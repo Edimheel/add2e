@@ -1477,8 +1477,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n7",
+          "effects": [
+            {
+              "id": "alteration_de_la_realite",
+              "label": "Altération de la réalité",
+              "kind": "illusionniste_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:alteration_de_la_realite",
+                "classe:illusionniste",
+                "niveau:7"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -5375,7 +5388,7 @@
         ],
         "composants_materiels_source": "petit morceau de rayon de miel",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
-        "composants_materiels_verification_recommandee": "true",
+        "composants_materiels_verification_recommandee": true,
         "composants_materiels_note": "",
         "composants_materiels_a_renseigner": false,
         "description": "ce sort est le même que le sort de niveau 2 de magicien bouche magique (voir p.69).",
@@ -5385,8 +5398,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n2",
+          "effects": [
+            {
+              "id": "bouche_magique",
+              "label": "Bouche magique",
+              "kind": "illusionniste_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:bouche_magique",
+                "classe:illusionniste",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -6647,10 +6673,15 @@
         "cible": "selon description texte",
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
-        "composantes": "V, S",
+        "composantes": "V, S, M",
         "composants_materiels": [
-          "laine",
-          "cire"
+          {
+            "type": "alternative",
+            "choix": [
+              "morceau de laine",
+              "cire"
+            ]
+          }
         ],
         "composants_materiels_source": "La composante matérielle est un morceau de laine ou un peu de cire.",
         "composants_materiels_reference": "",
@@ -6664,8 +6695,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n1",
+          "effects": [
+            {
+              "id": "bruitage",
+              "label": "Bruitage",
+              "kind": "illusion_or_sensory",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:bruitage",
+                "classe:illusionniste",
+                "illusion_ou_sensoriel",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -7845,8 +7890,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n2",
+          "effects": [
+            {
+              "id": "cecite",
+              "label": "Cécité",
+              "kind": "control",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:cecite",
+                "classe:illusionniste",
+                "controle",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -7975,8 +8034,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n1",
+          "effects": [
+            {
+              "id": "changement_d_apparence",
+              "label": "Changement d’apparence",
+              "kind": "illusion_or_sensory",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:changement_d_apparence",
+                "classe:illusionniste",
+                "illusion_ou_sensoriel",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -8338,13 +8411,12 @@
         "jet_sauvegarde": "Annule",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "disque de bronze",
-          "tige de fer"
+          "petite tige de fer"
         ],
         "composants_materiels_source": "Les composantes matérielles pour ce sort sont un petit disque de bronze et une petite tige de fer.",
         "composants_materiels_reference": "",
-        "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1\nnon consomme",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_note": "",
         "composants_materiels_a_renseigner": false,
         "description": "ce sort est similaire au sort de niveau 7 de druide confusion (voir p.64), mais toutes les créatures dans la zone d’effet sont confuses pendant la durée du sort. Seuls les guerriers, autres que paladin ou ranger, et les illusionnistes sont capables de combattre le sort et ont donc droit à un jet de protection. De la même manière, les monstres qui n’emploient pas la magie et qui ont une intelligence de 4 ou moins (semi-intelligence) peuvent lancer un jet de protection. Les composantes matérielles pour ce sort sont un petit disque de bronze et une petite tige de fer.",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-chaos.js",
@@ -8353,8 +8425,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n5",
+          "effects": [
+            {
+              "id": "chaos",
+              "label": "Chaos",
+              "kind": "illusionniste_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:chaos",
+                "classe:illusionniste",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -11613,9 +11698,9 @@
         "jet_sauvegarde": "spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Matérielle non précisée explicitement dans le"
+          "a completer"
         ],
-        "composants_materiels_source": "Matérielle non précisée explicitement dans le Manuel des joueurs.",
+        "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
         "composants_materiels_verification_recommandee": "true",
         "composants_materiels_note": "",
@@ -11634,8 +11719,22 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n4",
+          "effects": [
+            {
+              "id": "confusion",
+              "label": "Confusion",
+              "kind": "control",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:confusion",
+                "classe:illusionniste",
+                "controle",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -12976,9 +13075,9 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Matérielle non précisée explicitement dans le"
+          "a completer"
         ],
-        "composants_materiels_source": "Matérielle non précisée explicitement dans le Manuel des joueurs.",
+        "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
         "composants_materiels_verification_recommandee": "true",
         "composants_materiels_note": "",
@@ -12997,8 +13096,21 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n3",
+          "effects": [
+            {
+              "id": "corde_enchantee",
+              "label": "Corde enchantée",
+              "kind": "illusionniste_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:corde_enchantee",
+                "classe:illusionniste",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -13212,10 +13324,27 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [],
+        "composants_materiels": [
+          {
+            "type": "variante",
+            "id": "mineral",
+            "label": "Création d’un objet minéral",
+            "composants": [
+              "morceau de matière minérale similaire"
+            ]
+          },
+          {
+            "type": "variante",
+            "id": "vegetal",
+            "label": "Création d’un objet végétal",
+            "composants": [
+              "morceau de matière végétale similaire"
+            ]
+          }
+        ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
-        "composants_materiels_verification_recommandee": "true",
+        "composants_materiels_verification_recommandee": true,
         "composants_materiels_note": "",
         "composants_materiels_a_renseigner": true,
         "description": "ce sort est comparable au sort création mineure (voir p.97), mais il permet de créer des objets minéraux. Le sort peut aussi servir à créer des objets végétaux, mais leur durée d’existence est alors de 12 tours/niveau.",
@@ -13225,8 +13354,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n5",
+          "effects": [
+            {
+              "id": "creation_majeure",
+              "label": "Création majeure",
+              "kind": "illusionniste_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:creation_majeure",
+                "classe:illusionniste",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -13341,11 +13483,13 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [],
+        "composants_materiels": [
+          "morceau de matière végétale similaire"
+        ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
-        "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "tout petit morceau de la même matière que l’objet à créer\n1\nconsomme",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_note": "",
         "composants_materiels_a_renseigner": true,
         "description": "ce sort permet à l’illusionniste de créer un objet non-vivant, de nature végétale: corde, bois, etc. Le volume maximum est de 27 dm³ par niveau du lanceur de sort. (cf. Règles AVANCÉES DE DONJONS & DRAGONS, MANUEL DES MONSTRES, Djinn). Le lanceur de sort doit posséder un tout petit morceau de la même matière que l’objet à créer.",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-creation-mineure.js",
@@ -13354,8 +13498,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n4",
+          "effects": [
+            {
+              "id": "creation_mineure",
+              "label": "Création mineure",
+              "kind": "illusionniste_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:creation_mineure",
+                "classe:illusionniste",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -14769,8 +14926,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n2",
+          "effects": [
+            {
+              "id": "desinformation",
+              "label": "Désinformation",
+              "kind": "illusionniste_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:desinformation",
+                "classe:illusionniste",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -15038,7 +15208,7 @@
         ],
         "composants_materiels_source": "Les composantes matérielles sont une pincée de talc et un peu de poudre d’argent qu’il faut répandre.",
         "composants_materiels_reference": "",
-        "composants_materiels_verification_recommandee": "true",
+        "composants_materiels_verification_recommandee": true,
         "composants_materiels_note": "",
         "composants_materiels_a_renseigner": true,
         "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 2 de magicien détection de l’invisibilité (voir p.70).",
@@ -15048,8 +15218,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n1",
+          "effects": [
+            {
+              "id": "detection_de_l_invisibilite",
+              "label": "Détection de l’invisibilité",
+              "kind": "detection_or_divination",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:detection_de_l_invisibilite",
+                "classe:illusionniste",
+                "detection_ou_divination",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -15367,9 +15551,11 @@
         "cible": "",
         "temps_incantation": "2 segments",
         "jet_sauvegarde": "aucun",
-        "composantes": "V, S",
-        "composants_materiels": [],
-        "composants_materiels_source": "—",
+        "composantes": "V, S, M",
+        "composants_materiels": [
+          "a completer"
+        ],
+        "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
         "composants_materiels_note": "",
@@ -15388,8 +15574,22 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n2",
+          "effects": [
+            {
+              "id": "detection_de_la_magie",
+              "label": "Détection de la magie",
+              "kind": "detection_or_divination",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:detection_de_la_magie",
+                "classe:illusionniste",
+                "detection_ou_divination",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "folder": "T1nK1QcbtXGzdZUR",
@@ -15985,14 +16185,20 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "cristal teinté en jaune",
-          "verre teinté en jaune",
-          "mica teinté en jaune"
+          "morceau de cristal",
+          {
+            "type": "alternative",
+            "choix": [
+              "de verre",
+              "de mica"
+            ]
+          },
+          "teinté en jaune"
         ],
         "composants_materiels_source": "morceau de cristal, de verre ou de mica, teinté en jaune",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
-        "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_note": "",
         "composants_materiels_a_renseigner": false,
         "description": "grâce à ce sort, l’illusionniste est capable de voir et de reconnaitre une illusion pour ce qu’elle est réellement. Ce sort peut être utilisé pour permettre à d’autres créatures de constater qu’il existe une illusion. L’illusionniste doit toucher de ses deux mains la créature pendant qu’elle regarde l’illusion. La composante matérielle est un morceau de cristal, de verre ou de mica, teinté en jaune.",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-detection-des-illusions.js",
@@ -16001,8 +16207,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n1",
+          "effects": [
+            {
+              "id": "detection_des_illusions",
+              "label": "Détection des illusions",
+              "kind": "detection_or_divination",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:detection_des_illusions",
+                "classe:illusionniste",
+                "detection_ou_divination",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -17576,8 +17796,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n4",
+          "effects": [
+            {
+              "id": "dissipation_de_l_epuisement",
+              "label": "Dissipation de l’épuisement",
+              "kind": "illusionniste_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:dissipation_de_l_epuisement",
+                "classe:illusionniste",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -18147,8 +18380,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n3",
+          "effects": [
+            {
+              "id": "dissipation_des_illusions",
+              "label": "Dissipation des illusions",
+              "kind": "illusion_or_sensory",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:dissipation_des_illusions",
+                "classe:illusionniste",
+                "illusion_ou_sensoriel",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -19773,11 +20020,13 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [],
+        "composants_materiels": [
+          "encre à base de plomb"
+        ],
         "composants_materiels_source": "La composante matérielle de ce sort est une encre fabriquée à base de plomb par un alchimiste.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
-        "composants_materiels_note": "encre fabriquée à base de plomb par un alchimiste\n1\nconsomme\n100\ncomposante matérielle de ce sort est une encre fabriquée à base de plomb par un alchimiste",
+        "composants_materiels_note": "",
         "composants_materiels_a_renseigner": false,
         "description": "ce sort permet à l’illusionniste d’écrire des instructions ou d’autres informations sur un parchemin, du papier, de la peau, etc. Cet écrit parait être un écrit magique ou étranger. Seule la personne (ou la classe de personnage, ou autre) que l’illusionniste autorise à lire pourra le faire, bien qu’un autre illusionniste puisse reconnaître l’écrit pour ce qu’il est réellement. Toute autre créature essayant de le lire sera sujette à une confusion (voir p.64) pour 5d4 tours, moins 1 tour par niveau d’expérience du lecteur. Ce sort ne peut pas être utilisé sous l’eau. La composante matérielle de ce sort est une encre fabriquée à base de plomb par un alchimiste. Le prix de cette encre varie entre 100 et 400 po, sans compter la rémunération de l’alchimiste (100 po).",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-ecriture-illusoire.js",
@@ -19786,8 +20035,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n3",
+          "effects": [
+            {
+              "id": "ecriture_illusoire",
+              "label": "Écriture illusoire",
+              "kind": "illusionniste_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:ecriture_illusoire",
+                "classe:illusionniste",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -20044,9 +20306,11 @@
         "cible": "selon description texte",
         "temps_incantation": "3 segments",
         "jet_sauvegarde": "annule",
-        "composantes": "V, S",
-        "composants_materiels": [],
-        "composants_materiels_source": "—",
+        "composantes": "V, S, M",
+        "composants_materiels": [
+          "a completer"
+        ],
+        "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
         "composants_materiels_note": "",
@@ -20065,8 +20329,22 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n3",
+          "effects": [
+            {
+              "id": "effroi",
+              "label": "Effroi",
+              "kind": "control",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:effroi",
+                "classe:illusionniste",
+                "controle",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -20684,8 +20962,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n4",
+          "effects": [
+            {
+              "id": "emotion",
+              "label": "Émotion",
+              "kind": "illusionniste_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:emotion",
+                "classe:illusionniste",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -23723,11 +24014,11 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "toison de mouton"
+          "morceau de toison de mouton"
         ],
         "composants_materiels_source": "La composante matérielle est un morceau de toison de mouton.",
         "composants_materiels_reference": "",
-        "composants_materiels_verification_recommandee": "true",
+        "composants_materiels_verification_recommandee": true,
         "composants_materiels_note": "",
         "composants_materiels_a_renseigner": true,
         "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 3 de magicien force fantasmagorique (voir p.74).",
@@ -23737,8 +24028,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n1",
+          "effects": [
+            {
+              "id": "force_fantasmagorique",
+              "label": "Force fantasmagorique",
+              "kind": "illusionniste_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:force_fantasmagorique",
+                "classe:illusionniste",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -23958,10 +24262,12 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [],
+        "composants_materiels": [
+          "morceau de laine"
+        ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
-        "composants_materiels_verification_recommandee": "true",
+        "composants_materiels_verification_recommandee": true,
         "composants_materiels_note": "",
         "composants_materiels_a_renseigner": true,
         "description": "excepté ci-dessus et les précisions ci-dessous, ce sort est le même que le sort de niveau 3 de magicien force fantasmagorique (voir p.74). L’illusionniste peut maintenir l’illusion avec un minimum de concentration; il peut se déplacer à la moitié de sa vitesse normale mais ne peut lancer aucun sort. Le lanceur de sort peut inclure des bruits mineurs à l’illusion, mais en aucun cas des paroles compréhensibles. Cette illusion persiste pendant 2 rounds après que l’illusionniste ait cessé de se concentrer.",
@@ -23971,8 +24277,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n2",
+          "effects": [
+            {
+              "id": "force_fantasmagorique_amelioree",
+              "label": "Force fantasmagorique améliorée",
+              "kind": "illusionniste_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:force_fantasmagorique_amelioree",
+                "classe:illusionniste",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -24087,10 +24406,12 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [],
+        "composants_materiels": [
+          "morceau de laine"
+        ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
-        "composants_materiels_verification_recommandee": "true",
+        "composants_materiels_verification_recommandee": true,
         "composants_materiels_note": "",
         "composants_materiels_a_renseigner": true,
         "description": "ce sort crée une illusion dans laquelle les sons, les odeurs et même la température sont présents. Autrement, ce sort est similaire au sort de niveau 2 force fantasmagorique améliorée. Cette illusion persiste pendant 3 rounds après que l’illusionniste ait cessé de se concentrer.",
@@ -24100,8 +24421,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n3",
+          "effects": [
+            {
+              "id": "force_spectrale",
+              "label": "Force spectrale",
+              "kind": "illusionniste_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:force_spectrale",
+                "classe:illusionniste",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -26473,11 +26807,11 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "petite réplique (poupée) du magicien"
+          "Petite réplique (poupée) du magicien"
         ],
         "composants_materiels_source": "petite réplique (poupée) du magicien",
         "composants_materiels_reference": "Recherche dans le texte du Manuel des joueurs",
-        "composants_materiels_verification_recommandee": "true",
+        "composants_materiels_verification_recommandee": true,
         "composants_materiels_note": "",
         "composants_materiels_a_renseigner": false,
         "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 6 de magicien holographie (voir p.84).",
@@ -26487,8 +26821,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n5",
+          "effects": [
+            {
+              "id": "holographie",
+              "label": "Holographie",
+              "kind": "illusion_or_sensory",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:holographie",
+                "classe:illusionniste",
+                "illusion_ou_sensoriel",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -26724,8 +27072,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n1",
+          "effects": [
+            {
+              "id": "hypnotisme",
+              "label": "Hypnotisme",
+              "kind": "communication_or_control",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:hypnotisme",
+                "classe:illusionniste",
+                "communication_ou_controle",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -26991,10 +27353,12 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [],
+        "composants_materiels": [
+          "morceau de laine"
+        ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
-        "composants_materiels_verification_recommandee": "true",
+        "composants_materiels_verification_recommandee": true,
         "composants_materiels_note": "",
         "composants_materiels_a_renseigner": true,
         "description": "ce sort crée une force spectrale (voir p.97) aux effets permanents et qui ne demande pas de concentration de la part de l’illusionniste. Une dissipation de la magie peut l’annuler.",
@@ -27004,8 +27368,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n6",
+          "effects": [
+            {
+              "id": "illusion_permanente",
+              "label": "Illusion permanente",
+              "kind": "illusion_or_sensory",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:illusion_permanente",
+                "classe:illusionniste",
+                "illusion_ou_sensoriel",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -27121,10 +27499,12 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [],
+        "composants_materiels": [
+          "morceau de laine"
+        ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
-        "composants_materiels_verification_recommandee": "true",
+        "composants_materiels_verification_recommandee": true,
         "composants_materiels_note": "",
         "composants_materiels_a_renseigner": true,
         "description": "avec ce sort, l’illusionniste place une force spectrale qui se déclenchera sur simple commande ou quand une condition particulière (choisie par le lanceur de sort) sera remplie (cf. bouche magique p.69). L’illusion durera au maximum un round par niveau du lanceur de sort.",
@@ -27134,8 +27514,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n6",
+          "effects": [
+            {
+              "id": "illusion_programmee",
+              "label": "Illusion programmée",
+              "kind": "illusion_or_sensory",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:illusion_programmee",
+                "classe:illusionniste",
+                "illusion_ou_sensoriel",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -27393,9 +27787,11 @@
         "cible": "selon description texte",
         "temps_incantation": "2 segments",
         "jet_sauvegarde": "aucun",
-        "composantes": "V, S",
-        "composants_materiels": [],
-        "composants_materiels_source": "—",
+        "composantes": "V, S, M",
+        "composants_materiels": [
+          "a completer"
+        ],
+        "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
         "composants_materiels_note": "",
@@ -27414,8 +27810,22 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n2",
+          "effects": [
+            {
+              "id": "image_miroir",
+              "label": "Image miroir",
+              "kind": "protection",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:image_miroir",
+                "classe:illusionniste",
+                "protection",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -28569,13 +28979,13 @@
         "cible": "selon description texte",
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
-        "composantes": "V, S",
+        "composantes": "V, S, M",
         "composants_materiels": [
           "cil mis dans de la gomme arabique"
         ],
         "composants_materiels_source": "Les composantes matérielles sont un cil mis dans de la gomme arabique.",
         "composants_materiels_reference": "",
-        "composants_materiels_verification_recommandee": "true",
+        "composants_materiels_verification_recommandee": true,
         "composants_materiels_note": "",
         "composants_materiels_a_renseigner": false,
         "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 2 de magicien invisibilité (voir p.71).",
@@ -28585,8 +28995,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n2",
+          "effects": [
+            {
+              "id": "invisibilite",
+              "label": "Invisibilité",
+              "kind": "protection",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:invisibilite",
+                "classe:illusionniste",
+                "protection",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -28715,8 +29139,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n4",
+          "effects": [
+            {
+              "id": "invisibilite_amelioree",
+              "label": "Invisibilité améliorée",
+              "kind": "protection",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:invisibilite_amelioree",
+                "classe:illusionniste",
+                "protection",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -29230,7 +29668,7 @@
         "composants_materiels": [],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
-        "composants_materiels_verification_recommandee": "true",
+        "composants_materiels_verification_recommandee": true,
         "composants_materiels_note": "",
         "composants_materiels_a_renseigner": false,
         "description": "Excepté ci-dessus, ce sort est le même que le sort de niveau 3 de magicien invisibilité sur 3 mètres (voir p.74). Voir aussi le sort de magicien de niveau 2 invisibilité.",
@@ -29240,8 +29678,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n3",
+          "effects": [
+            {
+              "id": "invisibilite_sur_3_m",
+              "label": "Invisibilité sur 3 m",
+              "kind": "protection",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:invisibilite_sur_3_m",
+                "classe:illusionniste",
+                "protection",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -31400,7 +31852,7 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-           "diamant"
+          "diamant"
         ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
@@ -31809,8 +32261,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n6",
+          "effects": [
+            {
+              "id": "invocation_des_animaux",
+              "label": "Invocation des animaux",
+              "kind": "summon_or_actor_effect",
+              "automation": "actor_creation_or_mj_aid",
+              "tags": [
+                "effet:invocation_des_animaux",
+                "classe:illusionniste",
+                "invocation_ou_creation",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -32072,12 +32538,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "quartz fumé"
+          "Morceau de quartz fumé"
         ],
         "composants_materiels_source": "La composante matérielle est un morceau de quartz fumé.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
-        "composants_materiels_note": "1\nnon consomme",
+        "composants_materiels_note": "",
         "composants_materiels_a_renseigner": false,
         "description": "quand ce sort est lancé, l’illusionniste invoque et fait venir une ombre (cf. Règles AVANCÉES DE DONJONS & DRAGONS, MANUEL DES MONSTRES, Ombre) pour chaque tranche de 3 niveaux qu'il possède. Ces monstres sont sous son contrôle et attaqueront ses ennemis sur simple demande. Les ombres restent jusqu’à la fin du sort à moins qu’elles ne soient tuées ou repoussées (vade-retro). La composante matérielle est un morceau de quartz fumé.",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-invocation-des-ombres.js",
@@ -32086,8 +32552,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n5",
+          "effects": [
+            {
+              "id": "invocation_des_ombres",
+              "label": "Invocation des ombres",
+              "kind": "summon_or_actor_effect",
+              "automation": "actor_creation_or_mj_aid",
+              "tags": [
+                "effet:invocation_des_ombres",
+                "classe:illusionniste",
+                "invocation_ou_creation",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -32491,15 +32971,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "pincée de sable",
-          "jaune",
-          "bleue",
-          "poudre rouge"
+          "Pincée de sable"
         ],
         "composants_materiels_source": "Les composantes matérielles sont une pincée de sable ou de poudre de chacune de ces trois couleurs : rouge, jaune et bleu.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
-        "composants_materiels_note": "1",
+        "composants_materiels_note": "",
         "composants_materiels_a_renseigner": false,
         "description": "en lançant ce sort, l’illusionniste crée un jet de lumière vive qui jaillit en éventail de ses mains. De 1 à 6 créatures (1d6) peuvent être affectées dans la zone d'effet. Les créatures visées tombent inconscientes pour 2d4 rounds si leur niveau/DV est inférieur ou égal à celui de l’illusionniste; elles sont aveuglées pour 1d4 rounds si elles ont 1 à 2 niveaux/DV de plus que l’illusionniste; elles sont étourdies pour 2d4 segments si elles ont 3 niveaux/DV ou plus au dessus du niveau de l’illusionniste. Les créatures ayant un niveau supérieur à celui de l’illusionniste et celles qui ont 6 niveaux/DV ou plus ont droit à un jet de protection. Les composantes matérielles sont une pincée de sable ou de poudre de chacune de ces trois couleurs: rouge, jaune et bleu.",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-jet-de-couleurs.js",
@@ -32508,8 +32985,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n1",
+          "effects": [
+            {
+              "id": "jet_de_couleurs",
+              "label": "Jet de couleurs",
+              "kind": "illusionniste_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:jet_de_couleurs",
+                "classe:illusionniste",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -32639,8 +33129,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n7",
+          "effects": [
+            {
+              "id": "jet_prismatique",
+              "label": "Jet prismatique",
+              "kind": "illusionniste_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:jet_prismatique",
+                "classe:illusionniste",
+                "niveau:7"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -32898,9 +33401,11 @@
         "cible": "selon description texte",
         "temps_incantation": "5 segments",
         "jet_sauvegarde": "aucun",
-        "composantes": "V, S",
-        "composants_materiels": [],
-        "composants_materiels_source": "—",
+        "composantes": "V, S, M",
+        "composants_materiels": [
+          "a completer"
+        ],
+        "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
         "composants_materiels_note": "",
@@ -32919,8 +33424,22 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n5",
+          "effects": [
+            {
+              "id": "labyrinthe",
+              "label": "Labyrinthe",
+              "kind": "control",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:labyrinthe",
+                "classe:illusionniste",
+                "controle",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -36193,9 +36712,11 @@
         "cible": "",
         "temps_incantation": "3 segments",
         "jet_sauvegarde": "aucun",
-        "composantes": "V, S",
-        "composants_materiels": [],
-        "composants_materiels_source": "—",
+        "composantes": "V, S, M",
+        "composants_materiels": [
+          "a completer"
+        ],
+        "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
         "composants_materiels_note": "",
@@ -36214,8 +36735,22 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n3",
+          "effects": [
+            {
+              "id": "lumiere_eternelle",
+              "label": "Lumière éternelle",
+              "kind": "illusion_or_sensory",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:lumiere_eternelle",
+                "classe:illusionniste",
+                "illusion_ou_sensoriel",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "folder": "04KRbxzyIwoJeXdT",
@@ -36430,8 +36965,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n1",
+          "effects": [
+            {
+              "id": "lumieres_dansantes",
+              "label": "Lumières dansantes",
+              "kind": "illusion_or_sensory",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:lumieres_dansantes",
+                "classe:illusionniste",
+                "illusion_ou_sensoriel",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -36562,8 +37111,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n6",
+          "effects": [
+            {
+              "id": "magie_demi_ombre",
+              "label": "Magie demi-ombre",
+              "kind": "summon_or_actor_effect",
+              "automation": "actor_creation_or_mj_aid",
+              "tags": [
+                "effet:magie_demi_ombre",
+                "classe:illusionniste",
+                "invocation_ou_creation",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -36691,8 +37254,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n5",
+          "effects": [
+            {
+              "id": "magie_des_ombres",
+              "label": "Magie des ombres",
+              "kind": "summon_or_actor_effect",
+              "automation": "actor_creation_or_mj_aid",
+              "tags": [
+                "effet:magie_des_ombres",
+                "classe:illusionniste",
+                "invocation_ou_creation",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -38870,8 +39447,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n5",
+          "effects": [
+            {
+              "id": "monstres_demi_ombre",
+              "label": "Monstres demi-ombre",
+              "kind": "summon_or_actor_effect",
+              "automation": "actor_creation_or_mj_aid",
+              "tags": [
+                "effet:monstres_demi_ombre",
+                "classe:illusionniste",
+                "invocation_ou_creation",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -38999,8 +39590,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n4",
+          "effects": [
+            {
+              "id": "monstres_des_ombres",
+              "label": "Monstres des ombres",
+              "kind": "summon_or_actor_effect",
+              "automation": "actor_creation_or_mj_aid",
+              "tags": [
+                "effet:monstres_des_ombres",
+                "classe:illusionniste",
+                "invocation_ou_creation",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -39689,18 +40294,12 @@
         "jet_sauvegarde": "Annule",
         "composantes": "S, M",
         "composants_materiels": [
-          "bâtonnet d’encens",
-          "Encens",
-          "baguette de cristal",
-          "Focus durable",
-          "non détruit",
-          "matières phosphorescentes",
-          "Contenu"
+          "cire d’abeille"
         ],
         "composants_materiels_source": "cire d’abeille",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
-        "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1\nRequises lorsque la baguette de cristal est utilisée",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_note": "",
         "composants_materiels_a_renseigner": false,
         "description": "quand l’illusionniste lance ce sort, il crée un jeu de formes colorées, mouvantes et tournoyantes dans l’air. Les créatures qui regardent ces formes et qui ont raté leur jet de protection sont fascinées et continuent de fixer ce motif aussi longtemps que l’illusionniste le maintient dans l’air. Le lanceur du sort peut hypnotiser un maximum de 24 DV, c'est-à-dire 24 créatures avec 1 DV chacune, 12 créatures avec 2 DV chacune, etc. Toutes les créatures doivent se trouver dans la zone d’effet et chacune a droit à un jet de protection. L’illusionniste n’a pas besoin de parler, mais il doit faire des gestes appropriés en même temps qu’il doit tenir un bâtonnet d’encens allumé ou une baguette de cristal remplie de matières phosphorescentes.",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-motif-hypnotique.js",
@@ -39709,8 +40308,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n2",
+          "effects": [
+            {
+              "id": "motif_hypnotique",
+              "label": "Motif hypnotique",
+              "kind": "illusionniste_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:motif_hypnotique",
+                "classe:illusionniste",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -40118,12 +40730,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "poudre de poix séchés"
+          "Poudre de poix séchés"
         ],
         "composants_materiels_source": "La composante matérielle est de la poudre de poix séchés.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
-        "composants_materiels_note": "1\nconsomme",
+        "composants_materiels_note": "",
         "composants_materiels_a_renseigner": false,
         "description": "en lançant ce sort, l’illusionniste crée un mur de vapeurs épaisses là où il le désire, dans les limites de la portée du sort. Ce mur de brouillard restreint la vision (même l’infravision) à 60 cm. La zone d’effet est une forme cubique de 2\" d’arête par niveau du lanceur de sort. La fumée persiste pendant 3 rounds ou plus, sauf si elle est dissipée par un vent puissant (cf. rafale de vent). Ce sort ne peut pas être utilisé sous l’eau. La composante matérielle est de la poudre de poix séchés.",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-mur-de-brouillard.js",
@@ -40132,8 +40744,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n1",
+          "effects": [
+            {
+              "id": "mur_de_brouillard",
+              "label": "Mur de brouillard",
+              "kind": "illusion_or_sensory",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:mur_de_brouillard",
+                "classe:illusionniste",
+                "illusion_ou_sensoriel",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -41091,8 +41717,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n7",
+          "effects": [
+            {
+              "id": "mur_prismatique",
+              "label": "Mur prismatique",
+              "kind": "illusion_or_sensory",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:mur_prismatique",
+                "classe:illusionniste",
+                "illusion_ou_sensoriel",
+                "niveau:7"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -41371,8 +42011,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n2",
+          "effects": [
+            {
+              "id": "nappe_de_brouillard",
+              "label": "Nappe de brouillard",
+              "kind": "illusionniste_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:nappe_de_brouillard",
+                "classe:illusionniste",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -42137,13 +42790,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "pincée de poudre de diamant",
-          "Utilisée en poudre"
+          "Pincée de poudre de diamant"
         ],
         "composants_materiels_source": "La composante matérielle est une pincée de poudre de diamant.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
-        "composants_materiels_note": "1\nconsomme",
+        "composants_materiels_note": "",
         "composants_materiels_a_renseigner": false,
         "description": "en lançant ce sort, l’illusionniste se rend indétectable aux effets des sorts de divination, comme par exemple les sorts de clairaudience, clairvoyance, les sorts de détection et le sort ESP. Il est aussi protégé des détections par boule de cristal et médaillon d’ESP. La composante matérielle est une pincée de poudre de diamant.",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-non-detection.js",
@@ -42152,8 +42804,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n3",
+          "effects": [
+            {
+              "id": "non_detection",
+              "label": "Non-détection",
+              "kind": "detection_or_divination",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:non_detection",
+                "classe:illusionniste",
+                "detection_ou_divination",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -43144,8 +43810,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n6",
+          "effects": [
+            {
+              "id": "ombres",
+              "label": "Ombres",
+              "kind": "summon_or_actor_effect",
+              "automation": "actor_creation_or_mj_aid",
+              "tags": [
+                "effet:ombres",
+                "classe:illusionniste",
+                "invocation_ou_creation",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -44502,8 +45182,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n3",
+          "effects": [
+            {
+              "id": "paralysie_musculaire",
+              "label": "Paralysie musculaire",
+              "kind": "control",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:paralysie_musculaire",
+                "classe:illusionniste",
+                "controle",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -46275,9 +46969,9 @@
         "cible": "selon description texte",
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
-        "composantes": "V, S",
+        "composantes": "V, S, M",
         "composants_materiels": [
-          "morceaux d'écorce"
+          "poignée de morceaux d'écorce"
         ],
         "composants_materiels_source": "La composante matérielle est une poignée de morceaux d'écorce.",
         "composants_materiels_reference": "",
@@ -46291,8 +46985,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n4",
+          "effects": [
+            {
+              "id": "phytomorphose",
+              "label": "Phytomorphose",
+              "kind": "illusionniste_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:phytomorphose",
+                "classe:illusionniste",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -47892,8 +48599,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n5",
+          "effects": [
+            {
+              "id": "porte_des_ombres",
+              "label": "Porte des ombres",
+              "kind": "summon_or_actor_effect",
+              "automation": "actor_creation_or_mj_aid",
+              "tags": [
+                "effet:porte_des_ombres",
+                "classe:illusionniste",
+                "invocation_ou_creation",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -52358,8 +53079,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n1",
+          "effects": [
+            {
+              "id": "reflexion_des_regards",
+              "label": "Réflexion des regards",
+              "kind": "illusionniste_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:reflexion_des_regards",
+                "classe:illusionniste",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -58744,9 +59478,11 @@
         "cible": "",
         "temps_incantation": "3 tours",
         "jet_sauvegarde": "aucun",
-        "composantes": "V, S",
-        "composants_materiels": [],
-        "composants_materiels_source": "—",
+        "composantes": "V, S, M",
+        "composants_materiels": [
+          "a completer"
+        ],
+        "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
         "composants_materiels_note": "",
@@ -58765,8 +59501,21 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n7",
+          "effects": [
+            {
+              "id": "sort_astral",
+              "label": "Sort astral",
+              "kind": "illusionniste_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:sort_astral",
+                "classe:illusionniste",
+                "niveau:7"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "folder": "uGoqQoDScgKjhvyW",
@@ -59064,13 +59813,13 @@
         "cible": "selon description texte",
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
-        "composantes": "V, S, M",
+        "composantes": "*",
         "composants_materiels": [],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
-        "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "",
-        "composants_materiels_a_renseigner": true,
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_note": "Composants déterminés par le sort de magicien niveau 1 choisi.",
+        "composants_materiels_a_renseigner": false,
         "description": "l’illusionniste obtient 4 sorts de niveau 1 de magicien parmi la liste suivante quand il atteint le niveau 14 d’expérience et il peut en apprendre un de plus pour chaque progression de niveau. Agrandissement Fermeture Altération des feux normaux Lecture de la magie Amitié Mains brûlantes Aura magique de Nystul Message Bouclier Poigne électrique Charme-personnes Projectile magique Chute de plume Protection contre le mal Compréhension des langues Réparation Disque flottant de Tenser Serviteur invisible Effacement Sommeil L’illusionniste peut apprendre n’importe quel sort de la liste précédente. Il doit rechercher ces sorts de la même manière que le ferait le magicien. Si l’illusionniste choisit ce sort, il peut apprendre 4 sorts ou plus de cette liste, formant en tout un sort de niveau 7.",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-sorts-de-niveau-1-de-magicien.js",
         "onUseCode": "",
@@ -59078,8 +59827,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n7",
+          "effects": [
+            {
+              "id": "sorts_de_niveau_1_de_magicien",
+              "label": "Sorts de niveau 1 de magicien",
+              "kind": "illusionniste_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:sorts_de_niveau_1_de_magicien",
+                "classe:illusionniste",
+                "niveau:7"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -60178,7 +60940,7 @@
         ],
         "composants_materiels_source": "langue de serpent et, soit un peu de miel, soit une goutte d’huile douce",
         "composants_materiels_reference": "Recherche dans le texte du Manuel des joueurs",
-        "composants_materiels_verification_recommandee": "true",
+        "composants_materiels_verification_recommandee": true,
         "composants_materiels_note": "",
         "composants_materiels_a_renseigner": false,
         "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 3 de magicien suggestion (voir p.76).",
@@ -60188,8 +60950,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n3",
+          "effects": [
+            {
+              "id": "suggestion",
+              "label": "Suggestion",
+              "kind": "communication_or_control",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:suggestion",
+                "classe:illusionniste",
+                "communication_ou_controle",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -60305,10 +61081,19 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Annule",
         "composantes": "V, M",
-        "composants_materiels": [],
+        "composants_materiels": [
+          "langue de serpent",
+          {
+            "type": "alternative",
+            "choix": [
+              "miel",
+              "huile douce"
+            ]
+          }
+        ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
-        "composants_materiels_verification_recommandee": "true",
+        "composants_materiels_verification_recommandee": true,
         "composants_materiels_note": "",
         "composants_materiels_a_renseigner": true,
         "description": "ce sort est le même que le sort de niveau 3 suggestion, excepté le fait que l’illusionniste peut le lancer sur plusieurs créatures, tant que ces créatures se trouvent dans la portée du sort. Une créature par niveau du lanceur du sort peut être affectée. Si une seule créature se trouve dans la portée, son jet de protection est à –2. La suggestion doit être la même pour toutes les personnes qui l’entendent.",
@@ -60318,8 +61103,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n6",
+          "effects": [
+            {
+              "id": "suggestion_de_masse",
+              "label": "Suggestion de masse",
+              "kind": "communication_or_control",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:suggestion_de_masse",
+                "classe:illusionniste",
+                "communication_ou_controle",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -60441,7 +61240,7 @@
         "composants_materiels_source": "La composante matérielle est de la cire d’abeille.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
-        "composants_materiels_note": "1\nconsomme",
+        "composants_materiels_note": "",
         "composants_materiels_a_renseigner": false,
         "description": "ce sort provoque la surdité totale de la créature qui rate son jet de protection (cf. cécité). Cette surdité ne peut être dissipée que par une dissipation de la magie ou par le lanceur de sort en personne. La composante matérielle est de la cire d’abeille.",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-surdite.js",
@@ -60450,8 +61249,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n2",
+          "effects": [
+            {
+              "id": "surdite",
+              "label": "Surdité",
+              "kind": "control",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:surdite",
+                "classe:illusionniste",
+                "controle",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -61513,8 +62326,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n1",
+          "effects": [
+            {
+              "id": "tenebres",
+              "label": "Ténèbres",
+              "kind": "illusion_or_sensory",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:tenebres",
+                "classe:illusionniste",
+                "illusion_ou_sensoriel",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -61632,13 +62459,13 @@
         "composantes": "V, M",
         "composants_materiels": [
           "fourrure de chauve souris",
-          "charbon",
+          "morceau de charbon",
           "goutte de poix"
         ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
-        "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "1\nconsomme",
+        "composants_materiels_verification_recommandee": true,
+        "composants_materiels_note": "",
         "composants_materiels_a_renseigner": true,
         "description": "quand ce sort est lancé, l’illusionniste crée un globe d’obscurité impénétrable. Les effets de cette obscurité, ainsi que les composantes matérielles, sont les mêmes que pour le sort de niveau 2 de magicien ténèbres sur 5 m (voir p.72). Voir aussi lumière éternelle.",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-tenebres-eternelles.js",
@@ -61647,8 +62474,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n3",
+          "effects": [
+            {
+              "id": "tenebres_eternelles",
+              "label": "Ténèbres éternelles",
+              "kind": "illusion_or_sensory",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:tenebres_eternelles",
+                "classe:illusionniste",
+                "illusion_ou_sensoriel",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -61911,9 +62752,9 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Matérielle non précisée explicitement dans le"
+          "a completer"
         ],
-        "composants_materiels_source": "Matérielle non précisée explicitement dans le Manuel des joueurs.",
+        "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
         "composants_materiels_note": "",
@@ -61932,8 +62773,21 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n3",
+          "effects": [
+            {
+              "id": "terrain_hallucinatoire",
+              "label": "Terrain hallucinatoire",
+              "kind": "illusionniste_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:terrain_hallucinatoire",
+                "classe:illusionniste",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -63680,8 +64534,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n2",
+          "effects": [
+            {
+              "id": "trouble",
+              "label": "Trouble",
+              "kind": "illusionniste_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:trouble",
+                "classe:illusionniste",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -63810,8 +64677,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n4",
+          "effects": [
+            {
+              "id": "tueur_fantasmagorique",
+              "label": "Tueur fantasmagorique",
+              "kind": "illusionniste_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:tueur_fantasmagorique",
+                "classe:illusionniste",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -64035,11 +64915,11 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, M",
         "composants_materiels": [
-          "parchemin"
+          "parchemin mis en cône"
         ],
-        "composants_materiels_source": "parchemin mis en cône",
+        "composants_materiels_source": "petit parchemin mis en cône",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
-        "composants_materiels_verification_recommandee": "true",
+        "composants_materiels_verification_recommandee": true,
         "composants_materiels_note": "",
         "composants_materiels_a_renseigner": false,
         "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 1 de magicien ventriloquie (voir p.69).",
@@ -64049,8 +64929,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n2",
+          "effects": [
+            {
+              "id": "ventriloquie",
+              "label": "Ventriloquie",
+              "kind": "illusion_or_sensory",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:ventriloquie",
+                "classe:illusionniste",
+                "illusion_ou_sensoriel",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -64458,13 +65352,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "sacrifice de quelque chose ayant de la valeur",
-          "pouvoir invoqué"
+          "objet de valeur à sacrifier"
         ],
         "composants_materiels_source": "La composante matérielle de ce sort est le sacrifice de quelque chose ayant de la valeur pour le lanceur de sort et/ou pour le pouvoir invoqué.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
-        "composants_materiels_note": "1\nconsomme\nSacrifice déterminé selon la valeur accordée par le lanceur",
+        "composants_materiels_note": "",
         "composants_materiels_a_renseigner": false,
         "description": "quand un illusionniste veut obtenir des renseignements de façon surnaturelle, il lance ce sort. Il interpelle ainsi la puissance dont il désire l’aide et lui pose la question dont il veut connaitre la réponse. Le résultat se détermine par un tirage de 2d6. Si le résultat est de 2 à 6, la puissance est contrariée et oblige l’illusionniste à lui rendre service par une quête religieuse ou une quête magique puissante; le lanceur de sort n’obtiendra bien sûr aucune réponse. Si le résultat du tirage va de 7 à 9, la puissance est indifférente et une vision mineure, parfois même sans rapport avec la question, sera octroyée. Un score de 10 ou plus indique que la vision est accordée. La composante matérielle de ce sort est le sacrifice de quelque chose ayant de la valeur pour le lanceur de sort et/ou pour le pouvoir invoqué. Plus le sacrifice est important, plus grande est la chance de succès. Un objet très précieux donnera un bonus de +1 sur le résultat des dés; un objet extrêmement précieux ajoutera +2 au tirage; enfin, un objet sans prix, quasiment unique, ajoutera +3.",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-vision.js",
@@ -64473,8 +65366,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n7",
+          "effects": [
+            {
+              "id": "vision",
+              "label": "Vision",
+              "kind": "detection_or_divination",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:vision",
+                "classe:illusionniste",
+                "detection_ou_divination",
+                "niveau:7"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -64696,13 +65603,13 @@
         "cible": "selon description texte",
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
-        "composantes": "V, S",
+        "composantes": "V, S, M",
         "composants_materiels": [
           "symbole sacré du clerc"
         ],
         "composants_materiels_source": "symbole sacré du clerc",
         "composants_materiels_reference": "Règle/usage général clérical ; composant exact à vérifier si le sort précise un complément",
-        "composants_materiels_verification_recommandee": "true",
+        "composants_materiels_verification_recommandee": true,
         "composants_materiels_note": "",
         "composants_materiels_a_renseigner": false,
         "description": "ce sort ressemble beaucoup au sort de niveau 5 de clerc vision réelle (voir p.50). Cependant, il ne permet pas de déterminer les alignements.",
@@ -64712,8 +65619,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n6",
+          "effects": [
+            {
+              "id": "vision_reelle",
+              "label": "Vision réelle",
+              "kind": "detection_or_divination",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:vision_reelle",
+                "classe:illusionniste",
+                "detection_ou_divination",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -64842,8 +65763,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-illusionniste-n6",
+          "effects": [
+            {
+              "id": "voile_illusoire",
+              "label": "Voile illusoire",
+              "kind": "illusionniste_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:voile_illusoire",
+                "classe:illusionniste",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -65085,6 +66019,6 @@
       "sort": 0
     }
   ],
-  "normalizedBy": "2026-06-17-normalize-spell-materials-v3-extract-source-materials-v1",
-  "normalizedAt": "2026-06-18T11:05:49.560Z"
+  "normalizedBy": "2026-06-18-normalize-illusionist-components-resolve-warnings-v1",
+  "normalizedAt": "2026-06-18T21:00:51.840Z"
 }
