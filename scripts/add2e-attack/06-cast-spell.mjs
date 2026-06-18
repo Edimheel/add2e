@@ -1,6 +1,6 @@
 // scripts/add2e-attack/06-cast-spell.mjs
 // ADD2E — Lancement de sorts, onUse, mémorisation, pouvoirs et composants.
-// Version : 2026-06-18-cast-spell-disable-components-setting-v1
+// Version : 2026-06-18-cast-spell-single-consumables-setting-source-v1
 
 import { formatSortChamp, add2eGetSortField, add2eGetSortOnUsePath, add2eGetSortComponentsText } from "./01-core-helpers.mjs";
 import "./05-jb2a-vfx.mjs";
@@ -60,14 +60,6 @@ function onUseManagesSpellComponents(scriptPath, sortDoc) {
   if (["onUse", "onuse", "script", "manual", "manuel"].includes(String(explicit ?? "").trim())) return true;
   const path = norm(scriptPath);
   return path.includes("benediction");
-}
-function spellComponentsDisabledBySetting() {
-  try {
-    if (!game?.settings?.settings?.has?.("add2e.gestionComposantsSorts")) return false;
-    return !!game.settings.get("add2e", "gestionComposantsSorts");
-  } catch (_e) {
-    return false;
-  }
 }
 function renderApplication(app) {
   if (!app || typeof app.render !== "function") return;
@@ -219,7 +211,6 @@ export async function add2eCastSpell({ actor, sort } = {}) {
   }
   async function reserveComponents() {
     if (sort.system?.isPower) return true;
-    if (spellComponentsDisabledBySetting()) return true;
     const api = globalThis.ADD2E_CONSUMABLES;
     if (!api?.add2eReserveSpellComponents) return true;
     const scriptPath = add2eGetSortOnUsePath(spellToUse);
