@@ -6,72 +6,209 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 
-const VERSION = "2026-06-17-normalize-spell-materials-v3-extract-source-materials-v1";
+const VERSION = "2026-06-18-normalize-illusionist-structured-components-v1";
 const DEFAULT_INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const DEFAULT_OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
 const DEFAULT_CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
 const EFFECT_PROFILE_VERSION = "2026-06-16-add2e-spell-effects-v1";
+
 const CLERIC_LEVELS = [2, 3, 4, 5, 6, 7];
 const DRUID_LEVELS = [1, 2, 3, 4, 5, 6, 7];
 const WIZARD_LEVELS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-const MATERIAL_PRESERVE_CLASSES = new Set(["clerc", "druide"]);
-const MATERIAL_PRESERVE_FIELDS = ["composants_materiels", "composants_materiels_note", "composants_materiels_source", "composants_materiels_reference", "composants_materiels_verification_recommandee", "composants_materiels_a_renseigner"];
-const SYSTEM_KEYS = ["nom", "type", "classe", "spellLists", "niveau", "ecole", "portee", "duree", "zone_effet", "cible", "temps_incantation", "jet_sauvegarde", "composantes", "composants_materiels", "composants_materiels_source", "composants_materiels_reference", "composants_materiels_verification_recommandee", "composants_materiels_note", "composants_materiels_a_renseigner", "description", "onUse", "onUseCode", "tags", "effectTags", "effectProfile"];
+const ILLUSIONIST_LEVELS = [1, 2, 3, 4, 5, 6, 7];
+const MATERIAL_PRESERVE_CLASSES = new Set(["clerc", "druide", "magicien"]);
+const MATERIAL_PRESERVE_FIELDS = [
+  "composants_materiels",
+  "composants_materiels_source",
+  "composants_materiels_reference",
+  "composants_materiels_verification_recommandee",
+  "composants_materiels_note",
+  "composants_materiels_a_renseigner"
+];
+const SYSTEM_KEYS = [
+  "nom", "type", "classe", "spellLists", "niveau", "ecole", "portee", "duree", "zone_effet", "cible",
+  "temps_incantation", "jet_sauvegarde", "composantes", "composants_materiels", "composants_materiels_source",
+  "composants_materiels_reference", "composants_materiels_verification_recommandee", "composants_materiels_note",
+  "composants_materiels_a_renseigner", "description", "onUse", "onUseCode", "tags", "effectTags", "effectProfile"
+];
 
-function text(value) { return String(value ?? "").replace(/\s+/g, " ").trim(); }
-function norm(value) { return text(value).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "'").replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim(); }
-function slug(value) { return norm(value).replace(/\s+/g, "_"); }
-function clone(value) { return value === undefined ? undefined : JSON.parse(JSON.stringify(value)); }
-function spellLevel(system = {}) { const m = String(system.niveau ?? system.niveau_sort ?? system.level ?? "").match(/\d+/); return m ? Number(m[0]) || 0 : 0; }
-function spellLists(system = {}) { const raw = Array.isArray(system.spellLists) ? system.spellLists : String(system.spellLists ?? system.classe ?? "").split(/[,;|/]+/g); return raw.map(slug).filter(Boolean); }
-function isClassSpellLevel(item, classSlug, level) { const system = item?.system ?? {}; const c = slug(system.classe); const lists = spellLists(system); return spellLevel(system) === level && (c.includes(classSlug) || lists.includes(classSlug)); }
+function text(value) {
+  return String(value ?? "").replace(/\s+/g, " ").trim();
+}
+
+function norm(value) {
+  return text(value)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "'")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function slug(value) {
+  return norm(value).replace(/\s+/g, "_");
+}
+
+function clone(value) {
+  return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
+}
+
+function getItems(json) {
+  if (Array.isArray(json)) return json;
+  for (const key of ["items", "Item", "Items", "documents", "data", "entries"]) {
+    if (Array.isArray(json?.[key])) return json[key];
+  }
+  return [];
+}
+
+function spellLevel(system = {}) {
+  const m = String(system.niveau ?? system.niveau_sort ?? system.level ?? "").match(/\d+/);
+  return m ? Number(m[0]) || 0 : 0;
+}
+
+function spellLists(system = {}) {
+  const raw = Array.isArray(system.spellLists)
+    ? system.spellLists
+    : String(system.spellLists ?? system.classe ?? "").split(/[,;|/]+/g);
+  return raw.map(slug).filter(Boolean);
+}
+
+function isClassSpellLevel(item, classSlug, level) {
+  const system = item?.system ?? {};
+  const cls = slug(system.classe);
+  const lists = spellLists(system);
+  return spellLevel(system) === level && (cls.includes(classSlug) || lists.includes(classSlug));
+}
+
 function isClercSpellLevel(item, level) { return isClassSpellLevel(item, "clerc", level); }
 function isDruideSpellLevel(item, level) { return isClassSpellLevel(item, "druide", level); }
 function isMagicienSpellLevel(item, level) { return isClassSpellLevel(item, "magicien", level); }
-function isDruideSpell(item) { const level = spellLevel(item?.system ?? {}); return DRUID_LEVELS.includes(level) && isDruideSpellLevel(item, level); }
-function isMagicienSpell(item) { const level = spellLevel(item?.system ?? {}); return WIZARD_LEVELS.includes(level) && isMagicienSpellLevel(item, level); }
-function getItems(json) { if (Array.isArray(json)) return json; for (const key of ["items", "Item", "Items", "documents", "data", "entries"]) if (Array.isArray(json?.[key])) return json[key]; return []; }
-function unique(list) { const seen = new Set(); return list.filter(v => { const key = slug(v); if (!key || seen.has(key)) return false; seen.add(key); return true; }); }
-function fx(id, label, kind, tags, notes, extra = {}) { return { id, label, kind, automation: extra.automation ?? "active_effect_or_mj_aid", tags, notes, ...extra }; }
-function ep(effects, level, classSlug) { return { version: EFFECT_PROFILE_VERSION, source: `manual-normalized-${classSlug}-n${level}`, effects: clone(effects) }; }
+function isIllusionnisteSpellLevel(item, level) { return isClassSpellLevel(item, "illusionniste", level); }
+function isIllusionnisteSpell(item) {
+  const level = spellLevel(item?.system ?? {});
+  return ILLUSIONIST_LEVELS.includes(level) && isIllusionnisteSpellLevel(item, level);
+}
+
+function preserveKey(item) {
+  const system = item?.system ?? {};
+  return `${slug(system.classe)}|${spellLevel(system)}|${slug(item?.name ?? system.nom)}`;
+}
+
+function effectKey(item) {
+  const system = item?.system ?? {};
+  return `${spellLevel(system)}|${slug(item?.name ?? system.nom)}`;
+}
+
+function buildExistingItemIndex(outputPath) {
+  const index = new Map();
+  if (!fs.existsSync(outputPath)) return index;
+  try {
+    const json = JSON.parse(fs.readFileSync(outputPath, "utf8"));
+    for (const item of getItems(json)) {
+      if (!item || String(item.type ?? item.system?.type ?? "") !== "sort") continue;
+      index.set(preserveKey(item), item);
+    }
+  } catch (err) {
+    console.warn(`[ADD2E][SPELL_MATERIALS_V3] Impossible de lire le fichier de préservation : ${outputPath}`, err?.message ?? err);
+  }
+  return index;
+}
+
+function loadIllusionistAuditIndex() {
+  const index = new Map();
+  const loaded = [];
+  for (const level of ILLUSIONIST_LEVELS) {
+    const file = path.resolve(repoRoot, `audit/decoupage_fichier/illusionniste-niveau-${level}.json`);
+    if (!fs.existsSync(file)) continue;
+    try {
+      const json = JSON.parse(fs.readFileSync(file, "utf8"));
+      const items = getItems(json);
+      loaded.push({ file: path.relative(repoRoot, file), items: items.length });
+      for (const item of items) {
+        if (!item || String(item.type ?? item.system?.type ?? "") !== "sort") continue;
+        const system = item.system ?? {};
+        const key = `${spellLevel(system)}|${slug(item.name ?? system.nom)}`;
+        index.set(key, item);
+      }
+    } catch (err) {
+      console.warn(`[ADD2E][SPELL_MATERIALS_V3] Fichier illusionniste illisible : ${file}`, err?.message ?? err);
+    }
+  }
+  return { index, loaded };
+}
 
 const MATERIAL_CANON = new Map(Object.entries({
-  symbole_sacre: "symbole sacré du clerc", symbole_sacre_du_clerc: "symbole sacré du clerc", symbole_religieux: "symbole sacré du clerc",
-  jeu_de_baguettes_serties_de_gemmes: "jeu d’objets divinatoires", jeu_d_objets_divinatoires: "jeu d’objets divinatoires", objets_divinatoires_similaires: "jeu d’objets divinatoires", os_de_dragon: "jeu d’objets divinatoires",
-  feuille_d_infusion_encore_humide: "feuilles d’infusion encore humides", feuille_d_infusion_encore_humides: "feuilles d’infusion encore humides", feuilles_d_infusion_encore_humide: "feuilles d’infusion encore humides", feuilles_d_infusion_encore_humides: "feuilles d’infusion encore humides",
-  objet_similaire_au_chapelet_de_priere: "chapelet de prière", objet_similaire_ayant_la_meme_utilisation: "chapelet de prière", livre_de_priere: "livre de prière", chapelet_de_priere: "chapelet de prière",
-  gousse_ail: "gousse d’ail", gousse_d_ail: "gousse d’ail", poudre_argent: "poudre d’argent", poudre_d_argent: "poudre d’argent", poudre_or: "poudre d’or", poudre_d_or: "poudre d’or", poudre_de_diamant: "poudre de diamant",
-  eau_benite: "eau bénite", eau_maudite: "eau maudite", pierre_aimantee: "pierre aimantée", pincee_de_poussiere: "pincée de poussière", pincee_de_poussiere_de_cimetiere: "pincée de poussière de cimetière",
-  goutte_de_sang: "goutte de sang", chair_humaine: "morceau de chair humaine", morceau_de_chair_humaine: "morceau de chair humaine", os_en_poudre: "os en poudre", echarde_d_os: "os en poudre",
-  ecorce: "écorce", ecaille_de_serpent: "écailles de serpent", ecailles_de_serpent: "écailles de serpent", symbole_religieux_en_argent: "symbole religieux en argent", lame_miniature: "lame miniature", petit_caillou: "petit caillou", motte_de_terre: "motte de terre",
-  gui_sacre: "gui", gui_druidique: "gui", feuille_de_gui: "gui", feuilles_de_gui: "gui", typiquement_druidique_a_savoir_du_gui: "gui", houx_avec_lequel_le_druide_doit_se_frotter: "houx",
-  gui_majeur: "gui majeur", baie_de_houx: "baies de houx", baies_de_houx: "baies de houx", gland_de_chene: "glands de chêne", glands_de_chene: "glands de chêne", feuille_de_chene: "feuille de chêne", feuilles_de_chene: "feuilles de chêne",
-  nourriture_appreciee_par_l_animal: "nourriture appréciée par l’animal", nourriture_appréciée_par_l_animal: "nourriture appréciée par l’animal", feuille_de_trefle: "feuille de trèfle", feuille_de_trèfle: "feuille de trèfle", massue_en_chene: "massue en chêne", massue_en_chêne: "massue en chêne",
-  poudre_de_fer: "poudre de fer", pincee_de_poudre_de_fer: "poudre de fer", morceau_de_soie: "soie", petit_morceau_de_soie: "soie", soie_que_le_magicien_doit_passer_sur_l_objet_affecte: "soie", petit_parchemin_mis_en_cone: "parchemin mis en cône", parchemin_mis_en_cone: "parchemin mis en cône",
-  poudre_de_carbone: "carbone en poudre", carbone_reduits_en_poudre: "carbone en poudre", citron_reduits_en_poudre: "citron en poudre", citron_reduit_en_poudre: "citron en poudre", fil_de_cuivre: "fil de cuivre", petit_fil_de_cuivre: "fil de cuivre", cocon_de_chenille: "cocon de chenille", petite_corne_d_argent: "petite corne d’argent", corne_d_argent: "petite corne d’argent"
+  cire: "cire",
+  peu_de_cire: "cire",
+  morceau_de_cire: "cire",
+  laine: "laine",
+  morceau_de_laine: "morceau de laine",
+  petit_morceau_de_laine: "morceau de laine",
+  rayon_de_miel: "rayon de miel",
+  petit_morceau_de_rayon_de_miel: "rayon de miel",
+  morceau_de_rayon_de_miel: "rayon de miel",
+  poudre_de_fer: "poudre de fer",
+  pincee_de_poudre_de_fer: "poudre de fer",
+  poudre_d_argent: "poudre d’argent",
+  poudre_argent: "poudre d’argent",
+  petite_corne_d_argent: "petite corne d’argent",
+  corne_d_argent: "petite corne d’argent",
+  fil_de_cuivre: "fil de cuivre",
+  petit_fil_de_cuivre: "fil de cuivre",
+  parchemin_mis_en_cone: "parchemin mis en cône",
+  petit_parchemin_mis_en_cone: "parchemin mis en cône",
+  cocon_de_chenille: "cocon de chenille",
+  encens_a_faire_bruler: "encens à faire brûler",
+  encens_a_faire_brûler: "encens à faire brûler",
+  encens: "encens",
+  eau: "eau",
+  sable: "sable",
+  soufre: "soufre",
+  phosphore: "phosphore",
+  argile: "argile"
 }));
 
-const CLERIC_MATERIAL_OVERRIDES = new Map(Object.entries({
-  augure: ["jeu d’objets divinatoires", "feuilles d’infusion encore humides", "perle écrasée d’au moins 100 po"], divination: ["encens", "symbole sacré du clerc"], marteau_spirituel: ["marteau de guerre normal"], paralysie: ["petite tige de métal droite et rigide"], resistance_au_feu: ["goutte de mercure"], retardement_du_poison: ["symbole sacré du clerc", "gousse d’ail"], catalepsie: ["pincée de poussière de cimetière", "symbole sacré du clerc"], glyphe_de_garde: ["encens"], localisation_d_objets: ["pierre aimantée"], necro_animation: ["goutte de sang", "morceau de chair humaine", "os en poudre"], batons_a_serpents: ["écorce", "écailles de serpent"], necromancie: ["symbole sacré du clerc", "encens"], priere: ["symbole religieux en argent", "chapelet de prière"], abaissement_des_eaux: ["goutte d’eau", "pincée de poussière"], detection_des_mensonges: ["poudre d’or"], exorcisme: ["symbole sacré du clerc", "eau bénite", "eau maudite"], langage_des_plantes: ["goutte d’eau", "pincée de bouse", "flamme"], protection_contre_le_mal_sur_3_m: ["poudre d’argent"], protection_contre_le_mal_sur_3m: ["poudre d’argent"], communion: ["symbole sacré du clerc", "encens", "eau bénite"], expiation: ["symbole sacré du clerc", "chapelet de prière", "livre de prière"], fleau_d_insectes: ["symbole sacré du clerc"], pilier_de_feu: ["pincée de soufre"], quete_religieuse: ["symbole sacré du clerc"], rappel_a_la_vie: ["symbole sacré du clerc"], soin_ultime: ["symbole sacré du clerc"], vision_reelle: ["safran", "graisse", "huile"], animation_des_objets: ["symbole sacré du clerc"], barriere_de_lames: ["lame miniature"], invocation_des_animaux: ["symbole sacré du clerc"], lithomancie: ["encens", "argile molle"], rappel: ["symbole sacré du clerc"], separation_des_eaux: ["deux feuilles de cristal", "deux coquilles d’œuf"], serviteur_aerien: ["symbole sacré du clerc"], controle_du_climat: ["encens", "chapelet de prière"], marche_des_vents: ["feu", "eau bénite"], regeneration: ["symbole sacré du clerc", "eau bénite"], restauration: ["poudre de diamant"], resurrection: ["symbole sacré du clerc", "eau bénite"], seuil: ["symbole sacré du clerc"], sort_astral: ["symbole sacré du clerc"], symbole: ["mercure", "phosphore"], tremblement_de_terre: ["pincée de poussière", "petit caillou", "motte de terre"]
+const WIZARD_MATERIAL_OVERRIDES = new Map(Object.entries({
+  allometamorphose: ["cocon de chenille"],
+  agrandissement: ["poudre de fer"],
+  aura_magique_de_nystul: ["soie"],
+  arme_enchantee: ["carbone en poudre", "citron en poudre"],
+  clairaudience: ["petite corne d’argent"],
+  message: ["fil de cuivre"],
+  ventriloquie: ["parchemin mis en cône"]
 }));
-const DRUID_MATERIAL_OVERRIDES = new Map(Object.entries({
-  amitie_animale: ["gui", "nourriture appréciée par l’animal"], invisibilite_aux_animaux: ["houx"], passage_sans_trace: ["gui", "aiguille de pin"], shillelagh: ["massue en chêne", "gui", "feuille de trèfle"], langage_des_plantes: ["gui"],
-  fleau_d_insectes: ["gui", "houx", "feuille de chêne"], graines_de_feu: ["glands de chêne", "baies de houx"],
-  animation_de_la_roche: ["gui"], chariot_de_sustarre: ["gui", "petit morceau de bois", "baies de houx", "source de feu"], confusion: ["gui"], controle_du_climat: ["gui majeur"], doigt_de_mort: ["gui"], invocation_d_un_elemental_de_terre: ["gui"], invocation_d_un_élémental_de_terre: ["gui"], mort_rampante: ["gui"], reincarnation: ["gui"], tempete_de_feu: ["gui"], transmutation_du_metal_en_bois: ["gui", "gui majeur"]
-}));
-const WIZARD_MATERIAL_OVERRIDES = new Map(Object.entries({ allometamorphose: ["cocon de chenille"], agrandissement: ["poudre de fer"], aura_magique_de_nystul: ["soie"], arme_enchantee: ["carbone en poudre", "citron en poudre"], clairaudience: ["petite corne d’argent"], message: ["fil de cuivre"], ventriloquie: ["parchemin mis en cône"] }));
 
-const NOISE = new Set(["", "true", "false", "oui", "non", "consomme", "consommé", "non consomme", "non consommé", "non_consomme", "optionnel", "manuel", "manuel du joueur", "manuel des joueurs", "source", "aucun", "null", "undefined", "liquide", "consommation", "ingredient materiel", "ingrédient matériel", "composant materiel", "composant matériel", "composant requis", "clerc", "clerc non mauvais", "clerc mauvais", "druide", "druidique", "magicien", "illusionniste", "créature", "petite créature", "le", "la", "les", "brulee", "brûlée", "ses cendres sont eparpillees", "ses cendres sont éparpillées", "autre conifere", "autre conifère", "consommation explicitement indiquée dans la description", "consommation explicitement indiquee dans la description"]);
-const NOISE_STARTS = ["requise", "requis", "alternative", "formulation source", "source du manuel", "sort normal", "sort inverse", "selon la règle", "description indique", "pour lancer", "dons requis", "type de métal", "taille détermine", "sorte de diapason", "ingrédient matériel", "ingredient materiel", "composant matériel", "composant materiel", "composant requis", "non consommé", "non consomme", "brûlée", "brulee", "ses cendres", "avec lequel", "le druide doit", "doit se frotter", "application utilisant", "substitut", "combinable", "consommation explicitement"];
-const NOISE_CONTAINS = ["manuel des joueurs", "formulation source", "règle d arbitrage", "ayant servi", "avant consommation", "quand le sort est", "description indique", "saupoudrée", "pour lancer le sort", "ses cendres", "est éparpillée", "sont éparpillées", "avec lequel le druide doit", "composant requis selon", "application utilisant", "composant principal", "substitut au gui", "combinable avec", "consommation explicitement indiquée", "que le magicien doit", "utilisé pour", "utilisee pour", "utilisée pour"];
+const NOISE = new Set([
+  "", "true", "false", "oui", "non", "consomme", "consommé", "non consomme", "non consommé", "non_consomme",
+  "optionnel", "manuel", "manuel du joueur", "manuel des joueurs", "source", "aucun", "null", "undefined", "liquide",
+  "consommation", "ingredient materiel", "ingrédient matériel", "composant materiel", "composant matériel", "composant requis",
+  "clerc", "druide", "magicien", "illusionniste", "créature", "petite créature", "le", "la", "les",
+  "consommation explicitement indiquée dans la description", "consommation explicitement indiquee dans la description"
+].map(norm));
 
-function cleanMaterial(value) {
-  let out = text(value).replaceAll("_", "-").replace(/-/g, " ");
-  if (/houx\s+avec\s+lequel\s+le\s+druide\s+doit\s+se\s+frotter/i.test(out)) out = "houx";
-  if (/à\s+savoir\s+du\s+gui/i.test(out)) out = "gui";
-  out = out
-    .replace(/^(?:la|les)\s+composantes?\s+mat[eé]rielles?\s+(?:sont|est|consistent?\s+en|se\s+composent\s+de)\s+(?:un|une|du|de la|de l['’]?|des)?\s*/i, "")
-    .replace(/^composantes?\s+mat[eé]rielles?\s+(?:sont|est|consistent?\s+en|se\s+composent\s+de)\s+(?:un|une|du|de la|de l['’]?|des)?\s*/i, "")
+const NOISE_STARTS = [
+  "requise", "requis", "alternative", "formulation source", "source du manuel", "sort normal", "sort inverse", "selon la règle",
+  "description indique", "pour lancer", "ingrédient matériel", "ingredient materiel", "composant matériel", "composant materiel",
+  "composant requis", "non consommé", "non consomme", "consommation explicitement"
+].map(norm);
+
+const NOISE_CONTAINS = [
+  "manuel des joueurs", "formulation source", "règle d arbitrage", "description indique", "pour lancer le sort",
+  "composant requis selon", "consommation explicitement indiquée", "que le magicien doit", "que l illusionniste doit",
+  "utilisé pour", "utilisee pour", "utilisée pour"
+].map(norm);
+
+function canonicalMaterial(value) {
+  const key = slug(value);
+  return MATERIAL_CANON.get(key) ?? text(value);
+}
+
+function stripMaterialSourcePhrase(value) {
+  return text(value)
+    .replace(/^(?:la|les)\s+composantes?\s+mat[eé]rielles?\s+(?:sont|est|consistent?\s+en|se\s+composent\s+de)\s*/i, "")
+    .replace(/^composantes?\s+mat[eé]rielles?\s+(?:sont|est|consistent?\s+en|se\s+composent\s+de)\s*/i, "")
     .replace(/\s+d['’]une\s+valeur\b.*$/i, "")
     .replace(/\s+d['’]un\s+co[uû]t\b.*$/i, "")
     .replace(/\s+co[uû]tant\b.*$/i, "")
@@ -79,60 +216,395 @@ function cleanMaterial(value) {
     .replace(/\s+estim[ée]e?\s+à\b.*$/i, "")
     .replace(/,\s*qui\b.*$/i, "")
     .replace(/\s+qui\s+(?:dispara[îi]t|est\s+consomm[ée]e?|sont\s+consomm[ée]s?)\b.*$/i, "")
-    .replace(/^typiquement\s+druidique\s*\((.*?)\)$/i, "$1")
-    .replace(/^à\s+savoir\s+/i, "")
-    .replace(/\s+que\s+le\s+magicien\s+doit\b.*$/i, "")
-    .replace(/\s+que\s+l['’]?(?:enchanteur|utilisateur)\s+doit\b.*$/i, "")
+    .replace(/\s+que\s+(?:le\s+magicien|l['’]?illusionniste|l['’]?(?:enchanteur|utilisateur))\s+doit\b.*$/i, "")
     .replace(/\s+utilis(?:e|é|ée|es|és)\s+pour\b.*$/i, "")
     .replace(/\s+servant\s+à\b.*$/i, "")
     .replace(/\s+qui\s+doit\b.*$/i, "")
+    .replace(/[.!?;:]+$/g, "")
+    .trim();
+}
+
+function cleanMaterial(value) {
+  let out = stripMaterialSourcePhrase(value)
+    .replaceAll("_", "-")
+    .replace(/-/g, " ")
     .replace(/^d['’]\s*/i, "")
     .replace(/^(un|une)?\s*peu\s+de\s+/i, "")
     .replace(/^(un|une|du|de la|de l['’]?|des|le|la|les)\s+/i, "")
     .replace(/^(quelques|plusieurs)\s+/i, "")
-    .replace(/^petit morceau de\s+/i, "")
-    .replace(/^morceau de\s+/i, "")
-    .replace(/[.!?;:]+$/g, "")
     .trim();
-  return MATERIAL_CANON.get(slug(out)) ?? out;
+  out = canonicalMaterial(out);
+  return out;
 }
-function rejectMaterial(value) { const cleaned = cleanMaterial(value); const n = norm(cleaned); if (!n || NOISE.has(n)) return true; if (/^\d+(?:[,.]\d+)?\s*(m2|m|m²|case|cases|po|pa|pp|pc)?$/i.test(cleaned)) return true; if (NOISE_STARTS.some(v => n.startsWith(norm(v)))) return true; if (NOISE_CONTAINS.some(v => n.includes(norm(v)))) return true; if (n.split(" ").length > 8) return true; return false; }
-function collectMaterials(value, out = [], notes = []) { if (value === undefined || value === null || value === "") return { out, notes }; if (Array.isArray(value)) { for (const v of value) collectMaterials(v, out, notes); return { out, notes }; } if (typeof value === "object") { for (const k of ["note", "notes", "condition", "conditions", "description", "source", "reference", "formulation_source", "source_text"]) if (value[k]) notes.push(text(value[k])); const alts = value.alternatives ?? value.options ?? value.choix ?? value.auChoix ?? value.or; if (Array.isArray(alts)) { for (const v of alts) collectMaterials(v, out, notes); return { out, notes }; } const direct = value.nom ?? value.name ?? value.label ?? value.item ?? value.itemName ?? value.component ?? value.composant ?? value.slug ?? value.id; if (direct !== undefined) collectMaterials(direct, out, notes); return { out, notes }; } const main = text(value).split(/\s*(?:optionnel|alternative|ingrédient matériel|ingredient materiel|composant matériel|composant materiel|composant requis|consomm|formulation source|manuel des joueurs|requise pour|requis pour|sort normal|sort inversé|description indique|pour lancer le sort)\b/i)[0]; for (const part of main.split(/[,;|\n]+|\s+et\s+/gi).map(cleanMaterial).filter(Boolean)) for (const candidate of part.split(/\s+ou\s+/i).map(cleanMaterial).filter(Boolean)) { if (!rejectMaterial(candidate)) out.push(candidate); else notes.push(candidate); } return { out, notes }; }
-function normalizeMaterials(item) { const system = item.system ?? {}; const before = clone(system.composants_materiels ?? []); const notes = []; let values = []; collectMaterials(system.composants_materiels, values, notes); if (!values.length) collectMaterials(system.composants_materiels_objets, values, notes); if (!values.length) collectMaterials(system.composants_requis, values, notes); if (!values.length) collectMaterials(system.composants_materiels_source, values, notes); const key = slug(item?.name ?? system?.nom); const level = spellLevel(system); if (isDruideSpell(item) && DRUID_MATERIAL_OVERRIDES.has(key)) values = DRUID_MATERIAL_OVERRIDES.get(key); else if (isMagicienSpell(item) && WIZARD_MATERIAL_OVERRIDES.has(key)) values = WIZARD_MATERIAL_OVERRIDES.get(key); else if (isClercSpellLevel(item, level) && CLERIC_MATERIAL_OVERRIDES.has(key)) values = CLERIC_MATERIAL_OVERRIDES.get(key); system.composants_materiels = unique(values.map(cleanMaterial).filter(v => !rejectMaterial(v))); system.composants_materiels_note = unique([...(notes ?? []), system.composants_materiels_note].filter(Boolean)).join("\n"); return { before, after: clone(system.composants_materiels), notes: clone(notes), changed: JSON.stringify(before) !== JSON.stringify(system.composants_materiels) }; }
 
-function preserveKey(item) { const system = item?.system ?? {}; return `${slug(system.classe)}|${spellLevel(system)}|${slug(item?.name ?? system.nom)}`; }
-function buildExistingPreserveIndex(outputPath) { const index = new Map(); if (!fs.existsSync(outputPath)) return index; try { const json = JSON.parse(fs.readFileSync(outputPath, "utf8")); for (const item of getItems(json)) { const cls = slug(item?.system?.classe); if (!item || String(item.type ?? item.system?.type ?? "") !== "sort" || !MATERIAL_PRESERVE_CLASSES.has(cls)) continue; index.set(preserveKey(item), item); } } catch (err) { console.warn(`[ADD2E][SPELL_MATERIALS_V3] Impossible de lire le fichier de préservation : ${outputPath}`, err?.message ?? err); } return index; }
-function preserveExistingMaterials(item, existingIndex) { const cls = slug(item?.system?.classe); if (!MATERIAL_PRESERVE_CLASSES.has(cls)) return false; const previous = existingIndex.get(preserveKey(item)); if (!previous?.system) return false; let changed = false; item.system ??= {}; for (const field of MATERIAL_PRESERVE_FIELDS) { if (!Object.prototype.hasOwnProperty.call(previous.system, field)) continue; item.system[field] = clone(previous.system[field]); changed = true; } return changed; }
+function rejectMaterial(value) {
+  if (typeof value !== "string") return false;
+  const cleaned = cleanMaterial(value);
+  const n = norm(cleaned);
+  if (!n || NOISE.has(n)) return true;
+  if (/^\d+(?:[,.]\d+)?\s*(m2|m|m²|case|cases|po|pa|pp|pc)?$/i.test(cleaned)) return true;
+  if (NOISE_STARTS.some(v => n.startsWith(v))) return true;
+  if (NOISE_CONTAINS.some(v => n.includes(v))) return true;
+  if (n.split(" ").length > 8) return true;
+  return false;
+}
 
-function kindAndTags(name, classSlug) { const key = slug(name); const tags = [`effet:${key}`, `classe:${classSlug}`]; let kind = `${classSlug}_effect`; let automation = "active_effect_or_mj_aid"; if (/(soin|guerison|guérison|regeneration|régénération|restauration|rappel|resurrection|résurrection|reincarnation|réincarnation)/.test(key)) { kind = "healing_or_restoration"; tags.push("soin_ou_restauration"); } else if (/(detection|détection|localisation|prevision|prévision|communion|orientation|lithomancie|divination|augure|clairaudience|clairvoyance|lecture|identification|analyse|oracle|souhait)/.test(key)) { kind = "detection_or_divination"; automation = "mj_aid"; tags.push("detection_ou_divination"); } else if (/(langage|amitie|amitié|charme|perception|suggestion|domination|empathie)/.test(key)) { kind = "communication_or_control"; automation = "mj_aid"; tags.push("communication_ou_controle"); } else if (/(protection|bouclier|peau_d_ecorce|invisibilite|invisibilité|resistance|résistance|armure|globe|coquille|immunite|immunité|reflet|image_miroir)/.test(key)) { kind = "protection"; tags.push("protection"); } else if (/(paralysie|confusion|debilite|débilité|piege|piège|croc_en_jambe|repulsion|répulsion|quete|quête|exorcisme|sommeil|lenteur|immobilisation|labyrinthe|emprisonnement|entrave|terreur|peur)/.test(key)) { kind = "control"; tags.push("controle"); } else if (/(feu|foudre|metal|métal|pyrotechnie|tempete|tempête|lames|epines|épines|mort_rampante|pilier|tremblement|projectile|missile|eclair|éclair|boule|nuage|cone|cône|brulante|brûlante|brulant|brûlant|explosion|desintegration|désintégration|fleche|flèche)/.test(key)) { kind = "damage_or_area_control"; automation = "damage_or_mj_aid"; tags.push("degats_ou_zone"); } else if (/(invocation|serviteur|animal|animaux|insectes|animation|monstre|elemental|élémental|familier|demon|démon|conjuration)/.test(key)) { kind = "summon_or_actor_effect"; automation = "actor_creation_or_mj_aid"; tags.push("invocation_ou_creation"); } else if (/(plante|plantes|vegetal|végétal|bois|arbre|shillelagh|croissance|batons|bâtons)/.test(key)) { kind = "plant_or_nature_control"; tags.push("plante_ou_nature"); } else if (/(eau|aquatique|climat|vents|vent|terre|pierre|roche|boue|separation|séparation|abaissement|vol|teleportation|téléportation|porte|passage|plan|astral|ether|éther|dimension|transmutation|metamorphose|métamorphose)/.test(key)) { kind = "movement_transformation_or_element"; automation = "mj_aid"; tags.push("deplacement_transformation_ou_element"); } return { kind, tags, automation }; }
-function buildEffectProfile(item, classSlug, level) { const label = text(item?.name ?? item?.system?.nom ?? `Sort ${classSlug}`); const key = slug(label) || `sort_${classSlug}_n${level}`; const { kind, tags, automation } = kindAndTags(label, classSlug); return ep([fx(key, label, kind, [...tags, `niveau:${level}`], `Profil mécanique ${classSlug} normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort.`, { automation })], level, classSlug); }
-function applyEffectProfileOverride(item) { const system = item.system ?? {}; const level = spellLevel(system); let classSlug = ""; if (CLERIC_LEVELS.includes(level) && isClercSpellLevel(item, level)) classSlug = "clerc"; else if (DRUID_LEVELS.includes(level) && isDruideSpellLevel(item, level)) classSlug = "druide"; else if (WIZARD_LEVELS.includes(level) && isMagicienSpellLevel(item, level)) classSlug = "magicien"; if (!classSlug) return { applied: false, changed: false, level, classSlug: "" }; const next = buildEffectProfile(item, classSlug, level); const before = JSON.stringify(system.effectProfile ?? {}); system.effectProfile = next; return { applied: true, changed: before !== JSON.stringify(next), level, classSlug }; }
-function ensureSystem(system) { for (const key of SYSTEM_KEYS) { if (Object.prototype.hasOwnProperty.call(system, key)) continue; if (["spellLists", "composants_materiels", "tags", "effectTags"].includes(key)) system[key] = []; else if (key === "effectProfile") system[key] = { version: EFFECT_PROFILE_VERSION, source: "canonical-system", effects: [] }; else if (key === "composants_materiels_a_renseigner") system[key] = false; else system[key] = ""; } }
+function componentNamesFromEntry(entry) {
+  if (typeof entry === "string") return [entry];
+  if (!entry || typeof entry !== "object") return [];
+  if (entry.type === "alternative") return Array.isArray(entry.choix) ? entry.choix : [];
+  if (entry.type === "variante") return Array.isArray(entry.composants) ? entry.composants : [];
+  const direct = entry.nom ?? entry.name ?? entry.label ?? entry.item ?? entry.itemName ?? entry.component ?? entry.composant ?? entry.slug ?? entry.id;
+  return direct ? [String(direct)] : [];
+}
+
+function sanitizeEntry(entry) {
+  if (typeof entry === "string") {
+    const cleaned = cleanMaterial(entry);
+    return rejectMaterial(cleaned) ? null : cleaned;
+  }
+  if (!entry || typeof entry !== "object") return null;
+  if (entry.type === "alternative" || Array.isArray(entry.choix)) {
+    const choix = uniqueFlat((entry.choix ?? entry.alternatives ?? entry.options ?? []).map(cleanMaterial).filter(v => !rejectMaterial(v)));
+    if (!choix.length) return null;
+    if (choix.length === 1) return choix[0];
+    return { type: "alternative", choix };
+  }
+  if (entry.type === "variante") {
+    const composants = uniqueFlat((entry.composants ?? []).map(cleanMaterial).filter(v => !rejectMaterial(v)));
+    if (!composants.length) return null;
+    return {
+      type: "variante",
+      id: slug(entry.id ?? entry.label ?? entry.nom ?? entry.name ?? composants.join("_")),
+      label: text(entry.label ?? entry.nom ?? entry.name ?? entry.id ?? "Variante"),
+      composants
+    };
+  }
+  const names = componentNamesFromEntry(entry).map(cleanMaterial).filter(v => !rejectMaterial(v));
+  if (!names.length) return null;
+  return names[0];
+}
+
+function uniqueFlat(list) {
+  const seen = new Set();
+  const out = [];
+  for (const value of list) {
+    const key = slug(value);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(value);
+  }
+  return out;
+}
+
+function uniqueEntries(entries) {
+  const seen = new Set();
+  const out = [];
+  for (const entry of entries) {
+    const sanitized = sanitizeEntry(entry);
+    if (!sanitized) continue;
+    const key = typeof sanitized === "string"
+      ? `s:${slug(sanitized)}`
+      : `${sanitized.type}:${slug(sanitized.id ?? sanitized.label ?? "")}:${componentNamesFromEntry(sanitized).map(slug).join("|")}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(sanitized);
+  }
+  return out;
+}
+
+function parseElementalVariants(source) {
+  const n = norm(source);
+  if (!n.includes("elemental") && !n.includes("elementaire")) return [];
+  if (!n.includes("air") || !n.includes("eau") || !n.includes("feu") || !n.includes("terre")) return [];
+  return [
+    { type: "variante", id: "air", label: "Invocation d’un élémental de l’air", composants: ["encens à faire brûler"] },
+    { type: "variante", id: "eau", label: "Invocation d’un élémental de l’eau", composants: ["eau", "sable"] },
+    { type: "variante", id: "feu", label: "Invocation d’un élémental du feu", composants: ["soufre", "phosphore"] },
+    { type: "variante", id: "terre", label: "Invocation d’un élémental de terre", composants: ["argile"] }
+  ];
+}
+
+function parseSourceMaterials(source) {
+  const variants = parseElementalVariants(source);
+  if (variants.length) return variants;
+
+  const cleaned = stripMaterialSourcePhrase(source);
+  if (!cleaned) return [];
+  const chunks = cleaned
+    .split(/[,;\n]+|\s+ainsi\s+que\s+/gi)
+    .map(text)
+    .filter(Boolean);
+  const entries = [];
+  for (const chunk of chunks) {
+    if (/\s+ou\s+/i.test(chunk)) {
+      const choix = chunk.split(/\s+ou\s+/i).map(cleanMaterial).filter(v => !rejectMaterial(v));
+      if (choix.length > 1) entries.push({ type: "alternative", choix });
+      else if (choix.length === 1) entries.push(choix[0]);
+      continue;
+    }
+    for (const part of chunk.split(/\s+et\s+/i).map(cleanMaterial).filter(v => !rejectMaterial(v))) entries.push(part);
+  }
+  return uniqueEntries(entries);
+}
+
+function materialEntriesFromValue(value) {
+  if (value === undefined || value === null || value === "") return [];
+  if (Array.isArray(value)) return uniqueEntries(value.flatMap(v => materialEntriesFromValue(v)));
+  if (typeof value === "object") return uniqueEntries([value]);
+  return parseSourceMaterials(value);
+}
+
+function materialEntryCount(entries) {
+  return (entries ?? []).reduce((sum, entry) => sum + componentNamesFromEntry(entry).length, 0);
+}
+
+function ensureComposantesHasM(system, entries) {
+  if (!materialEntryCount(entries)) return;
+  const raw = text(system.composantes);
+  if (/(^|[,;\s])M([,;\s]|$)/i.test(raw)) return;
+  system.composantes = raw ? `${raw}, M` : "M";
+}
+
+function mergeIllusionistAuditSource(item, auditIndex) {
+  if (!isIllusionnisteSpell(item)) return null;
+  const source = auditIndex.get(effectKey(item));
+  if (!source?.system) return null;
+  const sys = item.system ?? {};
+  const src = source.system ?? {};
+  for (const field of [
+    "composants_materiels_source",
+    "composants_materiels_reference",
+    "composants_materiels_verification_recommandee",
+    "composants_materiels_a_renseigner"
+  ]) {
+    if (src[field] !== undefined && src[field] !== null && src[field] !== "") sys[field] = clone(src[field]);
+  }
+  if (Array.isArray(src.composants_materiels) && src.composants_materiels.length) sys.composants_materiels = clone(src.composants_materiels);
+  return source;
+}
+
+function normalizeMaterials(item, auditIndex) {
+  const system = item.system ?? {};
+  const before = clone(system.composants_materiels ?? []);
+  const key = slug(item?.name ?? system?.nom);
+  let entries = [];
+
+  if (isIllusionnisteSpell(item)) {
+    mergeIllusionistAuditSource(item, auditIndex);
+    entries = materialEntriesFromValue(system.composants_materiels);
+    if (!materialEntryCount(entries)) entries = materialEntriesFromValue(system.composants_materiels_objets);
+    if (!materialEntryCount(entries)) entries = materialEntriesFromValue(system.composants_requis);
+    if (!materialEntryCount(entries)) entries = materialEntriesFromValue(system.composants_materiels_source);
+    system.composants_materiels = uniqueEntries(entries);
+    ensureComposantesHasM(system, system.composants_materiels);
+  } else if (WIZARD_MATERIAL_OVERRIDES.has(key)) {
+    system.composants_materiels = uniqueEntries(WIZARD_MATERIAL_OVERRIDES.get(key));
+  } else {
+    entries = materialEntriesFromValue(system.composants_materiels);
+    system.composants_materiels = uniqueEntries(entries);
+  }
+
+  return {
+    before,
+    after: clone(system.composants_materiels),
+    changed: JSON.stringify(before) !== JSON.stringify(system.composants_materiels)
+  };
+}
+
+function kindAndTags(name, classSlug) {
+  const key = slug(name);
+  const tags = [`effet:${key}`, `classe:${classSlug}`];
+  let kind = `${classSlug}_effect`;
+  let automation = "active_effect_or_mj_aid";
+  if (/(soin|guerison|guérison|regeneration|régénération|restauration|rappel|resurrection|résurrection|reincarnation|réincarnation)/.test(key)) {
+    kind = "healing_or_restoration"; tags.push("soin_ou_restauration");
+  } else if (/(detection|détection|localisation|prevision|prévision|communion|orientation|lithomancie|divination|augure|clairaudience|clairvoyance|lecture|identification|analyse|oracle|vision)/.test(key)) {
+    kind = "detection_or_divination"; automation = "mj_aid"; tags.push("detection_ou_divination");
+  } else if (/(langage|amitie|amitié|charme|perception|suggestion|domination|empathie|hypnotisme)/.test(key)) {
+    kind = "communication_or_control"; automation = "mj_aid"; tags.push("communication_ou_controle");
+  } else if (/(protection|bouclier|invisibilite|invisibilité|resistance|résistance|armure|globe|immunite|immunité|reflet|reflection|réflexion|image_miroir)/.test(key)) {
+    kind = "protection"; tags.push("protection");
+  } else if (/(paralysie|confusion|debilite|débilité|piege|piège|repulsion|répulsion|sommeil|lenteur|immobilisation|labyrinthe|emprisonnement|entrave|terreur|peur|effroi|cecite|cécité|surdite|surdité)/.test(key)) {
+    kind = "control"; tags.push("controle");
+  } else if (/(feu|foudre|tempete|tempête|projectile|missile|eclair|éclair|boule|nuage|cone|cône|brulante|brûlante|explosion|desintegration|désintégration)/.test(key)) {
+    kind = "damage_or_area_control"; automation = "damage_or_mj_aid"; tags.push("degats_ou_zone");
+  } else if (/(invocation|serviteur|animal|animaux|insectes|animation|monstre|elemental|élémental|familier|ombre|ombres)/.test(key)) {
+    kind = "summon_or_actor_effect"; automation = "actor_creation_or_mj_aid"; tags.push("invocation_ou_creation");
+  } else if (/(illusion|fantasme|holographie|apparence|mur|tenebres|ténèbres|lumiere|lumière|bruitage|ventriloquie)/.test(key)) {
+    kind = "illusion_or_sensory"; automation = "mj_aid"; tags.push("illusion_ou_sensoriel");
+  }
+  return { kind, tags, automation };
+}
+
+function buildEffectProfile(item, classSlug, level) {
+  const label = text(item?.name ?? item?.system?.nom ?? `Sort ${classSlug}`);
+  const key = slug(label) || `sort_${classSlug}_n${level}`;
+  const { kind, tags, automation } = kindAndTags(label, classSlug);
+  return {
+    version: EFFECT_PROFILE_VERSION,
+    source: `manual-normalized-${classSlug}-n${level}`,
+    effects: [{
+      id: key,
+      label,
+      kind,
+      automation,
+      tags: [...tags, `niveau:${level}`],
+      notes: `Profil mécanique ${classSlug} normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort.`
+    }]
+  };
+}
+
+function applyEffectProfileOverride(item) {
+  const system = item.system ?? {};
+  const level = spellLevel(system);
+  let classSlug = "";
+  if (CLERIC_LEVELS.includes(level) && isClercSpellLevel(item, level)) classSlug = "clerc";
+  else if (DRUID_LEVELS.includes(level) && isDruideSpellLevel(item, level)) classSlug = "druide";
+  else if (WIZARD_LEVELS.includes(level) && isMagicienSpellLevel(item, level)) classSlug = "magicien";
+  else if (ILLUSIONIST_LEVELS.includes(level) && isIllusionnisteSpellLevel(item, level)) classSlug = "illusionniste";
+  if (!classSlug) return { applied: false, changed: false, level, classSlug: "" };
+  const next = buildEffectProfile(item, classSlug, level);
+  const before = JSON.stringify(system.effectProfile ?? {});
+  system.effectProfile = next;
+  return { applied: true, changed: before !== JSON.stringify(next), level, classSlug };
+}
+
+function ensureSystem(system) {
+  for (const key of SYSTEM_KEYS) {
+    if (Object.prototype.hasOwnProperty.call(system, key)) continue;
+    if (["spellLists", "composants_materiels", "tags", "effectTags"].includes(key)) system[key] = [];
+    else if (key === "effectProfile") system[key] = { version: EFFECT_PROFILE_VERSION, source: "canonical-system", effects: [] };
+    else if (key === "composants_materiels_a_renseigner") system[key] = false;
+    else system[key] = "";
+  }
+}
+
+function materialWarningForClass(item, classSlug) {
+  const entries = item?.system?.composants_materiels ?? [];
+  const hasM = String(item?.system?.composantes ?? "").toUpperCase().includes("M");
+  const bad = [];
+  for (const entry of entries) {
+    if (typeof entry === "string" && rejectMaterial(entry)) bad.push(entry);
+    if (entry && typeof entry === "object") {
+      if (!componentNamesFromEntry(entry).length) bad.push(entry);
+      for (const component of componentNamesFromEntry(entry)) if (rejectMaterial(component)) bad.push(component);
+    }
+  }
+  if (hasM && !materialEntryCount(entries)) bad.push("M sans composant");
+  return bad.length ? { name: item.name, niveau: item.system?.niveau, components: bad, allComponents: clone(entries), classe: classSlug } : null;
+}
+
 function makeBucket() { return { applied: [], missing: [] }; }
-function materialWarningForClass(item, classSlug) { const materials = item?.system?.composants_materiels ?? []; const hasM = String(item?.system?.composantes ?? "").toUpperCase().includes("M"); const bad = materials.filter(v => rejectMaterial(v) || norm(v).includes("composant requis") || norm(v).includes("formulation source") || norm(v).includes("manuel des joueurs")); if (hasM && !materials.length) bad.push("M sans composant"); return bad.length ? { name: item.name, niveau: item.system?.niveau, components: bad, allComponents: clone(materials), classe: classSlug } : null; }
 
 function main() {
-  const input = path.resolve(repoRoot, process.argv[2] || DEFAULT_INPUT); const output = path.resolve(repoRoot, process.argv[3] || DEFAULT_OUTPUT); const controlOutput = path.resolve(repoRoot, process.argv[4] || DEFAULT_CONTROL);
-  if (!fs.existsSync(input)) throw new Error(`Fichier introuvable : ${input}`); const raw = fs.readFileSync(input, "utf8"); if (!raw.trim()) throw new Error(`Fichier vide : ${input}`);
-  const json = JSON.parse(raw); const items = getItems(json); const existingPreserveIndex = buildExistingPreserveIndex(output); const control = { version: VERSION, input: path.relative(repoRoot, input), output: path.relative(repoRoot, output), totalItems: items.length, spells: 0, changedSpells: 0, changedEffectProfiles: 0, preservedManualMaterials: 0, preservedManualMaterialKeys: [], emptyMaterialSpells: 0, examples: [], watched: {}, suspiciousMaterialComponents: [], druideMaterialAudit: [], druideMaterialWarnings: [], magicienMaterialAudit: [], magicienMaterialWarnings: [], sameSystemFieldsForAllSpells: true, canonicalFields: SYSTEM_KEYS };
-  for (const level of CLERIC_LEVELS) control[`clercLevel${level}EffectProfiles`] = makeBucket(); for (const level of DRUID_LEVELS) control[`druideLevel${level}EffectProfiles`] = makeBucket(); for (const level of WIZARD_LEVELS) control[`magicienLevel${level}EffectProfiles`] = makeBucket(); const expected = JSON.stringify([...SYSTEM_KEYS].sort());
-  for (const item of items) {
-    if (!item || String(item.type ?? item.system?.type ?? "") !== "sort") continue; item.system ??= {}; ensureSystem(item.system); const materials = normalizeMaterials(item); const preserved = preserveExistingMaterials(item, existingPreserveIndex); const profile = applyEffectProfileOverride(item); control.spells += 1; if (preserved) { control.preservedManualMaterials += 1; control.preservedManualMaterialKeys.push({ name: item.name, classe: item.system.classe, niveau: item.system.niveau }); } if (!item.system.composants_materiels.length) control.emptyMaterialSpells += 1;
-    if (materials.changed && !preserved) { control.changedSpells += 1; if (control.examples.length < 40) control.examples.push({ name: item.name, classe: item.system.classe, niveau: item.system.niveau, before: materials.before, after: materials.after, notes: materials.notes }); }
+  const input = path.resolve(repoRoot, process.argv[2] || DEFAULT_INPUT);
+  const output = path.resolve(repoRoot, process.argv[3] || DEFAULT_OUTPUT);
+  const controlOutput = path.resolve(repoRoot, process.argv[4] || DEFAULT_CONTROL);
+  if (!fs.existsSync(input)) throw new Error(`Fichier introuvable : ${input}`);
+
+  const json = JSON.parse(fs.readFileSync(input, "utf8"));
+  const items = getItems(json);
+  const existingIndex = buildExistingItemIndex(output);
+  const illusionistAudit = loadIllusionistAuditIndex();
+  const control = {
+    version: VERSION,
+    input: path.relative(repoRoot, input),
+    output: path.relative(repoRoot, output),
+    illusionistAuditFiles: illusionistAudit.loaded,
+    totalItems: items.length,
+    spells: 0,
+    preservedManualMaterials: 0,
+    preservedClasses: [...MATERIAL_PRESERVE_CLASSES],
+    changedSpells: 0,
+    changedEffectProfiles: 0,
+    emptyMaterialSpells: 0,
+    examples: [],
+    watched: {},
+    illusionnisteMaterialAudit: [],
+    illusionnisteMaterialWarnings: [],
+    illusionnisteSourceMissing: [],
+    sameSystemFieldsForAllSpells: true,
+    canonicalFields: SYSTEM_KEYS
+  };
+  for (const level of CLERIC_LEVELS) control[`clercLevel${level}EffectProfiles`] = makeBucket();
+  for (const level of DRUID_LEVELS) control[`druideLevel${level}EffectProfiles`] = makeBucket();
+  for (const level of WIZARD_LEVELS) control[`magicienLevel${level}EffectProfiles`] = makeBucket();
+  for (const level of ILLUSIONIST_LEVELS) control[`illusionnisteLevel${level}EffectProfiles`] = makeBucket();
+
+  const expected = JSON.stringify([...SYSTEM_KEYS].sort());
+  for (let i = 0; i < items.length; i += 1) {
+    const item = items[i];
+    if (!item || String(item.type ?? item.system?.type ?? "") !== "sort") continue;
+    item.system ??= {};
+    ensureSystem(item.system);
+    const cls = slug(item.system.classe);
+    const existing = existingIndex.get(preserveKey(item));
+    if (MATERIAL_PRESERVE_CLASSES.has(cls) && existing) {
+      items[i] = clone(existing);
+      control.spells += 1;
+      control.preservedManualMaterials += 1;
+      continue;
+    }
+
+    const hadIllusionistSource = !isIllusionnisteSpell(item) || illusionistAudit.index.has(effectKey(item));
+    const materials = normalizeMaterials(item, illusionistAudit.index);
+    const profile = applyEffectProfileOverride(item);
+    control.spells += 1;
+    if (materials.changed) {
+      control.changedSpells += 1;
+      if (control.examples.length < 50) control.examples.push({ name: item.name, classe: item.system.classe, niveau: item.system.niveau, before: materials.before, after: materials.after });
+    }
     if (profile.changed) control.changedEffectProfiles += 1;
-    for (const level of CLERIC_LEVELS) if (isClercSpellLevel(item, level)) { const bucket = control[`clercLevel${level}EffectProfiles`]; if (profile.applied && profile.level === level && profile.classSlug === "clerc") bucket.applied.push(item.name); else bucket.missing.push(item.name); }
-    for (const level of DRUID_LEVELS) if (isDruideSpellLevel(item, level)) { const bucket = control[`druideLevel${level}EffectProfiles`]; if (profile.applied && profile.level === level && profile.classSlug === "druide") bucket.applied.push(item.name); else bucket.missing.push(item.name); control.druideMaterialAudit.push({ name: item.name, niveau: item.system.niveau, composants: clone(item.system.composants_materiels) }); const warning = materialWarningForClass(item, "druide"); if (warning) control.druideMaterialWarnings.push(warning); }
-    for (const level of WIZARD_LEVELS) if (isMagicienSpellLevel(item, level)) { const bucket = control[`magicienLevel${level}EffectProfiles`]; if (profile.applied && profile.level === level && profile.classSlug === "magicien") bucket.applied.push(item.name); else bucket.missing.push(item.name); control.magicienMaterialAudit.push({ name: item.name, niveau: item.system.niveau, composants: clone(item.system.composants_materiels) }); const warning = materialWarningForClass(item, "magicien"); if (warning) control.magicienMaterialWarnings.push(warning); }
-    const suspicious = (item.system.composants_materiels ?? []).filter(rejectMaterial); if (suspicious.length) control.suspiciousMaterialComponents.push({ name: item.name, classe: item.system.classe, niveau: item.system.niveau, components: suspicious, allComponents: clone(item.system.composants_materiels) });
-    if (profile.applied || DRUID_MATERIAL_OVERRIDES.has(slug(item.name ?? item.system.nom)) || CLERIC_MATERIAL_OVERRIDES.has(slug(item.name ?? item.system.nom)) || WIZARD_MATERIAL_OVERRIDES.has(slug(item.name ?? item.system.nom))) control.watched[item.name] = { classe: item.system.classe, niveau: item.system.niveau, composants_materiels: clone(item.system.composants_materiels), effectProfile: clone(item.system.effectProfile), note: item.system.composants_materiels_note };
+    if (!materialEntryCount(item.system.composants_materiels ?? [])) control.emptyMaterialSpells += 1;
+
+    for (const level of CLERIC_LEVELS) if (isClercSpellLevel(item, level)) {
+      const bucket = control[`clercLevel${level}EffectProfiles`];
+      if (profile.applied && profile.level === level && profile.classSlug === "clerc") bucket.applied.push(item.name); else bucket.missing.push(item.name);
+    }
+    for (const level of DRUID_LEVELS) if (isDruideSpellLevel(item, level)) {
+      const bucket = control[`druideLevel${level}EffectProfiles`];
+      if (profile.applied && profile.level === level && profile.classSlug === "druide") bucket.applied.push(item.name); else bucket.missing.push(item.name);
+    }
+    for (const level of WIZARD_LEVELS) if (isMagicienSpellLevel(item, level)) {
+      const bucket = control[`magicienLevel${level}EffectProfiles`];
+      if (profile.applied && profile.level === level && profile.classSlug === "magicien") bucket.applied.push(item.name); else bucket.missing.push(item.name);
+    }
+    for (const level of ILLUSIONIST_LEVELS) if (isIllusionnisteSpellLevel(item, level)) {
+      const bucket = control[`illusionnisteLevel${level}EffectProfiles`];
+      if (profile.applied && profile.level === level && profile.classSlug === "illusionniste") bucket.applied.push(item.name); else bucket.missing.push(item.name);
+      control.illusionnisteMaterialAudit.push({ name: item.name, niveau: item.system.niveau, composants: clone(item.system.composants_materiels) });
+      const warning = materialWarningForClass(item, "illusionniste");
+      if (warning) control.illusionnisteMaterialWarnings.push(warning);
+      if (!hadIllusionistSource) control.illusionnisteSourceMissing.push({ name: item.name, niveau: item.system.niveau });
+    }
+
+    if (profile.applied || isIllusionnisteSpell(item)) {
+      control.watched[item.name] = {
+        classe: item.system.classe,
+        niveau: item.system.niveau,
+        composants_materiels: clone(item.system.composants_materiels),
+        composantes: item.system.composantes,
+        effectProfile: clone(item.system.effectProfile)
+      };
+    }
     if (JSON.stringify(Object.keys(item.system).sort()) !== expected) control.sameSystemFieldsForAllSpells = false;
   }
-  json.normalizedBy = VERSION; json.normalizedAt = new Date().toISOString(); fs.writeFileSync(output, `${JSON.stringify(json, null, 2)}\n`, "utf8"); fs.writeFileSync(controlOutput, `${JSON.stringify(control, null, 2)}\n`, "utf8");
-  console.log(`[ADD2E][SPELL_MATERIALS_V3] ${control.spells} sort(s), ${control.changedSpells} composant(s) modifié(s).`); console.log(`[ADD2E][SPELL_MATERIALS_V3] Manual clerc/druide materials preserved: ${control.preservedManualMaterials}`);
-  for (const level of CLERIC_LEVELS) { const bucket = control[`clercLevel${level}EffectProfiles`]; console.log(`[ADD2E][SPELL_MATERIALS_V3] EffectProfiles N${level} clerc: ${bucket.applied.length} appliqué(s), ${bucket.missing.length} manquant(s).`); }
-  for (const level of DRUID_LEVELS) { const bucket = control[`druideLevel${level}EffectProfiles`]; console.log(`[ADD2E][SPELL_MATERIALS_V3] EffectProfiles N${level} druide: ${bucket.applied.length} appliqué(s), ${bucket.missing.length} manquant(s).`); }
-  for (const level of WIZARD_LEVELS) { const bucket = control[`magicienLevel${level}EffectProfiles`]; console.log(`[ADD2E][SPELL_MATERIALS_V3] EffectProfiles N${level} magicien: ${bucket.applied.length} appliqué(s), ${bucket.missing.length} manquant(s).`); }
-  console.log(`[ADD2E][SPELL_MATERIALS_V3] Druid material warnings: ${control.druideMaterialWarnings.length}`); console.log(`[ADD2E][SPELL_MATERIALS_V3] Wizard material warnings: ${control.magicienMaterialWarnings.length}`); console.log(`[ADD2E][SPELL_MATERIALS_V3] Suspicious: ${control.suspiciousMaterialComponents.length}`); console.log(`[ADD2E][SPELL_MATERIALS_V3] Output: ${path.relative(repoRoot, output)}`); console.log(`[ADD2E][SPELL_MATERIALS_V3] Control: ${path.relative(repoRoot, controlOutput)}`);
+
+  json.normalizedBy = VERSION;
+  json.normalizedAt = new Date().toISOString();
+  fs.writeFileSync(output, `${JSON.stringify(json, null, 2)}\n`, "utf8");
+  fs.writeFileSync(controlOutput, `${JSON.stringify(control, null, 2)}\n`, "utf8");
+
+  console.log(`[ADD2E][SPELL_MATERIALS_V3] ${control.spells} sort(s), ${control.changedSpells} composant(s) modifié(s).`);
+  console.log(`[ADD2E][SPELL_MATERIALS_V3] Manual clerc/druide/magicien materials preserved: ${control.preservedManualMaterials}`);
+  for (const level of ILLUSIONIST_LEVELS) {
+    const bucket = control[`illusionnisteLevel${level}EffectProfiles`];
+    console.log(`[ADD2E][SPELL_MATERIALS_V3] EffectProfiles N${level} illusionniste: ${bucket.applied.length} appliqué(s), ${bucket.missing.length} manquant(s).`);
+  }
+  console.log(`[ADD2E][SPELL_MATERIALS_V3] Illusionist material warnings: ${control.illusionnisteMaterialWarnings.length}`);
+  console.log(`[ADD2E][SPELL_MATERIALS_V3] Output: ${path.relative(repoRoot, output)}`);
+  console.log(`[ADD2E][SPELL_MATERIALS_V3] Control: ${path.relative(repoRoot, controlOutput)}`);
 }
 
 main();
