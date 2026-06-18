@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 
-const VERSION = "2026-06-17-normalize-spell-materials-v3-magicien-n9-effectprofile-v1";
+const VERSION = "2026-06-17-normalize-spell-materials-v3-magicien-material-cleanup-v1";
 const DEFAULT_INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const DEFAULT_OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
 const DEFAULT_CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
@@ -44,7 +44,9 @@ const MATERIAL_CANON = new Map(Object.entries({
   ecorce: "écorce", ecaille_de_serpent: "écailles de serpent", ecailles_de_serpent: "écailles de serpent", symbole_religieux_en_argent: "symbole religieux en argent", lame_miniature: "lame miniature", petit_caillou: "petit caillou", motte_de_terre: "motte de terre",
   gui_sacre: "gui", gui_druidique: "gui", feuille_de_gui: "gui", feuilles_de_gui: "gui", typiquement_druidique_a_savoir_du_gui: "gui", houx_avec_lequel_le_druide_doit_se_frotter: "houx",
   gui_majeur: "gui majeur", baie_de_houx: "baies de houx", baies_de_houx: "baies de houx", gland_de_chene: "glands de chêne", glands_de_chene: "glands de chêne", feuille_de_chene: "feuille de chêne", feuilles_de_chene: "feuilles de chêne",
-  nourriture_appreciee_par_l_animal: "nourriture appréciée par l’animal", nourriture_appréciée_par_l_animal: "nourriture appréciée par l’animal", feuille_de_trefle: "feuille de trèfle", feuille_de_trèfle: "feuille de trèfle", massue_en_chene: "massue en chêne", massue_en_chêne: "massue en chêne"
+  nourriture_appreciee_par_l_animal: "nourriture appréciée par l’animal", nourriture_appréciée_par_l_animal: "nourriture appréciée par l’animal", feuille_de_trefle: "feuille de trèfle", feuille_de_trèfle: "feuille de trèfle", massue_en_chene: "massue en chêne", massue_en_chêne: "massue en chêne",
+  poudre_de_fer: "poudre de fer", pincee_de_poudre_de_fer: "poudre de fer", morceau_de_soie: "soie", petit_morceau_de_soie: "soie", soie_que_le_magicien_doit_passer_sur_l_objet_affecte: "soie", petit_parchemin_mis_en_cone: "parchemin mis en cône", parchemin_mis_en_cone: "parchemin mis en cône",
+  poudre_de_carbone: "carbone en poudre", carbone_reduits_en_poudre: "carbone en poudre", citron_reduits_en_poudre: "citron en poudre", citron_reduit_en_poudre: "citron en poudre", fil_de_cuivre: "fil de cuivre", petit_fil_de_cuivre: "fil de cuivre"
 }));
 
 const CLERIC_MATERIAL_OVERRIDES = new Map(Object.entries({
@@ -57,15 +59,38 @@ const DRUID_MATERIAL_OVERRIDES = new Map(Object.entries({
   animation_de_la_roche: ["gui"], chariot_de_sustarre: ["gui", "petit morceau de bois", "baies de houx", "source de feu"], confusion: ["gui"], controle_du_climat: ["gui majeur"], doigt_de_mort: ["gui"], invocation_d_un_elemental_de_terre: ["gui"], invocation_d_un_élémental_de_terre: ["gui"], mort_rampante: ["gui"], reincarnation: ["gui"], tempete_de_feu: ["gui"], transmutation_du_metal_en_bois: ["gui", "gui majeur"]
 }));
 
-const NOISE = new Set(["", "true", "false", "oui", "non", "consomme", "consommé", "non consomme", "non consommé", "non_consomme", "optionnel", "manuel", "manuel du joueur", "manuel des joueurs", "source", "aucun", "null", "undefined", "liquide", "consommation", "ingredient materiel", "ingrédient matériel", "composant materiel", "composant matériel", "composant requis", "clerc", "clerc non mauvais", "clerc mauvais", "druide", "druidique", "magicien", "illusionniste", "créature", "petite créature", "le", "la", "les", "brulee", "brûlée", "ses cendres sont eparpillees", "ses cendres sont éparpillées", "autre conifere", "autre conifère"]);
-const NOISE_STARTS = ["requise", "requis", "alternative", "formulation source", "source du manuel", "sort normal", "sort inverse", "selon la règle", "description indique", "pour lancer", "dons requis", "type de métal", "taille détermine", "sorte de diapason", "ingrédient matériel", "ingredient materiel", "composant matériel", "composant materiel", "composant requis", "non consommé", "non consomme", "brûlée", "brulee", "ses cendres", "avec lequel", "le druide doit", "doit se frotter", "application utilisant", "substitut", "combinable"];
-const NOISE_CONTAINS = ["manuel des joueurs", "formulation source", "règle d arbitrage", "ayant servi", "avant consommation", "quand le sort est", "description indique", "saupoudrée", "pour lancer le sort", "ses cendres", "est éparpillée", "sont éparpillées", "avec lequel le druide doit", "composant requis selon", "application utilisant", "composant principal", "substitut au gui", "combinable avec"];
+const WIZARD_MATERIAL_OVERRIDES = new Map(Object.entries({
+  agrandissement: ["poudre de fer"],
+  aura_magique_de_nystul: ["soie"],
+  arme_enchantee: ["carbone en poudre", "citron en poudre"],
+  message: ["fil de cuivre"],
+  ventriloquie: ["parchemin mis en cône"]
+}));
+
+const NOISE = new Set(["", "true", "false", "oui", "non", "consomme", "consommé", "non consomme", "non consommé", "non_consomme", "optionnel", "manuel", "manuel du joueur", "manuel des joueurs", "source", "aucun", "null", "undefined", "liquide", "consommation", "ingredient materiel", "ingrédient matériel", "composant materiel", "composant matériel", "composant requis", "clerc", "clerc non mauvais", "clerc mauvais", "druide", "druidique", "magicien", "illusionniste", "créature", "petite créature", "le", "la", "les", "brulee", "brûlée", "ses cendres sont eparpillees", "ses cendres sont éparpillées", "autre conifere", "autre conifère", "consommation explicitement indiquée dans la description", "consommation explicitement indiquee dans la description"]);
+const NOISE_STARTS = ["requise", "requis", "alternative", "formulation source", "source du manuel", "sort normal", "sort inverse", "selon la règle", "description indique", "pour lancer", "dons requis", "type de métal", "taille détermine", "sorte de diapason", "ingrédient matériel", "ingredient materiel", "composant matériel", "composant materiel", "composant requis", "non consommé", "non consomme", "brûlée", "brulee", "ses cendres", "avec lequel", "le druide doit", "doit se frotter", "application utilisant", "substitut", "combinable", "consommation explicitement"];
+const NOISE_CONTAINS = ["manuel des joueurs", "formulation source", "règle d arbitrage", "ayant servi", "avant consommation", "quand le sort est", "description indique", "saupoudrée", "pour lancer le sort", "ses cendres", "est éparpillée", "sont éparpillées", "avec lequel le druide doit", "composant requis selon", "application utilisant", "composant principal", "substitut au gui", "combinable avec", "consommation explicitement indiquée", "que le magicien doit", "utilisé pour", "utilisee pour", "utilisée pour"];
 
 function cleanMaterial(value) {
   let out = text(value).replaceAll("_", "-").replace(/-/g, " ");
   if (/houx\s+avec\s+lequel\s+le\s+druide\s+doit\s+se\s+frotter/i.test(out)) out = "houx";
   if (/à\s+savoir\s+du\s+gui/i.test(out)) out = "gui";
-  out = out.replace(/^typiquement\s+druidique\s*\((.*?)\)$/i, "$1").replace(/^à\s+savoir\s+/i, "").replace(/^d['’]\s*/i, "").replace(/^(un|une)?\s*peu\s+de\s+/i, "").replace(/^(un|une|du|de la|de l['’]?|des|le|la|les)\s+/i, "").replace(/^(quelques|plusieurs)\s+/i, "").replace(/^petit morceau de\s+/i, "").replace(/^morceau de\s+/i, "").replace(/[.!?;:]+$/g, "").trim();
+  out = out
+    .replace(/^typiquement\s+druidique\s*\((.*?)\)$/i, "$1")
+    .replace(/^à\s+savoir\s+/i, "")
+    .replace(/\s+que\s+le\s+magicien\s+doit\b.*$/i, "")
+    .replace(/\s+que\s+l['’]?(?:enchanteur|utilisateur)\s+doit\b.*$/i, "")
+    .replace(/\s+utilis(?:e|é|ée|es|és)\s+pour\b.*$/i, "")
+    .replace(/\s+servant\s+à\b.*$/i, "")
+    .replace(/\s+qui\s+doit\b.*$/i, "")
+    .replace(/^d['’]\s*/i, "")
+    .replace(/^(un|une)?\s*peu\s+de\s+/i, "")
+    .replace(/^(un|une|du|de la|de l['’]?|des|le|la|les)\s+/i, "")
+    .replace(/^(quelques|plusieurs)\s+/i, "")
+    .replace(/^petit morceau de\s+/i, "")
+    .replace(/^morceau de\s+/i, "")
+    .replace(/[.!?;:]+$/g, "")
+    .trim();
   return MATERIAL_CANON.get(slug(out)) ?? out;
 }
 function rejectMaterial(value) { const cleaned = cleanMaterial(value); const n = norm(cleaned); if (!n || NOISE.has(n)) return true; if (/^\d+(?:[,.]\d+)?\s*(m2|m|m²|case|cases|po|pa|pp|pc)?$/i.test(cleaned)) return true; if (NOISE_STARTS.some(v => n.startsWith(norm(v)))) return true; if (NOISE_CONTAINS.some(v => n.includes(norm(v)))) return true; if (n.split(" ").length > 8) return true; return false; }
@@ -82,6 +107,7 @@ function normalizeMaterials(item) {
   collectMaterials(system.composants_materiels, values, notes); if (!values.length) collectMaterials(system.composants_materiels_objets, values, notes); if (!values.length) collectMaterials(system.composants_requis, values, notes);
   const key = slug(item?.name ?? system?.nom); const level = spellLevel(system);
   if (isDruideSpell(item) && DRUID_MATERIAL_OVERRIDES.has(key)) values = DRUID_MATERIAL_OVERRIDES.get(key);
+  else if (isMagicienSpell(item) && WIZARD_MATERIAL_OVERRIDES.has(key)) values = WIZARD_MATERIAL_OVERRIDES.get(key);
   else if (isClercSpellLevel(item, level) && CLERIC_MATERIAL_OVERRIDES.has(key)) values = CLERIC_MATERIAL_OVERRIDES.get(key);
   system.composants_materiels = unique(values.map(cleanMaterial).filter(v => !rejectMaterial(v)));
   system.composants_materiels_note = unique([...(notes ?? []), system.composants_materiels_note].filter(Boolean)).join("\n");
@@ -123,7 +149,7 @@ function main() {
     for (const level of DRUID_LEVELS) if (isDruideSpellLevel(item, level)) { const bucket = control[`druideLevel${level}EffectProfiles`]; if (profile.applied && profile.level === level && profile.classSlug === "druide") bucket.applied.push(item.name); else bucket.missing.push(item.name); control.druideMaterialAudit.push({ name: item.name, niveau: item.system.niveau, composants: clone(item.system.composants_materiels) }); const warning = materialWarningForClass(item, "druide"); if (warning) control.druideMaterialWarnings.push(warning); }
     for (const level of WIZARD_LEVELS) if (isMagicienSpellLevel(item, level)) { const bucket = control[`magicienLevel${level}EffectProfiles`]; if (profile.applied && profile.level === level && profile.classSlug === "magicien") bucket.applied.push(item.name); else bucket.missing.push(item.name); control.magicienMaterialAudit.push({ name: item.name, niveau: item.system.niveau, composants: clone(item.system.composants_materiels) }); const warning = materialWarningForClass(item, "magicien"); if (warning) control.magicienMaterialWarnings.push(warning); }
     const suspicious = (item.system.composants_materiels ?? []).filter(rejectMaterial); if (suspicious.length) control.suspiciousMaterialComponents.push({ name: item.name, classe: item.system.classe, niveau: item.system.niveau, components: suspicious, allComponents: clone(item.system.composants_materiels) });
-    if (profile.applied || DRUID_MATERIAL_OVERRIDES.has(slug(item.name ?? item.system.nom)) || CLERIC_MATERIAL_OVERRIDES.has(slug(item.name ?? item.system.nom))) control.watched[item.name] = { classe: item.system.classe, niveau: item.system.niveau, composants_materiels: clone(item.system.composants_materiels), effectProfile: clone(item.system.effectProfile), note: item.system.composants_materiels_note };
+    if (profile.applied || DRUID_MATERIAL_OVERRIDES.has(slug(item.name ?? item.system.nom)) || CLERIC_MATERIAL_OVERRIDES.has(slug(item.name ?? item.system.nom)) || WIZARD_MATERIAL_OVERRIDES.has(slug(item.name ?? item.system.nom))) control.watched[item.name] = { classe: item.system.classe, niveau: item.system.niveau, composants_materiels: clone(item.system.composants_materiels), effectProfile: clone(item.system.effectProfile), note: item.system.composants_materiels_note };
     if (JSON.stringify(Object.keys(item.system).sort()) !== expected) control.sameSystemFieldsForAllSpells = false;
   }
   json.normalizedBy = VERSION; json.normalizedAt = new Date().toISOString(); fs.writeFileSync(output, `${JSON.stringify(json, null, 2)}\n`, "utf8"); fs.writeFileSync(controlOutput, `${JSON.stringify(control, null, 2)}\n`, "utf8");
