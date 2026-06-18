@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — Gestion du temps hors combat.
-// Version : 2026-06-14-world-time-token-actors-v1
+// Version : 2026-06-18-world-time-any-gm-v1
 //
 // Rôle :
 // - Avancer le temps de jeu hors combat par commandes MJ.
@@ -22,7 +22,7 @@ import {
 import { add2eExpireTemporaryEffectsForActor } from "./18c-active-effects-expiration.mjs";
 import { add2eSyncActorVitalStatus, add2eVitalRegisterStatusEffects } from "./18b-vital-status-sync.mjs";
 
-export const ADD2E_WORLD_TIME_ENGINE_VERSION = "2026-06-14-world-time-token-actors-v1";
+export const ADD2E_WORLD_TIME_ENGINE_VERSION = "2026-06-18-world-time-any-gm-v1";
 
 const TAG = "[ADD2E][WORLD_TIME]";
 const TOOL_NAME = "add2e-world-time";
@@ -33,7 +33,7 @@ function log(label, data = {}) { console.log(`${TAG}${label}`, data); }
 function warn(label, data = {}) { console.warn(`${TAG}${label}`, data); }
 function esc(value) { return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#039;"); }
 function chatStyleData() { return CONST.CHAT_MESSAGE_STYLES ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER } : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 }; }
-function isResponsibleGM() { if (!game.user?.isGM) return false; if (typeof game.user.isActiveGM === "boolean") return game.user.isActiveGM; return game.users?.activeGM?.id === game.user.id || !game.users?.activeGM; }
+function isWorldTimeGM() { return game.user?.isGM === true; }
 function unitLabel(unit) { return ({ segment: "segment", round: "round", turn: "tour", minute: "minute", hour: "heure" })[unit] ?? unit ?? "round"; }
 
 function actorScanKey(actor, sourceKey = "") {
@@ -115,7 +115,7 @@ async function notifyAdvance({ before, after, delta, label, reason, expired }) {
 }
 
 export async function add2eWorldTimeExpireAllActors({ reason = "world-time", currentRound = null } = {}) {
-  if (!isResponsibleGM()) return { ok: false, reason: "not-responsible-gm", actors: 0, deleted: 0, messages: 0, rows: [] };
+  if (!isWorldTimeGM()) return { ok: false, reason: "not-gm", actors: 0, deleted: 0, messages: 0, rows: [] };
   add2eRegisterTimeEngineApi();
   add2eVitalRegisterStatusEffects();
 
@@ -148,9 +148,9 @@ export async function add2eWorldTimeExpireAllActors({ reason = "world-time", cur
 }
 
 export async function add2eWorldTimeAdvance({ value = 1, unit = "round", reason = "" } = {}) {
-  if (!isResponsibleGM()) {
-    ui.notifications?.warn?.("Temps ADD2E : seul le MJ actif peut avancer le temps.");
-    return { ok: false, reason: "not-responsible-gm" };
+  if (!isWorldTimeGM()) {
+    ui.notifications?.warn?.("Temps ADD2E : réservé au MJ.");
+    return { ok: false, reason: "not-gm" };
   }
 
   add2eRegisterTimeEngineApi();
