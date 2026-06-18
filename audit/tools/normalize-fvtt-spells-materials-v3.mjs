@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 
-const VERSION = "2026-06-18-normalize-illusionist-structured-components-v1";
+const VERSION = "2026-06-18-normalize-illusionist-components-resolve-warnings-v1";
 const DEFAULT_INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const DEFAULT_OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
 const DEFAULT_CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
@@ -141,6 +141,7 @@ function loadIllusionistAuditIndex() {
 
 const MATERIAL_CANON = new Map(Object.entries({
   cire: "cire",
+  cire_d_abeille: "cire d’abeille",
   peu_de_cire: "cire",
   morceau_de_cire: "cire",
   laine: "laine",
@@ -149,6 +150,11 @@ const MATERIAL_CANON = new Map(Object.entries({
   rayon_de_miel: "rayon de miel",
   petit_morceau_de_rayon_de_miel: "rayon de miel",
   morceau_de_rayon_de_miel: "rayon de miel",
+  miel: "miel",
+  un_peu_de_miel: "miel",
+  huile_douce: "huile douce",
+  goutte_d_huile_douce: "huile douce",
+  langue_de_serpent: "langue de serpent",
   poudre_de_fer: "poudre de fer",
   pincee_de_poudre_de_fer: "poudre de fer",
   poudre_d_argent: "poudre d’argent",
@@ -160,6 +166,16 @@ const MATERIAL_CANON = new Map(Object.entries({
   parchemin_mis_en_cone: "parchemin mis en cône",
   petit_parchemin_mis_en_cone: "parchemin mis en cône",
   cocon_de_chenille: "cocon de chenille",
+  encre_a_base_de_plomb: "encre à base de plomb",
+  encre_fabriquee_a_base_de_plomb: "encre à base de plomb",
+  petit_disque_de_bronze: "petit disque de bronze",
+  disque_de_bronze: "petit disque de bronze",
+  petite_tige_de_fer: "petite tige de fer",
+  tige_de_fer: "petite tige de fer",
+  morceau_de_matiere_vegetale_similaire: "morceau de matière végétale similaire",
+  morceau_de_matiere_minerale_similaire: "morceau de matière minérale similaire",
+  objet_de_valeur_a_sacrifier: "objet de valeur à sacrifier",
+  sacrifice_de_quelque_chose_ayant_de_la_valeur: "objet de valeur à sacrifier",
   encens_a_faire_bruler: "encens à faire brûler",
   encens_a_faire_brûler: "encens à faire brûler",
   encens: "encens",
@@ -178,6 +194,22 @@ const WIZARD_MATERIAL_OVERRIDES = new Map(Object.entries({
   clairaudience: ["petite corne d’argent"],
   message: ["fil de cuivre"],
   ventriloquie: ["parchemin mis en cône"]
+}));
+
+const ILLUSIONIST_COMPONENT_DELEGATIONS = new Set(["sorts_de_niveau_1_de_magicien"]);
+const ILLUSIONIST_MATERIAL_OVERRIDES = new Map(Object.entries({
+  creation_mineure: ["morceau de matière végétale similaire"],
+  creation_majeure: [
+    { type: "variante", id: "mineral", label: "Création d’un objet minéral", composants: ["morceau de matière minérale similaire"] },
+    { type: "variante", id: "vegetal", label: "Création d’un objet végétal", composants: ["morceau de matière végétale similaire"] }
+  ],
+  ecriture_illusoire: ["encre à base de plomb"],
+  force_fantasmagorique_amelioree: ["morceau de laine"],
+  force_spectrale: ["morceau de laine"],
+  illusion_permanente: ["morceau de laine"],
+  illusion_programmee: ["morceau de laine"],
+  suggestion_de_masse: ["langue de serpent", { type: "alternative", choix: ["miel", "huile douce"] }],
+  vision: ["objet de valeur à sacrifier"]
 }));
 
 const NOISE = new Set([
@@ -209,6 +241,7 @@ function stripMaterialSourcePhrase(value) {
   return text(value)
     .replace(/^(?:la|les)\s+composantes?\s+mat[eé]rielles?\s+(?:sont|est|consistent?\s+en|se\s+composent\s+de)\s*/i, "")
     .replace(/^composantes?\s+mat[eé]rielles?\s+(?:sont|est|consistent?\s+en|se\s+composent\s+de)\s*/i, "")
+    .replace(/^(?:la|les)\s+composante\s+mat[eé]rielle\s+(?:est|sont)\s*/i, "")
     .replace(/\s+d['’]une\s+valeur\b.*$/i, "")
     .replace(/\s+d['’]un\s+co[uû]t\b.*$/i, "")
     .replace(/\s+co[uû]tant\b.*$/i, "")
@@ -331,12 +364,22 @@ function parseSourceMaterials(source) {
 
   const cleaned = stripMaterialSourcePhrase(source);
   if (!cleaned) return [];
+  const entries = [];
   const chunks = cleaned
     .split(/[,;\n]+|\s+ainsi\s+que\s+/gi)
     .map(text)
     .filter(Boolean);
-  const entries = [];
   for (const chunk of chunks) {
+    if (/\s+soit\s+/i.test(chunk)) {
+      const leading = chunk.split(/\s+et\s*,?\s*soit\s+/i);
+      if (leading.length === 2) {
+        for (const part of leading[0].split(/\s+et\s+/i).map(cleanMaterial).filter(v => !rejectMaterial(v))) entries.push(part);
+        const choix = leading[1].split(/\s*,?\s*soit\s+|\s+ou\s+/i).map(cleanMaterial).filter(v => !rejectMaterial(v));
+        if (choix.length > 1) entries.push({ type: "alternative", choix });
+        else if (choix.length === 1) entries.push(choix[0]);
+        continue;
+      }
+    }
     if (/\s+ou\s+/i.test(chunk)) {
       const choix = chunk.split(/\s+ou\s+/i).map(cleanMaterial).filter(v => !rejectMaterial(v));
       if (choix.length > 1) entries.push({ type: "alternative", choix });
@@ -366,6 +409,14 @@ function ensureComposantesHasM(system, entries) {
   system.composantes = raw ? `${raw}, M` : "M";
 }
 
+function markDelegatedComponents(system) {
+  system.composants_materiels = [];
+  system.composantes = "*";
+  system.composants_materiels_a_renseigner = false;
+  const note = "Composants déterminés par le sort de magicien niveau 1 choisi.";
+  system.composants_materiels_note = text([system.composants_materiels_note, note].filter(Boolean).join("\n"));
+}
+
 function mergeIllusionistAuditSource(item, auditIndex) {
   if (!isIllusionnisteSpell(item)) return null;
   const source = auditIndex.get(effectKey(item));
@@ -392,12 +443,19 @@ function normalizeMaterials(item, auditIndex) {
 
   if (isIllusionnisteSpell(item)) {
     mergeIllusionistAuditSource(item, auditIndex);
-    entries = materialEntriesFromValue(system.composants_materiels);
-    if (!materialEntryCount(entries)) entries = materialEntriesFromValue(system.composants_materiels_objets);
-    if (!materialEntryCount(entries)) entries = materialEntriesFromValue(system.composants_requis);
-    if (!materialEntryCount(entries)) entries = materialEntriesFromValue(system.composants_materiels_source);
-    system.composants_materiels = uniqueEntries(entries);
-    ensureComposantesHasM(system, system.composants_materiels);
+    if (ILLUSIONIST_COMPONENT_DELEGATIONS.has(key)) {
+      markDelegatedComponents(system);
+    } else if (ILLUSIONIST_MATERIAL_OVERRIDES.has(key)) {
+      system.composants_materiels = uniqueEntries(ILLUSIONIST_MATERIAL_OVERRIDES.get(key));
+      ensureComposantesHasM(system, system.composants_materiels);
+    } else {
+      entries = materialEntriesFromValue(system.composants_materiels);
+      if (!materialEntryCount(entries)) entries = materialEntriesFromValue(system.composants_materiels_objets);
+      if (!materialEntryCount(entries)) entries = materialEntriesFromValue(system.composants_requis);
+      if (!materialEntryCount(entries)) entries = materialEntriesFromValue(system.composants_materiels_source);
+      system.composants_materiels = uniqueEntries(entries);
+      ensureComposantesHasM(system, system.composants_materiels);
+    }
   } else if (WIZARD_MATERIAL_OVERRIDES.has(key)) {
     system.composants_materiels = uniqueEntries(WIZARD_MATERIAL_OVERRIDES.get(key));
   } else {
@@ -481,6 +539,7 @@ function ensureSystem(system) {
 }
 
 function materialWarningForClass(item, classSlug) {
+  if (classSlug === "illusionniste" && ILLUSIONIST_COMPONENT_DELEGATIONS.has(slug(item?.name ?? item?.system?.nom))) return null;
   const entries = item?.system?.composants_materiels ?? [];
   const hasM = String(item?.system?.composantes ?? "").toUpperCase().includes("M");
   const bad = [];
