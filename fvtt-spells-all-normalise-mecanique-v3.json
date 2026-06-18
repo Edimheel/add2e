@@ -6104,9 +6104,9 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "luciole vivante",
-          "vert luisant vivant",
+          "vers luisant vivant",
           "queue de lucioles",
-          "de verts luisants morts"
+          "vers luisants morts"
         ],
         "composants_materiels_source": "phosphore pour la version chaude, phosphore ou luciole/ver luisant pour la version froide selon arbitrage MD",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
@@ -23579,10 +23579,7 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "cheveux",
-          "ours",
-          "bœuf",
-          "etc"
+          "poil de mammifere"
         ],
         "composants_materiels_source": "La composante matérielle est quelques cheveux ou un peu d’excrément d’un animal particulièrement fort — singe, ours, bœuf, etc.",
         "composants_materiels_reference": "",
@@ -26847,13 +26844,10 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "perle",
-          "plume de hibou trempée dans du vin",
+          "plume de hibou",
           "vin",
           "carpe miniature vivante",
-          "pierre porte bonheur réduite en poudre",
-          "Option permettant d’augmenter la chance de succès",
-          "Réduite en poudre",
-          "ajoutée à l’infusion"
+          "pierre porte bonheur réduite en poudre"
         ],
         "composants_materiels_source": "Les composantes de ce sort sont une perle (100 po minimum) et une plume de hibou trempée dans du vin.",
         "composants_materiels_reference": "",
@@ -34226,8 +34220,7 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, M",
         "composants_materiels": [
-          "petite statuette d’argile représentant une ziggourat",
-          "qui se brise quand l’incantation est prononcée"
+          "petite statuette d’argile"
         ],
         "composants_materiels_source": "petite statuette d’argile représentant une ziggourat, qui se brise quand l’incantation est prononcée",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -34520,7 +34513,7 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "boucle de cuir",
-          "fil d’or courbé en forme d’hameçon"
+          "fil d’or courbé"
         ],
         "composants_materiels_source": "La composante matérielle est soit une boucle de cuir, soit un morceau de fil d’or courbé en forme d’hameçon.",
         "composants_materiels_reference": "",
@@ -35269,7 +35262,7 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "fourchette d’argent",
-          "baguette fourchue selon version du sort"
+          "baguette fourchue"
         ],
         "composants_materiels_source": "fourchette d’argent ou baguette fourchue selon version du sort",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
@@ -42564,8 +42557,7 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "œuf pourri",
-          "feuilles de symplocarpe fétide",
-          "feuille de symplocarpe fétide"
+          "feuilles de symplocarpe fétide"
         ],
         "composants_materiels_source": "La composante matérielle de ce sort est un œuf pourri ou quelques feuilles de symplocarpe fétide.",
         "composants_materiels_reference": "",
@@ -43271,12 +43263,9 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "citrine réduite en poudre",
-          "Réduite en poudre",
-          "répartie sur le métal",
           "pierre d’ambre",
-          "Gemme non détruite",
           "topaze",
-          "topaze orientale (corindon)"
+          "corindon"
         ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
@@ -46143,11 +46132,7 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "morceau d’os de mort vivant (squelette",
-          "zombie",
-          "goule",
-          "ghast",
-          "momie)"
+          "os de mort vivant"
         ],
         "composants_materiels_source": "La composante matérielle est un morceau d’os de mort-vivant (squelette, zombie, goule, ghast ou momie).",
         "composants_materiels_reference": "",
