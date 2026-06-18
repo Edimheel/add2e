@@ -52989,7 +52989,7 @@
         "jet_sauvegarde": "Aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "deux objets magnétiques",
+          "objets magnétiques",
           "copeaux de métal"
         ],
         "composants_materiels_source": "deux objets magnétiques de n’importe quel type, par exemple pierre aimantée, ou deux copeaux de métal",
@@ -64050,9 +64050,9 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, M",
         "composants_materiels": [
-          "parchemin mis en cône"
+          "parchemin"
         ],
-        "composants_materiels_source": "petit parchemin mis en cône",
+        "composants_materiels_source": "parchemin mis en cône",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
         "composants_materiels_verification_recommandee": "true",
         "composants_materiels_note": "",
