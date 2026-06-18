@@ -802,8 +802,12 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "goutte d’eau",
-          "pincée de poussière"
+          "petite fiole d’eau",
+          "fiole est le contenant réutilisable",
+          "son contenu est",
+          "petite fiole de poussière",
+          "fiole d’eau",
+          "fiole de poussière"
         ],
         "composants_materiels_source": "Les composantes matérielles sont une petite fiole d’eau et une petite fiole de poussière.",
         "composants_materiels_reference": "",
@@ -824,8 +828,22 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n6",
+          "effects": [
+            {
+              "id": "abaissement_des_eaux",
+              "label": "Abaissement des eaux",
+              "kind": "movement_transformation_or_element",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:abaissement_des_eaux",
+                "classe:magicien",
+                "deplacement_transformation_ou_element",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -917,12 +935,12 @@
             {
               "id": "abaissement_des_eaux",
               "label": "Abaissement des Eaux",
-              "kind": "elemental_or_weather_control",
+              "kind": "movement_transformation_or_element",
               "automation": "mj_aid",
               "tags": [
                 "effet:abaissement_des_eaux",
                 "classe:clerc",
-                "element_ou_climat",
+                "deplacement_transformation_ou_element",
                 "niveau:4"
               ],
               "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
@@ -1161,8 +1179,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n1",
+          "effects": [
+            {
+              "id": "agrandissement",
+              "label": "Agrandissement",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:agrandissement",
+                "classe:magicien",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -1301,8 +1332,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n4",
+          "effects": [
+            {
+              "id": "allometamorphose",
+              "label": "Allométamorphose",
+              "kind": "movement_transformation_or_element",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:allometamorphose",
+                "classe:magicien",
+                "deplacement_transformation_ou_element",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -1560,8 +1605,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n1",
+          "effects": [
+            {
+              "id": "alteration_des_feux_normaux",
+              "label": "Altération des feux normaux",
+              "kind": "damage_or_area_control",
+              "automation": "damage_or_mj_aid",
+              "tags": [
+                "effet:alteration_des_feux_normaux",
+                "classe:magicien",
+                "degats_ou_zone",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -1725,8 +1784,22 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n1",
+          "effects": [
+            {
+              "id": "amitie",
+              "label": "Amitié",
+              "kind": "communication_or_control",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:amitie",
+                "classe:magicien",
+                "communication_ou_controle",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -1847,7 +1920,8 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "gui"
+          "gui",
+          "nourriture appréciée par l’animal"
         ],
         "composants_materiels_source": "Les composantes matérielles sont du gui et un peu de nourriture appréciée par l’animal.",
         "composants_materiels_reference": "",
@@ -2399,8 +2473,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n8",
+          "effects": [
+            {
+              "id": "antipathie_sympathie",
+              "label": "Antipathie/sympathie",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:antipathie_sympathie",
+                "classe:magicien",
+                "niveau:8"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -3344,8 +3431,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n4",
+          "effects": [
+            {
+              "id": "arme_enchantee",
+              "label": "Arme enchantée",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:arme_enchantee",
+                "classe:magicien",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -3473,8 +3573,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n9",
+          "effects": [
+            {
+              "id": "arret_du_temps",
+              "label": "Arrêt du temps",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:arret_du_temps",
+                "classe:magicien",
+                "niveau:9"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -4183,8 +4296,21 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n1",
+          "effects": [
+            {
+              "id": "aura_magique_de_nystul",
+              "label": "Aura magique de Nystul",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:aura_magique_de_nystul",
+                "classe:magicien",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -4338,8 +4464,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n4",
+          "effects": [
+            {
+              "id": "autometamorphose",
+              "label": "Autométamorphose",
+              "kind": "movement_transformation_or_element",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:autometamorphose",
+                "classe:magicien",
+                "deplacement_transformation_ou_element",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -5373,8 +5513,21 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n2",
+          "effects": [
+            {
+              "id": "bouche_magique",
+              "label": "Bouche magique",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:bouche_magique",
+                "classe:magicien",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -5471,8 +5624,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n1",
+          "effects": [
+            {
+              "id": "bouclier",
+              "label": "Bouclier",
+              "kind": "protection",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:bouclier",
+                "classe:magicien",
+                "protection",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -5942,8 +6109,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n4",
+          "effects": [
+            {
+              "id": "bouclier_de_feu",
+              "label": "Bouclier de feu",
+              "kind": "protection",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:bouclier_de_feu",
+                "classe:magicien",
+                "protection",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -6075,8 +6256,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n3",
+          "effects": [
+            {
+              "id": "boule_de_feu",
+              "label": "Boule de feu",
+              "kind": "damage_or_area_control",
+              "automation": "damage_or_mj_aid",
+              "tags": [
+                "effet:boule_de_feu",
+                "classe:magicien",
+                "degats_ou_zone",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -6204,8 +6399,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n7",
+          "effects": [
+            {
+              "id": "boule_de_feu_a_retardement",
+              "label": "Boule de feu à retardement",
+              "kind": "damage_or_area_control",
+              "automation": "damage_or_mj_aid",
+              "tags": [
+                "effet:boule_de_feu_a_retardement",
+                "classe:magicien",
+                "degats_ou_zone",
+                "niveau:7"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -6343,8 +6552,21 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n2",
+          "effects": [
+            {
+              "id": "bruitage",
+              "label": "Bruitage",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:bruitage",
+                "classe:magicien",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -6556,8 +6778,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n6",
+          "effects": [
+            {
+              "id": "bulle_anti_magique",
+              "label": "Bulle anti-magique",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:bulle_anti_magique",
+                "classe:magicien",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -6695,8 +6930,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n7",
+          "effects": [
+            {
+              "id": "cacodemon",
+              "label": "Cacodémon",
+              "kind": "summon_or_actor_effect",
+              "automation": "actor_creation_or_mj_aid",
+              "tags": [
+                "effet:cacodemon",
+                "classe:magicien",
+                "invocation_ou_creation",
+                "niveau:7"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -7223,10 +7472,7 @@
         "temps_incantation": "1 segment",
         "jet_sauvegarde": "aucun",
         "composantes": "V, S",
-        "composants_materiels": [
-          "pincée de poussière de cimetière",
-          "symbole sacré du clerc"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "—",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
@@ -7246,8 +7492,21 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n3",
+          "effects": [
+            {
+              "id": "catalepsie",
+              "label": "Catalepsie",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:catalepsie",
+                "classe:magicien",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "folder": "NDOM4cur7yxMu6TD",
@@ -7840,11 +8099,12 @@
             {
               "id": "changement_de_plan",
               "label": "Changement de Plan",
-              "kind": "clerc_effect",
-              "automation": "active_effect_or_mj_aid",
+              "kind": "movement_transformation_or_element",
+              "automation": "mj_aid",
               "tags": [
                 "effet:changement_de_plan",
                 "classe:clerc",
+                "deplacement_transformation_ou_element",
                 "niveau:5"
               ],
               "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
@@ -8198,7 +8458,8 @@
         "composants_materiels": [
           "gui",
           "bois",
-          "houx"
+          "baies de houx",
+          "source de feu"
         ],
         "composants_materiels_source": "gui druidique",
         "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui",
@@ -8356,8 +8617,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n8",
+          "effects": [
+            {
+              "id": "charme_masse",
+              "label": "Charme-masse",
+              "kind": "communication_or_control",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:charme_masse",
+                "classe:magicien",
+                "communication_ou_controle",
+                "niveau:8"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -8487,8 +8762,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n4",
+          "effects": [
+            {
+              "id": "charme_monstres",
+              "label": "Charme-monstres",
+              "kind": "communication_or_control",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:charme_monstres",
+                "classe:magicien",
+                "communication_ou_controle",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -8616,8 +8905,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n1",
+          "effects": [
+            {
+              "id": "charme_personnes",
+              "label": "Charme-personnes",
+              "kind": "communication_or_control",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:charme_personnes",
+                "classe:magicien",
+                "communication_ou_controle",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -8891,8 +9194,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n7",
+          "effects": [
+            {
+              "id": "charme_plantes",
+              "label": "Charme-plantes",
+              "kind": "communication_or_control",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:charme_plantes",
+                "classe:magicien",
+                "communication_ou_controle",
+                "niveau:7"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -9419,8 +9736,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n6",
+          "effects": [
+            {
+              "id": "chasseur_invisible",
+              "label": "Chasseur invisible",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:chasseur_invisible",
+                "classe:magicien",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -9551,8 +9881,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n3",
+          "effects": [
+            {
+              "id": "chaumiere_de_leomund",
+              "label": "Chaumière de Léomund",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:chaumiere_de_leomund",
+                "classe:magicien",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -9692,8 +10035,21 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n5",
+          "effects": [
+            {
+              "id": "chien_fidele_de_mordenkainen",
+              "label": "Chien fidèle de Mordenkainen",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:chien_fidele_de_mordenkainen",
+                "classe:magicien",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "folder": "37fDdSkBqVeypAKN",
@@ -9766,8 +10122,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n1",
+          "effects": [
+            {
+              "id": "chute_de_plume",
+              "label": "Chute de plume",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:chute_de_plume",
+                "classe:magicien",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -9897,8 +10266,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n3",
+          "effects": [
+            {
+              "id": "clairaudience",
+              "label": "Clairaudience",
+              "kind": "detection_or_divination",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:clairaudience",
+                "classe:magicien",
+                "detection_ou_divination",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -10028,8 +10411,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n3",
+          "effects": [
+            {
+              "id": "clairvoyance",
+              "label": "Clairvoyance",
+              "kind": "detection_or_divination",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:clairvoyance",
+                "classe:magicien",
+                "detection_ou_divination",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -10159,8 +10556,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n8",
+          "effects": [
+            {
+              "id": "clone",
+              "label": "Clone",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:clone",
+                "classe:magicien",
+                "niveau:8"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -10288,8 +10698,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n5",
+          "effects": [
+            {
+              "id": "coffre_secret_de_leomund",
+              "label": "Coffre secret de Léomund",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:coffre_secret_de_leomund",
+                "classe:magicien",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -10809,8 +11232,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n1",
+          "effects": [
+            {
+              "id": "comprehension_des_langues",
+              "label": "Compréhension des langues",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:comprehension_des_langues",
+                "classe:magicien",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -10943,8 +11379,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n5",
+          "effects": [
+            {
+              "id": "cone_de_froid",
+              "label": "Cône de froid",
+              "kind": "damage_or_area_control",
+              "automation": "damage_or_mj_aid",
+              "tags": [
+                "effet:cone_de_froid",
+                "classe:magicien",
+                "degats_ou_zone",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -11254,8 +11704,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n4",
+          "effects": [
+            {
+              "id": "confusion",
+              "label": "Confusion",
+              "kind": "control",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:confusion",
+                "classe:magicien",
+                "controle",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -11383,8 +11847,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n5",
+          "effects": [
+            {
+              "id": "contact_d_autres_plans",
+              "label": "Contact d'autres plans",
+              "kind": "movement_transformation_or_element",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:contact_d_autres_plans",
+                "classe:magicien",
+                "deplacement_transformation_ou_element",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -11910,12 +12388,12 @@
             {
               "id": "controle_des_vents",
               "label": "Contrôle des vents",
-              "kind": "elemental_or_weather_control",
+              "kind": "movement_transformation_or_element",
               "automation": "mj_aid",
               "tags": [
                 "effet:controle_des_vents",
                 "classe:druide",
-                "element_ou_climat",
+                "deplacement_transformation_ou_element",
                 "niveau:5"
               ],
               "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
@@ -12063,12 +12541,12 @@
             {
               "id": "controle_du_climat",
               "label": "Contrôle du climat",
-              "kind": "elemental_or_weather_control",
+              "kind": "movement_transformation_or_element",
               "automation": "mj_aid",
               "tags": [
                 "effet:controle_du_climat",
                 "classe:druide",
-                "element_ou_climat",
+                "deplacement_transformation_ou_element",
                 "niveau:7"
               ],
               "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
@@ -12129,8 +12607,10 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "encens",
-          "chapelet de prière"
+          "encens à brûler",
+          "mélange de terre",
+          "de bois",
+          "eau"
         ],
         "composants_materiels_source": "excepté ci-dessus et le fait que les composantes ma- térielles soient de l’encens à brûler et un mélange de terre, de bois et d’eau, ce sort est le même que le sort de niveau 7 de clerc contrôle du climat (voir p.52).",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -12151,8 +12631,22 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n6",
+          "effects": [
+            {
+              "id": "controle_du_climat",
+              "label": "Contrôle du climat",
+              "kind": "movement_transformation_or_element",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:controle_du_climat",
+                "classe:magicien",
+                "deplacement_transformation_ou_element",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -12242,12 +12736,12 @@
             {
               "id": "controle_du_climat",
               "label": "Contrôle du Climat",
-              "kind": "elemental_or_weather_control",
+              "kind": "movement_transformation_or_element",
               "automation": "mj_aid",
               "tags": [
                 "effet:controle_du_climat",
                 "classe:clerc",
-                "element_ou_climat",
+                "deplacement_transformation_ou_element",
                 "niveau:7"
               ],
               "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
@@ -12572,8 +13066,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n2",
+          "effects": [
+            {
+              "id": "corde_enchantee",
+              "label": "Corde enchantée",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:corde_enchantee",
+                "classe:magicien",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -12963,8 +13470,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n8",
+          "effects": [
+            {
+              "id": "cristairain",
+              "label": "Cristairain",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:cristairain",
+                "classe:magicien",
+                "niveau:8"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -13342,8 +13862,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n5",
+          "effects": [
+            {
+              "id": "croissance_animale",
+              "label": "Croissance animale",
+              "kind": "summon_or_actor_effect",
+              "automation": "actor_creation_or_mj_aid",
+              "tags": [
+                "effet:croissance_animale",
+                "classe:magicien",
+                "invocation_ou_creation",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -13471,8 +14005,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n8",
+          "effects": [
+            {
+              "id": "danse_irresistible_d_otto",
+              "label": "Danse irrésistible d’Otto",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:danse_irresistible_d_otto",
+                "classe:magicien",
+                "niveau:8"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -13710,8 +14257,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n5",
+          "effects": [
+            {
+              "id": "debilite_mentale",
+              "label": "Débilité mentale",
+              "kind": "control",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:debilite_mentale",
+                "classe:magicien",
+                "controle",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -14095,8 +14656,21 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n4",
+          "effects": [
+            {
+              "id": "desenvoutement",
+              "label": "Désenvoûtement",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:desenvoutement",
+                "classe:magicien",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -14313,8 +14887,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n6",
+          "effects": [
+            {
+              "id": "desintegration",
+              "label": "Désintégration",
+              "kind": "damage_or_area_control",
+              "automation": "damage_or_mj_aid",
+              "tags": [
+                "effet:desintegration",
+                "classe:magicien",
+                "degats_ou_zone",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -14676,8 +15264,22 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n1",
+          "effects": [
+            {
+              "id": "detection_de_la_magie",
+              "label": "Détection de la magie",
+              "kind": "detection_or_divination",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:detection_de_la_magie",
+                "classe:magicien",
+                "detection_ou_divination",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "folder": "ti9EBwYx3OHoVvTB",
@@ -16306,8 +16908,22 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n2",
+          "effects": [
+            {
+              "id": "detection_du_mal",
+              "label": "Détection du mal",
+              "kind": "detection_or_divination",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:detection_du_mal",
+                "classe:magicien",
+                "detection_ou_divination",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -16656,8 +17272,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n7",
+          "effects": [
+            {
+              "id": "disparition",
+              "label": "Disparition",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:disparition",
+                "classe:magicien",
+                "niveau:7"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -16787,8 +17416,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n1",
+          "effects": [
+            {
+              "id": "disque_flottant_de_tenser",
+              "label": "Disque flottant de Tenser",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:disque_flottant_de_tenser",
+                "classe:magicien",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "folder": "ti9EBwYx3OHoVvTB",
@@ -17054,8 +17696,21 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n3",
+          "effects": [
+            {
+              "id": "dissipation_de_la_magie",
+              "label": "Dissipation de la magie",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:dissipation_de_la_magie",
+                "classe:magicien",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -17852,8 +18507,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n5",
+          "effects": [
+            {
+              "id": "distorsion_des_distances",
+              "label": "Distorsion des distances",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:distorsion_des_distances",
+                "classe:magicien",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -18523,8 +19191,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n7",
+          "effects": [
+            {
+              "id": "duo_dimension",
+              "label": "Duo-dimension",
+              "kind": "movement_transformation_or_element",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:duo_dimension",
+                "classe:magicien",
+                "deplacement_transformation_ou_element",
+                "niveau:7"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -18654,8 +19336,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n2",
+          "effects": [
+            {
+              "id": "e_s_p",
+              "label": "E.S.P.",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:e_s_p",
+                "classe:magicien",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -18787,8 +19482,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n5",
+          "effects": [
+            {
+              "id": "eau_aeree",
+              "label": "Eau aérée",
+              "kind": "movement_transformation_or_element",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:eau_aeree",
+                "classe:magicien",
+                "deplacement_transformation_ou_element",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -18918,8 +19627,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n1",
+          "effects": [
+            {
+              "id": "ecriture",
+              "label": "Écriture",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:ecriture",
+                "classe:magicien",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -19177,8 +19899,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n1",
+          "effects": [
+            {
+              "id": "effacement",
+              "label": "Effacement",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:effacement",
+                "classe:magicien",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -19399,8 +20134,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n4",
+          "effects": [
+            {
+              "id": "effroi",
+              "label": "Effroi",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:effroi",
+                "classe:magicien",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -19671,8 +20419,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n4",
+          "effects": [
+            {
+              "id": "embroussaillement",
+              "label": "Embroussaillement",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:embroussaillement",
+                "classe:magicien",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -20033,8 +20794,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n9",
+          "effects": [
+            {
+              "id": "emprisonnement",
+              "label": "Emprisonnement",
+              "kind": "control",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:emprisonnement",
+                "classe:magicien",
+                "controle",
+                "niveau:9"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -20162,8 +20937,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n8",
+          "effects": [
+            {
+              "id": "emprisonnement_de_l_ame",
+              "label": "Emprisonnement de l’âme",
+              "kind": "control",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:emprisonnement_de_l_ame",
+                "classe:magicien",
+                "controle",
+                "niveau:8"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -20292,8 +21081,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n6",
+          "effects": [
+            {
+              "id": "enchantement",
+              "label": "Enchantement",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:enchantement",
+                "classe:magicien",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -20568,8 +21370,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n7",
+          "effects": [
+            {
+              "id": "epee_de_mordenkainen",
+              "label": "Épée de Mordenkainen",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:epee_de_mordenkainen",
+                "classe:magicien",
+                "niveau:7"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -20701,8 +21516,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n1",
+          "effects": [
+            {
+              "id": "escalade_d_araignee",
+              "label": "Escalade d’araignée",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:escalade_d_araignee",
+                "classe:magicien",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -20835,8 +21663,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n4",
+          "effects": [
+            {
+              "id": "excavation",
+              "label": "Excavation",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:excavation",
+                "classe:magicien",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -21371,8 +22212,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n4",
+          "effects": [
+            {
+              "id": "extension_i",
+              "label": "Extension I",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:extension_i",
+                "classe:magicien",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -21500,8 +22354,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n5",
+          "effects": [
+            {
+              "id": "extension_ii",
+              "label": "Extension II",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:extension_ii",
+                "classe:magicien",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -21629,8 +22496,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n6",
+          "effects": [
+            {
+              "id": "extension_iii",
+              "label": "Extension III",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:extension_iii",
+                "classe:magicien",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -21758,8 +22638,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n1",
+          "effects": [
+            {
+              "id": "fermeture",
+              "label": "Fermeture",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:fermeture",
+                "classe:magicien",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -21889,8 +22782,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n4",
+          "effects": [
+            {
+              "id": "feu_charmeur",
+              "label": "Feu charmeur",
+              "kind": "communication_or_control",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:feu_charmeur",
+                "classe:magicien",
+                "communication_ou_controle",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -22522,8 +23429,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n3",
+          "effects": [
+            {
+              "id": "fleche_de_feu",
+              "label": "Flèche de feu",
+              "kind": "damage_or_area_control",
+              "automation": "damage_or_mj_aid",
+              "tags": [
+                "effet:fleche_de_feu",
+                "classe:magicien",
+                "degats_ou_zone",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -22656,8 +23577,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n2",
+          "effects": [
+            {
+              "id": "force",
+              "label": "Force",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:force",
+                "classe:magicien",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -22923,8 +23857,21 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n3",
+          "effects": [
+            {
+              "id": "force_fantasmagorique",
+              "label": "Force fantasmagorique",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:force_fantasmagorique",
+                "classe:magicien",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -23412,8 +24359,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n3",
+          "effects": [
+            {
+              "id": "foudre",
+              "label": "Foudre",
+              "kind": "damage_or_area_control",
+              "automation": "damage_or_mj_aid",
+              "tags": [
+                "effet:foudre",
+                "classe:magicien",
+                "degats_ou_zone",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -23543,8 +24504,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n2",
+          "effects": [
+            {
+              "id": "fracassement",
+              "label": "Fracassement",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:fracassement",
+                "classe:magicien",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -23680,8 +24654,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n6",
+          "effects": [
+            {
+              "id": "glissement_de_terrain",
+              "label": "Glissement de terrain",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:glissement_de_terrain",
+                "classe:magicien",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -23809,8 +24796,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n6",
+          "effects": [
+            {
+              "id": "globe_d_invulnerabilite",
+              "label": "Globe d’invulnérabilité",
+              "kind": "protection",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:globe_d_invulnerabilite",
+                "classe:magicien",
+                "protection",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -23942,8 +24943,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n4",
+          "effects": [
+            {
+              "id": "globe_mineur_d_invulnerabilite",
+              "label": "Globe mineur d’invulnérabilité",
+              "kind": "protection",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:globe_mineur_d_invulnerabilite",
+                "classe:magicien",
+                "protection",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -24307,7 +25322,7 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "glands de chêne",
-          "houx"
+          "baies de houx"
         ],
         "composants_materiels_source": "les composantes matérielles de ce sort ne sont que des glands de chêne et/ou des baies de houx.",
         "composants_materiels_reference": "",
@@ -25311,8 +26326,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n9",
+          "effects": [
+            {
+              "id": "heteromorphisme",
+              "label": "Hétéromorphisme",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:heteromorphisme",
+                "classe:magicien",
+                "niveau:9"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -25581,8 +26609,21 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n6",
+          "effects": [
+            {
+              "id": "holographie",
+              "label": "Holographie",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:holographie",
+                "classe:magicien",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -25804,8 +26845,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n1",
+          "effects": [
+            {
+              "id": "identification",
+              "label": "Identification",
+              "kind": "detection_or_divination",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:identification",
+                "classe:magicien",
+                "detection_ou_divination",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -26193,8 +27248,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n2",
+          "effects": [
+            {
+              "id": "image_miroir",
+              "label": "Image miroir",
+              "kind": "protection",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:image_miroir",
+                "classe:magicien",
+                "protection",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -26418,8 +27487,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n8",
+          "effects": [
+            {
+              "id": "immunite_magique_de_serten",
+              "label": "Immunité magique de Serten",
+              "kind": "protection",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:immunite_magique_de_serten",
+                "classe:magicien",
+                "protection",
+                "niveau:8"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -26550,8 +27633,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n6",
+          "effects": [
+            {
+              "id": "incantation_mortelle",
+              "label": "Incantation mortelle",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:incantation_mortelle",
+                "classe:magicien",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -26683,8 +27779,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n3",
+          "effects": [
+            {
+              "id": "infravision",
+              "label": "Infravision",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:infravision",
+                "classe:magicien",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -27067,8 +28176,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n3",
+          "effects": [
+            {
+              "id": "intermittence",
+              "label": "Intermittence",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:intermittence",
+                "classe:magicien",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -27199,8 +28321,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n7",
+          "effects": [
+            {
+              "id": "inversion_de_la_gravite",
+              "label": "Inversion de la gravité",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:inversion_de_la_gravite",
+                "classe:magicien",
+                "niveau:7"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -27337,8 +28472,22 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n2",
+          "effects": [
+            {
+              "id": "invisibilite",
+              "label": "Invisibilité",
+              "kind": "protection",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:invisibilite",
+                "classe:magicien",
+                "protection",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -27826,8 +28975,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n7",
+          "effects": [
+            {
+              "id": "invisibilite_de_masse",
+              "label": "Invisibilité de masse",
+              "kind": "protection",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:invisibilite_de_masse",
+                "classe:magicien",
+                "protection",
+                "niveau:7"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -27962,8 +29125,22 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n3",
+          "effects": [
+            {
+              "id": "invisibilite_sur_3_m",
+              "label": "Invisibilité sur 3 m",
+              "kind": "protection",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:invisibilite_sur_3_m",
+                "classe:magicien",
+                "protection",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -28615,8 +29792,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n5",
+          "effects": [
+            {
+              "id": "invocation_d_elemental",
+              "label": "Invocation d’élémental",
+              "kind": "summon_or_actor_effect",
+              "automation": "actor_creation_or_mj_aid",
+              "tags": [
+                "effet:invocation_d_elemental",
+                "classe:magicien",
+                "invocation_ou_creation",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -29184,8 +30375,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n1",
+          "effects": [
+            {
+              "id": "invocation_d_un_familier",
+              "label": "Invocation d’un familier",
+              "kind": "summon_or_actor_effect",
+              "automation": "actor_creation_or_mj_aid",
+              "tags": [
+                "effet:invocation_d_un_familier",
+                "classe:magicien",
+                "invocation_ou_creation",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -29458,8 +30663,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n4",
+          "effects": [
+            {
+              "id": "invocation_de_monstre_ii",
+              "label": "Invocation de monstre II",
+              "kind": "summon_or_actor_effect",
+              "automation": "actor_creation_or_mj_aid",
+              "tags": [
+                "effet:invocation_de_monstre_ii",
+                "classe:magicien",
+                "invocation_ou_creation",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -29587,8 +30806,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n5",
+          "effects": [
+            {
+              "id": "invocation_de_monstre_iii",
+              "label": "Invocation de Monstre III",
+              "kind": "summon_or_actor_effect",
+              "automation": "actor_creation_or_mj_aid",
+              "tags": [
+                "effet:invocation_de_monstre_iii",
+                "classe:magicien",
+                "invocation_ou_creation",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -29716,8 +30949,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n6",
+          "effects": [
+            {
+              "id": "invocation_de_monstre_iv",
+              "label": "Invocation de monstre IV",
+              "kind": "summon_or_actor_effect",
+              "automation": "actor_creation_or_mj_aid",
+              "tags": [
+                "effet:invocation_de_monstre_iv",
+                "classe:magicien",
+                "invocation_ou_creation",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -29845,8 +31092,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n7",
+          "effects": [
+            {
+              "id": "invocation_de_monstre_v",
+              "label": "Invocation de monstre V",
+              "kind": "summon_or_actor_effect",
+              "automation": "actor_creation_or_mj_aid",
+              "tags": [
+                "effet:invocation_de_monstre_v",
+                "classe:magicien",
+                "invocation_ou_creation",
+                "niveau:7"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -29974,8 +31235,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n8",
+          "effects": [
+            {
+              "id": "invocation_de_monstre_vi",
+              "label": "Invocation de monstre VI",
+              "kind": "summon_or_actor_effect",
+              "automation": "actor_creation_or_mj_aid",
+              "tags": [
+                "effet:invocation_de_monstre_vi",
+                "classe:magicien",
+                "invocation_ou_creation",
+                "niveau:8"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -30103,8 +31378,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n9",
+          "effects": [
+            {
+              "id": "invocation_de_monstre_vii",
+              "label": "Invocation de Monstre VII",
+              "kind": "summon_or_actor_effect",
+              "automation": "actor_creation_or_mj_aid",
+              "tags": [
+                "effet:invocation_de_monstre_vii",
+                "classe:magicien",
+                "invocation_ou_creation",
+                "niveau:9"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -30232,8 +31521,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n3",
+          "effects": [
+            {
+              "id": "invocation_de_monstres_i",
+              "label": "Invocation de monstres I",
+              "kind": "summon_or_actor_effect",
+              "automation": "actor_creation_or_mj_aid",
+              "tags": [
+                "effet:invocation_de_monstres_i",
+                "classe:magicien",
+                "invocation_ou_creation",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -30454,9 +31757,7 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S",
-        "composants_materiels": [
-          "symbole sacré du clerc"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
@@ -30587,7 +31888,7 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "pomme de pin",
-          "houx"
+          "8 baies de houx"
         ],
         "composants_materiels_source": "Les composantes matérielles sont une pomme de pin et 8 baies de houx.",
         "composants_materiels_reference": "",
@@ -31020,8 +32321,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n7",
+          "effects": [
+            {
+              "id": "invocation_instantanee_de_drawmij",
+              "label": "Invocation instantanée de Drawmij",
+              "kind": "summon_or_actor_effect",
+              "automation": "actor_creation_or_mj_aid",
+              "tags": [
+                "effet:invocation_instantanee_de_drawmij",
+                "classe:magicien",
+                "invocation_ou_creation",
+                "niveau:7"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -31415,8 +32730,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n8",
+          "effects": [
+            {
+              "id": "labyrinthe",
+              "label": "Labyrinthe",
+              "kind": "control",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:labyrinthe",
+                "classe:magicien",
+                "controle",
+                "niveau:8"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -32864,8 +34193,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n3",
+          "effects": [
+            {
+              "id": "langues",
+              "label": "Langues",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:langues",
+                "classe:magicien",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "folder": "NDOM4cur7yxMu6TD",
@@ -32999,8 +34341,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n1",
+          "effects": [
+            {
+              "id": "lecture_de_la_magie",
+              "label": "Lecture de la magie",
+              "kind": "detection_or_divination",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:lecture_de_la_magie",
+                "classe:magicien",
+                "detection_ou_divination",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -33131,8 +34487,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n2",
+          "effects": [
+            {
+              "id": "levitation",
+              "label": "Lévitation",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:levitation",
+                "classe:magicien",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -33517,8 +34886,21 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n5",
+          "effects": [
+            {
+              "id": "lithomorphose",
+              "label": "Lithomorphose",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:lithomorphose",
+                "classe:magicien",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -33838,9 +35220,7 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [
-          "pierre aimantée"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "fourchette d’argent ou baguette fourchue selon version du sort",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
         "composants_materiels_verification_recommandee": "true",
@@ -33853,8 +35233,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n2",
+          "effects": [
+            {
+              "id": "localisation_d_objets",
+              "label": "Localisation d’objets",
+              "kind": "detection_or_divination",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:localisation_d_objets",
+                "classe:magicien",
+                "detection_ou_divination",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -34423,8 +35817,21 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n2",
+          "effects": [
+            {
+              "id": "lumiere_eternelle",
+              "label": "Lumière éternelle",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:lumiere_eternelle",
+                "classe:magicien",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -34836,8 +36243,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n1",
+          "effects": [
+            {
+              "id": "lumieres_dansantes",
+              "label": "Lumières dansantes",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:lumieres_dansantes",
+                "classe:magicien",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -35360,8 +36780,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n9",
+          "effects": [
+            {
+              "id": "main_broyante_de_bigby",
+              "label": "Main broyante de Bigby",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:main_broyante_de_bigby",
+                "classe:magicien",
+                "niveau:9"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -35491,8 +36924,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n5",
+          "effects": [
+            {
+              "id": "main_d_interposition_de_bigby",
+              "label": "Main d’interposition de Bigby",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:main_d_interposition_de_bigby",
+                "classe:magicien",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -35623,8 +37069,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n6",
+          "effects": [
+            {
+              "id": "main_de_force_de_bigby",
+              "label": "Main de force de Bigby",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:main_de_force_de_bigby",
+                "classe:magicien",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -35752,8 +37211,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n1",
+          "effects": [
+            {
+              "id": "mains_brulantes",
+              "label": "Mains brûlantes",
+              "kind": "damage_or_area_control",
+              "automation": "damage_or_mj_aid",
+              "tags": [
+                "effet:mains_brulantes",
+                "classe:magicien",
+                "degats_ou_zone",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -35884,8 +37357,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n4",
+          "effects": [
+            {
+              "id": "maladresse",
+              "label": "Maladresse",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:maladresse",
+                "classe:magicien",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -36268,12 +37754,12 @@
             {
               "id": "marche_des_vents",
               "label": "Marche des vents",
-              "kind": "elemental_or_weather_control",
+              "kind": "movement_transformation_or_element",
               "automation": "mj_aid",
               "tags": [
                 "effet:marche_des_vents",
                 "classe:clerc",
-                "element_ou_climat",
+                "deplacement_transformation_ou_element",
                 "niveau:7"
               ],
               "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
@@ -36514,12 +38000,12 @@
             {
               "id": "marteau_spirituel",
               "label": "Marteau Spirituel",
-              "kind": "elemental_or_weather_control",
+              "kind": "movement_transformation_or_element",
               "automation": "mj_aid",
               "tags": [
                 "effet:marteau_spirituel",
                 "classe:clerc",
-                "element_ou_climat",
+                "deplacement_transformation_ou_element",
                 "niveau:2"
               ],
               "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
@@ -36913,8 +38399,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n1",
+          "effects": [
+            {
+              "id": "message",
+              "label": "Message",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:message",
+                "classe:magicien",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -37188,8 +38687,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n5",
+          "effects": [
+            {
+              "id": "metempsycose",
+              "label": "Métempsycose",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:metempsycose",
+                "classe:magicien",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -37722,8 +39234,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n8",
+          "effects": [
+            {
+              "id": "mot_de_pouvoir_cecite",
+              "label": "Mot de pouvoir : « Cécité »",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:mot_de_pouvoir_cecite",
+                "classe:magicien",
+                "niveau:8"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -37851,8 +39376,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n7",
+          "effects": [
+            {
+              "id": "mot_de_pouvoir_etourdissement",
+              "label": "Mot de pouvoir : « étourdissement »",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:mot_de_pouvoir_etourdissement",
+                "classe:magicien",
+                "niveau:7"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -37980,8 +39518,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n9",
+          "effects": [
+            {
+              "id": "mot_de_pouvoir_mort",
+              "label": "Mot de pouvoir : « mort »",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:mot_de_pouvoir_mort",
+                "classe:magicien",
+                "niveau:9"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -38253,8 +39804,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n4",
+          "effects": [
+            {
+              "id": "moyen_mnemonique_de_rary",
+              "label": "Moyen mnémonique de Rary",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:moyen_mnemonique_de_rary",
+                "classe:magicien",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -38663,8 +40227,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n5",
+          "effects": [
+            {
+              "id": "mur_de_fer",
+              "label": "Mur de fer",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:mur_de_fer",
+                "classe:magicien",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -38945,8 +40522,22 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n4",
+          "effects": [
+            {
+              "id": "mur_de_feu",
+              "label": "Mur de feu",
+              "kind": "damage_or_area_control",
+              "automation": "damage_or_mj_aid",
+              "tags": [
+                "effet:mur_de_feu",
+                "classe:magicien",
+                "degats_ou_zone",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -39031,8 +40622,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n5",
+          "effects": [
+            {
+              "id": "mur_de_force",
+              "label": "Mur de force",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:mur_de_force",
+                "classe:magicien",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -39163,8 +40767,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n4",
+          "effects": [
+            {
+              "id": "mur_de_glace",
+              "label": "Mur de glace",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:mur_de_glace",
+                "classe:magicien",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -39295,8 +40912,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n5",
+          "effects": [
+            {
+              "id": "mur_de_roc",
+              "label": "Mur de roc",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:mur_de_roc",
+                "classe:magicien",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -39563,8 +41193,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n6",
+          "effects": [
+            {
+              "id": "mythomancie",
+              "label": "Mythomancie",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:mythomancie",
+                "classe:magicien",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -40064,11 +41707,7 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [
-          "goutte de sang",
-          "morceau de chair humaine",
-          "os en poudre"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
@@ -40081,8 +41720,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n5",
+          "effects": [
+            {
+              "id": "necro_animation",
+              "label": "Nécro-animation",
+              "kind": "summon_or_actor_effect",
+              "automation": "actor_creation_or_mj_aid",
+              "tags": [
+                "effet:necro_animation",
+                "classe:magicien",
+                "invocation_ou_creation",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -40593,8 +42246,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n8",
+          "effects": [
+            {
+              "id": "nuage_incendiaire",
+              "label": "Nuage incendiaire",
+              "kind": "damage_or_area_control",
+              "automation": "damage_or_mj_aid",
+              "tags": [
+                "effet:nuage_incendiaire",
+                "classe:magicien",
+                "degats_ou_zone",
+                "niveau:8"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -40722,8 +42389,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n5",
+          "effects": [
+            {
+              "id": "nuage_letal",
+              "label": "Nuage létal",
+              "kind": "damage_or_area_control",
+              "automation": "damage_or_mj_aid",
+              "tags": [
+                "effet:nuage_letal",
+                "classe:magicien",
+                "degats_ou_zone",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -40855,8 +42536,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n2",
+          "effects": [
+            {
+              "id": "nuage_puant",
+              "label": "Nuage puant",
+              "kind": "damage_or_area_control",
+              "automation": "damage_or_mj_aid",
+              "tags": [
+                "effet:nuage_puant",
+                "classe:magicien",
+                "degats_ou_zone",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -40984,8 +42679,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n9",
+          "effects": [
+            {
+              "id": "nuee_de_meteores",
+              "label": "Nuée de météores",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:nuee_de_meteores",
+                "classe:magicien",
+                "niveau:9"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -41258,8 +42966,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n4",
+          "effects": [
+            {
+              "id": "il_magique",
+              "label": "Œil magique",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:il_magique",
+                "classe:magicien",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -41526,8 +43247,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n2",
+          "effects": [
+            {
+              "id": "or_des_fous",
+              "label": "Or des fous",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:or_des_fous",
+                "classe:magicien",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -41904,8 +43638,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n2",
+          "effects": [
+            {
+              "id": "oubli",
+              "label": "Oubli",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:oubli",
+                "classe:magicien",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -42033,8 +43780,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n2",
+          "effects": [
+            {
+              "id": "ouverture",
+              "label": "Ouverture",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:ouverture",
+                "classe:magicien",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -42149,9 +43909,7 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V",
-        "composants_materiels": [
-          "petite tige de métal droite et rigide"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "symbole sacré du clerc",
         "composants_materiels_reference": "Règle/usage général clérical ; composant exact à vérifier si le sort précise un complément",
         "composants_materiels_verification_recommandee": "true",
@@ -42164,8 +43922,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n3",
+          "effects": [
+            {
+              "id": "paralysie",
+              "label": "Paralysie",
+              "kind": "control",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:paralysie",
+                "classe:magicien",
+                "controle",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "folder": "NDOM4cur7yxMu6TD",
@@ -42553,8 +44325,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n5",
+          "effects": [
+            {
+              "id": "paralysie_des_monstres",
+              "label": "Paralysie des monstres",
+              "kind": "control",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:paralysie_des_monstres",
+                "classe:magicien",
+                "controle",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -43207,11 +44993,12 @@
             {
               "id": "passage_sans_trace",
               "label": "Passage sans trace",
-              "kind": "druide_effect",
-              "automation": "active_effect_or_mj_aid",
+              "kind": "movement_transformation_or_element",
+              "automation": "mj_aid",
               "tags": [
                 "effet:passage_sans_trace",
                 "classe:druide",
+                "deplacement_transformation_ou_element",
                 "niveau:1"
               ],
               "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
@@ -43347,8 +45134,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n5",
+          "effects": [
+            {
+              "id": "passe_muraille",
+              "label": "Passe-muraille",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:passe_muraille",
+                "classe:magicien",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -44168,8 +45968,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n8",
+          "effects": [
+            {
+              "id": "permanence",
+              "label": "Permanence",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:permanence",
+                "classe:magicien",
+                "niveau:8"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -44303,8 +46116,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n2",
+          "effects": [
+            {
+              "id": "peur",
+              "label": "Peur",
+              "kind": "control",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:peur",
+                "classe:magicien",
+                "controle",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -44571,8 +46398,21 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n4",
+          "effects": [
+            {
+              "id": "phytomorphose",
+              "label": "Phytomorphose",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:phytomorphose",
+                "classe:magicien",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -44657,8 +46497,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n4",
+          "effects": [
+            {
+              "id": "piege_a_feu",
+              "label": "Piège à feu",
+              "kind": "control",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:piege_a_feu",
+                "classe:magicien",
+                "controle",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -44774,7 +46628,7 @@
         "jet_sauvegarde": "1/2",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "houx",
+          "baies de houx",
           "charbon"
         ],
         "composants_materiels_source": "ce sort est le même que le sort de niveau 4 de ma- gicien piège à feu (voir p.79) excepté ci-dessus, et en ce qui concerne les composantes matérielles : des baies de houx et un morceau de charbon avec lequel le druide doit surligner la fermeture.",
@@ -44893,8 +46747,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n2",
+          "effects": [
+            {
+              "id": "piege_de_leomund",
+              "label": "Piège de Léomund",
+              "kind": "control",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:piege_de_leomund",
+                "classe:magicien",
+                "controle",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -45418,8 +47286,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n7",
+          "effects": [
+            {
+              "id": "poigne_de_bigby",
+              "label": "Poigne de Bigby",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:poigne_de_bigby",
+                "classe:magicien",
+                "niveau:7"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -45547,8 +47428,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n1",
+          "effects": [
+            {
+              "id": "poigne_electrique",
+              "label": "Poigne électrique",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:poigne_electrique",
+                "classe:magicien",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -45681,8 +47575,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n8",
+          "effects": [
+            {
+              "id": "poing_de_bigby",
+              "label": "Poing de Bigby",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:poing_de_bigby",
+                "classe:magicien",
+                "niveau:8"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -45810,8 +47717,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n7",
+          "effects": [
+            {
+              "id": "porte_de_phase",
+              "label": "Porte de phase",
+              "kind": "movement_transformation_or_element",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:porte_de_phase",
+                "classe:magicien",
+                "deplacement_transformation_ou_element",
+                "niveau:7"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -46072,8 +47993,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n4",
+          "effects": [
+            {
+              "id": "porte_dimensionnelle",
+              "label": "Porte dimensionnelle",
+              "kind": "movement_transformation_or_element",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:porte_dimensionnelle",
+                "classe:magicien",
+                "deplacement_transformation_ou_element",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -46347,8 +48282,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n1",
+          "effects": [
+            {
+              "id": "poussee",
+              "label": "Poussée",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:poussee",
+                "classe:magicien",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -46880,8 +48828,22 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n1",
+          "effects": [
+            {
+              "id": "projectile_magique",
+              "label": "Projectile magique",
+              "kind": "damage_or_area_control",
+              "automation": "damage_or_mj_aid",
+              "tags": [
+                "effet:projectile_magique",
+                "classe:magicien",
+                "degats_ou_zone",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "folder": "ti9EBwYx3OHoVvTB",
@@ -47249,8 +49211,22 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n1",
+          "effects": [
+            {
+              "id": "protection_contre_le_mal",
+              "label": "Protection contre le mal",
+              "kind": "protection",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:protection_contre_le_mal",
+                "classe:magicien",
+                "protection",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -47702,9 +49678,7 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [
-          "poudre d’argent"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
@@ -47717,8 +49691,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n3",
+          "effects": [
+            {
+              "id": "protection_contre_le_mal_sur_3_m",
+              "label": "Protection contre le mal sur 3 m",
+              "kind": "protection",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:protection_contre_le_mal_sur_3_m",
+                "classe:magicien",
+                "protection",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -47954,8 +49942,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n3",
+          "effects": [
+            {
+              "id": "protection_contre_les_projectiles_normaux",
+              "label": "Protection contre les projectiles normaux",
+              "kind": "protection",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:protection_contre_les_projectiles_normaux",
+                "classe:magicien",
+                "protection",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -48083,8 +50085,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n8",
+          "effects": [
+            {
+              "id": "protection_d_esprit",
+              "label": "Protection d’esprit",
+              "kind": "protection",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:protection_d_esprit",
+                "classe:magicien",
+                "protection",
+                "niveau:8"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -48213,8 +50229,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n6",
+          "effects": [
+            {
+              "id": "punition_spirituelle",
+              "label": "Punition spirituelle",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:punition_spirituelle",
+                "classe:magicien",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -48347,12 +50376,12 @@
             {
               "id": "purification_de_l_eau",
               "label": "Purification de l'eau",
-              "kind": "elemental_or_weather_control",
+              "kind": "movement_transformation_or_element",
               "automation": "mj_aid",
               "tags": [
                 "effet:purification_de_l_eau",
                 "classe:druide",
-                "element_ou_climat",
+                "deplacement_transformation_ou_element",
                 "niveau:1"
               ],
               "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
@@ -48696,8 +50725,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n2",
+          "effects": [
+            {
+              "id": "pyrotechnie",
+              "label": "Pyrotechnie",
+              "kind": "damage_or_area_control",
+              "automation": "damage_or_mj_aid",
+              "tags": [
+                "effet:pyrotechnie",
+                "classe:magicien",
+                "degats_ou_zone",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -48825,8 +50868,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n6",
+          "effects": [
+            {
+              "id": "quete_magique",
+              "label": "Quête magique",
+              "kind": "control",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:quete_magique",
+                "classe:magicien",
+                "controle",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -49201,8 +51258,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n3",
+          "effects": [
+            {
+              "id": "rafale_de_vent",
+              "label": "Rafale de vent",
+              "kind": "movement_transformation_or_element",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:rafale_de_vent",
+                "classe:magicien",
+                "deplacement_transformation_ou_element",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -49332,8 +51403,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n3",
+          "effects": [
+            {
+              "id": "ralentissement",
+              "label": "Ralentissement",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:ralentissement",
+                "classe:magicien",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -49463,8 +51547,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n3",
+          "effects": [
+            {
+              "id": "rapidite",
+              "label": "Rapidité",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:rapidite",
+                "classe:magicien",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -50081,8 +52178,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n2",
+          "effects": [
+            {
+              "id": "rayon_d_affaiblissement",
+              "label": "Rayon d’affaiblissement",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:rayon_d_affaiblissement",
+                "classe:magicien",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -50742,8 +52852,22 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n6",
+          "effects": [
+            {
+              "id": "reincarnation",
+              "label": "Réincarnation",
+              "kind": "healing_or_restoration",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:reincarnation",
+                "classe:magicien",
+                "soin_ou_restauration",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -50828,8 +52952,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n1",
+          "effects": [
+            {
+              "id": "reparation",
+              "label": "Réparation",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:reparation",
+                "classe:magicien",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -50964,8 +53101,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n6",
+          "effects": [
+            {
+              "id": "repulsion",
+              "label": "Répulsion",
+              "kind": "control",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:repulsion",
+                "classe:magicien",
+                "controle",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -51082,9 +53233,11 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           "gui",
+          "l’un des éléments suivants: plusieurs soucis écrasés",
           "poireau écrasé",
-          "feuilles de navet écrasées",
-          "résine d’arbre à camphre"
+          "7 feuilles de navet écrasées",
+          "résine d’arbre à camphre",
+          "Consommation explicitement indiquée dans la description"
         ],
         "composants_materiels_source": "Les composantes matérielles sont du gui et l’un des éléments suivants : plusieurs soucis écrasés, un poireau écrasé, 7 feuilles de navet écrasées ou un peu de résine d’arbre à camphre.",
         "composants_materiels_reference": "",
@@ -52006,12 +54159,12 @@
             {
               "id": "respiration_aquatique",
               "label": "Respiration aquatique",
-              "kind": "elemental_or_weather_control",
+              "kind": "movement_transformation_or_element",
               "automation": "mj_aid",
               "tags": [
                 "effet:respiration_aquatique",
                 "classe:druide",
-                "element_ou_climat",
+                "deplacement_transformation_ou_element",
                 "niveau:3"
               ],
               "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
@@ -52156,8 +54309,22 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n3",
+          "effects": [
+            {
+              "id": "respiration_aquatique",
+              "label": "Respiration aquatique",
+              "kind": "movement_transformation_or_element",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:respiration_aquatique",
+                "classe:magicien",
+                "deplacement_transformation_ou_element",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -53129,8 +55296,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n3",
+          "effects": [
+            {
+              "id": "runes_explosives",
+              "label": "Runes explosives",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:runes_explosives",
+                "classe:magicien",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -53600,8 +55780,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n1",
+          "effects": [
+            {
+              "id": "saut",
+              "label": "Saut",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:saut",
+                "classe:magicien",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -53717,8 +55910,9 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "deux feuilles de cristal",
-          "deux coquilles d’œuf"
+          "deux feuilles de verre",
+          "Objet utilisé sans destruction indiquée",
+          "deux feuilles de cristal"
         ],
         "composants_materiels_source": "excepté ci-dessus, et le fait que les composantes matérielles soient 2 feuilles de verre ou de cristal, ce sort est le même que le sort de niveau 6 de clerc séparation des eaux (voir p.52).",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -53739,8 +55933,22 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n6",
+          "effects": [
+            {
+              "id": "separation_des_eaux",
+              "label": "Séparation des eaux",
+              "kind": "movement_transformation_or_element",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:separation_des_eaux",
+                "classe:magicien",
+                "deplacement_transformation_ou_element",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -53830,12 +56038,12 @@
             {
               "id": "separation_des_eaux",
               "label": "Séparation des Eaux",
-              "kind": "elemental_or_weather_control",
+              "kind": "movement_transformation_or_element",
               "automation": "mj_aid",
               "tags": [
                 "effet:separation_des_eaux",
                 "classe:clerc",
-                "element_ou_climat",
+                "deplacement_transformation_ou_element",
                 "niveau:6"
               ],
               "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
@@ -54313,8 +56521,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n1",
+          "effects": [
+            {
+              "id": "serviteur_invisible",
+              "label": "Serviteur invisible",
+              "kind": "summon_or_actor_effect",
+              "automation": "actor_creation_or_mj_aid",
+              "tags": [
+                "effet:serviteur_invisible",
+                "classe:magicien",
+                "invocation_ou_creation",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -54534,9 +56756,7 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S",
-        "composants_materiels": [
-          "symbole sacré du clerc"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
@@ -54549,8 +56769,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n9",
+          "effects": [
+            {
+              "id": "seuil",
+              "label": "Seuil",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:seuil",
+                "classe:magicien",
+                "niveau:9"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -55224,8 +57457,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n7",
+          "effects": [
+            {
+              "id": "simulacre",
+              "label": "Simulacre",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:simulacre",
+                "classe:magicien",
+                "niveau:7"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -56232,8 +58478,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n1",
+          "effects": [
+            {
+              "id": "sommeil",
+              "label": "Sommeil",
+              "kind": "control",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:sommeil",
+                "classe:magicien",
+                "controle",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -56344,9 +58604,7 @@
         "temps_incantation": "9 segments",
         "jet_sauvegarde": "aucun",
         "composantes": "V, S",
-        "composants_materiels": [
-          "symbole sacré du clerc"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "—",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
@@ -56366,8 +58624,22 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n9",
+          "effects": [
+            {
+              "id": "sort_astral",
+              "label": "Sort astral",
+              "kind": "movement_transformation_or_element",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:sort_astral",
+                "classe:magicien",
+                "deplacement_transformation_ou_element",
+                "niveau:9"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -56436,9 +58708,7 @@
         "temps_incantation": "3 tours",
         "jet_sauvegarde": "aucun",
         "composantes": "V, S",
-        "composants_materiels": [
-          "symbole sacré du clerc"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "—",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
@@ -56534,11 +58804,12 @@
             {
               "id": "sort_astral",
               "label": "Sort Astral",
-              "kind": "clerc_effect",
-              "automation": "active_effect_or_mj_aid",
+              "kind": "movement_transformation_or_element",
+              "automation": "mj_aid",
               "tags": [
                 "effet:sort_astral",
                 "classe:clerc",
+                "deplacement_transformation_ou_element",
                 "niveau:7"
               ],
               "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
@@ -56900,8 +59171,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n9",
+          "effects": [
+            {
+              "id": "souhait_majeur",
+              "label": "Souhait majeur",
+              "kind": "detection_or_divination",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:souhait_majeur",
+                "classe:magicien",
+                "detection_ou_divination",
+                "niveau:9"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -57029,8 +59314,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n7",
+          "effects": [
+            {
+              "id": "souhait_mineur",
+              "label": "Souhait mineur",
+              "kind": "detection_or_divination",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:souhait_mineur",
+                "classe:magicien",
+                "detection_ou_divination",
+                "niveau:7"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -57165,8 +59464,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n6",
+          "effects": [
+            {
+              "id": "sphere_glaciale_d_otiluke",
+              "label": "Sphère glaciale d’Otiluke",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:sphere_glaciale_d_otiluke",
+                "classe:magicien",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -57295,8 +59607,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n9",
+          "effects": [
+            {
+              "id": "sphere_prismatique",
+              "label": "Sphère prismatique",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:sphere_prismatique",
+                "classe:magicien",
+                "niveau:9"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -57424,8 +59749,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n9",
+          "effects": [
+            {
+              "id": "stase_temporelle",
+              "label": "Stase temporelle",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:stase_temporelle",
+                "classe:magicien",
+                "niveau:9"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -57558,8 +59896,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n7",
+          "effects": [
+            {
+              "id": "statue",
+              "label": "Statue",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:statue",
+                "classe:magicien",
+                "niveau:7"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -57696,8 +60047,22 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n3",
+          "effects": [
+            {
+              "id": "suggestion",
+              "label": "Suggestion",
+              "kind": "communication_or_control",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:suggestion",
+                "classe:magicien",
+                "communication_ou_controle",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -58406,8 +60771,10 @@
         "jet_sauvegarde": "spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "mercure",
-          "phosphore"
+          "diamant réduit en poudre",
+          "Réduit en poudre",
+          "opale noire réduite en poudre",
+          "Réduite en poudre"
         ],
         "composants_materiels_source": "Les composantes maté- rielles sont un diamant et une opale noire réduits en poudre, d’une valeur minimale de 5.000 po chacun.",
         "composants_materiels_reference": "",
@@ -58428,8 +60795,21 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n8",
+          "effects": [
+            {
+              "id": "symbole",
+              "label": "Symbole",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:symbole",
+                "classe:magicien",
+                "niveau:8"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -58511,8 +60891,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n5",
+          "effects": [
+            {
+              "id": "telekinesie",
+              "label": "Télékinésie",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:telekinesie",
+                "classe:magicien",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -58640,8 +61033,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n5",
+          "effects": [
+            {
+              "id": "teleportation",
+              "label": "Téléportation",
+              "kind": "movement_transformation_or_element",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:teleportation",
+                "classe:magicien",
+                "deplacement_transformation_ou_element",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -58919,8 +61326,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n4",
+          "effects": [
+            {
+              "id": "tempete_de_glace",
+              "label": "Tempête de glace",
+              "kind": "damage_or_area_control",
+              "automation": "damage_or_mj_aid",
+              "tags": [
+                "effet:tempete_de_glace",
+                "classe:magicien",
+                "degats_ou_zone",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -59316,8 +61737,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n2",
+          "effects": [
+            {
+              "id": "tenebres_sur_5_metres",
+              "label": "Ténèbres sur 5 mètres",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:tenebres_sur_5_metres",
+                "classe:magicien",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -59541,8 +61975,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n4",
+          "effects": [
+            {
+              "id": "terrain_hallucinatoire",
+              "label": "Terrain hallucinatoire",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:terrain_hallucinatoire",
+                "classe:magicien",
+                "niveau:4"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -59672,8 +62119,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n2",
+          "effects": [
+            {
+              "id": "toile_d_araignee",
+              "label": "Toile d’araignée",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:toile_d_araignee",
+                "classe:magicien",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -59806,8 +62266,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n8",
+          "effects": [
+            {
+              "id": "transformation_d_objets",
+              "label": "Transformation d’objets",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:transformation_d_objets",
+                "classe:magicien",
+                "niveau:8"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -59940,8 +62413,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n6",
+          "effects": [
+            {
+              "id": "transformation_de_tenser",
+              "label": "Transformation de Tenser",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:transformation_de_tenser",
+                "classe:magicien",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -60218,12 +62704,12 @@
             {
               "id": "transmutation_de_pierre_en_boue",
               "label": "Transmutation de pierre en boue",
-              "kind": "elemental_or_weather_control",
+              "kind": "movement_transformation_or_element",
               "automation": "mj_aid",
               "tags": [
                 "effet:transmutation_de_pierre_en_boue",
                 "classe:druide",
-                "element_ou_climat",
+                "deplacement_transformation_ou_element",
                 "niveau:5"
               ],
               "notes": "Profil mécanique druide normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
@@ -60367,8 +62853,22 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n5",
+          "effects": [
+            {
+              "id": "transmutation_de_pierre_en_boue",
+              "label": "Transmutation de pierre en boue",
+              "kind": "movement_transformation_or_element",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:transmutation_de_pierre_en_boue",
+                "classe:magicien",
+                "deplacement_transformation_ou_element",
+                "niveau:5"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -60456,8 +62956,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n6",
+          "effects": [
+            {
+              "id": "transmutation_de_pierre_en_chair",
+              "label": "Transmutation de pierre en chair",
+              "kind": "movement_transformation_or_element",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:transmutation_de_pierre_en_chair",
+                "classe:magicien",
+                "deplacement_transformation_ou_element",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -60734,8 +63248,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n6",
+          "effects": [
+            {
+              "id": "transvision",
+              "label": "Transvision",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:transvision",
+                "classe:magicien",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -61379,8 +63906,22 @@
         ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n1",
+          "effects": [
+            {
+              "id": "ventriloquie",
+              "label": "Ventriloquie",
+              "kind": "movement_transformation_or_element",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:ventriloquie",
+                "classe:magicien",
+                "deplacement_transformation_ou_element",
+                "niveau:1"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [],
@@ -61592,8 +64133,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n2",
+          "effects": [
+            {
+              "id": "verrou_magique",
+              "label": "Verrou magique",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:verrou_magique",
+                "classe:magicien",
+                "niveau:2"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -61729,8 +64283,21 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n6",
+          "effects": [
+            {
+              "id": "vigiles_et_sentinelles",
+              "label": "Vigiles et sentinelles",
+              "kind": "magicien_effect",
+              "automation": "active_effect_or_mj_aid",
+              "tags": [
+                "effet:vigiles_et_sentinelles",
+                "classe:magicien",
+                "niveau:6"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -62085,11 +64652,7 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S",
-        "composants_materiels": [
-          "safran",
-          "graisse",
-          "huile"
-        ],
+        "composants_materiels": [],
         "composants_materiels_source": "symbole sacré du clerc",
         "composants_materiels_reference": "Règle/usage général clérical ; composant exact à vérifier si le sort précise un complément",
         "composants_materiels_verification_recommandee": "true",
@@ -62364,8 +64927,22 @@
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "canonical-system",
-          "effects": []
+          "source": "manual-normalized-magicien-n3",
+          "effects": [
+            {
+              "id": "vol",
+              "label": "Vol",
+              "kind": "movement_transformation_or_element",
+              "automation": "mj_aid",
+              "tags": [
+                "effet:vol",
+                "classe:magicien",
+                "deplacement_transformation_ou_element",
+                "niveau:3"
+              ],
+              "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            }
+          ]
         }
       },
       "effects": [
@@ -62461,6 +65038,6 @@
       "sort": 0
     }
   ],
-  "normalizedBy": "2026-06-17-normalize-spell-materials-v3-druid-n7-materials-v1",
-  "normalizedAt": "2026-06-18T05:17:05.641Z"
+  "normalizedBy": "2026-06-17-normalize-spell-materials-v3-magicien-n9-effectprofile-v1",
+  "normalizedAt": "2026-06-18T05:48:14.028Z"
 }
