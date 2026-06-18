@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 
-const VERSION = "2026-06-18-normalize-illusionist-components-resolve-warnings-v1";
+const VERSION = "2026-06-18-normalize-wizard-structured-components-v1";
 const DEFAULT_INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const DEFAULT_OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
 const DEFAULT_CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
@@ -16,7 +16,7 @@ const CLERIC_LEVELS = [2, 3, 4, 5, 6, 7];
 const DRUID_LEVELS = [1, 2, 3, 4, 5, 6, 7];
 const WIZARD_LEVELS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 const ILLUSIONIST_LEVELS = [1, 2, 3, 4, 5, 6, 7];
-const MATERIAL_PRESERVE_CLASSES = new Set(["clerc", "druide", "magicien"]);
+const MATERIAL_PRESERVE_CLASSES = new Set(["clerc", "druide"]);
 const MATERIAL_PRESERVE_FIELDS = [
   "composants_materiels",
   "composants_materiels_source",
@@ -86,6 +86,10 @@ function isClercSpellLevel(item, level) { return isClassSpellLevel(item, "clerc"
 function isDruideSpellLevel(item, level) { return isClassSpellLevel(item, "druide", level); }
 function isMagicienSpellLevel(item, level) { return isClassSpellLevel(item, "magicien", level); }
 function isIllusionnisteSpellLevel(item, level) { return isClassSpellLevel(item, "illusionniste", level); }
+function isMagicienSpell(item) {
+  const level = spellLevel(item?.system ?? {});
+  return WIZARD_LEVELS.includes(level) && isMagicienSpellLevel(item, level);
+}
 function isIllusionnisteSpell(item) {
   const level = spellLevel(item?.system ?? {});
   return ILLUSIONIST_LEVELS.includes(level) && isIllusionnisteSpellLevel(item, level);
@@ -116,11 +120,11 @@ function buildExistingItemIndex(outputPath) {
   return index;
 }
 
-function loadIllusionistAuditIndex() {
+function loadClassAuditIndex(classSlug, levels) {
   const index = new Map();
   const loaded = [];
-  for (const level of ILLUSIONIST_LEVELS) {
-    const file = path.resolve(repoRoot, `audit/decoupage_fichier/illusionniste-niveau-${level}.json`);
+  for (const level of levels) {
+    const file = path.resolve(repoRoot, `audit/decoupage_fichier/${classSlug}-niveau-${level}.json`);
     if (!fs.existsSync(file)) continue;
     try {
       const json = JSON.parse(fs.readFileSync(file, "utf8"));
@@ -133,7 +137,7 @@ function loadIllusionistAuditIndex() {
         index.set(key, item);
       }
     } catch (err) {
-      console.warn(`[ADD2E][SPELL_MATERIALS_V3] Fichier illusionniste illisible : ${file}`, err?.message ?? err);
+      console.warn(`[ADD2E][SPELL_MATERIALS_V3] Fichier ${classSlug} illisible : ${file}`, err?.message ?? err);
     }
   }
   return { index, loaded };
@@ -159,6 +163,7 @@ const MATERIAL_CANON = new Map(Object.entries({
   pincee_de_poudre_de_fer: "poudre de fer",
   poudre_d_argent: "poudre d’argent",
   poudre_argent: "poudre d’argent",
+  poudre_de_diamant: "poudre de diamant",
   petite_corne_d_argent: "petite corne d’argent",
   corne_d_argent: "petite corne d’argent",
   fil_de_cuivre: "fil de cuivre",
@@ -183,8 +188,38 @@ const MATERIAL_CANON = new Map(Object.entries({
   sable: "sable",
   soufre: "soufre",
   phosphore: "phosphore",
-  argile: "argile"
+  argile: "argile",
+  soufre_et_phosphore: "soufre et phosphore",
+  guano_de_chauve_souris: "guano de chauve-souris",
+  guano_de_chauve_souris_en_boule: "guano de chauve-souris",
+  toile_d_araignee: "toile d’araignée",
+  morceau_de_toile_d_araignee: "toile d’araignée",
+  toile_d_araignee_bitumee: "toile d’araignée bitumée",
+  poudre_de_mica: "poudre de mica",
+  mica_en_poudre: "poudre de mica",
+  oeuf_pourri: "œuf pourri",
+  œuf_pourri: "œuf pourri",
+  feuilles_de_chou_puant: "feuilles de chou puant",
+  feuille_de_chou_puant: "feuilles de chou puant",
+  morceau_de_fourrure: "morceau de fourrure",
+  fourrure: "morceau de fourrure",
+  tige_de_verre: "tige de verre",
+  baguette_de_verre: "tige de verre",
+  tige_de_cristal: "tige de cristal",
+  baguette_de_cristal: "tige de cristal",
+  ambre: "ambre",
+  gomme_arabique: "gomme arabique",
+  cils: "cils",
+  cil: "cils",
+  morceau_de_gomme_arabique: "gomme arabique"
 }));
+
+const ELEMENTAL_VARIANTS = [
+  { type: "variante", id: "air", label: "Invocation d’un élémental de l’air", composants: ["encens à faire brûler"] },
+  { type: "variante", id: "eau", label: "Invocation d’un élémental de l’eau", composants: ["eau", "sable"] },
+  { type: "variante", id: "feu", label: "Invocation d’un élémental du feu", composants: ["soufre", "phosphore"] },
+  { type: "variante", id: "terre", label: "Invocation d’un élémental de terre", composants: ["argile"] }
+];
 
 const WIZARD_MATERIAL_OVERRIDES = new Map(Object.entries({
   allometamorphose: ["cocon de chenille"],
@@ -193,7 +228,8 @@ const WIZARD_MATERIAL_OVERRIDES = new Map(Object.entries({
   arme_enchantee: ["carbone en poudre", "citron en poudre"],
   clairaudience: ["petite corne d’argent"],
   message: ["fil de cuivre"],
-  ventriloquie: ["parchemin mis en cône"]
+  ventriloquie: ["parchemin mis en cône"],
+  invocation_d_un_elemental: ELEMENTAL_VARIANTS
 }));
 
 const ILLUSIONIST_COMPONENT_DELEGATIONS = new Set(["sorts_de_niveau_1_de_magicien"]);
@@ -229,7 +265,7 @@ const NOISE_STARTS = [
 const NOISE_CONTAINS = [
   "manuel des joueurs", "formulation source", "règle d arbitrage", "description indique", "pour lancer le sort",
   "composant requis selon", "consommation explicitement indiquée", "que le magicien doit", "que l illusionniste doit",
-  "utilisé pour", "utilisee pour", "utilisée pour"
+  "utilisé pour", "utilisee pour", "utilisée pour", "poudre en forme de cone"
 ].map(norm);
 
 function canonicalMaterial(value) {
@@ -350,12 +386,7 @@ function parseElementalVariants(source) {
   const n = norm(source);
   if (!n.includes("elemental") && !n.includes("elementaire")) return [];
   if (!n.includes("air") || !n.includes("eau") || !n.includes("feu") || !n.includes("terre")) return [];
-  return [
-    { type: "variante", id: "air", label: "Invocation d’un élémental de l’air", composants: ["encens à faire brûler"] },
-    { type: "variante", id: "eau", label: "Invocation d’un élémental de l’eau", composants: ["eau", "sable"] },
-    { type: "variante", id: "feu", label: "Invocation d’un élémental du feu", composants: ["soufre", "phosphore"] },
-    { type: "variante", id: "terre", label: "Invocation d’un élémental de terre", composants: ["argile"] }
-  ];
+  return clone(ELEMENTAL_VARIANTS);
 }
 
 function parseSourceMaterials(source) {
@@ -417,8 +448,22 @@ function markDelegatedComponents(system) {
   system.composants_materiels_note = text([system.composants_materiels_note, note].filter(Boolean).join("\n"));
 }
 
-function mergeIllusionistAuditSource(item, auditIndex) {
-  if (!isIllusionnisteSpell(item)) return null;
+function mergePreviousMaterials(item, existingIndex, classSlug) {
+  const cls = slug(item?.system?.classe);
+  if (cls !== classSlug) return null;
+  const previous = existingIndex.get(preserveKey(item));
+  if (!previous?.system) return null;
+  item.system ??= {};
+  for (const field of MATERIAL_PRESERVE_FIELDS) {
+    if (!Object.prototype.hasOwnProperty.call(previous.system, field)) continue;
+    item.system[field] = clone(previous.system[field]);
+  }
+  return previous;
+}
+
+function mergeClassAuditSource(item, auditIndex, classSlug) {
+  const cls = slug(item?.system?.classe);
+  if (cls !== classSlug) return null;
   const source = auditIndex.get(effectKey(item));
   if (!source?.system) return null;
   const sys = item.system ?? {};
@@ -435,14 +480,15 @@ function mergeIllusionistAuditSource(item, auditIndex) {
   return source;
 }
 
-function normalizeMaterials(item, auditIndex) {
+function normalizeMaterials(item, indexes) {
+  const { existingIndex, magicienAuditIndex, illusionnisteAuditIndex } = indexes;
   const system = item.system ?? {};
   const before = clone(system.composants_materiels ?? []);
   const key = slug(item?.name ?? system?.nom);
   let entries = [];
 
   if (isIllusionnisteSpell(item)) {
-    mergeIllusionistAuditSource(item, auditIndex);
+    mergeClassAuditSource(item, illusionnisteAuditIndex, "illusionniste");
     if (ILLUSIONIST_COMPONENT_DELEGATIONS.has(key)) {
       markDelegatedComponents(system);
     } else if (ILLUSIONIST_MATERIAL_OVERRIDES.has(key)) {
@@ -456,8 +502,19 @@ function normalizeMaterials(item, auditIndex) {
       system.composants_materiels = uniqueEntries(entries);
       ensureComposantesHasM(system, system.composants_materiels);
     }
-  } else if (WIZARD_MATERIAL_OVERRIDES.has(key)) {
-    system.composants_materiels = uniqueEntries(WIZARD_MATERIAL_OVERRIDES.get(key));
+  } else if (isMagicienSpell(item)) {
+    mergePreviousMaterials(item, existingIndex, "magicien");
+    mergeClassAuditSource(item, magicienAuditIndex, "magicien");
+    if (WIZARD_MATERIAL_OVERRIDES.has(key)) {
+      system.composants_materiels = uniqueEntries(WIZARD_MATERIAL_OVERRIDES.get(key));
+    } else {
+      entries = materialEntriesFromValue(system.composants_materiels);
+      if (!materialEntryCount(entries)) entries = materialEntriesFromValue(system.composants_materiels_objets);
+      if (!materialEntryCount(entries)) entries = materialEntriesFromValue(system.composants_requis);
+      if (!materialEntryCount(entries)) entries = materialEntriesFromValue(system.composants_materiels_source);
+      system.composants_materiels = uniqueEntries(entries);
+    }
+    ensureComposantesHasM(system, system.composants_materiels);
   } else {
     entries = materialEntriesFromValue(system.composants_materiels);
     system.composants_materiels = uniqueEntries(entries);
@@ -565,11 +622,13 @@ function main() {
   const json = JSON.parse(fs.readFileSync(input, "utf8"));
   const items = getItems(json);
   const existingIndex = buildExistingItemIndex(output);
-  const illusionistAudit = loadIllusionistAuditIndex();
+  const magicienAudit = loadClassAuditIndex("magicien", WIZARD_LEVELS);
+  const illusionistAudit = loadClassAuditIndex("illusionniste", ILLUSIONIST_LEVELS);
   const control = {
     version: VERSION,
     input: path.relative(repoRoot, input),
     output: path.relative(repoRoot, output),
+    magicienAuditFiles: magicienAudit.loaded,
     illusionistAuditFiles: illusionistAudit.loaded,
     totalItems: items.length,
     spells: 0,
@@ -580,6 +639,9 @@ function main() {
     emptyMaterialSpells: 0,
     examples: [],
     watched: {},
+    magicienMaterialAudit: [],
+    magicienMaterialWarnings: [],
+    magicienSourceMissing: [],
     illusionnisteMaterialAudit: [],
     illusionnisteMaterialWarnings: [],
     illusionnisteSourceMissing: [],
@@ -606,13 +668,14 @@ function main() {
       continue;
     }
 
+    const hadMagicienSource = !isMagicienSpell(item) || magicienAudit.index.has(effectKey(item));
     const hadIllusionistSource = !isIllusionnisteSpell(item) || illusionistAudit.index.has(effectKey(item));
-    const materials = normalizeMaterials(item, illusionistAudit.index);
+    const materials = normalizeMaterials(item, { existingIndex, magicienAuditIndex: magicienAudit.index, illusionnisteAuditIndex: illusionistAudit.index });
     const profile = applyEffectProfileOverride(item);
     control.spells += 1;
     if (materials.changed) {
       control.changedSpells += 1;
-      if (control.examples.length < 50) control.examples.push({ name: item.name, classe: item.system.classe, niveau: item.system.niveau, before: materials.before, after: materials.after });
+      if (control.examples.length < 80) control.examples.push({ name: item.name, classe: item.system.classe, niveau: item.system.niveau, before: materials.before, after: materials.after });
     }
     if (profile.changed) control.changedEffectProfiles += 1;
     if (!materialEntryCount(item.system.composants_materiels ?? [])) control.emptyMaterialSpells += 1;
@@ -628,6 +691,10 @@ function main() {
     for (const level of WIZARD_LEVELS) if (isMagicienSpellLevel(item, level)) {
       const bucket = control[`magicienLevel${level}EffectProfiles`];
       if (profile.applied && profile.level === level && profile.classSlug === "magicien") bucket.applied.push(item.name); else bucket.missing.push(item.name);
+      control.magicienMaterialAudit.push({ name: item.name, niveau: item.system.niveau, composants: clone(item.system.composants_materiels) });
+      const warning = materialWarningForClass(item, "magicien");
+      if (warning) control.magicienMaterialWarnings.push(warning);
+      if (!hadMagicienSource) control.magicienSourceMissing.push({ name: item.name, niveau: item.system.niveau });
     }
     for (const level of ILLUSIONIST_LEVELS) if (isIllusionnisteSpellLevel(item, level)) {
       const bucket = control[`illusionnisteLevel${level}EffectProfiles`];
@@ -638,7 +705,7 @@ function main() {
       if (!hadIllusionistSource) control.illusionnisteSourceMissing.push({ name: item.name, niveau: item.system.niveau });
     }
 
-    if (profile.applied || isIllusionnisteSpell(item)) {
+    if (profile.applied || isMagicienSpell(item) || isIllusionnisteSpell(item)) {
       control.watched[item.name] = {
         classe: item.system.classe,
         niveau: item.system.niveau,
@@ -656,11 +723,16 @@ function main() {
   fs.writeFileSync(controlOutput, `${JSON.stringify(control, null, 2)}\n`, "utf8");
 
   console.log(`[ADD2E][SPELL_MATERIALS_V3] ${control.spells} sort(s), ${control.changedSpells} composant(s) modifié(s).`);
-  console.log(`[ADD2E][SPELL_MATERIALS_V3] Manual clerc/druide/magicien materials preserved: ${control.preservedManualMaterials}`);
+  console.log(`[ADD2E][SPELL_MATERIALS_V3] Manual clerc/druide materials preserved: ${control.preservedManualMaterials}`);
+  for (const level of WIZARD_LEVELS) {
+    const bucket = control[`magicienLevel${level}EffectProfiles`];
+    console.log(`[ADD2E][SPELL_MATERIALS_V3] EffectProfiles N${level} magicien: ${bucket.applied.length} appliqué(s), ${bucket.missing.length} manquant(s).`);
+  }
   for (const level of ILLUSIONIST_LEVELS) {
     const bucket = control[`illusionnisteLevel${level}EffectProfiles`];
     console.log(`[ADD2E][SPELL_MATERIALS_V3] EffectProfiles N${level} illusionniste: ${bucket.applied.length} appliqué(s), ${bucket.missing.length} manquant(s).`);
   }
+  console.log(`[ADD2E][SPELL_MATERIALS_V3] Magicien material warnings: ${control.magicienMaterialWarnings.length}`);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Illusionist material warnings: ${control.illusionnisteMaterialWarnings.length}`);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Output: ${path.relative(repoRoot, output)}`);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Control: ${path.relative(repoRoot, controlOutput)}`);
