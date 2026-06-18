@@ -1,10 +1,10 @@
 {
-  "version": "2026-06-17-normalize-spell-materials-v3-source-to-materials-v1",
+  "version": "2026-06-17-normalize-spell-materials-v3-extract-source-materials-v1",
   "input": "fvtt-spells-all-normalise-mecanique-v1.json",
   "output": "fvtt-spells-all-normalise-mecanique-v3.json",
   "totalItems": 411,
   "spells": 411,
-  "changedSpells": 152,
+  "changedSpells": 155,
   "changedEffectProfiles": 334,
   "preservedManualMaterials": 154,
   "preservedManualMaterialKeys": [
@@ -779,7 +779,7 @@
       "niveau": 5
     }
   ],
-  "emptyMaterialSpells": 182,
+  "emptyMaterialSpells": 178,
   "examples": [
     {
       "name": "Abaissement des eaux",
@@ -1036,7 +1036,7 @@
       "niveau": 1,
       "before": [],
       "after": [
-        "composante matérielle est un morceau de laine",
+        "laine",
         "cire"
       ],
       "notes": []
@@ -1264,17 +1264,15 @@
         "corne d’argent d’une valeur minimale de 100 po",
         "Consommation explicitement indiquée dans la description. Formulation source du Manuel : « une petite corne d’argent d’une valeur minimale de 100 po"
       ],
-      "after": [],
+      "after": [
+        "petite corne d’argent"
+      ],
       "notes": [
-        "petite corne d’argent d’une valeur minimale de 100 po",
         "qui disparaît quand le sort est lancé",
         "1",
         "consomme",
         "Consommation explicitement indiquée dans la description",
-        "corne d’argent d’une valeur minimale de 100 po",
-        "Consommation explicitement indiquée dans la description",
-        "composante matérielle est une petite corne d’argent d’une valeur minimale de 100 po",
-        "qui disparaît quand le sort est lancé"
+        "Consommation explicitement indiquée dans la description"
       ]
     },
     {
@@ -1556,7 +1554,7 @@
       "niveau": 1,
       "before": [],
       "after": [
-        "composantes matérielles sont une pincée de talc",
+        "e pincée de talc",
         "poudre d’argent qu’il faut répandre"
       ],
       "notes": []
@@ -2799,7 +2797,9 @@
     "Clairaudience": {
       "classe": "Magicien",
       "niveau": 3,
-      "composants_materiels": [],
+      "composants_materiels": [
+        "petite corne d’argent"
+      ],
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
         "source": "manual-normalized-magicien-n3",
@@ -2819,7 +2819,7 @@
           }
         ]
       },
-      "note": "petite corne d’argent d’une valeur minimale de 100 po\nqui disparaît quand le sort est lancé\n1\nconsomme\nConsommation explicitement indiquée dans la description\ncorne d’argent d’une valeur minimale de 100 po\ncomposante matérielle est une petite corne d’argent d’une valeur minimale de 100 po"
+      "note": "qui disparaît quand le sort est lancé\n1\nconsomme\nConsommation explicitement indiquée dans la description"
     },
     "Clairvoyance": {
       "classe": "Magicien",
@@ -10839,7 +10839,9 @@
     {
       "name": "Clairaudience",
       "niveau": 3,
-      "composants": []
+      "composants": [
+        "petite corne d’argent"
+      ]
     },
     {
       "name": "Clairvoyance",
@@ -12050,15 +12052,6 @@
     }
   ],
   "magicienMaterialWarnings": [
-    {
-      "name": "Clairaudience",
-      "niveau": 3,
-      "components": [
-        "M sans composant"
-      ],
-      "allComponents": [],
-      "classe": "magicien"
-    },
     {
       "name": "Coffre secret de Léomund",
       "niveau": 5,

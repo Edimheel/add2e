@@ -6650,7 +6650,7 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S",
         "composants_materiels": [
-          "composante matérielle est un morceau de laine",
+          "laine",
           "cire"
         ],
         "composants_materiels_source": "La composante matérielle est un morceau de laine ou un peu de cire.",
@@ -10266,11 +10266,13 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [],
+        "composants_materiels": [
+          "petite corne d’argent"
+        ],
         "composants_materiels_source": "La composante matérielle est une petite corne d’argent d’une valeur minimale de 100 po, qui disparaît quand le sort est lancé.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
-        "composants_materiels_note": "petite corne d’argent d’une valeur minimale de 100 po\nqui disparaît quand le sort est lancé\n1\nconsomme\nConsommation explicitement indiquée dans la description\ncorne d’argent d’une valeur minimale de 100 po\ncomposante matérielle est une petite corne d’argent d’une valeur minimale de 100 po",
+        "composants_materiels_note": "qui disparaît quand le sort est lancé\n1\nconsomme\nConsommation explicitement indiquée dans la description",
         "composants_materiels_a_renseigner": false,
         "description": "le sort de clairaudience permet au magicien de se concentrer sur un endroit et d’entendre dans son esprit tous les sons de cet endroit, dans une zone d’effet de 6\" de rayon, centrée sur l’endroit qu’il examine. La distance n’est pas un problème, mais l’endroit doit être connu, c'est-à-dire un endroit familier au lanceur de sort ou évident (tel que derrière une porte, à un angle de couloir, dans le taillis d’un bois, etc.). Seuls les sons normalement audibles par le magicien peuvent être entendus. Une paroi de métal ou une protection magique empêche l’écoute. Ce sort ne fonctionne que sur le plan d’existence sur lequel se trouve le lanceur du sort au moment où il le lance. La composante matérielle est une petite corne d’argent d’une valeur minimale de 100 po, qui disparaît quand le sort est lancé.",
         "onUse": "systems/add2e/scripts/sorts/magicien-clairaudience.js",
@@ -15037,7 +15039,7 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "composantes matérielles sont une pincée de talc",
+          "e pincée de talc",
           "poudre d’argent qu’il faut répandre"
         ],
         "composants_materiels_source": "Les composantes matérielles sont une pincée de talc et un peu de poudre d’argent qu’il faut répandre.",
@@ -23731,11 +23733,13 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [],
+        "composants_materiels": [
+          "toison de mouton"
+        ],
         "composants_materiels_source": "La composante matérielle est un morceau de toison de mouton.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "composante matérielle est un morceau de toison de mouton",
+        "composants_materiels_note": "",
         "composants_materiels_a_renseigner": true,
         "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 3 de magicien force fantasmagorique (voir p.74).",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-force-fantasmagorique.js",
@@ -28582,11 +28586,13 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S",
-        "composants_materiels": [],
+        "composants_materiels": [
+          "cil mis dans de la gomme arabique"
+        ],
         "composants_materiels_source": "Les composantes matérielles sont un cil mis dans de la gomme arabique.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
-        "composants_materiels_note": "composantes matérielles sont un cil mis dans de la gomme arabique",
+        "composants_materiels_note": "",
         "composants_materiels_a_renseigner": false,
         "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 2 de magicien invisibilité (voir p.71).",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-invisibilite.js",
@@ -46290,11 +46296,13 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S",
-        "composants_materiels": [],
+        "composants_materiels": [
+          "e poignée de morceaux d'écorce"
+        ],
         "composants_materiels_source": "La composante matérielle est une poignée de morceaux d'écorce.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
-        "composants_materiels_note": "composante matérielle est une poignée de morceaux d'écorce",
+        "composants_materiels_note": "",
         "composants_materiels_a_renseigner": false,
         "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 4 de magicien phytomorphose (voir p.78).",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-phytomorphose.js",
@@ -65098,6 +65106,6 @@
       "sort": 0
     }
   ],
-  "normalizedBy": "2026-06-17-normalize-spell-materials-v3-source-to-materials-v1",
-  "normalizedAt": "2026-06-18T09:45:57.413Z"
+  "normalizedBy": "2026-06-17-normalize-spell-materials-v3-extract-source-materials-v1",
+  "normalizedAt": "2026-06-18T11:05:49.560Z"
 }
