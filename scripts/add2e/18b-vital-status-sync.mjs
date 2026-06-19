@@ -8,7 +8,7 @@ import {
   add2eVitalStatusAliases
 } from "./18a-vital-status-core.mjs";
 
-export const ADD2E_VITAL_STATUS_SYNC_VERSION = "2026-06-11-vital-status-sync-no-console-logs";
+export const ADD2E_VITAL_STATUS_SYNC_VERSION = "2026-06-19-vital-status-sync-monster-clear-dead-v1";
 
 const LOCKS = new Set();
 const ADD2E_STATUS_IDS = {
@@ -228,13 +228,17 @@ async function syncMonsterTokenStatus(token, actor, status) {
   const tokenActor = tokenActorFor(token);
   if (!tokenActor?.toggleStatusEffect || !doc?.id) return { changed: false, action: "no-toggle-status-effect", before: tokenDiagnostic(token, actor, "before-no-toggle") };
 
-  const active = status === "dead";
-  if (!active) {
-    const hasDead = hasRealDeadEffect(tokenActor);
-    return { changed: false, action: "skip-toggle-dead-off", hasDead };
+  const results = [];
+
+  if (status === "dead") {
+    results.push(await safeToggleActorStatus(tokenActor, "unconscious", false, { label: "monster_status" }));
+    results.push(await safeToggleActorStatus(tokenActor, "dead", true, { overlay: true, label: "monster_status" }));
+    return { changed: results.some(r => r?.changed), action: "monster-status-dead", results };
   }
 
-  return safeToggleActorStatus(tokenActor, "dead", true, { overlay: true, label: "monster_status" });
+  results.push(await safeToggleActorStatus(tokenActor, "dead", false, { label: "monster_status" }));
+  results.push(await safeToggleActorStatus(tokenActor, "unconscious", false, { label: "monster_status" }));
+  return { changed: results.some(r => r?.changed), action: "monster-status-clear", results };
 }
 
 async function syncCharacterStatus(actor, status) {
