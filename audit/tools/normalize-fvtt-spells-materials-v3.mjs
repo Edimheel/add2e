@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 
-const VERSION = "2026-06-19-normalize-wizard-components-text-mining-v7";
+const VERSION = "2026-06-19-normalize-wizard-components-text-mining-v8";
 const DEFAULT_INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const DEFAULT_OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
 const DEFAULT_CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
@@ -564,7 +564,7 @@ function parseAlternativeClause(source) {
 
   choices = uniqueFlat(choices.map(cleanMaterial).filter(v => !rejectMaterial(v)));
   if (choices.length <= 1) return [];
-  return [{ type: "alternative", choix }];
+  return [{ type: "alternative", choix: choices }];
 }
 
 function parseSourceMaterials(source) {
