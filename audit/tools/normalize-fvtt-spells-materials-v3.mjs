@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 
-const VERSION = "2026-06-19-normalize-cleric-components-text-mining-v14";
+const VERSION = "2026-06-19-normalize-cleric-components-text-mining-v15";
 const DEFAULT_INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const DEFAULT_OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
 const DEFAULT_CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
@@ -109,6 +109,7 @@ const MATERIAL_CANON = new Map(Object.entries({
   laine: "laine", morceau_de_laine: "morceau de laine", petit_morceau_de_laine: "morceau de laine",
   rayon_de_miel: "rayon de miel", petit_morceau_de_rayon_de_miel: "rayon de miel", morceau_de_rayon_de_miel: "rayon de miel",
   miel: "miel", un_peu_de_miel: "miel", huile_douce: "huile douce", goutte_d_huile: "goutte d’huile", goutte_d_huile_douce: "huile douce",
+  eau_benite: "Eau bénite", eau_maudite: "Eau maudite", encens_allume: "encens allumé", encens_allumé: "encens allumé", sang: "sang", vapeurs_de_fumier: "vapeurs de fumier",
   petit_morceau_de_silex: "silex", langue_de_serpent: "langue de serpent",
   boucle_de_cuir: "boucle de cuir", morceau_de_fil_d_or_courbe_en_forme_d_hamecon: "morceau de fil d’or courbé en forme d’hameçon",
   fourchette_d_argent: "fourchette d’argent", baguette_fourchue: "baguette fourchue", morceau_d_os_de_mort_vivant: "morceau d’os de mort-vivant",
@@ -124,6 +125,7 @@ const MATERIAL_CANON = new Map(Object.entries({
   melange_de_terre: "mélange de terre", lame_en_fer: "lame en fer", marteau_de_guerre_normal: "marteau de guerre normal", marteau_de_guerre: "marteau de guerre",
   petite_replique_du_magicien: "petite réplique du magicien",
   petit_tambour: "petit tambour", goutte_de_sang: "goutte de sang", deux_feuilles_de_verre: "deux feuilles de verre", deux_feuilles_de_cristal: "deux feuilles de cristal",
+  fine_feuille_de_cristal_de_6_cm: "fine feuille de cristal de 6 cm²", saphir_blanc: "saphir blanc", diamant: "diamant",
   poudre_de_fer: "poudre de fer", pincee_de_poudre_de_fer: "poudre de fer", poudre_d_argent: "poudre d’argent", poudre_argent: "poudre d’argent",
   poudre_de_diamant: "poudre de diamant", petite_corne_d_argent: "petite corne d’argent", corne_d_argent: "petite corne d’argent",
   fil_de_cuivre: "fil de cuivre", petit_fil_de_cuivre: "fil de cuivre", parchemin_mis_en_cone: "parchemin mis en cône", petit_parchemin_mis_en_cone: "parchemin mis en cône",
@@ -150,6 +152,11 @@ const MATERIAL_CANON = new Map(Object.entries({
 
 const MATERIAL_CONSUMPTION_OVERRIDES = new Map(Object.entries({
   encre_fine_faite_de_substances_rares: true,
+  eau_benite: true,
+  eau_maudite: true,
+  encens_allume: true,
+  sang: true,
+  vapeurs_de_fumier: true,
   peu_de_fourrure: false,
   baguette_de_verre: false,
   baguette_de_cristal: false,
@@ -186,6 +193,18 @@ const ELEMENTAL_VARIANTS = [
 ];
 
 const CLERIC_MATERIAL_OVERRIDES = new Map(Object.entries({
+  benediction: [
+    { type: "variante", id: "benediction", label: "Bénédiction", composants: ["Eau bénite"] },
+    { type: "variante", id: "malediction", label: "Malédiction (inverse)", composants: ["Eau maudite"] }
+  ],
+  protection_contre_le_mal: [
+    { type: "variante", id: "contre_le_mal_eau_benite", label: "Protection contre le mal — eau bénite", composants: ["Eau bénite"] },
+    { type: "variante", id: "contre_le_mal_encens", label: "Protection contre le mal — encens allumé", composants: ["encens allumé"] },
+    { type: "variante", id: "contre_le_bien_sang", label: "Protection contre le bien — sang", composants: ["sang"] },
+    { type: "variante", id: "contre_le_bien_fumier", label: "Protection contre le bien — vapeurs de fumier", composants: ["vapeurs de fumier"] }
+  ],
+  resistance_au_froid: ["soufre"],
+  resistance_au_feu_resistance_au_froid: ["soufre"],
   marteau_spirituel: ["marteau de guerre normal"]
 }));
 
@@ -226,8 +245,18 @@ const WIZARD_MATERIAL_OVERRIDES = new Map(Object.entries({
   invisibilite_sur_3m: ["cils", "gomme arabique"],
   invocation_de_monstre_i: ["petit sac", "petite bougie"],
   invocation_de_monstre_ii: ["petit sac", "petite bougie"],
+  invocation_de_monstre_iii: ["petit sac", "petite bougie"],
+  invocation_de_monstre_iv: ["petit sac", "petite bougie"],
+  invocation_de_monstre_v: ["petit sac", "petite bougie"],
+  invocation_de_monstre_vi: ["petit sac", "petite bougie"],
+  invocation_de_monstre_vii: ["petit sac", "petite_bougie"],
   invocation_de_monstres_i: ["petit sac", "petite bougie"],
   invocation_de_monstres_ii: ["petit sac", "petite bougie"],
+  invocation_de_monstres_iii: ["petit sac", "petite bougie"],
+  invocation_de_monstres_iv: ["petit sac", "petite bougie"],
+  invocation_de_monstres_v: ["petit sac", "petite bougie"],
+  invocation_de_monstres_vi: ["petit sac", "petite bougie"],
+  invocation_de_monstres_vii: ["petit sac", "petite bougie"],
   invocation_d_un_elemental: ELEMENTAL_VARIANTS,
   invocation_instantanee_de_drawmij: ["saphir"],
   levitation: [{ type: "alternative", choix: ["boucle de cuir", "morceau de fil d’or courbé en forme d’hameçon"] }],
@@ -246,6 +275,11 @@ const WIZARD_MATERIAL_OVERRIDES = new Map(Object.entries({
   reparation: [{ type: "alternative", choix: ["deux objets magnétiques", "deux copeaux de métal"] }],
   reincarnation: ["petit tambour", "goutte de sang"],
   separation_des_eaux: [{ type: "alternative", choix: ["deux feuilles de verre", "deux feuilles de cristal"] }],
+  sphere_glaciale_d_otiluke: [
+    { type: "variante", id: "premiere_application", label: "Première application", composants: ["fine feuille de cristal de 6 cm²"] },
+    { type: "variante", id: "deuxieme_application", label: "Deuxième application", composants: ["saphir blanc"] },
+    { type: "variante", id: "troisieme_application", label: "Troisième application", composants: ["diamant"] }
+  ],
   suggestion: ["langue de serpent", { type: "alternative", choix: ["miel", "huile douce"] }],
   ventriloquie: ["parchemin mis en cône"],
   vol: ["plume d’aile d’oiseau"]
@@ -269,7 +303,7 @@ const ILLUSIONIST_MATERIAL_OVERRIDES = new Map(Object.entries({
 
 const NOISE = new Set(["", "true", "false", "oui", "non", "consomme", "consommé", "non consomme", "non consommé", "non_consomme", "optionnel", "manuel", "manuel du joueur", "manuel des joueurs", "source", "aucun", "null", "undefined", "liquide", "consommation", "ingredient materiel", "ingrédient matériel", "composant materiel", "composant matériel", "composant requis", "clerc", "druide", "magicien", "illusionniste", "créature", "petite créature", "le", "la", "les", "consommation explicitement indiquée dans la description", "consommation explicitement indiquee dans la description"].map(norm));
 const NOISE_STARTS = ["requise", "requis", "alternative", "formulation source", "source du manuel", "sort normal", "sort inverse", "selon la règle", "description indique", "pour lancer", "ingrédient matériel", "ingredient materiel", "composant matériel", "composant materiel", "composant requis", "non consommé", "non consomme", "consommation explicitement"].map(norm);
-const NOISE_CONTAINS = ["manuel des joueurs", "formulation source", "règle d arbitrage", "description indique", "pour lancer le sort", "composant requis selon", "consommation explicitement indiquée", "que le magicien doit", "que l illusionniste doit", "utilisé pour", "utilisee pour", "utilisée pour", "poudre en forme de cone"].map(norm);
+const NOISE_CONTAINS = ["manuel des joueurs", "formulation source", "règle d arbitrage", "description indique", "pour lancer le sort", "composant requis selon", "consommation explicitement indiquée", "que le magicien doit", "que l illusionniste doit", "utilisé pour", "utilisee pour", "utilisée pour", "poudre en forme de cone", "application consomme apres le lancement", "application consommee apres le lancement"].map(norm);
 const DIRTY_MARKERS = ["par exemple", "que le magicien doit", "que l'illusionniste doit", "que l’illusionniste doit", "une pour chaque", "n’importe quel type", "n'importe quel type", "consommé", "consommée", "utilisé pour", "utilisée pour"];
 
 function canonicalMaterial(value) { return MATERIAL_CANON.get(slug(value)) ?? text(value); }
