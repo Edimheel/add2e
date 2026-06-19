@@ -1,5 +1,5 @@
 {
-  "version": "2026-06-19-normalize-cleric-components-text-mining-v13",
+  "version": "2026-06-19-normalize-cleric-components-text-mining-v15",
   "input": "fvtt-spells-all-normalise-mecanique-v1.json",
   "output": "fvtt-spells-all-normalise-mecanique-v3.json",
   "clercAuditFiles": [
@@ -106,9 +106,9 @@
   "preservedClasses": [
     "druide"
   ],
-  "changedSpells": 237,
+  "changedSpells": 241,
   "changedEffectProfiles": 333,
-  "emptyMaterialSpells": 97,
+  "emptyMaterialSpells": 92,
   "examples": [
     {
       "name": "Abaissement des eaux",
@@ -525,17 +525,26 @@
       ],
       "after": [
         {
-          "type": "alternative",
-          "choix": [
+          "type": "variante",
+          "id": "benediction",
+          "label": "Bénédiction",
+          "composants": [
             {
               "slug": "eau_benite",
               "nom": "Eau bénite",
               "quantite": 1,
               "consomme": true
-            },
+            }
+          ]
+        },
+        {
+          "type": "variante",
+          "id": "malediction",
+          "label": "Malédiction (inverse)",
+          "composants": [
             {
-              "slug": "maudite_pour_l_inverse",
-              "nom": "maudite pour l’inverse",
+              "slug": "eau_maudite",
+              "nom": "Eau maudite",
               "quantite": 1,
               "consomme": true
             }
@@ -2947,17 +2956,26 @@
       "niveau": 1,
       "composants_materiels": [
         {
-          "type": "alternative",
-          "choix": [
+          "type": "variante",
+          "id": "benediction",
+          "label": "Bénédiction",
+          "composants": [
             {
               "slug": "eau_benite",
               "nom": "Eau bénite",
               "quantite": 1,
               "consomme": true
-            },
+            }
+          ]
+        },
+        {
+          "type": "variante",
+          "id": "malediction",
+          "label": "Malédiction (inverse)",
+          "composants": [
             {
-              "slug": "maudite_pour_l_inverse",
-              "nom": "maudite pour l’inverse",
+              "slug": "eau_maudite",
+              "nom": "Eau maudite",
               "quantite": 1,
               "consomme": true
             }
@@ -6505,7 +6523,7 @@
       "composants_materiels": [
         {
           "slug": "diamant",
-          "nom": "Diamant",
+          "nom": "diamant",
           "quantite": 1,
           "consomme": true
         }
@@ -6958,7 +6976,20 @@
     "Invocation de Monstre III": {
       "classe": "Magicien",
       "niveau": 5,
-      "composants_materiels": [],
+      "composants_materiels": [
+        {
+          "slug": "petit_sac",
+          "nom": "petit sac",
+          "quantite": 1,
+          "consomme": false
+        },
+        {
+          "slug": "petite_bougie",
+          "nom": "petite bougie",
+          "quantite": 1,
+          "consomme": false
+        }
+      ],
       "composantes": "V, S, M",
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
@@ -6983,7 +7014,20 @@
     "Invocation de monstre IV": {
       "classe": "Magicien",
       "niveau": 6,
-      "composants_materiels": [],
+      "composants_materiels": [
+        {
+          "slug": "petit_sac",
+          "nom": "petit sac",
+          "quantite": 1,
+          "consomme": false
+        },
+        {
+          "slug": "petite_bougie",
+          "nom": "petite bougie",
+          "quantite": 1,
+          "consomme": false
+        }
+      ],
       "composantes": "V, S, M",
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
@@ -7008,7 +7052,20 @@
     "Invocation de monstre V": {
       "classe": "Magicien",
       "niveau": 7,
-      "composants_materiels": [],
+      "composants_materiels": [
+        {
+          "slug": "petit_sac",
+          "nom": "petit sac",
+          "quantite": 1,
+          "consomme": false
+        },
+        {
+          "slug": "petite_bougie",
+          "nom": "petite bougie",
+          "quantite": 1,
+          "consomme": false
+        }
+      ],
       "composantes": "V, S, M",
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
@@ -7035,10 +7092,16 @@
       "niveau": 8,
       "composants_materiels": [
         {
-          "slug": "diamant",
-          "nom": "Diamant",
+          "slug": "petit_sac",
+          "nom": "petit sac",
           "quantite": 1,
-          "consomme": true
+          "consomme": false
+        },
+        {
+          "slug": "petite_bougie",
+          "nom": "petite bougie",
+          "quantite": 1,
+          "consomme": false
         }
       ],
       "composantes": "V, S, M",
@@ -7065,7 +7128,20 @@
     "Invocation de Monstre VII": {
       "classe": "Magicien",
       "niveau": 9,
-      "composants_materiels": [],
+      "composants_materiels": [
+        {
+          "slug": "petit_sac",
+          "nom": "petit sac",
+          "quantite": 1,
+          "consomme": false
+        },
+        {
+          "slug": "petite_bougie",
+          "nom": "petite bougie",
+          "quantite": 1,
+          "consomme": false
+        }
+      ],
       "composantes": "V, S, M",
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
@@ -8027,7 +8103,14 @@
     "Marteau Spirituel": {
       "classe": "Clerc",
       "niveau": 2,
-      "composants_materiels": [],
+      "composants_materiels": [
+        {
+          "slug": "marteau_de_guerre_normal",
+          "nom": "marteau de guerre normal",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
       "composantes": "V, S, M",
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
@@ -9767,16 +9850,56 @@
       "niveau": 1,
       "composants_materiels": [
         {
-          "slug": "poudre_de_fer",
-          "nom": "poudre de fer",
-          "quantite": 1,
-          "consomme": true
+          "type": "variante",
+          "id": "contre_le_mal_eau_benite",
+          "label": "Protection contre le mal — eau bénite",
+          "composants": [
+            {
+              "slug": "eau_benite",
+              "nom": "Eau bénite",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
         },
         {
-          "slug": "argent_pour_tracer_le_cercle_de_protection",
-          "nom": "argent pour tracer le cercle de protection",
-          "quantite": 1,
-          "consomme": true
+          "type": "variante",
+          "id": "contre_le_mal_encens",
+          "label": "Protection contre le mal — encens allumé",
+          "composants": [
+            {
+              "slug": "encens_allume",
+              "nom": "encens allumé",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
+        },
+        {
+          "type": "variante",
+          "id": "contre_le_bien_sang",
+          "label": "Protection contre le bien — sang",
+          "composants": [
+            {
+              "slug": "sang",
+              "nom": "sang",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
+        },
+        {
+          "type": "variante",
+          "id": "contre_le_bien_fumier",
+          "label": "Protection contre le bien — vapeurs de fumier",
+          "composants": [
+            {
+              "slug": "vapeurs_de_fumier",
+              "nom": "vapeurs de fumier",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
         }
       ],
       "composantes": "V, S, M",
@@ -10428,8 +10551,8 @@
       "niveau": 1,
       "composants_materiels": [
         {
-          "slug": "pincee_de_souffre_comme_composante_materielle",
-          "nom": "Pincée de souffre comme composante matérielle",
+          "slug": "soufre",
+          "nom": "soufre",
           "quantite": 1,
           "consomme": true
         }
@@ -11187,46 +11310,43 @@
       "niveau": 6,
       "composants_materiels": [
         {
-          "slug": "fine_feuille_de_cristal_de_6_cm",
-          "nom": "fine feuille de cristal de 6 cm²",
-          "quantite": 1,
-          "consomme": true
+          "type": "variante",
+          "id": "premiere_application",
+          "label": "Première application",
+          "composants": [
+            {
+              "slug": "fine_feuille_de_cristal_de_6_cm",
+              "nom": "fine feuille de cristal de 6 cm²",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
         },
         {
-          "slug": "premiere_application",
-          "nom": "Première application",
-          "quantite": 1,
-          "consomme": true
+          "type": "variante",
+          "id": "deuxieme_application",
+          "label": "Deuxième application",
+          "composants": [
+            {
+              "slug": "saphir_blanc",
+              "nom": "saphir blanc",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
         },
         {
-          "slug": "consommee_apres_le_lancement",
-          "nom": "Consommée après le lancement",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "saphir_blanc",
-          "nom": "saphir blanc",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "deuxieme_application_consomme_apres_le_lancement",
-          "nom": "Deuxième application. Consommé après le lancement",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "diamant",
-          "nom": "diamant",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "troisieme_application_consomme_apres_le_lancement",
-          "nom": "Troisième application. Consommé après le lancement",
-          "quantite": 1,
-          "consomme": true
+          "type": "variante",
+          "id": "troisieme_application",
+          "label": "Troisième application",
+          "composants": [
+            {
+              "slug": "diamant",
+              "nom": "diamant",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
         }
       ],
       "composantes": "V, S, M",
@@ -12460,17 +12580,26 @@
       "niveau": 1,
       "composants": [
         {
-          "type": "alternative",
-          "choix": [
+          "type": "variante",
+          "id": "benediction",
+          "label": "Bénédiction",
+          "composants": [
             {
               "slug": "eau_benite",
               "nom": "Eau bénite",
               "quantite": 1,
               "consomme": true
-            },
+            }
+          ]
+        },
+        {
+          "type": "variante",
+          "id": "malediction",
+          "label": "Malédiction (inverse)",
+          "composants": [
             {
-              "slug": "maudite_pour_l_inverse",
-              "nom": "maudite pour l’inverse",
+              "slug": "eau_maudite",
+              "nom": "Eau maudite",
               "quantite": 1,
               "consomme": true
             }
@@ -12852,7 +12981,14 @@
     {
       "name": "Marteau Spirituel",
       "niveau": 2,
-      "composants": []
+      "composants": [
+        {
+          "slug": "marteau_de_guerre_normal",
+          "nom": "marteau de guerre normal",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
     },
     {
       "name": "Nécro animation",
@@ -12977,16 +13113,56 @@
       "niveau": 1,
       "composants": [
         {
-          "slug": "poudre_de_fer",
-          "nom": "poudre de fer",
-          "quantite": 1,
-          "consomme": true
+          "type": "variante",
+          "id": "contre_le_mal_eau_benite",
+          "label": "Protection contre le mal — eau bénite",
+          "composants": [
+            {
+              "slug": "eau_benite",
+              "nom": "Eau bénite",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
         },
         {
-          "slug": "argent_pour_tracer_le_cercle_de_protection",
-          "nom": "argent pour tracer le cercle de protection",
-          "quantite": 1,
-          "consomme": true
+          "type": "variante",
+          "id": "contre_le_mal_encens",
+          "label": "Protection contre le mal — encens allumé",
+          "composants": [
+            {
+              "slug": "encens_allume",
+              "nom": "encens allumé",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
+        },
+        {
+          "type": "variante",
+          "id": "contre_le_bien_sang",
+          "label": "Protection contre le bien — sang",
+          "composants": [
+            {
+              "slug": "sang",
+              "nom": "sang",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
+        },
+        {
+          "type": "variante",
+          "id": "contre_le_bien_fumier",
+          "label": "Protection contre le bien — vapeurs de fumier",
+          "composants": [
+            {
+              "slug": "vapeurs_de_fumier",
+              "nom": "vapeurs de fumier",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
         }
       ]
     },
@@ -13071,8 +13247,8 @@
       "niveau": 1,
       "composants": [
         {
-          "slug": "pincee_de_souffre_comme_composante_materielle",
-          "nom": "Pincée de souffre comme composante matérielle",
+          "slug": "soufre",
+          "nom": "soufre",
           "quantite": 1,
           "consomme": true
         }
@@ -13273,17 +13449,7 @@
       ]
     }
   ],
-  "clercMaterialWarnings": [
-    {
-      "name": "Marteau Spirituel",
-      "niveau": 2,
-      "components": [
-        "M sans composant"
-      ],
-      "allComponents": [],
-      "classe": "clerc"
-    }
-  ],
+  "clercMaterialWarnings": [],
   "clercSourceMissing": [],
   "magicienMaterialAudit": [
     {
@@ -14480,7 +14646,7 @@
       "composants": [
         {
           "slug": "diamant",
-          "nom": "Diamant",
+          "nom": "diamant",
           "quantite": 1,
           "consomme": true
         }
@@ -14680,34 +14846,92 @@
     {
       "name": "Invocation de Monstre III",
       "niveau": 5,
-      "composants": []
+      "composants": [
+        {
+          "slug": "petit_sac",
+          "nom": "petit sac",
+          "quantite": 1,
+          "consomme": false
+        },
+        {
+          "slug": "petite_bougie",
+          "nom": "petite bougie",
+          "quantite": 1,
+          "consomme": false
+        }
+      ]
     },
     {
       "name": "Invocation de monstre IV",
       "niveau": 6,
-      "composants": []
+      "composants": [
+        {
+          "slug": "petit_sac",
+          "nom": "petit sac",
+          "quantite": 1,
+          "consomme": false
+        },
+        {
+          "slug": "petite_bougie",
+          "nom": "petite bougie",
+          "quantite": 1,
+          "consomme": false
+        }
+      ]
     },
     {
       "name": "Invocation de monstre V",
       "niveau": 7,
-      "composants": []
+      "composants": [
+        {
+          "slug": "petit_sac",
+          "nom": "petit sac",
+          "quantite": 1,
+          "consomme": false
+        },
+        {
+          "slug": "petite_bougie",
+          "nom": "petite bougie",
+          "quantite": 1,
+          "consomme": false
+        }
+      ]
     },
     {
       "name": "Invocation de monstre VI",
       "niveau": 8,
       "composants": [
         {
-          "slug": "diamant",
-          "nom": "Diamant",
+          "slug": "petit_sac",
+          "nom": "petit sac",
           "quantite": 1,
-          "consomme": true
+          "consomme": false
+        },
+        {
+          "slug": "petite_bougie",
+          "nom": "petite bougie",
+          "quantite": 1,
+          "consomme": false
         }
       ]
     },
     {
       "name": "Invocation de Monstre VII",
       "niveau": 9,
-      "composants": []
+      "composants": [
+        {
+          "slug": "petit_sac",
+          "nom": "petit sac",
+          "quantite": 1,
+          "consomme": false
+        },
+        {
+          "slug": "petite_bougie",
+          "nom": "petite bougie",
+          "quantite": 1,
+          "consomme": false
+        }
+      ]
     },
     {
       "name": "Invocation de monstres I",
@@ -15738,46 +15962,43 @@
       "niveau": 6,
       "composants": [
         {
-          "slug": "fine_feuille_de_cristal_de_6_cm",
-          "nom": "fine feuille de cristal de 6 cm²",
-          "quantite": 1,
-          "consomme": true
+          "type": "variante",
+          "id": "premiere_application",
+          "label": "Première application",
+          "composants": [
+            {
+              "slug": "fine_feuille_de_cristal_de_6_cm",
+              "nom": "fine feuille de cristal de 6 cm²",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
         },
         {
-          "slug": "premiere_application",
-          "nom": "Première application",
-          "quantite": 1,
-          "consomme": true
+          "type": "variante",
+          "id": "deuxieme_application",
+          "label": "Deuxième application",
+          "composants": [
+            {
+              "slug": "saphir_blanc",
+              "nom": "saphir blanc",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
         },
         {
-          "slug": "consommee_apres_le_lancement",
-          "nom": "Consommée après le lancement",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "saphir_blanc",
-          "nom": "saphir blanc",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "deuxieme_application_consomme_apres_le_lancement",
-          "nom": "Deuxième application. Consommé après le lancement",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "diamant",
-          "nom": "diamant",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "troisieme_application_consomme_apres_le_lancement",
-          "nom": "Troisième application. Consommé après le lancement",
-          "quantite": 1,
-          "consomme": true
+          "type": "variante",
+          "id": "troisieme_application",
+          "label": "Troisième application",
+          "composants": [
+            {
+              "slug": "diamant",
+              "nom": "diamant",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
         }
       ]
     },
@@ -16116,98 +16337,7 @@
       ]
     }
   ],
-  "magicienMaterialWarnings": [
-    {
-      "name": "Invocation de Monstre III",
-      "niveau": 5,
-      "components": [
-        "M sans composant"
-      ],
-      "allComponents": [],
-      "classe": "magicien"
-    },
-    {
-      "name": "Invocation de monstre IV",
-      "niveau": 6,
-      "components": [
-        "M sans composant"
-      ],
-      "allComponents": [],
-      "classe": "magicien"
-    },
-    {
-      "name": "Invocation de monstre V",
-      "niveau": 7,
-      "components": [
-        "M sans composant"
-      ],
-      "allComponents": [],
-      "classe": "magicien"
-    },
-    {
-      "name": "Invocation de Monstre VII",
-      "niveau": 9,
-      "components": [
-        "M sans composant"
-      ],
-      "allComponents": [],
-      "classe": "magicien"
-    },
-    {
-      "name": "Sphère glaciale d’Otiluke",
-      "niveau": 6,
-      "components": [
-        "Consommée après le lancement",
-        "Deuxième application. Consommé après le lancement",
-        "Troisième application. Consommé après le lancement"
-      ],
-      "allComponents": [
-        {
-          "slug": "fine_feuille_de_cristal_de_6_cm",
-          "nom": "fine feuille de cristal de 6 cm²",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "premiere_application",
-          "nom": "Première application",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "consommee_apres_le_lancement",
-          "nom": "Consommée après le lancement",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "saphir_blanc",
-          "nom": "saphir blanc",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "deuxieme_application_consomme_apres_le_lancement",
-          "nom": "Deuxième application. Consommé après le lancement",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "diamant",
-          "nom": "diamant",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "troisieme_application_consomme_apres_le_lancement",
-          "nom": "Troisième application. Consommé après le lancement",
-          "quantite": 1,
-          "consomme": true
-        }
-      ],
-      "classe": "magicien"
-    }
-  ],
+  "magicienMaterialWarnings": [],
   "magicienSourceMissing": [],
   "illusionnisteMaterialAudit": [
     {

@@ -5253,17 +5253,26 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           {
-            "type": "alternative",
-            "choix": [
+            "type": "variante",
+            "id": "benediction",
+            "label": "Bénédiction",
+            "composants": [
               {
                 "slug": "eau_benite",
                 "nom": "Eau bénite",
                 "quantite": 1,
                 "consomme": true
-              },
+              }
+            ]
+          },
+          {
+            "type": "variante",
+            "id": "malediction",
+            "label": "Malédiction (inverse)",
+            "composants": [
               {
-                "slug": "maudite_pour_l_inverse",
-                "nom": "maudite pour l’inverse",
+                "slug": "eau_maudite",
+                "nom": "Eau maudite",
                 "quantite": 1,
                 "consomme": true
               }
@@ -28791,7 +28800,7 @@
         "composants_materiels": [
           {
             "slug": "diamant",
-            "nom": "Diamant",
+            "nom": "diamant",
             "quantite": 1,
             "consomme": true
           }
@@ -32277,7 +32286,20 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [],
+        "composants_materiels": [
+          {
+            "slug": "petit_sac",
+            "nom": "petit sac",
+            "quantite": 1,
+            "consomme": false
+          },
+          {
+            "slug": "petite_bougie",
+            "nom": "petite bougie",
+            "quantite": 1,
+            "consomme": false
+          }
+        ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": true,
@@ -32420,7 +32442,20 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [],
+        "composants_materiels": [
+          {
+            "slug": "petit_sac",
+            "nom": "petit sac",
+            "quantite": 1,
+            "consomme": false
+          },
+          {
+            "slug": "petite_bougie",
+            "nom": "petite bougie",
+            "quantite": 1,
+            "consomme": false
+          }
+        ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": true,
@@ -32563,7 +32598,20 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [],
+        "composants_materiels": [
+          {
+            "slug": "petit_sac",
+            "nom": "petit sac",
+            "quantite": 1,
+            "consomme": false
+          },
+          {
+            "slug": "petite_bougie",
+            "nom": "petite bougie",
+            "quantite": 1,
+            "consomme": false
+          }
+        ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": true,
@@ -32708,10 +32756,16 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           {
-            "slug": "diamant",
-            "nom": "Diamant",
+            "slug": "petit_sac",
+            "nom": "petit sac",
             "quantite": 1,
-            "consomme": true
+            "consomme": false
+          },
+          {
+            "slug": "petite_bougie",
+            "nom": "petite bougie",
+            "quantite": 1,
+            "consomme": false
           }
         ],
         "composants_materiels_source": "diamant qui doit être réduit en poudre et répandu sur les destinataires du sort, et chacun de ces destinataires doit posséder un diamant intact de n’importe quelle taille",
@@ -32856,7 +32910,20 @@
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [],
+        "composants_materiels": [
+          {
+            "slug": "petit_sac",
+            "nom": "petit sac",
+            "quantite": 1,
+            "consomme": false
+          },
+          {
+            "slug": "petite_bougie",
+            "nom": "petite bougie",
+            "quantite": 1,
+            "consomme": false
+          }
+        ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": true,
@@ -39748,7 +39815,14 @@
         "temps_incantation": "5 segments",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "composants_materiels": [],
+        "composants_materiels": [
+          {
+            "slug": "marteau_de_guerre_normal",
+            "nom": "marteau de guerre normal",
+            "quantite": 1,
+            "consomme": true
+          }
+        ],
         "composants_materiels_source": "marteau de guerre normal que le clerc doit lancer sur son ennemi en récitant une prière à son dieu",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
         "composants_materiels_verification_recommandee": true,
@@ -51527,16 +51601,56 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           {
-            "slug": "poudre_de_fer",
-            "nom": "poudre de fer",
-            "quantite": 1,
-            "consomme": true
+            "type": "variante",
+            "id": "contre_le_mal_eau_benite",
+            "label": "Protection contre le mal — eau bénite",
+            "composants": [
+              {
+                "slug": "eau_benite",
+                "nom": "Eau bénite",
+                "quantite": 1,
+                "consomme": true
+              }
+            ]
           },
           {
-            "slug": "argent_pour_tracer_le_cercle_de_protection",
-            "nom": "argent pour tracer le cercle de protection",
-            "quantite": 1,
-            "consomme": true
+            "type": "variante",
+            "id": "contre_le_mal_encens",
+            "label": "Protection contre le mal — encens allumé",
+            "composants": [
+              {
+                "slug": "encens_allume",
+                "nom": "encens allumé",
+                "quantite": 1,
+                "consomme": true
+              }
+            ]
+          },
+          {
+            "type": "variante",
+            "id": "contre_le_bien_sang",
+            "label": "Protection contre le bien — sang",
+            "composants": [
+              {
+                "slug": "sang",
+                "nom": "sang",
+                "quantite": 1,
+                "consomme": true
+              }
+            ]
+          },
+          {
+            "type": "variante",
+            "id": "contre_le_bien_fumier",
+            "label": "Protection contre le bien — vapeurs de fumier",
+            "composants": [
+              {
+                "slug": "vapeurs_de_fumier",
+                "nom": "vapeurs de fumier",
+                "quantite": 1,
+                "consomme": true
+              }
+            ]
           }
         ],
         "composants_materiels_source": "la poudre de fer et d’argent pour tracer le cercle de protection",
@@ -56226,8 +56340,8 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           {
-            "slug": "pincee_de_souffre_comme_composante_materielle",
-            "nom": "Pincée de souffre comme composante matérielle",
+            "slug": "soufre",
+            "nom": "soufre",
             "quantite": 1,
             "consomme": true
           }
@@ -61890,46 +62004,43 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           {
-            "slug": "fine_feuille_de_cristal_de_6_cm",
-            "nom": "fine feuille de cristal de 6 cm²",
-            "quantite": 1,
-            "consomme": true
+            "type": "variante",
+            "id": "premiere_application",
+            "label": "Première application",
+            "composants": [
+              {
+                "slug": "fine_feuille_de_cristal_de_6_cm",
+                "nom": "fine feuille de cristal de 6 cm²",
+                "quantite": 1,
+                "consomme": true
+              }
+            ]
           },
           {
-            "slug": "premiere_application",
-            "nom": "Première application",
-            "quantite": 1,
-            "consomme": true
+            "type": "variante",
+            "id": "deuxieme_application",
+            "label": "Deuxième application",
+            "composants": [
+              {
+                "slug": "saphir_blanc",
+                "nom": "saphir blanc",
+                "quantite": 1,
+                "consomme": true
+              }
+            ]
           },
           {
-            "slug": "consommee_apres_le_lancement",
-            "nom": "Consommée après le lancement",
-            "quantite": 1,
-            "consomme": true
-          },
-          {
-            "slug": "saphir_blanc",
-            "nom": "saphir blanc",
-            "quantite": 1,
-            "consomme": true
-          },
-          {
-            "slug": "deuxieme_application_consomme_apres_le_lancement",
-            "nom": "Deuxième application. Consommé après le lancement",
-            "quantite": 1,
-            "consomme": true
-          },
-          {
-            "slug": "diamant",
-            "nom": "diamant",
-            "quantite": 1,
-            "consomme": true
-          },
-          {
-            "slug": "troisieme_application_consomme_apres_le_lancement",
-            "nom": "Troisième application. Consommé après le lancement",
-            "quantite": 1,
-            "consomme": true
+            "type": "variante",
+            "id": "troisieme_application",
+            "label": "Troisième application",
+            "composants": [
+              {
+                "slug": "diamant",
+                "nom": "diamant",
+                "quantite": 1,
+                "consomme": true
+              }
+            ]
           }
         ],
         "composants_materiels_source": "",
@@ -67974,6 +68085,6 @@
       "sort": 0
     }
   ],
-  "normalizedBy": "2026-06-19-normalize-cleric-components-text-mining-v13",
-  "normalizedAt": "2026-06-19T13:48:03.535Z"
+  "normalizedBy": "2026-06-19-normalize-cleric-components-text-mining-v15",
+  "normalizedAt": "2026-06-19T16:04:10.878Z"
 }
