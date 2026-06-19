@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 
-const VERSION = "2026-06-19-normalize-wizard-components-text-mining-v8";
+const VERSION = "2026-06-19-normalize-wizard-components-text-mining-v9";
 const DEFAULT_INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const DEFAULT_OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
 const DEFAULT_CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
@@ -399,6 +399,7 @@ function rejectMaterial(value) {
   if (typeof value !== "string") return false;
   const cleaned = cleanMaterial(value);
   const n = norm(cleaned);
+  if (MATERIAL_CANON.has(slug(cleaned))) return false;
   if (!n || NOISE.has(n)) return true;
   if (/^\d+(?:[,.]\d+)?\s*(m2|m|m²|case|cases|po|pa|pp|pc)?$/i.test(cleaned)) return true;
   if (NOISE_STARTS.some(v => n.startsWith(v))) return true;
