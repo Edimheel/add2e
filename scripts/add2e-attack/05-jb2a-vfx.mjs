@@ -1,12 +1,17 @@
 // scripts/add2e-attack/05-jb2a-vfx.mjs
 // ADD2E — VFX JB2A Premium sécurisés pour sorts et attaques d'armes.
-// Version : 2026-06-19-v10-no-missing-sequencer-aliases
+// Version : 2026-06-19-v11-melee-weapon-attack-fx
 
-globalThis.ADD2E_JB2A_VFX_VERSION = "2026-06-19-v10-no-missing-sequencer-aliases";
+globalThis.ADD2E_JB2A_VFX_VERSION = "2026-06-19-v11-melee-weapon-attack-fx";
 
 const ADD2E_JB2A_VISIBLE_IMPACT = [
   "modules/JB2A_DnD5e/Library/2nd_Level/Divine_Smite/DivineSmite_01_Regular_BlueYellow_Target_400x400.webm",
   "modules/jb2a_patreon/Library/2nd_Level/Divine_Smite/DivineSmite_01_Regular_YellowWhite_Target_400x400.webm"
+];
+
+const ADD2E_JB2A_VISIBLE_WEAPON_IMPACT = [
+  "modules/JB2A_DnD5e/Library/Generic/Weapon_Attacks/Melee/Sword01_06_Regular_White_800x600.webm",
+  ...ADD2E_JB2A_VISIBLE_IMPACT
 ];
 
 const ADD2E_JB2A_PRESET_CANDIDATES = {
@@ -69,17 +74,17 @@ const ADD2E_JB2A_PRESET_CANDIDATES = {
     "modules/JB2A_DnD5e/Library/Generic/Marker/MarkerLightIntro_01_Regular_Blue_400x400.webm",
     ...ADD2E_JB2A_VISIBLE_IMPACT
   ],
-  weapon_slash: [...ADD2E_JB2A_VISIBLE_IMPACT],
-  weapon_cleave: [...ADD2E_JB2A_VISIBLE_IMPACT],
-  weapon_pierce: [...ADD2E_JB2A_VISIBLE_IMPACT],
-  weapon_bludgeon: [...ADD2E_JB2A_VISIBLE_IMPACT],
-  weapon_arrow: [...ADD2E_JB2A_VISIBLE_IMPACT],
-  weapon_bolt: [...ADD2E_JB2A_VISIBLE_IMPACT],
-  weapon_stone: [...ADD2E_JB2A_VISIBLE_IMPACT],
-  weapon_firearm: [...ADD2E_JB2A_VISIBLE_IMPACT],
-  weapon_ensnare: [...ADD2E_JB2A_VISIBLE_IMPACT],
-  weapon_whip: [...ADD2E_JB2A_VISIBLE_IMPACT],
-  weapon_default: [...ADD2E_JB2A_VISIBLE_IMPACT]
+  weapon_slash: [...ADD2E_JB2A_VISIBLE_WEAPON_IMPACT],
+  weapon_cleave: [...ADD2E_JB2A_VISIBLE_WEAPON_IMPACT],
+  weapon_pierce: [...ADD2E_JB2A_VISIBLE_WEAPON_IMPACT],
+  weapon_bludgeon: [...ADD2E_JB2A_VISIBLE_WEAPON_IMPACT],
+  weapon_arrow: [...ADD2E_JB2A_VISIBLE_WEAPON_IMPACT],
+  weapon_bolt: [...ADD2E_JB2A_VISIBLE_WEAPON_IMPACT],
+  weapon_stone: [...ADD2E_JB2A_VISIBLE_WEAPON_IMPACT],
+  weapon_firearm: [...ADD2E_JB2A_VISIBLE_WEAPON_IMPACT],
+  weapon_ensnare: [...ADD2E_JB2A_VISIBLE_WEAPON_IMPACT],
+  weapon_whip: [...ADD2E_JB2A_VISIBLE_WEAPON_IMPACT],
+  weapon_default: [...ADD2E_JB2A_VISIBLE_WEAPON_IMPACT]
 };
 
 const ADD2E_SPELL_KEY_TO_JB2A_PRESET = {
