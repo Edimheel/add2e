@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 
-const VERSION = "2026-06-19-normalize-components-v24";
+const VERSION = "2026-06-19-normalize-components-v25";
 const DEFAULT_INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const DEFAULT_OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
 const DEFAULT_CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
@@ -204,6 +204,14 @@ const CANON = new Map(Object.entries({
   huile_douce: "huile douce",
   goutte_d_huile_douce: "huile douce",
   langue_de_serpent: "langue de serpent",
+  poudre_de_ble: "poudre de blé",
+  parchemin_torsade_en_forme_de_boucle: "parchemin torsadé en forme de boucle",
+  jeu_de_3_coquilles_de_noisettes: "jeu de 3 coquilles de noisettes",
+  pierre: "pierre",
+  brindille: "brindille",
+  morceau_de_plante_verte: "morceau de plante verte",
+  feuille: "feuille",
+  brin_d_herbe: "brin d’herbe",
   poudre_de_fer: "poudre de fer",
   pincee_de_poudre_de_fer: "poudre de fer",
   poudre_d_argent: "poudre d’argent",
@@ -365,6 +373,11 @@ const WIZARD_OVERRIDES = new Map(Object.entries({
   ventriloquie: ["parchemin mis en cône"]
 }));
 const ILLUSIONIST_COMPONENT_DELEGATIONS = new Set(["sorts_de_niveau_1_de_magicien"]);
+const ILLUSIONIST_OVERRIDES = new Map(Object.entries({
+  confusion: ["jeu de 3 coquilles de noisettes"],
+  corde_enchantee: ["poudre de blé", "parchemin torsadé en forme de boucle"],
+  terrain_hallucinatoire: ["pierre", "brindille", alt(["morceau de plante verte", "feuille", "brin d’herbe"])]
+}));
 
 function canonical(value) {
   return CANON.get(slug(value)) ?? text(value);
@@ -521,7 +534,7 @@ function normalizeMaterials(item, indexes, existingIndex) {
   } else if (isClassSpell(item, "illusionniste")) {
     applyAudit(item, indexes.illusionniste, "illusionniste");
     if (ILLUSIONIST_COMPONENT_DELEGATIONS.has(key)) { system.composants_materiels = []; system.composantes = "*"; }
-    else system.composants_materiels = preserveOrParse(system, existing);
+    else system.composants_materiels = ILLUSIONIST_OVERRIDES.has(key) ? uniqueEntries(ILLUSIONIST_OVERRIDES.get(key)) : preserveOrParse(system, existing);
   } else {
     system.composants_materiels = preserveOrParse(system, existing);
   }
