@@ -1,5 +1,5 @@
 {
-  "version": "2026-06-19-normalize-components-v23",
+  "version": "2026-06-19-normalize-components-v25",
   "input": "fvtt-spells-all-normalise-mecanique-v1.json",
   "output": "fvtt-spells-all-normalise-mecanique-v3.json",
   "clercAuditFiles": [
@@ -103,49 +103,20 @@
   "appendedFromAudit": {
     "clerc": [
       {
-        "name": "Purification de la Nourriture et de la Boisson",
-        "classe": "Clerc",
-        "niveau": 1
-      },
-      {
-        "name": "Soins des Blessures Légères",
-        "classe": "Clerc",
-        "niveau": 1
-      },
-      {
-        "name": "Localisation d’un Objet",
-        "classe": "Clerc",
-        "niveau": 3
-      },
-      {
-        "name": "Bâtons en Serpents",
-        "classe": "Clerc",
-        "niveau": 4
-      },
-      {
-        "name": "Protection contre le Mal (Rayon de 10 pieds)",
-        "classe": "Clerc",
-        "niveau": 4
-      },
-      {
-        "name": "Soins ultime",
-        "classe": "Clerc",
-        "niveau": 5
-      },
-      {
         "name": "Asile",
         "classe": "Clerc",
         "niveau": 7
       }
     ]
   },
-  "totalItems": 418,
-  "spells": 418,
+  "removedManualDuplicates": [],
+  "totalItems": 412,
+  "spells": 412,
   "preservedManualMaterials": 0,
   "preservedClasses": [],
-  "changedSpells": 314,
-  "changedEffectProfiles": 418,
-  "emptyMaterialSpells": 104,
+  "changedSpells": 293,
+  "changedEffectProfiles": 412,
+  "emptyMaterialSpells": 119,
   "examples": [
     {
       "name": "Abaissement des eaux",
@@ -500,7 +471,7 @@
       "niveau": 6,
       "before": [],
       "after": [
-        "gui druidique"
+        "gui"
       ]
     },
     {
@@ -509,7 +480,7 @@
       "niveau": 5,
       "before": [],
       "after": [
-        "gui druidique"
+        "gui"
       ]
     },
     {
@@ -653,15 +624,6 @@
     },
     {
       "name": "Catalepsie",
-      "classe": "Magicien",
-      "niveau": 3,
-      "before": [],
-      "after": [
-        "a completer"
-      ]
-    },
-    {
-      "name": "Catalepsie",
       "classe": "Clerc",
       "niveau": 3,
       "before": [
@@ -675,7 +637,7 @@
       ],
       "after": [
         "pincée de poussière d’un cimetière",
-        "symbole sacré du clerc"
+        "symbole sacré"
       ]
     },
     {
@@ -955,7 +917,7 @@
       "niveau": 5,
       "before": [],
       "after": [
-        "gui druidique"
+        "gui"
       ]
     },
     {
@@ -1017,7 +979,7 @@
       "niveau": 4,
       "before": [],
       "after": [
-        "a completer"
+        "jeu de 3 coquilles de noisettes"
       ]
     },
     {
@@ -1026,16 +988,7 @@
       "niveau": 4,
       "before": [],
       "after": [
-        "Jeu de 3 coquilles de noisettes"
-      ]
-    },
-    {
-      "name": "Contre-poison",
-      "classe": "Clerc",
-      "niveau": 4,
-      "before": [],
-      "after": [
-        "a completer"
+        "jeu de 3 coquilles de noisettes"
       ]
     },
     {
@@ -1044,7 +997,7 @@
       "niveau": 4,
       "before": [],
       "after": [
-        "gui druidique"
+        "gui"
       ]
     },
     {
@@ -1053,7 +1006,7 @@
       "niveau": 5,
       "before": [],
       "after": [
-        "gui druidique"
+        "gui"
       ]
     },
     {
@@ -1110,7 +1063,8 @@
       "niveau": 3,
       "before": [],
       "after": [
-        "a completer"
+        "poudre de blé",
+        "parchemin torsadé en forme de boucle"
       ]
     },
     {
@@ -1127,8 +1081,8 @@
         "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « de la poudre de blé et un parchemin torsadé en forme de boucle »."
       ],
       "after": [
-        "Poudre de blé",
-        "Parchemin torsadé en forme de boucle"
+        "poudre de blé",
+        "parchemin torsadé en forme de boucle"
       ]
     },
     {
@@ -1192,7 +1146,7 @@
       "niveau": 2,
       "before": [],
       "after": [
-        "gui druidique"
+        "gui"
       ]
     },
     {
@@ -1247,15 +1201,6 @@
       ]
     },
     {
-      "name": "Désenvoûtement",
-      "classe": "Magicien",
-      "niveau": 4,
-      "before": [],
-      "after": [
-        "a completer"
-      ]
-    },
-    {
       "name": "Désintégration",
       "classe": "Magicien",
       "niveau": 6,
@@ -1298,29 +1243,11 @@
     },
     {
       "name": "Détection de la magie",
-      "classe": "Magicien",
-      "niveau": 1,
-      "before": [],
-      "after": [
-        "a completer"
-      ]
-    },
-    {
-      "name": "Détection de la magie",
-      "classe": "Illusionniste",
-      "niveau": 2,
-      "before": [],
-      "after": [
-        "a completer"
-      ]
-    },
-    {
-      "name": "Détection de la magie",
       "classe": "Druide",
       "niveau": 1,
       "before": [],
       "after": [
-        "gui druidique"
+        "gui"
       ]
     },
     {
@@ -1372,16 +1299,7 @@
       "niveau": 1,
       "before": [],
       "after": [
-        "gui druidique"
-      ]
-    },
-    {
-      "name": "Détection du mal",
-      "classe": "Magicien",
-      "niveau": 2,
-      "before": [],
-      "after": [
-        "a completer"
+        "gui"
       ]
     },
     {
@@ -1413,16 +1331,7 @@
         "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « une goutte de mercure »."
       ],
       "after": [
-        "Goutte de mercure"
-      ]
-    },
-    {
-      "name": "Dissipation de la magie",
-      "classe": "Magicien",
-      "niveau": 3,
-      "before": [],
-      "after": [
-        "a completer"
+        "goutte de mercure"
       ]
     },
     {
@@ -1453,6 +1362,127 @@
       ],
       "after": [
         "symbole sacré"
+      ]
+    },
+    {
+      "name": "Distorsion des distances",
+      "classe": "Magicien",
+      "niveau": 5,
+      "before": [
+        "un peu d’argile grasse",
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
+        "peu d’argile grasse",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « un peu d’argile grasse »."
+      ],
+      "after": [
+        "argile grasse"
+      ]
+    },
+    {
+      "name": "Distorsion du bois",
+      "classe": "Druide",
+      "niveau": 2,
+      "before": [],
+      "after": [
+        "gui"
+      ]
+    },
+    {
+      "name": "Divination",
+      "classe": "Clerc",
+      "niveau": 4,
+      "before": [
+        "petite créature",
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Sacrifiée pour lancer le sort.",
+        "encens",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
+        "symbole sacré du clerc",
+        "non_consomme",
+        "pierres précieuses",
+        "optionnel",
+        "Dons requis si une divination puissante est tentée.",
+        "objets magiques",
+        "Dons éventuellement requis si une divination puissante est tentée.",
+        "créature",
+        "Sacrifiée pour lancer le sort. Formulation source du Manuel : « petite créature »."
+      ],
+      "after": [
+        "offrande d’une petite créature",
+        "encens",
+        "symbole sacré"
+      ]
+    },
+    {
+      "name": "Doigt de mort",
+      "classe": "Druide",
+      "niveau": 7,
+      "before": [],
+      "after": [
+        "gui"
+      ]
+    },
+    {
+      "name": "Duo-dimension",
+      "classe": "Magicien",
+      "niveau": 7,
+      "before": [
+        "figurine en ivoire représentant le magicien",
+        "1",
+        "consomme",
+        "5000",
+        "Manuel des joueurs",
+        "Disparaît pour toujours.",
+        "parchemin"
+      ],
+      "after": [
+        "Figurine plate",
+        "Sertie de gemmes"
+      ]
+    },
+    {
+      "name": "E.S.P.",
+      "classe": "Magicien",
+      "niveau": 2,
+      "before": [
+        "une pièce de cuivre",
+        "1",
+        "non_consomme",
+        "Manuel des joueurs",
+        "pièce de cuivre",
+        "Formulation source du Manuel : « une pièce de cuivre »."
+      ],
+      "after": [
+        "pièce de cuivre"
+      ]
+    },
+    {
+      "name": "Eau aérée",
+      "classe": "Magicien",
+      "niveau": 5,
+      "before": [
+        "une petite poignée de sels alcalins ou de bromure",
+        "1",
+        "optionnel",
+        "Manuel des joueurs",
+        "Composant requis selon l’alternative ou la variante choisie.",
+        "Alternative ou variante explicitement indiquée par le Manuel.",
+        "poignée de sels alcalins ou de bromure",
+        "Alternative ou variante explicitement indiquée par le Manuel. Formulation source du Manuel : « une petite poignée de sels alcalins ou de bromure »."
+      ],
+      "after": [
+        {
+          "type": "alternative",
+          "choix": [
+            "Petite poignée de sels alcalins",
+            "de bromure"
+          ]
+        }
       ]
     }
   ],
@@ -2146,7 +2176,7 @@
       "classe": "Druide",
       "niveau": 6,
       "composants_materiels": [
-        "gui druidique"
+        "gui"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -2172,7 +2202,7 @@
       "classe": "Druide",
       "niveau": 5,
       "composants_materiels": [
-        "gui druidique"
+        "gui"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -2973,7 +3003,7 @@
       "classe": "Druide",
       "niveau": 5,
       "composants_materiels": [
-        "gui druidique"
+        "gui"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -3057,7 +3087,7 @@
       "classe": "Magicien",
       "niveau": 4,
       "composants_materiels": [
-        "Jeu de 3 coquilles de noisettes"
+        "jeu de 3 coquilles de noisettes"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -3131,7 +3161,7 @@
       "classe": "Druide",
       "niveau": 4,
       "composants_materiels": [
-        "gui druidique"
+        "gui"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -3157,7 +3187,7 @@
       "classe": "Druide",
       "niveau": 5,
       "composants_materiels": [
-        "gui druidique"
+        "gui"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -3239,8 +3269,8 @@
       "classe": "Magicien",
       "niveau": 2,
       "composants_materiels": [
-        "Poudre de blé",
-        "Parchemin torsadé en forme de boucle"
+        "poudre de blé",
+        "parchemin torsadé en forme de boucle"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -3359,7 +3389,7 @@
       "classe": "Druide",
       "niveau": 2,
       "composants_materiels": [
-        "gui druidique"
+        "gui"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -3468,10 +3498,8 @@
     "Désenvoûtement": {
       "classe": "Magicien",
       "niveau": 4,
-      "composants_materiels": [
-        "a completer"
-      ],
-      "composantes": "V, S, M",
+      "composants_materiels": [],
+      "composantes": "V, S",
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
         "source": "manual-normalized-magicien-n4",
@@ -3572,7 +3600,7 @@
       "classe": "Druide",
       "niveau": 1,
       "composants_materiels": [
-        "gui druidique"
+        "gui"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -3707,7 +3735,7 @@
       "classe": "Druide",
       "niveau": 1,
       "composants_materiels": [
-        "gui druidique"
+        "gui"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -3783,7 +3811,7 @@
       "classe": "Magicien",
       "niveau": 1,
       "composants_materiels": [
-        "Goutte de mercure"
+        "goutte de mercure"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -3959,7 +3987,7 @@
       "classe": "Druide",
       "niveau": 2,
       "composants_materiels": [
-        "gui druidique"
+        "gui"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -4232,7 +4260,7 @@
       "classe": "Druide",
       "niveau": 4,
       "composants_materiels": [
-        "gui druidique"
+        "gui"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -4382,7 +4410,7 @@
       "classe": "Druide",
       "niveau": 1,
       "composants_materiels": [
-        "gui druidique"
+        "gui"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -4666,7 +4694,7 @@
       "classe": "Druide",
       "niveau": 2,
       "composants_materiels": [
-        "gui druidique"
+        "gui"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -4877,7 +4905,7 @@
       "classe": "Druide",
       "niveau": 4,
       "composants_materiels": [
-        "gui druidique"
+        "gui"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -5055,7 +5083,7 @@
       "classe": "Clerc",
       "niveau": 3,
       "composants_materiels": [
-        "Symbole sacré du clerc"
+        "symbole sacré"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -5182,7 +5210,7 @@
       "classe": "Clerc",
       "niveau": 3,
       "composants_materiels": [
-        "gui druidique"
+        "gui"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -5362,10 +5390,8 @@
     "Image miroir": {
       "classe": "Illusionniste",
       "niveau": 2,
-      "composants_materiels": [
-        "a completer"
-      ],
-      "composantes": "V, S, M",
+      "composants_materiels": [],
+      "composantes": "V, S",
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
         "source": "manual-normalized-illusionniste-n2",
@@ -5669,7 +5695,7 @@
       "classe": "Druide",
       "niveau": 4,
       "composants_materiels": [
-        "gui druidique"
+        "gui"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -5695,7 +5721,7 @@
       "classe": "Druide",
       "niveau": 5,
       "composants_materiels": [
-        "gui druidique"
+        "gui"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -5721,7 +5747,7 @@
       "classe": "Druide",
       "niveau": 6,
       "composants_materiels": [
-        "gui druidique"
+        "gui"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -5861,7 +5887,7 @@
       "classe": "Druide",
       "niveau": 6,
       "composants_materiels": [
-        "gui druidique"
+        "gui"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -5913,7 +5939,7 @@
       "classe": "Druide",
       "niveau": 3,
       "composants_materiels": [
-        "gui druidique"
+        "gui"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -6205,7 +6231,7 @@
       "classe": "Druide",
       "niveau": 6,
       "composants_materiels": [
-        "gui druidique"
+        "gui"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -6306,10 +6332,8 @@
     "Labyrinthe": {
       "classe": "Illusionniste",
       "niveau": 5,
-      "composants_materiels": [
-        "a completer"
-      ],
-      "composantes": "V, S, M",
+      "composants_materiels": [],
+      "composantes": "V, S",
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
         "source": "manual-normalized-illusionniste-n5",
@@ -6433,10 +6457,8 @@
     "Langue": {
       "classe": "Clerc",
       "niveau": 4,
-      "composants_materiels": [
-        "a completer"
-      ],
-      "composantes": "V, S, M",
+      "composants_materiels": [],
+      "composantes": "V, S",
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
         "source": "manual-normalized-clerc-n4",
@@ -6545,7 +6567,7 @@
       "classe": "Clerc",
       "niveau": 6,
       "composants_materiels": [
-        "Goutte de mercure"
+        "goutte de mercure"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -6655,7 +6677,7 @@
       "classe": "Druide",
       "niveau": 1,
       "composants_materiels": [
-        "gui druidique"
+        "gui"
       ],
       "composantes": "V, S,M",
       "effectProfile": {
@@ -6681,7 +6703,7 @@
       "classe": "Druide",
       "niveau": 2,
       "composants_materiels": [
-        "gui druidique"
+        "gui"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -6732,10 +6754,8 @@
     "Lumière éternelle": {
       "classe": "Illusionniste",
       "niveau": 3,
-      "composants_materiels": [
-        "a completer"
-      ],
-      "composantes": "V, S, M",
+      "composants_materiels": [],
+      "composantes": "V, S",
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
         "source": "manual-normalized-illusionniste-n3",
@@ -7080,7 +7100,7 @@
       "classe": "Druide",
       "niveau": 2,
       "composants_materiels": [
-        "gui druidique"
+        "gui"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -7333,7 +7353,7 @@
       "classe": "Druide",
       "niveau": 6,
       "composants_materiels": [
-        "gui druidique"
+        "gui"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -7590,7 +7610,7 @@
       "classe": "Clerc",
       "niveau": 3,
       "composants_materiels": [
-        "Symbole sacré du clerc"
+        "symbole sacré"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -7985,7 +8005,7 @@
       "composants_materiels": [
         "petite tige de métal droite",
         "rigide",
-        "tige de métal droite"
+        "petite tige de métal droite"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -8011,7 +8031,7 @@
       "classe": "Druide",
       "niveau": 3,
       "composants_materiels": [
-        "gui druidique"
+        "gui"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -8088,7 +8108,7 @@
       "classe": "Druide",
       "niveau": 4,
       "composants_materiels": [
-        "gui druidique"
+        "gui"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -8193,7 +8213,7 @@
       "classe": "Druide",
       "niveau": 5,
       "composants_materiels": [
-        "gui druidique"
+        "gui"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -8604,7 +8624,7 @@
       "classe": "Druide",
       "niveau": 4,
       "composants_materiels": [
-        "gui druidique"
+        "gui"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -8656,7 +8676,7 @@
       "classe": "Druide",
       "niveau": 1,
       "composants_materiels": [
-        "gui druidique"
+        "gui"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -8708,10 +8728,8 @@
     "Projectile magique": {
       "classe": "Magicien",
       "niveau": 1,
-      "composants_materiels": [
-        "a completer"
-      ],
-      "composantes": "V, S, M",
+      "composants_materiels": [],
+      "composantes": "V, S",
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
         "source": "manual-normalized-magicien-n1",
@@ -8735,7 +8753,7 @@
       "classe": "Druide",
       "niveau": 4,
       "composants_materiels": [
-        "gui druidique"
+        "gui"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -8761,7 +8779,7 @@
       "classe": "Druide",
       "niveau": 3,
       "composants_materiels": [
-        "gui druidique"
+        "gui"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -9057,7 +9075,7 @@
       "classe": "Magicien",
       "niveau": 2,
       "composants_materiels": [
-        "gui druidique"
+        "gui"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -9466,7 +9484,7 @@
       "classe": "Druide",
       "niveau": 6,
       "composants_materiels": [
-        "gui druidique"
+        "gui"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -9492,7 +9510,7 @@
       "classe": "Clerc",
       "niveau": 2,
       "composants_materiels": [
-        "Goutte de mercure"
+        "goutte de mercure"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -9634,7 +9652,7 @@
       "niveau": 2,
       "composants_materiels": [
         "symbole sacré",
-        "Gousse d’ail"
+        "gousse d’ail"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -10026,7 +10044,7 @@
       "classe": "Druide",
       "niveau": 2,
       "composants_materiels": [
-        "symbole sacré du clerc",
+        "symbole sacré",
         "petit miroir en argent"
       ],
       "composantes": "V, S, M",
@@ -10078,10 +10096,8 @@
     "Sort astral": {
       "classe": "Illusionniste",
       "niveau": 7,
-      "composants_materiels": [
-        "a completer"
-      ],
-      "composantes": "V, S, M",
+      "composants_materiels": [],
+      "composantes": "V, S",
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
         "source": "manual-normalized-illusionniste-n7",
@@ -10632,9 +10648,9 @@
       "classe": "Magicien",
       "niveau": 4,
       "composants_materiels": [
-        "Brindille",
-        "Morceau de plante verte",
-        "Feuille"
+        "brindille",
+        "morceau de plante verte",
+        "feuille"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -11060,7 +11076,7 @@
       "classe": "Illusionniste",
       "niveau": 6,
       "composants_materiels": [
-        "symbole sacré du clerc"
+        "symbole sacré"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -11132,162 +11148,11 @@
         ]
       }
     },
-    "Purification de la Nourriture et de la Boisson": {
-      "classe": "Clerc",
-      "niveau": 1,
-      "composants_materiels": [],
-      "composantes": "V, S",
-      "effectProfile": {
-        "version": "2026-06-16-add2e-spell-effects-v1",
-        "source": "manual-normalized-clerc-n1",
-        "effects": [
-          {
-            "id": "purification_de_la_nourriture_et_de_la_boisson",
-            "label": "Purification de la Nourriture et de la Boisson",
-            "kind": "clerc_effect",
-            "automation": "active_effect_or_mj_aid",
-            "tags": [
-              "effet:purification_de_la_nourriture_et_de_la_boisson",
-              "classe:clerc",
-              "niveau:1"
-            ],
-            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
-          }
-        ]
-      }
-    },
-    "Soins des Blessures Légères": {
-      "classe": "Clerc",
-      "niveau": 1,
-      "composants_materiels": [],
-      "composantes": "V, S",
-      "effectProfile": {
-        "version": "2026-06-16-add2e-spell-effects-v1",
-        "source": "manual-normalized-clerc-n1",
-        "effects": [
-          {
-            "id": "soins_des_blessures_legeres",
-            "label": "Soins des Blessures Légères",
-            "kind": "clerc_effect",
-            "automation": "active_effect_or_mj_aid",
-            "tags": [
-              "effet:soins_des_blessures_legeres",
-              "classe:clerc",
-              "niveau:1"
-            ],
-            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
-          }
-        ]
-      }
-    },
-    "Localisation d’un Objet": {
-      "classe": "Clerc",
-      "niveau": 3,
-      "composants_materiels": [
-        "Symbole sacré du clerc"
-      ],
-      "composantes": "V, S, M",
-      "effectProfile": {
-        "version": "2026-06-16-add2e-spell-effects-v1",
-        "source": "manual-normalized-clerc-n3",
-        "effects": [
-          {
-            "id": "localisation_d_un_objet",
-            "label": "Localisation d’un Objet",
-            "kind": "clerc_effect",
-            "automation": "active_effect_or_mj_aid",
-            "tags": [
-              "effet:localisation_d_un_objet",
-              "classe:clerc",
-              "niveau:3"
-            ],
-            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
-          }
-        ]
-      }
-    },
-    "Bâtons en Serpents": {
-      "classe": "Clerc",
-      "niveau": 4,
-      "composants_materiels": [
-        "petit morceau d’écorce",
-        "Plusieurs écailles de serpent"
-      ],
-      "composantes": "V, S, M",
-      "effectProfile": {
-        "version": "2026-06-16-add2e-spell-effects-v1",
-        "source": "manual-normalized-clerc-n4",
-        "effects": [
-          {
-            "id": "batons_en_serpents",
-            "label": "Bâtons en Serpents",
-            "kind": "clerc_effect",
-            "automation": "active_effect_or_mj_aid",
-            "tags": [
-              "effet:batons_en_serpents",
-              "classe:clerc",
-              "niveau:4"
-            ],
-            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
-          }
-        ]
-      }
-    },
-    "Protection contre le Mal (Rayon de 10 pieds)": {
-      "classe": "Clerc",
-      "niveau": 4,
-      "composants_materiels": [
-        "Symbole sacré du clerc"
-      ],
-      "composantes": "V, S, M",
-      "effectProfile": {
-        "version": "2026-06-16-add2e-spell-effects-v1",
-        "source": "manual-normalized-clerc-n4",
-        "effects": [
-          {
-            "id": "protection_contre_le_mal_rayon_de_10_pieds",
-            "label": "Protection contre le Mal (Rayon de 10 pieds)",
-            "kind": "clerc_effect",
-            "automation": "active_effect_or_mj_aid",
-            "tags": [
-              "effet:protection_contre_le_mal_rayon_de_10_pieds",
-              "classe:clerc",
-              "niveau:4"
-            ],
-            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
-          }
-        ]
-      }
-    },
-    "Soins ultime": {
-      "classe": "Clerc",
-      "niveau": 5,
-      "composants_materiels": [],
-      "composantes": "V, S",
-      "effectProfile": {
-        "version": "2026-06-16-add2e-spell-effects-v1",
-        "source": "manual-normalized-clerc-n5",
-        "effects": [
-          {
-            "id": "soins_ultime",
-            "label": "Soins ultime",
-            "kind": "clerc_effect",
-            "automation": "active_effect_or_mj_aid",
-            "tags": [
-              "effet:soins_ultime",
-              "classe:clerc",
-              "niveau:5"
-            ],
-            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
-          }
-        ]
-      }
-    },
     "Asile": {
       "classe": "Clerc",
       "niveau": 7,
       "composants_materiels": [
-        "Symbole sacré du clerc"
+        "symbole sacré"
       ],
       "composantes": "V, S, M",
       "effectProfile": {
@@ -11412,7 +11277,7 @@
       "niveau": 3,
       "composants": [
         "pincée de poussière d’un cimetière",
-        "symbole sacré du clerc"
+        "symbole sacré"
       ]
     },
     {
@@ -11437,9 +11302,7 @@
     {
       "name": "Contre-poison",
       "niveau": 4,
-      "composants": [
-        "a completer"
-      ]
+      "composants": []
     },
     {
       "name": "Contrôle du Climat",
@@ -11533,7 +11396,7 @@
       "name": "Glyphe de Garde",
       "niveau": 3,
       "composants": [
-        "Symbole sacré du clerc"
+        "symbole sacré"
       ]
     },
     {
@@ -11550,7 +11413,7 @@
       "name": "Guérison des Maladies",
       "niveau": 3,
       "composants": [
-        "gui druidique"
+        "gui"
       ]
     },
     {
@@ -11561,9 +11424,7 @@
     {
       "name": "Invocation des animaux",
       "niveau": 6,
-      "composants": [
-        "a completer"
-      ]
+      "composants": []
     },
     {
       "name": "Langage animal",
@@ -11586,15 +11447,13 @@
     {
       "name": "Langue",
       "niveau": 4,
-      "composants": [
-        "a completer"
-      ]
+      "composants": []
     },
     {
       "name": "Lithomancie",
       "niveau": 6,
       "composants": [
-        "Goutte de mercure"
+        "goutte de mercure"
       ]
     },
     {
@@ -11656,7 +11515,7 @@
       "name": "Nécro animation",
       "niveau": 3,
       "composants": [
-        "Symbole sacré du clerc"
+        "symbole sacré"
       ]
     },
     {
@@ -11685,7 +11544,7 @@
       "composants": [
         "petite tige de métal droite",
         "rigide",
-        "tige de métal droite"
+        "petite tige de métal droite"
       ]
     },
     {
@@ -11843,7 +11702,7 @@
       "name": "Résistance au feu",
       "niveau": 2,
       "composants": [
-        "Goutte de mercure"
+        "goutte de mercure"
       ]
     },
     {
@@ -11870,7 +11729,7 @@
       "niveau": 2,
       "composants": [
         "symbole sacré",
-        "Gousse d’ail"
+        "gousse d’ail"
       ]
     },
     {
@@ -11895,9 +11754,7 @@
     {
       "name": "Seuil",
       "niveau": 7,
-      "composants": [
-        "a completer"
-      ]
+      "composants": []
     },
     {
       "name": "Silence sur 5 mètres",
@@ -11956,47 +11813,10 @@
       ]
     },
     {
-      "name": "Purification de la Nourriture et de la Boisson",
-      "niveau": 1,
-      "composants": []
-    },
-    {
-      "name": "Soins des Blessures Légères",
-      "niveau": 1,
-      "composants": []
-    },
-    {
-      "name": "Localisation d’un Objet",
-      "niveau": 3,
-      "composants": [
-        "Symbole sacré du clerc"
-      ]
-    },
-    {
-      "name": "Bâtons en Serpents",
-      "niveau": 4,
-      "composants": [
-        "petit morceau d’écorce",
-        "Plusieurs écailles de serpent"
-      ]
-    },
-    {
-      "name": "Protection contre le Mal (Rayon de 10 pieds)",
-      "niveau": 4,
-      "composants": [
-        "Symbole sacré du clerc"
-      ]
-    },
-    {
-      "name": "Soins ultime",
-      "niveau": 5,
-      "composants": []
-    },
-    {
       "name": "Asile",
       "niveau": 7,
       "composants": [
-        "Symbole sacré du clerc"
+        "symbole sacré"
       ]
     }
   ],
@@ -12170,9 +11990,7 @@
     {
       "name": "Catalepsie",
       "niveau": 3,
-      "composants": [
-        "a completer"
-      ]
+      "composants": []
     },
     {
       "name": "Charme-masse",
@@ -12295,7 +12113,7 @@
       "name": "Confusion",
       "niveau": 4,
       "composants": [
-        "Jeu de 3 coquilles de noisettes"
+        "jeu de 3 coquilles de noisettes"
       ]
     },
     {
@@ -12317,8 +12135,8 @@
       "name": "Corde enchantée",
       "niveau": 2,
       "composants": [
-        "Poudre de blé",
-        "Parchemin torsadé en forme de boucle"
+        "poudre de blé",
+        "parchemin torsadé en forme de boucle"
       ]
     },
     {
@@ -12358,9 +12176,7 @@
     {
       "name": "Désenvoûtement",
       "niveau": 4,
-      "composants": [
-        "a completer"
-      ]
+      "composants": []
     },
     {
       "name": "Désintégration",
@@ -12372,16 +12188,12 @@
     {
       "name": "Détection de la magie",
       "niveau": 1,
-      "composants": [
-        "a completer"
-      ]
+      "composants": []
     },
     {
       "name": "Détection du mal",
       "niveau": 2,
-      "composants": [
-        "a completer"
-      ]
+      "composants": []
     },
     {
       "name": "Disparition",
@@ -12392,15 +12204,13 @@
       "name": "Disque flottant de Tenser",
       "niveau": 1,
       "composants": [
-        "Goutte de mercure"
+        "goutte de mercure"
       ]
     },
     {
       "name": "Dissipation de la magie",
       "niveau": 3,
-      "composants": [
-        "a completer"
-      ]
+      "composants": []
     },
     {
       "name": "Distorsion des distances",
@@ -12869,9 +12679,7 @@
     {
       "name": "Lumière éternelle",
       "niveau": 2,
-      "composants": [
-        "a completer"
-      ]
+      "composants": []
     },
     {
       "name": "Lumières dansantes",
@@ -13071,7 +12879,7 @@
       "name": "Paralysie",
       "niveau": 3,
       "composants": [
-        "symbole sacré du clerc"
+        "symbole sacré"
       ]
     },
     {
@@ -13170,9 +12978,7 @@
     {
       "name": "Projectile magique",
       "niveau": 1,
-      "composants": [
-        "a completer"
-      ]
+      "composants": []
     },
     {
       "name": "Protection contre le mal",
@@ -13215,7 +13021,7 @@
       "name": "Pyrotechnie",
       "niveau": 2,
       "composants": [
-        "gui druidique"
+        "gui"
       ]
     },
     {
@@ -13353,9 +13159,7 @@
     {
       "name": "Sort astral",
       "niveau": 9,
-      "composants": [
-        "a completer"
-      ]
+      "composants": []
     },
     {
       "name": "Souhait majeur",
@@ -13476,9 +13280,9 @@
       "name": "Terrain hallucinatoire",
       "niveau": 4,
       "composants": [
-        "Brindille",
-        "Morceau de plante verte",
-        "Feuille"
+        "brindille",
+        "morceau de plante verte",
+        "feuille"
       ]
     },
     {
@@ -13616,14 +13420,15 @@
       "name": "Confusion",
       "niveau": 4,
       "composants": [
-        "a completer"
+        "jeu de 3 coquilles de noisettes"
       ]
     },
     {
       "name": "Corde enchantée",
       "niveau": 3,
       "composants": [
-        "a completer"
+        "poudre de blé",
+        "parchemin torsadé en forme de boucle"
       ]
     },
     {
@@ -13671,9 +13476,7 @@
     {
       "name": "Détection de la magie",
       "niveau": 2,
-      "composants": [
-        "a completer"
-      ]
+      "composants": []
     },
     {
       "name": "Détection des illusions",
@@ -13710,9 +13513,7 @@
     {
       "name": "Effroi",
       "niveau": 3,
-      "composants": [
-        "a completer"
-      ]
+      "composants": []
     },
     {
       "name": "Émotion",
@@ -13769,9 +13570,7 @@
     {
       "name": "Image miroir",
       "niveau": 2,
-      "composants": [
-        "a completer"
-      ]
+      "composants": []
     },
     {
       "name": "Invisibilité",
@@ -13817,16 +13616,12 @@
     {
       "name": "Labyrinthe",
       "niveau": 5,
-      "composants": [
-        "a completer"
-      ]
+      "composants": []
     },
     {
       "name": "Lumière éternelle",
       "niveau": 3,
-      "composants": [
-        "a completer"
-      ]
+      "composants": []
     },
     {
       "name": "Lumières dansantes",
@@ -13914,9 +13709,7 @@
     {
       "name": "Sort astral",
       "niveau": 7,
-      "composants": [
-        "a completer"
-      ]
+      "composants": []
     },
     {
       "name": "Sorts de niveau 1 de magicien",
@@ -13975,7 +13768,16 @@
       "name": "Terrain hallucinatoire",
       "niveau": 3,
       "composants": [
-        "a completer"
+        "pierre",
+        "brindille",
+        {
+          "type": "alternative",
+          "choix": [
+            "morceau de plante verte",
+            "feuille",
+            "brin d’herbe"
+          ]
+        }
       ]
     },
     {
@@ -14006,7 +13808,7 @@
       "name": "Vision réelle",
       "niveau": 6,
       "composants": [
-        "symbole sacré du clerc"
+        "symbole sacré"
       ]
     },
     {
@@ -14058,9 +13860,7 @@
       "Purification de l'eau et des aliments",
       "Résistance au Froid",
       "Sanctuaire",
-      "Soins mineurs",
-      "Purification de la Nourriture et de la Boisson",
-      "Soins des Blessures Légères"
+      "Soins mineurs"
     ],
     "missing": []
   },
@@ -14094,8 +13894,7 @@
       "Manne",
       "Nécro animation",
       "Nécromancie",
-      "Prière",
-      "Localisation d’un Objet"
+      "Prière"
     ],
     "missing": []
   },
@@ -14110,9 +13909,7 @@
       "Langage des Plantes",
       "Langue",
       "Protection contre le mal sur 3 m",
-      "Soins Majeurs",
-      "Bâtons en Serpents",
-      "Protection contre le Mal (Rayon de 10 pieds)"
+      "Soins Majeurs"
     ],
     "missing": []
   },
@@ -14127,8 +13924,7 @@
       "Quête Religieuse",
       "Rappel à la Vie",
       "Soin ultime",
-      "Vision réelle",
-      "Soins ultime"
+      "Vision réelle"
     ],
     "missing": []
   },
