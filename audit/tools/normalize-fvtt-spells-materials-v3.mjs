@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 
-const VERSION = "2026-06-19-normalize-wizard-components-text-mining-v1";
+const VERSION = "2026-06-19-normalize-wizard-components-text-mining-v2";
 const DEFAULT_INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const DEFAULT_OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
 const DEFAULT_CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
@@ -405,16 +405,17 @@ function isComplexMaterialText(value) {
   return n.split(" ").length > 8;
 }
 
-function sanitizeEntry(entry) {
+function sanitizeEntry(entry, options = {}) {
+  const fromParser = options.fromParser === true;
   if (typeof entry === "string") {
-    if (isComplexMaterialText(entry)) return parseSourceMaterials(entry);
+    if (!fromParser && isComplexMaterialText(entry)) return parseSourceMaterials(entry);
     const cleaned = cleanMaterial(entry);
     return rejectMaterial(cleaned) ? null : cleaned;
   }
   if (!entry || typeof entry !== "object") return null;
   if (entry.type === "alternative" || Array.isArray(entry.choix)) {
     const choix = uniqueFlat((entry.choix ?? entry.alternatives ?? entry.options ?? []).flatMap(value => {
-      const cleaned = sanitizeEntry(value);
+      const cleaned = sanitizeEntry(value, options);
       if (!cleaned) return [];
       if (Array.isArray(cleaned)) return cleaned.flatMap(componentNamesFromEntry);
       if (cleaned?.type === "alternative") return cleaned.choix ?? [];
@@ -426,7 +427,7 @@ function sanitizeEntry(entry) {
   }
   if (entry.type === "variante") {
     const composants = uniqueFlat((entry.composants ?? []).flatMap(value => {
-      const cleaned = sanitizeEntry(value);
+      const cleaned = sanitizeEntry(value, options);
       if (!cleaned) return [];
       if (Array.isArray(cleaned)) return cleaned.flatMap(componentNamesFromEntry);
       return componentNamesFromEntry(cleaned);
@@ -441,7 +442,7 @@ function sanitizeEntry(entry) {
   }
   const names = componentNamesFromEntry(entry);
   if (!names.length) return null;
-  if (names.length === 1 && isComplexMaterialText(names[0])) return parseSourceMaterials(names[0]);
+  if (!fromParser && names.length === 1 && isComplexMaterialText(names[0])) return parseSourceMaterials(names[0]);
   const cleaned = names.map(cleanMaterial).filter(v => !rejectMaterial(v));
   if (!cleaned.length) return null;
   return cleaned.length === 1 ? cleaned[0] : cleaned;
@@ -460,11 +461,11 @@ function uniqueFlat(list) {
   return out;
 }
 
-function uniqueEntries(entries) {
+function uniqueEntries(entries, options = {}) {
   const seen = new Set();
   const out = [];
   for (const entry of entries.flat(Infinity)) {
-    const sanitizedRaw = sanitizeEntry(entry);
+    const sanitizedRaw = sanitizeEntry(entry, options);
     const sanitizedList = Array.isArray(sanitizedRaw) ? sanitizedRaw : [sanitizedRaw];
     for (const sanitized of sanitizedList) {
       if (!sanitized) continue;
@@ -536,7 +537,7 @@ function parseSourceMaterials(source) {
     }
     for (const part of chunk.split(/\s+et\s+/i).map(cleanMaterial).filter(v => !rejectMaterial(v))) entries.push(part);
   }
-  return uniqueEntries(entries);
+  return uniqueEntries(entries, { fromParser: true });
 }
 
 function materialEntriesFromValue(value) {
