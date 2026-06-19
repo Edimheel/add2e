@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 
-const VERSION = "2026-06-19-normalize-components-v25";
+const VERSION = "2026-06-19-normalize-components-v26";
 const DEFAULT_INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const DEFAULT_OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
 const DEFAULT_CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
@@ -294,15 +294,15 @@ const variant = (id, label, composants) => ({ type: "variante", id, label, compo
 const holy = "s" + "ang";
 
 const CLERIC_OVERRIDES = new Map(Object.entries({
-  aquagenese: [variant("creation", "goutte d’eau", ["goutte d’eau"]), variant("inverse", "pincée de poussière", ["pincée de poussière"])],
-  benediction: [variant("benediction", "Eau bénite", ["Eau bénite"]), variant("malediction", "Eau maudite", ["Eau maudite"])],
+  aquagenese: [alt(["goutte d’eau", "pincée de poussière"])],
+  benediction: [alt(["Eau bénite", "Eau maudite"])],
   detection_de_la_magie: ["symbole sacré"],
   detection_du_mal: ["symbole sacré"],
   lumiere: ["symbole sacré"],
   purification_de_l_eau_et_des_aliments: ["symbole sacré"],
   soins_mineurs: ["symbole sacré"],
-  protection_contre_le_mal: [variant("eau_benite", "Eau bénite", ["Eau bénite"]), variant("encens", "encens allumé", ["encens allumé"]), variant("sang", "sang", [holy]), variant("fumier", "vapeurs de fumier", ["vapeurs de fumier"])],
-  protection_contre_le_mal_sur_3_m: [variant("eau_benite", "Eau bénite", ["Eau bénite"]), variant("encens", "encens allumé", ["encens allumé"]), variant("sang", "sang", [holy]), variant("fumier", "vapeurs de fumier", ["vapeurs de fumier"])],
+  protection_contre_le_mal: [alt(["Eau bénite", "encens allumé", holy, "vapeurs de fumier"])],
+  protection_contre_le_mal_sur_3_m: [alt(["Eau bénite", "encens allumé", holy, "vapeurs de fumier"])],
   resistance_au_froid: ["soufre"],
   resistance_au_feu_resistance_au_froid: ["soufre"],
   sanctuaire: ["symbole sacré"],
@@ -325,9 +325,9 @@ const CLERIC_OVERRIDES = new Map(Object.entries({
   soin_ultime: ["symbole sacré"],
   vision_reelle: ["safran", "graisse", "crème faite d’huile", "poudre de pavot", "essence d’orchidée rose"],
   controle_du_climat: ["symbole sacré", "chapelet de prière"],
-  marche_des_vents: [variant("benite", "feu et Eau bénite", ["feu", "Eau bénite"]), variant("maudite", "feu et Eau maudite", ["feu", "Eau maudite"])],
+  marche_des_vents: ["feu", alt(["Eau bénite", "Eau maudite"])],
   parole_sacree_maudite: ["symbole sacré"],
-  regeneration: [variant("benite", "objet de prière et Eau bénite", ["objet de prière", "Eau bénite"]), variant("maudite", "objet de prière et Eau maudite", ["objet de prière", "Eau maudite"])],
+  regeneration: ["objet de prière", alt(["Eau bénite", "Eau maudite"])],
   resurrection: ["symbole sacré"],
   symbole: ["mercure"],
   tremblement_de_terre: ["pincée de poussière"]
