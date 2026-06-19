@@ -1,5 +1,5 @@
 {
-  "version": "2026-06-19-normalize-wizard-components-text-mining-v9",
+  "version": "2026-06-19-normalize-wizard-components-text-mining-v11",
   "input": "fvtt-spells-all-normalise-mecanique-v1.json",
   "output": "fvtt-spells-all-normalise-mecanique-v3.json",
   "magicienAuditFiles": [
@@ -106,32 +106,8 @@
           "consomme": true
         },
         {
-          "slug": "fiole_est_le_contenant_reutilisable",
-          "nom": "fiole est le contenant réutilisable",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "son_contenu_est",
-          "nom": "son contenu est",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
           "slug": "petite_fiole_de_poussiere",
           "nom": "petite fiole de poussière",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "fiole_d_eau",
-          "nom": "fiole d’eau",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "fiole_de_poussiere",
-          "nom": "fiole de poussière",
           "quantite": 1,
           "consomme": true
         }
@@ -339,10 +315,62 @@
       ],
       "after": [
         {
-          "slug": "phosphore_pour_la_version_chaude",
-          "nom": "Phosphore pour la version chaude",
-          "quantite": 1,
-          "consomme": true
+          "type": "variante",
+          "id": "flammes_chaudes",
+          "label": "Flammes chaudes",
+          "composants": [
+            {
+              "slug": "phosphore",
+              "nom": "phosphore",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
+        },
+        {
+          "type": "variante",
+          "id": "flammes_froides_luciole",
+          "label": "Flammes froides — luciole vivante",
+          "composants": [
+            {
+              "slug": "luciole_vivante",
+              "nom": "luciole vivante",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
+        },
+        {
+          "type": "variante",
+          "id": "flammes_froides_ver_luisant",
+          "label": "Flammes froides — ver luisant vivant",
+          "composants": [
+            {
+              "slug": "ver_luisant_vivant",
+              "nom": "ver luisant vivant",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
+        },
+        {
+          "type": "variante",
+          "id": "flammes_froides_queues",
+          "label": "Flammes froides — queues de lucioles ou vers luisants morts",
+          "composants": [
+            {
+              "slug": "4_queues_de_lucioles",
+              "nom": "4 queues de lucioles",
+              "quantite": 1,
+              "consomme": true
+            },
+            {
+              "slug": "de_vers_luisants_morts",
+              "nom": "de vers luisants morts",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
         }
       ]
     },
@@ -836,16 +864,16 @@
           "type": "alternative",
           "choix": [
             {
-              "slug": "cone_de_verre",
-              "nom": "Cône de verre",
+              "slug": "petit_cone_de_verre",
+              "nom": "petit cône de verre",
               "quantite": 1,
-              "consomme": true
+              "consomme": false
             },
             {
-              "slug": "de_cristal_de_tres_petite_taille",
-              "nom": "de cristal de très petite taille",
+              "slug": "petit_cone_de_cristal",
+              "nom": "petit cône de cristal",
               "quantite": 1,
-              "consomme": true
+              "consomme": false
             }
           ]
         }
@@ -1297,8 +1325,8 @@
       ],
       "after": [
         {
-          "slug": "peu_d_argile_grasse",
-          "nom": "Peu d’argile grasse",
+          "slug": "argile_grasse",
+          "nom": "argile grasse",
           "quantite": 1,
           "consomme": true
         }
@@ -1400,20 +1428,8 @@
       ],
       "after": [
         {
-          "slug": "surface_d_ecriture",
-          "nom": "Surface d’écriture",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
           "slug": "encre_fine_faite_de_substances_rares",
           "nom": "encre fine faite de substances rares",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "cout_minimum_200_po_par_flacon",
-          "nom": "coût minimum 200 po par flacon",
           "quantite": 1,
           "consomme": true
         }
@@ -1759,8 +1775,8 @@
       ],
       "after": [
         {
-          "slug": "morceau_de_fourrure_et_une_baguette_de_verre",
-          "nom": "Morceau de fourrure et une baguette de verre",
+          "slug": "morceau_de_fourrure",
+          "nom": "morceau de fourrure",
           "quantite": 1,
           "consomme": true
         },
@@ -1768,16 +1784,22 @@
           "type": "alternative",
           "choix": [
             {
-              "slug": "ambre",
-              "nom": "ambre",
+              "slug": "baguette_de_verre",
+              "nom": "baguette de verre",
               "quantite": 1,
-              "consomme": true
+              "consomme": false
             },
             {
-              "slug": "de_cristal",
-              "nom": "de cristal",
+              "slug": "baguette_de_cristal",
+              "nom": "baguette de cristal",
               "quantite": 1,
-              "consomme": true
+              "consomme": false
+            },
+            {
+              "slug": "baguette_d_ambre",
+              "nom": "baguette d’ambre",
+              "quantite": 1,
+              "consomme": false
             }
           ]
         }
@@ -1824,22 +1846,22 @@
       ],
       "after": [
         {
-          "slug": "melange_de_terre_argile",
-          "nom": "Mélange de terre (argile",
+          "slug": "melange_de_terre",
+          "nom": "mélange de terre",
           "quantite": 1,
           "consomme": true
         },
         {
-          "slug": "sable_dans_un_petit_sac",
-          "nom": "Sable) dans un petit sac",
+          "slug": "petit_sac",
+          "nom": "petit sac",
           "quantite": 1,
-          "consomme": true
+          "consomme": false
         },
         {
           "slug": "lame_en_fer",
-          "nom": "Lame en fer",
+          "nom": "lame en fer",
           "quantite": 1,
-          "consomme": true
+          "consomme": false
         }
       ]
     },
@@ -1932,9 +1954,9 @@
       "after": [
         {
           "slug": "petite_replique_du_magicien",
-          "nom": "Petite réplique du magicien",
+          "nom": "petite réplique du magicien",
           "quantite": 1,
-          "consomme": true
+          "consomme": false
         }
       ]
     },
@@ -1956,25 +1978,7 @@
           "slug": "petite_replique_du_magicien",
           "nom": "petite réplique du magicien",
           "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "objet_durable",
-          "nom": "Objet durable",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "focus_utilise_sans_destruction_indiquee",
-          "nom": "focus utilisé sans destruction indiquée",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "replique_du_magicien",
-          "nom": "réplique du magicien",
-          "quantite": 1,
-          "consomme": true
+          "consomme": false
         }
       ]
     },
@@ -2066,32 +2070,8 @@
           "consomme": true
         },
         {
-          "slug": "fiole_est_le_contenant_reutilisable",
-          "nom": "fiole est le contenant réutilisable",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "son_contenu_est",
-          "nom": "son contenu est",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
           "slug": "petite_fiole_de_poussiere",
           "nom": "petite fiole de poussière",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "fiole_d_eau",
-          "nom": "fiole d’eau",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "fiole_de_poussiere",
-          "nom": "fiole de poussière",
           "quantite": 1,
           "consomme": true
         }
@@ -2496,10 +2476,62 @@
       "niveau": 4,
       "composants_materiels": [
         {
-          "slug": "phosphore_pour_la_version_chaude",
-          "nom": "Phosphore pour la version chaude",
-          "quantite": 1,
-          "consomme": true
+          "type": "variante",
+          "id": "flammes_chaudes",
+          "label": "Flammes chaudes",
+          "composants": [
+            {
+              "slug": "phosphore",
+              "nom": "phosphore",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
+        },
+        {
+          "type": "variante",
+          "id": "flammes_froides_luciole",
+          "label": "Flammes froides — luciole vivante",
+          "composants": [
+            {
+              "slug": "luciole_vivante",
+              "nom": "luciole vivante",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
+        },
+        {
+          "type": "variante",
+          "id": "flammes_froides_ver_luisant",
+          "label": "Flammes froides — ver luisant vivant",
+          "composants": [
+            {
+              "slug": "ver_luisant_vivant",
+              "nom": "ver luisant vivant",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
+        },
+        {
+          "type": "variante",
+          "id": "flammes_froides_queues",
+          "label": "Flammes froides — queues de lucioles ou vers luisants morts",
+          "composants": [
+            {
+              "slug": "4_queues_de_lucioles",
+              "nom": "4 queues de lucioles",
+              "quantite": 1,
+              "consomme": true
+            },
+            {
+              "slug": "de_vers_luisants_morts",
+              "nom": "de vers luisants morts",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
         }
       ],
       "composantes": "V, S, M",
@@ -3271,16 +3303,16 @@
           "type": "alternative",
           "choix": [
             {
-              "slug": "cone_de_verre",
-              "nom": "Cône de verre",
+              "slug": "petit_cone_de_verre",
+              "nom": "petit cône de verre",
               "quantite": 1,
-              "consomme": true
+              "consomme": false
             },
             {
-              "slug": "de_cristal_de_tres_petite_taille",
-              "nom": "de cristal de très petite taille",
+              "slug": "petit_cone_de_cristal",
+              "nom": "petit cône de cristal",
               "quantite": 1,
-              "consomme": true
+              "consomme": false
             }
           ]
         }
@@ -4056,8 +4088,8 @@
       "niveau": 5,
       "composants_materiels": [
         {
-          "slug": "peu_d_argile_grasse",
-          "nom": "Peu d’argile grasse",
+          "slug": "argile_grasse",
+          "nom": "argile grasse",
           "quantite": 1,
           "consomme": true
         }
@@ -4197,20 +4229,8 @@
       "niveau": 1,
       "composants_materiels": [
         {
-          "slug": "surface_d_ecriture",
-          "nom": "Surface d’écriture",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
           "slug": "encre_fine_faite_de_substances_rares",
           "nom": "encre fine faite de substances rares",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "cout_minimum_200_po_par_flacon",
-          "nom": "coût minimum 200 po par flacon",
           "quantite": 1,
           "consomme": true
         }
@@ -4881,8 +4901,8 @@
       "niveau": 3,
       "composants_materiels": [
         {
-          "slug": "morceau_de_fourrure_et_une_baguette_de_verre",
-          "nom": "Morceau de fourrure et une baguette de verre",
+          "slug": "morceau_de_fourrure",
+          "nom": "morceau de fourrure",
           "quantite": 1,
           "consomme": true
         },
@@ -4890,16 +4910,22 @@
           "type": "alternative",
           "choix": [
             {
-              "slug": "ambre",
-              "nom": "ambre",
+              "slug": "baguette_de_verre",
+              "nom": "baguette de verre",
               "quantite": 1,
-              "consomme": true
+              "consomme": false
             },
             {
-              "slug": "de_cristal",
-              "nom": "de cristal",
+              "slug": "baguette_de_cristal",
+              "nom": "baguette de cristal",
               "quantite": 1,
-              "consomme": true
+              "consomme": false
+            },
+            {
+              "slug": "baguette_d_ambre",
+              "nom": "baguette d’ambre",
+              "quantite": 1,
+              "consomme": false
             }
           ]
         }
@@ -4961,22 +4987,22 @@
       "niveau": 6,
       "composants_materiels": [
         {
-          "slug": "melange_de_terre_argile",
-          "nom": "Mélange de terre (argile",
+          "slug": "melange_de_terre",
+          "nom": "mélange de terre",
           "quantite": 1,
           "consomme": true
         },
         {
-          "slug": "sable_dans_un_petit_sac",
-          "nom": "Sable) dans un petit sac",
+          "slug": "petit_sac",
+          "nom": "petit sac",
           "quantite": 1,
-          "consomme": true
+          "consomme": false
         },
         {
           "slug": "lame_en_fer",
-          "nom": "Lame en fer",
+          "nom": "lame en fer",
           "quantite": 1,
-          "consomme": true
+          "consomme": false
         }
       ],
       "composantes": "V, S, M",
@@ -5124,25 +5150,7 @@
           "slug": "petite_replique_du_magicien",
           "nom": "petite réplique du magicien",
           "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "objet_durable",
-          "nom": "Objet durable",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "focus_utilise_sans_destruction_indiquee",
-          "nom": "focus utilisé sans destruction indiquée",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "replique_du_magicien",
-          "nom": "réplique du magicien",
-          "quantite": 1,
-          "consomme": true
+          "consomme": false
         }
       ],
       "composantes": "V, S, M",
@@ -5724,10 +5732,16 @@
       "niveau": 4,
       "composants_materiels": [
         {
-          "slug": "meme",
-          "nom": "Même",
+          "slug": "petit_sac",
+          "nom": "petit sac",
           "quantite": 1,
-          "consomme": true
+          "consomme": false
+        },
+        {
+          "slug": "petite_bougie",
+          "nom": "petite bougie",
+          "quantite": 1,
+          "consomme": false
         }
       ],
       "composantes": "V, S, M",
@@ -5759,7 +5773,7 @@
           "slug": "petit_sac",
           "nom": "petit sac",
           "quantite": 1,
-          "consomme": true
+          "consomme": false
         },
         {
           "slug": "bougie",
@@ -5797,7 +5811,7 @@
           "slug": "petit_sac",
           "nom": "petit sac",
           "quantite": 1,
-          "consomme": true
+          "consomme": false
         },
         {
           "slug": "bougie",
@@ -5835,7 +5849,7 @@
           "slug": "petit_sac",
           "nom": "petit sac",
           "quantite": 1,
-          "consomme": true
+          "consomme": false
         },
         {
           "slug": "bougie",
@@ -5937,13 +5951,13 @@
           "slug": "petit_sac",
           "nom": "petit sac",
           "quantite": 1,
-          "consomme": true
+          "consomme": false
         },
         {
-          "slug": "bougie",
-          "nom": "bougie",
+          "slug": "petite_bougie",
+          "nom": "petite bougie",
           "quantite": 1,
-          "consomme": true
+          "consomme": false
         }
       ],
       "composantes": "V, S, M",
@@ -6259,14 +6273,8 @@
       "niveau": 5,
       "composants_materiels": [
         {
-          "slug": "argile_grasse_faconnee",
-          "nom": "argile grasse façonnée",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "faconnee_puis",
-          "nom": "Façonnée puis",
+          "slug": "argile_grasse",
+          "nom": "argile grasse",
           "quantite": 1,
           "consomme": true
         }
@@ -6638,10 +6646,10 @@
       "niveau": 5,
       "composants_materiels": [
         {
-          "slug": "receptacle_lui_meme",
-          "nom": "Réceptacle lui même",
+          "slug": "receptacle",
+          "nom": "réceptacle",
           "quantite": 1,
-          "consomme": true
+          "consomme": false
         }
       ],
       "composantes": "V, S, M",
@@ -7715,14 +7723,14 @@
           "type": "alternative",
           "choix": [
             {
-              "slug": "poudre_de_feu",
-              "nom": "Poudre de feu",
+              "slug": "soufre",
+              "nom": "soufre",
               "quantite": 1,
               "consomme": true
             },
             {
-              "slug": "composant_inflammable_du_sceau",
-              "nom": "composant inflammable du sceau",
+              "slug": "salpetre",
+              "nom": "salpêtre",
               "quantite": 1,
               "consomme": true
             }
@@ -8392,17 +8400,11 @@
           "slug": "petit_tambour",
           "nom": "petit tambour",
           "quantite": 1,
-          "consomme": true
+          "consomme": false
         },
         {
           "slug": "goutte_de_sang",
           "nom": "goutte de sang",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "tambour",
-          "nom": "tambour",
           "quantite": 1,
           "consomme": true
         }
@@ -8605,22 +8607,21 @@
       "niveau": 6,
       "composants_materiels": [
         {
-          "slug": "deux_feuilles_de_verre",
-          "nom": "deux feuilles de verre",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "objet_utilise_sans_destruction_indiquee",
-          "nom": "Objet utilisé sans destruction indiquée",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "deux_feuilles_de_cristal",
-          "nom": "deux feuilles de cristal",
-          "quantite": 1,
-          "consomme": true
+          "type": "alternative",
+          "choix": [
+            {
+              "slug": "deux_feuilles_de_verre",
+              "nom": "deux feuilles de verre",
+              "quantite": 1,
+              "consomme": false
+            },
+            {
+              "slug": "deux_feuilles_de_cristal",
+              "nom": "deux feuilles de cristal",
+              "quantite": 1,
+              "consomme": false
+            }
+          ]
         }
       ],
       "composantes": "V, S, M",
@@ -9597,7 +9598,7 @@
       "composants_materiels": [
         {
           "slug": "goutte_de_sang",
-          "nom": "Goutte de sang",
+          "nom": "goutte de sang",
           "quantite": 1,
           "consomme": true
         },
@@ -9950,32 +9951,8 @@
           "consomme": true
         },
         {
-          "slug": "fiole_est_le_contenant_reutilisable",
-          "nom": "fiole est le contenant réutilisable",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "son_contenu_est",
-          "nom": "son contenu est",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
           "slug": "petite_fiole_de_poussiere",
           "nom": "petite fiole de poussière",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "fiole_d_eau",
-          "nom": "fiole d’eau",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "fiole_de_poussiere",
-          "nom": "fiole de poussière",
           "quantite": 1,
           "consomme": true
         }
@@ -10125,10 +10102,62 @@
       "niveau": 4,
       "composants": [
         {
-          "slug": "phosphore_pour_la_version_chaude",
-          "nom": "Phosphore pour la version chaude",
-          "quantite": 1,
-          "consomme": true
+          "type": "variante",
+          "id": "flammes_chaudes",
+          "label": "Flammes chaudes",
+          "composants": [
+            {
+              "slug": "phosphore",
+              "nom": "phosphore",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
+        },
+        {
+          "type": "variante",
+          "id": "flammes_froides_luciole",
+          "label": "Flammes froides — luciole vivante",
+          "composants": [
+            {
+              "slug": "luciole_vivante",
+              "nom": "luciole vivante",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
+        },
+        {
+          "type": "variante",
+          "id": "flammes_froides_ver_luisant",
+          "label": "Flammes froides — ver luisant vivant",
+          "composants": [
+            {
+              "slug": "ver_luisant_vivant",
+              "nom": "ver luisant vivant",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
+        },
+        {
+          "type": "variante",
+          "id": "flammes_froides_queues",
+          "label": "Flammes froides — queues de lucioles ou vers luisants morts",
+          "composants": [
+            {
+              "slug": "4_queues_de_lucioles",
+              "nom": "4 queues de lucioles",
+              "quantite": 1,
+              "consomme": true
+            },
+            {
+              "slug": "de_vers_luisants_morts",
+              "nom": "de vers luisants morts",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
         }
       ]
     },
@@ -10424,16 +10453,16 @@
           "type": "alternative",
           "choix": [
             {
-              "slug": "cone_de_verre",
-              "nom": "Cône de verre",
+              "slug": "petit_cone_de_verre",
+              "nom": "petit cône de verre",
               "quantite": 1,
-              "consomme": true
+              "consomme": false
             },
             {
-              "slug": "de_cristal_de_tres_petite_taille",
-              "nom": "de cristal de très petite taille",
+              "slug": "petit_cone_de_cristal",
+              "nom": "petit cône de cristal",
               "quantite": 1,
-              "consomme": true
+              "consomme": false
             }
           ]
         }
@@ -10650,8 +10679,8 @@
       "niveau": 5,
       "composants": [
         {
-          "slug": "peu_d_argile_grasse",
-          "nom": "Peu d’argile grasse",
+          "slug": "argile_grasse",
+          "nom": "argile grasse",
           "quantite": 1,
           "consomme": true
         }
@@ -10715,20 +10744,8 @@
       "niveau": 1,
       "composants": [
         {
-          "slug": "surface_d_ecriture",
-          "nom": "Surface d’écriture",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
           "slug": "encre_fine_faite_de_substances_rares",
           "nom": "encre fine faite de substances rares",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "cout_minimum_200_po_par_flacon",
-          "nom": "coût minimum 200 po par flacon",
           "quantite": 1,
           "consomme": true
         }
@@ -10935,8 +10952,8 @@
       "niveau": 3,
       "composants": [
         {
-          "slug": "morceau_de_fourrure_et_une_baguette_de_verre",
-          "nom": "Morceau de fourrure et une baguette de verre",
+          "slug": "morceau_de_fourrure",
+          "nom": "morceau de fourrure",
           "quantite": 1,
           "consomme": true
         },
@@ -10944,16 +10961,22 @@
           "type": "alternative",
           "choix": [
             {
-              "slug": "ambre",
-              "nom": "ambre",
+              "slug": "baguette_de_verre",
+              "nom": "baguette de verre",
               "quantite": 1,
-              "consomme": true
+              "consomme": false
             },
             {
-              "slug": "de_cristal",
-              "nom": "de cristal",
+              "slug": "baguette_de_cristal",
+              "nom": "baguette de cristal",
               "quantite": 1,
-              "consomme": true
+              "consomme": false
+            },
+            {
+              "slug": "baguette_d_ambre",
+              "nom": "baguette d’ambre",
+              "quantite": 1,
+              "consomme": false
             }
           ]
         }
@@ -10976,22 +10999,22 @@
       "niveau": 6,
       "composants": [
         {
-          "slug": "melange_de_terre_argile",
-          "nom": "Mélange de terre (argile",
+          "slug": "melange_de_terre",
+          "nom": "mélange de terre",
           "quantite": 1,
           "consomme": true
         },
         {
-          "slug": "sable_dans_un_petit_sac",
-          "nom": "Sable) dans un petit sac",
+          "slug": "petit_sac",
+          "nom": "petit sac",
           "quantite": 1,
-          "consomme": true
+          "consomme": false
         },
         {
           "slug": "lame_en_fer",
-          "nom": "Lame en fer",
+          "nom": "lame en fer",
           "quantite": 1,
-          "consomme": true
+          "consomme": false
         }
       ]
     },
@@ -11061,25 +11084,7 @@
           "slug": "petite_replique_du_magicien",
           "nom": "petite réplique du magicien",
           "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "objet_durable",
-          "nom": "Objet durable",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "focus_utilise_sans_destruction_indiquee",
-          "nom": "focus utilisé sans destruction indiquée",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "replique_du_magicien",
-          "nom": "réplique du magicien",
-          "quantite": 1,
-          "consomme": true
+          "consomme": false
         }
       ]
     },
@@ -11296,10 +11301,16 @@
       "niveau": 4,
       "composants": [
         {
-          "slug": "meme",
-          "nom": "Même",
+          "slug": "petit_sac",
+          "nom": "petit sac",
           "quantite": 1,
-          "consomme": true
+          "consomme": false
+        },
+        {
+          "slug": "petite_bougie",
+          "nom": "petite bougie",
+          "quantite": 1,
+          "consomme": false
         }
       ]
     },
@@ -11311,7 +11322,7 @@
           "slug": "petit_sac",
           "nom": "petit sac",
           "quantite": 1,
-          "consomme": true
+          "consomme": false
         },
         {
           "slug": "bougie",
@@ -11329,7 +11340,7 @@
           "slug": "petit_sac",
           "nom": "petit sac",
           "quantite": 1,
-          "consomme": true
+          "consomme": false
         },
         {
           "slug": "bougie",
@@ -11347,7 +11358,7 @@
           "slug": "petit_sac",
           "nom": "petit sac",
           "quantite": 1,
-          "consomme": true
+          "consomme": false
         },
         {
           "slug": "bougie",
@@ -11389,13 +11400,13 @@
           "slug": "petit_sac",
           "nom": "petit sac",
           "quantite": 1,
-          "consomme": true
+          "consomme": false
         },
         {
-          "slug": "bougie",
-          "nom": "bougie",
+          "slug": "petite_bougie",
+          "nom": "petite bougie",
           "quantite": 1,
-          "consomme": true
+          "consomme": false
         }
       ]
     },
@@ -11474,14 +11485,8 @@
       "niveau": 5,
       "composants": [
         {
-          "slug": "argile_grasse_faconnee",
-          "nom": "argile grasse façonnée",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "faconnee_puis",
-          "nom": "Façonnée puis",
+          "slug": "argile_grasse",
+          "nom": "argile grasse",
           "quantite": 1,
           "consomme": true
         }
@@ -11627,10 +11632,10 @@
       "niveau": 5,
       "composants": [
         {
-          "slug": "receptacle_lui_meme",
-          "nom": "Réceptacle lui même",
+          "slug": "receptacle",
+          "nom": "réceptacle",
           "quantite": 1,
-          "consomme": true
+          "consomme": false
         }
       ]
     },
@@ -11952,14 +11957,14 @@
           "type": "alternative",
           "choix": [
             {
-              "slug": "poudre_de_feu",
-              "nom": "Poudre de feu",
+              "slug": "soufre",
+              "nom": "soufre",
               "quantite": 1,
               "consomme": true
             },
             {
-              "slug": "composant_inflammable_du_sceau",
-              "nom": "composant inflammable du sceau",
+              "slug": "salpetre",
+              "nom": "salpêtre",
               "quantite": 1,
               "consomme": true
             }
@@ -12193,17 +12198,11 @@
           "slug": "petit_tambour",
           "nom": "petit tambour",
           "quantite": 1,
-          "consomme": true
+          "consomme": false
         },
         {
           "slug": "goutte_de_sang",
           "nom": "goutte de sang",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "tambour",
-          "nom": "tambour",
           "quantite": 1,
           "consomme": true
         }
@@ -12290,22 +12289,21 @@
       "niveau": 6,
       "composants": [
         {
-          "slug": "deux_feuilles_de_verre",
-          "nom": "deux feuilles de verre",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "objet_utilise_sans_destruction_indiquee",
-          "nom": "Objet utilisé sans destruction indiquée",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "deux_feuilles_de_cristal",
-          "nom": "deux feuilles de cristal",
-          "quantite": 1,
-          "consomme": true
+          "type": "alternative",
+          "choix": [
+            {
+              "slug": "deux_feuilles_de_verre",
+              "nom": "deux feuilles de verre",
+              "quantite": 1,
+              "consomme": false
+            },
+            {
+              "slug": "deux_feuilles_de_cristal",
+              "nom": "deux feuilles de cristal",
+              "quantite": 1,
+              "consomme": false
+            }
+          ]
         }
       ]
     },
@@ -12672,7 +12670,7 @@
       "composants": [
         {
           "slug": "goutte_de_sang",
-          "nom": "Goutte de sang",
+          "nom": "goutte de sang",
           "quantite": 1,
           "consomme": true
         },
@@ -12761,35 +12759,7 @@
       ]
     }
   ],
-  "magicienMaterialWarnings": [
-    {
-      "name": "Lévitation",
-      "niveau": 2,
-      "components": [
-        "morceau de fil d’or courbé en forme d’hameçon"
-      ],
-      "allComponents": [
-        {
-          "type": "alternative",
-          "choix": [
-            {
-              "slug": "boucle_de_cuir",
-              "nom": "boucle de cuir",
-              "quantite": 1,
-              "consomme": true
-            },
-            {
-              "slug": "morceau_de_fil_d_or_courbe_en_forme_d_hamecon",
-              "nom": "morceau de fil d’or courbé en forme d’hameçon",
-              "quantite": 1,
-              "consomme": true
-            }
-          ]
-        }
-      ],
-      "classe": "magicien"
-    }
-  ],
+  "magicienMaterialWarnings": [],
   "magicienSourceMissing": [],
   "illusionnisteMaterialAudit": [
     {
@@ -13073,9 +13043,9 @@
       "composants": [
         {
           "slug": "petite_replique_du_magicien",
-          "nom": "Petite réplique du magicien",
+          "nom": "petite réplique du magicien",
           "quantite": 1,
-          "consomme": true
+          "consomme": false
         }
       ]
     },
