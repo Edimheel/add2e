@@ -1,8 +1,8 @@
 // scripts/add2e-attack/05-jb2a-vfx.mjs
-// ADD2E — VFX JB2A Premium sécurisés.
-// Version : 2026-05-22-v7-protection
+// ADD2E — VFX JB2A Premium sécurisés pour sorts et attaques d'armes.
+// Version : 2026-06-19-v8-weapon-fx-from-json
 
-globalThis.ADD2E_JB2A_VFX_VERSION = "2026-05-22-v7-protection";
+globalThis.ADD2E_JB2A_VFX_VERSION = "2026-06-19-v8-weapon-fx-from-json";
 
 const ADD2E_JB2A_PRESET_CANDIDATES = {
   divine: [
@@ -97,6 +97,52 @@ const ADD2E_JB2A_PRESET_CANDIDATES = {
   light: [
     "modules/jb2a_patreon/Library/Generic/Marker/MarkerLightIntro_01_Regular_Yellow_400x400.webm",
     "modules/JB2A_DnD5e/Library/Generic/Marker/MarkerLightIntro_01_Regular_Blue_400x400.webm"
+  ],
+  weapon_slash: [
+    "modules/jb2a_patreon/Library/Generic/Weapon_Attacks/Melee/Sword_01_Regular_White_800x800.webm",
+    "modules/JB2A_DnD5e/Library/Generic/Weapon_Attacks/Melee/Sword_01_Regular_White_800x800.webm",
+    "modules/JB2A_DnD5e/Library/2nd_Level/Divine_Smite/DivineSmite_01_Regular_BlueYellow_Target_400x400.webm"
+  ],
+  weapon_cleave: [
+    "modules/jb2a_patreon/Library/Generic/Weapon_Attacks/Melee/Axe_01_Regular_White_800x800.webm",
+    "modules/JB2A_DnD5e/Library/Generic/Weapon_Attacks/Melee/Axe_01_Regular_White_800x800.webm",
+    "modules/JB2A_DnD5e/Library/2nd_Level/Divine_Smite/DivineSmite_01_Regular_BlueYellow_Target_400x400.webm"
+  ],
+  weapon_pierce: [
+    "modules/jb2a_patreon/Library/Generic/Weapon_Attacks/Melee/Piercing_01_Regular_White_800x800.webm",
+    "modules/JB2A_DnD5e/Library/Generic/Weapon_Attacks/Melee/Piercing_01_Regular_White_800x800.webm",
+    "modules/JB2A_DnD5e/Library/2nd_Level/Divine_Smite/DivineSmite_01_Regular_BlueYellow_Target_400x400.webm"
+  ],
+  weapon_bludgeon: [
+    "modules/jb2a_patreon/Library/Generic/Weapon_Attacks/Melee/Mace_01_Regular_White_800x800.webm",
+    "modules/JB2A_DnD5e/Library/Generic/Weapon_Attacks/Melee/Mace_01_Regular_White_800x800.webm",
+    "modules/JB2A_DnD5e/Library/2nd_Level/Divine_Smite/DivineSmite_01_Regular_BlueYellow_Target_400x400.webm"
+  ],
+  weapon_arrow: [
+    "modules/jb2a_patreon/Library/Generic/Weapon_Attacks/Ranged/Arrow01_01_Regular_White_30ft_1600x400.webm",
+    "modules/JB2A_DnD5e/Library/Generic/Weapon_Attacks/Ranged/Arrow01_01_Regular_White_30ft_1600x400.webm",
+    "modules/JB2A_DnD5e/Library/2nd_Level/Divine_Smite/DivineSmite_01_Regular_BlueYellow_Target_400x400.webm"
+  ],
+  weapon_bolt: [
+    "modules/jb2a_patreon/Library/Generic/Weapon_Attacks/Ranged/Bolt01_01_Regular_White_30ft_1600x400.webm",
+    "modules/JB2A_DnD5e/Library/Generic/Weapon_Attacks/Ranged/Bolt01_01_Regular_White_30ft_1600x400.webm",
+    "modules/JB2A_DnD5e/Library/2nd_Level/Divine_Smite/DivineSmite_01_Regular_BlueYellow_Target_400x400.webm"
+  ],
+  weapon_stone: [
+    "modules/JB2A_DnD5e/Library/2nd_Level/Divine_Smite/DivineSmite_01_Regular_BlueYellow_Target_400x400.webm"
+  ],
+  weapon_firearm: [
+    "modules/JB2A_DnD5e/Library/2nd_Level/Divine_Smite/DivineSmite_01_Regular_BlueYellow_Target_400x400.webm"
+  ],
+  weapon_ensnare: [
+    "modules/JB2A_DnD5e/Library/Generic/Conditions/Boon01/ConditionBoon01_012_Green_600x600.webm"
+  ],
+  weapon_whip: [
+    "modules/JB2A_DnD5e/Library/2nd_Level/Divine_Smite/DivineSmite_01_Regular_BlueYellow_Target_400x400.webm"
+  ],
+  weapon_default: [
+    "modules/JB2A_DnD5e/Library/2nd_Level/Divine_Smite/DivineSmite_01_Regular_BlueYellow_Target_400x400.webm",
+    "modules/jb2a_patreon/Library/2nd_Level/Divine_Smite/DivineSmite_01_Regular_YellowWhite_Target_400x400.webm"
   ]
 };
 
@@ -188,6 +234,170 @@ async function add2ePickJb2aFiles(preset = "divine", max = 2) {
   return files;
 }
 
+function add2eArray(value) {
+  if (value === undefined || value === null || value === "") return [];
+  if (Array.isArray(value)) return value;
+  if (typeof value === "object") return Object.values(value);
+  return [value];
+}
+
+function add2eGetActorToken(actor) {
+  if (!actor) return null;
+  const controlled = globalThis.canvas?.tokens?.controlled ?? [];
+  return controlled.find(t => t?.actor?.id === actor.id || t?.document?.actorId === actor.id)
+    ?? actor.getActiveTokens?.()[0]
+    ?? actor.token?.object
+    ?? actor.token
+    ?? null;
+}
+
+function add2eGetWeaponJb2aConfig(weapon) {
+  const s = weapon?.system ?? {};
+  const f = weapon?.flags?.add2e ?? {};
+  const explicit = (s.jb2a && typeof s.jb2a === "object") ? s.jb2a
+    : (f.jb2a && typeof f.jb2a === "object") ? f.jb2a
+    : {};
+
+  return {
+    preset: String(explicit.preset ?? s.jb2aPreset ?? f.jb2aPreset ?? "").trim(),
+    mode: String(explicit.mode ?? s.jb2aMode ?? f.jb2aMode ?? "").trim(),
+    file: explicit.file ?? explicit.files ?? s.jb2aFile ?? f.jb2aFile ?? null
+  };
+}
+
+function add2eInferWeaponJb2aPreset(weapon) {
+  const s = weapon?.system ?? {};
+  const tags = [
+    weapon?.name,
+    s.nom,
+    s.categorie,
+    s.type_degats,
+    s.proprietes,
+    ...add2eArray(s.tags),
+    ...add2eArray(s.effectTags)
+  ].join(" ");
+
+  const text = add2eNormalizeFxKey(tags);
+
+  if (/(arquebuse|pistolet|mousquet|arme_feu|arme_a_feu)/.test(text)) return { preset: "weapon_firearm", mode: "projectile" };
+  if (/(arbalete|carreau)/.test(text)) return { preset: "weapon_bolt", mode: "projectile" };
+  if (/(arc|fleche|sarbacane|aiguille)/.test(text)) return { preset: "weapon_arrow", mode: "projectile" };
+  if (/(fronde|balle|pierre)/.test(text)) return { preset: "weapon_stone", mode: "projectile" };
+  if (/(filet|lasso|bolas|entrave|attrape_homme)/.test(text)) return { preset: "weapon_ensnare", mode: "projectile" };
+  if (/(fouet|martinet)/.test(text)) return { preset: "weapon_whip", mode: "impact" };
+  if (/(hache|bardiche|hallebarde|guisarme|voulge|arme_hast)/.test(text)) return { preset: "weapon_cleave", mode: "impact" };
+  if (/(baton|bâton|massue|masse|marteau|fleau|fléau|contond)/.test(text)) return { preset: "weapon_bludgeon", mode: "impact" };
+  if (/(dague|lance|pique|perfor|trident|stylet|javelot|fourche)/.test(text)) return { preset: "weapon_pierce", mode: "impact" };
+  if (/(tranch|epee|épée|sabre|cimeterre|rapiere|rapière)/.test(text)) return { preset: "weapon_slash", mode: "impact" };
+
+  return { preset: "weapon_default", mode: "impact" };
+}
+
+async function add2eResolveWeaponFxFiles(config, fallbackPreset) {
+  const explicitFiles = add2eArray(config?.file);
+  for (const file of explicitFiles) {
+    const path = String(file ?? "").trim();
+    if (path && await add2eJb2aFileExists(path)) return [path];
+  }
+  return add2ePickJb2aFiles(fallbackPreset, 1);
+}
+
+export async function add2ePlayWeaponAttackFx({ actor, weapon, sourceToken, targetToken } = {}) {
+  try {
+    if (typeof Sequence === "undefined" || !weapon) return false;
+
+    const explicit = add2eGetWeaponJb2aConfig(weapon);
+    const inferred = add2eInferWeaponJb2aPreset(weapon);
+
+    const preset = add2eNormalizeFxKey(explicit.preset || inferred.preset || "weapon_default") || "weapon_default";
+    const mode = add2eNormalizeFxKey(explicit.mode || inferred.mode || "impact") || "impact";
+
+    const files = await add2eResolveWeaponFxFiles(explicit, preset);
+    if (!files.length) return false;
+
+    const src = add2eGetTokenLikeObject(sourceToken) ?? add2eGetActorToken(actor);
+    const target = add2eGetTokenLikeObject(targetToken) ?? Array.from(game.user?.targets ?? [])[0] ?? null;
+    const point = add2eGetTokenLikeCenter(target) ?? add2eGetTokenLikeCenter(src);
+
+    if (!src && !point) return false;
+
+    const seq = new Sequence();
+    const effect = seq.effect().file(files[0]);
+
+    if (mode === "projectile" && src && target && typeof effect.stretchTo === "function") {
+      effect.atLocation(src).stretchTo(target);
+    } else if (target) {
+      effect.attachTo(target);
+    } else if (point) {
+      effect.atLocation(point);
+    } else {
+      return false;
+    }
+
+    effect.scaleToObject(1).opacity(0.9);
+
+    await seq.play();
+    return true;
+  } catch (e) {
+    console.warn("[ADD2E][JB2A][WEAPON][ERROR] VFX d'arme ignoré pour ne pas bloquer l'attaque.", {
+      weapon: weapon?.name,
+      error: e
+    });
+    return false;
+  }
+}
+
+function add2eInstallWeaponAttackPatch() {
+  const fn = globalThis.add2eAttackRoll;
+  if (typeof fn !== "function") return false;
+  if (fn.__add2eWeaponFxWrapped) return true;
+  if (fn.name === "add2eAttackRollPending") return false;
+
+  const original = fn;
+
+  const wrapped = async function add2eAttackRollWeaponFxWrapper(...args) {
+    const payload = args[0] ?? {};
+    const actor = payload.actor
+      ?? (payload.actorId ? game.actors?.get?.(payload.actorId) : null)
+      ?? null;
+
+    const weapon = payload.arme
+      ?? payload.weapon
+      ?? payload.item
+      ?? (actor && payload.itemId ? actor.items?.get?.(payload.itemId) : null)
+      ?? null;
+
+    const targetTokenBeforeRoll = payload.targetToken ?? Array.from(game.user?.targets ?? [])[0] ?? null;
+    const result = await original.apply(this, args);
+
+    if (result && weapon?.type === "arme") {
+      await add2ePlayWeaponAttackFx({
+        actor,
+        weapon,
+        sourceToken: payload.token ?? payload.sourceToken ?? add2eGetActorToken(actor),
+        targetToken: payload.targetToken ?? targetTokenBeforeRoll ?? Array.from(game.user?.targets ?? [])[0] ?? null
+      });
+    }
+
+    return result;
+  };
+
+  wrapped.__add2eWeaponFxWrapped = true;
+  wrapped.__add2eOriginalAttackRoll = original;
+  globalThis.add2eAttackRoll = wrapped;
+  return true;
+}
+
+function add2eScheduleWeaponAttackPatch() {
+  let attempts = 0;
+  const tryPatch = () => {
+    attempts += 1;
+    if (add2eInstallWeaponAttackPatch() || attempts >= 30) return;
+    setTimeout(tryPatch, 200);
+  };
+  tryPatch();
+}
+
 export async function add2ePlayJb2aPremiumFx(target, preset = "divine", options = {}) {
   try {
     if (typeof Sequence === "undefined") return false;
@@ -258,12 +468,16 @@ async function add2ePlayCentralSpellFx(spellKey = "divine", context = {}) {
 
 globalThis.ADD2E_CLERC_PLAY_LAUNCH_FX = add2ePlayJb2aPremiumFx;
 globalThis.ADD2E_PLAY_SPELL_FX = add2ePlayCentralSpellFx;
+globalThis.ADD2E_PLAY_WEAPON_FX = add2ePlayWeaponAttackFx;
 globalThis.ADD2E_JB2A_PRESET_CANDIDATES = ADD2E_JB2A_PRESET_CANDIDATES;
 globalThis.ADD2E_SPELL_KEY_TO_JB2A_PRESET = ADD2E_SPELL_KEY_TO_JB2A_PRESET;
+add2eScheduleWeaponAttackPatch();
 
 Hooks.once("ready", () => {
   globalThis.ADD2E_PLAY_SPELL_FX = add2ePlayCentralSpellFx;
+  globalThis.ADD2E_PLAY_WEAPON_FX = add2ePlayWeaponAttackFx;
   globalThis.ADD2E_JB2A_PRESET_CANDIDATES = ADD2E_JB2A_PRESET_CANDIDATES;
   globalThis.ADD2E_SPELL_KEY_TO_JB2A_PRESET = ADD2E_SPELL_KEY_TO_JB2A_PRESET;
+  add2eScheduleWeaponAttackPatch();
   console.log("[ADD2E][JB2A][VERSION]", globalThis.ADD2E_JB2A_VFX_VERSION);
 });
