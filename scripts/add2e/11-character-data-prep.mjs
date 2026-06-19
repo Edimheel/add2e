@@ -161,19 +161,33 @@ Hooks.on("updateActor", async (actor, changes = {}, options = {}, _userId) => {
 
       if (hpPathChanged) {
         const newHP = Number(foundry.utils.getProperty(actor, hpPathChanged) ?? 0);
+        const actorType = String(actor?.type ?? "").trim().toLowerCase();
+        const isMonster = actorType === "monster" || actorType === "monstre";
 
         const DEAD_STATUS = "dead";
         const UNCONSCIOUS_STATUS = "unconscious";
 
-        if (newHP <= -11) {
-          await actor.toggleStatusEffect(UNCONSCIOUS_STATUS, { active: false, overlay: false });
-          await actor.toggleStatusEffect(DEAD_STATUS, { active: true, overlay: true });
-        } else if (newHP <= 0) {
-          await actor.toggleStatusEffect(DEAD_STATUS, { active: false, overlay: false });
-          await actor.toggleStatusEffect(UNCONSCIOUS_STATUS, { active: true, overlay: true });
-        } else {
-          await actor.toggleStatusEffect(DEAD_STATUS, { active: false, overlay: false });
-          await actor.toggleStatusEffect(UNCONSCIOUS_STATUS, { active: false, overlay: false });
+        if (isMonster) {
+          if (typeof globalThis.add2eSyncActorVitalStatus === "function") {
+            await globalThis.add2eSyncActorVitalStatus(actor, { reason: "11-character-data-prep:monster-hp" });
+          } else if (newHP <= 0) {
+            await actor.toggleStatusEffect(UNCONSCIOUS_STATUS, { active: false, overlay: false });
+            await actor.toggleStatusEffect(DEAD_STATUS, { active: true, overlay: true });
+          } else {
+            await actor.toggleStatusEffect(DEAD_STATUS, { active: false, overlay: false });
+            await actor.toggleStatusEffect(UNCONSCIOUS_STATUS, { active: false, overlay: false });
+          }
+        } else if (actorType === "personnage") {
+          if (newHP <= -11) {
+            await actor.toggleStatusEffect(UNCONSCIOUS_STATUS, { active: false, overlay: false });
+            await actor.toggleStatusEffect(DEAD_STATUS, { active: true, overlay: true });
+          } else if (newHP <= 0) {
+            await actor.toggleStatusEffect(DEAD_STATUS, { active: false, overlay: false });
+            await actor.toggleStatusEffect(UNCONSCIOUS_STATUS, { active: true, overlay: true });
+          } else {
+            await actor.toggleStatusEffect(DEAD_STATUS, { active: false, overlay: false });
+            await actor.toggleStatusEffect(UNCONSCIOUS_STATUS, { active: false, overlay: false });
+          }
         }
       }
     }
