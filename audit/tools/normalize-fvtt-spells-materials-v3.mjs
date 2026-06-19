@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 
-const VERSION = "2026-06-19-normalize-wizard-components-text-mining-v5";
+const VERSION = "2026-06-19-normalize-wizard-components-text-mining-v6";
 const DEFAULT_INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const DEFAULT_OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
 const DEFAULT_CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
@@ -157,7 +157,9 @@ const MATERIAL_CANON = new Map(Object.entries({
   miel: "miel",
   un_peu_de_miel: "miel",
   huile_douce: "huile douce",
+  goutte_d_huile: "goutte d’huile",
   goutte_d_huile_douce: "huile douce",
+  petit_morceau_de_silex: "silex",
   langue_de_serpent: "langue de serpent",
   poudre_de_fer: "poudre de fer",
   pincee_de_poudre_de_fer: "poudre de fer",
@@ -207,6 +209,7 @@ const MATERIAL_CANON = new Map(Object.entries({
   baguette_de_verre: "tige de verre",
   perle_de_verre: "perle de verre",
   perle_de_cristal: "perle de cristal",
+  petite_perle_de_cristal: "petite perle de cristal",
   tige_de_cristal: "tige de cristal",
   baguette_de_cristal: "tige de cristal",
   ambre: "ambre",
@@ -257,10 +260,13 @@ const WIZARD_MATERIAL_OVERRIDES = new Map(Object.entries({
   agrandissement: ["poudre de fer"],
   aura_magique_de_nystul: ["soie"],
   arme_enchantee: ["carbone en poudre", "citron en poudre"],
+  chaumiere_de_leomund: ["petite perle de cristal"],
   clairaudience: ["petite corne d’argent"],
+  clairvoyance: ["pincée de poudre de glande pinéale humaine ou humanoïde"],
   coffre_secret_de_leomund: ["coffre de grande valeur", "réplique miniature du coffre"],
   effroi: [{ type: "alternative", choix: ["cœur de poule", "plume blanche"] }],
   emprisonnement_de_l_ame: ["gemme d’emprisonnement"],
+  fleche_de_feu: ["goutte d’huile", "silex"],
   globe_d_invulnerabilite: [{ type: "alternative", choix: ["perle de verre", "perle de cristal"] }],
   invisibilite_de_masse: ["cils", "gomme arabique"],
   invocation_d_un_elemental: ELEMENTAL_VARIANTS,
@@ -344,6 +350,7 @@ function stripMaterialSourcePhrase(value) {
 function removeIncises(value) {
   return text(value)
     .replace(/\([^)]*\)/g, " ")
+    .replace(/\s+[—–]\s+[^—–]+(?:\s+[—–])?$/g, "")
     .replace(/\s+[—–-]\s+[^—–-]+\s+[—–-]\s+/g, " ")
     .replace(/,\s*par\s+exemple\s+[^,.;]+(?=,|\.|;|$)/gi, "")
     .replace(/\s+par\s+exemple\s+[^,.;]+(?=,|\.|;|$)/gi, "")
