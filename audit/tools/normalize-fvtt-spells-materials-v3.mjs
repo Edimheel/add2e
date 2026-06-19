@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 
-const VERSION = "2026-06-19-normalize-wizard-components-text-mining-v6";
+const VERSION = "2026-06-19-normalize-wizard-components-text-mining-v7";
 const DEFAULT_INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const DEFAULT_OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
 const DEFAULT_CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
@@ -161,6 +161,12 @@ const MATERIAL_CANON = new Map(Object.entries({
   goutte_d_huile_douce: "huile douce",
   petit_morceau_de_silex: "silex",
   langue_de_serpent: "langue de serpent",
+  boucle_de_cuir: "boucle de cuir",
+  morceau_de_fil_d_or_courbe_en_forme_d_hamecon: "morceau de fil d’or courbé en forme d’hameçon",
+  fourchette_d_argent: "fourchette d’argent",
+  baguette_fourchue: "baguette fourchue",
+  morceau_d_os_de_mort_vivant: "morceau d’os de mort-vivant",
+  plume_d_aile_d_oiseau: "plume d’aile d’oiseau",
   poudre_de_fer: "poudre de fer",
   pincee_de_poudre_de_fer: "poudre de fer",
   poudre_d_argent: "poudre d’argent",
@@ -269,15 +275,24 @@ const WIZARD_MATERIAL_OVERRIDES = new Map(Object.entries({
   fleche_de_feu: ["goutte d’huile", "silex"],
   globe_d_invulnerabilite: [{ type: "alternative", choix: ["perle de verre", "perle de cristal"] }],
   invisibilite_de_masse: ["cils", "gomme arabique"],
+  invisibilite_sur_3_m: ["cils", "gomme arabique"],
+  invisibilite_sur_3m: ["cils", "gomme arabique"],
   invocation_d_un_elemental: ELEMENTAL_VARIANTS,
   invocation_instantanee_de_drawmij: ["saphir"],
+  levitation: [{ type: "alternative", choix: ["boucle de cuir", "morceau de fil d’or courbé en forme d’hameçon"] }],
+  localisation_d_objet: [{ type: "alternative", choix: ["fourchette d’argent", "baguette fourchue"] }],
+  localisation_d_objets: [{ type: "alternative", choix: ["fourchette d’argent", "baguette fourchue"] }],
   message: ["fil de cuivre"],
   necro_animation: ["goutte de sang", "morceau de chair humaine", "os en poudre"],
   nuage_incendiaire: ["soufre", "phosphore"],
+  peur: ["morceau d’os de mort-vivant"],
   piege_de_leomund: ["morceau de fer pyriteux"],
   protection_contre_le_mal_sur_3_m: ["poudre d’argent"],
   punition_spirituelle: ["vélin enluminé"],
-  ventriloquie: ["parchemin mis en cône"]
+  reparation: [{ type: "alternative", choix: ["deux objets magnétiques", "deux copeaux de métal"] }],
+  suggestion: ["langue de serpent", { type: "alternative", choix: ["miel", "huile douce"] }],
+  ventriloquie: ["parchemin mis en cône"],
+  vol: ["plume d’aile d’oiseau"]
 }));
 
 const ILLUSIONIST_COMPONENT_DELEGATIONS = new Set(["sorts_de_niveau_1_de_magicien"]);
@@ -549,7 +564,7 @@ function parseAlternativeClause(source) {
 
   choices = uniqueFlat(choices.map(cleanMaterial).filter(v => !rejectMaterial(v)));
   if (choices.length <= 1) return [];
-  return [{ type: "alternative", choix: choices }];
+  return [{ type: "alternative", choix }];
 }
 
 function parseSourceMaterials(source) {
