@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 
-const VERSION = "2026-06-19-normalize-wizard-components-text-mining-v9";
+const VERSION = "2026-06-19-normalize-wizard-components-text-mining-v10";
 const DEFAULT_INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const DEFAULT_OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
 const DEFAULT_CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
@@ -674,6 +674,7 @@ function materialQualityWarnings(entries) {
   for (const entry of entries ?? []) {
     for (const name of componentNamesFromEntry(entry)) {
       const n = norm(name);
+      if (MATERIAL_CANON.has(slug(cleanMaterial(name)))) continue;
       if (rejectMaterial(name) || DIRTY_MARKERS.some(marker => n.includes(norm(marker))) || n.split(" ").length > 8) warnings.push(name);
     }
   }
