@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 
-const VERSION = "2026-06-19-normalize-cleric-components-text-mining-v13";
+const VERSION = "2026-06-19-normalize-cleric-components-text-mining-v14";
 const DEFAULT_INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const DEFAULT_OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
 const DEFAULT_CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
@@ -121,7 +121,8 @@ const MATERIAL_CANON = new Map(Object.entries({
   petit_sac: "petit sac", petite_bougie: "petite bougie", soufre: "soufre", souffre: "soufre", salpetre: "salpêtre",
   petit_cone_de_verre: "petit cône de verre", petit_cone_de_cristal: "petit cône de cristal", argile_grasse: "argile grasse",
   receptacle: "réceptacle", petite_fiole_d_eau: "petite fiole d’eau", petite_fiole_de_poussiere: "petite fiole de poussière",
-  melange_de_terre: "mélange de terre", lame_en_fer: "lame en fer", petite_replique_du_magicien: "petite réplique du magicien",
+  melange_de_terre: "mélange de terre", lame_en_fer: "lame en fer", marteau_de_guerre_normal: "marteau de guerre normal", marteau_de_guerre: "marteau de guerre",
+  petite_replique_du_magicien: "petite réplique du magicien",
   petit_tambour: "petit tambour", goutte_de_sang: "goutte de sang", deux_feuilles_de_verre: "deux feuilles de verre", deux_feuilles_de_cristal: "deux feuilles de cristal",
   poudre_de_fer: "poudre de fer", pincee_de_poudre_de_fer: "poudre de fer", poudre_d_argent: "poudre d’argent", poudre_argent: "poudre d’argent",
   poudre_de_diamant: "poudre de diamant", petite_corne_d_argent: "petite corne d’argent", corne_d_argent: "petite corne d’argent",
@@ -169,6 +170,7 @@ const MATERIAL_CONSUMPTION_OVERRIDES = new Map(Object.entries({
   petite_fiole_de_poussiere: true,
   melange_de_terre: true,
   lame_en_fer: false,
+  marteau_de_guerre_normal: true,
   petite_replique_du_magicien: false,
   petit_tambour: false,
   goutte_de_sang: true,
@@ -182,6 +184,10 @@ const ELEMENTAL_VARIANTS = [
   { type: "variante", id: "feu", label: "Invocation d’un élémental du feu", composants: ["soufre", "phosphore"] },
   { type: "variante", id: "terre", label: "Invocation d’un élémental de terre", composants: ["argile"] }
 ];
+
+const CLERIC_MATERIAL_OVERRIDES = new Map(Object.entries({
+  marteau_spirituel: ["marteau de guerre normal"]
+}));
 
 const WIZARD_NO_MATERIAL_COMPONENTS = new Set(["intermittence", "mot_de_pouvoir_cecite", "mot_de_pouvoir_etourdissement", "mot_de_pouvoir_mort"]);
 const WIZARD_COMPONENT_DELEGATIONS = new Map(Object.entries({
@@ -281,7 +287,7 @@ function stripMaterialSourcePhrase(value) {
     .replace(/\s+estim[ée]e?\s+à\b.*$/i, "")
     .replace(/,\s*qui\b.*$/i, "")
     .replace(/\s+qui\s+(?:dispara[îi]t|est\s+consomm[ée]e?|sont\s+consomm[ée]s?)\b.*$/i, "")
-    .replace(/\s+que\s+(?:le\s+magicien|l['’]?illusionniste|l['’]?(?:enchanteur|utilisateur))\s+doit\b.*$/i, "")
+    .replace(/\s+que\s+(?:le\s+clerc|le\s+magicien|l['’]?illusionniste|l['’]?(?:enchanteur|utilisateur))\s+doit\b.*$/i, "")
     .replace(/\s+utilis(?:e|é|ée|es|és)\s+pour\b.*$/i, "")
     .replace(/\s+servant\s+à\b.*$/i, "")
     .replace(/\s+qui\s+doit\b.*$/i, "")
@@ -294,7 +300,7 @@ function removeIncises(value) {
     .replace(/\s+par\s+exemple\s+[^,.;]+(?=,|\.|;|$)/gi, "")
     .replace(/\s+de\s+n[’']?importe\s+quel\s+type\b/gi, "")
     .replace(/\s+quel\s+qu['’]?en\s+soit\s+le\s+type\b/gi, "")
-    .replace(/\s+que\s+(?:le\s+magicien|l[’']?illusionniste)\s+doit\b.*$/i, "")
+    .replace(/\s+que\s+(?:le\s+clerc|le\s+magicien|l[’']?illusionniste)\s+doit\b.*$/i, "")
     .replace(/\s+quand\s+le\s+sort\s+est\s+lanc[ée]\b.*$/i, "")
     .replace(/\s+au\s+moment\s+du\s+lancement\b.*$/i, "")
     .replace(/\s+/g, " ").replace(/\s+,/g, ",").replace(/,\s*,/g, ",").replace(/^,\s*|,\s*$/g, "").trim();
@@ -554,7 +560,8 @@ function normalizeMaterials(item, indexes) {
 
   if (isClercSpell(item)) {
     mergeClassAuditSource(item, clercAuditIndex, "clerc");
-    system.composants_materiels = resolveMaterialEntries(system);
+    if (CLERIC_MATERIAL_OVERRIDES.has(key)) system.composants_materiels = uniqueEntries(CLERIC_MATERIAL_OVERRIDES.get(key));
+    else system.composants_materiels = resolveMaterialEntries(system);
     ensureComposantesHasM(system, system.composants_materiels);
   } else if (isIllusionnisteSpell(item)) {
     mergeClassAuditSource(item, illusionnisteAuditIndex, "illusionniste");
@@ -688,7 +695,6 @@ function main() {
       continue;
     }
 
-    const level = spellLevel(item.system);
     const hadClercSource = !isClercSpell(item) || clercAudit.index.has(effectKey(item));
     const hadMagicienSource = !isMagicienSpell(item) || magicienAudit.index.has(effectKey(item));
     const hadIllusionistSource = !isIllusionnisteSpell(item) || illusionistAudit.index.has(effectKey(item));
