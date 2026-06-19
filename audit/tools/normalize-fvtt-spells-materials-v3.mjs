@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 
-const VERSION = "2026-06-19-normalize-cleric-material-overrides-v19";
+const VERSION = "2026-06-19-normalize-components-v20";
 const DEFAULT_INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const DEFAULT_OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
 const DEFAULT_CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
@@ -108,12 +108,15 @@ const CANON = new Map(Object.entries({
   eau_benite: "Eau bénite",
   eau_maudite: "Eau maudite",
   encens_allume: "encens allumé",
+  encens_allumé: "encens allumé",
   vapeurs_de_fumier: "vapeurs de fumier",
+  sang: "sang",
   symbole_sacre: "symbole sacré",
   son_symbole_sacre: "symbole sacré",
   chapelet: "chapelet",
   chapelet_de_priere: "chapelet de prière",
   goutte_d_eau: "goutte d’eau",
+  goutte_d_huile: "goutte d’huile",
   pincee_de_poussiere: "pincée de poussière",
   pincee_de_bouse: "pincée de bouse",
   petit_morceau_d_ecorce: "petit morceau d’écorce",
@@ -138,14 +141,94 @@ const CANON = new Map(Object.entries({
   creme_faite_d_huile: "crème faite d’huile",
   poudre_de_pavot: "poudre de pavot",
   essence_d_orchidee_rose: "essence d’orchidée rose",
+  cire: "cire",
+  cire_d_abeille: "cire d’abeille",
+  peu_de_cire: "cire",
+  morceau_de_cire: "cire",
+  laine: "laine",
+  morceau_de_laine: "morceau de laine",
+  petit_morceau_de_laine: "morceau de laine",
+  rayon_de_miel: "rayon de miel",
+  petit_morceau_de_rayon_de_miel: "rayon de miel",
+  morceau_de_rayon_de_miel: "rayon de miel",
+  miel: "miel",
+  un_peu_de_miel: "miel",
+  huile_douce: "huile douce",
+  goutte_d_huile_douce: "huile douce",
+  langue_de_serpent: "langue de serpent",
+  poudre_de_fer: "poudre de fer",
+  pincee_de_poudre_de_fer: "poudre de fer",
+  poudre_d_argent: "poudre d’argent",
+  poudre_argent: "poudre d’argent",
+  poudre_de_diamant: "poudre de diamant",
+  petite_corne_d_argent: "petite corne d’argent",
+  corne_d_argent: "petite corne d’argent",
+  fil_de_cuivre: "fil de cuivre",
+  petit_fil_de_cuivre: "fil de cuivre",
+  parchemin_mis_en_cone: "parchemin mis en cône",
+  petit_parchemin_mis_en_cone: "parchemin mis en cône",
+  cocon_de_chenille: "cocon de chenille",
+  encre_a_base_de_plomb: "encre à base de plomb",
+  encre_fabriquee_a_base_de_plomb: "encre à base de plomb",
+  petit_disque_de_bronze: "petit disque de bronze",
+  disque_de_bronze: "petit disque de bronze",
+  petite_tige_de_fer: "petite tige de fer",
+  tige_de_fer: "petite tige de fer",
+  morceau_de_matiere_vegetale_similaire: "morceau de matière végétale similaire",
+  morceau_de_matiere_minerale_similaire: "morceau de matière minérale similaire",
+  objet_de_valeur_a_sacrifier: "objet de valeur à sacrifier",
+  sacrifice_de_quelque_chose_ayant_de_la_valeur: "objet de valeur à sacrifier",
+  encens_a_faire_bruler: "encens à faire brûler",
+  encens_a_faire_brûler: "encens à faire brûler",
+  encens: "encens",
+  eau: "eau",
+  sable: "sable",
   soufre: "soufre",
   souffre: "soufre",
+  phosphore: "phosphore",
+  argile: "argile",
   salpetre: "salpêtre",
+  soufre_et_phosphore: "soufre et phosphore",
+  guano_de_chauve_souris: "guano de chauve-souris",
+  guano_de_chauve_souris_en_boule: "guano de chauve-souris",
+  fiente_de_chauve_souris: "guano de chauve-souris",
+  toile_d_araignee: "toile d’araignée",
+  morceau_de_toile_d_araignee: "toile d’araignée",
+  toile_d_araignee_bitumee: "toile d’araignée bitumée",
+  poudre_de_mica: "poudre de mica",
+  mica_en_poudre: "poudre de mica",
+  oeuf_pourri: "œuf pourri",
+  œuf_pourri: "œuf pourri",
+  feuilles_de_chou_puant: "feuilles de chou puant",
+  feuille_de_chou_puant: "feuilles de chou puant",
+  morceau_de_fourrure: "morceau de fourrure",
+  fourrure: "morceau de fourrure",
+  tige_de_verre: "tige de verre",
+  baguette_de_verre: "tige de verre",
+  perle_de_verre: "perle de verre",
+  perle_de_cristal: "perle de cristal",
+  tige_de_cristal: "tige de cristal",
+  baguette_de_cristal: "tige de cristal",
+  ambre: "ambre",
+  gomme_arabique: "gomme arabique",
+  cils: "cils",
+  cil: "cils",
+  morceau_de_gomme_arabique: "gomme arabique",
+  coeur_de_poule: "cœur de poule",
+  cœur_de_poule: "cœur de poule",
+  plume_blanche: "plume blanche",
+  gemme_d_emprisonnement: "gemme d’emprisonnement",
+  saphir: "saphir",
+  coffre_de_grande_valeur: "coffre de grande valeur",
+  replique_miniature_du_coffre: "réplique miniature du coffre",
+  miniature_du_coffre: "réplique miniature du coffre",
+  fer_pyriteux: "fer pyriteux",
+  morceau_de_fer_pyriteux: "morceau de fer pyriteux",
+  velin_enlumine: "vélin enluminé",
+  velin_specialement_enlumine: "vélin enluminé",
   petit_sac: "petit sac",
   petite_bougie: "petite bougie",
-  marteau_de_guerre_normal: "marteau de guerre normal",
-  guano_de_chauve_souris: "guano de chauve-souris",
-  fiente_de_chauve_souris: "guano de chauve-souris"
+  marteau_de_guerre_normal: "marteau de guerre normal"
 }));
 
 const NON_CONSUMED = new Set(["symbole_sacre", "chapelet", "chapelet_de_priere", "feu", "objet_de_priere", "petit_sac", "petite_bougie"]);
@@ -194,18 +277,43 @@ const CLERIC_OVERRIDES = new Map(Object.entries({
   tremblement_de_terre: ["pincée de poussière"]
 }));
 
+const ELEMENTAL_VARIANTS = [
+  variant("air", "Invocation d’un élémental de l’air", ["encens à faire brûler"]),
+  variant("eau", "Invocation d’un élémental de l’eau", ["eau", "sable"]),
+  variant("feu", "Invocation d’un élémental du feu", ["soufre", "phosphore"]),
+  variant("terre", "Invocation d’un élémental de terre", ["argile"])
+];
 const WIZARD_NO_MATERIAL_COMPONENTS = new Set(["intermittence", "mot_de_pouvoir_cecite", "mot_de_pouvoir_etourdissement", "mot_de_pouvoir_mort"]);
 const WIZARD_COMPONENT_DELEGATIONS = new Map(Object.entries({
   enchantement: "Composants variables selon l’objet enchanté et la procédure d’enchantement.",
   permanence: "Composants variables selon le sort ou l’effet rendu permanent."
 }));
 const WIZARD_OVERRIDES = new Map(Object.entries({
+  allometamorphose: ["cocon de chenille"],
+  agrandissement: ["poudre de fer"],
+  aura_magique_de_nystul: ["soie"],
+  arme_enchantee: ["carbone en poudre", "citron en poudre"],
   boule_de_feu_a_retardement: ["soufre", "guano de chauve-souris"],
+  clairaudience: ["petite corne d’argent"],
+  coffre_secret_de_leomund: ["coffre de grande valeur", "réplique miniature du coffre"],
+  effroi: [alt(["cœur de poule", "plume blanche"])],
+  emprisonnement_de_l_ame: ["gemme d’emprisonnement"],
+  globe_d_invulnerabilite: [alt(["perle de verre", "perle de cristal"])],
+  invisibilite_de_masse: ["cils", "gomme arabique"],
+  invocation_d_un_elemental: ELEMENTAL_VARIANTS,
+  invocation_instantanee_de_drawmij: ["saphir"],
   invocation_de_monstre_iii: ["petit sac", "petite bougie"],
   invocation_de_monstre_iv: ["petit sac", "petite bougie"],
   invocation_de_monstre_v: ["petit sac", "petite bougie"],
   invocation_de_monstre_vii: ["petit sac", "petite bougie"],
-  sphere_glaciale_d_otiluke: [variant("premiere_application", "fine feuille de cristal de 6 cm²", ["fine feuille de cristal de 6 cm²"]), variant("deuxieme_application", "saphir blanc", ["saphir blanc"]), variant("troisieme_application", "diamant", ["diamant"])]
+  message: ["fil de cuivre"],
+  necro_animation: ["goutte de sang", "morceau de chair humaine", "os en poudre"],
+  nuage_incendiaire: ["soufre", "phosphore"],
+  piege_de_leomund: ["morceau de fer pyriteux"],
+  protection_contre_le_mal_sur_3_m: ["poudre d’argent"],
+  punition_spirituelle: ["vélin enluminé"],
+  sphere_glaciale_d_otiluke: [variant("premiere_application", "fine feuille de cristal de 6 cm²", ["fine feuille de cristal de 6 cm²"]), variant("deuxieme_application", "saphir blanc", ["saphir blanc"]), variant("troisieme_application", "diamant", ["diamant"])],
+  ventriloquie: ["parchemin mis en cône"]
 }));
 const ILLUSIONIST_COMPONENT_DELEGATIONS = new Set(["sorts_de_niveau_1_de_magicien"]);
 
