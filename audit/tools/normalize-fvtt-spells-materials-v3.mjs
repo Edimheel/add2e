@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 
-const VERSION = "2026-06-19-normalize-wizard-components-text-mining-v11";
+const VERSION = "2026-06-19-normalize-wizard-components-text-mining-v12";
 const DEFAULT_INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const DEFAULT_OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
 const DEFAULT_CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
@@ -226,6 +226,7 @@ const MATERIAL_CANON = new Map(Object.entries({
   argile: "argile",
   guano_de_chauve_souris: "guano de chauve-souris",
   guano_de_chauve_souris_en_boule: "guano de chauve-souris",
+  fiente_de_chauve_souris: "guano de chauve-souris",
   toile_d_araignee: "toile d’araignée",
   morceau_de_toile_d_araignee: "toile d’araignée",
   toile_d_araignee_bitumee: "toile d’araignée bitumée",
@@ -328,6 +329,7 @@ const WIZARD_MATERIAL_OVERRIDES = new Map(Object.entries({
     { type: "variante", id: "flammes_froides_ver_luisant", label: "Flammes froides — ver luisant vivant", composants: ["ver luisant vivant"] },
     { type: "variante", id: "flammes_froides_queues", label: "Flammes froides — queues de lucioles ou vers luisants morts", composants: ["4 queues de lucioles ou de vers luisants morts"] }
   ],
+  boule_de_feu_a_retardement: ["soufre", "guano de chauve-souris"],
   chaumiere_de_leomund: ["petite perle de cristal"],
   clairaudience: ["petite corne d’argent"],
   clairvoyance: ["pincée de poudre de glande pinéale humaine ou humanoïde"],
