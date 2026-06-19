@@ -1,5 +1,5 @@
 {
-  "version": "2026-06-19-normalize-wizard-components-text-mining-v11",
+  "version": "2026-06-19-normalize-wizard-components-text-mining-v12",
   "input": "fvtt-spells-all-normalise-mecanique-v1.json",
   "output": "fvtt-spells-all-normalise-mecanique-v3.json",
   "magicienAuditFiles": [
@@ -403,14 +403,14 @@
       "before": [],
       "after": [
         {
-          "slug": "comme_boule_de_feu_boule_de_soufre",
-          "nom": "Comme Boule de feu : boule de soufre",
+          "slug": "soufre",
+          "nom": "soufre",
           "quantite": 1,
           "consomme": true
         },
         {
-          "slug": "fiente_de_chauve_souris",
-          "nom": "fiente de chauve souris",
+          "slug": "guano_de_chauve_souris",
+          "nom": "guano de chauve-souris",
           "quantite": 1,
           "consomme": true
         }
@@ -2592,14 +2592,14 @@
       "niveau": 7,
       "composants_materiels": [
         {
-          "slug": "comme_boule_de_feu_boule_de_soufre",
-          "nom": "Comme Boule de feu : boule de soufre",
+          "slug": "soufre",
+          "nom": "soufre",
           "quantite": 1,
           "consomme": true
         },
         {
-          "slug": "fiente_de_chauve_souris",
-          "nom": "fiente de chauve souris",
+          "slug": "guano_de_chauve_souris",
+          "nom": "guano de chauve-souris",
           "quantite": 1,
           "consomme": true
         }
@@ -10178,14 +10178,14 @@
       "niveau": 7,
       "composants": [
         {
-          "slug": "comme_boule_de_feu_boule_de_soufre",
-          "nom": "Comme Boule de feu : boule de soufre",
+          "slug": "soufre",
+          "nom": "soufre",
           "quantite": 1,
           "consomme": true
         },
         {
-          "slug": "fiente_de_chauve_souris",
-          "nom": "fiente de chauve souris",
+          "slug": "guano_de_chauve_souris",
+          "nom": "guano de chauve-souris",
           "quantite": 1,
           "consomme": true
         }
