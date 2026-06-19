@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 
-const VERSION = "2026-06-19-normalize-cleric-material-overrides-v18";
+const VERSION = "2026-06-19-normalize-cleric-material-overrides-v19";
 const DEFAULT_INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const DEFAULT_OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
 const DEFAULT_CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
@@ -227,6 +227,13 @@ function isBadName(value) {
   const n = norm(value);
   return !n || ["true", "false", "oui", "non", "consomme", "consommé", "manuel", "source", "aucun", "null", "undefined"].includes(n) || n.split(" ").length > 10;
 }
+function cleanVariantLabel(label, composants) {
+  const fromLabel = text(label).split(/\s+[—–-]\s+/g).pop();
+  const cleaned = cleanName(fromLabel);
+  if (cleaned && !isBadName(cleaned) && slug(cleaned) !== "variante") return cleaned;
+  const names = (composants ?? []).map(c => c?.nom ?? c).map(cleanName).filter(v => v && !isBadName(v));
+  return names.join(", ") || "Variante";
+}
 function uniqueBySlug(list) {
   const seen = new Set();
   const out = [];
@@ -250,7 +257,7 @@ function sanitizeEntry(entry) {
   }
   if (entry.type === "variante") {
     const composants = uniqueBySlug((entry.composants ?? []).flatMap(value => componentNames(sanitizeEntry(value))).map(cleanName).filter(value => !isBadName(value)));
-    return composants.length ? { type: "variante", id: slug(entry.id ?? entry.label ?? composants.join("_")), label: text(entry.label ?? composants.join(", ")), composants } : null;
+    return composants.length ? { type: "variante", id: slug(entry.id ?? entry.label ?? composants.join("_")), label: cleanVariantLabel(entry.label, composants), composants } : null;
   }
   const names = componentNames(entry).map(cleanName).filter(value => !isBadName(value));
   return names.length === 1 ? names[0] : names;
@@ -288,7 +295,7 @@ function normalizeStructure(entries) {
       if (choix.length > 1) out.push({ type: "alternative", choix }); else if (choix.length === 1) out.push(choix[0]);
     } else if (entry.type === "variante") {
       const composants = uniqueComponentObjects(entry.composants ?? []);
-      if (composants.length) out.push({ type: "variante", id: slug(entry.id ?? entry.label ?? composants.map(c => c.nom).join("_")), label: text(entry.label ?? composants.map(c => c.nom).join(", ")), composants });
+      if (composants.length) out.push({ type: "variante", id: slug(entry.id ?? entry.label ?? composants.map(c => c.nom).join("_")), label: cleanVariantLabel(entry.label, composants), composants });
     } else {
       const component = componentObject(entry, entry);
       if (component) out.push(component);
