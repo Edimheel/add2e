@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 
-const VERSION = "2026-06-19-normalize-cleric-material-overrides-v17";
+const VERSION = "2026-06-19-normalize-cleric-material-overrides-v18";
 const DEFAULT_INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const DEFAULT_OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
 const DEFAULT_CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
@@ -84,6 +84,24 @@ function loadClassAuditIndex(classSlug, levels) {
     for (const item of items) if (item && String(item.type ?? item.system?.type ?? "") === "sort") index.set(effectKey(item), item);
   }
   return { index, loaded };
+}
+function appendMissingAuditItems(items, auditIndex, classSlug) {
+  const present = new Set(items.filter(item => item && String(item.type ?? item.system?.type ?? "") === "sort").map(preserveKey));
+  const added = [];
+  for (const source of auditIndex.values()) {
+    if (!source || String(source.type ?? source.system?.type ?? "") !== "sort") continue;
+    if (!isClassSpell(source, classSlug)) continue;
+    const key = preserveKey(source);
+    if (!key || present.has(key)) continue;
+    const item = clone(source);
+    item.system ??= {};
+    item.system.classe ||= classSlug.charAt(0).toUpperCase() + classSlug.slice(1);
+    item.system.spellLists = Array.isArray(item.system.spellLists) && item.system.spellLists.length ? item.system.spellLists : [item.system.classe];
+    items.push(item);
+    present.add(key);
+    added.push({ name: item.name, classe: item.system.classe, niveau: item.system.niveau });
+  }
+  return added;
 }
 
 const CANON = new Map(Object.entries({
@@ -389,7 +407,8 @@ function main() {
   const items = getItems(json);
   const existingIndex = buildExistingItemIndex(output);
   const audits = { clerc: loadClassAuditIndex("clerc", LEVELS.clerc), magicien: loadClassAuditIndex("magicien", LEVELS.magicien), illusionniste: loadClassAuditIndex("illusionniste", LEVELS.illusionniste) };
-  const control = { version: VERSION, input: path.relative(repoRoot, input), output: path.relative(repoRoot, output), clercAuditFiles: audits.clerc.loaded, magicienAuditFiles: audits.magicien.loaded, illusionistAuditFiles: audits.illusionniste.loaded, totalItems: items.length, spells: 0, preservedManualMaterials: 0, preservedClasses: [], changedSpells: 0, changedEffectProfiles: 0, emptyMaterialSpells: 0, examples: [], watched: {}, clercMaterialAudit: [], clercMaterialWarnings: [], clercSourceMissing: [], magicienMaterialAudit: [], magicienMaterialWarnings: [], magicienSourceMissing: [], illusionnisteMaterialAudit: [], illusionnisteMaterialWarnings: [], illusionnisteSourceMissing: [], sameSystemFieldsForAllSpells: true, canonicalFields: SYSTEM_KEYS };
+  const appendedFromAudit = { clerc: appendMissingAuditItems(items, audits.clerc.index, "clerc") };
+  const control = { version: VERSION, input: path.relative(repoRoot, input), output: path.relative(repoRoot, output), clercAuditFiles: audits.clerc.loaded, magicienAuditFiles: audits.magicien.loaded, illusionistAuditFiles: audits.illusionniste.loaded, appendedFromAudit, totalItems: items.length, spells: 0, preservedManualMaterials: 0, preservedClasses: [], changedSpells: 0, changedEffectProfiles: 0, emptyMaterialSpells: 0, examples: [], watched: {}, clercMaterialAudit: [], clercMaterialWarnings: [], clercSourceMissing: [], magicienMaterialAudit: [], magicienMaterialWarnings: [], magicienSourceMissing: [], illusionnisteMaterialAudit: [], illusionnisteMaterialWarnings: [], illusionnisteSourceMissing: [], sameSystemFieldsForAllSpells: true, canonicalFields: SYSTEM_KEYS };
   for (const [classSlug, levels] of Object.entries(LEVELS)) for (const level of levels) control[`${classSlug}Level${level}EffectProfiles`] = makeBucket();
   const expected = JSON.stringify([...SYSTEM_KEYS].sort());
   for (const item of items) {
@@ -422,6 +441,7 @@ function main() {
   fs.writeFileSync(controlOutput, `${JSON.stringify(control, null, 2)}\n`, "utf8");
   console.log(`[ADD2E][SPELL_MATERIALS_V3] ${control.spells} sort(s), ${control.changedSpells} composant(s) modifié(s).`);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Manual preserved materials: ${control.preservedManualMaterials}`);
+  console.log(`[ADD2E][SPELL_MATERIALS_V3] Clerc audit append: ${appendedFromAudit.clerc.length}`);
   for (const classSlug of ["clerc", "magicien", "illusionniste"]) for (const level of LEVELS[classSlug]) { const bucket = control[`${classSlug}Level${level}EffectProfiles`]; console.log(`[ADD2E][SPELL_MATERIALS_V3] EffectProfiles N${level} ${classSlug}: ${bucket.applied.length} appliqué(s), ${bucket.missing.length} manquant(s).`); }
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Clerc material warnings: ${control.clercMaterialWarnings.length}`);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Magicien material warnings: ${control.magicienMaterialWarnings.length}`);
