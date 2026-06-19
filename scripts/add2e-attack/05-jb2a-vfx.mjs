@@ -1,8 +1,11 @@
 // scripts/add2e-attack/05-jb2a-vfx.mjs
 // ADD2E — VFX JB2A Premium sécurisés pour sorts et attaques d'armes.
-// Version : 2026-06-19-v13-non-arme-attack-items
+// Version : 2026-06-19-v14-dedupe-weapon-effects
 
-globalThis.ADD2E_JB2A_VFX_VERSION = "2026-06-19-v13-non-arme-attack-items";
+globalThis.ADD2E_JB2A_VFX_VERSION = "2026-06-19-v14-dedupe-weapon-effects";
+
+const ADD2E_JB2A_WEAPON_FX_DEDUPE_MS = 1200;
+globalThis.__ADD2E_JB2A_WEAPON_FX_DEDUPE_KEYS ??= new Map();
 
 const ADD2E_JB2A_VISIBLE_IMPACT = [
   "modules/JB2A_DnD5e/Library/2nd_Level/Divine_Smite/DivineSmite_01_Regular_BlueYellow_Target_400x400.webm",
@@ -300,9 +303,38 @@ function add2eInferWeaponJb2aPreset(weapon) {
   return { preset: "weapon_default", mode: "impact" };
 }
 
+function add2eBuildWeaponFxDedupeKey({ actor, weapon, sourceToken, targetToken } = {}) {
+  const src = add2eGetTokenLikeObject(sourceToken) ?? add2eGetActorToken(actor);
+  const target = add2eGetTokenLikeObject(targetToken) ?? Array.from(game.user?.targets ?? [])[0] ?? null;
+  return [
+    game.user?.id ?? "user",
+    actor?.id ?? actor?.name ?? "actor",
+    weapon?.id ?? weapon?.name ?? "weapon",
+    src?.id ?? src?.document?.id ?? "source",
+    target?.id ?? target?.document?.id ?? target?.name ?? "target"
+  ].join("|");
+}
+
+function add2eEnterWeaponFxDedupe(key) {
+  const now = Date.now();
+  const map = globalThis.__ADD2E_JB2A_WEAPON_FX_DEDUPE_KEYS;
+  if (!(map instanceof Map)) return true;
+  for (const [k, ts] of map.entries()) {
+    if ((now - Number(ts || 0)) > ADD2E_JB2A_WEAPON_FX_DEDUPE_MS) map.delete(k);
+  }
+  if (map.has(key)) return false;
+  map.set(key, now);
+  return true;
+}
+
 async function add2ePlayWeaponAttackFx({ actor, weapon, sourceToken, targetToken } = {}) {
   try {
     if (typeof Sequence === "undefined" || !weapon) return false;
+    const dedupeKey = add2eBuildWeaponFxDedupeKey({ actor, weapon, sourceToken, targetToken });
+    if (!add2eEnterWeaponFxDedupe(dedupeKey)) {
+      console.warn("[ADD2E][JB2A][WEAPON][SKIP_DUPLICATE]", { weapon: weapon?.name, weaponType: weapon?.type, dedupeKey });
+      return false;
+    }
     const explicit = add2eGetWeaponJb2aConfig(weapon);
     const inferred = add2eInferWeaponJb2aPreset(weapon);
     const preset = add2eNormalizeFxKey(explicit.preset || inferred.preset || "weapon_default") || "weapon_default";
@@ -339,8 +371,8 @@ function add2eWrapAttackRollForWeaponFx(fn) {
     const sourceToken = payload.token ?? payload.sourceToken ?? add2eGetActorToken(actor);
     const targetTokenBeforeRoll = payload.targetToken ?? Array.from(game.user?.targets ?? [])[0] ?? null;
     const result = await original.apply(this, args);
-    if (weapon) await add2ePlayWeaponAttackFx({ actor, weapon, sourceToken, targetToken: payload.targetToken ?? targetTokenBeforeRoll ?? Array.from(game.user?.targets ?? [])[0] ?? null });
-    else console.warn("[ADD2E][JB2A][WEAPON][SKIP_NO_WEAPON]", { actor: actor?.name, actorId: actor?.id, payloadKeys: Object.keys(payload ?? {}) });
+    if (weapon && result !== false) await add2ePlayWeaponAttackFx({ actor, weapon, sourceToken, targetToken: payload.targetToken ?? targetTokenBeforeRoll ?? Array.from(game.user?.targets ?? [])[0] ?? null });
+    else if (!weapon) console.warn("[ADD2E][JB2A][WEAPON][SKIP_NO_WEAPON]", { actor: actor?.name, actorId: actor?.id, payloadKeys: Object.keys(payload ?? {}) });
     return result;
   };
   wrapped.__add2eWeaponFxWrapped = true;
