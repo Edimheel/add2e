@@ -1,5 +1,5 @@
 {
-  "version": "2026-06-19-normalize-wizard-components-text-mining-v6",
+  "version": "2026-06-19-normalize-wizard-components-text-mining-v9",
   "input": "fvtt-spells-all-normalise-mecanique-v1.json",
   "output": "fvtt-spells-all-normalise-mecanique-v3.json",
   "magicienAuditFiles": [
@@ -6217,10 +6217,21 @@
       "niveau": 2,
       "composants_materiels": [
         {
-          "slug": "soit_une_boucle_de_cuir",
-          "nom": "soit une boucle de cuir",
-          "quantite": 1,
-          "consomme": true
+          "type": "alternative",
+          "choix": [
+            {
+              "slug": "boucle_de_cuir",
+              "nom": "boucle de cuir",
+              "quantite": 1,
+              "consomme": true
+            },
+            {
+              "slug": "morceau_de_fil_d_or_courbe_en_forme_d_hamecon",
+              "nom": "morceau de fil d’or courbé en forme d’hameçon",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
         }
       ],
       "composantes": "V, S, M",
@@ -6289,13 +6300,13 @@
           "choix": [
             {
               "slug": "fourchette_d_argent",
-              "nom": "Fourchette d’argent",
+              "nom": "fourchette d’argent",
               "quantite": 1,
               "consomme": true
             },
             {
-              "slug": "baguette_fourchue_selon_version_du_sort",
-              "nom": "baguette fourchue selon version du sort",
+              "slug": "baguette_fourchue",
+              "nom": "baguette fourchue",
               "quantite": 1,
               "consomme": true
             }
@@ -7638,8 +7649,8 @@
       "niveau": 2,
       "composants_materiels": [
         {
-          "slug": "morceau_d_os_de_mort_vivant_squelette",
-          "nom": "Morceau d’os de mort vivant (squelette",
+          "slug": "morceau_d_os_de_mort_vivant",
+          "nom": "morceau d’os de mort-vivant",
           "quantite": 1,
           "consomme": true
         }
@@ -9901,7 +9912,7 @@
       "composants_materiels": [
         {
           "slug": "plume_d_aile_d_oiseau",
-          "nom": "Plume d’aile d’oiseau",
+          "nom": "plume d’aile d’oiseau",
           "quantite": 1,
           "consomme": true
         }
@@ -11189,8 +11200,14 @@
       "niveau": 3,
       "composants": [
         {
-          "slug": "materielle_non_precisee_explicitement_dans_le",
-          "nom": "Matérielle non précisée explicitement dans le",
+          "slug": "cils",
+          "nom": "cils",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "gomme_arabique",
+          "nom": "gomme arabique",
           "quantite": 1,
           "consomme": true
         }
@@ -11434,10 +11451,21 @@
       "niveau": 2,
       "composants": [
         {
-          "slug": "soit_une_boucle_de_cuir",
-          "nom": "soit une boucle de cuir",
-          "quantite": 1,
-          "consomme": true
+          "type": "alternative",
+          "choix": [
+            {
+              "slug": "boucle_de_cuir",
+              "nom": "boucle de cuir",
+              "quantite": 1,
+              "consomme": true
+            },
+            {
+              "slug": "morceau_de_fil_d_or_courbe_en_forme_d_hamecon",
+              "nom": "morceau de fil d’or courbé en forme d’hameçon",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
         }
       ]
     },
@@ -11468,13 +11496,13 @@
           "choix": [
             {
               "slug": "fourchette_d_argent",
-              "nom": "Fourchette d’argent",
+              "nom": "fourchette d’argent",
               "quantite": 1,
               "consomme": true
             },
             {
-              "slug": "baguette_fourchue_selon_version_du_sort",
-              "nom": "baguette fourchue selon version du sort",
+              "slug": "baguette_fourchue",
+              "nom": "baguette fourchue",
               "quantite": 1,
               "consomme": true
             }
@@ -11897,8 +11925,8 @@
       "niveau": 2,
       "composants": [
         {
-          "slug": "morceau_d_os_de_mort_vivant_squelette",
-          "nom": "Morceau d’os de mort vivant (squelette",
+          "slug": "morceau_d_os_de_mort_vivant",
+          "nom": "morceau d’os de mort-vivant",
           "quantite": 1,
           "consomme": true
         }
@@ -12438,10 +12466,27 @@
       "niveau": 3,
       "composants": [
         {
-          "slug": "plume_d_aile_d_oiseau",
-          "nom": "plume d’aile d’oiseau",
+          "slug": "langue_de_serpent",
+          "nom": "langue de serpent",
           "quantite": 1,
           "consomme": true
+        },
+        {
+          "type": "alternative",
+          "choix": [
+            {
+              "slug": "miel",
+              "nom": "miel",
+              "quantite": 1,
+              "consomme": true
+            },
+            {
+              "slug": "huile_douce",
+              "nom": "huile douce",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
         }
       ]
     },
@@ -12709,14 +12754,42 @@
       "composants": [
         {
           "slug": "plume_d_aile_d_oiseau",
-          "nom": "Plume d’aile d’oiseau",
+          "nom": "plume d’aile d’oiseau",
           "quantite": 1,
           "consomme": true
         }
       ]
     }
   ],
-  "magicienMaterialWarnings": [],
+  "magicienMaterialWarnings": [
+    {
+      "name": "Lévitation",
+      "niveau": 2,
+      "components": [
+        "morceau de fil d’or courbé en forme d’hameçon"
+      ],
+      "allComponents": [
+        {
+          "type": "alternative",
+          "choix": [
+            {
+              "slug": "boucle_de_cuir",
+              "nom": "boucle de cuir",
+              "quantite": 1,
+              "consomme": true
+            },
+            {
+              "slug": "morceau_de_fil_d_or_courbe_en_forme_d_hamecon",
+              "nom": "morceau de fil d’or courbé en forme d’hameçon",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
+        }
+      ],
+      "classe": "magicien"
+    }
+  ],
   "magicienSourceMissing": [],
   "illusionnisteMaterialAudit": [
     {

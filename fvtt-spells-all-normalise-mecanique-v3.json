@@ -21910,7 +21910,7 @@
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": true,
-        "composants_materiels_note": "Composants variables selon l’objet enchanté et la procédure d’enchantement. Composants variables selon l’objet enchanté et la procédure d’enchantement. Composants variables selon l’objet enchanté et la procédure d’enchantement. Composants variables selon l’objet enchanté et la procédure d’enchantement. Composants variables selon l’objet enchanté et la procédure d’enchantement. Composants variables selon l’objet enchanté et la procédure d’enchantement. Composants variables selon l’objet enchanté et la procédure d’enchantement. Composants variables selon l’objet enchanté et la procédure d’enchantement.",
+        "composants_materiels_note": "Composants variables selon l’objet enchanté et la procédure d’enchantement. Composants variables selon l’objet enchanté et la procédure d’enchantement. Composants variables selon l’objet enchanté et la procédure d’enchantement. Composants variables selon l’objet enchanté et la procédure d’enchantement. Composants variables selon l’objet enchanté et la procédure d’enchantement. Composants variables selon l’objet enchanté et la procédure d’enchantement. Composants variables selon l’objet enchanté et la procédure d’enchantement. Composants variables selon l’objet enchanté et la procédure d’enchantement. Composants variables selon l’objet enchanté et la procédure d’enchantement. Composants variables selon l’objet enchanté et la procédure d’enchantement. Composants variables selon l’objet enchanté et la procédure d’enchantement.",
         "composants_materiels_a_renseigner": false,
         "description": "ce sort doit être employé par un magicien désirant créer un objet magique. L’enchantement prépare l’objet à recevoir la magie que l’on veut lui conférer. L’objet doit remplir les conditions suivantes: 1) Il doit être dans un état impeccable 2) Il doit être de très belle facture, fabriqué avec les meilleurs matériaux et avec la plus grande précision possible 3) Sa valeur marchande doit refléter la 2e condition et dans tous les cas, le matériau de fabrication doit valoir au moins 100 po. Considérant la 3e condition, il est impossible de l’appliquer sur des objets, comme les cordes, les objets en cuir, les vêtements, la poterie, qui ne sont pas brodés, incrustés de bijoux, ciselés et/ou gravés. Cependant, si un tel travail et/ou matériau peut être ajouté sans altérer la fonction de l’objet, l’enchantement est possible. Le magicien doit toucher l’objet avec la main. Ce contact doit être constant pendant le temps d’incantation qui est de 16 heures + 8 à 64 heures (comme le magicien ne peut travailleur plus de 8 heures par jour et qu’il n’est pas possible d’accélérer le temps d’incantation, même par un sort de rapidité ou un moyen similaire, cela signifie que le temps à consacrer est en fait de 2 jours + 1 à 8 jours). Tout le travail de préparation ne doit jamais être interrompu et pendant les périodes de repos, l’objet ne doit jamais être à plus de 30 cm du magicien, sinon le sort est annulé et devra être relancé. (Pendant les périodes de repos, le magicien ne doit entreprendre aucune autre opération magique. Il doit se reposer et rester seul). À la fin du sort, le magicien saura que l’objet est prêt pour l’opération finale. Il prononce alors l’ultime incantation; si l’objet réussit un jet de protection contre les sorts (qui est exactement le même que celui du magicien, en tenant compte de ses bonus avec toutefois un maximum de +3), le sort est achevé. Un résultat de 1 sur 1d20 sera toujours considéré comme un échec, malgré les ajustements éventuels. Une fois que le sort est achevé et que le jet de protection est réussi, le magicien peut commencer à placer sur l’objet le pouvoir qu’il désire lui conférer; il doit placer ce sort dans une période de 24 heures après l’enchantement, sinon le sort de préparation est annulé et l’objet doit être à nouveau enchanté. Chaque sort lancé successivement sur un objet enchanté demande 4 heures + 4-8 heures par niveau de magie du sort. De nouveau, durant l'incantation le magicien doit toucher l'objet et pendant les périodes de repos, il doit rester à 30 cm maximum de lui. Cette procédure est la même pour chaque nouveau sort lancé sur l'objet; chaque nouveau pouvoir magique doit être lancé dans une période de 24 heures par rapport au pouvoir magique précédent, même si le lancement d'un sort précédent a raté. Aucune magie placée sur, ou dans, un objet n'est permanente, sauf si un sort de permanence est utilisé; cela risque de provoquer la perte d'un point de constitution chez le magicien lançant le sort. Il faut préciser également que s'il est possible de dire que le sort de base d'enchantement est réussi, il n'est pas possible d'affirmer que les autres sorts lancés prennent effet, car chaque autre sort entraîne un jet de protection, dans les mêmes conditions que le premier. Les objets à charge (baguettes, bâtonnets, bâtons, javelots de foudre, anneau de souhaits majeurs, etc.) ne peuvent avoir des pouvoirs permanents. Les parchemins et autres objets magiques ne pourront jamais être utilisés pour un enchantement ou pour affecter un objet ainsi enchanté. Les composantes matérielles varient selon les pouvoirs lancés sur l'objet et selon l'objet lui-même; ex: une cape de déplacement pourra nécessiter la peau d'une ou plusieurs bêtes éclipsantes; une épée tueuse de dragon pourra nécessiter le sang et une autre partie du corps du dragon approprié, un anneau d'étoiles filantes pourra nécessiter des fragments de météorites et la corne d'un ki-rin. C'est le MD qui décide des composantes appropriées.",
         "onUse": "systems/add2e/scripts/sorts/magicien-enchantement.js",
@@ -29323,7 +29323,7 @@
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": true,
-        "composants_materiels_note": "Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe.",
+        "composants_materiels_note": "Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe.",
         "composants_materiels_a_renseigner": false,
         "description": "grâce à ce sort, le magicien fait disparaitre et réapparaître son enveloppe corporelle sur son plan d’existence, à un moment et un endroit tirés au hasard, pendant chaque minute de la durée du sort. (Cf. MANUEL DES MONSTRES, chien esquiveur). Le segment du round pendant lequel disparaît le magicien est déterminé en lançant 2d4 et, durant ce même segment, il réapparaîtra à 60 cm de l’endroit où il se trouvait avant de disparaitre. (La direction est déterminée en lançant 1d8: 1 = devant à droite; 2 = à droite; 3 = derrière à droite; 4 = derrière; 5 = derrière à gauche; 6 = à gauche; 7 = devant à gauche; 8 = devant). Si un objet occupe l’espace où le magicien doit réapparaître, ce dernier se déplace de nouveau dans une autre direction depuis sa position de départ jusqu’à ce qu’il trouve un espace libre, mais jamais au-delà de 3 mètres de sa position d’origine (du début de round). Si le magicien ne peut pas réapparaître, il se retrouve alors piégé sur le plan éthéré. Pendant et après le segment de déplacement, le magicien ne peut être atteint que par une attaque pouvant frapper les deux endroits à la fois, c'est-à-dire par un souffle de dragon, par une boule de feu ou par tout type d’attaque similaire affectant une large zone. Les adversaires qui ne sont pas capable de telles attaques ne peuvent toucher le magicien qu’avant son déplacement. Le lanceur de sort n’a que 75 % de chances de réussir une action autre qu’une attaque physique avec une arme de mêlée, pendant qu’il est sous l’effet du sort. C'est-à-dire que l’utilisation d’un sort ou d’un objet ne pourrait pas se faire ou se ferait d’une manière incorrecte ou dans une mauvaise direction. Le MD déterminera les chances de succès ou d’échec et les résultats précis des actions entreprises.",
         "onUse": "systems/add2e/scripts/sorts/magicien-intermittence.js",
@@ -30320,8 +30320,14 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           {
-            "slug": "materielle_non_precisee_explicitement_dans_le",
-            "nom": "Matérielle non précisée explicitement dans le",
+            "slug": "cils",
+            "nom": "cils",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "gomme_arabique",
+            "nom": "gomme arabique",
             "quantite": 1,
             "consomme": true
           }
@@ -35942,10 +35948,21 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           {
-            "slug": "soit_une_boucle_de_cuir",
-            "nom": "soit une boucle de cuir",
-            "quantite": 1,
-            "consomme": true
+            "type": "alternative",
+            "choix": [
+              {
+                "slug": "boucle_de_cuir",
+                "nom": "boucle de cuir",
+                "quantite": 1,
+                "consomme": true
+              },
+              {
+                "slug": "morceau_de_fil_d_or_courbe_en_forme_d_hamecon",
+                "nom": "morceau de fil d’or courbé en forme d’hameçon",
+                "quantite": 1,
+                "consomme": true
+              }
+            ]
           }
         ],
         "composants_materiels_source": "La composante matérielle est soit une boucle de cuir, soit un morceau de fil d’or courbé en forme d’hameçon.",
@@ -36709,13 +36726,13 @@
             "choix": [
               {
                 "slug": "fourchette_d_argent",
-                "nom": "Fourchette d’argent",
+                "nom": "fourchette d’argent",
                 "quantite": 1,
                 "consomme": true
               },
               {
-                "slug": "baguette_fourchue_selon_version_du_sort",
-                "nom": "baguette fourchue selon version du sort",
+                "slug": "baguette_fourchue",
+                "nom": "baguette fourchue",
                 "quantite": 1,
                 "consomme": true
               }
@@ -40880,7 +40897,7 @@
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": true,
-        "composants_materiels_note": "Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe.",
+        "composants_materiels_note": "Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe.",
         "composants_materiels_a_renseigner": false,
         "description": "quand ce mot est prononcé, une ou plusieurs créatures se trouvant dans la portée et la zone d’effet deviennent temporairement aveugles. Le sort affecte 100 points de vie maximum, mais sa durée dépend du nombre des points de vie des créatures affectées. Si le sort affecte 50 points de vie ou moins, le sort dure de 2 à 5 tours (1d4+1); s’il affecte 51 points de vie ou plus, la durée n’est que de 2 à 5 rounds. Le magicien doit indiquer quelle(s) créature(s) il veut rendre aveugle(s); il doit en désigner une qui représentera le centre de la zone d’effet, ceci avant de déterminer les résultats du sort. Les créatures avec plus de 100 points de vie ne sont pas affectées. Ce sort peut être annulé avec les sorts suivants: guérison de la cécité, dissipation de la magie.",
         "onUse": "systems/add2e/scripts/sorts/magicien-mot-de-pouvoir-cecite.js",
@@ -41023,7 +41040,7 @@
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": true,
-        "composants_materiels_note": "Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe.",
+        "composants_materiels_note": "Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe.",
         "composants_materiels_a_renseigner": false,
         "description": "quand ce mot est prononcé, la créature, que le magicien a choisie comme victime, est étourdie, chancelante et incapable de penser ou d’agir de façon cohérente pendant un certain nombre de rounds. Le magicien doit faire face à sa victime et cette dernière doit être dans la portée du sort. Les créatures ayant de 1 à 30 points de vie sont étourdies pendant 4 à 16 rounds (4d4). Les créatures ayant de 31 à 60 points de vie sont étourdies pendant 2 à 8 rounds (2d4). Les créatures ayant de 61 à 90 points de vie sont étourdies pendant 1 à 4 rounds (1d4). Les créatures ayant plus de 90 points de vie ne sont pas affectées par le sort. À noter que les points de vie pris en compte sont ceux de la créature au moment où le sort est lancé et non pas ceux qu’elle possède quand elle n’est pas blessée.",
         "onUse": "systems/add2e/scripts/sorts/magicien-mot-de-pouvoir-etourdissement.js",
@@ -41165,7 +41182,7 @@
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": true,
-        "composants_materiels_note": "Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe.",
+        "composants_materiels_note": "Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe.",
         "composants_materiels_a_renseigner": false,
         "description": "quand ce mot est prononcé, une ou plusieurs créatures se trouvant dans la portée du sort et dans la zone d’effet meurent. Ce sort tue 1 créature avec 60 points de vie maximum ou bien 2 créatures ou plus avec 10 points de vie maximum chacune pour un total de 120 points de vie. La décision d’affecter une ou plusieurs créatures doit être annoncée, ainsi que la portée choisie et l’endroit correspondant au centre de la zone d’effet.",
         "onUse": "systems/add2e/scripts/sorts/magicien-mot-de-pouvoir-mort.js",
@@ -47843,7 +47860,7 @@
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": true,
-        "composants_materiels_note": "Composants variables selon le sort ou l’effet rendu permanent. Composants variables selon le sort ou l’effet rendu permanent. Composants variables selon le sort ou l’effet rendu permanent. Composants variables selon le sort ou l’effet rendu permanent. Composants variables selon le sort ou l’effet rendu permanent. Composants variables selon le sort ou l’effet rendu permanent. Composants variables selon le sort ou l’effet rendu permanent. Composants variables selon le sort ou l’effet rendu permanent.",
+        "composants_materiels_note": "Composants variables selon le sort ou l’effet rendu permanent. Composants variables selon le sort ou l’effet rendu permanent. Composants variables selon le sort ou l’effet rendu permanent. Composants variables selon le sort ou l’effet rendu permanent. Composants variables selon le sort ou l’effet rendu permanent. Composants variables selon le sort ou l’effet rendu permanent. Composants variables selon le sort ou l’effet rendu permanent. Composants variables selon le sort ou l’effet rendu permanent. Composants variables selon le sort ou l’effet rendu permanent. Composants variables selon le sort ou l’effet rendu permanent. Composants variables selon le sort ou l’effet rendu permanent.",
         "composants_materiels_a_renseigner": false,
         "description": "ce sort affecte la durée de certains sorts en la rendant permanente. Les sorts à usage personnel sur lesquels une permanence peut être lancée sont les suivants: Compréhension des langues Langues Détection du mal Lecture de la magie Détection de l’invisibilité Protection contre le mal Détection de la magie Protection contre les projectiles normaux Infravision Serviteur invisible Le magicien lance le sort désiré, puis il lance ensuite le sort permanence. Chaque sort de permanence lancé baisse la constitution du magicien de 1 point. Si le sort est lancé sur un objet, il n’y a que 5 % de chance que le magicien perde 1 point de constitution. Cependant, si le sort de permanence est utilisé pour recharger un objet (comme un anneau d’accumulation de sorts) cette chance passe à 100 %. Il ne peut pas lancer les sorts de la liste ci-dessus sur d’autres créatures que lui-même pour les rendre permanents. En plus de l’usage personnel, la permanence peut aussi affecter les sorts suivants, lancés sur une créature, un objet ou une zone d’effet: Agrandissement Mur de force Bouche magique Nuage puant Effroi Rafale de vent Invisibilité Sphère prismatique Mur de feu Toile d’araignée La première application du sort ne peut être dissipée que par un magicien de niveau supérieur à celui qui a lancé le sort de permanence. La deuxième application autorise le magicien à lancer le sort de permanence en même temps que le sort dont il veut altérer la durée, à condition que la cible ne soit pas une créature vivante. Cette deuxième application du sort peut être dissipée normalement, ce qui annule l’association des deux sorts.",
         "onUse": "systems/add2e/scripts/sorts/magicien-permanence.js",
@@ -47983,8 +48000,8 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           {
-            "slug": "morceau_d_os_de_mort_vivant_squelette",
-            "nom": "Morceau d’os de mort vivant (squelette",
+            "slug": "morceau_d_os_de_mort_vivant",
+            "nom": "morceau d’os de mort-vivant",
             "quantite": 1,
             "consomme": true
           }
@@ -62240,10 +62257,27 @@
         "composantes": "V, M",
         "composants_materiels": [
           {
-            "slug": "plume_d_aile_d_oiseau",
-            "nom": "plume d’aile d’oiseau",
+            "slug": "langue_de_serpent",
+            "nom": "langue de serpent",
             "quantite": 1,
             "consomme": true
+          },
+          {
+            "type": "alternative",
+            "choix": [
+              {
+                "slug": "miel",
+                "nom": "miel",
+                "quantite": 1,
+                "consomme": true
+              },
+              {
+                "slug": "huile_douce",
+                "nom": "huile douce",
+                "quantite": 1,
+                "consomme": true
+              }
+            ]
           }
         ],
         "composants_materiels_source": "a_completer",
@@ -67514,7 +67548,7 @@
         "composants_materiels": [
           {
             "slug": "plume_d_aile_d_oiseau",
-            "nom": "Plume d’aile d’oiseau",
+            "nom": "plume d’aile d’oiseau",
             "quantite": 1,
             "consomme": true
           }
@@ -67641,6 +67675,6 @@
       "sort": 0
     }
   ],
-  "normalizedBy": "2026-06-19-normalize-wizard-components-text-mining-v6",
-  "normalizedAt": "2026-06-19T07:51:15.382Z"
+  "normalizedBy": "2026-06-19-normalize-wizard-components-text-mining-v9",
+  "normalizedAt": "2026-06-19T10:34:16.710Z"
 }
