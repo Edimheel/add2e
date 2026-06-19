@@ -1,15 +1,48 @@
 // scripts/add2e-attack/05-jb2a-vfx.mjs
 // ADD2E — VFX JB2A Premium sécurisés pour sorts et attaques d'armes.
-// Version : 2026-06-19-v11-melee-weapon-attack-fx
+// Version : 2026-06-19-v12-weapon-family-effects
 
-globalThis.ADD2E_JB2A_VFX_VERSION = "2026-06-19-v11-melee-weapon-attack-fx";
+globalThis.ADD2E_JB2A_VFX_VERSION = "2026-06-19-v12-weapon-family-effects";
 
 const ADD2E_JB2A_VISIBLE_IMPACT = [
   "modules/JB2A_DnD5e/Library/2nd_Level/Divine_Smite/DivineSmite_01_Regular_BlueYellow_Target_400x400.webm",
   "modules/jb2a_patreon/Library/2nd_Level/Divine_Smite/DivineSmite_01_Regular_YellowWhite_Target_400x400.webm"
 ];
 
-const ADD2E_JB2A_VISIBLE_WEAPON_IMPACT = [
+const ADD2E_JB2A_WEAPON_SLASH = [
+  "modules/JB2A_DnD5e/Library/Generic/Weapon_Attacks/Melee/Sword01_06_Regular_White_800x600.webm",
+  ...ADD2E_JB2A_VISIBLE_IMPACT
+];
+
+const ADD2E_JB2A_WEAPON_CLEAVE = [
+  "modules/JB2A_DnD5e/Library/Generic/Weapon_Attacks/Melee/Axe01_01_Regular_White_800x600.webm",
+  "modules/JB2A_DnD5e/Library/Generic/Weapon_Attacks/Melee/Sword01_06_Regular_White_800x600.webm",
+  ...ADD2E_JB2A_VISIBLE_IMPACT
+];
+
+const ADD2E_JB2A_WEAPON_PIERCE = [
+  "modules/JB2A_DnD5e/Library/Generic/Weapon_Attacks/Melee/Piercing01_01_Regular_White_800x600.webm",
+  "modules/JB2A_DnD5e/Library/Generic/Weapon_Attacks/Melee/Dagger01_01_Regular_White_800x600.webm",
+  "modules/JB2A_DnD5e/Library/Generic/Weapon_Attacks/Melee/Sword01_06_Regular_White_800x600.webm",
+  ...ADD2E_JB2A_VISIBLE_IMPACT
+];
+
+const ADD2E_JB2A_WEAPON_BLUDGEON = [
+  "modules/JB2A_DnD5e/Library/Generic/Weapon_Attacks/Melee/Mace01_01_Regular_White_800x600.webm",
+  "modules/JB2A_DnD5e/Library/Generic/Weapon_Attacks/Melee/Hammer01_01_Regular_White_800x600.webm",
+  "modules/JB2A_DnD5e/Library/Generic/Weapon_Attacks/Melee/Sword01_06_Regular_White_800x600.webm",
+  ...ADD2E_JB2A_VISIBLE_IMPACT
+];
+
+const ADD2E_JB2A_WEAPON_RANGED = [
+  "modules/JB2A_DnD5e/Library/Generic/Weapon_Attacks/Ranged/Arrow01_01_Regular_White_30ft_1600x400.webm",
+  "modules/JB2A_DnD5e/Library/Generic/Weapon_Attacks/Ranged/Bolt01_01_Regular_White_30ft_1600x400.webm",
+  "modules/JB2A_DnD5e/Library/Generic/Weapon_Attacks/Melee/Sword01_06_Regular_White_800x600.webm",
+  ...ADD2E_JB2A_VISIBLE_IMPACT
+];
+
+const ADD2E_JB2A_WEAPON_SPECIAL = [
+  "modules/JB2A_DnD5e/Library/Generic/Conditions/Boon01/ConditionBoon01_012_Green_600x600.webm",
   "modules/JB2A_DnD5e/Library/Generic/Weapon_Attacks/Melee/Sword01_06_Regular_White_800x600.webm",
   ...ADD2E_JB2A_VISIBLE_IMPACT
 ];
@@ -74,17 +107,17 @@ const ADD2E_JB2A_PRESET_CANDIDATES = {
     "modules/JB2A_DnD5e/Library/Generic/Marker/MarkerLightIntro_01_Regular_Blue_400x400.webm",
     ...ADD2E_JB2A_VISIBLE_IMPACT
   ],
-  weapon_slash: [...ADD2E_JB2A_VISIBLE_WEAPON_IMPACT],
-  weapon_cleave: [...ADD2E_JB2A_VISIBLE_WEAPON_IMPACT],
-  weapon_pierce: [...ADD2E_JB2A_VISIBLE_WEAPON_IMPACT],
-  weapon_bludgeon: [...ADD2E_JB2A_VISIBLE_WEAPON_IMPACT],
-  weapon_arrow: [...ADD2E_JB2A_VISIBLE_WEAPON_IMPACT],
-  weapon_bolt: [...ADD2E_JB2A_VISIBLE_WEAPON_IMPACT],
-  weapon_stone: [...ADD2E_JB2A_VISIBLE_WEAPON_IMPACT],
-  weapon_firearm: [...ADD2E_JB2A_VISIBLE_WEAPON_IMPACT],
-  weapon_ensnare: [...ADD2E_JB2A_VISIBLE_WEAPON_IMPACT],
-  weapon_whip: [...ADD2E_JB2A_VISIBLE_WEAPON_IMPACT],
-  weapon_default: [...ADD2E_JB2A_VISIBLE_WEAPON_IMPACT]
+  weapon_slash: [...ADD2E_JB2A_WEAPON_SLASH],
+  weapon_cleave: [...ADD2E_JB2A_WEAPON_CLEAVE],
+  weapon_pierce: [...ADD2E_JB2A_WEAPON_PIERCE],
+  weapon_bludgeon: [...ADD2E_JB2A_WEAPON_BLUDGEON],
+  weapon_arrow: [...ADD2E_JB2A_WEAPON_RANGED],
+  weapon_bolt: [...ADD2E_JB2A_WEAPON_RANGED],
+  weapon_stone: [...ADD2E_JB2A_WEAPON_RANGED],
+  weapon_firearm: [...ADD2E_JB2A_WEAPON_RANGED],
+  weapon_ensnare: [...ADD2E_JB2A_WEAPON_SPECIAL],
+  weapon_whip: [...ADD2E_JB2A_WEAPON_SLASH],
+  weapon_default: [...ADD2E_JB2A_WEAPON_SLASH]
 };
 
 const ADD2E_SPELL_KEY_TO_JB2A_PRESET = {
