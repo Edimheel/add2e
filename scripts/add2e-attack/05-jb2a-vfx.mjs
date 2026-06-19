@@ -1,8 +1,8 @@
 // scripts/add2e-attack/05-jb2a-vfx.mjs
 // ADD2E — VFX JB2A Premium sécurisés pour sorts et attaques d'armes.
-// Version : 2026-06-19-v14-dedupe-weapon-effects
+// Version : 2026-06-19-v15-oriented-weapon-effects
 
-globalThis.ADD2E_JB2A_VFX_VERSION = "2026-06-19-v14-dedupe-weapon-effects";
+globalThis.ADD2E_JB2A_VFX_VERSION = "2026-06-19-v15-oriented-weapon-effects";
 
 const ADD2E_JB2A_WEAPON_FX_DEDUPE_MS = 1200;
 globalThis.__ADD2E_JB2A_WEAPON_FX_DEDUPE_KEYS ??= new Map();
@@ -192,6 +192,15 @@ function add2eGetActorToken(actor) {
     ?? null;
 }
 
+function add2eCallEffectMethod(effect, method, ...args) {
+  try {
+    if (typeof effect?.[method] === "function") effect[method](...args);
+  } catch (_e) {
+    // Compatibilité Sequencer : certaines méthodes peuvent varier selon la version.
+  }
+  return effect;
+}
+
 function add2eModuleLooksActiveForPath(path) {
   const p = String(path || "");
   if (p.startsWith("modules/jb2a_patreon/")) return game.modules?.get?.("jb2a_patreon")?.active !== false;
@@ -346,12 +355,24 @@ async function add2ePlayWeaponAttackFx({ actor, weapon, sourceToken, targetToken
     if (!src && !point) return false;
     const seq = new Sequence();
     const effect = seq.effect().file(files[0]);
-    if (target) effect.attachTo(target);
-    else if (point) effect.atLocation(point);
-    else return false;
-    effect.scaleToObject(1).opacity(0.9);
+    if (src && target) {
+      effect.atLocation(src).stretchTo(target);
+    } else if (target) {
+      effect.atLocation(target);
+      add2eCallEffectMethod(effect, "scaleToObject", 1.35);
+    } else if (point) {
+      effect.atLocation(point);
+      add2eCallEffectMethod(effect, "scale", 1.35);
+    } else {
+      return false;
+    }
+    add2eCallEffectMethod(effect, "opacity", 1);
+    add2eCallEffectMethod(effect, "aboveLighting");
+    add2eCallEffectMethod(effect, "zIndex", 1000);
+    add2eCallEffectMethod(effect, "fadeIn", 50);
+    add2eCallEffectMethod(effect, "fadeOut", 100);
     await seq.play();
-    console.log("[ADD2E][JB2A][WEAPON][PLAY]", { weapon: weapon?.name, weaponType: weapon?.type, preset, mode: "impact", file: files[0] });
+    console.log("[ADD2E][JB2A][WEAPON][PLAY]", { weapon: weapon?.name, weaponType: weapon?.type, preset, mode: "oriented", file: files[0], source: src?.name ?? src?.id ?? null, target: target?.name ?? target?.id ?? null });
     return true;
   } catch (e) {
     console.warn("[ADD2E][JB2A][WEAPON][ERROR] VFX d'arme ignoré pour ne pas bloquer l'attaque.", { weapon: weapon?.name, weaponType: weapon?.type, error: e });
