@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 
-const VERSION = "2026-06-19-normalize-wizard-components-text-mining-v3";
+const VERSION = "2026-06-19-normalize-wizard-components-text-mining-v4";
 const DEFAULT_INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const DEFAULT_OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
 const DEFAULT_CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
@@ -495,6 +495,38 @@ function extractMaterialClause(source) {
   return removeIncises(cleaned);
 }
 
+function parseSharedHeadEnumeration(source) {
+  const cleaned = extractMaterialClause(source);
+  if (!cleaned || !cleaned.includes(",")) return [];
+
+  const parts = cleaned
+    .replace(/\s+ou\s+/gi, ", ")
+    .split(/,/g)
+    .map(text)
+    .filter(Boolean);
+  if (parts.length < 3) return [];
+
+  const first = parts[0];
+  const match = first.match(/^(.+?)\s+(d['’][^,]+|de\s+[^,]+|du\s+[^,]+|des\s+[^,]+)$/i);
+  if (!match) return [];
+
+  const base = text(match[1]);
+  const suffixes = [text(match[2]), ...parts.slice(1).map(v => v.replace(/^ou\s+/i, "").trim())];
+  const later = suffixes.slice(1);
+  const looksShared = later.some(v => /^(d['’]|de\s+|du\s+|des\s+)/i.test(v))
+    || /\b(sph[eè]res?|perles?|gemmes?|pierres?|boules?|billes?|cristaux?|morceaux?|objets?|copeaux?|sels?|poudres?)\b/i.test(base);
+  if (!looksShared) return [];
+
+  const choices = uniqueFlat(suffixes.map(suffix => {
+    const part = text(suffix);
+    if (!part) return "";
+    return `${base} ${part}`;
+  }).map(cleanMaterial).filter(v => !rejectMaterial(v)));
+
+  if (choices.length <= 1) return [];
+  return [{ type: "alternative", choix: choices }];
+}
+
 function parseAlternativeClause(source) {
   const cleaned = extractMaterialClause(source);
   if (!cleaned) return [];
@@ -516,6 +548,9 @@ function parseAlternativeClause(source) {
 function parseSourceMaterials(source) {
   const variants = parseElementalVariants(source);
   if (variants.length) return variants;
+
+  const sharedHead = parseSharedHeadEnumeration(source);
+  if (sharedHead.length) return sharedHead;
 
   const alternative = parseAlternativeClause(source);
   if (alternative.length) return alternative;
