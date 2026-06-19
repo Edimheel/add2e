@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 
-const VERSION = "2026-06-19-normalize-components-v23";
+const VERSION = "2026-06-19-normalize-components-v24";
 const DEFAULT_INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const DEFAULT_OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
 const DEFAULT_CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
@@ -38,6 +38,15 @@ const SYSTEM_FIELD_ALIASES = new Map(Object.entries({
   description_texte: "description"
 }));
 
+const CLERIC_MANUAL_DUPLICATE_SPELL_SLUGS = new Set([
+  "purification_de_la_nourriture_et_de_la_boisson",
+  "soins_des_blessures_legeres",
+  "localisation_d_un_objet",
+  "batons_en_serpents",
+  "protection_contre_le_mal_rayon_de_10_pieds",
+  "soins_ultime"
+]);
+
 const text = value => String(value ?? "").replace(/\s+/g, " ").trim();
 const norm = value => text(value).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "'").replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim();
 const slug = value => norm(value).replace(/\s+/g, "_");
@@ -50,7 +59,6 @@ function normalizeSystemShape(system = {}) {
   }
   for (const key of Object.keys(system)) if (!SYSTEM_KEY_SET.has(key)) delete system[key];
 }
-
 function readJson(file, fallback = {}) {
   try { return JSON.parse(fs.readFileSync(file, "utf8")); }
   catch { return fallback; }
@@ -82,12 +90,26 @@ function effectKey(item) {
   const system = item?.system ?? {};
   return `${spellLevel(system)}|${slug(item?.name ?? system.nom)}`;
 }
-
+function isManualDuplicateClericSpell(item) {
+  if (!item || String(item.type ?? item.system?.type ?? "") !== "sort") return false;
+  if (!isClassSpell(item, "clerc")) return false;
+  return CLERIC_MANUAL_DUPLICATE_SPELL_SLUGS.has(slug(item.name ?? item.system?.nom));
+}
+function pruneManualDuplicateClericSpells(items) {
+  const removed = [];
+  for (let i = items.length - 1; i >= 0; i -= 1) {
+    const item = items[i];
+    if (!isManualDuplicateClericSpell(item)) continue;
+    removed.push({ name: item.name, classe: item.system?.classe, niveau: item.system?.niveau });
+    items.splice(i, 1);
+  }
+  return removed.reverse();
+}
 function buildExistingItemIndex(outputPath) {
   const index = new Map();
   if (!fs.existsSync(outputPath)) return index;
   for (const item of getItems(readJson(outputPath, {}))) {
-    if (item && String(item.type ?? item.system?.type ?? "") === "sort") index.set(preserveKey(item), item);
+    if (item && String(item.type ?? item.system?.type ?? "") === "sort" && !isManualDuplicateClericSpell(item)) index.set(preserveKey(item), item);
   }
   return index;
 }
@@ -111,6 +133,7 @@ function appendMissingAuditItems(items, auditIndex, classSlug) {
   for (const source of auditIndex.values()) {
     if (!source || String(source.type ?? source.system?.type ?? "") !== "sort") continue;
     if (!isClassSpell(source, classSlug)) continue;
+    if (classSlug === "clerc" && CLERIC_MANUAL_DUPLICATE_SPELL_SLUGS.has(slug(source.name ?? source.system?.nom))) continue;
     const key = preserveKey(source);
     if (!key || present.has(key)) continue;
     const item = clone(source);
@@ -132,20 +155,25 @@ const CANON = new Map(Object.entries({
   vapeurs_de_fumier: "vapeurs de fumier",
   sang: "sang",
   symbole_sacre: "symbole sacré",
+  symbole_sacre_du_clerc: "symbole sacré",
   son_symbole_sacre: "symbole sacré",
   chapelet: "chapelet",
   chapelet_de_priere: "chapelet de prière",
   goutte_d_eau: "goutte d’eau",
   goutte_d_huile: "goutte d’huile",
+  goutte_de_mercure: "goutte de mercure",
   pincee_de_poussiere: "pincée de poussière",
   pincee_de_bouse: "pincée de bouse",
   petit_morceau_d_ecorce: "petit morceau d’écorce",
   morceau_d_ecorce: "morceau d’écorce",
+  plusieurs_ecailles_de_serpent: "écailles de serpent",
   ecailles_de_serpent: "écailles de serpent",
   poussiere_de_laiton: "poussière de laiton",
   poussiere_d_or: "poussière d’or",
   offrande_d_une_petite_creature: "offrande d’une petite créature",
+  gousse_d_ail: "gousse d’ail",
   gui: "gui",
+  gui_druidique: "gui",
   amandes: "amandes",
   petite_baguette_fourchue_metallique: "petite baguette fourchue métallique",
   feu: "feu",
@@ -194,6 +222,8 @@ const CANON = new Map(Object.entries({
   disque_de_bronze: "petit disque de bronze",
   petite_tige_de_fer: "petite tige de fer",
   tige_de_fer: "petite tige de fer",
+  petite_tige_de_metal_droite: "petite tige de métal droite",
+  tige_de_metal_droite: "petite tige de métal droite",
   morceau_de_matiere_vegetale_similaire: "morceau de matière végétale similaire",
   morceau_de_matiere_minerale_similaire: "morceau de matière minérale similaire",
   objet_de_valeur_a_sacrifier: "objet de valeur à sacrifier",
@@ -358,7 +388,7 @@ function componentNames(entry) {
 }
 function isBadName(value) {
   const n = norm(value);
-  return !n || ["true", "false", "oui", "non", "consomme", "consommé", "manuel", "source", "aucun", "null", "undefined"].includes(n) || n.split(" ").length > 10;
+  return !n || ["true", "false", "oui", "non", "consomme", "consommé", "manuel", "source", "aucun", "null", "undefined", "a completer", "a_completer"].includes(n) || n.split(" ").length > 10;
 }
 function cleanVariantLabel(label, composants) {
   const fromLabel = text(label).split(/\s+[—–-]\s+/g).pop();
@@ -538,10 +568,13 @@ function main() {
   if (!fs.existsSync(input)) throw new Error(`Fichier introuvable : ${input}`);
   const json = readJson(input, {});
   const items = getItems(json);
+  const removedManualDuplicatesBeforeAudit = pruneManualDuplicateClericSpells(items);
   const existingIndex = buildExistingItemIndex(output);
   const audits = { clerc: loadClassAuditIndex("clerc", LEVELS.clerc), magicien: loadClassAuditIndex("magicien", LEVELS.magicien), illusionniste: loadClassAuditIndex("illusionniste", LEVELS.illusionniste) };
   const appendedFromAudit = { clerc: appendMissingAuditItems(items, audits.clerc.index, "clerc") };
-  const control = { version: VERSION, input: path.relative(repoRoot, input), output: path.relative(repoRoot, output), clercAuditFiles: audits.clerc.loaded, magicienAuditFiles: audits.magicien.loaded, illusionistAuditFiles: audits.illusionniste.loaded, appendedFromAudit, totalItems: items.length, spells: 0, preservedManualMaterials: 0, preservedClasses: [], changedSpells: 0, changedEffectProfiles: 0, emptyMaterialSpells: 0, examples: [], watched: {}, clercMaterialAudit: [], clercMaterialWarnings: [], clercSourceMissing: [], magicienMaterialAudit: [], magicienMaterialWarnings: [], magicienSourceMissing: [], illusionnisteMaterialAudit: [], illusionnisteMaterialWarnings: [], illusionnisteSourceMissing: [], sameSystemFieldsForAllSpells: true, canonicalFields: SYSTEM_KEYS };
+  const removedManualDuplicatesAfterAudit = pruneManualDuplicateClericSpells(items);
+  const removedManualDuplicates = [...removedManualDuplicatesBeforeAudit, ...removedManualDuplicatesAfterAudit];
+  const control = { version: VERSION, input: path.relative(repoRoot, input), output: path.relative(repoRoot, output), clercAuditFiles: audits.clerc.loaded, magicienAuditFiles: audits.magicien.loaded, illusionistAuditFiles: audits.illusionniste.loaded, appendedFromAudit, removedManualDuplicates, totalItems: items.length, spells: 0, preservedManualMaterials: 0, preservedClasses: [], changedSpells: 0, changedEffectProfiles: 0, emptyMaterialSpells: 0, examples: [], watched: {}, clercMaterialAudit: [], clercMaterialWarnings: [], clercSourceMissing: [], magicienMaterialAudit: [], magicienMaterialWarnings: [], magicienSourceMissing: [], illusionnisteMaterialAudit: [], illusionnisteMaterialWarnings: [], illusionnisteSourceMissing: [], sameSystemFieldsForAllSpells: true, canonicalFields: SYSTEM_KEYS };
   for (const [classSlug, levels] of Object.entries(LEVELS)) for (const level of levels) control[`${classSlug}Level${level}EffectProfiles`] = makeBucket();
   const expected = JSON.stringify([...SYSTEM_KEYS].sort());
   for (const item of items) {
@@ -576,6 +609,7 @@ function main() {
   console.log(`[ADD2E][SPELL_MATERIALS_V3] ${control.spells} sort(s), ${control.changedSpells} composant(s) modifié(s).`);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Manual preserved materials: ${control.preservedManualMaterials}`);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Clerc audit append: ${appendedFromAudit.clerc.length}`);
+  console.log(`[ADD2E][SPELL_MATERIALS_V3] Clerc manual duplicates removed: ${removedManualDuplicates.length}`);
   for (const classSlug of ["clerc", "magicien", "illusionniste"]) for (const level of LEVELS[classSlug]) { const bucket = control[`${classSlug}Level${level}EffectProfiles`]; console.log(`[ADD2E][SPELL_MATERIALS_V3] EffectProfiles N${level} ${classSlug}: ${bucket.applied.length} appliqué(s), ${bucket.missing.length} manquant(s).`); }
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Clerc material warnings: ${control.clercMaterialWarnings.length}`);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Magicien material warnings: ${control.magicienMaterialWarnings.length}`);
