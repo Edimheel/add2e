@@ -1,8 +1,13 @@
 // scripts/add2e-attack/05-jb2a-vfx.mjs
 // ADD2E — VFX JB2A Premium sécurisés pour sorts et attaques d'armes.
-// Version : 2026-06-19-v9-weapon-fx-stable-hook
+// Version : 2026-06-19-v10-no-missing-sequencer-aliases
 
-globalThis.ADD2E_JB2A_VFX_VERSION = "2026-06-19-v9-weapon-fx-stable-hook";
+globalThis.ADD2E_JB2A_VFX_VERSION = "2026-06-19-v10-no-missing-sequencer-aliases";
+
+const ADD2E_JB2A_VISIBLE_IMPACT = [
+  "modules/JB2A_DnD5e/Library/2nd_Level/Divine_Smite/DivineSmite_01_Regular_BlueYellow_Target_400x400.webm",
+  "modules/jb2a_patreon/Library/2nd_Level/Divine_Smite/DivineSmite_01_Regular_YellowWhite_Target_400x400.webm"
+];
 
 const ADD2E_JB2A_PRESET_CANDIDATES = {
   divine: [
@@ -12,156 +17,69 @@ const ADD2E_JB2A_PRESET_CANDIDATES = {
     "modules/JB2A_DnD5e/Library/1st_Level/Bless/Bless_01_Regular_Yellow_Intro_400x400.webm"
   ],
   bless: [
-    "modules/jb2a_patreon/Library/2nd_Level/Divine_Smite/DivineSmite_01_Regular_YellowWhite_Target_400x400.webm",
-    "modules/JB2A_DnD5e/Library/2nd_Level/Divine_Smite/DivineSmite_01_Regular_BlueYellow_Target_400x400.webm",
     "modules/JB2A_DnD5e/Library/Generic/Conditions/Boon01/ConditionBoon01_020_Green_600x600.webm",
-    "modules/JB2A_DnD5e/Library/Generic/Conditions/Boon01/ConditionBoon01_012_Green_600x600.webm",
-    "modules/jb2a_patreon/Library/1st_Level/Bless/Bless_01_Regular_Yellow_Intro_400x400.webm",
-    "modules/JB2A_DnD5e/Library/1st_Level/Bless/Bless_01_Regular_Yellow_Intro_400x400.webm"
+    ...ADD2E_JB2A_VISIBLE_IMPACT
   ],
   curse: [
-    "modules/jb2a_patreon/Library/2nd_Level/Divine_Smite/DivineSmite_01_Dark_Red_Target_400x400.webm",
     "modules/JB2A_DnD5e/Library/Generic/Conditions/Curse01/ConditionCurse01_020_Red_600x600.webm",
-    "modules/JB2A_DnD5e/Library/Generic/Conditions/Curse01/ConditionCurse01_016_Red_600x600.webm",
-    "modules/JB2A_DnD5e/Library/Generic/Conditions/Curse01/ConditionCurse01_005_Red_600x600.webm",
-    "modules/jb2a_patreon/Library/Generic/Token_Stage/TokenStageHex01_01_Regular_Red_400x400.webm"
+    ...ADD2E_JB2A_VISIBLE_IMPACT
   ],
   protection: [
-    "modules/jb2a_patreon/Library/Generic/Shield/Shield_01_Regular_Yellow_400x400.webm",
     "modules/JB2A_DnD5e/Library/Generic/Shield/Shield_01_Regular_Yellow_400x400.webm",
-    "modules/jb2a_patreon/Library/Generic/Shield/Shield_01_Regular_Blue_400x400.webm",
-    "modules/JB2A_DnD5e/Library/Generic/Shield/Shield_01_Regular_Blue_400x400.webm",
-    "modules/jb2a_patreon/Library/2nd_Level/Divine_Smite/DivineSmite_01_Regular_YellowWhite_Target_400x400.webm"
+    ...ADD2E_JB2A_VISIBLE_IMPACT
   ],
   protection_dark: [
-    "modules/jb2a_patreon/Library/Generic/Shield/Shield_01_Regular_Purple_400x400.webm",
     "modules/JB2A_DnD5e/Library/Generic/Shield/Shield_01_Regular_Purple_400x400.webm",
-    "modules/jb2a_patreon/Library/Generic/Shield/Shield_01_Regular_Red_400x400.webm",
-    "modules/JB2A_DnD5e/Library/Generic/Shield/Shield_01_Regular_Red_400x400.webm",
-    "modules/JB2A_DnD5e/Library/Generic/Conditions/Curse01/ConditionCurse01_016_Red_600x600.webm"
+    ...ADD2E_JB2A_VISIBLE_IMPACT
   ],
   command: [
-    "modules/jb2a_patreon/Library/Generic/Energy/DodecahedronRuneAbove_01_Dark_Purple_600x600.webm",
-    "modules/jb2a_patreon/Library/Generic/Energy/DodecahedronStarAbove_01_Dark_Purple_600x600.webm",
-    "modules/jb2a_patreon/Library/Generic/Marker/MarkerFear_01_Dark_Purple_400x400.webm",
     "modules/JB2A_DnD5e/Library/Generic/Marker/MarkerFear_01_Dark_Purple_400x400.webm",
-    "modules/JB2A_DnD5e/Library/Generic/Conditions/Curse01/ConditionCurse01_016_Red_600x600.webm"
+    ...ADD2E_JB2A_VISIBLE_IMPACT
   ],
   water: [
-    "modules/jb2a_patreon/Library/Generic/Liquid/LiquidSplash01_Bright_Blue_400x400.webm",
     "modules/JB2A_DnD5e/Library/Generic/Impact/ImpactWater02_01_Regular_Blue_600x600.webm",
-    "modules/JB2A_DnD5e/Library/Generic/Cast/CastWater02_01_Regular_Blue_400x400.webm",
-    "modules/jb2a_patreon/Library/Generic/Liquid/WaterSplashConeLoop_01_01_Regular_Blue_600x600.webm",
-    "modules/JB2A_DnD5e/Library/Generic/Liquid/WaterSplashConeLoop_01_01_Regular_Blue_600x600.webm"
+    ...ADD2E_JB2A_VISIBLE_IMPACT
   ],
   dry: [
-    "modules/jb2a_patreon/Library/Generic/Smoke/SmokePuff01_01_Dark_Black_400x400.webm",
-    "modules/jb2a_patreon/Library/2nd_Level/Misty_Step/MistyStep_01_Dark_Red_400x400.webm",
     "modules/JB2A_DnD5e/Library/Generic/Smoke/SmokePuff01_01_Regular_Grey_400x400.webm",
-    "modules/jb2a_patreon/Library/Generic/Smoke/SmokePuffRing01_01_Dark_Black_400x400.webm"
+    ...ADD2E_JB2A_VISIBLE_IMPACT
   ],
   detection: [
-    "modules/jb2a_patreon/Library/Generic/Energy/DodecahedronStarAbove_01_Regular_BlueYellow_600x600.webm",
-    "modules/jb2a_patreon/Library/Generic/Energy/DodecahedronRuneAbove_01_Regular_BlueYellow_600x600.webm",
-    "modules/jb2a_patreon/Library/1st_Level/Detect_Magic/DetectMagicCircle_01_Regular_Purple_1200x1200.webm",
-    "modules/JB2A_DnD5e/Library/1st_Level/Detect_Magic/DetectMagicCircle_01_Regular_Blue_1200x1200.webm"
+    "modules/JB2A_DnD5e/Library/1st_Level/Detect_Magic/DetectMagicCircle_01_Regular_Blue_1200x1200.webm",
+    ...ADD2E_JB2A_VISIBLE_IMPACT
   ],
   evil_detection: [
-    "modules/jb2a_patreon/Library/Generic/Energy/DodecahedronSkullAbove_01_Dark_GreenPurple_600x600.webm",
-    "modules/jb2a_patreon/Library/Generic/Marker/MarkerFear_03_Dark_Purple_400x400.webm",
-    "modules/JB2A_DnD5e/Library/Generic/Conditions/Curse01/ConditionCurse01_001_Red_600x600.webm",
-    "modules/JB2A_DnD5e/Library/Generic/Marker/MarkerFear_01_Dark_Purple_400x400.webm"
+    "modules/JB2A_DnD5e/Library/Generic/Marker/MarkerFear_01_Dark_Purple_400x400.webm",
+    ...ADD2E_JB2A_VISIBLE_IMPACT
   ],
-  good_detection: [
-    "modules/jb2a_patreon/Library/2nd_Level/Divine_Smite/DivineSmite_01_Regular_BlueYellow_Target_400x400.webm",
-    "modules/jb2a_patreon/Library/1st_Level/Bless/Bless_01_Regular_Blue_Intro_400x400.webm",
-    "modules/JB2A_DnD5e/Library/1st_Level/Bless/Bless_01_Regular_Yellow_Intro_400x400.webm"
-  ],
+  good_detection: [...ADD2E_JB2A_VISIBLE_IMPACT],
   fear: [
-    "modules/jb2a_patreon/Library/Generic/Marker/MarkerFear_03_Dark_Orange_400x400.webm",
-    "modules/jb2a_patreon/Library/Generic/Marker/MarkerFear_02_Dark_Orange_400x400.webm",
-    "modules/JB2A_DnD5e/Library/Generic/Marker/MarkerFear_01_Dark_Purple_400x400.webm"
+    "modules/JB2A_DnD5e/Library/Generic/Marker/MarkerFear_01_Dark_Purple_400x400.webm",
+    ...ADD2E_JB2A_VISIBLE_IMPACT
   ],
   calm: [
-    "modules/jb2a_patreon/Library/Generic/Creature/FairiesInwardBurst01_01_Regular_BluePurple_600x600.webm",
     "modules/JB2A_DnD5e/Library/Generic/Butterflies/ButterfliesInwardBurst01_01_Regular_BluePurple_600x600.webm",
-    "modules/jb2a_patreon/Library/1st_Level/Bless/Bless_01_Regular_Blue_Intro_400x400.webm",
-    "modules/jb2a_patreon/Library/1st_Level/Bless/Bless_01_Regular_Green_Intro_400x400.webm"
+    ...ADD2E_JB2A_VISIBLE_IMPACT
   ],
   heal: [
-    "modules/jb2a_patreon/Library/Generic/Healing/HealingAbility_02_Regular_TealYellow_Burst_600x600.webm",
-    "modules/jb2a_patreon/Library/Generic/Healing/HealingAbility_02_Regular_GreenOrange_Burst_600x600.webm",
-    "modules/jb2a_patreon/Library/1st_Level/Cure_Wounds/CureWounds_01_Green_400x400.webm",
-    "modules/JB2A_DnD5e/Library/1st_Level/Cure_Wounds/CureWounds_01_Blue_400x400.webm"
+    "modules/JB2A_DnD5e/Library/1st_Level/Cure_Wounds/CureWounds_01_Blue_400x400.webm",
+    ...ADD2E_JB2A_VISIBLE_IMPACT
   ],
   light: [
-    "modules/jb2a_patreon/Library/Generic/Marker/MarkerLightIntro_01_Regular_Yellow_400x400.webm",
-    "modules/JB2A_DnD5e/Library/Generic/Marker/MarkerLightIntro_01_Regular_Blue_400x400.webm"
+    "modules/JB2A_DnD5e/Library/Generic/Marker/MarkerLightIntro_01_Regular_Blue_400x400.webm",
+    ...ADD2E_JB2A_VISIBLE_IMPACT
   ],
-  weapon_slash: [
-    "jb2a.melee_attack.slashing.one_handed",
-    "jb2a.melee_attack.slashing.two_handed",
-    "modules/jb2a_patreon/Library/Generic/Weapon_Attacks/Melee/Sword_01_Regular_White_800x800.webm",
-    "modules/JB2A_DnD5e/Library/Generic/Weapon_Attacks/Melee/Sword_01_Regular_White_800x800.webm",
-    "modules/JB2A_DnD5e/Library/2nd_Level/Divine_Smite/DivineSmite_01_Regular_BlueYellow_Target_400x400.webm"
-  ],
-  weapon_cleave: [
-    "jb2a.melee_attack.slashing.two_handed",
-    "modules/jb2a_patreon/Library/Generic/Weapon_Attacks/Melee/Axe_01_Regular_White_800x800.webm",
-    "modules/JB2A_DnD5e/Library/Generic/Weapon_Attacks/Melee/Axe_01_Regular_White_800x800.webm",
-    "modules/JB2A_DnD5e/Library/2nd_Level/Divine_Smite/DivineSmite_01_Regular_BlueYellow_Target_400x400.webm"
-  ],
-  weapon_pierce: [
-    "jb2a.melee_attack.piercing.one_handed",
-    "jb2a.melee_attack.piercing.two_handed",
-    "modules/jb2a_patreon/Library/Generic/Weapon_Attacks/Melee/Piercing_01_Regular_White_800x800.webm",
-    "modules/JB2A_DnD5e/Library/Generic/Weapon_Attacks/Melee/Piercing_01_Regular_White_800x800.webm",
-    "modules/JB2A_DnD5e/Library/2nd_Level/Divine_Smite/DivineSmite_01_Regular_BlueYellow_Target_400x400.webm"
-  ],
-  weapon_bludgeon: [
-    "jb2a.melee_attack.bludgeoning.one_handed",
-    "jb2a.melee_attack.bludgeoning.two_handed",
-    "modules/jb2a_patreon/Library/Generic/Weapon_Attacks/Melee/Mace_01_Regular_White_800x800.webm",
-    "modules/JB2A_DnD5e/Library/Generic/Weapon_Attacks/Melee/Mace_01_Regular_White_800x800.webm",
-    "modules/JB2A_DnD5e/Library/2nd_Level/Divine_Smite/DivineSmite_01_Regular_BlueYellow_Target_400x400.webm"
-  ],
-  weapon_arrow: [
-    "jb2a.arrow.physical.white",
-    "jb2a.arrow.physical.01.white",
-    "modules/jb2a_patreon/Library/Generic/Weapon_Attacks/Ranged/Arrow01_01_Regular_White_30ft_1600x400.webm",
-    "modules/JB2A_DnD5e/Library/Generic/Weapon_Attacks/Ranged/Arrow01_01_Regular_White_30ft_1600x400.webm",
-    "modules/JB2A_DnD5e/Library/2nd_Level/Divine_Smite/DivineSmite_01_Regular_BlueYellow_Target_400x400.webm"
-  ],
-  weapon_bolt: [
-    "jb2a.bolt.physical.white",
-    "jb2a.arrow.physical.01.white",
-    "modules/jb2a_patreon/Library/Generic/Weapon_Attacks/Ranged/Bolt01_01_Regular_White_30ft_1600x400.webm",
-    "modules/JB2A_DnD5e/Library/Generic/Weapon_Attacks/Ranged/Bolt01_01_Regular_White_30ft_1600x400.webm",
-    "modules/JB2A_DnD5e/Library/2nd_Level/Divine_Smite/DivineSmite_01_Regular_BlueYellow_Target_400x400.webm"
-  ],
-  weapon_stone: [
-    "jb2a.boulder.toss.01.15ft",
-    "jb2a.throwing_rock",
-    "modules/JB2A_DnD5e/Library/2nd_Level/Divine_Smite/DivineSmite_01_Regular_BlueYellow_Target_400x400.webm"
-  ],
-  weapon_firearm: [
-    "jb2a.bullet.01.orange",
-    "jb2a.muzzle_flash.01.orange",
-    "modules/JB2A_DnD5e/Library/2nd_Level/Divine_Smite/DivineSmite_01_Regular_BlueYellow_Target_400x400.webm"
-  ],
-  weapon_ensnare: [
-    "jb2a.entangle.01.complete.green",
-    "jb2a.web.01",
-    "modules/JB2A_DnD5e/Library/Generic/Conditions/Boon01/ConditionBoon01_012_Green_600x600.webm"
-  ],
-  weapon_whip: [
-    "jb2a.melee_attack.slashing.one_handed",
-    "modules/JB2A_DnD5e/Library/2nd_Level/Divine_Smite/DivineSmite_01_Regular_BlueYellow_Target_400x400.webm"
-  ],
-  weapon_default: [
-    "modules/JB2A_DnD5e/Library/2nd_Level/Divine_Smite/DivineSmite_01_Regular_BlueYellow_Target_400x400.webm",
-    "modules/jb2a_patreon/Library/2nd_Level/Divine_Smite/DivineSmite_01_Regular_YellowWhite_Target_400x400.webm"
-  ]
+  weapon_slash: [...ADD2E_JB2A_VISIBLE_IMPACT],
+  weapon_cleave: [...ADD2E_JB2A_VISIBLE_IMPACT],
+  weapon_pierce: [...ADD2E_JB2A_VISIBLE_IMPACT],
+  weapon_bludgeon: [...ADD2E_JB2A_VISIBLE_IMPACT],
+  weapon_arrow: [...ADD2E_JB2A_VISIBLE_IMPACT],
+  weapon_bolt: [...ADD2E_JB2A_VISIBLE_IMPACT],
+  weapon_stone: [...ADD2E_JB2A_VISIBLE_IMPACT],
+  weapon_firearm: [...ADD2E_JB2A_VISIBLE_IMPACT],
+  weapon_ensnare: [...ADD2E_JB2A_VISIBLE_IMPACT],
+  weapon_whip: [...ADD2E_JB2A_VISIBLE_IMPACT],
+  weapon_default: [...ADD2E_JB2A_VISIBLE_IMPACT]
 };
 
 const ADD2E_SPELL_KEY_TO_JB2A_PRESET = {
@@ -195,14 +113,6 @@ function add2eNormalizeFxKey(value) {
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/_+/g, "_")
     .replace(/^_|_$/g, "");
-}
-
-function add2eFirstString(...values) {
-  for (const value of values.flat(Infinity)) {
-    const text = String(value ?? "").trim();
-    if (text) return text;
-  }
-  return "";
 }
 
 function add2eArray(value) {
@@ -264,46 +174,17 @@ async function add2eJb2aFileExists(path) {
   }
 }
 
-function add2eSequencerEntryFile(entry) {
-  if (!entry) return "";
-  if (typeof entry === "string") return entry;
-  if (typeof entry.file === "string") return entry.file;
-  if (typeof entry.file === "function") {
-    try { return String(entry.file() ?? ""); } catch (_e) { return ""; }
-  }
-  if (Array.isArray(entry.file)) return add2eFirstString(entry.file);
-  if (Array.isArray(entry.files)) return add2eFirstString(entry.files);
-  return "";
-}
-
-function add2eResolveSequencerDatabaseCandidate(candidate) {
-  const key = String(candidate ?? "").trim();
-  if (!key || key.includes("/")) return "";
-  const db = globalThis.Sequencer?.Database;
-  if (!db) return "";
-  for (const fn of ["getEntry", "get", "getPathsUnder"]) {
-    if (typeof db?.[fn] !== "function") continue;
-    try {
-      const entry = db[fn](key);
-      if (Array.isArray(entry)) return add2eFirstString(entry.map(add2eSequencerEntryFile));
-      const file = add2eSequencerEntryFile(entry);
-      if (file) return file;
-    } catch (_e) {}
-  }
-  return "";
-}
-
 async function add2ePickJb2aFiles(preset = "divine", max = 2, explicitCandidates = []) {
   const key = add2eNormalizeFxKey(preset || "divine") || "divine";
-  const candidates = [...add2eArray(explicitCandidates), ...(ADD2E_JB2A_PRESET_CANDIDATES[key] ?? [])];
+  const candidates = [...add2eArray(explicitCandidates), ...(ADD2E_JB2A_PRESET_CANDIDATES[key] ?? ADD2E_JB2A_VISIBLE_IMPACT)]
+    .map(candidate => String(candidate ?? "").trim())
+    .filter(candidate => candidate && candidate.includes("/"));
   const files = [];
   for (const candidate of candidates) {
     if (files.length >= max) break;
-    const resolved = add2eResolveSequencerDatabaseCandidate(candidate) || String(candidate ?? "").trim();
-    if (!resolved) continue;
-    if (resolved.includes("/") && await add2eJb2aFileExists(resolved)) files.push(resolved);
+    if (await add2eJb2aFileExists(candidate)) files.push(candidate);
   }
-  if (!files.length) console.warn("[ADD2E][JB2A][MISSING_PRESET] Aucun fichier JB2A trouvé pour le preset.", { preset: key, candidates });
+  if (!files.length) console.warn("[ADD2E][JB2A][MISSING_PRESET] Aucun fichier JB2A direct trouvé pour le preset.", { preset: key, candidates });
   return [...new Set(files)];
 }
 
@@ -368,11 +249,11 @@ function add2eInferWeaponJb2aPreset(weapon) {
     s.tags,
     s.effectTags
   ].flatMap(add2eArray).join(" "));
-  if (/(arquebuse|pistolet|mousquet|arme_feu|arme_a_feu|feu)/.test(text)) return { preset: "weapon_firearm", mode: "projectile" };
-  if (/(arbalete|carreau|bolt)/.test(text)) return { preset: "weapon_bolt", mode: "projectile" };
-  if (/(arc|fleche|flèche|sarbacane|aiguille|arrow)/.test(text)) return { preset: "weapon_arrow", mode: "projectile" };
-  if (/(fronde|balle|pierre|stone)/.test(text)) return { preset: "weapon_stone", mode: "projectile" };
-  if (/(filet|lasso|bolas|entrave|attrape_homme)/.test(text)) return { preset: "weapon_ensnare", mode: "projectile" };
+  if (/(arquebuse|arme_feu|arme_a_feu)/.test(text)) return { preset: "weapon_firearm", mode: "impact" };
+  if (/(arbalete|carreau|bolt)/.test(text)) return { preset: "weapon_bolt", mode: "impact" };
+  if (/(arc|fleche|flèche|sarbacane|aiguille|arrow)/.test(text)) return { preset: "weapon_arrow", mode: "impact" };
+  if (/(fronde|balle|pierre|stone)/.test(text)) return { preset: "weapon_stone", mode: "impact" };
+  if (/(filet|lasso|bolas|entrave|attrape_homme)/.test(text)) return { preset: "weapon_ensnare", mode: "impact" };
   if (/(fouet|martinet|whip)/.test(text)) return { preset: "weapon_whip", mode: "impact" };
   if (/(hache|bardiche|hallebarde|guisarme|voulge|arme_hast|axe)/.test(text)) return { preset: "weapon_cleave", mode: "impact" };
   if (/(baton|bâton|massue|masse|marteau|fleau|fléau|contond|bludgeon|mace|hammer)/.test(text)) return { preset: "weapon_bludgeon", mode: "impact" };
@@ -387,7 +268,6 @@ async function add2ePlayWeaponAttackFx({ actor, weapon, sourceToken, targetToken
     const explicit = add2eGetWeaponJb2aConfig(weapon);
     const inferred = add2eInferWeaponJb2aPreset(weapon);
     const preset = add2eNormalizeFxKey(explicit.preset || inferred.preset || "weapon_default") || "weapon_default";
-    const mode = add2eNormalizeFxKey(explicit.mode || inferred.mode || "impact") || "impact";
     const files = await add2ePickJb2aFiles(preset, 1, explicit.file ?? explicit.files ?? []);
     if (!files.length) return false;
     const src = add2eGetTokenLikeObject(sourceToken) ?? add2eGetActorToken(actor);
@@ -396,13 +276,12 @@ async function add2ePlayWeaponAttackFx({ actor, weapon, sourceToken, targetToken
     if (!src && !point) return false;
     const seq = new Sequence();
     const effect = seq.effect().file(files[0]);
-    if (mode === "projectile" && src && target && typeof effect.stretchTo === "function") effect.atLocation(src).stretchTo(target);
-    else if (target) effect.attachTo(target);
+    if (target) effect.attachTo(target);
     else if (point) effect.atLocation(point);
     else return false;
     effect.scaleToObject(1).opacity(0.9);
     await seq.play();
-    console.log("[ADD2E][JB2A][WEAPON][PLAY]", { weapon: weapon?.name, preset, mode, file: files[0] });
+    console.log("[ADD2E][JB2A][WEAPON][PLAY]", { weapon: weapon?.name, preset, mode: "impact", file: files[0] });
     return true;
   } catch (e) {
     console.warn("[ADD2E][JB2A][WEAPON][ERROR] VFX d'arme ignoré pour ne pas bloquer l'attaque.", { weapon: weapon?.name, error: e });
