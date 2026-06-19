@@ -1,7 +1,37 @@
 {
-  "version": "2026-06-19-normalize-wizard-components-text-mining-v12",
+  "version": "2026-06-19-normalize-cleric-components-text-mining-v13",
   "input": "fvtt-spells-all-normalise-mecanique-v1.json",
   "output": "fvtt-spells-all-normalise-mecanique-v3.json",
+  "clercAuditFiles": [
+    {
+      "file": "audit\\decoupage_fichier\\clerc-niveau-1.json",
+      "items": 14
+    },
+    {
+      "file": "audit\\decoupage_fichier\\clerc-niveau-2.json",
+      "items": 12
+    },
+    {
+      "file": "audit\\decoupage_fichier\\clerc-niveau-3.json",
+      "items": 13
+    },
+    {
+      "file": "audit\\decoupage_fichier\\clerc-niveau-4.json",
+      "items": 12
+    },
+    {
+      "file": "audit\\decoupage_fichier\\clerc-niveau-5.json",
+      "items": 11
+    },
+    {
+      "file": "audit\\decoupage_fichier\\clerc-niveau-6.json",
+      "items": 10
+    },
+    {
+      "file": "audit\\decoupage_fichier\\clerc-niveau-7.json",
+      "items": 11
+    }
+  ],
   "magicienAuditFiles": [
     {
       "file": "audit\\decoupage_fichier\\magicien-niveau-1.json",
@@ -72,14 +102,13 @@
   ],
   "totalItems": 411,
   "spells": 411,
-  "preservedManualMaterials": 154,
+  "preservedManualMaterials": 78,
   "preservedClasses": [
-    "clerc",
     "druide"
   ],
-  "changedSpells": 188,
-  "changedEffectProfiles": 257,
-  "emptyMaterialSpells": 69,
+  "changedSpells": 237,
+  "changedEffectProfiles": 333,
+  "emptyMaterialSpells": 97,
   "examples": [
     {
       "name": "Abaissement des eaux",
@@ -108,6 +137,34 @@
         {
           "slug": "petite_fiole_de_poussiere",
           "nom": "petite fiole de poussière",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Abaissement des Eaux",
+      "classe": "Clerc",
+      "niveau": 4,
+      "before": [
+        "symbole sacré du clerc",
+        "1",
+        "non_consomme",
+        "Manuel des joueurs",
+        "pincée de poussière",
+        "consomme",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+      ],
+      "after": [
+        {
+          "slug": "symbole_sacre",
+          "nom": "Symbole sacré",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "pincee_de_poussiere",
+          "nom": "Pincée de poussière",
           "quantite": 1,
           "consomme": true
         }
@@ -213,6 +270,41 @@
       ]
     },
     {
+      "name": "Aquagenèse",
+      "classe": "Clerc",
+      "niveau": 1,
+      "before": [
+        "goutte d’eau",
+        "1",
+        "optionnel",
+        "Manuel des joueurs",
+        "Requise pour la création d’eau.",
+        "Alternative à une pincée de poussière.",
+        "pincée de poussière",
+        "Requise pour la destruction d’eau.",
+        "Alternative à une goutte d’eau."
+      ],
+      "after": [
+        {
+          "type": "alternative",
+          "choix": [
+            {
+              "slug": "goutte_d_eau",
+              "nom": "Goutte d’eau",
+              "quantite": 1,
+              "consomme": true
+            },
+            {
+              "slug": "pincee_de_poussiere",
+              "nom": "pincée de poussière",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "Arme enchantée",
       "classe": "Magicien",
       "niveau": 4,
@@ -241,6 +333,127 @@
       ]
     },
     {
+      "name": "Augure",
+      "classe": "Clerc",
+      "niveau": 2,
+      "before": [
+        "jeu de baguettes serties de gemmes",
+        "1",
+        "optionnel",
+        "Manuel des joueurs",
+        "Alternative : utiliser ce composant",
+        "des os de dragon",
+        "des objets divinatoires similaires ou des feuilles d’infusion encore humides.",
+        "Alternative aux os de dragon",
+        "aux objets similaires et aux feuilles d’infusion.",
+        "os de dragon",
+        "un jeu de baguettes serties de gemmes",
+        "Alternative au jeu de baguettes serties de gemmes",
+        "objets divinatoires similaires",
+        "des os de dragon ou des feuilles d’infusion encore humides.",
+        "aux os de dragon et aux feuilles d’infusion.",
+        "feuille d’infusion encore humides",
+        "Alternative aux objets divinatoires",
+        "cette méthode requiert aussi une perle écrasée d’au moins 100 po.",
+        "placées dans le récipient ayant servi pour l’infusion. Formulation source du Manuel : « feuilles d’infusion encore humides ».",
+        "perle écrasée d’au moins 100 po",
+        "100",
+        "Requise uniquement si la méthode des feuilles d’infusion encore humides est utilisée.",
+        "Requise uniquement avec la méthode des feuilles d’infusion",
+        "ajoutée à la boisson avant consommation."
+      ],
+      "after": [
+        {
+          "slug": "jeu_de_baguettes_serties_de_gemmes",
+          "nom": "jeu de baguettes serties de gemmes",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "os_de_dragon",
+          "nom": "os de dragon",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "type": "alternative",
+          "choix": [
+            {
+              "slug": "objets_divinatoires_similaires",
+              "nom": "objets divinatoires similaires",
+              "quantite": 1,
+              "consomme": true
+            },
+            {
+              "slug": "feuilles_d_infusion_encore_humides",
+              "nom": "feuilles d’infusion encore humides",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
+        },
+        {
+          "slug": "aux_objets_similaires",
+          "nom": "aux objets similaires",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "aux_feuilles_d_infusion",
+          "nom": "aux feuilles d’infusion",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "objets_divinatoires_similaires",
+          "nom": "objets divinatoires similaires",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "type": "alternative",
+          "choix": [
+            {
+              "slug": "os_de_dragon",
+              "nom": "os de dragon",
+              "quantite": 1,
+              "consomme": true
+            },
+            {
+              "slug": "feuilles_d_infusion_encore_humides",
+              "nom": "feuilles d’infusion encore humides",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
+        },
+        {
+          "slug": "aux_os_de_dragon",
+          "nom": "aux os de dragon",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "feuille_d_infusion_encore_humides",
+          "nom": "feuille d’infusion encore humides",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "perle_ecrasee_d_au_moins_100_po",
+          "nom": "perle écrasée d’au moins 100 po",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "ajoutee_a_la_boisson_avant_consommation",
+          "nom": "ajoutée à la boisson avant consommation",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
       "name": "Aura magique de Nystul",
       "classe": "Magicien",
       "niveau": 1,
@@ -258,6 +471,75 @@
           "nom": "soie",
           "quantite": 1,
           "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Bâtons à serpents",
+      "classe": "Clerc",
+      "niveau": 4,
+      "before": [
+        "petit morceau d’écorce",
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
+        "écailles de serpent",
+        "morceau d’écorce",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « petit morceau d’écorce »."
+      ],
+      "after": [
+        {
+          "slug": "petit_morceau_d_ecorce",
+          "nom": "petit morceau d’écorce",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "ecailles_de_serpent",
+          "nom": "écailles de serpent",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "morceau_d_ecorce",
+          "nom": "morceau d’écorce",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Bénédiction",
+      "classe": "Clerc",
+      "niveau": 1,
+      "before": [
+        "eau bénite",
+        "1",
+        "optionnel",
+        "Manuel des joueurs",
+        "Sort normal.",
+        "Liquide consommé.",
+        "eau maudite",
+        "Sort inversé : malédiction."
+      ],
+      "after": [
+        {
+          "type": "alternative",
+          "choix": [
+            {
+              "slug": "eau_benite",
+              "nom": "Eau bénite",
+              "quantite": 1,
+              "consomme": true
+            },
+            {
+              "slug": "maudite_pour_l_inverse",
+              "nom": "maudite pour l’inverse",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
         }
       ]
     },
@@ -431,8 +713,8 @@
       ],
       "after": [
         {
-          "slug": "laine",
-          "nom": "laine",
+          "slug": "morceau_de_laine",
+          "nom": "morceau de laine",
           "quantite": 1,
           "consomme": true
         },
@@ -531,6 +813,57 @@
       ]
     },
     {
+      "name": "Catalepsie",
+      "classe": "Clerc",
+      "niveau": 3,
+      "before": [
+        "pincée de poussière d’un cimetière",
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
+        "symbole sacré du clerc",
+        "non_consomme"
+      ],
+      "after": [
+        {
+          "slug": "pincee_de_poussiere_d_un_cimetiere",
+          "nom": "pincée de poussière d’un cimetière",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "symbole_sacre_du_clerc",
+          "nom": "symbole sacré du clerc",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Changement de Plan",
+      "classe": "Clerc",
+      "niveau": 5,
+      "before": [
+        "petite baguette fourchue métallique",
+        "sorte de diapason",
+        "1",
+        "non_consomme",
+        "Manuel des joueurs",
+        "Le type de métal et la taille déterminent le plan d’arrivée.",
+        "baguette fourchue métallique",
+        "Le type de métal et la taille déterminent le plan d’arrivée. Formulation source du Manuel : « petite baguette fourchue métallique"
+      ],
+      "after": [
+        {
+          "slug": "petite_baguette_fourchue_metallique",
+          "nom": "Petite baguette fourchue métallique",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
       "name": "Chaos",
       "classe": "Illusionniste",
       "niveau": 5,
@@ -597,22 +930,21 @@
           "consomme": true
         },
         {
-          "slug": "goutte_d_eau",
-          "nom": "goutte d’eau",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "feuille",
-          "nom": "feuille",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "brindille",
-          "nom": "brindille",
-          "quantite": 1,
-          "consomme": true
+          "type": "alternative",
+          "choix": [
+            {
+              "slug": "goutte_d_eau_et_une_feuille",
+              "nom": "goutte d’eau et une feuille",
+              "quantite": 1,
+              "consomme": true
+            },
+            {
+              "slug": "brindille",
+              "nom": "brindille",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
         }
       ]
     },
@@ -677,8 +1009,8 @@
       ],
       "after": [
         {
-          "slug": "sifflet_en_argent",
-          "nom": "sifflet en argent",
+          "slug": "petit_sifflet_en_argent",
+          "nom": "petit sifflet en argent",
           "quantite": 1,
           "consomme": true
         },
@@ -691,6 +1023,12 @@
         {
           "slug": "fil",
           "nom": "fil",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "sifflet_en_argent",
+          "nom": "sifflet en argent",
           "quantite": 1,
           "consomme": true
         }
@@ -821,6 +1159,29 @@
       ]
     },
     {
+      "name": "Communion",
+      "classe": "Clerc",
+      "niveau": 5,
+      "before": [
+        "symbole sacré du clerc",
+        "1",
+        "non_consomme",
+        "Manuel des joueurs",
+        "eau bénite",
+        "consomme",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
+        "encens"
+      ],
+      "after": [
+        {
+          "slug": "symbole_sacre",
+          "nom": "Symbole sacré",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
       "name": "Compréhension des langues",
       "classe": "Magicien",
       "niveau": 1,
@@ -908,6 +1269,20 @@
       ]
     },
     {
+      "name": "Contre-poison",
+      "classe": "Clerc",
+      "niveau": 4,
+      "before": [],
+      "after": [
+        {
+          "slug": "a_completer",
+          "nom": "a completer",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
       "name": "Contrôle du climat",
       "classe": "Magicien",
       "niveau": 6,
@@ -941,6 +1316,36 @@
         {
           "slug": "eau",
           "nom": "eau",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Contrôle du Climat",
+      "classe": "Clerc",
+      "niveau": 7,
+      "before": [
+        "symbole sacré du clerc",
+        "1",
+        "non_consomme",
+        "Manuel des joueurs",
+        "chapelet de prière",
+        "optionnel",
+        "Alternative à un objet similaire.",
+        "objet similaire au chapelet de prière",
+        "Alternative au chapelet de prière."
+      ],
+      "after": [
+        {
+          "slug": "symbole_sacre",
+          "nom": "Symbole sacré",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "son_chapelet_de_priere",
+          "nom": "Son chapelet de prière",
           "quantite": 1,
           "consomme": true
         }
@@ -1187,6 +1592,32 @@
     },
     {
       "name": "Détection de la magie",
+      "classe": "Clerc",
+      "niveau": 1,
+      "before": [
+        "symbole sacré du clerc",
+        "1",
+        "non_consomme",
+        "Manuel des joueurs",
+        "Source JSON : symbole sacré requis."
+      ],
+      "after": [
+        {
+          "slug": "symbole_sacre_du_clerc",
+          "nom": "symbole sacré du clerc",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "source_json_symbole_sacre_requis",
+          "nom": "Source JSON : symbole sacré requis",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Détection de la magie",
       "classe": "Magicien",
       "niveau": 1,
       "before": [],
@@ -1261,6 +1692,32 @@
       ]
     },
     {
+      "name": "Détection des Mensonges",
+      "classe": "Clerc",
+      "niveau": 4,
+      "before": [
+        "poussière de laiton",
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Sort inversé : dissimulation des mensonges."
+      ],
+      "after": [
+        {
+          "slug": "poussiere_de_laiton",
+          "nom": "Poussière de laiton",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "poussiere_d_or",
+          "nom": "Poussière d’or",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
       "name": "Détection du mal",
       "classe": "Magicien",
       "niveau": 2,
@@ -1269,6 +1726,26 @@
         {
           "slug": "a_completer",
           "nom": "a completer",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Détection du mal",
+      "classe": "Clerc",
+      "niveau": 1,
+      "before": [
+        "symbole sacré du clerc",
+        "1",
+        "non_consomme",
+        "Manuel des joueurs",
+        "Source JSON : symbole sacré tenu devant le lanceur."
+      ],
+      "after": [
+        {
+          "slug": "son_symbole_sacre",
+          "nom": "Son symbole sacré",
           "quantite": 1,
           "consomme": true
         }
@@ -1311,6 +1788,32 @@
       ]
     },
     {
+      "name": "Dissipation du Mal",
+      "classe": "Clerc",
+      "niveau": 5,
+      "before": [
+        "symbole sacré du clerc",
+        "1",
+        "non_consomme",
+        "Manuel des joueurs",
+        "eau bénite",
+        "optionnel",
+        "Requise pour dissipation du mal",
+        "alternative à l’eau maudite.",
+        "eau maudite",
+        "Requise pour dissipation du bien",
+        "alternative à l’eau bénite."
+      ],
+      "after": [
+        {
+          "slug": "symbole_sacre",
+          "nom": "Symbole sacré",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
       "name": "Distorsion des distances",
       "classe": "Magicien",
       "niveau": 5,
@@ -1327,6 +1830,43 @@
         {
           "slug": "argile_grasse",
           "nom": "argile grasse",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Divination",
+      "classe": "Clerc",
+      "niveau": 4,
+      "before": [
+        "petite créature",
+        "1",
+        "consomme",
+        "Manuel des joueurs",
+        "Sacrifiée pour lancer le sort.",
+        "encens",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
+        "symbole sacré du clerc",
+        "non_consomme",
+        "pierres précieuses",
+        "optionnel",
+        "Dons requis si une divination puissante est tentée.",
+        "objets magiques",
+        "Dons éventuellement requis si une divination puissante est tentée.",
+        "créature",
+        "Sacrifiée pour lancer le sort. Formulation source du Manuel : « petite créature »."
+      ],
+      "after": [
+        {
+          "slug": "sacrifice_d_une_petite_creature",
+          "nom": "Sacrifice d’une petite créature",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "l_encens_et_le_symbole_sacre_du_clerc",
+          "nom": "L’encens et le symbole sacré du clerc",
           "quantite": 1,
           "consomme": true
         }
@@ -1551,14 +2091,26 @@
       ],
       "after": [
         {
-          "slug": "epee_miniature_en_platine",
-          "nom": "épée miniature en platine",
+          "slug": "epee_miniature_en_platine_avec_poignee",
+          "nom": "épée miniature en platine avec poignée",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "pommeau_en_cuivre",
+          "nom": "pommeau en cuivre",
           "quantite": 1,
           "consomme": true
         },
         {
           "slug": "zinc",
           "nom": "zinc",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "disparait_quand_le_sort_est_lance",
+          "nom": "Disparaît quand le sort est lancé",
           "quantite": 1,
           "consomme": true
         }
@@ -1620,6 +2172,64 @@
       ]
     },
     {
+      "name": "Exorcisme",
+      "classe": "Clerc",
+      "niveau": 4,
+      "before": [
+        "symbole sacré du clerc",
+        "1",
+        "non_consomme",
+        "Manuel des joueurs",
+        "eau bénite",
+        "optionnel",
+        "Clerc non mauvais.",
+        "Liquide consommé.",
+        "eau maudite",
+        "Clerc mauvais."
+      ],
+      "after": [
+        {
+          "slug": "symbole_sacre",
+          "nom": "Symbole sacré",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Expiation",
+      "classe": "Clerc",
+      "niveau": 5,
+      "before": [
+        "symbole sacré du clerc",
+        "1",
+        "non_consomme",
+        "Manuel des joueurs",
+        "chapelet",
+        "optionnel",
+        "Alternative au livre de prière.",
+        "livre de prière",
+        "Alternative au chapelet.",
+        "encens",
+        "consomme",
+        "Encens à brûler."
+      ],
+      "after": [
+        {
+          "slug": "symbole_sacre",
+          "nom": "Symbole sacré",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "son_chapelet",
+          "nom": "Son chapelet",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
       "name": "Feu charmeur",
       "classe": "Magicien",
       "niveau": 4,
@@ -1642,416 +2252,24 @@
       ]
     },
     {
-      "name": "Flèche de feu",
-      "classe": "Magicien",
-      "niveau": 3,
-      "before": [
-        "goutte d’huile",
-        "1",
-        "consomme",
-        "Manuel des joueurs",
-        "morceau de silex",
-        "non_consomme",
-        "Formulation source du Manuel : « petit morceau de silex »."
-      ],
-      "after": [
-        {
-          "slug": "goutte_d_huile",
-          "nom": "goutte d’huile",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "silex",
-          "nom": "silex",
-          "quantite": 1,
-          "consomme": true
-        }
-      ]
-    },
-    {
-      "name": "Force",
-      "classe": "Magicien",
-      "niveau": 2,
-      "before": [
-        "quelques cheveux ou un peu d’excrément d’un animal particulièrement fort — singe",
-        "ours",
-        "bœuf",
-        "etc",
-        "1",
-        "optionnel",
-        "Manuel des joueurs",
-        "Composant requis selon l’alternative ou la variante choisie.",
-        "Alternative ou variante explicitement indiquée par le Manuel.",
-        "cheveux ou un peu d’excrément d’un animal particulièrement fort — singe",
-        "Alternative ou variante explicitement indiquée par le Manuel. Formulation source du Manuel : « quelques cheveux ou un peu d’excrément d’un animal particulièrement fort — singe"
-      ],
-      "after": [
-        {
-          "slug": "cheveux",
-          "nom": "cheveux",
-          "quantite": 1,
-          "consomme": true
-        }
-      ]
-    },
-    {
-      "name": "Force fantasmagorique",
-      "classe": "Illusionniste",
-      "niveau": 1,
-      "before": [],
-      "after": [
-        {
-          "slug": "morceau_de_toison_de_mouton",
-          "nom": "morceau de toison de mouton",
-          "quantite": 1,
-          "consomme": true
-        }
-      ]
-    },
-    {
-      "name": "Force fantasmagorique",
-      "classe": "Magicien",
-      "niveau": 3,
-      "before": [
-        "un morceau de toison de mouton",
-        "1",
-        "consomme",
-        "Manuel des joueurs",
-        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
-        "morceau de toison de mouton",
-        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « un morceau de toison de mouton »."
-      ],
-      "after": [
-        {
-          "slug": "toison_de_mouton",
-          "nom": "toison de mouton",
-          "quantite": 1,
-          "consomme": true
-        }
-      ]
-    },
-    {
-      "name": "Force fantasmagorique améliorée",
-      "classe": "Illusionniste",
-      "niveau": 2,
-      "before": [],
-      "after": [
-        {
-          "slug": "morceau_de_laine",
-          "nom": "morceau de laine",
-          "quantite": 1,
-          "consomme": true
-        }
-      ]
-    },
-    {
-      "name": "Force spectrale",
-      "classe": "Illusionniste",
-      "niveau": 3,
-      "before": [],
-      "after": [
-        {
-          "slug": "morceau_de_laine",
-          "nom": "morceau de laine",
-          "quantite": 1,
-          "consomme": true
-        }
-      ]
-    },
-    {
-      "name": "Foudre",
-      "classe": "Magicien",
-      "niveau": 3,
-      "before": [
-        "fourrure",
-        "1",
-        "consomme",
-        "Manuel des joueurs",
-        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
-        "baguette de verre",
-        "de cristal ou d’ambre",
-        "non_consomme"
-      ],
-      "after": [
-        {
-          "slug": "morceau_de_fourrure",
-          "nom": "morceau de fourrure",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "type": "alternative",
-          "choix": [
-            {
-              "slug": "baguette_de_verre",
-              "nom": "baguette de verre",
-              "quantite": 1,
-              "consomme": false
-            },
-            {
-              "slug": "baguette_de_cristal",
-              "nom": "baguette de cristal",
-              "quantite": 1,
-              "consomme": false
-            },
-            {
-              "slug": "baguette_d_ambre",
-              "nom": "baguette d’ambre",
-              "quantite": 1,
-              "consomme": false
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Fracassement",
-      "classe": "Magicien",
-      "niveau": 2,
-      "before": [
-        "un éclat de mica",
-        "1",
-        "consomme",
-        "Manuel des joueurs",
-        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
-        "éclat de mica",
-        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « un éclat de mica »."
-      ],
-      "after": [
-        {
-          "slug": "eclat_de_mica",
-          "nom": "Éclat de mica",
-          "quantite": 1,
-          "consomme": true
-        }
-      ]
-    },
-    {
-      "name": "Glissement de terrain",
-      "classe": "Magicien",
-      "niveau": 6,
-      "before": [
-        "mélange de terre",
-        "argile",
-        "terreau ou sable",
-        "1",
-        "consomme",
-        "Manuel des joueurs",
-        "petit sac",
-        "non_consomme",
-        "lame en fer",
-        "sac",
-        "Formulation source du Manuel : « petit sac »."
-      ],
-      "after": [
-        {
-          "slug": "melange_de_terre",
-          "nom": "mélange de terre",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "petit_sac",
-          "nom": "petit sac",
-          "quantite": 1,
-          "consomme": false
-        },
-        {
-          "slug": "lame_en_fer",
-          "nom": "lame en fer",
-          "quantite": 1,
-          "consomme": false
-        }
-      ]
-    },
-    {
-      "name": "Globe d’invulnérabilité",
-      "classe": "Magicien",
-      "niveau": 6,
-      "before": [],
-      "after": [
-        {
-          "type": "alternative",
-          "choix": [
-            {
-              "slug": "perle_de_verre",
-              "nom": "perle de verre",
-              "quantite": 1,
-              "consomme": true
-            },
-            {
-              "slug": "perle_de_cristal",
-              "nom": "perle de cristal",
-              "quantite": 1,
-              "consomme": true
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Globe mineur d’invulnérabilité",
-      "classe": "Magicien",
-      "niveau": 4,
-      "before": [
-        "perle de verre",
-        "1",
-        "optionnel",
-        "Manuel des joueurs",
-        "Alternative à une perle de cristal.",
-        "perle de cristal",
-        "Alternative à une perle de verre."
-      ],
-      "after": [
-        {
-          "type": "alternative",
-          "choix": [
-            {
-              "slug": "perle_de_verre",
-              "nom": "perle de verre",
-              "quantite": 1,
-              "consomme": true
-            },
-            {
-              "slug": "de_cristal",
-              "nom": "de cristal",
-              "quantite": 1,
-              "consomme": true
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Hétéromorphisme",
-      "classe": "Magicien",
-      "niveau": 9,
-      "before": [
-        "petite couronne de jade",
-        "1",
-        "consomme",
-        "5000",
-        "Manuel des joueurs",
-        "Se brise pendant l’incantation.",
-        "couronne de jade",
-        "Se brise pendant l’incantation. Formulation source du Manuel : « petite couronne de jade »."
-      ],
-      "after": [
-        {
-          "slug": "petite_couronne_de_jade",
-          "nom": "Petite couronne de jade",
-          "quantite": 1,
-          "consomme": true
-        }
-      ]
-    },
-    {
-      "name": "Holographie",
-      "classe": "Illusionniste",
+      "name": "Fléau d’Insectes",
+      "classe": "Clerc",
       "niveau": 5,
-      "before": [],
-      "after": [
-        {
-          "slug": "petite_replique_du_magicien",
-          "nom": "petite réplique du magicien",
-          "quantite": 1,
-          "consomme": false
-        }
-      ]
-    },
-    {
-      "name": "Holographie",
-      "classe": "Magicien",
-      "niveau": 6,
       "before": [
-        "une petite réplique (poupée) du magicien",
-        "1",
-        "non_consomme",
-        "Manuel des joueurs",
-        "Objet durable ou focus utilisé sans destruction indiquée.",
-        "réplique (poupée) du magicien",
-        "Objet durable ou focus utilisé sans destruction indiquée. Formulation source du Manuel : « une petite réplique (poupée) du magicien »."
-      ],
-      "after": [
-        {
-          "slug": "petite_replique_du_magicien",
-          "nom": "petite réplique du magicien",
-          "quantite": 1,
-          "consomme": false
-        }
-      ]
-    },
-    {
-      "name": "Identification",
-      "classe": "Magicien",
-      "niveau": 1,
-      "before": [
-        "perle",
+        "grains de sucre",
         "1",
         "consomme",
-        "100",
         "Manuel des joueurs",
-        "plume de hibou trempée dans du vin",
-        "vin",
-        "carpe miniature vivante",
-        "pierre porte-bonheur réduite en poudre",
-        "optionnel",
-        "Option permettant d’augmenter la chance de succès.",
-        "Réduite en poudre et ajoutée à l’infusion."
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée.",
+        "amandes",
+        "matière grasse",
+        "grain de sucre",
+        "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « grains de sucre »."
       ],
       "after": [
         {
-          "slug": "perle",
-          "nom": "Perle",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "plume_de_hibou_trempee_dans_du_vin",
-          "nom": "Plume de hibou trempée dans du vin",
-          "quantite": 1,
-          "consomme": true
-        }
-      ]
-    },
-    {
-      "name": "Illusion permanente",
-      "classe": "Illusionniste",
-      "niveau": 6,
-      "before": [],
-      "after": [
-        {
-          "slug": "morceau_de_laine",
-          "nom": "morceau de laine",
-          "quantite": 1,
-          "consomme": true
-        }
-      ]
-    },
-    {
-      "name": "Illusion programmée",
-      "classe": "Illusionniste",
-      "niveau": 6,
-      "before": [],
-      "after": [
-        {
-          "slug": "morceau_de_laine",
-          "nom": "morceau de laine",
-          "quantite": 1,
-          "consomme": true
-        }
-      ]
-    },
-    {
-      "name": "Image miroir",
-      "classe": "Illusionniste",
-      "niveau": 2,
-      "before": [],
-      "after": [
-        {
-          "slug": "a_completer",
-          "nom": "a completer",
+          "slug": "amandes",
+          "nom": "Amandes",
           "quantite": 1,
           "consomme": true
         }
@@ -2092,6 +2310,43 @@
               "niveau:6"
             ],
             "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Abaissement des Eaux": {
+      "classe": "Clerc",
+      "niveau": 4,
+      "composants_materiels": [
+        {
+          "slug": "symbole_sacre",
+          "nom": "Symbole sacré",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "pincee_de_poussiere",
+          "nom": "Pincée de poussière",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n4",
+        "effects": [
+          {
+            "id": "abaissement_des_eaux",
+            "label": "Abaissement des Eaux",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:abaissement_des_eaux",
+              "classe:clerc",
+              "niveau:4"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       }
@@ -2268,6 +2523,31 @@
         ]
       }
     },
+    "Animation des objets": {
+      "classe": "Clerc",
+      "niveau": 6,
+      "composants_materiels": [],
+      "composantes": "V, S",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n6",
+        "effects": [
+          {
+            "id": "animation_des_objets",
+            "label": "Animation des objets",
+            "kind": "summon_or_actor_effect",
+            "automation": "actor_creation_or_mj_aid",
+            "tags": [
+              "effet:animation_des_objets",
+              "classe:clerc",
+              "invocation_ou_creation",
+              "niveau:6"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
     "Antipathie/sympathie": {
       "classe": "Magicien",
       "niveau": 8,
@@ -2295,6 +2575,72 @@
               "niveau:8"
             ],
             "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Apaisement": {
+      "classe": "Clerc",
+      "niveau": 1,
+      "composants_materiels": [],
+      "composantes": "V, S",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n1",
+        "effects": [
+          {
+            "id": "apaisement",
+            "label": "Apaisement",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:apaisement",
+              "classe:clerc",
+              "niveau:1"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Aquagenèse": {
+      "classe": "Clerc",
+      "niveau": 1,
+      "composants_materiels": [
+        {
+          "type": "alternative",
+          "choix": [
+            {
+              "slug": "goutte_d_eau",
+              "nom": "Goutte d’eau",
+              "quantite": 1,
+              "consomme": true
+            },
+            {
+              "slug": "pincee_de_poussiere",
+              "nom": "pincée de poussière",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n1",
+        "effects": [
+          {
+            "id": "aquagenese",
+            "label": "Aquagenèse",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:aquagenese",
+              "classe:clerc",
+              "niveau:1"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       }
@@ -2360,6 +2706,120 @@
         ]
       }
     },
+    "Augure": {
+      "classe": "Clerc",
+      "niveau": 2,
+      "composants_materiels": [
+        {
+          "slug": "jeu_de_baguettes_serties_de_gemmes",
+          "nom": "jeu de baguettes serties de gemmes",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "os_de_dragon",
+          "nom": "os de dragon",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "type": "alternative",
+          "choix": [
+            {
+              "slug": "objets_divinatoires_similaires",
+              "nom": "objets divinatoires similaires",
+              "quantite": 1,
+              "consomme": true
+            },
+            {
+              "slug": "feuilles_d_infusion_encore_humides",
+              "nom": "feuilles d’infusion encore humides",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
+        },
+        {
+          "slug": "aux_objets_similaires",
+          "nom": "aux objets similaires",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "aux_feuilles_d_infusion",
+          "nom": "aux feuilles d’infusion",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "objets_divinatoires_similaires",
+          "nom": "objets divinatoires similaires",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "type": "alternative",
+          "choix": [
+            {
+              "slug": "os_de_dragon",
+              "nom": "os de dragon",
+              "quantite": 1,
+              "consomme": true
+            },
+            {
+              "slug": "feuilles_d_infusion_encore_humides",
+              "nom": "feuilles d’infusion encore humides",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
+        },
+        {
+          "slug": "aux_os_de_dragon",
+          "nom": "aux os de dragon",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "feuille_d_infusion_encore_humides",
+          "nom": "feuille d’infusion encore humides",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "perle_ecrasee_d_au_moins_100_po",
+          "nom": "perle écrasée d’au moins 100 po",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "ajoutee_a_la_boisson_avant_consommation",
+          "nom": "ajoutée à la boisson avant consommation",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n2",
+        "effects": [
+          {
+            "id": "augure",
+            "label": "Augure",
+            "kind": "detection_or_divination",
+            "automation": "mj_aid",
+            "tags": [
+              "effet:augure",
+              "classe:clerc",
+              "detection_ou_divination",
+              "niveau:2"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
     "Aura magique de Nystul": {
       "classe": "Magicien",
       "niveau": 1,
@@ -2411,6 +2871,115 @@
               "niveau:4"
             ],
             "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Barrière de Lames": {
+      "classe": "Clerc",
+      "niveau": 6,
+      "composants_materiels": [],
+      "composantes": "V, S",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n6",
+        "effects": [
+          {
+            "id": "barriere_de_lames",
+            "label": "Barrière de Lames",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:barriere_de_lames",
+              "classe:clerc",
+              "niveau:6"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Bâtons à serpents": {
+      "classe": "Clerc",
+      "niveau": 4,
+      "composants_materiels": [
+        {
+          "slug": "petit_morceau_d_ecorce",
+          "nom": "petit morceau d’écorce",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "ecailles_de_serpent",
+          "nom": "écailles de serpent",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "morceau_d_ecorce",
+          "nom": "morceau d’écorce",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n4",
+        "effects": [
+          {
+            "id": "batons_a_serpents",
+            "label": "Bâtons à serpents",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:batons_a_serpents",
+              "classe:clerc",
+              "niveau:4"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Bénédiction": {
+      "classe": "Clerc",
+      "niveau": 1,
+      "composants_materiels": [
+        {
+          "type": "alternative",
+          "choix": [
+            {
+              "slug": "eau_benite",
+              "nom": "Eau bénite",
+              "quantite": 1,
+              "consomme": true
+            },
+            {
+              "slug": "maudite_pour_l_inverse",
+              "nom": "maudite pour l’inverse",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n1",
+        "effects": [
+          {
+            "id": "benediction",
+            "label": "Bénédiction",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:benediction",
+              "classe:clerc",
+              "niveau:1"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       }
@@ -2741,13 +3310,43 @@
         ]
       }
     },
+    "Cantique": {
+      "classe": "Clerc",
+      "niveau": 2,
+      "composants_materiels": [],
+      "composantes": "V, S",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n2",
+        "effects": [
+          {
+            "id": "cantique",
+            "label": "Cantique",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:cantique",
+              "classe:clerc",
+              "niveau:2"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
     "Catalepsie": {
-      "classe": "Magicien",
+      "classe": "Clerc",
       "niveau": 3,
       "composants_materiels": [
         {
-          "slug": "a_completer",
-          "nom": "a completer",
+          "slug": "pincee_de_poussiere_d_un_cimetiere",
+          "nom": "pincée de poussière d’un cimetière",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "symbole_sacre_du_clerc",
+          "nom": "symbole sacré du clerc",
           "quantite": 1,
           "consomme": true
         }
@@ -2755,19 +3354,19 @@
       "composantes": "V, S, M",
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
-        "source": "manual-normalized-magicien-n3",
+        "source": "manual-normalized-clerc-n3",
         "effects": [
           {
             "id": "catalepsie",
             "label": "Catalepsie",
-            "kind": "magicien_effect",
+            "kind": "clerc_effect",
             "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:catalepsie",
-              "classe:magicien",
+              "classe:clerc",
               "niveau:3"
             ],
-            "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       }
@@ -2818,6 +3417,37 @@
               "niveau:1"
             ],
             "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Changement de Plan": {
+      "classe": "Clerc",
+      "niveau": 5,
+      "composants_materiels": [
+        {
+          "slug": "petite_baguette_fourchue_metallique",
+          "nom": "Petite baguette fourchue métallique",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n5",
+        "effects": [
+          {
+            "id": "changement_de_plan",
+            "label": "Changement de Plan",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:changement_de_plan",
+              "classe:clerc",
+              "niveau:5"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       }
@@ -2946,22 +3576,21 @@
           "consomme": true
         },
         {
-          "slug": "goutte_d_eau",
-          "nom": "goutte d’eau",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "feuille",
-          "nom": "feuille",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "brindille",
-          "nom": "brindille",
-          "quantite": 1,
-          "consomme": true
+          "type": "alternative",
+          "choix": [
+            {
+              "slug": "goutte_d_eau_et_une_feuille",
+              "nom": "goutte d’eau et une feuille",
+              "quantite": 1,
+              "consomme": true
+            },
+            {
+              "slug": "brindille",
+              "nom": "brindille",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
         }
       ],
       "composantes": "V, S, M",
@@ -2981,6 +3610,31 @@
               "niveau:7"
             ],
             "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Charme-Serpents": {
+      "classe": "Clerc",
+      "niveau": 2,
+      "composants_materiels": [],
+      "composantes": "V, S",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n2",
+        "effects": [
+          {
+            "id": "charme_serpents",
+            "label": "Charme-Serpents",
+            "kind": "communication_or_control",
+            "automation": "mj_aid",
+            "tags": [
+              "effet:charme_serpents",
+              "classe:clerc",
+              "communication_ou_controle",
+              "niveau:2"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       }
@@ -3052,8 +3706,8 @@
       "niveau": 5,
       "composants_materiels": [
         {
-          "slug": "sifflet_en_argent",
-          "nom": "sifflet en argent",
+          "slug": "petit_sifflet_en_argent",
+          "nom": "petit sifflet en argent",
           "quantite": 1,
           "consomme": true
         },
@@ -3066,6 +3720,12 @@
         {
           "slug": "fil",
           "nom": "fil",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "sifflet_en_argent",
+          "nom": "sifflet en argent",
           "quantite": 1,
           "consomme": true
         }
@@ -3264,6 +3924,38 @@
         ]
       }
     },
+    "Communion": {
+      "classe": "Clerc",
+      "niveau": 5,
+      "composants_materiels": [
+        {
+          "slug": "symbole_sacre",
+          "nom": "Symbole sacré",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n5",
+        "effects": [
+          {
+            "id": "communion",
+            "label": "Communion",
+            "kind": "detection_or_divination",
+            "automation": "mj_aid",
+            "tags": [
+              "effet:communion",
+              "classe:clerc",
+              "detection_ou_divination",
+              "niveau:5"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
     "Compréhension des langues": {
       "classe": "Magicien",
       "niveau": 1,
@@ -3394,6 +4086,37 @@
         ]
       }
     },
+    "Contre-poison": {
+      "classe": "Clerc",
+      "niveau": 4,
+      "composants_materiels": [
+        {
+          "slug": "a_completer",
+          "nom": "a completer",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n4",
+        "effects": [
+          {
+            "id": "contre_poison",
+            "label": "Contre-poison",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:contre_poison",
+              "classe:clerc",
+              "niveau:4"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
     "Contrôle du climat": {
       "classe": "Magicien",
       "niveau": 6,
@@ -3439,6 +4162,43 @@
               "niveau:6"
             ],
             "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Contrôle du Climat": {
+      "classe": "Clerc",
+      "niveau": 7,
+      "composants_materiels": [
+        {
+          "slug": "symbole_sacre",
+          "nom": "Symbole sacré",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "son_chapelet_de_priere",
+          "nom": "Son chapelet de prière",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n7",
+        "effects": [
+          {
+            "id": "controle_du_climat",
+            "label": "Contrôle du Climat",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:controle_du_climat",
+              "classe:clerc",
+              "niveau:7"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       }
@@ -3861,6 +4621,31 @@
         ]
       }
     },
+    "Détection des Charmes": {
+      "classe": "Clerc",
+      "niveau": 2,
+      "composants_materiels": [],
+      "composantes": "V, S",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n2",
+        "effects": [
+          {
+            "id": "detection_des_charmes",
+            "label": "Détection des Charmes",
+            "kind": "detection_or_divination",
+            "automation": "mj_aid",
+            "tags": [
+              "effet:detection_des_charmes",
+              "classe:clerc",
+              "detection_ou_divination",
+              "niveau:2"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
     "Détection des illusions": {
       "classe": "Illusionniste",
       "niveau": 1,
@@ -3916,13 +4701,19 @@
         ]
       }
     },
-    "Détection du mal": {
-      "classe": "Magicien",
-      "niveau": 2,
+    "Détection des Mensonges": {
+      "classe": "Clerc",
+      "niveau": 4,
       "composants_materiels": [
         {
-          "slug": "a_completer",
-          "nom": "a completer",
+          "slug": "poussiere_de_laiton",
+          "nom": "Poussière de laiton",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "poussiere_d_or",
+          "nom": "Poussière d’or",
           "quantite": 1,
           "consomme": true
         }
@@ -3930,7 +4721,64 @@
       "composantes": "V, S, M",
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
-        "source": "manual-normalized-magicien-n2",
+        "source": "manual-normalized-clerc-n4",
+        "effects": [
+          {
+            "id": "detection_des_mensonges",
+            "label": "Détection des Mensonges",
+            "kind": "detection_or_divination",
+            "automation": "mj_aid",
+            "tags": [
+              "effet:detection_des_mensonges",
+              "classe:clerc",
+              "detection_ou_divination",
+              "niveau:4"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Détection des Pièges": {
+      "classe": "Clerc",
+      "niveau": 2,
+      "composants_materiels": [],
+      "composantes": "V, S",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n2",
+        "effects": [
+          {
+            "id": "detection_des_pieges",
+            "label": "Détection des Pièges",
+            "kind": "detection_or_divination",
+            "automation": "mj_aid",
+            "tags": [
+              "effet:detection_des_pieges",
+              "classe:clerc",
+              "detection_ou_divination",
+              "niveau:2"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Détection du mal": {
+      "classe": "Clerc",
+      "niveau": 1,
+      "composants_materiels": [
+        {
+          "slug": "son_symbole_sacre",
+          "nom": "Son symbole sacré",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n1",
         "effects": [
           {
             "id": "detection_du_mal",
@@ -3939,11 +4787,11 @@
             "automation": "mj_aid",
             "tags": [
               "effet:detection_du_mal",
-              "classe:magicien",
+              "classe:clerc",
               "detection_ou_divination",
-              "niveau:2"
+              "niveau:1"
             ],
-            "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       }
@@ -4058,6 +4906,30 @@
         ]
       }
     },
+    "Dissipation de la Magie": {
+      "classe": "Clerc",
+      "niveau": 3,
+      "composants_materiels": [],
+      "composantes": "V, S",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n3",
+        "effects": [
+          {
+            "id": "dissipation_de_la_magie",
+            "label": "Dissipation de la Magie",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:dissipation_de_la_magie",
+              "classe:clerc",
+              "niveau:3"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
     "Dissipation des illusions": {
       "classe": "Illusionniste",
       "niveau": 3,
@@ -4079,6 +4951,37 @@
               "niveau:3"
             ],
             "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Dissipation du Mal": {
+      "classe": "Clerc",
+      "niveau": 5,
+      "composants_materiels": [
+        {
+          "slug": "symbole_sacre",
+          "nom": "Symbole sacré",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n5",
+        "effects": [
+          {
+            "id": "dissipation_du_mal",
+            "label": "Dissipation du Mal",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:dissipation_du_mal",
+              "classe:clerc",
+              "niveau:5"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       }
@@ -4110,6 +5013,44 @@
               "niveau:5"
             ],
             "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Divination": {
+      "classe": "Clerc",
+      "niveau": 4,
+      "composants_materiels": [
+        {
+          "slug": "sacrifice_d_une_petite_creature",
+          "nom": "Sacrifice d’une petite créature",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "l_encens_et_le_symbole_sacre_du_clerc",
+          "nom": "L’encens et le symbole sacré du clerc",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n4",
+        "effects": [
+          {
+            "id": "divination",
+            "label": "Divination",
+            "kind": "detection_or_divination",
+            "automation": "mj_aid",
+            "tags": [
+              "effet:divination",
+              "classe:clerc",
+              "detection_ou_divination",
+              "niveau:4"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       }
@@ -4500,14 +5441,26 @@
       "niveau": 7,
       "composants_materiels": [
         {
-          "slug": "epee_miniature_en_platine",
-          "nom": "épée miniature en platine",
+          "slug": "epee_miniature_en_platine_avec_poignee",
+          "nom": "épée miniature en platine avec poignée",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "pommeau_en_cuivre",
+          "nom": "pommeau en cuivre",
           "quantite": 1,
           "consomme": true
         },
         {
           "slug": "zinc",
           "nom": "zinc",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "disparait_quand_le_sort_est_lance",
+          "nom": "Disparaît quand le sort est lancé",
           "quantite": 1,
           "consomme": true
         }
@@ -4602,6 +5555,74 @@
               "niveau:4"
             ],
             "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Exorcisme": {
+      "classe": "Clerc",
+      "niveau": 4,
+      "composants_materiels": [
+        {
+          "slug": "symbole_sacre",
+          "nom": "Symbole sacré",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n4",
+        "effects": [
+          {
+            "id": "exorcisme",
+            "label": "Exorcisme",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:exorcisme",
+              "classe:clerc",
+              "niveau:4"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Expiation": {
+      "classe": "Clerc",
+      "niveau": 5,
+      "composants_materiels": [
+        {
+          "slug": "symbole_sacre",
+          "nom": "Symbole sacré",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "son_chapelet",
+          "nom": "Son chapelet",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n5",
+        "effects": [
+          {
+            "id": "expiation",
+            "label": "Expiation",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:expiation",
+              "classe:clerc",
+              "niveau:5"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       }
@@ -4734,6 +5755,38 @@
         ]
       }
     },
+    "Fléau d’Insectes": {
+      "classe": "Clerc",
+      "niveau": 5,
+      "composants_materiels": [
+        {
+          "slug": "amandes",
+          "nom": "Amandes",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n5",
+        "effects": [
+          {
+            "id": "fleau_d_insectes",
+            "label": "Fléau d’Insectes",
+            "kind": "summon_or_actor_effect",
+            "automation": "actor_creation_or_mj_aid",
+            "tags": [
+              "effet:fleau_d_insectes",
+              "classe:clerc",
+              "invocation_ou_creation",
+              "niveau:5"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
     "Flèche de feu": {
       "classe": "Magicien",
       "niveau": 3,
@@ -4808,8 +5861,8 @@
       "niveau": 3,
       "composants_materiels": [
         {
-          "slug": "toison_de_mouton",
-          "nom": "toison de mouton",
+          "slug": "morceau_de_toison_de_mouton",
+          "nom": "morceau de toison de mouton",
           "quantite": 1,
           "consomme": true
         }
@@ -5107,6 +6160,119 @@
               "niveau:4"
             ],
             "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Glyphe de Garde": {
+      "classe": "Clerc",
+      "niveau": 3,
+      "composants_materiels": [
+        {
+          "slug": "symbole_sacre_du_clerc",
+          "nom": "Symbole sacré du clerc",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n3",
+        "effects": [
+          {
+            "id": "glyphe_de_garde",
+            "label": "Glyphe de Garde",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:glyphe_de_garde",
+              "classe:clerc",
+              "niveau:3"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Guérison": {
+      "classe": "Clerc",
+      "niveau": 6,
+      "composants_materiels": [],
+      "composantes": "V, S",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n6",
+        "effects": [
+          {
+            "id": "guerison",
+            "label": "Guérison",
+            "kind": "healing_or_restoration",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:guerison",
+              "classe:clerc",
+              "soin_ou_restauration",
+              "niveau:6"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Guérison de la Cécité": {
+      "classe": "Clerc",
+      "niveau": 3,
+      "composants_materiels": [],
+      "composantes": "V, S",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n3",
+        "effects": [
+          {
+            "id": "guerison_de_la_cecite",
+            "label": "Guérison de la Cécité",
+            "kind": "healing_or_restoration",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:guerison_de_la_cecite",
+              "classe:clerc",
+              "soin_ou_restauration",
+              "niveau:3"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Guérison des Maladies": {
+      "classe": "Clerc",
+      "niveau": 3,
+      "composants_materiels": [
+        {
+          "slug": "gui_druidique",
+          "nom": "gui druidique",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n3",
+        "effects": [
+          {
+            "id": "guerison_des_maladies",
+            "label": "Guérison des Maladies",
+            "kind": "healing_or_restoration",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:guerison_des_maladies",
+              "classe:clerc",
+              "soin_ou_restauration",
+              "niveau:3"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       }
@@ -5430,6 +6596,30 @@
               "niveau:3"
             ],
             "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Injonction": {
+      "classe": "Clerc",
+      "niveau": 1,
+      "composants_materiels": [],
+      "composantes": "V",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n1",
+        "effects": [
+          {
+            "id": "injonction",
+            "label": "Injonction",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:injonction",
+              "classe:clerc",
+              "niveau:1"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       }
@@ -5768,20 +6958,7 @@
     "Invocation de Monstre III": {
       "classe": "Magicien",
       "niveau": 5,
-      "composants_materiels": [
-        {
-          "slug": "petit_sac",
-          "nom": "petit sac",
-          "quantite": 1,
-          "consomme": false
-        },
-        {
-          "slug": "bougie",
-          "nom": "bougie",
-          "quantite": 1,
-          "consomme": true
-        }
-      ],
+      "composants_materiels": [],
       "composantes": "V, S, M",
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
@@ -5806,20 +6983,7 @@
     "Invocation de monstre IV": {
       "classe": "Magicien",
       "niveau": 6,
-      "composants_materiels": [
-        {
-          "slug": "petit_sac",
-          "nom": "petit sac",
-          "quantite": 1,
-          "consomme": false
-        },
-        {
-          "slug": "bougie",
-          "nom": "bougie",
-          "quantite": 1,
-          "consomme": true
-        }
-      ],
+      "composants_materiels": [],
       "composantes": "V, S, M",
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
@@ -5844,20 +7008,7 @@
     "Invocation de monstre V": {
       "classe": "Magicien",
       "niveau": 7,
-      "composants_materiels": [
-        {
-          "slug": "petit_sac",
-          "nom": "petit sac",
-          "quantite": 1,
-          "consomme": false
-        },
-        {
-          "slug": "bougie",
-          "nom": "bougie",
-          "quantite": 1,
-          "consomme": true
-        }
-      ],
+      "composants_materiels": [],
       "composantes": "V, S, M",
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
@@ -5914,14 +7065,7 @@
     "Invocation de Monstre VII": {
       "classe": "Magicien",
       "niveau": 9,
-      "composants_materiels": [
-        {
-          "slug": "diamant",
-          "nom": "diamant",
-          "quantite": 1,
-          "consomme": true
-        }
-      ],
+      "composants_materiels": [],
       "composantes": "V, S, M",
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
@@ -6157,6 +7301,125 @@
         ]
       }
     },
+    "Langage animal": {
+      "classe": "Clerc",
+      "niveau": 2,
+      "composants_materiels": [],
+      "composantes": "V, S",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n2",
+        "effects": [
+          {
+            "id": "langage_animal",
+            "label": "Langage animal",
+            "kind": "communication_or_control",
+            "automation": "mj_aid",
+            "tags": [
+              "effet:langage_animal",
+              "classe:clerc",
+              "communication_ou_controle",
+              "niveau:2"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Langage des Monstres": {
+      "classe": "Clerc",
+      "niveau": 6,
+      "composants_materiels": [],
+      "composantes": "V, S",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n6",
+        "effects": [
+          {
+            "id": "langage_des_monstres",
+            "label": "Langage des Monstres",
+            "kind": "communication_or_control",
+            "automation": "mj_aid",
+            "tags": [
+              "effet:langage_des_monstres",
+              "classe:clerc",
+              "communication_ou_controle",
+              "niveau:6"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Langage des Plantes": {
+      "classe": "Clerc",
+      "niveau": 4,
+      "composants_materiels": [
+        {
+          "slug": "goutte_d_eau",
+          "nom": "Goutte d’eau",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "pincee_de_bouse",
+          "nom": "Pincée de bouse",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n4",
+        "effects": [
+          {
+            "id": "langage_des_plantes",
+            "label": "Langage des Plantes",
+            "kind": "communication_or_control",
+            "automation": "mj_aid",
+            "tags": [
+              "effet:langage_des_plantes",
+              "classe:clerc",
+              "communication_ou_controle",
+              "niveau:4"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Langue": {
+      "classe": "Clerc",
+      "niveau": 4,
+      "composants_materiels": [
+        {
+          "slug": "a_completer",
+          "nom": "a completer",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n4",
+        "effects": [
+          {
+            "id": "langue",
+            "label": "Langue",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:langue",
+              "classe:clerc",
+              "niveau:4"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
     "Langues": {
       "classe": "Magicien",
       "niveau": 3,
@@ -6268,6 +7531,38 @@
         ]
       }
     },
+    "Lithomancie": {
+      "classe": "Clerc",
+      "niveau": 6,
+      "composants_materiels": [
+        {
+          "slug": "goutte_de_mercure",
+          "nom": "Goutte de mercure",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n6",
+        "effects": [
+          {
+            "id": "lithomancie",
+            "label": "Lithomancie",
+            "kind": "detection_or_divination",
+            "automation": "mj_aid",
+            "tags": [
+              "effet:lithomancie",
+              "classe:clerc",
+              "detection_ou_divination",
+              "niveau:6"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
     "Lithomorphose": {
       "classe": "Magicien",
       "niveau": 5,
@@ -6295,6 +7590,38 @@
               "niveau:5"
             ],
             "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Localisation d'objets": {
+      "classe": "Clerc",
+      "niveau": 3,
+      "composants_materiels": [
+        {
+          "slug": "pierre_aimantee",
+          "nom": "pierre aimantée",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n3",
+        "effects": [
+          {
+            "id": "localisation_d_objets",
+            "label": "Localisation d'objets",
+            "kind": "detection_or_divination",
+            "automation": "mj_aid",
+            "tags": [
+              "effet:localisation_d_objets",
+              "classe:clerc",
+              "detection_ou_divination",
+              "niveau:3"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       }
@@ -6338,6 +7665,38 @@
               "niveau:2"
             ],
             "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Lumière": {
+      "classe": "Clerc",
+      "niveau": 1,
+      "composants_materiels": [
+        {
+          "slug": "a_completer",
+          "nom": "a completer",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n1",
+        "effects": [
+          {
+            "id": "lumiere",
+            "label": "Lumière",
+            "kind": "illusion_or_sensory",
+            "automation": "mj_aid",
+            "tags": [
+              "effet:lumiere",
+              "classe:clerc",
+              "illusion_ou_sensoriel",
+              "niveau:1"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       }
@@ -6606,6 +7965,85 @@
               "niveau:4"
             ],
             "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Manne": {
+      "classe": "Clerc",
+      "niveau": 3,
+      "composants_materiels": [],
+      "composantes": "V, S",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n3",
+        "effects": [
+          {
+            "id": "manne",
+            "label": "Manne",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:manne",
+              "classe:clerc",
+              "niveau:3"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Marche des vents": {
+      "classe": "Clerc",
+      "niveau": 7,
+      "composants_materiels": [
+        {
+          "slug": "feu_et_de_l_eau_benite_maudite",
+          "nom": "Feu et de l’eau bénite/maudite",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n7",
+        "effects": [
+          {
+            "id": "marche_des_vents",
+            "label": "Marche des vents",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:marche_des_vents",
+              "classe:clerc",
+              "niveau:7"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Marteau Spirituel": {
+      "classe": "Clerc",
+      "niveau": 2,
+      "composants_materiels": [],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n2",
+        "effects": [
+          {
+            "id": "marteau_spirituel",
+            "label": "Marteau Spirituel",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:marteau_spirituel",
+              "classe:clerc",
+              "niveau:2"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       }
@@ -7153,6 +8591,38 @@
         ]
       }
     },
+    "Nécro animation": {
+      "classe": "Clerc",
+      "niveau": 3,
+      "composants_materiels": [
+        {
+          "slug": "symbole_sacre_du_clerc",
+          "nom": "Symbole sacré du clerc",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n3",
+        "effects": [
+          {
+            "id": "necro_animation",
+            "label": "Nécro animation",
+            "kind": "summon_or_actor_effect",
+            "automation": "actor_creation_or_mj_aid",
+            "tags": [
+              "effet:necro_animation",
+              "classe:clerc",
+              "invocation_ou_creation",
+              "niveau:3"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
     "Nécro-animation": {
       "classe": "Magicien",
       "niveau": 5,
@@ -7193,6 +8663,37 @@
               "niveau:5"
             ],
             "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Nécromancie": {
+      "classe": "Clerc",
+      "niveau": 3,
+      "composants_materiels": [
+        {
+          "slug": "son_symbole_sacre",
+          "nom": "Son symbole sacré",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n3",
+        "effects": [
+          {
+            "id": "necromancie",
+            "label": "Nécromancie",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:necromancie",
+              "classe:clerc",
+              "niveau:3"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       }
@@ -7415,8 +8916,26 @@
           "consomme": true
         },
         {
+          "slug": "reduite_en_poudre",
+          "nom": "Réduite en poudre",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "repartie_sur_le_metal",
+          "nom": "répartie sur le métal",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
           "slug": "pierre_d_ambre",
           "nom": "pierre d’ambre",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "gemme_non_detruite",
+          "nom": "Gemme non détruite",
           "quantite": 1,
           "consomme": true
         },
@@ -7427,8 +8946,8 @@
           "consomme": true
         },
         {
-          "slug": "corindon",
-          "nom": "corindon",
+          "slug": "topaze_orientale",
+          "nom": "topaze orientale",
           "quantite": 1,
           "consomme": true
         }
@@ -7449,6 +8968,49 @@
               "niveau:2"
             ],
             "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Orientation": {
+      "classe": "Clerc",
+      "niveau": 6,
+      "composants_materiels": [
+        {
+          "type": "alternative",
+          "choix": [
+            {
+              "slug": "jeu_d_objets_divinatoires_en_ivoire",
+              "nom": "jeu d’objets divinatoires en ivoire",
+              "quantite": 1,
+              "consomme": true
+            },
+            {
+              "slug": "jeu_d_objets_divinatoires_de_runes_gravees",
+              "nom": "jeu d’objets divinatoires de runes gravées",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n6",
+        "effects": [
+          {
+            "id": "orientation",
+            "label": "Orientation",
+            "kind": "detection_or_divination",
+            "automation": "mj_aid",
+            "tags": [
+              "effet:orientation",
+              "classe:clerc",
+              "detection_ou_divination",
+              "niveau:6"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       }
@@ -7502,20 +9064,32 @@
       }
     },
     "Paralysie": {
-      "classe": "Magicien",
-      "niveau": 3,
+      "classe": "Clerc",
+      "niveau": 2,
       "composants_materiels": [
         {
-          "slug": "symbole_sacre_du_clerc",
-          "nom": "symbole sacré du clerc",
+          "slug": "petite_tige_de_metal_droite",
+          "nom": "petite tige de métal droite",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "rigide",
+          "nom": "rigide",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "tige_de_metal_droite",
+          "nom": "tige de métal droite",
           "quantite": 1,
           "consomme": true
         }
       ],
-      "composantes": "V, M",
+      "composantes": "V, S, M",
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
-        "source": "manual-normalized-magicien-n3",
+        "source": "manual-normalized-clerc-n2",
         "effects": [
           {
             "id": "paralysie",
@@ -7524,11 +9098,11 @@
             "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:paralysie",
-              "classe:magicien",
+              "classe:clerc",
               "controle",
-              "niveau:3"
+              "niveau:2"
             ],
-            "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       }
@@ -7596,6 +9170,37 @@
         ]
       }
     },
+    "Parole sacrée/maudite": {
+      "classe": "Clerc",
+      "niveau": 7,
+      "composants_materiels": [
+        {
+          "slug": "symbole_sacre_du_clerc",
+          "nom": "Symbole sacré du clerc",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n7",
+        "effects": [
+          {
+            "id": "parole_sacree_maudite",
+            "label": "Parole sacrée/maudite",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:parole_sacree_maudite",
+              "classe:clerc",
+              "niveau:7"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
     "Passe-muraille": {
       "classe": "Magicien",
       "niveau": 5,
@@ -7624,6 +9229,31 @@
               "niveau:5"
             ],
             "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Perception des Alignements": {
+      "classe": "Clerc",
+      "niveau": 2,
+      "composants_materiels": [],
+      "composantes": "V, S",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n2",
+        "effects": [
+          {
+            "id": "perception_des_alignements",
+            "label": "Perception des Alignements",
+            "kind": "communication_or_control",
+            "automation": "mj_aid",
+            "tags": [
+              "effet:perception_des_alignements",
+              "classe:clerc",
+              "communication_ou_controle",
+              "niveau:2"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       }
@@ -7786,6 +9416,38 @@
               "niveau:2"
             ],
             "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Pilier de Feu": {
+      "classe": "Clerc",
+      "niveau": 5,
+      "composants_materiels": [
+        {
+          "slug": "pincee_de_souffre",
+          "nom": "Pincée de souffre",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n5",
+        "effects": [
+          {
+            "id": "pilier_de_feu",
+            "label": "Pilier de Feu",
+            "kind": "damage_or_area_control",
+            "automation": "damage_or_mj_aid",
+            "tags": [
+              "effet:pilier_de_feu",
+              "classe:clerc",
+              "degats_ou_zone",
+              "niveau:5"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       }
@@ -7993,6 +9655,43 @@
         ]
       }
     },
+    "Prière": {
+      "classe": "Clerc",
+      "niveau": 3,
+      "composants_materiels": [
+        {
+          "slug": "son_symbole_religieux_en_argent",
+          "nom": "Son symbole religieux en argent",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "son_chapelet_de_priere",
+          "nom": "Son chapelet de prière",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n3",
+        "effects": [
+          {
+            "id": "priere",
+            "label": "Prière",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:priere",
+              "classe:clerc",
+              "niveau:3"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
     "Projectile magique": {
       "classe": "Magicien",
       "niveau": 1,
@@ -8063,13 +9762,19 @@
         ]
       }
     },
-    "Protection contre le mal sur 3 m": {
-      "classe": "Magicien",
-      "niveau": 3,
+    "Protection contre le Mal": {
+      "classe": "Clerc",
+      "niveau": 1,
       "composants_materiels": [
         {
-          "slug": "poudre_d_argent",
-          "nom": "poudre d’argent",
+          "slug": "poudre_de_fer",
+          "nom": "poudre de fer",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "argent_pour_tracer_le_cercle_de_protection",
+          "nom": "argent pour tracer le cercle de protection",
           "quantite": 1,
           "consomme": true
         }
@@ -8077,7 +9782,39 @@
       "composantes": "V, S, M",
       "effectProfile": {
         "version": "2026-06-16-add2e-spell-effects-v1",
-        "source": "manual-normalized-magicien-n3",
+        "source": "manual-normalized-clerc-n1",
+        "effects": [
+          {
+            "id": "protection_contre_le_mal",
+            "label": "Protection contre le Mal",
+            "kind": "protection",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:protection_contre_le_mal",
+              "classe:clerc",
+              "protection",
+              "niveau:1"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Protection contre le mal sur 3 m": {
+      "classe": "Clerc",
+      "niveau": 4,
+      "composants_materiels": [
+        {
+          "slug": "a_completer",
+          "nom": "a completer",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n4",
         "effects": [
           {
             "id": "protection_contre_le_mal_sur_3_m",
@@ -8086,11 +9823,11 @@
             "automation": "active_effect_or_mj_aid",
             "tags": [
               "effet:protection_contre_le_mal_sur_3_m",
-              "classe:magicien",
+              "classe:clerc",
               "protection",
-              "niveau:3"
+              "niveau:4"
             ],
-            "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       }
@@ -8196,13 +9933,44 @@
         ]
       }
     },
+    "Purification de l'eau et des aliments": {
+      "classe": "Clerc",
+      "niveau": 1,
+      "composants_materiels": [
+        {
+          "slug": "a_completer",
+          "nom": "a completer",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n1",
+        "effects": [
+          {
+            "id": "purification_de_l_eau_et_des_aliments",
+            "label": "Purification de l'eau et des aliments",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:purification_de_l_eau_et_des_aliments",
+              "classe:clerc",
+              "niveau:1"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
     "Pyrotechnie": {
       "classe": "Magicien",
       "niveau": 2,
       "composants_materiels": [
         {
-          "slug": "gui",
-          "nom": "gui",
+          "slug": "gui_druidique",
+          "nom": "gui druidique",
           "quantite": 1,
           "consomme": true
         }
@@ -8247,6 +10015,37 @@
               "niveau:6"
             ],
             "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Quête Religieuse": {
+      "classe": "Clerc",
+      "niveau": 5,
+      "composants_materiels": [
+        {
+          "slug": "symbole_sacre",
+          "nom": "Symbole sacré",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n5",
+        "effects": [
+          {
+            "id": "quete_religieuse",
+            "label": "Quête Religieuse",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:quete_religieuse",
+              "classe:clerc",
+              "niveau:5"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       }
@@ -8344,6 +10143,56 @@
         ]
       }
     },
+    "Rappel": {
+      "classe": "Clerc",
+      "niveau": 6,
+      "composants_materiels": [],
+      "composantes": "V",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n6",
+        "effects": [
+          {
+            "id": "rappel",
+            "label": "Rappel",
+            "kind": "healing_or_restoration",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:rappel",
+              "classe:clerc",
+              "soin_ou_restauration",
+              "niveau:6"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Rappel à la Vie": {
+      "classe": "Clerc",
+      "niveau": 5,
+      "composants_materiels": [],
+      "composantes": "V, S",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n5",
+        "effects": [
+          {
+            "id": "rappel_a_la_vie",
+            "label": "Rappel à la Vie",
+            "kind": "healing_or_restoration",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:rappel_a_la_vie",
+              "classe:clerc",
+              "soin_ou_restauration",
+              "niveau:5"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
     "Rayon d’affaiblissement": {
       "classe": "Magicien",
       "niveau": 2,
@@ -8388,6 +10237,44 @@
               "niveau:1"
             ],
             "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Régénération": {
+      "classe": "Clerc",
+      "niveau": 7,
+      "composants_materiels": [
+        {
+          "slug": "objet_de_priere",
+          "nom": "Objet de prière",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "de_l_eau_benite_maudite",
+          "nom": "de l’eau bénite/maudite",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n7",
+        "effects": [
+          {
+            "id": "regeneration",
+            "label": "Régénération",
+            "kind": "healing_or_restoration",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:regeneration",
+              "classe:clerc",
+              "soin_ou_restauration",
+              "niveau:7"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       }
@@ -8504,27 +10391,107 @@
         ]
       }
     },
+    "Résistance au feu": {
+      "classe": "Clerc",
+      "niveau": 2,
+      "composants_materiels": [
+        {
+          "slug": "goutte_de_mercure",
+          "nom": "Goutte de mercure",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n2",
+        "effects": [
+          {
+            "id": "resistance_au_feu",
+            "label": "Résistance au feu",
+            "kind": "protection",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:resistance_au_feu",
+              "classe:clerc",
+              "protection",
+              "niveau:2"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Résistance au Froid": {
+      "classe": "Clerc",
+      "niveau": 1,
+      "composants_materiels": [
+        {
+          "slug": "pincee_de_souffre_comme_composante_materielle",
+          "nom": "Pincée de souffre comme composante matérielle",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n1",
+        "effects": [
+          {
+            "id": "resistance_au_froid",
+            "label": "Résistance au Froid",
+            "kind": "protection",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:resistance_au_froid",
+              "classe:clerc",
+              "protection",
+              "niveau:1"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
     "Respiration aquatique": {
       "classe": "Magicien",
       "niveau": 3,
       "composants_materiels": [
         {
-          "slug": "petit_roseau",
-          "nom": "petit roseau",
-          "quantite": 1,
-          "consomme": true
+          "type": "alternative",
+          "choix": [
+            {
+              "slug": "petit_roseau",
+              "nom": "petit roseau",
+              "quantite": 1,
+              "consomme": true
+            },
+            {
+              "slug": "brin_de_paille",
+              "nom": "brin de paille",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
         },
         {
-          "slug": "brin_de_paille",
-          "nom": "brin de paille",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "roseau",
-          "nom": "roseau",
-          "quantite": 1,
-          "consomme": true
+          "type": "alternative",
+          "choix": [
+            {
+              "slug": "roseau",
+              "nom": "roseau",
+              "quantite": 1,
+              "consomme": true
+            },
+            {
+              "slug": "brin_de_paille",
+              "nom": "brin de paille",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
         }
       ],
       "composantes": "V, S, M",
@@ -8543,6 +10510,100 @@
               "niveau:3"
             ],
             "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Restauration": {
+      "classe": "Clerc",
+      "niveau": 7,
+      "composants_materiels": [],
+      "composantes": "V, S",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n7",
+        "effects": [
+          {
+            "id": "restauration",
+            "label": "Restauration",
+            "kind": "healing_or_restoration",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:restauration",
+              "classe:clerc",
+              "soin_ou_restauration",
+              "niveau:7"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Résurrection": {
+      "classe": "Clerc",
+      "niveau": 7,
+      "composants_materiels": [
+        {
+          "slug": "symbole_sacre",
+          "nom": "Symbole sacré",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n7",
+        "effects": [
+          {
+            "id": "resurrection",
+            "label": "Résurrection",
+            "kind": "healing_or_restoration",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:resurrection",
+              "classe:clerc",
+              "soin_ou_restauration",
+              "niveau:7"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Retardement du Poison": {
+      "classe": "Clerc",
+      "niveau": 2,
+      "composants_materiels": [
+        {
+          "slug": "symbole_sacre",
+          "nom": "Symbole sacré",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "gousse_d_ail",
+          "nom": "Gousse d’ail",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n2",
+        "effects": [
+          {
+            "id": "retardement_du_poison",
+            "label": "Retardement du Poison",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:retardement_du_poison",
+              "classe:clerc",
+              "niveau:2"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       }
@@ -8567,6 +10628,43 @@
               "niveau:3"
             ],
             "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Sanctuaire": {
+      "classe": "Clerc",
+      "niveau": 1,
+      "composants_materiels": [
+        {
+          "slug": "symbole_sacre",
+          "nom": "Symbole sacré",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "petit_miroir_en_argent",
+          "nom": "Petit miroir en argent",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n1",
+        "effects": [
+          {
+            "id": "sanctuaire",
+            "label": "Sanctuaire",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:sanctuaire",
+              "classe:clerc",
+              "niveau:1"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       }
@@ -8644,6 +10742,62 @@
         ]
       }
     },
+    "Séparation des Eaux": {
+      "classe": "Clerc",
+      "niveau": 6,
+      "composants_materiels": [
+        {
+          "slug": "symbole_sacre",
+          "nom": "Symbole sacré",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n6",
+        "effects": [
+          {
+            "id": "separation_des_eaux",
+            "label": "Séparation des Eaux",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:separation_des_eaux",
+              "classe:clerc",
+              "niveau:6"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Serviteur Aérien": {
+      "classe": "Clerc",
+      "niveau": 6,
+      "composants_materiels": [],
+      "composantes": "V, S",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n6",
+        "effects": [
+          {
+            "id": "serviteur_aerien",
+            "label": "Serviteur Aérien",
+            "kind": "summon_or_actor_effect",
+            "automation": "actor_creation_or_mj_aid",
+            "tags": [
+              "effet:serviteur_aerien",
+              "classe:clerc",
+              "invocation_ou_creation",
+              "niveau:6"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
     "Serviteur invisible": {
       "classe": "Magicien",
       "niveau": 1,
@@ -8706,13 +10860,37 @@
         ]
       }
     },
+    "Silence sur 5 mètres": {
+      "classe": "Clerc",
+      "niveau": 2,
+      "composants_materiels": [],
+      "composantes": "V, S",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n2",
+        "effects": [
+          {
+            "id": "silence_sur_5_metres",
+            "label": "Silence sur 5 mètres",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:silence_sur_5_metres",
+              "classe:clerc",
+              "niveau:2"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
     "Simulacre": {
       "classe": "Magicien",
       "niveau": 7,
       "composants_materiels": [
         {
-          "slug": "l_original",
-          "nom": "l’original",
+          "slug": "morceau_de_l_original",
+          "nom": "morceau de l’original",
           "quantite": 1,
           "consomme": true
         },
@@ -8739,6 +10917,108 @@
               "niveau:7"
             ],
             "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Soin ultime": {
+      "classe": "Clerc",
+      "niveau": 5,
+      "composants_materiels": [
+        {
+          "slug": "a_completer",
+          "nom": "a completer",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n5",
+        "effects": [
+          {
+            "id": "soin_ultime",
+            "label": "Soin ultime",
+            "kind": "healing_or_restoration",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:soin_ultime",
+              "classe:clerc",
+              "soin_ou_restauration",
+              "niveau:5"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Soins Majeurs": {
+      "classe": "Clerc",
+      "niveau": 4,
+      "composants_materiels": [
+        {
+          "slug": "gui",
+          "nom": "gui",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "de_n_importe_quelle_sorte",
+          "nom": "de n’importe quelle sorte",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n4",
+        "effects": [
+          {
+            "id": "soins_majeurs",
+            "label": "Soins Majeurs",
+            "kind": "healing_or_restoration",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:soins_majeurs",
+              "classe:clerc",
+              "soin_ou_restauration",
+              "niveau:4"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Soins mineurs": {
+      "classe": "Clerc",
+      "niveau": 1,
+      "composants_materiels": [
+        {
+          "slug": "a_completer",
+          "nom": "a completer",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n1",
+        "effects": [
+          {
+            "id": "soins_mineurs",
+            "label": "Soins mineurs",
+            "kind": "healing_or_restoration",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:soins_mineurs",
+              "classe:clerc",
+              "soin_ou_restauration",
+              "niveau:1"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       }
@@ -8802,6 +11082,30 @@
               "niveau:7"
             ],
             "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
+    "Sort Astral": {
+      "classe": "Clerc",
+      "niveau": 7,
+      "composants_materiels": [],
+      "composantes": "V, S",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n7",
+        "effects": [
+          {
+            "id": "sort_astral",
+            "label": "Sort Astral",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:sort_astral",
+              "classe:clerc",
+              "niveau:7"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
           }
         ]
       }
@@ -8895,14 +11199,20 @@
           "consomme": true
         },
         {
+          "slug": "consommee_apres_le_lancement",
+          "nom": "Consommée après le lancement",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
           "slug": "saphir_blanc",
           "nom": "saphir blanc",
           "quantite": 1,
           "consomme": true
         },
         {
-          "slug": "deuxieme_application",
-          "nom": "Deuxième application",
+          "slug": "deuxieme_application_consomme_apres_le_lancement",
+          "nom": "Deuxième application. Consommé après le lancement",
           "quantite": 1,
           "consomme": true
         },
@@ -8913,8 +11223,8 @@
           "consomme": true
         },
         {
-          "slug": "troisieme_application",
-          "nom": "Troisième application",
+          "slug": "troisieme_application_consomme_apres_le_lancement",
+          "nom": "Troisième application. Consommé après le lancement",
           "quantite": 1,
           "consomme": true
         }
@@ -9672,6 +11982,37 @@
         ]
       }
     },
+    "Tremblement de Terre": {
+      "classe": "Clerc",
+      "niveau": 7,
+      "composants_materiels": [
+        {
+          "slug": "pincee_de_poussiere",
+          "nom": "Pincée de poussière",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "composantes": "V, S, M",
+      "effectProfile": {
+        "version": "2026-06-16-add2e-spell-effects-v1",
+        "source": "manual-normalized-clerc-n7",
+        "effects": [
+          {
+            "id": "tremblement_de_terre",
+            "label": "Tremblement de Terre",
+            "kind": "clerc_effect",
+            "automation": "active_effect_or_mj_aid",
+            "tags": [
+              "effet:tremblement_de_terre",
+              "classe:clerc",
+              "niveau:7"
+            ],
+            "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+          }
+        ]
+      }
+    },
     "Trouble": {
       "classe": "Illusionniste",
       "niveau": 2,
@@ -9939,6 +12280,1011 @@
       }
     }
   },
+  "clercMaterialAudit": [
+    {
+      "name": "Abaissement des Eaux",
+      "niveau": 4,
+      "composants": [
+        {
+          "slug": "symbole_sacre",
+          "nom": "Symbole sacré",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "pincee_de_poussiere",
+          "nom": "Pincée de poussière",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Animation des objets",
+      "niveau": 6,
+      "composants": []
+    },
+    {
+      "name": "Apaisement",
+      "niveau": 1,
+      "composants": []
+    },
+    {
+      "name": "Aquagenèse",
+      "niveau": 1,
+      "composants": [
+        {
+          "type": "alternative",
+          "choix": [
+            {
+              "slug": "goutte_d_eau",
+              "nom": "Goutte d’eau",
+              "quantite": 1,
+              "consomme": true
+            },
+            {
+              "slug": "pincee_de_poussiere",
+              "nom": "pincée de poussière",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Augure",
+      "niveau": 2,
+      "composants": [
+        {
+          "slug": "jeu_de_baguettes_serties_de_gemmes",
+          "nom": "jeu de baguettes serties de gemmes",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "os_de_dragon",
+          "nom": "os de dragon",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "type": "alternative",
+          "choix": [
+            {
+              "slug": "objets_divinatoires_similaires",
+              "nom": "objets divinatoires similaires",
+              "quantite": 1,
+              "consomme": true
+            },
+            {
+              "slug": "feuilles_d_infusion_encore_humides",
+              "nom": "feuilles d’infusion encore humides",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
+        },
+        {
+          "slug": "aux_objets_similaires",
+          "nom": "aux objets similaires",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "aux_feuilles_d_infusion",
+          "nom": "aux feuilles d’infusion",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "objets_divinatoires_similaires",
+          "nom": "objets divinatoires similaires",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "type": "alternative",
+          "choix": [
+            {
+              "slug": "os_de_dragon",
+              "nom": "os de dragon",
+              "quantite": 1,
+              "consomme": true
+            },
+            {
+              "slug": "feuilles_d_infusion_encore_humides",
+              "nom": "feuilles d’infusion encore humides",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
+        },
+        {
+          "slug": "aux_os_de_dragon",
+          "nom": "aux os de dragon",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "feuille_d_infusion_encore_humides",
+          "nom": "feuille d’infusion encore humides",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "perle_ecrasee_d_au_moins_100_po",
+          "nom": "perle écrasée d’au moins 100 po",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "ajoutee_a_la_boisson_avant_consommation",
+          "nom": "ajoutée à la boisson avant consommation",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Barrière de Lames",
+      "niveau": 6,
+      "composants": []
+    },
+    {
+      "name": "Bâtons à serpents",
+      "niveau": 4,
+      "composants": [
+        {
+          "slug": "petit_morceau_d_ecorce",
+          "nom": "petit morceau d’écorce",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "ecailles_de_serpent",
+          "nom": "écailles de serpent",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "morceau_d_ecorce",
+          "nom": "morceau d’écorce",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Bénédiction",
+      "niveau": 1,
+      "composants": [
+        {
+          "type": "alternative",
+          "choix": [
+            {
+              "slug": "eau_benite",
+              "nom": "Eau bénite",
+              "quantite": 1,
+              "consomme": true
+            },
+            {
+              "slug": "maudite_pour_l_inverse",
+              "nom": "maudite pour l’inverse",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Cantique",
+      "niveau": 2,
+      "composants": []
+    },
+    {
+      "name": "Catalepsie",
+      "niveau": 3,
+      "composants": [
+        {
+          "slug": "pincee_de_poussiere_d_un_cimetiere",
+          "nom": "pincée de poussière d’un cimetière",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "symbole_sacre_du_clerc",
+          "nom": "symbole sacré du clerc",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Changement de Plan",
+      "niveau": 5,
+      "composants": [
+        {
+          "slug": "petite_baguette_fourchue_metallique",
+          "nom": "Petite baguette fourchue métallique",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Charme-Serpents",
+      "niveau": 2,
+      "composants": []
+    },
+    {
+      "name": "Communion",
+      "niveau": 5,
+      "composants": [
+        {
+          "slug": "symbole_sacre",
+          "nom": "Symbole sacré",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Contre-poison",
+      "niveau": 4,
+      "composants": [
+        {
+          "slug": "a_completer",
+          "nom": "a completer",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Contrôle du Climat",
+      "niveau": 7,
+      "composants": [
+        {
+          "slug": "symbole_sacre",
+          "nom": "Symbole sacré",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "son_chapelet_de_priere",
+          "nom": "Son chapelet de prière",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Désenvoûtement",
+      "niveau": 3,
+      "composants": []
+    },
+    {
+      "name": "Détection de la magie",
+      "niveau": 1,
+      "composants": [
+        {
+          "slug": "symbole_sacre_du_clerc",
+          "nom": "symbole sacré du clerc",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "source_json_symbole_sacre_requis",
+          "nom": "Source JSON : symbole sacré requis",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Détection des Charmes",
+      "niveau": 2,
+      "composants": []
+    },
+    {
+      "name": "Détection des Mensonges",
+      "niveau": 4,
+      "composants": [
+        {
+          "slug": "poussiere_de_laiton",
+          "nom": "Poussière de laiton",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "poussiere_d_or",
+          "nom": "Poussière d’or",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Détection des Pièges",
+      "niveau": 2,
+      "composants": []
+    },
+    {
+      "name": "Détection du mal",
+      "niveau": 1,
+      "composants": [
+        {
+          "slug": "son_symbole_sacre",
+          "nom": "Son symbole sacré",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Dissipation de la Magie",
+      "niveau": 3,
+      "composants": []
+    },
+    {
+      "name": "Dissipation du Mal",
+      "niveau": 5,
+      "composants": [
+        {
+          "slug": "symbole_sacre",
+          "nom": "Symbole sacré",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Divination",
+      "niveau": 4,
+      "composants": [
+        {
+          "slug": "sacrifice_d_une_petite_creature",
+          "nom": "Sacrifice d’une petite créature",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "l_encens_et_le_symbole_sacre_du_clerc",
+          "nom": "L’encens et le symbole sacré du clerc",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Exorcisme",
+      "niveau": 4,
+      "composants": [
+        {
+          "slug": "symbole_sacre",
+          "nom": "Symbole sacré",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Expiation",
+      "niveau": 5,
+      "composants": [
+        {
+          "slug": "symbole_sacre",
+          "nom": "Symbole sacré",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "son_chapelet",
+          "nom": "Son chapelet",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Fléau d’Insectes",
+      "niveau": 5,
+      "composants": [
+        {
+          "slug": "amandes",
+          "nom": "Amandes",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Glyphe de Garde",
+      "niveau": 3,
+      "composants": [
+        {
+          "slug": "symbole_sacre_du_clerc",
+          "nom": "Symbole sacré du clerc",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Guérison",
+      "niveau": 6,
+      "composants": []
+    },
+    {
+      "name": "Guérison de la Cécité",
+      "niveau": 3,
+      "composants": []
+    },
+    {
+      "name": "Guérison des Maladies",
+      "niveau": 3,
+      "composants": [
+        {
+          "slug": "gui_druidique",
+          "nom": "gui druidique",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Injonction",
+      "niveau": 1,
+      "composants": []
+    },
+    {
+      "name": "Invocation des animaux",
+      "niveau": 6,
+      "composants": [
+        {
+          "slug": "a_completer",
+          "nom": "a completer",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Langage animal",
+      "niveau": 2,
+      "composants": []
+    },
+    {
+      "name": "Langage des Monstres",
+      "niveau": 6,
+      "composants": []
+    },
+    {
+      "name": "Langage des Plantes",
+      "niveau": 4,
+      "composants": [
+        {
+          "slug": "goutte_d_eau",
+          "nom": "Goutte d’eau",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "pincee_de_bouse",
+          "nom": "Pincée de bouse",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Langue",
+      "niveau": 4,
+      "composants": [
+        {
+          "slug": "a_completer",
+          "nom": "a completer",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Lithomancie",
+      "niveau": 6,
+      "composants": [
+        {
+          "slug": "goutte_de_mercure",
+          "nom": "Goutte de mercure",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Localisation d'objets",
+      "niveau": 3,
+      "composants": [
+        {
+          "slug": "pierre_aimantee",
+          "nom": "pierre aimantée",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Lumière",
+      "niveau": 1,
+      "composants": [
+        {
+          "slug": "a_completer",
+          "nom": "a completer",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Lumière éternelle",
+      "niveau": 3,
+      "composants": []
+    },
+    {
+      "name": "Manne",
+      "niveau": 3,
+      "composants": []
+    },
+    {
+      "name": "Marche des vents",
+      "niveau": 7,
+      "composants": [
+        {
+          "slug": "feu_et_de_l_eau_benite_maudite",
+          "nom": "Feu et de l’eau bénite/maudite",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Marteau Spirituel",
+      "niveau": 2,
+      "composants": []
+    },
+    {
+      "name": "Nécro animation",
+      "niveau": 3,
+      "composants": [
+        {
+          "slug": "symbole_sacre_du_clerc",
+          "nom": "Symbole sacré du clerc",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Nécromancie",
+      "niveau": 3,
+      "composants": [
+        {
+          "slug": "son_symbole_sacre",
+          "nom": "Son symbole sacré",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Orientation",
+      "niveau": 6,
+      "composants": [
+        {
+          "type": "alternative",
+          "choix": [
+            {
+              "slug": "jeu_d_objets_divinatoires_en_ivoire",
+              "nom": "jeu d’objets divinatoires en ivoire",
+              "quantite": 1,
+              "consomme": true
+            },
+            {
+              "slug": "jeu_d_objets_divinatoires_de_runes_gravees",
+              "nom": "jeu d’objets divinatoires de runes gravées",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Paralysie",
+      "niveau": 2,
+      "composants": [
+        {
+          "slug": "petite_tige_de_metal_droite",
+          "nom": "petite tige de métal droite",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "rigide",
+          "nom": "rigide",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "tige_de_metal_droite",
+          "nom": "tige de métal droite",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Parole sacrée/maudite",
+      "niveau": 7,
+      "composants": [
+        {
+          "slug": "symbole_sacre_du_clerc",
+          "nom": "Symbole sacré du clerc",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Perception des Alignements",
+      "niveau": 2,
+      "composants": []
+    },
+    {
+      "name": "Pilier de Feu",
+      "niveau": 5,
+      "composants": [
+        {
+          "slug": "pincee_de_souffre",
+          "nom": "Pincée de souffre",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Prière",
+      "niveau": 3,
+      "composants": [
+        {
+          "slug": "son_symbole_religieux_en_argent",
+          "nom": "Son symbole religieux en argent",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "son_chapelet_de_priere",
+          "nom": "Son chapelet de prière",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Protection contre le Mal",
+      "niveau": 1,
+      "composants": [
+        {
+          "slug": "poudre_de_fer",
+          "nom": "poudre de fer",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "argent_pour_tracer_le_cercle_de_protection",
+          "nom": "argent pour tracer le cercle de protection",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Protection contre le mal sur 3 m",
+      "niveau": 4,
+      "composants": [
+        {
+          "slug": "a_completer",
+          "nom": "a completer",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Purification de l'eau et des aliments",
+      "niveau": 1,
+      "composants": [
+        {
+          "slug": "a_completer",
+          "nom": "a completer",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Quête Religieuse",
+      "niveau": 5,
+      "composants": [
+        {
+          "slug": "symbole_sacre",
+          "nom": "Symbole sacré",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Rappel",
+      "niveau": 6,
+      "composants": []
+    },
+    {
+      "name": "Rappel à la Vie",
+      "niveau": 5,
+      "composants": []
+    },
+    {
+      "name": "Régénération",
+      "niveau": 7,
+      "composants": [
+        {
+          "slug": "objet_de_priere",
+          "nom": "Objet de prière",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "de_l_eau_benite_maudite",
+          "nom": "de l’eau bénite/maudite",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Résistance au feu",
+      "niveau": 2,
+      "composants": [
+        {
+          "slug": "goutte_de_mercure",
+          "nom": "Goutte de mercure",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Résistance au Froid",
+      "niveau": 1,
+      "composants": [
+        {
+          "slug": "pincee_de_souffre_comme_composante_materielle",
+          "nom": "Pincée de souffre comme composante matérielle",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Restauration",
+      "niveau": 7,
+      "composants": []
+    },
+    {
+      "name": "Résurrection",
+      "niveau": 7,
+      "composants": [
+        {
+          "slug": "symbole_sacre",
+          "nom": "Symbole sacré",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Retardement du Poison",
+      "niveau": 2,
+      "composants": [
+        {
+          "slug": "symbole_sacre",
+          "nom": "Symbole sacré",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "gousse_d_ail",
+          "nom": "Gousse d’ail",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Sanctuaire",
+      "niveau": 1,
+      "composants": [
+        {
+          "slug": "symbole_sacre",
+          "nom": "Symbole sacré",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "petit_miroir_en_argent",
+          "nom": "Petit miroir en argent",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Séparation des Eaux",
+      "niveau": 6,
+      "composants": [
+        {
+          "slug": "symbole_sacre",
+          "nom": "Symbole sacré",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Serviteur Aérien",
+      "niveau": 6,
+      "composants": []
+    },
+    {
+      "name": "Seuil",
+      "niveau": 7,
+      "composants": [
+        {
+          "slug": "a_completer",
+          "nom": "a completer",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Silence sur 5 mètres",
+      "niveau": 2,
+      "composants": []
+    },
+    {
+      "name": "Soin ultime",
+      "niveau": 5,
+      "composants": [
+        {
+          "slug": "a_completer",
+          "nom": "a completer",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Soins Majeurs",
+      "niveau": 4,
+      "composants": [
+        {
+          "slug": "gui",
+          "nom": "gui",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "de_n_importe_quelle_sorte",
+          "nom": "de n’importe quelle sorte",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Soins mineurs",
+      "niveau": 1,
+      "composants": [
+        {
+          "slug": "a_completer",
+          "nom": "a completer",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Sort Astral",
+      "niveau": 7,
+      "composants": []
+    },
+    {
+      "name": "Symbole",
+      "niveau": 7,
+      "composants": [
+        {
+          "slug": "mercure",
+          "nom": "Mercure",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Tremblement de Terre",
+      "niveau": 7,
+      "composants": [
+        {
+          "slug": "pincee_de_poussiere",
+          "nom": "Pincée de poussière",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    },
+    {
+      "name": "Vision réelle",
+      "niveau": 5,
+      "composants": [
+        {
+          "slug": "de_safran",
+          "nom": "de safran",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "de_graisse",
+          "nom": "de graisse",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "creme_faite_d_huile",
+          "nom": "crème faite d’huile",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "de_poudre_de_pavot",
+          "nom": "de poudre de pavot",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "essence_d_orchidee_rose",
+          "nom": "essence d’orchidée rose",
+          "quantite": 1,
+          "consomme": true
+        }
+      ]
+    }
+  ],
+  "clercMaterialWarnings": [
+    {
+      "name": "Marteau Spirituel",
+      "niveau": 2,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": [],
+      "classe": "clerc"
+    }
+  ],
+  "clercSourceMissing": [],
   "magicienMaterialAudit": [
     {
       "name": "Abaissement des eaux",
@@ -10196,8 +13542,8 @@
       "niveau": 2,
       "composants": [
         {
-          "slug": "laine",
-          "nom": "laine",
+          "slug": "morceau_de_laine",
+          "nom": "morceau de laine",
           "quantite": 1,
           "consomme": true
         },
@@ -10289,22 +13635,21 @@
           "consomme": true
         },
         {
-          "slug": "goutte_d_eau",
-          "nom": "goutte d’eau",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "feuille",
-          "nom": "feuille",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "brindille",
-          "nom": "brindille",
-          "quantite": 1,
-          "consomme": true
+          "type": "alternative",
+          "choix": [
+            {
+              "slug": "goutte_d_eau_et_une_feuille",
+              "nom": "goutte d’eau et une feuille",
+              "quantite": 1,
+              "consomme": true
+            },
+            {
+              "slug": "brindille",
+              "nom": "brindille",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
         }
       ]
     },
@@ -10337,8 +13682,8 @@
       "niveau": 5,
       "composants": [
         {
-          "slug": "sifflet_en_argent",
-          "nom": "sifflet en argent",
+          "slug": "petit_sifflet_en_argent",
+          "nom": "petit sifflet en argent",
           "quantite": 1,
           "consomme": true
         },
@@ -10351,6 +13696,12 @@
         {
           "slug": "fil",
           "nom": "fil",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "sifflet_en_argent",
+          "nom": "sifflet en argent",
           "quantite": 1,
           "consomme": true
         }
@@ -10824,14 +14175,26 @@
       "niveau": 7,
       "composants": [
         {
-          "slug": "epee_miniature_en_platine",
-          "nom": "épée miniature en platine",
+          "slug": "epee_miniature_en_platine_avec_poignee",
+          "nom": "épée miniature en platine avec poignée",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "pommeau_en_cuivre",
+          "nom": "pommeau en cuivre",
           "quantite": 1,
           "consomme": true
         },
         {
           "slug": "zinc",
           "nom": "zinc",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "disparait_quand_le_sort_est_lance",
+          "nom": "Disparaît quand le sort est lancé",
           "quantite": 1,
           "consomme": true
         }
@@ -10940,8 +14303,8 @@
       "niveau": 3,
       "composants": [
         {
-          "slug": "toison_de_mouton",
-          "nom": "toison de mouton",
+          "slug": "morceau_de_toison_de_mouton",
+          "nom": "morceau de toison de mouton",
           "quantite": 1,
           "consomme": true
         }
@@ -11175,8 +14538,8 @@
       "niveau": 2,
       "composants": [
         {
-          "slug": "cils",
-          "nom": "cils",
+          "slug": "cil_mis_dans_de_la_gomme_arabique",
+          "nom": "cil mis dans de la gomme arabique",
           "quantite": 1,
           "consomme": true
         }
@@ -11317,56 +14680,17 @@
     {
       "name": "Invocation de Monstre III",
       "niveau": 5,
-      "composants": [
-        {
-          "slug": "petit_sac",
-          "nom": "petit sac",
-          "quantite": 1,
-          "consomme": false
-        },
-        {
-          "slug": "bougie",
-          "nom": "bougie",
-          "quantite": 1,
-          "consomme": true
-        }
-      ]
+      "composants": []
     },
     {
       "name": "Invocation de monstre IV",
       "niveau": 6,
-      "composants": [
-        {
-          "slug": "petit_sac",
-          "nom": "petit sac",
-          "quantite": 1,
-          "consomme": false
-        },
-        {
-          "slug": "bougie",
-          "nom": "bougie",
-          "quantite": 1,
-          "consomme": true
-        }
-      ]
+      "composants": []
     },
     {
       "name": "Invocation de monstre V",
       "niveau": 7,
-      "composants": [
-        {
-          "slug": "petit_sac",
-          "nom": "petit sac",
-          "quantite": 1,
-          "consomme": false
-        },
-        {
-          "slug": "bougie",
-          "nom": "bougie",
-          "quantite": 1,
-          "consomme": true
-        }
-      ]
+      "composants": []
     },
     {
       "name": "Invocation de monstre VI",
@@ -11383,14 +14707,7 @@
     {
       "name": "Invocation de Monstre VII",
       "niveau": 9,
-      "composants": [
-        {
-          "slug": "diamant",
-          "nom": "diamant",
-          "quantite": 1,
-          "consomme": true
-        }
-      ]
+      "composants": []
     },
     {
       "name": "Invocation de monstres I",
@@ -11849,8 +15166,26 @@
           "consomme": true
         },
         {
+          "slug": "reduite_en_poudre",
+          "nom": "Réduite en poudre",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "repartie_sur_le_metal",
+          "nom": "répartie sur le métal",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
           "slug": "pierre_d_ambre",
           "nom": "pierre d’ambre",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "gemme_non_detruite",
+          "nom": "Gemme non détruite",
           "quantite": 1,
           "consomme": true
         },
@@ -11861,8 +15196,8 @@
           "consomme": true
         },
         {
-          "slug": "corindon",
-          "nom": "corindon",
+          "slug": "topaze_orientale",
+          "nom": "topaze orientale",
           "quantite": 1,
           "consomme": true
         }
@@ -12137,8 +15472,8 @@
       "niveau": 2,
       "composants": [
         {
-          "slug": "gui",
-          "nom": "gui",
+          "slug": "gui_druidique",
+          "nom": "gui druidique",
           "quantite": 1,
           "consomme": true
         }
@@ -12248,22 +15583,38 @@
       "niveau": 3,
       "composants": [
         {
-          "slug": "petit_roseau",
-          "nom": "petit roseau",
-          "quantite": 1,
-          "consomme": true
+          "type": "alternative",
+          "choix": [
+            {
+              "slug": "petit_roseau",
+              "nom": "petit roseau",
+              "quantite": 1,
+              "consomme": true
+            },
+            {
+              "slug": "brin_de_paille",
+              "nom": "brin de paille",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
         },
         {
-          "slug": "brin_de_paille",
-          "nom": "brin de paille",
-          "quantite": 1,
-          "consomme": true
-        },
-        {
-          "slug": "roseau",
-          "nom": "roseau",
-          "quantite": 1,
-          "consomme": true
+          "type": "alternative",
+          "choix": [
+            {
+              "slug": "roseau",
+              "nom": "roseau",
+              "quantite": 1,
+              "consomme": true
+            },
+            {
+              "slug": "brin_de_paille",
+              "nom": "brin de paille",
+              "quantite": 1,
+              "consomme": true
+            }
+          ]
         }
       ]
     },
@@ -12335,8 +15686,8 @@
       "niveau": 7,
       "composants": [
         {
-          "slug": "l_original",
-          "nom": "l’original",
+          "slug": "morceau_de_l_original",
+          "nom": "morceau de l’original",
           "quantite": 1,
           "consomme": true
         },
@@ -12399,14 +15750,20 @@
           "consomme": true
         },
         {
+          "slug": "consommee_apres_le_lancement",
+          "nom": "Consommée après le lancement",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
           "slug": "saphir_blanc",
           "nom": "saphir blanc",
           "quantite": 1,
           "consomme": true
         },
         {
-          "slug": "deuxieme_application",
-          "nom": "Deuxième application",
+          "slug": "deuxieme_application_consomme_apres_le_lancement",
+          "nom": "Deuxième application. Consommé après le lancement",
           "quantite": 1,
           "consomme": true
         },
@@ -12417,8 +15774,8 @@
           "consomme": true
         },
         {
-          "slug": "troisieme_application",
-          "nom": "Troisième application",
+          "slug": "troisieme_application_consomme_apres_le_lancement",
+          "nom": "Troisième application. Consommé après le lancement",
           "quantite": 1,
           "consomme": true
         }
@@ -12759,7 +16116,98 @@
       ]
     }
   ],
-  "magicienMaterialWarnings": [],
+  "magicienMaterialWarnings": [
+    {
+      "name": "Invocation de Monstre III",
+      "niveau": 5,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": [],
+      "classe": "magicien"
+    },
+    {
+      "name": "Invocation de monstre IV",
+      "niveau": 6,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": [],
+      "classe": "magicien"
+    },
+    {
+      "name": "Invocation de monstre V",
+      "niveau": 7,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": [],
+      "classe": "magicien"
+    },
+    {
+      "name": "Invocation de Monstre VII",
+      "niveau": 9,
+      "components": [
+        "M sans composant"
+      ],
+      "allComponents": [],
+      "classe": "magicien"
+    },
+    {
+      "name": "Sphère glaciale d’Otiluke",
+      "niveau": 6,
+      "components": [
+        "Consommée après le lancement",
+        "Deuxième application. Consommé après le lancement",
+        "Troisième application. Consommé après le lancement"
+      ],
+      "allComponents": [
+        {
+          "slug": "fine_feuille_de_cristal_de_6_cm",
+          "nom": "fine feuille de cristal de 6 cm²",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "premiere_application",
+          "nom": "Première application",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "consommee_apres_le_lancement",
+          "nom": "Consommée après le lancement",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "saphir_blanc",
+          "nom": "saphir blanc",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "deuxieme_application_consomme_apres_le_lancement",
+          "nom": "Deuxième application. Consommé après le lancement",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "diamant",
+          "nom": "diamant",
+          "quantite": 1,
+          "consomme": true
+        },
+        {
+          "slug": "troisieme_application_consomme_apres_le_lancement",
+          "nom": "Troisième application. Consommé après le lancement",
+          "quantite": 1,
+          "consomme": true
+        }
+      ],
+      "classe": "magicien"
+    }
+  ],
   "magicienSourceMissing": [],
   "illusionnisteMaterialAudit": [
     {
@@ -13477,28 +16925,115 @@
     "effectTags",
     "effectProfile"
   ],
+  "clercLevel1EffectProfiles": {
+    "applied": [
+      "Apaisement",
+      "Aquagenèse",
+      "Bénédiction",
+      "Détection de la magie",
+      "Détection du mal",
+      "Injonction",
+      "Lumière",
+      "Protection contre le Mal",
+      "Purification de l'eau et des aliments",
+      "Résistance au Froid",
+      "Sanctuaire",
+      "Soins mineurs"
+    ],
+    "missing": []
+  },
   "clercLevel2EffectProfiles": {
-    "applied": [],
+    "applied": [
+      "Augure",
+      "Cantique",
+      "Charme-Serpents",
+      "Détection des Charmes",
+      "Détection des Pièges",
+      "Langage animal",
+      "Marteau Spirituel",
+      "Paralysie",
+      "Perception des Alignements",
+      "Résistance au feu",
+      "Retardement du Poison",
+      "Silence sur 5 mètres"
+    ],
     "missing": []
   },
   "clercLevel3EffectProfiles": {
-    "applied": [],
+    "applied": [
+      "Catalepsie",
+      "Désenvoûtement",
+      "Dissipation de la Magie",
+      "Glyphe de Garde",
+      "Guérison de la Cécité",
+      "Guérison des Maladies",
+      "Localisation d'objets",
+      "Lumière éternelle",
+      "Manne",
+      "Nécro animation",
+      "Nécromancie",
+      "Prière"
+    ],
     "missing": []
   },
   "clercLevel4EffectProfiles": {
-    "applied": [],
+    "applied": [
+      "Abaissement des Eaux",
+      "Bâtons à serpents",
+      "Contre-poison",
+      "Détection des Mensonges",
+      "Divination",
+      "Exorcisme",
+      "Langage des Plantes",
+      "Langue",
+      "Protection contre le mal sur 3 m",
+      "Soins Majeurs"
+    ],
     "missing": []
   },
   "clercLevel5EffectProfiles": {
-    "applied": [],
+    "applied": [
+      "Changement de Plan",
+      "Communion",
+      "Dissipation du Mal",
+      "Expiation",
+      "Fléau d’Insectes",
+      "Pilier de Feu",
+      "Quête Religieuse",
+      "Rappel à la Vie",
+      "Soin ultime",
+      "Vision réelle"
+    ],
     "missing": []
   },
   "clercLevel6EffectProfiles": {
-    "applied": [],
+    "applied": [
+      "Animation des objets",
+      "Barrière de Lames",
+      "Guérison",
+      "Invocation des animaux",
+      "Langage des Monstres",
+      "Lithomancie",
+      "Orientation",
+      "Rappel",
+      "Séparation des Eaux",
+      "Serviteur Aérien"
+    ],
     "missing": []
   },
   "clercLevel7EffectProfiles": {
-    "applied": [],
+    "applied": [
+      "Contrôle du Climat",
+      "Marche des vents",
+      "Parole sacrée/maudite",
+      "Régénération",
+      "Restauration",
+      "Résurrection",
+      "Seuil",
+      "Sort Astral",
+      "Symbole",
+      "Tremblement de Terre"
+    ],
     "missing": []
   },
   "druideLevel1EffectProfiles": {
