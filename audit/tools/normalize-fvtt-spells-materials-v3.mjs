@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 
-const VERSION = "2026-06-18-normalize-wizard-structured-components-v1";
+const VERSION = "2026-06-18-normalize-wizard-components-resolve-warnings-v1";
 const DEFAULT_INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const DEFAULT_OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
 const DEFAULT_CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
@@ -205,13 +205,27 @@ const MATERIAL_CANON = new Map(Object.entries({
   fourrure: "morceau de fourrure",
   tige_de_verre: "tige de verre",
   baguette_de_verre: "tige de verre",
+  perle_de_verre: "perle de verre",
+  perle_de_cristal: "perle de cristal",
   tige_de_cristal: "tige de cristal",
   baguette_de_cristal: "tige de cristal",
   ambre: "ambre",
   gomme_arabique: "gomme arabique",
   cils: "cils",
   cil: "cils",
-  morceau_de_gomme_arabique: "gomme arabique"
+  morceau_de_gomme_arabique: "gomme arabique",
+  coeur_de_poule: "cœur de poule",
+  cœur_de_poule: "cœur de poule",
+  plume_blanche: "plume blanche",
+  gemme_d_emprisonnement: "gemme d’emprisonnement",
+  saphir: "saphir",
+  coffre_de_grande_valeur: "coffre de grande valeur",
+  replique_miniature_du_coffre: "réplique miniature du coffre",
+  miniature_du_coffre: "réplique miniature du coffre",
+  fer_pyriteux: "fer pyriteux",
+  morceau_de_fer_pyriteux: "morceau de fer pyriteux",
+  velin_enlumine: "vélin enluminé",
+  velin_specialement_enlumine: "vélin enluminé"
 }));
 
 const ELEMENTAL_VARIANTS = [
@@ -221,15 +235,36 @@ const ELEMENTAL_VARIANTS = [
   { type: "variante", id: "terre", label: "Invocation d’un élémental de terre", composants: ["argile"] }
 ];
 
+const WIZARD_NO_MATERIAL_COMPONENTS = new Set([
+  "intermittence",
+  "mot_de_pouvoir_cecite",
+  "mot_de_pouvoir_etourdissement",
+  "mot_de_pouvoir_mort"
+]);
+const WIZARD_COMPONENT_DELEGATIONS = new Map(Object.entries({
+  enchantement: "Composants variables selon l’objet enchanté et la procédure d’enchantement.",
+  permanence: "Composants variables selon le sort ou l’effet rendu permanent."
+}));
 const WIZARD_MATERIAL_OVERRIDES = new Map(Object.entries({
   allometamorphose: ["cocon de chenille"],
   agrandissement: ["poudre de fer"],
   aura_magique_de_nystul: ["soie"],
   arme_enchantee: ["carbone en poudre", "citron en poudre"],
   clairaudience: ["petite corne d’argent"],
+  coffre_secret_de_leomund: ["coffre de grande valeur", "réplique miniature du coffre"],
+  effroi: [{ type: "alternative", choix: ["cœur de poule", "plume blanche"] }],
+  emprisonnement_de_l_ame: ["gemme d’emprisonnement"],
+  globe_d_invulnerabilite: [{ type: "alternative", choix: ["perle de verre", "perle de cristal"] }],
+  invisibilite_de_masse: ["cils", "gomme arabique"],
+  invocation_d_un_elemental: ELEMENTAL_VARIANTS,
+  invocation_instantanee_de_drawmij: ["saphir"],
   message: ["fil de cuivre"],
-  ventriloquie: ["parchemin mis en cône"],
-  invocation_d_un_elemental: ELEMENTAL_VARIANTS
+  necro_animation: ["goutte de sang", "morceau de chair humaine", "os en poudre"],
+  nuage_incendiaire: ["soufre", "phosphore"],
+  piege_de_leomund: ["morceau de fer pyriteux"],
+  protection_contre_le_mal_sur_3_m: ["poudre d’argent"],
+  punition_spirituelle: ["vélin enluminé"],
+  ventriloquie: ["parchemin mis en cône"]
 }));
 
 const ILLUSIONIST_COMPONENT_DELEGATIONS = new Set(["sorts_de_niveau_1_de_magicien"]);
@@ -440,12 +475,23 @@ function ensureComposantesHasM(system, entries) {
   system.composantes = raw ? `${raw}, M` : "M";
 }
 
-function markDelegatedComponents(system) {
+function removeMaterialComponent(system, note) {
+  system.composants_materiels = [];
+  system.composantes = text(system.composantes)
+    .split(/[,;]+|\s+/g)
+    .map(v => v.trim())
+    .filter(v => v && v.toUpperCase() !== "M")
+    .join(", ");
+  if (!system.composantes) system.composantes = "V";
+  system.composants_materiels_a_renseigner = false;
+  if (note) system.composants_materiels_note = text([system.composants_materiels_note, note].filter(Boolean).join("\n"));
+}
+
+function markDelegatedComponents(system, note) {
   system.composants_materiels = [];
   system.composantes = "*";
   system.composants_materiels_a_renseigner = false;
-  const note = "Composants déterminés par le sort de magicien niveau 1 choisi.";
-  system.composants_materiels_note = text([system.composants_materiels_note, note].filter(Boolean).join("\n"));
+  if (note) system.composants_materiels_note = text([system.composants_materiels_note, note].filter(Boolean).join("\n"));
 }
 
 function mergePreviousMaterials(item, existingIndex, classSlug) {
@@ -490,7 +536,7 @@ function normalizeMaterials(item, indexes) {
   if (isIllusionnisteSpell(item)) {
     mergeClassAuditSource(item, illusionnisteAuditIndex, "illusionniste");
     if (ILLUSIONIST_COMPONENT_DELEGATIONS.has(key)) {
-      markDelegatedComponents(system);
+      markDelegatedComponents(system, "Composants déterminés par le sort de magicien niveau 1 choisi.");
     } else if (ILLUSIONIST_MATERIAL_OVERRIDES.has(key)) {
       system.composants_materiels = uniqueEntries(ILLUSIONIST_MATERIAL_OVERRIDES.get(key));
       ensureComposantesHasM(system, system.composants_materiels);
@@ -505,16 +551,21 @@ function normalizeMaterials(item, indexes) {
   } else if (isMagicienSpell(item)) {
     mergePreviousMaterials(item, existingIndex, "magicien");
     mergeClassAuditSource(item, magicienAuditIndex, "magicien");
-    if (WIZARD_MATERIAL_OVERRIDES.has(key)) {
+    if (WIZARD_NO_MATERIAL_COMPONENTS.has(key)) {
+      removeMaterialComponent(system, "Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe.");
+    } else if (WIZARD_COMPONENT_DELEGATIONS.has(key)) {
+      markDelegatedComponents(system, WIZARD_COMPONENT_DELEGATIONS.get(key));
+    } else if (WIZARD_MATERIAL_OVERRIDES.has(key)) {
       system.composants_materiels = uniqueEntries(WIZARD_MATERIAL_OVERRIDES.get(key));
+      ensureComposantesHasM(system, system.composants_materiels);
     } else {
       entries = materialEntriesFromValue(system.composants_materiels);
       if (!materialEntryCount(entries)) entries = materialEntriesFromValue(system.composants_materiels_objets);
       if (!materialEntryCount(entries)) entries = materialEntriesFromValue(system.composants_requis);
       if (!materialEntryCount(entries)) entries = materialEntriesFromValue(system.composants_materiels_source);
       system.composants_materiels = uniqueEntries(entries);
+      ensureComposantesHasM(system, system.composants_materiels);
     }
-    ensureComposantesHasM(system, system.composants_materiels);
   } else {
     entries = materialEntriesFromValue(system.composants_materiels);
     system.composants_materiels = uniqueEntries(entries);
@@ -596,7 +647,9 @@ function ensureSystem(system) {
 }
 
 function materialWarningForClass(item, classSlug) {
-  if (classSlug === "illusionniste" && ILLUSIONIST_COMPONENT_DELEGATIONS.has(slug(item?.name ?? item?.system?.nom))) return null;
+  const key = slug(item?.name ?? item?.system?.nom);
+  if (classSlug === "illusionniste" && ILLUSIONIST_COMPONENT_DELEGATIONS.has(key)) return null;
+  if (classSlug === "magicien" && (WIZARD_NO_MATERIAL_COMPONENTS.has(key) || WIZARD_COMPONENT_DELEGATIONS.has(key))) return null;
   const entries = item?.system?.composants_materiels ?? [];
   const hasM = String(item?.system?.composantes ?? "").toUpperCase().includes("M");
   const bad = [];
