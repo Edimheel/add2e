@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 
-const VERSION = "2026-06-19-normalize-cleric-material-overrides-v16";
+const VERSION = "2026-06-19-normalize-cleric-material-overrides-v17";
 const DEFAULT_INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const DEFAULT_OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
 const DEFAULT_CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
@@ -176,6 +176,11 @@ const CLERIC_OVERRIDES = new Map(Object.entries({
   tremblement_de_terre: ["pincée de poussière"]
 }));
 
+const WIZARD_NO_MATERIAL_COMPONENTS = new Set(["intermittence", "mot_de_pouvoir_cecite", "mot_de_pouvoir_etourdissement", "mot_de_pouvoir_mort"]);
+const WIZARD_COMPONENT_DELEGATIONS = new Map(Object.entries({
+  enchantement: "Composants variables selon l’objet enchanté et la procédure d’enchantement.",
+  permanence: "Composants variables selon le sort ou l’effet rendu permanent."
+}));
 const WIZARD_OVERRIDES = new Map(Object.entries({
   boule_de_feu_a_retardement: ["soufre", "guano de chauve-souris"],
   invocation_de_monstre_iii: ["petit sac", "petite bougie"],
@@ -299,6 +304,9 @@ function ensureM(system, entries) {
   const raw = text(system.composantes);
   if (!/(^|[,;\s])M([,;\s]|$)/i.test(raw)) system.composantes = raw ? `${raw}, M` : "M";
 }
+function removeM(system) {
+  system.composantes = text(system.composantes).split(/[,;]+|\s+/g).map(v => v.trim()).filter(v => v && v.toUpperCase() !== "M").join(", ") || "V";
+}
 function applyAudit(item, auditIndex, classSlug) {
   if (!isClassSpell(item, classSlug)) return;
   const source = auditIndex.get(effectKey(item));
@@ -326,7 +334,9 @@ function normalizeMaterials(item, indexes, existingIndex) {
     system.composants_materiels = CLERIC_OVERRIDES.has(key) ? uniqueEntries(CLERIC_OVERRIDES.get(key)) : preserveOrParse(system, existing);
   } else if (isClassSpell(item, "magicien")) {
     applyAudit(item, indexes.magicien, "magicien");
-    system.composants_materiels = WIZARD_OVERRIDES.has(key) ? uniqueEntries(WIZARD_OVERRIDES.get(key)) : preserveOrParse(system, existing);
+    if (WIZARD_NO_MATERIAL_COMPONENTS.has(key)) { system.composants_materiels = []; removeM(system); }
+    else if (WIZARD_COMPONENT_DELEGATIONS.has(key)) { system.composants_materiels = []; system.composantes = "*"; system.composants_materiels_note = WIZARD_COMPONENT_DELEGATIONS.get(key); }
+    else system.composants_materiels = WIZARD_OVERRIDES.has(key) ? uniqueEntries(WIZARD_OVERRIDES.get(key)) : preserveOrParse(system, existing);
   } else if (isClassSpell(item, "illusionniste")) {
     applyAudit(item, indexes.illusionniste, "illusionniste");
     if (ILLUSIONIST_COMPONENT_DELEGATIONS.has(key)) { system.composants_materiels = []; system.composantes = "*"; }
@@ -360,9 +370,12 @@ function applyEffectProfile(item) {
   return { applied: true, changed: before !== JSON.stringify(next), level, classSlug };
 }
 function classWarning(item, classSlug) {
+  const key = slug(item.name ?? item.system?.nom);
+  if (classSlug === "magicien" && (WIZARD_NO_MATERIAL_COMPONENTS.has(key) || WIZARD_COMPONENT_DELEGATIONS.has(key))) return null;
+  if (classSlug === "illusionniste" && ILLUSIONIST_COMPONENT_DELEGATIONS.has(key)) return null;
   const entries = item.system?.composants_materiels ?? [];
   const bad = warningList(entries);
-  if (String(item.system?.composantes ?? "").toUpperCase().includes("M") && !materialCount(entries) && !(classSlug === "illusionniste" && ILLUSIONIST_COMPONENT_DELEGATIONS.has(slug(item.name)))) bad.push("M sans composant");
+  if (String(item.system?.composantes ?? "").toUpperCase().includes("M") && !materialCount(entries)) bad.push("M sans composant");
   return bad.length ? { name: item.name, niveau: item.system?.niveau, components: bad, allComponents: clone(entries), classe: classSlug } : null;
 }
 const makeBucket = () => ({ applied: [], missing: [] });
