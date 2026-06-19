@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 
-const VERSION = "2026-06-18-normalize-wizard-components-resolve-warnings-v1";
+const VERSION = "2026-06-19-normalize-wizard-components-text-mining-v1";
 const DEFAULT_INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const DEFAULT_OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
 const DEFAULT_CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
@@ -225,7 +225,14 @@ const MATERIAL_CANON = new Map(Object.entries({
   fer_pyriteux: "fer pyriteux",
   morceau_de_fer_pyriteux: "morceau de fer pyriteux",
   velin_enlumine: "vélin enluminé",
-  velin_specialement_enlumine: "vélin enluminé"
+  velin_specialement_enlumine: "vélin enluminé",
+  objet_magnetique: "objet magnétique",
+  objets_magnetiques: "objets magnétiques",
+  deux_objets_magnetiques: "deux objets magnétiques",
+  copeau_de_metal: "copeau de métal",
+  copeaux_de_metal: "copeaux de métal",
+  deux_copeaux_de_metal: "deux copeaux de métal",
+  patte_arriere_de_sauterelle: "patte arrière de sauterelle"
 }));
 
 const ELEMENTAL_VARIANTS = [
@@ -303,6 +310,11 @@ const NOISE_CONTAINS = [
   "utilisé pour", "utilisee pour", "utilisée pour", "poudre en forme de cone"
 ].map(norm);
 
+const DIRTY_MARKERS = [
+  "par exemple", "que le magicien doit", "que l'illusionniste doit", "que l’illusionniste doit", "une pour chaque",
+  "n’importe quel type", "n'importe quel type", "consommé", "consommée", "utilisé pour", "utilisée pour"
+];
+
 function canonicalMaterial(value) {
   const key = slug(value);
   return MATERIAL_CANON.get(key) ?? text(value);
@@ -310,9 +322,10 @@ function canonicalMaterial(value) {
 
 function stripMaterialSourcePhrase(value) {
   return text(value)
-    .replace(/^(?:la|les)\s+composantes?\s+mat[eé]rielles?\s+(?:sont|est|consistent?\s+en|se\s+composent\s+de)\s*/i, "")
-    .replace(/^composantes?\s+mat[eé]rielles?\s+(?:sont|est|consistent?\s+en|se\s+composent\s+de)\s*/i, "")
-    .replace(/^(?:la|les)\s+composante\s+mat[eé]rielle\s+(?:est|sont)\s*/i, "")
+    .replace(/^(?:la|les)\s+composantes?\s+mat[eé]rielles?\s+(?:de\s+ce\s+sort\s+)?(?:sont|est|consistent?\s+en|se\s+composent\s+de)\s*/i, "")
+    .replace(/^composantes?\s+mat[eé]rielles?\s+(?:de\s+ce\s+sort\s+)?(?:sont|est|consistent?\s+en|se\s+composent\s+de)\s*/i, "")
+    .replace(/^(?:la|les)\s+composante\s+mat[eé]rielle\s+(?:de\s+ce\s+sort\s+)?(?:est|sont)\s*/i, "")
+    .replace(/^la\s+composante\s+de\s+ce\s+sort\s+est\s+/i, "")
     .replace(/\s+d['’]une\s+valeur\b.*$/i, "")
     .replace(/\s+d['’]un\s+co[uû]t\b.*$/i, "")
     .replace(/\s+co[uû]tant\b.*$/i, "")
@@ -328,14 +341,33 @@ function stripMaterialSourcePhrase(value) {
     .trim();
 }
 
+function removeIncises(value) {
+  return text(value)
+    .replace(/\([^)]*\)/g, " ")
+    .replace(/\s+[—–-]\s+[^—–-]+\s+[—–-]\s+/g, " ")
+    .replace(/,\s*par\s+exemple\s+[^,.;]+(?=,|\.|;|$)/gi, "")
+    .replace(/\s+par\s+exemple\s+[^,.;]+(?=,|\.|;|$)/gi, "")
+    .replace(/\s+de\s+n[’']?importe\s+quel\s+type\b/gi, "")
+    .replace(/\s+quel\s+qu['’]?en\s+soit\s+le\s+type\b/gi, "")
+    .replace(/\s+que\s+(?:le\s+magicien|l[’']?illusionniste)\s+doit\b.*$/i, "")
+    .replace(/\s+quand\s+le\s+sort\s+est\s+lanc[ée]\b.*$/i, "")
+    .replace(/\s+au\s+moment\s+du\s+lancement\b.*$/i, "")
+    .replace(/\s+/g, " ")
+    .replace(/\s+,/g, ",")
+    .replace(/,\s*,/g, ",")
+    .replace(/^,\s*|,\s*$/g, "")
+    .trim();
+}
+
 function cleanMaterial(value) {
-  let out = stripMaterialSourcePhrase(value)
+  let out = removeIncises(stripMaterialSourcePhrase(value))
     .replaceAll("_", "-")
     .replace(/-/g, " ")
     .replace(/^d['’]\s*/i, "")
     .replace(/^(un|une)?\s*peu\s+de\s+/i, "")
     .replace(/^(un|une|du|de la|de l['’]?|des|le|la|les)\s+/i, "")
     .replace(/^(quelques|plusieurs)\s+/i, "")
+    .replace(/\s+/g, " ")
     .trim();
   out = canonicalMaterial(out);
   return out;
@@ -356,26 +388,49 @@ function rejectMaterial(value) {
 function componentNamesFromEntry(entry) {
   if (typeof entry === "string") return [entry];
   if (!entry || typeof entry !== "object") return [];
-  if (entry.type === "alternative") return Array.isArray(entry.choix) ? entry.choix : [];
-  if (entry.type === "variante") return Array.isArray(entry.composants) ? entry.composants : [];
+  if (entry.type === "alternative") return Array.isArray(entry.choix) ? entry.choix.flatMap(componentNamesFromEntry) : [];
+  if (entry.type === "variante") return Array.isArray(entry.composants) ? entry.composants.flatMap(componentNamesFromEntry) : [];
   const direct = entry.nom ?? entry.name ?? entry.label ?? entry.item ?? entry.itemName ?? entry.component ?? entry.composant ?? entry.slug ?? entry.id;
   return direct ? [String(direct)] : [];
 }
 
+function isComplexMaterialText(value) {
+  const raw = text(value);
+  if (!raw) return false;
+  const n = norm(raw);
+  if (/\b(?:ou|soit)\b/i.test(raw)) return true;
+  if (/[—–]/.test(raw)) return true;
+  if (raw.includes(",")) return true;
+  if (DIRTY_MARKERS.some(marker => n.includes(norm(marker)))) return true;
+  return n.split(" ").length > 8;
+}
+
 function sanitizeEntry(entry) {
   if (typeof entry === "string") {
+    if (isComplexMaterialText(entry)) return parseSourceMaterials(entry);
     const cleaned = cleanMaterial(entry);
     return rejectMaterial(cleaned) ? null : cleaned;
   }
   if (!entry || typeof entry !== "object") return null;
   if (entry.type === "alternative" || Array.isArray(entry.choix)) {
-    const choix = uniqueFlat((entry.choix ?? entry.alternatives ?? entry.options ?? []).map(cleanMaterial).filter(v => !rejectMaterial(v)));
+    const choix = uniqueFlat((entry.choix ?? entry.alternatives ?? entry.options ?? []).flatMap(value => {
+      const cleaned = sanitizeEntry(value);
+      if (!cleaned) return [];
+      if (Array.isArray(cleaned)) return cleaned.flatMap(componentNamesFromEntry);
+      if (cleaned?.type === "alternative") return cleaned.choix ?? [];
+      return componentNamesFromEntry(cleaned);
+    }).map(cleanMaterial).filter(v => !rejectMaterial(v)));
     if (!choix.length) return null;
     if (choix.length === 1) return choix[0];
     return { type: "alternative", choix };
   }
   if (entry.type === "variante") {
-    const composants = uniqueFlat((entry.composants ?? []).map(cleanMaterial).filter(v => !rejectMaterial(v)));
+    const composants = uniqueFlat((entry.composants ?? []).flatMap(value => {
+      const cleaned = sanitizeEntry(value);
+      if (!cleaned) return [];
+      if (Array.isArray(cleaned)) return cleaned.flatMap(componentNamesFromEntry);
+      return componentNamesFromEntry(cleaned);
+    }).map(cleanMaterial).filter(v => !rejectMaterial(v)));
     if (!composants.length) return null;
     return {
       type: "variante",
@@ -384,15 +439,19 @@ function sanitizeEntry(entry) {
       composants
     };
   }
-  const names = componentNamesFromEntry(entry).map(cleanMaterial).filter(v => !rejectMaterial(v));
+  const names = componentNamesFromEntry(entry);
   if (!names.length) return null;
-  return names[0];
+  if (names.length === 1 && isComplexMaterialText(names[0])) return parseSourceMaterials(names[0]);
+  const cleaned = names.map(cleanMaterial).filter(v => !rejectMaterial(v));
+  if (!cleaned.length) return null;
+  return cleaned.length === 1 ? cleaned[0] : cleaned;
 }
 
 function uniqueFlat(list) {
   const seen = new Set();
   const out = [];
-  for (const value of list) {
+  for (const value of list.flat(Infinity)) {
+    if (value === undefined || value === null) continue;
     const key = slug(value);
     if (!key || seen.has(key)) continue;
     seen.add(key);
@@ -404,15 +463,18 @@ function uniqueFlat(list) {
 function uniqueEntries(entries) {
   const seen = new Set();
   const out = [];
-  for (const entry of entries) {
-    const sanitized = sanitizeEntry(entry);
-    if (!sanitized) continue;
-    const key = typeof sanitized === "string"
-      ? `s:${slug(sanitized)}`
-      : `${sanitized.type}:${slug(sanitized.id ?? sanitized.label ?? "")}:${componentNamesFromEntry(sanitized).map(slug).join("|")}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    out.push(sanitized);
+  for (const entry of entries.flat(Infinity)) {
+    const sanitizedRaw = sanitizeEntry(entry);
+    const sanitizedList = Array.isArray(sanitizedRaw) ? sanitizedRaw : [sanitizedRaw];
+    for (const sanitized of sanitizedList) {
+      if (!sanitized) continue;
+      const key = typeof sanitized === "string"
+        ? `s:${slug(sanitized)}`
+        : `${sanitized.type}:${slug(sanitized.id ?? sanitized.label ?? "")}:${componentNamesFromEntry(sanitized).map(slug).join("|")}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(sanitized);
+    }
   }
   return out;
 }
@@ -424,11 +486,40 @@ function parseElementalVariants(source) {
   return clone(ELEMENTAL_VARIANTS);
 }
 
+function extractMaterialClause(source) {
+  let cleaned = stripMaterialSourcePhrase(source);
+  const match = cleaned.match(/(?:la|les)\s+composantes?\s+mat[eé]rielles?\s+(?:de\s+ce\s+sort\s+)?(?:sont|est|consistent?\s+en|se\s+composent\s+de)\s+(.+?)(?:\s+(?:l['’]?inverse|le\s+sort|ce\s+sort|quand\s+le\s+sort)\b|[.?!]$|$)/i)
+    ?? cleaned.match(/la\s+composante\s+de\s+ce\s+sort\s+est\s+(.+?)(?:\s+(?:l['’]?inverse|le\s+sort|ce\s+sort|quand\s+le\s+sort)\b|[.?!]$|$)/i);
+  if (match?.[1]) cleaned = match[1];
+  return removeIncises(cleaned);
+}
+
+function parseAlternativeClause(source) {
+  const cleaned = extractMaterialClause(source);
+  if (!cleaned) return [];
+
+  let choices = [];
+  if (/\bsoit\b/i.test(cleaned)) {
+    choices = cleaned
+      .replace(/^.*?\bsoit\b\s*/i, "")
+      .split(/\s*,?\s*soit\s+|\s+ou\s+/i);
+  } else if (/\s+ou\s+/i.test(cleaned)) {
+    choices = cleaned.split(/\s+ou\s+/i);
+  }
+
+  choices = uniqueFlat(choices.map(cleanMaterial).filter(v => !rejectMaterial(v)));
+  if (choices.length <= 1) return [];
+  return [{ type: "alternative", choix: choices }];
+}
+
 function parseSourceMaterials(source) {
   const variants = parseElementalVariants(source);
   if (variants.length) return variants;
 
-  const cleaned = stripMaterialSourcePhrase(source);
+  const alternative = parseAlternativeClause(source);
+  if (alternative.length) return alternative;
+
+  const cleaned = extractMaterialClause(source);
   if (!cleaned) return [];
   const entries = [];
   const chunks = cleaned
@@ -436,21 +527,12 @@ function parseSourceMaterials(source) {
     .map(text)
     .filter(Boolean);
   for (const chunk of chunks) {
-    if (/\s+soit\s+/i.test(chunk)) {
-      const leading = chunk.split(/\s+et\s*,?\s*soit\s+/i);
-      if (leading.length === 2) {
-        for (const part of leading[0].split(/\s+et\s+/i).map(cleanMaterial).filter(v => !rejectMaterial(v))) entries.push(part);
-        const choix = leading[1].split(/\s*,?\s*soit\s+|\s+ou\s+/i).map(cleanMaterial).filter(v => !rejectMaterial(v));
-        if (choix.length > 1) entries.push({ type: "alternative", choix });
-        else if (choix.length === 1) entries.push(choix[0]);
+    if (/\s+soit\s+/i.test(chunk) || /\s+ou\s+/i.test(chunk)) {
+      const alt = parseAlternativeClause(chunk);
+      if (alt.length) {
+        entries.push(...alt);
         continue;
       }
-    }
-    if (/\s+ou\s+/i.test(chunk)) {
-      const choix = chunk.split(/\s+ou\s+/i).map(cleanMaterial).filter(v => !rejectMaterial(v));
-      if (choix.length > 1) entries.push({ type: "alternative", choix });
-      else if (choix.length === 1) entries.push(choix[0]);
-      continue;
     }
     for (const part of chunk.split(/\s+et\s+/i).map(cleanMaterial).filter(v => !rejectMaterial(v))) entries.push(part);
   }
@@ -466,6 +548,17 @@ function materialEntriesFromValue(value) {
 
 function materialEntryCount(entries) {
   return (entries ?? []).reduce((sum, entry) => sum + componentNamesFromEntry(entry).length, 0);
+}
+
+function materialQualityWarnings(entries) {
+  const warnings = [];
+  for (const entry of entries ?? []) {
+    for (const name of componentNamesFromEntry(entry)) {
+      const n = norm(name);
+      if (rejectMaterial(name) || DIRTY_MARKERS.some(marker => n.includes(norm(marker))) || n.split(" ").length > 8) warnings.push(name);
+    }
+  }
+  return warnings;
 }
 
 function ensureComposantesHasM(system, entries) {
@@ -526,12 +619,23 @@ function mergeClassAuditSource(item, auditIndex, classSlug) {
   return source;
 }
 
+function resolveMaterialEntries(system) {
+  let entries = materialEntriesFromValue(system.composants_materiels);
+  if (materialQualityWarnings(entries).length && system.composants_materiels_source) {
+    const fromSource = materialEntriesFromValue(system.composants_materiels_source);
+    if (materialEntryCount(fromSource)) entries = fromSource;
+  }
+  if (!materialEntryCount(entries)) entries = materialEntriesFromValue(system.composants_materiels_objets);
+  if (!materialEntryCount(entries)) entries = materialEntriesFromValue(system.composants_requis);
+  if (!materialEntryCount(entries)) entries = materialEntriesFromValue(system.composants_materiels_source);
+  return uniqueEntries(entries);
+}
+
 function normalizeMaterials(item, indexes) {
   const { existingIndex, magicienAuditIndex, illusionnisteAuditIndex } = indexes;
   const system = item.system ?? {};
   const before = clone(system.composants_materiels ?? []);
   const key = slug(item?.name ?? system?.nom);
-  let entries = [];
 
   if (isIllusionnisteSpell(item)) {
     mergeClassAuditSource(item, illusionnisteAuditIndex, "illusionniste");
@@ -541,11 +645,7 @@ function normalizeMaterials(item, indexes) {
       system.composants_materiels = uniqueEntries(ILLUSIONIST_MATERIAL_OVERRIDES.get(key));
       ensureComposantesHasM(system, system.composants_materiels);
     } else {
-      entries = materialEntriesFromValue(system.composants_materiels);
-      if (!materialEntryCount(entries)) entries = materialEntriesFromValue(system.composants_materiels_objets);
-      if (!materialEntryCount(entries)) entries = materialEntriesFromValue(system.composants_requis);
-      if (!materialEntryCount(entries)) entries = materialEntriesFromValue(system.composants_materiels_source);
-      system.composants_materiels = uniqueEntries(entries);
+      system.composants_materiels = resolveMaterialEntries(system);
       ensureComposantesHasM(system, system.composants_materiels);
     }
   } else if (isMagicienSpell(item)) {
@@ -559,16 +659,11 @@ function normalizeMaterials(item, indexes) {
       system.composants_materiels = uniqueEntries(WIZARD_MATERIAL_OVERRIDES.get(key));
       ensureComposantesHasM(system, system.composants_materiels);
     } else {
-      entries = materialEntriesFromValue(system.composants_materiels);
-      if (!materialEntryCount(entries)) entries = materialEntriesFromValue(system.composants_materiels_objets);
-      if (!materialEntryCount(entries)) entries = materialEntriesFromValue(system.composants_requis);
-      if (!materialEntryCount(entries)) entries = materialEntriesFromValue(system.composants_materiels_source);
-      system.composants_materiels = uniqueEntries(entries);
+      system.composants_materiels = resolveMaterialEntries(system);
       ensureComposantesHasM(system, system.composants_materiels);
     }
   } else {
-    entries = materialEntriesFromValue(system.composants_materiels);
-    system.composants_materiels = uniqueEntries(entries);
+    system.composants_materiels = resolveMaterialEntries(system);
   }
 
   return {
@@ -652,14 +747,7 @@ function materialWarningForClass(item, classSlug) {
   if (classSlug === "magicien" && (WIZARD_NO_MATERIAL_COMPONENTS.has(key) || WIZARD_COMPONENT_DELEGATIONS.has(key))) return null;
   const entries = item?.system?.composants_materiels ?? [];
   const hasM = String(item?.system?.composantes ?? "").toUpperCase().includes("M");
-  const bad = [];
-  for (const entry of entries) {
-    if (typeof entry === "string" && rejectMaterial(entry)) bad.push(entry);
-    if (entry && typeof entry === "object") {
-      if (!componentNamesFromEntry(entry).length) bad.push(entry);
-      for (const component of componentNamesFromEntry(entry)) if (rejectMaterial(component)) bad.push(component);
-    }
-  }
+  const bad = materialQualityWarnings(entries);
   if (hasM && !materialEntryCount(entries)) bad.push("M sans composant");
   return bad.length ? { name: item.name, niveau: item.system?.niveau, components: bad, allComponents: clone(entries), classe: classSlug } : null;
 }
