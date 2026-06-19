@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 
-const VERSION = "2026-06-19-normalize-components-v22";
+const VERSION = "2026-06-19-normalize-components-v23";
 const DEFAULT_INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const DEFAULT_OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
 const DEFAULT_CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
@@ -25,11 +25,31 @@ const SYSTEM_KEYS = [
   "composants_materiels_reference", "composants_materiels_verification_recommandee", "composants_materiels_note",
   "composants_materiels_a_renseigner", "description", "onUse", "onUseCode", "tags", "effectTags", "effectProfile"
 ];
+const SYSTEM_KEY_SET = new Set(SYSTEM_KEYS);
+const SYSTEM_FIELD_ALIASES = new Map(Object.entries({
+  "durée": "duree",
+  "portée": "portee",
+  "école": "ecole",
+  on_use: "onUse",
+  onuse: "onUse",
+  description_html: "description",
+  description_reelle: "description",
+  description_source: "description",
+  description_texte: "description"
+}));
 
 const text = value => String(value ?? "").replace(/\s+/g, " ").trim();
 const norm = value => text(value).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "'").replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim();
 const slug = value => norm(value).replace(/\s+/g, "_");
 const clone = value => value === undefined ? undefined : JSON.parse(JSON.stringify(value));
+const isEmptySystemValue = value => value === undefined || value === null || value === "" || (Array.isArray(value) && value.length === 0);
+
+function normalizeSystemShape(system = {}) {
+  for (const [alias, target] of SYSTEM_FIELD_ALIASES.entries()) {
+    if (system[alias] !== undefined && isEmptySystemValue(system[target]) && !isEmptySystemValue(system[alias])) system[target] = clone(system[alias]);
+  }
+  for (const key of Object.keys(system)) if (!SYSTEM_KEY_SET.has(key)) delete system[key];
+}
 
 function readJson(file, fallback = {}) {
   try { return JSON.parse(fs.readFileSync(file, "utf8")); }
@@ -531,6 +551,7 @@ function main() {
     const hadSource = { clerc: !isClassSpell(item, "clerc") || audits.clerc.index.has(effectKey(item)), magicien: !isClassSpell(item, "magicien") || audits.magicien.index.has(effectKey(item)), illusionniste: !isClassSpell(item, "illusionniste") || audits.illusionniste.index.has(effectKey(item)) };
     const materials = normalizeMaterials(item, { clerc: audits.clerc.index, magicien: audits.magicien.index, illusionniste: audits.illusionniste.index }, existingIndex);
     const profile = applyEffectProfile(item);
+    normalizeSystemShape(item.system);
     control.spells += 1;
     if (materials.changed) { control.changedSpells += 1; if (control.examples.length < 80) control.examples.push({ name: item.name, classe: item.system.classe, niveau: item.system.niveau, before: materials.before, after: materials.after }); }
     if (profile.changed) control.changedEffectProfiles += 1;
