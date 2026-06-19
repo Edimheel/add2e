@@ -802,12 +802,42 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "petite fiole d’eau",
-          "fiole est le contenant réutilisable",
-          "son contenu est",
-          "petite fiole de poussière",
-          "fiole d’eau",
-          "fiole de poussière"
+          {
+            "slug": "petite_fiole_d_eau",
+            "nom": "petite fiole d’eau",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "fiole_est_le_contenant_reutilisable",
+            "nom": "fiole est le contenant réutilisable",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "son_contenu_est",
+            "nom": "son contenu est",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "petite_fiole_de_poussiere",
+            "nom": "petite fiole de poussière",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "fiole_d_eau",
+            "nom": "fiole d’eau",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "fiole_de_poussiere",
+            "nom": "fiole de poussière",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
@@ -1164,7 +1194,12 @@
         "jet_sauvegarde": "Annule si non consentant",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "poudre de fer"
+          {
+            "slug": "poudre_de_fer",
+            "nom": "poudre de fer",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante de ce sort est une pincée de poudre de fer.",
         "composants_materiels_reference": "",
@@ -1319,7 +1354,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "cocon de chenille"
+          {
+            "slug": "cocon_de_chenille",
+            "nom": "cocon de chenille",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "cocon de chenille",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -1752,18 +1792,38 @@
           {
             "type": "alternative",
             "choix": [
-              "craie",
-              "farine blanche"
+              {
+                "slug": "craie",
+                "nom": "Craie",
+                "quantite": 1,
+                "consomme": true
+              },
+              {
+                "slug": "farine_blanche",
+                "nom": "farine blanche",
+                "quantite": 1,
+                "consomme": true
+              },
+              {
+                "slug": "noir_de_fumee",
+                "nom": "noir de fumée",
+                "quantite": 1,
+                "consomme": true
+              },
+              {
+                "slug": "suie",
+                "nom": "suie",
+                "quantite": 1,
+                "consomme": true
+              },
+              {
+                "slug": "vermillon",
+                "nom": "vermillon",
+                "quantite": 1,
+                "consomme": true
+              }
             ]
-          },
-          {
-            "type": "alternative",
-            "choix": [
-              "noir de fumée",
-              "suie"
-            ]
-          },
-          "vermillon"
+          }
         ],
         "composants_materiels_source": "craie ou farine blanche, noir de fumée ou suie, vermillon",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
@@ -2488,7 +2548,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Morceau d’alun trempé dans du vinaigre"
+          {
+            "slug": "morceau_d_alun_trempe_dans_du_vinaigre",
+            "nom": "Morceau d’alun trempé dans du vinaigre",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle est un morceau d’alun trempé dans du vinaigre. | Les composantes matérielles sont des perles écrasées pour une valeur minimale de 1.",
         "composants_materiels_reference": "",
@@ -3444,8 +3509,18 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "carbone en poudre",
-          "citron en poudre"
+          {
+            "slug": "carbone_en_poudre",
+            "nom": "carbone en poudre",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "citron_en_poudre",
+            "nom": "citron en poudre",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "Les composantes matérielles de ce sort sont du carbone et du citron réduits en poudre.",
         "composants_materiels_reference": "",
@@ -4268,7 +4343,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "soie"
+          {
+            "slug": "soie",
+            "nom": "soie",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle de ce sort est un petit morceau de soie que le magicien doit passer sur l’objet affecté.",
         "composants_materiels_reference": "",
@@ -5391,7 +5471,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "rayon de miel"
+          {
+            "slug": "rayon_de_miel",
+            "nom": "rayon de miel",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "petit morceau de rayon de miel",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
@@ -5536,7 +5621,12 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "rayon de miel"
+          {
+            "slug": "rayon_de_miel",
+            "nom": "rayon de miel",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
@@ -6136,8 +6226,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "phosphore pour la version chaude",
-          "phosphore"
+          {
+            "slug": "phosphore_pour_la_version_chaude",
+            "nom": "Phosphore pour la version chaude",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "phosphore pour la version chaude, phosphore ou luciole/ver luisant pour la version froide selon arbitrage MD",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
@@ -6282,7 +6376,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Petite boule composée de fiente de chauve souris"
+          {
+            "slug": "petite_boule_composee_de_fiente_de_chauve_souris",
+            "nom": "Petite boule composée de fiente de chauve souris",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle de ce sort est une petite boule composée de fiente de chauve-souris et de souffre.",
         "composants_materiels_reference": "",
@@ -6427,8 +6526,18 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "comme Boule de feu : boule de soufre",
-          "fiente de chauve souris"
+          {
+            "slug": "comme_boule_de_feu_boule_de_soufre",
+            "nom": "Comme Boule de feu : boule de soufre",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "fiente_de_chauve_souris",
+            "nom": "fiente de chauve souris",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "comme Boule de feu : boule de soufre et fiente de chauve-souris",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
@@ -6573,8 +6682,18 @@
         "jet_sauvegarde": "spécial",
         "composantes": "V, M",
         "composants_materiels": [
-          "laine",
-          "cire"
+          {
+            "slug": "laine",
+            "nom": "laine",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "cire",
+            "nom": "cire",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
@@ -6683,8 +6802,18 @@
           {
             "type": "alternative",
             "choix": [
-              "morceau de laine",
-              "cire"
+              {
+                "slug": "morceau_de_laine",
+                "nom": "morceau de laine",
+                "quantite": 1,
+                "consomme": true
+              },
+              {
+                "slug": "cire",
+                "nom": "cire",
+                "quantite": 1,
+                "consomme": true
+              }
             ]
           }
         ],
@@ -6974,10 +7103,30 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Cinq chandelles noires allumées",
-          "Saindoux",
-          "Suie",
-          "Racine de mandragore"
+          {
+            "slug": "cinq_chandelles_noires_allumees",
+            "nom": "Cinq chandelles noires allumées",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "saindoux",
+            "nom": "Saindoux",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "suie",
+            "nom": "Suie",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "racine_de_mandragore",
+            "nom": "Racine de mandragore",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "Les composantes matérielles sont cinq chandelles noires allumées, un brasero de charbons ardents dans lequel le magicien doit brûler du soufre, des fourrures de chauves-souris, du saindoux, de la suie, des cristaux d’acide mercuro-nitrique, une racine de mandragore, de l’alcool, un parchemin sur lequel est inscrit le nom du démon, sous formes de runes entourées d’un pentacle et une coupe de sang de mammifère (humain de préférence) placé dans l’endroit où sera retenu le cacodémon.",
         "composants_materiels_reference": "",
@@ -7533,7 +7682,12 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "a completer"
+          {
+            "slug": "a_completer",
+            "nom": "a completer",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
@@ -8413,7 +8567,12 @@
         "jet_sauvegarde": "Annule",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "petite tige de fer"
+          {
+            "slug": "petite_tige_de_fer",
+            "nom": "petite tige de fer",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "Les composantes matérielles pour ce sort sont un petit disque de bronze et une petite tige de fer.",
         "composants_materiels_reference": "",
@@ -8850,7 +9009,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "jeu de 3 coquilles de noisettes"
+          {
+            "slug": "jeu_de_3_coquilles_de_noisettes",
+            "nom": "jeu de 3 coquilles de noisettes",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
@@ -9279,10 +9443,30 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "pincée d’humus",
-          "goutte d’eau",
-          "feuille",
-          "brindille"
+          {
+            "slug": "pincee_d_humus",
+            "nom": "pincée d’humus",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "goutte_d_eau",
+            "nom": "goutte d’eau",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "feuille",
+            "nom": "feuille",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "brindille",
+            "nom": "brindille",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
@@ -9822,7 +10006,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Bout de corne taillé en forme de croissant"
+          {
+            "slug": "bout_de_corne_taille_en_forme_de_croissant",
+            "nom": "Bout de corne taillé en forme de croissant",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "Les composantes matérielles sont de l’encens à faire brûler et un bout de corne taillé en forme de croissant.",
         "composants_materiels_reference": "",
@@ -9966,7 +10155,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "si la chaumière est détruite"
+          {
+            "slug": "petite_perle_de_cristal",
+            "nom": "petite perle de cristal",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "petite perle de cristal qui se brisera à la fin du sort ou si la chaumière est détruite",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -10110,9 +10304,24 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "sifflet en argent",
-          "morceau d’os",
-          "fil"
+          {
+            "slug": "sifflet_en_argent",
+            "nom": "sifflet en argent",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "morceau_d_os",
+            "nom": "morceau d’os",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "fil",
+            "nom": "fil",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
@@ -10203,7 +10412,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, M",
         "composants_materiels": [
-          "Petite plume"
+          {
+            "slug": "petite_plume",
+            "nom": "Petite plume",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle est une petite plume ou un peu de duvet que le magicien doit avoir quelque part sur lui.",
         "composants_materiels_reference": "",
@@ -10347,7 +10561,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "petite corne d’argent"
+          {
+            "slug": "petite_corne_d_argent",
+            "nom": "petite corne d’argent",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle est une petite corne d’argent d’une valeur minimale de 100 po, qui disparaît quand le sort est lancé.",
         "composants_materiels_reference": "",
@@ -10492,7 +10711,23 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "humanoïde"
+          {
+            "type": "alternative",
+            "choix": [
+              {
+                "slug": "pincee_de_poudre_de_glande_pineale_humaine",
+                "nom": "pincée de poudre de glande pinéale humaine",
+                "quantite": 1,
+                "consomme": true
+              },
+              {
+                "slug": "humanoide",
+                "nom": "humanoïde",
+                "quantite": 1,
+                "consomme": true
+              }
+            ]
+          }
         ],
         "composants_materiels_source": "La composante matérielle de ce sort est une pincée de poudre faite à partir de la glande pinéale d’un humain ou d’un humanoïde.",
         "composants_materiels_reference": "",
@@ -10637,7 +10872,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Morceau de chair de l’original"
+          {
+            "slug": "morceau_de_chair_de_l_original",
+            "nom": "Morceau de chair de l’original",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle de ce sort est un morceau de chair de l’original.",
         "composants_materiels_reference": "",
@@ -10781,8 +11021,18 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "coffre de grande valeur",
-          "réplique miniature du coffre"
+          {
+            "slug": "coffre_de_grande_valeur",
+            "nom": "coffre de grande valeur",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "replique_miniature_du_coffre",
+            "nom": "réplique miniature du coffre",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
@@ -11315,7 +11565,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Pincée de suie"
+          {
+            "slug": "pincee_de_suie",
+            "nom": "Pincée de suie",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "Les composantes matérielles de ce sort sont une pincée de suie et quelques grains de sel.",
         "composants_materiels_reference": "",
@@ -11462,8 +11717,18 @@
           {
             "type": "alternative",
             "choix": [
-              "cône de verre",
-              "de cristal de très petite taille"
+              {
+                "slug": "cone_de_verre",
+                "nom": "Cône de verre",
+                "quantite": 1,
+                "consomme": true
+              },
+              {
+                "slug": "de_cristal_de_tres_petite_taille",
+                "nom": "de cristal de très petite taille",
+                "quantite": 1,
+                "consomme": true
+              }
             ]
           }
         ],
@@ -11702,7 +11967,12 @@
         "jet_sauvegarde": "spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "a completer"
+          {
+            "slug": "a_completer",
+            "nom": "a completer",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -11808,7 +12078,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Jeu de 3 coquilles de noisettes"
+          {
+            "slug": "jeu_de_3_coquilles_de_noisettes",
+            "nom": "Jeu de 3 coquilles de noisettes",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "jeu de 3 coquilles de noisettes",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -12724,10 +12999,30 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "encens à brûler",
-          "mélange de terre",
-          "de bois",
-          "eau"
+          {
+            "slug": "encens_a_bruler",
+            "nom": "encens à brûler",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "melange_de_terre",
+            "nom": "mélange de terre",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "de_bois",
+            "nom": "de bois",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "eau",
+            "nom": "eau",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -13077,7 +13372,12 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "a completer"
+          {
+            "slug": "a_completer",
+            "nom": "a completer",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
@@ -13182,8 +13482,18 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Poudre de blé",
-          "Parchemin torsadé en forme de boucle"
+          {
+            "slug": "poudre_de_ble",
+            "nom": "Poudre de blé",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "parchemin_torsade_en_forme_de_boucle",
+            "nom": "Parchemin torsadé en forme de boucle",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "Les composantes matérielles sont de la poudre de blé et un parchemin torsadé en forme de boucle.",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
@@ -13332,7 +13642,12 @@
             "id": "mineral",
             "label": "Création d’un objet minéral",
             "composants": [
-              "morceau de matière minérale similaire"
+              {
+                "slug": "morceau_de_matiere_minerale_similaire",
+                "nom": "morceau de matière minérale similaire",
+                "quantite": 1,
+                "consomme": true
+              }
             ]
           },
           {
@@ -13340,7 +13655,12 @@
             "id": "vegetal",
             "label": "Création d’un objet végétal",
             "composants": [
-              "morceau de matière végétale similaire"
+              {
+                "slug": "morceau_de_matiere_vegetale_similaire",
+                "nom": "morceau de matière végétale similaire",
+                "quantite": 1,
+                "consomme": true
+              }
             ]
           }
         ],
@@ -13486,7 +13806,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "morceau de matière végétale similaire"
+          {
+            "slug": "morceau_de_matiere_vegetale_similaire",
+            "nom": "morceau de matière végétale similaire",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
@@ -13631,7 +13956,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Petit morceau d’acier"
+          {
+            "slug": "petit_morceau_d_acier",
+            "nom": "Petit morceau d’acier",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "Les composantes matérielles sont un petit morceau de verre et un petit morceau d’acier.",
         "composants_materiels_reference": "",
@@ -14023,7 +14353,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "pincée de poudre d’os"
+          {
+            "slug": "pincee_de_poudre_d_os",
+            "nom": "pincée de poudre d’os",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "pincée de poudre d’os",
         "composants_materiels_reference": "Recherche dans le texte du Manuel des joueurs",
@@ -14415,13 +14750,33 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "poignée de petites sphères d’argile",
-          "de cristal",
           {
             "type": "alternative",
             "choix": [
-              "de verre",
-              "minérales"
+              {
+                "slug": "poignee_de_petites_spheres_d_argile",
+                "nom": "Poignée de petites sphères d’argile",
+                "quantite": 1,
+                "consomme": true
+              },
+              {
+                "slug": "poignee_de_petites_spheres_de_cristal",
+                "nom": "Poignée de petites sphères de cristal",
+                "quantite": 1,
+                "consomme": true
+              },
+              {
+                "slug": "poignee_de_petites_spheres_de_verre",
+                "nom": "Poignée de petites sphères de verre",
+                "quantite": 1,
+                "consomme": true
+              },
+              {
+                "slug": "poignee_de_petites_spheres_minerales",
+                "nom": "Poignée de petites sphères minérales",
+                "quantite": 1,
+                "consomme": true
+              }
             ]
           }
         ],
@@ -14817,7 +15172,12 @@
         "jet_sauvegarde": "spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "a completer"
+          {
+            "slug": "a_completer",
+            "nom": "a completer",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
@@ -15067,7 +15427,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Pincée de poussière"
+          {
+            "slug": "pincee_de_poussiere",
+            "nom": "Pincée de poussière",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "Les composantes matérielles sont une pierre aimantée et une pincée de poussière.",
         "composants_materiels_reference": "",
@@ -15212,8 +15577,18 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "pincée de talc",
-          "poudre d’argent qu’il faut répandre"
+          {
+            "slug": "pincee_de_talc",
+            "nom": "pincée de talc",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "poudre_d_argent_qu_il_faut_repandre",
+            "nom": "poudre d’argent qu’il faut répandre",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "Les composantes matérielles sont une pincée de talc et un peu de poudre d’argent qu’il faut répandre.",
         "composants_materiels_reference": "",
@@ -15456,7 +15831,12 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "a completer"
+          {
+            "slug": "a_completer",
+            "nom": "a completer",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui",
@@ -15564,7 +15944,12 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "a completer"
+          {
+            "slug": "a_completer",
+            "nom": "a completer",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
@@ -16196,15 +16581,35 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "morceau de cristal",
           {
             "type": "alternative",
             "choix": [
-              "de verre",
-              "de mica"
+              {
+                "slug": "morceau_de_cristal",
+                "nom": "Morceau de cristal",
+                "quantite": 1,
+                "consomme": true
+              },
+              {
+                "slug": "morceau_de_verre",
+                "nom": "Morceau de verre",
+                "quantite": 1,
+                "consomme": true
+              },
+              {
+                "slug": "morceau_de_mica",
+                "nom": "Morceau de mica",
+                "quantite": 1,
+                "consomme": true
+              },
+              {
+                "slug": "morceau_teinte_en_jaune",
+                "nom": "Morceau teinté en jaune",
+                "quantite": 1,
+                "consomme": true
+              }
             ]
-          },
-          "teinté en jaune"
+          }
         ],
         "composants_materiels_source": "morceau de cristal, de verre ou de mica, teinté en jaune",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -17138,7 +17543,12 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "a completer"
+          {
+            "slug": "a_completer",
+            "nom": "a completer",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
@@ -17653,7 +18063,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Goutte de mercure"
+          {
+            "slug": "goutte_de_mercure",
+            "nom": "Goutte de mercure",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle est une goutte de mercure.",
         "composants_materiels_reference": "",
@@ -17941,7 +18356,12 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "a completer"
+          {
+            "slug": "a_completer",
+            "nom": "a completer",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
@@ -18773,7 +19193,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Peu d’argile grasse"
+          {
+            "slug": "peu_d_argile_grasse",
+            "nom": "Peu d’argile grasse",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "peu d’argile grasse",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -19455,8 +19880,18 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Figurine plate",
-          "Sertie de gemmes"
+          {
+            "slug": "figurine_plate",
+            "nom": "Figurine plate",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "sertie_de_gemmes",
+            "nom": "Sertie de gemmes",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "Les composantes matérielles sont une figurine plate et fine en ivoire représentant le magicien (de très belle facture, filigranée d’or, émaillée et sertie de gemmes, le tout pour une valeur de 5.",
         "composants_materiels_reference": "",
@@ -19600,7 +20035,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "pièce de cuivre"
+          {
+            "slug": "piece_de_cuivre",
+            "nom": "pièce de cuivre",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
@@ -19744,7 +20184,23 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Petite poignée de sels alcalins ou de bromure"
+          {
+            "type": "alternative",
+            "choix": [
+              {
+                "slug": "petite_poignee_de_sels_alcalins",
+                "nom": "Petite poignée de sels alcalins",
+                "quantite": 1,
+                "consomme": true
+              },
+              {
+                "slug": "de_bromure",
+                "nom": "de bromure",
+                "quantite": 1,
+                "consomme": true
+              }
+            ]
+          }
         ],
         "composants_materiels_source": "petite poignée de sels alcalins ou de bromure",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -19888,9 +20344,24 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "surface d’écriture",
-          "encre fine faite de substances rares",
-          "coût minimum 200 po par flacon"
+          {
+            "slug": "surface_d_ecriture",
+            "nom": "Surface d’écriture",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "encre_fine_faite_de_substances_rares",
+            "nom": "encre fine faite de substances rares",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "cout_minimum_200_po_par_flacon",
+            "nom": "coût minimum 200 po par flacon",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "surface d’écriture et encre fine faite de substances rares, coût minimum 200 po par flacon",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
@@ -20034,7 +20505,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "encre à base de plomb"
+          {
+            "slug": "encre_a_base_de_plomb",
+            "nom": "encre à base de plomb",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle de ce sort est une encre fabriquée à base de plomb par un alchimiste.",
         "composants_materiels_reference": "",
@@ -20321,7 +20797,12 @@
         "jet_sauvegarde": "annule",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "a completer"
+          {
+            "slug": "a_completer",
+            "nom": "a completer",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
@@ -20430,8 +20911,18 @@
           {
             "type": "alternative",
             "choix": [
-              "cœur de poule",
-              "plume blanche"
+              {
+                "slug": "c_ur_de_poule",
+                "nom": "cœur de poule",
+                "quantite": 1,
+                "consomme": true
+              },
+              {
+                "slug": "plume_blanche",
+                "nom": "plume blanche",
+                "quantite": 1,
+                "consomme": true
+              }
             ]
           }
         ],
@@ -20721,8 +21212,18 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "gui",
-          "petite branche d’arbre"
+          {
+            "slug": "gui",
+            "nom": "gui",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "petite_branche_d_arbre",
+            "nom": "petite branche d’arbre",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "gui et une petite branche d’arbre",
         "composants_materiels_reference": "Recherche dans le texte du Manuel des joueurs",
@@ -21255,7 +21756,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "gemme d’emprisonnement"
+          {
+            "slug": "gemme_d_emprisonnement",
+            "nom": "gemme d’emprisonnement",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
@@ -21404,7 +21910,7 @@
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": true,
-        "composants_materiels_note": "Composants variables selon l’objet enchanté et la procédure d’enchantement.",
+        "composants_materiels_note": "Composants variables selon l’objet enchanté et la procédure d’enchantement. Composants variables selon l’objet enchanté et la procédure d’enchantement. Composants variables selon l’objet enchanté et la procédure d’enchantement. Composants variables selon l’objet enchanté et la procédure d’enchantement. Composants variables selon l’objet enchanté et la procédure d’enchantement. Composants variables selon l’objet enchanté et la procédure d’enchantement. Composants variables selon l’objet enchanté et la procédure d’enchantement. Composants variables selon l’objet enchanté et la procédure d’enchantement.",
         "composants_materiels_a_renseigner": false,
         "description": "ce sort doit être employé par un magicien désirant créer un objet magique. L’enchantement prépare l’objet à recevoir la magie que l’on veut lui conférer. L’objet doit remplir les conditions suivantes: 1) Il doit être dans un état impeccable 2) Il doit être de très belle facture, fabriqué avec les meilleurs matériaux et avec la plus grande précision possible 3) Sa valeur marchande doit refléter la 2e condition et dans tous les cas, le matériau de fabrication doit valoir au moins 100 po. Considérant la 3e condition, il est impossible de l’appliquer sur des objets, comme les cordes, les objets en cuir, les vêtements, la poterie, qui ne sont pas brodés, incrustés de bijoux, ciselés et/ou gravés. Cependant, si un tel travail et/ou matériau peut être ajouté sans altérer la fonction de l’objet, l’enchantement est possible. Le magicien doit toucher l’objet avec la main. Ce contact doit être constant pendant le temps d’incantation qui est de 16 heures + 8 à 64 heures (comme le magicien ne peut travailleur plus de 8 heures par jour et qu’il n’est pas possible d’accélérer le temps d’incantation, même par un sort de rapidité ou un moyen similaire, cela signifie que le temps à consacrer est en fait de 2 jours + 1 à 8 jours). Tout le travail de préparation ne doit jamais être interrompu et pendant les périodes de repos, l’objet ne doit jamais être à plus de 30 cm du magicien, sinon le sort est annulé et devra être relancé. (Pendant les périodes de repos, le magicien ne doit entreprendre aucune autre opération magique. Il doit se reposer et rester seul). À la fin du sort, le magicien saura que l’objet est prêt pour l’opération finale. Il prononce alors l’ultime incantation; si l’objet réussit un jet de protection contre les sorts (qui est exactement le même que celui du magicien, en tenant compte de ses bonus avec toutefois un maximum de +3), le sort est achevé. Un résultat de 1 sur 1d20 sera toujours considéré comme un échec, malgré les ajustements éventuels. Une fois que le sort est achevé et que le jet de protection est réussi, le magicien peut commencer à placer sur l’objet le pouvoir qu’il désire lui conférer; il doit placer ce sort dans une période de 24 heures après l’enchantement, sinon le sort de préparation est annulé et l’objet doit être à nouveau enchanté. Chaque sort lancé successivement sur un objet enchanté demande 4 heures + 4-8 heures par niveau de magie du sort. De nouveau, durant l'incantation le magicien doit toucher l'objet et pendant les périodes de repos, il doit rester à 30 cm maximum de lui. Cette procédure est la même pour chaque nouveau sort lancé sur l'objet; chaque nouveau pouvoir magique doit être lancé dans une période de 24 heures par rapport au pouvoir magique précédent, même si le lancement d'un sort précédent a raté. Aucune magie placée sur, ou dans, un objet n'est permanente, sauf si un sort de permanence est utilisé; cela risque de provoquer la perte d'un point de constitution chez le magicien lançant le sort. Il faut préciser également que s'il est possible de dire que le sort de base d'enchantement est réussi, il n'est pas possible d'affirmer que les autres sorts lancés prennent effet, car chaque autre sort entraîne un jet de protection, dans les mêmes conditions que le premier. Les objets à charge (baguettes, bâtonnets, bâtons, javelots de foudre, anneau de souhaits majeurs, etc.) ne peuvent avoir des pouvoirs permanents. Les parchemins et autres objets magiques ne pourront jamais être utilisés pour un enchantement ou pour affecter un objet ainsi enchanté. Les composantes matérielles varient selon les pouvoirs lancés sur l'objet et selon l'objet lui-même; ex: une cape de déplacement pourra nécessiter la peau d'une ou plusieurs bêtes éclipsantes; une épée tueuse de dragon pourra nécessiter le sang et une autre partie du corps du dragon approprié, un anneau d'étoiles filantes pourra nécessiter des fragments de météorites et la corne d'un ki-rin. C'est le MD qui décide des composantes appropriées.",
         "onUse": "systems/add2e/scripts/sorts/magicien-enchantement.js",
@@ -21686,8 +22192,18 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "épée miniature en platine",
-          "zinc"
+          {
+            "slug": "epee_miniature_en_platine",
+            "nom": "épée miniature en platine",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "zinc",
+            "nom": "zinc",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
@@ -21831,8 +22347,18 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Goutte de bitume",
-          "Araignée vivante"
+          {
+            "slug": "goutte_de_bitume",
+            "nom": "Goutte de bitume",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "araignee_vivante",
+            "nom": "Araignée vivante",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "Les composantes matérielles sont une goutte de bitume et une araignée vivante.",
         "composants_materiels_reference": "",
@@ -21977,7 +22503,18 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Pelle miniature et un petit baquet"
+          {
+            "slug": "pelle_miniature",
+            "nom": "Pelle miniature",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "petit_baquet",
+            "nom": "petit baquet",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "pelle miniature et un petit baquet que le magicien doit tenir pendant l’excavation",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -23096,7 +23633,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Morceau de soie multicolore extrêmement fine"
+          {
+            "slug": "morceau_de_soie_multicolore_extremement_fine",
+            "nom": "Morceau de soie multicolore extrêmement fine",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "morceau de soie multicolore extrêmement fine que le magicien doit lancer dans la source du feu",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -23742,7 +24284,18 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "poudre de feu"
+          {
+            "slug": "goutte_d_huile",
+            "nom": "goutte d’huile",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "silex",
+            "nom": "silex",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "poudre de feu ou composant pyrotechnique du projectile selon la version du sort",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
@@ -23887,7 +24440,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "cheveux"
+          {
+            "slug": "cheveux",
+            "nom": "cheveux",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle est quelques cheveux ou un peu d’excrément d’un animal particulièrement fort — singe, ours, bœuf, etc.",
         "composants_materiels_reference": "",
@@ -24031,7 +24589,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "morceau de toison de mouton"
+          {
+            "slug": "morceau_de_toison_de_mouton",
+            "nom": "morceau de toison de mouton",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle est un morceau de toison de mouton.",
         "composants_materiels_reference": "",
@@ -24175,7 +24738,12 @@
         "jet_sauvegarde": "spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "toison de mouton"
+          {
+            "slug": "toison_de_mouton",
+            "nom": "toison de mouton",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
@@ -24280,7 +24848,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "morceau de laine"
+          {
+            "slug": "morceau_de_laine",
+            "nom": "morceau de laine",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
@@ -24424,7 +24997,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "morceau de laine"
+          {
+            "slug": "morceau_de_laine",
+            "nom": "morceau de laine",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
@@ -24711,8 +25289,29 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Morceau de fourrure et une baguette de verre",
-          "Ambre ou de cristal"
+          {
+            "slug": "morceau_de_fourrure_et_une_baguette_de_verre",
+            "nom": "Morceau de fourrure et une baguette de verre",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "type": "alternative",
+            "choix": [
+              {
+                "slug": "ambre",
+                "nom": "ambre",
+                "quantite": 1,
+                "consomme": true
+              },
+              {
+                "slug": "de_cristal",
+                "nom": "de cristal",
+                "quantite": 1,
+                "consomme": true
+              }
+            ]
+          }
         ],
         "composants_materiels_source": "un morceau de fourrure et une baguette de verre, d’ambre ou de cristal",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
@@ -24857,7 +25456,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Éclat de mica"
+          {
+            "slug": "eclat_de_mica",
+            "nom": "Éclat de mica",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "éclat de mica",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -25001,9 +25605,24 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Mélange de terre (argile",
-          "Sable) dans un petit sac",
-          "Lame en fer"
+          {
+            "slug": "melange_de_terre_argile",
+            "nom": "Mélange de terre (argile",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "sable_dans_un_petit_sac",
+            "nom": "Sable) dans un petit sac",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "lame_en_fer",
+            "nom": "Lame en fer",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "Les composantes matérielles sont un mélange de terre (argile, terreau, sable) dans un petit sac et une lame en fer.",
         "composants_materiels_reference": "",
@@ -25150,8 +25769,18 @@
           {
             "type": "alternative",
             "choix": [
-              "perle de verre",
-              "perle de cristal"
+              {
+                "slug": "perle_de_verre",
+                "nom": "perle de verre",
+                "quantite": 1,
+                "consomme": true
+              },
+              {
+                "slug": "perle_de_cristal",
+                "nom": "perle de cristal",
+                "quantite": 1,
+                "consomme": true
+              }
             ]
           }
         ],
@@ -25299,7 +25928,23 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Perle de verre ou de cristal"
+          {
+            "type": "alternative",
+            "choix": [
+              {
+                "slug": "perle_de_verre",
+                "nom": "perle de verre",
+                "quantite": 1,
+                "consomme": true
+              },
+              {
+                "slug": "de_cristal",
+                "nom": "de cristal",
+                "quantite": 1,
+                "consomme": true
+              }
+            ]
+          }
         ],
         "composants_materiels_source": "perle de verre ou de cristal",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -26680,7 +27325,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Petite couronne de jade"
+          {
+            "slug": "petite_couronne_de_jade",
+            "nom": "Petite couronne de jade",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "petite couronne de jade d’une valeur minimale de 5",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -26824,7 +27474,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Petite réplique (poupée) du magicien"
+          {
+            "slug": "petite_replique_du_magicien",
+            "nom": "Petite réplique du magicien",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "petite réplique (poupée) du magicien",
         "composants_materiels_reference": "Recherche dans le texte du Manuel des joueurs",
@@ -26969,10 +27624,30 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "petite réplique (poupée) du magicien",
-          "Objet durable",
-          "focus utilisé sans destruction indiquée",
-          "réplique (poupée) du magicien"
+          {
+            "slug": "petite_replique_du_magicien",
+            "nom": "petite réplique du magicien",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "objet_durable",
+            "nom": "Objet durable",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "focus_utilise_sans_destruction_indiquee",
+            "nom": "focus utilisé sans destruction indiquée",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "replique_du_magicien",
+            "nom": "réplique du magicien",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "Recherche dans le texte du Manuel des joueurs",
@@ -27223,8 +27898,18 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Perle",
-          "Plume de hibou trempée dans du vin"
+          {
+            "slug": "perle",
+            "nom": "Perle",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "plume_de_hibou_trempee_dans_du_vin",
+            "nom": "Plume de hibou trempée dans du vin",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "Les composantes de ce sort sont une perle (100 po minimum) et une plume de hibou trempée dans du vin.",
         "composants_materiels_reference": "",
@@ -27369,7 +28054,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "morceau de laine"
+          {
+            "slug": "morceau_de_laine",
+            "nom": "morceau de laine",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
@@ -27515,7 +28205,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "morceau de laine"
+          {
+            "slug": "morceau_de_laine",
+            "nom": "morceau de laine",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
@@ -27804,7 +28499,12 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "a completer"
+          {
+            "slug": "a_completer",
+            "nom": "a completer",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
@@ -27910,7 +28610,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Diamant"
+          {
+            "slug": "diamant",
+            "nom": "Diamant",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle est un diamant qui doit être réduit en poudre et répandu sur les destinataires du sort, et chacun de ces destinataires doit posséder un diamant intact de n’importe quelle taille.",
         "composants_materiels_reference": "",
@@ -28055,7 +28760,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Perle noire écrasée"
+          {
+            "slug": "perle_noire_ecrasee",
+            "nom": "Perle noire écrasée",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle est une perle noire écrasée d’une valeur minimale de 1.",
         "composants_materiels_reference": "",
@@ -28199,8 +28909,18 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Pincée de poudre de carotte séchée",
-          "Agate"
+          {
+            "slug": "pincee_de_poudre_de_carotte_sechee",
+            "nom": "Pincée de poudre de carotte séchée",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "agate",
+            "nom": "Agate",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle de ce sort est une pincée de poudre de carotte séchée ou une agate.",
         "composants_materiels_reference": "",
@@ -28603,7 +29323,7 @@
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": true,
-        "composants_materiels_note": "Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe.",
+        "composants_materiels_note": "Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe.",
         "composants_materiels_a_renseigner": false,
         "description": "grâce à ce sort, le magicien fait disparaitre et réapparaître son enveloppe corporelle sur son plan d’existence, à un moment et un endroit tirés au hasard, pendant chaque minute de la durée du sort. (Cf. MANUEL DES MONSTRES, chien esquiveur). Le segment du round pendant lequel disparaît le magicien est déterminé en lançant 2d4 et, durant ce même segment, il réapparaîtra à 60 cm de l’endroit où il se trouvait avant de disparaitre. (La direction est déterminée en lançant 1d8: 1 = devant à droite; 2 = à droite; 3 = derrière à droite; 4 = derrière; 5 = derrière à gauche; 6 = à gauche; 7 = devant à gauche; 8 = devant). Si un objet occupe l’espace où le magicien doit réapparaître, ce dernier se déplace de nouveau dans une autre direction depuis sa position de départ jusqu’à ce qu’il trouve un espace libre, mais jamais au-delà de 3 mètres de sa position d’origine (du début de round). Si le magicien ne peut pas réapparaître, il se retrouve alors piégé sur le plan éthéré. Pendant et après le segment de déplacement, le magicien ne peut être atteint que par une attaque pouvant frapper les deux endroits à la fois, c'est-à-dire par un souffle de dragon, par une boule de feu ou par tout type d’attaque similaire affectant une large zone. Les adversaires qui ne sont pas capable de telles attaques ne peuvent toucher le magicien qu’avant son déplacement. Le lanceur de sort n’a que 75 % de chances de réussir une action autre qu’une attaque physique avec une arme de mêlée, pendant qu’il est sous l’effet du sort. C'est-à-dire que l’utilisation d’un sort ou d’un objet ne pourrait pas se faire ou se ferait d’une manière incorrecte ou dans une mauvaise direction. Le MD déterminera les chances de succès ou d’échec et les résultats précis des actions entreprises.",
         "onUse": "systems/add2e/scripts/sorts/magicien-intermittence.js",
@@ -28742,7 +29462,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Limaille de fer"
+          {
+            "slug": "limaille_de_fer",
+            "nom": "Limaille de fer",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "Les composantes matérielles sont une pierre aimantée et de la limaille de fer.",
         "composants_materiels_reference": "",
@@ -28886,7 +29611,12 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "cils"
+          {
+            "slug": "cils",
+            "nom": "cils",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
@@ -28992,7 +29722,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "cil mis dans de la gomme arabique"
+          {
+            "slug": "cil_mis_dans_de_la_gomme_arabique",
+            "nom": "cil mis dans de la gomme arabique",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "Les composantes matérielles sont un cil mis dans de la gomme arabique.",
         "composants_materiels_reference": "",
@@ -29428,8 +30163,18 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "cils",
-          "gomme arabique"
+          {
+            "slug": "cils",
+            "nom": "cils",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "gomme_arabique",
+            "nom": "gomme arabique",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
@@ -29574,7 +30319,12 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Matérielle non précisée explicitement dans le"
+          {
+            "slug": "materielle_non_precisee_explicitement_dans_le",
+            "nom": "Matérielle non précisée explicitement dans le",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
@@ -30253,16 +31003,66 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "encens à faire brûler",
-          "Invocation d’un élémental de l’air",
-          "eau",
-          "Invocation d’un élémental de l’eau",
-          "sable",
-          "soufre",
-          "Invocation d’un élémental du feu",
-          "phosphore",
-          "argile",
-          "Invocation d’un élémental de terre"
+          {
+            "slug": "encens_a_faire_bruler",
+            "nom": "encens à faire brûler",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "invocation_d_un_elemental_de_l_air",
+            "nom": "Invocation d’un élémental de l’air",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "eau",
+            "nom": "eau",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "invocation_d_un_elemental_de_l_eau",
+            "nom": "Invocation d’un élémental de l’eau",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "sable",
+            "nom": "sable",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "soufre",
+            "nom": "soufre",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "invocation_d_un_elemental_du_feu",
+            "nom": "Invocation d’un élémental du feu",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "phosphore",
+            "nom": "phosphore",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "argile",
+            "nom": "argile",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "invocation_d_un_elemental_de_terre",
+            "nom": "Invocation d’un élémental de terre",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
@@ -30847,7 +31647,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "brassière en cuivre"
+          {
+            "slug": "brassiere_en_cuivre",
+            "nom": "Brassière en cuivre",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "brassière en cuivre et morceaux d’encens dans un brasier de charbon de bois",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
@@ -31137,7 +31942,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "même"
+          {
+            "slug": "meme",
+            "nom": "Même",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "même ; il y a également 1 à 4 rounds de délai",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -31282,8 +32092,18 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "petit sac",
-          "bougie"
+          {
+            "slug": "petit_sac",
+            "nom": "petit sac",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "bougie",
+            "nom": "bougie",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
@@ -31428,8 +32248,18 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "petit sac",
-          "bougie"
+          {
+            "slug": "petit_sac",
+            "nom": "petit sac",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "bougie",
+            "nom": "bougie",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
@@ -31574,8 +32404,18 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "petit sac",
-          "bougie"
+          {
+            "slug": "petit_sac",
+            "nom": "petit sac",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "bougie",
+            "nom": "bougie",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
@@ -31720,7 +32560,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Diamant"
+          {
+            "slug": "diamant",
+            "nom": "Diamant",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "diamant qui doit être réduit en poudre et répandu sur les destinataires du sort, et chacun de ces destinataires doit posséder un diamant intact de n’importe quelle taille",
         "composants_materiels_reference": "Recherche dans le texte du Manuel des joueurs",
@@ -31865,7 +32710,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "diamant"
+          {
+            "slug": "diamant",
+            "nom": "diamant",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
@@ -32010,8 +32860,18 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "petit sac",
-          "bougie"
+          {
+            "slug": "petit_sac",
+            "nom": "petit sac",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "bougie",
+            "nom": "bougie",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "Les composantes matérielles de sort sont un petit sac et une petite bougie (pas nécessairement allumée).",
         "composants_materiels_reference": "",
@@ -32551,7 +33411,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Morceau de quartz fumé"
+          {
+            "slug": "morceau_de_quartz_fume",
+            "nom": "Morceau de quartz fumé",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle est un morceau de quartz fumé.",
         "composants_materiels_reference": "",
@@ -32841,7 +33706,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "saphir"
+          {
+            "slug": "saphir",
+            "nom": "saphir",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
@@ -32986,7 +33856,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Pincée de sable"
+          {
+            "slug": "pincee_de_sable",
+            "nom": "Pincée de sable",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "Les composantes matérielles sont une pincée de sable ou de poudre de chacune de ces trois couleurs : rouge, jaune et bleu.",
         "composants_materiels_reference": "",
@@ -33418,7 +34293,12 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "a completer"
+          {
+            "slug": "a_completer",
+            "nom": "a completer",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
@@ -34754,7 +35634,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, M",
         "composants_materiels": [
-          "Petite statuette d’argile représentant une ziggourat"
+          {
+            "slug": "petite_statuette_d_argile_representant_une_ziggourat",
+            "nom": "Petite statuette d’argile représentant une ziggourat",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "petite statuette d’argile représentant une ziggourat, qui se brise quand l’incantation est prononcée",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -34900,8 +35785,18 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Cristal clair",
-          "Prisme minéral"
+          {
+            "slug": "cristal_clair",
+            "nom": "Cristal clair",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "prisme_mineral",
+            "nom": "Prisme minéral",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle de ce sort est un cristal clair ou un prisme minéral ; cette composante ne disparaît pas avec l’utilisation.",
         "composants_materiels_reference": "",
@@ -35046,7 +35941,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "soit une boucle de cuir"
+          {
+            "slug": "soit_une_boucle_de_cuir",
+            "nom": "soit une boucle de cuir",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle est soit une boucle de cuir, soit un morceau de fil d’or courbé en forme d’hameçon.",
         "composants_materiels_reference": "",
@@ -35437,8 +36337,18 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "argile grasse façonnée",
-          "Façonnée puis"
+          {
+            "slug": "argile_grasse_faconnee",
+            "nom": "argile grasse façonnée",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "faconnee_puis",
+            "nom": "Façonnée puis",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -35797,8 +36707,18 @@
           {
             "type": "alternative",
             "choix": [
-              "fourchette d’argent",
-              "baguette fourchue selon version du sort"
+              {
+                "slug": "fourchette_d_argent",
+                "nom": "Fourchette d’argent",
+                "quantite": 1,
+                "consomme": true
+              },
+              {
+                "slug": "baguette_fourchue_selon_version_du_sort",
+                "nom": "baguette fourchue selon version du sort",
+                "quantite": 1,
+                "consomme": true
+              }
             ]
           }
         ],
@@ -36379,7 +37299,12 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "a completer"
+          {
+            "slug": "a_completer",
+            "nom": "a completer",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
@@ -36736,7 +37661,12 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "a completer"
+          {
+            "slug": "a_completer",
+            "nom": "a completer",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
@@ -36828,7 +37758,23 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "phosphore ou un ver luisant"
+          {
+            "type": "alternative",
+            "choix": [
+              {
+                "slug": "phosphore",
+                "nom": "phosphore",
+                "quantite": 1,
+                "consomme": true
+              },
+              {
+                "slug": "ver_luisant",
+                "nom": "ver luisant",
+                "quantite": 1,
+                "consomme": true
+              }
+            ]
+          }
         ],
         "composants_materiels_source": "un peu de phosphore ou un ver luisant",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
@@ -37407,8 +38353,18 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Gant en peau de serpent",
-          "Coquille d’œuf"
+          {
+            "slug": "gant_en_peau_de_serpent",
+            "nom": "Gant en peau de serpent",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "coquille_d_uf",
+            "nom": "Coquille d’œuf",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "Les composantes matérielles sont un gant en peau de serpent et une coquille d’œuf.",
         "composants_materiels_reference": "",
@@ -37552,7 +38508,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Gant"
+          {
+            "slug": "gant",
+            "nom": "Gant",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle est un gant.",
         "composants_materiels_reference": "",
@@ -37697,7 +38658,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Gant"
+          {
+            "slug": "gant",
+            "nom": "Gant",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle est un gant.",
         "composants_materiels_reference": "",
@@ -37984,8 +38950,18 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Petit morceau de lait solidifié (crème épaisse",
-          "Beurre)"
+          {
+            "slug": "petit_morceau_de_lait_solidifie_creme_epaisse",
+            "nom": "Petit morceau de lait solidifié (crème épaisse",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "beurre",
+            "nom": "Beurre)",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle est un petit morceau de lait solidifié (crème épaisse ou beurre).",
         "composants_materiels_reference": "",
@@ -39026,7 +40002,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "fil de cuivre"
+          {
+            "slug": "fil_de_cuivre",
+            "nom": "fil de cuivre",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "petite pièce de cuivre, finement ciselée",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -39314,7 +40295,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Réceptacle lui même"
+          {
+            "slug": "receptacle_lui_meme",
+            "nom": "Réceptacle lui même",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "réceptacle lui-même",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -39894,7 +40880,7 @@
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": true,
-        "composants_materiels_note": "Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe.",
+        "composants_materiels_note": "Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe.",
         "composants_materiels_a_renseigner": false,
         "description": "quand ce mot est prononcé, une ou plusieurs créatures se trouvant dans la portée et la zone d’effet deviennent temporairement aveugles. Le sort affecte 100 points de vie maximum, mais sa durée dépend du nombre des points de vie des créatures affectées. Si le sort affecte 50 points de vie ou moins, le sort dure de 2 à 5 tours (1d4+1); s’il affecte 51 points de vie ou plus, la durée n’est que de 2 à 5 rounds. Le magicien doit indiquer quelle(s) créature(s) il veut rendre aveugle(s); il doit en désigner une qui représentera le centre de la zone d’effet, ceci avant de déterminer les résultats du sort. Les créatures avec plus de 100 points de vie ne sont pas affectées. Ce sort peut être annulé avec les sorts suivants: guérison de la cécité, dissipation de la magie.",
         "onUse": "systems/add2e/scripts/sorts/magicien-mot-de-pouvoir-cecite.js",
@@ -40037,7 +41023,7 @@
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": true,
-        "composants_materiels_note": "Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe.",
+        "composants_materiels_note": "Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe.",
         "composants_materiels_a_renseigner": false,
         "description": "quand ce mot est prononcé, la créature, que le magicien a choisie comme victime, est étourdie, chancelante et incapable de penser ou d’agir de façon cohérente pendant un certain nombre de rounds. Le magicien doit faire face à sa victime et cette dernière doit être dans la portée du sort. Les créatures ayant de 1 à 30 points de vie sont étourdies pendant 4 à 16 rounds (4d4). Les créatures ayant de 31 à 60 points de vie sont étourdies pendant 2 à 8 rounds (2d4). Les créatures ayant de 61 à 90 points de vie sont étourdies pendant 1 à 4 rounds (1d4). Les créatures ayant plus de 90 points de vie ne sont pas affectées par le sort. À noter que les points de vie pris en compte sont ceux de la créature au moment où le sort est lancé et non pas ceux qu’elle possède quand elle n’est pas blessée.",
         "onUse": "systems/add2e/scripts/sorts/magicien-mot-de-pouvoir-etourdissement.js",
@@ -40179,7 +41165,7 @@
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": true,
-        "composants_materiels_note": "Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe.",
+        "composants_materiels_note": "Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe. Composante matérielle retirée : le sort ne consomme pas de composant matériel fixe.",
         "composants_materiels_a_renseigner": false,
         "description": "quand ce mot est prononcé, une ou plusieurs créatures se trouvant dans la portée du sort et dans la zone d’effet meurent. Ce sort tue 1 créature avec 60 points de vie maximum ou bien 2 créatures ou plus avec 10 points de vie maximum chacune pour un total de 120 points de vie. La décision d’affecter une ou plusieurs créatures doit être annoncée, ainsi que la portée choisie et l’endroit correspondant au centre de la zone d’effet.",
         "onUse": "systems/add2e/scripts/sorts/magicien-mot-de-pouvoir-mort.js",
@@ -40318,7 +41304,12 @@
         "jet_sauvegarde": "Annule",
         "composantes": "S, M",
         "composants_materiels": [
-          "cire d’abeille"
+          {
+            "slug": "cire_d_abeille",
+            "nom": "cire d’abeille",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "cire d’abeille",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
@@ -40463,10 +41454,30 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Morceau de ficelle",
-          "Plaque d’ivoire",
-          "Encre composée de sécrétion de calmar",
-          "Soit de sang de dragon noir"
+          {
+            "slug": "morceau_de_ficelle",
+            "nom": "Morceau de ficelle",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "plaque_d_ivoire",
+            "nom": "Plaque d’ivoire",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "encre_composee_de_secretion_de_calmar",
+            "nom": "Encre composée de sécrétion de calmar",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "soit_de_sang_de_dragon_noir",
+            "nom": "Soit de sang de dragon noir",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "Les composantes matérielles de ce sort sont un morceau de ficelle, une plaque d’ivoire d’une valeur minimale de 100 po et une encre composée de sécrétion de calmar et, soit de sang de dragon noir, soit de suc digestif de limace géante.",
         "composants_materiels_reference": "",
@@ -40755,7 +41766,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Poudre de poix séchés"
+          {
+            "slug": "poudre_de_poix_seches",
+            "nom": "Poudre de poix séchés",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle est de la poudre de poix séchés.",
         "composants_materiels_reference": "",
@@ -40901,7 +41917,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Petit morceau de plaque de fer"
+          {
+            "slug": "petit_morceau_de_plaque_de_fer",
+            "nom": "Petit morceau de plaque de fer",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle est un petit morceau de plaque de fer.",
         "composants_materiels_reference": "",
@@ -41190,7 +42211,12 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "phosphore"
+          {
+            "slug": "phosphore",
+            "nom": "phosphore",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -41296,7 +42322,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Pincée de poudre de diamant (issue d’une"
+          {
+            "slug": "pincee_de_poudre_de_diamant_issue_d_une",
+            "nom": "Pincée de poudre de diamant (issue d’une",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle est une pincée de poudre de diamant (issue d’une ou plusieurs pierres) pour une valeur minimale de 10.",
         "composants_materiels_reference": "",
@@ -41441,7 +42472,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Petit morceau de quartz"
+          {
+            "slug": "petit_morceau_de_quartz",
+            "nom": "Petit morceau de quartz",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle est un petit morceau de quartz ou une pierre cristalline de même type.",
         "composants_materiels_reference": "",
@@ -41586,7 +42622,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Petit bloc de granit"
+          {
+            "slug": "petit_bloc_de_granit",
+            "nom": "Petit bloc de granit",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "petit bloc de granit",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -41875,8 +42916,18 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Morceaux d’ivoire",
-          "Parchemin"
+          {
+            "slug": "morceaux_d_ivoire",
+            "nom": "Morceaux d’ivoire",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "parchemin",
+            "nom": "Parchemin",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "Les composantes matérielles sont de l’encens et des morceaux d’ivoire, placés en forme de rectangle ; mais le magicien doit en plus sacrifier quelque chose (une potion, un parchemin ou objet magique, une créature, etc.",
         "composants_materiels_reference": "",
@@ -42418,9 +43469,24 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "goutte de sang",
-          "morceau de chair humaine",
-          "os en poudre"
+          {
+            "slug": "goutte_de_sang",
+            "nom": "goutte de sang",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "morceau_de_chair_humaine",
+            "nom": "morceau de chair humaine",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "os_en_poudre",
+            "nom": "os en poudre",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
@@ -42815,7 +43881,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Pincée de poudre de diamant"
+          {
+            "slug": "pincee_de_poudre_de_diamant",
+            "nom": "Pincée de poudre de diamant",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle est une pincée de poudre de diamant.",
         "composants_materiels_reference": "",
@@ -42961,8 +44032,18 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "soufre",
-          "phosphore"
+          {
+            "slug": "soufre",
+            "nom": "soufre",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "phosphore",
+            "nom": "phosphore",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
@@ -43250,7 +44331,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "feuilles de symplocarpe fétide"
+          {
+            "slug": "feuilles_de_symplocarpe_fetide",
+            "nom": "feuilles de symplocarpe fétide",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle de ce sort est un œuf pourri ou quelques feuilles de symplocarpe fétide.",
         "composants_materiels_reference": "",
@@ -43680,7 +44766,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Morceau de fourrure de chauve souris"
+          {
+            "slug": "morceau_de_fourrure_de_chauve_souris",
+            "nom": "Morceau de fourrure de chauve souris",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle est un morceau de fourrure de chauve-souris.",
         "composants_materiels_reference": "",
@@ -43969,10 +45060,30 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "citrine réduite en poudre",
-          "pierre d’ambre",
-          "topaze",
-          "corindon"
+          {
+            "slug": "citrine_reduite_en_poudre",
+            "nom": "citrine réduite en poudre",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "pierre_d_ambre",
+            "nom": "pierre d’ambre",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "topaze",
+            "nom": "topaze",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "corindon",
+            "nom": "corindon",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
@@ -44649,7 +45760,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, M",
         "composants_materiels": [
-          "symbole sacré du clerc"
+          {
+            "slug": "symbole_sacre_du_clerc",
+            "nom": "symbole sacré du clerc",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "symbole sacré du clerc",
         "composants_materiels_reference": "Règle/usage général clérical ; composant exact à vérifier si le sort précise un complément",
@@ -45048,8 +46164,18 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Petite barre de métal",
-          "Pour chaque monstre visé"
+          {
+            "slug": "petite_barre_de_metal",
+            "nom": "Petite barre de métal",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "pour_chaque_monstre_vise",
+            "nom": "Pour chaque monstre visé",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "petite barre de métal, une pour chaque monstre visé",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -45872,7 +46998,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Pincée de graines de sésame"
+          {
+            "slug": "pincee_de_graines_de_sesame",
+            "nom": "Pincée de graines de sésame",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "pincée de graines de sésame",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -46712,7 +47843,7 @@
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": true,
-        "composants_materiels_note": "Composants variables selon le sort ou l’effet rendu permanent.",
+        "composants_materiels_note": "Composants variables selon le sort ou l’effet rendu permanent. Composants variables selon le sort ou l’effet rendu permanent. Composants variables selon le sort ou l’effet rendu permanent. Composants variables selon le sort ou l’effet rendu permanent. Composants variables selon le sort ou l’effet rendu permanent. Composants variables selon le sort ou l’effet rendu permanent. Composants variables selon le sort ou l’effet rendu permanent. Composants variables selon le sort ou l’effet rendu permanent.",
         "composants_materiels_a_renseigner": false,
         "description": "ce sort affecte la durée de certains sorts en la rendant permanente. Les sorts à usage personnel sur lesquels une permanence peut être lancée sont les suivants: Compréhension des langues Langues Détection du mal Lecture de la magie Détection de l’invisibilité Protection contre le mal Détection de la magie Protection contre les projectiles normaux Infravision Serviteur invisible Le magicien lance le sort désiré, puis il lance ensuite le sort permanence. Chaque sort de permanence lancé baisse la constitution du magicien de 1 point. Si le sort est lancé sur un objet, il n’y a que 5 % de chance que le magicien perde 1 point de constitution. Cependant, si le sort de permanence est utilisé pour recharger un objet (comme un anneau d’accumulation de sorts) cette chance passe à 100 %. Il ne peut pas lancer les sorts de la liste ci-dessus sur d’autres créatures que lui-même pour les rendre permanents. En plus de l’usage personnel, la permanence peut aussi affecter les sorts suivants, lancés sur une créature, un objet ou une zone d’effet: Agrandissement Mur de force Bouche magique Nuage puant Effroi Rafale de vent Invisibilité Sphère prismatique Mur de feu Toile d’araignée La première application du sort ne peut être dissipée que par un magicien de niveau supérieur à celui qui a lancé le sort de permanence. La deuxième application autorise le magicien à lancer le sort de permanence en même temps que le sort dont il veut altérer la durée, à condition que la cible ne soit pas une créature vivante. Cette deuxième application du sort peut être dissipée normalement, ce qui annule l’association des deux sorts.",
         "onUse": "systems/add2e/scripts/sorts/magicien-permanence.js",
@@ -46851,7 +47982,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Morceau d’os de mort vivant (squelette"
+          {
+            "slug": "morceau_d_os_de_mort_vivant_squelette",
+            "nom": "Morceau d’os de mort vivant (squelette",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle est un morceau d’os de mort-vivant (squelette, zombie, goule, ghast ou momie).",
         "composants_materiels_reference": "",
@@ -46996,7 +48132,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "poignée de morceaux d'écorce"
+          {
+            "slug": "poignee_de_morceaux_d_ecorce",
+            "nom": "poignée de morceaux d'écorce",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle est une poignée de morceaux d'écorce.",
         "composants_materiels_reference": "",
@@ -47141,7 +48282,12 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "poignée de morceaux d'écorce"
+          {
+            "slug": "poignee_de_morceaux_d_ecorce",
+            "nom": "poignée de morceaux d'écorce",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
@@ -47246,7 +48392,23 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Poudre de feu ou composant inflammable du sceau"
+          {
+            "type": "alternative",
+            "choix": [
+              {
+                "slug": "poudre_de_feu",
+                "nom": "Poudre de feu",
+                "quantite": 1,
+                "consomme": true
+              },
+              {
+                "slug": "composant_inflammable_du_sceau",
+                "nom": "composant inflammable du sceau",
+                "quantite": 1,
+                "consomme": true
+              }
+            ]
+          }
         ],
         "composants_materiels_source": "poudre de feu ou composant inflammable du sceau",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
@@ -47498,7 +48660,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "morceau de fer pyriteux"
+          {
+            "slug": "morceau_de_fer_pyriteux",
+            "nom": "morceau de fer pyriteux",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "morceau de fer pyriteux (une pierre à feu) avec lequel le magicien doit toucher l’objet à « piéger »",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -48037,7 +49204,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Gant en cuir"
+          {
+            "slug": "gant_en_cuir",
+            "nom": "Gant en cuir",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle est un gant en cuir.",
         "composants_materiels_reference": "",
@@ -48323,7 +49495,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Gant en cuir"
+          {
+            "slug": "gant_en_cuir",
+            "nom": "Gant en cuir",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "Les composantes matérielles de ce sort sont un gant en cuir et un petit objet fait de 4 anneaux reliés entre eux, formant une ligne légèrement courbe, le tout attaché par une barrette en forme de « I ».",
         "composants_materiels_reference": "",
@@ -48753,8 +49930,18 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, M",
         "composants_materiels": [
-          "pincée de poussière",
-          "gouttes d’eau"
+          {
+            "slug": "pincee_de_poussiere",
+            "nom": "pincée de poussière",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "gouttes_d_eau",
+            "nom": "gouttes d’eau",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
@@ -49042,7 +50229,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Pincée de poudre de cuivre"
+          {
+            "slug": "pincee_de_poudre_de_cuivre",
+            "nom": "Pincée de poudre de cuivre",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle de ce sort est une pincée de poudre de cuivre qui doit être soufflée de la paume de la main, avant de pointer le doigt vers l’objectif visé.",
         "composants_materiels_reference": "",
@@ -49583,7 +50775,12 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "a completer"
+          {
+            "slug": "a_completer",
+            "nom": "a completer",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
@@ -49965,8 +51162,18 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "poudre de fer",
-          "poudre d’argent"
+          {
+            "slug": "poudre_de_fer",
+            "nom": "poudre de fer",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "poudre_d_argent",
+            "nom": "poudre d’argent",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "Recherche dans le texte du Manuel des joueurs",
@@ -50455,7 +51662,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "poudre d’argent"
+          {
+            "slug": "poudre_d_argent",
+            "nom": "poudre d’argent",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
@@ -50706,7 +51918,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Morceau de carapace de tortue"
+          {
+            "slug": "morceau_de_carapace_de_tortue",
+            "nom": "Morceau de carapace de tortue",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle est un morceau de carapace de tortue.",
         "composants_materiels_reference": "",
@@ -50851,8 +52068,18 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "gant en cuir",
-          "formant une ligne légèrement courbe"
+          {
+            "slug": "gant_en_cuir",
+            "nom": "Gant en cuir",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "formant_une_ligne_legerement_courbe",
+            "nom": "formant une ligne légèrement courbe",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "gant en cuir et un petit objet fait de 4 anneaux reliés entre eux, formant une ligne légèrement courbe, le tout attaché par une barrette en forme de « I »",
         "composants_materiels_reference": "Recherche dans le texte du Manuel des joueurs",
@@ -50998,7 +52225,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, M",
         "composants_materiels": [
-          "vélin enluminé"
+          {
+            "slug": "velin_enlumine",
+            "nom": "vélin enluminé",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
@@ -51496,7 +52728,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "gui"
+          {
+            "slug": "gui",
+            "nom": "gui",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "gui druidique",
         "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui",
@@ -52025,7 +53262,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Graine de légume"
+          {
+            "slug": "graine_de_legume",
+            "nom": "Graine de légume",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle est une graine de légume.",
         "composants_materiels_reference": "",
@@ -52169,7 +53411,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Goutte de mélasse"
+          {
+            "slug": "goutte_de_melasse",
+            "nom": "Goutte de mélasse",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle est une goutte de mélasse.",
         "composants_materiels_reference": "",
@@ -52313,7 +53560,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Fragment de racine de réglisse"
+          {
+            "slug": "fragment_de_racine_de_reglisse",
+            "nom": "Fragment de racine de réglisse",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle est un fragment de racine de réglisse.",
         "composants_materiels_reference": "",
@@ -53622,9 +54874,24 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "petit tambour",
-          "goutte de sang",
-          "tambour"
+          {
+            "slug": "petit_tambour",
+            "nom": "petit tambour",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "goutte_de_sang",
+            "nom": "goutte de sang",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "tambour",
+            "nom": "tambour",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui",
@@ -53730,9 +54997,23 @@
         "jet_sauvegarde": "Aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "deux objets magnétiques de n’importe quel type",
-          "par exemple pierre aimantée",
-          "ou deux copeaux de métal"
+          {
+            "type": "alternative",
+            "choix": [
+              {
+                "slug": "deux_objets_magnetiques",
+                "nom": "deux objets magnétiques",
+                "quantite": 1,
+                "consomme": true
+              },
+              {
+                "slug": "deux_copeaux_de_metal",
+                "nom": "deux copeaux de métal",
+                "quantite": 1,
+                "consomme": true
+              }
+            ]
+          }
         ],
         "composants_materiels_source": "deux objets magnétiques de n’importe quel type, par exemple pierre aimantée, ou deux copeaux de métal",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
@@ -53876,7 +55157,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Paire de petites barres de fer magnétisées"
+          {
+            "slug": "paire_de_petites_barres_de_fer_magnetisees",
+            "nom": "Paire de petites barres de fer magnétisées",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "Les composantes matérielles sont une paire de petites barres de fer magnétisées, attachées à deux statuettes de chien, l’une en ivoire, l’autre en ébène.",
         "composants_materiels_reference": "",
@@ -55075,9 +56361,24 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "petit roseau",
-          "brin de paille",
-          "roseau"
+          {
+            "slug": "petit_roseau",
+            "nom": "petit roseau",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "brin_de_paille",
+            "nom": "brin de paille",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "roseau",
+            "nom": "roseau",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -56554,7 +57855,12 @@
         "jet_sauvegarde": "Aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Patte arrière de sauterelle — une pour chaque saut —"
+          {
+            "slug": "patte_arriere_de_sauterelle",
+            "nom": "patte arrière de sauterelle",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "patte arrière de sauterelle — une pour chaque saut — que le magicien doit casser quand le saut est effectué",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -56698,9 +58004,24 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "deux feuilles de verre",
-          "Objet utilisé sans destruction indiquée",
-          "deux feuilles de cristal"
+          {
+            "slug": "deux_feuilles_de_verre",
+            "nom": "deux feuilles de verre",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "objet_utilise_sans_destruction_indiquee",
+            "nom": "Objet utilisé sans destruction indiquée",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "deux_feuilles_de_cristal",
+            "nom": "deux feuilles de cristal",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -57293,8 +58614,18 @@
         "jet_sauvegarde": "Aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Bout de ficelle",
-          "Morceau de bois"
+          {
+            "slug": "bout_de_ficelle",
+            "nom": "Bout de ficelle",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "morceau_de_bois",
+            "nom": "Morceau de bois",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "Les composantes matérielles de ce sort sont un bout de ficelle et un morceau de bois.",
         "composants_materiels_reference": "",
@@ -58229,8 +59560,18 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "l’original",
-          "poudre de rubis"
+          {
+            "slug": "l_original",
+            "nom": "l’original",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "poudre_de_rubis",
+            "nom": "poudre de rubis",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
@@ -59249,7 +60590,12 @@
         "jet_sauvegarde": "Aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Pincée de sable fin"
+          {
+            "slug": "pincee_de_sable_fin",
+            "nom": "Pincée de sable fin",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "Les composantes matérielles de ce sort sont une pincée de sable fin ou des pétales de rose ou un criquet vivant.",
         "composants_materiels_reference": "",
@@ -59390,7 +60736,12 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "a completer"
+          {
+            "slug": "a_completer",
+            "nom": "a completer",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
@@ -59495,7 +60846,12 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "a completer"
+          {
+            "slug": "a_completer",
+            "nom": "a completer",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
@@ -60257,12 +61613,42 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "fine feuille de cristal de 6 cm²",
-          "Première application",
-          "saphir blanc",
-          "Deuxième application",
-          "diamant",
-          "Troisième application"
+          {
+            "slug": "fine_feuille_de_cristal_de_6_cm",
+            "nom": "fine feuille de cristal de 6 cm²",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "premiere_application",
+            "nom": "Première application",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "saphir_blanc",
+            "nom": "saphir blanc",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "deuxieme_application",
+            "nom": "Deuxième application",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "diamant",
+            "nom": "diamant",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "troisieme_application",
+            "nom": "Troisième application",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
@@ -60549,7 +61935,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Poudre composée de diamant"
+          {
+            "slug": "poudre_composee_de_diamant",
+            "nom": "Poudre composée de diamant",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle de la stase temporelle est une poudre composée de diamant, d’émeraude, de rubis et de saphir : une pierre de chaque type étant nécessaire.",
         "composants_materiels_reference": "",
@@ -60693,8 +62084,18 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "sable",
-          "Goutte d’eau"
+          {
+            "slug": "sable",
+            "nom": "sable",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "goutte_d_eau",
+            "nom": "Goutte d’eau",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "Les composantes matérielles sont : de la chaud, du sable et une goutte d’eau, le tout mélangé par une tige en fer (pointe ou clou par exemple).",
         "composants_materiels_reference": "",
@@ -60838,7 +62239,12 @@
         "jet_sauvegarde": "annule",
         "composantes": "V, M",
         "composants_materiels": [
-          "plume d’aile d’oiseau"
+          {
+            "slug": "plume_d_aile_d_oiseau",
+            "nom": "plume d’aile d’oiseau",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "Recherche dans le texte du Manuel des joueurs",
@@ -60944,9 +62350,23 @@
         "jet_sauvegarde": "Annule",
         "composantes": "V, M",
         "composants_materiels": [
-          "langue de serpent et",
-          "soit un peu de miel",
-          "soit une goutte d’huile douce"
+          {
+            "type": "alternative",
+            "choix": [
+              {
+                "slug": "miel",
+                "nom": "miel",
+                "quantite": 1,
+                "consomme": true
+              },
+              {
+                "slug": "huile_douce",
+                "nom": "huile douce",
+                "quantite": 1,
+                "consomme": true
+              }
+            ]
+          }
         ],
         "composants_materiels_source": "langue de serpent et, soit un peu de miel, soit une goutte d’huile douce",
         "composants_materiels_reference": "Recherche dans le texte du Manuel des joueurs",
@@ -61092,12 +62512,27 @@
         "jet_sauvegarde": "Annule",
         "composantes": "V, M",
         "composants_materiels": [
-          "langue de serpent",
+          {
+            "slug": "langue_de_serpent",
+            "nom": "langue de serpent",
+            "quantite": 1,
+            "consomme": true
+          },
           {
             "type": "alternative",
             "choix": [
-              "miel",
-              "huile douce"
+              {
+                "slug": "miel",
+                "nom": "miel",
+                "quantite": 1,
+                "consomme": true
+              },
+              {
+                "slug": "huile_douce",
+                "nom": "huile douce",
+                "quantite": 1,
+                "consomme": true
+              }
             ]
           }
         ],
@@ -61245,7 +62680,12 @@
         "jet_sauvegarde": "Annule",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "cire d’abeille"
+          {
+            "slug": "cire_d_abeille",
+            "nom": "cire d’abeille",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle est de la cire d’abeille.",
         "composants_materiels_reference": "",
@@ -61638,10 +63078,30 @@
         "jet_sauvegarde": "spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "diamant réduit en poudre",
-          "Réduit en poudre",
-          "opale noire réduite en poudre",
-          "Réduite en poudre"
+          {
+            "slug": "diamant_reduit_en_poudre",
+            "nom": "diamant réduit en poudre",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "reduit_en_poudre",
+            "nom": "Réduit en poudre",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "opale_noire_reduite_en_poudre",
+            "nom": "opale noire réduite en poudre",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "reduite_en_poudre",
+            "nom": "Réduite en poudre",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
@@ -62177,8 +63637,18 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Pincée de poussière",
-          "gouttes d’eau"
+          {
+            "slug": "pincee_de_poussiere",
+            "nom": "Pincée de poussière",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "gouttes_d_eau",
+            "nom": "gouttes d’eau",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "Les composantes matérielles sont une pincée de poussière et quelques gouttes d’eau.",
         "composants_materiels_reference": "",
@@ -62467,9 +63937,24 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, M",
         "composants_materiels": [
-          "fourrure de chauve souris",
-          "morceau de charbon",
-          "goutte de poix"
+          {
+            "slug": "fourrure_de_chauve_souris",
+            "nom": "fourrure de chauve souris",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "morceau_de_charbon",
+            "nom": "morceau de charbon",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "goutte_de_poix",
+            "nom": "goutte de poix",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
@@ -62615,9 +64100,23 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, M",
         "composants_materiels": [
-          "fourrure de chauve souris",
-          "morceau de charbon",
-          "soit une goutte de poix"
+          {
+            "type": "alternative",
+            "choix": [
+              {
+                "slug": "morceau_de_charbon",
+                "nom": "morceau de charbon",
+                "quantite": 1,
+                "consomme": true
+              },
+              {
+                "slug": "goutte_de_poix",
+                "nom": "goutte de poix",
+                "quantite": 1,
+                "consomme": true
+              }
+            ]
+          }
         ],
         "composants_materiels_source": "un peu de fourrure de chauve-souris et soit un morceau de charbon, soit une goutte de poix",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
@@ -62762,7 +64261,12 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "a completer"
+          {
+            "slug": "a_completer",
+            "nom": "a completer",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
@@ -62867,9 +64371,24 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Brindille",
-          "Morceau de plante verte",
-          "Feuille"
+          {
+            "slug": "brindille",
+            "nom": "Brindille",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "morceau_de_plante_verte",
+            "nom": "Morceau de plante verte",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "feuille",
+            "nom": "Feuille",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "Les composantes matérielles sont une pierre, une brindille et un morceau de plante verte, feuille ou brin d’herbe.",
         "composants_materiels_reference": "",
@@ -63013,7 +64532,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "toile d’araignée"
+          {
+            "slug": "toile_d_araignee",
+            "nom": "toile d’araignée",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle de ce sort est un peu de toile d’araignée.",
         "composants_materiels_reference": "",
@@ -63158,7 +64682,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Mercure"
+          {
+            "slug": "mercure",
+            "nom": "Mercure",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "Les composantes matérielles sont du mercure, de la gomme arabique, et de la fumée.",
         "composants_materiels_reference": "",
@@ -63303,7 +64832,23 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Potion d’héroïsme ou de super héroïsme,"
+          {
+            "type": "alternative",
+            "choix": [
+              {
+                "slug": "potion_d_heroisme",
+                "nom": "Potion d’héroïsme",
+                "quantite": 1,
+                "consomme": true
+              },
+              {
+                "slug": "de_super_heroisme",
+                "nom": "de super héroïsme",
+                "quantite": 1,
+                "consomme": true
+              }
+            ]
+          }
         ],
         "composants_materiels_source": "potion d’héroïsme ou de super-héroïsme, que le magicien doit boire pendant qu’il lance le sort",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -63734,9 +65279,24 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "eau",
-          "argile",
-          "sable"
+          {
+            "slug": "eau",
+            "nom": "eau",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "argile",
+            "nom": "argile",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "sable",
+            "nom": "sable",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "Recherche dans le texte du Manuel des joueurs",
@@ -63841,8 +65401,18 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Goutte de sang",
-          "Chaux"
+          {
+            "slug": "goutte_de_sang",
+            "nom": "Goutte de sang",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "chaux",
+            "nom": "Chaux",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "Les composantes matérielles sont une pincée de terre et une goutte de sang ; de la chaux, de l’eau et de la terre sont nécessaires pour l’inverse.",
         "composants_materiels_reference": "",
@@ -64132,7 +65702,23 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Petit morceau de verre ou de cristal"
+          {
+            "type": "alternative",
+            "choix": [
+              {
+                "slug": "petit_morceau_de_verre",
+                "nom": "Petit morceau de verre",
+                "quantite": 1,
+                "consomme": true
+              },
+              {
+                "slug": "de_cristal",
+                "nom": "de cristal",
+                "quantite": 1,
+                "consomme": true
+              }
+            ]
+          }
         ],
         "composants_materiels_source": "petit morceau de verre ou de cristal",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
@@ -64809,7 +66395,12 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, M",
         "composants_materiels": [
-          "parchemin mis en cône"
+          {
+            "slug": "parchemin_mis_en_cone",
+            "nom": "parchemin mis en cône",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
@@ -64915,7 +66506,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, M",
         "composants_materiels": [
-          "parchemin mis en cône"
+          {
+            "slug": "parchemin_mis_en_cone",
+            "nom": "parchemin mis en cône",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "petit parchemin mis en cône",
         "composants_materiels_reference": "Recherche approfondie PHB/manuel — correction manuelle ciblée",
@@ -65203,9 +66799,24 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "soufre",
-          "sang d’ombre des roches",
-          "Petite baguette d’argent"
+          {
+            "slug": "soufre",
+            "nom": "soufre",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "sang_d_ombre_des_roches",
+            "nom": "sang d’ombre des roches",
+            "quantite": 1,
+            "consomme": true
+          },
+          {
+            "slug": "petite_baguette_d_argent",
+            "nom": "Petite baguette d’argent",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "Les composantes matérielles sont de l’encens à brûler, un peu de soufre et d’huile, une cordelette à nœuds, un peu de sang d’ombre des roches et une petite baguette d’argent.",
         "composants_materiels_reference": "",
@@ -65349,7 +66960,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "objet de valeur à sacrifier"
+          {
+            "slug": "objet_de_valeur_a_sacrifier",
+            "nom": "objet de valeur à sacrifier",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle de ce sort est le sacrifice de quelque chose ayant de la valeur pour le lanceur de sort et/ou pour le pouvoir invoqué.",
         "composants_materiels_reference": "",
@@ -65602,7 +67218,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "symbole sacré du clerc"
+          {
+            "slug": "symbole_sacre_du_clerc",
+            "nom": "symbole sacré du clerc",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "symbole sacré du clerc",
         "composants_materiels_reference": "Règle/usage général clérical ; composant exact à vérifier si le sort précise un complément",
@@ -65891,7 +67512,12 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "Plume d’aile d’oiseau"
+          {
+            "slug": "plume_d_aile_d_oiseau",
+            "nom": "Plume d’aile d’oiseau",
+            "quantite": 1,
+            "consomme": true
+          }
         ],
         "composants_materiels_source": "La composante matérielle est une plume d’aile d’oiseau.",
         "composants_materiels_reference": "",
@@ -66015,6 +67641,6 @@
       "sort": 0
     }
   ],
-  "normalizedBy": "2026-06-18-normalize-wizard-components-resolve-warnings-v1",
-  "normalizedAt": "2026-06-19T05:06:10.104Z"
+  "normalizedBy": "2026-06-19-normalize-wizard-components-text-mining-v6",
+  "normalizedAt": "2026-06-19T07:51:15.382Z"
 }
