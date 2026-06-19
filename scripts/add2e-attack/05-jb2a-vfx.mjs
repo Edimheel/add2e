@@ -1,8 +1,8 @@
 // scripts/add2e-attack/05-jb2a-vfx.mjs
 // ADD2E — VFX JB2A Premium sécurisés pour sorts et attaques d'armes.
-// Version : 2026-06-19-v12-weapon-family-effects
+// Version : 2026-06-19-v13-non-arme-attack-items
 
-globalThis.ADD2E_JB2A_VFX_VERSION = "2026-06-19-v12-weapon-family-effects";
+globalThis.ADD2E_JB2A_VFX_VERSION = "2026-06-19-v13-non-arme-attack-items";
 
 const ADD2E_JB2A_VISIBLE_IMPACT = [
   "modules/JB2A_DnD5e/Library/2nd_Level/Divine_Smite/DivineSmite_01_Regular_BlueYellow_Target_400x400.webm",
@@ -319,10 +319,10 @@ async function add2ePlayWeaponAttackFx({ actor, weapon, sourceToken, targetToken
     else return false;
     effect.scaleToObject(1).opacity(0.9);
     await seq.play();
-    console.log("[ADD2E][JB2A][WEAPON][PLAY]", { weapon: weapon?.name, preset, mode: "impact", file: files[0] });
+    console.log("[ADD2E][JB2A][WEAPON][PLAY]", { weapon: weapon?.name, weaponType: weapon?.type, preset, mode: "impact", file: files[0] });
     return true;
   } catch (e) {
-    console.warn("[ADD2E][JB2A][WEAPON][ERROR] VFX d'arme ignoré pour ne pas bloquer l'attaque.", { weapon: weapon?.name, error: e });
+    console.warn("[ADD2E][JB2A][WEAPON][ERROR] VFX d'arme ignoré pour ne pas bloquer l'attaque.", { weapon: weapon?.name, weaponType: weapon?.type, error: e });
     return false;
   }
 }
@@ -339,7 +339,8 @@ function add2eWrapAttackRollForWeaponFx(fn) {
     const sourceToken = payload.token ?? payload.sourceToken ?? add2eGetActorToken(actor);
     const targetTokenBeforeRoll = payload.targetToken ?? Array.from(game.user?.targets ?? [])[0] ?? null;
     const result = await original.apply(this, args);
-    if (weapon?.type === "arme") await add2ePlayWeaponAttackFx({ actor, weapon, sourceToken, targetToken: payload.targetToken ?? targetTokenBeforeRoll ?? Array.from(game.user?.targets ?? [])[0] ?? null });
+    if (weapon) await add2ePlayWeaponAttackFx({ actor, weapon, sourceToken, targetToken: payload.targetToken ?? targetTokenBeforeRoll ?? Array.from(game.user?.targets ?? [])[0] ?? null });
+    else console.warn("[ADD2E][JB2A][WEAPON][SKIP_NO_WEAPON]", { actor: actor?.name, actorId: actor?.id, payloadKeys: Object.keys(payload ?? {}) });
     return result;
   };
   wrapped.__add2eWeaponFxWrapped = true;
