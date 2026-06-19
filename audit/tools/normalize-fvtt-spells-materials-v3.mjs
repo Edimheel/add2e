@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 
-const VERSION = "2026-06-19-normalize-wizard-components-text-mining-v2";
+const VERSION = "2026-06-19-normalize-wizard-components-text-mining-v3";
 const DEFAULT_INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const DEFAULT_OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
 const DEFAULT_CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
@@ -551,6 +551,66 @@ function materialEntryCount(entries) {
   return (entries ?? []).reduce((sum, entry) => sum + componentNamesFromEntry(entry).length, 0);
 }
 
+function materialComponentObject(value, source = {}) {
+  const rawName = typeof value === "object"
+    ? value?.nom ?? value?.name ?? value?.label ?? value?.item ?? value?.itemName ?? value?.component ?? value?.composant ?? value?.slug ?? value?.id
+    : value;
+  const nom = cleanMaterial(rawName);
+  if (rejectMaterial(nom)) return null;
+  const quantite = Math.max(1, Number(source.quantite ?? source.quantity ?? source.qty ?? source.nombre ?? source.count ?? 1) || 1);
+  const consomme = source.consomme !== false && source.consume !== false;
+  return { slug: slug(nom), nom, quantite, consomme };
+}
+
+function uniqueComponentObjects(values) {
+  const seen = new Set();
+  const out = [];
+  for (const value of values.flat(Infinity)) {
+    const entry = typeof value === "object" && value?.slug && value?.nom ? value : materialComponentObject(value);
+    if (!entry) continue;
+    const key = slug(entry.slug ?? entry.nom);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(entry);
+  }
+  return out;
+}
+
+function normalizeMaterialStructure(entries) {
+  const out = [];
+  for (const entry of entries ?? []) {
+    if (!entry) continue;
+    if (entry.type === "alternative" || Array.isArray(entry.choix)) {
+      const choix = uniqueComponentObjects(entry.choix ?? entry.alternatives ?? entry.options ?? []);
+      if (choix.length > 1) out.push({ type: "alternative", choix });
+      else if (choix.length === 1) out.push(choix[0]);
+      continue;
+    }
+    if (entry.type === "variante") {
+      const composants = uniqueComponentObjects(entry.composants ?? []);
+      if (!composants.length) continue;
+      out.push({
+        type: "variante",
+        id: slug(entry.id ?? entry.label ?? entry.nom ?? entry.name ?? composants.map(c => c.nom).join("_")),
+        label: text(entry.label ?? entry.nom ?? entry.name ?? entry.id ?? "Variante"),
+        composants
+      });
+      continue;
+    }
+    const component = materialComponentObject(entry, entry);
+    if (component) out.push(component);
+  }
+  const seen = new Set();
+  return out.filter(entry => {
+    const key = entry.type
+      ? `${entry.type}:${slug(entry.id ?? entry.label ?? "")}:${componentNamesFromEntry(entry).map(slug).join("|")}`
+      : `component:${slug(entry.slug ?? entry.nom)}`;
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 function materialQualityWarnings(entries) {
   const warnings = [];
   for (const entry of entries ?? []) {
@@ -666,6 +726,8 @@ function normalizeMaterials(item, indexes) {
   } else {
     system.composants_materiels = resolveMaterialEntries(system);
   }
+
+  system.composants_materiels = normalizeMaterialStructure(system.composants_materiels);
 
   return {
     before,
