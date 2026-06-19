@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 
-const VERSION = "2026-06-19-normalize-components-v21";
+const VERSION = "2026-06-19-normalize-components-v22";
 const DEFAULT_INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const DEFAULT_OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
 const DEFAULT_CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
@@ -231,8 +231,6 @@ const CANON = new Map(Object.entries({
   marteau_de_guerre_normal: "marteau de guerre normal"
 }));
 
-const NON_CONSUMED = new Set(["symbole_sacre", "chapelet", "chapelet_de_priere", "feu", "objet_de_priere", "petit_sac", "petite_bougie"]);
-
 const alt = choix => ({ type: "alternative", choix });
 const variant = (id, label, composants) => ({ type: "variante", id, label, composants });
 const holy = "s" + "ang";
@@ -324,13 +322,19 @@ function canonical(value) {
 function cleanName(value) {
   return canonical(text(value).replace(/[_-]+/g, " ").replace(/^(un|une|du|de la|de l['’]?|des|le|la|les|son|sa|ses)\s+/i, "").replace(/\s+/g, " "));
 }
+function materialString(value) {
+  if (typeof value === "string") return cleanName(value);
+  if (!value || typeof value !== "object") return "";
+  if (value.type === "alternative" || value.type === "variante" || value.type === "variant" || Array.isArray(value.choix) || Array.isArray(value.composants)) return "";
+  return cleanName(value.nom ?? value.name ?? value.item ?? value.itemName ?? value.component ?? value.composant ?? value.slug ?? value.id ?? "");
+}
 function componentNames(entry) {
   if (typeof entry === "string") return [entry];
   if (!entry || typeof entry !== "object") return [];
   if (entry.type === "alternative" || Array.isArray(entry.choix)) return (entry.choix ?? entry.alternatives ?? entry.options ?? []).flatMap(componentNames);
   if (entry.type === "variante" || entry.type === "variant" || Array.isArray(entry.composants)) return (entry.composants ?? entry.components ?? []).flatMap(componentNames);
-  const direct = entry.nom ?? entry.name ?? entry.item ?? entry.itemName ?? entry.component ?? entry.composant ?? entry.slug ?? entry.id;
-  return direct ? [String(direct)] : [];
+  const direct = materialString(entry);
+  return direct ? [direct] : [];
 }
 function isBadName(value) {
   const n = norm(value);
@@ -340,7 +344,7 @@ function cleanVariantLabel(label, composants) {
   const fromLabel = text(label).split(/\s+[—–-]\s+/g).pop();
   const cleaned = cleanName(fromLabel);
   if (cleaned && !isBadName(cleaned) && slug(cleaned) !== "variante") return cleaned;
-  const names = (composants ?? []).map(c => c?.nom ?? c).map(cleanName).filter(v => v && !isBadName(v));
+  const names = (composants ?? []).map(materialString).filter(v => v && !isBadName(v));
   return names.join(", ") || "Variante";
 }
 function uniqueBySlug(list) {
@@ -389,38 +393,30 @@ function uniqueEntries(entries) {
 function parseTextMaterials(value) {
   return uniqueEntries(String(value ?? "").split(/[,;|\n]+|\s+et\s+/i).map(cleanName).filter(value => !isBadName(value)));
 }
-function componentObject(value, source = {}) {
-  if (value && typeof value === "object" && (value.type === "variante" || value.type === "variant" || value.type === "alternative" || Array.isArray(value.composants) || Array.isArray(value.choix))) return null;
-  const name = cleanName(typeof value === "object" ? (value.nom ?? value.name ?? value.item ?? value.itemName ?? value.component ?? value.composant ?? value.slug ?? value.id) : value);
-  if (isBadName(name)) return null;
-  const key = slug(name);
-  return { slug: key, nom: name, quantite: Math.max(1, Number(source.quantite ?? source.quantity ?? source.qty ?? 1) || 1), consomme: !NON_CONSUMED.has(key) && source.consomme !== false && source.consume !== false };
-}
 function normalizeStructure(entries) {
   const out = [];
   for (const entry of entries ?? []) {
     if (!entry) continue;
     if (entry.type === "alternative" || Array.isArray(entry.choix)) {
-      const choix = uniqueComponentObjects(entry.choix ?? entry.alternatives ?? entry.options ?? []);
+      const choix = uniqueMaterialStrings(entry.choix ?? entry.alternatives ?? entry.options ?? []);
       if (choix.length > 1) out.push({ type: "alternative", choix }); else if (choix.length === 1) out.push(choix[0]);
     } else if (entry.type === "variante" || entry.type === "variant" || Array.isArray(entry.composants)) {
-      const composants = uniqueComponentObjects(entry.composants ?? entry.components ?? []);
-      if (composants.length) out.push({ type: "variante", id: slug(entry.id ?? entry.label ?? composants.map(c => c.nom).join("_")), label: cleanVariantLabel(entry.label, composants), composants });
+      const composants = uniqueMaterialStrings(entry.composants ?? entry.components ?? []);
+      if (composants.length) out.push({ type: "variante", id: slug(entry.id ?? entry.label ?? composants.join("_")), label: cleanVariantLabel(entry.label, composants), composants });
     } else {
-      const component = componentObject(entry, entry);
-      if (component) out.push(component);
+      const component = materialString(entry);
+      if (component && !isBadName(component)) out.push(component);
     }
   }
   return out;
 }
-function uniqueComponentObjects(values) {
+function uniqueMaterialStrings(values) {
   const seen = new Set();
   const out = [];
   for (const value of values.flat(Infinity)) {
-    const component = value?.slug && value?.nom ? value : componentObject(value);
-    if (!component) continue;
-    const key = slug(component.slug ?? component.nom);
-    if (!key || seen.has(key)) continue;
+    const component = materialString(value);
+    const key = slug(component);
+    if (!component || isBadName(component) || !key || seen.has(key)) continue;
     seen.add(key);
     out.push(component);
   }
