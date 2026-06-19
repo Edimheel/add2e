@@ -6,7 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 
-const VERSION = "2026-06-19-normalize-wizard-components-text-mining-v10";
+const VERSION = "2026-06-19-normalize-wizard-components-text-mining-v11";
 const DEFAULT_INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const DEFAULT_OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
 const DEFAULT_CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
@@ -167,6 +167,33 @@ const MATERIAL_CANON = new Map(Object.entries({
   baguette_fourchue: "baguette fourchue",
   morceau_d_os_de_mort_vivant: "morceau d’os de mort-vivant",
   plume_d_aile_d_oiseau: "plume d’aile d’oiseau",
+  encre_fine_faite_de_substances_rares: "encre fine faite de substances rares",
+  peu_de_fourrure: "peu de fourrure",
+  baguette_de_verre: "baguette de verre",
+  baguette_de_cristal: "baguette de cristal",
+  baguette_d_ambre: "baguette d’ambre",
+  luciole_vivante: "luciole vivante",
+  ver_luisant_vivant: "ver luisant vivant",
+  vert_luisant_vivant: "ver luisant vivant",
+  quatre_queues_de_lucioles_ou_de_vers_luisants_morts: "4 queues de lucioles ou de vers luisants morts",
+  petit_sac: "petit sac",
+  petite_bougie: "petite bougie",
+  soufre: "soufre",
+  souffre: "soufre",
+  salpetre: "salpêtre",
+  petit_cone_de_verre: "petit cône de verre",
+  petit_cone_de_cristal: "petit cône de cristal",
+  argile_grasse: "argile grasse",
+  receptacle: "réceptacle",
+  petite_fiole_d_eau: "petite fiole d’eau",
+  petite_fiole_de_poussiere: "petite fiole de poussière",
+  melange_de_terre: "mélange de terre",
+  lame_en_fer: "lame en fer",
+  petite_replique_du_magicien: "petite réplique du magicien",
+  petit_tambour: "petit tambour",
+  goutte_de_sang: "goutte de sang",
+  deux_feuilles_de_verre: "deux feuilles de verre",
+  deux_feuilles_de_cristal: "deux feuilles de cristal",
   poudre_de_fer: "poudre de fer",
   pincee_de_poudre_de_fer: "poudre de fer",
   poudre_d_argent: "poudre d’argent",
@@ -194,10 +221,9 @@ const MATERIAL_CANON = new Map(Object.entries({
   encens: "encens",
   eau: "eau",
   sable: "sable",
-  soufre: "soufre",
+  soufre_et_phosphore: "soufre et phosphore",
   phosphore: "phosphore",
   argile: "argile",
-  soufre_et_phosphore: "soufre et phosphore",
   guano_de_chauve_souris: "guano de chauve-souris",
   guano_de_chauve_souris_en_boule: "guano de chauve-souris",
   toile_d_araignee: "toile d’araignée",
@@ -212,12 +238,12 @@ const MATERIAL_CANON = new Map(Object.entries({
   morceau_de_fourrure: "morceau de fourrure",
   fourrure: "morceau de fourrure",
   tige_de_verre: "tige de verre",
-  baguette_de_verre: "tige de verre",
+  baguette_de_verre: "baguette de verre",
   perle_de_verre: "perle de verre",
   perle_de_cristal: "perle de cristal",
   petite_perle_de_cristal: "petite perle de cristal",
   tige_de_cristal: "tige de cristal",
-  baguette_de_cristal: "tige de cristal",
+  baguette_de_cristal: "baguette de cristal",
   ambre: "ambre",
   gomme_arabique: "gomme arabique",
   cils: "cils",
@@ -244,6 +270,35 @@ const MATERIAL_CANON = new Map(Object.entries({
   patte_arriere_de_sauterelle: "patte arrière de sauterelle"
 }));
 
+const MATERIAL_CONSUMPTION_OVERRIDES = new Map(Object.entries({
+  encre_fine_faite_de_substances_rares: true,
+  peu_de_fourrure: false,
+  baguette_de_verre: false,
+  baguette_de_cristal: false,
+  baguette_d_ambre: false,
+  phosphore: true,
+  luciole_vivante: true,
+  ver_luisant_vivant: true,
+  quatre_queues_de_lucioles_ou_de_vers_luisants_morts: true,
+  petit_sac: false,
+  petite_bougie: false,
+  soufre: true,
+  salpetre: true,
+  petit_cone_de_verre: false,
+  petit_cone_de_cristal: false,
+  argile_grasse: true,
+  receptacle: false,
+  petite_fiole_d_eau: true,
+  petite_fiole_de_poussiere: true,
+  melange_de_terre: true,
+  lame_en_fer: false,
+  petite_replique_du_magicien: false,
+  petit_tambour: false,
+  goutte_de_sang: true,
+  deux_feuilles_de_verre: false,
+  deux_feuilles_de_cristal: false
+}));
+
 const ELEMENTAL_VARIANTS = [
   { type: "variante", id: "air", label: "Invocation d’un élémental de l’air", composants: ["encens à faire brûler"] },
   { type: "variante", id: "eau", label: "Invocation d’un élémental de l’eau", composants: ["eau", "sable"] },
@@ -262,34 +317,56 @@ const WIZARD_COMPONENT_DELEGATIONS = new Map(Object.entries({
   permanence: "Composants variables selon le sort ou l’effet rendu permanent."
 }));
 const WIZARD_MATERIAL_OVERRIDES = new Map(Object.entries({
+  abaissement_des_eaux: ["petite fiole d’eau", "petite fiole de poussière"],
   allometamorphose: ["cocon de chenille"],
   agrandissement: ["poudre de fer"],
   aura_magique_de_nystul: ["soie"],
   arme_enchantee: ["carbone en poudre", "citron en poudre"],
+  bouclier_de_feu: [
+    { type: "variante", id: "flammes_chaudes", label: "Flammes chaudes", composants: ["phosphore"] },
+    { type: "variante", id: "flammes_froides_luciole", label: "Flammes froides — luciole vivante", composants: ["luciole vivante"] },
+    { type: "variante", id: "flammes_froides_ver_luisant", label: "Flammes froides — ver luisant vivant", composants: ["ver luisant vivant"] },
+    { type: "variante", id: "flammes_froides_queues", label: "Flammes froides — queues de lucioles ou vers luisants morts", composants: ["4 queues de lucioles ou de vers luisants morts"] }
+  ],
   chaumiere_de_leomund: ["petite perle de cristal"],
   clairaudience: ["petite corne d’argent"],
   clairvoyance: ["pincée de poudre de glande pinéale humaine ou humanoïde"],
   coffre_secret_de_leomund: ["coffre de grande valeur", "réplique miniature du coffre"],
+  cone_de_froid: [{ type: "alternative", choix: ["petit cône de verre", "petit cône de cristal"] }],
+  distorsion_des_distances: ["argile grasse"],
+  ecriture: ["encre fine faite de substances rares"],
   effroi: [{ type: "alternative", choix: ["cœur de poule", "plume blanche"] }],
   emprisonnement_de_l_ame: ["gemme d’emprisonnement"],
   fleche_de_feu: ["goutte d’huile", "silex"],
+  foudre: ["peu de fourrure", { type: "alternative", choix: ["baguette de verre", "baguette de cristal", "baguette d’ambre"] }],
+  glissement_de_terrain: ["mélange de terre", "petit sac", "lame en fer"],
   globe_d_invulnerabilite: [{ type: "alternative", choix: ["perle de verre", "perle de cristal"] }],
+  holographie: ["petite réplique du magicien"],
   invisibilite_de_masse: ["cils", "gomme arabique"],
   invisibilite_sur_3_m: ["cils", "gomme arabique"],
   invisibilite_sur_3m: ["cils", "gomme arabique"],
+  invocation_de_monstre_i: ["petit sac", "petite bougie"],
+  invocation_de_monstre_ii: ["petit sac", "petite bougie"],
+  invocation_de_monstres_i: ["petit sac", "petite bougie"],
+  invocation_de_monstres_ii: ["petit sac", "petite bougie"],
   invocation_d_un_elemental: ELEMENTAL_VARIANTS,
   invocation_instantanee_de_drawmij: ["saphir"],
   levitation: [{ type: "alternative", choix: ["boucle de cuir", "morceau de fil d’or courbé en forme d’hameçon"] }],
+  lithomorphose: ["argile grasse"],
   localisation_d_objet: [{ type: "alternative", choix: ["fourchette d’argent", "baguette fourchue"] }],
   localisation_d_objets: [{ type: "alternative", choix: ["fourchette d’argent", "baguette fourchue"] }],
   message: ["fil de cuivre"],
+  metempsycose: ["réceptacle"],
   necro_animation: ["goutte de sang", "morceau de chair humaine", "os en poudre"],
   nuage_incendiaire: ["soufre", "phosphore"],
   peur: ["morceau d’os de mort-vivant"],
+  piege_a_feu: [{ type: "alternative", choix: ["soufre", "salpêtre"] }],
   piege_de_leomund: ["morceau de fer pyriteux"],
   protection_contre_le_mal_sur_3_m: ["poudre d’argent"],
   punition_spirituelle: ["vélin enluminé"],
   reparation: [{ type: "alternative", choix: ["deux objets magnétiques", "deux copeaux de métal"] }],
+  reincarnation: ["petit tambour", "goutte de sang"],
+  separation_des_eaux: [{ type: "alternative", choix: ["deux feuilles de verre", "deux feuilles de cristal"] }],
   suggestion: ["langue de serpent", { type: "alternative", choix: ["miel", "huile douce"] }],
   ventriloquie: ["parchemin mis en cône"],
   vol: ["plume d’aile d’oiseau"]
@@ -616,8 +693,11 @@ function materialComponentObject(value, source = {}) {
   const nom = cleanMaterial(rawName);
   if (rejectMaterial(nom)) return null;
   const quantite = Math.max(1, Number(source.quantite ?? source.quantity ?? source.qty ?? source.nombre ?? source.count ?? 1) || 1);
-  const consomme = source.consomme !== false && source.consume !== false;
-  return { slug: slug(nom), nom, quantite, consomme };
+  const key = slug(nom);
+  const consomme = MATERIAL_CONSUMPTION_OVERRIDES.has(key)
+    ? MATERIAL_CONSUMPTION_OVERRIDES.get(key)
+    : source.consomme !== false && source.consume !== false;
+  return { slug: key, nom, quantite, consomme };
 }
 
 function uniqueComponentObjects(values) {
