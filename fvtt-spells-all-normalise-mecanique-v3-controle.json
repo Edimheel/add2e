@@ -139,7 +139,7 @@
       }
     ]
   },
-  "totalItems": 418,
+  "totalItems": 414,
   "spells": 418,
   "preservedManualMaterials": 0,
   "preservedClasses": [],
@@ -14614,45 +14614,25 @@
     "missing": []
   },
   "sourceSpellCount": 411,
-  "outputSpellCount": 418,
+  "outputSpellCount": 414,
   "sourceSpellCountExpected": 411,
   "sourceSpellCountInvariant": true,
-  "v3SpellCountBaseline": 418,
+  "v3SpellCountBaseline": 414,
   "v3OnlyItemsPreserved": [
     {
-      "name": "Purification de la Nourriture et de la Boisson",
-      "classe": "Clerc",
+      "name": "Lumière",
+      "classe": "Magicien",
       "niveau": 1
     },
     {
-      "name": "Soins des Blessures Légères",
-      "classe": "Clerc",
+      "name": "Lumière",
+      "classe": "Illusionniste",
       "niveau": 1
     },
     {
-      "name": "Localisation d’un Objet",
-      "classe": "Clerc",
-      "niveau": 3
-    },
-    {
-      "name": "Bâtons en Serpents",
-      "classe": "Clerc",
-      "niveau": 4
-    },
-    {
-      "name": "Protection contre le Mal (Rayon de 10 pieds)",
-      "classe": "Clerc",
-      "niveau": 4
-    },
-    {
-      "name": "Soins ultime",
-      "classe": "Clerc",
-      "niveau": 5
-    },
-    {
-      "name": "Asile",
-      "classe": "Clerc",
-      "niveau": 7
+      "name": "Détection de l’invisibilité",
+      "classe": "Magicien",
+      "niveau": 2
     }
   ],
   "ignoredAuditOnlyItems": [],
@@ -14668,8 +14648,8 @@
       "normalizedBy",
       "normalizedAt"
     ],
-    "itemCountBefore": 418,
-    "itemCountAfter": 418
+    "itemCountBefore": 414,
+    "itemCountAfter": 414
   },
   "reversibleActorSplit": {
     "version": "2026-06-20-reference-flags-v3-preserve-v3",
@@ -18409,5 +18389,89 @@
       "illusionniste": 3
     },
     "unmatchedReferences": []
+  },
+  "phbPrune": {
+    "version": "2026-06-20-phb-inventory-prune-v3-strict-class-entries",
+    "reference": "audit/reference/manuel-joueurs-sorts-master.json",
+    "action": "prune_non_phb_spells",
+    "appliedAt": "2026-06-20T20:42:06.127Z",
+    "sourceSpellCount": 421,
+    "spellCount": 414,
+    "totalItems": 414,
+    "manualClassLevelEntryCount": 414,
+    "materialized": [],
+    "missingManualBefore": [],
+    "removed": [
+      {
+        "key": "i1hJN7EdqPcLTVL1",
+        "id": "i1hJN7EdqPcLTVL1",
+        "name": "Purification de la Nourriture et de la Boisson",
+        "classe": "Clerc",
+        "spellLists": [
+          "clerc"
+        ],
+        "niveau": 1
+      },
+      {
+        "key": "41cYJx1D12of5dtp",
+        "id": "41cYJx1D12of5dtp",
+        "name": "Soins des Blessures Légères",
+        "classe": "Clerc",
+        "spellLists": [
+          "clerc"
+        ],
+        "niveau": 1
+      },
+      {
+        "key": "JYPI9EQRzXnTBajE",
+        "id": "JYPI9EQRzXnTBajE",
+        "name": "Localisation d’un Objet",
+        "classe": "Clerc",
+        "spellLists": [
+          "clerc"
+        ],
+        "niveau": 3
+      },
+      {
+        "key": "AlmyxyBQ3JUlncRq",
+        "id": "AlmyxyBQ3JUlncRq",
+        "name": "Bâtons en Serpents",
+        "classe": "Clerc",
+        "spellLists": [
+          "clerc"
+        ],
+        "niveau": 4
+      },
+      {
+        "key": "SdDT7AaELrLPFCy7",
+        "id": "SdDT7AaELrLPFCy7",
+        "name": "Protection contre le Mal (Rayon de 10 pieds)",
+        "classe": "Clerc",
+        "spellLists": [
+          "clerc"
+        ],
+        "niveau": 4
+      },
+      {
+        "key": "NT2DlgfjeVmmWktM",
+        "id": "NT2DlgfjeVmmWktM",
+        "name": "Soins ultime",
+        "classe": "Clerc",
+        "spellLists": [
+          "clerc"
+        ],
+        "niveau": 5
+      },
+      {
+        "key": "MjfD1BtI6Zbmcbkn",
+        "id": "MjfD1BtI6Zbmcbkn",
+        "name": "Asile",
+        "classe": "Clerc",
+        "spellLists": [
+          "clerc"
+        ],
+        "niveau": 7
+      }
+    ]
   }
 }

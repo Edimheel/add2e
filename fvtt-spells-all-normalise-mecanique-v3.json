@@ -70062,90 +70062,56 @@
       "sort": 0
     },
     {
-      "name": "Purification de la Nourriture et de la Boisson",
+      "name": "Lumière",
       "type": "sort",
-      "img": "systems/add2e/assets/icones/sorts/purification-de-la-nourriture-et-de-la-boisson.webp",
+      "img": "systems/add2e/assets/icones/sorts/lumiere.webp",
       "system": {
-        "niveau": 1,
-        "classe": "Clerc",
+        "nom": "Lumière",
+        "type": "sort",
+        "classe": "Magicien",
         "spellLists": [
-          "Clerc"
+          "Magicien"
         ],
-        "portee": "30 mètres",
-        "duree": "Permanent",
-        "zone_effet": {
-          "valeur": "27 dm³/niveau",
-          "unite": "texte"
-        },
-        "cible": {
-          "valeur": 0,
-          "unite": "nourriture ou boisson"
-        },
-        "jet_sauvegarde": "Aucun",
-        "composantes": "V, S",
-        "temps_incantation": {
-          "valeur": "1",
-          "unite": "round"
-        },
-        "description": "Ce sort permet de purifier toute nourriture et toute eau polluée, moisie, pourrie, empoisonnée. L’inverse du sort, corruption de l’eau et des aliments, rend la nourriture impropre à la consommation et l’eau polluée et non potable ; l’inverse profane même l’eau bénite. L’eau maudite est altérée par une purification de l’eau.",
-        "onUse": "systems/add2e/scripts/sorts/purification-de-la-nourriture-et-de-la-boisson.js",
+        "niveau": 1,
+        "ecole": "Altération",
+        "portee": "12\"",
+        "duree": "6 tours + 1 tour/niveau",
+        "zone_effet": "sphère de 2\" de rayon",
+        "cible": "selon description texte",
+        "temps_incantation": "4 segments",
+        "jet_sauvegarde": "aucun",
+        "composantes": "V, S, M",
+        "composants_materiels": [
+          "symbole sacré"
+        ],
+        "composants_materiels_source": "a_completer",
+        "composants_materiels_reference": "",
+        "composants_materiels_verification_recommandee": "",
+        "composants_materiels_note": "",
+        "composants_materiels_a_renseigner": false,
+        "description": "ce sort provoque une excitation des molécules qui se mettent alors à briller. La lumière créée est semblable à celle d’une torche et éclaire dans une zone de 4\" de diamètre. La lumière dure 6 tours (1 heure) plus 1 tour/niveau du clerc, à moins que le clerc annule cette lumière d’un mot. Si le sort de lumière est lancé sur une créature, son éventuelle résistance à la magie s’applique et un jet de protection est autorisé. Un succès indique que la zone de lumière se crée derrière la créature visée, plutôt que sur elle. Dans tous les autres cas, le sort prend effet là où le clerc le désire, tant qu’il n’y a pas d’obstacles entre lui et la portée du sort. Le clerc peut lancer son sort dans les airs, sur une pierre, du métal, du bois, etc. Si ce sort est lancé sur le visage ou sur les yeux d’une créature, la lumière aura tendance à l’aveugler (comme si une très forte lumière était placée devant ses yeux). Ses attaques et ses jets de protection subissent alors –4 pour toucher et même sa classe d’armure subi ce malus. À noter que ce sort ne «bouge pas», bien qu’il puisse être lancé sur une créature ou un objet mobile. Ce sort est réversible, créant alors une zone de ténèbres dans les mêmes conditions, sauf en ce qui concerne la durée, qui est alors la moitié du sort normal.",
+        "onUse": "systems/add2e/scripts/sorts/lumiere.js",
+        "onUseCode": "",
         "tags": [
           "classe:clerc",
-          "liste:clerc",
           "niveau:1",
-          "sort:purification_nourriture_boisson",
-          "sort:purification_de_la_nourriture_et_de_la_boisson",
-          "ecole:alteration",
-          "purification:nourriture",
-          "purification:boisson",
-          "purification:eau",
-          "anti:poison",
-          "anti:souillure",
-          "anti:moisissure",
-          "anti:pourriture",
-          "reversible:corruption_de_la_nourriture_et_de_la_boisson",
-          "profane:eau_benite",
-          "altere:eau_maudite"
+          "sort:lumiere",
+          "ecole:alteration"
         ],
         "effectTags": [
-          "classe:clerc",
-          "liste:clerc",
-          "niveau:1",
-          "sort:purification_nourriture_boisson",
-          "sort:purification_de_la_nourriture_et_de_la_boisson",
-          "ecole:alteration",
-          "purification:nourriture",
-          "purification:boisson",
-          "purification:eau",
-          "anti:poison",
-          "anti:souillure",
-          "anti:moisissure",
-          "anti:pourriture",
-          "reversible:corruption_de_la_nourriture_et_de_la_boisson",
-          "profane:eau_benite",
-          "altere:eau_maudite"
+          "sort:lumiere"
         ],
-        "ecole": "Altération",
-        "composants_materiels": [],
-        "composants_materiels_a_renseigner": false,
-        "nom": "",
-        "type": "",
-        "composants_materiels_source": "",
-        "composants_materiels_reference": "",
-        "composants_materiels_verification_recommandee": "",
-        "composants_materiels_note": "",
-        "onUseCode": "",
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
           "source": "manual-normalized-clerc-n1",
           "effects": [
             {
-              "id": "purification_de_la_nourriture_et_de_la_boisson",
-              "label": "Purification de la Nourriture et de la Boisson",
+              "id": "lumiere",
+              "label": "Lumière",
               "kind": "clerc_effect",
               "automation": "active_effect_or_mj_aid",
               "tags": [
-                "effet:purification_de_la_nourriture_et_de_la_boisson",
+                "effet:lumiere",
                 "classe:clerc",
                 "niveau:1"
               ],
@@ -70154,337 +70120,108 @@
           ]
         }
       },
-      "folder": "RV9v89HxrYvQpcPU",
-      "effects": [
-        {
-          "name": "Purification de la Nourriture et de la Boisson",
-          "flags": {
-            "add2e": {
-              "tags": [
-                "classe:clerc",
-                "liste:clerc",
-                "niveau:1",
-                "sort:purification_nourriture_boisson",
-                "sort:purification_de_la_nourriture_et_de_la_boisson",
-                "purification:nourriture",
-                "purification:boisson",
-                "purification:eau",
-                "anti:poison",
-                "anti:souillure",
-                "anti:moisissure",
-                "anti:pourriture",
-                "reversible:corruption_de_la_nourriture_et_de_la_boisson",
-                "profane:eau_benite",
-                "altere:eau_maudite",
-                "ecole:alteration"
-              ],
-              "correctedBy": "2026-05-23-clerc-n1-tags-resistance-froid-purification-v1",
-              "spellTagsPatch": {
-                "createsCombatEffect": false,
-                "reversible": true,
-                "reverseSpell": "Corruption de la Nourriture et de la Boisson",
-                "purifiesFood": true,
-                "purifiesWater": true,
-                "purifiesPoison": true,
-                "purifiesSpoilage": true
-              }
-            }
-          },
-          "duration": {
-            "value": 0,
-            "units": "rounds",
-            "expiry": "turnStart",
-            "expired": false
-          },
-          "disabled": true,
-          "transfer": false,
-          "img": "systems/add2e/assets/icones/sorts/purification-de-la-nourriture-et-de-la-boisson.webp",
-          "type": "base",
-          "system": {
-            "changes": []
-          },
-          "description": "",
-          "tint": "#ffffff",
-          "statuses": [],
-          "sort": 0,
-          "origin": "Item.Ed78Mif7wfNyCSLo",
-          "_id": "SnYHImrpK3SzJmgr",
-          "_stats": {
-            "compendiumSource": null,
-            "duplicateSource": null,
-            "exportSource": null,
-            "coreVersion": "14.363",
-            "systemId": "add2e",
-            "systemVersion": "0.1.15",
-            "lastModifiedBy": "3qitoEt1cN3Qhvig",
-            "createdTime": 1780340567257,
-            "modifiedTime": 1780340567257
-          },
-          "start": null,
-          "showIcon": 1,
-          "folder": null
-        },
-        {
-          "name": "Purification de la Nourriture et de la Boisson",
-          "flags": {
-            "add2e": {
-              "tags": [
-                "classe:clerc",
-                "liste:clerc",
-                "niveau:1",
-                "sort:purification_nourriture_boisson",
-                "sort:purification_de_la_nourriture_et_de_la_boisson",
-                "purification:nourriture",
-                "purification:boisson",
-                "purification:eau",
-                "anti:poison",
-                "anti:souillure",
-                "anti:moisissure",
-                "anti:pourriture",
-                "reversible:corruption_de_la_nourriture_et_de_la_boisson",
-                "profane:eau_benite",
-                "altere:eau_maudite",
-                "ecole:alteration"
-              ],
-              "correctedBy": "2026-05-23-clerc-n1-tags-resistance-froid-purification-v1",
-              "spellTagsPatch": {
-                "createsCombatEffect": false,
-                "reversible": true,
-                "reverseSpell": "Corruption de la Nourriture et de la Boisson",
-                "purifiesFood": true,
-                "purifiesWater": true,
-                "purifiesPoison": true,
-                "purifiesSpoilage": true
-              }
-            }
-          },
-          "duration": {
-            "value": 0,
-            "units": "rounds",
-            "expiry": "turnStart",
-            "expired": false
-          },
-          "disabled": true,
-          "transfer": false,
-          "img": "systems/add2e/assets/icones/sorts/purification-de-la-nourriture-et-de-la-boisson.webp",
-          "type": "base",
-          "system": {
-            "changes": []
-          },
-          "description": "",
-          "tint": "#ffffff",
-          "statuses": [],
-          "sort": 0,
-          "origin": "Item.Ed78Mif7wfNyCSLo",
-          "_id": "CikhLXLK5B3LOtEw",
-          "_stats": {
-            "compendiumSource": null,
-            "duplicateSource": null,
-            "exportSource": null,
-            "coreVersion": "14.363",
-            "systemId": "add2e",
-            "systemVersion": "0.1.15",
-            "lastModifiedBy": "3qitoEt1cN3Qhvig",
-            "createdTime": 1780340567257,
-            "modifiedTime": 1780340567257
-          },
-          "start": null,
-          "showIcon": 1,
-          "folder": null
-        },
-        {
-          "name": "Purification de la Nourriture et de la Boisson",
-          "flags": {
-            "add2e": {
-              "tags": [
-                "classe:clerc",
-                "liste:clerc",
-                "niveau:1",
-                "sort:purification_nourriture_boisson",
-                "sort:purification_de_la_nourriture_et_de_la_boisson",
-                "purification:nourriture",
-                "purification:boisson",
-                "purification:eau",
-                "anti:poison",
-                "anti:souillure",
-                "anti:moisissure",
-                "anti:pourriture",
-                "reversible:corruption_de_la_nourriture_et_de_la_boisson",
-                "profane:eau_benite",
-                "altere:eau_maudite",
-                "ecole:alteration"
-              ],
-              "correctedBy": "2026-05-23-clerc-n1-tags-resistance-froid-purification-v1",
-              "spellTagsPatch": {
-                "createsCombatEffect": false,
-                "reversible": true,
-                "reverseSpell": "Corruption de la Nourriture et de la Boisson",
-                "purifiesFood": true,
-                "purifiesWater": true,
-                "purifiesPoison": true,
-                "purifiesSpoilage": true
-              }
-            }
-          },
-          "duration": {
-            "value": 0,
-            "units": "rounds",
-            "expiry": "turnStart",
-            "expired": false
-          },
-          "disabled": true,
-          "transfer": false,
-          "img": "systems/add2e/assets/icones/sorts/purification-de-la-nourriture-et-de-la-boisson.webp",
-          "type": "base",
-          "system": {
-            "changes": []
-          },
-          "description": "",
-          "tint": "#ffffff",
-          "statuses": [],
-          "sort": 0,
-          "origin": "Item.Ed78Mif7wfNyCSLo",
-          "_id": "aaOR6mQcyZlnLLGI",
-          "_stats": {
-            "compendiumSource": null,
-            "duplicateSource": null,
-            "exportSource": null,
-            "coreVersion": "14.363",
-            "systemId": "add2e",
-            "systemVersion": "0.1.15",
-            "lastModifiedBy": "3qitoEt1cN3Qhvig",
-            "createdTime": 1780340567257,
-            "modifiedTime": 1780340567257
-          },
-          "start": null,
-          "showIcon": 1,
-          "folder": null
-        }
-      ],
+      "effects": [],
+      "folder": "ti9EBwYx3OHoVvTB",
       "flags": {
         "add2e": {
           "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "illusionniste-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import sorts",
+          "importerVersion": "2026-06-11-import-sorts-v2-no-merge-same-name",
+          "importedAt": "2026-06-16T19:58:26.755Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/illusionniste-lumiere.js",
+          "routedClass": "Magicien",
+          "spellListsResolved": [
+            "Magicien"
+          ],
           "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
           "dispatchSource": "export game.items",
-          "onUseUnchanged": true,
-          "originalOnUse": "systems/add2e/scripts/sorts/purification-de-la-nourriture-et-de-la-boisson.js",
-          "spellListsResolved": [
-            "Clerc"
-          ],
-          "importedBy": "ADD2E import universel",
-          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
-          "importedAt": "2026-05-28T06:32:54.236Z",
-          "routedClass": "Clerc",
-          "tags": [
-            "classe:clerc",
-            "liste:clerc",
-            "niveau:1",
-            "sort:purification_nourriture_boisson",
-            "sort:purification_de_la_nourriture_et_de_la_boisson",
-            "ecole:alteration",
-            "purification:nourriture",
-            "purification:boisson",
-            "purification:eau",
-            "anti:poison",
-            "anti:souillure",
-            "anti:moisissure",
-            "anti:pourriture",
-            "reversible:corruption_de_la_nourriture_et_de_la_boisson",
-            "profane:eau_benite",
-            "altere:eau_maudite"
-          ],
-          "correctedBy": "2026-05-23-clerc-n1-tags-resistance-froid-purification-v1",
-          "spellTagsPatch": {
-            "createsCombatEffect": false,
-            "reversible": true,
-            "reverseSpell": "Corruption de la Nourriture et de la Boisson",
-            "purifiesFood": true,
-            "purifiesWater": true,
-            "purifiesPoison": true,
-            "purifiesSpoilage": true
-          }
+          "generatedBy": "add2e-spell-agent",
+          "generatedStatus": "rules_to_complete_from_phb",
+          "onUseGenerated": true,
+          "importKey": "lumiere|sort|clerc|1",
+          "canonicalSpellFields": {
+            "version": "2026-06-16-cleric-l1-canonical-fields-v3"
+          },
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
         },
         "add2eExport": {
-          "folderPath": "Sorts / Clerc / Niveau 1",
-          "sourceFolderId": "drnwQQ9thhmKNqbB",
-          "exportedAt": "2026-05-22T09:57:29.890Z"
+          "folderPath": "Sorts / Magicien / Niveau 1",
+          "sourceFolderId": "wZjNl5NhQ29MLhhM",
+          "exportedAt": "2026-05-22T09:57:29.898Z"
         }
       },
+      "_id": "Zg2wEoydngNsIvyV",
+      "sort": 700000,
       "ownership": {
         "default": 0,
         "3qitoEt1cN3Qhvig": 3
       },
       "_stats": {
-        "compendiumSource": "Compendium.add2e.sorts.Item.Ed78Mif7wfNyCSLo",
-        "duplicateSource": null,
-        "exportSource": null,
         "coreVersion": "14.363",
         "systemId": "add2e",
-        "systemVersion": "0.1.15",
-        "createdTime": 1780340567257,
-        "modifiedTime": 1780340567257,
-        "lastModifiedBy": "3qitoEt1cN3Qhvig"
-      },
-      "_id": "i1hJN7EdqPcLTVL1",
-      "sort": 0
+        "systemVersion": "0.1.20",
+        "createdTime": 1781638688675,
+        "modifiedTime": 1781639973136,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
     },
     {
-      "name": "Soins des Blessures Légères",
+      "name": "Lumière",
       "type": "sort",
-      "img": "systems/add2e/assets/icones/sorts/soins-des-blessures-legeres.webp",
+      "img": "systems/add2e/assets/icones/sorts/lumiere.webp",
       "system": {
+        "nom": "Lumière",
+        "type": "sort",
+        "classe": "Illusionniste",
+        "spellLists": [
+          "Illusionniste"
+        ],
         "niveau": 1,
-        "classe": "Clerc",
-        "spellLists": [
-          "Clerc"
+        "ecole": "Altération",
+        "portee": "12\"",
+        "duree": "6 tours + 1 tour/niveau",
+        "zone_effet": "sphère de 2\" de rayon",
+        "cible": "selon description texte",
+        "temps_incantation": "4 segments",
+        "jet_sauvegarde": "aucun",
+        "composantes": "V, S, M",
+        "composants_materiels": [
+          "symbole sacré"
         ],
-        "portee": {
-          "valeur": 0,
-          "unite": "toucher"
-        },
-        "duree": {
-          "valeur": "permanente",
-          "unite": "texte"
-        },
-        "zone_effet": {
-          "valeur": "créature touchée",
-          "unite": "texte"
-        },
-        "cible": {
-          "valeur": 1,
-          "unite": "créature vivante"
-        },
-        "jet_sauvegarde": "Aucun",
-        "composantes": "V, S",
-        "temps_incantation": {
-          "valeur": "5",
-          "unite": "segments"
-        },
-        "description": "En posant ses mains sur une créature blessée, le clerc peut lui redonner de 1 à 8 points de vie perdus (1d8). Ce sort ne peut pas soigner les créatures sans enveloppe corporelle, ni les morts-vivants, ni les créatures uniquement touchées par des armes en fer, en argent ou ma44 giques. L’effet des soins mineurs est permanent tant que la personne guérie ne subit pas d’autres dommages. L’inverse de ce sort, blessures mineures, agit selon les mêmes principes mais cause de 1 à 8 points de dommages. Si une créature évite le contact des mains du clerc, celui-ci doit lancer une « probabilité de toucher » pour voir s’il a pu poser ses mains sur la victime pour infliger une blessure. SORTS DE NIVEAU 2",
-        "onUse": "systems/add2e/scripts/sorts/soins-des-blessures-legeres.js",
-        "ecole": "Nécromancie",
-        "composants_materiels": [],
-        "composants_materiels_a_renseigner": false,
-        "nom": "",
-        "type": "",
-        "composants_materiels_source": "",
+        "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
         "composants_materiels_note": "",
+        "composants_materiels_a_renseigner": false,
+        "description": "ce sort provoque une excitation des molécules qui se mettent alors à briller. La lumière créée est semblable à celle d’une torche et éclaire dans une zone de 4\" de diamètre. La lumière dure 6 tours (1 heure) plus 1 tour/niveau du clerc, à moins que le clerc annule cette lumière d’un mot. Si le sort de lumière est lancé sur une créature, son éventuelle résistance à la magie s’applique et un jet de protection est autorisé. Un succès indique que la zone de lumière se crée derrière la créature visée, plutôt que sur elle. Dans tous les autres cas, le sort prend effet là où le clerc le désire, tant qu’il n’y a pas d’obstacles entre lui et la portée du sort. Le clerc peut lancer son sort dans les airs, sur une pierre, du métal, du bois, etc. Si ce sort est lancé sur le visage ou sur les yeux d’une créature, la lumière aura tendance à l’aveugler (comme si une très forte lumière était placée devant ses yeux). Ses attaques et ses jets de protection subissent alors –4 pour toucher et même sa classe d’armure subi ce malus. À noter que ce sort ne «bouge pas», bien qu’il puisse être lancé sur une créature ou un objet mobile. Ce sort est réversible, créant alors une zone de ténèbres dans les mêmes conditions, sauf en ce qui concerne la durée, qui est alors la moitié du sort normal.",
+        "onUse": "systems/add2e/scripts/sorts/lumiere.js",
         "onUseCode": "",
-        "tags": [],
-        "effectTags": [],
+        "tags": [
+          "classe:clerc",
+          "niveau:1",
+          "sort:lumiere",
+          "ecole:alteration"
+        ],
+        "effectTags": [
+          "sort:lumiere"
+        ],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
           "source": "manual-normalized-clerc-n1",
           "effects": [
             {
-              "id": "soins_des_blessures_legeres",
-              "label": "Soins des Blessures Légères",
+              "id": "lumiere",
+              "label": "Lumière",
               "kind": "clerc_effect",
               "automation": "active_effect_or_mj_aid",
               "tags": [
-                "effet:soins_des_blessures_legeres",
+                "effet:lumiere",
                 "classe:clerc",
                 "niveau:1"
               ],
@@ -70493,1379 +70230,123 @@
           ]
         }
       },
-      "folder": "RV9v89HxrYvQpcPU",
-      "effects": [
-        {
-          "name": "Soins des Blessures Légères",
-          "flags": {
-            "add2e": {
-              "tags": [
-                "classe:clerc",
-                "liste:clerc",
-                "niveau:1",
-                "sort:soins_des_blessures_legeres",
-                "soin:1d8",
-                "reversible:blessures_legeres",
-                "degats_inverse:1d8",
-                "etat:soin",
-                "ecole:necromancie"
-              ]
-            }
-          },
-          "duration": {
-            "value": 0,
-            "units": "rounds",
-            "expiry": "turnStart",
-            "expired": false
-          },
-          "disabled": true,
-          "transfer": false,
-          "img": "systems/add2e/assets/icones/sorts/soins-des-blessures-legeres.webp",
-          "type": "base",
-          "system": {
-            "changes": []
-          },
-          "description": "",
-          "tint": "#ffffff",
-          "statuses": [],
-          "sort": 0,
-          "origin": "Item.ZtH0jCxBJupBfFdk",
-          "_id": "vYpzCR83jwLSSj2b",
-          "_stats": {
-            "compendiumSource": null,
-            "duplicateSource": null,
-            "exportSource": null,
-            "coreVersion": "14.363",
-            "systemId": "add2e",
-            "systemVersion": "0.1.15",
-            "lastModifiedBy": "3qitoEt1cN3Qhvig",
-            "createdTime": 1780340568653,
-            "modifiedTime": 1780340568653
-          },
-          "start": null,
-          "showIcon": 1,
-          "folder": null
-        },
-        {
-          "name": "Soins des Blessures Légères",
-          "flags": {
-            "add2e": {
-              "tags": [
-                "classe:clerc",
-                "liste:clerc",
-                "niveau:1",
-                "sort:soins_des_blessures_legeres",
-                "soin:1d8",
-                "reversible:blessures_legeres",
-                "degats_inverse:1d8",
-                "etat:soin",
-                "ecole:necromancie"
-              ]
-            }
-          },
-          "duration": {
-            "value": 0,
-            "units": "rounds",
-            "expiry": "turnStart",
-            "expired": false
-          },
-          "disabled": true,
-          "transfer": false,
-          "img": "systems/add2e/assets/icones/sorts/soins-des-blessures-legeres.webp",
-          "type": "base",
-          "system": {
-            "changes": []
-          },
-          "description": "",
-          "tint": "#ffffff",
-          "statuses": [],
-          "sort": 0,
-          "origin": "Item.ZtH0jCxBJupBfFdk",
-          "_id": "kLFkj48XuQl8qsYp",
-          "_stats": {
-            "compendiumSource": null,
-            "duplicateSource": null,
-            "exportSource": null,
-            "coreVersion": "14.363",
-            "systemId": "add2e",
-            "systemVersion": "0.1.15",
-            "lastModifiedBy": "3qitoEt1cN3Qhvig",
-            "createdTime": 1780340568653,
-            "modifiedTime": 1780340568653
-          },
-          "start": null,
-          "showIcon": 1,
-          "folder": null
-        },
-        {
-          "name": "Soins des Blessures Légères",
-          "flags": {
-            "add2e": {
-              "tags": [
-                "classe:clerc",
-                "liste:clerc",
-                "niveau:1",
-                "sort:soins_des_blessures_legeres",
-                "soin:1d8",
-                "reversible:blessures_legeres",
-                "degats_inverse:1d8",
-                "etat:soin",
-                "ecole:necromancie"
-              ]
-            }
-          },
-          "duration": {
-            "value": 0,
-            "units": "rounds",
-            "expiry": "turnStart",
-            "expired": false
-          },
-          "disabled": true,
-          "transfer": false,
-          "img": "systems/add2e/assets/icones/sorts/soins-des-blessures-legeres.webp",
-          "type": "base",
-          "system": {
-            "changes": []
-          },
-          "description": "",
-          "tint": "#ffffff",
-          "statuses": [],
-          "sort": 0,
-          "origin": "Item.ZtH0jCxBJupBfFdk",
-          "_id": "fKVw6m3kpOQNtxzI",
-          "_stats": {
-            "compendiumSource": null,
-            "duplicateSource": null,
-            "exportSource": null,
-            "coreVersion": "14.363",
-            "systemId": "add2e",
-            "systemVersion": "0.1.15",
-            "lastModifiedBy": "3qitoEt1cN3Qhvig",
-            "createdTime": 1780340568653,
-            "modifiedTime": 1780340568653
-          },
-          "start": null,
-          "showIcon": 1,
-          "folder": null
-        },
-        {
-          "name": "Soins des Blessures Légères",
-          "img": "systems/add2e/assets/icones/sorts/soins-des-blessures-legeres.webp",
-          "disabled": true,
-          "transfer": false,
-          "type": "base",
-          "system": {
-            "changes": []
-          },
-          "duration": {
-            "value": 0,
-            "units": "rounds",
-            "expiry": "turnStart",
-            "expired": false
-          },
-          "flags": {
-            "add2e": {
-              "tags": [
-                "classe:clerc",
-                "liste:clerc",
-                "niveau:1",
-                "sort:soins_des_blessures_legeres",
-                "soin:1d8",
-                "reversible:blessures_legeres",
-                "degats_inverse:1d8",
-                "etat:soin",
-                "ecole:necromancie"
-              ],
-              "rulesVersion": "2026-05-23-clean-soins-legeres-v1"
-            }
-          },
-          "description": "",
-          "tint": "#ffffff",
-          "statuses": [],
-          "sort": 0,
-          "origin": "Item.ZtH0jCxBJupBfFdk",
-          "_id": "1gGsVH6SGWQLIVRY",
-          "_stats": {
-            "compendiumSource": null,
-            "duplicateSource": null,
-            "exportSource": null,
-            "coreVersion": "14.363",
-            "systemId": "add2e",
-            "systemVersion": "0.1.15",
-            "lastModifiedBy": "3qitoEt1cN3Qhvig",
-            "createdTime": 1780340568653,
-            "modifiedTime": 1780340568653
-          },
-          "start": null,
-          "showIcon": 1,
-          "folder": null
-        }
-      ],
+      "effects": [],
+      "folder": "DZvZqNRwkHJoTbWu",
       "flags": {
         "add2e": {
           "onUsePackVersion": "v6-counter-vfx",
+          "spellPack": "illusionniste-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import sorts",
+          "importerVersion": "2026-06-11-import-sorts-v2-no-merge-same-name",
+          "importedAt": "2026-06-16T19:58:26.755Z",
+          "onUseUnchanged": true,
+          "originalOnUse": "systems/add2e/scripts/sorts/illusionniste-lumiere.js",
+          "routedClass": "Illusionniste",
+          "spellListsResolved": [
+            "Illusionniste"
+          ],
           "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
           "dispatchSource": "export game.items",
-          "onUseUnchanged": true,
-          "originalOnUse": "systems/add2e/scripts/sorts/soins-des-blessures-legeres.js",
-          "spellListsResolved": [
-            "Clerc"
-          ],
-          "importedBy": "ADD2E import universel",
-          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
-          "importedAt": "2026-05-28T06:33:25.421Z",
-          "routedClass": "Clerc",
-          "correctedBy": "2026-05-23-clean-soins-legeres-v1",
-          "correctionSource": "world/game.items"
+          "generatedBy": "add2e-spell-agent",
+          "generatedStatus": "rules_to_complete_from_phb",
+          "onUseGenerated": true,
+          "importKey": "lumiere|sort|clerc|1",
+          "canonicalSpellFields": {
+            "version": "2026-06-16-cleric-l1-canonical-fields-v3"
+          },
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
         },
         "add2eExport": {
-          "folderPath": "Sorts / Clerc / Niveau 1",
-          "sourceFolderId": "drnwQQ9thhmKNqbB",
-          "exportedAt": "2026-05-22T09:57:29.890Z"
+          "folderPath": "Sorts / Illusionniste / Niveau 1",
+          "sourceFolderId": "1ZIe7w4XxxGlDEuJ",
+          "exportedAt": "2026-05-22T09:57:29.898Z"
         }
       },
+      "_id": "E9Yo4npKmFqU2Xgl",
+      "sort": 700000,
       "ownership": {
         "default": 0,
         "3qitoEt1cN3Qhvig": 3
       },
       "_stats": {
-        "compendiumSource": "Compendium.add2e.sorts.Item.ZtH0jCxBJupBfFdk",
-        "duplicateSource": null,
-        "exportSource": null,
         "coreVersion": "14.363",
         "systemId": "add2e",
-        "systemVersion": "0.1.15",
-        "createdTime": 1780340568653,
-        "modifiedTime": 1780340568653,
-        "lastModifiedBy": "3qitoEt1cN3Qhvig"
-      },
-      "_id": "41cYJx1D12of5dtp",
-      "sort": 0
+        "systemVersion": "0.1.20",
+        "createdTime": 1781638688675,
+        "modifiedTime": 1781639973136,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
     },
     {
-      "name": "Localisation d’un Objet",
+      "name": "Détection de l’invisibilité",
       "type": "sort",
-      "img": "systems/add2e/assets/icones/sorts/localisation-d-un-objet.webp",
+      "img": "systems/add2e/assets/icones/sorts/illusionniste-detection-de-l-invisibilite.webp",
       "system": {
-        "niveau": 3,
-        "classe": "Clerc",
+        "nom": "Détection de l’invisibilité",
+        "type": "sort",
+        "classe": "Magicien",
         "spellLists": [
-          "Clerc"
+          "Magicien"
         ],
-        "portee": {
-          "valeur": 6,
-          "unite": "pouces + 1 pouce par niveau"
-        },
-        "duree": {
-          "valeur": "1 round par niveau",
-          "unite": "texte"
-        },
-        "zone_effet": {
-          "valeur": "direction de recherche",
-          "unite": "texte"
-        },
-        "cible": {
-          "valeur": "objet connu ou décrit",
-          "unite": "texte"
-        },
-        "jet_sauvegarde": "Aucun",
-        "composantes": "V, S, M",
-        "temps_incantation": {
-          "valeur": "1",
-          "unite": "tour"
-        },
-        "description": "Ce sort aide à localiser un objet connu ou familier. Le clerc lance le sort, tourne lentement sur lui-même et sait quand il se trouve face à la direction de l’objet à découvrir, tant que cet objet se trouve dans la portée du sort. Ce sort demande une pierre aimantée comme composante matérielle. On peut localiser des objets tels que : un bijou, un outil, une arme ou même une échelle ou un escalier. L’inverse de ce sort, dissimulation d'objets, permet au clerc de protéger un objet d’une telle détection, d’une localisation par boule de cristal ou par des moyens similaires. Aucune application du sort ne fonctionne sur un être vivant.",
-        "onUse": "systems/add2e/scripts/sorts/localisation-d-un-objet.js",
+        "niveau": 2,
         "ecole": "Divination",
-        "composants_materiels": [
-          "Symbole sacré du clerc"
-        ],
-        "composants_materiels_a_renseigner": false,
-        "composants_materiels_verification_recommandee": true,
-        "composants_materiels_source": "symbole sacré du clerc",
-        "composants_materiels_reference": "Règle/usage général clérical ; composant exact à vérifier si le sort précise un complément",
-        "nom": "",
-        "type": "",
-        "composants_materiels_note": "",
-        "onUseCode": "",
-        "tags": [],
-        "effectTags": [],
-        "effectProfile": {
-          "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "manual-normalized-clerc-n3",
-          "effects": [
-            {
-              "id": "localisation_d_un_objet",
-              "label": "Localisation d’un Objet",
-              "kind": "clerc_effect",
-              "automation": "active_effect_or_mj_aid",
-              "tags": [
-                "effet:localisation_d_un_objet",
-                "classe:clerc",
-                "niveau:3"
-              ],
-              "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
-            }
-          ]
-        }
-      },
-      "folder": "nVwHVJGLpzDmmNFR",
-      "effects": [
-        {
-          "name": "Localisation d’un Objet",
-          "flags": {
-            "add2e": {
-              "tags": [
-                "classe:clerc",
-                "liste:clerc",
-                "niveau:3",
-                "sort:localisation_d_un_objet",
-                "detection:objet",
-                "divination",
-                "localisation",
-                "sort:localisation_dun_objet",
-                "ecole:divination"
-              ]
-            }
-          },
-          "duration": {
-            "value": 0,
-            "units": "rounds",
-            "expiry": "turnStart",
-            "expired": false
-          },
-          "disabled": true,
-          "transfer": false,
-          "img": "systems/add2e/assets/icones/sorts/localisation-d-un-objet.webp",
-          "type": "base",
-          "system": {
-            "changes": []
-          },
-          "description": "",
-          "tint": "#ffffff",
-          "statuses": [],
-          "sort": 0,
-          "origin": "Item.kqBAX4JoZbnTLR2f",
-          "_id": "0DtXKVsOmsYJn4xR",
-          "_stats": {
-            "compendiumSource": null,
-            "duplicateSource": null,
-            "exportSource": null,
-            "coreVersion": "14.363",
-            "systemId": "add2e",
-            "systemVersion": "0.1.15",
-            "lastModifiedBy": "3qitoEt1cN3Qhvig",
-            "createdTime": 1780340568825,
-            "modifiedTime": 1780340568825
-          },
-          "start": null,
-          "showIcon": 1,
-          "folder": null
-        },
-        {
-          "name": "Localisation d’un Objet",
-          "flags": {
-            "add2e": {
-              "tags": [
-                "classe:clerc",
-                "liste:clerc",
-                "niveau:3",
-                "sort:localisation_d_un_objet",
-                "detection:objet",
-                "divination",
-                "localisation",
-                "sort:localisation_dun_objet",
-                "ecole:divination"
-              ]
-            }
-          },
-          "duration": {
-            "value": 0,
-            "units": "rounds",
-            "expiry": "turnStart",
-            "expired": false
-          },
-          "disabled": true,
-          "transfer": false,
-          "img": "systems/add2e/assets/icones/sorts/localisation-d-un-objet.webp",
-          "type": "base",
-          "system": {
-            "changes": []
-          },
-          "description": "",
-          "tint": "#ffffff",
-          "statuses": [],
-          "sort": 0,
-          "origin": "Item.kqBAX4JoZbnTLR2f",
-          "_id": "A1GN1sHUANX7STew",
-          "_stats": {
-            "compendiumSource": null,
-            "duplicateSource": null,
-            "exportSource": null,
-            "coreVersion": "14.363",
-            "systemId": "add2e",
-            "systemVersion": "0.1.15",
-            "lastModifiedBy": "3qitoEt1cN3Qhvig",
-            "createdTime": 1780340568825,
-            "modifiedTime": 1780340568825
-          },
-          "start": null,
-          "showIcon": 1,
-          "folder": null
-        },
-        {
-          "name": "Localisation d’un Objet",
-          "flags": {
-            "add2e": {
-              "tags": [
-                "classe:clerc",
-                "liste:clerc",
-                "niveau:3",
-                "sort:localisation_d_un_objet",
-                "detection:objet",
-                "divination",
-                "localisation",
-                "sort:localisation_dun_objet",
-                "ecole:divination"
-              ]
-            }
-          },
-          "duration": {
-            "value": 0,
-            "units": "rounds",
-            "expiry": "turnStart",
-            "expired": false
-          },
-          "disabled": true,
-          "transfer": false,
-          "img": "systems/add2e/assets/icones/sorts/localisation-d-un-objet.webp",
-          "type": "base",
-          "system": {
-            "changes": []
-          },
-          "description": "",
-          "tint": "#ffffff",
-          "statuses": [],
-          "sort": 0,
-          "origin": "Item.kqBAX4JoZbnTLR2f",
-          "_id": "1IZhTPj2ZQUQ5ggz",
-          "_stats": {
-            "compendiumSource": null,
-            "duplicateSource": null,
-            "exportSource": null,
-            "coreVersion": "14.363",
-            "systemId": "add2e",
-            "systemVersion": "0.1.15",
-            "lastModifiedBy": "3qitoEt1cN3Qhvig",
-            "createdTime": 1780340568825,
-            "modifiedTime": 1780340568825
-          },
-          "start": null,
-          "showIcon": 1,
-          "folder": null
-        }
-      ],
-      "flags": {
-        "add2e": {
-          "onUsePackVersion": "v6-counter-vfx",
-          "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
-          "dispatchSource": "export game.items",
-          "onUseUnchanged": true,
-          "originalOnUse": "systems/add2e/scripts/sorts/localisation-d-un-objet.js",
-          "spellListsResolved": [
-            "Clerc"
-          ],
-          "importedBy": "ADD2E import universel",
-          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
-          "importedAt": "2026-05-28T06:30:56.385Z",
-          "routedClass": "Clerc"
-        },
-        "add2eExport": {
-          "folderPath": "Sorts / Clerc / Niveau 3",
-          "sourceFolderId": "Y58XFhAtUE6ZY4XE",
-          "exportedAt": "2026-05-22T09:57:29.891Z"
-        }
-      },
-      "ownership": {
-        "default": 0,
-        "3qitoEt1cN3Qhvig": 3
-      },
-      "_stats": {
-        "compendiumSource": "Compendium.add2e.sorts.Item.kqBAX4JoZbnTLR2f",
-        "duplicateSource": null,
-        "exportSource": null,
-        "coreVersion": "14.363",
-        "systemId": "add2e",
-        "systemVersion": "0.1.15",
-        "createdTime": 1780340568825,
-        "modifiedTime": 1780340568825,
-        "lastModifiedBy": "3qitoEt1cN3Qhvig"
-      },
-      "_id": "JYPI9EQRzXnTBajE",
-      "sort": 0
-    },
-    {
-      "name": "Bâtons en Serpents",
-      "type": "sort",
-      "img": "systems/add2e/assets/icones/sorts/batons-en-serpents.webp",
-      "system": {
-        "niveau": 4,
-        "classe": "Clerc",
-        "spellLists": [
-          "Clerc"
-        ],
-        "portee": {
-          "valeur": "3",
-          "unite": "pouces"
-        },
-        "duree": {
-          "valeur": "2 rounds par niveau",
-          "unite": "texte"
-        },
-        "zone_effet": {
-          "valeur": "bâtons ou objets de bois similaires",
-          "unite": "texte"
-        },
-        "cible": {
-          "valeur": "bâtons",
-          "unite": "texte"
-        },
-        "jet_sauvegarde": "Aucun",
-        "composantes": "V, S, M",
-        "temps_incantation": {
-          "valeur": "7",
-          "unite": "segments"
-        },
-        "description": "Avec ce sort, le clerc est capable de transformer un bâton en serpent pour chaque niveau d’expérience atteint ; c.-à-d. un clerc de niveau 9 pourra changer 9 bâtons en 9 serpents. Ces serpents attaquent sur ordre du clerc. Il doit bien sûr y avoir des bâtons ou des objets en bois similaires (torches, lances de fantassin, etc.) à transformer en serpents. Seuls les morceaux de bois qui sont dans la zone d’effet seront transformés. Les objets magiques comme les bâtons magiques ou les lances de fantassin magiques ne sont pas affectés. Il y a 5 % de chance par niveau du clerc que chaque serpent soit venimeux. Chaque bâton transformé en serpent par un clerc de niveau 11 aura 55 % de chance d’être venimeux. Les effets durent 2 rounds par niveau du clerc. Les composantes matérielles de ce sort sont un petit morceau d’écorce et plusieurs écailles de serpent. L’inverse, serpents à bâtons, a donc l’effet contraire, pour la même durée, ou permet d’annuler les effets de bâtons à serpents en tenant compte du niveau du clerc (c.-à-d. un clerc de niveau 10 lançant serpents à bâtons pourra transformer 10 serpents en bâtons).",
-        "onUse": "systems/add2e/scripts/sorts/batons-en-serpents.js",
-        "ecole": "Altération",
-        "composants_materiels": [
-          "petit morceau d’écorce",
-          "Plusieurs écailles de serpent"
-        ],
-        "composants_materiels_a_renseigner": false,
-        "composants_materiels_source": "Les composantes matérielles de ce sort sont un petit morceau d’écorce et plusieurs écailles de serpent.",
-        "nom": "",
-        "type": "",
-        "composants_materiels_reference": "",
-        "composants_materiels_verification_recommandee": "",
-        "composants_materiels_note": "",
-        "onUseCode": "",
-        "tags": [],
-        "effectTags": [],
-        "effectProfile": {
-          "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "manual-normalized-clerc-n4",
-          "effects": [
-            {
-              "id": "batons_en_serpents",
-              "label": "Bâtons en Serpents",
-              "kind": "clerc_effect",
-              "automation": "active_effect_or_mj_aid",
-              "tags": [
-                "effet:batons_en_serpents",
-                "classe:clerc",
-                "niveau:4"
-              ],
-              "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
-            }
-          ]
-        }
-      },
-      "folder": "41AdT8ZCezqGIOKy",
-      "effects": [
-        {
-          "name": "Bâtons en Serpents",
-          "flags": {
-            "add2e": {
-              "tags": [
-                "classe:clerc",
-                "liste:clerc",
-                "niveau:4",
-                "sort:batons_en_serpents",
-                "transmutation:baton_serpent",
-                "conjuration:serpents",
-                "reversible:serpents_en_batons",
-                "ecole:alteration"
-              ]
-            }
-          },
-          "duration": {
-            "value": 0,
-            "units": "rounds",
-            "expiry": "turnStart",
-            "expired": false
-          },
-          "disabled": true,
-          "transfer": false,
-          "img": "systems/add2e/assets/icones/sorts/batons-en-serpents.webp",
-          "type": "base",
-          "system": {
-            "changes": []
-          },
-          "description": "",
-          "tint": "#ffffff",
-          "statuses": [],
-          "sort": 0,
-          "origin": "Item.qCWLzeYeIgW2UrmY",
-          "_id": "nKCzD4gdE2pQEnX0",
-          "_stats": {
-            "compendiumSource": null,
-            "duplicateSource": null,
-            "exportSource": null,
-            "coreVersion": "14.363",
-            "systemId": "add2e",
-            "systemVersion": "0.1.15",
-            "lastModifiedBy": "3qitoEt1cN3Qhvig",
-            "createdTime": 1780340569366,
-            "modifiedTime": 1780340569366
-          },
-          "start": null,
-          "showIcon": 1,
-          "folder": null
-        },
-        {
-          "name": "Bâtons en Serpents",
-          "flags": {
-            "add2e": {
-              "tags": [
-                "classe:clerc",
-                "liste:clerc",
-                "niveau:4",
-                "sort:batons_en_serpents",
-                "transmutation:baton_serpent",
-                "conjuration:serpents",
-                "reversible:serpents_en_batons",
-                "ecole:alteration"
-              ]
-            }
-          },
-          "duration": {
-            "value": 0,
-            "units": "rounds",
-            "expiry": "turnStart",
-            "expired": false
-          },
-          "disabled": true,
-          "transfer": false,
-          "img": "systems/add2e/assets/icones/sorts/batons-en-serpents.webp",
-          "type": "base",
-          "system": {
-            "changes": []
-          },
-          "description": "",
-          "tint": "#ffffff",
-          "statuses": [],
-          "sort": 0,
-          "origin": "Item.qCWLzeYeIgW2UrmY",
-          "_id": "GSNLKZd9oSv32k9P",
-          "_stats": {
-            "compendiumSource": null,
-            "duplicateSource": null,
-            "exportSource": null,
-            "coreVersion": "14.363",
-            "systemId": "add2e",
-            "systemVersion": "0.1.15",
-            "lastModifiedBy": "3qitoEt1cN3Qhvig",
-            "createdTime": 1780340569366,
-            "modifiedTime": 1780340569366
-          },
-          "start": null,
-          "showIcon": 1,
-          "folder": null
-        },
-        {
-          "name": "Bâtons en Serpents",
-          "flags": {
-            "add2e": {
-              "tags": [
-                "classe:clerc",
-                "liste:clerc",
-                "niveau:4",
-                "sort:batons_en_serpents",
-                "transmutation:baton_serpent",
-                "conjuration:serpents",
-                "reversible:serpents_en_batons",
-                "ecole:alteration"
-              ]
-            }
-          },
-          "duration": {
-            "value": 0,
-            "units": "rounds",
-            "expiry": "turnStart",
-            "expired": false
-          },
-          "disabled": true,
-          "transfer": false,
-          "img": "systems/add2e/assets/icones/sorts/batons-en-serpents.webp",
-          "type": "base",
-          "system": {
-            "changes": []
-          },
-          "description": "",
-          "tint": "#ffffff",
-          "statuses": [],
-          "sort": 0,
-          "origin": "Item.qCWLzeYeIgW2UrmY",
-          "_id": "KwvZfBP2gy7L290i",
-          "_stats": {
-            "compendiumSource": null,
-            "duplicateSource": null,
-            "exportSource": null,
-            "coreVersion": "14.363",
-            "systemId": "add2e",
-            "systemVersion": "0.1.15",
-            "lastModifiedBy": "3qitoEt1cN3Qhvig",
-            "createdTime": 1780340569366,
-            "modifiedTime": 1780340569366
-          },
-          "start": null,
-          "showIcon": 1,
-          "folder": null
-        }
-      ],
-      "flags": {
-        "add2e": {
-          "onUsePackVersion": "v6-counter-vfx",
-          "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
-          "dispatchSource": "export game.items",
-          "onUseUnchanged": true,
-          "originalOnUse": "systems/add2e/scripts/sorts/batons-en-serpents.js",
-          "spellListsResolved": [
-            "Clerc"
-          ],
-          "importedBy": "ADD2E import universel",
-          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
-          "importedAt": "2026-05-28T06:28:37.607Z",
-          "routedClass": "Clerc"
-        },
-        "add2eExport": {
-          "folderPath": "Sorts / Clerc / Niveau 4",
-          "sourceFolderId": "HjgRuAeCCVfP07Qv",
-          "exportedAt": "2026-05-22T09:57:29.892Z"
-        }
-      },
-      "ownership": {
-        "default": 0,
-        "3qitoEt1cN3Qhvig": 3
-      },
-      "_stats": {
-        "compendiumSource": "Compendium.add2e.sorts.Item.qCWLzeYeIgW2UrmY",
-        "duplicateSource": null,
-        "exportSource": null,
-        "coreVersion": "14.363",
-        "systemId": "add2e",
-        "systemVersion": "0.1.15",
-        "createdTime": 1780340569366,
-        "modifiedTime": 1780340569366,
-        "lastModifiedBy": "3qitoEt1cN3Qhvig"
-      },
-      "_id": "AlmyxyBQ3JUlncRq",
-      "sort": 0
-    },
-    {
-      "name": "Protection contre le Mal (Rayon de 10 pieds)",
-      "type": "sort",
-      "img": "systems/add2e/assets/icones/sorts/protection-contre-le-mal-rayon-de-10-pieds.webp",
-      "system": {
-        "niveau": 4,
-        "classe": "Clerc",
-        "spellLists": [
-          "Clerc"
-        ],
-        "portee": {
-          "valeur": 0,
-          "unite": "personnel"
-        },
-        "duree": {
-          "valeur": "1 tour par niveau",
-          "unite": "texte"
-        },
-        "zone_effet": {
-          "valeur": 10,
-          "unite": "pieds de rayon"
-        },
-        "cible": {
-          "valeur": "zone autour du clerc",
-          "unite": "texte"
-        },
-        "jet_sauvegarde": "Aucun",
-        "composantes": "V, S, M",
-        "temps_incantation": {
-          "valeur": "7",
-          "unite": "segments"
-        },
-        "description": "Le globe de protection de ce sort est identique à celui du sort de niveau 1, protection contre le mal, sauf qu’il affecte une zone plus importante. La durée du sort est également plus importante. Pour lancer ce sort, le clerc doit tracer un cercle de 6 mètres de diamètre en utilisant de l’eau bénite ou du sang, de l’encens allumé ou des vapeurs de fumier selon l’alignement du clerc et selon que le sort est lancé normalement ou inversé (protection contre le bien sur 3 m).",
-        "onUse": "systems/add2e/scripts/sorts/protection-contre-le-mal-rayon-de-10-pieds.js",
-        "ecole": "Abjuration",
-        "composants_materiels": [
-          "Symbole sacré du clerc"
-        ],
-        "composants_materiels_a_renseigner": false,
-        "composants_materiels_verification_recommandee": true,
-        "composants_materiels_source": "symbole sacré du clerc",
-        "composants_materiels_reference": "Règle/usage général clérical ; composant exact à vérifier si le sort précise un complément",
-        "nom": "",
-        "type": "",
-        "composants_materiels_note": "",
-        "onUseCode": "",
-        "tags": [],
-        "effectTags": [],
-        "effectProfile": {
-          "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "manual-normalized-clerc-n4",
-          "effects": [
-            {
-              "id": "protection_contre_le_mal_rayon_de_10_pieds",
-              "label": "Protection contre le Mal (Rayon de 10 pieds)",
-              "kind": "clerc_effect",
-              "automation": "active_effect_or_mj_aid",
-              "tags": [
-                "effet:protection_contre_le_mal_rayon_de_10_pieds",
-                "classe:clerc",
-                "niveau:4"
-              ],
-              "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
-            }
-          ]
-        }
-      },
-      "folder": "41AdT8ZCezqGIOKy",
-      "effects": [
-        {
-          "name": "Protection contre le Mal (Rayon de 10 pieds)",
-          "flags": {
-            "add2e": {
-              "tags": [
-                "classe:clerc",
-                "liste:clerc",
-                "niveau:4",
-                "sort:protection_contre_le_mal_rayon_de_10_pieds",
-                "protection:mal",
-                "zone:10_pieds",
-                "bonus:ca:2",
-                "bonus:sauvegarde:2",
-                "reversible:protection_bien",
-                "ecole:abjuration"
-              ]
-            }
-          },
-          "duration": {
-            "value": 0,
-            "units": "rounds",
-            "expiry": "turnStart",
-            "expired": false
-          },
-          "disabled": true,
-          "transfer": false,
-          "img": "systems/add2e/assets/icones/sorts/protection-contre-le-mal-rayon-de-10-pieds.webp",
-          "type": "base",
-          "system": {
-            "changes": []
-          },
-          "description": "",
-          "tint": "#ffffff",
-          "statuses": [],
-          "sort": 0,
-          "origin": "Item.CzogsHRvavXZaPwH",
-          "_id": "zozjZ8fkoutMZXEn",
-          "_stats": {
-            "compendiumSource": null,
-            "duplicateSource": null,
-            "exportSource": null,
-            "coreVersion": "14.363",
-            "systemId": "add2e",
-            "systemVersion": "0.1.15",
-            "lastModifiedBy": "3qitoEt1cN3Qhvig",
-            "createdTime": 1780340567230,
-            "modifiedTime": 1780340567230
-          },
-          "start": null,
-          "showIcon": 1,
-          "folder": null
-        },
-        {
-          "name": "Protection contre le Mal (Rayon de 10 pieds)",
-          "flags": {
-            "add2e": {
-              "tags": [
-                "classe:clerc",
-                "liste:clerc",
-                "niveau:4",
-                "sort:protection_contre_le_mal_rayon_de_10_pieds",
-                "protection:mal",
-                "zone:10_pieds",
-                "bonus:ca:2",
-                "bonus:sauvegarde:2",
-                "reversible:protection_bien",
-                "ecole:abjuration"
-              ]
-            }
-          },
-          "duration": {
-            "value": 0,
-            "units": "rounds",
-            "expiry": "turnStart",
-            "expired": false
-          },
-          "disabled": true,
-          "transfer": false,
-          "img": "systems/add2e/assets/icones/sorts/protection-contre-le-mal-rayon-de-10-pieds.webp",
-          "type": "base",
-          "system": {
-            "changes": []
-          },
-          "description": "",
-          "tint": "#ffffff",
-          "statuses": [],
-          "sort": 0,
-          "origin": "Item.CzogsHRvavXZaPwH",
-          "_id": "9io25gRteMqlUQez",
-          "_stats": {
-            "compendiumSource": null,
-            "duplicateSource": null,
-            "exportSource": null,
-            "coreVersion": "14.363",
-            "systemId": "add2e",
-            "systemVersion": "0.1.15",
-            "lastModifiedBy": "3qitoEt1cN3Qhvig",
-            "createdTime": 1780340567230,
-            "modifiedTime": 1780340567230
-          },
-          "start": null,
-          "showIcon": 1,
-          "folder": null
-        },
-        {
-          "name": "Protection contre le Mal (Rayon de 10 pieds)",
-          "flags": {
-            "add2e": {
-              "tags": [
-                "classe:clerc",
-                "liste:clerc",
-                "niveau:4",
-                "sort:protection_contre_le_mal_rayon_de_10_pieds",
-                "protection:mal",
-                "zone:10_pieds",
-                "bonus:ca:2",
-                "bonus:sauvegarde:2",
-                "reversible:protection_bien",
-                "ecole:abjuration"
-              ]
-            }
-          },
-          "duration": {
-            "value": 0,
-            "units": "rounds",
-            "expiry": "turnStart",
-            "expired": false
-          },
-          "disabled": true,
-          "transfer": false,
-          "img": "systems/add2e/assets/icones/sorts/protection-contre-le-mal-rayon-de-10-pieds.webp",
-          "type": "base",
-          "system": {
-            "changes": []
-          },
-          "description": "",
-          "tint": "#ffffff",
-          "statuses": [],
-          "sort": 0,
-          "origin": "Item.CzogsHRvavXZaPwH",
-          "_id": "YHjSyTj5b8ToxHaq",
-          "_stats": {
-            "compendiumSource": null,
-            "duplicateSource": null,
-            "exportSource": null,
-            "coreVersion": "14.363",
-            "systemId": "add2e",
-            "systemVersion": "0.1.15",
-            "lastModifiedBy": "3qitoEt1cN3Qhvig",
-            "createdTime": 1780340567230,
-            "modifiedTime": 1780340567230
-          },
-          "start": null,
-          "showIcon": 1,
-          "folder": null
-        }
-      ],
-      "flags": {
-        "add2e": {
-          "onUsePackVersion": "v6-counter-vfx",
-          "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
-          "dispatchSource": "export game.items",
-          "onUseUnchanged": true,
-          "originalOnUse": "systems/add2e/scripts/sorts/protection-contre-le-mal-rayon-de-10-pieds.js",
-          "spellListsResolved": [
-            "Clerc"
-          ],
-          "importedBy": "ADD2E import universel",
-          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
-          "importedAt": "2026-05-28T06:32:45.948Z",
-          "routedClass": "Clerc"
-        },
-        "add2eExport": {
-          "folderPath": "Sorts / Clerc / Niveau 4",
-          "sourceFolderId": "HjgRuAeCCVfP07Qv",
-          "exportedAt": "2026-05-22T09:57:29.893Z"
-        }
-      },
-      "ownership": {
-        "default": 0,
-        "3qitoEt1cN3Qhvig": 3
-      },
-      "_stats": {
-        "compendiumSource": "Compendium.add2e.sorts.Item.CzogsHRvavXZaPwH",
-        "duplicateSource": null,
-        "exportSource": null,
-        "coreVersion": "14.363",
-        "systemId": "add2e",
-        "systemVersion": "0.1.15",
-        "createdTime": 1780340567230,
-        "modifiedTime": 1780340567230,
-        "lastModifiedBy": "3qitoEt1cN3Qhvig"
-      },
-      "_id": "SdDT7AaELrLPFCy7",
-      "sort": 0
-    },
-    {
-      "name": "Soins ultime",
-      "type": "sort",
-      "img": "systems/add2e/assets/icones/sorts/soins-des-blessures-critiques.webp",
-      "system": {
-        "niveau": 5,
-        "classe": "Clerc",
-        "spellLists": [
-          "Clerc"
-        ],
-        "portee": {
-          "valeur": "toucher",
-          "unite": "texte"
-        },
-        "duree": {
-          "valeur": "spéciale",
-          "unite": "texte"
-        },
-        "zone_effet": {
-          "valeur": "selon description",
-          "unite": "texte"
-        },
-        "cible": {
-          "valeur": "selon description",
-          "unite": "texte"
-        },
-        "jet_sauvegarde": "Spécial",
-        "composantes": "V, S",
-        "temps_incantation": {
-          "valeur": "1 round",
-          "unite": "texte"
-        },
-        "description": "Ce sort est une version très puissante du sort de niveau 1 soins mineurs (voir p.44) et il fonctionne de la même manière avec les mêmes restrictions. Soin ultime permet de redonner 6-27 points de vie (3d8+3). L’inverse, blessure ultime, inflige 6-27 points de dommages si un jet pour toucher est réussi.",
-        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/soins-des-blessures-critiques.js",
-        "ecole": "Nécromancie",
-        "composants_materiels": [],
-        "composants_materiels_a_renseigner": false,
-        "nom": "",
-        "type": "",
-        "composants_materiels_source": "",
-        "composants_materiels_reference": "",
-        "composants_materiels_verification_recommandee": "",
-        "composants_materiels_note": "",
-        "onUseCode": "",
-        "tags": [],
-        "effectTags": [],
-        "effectProfile": {
-          "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "manual-normalized-clerc-n5",
-          "effects": [
-            {
-              "id": "soins_ultime",
-              "label": "Soins ultime",
-              "kind": "clerc_effect",
-              "automation": "active_effect_or_mj_aid",
-              "tags": [
-                "effet:soins_ultime",
-                "classe:clerc",
-                "niveau:5"
-              ],
-              "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
-            }
-          ]
-        }
-      },
-      "effects": [
-        {
-          "name": "Soins des Blessures Critiques",
-          "flags": {
-            "add2e": {
-              "tags": [
-                "classe:clerc",
-                "liste:clerc",
-                "niveau:5",
-                "sort:soins_des_blessures_critiques",
-                "soin:3d8+3",
-                "reversible:blessures_critiques",
-                "sort:soins_ultime",
-                "ecole:necromancie"
-              ]
-            }
-          },
-          "duration": {
-            "value": 0,
-            "units": "rounds",
-            "expiry": "turnStart",
-            "expired": false
-          },
-          "disabled": true,
-          "transfer": false,
-          "img": "systems/add2e/assets/icones/sorts/soins-des-blessures-critiques.webp",
-          "type": "base",
-          "system": {
-            "changes": []
-          },
-          "description": "",
-          "tint": "#ffffff",
-          "statuses": [],
-          "sort": 0,
-          "origin": "Item.l8yidRdgyyCjDxRY",
-          "_id": "j65wgECLPTC2OJVq",
-          "_stats": {
-            "compendiumSource": null,
-            "duplicateSource": null,
-            "exportSource": null,
-            "coreVersion": "14.363",
-            "systemId": "add2e",
-            "systemVersion": "0.1.15",
-            "lastModifiedBy": "3qitoEt1cN3Qhvig",
-            "createdTime": 1780340568831,
-            "modifiedTime": 1780340568831
-          },
-          "start": null,
-          "showIcon": 1,
-          "folder": null
-        },
-        {
-          "name": "Soins des Blessures Critiques",
-          "flags": {
-            "add2e": {
-              "tags": [
-                "classe:clerc",
-                "liste:clerc",
-                "niveau:5",
-                "sort:soins_des_blessures_critiques",
-                "soin:3d8+3",
-                "reversible:blessures_critiques",
-                "sort:soins_ultime",
-                "ecole:necromancie"
-              ]
-            }
-          },
-          "duration": {
-            "value": 0,
-            "units": "rounds",
-            "expiry": "turnStart",
-            "expired": false
-          },
-          "disabled": true,
-          "transfer": false,
-          "img": "systems/add2e/assets/icones/sorts/soins-des-blessures-critiques.webp",
-          "type": "base",
-          "system": {
-            "changes": []
-          },
-          "description": "",
-          "tint": "#ffffff",
-          "statuses": [],
-          "sort": 0,
-          "origin": "Item.l8yidRdgyyCjDxRY",
-          "_id": "VysceG6pp8BGeCLZ",
-          "_stats": {
-            "compendiumSource": null,
-            "duplicateSource": null,
-            "exportSource": null,
-            "coreVersion": "14.363",
-            "systemId": "add2e",
-            "systemVersion": "0.1.15",
-            "lastModifiedBy": "3qitoEt1cN3Qhvig",
-            "createdTime": 1780340568831,
-            "modifiedTime": 1780340568831
-          },
-          "start": null,
-          "showIcon": 1,
-          "folder": null
-        },
-        {
-          "name": "Soins des Blessures Critiques",
-          "flags": {
-            "add2e": {
-              "tags": [
-                "classe:clerc",
-                "liste:clerc",
-                "niveau:5",
-                "sort:soins_des_blessures_critiques",
-                "soin:3d8+3",
-                "reversible:blessures_critiques",
-                "sort:soins_ultime",
-                "ecole:necromancie"
-              ]
-            }
-          },
-          "duration": {
-            "value": 0,
-            "units": "rounds",
-            "expiry": "turnStart",
-            "expired": false
-          },
-          "disabled": true,
-          "transfer": false,
-          "img": "systems/add2e/assets/icones/sorts/soins-des-blessures-critiques.webp",
-          "type": "base",
-          "system": {
-            "changes": []
-          },
-          "description": "",
-          "tint": "#ffffff",
-          "statuses": [],
-          "sort": 0,
-          "origin": "Item.l8yidRdgyyCjDxRY",
-          "_id": "0d1L0DR9OzFVugLt",
-          "_stats": {
-            "compendiumSource": null,
-            "duplicateSource": null,
-            "exportSource": null,
-            "coreVersion": "14.363",
-            "systemId": "add2e",
-            "systemVersion": "0.1.15",
-            "lastModifiedBy": "3qitoEt1cN3Qhvig",
-            "createdTime": 1780340568831,
-            "modifiedTime": 1780340568831
-          },
-          "start": null,
-          "showIcon": 1,
-          "folder": null
-        }
-      ],
-      "flags": {
-        "add2e": {
-          "onUsePackVersion": "v6-counter-vfx",
-          "spellPack": "clerc-niveaux-5-6-7",
-          "importedBy": "ADD2E import universel",
-          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
-          "importedAt": "2026-05-28T06:33:29.902Z",
-          "onUseUnchanged": true,
-          "originalOnUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/soins-des-blessures-critiques.js",
-          "routedClass": "Clerc",
-          "spellListsResolved": [
-            "Clerc"
-          ]
-        },
-        "add2eExport": {
-          "folderPath": "Sorts / Clerc / Niveau 5",
-          "sourceFolderId": "mzTH1qfzsUTSJjW0",
-          "exportedAt": "2026-05-22T09:57:29.894Z"
-        }
-      },
-      "folder": "X7pZeYM8wG1Wcpgg",
-      "ownership": {
-        "default": 0,
-        "3qitoEt1cN3Qhvig": 3
-      },
-      "_stats": {
-        "compendiumSource": "Compendium.add2e.sorts.Item.l8yidRdgyyCjDxRY",
-        "duplicateSource": null,
-        "exportSource": null,
-        "coreVersion": "14.363",
-        "systemId": "add2e",
-        "systemVersion": "0.1.15",
-        "createdTime": 1780340568831,
-        "modifiedTime": 1780340568831,
-        "lastModifiedBy": "3qitoEt1cN3Qhvig"
-      },
-      "_id": "NT2DlgfjeVmmWktM",
-      "sort": 0
-    },
-    {
-      "name": "Asile",
-      "type": "sort",
-      "img": "systems/add2e/assets/icones/sorts/asile.webp",
-      "system": {
-        "niveau": 7,
-        "classe": "Clerc",
-        "spellLists": [
-          "Clerc"
-        ],
-        "portee": {
-          "valeur": "toucher",
-          "unite": "texte"
-        },
-        "duree": {
-          "valeur": "spéciale",
-          "unite": "texte"
-        },
-        "zone_effet": {
-          "valeur": "selon description",
-          "unite": "texte"
-        },
-        "cible": {
-          "valeur": "selon description",
-          "unite": "texte"
-        },
+        "portee": "spéciale texte",
+        "duree": "spéciale texte",
+        "zone_effet": "selon description texte",
+        "cible": "selon description texte",
+        "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
-        "temps_incantation": {
-          "valeur": "1 round",
-          "unite": "texte"
-        },
-        "description": "Asile ouvre une voie de déplacement magique ou permet un passage extraordinaire. La destination, les limites de transport, les risques et les conditions exactes dépendent du sort, du plan ou du terrain concerné. Le MD valide toujours les points d’arrivée et les obstacles surnaturels.",
-        "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/asile.js",
-        "ecole": "Abjuration",
         "composants_materiels": [
-          "Symbole sacré du clerc"
+          "pincée de talc",
+          "poudre d’argent qu’il faut répandre"
         ],
-        "composants_materiels_a_renseigner": false,
+        "composants_materiels_source": "Les composantes matérielles sont une pincée de talc et un peu de poudre d’argent qu’il faut répandre.",
+        "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": true,
-        "composants_materiels_source": "symbole sacré du clerc",
-        "composants_materiels_reference": "Règle/usage général clérical ; composant exact à vérifier si le sort précise un complément",
-        "nom": "",
-        "type": "",
         "composants_materiels_note": "",
+        "composants_materiels_a_renseigner": true,
+        "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 2 de magicien détection de l’invisibilité (voir p.70).",
+        "onUse": "systems/add2e/scripts/sorts/illusionniste-detection-de-l-invisibilite.js",
         "onUseCode": "",
         "tags": [],
         "effectTags": [],
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "manual-normalized-clerc-n7",
+          "source": "manual-normalized-illusionniste-n1",
           "effects": [
             {
-              "id": "asile",
-              "label": "Asile",
-              "kind": "clerc_effect",
+              "id": "detection_de_l_invisibilite",
+              "label": "Détection de l’invisibilité",
+              "kind": "illusionniste_effect",
               "automation": "active_effect_or_mj_aid",
               "tags": [
-                "effet:asile",
-                "classe:clerc",
-                "niveau:7"
+                "effet:detection_de_l_invisibilite",
+                "classe:illusionniste",
+                "niveau:1"
               ],
-              "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
+              "notes": "Profil mécanique illusionniste normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
             }
           ]
         }
       },
       "effects": [
         {
-          "name": "Asile",
+          "name": "Détection de l’invisibilité",
           "flags": {
             "add2e": {
               "tags": [
-                "classe:clerc",
-                "liste:clerc",
-                "niveau:7",
-                "sort:asile",
-                "asile",
-                "sanctuaire",
-                "transport",
-                "ecole:abjuration"
+                "classe:magicien",
+                "liste:magicien",
+                "niveau:2",
+                "sort:detection_de_l_invisibilite",
+                "detection:invisibilite",
+                "sort:detection_de_linvisibilite",
+                "ecole:divination"
               ]
             }
           },
@@ -71877,7 +70358,7 @@
           },
           "disabled": true,
           "transfer": false,
-          "img": "systems/add2e/assets/icones/sorts/asile.webp",
+          "img": "systems/add2e/assets/icones/sorts/illusionniste-detection-de-l-invisibilite.webp",
           "type": "base",
           "system": {
             "changes": []
@@ -71885,165 +70366,68 @@
           "description": "",
           "tint": "#ffffff",
           "statuses": [],
+          "start": null,
+          "showIcon": 1,
+          "origin": "Item.xbOjuFsPWKQCmRmP",
+          "_id": "JtCnIZV2HoMF4xVP",
+          "folder": null,
           "sort": 0,
-          "origin": "Item.1Dhj5gEGp22wR3C7",
-          "_id": "9aH39suCiq7DZLLA",
           "_stats": {
-            "compendiumSource": null,
-            "duplicateSource": null,
-            "exportSource": null,
             "coreVersion": "14.363",
             "systemId": "add2e",
             "systemVersion": "0.1.15",
+            "createdTime": 1781288258133,
+            "modifiedTime": 1781288258133,
             "lastModifiedBy": "3qitoEt1cN3Qhvig",
-            "createdTime": 1780340567054,
-            "modifiedTime": 1780340567054
-          },
-          "start": null,
-          "showIcon": 1,
-          "folder": null
-        },
-        {
-          "name": "Asile",
-          "flags": {
-            "add2e": {
-              "tags": [
-                "classe:clerc",
-                "liste:clerc",
-                "niveau:7",
-                "sort:asile",
-                "asile",
-                "sanctuaire",
-                "transport",
-                "ecole:abjuration"
-              ]
-            }
-          },
-          "duration": {
-            "value": 0,
-            "units": "rounds",
-            "expiry": "turnStart",
-            "expired": false
-          },
-          "disabled": true,
-          "transfer": false,
-          "img": "systems/add2e/assets/icones/sorts/asile.webp",
-          "type": "base",
-          "system": {
-            "changes": []
-          },
-          "description": "",
-          "tint": "#ffffff",
-          "statuses": [],
-          "sort": 0,
-          "origin": "Item.1Dhj5gEGp22wR3C7",
-          "_id": "R80nDKtzSFfsWtQm",
-          "_stats": {
             "compendiumSource": null,
             "duplicateSource": null,
-            "exportSource": null,
-            "coreVersion": "14.363",
-            "systemId": "add2e",
-            "systemVersion": "0.1.15",
-            "lastModifiedBy": "3qitoEt1cN3Qhvig",
-            "createdTime": 1780340567054,
-            "modifiedTime": 1780340567054
-          },
-          "start": null,
-          "showIcon": 1,
-          "folder": null
-        },
-        {
-          "name": "Asile",
-          "flags": {
-            "add2e": {
-              "tags": [
-                "classe:clerc",
-                "liste:clerc",
-                "niveau:7",
-                "sort:asile",
-                "asile",
-                "sanctuaire",
-                "transport",
-                "ecole:abjuration"
-              ]
-            }
-          },
-          "duration": {
-            "value": 0,
-            "units": "rounds",
-            "expiry": "turnStart",
-            "expired": false
-          },
-          "disabled": true,
-          "transfer": false,
-          "img": "systems/add2e/assets/icones/sorts/asile.webp",
-          "type": "base",
-          "system": {
-            "changes": []
-          },
-          "description": "",
-          "tint": "#ffffff",
-          "statuses": [],
-          "sort": 0,
-          "origin": "Item.1Dhj5gEGp22wR3C7",
-          "_id": "0qifJ5v01K7mysYR",
-          "_stats": {
-            "compendiumSource": null,
-            "duplicateSource": null,
-            "exportSource": null,
-            "coreVersion": "14.363",
-            "systemId": "add2e",
-            "systemVersion": "0.1.15",
-            "lastModifiedBy": "3qitoEt1cN3Qhvig",
-            "createdTime": 1780340567054,
-            "modifiedTime": 1780340567054
-          },
-          "start": null,
-          "showIcon": 1,
-          "folder": null
+            "exportSource": null
+          }
         }
       ],
+      "folder": "ScqmKiWr6f2z1e6d",
       "flags": {
         "add2e": {
           "onUsePackVersion": "v6-counter-vfx",
-          "spellPack": "clerc-niveaux-5-6-7",
-          "importedBy": "ADD2E import universel",
-          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
-          "importedAt": "2026-05-28T06:28:32.044Z",
+          "spellPack": "illusionniste-niveaux-1-7",
+          "scriptFlatNoSubdir": true,
+          "importedBy": "ADD2E import sorts",
+          "importerVersion": "2026-06-11-import-sorts-v2-no-merge-same-name",
+          "importedAt": "2026-06-12T18:17:38.075Z",
           "onUseUnchanged": true,
-          "originalOnUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/asile.js",
-          "routedClass": "Clerc",
+          "originalOnUse": "systems/add2e/scripts/sorts/illusionniste-detection-de-l-invisibilite.js",
+          "routedClass": "Magicien",
           "spellListsResolved": [
-            "Clerc"
-          ]
+            "Magicien"
+          ],
+          "importKey": "detection_de_linvisibilite|sort|illusionniste|1",
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
         },
         "add2eExport": {
-          "folderPath": "Sorts / Clerc / Niveau 7",
-          "sourceFolderId": "3xb3zcASVeC5FKry",
-          "exportedAt": "2026-05-22T09:57:29.894Z"
+          "folderPath": "Sorts / Illusionniste / Niveau 2",
+          "sourceFolderId": "nkyFW0ZHZypWHSil",
+          "exportedAt": "2026-05-22T09:57:29.898Z"
         }
       },
-      "folder": "6Rzv4BEmmsytROwN",
       "ownership": {
         "default": 0,
         "3qitoEt1cN3Qhvig": 3
       },
       "_stats": {
-        "compendiumSource": "Compendium.add2e.sorts.Item.1Dhj5gEGp22wR3C7",
+        "compendiumSource": "Compendium.add2e.sorts.Item.ruHQQ0sOH8Qoaxcl",
         "duplicateSource": null,
         "exportSource": null,
         "coreVersion": "14.363",
         "systemId": "add2e",
         "systemVersion": "0.1.15",
-        "createdTime": 1780340567054,
-        "modifiedTime": 1780340567054,
+        "createdTime": 1781203828533,
+        "modifiedTime": 1781288258084,
         "lastModifiedBy": "3qitoEt1cN3Qhvig"
       },
-      "_id": "MjfD1BtI6Zbmcbkn",
+      "_id": "xbOjuFsPWKQCmRmP",
       "sort": 0
     }
   ],
   "normalizedBy": "2026-06-20-reference-flags-v3-preserve-v3",
-  "normalizedAt": "2026-06-20T20:00:49.253Z"
+  "normalizedAt": "2026-06-20T20:43:19.921Z"
 }
