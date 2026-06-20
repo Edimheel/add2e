@@ -3,11 +3,12 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const VERSION = "2026-06-20-reversible-reference-reader-v1";
+const VERSION = "2026-06-20-reversible-reference-reader-v2";
 const INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
 const CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
 const MASTER = "audit/reference/manuel-joueurs-sorts-master.json";
+const REVERSIBILITY_REFERENCE = "audit/reference/manuel-joueurs-reversibilite.json";
 const CLASSES = {
   clerc: [1, 2, 3, 4, 5, 6, 7],
   druide: [1, 2, 3, 4, 5, 6, 7],
@@ -24,6 +25,7 @@ const slug = value => text(value)
   .replace(/[^a-z0-9]+/g, "_")
   .replace(/^_+|_+$/g, "");
 const clone = value => value === undefined ? undefined : JSON.parse(JSON.stringify(value));
+const emptyCounts = () => Object.fromEntries(Object.keys(CLASSES).map(classSlug => [classSlug, 0]));
 
 function readJson(file, fallback = null) {
   try { return JSON.parse(fs.readFileSync(file, "utf8")); }
@@ -125,9 +127,8 @@ function hasReversibleMarker(value) {
 
 function upsertMeta(index, key, patch) {
   const previous = index.get(key) ?? { variants: [] };
-  const variants = [...previous.variants, ...(patch.variants ?? [])];
   const seen = new Set();
-  const uniqueVariants = variants.filter(choice => {
+  const variants = [...previous.variants, ...(patch.variants ?? [])].filter(choice => {
     const choiceKey = `${choice.id}|${choice.nom}`;
     if (seen.has(choiceKey)) return false;
     seen.add(choiceKey);
@@ -138,15 +139,16 @@ function upsertMeta(index, key, patch) {
     ...previous,
     ...patch,
     inverse: text(patch.inverse) || previous.inverse || "",
+    inverseNameStatus: text(patch.inverseNameStatus) || previous.inverseNameStatus || "",
     reversible: Boolean(previous.reversible || patch.reversible),
-    variants: uniqueVariants,
+    variants,
     sources: [...new Set([...(previous.sources ?? []), ...(patch.sources ?? [])])]
   });
 }
 
-function readMasterStructuredData(master, index, masterPath) {
-  const inverseRoots = [master?.reversible, master?.reversibles, master?.reversibleSpells].filter(Boolean);
-  const variantRoots = [master?.variant, master?.variants, master?.variantes].filter(Boolean);
+function readStructuredData(document, index, relativePath) {
+  const inverseRoots = [document?.reversible, document?.reversibles, document?.reversibleSpells].filter(Boolean);
+  const variantRoots = [document?.variant, document?.variants, document?.variantes].filter(Boolean);
 
   for (const root of inverseRoots) {
     for (const [lot, entries] of Object.entries(root)) {
@@ -160,7 +162,8 @@ function readMasterStructuredData(master, index, masterPath) {
           upsertMeta(index, metaKey(scope.classSlug, scope.level, name), {
             reversible: hasReversibleMarker(entry),
             inverse: inverseName(entry),
-            sources: [masterPath]
+            inverseNameStatus: text(entry?.inverseNameStatus),
+            sources: [relativePath]
           });
         }
         continue;
@@ -170,7 +173,8 @@ function readMasterStructuredData(master, index, masterPath) {
         upsertMeta(index, metaKey(scope.classSlug, scope.level, name), {
           reversible: hasReversibleMarker(entry),
           inverse: inverseName(entry),
-          sources: [masterPath]
+          inverseNameStatus: text(entry?.inverseNameStatus),
+          sources: [relativePath]
         });
       }
     }
@@ -183,7 +187,7 @@ function readMasterStructuredData(master, index, masterPath) {
       for (const [name, entry] of Object.entries(entries ?? {})) {
         upsertMeta(index, metaKey(scope.classSlug, scope.level, name), {
           variants: normaliseChoices(entry),
-          sources: [masterPath]
+          sources: [relativePath]
         });
       }
     }
@@ -194,31 +198,31 @@ function loadReferences() {
   const detailed = new Map();
   const structured = new Map();
   const files = [];
-  const masterFile = path.join(ROOT, MASTER);
-  const master = readJson(masterFile, {});
 
-  if (master && typeof master === "object") {
-    files.push(MASTER);
-    readMasterStructuredData(master, structured, MASTER);
+  for (const relative of [MASTER, REVERSIBILITY_REFERENCE]) {
+    const document = readJson(path.join(ROOT, relative), null);
+    if (!document || typeof document !== "object") continue;
+    files.push(relative);
+    readStructuredData(document, structured, relative);
   }
 
   for (const [classSlug, levels] of Object.entries(CLASSES)) {
     for (const level of levels) {
       const relative = `audit/reference/manuel-joueurs-${classSlug}-niveau-${level}.json`;
-      const file = path.join(ROOT, relative);
-      if (!fs.existsSync(file)) continue;
-      const document = readJson(file, {});
+      const document = readJson(path.join(ROOT, relative), null);
+      if (!document) continue;
       files.push(relative);
 
       for (const reference of document.spells ?? []) {
         const name = text(reference?.nom ?? reference?.name);
         if (!name) continue;
-        const refLevel = Number(reference?.niveau ?? reference?.level ?? level) || level;
-        const key = metaKey(classSlug, refLevel, name);
+        const referenceLevel = Number(reference?.niveau ?? reference?.level ?? level) || level;
+        const key = metaKey(classSlug, referenceLevel, name);
         detailed.set(key, { ...clone(reference), __file: relative });
         upsertMeta(structured, key, {
           reversible: hasReversibleMarker(reference?.reversible) || Boolean(text(reference?.inverse)),
           inverse: inverseName(reference?.reversible) || text(reference?.inverse),
+          inverseNameStatus: text(reference?.inverseNameStatus),
           variants: normaliseChoices(reference?.variant ?? reference?.variants ?? reference?.variantes),
           sources: [relative]
         });
@@ -226,7 +230,14 @@ function loadReferences() {
     }
   }
 
-  return { detailed, structured, files };
+  const declaredByClass = emptyCounts();
+  for (const [key, metadata] of structured) {
+    if (!metadata.reversible) continue;
+    const classSlug = key.split("|", 1)[0];
+    if (Object.hasOwn(declaredByClass, classSlug)) declaredByClass[classSlug] += 1;
+  }
+
+  return { detailed, structured, files: [...new Set(files)], declaredByClass };
 }
 
 function materialMode(rule) {
@@ -262,7 +273,7 @@ function actorMode(reference, item, id, name) {
 }
 
 function applyReferenceFlags(items, references) {
-  const byClass = Object.fromEntries(Object.keys(CLASSES).map(classSlug => [classSlug, 0]));
+  const actorSplitByClass = emptyCounts();
   const reversibleProfiles = [];
   const variantProfiles = [];
   const unresolvedReversible = [];
@@ -293,7 +304,13 @@ function applyReferenceFlags(items, references) {
 
       if (!metadata.reversible) continue;
       if (!metadata.inverse) {
-        unresolvedReversible.push({ class: classSlug, level, name, referenceFiles: metadata.sources });
+        unresolvedReversible.push({
+          class: classSlug,
+          level,
+          name,
+          inverseNameStatus: metadata.inverseNameStatus,
+          referenceFiles: metadata.sources
+        });
         continue;
       }
 
@@ -308,7 +325,7 @@ function applyReferenceFlags(items, references) {
       };
       reversible.push(profile);
       reversibleProfiles.push({ name, ...clone(profile) });
-      byClass[classSlug] += 1;
+      actorSplitByClass[classSlug] += 1;
     }
 
     item.flags ??= {};
@@ -339,7 +356,7 @@ function applyReferenceFlags(items, references) {
     }
   }
 
-  return { byClass, reversibleProfiles, variantProfiles, unresolvedReversible };
+  return { actorSplitByClass, reversibleProfiles, variantProfiles, unresolvedReversible };
 }
 
 function main() {
@@ -378,7 +395,9 @@ function main() {
   control.reversibleActorSplit = {
     version: VERSION,
     referenceFiles: references.files,
-    byClass: flags.byClass,
+    declaredByClass: references.declaredByClass,
+    actorSplitByClass: flags.actorSplitByClass,
+    byClass: references.declaredByClass,
     profiles: flags.reversibleProfiles,
     unresolvedStructuredReversible: flags.unresolvedReversible
   };
@@ -387,9 +406,9 @@ function main() {
   writeJson(controlFile, control);
 
   console.log(`[ADD2E][SPELL_MATERIALS_V3] ${control.outputSpellCount} sort(s) conservé(s) depuis la source.`);
-  console.log(`[ADD2E][SPELL_MATERIALS_V3] Réversibles structurés — clerc: ${flags.byClass.clerc}, druide: ${flags.byClass.druide}, magicien: ${flags.byClass.magicien}, illusionniste: ${flags.byClass.illusionniste}.`);
+  console.log(`[ADD2E][SPELL_MATERIALS_V3] Réversibles déclarés — clerc: ${references.declaredByClass.clerc}, druide: ${references.declaredByClass.druide}, magicien: ${references.declaredByClass.magicien}, illusionniste: ${references.declaredByClass.illusionniste}.`);
+  console.log(`[ADD2E][SPELL_MATERIALS_V3] Profils Actor prêts — clerc: ${flags.actorSplitByClass.clerc}, druide: ${flags.actorSplitByClass.druide}, magicien: ${flags.actorSplitByClass.magicien}, illusionniste: ${flags.actorSplitByClass.illusionniste}; inverse sans nom manuel: ${flags.unresolvedReversible.length}.`);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Variantes structurées: ${flags.variantProfiles.length} sort(s) / ${control.variantChoiceCount} choix.`);
-  console.log(`[ADD2E][SPELL_MATERIALS_V3] Réversibles sans inverse nommé: ${flags.unresolvedReversible.length}.`);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Items d’audit exclus: ${ignoredAuditOnlyItems.length}.`);
 }
 
