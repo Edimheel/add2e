@@ -862,7 +862,57 @@
           "generatedStatus": "rules_to_complete_from_phb",
           "onUseGenerated": true,
           "importKey": "abaissement_des_eaux|sort|magicien|6",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "magicien",
+                "level": 6,
+                "referenceName": "Abaissement des eaux",
+                "foundryItemName": "Abaissement des eaux",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-magicien-niveau-6.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Abaissement des eaux",
+                    "manualName": "Abaissement des eaux",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "petite fiole d’eau",
+                        "petite fiole de poussière"
+                      ]
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Gonflement des eaux",
+                    "manualName": "Gonflement des eaux",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "petite fiole d’eau",
+                        "petite fiole de poussière"
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Clerc / Niveau 4",
@@ -1111,7 +1161,95 @@
           "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
           "dispatchSource": "export game.items",
           "importKey": "abaissement_des_eaux|sort|clerc|4",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "clerc",
+                "level": 4,
+                "referenceName": "Abaissement des eaux",
+                "foundryItemName": "Abaissement des Eaux",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-clerc-niveau-4.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Abaissement des eaux",
+                    "manualName": "Abaissement des eaux",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "symbole sacré du clerc",
+                        "pincée de poussière"
+                      ]
+                    },
+                    "materialReference": [
+                      {
+                        "nom": "symbole sacré du clerc",
+                        "quantite": 1,
+                        "consommation": "non_consomme",
+                        "cout_po": null,
+                        "source": "Manuel des joueurs",
+                        "condition": null,
+                        "notes": null
+                      },
+                      {
+                        "nom": "pincée de poussière",
+                        "quantite": 1,
+                        "consommation": "consomme",
+                        "cout_po": null,
+                        "source": "Manuel des joueurs",
+                        "condition": null,
+                        "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+                      }
+                    ]
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Gonflement des eaux",
+                    "manualName": "Gonflement des eaux",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "symbole sacré du clerc",
+                        "pincée de poussière"
+                      ]
+                    },
+                    "materialReference": [
+                      {
+                        "nom": "symbole sacré du clerc",
+                        "quantite": 1,
+                        "consommation": "non_consomme",
+                        "cout_po": null,
+                        "source": "Manuel des joueurs",
+                        "condition": null,
+                        "notes": null
+                      },
+                      {
+                        "nom": "pincée de poussière",
+                        "quantite": 1,
+                        "consommation": "consomme",
+                        "cout_po": null,
+                        "source": "Manuel des joueurs",
+                        "condition": null,
+                        "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+                      }
+                    ]
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Clerc / Niveau 4",
@@ -1267,7 +1405,55 @@
             "Magicien"
           ],
           "importKey": "agrandissement|sort|magicien|1",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "magicien",
+                "level": 1,
+                "referenceName": "Agrandissement",
+                "foundryItemName": "Agrandissement",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-magicien-niveau-1.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Agrandissement",
+                    "manualName": "Agrandissement",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "poudre de fer"
+                      ]
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Rétrécissement",
+                    "manualName": "Rétrécissement",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "poudre de fer"
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Magicien / Niveau 1",
@@ -2567,7 +2753,41 @@
             "Magicien"
           ],
           "importKey": "antipathie_sympathie|sort|magicien|8",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "variant": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "profiles": [
+              {
+                "class": "magicien",
+                "level": 8,
+                "referenceName": "Antipathie/sympathie",
+                "foundryItemName": "Antipathie/sympathie",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-sorts-master.json",
+                  "audit/reference/manuel-joueurs-magicien-niveau-8.json"
+                ],
+                "choices": [
+                  {
+                    "id": "antipathie",
+                    "nom": "Antipathie",
+                    "reference": {
+                      "id": "antipathie",
+                      "nom": "Antipathie"
+                    }
+                  },
+                  {
+                    "id": "sympathie",
+                    "nom": "Sympathie",
+                    "reference": {
+                      "id": "sympathie",
+                      "nom": "Sympathie"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Magicien / Niveau 8",
@@ -2824,7 +3044,51 @@
           "canonicalSpellFields": {
             "version": "2026-06-16-cleric-l1-canonical-fields-v3"
           },
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "clerc",
+                "level": 1,
+                "referenceName": "Apaisement",
+                "foundryItemName": "Apaisement",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-clerc-niveau-1.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Apaisement",
+                    "manualName": "Apaisement",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": []
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Épouvante",
+                    "manualName": "Épouvante",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": []
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Clerc / Niveau 1",
@@ -3200,7 +3464,75 @@
           "canonicalSpellFields": {
             "version": "2026-06-16-cleric-l1-canonical-fields-v3"
           },
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "clerc",
+                "level": 1,
+                "referenceName": "Aquagenèse",
+                "foundryItemName": "Aquagenèse",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-clerc-niveau-1.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Aquagenèse",
+                    "manualName": "Aquagenèse",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "goutte d’eau"
+                      ]
+                    },
+                    "materialReference": [
+                      {
+                        "nom": "goutte d’eau",
+                        "quantite": 1,
+                        "consommation": "optionnel",
+                        "cout_po": null,
+                        "source": "Manuel des joueurs",
+                        "condition": "Requise pour la création d’eau.",
+                        "notes": "Alternative à une pincée de poussière."
+                      }
+                    ]
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Destruction d’eau",
+                    "manualName": "Destruction d’eau",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "pincée de poussière"
+                      ]
+                    },
+                    "materialReference": [
+                      {
+                        "nom": "pincée de poussière",
+                        "quantite": 1,
+                        "consommation": "optionnel",
+                        "cout_po": null,
+                        "source": "Manuel des joueurs",
+                        "condition": "Requise pour la destruction d’eau.",
+                        "notes": "Alternative à une goutte d’eau."
+                      }
+                    ]
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Clerc / Niveau 1",
@@ -3491,7 +3823,49 @@
             "Magicien"
           ],
           "importKey": "arme_enchantee|sort|magicien|4",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": false,
+            "profiles": [
+              {
+                "class": "magicien",
+                "level": 4,
+                "referenceName": "Arme enchantée",
+                "foundryItemName": "Arme enchantée",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-magicien-niveau-4.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "not_named_in_manual",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Arme enchantée",
+                    "manualName": "Arme enchantée",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "carbone en poudre",
+                        "citron en poudre"
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": false,
+                "inverse": {
+                  "name": null,
+                  "inverseNameStatus": "not_named_in_manual",
+                  "requiresManualNaming": true
+                }
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Magicien / Niveau 4",
@@ -4881,7 +5255,95 @@
           "generatedStatus": "rules_to_complete_from_phb",
           "onUseGenerated": true,
           "importKey": "batons_a_serpents|sort|clerc|4",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "clerc",
+                "level": 4,
+                "referenceName": "Bâtons à serpents",
+                "foundryItemName": "Bâtons à serpents",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-clerc-niveau-4.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Bâtons à serpents",
+                    "manualName": "Bâtons à serpents",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "morceau d’écorce",
+                        "écailles de serpent"
+                      ]
+                    },
+                    "materialReference": [
+                      {
+                        "nom": "morceau d’écorce",
+                        "quantite": 1,
+                        "consommation": "consomme",
+                        "cout_po": null,
+                        "source": "Manuel des joueurs",
+                        "condition": null,
+                        "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « petit morceau d’écorce »."
+                      },
+                      {
+                        "nom": "écailles de serpent",
+                        "quantite": 1,
+                        "consommation": "consomme",
+                        "cout_po": null,
+                        "source": "Manuel des joueurs",
+                        "condition": null,
+                        "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+                      }
+                    ]
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Serpents à bâtons",
+                    "manualName": "Serpents à bâtons",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "morceau d’écorce",
+                        "écailles de serpent"
+                      ]
+                    },
+                    "materialReference": [
+                      {
+                        "nom": "morceau d’écorce",
+                        "quantite": 1,
+                        "consommation": "consomme",
+                        "cout_po": null,
+                        "source": "Manuel des joueurs",
+                        "condition": null,
+                        "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « petit morceau d’écorce »."
+                      },
+                      {
+                        "nom": "écailles de serpent",
+                        "quantite": 1,
+                        "consommation": "consomme",
+                        "cout_po": null,
+                        "source": "Manuel des joueurs",
+                        "condition": null,
+                        "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+                      }
+                    ]
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Druide / Niveau 5",
@@ -5026,7 +5488,55 @@
             "Druide"
           ],
           "importKey": "batons_a_serpents|sort|druide|5",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "druide",
+                "level": 5,
+                "referenceName": "Bâtons à serpents",
+                "foundryItemName": "Bâtons à serpents",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-druide-niveau-5.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Bâtons à serpents",
+                    "manualName": "Bâtons à serpents",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "gui"
+                      ]
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Serpents à bâtons",
+                    "manualName": "Serpents à bâtons",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "gui"
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Druide / Niveau 5",
@@ -5294,7 +5804,75 @@
           "canonicalSpellFields": {
             "version": "2026-06-16-cleric-l1-canonical-fields-v3"
           },
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "clerc",
+                "level": 1,
+                "referenceName": "Bénédiction",
+                "foundryItemName": "Bénédiction",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-clerc-niveau-1.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Bénédiction",
+                    "manualName": "Bénédiction",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "eau bénite"
+                      ]
+                    },
+                    "materialReference": [
+                      {
+                        "nom": "eau bénite",
+                        "quantite": 1,
+                        "consommation": "optionnel",
+                        "cout_po": null,
+                        "source": "Manuel des joueurs",
+                        "condition": "Sort normal.",
+                        "notes": "Liquide consommé."
+                      }
+                    ]
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Malédiction",
+                    "manualName": "Malédiction",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "eau maudite"
+                      ]
+                    },
+                    "materialReference": [
+                      {
+                        "nom": "eau maudite",
+                        "quantite": 1,
+                        "consommation": "optionnel",
+                        "cout_po": null,
+                        "source": "Manuel des joueurs",
+                        "condition": "Sort inversé : malédiction.",
+                        "notes": "Liquide consommé."
+                      }
+                    ]
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Clerc / Niveau 1",
@@ -6215,7 +6793,41 @@
             "Magicien"
           ],
           "importKey": "bouclier_de_feu|sort|magicien|4",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "variant": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "profiles": [
+              {
+                "class": "magicien",
+                "level": 4,
+                "referenceName": "Bouclier de feu",
+                "foundryItemName": "Bouclier de feu",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-sorts-master.json",
+                  "audit/reference/manuel-joueurs-magicien-niveau-4.json"
+                ],
+                "choices": [
+                  {
+                    "id": "flammes_chaudes",
+                    "nom": "Flammes chaudes",
+                    "reference": {
+                      "id": "flammes_chaudes",
+                      "nom": "Flammes chaudes"
+                    }
+                  },
+                  {
+                    "id": "flammes_froides",
+                    "nom": "Flammes froides",
+                    "reference": {
+                      "id": "flammes_froides",
+                      "nom": "Flammes froides"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Magicien / Niveau 4",
@@ -9200,7 +9812,41 @@
             "Druide"
           ],
           "importKey": "charme_personnes_ou_mammiferes|sort|druide|2",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "variant": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "profiles": [
+              {
+                "class": "druide",
+                "level": 2,
+                "referenceName": "Charme-personnes ou mammifères",
+                "foundryItemName": "Charme-personnes ou mammifères",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-sorts-master.json",
+                  "audit/reference/manuel-joueurs-druide-niveau-2.json"
+                ],
+                "choices": [
+                  {
+                    "id": "personnes",
+                    "nom": "Personnes",
+                    "reference": {
+                      "id": "personnes",
+                      "nom": "Personnes"
+                    }
+                  },
+                  {
+                    "id": "mammiferes",
+                    "nom": "Mammifères",
+                    "reference": {
+                      "id": "mammiferes",
+                      "nom": "Mammifères"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Druide / Niveau 2",
@@ -11386,7 +12032,55 @@
             "Magicien"
           ],
           "importKey": "comprehension_des_langues|sort|magicien|1",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "magicien",
+                "level": 1,
+                "referenceName": "Compréhension des langues",
+                "foundryItemName": "Compréhension des langues",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-magicien-niveau-1.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Compréhension des langues",
+                    "manualName": "Compréhension des langues",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "Pincée de suie"
+                      ]
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Confusion des langues",
+                    "manualName": "Confusion des langues",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "Pincée de suie"
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Magicien / Niveau 1",
@@ -12125,7 +12819,55 @@
           "generatedStatus": "rules_to_complete_from_phb",
           "onUseGenerated": true,
           "importKey": "contre_poison|sort|clerc|4",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "clerc",
+                "level": 4,
+                "referenceName": "Contre-poison",
+                "foundryItemName": "Contre-poison",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-clerc-niveau-4.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Contre-poison",
+                    "manualName": "Contre-poison",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "a completer"
+                      ]
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Empoisonnement",
+                    "manualName": "Empoisonnement",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "a completer"
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Druide / Niveau 3",
@@ -12270,7 +13012,51 @@
           "spellPack": "druide-niveaux-1-7",
           "scriptFlatNoSubdir": true,
           "importKey": "contre_poison|sort|druide|3",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "druide",
+                "level": 3,
+                "referenceName": "Contre-poison",
+                "foundryItemName": "Contre-poison",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-druide-niveau-3.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Contre-poison",
+                    "manualName": "Contre-poison",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": []
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Empoisonnement",
+                    "manualName": "Empoisonnement",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": []
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Druide / Niveau 3",
@@ -13950,7 +14736,48 @@
           "generatedStatus": "rules_to_complete_from_phb",
           "onUseGenerated": true,
           "importKey": "croissance_animale|sort|druide|5",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": false,
+            "profiles": [
+              {
+                "class": "druide",
+                "level": 5,
+                "referenceName": "Croissance animale",
+                "foundryItemName": "Croissance animale",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-druide-niveau-5.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "not_named_in_manual",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Croissance animale",
+                    "manualName": "Croissance animale",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "Matérielle non précisée explicitement dans le Manuel des joueurs."
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": false,
+                "inverse": {
+                  "name": null,
+                  "inverseNameStatus": "not_named_in_manual",
+                  "requiresManualNaming": true
+                }
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Magicien / Niveau 5",
@@ -14094,7 +14921,48 @@
             "Magicien"
           ],
           "importKey": "croissance_animale|sort|magicien|5",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": false,
+            "profiles": [
+              {
+                "class": "magicien",
+                "level": 5,
+                "referenceName": "Croissance animale",
+                "foundryItemName": "Croissance animale",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-magicien-niveau-5.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "not_named_in_manual",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Croissance animale",
+                    "manualName": "Croissance animale",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "pincée de poudre d’os"
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": false,
+                "inverse": {
+                  "name": null,
+                  "inverseNameStatus": "not_named_in_manual",
+                  "requiresManualNaming": true
+                }
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Magicien / Niveau 5",
@@ -14741,7 +15609,51 @@
           "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
           "dispatchSource": "export game.items",
           "importKey": "desenvoutement|sort|clerc|3",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "clerc",
+                "level": 3,
+                "referenceName": "Désenvoûtement",
+                "foundryItemName": "Désenvoûtement",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-clerc-niveau-3.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Désenvoûtement",
+                    "manualName": "Désenvoûtement",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": []
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Envoûtement",
+                    "manualName": "Envoûtement",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": []
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Clerc / Niveau 3",
@@ -14848,7 +15760,55 @@
           "generatedStatus": "rules_to_complete_from_phb",
           "onUseGenerated": true,
           "importKey": "desenvoutement|sort|magicien|4",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "magicien",
+                "level": 4,
+                "referenceName": "Désenvoûtement",
+                "foundryItemName": "Désenvoûtement",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-magicien-niveau-4.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Désenvoûtement",
+                    "manualName": "Désenvoûtement",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "a completer"
+                      ]
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Envoûtement",
+                    "manualName": "Envoûtement",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "a completer"
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Clerc / Niveau 3",
@@ -16114,7 +17074,51 @@
           "importedAt": "2026-06-12T18:17:38.300Z",
           "routedClass": "Clerc",
           "importKey": "detection_des_charmes|sort|clerc|2",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "clerc",
+                "level": 2,
+                "referenceName": "Détection des charmes",
+                "foundryItemName": "Détection des Charmes",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-clerc-niveau-2.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Détection des charmes",
+                    "manualName": "Détection des charmes",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": []
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Dissimulation des charmes",
+                    "manualName": "Dissimulation des charmes",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": []
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Clerc / Niveau 2",
@@ -16516,7 +17520,66 @@
           "importedAt": "2026-06-12T18:17:38.444Z",
           "routedClass": "Clerc",
           "importKey": "detection_des_mensonges|sort|clerc|4",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "clerc",
+                "level": 4,
+                "referenceName": "Détection des mensonges",
+                "foundryItemName": "Détection des Mensonges",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-clerc-niveau-4.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Détection des mensonges",
+                    "manualName": "Détection des mensonges",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "poussière de laiton",
+                        "poussière d’or"
+                      ]
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Dissimulation des mensonges",
+                    "manualName": "Dissimulation des mensonges",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "poussière de laiton"
+                      ]
+                    },
+                    "materialReference": [
+                      {
+                        "nom": "poussière de laiton",
+                        "quantite": 1,
+                        "consommation": "consomme",
+                        "cout_po": null,
+                        "source": "Manuel des joueurs",
+                        "condition": "Sort inversé : dissimulation des mensonges.",
+                        "notes": null
+                      }
+                    ]
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Clerc / Niveau 4",
@@ -17161,7 +18224,55 @@
           "generatedStatus": "rules_to_complete_from_phb",
           "onUseGenerated": true,
           "importKey": "detection_du_mal|sort|magicien|2",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "magicien",
+                "level": 2,
+                "referenceName": "Détection du mal",
+                "foundryItemName": "Détection du mal",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-magicien-niveau-2.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Détection du mal",
+                    "manualName": "Détection du mal",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "a completer"
+                      ]
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Détection du bien",
+                    "manualName": "Détection du bien",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "a completer"
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Clerc / Niveau 1",
@@ -17412,7 +18523,55 @@
           "canonicalSpellFields": {
             "version": "2026-06-16-cleric-l1-canonical-fields-v3"
           },
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "clerc",
+                "level": 1,
+                "referenceName": "Détection du mal",
+                "foundryItemName": "Détection du mal",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-clerc-niveau-1.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Détection du mal",
+                    "manualName": "Détection du mal",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "symbole sacré"
+                      ]
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Détection du bien",
+                    "manualName": "Détection du bien",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "symbole sacré"
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Clerc / Niveau 1",
@@ -18673,7 +19832,95 @@
             "Clerc"
           ],
           "importKey": "dissipation_du_mal|sort|clerc|5",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "clerc",
+                "level": 5,
+                "referenceName": "Dissipation du mal",
+                "foundryItemName": "Dissipation du Mal",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-clerc-niveau-5.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Dissipation du mal",
+                    "manualName": "Dissipation du mal",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "symbole sacré du clerc"
+                      ]
+                    },
+                    "materialReference": [
+                      {
+                        "nom": "symbole sacré du clerc",
+                        "quantite": 1,
+                        "consommation": "non_consomme",
+                        "cout_po": null,
+                        "source": "Manuel des joueurs",
+                        "condition": null,
+                        "notes": null
+                      }
+                    ]
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Dissipation du bien",
+                    "manualName": "Dissipation du bien",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "symbole sacré du clerc",
+                        "eau bénite",
+                        "eau maudite"
+                      ]
+                    },
+                    "materialReference": [
+                      {
+                        "nom": "symbole sacré du clerc",
+                        "quantite": 1,
+                        "consommation": "non_consomme",
+                        "cout_po": null,
+                        "source": "Manuel des joueurs",
+                        "condition": null,
+                        "notes": null
+                      },
+                      {
+                        "nom": "eau bénite",
+                        "quantite": 1,
+                        "consommation": "optionnel",
+                        "cout_po": null,
+                        "source": "Manuel des joueurs",
+                        "condition": "Requise pour dissipation du mal ; alternative à l’eau maudite.",
+                        "notes": null
+                      },
+                      {
+                        "nom": "eau maudite",
+                        "quantite": 1,
+                        "consommation": "optionnel",
+                        "cout_po": null,
+                        "source": "Manuel des joueurs",
+                        "condition": "Requise pour dissipation du bien ; alternative à l’eau bénite.",
+                        "notes": null
+                      }
+                    ]
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Clerc / Niveau 5",
@@ -20626,7 +21873,55 @@
             "Druide"
           ],
           "importKey": "embrasement|sort|druide|4",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "druide",
+                "level": 4,
+                "referenceName": "Embrasement",
+                "foundryItemName": "Embrasement",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-druide-niveau-4.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Embrasement",
+                    "manualName": "Embrasement",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "gui druidique"
+                      ]
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Extinction",
+                    "manualName": "Extinction",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "gui druidique"
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Druide / Niveau 4",
@@ -21161,7 +22456,51 @@
             "Magicien"
           ],
           "importKey": "emprisonnement|sort|magicien|9",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "magicien",
+                "level": 9,
+                "referenceName": "Emprisonnement",
+                "foundryItemName": "Emprisonnement",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-magicien-niveau-9.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Emprisonnement",
+                    "manualName": "Emprisonnement",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": []
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Libération",
+                    "manualName": "Libération",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": []
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Magicien / Niveau 9",
@@ -24618,7 +25957,48 @@
             "Druide"
           ],
           "importKey": "foret_hallucinatoire|sort|druide|4",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": false,
+            "profiles": [
+              {
+                "class": "druide",
+                "level": 4,
+                "referenceName": "Forêt hallucinatoire",
+                "foundryItemName": "Forêt hallucinatoire",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-druide-niveau-4.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "not_named_in_manual",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Forêt hallucinatoire",
+                    "manualName": "Forêt hallucinatoire",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "gui druidique"
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": false,
+                "inverse": {
+                  "name": null,
+                  "inverseNameStatus": "not_named_in_manual",
+                  "requiresManualNaming": true
+                }
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Druide / Niveau 4",
@@ -25754,7 +27134,41 @@
             "Druide"
           ],
           "importKey": "graines_de_feu|sort|druide|6",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "variant": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "profiles": [
+              {
+                "class": "druide",
+                "level": 6,
+                "referenceName": "Graines de feu",
+                "foundryItemName": "Graines de feu",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-sorts-master.json",
+                  "audit/reference/manuel-joueurs-druide-niveau-6.json"
+                ],
+                "choices": [
+                  {
+                    "id": "glands",
+                    "nom": "Glands",
+                    "reference": {
+                      "id": "glands",
+                      "nom": "Glands"
+                    }
+                  },
+                  {
+                    "id": "baies_de_houx",
+                    "nom": "Baies de houx",
+                    "reference": {
+                      "id": "baies_de_houx",
+                      "nom": "Baies de houx"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Druide / Niveau 6",
@@ -25997,7 +27411,51 @@
             "Clerc"
           ],
           "importKey": "guerison|sort|clerc|6",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "clerc",
+                "level": 6,
+                "referenceName": "Guérison",
+                "foundryItemName": "Guérison",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-clerc-niveau-6.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Guérison",
+                    "manualName": "Guérison",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": []
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Traumatisme",
+                    "manualName": "Traumatisme",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": []
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Clerc / Niveau 6",
@@ -26245,7 +27703,51 @@
           "importedAt": "2026-06-12T18:17:42.276Z",
           "routedClass": "Clerc",
           "importKey": "guerison_de_la_cecite|sort|clerc|3",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "clerc",
+                "level": 3,
+                "referenceName": "Guérison de la cécité",
+                "foundryItemName": "Guérison de la Cécité",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-clerc-niveau-3.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Guérison de la cécité",
+                    "manualName": "Guérison de la cécité",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": []
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Cécité",
+                    "manualName": "Cécité",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": []
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Clerc / Niveau 3",
@@ -26351,7 +27853,55 @@
           "generatedStatus": "rules_to_complete_from_phb",
           "onUseGenerated": true,
           "importKey": "guerison_des_maladies|sort|druide|3",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "druide",
+                "level": 3,
+                "referenceName": "Guérison des maladies",
+                "foundryItemName": "Guérison des maladies",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-druide-niveau-3.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Guérison des maladies",
+                    "manualName": "Guérison des maladies",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "Matérielle non précisée explicitement dans le Manuel des joueurs."
+                      ]
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Contamination",
+                    "manualName": "Contamination",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "Matérielle non précisée explicitement dans le Manuel des joueurs."
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Clerc / Niveau 3",
@@ -26596,7 +28146,55 @@
           "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
           "dispatchSource": "export game.items",
           "importKey": "guerison_des_maladies|sort|clerc|3",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "clerc",
+                "level": 3,
+                "referenceName": "Guérison des maladies",
+                "foundryItemName": "Guérison des Maladies",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-clerc-niveau-3.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Guérison des maladies",
+                    "manualName": "Guérison des maladies",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "gui druidique"
+                      ]
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Contamination",
+                    "manualName": "Contamination",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "gui druidique"
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Clerc / Niveau 3",
@@ -30326,7 +31924,57 @@
             "Magicien"
           ],
           "importKey": "invocation_delemental|sort|magicien|5",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "variant": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "profiles": [
+              {
+                "class": "magicien",
+                "level": 5,
+                "referenceName": "Invocation d'élémental",
+                "foundryItemName": "Invocation d’élémental",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-sorts-master.json",
+                  "audit/reference/manuel-joueurs-magicien-niveau-5.json"
+                ],
+                "choices": [
+                  {
+                    "id": "air",
+                    "nom": "Élémental de l’air",
+                    "reference": {
+                      "id": "air",
+                      "nom": "Élémental de l’air"
+                    }
+                  },
+                  {
+                    "id": "eau",
+                    "nom": "Élémental de l’eau",
+                    "reference": {
+                      "id": "eau",
+                      "nom": "Élémental de l’eau"
+                    }
+                  },
+                  {
+                    "id": "terre",
+                    "nom": "Élémental de terre",
+                    "reference": {
+                      "id": "terre",
+                      "nom": "Élémental de terre"
+                    }
+                  },
+                  {
+                    "id": "feu",
+                    "nom": "Élémental du feu",
+                    "reference": {
+                      "id": "feu",
+                      "nom": "Élémental du feu"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Magicien / Niveau 5",
@@ -30619,7 +32267,55 @@
             "Druide"
           ],
           "importKey": "invocation_dun_elemental_de_terre|sort|druide|7",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "druide",
+                "level": 7,
+                "referenceName": "Invocation d’un élémental de terre",
+                "foundryItemName": "Invocation d'un élémental de terre",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-druide-niveau-7.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Invocation d’un élémental de terre",
+                    "manualName": "Invocation d’un élémental de terre",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "gui"
+                      ]
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Dissipation d’un élémental de terre",
+                    "manualName": "Dissipation d’un élémental de terre",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "gui"
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Druide / Niveau 7",
@@ -30764,7 +32460,55 @@
             "Druide"
           ],
           "importKey": "invocation_dun_elemental_du_feu|sort|druide|6",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "druide",
+                "level": 6,
+                "referenceName": "Invocation d’un élémental du feu",
+                "foundryItemName": "Invocation d'un élémental du feu",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-druide-niveau-6.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Invocation d’un élémental du feu",
+                    "manualName": "Invocation d’un élémental du feu",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "gui druidique"
+                      ]
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Dissipation d’un élémental du feu",
+                    "manualName": "Dissipation d’un élémental du feu",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "gui druidique"
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Druide / Niveau 6",
@@ -34663,7 +36407,55 @@
           "importerVersion": "2026-06-11-import-sorts-v2-no-merge-same-name",
           "importedAt": "2026-06-12T18:17:45.890Z",
           "importKey": "langue|sort|clerc|4",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "clerc",
+                "level": 4,
+                "referenceName": "Langue",
+                "foundryItemName": "Langue",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-clerc-niveau-4.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Langue",
+                    "manualName": "Langue",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "a completer"
+                      ]
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Incompréhension",
+                    "manualName": "Incompréhension",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "a completer"
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         }
       },
       "ownership": {
@@ -34804,7 +36596,55 @@
           "spellPack": "magicien-niveaux-1-9",
           "scriptFlatNoSubdir": true,
           "importKey": "langues|sort|magicien|3",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "magicien",
+                "level": 3,
+                "referenceName": "Langues",
+                "foundryItemName": "Langues",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-magicien-niveau-3.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Langues",
+                    "manualName": "Langues",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "Petite statuette d’argile représentant une ziggourat"
+                      ]
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Incompréhension",
+                    "manualName": "Incompréhension",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "Petite statuette d’argile représentant une ziggourat"
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Magicien / Niveau 3",
@@ -34949,7 +36789,57 @@
             "Magicien"
           ],
           "importKey": "lecture_de_la_magie|sort|magicien|1",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "magicien",
+                "level": 1,
+                "referenceName": "Lecture de la magie",
+                "foundryItemName": "Lecture de la magie",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-magicien-niveau-1.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Lecture de la magie",
+                    "manualName": "Lecture de la magie",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "Cristal clair",
+                        "Prisme minéral"
+                      ]
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Obscurcissement de la magie",
+                    "manualName": "Obscurcissement de la magie",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "Cristal clair",
+                        "Prisme minéral"
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Magicien / Niveau 1",
@@ -35698,7 +37588,75 @@
           "generatedStatus": "rules_to_complete_from_phb",
           "onUseGenerated": true,
           "importKey": "localisation_dobjets|sort|clerc|3",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "clerc",
+                "level": 3,
+                "referenceName": "Localisation d’objets",
+                "foundryItemName": "Localisation d'objets",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-clerc-niveau-3.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Localisation d’objets",
+                    "manualName": "Localisation d’objets",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "pierre aimantée"
+                      ]
+                    },
+                    "materialReference": [
+                      {
+                        "nom": "pierre aimantée",
+                        "quantite": 1,
+                        "consommation": "non_consomme",
+                        "cout_po": null,
+                        "source": "Manuel des joueurs",
+                        "condition": null,
+                        "notes": null
+                      }
+                    ]
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Dissimulation d’objets",
+                    "manualName": "Dissimulation d’objets",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "pierre aimantée"
+                      ]
+                    },
+                    "materialReference": [
+                      {
+                        "nom": "pierre aimantée",
+                        "quantite": 1,
+                        "consommation": "non_consomme",
+                        "cout_po": null,
+                        "source": "Manuel des joueurs",
+                        "condition": null,
+                        "notes": null
+                      }
+                    ]
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Magicien / Niveau 2",
@@ -35849,7 +37807,67 @@
             "Magicien"
           ],
           "importKey": "localisation_dobjets|sort|magicien|2",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "magicien",
+                "level": 2,
+                "referenceName": "Localisation d’objets",
+                "foundryItemName": "Localisation d’objets",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-magicien-niveau-2.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Localisation d’objets",
+                    "manualName": "Localisation d’objets",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        {
+                          "type": "alternative",
+                          "choix": [
+                            "fourchette d’argent",
+                            "baguette fourchue"
+                          ]
+                        }
+                      ]
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Dissimulation d’objets",
+                    "manualName": "Dissimulation d’objets",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        {
+                          "type": "alternative",
+                          "choix": [
+                            "fourchette d’argent",
+                            "baguette fourchue"
+                          ]
+                        }
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Magicien / Niveau 2",
@@ -36250,7 +38268,55 @@
           "canonicalSpellFields": {
             "version": "2026-06-16-cleric-l1-canonical-fields-v3"
           },
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "clerc",
+                "level": 1,
+                "referenceName": "Lumière",
+                "foundryItemName": "Lumière",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-clerc-niveau-1.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Lumière",
+                    "manualName": "Lumière",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "symbole sacré"
+                      ]
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Ténèbres",
+                    "manualName": "Ténèbres",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "symbole sacré"
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Illusionniste / Niveau 1",
@@ -36605,7 +38671,51 @@
           "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
           "dispatchSource": "export game.items",
           "importKey": "lumiere_eternelle|sort|clerc|3",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "clerc",
+                "level": 3,
+                "referenceName": "Lumière éternelle",
+                "foundryItemName": "Lumière éternelle",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-clerc-niveau-3.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Lumière éternelle",
+                    "manualName": "Lumière éternelle",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": []
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Ténèbres éternelles",
+                    "manualName": "Ténèbres éternelles",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": []
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Clerc / Niveau 3",
@@ -37135,7 +39245,81 @@
             "Illusionniste"
           ],
           "importKey": "magie_demi_ombre|sort|illusionniste|6",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "variant": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "profiles": [
+              {
+                "class": "illusionniste",
+                "level": 6,
+                "referenceName": "Magie demi-ombre",
+                "foundryItemName": "Magie demi-ombre",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-sorts-master.json",
+                  "audit/reference/manuel-joueurs-illusionniste-niveau-6.json"
+                ],
+                "choices": [
+                  {
+                    "id": "projectile_magique",
+                    "nom": "Projectile magique",
+                    "reference": {
+                      "id": "projectile_magique",
+                      "nom": "Projectile magique"
+                    }
+                  },
+                  {
+                    "id": "boule_de_feu",
+                    "nom": "Boule de feu",
+                    "reference": {
+                      "id": "boule_de_feu",
+                      "nom": "Boule de feu"
+                    }
+                  },
+                  {
+                    "id": "foudre",
+                    "nom": "Foudre",
+                    "reference": {
+                      "id": "foudre",
+                      "nom": "Foudre"
+                    }
+                  },
+                  {
+                    "id": "cone_de_froid",
+                    "nom": "Cône de froid",
+                    "reference": {
+                      "id": "cone_de_froid",
+                      "nom": "Cône de froid"
+                    }
+                  },
+                  {
+                    "id": "mur_de_feu",
+                    "nom": "Mur de feu",
+                    "reference": {
+                      "id": "mur_de_feu",
+                      "nom": "Mur de feu"
+                    }
+                  },
+                  {
+                    "id": "mur_de_glace",
+                    "nom": "Mur de glace",
+                    "reference": {
+                      "id": "mur_de_glace",
+                      "nom": "Mur de glace"
+                    }
+                  },
+                  {
+                    "id": "nuage_letal",
+                    "nom": "Nuage létal",
+                    "reference": {
+                      "id": "nuage_letal",
+                      "nom": "Nuage létal"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Illusionniste / Niveau 6",
@@ -37277,7 +39461,57 @@
             "Illusionniste"
           ],
           "importKey": "magie_des_ombres|sort|illusionniste|5",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "variant": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "profiles": [
+              {
+                "class": "illusionniste",
+                "level": 5,
+                "referenceName": "Magie des ombres",
+                "foundryItemName": "Magie des ombres",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-sorts-master.json",
+                  "audit/reference/manuel-joueurs-illusionniste-niveau-5.json"
+                ],
+                "choices": [
+                  {
+                    "id": "projectile_magique",
+                    "nom": "Projectile magique",
+                    "reference": {
+                      "id": "projectile_magique",
+                      "nom": "Projectile magique"
+                    }
+                  },
+                  {
+                    "id": "boule_de_feu",
+                    "nom": "Boule de feu",
+                    "reference": {
+                      "id": "boule_de_feu",
+                      "nom": "Boule de feu"
+                    }
+                  },
+                  {
+                    "id": "foudre",
+                    "nom": "Foudre",
+                    "reference": {
+                      "id": "foudre",
+                      "nom": "Foudre"
+                    }
+                  },
+                  {
+                    "id": "cone_de_froid",
+                    "nom": "Cône de froid",
+                    "reference": {
+                      "id": "cone_de_froid",
+                      "nom": "Cône de froid"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Illusionniste / Niveau 5",
@@ -39198,7 +41432,55 @@
             "Druide"
           ],
           "importKey": "metal_brulant|sort|druide|2",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "druide",
+                "level": 2,
+                "referenceName": "Métal brûlant",
+                "foundryItemName": "Métal brûlant",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-druide-niveau-2.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Métal brûlant",
+                    "manualName": "Métal brûlant",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "gui druidique"
+                      ]
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Métal glacial",
+                    "manualName": "Métal glacial",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "gui druidique"
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Druide / Niveau 2",
@@ -44235,7 +46517,75 @@
             "Clerc"
           ],
           "importKey": "orientation|sort|clerc|6",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "clerc",
+                "level": 6,
+                "referenceName": "Orientation",
+                "foundryItemName": "Orientation",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-clerc-niveau-6.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Orientation",
+                    "manualName": "Orientation",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "jeu d’objets divinatoires en os ou en ivoire, sous forme de bâtonnets ou de runes gravées"
+                      ]
+                    },
+                    "materialReference": [
+                      {
+                        "nom": "jeu d’objets divinatoires en os ou en ivoire, sous forme de bâtonnets ou de runes gravées",
+                        "quantite": 1,
+                        "consommation": "non_consomme",
+                        "cout_po": null,
+                        "source": "Manuel des joueurs",
+                        "condition": null,
+                        "notes": null
+                      }
+                    ]
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Fausse route",
+                    "manualName": "Fausse route",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "jeu d’objets divinatoires en os ou en ivoire, sous forme de bâtonnets ou de runes gravées"
+                      ]
+                    },
+                    "materialReference": [
+                      {
+                        "nom": "jeu d’objets divinatoires en os ou en ivoire, sous forme de bâtonnets ou de runes gravées",
+                        "quantite": 1,
+                        "consommation": "non_consomme",
+                        "cout_po": null,
+                        "source": "Manuel des joueurs",
+                        "condition": null,
+                        "notes": null
+                      }
+                    ]
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Clerc / Niveau 6",
@@ -46579,7 +48929,51 @@
           "importedAt": "2026-06-12T18:17:50.938Z",
           "routedClass": "Clerc",
           "importKey": "perception_des_alignements|sort|clerc|2",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "clerc",
+                "level": 2,
+                "referenceName": "Perception des alignements",
+                "foundryItemName": "Perception des Alignements",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-clerc-niveau-2.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Perception des alignements",
+                    "manualName": "Perception des alignements",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": []
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Confusion de l’alignement",
+                    "manualName": "Confusion de l’alignement",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": []
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Clerc / Niveau 2",
@@ -49965,7 +52359,57 @@
           "generatedStatus": "rules_to_complete_from_phb",
           "onUseGenerated": true,
           "importKey": "protection_contre_le_mal|sort|magicien|1",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "magicien",
+                "level": 1,
+                "referenceName": "Protection contre le mal",
+                "foundryItemName": "Protection contre le mal",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-magicien-niveau-1.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Protection contre le mal",
+                    "manualName": "Protection contre le mal",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "poudre de fer",
+                        "poudre d’argent"
+                      ]
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Protection contre le bien",
+                    "manualName": "Protection contre le bien",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "poudre de fer",
+                        "poudre d’argent"
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Clerc / Niveau 1",
@@ -50339,7 +52783,117 @@
           "canonicalSpellFields": {
             "version": "2026-06-16-cleric-l1-canonical-fields-v3"
           },
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "clerc",
+                "level": 1,
+                "referenceName": "Protection contre le mal",
+                "foundryItemName": "Protection contre le Mal",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-clerc-niveau-1.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Protection contre le mal",
+                    "manualName": "Protection contre le mal",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        {
+                          "type": "variante",
+                          "id": "eau_benite",
+                          "label": "Eau bénite",
+                          "composants": [
+                            "Eau bénite"
+                          ]
+                        },
+                        {
+                          "type": "variante",
+                          "id": "encens",
+                          "label": "encens allumé",
+                          "composants": [
+                            "encens allumé"
+                          ]
+                        },
+                        {
+                          "type": "variante",
+                          "id": "sang",
+                          "label": "sang",
+                          "composants": [
+                            "sang"
+                          ]
+                        },
+                        {
+                          "type": "variante",
+                          "id": "fumier",
+                          "label": "vapeurs de fumier",
+                          "composants": [
+                            "vapeurs de fumier"
+                          ]
+                        }
+                      ]
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Protection contre le bien",
+                    "manualName": "Protection contre le bien",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        {
+                          "type": "variante",
+                          "id": "eau_benite",
+                          "label": "Eau bénite",
+                          "composants": [
+                            "Eau bénite"
+                          ]
+                        },
+                        {
+                          "type": "variante",
+                          "id": "encens",
+                          "label": "encens allumé",
+                          "composants": [
+                            "encens allumé"
+                          ]
+                        },
+                        {
+                          "type": "variante",
+                          "id": "sang",
+                          "label": "sang",
+                          "composants": [
+                            "sang"
+                          ]
+                        },
+                        {
+                          "type": "variante",
+                          "id": "fumier",
+                          "label": "vapeurs de fumier",
+                          "composants": [
+                            "vapeurs de fumier"
+                          ]
+                        }
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Clerc / Niveau 1",
@@ -50483,7 +53037,55 @@
             "Magicien"
           ],
           "importKey": "protection_contre_le_mal_sur_3_m|sort|magicien|3",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "magicien",
+                "level": 3,
+                "referenceName": "Protection contre le mal sur 3 m",
+                "foundryItemName": "Protection contre le mal sur 3 m",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-magicien-niveau-3.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Protection contre le mal sur 3 m",
+                    "manualName": "Protection contre le mal sur 3 m",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "poudre d’argent"
+                      ]
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Protection contre le bien sur 3 m",
+                    "manualName": "Protection contre le bien sur 3 m",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "poudre d’argent"
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Magicien / Niveau 3",
@@ -50619,7 +53221,117 @@
           "generatedStatus": "rules_to_complete_from_phb",
           "onUseGenerated": true,
           "importKey": "protection_contre_le_mal_sur_3_m|sort|clerc|4",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "clerc",
+                "level": 4,
+                "referenceName": "Protection contre le mal sur 3 m",
+                "foundryItemName": "Protection contre le mal sur 3 m",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-clerc-niveau-4.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Protection contre le mal sur 3 m",
+                    "manualName": "Protection contre le mal sur 3 m",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        {
+                          "type": "variante",
+                          "id": "eau_benite",
+                          "label": "Eau bénite",
+                          "composants": [
+                            "Eau bénite"
+                          ]
+                        },
+                        {
+                          "type": "variante",
+                          "id": "encens",
+                          "label": "encens allumé",
+                          "composants": [
+                            "encens allumé"
+                          ]
+                        },
+                        {
+                          "type": "variante",
+                          "id": "sang",
+                          "label": "sang",
+                          "composants": [
+                            "sang"
+                          ]
+                        },
+                        {
+                          "type": "variante",
+                          "id": "fumier",
+                          "label": "vapeurs de fumier",
+                          "composants": [
+                            "vapeurs de fumier"
+                          ]
+                        }
+                      ]
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Protection contre le bien sur 3 m",
+                    "manualName": "Protection contre le bien sur 3 m",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        {
+                          "type": "variante",
+                          "id": "eau_benite",
+                          "label": "Eau bénite",
+                          "composants": [
+                            "Eau bénite"
+                          ]
+                        },
+                        {
+                          "type": "variante",
+                          "id": "encens",
+                          "label": "encens allumé",
+                          "composants": [
+                            "encens allumé"
+                          ]
+                        },
+                        {
+                          "type": "variante",
+                          "id": "sang",
+                          "label": "sang",
+                          "composants": [
+                            "sang"
+                          ]
+                        },
+                        {
+                          "type": "variante",
+                          "id": "fumier",
+                          "label": "vapeurs de fumier",
+                          "composants": [
+                            "vapeurs de fumier"
+                          ]
+                        }
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Magicien / Niveau 3",
@@ -51196,7 +53908,51 @@
             "Druide"
           ],
           "importKey": "purification_de_leau|sort|druide|1",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "druide",
+                "level": 1,
+                "referenceName": "Purification de l’eau",
+                "foundryItemName": "Purification de l'eau",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-druide-niveau-1.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Purification de l’eau",
+                    "manualName": "Purification de l’eau",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": []
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Corruption de l’eau",
+                    "manualName": "Corruption de l’eau",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": []
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Druide / Niveau 1",
@@ -51296,7 +54052,55 @@
           "canonicalSpellFields": {
             "version": "2026-06-16-cleric-l1-canonical-fields-v3"
           },
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "clerc",
+                "level": 1,
+                "referenceName": "Purification de l’eau et des aliments",
+                "foundryItemName": "Purification de l'eau et des aliments",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-clerc-niveau-1.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Purification de l’eau et des aliments",
+                    "manualName": "Purification de l’eau et des aliments",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "symbole sacré"
+                      ]
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Corruption de l’eau et des aliments",
+                    "manualName": "Corruption de l’eau et des aliments",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "symbole sacré"
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         }
       },
       "_id": "bUh71wPwV9S9IMOk",
@@ -51395,7 +54199,41 @@
           "generatedStatus": "rules_to_complete_from_phb",
           "onUseGenerated": true,
           "importKey": "pyrotechnie|sort|druide|3",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "variant": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "profiles": [
+              {
+                "class": "druide",
+                "level": 3,
+                "referenceName": "Pyrotechnie",
+                "foundryItemName": "Pyrotechnie",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-sorts-master.json",
+                  "audit/reference/manuel-joueurs-druide-niveau-3.json"
+                ],
+                "choices": [
+                  {
+                    "id": "feu_d_artifice",
+                    "nom": "Feu d’artifice",
+                    "reference": {
+                      "id": "feu_d_artifice",
+                      "nom": "Feu d’artifice"
+                    }
+                  },
+                  {
+                    "id": "fumee",
+                    "nom": "Fumée",
+                    "reference": {
+                      "id": "fumee",
+                      "nom": "Fumée"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Magicien / Niveau 2",
@@ -51539,7 +54377,41 @@
             "Magicien"
           ],
           "importKey": "pyrotechnie|sort|magicien|2",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "variant": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "profiles": [
+              {
+                "class": "magicien",
+                "level": 2,
+                "referenceName": "Pyrotechnie",
+                "foundryItemName": "Pyrotechnie",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-sorts-master.json",
+                  "audit/reference/manuel-joueurs-magicien-niveau-2.json"
+                ],
+                "choices": [
+                  {
+                    "id": "feu_d_artifice",
+                    "nom": "Feu d’artifice",
+                    "reference": {
+                      "id": "feu_d_artifice",
+                      "nom": "Feu d’artifice"
+                    }
+                  },
+                  {
+                    "id": "fumee",
+                    "nom": "Fumée",
+                    "reference": {
+                      "id": "fumee",
+                      "nom": "Fumée"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Magicien / Niveau 2",
@@ -52838,7 +55710,51 @@
             "Clerc"
           ],
           "importKey": "rappel_a_la_vie|sort|clerc|5",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "clerc",
+                "level": 5,
+                "referenceName": "Rappel à la vie",
+                "foundryItemName": "Rappel à la Vie",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-clerc-niveau-5.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Rappel à la vie",
+                    "manualName": "Rappel à la vie",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": []
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Destruction de la vie",
+                    "manualName": "Destruction de la vie",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": []
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Clerc / Niveau 5",
@@ -53383,7 +56299,105 @@
             "Clerc"
           ],
           "importKey": "regeneration|sort|clerc|7",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "clerc",
+                "level": 7,
+                "referenceName": "Régénération",
+                "foundryItemName": "Régénération",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-clerc-niveau-7.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Régénération",
+                    "manualName": "Régénération",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "objet de prière",
+                        "eau maudite"
+                      ]
+                    },
+                    "materialReference": [
+                      {
+                        "nom": "objet de prière",
+                        "quantite": 1,
+                        "consommation": "non_consomme",
+                        "cout_po": null,
+                        "source": "Manuel des joueurs",
+                        "condition": null,
+                        "notes": null
+                      },
+                      {
+                        "nom": "eau maudite",
+                        "quantite": 1,
+                        "consommation": "optionnel",
+                        "cout_po": null,
+                        "source": "Manuel des joueurs",
+                        "condition": "Requise pour flétrissement ; alternative à l’eau bénite.",
+                        "notes": null
+                      }
+                    ]
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Flétrissement",
+                    "manualName": "Flétrissement",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "objet de prière",
+                        "eau bénite",
+                        "eau maudite"
+                      ]
+                    },
+                    "materialReference": [
+                      {
+                        "nom": "objet de prière",
+                        "quantite": 1,
+                        "consommation": "non_consomme",
+                        "cout_po": null,
+                        "source": "Manuel des joueurs",
+                        "condition": null,
+                        "notes": null
+                      },
+                      {
+                        "nom": "eau bénite",
+                        "quantite": 1,
+                        "consommation": "optionnel",
+                        "cout_po": null,
+                        "source": "Manuel des joueurs",
+                        "condition": "Requise pour régénération ; alternative à l’eau maudite.",
+                        "notes": null
+                      },
+                      {
+                        "nom": "eau maudite",
+                        "quantite": 1,
+                        "consommation": "optionnel",
+                        "cout_po": null,
+                        "source": "Manuel des joueurs",
+                        "condition": "Requise pour flétrissement ; alternative à l’eau bénite.",
+                        "notes": null
+                      }
+                    ]
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Clerc / Niveau 7",
@@ -54979,7 +57993,55 @@
             "Druide"
           ],
           "importKey": "respiration_aquatique|sort|druide|3",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "druide",
+                "level": 3,
+                "referenceName": "Respiration aquatique",
+                "foundryItemName": "Respiration aquatique",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-druide-niveau-3.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Respiration aquatique",
+                    "manualName": "Respiration aquatique",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "petit roseau ou un brin de paille"
+                      ]
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Respiration aérienne",
+                    "manualName": "Respiration aérienne",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "petit roseau ou un brin de paille"
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Druide / Niveau 3",
@@ -55097,7 +58159,81 @@
           "generatedStatus": "rules_to_complete_from_phb",
           "onUseGenerated": true,
           "importKey": "respiration_aquatique|sort|magicien|3",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "magicien",
+                "level": 3,
+                "referenceName": "Respiration aquatique",
+                "foundryItemName": "Respiration aquatique",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-magicien-niveau-3.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Respiration aquatique",
+                    "manualName": "Respiration aquatique",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        {
+                          "type": "alternative",
+                          "choix": [
+                            "petit roseau",
+                            "brin de paille"
+                          ]
+                        },
+                        {
+                          "type": "alternative",
+                          "choix": [
+                            "roseau",
+                            "brin de paille"
+                          ]
+                        }
+                      ]
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Respiration aérienne",
+                    "manualName": "Respiration aérienne",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        {
+                          "type": "alternative",
+                          "choix": [
+                            "petit roseau",
+                            "brin de paille"
+                          ]
+                        },
+                        {
+                          "type": "alternative",
+                          "choix": [
+                            "roseau",
+                            "brin de paille"
+                          ]
+                        }
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Druide / Niveau 3",
@@ -55337,7 +58473,51 @@
             "Clerc"
           ],
           "importKey": "restauration|sort|clerc|7",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "clerc",
+                "level": 7,
+                "referenceName": "Restauration",
+                "foundryItemName": "Restauration",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-clerc-niveau-7.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Restauration",
+                    "manualName": "Restauration",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": []
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Perte d’énergie",
+                    "manualName": "Perte d’énergie",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": []
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Clerc / Niveau 7",
@@ -55579,7 +58759,105 @@
             "Clerc"
           ],
           "importKey": "resurrection|sort|clerc|7",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "clerc",
+                "level": 7,
+                "referenceName": "Résurrection",
+                "foundryItemName": "Résurrection",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-clerc-niveau-7.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Résurrection",
+                    "manualName": "Résurrection",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "symbole sacré du clerc",
+                        "eau maudite"
+                      ]
+                    },
+                    "materialReference": [
+                      {
+                        "nom": "symbole sacré du clerc",
+                        "quantite": 1,
+                        "consommation": "non_consomme",
+                        "cout_po": null,
+                        "source": "Manuel des joueurs",
+                        "condition": null,
+                        "notes": null
+                      },
+                      {
+                        "nom": "eau maudite",
+                        "quantite": 1,
+                        "consommation": "optionnel",
+                        "cout_po": null,
+                        "source": "Manuel des joueurs",
+                        "condition": "Requise pour anéantissement ; alternative à l’eau bénite.",
+                        "notes": null
+                      }
+                    ]
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Anéantissement",
+                    "manualName": "Anéantissement",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "symbole sacré du clerc",
+                        "eau bénite",
+                        "eau maudite"
+                      ]
+                    },
+                    "materialReference": [
+                      {
+                        "nom": "symbole sacré du clerc",
+                        "quantite": 1,
+                        "consommation": "non_consomme",
+                        "cout_po": null,
+                        "source": "Manuel des joueurs",
+                        "condition": null,
+                        "notes": null
+                      },
+                      {
+                        "nom": "eau bénite",
+                        "quantite": 1,
+                        "consommation": "optionnel",
+                        "cout_po": null,
+                        "source": "Manuel des joueurs",
+                        "condition": "Requise pour résurrection ; alternative à l’eau maudite.",
+                        "notes": null
+                      },
+                      {
+                        "nom": "eau maudite",
+                        "quantite": 1,
+                        "consommation": "optionnel",
+                        "cout_po": null,
+                        "source": "Manuel des joueurs",
+                        "condition": "Requise pour anéantissement ; alternative à l’eau bénite.",
+                        "notes": null
+                      }
+                    ]
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Clerc / Niveau 7",
@@ -58380,7 +61658,55 @@
           "generatedStatus": "rules_to_complete_from_phb",
           "onUseGenerated": true,
           "importKey": "soin_ultime|sort|clerc|5",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "clerc",
+                "level": 5,
+                "referenceName": "Soin ultime",
+                "foundryItemName": "Soin ultime",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-clerc-niveau-5.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Soin ultime",
+                    "manualName": "Soin ultime",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "symbole sacré"
+                      ]
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Blessure ultime",
+                    "manualName": "Blessure ultime",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "symbole sacré"
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Druide / Niveau 6",
@@ -58524,7 +61850,55 @@
             "Druide"
           ],
           "importKey": "soin_ultime|sort|druide|6",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "druide",
+                "level": 6,
+                "referenceName": "Soin ultime",
+                "foundryItemName": "Soin ultime",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-druide-niveau-6.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Soin ultime",
+                    "manualName": "Soin ultime",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "gui"
+                      ]
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Blessure ultime",
+                    "manualName": "Blessure ultime",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "gui"
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Druide / Niveau 6",
@@ -58631,7 +62005,55 @@
           "generatedStatus": "rules_to_complete_from_phb",
           "onUseGenerated": true,
           "importKey": "soins_majeurs|sort|druide|4",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "druide",
+                "level": 4,
+                "referenceName": "Soins majeurs",
+                "foundryItemName": "Soins majeurs",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-druide-niveau-4.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Soins majeurs",
+                    "manualName": "Soins majeurs",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "gui"
+                      ]
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Blessures majeures",
+                    "manualName": "Blessures majeures",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "gui"
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Clerc / Niveau 4",
@@ -58885,7 +62307,55 @@
           "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
           "dispatchSource": "export game.items",
           "importKey": "soins_majeurs|sort|clerc|4",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "clerc",
+                "level": 4,
+                "referenceName": "Soins majeurs",
+                "foundryItemName": "Soins Majeurs",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-clerc-niveau-4.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Soins majeurs",
+                    "manualName": "Soins majeurs",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "gui"
+                      ]
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Blessures majeures",
+                    "manualName": "Blessures majeures",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "gui"
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Clerc / Niveau 4",
@@ -58993,7 +62463,55 @@
           "canonicalSpellFields": {
             "version": "2026-06-16-cleric-l1-canonical-fields-v3"
           },
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "clerc",
+                "level": 1,
+                "referenceName": "Soins mineurs",
+                "foundryItemName": "Soins mineurs",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-clerc-niveau-1.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Soins mineurs",
+                    "manualName": "Soins mineurs",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "symbole sacré"
+                      ]
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Blessures mineures",
+                    "manualName": "Blessures mineures",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "symbole sacré"
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Druide / Niveau 2",
@@ -59138,7 +62656,57 @@
             "Druide"
           ],
           "importKey": "soins_mineurs|sort|druide|2",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "druide",
+                "level": 2,
+                "referenceName": "Soins mineurs",
+                "foundryItemName": "Soins mineurs",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-druide-niveau-2.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Soins mineurs",
+                    "manualName": "Soins mineurs",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "symbole sacré du clerc",
+                        "petit miroir en argent"
+                      ]
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Blessures mineures",
+                    "manualName": "Blessures mineures",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "symbole sacré du clerc",
+                        "petit miroir en argent"
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Druide / Niveau 2",
@@ -59858,7 +63426,185 @@
             "Illusionniste"
           ],
           "importKey": "sorts_de_niveau_1_de_magicien|sort|illusionniste|7",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "variant": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "profiles": [
+              {
+                "class": "illusionniste",
+                "level": 7,
+                "referenceName": "Sorts de niveau 1 de magicien",
+                "foundryItemName": "Sorts de niveau 1 de magicien",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-sorts-master.json",
+                  "audit/reference/manuel-joueurs-illusionniste-niveau-7.json"
+                ],
+                "choices": [
+                  {
+                    "id": "agrandissement",
+                    "nom": "Agrandissement",
+                    "reference": {
+                      "id": "agrandissement",
+                      "nom": "Agrandissement"
+                    }
+                  },
+                  {
+                    "id": "alteration_des_feux_normaux",
+                    "nom": "Altération des feux normaux",
+                    "reference": {
+                      "id": "alteration_des_feux_normaux",
+                      "nom": "Altération des feux normaux"
+                    }
+                  },
+                  {
+                    "id": "amitie",
+                    "nom": "Amitié",
+                    "reference": {
+                      "id": "amitie",
+                      "nom": "Amitié"
+                    }
+                  },
+                  {
+                    "id": "aura_magique_de_nystul",
+                    "nom": "Aura magique de Nystul",
+                    "reference": {
+                      "id": "aura_magique_de_nystul",
+                      "nom": "Aura magique de Nystul"
+                    }
+                  },
+                  {
+                    "id": "bouclier",
+                    "nom": "Bouclier",
+                    "reference": {
+                      "id": "bouclier",
+                      "nom": "Bouclier"
+                    }
+                  },
+                  {
+                    "id": "charme_personnes",
+                    "nom": "Charme-personnes",
+                    "reference": {
+                      "id": "charme_personnes",
+                      "nom": "Charme-personnes"
+                    }
+                  },
+                  {
+                    "id": "chute_de_plume",
+                    "nom": "Chute de plume",
+                    "reference": {
+                      "id": "chute_de_plume",
+                      "nom": "Chute de plume"
+                    }
+                  },
+                  {
+                    "id": "comprehension_des_langues",
+                    "nom": "Compréhension des langues",
+                    "reference": {
+                      "id": "comprehension_des_langues",
+                      "nom": "Compréhension des langues"
+                    }
+                  },
+                  {
+                    "id": "disque_flottant_de_tenser",
+                    "nom": "Disque flottant de Tenser",
+                    "reference": {
+                      "id": "disque_flottant_de_tenser",
+                      "nom": "Disque flottant de Tenser"
+                    }
+                  },
+                  {
+                    "id": "effacement",
+                    "nom": "Effacement",
+                    "reference": {
+                      "id": "effacement",
+                      "nom": "Effacement"
+                    }
+                  },
+                  {
+                    "id": "fermeture",
+                    "nom": "Fermeture",
+                    "reference": {
+                      "id": "fermeture",
+                      "nom": "Fermeture"
+                    }
+                  },
+                  {
+                    "id": "lecture_de_la_magie",
+                    "nom": "Lecture de la magie",
+                    "reference": {
+                      "id": "lecture_de_la_magie",
+                      "nom": "Lecture de la magie"
+                    }
+                  },
+                  {
+                    "id": "mains_brulantes",
+                    "nom": "Mains brûlantes",
+                    "reference": {
+                      "id": "mains_brulantes",
+                      "nom": "Mains brûlantes"
+                    }
+                  },
+                  {
+                    "id": "message",
+                    "nom": "Message",
+                    "reference": {
+                      "id": "message",
+                      "nom": "Message"
+                    }
+                  },
+                  {
+                    "id": "poigne_electrique",
+                    "nom": "Poigne électrique",
+                    "reference": {
+                      "id": "poigne_electrique",
+                      "nom": "Poigne électrique"
+                    }
+                  },
+                  {
+                    "id": "projectile_magique",
+                    "nom": "Projectile magique",
+                    "reference": {
+                      "id": "projectile_magique",
+                      "nom": "Projectile magique"
+                    }
+                  },
+                  {
+                    "id": "protection_contre_le_mal",
+                    "nom": "Protection contre le mal",
+                    "reference": {
+                      "id": "protection_contre_le_mal",
+                      "nom": "Protection contre le mal"
+                    }
+                  },
+                  {
+                    "id": "reparation",
+                    "nom": "Réparation",
+                    "reference": {
+                      "id": "reparation",
+                      "nom": "Réparation"
+                    }
+                  },
+                  {
+                    "id": "serviteur_invisible",
+                    "nom": "Serviteur invisible",
+                    "reference": {
+                      "id": "serviteur_invisible",
+                      "nom": "Serviteur invisible"
+                    }
+                  },
+                  {
+                    "id": "sommeil",
+                    "nom": "Sommeil",
+                    "reference": {
+                      "id": "sommeil",
+                      "nom": "Sommeil"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Illusionniste / Niveau 7",
@@ -60596,7 +64342,55 @@
             "Magicien"
           ],
           "importKey": "stase_temporelle|sort|magicien|9",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "magicien",
+                "level": 9,
+                "referenceName": "Stase temporelle",
+                "foundryItemName": "Stase temporelle",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-magicien-niveau-9.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Stase temporelle",
+                    "manualName": "Stase temporelle",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "Poudre composée de diamant"
+                      ]
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Rétablissement temporel",
+                    "manualName": "Rétablissement temporel",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "Poudre composée de diamant"
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Magicien / Niveau 9",
@@ -62085,7 +65879,55 @@
             "Druide"
           ],
           "importKey": "tempete_de_feu|sort|druide|7",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "druide",
+                "level": 7,
+                "referenceName": "Tempête de feu",
+                "foundryItemName": "Tempête de feu",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-druide-niveau-7.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Tempête de feu",
+                    "manualName": "Tempête de feu",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "gui"
+                      ]
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Dissipation du feu",
+                    "manualName": "Dissipation du feu",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "gui"
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Druide / Niveau 7",
@@ -63650,7 +67492,59 @@
             "Druide"
           ],
           "importKey": "transmutation_de_pierre_en_boue|sort|druide|5",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "druide",
+                "level": 5,
+                "referenceName": "Transmutation de pierre en boue",
+                "foundryItemName": "Transmutation de pierre en boue",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-druide-niveau-5.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Transmutation de pierre en boue",
+                    "manualName": "Transmutation de pierre en boue",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "l’eau",
+                        "de l’argile (eau",
+                        "sable pour l’inverse)"
+                      ]
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Transmutation de boue en pierre",
+                    "manualName": "Transmutation de boue en pierre",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "l’eau",
+                        "de l’argile (eau",
+                        "sable pour l’inverse)"
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Druide / Niveau 5",
@@ -63757,7 +67651,59 @@
           "generatedStatus": "rules_to_complete_from_phb",
           "onUseGenerated": true,
           "importKey": "transmutation_de_pierre_en_boue|sort|magicien|5",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "magicien",
+                "level": 5,
+                "referenceName": "Transmutation de pierre en boue",
+                "foundryItemName": "Transmutation de pierre en boue",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-magicien-niveau-5.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Transmutation de pierre en boue",
+                    "manualName": "Transmutation de pierre en boue",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "eau",
+                        "argile",
+                        "sable"
+                      ]
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Transmutation de boue en pierre",
+                    "manualName": "Transmutation de boue en pierre",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "eau",
+                        "argile",
+                        "sable"
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Druide / Niveau 5",
@@ -63902,7 +67848,57 @@
             "Magicien"
           ],
           "importKey": "transmutation_de_pierre_en_chair|sort|magicien|6",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "magicien",
+                "level": 6,
+                "referenceName": "Transmutation de pierre en chair",
+                "foundryItemName": "Transmutation de pierre en chair",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-magicien-niveau-6.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Transmutation de pierre en chair",
+                    "manualName": "Transmutation de pierre en chair",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "goutte de sang",
+                        "Chaux"
+                      ]
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Transmutation de chair en pierre",
+                    "manualName": "Transmutation de chair en pierre",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "goutte de sang",
+                        "Chaux"
+                      ]
+                    },
+                    "materialReference": []
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Magicien / Niveau 6",
@@ -65518,7 +69514,95 @@
           "generatedStatus": "rules_to_complete_from_phb",
           "onUseGenerated": true,
           "importKey": "vision_reelle|sort|clerc|5",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "reversible": {
+            "version": "2026-06-20-reference-flags-v3-preserve-v3",
+            "managedBy": "normalize-fvtt-spells-materials-v3",
+            "enabled": true,
+            "choiceTiming": "memorization",
+            "splitOnActorGrant": true,
+            "profiles": [
+              {
+                "class": "clerc",
+                "level": 5,
+                "referenceName": "Vision réelle",
+                "foundryItemName": "Vision réelle",
+                "referenceFiles": [
+                  "audit/reference/manuel-joueurs-clerc-niveau-5.json",
+                  "audit/reference/manuel-joueurs-reversibilite.json"
+                ],
+                "reversible": true,
+                "inverseNameStatus": "manual_explicit",
+                "modes": [
+                  {
+                    "id": "normal",
+                    "actorItemName": "Vision réelle",
+                    "manualName": "Vision réelle",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "crème pour les yeux faite de poudre de champignons très rares, de safran et de graisse",
+                        "crème faite d’huile, de poudre de pavot et d’essence d’orchidée rose"
+                      ]
+                    },
+                    "materialReference": [
+                      {
+                        "nom": "crème pour les yeux faite de poudre de champignons très rares, de safran et de graisse",
+                        "quantite": 1,
+                        "consommation": "optionnel",
+                        "cout_po": null,
+                        "source": "Manuel des joueurs",
+                        "condition": "Requise pour vision réelle.",
+                        "notes": "La crème doit être vieille de 1 à 6 mois."
+                      },
+                      {
+                        "nom": "crème faite d’huile, de poudre de pavot et d’essence d’orchidée rose",
+                        "quantite": 1,
+                        "consommation": "optionnel",
+                        "cout_po": null,
+                        "source": "Manuel des joueurs",
+                        "condition": "Requise pour vision erronée.",
+                        "notes": "La crème doit être vieille de 1 à 6 mois."
+                      }
+                    ]
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Vision erronée",
+                    "manualName": "Vision erronée",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [
+                        "crème pour les yeux faite de poudre de champignons très rares, de safran et de graisse",
+                        "crème faite d’huile, de poudre de pavot et d’essence d’orchidée rose"
+                      ]
+                    },
+                    "materialReference": [
+                      {
+                        "nom": "crème pour les yeux faite de poudre de champignons très rares, de safran et de graisse",
+                        "quantite": 1,
+                        "consommation": "optionnel",
+                        "cout_po": null,
+                        "source": "Manuel des joueurs",
+                        "condition": "Requise pour vision réelle.",
+                        "notes": "La crème doit être vieille de 1 à 6 mois."
+                      },
+                      {
+                        "nom": "crème faite d’huile, de poudre de pavot et d’essence d’orchidée rose",
+                        "quantite": 1,
+                        "consommation": "optionnel",
+                        "cout_po": null,
+                        "source": "Manuel des joueurs",
+                        "condition": "Requise pour vision erronée.",
+                        "notes": "La crème doit être vieille de 1 à 6 mois."
+                      }
+                    ]
+                  }
+                ],
+                "splitOnActorGrant": true
+              }
+            ]
+          }
         },
         "add2eExport": {
           "folderPath": "Sorts / Illusionniste / Niveau 6",
@@ -67960,6 +72044,6 @@
       "sort": 0
     }
   ],
-  "normalizedBy": "2026-06-19-normalize-components-v23",
-  "normalizedAt": "2026-06-19T19:36:00.924Z"
+  "normalizedBy": "2026-06-20-reference-flags-v3-preserve-v3",
+  "normalizedAt": "2026-06-20T20:00:49.253Z"
 }
