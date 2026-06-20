@@ -40,7 +40,8 @@
         "img": "systems/add2e/assets/icones/sorts/changement-de-plan.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/changement-de-plan.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 2,
@@ -90,7 +91,8 @@
         "img": "systems/add2e/assets/icones/sorts/communion.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/communion.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 3,
@@ -141,7 +143,8 @@
         "img": "systems/add2e/assets/icones/sorts/dissipation-du-mal.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/dissipation-du-mal.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 4,
@@ -200,7 +203,8 @@
         "img": "systems/add2e/assets/icones/sorts/penitence.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/penitence.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 5,
@@ -250,7 +254,8 @@
         "img": "systems/add2e/assets/icones/sorts/fleau-d-insectes.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/fleau-d-insectes.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 6,
@@ -282,7 +287,8 @@
         "img": "systems/add2e/assets/icones/sorts/colonne-de-feu.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/colonne-de-feu.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 7,
@@ -314,7 +320,8 @@
         "img": "systems/add2e/assets/icones/sorts/quete-religieuse.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/quete-religieuse.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 8,
@@ -336,7 +343,8 @@
         "img": "systems/add2e/assets/icones/sorts/rappel-a-la-vie.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/rappel-a-la-vie.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 9,
@@ -358,7 +366,8 @@
         "img": "systems/add2e/assets/icones/sorts/soin-ultime.webp",
         "onUse": "systems/add2e/scripts/sorts/soin-ultime.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 10,
@@ -399,7 +408,8 @@
         "img": "systems/add2e/assets/icones/sorts/vision-reelle.webp",
         "onUse": "systems/add2e/scripts/sorts/vision-reelle.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     }
   ]
 }

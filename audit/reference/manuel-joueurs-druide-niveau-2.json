@@ -1,1 +1,131 @@
-{"source":{"document":"AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf","reference":"Manuel des joueurs AD&D 2e","classe":"druide","niveau":2,"note":"Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."},"status":"reference_liste_noms_complete_regles_a_completer","expectedCount":12,"foundryExport":"audit/decoupage_fichier/druide-niveau-2.json","rules":{"included":["nom du sort","classe","niveau","ordre dans le tableau du Manuel des joueurs","nombre de sorts attendu","variantes explicitement nommées dans le Manuel des joueurs"],"warning":"Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis.","variantes":"Le tableau variantes est vide lorsqu’aucun choix de forme explicitement nommé ne figure dans le Manuel des joueurs."},"spells":[{"ordre":1,"nom":"Aquagenèse","niveau":2,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":2,"nom":"Catalepsie","niveau":2,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":3,"nom":"\u0043harme\u002dpersonnes ou mammifères","niveau":2,"variantes":[{"id":"personnes","nom":"Personnes"},{"id":"mammiferes","nom":"Mammifères"}],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":4,"nom":"\u0043roc\u002den\u002djambe","niveau":2,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":5,"nom":"Distorsion du bois","niveau":2,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":6,"nom":"Flamme","niveau":2,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":7,"nom":"Localisation des plantes","niveau":2,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":8,"nom":"Métal brûlant","niveau":2,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":9,"nom":"Obscurcissement","niveau":2,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":10,"nom":"Peau d'écorce","niveau":2,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":11,"nom":"Piège à feu","niveau":2,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":12,"nom":"Soins mineurs","niveau":2,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"}]}
+{
+  "source": {
+    "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf",
+    "reference": "Manuel des joueurs AD&D 2e",
+    "classe": "druide",
+    "niveau": 2,
+    "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
+  },
+  "status": "reference_liste_noms_complete_regles_a_completer",
+  "expectedCount": 12,
+  "foundryExport": "audit/decoupage_fichier/druide-niveau-2.json",
+  "rules": {
+    "included": [
+      "nom du sort",
+      "classe",
+      "niveau",
+      "ordre dans le tableau du Manuel des joueurs",
+      "nombre de sorts attendu",
+      "variantes explicitement nommées dans le Manuel des joueurs"
+    ],
+    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis.",
+    "variantes": "Le tableau variantes est vide lorsqu’aucun choix de forme explicitement nommé ne figure dans le Manuel des joueurs."
+  },
+  "spells": [
+    {
+      "ordre": 1,
+      "nom": "Aquagenèse",
+      "niveau": 2,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 2,
+      "nom": "Catalepsie",
+      "niveau": 2,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 3,
+      "nom": "Charme-personnes ou mammifères",
+      "niveau": 2,
+      "variantes": [
+        {
+          "id": "personnes",
+          "nom": "Personnes"
+        },
+        {
+          "id": "mammiferes",
+          "nom": "Mammifères"
+        }
+      ],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 4,
+      "nom": "Croc-en-jambe",
+      "niveau": 2,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 5,
+      "nom": "Distorsion du bois",
+      "niveau": 2,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 6,
+      "nom": "Flamme",
+      "niveau": 2,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 7,
+      "nom": "Localisation des plantes",
+      "niveau": 2,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 8,
+      "nom": "Métal brûlant",
+      "niveau": 2,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 9,
+      "nom": "Obscurcissement",
+      "niveau": 2,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 10,
+      "nom": "Peau d'écorce",
+      "niveau": 2,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 11,
+      "nom": "Piège à feu",
+      "niveau": 2,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 12,
+      "nom": "Soins mineurs",
+      "niveau": 2,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    }
+  ]
+}

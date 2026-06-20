@@ -29,7 +29,8 @@
         "img": "systems/add2e/assets/icones/sorts/animation-d-un-objet.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/animation-d-un-objet.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 2,
@@ -50,7 +51,8 @@
         "img": "systems/add2e/assets/icones/sorts/barriere-de-lames.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/barriere-de-lames.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 3,
@@ -72,7 +74,8 @@
         "img": "systems/add2e/assets/icones/sorts/guerison.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/guerison.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 4,
@@ -93,7 +96,8 @@
         "img": "systems/add2e/assets/icones/sorts/invocation-des-animaux.webp",
         "onUse": "systems/add2e/scripts/sorts/invocation-des-animaux.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 5,
@@ -114,7 +118,8 @@
         "img": "systems/add2e/assets/icones/sorts/langage-des-monstres.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/langage-des-monstres.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 6,
@@ -154,7 +159,8 @@
         "img": "systems/add2e/assets/icones/sorts/pierres-parlantes.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/pierres-parlantes.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 7,
@@ -186,7 +192,8 @@
         "img": "systems/add2e/assets/icones/sorts/orientation.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/orientation.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 8,
@@ -207,7 +214,8 @@
         "img": "systems/add2e/assets/icones/sorts/mot-de-rappel.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/mot-de-rappel.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 9,
@@ -239,7 +247,8 @@
         "img": "systems/add2e/assets/icones/sorts/separation-des-eaux.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/separation-des-eaux.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 10,
@@ -260,7 +269,8 @@
         "img": "systems/add2e/assets/icones/sorts/serviteur-aerien.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/serviteur-aerien.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     }
   ]
 }

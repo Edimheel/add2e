@@ -57,7 +57,8 @@
         "img": "systems/add2e/assets/icones/sorts/controle-du-climat.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/controle-du-climat.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 2,
@@ -106,7 +107,8 @@
         "img": "systems/add2e/assets/icones/sorts/marche-sur-le-vent.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/marche-sur-le-vent.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 3,
@@ -127,7 +129,8 @@
         "img": "systems/add2e/assets/icones/sorts/parole-sacree.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/parole-sacree.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 4,
@@ -178,7 +181,8 @@
         "img": "systems/add2e/assets/icones/sorts/regeneration.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/regeneration.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 5,
@@ -200,7 +204,8 @@
         "img": "systems/add2e/assets/icones/sorts/restauration.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/restauration.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 6,
@@ -251,7 +256,8 @@
         "img": "systems/add2e/assets/icones/sorts/resurrection.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/resurrection.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 7,
@@ -272,7 +278,8 @@
         "img": "systems/add2e/assets/icones/sorts/seuil.webp",
         "onUse": "systems/add2e/scripts/sorts/seuil.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 8,
@@ -293,7 +300,8 @@
         "img": "systems/add2e/assets/icones/sorts/sort-astral.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/sort-astral.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 9,
@@ -333,7 +341,8 @@
         "img": "systems/add2e/assets/icones/sorts/symbole.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/symbole.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 10,
@@ -383,7 +392,8 @@
         "img": "systems/add2e/assets/icones/sorts/tremblement-de-terre.webp",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/tremblement-de-terre.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     }
   ]
 }

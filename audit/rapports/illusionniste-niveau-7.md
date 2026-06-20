@@ -1,6 +1,6 @@
 # Audit automatique — illusionniste-niveau-7
 
-Généré le : 2026-06-20T14:29:39.656Z
+Généré le : 2026-06-20T14:32:02.262Z
 
 ## Fichiers
 
@@ -12,7 +12,7 @@ Généré le : 2026-06-20T14:29:39.656Z
 - Classe : `illusionniste`
 - Niveau : `7`
 - Sorts dans l’export : `6`
-- Sorts attendus par la référence : `5`
+- Sorts attendus par la référence : `6`
 - Sorts manquants : `0`
 - Écarts de nom : `0`
 
@@ -25,10 +25,7 @@ Généré le : 2026-06-20T14:29:39.656Z
 | Mur prismatique | OK | OK | OK | V, S |
 | Sort astral | OK | OK | OK | a_completer |
 | Vision | OK | OK | OK | Sacrifice de quelque chose ayant de la valeur pour le lanceur de sort |
-
-## Sorts présents hors correspondance stricte
-
-- Sorts de niveau 1 de magicien
+| Sorts de niveau 1 de magicien | OK | OK | Manquante : assets/icones/sorts/illusionniste-sorts-de-niveau-1-de-magicien.webp | V, S, M |
 
 ## Statut
 

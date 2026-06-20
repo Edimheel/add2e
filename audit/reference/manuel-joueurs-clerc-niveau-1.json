@@ -30,7 +30,8 @@
         "img": "systems/add2e/assets/icones/sorts/apaisement.webp",
         "onUse": "systems/add2e/scripts/sorts/apaisement.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 2,
@@ -71,7 +72,8 @@
         "img": "systems/add2e/assets/icones/sorts/creation-d-eau.webp",
         "onUse": "systems/add2e/scripts/sorts/creation-d-eau.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 3,
@@ -112,7 +114,8 @@
         "img": "systems/add2e/assets/icones/sorts/benediction.webp",
         "onUse": "systems/add2e/scripts/sorts/benediction.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 4,
@@ -133,7 +136,8 @@
         "img": "systems/add2e/assets/icones/sorts/detection-de-la-magie.webp",
         "onUse": "systems/add2e/scripts/sorts/detection-de-la-magie.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 5,
@@ -155,7 +159,8 @@
         "img": "systems/add2e/assets/icones/sorts/detection-du-mal.webp",
         "onUse": "systems/add2e/scripts/sorts/detection-du-mal.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 6,
@@ -176,7 +181,8 @@
         "img": "systems/add2e/assets/icones/sorts/injonction.webp",
         "onUse": "systems/add2e/scripts/sorts/injonction.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 7,
@@ -198,7 +204,8 @@
         "img": "systems/add2e/assets/icones/sorts/lumiere.webp",
         "onUse": "systems/add2e/scripts/sorts/lumiere.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 8,
@@ -220,7 +227,8 @@
         "img": "systems/add2e/assets/icones/sorts/protection-contre-le-mal.webp",
         "onUse": "systems/add2e/scripts/sorts/protection-contre-le-mal.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 9,
@@ -242,7 +250,8 @@
         "img": "systems/add2e/assets/icones/sorts/purification-de-leau-et-des-aliments.webp",
         "onUse": "systems/add2e/scripts/sorts/purification-de-leau-et-des-aliments.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 10,
@@ -273,7 +282,8 @@
         "img": "systems/add2e/assets/icones/sorts/resistance-au-froid.webp",
         "onUse": "systems/add2e/scripts/sorts/resistance-au-froid.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 11,
@@ -313,7 +323,8 @@
         "img": "systems/add2e/assets/icones/sorts/sanctuaire.webp",
         "onUse": "systems/add2e/scripts/sorts/sanctuaire.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 12,
@@ -335,7 +346,8 @@
         "img": "systems/add2e/assets/icones/sorts/soins-mineurs.webp",
         "onUse": "systems/add2e/scripts/sorts/soins-mineurs.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     }
   ]
 }

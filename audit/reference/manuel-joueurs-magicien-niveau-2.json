@@ -1,1 +1,227 @@
-{"source":{"document":"AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf","reference":"Manuel des joueurs AD&D 2e","classe":"magicien","niveau":2,"note":"Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."},"status":"reference_liste_noms_complete_regles_a_completer","expectedCount":24,"foundryExport":"audit/decoupage_fichier/magicien-niveau-2.json","rules":{"included":["nom du sort","classe","niveau","ordre dans le tableau du Manuel des joueurs","nombre de sorts attendu","variantes explicitement nommées dans le Manuel des joueurs"],"warning":"Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis.","variantes":"Le tableau variantes est vide lorsqu’aucun choix de forme explicitement nommé ne figure dans le Manuel des joueurs."},"spells":[{"ordre":1,"nom":"Bouche magique","niveau":2,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":2,"nom":"Bruitage","niveau":2,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":3,"nom":"Corde enchantée","niveau":2,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":4,"nom":"Détection de l'invisibilité","niveau":2,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":5,"nom":"Détection du mal","niveau":2,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":6,"nom":"E.S.P.","niveau":2,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":7,"nom":"Force","niveau":2,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":8,"nom":"Fracassement","niveau":2,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":9,"nom":"Image miroir","niveau":2,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":10,"nom":"Invisibilité","niveau":2,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":11,"nom":"Lévitation","niveau":2,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":12,"nom":"Localisation d'objets","niveau":2,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":13,"nom":"Lumière éternelle","niveau":2,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":14,"nom":"Nuage puant","niveau":2,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":15,"nom":"Or des fous","niveau":2,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":16,"nom":"Oubli","niveau":2,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":17,"nom":"Ouverture","niveau":2,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":18,"nom":"Peur","niveau":2,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":19,"nom":"Piège de Léomund","niveau":2,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":20,"nom":"Pyrotechnie","niveau":2,"variantes":[{"id":"feu_d_artifice","nom":"Feu d’artifice"},{"id":"fumee","nom":"Fumée"}],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":21,"nom":"Rayon d'affaiblissement","niveau":2,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":22,"nom":"Ténèbres sur 5 mètres","niveau":2,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":23,"nom":"Toile d'araignée","niveau":2,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":24,"nom":"Verrou magique","niveau":2,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"}]}
+{
+  "source": {
+    "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf",
+    "reference": "Manuel des joueurs AD&D 2e",
+    "classe": "magicien",
+    "niveau": 2,
+    "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
+  },
+  "status": "reference_liste_noms_complete_regles_a_completer",
+  "expectedCount": 24,
+  "foundryExport": "audit/decoupage_fichier/magicien-niveau-2.json",
+  "rules": {
+    "included": [
+      "nom du sort",
+      "classe",
+      "niveau",
+      "ordre dans le tableau du Manuel des joueurs",
+      "nombre de sorts attendu",
+      "variantes explicitement nommées dans le Manuel des joueurs"
+    ],
+    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis.",
+    "variantes": "Le tableau variantes est vide lorsqu’aucun choix de forme explicitement nommé ne figure dans le Manuel des joueurs."
+  },
+  "spells": [
+    {
+      "ordre": 1,
+      "nom": "Bouche magique",
+      "niveau": 2,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 2,
+      "nom": "Bruitage",
+      "niveau": 2,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 3,
+      "nom": "Corde enchantée",
+      "niveau": 2,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 4,
+      "nom": "Détection de l'invisibilité",
+      "niveau": 2,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 5,
+      "nom": "Détection du mal",
+      "niveau": 2,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 6,
+      "nom": "E.S.P.",
+      "niveau": 2,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 7,
+      "nom": "Force",
+      "niveau": 2,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 8,
+      "nom": "Fracassement",
+      "niveau": 2,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 9,
+      "nom": "Image miroir",
+      "niveau": 2,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 10,
+      "nom": "Invisibilité",
+      "niveau": 2,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 11,
+      "nom": "Lévitation",
+      "niveau": 2,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 12,
+      "nom": "Localisation d'objets",
+      "niveau": 2,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 13,
+      "nom": "Lumière éternelle",
+      "niveau": 2,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 14,
+      "nom": "Nuage puant",
+      "niveau": 2,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 15,
+      "nom": "Or des fous",
+      "niveau": 2,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 16,
+      "nom": "Oubli",
+      "niveau": 2,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 17,
+      "nom": "Ouverture",
+      "niveau": 2,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 18,
+      "nom": "Peur",
+      "niveau": 2,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 19,
+      "nom": "Piège de Léomund",
+      "niveau": 2,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 20,
+      "nom": "Pyrotechnie",
+      "niveau": 2,
+      "variantes": [
+        {
+          "id": "feu_d_artifice",
+          "nom": "Feu d’artifice"
+        },
+        {
+          "id": "fumee",
+          "nom": "Fumée"
+        }
+      ],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 21,
+      "nom": "Rayon d'affaiblissement",
+      "niveau": 2,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 22,
+      "nom": "Ténèbres sur 5 mètres",
+      "niveau": 2,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 23,
+      "nom": "Toile d'araignée",
+      "niveau": 2,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 24,
+      "nom": "Verrou magique",
+      "niveau": 2,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    }
+  ]
+}

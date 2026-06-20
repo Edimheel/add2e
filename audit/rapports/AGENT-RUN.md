@@ -1,14 +1,14 @@
 # Agent run
 
-Run at: 2026-06-20T12:47:31.826Z
+Run at: 2026-06-20T14:32:02.299Z
 Status: ok_finished
 Run completed: true
 Mode: audit_and_plan
 Production writes: false
 OnUse creation: false
 Total lots: 30
-Lots with findings: 3
-Planned actions: 3
+Lots with findings: 4
+Planned actions: 4
 Next lot: magicien-niveau-1
 
 ## Actions
@@ -19,8 +19,8 @@ Status: ok
 
 ```text
 Références créées : 0
-Références enrichies : 20
-Références détaillées conservées : 10
+Références enrichies : 23
+Références détaillées conservées : 7
 Lots sans liste maître : 0
 ```
 
@@ -40,4 +40,5 @@ Références manquantes : 0
 | --- | ---: | ---: | ---: | ---: |
 | magicien-niveau-1 | 30 | 30 | 0 | 1 |
 | magicien-niveau-2 | 24 | 23 | 0 | 1 |
+| magicien-niveau-5 | 24 | 25 | 1 | 0 |
 | illusionniste-niveau-1 | 12 | 11 | 0 | 1 |

@@ -1,1 +1,163 @@
-{"source":{"document":"AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf","reference":"Manuel des joueurs AD&D 2e","classe":"magicien","niveau":8,"note":"Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."},"status":"reference_liste_noms_complete_regles_a_completer","expectedCount":16,"foundryExport":"audit/decoupage_fichier/magicien-niveau-8.json","rules":{"included":["nom du sort","classe","niveau","ordre dans le tableau du Manuel des joueurs","nombre de sorts attendu","variantes explicitement nommées dans le Manuel des joueurs"],"warning":"Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis.","variantes":"Le tableau variantes est vide lorsqu’aucun choix de forme explicitement nommé ne figure dans le Manuel des joueurs."},"spells":[{"ordre":1,"nom":"Antipathie/sympathie","niveau":8,"variantes":[{"id":"antipathie","nom":"Antipathie"},{"id":"sympathie","nom":"Sympathie"}],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":2,"nom":"\u0043harme-masse","niveau":8,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":3,"nom":"Clone","niveau":8,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":4,"nom":"Cristairain","niveau":8,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":5,"nom":"Danse irrésistible d'Otto","niveau":8,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":6,"nom":"Emprisonnement de l'âme","niveau":8,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":7,"nom":"Immunité magique de Serten","niveau":8,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":8,"nom":"Invocation de \u006d\u006f\u006e\u0073\u0074\u0072\u0065 VI","niveau":8,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":9,"nom":"Labyrinthe","niveau":8,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":10,"nom":"Mot de pouvoir : « cécité »","niveau":8,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":11,"nom":"Nuage incendiaire","niveau":8,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":12,"nom":"Permanence","niveau":8,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":13,"nom":"Poing de Bigby","niveau":8,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":14,"nom":"Protection d'esprit","niveau":8,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":15,"nom":"Symbole","niveau":8,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"},{"ordre":16,"nom":"Transformation d'objets","niveau":8,"variantes":[],"status":"nom_reference_tableau_manuel_joueurs","regles_detaillees":"a_completer_depuis_description_du_sort"}]}
+{
+  "source": {
+    "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf",
+    "reference": "Manuel des joueurs AD&D 2e",
+    "classe": "magicien",
+    "niveau": 8,
+    "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
+  },
+  "status": "reference_liste_noms_complete_regles_a_completer",
+  "expectedCount": 16,
+  "foundryExport": "audit/decoupage_fichier/magicien-niveau-8.json",
+  "rules": {
+    "included": [
+      "nom du sort",
+      "classe",
+      "niveau",
+      "ordre dans le tableau du Manuel des joueurs",
+      "nombre de sorts attendu",
+      "variantes explicitement nommées dans le Manuel des joueurs"
+    ],
+    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis.",
+    "variantes": "Le tableau variantes est vide lorsqu’aucun choix de forme explicitement nommé ne figure dans le Manuel des joueurs."
+  },
+  "spells": [
+    {
+      "ordre": 1,
+      "nom": "Antipathie/sympathie",
+      "niveau": 8,
+      "variantes": [
+        {
+          "id": "antipathie",
+          "nom": "Antipathie"
+        },
+        {
+          "id": "sympathie",
+          "nom": "Sympathie"
+        }
+      ],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 2,
+      "nom": "Charme-masse",
+      "niveau": 8,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 3,
+      "nom": "Clone",
+      "niveau": 8,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 4,
+      "nom": "Cristairain",
+      "niveau": 8,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 5,
+      "nom": "Danse irrésistible d'Otto",
+      "niveau": 8,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 6,
+      "nom": "Emprisonnement de l'âme",
+      "niveau": 8,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 7,
+      "nom": "Immunité magique de Serten",
+      "niveau": 8,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 8,
+      "nom": "Invocation de monstre VI",
+      "niveau": 8,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 9,
+      "nom": "Labyrinthe",
+      "niveau": 8,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 10,
+      "nom": "Mot de pouvoir : « cécité »",
+      "niveau": 8,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 11,
+      "nom": "Nuage incendiaire",
+      "niveau": 8,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 12,
+      "nom": "Permanence",
+      "niveau": 8,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 13,
+      "nom": "Poing de Bigby",
+      "niveau": 8,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 14,
+      "nom": "Protection d'esprit",
+      "niveau": 8,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 15,
+      "nom": "Symbole",
+      "niveau": 8,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    },
+    {
+      "ordre": 16,
+      "nom": "Transformation d'objets",
+      "niveau": 8,
+      "variantes": [],
+      "status": "nom_reference_tableau_manuel_joueurs",
+      "regles_detaillees": "a_completer_depuis_description_du_sort"
+    }
+  ]
+}

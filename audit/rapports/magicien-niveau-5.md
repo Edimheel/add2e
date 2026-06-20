@@ -1,6 +1,6 @@
 # Audit automatique — magicien-niveau-5
 
-Généré le : 2026-06-20T14:29:39.671Z
+Généré le : 2026-06-20T14:32:02.278Z
 
 ## Fichiers
 
@@ -13,7 +13,7 @@ Généré le : 2026-06-20T14:29:39.671Z
 - Niveau : `5`
 - Sorts dans l’export : `25`
 - Sorts attendus par la référence : `24`
-- Sorts manquants : `0`
+- Sorts manquants : `1`
 - Écarts de nom : `0`
 
 ## Comparaison à la référence
@@ -41,13 +41,18 @@ Généré le : 2026-06-20T14:29:39.671Z
 | Nuage létal | OK | OK | Manquante : assets/icones/sorts/magicien-nuage-letal.webp | V, S |
 | Paralysie des monstres | OK | OK | Manquante : assets/icones/sorts/magicien-paralysie-des-monstres.webp | Petite barre de métal ; Pour chaque monstre visé |
 | Passe-muraille | OK | OK | Manquante : assets/icones/sorts/magicien-passe-muraille.webp | Pincée de graines de sésame |
-| Télékinésie | OK | OK | Manquante : assets/icones/sorts/magicien-telekinesie.webp | V, S |
+| Téléikinésie | MANQUANT | — | — | — |
 | Téléportation | OK | OK | Manquante : assets/icones/sorts/magicien-teleportation.webp | V |
 | Transmutation de pierre en boue | OK | OK | Manquante : assets/icones/sorts/transmutation-de-pierre-en-boue.webp | a_completer |
+
+## Sorts manquants
+
+- Téléikinésie
 
 ## Sorts présents hors correspondance stricte
 
 - Chien fidèle de Mordekainen
+- Télékinésie
 
 ## Statut
 

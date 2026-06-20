@@ -76,7 +76,8 @@
         "img": "systems/add2e/assets/icones/sorts/augure.webp",
         "onUse": "systems/add2e/scripts/sorts/augure.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 2,
@@ -97,7 +98,8 @@
         "img": "systems/add2e/assets/icones/sorts/cantique.webp",
         "onUse": "systems/add2e/scripts/sorts/cantique.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 3,
@@ -118,7 +120,8 @@
         "img": "systems/add2e/assets/icones/sorts/charme-serpents.webp",
         "onUse": "systems/add2e/scripts/sorts/charme-serpents.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 4,
@@ -140,7 +143,8 @@
         "img": "systems/add2e/assets/icones/sorts/detection-des-charmes.webp",
         "onUse": "systems/add2e/scripts/sorts/detection-des-charmes.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 5,
@@ -161,7 +165,8 @@
         "img": "systems/add2e/assets/icones/sorts/detection-des-pieges.webp",
         "onUse": "systems/add2e/scripts/sorts/detection-des-pieges.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 6,
@@ -182,7 +187,8 @@
         "img": "systems/add2e/assets/icones/sorts/langage-des-animaux.webp",
         "onUse": "systems/add2e/scripts/sorts/langage-des-animaux.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 7,
@@ -213,7 +219,8 @@
         "img": "systems/add2e/assets/icones/sorts/marteau-spirituel.webp",
         "onUse": "systems/add2e/scripts/sorts/marteau-spirituel.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 8,
@@ -245,7 +252,8 @@
         "img": "systems/add2e/assets/icones/sorts/paralysie.webp",
         "onUse": "systems/add2e/scripts/sorts/paralysie.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 9,
@@ -267,7 +275,8 @@
         "img": "systems/add2e/assets/icones/sorts/connaissance-des-alignements.webp",
         "onUse": "systems/add2e/scripts/sorts/connaissance-des-alignements.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 10,
@@ -298,7 +307,8 @@
         "img": "systems/add2e/assets/icones/sorts/resistance-au-feu-resistance-au-froid.webp",
         "onUse": "systems/add2e/scripts/sorts/resistance-au-feu-resistance-au-froid.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 11,
@@ -337,7 +347,8 @@
         "img": "systems/add2e/assets/icones/sorts/ralentissement-du-poison.webp",
         "onUse": "systems/add2e/scripts/sorts/ralentissement-du-poison.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 12,
@@ -358,7 +369,8 @@
         "img": "systems/add2e/assets/icones/sorts/silence-rayon-de-15-pieds.webp",
         "onUse": "systems/add2e/scripts/sorts/silence-rayon-de-15-pieds.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     }
   ]
 }

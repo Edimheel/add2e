@@ -49,7 +49,8 @@
         "img": "systems/add2e/assets/icones/sorts/abaissement-des-eaux.webp",
         "onUse": "systems/add2e/scripts/sorts/abaissement-des-eaux.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 2,
@@ -90,7 +91,8 @@
         "img": "systems/add2e/assets/icones/sorts/batons-a-serpents.webp",
         "onUse": "systems/add2e/scripts/sorts/batons-a-serpents.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 3,
@@ -112,7 +114,8 @@
         "img": "systems/add2e/assets/icones/sorts/contre-poison.webp",
         "onUse": "systems/add2e/scripts/sorts/contre-poison.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 4,
@@ -144,7 +147,8 @@
         "img": "systems/add2e/assets/icones/sorts/detection-des-mensonges.webp",
         "onUse": "systems/add2e/scripts/sorts/detection-des-mensonges.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 5,
@@ -211,7 +215,8 @@
         "img": "systems/add2e/assets/icones/sorts/divination.webp",
         "onUse": "systems/add2e/scripts/sorts/divination.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 6,
@@ -260,7 +265,8 @@
         "img": "systems/add2e/assets/icones/sorts/exorcisme.webp",
         "onUse": "systems/add2e/scripts/sorts/exorcisme.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 7,
@@ -309,7 +315,8 @@
         "img": "systems/add2e/assets/icones/sorts/langage-des-plantes.webp",
         "onUse": "systems/add2e/scripts/sorts/langage-des-plantes.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     },
     {
       "ordre": 8,
@@ -330,7 +337,8 @@
         "img": "systems/add2e/assets/icones/sorts/langue.webp",
         "onUse": "systems/add2e/scripts/sorts/langue.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_a_verifier_manuellement",
+      "variantes": []
     },
     {
       "ordre": 9,
@@ -352,7 +360,8 @@
         "img": "systems/add2e/assets/icones/sorts/protection-contre-le-mal-sur-3-m.webp",
         "onUse": "systems/add2e/scripts/sorts/protection-contre-le-mal-sur-3-m.js"
       },
-      "status": "reference_a_verifier_manuellement"
+      "status": "reference_a_verifier_manuellement",
+      "variantes": []
     },
     {
       "ordre": 10,
@@ -374,7 +383,8 @@
         "img": "systems/add2e/assets/icones/sorts/soins-des-blessures-graves.webp",
         "onUse": "systems/add2e/scripts/sorts/soins-des-blessures-graves.js"
       },
-      "status": "reference_complete_description_normalisee"
+      "status": "reference_complete_description_normalisee",
+      "variantes": []
     }
   ]
 }

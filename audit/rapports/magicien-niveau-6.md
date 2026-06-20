@@ -1,6 +1,6 @@
 # Audit automatique — magicien-niveau-6
 
-Généré le : 2026-06-20T14:29:39.675Z
+Généré le : 2026-06-20T14:32:02.281Z
 
 ## Fichiers
 
@@ -32,7 +32,7 @@ Généré le : 2026-06-20T14:29:39.675Z
 | Holographie | OK | OK | Manquante : assets/icones/sorts/holographie.webp | a_completer |
 | Incantation mortelle | OK | OK | Manquante : assets/icones/sorts/magicien-incantation-mortelle.webp | Perle noire écrasée d’une valeur minimale de 1 |
 | Invocation de monstre IV | OK | OK | Manquante : assets/icones/sorts/magicien-invocation-de-monstre-iv.webp | V, S, M |
-| Main de force de Bigby | OK | OK | Manquante : assets/icones/sorts/magicien-main-de-force-de-bigby.webp | Gant |
+| Main de force de bigby | OK | OK | Manquante : assets/icones/sorts/magicien-main-de-force-de-bigby.webp | Gant |
 | Mythomancie | OK | OK | Manquante : assets/icones/sorts/magicien-mythomancie.webp | Morceaux d’ivoire ; Parchemin |
 | Punition spirituelle | OK | OK | Manquante : assets/icones/sorts/magicien-punition-spirituelle.webp | V, M |
 | Quête magique | OK | OK | Manquante : assets/icones/sorts/magicien-quete-magique.webp | V |

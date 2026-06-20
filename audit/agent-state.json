@@ -1,7 +1,7 @@
 {
   "agentName": "add2e-spell-agent",
   "createdAt": "2026-06-02",
-  "lastRunAt": "2026-06-20T12:47:31.826Z",
+  "lastRunAt": "2026-06-20T14:32:02.299Z",
   "lastRunStatus": "ok_finished",
   "currentLot": null,
   "nextLot": "magicien-niveau-1",
@@ -11,7 +11,7 @@
     {
       "script": "audit/tools/generate-reference-files.mjs",
       "status": "ok",
-      "output": "Références créées : 0\nRéférences enrichies : 20\nRéférences détaillées conservées : 10\nLots sans liste maître : 0"
+      "output": "Références créées : 0\nRéférences enrichies : 23\nRéférences détaillées conservées : 7\nLots sans liste maître : 0"
     },
     {
       "script": "audit/tools/generate-spell-audit-reports.mjs",
@@ -37,6 +37,14 @@
       "action": "review_remaining_after_safe_fix"
     },
     {
+      "lot": "magicien-niveau-5",
+      "expected": 24,
+      "foundry": 25,
+      "missing": 1,
+      "nameDiffs": 0,
+      "action": "review_remaining_after_safe_fix"
+    },
+    {
       "lot": "illusionniste-niveau-1",
       "expected": 12,
       "foundry": 11,
@@ -55,6 +63,6 @@
     "The central agent should apply JSON and onUse fixes, then regenerate split files and reports."
   ],
   "totalLots": 30,
-  "lotsWithFindingsCount": 3,
-  "plannedActionCount": 3
+  "lotsWithFindingsCount": 4,
+  "plannedActionCount": 4
 }
