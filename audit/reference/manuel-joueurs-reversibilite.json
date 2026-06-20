@@ -1,0 +1,394 @@
+{
+  "source": {
+    "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf",
+    "reference": "Manuel des joueurs AD&D 2e",
+    "note": "Réversibilité relevée strictement dans les descriptions de sorts du Manuel des joueurs."
+  },
+  "schema": {
+    "root": "reversibles",
+    "entryFields": [
+      "reversible",
+      "inverse",
+      "inverseNameStatus",
+      "note"
+    ],
+    "inverseNameStatus": {
+      "manual_explicit": "Le Manuel nomme explicitement la forme inverse.",
+      "not_named_in_manual": "Le Manuel indique que le sort est réversible sans attribuer de nom distinct à l’inverse."
+    }
+  },
+  "expectedCounts": {
+    "clerc": 31,
+    "druide": 16,
+    "magicien": 17,
+    "illusionniste": 0
+  },
+  "reversibles": {
+    "clerc-niveau-1": {
+      "Apaisement": {
+        "reversible": true,
+        "inverse": "Épouvante",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Aquagenèse": {
+        "reversible": true,
+        "inverse": "Destruction d’eau",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Bénédiction": {
+        "reversible": true,
+        "inverse": "Malédiction",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Détection du mal": {
+        "reversible": true,
+        "inverse": "Détection du bien",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Lumière": {
+        "reversible": true,
+        "inverse": "Ténèbres",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Protection contre le mal": {
+        "reversible": true,
+        "inverse": "Protection contre le bien",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Purification de l’eau et des aliments": {
+        "reversible": true,
+        "inverse": "Corruption de l’eau et des aliments",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Soins mineurs": {
+        "reversible": true,
+        "inverse": "Blessures mineures",
+        "inverseNameStatus": "manual_explicit"
+      }
+    },
+    "clerc-niveau-2": {
+      "Détection des charmes": {
+        "reversible": true,
+        "inverse": "Dissimulation des charmes",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Perception des alignements": {
+        "reversible": true,
+        "inverse": "Confusion de l’alignement",
+        "inverseNameStatus": "manual_explicit"
+      }
+    },
+    "clerc-niveau-3": {
+      "Désenvoûtement": {
+        "reversible": true,
+        "inverse": "Envoûtement",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Guérison de la cécité": {
+        "reversible": true,
+        "inverse": "Cécité",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Guérison des maladies": {
+        "reversible": true,
+        "inverse": "Contamination",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Localisation d’objets": {
+        "reversible": true,
+        "inverse": "Dissimulation d’objets",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Lumière éternelle": {
+        "reversible": true,
+        "inverse": "Ténèbres éternelles",
+        "inverseNameStatus": "manual_explicit"
+      }
+    },
+    "clerc-niveau-4": {
+      "Abaissement des eaux": {
+        "reversible": true,
+        "inverse": "Gonflement des eaux",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Bâtons à serpents": {
+        "reversible": true,
+        "inverse": "Serpents à bâtons",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Contre-poison": {
+        "reversible": true,
+        "inverse": "Empoisonnement",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Détection des mensonges": {
+        "reversible": true,
+        "inverse": "Dissimulation des mensonges",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Langue": {
+        "reversible": true,
+        "inverse": "Incompréhension",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Protection contre le mal sur 3 m": {
+        "reversible": true,
+        "inverse": "Protection contre le bien sur 3 m",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Soins majeurs": {
+        "reversible": true,
+        "inverse": "Blessures majeures",
+        "inverseNameStatus": "manual_explicit"
+      }
+    },
+    "clerc-niveau-5": {
+      "Dissipation du mal": {
+        "reversible": true,
+        "inverse": "Dissipation du bien",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Rappel à la vie": {
+        "reversible": true,
+        "inverse": "Destruction de la vie",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Soin ultime": {
+        "reversible": true,
+        "inverse": "Blessure ultime",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Vision réelle": {
+        "reversible": true,
+        "inverse": "Vision erronée",
+        "inverseNameStatus": "manual_explicit"
+      }
+    },
+    "clerc-niveau-6": {
+      "Guérison": {
+        "reversible": true,
+        "inverse": "Traumatisme",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Orientation": {
+        "reversible": true,
+        "inverse": "Fausse route",
+        "inverseNameStatus": "manual_explicit"
+      }
+    },
+    "clerc-niveau-7": {
+      "Régénération": {
+        "reversible": true,
+        "inverse": "Flétrissement",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Restauration": {
+        "reversible": true,
+        "inverse": "Perte d’énergie",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Résurrection": {
+        "reversible": true,
+        "inverse": "Anéantissement",
+        "inverseNameStatus": "manual_explicit"
+      }
+    },
+    "druide-niveau-1": {
+      "Purification de l’eau": {
+        "reversible": true,
+        "inverse": "Corruption de l’eau",
+        "inverseNameStatus": "manual_explicit"
+      }
+    },
+    "druide-niveau-2": {
+      "Métal brûlant": {
+        "reversible": true,
+        "inverse": "Métal glacial",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Soins mineurs": {
+        "reversible": true,
+        "inverse": "Blessures mineures",
+        "inverseNameStatus": "manual_explicit"
+      }
+    },
+    "druide-niveau-3": {
+      "Contre-poison": {
+        "reversible": true,
+        "inverse": "Empoisonnement",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Guérison des maladies": {
+        "reversible": true,
+        "inverse": "Contamination",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Respiration aquatique": {
+        "reversible": true,
+        "inverse": "Respiration aérienne",
+        "inverseNameStatus": "manual_explicit"
+      }
+    },
+    "druide-niveau-4": {
+      "Embrasement": {
+        "reversible": true,
+        "inverse": "Extinction",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Forêt hallucinatoire": {
+        "reversible": true,
+        "inverse": null,
+        "inverseNameStatus": "not_named_in_manual",
+        "note": "Le Manuel indique que le sort est réversible sans nom distinct pour l’inverse."
+      },
+      "Soins majeurs": {
+        "reversible": true,
+        "inverse": "Blessures majeures",
+        "inverseNameStatus": "manual_explicit"
+      }
+    },
+    "druide-niveau-5": {
+      "Bâtons à serpents": {
+        "reversible": true,
+        "inverse": "Serpents à bâtons",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Croissance animale": {
+        "reversible": true,
+        "inverse": null,
+        "inverseNameStatus": "not_named_in_manual",
+        "note": "Le Manuel indique que le sort est réversible sans nom distinct pour l’inverse."
+      },
+      "Transmutation de pierre en boue": {
+        "reversible": true,
+        "inverse": "Transmutation de boue en pierre",
+        "inverseNameStatus": "manual_explicit"
+      }
+    },
+    "druide-niveau-6": {
+      "Invocation d’un élémental du feu": {
+        "reversible": true,
+        "inverse": "Dissipation d’un élémental du feu",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Soin ultime": {
+        "reversible": true,
+        "inverse": "Blessure ultime",
+        "inverseNameStatus": "manual_explicit"
+      }
+    },
+    "druide-niveau-7": {
+      "Invocation d’un élémental de terre": {
+        "reversible": true,
+        "inverse": "Dissipation d’un élémental de terre",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Tempête de feu": {
+        "reversible": true,
+        "inverse": "Dissipation du feu",
+        "inverseNameStatus": "manual_explicit"
+      }
+    },
+    "magicien-niveau-1": {
+      "Agrandissement": {
+        "reversible": true,
+        "inverse": "Rétrécissement",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Compréhension des langues": {
+        "reversible": true,
+        "inverse": "Confusion des langues",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Lecture de la magie": {
+        "reversible": true,
+        "inverse": "Obscurcissement de la magie",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Protection contre le mal": {
+        "reversible": true,
+        "inverse": "Protection contre le bien",
+        "inverseNameStatus": "manual_explicit"
+      }
+    },
+    "magicien-niveau-2": {
+      "Détection du mal": {
+        "reversible": true,
+        "inverse": "Détection du bien",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Localisation d’objets": {
+        "reversible": true,
+        "inverse": "Dissimulation d’objets",
+        "inverseNameStatus": "manual_explicit"
+      }
+    },
+    "magicien-niveau-3": {
+      "Langues": {
+        "reversible": true,
+        "inverse": "Incompréhension",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Protection contre le mal sur 3 m": {
+        "reversible": true,
+        "inverse": "Protection contre le bien sur 3 m",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Respiration aquatique": {
+        "reversible": true,
+        "inverse": "Respiration aérienne",
+        "inverseNameStatus": "manual_explicit"
+      }
+    },
+    "magicien-niveau-4": {
+      "Arme enchantée": {
+        "reversible": true,
+        "inverse": null,
+        "inverseNameStatus": "not_named_in_manual",
+        "note": "Le Manuel indique que le sort est réversible sans nom distinct pour l’inverse."
+      },
+      "Désenvoûtement": {
+        "reversible": true,
+        "inverse": "Envoûtement",
+        "inverseNameStatus": "manual_explicit"
+      }
+    },
+    "magicien-niveau-5": {
+      "Croissance animale": {
+        "reversible": true,
+        "inverse": null,
+        "inverseNameStatus": "not_named_in_manual",
+        "note": "Le Manuel indique que le sort est réversible sans nom distinct pour l’inverse."
+      },
+      "Transmutation de pierre en boue": {
+        "reversible": true,
+        "inverse": "Transmutation de boue en pierre",
+        "inverseNameStatus": "manual_explicit"
+      }
+    },
+    "magicien-niveau-6": {
+      "Abaissement des eaux": {
+        "reversible": true,
+        "inverse": "Gonflement des eaux",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Transmutation de pierre en chair": {
+        "reversible": true,
+        "inverse": "Transmutation de chair en pierre",
+        "inverseNameStatus": "manual_explicit"
+      }
+    },
+    "magicien-niveau-9": {
+      "Emprisonnement": {
+        "reversible": true,
+        "inverse": "Libération",
+        "inverseNameStatus": "manual_explicit"
+      },
+      "Stase temporelle": {
+        "reversible": true,
+        "inverse": "Rétablissement temporel",
+        "inverseNameStatus": "manual_explicit"
+      }
+    }
+  }
+}
