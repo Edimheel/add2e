@@ -1,6 +1,6 @@
 # Audit automatique — magicien-niveau-4
 
-Généré le : 2026-06-20T13:53:49.985Z
+Généré le : 2026-06-20T13:57:01.486Z
 
 ## Fichiers
 
@@ -35,7 +35,7 @@ Généré le : 2026-06-20T13:53:49.985Z
 | Globe mineur d'invulnérabilité | OK | OK | Manquante : assets/icones/sorts/magicien-globe-mineur-d-invulnerabilite.webp | Perle de verre ou de cristal |
 | Invocation de monstre II | OK | OK | Manquante : assets/icones/sorts/magicien-invocation-de-monstre-ii.webp | Même ; il y a également 1 à 4 rounds de délai |
 | Maladresse | OK | OK | Manquante : assets/icones/sorts/magicien-maladresse.webp | Petit morceau de lait solidifié (crème épaisse ; Beurre) |
-| Moyen mnémonique de Rary | OK | OK | Manquante : assets/icones/sorts/magicien-moyen-mnemonique-de-rary.webp | Morceau de ficelle ; Plaque d’ivoire d’une valeur minimale de 100 po ; Encre composée de sécrétion de calmar ; Soit de sang de dragon noir |
+| Moyen mnémonique de rary | OK | OK | Manquante : assets/icones/sorts/magicien-moyen-mnemonique-de-rary.webp | Morceau de ficelle ; Plaque d’ivoire d’une valeur minimale de 100 po ; Encre composée de sécrétion de calmar ; Soit de sang de dragon noir |
 | Mur de feu | OK | OK | Manquante : assets/icones/sorts/mur-de-feu.webp | a_completer |
 | Mur de glace | OK | OK | Manquante : assets/icones/sorts/magicien-mur-de-glace.webp | Petit morceau de quartz |
 | Œil magique | OK | OK | Manquante : assets/icones/sorts/magicien-il-magique.webp | Morceau de fourrure de chauve-souris |
