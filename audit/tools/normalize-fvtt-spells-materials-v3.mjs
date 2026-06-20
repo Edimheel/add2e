@@ -3,7 +3,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const VERSION = "2026-06-20-reversible-actor-structure-v5";
+const VERSION = "2026-06-20-reversible-reference-reader-v1";
+const INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
+const OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
+const CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
+const MASTER = "audit/reference/manuel-joueurs-sorts-master.json";
 const CLASSES = {
   clerc: [1, 2, 3, 4, 5, 6, 7],
   druide: [1, 2, 3, 4, 5, 6, 7],
@@ -56,10 +60,10 @@ function itemLevel(item) {
 
 function itemClasses(item) {
   const system = item?.system ?? {};
-  const source = Array.isArray(system.spellLists)
+  const values = Array.isArray(system.spellLists)
     ? system.spellLists
     : String(system.spellLists ?? system.classe ?? "").split(/[,;|/]+/g);
-  return new Set([...source.map(slug), slug(system.classe)].filter(Boolean));
+  return new Set([...values.map(slug), slug(system.classe)].filter(Boolean));
 }
 
 function itemKey(item) {
@@ -67,55 +71,162 @@ function itemKey(item) {
   return id || `${slug(item?.system?.classe)}|${itemLevel(item)}|${slug(item?.name ?? item?.system?.nom)}`;
 }
 
-function loadReferences() {
-  const index = new Map();
-  const files = [];
+function lotScope(lot) {
+  const match = String(lot ?? "").match(/^(clerc|druide|magicien|illusionniste)-niveau-(\d+)$/i);
+  if (!match) return null;
+  return { classSlug: match[1].toLowerCase(), level: Number(match[2]) };
+}
 
-  for (const [classSlug, levels] of Object.entries(CLASSES)) {
-    for (const level of levels) {
-      const file = path.join(ROOT, `audit/reference/manuel-joueurs-${classSlug}-niveau-${level}.json`);
-      if (!fs.existsSync(file)) continue;
-      const document = readJson(file, {});
-      files.push(path.relative(ROOT, file));
+function metaKey(classSlug, level, name) {
+  return `${classSlug}|${level}|${slug(name)}`;
+}
 
-      for (const reference of document.spells ?? []) {
-        const name = text(reference?.nom ?? reference?.name);
-        if (!name) continue;
-        const referenceLevel = Number(reference?.niveau ?? reference?.level ?? level) || level;
-        index.set(`${classSlug}|${referenceLevel}|${slug(name)}`, {
-          ...clone(reference),
-          __class: classSlug,
-          __level: referenceLevel,
-          __file: path.relative(ROOT, file)
+function normaliseChoices(value) {
+  const source = Array.isArray(value)
+    ? value
+    : Array.isArray(value?.choices)
+      ? value.choices
+      : Array.isArray(value?.options)
+        ? value.options
+        : Array.isArray(value?.variants)
+          ? value.variants
+          : Array.isArray(value?.variantes)
+            ? value.variantes
+            : [];
+
+  return source.map(choice => ({
+    id: text(choice?.id) || slug(choice?.nom ?? choice?.name),
+    nom: text(choice?.nom ?? choice?.name),
+    reference: clone(choice)
+  })).filter(choice => choice.id && choice.nom);
+}
+
+function inverseName(value) {
+  if (typeof value === "string") return text(value);
+  if (!value || typeof value !== "object") return "";
+
+  const direct = value.inverse ?? value.inverseName ?? value.nomInverse ?? value.actorItemName;
+  if (typeof direct === "string") return text(direct);
+  if (direct && typeof direct === "object") {
+    const nested = text(direct.nom ?? direct.name ?? direct.actorItemName);
+    if (nested) return nested;
+  }
+
+  const modes = Array.isArray(value.modes) ? value.modes : [];
+  const inverseMode = modes.find(mode => String(mode?.id ?? "").toLowerCase() === "inverse");
+  return text(inverseMode?.nom ?? inverseMode?.name ?? inverseMode?.actorItemName);
+}
+
+function hasReversibleMarker(value) {
+  if (value === true) return true;
+  if (typeof value === "string" && text(value)) return true;
+  return Boolean(value && typeof value === "object");
+}
+
+function upsertMeta(index, key, patch) {
+  const previous = index.get(key) ?? { variants: [] };
+  const variants = [...previous.variants, ...(patch.variants ?? [])];
+  const seen = new Set();
+  const uniqueVariants = variants.filter(choice => {
+    const choiceKey = `${choice.id}|${choice.nom}`;
+    if (seen.has(choiceKey)) return false;
+    seen.add(choiceKey);
+    return true;
+  });
+
+  index.set(key, {
+    ...previous,
+    ...patch,
+    inverse: text(patch.inverse) || previous.inverse || "",
+    reversible: Boolean(previous.reversible || patch.reversible),
+    variants: uniqueVariants,
+    sources: [...new Set([...(previous.sources ?? []), ...(patch.sources ?? [])])]
+  });
+}
+
+function readMasterStructuredData(master, index, masterPath) {
+  const inverseRoots = [master?.reversible, master?.reversibles, master?.reversibleSpells].filter(Boolean);
+  const variantRoots = [master?.variant, master?.variants, master?.variantes].filter(Boolean);
+
+  for (const root of inverseRoots) {
+    for (const [lot, entries] of Object.entries(root)) {
+      const scope = lotScope(lot);
+      if (!scope) continue;
+
+      if (Array.isArray(entries)) {
+        for (const entry of entries) {
+          const name = text(entry?.nom ?? entry?.name ?? entry?.sort ?? entry?.spell);
+          if (!name) continue;
+          upsertMeta(index, metaKey(scope.classSlug, scope.level, name), {
+            reversible: hasReversibleMarker(entry),
+            inverse: inverseName(entry),
+            sources: [masterPath]
+          });
+        }
+        continue;
+      }
+
+      for (const [name, entry] of Object.entries(entries ?? {})) {
+        upsertMeta(index, metaKey(scope.classSlug, scope.level, name), {
+          reversible: hasReversibleMarker(entry),
+          inverse: inverseName(entry),
+          sources: [masterPath]
         });
       }
     }
   }
 
-  return { index, files };
-}
-
-function inverseName(reference) {
-  const direct = reference?.reversible ?? reference?.inverse;
-  if (typeof direct === "string") return text(direct);
-  if (direct && typeof direct === "object") {
-    return text(direct.inverse ?? direct.nom ?? direct.name ?? direct.actorItemName);
+  for (const root of variantRoots) {
+    for (const [lot, entries] of Object.entries(root)) {
+      const scope = lotScope(lot);
+      if (!scope) continue;
+      for (const [name, entry] of Object.entries(entries ?? {})) {
+        upsertMeta(index, metaKey(scope.classSlug, scope.level, name), {
+          variants: normaliseChoices(entry),
+          sources: [masterPath]
+        });
+      }
+    }
   }
-  return "";
 }
 
-function variants(reference) {
-  const raw = Array.isArray(reference?.variantes)
-    ? reference.variantes
-    : Array.isArray(reference?.variants)
-      ? reference.variants
-      : [];
+function loadReferences() {
+  const detailed = new Map();
+  const structured = new Map();
+  const files = [];
+  const masterFile = path.join(ROOT, MASTER);
+  const master = readJson(masterFile, {});
 
-  return raw.map(variant => ({
-    id: text(variant?.id) || slug(variant?.nom ?? variant?.name),
-    nom: text(variant?.nom ?? variant?.name),
-    reference: clone(variant)
-  })).filter(variant => variant.id && variant.nom);
+  if (master && typeof master === "object") {
+    files.push(MASTER);
+    readMasterStructuredData(master, structured, MASTER);
+  }
+
+  for (const [classSlug, levels] of Object.entries(CLASSES)) {
+    for (const level of levels) {
+      const relative = `audit/reference/manuel-joueurs-${classSlug}-niveau-${level}.json`;
+      const file = path.join(ROOT, relative);
+      if (!fs.existsSync(file)) continue;
+      const document = readJson(file, {});
+      files.push(relative);
+
+      for (const reference of document.spells ?? []) {
+        const name = text(reference?.nom ?? reference?.name);
+        if (!name) continue;
+        const refLevel = Number(reference?.niveau ?? reference?.level ?? level) || level;
+        const key = metaKey(classSlug, refLevel, name);
+        detailed.set(key, { ...clone(reference), __file: relative });
+        upsertMeta(structured, key, {
+          reversible: hasReversibleMarker(reference?.reversible) || Boolean(text(reference?.inverse)),
+          inverse: inverseName(reference?.reversible) || text(reference?.inverse),
+          variants: normaliseChoices(reference?.variant ?? reference?.variants ?? reference?.variantes),
+          sources: [relative]
+        });
+      }
+    }
+  }
+
+  return { detailed, structured, files };
 }
 
 function materialMode(rule) {
@@ -135,11 +246,7 @@ function modeMaterials(reference, mode, fallback) {
     return target === "shared" || target === mode;
   });
   const components = selected.map(rule => text(rule?.nom ?? rule?.name)).filter(Boolean);
-
-  return {
-    components: components.length ? components : clone(fallback ?? []),
-    reference: selected
-  };
+  return { components: components.length ? components : clone(fallback ?? []), reference: selected };
 }
 
 function actorMode(reference, item, id, name) {
@@ -154,7 +261,7 @@ function actorMode(reference, item, id, name) {
   };
 }
 
-function applyStructuredFlags(items, references) {
+function applyReferenceFlags(items, references) {
   const byClass = Object.fromEntries(Object.keys(CLASSES).map(classSlug => [classSlug, 0]));
   const reversibleProfiles = [];
   const variantProfiles = [];
@@ -162,43 +269,42 @@ function applyStructuredFlags(items, references) {
 
   for (const item of items) {
     if (String(item?.type ?? item?.system?.type ?? "") !== "sort") continue;
-    const level = itemLevel(item);
     const name = text(item?.name ?? item?.system?.nom);
+    const level = itemLevel(item);
     const reversible = [];
-    const variantsByProfile = [];
+    const variants = [];
 
     for (const classSlug of itemClasses(item)) {
-      const reference = references.index.get(`${classSlug}|${level}|${slug(name)}`);
-      if (!reference) continue;
+      const key = metaKey(classSlug, level, name);
+      const metadata = references.structured.get(key);
+      if (!metadata) continue;
+      const reference = references.detailed.get(key) ?? {};
 
-      const sourceVariants = variants(reference);
-      if (sourceVariants.length) {
-        variantsByProfile.push({
+      if (metadata.variants.length) {
+        const profile = {
           class: classSlug,
           level,
-          referenceFile: reference.__file,
-          variants: sourceVariants
-        });
-        variantProfiles.push({ name, class: classSlug, level, variants: clone(sourceVariants) });
+          referenceFiles: metadata.sources,
+          choices: clone(metadata.variants)
+        };
+        variants.push(profile);
+        variantProfiles.push({ name, ...clone(profile) });
       }
 
-      const inverse = inverseName(reference);
-      if (!inverse) {
-        if (reference?.reversible === true) {
-          unresolvedReversible.push({ class: classSlug, level, name, referenceFile: reference.__file });
-        }
+      if (!metadata.reversible) continue;
+      if (!metadata.inverse) {
+        unresolvedReversible.push({ class: classSlug, level, name, referenceFiles: metadata.sources });
         continue;
       }
 
       const profile = {
         class: classSlug,
         level,
-        referenceFile: reference.__file,
+        referenceFiles: metadata.sources,
         modes: [
           actorMode(reference, item, "normal", text(reference.nom) || name),
-          actorMode(reference, item, "inverse", inverse)
-        ],
-        variants: sourceVariants
+          actorMode(reference, item, "inverse", metadata.inverse)
+        ]
       };
       reversible.push(profile);
       reversibleProfiles.push({ name, ...clone(profile) });
@@ -214,7 +320,6 @@ function applyStructuredFlags(items, references) {
         managedBy: "normalize-fvtt-spells-materials-v3",
         enabled: true,
         splitOnActorGrant: true,
-        actorGrantEvents: ["drop", "auto-grant-clerc", "auto-grant-druide"],
         choiceTiming: "memorization",
         profiles: reversible
       };
@@ -222,14 +327,15 @@ function applyStructuredFlags(items, references) {
       delete item.flags.add2e.reversible;
     }
 
-    if (variantsByProfile.length) {
-      item.flags.add2e.variants = {
+    if (variants.length) {
+      item.flags.add2e.variant = {
         version: VERSION,
         managedBy: "normalize-fvtt-spells-materials-v3",
-        profiles: variantsByProfile
+        profiles: variants
       };
-    } else if (item.flags.add2e.variants?.managedBy === "normalize-fvtt-spells-materials-v3") {
       delete item.flags.add2e.variants;
+    } else if (item.flags.add2e.variant?.managedBy === "normalize-fvtt-spells-materials-v3") {
+      delete item.flags.add2e.variant;
     }
   }
 
@@ -237,9 +343,9 @@ function applyStructuredFlags(items, references) {
 }
 
 function main() {
-  const input = path.join(ROOT, process.argv[2] || "fvtt-spells-all-normalise-mecanique-v1.json");
-  const output = path.join(ROOT, process.argv[3] || "fvtt-spells-all-normalise-mecanique-v3.json");
-  const controlFile = path.join(ROOT, process.argv[4] || "fvtt-spells-all-normalise-mecanique-v3-controle.json");
+  const input = path.join(ROOT, process.argv[2] || INPUT);
+  const output = path.join(ROOT, process.argv[3] || OUTPUT);
+  const controlFile = path.join(ROOT, process.argv[4] || CONTROL);
   const source = readJson(input);
   if (!source) throw new Error(`Fichier introuvable ou invalide : ${input}`);
 
@@ -249,10 +355,12 @@ function main() {
   const previousByKey = new Map(previousItems.map(item => [itemKey(item), item]));
   const sourceKeys = new Set(sourceItems.map(itemKey));
   const items = sourceItems.map(item => clone(previousByKey.get(itemKey(item)) ?? item));
-  const ignoredAuditOnlyItems = previousItems.filter(item => !sourceKeys.has(itemKey(item))).map(item => ({ name: item.name, classe: item.system?.classe, niveau: item.system?.niveau }));
+  const ignoredAuditOnlyItems = previousItems
+    .filter(item => !sourceKeys.has(itemKey(item)))
+    .map(item => ({ name: item.name, classe: item.system?.classe, niveau: item.system?.niveau }));
 
-  const refs = loadReferences();
-  const flags = applyStructuredFlags(items, refs);
+  const references = loadReferences();
+  const flags = applyReferenceFlags(items, references);
   const result = setItems(clone(previous), items);
   result.normalizedBy = VERSION;
   result.normalizedAt = new Date().toISOString();
@@ -269,17 +377,18 @@ function main() {
   control.ignoredAuditOnlyItems = ignoredAuditOnlyItems;
   control.reversibleActorSplit = {
     version: VERSION,
-    referenceFiles: refs.files,
+    referenceFiles: references.files,
     byClass: flags.byClass,
     profiles: flags.reversibleProfiles,
     unresolvedStructuredReversible: flags.unresolvedReversible
   };
   control.variantProfiles = flags.variantProfiles;
+  control.variantChoiceCount = flags.variantProfiles.reduce((total, profile) => total + profile.choices.length, 0);
   writeJson(controlFile, control);
 
   console.log(`[ADD2E][SPELL_MATERIALS_V3] ${control.outputSpellCount} sort(s) conservé(s) depuis la source.`);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Réversibles structurés — clerc: ${flags.byClass.clerc}, druide: ${flags.byClass.druide}, magicien: ${flags.byClass.magicien}, illusionniste: ${flags.byClass.illusionniste}.`);
-  console.log(`[ADD2E][SPELL_MATERIALS_V3] Variantes structurées: ${flags.variantProfiles.length}.`);
+  console.log(`[ADD2E][SPELL_MATERIALS_V3] Variantes structurées: ${flags.variantProfiles.length} sort(s) / ${control.variantChoiceCount} choix.`);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Réversibles sans inverse nommé: ${flags.unresolvedReversible.length}.`);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Items d’audit exclus: ${ignoredAuditOnlyItems.length}.`);
 }
