@@ -1,5 +1,5 @@
 {
-  "version": "2026-06-19-normalize-components-v25",
+  "version": "2026-06-19-normalize-components-v26",
   "input": "fvtt-spells-all-normalise-mecanique-v1.json",
   "output": "fvtt-spells-all-normalise-mecanique-v3.json",
   "clercAuditFiles": [
@@ -261,18 +261,9 @@
       ],
       "after": [
         {
-          "type": "variante",
-          "id": "creation",
-          "label": "goutte d’eau",
-          "composants": [
-            "goutte d’eau"
-          ]
-        },
-        {
-          "type": "variante",
-          "id": "inverse",
-          "label": "pincée de poussière",
-          "composants": [
+          "type": "alternative",
+          "choix": [
+            "goutte d’eau",
             "pincée de poussière"
           ]
         }
@@ -422,18 +413,9 @@
       ],
       "after": [
         {
-          "type": "variante",
-          "id": "benediction",
-          "label": "Eau bénite",
-          "composants": [
-            "Eau bénite"
-          ]
-        },
-        {
-          "type": "variante",
-          "id": "malediction",
-          "label": "Eau maudite",
-          "composants": [
+          "type": "alternative",
+          "choix": [
+            "Eau bénite",
             "Eau maudite"
           ]
         }
@@ -1808,18 +1790,9 @@
       "niveau": 1,
       "composants_materiels": [
         {
-          "type": "variante",
-          "id": "creation",
-          "label": "goutte d’eau",
-          "composants": [
-            "goutte d’eau"
-          ]
-        },
-        {
-          "type": "variante",
-          "id": "inverse",
-          "label": "pincée de poussière",
-          "composants": [
+          "type": "alternative",
+          "choix": [
+            "goutte d’eau",
             "pincée de poussière"
           ]
         }
@@ -2086,18 +2059,9 @@
       "niveau": 1,
       "composants_materiels": [
         {
-          "type": "variante",
-          "id": "benediction",
-          "label": "Eau bénite",
-          "composants": [
-            "Eau bénite"
-          ]
-        },
-        {
-          "type": "variante",
-          "id": "malediction",
-          "label": "Eau maudite",
-          "composants": [
+          "type": "alternative",
+          "choix": [
+            "Eau bénite",
             "Eau maudite"
           ]
         }
@@ -7005,21 +6969,11 @@
       "classe": "Clerc",
       "niveau": 7,
       "composants_materiels": [
+        "feu",
         {
-          "type": "variante",
-          "id": "benite",
-          "label": "feu et Eau bénite",
-          "composants": [
-            "feu",
-            "Eau bénite"
-          ]
-        },
-        {
-          "type": "variante",
-          "id": "maudite",
-          "label": "feu et Eau maudite",
-          "composants": [
-            "feu",
+          "type": "alternative",
+          "choix": [
+            "Eau bénite",
             "Eau maudite"
           ]
         }
@@ -8833,34 +8787,11 @@
       "niveau": 1,
       "composants_materiels": [
         {
-          "type": "variante",
-          "id": "eau_benite",
-          "label": "Eau bénite",
-          "composants": [
-            "Eau bénite"
-          ]
-        },
-        {
-          "type": "variante",
-          "id": "encens",
-          "label": "encens allumé",
-          "composants": [
-            "encens allumé"
-          ]
-        },
-        {
-          "type": "variante",
-          "id": "sang",
-          "label": "sang",
-          "composants": [
-            "sang"
-          ]
-        },
-        {
-          "type": "variante",
-          "id": "fumier",
-          "label": "vapeurs de fumier",
-          "composants": [
+          "type": "alternative",
+          "choix": [
+            "Eau bénite",
+            "encens allumé",
+            "sang",
             "vapeurs de fumier"
           ]
         }
@@ -8890,34 +8821,11 @@
       "niveau": 4,
       "composants_materiels": [
         {
-          "type": "variante",
-          "id": "eau_benite",
-          "label": "Eau bénite",
-          "composants": [
-            "Eau bénite"
-          ]
-        },
-        {
-          "type": "variante",
-          "id": "encens",
-          "label": "encens allumé",
-          "composants": [
-            "encens allumé"
-          ]
-        },
-        {
-          "type": "variante",
-          "id": "sang",
-          "label": "sang",
-          "composants": [
-            "sang"
-          ]
-        },
-        {
-          "type": "variante",
-          "id": "fumier",
-          "label": "vapeurs de fumier",
-          "composants": [
+          "type": "alternative",
+          "choix": [
+            "Eau bénite",
+            "encens allumé",
+            "sang",
             "vapeurs de fumier"
           ]
         }
@@ -9325,21 +9233,11 @@
       "classe": "Clerc",
       "niveau": 7,
       "composants_materiels": [
+        "objet de prière",
         {
-          "type": "variante",
-          "id": "benite",
-          "label": "objet de prière et Eau bénite",
-          "composants": [
-            "objet de prière",
-            "Eau bénite"
-          ]
-        },
-        {
-          "type": "variante",
-          "id": "maudite",
-          "label": "objet de prière et Eau maudite",
-          "composants": [
-            "objet de prière",
+          "type": "alternative",
+          "choix": [
+            "Eau bénite",
             "Eau maudite"
           ]
         }
@@ -11199,18 +11097,9 @@
       "niveau": 1,
       "composants": [
         {
-          "type": "variante",
-          "id": "creation",
-          "label": "goutte d’eau",
-          "composants": [
-            "goutte d’eau"
-          ]
-        },
-        {
-          "type": "variante",
-          "id": "inverse",
-          "label": "pincée de poussière",
-          "composants": [
+          "type": "alternative",
+          "choix": [
+            "goutte d’eau",
             "pincée de poussière"
           ]
         }
@@ -11250,18 +11139,9 @@
       "niveau": 1,
       "composants": [
         {
-          "type": "variante",
-          "id": "benediction",
-          "label": "Eau bénite",
-          "composants": [
-            "Eau bénite"
-          ]
-        },
-        {
-          "type": "variante",
-          "id": "malediction",
-          "label": "Eau maudite",
-          "composants": [
+          "type": "alternative",
+          "choix": [
+            "Eau bénite",
             "Eau maudite"
           ]
         }
@@ -11484,21 +11364,11 @@
       "name": "Marche des vents",
       "niveau": 7,
       "composants": [
+        "feu",
         {
-          "type": "variante",
-          "id": "benite",
-          "label": "feu et Eau bénite",
-          "composants": [
-            "feu",
-            "Eau bénite"
-          ]
-        },
-        {
-          "type": "variante",
-          "id": "maudite",
-          "label": "feu et Eau maudite",
-          "composants": [
-            "feu",
+          "type": "alternative",
+          "choix": [
+            "Eau bénite",
             "Eau maudite"
           ]
         }
@@ -11579,34 +11449,11 @@
       "niveau": 1,
       "composants": [
         {
-          "type": "variante",
-          "id": "eau_benite",
-          "label": "Eau bénite",
-          "composants": [
-            "Eau bénite"
-          ]
-        },
-        {
-          "type": "variante",
-          "id": "encens",
-          "label": "encens allumé",
-          "composants": [
-            "encens allumé"
-          ]
-        },
-        {
-          "type": "variante",
-          "id": "sang",
-          "label": "sang",
-          "composants": [
-            "sang"
-          ]
-        },
-        {
-          "type": "variante",
-          "id": "fumier",
-          "label": "vapeurs de fumier",
-          "composants": [
+          "type": "alternative",
+          "choix": [
+            "Eau bénite",
+            "encens allumé",
+            "sang",
             "vapeurs de fumier"
           ]
         }
@@ -11617,34 +11464,11 @@
       "niveau": 4,
       "composants": [
         {
-          "type": "variante",
-          "id": "eau_benite",
-          "label": "Eau bénite",
-          "composants": [
-            "Eau bénite"
-          ]
-        },
-        {
-          "type": "variante",
-          "id": "encens",
-          "label": "encens allumé",
-          "composants": [
-            "encens allumé"
-          ]
-        },
-        {
-          "type": "variante",
-          "id": "sang",
-          "label": "sang",
-          "composants": [
-            "sang"
-          ]
-        },
-        {
-          "type": "variante",
-          "id": "fumier",
-          "label": "vapeurs de fumier",
-          "composants": [
+          "type": "alternative",
+          "choix": [
+            "Eau bénite",
+            "encens allumé",
+            "sang",
             "vapeurs de fumier"
           ]
         }
@@ -11678,21 +11502,11 @@
       "name": "Régénération",
       "niveau": 7,
       "composants": [
+        "objet de prière",
         {
-          "type": "variante",
-          "id": "benite",
-          "label": "objet de prière et Eau bénite",
-          "composants": [
-            "objet de prière",
-            "Eau bénite"
-          ]
-        },
-        {
-          "type": "variante",
-          "id": "maudite",
-          "label": "objet de prière et Eau maudite",
-          "composants": [
-            "objet de prière",
+          "type": "alternative",
+          "choix": [
+            "Eau bénite",
             "Eau maudite"
           ]
         }

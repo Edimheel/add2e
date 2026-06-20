@@ -2977,18 +2977,9 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           {
-            "type": "variante",
-            "id": "creation",
-            "label": "goutte d’eau",
-            "composants": [
-              "goutte d’eau"
-            ]
-          },
-          {
-            "type": "variante",
-            "id": "inverse",
-            "label": "pincée de poussière",
-            "composants": [
+            "type": "alternative",
+            "choix": [
+              "goutte d’eau",
               "pincée de poussière"
             ]
           }
@@ -5075,18 +5066,9 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           {
-            "type": "variante",
-            "id": "benediction",
-            "label": "Eau bénite",
-            "composants": [
-              "Eau bénite"
-            ]
-          },
-          {
-            "type": "variante",
-            "id": "malediction",
-            "label": "Eau maudite",
-            "composants": [
+            "type": "alternative",
+            "choix": [
+              "Eau bénite",
               "Eau maudite"
             ]
           }
@@ -38266,21 +38248,11 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
+          "feu",
           {
-            "type": "variante",
-            "id": "benite",
-            "label": "feu et Eau bénite",
-            "composants": [
-              "feu",
-              "Eau bénite"
-            ]
-          },
-          {
-            "type": "variante",
-            "id": "maudite",
-            "label": "feu et Eau maudite",
-            "composants": [
-              "feu",
+            "type": "alternative",
+            "choix": [
+              "Eau bénite",
               "Eau maudite"
             ]
           }
@@ -49985,34 +49957,11 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           {
-            "type": "variante",
-            "id": "eau_benite",
-            "label": "Eau bénite",
-            "composants": [
-              "Eau bénite"
-            ]
-          },
-          {
-            "type": "variante",
-            "id": "encens",
-            "label": "encens allumé",
-            "composants": [
-              "encens allumé"
-            ]
-          },
-          {
-            "type": "variante",
-            "id": "sang",
-            "label": "sang",
-            "composants": [
-              "sang"
-            ]
-          },
-          {
-            "type": "variante",
-            "id": "fumier",
-            "label": "vapeurs de fumier",
-            "composants": [
+            "type": "alternative",
+            "choix": [
+              "Eau bénite",
+              "encens allumé",
+              "sang",
               "vapeurs de fumier"
             ]
           }
@@ -50503,34 +50452,11 @@
         "composantes": "V, S, M",
         "composants_materiels": [
           {
-            "type": "variante",
-            "id": "eau_benite",
-            "label": "Eau bénite",
-            "composants": [
-              "Eau bénite"
-            ]
-          },
-          {
-            "type": "variante",
-            "id": "encens",
-            "label": "encens allumé",
-            "composants": [
-              "encens allumé"
-            ]
-          },
-          {
-            "type": "variante",
-            "id": "sang",
-            "label": "sang",
-            "composants": [
-              "sang"
-            ]
-          },
-          {
-            "type": "variante",
-            "id": "fumier",
-            "label": "vapeurs de fumier",
-            "composants": [
+            "type": "alternative",
+            "choix": [
+              "Eau bénite",
+              "encens allumé",
+              "sang",
               "vapeurs de fumier"
             ]
           }
@@ -53143,21 +53069,11 @@
         "jet_sauvegarde": "Spécial",
         "composantes": "V, S, M",
         "composants_materiels": [
+          "objet de prière",
           {
-            "type": "variante",
-            "id": "benite",
-            "label": "objet de prière et Eau bénite",
-            "composants": [
-              "objet de prière",
-              "Eau bénite"
-            ]
-          },
-          {
-            "type": "variante",
-            "id": "maudite",
-            "label": "objet de prière et Eau maudite",
-            "composants": [
-              "objet de prière",
+            "type": "alternative",
+            "choix": [
+              "Eau bénite",
               "Eau maudite"
             ]
           }
@@ -66210,6 +66126,6 @@
       "sort": 0
     }
   ],
-  "normalizedBy": "2026-06-19-normalize-components-v25",
-  "normalizedAt": "2026-06-19T20:18:30.050Z"
+  "normalizedBy": "2026-06-19-normalize-components-v26",
+  "normalizedAt": "2026-06-20T06:43:14.170Z"
 }
