@@ -1,6 +1,6 @@
 # Audit automatique — druide-niveau-4
 
-Généré le : 2026-06-20T13:16:31.769Z
+Généré le : 2026-06-20T13:17:59.177Z
 
 ## Fichiers
 
