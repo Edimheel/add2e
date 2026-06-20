@@ -547,18 +547,18 @@ function normalizeMaterials(item, indexes, existingIndex) {
   const key = slug(item.name ?? system.nom);
   const existing = existingIndex.get(preserveKey(item));
   if (isClassSpell(item, "clerc")) {
-    applyAudit(item, indexes.clerc, "clerc");
+    applyAudit(item, indexes.clerc.index, "clerc");
     system.composants_materiels = CLERIC_OVERRIDES.has(key) ? uniqueEntries(CLERIC_OVERRIDES.get(key)) : preserveOrParse(system, existing);
   } else if (isClassSpell(item, "druide")) {
-    applyAudit(item, indexes.druide, "druide");
+    applyAudit(item, indexes.druide.index, "druide");
     system.composants_materiels = preserveOrParse(system, existing);
   } else if (isClassSpell(item, "magicien")) {
-    applyAudit(item, indexes.magicien, "magicien");
+    applyAudit(item, indexes.magicien.index, "magicien");
     if (WIZARD_NO_MATERIAL_COMPONENTS.has(key)) { system.composants_materiels = []; removeM(system); }
     else if (WIZARD_COMPONENT_DELEGATIONS.has(key)) { system.composants_materiels = []; system.composantes = "*"; system.composants_materiels_note = WIZARD_COMPONENT_DELEGATIONS.get(key); }
     else system.composants_materiels = WIZARD_OVERRIDES.has(key) ? uniqueEntries(WIZARD_OVERRIDES.get(key)) : preserveOrParse(system, existing);
   } else if (isClassSpell(item, "illusionniste")) {
-    applyAudit(item, indexes.illusionniste, "illusionniste");
+    applyAudit(item, indexes.illusionniste.index, "illusionniste");
     if (ILLUSIONIST_COMPONENT_DELEGATIONS.has(key)) { system.composants_materiels = []; system.composantes = "*"; }
     else system.composants_materiels = ILLUSIONIST_OVERRIDES.has(key) ? uniqueEntries(ILLUSIONIST_OVERRIDES.get(key)) : preserveOrParse(system, existing);
   } else {
