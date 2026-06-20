@@ -18,17 +18,23 @@ function lotToPath(lotKey) {
   return path.join(referenceDir, `manuel-joueurs-${lotKey}.json`);
 }
 
-function buildSpells(names, niveau) {
+function variantsFor(variantesByName, nom) {
+  const variants = variantesByName?.[nom];
+  return Array.isArray(variants) ? variants : [];
+}
+
+function buildSpells(names, niveau, variantesByName = {}) {
   return names.map((nom, index) => ({
     ordre: index + 1,
     nom,
     niveau,
+    variantes: variantsFor(variantesByName, nom),
     status: "nom_reference_tableau_manuel_joueurs",
     regles_detaillees: "a_completer_depuis_description_du_sort"
   }));
 }
 
-function buildReference(group, names) {
+function buildReference(group, names, variantesByName = {}) {
   const hasNames = Array.isArray(names) && names.length > 0;
   return {
     source: {
@@ -47,11 +53,13 @@ function buildReference(group, names) {
         "classe",
         "niveau",
         "ordre dans le tableau du Manuel des joueurs",
-        "nombre de sorts attendu"
+        "nombre de sorts attendu",
+        "variantes explicitement nommées dans le Manuel des joueurs"
       ],
-      warning: "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis."
+      warning: "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis.",
+      variantes: "Le tableau variantes est vide lorsqu’aucun choix de forme explicitement nommé ne figure dans le Manuel des joueurs."
     },
-    spells: hasNames ? buildSpells(names, group.niveau) : []
+    spells: hasNames ? buildSpells(names, group.niveau, variantesByName) : []
   };
 }
 
@@ -71,6 +79,19 @@ function shouldPreserveDetailedReference(existing) {
   );
 }
 
+function synchronizeDetailedReference(existing, names, variantesByName) {
+  const expectedCount = Array.isArray(names) ? names.length : null;
+  if (expectedCount !== null && existing.spells.length !== expectedCount) {
+    throw new Error(`Référence détaillée incohérente : ${existing.source?.classe ?? "classe inconnue"} niveau ${existing.source?.niveau ?? "?"} contient ${existing.spells.length} sort(s), mais le tableau du Manuel en attend ${expectedCount}.`);
+  }
+
+  existing.expectedCount = expectedCount;
+  for (const spell of existing.spells) {
+    spell.variantes = variantsFor(variantesByName, spell.nom);
+  }
+  return existing;
+}
+
 function main() {
   if (!fs.existsSync(splitIndexPath)) {
     throw new Error(`Index de découpage introuvable : ${splitIndexPath}`);
@@ -84,6 +105,7 @@ function main() {
   const index = readJson(splitIndexPath);
   const master = readJson(masterPath);
   master.lots ||= {};
+  master.variantes ||= {};
 
   let created = 0;
   let enriched = 0;
@@ -94,6 +116,7 @@ function main() {
     const lotKey = group.key;
     const targetPath = lotToPath(lotKey);
     const names = master.lots[lotKey];
+    const variantesByName = master.variantes[lotKey] || {};
 
     if (!Array.isArray(names) || names.length === 0) {
       missingMasterList += 1;
@@ -102,6 +125,8 @@ function main() {
     if (fs.existsSync(targetPath)) {
       const existing = readJson(targetPath);
       if (shouldPreserveDetailedReference(existing)) {
+        const synchronized = synchronizeDetailedReference(existing, names, variantesByName);
+        fs.writeFileSync(targetPath, `${JSON.stringify(synchronized, null, 2)}\n`, "utf8");
         preservedDetailed += 1;
         master.lotsStatus ||= {};
         master.lotsStatus[lotKey] = {
@@ -112,10 +137,11 @@ function main() {
       }
     }
 
-    const reference = buildReference(group, names);
+    const reference = buildReference(group, names, variantesByName);
+    const existed = fs.existsSync(targetPath);
     fs.writeFileSync(targetPath, `${JSON.stringify(reference, null, 2)}\n`, "utf8");
 
-    if (fs.existsSync(targetPath)) enriched += 1;
+    if (existed) enriched += 1;
     else created += 1;
 
     master.lotsStatus ||= {};
