@@ -1,0 +1,98 @@
+{
+  "source": {
+    "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf",
+    "reference": "Manuel des joueurs AD&D 2e",
+    "note": "Le Manuel des joueurs est la source de vérité. Ce référentiel prépare uniquement la future création de deux Items d'acteur pour un sort réversible ; il n'active encore aucune mécanique Foundry."
+  },
+  "status": "reference_reversible_actor_split_structure_only",
+  "version": "2026-06-20-reversible-actor-split-v1",
+  "foundryContract": {
+    "flagPath": "flags.add2e.reversible",
+    "sourceCompendiumItemMode": "normal",
+    "actorItemGeneration": "split-actor-items",
+    "generationTiming": [
+      "drop",
+      "auto-grant-clerc",
+      "auto-grant-druide"
+    ],
+    "choiceTiming": "memorization",
+    "runtimeStateOnActorItem": "flags.add2e.reversibleActorMode",
+    "rules": [
+      "Le sort-source du compendium ne crée pas de compteur partagé entre ses deux facettes.",
+      "Lors de l'ajout à un acteur, la future mécanique créera une copie par facette.",
+      "Chaque copie conservera son propre compteur de mémorisation.",
+      "La future consommation utilisera uniquement les composants de la facette mémorisée.",
+      "Aucun champ system supplémentaire ne sera créé : la structure repose exclusivement sur flags.add2e."
+    ],
+    "modeShape": {
+      "id": "normal ou inverse",
+      "actorItemName": "nom de l'Item créé sur l'acteur",
+      "manualName": "nom explicite dans le Manuel, ou null si le Manuel ne donne pas de titre séparé",
+      "systemOverrides": {
+        "composants_materiels": "optionnel ; absent = conserver les composants du sort-source"
+      }
+    }
+  },
+  "spells": [
+    {"classe":"Clerc","niveau":1,"nom":"Apaisement","inverse":"Épouvante"},
+    {"classe":"Clerc","niveau":1,"nom":"Aquagenèse","inverse":"Destruction d’eau","modes":{"normal":{"composants_materiels":["goutte d’eau"]},"inverse":{"composants_materiels":["pincée de poussière"]}}},
+    {"classe":"Clerc","niveau":1,"nom":"Bénédiction","inverse":"Malédiction","modes":{"normal":{"composants_materiels":["Eau bénite"]},"inverse":{"composants_materiels":["Eau maudite"]}}},
+    {"classe":"Clerc","niveau":1,"nom":"Détection du mal","inverse":"Détection du bien"},
+    {"classe":"Clerc","niveau":1,"nom":"Purification de l’eau et des aliments","inverse":"Corruption de l’eau et des aliments"},
+    {"classe":"Clerc","niveau":1,"nom":"Lumière","inverse":"Ténèbres"},
+    {"classe":"Clerc","niveau":1,"nom":"Protection contre le mal","inverse":"Protection contre le bien","modes":{"normal":{"composants_materiels":[{"type":"alternative","choix":["Eau bénite","encens allumé"]}]},"inverse":{"composants_materiels":[{"type":"alternative","choix":["sang","vapeurs de fumier"]}]}}},
+    {"classe":"Clerc","niveau":1,"nom":"Soins mineurs","inverse":"Blessures mineures"},
+
+    {"classe":"Clerc","niveau":2,"nom":"Détection des charmes","inverse":"Dissimulation des charmes"},
+    {"classe":"Clerc","niveau":2,"nom":"Perception des alignements","inverse":"Confusion de l’alignement"},
+
+    {"classe":"Clerc","niveau":3,"nom":"Désenvoûtement","inverse":"Envoûtement"},
+    {"classe":"Clerc","niveau":3,"nom":"Guérison de la cécité","inverse":"Cécité"},
+    {"classe":"Clerc","niveau":3,"nom":"Guérison des maladies","inverse":"Contamination"},
+    {"classe":"Clerc","niveau":3,"nom":"Localisation d’objets","inverse":"Dissimulation d’objets"},
+    {"classe":"Clerc","niveau":3,"nom":"Lumière éternelle","inverse":"Ténèbres éternelles"},
+
+    {"classe":"Clerc","niveau":4,"nom":"Bâtons à serpents","inverse":"Serpents à bâtons"},
+    {"classe":"Clerc","niveau":4,"nom":"Contre-poison","inverse":"Empoisonnement"},
+    {"classe":"Clerc","niveau":4,"nom":"Détection des mensonges","inverse":"Dissimulation des mensonges","modes":{"normal":{"composants_materiels":["poussière d’or"]},"inverse":{"composants_materiels":["poussière de laiton"]}}},
+    {"classe":"Clerc","niveau":4,"nom":"Abaissement des eaux","inverse":"Gonflement des eaux"},
+    {"classe":"Clerc","niveau":4,"nom":"Langues","inverse":"Incompréhension"},
+    {"classe":"Clerc","niveau":4,"nom":"Protection contre le mal sur 3 mètres","inverse":"Protection contre le bien sur 3 mètres","modes":{"normal":{"composants_materiels":[{"type":"alternative","choix":["Eau bénite","encens allumé"]}]},"inverse":{"composants_materiels":[{"type":"alternative","choix":["sang","vapeurs de fumier"]}]}}},
+
+    {"classe":"Clerc","niveau":5,"nom":"Soins majeurs","inverse":"Blessures majeures"},
+    {"classe":"Clerc","niveau":5,"nom":"Dissipation du mal","inverse":"Dissipation du bien","modes":{"normal":{"composants_materiels":["symbole sacré","Eau bénite"]},"inverse":{"composants_materiels":["symbole sacré","Eau maudite"]}}},
+    {"classe":"Clerc","niveau":5,"nom":"Rappel à la vie","inverse":"Destruction de la vie"},
+    {"classe":"Clerc","niveau":5,"nom":"Soin ultime","inverse":"Blessure ultime"},
+    {"classe":"Clerc","niveau":5,"nom":"Vision réelle","inverse":"Vision erronée","modes":{"normal":{"composants_materiels":["poudre de champignons rares","safran","graisse"]},"inverse":{"composants_materiels":["huile","poudre de pavot","essence d’orchidée rose"]}}},
+
+    {"classe":"Clerc","niveau":6,"nom":"Guérison","inverse":"Traumatisme"},
+    {"classe":"Clerc","niveau":6,"nom":"Orientation","inverse":"Fausse route"},
+
+    {"classe":"Clerc","niveau":7,"nom":"Régénération","inverse":"Flétrissement"},
+    {"classe":"Clerc","niveau":7,"nom":"Restauration","inverse":"Perte d’énergie"},
+    {"classe":"Clerc","niveau":7,"nom":"Résurrection","inverse":"Anéantissement","modes":{"normal":{"composants_materiels":["symbole sacré","Eau bénite"]},"inverse":{"composants_materiels":["symbole sacré","Eau maudite"]}}},
+
+    {"classe":"Druide","niveau":1,"nom":"Purification de l’eau","inverse":"Corruption de l’eau"},
+
+    {"classe":"Druide","niveau":2,"nom":"Métal brûlant","inverse":"Métal glacial"},
+    {"classe":"Druide","niveau":2,"nom":"Soins mineurs","inverse":"Blessures mineures"},
+
+    {"classe":"Druide","niveau":3,"nom":"Contre-poison","inverse":"Empoisonnement"},
+    {"classe":"Druide","niveau":3,"nom":"Guérison des maladies","inverse":"Contamination"},
+    {"classe":"Druide","niveau":3,"nom":"Respiration aquatique","inverse":"Respiration aérienne"},
+
+    {"classe":"Druide","niveau":4,"nom":"Embrasement","inverse":"Extinction"},
+    {"classe":"Druide","niveau":4,"nom":"Forêt hallucinatoire","inverse":null,"inverseLabelFallback":"Forêt hallucinatoire (inverse)","manualStatus":"Le Manuel mentionne la facette inverse sans lui donner de nom distinct."},
+    {"classe":"Druide","niveau":4,"nom":"Soins majeurs","inverse":"Blessures majeures"},
+
+    {"classe":"Druide","niveau":5,"nom":"Bâtons à serpents","inverse":"Serpents à bâtons"},
+    {"classe":"Druide","niveau":5,"nom":"Croissance animale","inverse":null,"inverseLabelFallback":"Croissance animale (inverse)","manualStatus":"Le Manuel décrit la réduction de taille mais ne donne pas de titre distinct."},
+    {"classe":"Druide","niveau":5,"nom":"Transmutation de pierre en boue","inverse":"Transmutation de boue en pierre"},
+
+    {"classe":"Druide","niveau":6,"nom":"Invocation d’un élémental du feu","inverse":"Dissipation d’un élémental du feu"},
+    {"classe":"Druide","niveau":6,"nom":"Soin ultime","inverse":"Blessure ultime"},
+
+    {"classe":"Druide","niveau":7,"nom":"Invocation d’un élémental de terre","inverse":null,"inverseLabelFallback":"Invocation d’un élémental de terre (inverse)","manualStatus":"Le Manuel renvoie à la facette inverse de l’invocation d’un élémental du feu sans fournir de titre distinct pour cette entrée."},
+    {"classe":"Druide","niveau":7,"nom":"Tempête de feu","inverse":"Dissipation du feu"}
+  ]
+}
