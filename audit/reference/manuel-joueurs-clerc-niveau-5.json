@@ -41,7 +41,8 @@
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/changement-de-plan.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": false
     },
     {
       "ordre": 2,
@@ -92,7 +93,8 @@
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/communion.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": false
     },
     {
       "ordre": 3,
@@ -144,7 +146,9 @@
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/dissipation-du-mal.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": true,
+      "inverseNameStatus": "manual_explicit"
     },
     {
       "ordre": 4,
@@ -204,7 +208,8 @@
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/penitence.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": false
     },
     {
       "ordre": 5,
@@ -255,7 +260,8 @@
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/fleau-d-insectes.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": false
     },
     {
       "ordre": 6,
@@ -288,7 +294,8 @@
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/colonne-de-feu.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": false
     },
     {
       "ordre": 7,
@@ -321,7 +328,8 @@
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/quete-religieuse.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": false
     },
     {
       "ordre": 8,
@@ -344,7 +352,9 @@
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/rappel-a-la-vie.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": true,
+      "inverseNameStatus": "manual_explicit"
     },
     {
       "ordre": 9,
@@ -367,7 +377,9 @@
         "onUse": "systems/add2e/scripts/sorts/soin-ultime.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": true,
+      "inverseNameStatus": "manual_explicit"
     },
     {
       "ordre": 10,
@@ -380,7 +392,7 @@
       "composantes": "V, S, M",
       "temps_incantation": "8 segments",
       "jet_sauvegarde": "aucun",
-      "inverse": "Vision fausse",
+      "inverse": "Vision erronée",
       "description": "quand le clerc lance ce sort, toute chose dans la zone d’effet apparaît comme ce qu’elle est vraiment. Les portes secrètes deviennent visibles pour le clerc, la place des choses déplacées devient évidente, les choses invisibles, éthérées et astrales deviennent également visibles. Les choses métamorphosées et transformées magiquement apparaissent sous leur vrai jour. Même une aura émise par des créatures devient visible, ainsi le clerc peut-il savoir si elles sont bonnes, mauvaises, ou entre les deux. Ce sort requiert une crème pour les yeux comme composante matérielle; cette crème est faite d’une poudre de champignons très rares, de safran et de graisse. L’inverse du sort, vision erronée, fait que la créature affectée voit les choses comme elles ne le sont pas réellement: ce qui est cher devient sans valeur, le rugueux devient lisse, la beauté devient laide, etc. La crème pour l’inverse du sort est faite d’huile, de poudre de pavot et d’essence d’orchidée rose. Pour les deux versions du sort, la crème doit être vieille de 1 à 6 mois.",
       "composants_materiels_objets": [
         {
@@ -409,7 +421,9 @@
         "onUse": "systems/add2e/scripts/sorts/vision-reelle.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": true,
+      "inverseNameStatus": "manual_explicit"
     }
   ]
 }

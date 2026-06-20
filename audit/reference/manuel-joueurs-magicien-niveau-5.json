@@ -16,10 +16,12 @@
       "niveau",
       "ordre dans le tableau du Manuel des joueurs",
       "nombre de sorts attendu",
-      "variantes explicitement nommées dans le Manuel des joueurs"
+      "variantes explicitement nommées dans le Manuel des joueurs",
+      "réversibilité et nom de l’inverse quand le Manuel le donne"
     ],
     "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis.",
-    "variantes": "Le tableau variantes est vide lorsqu’aucun choix de forme explicitement nommé ne figure dans le Manuel des joueurs."
+    "variantes": "Le tableau variantes est vide lorsqu’aucun choix de forme explicitement nommé ne figure dans le Manuel des joueurs.",
+    "reversibilite": "Le champ reversible est toujours booléen. Le champ inverse vaut null lorsque le Manuel indique un sort réversible sans donner de nom distinct à sa forme inverse."
   },
   "spells": [
     {
@@ -27,6 +29,7 @@
       "nom": "Chien fidèle de Mordenkainen",
       "niveau": 5,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -35,6 +38,7 @@
       "nom": "Coffre secret de Léomund",
       "niveau": 5,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -43,6 +47,7 @@
       "nom": "Cône de froid",
       "niveau": 5,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -51,6 +56,7 @@
       "nom": "Contact d'autres plans",
       "niveau": 5,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -59,6 +65,10 @@
       "nom": "Croissance animale",
       "niveau": 5,
       "variantes": [],
+      "reversible": true,
+      "inverse": null,
+      "inverseNameStatus": "not_named_in_manual",
+      "reversibilityNote": "Le Manuel indique que le sort est réversible sans nom distinct pour l’inverse.",
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -67,6 +77,7 @@
       "nom": "Débilité mentale",
       "niveau": 5,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -75,6 +86,7 @@
       "nom": "Distorsion des distances",
       "niveau": 5,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -83,6 +95,7 @@
       "nom": "Eau aérée",
       "niveau": 5,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -91,6 +104,7 @@
       "nom": "Extension II",
       "niveau": 5,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -116,6 +130,7 @@
           "nom": "Élémental du feu"
         }
       ],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -124,6 +139,7 @@
       "nom": "Invocation de Monstre III",
       "niveau": 5,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -132,6 +148,7 @@
       "nom": "Lithomorphose",
       "niveau": 5,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -140,6 +157,7 @@
       "nom": "Main d'interposition de Bigby",
       "niveau": 5,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -148,6 +166,7 @@
       "nom": "Métempsycose",
       "niveau": 5,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -156,6 +175,7 @@
       "nom": "Mur de fer",
       "niveau": 5,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -164,6 +184,7 @@
       "nom": "Mur de force",
       "niveau": 5,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -172,6 +193,7 @@
       "nom": "Mur de roc",
       "niveau": 5,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -180,6 +202,7 @@
       "nom": "Nécro-animation",
       "niveau": 5,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -188,6 +211,7 @@
       "nom": "Nuage létal",
       "niveau": 5,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -196,6 +220,7 @@
       "nom": "Paralysie des monstres",
       "niveau": 5,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -204,6 +229,7 @@
       "nom": "Passe-muraille",
       "niveau": 5,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -212,6 +238,7 @@
       "nom": "Téléikinésie",
       "niveau": 5,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -220,6 +247,7 @@
       "nom": "Téléportation",
       "niveau": 5,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -228,6 +256,9 @@
       "nom": "Transmutation de pierre en boue",
       "niveau": 5,
       "variantes": [],
+      "reversible": true,
+      "inverse": "Transmutation de boue en pierre",
+      "inverseNameStatus": "manual_explicit",
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     }

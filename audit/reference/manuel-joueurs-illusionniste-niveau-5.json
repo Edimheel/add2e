@@ -16,10 +16,12 @@
       "niveau",
       "ordre dans le tableau du Manuel des joueurs",
       "nombre de sorts attendu",
-      "variantes explicitement nommées dans le Manuel des joueurs"
+      "variantes explicitement nommées dans le Manuel des joueurs",
+      "réversibilité et nom de l’inverse quand le Manuel le donne"
     ],
     "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis.",
-    "variantes": "Le tableau variantes est vide lorsqu’aucun choix de forme explicitement nommé ne figure dans le Manuel des joueurs."
+    "variantes": "Le tableau variantes est vide lorsqu’aucun choix de forme explicitement nommé ne figure dans le Manuel des joueurs.",
+    "reversibilite": "Le champ reversible est toujours booléen. Le champ inverse vaut null lorsque le Manuel indique un sort réversible sans donner de nom distinct à sa forme inverse."
   },
   "spells": [
     {
@@ -27,6 +29,7 @@
       "nom": "Chaos",
       "niveau": 5,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -35,6 +38,7 @@
       "nom": "Création majeure",
       "niveau": 5,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -43,6 +47,7 @@
       "nom": "Holographie",
       "niveau": 5,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -51,6 +56,7 @@
       "nom": "Invocation des ombres",
       "niveau": 5,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -59,6 +65,7 @@
       "nom": "Labyrinthe",
       "niveau": 5,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -84,6 +91,7 @@
           "nom": "Cône de froid"
         }
       ],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -92,6 +100,7 @@
       "nom": "Monstres demi-ombre",
       "niveau": 5,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -100,6 +109,7 @@
       "nom": "Porte des ombres",
       "niveau": 5,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     }

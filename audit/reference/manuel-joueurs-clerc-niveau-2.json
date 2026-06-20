@@ -77,7 +77,8 @@
         "onUse": "systems/add2e/scripts/sorts/augure.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": false
     },
     {
       "ordre": 2,
@@ -99,7 +100,8 @@
         "onUse": "systems/add2e/scripts/sorts/cantique.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": false
     },
     {
       "ordre": 3,
@@ -121,7 +123,8 @@
         "onUse": "systems/add2e/scripts/sorts/charme-serpents.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": false
     },
     {
       "ordre": 4,
@@ -144,7 +147,9 @@
         "onUse": "systems/add2e/scripts/sorts/detection-des-charmes.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": true,
+      "inverseNameStatus": "manual_explicit"
     },
     {
       "ordre": 5,
@@ -166,7 +171,8 @@
         "onUse": "systems/add2e/scripts/sorts/detection-des-pieges.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": false
     },
     {
       "ordre": 6,
@@ -188,7 +194,8 @@
         "onUse": "systems/add2e/scripts/sorts/langage-des-animaux.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": false
     },
     {
       "ordre": 7,
@@ -220,7 +227,8 @@
         "onUse": "systems/add2e/scripts/sorts/marteau-spirituel.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": false
     },
     {
       "ordre": 8,
@@ -253,7 +261,8 @@
         "onUse": "systems/add2e/scripts/sorts/paralysie.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": false
     },
     {
       "ordre": 9,
@@ -276,7 +285,9 @@
         "onUse": "systems/add2e/scripts/sorts/connaissance-des-alignements.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": true,
+      "inverseNameStatus": "manual_explicit"
     },
     {
       "ordre": 10,
@@ -308,7 +319,8 @@
         "onUse": "systems/add2e/scripts/sorts/resistance-au-feu-resistance-au-froid.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": false
     },
     {
       "ordre": 11,
@@ -348,7 +360,8 @@
         "onUse": "systems/add2e/scripts/sorts/ralentissement-du-poison.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": false
     },
     {
       "ordre": 12,
@@ -370,7 +383,8 @@
         "onUse": "systems/add2e/scripts/sorts/silence-rayon-de-15-pieds.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": false
     }
   ]
 }

@@ -31,7 +31,9 @@
         "onUse": "systems/add2e/scripts/sorts/apaisement.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": true,
+      "inverseNameStatus": "manual_explicit"
     },
     {
       "ordre": 2,
@@ -44,7 +46,7 @@
       "composantes": "V, S, M",
       "temps_incantation": "1 round",
       "jet_sauvegarde": "aucun",
-      "inverse": "Déshydratation",
+      "inverse": "Destruction d’eau",
       "description": "en lançant ce sort, le clerc peut créer 15 litres d’eau par niveau qu’il a atteint; soit 30 l au niveau 2, 45 l au niveau 3, etc. L’eau est claire et potable (elle ressemble à de l’eau de pluie). L’eau créée dure jusqu’à évaporation naturelle ou jusqu’à ce qu’elle soit utilisée. L’eau peut être créée dans un endroit qui pourra contenir jusqu’à 0,75 m³. On ne peut pas créer de l’eau à l’intérieur d’une chose vivante. L’inverse du sort, destruction d’eau, fait disparaitre l’eau sans aucune trace (comme de la vapeur), pour une même quantité par niveau du clerc. Le sort demande au moins une goutte d’eau ou une pincée de poussière comme composante matérielle: la goutte d’eau pour la création, la poussière pour la destruction.",
       "composants_materiels_objets": [
         {
@@ -73,7 +75,9 @@
         "onUse": "systems/add2e/scripts/sorts/creation-d-eau.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": true,
+      "inverseNameStatus": "manual_explicit"
     },
     {
       "ordre": 3,
@@ -115,7 +119,9 @@
         "onUse": "systems/add2e/scripts/sorts/benediction.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": true,
+      "inverseNameStatus": "manual_explicit"
     },
     {
       "ordre": 4,
@@ -137,7 +143,8 @@
         "onUse": "systems/add2e/scripts/sorts/detection-de-la-magie.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": false
     },
     {
       "ordre": 5,
@@ -160,7 +167,9 @@
         "onUse": "systems/add2e/scripts/sorts/detection-du-mal.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": true,
+      "inverseNameStatus": "manual_explicit"
     },
     {
       "ordre": 6,
@@ -182,7 +191,8 @@
         "onUse": "systems/add2e/scripts/sorts/injonction.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": false
     },
     {
       "ordre": 7,
@@ -205,7 +215,9 @@
         "onUse": "systems/add2e/scripts/sorts/lumiere.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": true,
+      "inverseNameStatus": "manual_explicit"
     },
     {
       "ordre": 8,
@@ -228,7 +240,9 @@
         "onUse": "systems/add2e/scripts/sorts/protection-contre-le-mal.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": true,
+      "inverseNameStatus": "manual_explicit"
     },
     {
       "ordre": 9,
@@ -241,7 +255,7 @@
       "composantes": "V, S",
       "temps_incantation": "1 round",
       "jet_sauvegarde": "aucun",
-      "inverse": "Putréfaction de l'eau et des aliments",
+      "inverse": "Corruption de l’eau et des aliments",
       "description": "ce sort permet de purifier toute nourriture et toute eau polluée, moisie, pourrie, empoisonnée. L’inverse du sort, corruption de l’eau et des aliments, rend la nourriture impropre à la consommation et l’eau polluée et non potable; l’inverse profane même l’eau bénite. L’eau maudite est altérée par une purification de l’eau.",
       "composants_materiels_objets": [],
       "foundry": {
@@ -251,7 +265,9 @@
         "onUse": "systems/add2e/scripts/sorts/purification-de-leau-et-des-aliments.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": true,
+      "inverseNameStatus": "manual_explicit"
     },
     {
       "ordre": 10,
@@ -283,7 +299,8 @@
         "onUse": "systems/add2e/scripts/sorts/resistance-au-froid.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": false
     },
     {
       "ordre": 11,
@@ -324,7 +341,8 @@
         "onUse": "systems/add2e/scripts/sorts/sanctuaire.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": false
     },
     {
       "ordre": 12,
@@ -347,7 +365,9 @@
         "onUse": "systems/add2e/scripts/sorts/soins-mineurs.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": true,
+      "inverseNameStatus": "manual_explicit"
     }
   ]
 }

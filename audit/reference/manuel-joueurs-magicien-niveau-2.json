@@ -16,10 +16,12 @@
       "niveau",
       "ordre dans le tableau du Manuel des joueurs",
       "nombre de sorts attendu",
-      "variantes explicitement nommées dans le Manuel des joueurs"
+      "variantes explicitement nommées dans le Manuel des joueurs",
+      "réversibilité et nom de l’inverse quand le Manuel le donne"
     ],
     "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis.",
-    "variantes": "Le tableau variantes est vide lorsqu’aucun choix de forme explicitement nommé ne figure dans le Manuel des joueurs."
+    "variantes": "Le tableau variantes est vide lorsqu’aucun choix de forme explicitement nommé ne figure dans le Manuel des joueurs.",
+    "reversibilite": "Le champ reversible est toujours booléen. Le champ inverse vaut null lorsque le Manuel indique un sort réversible sans donner de nom distinct à sa forme inverse."
   },
   "spells": [
     {
@@ -27,6 +29,7 @@
       "nom": "Bouche magique",
       "niveau": 2,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -35,6 +38,7 @@
       "nom": "Bruitage",
       "niveau": 2,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -43,6 +47,7 @@
       "nom": "Corde enchantée",
       "niveau": 2,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -51,6 +56,7 @@
       "nom": "Détection de l'invisibilité",
       "niveau": 2,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -59,6 +65,9 @@
       "nom": "Détection du mal",
       "niveau": 2,
       "variantes": [],
+      "reversible": true,
+      "inverse": "Détection du bien",
+      "inverseNameStatus": "manual_explicit",
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -67,6 +76,7 @@
       "nom": "E.S.P.",
       "niveau": 2,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -75,6 +85,7 @@
       "nom": "Force",
       "niveau": 2,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -83,6 +94,7 @@
       "nom": "Fracassement",
       "niveau": 2,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -91,6 +103,7 @@
       "nom": "Image miroir",
       "niveau": 2,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -99,6 +112,7 @@
       "nom": "Invisibilité",
       "niveau": 2,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -107,6 +121,7 @@
       "nom": "Lévitation",
       "niveau": 2,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -115,6 +130,9 @@
       "nom": "Localisation d'objets",
       "niveau": 2,
       "variantes": [],
+      "reversible": true,
+      "inverse": "Dissimulation d’objets",
+      "inverseNameStatus": "manual_explicit",
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -123,6 +141,7 @@
       "nom": "Lumière éternelle",
       "niveau": 2,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -131,6 +150,7 @@
       "nom": "Nuage puant",
       "niveau": 2,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -139,6 +159,7 @@
       "nom": "Or des fous",
       "niveau": 2,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -147,6 +168,7 @@
       "nom": "Oubli",
       "niveau": 2,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -155,6 +177,7 @@
       "nom": "Ouverture",
       "niveau": 2,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -163,6 +186,7 @@
       "nom": "Peur",
       "niveau": 2,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -171,6 +195,7 @@
       "nom": "Piège de Léomund",
       "niveau": 2,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -188,6 +213,7 @@
           "nom": "Fumée"
         }
       ],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -196,6 +222,7 @@
       "nom": "Rayon d'affaiblissement",
       "niveau": 2,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -204,6 +231,7 @@
       "nom": "Ténèbres sur 5 mètres",
       "niveau": 2,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -212,6 +240,7 @@
       "nom": "Toile d'araignée",
       "niveau": 2,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -220,6 +249,7 @@
       "nom": "Verrou magique",
       "niveau": 2,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     }

@@ -16,10 +16,12 @@
       "niveau",
       "ordre dans le tableau du Manuel des joueurs",
       "nombre de sorts attendu",
-      "variantes explicitement nommées dans le Manuel des joueurs"
+      "variantes explicitement nommées dans le Manuel des joueurs",
+      "réversibilité et nom de l’inverse quand le Manuel le donne"
     ],
     "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis.",
-    "variantes": "Le tableau variantes est vide lorsqu’aucun choix de forme explicitement nommé ne figure dans le Manuel des joueurs."
+    "variantes": "Le tableau variantes est vide lorsqu’aucun choix de forme explicitement nommé ne figure dans le Manuel des joueurs.",
+    "reversibilite": "Le champ reversible est toujours booléen. Le champ inverse vaut null lorsque le Manuel indique un sort réversible sans donner de nom distinct à sa forme inverse."
   },
   "spells": [
     {
@@ -27,6 +29,7 @@
       "nom": "Corde enchantée",
       "niveau": 3,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -35,6 +38,7 @@
       "nom": "Dissipation des illusions",
       "niveau": 3,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -43,6 +47,7 @@
       "nom": "Écriture illusoire",
       "niveau": 3,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -51,6 +56,7 @@
       "nom": "Effroi",
       "niveau": 3,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -59,6 +65,7 @@
       "nom": "Force spectrale",
       "niveau": 3,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -67,6 +74,7 @@
       "nom": "Invisibilité sur 3 m",
       "niveau": 3,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -75,6 +83,7 @@
       "nom": "Lumière éternelle",
       "niveau": 3,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -83,6 +92,7 @@
       "nom": "Non-détection",
       "niveau": 3,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -91,6 +101,7 @@
       "nom": "Paralysie musculaire",
       "niveau": 3,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -99,6 +110,7 @@
       "nom": "Suggestion",
       "niveau": 3,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -107,6 +119,7 @@
       "nom": "Ténèbres éternelles",
       "niveau": 3,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -115,6 +128,7 @@
       "nom": "Terrain hallucinatoire",
       "niveau": 3,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     }

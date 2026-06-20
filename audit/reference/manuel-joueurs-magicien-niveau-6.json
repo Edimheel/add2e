@@ -16,10 +16,12 @@
       "niveau",
       "ordre dans le tableau du Manuel des joueurs",
       "nombre de sorts attendu",
-      "variantes explicitement nommées dans le Manuel des joueurs"
+      "variantes explicitement nommées dans le Manuel des joueurs",
+      "réversibilité et nom de l’inverse quand le Manuel le donne"
     ],
     "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis.",
-    "variantes": "Le tableau variantes est vide lorsqu’aucun choix de forme explicitement nommé ne figure dans le Manuel des joueurs."
+    "variantes": "Le tableau variantes est vide lorsqu’aucun choix de forme explicitement nommé ne figure dans le Manuel des joueurs.",
+    "reversibilite": "Le champ reversible est toujours booléen. Le champ inverse vaut null lorsque le Manuel indique un sort réversible sans donner de nom distinct à sa forme inverse."
   },
   "spells": [
     {
@@ -27,6 +29,9 @@
       "nom": "Abaissement des eaux",
       "niveau": 6,
       "variantes": [],
+      "reversible": true,
+      "inverse": "Gonflement des eaux",
+      "inverseNameStatus": "manual_explicit",
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -35,6 +40,7 @@
       "nom": "Bulle anti-magique",
       "niveau": 6,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -43,6 +49,7 @@
       "nom": "Chasseur invisible",
       "niveau": 6,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -51,6 +58,7 @@
       "nom": "Contrôle du climat",
       "niveau": 6,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -59,6 +67,7 @@
       "nom": "Désintégration",
       "niveau": 6,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -67,6 +76,7 @@
       "nom": "Enchantement",
       "niveau": 6,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -75,6 +85,7 @@
       "nom": "Extension III",
       "niveau": 6,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -83,6 +94,7 @@
       "nom": "Glissement de terrain",
       "niveau": 6,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -91,6 +103,7 @@
       "nom": "Globe d'invulnérabilité",
       "niveau": 6,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -99,6 +112,7 @@
       "nom": "Holographie",
       "niveau": 6,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -107,6 +121,7 @@
       "nom": "Incantation mortelle",
       "niveau": 6,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -115,6 +130,7 @@
       "nom": "Invocation de monstre IV",
       "niveau": 6,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -123,6 +139,7 @@
       "nom": "Main de force de bigby",
       "niveau": 6,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -131,6 +148,7 @@
       "nom": "Mythomancie",
       "niveau": 6,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -139,6 +157,7 @@
       "nom": "Punition spirituelle",
       "niveau": 6,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -147,6 +166,7 @@
       "nom": "Quête magique",
       "niveau": 6,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -155,6 +175,7 @@
       "nom": "Réincarnation",
       "niveau": 6,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -163,6 +184,7 @@
       "nom": "Répulsion",
       "niveau": 6,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -171,6 +193,7 @@
       "nom": "Séparation des eaux",
       "niveau": 6,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -179,6 +202,7 @@
       "nom": "Sphère glaciale d'Otiluke",
       "niveau": 6,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -187,6 +211,7 @@
       "nom": "Transformation de Tenser",
       "niveau": 6,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -195,6 +220,9 @@
       "nom": "Transmutation de pierre en chair",
       "niveau": 6,
       "variantes": [],
+      "reversible": true,
+      "inverse": "Transmutation de chair en pierre",
+      "inverseNameStatus": "manual_explicit",
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -203,6 +231,7 @@
       "nom": "Transvision",
       "niveau": 6,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -211,6 +240,7 @@
       "nom": "Vigiles et sentinelles",
       "niveau": 6,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     }

@@ -16,10 +16,12 @@
       "niveau",
       "ordre dans le tableau du Manuel des joueurs",
       "nombre de sorts attendu",
-      "variantes explicitement nommées dans le Manuel des joueurs"
+      "variantes explicitement nommées dans le Manuel des joueurs",
+      "réversibilité et nom de l’inverse quand le Manuel le donne"
     ],
     "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis.",
-    "variantes": "Le tableau variantes est vide lorsqu’aucun choix de forme explicitement nommé ne figure dans le Manuel des joueurs."
+    "variantes": "Le tableau variantes est vide lorsqu’aucun choix de forme explicitement nommé ne figure dans le Manuel des joueurs.",
+    "reversibilite": "Le champ reversible est toujours booléen. Le champ inverse vaut null lorsque le Manuel indique un sort réversible sans donner de nom distinct à sa forme inverse."
   },
   "spells": [
     {
@@ -27,6 +29,9 @@
       "nom": "Bâtons à serpents",
       "niveau": 5,
       "variantes": [],
+      "reversible": true,
+      "inverse": "Serpents à bâtons",
+      "inverseNameStatus": "manual_explicit",
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -35,6 +40,7 @@
       "nom": "Bouclier anti-plantes",
       "niveau": 5,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -43,6 +49,7 @@
       "nom": "Communion avec la nature",
       "niveau": 5,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -51,6 +58,7 @@
       "nom": "Contrôle des vents",
       "niveau": 5,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -59,6 +67,10 @@
       "nom": "Croissance animale",
       "niveau": 5,
       "variantes": [],
+      "reversible": true,
+      "inverse": null,
+      "inverseNameStatus": "not_named_in_manual",
+      "reversibilityNote": "Le Manuel indique que le sort est réversible sans nom distinct pour l’inverse.",
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -67,6 +79,7 @@
       "nom": "Fléau d’insectes",
       "niveau": 5,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -75,6 +88,7 @@
       "nom": "Invocation animale II",
       "niveau": 5,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -83,6 +97,7 @@
       "nom": "Mur de feu",
       "niveau": 5,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -91,6 +106,7 @@
       "nom": "Passe-plantes",
       "niveau": 5,
       "variantes": [],
+      "reversible": false,
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     },
@@ -99,6 +115,9 @@
       "nom": "Transmutation de pierre en boue",
       "niveau": 5,
       "variantes": [],
+      "reversible": true,
+      "inverse": "Transmutation de boue en pierre",
+      "inverseNameStatus": "manual_explicit",
       "status": "nom_reference_tableau_manuel_joueurs",
       "regles_detaillees": "a_completer_depuis_description_du_sort"
     }

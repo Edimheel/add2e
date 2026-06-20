@@ -30,7 +30,8 @@
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/animation-d-un-objet.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": false
     },
     {
       "ordre": 2,
@@ -52,7 +53,8 @@
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/barriere-de-lames.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": false
     },
     {
       "ordre": 3,
@@ -65,7 +67,7 @@
       "composantes": "V, S",
       "temps_incantation": "1 round",
       "jet_sauvegarde": "aucun",
-      "inverse": "Blessure",
+      "inverse": "Traumatisme",
       "description": "ce sort très puissant permet au clerc de guérir n’importe quelle maladie et les blessures qu’a pu subir quelqu’un (voir soins mineurs pour la liste des créatures pouvant être affectées). Il guérit les maladies sous toutes leurs formes. Il guérit aussi la cécité et redonne tous les points de vie perdus sauf 1d4. Il annule le sort de débilité mentale. Ce sort ne sera évidemment pas efficace contre des maladies ou des blessures ultérieures (il ne s’agit pas d’une immunité ou d’un vaccin). L’inverse du sort, traumatisme, inflige une maladie à la victime et lui fait perdre tous ses points de vie sauf 1d4. Pour traumatisme, le clerc doit réussir un jet pour toucher.",
       "composants_materiels_objets": [],
       "foundry": {
@@ -75,7 +77,9 @@
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/guerison.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": true,
+      "inverseNameStatus": "manual_explicit"
     },
     {
       "ordre": 4,
@@ -97,7 +101,8 @@
         "onUse": "systems/add2e/scripts/sorts/invocation-des-animaux.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": false
     },
     {
       "ordre": 5,
@@ -119,7 +124,8 @@
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/langage-des-monstres.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": false
     },
     {
       "ordre": 6,
@@ -160,7 +166,8 @@
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/pierres-parlantes.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": false
     },
     {
       "ordre": 7,
@@ -173,7 +180,7 @@
       "composantes": "V, S, M",
       "temps_incantation": "3 rounds",
       "jet_sauvegarde": "aucun",
-      "inverse": "Désorientation",
+      "inverse": "Fausse route",
       "description": "grâce à ce sort, le clerc est capable de trouver la route la plus courte et la plus directe pour l’emmener là où il le désire, que ce soit pour entrer ou sortir d’un endroit. Cet endroit peut être à l’extérieur ou sous terre; ce peut même être un labyrinthe. Cette connaissance dure tant que le sort est actif, c'est-à-dire 1 tour par niveau du clerc. Ce sort permet au clerc et à ceux qui sont avec lui de sortir d’un sort de labyrinthe en un round. À noter qu’un lieu n’est pas un objet: le sort porte sur un endroit connu et identifié en tant que tel et non sur ce qu’il contient ou abrite. On peut ainsi trouver une forêt de frênes connue mais pas celle où habite le dragon vert ou qui contient tel trésor. La composante matérielle de ce sort est un jeu d’objets divinatoires de ceux appréciés par le clerc: en os ou en ivoire, sous la forme de bâtonnets ou de runes gravées. L’inverse du sort, fausse route, fait que la créature touchée est incapable de trouver sa route pendant la durée du sort, bien qu’elle puisse être guidée.",
       "composants_materiels_objets": [
         {
@@ -193,7 +200,9 @@
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/orientation.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": true,
+      "inverseNameStatus": "manual_explicit"
     },
     {
       "ordre": 8,
@@ -215,7 +224,8 @@
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/mot-de-rappel.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": false
     },
     {
       "ordre": 9,
@@ -248,7 +258,8 @@
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/separation-des-eaux.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": false
     },
     {
       "ordre": 10,
@@ -270,7 +281,8 @@
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/serviteur-aerien.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": false
     }
   ]
 }

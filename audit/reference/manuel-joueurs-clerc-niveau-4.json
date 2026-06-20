@@ -21,7 +21,7 @@
       "composantes": "V, S, M",
       "temps_incantation": "1 tour",
       "jet_sauvegarde": "aucun",
-      "inverse": "Élévation des eaux",
+      "inverse": "Gonflement des eaux",
       "description": "en lançant ce sort, le clerc provoque une dépression, un abaissement de l’eau ou d’un liquide similaire dans la zone d’effet. Cette baisse du niveau de l’eau est de 5 % par niveau du clerc, c'est-à-dire 40 % au niveau 8, 45 % au niveau 9, etc. La zone d’effet augmente aussi avec le niveau du clerc: 8\" x 8\" au niveau 8, 9\" x 9\" au niveau 9, etc. Les composantes matérielles de ce sort sont le symbole sacré du clerc et une pincée de poussière. L’inverse du sort, gonflement des eaux, annule les effets d’un abaissement et/ou fait monter le niveau de l’eau dans la zone d’effet de 30 cm par niveau du clerc. Ce sort ne peut pas être utilisé sous l’eau.",
       "composants_materiels_objets": [
         {
@@ -50,7 +50,9 @@
         "onUse": "systems/add2e/scripts/sorts/abaissement-des-eaux.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": true,
+      "inverseNameStatus": "manual_explicit"
     },
     {
       "ordre": 2,
@@ -92,7 +94,9 @@
         "onUse": "systems/add2e/scripts/sorts/batons-a-serpents.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": true,
+      "inverseNameStatus": "manual_explicit"
     },
     {
       "ordre": 3,
@@ -105,7 +109,7 @@
       "composantes": "V, S",
       "temps_incantation": "7 segments",
       "jet_sauvegarde": "aucun",
-      "inverse": "Poison",
+      "inverse": "Empoisonnement",
       "description": "le clerc peut, avec ce sort, désintoxiquer toute créature ou toute substance touchée de n’importe quel poison. Un adversaire, tel qu’un reptile ou un serpent venimeux (ou même l’arme d’un adversaire enduite de poison), non consentant pour la désintoxication devra être touché par le clerc (jet pour toucher réussi). Les effets du sort contre-poison sont permanents mais seulement sur le poison existant dans la créature au moment où elle est touchée, c.-à-d. que les créatures secrétant un nouveau poison ne seront pas désintoxiquées de façon permanente. L’inverse du sort, empoisonnement, requiert aussi la réussite d’un jet pour toucher et la victime est autorisée à effectuer un jet de protection contre le poison. Si le jet de protection est raté, la victime est tuée par le poison.",
       "composants_materiels_objets": [],
       "foundry": {
@@ -115,7 +119,9 @@
         "onUse": "systems/add2e/scripts/sorts/contre-poison.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": true,
+      "inverseNameStatus": "manual_explicit"
     },
     {
       "ordre": 4,
@@ -128,7 +134,7 @@
       "composantes": "V, S, M",
       "temps_incantation": "7 segments",
       "jet_sauvegarde": "aucun",
-      "inverse": "Indétection des mensonges",
+      "inverse": "Dissimulation des mensonges",
       "description": "quand le clerc lance ce sort, le bénéficiaire est immédiatement capable de savoir si la vérité a été dite. Le sort ne révèle pas la vérité, ni les non-dits, ni les faux-fuyants: il ne fait que détecter les mensonges. Le sort dure un round par niveau du clerc. De la poussière d’or est nécessaire pour lancer détection des mensonges. L’inverse du sort, dissimulation des mensonges, fait que les mensonges paraissent crédibles ou annule simplement les effets d’une détection des mensonges. La composante matérielle de dissimulation des mensonges est de la poussière de laiton.",
       "composants_materiels_objets": [
         {
@@ -148,7 +154,9 @@
         "onUse": "systems/add2e/scripts/sorts/detection-des-mensonges.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": true,
+      "inverseNameStatus": "manual_explicit"
     },
     {
       "ordre": 5,
@@ -216,7 +224,8 @@
         "onUse": "systems/add2e/scripts/sorts/divination.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": false
     },
     {
       "ordre": 6,
@@ -266,7 +275,8 @@
         "onUse": "systems/add2e/scripts/sorts/exorcisme.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": false
     },
     {
       "ordre": 7,
@@ -316,7 +326,8 @@
         "onUse": "systems/add2e/scripts/sorts/langage-des-plantes.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": false
     },
     {
       "ordre": 8,
@@ -338,7 +349,10 @@
         "onUse": "systems/add2e/scripts/sorts/langue.js"
       },
       "status": "reference_a_verifier_manuellement",
-      "variantes": []
+      "variantes": [],
+      "reversible": true,
+      "inverse": "Incompréhension",
+      "inverseNameStatus": "manual_explicit"
     },
     {
       "ordre": 9,
@@ -361,7 +375,9 @@
         "onUse": "systems/add2e/scripts/sorts/protection-contre-le-mal-sur-3-m.js"
       },
       "status": "reference_a_verifier_manuellement",
-      "variantes": []
+      "variantes": [],
+      "reversible": true,
+      "inverseNameStatus": "manual_explicit"
     },
     {
       "ordre": 10,
@@ -384,7 +400,9 @@
         "onUse": "systems/add2e/scripts/sorts/soins-des-blessures-graves.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": true,
+      "inverseNameStatus": "manual_explicit"
     }
   ]
 }

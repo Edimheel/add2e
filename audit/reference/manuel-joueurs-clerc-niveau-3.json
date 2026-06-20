@@ -51,7 +51,8 @@
         "onUse": "systems/add2e/scripts/sorts/catalepsie.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": false
     },
     {
       "ordre": 2,
@@ -75,7 +76,9 @@
         "onUse": "systems/add2e/scripts/sorts/delivrance-de-la-malediction.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": true,
+      "inverseNameStatus": "manual_explicit"
     },
     {
       "ordre": 3,
@@ -98,7 +101,8 @@
         "onUse": "systems/add2e/scripts/sorts/dissipation-de-la-magie.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": false
     },
     {
       "ordre": 4,
@@ -141,7 +145,8 @@
         "onUse": "systems/add2e/scripts/sorts/glyphe-de-garde.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": false
     },
     {
       "ordre": 5,
@@ -165,7 +170,9 @@
         "onUse": "systems/add2e/scripts/sorts/guerison-de-la-cecite-ou-de-la-surdite.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": true,
+      "inverseNameStatus": "manual_explicit"
     },
     {
       "ordre": 6,
@@ -189,7 +196,9 @@
         "onUse": "systems/add2e/scripts/sorts/guerison-des-maladies.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": true,
+      "inverseNameStatus": "manual_explicit"
     },
     {
       "ordre": 7,
@@ -202,7 +211,7 @@
       "composantes": "V, S, M",
       "temps_incantation": "1 tour",
       "jet_sauvegarde": "aucun",
-      "inverse": "Dissimulation d'objets",
+      "inverse": "Dissimulation d’objets",
       "composants_materiels_source": "pierre aimantée",
       "notes_regles": "Ne fonctionne pas sur un être vivant. Le clerc tourne lentement sur lui-même et sait quand il se trouve face à la direction de l’objet.",
       "description": "ce sort aide à localiser un objet connu ou familier. Le clerc lance le sort, tourne lentement sur lui-même et sait quand il se trouve face à la direction de l’objet à découvrir, tant que cet objet se trouve dans la portée du sort. Ce sort demande une pierre aimantée comme composante matérielle. On peut localiser des objets tels que: un bijou, un outil, une arme ou même une échelle ou un escalier. L’inverse de ce sort, dissimulation d'objets, permet au clerc de protéger un objet d’une telle détection, d’une localisation par boule de cristal ou par des moyens similaires. Aucune application du sort ne fonctionne sur un être vivant.",
@@ -224,7 +233,9 @@
         "onUse": "systems/add2e/scripts/sorts/localisation-dobjets.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": true,
+      "inverseNameStatus": "manual_explicit"
     },
     {
       "ordre": 8,
@@ -248,7 +259,9 @@
         "onUse": "systems/add2e/scripts/sorts/lumiere-continuelle.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": true,
+      "inverseNameStatus": "manual_explicit"
     },
     {
       "ordre": 9,
@@ -271,7 +284,8 @@
         "onUse": "systems/add2e/scripts/sorts/creation-de-nourriture-et-d-eau.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": false
     },
     {
       "ordre": 10,
@@ -332,7 +346,8 @@
         "onUse": "systems/add2e/scripts/sorts/animation-des-morts.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": false
     },
     {
       "ordre": 11,
@@ -375,7 +390,8 @@
         "onUse": "systems/add2e/scripts/sorts/communication-avec-les-morts.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": false
     },
     {
       "ordre": 12,
@@ -427,7 +443,8 @@
         "onUse": "systems/add2e/scripts/sorts/priere.js"
       },
       "status": "reference_complete_description_normalisee",
-      "variantes": []
+      "variantes": [],
+      "reversible": false
     }
   ]
 }
