@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const VERSION = "2026-06-20-phb-inventory-prune-v1";
+const VERSION = "2026-06-20-phb-inventory-prune-v2-shared-spells";
 const V3_FILE = "fvtt-spells-all-normalise-mecanique-v3.json";
 const CONTROL_FILE = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
 const MASTER_FILE = "audit/reference/manuel-joueurs-sorts-master.json";
@@ -14,6 +14,11 @@ const CLASSES = {
   illusionniste: [1, 2, 3, 4, 5, 6, 7]
 };
 
+// Erreur historique de transcription de la référence PHB, pas une règle de rapprochement floue.
+const LEGACY_REFERENCE_NAME_ALIASES = new Map([
+  ["teleikinesie", "telekinesie"]
+]);
+
 const text = value => String(value ?? "").replace(/\s+/g, " ").trim();
 const slug = value => text(value)
   .toLowerCase()
@@ -22,6 +27,7 @@ const slug = value => text(value)
   .replace(/[’']/g, "'")
   .replace(/[^a-z0-9]+/g, "_")
   .replace(/^_+|_+$/g, "");
+const nameKey = value => LEGACY_REFERENCE_NAME_ALIASES.get(slug(value)) ?? slug(value);
 const clone = value => value === undefined ? undefined : JSON.parse(JSON.stringify(value));
 
 function readJson(file, fallback = null) {
@@ -74,8 +80,12 @@ function itemKey(item) {
   return id || `${slug(item?.system?.classe)}|${itemLevel(item)}|${slug(item?.name ?? item?.system?.nom)}`;
 }
 
-function metaKey(classSlug, level, name) {
+function referenceKey(classSlug, level, name) {
   return `${classSlug}|${level}|${slug(name)}`;
+}
+
+function scopedNameKey(classSlug, level, name) {
+  return `${classSlug}|${level}|${nameKey(name)}`;
 }
 
 function lotScope(lot) {
@@ -116,8 +126,7 @@ function loadReferenceEntries() {
         const name = text(spell?.nom ?? spell?.name);
         if (!name) continue;
         const referenceLevel = Number(spell?.niveau ?? spell?.level ?? level) || level;
-        references.set(metaKey(classSlug, referenceLevel, name), {
-          name,
+        references.set(referenceKey(classSlug, referenceLevel, name), {
           aliases: referenceAliases(spell),
           source: relative
         });
@@ -128,6 +137,12 @@ function loadReferenceEntries() {
   return references;
 }
 
+function addLookup(map, key, value) {
+  const values = map.get(key) ?? new Set();
+  values.add(value);
+  map.set(key, values);
+}
+
 function loadPhbInventory() {
   const master = readJson(path.join(ROOT, MASTER_FILE), null);
   if (!master || typeof master !== "object" || !master.lots || typeof master.lots !== "object") {
@@ -136,7 +151,8 @@ function loadPhbInventory() {
 
   const references = loadReferenceEntries();
   const entries = new Map();
-  const lookup = new Map();
+  const nameLookup = new Map();
+  const scopedLookup = new Map();
 
   for (const [lot, names] of Object.entries(master.lots)) {
     const scope = lotScope(lot);
@@ -145,36 +161,31 @@ function loadPhbInventory() {
     for (const rawName of names) {
       const name = text(rawName);
       if (!name) continue;
-      const key = metaKey(scope.classSlug, scope.level, name);
+      const key = referenceKey(scope.classSlug, scope.level, name);
+      if (entries.has(key)) {
+        throw new Error(`Doublon dans l’inventaire du Manuel : ${key}.`);
+      }
+
       const reference = references.get(key);
-      const aliases = reference?.aliases ?? [];
       const entry = {
         key,
         class: scope.classSlug,
         level: scope.level,
         name,
-        aliases,
+        aliases: reference?.aliases ?? [],
         referenceFile: reference?.source ?? null
       };
-
-      if (entries.has(key)) {
-        throw new Error(`Doublon dans l’inventaire du Manuel : ${key}.`);
-      }
       entries.set(key, entry);
 
-      for (const candidateName of [name, ...aliases]) {
-        const candidateKey = metaKey(scope.classSlug, scope.level, candidateName);
-        const existing = lookup.get(candidateKey);
-        if (existing && existing !== key) {
-          throw new Error(`Alias Foundry ambigu dans l’inventaire du Manuel : ${candidateKey}.`);
-        }
-        lookup.set(candidateKey, key);
+      for (const candidateName of [name, ...entry.aliases]) {
+        addLookup(nameLookup, nameKey(candidateName), key);
+        addLookup(scopedLookup, scopedNameKey(scope.classSlug, scope.level, candidateName), key);
       }
     }
   }
 
   if (!entries.size) throw new Error("L’inventaire du Manuel ne contient aucun sort.");
-  return { entries, lookup };
+  return { entries, nameLookup, scopedLookup };
 }
 
 function summary(item) {
@@ -191,33 +202,54 @@ function reconcile(items, inventory) {
   const matchedReferenceKeys = new Set();
   const outsidePhb = [];
   const matchedItems = [];
+  const sharedListMatches = [];
 
   for (const item of items) {
     if (!isSpell(item)) continue;
 
     const name = text(item?.name ?? item?.system?.nom);
     const level = itemLevel(item);
-    const references = [];
-
-    for (const classSlug of itemClasses(item)) {
-      const candidate = inventory.lookup.get(metaKey(classSlug, level, name));
-      if (candidate) references.push(candidate);
+    const classes = [...itemClasses(item)];
+    const scopedReferences = new Set();
+    for (const classSlug of classes) {
+      for (const key of inventory.scopedLookup.get(scopedNameKey(classSlug, level, name)) ?? []) {
+        scopedReferences.add(key);
+      }
     }
 
-    const uniqueReferences = [...new Set(references)];
-    if (!uniqueReferences.length) {
+    // Un même item peut être listé par plusieurs classes et à des niveaux différents.
+    // La présence dans une liste du Manuel suffit à identifier le sort physique.
+    const sharedReferences = new Set(inventory.nameLookup.get(nameKey(name)) ?? []);
+    const references = [...new Set([...scopedReferences, ...sharedReferences])];
+
+    if (!references.length) {
       outsidePhb.push({ key: itemKey(item), ...summary(item) });
       continue;
     }
 
-    for (const key of uniqueReferences) matchedReferenceKeys.add(key);
-    matchedItems.push({ key: itemKey(item), item: summary(item), references: uniqueReferences });
+    for (const key of references) matchedReferenceKeys.add(key);
+    const itemSummary = summary(item);
+    matchedItems.push({ key: itemKey(item), item: itemSummary, references });
+
+    const crossListReferences = references
+      .map(key => inventory.entries.get(key))
+      .filter(entry => entry && !classes.includes(entry.class));
+    if (crossListReferences.length) {
+      sharedListMatches.push({
+        item: itemSummary,
+        references: crossListReferences.map(entry => ({
+          class: entry.class,
+          level: entry.level,
+          name: entry.name
+        }))
+      });
+    }
   }
 
   const missingManual = [...inventory.entries.values()]
     .filter(entry => !matchedReferenceKeys.has(entry.key));
 
-  return { outsidePhb, missingManual, matchedItems };
+  return { outsidePhb, missingManual, matchedItems, sharedListMatches };
 }
 
 function stableValue(value) {
@@ -274,14 +306,15 @@ function main() {
   const result = reconcile(items, inventory);
 
   console.log(`[ADD2E][PHB_PRUNE] Sorts V3 analysés: ${spells.length}.`);
-  console.log(`[ADD2E][PHB_PRUNE] Sorts déclarés par le Manuel: ${inventory.entries.size}.`);
+  console.log(`[ADD2E][PHB_PRUNE] Entrées classe/niveau déclarées par le Manuel: ${inventory.entries.size}.`);
   console.log(`[ADD2E][PHB_PRUNE] Sorts V3 appariés au Manuel: ${result.matchedItems.length}.`);
+  console.log(`[ADD2E][PHB_PRUNE] Correspondances partagées entre listes: ${result.sharedListMatches.length}.`);
   console.log(`[ADD2E][PHB_PRUNE] Sorts V3 hors Manuel: ${result.outsidePhb.length}.`);
-  console.log(`[ADD2E][PHB_PRUNE] Sorts du Manuel absents du V3: ${result.missingManual.length}.`);
+  console.log(`[ADD2E][PHB_PRUNE] Entrées du Manuel absentes du V3: ${result.missingManual.length}.`);
 
   if (result.missingManual.length) {
     printReport("Références du Manuel sans équivalent V3 — suppression bloquée", result.missingManual);
-    throw new Error("Suppression annulée : chaque sort du Manuel doit être apparié exactement avant toute suppression.");
+    throw new Error("Suppression annulée : chaque sort du Manuel doit être apparié avant toute suppression.");
   }
 
   if (!apply) {
@@ -301,8 +334,9 @@ function main() {
     reference: MASTER_FILE,
     appliedAt: new Date().toISOString(),
     sourceSpellCount: spells.length,
-    manualSpellCount: inventory.entries.size,
+    manualClassLevelEntryCount: inventory.entries.size,
     retainedSpellCount: prunedItems.filter(isSpell).length,
+    sharedListMatchCount: result.sharedListMatches.length,
     removed: result.outsidePhb,
     missingManual: []
   };
