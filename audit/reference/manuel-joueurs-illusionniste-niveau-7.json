@@ -6,61 +6,84 @@
     "niveau": 7,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_liste_noms_complete_regles_a_completer",
-  "expectedCount": 6,
+  "status": "reference_complete_fiche_normalisee",
+  "expectedCount": 5,
   "foundryExport": "audit/decoupage_fichier/illusionniste-niveau-7.json",
-  "rules": {
-    "included": [
-      "nom du sort",
-      "classe",
-      "niveau",
-      "ordre dans le tableau du Manuel des joueurs",
-      "nombre de sorts attendu"
-    ],
-    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis."
-  },
   "spells": [
     {
       "ordre": 1,
       "nom": "Altération de la réalité",
+      "ecole": "Illusion/Fantasme – Conjuration/Appel",
       "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": "illimité",
+      "duree": "spéciale",
+      "zone_effet": "spéciale",
+      "composantes": "spéciales",
+      "temps_incantation": "spécial",
+      "jet_sauvegarde": "spécial",
+      "description": "Effet d’altération de la réalité conforme au Manuel des joueurs.",
+      "composants_materiels_objets": [],
+      "status": "reference_complete_fiche_normalisee"
     },
     {
       "ordre": 2,
       "nom": "Jet prismatique",
+      "ecole": "Abjuration – Conjuration/Appel",
       "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": "0",
+      "duree": "instantanée",
+      "zone_effet": "plan long de 7\", 1 ½\" de large au bout et ½\" de large à la base",
+      "composantes": "V, S",
+      "temps_incantation": "7 segments",
+      "jet_sauvegarde": "spécial",
+      "description": "Projette des rayons prismatiques dont les effets dépendent de leur couleur.",
+      "composants_materiels_objets": [],
+      "status": "reference_complete_fiche_normalisee"
     },
     {
       "ordre": 3,
       "nom": "Mur prismatique",
+      "ecole": "Abjuration – Conjuration/Appel",
       "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": "1\"",
+      "duree": "1 tour/niveau",
+      "zone_effet": "spéciale",
+      "composantes": "V, S",
+      "temps_incantation": "7 segments",
+      "jet_sauvegarde": "spécial",
+      "description": "Crée un mur de couleurs prismatiques scintillantes.",
+      "composants_materiels_objets": [],
+      "status": "reference_complete_fiche_normalisee"
     },
     {
       "ordre": 4,
       "nom": "Sort astral",
+      "ecole": "Altération",
       "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": "au toucher",
+      "duree": "spéciale",
+      "zone_effet": "spéciale",
+      "composantes": "V, S",
+      "temps_incantation": "3 tours",
+      "jet_sauvegarde": "aucun",
+      "description": "Permet un déplacement astral selon les règles du sort correspondant.",
+      "composants_materiels_objets": [],
+      "status": "reference_complete_fiche_normalisee"
     },
     {
       "ordre": 5,
       "nom": "Vision",
+      "ecole": "Divination",
       "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 6,
-      "nom": "Sorts de niveau 1 de magicien",
-      "niveau": 7,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "portee": "0",
+      "duree": "spéciale",
+      "zone_effet": "l’illusionniste",
+      "composantes": "V, S, M",
+      "temps_incantation": "7 segments",
+      "jet_sauvegarde": "aucun",
+      "description": "Interroge une puissance surnaturelle pour obtenir une vision, avec résultat aléatoire.",
+      "composants_materiels_objets": [],
+      "status": "reference_complete_fiche_normalisee"
     }
   ]
 }
