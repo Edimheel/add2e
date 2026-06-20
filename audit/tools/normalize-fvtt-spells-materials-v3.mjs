@@ -6,7 +6,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 
-const VERSION = "2026-06-19-normalize-components-v26";
+const VERSION = "2026-06-20-normalize-components-v27";
+const REVERSIBLE_VERSION = "2026-06-20-reversible-actor-split-v1";
 const DEFAULT_INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const DEFAULT_OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
 const DEFAULT_CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
@@ -82,6 +83,9 @@ function isClassSpell(item, classSlug) {
 function isClassSpellLevel(item, classSlug, level) {
   return spellLevel(item?.system ?? {}) === level && isClassSpell(item, classSlug);
 }
+function primarySpellClass(item) {
+  return Object.keys(LEVELS).find(classSlug => isClassSpell(item, classSlug)) ?? "";
+}
 function preserveKey(item) {
   const system = item?.system ?? {};
   return `${slug(system.classe)}|${spellLevel(system)}|${slug(item?.name ?? system.nom)}`;
@@ -124,6 +128,25 @@ function loadClassAuditIndex(classSlug, levels) {
     const items = getItems(json);
     loaded.push({ file: path.relative(repoRoot, file), items: items.length });
     for (const item of items) if (item && String(item.type ?? item.system?.type ?? "") === "sort") index.set(effectKey(item), item);
+  }
+  return { index, loaded };
+}
+function loadClassReferenceIndex(classSlug, levels) {
+  const index = new Map();
+  const loaded = [];
+  for (const level of levels) {
+    const file = path.resolve(repoRoot, `audit/reference/manuel-joueurs-${classSlug}-niveau-${level}.json`);
+    if (!fs.existsSync(file)) continue;
+    const json = readJson(file, null);
+    if (!json) continue;
+    const spells = Array.isArray(json?.spells) ? json.spells : [];
+    loaded.push({ file: path.relative(repoRoot, file), spells: spells.length, status: json.status ?? "" });
+    for (const reference of spells) {
+      const name = text(reference?.nom ?? reference?.name);
+      const referenceLevel = Number(reference?.niveau ?? reference?.level ?? level) || level;
+      if (!name) continue;
+      index.set(`${referenceLevel}|${slug(name)}`, { ...clone(reference), __file: path.relative(repoRoot, file), __class: classSlug, __level: referenceLevel });
+    }
   }
   return { index, loaded };
 }
@@ -294,15 +317,15 @@ const variant = (id, label, composants) => ({ type: "variante", id, label, compo
 const holy = "s" + "ang";
 
 const CLERIC_OVERRIDES = new Map(Object.entries({
-  aquagenese: [alt(["goutte d’eau", "pincée de poussière"])],
-  benediction: [alt(["Eau bénite", "Eau maudite"])],
+  aquagenese: [variant("creation", "goutte d’eau", ["goutte d’eau"]), variant("inverse", "pincée de poussière", ["pincée de poussière"])],
+  benediction: [variant("benediction", "Eau bénite", ["Eau bénite"]), variant("malediction", "Eau maudite", ["Eau maudite"])],
   detection_de_la_magie: ["symbole sacré"],
   detection_du_mal: ["symbole sacré"],
   lumiere: ["symbole sacré"],
   purification_de_l_eau_et_des_aliments: ["symbole sacré"],
   soins_mineurs: ["symbole sacré"],
-  protection_contre_le_mal: [alt(["Eau bénite", "encens allumé", holy, "vapeurs de fumier"])],
-  protection_contre_le_mal_sur_3_m: [alt(["Eau bénite", "encens allumé", holy, "vapeurs de fumier"])],
+  protection_contre_le_mal: [variant("eau_benite", "Eau bénite", ["Eau bénite"]), variant("encens", "encens allumé", ["encens allumé"]), variant("sang", "sang", [holy]), variant("fumier", "vapeurs de fumier", ["vapeurs de fumier"])],
+  protection_contre_le_mal_sur_3_m: [variant("eau_benite", "Eau bénite", ["Eau bénite"]), variant("encens", "encens allumé", ["encens allumé"]), variant("sang", "sang", [holy]), variant("fumier", "vapeurs de fumier", ["vapeurs de fumier"])],
   resistance_au_froid: ["soufre"],
   resistance_au_feu_resistance_au_froid: ["soufre"],
   sanctuaire: ["symbole sacré"],
@@ -325,9 +348,9 @@ const CLERIC_OVERRIDES = new Map(Object.entries({
   soin_ultime: ["symbole sacré"],
   vision_reelle: ["safran", "graisse", "crème faite d’huile", "poudre de pavot", "essence d’orchidée rose"],
   controle_du_climat: ["symbole sacré", "chapelet de prière"],
-  marche_des_vents: ["feu", alt(["Eau bénite", "Eau maudite"])],
+  marche_des_vents: [variant("benite", "feu et Eau bénite", ["feu", "Eau bénite"]), variant("maudite", "feu et Eau maudite", ["feu", "Eau maudite"])],
   parole_sacree_maudite: ["symbole sacré"],
-  regeneration: ["objet de prière", alt(["Eau bénite", "Eau maudite"])],
+  regeneration: [variant("benite", "objet de prière et Eau bénite", ["objet de prière", "Eau bénite"]), variant("maudite", "objet de prière et Eau maudite", ["objet de prière", "Eau maudite"])],
   resurrection: ["symbole sacré"],
   symbole: ["mercure"],
   tremblement_de_terre: ["pincée de poussière"]
@@ -526,6 +549,9 @@ function normalizeMaterials(item, indexes, existingIndex) {
   if (isClassSpell(item, "clerc")) {
     applyAudit(item, indexes.clerc, "clerc");
     system.composants_materiels = CLERIC_OVERRIDES.has(key) ? uniqueEntries(CLERIC_OVERRIDES.get(key)) : preserveOrParse(system, existing);
+  } else if (isClassSpell(item, "druide")) {
+    applyAudit(item, indexes.druide, "druide");
+    system.composants_materiels = preserveOrParse(system, existing);
   } else if (isClassSpell(item, "magicien")) {
     applyAudit(item, indexes.magicien, "magicien");
     if (WIZARD_NO_MATERIAL_COMPONENTS.has(key)) { system.composants_materiels = []; removeM(system); }
@@ -542,6 +568,94 @@ function normalizeMaterials(item, indexes, existingIndex) {
   ensureM(system, system.composants_materiels);
   return { before, after: clone(system.composants_materiels), changed: JSON.stringify(before) !== JSON.stringify(system.composants_materiels) };
 }
+function stripHtml(value) {
+  return text(String(value ?? "").replace(/<[^>]*>/g, " ").replace(/&quot;/gi, "\"").replace(/&#x27;|&apos;/gi, "'").replace(/&amp;/gi, "&"));
+}
+function displayName(value) {
+  const name = text(value).replace(/^[-–—,:;\s]+|[-–—,:;\s]+$/g, "");
+  return name ? name.charAt(0).toUpperCase() + name.slice(1) : "";
+}
+function referenceInverseName(reference, auditItem, item) {
+  const direct = [
+    reference?.inverse,
+    reference?.inversé,
+    reference?.inverse_nom,
+    reference?.nom_inverse,
+    reference?.reversible?.inverse,
+    reference?.reversible?.nom_inverse
+  ];
+  for (const candidate of direct) {
+    const name = displayName(candidate?.nom ?? candidate?.name ?? candidate);
+    if (name) return { name, source: "reference" };
+  }
+  const description = stripHtml(reference?.description ?? reference?.description_reelle ?? auditItem?.system?.description ?? auditItem?.system?.description_reelle ?? item?.system?.description ?? item?.system?.description_reelle);
+  const patterns = [
+    /l['’]inverse(?:\s+du\s+sort)?\s*,\s*([^,.;:()]{2,90})/i,
+    /l['’]inverse\s*(?:est|s['’]appelle|se\s+nomme)\s*[:;,]?\s*([^,.;:()]{2,90})/i,
+    /inverse\s*:\s*([^,.;:()]{2,90})/i
+  ];
+  for (const pattern of patterns) {
+    const match = description.match(pattern);
+    const name = displayName(match?.[1]);
+    if (name && !/^(du|de|le|la|les|un|une|ce|cet|cette|il|elle|annule|annulera|permet|fait)\b/i.test(name)) return { name, source: "description" };
+  }
+  return null;
+}
+function referenceMaterialRules(reference) {
+  const raw = reference?.composants_materiels_objets ?? reference?.composantsMaterielsObjets ?? reference?.materiels ?? [];
+  return Array.isArray(raw) ? clone(raw) : [];
+}
+function buildReversibleDefinition(item, classSlug, reference, auditItem) {
+  const inverse = referenceInverseName(reference, auditItem, item);
+  if (!inverse?.name) return null;
+  const materialRules = referenceMaterialRules(reference);
+  return {
+    version: REVERSIBLE_VERSION,
+    managedBy: "normalize-fvtt-spells-materials-v3",
+    enabled: true,
+    actorItemGeneration: "split-actor-items",
+    choiceTiming: "memorization",
+    sourceItemMode: "normal",
+    source: {
+      classe: classSlug,
+      niveau: spellLevel(item.system),
+      referenceFile: reference?.__file ?? "",
+      inverseNameSource: inverse.source
+    },
+    modes: [
+      {
+        id: "normal",
+        actorItemName: item.name,
+        manualName: item.name,
+        systemOverrides: {}
+      },
+      {
+        id: "inverse",
+        actorItemName: inverse.name,
+        manualName: inverse.name,
+        systemOverrides: {}
+      }
+    ],
+    materialReference: materialRules,
+    materialResolution: {
+      normal: "source-item",
+      inverse: materialRules.length ? "reference-conditions" : "pending-reference-material-classification"
+    }
+  };
+}
+function applyReversibleDefinition(item, classSlug, reference, auditItem) {
+  const definition = buildReversibleDefinition(item, classSlug, reference, auditItem);
+  const current = item?.flags?.add2e?.reversible;
+  if (!definition) {
+    if (current?.managedBy === "normalize-fvtt-spells-materials-v3") delete item.flags?.add2e?.reversible;
+    return { applied: false, changed: Boolean(current?.managedBy === "normalize-fvtt-spells-materials-v3"), definition: null };
+  }
+  item.flags ??= {};
+  item.flags.add2e ??= {};
+  const changed = JSON.stringify(current ?? {}) !== JSON.stringify(definition);
+  item.flags.add2e.reversible = definition;
+  return { applied: true, changed, definition };
+}
 function ensureSystem(system) {
   for (const key of SYSTEM_KEYS) {
     if (Object.prototype.hasOwnProperty.call(system, key)) continue;
@@ -554,8 +668,8 @@ function ensureSystem(system) {
 function applyEffectProfile(item) {
   const system = item.system ?? {};
   const level = spellLevel(system);
-  const classSlug = Object.entries(LEVELS).find(([cls, levels]) => levels.includes(level) && isClassSpellLevel(item, cls, level))?.[0] ?? "";
-  if (!classSlug) return { applied: false, changed: false, level, classSlug };
+  const classSlug = primarySpellClass(item);
+  if (!classSlug || !LEVELS[classSlug]?.includes(level)) return { applied: false, changed: false, level, classSlug };
   const label = text(item.name ?? system.nom ?? `Sort ${classSlug}`);
   const id = slug(label);
   const next = { version: EFFECT_PROFILE_VERSION, source: `manual-normalized-${classSlug}-n${level}`, effects: [{ id, label, kind: `${classSlug}_effect`, automation: "active_effect_or_mj_aid", tags: [`effet:${id}`, `classe:${classSlug}`, `niveau:${level}`], notes: `Profil mécanique ${classSlug} normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort.` }] };
@@ -583,36 +697,85 @@ function main() {
   const items = getItems(json);
   const removedManualDuplicatesBeforeAudit = pruneManualDuplicateClericSpells(items);
   const existingIndex = buildExistingItemIndex(output);
-  const audits = { clerc: loadClassAuditIndex("clerc", LEVELS.clerc), magicien: loadClassAuditIndex("magicien", LEVELS.magicien), illusionniste: loadClassAuditIndex("illusionniste", LEVELS.illusionniste) };
+  const audits = Object.fromEntries(Object.entries(LEVELS).map(([classSlug, levels]) => [classSlug, loadClassAuditIndex(classSlug, levels)]));
+  const references = Object.fromEntries(Object.entries(LEVELS).map(([classSlug, levels]) => [classSlug, loadClassReferenceIndex(classSlug, levels)]));
   const appendedFromAudit = { clerc: appendMissingAuditItems(items, audits.clerc.index, "clerc") };
   const removedManualDuplicatesAfterAudit = pruneManualDuplicateClericSpells(items);
   const removedManualDuplicates = [...removedManualDuplicatesBeforeAudit, ...removedManualDuplicatesAfterAudit];
-  const control = { version: VERSION, input: path.relative(repoRoot, input), output: path.relative(repoRoot, output), clercAuditFiles: audits.clerc.loaded, magicienAuditFiles: audits.magicien.loaded, illusionistAuditFiles: audits.illusionniste.loaded, appendedFromAudit, removedManualDuplicates, totalItems: items.length, spells: 0, preservedManualMaterials: 0, preservedClasses: [], changedSpells: 0, changedEffectProfiles: 0, emptyMaterialSpells: 0, examples: [], watched: {}, clercMaterialAudit: [], clercMaterialWarnings: [], clercSourceMissing: [], magicienMaterialAudit: [], magicienMaterialWarnings: [], magicienSourceMissing: [], illusionnisteMaterialAudit: [], illusionnisteMaterialWarnings: [], illusionnisteSourceMissing: [], sameSystemFieldsForAllSpells: true, canonicalFields: SYSTEM_KEYS };
-  for (const [classSlug, levels] of Object.entries(LEVELS)) for (const level of levels) control[`${classSlug}Level${level}EffectProfiles`] = makeBucket();
+  const control = {
+    version: VERSION,
+    reversibleVersion: REVERSIBLE_VERSION,
+    input: path.relative(repoRoot, input),
+    output: path.relative(repoRoot, output),
+    auditFiles: Object.fromEntries(Object.entries(audits).map(([classSlug, value]) => [classSlug, value.loaded])),
+    referenceFiles: Object.fromEntries(Object.entries(references).map(([classSlug, value]) => [classSlug, value.loaded])),
+    appendedFromAudit,
+    removedManualDuplicates,
+    totalItems: items.length,
+    spells: 0,
+    changedSpells: 0,
+    changedEffectProfiles: 0,
+    changedReversibleDefinitions: 0,
+    emptyMaterialSpells: 0,
+    examples: [],
+    watched: {},
+    reversibleSpellAudit: [],
+    reversibleSourceMissing: [],
+    reversibleMaterialPending: [],
+    sameSystemFieldsForAllSpells: true,
+    canonicalFields: SYSTEM_KEYS
+  };
+  for (const [classSlug, levels] of Object.entries(LEVELS)) {
+    control[`${classSlug}MaterialAudit`] = [];
+    control[`${classSlug}MaterialWarnings`] = [];
+    control[`${classSlug}SourceMissing`] = [];
+    for (const level of levels) control[`${classSlug}Level${level}EffectProfiles`] = makeBucket();
+  }
   const expected = JSON.stringify([...SYSTEM_KEYS].sort());
   for (const item of items) {
     if (!item || String(item.type ?? item.system?.type ?? "") !== "sort") continue;
     item.system ??= {};
     ensureSystem(item.system);
-    const hadSource = { clerc: !isClassSpell(item, "clerc") || audits.clerc.index.has(effectKey(item)), magicien: !isClassSpell(item, "magicien") || audits.magicien.index.has(effectKey(item)), illusionniste: !isClassSpell(item, "illusionniste") || audits.illusionniste.index.has(effectKey(item)) };
-    const materials = normalizeMaterials(item, { clerc: audits.clerc.index, magicien: audits.magicien.index, illusionniste: audits.illusionniste.index }, existingIndex);
+    const hadSource = Object.fromEntries(Object.keys(LEVELS).map(classSlug => [classSlug, !isClassSpell(item, classSlug) || audits[classSlug].index.has(effectKey(item))]));
+    const materials = normalizeMaterials(item, audits, existingIndex);
+    const classSlug = primarySpellClass(item);
+    const reference = classSlug ? references[classSlug].index.get(effectKey(item)) ?? null : null;
+    const auditItem = classSlug ? audits[classSlug].index.get(effectKey(item)) ?? null : null;
+    const reversible = classSlug ? applyReversibleDefinition(item, classSlug, reference, auditItem) : { applied: false, changed: false, definition: null };
     const profile = applyEffectProfile(item);
     normalizeSystemShape(item.system);
     control.spells += 1;
-    if (materials.changed) { control.changedSpells += 1; if (control.examples.length < 80) control.examples.push({ name: item.name, classe: item.system.classe, niveau: item.system.niveau, before: materials.before, after: materials.after }); }
-    if (profile.changed) control.changedEffectProfiles += 1;
-    if (!materialCount(item.system.composants_materiels ?? [])) control.emptyMaterialSpells += 1;
-    for (const [classSlug, levels] of Object.entries(LEVELS)) for (const level of levels) if (isClassSpellLevel(item, classSlug, level)) {
-      const bucket = control[`${classSlug}Level${level}EffectProfiles`];
-      if (profile.applied && profile.level === level && profile.classSlug === classSlug) bucket.applied.push(item.name); else bucket.missing.push(item.name);
-      if (["clerc", "magicien", "illusionniste"].includes(classSlug)) {
-        control[`${classSlug}MaterialAudit`].push({ name: item.name, niveau: item.system.niveau, composants: clone(item.system.composants_materiels) });
-        const warning = classWarning(item, classSlug);
-        if (warning) control[`${classSlug}MaterialWarnings`].push(warning);
-        if (!hadSource[classSlug]) control[`${classSlug}SourceMissing`].push({ name: item.name, niveau: item.system.niveau });
-      }
+    if (materials.changed) {
+      control.changedSpells += 1;
+      if (control.examples.length < 80) control.examples.push({ name: item.name, classe: item.system.classe, niveau: item.system.niveau, before: materials.before, after: materials.after });
     }
-    if (profile.applied || isClassSpell(item, "clerc") || isClassSpell(item, "magicien") || isClassSpell(item, "illusionniste")) control.watched[item.name] = { classe: item.system.classe, niveau: item.system.niveau, composants_materiels: clone(item.system.composants_materiels), composantes: item.system.composantes, effectProfile: clone(item.system.effectProfile) };
+    if (profile.changed) control.changedEffectProfiles += 1;
+    if (reversible.changed) control.changedReversibleDefinitions += 1;
+    if (!materialCount(item.system.composants_materiels ?? [])) control.emptyMaterialSpells += 1;
+    if (reversible.applied) {
+      const definition = reversible.definition;
+      control.reversibleSpellAudit.push({ name: item.name, classe: classSlug, niveau: item.system.niveau, modes: clone(definition.modes), materialResolution: clone(definition.materialResolution) });
+      if (!reference) control.reversibleSourceMissing.push({ name: item.name, classe: classSlug, niveau: item.system.niveau, inverse: definition.modes?.[1]?.actorItemName ?? "" });
+      if (definition.materialResolution?.inverse === "pending-reference-material-classification") control.reversibleMaterialPending.push({ name: item.name, classe: classSlug, niveau: item.system.niveau, inverse: definition.modes?.[1]?.actorItemName ?? "" });
+    }
+    for (const [listedClass, levels] of Object.entries(LEVELS)) for (const level of levels) if (isClassSpellLevel(item, listedClass, level)) {
+      const bucket = control[`${listedClass}Level${level}EffectProfiles`];
+      if (profile.applied && profile.level === level && profile.classSlug === listedClass) bucket.applied.push(item.name); else bucket.missing.push(item.name);
+      control[`${listedClass}MaterialAudit`].push({ name: item.name, niveau: item.system.niveau, composants: clone(item.system.composants_materiels) });
+      const warning = classWarning(item, listedClass);
+      if (warning) control[`${listedClass}MaterialWarnings`].push(warning);
+      if (!hadSource[listedClass]) control[`${listedClass}SourceMissing`].push({ name: item.name, niveau: item.system.niveau });
+    }
+    if (profile.applied || Object.keys(LEVELS).some(listedClass => isClassSpell(item, listedClass))) {
+      control.watched[item.name] = {
+        classe: item.system.classe,
+        niveau: item.system.niveau,
+        composants_materiels: clone(item.system.composants_materiels),
+        composantes: item.system.composantes,
+        effectProfile: clone(item.system.effectProfile),
+        reversible: clone(item.flags?.add2e?.reversible ?? null)
+      };
+    }
     if (JSON.stringify(Object.keys(item.system).sort()) !== expected) control.sameSystemFieldsForAllSpells = false;
   }
   json.normalizedBy = VERSION;
@@ -620,13 +783,14 @@ function main() {
   fs.writeFileSync(output, `${JSON.stringify(json, null, 2)}\n`, "utf8");
   fs.writeFileSync(controlOutput, `${JSON.stringify(control, null, 2)}\n`, "utf8");
   console.log(`[ADD2E][SPELL_MATERIALS_V3] ${control.spells} sort(s), ${control.changedSpells} composant(s) modifié(s).`);
-  console.log(`[ADD2E][SPELL_MATERIALS_V3] Manual preserved materials: ${control.preservedManualMaterials}`);
+  console.log(`[ADD2E][SPELL_MATERIALS_V3] Reversible definitions: ${control.reversibleSpellAudit.length} détectée(s), ${control.reversibleMaterialPending.length} composant(s) inverse à résoudre plus tard.`);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Clerc audit append: ${appendedFromAudit.clerc.length}`);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Clerc manual duplicates removed: ${removedManualDuplicates.length}`);
-  for (const classSlug of ["clerc", "magicien", "illusionniste"]) for (const level of LEVELS[classSlug]) { const bucket = control[`${classSlug}Level${level}EffectProfiles`]; console.log(`[ADD2E][SPELL_MATERIALS_V3] EffectProfiles N${level} ${classSlug}: ${bucket.applied.length} appliqué(s), ${bucket.missing.length} manquant(s).`); }
-  console.log(`[ADD2E][SPELL_MATERIALS_V3] Clerc material warnings: ${control.clercMaterialWarnings.length}`);
-  console.log(`[ADD2E][SPELL_MATERIALS_V3] Magicien material warnings: ${control.magicienMaterialWarnings.length}`);
-  console.log(`[ADD2E][SPELL_MATERIALS_V3] Illusionist material warnings: ${control.illusionnisteMaterialWarnings.length}`);
+  for (const classSlug of Object.keys(LEVELS)) for (const level of LEVELS[classSlug]) {
+    const bucket = control[`${classSlug}Level${level}EffectProfiles`];
+    console.log(`[ADD2E][SPELL_MATERIALS_V3] EffectProfiles N${level} ${classSlug}: ${bucket.applied.length} appliqué(s), ${bucket.missing.length} manquant(s).`);
+  }
+  for (const classSlug of Object.keys(LEVELS)) console.log(`[ADD2E][SPELL_MATERIALS_V3] ${classSlug} material warnings: ${control[`${classSlug}MaterialWarnings`].length}`);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Output: ${path.relative(repoRoot, output)}`);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Control: ${path.relative(repoRoot, controlOutput)}`);
 }
