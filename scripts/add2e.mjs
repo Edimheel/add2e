@@ -12,6 +12,7 @@ import "./add2e/character-sheet-templates.mjs";
 import "./add2e/monster-sheet-capabilities.mjs";
 import "./add2e/01-macros-base-caracs.mjs";
 import "./add2e/02-spell-sync.mjs";
+import "./add2e/02c-spell-family-expansion.mjs";
 import "./add2e/02b-spell-sync-dedupe.mjs";
 import "./add2e/03-equipment-rules.mjs";
 import "./add2e/04-class-active-abilities.mjs";
