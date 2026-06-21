@@ -4,7 +4,7 @@
 // Compatible Foundry V13 / V14 / V15.
 // ============================================================
 
-const ADD2E_SPELL_FAMILY_VERSION = "2026-06-21-spell-family-order-v3";
+const ADD2E_SPELL_FAMILY_VERSION = "2026-06-21-spell-family-variants-replace-parent-v4";
 const ADD2E_SPELL_FAMILY_PENDING = globalThis.ADD2E_SPELL_FAMILY_PENDING instanceof Set
   ? globalThis.ADD2E_SPELL_FAMILY_PENDING
   : new Set();
@@ -233,7 +233,9 @@ async function add2eEnsureActorSpellFamily(item) {
   if (String(item.type ?? "").toLowerCase() !== "sort" || add2eSpellFamilyIsGenerated(item)) return { handled: false, reason: "not-base-spell" };
 
   const { familyKey, entries } = add2eSpellFamilyBuildExpected(item);
-  if (entries.length <= 1) return { handled: true, created: 0, updated: 0, familyKey };
+  const derivedEntries = entries.filter(entry => entry.identity !== "base");
+  const variantEntries = derivedEntries.filter(entry => entry.kind === "variant");
+  if (!derivedEntries.length) return { handled: true, created: 0, updated: 0, deletedBase: 0, familyKey };
 
   const existing = new Map();
   const occupied = new Set();
@@ -244,42 +246,80 @@ async function add2eEnsureActorSpellFamily(item) {
     if (identity) existing.set(identity, actorItem);
   }
 
-  const base = entries.find(entry => entry.identity === "base");
-  if (base) await actor.updateEmbeddedDocuments("Item", [add2eSpellFamilyUpdate(item, base)], { add2eInternal: true, add2eSpellFamilyExpansion: true, render: false });
+  if (!variantEntries.length) {
+    const base = entries.find(entry => entry.identity === "base");
+    if (base) await actor.updateEmbeddedDocuments("Item", [add2eSpellFamilyUpdate(item, base)], { add2eInternal: true, add2eSpellFamilyExpansion: true, render: false });
+  }
 
   const updates = [];
   const creates = [];
-  for (const expected of entries.filter(entry => entry.identity !== "base")) {
+  const resolvedVariantIdentities = new Set();
+  const unresolvedVariantIdentities = [];
+
+  for (const expected of derivedEntries) {
     const found = existing.get(expected.identity);
     if (found) {
       updates.push(add2eSpellFamilyUpdate(found, expected));
+      if (expected.kind === "variant") resolvedVariantIdentities.add(expected.identity);
       continue;
     }
+
     const stableKey = add2eSpellFamilyStableKey(expected.data);
-    if (occupied.has(stableKey)) continue;
+    if (occupied.has(stableKey)) {
+      if (expected.kind === "variant") unresolvedVariantIdentities.push(expected.identity);
+      continue;
+    }
+
     const data = add2eSpellFamilyClone(expected.data);
     delete data._id;
     data.folder = null;
     creates.push(data);
     occupied.add(stableKey);
+    if (expected.kind === "variant") resolvedVariantIdentities.add(expected.identity);
   }
 
   if (updates.length) await actor.updateEmbeddedDocuments("Item", updates, { add2eInternal: true, add2eSpellFamilyExpansion: true, render: false });
   if (creates.length) await actor.createEmbeddedDocuments("Item", creates, { add2eInternal: true, add2eSpellFamilyExpansion: true, render: false });
-  if (updates.length || creates.length) add2eRerenderActorSheet?.(actor, false);
-  return { handled: true, created: creates.length, updated: updates.length + (base ? 1 : 0), familyKey };
+
+  let deletedBase = 0;
+  const allVariantsResolved = variantEntries.length > 0
+    && resolvedVariantIdentities.size === variantEntries.length
+    && unresolvedVariantIdentities.length === 0;
+
+  if (allVariantsResolved && actor.items?.get?.(item.id)) {
+    await actor.deleteEmbeddedDocuments("Item", [item.id], { add2eInternal: true, add2eSpellFamilyExpansion: true, reason: "replace-generic-variant-parent" });
+    deletedBase = 1;
+  } else if (variantEntries.length && unresolvedVariantIdentities.length) {
+    console.warn("[ADD2E][SPELL_FAMILY][KEEP_PARENT_VARIANT_CONFLICT]", {
+      actor: actor.name,
+      sort: item.name,
+      unresolvedVariantIdentities
+    });
+  }
+
+  if (updates.length || creates.length || deletedBase) add2eRerenderActorSheet?.(actor, false);
+  return {
+    handled: true,
+    created: creates.length,
+    updated: updates.length,
+    deletedBase,
+    unresolvedVariantIdentities,
+    familyKey
+  };
 }
 
 async function add2eExpandActorSpellFamilies(actor) {
-  if (!actor || actor.type !== "personnage") return { handled: false, created: 0, updated: 0 };
+  if (!actor || actor.type !== "personnage") return { handled: false, created: 0, updated: 0, deletedBase: 0 };
   let created = 0;
   let updated = 0;
+  let deletedBase = 0;
   for (const item of actor.items?.filter?.(entry => String(entry.type ?? "").toLowerCase() === "sort" && !add2eSpellFamilyIsGenerated(entry)) ?? []) {
     const result = await add2eEnsureActorSpellFamily(item);
     created += result?.created ?? 0;
     updated += result?.updated ?? 0;
+    deletedBase += result?.deletedBase ?? 0;
   }
-  return { handled: true, created, updated };
+  return { handled: true, created, updated, deletedBase };
 }
 
 function add2eSpellFamilySortInfo(entry) {
@@ -337,11 +377,11 @@ function add2eSortActorSpellFamilyRows(data) {
 
 function add2eInstallSpellFamilyDisplaySorting() {
   const prototype = globalThis.Add2eActorSheet?.prototype;
-  if (!prototype || prototype.__add2eSpellFamilyDisplaySortingV3) return false;
+  if (!prototype || prototype.__add2eSpellFamilyDisplaySortingV4) return false;
   const previousGetData = prototype.getData;
   if (typeof previousGetData !== "function") return false;
 
-  prototype.__add2eSpellFamilyDisplaySortingV3 = true;
+  prototype.__add2eSpellFamilyDisplaySortingV4 = true;
   prototype.getData = async function add2eSpellFamilyOrderedGetData(...args) {
     const data = await previousGetData.apply(this, args);
     return add2eSortActorSpellFamilyRows(data);
