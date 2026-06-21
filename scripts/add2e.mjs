@@ -16,7 +16,6 @@ import "./add2e/02c-spell-family-expansion.mjs";
 import "./add2e/02b-spell-sync-dedupe.mjs";
 import "./add2e/03-equipment-rules.mjs";
 import "./add2e/04-class-active-abilities.mjs";
-import "./add2e/object-magic-powers.mjs";
 import "./add2e/06-class-effects-thief.mjs";
 import "./add2e/07-spellcasting-rules.mjs";
 import "./add2e/09-race-class-drop.mjs";
@@ -272,6 +271,90 @@ function add2eRefreshMerchantPriceCells(root = document) {
   }
 }
 
+function add2eIsComponentItem(item) {
+  const system = item?.system ?? {};
+  const flags = item?.flags?.add2e ?? {};
+  if (add2eSpellFamilyDropNormalize(system.categorie ?? system.category) === "composant_sort") return true;
+  if (flags.schema === "equipement-composant-sort") return true;
+  const tags = [system.tags, system.effectTags, flags.tags]
+    .flatMap(value => Array.isArray(value) ? value : value ? [value] : [])
+    .map(add2eSpellFamilyDropNormalize);
+  return tags.includes("composant_sort") || tags.some(tag => tag.startsWith("composant_"));
+}
+
+function add2eIsPrimaryActiveGM() {
+  if (!game.user?.isGM) return false;
+  const primary = game.users?.activeGM ?? Array.from(game.users ?? []).find(user => user.active && user.isGM) ?? null;
+  return !primary || String(primary.id) === String(game.user.id);
+}
+
+async function add2eSyncVendorComponentPricesFromCompendium() {
+  if (!add2eIsPrimaryActiveGM()) return;
+
+  const packIds = new Set(["add2e.equipements", "world.equipements", "add2e.equipement", "world.equipement"]);
+  for (const [id, pack] of game.packs ?? []) {
+    const label = `${id} ${pack?.metadata?.label ?? ""}`;
+    if (pack?.documentName === "Item" && /equip|équip|objets?/i.test(label) && !/magique|magic/i.test(label)) {
+      packIds.add(id);
+    }
+  }
+
+  const sourceByName = new Map();
+  for (const packId of packIds) {
+    const pack = game.packs?.get?.(packId);
+    if (!pack) continue;
+
+    let documents = [];
+    try { documents = await pack.getDocuments(); } catch (_error) { continue; }
+    for (const item of documents) {
+      if (!add2eIsComponentItem(item)) continue;
+      sourceByName.set(add2eSpellFamilyDropNormalize(item.name), item);
+    }
+  }
+
+  if (!sourceByName.size) return;
+
+  for (const vendor of game.actors ?? []) {
+    if (vendor.getFlag?.("add2e", "isVendor") !== true && vendor.name !== "Marchand de composants et projectiles") continue;
+
+    const updates = [];
+    for (const item of vendor.items ?? []) {
+      if (!add2eIsComponentItem(item)) continue;
+      const source = sourceByName.get(add2eSpellFamilyDropNormalize(item.name));
+      if (!source) continue;
+
+      const sourceSystem = source.system ?? {};
+      const sourceFlags = source.flags?.add2e ?? {};
+      const currentSystem = item.system ?? {};
+      const currentFlags = item.flags?.add2e ?? {};
+
+      const priceChanged = currentSystem.prix !== sourceSystem.prix
+        || currentSystem.cout !== sourceSystem.cout
+        || currentSystem.source_prix !== sourceSystem.source_prix
+        || currentFlags.priceStatus !== sourceFlags.priceStatus
+        || currentFlags.priceSource !== sourceFlags.priceSource;
+      if (!priceChanged) continue;
+
+      updates.push({
+        _id: item.id,
+        "system.prix": sourceSystem.prix ?? "",
+        "system.cout": sourceSystem.cout ?? "",
+        "system.source_prix": sourceSystem.source_prix ?? "",
+        "flags.add2e.priceStatus": sourceFlags.priceStatus ?? "unpriced",
+        "flags.add2e.priceSource": sourceFlags.priceSource ?? ""
+      });
+    }
+
+    if (updates.length) {
+      await vendor.updateEmbeddedDocuments("Item", updates, {
+        add2eReason: "vendor-sync-component-prices-from-compendium",
+        render: false
+      });
+      console.info("[ADD2E][VENDOR][COMPONENT_PRICE_SYNC]", { vendor: vendor.name, updated: updates.length });
+    }
+  }
+}
+
 function add2eInstallShopUiTools() {
   if (globalThis.__ADD2E_SHOP_UI_TOOLS_V1__) return;
   globalThis.__ADD2E_SHOP_UI_TOOLS_V1__ = true;
@@ -312,4 +395,9 @@ function add2eInstallShopUiTools() {
   }, true);
 }
 
-Hooks.once("ready", add2eInstallShopUiTools);
+Hooks.once("ready", () => {
+  add2eInstallShopUiTools();
+  window.setTimeout(() => add2eSyncVendorComponentPricesFromCompendium().catch(error => {
+    console.error("[ADD2E][VENDOR][COMPONENT_PRICE_SYNC_ERROR]", error);
+  }), 1500);
+});
