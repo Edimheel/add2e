@@ -1,0 +1,90 @@
+{
+  "source": {
+    "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf",
+    "reference": "Manuel des joueurs AD&D 2e",
+    "pages": [43, 44],
+    "note": "Compléments matériels relevés dans le Manuel lorsque le fichier de classe/niveau ne détaillait pas encore les objets nécessaires."
+  },
+  "schema": {
+    "root": "materiels",
+    "entryFields": [
+      "composantes",
+      "composants_materiels_objets"
+    ]
+  },
+  "materiels": {
+    "clerc-niveau-1": {
+      "Détection de la magie": {
+        "composantes": "V, S, M",
+        "composants_materiels_objets": [
+          {
+            "nom": "symbole sacré",
+            "quantite": 1,
+            "consommation": "non_consomme",
+            "source": "Manuel des joueurs",
+            "condition": "Le clerc tient son symbole sacré devant lui.",
+            "notes": "Objet religieux non consommé."
+          }
+        ]
+      },
+      "Détection du mal": {
+        "composantes": "V, S, M",
+        "composants_materiels_objets": [
+          {
+            "nom": "symbole sacré",
+            "quantite": 1,
+            "consommation": "non_consomme",
+            "source": "Manuel des joueurs",
+            "condition": "Le clerc tient son symbole sacré devant lui.",
+            "notes": "Objet religieux non consommé ; identique pour l’inverse Détection du bien."
+          }
+        ]
+      },
+      "Protection contre le mal": {
+        "composantes": "V, S, M",
+        "composants_materiels_objets": [
+          {
+            "nom": "eau bénite",
+            "quantite": 1,
+            "consommation": "consomme",
+            "source": "Manuel des joueurs",
+            "mode": "normal",
+            "alternativeGroup": "protection-contre-le-mal-normal",
+            "condition": "Alternative du sort normal : eau bénite ou encens allumé.",
+            "notes": "Le cercle de 90 cm est tracé avec cette matière."
+          },
+          {
+            "nom": "encens allumé",
+            "quantite": 1,
+            "consommation": "consomme",
+            "source": "Manuel des joueurs",
+            "mode": "normal",
+            "alternativeGroup": "protection-contre-le-mal-normal",
+            "condition": "Alternative du sort normal : eau bénite ou encens allumé.",
+            "notes": "Le cercle de 90 cm est tracé avec cette matière."
+          },
+          {
+            "nom": "sang",
+            "quantite": 1,
+            "consommation": "consomme",
+            "source": "Manuel des joueurs",
+            "mode": "inverse",
+            "alternativeGroup": "protection-contre-le-bien-inverse",
+            "condition": "Alternative du sort inverse : sang ou vapeurs de fumier.",
+            "notes": "Le cercle de 90 cm est tracé avec cette matière."
+          },
+          {
+            "nom": "vapeurs de fumier",
+            "quantite": 1,
+            "consommation": "consomme",
+            "source": "Manuel des joueurs",
+            "mode": "inverse",
+            "alternativeGroup": "protection-contre-le-bien-inverse",
+            "condition": "Alternative du sort inverse : sang ou vapeurs de fumier.",
+            "notes": "Le cercle de 90 cm est tracé avec cette matière."
+          }
+        ]
+      }
+    }
+  }
+}
