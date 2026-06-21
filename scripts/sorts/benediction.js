@@ -1,7 +1,7 @@
 /**
  * ADD2E — Sort BÉNÉDICTION / MALÉDICTION
  * Clerc niveau 1 — Conjuration/Appel
- * Version : 2026-06-15-benediction-malediction-expiration-label-v1
+ * Version : 2026-06-21-benediction-derived-mode-v1
  *
  * Effet : +1 au moral et +1 aux jets d'attaque des alliés dans la zone.
  * Inverse : Malédiction, -1 au moral et -1 aux jets d'attaque.
@@ -9,7 +9,7 @@
  */
 
 const __add2eOnUseResult = await (async () => {
-  const VERSION = "2026-06-15-benediction-malediction-expiration-label-v1";
+  const VERSION = "2026-06-21-benediction-derived-mode-v1";
   console.log(`%c[ADD2E][BENEDICTION] ${VERSION}`, "color:#b88924;font-weight:bold;");
 
   const ADD2E_CLERIC_CHAT = {
@@ -219,24 +219,31 @@ const __add2eOnUseResult = await (async () => {
   const outOfRange = targets.filter(t => add2eDistanceMeters(casterToken, t) > maxRange);
   if (outOfRange.length) { ui.notifications.warn(`Bénédiction : cible hors de portée (${outOfRange.map(t => t.name).join(", ")}).`); return false; }
 
+  const reversibleMode = String(sourceItem.flags?.add2e?.reversibleActorEntry?.mode ?? "").trim().toLowerCase();
+  const forcedMode = reversibleMode === "inverse" ? "malediction" : reversibleMode === "normal" ? "benediction" : "";
+  const forcedModeLabel = forcedMode === "malediction" ? "Malédiction" : "Bénédiction";
+
   const DialogV2 = foundry.applications?.api?.DialogV2;
   if (!DialogV2?.wait) { ui.notifications.error("Bénédiction : DialogV2 est requis."); return false; }
 
   const targetNamesHtml = targets.map(t => `<li>${add2eEscapeHtml(t.name)}</li>`).join("");
+  const modeField = forcedMode
+    ? `<div class="form-group"><label style="font-weight:bold;">Effet :</label><div style="padding:6px 0;">${add2eEscapeHtml(forcedModeLabel)}</div></div>`
+    : `<div class="form-group"><label style="font-weight:bold;">Effet :</label><select name="mode" style="width:100%;"><option value="benediction">Bénédiction (+1 attaque, +1 moral)</option><option value="malediction">Malédiction (-1 attaque, -1 moral)</option></select></div>`;
   const dialogResult = await DialogV2.wait({
-    window: { title: "Lancement : Bénédiction" },
+    window: { title: `Lancement : ${forcedMode ? forcedModeLabel : "Bénédiction"}` },
     add2eTheme: "cleric",
     add2eImg: sourceItem.img || "icons/magic/holy/prayer-hands-glowing-yellow.webp",
-    content: `<form style="font-family:var(--font-primary);display:flex;flex-direction:column;gap:8px;"><div class="form-group"><label style="font-weight:bold;">Effet :</label><select name="mode" style="width:100%;"><option value="benediction">Bénédiction (+1 attaque, +1 moral)</option><option value="malediction">Malédiction (-1 attaque, -1 moral)</option></select></div><div style="font-size:0.9em;color:#666;border-top:1px solid #ddd;padding-top:6px;"><div><b>Durée :</b> 6 rounds</div><div><b>Portée :</b> 18 m</div><div><b>Cibles :</b></div><ul style="margin:4px 0 0 16px;padding:0;">${targetNamesHtml}</ul></div></form>`,
+    content: `<form style="font-family:var(--font-primary);display:flex;flex-direction:column;gap:8px;">${modeField}<div style="font-size:0.9em;color:#666;border-top:1px solid #ddd;padding-top:6px;"><div><b>Durée :</b> 6 rounds</div><div><b>Portée :</b> 18 m</div><div><b>Cibles :</b></div><ul style="margin:4px 0 0 16px;padding:0;">${targetNamesHtml}</ul></div></form>`,
     buttons: [
-      { action: "cast", label: "Lancer", icon: "fa-solid fa-hands-praying", default: true, callback: (event, button) => ({ mode: String(button.form.elements.mode?.value || "benediction") }) },
+      { action: "cast", label: "Lancer", icon: "fa-solid fa-hands-praying", default: true, callback: (_event, button) => ({ mode: forcedMode || String(button.form.elements.mode?.value || "benediction") }) },
       { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => null }
     ],
     rejectClose: false
   });
   if (!dialogResult) return false;
 
-  const mode = dialogResult.mode;
+  const mode = forcedMode || dialogResult.mode;
   const isCurse = mode === "malediction";
   const bonusValue = isCurse ? -1 : 1;
   const modeLabel = isCurse ? "Malédiction" : "Bénédiction";
