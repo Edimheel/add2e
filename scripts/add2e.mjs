@@ -103,3 +103,21 @@ Hooks.on("preCreateItem", (item, _data, options = {}, userId) => {
   ui.notifications.warn(`"${item.name}" est déjà présent sur cet acteur.`);
   return false;
 });
+
+Hooks.once("ready", () => {
+  if (globalThis.__ADD2E_VENDOR_STALE_ROW_GUARD__) return;
+  globalThis.__ADD2E_VENDOR_STALE_ROW_GUARD__ = true;
+
+  document.addEventListener("click", event => {
+    const target = event.target instanceof Element ? event.target : null;
+    const action = target?.closest?.(".add2e-merchant-app [data-action]") ?? null;
+    if (!action || action.dataset?.action === "restock") return;
+
+    const row = action.closest?.("tr[data-id]") ?? null;
+    if (row?.dataset?.id) return;
+
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    ui.notifications.warn("La liste du marchand vient d’être actualisée. Réessaie l’action.");
+  }, true);
+});
