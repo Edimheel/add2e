@@ -4,7 +4,7 @@
 // Compatible Foundry V13 / V14 / V15.
 // ============================================================
 
-const ADD2E_SPELL_FAMILY_VERSION = "2026-06-21-spell-family-variants-replace-parent-v4";
+const ADD2E_SPELL_FAMILY_VERSION = "2026-06-21-spell-family-safe-display-sort-v5";
 const ADD2E_SPELL_FAMILY_PENDING = globalThis.ADD2E_SPELL_FAMILY_PENDING instanceof Set
   ? globalThis.ADD2E_SPELL_FAMILY_PENDING
   : new Set();
@@ -170,7 +170,7 @@ function add2eSpellFamilyBuildExpected(baseItem) {
   }
 
   let variantOrder = 10;
-  const variantProfiles = add2eSpellFamilyProfiles(source.flags?.add2e?.variant, source.system);
+  const variantProfiles = add2eSpellFamilyProfiles(source.flags?.add2e?.variant ?? source.flags?.add2e?.variants, source.system);
   for (const profile of variantProfiles) {
     const profileKey = add2eSpellFamilyProfileKey(profile, baseName);
     for (const choice of Array.isArray(profile?.choices) ? profile.choices : []) {
@@ -333,12 +333,7 @@ function add2eSpellFamilySortInfo(entry) {
     else if (family.kind === "variant") sortOrder = 10;
     else sortOrder = 999;
   }
-  return {
-    familyKey: String(family.key ?? "").trim(),
-    familyName,
-    sortOrder,
-    name
-  };
+  return { familyKey: String(family.key ?? "").trim(), familyName, sortOrder, name };
 }
 
 function add2eCompareSpellFamilyRows(left, right) {
@@ -365,10 +360,14 @@ function add2eSortActorSpellFamilyRows(data) {
     if (Array.isArray(rows)) rows.sort(add2eCompareSpellFamilyRows);
   }
 
-  for (const level of data.add2eSpellLevels ?? []) {
-    if (Array.isArray(level?.sorts)) level.sort(add2eCompareSpellFamilyRows);
-    for (const group of level?.groups ?? []) {
-      if (Array.isArray(group?.sorts)) group.sort(add2eCompareSpellFamilyRows);
+  const levels = Array.isArray(data.add2eSpellLevels) ? data.add2eSpellLevels : [];
+  for (const level of levels) {
+    if (!level || typeof level !== "object") continue;
+    if (Array.isArray(level.sorts)) level.sorts.sort(add2eCompareSpellFamilyRows);
+
+    const groups = Array.isArray(level.groups) ? level.groups : [];
+    for (const group of groups) {
+      if (Array.isArray(group?.sorts)) group.sorts.sort(add2eCompareSpellFamilyRows);
     }
   }
 
@@ -377,14 +376,19 @@ function add2eSortActorSpellFamilyRows(data) {
 
 function add2eInstallSpellFamilyDisplaySorting() {
   const prototype = globalThis.Add2eActorSheet?.prototype;
-  if (!prototype || prototype.__add2eSpellFamilyDisplaySortingV4) return false;
+  if (!prototype || prototype.__add2eSpellFamilyDisplaySortingV5) return false;
   const previousGetData = prototype.getData;
   if (typeof previousGetData !== "function") return false;
 
-  prototype.__add2eSpellFamilyDisplaySortingV4 = true;
+  prototype.__add2eSpellFamilyDisplaySortingV5 = true;
   prototype.getData = async function add2eSpellFamilyOrderedGetData(...args) {
     const data = await previousGetData.apply(this, args);
-    return add2eSortActorSpellFamilyRows(data);
+    try {
+      return add2eSortActorSpellFamilyRows(data);
+    } catch (error) {
+      console.error("[ADD2E][SPELL_FAMILY][DISPLAY_SORT_ERROR]", error);
+      return data;
+    }
   };
   return true;
 }
