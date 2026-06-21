@@ -1,0 +1,53 @@
+{
+  "source": {
+    "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf",
+    "reference": "Manuel des joueurs AD&D 2e",
+    "pages": "94-101",
+    "classe": "illusionniste"
+  },
+  "scope": {
+    "spellCount": 66,
+    "levels": {
+      "1": 12,
+      "2": 12,
+      "3": 12,
+      "4": 8,
+      "5": 8,
+      "6": 8,
+      "7": 6
+    }
+  },
+  "reversibilityAudit": {
+    "expectedReversibleCount": 0,
+    "rule": "Un sort n’est déclaré réversible que si son entrée propre du Manuel porte la mention « Réversible » ou décrit explicitement une forme inverse. Un renvoi vers un sort d’une autre classe ne transfère pas automatiquement sa réversibilité.",
+    "result": "Aucune entrée de sort d’illusionniste des niveaux 1 à 7 ne porte la mention « Réversible ».",
+    "consequence": "Le décompte illusionniste du référentiel principal reste à 0 et aucun flag add2e.reversible ne doit être créé pour un sort d’illusionniste."
+  },
+  "notableCases": [
+    {
+      "niveau": 1,
+      "sort": "Lumière",
+      "reversible": false,
+      "reason": "L’entrée de l’illusionniste ne porte pas la mention « Réversible » ; Ténèbres est une entrée distincte de niveau 1."
+    },
+    {
+      "niveau": 3,
+      "sort": "Lumière éternelle",
+      "reversible": false,
+      "reason": "Le Manuel indique explicitement : « Note : sort non réversible. »",
+      "relatedSpell": "Ténèbres éternelles"
+    },
+    {
+      "niveau": 6,
+      "sort": "Vision réelle",
+      "reversible": false,
+      "reason": "Le sort ressemble au sort clérical mais son entrée d’illusionniste ne porte pas la mention « Réversible »."
+    },
+    {
+      "niveau": 7,
+      "sort": "Sorts de niveau 1 de magicien",
+      "reversible": false,
+      "reason": "Il s’agit d’un sort-cadre donnant accès à des choix de magicien ; l’entrée propre n’est pas marquée « Réversible ». Les éventuelles réversibilités d’un choix ne rendent pas le sort-cadre réversible."
+    }
+  ]
+}
