@@ -34,3 +34,19 @@ import "./add2e/18-token-state-overlay.mjs";
 import "./add2e/20-session-xp.mjs";
 import "./add2e/21-consumables.mjs";
 import "./add2e/24-player-trades.mjs";
+
+// Les lignes dérivées (inverse/variantes) sont traitées par le créateur du sort.
+// Cela couvre le MJ principal, un MJ secondaire et un joueur propriétaire sans
+// dépendre de la session désignée comme activeGM. Le module 02c conserve le
+// verrou global empêchant les expansions concurrentes de créer des doublons.
+Hooks.on("createItem", (item, options = {}, userId) => {
+  if (options?.add2eSpellFamilyExpansion) return;
+  if (String(userId ?? "") !== String(game.user?.id ?? "")) return;
+  if (String(item?.type ?? "").toLowerCase() !== "sort") return;
+  if (item?.flags?.add2e?.spellFamily?.generated === true) return;
+  if (typeof globalThis.add2eEnsureActorSpellFamily !== "function") return;
+
+  Promise.resolve()
+    .then(() => globalThis.add2eEnsureActorSpellFamily(item))
+    .catch(error => console.error("[ADD2E][SPELL_FAMILY][CREATOR_EXPANSION_ERROR]", error));
+});
