@@ -3,13 +3,14 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const VERSION = "2026-06-20-reference-flags-v3-preserve-v3";
+const VERSION = "2026-06-21-reference-mechanics-v4";
 const MANAGED_BY = "normalize-fvtt-spells-materials-v3";
 const INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
 const CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
 const MASTER = "audit/reference/manuel-joueurs-sorts-master.json";
 const REVERSIBILITY_REFERENCE = "audit/reference/manuel-joueurs-reversibilite.json";
+const MATERIAL_REFERENCE = "audit/reference/manuel-joueurs-composants-materiels.json";
 const CLASSES = {
   clerc: [1, 2, 3, 4, 5, 6, 7],
   druide: [1, 2, 3, 4, 5, 6, 7],
@@ -92,6 +93,10 @@ function uniqueText(values) {
   return [...new Set(values.map(text).filter(Boolean))];
 }
 
+function componentsHaveMaterial(value) {
+  return text(value).split(/[,;/\s]+/g).some(part => part.trim().toUpperCase() === "M");
+}
+
 function normaliseChoices(value) {
   const source = Array.isArray(value)
     ? value
@@ -115,16 +120,14 @@ function normaliseChoices(value) {
 function inverseName(value) {
   if (typeof value === "string") return text(value);
   if (!value || typeof value !== "object") return "";
-
   const direct = value.inverse ?? value.inverseName ?? value.nomInverse ?? value.actorItemName;
   if (typeof direct === "string") return text(direct);
   if (direct && typeof direct === "object") {
     const nested = text(direct.nom ?? direct.name ?? direct.actorItemName);
     if (nested) return nested;
   }
-
-  const modes = Array.isArray(value.modes) ? value.modes : [];
-  const inverseMode = modes.find(mode => String(mode?.id ?? "").toLowerCase() === "inverse");
+  const inverseMode = (Array.isArray(value.modes) ? value.modes : [])
+    .find(mode => String(mode?.id ?? "").toLowerCase() === "inverse");
   return text(inverseMode?.nom ?? inverseMode?.name ?? inverseMode?.actorItemName);
 }
 
@@ -135,23 +138,19 @@ function hasReversibleMarker(value) {
 }
 
 function referenceAliases(value) {
-  const direct = [
-    value?.foundryName,
-    value?.foundryNom,
-    value?.foundry?.name,
-    value?.foundry?.nom
-  ];
-  const lists = [
-    value?.foundryNames,
-    value?.foundryNoms,
-    value?.foundry?.names,
-    value?.foundry?.noms
-  ].flatMap(entry => Array.isArray(entry) ? entry : []);
+  const direct = [value?.foundryName, value?.foundryNom, value?.foundry?.name, value?.foundry?.nom];
+  const lists = [value?.foundryNames, value?.foundryNoms, value?.foundry?.names, value?.foundry?.noms]
+    .flatMap(entry => Array.isArray(entry) ? entry : []);
   return uniqueText([...direct, ...lists]);
 }
 
+function materialState(composantes, materials) {
+  if (!componentsHaveMaterial(composantes)) return "none";
+  return Array.isArray(materials) && materials.length ? "declared" : "unknown";
+}
+
 function upsertMeta(index, key, patch) {
-  const previous = index.get(key) ?? { variants: [], aliases: [], sources: [] };
+  const previous = index.get(key) ?? { variants: [], aliases: [], sources: [], materials: [] };
   const seenVariants = new Set();
   const variants = [...(previous.variants ?? []), ...(patch.variants ?? [])].filter(choice => {
     const choiceKey = `${choice.id}|${choice.nom}`;
@@ -168,6 +167,9 @@ function upsertMeta(index, key, patch) {
     referenceName: text(patch.referenceName) || previous.referenceName || "",
     inverse: text(patch.inverse) || previous.inverse || "",
     inverseNameStatus: text(patch.inverseNameStatus) || previous.inverseNameStatus || "",
+    composantes: text(patch.composantes) || previous.composantes || "",
+    materialState: patch.materialState ?? previous.materialState ?? "unknown",
+    materials: patch.materials !== undefined ? clone(patch.materials) : clone(previous.materials ?? []),
     reversible: Boolean(previous.reversible || patch.reversible),
     variants,
     aliases: uniqueText([...(previous.aliases ?? []), ...(patch.aliases ?? [])]),
@@ -192,27 +194,17 @@ function addStructuredEntry(index, scope, name, entry, relativePath) {
 }
 
 function readStructuredData(document, index, relativePath) {
-  const inverseRoots = [
-    document?.reversible,
-    document?.reversibles,
-    document?.reversibleSpells
-  ].filter(Boolean);
+  const inverseRoots = [document?.reversible, document?.reversibles, document?.reversibleSpells].filter(Boolean);
   const variantRoots = [document?.variant, document?.variants, document?.variantes].filter(Boolean);
 
   for (const root of inverseRoots) {
     for (const [lot, entries] of Object.entries(root)) {
       const scope = lotScope(lot);
       if (!scope) continue;
-
       if (Array.isArray(entries)) {
-        for (const entry of entries) {
-          const name = text(entry?.nom ?? entry?.name ?? entry?.sort ?? entry?.spell);
-          addStructuredEntry(index, scope, name, entry, relativePath);
-        }
+        for (const entry of entries) addStructuredEntry(index, scope, text(entry?.nom ?? entry?.name ?? entry?.sort ?? entry?.spell), entry, relativePath);
       } else {
-        for (const [name, entry] of Object.entries(entries ?? {})) {
-          addStructuredEntry(index, scope, name, entry, relativePath);
-        }
+        for (const [name, entry] of Object.entries(entries ?? {})) addStructuredEntry(index, scope, name, entry, relativePath);
       }
     }
   }
@@ -236,27 +228,46 @@ function readStructuredData(document, index, relativePath) {
   }
 }
 
+function readMaterialData(document, index, relativePath) {
+  const roots = [document?.materiels, document?.materials, document?.composants_materiels].filter(Boolean);
+  for (const root of roots) {
+    for (const [lot, entries] of Object.entries(root)) {
+      const scope = lotScope(lot);
+      if (!scope) continue;
+      for (const [name, entry] of Object.entries(entries ?? {})) {
+        const referenceName = text(name);
+        if (!referenceName || !entry || typeof entry !== "object") continue;
+        const materials = Array.isArray(entry.composants_materiels_objets)
+          ? clone(entry.composants_materiels_objets)
+          : [];
+        upsertMeta(index, metaKey(scope.classSlug, scope.level, referenceName), {
+          classSlug: scope.classSlug,
+          level: scope.level,
+          referenceName,
+          aliases: referenceAliases(entry),
+          composantes: text(entry.composantes),
+          materials,
+          materialState: materials.length || !componentsHaveMaterial(entry.composantes) ? "declared" : "unknown",
+          sources: [relativePath]
+        });
+      }
+    }
+  }
+}
+
 function buildLookup(structured) {
   const lookup = new Map();
-
   for (const [canonicalKey, metadata] of structured) {
-    const keys = [metadata.referenceName, ...(metadata.aliases ?? [])]
-      .map(name => metaKey(metadata.classSlug, metadata.level, name));
-
-    for (const candidate of keys) {
+    for (const candidate of [metadata.referenceName, ...(metadata.aliases ?? [])].map(name => metaKey(metadata.classSlug, metadata.level, name))) {
       const previous = lookup.get(candidate);
-      if (previous && previous !== canonicalKey) {
-        throw new Error(`Alias Foundry ambigu : ${candidate} cible ${previous} et ${canonicalKey}.`);
-      }
+      if (previous && previous !== canonicalKey) throw new Error(`Alias Foundry ambigu : ${candidate} cible ${previous} et ${canonicalKey}.`);
       lookup.set(candidate, canonicalKey);
     }
   }
-
   return lookup;
 }
 
 function loadReferences() {
-  const detailed = new Map();
   const structured = new Map();
   const files = [];
   const expectedByClass = {};
@@ -273,14 +284,14 @@ function loadReferences() {
       const document = readJson(path.join(ROOT, relative), null);
       if (!document) continue;
       files.push(relative);
-
       for (const reference of document.spells ?? []) {
         const name = text(reference?.nom ?? reference?.name);
         if (!name) continue;
         const referenceLevel = Number(reference?.niveau ?? reference?.level ?? level) || level;
-        const key = metaKey(classSlug, referenceLevel, name);
-        detailed.set(key, { ...clone(reference), __file: relative });
-        upsertMeta(structured, key, {
+        const materials = Array.isArray(reference?.composants_materiels_objets)
+          ? clone(reference.composants_materiels_objets)
+          : [];
+        upsertMeta(structured, metaKey(classSlug, referenceLevel, name), {
           classSlug,
           level: referenceLevel,
           referenceName: name,
@@ -289,49 +300,43 @@ function loadReferences() {
           inverse: text(reference?.inverse),
           inverseNameStatus: text(reference?.inverseNameStatus),
           variants: normaliseChoices(reference?.variant ?? reference?.variants ?? reference?.variantes),
+          composantes: text(reference?.composantes),
+          materials,
+          materialState: materialState(reference?.composantes, materials),
           sources: [relative]
         });
       }
     }
   }
 
+  const materialDocument = readJson(path.join(ROOT, MATERIAL_REFERENCE), null);
+  if (!materialDocument || typeof materialDocument !== "object") throw new Error(`Référence de composants introuvable ou invalide : ${MATERIAL_REFERENCE}`);
+  files.push(MATERIAL_REFERENCE);
+  readMaterialData(materialDocument, structured, MATERIAL_REFERENCE);
+
   const reversibilityDocument = readJson(path.join(ROOT, REVERSIBILITY_REFERENCE), null);
-  if (!reversibilityDocument || typeof reversibilityDocument !== "object") {
-    throw new Error(`Référence de réversibilité introuvable ou invalide : ${REVERSIBILITY_REFERENCE}`);
-  }
+  if (!reversibilityDocument || typeof reversibilityDocument !== "object") throw new Error(`Référence de réversibilité introuvable ou invalide : ${REVERSIBILITY_REFERENCE}`);
   files.push(REVERSIBILITY_REFERENCE);
   readStructuredData(reversibilityDocument, structured, REVERSIBILITY_REFERENCE);
-  if (reversibilityDocument.expectedCounts && typeof reversibilityDocument.expectedCounts === "object") {
-    Object.assign(expectedByClass, reversibilityDocument.expectedCounts);
-  }
+  if (reversibilityDocument.expectedCounts && typeof reversibilityDocument.expectedCounts === "object") Object.assign(expectedByClass, reversibilityDocument.expectedCounts);
 
   const declaredByClass = emptyCounts();
   for (const metadata of structured.values()) {
-    if (!metadata.reversible || !Object.hasOwn(declaredByClass, metadata.classSlug)) continue;
-    declaredByClass[metadata.classSlug] += 1;
+    if (metadata.reversible && Object.hasOwn(declaredByClass, metadata.classSlug)) declaredByClass[metadata.classSlug] += 1;
   }
-
   for (const classSlug of Object.keys(CLASSES)) {
     const expected = Number(expectedByClass[classSlug]);
-    if (!Number.isFinite(expected)) continue;
-    if (declaredByClass[classSlug] !== expected) {
-      throw new Error(
-        `Référence de réversibilité incohérente pour ${classSlug} : ${declaredByClass[classSlug]} déclaré(s), ${expected} attendu(s).`
-      );
+    if (Number.isFinite(expected) && declaredByClass[classSlug] !== expected) {
+      throw new Error(`Référence de réversibilité incohérente pour ${classSlug} : ${declaredByClass[classSlug]} déclaré(s), ${expected} attendu(s).`);
     }
   }
 
-  return {
-    detailed,
-    structured,
-    lookup: buildLookup(structured),
-    files: [...new Set(files)],
-    declaredByClass,
-    expectedByClass
-  };
+  return { structured, lookup: buildLookup(structured), files: [...new Set(files)], declaredByClass, expectedByClass };
 }
 
 function materialMode(rule) {
+  const explicit = text(rule?.mode ?? rule?.forme ?? rule?.form).toLowerCase();
+  if (["normal", "inverse", "shared"].includes(explicit)) return explicit;
   const source = text(`${rule?.condition ?? ""} ${rule?.notes ?? ""}`).toLowerCase();
   if (!source) return "shared";
   if (/(inverse|inversé|inversee|malédiction|maudite|destruction|déshydratation|corruption|épouvante|ténèbres|blessures|bien)/i.test(source)) return "inverse";
@@ -339,49 +344,65 @@ function materialMode(rule) {
   return "shared";
 }
 
-function modeMaterials(reference, mode, fallback) {
-  const all = Array.isArray(reference?.composants_materiels_objets)
-    ? clone(reference.composants_materiels_objets)
-    : [];
+function modeMaterials(metadata, item, mode) {
+  if (!componentsHaveMaterial(metadata?.composantes ?? item?.system?.composantes)) return { value: [], reference: [] };
+  const all = Array.isArray(metadata?.materials) ? clone(metadata.materials) : [];
   const selected = all.filter(rule => {
     const target = materialMode(rule);
     return target === "shared" || target === mode;
   });
-  const components = selected.map(rule => text(rule?.nom ?? rule?.name)).filter(Boolean);
-  return { components: components.length ? components : clone(fallback ?? []), reference: selected };
+  if (selected.length) {
+    const grouped = new Map();
+    const direct = [];
+    for (const rule of selected) {
+      const group = text(rule?.alternativeGroup);
+      if (!group) direct.push(rule);
+      else {
+        if (!grouped.has(group)) grouped.set(group, []);
+        grouped.get(group).push(rule);
+      }
+    }
+    const value = [...direct, ...[...grouped.values()].map(alternatives => ({ alternatives }))];
+    return { value, reference: selected };
+  }
+  return {
+    value: clone(item?.system?.composants_materiels ?? []),
+    reference: clone(item?.system?.composants_materiels_objets ?? [])
+  };
 }
 
-function actorMode(reference, item, id, name) {
-  const materials = modeMaterials(reference, id, item?.system?.composants_materiels ?? []);
+function actorMode(metadata, item, id, name) {
+  const materials = modeMaterials(metadata, item, id);
+  const composantes = text(metadata?.composantes) || text(item?.system?.composantes);
+  const overrides = {
+    composants_materiels: materials.value,
+    composants_materiels_objets: materials.reference,
+    composantes
+  };
+  if (!componentsHaveMaterial(composantes)) overrides.composants_requis = [];
   return {
     id,
     actorItemName: name,
     manualName: name,
     copySourceItem: true,
-    systemOverrides: { composants_materiels: materials.components },
+    systemOverrides: overrides,
     materialReference: materials.reference
   };
-}
-
-function cleanEmptyFlagContainers(item) {
-  const add2e = item?.flags?.add2e;
-  if (add2e && typeof add2e === "object" && !Array.isArray(add2e) && Object.keys(add2e).length === 0) {
-    delete item.flags.add2e;
-  }
-
-  const flags = item?.flags;
-  if (flags && typeof flags === "object" && !Array.isArray(flags) && Object.keys(flags).length === 0) {
-    delete item.flags;
-  }
 }
 
 function ownsFlag(value) {
   return Boolean(value && typeof value === "object" && value.managedBy === MANAGED_BY);
 }
 
-function profileEntry(metadata, item, itemName, classSlug, level, reference) {
+function cleanEmptyFlagContainers(item) {
+  const add2e = item?.flags?.add2e;
+  if (add2e && typeof add2e === "object" && !Array.isArray(add2e) && !Object.keys(add2e).length) delete item.flags.add2e;
+  if (item?.flags && typeof item.flags === "object" && !Array.isArray(item.flags) && !Object.keys(item.flags).length) delete item.flags;
+}
+
+function profileEntry(metadata, item, itemName, classSlug, level) {
   const normalName = text(metadata.referenceName) || itemName;
-  const modes = [actorMode(reference, item, "normal", normalName)];
+  const modes = [actorMode(metadata, item, "normal", normalName)];
   const profile = {
     class: classSlug,
     level,
@@ -392,19 +413,13 @@ function profileEntry(metadata, item, itemName, classSlug, level, reference) {
     inverseNameStatus: metadata.inverseNameStatus || (metadata.inverse ? "manual_explicit" : "not_named_in_manual"),
     modes
   };
-
   if (metadata.inverse) {
-    modes.push(actorMode(reference, item, "inverse", metadata.inverse));
+    modes.push(actorMode(metadata, item, "inverse", metadata.inverse));
     profile.splitOnActorGrant = true;
   } else {
     profile.splitOnActorGrant = false;
-    profile.inverse = {
-      name: null,
-      inverseNameStatus: profile.inverseNameStatus,
-      requiresManualNaming: true
-    };
+    profile.inverse = { name: null, inverseNameStatus: profile.inverseNameStatus, requiresManualNaming: true };
   }
-
   return profile;
 }
 
@@ -418,6 +433,71 @@ function referenceSummary(metadata) {
     inverseNameStatus: metadata.inverseNameStatus || null,
     referenceFiles: metadata.sources
   };
+}
+
+function itemMatches(references, item) {
+  const itemName = text(item?.name ?? item?.system?.nom);
+  const level = itemLevel(item);
+  const matches = [];
+  for (const classSlug of itemClasses(item)) {
+    const canonicalKey = references.lookup.get(metaKey(classSlug, level, itemName));
+    const metadata = canonicalKey ? references.structured.get(canonicalKey) : null;
+    if (metadata) matches.push({ classSlug, canonicalKey, metadata });
+  }
+  return matches;
+}
+
+function applyReferenceMechanicalFields(items, references) {
+  const result = { updated: 0, noMaterialCleared: 0, structuredMaterialsApplied: 0, missingMaterialReferences: [], conflicts: [] };
+  for (const item of items) {
+    if (!isSpell(item)) continue;
+    const matches = itemMatches(references, item);
+    if (!matches.length) continue;
+    const signature = entry => JSON.stringify({
+      composantes: entry.metadata.composantes,
+      materialState: entry.metadata.materialState,
+      materials: entry.metadata.materials
+    });
+    const signatures = [...new Set(matches.map(signature))];
+    if (signatures.length > 1) {
+      result.conflicts.push({ name: item.name, level: itemLevel(item), matches: matches.map(entry => referenceSummary(entry.metadata)) });
+      continue;
+    }
+    const metadata = matches[0].metadata;
+    const composantes = text(metadata.composantes);
+    if (!composantes) continue;
+    item.system ??= {};
+    let changed = false;
+    if (item.system.composantes !== composantes) {
+      item.system.composantes = composantes;
+      changed = true;
+    }
+    if (!componentsHaveMaterial(composantes)) {
+      for (const field of ["composants_materiels", "composants_materiels_objets", "composants_requis"]) {
+        if (!Array.isArray(item.system[field]) || item.system[field].length) {
+          item.system[field] = [];
+          changed = true;
+        }
+      }
+      if (changed) result.noMaterialCleared += 1;
+    } else if (metadata.materialState === "declared" && Array.isArray(metadata.materials) && metadata.materials.length) {
+      const materials = clone(metadata.materials);
+      if (JSON.stringify(item.system.composants_materiels) !== JSON.stringify(materials)) {
+        item.system.composants_materiels = materials;
+        changed = true;
+      }
+      if (JSON.stringify(item.system.composants_materiels_objets) !== JSON.stringify(materials)) {
+        item.system.composants_materiels_objets = clone(materials);
+        changed = true;
+      }
+      if (changed) result.structuredMaterialsApplied += 1;
+    } else if (metadata.materialState === "unknown") {
+      result.missingMaterialReferences.push(referenceSummary(metadata));
+    }
+    if (changed) result.updated += 1;
+  }
+  result.missingMaterialReferences = result.missingMaterialReferences.filter((entry, index, list) => list.findIndex(other => `${other.class}|${other.level}|${other.name}` === `${entry.class}|${entry.level}|${entry.name}`) === index);
+  return result;
 }
 
 function applyReferenceFlags(items, references) {
@@ -437,41 +517,22 @@ function applyReferenceFlags(items, references) {
     const level = itemLevel(item);
     const reversible = [];
     const variants = [];
-
-    for (const classSlug of itemClasses(item)) {
-      const requestedKey = metaKey(classSlug, level, itemName);
-      const canonicalKey = references.lookup.get(requestedKey);
-      if (!canonicalKey) continue;
-
-      const metadata = references.structured.get(canonicalKey);
-      if (!metadata) continue;
-      const reference = references.detailed.get(canonicalKey) ?? {};
-
+    for (const { classSlug, canonicalKey, metadata } of itemMatches(references, item)) {
       if (metadata.variants.length) {
-        const profile = {
-          class: classSlug,
-          level,
-          referenceName: metadata.referenceName,
-          foundryItemName: itemName,
-          referenceFiles: metadata.sources,
-          choices: clone(metadata.variants)
-        };
+        const profile = { class: classSlug, level, referenceName: metadata.referenceName, foundryItemName: itemName, referenceFiles: metadata.sources, choices: clone(metadata.variants) };
         variants.push(profile);
         variantProfiles.push({ name: itemName, ...clone(profile) });
         variantMatchedByClass[classSlug] += 1;
         matchedVariantKeys.add(canonicalKey);
       }
-
       if (!metadata.reversible) continue;
-      const profile = profileEntry(metadata, item, itemName, classSlug, level, reference);
+      const profile = profileEntry(metadata, item, itemName, classSlug, level);
       reversible.push(profile);
       reversibleProfiles.push({ name: itemName, ...clone(profile) });
       reversibleMatchedByClass[classSlug] += 1;
       matchedReversibleKeys.add(canonicalKey);
-
-      if (metadata.inverse) {
-        actorSplitByClass[classSlug] += 1;
-      } else {
+      if (metadata.inverse) actorSplitByClass[classSlug] += 1;
+      else {
         unnamedInverseByClass[classSlug] += 1;
         unresolvedReversible.push({ name: itemName, ...clone(profile) });
       }
@@ -480,91 +541,45 @@ function applyReferenceFlags(items, references) {
     const hasOwnedReversible = ownsFlag(item?.flags?.add2e?.reversible);
     const hasOwnedVariant = ownsFlag(item?.flags?.add2e?.variant) || ownsFlag(item?.flags?.add2e?.variants);
     if (!reversible.length && !variants.length && !hasOwnedReversible && !hasOwnedVariant) continue;
-
     item.flags ??= {};
     item.flags.add2e ??= {};
-
     if (reversible.length) {
-      item.flags.add2e.reversible = {
-        version: VERSION,
-        managedBy: MANAGED_BY,
-        enabled: true,
-        choiceTiming: "memorization",
-        splitOnActorGrant: reversible.some(profile => profile.splitOnActorGrant),
-        profiles: reversible
-      };
-    } else if (hasOwnedReversible) {
-      delete item.flags.add2e.reversible;
-    }
-
+      item.flags.add2e.reversible = { version: VERSION, managedBy: MANAGED_BY, enabled: true, choiceTiming: "memorization", splitOnActorGrant: reversible.some(profile => profile.splitOnActorGrant), profiles: reversible };
+    } else if (hasOwnedReversible) delete item.flags.add2e.reversible;
     if (variants.length) {
-      item.flags.add2e.variant = {
-        version: VERSION,
-        managedBy: MANAGED_BY,
-        profiles: variants
-      };
+      item.flags.add2e.variant = { version: VERSION, managedBy: MANAGED_BY, profiles: variants };
       if (ownsFlag(item.flags.add2e.variants)) delete item.flags.add2e.variants;
     } else {
       if (ownsFlag(item.flags.add2e.variant)) delete item.flags.add2e.variant;
       if (ownsFlag(item.flags.add2e.variants)) delete item.flags.add2e.variants;
     }
-
     cleanEmptyFlagContainers(item);
   }
 
   const unmatchedReversibleReferences = [];
   const unmatchedVariantReferences = [];
   for (const [canonicalKey, metadata] of references.structured) {
-    if (metadata.reversible && !matchedReversibleKeys.has(canonicalKey)) {
-      unmatchedReversibleReferences.push(referenceSummary(metadata));
-    }
-    if (metadata.variants.length && !matchedVariantKeys.has(canonicalKey)) {
-      unmatchedVariantReferences.push({
-        ...referenceSummary(metadata),
-        choices: clone(metadata.variants)
-      });
-    }
+    if (metadata.reversible && !matchedReversibleKeys.has(canonicalKey)) unmatchedReversibleReferences.push(referenceSummary(metadata));
+    if (metadata.variants.length && !matchedVariantKeys.has(canonicalKey)) unmatchedVariantReferences.push({ ...referenceSummary(metadata), choices: clone(metadata.variants) });
   }
-
-  return {
-    actorSplitByClass,
-    reversibleMatchedByClass,
-    unnamedInverseByClass,
-    variantMatchedByClass,
-    reversibleProfiles,
-    variantProfiles,
-    unresolvedReversible,
-    unmatchedReversibleReferences,
-    unmatchedVariantReferences
-  };
+  return { actorSplitByClass, reversibleMatchedByClass, unnamedInverseByClass, variantMatchedByClass, reversibleProfiles, variantProfiles, unresolvedReversible, unmatchedReversibleReferences, unmatchedVariantReferences };
 }
 
 function indexItems(items, label) {
   const index = new Map();
   const duplicates = [];
-
   for (const item of items) {
     const key = itemKey(item);
     if (index.has(key)) duplicates.push(key);
     index.set(key, item);
   }
-
-  if (duplicates.length) {
-    throw new Error(`${label} contient des clés d’items dupliquées : ${duplicates.slice(0, 10).join(", ")}.`);
-  }
-
+  if (duplicates.length) throw new Error(`${label} contient des clés d’items dupliquées : ${duplicates.slice(0, 10).join(", ")}.`);
   return index;
 }
 
 function stableValue(value) {
   if (Array.isArray(value)) return value.map(stableValue);
-  if (value && typeof value === "object") {
-    return Object.fromEntries(
-      Object.keys(value)
-        .sort()
-        .map(key => [key, stableValue(value[key])])
-    );
-  }
+  if (value && typeof value === "object") return Object.fromEntries(Object.keys(value).sort().map(key => [key, stableValue(value[key])]));
   return value;
 }
 
@@ -572,13 +587,16 @@ function sameJson(left, right) {
   return JSON.stringify(stableValue(left)) === JSON.stringify(stableValue(right));
 }
 
-function stripManagedSpellFlags(item) {
+function stripManagedSpellData(item) {
   const stripped = clone(item);
   const add2e = stripped?.flags?.add2e;
   if (add2e && typeof add2e === "object" && !Array.isArray(add2e)) {
     if (ownsFlag(add2e.reversible)) delete add2e.reversible;
     if (ownsFlag(add2e.variant)) delete add2e.variant;
     if (ownsFlag(add2e.variants)) delete add2e.variants;
+  }
+  if (isSpell(stripped)) {
+    for (const field of ["composantes", "composants_materiels", "composants_materiels_objets", "composants_requis"]) delete stripped.system?.[field];
   }
   cleanEmptyFlagContainers(stripped);
   return stripped;
@@ -588,31 +606,20 @@ function comparableDocument(document) {
   const comparable = clone(document);
   delete comparable.normalizedBy;
   delete comparable.normalizedAt;
-  const items = getItems(comparable).map(stripManagedSpellFlags);
-  return setItems(comparable, items);
+  return setItems(comparable, getItems(comparable).map(stripManagedSpellData));
 }
 
 function assertNoRegression(before, after) {
   const beforeItems = getItems(before);
   const afterItems = getItems(after);
-  if (beforeItems.length !== afterItems.length) {
-    throw new Error(`Régression bloquée : ${beforeItems.length} item(s) avant, ${afterItems.length} item(s) après.`);
-  }
-
+  if (beforeItems.length !== afterItems.length) throw new Error(`Régression bloquée : ${beforeItems.length} item(s) avant, ${afterItems.length} item(s) après.`);
   const beforeIndex = indexItems(beforeItems, "Le JSON V3 validé avant normalisation");
   const afterIndex = indexItems(afterItems, "Le JSON V3 après normalisation");
   const missing = [...beforeIndex.keys()].filter(key => !afterIndex.has(key));
   const added = [...afterIndex.keys()].filter(key => !beforeIndex.has(key));
-  if (missing.length || added.length) {
-    throw new Error(
-      `Régression bloquée : le jeu d’items a changé.${missing.length ? ` Supprimés: ${missing.slice(0, 8).join(", ")}.` : ""}${added.length ? ` Ajoutés: ${added.slice(0, 8).join(", ")}.` : ""}`
-    );
-  }
-
+  if (missing.length || added.length) throw new Error(`Régression bloquée : le jeu d’items a changé.${missing.length ? ` Supprimés: ${missing.slice(0, 8).join(", ")}.` : ""}${added.length ? ` Ajoutés: ${added.slice(0, 8).join(", ")}.` : ""}`);
   if (!sameJson(comparableDocument(before), comparableDocument(after))) {
-    throw new Error(
-      "Régression bloquée : le normalisateur a modifié des données hors flags.add2e.reversible, flags.add2e.variant/variants ou métadonnées normalizedBy/normalizedAt."
-    );
+    throw new Error("Régression bloquée : le normalisateur a modifié des données hors composants de sort, flags add2e réversible/variante ou métadonnées normalizedBy/normalizedAt.");
   }
 }
 
@@ -622,10 +629,7 @@ function main() {
   const controlFile = path.join(ROOT, process.argv[4] || CONTROL);
   const source = readJson(input);
   if (!source) throw new Error(`Fichier source introuvable ou invalide : ${input}`);
-  if (!fs.existsSync(output)) {
-    throw new Error(`JSON V3 validé introuvable : ${output}.`);
-  }
-
+  if (!fs.existsSync(output)) throw new Error(`JSON V3 validé introuvable : ${output}.`);
   const previous = readJson(output);
   if (!previous) throw new Error(`JSON V3 validé invalide : ${output}`);
 
@@ -634,17 +638,15 @@ function main() {
   const sourceSpellCount = sourceItems.filter(isSpell).length;
   const previousSpellCount = previousItems.filter(isSpell).length;
   const sourceKeys = new Set(sourceItems.map(itemKey));
-  const v3OnlyItemsPreserved = previousItems
-    .filter(item => !sourceKeys.has(itemKey(item)))
-    .map(item => ({ name: item.name, classe: item.system?.classe, niveau: item.system?.niveau }));
+  const v3OnlyItemsPreserved = previousItems.filter(item => !sourceKeys.has(itemKey(item))).map(item => ({ name: item.name, classe: item.system?.classe, niveau: item.system?.niveau }));
 
   const items = previousItems.map(item => clone(item));
   const references = loadReferences();
+  const mechanics = applyReferenceMechanicalFields(items, references);
   const flags = applyReferenceFlags(items, references);
   const result = setItems(clone(previous), items);
   result.normalizedBy = VERSION;
   result.normalizedAt = new Date().toISOString();
-
   assertNoRegression(previous, result);
 
   const control = readJson(controlFile, {}) ?? {};
@@ -663,17 +665,19 @@ function main() {
     status: "passed",
     validatedBaseline: path.relative(ROOT, output),
     allowedItemPaths: [
+      "system.composantes",
+      "system.composants_materiels",
+      "system.composants_materiels_objets",
+      "system.composants_requis",
       "flags.add2e.reversible",
       "flags.add2e.variant",
       "flags.add2e.variants"
     ],
-    allowedDocumentPaths: [
-      "normalizedBy",
-      "normalizedAt"
-    ],
+    allowedDocumentPaths: ["normalizedBy", "normalizedAt"],
     itemCountBefore: previousItems.length,
     itemCountAfter: items.length
   };
+  control.materialMechanics = mechanics;
   control.reversibleActorSplit = {
     version: VERSION,
     referenceFiles: references.files,
@@ -688,20 +692,15 @@ function main() {
   };
   control.variantProfiles = flags.variantProfiles;
   control.variantChoiceCount = flags.variantProfiles.reduce((total, profile) => total + profile.choices.length, 0);
-  control.variantReferenceCoverage = {
-    matchedByClass: flags.variantMatchedByClass,
-    unmatchedReferences: flags.unmatchedVariantReferences
-  };
+  control.variantReferenceCoverage = { matchedByClass: flags.variantMatchedByClass, unmatchedReferences: flags.unmatchedVariantReferences };
 
   writeJson(output, result);
   writeJson(controlFile, control);
-
   console.log(`[ADD2E][SPELL_MATERIALS_V3] ${control.outputSpellCount} sort(s) V3 conservé(s) comme base.`);
+  console.log(`[ADD2E][SPELL_MATERIALS_V3] Composantes appliquées: ${mechanics.updated}; sans M vidés: ${mechanics.noMaterialCleared}; références matérielles structurées: ${mechanics.structuredMaterialsApplied}.`);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Réversibles déclarés — clerc: ${references.declaredByClass.clerc}, druide: ${references.declaredByClass.druide}, magicien: ${references.declaredByClass.magicien}, illusionniste: ${references.declaredByClass.illusionniste}.`);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Réversibles appariés — clerc: ${flags.reversibleMatchedByClass.clerc}, druide: ${flags.reversibleMatchedByClass.druide}, magicien: ${flags.reversibleMatchedByClass.magicien}, illusionniste: ${flags.reversibleMatchedByClass.illusionniste}.`);
-  console.log(`[ADD2E][SPELL_MATERIALS_V3] Profils Actor à inverse nommé — clerc: ${flags.actorSplitByClass.clerc}, druide: ${flags.actorSplitByClass.druide}, magicien: ${flags.actorSplitByClass.magicien}, illusionniste: ${flags.actorSplitByClass.illusionniste}; inverse sans nom: ${flags.unresolvedReversible.length}.`);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Variantes structurées: ${flags.variantProfiles.length} sort(s) / ${control.variantChoiceCount} choix.`);
-  console.log(`[ADD2E][SPELL_MATERIALS_V3] Références non appariées — réversibles: ${flags.unmatchedReversibleReferences.length}, variantes: ${flags.unmatchedVariantReferences.length}.`);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Contrôle de non-régression: OK.`);
 }
 
