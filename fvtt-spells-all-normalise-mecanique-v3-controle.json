@@ -1,5 +1,5 @@
 {
-  "version": "2026-06-20-reference-flags-v3-preserve-v3",
+  "version": "2026-06-21-reference-mechanics-v4",
   "input": "fvtt-spells-all-normalise-mecanique-v1.json",
   "output": "fvtt-spells-all-normalise-mecanique-v3.json",
   "clercAuditFiles": [
@@ -14640,6 +14640,10 @@
     "status": "passed",
     "validatedBaseline": "fvtt-spells-all-normalise-mecanique-v3.json",
     "allowedItemPaths": [
+      "system.composantes",
+      "system.composants_materiels",
+      "system.composants_materiels_objets",
+      "system.composants_requis",
       "flags.add2e.reversible",
       "flags.add2e.variant",
       "flags.add2e.variants"
@@ -14652,7 +14656,7 @@
     "itemCountAfter": 414
   },
   "reversibleActorSplit": {
-    "version": "2026-06-20-reference-flags-v3-preserve-v3",
+    "version": "2026-06-21-reference-mechanics-v4",
     "referenceFiles": [
       "audit/reference/manuel-joueurs-sorts-master.json",
       "audit/reference/manuel-joueurs-clerc-niveau-1.json",
@@ -14685,6 +14689,7 @@
       "audit/reference/manuel-joueurs-illusionniste-niveau-5.json",
       "audit/reference/manuel-joueurs-illusionniste-niveau-6.json",
       "audit/reference/manuel-joueurs-illusionniste-niveau-7.json",
+      "audit/reference/manuel-joueurs-composants-materiels.json",
       "audit/reference/manuel-joueurs-reversibilite.json"
     ],
     "expectedByClass": {
@@ -14737,10 +14742,9 @@
             "manualName": "Abaissement des eaux",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "petite fiole d’eau",
-                "petite fiole de poussière"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           },
@@ -14750,10 +14754,9 @@
             "manualName": "Gonflement des eaux",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "petite fiole d’eau",
-                "petite fiole de poussière"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           }
@@ -14780,9 +14783,46 @@
             "copySourceItem": true,
             "systemOverrides": {
               "composants_materiels": [
-                "symbole sacré du clerc",
-                "pincée de poussière"
-              ]
+                {
+                  "nom": "symbole sacré du clerc",
+                  "quantite": 1,
+                  "consommation": "non_consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": null,
+                  "notes": null
+                },
+                {
+                  "nom": "pincée de poussière",
+                  "quantite": 1,
+                  "consommation": "consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": null,
+                  "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+                }
+              ],
+              "composants_materiels_objets": [
+                {
+                  "nom": "symbole sacré du clerc",
+                  "quantite": 1,
+                  "consommation": "non_consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": null,
+                  "notes": null
+                },
+                {
+                  "nom": "pincée de poussière",
+                  "quantite": 1,
+                  "consommation": "consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": null,
+                  "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+                }
+              ],
+              "composantes": "V, S, M"
             },
             "materialReference": [
               {
@@ -14812,9 +14852,46 @@
             "copySourceItem": true,
             "systemOverrides": {
               "composants_materiels": [
-                "symbole sacré du clerc",
-                "pincée de poussière"
-              ]
+                {
+                  "nom": "symbole sacré du clerc",
+                  "quantite": 1,
+                  "consommation": "non_consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": null,
+                  "notes": null
+                },
+                {
+                  "nom": "pincée de poussière",
+                  "quantite": 1,
+                  "consommation": "consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": null,
+                  "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+                }
+              ],
+              "composants_materiels_objets": [
+                {
+                  "nom": "symbole sacré du clerc",
+                  "quantite": 1,
+                  "consommation": "non_consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": null,
+                  "notes": null
+                },
+                {
+                  "nom": "pincée de poussière",
+                  "quantite": 1,
+                  "consommation": "consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": null,
+                  "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+                }
+              ],
+              "composantes": "V, S, M"
             },
             "materialReference": [
               {
@@ -14859,9 +14936,9 @@
             "manualName": "Agrandissement",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "poudre de fer"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           },
@@ -14871,9 +14948,9 @@
             "manualName": "Rétrécissement",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "poudre de fer"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           }
@@ -14899,7 +14976,10 @@
             "manualName": "Apaisement",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": []
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S",
+              "composants_requis": []
             },
             "materialReference": []
           },
@@ -14909,7 +14989,10 @@
             "manualName": "Épouvante",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": []
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S",
+              "composants_requis": []
             },
             "materialReference": []
           }
@@ -14936,8 +15019,28 @@
             "copySourceItem": true,
             "systemOverrides": {
               "composants_materiels": [
-                "goutte d’eau"
-              ]
+                {
+                  "nom": "goutte d’eau",
+                  "quantite": 1,
+                  "consommation": "optionnel",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": "Requise pour la création d’eau.",
+                  "notes": "Alternative à une pincée de poussière."
+                }
+              ],
+              "composants_materiels_objets": [
+                {
+                  "nom": "goutte d’eau",
+                  "quantite": 1,
+                  "consommation": "optionnel",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": "Requise pour la création d’eau.",
+                  "notes": "Alternative à une pincée de poussière."
+                }
+              ],
+              "composantes": "V, S, M"
             },
             "materialReference": [
               {
@@ -14958,8 +15061,28 @@
             "copySourceItem": true,
             "systemOverrides": {
               "composants_materiels": [
-                "pincée de poussière"
-              ]
+                {
+                  "nom": "pincée de poussière",
+                  "quantite": 1,
+                  "consommation": "optionnel",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": "Requise pour la destruction d’eau.",
+                  "notes": "Alternative à une goutte d’eau."
+                }
+              ],
+              "composants_materiels_objets": [
+                {
+                  "nom": "pincée de poussière",
+                  "quantite": 1,
+                  "consommation": "optionnel",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": "Requise pour la destruction d’eau.",
+                  "notes": "Alternative à une goutte d’eau."
+                }
+              ],
+              "composantes": "V, S, M"
             },
             "materialReference": [
               {
@@ -14995,10 +15118,9 @@
             "manualName": "Arme enchantée",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "carbone en poudre",
-                "citron en poudre"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           }
@@ -15030,9 +15152,46 @@
             "copySourceItem": true,
             "systemOverrides": {
               "composants_materiels": [
-                "morceau d’écorce",
-                "écailles de serpent"
-              ]
+                {
+                  "nom": "morceau d’écorce",
+                  "quantite": 1,
+                  "consommation": "consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": null,
+                  "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « petit morceau d’écorce »."
+                },
+                {
+                  "nom": "écailles de serpent",
+                  "quantite": 1,
+                  "consommation": "consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": null,
+                  "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+                }
+              ],
+              "composants_materiels_objets": [
+                {
+                  "nom": "morceau d’écorce",
+                  "quantite": 1,
+                  "consommation": "consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": null,
+                  "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « petit morceau d’écorce »."
+                },
+                {
+                  "nom": "écailles de serpent",
+                  "quantite": 1,
+                  "consommation": "consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": null,
+                  "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+                }
+              ],
+              "composantes": "V, S, M"
             },
             "materialReference": [
               {
@@ -15062,9 +15221,46 @@
             "copySourceItem": true,
             "systemOverrides": {
               "composants_materiels": [
-                "morceau d’écorce",
-                "écailles de serpent"
-              ]
+                {
+                  "nom": "morceau d’écorce",
+                  "quantite": 1,
+                  "consommation": "consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": null,
+                  "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « petit morceau d’écorce »."
+                },
+                {
+                  "nom": "écailles de serpent",
+                  "quantite": 1,
+                  "consommation": "consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": null,
+                  "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+                }
+              ],
+              "composants_materiels_objets": [
+                {
+                  "nom": "morceau d’écorce",
+                  "quantite": 1,
+                  "consommation": "consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": null,
+                  "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée. Formulation source du Manuel : « petit morceau d’écorce »."
+                },
+                {
+                  "nom": "écailles de serpent",
+                  "quantite": 1,
+                  "consommation": "consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": null,
+                  "notes": "Ingrédient matériel consommé au lancement selon la règle d’arbitrage ADD2E appliquée."
+                }
+              ],
+              "composantes": "V, S, M"
             },
             "materialReference": [
               {
@@ -15109,9 +15305,9 @@
             "manualName": "Bâtons à serpents",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "gui"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           },
@@ -15121,9 +15317,9 @@
             "manualName": "Serpents à bâtons",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "gui"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           }
@@ -15150,8 +15346,28 @@
             "copySourceItem": true,
             "systemOverrides": {
               "composants_materiels": [
-                "eau bénite"
-              ]
+                {
+                  "nom": "eau bénite",
+                  "quantite": 1,
+                  "consommation": "optionnel",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": "Sort normal.",
+                  "notes": "Liquide consommé."
+                }
+              ],
+              "composants_materiels_objets": [
+                {
+                  "nom": "eau bénite",
+                  "quantite": 1,
+                  "consommation": "optionnel",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": "Sort normal.",
+                  "notes": "Liquide consommé."
+                }
+              ],
+              "composantes": "V, S, M"
             },
             "materialReference": [
               {
@@ -15172,8 +15388,28 @@
             "copySourceItem": true,
             "systemOverrides": {
               "composants_materiels": [
-                "eau maudite"
-              ]
+                {
+                  "nom": "eau maudite",
+                  "quantite": 1,
+                  "consommation": "optionnel",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": "Sort inversé : malédiction.",
+                  "notes": "Liquide consommé."
+                }
+              ],
+              "composants_materiels_objets": [
+                {
+                  "nom": "eau maudite",
+                  "quantite": 1,
+                  "consommation": "optionnel",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": "Sort inversé : malédiction.",
+                  "notes": "Liquide consommé."
+                }
+              ],
+              "composantes": "V, S, M"
             },
             "materialReference": [
               {
@@ -15209,9 +15445,9 @@
             "manualName": "Compréhension des langues",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "Pincée de suie"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           },
@@ -15221,9 +15457,9 @@
             "manualName": "Confusion des langues",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "Pincée de suie"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           }
@@ -15249,9 +15485,10 @@
             "manualName": "Contre-poison",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "a completer"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S",
+              "composants_requis": []
             },
             "materialReference": []
           },
@@ -15261,9 +15498,10 @@
             "manualName": "Empoisonnement",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "a completer"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S",
+              "composants_requis": []
             },
             "materialReference": []
           }
@@ -15289,7 +15527,10 @@
             "manualName": "Contre-poison",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": []
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S",
+              "composants_requis": []
             },
             "materialReference": []
           },
@@ -15299,7 +15540,10 @@
             "manualName": "Empoisonnement",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": []
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S",
+              "composants_requis": []
             },
             "materialReference": []
           }
@@ -15325,9 +15569,9 @@
             "manualName": "Croissance animale",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "Matérielle non précisée explicitement dans le Manuel des joueurs."
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           }
@@ -15358,9 +15602,9 @@
             "manualName": "Croissance animale",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "pincée de poudre d’os"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           }
@@ -15391,7 +15635,10 @@
             "manualName": "Désenvoûtement",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": []
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S",
+              "composants_requis": []
             },
             "materialReference": []
           },
@@ -15401,7 +15648,10 @@
             "manualName": "Envoûtement",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": []
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S",
+              "composants_requis": []
             },
             "materialReference": []
           }
@@ -15427,9 +15677,9 @@
             "manualName": "Désenvoûtement",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "a completer"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           },
@@ -15439,9 +15689,9 @@
             "manualName": "Envoûtement",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "a completer"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           }
@@ -15467,7 +15717,10 @@
             "manualName": "Détection des charmes",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": []
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S",
+              "composants_requis": []
             },
             "materialReference": []
           },
@@ -15477,7 +15730,10 @@
             "manualName": "Dissimulation des charmes",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": []
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S",
+              "composants_requis": []
             },
             "materialReference": []
           }
@@ -15504,11 +15760,40 @@
             "copySourceItem": true,
             "systemOverrides": {
               "composants_materiels": [
-                "poussière de laiton",
-                "poussière d’or"
-              ]
+                {
+                  "nom": "poussière de laiton",
+                  "quantite": 1,
+                  "consommation": "consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": "Sort inversé : dissimulation des mensonges.",
+                  "notes": null
+                }
+              ],
+              "composants_materiels_objets": [
+                {
+                  "nom": "poussière de laiton",
+                  "quantite": 1,
+                  "consommation": "consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": "Sort inversé : dissimulation des mensonges.",
+                  "notes": null
+                }
+              ],
+              "composantes": "V, S, M"
             },
-            "materialReference": []
+            "materialReference": [
+              {
+                "nom": "poussière de laiton",
+                "quantite": 1,
+                "consommation": "consomme",
+                "cout_po": null,
+                "source": "Manuel des joueurs",
+                "condition": "Sort inversé : dissimulation des mensonges.",
+                "notes": null
+              }
+            ]
           },
           {
             "id": "inverse",
@@ -15517,8 +15802,28 @@
             "copySourceItem": true,
             "systemOverrides": {
               "composants_materiels": [
-                "poussière de laiton"
-              ]
+                {
+                  "nom": "poussière de laiton",
+                  "quantite": 1,
+                  "consommation": "consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": "Sort inversé : dissimulation des mensonges.",
+                  "notes": null
+                }
+              ],
+              "composants_materiels_objets": [
+                {
+                  "nom": "poussière de laiton",
+                  "quantite": 1,
+                  "consommation": "consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": "Sort inversé : dissimulation des mensonges.",
+                  "notes": null
+                }
+              ],
+              "composantes": "V, S, M"
             },
             "materialReference": [
               {
@@ -15554,9 +15859,9 @@
             "manualName": "Détection du mal",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "a completer"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           },
@@ -15566,9 +15871,9 @@
             "manualName": "Détection du bien",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "a completer"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           }
@@ -15583,6 +15888,7 @@
         "foundryItemName": "Détection du mal",
         "referenceFiles": [
           "audit/reference/manuel-joueurs-clerc-niveau-1.json",
+          "audit/reference/manuel-joueurs-composants-materiels.json",
           "audit/reference/manuel-joueurs-reversibilite.json"
         ],
         "reversible": true,
@@ -15595,10 +15901,37 @@
             "copySourceItem": true,
             "systemOverrides": {
               "composants_materiels": [
-                "symbole sacré"
-              ]
+                {
+                  "nom": "symbole sacré",
+                  "quantite": 1,
+                  "consommation": "non_consomme",
+                  "source": "Manuel des joueurs",
+                  "condition": "Le clerc tient son symbole sacré devant lui.",
+                  "notes": "Objet religieux non consommé ; identique pour l’inverse Détection du bien."
+                }
+              ],
+              "composants_materiels_objets": [
+                {
+                  "nom": "symbole sacré",
+                  "quantite": 1,
+                  "consommation": "non_consomme",
+                  "source": "Manuel des joueurs",
+                  "condition": "Le clerc tient son symbole sacré devant lui.",
+                  "notes": "Objet religieux non consommé ; identique pour l’inverse Détection du bien."
+                }
+              ],
+              "composantes": "V, S, M"
             },
-            "materialReference": []
+            "materialReference": [
+              {
+                "nom": "symbole sacré",
+                "quantite": 1,
+                "consommation": "non_consomme",
+                "source": "Manuel des joueurs",
+                "condition": "Le clerc tient son symbole sacré devant lui.",
+                "notes": "Objet religieux non consommé ; identique pour l’inverse Détection du bien."
+              }
+            ]
           },
           {
             "id": "inverse",
@@ -15607,10 +15940,37 @@
             "copySourceItem": true,
             "systemOverrides": {
               "composants_materiels": [
-                "symbole sacré"
-              ]
+                {
+                  "nom": "symbole sacré",
+                  "quantite": 1,
+                  "consommation": "non_consomme",
+                  "source": "Manuel des joueurs",
+                  "condition": "Le clerc tient son symbole sacré devant lui.",
+                  "notes": "Objet religieux non consommé ; identique pour l’inverse Détection du bien."
+                }
+              ],
+              "composants_materiels_objets": [
+                {
+                  "nom": "symbole sacré",
+                  "quantite": 1,
+                  "consommation": "non_consomme",
+                  "source": "Manuel des joueurs",
+                  "condition": "Le clerc tient son symbole sacré devant lui.",
+                  "notes": "Objet religieux non consommé ; identique pour l’inverse Détection du bien."
+                }
+              ],
+              "composantes": "V, S, M"
             },
-            "materialReference": []
+            "materialReference": [
+              {
+                "nom": "symbole sacré",
+                "quantite": 1,
+                "consommation": "non_consomme",
+                "source": "Manuel des joueurs",
+                "condition": "Le clerc tient son symbole sacré devant lui.",
+                "notes": "Objet religieux non consommé ; identique pour l’inverse Détection du bien."
+              }
+            ]
           }
         ],
         "splitOnActorGrant": true
@@ -15635,8 +15995,28 @@
             "copySourceItem": true,
             "systemOverrides": {
               "composants_materiels": [
-                "symbole sacré du clerc"
-              ]
+                {
+                  "nom": "symbole sacré du clerc",
+                  "quantite": 1,
+                  "consommation": "non_consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": null,
+                  "notes": null
+                }
+              ],
+              "composants_materiels_objets": [
+                {
+                  "nom": "symbole sacré du clerc",
+                  "quantite": 1,
+                  "consommation": "non_consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": null,
+                  "notes": null
+                }
+              ],
+              "composantes": "V, S, M"
             },
             "materialReference": [
               {
@@ -15657,10 +16037,64 @@
             "copySourceItem": true,
             "systemOverrides": {
               "composants_materiels": [
-                "symbole sacré du clerc",
-                "eau bénite",
-                "eau maudite"
-              ]
+                {
+                  "nom": "symbole sacré du clerc",
+                  "quantite": 1,
+                  "consommation": "non_consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": null,
+                  "notes": null
+                },
+                {
+                  "nom": "eau bénite",
+                  "quantite": 1,
+                  "consommation": "optionnel",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": "Requise pour dissipation du mal ; alternative à l’eau maudite.",
+                  "notes": null
+                },
+                {
+                  "nom": "eau maudite",
+                  "quantite": 1,
+                  "consommation": "optionnel",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": "Requise pour dissipation du bien ; alternative à l’eau bénite.",
+                  "notes": null
+                }
+              ],
+              "composants_materiels_objets": [
+                {
+                  "nom": "symbole sacré du clerc",
+                  "quantite": 1,
+                  "consommation": "non_consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": null,
+                  "notes": null
+                },
+                {
+                  "nom": "eau bénite",
+                  "quantite": 1,
+                  "consommation": "optionnel",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": "Requise pour dissipation du mal ; alternative à l’eau maudite.",
+                  "notes": null
+                },
+                {
+                  "nom": "eau maudite",
+                  "quantite": 1,
+                  "consommation": "optionnel",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": "Requise pour dissipation du bien ; alternative à l’eau bénite.",
+                  "notes": null
+                }
+              ],
+              "composantes": "V, S, M"
             },
             "materialReference": [
               {
@@ -15714,9 +16148,9 @@
             "manualName": "Embrasement",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "gui druidique"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           },
@@ -15726,9 +16160,9 @@
             "manualName": "Extinction",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "gui druidique"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           }
@@ -15754,7 +16188,10 @@
             "manualName": "Emprisonnement",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": []
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S",
+              "composants_requis": []
             },
             "materialReference": []
           },
@@ -15764,7 +16201,10 @@
             "manualName": "Libération",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": []
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S",
+              "composants_requis": []
             },
             "materialReference": []
           }
@@ -15790,9 +16230,9 @@
             "manualName": "Forêt hallucinatoire",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "gui druidique"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           }
@@ -15823,7 +16263,10 @@
             "manualName": "Guérison",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": []
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S",
+              "composants_requis": []
             },
             "materialReference": []
           },
@@ -15833,7 +16276,10 @@
             "manualName": "Traumatisme",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": []
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S",
+              "composants_requis": []
             },
             "materialReference": []
           }
@@ -15859,7 +16305,10 @@
             "manualName": "Guérison de la cécité",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": []
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S",
+              "composants_requis": []
             },
             "materialReference": []
           },
@@ -15869,7 +16318,10 @@
             "manualName": "Cécité",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": []
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S",
+              "composants_requis": []
             },
             "materialReference": []
           }
@@ -15895,9 +16347,9 @@
             "manualName": "Guérison des maladies",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "Matérielle non précisée explicitement dans le Manuel des joueurs."
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           },
@@ -15907,9 +16359,9 @@
             "manualName": "Contamination",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "Matérielle non précisée explicitement dans le Manuel des joueurs."
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           }
@@ -15935,9 +16387,10 @@
             "manualName": "Guérison des maladies",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "gui druidique"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S",
+              "composants_requis": []
             },
             "materialReference": []
           },
@@ -15947,9 +16400,10 @@
             "manualName": "Contamination",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "gui druidique"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S",
+              "composants_requis": []
             },
             "materialReference": []
           }
@@ -15975,9 +16429,9 @@
             "manualName": "Invocation d’un élémental de terre",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "gui"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           },
@@ -15987,9 +16441,9 @@
             "manualName": "Dissipation d’un élémental de terre",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "gui"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           }
@@ -16015,9 +16469,9 @@
             "manualName": "Invocation d’un élémental du feu",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "gui druidique"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           },
@@ -16027,9 +16481,9 @@
             "manualName": "Dissipation d’un élémental du feu",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "gui druidique"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           }
@@ -16055,9 +16509,10 @@
             "manualName": "Langue",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "a completer"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "a_verifier_manuellement",
+              "composants_requis": []
             },
             "materialReference": []
           },
@@ -16067,9 +16522,10 @@
             "manualName": "Incompréhension",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "a completer"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "a_verifier_manuellement",
+              "composants_requis": []
             },
             "materialReference": []
           }
@@ -16095,9 +16551,9 @@
             "manualName": "Langues",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "Petite statuette d’argile représentant une ziggourat"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, M"
             },
             "materialReference": []
           },
@@ -16107,9 +16563,9 @@
             "manualName": "Incompréhension",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "Petite statuette d’argile représentant une ziggourat"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, M"
             },
             "materialReference": []
           }
@@ -16135,10 +16591,9 @@
             "manualName": "Lecture de la magie",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "Cristal clair",
-                "Prisme minéral"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           },
@@ -16148,10 +16603,9 @@
             "manualName": "Obscurcissement de la magie",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "Cristal clair",
-                "Prisme minéral"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           }
@@ -16178,8 +16632,28 @@
             "copySourceItem": true,
             "systemOverrides": {
               "composants_materiels": [
-                "pierre aimantée"
-              ]
+                {
+                  "nom": "pierre aimantée",
+                  "quantite": 1,
+                  "consommation": "non_consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": null,
+                  "notes": null
+                }
+              ],
+              "composants_materiels_objets": [
+                {
+                  "nom": "pierre aimantée",
+                  "quantite": 1,
+                  "consommation": "non_consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": null,
+                  "notes": null
+                }
+              ],
+              "composantes": "V, S, M"
             },
             "materialReference": [
               {
@@ -16200,8 +16674,28 @@
             "copySourceItem": true,
             "systemOverrides": {
               "composants_materiels": [
-                "pierre aimantée"
-              ]
+                {
+                  "nom": "pierre aimantée",
+                  "quantite": 1,
+                  "consommation": "non_consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": null,
+                  "notes": null
+                }
+              ],
+              "composants_materiels_objets": [
+                {
+                  "nom": "pierre aimantée",
+                  "quantite": 1,
+                  "consommation": "non_consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": null,
+                  "notes": null
+                }
+              ],
+              "composantes": "V, S, M"
             },
             "materialReference": [
               {
@@ -16237,15 +16731,9 @@
             "manualName": "Localisation d’objets",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                {
-                  "type": "alternative",
-                  "choix": [
-                    "fourchette d’argent",
-                    "baguette fourchue"
-                  ]
-                }
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           },
@@ -16255,15 +16743,9 @@
             "manualName": "Dissimulation d’objets",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                {
-                  "type": "alternative",
-                  "choix": [
-                    "fourchette d’argent",
-                    "baguette fourchue"
-                  ]
-                }
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           }
@@ -16289,9 +16771,10 @@
             "manualName": "Lumière",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "symbole sacré"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S",
+              "composants_requis": []
             },
             "materialReference": []
           },
@@ -16301,9 +16784,10 @@
             "manualName": "Ténèbres",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "symbole sacré"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S",
+              "composants_requis": []
             },
             "materialReference": []
           }
@@ -16329,7 +16813,10 @@
             "manualName": "Lumière éternelle",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": []
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S",
+              "composants_requis": []
             },
             "materialReference": []
           },
@@ -16339,7 +16826,10 @@
             "manualName": "Ténèbres éternelles",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": []
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S",
+              "composants_requis": []
             },
             "materialReference": []
           }
@@ -16365,9 +16855,9 @@
             "manualName": "Métal brûlant",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "gui druidique"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           },
@@ -16377,9 +16867,9 @@
             "manualName": "Métal glacial",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "gui druidique"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           }
@@ -16406,8 +16896,28 @@
             "copySourceItem": true,
             "systemOverrides": {
               "composants_materiels": [
-                "jeu d’objets divinatoires en os ou en ivoire, sous forme de bâtonnets ou de runes gravées"
-              ]
+                {
+                  "nom": "jeu d’objets divinatoires en os ou en ivoire, sous forme de bâtonnets ou de runes gravées",
+                  "quantite": 1,
+                  "consommation": "non_consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": null,
+                  "notes": null
+                }
+              ],
+              "composants_materiels_objets": [
+                {
+                  "nom": "jeu d’objets divinatoires en os ou en ivoire, sous forme de bâtonnets ou de runes gravées",
+                  "quantite": 1,
+                  "consommation": "non_consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": null,
+                  "notes": null
+                }
+              ],
+              "composantes": "V, S, M"
             },
             "materialReference": [
               {
@@ -16428,8 +16938,28 @@
             "copySourceItem": true,
             "systemOverrides": {
               "composants_materiels": [
-                "jeu d’objets divinatoires en os ou en ivoire, sous forme de bâtonnets ou de runes gravées"
-              ]
+                {
+                  "nom": "jeu d’objets divinatoires en os ou en ivoire, sous forme de bâtonnets ou de runes gravées",
+                  "quantite": 1,
+                  "consommation": "non_consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": null,
+                  "notes": null
+                }
+              ],
+              "composants_materiels_objets": [
+                {
+                  "nom": "jeu d’objets divinatoires en os ou en ivoire, sous forme de bâtonnets ou de runes gravées",
+                  "quantite": 1,
+                  "consommation": "non_consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": null,
+                  "notes": null
+                }
+              ],
+              "composantes": "V, S, M"
             },
             "materialReference": [
               {
@@ -16465,7 +16995,10 @@
             "manualName": "Perception des alignements",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": []
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S",
+              "composants_requis": []
             },
             "materialReference": []
           },
@@ -16475,7 +17008,10 @@
             "manualName": "Confusion de l’alignement",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": []
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S",
+              "composants_requis": []
             },
             "materialReference": []
           }
@@ -16501,10 +17037,9 @@
             "manualName": "Protection contre le mal",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "poudre de fer",
-                "poudre d’argent"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           },
@@ -16514,10 +17049,9 @@
             "manualName": "Protection contre le bien",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "poudre de fer",
-                "poudre d’argent"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           }
@@ -16532,6 +17066,7 @@
         "foundryItemName": "Protection contre le Mal",
         "referenceFiles": [
           "audit/reference/manuel-joueurs-clerc-niveau-1.json",
+          "audit/reference/manuel-joueurs-composants-materiels.json",
           "audit/reference/manuel-joueurs-reversibilite.json"
         ],
         "reversible": true,
@@ -16545,40 +17080,76 @@
             "systemOverrides": {
               "composants_materiels": [
                 {
-                  "type": "variante",
-                  "id": "eau_benite",
-                  "label": "Eau bénite",
-                  "composants": [
-                    "Eau bénite"
-                  ]
-                },
-                {
-                  "type": "variante",
-                  "id": "encens",
-                  "label": "encens allumé",
-                  "composants": [
-                    "encens allumé"
-                  ]
-                },
-                {
-                  "type": "variante",
-                  "id": "sang",
-                  "label": "sang",
-                  "composants": [
-                    "sang"
-                  ]
-                },
-                {
-                  "type": "variante",
-                  "id": "fumier",
-                  "label": "vapeurs de fumier",
-                  "composants": [
-                    "vapeurs de fumier"
+                  "alternatives": [
+                    {
+                      "nom": "eau bénite",
+                      "quantite": 1,
+                      "consommation": "consomme",
+                      "source": "Manuel des joueurs",
+                      "mode": "normal",
+                      "alternativeGroup": "protection-contre-le-mal-normal",
+                      "condition": "Alternative du sort normal : eau bénite ou encens allumé.",
+                      "notes": "Le cercle de 90 cm est tracé avec cette matière."
+                    },
+                    {
+                      "nom": "encens allumé",
+                      "quantite": 1,
+                      "consommation": "consomme",
+                      "source": "Manuel des joueurs",
+                      "mode": "normal",
+                      "alternativeGroup": "protection-contre-le-mal-normal",
+                      "condition": "Alternative du sort normal : eau bénite ou encens allumé.",
+                      "notes": "Le cercle de 90 cm est tracé avec cette matière."
+                    }
                   ]
                 }
-              ]
+              ],
+              "composants_materiels_objets": [
+                {
+                  "nom": "eau bénite",
+                  "quantite": 1,
+                  "consommation": "consomme",
+                  "source": "Manuel des joueurs",
+                  "mode": "normal",
+                  "alternativeGroup": "protection-contre-le-mal-normal",
+                  "condition": "Alternative du sort normal : eau bénite ou encens allumé.",
+                  "notes": "Le cercle de 90 cm est tracé avec cette matière."
+                },
+                {
+                  "nom": "encens allumé",
+                  "quantite": 1,
+                  "consommation": "consomme",
+                  "source": "Manuel des joueurs",
+                  "mode": "normal",
+                  "alternativeGroup": "protection-contre-le-mal-normal",
+                  "condition": "Alternative du sort normal : eau bénite ou encens allumé.",
+                  "notes": "Le cercle de 90 cm est tracé avec cette matière."
+                }
+              ],
+              "composantes": "V, S, M"
             },
-            "materialReference": []
+            "materialReference": [
+              {
+                "nom": "eau bénite",
+                "quantite": 1,
+                "consommation": "consomme",
+                "source": "Manuel des joueurs",
+                "mode": "normal",
+                "alternativeGroup": "protection-contre-le-mal-normal",
+                "condition": "Alternative du sort normal : eau bénite ou encens allumé.",
+                "notes": "Le cercle de 90 cm est tracé avec cette matière."
+              },
+              {
+                "nom": "encens allumé",
+                "quantite": 1,
+                "consommation": "consomme",
+                "source": "Manuel des joueurs",
+                "mode": "normal",
+                "alternativeGroup": "protection-contre-le-mal-normal",
+                "condition": "Alternative du sort normal : eau bénite ou encens allumé.",
+                "notes": "Le cercle de 90 cm est tracé avec cette matière."
+              }
+            ]
           },
           {
             "id": "inverse",
@@ -16588,40 +17159,76 @@
             "systemOverrides": {
               "composants_materiels": [
                 {
-                  "type": "variante",
-                  "id": "eau_benite",
-                  "label": "Eau bénite",
-                  "composants": [
-                    "Eau bénite"
-                  ]
-                },
-                {
-                  "type": "variante",
-                  "id": "encens",
-                  "label": "encens allumé",
-                  "composants": [
-                    "encens allumé"
-                  ]
-                },
-                {
-                  "type": "variante",
-                  "id": "sang",
-                  "label": "sang",
-                  "composants": [
-                    "sang"
-                  ]
-                },
-                {
-                  "type": "variante",
-                  "id": "fumier",
-                  "label": "vapeurs de fumier",
-                  "composants": [
-                    "vapeurs de fumier"
+                  "alternatives": [
+                    {
+                      "nom": "sang",
+                      "quantite": 1,
+                      "consommation": "consomme",
+                      "source": "Manuel des joueurs",
+                      "mode": "inverse",
+                      "alternativeGroup": "protection-contre-le-bien-inverse",
+                      "condition": "Alternative du sort inverse : sang ou vapeurs de fumier.",
+                      "notes": "Le cercle de 90 cm est tracé avec cette matière."
+                    },
+                    {
+                      "nom": "vapeurs de fumier",
+                      "quantite": 1,
+                      "consommation": "consomme",
+                      "source": "Manuel des joueurs",
+                      "mode": "inverse",
+                      "alternativeGroup": "protection-contre-le-bien-inverse",
+                      "condition": "Alternative du sort inverse : sang ou vapeurs de fumier.",
+                      "notes": "Le cercle de 90 cm est tracé avec cette matière."
+                    }
                   ]
                 }
-              ]
+              ],
+              "composants_materiels_objets": [
+                {
+                  "nom": "sang",
+                  "quantite": 1,
+                  "consommation": "consomme",
+                  "source": "Manuel des joueurs",
+                  "mode": "inverse",
+                  "alternativeGroup": "protection-contre-le-bien-inverse",
+                  "condition": "Alternative du sort inverse : sang ou vapeurs de fumier.",
+                  "notes": "Le cercle de 90 cm est tracé avec cette matière."
+                },
+                {
+                  "nom": "vapeurs de fumier",
+                  "quantite": 1,
+                  "consommation": "consomme",
+                  "source": "Manuel des joueurs",
+                  "mode": "inverse",
+                  "alternativeGroup": "protection-contre-le-bien-inverse",
+                  "condition": "Alternative du sort inverse : sang ou vapeurs de fumier.",
+                  "notes": "Le cercle de 90 cm est tracé avec cette matière."
+                }
+              ],
+              "composantes": "V, S, M"
             },
-            "materialReference": []
+            "materialReference": [
+              {
+                "nom": "sang",
+                "quantite": 1,
+                "consommation": "consomme",
+                "source": "Manuel des joueurs",
+                "mode": "inverse",
+                "alternativeGroup": "protection-contre-le-bien-inverse",
+                "condition": "Alternative du sort inverse : sang ou vapeurs de fumier.",
+                "notes": "Le cercle de 90 cm est tracé avec cette matière."
+              },
+              {
+                "nom": "vapeurs de fumier",
+                "quantite": 1,
+                "consommation": "consomme",
+                "source": "Manuel des joueurs",
+                "mode": "inverse",
+                "alternativeGroup": "protection-contre-le-bien-inverse",
+                "condition": "Alternative du sort inverse : sang ou vapeurs de fumier.",
+                "notes": "Le cercle de 90 cm est tracé avec cette matière."
+              }
+            ]
           }
         ],
         "splitOnActorGrant": true
@@ -16645,9 +17252,9 @@
             "manualName": "Protection contre le mal sur 3 m",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "poudre d’argent"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           },
@@ -16657,9 +17264,9 @@
             "manualName": "Protection contre le bien sur 3 m",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "poudre d’argent"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           }
@@ -16685,40 +17292,10 @@
             "manualName": "Protection contre le mal sur 3 m",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                {
-                  "type": "variante",
-                  "id": "eau_benite",
-                  "label": "Eau bénite",
-                  "composants": [
-                    "Eau bénite"
-                  ]
-                },
-                {
-                  "type": "variante",
-                  "id": "encens",
-                  "label": "encens allumé",
-                  "composants": [
-                    "encens allumé"
-                  ]
-                },
-                {
-                  "type": "variante",
-                  "id": "sang",
-                  "label": "sang",
-                  "composants": [
-                    "sang"
-                  ]
-                },
-                {
-                  "type": "variante",
-                  "id": "fumier",
-                  "label": "vapeurs de fumier",
-                  "composants": [
-                    "vapeurs de fumier"
-                  ]
-                }
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "a_verifier_manuellement",
+              "composants_requis": []
             },
             "materialReference": []
           },
@@ -16728,40 +17305,10 @@
             "manualName": "Protection contre le bien sur 3 m",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                {
-                  "type": "variante",
-                  "id": "eau_benite",
-                  "label": "Eau bénite",
-                  "composants": [
-                    "Eau bénite"
-                  ]
-                },
-                {
-                  "type": "variante",
-                  "id": "encens",
-                  "label": "encens allumé",
-                  "composants": [
-                    "encens allumé"
-                  ]
-                },
-                {
-                  "type": "variante",
-                  "id": "sang",
-                  "label": "sang",
-                  "composants": [
-                    "sang"
-                  ]
-                },
-                {
-                  "type": "variante",
-                  "id": "fumier",
-                  "label": "vapeurs de fumier",
-                  "composants": [
-                    "vapeurs de fumier"
-                  ]
-                }
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "a_verifier_manuellement",
+              "composants_requis": []
             },
             "materialReference": []
           }
@@ -16787,7 +17334,10 @@
             "manualName": "Purification de l’eau",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": []
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S",
+              "composants_requis": []
             },
             "materialReference": []
           },
@@ -16797,7 +17347,10 @@
             "manualName": "Corruption de l’eau",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": []
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S",
+              "composants_requis": []
             },
             "materialReference": []
           }
@@ -16823,9 +17376,10 @@
             "manualName": "Purification de l’eau et des aliments",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "symbole sacré"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S",
+              "composants_requis": []
             },
             "materialReference": []
           },
@@ -16835,9 +17389,10 @@
             "manualName": "Corruption de l’eau et des aliments",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "symbole sacré"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S",
+              "composants_requis": []
             },
             "materialReference": []
           }
@@ -16863,7 +17418,10 @@
             "manualName": "Rappel à la vie",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": []
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S",
+              "composants_requis": []
             },
             "materialReference": []
           },
@@ -16873,7 +17431,10 @@
             "manualName": "Destruction de la vie",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": []
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S",
+              "composants_requis": []
             },
             "materialReference": []
           }
@@ -16900,9 +17461,46 @@
             "copySourceItem": true,
             "systemOverrides": {
               "composants_materiels": [
-                "objet de prière",
-                "eau maudite"
-              ]
+                {
+                  "nom": "objet de prière",
+                  "quantite": 1,
+                  "consommation": "non_consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": null,
+                  "notes": null
+                },
+                {
+                  "nom": "eau maudite",
+                  "quantite": 1,
+                  "consommation": "optionnel",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": "Requise pour flétrissement ; alternative à l’eau bénite.",
+                  "notes": null
+                }
+              ],
+              "composants_materiels_objets": [
+                {
+                  "nom": "objet de prière",
+                  "quantite": 1,
+                  "consommation": "non_consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": null,
+                  "notes": null
+                },
+                {
+                  "nom": "eau maudite",
+                  "quantite": 1,
+                  "consommation": "optionnel",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": "Requise pour flétrissement ; alternative à l’eau bénite.",
+                  "notes": null
+                }
+              ],
+              "composantes": "V, S, M"
             },
             "materialReference": [
               {
@@ -16932,10 +17530,64 @@
             "copySourceItem": true,
             "systemOverrides": {
               "composants_materiels": [
-                "objet de prière",
-                "eau bénite",
-                "eau maudite"
-              ]
+                {
+                  "nom": "objet de prière",
+                  "quantite": 1,
+                  "consommation": "non_consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": null,
+                  "notes": null
+                },
+                {
+                  "nom": "eau bénite",
+                  "quantite": 1,
+                  "consommation": "optionnel",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": "Requise pour régénération ; alternative à l’eau maudite.",
+                  "notes": null
+                },
+                {
+                  "nom": "eau maudite",
+                  "quantite": 1,
+                  "consommation": "optionnel",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": "Requise pour flétrissement ; alternative à l’eau bénite.",
+                  "notes": null
+                }
+              ],
+              "composants_materiels_objets": [
+                {
+                  "nom": "objet de prière",
+                  "quantite": 1,
+                  "consommation": "non_consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": null,
+                  "notes": null
+                },
+                {
+                  "nom": "eau bénite",
+                  "quantite": 1,
+                  "consommation": "optionnel",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": "Requise pour régénération ; alternative à l’eau maudite.",
+                  "notes": null
+                },
+                {
+                  "nom": "eau maudite",
+                  "quantite": 1,
+                  "consommation": "optionnel",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": "Requise pour flétrissement ; alternative à l’eau bénite.",
+                  "notes": null
+                }
+              ],
+              "composantes": "V, S, M"
             },
             "materialReference": [
               {
@@ -16989,9 +17641,9 @@
             "manualName": "Respiration aquatique",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "petit roseau ou un brin de paille"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           },
@@ -17001,9 +17653,9 @@
             "manualName": "Respiration aérienne",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "petit roseau ou un brin de paille"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           }
@@ -17029,22 +17681,9 @@
             "manualName": "Respiration aquatique",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                {
-                  "type": "alternative",
-                  "choix": [
-                    "petit roseau",
-                    "brin de paille"
-                  ]
-                },
-                {
-                  "type": "alternative",
-                  "choix": [
-                    "roseau",
-                    "brin de paille"
-                  ]
-                }
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           },
@@ -17054,22 +17693,9 @@
             "manualName": "Respiration aérienne",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                {
-                  "type": "alternative",
-                  "choix": [
-                    "petit roseau",
-                    "brin de paille"
-                  ]
-                },
-                {
-                  "type": "alternative",
-                  "choix": [
-                    "roseau",
-                    "brin de paille"
-                  ]
-                }
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           }
@@ -17095,7 +17721,10 @@
             "manualName": "Restauration",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": []
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S",
+              "composants_requis": []
             },
             "materialReference": []
           },
@@ -17105,7 +17734,10 @@
             "manualName": "Perte d’énergie",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": []
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S",
+              "composants_requis": []
             },
             "materialReference": []
           }
@@ -17132,9 +17764,46 @@
             "copySourceItem": true,
             "systemOverrides": {
               "composants_materiels": [
-                "symbole sacré du clerc",
-                "eau maudite"
-              ]
+                {
+                  "nom": "symbole sacré du clerc",
+                  "quantite": 1,
+                  "consommation": "non_consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": null,
+                  "notes": null
+                },
+                {
+                  "nom": "eau maudite",
+                  "quantite": 1,
+                  "consommation": "optionnel",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": "Requise pour anéantissement ; alternative à l’eau bénite.",
+                  "notes": null
+                }
+              ],
+              "composants_materiels_objets": [
+                {
+                  "nom": "symbole sacré du clerc",
+                  "quantite": 1,
+                  "consommation": "non_consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": null,
+                  "notes": null
+                },
+                {
+                  "nom": "eau maudite",
+                  "quantite": 1,
+                  "consommation": "optionnel",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": "Requise pour anéantissement ; alternative à l’eau bénite.",
+                  "notes": null
+                }
+              ],
+              "composantes": "V, S, M"
             },
             "materialReference": [
               {
@@ -17164,10 +17833,64 @@
             "copySourceItem": true,
             "systemOverrides": {
               "composants_materiels": [
-                "symbole sacré du clerc",
-                "eau bénite",
-                "eau maudite"
-              ]
+                {
+                  "nom": "symbole sacré du clerc",
+                  "quantite": 1,
+                  "consommation": "non_consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": null,
+                  "notes": null
+                },
+                {
+                  "nom": "eau bénite",
+                  "quantite": 1,
+                  "consommation": "optionnel",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": "Requise pour résurrection ; alternative à l’eau maudite.",
+                  "notes": null
+                },
+                {
+                  "nom": "eau maudite",
+                  "quantite": 1,
+                  "consommation": "optionnel",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": "Requise pour anéantissement ; alternative à l’eau bénite.",
+                  "notes": null
+                }
+              ],
+              "composants_materiels_objets": [
+                {
+                  "nom": "symbole sacré du clerc",
+                  "quantite": 1,
+                  "consommation": "non_consomme",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": null,
+                  "notes": null
+                },
+                {
+                  "nom": "eau bénite",
+                  "quantite": 1,
+                  "consommation": "optionnel",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": "Requise pour résurrection ; alternative à l’eau maudite.",
+                  "notes": null
+                },
+                {
+                  "nom": "eau maudite",
+                  "quantite": 1,
+                  "consommation": "optionnel",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": "Requise pour anéantissement ; alternative à l’eau bénite.",
+                  "notes": null
+                }
+              ],
+              "composantes": "V, S, M"
             },
             "materialReference": [
               {
@@ -17221,9 +17944,10 @@
             "manualName": "Soin ultime",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "symbole sacré"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S",
+              "composants_requis": []
             },
             "materialReference": []
           },
@@ -17233,9 +17957,10 @@
             "manualName": "Blessure ultime",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "symbole sacré"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S",
+              "composants_requis": []
             },
             "materialReference": []
           }
@@ -17261,9 +17986,9 @@
             "manualName": "Soin ultime",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "gui"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           },
@@ -17273,9 +17998,9 @@
             "manualName": "Blessure ultime",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "gui"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           }
@@ -17301,9 +18026,9 @@
             "manualName": "Soins majeurs",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "gui"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           },
@@ -17313,9 +18038,9 @@
             "manualName": "Blessures majeures",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "gui"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           }
@@ -17341,9 +18066,10 @@
             "manualName": "Soins majeurs",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "gui"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S",
+              "composants_requis": []
             },
             "materialReference": []
           },
@@ -17353,9 +18079,10 @@
             "manualName": "Blessures majeures",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "gui"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S",
+              "composants_requis": []
             },
             "materialReference": []
           }
@@ -17381,9 +18108,10 @@
             "manualName": "Soins mineurs",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "symbole sacré"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S",
+              "composants_requis": []
             },
             "materialReference": []
           },
@@ -17393,9 +18121,10 @@
             "manualName": "Blessures mineures",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "symbole sacré"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S",
+              "composants_requis": []
             },
             "materialReference": []
           }
@@ -17421,10 +18150,9 @@
             "manualName": "Soins mineurs",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "symbole sacré du clerc",
-                "petit miroir en argent"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           },
@@ -17434,10 +18162,9 @@
             "manualName": "Blessures mineures",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "symbole sacré du clerc",
-                "petit miroir en argent"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           }
@@ -17463,9 +18190,9 @@
             "manualName": "Stase temporelle",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "Poudre composée de diamant"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           },
@@ -17475,9 +18202,9 @@
             "manualName": "Rétablissement temporel",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "Poudre composée de diamant"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           }
@@ -17503,9 +18230,9 @@
             "manualName": "Tempête de feu",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "gui"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           },
@@ -17515,9 +18242,9 @@
             "manualName": "Dissipation du feu",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "gui"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           }
@@ -17543,11 +18270,9 @@
             "manualName": "Transmutation de pierre en boue",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "l’eau",
-                "de l’argile (eau",
-                "sable pour l’inverse)"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           },
@@ -17557,11 +18282,9 @@
             "manualName": "Transmutation de boue en pierre",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "l’eau",
-                "de l’argile (eau",
-                "sable pour l’inverse)"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           }
@@ -17587,11 +18310,9 @@
             "manualName": "Transmutation de pierre en boue",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "eau",
-                "argile",
-                "sable"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           },
@@ -17601,11 +18322,9 @@
             "manualName": "Transmutation de boue en pierre",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "eau",
-                "argile",
-                "sable"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           }
@@ -17631,10 +18350,9 @@
             "manualName": "Transmutation de pierre en chair",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "goutte de sang",
-                "Chaux"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           },
@@ -17644,10 +18362,9 @@
             "manualName": "Transmutation de chair en pierre",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "goutte de sang",
-                "Chaux"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           }
@@ -17674,9 +18391,46 @@
             "copySourceItem": true,
             "systemOverrides": {
               "composants_materiels": [
-                "crème pour les yeux faite de poudre de champignons très rares, de safran et de graisse",
-                "crème faite d’huile, de poudre de pavot et d’essence d’orchidée rose"
-              ]
+                {
+                  "nom": "crème pour les yeux faite de poudre de champignons très rares, de safran et de graisse",
+                  "quantite": 1,
+                  "consommation": "optionnel",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": "Requise pour vision réelle.",
+                  "notes": "La crème doit être vieille de 1 à 6 mois."
+                },
+                {
+                  "nom": "crème faite d’huile, de poudre de pavot et d’essence d’orchidée rose",
+                  "quantite": 1,
+                  "consommation": "optionnel",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": "Requise pour vision erronée.",
+                  "notes": "La crème doit être vieille de 1 à 6 mois."
+                }
+              ],
+              "composants_materiels_objets": [
+                {
+                  "nom": "crème pour les yeux faite de poudre de champignons très rares, de safran et de graisse",
+                  "quantite": 1,
+                  "consommation": "optionnel",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": "Requise pour vision réelle.",
+                  "notes": "La crème doit être vieille de 1 à 6 mois."
+                },
+                {
+                  "nom": "crème faite d’huile, de poudre de pavot et d’essence d’orchidée rose",
+                  "quantite": 1,
+                  "consommation": "optionnel",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": "Requise pour vision erronée.",
+                  "notes": "La crème doit être vieille de 1 à 6 mois."
+                }
+              ],
+              "composantes": "V, S, M"
             },
             "materialReference": [
               {
@@ -17706,9 +18460,46 @@
             "copySourceItem": true,
             "systemOverrides": {
               "composants_materiels": [
-                "crème pour les yeux faite de poudre de champignons très rares, de safran et de graisse",
-                "crème faite d’huile, de poudre de pavot et d’essence d’orchidée rose"
-              ]
+                {
+                  "nom": "crème pour les yeux faite de poudre de champignons très rares, de safran et de graisse",
+                  "quantite": 1,
+                  "consommation": "optionnel",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": "Requise pour vision réelle.",
+                  "notes": "La crème doit être vieille de 1 à 6 mois."
+                },
+                {
+                  "nom": "crème faite d’huile, de poudre de pavot et d’essence d’orchidée rose",
+                  "quantite": 1,
+                  "consommation": "optionnel",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": "Requise pour vision erronée.",
+                  "notes": "La crème doit être vieille de 1 à 6 mois."
+                }
+              ],
+              "composants_materiels_objets": [
+                {
+                  "nom": "crème pour les yeux faite de poudre de champignons très rares, de safran et de graisse",
+                  "quantite": 1,
+                  "consommation": "optionnel",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": "Requise pour vision réelle.",
+                  "notes": "La crème doit être vieille de 1 à 6 mois."
+                },
+                {
+                  "nom": "crème faite d’huile, de poudre de pavot et d’essence d’orchidée rose",
+                  "quantite": 1,
+                  "consommation": "optionnel",
+                  "cout_po": null,
+                  "source": "Manuel des joueurs",
+                  "condition": "Requise pour vision erronée.",
+                  "notes": "La crème doit être vieille de 1 à 6 mois."
+                }
+              ],
+              "composantes": "V, S, M"
             },
             "materialReference": [
               {
@@ -17755,10 +18546,9 @@
             "manualName": "Arme enchantée",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "carbone en poudre",
-                "citron en poudre"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           }
@@ -17789,9 +18579,9 @@
             "manualName": "Croissance animale",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "Matérielle non précisée explicitement dans le Manuel des joueurs."
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           }
@@ -17822,9 +18612,9 @@
             "manualName": "Croissance animale",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "pincée de poudre d’os"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           }
@@ -17855,9 +18645,9 @@
             "manualName": "Forêt hallucinatoire",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                "gui druidique"
-              ]
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
+              "composantes": "V, S, M"
             },
             "materialReference": []
           }
@@ -18473,5 +19263,12 @@
         "niveau": 7
       }
     ]
+  },
+  "materialMechanics": {
+    "updated": 76,
+    "noMaterialCleared": 35,
+    "structuredMaterialsApplied": 41,
+    "missingMaterialReferences": [],
+    "conflicts": []
   }
 }
