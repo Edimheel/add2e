@@ -4,7 +4,7 @@
 // Compatible Foundry V13 / V14 / V15.
 // ============================================================
 
-const ADD2E_SPELL_FAMILY_VERSION = "2026-06-21-spell-family-actor-lines-v1";
+const ADD2E_SPELL_FAMILY_VERSION = "2026-06-21-spell-family-primary-gm-v2";
 const ADD2E_SPELL_FAMILY_PENDING = globalThis.ADD2E_SPELL_FAMILY_PENDING instanceof Set
   ? globalThis.ADD2E_SPELL_FAMILY_PENDING
   : new Set();
@@ -47,7 +47,7 @@ function add2eSpellFamilyLevel(system = {}) {
 }
 
 function add2eSpellFamilyLists(system = {}) {
-  return [...new Set([
+  const values = [
     ...add2eSpellFamilyArray(system.spellLists),
     ...add2eSpellFamilyArray(system.lists),
     ...add2eSpellFamilyArray(system.classes),
@@ -56,53 +56,57 @@ function add2eSpellFamilyLists(system = {}) {
     ...add2eSpellFamilyArray(system.liste),
     ...add2eSpellFamilyArray(system.tags),
     ...add2eSpellFamilyArray(system.effectTags)
-  ].map(add2eSpellFamilyNormalize).filter(Boolean))];
+  ].map(add2eSpellFamilyNormalize).filter(Boolean);
+  return [...new Set(values)];
 }
 
 function add2eSpellFamilyStableKey(data) {
   const system = data?.system ?? {};
   const lists = add2eSpellFamilyLists(system).sort().join("+") || "liste_inconnue";
-  const level = add2eSpellFamilyLevel(system);
-  const name = add2eSpellFamilyNormalize(data?.name ?? system.nom ?? "");
-  return `${lists}|${level}|${name}`;
-}
-
-function add2eSpellFamilyProfileKey(profile = {}, fallbackName = "") {
-  return [
-    add2eSpellFamilyNormalize(profile.class),
-    Number(profile.level) || 0,
-    add2eSpellFamilyNormalize(profile.referenceName ?? fallbackName)
-  ].join("|");
+  return `${lists}|${add2eSpellFamilyLevel(system)}|${add2eSpellFamilyNormalize(data?.name ?? system.nom ?? "")}`;
 }
 
 function add2eSpellFamilyProfiles(flag, system) {
-  const profiles = Array.isArray(flag?.profiles) ? flag.profiles.filter(profile => profile && typeof profile === "object") : [];
+  const profiles = Array.isArray(flag?.profiles) ? flag.profiles.filter(v => v && typeof v === "object") : [];
   if (!profiles.length) return [];
-
   const level = add2eSpellFamilyLevel(system);
   const lists = new Set(add2eSpellFamilyLists(system));
-  const matches = profiles.filter(profile => {
+  const matching = profiles.filter(profile => {
     const profileLevel = Number(profile.level) || 0;
     const profileClass = add2eSpellFamilyNormalize(profile.class);
-    if (profileLevel && profileLevel !== level) return false;
-    return !profileClass || !lists.size || lists.has(profileClass);
+    return (!profileLevel || profileLevel === level) && (!profileClass || !lists.size || lists.has(profileClass));
   });
-
-  return matches.length ? matches : profiles.length === 1 ? profiles : [];
+  return matching.length ? matching : profiles.length === 1 ? profiles : [];
 }
 
-function add2eSpellFamilyMode(profile = {}, modeId) {
-  return (Array.isArray(profile.modes) ? profile.modes : [])
-    .find(mode => String(mode?.id ?? "").trim().toLowerCase() === String(modeId).trim().toLowerCase()) ?? null;
+function add2eSpellFamilyMode(profile, id) {
+  return (Array.isArray(profile?.modes) ? profile.modes : [])
+    .find(mode => String(mode?.id ?? "").toLowerCase() === String(id).toLowerCase()) ?? null;
 }
 
-function add2eSpellFamilyApplySystemOverrides(data, overrides = {}) {
+function add2eSpellFamilyProfileKey(profile, fallbackName) {
+  return [
+    add2eSpellFamilyNormalize(profile?.class),
+    Number(profile?.level) || 0,
+    add2eSpellFamilyNormalize(profile?.referenceName ?? fallbackName)
+  ].join("|");
+}
+
+function add2eSpellFamilyApplyOverrides(data, overrides = {}) {
   const result = add2eSpellFamilyClone(data);
   result.system ??= {};
   for (const [key, value] of Object.entries(overrides ?? {})) {
     if (key.includes(".")) foundry.utils.setProperty(result.system, key, add2eSpellFamilyClone(value));
     else result.system[key] = add2eSpellFamilyClone(value);
   }
+  return result;
+}
+
+function add2eSpellFamilyRename(data, name) {
+  const result = add2eSpellFamilyClone(data);
+  result.name = String(name ?? "").trim();
+  result.system ??= {};
+  result.system.nom = result.name;
   return result;
 }
 
@@ -120,45 +124,29 @@ function add2eSpellFamilyMark(data, familyKey, kind, details = {}) {
   return result;
 }
 
-function add2eSpellFamilyRename(data, name) {
-  const result = add2eSpellFamilyClone(data);
-  result.name = String(name ?? "").trim();
-  result.system ??= {};
-  result.system.nom = result.name;
-  return result;
-}
-
 function add2eSpellFamilyBuildExpected(baseItem) {
-  const baseSource = baseItem.toObject();
-  const baseName = String(baseSource.name ?? baseSource.system?.nom ?? "").trim();
-  const familyKey = add2eSpellFamilyStableKey(baseSource);
-  const expected = [];
-
-  const reversibleProfiles = add2eSpellFamilyProfiles(baseSource.flags?.add2e?.reversible, baseSource.system);
-  const normalProfile = reversibleProfiles[0] ?? null;
-  const normalMode = normalProfile ? add2eSpellFamilyMode(normalProfile, "normal") : null;
-  const preparedBase = normalMode?.systemOverrides
-    ? add2eSpellFamilyApplySystemOverrides(baseSource, normalMode.systemOverrides)
-    : add2eSpellFamilyClone(baseSource);
-
-  expected.push({
+  const source = baseItem.toObject();
+  const baseName = String(source.name ?? source.system?.nom ?? "").trim();
+  const familyKey = add2eSpellFamilyStableKey(source);
+  const reversibleProfiles = add2eSpellFamilyProfiles(source.flags?.add2e?.reversible, source.system);
+  const normalMode = reversibleProfiles.map(profile => add2eSpellFamilyMode(profile, "normal")).find(Boolean);
+  const normalData = normalMode?.systemOverrides
+    ? add2eSpellFamilyApplyOverrides(source, normalMode.systemOverrides)
+    : add2eSpellFamilyClone(source);
+  const entries = [{
     identity: "base",
     kind: "base",
-    data: add2eSpellFamilyMark(preparedBase, familyKey, "base", {
-      sourceItemId: baseItem.id,
-      sourceItemName: baseName
-    })
-  });
+    data: add2eSpellFamilyMark(normalData, familyKey, "base", { sourceItemId: baseItem.id, sourceItemName: baseName })
+  }];
 
   for (const profile of reversibleProfiles) {
     if (profile?.splitOnActorGrant !== true) continue;
-    const inverseMode = add2eSpellFamilyMode(profile, "inverse");
-    const inverseName = String(inverseMode?.actorItemName ?? inverseMode?.manualName ?? "").trim();
+    const inverse = add2eSpellFamilyMode(profile, "inverse");
+    const inverseName = String(inverse?.actorItemName ?? inverse?.manualName ?? "").trim();
     if (!inverseName) continue;
-
     const profileKey = add2eSpellFamilyProfileKey(profile, baseName);
-    let data = add2eSpellFamilyRename(preparedBase, inverseName);
-    data = add2eSpellFamilyApplySystemOverrides(data, inverseMode?.systemOverrides ?? {});
+    let data = add2eSpellFamilyRename(normalData, inverseName);
+    data = add2eSpellFamilyApplyOverrides(data, inverse?.systemOverrides ?? {});
     data = add2eSpellFamilyMark(data, familyKey, "inverse", {
       sourceItemId: baseItem.id,
       sourceItemName: baseName,
@@ -172,18 +160,17 @@ function add2eSpellFamilyBuildExpected(baseItem) {
       mode: "inverse",
       sourceItemName: baseName
     };
-    expected.push({ identity: `inverse:${profileKey}`, kind: "inverse", data });
+    entries.push({ identity: `inverse:${profileKey}`, kind: "inverse", data });
   }
 
-  const variantProfiles = add2eSpellFamilyProfiles(baseSource.flags?.add2e?.variant, baseSource.system);
+  const variantProfiles = add2eSpellFamilyProfiles(source.flags?.add2e?.variant, source.system);
   for (const profile of variantProfiles) {
     const profileKey = add2eSpellFamilyProfileKey(profile, baseName);
     for (const choice of Array.isArray(profile?.choices) ? profile.choices : []) {
       const choiceId = String(choice?.id ?? "").trim() || add2eSpellFamilyNormalize(choice?.nom ?? choice?.name);
       const choiceName = String(choice?.nom ?? choice?.name ?? "").trim();
       if (!choiceId || !choiceName) continue;
-
-      let data = add2eSpellFamilyRename(preparedBase, `${baseName} — ${choiceName}`);
+      let data = add2eSpellFamilyRename(normalData, `${baseName} — ${choiceName}`);
       data = add2eSpellFamilyMark(data, familyKey, "variant", {
         sourceItemId: baseItem.id,
         sourceItemName: baseName,
@@ -198,19 +185,16 @@ function add2eSpellFamilyBuildExpected(baseItem) {
         nom: choiceName,
         reference: add2eSpellFamilyClone(choice?.reference ?? null)
       };
-      expected.push({ identity: `variant:${profileKey}:${choiceId}`, kind: "variant", data });
+      entries.push({ identity: `variant:${profileKey}:${choiceId}`, kind: "variant", data });
     }
   }
 
   const unique = new Map();
-  for (const entry of expected) {
-    const key = `${entry.identity}|${add2eSpellFamilyStableKey(entry.data)}`;
-    if (!unique.has(key)) unique.set(key, entry);
-  }
+  for (const entry of entries) unique.set(`${entry.identity}|${add2eSpellFamilyStableKey(entry.data)}`, entry);
   return { familyKey, entries: [...unique.values()] };
 }
 
-function add2eSpellFamilyEntryIdentity(item) {
+function add2eSpellFamilyIdentity(item) {
   const family = item?.flags?.add2e?.spellFamily ?? {};
   if (family.kind === "base") return "base";
   if (family.kind === "inverse") return `inverse:${family.profileKey ?? ""}`;
@@ -222,69 +206,83 @@ function add2eSpellFamilyIsGenerated(item) {
   return item?.flags?.add2e?.spellFamily?.generated === true;
 }
 
-function add2eSpellFamilyUpdateData(existing, expected) {
-  const flags = expected.data.flags?.add2e ?? {};
+function add2eSpellFamilyUpdate(existing, expected) {
+  const add2e = expected.data.flags?.add2e ?? {};
   const update = {
     _id: existing.id,
     name: expected.data.name,
     img: expected.data.img,
     system: add2eSpellFamilyClone(expected.data.system ?? {}),
-    "flags.add2e.spellFamily": add2eSpellFamilyClone(flags.spellFamily)
+    "flags.add2e.spellFamily": add2eSpellFamilyClone(add2e.spellFamily)
   };
-  if (flags.reversibleActorEntry) update["flags.add2e.reversibleActorEntry"] = add2eSpellFamilyClone(flags.reversibleActorEntry);
-  if (flags.variantChoice) update["flags.add2e.variantChoice"] = add2eSpellFamilyClone(flags.variantChoice);
+  if (add2e.reversibleActorEntry) update["flags.add2e.reversibleActorEntry"] = add2eSpellFamilyClone(add2e.reversibleActorEntry);
+  if (add2e.variantChoice) update["flags.add2e.variantChoice"] = add2eSpellFamilyClone(add2e.variantChoice);
   return update;
 }
 
 async function add2eEnsureActorSpellFamily(item) {
   const actor = item?.actor ?? item?.parent ?? null;
   if (!actor || actor.documentName !== "Actor" || actor.type !== "personnage") return { handled: false, reason: "not-character" };
-  if (String(item.type ?? "").toLowerCase() !== "sort") return { handled: false, reason: "not-spell" };
-  if (add2eSpellFamilyIsGenerated(item)) return { handled: false, reason: "generated-entry" };
+  if (String(item.type ?? "").toLowerCase() !== "sort" || add2eSpellFamilyIsGenerated(item)) return { handled: false, reason: "not-base-spell" };
 
   const { familyKey, entries } = add2eSpellFamilyBuildExpected(item);
   if (entries.length <= 1) return { handled: true, created: 0, updated: 0, familyKey };
 
-  const base = entries.find(entry => entry.kind === "base");
-  const baseUpdate = base ? add2eSpellFamilyUpdateData(item, base) : null;
-  if (baseUpdate) await actor.updateEmbeddedDocuments("Item", [baseUpdate], { add2eInternal: true, add2eSpellFamilyExpansion: true, render: false });
-
-  const existingByIdentity = new Map();
-  const occupiedStableKeys = new Set();
+  const existing = new Map();
+  const occupied = new Set();
   for (const actorItem of actor.items?.filter?.(entry => String(entry.type ?? "").toLowerCase() === "sort") ?? []) {
-    if (actorItem.id !== item.id) occupiedStableKeys.add(add2eSpellFamilyStableKey(actorItem));
-    const marker = actorItem.flags?.add2e?.spellFamily ?? {};
-    if (marker.key !== familyKey) continue;
-    const identity = add2eSpellFamilyEntryIdentity(actorItem);
-    if (identity) existingByIdentity.set(identity, actorItem);
+    if (actorItem.id !== item.id) occupied.add(add2eSpellFamilyStableKey(actorItem));
+    if (actorItem.flags?.add2e?.spellFamily?.key !== familyKey) continue;
+    const identity = add2eSpellFamilyIdentity(actorItem);
+    if (identity) existing.set(identity, actorItem);
   }
+
+  const base = entries.find(entry => entry.identity === "base");
+  if (base) await actor.updateEmbeddedDocuments("Item", [add2eSpellFamilyUpdate(item, base)], { add2eInternal: true, add2eSpellFamilyExpansion: true, render: false });
 
   const updates = [];
   const creates = [];
-  for (const expected of entries.filter(entry => entry.kind !== "base")) {
-    const known = existingByIdentity.get(expected.identity) ?? null;
-    if (known) {
-      updates.push(add2eSpellFamilyUpdateData(known, expected));
+  for (const expected of entries.filter(entry => entry.identity !== "base")) {
+    const found = existing.get(expected.identity);
+    if (found) {
+      updates.push(add2eSpellFamilyUpdate(found, expected));
       continue;
     }
     const stableKey = add2eSpellFamilyStableKey(expected.data);
-    if (occupiedStableKeys.has(stableKey)) continue;
+    if (occupied.has(stableKey)) continue;
     const data = add2eSpellFamilyClone(expected.data);
     delete data._id;
     data.folder = null;
     creates.push(data);
-    occupiedStableKeys.add(stableKey);
+    occupied.add(stableKey);
   }
 
   if (updates.length) await actor.updateEmbeddedDocuments("Item", updates, { add2eInternal: true, add2eSpellFamilyExpansion: true, render: false });
   if (creates.length) await actor.createEmbeddedDocuments("Item", creates, { add2eInternal: true, add2eSpellFamilyExpansion: true, render: false });
   if (updates.length || creates.length) add2eRerenderActorSheet?.(actor, false);
-  return { handled: true, created: creates.length, updated: updates.length + (baseUpdate ? 1 : 0), familyKey };
+  return { handled: true, created: creates.length, updated: updates.length + (base ? 1 : 0), familyKey };
 }
 
-Hooks.on("createItem", (item, options = {}, userId) => {
+async function add2eExpandActorSpellFamilies(actor) {
+  if (!actor || actor.type !== "personnage") return { handled: false, created: 0, updated: 0 };
+  let created = 0;
+  let updated = 0;
+  for (const item of actor.items?.filter?.(entry => String(entry.type ?? "").toLowerCase() === "sort" && !add2eSpellFamilyIsGenerated(entry)) ?? []) {
+    const result = await add2eEnsureActorSpellFamily(item);
+    created += result?.created ?? 0;
+    updated += result?.updated ?? 0;
+  }
+  return { handled: true, created, updated };
+}
+
+function add2eSpellFamilyIsPrimaryActiveGM() {
+  const primary = game.users?.activeGM ?? Array.from(game.users ?? []).find(user => user.active && user.isGM) ?? null;
+  return Boolean(game.user?.isGM && (!primary || String(primary.id) === String(game.user.id)));
+}
+
+Hooks.on("createItem", (item, options = {}) => {
   if (options?.add2eSpellFamilyExpansion) return;
-  if (String(userId ?? "") !== String(game.user?.id ?? "")) return;
+  if (!add2eSpellFamilyIsPrimaryActiveGM()) return;
   if (String(item?.type ?? "").toLowerCase() !== "sort" || add2eSpellFamilyIsGenerated(item)) return;
   const key = String(item.uuid ?? item.id ?? "");
   if (!key || ADD2E_SPELL_FAMILY_PENDING.has(key)) return;
@@ -296,3 +294,4 @@ Hooks.on("createItem", (item, options = {}, userId) => {
 
 globalThis.ADD2E_SPELL_FAMILY_VERSION = ADD2E_SPELL_FAMILY_VERSION;
 globalThis.add2eEnsureActorSpellFamily = add2eEnsureActorSpellFamily;
+globalThis.add2eExpandActorSpellFamilies = add2eExpandActorSpellFamilies;
