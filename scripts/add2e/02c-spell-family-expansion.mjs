@@ -1,10 +1,10 @@
 // ============================================================
-// ADD2E — Expansion des formes de sorts sur les acteurs
+// ADD2E — Expansion et ordre des formes de sorts sur les acteurs
 // Réversibles et variantes : une ligne d'acteur par forme.
 // Compatible Foundry V13 / V14 / V15.
 // ============================================================
 
-const ADD2E_SPELL_FAMILY_VERSION = "2026-06-21-spell-family-primary-gm-v2";
+const ADD2E_SPELL_FAMILY_VERSION = "2026-06-21-spell-family-order-v3";
 const ADD2E_SPELL_FAMILY_PENDING = globalThis.ADD2E_SPELL_FAMILY_PENDING instanceof Set
   ? globalThis.ADD2E_SPELL_FAMILY_PENDING
   : new Set();
@@ -110,7 +110,7 @@ function add2eSpellFamilyRename(data, name) {
   return result;
 }
 
-function add2eSpellFamilyMark(data, familyKey, kind, details = {}) {
+function add2eSpellFamilyMark(data, familyKey, kind, details = {}, sortOrder = 0) {
   const result = add2eSpellFamilyClone(data);
   result.flags ??= {};
   result.flags.add2e ??= {};
@@ -118,6 +118,7 @@ function add2eSpellFamilyMark(data, familyKey, kind, details = {}) {
     version: ADD2E_SPELL_FAMILY_VERSION,
     key: familyKey,
     kind,
+    sortOrder,
     generated: kind !== "base",
     ...add2eSpellFamilyClone(details)
   };
@@ -133,12 +134,17 @@ function add2eSpellFamilyBuildExpected(baseItem) {
   const normalData = normalMode?.systemOverrides
     ? add2eSpellFamilyApplyOverrides(source, normalMode.systemOverrides)
     : add2eSpellFamilyClone(source);
+
   const entries = [{
     identity: "base",
     kind: "base",
-    data: add2eSpellFamilyMark(normalData, familyKey, "base", { sourceItemId: baseItem.id, sourceItemName: baseName })
+    data: add2eSpellFamilyMark(normalData, familyKey, "base", {
+      sourceItemId: baseItem.id,
+      sourceItemName: baseName
+    }, 0)
   }];
 
+  let inverseOrder = 1;
   for (const profile of reversibleProfiles) {
     if (profile?.splitOnActorGrant !== true) continue;
     const inverse = add2eSpellFamilyMode(profile, "inverse");
@@ -153,7 +159,7 @@ function add2eSpellFamilyBuildExpected(baseItem) {
       profileKey,
       reversibleMode: "inverse",
       inverseNameStatus: profile.inverseNameStatus ?? "manual_explicit"
-    });
+    }, inverseOrder++);
     data.flags.add2e.reversibleActorEntry = {
       version: ADD2E_SPELL_FAMILY_VERSION,
       profileKey,
@@ -163,6 +169,7 @@ function add2eSpellFamilyBuildExpected(baseItem) {
     entries.push({ identity: `inverse:${profileKey}`, kind: "inverse", data });
   }
 
+  let variantOrder = 10;
   const variantProfiles = add2eSpellFamilyProfiles(source.flags?.add2e?.variant, source.system);
   for (const profile of variantProfiles) {
     const profileKey = add2eSpellFamilyProfileKey(profile, baseName);
@@ -177,7 +184,7 @@ function add2eSpellFamilyBuildExpected(baseItem) {
         profileKey,
         variantChoiceId: choiceId,
         variantChoiceName: choiceName
-      });
+      }, variantOrder++);
       data.flags.add2e.variantChoice = {
         version: ADD2E_SPELL_FAMILY_VERSION,
         profileKey,
@@ -275,6 +282,73 @@ async function add2eExpandActorSpellFamilies(actor) {
   return { handled: true, created, updated };
 }
 
+function add2eSpellFamilySortInfo(entry) {
+  const family = entry?.flags?.add2e?.spellFamily ?? {};
+  const name = String(entry?.name ?? entry?.system?.nom ?? "").trim();
+  const familyName = String(family.sourceItemName ?? name).trim() || name;
+  let sortOrder = Number(family.sortOrder);
+  if (!Number.isFinite(sortOrder)) {
+    if (family.kind === "base") sortOrder = 0;
+    else if (family.kind === "inverse") sortOrder = 1;
+    else if (family.kind === "variant") sortOrder = 10;
+    else sortOrder = 999;
+  }
+  return {
+    familyKey: String(family.key ?? "").trim(),
+    familyName,
+    sortOrder,
+    name
+  };
+}
+
+function add2eCompareSpellFamilyRows(left, right) {
+  const a = add2eSpellFamilySortInfo(left);
+  const b = add2eSpellFamilySortInfo(right);
+  const familyNameCompare = a.familyName.localeCompare(b.familyName, "fr", { sensitivity: "base" });
+  if (familyNameCompare) return familyNameCompare;
+
+  if (a.familyKey && a.familyKey === b.familyKey) {
+    const orderCompare = a.sortOrder - b.sortOrder;
+    if (orderCompare) return orderCompare;
+  } else if (a.familyKey || b.familyKey) {
+    const keyCompare = a.familyKey.localeCompare(b.familyKey, "fr", { sensitivity: "base" });
+    if (keyCompare) return keyCompare;
+  }
+
+  return a.name.localeCompare(b.name, "fr", { sensitivity: "base" });
+}
+
+function add2eSortActorSpellFamilyRows(data) {
+  if (!data || typeof data !== "object") return data;
+
+  for (const rows of Object.values(data.sortsParNiveau ?? {})) {
+    if (Array.isArray(rows)) rows.sort(add2eCompareSpellFamilyRows);
+  }
+
+  for (const level of data.add2eSpellLevels ?? []) {
+    if (Array.isArray(level?.sorts)) level.sort(add2eCompareSpellFamilyRows);
+    for (const group of level?.groups ?? []) {
+      if (Array.isArray(group?.sorts)) group.sort(add2eCompareSpellFamilyRows);
+    }
+  }
+
+  return data;
+}
+
+function add2eInstallSpellFamilyDisplaySorting() {
+  const prototype = globalThis.Add2eActorSheet?.prototype;
+  if (!prototype || prototype.__add2eSpellFamilyDisplaySortingV3) return false;
+  const previousGetData = prototype.getData;
+  if (typeof previousGetData !== "function") return false;
+
+  prototype.__add2eSpellFamilyDisplaySortingV3 = true;
+  prototype.getData = async function add2eSpellFamilyOrderedGetData(...args) {
+    const data = await previousGetData.apply(this, args);
+    return add2eSortActorSpellFamilyRows(data);
+  };
+  return true;
+}
+
 function add2eSpellFamilyIsPrimaryActiveGM() {
   const primary = game.users?.activeGM ?? Array.from(game.users ?? []).find(user => user.active && user.isGM) ?? null;
   return Boolean(game.user?.isGM && (!primary || String(primary.id) === String(game.user.id)));
@@ -292,6 +366,13 @@ Hooks.on("createItem", (item, options = {}) => {
     .finally(() => ADD2E_SPELL_FAMILY_PENDING.delete(key)));
 });
 
+Hooks.once("ready", () => {
+  if (!add2eInstallSpellFamilyDisplaySorting()) {
+    console.warn("[ADD2E][SPELL_FAMILY][DISPLAY_SORT_NOT_INSTALLED]");
+  }
+});
+
 globalThis.ADD2E_SPELL_FAMILY_VERSION = ADD2E_SPELL_FAMILY_VERSION;
 globalThis.add2eEnsureActorSpellFamily = add2eEnsureActorSpellFamily;
 globalThis.add2eExpandActorSpellFamilies = add2eExpandActorSpellFamilies;
+globalThis.add2eSortActorSpellFamilyRows = add2eSortActorSpellFamilyRows;
