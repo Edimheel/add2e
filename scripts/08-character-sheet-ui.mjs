@@ -22,6 +22,8 @@ const ADD2E_PROJECTILE_COMBAT_FLAG_KEY = "projectilesDepensesCombat";
 const ADD2E_PROJECTILE_SOCKET_TYPE = "ADD2E_PROJECTILE_SPENT_REQUEST";
 const ADD2E_PROJECTILE_RECOVERY_SOCKET_TYPE = "ADD2E_PROJECTILE_RECOVERY_RESULT";
 const ADD2E_PROJECTILE_RECOVERY_RATE = 0.6;
+const ADD2E_ITEM_REFRESH_DELAY_MS = 80;
+const add2eItemRefreshTimers = new Map();
 
 export function add2eEnhanceCharacterSheetUi(sheet, html) {
   const actor = sheet?.actor ?? sheet?.document;
@@ -53,12 +55,42 @@ function bindOnRender(app, html) {
   }
 }
 
-function add2eRefreshActorSheetsForItemChange(item, reason = "item-change") {
+function add2eItemRefreshIsAutomaticSpellOperation(item, options = {}) {
+  const type = String(item?.type ?? "").toLowerCase();
+  if (["sort", "spell"].includes(type)) return true;
+  return options?.add2eSpellSync === true
+    || options?.add2eDropPurge === true
+    || options?.add2eCompendiumTruth === true;
+}
+
+function add2eQueueActorSheetRefresh(actor, item, reason = "item-change") {
+  const key = String(actor?.uuid ?? actor?.id ?? "");
+  if (!key) return;
+  const existing = add2eItemRefreshTimers.get(key);
+  if (existing) clearTimeout(existing);
+
+  const timer = setTimeout(() => {
+    add2eItemRefreshTimers.delete(key);
+    for (const app of Object.values(actor.apps ?? {})) {
+      try {
+        app._add2eRememberActiveTab?.(app.element, app._add2eActiveTab || app._add2eReadStoredTab?.() || "equipement");
+        app.render(false);
+      } catch (err) {
+        console.warn("[ADD2E][CHARACTER_UI][REFRESH_ITEM] Impossible de rafraîchir la fiche", { actor: actor.name, item: item?.name, reason, err });
+      }
+    }
+  }, ADD2E_ITEM_REFRESH_DELAY_MS);
+
+  add2eItemRefreshTimers.set(key, timer);
+}
+
+function add2eRefreshActorSheetsForItemChange(item, reason = "item-change", options = {}) {
   const actor = item?.parent;
   if (!actor || actor.documentName !== "Actor" || actor.type !== "personnage") return;
+  if (add2eItemRefreshIsAutomaticSpellOperation(item, options)) return;
 
   const type = String(item.type || "").toLowerCase();
-  if (!["objet", "arme", "armure", "object", "magic", "objet_magique", "classe", "race", "sort"].includes(type)) return;
+  if (!["objet", "arme", "armure", "object", "magic", "objet_magique", "classe", "race"].includes(type)) return;
 
   const hasPowers = (() => {
     try {
@@ -69,16 +101,9 @@ function add2eRefreshActorSheetsForItemChange(item, reason = "item-change") {
     return Array.isArray(raw) ? raw.length > 0 : !!(raw && typeof raw === "object" && Object.keys(raw).length);
   })();
 
-  if (!["objet", "arme", "armure", "object", "magic", "objet_magique"].includes(type) || hasPowers) {
-    for (const app of Object.values(actor.apps ?? {})) {
-      try {
-        app._add2eRememberActiveTab?.(app.element, app._add2eActiveTab || app._add2eReadStoredTab?.() || "sorts");
-        app.render(false);
-      } catch (err) {
-        console.warn("[ADD2E][CHARACTER_UI][REFRESH_ITEM] Impossible de rafraîchir la fiche", { actor: actor.name, item: item.name, reason, err });
-      }
-    }
-  }
+  const isEquipment = ["objet", "arme", "armure", "object", "magic", "objet_magique"].includes(type);
+  if ((isEquipment && !hasPowers) || (!isEquipment && options?.add2eInternal === true)) return;
+  add2eQueueActorSheetRefresh(actor, item, reason);
 }
 
 function add2eIsResponsibleGM() {
@@ -413,9 +438,15 @@ Hooks.once("ready", () => {
   add2eRegisterProjectileSpendUpdateGuard();
 });
 
-for (const hookName of ["createItem", "updateItem", "deleteItem"]) {
-  Hooks.on(hookName, (item, _changes, _options, _userId) => setTimeout(() => add2eRefreshActorSheetsForItemChange(item, hookName), 80));
-}
+Hooks.on("createItem", (item, options = {}) => {
+  window.setTimeout(() => add2eRefreshActorSheetsForItemChange(item, "createItem", options), ADD2E_ITEM_REFRESH_DELAY_MS);
+});
+Hooks.on("updateItem", (item, _changes = {}, options = {}) => {
+  window.setTimeout(() => add2eRefreshActorSheetsForItemChange(item, "updateItem", options), ADD2E_ITEM_REFRESH_DELAY_MS);
+});
+Hooks.on("deleteItem", (item, options = {}) => {
+  window.setTimeout(() => add2eRefreshActorSheetsForItemChange(item, "deleteItem", options), ADD2E_ITEM_REFRESH_DELAY_MS);
+});
 
 expose("add2eEnhanceCharacterSheetUi", add2eEnhanceCharacterSheetUi);
 expose("add2eProjectileMergeSpentDeltas", add2eProjectileMergeSpentDeltas);
