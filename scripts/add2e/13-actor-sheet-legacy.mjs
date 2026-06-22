@@ -71,7 +71,7 @@ function add2eLegacyRoot(html) {
   return null;
 }
 
-const ADD2E_SHEET_LEVEL_PIPELINE_GUARD_VERSION = "2026-06-22-level-pipeline-v1";
+const ADD2E_SHEET_LEVEL_PIPELINE_GUARD_VERSION = "2026-06-22-level-pipeline-v2";
 globalThis.ADD2E_SHEET_LEVEL_PIPELINE_GUARD_VERSION = ADD2E_SHEET_LEVEL_PIPELINE_GUARD_VERSION;
 
 function add2eLegacySameValue(left, right) {
@@ -79,10 +79,30 @@ function add2eLegacySameValue(left, right) {
   return JSON.stringify(left) === JSON.stringify(right);
 }
 
-function add2eLegacyFilterMoveXpRecalc(actor, changes, options) {
-  if (options?.add2eReason !== "move-xp-recalc:movement") return;
+function add2eLegacySameScalar(left, right) {
+  if (left === right) return true;
+  const leftText = String(left ?? "").trim();
+  const rightText = String(right ?? "").trim();
+  if (leftText && rightText) {
+    const leftNumber = Number(leftText);
+    const rightNumber = Number(rightText);
+    if (Number.isFinite(leftNumber) && Number.isFinite(rightNumber)) return leftNumber === rightNumber;
+  }
+  return add2eLegacySameValue(left, right);
+}
+
+function add2eLegacyPruneUnchangedFormXp(actor, changes) {
   const system = changes?.system;
   if (!system || typeof system !== "object") return;
+  if (!Object.prototype.hasOwnProperty.call(system, "xp")) return;
+  if (add2eLegacySameScalar(system.xp, actor?.system?.xp)) delete system.xp;
+}
+
+function add2eLegacyFilterMoveXpRecalc(actor, changes, options) {
+  const reason = options?.add2eReason;
+  if (reason !== "move-xp-recalc:movement" && reason !== "move-xp-preupdate:movement") return null;
+  const system = changes?.system;
+  if (!system || typeof system !== "object") return false;
 
   const allowed = ["mouvement", "movement", "vitesse_deplacement"];
   const filtered = {};
@@ -91,15 +111,29 @@ function add2eLegacyFilterMoveXpRecalc(actor, changes, options) {
     if (!add2eLegacySameValue(system[key], actor?.system?.[key])) filtered[key] = system[key];
   }
 
-  if (Object.keys(filtered).length) changes.system = filtered;
-  else delete changes.system;
+  if (Object.keys(filtered).length) {
+    changes.system = filtered;
+    return true;
+  }
+
+  delete changes.system;
+  return false;
 }
 
 if (!globalThis.ADD2E_SHEET_LEVEL_PIPELINE_GUARD_INSTALLED) {
   globalThis.ADD2E_SHEET_LEVEL_PIPELINE_GUARD_INSTALLED = true;
 
   Hooks.on("preUpdateActor", (actor, changes, options) => {
-    add2eLegacyFilterMoveXpRecalc(actor, changes, options);
+    if (actor?.type !== "personnage") return true;
+    add2eLegacyPruneUnchangedFormXp(actor, changes);
+    return add2eLegacyFilterMoveXpRecalc(actor, changes, options) !== false;
+  });
+
+  Hooks.once("ready", () => {
+    Hooks.on("preUpdateActor", (actor, changes, options) => {
+      if (actor?.type !== "personnage") return true;
+      return add2eLegacyFilterMoveXpRecalc(actor, changes, options) !== false;
+    });
   });
 
   Hooks.on("updateActor", async (actor, changes, options) => {
