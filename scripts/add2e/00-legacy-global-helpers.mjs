@@ -2,36 +2,98 @@
 // ADD2E — Helpers globaux encore utilisés par la feuille legacy
 // ============================================================
 
-const ADD2E_LEGACY_GLOBAL_HELPERS_VERSION = "2026-06-22-legacy-global-helpers-v4-image-fallback";
+const ADD2E_LEGACY_GLOBAL_HELPERS_VERSION = "2026-06-22-legacy-global-helpers-v5-image-capture";
 globalThis.ADD2E_LEGACY_GLOBAL_HELPERS_VERSION = ADD2E_LEGACY_GLOBAL_HELPERS_VERSION;
 console.log("[ADD2E][LEGACY_GLOBAL_HELPERS][VERSION]", ADD2E_LEGACY_GLOBAL_HELPERS_VERSION);
 
 const ADD2E_SHEET_IMAGE_FALLBACK = "icons/svg/item-bag.svg";
+const ADD2E_SHEET_MISSING_IMAGES = globalThis.ADD2E_SHEET_MISSING_IMAGES instanceof Set
+  ? globalThis.ADD2E_SHEET_MISSING_IMAGES
+  : new Set();
+globalThis.ADD2E_SHEET_MISSING_IMAGES = ADD2E_SHEET_MISSING_IMAGES;
+
+function add2eSheetImageSource(image) {
+  return String(image?.currentSrc || image?.getAttribute?.("src") || "").trim();
+}
+
+function add2eSheetImageSourceKeys(source) {
+  const value = String(source ?? "").trim();
+  if (!value) return [];
+
+  const keys = new Set([value]);
+  try { keys.add(new URL(value, document.baseURI).href); }
+  catch (_e) {}
+  return [...keys];
+}
+
+function add2eIsKnownMissingSheetImage(image) {
+  return add2eSheetImageSourceKeys(add2eSheetImageSource(image))
+    .some(key => ADD2E_SHEET_MISSING_IMAGES.has(key));
+}
+
+function add2eIsCharacterSheetImage(image) {
+  if (!image || String(image.tagName ?? "").toLowerCase() !== "img") return false;
+  return Boolean(image.closest?.(".add2e-character-v3, .add2e-character-v2-app, #add2e-personnage"));
+}
+
+function add2eApplySheetImageFallback(image) {
+  if (!image || String(image.tagName ?? "").toLowerCase() !== "img") return;
+  if (image.dataset.add2eImageFallbackApplied === "true") return;
+
+  const source = add2eSheetImageSource(image);
+  if (source === ADD2E_SHEET_IMAGE_FALLBACK || source.endsWith(`/${ADD2E_SHEET_IMAGE_FALLBACK}`)) return;
+
+  for (const key of add2eSheetImageSourceKeys(source)) {
+    ADD2E_SHEET_MISSING_IMAGES.add(key);
+  }
+
+  image.dataset.add2eImageFallbackApplied = "true";
+  image.dataset.add2eImageFallbackSource = source;
+  image.removeAttribute("onerror");
+  image.onerror = null;
+  image.removeAttribute("srcset");
+  image.removeAttribute("sizes");
+  image.loading = "lazy";
+  image.decoding = "async";
+  image.alt ||= "Image indisponible";
+  image.src = ADD2E_SHEET_IMAGE_FALLBACK;
+}
+
+// Le listener est posé une seule fois sur document, en capture. Il s'exécute
+// avant un éventuel onerror ou listener ajouté sur l'image par une feuille,
+// puis bloque la propagation : aucune erreur d'image ne peut provoquer render().
+if (!globalThis.__ADD2E_SHEET_IMAGE_ERROR_CAPTURE_V5) {
+  globalThis.__ADD2E_SHEET_IMAGE_ERROR_CAPTURE_V5 = true;
+
+  document.addEventListener("error", event => {
+    const image = event.target;
+    if (!add2eIsCharacterSheetImage(image)) return;
+
+    event.preventDefault?.();
+    event.stopImmediatePropagation?.();
+    add2eApplySheetImageFallback(image);
+  }, true);
+}
 
 function add2eRegisterSheetImageFallbacks(root) {
   if (!root?.find) return;
 
   root.find("img[src]").each((_index, image) => {
-    if (!image || image.dataset.add2eImageFallbackBound === "true") return;
+    if (!image || String(image.tagName ?? "").toLowerCase() !== "img") return;
 
-    image.dataset.add2eImageFallbackBound = "true";
     image.loading = "lazy";
     image.decoding = "async";
 
-    const applyFallback = () => {
-      if (image.dataset.add2eImageFallbackApplied === "true") return;
+    // Après la première 404, une nouvelle feuille n'essaie plus l'URL
+    // absente : elle reçoit directement l'icône locale.
+    if (add2eIsKnownMissingSheetImage(image)) {
+      add2eApplySheetImageFallback(image);
+      return;
+    }
 
-      image.dataset.add2eImageFallbackApplied = "true";
-      image.dataset.add2eImageFallbackSource = image.currentSrc || image.getAttribute("src") || "";
-      image.removeAttribute("srcset");
-      image.removeAttribute("sizes");
-      image.alt ||= "Image indisponible";
-      image.src = ADD2E_SHEET_IMAGE_FALLBACK;
-    };
-
-    image.addEventListener("error", applyFallback, { once: true });
-
-    if (image.complete && image.naturalWidth === 0) applyFallback();
+    if (image.complete && image.naturalWidth === 0) {
+      add2eApplySheetImageFallback(image);
+    }
   });
 }
 
