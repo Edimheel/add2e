@@ -2,14 +2,16 @@
   "source": {
     "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf",
     "reference": "Manuel des joueurs AD&D 2e",
-    "pages": [43, 44, 68],
-    "note": "Compléments matériels relevés dans le Manuel lorsque le fichier de classe/niveau ne détaillait pas encore les objets nécessaires."
+    "pages": [43, 44, 67, 68],
+    "note": "Compléments mécaniques relevés dans le Manuel lorsque le fichier de classe/niveau ne détaille pas encore les champs nécessaires à Foundry."
   },
   "schema": {
     "root": "materiels",
     "entryFields": [
       "composantes",
-      "composants_materiels_objets"
+      "composants_materiels_objets",
+      "description",
+      "description_source"
     ]
   },
   "materiels": {
@@ -87,6 +89,12 @@
       }
     },
     "magicien-niveau-1": {
+      "Lumière": {
+        "composantes": "V, S",
+        "composants_materiels_objets": [],
+        "description": "Avec les paramètres indiqués ci-dessus, ce sort produit les mêmes effets que Lumière de clerc de niveau 1, mais il n’a aucune forme inverse.",
+        "description_source": "Manuel des joueurs AD&D 2e, p. 67"
+      },
       "Projectile magique": {
         "composantes": "V, S",
         "composants_materiels_objets": []
