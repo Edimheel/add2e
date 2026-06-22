@@ -45,9 +45,6 @@ if(globalThis.Add2eActorSheet?.prototype&&!globalThis.Add2eActorSheet.prototype.
       data.combatDefense.ac_totale=defense.caTotal;
       data.combatDefense.objets_magiques_defense=defense;
       if(defense.fixedCAActive)data.combatDefense.armure=`${defense.fixedSource} <small style="color:#7f704d;">(CA fixe, armure ignorée)</small>`;
-      data.actor.system.ca_naturel=defense.caNaturel;
-      data.actor.system.ca_total=defense.caTotal;
-      if(this.actor.system.ca_total!==defense.caTotal||this.actor.system.ca_naturel!==defense.caNaturel)setTimeout(()=>this.actor.update({"system.ca_naturel":defense.caNaturel,"system.ca_total":defense.caTotal},{add2eInternal:true}),0);
     }catch(err){console.warn("[ADD2E][BRACELETS_DEFENSE][SHEET_FIX_ERROR]",err);}
     return data;
   };
@@ -72,6 +69,45 @@ function add2eLegacyRoot(html) {
   return null;
 }
 
+const ADD2E_SHEET_LEVEL_PIPELINE_GUARD_VERSION = "2026-06-22-level-pipeline-v1";
+globalThis.ADD2E_SHEET_LEVEL_PIPELINE_GUARD_VERSION = ADD2E_SHEET_LEVEL_PIPELINE_GUARD_VERSION;
+
+function add2eLegacySameValue(left, right) {
+  if (foundry?.utils?.deepEqual) return foundry.utils.deepEqual(left, right);
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
+function add2eLegacyFilterMoveXpRecalc(actor, changes, options) {
+  if (options?.add2eReason !== "move-xp-recalc:movement") return;
+  const system = changes?.system;
+  if (!system || typeof system !== "object") return;
+
+  const allowed = ["mouvement", "movement", "vitesse_deplacement"];
+  const filtered = {};
+  for (const key of allowed) {
+    if (!Object.prototype.hasOwnProperty.call(system, key)) continue;
+    if (!add2eLegacySameValue(system[key], actor?.system?.[key])) filtered[key] = system[key];
+  }
+
+  if (Object.keys(filtered).length) changes.system = filtered;
+  else delete changes.system;
+}
+
+if (!globalThis.ADD2E_SHEET_LEVEL_PIPELINE_GUARD_INSTALLED) {
+  globalThis.ADD2E_SHEET_LEVEL_PIPELINE_GUARD_INSTALLED = true;
+
+  Hooks.on("preUpdateActor", (actor, changes, options) => {
+    add2eLegacyFilterMoveXpRecalc(actor, changes, options);
+  });
+
+  Hooks.on("updateActor", async (actor, changes, options) => {
+    if (actor?.type !== "personnage" || options?.add2eInternal) return;
+    if (!Object.prototype.hasOwnProperty.call(changes?.system ?? {}, "niveau")) return;
+    try { await globalThis.add2eSyncClassPassiveEffect?.(actor); }
+    catch (err) { console.warn("[ADD2E][CLASSE][EFFETS][LEVEL_SYNC_ERROR]", err); }
+  });
+}
+
 if (globalThis.Add2eActorSheet?.prototype && !globalThis.Add2eActorSheet.prototype.__add2eOpenItemsFromNamesV2) {
   globalThis.Add2eActorSheet.prototype.__add2eOpenItemsFromNamesV2 = true;
   const originalActivateListeners = globalThis.Add2eActorSheet.prototype.activateListeners;
@@ -80,6 +116,7 @@ if (globalThis.Add2eActorSheet?.prototype && !globalThis.Add2eActorSheet.prototy
     const sheet = this;
     const root = add2eLegacyRoot(html);
     if (!root?.querySelectorAll) return;
+    $(root).find('input[name="system.niveau"]').off("change.add2e");
     const selector = "tr.item[data-item-id] > td:first-child b, tr.item[data-item-id] > td:nth-child(2) b, .a2e-summary-weapon-name";
     for (const el of root.querySelectorAll(selector)) {
       el.style.cursor = "pointer";
