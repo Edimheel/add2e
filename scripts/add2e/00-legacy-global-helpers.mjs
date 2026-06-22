@@ -1,1 +1,227 @@
-// revert via ref next
+// ============================================================
+// ADD2E — Helpers globaux encore utilisés par la feuille legacy
+// ============================================================
+
+const ADD2E_LEGACY_GLOBAL_HELPERS_VERSION = "2026-05-24-legacy-global-helpers-v3-gm-operation-only";
+globalThis.ADD2E_LEGACY_GLOBAL_HELPERS_VERSION = ADD2E_LEGACY_GLOBAL_HELPERS_VERSION;
+console.log("[ADD2E][LEGACY_GLOBAL_HELPERS][VERSION]", ADD2E_LEGACY_GLOBAL_HELPERS_VERSION);
+
+function add2eLegacyNormalize(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[\s\-]+/g, "_")
+    .replace(/_+/g, "_");
+}
+
+function add2eLegacyArray(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.flatMap(add2eLegacyArray).filter(Boolean);
+  if (typeof value === "string") return value.split(/[,;|\n]+/).map(v => v.trim()).filter(Boolean);
+  if (value && typeof value === "object") {
+    for (const key of ["value", "values", "list", "lists", "items", "allowed", "alignments", "alignements"]) {
+      if (value[key] !== undefined) return add2eLegacyArray(value[key]);
+    }
+  }
+  return [value];
+}
+
+function add2eClassAllowedAlignmentsFallback(classSystem = {}) {
+  const sources = [
+    classSystem.alignements_autorises,
+    classSystem.alignementsAutorises,
+    classSystem.allowedAlignments,
+    classSystem.alignmentsAllowed,
+    classSystem.alignements,
+    classSystem.alignments,
+    classSystem.alignment,
+    classSystem.alignement
+  ];
+
+  const out = [];
+  for (const src of sources) out.push(...add2eLegacyArray(src));
+
+  const tags = add2eLegacyArray(classSystem.requirementTags);
+  for (const raw of tags) {
+    const tag = add2eLegacyNormalize(raw);
+    const parts = tag.split(":");
+    if (parts[0] !== "prerequis" || parts[1] !== "alignement") continue;
+    if (parts[2] === "allow" && parts[3]) out.push(parts.slice(3).join(":"));
+  }
+
+  return [...new Set(out.map(v => String(v ?? "").trim()).filter(Boolean))];
+}
+
+if (typeof globalThis.add2eClassAllowedAlignments !== "function") {
+  globalThis.add2eClassAllowedAlignments = add2eClassAllowedAlignmentsFallback;
+}
+
+if (typeof globalThis.add2ePickClassAlignment !== "function") {
+  globalThis.add2ePickClassAlignment = function add2ePickClassAlignment(actor, classSystem = {}) {
+    const allowed = globalThis.add2eClassAllowedAlignments?.(classSystem) ?? [];
+    const current = String(actor?.system?.alignement ?? "").trim();
+    const currentNorm = add2eLegacyNormalize(current);
+
+    if (allowed.length) {
+      const match = allowed.find(a => add2eLegacyNormalize(a) === currentNorm);
+      if (match) return current;
+      return allowed[0];
+    }
+
+    return current;
+  };
+}
+
+if (typeof globalThis.add2eRegisterImgPicker !== "function") {
+  globalThis.add2eRegisterImgPicker = function add2eRegisterImgPicker(html, sheet) {
+    const root = html?.jquery ? html : $(html);
+    if (!root?.find) return;
+
+    const actor = sheet?.actor ?? sheet?.document;
+    if (!actor) return;
+
+    root.find("img[data-edit], .profile-img[data-edit], .actor-img[data-edit]")
+      .off("click.add2e-img-picker")
+      .on("click.add2e-img-picker", ev => {
+        ev.preventDefault();
+        const target = ev.currentTarget;
+        const field = target.dataset.edit || target.getAttribute("data-edit") || "img";
+        const current = foundry.utils.getProperty(actor, field) || target.getAttribute("src") || actor.img || "icons/svg/mystery-man.svg";
+
+        new FilePicker({
+          type: "image",
+          current,
+          callback: async path => {
+            const update = {};
+            update[field] = path;
+            await actor.update(update);
+          },
+          top: sheet?.position?.top + 40,
+          left: sheet?.position?.left + 10
+        }).browse(current);
+      });
+  };
+}
+
+// ============================================================
+// ADD2E — Helpers d'écriture propres pour scripts onUse
+// Un seul protocole socket : ADD2E_GM_OPERATION.
+// La réception MJ reste centralisée dans scripts/add2e/15-validation-sockets.mjs.
+// ============================================================
+
+const ADD2E_SPELL_GM_HELPERS_VERSION = "2026-05-24-spell-gm-helpers-v1";
+globalThis.ADD2E_SPELL_GM_HELPERS_VERSION = ADD2E_SPELL_GM_HELPERS_VERSION;
+
+function add2eHasDirectActorWrite(actorDoc) {
+  if (!actorDoc) return false;
+  if (game.user?.isGM) return true;
+  return !!actorDoc.isOwner || actorDoc.testUserPermission?.(game.user, "OWNER") === true;
+}
+
+function add2eReadHpMax(actorDoc) {
+  const sys = actorDoc?.system ?? {};
+  return Number(sys.points_de_coup)
+    || Number(sys.pv_max)
+    || Number(sys.points_de_vie)
+    || Number(sys.hp?.max)
+    || Number(sys.attributes?.hp?.max)
+    || 0;
+}
+
+function add2eReadHpCurrent(actorDoc, max = 0) {
+  const sys = actorDoc?.system ?? {};
+  for (const raw of [sys.pdv, sys.pv, sys.hp?.value, sys.attributes?.hp?.value]) {
+    if (raw === undefined || raw === null || raw === "") continue;
+    const n = Number(raw);
+    if (Number.isFinite(n)) return n;
+  }
+  return Number(max) || 0;
+}
+
+async function add2eApplyDamageDirect({ actorDoc, montant = 0, type = "degats", details = "" } = {}) {
+  if (!actorDoc) return false;
+  const amount = Math.abs(Number(montant) || 0);
+  if (!amount) return true;
+
+  const isHeal = String(type ?? "").toLowerCase().includes("soin") || Number(montant) < 0;
+  const max = add2eReadHpMax(actorDoc);
+  const current = add2eReadHpCurrent(actorDoc, max);
+  const next = isHeal ? Math.min(max || current + amount, current + amount) : current - amount;
+
+  await actorDoc.update({ "system.pdv": next }, { add2eReason: "spell-apply-damage", add2eDetails: details });
+  console.log("[ADD2E][SPELL_GM_HELPERS][APPLY_DAMAGE_DIRECT]", { actor: actorDoc.name, type, montant, current, max, next, details });
+  return true;
+}
+
+function add2ePayloadFromTarget(cible, data = {}) {
+  const tokenDoc = cible?.document ?? cible?.token?.document ?? null;
+  const actorDoc = cible?.actor ?? cible;
+  return {
+    actorId: actorDoc?.id ?? tokenDoc?.actorId ?? null,
+    actorUuid: actorDoc?.uuid ?? null,
+    sceneId: tokenDoc?.parent?.id ?? canvas?.scene?.id ?? null,
+    tokenId: tokenDoc?.id ?? null,
+    ...data
+  };
+}
+
+function add2eEmitGMOperation(operation, payload = {}) {
+  const activeGM = game.users?.activeGM ?? game.users?.find?.(u => u.active && u.isGM) ?? null;
+  if (!game.socket || (!game.user?.isGM && !activeGM)) return false;
+  game.socket.emit("system.add2e", {
+    type: "ADD2E_GM_OPERATION",
+    operation,
+    payload: { ...payload, fromUserId: game.user.id, sentAt: Date.now() }
+  });
+  console.log("[ADD2E][SPELL_GM_HELPERS][GM_OPERATION_EMIT]", { operation, payload });
+  return true;
+}
+
+if (typeof globalThis.add2eApplyDamage !== "function") {
+  globalThis.add2eApplyDamage = async function add2eApplyDamage({ cible, montant = 0, type = "degats", details = "" } = {}) {
+    const actorDoc = cible?.actor ?? cible;
+    if (!actorDoc) return false;
+    if (add2eHasDirectActorWrite(actorDoc)) return await add2eApplyDamageDirect({ actorDoc, montant, type, details });
+
+    const ok = add2eEmitGMOperation("applyDamage", add2ePayloadFromTarget(cible, { montant, type, details }));
+    if (!ok) ui.notifications?.error(`ADD2E : aucun MJ actif pour appliquer ${details || type}.`);
+    return ok;
+  };
+}
+
+if (typeof globalThis.add2eDeleteActiveEffects !== "function") {
+  globalThis.add2eDeleteActiveEffects = async function add2eDeleteActiveEffects({ actor, effects = [], ids = [], tags = [], names = [] } = {}) {
+    const actorDoc = actor;
+    if (!actorDoc) return { deleted: 0, blocked: true };
+    const wantedIds = [...ids, ...effects.map(e => e?.id).filter(Boolean)].filter(Boolean);
+
+    if (add2eHasDirectActorWrite(actorDoc)) {
+      let finalIds = [...wantedIds];
+      if (tags.length || names.length) {
+        const tagNorms = tags.map(add2eLegacyNormalize);
+        const nameNorms = names.map(add2eLegacyNormalize);
+        for (const effect of actorDoc.effects ?? []) {
+          const eTags = add2eLegacyArray(effect.flags?.add2e?.tags ?? effect.getFlag?.("add2e", "tags") ?? []).map(add2eLegacyNormalize);
+          const eName = add2eLegacyNormalize(effect.name);
+          if (tagNorms.some(t => eTags.includes(t)) || nameNorms.some(n => eName.includes(n))) finalIds.push(effect.id);
+        }
+      }
+      finalIds = [...new Set(finalIds)].filter(Boolean);
+      if (finalIds.length) await actorDoc.deleteEmbeddedDocuments("ActiveEffect", finalIds);
+      return { deleted: finalIds.length, blocked: false };
+    }
+
+    const ok = add2eEmitGMOperation("deleteActiveEffects", {
+      actorUuid: actorDoc.uuid,
+      actorId: actorDoc.id,
+      effectIds: wantedIds,
+      tags,
+      names
+    });
+    return { deleted: 0, blocked: !ok, relayed: ok };
+  };
+}
+
+console.log("[ADD2E][SPELL_GM_HELPERS][READY]", ADD2E_SPELL_GM_HELPERS_VERSION);
