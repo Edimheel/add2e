@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const VERSION = "2026-06-21-reference-mechanics-v4";
+const VERSION = "2026-06-22-reference-description-v5";
 const MANAGED_BY = "normalize-fvtt-spells-materials-v3";
 const INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
@@ -109,7 +109,6 @@ function normaliseChoices(value) {
           : Array.isArray(value?.variantes)
             ? value.variantes
             : [];
-
   return source.map(choice => ({
     id: text(choice?.id) || slug(choice?.nom ?? choice?.name),
     nom: text(choice?.nom ?? choice?.name),
@@ -149,6 +148,10 @@ function materialState(composantes, materials) {
   return Array.isArray(materials) && materials.length ? "declared" : "unknown";
 }
 
+function referenceDescription(entry) {
+  return text(entry?.description ?? entry?.description_texte ?? entry?.description_reelle);
+}
+
 function upsertMeta(index, key, patch) {
   const previous = index.get(key) ?? { variants: [], aliases: [], sources: [], materials: [] };
   const seenVariants = new Set();
@@ -168,6 +171,8 @@ function upsertMeta(index, key, patch) {
     inverse: text(patch.inverse) || previous.inverse || "",
     inverseNameStatus: text(patch.inverseNameStatus) || previous.inverseNameStatus || "",
     composantes: text(patch.composantes) || previous.composantes || "",
+    description: text(patch.description) || previous.description || "",
+    descriptionSource: text(patch.descriptionSource) || previous.descriptionSource || "",
     materialState: patch.materialState ?? previous.materialState ?? "unknown",
     materials: patch.materials !== undefined ? clone(patch.materials) : clone(previous.materials ?? []),
     reversible: Boolean(previous.reversible || patch.reversible),
@@ -196,7 +201,6 @@ function addStructuredEntry(index, scope, name, entry, relativePath) {
 function readStructuredData(document, index, relativePath) {
   const inverseRoots = [document?.reversible, document?.reversibles, document?.reversibleSpells].filter(Boolean);
   const variantRoots = [document?.variant, document?.variants, document?.variantes].filter(Boolean);
-
   for (const root of inverseRoots) {
     for (const [lot, entries] of Object.entries(root)) {
       const scope = lotScope(lot);
@@ -208,7 +212,6 @@ function readStructuredData(document, index, relativePath) {
       }
     }
   }
-
   for (const root of variantRoots) {
     for (const [lot, entries] of Object.entries(root)) {
       const scope = lotScope(lot);
@@ -246,6 +249,8 @@ function readMaterialData(document, index, relativePath) {
           referenceName,
           aliases: referenceAliases(entry),
           composantes: text(entry.composantes),
+          description: referenceDescription(entry),
+          descriptionSource: text(entry.description_source),
           materials,
           materialState: materials.length || !componentsHaveMaterial(entry.composantes) ? "declared" : "unknown",
           sources: [relativePath]
@@ -271,13 +276,11 @@ function loadReferences() {
   const structured = new Map();
   const files = [];
   const expectedByClass = {};
-
   const master = readJson(path.join(ROOT, MASTER), null);
   if (master && typeof master === "object") {
     files.push(MASTER);
     readStructuredData(master, structured, MASTER);
   }
-
   for (const [classSlug, levels] of Object.entries(CLASSES)) {
     for (const level of levels) {
       const relative = `audit/reference/manuel-joueurs-${classSlug}-niveau-${level}.json`;
@@ -301,6 +304,8 @@ function loadReferences() {
           inverseNameStatus: text(reference?.inverseNameStatus),
           variants: normaliseChoices(reference?.variant ?? reference?.variants ?? reference?.variantes),
           composantes: text(reference?.composantes),
+          description: referenceDescription(reference),
+          descriptionSource: text(reference?.description_source),
           materials,
           materialState: materialState(reference?.composantes, materials),
           sources: [relative]
@@ -308,7 +313,6 @@ function loadReferences() {
       }
     }
   }
-
   const materialDocument = readJson(path.join(ROOT, MATERIAL_REFERENCE), null);
   if (!materialDocument || typeof materialDocument !== "object") throw new Error(`Référence de composants introuvable ou invalide : ${MATERIAL_REFERENCE}`);
   files.push(MATERIAL_REFERENCE);
@@ -330,7 +334,6 @@ function loadReferences() {
       throw new Error(`Référence de réversibilité incohérente pour ${classSlug} : ${declaredByClass[classSlug]} déclaré(s), ${expected} attendu(s).`);
     }
   }
-
   return { structured, lookup: buildLookup(structured), files: [...new Set(files)], declaredByClass, expectedByClass };
 }
 
@@ -362,8 +365,7 @@ function modeMaterials(metadata, item, mode) {
         grouped.get(group).push(rule);
       }
     }
-    const value = [...direct, ...[...grouped.values()].map(alternatives => ({ alternatives }))];
-    return { value, reference: selected };
+    return { value: [...direct, ...[...grouped.values()].map(alternatives => ({ alternatives }))], reference: selected };
   }
   return {
     value: clone(item?.system?.composants_materiels ?? []),
@@ -438,6 +440,9 @@ function referenceSummary(metadata) {
 function itemMatches(references, item) {
   const itemName = text(item?.name ?? item?.system?.nom);
   const level = itemLevel(item);
+  const primaryClass = slug(item?.system?.classe);
+  const primaryKey = primaryClass ? references.lookup.get(metaKey(primaryClass, level, itemName)) : null;
+  if (primaryKey) return [{ classSlug: primaryClass, canonicalKey: primaryKey, metadata: references.structured.get(primaryKey) }];
   const matches = [];
   for (const classSlug of itemClasses(item)) {
     const canonicalKey = references.lookup.get(metaKey(classSlug, level, itemName));
@@ -447,8 +452,45 @@ function itemMatches(references, item) {
   return matches;
 }
 
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function applyDescription(item, metadata) {
+  const description = text(metadata?.description);
+  if (!description) return false;
+  item.system ??= {};
+  const values = {
+    description,
+    description_texte: description,
+    description_reelle: description,
+    description_html: `<p>${escapeHtml(description)}</p>`
+  };
+  if (text(metadata?.descriptionSource)) values.description_source = text(metadata.descriptionSource);
+  let changed = false;
+  for (const [field, value] of Object.entries(values)) {
+    if (String(item.system[field] ?? "") !== value) {
+      item.system[field] = value;
+      changed = true;
+    }
+  }
+  return changed;
+}
+
 function applyReferenceMechanicalFields(items, references) {
-  const result = { updated: 0, noMaterialCleared: 0, structuredMaterialsApplied: 0, missingMaterialReferences: [], conflicts: [] };
+  const result = {
+    updated: 0,
+    noMaterialCleared: 0,
+    structuredMaterialsApplied: 0,
+    descriptionsApplied: 0,
+    missingMaterialReferences: [],
+    conflicts: []
+  };
   for (const item of items) {
     if (!isSpell(item)) continue;
     const matches = itemMatches(references, item);
@@ -456,18 +498,24 @@ function applyReferenceMechanicalFields(items, references) {
     const signature = entry => JSON.stringify({
       composantes: entry.metadata.composantes,
       materialState: entry.metadata.materialState,
-      materials: entry.metadata.materials
+      materials: entry.metadata.materials,
+      description: entry.metadata.description,
+      descriptionSource: entry.metadata.descriptionSource
     });
-    const signatures = [...new Set(matches.map(signature))];
-    if (signatures.length > 1) {
+    if (new Set(matches.map(signature)).size > 1) {
       result.conflicts.push({ name: item.name, level: itemLevel(item), matches: matches.map(entry => referenceSummary(entry.metadata)) });
       continue;
     }
     const metadata = matches[0].metadata;
     const composantes = text(metadata.composantes);
-    if (!composantes) continue;
+    const descriptionChanged = applyDescription(item, metadata);
+    if (descriptionChanged) result.descriptionsApplied += 1;
+    if (!composantes) {
+      if (descriptionChanged) result.updated += 1;
+      continue;
+    }
     item.system ??= {};
-    let changed = false;
+    let changed = descriptionChanged;
     if (item.system.composantes !== composantes) {
       item.system.composantes = composantes;
       changed = true;
@@ -496,7 +544,9 @@ function applyReferenceMechanicalFields(items, references) {
     }
     if (changed) result.updated += 1;
   }
-  result.missingMaterialReferences = result.missingMaterialReferences.filter((entry, index, list) => list.findIndex(other => `${other.class}|${other.level}|${other.name}` === `${entry.class}|${entry.level}|${entry.name}`) === index);
+  result.missingMaterialReferences = result.missingMaterialReferences.filter((entry, index, list) =>
+    list.findIndex(other => `${other.class}|${other.level}|${other.name}` === `${entry.class}|${entry.level}|${entry.name}`) === index
+  );
   return result;
 }
 
@@ -510,7 +560,6 @@ function applyReferenceFlags(items, references) {
   const unresolvedReversible = [];
   const matchedReversibleKeys = new Set();
   const matchedVariantKeys = new Set();
-
   for (const item of items) {
     if (!isSpell(item)) continue;
     const itemName = text(item?.name ?? item?.system?.nom);
@@ -537,7 +586,6 @@ function applyReferenceFlags(items, references) {
         unresolvedReversible.push({ name: itemName, ...clone(profile) });
       }
     }
-
     const hasOwnedReversible = ownsFlag(item?.flags?.add2e?.reversible);
     const hasOwnedVariant = ownsFlag(item?.flags?.add2e?.variant) || ownsFlag(item?.flags?.add2e?.variants);
     if (!reversible.length && !variants.length && !hasOwnedReversible && !hasOwnedVariant) continue;
@@ -555,14 +603,23 @@ function applyReferenceFlags(items, references) {
     }
     cleanEmptyFlagContainers(item);
   }
-
   const unmatchedReversibleReferences = [];
   const unmatchedVariantReferences = [];
   for (const [canonicalKey, metadata] of references.structured) {
     if (metadata.reversible && !matchedReversibleKeys.has(canonicalKey)) unmatchedReversibleReferences.push(referenceSummary(metadata));
     if (metadata.variants.length && !matchedVariantKeys.has(canonicalKey)) unmatchedVariantReferences.push({ ...referenceSummary(metadata), choices: clone(metadata.variants) });
   }
-  return { actorSplitByClass, reversibleMatchedByClass, unnamedInverseByClass, variantMatchedByClass, reversibleProfiles, variantProfiles, unresolvedReversible, unmatchedReversibleReferences, unmatchedVariantReferences };
+  return {
+    actorSplitByClass,
+    reversibleMatchedByClass,
+    unnamedInverseByClass,
+    variantMatchedByClass,
+    reversibleProfiles,
+    variantProfiles,
+    unresolvedReversible,
+    unmatchedReversibleReferences,
+    unmatchedVariantReferences
+  };
 }
 
 function indexItems(items, label) {
@@ -596,7 +653,17 @@ function stripManagedSpellData(item) {
     if (ownsFlag(add2e.variants)) delete add2e.variants;
   }
   if (isSpell(stripped)) {
-    for (const field of ["composantes", "composants_materiels", "composants_materiels_objets", "composants_requis"]) delete stripped.system?.[field];
+    for (const field of [
+      "composantes",
+      "composants_materiels",
+      "composants_materiels_objets",
+      "composants_requis",
+      "description",
+      "description_texte",
+      "description_reelle",
+      "description_html",
+      "description_source"
+    ]) delete stripped.system?.[field];
   }
   cleanEmptyFlagContainers(stripped);
   return stripped;
@@ -617,9 +684,11 @@ function assertNoRegression(before, after) {
   const afterIndex = indexItems(afterItems, "Le JSON V3 après normalisation");
   const missing = [...beforeIndex.keys()].filter(key => !afterIndex.has(key));
   const added = [...afterIndex.keys()].filter(key => !beforeIndex.has(key));
-  if (missing.length || added.length) throw new Error(`Régression bloquée : le jeu d’items a changé.${missing.length ? ` Supprimés: ${missing.slice(0, 8).join(", ")}.` : ""}${added.length ? ` Ajoutés: ${added.slice(0, 8).join(", ")}.` : ""}`);
+  if (missing.length || added.length) {
+    throw new Error(`Régression bloquée : le jeu d’items a changé.${missing.length ? ` Supprimés: ${missing.slice(0, 8).join(", ")}.` : ""}${added.length ? ` Ajoutés: ${added.slice(0, 8).join(", ")}.` : ""}`);
+  }
   if (!sameJson(comparableDocument(before), comparableDocument(after))) {
-    throw new Error("Régression bloquée : le normalisateur a modifié des données hors composants de sort, flags add2e réversible/variante ou métadonnées normalizedBy/normalizedAt.");
+    throw new Error("Régression bloquée : le normalisateur a modifié des données hors composants de sort, descriptions référencées, flags add2e réversible/variante ou métadonnées normalizedBy/normalizedAt.");
   }
 }
 
@@ -669,6 +738,11 @@ function main() {
       "system.composants_materiels",
       "system.composants_materiels_objets",
       "system.composants_requis",
+      "system.description",
+      "system.description_texte",
+      "system.description_reelle",
+      "system.description_html",
+      "system.description_source",
       "flags.add2e.reversible",
       "flags.add2e.variant",
       "flags.add2e.variants"
@@ -697,7 +771,7 @@ function main() {
   writeJson(output, result);
   writeJson(controlFile, control);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] ${control.outputSpellCount} sort(s) V3 conservé(s) comme base.`);
-  console.log(`[ADD2E][SPELL_MATERIALS_V3] Composantes appliquées: ${mechanics.updated}; sans M vidés: ${mechanics.noMaterialCleared}; références matérielles structurées: ${mechanics.structuredMaterialsApplied}.`);
+  console.log(`[ADD2E][SPELL_MATERIALS_V3] Composantes appliquées: ${mechanics.updated}; sans M vidés: ${mechanics.noMaterialCleared}; références matérielles structurées: ${mechanics.structuredMaterialsApplied}; descriptions référencées: ${mechanics.descriptionsApplied}.`);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Réversibles déclarés — clerc: ${references.declaredByClass.clerc}, druide: ${references.declaredByClass.druide}, magicien: ${references.declaredByClass.magicien}, illusionniste: ${references.declaredByClass.illusionniste}.`);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Réversibles appariés — clerc: ${flags.reversibleMatchedByClass.clerc}, druide: ${flags.reversibleMatchedByClass.druide}, magicien: ${flags.reversibleMatchedByClass.magicien}, illusionniste: ${flags.reversibleMatchedByClass.illusionniste}.`);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Variantes structurées: ${flags.variantProfiles.length} sort(s) / ${control.variantChoiceCount} choix.`);
