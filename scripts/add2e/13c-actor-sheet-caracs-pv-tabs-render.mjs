@@ -176,8 +176,15 @@ globalThis.Add2eActorSheet.prototype.autoSetPointsDeCoup = async function autoSe
     for (let i = 0; i < lvl; i++) hpMax += (i === 0 ? hitDie : (Number(hpRolls[i]) || 1)) + conBonus;
     if (!Number.isFinite(hpMax) || hpMax < 1) hpMax = 1;
 
-    const up = { "system.hpRolls": hpRolls, "system.points_de_coup": hpMax };
-    if (syncCurrent) up["system.pdv"] = hpMax;
+    const sameHpRolls = foundry.utils.deepEqual
+      ? foundry.utils.deepEqual(s.hpRolls ?? [], hpRolls)
+      : JSON.stringify(s.hpRolls ?? []) === JSON.stringify(hpRolls);
+    const up = {};
+    if (!sameHpRolls) up["system.hpRolls"] = hpRolls;
+    if (Number(s.points_de_coup) !== hpMax) up["system.points_de_coup"] = hpMax;
+    if (syncCurrent && Number(s.pdv) !== hpMax) up["system.pdv"] = hpMax;
+    if (!Object.keys(up).length) return;
+
     await actor.update(up, { add2eInternal: true, reason });
   } catch (e) {
     console.warn("[ADD2E][HP] Erreur autoSetPointsDeCoup :", e);
