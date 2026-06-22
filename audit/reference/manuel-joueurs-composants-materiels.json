@@ -2,7 +2,7 @@
   "source": {
     "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf",
     "reference": "Manuel des joueurs AD&D 2e",
-    "pages": [43, 44],
+    "pages": [43, 44, 68],
     "note": "Compléments matériels relevés dans le Manuel lorsque le fichier de classe/niveau ne détaillait pas encore les objets nécessaires."
   },
   "schema": {
@@ -82,6 +82,33 @@
             "alternativeGroup": "protection-contre-le-bien-inverse",
             "condition": "Alternative du sort inverse : sang ou vapeurs de fumier.",
             "notes": "Le cercle de 90 cm est tracé avec cette matière."
+          }
+        ]
+      }
+    },
+    "magicien-niveau-1": {
+      "Projectile magique": {
+        "composantes": "V, S",
+        "composants_materiels_objets": []
+      },
+      "Protection contre le mal": {
+        "composantes": "V, S, M",
+        "composants_materiels_objets": [
+          {
+            "nom": "Poudre de fer",
+            "quantite": 1,
+            "consommation": "consomme",
+            "source": "Manuel des joueurs, p. 68",
+            "condition": "La poudre de fer sert à tracer le cercle de protection.",
+            "notes": "Composant matériel du magicien ; requis avec la poudre d’argent."
+          },
+          {
+            "nom": "Poudre d’argent",
+            "quantite": 1,
+            "consommation": "consomme",
+            "source": "Manuel des joueurs, p. 68",
+            "condition": "La poudre d’argent sert à tracer le cercle de protection.",
+            "notes": "Composant matériel du magicien ; requis avec la poudre de fer."
           }
         ]
       }
