@@ -1,5 +1,5 @@
 {
-  "version": "2026-06-21-reference-mechanics-v4",
+  "version": "2026-06-22-reference-description-v5",
   "input": "fvtt-spells-all-normalise-mecanique-v1.json",
   "output": "fvtt-spells-all-normalise-mecanique-v3.json",
   "clercAuditFiles": [
@@ -14644,6 +14644,11 @@
       "system.composants_materiels",
       "system.composants_materiels_objets",
       "system.composants_requis",
+      "system.description",
+      "system.description_texte",
+      "system.description_reelle",
+      "system.description_html",
+      "system.description_source",
       "flags.add2e.reversible",
       "flags.add2e.variant",
       "flags.add2e.variants"
@@ -14656,7 +14661,7 @@
     "itemCountAfter": 414
   },
   "reversibleActorSplit": {
-    "version": "2026-06-21-reference-mechanics-v4",
+    "version": "2026-06-22-reference-description-v5",
     "referenceFiles": [
       "audit/reference/manuel-joueurs-sorts-master.json",
       "audit/reference/manuel-joueurs-clerc-niveau-1.json",
@@ -19368,9 +19373,10 @@
     ]
   },
   "materialMechanics": {
-    "updated": 2,
-    "noMaterialCleared": 1,
-    "structuredMaterialsApplied": 1,
+    "updated": 75,
+    "noMaterialCleared": 34,
+    "structuredMaterialsApplied": 41,
+    "descriptionsApplied": 75,
     "missingMaterialReferences": [],
     "conflicts": []
   }
