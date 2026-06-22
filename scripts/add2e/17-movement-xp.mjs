@@ -1,20 +1,17 @@
 // ADD2E — XP + Mouvement
-// Version : 2026-06-10-move-xp-multiclass-safe-v4-hide-global-xp
+// Version : 2026-06-22-move-xp-differential-item-sync-v5
 //
 // Principes :
-// - pas de patch de render()
-// - pas d'actor.update() depuis getData()
-// - ajustements XP/niveau mono-classe dans preUpdateActor
-// - pour les multiclassés : répartit l'XP globale entre les classes puis laisse 17b recalculer les niveaux
-// - ignore les updates internes du module multiclassage
-// - n'injecte pas le champ XP global sur les feuilles multiclassées
-// - contrôle token sur la valeur affichée de mouvement en mètres
-// - MJ : jamais bloqué, mais échelle couleur visible
-// - Joueurs : blocage si dépassement, avec échelle couleur visible
+// - les changements de niveau et d'XP sont déterminés par différence réelle ;
+// - un recalcul de mouvement n'écrit jamais niveau, XP ou titre ;
+// - les changements d'Items sont regroupés par acteur ;
+// - les sorts synchronisés ne déclenchent jamais un recalcul de mouvement.
 
-const VERSION = "2026-06-10-move-xp-multiclass-safe-v4-hide-global-xp";
+const VERSION = "2026-06-22-move-xp-differential-item-sync-v5";
 const TAG = "[ADD2E][MOVE_XP]";
 const INTERNAL = "add2eMoveXpInternal";
+const ITEM_RECALC_DELAY_MS = 140;
+const itemRecalcTimers = new Map();
 
 globalThis.ADD2E_MOVE_XP_VERSION = VERSION;
 
@@ -53,6 +50,23 @@ function firstPositive(...values) {
     if (Number.isFinite(out) && out > 0) return out;
   }
   return 0;
+}
+
+function sameValue(left, right) {
+  if (left === right) return true;
+  const leftNumber = num(left, NaN);
+  const rightNumber = num(right, NaN);
+  if (Number.isFinite(leftNumber) && Number.isFinite(rightNumber)) return leftNumber === rightNumber;
+  if (foundry?.utils?.deepEqual) return foundry.utils.deepEqual(left, right);
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
+function getPath(document, path) {
+  return foundry?.utils?.getProperty ? foundry.utils.getProperty(document, path) : undefined;
+}
+
+function changedUpdatePayload(actor, updates = {}) {
+  return Object.fromEntries(Object.entries(updates).filter(([path, value]) => !sameValue(getPath(actor, path), value)));
 }
 
 function classItem(actor) { return actor?.items?.find?.(i => String(i.type || "").toLowerCase() === "classe") ?? null; }
@@ -178,21 +192,22 @@ function strengthWeightAdjustment(actor) {
     if (exceptional <= 75) return 1250;
     if (exceptional <= 90) return 1500;
     if (exceptional <= 99) return 2000;
-    return 3000;
   }
   return 3000;
 }
 
 function itemWeight(item) {
   const type = String(item?.type || "").toLowerCase();
-  if (["classe", "race", "sort"].includes(type)) return 0;
+  if (["classe", "race", "sort", "spell"].includes(type)) return 0;
   const sys = item?.system ?? {};
   const quantity = Math.max(1, num(sys.quantite ?? sys.quantity ?? 1, 1));
   const weight = num(sys.poids ?? sys.weight ?? sys.encombrement ?? sys.encumbrance ?? 0, 0);
   return Math.max(0, quantity * weight);
 }
 
-function carriedWeight(actor) { return (actor?.items?.contents ?? Array.from(actor?.items ?? [])).reduce((sum, item) => sum + itemWeight(item), 0); }
+function carriedWeight(actor) {
+  return (actor?.items?.contents ?? Array.from(actor?.items ?? [])).reduce((sum, item) => sum + itemWeight(item), 0);
+}
 
 function computeMovement(actor) {
   const base = baseMove(actor);
@@ -232,7 +247,14 @@ function computeMovement(actor) {
 
 function movementUpdates(actor) {
   const movement = computeMovement(actor);
-  return { updates: { "system.mouvement": movement, "system.movement": movement.actuel, "system.vitesse_deplacement": movement.actuel }, movement };
+  return {
+    updates: {
+      "system.mouvement": movement,
+      "system.movement": movement.actuel,
+      "system.vitesse_deplacement": movement.actuel
+    },
+    movement
+  };
 }
 
 function splitMulticlassXpMap(actor, incomingTotalXp) {
@@ -242,7 +264,7 @@ function splitMulticlassXpMap(actor, incomingTotalXp) {
   const newTotal = Math.max(0, Math.floor(num(incomingTotalXp, oldTotal)));
   const delta = newTotal - oldTotal;
   const xpMap = foundry.utils.deepClone(actor.system?.xp_par_classe ?? {});
-  const entries = classes.map(cls => ({ slug: classSlug(cls), cls })).filter(e => e.slug);
+  const entries = classes.map(cls => ({ slug: classSlug(cls), cls })).filter(entry => entry.slug);
   for (const entry of entries) xpMap[entry.slug] = Math.max(0, Math.floor(num(xpMap[entry.slug], 0)));
   if (delta !== 0) {
     const sign = delta >= 0 ? 1 : -1;
@@ -265,20 +287,41 @@ function multiclassXpUpdates(actor, incomingXp) {
     const payload = globalThis.add2eMulticlassUpdatePayload(actor, null, xpMap, null);
     if (payload) return payload;
   }
-  return { "system.xp": Math.max(0, Math.floor(num(incomingXp, actor.system?.xp ?? 0))), "system.xp_par_classe": xpMap };
+  return {
+    "system.xp": Math.max(0, Math.floor(num(incomingXp, actor.system?.xp ?? 0))),
+    "system.xp_par_classe": xpMap
+  };
 }
 
 function flatActorUpdates(actor, { mode = "auto", incoming = {} } = {}) {
-  const incomingLevel = incoming["system.niveau"] !== undefined ? Math.max(1, num(incoming["system.niveau"], 1)) : Math.max(1, num(actor?.system?.niveau, 1));
-  const incomingXp = incoming["system.xp"] !== undefined ? Math.max(0, Math.floor(num(incoming["system.xp"], 0))) : Math.max(0, Math.floor(num(actor?.system?.xp, 0)));
+  const movementOnly = movementUpdates(actor);
+  if (mode === "movement") {
+    return {
+      updates: movementOnly.updates,
+      xp: computeXp(actor),
+      movement: movementOnly.movement,
+      multiclass: isMulticlassActor(actor)
+    };
+  }
+
+  const incomingLevel = incoming["system.niveau"] !== undefined
+    ? Math.max(1, num(incoming["system.niveau"], 1))
+    : Math.max(1, num(actor?.system?.niveau, 1));
+  const incomingXp = incoming["system.xp"] !== undefined
+    ? Math.max(0, Math.floor(num(incoming["system.xp"], 0)))
+    : Math.max(0, Math.floor(num(actor?.system?.xp, 0)));
 
   if (isMulticlassActor(actor)) {
-    const movementOnly = movementUpdates(actor);
     const updates = { ...movementOnly.updates };
-    if (incoming["system.xp"] !== undefined) Object.assign(updates, multiclassXpUpdates(actor, incomingXp) ?? { "system.xp": incomingXp });
+    if (mode === "xp" && incoming["system.xp"] !== undefined) Object.assign(updates, multiclassXpUpdates(actor, incomingXp) ?? { "system.xp": incomingXp });
     return {
       updates,
-      xp: { xp: updates["system.xp"] ?? incomingXp, level: updates["system.niveau"] ?? actor.system?.niveau, suggestedLevel: updates["system.niveau_suggere"] ?? actor.system?.niveau_suggere ?? actor.system?.niveau, progressionLabel: updates["system.progression_xp"] ?? actor.system?.progression_xp ?? "" },
+      xp: {
+        xp: updates["system.xp"] ?? incomingXp,
+        level: updates["system.niveau"] ?? actor.system?.niveau,
+        suggestedLevel: updates["system.niveau_suggere"] ?? actor.system?.niveau_suggere ?? actor.system?.niveau,
+        progressionLabel: updates["system.progression_xp"] ?? actor.system?.progression_xp ?? ""
+      },
       movement: movementOnly.movement,
       multiclass: true
     };
@@ -291,21 +334,34 @@ function flatActorUpdates(actor, { mode = "auto", incoming = {} } = {}) {
     xp = Math.max(xp, minXpForLevel(actor, level));
     const suggested = levelForXp(actor, xp);
     if (game.settings.get("add2e", "xpAutoLevel") && suggested > level) level = suggested;
-  } else xp = Math.max(xp, minXpForLevel(actor, level));
+  } else {
+    xp = Math.max(xp, minXpForLevel(actor, level));
+  }
 
   const meta = xpMeta(actor, level, xp);
-  const movement = computeMovement(actor);
   const currentTitle = xpRows(actor).find(row => Number(row.niveau) === level)?.title ?? actor?.system?.titre ?? "";
-  const updates = { "system.xp": xp, "system.niveau": level, "system.progression_xp": meta.progressionLabel, "system.xp_next": meta.nextXp, "system.xp_to_next": meta.xpToNext, "system.xp_percent": meta.percent, "system.niveau_suggere": meta.suggestedLevel, "system.mouvement": movement, "system.movement": movement.actuel, "system.vitesse_deplacement": movement.actuel };
+  const updates = {
+    "system.xp": xp,
+    "system.niveau": level,
+    "system.progression_xp": meta.progressionLabel,
+    "system.xp_next": meta.nextXp,
+    "system.xp_to_next": meta.xpToNext,
+    "system.xp_percent": meta.percent,
+    "system.niveau_suggere": meta.suggestedLevel,
+    ...movementOnly.updates
+  };
   if (currentTitle) updates["system.titre"] = currentTitle;
-  return { updates, xp: meta, movement, multiclass: false };
+  return { updates, xp: meta, movement: movementOnly.movement, multiclass: false };
 }
 
 async function recalc(actor, { mode = "auto", notify = false } = {}) {
   if (!actor || actor.type !== "personnage") return null;
   const result = flatActorUpdates(actor, { mode });
-  await actor.update(result.updates, { [INTERNAL]: true, add2eReason: `move-xp-recalc:${mode}`, render: false });
-  if (notify && mode === "level" && !result.multiclass) ui.notifications.info(`${actor.name} : XP ajustée au niveau ${result.updates["system.niveau"]} (${result.updates["system.xp"].toLocaleString()} XP).`);
+  const updates = changedUpdatePayload(actor, result.updates);
+  result.updates = updates;
+  result.skipped = Object.keys(updates).length === 0;
+  if (!result.skipped) await actor.update(updates, { [INTERNAL]: true, add2eReason: `move-xp-recalc:${mode}`, render: false });
+  if (notify && mode === "level" && !result.multiclass) ui.notifications.info(`${actor.name} : XP ajustée au niveau ${result.xp.level} (${result.xp.xp.toLocaleString()} XP).`);
   return result;
 }
 
@@ -317,10 +373,14 @@ async function awardXp(actor, amount, { reason = "Gain d'expérience", percentBo
   const before = Math.max(0, Math.floor(num(actor.system?.xp, 0)));
   const after = before + total;
   const result = flatActorUpdates(actor, { mode: "xp", incoming: { "system.xp": after } });
-  await actor.update(result.updates, { add2eReason: "move-xp-award" });
-  const displayedXp = Number(result.updates["system.xp"] ?? after) || after;
-  const displayedLevel = String(result.updates["system.niveau"] ?? actor.system?.niveau ?? "-");
-  await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: `<div class="add2e-xp-chat" style="border:1px solid #b88924;border-radius:10px;background:#fff8df;padding:.65em .8em;"><h3>Expérience — ${actor.name}</h3><div>${reason ? `<b>${reason}</b><br>` : ""}+${total.toLocaleString()} XP${bonus ? ` dont bonus ${bonus.toLocaleString()} XP` : ""}</div><div>${before.toLocaleString()} → <b>${displayedXp.toLocaleString()}</b> XP</div><div>Niveau actuel : <b>${displayedLevel}</b>${result.multiclass ? " — multiclassage" : ""}</div></div>` });
+  const updates = changedUpdatePayload(actor, result.updates);
+  if (Object.keys(updates).length) await actor.update(updates, { add2eReason: "move-xp-award" });
+  const displayedXp = Number(updates["system.xp"] ?? result.xp.xp ?? after) || after;
+  const displayedLevel = String(updates["system.niveau"] ?? result.xp.level ?? actor.system?.niveau ?? "-");
+  await ChatMessage.create({
+    speaker: ChatMessage.getSpeaker({ actor }),
+    content: `<div class="add2e-xp-chat" style="border:1px solid #b88924;border-radius:10px;background:#fff8df;padding:.65em .8em;"><h3>Expérience — ${actor.name}</h3><div>${reason ? `<b>${reason}</b><br>` : ""}+${total.toLocaleString()} XP${bonus ? ` dont bonus ${bonus.toLocaleString()} XP` : ""}</div><div>${before.toLocaleString()} → <b>${displayedXp.toLocaleString()}</b> XP</div><div>Niveau actuel : <b>${displayedLevel}</b>${result.multiclass ? " — multiclassage" : ""}</div></div>`
+  });
   return { before, after: displayedXp, total, bonus, ...result };
 }
 
@@ -333,7 +393,10 @@ async function promptXp(actor) {
     window: { title: `Attribuer de l'XP — ${actor.name}` },
     content,
     buttons: [
-      { action: "add", label: "Ajouter", default: true, callback: (_event, _button, dialog) => { const form = dialog?.element?.querySelector?.("form") ?? document.querySelector("form"); return { action: "add", amount: form?.amount?.value ?? 0, percentBonus: form?.percentBonus?.value ?? 0, reason: form?.reason?.value ?? "Récompense d'aventure" }; } },
+      { action: "add", label: "Ajouter", default: true, callback: (_event, _button, dialog) => {
+        const form = dialog?.element?.querySelector?.("form") ?? document.querySelector("form");
+        return { action: "add", amount: form?.amount?.value ?? 0, percentBonus: form?.percentBonus?.value ?? 0, reason: form?.reason?.value ?? "Récompense d'aventure" };
+      } },
       { action: "cancel", label: "Annuler", callback: () => ({ action: "cancel" }) }
     ],
     modal: true,
@@ -349,11 +412,9 @@ function findField(root, label) { const wanted = norm(label); return [...root.qu
 
 function ensureXpField(sheet, html) {
   const actor = sheet?.actor;
-  if (!actor || actor.type !== "personnage") return;
-  if (isMulticlassActor(actor)) return;
+  if (!actor || actor.type !== "personnage" || isMulticlassActor(actor)) return;
   const root = rootEl(html);
-  if (!root?.querySelector) return;
-  if (root.querySelector("input[name='system.xp']")) return;
+  if (!root?.querySelector || root.querySelector("input[name='system.xp']")) return;
   const levelField = findField(root, "Niveau");
   if (!levelField) return;
   const field = document.createElement("div");
@@ -390,7 +451,12 @@ function tokenDistanceMeters(tokenDoc, changes, from = null) {
 function combatTurnKey() { const combat = game.combat; return combat ? `${combat.id}:${combat.round ?? 0}:${combat.turn ?? 0}` : null; }
 function spentThisTurn(actor) { const key = combatTurnKey(); if (!key) return 0; return actor.getFlag("add2e", "movementTurnKey") === key ? Number(actor.getFlag("add2e", "movementSpentMeters")) || 0 : 0; }
 function movementOrigin(tokenDoc) { return tokenDoc.getFlag("add2e", "lastAllowedPosition") ?? { x: tokenDoc.x, y: tokenDoc.y }; }
-function movementScaleStatus(distance, max) { if (max <= 0) return { key: "red", label: "rouge", color: 0xd91e18, blocked: true }; if (distance <= max + 0.01) return { key: "green", label: "vert", color: 0x2ecc71, blocked: false }; if (distance <= (max * 2) + 0.01) return { key: "orange", label: "orange", color: 0xf39c12, blocked: true }; return { key: "red", label: "rouge", color: 0xd91e18, blocked: true }; }
+function movementScaleStatus(distance, max) {
+  if (max <= 0) return { key: "red", label: "rouge", color: 0xd91e18, blocked: true };
+  if (distance <= max + 0.01) return { key: "green", label: "vert", color: 0x2ecc71, blocked: false };
+  if (distance <= (max * 2) + 0.01) return { key: "orange", label: "orange", color: 0xf39c12, blocked: true };
+  return { key: "red", label: "rouge", color: 0xd91e18, blocked: true };
+}
 
 function drawMovementScale(tokenDoc, status, distance, max) {
   const token = canvas?.tokens?.get?.(tokenDoc.id);
@@ -425,19 +491,61 @@ function computeTokenMovementScale(tokenDoc, changes = {}, from = null) {
 }
 
 function validateTokenMovement(tokenDoc, changes, options = {}) {
-  if (options?.add2eIgnoreMovement) return true;
-  if (!game.settings.get("add2e", "enforceTokenMovement")) return true;
+  if (options?.add2eIgnoreMovement || !game.settings.get("add2e", "enforceTokenMovement")) return true;
   if (!changes || (changes.x === undefined && changes.y === undefined)) return true;
   const actor = tokenDoc.actor;
   if (!actor || actor.type !== "personnage") return true;
   const result = computeTokenMovementScale(tokenDoc, changes);
   if (!result) return true;
   const { next, max, status } = result;
-  if (game.user.isGM) { if (next > max + 0.01) ui.notifications.info(`${actor.name} dépasse son mouvement (${status.label}) : ${next.toFixed(1)} m / ${max.toFixed(1)} m. Déplacement MJ autorisé.`); return true; }
-  if (status.blocked) { ui.notifications.warn(`${actor.name} dépasse son mouvement (${status.label}) : ${next.toFixed(1)} m / ${max.toFixed(1)} m.`); return false; }
+  if (game.user.isGM) {
+    if (next > max + 0.01) ui.notifications.info(`${actor.name} dépasse son mouvement (${status.label}) : ${next.toFixed(1)} m / ${max.toFixed(1)} m. Déplacement MJ autorisé.`);
+    return true;
+  }
+  if (status.blocked) {
+    ui.notifications.warn(`${actor.name} dépasse son mouvement (${status.label}) : ${next.toFixed(1)} m / ${max.toFixed(1)} m.`);
+    return false;
+  }
   if (game.combat) setTimeout(() => { actor.setFlag("add2e", "movementTurnKey", combatTurnKey()); actor.setFlag("add2e", "movementSpentMeters", next); }, 0);
   else setTimeout(() => tokenDoc.setFlag("add2e", "lastAllowedPosition", { x: changes.x ?? tokenDoc.x, y: changes.y ?? tokenDoc.y }), 0);
   return true;
+}
+
+function itemCanAffectMovement(item, hookName, options = {}) {
+  const actor = item?.parent;
+  if (!actor || actor.documentName !== "Actor" || actor.type !== "personnage") return false;
+  const type = String(item.type ?? "").toLowerCase();
+  if (["sort", "spell"].includes(type)) return false;
+  if (options?.add2eSpellSync || options?.add2eDropPurge || options?.add2eCompendiumTruth) return false;
+
+  if (["classe", "race"].includes(type)) {
+    if (options?.add2eInternal) return hookName === "createItem" || hookName === "updateItem";
+    return true;
+  }
+
+  return !options?.add2eInternal;
+}
+
+function queueItemMovementRecalc(item, hookName, options = {}) {
+  if (!itemCanAffectMovement(item, hookName, options)) return;
+  const actor = item.parent;
+  const key = String(actor.uuid ?? actor.id);
+  const existing = itemRecalcTimers.get(key);
+  if (existing) clearTimeout(existing);
+  const timer = setTimeout(() => {
+    itemRecalcTimers.delete(key);
+    recalc(actor, { mode: "movement" }).catch(error => console.warn(`${TAG}[ITEM_RECALC]`, { actor: actor.name, error }));
+  }, ITEM_RECALC_DELAY_MS);
+  itemRecalcTimers.set(key, timer);
+}
+
+function changeValue(changes, path) {
+  return foundry.utils.hasProperty(changes, path) ? foundry.utils.getProperty(changes, path) : undefined;
+}
+
+function changedPath(actor, changes, path) {
+  if (!foundry.utils.hasProperty(changes, path)) return false;
+  return !sameValue(changeValue(changes, path), getPath(actor, path));
 }
 
 Hooks.once("init", () => {
@@ -447,34 +555,67 @@ Hooks.once("init", () => {
 
 Hooks.once("ready", async () => {
   log("[READY]", { version: VERSION });
-  if (game.user.isGM) for (const actor of game.actors?.filter(a => a.type === "personnage") ?? []) await recalc(actor, { mode: "auto" }).catch(err => console.warn(`${TAG}[READY][SKIP]`, actor?.name, err));
-  for (const token of canvas?.tokens?.placeables ?? []) if (token.actor?.type === "personnage") token.document.setFlag("add2e", "lastAllowedPosition", { x: token.document.x, y: token.document.y });
+  if (game.user.isGM) {
+    for (const actor of game.actors?.filter(actor => actor.type === "personnage") ?? []) {
+      await recalc(actor, { mode: "auto" }).catch(error => console.warn(`${TAG}[READY][SKIP]`, actor?.name, error));
+    }
+  }
+  for (const token of canvas?.tokens?.placeables ?? []) {
+    if (token.actor?.type === "personnage") token.document.setFlag("add2e", "lastAllowedPosition", { x: token.document.x, y: token.document.y });
+  }
 });
 
 Hooks.on("preUpdateActor", (actor, changes, options) => {
   if (options?.[INTERNAL] || options?.add2eInternal || !actor || actor.type !== "personnage") return true;
-  const levelChanged = foundry.utils.hasProperty(changes, "system.niveau");
-  const xpChanged = foundry.utils.hasProperty(changes, "system.xp");
-  const movementChanged = ["system.force", "system.force_poids", "system.force_ex", "system.force_exceptionnelle", "system.mouvement.base", "system.vitesse_deplacement"].some(path => foundry.utils.hasProperty(changes, path));
+
+  const levelChanged = changedPath(actor, changes, "system.niveau");
+  const xpChanged = changedPath(actor, changes, "system.xp");
+  const movementChanged = [
+    "system.force",
+    "system.force_poids",
+    "system.force_ex",
+    "system.force_exceptionnelle",
+    "system.mouvement.base",
+    "system.vitesse_deplacement"
+  ].some(path => changedPath(actor, changes, path));
+
   if (!levelChanged && !xpChanged && !movementChanged) return true;
+
   const incoming = {};
-  if (levelChanged) incoming["system.niveau"] = foundry.utils.getProperty(changes, "system.niveau");
-  if (xpChanged) incoming["system.xp"] = foundry.utils.getProperty(changes, "system.xp");
+  if (levelChanged) incoming["system.niveau"] = changeValue(changes, "system.niveau");
+  if (xpChanged) incoming["system.xp"] = changeValue(changes, "system.xp");
   const mode = levelChanged && !xpChanged ? "level" : xpChanged ? "xp" : "movement";
   const result = flatActorUpdates(actor, { mode, incoming });
-  foundry.utils.mergeObject(changes, foundry.utils.expandObject(result.updates), { inplace: true });
+  const derived = changedUpdatePayload(actor, result.updates);
+  if (Object.keys(derived).length) foundry.utils.mergeObject(changes, foundry.utils.expandObject(derived), { inplace: true });
   options.add2eReason = `move-xp-preupdate:${mode}`;
-  log("[ACTOR][PREUPDATE]", { actor: actor.name, mode, multiclass: result.multiclass === true, updates: result.updates });
+  log("[ACTOR][PREUPDATE]", { actor: actor.name, mode, multiclass: result.multiclass === true, updates: derived });
   return true;
 });
 
 Hooks.on("renderActorSheet", (sheet, html) => { if (sheet?.actor?.type !== "personnage") return; ensureXpField(sheet, html); bindXpButton(sheet, html); });
 Hooks.on("renderAdd2eActorSheet", (sheet, html) => { if (sheet?.actor?.type !== "personnage") return; ensureXpField(sheet, html); bindXpButton(sheet, html); });
 Hooks.on("preUpdateToken", (tokenDoc, changes, options) => validateTokenMovement(tokenDoc, changes, options));
-Hooks.on("updateToken", (tokenDoc, changes) => { if (!changes || (changes.x === undefined && changes.y === undefined)) return; if (!game.settings.get("add2e", "enforceTokenMovement")) return; computeTokenMovementScale(tokenDoc, { x: tokenDoc.x, y: tokenDoc.y }); });
-Hooks.on("controlToken", token => { if (token?.actor?.type === "personnage") { token.document.setFlag("add2e", "lastAllowedPosition", { x: token.document.x, y: token.document.y }); computeTokenMovementScale(token.document, { x: token.document.x, y: token.document.y }); } });
-for (const hookName of ["createItem", "updateItem", "deleteItem"]) Hooks.on(hookName, item => { const actor = item?.parent; if (actor?.documentName === "Actor" && actor.type === "personnage") recalc(actor, { mode: "movement" }).catch(err => console.warn(`${TAG}[${hookName}]`, err)); });
-Hooks.on("updateCombat", () => { if (!game.user.isGM) return; for (const combatant of game.combat?.combatants ?? []) if (combatant.actor?.type === "personnage") combatant.actor.setFlag("add2e", "movementTurnKey", combatTurnKey()); });
+Hooks.on("updateToken", (tokenDoc, changes) => {
+  if (!changes || (changes.x === undefined && changes.y === undefined)) return;
+  if (!game.settings.get("add2e", "enforceTokenMovement")) return;
+  computeTokenMovementScale(tokenDoc, { x: tokenDoc.x, y: tokenDoc.y });
+});
+Hooks.on("controlToken", token => {
+  if (token?.actor?.type !== "personnage") return;
+  token.document.setFlag("add2e", "lastAllowedPosition", { x: token.document.x, y: token.document.y });
+  computeTokenMovementScale(token.document, { x: token.document.x, y: token.document.y });
+});
+
+Hooks.on("createItem", (item, options = {}) => queueItemMovementRecalc(item, "createItem", options));
+Hooks.on("updateItem", (item, _changes = {}, options = {}) => queueItemMovementRecalc(item, "updateItem", options));
+Hooks.on("deleteItem", (item, options = {}) => queueItemMovementRecalc(item, "deleteItem", options));
+Hooks.on("updateCombat", () => {
+  if (!game.user.isGM) return;
+  for (const combatant of game.combat?.combatants ?? []) {
+    if (combatant.actor?.type === "personnage") combatant.actor.setFlag("add2e", "movementTurnKey", combatTurnKey());
+  }
+});
 
 globalThis.add2eComputeXp = computeXp;
 globalThis.add2eComputeMovement = computeMovement;
