@@ -165,6 +165,10 @@ function buildGmCard(ctx) {
   const hit = !!ctx.finalResult;
   const positionDetails = Array.isArray(ctx.activePositionAttackAdjustment?.details) ? ctx.activePositionAttackAdjustment.details : [];
   const calculSimple = `<b>${esc(ctx.d20)}</b> <span style="color:#6d654f;font-size:0.8em;">(d20)</span> ${esc(signed(ctx.totalBonusToucher))} = <b style="font-size:1.1em;">${esc(ctx.totalAuToucher)}</b>`;
+  const ajustementCA = safeNumber(ctx.ajustementCA);
+  const seuilApresArmure = safeNumber(ctx.valeurPourToucher);
+  const seuilThacoCA = seuilApresArmure + ajustementCA;
+  const autresModificateursJet = safeNumber(ctx.totalBonusToucher);
   const naturalLine = o.key === "natural20" ? `<div style="color:#b7791f;"><b>20 naturel :</b> coup exceptionnel, réussite automatique.</div>` : o.key === "natural1" ? `<div style="color:#9f1239;"><b>1 naturel :</b> échec critique, échec automatique.</div>` : "";
   const touchLines = [
     naturalLine,
@@ -172,7 +176,9 @@ function buildGmCard(ctx) {
     `<div><b>Classe d’armure cible :</b> ${esc(ctx.caFinaleCible)}${ctx.activePositionAttackAdjustment?.caAdjustment ? ` <span style="color:#7a4b00;">(position : ${esc(ctx.caAvantPosition)} → ${esc(ctx.caAvantConditionnelle)})</span>` : ""}</div>`,
     ctx.conditionalACLine || "",
     positionDetails.length ? `<div><b>Position :</b> ${positionDetails.map(esc).join(" ; ")}</div>` : "",
-    `<div><b>Seuil sans modificateur :</b> ${esc(ctx.valeurPourToucher)}</div>`,
+    `<div><b>Seuil THAC0 / CA :</b> ${esc(seuilThacoCA)}</div>`,
+    `<div><b>Ajustement armure / arme :</b> ${esc(signed(ajustementCA))}</div>`,
+    `<div><b>Seuil après armure / arme :</b> ${esc(seuilApresArmure)}</div>`,
     `<hr style="border:0;border-top:1px solid #e0d3ad;margin:6px 0;">`,
     `<div><b>Modificateur ${esc(ctx.modCaracToucherLabel)} :</b> ${esc(signed(ctx.modCaracToucher))}</div>`,
     `<div><b>Modificateur magique arme :</b> ${esc(signed(ctx.bonusHit))}</div>`,
@@ -181,9 +187,8 @@ function buildGmCard(ctx) {
     `<div><b>Modificateur temporaire :</b> ${esc(signed(ctx.userBonus))}</div>`,
     ctx.useBackstab ? `<div><b>Attaque sournoise :</b> +4 toucher, dégâts ×${esc(ctx.backstabMultiplier)}</div>` : "",
     ctx.useAssassination ? `<div><b>Assassinat :</b> ${esc(ctx.assassinationInfo?.score ?? 0)}%${ctx.assassinatMod ? ` (${esc(signed(ctx.assassinatMod))} situation)` : ""}</div>` : "",
-    `<div><b>Modificateur armure / arme :</b> ${esc(signed(ctx.ajustementCA))}</div>`,
     `<hr style="border:0;border-top:1px solid #e0d3ad;margin:6px 0;">`,
-    `<div style="font-size:1.08em;"><b>Total modificateur :</b><span style="font-weight:bold;color:#2563eb;"> ${esc(signed(ctx.totalBonusToucher))}</span></div>`,
+    `<div style="font-size:1.08em;"><b>Autres modificateurs au jet :</b><span style="font-weight:bold;color:#2563eb;"> ${esc(signed(autresModificateursJet))}</span></div>`,
     `<div style="font-size:1.08em;"><b>Seuil final au d20 :</b><span style="font-weight:bold;color:#15803d;"> ${esc(ctx.seuilFinalD20)}</span></div>`
   ].filter(Boolean).join("");
   const damageLines = hit ? [
