@@ -2,9 +2,40 @@
 // ADD2E — Helpers globaux encore utilisés par la feuille legacy
 // ============================================================
 
-const ADD2E_LEGACY_GLOBAL_HELPERS_VERSION = "2026-05-24-legacy-global-helpers-v3-gm-operation-only";
+const ADD2E_LEGACY_GLOBAL_HELPERS_VERSION = "2026-06-22-legacy-global-helpers-v4-image-fallback";
 globalThis.ADD2E_LEGACY_GLOBAL_HELPERS_VERSION = ADD2E_LEGACY_GLOBAL_HELPERS_VERSION;
 console.log("[ADD2E][LEGACY_GLOBAL_HELPERS][VERSION]", ADD2E_LEGACY_GLOBAL_HELPERS_VERSION);
+
+const ADD2E_SHEET_IMAGE_FALLBACK = "icons/svg/item-bag.svg";
+
+function add2eRegisterSheetImageFallbacks(root) {
+  if (!root?.find) return;
+
+  root.find("img[src]").each((_index, image) => {
+    if (!image || image.dataset.add2eImageFallbackBound === "true") return;
+
+    image.dataset.add2eImageFallbackBound = "true";
+    image.loading = "lazy";
+    image.decoding = "async";
+
+    const applyFallback = () => {
+      if (image.dataset.add2eImageFallbackApplied === "true") return;
+
+      image.dataset.add2eImageFallbackApplied = "true";
+      image.dataset.add2eImageFallbackSource = image.currentSrc || image.getAttribute("src") || "";
+      image.removeAttribute("srcset");
+      image.removeAttribute("sizes");
+      image.alt ||= "Image indisponible";
+      image.src = ADD2E_SHEET_IMAGE_FALLBACK;
+    };
+
+    image.addEventListener("error", applyFallback, { once: true });
+
+    if (image.complete && image.naturalWidth === 0) applyFallback();
+  });
+}
+
+globalThis.add2eRegisterSheetImageFallbacks = add2eRegisterSheetImageFallbacks;
 
 function add2eLegacyNormalize(value) {
   return String(value ?? "")
@@ -78,6 +109,9 @@ if (typeof globalThis.add2eRegisterImgPicker !== "function") {
   globalThis.add2eRegisterImgPicker = function add2eRegisterImgPicker(html, sheet) {
     const root = html?.jquery ? html : $(html);
     if (!root?.find) return;
+
+    // Fallback local uniquement : aucune écriture d'Actor/Item et aucun render().
+    add2eRegisterSheetImageFallbacks(root);
 
     const actor = sheet?.actor ?? sheet?.document;
     if (!actor) return;
