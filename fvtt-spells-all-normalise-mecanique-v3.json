@@ -53611,10 +53611,8 @@
         "cible": "",
         "temps_incantation": "1 segment",
         "jet_sauvegarde": "aucun",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          "a completer"
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
@@ -53649,7 +53647,9 @@
               "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
             }
           ]
-        }
+        },
+        "composants_materiels_objets": [],
+        "composants_requis": []
       },
       "folder": "ti9EBwYx3OHoVvTB",
       "effects": [],
@@ -53996,8 +53996,22 @@
         "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
-          "poudre de fer",
-          "poudre d’argent"
+          {
+            "nom": "Poudre de fer",
+            "quantite": 1,
+            "consommation": "consomme",
+            "source": "Manuel des joueurs, p. 68",
+            "condition": "La poudre de fer sert à tracer le cercle de protection.",
+            "notes": "Composant matériel du magicien ; requis avec la poudre d’argent."
+          },
+          {
+            "nom": "Poudre d’argent",
+            "quantite": 1,
+            "consommation": "consomme",
+            "source": "Manuel des joueurs, p. 68",
+            "condition": "La poudre d’argent sert à tracer le cercle de protection.",
+            "notes": "Composant matériel du magicien ; requis avec la poudre de fer."
+          }
         ],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "Recherche dans le texte du Manuel des joueurs",
@@ -54033,7 +54047,25 @@
               "notes": "Profil mécanique magicien normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
             }
           ]
-        }
+        },
+        "composants_materiels_objets": [
+          {
+            "nom": "Poudre de fer",
+            "quantite": 1,
+            "consommation": "consomme",
+            "source": "Manuel des joueurs, p. 68",
+            "condition": "La poudre de fer sert à tracer le cercle de protection.",
+            "notes": "Composant matériel du magicien ; requis avec la poudre d’argent."
+          },
+          {
+            "nom": "Poudre d’argent",
+            "quantite": 1,
+            "consommation": "consomme",
+            "source": "Manuel des joueurs, p. 68",
+            "condition": "La poudre d’argent sert à tracer le cercle de protection.",
+            "notes": "Composant matériel du magicien ; requis avec la poudre de fer."
+          }
+        ]
       },
       "effects": [],
       "flags": {
@@ -54092,6 +54124,7 @@
                 "foundryItemName": "Protection contre le mal",
                 "referenceFiles": [
                   "audit/reference/manuel-joueurs-magicien-niveau-1.json",
+                  "audit/reference/manuel-joueurs-composants-materiels.json",
                   "audit/reference/manuel-joueurs-reversibilite.json"
                 ],
                 "reversible": true,
@@ -54103,11 +54136,62 @@
                     "manualName": "Protection contre le mal",
                     "copySourceItem": true,
                     "systemOverrides": {
-                      "composants_materiels": [],
-                      "composants_materiels_objets": [],
+                      "composants_materiels": [
+                        {
+                          "nom": "Poudre de fer",
+                          "quantite": 1,
+                          "consommation": "consomme",
+                          "source": "Manuel des joueurs, p. 68",
+                          "condition": "La poudre de fer sert à tracer le cercle de protection.",
+                          "notes": "Composant matériel du magicien ; requis avec la poudre d’argent."
+                        },
+                        {
+                          "nom": "Poudre d’argent",
+                          "quantite": 1,
+                          "consommation": "consomme",
+                          "source": "Manuel des joueurs, p. 68",
+                          "condition": "La poudre d’argent sert à tracer le cercle de protection.",
+                          "notes": "Composant matériel du magicien ; requis avec la poudre de fer."
+                        }
+                      ],
+                      "composants_materiels_objets": [
+                        {
+                          "nom": "Poudre de fer",
+                          "quantite": 1,
+                          "consommation": "consomme",
+                          "source": "Manuel des joueurs, p. 68",
+                          "condition": "La poudre de fer sert à tracer le cercle de protection.",
+                          "notes": "Composant matériel du magicien ; requis avec la poudre d’argent."
+                        },
+                        {
+                          "nom": "Poudre d’argent",
+                          "quantite": 1,
+                          "consommation": "consomme",
+                          "source": "Manuel des joueurs, p. 68",
+                          "condition": "La poudre d’argent sert à tracer le cercle de protection.",
+                          "notes": "Composant matériel du magicien ; requis avec la poudre de fer."
+                        }
+                      ],
                       "composantes": "V, S, M"
                     },
-                    "materialReference": []
+                    "materialReference": [
+                      {
+                        "nom": "Poudre de fer",
+                        "quantite": 1,
+                        "consommation": "consomme",
+                        "source": "Manuel des joueurs, p. 68",
+                        "condition": "La poudre de fer sert à tracer le cercle de protection.",
+                        "notes": "Composant matériel du magicien ; requis avec la poudre d’argent."
+                      },
+                      {
+                        "nom": "Poudre d’argent",
+                        "quantite": 1,
+                        "consommation": "consomme",
+                        "source": "Manuel des joueurs, p. 68",
+                        "condition": "La poudre d’argent sert à tracer le cercle de protection.",
+                        "notes": "Composant matériel du magicien ; requis avec la poudre de fer."
+                      }
+                    ]
                   },
                   {
                     "id": "inverse",
@@ -54115,11 +54199,62 @@
                     "manualName": "Protection contre le bien",
                     "copySourceItem": true,
                     "systemOverrides": {
-                      "composants_materiels": [],
-                      "composants_materiels_objets": [],
+                      "composants_materiels": [
+                        {
+                          "nom": "Poudre de fer",
+                          "quantite": 1,
+                          "consommation": "consomme",
+                          "source": "Manuel des joueurs, p. 68",
+                          "condition": "La poudre de fer sert à tracer le cercle de protection.",
+                          "notes": "Composant matériel du magicien ; requis avec la poudre d’argent."
+                        },
+                        {
+                          "nom": "Poudre d’argent",
+                          "quantite": 1,
+                          "consommation": "consomme",
+                          "source": "Manuel des joueurs, p. 68",
+                          "condition": "La poudre d’argent sert à tracer le cercle de protection.",
+                          "notes": "Composant matériel du magicien ; requis avec la poudre de fer."
+                        }
+                      ],
+                      "composants_materiels_objets": [
+                        {
+                          "nom": "Poudre de fer",
+                          "quantite": 1,
+                          "consommation": "consomme",
+                          "source": "Manuel des joueurs, p. 68",
+                          "condition": "La poudre de fer sert à tracer le cercle de protection.",
+                          "notes": "Composant matériel du magicien ; requis avec la poudre d’argent."
+                        },
+                        {
+                          "nom": "Poudre d’argent",
+                          "quantite": 1,
+                          "consommation": "consomme",
+                          "source": "Manuel des joueurs, p. 68",
+                          "condition": "La poudre d’argent sert à tracer le cercle de protection.",
+                          "notes": "Composant matériel du magicien ; requis avec la poudre de fer."
+                        }
+                      ],
                       "composantes": "V, S, M"
                     },
-                    "materialReference": []
+                    "materialReference": [
+                      {
+                        "nom": "Poudre de fer",
+                        "quantite": 1,
+                        "consommation": "consomme",
+                        "source": "Manuel des joueurs, p. 68",
+                        "condition": "La poudre de fer sert à tracer le cercle de protection.",
+                        "notes": "Composant matériel du magicien ; requis avec la poudre d’argent."
+                      },
+                      {
+                        "nom": "Poudre d’argent",
+                        "quantite": 1,
+                        "consommation": "consomme",
+                        "source": "Manuel des joueurs, p. 68",
+                        "condition": "La poudre d’argent sert à tracer le cercle de protection.",
+                        "notes": "Composant matériel du magicien ; requis avec la poudre de fer."
+                      }
+                    ]
                   }
                 ],
                 "splitOnActorGrant": true
@@ -72794,5 +72929,5 @@
     }
   ],
   "normalizedBy": "2026-06-21-reference-mechanics-v4",
-  "normalizedAt": "2026-06-21T17:11:45.298Z"
+  "normalizedAt": "2026-06-22T04:00:20.003Z"
 }
