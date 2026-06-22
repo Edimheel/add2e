@@ -192,3 +192,260 @@ if (globalThis.Add2eActorSheet?.prototype && !globalThis.Add2eActorSheet.prototy
     }, true);
   };
 }
+
+// Diagnostic temporaire — niveau, XP et rafraîchissements après synchronisation de sorts.
+const ADD2E_LEVEL_DIAGNOSTIC_VERSION = "2026-06-22-level-refresh-trace-v1";
+const ADD2E_LEVEL_DIAGNOSTIC_MAX_PER_ACTOR = 300;
+globalThis.ADD2E_LEVEL_DIAGNOSTIC_VERSION = ADD2E_LEVEL_DIAGNOSTIC_VERSION;
+
+globalThis.__ADD2E_LEVEL_DIAGNOSTIC_STATE__ ??= { sequence: 0, events: [], counts: Object.create(null), limited: Object.create(null) };
+
+function add2eLevelDiagActorKey(actor) {
+  return String(actor?.uuid ?? actor?.id ?? actor?.name ?? "unknown");
+}
+
+function add2eLevelDiagOptions(options = {}) {
+  return {
+    reason: options?.add2eReason ?? options?.reason ?? null,
+    internal: options?.add2eInternal === true,
+    moveXpInternal: options?.add2eMoveXpInternal === true,
+    spellSync: options?.add2eSpellSync === true,
+    compendiumTruth: options?.add2eCompendiumTruth === true,
+    dropPurge: options?.add2eDropPurge === true,
+    render: options?.render ?? null
+  };
+}
+
+function add2eLevelDiagChanges(changes = {}) {
+  const flattened = foundry?.utils?.flattenObject ? foundry.utils.flattenObject(changes ?? {}) : (changes ?? {});
+  const entries = Object.entries(flattened)
+    .filter(([key]) => key.startsWith("system.") || key === "name")
+    .slice(0, 30)
+    .map(([key, value]) => [key, value]);
+  return {
+    keys: entries.map(([key]) => key),
+    values: Object.fromEntries(entries),
+    niveau: changes?.system?.niveau ?? flattened["system.niveau"] ?? null,
+    xp: changes?.system?.xp ?? flattened["system.xp"] ?? null
+  };
+}
+
+function add2eLevelDiag(label, actor, data = {}) {
+  if (actor?.type !== "personnage") return;
+  const state = globalThis.__ADD2E_LEVEL_DIAGNOSTIC_STATE__;
+  const key = add2eLevelDiagActorKey(actor);
+  const count = Number(state.counts[key] ?? 0);
+  if (count >= ADD2E_LEVEL_DIAGNOSTIC_MAX_PER_ACTOR) {
+    if (!state.limited[key]) {
+      state.limited[key] = true;
+      console.warn("[ADD2E][LEVEL_DIAG][LIMIT]", { actor: actor.name, actorId: key, limit: ADD2E_LEVEL_DIAGNOSTIC_MAX_PER_ACTOR });
+    }
+    return;
+  }
+
+  state.counts[key] = count + 1;
+  const event = {
+    id: ++state.sequence,
+    timestamp: new Date().toISOString(),
+    label,
+    actor: actor.name,
+    actorId: key,
+    niveau: actor.system?.niveau ?? null,
+    xp: actor.system?.xp ?? null,
+    itemCount: actor.items?.size ?? actor.items?.length ?? 0,
+    ...data
+  };
+  state.events.push(event);
+  if (state.events.length > 1200) state.events.splice(0, state.events.length - 1200);
+  console.log("[ADD2E][LEVEL_DIAG]", event);
+}
+
+function add2eLevelDiagResult(result) {
+  if (!result || typeof result !== "object") return result ?? null;
+  return {
+    handled: result.handled ?? null,
+    imported: result.imported ?? null,
+    deleted: result.deleted ?? null,
+    reset: result.reset ?? null,
+    maxSpellLevel: result.maxSpellLevel ?? null,
+    levelDecreased: result.levelDecreased ?? null,
+    skippedRunning: result.skippedRunning ?? null,
+    mode: result.mode ?? null
+  };
+}
+
+const add2eLegacyPruneUnchangedFormXpDiagnosticBase = add2eLegacyPruneUnchangedFormXp;
+add2eLegacyPruneUnchangedFormXp = function add2eLegacyPruneUnchangedFormXpDiagnostic(actor, changes) {
+  const before = changes?.system?.xp;
+  const result = add2eLegacyPruneUnchangedFormXpDiagnosticBase(actor, changes);
+  if (before !== undefined) {
+    add2eLevelDiag("FORM_XP_PRUNE", actor, {
+      before,
+      actorXpBefore: actor?.system?.xp ?? null,
+      removed: !Object.prototype.hasOwnProperty.call(changes?.system ?? {}, "xp"),
+      changes: add2eLevelDiagChanges(changes)
+    });
+  }
+  return result;
+};
+
+const add2eLegacyFilterMoveXpRecalcDiagnosticBase = add2eLegacyFilterMoveXpRecalc;
+add2eLegacyFilterMoveXpRecalc = function add2eLegacyFilterMoveXpRecalcDiagnostic(actor, changes, options) {
+  const reason = options?.add2eReason;
+  const watched = reason === "move-xp-recalc:movement" || reason === "move-xp-preupdate:movement";
+  const before = watched ? add2eLevelDiagChanges(changes) : null;
+  const result = add2eLegacyFilterMoveXpRecalcDiagnosticBase(actor, changes, options);
+  if (watched) add2eLevelDiag("MOVE_XP_MOVEMENT_FILTER", actor, {
+    result,
+    before,
+    after: add2eLevelDiagChanges(changes),
+    options: add2eLevelDiagOptions(options)
+  });
+  return result;
+};
+
+function add2eLevelDiagWrapSheetMethod(methodName) {
+  const proto = globalThis.Add2eActorSheet?.prototype;
+  const original = proto?.[methodName];
+  if (!proto || typeof original !== "function" || original.__add2eLevelDiagnosticWrapped) return;
+  const wrapped = async function add2eLevelDiagnosticSheetMethod(...args) {
+    add2eLevelDiag(`SHEET_${methodName}_START`, this.actor, { args: methodName === "autoSetPointsDeCoup" ? args[0] ?? {} : {} });
+    try {
+      const result = await original.apply(this, args);
+      add2eLevelDiag(`SHEET_${methodName}_END`, this.actor, { args: methodName === "autoSetPointsDeCoup" ? args[0] ?? {} : {} });
+      return result;
+    } catch (error) {
+      add2eLevelDiag(`SHEET_${methodName}_ERROR`, this.actor, { error: String(error?.message ?? error) });
+      throw error;
+    }
+  };
+  wrapped.__add2eLevelDiagnosticWrapped = true;
+  proto[methodName] = wrapped;
+}
+
+function add2eLevelDiagWrapSubmit() {
+  const Sheet = globalThis.Add2eActorSheet;
+  const original = Sheet?._add2eSubmitForm;
+  if (!Sheet || typeof original !== "function" || original.__add2eLevelDiagnosticWrapped) return;
+  const wrapped = async function add2eLevelDiagnosticSubmit(event, form, formData) {
+    const actor = this?.actor ?? this?.document ?? null;
+    const raw = formData?.object ?? {};
+    add2eLevelDiag("V2_FORM_SUBMIT_START", actor, {
+      eventType: event?.type ?? null,
+      niveau: raw["system.niveau"] ?? null,
+      xp: raw["system.xp"] ?? null,
+      formKeys: Object.keys(raw).filter(key => key === "name" || key.startsWith("system.")).slice(0, 40)
+    });
+    try {
+      const result = await original.call(this, event, form, formData);
+      add2eLevelDiag("V2_FORM_SUBMIT_END", actor, {});
+      return result;
+    } catch (error) {
+      add2eLevelDiag("V2_FORM_SUBMIT_ERROR", actor, { error: String(error?.message ?? error) });
+      throw error;
+    }
+  };
+  wrapped.__add2eLevelDiagnosticWrapped = true;
+  Sheet._add2eSubmitForm = wrapped;
+  if (Sheet.DEFAULT_OPTIONS?.form) Sheet.DEFAULT_OPTIONS.form.handler = wrapped;
+}
+
+function add2eLevelDiagWrapGlobal(name, label) {
+  const original = globalThis[name];
+  if (typeof original !== "function" || original.__add2eLevelDiagnosticWrapped) return;
+  const wrapped = async function add2eLevelDiagnosticGlobal(...args) {
+    const actor = args.find(arg => arg?.type === "personnage") ?? null;
+    add2eLevelDiag(`${label}_START`, actor, {
+      className: args.find(arg => arg?.type === "classe")?.name ?? null,
+      options: args.find(arg => arg && typeof arg === "object" && (Object.prototype.hasOwnProperty.call(arg, "mode") || Object.prototype.hasOwnProperty.call(arg, "reason"))) ?? null
+    });
+    try {
+      const result = await original.apply(this, args);
+      add2eLevelDiag(`${label}_END`, actor, { result: add2eLevelDiagResult(result) });
+      return result;
+    } catch (error) {
+      add2eLevelDiag(`${label}_ERROR`, actor, { error: String(error?.message ?? error) });
+      throw error;
+    }
+  };
+  wrapped.__add2eLevelDiagnosticWrapped = true;
+  globalThis[name] = wrapped;
+}
+
+add2eLevelDiagWrapSheetMethod("autoSetCaracAjustements");
+add2eLevelDiagWrapSheetMethod("autoSetPointsDeCoup");
+add2eLevelDiagWrapSubmit();
+
+if (globalThis.Add2eActorSheet?.prototype && !globalThis.Add2eActorSheet.prototype.__add2eLevelDiagnosticDomBound) {
+  globalThis.Add2eActorSheet.prototype.__add2eLevelDiagnosticDomBound = true;
+  const previousActivateListeners = globalThis.Add2eActorSheet.prototype.activateListeners;
+  globalThis.Add2eActorSheet.prototype.activateListeners = function add2eLevelDiagnosticActivateListeners(html) {
+    previousActivateListeners.call(this, html);
+    const root = add2eLegacyRoot(html);
+    if (!root || root.dataset.add2eLevelDiagnosticBound === "1") return;
+    root.dataset.add2eLevelDiagnosticBound = "1";
+    root.addEventListener("change", event => {
+      const field = event.target?.closest?.("input[name='system.niveau'], input[name='system.xp']");
+      if (!field || !root.contains(field)) return;
+      add2eLevelDiag("DOM_FIELD_CHANGE", this.actor, { field: field.name, value: field.value });
+    }, true);
+  };
+}
+
+Hooks.on("preUpdateActor", (actor, changes, options) => {
+  if (actor?.type !== "personnage") return;
+  add2eLevelDiag("PREUPDATE_OBSERVER_EARLY", actor, { changes: add2eLevelDiagChanges(changes), options: add2eLevelDiagOptions(options) });
+});
+
+Hooks.on("updateActor", (actor, changes, options) => {
+  if (actor?.type !== "personnage") return;
+  add2eLevelDiag("UPDATE_ACTOR", actor, { changes: add2eLevelDiagChanges(changes), options: add2eLevelDiagOptions(options) });
+});
+
+Hooks.on("createItem", (item, options = {}) => {
+  const actor = item?.parent;
+  if (actor?.type !== "personnage") return;
+  add2eLevelDiag("CREATE_ITEM", actor, { item: { id: item.id, name: item.name, type: item.type }, options: add2eLevelDiagOptions(options) });
+});
+
+Hooks.on("updateItem", (item, changes = {}, options = {}) => {
+  const actor = item?.parent;
+  if (actor?.type !== "personnage") return;
+  add2eLevelDiag("UPDATE_ITEM", actor, { item: { id: item.id, name: item.name, type: item.type }, changes: add2eLevelDiagChanges(changes), options: add2eLevelDiagOptions(options) });
+});
+
+Hooks.on("deleteItem", (item, options = {}) => {
+  const actor = item?.parent;
+  if (actor?.type !== "personnage") return;
+  add2eLevelDiag("DELETE_ITEM", actor, { item: { id: item.id, name: item.name, type: item.type }, options: add2eLevelDiagOptions(options) });
+});
+
+Hooks.on("renderApplication", app => {
+  const actor = app?.actor ?? app?.document ?? null;
+  if (actor?.type !== "personnage") return;
+  add2eLevelDiag("RENDER_APPLICATION", actor, { app: app?.constructor?.name ?? null, appId: app?.id ?? null });
+});
+
+Hooks.once("ready", () => {
+  add2eLevelDiagWrapGlobal("add2eSyncActorSpellsFromClass", "SPELL_SYNC_CLASS");
+  add2eLevelDiagWrapGlobal("add2eSyncNewSpellLevelsAfterActorLevelChange", "SPELL_SYNC_LEVEL");
+  add2eLevelDiagWrapGlobal("add2eRecalcMoveXp", "MOVE_XP_RECALC");
+
+  Hooks.on("preUpdateActor", (actor, changes, options) => {
+    if (actor?.type !== "personnage") return;
+    add2eLevelDiag("PREUPDATE_OBSERVER_LATE", actor, { changes: add2eLevelDiagChanges(changes), options: add2eLevelDiagOptions(options) });
+  });
+});
+
+globalThis.add2eLevelDiagClear = function add2eLevelDiagClear() {
+  globalThis.__ADD2E_LEVEL_DIAGNOSTIC_STATE__ = { sequence: 0, events: [], counts: Object.create(null), limited: Object.create(null) };
+  console.info("[ADD2E][LEVEL_DIAG] Trace vidée.");
+};
+
+globalThis.add2eLevelDiagDump = function add2eLevelDiagDump() {
+  const events = [...(globalThis.__ADD2E_LEVEL_DIAGNOSTIC_STATE__?.events ?? [])];
+  console.table(events);
+  return events;
+};
+
+console.info("[ADD2E][LEVEL_DIAG][BOOT]", { version: ADD2E_LEVEL_DIAGNOSTIC_VERSION, limitPerActor: ADD2E_LEVEL_DIAGNOSTIC_MAX_PER_ACTOR });
