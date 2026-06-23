@@ -13,12 +13,11 @@ import {
   esc
 } from "./22a-vendor-core.mjs";
 
-export const ADD2E_CONSUMABLES_VERSION = "2026-06-15-consumables-core-v12-delete-zero-quantity-items";
+export const ADD2E_CONSUMABLES_VERSION = "2026-06-23-consumables-core-v15-transactional-reusable-components";
 export const SOCKET_COMPONENT_RESULT = "ADD2E_SPELL_COMPONENT_RESULT";
 export const GM_OPERATION_COMPONENT_RESERVE = "vendorReserveSpellComponents";
 export const GM_OPERATION_COMPONENT_REFUND = "vendorRefundSpellComponents";
-
-const ZERO_DELETE_OPTION = "add2eDeletingEmptyComponent";
+export const GM_OPERATION_COMPONENT_FINALIZE = "vendorFinalizeSpellComponents";
 
 const asArray = value => Array.isArray(value)
   ? value
@@ -27,30 +26,6 @@ const asArray = value => Array.isArray(value)
     : typeof value === "string"
       ? value.split(/[,;|\n]+|\bet\b/gi).map(v => v.trim()).filter(Boolean)
       : [value];
-
-function deepClone(value) {
-  try { return foundry.utils.deepClone(value); }
-  catch (_err) {
-    try { return foundry.utils.duplicate(value); }
-    catch (_e) { return JSON.parse(JSON.stringify(value ?? null)); }
-  }
-}
-
-function itemDataForRefund(item) {
-  if (!item) return null;
-  const data = typeof item.toObject === "function" ? item.toObject() : deepClone(item);
-  if (!data || typeof data !== "object") return null;
-  delete data._id;
-  delete data._stats;
-  return data;
-}
-
-function withQuantityOnItemData(itemData, value) {
-  const data = deepClone(itemData);
-  data.system ??= {};
-  data.system.quantite = Math.max(0, Math.floor(num(value, 0)));
-  return data;
-}
 
 function toFieldArray(value) {
   if (value === null || value === undefined || value === "") return [];
@@ -123,6 +98,21 @@ function itemTextFields(item) {
   ].map(lower).filter(Boolean);
 }
 
+function isSacredSymbolName(value) {
+  const key = slug(value);
+  return key === "symbole_sacre"
+    || key === "holy_symbol"
+    || key === "symbole_saint"
+    || key.startsWith("symbole_sacre_")
+    || key.startsWith("holy_symbol_");
+}
+
+function isSacredSymbolItem(item) {
+  const system = item?.system ?? {};
+  return [item?.name, system.nom, system.slug, system.composantSlug, system.componentSlug]
+    .some(isSacredSymbolName);
+}
+
 function isKnownLooseComponentName(value) {
   const key = slug(value);
   if (!key) return false;
@@ -146,6 +136,48 @@ function isSpellComponentItem(item) {
   if (fields.some(v => v.includes("composant") && v.includes("sort"))) return true;
   if (fields.some(v => v.includes("spell") && v.includes("component"))) return true;
   return isKnownLooseComponentName(item?.name) || isKnownLooseComponentName(item?.system?.nom);
+}
+
+function booleanValue(value) {
+  if (value === true) return true;
+  if (value === false) return false;
+  if (value === undefined || value === null || value === "") return null;
+  const text = lower(value);
+  if (["true", "1", "yes", "oui", "on"].includes(text)) return true;
+  if (["false", "0", "no", "non", "off"].includes(text)) return false;
+  return null;
+}
+
+function componentRequirementConsumes(value, fallback = true) {
+  if (!value || typeof value !== "object") return fallback;
+  if (isSacredSymbolName(rawRequirementName(value))) return false;
+
+  const reusable = booleanValue(value.reutilisable ?? value.réutilisable ?? value.reusable);
+  if (reusable === true) return false;
+
+  const explicit = booleanValue(value.consomme ?? value.consume ?? value.consumable ?? value.consomable ?? value.estConsommable);
+  if (explicit !== null) return explicit;
+
+  const mode = lower(value.consommation ?? value.consumption ?? "");
+  if (!mode) return fallback;
+  return !(/^(non|reutilisable)$/.test(mode) || /reutilis|non[\s_-]*consomm|sans[\s_-]*consomm|permanent/.test(mode));
+}
+
+function isReusableComponentItem(item) {
+  if (!item) return false;
+  if (isSacredSymbolItem(item)) return true;
+
+  const system = item.system ?? {};
+  const flags = item.flags?.add2e ?? {};
+  const reusable = booleanValue(system.reutilisable ?? system.réutilisable ?? system.reusable ?? flags.reutilisable ?? flags.réutilisable ?? flags.reusable);
+  if (reusable === true) return true;
+
+  const consumable = booleanValue(system.consommable ?? system.consumable ?? system.consomme ?? system.consume ?? flags.consommable ?? flags.consumable ?? flags.consomme ?? flags.consume);
+  if (consumable !== null) return consumable === false;
+
+  const mode = lower(system.consommation ?? system.consumption ?? flags.consommation ?? flags.consumption ?? "");
+  if (/^(non|reutilisable)$/.test(mode) || /reutilis|non[\s_-]*consomm|sans[\s_-]*consomm|permanent/.test(mode)) return true;
+  return itemTextFields(item).some(value => /reutilis|non[\s_-]*consomm|sans[\s_-]*consomm/.test(value));
 }
 
 function isOnlyComponentCode(value) {
@@ -193,19 +225,19 @@ function requirementKey(rawName) {
   return key;
 }
 
-function makeRequirement(rawName, rawQty = 1) {
+function makeRequirement(rawName, rawQty = 1, consume = true) {
   const name = cleanComponentName(rawName);
   if (!name || isOnlyComponentCode(name)) return null;
   const key = requirementKey(name);
   if (!key) return null;
   const qty = Math.max(1, Math.floor(num(rawQty, 1)));
-  return { name, key, quantity: qty };
+  return { name, key, quantity: qty, consume: !isSacredSymbolName(name) && consume !== false };
 }
 
-function addRequirement(out, rawName, rawQty = 1) {
-  const req = makeRequirement(rawName, rawQty);
+function addRequirement(out, rawName, rawQty = 1, consume = true) {
+  const req = makeRequirement(rawName, rawQty, consume);
   if (!req) return;
-  const existing = out.find(r => r.key === req.key && !r.alternatives);
+  const existing = out.find(r => r.key === req.key && r.consume === req.consume && !r.alternatives);
   if (existing) existing.quantity += req.quantity;
   else out.push(req);
 }
@@ -213,13 +245,13 @@ function addRequirement(out, rawName, rawQty = 1) {
 function addAlternativeRequirement(out, alternatives) {
   const clean = [];
   for (const alt of alternatives) {
-    const req = makeRequirement(rawRequirementName(alt), rawRequirementQuantity(alt));
+    const req = makeRequirement(rawRequirementName(alt), rawRequirementQuantity(alt), componentRequirementConsumes(alt));
     if (!req) continue;
-    if (!clean.some(r => r.key === req.key)) clean.push(req);
+    if (!clean.some(r => r.key === req.key && r.consume === req.consume)) clean.push(req);
   }
   if (!clean.length) return;
   if (clean.length === 1) {
-    addRequirement(out, clean[0].name, clean[0].quantity);
+    addRequirement(out, clean[0].name, clean[0].quantity, clean[0].consume);
     return;
   }
   out.push({ name: clean.map(r => r.name).join(" ou "), key: clean.map(r => r.key).join("__or__"), quantity: 1, alternatives: clean });
@@ -255,7 +287,7 @@ function collectRequirement(out, value) {
     }
     const name = rawRequirementName(value);
     const qty = rawRequirementQuantity(value);
-    if (name) addRequirement(out, name, qty);
+    if (name) addRequirement(out, name, qty, componentRequirementConsumes(value));
   }
 }
 
@@ -375,11 +407,43 @@ function sortByName(a, b) {
   return String(a?.name ?? "").localeCompare(String(b?.name ?? ""));
 }
 
+function reusableComponentRequirementKeys(actor) {
+  const keys = new Set();
+  const sorts = Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "sort");
+  for (const sort of sorts) {
+    for (const requirement of spellComponentRequirements(sort)) {
+      const candidates = requirement.alternatives?.length ? requirement.alternatives : [requirement];
+      for (const candidate of candidates) {
+        if (candidate?.consume !== false) continue;
+        for (const key of requirementKeys(candidate)) keys.add(key);
+      }
+    }
+  }
+  return keys;
+}
+
+function isReusableComponentForActor(item, reusableKeys) {
+  if (isReusableComponentItem(item)) return true;
+  if (!reusableKeys?.size) return false;
+  const keys = componentKeys(item);
+  return keys.some(itemKey => [...reusableKeys].some(requirementKey => compatibleComponentKey(itemKey, requirementKey)));
+}
+
+function sortComponentsForActor(actor, items) {
+  const reusableKeys = reusableComponentRequirementKeys(actor);
+  return items.sort((a, b) => {
+    const aReusable = isReusableComponentForActor(a, reusableKeys);
+    const bReusable = isReusableComponentForActor(b, reusableKeys);
+    if (aReusable !== bReusable) return aReusable ? 1 : -1;
+    return sortByName(a, b);
+  });
+}
+
 export function prepareActorSheetConsumables(data) {
   const items = Array.from(data?.actor?.items ?? []);
   const objets = Array.isArray(data?.listeObjets) && data.listeObjets.length ? data.listeObjets : items.filter(item => item.type === "objet");
   const carquois = objets.filter(item => isAmmunition(item) && quantity(item) > 0).sort(sortByName);
-  const sacoche = objets.filter(item => isSpellComponentItem(item) && quantity(item) > 0).sort(sortByName);
+  const sacoche = sortComponentsForActor(data?.actor, objets.filter(item => isSpellComponentItem(item) && quantity(item) > 0));
   const divers = objets.filter(item => !isAmmunition(item) && !isSpellComponentItem(item)).sort(sortByName);
   data.listeCarquois = carquois;
   data.listeSacocheComposants = sacoche;
@@ -420,7 +484,6 @@ function serializableReservation(result) {
     consumed: (result?.consumed ?? []).map(entry => ({
       itemId: entry.itemId,
       itemName: entry.itemName,
-      itemData: entry.itemData,
       before: entry.before,
       after: entry.after,
       quantity: entry.quantity,
@@ -431,26 +494,18 @@ function serializableReservation(result) {
   };
 }
 
-async function deleteDepletedConsumedItems(actor, consumed) {
-  const ids = consumed
-    .filter(entry => entry.after <= 0 && entry.itemId && actor?.items?.get?.(entry.itemId))
-    .map(entry => entry.itemId);
-  const uniqueIds = [...new Set(ids)];
-  if (!uniqueIds.length) return 0;
-  await actor.deleteEmbeddedDocuments("Item", uniqueIds, { add2eReason: "spell-component-depleted-delete", [ZERO_DELETE_OPTION]: true });
-  for (const entry of consumed) if (uniqueIds.includes(entry.itemId)) entry.deleted = true;
-  return uniqueIds.length;
-}
-
-async function deleteZeroQuantityComponentItem(item, reason = "spell-component-zero-delete") {
-  const actor = item?.parent;
-  if (!actor || actor.documentName !== "Actor") return false;
-  if (String(item?.type ?? "").toLowerCase() !== "objet") return false;
-  if (!isSpellComponentItem(item)) return false;
-  if (quantity(item) > 0) return false;
-  if (!game.user?.isGM && item.isOwner !== true && actor.isOwner !== true) return false;
-  if (!actor.items?.get?.(item.id)) return false;
-  await actor.deleteEmbeddedDocuments("Item", [item.id], { add2eReason: reason, [ZERO_DELETE_OPTION]: true });
+async function finalizeSpellComponentsLocal(reservation) {
+  const actor = game.actors?.get(reservation?.actorId);
+  if (!actor) return false;
+  const ids = [...new Set((reservation?.consumed ?? [])
+    .filter(entry => Number(entry?.after) <= 0 && entry?.itemId)
+    .map(entry => entry.itemId)
+    .filter(itemId => {
+      const item = actor.items?.get(itemId);
+      return !!item && quantity(item) <= 0;
+    }))];
+  if (!ids.length) return true;
+  await actor.deleteEmbeddedDocuments("Item", ids, { add2eReason: "spell-component-finalized-delete" });
   return true;
 }
 
@@ -463,37 +518,19 @@ async function cleanupExistingZeroQuantityComponents() {
       .map(item => item.id)
       .filter(Boolean);
     if (!ids.length) continue;
-    await actor.deleteEmbeddedDocuments("Item", [...new Set(ids)], { add2eReason: "spell-component-zero-ready-cleanup", [ZERO_DELETE_OPTION]: true });
+    await actor.deleteEmbeddedDocuments("Item", [...new Set(ids)], { add2eReason: "spell-component-zero-ready-cleanup" });
     deleted += ids.length;
   }
   if (deleted) console.log("[ADD2E][CONSUMABLES][ZERO_COMPONENTS_DELETED]", { deleted });
   return deleted;
 }
 
-function installZeroQuantityComponentDeletionHook() {
-  if (globalThis.__ADD2E_CONSUMABLES_ZERO_DELETE_V1) return false;
-  globalThis.__ADD2E_CONSUMABLES_ZERO_DELETE_V1 = true;
-
-  Hooks.on("updateItem", (item, changed, options) => {
-    if (options?.[ZERO_DELETE_OPTION]) return;
-    if (!item?.parent || item.parent.documentName !== "Actor") return;
-    const quantityChanged = foundry.utils.hasProperty(changed, "system.quantite") ||
-      foundry.utils.hasProperty(changed, "system.quantity");
-    if (!quantityChanged) return;
-    window.setTimeout(() => {
-      const actor = item.parent;
-      const live = actor?.items?.get?.(item.id);
-      if (!live) return;
-      deleteZeroQuantityComponentItem(live, "spell-component-zero-update-delete").catch(err => {
-        console.warn("[ADD2E][CONSUMABLES][ZERO_DELETE_FAILED]", { actor: actor?.name, item: live?.name, err });
-      });
-    }, 25);
-  });
-
+function installZeroQuantityComponentCleanup() {
+  if (globalThis.__ADD2E_CONSUMABLES_ZERO_CLEANUP_V1) return false;
+  globalThis.__ADD2E_CONSUMABLES_ZERO_CLEANUP_V1 = true;
   Hooks.once("ready", () => window.setTimeout(() => {
     cleanupExistingZeroQuantityComponents().catch(err => console.warn("[ADD2E][CONSUMABLES][ZERO_READY_CLEANUP_FAILED]", err));
   }, 750));
-
   return true;
 }
 
@@ -504,6 +541,7 @@ async function reserveSpellComponentsLocal(actor, sort, requirements = null) {
     if (!spellHasMaterialComponent(sort)) return { ok: true, skipped: true, consumed: [] };
     return { ok: false, blocked: true, consumed: [], message: `${sort?.name ?? "Ce sort"} requiert une composante matérielle, mais aucun composant précis n'est déclaré sur le sort.` };
   }
+
   const consumed = [];
   for (const requirement of reqs) {
     const found = findActorComponentForRequirement(actor, requirement);
@@ -511,31 +549,40 @@ async function reserveSpellComponentsLocal(actor, sort, requirements = null) {
     const selectedRequirement = found?.requirement ?? requirement;
     const before = quantity(item);
     if (!item || before < selectedRequirement.quantity) {
-      for (const entry of consumed.reverse()) await entry.item.update(quantityUpdate(entry.before), { add2eReason: "spell-component-reserve-rollback" });
+      for (const entry of [...consumed].reverse()) {
+        const live = actor?.items?.get?.(entry.itemId);
+        if (live && quantity(live) === entry.after) await live.update(quantityUpdate(entry.before), { add2eReason: "spell-component-reserve-rollback" });
+      }
       return { ok: false, blocked: true, consumed: [], missing: requirement, message: `${actor?.name ?? "Le lanceur"} n'a pas le composant requis : ${requirement.name} (${requirement.quantity}).` };
     }
+    if (selectedRequirement.consume === false || isReusableComponentItem(item)) continue;
+
     const after = before - selectedRequirement.quantity;
-    const itemData = itemDataForRefund(item);
     await item.update(quantityUpdate(after), { add2eReason: "spell-component-reserved-gm" });
-    consumed.push({ item, itemId: item.id, itemName: item.name, itemData, requirement: selectedRequirement, groupRequirement: found?.group, before, after, quantity: selectedRequirement.quantity, deleted: false });
+    consumed.push({
+      itemId: item.id,
+      itemName: item.name,
+      requirement: selectedRequirement,
+      groupRequirement: found?.group,
+      before,
+      after,
+      quantity: selectedRequirement.quantity,
+      deleted: false
+    });
   }
-  await deleteDepletedConsumedItems(actor, consumed);
+
   return { ok: true, blocked: false, actorId: actor?.id, sortId: sort?.id, sortName: sort?.name, consumed };
 }
 
 async function refundSpellComponentsLocal(reservation) {
   const actor = game.actors?.get(reservation?.actorId);
-  const entries = reservation?.consumed ?? [];
-  if (!actor || !entries.length) return false;
+  const entries = [...(reservation?.consumed ?? [])].reverse();
+  if (!actor) return false;
+
   for (const entry of entries) {
-    const item = actor.items?.get(entry.itemId) ?? Array.from(actor.items ?? []).find(i => i.name === entry.itemName && isSpellComponentItem(i));
-    if (item) {
-      await item.update(quantityUpdate(entry.before), { add2eReason: "spell-component-refund-gm" });
-      continue;
-    }
-    if (entry.itemData) {
-      await actor.createEmbeddedDocuments("Item", [withQuantityOnItemData(entry.itemData, entry.before)], { add2eReason: "spell-component-refund-recreate-gm" });
-    }
+    const item = actor.items?.get(entry.itemId);
+    if (!item || quantity(item) !== Number(entry.after)) return false;
+    await item.update(quantityUpdate(entry.before), { add2eReason: "spell-component-refund-gm" });
   }
   return true;
 }
@@ -545,7 +592,12 @@ function requestGmComponentOperation(operation, payload) {
     if (!game.socket) return resolve({ ok: false, blocked: true, message: "Socket Foundry indisponible." });
     const requestId = payload.requestId ?? foundry.utils.randomID();
     let done = false;
-    const finish = result => { if (done) return; done = true; try { game.socket.off?.("system.add2e", handler); } catch (_e) {} resolve(result); };
+    const finish = result => {
+      if (done) return;
+      done = true;
+      try { game.socket.off?.("system.add2e", handler); } catch (_e) {}
+      resolve(result);
+    };
     const handler = data => {
       if (data?.type !== SOCKET_COMPONENT_RESULT) return;
       if (data.requestId !== requestId || data.userId !== game.user?.id) return;
@@ -572,23 +624,36 @@ export async function add2eReserveSpellComponents(actor, sort) {
 }
 
 export async function add2eRefundSpellComponents(reservation) {
-  if (!reservation?.consumed?.length) return false;
+  if (!reservation?.consumed?.length) return true;
   if (game.user?.isGM) return refundSpellComponentsLocal(reservation);
   const result = await requestGmComponentOperation(GM_OPERATION_COMPONENT_REFUND, { reservation });
   return !!result?.ok;
 }
 
+export async function add2eFinalizeSpellComponents(reservation) {
+  if (!reservation?.consumed?.length) return true;
+  if (game.user?.isGM) return finalizeSpellComponentsLocal(reservation);
+  const result = await requestGmComponentOperation(GM_OPERATION_COMPONENT_FINALIZE, { reservation });
+  return !!result?.ok;
+}
+
 export function registerGlobals() {
   game.add2e = game.add2e ?? {};
-  game.add2e.consumables = { ...(game.add2e.consumables ?? {}), add2eReserveSpellComponents, add2eRefundSpellComponents, prepareActorSheetConsumables };
+  game.add2e.consumables = {
+    ...(game.add2e.consumables ?? {}),
+    add2eReserveSpellComponents,
+    add2eRefundSpellComponents,
+    add2eFinalizeSpellComponents,
+    prepareActorSheetConsumables
+  };
   globalThis.ADD2E_CONSUMABLES = { ...(globalThis.ADD2E_CONSUMABLES ?? {}), ...game.add2e.consumables };
   globalThis.ADD2E_CONSUMABLES_VERSION = ADD2E_CONSUMABLES_VERSION;
   globalThis.add2eReserveSpellComponents = add2eReserveSpellComponents;
   globalThis.add2eRefundSpellComponents = add2eRefundSpellComponents;
+  globalThis.add2eFinalizeSpellComponents = add2eFinalizeSpellComponents;
   globalThis.add2ePrepareActorSheetConsumables = prepareActorSheetConsumables;
-  globalThis.add2eDeleteZeroQuantityComponentItem = deleteZeroQuantityComponentItem;
   patchActorSheetConsumablesData();
-  installZeroQuantityComponentDeletionHook();
+  installZeroQuantityComponentCleanup();
 }
 
 export function registerSockets() {
@@ -597,20 +662,31 @@ export function registerSockets() {
   game.socket?.on?.("system.add2e", async data => {
     if (!game.user?.isGM) return;
     if (data?.type !== GM_OPERATION_TYPE) return;
-    if (![GM_OPERATION_COMPONENT_RESERVE, GM_OPERATION_COMPONENT_REFUND].includes(data.operation)) return;
+    if (![GM_OPERATION_COMPONENT_RESERVE, GM_OPERATION_COMPONENT_REFUND, GM_OPERATION_COMPONENT_FINALIZE].includes(data.operation)) return;
     const payload = data.payload ?? {};
+
     if (data.operation === GM_OPERATION_COMPONENT_RESERVE) {
       const actor = game.actors?.get(payload.actorId);
       const sort = actor?.items?.get(payload.sortId) ?? { id: payload.sortId, name: payload.sortName, system: {}, flags: {} };
       let result = { ok: false, blocked: true, message: "Acteur introuvable pour les composants de sort." };
-      try { if (actor) result = await reserveSpellComponentsLocal(actor, sort, payload.requirements); }
-      catch (err) { console.warn("[ADD2E][CONSUMABLES][COMPONENTS][RESERVE][GM]", err); result = { ok: false, blocked: true, message: err?.message || "Erreur MJ pendant la réservation des composants." }; }
+      try {
+        if (actor) result = await reserveSpellComponentsLocal(actor, sort, payload.requirements);
+      } catch (err) {
+        console.warn("[ADD2E][CONSUMABLES][COMPONENTS][RESERVE][GM]", err);
+        result = { ok: false, blocked: true, message: err?.message || "Erreur MJ pendant la réservation des composants." };
+      }
       game.socket.emit("system.add2e", { type: SOCKET_COMPONENT_RESULT, requestId: payload.requestId, userId: payload.userId, result: serializableReservation(result) });
       return;
     }
+
     let ok = false;
-    try { ok = await refundSpellComponentsLocal(payload.reservation); }
-    catch (err) { console.warn("[ADD2E][CONSUMABLES][COMPONENTS][REFUND]", err); }
+    try {
+      ok = data.operation === GM_OPERATION_COMPONENT_REFUND
+        ? await refundSpellComponentsLocal(payload.reservation)
+        : await finalizeSpellComponentsLocal(payload.reservation);
+    } catch (err) {
+      console.warn("[ADD2E][CONSUMABLES][COMPONENTS][TRANSACTION]", { operation: data.operation, err });
+    }
     game.socket.emit("system.add2e", { type: SOCKET_COMPONENT_RESULT, requestId: payload.requestId, userId: payload.userId, result: { ok } });
   });
 }
