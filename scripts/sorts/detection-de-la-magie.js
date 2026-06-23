@@ -108,7 +108,7 @@ const __add2eOnUseResult = await (async () => {
 
     return {
       name: "Détection de la magie",
-      img: sourceItem?.img || "systems/add2e/assets/icones/sorts/detection-magie.webp",
+      img: "icons/svg/aura.svg",
       origin: sourceItem?.uuid ?? null,
       disabled: false,
       transfer: false,
