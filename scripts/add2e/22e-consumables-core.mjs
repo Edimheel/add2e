@@ -588,7 +588,7 @@ async function reserveSpellComponentsLocal(actor, sort, requirements = null) {
 
     const after = before - selectedRequirement.quantity;
     const itemData = itemDataForRefund(item);
-    await item.update(quantityUpdate(after), { add2eReason: "spell-component-reserved-gm" });
+    await item.update(quantityUpdate(after), { add2eReason: "spell-component-reserved-gm", [ZERO_DELETE_OPTION]: true });
     consumed.push({ item, itemId: item.id, itemName: item.name, itemData, requirement: selectedRequirement, groupRequirement: found?.group, before, after, quantity: selectedRequirement.quantity, deleted: false });
   }
   await deleteDepletedConsumedItems(actor, consumed);
