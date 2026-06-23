@@ -110,7 +110,8 @@ Hooks.once("ready", () => {
   document.addEventListener("click", event => {
     const target = event.target instanceof Element ? event.target : null;
     const action = target?.closest?.(".add2e-merchant-app [data-action]") ?? null;
-    if (!action || action.dataset?.action === "restock") return;
+    const actionName = String(action?.dataset?.action ?? "");
+    if (!action || !["buy", "stock", "assign"].includes(actionName)) return;
 
     const row = action.closest?.("tr[data-id]") ?? null;
     if (row?.dataset?.id) return;
