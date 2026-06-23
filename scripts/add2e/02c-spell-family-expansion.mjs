@@ -1,5 +1,5 @@
 const ADD2E_SPELL_FAMILY_VERSION = "2026-06-23-spell-family-material-profiles-v7";
-const ADD2E_SPELL_FAMILY_MATERIAL_MIGRATION = "2026-06-23-spell-family-material-profiles-v7";
+const ADD2E_SPELL_FAMILY_MATERIAL_MIGRATION = "2026-06-23-spell-family-material-profiles-v8";
 
 const SPELL_FAMILY_PENDING = globalThis.ADD2E_SPELL_FAMILY_PENDING instanceof Set
   ? globalThis.ADD2E_SPELL_FAMILY_PENDING
@@ -389,6 +389,43 @@ function sortSpellFamilyRows(data) {
   return data;
 }
 
+function comparableMaterialData(value) {
+  if (Array.isArray(value)) return value.map(comparableMaterialData);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(Object.keys(value).sort().map(key => [key, comparableMaterialData(value[key])]));
+  }
+  return value ?? null;
+}
+
+function sameMaterialData(left, right) {
+  return JSON.stringify(comparableMaterialData(left)) === JSON.stringify(comparableMaterialData(right));
+}
+
+function spellFamilyMaterialsNeedMigration(actor, item) {
+  if (!actor?.items?.has?.(item?.id)) return false;
+
+  const { key, output } = expectedSpellFamily(item);
+  const existingByIdentity = new Map();
+  for (const actorSpell of actor.items?.filter?.(candidate => String(candidate.type).toLowerCase() === "sort") ?? []) {
+    if (actorSpell.flags?.add2e?.spellFamily?.key !== key) continue;
+    const identity = familyIdentity(actorSpell);
+    if (identity) existingByIdentity.set(identity, actorSpell);
+  }
+
+  for (const entry of output) {
+    const actual = entry.id === "base" ? item : existingByIdentity.get(entry.id);
+    if (!actual) return true;
+
+    const expectedSystem = entry.data?.system ?? {};
+    const actualSystem = actual.system ?? {};
+    for (const field of ["composants_materiels", "composants_materiels_objets"]) {
+      if (!sameMaterialData(actualSystem[field], expectedSystem[field])) return true;
+    }
+  }
+
+  return false;
+}
+
 async function migrateExistingSpellFamilyMaterials() {
   if (!game.user?.isGM) return;
   for (const actor of game.actors?.filter?.(candidate => candidate.type === "personnage") ?? []) {
@@ -398,12 +435,17 @@ async function migrateExistingSpellFamilyMaterials() {
       && matchingProfiles(item.flags?.add2e?.reversible, item.system).some(profile => profile?.splitOnActorGrant === true)
     ) ?? [];
     if (!candidates.length) continue;
-    if (actor.getFlag?.("add2e", "spellFamilyMaterialMigration") === ADD2E_SPELL_FAMILY_MATERIAL_MIGRATION) continue;
 
+    let repaired = false;
     for (const item of candidates) {
-      if (actor.items.has(item.id)) await ensureSpellFamily(item);
+      if (!actor.items.has(item.id) || !spellFamilyMaterialsNeedMigration(actor, item)) continue;
+      await ensureSpellFamily(item);
+      repaired = true;
     }
-    await actor.setFlag?.("add2e", "spellFamilyMaterialMigration", ADD2E_SPELL_FAMILY_MATERIAL_MIGRATION);
+
+    if (repaired || actor.getFlag?.("add2e", "spellFamilyMaterialMigration") !== ADD2E_SPELL_FAMILY_MATERIAL_MIGRATION) {
+      await actor.setFlag?.("add2e", "spellFamilyMaterialMigration", ADD2E_SPELL_FAMILY_MATERIAL_MIGRATION);
+    }
   }
 }
 
@@ -477,7 +519,6 @@ function add2eSpellSyncChangedLevel(changes){const direct=changes?.system?.nivea
 function add2eSpellSyncClassLabel(cls){return normalize(cls?.system?.slug??cls?.system?.label??cls?.system?.nom??cls?.system?.name??cls?.name??"")}
 function add2eSpellSyncClassIsAutomatic(cls){if(String(cls?.type??"").toLowerCase()!=="classe")return false;const sys=cls?.system??{},slug=add2eSpellSyncClassLabel(cls);if(slug.includes("clerc")||slug.includes("pretre")||slug.includes("priest")||slug.includes("druide")||slug.includes("druid"))return true;let casting=sys.spellcasting??{};if(typeof casting==="string"){try{casting=JSON.parse(casting)}catch(_e){casting={}}}const values=[...asArray(sys.spellLists),...asArray(sys.lists),...asArray(casting?.lists),...asArray(casting?.spellLists)].map(normalize);return values.includes("clerc")||values.includes("druide")}
 function add2eSpellSyncAutoClasses(actor){return actor?.items?.filter?.(add2eSpellSyncClassIsAutomatic)??[]}
-
 function add2eSpellSyncOpenModal(actor,message="Synchronisation des sorts en cours…"){
   const key=add2eSpellSyncRunKey(actor),existing=ADD2E_SPELL_SYNC_MODAL_STATE.get(key);
   if(existing){existing.count+=1;return()=>add2eSpellSyncCloseModal(actor)}
