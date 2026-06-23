@@ -1,9 +1,52 @@
 // ADD2E — Multiclassage : opérations acteur
-// Version : 2026-06-13-multiclass-operations-v1
+// Version : 2026-06-23-multiclass-monoclass-collapse-v2
 
-import { classItems, classSlug, cloneItemData, INTERNAL, itemLabel, norm, systemRace, warn } from "./17b-multiclass-core.mjs";
-import { classPrerequisitesOk, currentRaceOrCompatibleAlternatives, minXpForClassLevel, multiclassUpdatePayload, raceCompatibleForMulticlass, raceMatchesClassRules, raceAllowsClassSet, monoClassCleanupPayload } from "./17b-multiclass-rules.mjs";
+import { classItems, classSlug, cloneItemData, INTERNAL, itemLabel, norm, num, systemRace, warn } from "./17b-multiclass-core.mjs";
+import { classPrerequisitesOk, classRaceMaxLevel, classTitleForLevel, currentRaceOrCompatibleAlternatives, levelForClassXp, minXpForClassLevel, multiclassUpdatePayload, nextXpForClassLevel, raceCompatibleForMulticlass, raceMatchesClassRules, raceAllowsClassSet, monoClassCleanupPayload } from "./17b-multiclass-rules.mjs";
 import { dialogAlert } from "./17b-multiclass-dialogs.mjs";
+
+function monoclassProgressionPayload(actor, classDoc) {
+  const classSystem = classDoc?.system ?? {};
+  const slug = classSlug(classDoc);
+  const xpMap = foundry.utils.deepClone(actor?.system?.xp_par_classe ?? {});
+  const levelMap = foundry.utils.deepClone(actor?.system?.niveaux_par_classe ?? {});
+
+  const classXp = num(xpMap?.[slug], NaN);
+  let xp = Number.isFinite(classXp)
+    ? Math.max(0, Math.floor(classXp))
+    : Math.max(0, Math.floor(num(actor?.system?.xp, 0)));
+
+  const classLevel = num(levelMap?.[slug], NaN);
+  let level = Number.isFinite(classLevel) && classLevel > 0
+    ? Math.max(1, Math.floor(classLevel))
+    : levelForClassXp(classSystem, xp);
+
+  xp = Math.max(xp, minXpForClassLevel(classSystem, level));
+
+  const maxLevel = classRaceMaxLevel(classDoc, systemRace(actor));
+  if (maxLevel > 0 && level > maxLevel) {
+    level = maxLevel;
+    xp = minXpForClassLevel(classSystem, level);
+  }
+
+  const currentXp = minXpForClassLevel(classSystem, level);
+  const nextXp = nextXpForClassLevel(classSystem, level);
+  const title = classTitleForLevel(classSystem, level);
+  const xpPercent = nextXp > currentXp
+    ? Math.max(0, Math.min(100, Math.floor(((xp - currentXp) / (nextXp - currentXp)) * 100)))
+    : 100;
+
+  return {
+    "system.niveau": level,
+    "system.niveau_suggere": level,
+    "system.xp": xp,
+    "system.titre": title,
+    "system.progression_xp": nextXp ? `${xp.toLocaleString()} / ${nextXp.toLocaleString()} XP` : `${xp.toLocaleString()} XP`,
+    "system.xp_next": nextXp,
+    "system.xp_to_next": nextXp ? Math.max(0, nextXp - xp) : 0,
+    "system.xp_percent": xpPercent
+  };
+}
 
 export async function cleanupAfterMonoclassReplace(actor, itemData, sheet = null) {
   if (!actor || actor.type !== "personnage") return false;
@@ -16,6 +59,8 @@ export async function cleanupAfterMonoclassReplace(actor, itemData, sheet = null
   if (keep) {
     payload["system.details_classe"] = { ...(keep.system ?? {}), name: keep.name, label: keep.name, slug: classSlug(keep), sourceItemId: keep.id, sourceItemUuid: keep.uuid };
     payload["system.classe"] = keep.name;
+    payload["system.spellcasting"] = foundry.utils.deepClone(keep.system?.spellcasting ?? null);
+    Object.assign(payload, monoclassProgressionPayload(actor, keep));
   }
   await actor.update(payload, { [INTERNAL]: true, add2eInternal: true, add2eReason: "multiclass-monoclass-clean-system" });
   sheet?._add2eRememberActiveTab?.();
@@ -100,6 +145,16 @@ export async function replaceClassInMulticlass(actor, option, sheet = null) {
   if (!ok || !raceMatchesClassRules(option.raceData, itemData) || !classPrerequisitesOk(actor, itemData, option.raceData, { notify: true })) return false;
   const replaced = classItems(actor).find(cls => cls.id === option.replacedClassId || classSlug(cls) === option.replacedClassSlug);
   if (!replaced) { ui.notifications.error("Classe à remplacer introuvable dans l'acteur."); return false; }
+
+  const targetSlug = classSlug(itemData);
+  const remainingClasses = classItems(actor).filter(cls => cls.id !== replaced.id);
+  const targetAlreadyPresent = remainingClasses.some(cls => classSlug(cls) === targetSlug);
+  if (targetAlreadyPresent) {
+    if (remainingClasses.length === 1) return applyClassAsMonoclass(actor, { classData: itemData, raceData: option.raceData }, sheet);
+    ui.notifications.warn(`${itemLabel(itemData, "Classe")} est déjà présente dans le multiclassage.`);
+    return false;
+  }
+
   await applyRaceData(actor, option.raceData, sheet);
   await actor.deleteEmbeddedDocuments("Item", [replaced.id], { [INTERNAL]: true, add2eInternal: true, add2eReason: "multiclass-replace-class-delete" });
   const data = cloneItemData(itemData);
