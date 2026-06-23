@@ -1,190 +1,86 @@
 /**
- * ADD2E — Sort CRÉATION D’EAU / DESTRUCTION D’EAU
- * Foundry V13/V14
- * Version : 2026-05-22-v2-fix-caster-token-vfx
+ * ADD2E — Création d’eau / Destruction d’eau
+ * Compatible Foundry V13/V14/V15 — DialogV2 uniquement.
  */
-
-console.log("%c[ADD2E][CREATION D EAU] SCRIPT CUSTOM CLERC v2", "color:#b88924;font-weight:bold;");
 
 const __add2eOnUseResult = await (async () => {
   const DialogV2 = foundry.applications?.api?.DialogV2;
-
-  if (!DialogV2) {
-    ui.notifications.error("Création d’Eau : DialogV2 est introuvable. Ce script nécessite Foundry V13/V14.");
+  if (!DialogV2?.wait) {
+    ui.notifications?.error?.("Création d’eau : DialogV2 introuvable.");
     return false;
   }
 
-  const ADD2E_CLERIC_CHAT = {
-    main: "#b88924",
-    dark: "#6f4b12",
-    pale: "#fff7df",
-    pale2: "#fffaf0",
-    border: "#e2bc63",
-    borderDark: "#8a611d",
-    success: "#2f8f46",
-    warning: "#b88924",
-    fail: "#b33a2e",
-    muted: "#6b5a35"
-  };
+  const esc = value => String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+  const norm = value => String(value ?? "")
+    .toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "_").replace(/[^a-z0-9]+/g, "_")
+    .replace(/_+/g, "_").replace(/^_+|_+$/g, "");
+  const chatStyle = () => CONST.CHAT_MESSAGE_STYLES
+    ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER }
+    : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 };
 
-  function chatStyleData() {
-    return CONST.CHAT_MESSAGE_STYLES
-      ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER }
-      : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 };
-  }
-
-  function add2eEscapeHtml(value) {
-    return String(value ?? "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/\"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-  }
-
-  function add2eSpellImg(src, fallback = "icons/magic/water/orb-water-blue.webp") {
-    return add2eEscapeHtml(src || fallback);
-  }
-
-  function add2eFormatLitres(value) {
-    const n = Number(value) || 0;
-    if (Number.isInteger(n)) return `${n} L`;
-    return `${Math.round(n * 10) / 10} L`;
-  }
-
-  async function add2eSafePlayFx(mode, casterToken, caster) {
-    try {
-      await globalThis.ADD2E_PLAY_SPELL_FX?.(mode === "destroy" ? "destruction_eau" : "aquagenese", {
-        casterToken: casterToken ?? caster,
-        jb2aOptions: { maxFiles: 1, scaleToObject: 1.25, opacity: 0.85 }
-      });
-    } catch (e) {
-      console.warn("[ADD2E][CREATION_D_EAU][VFX][IGNORED]", e);
-    }
-  }
-
-  function add2eClercCard({ caster, sourceItem, mode, nbOutres, litres, maxLitres, itemCreated, itemUpdated }) {
-    const casterName = add2eEscapeHtml(caster?.name ?? "Lanceur");
-    const spellName = add2eEscapeHtml(sourceItem?.name ?? "Création d’Eau");
-    const modeLabel = mode === "destroy" ? "Destruction d’eau" : "Création d’eau";
-    const modeColor = mode === "destroy" ? ADD2E_CLERIC_CHAT.warning : ADD2E_CLERIC_CHAT.success;
-    const litresTxt = add2eEscapeHtml(add2eFormatLitres(litres));
-    const maxTxt = add2eEscapeHtml(add2eFormatLitres(maxLitres));
-
-    let itemHtml = "";
-    if (itemCreated) {
-      itemHtml = `<div style="margin-top:6px;color:${ADD2E_CLERIC_CHAT.dark};">Équipement créé : <b>${add2eEscapeHtml(itemCreated.name)}</b> × ${nbOutres}</div>`;
-    } else if (itemUpdated) {
-      itemHtml = `<div style="margin-top:6px;color:${ADD2E_CLERIC_CHAT.dark};">Équipement mis à jour : <b>${add2eEscapeHtml(itemUpdated.name)}</b> +${nbOutres}</div>`;
-    }
-
-    return `
-      <div class="add2e-spell-card add2e-spell-card-clerc add2e-spell-card-creation-d-eau" style="border-radius:12px;box-shadow:0 4px 10px #0002;background:linear-gradient(135deg,${ADD2E_CLERIC_CHAT.pale2} 0%,${ADD2E_CLERIC_CHAT.pale} 100%);border:1.5px solid ${ADD2E_CLERIC_CHAT.border};overflow:hidden;padding:0;font-family:var(--font-primary);">
-        <div style="background:linear-gradient(90deg,${ADD2E_CLERIC_CHAT.dark} 0%,${ADD2E_CLERIC_CHAT.main} 100%);padding:8px 12px;color:white;display:flex;align-items:center;gap:10px;border-bottom:2px solid ${ADD2E_CLERIC_CHAT.borderDark};">
-          <img src="${add2eSpellImg(caster?.img, "icons/svg/mystery-man.svg")}" style="width:36px;height:36px;border-radius:50%;border:2px solid #fff;object-fit:cover;">
-          <div style="line-height:1.2;flex:1;">
-            <div style="font-weight:bold;font-size:1.05em;">${casterName}</div>
-            <div style="font-size:0.85em;opacity:0.95;">lance <b>${spellName}</b></div>
-          </div>
-          <img src="${add2eSpellImg(sourceItem?.img)}" style="width:32px;height:32px;border-radius:4px;background:#fff;">
-        </div>
-        <div style="padding:10px;">
-          <div style="border:1px solid ${ADD2E_CLERIC_CHAT.border};background:#ffffff;border-radius:6px;padding:8px;text-align:center;">
-            <div style="font-weight:bold;color:${modeColor};font-size:1.08em;">${modeLabel}</div>
-            <div style="margin-top:5px;color:${ADD2E_CLERIC_CHAT.dark};">Outres concernées : <b>${nbOutres}</b> × 5 L</div>
-            <div style="margin-top:3px;color:${ADD2E_CLERIC_CHAT.dark};">Quantité totale : <b>${litresTxt}</b></div>
-            <div style="margin-top:3px;color:${ADD2E_CLERIC_CHAT.muted};font-size:0.9em;">Maximum autorisé : ${maxTxt}, soit 15 L × niveau du clerc.</div>
-            ${itemHtml}
-          </div>
-          <details style="margin-top:8px;background:white;border:1px solid ${ADD2E_CLERIC_CHAT.border};border-radius:6px;">
-            <summary style="cursor:pointer;color:${ADD2E_CLERIC_CHAT.dark};font-weight:600;padding:6px;">Règle appliquée</summary>
-            <div style="padding:8px;font-size:0.85em;line-height:1.45;color:${ADD2E_CLERIC_CHAT.dark};">
-              <div><b>Création d’Eau</b> — Clerc niveau 1, altération.</div>
-              <div>Portée : 9 m ; durée : permanente ; jet de protection : aucun.</div>
-              <div>Effet automatisé : crée de l’eau claire et potable à raison de <b>15 litres par niveau du clerc</b>.</div>
-              <div>Restriction : l’effet ne peut pas être produit à l’intérieur d’un être vivant.</div>
-              <div>Inverse : destruction d’eau, même quantité.</div>
-            </div>
-          </details>
-        </div>
-      </div>`;
-  }
-
-  let sourceItem = null;
-  if (typeof sort !== "undefined" && sort) sourceItem = sort;
-  else if (typeof item !== "undefined" && item) sourceItem = item;
-  else if (typeof this !== "undefined" && this?.documentName === "Item") sourceItem = this;
-  else if (typeof args !== "undefined" && args?.[0]?.item) sourceItem = args[0].item;
-
-  if (!sourceItem) {
-    ui.notifications.error("Création d’Eau : sort introuvable.");
-    return false;
-  }
-
-  const caster = (typeof actor !== "undefined" && actor) ? actor : sourceItem.parent;
-  if (!caster) {
-    ui.notifications.error("Création d’Eau : lanceur introuvable.");
-    return false;
-  }
-
-  const casterToken = canvas.tokens?.controlled?.[0]
-    ?? ((typeof token !== "undefined" && token) ? token : null)
-    ?? caster.getActiveTokens?.()[0]
+  const sourceItem = (typeof sort !== "undefined" && sort)
+    ?? (typeof item !== "undefined" && item)
+    ?? (typeof args !== "undefined" && args?.[0]?.item)
     ?? null;
+  const caster = (typeof actor !== "undefined" && actor) ?? sourceItem?.parent ?? null;
+  if (!sourceItem || !caster) {
+    ui.notifications?.error?.("Création d’eau : sort ou lanceur introuvable.");
+    return false;
+  }
 
-  const niveau = Math.max(1, Number(caster.system?.niveau) || 1);
-  const maxLitres = niveau * 15;
+  const reversible = sourceItem.flags?.add2e?.reversibleActorEntry ?? sourceItem.system?.reversibleActorEntry ?? {};
+  const entryMode = norm(typeof reversible === "object" ? reversible.mode : reversible);
+  const sourceName = norm(sourceItem.name ?? sourceItem.system?.nom);
+  const mode = ["inverse", "inversee", "invers", "reversed"].includes(entryMode)
+    || /(?:destruction|detruction).*eau/.test(sourceName)
+    ? "destroy"
+    : "create";
+  const modeLabel = mode === "destroy" ? "Destruction d’eau" : "Création d’eau";
+
+  const level = Math.max(1, Number(caster.system?.niveau) || 1);
+  const maxLitres = level * 15;
   const maxOutres = Math.max(1, Math.floor(maxLitres / 5));
-
-  const dialogContent = `
-    <form class="add2e-creation-d-eau-form" style="font-family:var(--font-primary);display:flex;flex-direction:column;gap:8px;">
-      <div class="form-group"><label style="font-weight:bold;">Effet :</label><select name="mode" style="width:100%;"><option value="create">Créer de l’eau claire et potable</option><option value="destroy">Inverse : détruire de l’eau</option></select></div>
-      <div class="form-group"><label style="font-weight:bold;">Nombre d’outres de 5 L :</label><input type="number" name="nbOutres" value="${maxOutres}" min="1" max="${maxOutres}" step="1" style="width:100%;"><p style="margin:3px 0 0 0;color:#666;font-size:0.85em;">Maximum : ${maxOutres} outre(s), soit ${maxLitres} L au niveau ${niveau}.</p></div>
-    </form>`;
-
   const dialogResult = await DialogV2.wait({
-    window: { title: "Lancement : Création d’Eau" },
+    window: { title: `Lancement : ${modeLabel}` },
     add2eTheme: "cleric",
     add2eImg: sourceItem.img || "icons/magic/water/orb-water-blue.webp",
-    content: dialogContent,
+    content: `<form style="font-family:var(--font-primary);display:flex;flex-direction:column;gap:8px;">
+      <div class="form-group"><label style="font-weight:bold;">Effet :</label><div style="padding:6px 0;">${esc(modeLabel)}</div></div>
+      <div class="form-group"><label style="font-weight:bold;">Nombre d’outres de 5 L :</label><input type="number" name="nbOutres" value="${maxOutres}" min="1" max="${maxOutres}" step="1" style="width:100%;"><p style="margin:3px 0 0;color:#666;font-size:.85em;">Maximum : ${maxOutres} outre(s), soit ${maxLitres} L au niveau ${level}.</p></div>
+    </form>`,
     buttons: [
-      { action: "cast", label: "Lancer", icon: "fa-solid fa-droplet", default: true, callback: (event, button) => ({ mode: String(button.form.elements.mode?.value || "create"), nbOutres: Number(button.form.elements.nbOutres?.value || 0) }) },
+      { action: "cast", label: "Lancer", icon: "fa-solid fa-droplet", default: true, callback: (_event, button) => ({ nbOutres: Number(button.form.elements.nbOutres?.value || 0) }) },
       { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => null }
     ],
     rejectClose: false
   });
-
   if (!dialogResult) return false;
 
-  const mode = dialogResult.mode === "destroy" ? "destroy" : "create";
   const nbOutres = Math.floor(Number(dialogResult.nbOutres) || 0);
   const litres = nbOutres * 5;
-
-  if (!Number.isFinite(nbOutres) || nbOutres <= 0) {
-    ui.notifications.warn("Création d’Eau : nombre d’outres invalide.");
-    return false;
-  }
-
-  if (nbOutres > maxOutres || litres > maxLitres) {
-    ui.notifications.warn(`Création d’Eau : quantité maximale dépassée (${maxOutres} outre(s), ${maxLitres} L au niveau ${niveau}).`);
+  if (!Number.isFinite(nbOutres) || nbOutres <= 0 || nbOutres > maxOutres || litres > maxLitres) {
+    ui.notifications?.warn?.(`Création d’eau : quantité invalide (maximum ${maxLitres} L).`);
     return false;
   }
 
   let itemCreated = null;
   let itemUpdated = null;
-
   if (mode === "create") {
     const itemName = "Outre d’eau (5 L)";
-    const existing = caster.items?.find(i => i.type === "objet" && String(i.name || "").toLowerCase() === itemName.toLowerCase());
-
+    const existing = caster.items?.find(entry => entry.type === "objet" && norm(entry.name) === norm(itemName)) ?? null;
     try {
       if (existing) {
-        const currentQty = Number(existing.system?.quantite) || 0;
-        const newQty = currentQty + nbOutres;
+        const next = Math.max(0, Number(existing.system?.quantite) || 0) + nbOutres;
         await existing.update({
-          "system.quantite": newQty,
-          "system.volume_litres": newQty * 5,
-          "system.description": `Outres contenant de l’eau claire et potable créée par Création d’Eau. Quantité : ${newQty} outre(s) de 5 L, soit ${add2eFormatLitres(newQty * 5)}.`
+          "system.quantite": next,
+          "system.volume_litres": next * 5,
+          "system.description": `Outres contenant de l’eau claire et potable créée par Création d’eau. Quantité : ${next} outre(s) de 5 L, soit ${next * 5} L.`
         });
         itemUpdated = existing;
       } else {
@@ -194,7 +90,7 @@ const __add2eOnUseResult = await (async () => {
           img: "icons/consumables/drinks/water-jug-blue.webp",
           system: {
             nom: itemName,
-            description: `Outres contenant de l’eau claire et potable créée par Création d’Eau. Quantité : ${nbOutres} outre(s) de 5 L, soit ${add2eFormatLitres(litres)}.`,
+            description: `Outres contenant de l’eau claire et potable créée par Création d’eau. Quantité : ${nbOutres} outre(s) de 5 L, soit ${litres} L.`,
             quantite: nbOutres,
             unite: "outre",
             volume_litres: litres,
@@ -203,40 +99,46 @@ const __add2eOnUseResult = await (async () => {
             equipee: false,
             tags: ["sort:creation-d-eau", "objet:outre_eau", "eau:potable", "volume_unitaire_litres:5"]
           },
-          flags: { add2e: { createdBySpell: "Création d’Eau", spellUuid: sourceItem.uuid ?? null, casterUuid: caster.uuid ?? null, volumeUnitaireLitres: 5, quantityAdded: nbOutres, litresAdded: litres, createdAt: Date.now() } }
+          flags: { add2e: { createdBySpell: "Création d’eau", spellUuid: sourceItem.uuid ?? null, casterUuid: caster.uuid ?? null, volumeUnitaireLitres: 5, quantityAdded: nbOutres, litresAdded: litres, createdAt: Date.now() } }
         }]);
         itemCreated = created?.[0] ?? null;
       }
-    } catch (e) {
-      console.error("[ADD2E][CREATION D EAU] Échec création / mise à jour de l’objet Outre d’eau.", e);
-      ui.notifications.error("Création d’Eau : impossible de créer ou mettre à jour l’objet Outre d’eau. Le sort n’est pas consommé.");
+    } catch (error) {
+      console.error("[ADD2E][CREATION_D_EAU][OBJECT_FAILED]", error);
+      ui.notifications?.error?.("Création d’eau : impossible de créer ou de mettre à jour les outres.");
       return false;
     }
-
-    if (!itemCreated && !itemUpdated) {
-      ui.notifications.error("Création d’Eau : l’objet Outre d’eau n’a pas été créé ou mis à jour. Le sort n’est pas consommé.");
-      return false;
-    }
+    if (!itemCreated && !itemUpdated) return false;
   }
 
-  await add2eSafePlayFx(mode, casterToken, caster);
+  const casterToken = canvas.tokens?.controlled?.[0] ?? caster.getActiveTokens?.()[0] ?? null;
+  try {
+    await globalThis.ADD2E_PLAY_SPELL_FX?.(mode === "destroy" ? "destruction_eau" : "aquagenese", {
+      casterToken: casterToken ?? caster,
+      jb2aOptions: { maxFiles: 1, scaleToObject: 1.25, opacity: 0.85 }
+    });
+  } catch (error) {
+    console.warn("[ADD2E][CREATION_D_EAU][VFX][IGNORED]", error);
+  }
 
+  const itemLine = itemCreated
+    ? `Équipement créé : <b>${esc(itemCreated.name)}</b> × ${nbOutres}.`
+    : itemUpdated
+      ? `Équipement mis à jour : <b>${esc(itemUpdated.name)}</b> +${nbOutres}.`
+      : "Aucun équipement créé.";
   await ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor: caster }),
-    content: add2eClercCard({ caster, sourceItem, mode, nbOutres, litres, maxLitres, itemCreated, itemUpdated }),
-    ...chatStyleData()
+    content: `<div class="add2e-spell-card add2e-spell-card-clerc" style="border:1px solid #e2bc63;border-radius:8px;overflow:hidden;background:#fffaf0;"><div style="padding:8px 10px;background:#6f4b12;color:#fff;font-weight:bold;display:flex;gap:8px;align-items:center;"><img src="${esc(sourceItem.img || "icons/magic/water/orb-water-blue.webp")}" style="width:28px;height:28px;border-radius:4px;"><span>${esc(caster.name)} — ${esc(modeLabel)}</span></div><div style="padding:9px;color:#6f4b12;"><div><b>Quantité :</b> ${litres} L (${nbOutres} outre(s)).</div><div><b>Maximum :</b> ${maxLitres} L.</div><div style="margin-top:5px;">${itemLine}</div></div></div>`,
+    ...chatStyle()
   });
 
-  console.log("[ADD2E][creation-d-eau.js][ONUSE_RESULT]", true);
+  console.log("[ADD2E][creation-d-eau.js][ONUSE_RESULT]", { mode, nbOutres, litres });
   return true;
 })();
 
 if (__add2eOnUseResult !== true && __add2eOnUseResult !== false) {
-  console.error("[ADD2E][ONUSE][BAD_RETURN_STRICT] Le script onUse doit retourner true ou false.", {
-    script: "creation-d-eau.js",
-    result: __add2eOnUseResult
-  });
-  ui.notifications?.error?.(`${sourceItem?.name ?? item?.name ?? sort?.name ?? "Sort"} : le script onUse n'a pas retourné true/false.`);
+  console.error("[ADD2E][ONUSE][BAD_RETURN_STRICT]", { script: "creation-d-eau.js", result: __add2eOnUseResult });
+  ui.notifications?.error?.("Création d’eau : le script onUse n’a pas retourné true/false.");
   return false;
 }
 
