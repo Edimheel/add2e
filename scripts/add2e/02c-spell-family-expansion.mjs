@@ -1,31 +1,458 @@
-const V="2026-06-21-spell-family-deferred-parent-removal-v6",Q=globalThis.ADD2E_SPELL_FAMILY_PENDING instanceof Set?globalThis.ADD2E_SPELL_FAMILY_PENDING:new Set(),R=globalThis.ADD2E_SPELL_FAMILY_PENDING_REMOVALS instanceof Set?globalThis.ADD2E_SPELL_FAMILY_PENDING_REMOVALS:new Set();globalThis.ADD2E_SPELL_FAMILY_PENDING=Q;globalThis.ADD2E_SPELL_FAMILY_PENDING_REMOVALS=R;
-const copy=v=>{if(v==null)return v;try{return foundry.utils.deepClone(v)}catch(e){}try{return foundry.utils.duplicate(v)}catch(e){}return JSON.parse(JSON.stringify(v))},norm=v=>String(v??"").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[’']/g,"").replace(/\s*\([^)]*\)\s*$/g,"").replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,"");
-function arr(v){if(v==null||v==="")return[];if(Array.isArray(v))return v.flatMap(arr);if(typeof v==="string")return v.split(/[,;|\n]+/).map(x=>x.trim()).filter(Boolean);if(typeof v==="object")for(const k of["spellLists","lists","classes","classe","class","value","values","items"])if(v[k]!==undefined)return arr(v[k]);return[v]}
-const level=s=>Number(String(s?.niveau??s?.niveau_sort??s?.spellLevel??s?.level??0).match(/\d+/)?.[0]??0)||0,lists=s=>[...new Set(["spellLists","lists","classes","classe","class","liste","tags","effectTags"].flatMap(k=>arr(s?.[k])).map(norm).filter(Boolean))],stable=d=>`${lists(d?.system).sort().join("+")||"liste_inconnue"}|${level(d?.system)}|${norm(d?.name??d?.system?.nom)}`;
-function profiles(flag,system){const p=Array.isArray(flag?.profiles)?flag.profiles.filter(Boolean):[];if(!p.length)return[];const l=level(system),cs=new Set(lists(system)),m=p.filter(x=>(!Number(x.level)||Number(x.level)===l)&&(!norm(x.class)||!cs.size||cs.has(norm(x.class))));return m.length?m:p.length===1?p:[]}
-const getMode=(p,id)=>(p?.modes??[]).find(x=>String(x?.id??"").toLowerCase()===id)??null,pkey=(p,n)=>[norm(p?.class),Number(p?.level)||0,norm(p?.referenceName??n)].join("|");
-function override(d,o={}){const r=copy(d);r.system??={};for(const[k,v]of Object.entries(o)){if(k.includes("."))foundry.utils.setProperty(r.system,k,copy(v));else r.system[k]=copy(v)}return r}function named(d,n){const r=copy(d);r.name=String(n??"").trim();r.system??={};r.system.nom=r.name;return r}function marked(d,key,kind,extra={},order=0){const r=copy(d);r.flags??={};r.flags.add2e??={};r.flags.add2e.spellFamily={version:V,key,kind,sortOrder:order,generated:kind!=="base",...copy(extra)};return r}
-function expected(base){const src=base.toObject(),name=String(src.name??src.system?.nom??"").trim(),key=stable(src),rev=profiles(src.flags?.add2e?.reversible,src.system),normal=rev.map(p=>getMode(p,"normal")).find(Boolean),data=normal?.systemOverrides?override(src,normal.systemOverrides):copy(src),out=[{id:"base",kind:"base",data:marked(data,key,"base",{sourceItemId:base.id,sourceItemName:name},0)}];let i=1;for(const p of rev){if(p?.splitOnActorGrant!==true)continue;const m=getMode(p,"inverse"),n=String(m?.actorItemName??m?.manualName??"").trim();if(!n)continue;const pk=pkey(p,name);let x=marked(override(named(data,n),m?.systemOverrides??{}),key,"inverse",{sourceItemId:base.id,sourceItemName:name,profileKey:pk,reversibleMode:"inverse",inverseNameStatus:p.inverseNameStatus??"manual_explicit"},i++);x.flags.add2e.reversibleActorEntry={version:V,profileKey:pk,mode:"inverse",sourceItemName:name};out.push({id:`inverse:${pk}`,kind:"inverse",data:x})}let v=10;for(const p of profiles(src.flags?.add2e?.variant??src.flags?.add2e?.variants,src.system)){const pk=pkey(p,name);for(const c of p?.choices??[]){const id=String(c?.id??"").trim()||norm(c?.nom??c?.name),n=String(c?.nom??c?.name??"").trim();if(!id||!n)continue;let x=marked(named(data,`${name} — ${n}`),key,"variant",{sourceItemId:base.id,sourceItemName:name,profileKey:pk,variantChoiceId:id,variantChoiceName:n},v++);x.flags.add2e.variantChoice={version:V,profileKey:pk,id,nom:n,reference:copy(c?.reference??null)};out.push({id:`variant:${pk}:${id}`,kind:"variant",data:x})}}return{key,out:[...new Map(out.map(x=>[`${x.id}|${stable(x.data)}`,x])).values()]}}
-const generated=i=>i?.flags?.add2e?.spellFamily?.generated===true,identity=i=>{const f=i?.flags?.add2e?.spellFamily??{};return f.kind==="base"?"base":f.kind==="inverse"?`inverse:${f.profileKey??""}`:f.kind==="variant"?`variant:${f.profileKey??""}:${f.variantChoiceId??""}`:""};
-function update(i,e){const a=e.data.flags?.add2e??{},u={_id:i.id,name:e.data.name,img:e.data.img,system:copy(e.data.system??{}),"flags.add2e.spellFamily":copy(a.spellFamily)};if(a.reversibleActorEntry)u["flags.add2e.reversibleActorEntry"]=copy(a.reversibleActorEntry);if(a.variantChoice)u["flags.add2e.variantChoice"]=copy(a.variantChoice);return u}
-function schedule(actor,id){const k=`${actor?.uuid??actor?.id??""}|${id}`;if(!k||R.has(k))return false;R.add(k);setTimeout(async()=>{try{const p=actor.items?.get?.(id);if(!p||String(p.type).toLowerCase()!=="sort"||generated(p))return;await actor.deleteEmbeddedDocuments("Item",[id],{add2eInternal:true,add2eSpellFamilyExpansion:true,reason:"replace-generic-variant-parent",render:false});add2eRerenderActorSheet?.(actor,false)}catch(e){if(!/does not exist|undefined id/i.test(String(e?.message??e)))console.error("[ADD2E][SPELL_FAMILY][PARENT_REMOVAL_ERROR]",e)}finally{R.delete(k)}},500);return true}
-async function ensure(item){const actor=item?.actor??item?.parent;if(!actor||actor.documentName!=="Actor"||actor.type!=="personnage"||!actor.items?.has?.(item.id)||String(item?.type).toLowerCase()!=="sort"||generated(item))return{handled:false};const{key,out}=expected(item),derived=out.filter(x=>x.id!=="base"),variants=derived.filter(x=>x.kind==="variant");if(!derived.length)return{handled:true,created:0,updated:0};const ex=new Map(),occ=new Set();for(const a of actor.items?.filter?.(x=>String(x.type).toLowerCase()==="sort")??[]){if(a.id!==item.id)occ.add(stable(a));if(a.flags?.add2e?.spellFamily?.key===key){const id=identity(a);if(id)ex.set(id,a)}}if(!variants.length){const b=out.find(x=>x.id==="base");if(b&&actor.items.has(item.id))await actor.updateEmbeddedDocuments("Item",[update(item,b)],{add2eInternal:true,add2eSpellFamilyExpansion:true,render:false})}const us=[],cs=[],ok=new Set(),bad=[];for(const e of derived){const found=ex.get(e.id);if(found){us.push(update(found,e));if(e.kind==="variant")ok.add(e.id);continue}const sk=stable(e.data);if(occ.has(sk)){if(e.kind==="variant")bad.push(e.id);continue}const d=copy(e.data);delete d._id;d.folder=null;cs.push(d);occ.add(sk);if(e.kind==="variant")ok.add(e.id)}if(us.length)await actor.updateEmbeddedDocuments("Item",us,{add2eInternal:true,add2eSpellFamilyExpansion:true,render:false});if(cs.length)await actor.createEmbeddedDocuments("Item",cs,{add2eInternal:true,add2eSpellFamilyExpansion:true,render:false});const queued=variants.length>0&&ok.size===variants.length&&!bad.length?schedule(actor,item.id):false;if(bad.length)console.warn("[ADD2E][SPELL_FAMILY][KEEP_PARENT_VARIANT_CONFLICT]",{actor:actor.name,sort:item.name,bad});if(us.length||cs.length)add2eRerenderActorSheet?.(actor,false);return{handled:true,created:cs.length,updated:us.length,queued}}
-async function expand(actor){if(!actor||actor.type!=="personnage")return{handled:false};let created=0,updated=0,queued=0;for(const i of actor.items?.filter?.(x=>String(x.type).toLowerCase()==="sort"&&!generated(x))??[]){if(!actor.items.has(i.id))continue;const r=await ensure(i);created+=r?.created??0;updated+=r?.updated??0;queued+=r?.queued?1:0}return{handled:true,created,updated,queued}}
-function compare(a,b){const A=a?.flags?.add2e?.spellFamily??{},B=b?.flags?.add2e?.spellFamily??{},an=String(a?.name??a?.system?.nom??""),bn=String(b?.name??b?.system?.nom??""),af=String(A.sourceItemName??an),bf=String(B.sourceItemName??bn),fc=af.localeCompare(bf,"fr",{sensitivity:"base"});if(fc)return fc;if(A.key&&A.key===B.key){const ao=Number.isFinite(Number(A.sortOrder))?Number(A.sortOrder):A.kind==="inverse"?1:A.kind==="variant"?10:0,bo=Number.isFinite(Number(B.sortOrder))?Number(B.sortOrder):B.kind==="inverse"?1:B.kind==="variant"?10:0;if(ao!==bo)return ao-bo}return an.localeCompare(bn,"fr",{sensitivity:"base"})}
-function sortRows(d){if(!d||typeof d!=="object")return d;for(const r of Object.values(d.sortsParNiveau??{}))if(Array.isArray(r))r.sort(compare);for(const l of Array.isArray(d.add2eSpellLevels)?d.add2eSpellLevels:[]){if(Array.isArray(l?.sorts))l.sorts.sort(compare);for(const g of Array.isArray(l?.groups)?l.groups:[])if(Array.isArray(g?.sorts))g.sorts.sort(compare)}return d}
-Hooks.on("createItem",(item,options={},userId)=>{if(options?.add2eSpellFamilyExpansion||String(userId??"")!==String(game.user?.id??"")||String(item?.type).toLowerCase()!=="sort"||generated(item))return;const k=String(item.uuid??item.id??"");if(!k||Q.has(k))return;Q.add(k);setTimeout(()=>ensure(item).catch(e=>console.error("[ADD2E][SPELL_FAMILY][EXPANSION_ERROR]",e)).finally(()=>Q.delete(k)),50)});
-Hooks.once("ready",()=>{const p=globalThis.Add2eActorSheet?.prototype;if(!p||p.__add2eSpellFamilyDisplaySortingV6||typeof p.getData!=="function")return;const old=p.getData;p.__add2eSpellFamilyDisplaySortingV6=true;p.getData=async function(...args){const d=await old.apply(this,args);try{return sortRows(d)}catch(e){console.error("[ADD2E][SPELL_FAMILY][DISPLAY_SORT_ERROR]",e);return d}}});
-globalThis.ADD2E_SPELL_FAMILY_VERSION=V;globalThis.add2eEnsureActorSpellFamily=ensure;globalThis.add2eExpandActorSpellFamilies=expand;globalThis.add2eSortActorSpellFamilyRows=sortRows;
+const ADD2E_SPELL_FAMILY_VERSION = "2026-06-23-spell-family-material-profiles-v7";
+const ADD2E_SPELL_FAMILY_MATERIAL_MIGRATION = "2026-06-23-spell-family-material-profiles-v7";
+
+const SPELL_FAMILY_PENDING = globalThis.ADD2E_SPELL_FAMILY_PENDING instanceof Set
+  ? globalThis.ADD2E_SPELL_FAMILY_PENDING
+  : new Set();
+const SPELL_FAMILY_PENDING_REMOVALS = globalThis.ADD2E_SPELL_FAMILY_PENDING_REMOVALS instanceof Set
+  ? globalThis.ADD2E_SPELL_FAMILY_PENDING_REMOVALS
+  : new Set();
+
+globalThis.ADD2E_SPELL_FAMILY_PENDING = SPELL_FAMILY_PENDING;
+globalThis.ADD2E_SPELL_FAMILY_PENDING_REMOVALS = SPELL_FAMILY_PENDING_REMOVALS;
+
+const clone = value => {
+  if (value == null) return value;
+  try { return foundry.utils.deepClone(value); }
+  catch (_err) {
+    try { return foundry.utils.duplicate(value); }
+    catch (_duplicateError) { return JSON.parse(JSON.stringify(value)); }
+  }
+};
+
+const normalize = value => String(value ?? "")
+  .trim()
+  .toLowerCase()
+  .normalize("NFD")
+  .replace(/[\u0300-\u036f]/g, "")
+  .replace(/[’']/g, "")
+  .replace(/\s*\([^)]*\)\s*$/g, "")
+  .replace(/[^a-z0-9]+/g, "_")
+  .replace(/^_+|_+$/g, "");
+
+function asArray(value) {
+  if (value == null || value === "") return [];
+  if (Array.isArray(value)) return value.flatMap(asArray);
+  if (typeof value === "string") return value.split(/[,;|\n]+/).map(entry => entry.trim()).filter(Boolean);
+  if (typeof value === "object") {
+    for (const key of ["spellLists", "lists", "classes", "classe", "class", "value", "values", "items"]) {
+      if (value[key] !== undefined) return asArray(value[key]);
+    }
+  }
+  return [value];
+}
+
+const spellLevel = system => Number(String(system?.niveau ?? system?.niveau_sort ?? system?.spellLevel ?? system?.level ?? 0).match(/\d+/)?.[0] ?? 0) || 0;
+const spellLists = system => [...new Set([
+  "spellLists", "lists", "classes", "classe", "class", "liste", "tags", "effectTags"
+].flatMap(key => asArray(system?.[key])).map(normalize).filter(Boolean))];
+const stableSpellKey = data => `${spellLists(data?.system).sort().join("+") || "liste_inconnue"}|${spellLevel(data?.system)}|${normalize(data?.name ?? data?.system?.nom)}`;
+
+function matchingProfiles(flag, system) {
+  const profiles = Array.isArray(flag?.profiles) ? flag.profiles.filter(Boolean) : [];
+  if (!profiles.length) return [];
+  const level = spellLevel(system);
+  const lists = new Set(spellLists(system));
+  const matched = profiles.filter(profile =>
+    (!Number(profile?.level) || Number(profile.level) === level)
+    && (!normalize(profile?.class) || !lists.size || lists.has(normalize(profile.class)))
+  );
+  return matched.length ? matched : profiles.length === 1 ? profiles : [];
+}
+
+const modeFor = (profile, id) => (profile?.modes ?? []).find(mode => String(mode?.id ?? "").toLowerCase() === id) ?? null;
+const profileKey = (profile, name) => [normalize(profile?.class), Number(profile?.level) || 0, normalize(profile?.referenceName ?? name)].join("|");
+const hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object ?? {}, key);
+
+function applySystemOverrides(data, overrides = {}) {
+  const result = clone(data);
+  result.system ??= {};
+  for (const [key, value] of Object.entries(overrides ?? {})) {
+    if (key.includes(".")) foundry.utils.setProperty(result.system, key, clone(value));
+    else result.system[key] = clone(value);
+  }
+  return result;
+}
+
+function hasStructuredMaterials(value) {
+  return Array.isArray(value) && value.some(entry =>
+    entry && typeof entry === "object" && !Array.isArray(entry)
+    && String(entry.nom ?? entry.name ?? entry.label ?? entry.component ?? entry.composant ?? "").trim()
+  );
+}
+
+function synchronizeMaterialFields(data, overrides = {}) {
+  const result = clone(data);
+  const system = result.system ??= {};
+  const structured = system.composants_materiels_objets;
+  const explicitMaterialList = hasOwn(overrides, "composants_materiels") || hasOwn(overrides, "composants_materiels_objets");
+
+  if (hasStructuredMaterials(structured)) {
+    if (!hasOwn(overrides, "composants_materiels") || hasOwn(overrides, "composants_materiels_objets")) {
+      system.composants_materiels = clone(structured);
+    }
+  } else if (hasStructuredMaterials(system.composants_materiels)) {
+    system.composants_materiels_objets = clone(system.composants_materiels);
+  } else if (!explicitMaterialList && Array.isArray(system.composants_materiels_objets) && system.composants_materiels_objets.length) {
+    system.composants_materiels = clone(system.composants_materiels_objets);
+  }
+
+  return result;
+}
+
+function applyMode(data, mode = null) {
+  const overrides = mode?.systemOverrides ?? {};
+  return synchronizeMaterialFields(applySystemOverrides(data, overrides), overrides);
+}
+
+function withName(data, name) {
+  const result = clone(data);
+  result.name = String(name ?? "").trim();
+  result.system ??= {};
+  result.system.nom = result.name;
+  return result;
+}
+
+function markFamily(data, key, kind, extra = {}, sortOrder = 0) {
+  const result = clone(data);
+  result.flags ??= {};
+  result.flags.add2e ??= {};
+  result.flags.add2e.spellFamily = {
+    version: ADD2E_SPELL_FAMILY_VERSION,
+    key,
+    kind,
+    sortOrder,
+    generated: kind !== "base",
+    ...clone(extra)
+  };
+  return result;
+}
+
+function expectedSpellFamily(base) {
+  const source = typeof base?.toObject === "function" ? base.toObject() : clone(base);
+  const name = String(source?.name ?? source?.system?.nom ?? "").trim();
+  const key = stableSpellKey(source);
+  const reversibleProfiles = matchingProfiles(source?.flags?.add2e?.reversible, source?.system);
+  const normalMode = reversibleProfiles.map(profile => modeFor(profile, "normal")).find(Boolean);
+  const normalData = applyMode(source, normalMode);
+  const output = [{
+    id: "base",
+    kind: "base",
+    data: markFamily(normalData, key, "base", { sourceItemId: base.id, sourceItemName: name }, 0)
+  }];
+
+  let inverseOrder = 1;
+  for (const profile of reversibleProfiles) {
+    if (profile?.splitOnActorGrant !== true) continue;
+    const inverseMode = modeFor(profile, "inverse");
+    const inverseName = String(inverseMode?.actorItemName ?? inverseMode?.manualName ?? "").trim();
+    if (!inverseName) continue;
+    const keyForProfile = profileKey(profile, name);
+    let data = withName(normalData, inverseName);
+    data = applyMode(data, inverseMode);
+    data = markFamily(data, key, "inverse", {
+      sourceItemId: base.id,
+      sourceItemName: name,
+      profileKey: keyForProfile,
+      reversibleMode: "inverse",
+      inverseNameStatus: profile.inverseNameStatus ?? "manual_explicit"
+    }, inverseOrder++);
+    data.flags.add2e.reversibleActorEntry = {
+      version: ADD2E_SPELL_FAMILY_VERSION,
+      profileKey: keyForProfile,
+      mode: "inverse",
+      sourceItemName: name
+    };
+    output.push({ id: `inverse:${keyForProfile}`, kind: "inverse", data });
+  }
+
+  let variantOrder = 10;
+  for (const profile of matchingProfiles(source?.flags?.add2e?.variant ?? source?.flags?.add2e?.variants, source?.system)) {
+    const keyForProfile = profileKey(profile, name);
+    for (const choice of profile?.choices ?? []) {
+      const choiceId = String(choice?.id ?? "").trim() || normalize(choice?.nom ?? choice?.name);
+      const choiceName = String(choice?.nom ?? choice?.name ?? "").trim();
+      if (!choiceId || !choiceName) continue;
+      let data = withName(normalData, `${name} — ${choiceName}`);
+      data = applyMode(data, choice?.systemOverrides ?? choice?.systemOverride ?? null);
+      data = markFamily(data, key, "variant", {
+        sourceItemId: base.id,
+        sourceItemName: name,
+        profileKey: keyForProfile,
+        variantChoiceId: choiceId,
+        variantChoiceName: choiceName
+      }, variantOrder++);
+      data.flags.add2e.variantChoice = {
+        version: ADD2E_SPELL_FAMILY_VERSION,
+        profileKey: keyForProfile,
+        id: choiceId,
+        nom: choiceName,
+        reference: clone(choice?.reference ?? null)
+      };
+      output.push({ id: `variant:${keyForProfile}:${choiceId}`, kind: "variant", data });
+    }
+  }
+
+  return {
+    key,
+    output: [...new Map(output.map(entry => [`${entry.id}|${stableSpellKey(entry.data)}`, entry])).values()]
+  };
+}
+
+const isGeneratedFamilySpell = item => item?.flags?.add2e?.spellFamily?.generated === true;
+function familyIdentity(item) {
+  const family = item?.flags?.add2e?.spellFamily ?? {};
+  if (family.kind === "base") return "base";
+  if (family.kind === "inverse") return `inverse:${family.profileKey ?? ""}`;
+  if (family.kind === "variant") return `variant:${family.profileKey ?? ""}:${family.variantChoiceId ?? ""}`;
+  return "";
+}
+
+function itemUpdate(item, expected) {
+  const add2e = expected.data.flags?.add2e ?? {};
+  const update = {
+    _id: item.id,
+    name: expected.data.name,
+    img: expected.data.img,
+    system: clone(expected.data.system ?? {}),
+    "flags.add2e.spellFamily": clone(add2e.spellFamily)
+  };
+  if (add2e.reversibleActorEntry) update["flags.add2e.reversibleActorEntry"] = clone(add2e.reversibleActorEntry);
+  if (add2e.variantChoice) update["flags.add2e.variantChoice"] = clone(add2e.variantChoice);
+  return update;
+}
+
+function scheduleVariantParentRemoval(actor, id) {
+  const key = `${actor?.uuid ?? actor?.id ?? ""}|${id}`;
+  if (!key || SPELL_FAMILY_PENDING_REMOVALS.has(key)) return false;
+  SPELL_FAMILY_PENDING_REMOVALS.add(key);
+  setTimeout(async () => {
+    try {
+      const parent = actor.items?.get?.(id);
+      if (!parent || String(parent.type).toLowerCase() !== "sort" || isGeneratedFamilySpell(parent)) return;
+      await actor.deleteEmbeddedDocuments("Item", [id], {
+        add2eInternal: true,
+        add2eSpellFamilyExpansion: true,
+        reason: "replace-generic-variant-parent",
+        render: false
+      });
+      globalThis.add2eRerenderActorSheet?.(actor, false);
+    } catch (error) {
+      if (!/does not exist|undefined id/i.test(String(error?.message ?? error))) {
+        console.error("[ADD2E][SPELL_FAMILY][PARENT_REMOVAL_ERROR]", error);
+      }
+    } finally {
+      SPELL_FAMILY_PENDING_REMOVALS.delete(key);
+    }
+  }, 500);
+  return true;
+}
+
+async function ensureSpellFamily(item) {
+  const actor = item?.actor ?? item?.parent;
+  if (!actor || actor.documentName !== "Actor" || actor.type !== "personnage" || !actor.items?.has?.(item.id)
+    || String(item?.type).toLowerCase() !== "sort" || isGeneratedFamilySpell(item)) {
+    return { handled: false };
+  }
+
+  const { key, output } = expectedSpellFamily(item);
+  const derived = output.filter(entry => entry.id !== "base");
+  const variants = derived.filter(entry => entry.kind === "variant");
+  if (!derived.length) return { handled: true, created: 0, updated: 0, baseUpdated: 0 };
+
+  const existingByIdentity = new Map();
+  const occupiedKeys = new Set();
+  for (const actorSpell of actor.items?.filter?.(candidate => String(candidate.type).toLowerCase() === "sort") ?? []) {
+    if (actorSpell.id !== item.id) occupiedKeys.add(stableSpellKey(actorSpell));
+    if (actorSpell.flags?.add2e?.spellFamily?.key === key) {
+      const identity = familyIdentity(actorSpell);
+      if (identity) existingByIdentity.set(identity, actorSpell);
+    }
+  }
+
+  let baseUpdated = 0;
+  if (!variants.length) {
+    const baseEntry = output.find(entry => entry.id === "base");
+    if (baseEntry && actor.items.has(item.id)) {
+      await actor.updateEmbeddedDocuments("Item", [itemUpdate(item, baseEntry)], {
+        add2eInternal: true,
+        add2eSpellFamilyExpansion: true,
+        render: false
+      });
+      baseUpdated = 1;
+    }
+  }
+
+  const updates = [];
+  const creates = [];
+  const createdVariantIds = new Set();
+  const conflictingVariantIds = [];
+
+  for (const entry of derived) {
+    const existing = existingByIdentity.get(entry.id);
+    if (existing) {
+      updates.push(itemUpdate(existing, entry));
+      if (entry.kind === "variant") createdVariantIds.add(entry.id);
+      continue;
+    }
+
+    const expectedKey = stableSpellKey(entry.data);
+    if (occupiedKeys.has(expectedKey)) {
+      if (entry.kind === "variant") conflictingVariantIds.push(entry.id);
+      continue;
+    }
+
+    const data = clone(entry.data);
+    delete data._id;
+    data.folder = null;
+    creates.push(data);
+    occupiedKeys.add(expectedKey);
+    if (entry.kind === "variant") createdVariantIds.add(entry.id);
+  }
+
+  if (updates.length) {
+    await actor.updateEmbeddedDocuments("Item", updates, {
+      add2eInternal: true,
+      add2eSpellFamilyExpansion: true,
+      render: false
+    });
+  }
+  if (creates.length) {
+    await actor.createEmbeddedDocuments("Item", creates, {
+      add2eInternal: true,
+      add2eSpellFamilyExpansion: true,
+      render: false
+    });
+  }
+
+  const queued = variants.length > 0 && createdVariantIds.size === variants.length && !conflictingVariantIds.length
+    ? scheduleVariantParentRemoval(actor, item.id)
+    : false;
+
+  if (conflictingVariantIds.length) {
+    console.warn("[ADD2E][SPELL_FAMILY][KEEP_PARENT_VARIANT_CONFLICT]", {
+      actor: actor.name,
+      sort: item.name,
+      conflicts: conflictingVariantIds
+    });
+  }
+
+  if (baseUpdated || updates.length || creates.length) globalThis.add2eRerenderActorSheet?.(actor, false);
+  return { handled: true, created: creates.length, updated: updates.length, baseUpdated, queued };
+}
+
+async function expandActorSpellFamilies(actor) {
+  if (!actor || actor.type !== "personnage") return { handled: false };
+  let created = 0;
+  let updated = 0;
+  let baseUpdated = 0;
+  let queued = 0;
+  for (const item of actor.items?.filter?.(candidate => String(candidate.type).toLowerCase() === "sort" && !isGeneratedFamilySpell(candidate)) ?? []) {
+    if (!actor.items.has(item.id)) continue;
+    const result = await ensureSpellFamily(item);
+    created += result?.created ?? 0;
+    updated += result?.updated ?? 0;
+    baseUpdated += result?.baseUpdated ?? 0;
+    queued += result?.queued ? 1 : 0;
+  }
+  return { handled: true, created, updated, baseUpdated, queued };
+}
+
+function compareSpellFamilyRows(left, right) {
+  const leftFamily = left?.flags?.add2e?.spellFamily ?? {};
+  const rightFamily = right?.flags?.add2e?.spellFamily ?? {};
+  const leftName = String(left?.name ?? left?.system?.nom ?? "");
+  const rightName = String(right?.name ?? right?.system?.nom ?? "");
+  const leftSource = String(leftFamily.sourceItemName ?? leftName);
+  const rightSource = String(rightFamily.sourceItemName ?? rightName);
+  const sourceCompare = leftSource.localeCompare(rightSource, "fr", { sensitivity: "base" });
+  if (sourceCompare) return sourceCompare;
+  if (leftFamily.key && leftFamily.key === rightFamily.key) {
+    const leftOrder = Number.isFinite(Number(leftFamily.sortOrder)) ? Number(leftFamily.sortOrder) : leftFamily.kind === "inverse" ? 1 : leftFamily.kind === "variant" ? 10 : 0;
+    const rightOrder = Number.isFinite(Number(rightFamily.sortOrder)) ? Number(rightFamily.sortOrder) : rightFamily.kind === "inverse" ? 1 : rightFamily.kind === "variant" ? 10 : 0;
+    if (leftOrder !== rightOrder) return leftOrder - rightOrder;
+  }
+  return leftName.localeCompare(rightName, "fr", { sensitivity: "base" });
+}
+
+function sortSpellFamilyRows(data) {
+  if (!data || typeof data !== "object") return data;
+  for (const rows of Object.values(data.sortsParNiveau ?? {})) {
+    if (Array.isArray(rows)) rows.sort(compareSpellFamilyRows);
+  }
+  for (const level of Array.isArray(data.add2eSpellLevels) ? data.add2eSpellLevels : []) {
+    if (Array.isArray(level?.sorts)) level.sorts.sort(compareSpellFamilyRows);
+    for (const group of Array.isArray(level?.groups) ? level.groups : []) {
+      if (Array.isArray(group?.sorts)) group.sorts.sort(compareSpellFamilyRows);
+    }
+  }
+  return data;
+}
+
+async function migrateExistingSpellFamilyMaterials() {
+  if (!game.user?.isGM) return;
+  for (const actor of game.actors?.filter?.(candidate => candidate.type === "personnage") ?? []) {
+    const candidates = actor.items?.filter?.(item =>
+      String(item.type).toLowerCase() === "sort"
+      && !isGeneratedFamilySpell(item)
+      && matchingProfiles(item.flags?.add2e?.reversible, item.system).some(profile => profile?.splitOnActorGrant === true)
+    ) ?? [];
+    if (!candidates.length) continue;
+    if (actor.getFlag?.("add2e", "spellFamilyMaterialMigration") === ADD2E_SPELL_FAMILY_MATERIAL_MIGRATION) continue;
+
+    for (const item of candidates) {
+      if (actor.items.has(item.id)) await ensureSpellFamily(item);
+    }
+    await actor.setFlag?.("add2e", "spellFamilyMaterialMigration", ADD2E_SPELL_FAMILY_MATERIAL_MIGRATION);
+  }
+}
+
+Hooks.on("createItem", (item, options = {}, userId) => {
+  if (options?.add2eSpellFamilyExpansion || String(userId ?? "") !== String(game.user?.id ?? "")
+    || String(item?.type).toLowerCase() !== "sort" || isGeneratedFamilySpell(item)) return;
+  const key = String(item.uuid ?? item.id ?? "");
+  if (!key || SPELL_FAMILY_PENDING.has(key)) return;
+  SPELL_FAMILY_PENDING.add(key);
+  setTimeout(() => ensureSpellFamily(item)
+    .catch(error => console.error("[ADD2E][SPELL_FAMILY][EXPANSION_ERROR]", error))
+    .finally(() => SPELL_FAMILY_PENDING.delete(key)), 50);
+});
+
+Hooks.once("ready", () => {
+  const sheetPrototype = globalThis.Add2eActorSheet?.prototype;
+  if (sheetPrototype && !sheetPrototype.__add2eSpellFamilyDisplaySortingV7 && typeof sheetPrototype.getData === "function") {
+    const originalGetData = sheetPrototype.getData;
+    sheetPrototype.__add2eSpellFamilyDisplaySortingV7 = true;
+    sheetPrototype.getData = async function add2eSpellFamilyGetData(...args) {
+      const data = await originalGetData.apply(this, args);
+      try { return sortSpellFamilyRows(data); }
+      catch (error) {
+        console.error("[ADD2E][SPELL_FAMILY][DISPLAY_SORT_ERROR]", error);
+        return data;
+      }
+    };
+  }
+
+  if (game.user?.isGM) {
+    setTimeout(() => migrateExistingSpellFamilyMaterials()
+      .catch(error => console.error("[ADD2E][SPELL_FAMILY][MATERIAL_MIGRATION_ERROR]", error)), 250);
+  }
+});
+
+globalThis.ADD2E_SPELL_FAMILY_VERSION = ADD2E_SPELL_FAMILY_VERSION;
+globalThis.add2eEnsureActorSpellFamily = ensureSpellFamily;
+globalThis.add2eExpandActorSpellFamilies = expandActorSpellFamilies;
+globalThis.add2eSortActorSpellFamilyRows = sortSpellFamilyRows;
 
 const ADD2E_SPELL_CLASS_LEVEL_VERSION="2026-06-23-progression-ceiling-v1";
 function add2eSpellClassLevel(actor,classSlug=""){
-  const actorLevel=Math.max(1,Number(actor?.system?.niveau??actor?.system?.level??1)||1),wanted=norm(classSlug),classes=actor?.items?.filter?.(item=>String(item?.type??"").toLowerCase()==="classe")??[];
-  const cls=classes.find(item=>[item?.system?.slug,item?.system?.label,item?.system?.nom,item?.system?.name,item?.name].map(norm).includes(wanted))??classes[0]??null;
+  const actorLevel=Math.max(1,Number(actor?.system?.niveau??actor?.system?.level??1)||1),wanted=normalize(classSlug),classes=actor?.items?.filter?.(item=>String(item?.type??"").toLowerCase()==="classe")??[];
+  const cls=classes.find(item=>[item?.system?.slug,item?.system?.label,item?.system?.nom,item?.system?.name,item?.name].map(normalize).includes(wanted))??classes[0]??null;
   const read=value=>{const n=Number(value?.niveau??value?.level??value?.value??value);return Number.isFinite(n)&&n>0?Math.floor(n):0};
   let requested=0;
   for(const root of [actor?.system?.niveaux_par_classe,actor?.system?.niveauxParClasse,actor?.system?.levelsByClass,actor?.system?.classLevels]){
     if(!root||typeof root!=="object")continue;
-    for(const [key,value] of Object.entries(root)){if(norm(key)!==wanted)continue;requested=read(value);break}
+    for(const [key,value] of Object.entries(root)){if(normalize(key)!==wanted)continue;requested=read(value);break}
     if(requested)break;
   }
   if(!requested&&classes.length>1)requested=read(cls?.system?.niveau??cls?.system?.level??cls?.system?.currentLevel??cls?.system?.niveauActuel);
@@ -47,8 +474,8 @@ globalThis.ADD2E_SPELL_SYNC_MODAL_VERSION=ADD2E_SPELL_SYNC_MODAL_VERSION;
 function add2eSpellSyncRunKey(actor){return String(actor?.uuid??actor?.id??actor?.name??"acteur-inconnu")}
 function add2eSpellSyncCurrentLevel(actor){return Math.max(1,Number(actor?.system?.niveau??actor?.system?.level??1)||1)}
 function add2eSpellSyncChangedLevel(changes){const direct=changes?.system?.niveau??changes?.["system.niveau"]??changes?.system?.level??changes?.["system.level"];const n=Number(direct);return Number.isFinite(n)&&n>0?Math.floor(n):0}
-function add2eSpellSyncClassLabel(cls){return norm(cls?.system?.slug??cls?.system?.label??cls?.system?.nom??cls?.system?.name??cls?.name??"")}
-function add2eSpellSyncClassIsAutomatic(cls){if(String(cls?.type??"").toLowerCase()!=="classe")return false;const sys=cls?.system??{},slug=add2eSpellSyncClassLabel(cls);if(slug.includes("clerc")||slug.includes("pretre")||slug.includes("priest")||slug.includes("druide")||slug.includes("druid"))return true;let casting=sys.spellcasting??{};if(typeof casting==="string"){try{casting=JSON.parse(casting)}catch(_e){casting={}}}const values=[...arr(sys.spellLists),...arr(sys.lists),...arr(casting?.lists),...arr(casting?.spellLists)].map(norm);return values.includes("clerc")||values.includes("druide")}
+function add2eSpellSyncClassLabel(cls){return normalize(cls?.system?.slug??cls?.system?.label??cls?.system?.nom??cls?.system?.name??cls?.name??"")}
+function add2eSpellSyncClassIsAutomatic(cls){if(String(cls?.type??"").toLowerCase()!=="classe")return false;const sys=cls?.system??{},slug=add2eSpellSyncClassLabel(cls);if(slug.includes("clerc")||slug.includes("pretre")||slug.includes("priest")||slug.includes("druide")||slug.includes("druid"))return true;let casting=sys.spellcasting??{};if(typeof casting==="string"){try{casting=JSON.parse(casting)}catch(_e){casting={}}}const values=[...asArray(sys.spellLists),...asArray(sys.lists),...asArray(casting?.lists),...asArray(casting?.spellLists)].map(normalize);return values.includes("clerc")||values.includes("druide")}
 function add2eSpellSyncAutoClasses(actor){return actor?.items?.filter?.(add2eSpellSyncClassIsAutomatic)??[]}
 
 function add2eSpellSyncOpenModal(actor,message="Synchronisation des sorts en cours…"){
@@ -82,7 +509,7 @@ function add2eSpellSyncSignature(actor){
   const classes=actor?.items?.filter?.(item=>String(item?.type??"").toLowerCase()==="classe")??[],multi=actor?.system?.multiclasse?.enabled===true||classes.length>1,sig={};
   if(!multi)sig.__mono=add2eSpellSyncCurrentLevel(actor);
   for(const cls of classes){const key=add2eSpellSyncClassLabel(cls)||cls.id||cls.name;if(!key)continue;const stored=Number(cls?.system?.niveau??cls?.system?.level??cls?.system?.currentLevel??cls?.system?.niveauActuel);sig[key]=Number.isFinite(stored)&&stored>0?Math.floor(stored):add2eSpellSyncCurrentLevel(actor)}
-  for(const root of [actor?.system?.niveaux_par_classe,actor?.system?.niveauxParClasse,actor?.system?.levelsByClass,actor?.system?.classLevels]){if(!root||typeof root!=="object")continue;for(const [key,value] of Object.entries(root)){const n=Number(value?.niveau??value?.level??value?.value??value);if(Number.isFinite(n)&&n>0)sig[norm(key)]=Math.floor(n)}}
+  for(const root of [actor?.system?.niveaux_par_classe,actor?.system?.niveauxParClasse,actor?.system?.levelsByClass,actor?.system?.classLevels]){if(!root||typeof root!=="object")continue;for(const [key,value] of Object.entries(root)){const n=Number(value?.niveau??value?.level??value?.value??value);if(Number.isFinite(n)&&n>0)sig[normalize(key)]=Math.floor(n)}}
   return sig;
 }
 async function add2eSpellSyncFastLevelDown(actor){
