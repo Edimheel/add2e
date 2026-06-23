@@ -1,5 +1,5 @@
 // ADD2E — Marchand V2 compact.
-// Version : 2026-06-17-merchant-collapse-canonical-components-v1
+// Version : 2026-06-23-merchant-component-spell-links-v2
 
 import {
   findVendor,
@@ -25,18 +25,17 @@ import {
 } from "./22a-vendor-core.mjs";
 import { normalizeShopCurrency, ADD2E_VENDOR_PLAYER_BUY } from "./22x-vendor-socket-bootstrap.mjs";
 
-const VERSION = "2026-06-17-merchant-collapse-canonical-components-v1";
+const VERSION = "2026-06-23-merchant-component-spell-links-v2";
 const DIAG = "[ADD2E][MERCHANT_APP][BUY_DIAG]";
 
-const arr = v => Array.isArray(v)
-  ? v.flatMap(arr)
-  : v == null || v === ""
+const arr = value => Array.isArray(value)
+  ? value.flatMap(arr)
+  : value == null || value === ""
     ? []
-    : typeof v === "string"
-      ? v.split(/[,;|\n]+/g).map(x => x.trim()).filter(Boolean)
-      : [v];
-const key = v => slug(String(v ?? ""));
-const uniq = v => [...new Set(v.filter(Boolean))];
+    : typeof value === "string"
+      ? value.split(/[,;|\n]+/g).map(entry => entry.trim()).filter(Boolean)
+      : [value];
+const uniq = values => [...new Set(values.filter(Boolean))];
 
 const COMPONENT_NAME_ALIASES = new Map(Object.entries({
   symbole_sacre: "Symbole sacré du clerc",
@@ -78,18 +77,19 @@ function canonicalItemName(item) {
 }
 
 function canonicalStockKey(item) {
-  if (vendorKind(item) !== "Composant") return `item:${item?.id ?? foundry.utils.randomID()}`;
-  return `component:${slug(canonicalItemName(item))}`;
+  return vendorKind(item) === "Composant"
+    ? `component:${slug(canonicalItemName(item))}`
+    : `item:${item?.id ?? foundry.utils.randomID()}`;
 }
 
-function preferVisibleStockItem(a, b) {
-  const qa = quantity(a);
-  const qb = quantity(b);
-  if (qa !== qb) return qa > qb ? a : b;
-  const pa = priceCopper(a);
-  const pb = priceCopper(b);
-  if (pa !== pb) return pa <= pb ? a : b;
-  return String(canonicalItemName(a)).localeCompare(String(canonicalItemName(b)), "fr") <= 0 ? a : b;
+function preferVisibleStockItem(left, right) {
+  const leftQty = quantity(left);
+  const rightQty = quantity(right);
+  if (leftQty !== rightQty) return leftQty > rightQty ? left : right;
+  const leftPrice = priceCopper(left);
+  const rightPrice = priceCopper(right);
+  if (leftPrice !== rightPrice) return leftPrice <= rightPrice ? left : right;
+  return String(canonicalItemName(left)).localeCompare(String(canonicalItemName(right)), "fr") <= 0 ? left : right;
 }
 
 function collapseCanonicalStock(items = []) {
@@ -99,11 +99,9 @@ function collapseCanonicalStock(items = []) {
     if (!groups.has(groupKey)) groups.set(groupKey, []);
     groups.get(groupKey).push(item);
   }
-
-  return [...groups.values()].map(group => {
-    if (group.length === 1) return group[0];
-    return group.reduce((kept, item) => preferVisibleStockItem(kept, item), group[0]);
-  }).sort((a, b) => String(canonicalItemName(a)).localeCompare(String(canonicalItemName(b)), "fr"));
+  return [...groups.values()]
+    .map(group => group.length === 1 ? group[0] : group.reduce(preferVisibleStockItem, group[0]))
+    .sort((left, right) => String(canonicalItemName(left)).localeCompare(String(canonicalItemName(right)), "fr"));
 }
 
 function isShopActor(actor) {
@@ -111,94 +109,133 @@ function isShopActor(actor) {
 }
 
 function sceneActors() {
-  const map = new Map();
-  for (const t of canvas?.tokens?.placeables ?? []) {
-    const a = t?.actor;
-    if (a?.id && !isShopActor(a)) map.set(a.id, a);
+  const actors = new Map();
+  for (const token of canvas?.tokens?.placeables ?? []) {
+    const actor = token?.actor;
+    if (actor?.id && !isShopActor(actor)) actors.set(actor.id, actor);
   }
-  return [...map.values()].sort((a, b) => String(a.name).localeCompare(String(b.name), "fr"));
+  return [...actors.values()].sort((left, right) => String(left.name).localeCompare(String(right.name), "fr"));
 }
 
 function buyerOptions(selected = "") {
-  return sceneActors().map(a => `<option value="${esc(a.id)}" ${a.id === selected ? "selected" : ""}>${esc(a.name)}</option>`).join("");
+  return sceneActors().map(actor => `<option value="${esc(actor.id)}" ${actor.id === selected ? "selected" : ""}>${esc(actor.name)}</option>`).join("");
 }
 
 function priceLabel(item) {
   const raw = String(item?.system?.prix ?? item?.system?.cout ?? "").trim();
-  return raw ? raw : formatMoney(priceCopper(item));
+  return raw || formatMoney(priceCopper(item));
+}
+
+function declaredSpellNames(item) {
+  if (vendorKind(item) !== "Composant") return [];
+  const system = item?.system ?? {};
+  const flags = item?.flags?.add2e ?? {};
+  return uniq([
+    ...arr(system.sorts_associes),
+    ...arr(system.sortsAssocies),
+    ...arr(system.spells),
+    ...arr(system.spellNames),
+    ...arr(flags.sorts_associes),
+    ...arr(flags.sortsAssocies),
+    ...arr(flags.spells),
+    ...arr(flags.spellNames)
+  ].map(value => String(value ?? "").trim()).filter(Boolean)).sort((left, right) => left.localeCompare(right, "fr"));
 }
 
 function linked(item) {
-  const s = item?.system ?? {}, f = item?.flags?.add2e ?? {};
   return uniq([
-    ...arr(s.sorts_associes),
-    ...arr(s.sortsAssocies),
-    ...arr(s.spells),
-    ...arr(s.spellNames),
-    ...arr(f.sorts_associes),
-    ...arr(f.sortsAssocies),
-    ...arr(f.spells),
-    ...arr(f.spellNames),
+    ...declaredSpellNames(item),
     item?.name,
     canonicalItemName(item)
-  ].map(x => String(x).trim()).filter(Boolean));
+  ].map(value => String(value ?? "").trim()).filter(Boolean));
+}
+
+function materialNames(value, names = []) {
+  for (const entry of arr(value)) {
+    if (Array.isArray(entry)) { materialNames(entry, names); continue; }
+    if (!entry) continue;
+    if (typeof entry === "string") { names.push(entry); continue; }
+    if (typeof entry === "object") {
+      if (Array.isArray(entry.alternatives)) { materialNames(entry.alternatives, names); continue; }
+      const name = entry.nom ?? entry.name ?? entry.label ?? entry.item ?? entry.itemName ?? entry.component ?? entry.composant ?? entry.slug;
+      if (name) names.push(name);
+    }
+  }
+  return names;
 }
 
 function spellKeys(spell) {
-  const s = spell?.system ?? {}, f = spell?.flags?.add2e ?? {};
-  return uniq([spell?.name, s.nom, s.slug, f.slug, f.importKey, ...arr(s.composants_materiels)].map(key));
+  const system = spell?.system ?? {};
+  const flags = spell?.flags?.add2e ?? {};
+  return uniq([
+    spell?.name,
+    system.nom,
+    system.slug,
+    flags.slug,
+    flags.importKey,
+    ...materialNames(system.composants_materiels),
+    ...materialNames(system.composants_materiels_objets),
+    ...materialNames(system.composants_requis)
+  ].map(value => String(value ?? "").trim()).filter(Boolean));
 }
 
 function memorized(spell) {
   try {
-    const n = Number(globalThis.add2eGetTotalMemorizedCount?.(spell));
-    if (Number.isFinite(n) && n > 0) return Math.floor(n);
-  } catch (_e) {}
+    const value = Number(globalThis.add2eGetTotalMemorizedCount?.(spell));
+    if (Number.isFinite(value) && value > 0) return Math.floor(value);
+  } catch (_error) {}
   const raw = spell?.getFlag?.("add2e", "memorizedByList") ?? spell?.flags?.add2e?.memorizedByList ?? {};
-  if (raw && typeof raw === "object" && !Array.isArray(raw)) return Object.values(raw).reduce((s, v) => s + (Number(v) || 0), 0);
+  if (raw && typeof raw === "object" && !Array.isArray(raw)) return Object.values(raw).reduce((sum, value) => sum + (Number(value) || 0), 0);
   return Number(spell?.getFlag?.("add2e", "memorizedCount") ?? spell?.flags?.add2e?.memorizedCount ?? 0) || 0;
 }
 
 function spells(actor) {
   return Array.from(actor?.items ?? [])
-    .filter(i => String(i?.type ?? "").toLowerCase() === "sort" && !i.system?.isPower && !i.system?.isObjectPower)
-    .sort((a, b) => String(a.name).localeCompare(String(b.name), "fr"));
+    .filter(item => String(item?.type ?? "").toLowerCase() === "sort" && !item.system?.isPower && !item.system?.isObjectPower)
+    .sort((left, right) => String(left.name).localeCompare(String(right.name), "fr"));
 }
 
 function usage(actor, item) {
   if (vendorKind(item) !== "Composant") return { known: 0, prep: 0, names: [] };
-  const aliases = linked(item).map(x => slug(canonicalName(x)));
+  const aliases = linked(item).map(value => slug(canonicalName(value)));
   if (!aliases.length) return { known: 0, prep: 0, names: [] };
-  let known = 0, prep = 0, names = [];
-  for (const sp of spells(actor)) {
-    if (!spellKeys(sp).some(k => aliases.includes(slug(canonicalName(k))))) continue;
+  let known = 0;
+  let prep = 0;
+  const names = [];
+  for (const spell of spells(actor)) {
+    if (!spellKeys(spell).some(value => aliases.includes(slug(canonicalName(value))))) continue;
     known += 1;
-    const m = memorized(sp);
-    prep += m;
-    names.push(m > 1 ? `${sp.name} ×${m}` : sp.name);
+    const count = memorized(spell);
+    prep += count;
+    names.push(count > 1 ? `${spell.name} ×${count}` : spell.name);
   }
   return { known, prep, names: uniq(names) };
 }
 
+function displaySpellNames(item, use) {
+  const declared = declaredSpellNames(item);
+  return declared.length ? declared : use.names;
+}
+
 function actorItemQty(item) {
-  const q = quantity(item);
-  return q > 0 ? q : 1;
+  const value = quantity(item);
+  return value > 0 ? value : 1;
 }
 
 function sameOwnedItem(vendorItem, actorItem) {
   if (!vendorItem || !actorItem) return false;
-  const vn = slug(canonicalItemName(vendorItem));
-  const an = slug(canonicalName(actorItem.name));
-  if (!vn || vn !== an) return false;
+  const vendorName = slug(canonicalItemName(vendorItem));
+  const actorName = slug(canonicalName(actorItem.name));
+  if (!vendorName || vendorName !== actorName) return false;
   if (isAmmunition(vendorItem) || isAmmunition(actorItem)) return true;
-  const vt = String(vendorItem.type ?? "").toLowerCase();
-  const at = String(actorItem.type ?? "").toLowerCase();
-  return !vt || !at || vt === at || vt === "objet" || at === "objet";
+  const vendorType = String(vendorItem.type ?? "").toLowerCase();
+  const actorType = String(actorItem.type ?? "").toLowerCase();
+  return !vendorType || !actorType || vendorType === actorType || vendorType === "objet" || actorType === "objet";
 }
 
 function ownedQuantity(actor, item) {
   if (!actor) return 0;
-  return Array.from(actor.items ?? []).filter(i => sameOwnedItem(item, i)).reduce((sum, i) => sum + actorItemQty(i), 0);
+  return Array.from(actor.items ?? []).filter(actorItem => sameOwnedItem(item, actorItem)).reduce((sum, actorItem) => sum + actorItemQty(actorItem), 0);
 }
 
 function articleLabel(ctx, item) {
@@ -207,8 +244,9 @@ function articleLabel(ctx, item) {
 }
 
 function itemTags(item) {
-  const s = item?.system ?? {}, f = item?.flags?.add2e ?? {};
-  return [s.tags, s.effectTags, s.effecttags, f.tags, f.effectTags, f.effecttags].flatMap(arr).map(v => lower(v)).filter(Boolean);
+  const system = item?.system ?? {};
+  const flags = item?.flags?.add2e ?? {};
+  return [system.tags, system.effectTags, system.effecttags, flags.tags, flags.effectTags, flags.effecttags].flatMap(arr).map(value => lower(value)).filter(Boolean);
 }
 
 function isBazaarItem(item) {
@@ -217,38 +255,29 @@ function isBazaarItem(item) {
 
 function normalizeSectionLabel(raw = "") {
   const value = String(raw ?? "").trim();
-  const s = lower(value);
-  if (!s) return "Divers";
-  if (/herbe|herbor|plante|ingredient|ingrédient|epice|épice|aromate|racine|baie|graine|feuille|fleur/.test(s)) return "Herbes et ingrédients";
-  if (/outil|tools?|artisan|craft|metier|métier|crochet|corde|grappin/.test(s)) return "Outils et matériel";
-  if (/vetement|vêtement|habit|robe|botte|chaussure|ceinture|cape/.test(s)) return "Vêtements";
-  if (/nourriture|ration|vivre|eau|boisson|repas/.test(s)) return "Vivres";
-  if (/lumiere|lumière|torche|lanterne|huile|bougie/.test(s)) return "Éclairage";
-  if (/contenant|sac|sacoche|coffre|bourse|etui|étui|carquois|boite|boîte/.test(s)) return "Contenants";
-  if (/monture|cheval|animal|chariot|charrette|selle|bride/.test(s)) return "Transport et montures";
-  if (/service|logement|auberge/.test(s)) return "Services";
+  const label = lower(value);
+  if (!label) return "Divers";
+  if (/herbe|herbor|plante|ingredient|ingrédient|epice|épice|aromate|racine|baie|graine|feuille|fleur/.test(label)) return "Herbes et ingrédients";
+  if (/outil|tools?|artisan|craft|metier|métier|crochet|corde|grappin/.test(label)) return "Outils et matériel";
+  if (/vetement|vêtement|habit|robe|botte|chaussure|ceinture|cape/.test(label)) return "Vêtements";
+  if (/nourriture|ration|vivre|eau|boisson|repas/.test(label)) return "Vivres";
+  if (/lumiere|lumière|torche|lanterne|huile|bougie/.test(label)) return "Éclairage";
+  if (/contenant|sac|sacoche|coffre|bourse|etui|étui|carquois|boite|boîte/.test(label)) return "Contenants";
+  if (/monture|cheval|animal|chariot|charrette|selle|bride/.test(label)) return "Transport et montures";
+  if (/service|logement|auberge/.test(label)) return "Services";
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
 function bazaarSection(item) {
-  const s = item?.system ?? {};
-  const values = [s.categorie, s.category, s.sousType, s.sous_type, s.subtype, s.kind, s.slot, ...itemTags(item)].map(v => String(v ?? "").trim()).filter(Boolean);
-  const text = values.map(lower).join(" ");
-  if (/herbe|herbor|plante|ingredient|ingrédient|epice|épice|aromate|racine|baie|graine|feuille|fleur/.test(text)) return "Herbes et ingrédients";
-  if (/outil|tools?|artisan|craft|metier|métier|crochet|corde|grappin/.test(text)) return "Outils et matériel";
-  if (/vetement|vêtement|habit|robe|botte|chaussure|ceinture|cape/.test(text)) return "Vêtements";
-  if (/nourriture|ration|vivre|eau|boisson|repas/.test(text)) return "Vivres";
-  if (/lumiere|lumière|torche|lanterne|huile|bougie/.test(text)) return "Éclairage";
-  if (/contenant|sac|sacoche|coffre|bourse|etui|étui|carquois|boite|boîte/.test(text)) return "Contenants";
-  if (/monture|cheval|animal|chariot|charrette|selle|bride/.test(text)) return "Transport et montures";
-  if (/service|logement|auberge/.test(text)) return "Services";
-  return normalizeSectionLabel(s.categorie ?? s.category ?? s.sousType ?? s.sous_type ?? "Divers");
+  const system = item?.system ?? {};
+  const values = [system.categorie, system.category, system.sousType, system.sous_type, system.subtype, system.kind, system.slot, ...itemTags(item)].map(value => String(value ?? "").trim()).filter(Boolean);
+  return normalizeSectionLabel(values.join(" "));
 }
 
 function sectionRank(name) {
   const order = ["Outils et matériel", "Herbes et ingrédients", "Vivres", "Éclairage", "Contenants", "Vêtements", "Transport et montures", "Services", "Divers"];
-  const i = order.indexOf(name);
-  return i >= 0 ? i : 500;
+  const index = order.indexOf(name);
+  return index >= 0 ? index : 500;
 }
 
 function rowTabs(item, use) {
@@ -260,7 +289,7 @@ function rowTabs(item, use) {
 }
 
 function actionIcon(action, icon, title, disabled = false, extraClass = "") {
-  const disabledAttrs = disabled ? `aria-disabled="true" data-disabled="1"` : `data-action="${action}" role="button" tabindex="0"`;
+  const disabledAttrs = disabled ? 'aria-disabled="true" data-disabled="1"' : `data-action="${action}" role="button" tabindex="0"`;
   return `<i class="fas ${icon} add2e-vendor-action-icon ${extraClass} ${disabled ? "disabled" : ""}" title="${esc(title)}" aria-label="${esc(title)}" ${disabledAttrs}></i>`;
 }
 
@@ -268,19 +297,21 @@ function rowHtml(item, ctx, use, visible = true) {
   const kind = vendorKind(item);
   const itemQty = quantity(item);
   const disabled = !ctx.buyer || itemQty <= 0;
-  const label = articleLabel(ctx, item);
+  const names = displaySpellNames(item, use);
+  const spellLabel = names.length ? names.join(", ") : "—";
   const gm = ctx.isGM ? `<td class="col-mj add2e-vendor-gm-actions"><input class="s stock-input" type="number" min="0" value="${itemQty}" title="Stock"><span class="vendor-icon-group">${actionIcon("stock", "fa-boxes-stacked", "Définir le stock", false, "stock")} ${actionIcon("assign", "fa-hand-holding", "Donner à l’acheteur", disabled, "assign")}</span></td>` : "";
-  return `<tr data-id="${esc(item.id)}" style="${visible ? "" : "display:none"}"><td class="col-article">${esc(label)}</td><td class="col-type" title="${esc(kind)}"><span class="type-pill">${esc(kind)}</span></td><td class="col-sorts" title="${esc(use.names.length ? use.names.join(", ") : "—")}">${esc(use.names.length ? use.names.join(", ") : "—")}</td><td class="col-prix">${esc(priceLabel(item))}</td><td class="col-stock">${itemQty}</td><td class="col-qty"><input class="q" type="number" min="1" value="1" title="Quantité"></td><td class="col-action">${actionIcon("buy", "fa-cart-shopping", "Acheter", disabled, "buy")}</td>${gm}</tr>`;
+  return `<tr data-id="${esc(item.id)}" style="${visible ? "" : "display:none"}"><td class="col-article">${esc(articleLabel(ctx, item))}</td><td class="col-type" title="${esc(kind)}"><span class="type-pill">${esc(kind)}</span></td><td class="col-sorts" title="${esc(spellLabel)}">${esc(spellLabel)}</td><td class="col-prix">${esc(priceLabel(item))}</td><td class="col-stock">${itemQty}</td><td class="col-qty"><input class="q" type="number" min="1" value="1" title="Quantité"></td><td class="col-action">${actionIcon("buy", "fa-cart-shopping", "Acheter", disabled, "buy")}</td>${gm}</tr>`;
 }
 
 function itemVisibleForContext(item, ctx, use) {
   const tabs = rowTabs(item, use);
-  const txt = lower(`${item.name} ${canonicalItemName(item)} ${articleLabel(ctx, item)} ${vendorKind(item)} ${bazaarSection(item)} ${use.names.join(" ")}`);
-  return (ctx.tab === "all" || tabs.includes(ctx.tab)) && (!ctx.search || txt.includes(lower(ctx.search)));
+  const spellNames = displaySpellNames(item, use);
+  const haystack = lower(`${item.name} ${canonicalItemName(item)} ${articleLabel(ctx, item)} ${vendorKind(item)} ${bazaarSection(item)} ${spellNames.join(" ")}`);
+  return (ctx.tab === "all" || tabs.includes(ctx.tab)) && (!ctx.search || haystack.includes(lower(ctx.search)));
 }
 
 function tableHeader(ctx) {
-  return `<thead><tr><th class="col-article">Article</th><th class="col-type">Type</th><th class="col-sorts">Sorts</th><th class="col-prix">Prix</th><th class="col-stock">Stock</th><th class="col-qty">Qté</th><th class="col-action"></th>${ctx.isGM ? "<th class=\"col-mj\">MJ</th>" : ""}</tr></thead>`;
+  return `<thead><tr><th class="col-article">Article</th><th class="col-type">Type</th><th class="col-sorts">Sorts</th><th class="col-prix">Prix</th><th class="col-stock">Stock</th><th class="col-qty">Qté</th><th class="col-action"></th>${ctx.isGM ? '<th class="col-mj">MJ</th>' : ""}</tr></thead>`;
 }
 
 function renderFlatTable(ctx, rows) {
@@ -297,24 +328,24 @@ function renderBazaarAccordion(ctx) {
     if (!groups.has(section)) groups.set(section, []);
     groups.get(section).push({ item, use });
   }
-  const sections = [...groups.entries()].sort(([a], [b]) => sectionRank(a) - sectionRank(b) || a.localeCompare(b, "fr"));
-  if (!sections.length) return `<div class="add2e-vendor-scroll"><p class="a2e-muted">Aucun article dans le bazard.</p></div>`;
+  const sections = [...groups.entries()].sort(([left], [right]) => sectionRank(left) - sectionRank(right) || left.localeCompare(right, "fr"));
+  if (!sections.length) return '<div class="add2e-vendor-scroll"><p class="a2e-muted">Aucun article dans le bazard.</p></div>';
   return `<div class="add2e-vendor-scroll add2e-vendor-bazaar-list">${sections.map(([section, entries]) => {
-    entries.sort((a, b) => String(canonicalItemName(a.item)).localeCompare(String(canonicalItemName(b.item)), "fr"));
+    entries.sort((left, right) => String(canonicalItemName(left.item)).localeCompare(String(canonicalItemName(right.item)), "fr"));
     const rows = entries.map(entry => rowHtml(entry.item, ctx, entry.use, true)).join("");
     return `<details class="add2e-vendor-bazaar-section"><summary><span>${esc(section)}</span><strong>${entries.length}</strong></summary><table class="add2e-vendor-table">${tableHeader(ctx)}<tbody>${rows}</tbody></table></details>`;
   }).join("")}</div>`;
 }
 
 function vendorStyle() {
-  return `<style>.add2e-merchant-app{background:#e7d29a;color:#2b2113}.add2e-merchant-app section{background:linear-gradient(180deg,#f0dfab 0%,#e4c985 100%);padding:0 .65rem .65rem}.add2e-merchant-app p{margin:.45rem 0 .5rem;padding:.42rem .6rem;border:1px solid rgba(110,76,23,.22);border-radius:8px;background:rgba(255,250,236,.76)}.add2e-merchant-app select.buyer,.add2e-merchant-app input.search{border:1px solid rgba(88,56,13,.45);border-radius:7px;background:#fffbf0;color:#2d210f;font-weight:800}.add2e-merchant-app input.search{width:100%;box-sizing:border-box;margin:.35rem 0 .6rem;padding:.4rem .6rem}.add2e-merchant-app button[data-tab]{height:28px;margin:0 .22rem .38rem 0;padding:0 .7rem;border:1px solid rgba(81,52,16,.42);border-radius:7px;background:linear-gradient(180deg,#6a4518,#49300f);color:#f8e7b4;font-weight:900}.add2e-merchant-app button[data-tab][style*="outline"]{background:linear-gradient(180deg,#d8ad56,#9a6d23)!important;color:#201506;outline:2px solid rgba(255,255,255,.9)!important}.add2e-merchant-app .add2e-vendor-toolbar-icon{display:inline-flex;margin:0 0 .38rem .28rem;color:#4b3210;font-size:1.05rem;cursor:pointer}.add2e-merchant-app .add2e-vendor-scroll{max-height:420px;overflow-y:auto;padding-right:6px;margin-top:6px}.add2e-merchant-app .add2e-vendor-bazaar-section{display:block;margin:0 0 8px;border:1px solid rgba(76,51,16,.32);border-radius:9px;background:rgba(255,248,226,.56);overflow:hidden}.add2e-merchant-app .add2e-vendor-bazaar-section>summary{cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 11px;background:linear-gradient(180deg,#4a3418,#33240f);color:#f4dc9d;font-weight:900}.add2e-merchant-app .add2e-vendor-bazaar-section:not([open]) table{display:none}.add2e-merchant-app .add2e-vendor-table{width:100%;table-layout:fixed;border-collapse:collapse;background:#fff7df}.add2e-merchant-app th{position:sticky;top:0;background:#5a3a12;color:#f5e1a9;text-transform:uppercase;font-size:.74em;padding:.34rem .42rem}.add2e-merchant-app td{padding:.24rem .42rem;border-bottom:1px solid rgba(99,70,24,.16);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.add2e-merchant-app tr:nth-child(odd){background:#fffaf0}.add2e-merchant-app tr:nth-child(even){background:#f6edcf}.add2e-merchant-app tr:hover{background:#f3dda2}.add2e-merchant-app .col-article{width:35%;font-weight:900}.add2e-merchant-app .col-type{width:10%}.add2e-merchant-app .col-sorts{width:5%;text-align:center;color:#6d5c3c;font-size:.88em}.add2e-merchant-app .col-prix{width:8%;font-weight:900;color:#4d3107}.add2e-merchant-app .col-stock{width:6%;text-align:center;font-weight:900}.add2e-merchant-app .col-qty{width:6%;text-align:center}.add2e-merchant-app .col-action{width:5%;text-align:center}.add2e-merchant-app .col-mj{width:15%;text-align:right}.add2e-merchant-app .type-pill{display:inline-flex;max-width:100%;padding:1px 7px;border-radius:999px;background:#ead79b;color:#352408;font-size:.82em;font-weight:900}.add2e-merchant-app .q,.add2e-merchant-app .s{height:23px;min-height:23px;text-align:center;border:1px solid rgba(120,82,28,.42);border-radius:6px;background:#fffdf2;color:#2d210f;font-weight:900}.add2e-merchant-app .q{width:42px}.add2e-merchant-app .stock-input{width:48px;margin-right:5px}.add2e-merchant-app .vendor-icon-group{display:inline-flex;gap:8px}.add2e-merchant-app .add2e-vendor-action-icon{display:inline-flex;align-items:center;justify-content:center;min-width:16px;padding:0;border:0;background:transparent;font-size:1.02rem;color:#4b3210;cursor:pointer}.add2e-merchant-app .add2e-vendor-action-icon.buy{color:#1f6b37}.add2e-merchant-app .add2e-vendor-action-icon.assign{color:#235a8d}.add2e-merchant-app .add2e-vendor-action-icon.disabled{opacity:.28;cursor:not-allowed}</style>`;
+  return `<style>.add2e-merchant-app{background:#e7d29a;color:#2b2113}.add2e-merchant-app section{background:linear-gradient(180deg,#f0dfab 0%,#e4c985 100%);padding:0 .65rem .65rem}.add2e-merchant-app p{margin:.45rem 0 .5rem;padding:.42rem .6rem;border:1px solid rgba(110,76,23,.22);border-radius:8px;background:rgba(255,250,236,.76)}.add2e-merchant-app select.buyer,.add2e-merchant-app input.search{border:1px solid rgba(88,56,13,.45);border-radius:7px;background:#fffbf0;color:#2d210f;font-weight:800}.add2e-merchant-app input.search{width:100%;box-sizing:border-box;margin:.35rem 0 .6rem;padding:.4rem .6rem}.add2e-merchant-app button[data-tab]{height:28px;margin:0 .22rem .38rem 0;padding:0 .7rem;border:1px solid rgba(81,52,16,.42);border-radius:7px;background:linear-gradient(180deg,#6a4518,#49300f);color:#f8e7b4;font-weight:900}.add2e-merchant-app button[data-tab][style*="outline"]{background:linear-gradient(180deg,#d8ad56,#9a6d23)!important;color:#201506;outline:2px solid rgba(255,255,255,.9)!important}.add2e-merchant-app .add2e-vendor-toolbar-icon{display:inline-flex;margin:0 0 .38rem .28rem;color:#4b3210;font-size:1.05rem;cursor:pointer}.add2e-merchant-app .add2e-vendor-scroll{max-height:420px;overflow-y:auto;padding-right:6px;margin-top:6px}.add2e-merchant-app .add2e-vendor-bazaar-section{display:block;margin:0 0 8px;border:1px solid rgba(76,51,16,.32);border-radius:9px;background:rgba(255,248,226,.56);overflow:hidden}.add2e-merchant-app .add2e-vendor-bazaar-section>summary{cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 11px;background:linear-gradient(180deg,#4a3418,#33240f);color:#f4dc9d;font-weight:900}.add2e-merchant-app .add2e-vendor-bazaar-section:not([open]) table{display:none}.add2e-merchant-app .add2e-vendor-table{width:100%;table-layout:fixed;border-collapse:collapse;background:#fff7df}.add2e-merchant-app th{position:sticky;top:0;background:#5a3a12;color:#f5e1a9;text-transform:uppercase;font-size:.74em;padding:.34rem .42rem}.add2e-merchant-app td{padding:.24rem .42rem;border-bottom:1px solid rgba(99,70,24,.16);overflow:hidden;text-overflow:ellipsis}.add2e-merchant-app tr:nth-child(odd){background:#fffaf0}.add2e-merchant-app tr:nth-child(even){background:#f6edcf}.add2e-merchant-app tr:hover{background:#f3dda2}.add2e-merchant-app .col-article{width:24%;font-weight:900;white-space:nowrap}.add2e-merchant-app .col-type{width:9%;white-space:nowrap}.add2e-merchant-app .col-sorts{width:27%;white-space:normal;line-height:1.25;color:#5c492a;font-size:.86em}.add2e-merchant-app .col-prix{width:8%;white-space:nowrap;font-weight:900;color:#4d3107}.add2e-merchant-app .col-stock{width:6%;white-space:nowrap;text-align:center;font-weight:900}.add2e-merchant-app .col-qty{width:6%;white-space:nowrap;text-align:center}.add2e-merchant-app .col-action{width:5%;white-space:nowrap;text-align:center}.add2e-merchant-app .col-mj{width:15%;white-space:nowrap;text-align:right}.add2e-merchant-app .type-pill{display:inline-flex;max-width:100%;padding:1px 7px;border-radius:999px;background:#ead79b;color:#352408;font-size:.82em;font-weight:900}.add2e-merchant-app .q,.add2e-merchant-app .s{height:23px;min-height:23px;text-align:center;border:1px solid rgba(120,82,28,.42);border-radius:6px;background:#fffdf2;color:#2d210f;font-weight:900}.add2e-merchant-app .q{width:42px}.add2e-merchant-app .stock-input{width:48px;margin-right:5px}.add2e-merchant-app .vendor-icon-group{display:inline-flex;gap:8px}.add2e-merchant-app .add2e-vendor-action-icon{display:inline-flex;align-items:center;justify-content:center;min-width:16px;padding:0;border:0;background:transparent;font-size:1.02rem;color:#4b3210;cursor:pointer}.add2e-merchant-app .add2e-vendor-action-icon.buy{color:#1f6b37}.add2e-merchant-app .add2e-vendor-action-icon.assign{color:#235a8d}.add2e-merchant-app .add2e-vendor-action-icon.disabled{opacity:.28;cursor:not-allowed}</style>`;
 }
 
 async function confirmPlayerBuy(item, qty) {
-  const D = foundry?.applications?.api?.DialogV2;
+  const DialogV2 = foundry?.applications?.api?.DialogV2;
   const total = formatMoney(priceCopper(item) * qty);
   diag("PLAYER_CONFIRM_OPEN", { item: item?.name, itemId: item?.id, qty, total });
-  const ok = await (D?.confirm?.({ window: { title: "Confirmer l’achat" }, content: `<p>Acheter <b>${qty} × ${esc(canonicalItemName(item))}</b> pour <b>${total}</b> ?</p>`, yes: { label: "Acheter" }, no: { label: "Annuler" }, modal: true }) ?? false);
+  const ok = await (DialogV2?.confirm?.({ window: { title: "Confirmer l’achat" }, content: `<p>Acheter <b>${qty} × ${esc(canonicalItemName(item))}</b> pour <b>${total}</b> ?</p>`, yes: { label: "Acheter" }, no: { label: "Annuler" }, modal: true }) ?? false);
   diag("PLAYER_CONFIRM_CLOSE", { item: item?.name, itemId: item?.id, qty, ok });
   return ok;
 }
@@ -332,9 +363,7 @@ class Add2eMerchantApp extends foundry.applications.api.ApplicationV2 {
 
   get title() { return `${this.vendor?.name ?? "Marchand"}${this.buyer ? ` — ${this.buyer.name}` : ""}`; }
 
-  stock() {
-    return collapseCanonicalStock(Array.from(this.vendor?.items ?? []).filter(isStockItem));
-  }
+  stock() { return collapseCanonicalStock(Array.from(this.vendor?.items ?? []).filter(isStockItem)); }
 
   async _prepareContext() {
     normalizeShopCurrency();
@@ -343,18 +372,19 @@ class Add2eMerchantApp extends foundry.applications.api.ApplicationV2 {
 
   async _renderHTML(ctx) {
     if (ctx.tab === "equipment") ctx.tab = "bazaar";
-    let prepCount = 0, knownCount = 0;
+    let prepCount = 0;
+    let knownCount = 0;
     const computed = ctx.items.map(item => ({ item, use: usage(ctx.buyer, item) }));
     for (const entry of computed) {
-      if (entry.use.prep > 0) prepCount++;
-      if (entry.use.known > 0) knownCount++;
+      if (entry.use.prep > 0) prepCount += 1;
+      if (entry.use.known > 0) knownCount += 1;
     }
     const nav = [["all", "Tous"], ["prepared", `Mémorisés (${prepCount})`], ["known", `Connus (${knownCount})`], ["components", "Composants"], ["projectiles", "Projectiles"], ["bazaar", "Bazard"]]
-      .map(([id, lab]) => `<button data-tab="${id}" ${ctx.tab === id ? "style='outline:2px solid #fff'" : ""}>${lab}</button>`).join("");
+      .map(([id, label]) => `<button data-tab="${id}" ${ctx.tab === id ? "style='outline:2px solid #fff'" : ""}>${label}</button>`).join("");
     const visibleRows = computed.filter(({ item, use }) => ctx.tab !== "bazaar" && itemVisibleForContext(item, ctx, use)).map(({ item, use }) => rowHtml(item, ctx, use, true)).join("");
     const list = ctx.tab === "bazaar" ? renderBazaarAccordion(ctx) : renderFlatTable(ctx, visibleRows || `<tr><td colspan="${ctx.isGM ? 8 : 7}" class="a2e-muted">Aucun article.</td></tr>`);
     const buyer = ctx.isGM ? `<select class="buyer">${buyerOptions(ctx.buyer?.id)}</select>` : `<b>${esc(ctx.buyer?.name ?? "aucun")}</b>`;
-    const restock = ctx.isGM ? `<i class="fas fa-rotate add2e-vendor-toolbar-icon" data-action="restock" role="button" tabindex="0" title="Restock global" aria-label="Restock global"></i>` : "";
+    const restock = ctx.isGM ? '<i class="fas fa-rotate add2e-vendor-toolbar-icon" data-action="restock" role="button" tabindex="0" title="Restock global" aria-label="Restock global"></i>' : "";
     const div = document.createElement("section");
     div.innerHTML = `${vendorStyle()}<p><span>Acheteur :</span> ${buyer} <strong>${ctx.buyer ? esc(formatMoney(getMoney(ctx.buyer))) : ""}</strong></p><div>${nav}${restock}</div><input class="search" value="${esc(ctx.search)}" placeholder="Recherche">${list}`;
     return div;
@@ -362,13 +392,13 @@ class Add2eMerchantApp extends foundry.applications.api.ApplicationV2 {
 
   _replaceHTML(result, content) { content.replaceChildren(result); }
 
-  async _onRender(c, o) {
-    await super._onRender?.(c, o);
-    const r = this.element;
-    r.querySelector(".buyer")?.addEventListener("change", e => { this.buyer = game.actors.get(e.currentTarget.value) ?? this.buyer; this.render({ force: true }); });
-    r.querySelector(".search")?.addEventListener("input", e => { this.search = e.currentTarget.value ?? ""; this.render({ force: true }); });
-    r.querySelectorAll("button[data-tab]").forEach(b => b.addEventListener("click", e => { this.tab = e.currentTarget.dataset.tab; this.render({ force: true }); }));
-    r.querySelectorAll("[data-action]").forEach(b => b.addEventListener("click", e => this.click(e)));
+  async _onRender(context, options) {
+    await super._onRender?.(context, options);
+    const root = this.element;
+    root.querySelector(".buyer")?.addEventListener("change", event => { this.buyer = game.actors.get(event.currentTarget.value) ?? this.buyer; this.render({ force: true }); });
+    root.querySelector(".search")?.addEventListener("input", event => { this.search = event.currentTarget.value ?? ""; this.render({ force: true }); });
+    root.querySelectorAll("button[data-tab]").forEach(button => button.addEventListener("click", event => { this.tab = event.currentTarget.dataset.tab; this.render({ force: true }); }));
+    root.querySelectorAll("[data-action]").forEach(button => button.addEventListener("click", event => this.click(event)));
   }
 
   async playerBuy(item, qty) {
@@ -383,26 +413,26 @@ class Add2eMerchantApp extends foundry.applications.api.ApplicationV2 {
     return true;
   }
 
-  async click(e) {
-    if (e.currentTarget?.dataset?.disabled === "1") return;
-    const a = e.currentTarget.dataset.action;
-    diag("CLICK", { action: a, isGM: game.user?.isGM });
-    if (a === "restock") { await restockAll(this.vendor); return this.render({ force: true }); }
-    const row = e.currentTarget.closest("tr");
+  async click(event) {
+    if (event.currentTarget?.dataset?.disabled === "1") return;
+    const action = event.currentTarget.dataset.action;
+    diag("CLICK", { action, isGM: game.user?.isGM });
+    if (action === "restock") { await restockAll(this.vendor); return this.render({ force: true }); }
+    const row = event.currentTarget.closest("tr");
     const item = this.vendor.items.get(row?.dataset.id);
-    if (a === "stock") { await setStock(item, row.querySelector(".s")?.value); return this.render({ force: true }); }
-    if (a === "assign") return this.assign(item);
+    if (action === "stock") { await setStock(item, row.querySelector(".s")?.value); return this.render({ force: true }); }
+    if (action === "assign") return this.assign(item);
     normalizeShopCurrency();
     if (!game.user?.isGM) return this.playerBuy(item, row.querySelector(".q")?.value);
     diag("GM_BUY_DIRECT", { vendorId: this.vendor?.id, buyerId: this.buyer?.id, itemId: item?.id, quantity: row.querySelector(".q")?.value });
     const ok = await buy({ vendor: this.vendor, buyer: this.buyer, item, quantity: row.querySelector(".q")?.value });
-    if (ok && game.user?.isGM) this.render({ force: true });
+    if (ok) this.render({ force: true });
   }
 
   async assign(item) {
     if (!this.buyer) return alertBox("Aucun acteur", "Choisis d’abord un acteur acheteur présent sur la scène.");
-    const r = await assignItemToToken({ vendor: this.vendor, item, token: { actor: this.buyer, name: this.buyer.name }, quantity: 1 });
-    r.ok ? ui.notifications.info(r.message) : ui.notifications.warn(r.message);
+    const result = await assignItemToToken({ vendor: this.vendor, item, token: { actor: this.buyer, name: this.buyer.name }, quantity: 1 });
+    result.ok ? ui.notifications.info(result.message) : ui.notifications.warn(result.message);
     this.render({ force: true });
   }
 }
@@ -412,9 +442,9 @@ const registry = () => globalThis.__ADD2E_MERCHANT_UNIT_APPS ??= new Map();
 function openLock(actor) {
   const id = `${game.user?.id}:${actor?.id}`;
   const now = Date.now();
-  const m = globalThis.__ADD2E_MERCHANT_OPEN_LOCK ??= {};
-  if (m[id] && now - m[id] < 750) return false;
-  m[id] = now;
+  const locks = globalThis.__ADD2E_MERCHANT_OPEN_LOCK ??= {};
+  if (locks[id] && now - locks[id] < 750) return false;
+  locks[id] = now;
   return true;
 }
 
@@ -453,21 +483,21 @@ export function bindAllVendorTokens() {
       token.cursor = "pointer";
       token.eventMode = "static";
       token.interactive = true;
-      token.on?.("pointertap", ev => { ev?.stopPropagation?.(); openFromToken(token); });
-      token.on?.("pointerup", ev => { ev?.stopPropagation?.(); openFromToken(token); });
-    } catch (_e) {}
+      token.on?.("pointertap", event => { event?.stopPropagation?.(); openFromToken(token); });
+      token.on?.("pointerup", event => { event?.stopPropagation?.(); openFromToken(token); });
+    } catch (_error) {}
   }
 }
 
 export function patchVendorTokenClick() {
   if (globalThis.__ADD2E_MERCHANT_UNIT_CLICK_V4) return;
   globalThis.__ADD2E_MERCHANT_UNIT_CLICK_V4 = true;
-  const C = foundry?.canvas?.placeables?.Token ?? CONFIG?.Token?.objectClass ?? globalThis.Token;
-  const p = C?.prototype;
-  if (p && typeof p._onClickLeft === "function") {
-    const old = p._onClickLeft;
-    p._onClickLeft = function(event) {
-      const result = old.call(this, event);
+  const TokenClass = foundry?.canvas?.placeables?.Token ?? CONFIG?.Token?.objectClass ?? globalThis.Token;
+  const prototype = TokenClass?.prototype;
+  if (prototype && typeof prototype._onClickLeft === "function") {
+    const original = prototype._onClickLeft;
+    prototype._onClickLeft = function(event) {
+      const result = original.call(this, event);
       if (isVendorActor(this.actor)) setTimeout(() => openFromToken(this), 0);
       return result;
     };
