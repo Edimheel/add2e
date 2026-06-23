@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const VERSION = "2026-06-22-reference-description-v5";
+const VERSION = "2026-06-23-structured-material-quantities-v6";
 const MANAGED_BY = "normalize-fvtt-spells-materials-v3";
 const INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
@@ -11,6 +11,7 @@ const CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
 const MASTER = "audit/reference/manuel-joueurs-sorts-master.json";
 const REVERSIBILITY_REFERENCE = "audit/reference/manuel-joueurs-reversibilite.json";
 const MATERIAL_REFERENCE = "audit/reference/manuel-joueurs-composants-materiels.json";
+const EQUIPMENT_SOURCE = "sources/Item-Equipements.json";
 const CLASSES = {
   clerc: [1, 2, 3, 4, 5, 6, 7],
   druide: [1, 2, 3, 4, 5, 6, 7],
@@ -27,6 +28,7 @@ const slug = value => text(value)
   .replace(/[^a-z0-9]+/g, "_")
   .replace(/^_+|_+$/g, "");
 const clone = value => value === undefined ? undefined : JSON.parse(JSON.stringify(value));
+const asArray = value => Array.isArray(value) ? value : value == null || value === "" ? [] : [value];
 const emptyCounts = () => Object.fromEntries(Object.keys(CLASSES).map(classSlug => [classSlug, 0]));
 
 function readJson(file, fallback = null) {
@@ -59,7 +61,7 @@ function setItems(document, items) {
 }
 
 function isSpell(item) {
-  return String(item?.type ?? item?.system?.type ?? "") === "sort";
+  return String(item?.type ?? item?.system?.type ?? "").toLowerCase() === "sort";
 }
 
 function itemLevel(item) {
@@ -81,8 +83,7 @@ function itemKey(item) {
 
 function lotScope(lot) {
   const match = String(lot ?? "").match(/^(clerc|druide|magicien|illusionniste)-niveau-(\d+)$/i);
-  if (!match) return null;
-  return { classSlug: match[1].toLowerCase(), level: Number(match[2]) };
+  return match ? { classSlug: match[1].toLowerCase(), level: Number(match[2]) } : null;
 }
 
 function metaKey(classSlug, level, name) {
@@ -95,6 +96,122 @@ function uniqueText(values) {
 
 function componentsHaveMaterial(value) {
   return text(value).split(/[,;/\s]+/g).some(part => part.trim().toUpperCase() === "M");
+}
+
+function materialNameAndQuantity(value, fallbackQuantity = 1) {
+  const original = text(value);
+  let name = original;
+  let quantity = Math.max(1, Math.floor(Number(fallbackQuantity) || 1));
+  let conventional = false;
+
+  const explicit = name.match(/^(\d+)\s*(?:[x×]\s*)?(.+)$/i);
+  if (explicit) {
+    quantity = Math.max(1, Number(explicit[1]) || 1);
+    name = text(explicit[2]);
+  } else {
+    const before = name;
+    name = name
+      .replace(/^(?:un|une)\s+peu\s+de\s+/i, "")
+      .replace(/^(?:quelques|plusieurs)\s+/i, "")
+      .replace(/^(?:petit\s+)?morceau\s+de\s+/i, "")
+      .replace(/^poign(?:e|é)e\s+de\s+/i, "")
+      .replace(/^(?:un|une|du|de la|de l['’]?|des|le|la|les)\s+/i, "");
+    conventional = text(before) !== text(name);
+  }
+
+  name = name.replace(/[.!?;:]+$/g, "").trim();
+  return {
+    nom: name,
+    quantite: quantity,
+    original,
+    convention: conventional && !explicit
+  };
+}
+
+function consumptionIsNonConsumed(value) {
+  const raw = text(value).toLowerCase();
+  return ["non_consomme", "non consommé", "non consomme", "non_consumed", "nonconsumed", "focus"].includes(raw);
+}
+
+function normaliseMaterialRule(raw) {
+  if (raw == null || raw === "") return null;
+  if (typeof raw === "string") {
+    const alternatives = String(raw).replace(/[()\[\]{}]/g, " ").split(/\bou\b/gi).map(text).filter(Boolean);
+    if (alternatives.length > 1) {
+      const values = alternatives.map(normaliseMaterialRule).filter(Boolean);
+      return values.length ? { alternatives: values } : null;
+    }
+    const info = materialNameAndQuantity(raw, 1);
+    if (!info.nom) return null;
+    const rule = { nom: info.nom, quantite: info.quantite, consommation: "consomme" };
+    if (info.nom !== info.original) rule.notes = `Texte du Manuel : ${info.original}.`;
+    if (info.convention) rule.notes = `Quantité conventionnelle ADD2E : 1. ${rule.notes}`;
+    return rule;
+  }
+  if (typeof raw !== "object" || Array.isArray(raw)) return null;
+
+  const alternatives = raw.alternatives ?? raw.options ?? raw.choix ?? raw.auChoix ?? raw.or;
+  if (Array.isArray(alternatives) && alternatives.length) {
+    const rule = clone(raw);
+    rule.alternatives = alternatives.map(normaliseMaterialRule).filter(Boolean);
+    delete rule.options;
+    delete rule.choix;
+    delete rule.auChoix;
+    delete rule.or;
+    return rule.alternatives.length ? rule : null;
+  }
+
+  const sourceName = raw.nom ?? raw.name ?? raw.label ?? raw.item ?? raw.itemName ?? raw.component ?? raw.composant ?? raw.slug;
+  if (!text(sourceName)) return clone(raw);
+  const explicitQuantity = raw.quantite ?? raw.quantity ?? raw.qty ?? raw.nombre ?? raw.count ?? 1;
+  const info = materialNameAndQuantity(sourceName, explicitQuantity);
+  if (!info.nom) return null;
+  const rule = clone(raw);
+  rule.nom = info.nom;
+  rule.quantite = info.quantite;
+  delete rule.name;
+  delete rule.label;
+  delete rule.item;
+  delete rule.itemName;
+  delete rule.component;
+  delete rule.composant;
+  delete rule.slug;
+  delete rule.quantity;
+  delete rule.qty;
+  delete rule.nombre;
+  delete rule.count;
+  if (!rule.consommation && raw.consomme !== false && raw.consume !== false) rule.consommation = "consomme";
+  if (raw.consomme === false || raw.consume === false || consumptionIsNonConsumed(raw.consommation ?? raw.consumption)) rule.consommation = "non_consomme";
+  if (info.nom !== info.original) {
+    const note = `Texte du Manuel : ${info.original}.`;
+    const convention = info.convention ? " Quantité conventionnelle ADD2E : 1." : "";
+    rule.notes = uniqueText([text(rule.notes), `${note}${convention}`]).join(" ");
+  }
+  delete rule.consomme;
+  delete rule.consume;
+  return rule;
+}
+
+function normaliseMaterialRules(value) {
+  const out = [];
+  for (const raw of asArray(value)) {
+    if (Array.isArray(raw)) out.push(...normaliseMaterialRules(raw));
+    else {
+      const rule = normaliseMaterialRule(raw);
+      if (rule) out.push(rule);
+    }
+  }
+  return out;
+}
+
+function flattenMaterialRules(value, out = []) {
+  for (const raw of asArray(value)) {
+    if (Array.isArray(raw)) { flattenMaterialRules(raw, out); continue; }
+    if (!raw || typeof raw !== "object") continue;
+    if (Array.isArray(raw.alternatives)) { flattenMaterialRules(raw.alternatives, out); continue; }
+    if (text(raw.nom)) out.push(raw);
+  }
+  return out;
 }
 
 function normaliseChoices(value) {
@@ -125,8 +242,7 @@ function inverseName(value) {
     const nested = text(direct.nom ?? direct.name ?? direct.actorItemName);
     if (nested) return nested;
   }
-  const inverseMode = (Array.isArray(value.modes) ? value.modes : [])
-    .find(mode => String(mode?.id ?? "").toLowerCase() === "inverse");
+  const inverseMode = (Array.isArray(value.modes) ? value.modes : []).find(mode => String(mode?.id ?? "").toLowerCase() === "inverse");
   return text(inverseMode?.nom ?? inverseMode?.name ?? inverseMode?.actorItemName);
 }
 
@@ -138,8 +254,7 @@ function hasReversibleMarker(value) {
 
 function referenceAliases(value) {
   const direct = [value?.foundryName, value?.foundryNom, value?.foundry?.name, value?.foundry?.nom];
-  const lists = [value?.foundryNames, value?.foundryNoms, value?.foundry?.names, value?.foundry?.noms]
-    .flatMap(entry => Array.isArray(entry) ? entry : []);
+  const lists = [value?.foundryNames, value?.foundryNoms, value?.foundry?.names, value?.foundry?.noms].flatMap(entry => Array.isArray(entry) ? entry : []);
   return uniqueText([...direct, ...lists]);
 }
 
@@ -156,12 +271,11 @@ function upsertMeta(index, key, patch) {
   const previous = index.get(key) ?? { variants: [], aliases: [], sources: [], materials: [] };
   const seenVariants = new Set();
   const variants = [...(previous.variants ?? []), ...(patch.variants ?? [])].filter(choice => {
-    const choiceKey = `${choice.id}|${choice.nom}`;
-    if (seenVariants.has(choiceKey)) return false;
-    seenVariants.add(choiceKey);
+    const candidate = `${choice.id}|${choice.nom}`;
+    if (seenVariants.has(candidate)) return false;
+    seenVariants.add(candidate);
     return true;
   });
-
   index.set(key, {
     ...previous,
     ...patch,
@@ -174,7 +288,7 @@ function upsertMeta(index, key, patch) {
     description: text(patch.description) || previous.description || "",
     descriptionSource: text(patch.descriptionSource) || previous.descriptionSource || "",
     materialState: patch.materialState ?? previous.materialState ?? "unknown",
-    materials: patch.materials !== undefined ? clone(patch.materials) : clone(previous.materials ?? []),
+    materials: patch.materials !== undefined ? normaliseMaterialRules(patch.materials) : normaliseMaterialRules(previous.materials ?? []),
     reversible: Boolean(previous.reversible || patch.reversible),
     variants,
     aliases: uniqueText([...(previous.aliases ?? []), ...(patch.aliases ?? [])]),
@@ -199,20 +313,15 @@ function addStructuredEntry(index, scope, name, entry, relativePath) {
 }
 
 function readStructuredData(document, index, relativePath) {
-  const inverseRoots = [document?.reversible, document?.reversibles, document?.reversibleSpells].filter(Boolean);
-  const variantRoots = [document?.variant, document?.variants, document?.variantes].filter(Boolean);
-  for (const root of inverseRoots) {
+  for (const root of [document?.reversible, document?.reversibles, document?.reversibleSpells].filter(Boolean)) {
     for (const [lot, entries] of Object.entries(root)) {
       const scope = lotScope(lot);
       if (!scope) continue;
-      if (Array.isArray(entries)) {
-        for (const entry of entries) addStructuredEntry(index, scope, text(entry?.nom ?? entry?.name ?? entry?.sort ?? entry?.spell), entry, relativePath);
-      } else {
-        for (const [name, entry] of Object.entries(entries ?? {})) addStructuredEntry(index, scope, name, entry, relativePath);
-      }
+      if (Array.isArray(entries)) for (const entry of entries) addStructuredEntry(index, scope, text(entry?.nom ?? entry?.name ?? entry?.sort ?? entry?.spell), entry, relativePath);
+      else for (const [name, entry] of Object.entries(entries ?? {})) addStructuredEntry(index, scope, name, entry, relativePath);
     }
   }
-  for (const root of variantRoots) {
+  for (const root of [document?.variant, document?.variants, document?.variantes].filter(Boolean)) {
     for (const [lot, entries] of Object.entries(root)) {
       const scope = lotScope(lot);
       if (!scope) continue;
@@ -232,17 +341,15 @@ function readStructuredData(document, index, relativePath) {
 }
 
 function readMaterialData(document, index, relativePath) {
-  const roots = [document?.materiels, document?.materials, document?.composants_materiels].filter(Boolean);
-  for (const root of roots) {
+  for (const root of [document?.materiels, document?.materials, document?.composants_materiels].filter(Boolean)) {
     for (const [lot, entries] of Object.entries(root)) {
       const scope = lotScope(lot);
       if (!scope) continue;
       for (const [name, entry] of Object.entries(entries ?? {})) {
+        if (!entry || typeof entry !== "object") continue;
         const referenceName = text(name);
-        if (!referenceName || !entry || typeof entry !== "object") continue;
-        const materials = Array.isArray(entry.composants_materiels_objets)
-          ? clone(entry.composants_materiels_objets)
-          : [];
+        if (!referenceName) continue;
+        const materials = normaliseMaterialRules(entry.composants_materiels_objets ?? entry.composants_materiels ?? []);
         upsertMeta(index, metaKey(scope.classSlug, scope.level, referenceName), {
           classSlug: scope.classSlug,
           level: scope.level,
@@ -263,7 +370,8 @@ function readMaterialData(document, index, relativePath) {
 function buildLookup(structured) {
   const lookup = new Map();
   for (const [canonicalKey, metadata] of structured) {
-    for (const candidate of [metadata.referenceName, ...(metadata.aliases ?? [])].map(name => metaKey(metadata.classSlug, metadata.level, name))) {
+    for (const name of [metadata.referenceName, ...(metadata.aliases ?? [])]) {
+      const candidate = metaKey(metadata.classSlug, metadata.level, name);
       const previous = lookup.get(candidate);
       if (previous && previous !== canonicalKey) throw new Error(`Alias Foundry ambigu : ${candidate} cible ${previous} et ${canonicalKey}.`);
       lookup.set(candidate, canonicalKey);
@@ -277,10 +385,8 @@ function loadReferences() {
   const files = [];
   const expectedByClass = {};
   const master = readJson(path.join(ROOT, MASTER), null);
-  if (master && typeof master === "object") {
-    files.push(MASTER);
-    readStructuredData(master, structured, MASTER);
-  }
+  if (master && typeof master === "object") { files.push(MASTER); readStructuredData(master, structured, MASTER); }
+
   for (const [classSlug, levels] of Object.entries(CLASSES)) {
     for (const level of levels) {
       const relative = `audit/reference/manuel-joueurs-${classSlug}-niveau-${level}.json`;
@@ -291,9 +397,7 @@ function loadReferences() {
         const name = text(reference?.nom ?? reference?.name);
         if (!name) continue;
         const referenceLevel = Number(reference?.niveau ?? reference?.level ?? level) || level;
-        const materials = Array.isArray(reference?.composants_materiels_objets)
-          ? clone(reference.composants_materiels_objets)
-          : [];
+        const materials = normaliseMaterialRules(reference?.composants_materiels_objets ?? reference?.composants_materiels ?? []);
         upsertMeta(structured, metaKey(classSlug, referenceLevel, name), {
           classSlug,
           level: referenceLevel,
@@ -313,6 +417,7 @@ function loadReferences() {
       }
     }
   }
+
   const materialDocument = readJson(path.join(ROOT, MATERIAL_REFERENCE), null);
   if (!materialDocument || typeof materialDocument !== "object") throw new Error(`Référence de composants introuvable ou invalide : ${MATERIAL_REFERENCE}`);
   files.push(MATERIAL_REFERENCE);
@@ -325,14 +430,10 @@ function loadReferences() {
   if (reversibilityDocument.expectedCounts && typeof reversibilityDocument.expectedCounts === "object") Object.assign(expectedByClass, reversibilityDocument.expectedCounts);
 
   const declaredByClass = emptyCounts();
-  for (const metadata of structured.values()) {
-    if (metadata.reversible && Object.hasOwn(declaredByClass, metadata.classSlug)) declaredByClass[metadata.classSlug] += 1;
-  }
+  for (const metadata of structured.values()) if (metadata.reversible && Object.hasOwn(declaredByClass, metadata.classSlug)) declaredByClass[metadata.classSlug] += 1;
   for (const classSlug of Object.keys(CLASSES)) {
     const expected = Number(expectedByClass[classSlug]);
-    if (Number.isFinite(expected) && declaredByClass[classSlug] !== expected) {
-      throw new Error(`Référence de réversibilité incohérente pour ${classSlug} : ${declaredByClass[classSlug]} déclaré(s), ${expected} attendu(s).`);
-    }
+    if (Number.isFinite(expected) && declaredByClass[classSlug] !== expected) throw new Error(`Référence de réversibilité incohérente pour ${classSlug} : ${declaredByClass[classSlug]} déclaré(s), ${expected} attendu(s).`);
   }
   return { structured, lookup: buildLookup(structured), files: [...new Set(files)], declaredByClass, expectedByClass };
 }
@@ -349,47 +450,32 @@ function materialMode(rule) {
 
 function modeMaterials(metadata, item, mode) {
   if (!componentsHaveMaterial(metadata?.composantes ?? item?.system?.composantes)) return { value: [], reference: [] };
-  const all = Array.isArray(metadata?.materials) ? clone(metadata.materials) : [];
+  const declared = normaliseMaterialRules(metadata?.materials ?? []);
+  const fallback = normaliseMaterialRules(item?.system?.composants_materiels_objets?.length ? item.system.composants_materiels_objets : item?.system?.composants_materiels ?? []);
+  const all = declared.length ? declared : fallback;
   const selected = all.filter(rule => {
     const target = materialMode(rule);
     return target === "shared" || target === mode;
   });
-  if (selected.length) {
-    const grouped = new Map();
-    const direct = [];
-    for (const rule of selected) {
-      const group = text(rule?.alternativeGroup);
-      if (!group) direct.push(rule);
-      else {
-        if (!grouped.has(group)) grouped.set(group, []);
-        grouped.get(group).push(rule);
-      }
+  const grouped = new Map();
+  const direct = [];
+  for (const rule of selected) {
+    const group = text(rule?.alternativeGroup);
+    if (!group) direct.push(rule);
+    else {
+      if (!grouped.has(group)) grouped.set(group, []);
+      grouped.get(group).push(rule);
     }
-    return { value: [...direct, ...[...grouped.values()].map(alternatives => ({ alternatives }))], reference: selected };
   }
-  return {
-    value: clone(item?.system?.composants_materiels ?? []),
-    reference: clone(item?.system?.composants_materiels_objets ?? [])
-  };
+  return { value: [...direct, ...[...grouped.values()].map(alternatives => ({ alternatives }))], reference: selected };
 }
 
 function actorMode(metadata, item, id, name) {
   const materials = modeMaterials(metadata, item, id);
   const composantes = text(metadata?.composantes) || text(item?.system?.composantes);
-  const overrides = {
-    composants_materiels: materials.value,
-    composants_materiels_objets: materials.reference,
-    composantes
-  };
-  if (!componentsHaveMaterial(composantes)) overrides.composants_requis = [];
-  return {
-    id,
-    actorItemName: name,
-    manualName: name,
-    copySourceItem: true,
-    systemOverrides: overrides,
-    materialReference: materials.reference
-  };
+  const systemOverrides = { composants_materiels: materials.value, composants_materiels_objets: materials.reference, composantes };
+  if (!componentsHaveMaterial(composantes)) systemOverrides.composants_requis = [];
+  return { id, actorItemName: name, manualName: name, copySourceItem: true, systemOverrides, materialReference: materials.reference };
 }
 
 function ownsFlag(value) {
@@ -426,15 +512,7 @@ function profileEntry(metadata, item, itemName, classSlug, level) {
 }
 
 function referenceSummary(metadata) {
-  return {
-    class: metadata.classSlug,
-    level: metadata.level,
-    name: metadata.referenceName,
-    aliases: metadata.aliases,
-    inverse: metadata.inverse || null,
-    inverseNameStatus: metadata.inverseNameStatus || null,
-    referenceFiles: metadata.sources
-  };
+  return { class: metadata.classSlug, level: metadata.level, name: metadata.referenceName, aliases: metadata.aliases, inverse: metadata.inverse || null, inverseNameStatus: metadata.inverseNameStatus || null, referenceFiles: metadata.sources };
 }
 
 function itemMatches(references, item) {
@@ -453,100 +531,83 @@ function itemMatches(references, item) {
 }
 
 function escapeHtml(value) {
-  return String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
+  return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
 
 function applyDescription(item, metadata) {
   const description = text(metadata?.description);
   if (!description) return false;
   item.system ??= {};
-  const values = {
-    description,
-    description_texte: description,
-    description_reelle: description,
-    description_html: `<p>${escapeHtml(description)}</p>`
-  };
+  const values = { description, description_texte: description, description_reelle: description, description_html: `<p>${escapeHtml(description)}</p>` };
   if (text(metadata?.descriptionSource)) values.description_source = text(metadata.descriptionSource);
   let changed = false;
   for (const [field, value] of Object.entries(values)) {
-    if (String(item.system[field] ?? "") !== value) {
-      item.system[field] = value;
-      changed = true;
-    }
+    if (String(item.system[field] ?? "") !== value) { item.system[field] = value; changed = true; }
   }
   return changed;
 }
 
+function applyMaterialFields(item, materials) {
+  item.system ??= {};
+  let changed = false;
+  for (const field of ["composants_materiels", "composants_materiels_objets"]) {
+    if (JSON.stringify(item.system[field] ?? []) !== JSON.stringify(materials)) { item.system[field] = clone(materials); changed = true; }
+  }
+  return changed;
+}
+
+function normaliseExistingSpellMaterialFields(items) {
+  let updated = 0;
+  for (const item of items) {
+    if (!isSpell(item)) continue;
+    item.system ??= {};
+    const raw = Array.isArray(item.system.composants_materiels_objets) && item.system.composants_materiels_objets.length
+      ? item.system.composants_materiels_objets
+      : item.system.composants_materiels;
+    const materials = normaliseMaterialRules(raw ?? []);
+    if (!materials.length) continue;
+    if (applyMaterialFields(item, materials)) updated += 1;
+  }
+  return updated;
+}
+
 function applyReferenceMechanicalFields(items, references) {
-  const result = {
-    updated: 0,
-    noMaterialCleared: 0,
-    structuredMaterialsApplied: 0,
-    descriptionsApplied: 0,
-    missingMaterialReferences: [],
-    conflicts: []
-  };
+  const result = { updated: 0, noMaterialCleared: 0, structuredMaterialsApplied: 0, fallbackTextMaterialsNormalized: 0, descriptionsApplied: 0, missingMaterialReferences: [], conflicts: [] };
   for (const item of items) {
     if (!isSpell(item)) continue;
     const matches = itemMatches(references, item);
     if (!matches.length) continue;
-    const signature = entry => JSON.stringify({
-      composantes: entry.metadata.composantes,
-      materialState: entry.metadata.materialState,
-      materials: entry.metadata.materials,
-      description: entry.metadata.description,
-      descriptionSource: entry.metadata.descriptionSource
-    });
-    if (new Set(matches.map(signature)).size > 1) {
-      result.conflicts.push({ name: item.name, level: itemLevel(item), matches: matches.map(entry => referenceSummary(entry.metadata)) });
-      continue;
-    }
+    const signature = entry => JSON.stringify({ composantes: entry.metadata.composantes, materialState: entry.metadata.materialState, materials: entry.metadata.materials, description: entry.metadata.description, descriptionSource: entry.metadata.descriptionSource });
+    if (new Set(matches.map(signature)).size > 1) { result.conflicts.push({ name: item.name, level: itemLevel(item), matches: matches.map(entry => referenceSummary(entry.metadata)) }); continue; }
+
     const metadata = matches[0].metadata;
     const composantes = text(metadata.composantes);
-    const descriptionChanged = applyDescription(item, metadata);
-    if (descriptionChanged) result.descriptionsApplied += 1;
-    if (!composantes) {
-      if (descriptionChanged) result.updated += 1;
-      continue;
-    }
+    let changed = applyDescription(item, metadata);
+    if (changed) result.descriptionsApplied += 1;
+    if (!composantes) { if (changed) result.updated += 1; continue; }
     item.system ??= {};
-    let changed = descriptionChanged;
-    if (item.system.composantes !== composantes) {
-      item.system.composantes = composantes;
-      changed = true;
-    }
+    if (item.system.composantes !== composantes) { item.system.composantes = composantes; changed = true; }
     if (!componentsHaveMaterial(composantes)) {
       for (const field of ["composants_materiels", "composants_materiels_objets", "composants_requis"]) {
-        if (!Array.isArray(item.system[field]) || item.system[field].length) {
-          item.system[field] = [];
-          changed = true;
-        }
+        if (!Array.isArray(item.system[field]) || item.system[field].length) { item.system[field] = []; changed = true; }
       }
       if (changed) result.noMaterialCleared += 1;
-    } else if (metadata.materialState === "declared" && Array.isArray(metadata.materials) && metadata.materials.length) {
-      const materials = clone(metadata.materials);
-      if (JSON.stringify(item.system.composants_materiels) !== JSON.stringify(materials)) {
-        item.system.composants_materiels = materials;
-        changed = true;
+    } else {
+      const declared = normaliseMaterialRules(metadata.materials ?? []);
+      const fallbackRaw = item.system.composants_materiels_objets?.length ? item.system.composants_materiels_objets : item.system.composants_materiels;
+      const fallback = normaliseMaterialRules(fallbackRaw ?? []);
+      const materials = declared.length ? declared : fallback;
+      if (materials.length) {
+        if (applyMaterialFields(item, materials)) changed = true;
+        if (declared.length) result.structuredMaterialsApplied += 1;
+        else result.fallbackTextMaterialsNormalized += 1;
+      } else if (metadata.materialState === "unknown") {
+        result.missingMaterialReferences.push(referenceSummary(metadata));
       }
-      if (JSON.stringify(item.system.composants_materiels_objets) !== JSON.stringify(materials)) {
-        item.system.composants_materiels_objets = clone(materials);
-        changed = true;
-      }
-      if (changed) result.structuredMaterialsApplied += 1;
-    } else if (metadata.materialState === "unknown") {
-      result.missingMaterialReferences.push(referenceSummary(metadata));
     }
     if (changed) result.updated += 1;
   }
-  result.missingMaterialReferences = result.missingMaterialReferences.filter((entry, index, list) =>
-    list.findIndex(other => `${other.class}|${other.level}|${other.name}` === `${entry.class}|${entry.level}|${entry.name}`) === index
-  );
+  result.missingMaterialReferences = result.missingMaterialReferences.filter((entry, index, list) => list.findIndex(other => `${other.class}|${other.level}|${other.name}` === `${entry.class}|${entry.level}|${entry.name}`) === index);
   return result;
 }
 
@@ -560,6 +621,7 @@ function applyReferenceFlags(items, references) {
   const unresolvedReversible = [];
   const matchedReversibleKeys = new Set();
   const matchedVariantKeys = new Set();
+
   for (const item of items) {
     if (!isSpell(item)) continue;
     const itemName = text(item?.name ?? item?.system?.nom);
@@ -581,19 +643,15 @@ function applyReferenceFlags(items, references) {
       reversibleMatchedByClass[classSlug] += 1;
       matchedReversibleKeys.add(canonicalKey);
       if (metadata.inverse) actorSplitByClass[classSlug] += 1;
-      else {
-        unnamedInverseByClass[classSlug] += 1;
-        unresolvedReversible.push({ name: itemName, ...clone(profile) });
-      }
+      else { unnamedInverseByClass[classSlug] += 1; unresolvedReversible.push({ name: itemName, ...clone(profile) }); }
     }
     const hasOwnedReversible = ownsFlag(item?.flags?.add2e?.reversible);
     const hasOwnedVariant = ownsFlag(item?.flags?.add2e?.variant) || ownsFlag(item?.flags?.add2e?.variants);
     if (!reversible.length && !variants.length && !hasOwnedReversible && !hasOwnedVariant) continue;
     item.flags ??= {};
     item.flags.add2e ??= {};
-    if (reversible.length) {
-      item.flags.add2e.reversible = { version: VERSION, managedBy: MANAGED_BY, enabled: true, choiceTiming: "memorization", splitOnActorGrant: reversible.some(profile => profile.splitOnActorGrant), profiles: reversible };
-    } else if (hasOwnedReversible) delete item.flags.add2e.reversible;
+    if (reversible.length) item.flags.add2e.reversible = { version: VERSION, managedBy: MANAGED_BY, enabled: true, choiceTiming: "memorization", splitOnActorGrant: reversible.some(profile => profile.splitOnActorGrant), profiles: reversible };
+    else if (hasOwnedReversible) delete item.flags.add2e.reversible;
     if (variants.length) {
       item.flags.add2e.variant = { version: VERSION, managedBy: MANAGED_BY, profiles: variants };
       if (ownsFlag(item.flags.add2e.variants)) delete item.flags.add2e.variants;
@@ -603,23 +661,14 @@ function applyReferenceFlags(items, references) {
     }
     cleanEmptyFlagContainers(item);
   }
+
   const unmatchedReversibleReferences = [];
   const unmatchedVariantReferences = [];
   for (const [canonicalKey, metadata] of references.structured) {
     if (metadata.reversible && !matchedReversibleKeys.has(canonicalKey)) unmatchedReversibleReferences.push(referenceSummary(metadata));
     if (metadata.variants.length && !matchedVariantKeys.has(canonicalKey)) unmatchedVariantReferences.push({ ...referenceSummary(metadata), choices: clone(metadata.variants) });
   }
-  return {
-    actorSplitByClass,
-    reversibleMatchedByClass,
-    unnamedInverseByClass,
-    variantMatchedByClass,
-    reversibleProfiles,
-    variantProfiles,
-    unresolvedReversible,
-    unmatchedReversibleReferences,
-    unmatchedVariantReferences
-  };
+  return { actorSplitByClass, reversibleMatchedByClass, unnamedInverseByClass, variantMatchedByClass, reversibleProfiles, variantProfiles, unresolvedReversible, unmatchedReversibleReferences, unmatchedVariantReferences };
 }
 
 function indexItems(items, label) {
@@ -652,19 +701,7 @@ function stripManagedSpellData(item) {
     if (ownsFlag(add2e.variant)) delete add2e.variant;
     if (ownsFlag(add2e.variants)) delete add2e.variants;
   }
-  if (isSpell(stripped)) {
-    for (const field of [
-      "composantes",
-      "composants_materiels",
-      "composants_materiels_objets",
-      "composants_requis",
-      "description",
-      "description_texte",
-      "description_reelle",
-      "description_html",
-      "description_source"
-    ]) delete stripped.system?.[field];
-  }
+  if (isSpell(stripped)) for (const field of ["composantes", "composants_materiels", "composants_materiels_objets", "composants_requis", "description", "description_texte", "description_reelle", "description_html", "description_source"]) delete stripped.system?.[field];
   cleanEmptyFlagContainers(stripped);
   return stripped;
 }
@@ -684,12 +721,54 @@ function assertNoRegression(before, after) {
   const afterIndex = indexItems(afterItems, "Le JSON V3 après normalisation");
   const missing = [...beforeIndex.keys()].filter(key => !afterIndex.has(key));
   const added = [...afterIndex.keys()].filter(key => !beforeIndex.has(key));
-  if (missing.length || added.length) {
-    throw new Error(`Régression bloquée : le jeu d’items a changé.${missing.length ? ` Supprimés: ${missing.slice(0, 8).join(", ")}.` : ""}${added.length ? ` Ajoutés: ${added.slice(0, 8).join(", ")}.` : ""}`);
+  if (missing.length || added.length) throw new Error(`Régression bloquée : le jeu d’items a changé.${missing.length ? ` Supprimés: ${missing.slice(0, 8).join(", ")}.` : ""}${added.length ? ` Ajoutés: ${added.slice(0, 8).join(", ")}.` : ""}`);
+  if (!sameJson(comparableDocument(before), comparableDocument(after))) throw new Error("Régression bloquée : le normalisateur a modifié des données hors composants de sort, descriptions référencées, flags add2e réversible/variante ou métadonnées normalizedBy/normalizedAt.");
+}
+
+function componentSourceItem(item) {
+  const system = item?.system ?? {};
+  const tags = [...asArray(system.tags), ...asArray(system.effectTags), ...asArray(item?.flags?.add2e?.tags)].map(slug);
+  return slug(system.categorie ?? system.category) === "composant_sort" || slug(system.sousType ?? system.sous_type) === "composant" || tags.includes("composant_sort") || tags.some(tag => tag.startsWith("composant_"));
+}
+
+function componentUsageIndex(spells) {
+  const index = new Map();
+  for (const spell of spells) {
+    if (!isSpell(spell)) continue;
+    const materialSource = Array.isArray(spell?.system?.composants_materiels_objets) && spell.system.composants_materiels_objets.length
+      ? spell.system.composants_materiels_objets
+      : spell?.system?.composants_materiels;
+    for (const rule of flattenMaterialRules(materialSource)) {
+      const info = materialNameAndQuantity(rule.nom, rule.quantite);
+      const key = slug(info.nom);
+      if (!key) continue;
+      if (!index.has(key)) index.set(key, new Set());
+      index.get(key).add(text(spell.name ?? spell.system?.nom));
+    }
   }
-  if (!sameJson(comparableDocument(before), comparableDocument(after))) {
-    throw new Error("Régression bloquée : le normalisateur a modifié des données hors composants de sort, descriptions référencées, flags add2e réversible/variante ou métadonnées normalizedBy/normalizedAt.");
+  return index;
+}
+
+function syncEquipmentComponentAssociations(spells) {
+  const sourceFile = path.join(ROOT, EQUIPMENT_SOURCE);
+  const document = readJson(sourceFile, null);
+  if (!document) return { file: EQUIPMENT_SOURCE, updated: 0, missing: true };
+  const usages = componentUsageIndex(spells);
+  let updated = 0;
+  for (const item of getItems(document)) {
+    if (!componentSourceItem(item)) continue;
+    item.system ??= {};
+    const info = materialNameAndQuantity(item.name ?? item.system.nom, 1);
+    const key = slug(info.nom);
+    const spellNames = [...(usages.get(key) ?? [])].sort((a, b) => a.localeCompare(b, "fr"));
+    let changed = false;
+    if (info.nom && item.name !== info.nom) { item.name = info.nom; changed = true; }
+    if (info.nom && item.system.nom !== info.nom) { item.system.nom = info.nom; changed = true; }
+    if (JSON.stringify(item.system.sorts_associes ?? []) !== JSON.stringify(spellNames)) { item.system.sorts_associes = spellNames; changed = true; }
+    if (changed) updated += 1;
   }
+  if (updated) writeJson(sourceFile, document);
+  return { file: EQUIPMENT_SOURCE, updated, linkedComponents: usages.size, missing: false };
 }
 
 function main() {
@@ -711,12 +790,15 @@ function main() {
 
   const items = previousItems.map(item => clone(item));
   const references = loadReferences();
+  const existingMaterialFieldsNormalized = normaliseExistingSpellMaterialFields(items);
   const mechanics = applyReferenceMechanicalFields(items, references);
+  mechanics.existingMaterialFieldsNormalized = existingMaterialFieldsNormalized;
   const flags = applyReferenceFlags(items, references);
   const result = setItems(clone(previous), items);
   result.normalizedBy = VERSION;
   result.normalizedAt = new Date().toISOString();
   assertNoRegression(previous, result);
+  const equipmentAssociations = syncEquipmentComponentAssociations(items);
 
   const control = readJson(controlFile, {}) ?? {};
   control.version = VERSION;
@@ -733,25 +815,13 @@ function main() {
   control.nonRegression = {
     status: "passed",
     validatedBaseline: path.relative(ROOT, output),
-    allowedItemPaths: [
-      "system.composantes",
-      "system.composants_materiels",
-      "system.composants_materiels_objets",
-      "system.composants_requis",
-      "system.description",
-      "system.description_texte",
-      "system.description_reelle",
-      "system.description_html",
-      "system.description_source",
-      "flags.add2e.reversible",
-      "flags.add2e.variant",
-      "flags.add2e.variants"
-    ],
+    allowedItemPaths: ["system.composantes", "system.composants_materiels", "system.composants_materiels_objets", "system.composants_requis", "system.description", "system.description_texte", "system.description_reelle", "system.description_html", "system.description_source", "flags.add2e.reversible", "flags.add2e.variant", "flags.add2e.variants"],
     allowedDocumentPaths: ["normalizedBy", "normalizedAt"],
     itemCountBefore: previousItems.length,
     itemCountAfter: items.length
   };
   control.materialMechanics = mechanics;
+  control.componentCatalog = equipmentAssociations;
   control.reversibleActorSplit = {
     version: VERSION,
     referenceFiles: references.files,
@@ -771,7 +841,8 @@ function main() {
   writeJson(output, result);
   writeJson(controlFile, control);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] ${control.outputSpellCount} sort(s) V3 conservé(s) comme base.`);
-  console.log(`[ADD2E][SPELL_MATERIALS_V3] Composantes appliquées: ${mechanics.updated}; sans M vidés: ${mechanics.noMaterialCleared}; références matérielles structurées: ${mechanics.structuredMaterialsApplied}; descriptions référencées: ${mechanics.descriptionsApplied}.`);
+  console.log(`[ADD2E][SPELL_MATERIALS_V3] Composantes appliquées: ${mechanics.updated}; sans M vidés: ${mechanics.noMaterialCleared}; références matérielles structurées: ${mechanics.structuredMaterialsApplied}; textes convertis: ${mechanics.fallbackTextMaterialsNormalized}.`);
+  console.log(`[ADD2E][SPELL_MATERIALS_V3] Associations composants -> sorts: ${equipmentAssociations.updated} équipement(s) mis à jour.`);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Réversibles déclarés — clerc: ${references.declaredByClass.clerc}, druide: ${references.declaredByClass.druide}, magicien: ${references.declaredByClass.magicien}, illusionniste: ${references.declaredByClass.illusionniste}.`);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Réversibles appariés — clerc: ${flags.reversibleMatchedByClass.clerc}, druide: ${flags.reversibleMatchedByClass.druide}, magicien: ${flags.reversibleMatchedByClass.magicien}, illusionniste: ${flags.reversibleMatchedByClass.illusionniste}.`);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Variantes structurées: ${flags.variantProfiles.length} sort(s) / ${control.variantChoiceCount} choix.`);
