@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const VERSION = "2026-06-23-structured-material-quantities-v6";
+const VERSION = "2026-06-23-compendium-equipements-materials-v7";
 const MANAGED_BY = "normalize-fvtt-spells-materials-v3";
 const INPUT = "fvtt-spells-all-normalise-mecanique-v1.json";
 const OUTPUT = "fvtt-spells-all-normalise-mecanique-v3.json";
@@ -11,7 +11,7 @@ const CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
 const MASTER = "audit/reference/manuel-joueurs-sorts-master.json";
 const REVERSIBILITY_REFERENCE = "audit/reference/manuel-joueurs-reversibilite.json";
 const MATERIAL_REFERENCE = "audit/reference/manuel-joueurs-composants-materiels.json";
-const EQUIPMENT_SOURCE = "sources/Item-Equipements.json";
+const EQUIPMENT_COMPENDIUM = "compendium_equiepents.json";
 const CLASSES = {
   clerc: [1, 2, 3, 4, 5, 6, 7],
   druide: [1, 2, 3, 4, 5, 6, 7],
@@ -133,6 +133,10 @@ function consumptionIsNonConsumed(value) {
   return ["non_consomme", "non consommé", "non consomme", "non_consumed", "nonconsumed", "focus"].includes(raw);
 }
 
+function normaliseConsumption(value, fallback = "consomme") {
+  return consumptionIsNonConsumed(value) ? "non_consomme" : text(value) || fallback;
+}
+
 function normaliseMaterialRule(raw) {
   if (raw == null || raw === "") return null;
   if (typeof raw === "string") {
@@ -166,6 +170,7 @@ function normaliseMaterialRule(raw) {
   const explicitQuantity = raw.quantite ?? raw.quantity ?? raw.qty ?? raw.nombre ?? raw.count ?? 1;
   const info = materialNameAndQuantity(sourceName, explicitQuantity);
   if (!info.nom) return null;
+
   const rule = clone(raw);
   rule.nom = info.nom;
   rule.quantite = info.quantite;
@@ -725,50 +730,205 @@ function assertNoRegression(before, after) {
   if (!sameJson(comparableDocument(before), comparableDocument(after))) throw new Error("Régression bloquée : le normalisateur a modifié des données hors composants de sort, descriptions référencées, flags add2e réversible/variante ou métadonnées normalizedBy/normalizedAt.");
 }
 
-function componentSourceItem(item) {
+function componentCompendiumItem(item) {
   const system = item?.system ?? {};
   const tags = [...asArray(system.tags), ...asArray(system.effectTags), ...asArray(item?.flags?.add2e?.tags)].map(slug);
   return slug(system.categorie ?? system.category) === "composant_sort" || slug(system.sousType ?? system.sous_type) === "composant" || tags.includes("composant_sort") || tags.some(tag => tag.startsWith("composant_"));
+}
+
+function spellClassName(spell) {
+  const system = spell?.system ?? {};
+  if (text(system.classe)) return text(system.classe);
+  if (Array.isArray(system.spellLists) && system.spellLists.length) return text(system.spellLists[0]);
+  return "";
+}
+
+function ruleCondition(rule, inherited = "") {
+  return text(rule?.condition ?? rule?.conditions ?? rule?.sourceCondition ?? inherited) || null;
+}
+
+function ruleConsumption(rule, inherited = "consomme") {
+  return normaliseConsumption(rule?.consommation ?? rule?.consumption ?? rule?.consume ?? inherited, inherited || "consomme");
+}
+
+function collectComponentUsage(value, spell, inherited = {}, out = []) {
+  for (const raw of asArray(value)) {
+    if (Array.isArray(raw)) {
+      collectComponentUsage(raw, spell, inherited, out);
+      continue;
+    }
+    if (!raw) continue;
+    if (typeof raw === "string") {
+      const info = materialNameAndQuantity(raw, 1);
+      if (!info.nom) continue;
+      out.push({
+        key: slug(info.nom),
+        detail: {
+          nom: text(spell?.name ?? spell?.system?.nom),
+          id: text(spell?._id ?? spell?.id),
+          classe: spellClassName(spell),
+          niveau: itemLevel(spell),
+          quantite: info.quantite,
+          consommation: ruleConsumption({}, inherited.consommation),
+          condition: text(inherited.condition) || null
+        }
+      });
+      continue;
+    }
+    if (typeof raw !== "object") continue;
+
+    const next = {
+      consommation: ruleConsumption(raw, inherited.consommation),
+      condition: ruleCondition(raw, inherited.condition)
+    };
+    const alternatives = raw.alternatives ?? raw.options ?? raw.choix ?? raw.auChoix ?? raw.or;
+    if (Array.isArray(alternatives) && alternatives.length) {
+      collectComponentUsage(alternatives, spell, next, out);
+      continue;
+    }
+
+    const rawName = raw.nom ?? raw.name ?? raw.label ?? raw.item ?? raw.itemName ?? raw.component ?? raw.composant ?? raw.slug;
+    const rawQuantity = raw.quantite ?? raw.quantity ?? raw.qty ?? raw.nombre ?? raw.count ?? 1;
+    const info = materialNameAndQuantity(rawName, rawQuantity);
+    if (!info.nom) continue;
+    out.push({
+      key: slug(info.nom),
+      detail: {
+        nom: text(spell?.name ?? spell?.system?.nom),
+        id: text(spell?._id ?? spell?.id),
+        classe: spellClassName(spell),
+        niveau: itemLevel(spell),
+        quantite: info.quantite,
+        consommation: next.consommation,
+        condition: next.condition
+      }
+    });
+  }
+  return out;
 }
 
 function componentUsageIndex(spells) {
   const index = new Map();
   for (const spell of spells) {
     if (!isSpell(spell)) continue;
-    const materialSource = Array.isArray(spell?.system?.composants_materiels_objets) && spell.system.composants_materiels_objets.length
+    const source = Array.isArray(spell?.system?.composants_materiels_objets) && spell.system.composants_materiels_objets.length
       ? spell.system.composants_materiels_objets
       : spell?.system?.composants_materiels;
-    for (const rule of flattenMaterialRules(materialSource)) {
-      const info = materialNameAndQuantity(rule.nom, rule.quantite);
-      const key = slug(info.nom);
-      if (!key) continue;
-      if (!index.has(key)) index.set(key, new Set());
-      index.get(key).add(text(spell.name ?? spell.system?.nom));
+    for (const usage of collectComponentUsage(source, spell)) {
+      if (!usage.key) continue;
+      if (!index.has(usage.key)) index.set(usage.key, []);
+      index.get(usage.key).push(usage.detail);
     }
+  }
+
+  for (const [key, details] of index) {
+    const unique = new Map();
+    for (const detail of details) {
+      const detailKey = [detail.id, detail.nom, detail.classe, detail.niveau, detail.quantite, detail.consommation, detail.condition ?? ""].join("|");
+      unique.set(detailKey, detail);
+    }
+    index.set(key, [...unique.values()].sort((left, right) =>
+      String(left.nom).localeCompare(String(right.nom), "fr") ||
+      Number(left.niveau) - Number(right.niveau) ||
+      String(left.condition ?? "").localeCompare(String(right.condition ?? ""), "fr")
+    ));
   }
   return index;
 }
 
+function preserveComponentTags(values, test) {
+  return asArray(values).map(value => String(value ?? "").trim()).filter(value => value && !test(value));
+}
+
+function componentTags(existing, componentSlug) {
+  const retained = preserveComponentTags(existing, value =>
+    ["objet", "categorie:composant_sort", "sous_type:composant", "composant_sort", "consommable"].includes(value) ||
+    /^objet:/i.test(value) ||
+    /^composant:/i.test(value)
+  );
+  return uniqueText([
+    "objet",
+    "categorie:composant_sort",
+    "sous_type:composant",
+    `objet:${componentSlug}`,
+    "composant_sort",
+    `composant:${componentSlug}`,
+    "consommable",
+    ...retained
+  ]);
+}
+
+function componentEffectTags(existing, componentSlug) {
+  const retained = preserveComponentTags(existing, value =>
+    ["objet", "categorie_composant_sort", "sous_type_composant", "composant_sort", "consommable"].includes(value) ||
+    /^objet_/i.test(value) ||
+    /^composant_/i.test(value)
+  );
+  return uniqueText([
+    "objet",
+    "categorie_composant_sort",
+    "sous_type_composant",
+    `objet_${componentSlug}`,
+    "composant_sort",
+    `composant_${componentSlug}`,
+    "consommable",
+    ...retained
+  ]);
+}
+
 function syncEquipmentComponentAssociations(spells) {
-  const sourceFile = path.join(ROOT, EQUIPMENT_SOURCE);
+  const sourceFile = path.join(ROOT, EQUIPMENT_COMPENDIUM);
   const document = readJson(sourceFile, null);
-  if (!document) return { file: EQUIPMENT_SOURCE, updated: 0, missing: true };
+  if (!document) return { file: EQUIPMENT_COMPENDIUM, updated: 0, missing: true };
+
   const usages = componentUsageIndex(spells);
   let updated = 0;
   for (const item of getItems(document)) {
-    if (!componentSourceItem(item)) continue;
+    if (!componentCompendiumItem(item)) continue;
     item.system ??= {};
-    const info = materialNameAndQuantity(item.name ?? item.system.nom, 1);
-    const key = slug(info.nom);
-    const spellNames = [...(usages.get(key) ?? [])].sort((a, b) => a.localeCompare(b, "fr"));
+    item.flags ??= {};
+    item.flags.add2e ??= {};
+
+    const info = materialNameAndQuantity(item.system.nom ?? item.name, 1);
+    const componentName = info.nom;
+    const componentSlug = slug(componentName);
+    if (!componentName || !componentSlug) continue;
+
+    const details = clone(usages.get(componentSlug) ?? []);
+    const spellNames = uniqueText(details.map(detail => detail.nom)).sort((left, right) => left.localeCompare(right, "fr"));
+    const consumptions = uniqueText(details.map(detail => detail.consommation)).sort((left, right) => left.localeCompare(right, "fr"));
+    const conditions = uniqueText(details.map(detail => detail.condition)).sort((left, right) => left.localeCompare(right, "fr"));
+    const expectedDescription = `Composant de sort : ${componentName}.`;
     let changed = false;
-    if (info.nom && item.name !== info.nom) { item.name = info.nom; changed = true; }
-    if (info.nom && item.system.nom !== info.nom) { item.system.nom = info.nom; changed = true; }
-    if (JSON.stringify(item.system.sorts_associes ?? []) !== JSON.stringify(spellNames)) { item.system.sorts_associes = spellNames; changed = true; }
+
+    const assign = (path, value) => {
+      const current = path.split(".").reduce((target, key) => target?.[key], item);
+      if (JSON.stringify(current) === JSON.stringify(value)) return;
+      let target = item;
+      const keys = path.split(".");
+      for (const key of keys.slice(0, -1)) target = target[key] ??= {};
+      target[keys.at(-1)] = value;
+      changed = true;
+    };
+
+    assign("name", componentName);
+    assign("system.nom", componentName);
+    assign("system.slug", componentSlug);
+    assign("flags.add2e.slug", componentSlug);
+    assign("system.tags", componentTags(item.system.tags, componentSlug));
+    assign("system.effectTags", componentEffectTags(item.system.effectTags, componentSlug));
+    assign("system.sorts_associes", spellNames);
+    assign("system.sorts_associes_details", details);
+    assign("system.consommations_associees", consumptions);
+    assign("system.conditions_associees", conditions);
+    if (/^Composant de sort\s*:/i.test(String(item.system.description ?? ""))) assign("system.description", expectedDescription);
+    if (!text(item.system.source_composant)) assign("system.source_composant", "Compendium.add2e.sorts — composants matériels normalisés");
+
     if (changed) updated += 1;
   }
+
   if (updated) writeJson(sourceFile, document);
-  return { file: EQUIPMENT_SOURCE, updated, linkedComponents: usages.size, missing: false };
+  return { file: EQUIPMENT_COMPENDIUM, updated, linkedComponents: usages.size, missing: false };
 }
 
 function main() {
@@ -815,7 +975,20 @@ function main() {
   control.nonRegression = {
     status: "passed",
     validatedBaseline: path.relative(ROOT, output),
-    allowedItemPaths: ["system.composantes", "system.composants_materiels", "system.composants_materiels_objets", "system.composants_requis", "system.description", "system.description_texte", "system.description_reelle", "system.description_html", "system.description_source", "flags.add2e.reversible", "flags.add2e.variant", "flags.add2e.variants"],
+    allowedItemPaths: [
+      "system.composantes",
+      "system.composants_materiels",
+      "system.composants_materiels_objets",
+      "system.composants_requis",
+      "system.description",
+      "system.description_texte",
+      "system.description_reelle",
+      "system.description_html",
+      "system.description_source",
+      "flags.add2e.reversible",
+      "flags.add2e.variant",
+      "flags.add2e.variants"
+    ],
     allowedDocumentPaths: ["normalizedBy", "normalizedAt"],
     itemCountBefore: previousItems.length,
     itemCountAfter: items.length
@@ -842,7 +1015,7 @@ function main() {
   writeJson(controlFile, control);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] ${control.outputSpellCount} sort(s) V3 conservé(s) comme base.`);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Composantes appliquées: ${mechanics.updated}; sans M vidés: ${mechanics.noMaterialCleared}; références matérielles structurées: ${mechanics.structuredMaterialsApplied}; textes convertis: ${mechanics.fallbackTextMaterialsNormalized}.`);
-  console.log(`[ADD2E][SPELL_MATERIALS_V3] Associations composants -> sorts: ${equipmentAssociations.updated} équipement(s) mis à jour.`);
+  console.log(`[ADD2E][SPELL_MATERIALS_V3] Compendium équipements mis à jour: ${equipmentAssociations.updated} composant(s), ${equipmentAssociations.linkedComponents ?? 0} lien(s) de composant.`);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Réversibles déclarés — clerc: ${references.declaredByClass.clerc}, druide: ${references.declaredByClass.druide}, magicien: ${references.declaredByClass.magicien}, illusionniste: ${references.declaredByClass.illusionniste}.`);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Réversibles appariés — clerc: ${flags.reversibleMatchedByClass.clerc}, druide: ${flags.reversibleMatchedByClass.druide}, magicien: ${flags.reversibleMatchedByClass.magicien}, illusionniste: ${flags.reversibleMatchedByClass.illusionniste}.`);
   console.log(`[ADD2E][SPELL_MATERIALS_V3] Variantes structurées: ${flags.variantProfiles.length} sort(s) / ${control.variantChoiceCount} choix.`);
