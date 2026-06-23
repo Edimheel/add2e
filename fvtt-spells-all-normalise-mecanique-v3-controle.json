@@ -1,5 +1,5 @@
 {
-  "version": "2026-06-22-reference-description-v5",
+  "version": "2026-06-23-structured-material-quantities-v6",
   "input": "fvtt-spells-all-normalise-mecanique-v1.json",
   "output": "fvtt-spells-all-normalise-mecanique-v3.json",
   "clercAuditFiles": [
@@ -14661,7 +14661,7 @@
     "itemCountAfter": 414
   },
   "reversibleActorSplit": {
-    "version": "2026-06-22-reference-description-v5",
+    "version": "2026-06-23-structured-material-quantities-v6",
     "referenceFiles": [
       "audit/reference/manuel-joueurs-sorts-master.json",
       "audit/reference/manuel-joueurs-clerc-niveau-1.json",
@@ -15764,41 +15764,11 @@
             "manualName": "Détection des mensonges",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                {
-                  "nom": "poussière de laiton",
-                  "quantite": 1,
-                  "consommation": "consomme",
-                  "cout_po": null,
-                  "source": "Manuel des joueurs",
-                  "condition": "Sort inversé : dissimulation des mensonges.",
-                  "notes": null
-                }
-              ],
-              "composants_materiels_objets": [
-                {
-                  "nom": "poussière de laiton",
-                  "quantite": 1,
-                  "consommation": "consomme",
-                  "cout_po": null,
-                  "source": "Manuel des joueurs",
-                  "condition": "Sort inversé : dissimulation des mensonges.",
-                  "notes": null
-                }
-              ],
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
               "composantes": "V, S, M"
             },
-            "materialReference": [
-              {
-                "nom": "poussière de laiton",
-                "quantite": 1,
-                "consommation": "consomme",
-                "cout_po": null,
-                "source": "Manuel des joueurs",
-                "condition": "Sort inversé : dissimulation des mensonges.",
-                "notes": null
-              }
-            ]
+            "materialReference": []
           },
           {
             "id": "inverse",
@@ -15905,38 +15875,11 @@
             "manualName": "Détection du mal",
             "copySourceItem": true,
             "systemOverrides": {
-              "composants_materiels": [
-                {
-                  "nom": "symbole sacré",
-                  "quantite": 1,
-                  "consommation": "non_consomme",
-                  "source": "Manuel des joueurs",
-                  "condition": "Le clerc tient son symbole sacré devant lui.",
-                  "notes": "Objet religieux non consommé ; identique pour l’inverse Détection du bien."
-                }
-              ],
-              "composants_materiels_objets": [
-                {
-                  "nom": "symbole sacré",
-                  "quantite": 1,
-                  "consommation": "non_consomme",
-                  "source": "Manuel des joueurs",
-                  "condition": "Le clerc tient son symbole sacré devant lui.",
-                  "notes": "Objet religieux non consommé ; identique pour l’inverse Détection du bien."
-                }
-              ],
+              "composants_materiels": [],
+              "composants_materiels_objets": [],
               "composantes": "V, S, M"
             },
-            "materialReference": [
-              {
-                "nom": "symbole sacré",
-                "quantite": 1,
-                "consommation": "non_consomme",
-                "source": "Manuel des joueurs",
-                "condition": "Le clerc tient son symbole sacré devant lui.",
-                "notes": "Objet religieux non consommé ; identique pour l’inverse Détection du bien."
-              }
-            ]
+            "materialReference": []
           },
           {
             "id": "inverse",
@@ -19373,11 +19316,19 @@
     ]
   },
   "materialMechanics": {
-    "updated": 75,
-    "noMaterialCleared": 34,
-    "structuredMaterialsApplied": 41,
-    "descriptionsApplied": 75,
+    "updated": 0,
+    "noMaterialCleared": 0,
+    "structuredMaterialsApplied": 42,
+    "fallbackTextMaterialsNormalized": 0,
+    "descriptionsApplied": 0,
     "missingMaterialReferences": [],
-    "conflicts": []
+    "conflicts": [],
+    "existingMaterialFieldsNormalized": 258
+  },
+  "componentCatalog": {
+    "file": "sources/Item-Equipements.json",
+    "updated": 87,
+    "linkedComponents": 304,
+    "missing": false
   }
 }
