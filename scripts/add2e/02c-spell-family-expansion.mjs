@@ -37,7 +37,7 @@ function add2eSpellClassLevel(actor,classSlug=""){
 globalThis.ADD2E_SPELL_CLASS_LEVEL_VERSION=ADD2E_SPELL_CLASS_LEVEL_VERSION;
 globalThis.add2eSpellClassLevel=add2eSpellClassLevel;
 
-const ADD2E_SPELL_SYNC_MODAL_VERSION="2026-06-23-modal-fast-level-down-v1";
+const ADD2E_SPELL_SYNC_MODAL_VERSION="2026-06-23-modal-fast-level-down-v2";
 const ADD2E_SPELL_SYNC_LEVEL_DOWNS=globalThis.ADD2E_SPELL_SYNC_LEVEL_DOWNS instanceof Map?globalThis.ADD2E_SPELL_SYNC_LEVEL_DOWNS:new Map();
 const ADD2E_SPELL_SYNC_MODAL_STATE=globalThis.ADD2E_SPELL_SYNC_MODAL_STATE instanceof Map?globalThis.ADD2E_SPELL_SYNC_MODAL_STATE:new Map();
 globalThis.ADD2E_SPELL_SYNC_LEVEL_DOWNS=ADD2E_SPELL_SYNC_LEVEL_DOWNS;
@@ -61,11 +61,10 @@ function add2eSpellSyncOpenModal(actor,message="Synchronisation des sorts en cou
       dialog=new DialogV2({
         window:{title:"Synchronisation des sorts"},
         content:`<section class="add2e-spell-sync-wait" style="min-width:330px;text-align:center;line-height:1.45;padding:8px 4px;"><i class="fas fa-circle-notch fa-spin" style="font-size:2rem;margin:8px;color:#b88924;"></i><p style="margin:8px 0 4px;font-weight:700;">${String(actor?.name??"Personnage")}</p><p style="margin:0;">${message}</p><p style="margin:12px 0 0;font-size:.9em;opacity:.8;">Veuillez patienter. Les actions sur cette fiche sont temporairement bloquées.</p></section>`,
-        buttons:[],
-        modal:true,
-        rejectClose:true
-      });
-      dialog.render(true);
+        buttons:[{action:"wait",label:"Synchronisation en cours…",default:true,callback:()=>false}],
+        close:()=>false
+      },{width:420,height:"auto"});
+      dialog.render({force:true});
     }catch(error){console.warn("[ADD2E][SPELL_SYNC][WAIT_DIALOG_ERROR]",error)}
   }
   ADD2E_SPELL_SYNC_MODAL_STATE.set(key,{count:1,dialog});
@@ -77,7 +76,7 @@ function add2eSpellSyncCloseModal(actor){
   entry.count-=1;
   if(entry.count>0)return;
   ADD2E_SPELL_SYNC_MODAL_STATE.delete(key);
-  entry.dialog?.close?.({force:true}).catch?.(error=>console.warn("[ADD2E][SPELL_SYNC][WAIT_DIALOG_CLOSE_ERROR]",error));
+  try{entry.dialog?.close?.({force:true})}catch(error){console.warn("[ADD2E][SPELL_SYNC][WAIT_DIALOG_CLOSE_ERROR]",error)}
 }
 function add2eSpellSyncSignature(actor){
   const classes=actor?.items?.filter?.(item=>String(item?.type??"").toLowerCase()==="classe")??[],multi=actor?.system?.multiclasse?.enabled===true||classes.length>1,sig={};
