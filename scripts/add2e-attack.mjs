@@ -42,7 +42,7 @@ function add2eHudDiagnosticsModules() {
     } else if (typeof modules?.entries === "function") {
       entries = Array.from(modules.entries());
     } else if (typeof modules?.values === "function") {
-      entries = Array.from(modules.values()).map(mod => [mod.id ?? mod.name ?? mod.key ?? "", mod]);
+      entries = Array.from(modules.values()).map(mod => [mod.id ?? mod.name ?? "", mod]);
     } else if (modules && typeof modules === "object") {
       entries = Object.entries(modules);
     }
@@ -84,7 +84,110 @@ function add2eInstallHudDiagnostics() {
   };
 }
 
+function add2eComponentTransactionStore() {
+  if (!(globalThis.__ADD2E_COMPONENT_TRANSACTION_STORE_V1 instanceof Map)) {
+    globalThis.__ADD2E_COMPONENT_TRANSACTION_STORE_V1 = new Map();
+  }
+  return globalThis.__ADD2E_COMPONENT_TRANSACTION_STORE_V1;
+}
+
+function add2eComponentSortKeys(sort) {
+  const flags = sort?.flags?.add2e ?? {};
+  return [sort?.id, sort?._id, sort?.uuid, sort?._stats?.compendiumSource, flags.sourceUuid, flags.sourceId, flags.importKey]
+    .map(value => String(value ?? "").trim())
+    .filter(Boolean);
+}
+
+function add2eRememberComponentTransaction(actor, sort, reservation) {
+  if (!reservation?.ok || !reservation?.consumed?.length || !actor?.id) return;
+  const id = foundry.utils.randomID();
+  add2eComponentTransactionStore().set(id, {
+    id,
+    actorId: String(actor.id),
+    sortKeys: add2eComponentSortKeys(sort),
+    reservation
+  });
+}
+
+function add2eForgetComponentTransaction(reservation) {
+  if (!reservation) return;
+  const store = add2eComponentTransactionStore();
+  for (const [id, entry] of store) {
+    if (entry.reservation === reservation) store.delete(id);
+  }
+}
+
+function add2eTakeComponentTransaction(actor, sort) {
+  const actorId = String(actor?.id ?? "");
+  if (!actorId) return null;
+  const requestedKeys = new Set(add2eComponentSortKeys(sort));
+  const entries = Array.from(add2eComponentTransactionStore().entries())
+    .filter(([, entry]) => entry.actorId === actorId);
+  if (!entries.length) return null;
+
+  let selected = entries.find(([, entry]) => entry.sortKeys.some(key => requestedKeys.has(key))) ?? null;
+  if (!selected && entries.length === 1) selected = entries[0];
+  if (!selected) return null;
+
+  add2eComponentTransactionStore().delete(selected[0]);
+  return selected[1].reservation;
+}
+
+function add2eInstallSpellComponentTransactionBridge() {
+  if (globalThis.__ADD2E_COMPONENT_TRANSACTION_BRIDGE_V1) return true;
+  const api = globalThis.ADD2E_CONSUMABLES;
+  const castSpell = globalThis.add2eCastSpell;
+  if (!api?.add2eReserveSpellComponents || !api?.add2eRefundSpellComponents || !api?.add2eFinalizeSpellComponents || typeof castSpell !== "function") return false;
+
+  globalThis.__ADD2E_COMPONENT_TRANSACTION_BRIDGE_V1 = true;
+  const reserve = api.add2eReserveSpellComponents.bind(api);
+  const refund = api.add2eRefundSpellComponents.bind(api);
+
+  api.add2eReserveSpellComponents = async function add2eReserveSpellComponentsTracked(actor, sort) {
+    const reservation = await reserve(actor, sort);
+    add2eRememberComponentTransaction(actor, sort, reservation);
+    return reservation;
+  };
+
+  api.add2eRefundSpellComponents = async function add2eRefundSpellComponentsTracked(reservation) {
+    const refunded = await refund(reservation);
+    if (refunded) add2eForgetComponentTransaction(reservation);
+    return refunded;
+  };
+
+  const transactionalCastSpell = async function add2eCastSpellTransactional(args = {}) {
+    const result = await castSpell(args);
+    if (result !== true) return result;
+
+    const reservation = add2eTakeComponentTransaction(args.actor, args.sort);
+    if (!reservation) return result;
+
+    const finalized = await api.add2eFinalizeSpellComponents(reservation);
+    if (!finalized) {
+      console.error("[ADD2E][CAST_SPELL][FINALIZE][COMPONENTS_FAILED]", { actor: args.actor?.name, sort: args.sort?.name, reservation });
+      ui.notifications.error("Le sort a été lancé, mais la suppression des composants épuisés doit être vérifiée par le MJ.");
+    }
+    return result;
+  };
+
+  globalThis.add2eCastSpell = transactionalCastSpell;
+  globalThis.cast_spell = transactionalCastSpell;
+  return true;
+}
+
+function add2eScheduleSpellComponentTransactionBridge() {
+  let attempts = 0;
+  const install = () => {
+    if (add2eInstallSpellComponentTransactionBridge()) return;
+    attempts += 1;
+    if (attempts < 20) window.setTimeout(install, 50);
+  };
+  install();
+}
+
 add2eInstallHudDiagnostics();
+
+Hooks.once("ready", () => add2eScheduleSpellComponentTransactionBridge());
 
 (async () => {
   // Ordre important : helpers / dégâts / règles / VFX / sorts d'abord,
