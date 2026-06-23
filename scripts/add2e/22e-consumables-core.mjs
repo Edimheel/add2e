@@ -13,7 +13,7 @@ import {
   esc
 } from "./22a-vendor-core.mjs";
 
-export const ADD2E_CONSUMABLES_VERSION = "2026-06-15-consumables-core-v12-delete-zero-quantity-items";
+export const ADD2E_CONSUMABLES_VERSION = "2026-06-23-consumables-core-v13-reusable-components";
 export const SOCKET_COMPONENT_RESULT = "ADD2E_SPELL_COMPONENT_RESULT";
 export const GM_OPERATION_COMPONENT_RESERVE = "vendorReserveSpellComponents";
 export const GM_OPERATION_COMPONENT_REFUND = "vendorRefundSpellComponents";
@@ -148,6 +148,44 @@ function isSpellComponentItem(item) {
   return isKnownLooseComponentName(item?.name) || isKnownLooseComponentName(item?.system?.nom);
 }
 
+function booleanValue(value) {
+  if (value === true) return true;
+  if (value === false) return false;
+  if (value === undefined || value === null || value === "") return null;
+  const text = lower(value);
+  if (["true", "1", "yes", "oui", "on"].includes(text)) return true;
+  if (["false", "0", "no", "non", "off"].includes(text)) return false;
+  return null;
+}
+
+function componentRequirementConsumes(value, fallback = true) {
+  if (!value || typeof value !== "object") return fallback;
+  const reusable = booleanValue(value.reutilisable ?? value.réutilisable ?? value.reusable);
+  if (reusable === true) return false;
+
+  const explicit = booleanValue(value.consomme ?? value.consume ?? value.consumable ?? value.consomable ?? value.estConsommable);
+  if (explicit !== null) return explicit;
+
+  const mode = lower(value.consommation ?? value.consumption ?? "");
+  if (!mode) return fallback;
+  return !(/^(non|reutilisable)$/.test(mode) || /reutilis|non[\s_-]*consomm|sans[\s_-]*consomm|permanent/.test(mode));
+}
+
+function isReusableComponentItem(item) {
+  if (!item) return false;
+  const system = item.system ?? {};
+  const flags = item.flags?.add2e ?? {};
+  const reusable = booleanValue(system.reutilisable ?? system.réutilisable ?? system.reusable ?? flags.reutilisable ?? flags.réutilisable ?? flags.reusable);
+  if (reusable === true) return true;
+
+  const consumable = booleanValue(system.consommable ?? system.consumable ?? system.consomme ?? system.consume ?? flags.consommable ?? flags.consumable ?? flags.consomme ?? flags.consume);
+  if (consumable !== null) return consumable === false;
+
+  const mode = lower(system.consommation ?? system.consumption ?? flags.consommation ?? flags.consumption ?? "");
+  if (/^(non|reutilisable)$/.test(mode) || /reutilis|non[\s_-]*consomm|sans[\s_-]*consomm|permanent/.test(mode)) return true;
+  return itemTextFields(item).some(value => /reutilis|non[\s_-]*consomm|sans[\s_-]*consomm/.test(value));
+}
+
 function isOnlyComponentCode(value) {
   const text = lower(value).replace(/[^a-z]/g, "");
   return ["v", "s", "m", "vs", "vm", "sm", "vsm", "verbal", "somatique", "materiel", "materielle", "material"].includes(text);
@@ -193,19 +231,19 @@ function requirementKey(rawName) {
   return key;
 }
 
-function makeRequirement(rawName, rawQty = 1) {
+function makeRequirement(rawName, rawQty = 1, consume = true) {
   const name = cleanComponentName(rawName);
   if (!name || isOnlyComponentCode(name)) return null;
   const key = requirementKey(name);
   if (!key) return null;
   const qty = Math.max(1, Math.floor(num(rawQty, 1)));
-  return { name, key, quantity: qty };
+  return { name, key, quantity: qty, consume: consume !== false };
 }
 
-function addRequirement(out, rawName, rawQty = 1) {
-  const req = makeRequirement(rawName, rawQty);
+function addRequirement(out, rawName, rawQty = 1, consume = true) {
+  const req = makeRequirement(rawName, rawQty, consume);
   if (!req) return;
-  const existing = out.find(r => r.key === req.key && !r.alternatives);
+  const existing = out.find(r => r.key === req.key && r.consume === req.consume && !r.alternatives);
   if (existing) existing.quantity += req.quantity;
   else out.push(req);
 }
@@ -213,13 +251,13 @@ function addRequirement(out, rawName, rawQty = 1) {
 function addAlternativeRequirement(out, alternatives) {
   const clean = [];
   for (const alt of alternatives) {
-    const req = makeRequirement(rawRequirementName(alt), rawRequirementQuantity(alt));
+    const req = makeRequirement(rawRequirementName(alt), rawRequirementQuantity(alt), componentRequirementConsumes(alt));
     if (!req) continue;
-    if (!clean.some(r => r.key === req.key)) clean.push(req);
+    if (!clean.some(r => r.key === req.key && r.consume === req.consume)) clean.push(req);
   }
   if (!clean.length) return;
   if (clean.length === 1) {
-    addRequirement(out, clean[0].name, clean[0].quantity);
+    addRequirement(out, clean[0].name, clean[0].quantity, clean[0].consume);
     return;
   }
   out.push({ name: clean.map(r => r.name).join(" ou "), key: clean.map(r => r.key).join("__or__"), quantity: 1, alternatives: clean });
@@ -255,7 +293,7 @@ function collectRequirement(out, value) {
     }
     const name = rawRequirementName(value);
     const qty = rawRequirementQuantity(value);
-    if (name) addRequirement(out, name, qty);
+    if (name) addRequirement(out, name, qty, componentRequirementConsumes(value));
   }
 }
 
@@ -375,11 +413,43 @@ function sortByName(a, b) {
   return String(a?.name ?? "").localeCompare(String(b?.name ?? ""));
 }
 
+function reusableComponentRequirementKeys(actor) {
+  const keys = new Set();
+  const sorts = Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "sort");
+  for (const sort of sorts) {
+    for (const requirement of spellComponentRequirements(sort)) {
+      const candidates = requirement.alternatives?.length ? requirement.alternatives : [requirement];
+      for (const candidate of candidates) {
+        if (candidate?.consume !== false) continue;
+        for (const key of requirementKeys(candidate)) keys.add(key);
+      }
+    }
+  }
+  return keys;
+}
+
+function isReusableComponentForActor(item, reusableKeys) {
+  if (isReusableComponentItem(item)) return true;
+  if (!reusableKeys?.size) return false;
+  const keys = componentKeys(item);
+  return keys.some(itemKey => [...reusableKeys].some(requirementKey => compatibleComponentKey(itemKey, requirementKey)));
+}
+
+function sortComponentsForActor(actor, items) {
+  const reusableKeys = reusableComponentRequirementKeys(actor);
+  return items.sort((a, b) => {
+    const aReusable = isReusableComponentForActor(a, reusableKeys);
+    const bReusable = isReusableComponentForActor(b, reusableKeys);
+    if (aReusable !== bReusable) return aReusable ? 1 : -1;
+    return sortByName(a, b);
+  });
+}
+
 export function prepareActorSheetConsumables(data) {
   const items = Array.from(data?.actor?.items ?? []);
   const objets = Array.isArray(data?.listeObjets) && data.listeObjets.length ? data.listeObjets : items.filter(item => item.type === "objet");
   const carquois = objets.filter(item => isAmmunition(item) && quantity(item) > 0).sort(sortByName);
-  const sacoche = objets.filter(item => isSpellComponentItem(item) && quantity(item) > 0).sort(sortByName);
+  const sacoche = sortComponentsForActor(data?.actor, objets.filter(item => isSpellComponentItem(item) && quantity(item) > 0));
   const divers = objets.filter(item => !isAmmunition(item) && !isSpellComponentItem(item)).sort(sortByName);
   data.listeCarquois = carquois;
   data.listeSacocheComposants = sacoche;
@@ -514,6 +584,8 @@ async function reserveSpellComponentsLocal(actor, sort, requirements = null) {
       for (const entry of consumed.reverse()) await entry.item.update(quantityUpdate(entry.before), { add2eReason: "spell-component-reserve-rollback" });
       return { ok: false, blocked: true, consumed: [], missing: requirement, message: `${actor?.name ?? "Le lanceur"} n'a pas le composant requis : ${requirement.name} (${requirement.quantity}).` };
     }
+    if (selectedRequirement.consume === false || isReusableComponentItem(item)) continue;
+
     const after = before - selectedRequirement.quantity;
     const itemData = itemDataForRefund(item);
     await item.update(quantityUpdate(after), { add2eReason: "spell-component-reserved-gm" });
