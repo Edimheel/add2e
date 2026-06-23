@@ -1,5 +1,5 @@
 {
-  "version": "2026-06-23-structured-material-quantities-v6",
+  "version": "2026-06-23-rebuild-components-from-v3-v9",
   "input": "fvtt-spells-all-normalise-mecanique-v1.json",
   "output": "fvtt-spells-all-normalise-mecanique-v3.json",
   "clercAuditFiles": [
@@ -14661,7 +14661,7 @@
     "itemCountAfter": 414
   },
   "reversibleActorSplit": {
-    "version": "2026-06-23-structured-material-quantities-v6",
+    "version": "2026-06-23-compendium-equipements-materials-v7",
     "referenceFiles": [
       "audit/reference/manuel-joueurs-sorts-master.json",
       "audit/reference/manuel-joueurs-clerc-niveau-1.json",
@@ -19323,12 +19323,17 @@
     "descriptionsApplied": 0,
     "missingMaterialReferences": [],
     "conflicts": [],
-    "existingMaterialFieldsNormalized": 258
+    "existingMaterialFieldsNormalized": 0
   },
   "componentCatalog": {
-    "file": "sources/Item-Equipements.json",
-    "updated": 87,
-    "linkedComponents": 304,
-    "missing": false
+    "file": "compendium_equiepents.json",
+    "source": "fvtt-spells-all-normalise-mecanique-v3.json",
+    "deleted": 477,
+    "created": 304,
+    "uniqueComponents": 304,
+    "linkedSpellEntries": 503,
+    "policy": "Tous les objets composants existants sont supprimés puis recréés uniquement depuis les entrées structurées de fvtt-spells-all-normalise-mecanique-v3.json.",
+    "v3Rewritten": false,
+    "grammarParsing": false
   }
 }

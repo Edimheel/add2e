@@ -884,7 +884,7 @@
           "importKey": "abaissement_des_eaux|sort|magicien|6",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -1220,7 +1220,7 @@
           "importKey": "abaissement_des_eaux|sort|clerc|4",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -1549,7 +1549,7 @@
           "importKey": "agrandissement|sort|magicien|1",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -3007,7 +3007,7 @@
           "importKey": "antipathie_sympathie|sort|magicien|8",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "variant": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "profiles": [
               {
@@ -3303,7 +3303,7 @@
           },
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -3754,7 +3754,7 @@
           },
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -4193,7 +4193,7 @@
           "importKey": "arme_enchantee|sort|magicien|4",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -5764,7 +5764,7 @@
           "importKey": "batons_a_serpents|sort|clerc|4",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -6082,7 +6082,7 @@
           "importKey": "batons_a_serpents|sort|druide|5",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -6423,7 +6423,7 @@
           },
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -7547,7 +7547,7 @@
           "importKey": "bouclier_de_feu|sort|magicien|4",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "variant": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "profiles": [
               {
@@ -10841,7 +10841,7 @@
           "importKey": "charme_personnes_ou_mammiferes|sort|druide|2",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "variant": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "profiles": [
               {
@@ -13320,7 +13320,7 @@
           "importKey": "comprehension_des_langues|sort|magicien|1",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -14168,7 +14168,7 @@
           "importKey": "contre_poison|sort|clerc|4",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -14363,7 +14363,7 @@
           "importKey": "contre_poison|sort|druide|3",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -16326,7 +16326,7 @@
           "importKey": "croissance_animale|sort|druide|5",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -16522,7 +16522,7 @@
           "importKey": "croissance_animale|sort|magicien|5",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -17266,7 +17266,7 @@
           "importKey": "desenvoutement|sort|clerc|3",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -17434,7 +17434,7 @@
           "importKey": "desenvoutement|sort|magicien|4",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -18837,7 +18837,7 @@
           "importKey": "detection_des_charmes|sort|clerc|2",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -19359,7 +19359,7 @@
           "importKey": "detection_des_mensonges|sort|clerc|4",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -20109,7 +20109,7 @@
           "importKey": "detection_du_mal|sort|magicien|2",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -20428,7 +20428,7 @@
           },
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -21863,7 +21863,7 @@
           "importKey": "dissipation_du_mal|sort|clerc|5",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -24228,7 +24228,7 @@
           "importKey": "embrasement|sort|druide|4",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -24844,7 +24844,7 @@
           "importKey": "emprisonnement|sort|magicien|9",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -28789,7 +28789,7 @@
           "importKey": "foret_hallucinatoire|sort|druide|4",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -30161,7 +30161,7 @@
           "importKey": "graines_de_feu|sort|druide|6",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "variant": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "profiles": [
               {
@@ -30443,7 +30443,7 @@
           "importKey": "guerison|sort|clerc|6",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -30746,7 +30746,7 @@
           "importKey": "guerison_de_la_cecite|sort|clerc|3",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -30915,7 +30915,7 @@
           "importKey": "guerison_des_maladies|sort|druide|3",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -31211,7 +31211,7 @@
           "importKey": "guerison_des_maladies|sort|clerc|3",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -35297,7 +35297,7 @@
           "importKey": "invocation_delemental|sort|magicien|5",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "variant": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "profiles": [
               {
@@ -35689,7 +35689,7 @@
           "importKey": "invocation_dun_elemental_de_terre|sort|druide|7",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -35893,7 +35893,7 @@
           "importKey": "invocation_dun_elemental_du_feu|sort|druide|6",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -40162,7 +40162,7 @@
           "importKey": "langue|sort|clerc|4",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -40364,7 +40364,7 @@
           "importKey": "langues|sort|magicien|3",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -40577,7 +40577,7 @@
           "importKey": "lecture_de_la_magie|sort|magicien|1",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -41485,7 +41485,7 @@
           "importKey": "localisation_dobjets|sort|clerc|3",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -41769,7 +41769,7 @@
           "importKey": "localisation_dobjets|sort|magicien|2",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -42243,7 +42243,7 @@
           },
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -42664,7 +42664,7 @@
           "importKey": "lumiere_eternelle|sort|clerc|3",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -43280,7 +43280,7 @@
           "importKey": "magie_demi_ombre|sort|illusionniste|6",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "variant": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "profiles": [
               {
@@ -43496,7 +43496,7 @@
           "importKey": "magie_des_ombres|sort|illusionniste|5",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "variant": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "profiles": [
               {
@@ -45619,7 +45619,7 @@
           "importKey": "metal_brulant|sort|druide|2",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -51172,7 +51172,7 @@
           "importKey": "orientation|sort|clerc|6",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -53765,7 +53765,7 @@
           "importKey": "perception_des_alignements|sort|clerc|2",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -57533,7 +57533,7 @@
           "importKey": "protection_contre_le_mal|sort|magicien|1",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -58111,7 +58111,7 @@
           },
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -58449,7 +58449,7 @@
           "importKey": "protection_contre_le_mal_sur_3_m|sort|magicien|3",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -58602,7 +58602,7 @@
           "importKey": "protection_contre_le_mal_sur_3_m|sort|clerc|4",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -59273,7 +59273,7 @@
           "importKey": "purification_de_leau|sort|druide|1",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -59426,7 +59426,7 @@
           },
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -59588,7 +59588,7 @@
           "importKey": "pyrotechnie|sort|druide|3",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "variant": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "profiles": [
               {
@@ -59777,7 +59777,7 @@
           "importKey": "pyrotechnie|sort|magicien|2",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "variant": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "profiles": [
               {
@@ -61175,7 +61175,7 @@
           "importKey": "rappel_a_la_vie|sort|clerc|5",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -61811,7 +61811,7 @@
           "importKey": "regeneration|sort|clerc|7",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -63805,7 +63805,7 @@
           "importKey": "respiration_aquatique|sort|druide|3",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -64019,7 +64019,7 @@
           "importKey": "respiration_aquatique|sort|magicien|3",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -64312,7 +64312,7 @@
           "importKey": "restauration|sort|clerc|7",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -64662,7 +64662,7 @@
           "importKey": "resurrection|sort|clerc|7",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -67874,7 +67874,7 @@
           "importKey": "soin_ultime|sort|clerc|5",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -68079,7 +68079,7 @@
           "importKey": "soin_ultime|sort|druide|6",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -68245,7 +68245,7 @@
           "importKey": "soins_majeurs|sort|druide|4",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -68550,7 +68550,7 @@
           "importKey": "soins_majeurs|sort|clerc|4",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -68711,7 +68711,7 @@
           },
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -68926,7 +68926,7 @@
           "importKey": "soins_mineurs|sort|druide|2",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -69732,7 +69732,7 @@
           "importKey": "sorts_de_niveau_1_de_magicien|sort|illusionniste|7",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "variant": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "profiles": [
               {
@@ -70697,7 +70697,7 @@
           "importKey": "stase_temporelle|sort|magicien|9",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -72447,7 +72447,7 @@
           "importKey": "tempete_de_feu|sort|druide|7",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -74256,7 +74256,7 @@
           "importKey": "transmutation_de_pierre_en_boue|sort|druide|5",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -74440,7 +74440,7 @@
           "importKey": "transmutation_de_pierre_en_boue|sort|magicien|5",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -74653,7 +74653,7 @@
           "importKey": "transmutation_de_pierre_en_chair|sort|magicien|6",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -76520,7 +76520,7 @@
           "importKey": "vision_reelle|sort|clerc|5",
           "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
           "reversible": {
-            "version": "2026-06-23-structured-material-quantities-v6",
+            "version": "2026-06-23-compendium-equipements-materials-v7",
             "managedBy": "normalize-fvtt-spells-materials-v3",
             "enabled": true,
             "choiceTiming": "memorization",
@@ -77563,6 +77563,6 @@
       "sort": 0
     }
   ],
-  "normalizedBy": "2026-06-23-structured-material-quantities-v6",
-  "normalizedAt": "2026-06-23T10:09:58.899Z"
+  "normalizedBy": "2026-06-23-compendium-equipements-materials-v7",
+  "normalizedAt": "2026-06-23T10:49:28.838Z"
 }
