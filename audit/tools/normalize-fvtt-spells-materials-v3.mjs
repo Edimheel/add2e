@@ -4,7 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const VERSION = "2026-06-24-component-catalog-from-v3-v14";
+const VERSION = "2026-06-24-component-catalog-token-pricing-v15";
 const SOURCE_V3 = "fvtt-spells-all-normalise-mecanique-v3.json";
 const CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
 const EQUIPMENT_COMPENDIUM = "compendium_equipements.json";
@@ -26,9 +26,10 @@ const EQUIPMENT_ALIASES = Object.freeze({
   eau_benite: ["eau_benite_fiole"],
   eau_maudite: ["eau_benite_fiole"],
   encens: ["encens_batonnet"],
+  chapelet: ["chapelet_de_priere"],
   chapelet_de_priere: ["chapelet_de_priere"],
   miroir_en_argent: ["miroir_en_argent_petit"],
-  symbole_sacre: ["symbole_beni_bois", "symbole_beni_fer", "symbole_beni_argent"],
+  symbole_sacre: ["symbole_beni_bois"],
   symbole_religieux_en_argent: ["symbole_beni_argent"]
 });
 
@@ -66,6 +67,71 @@ const EXACT_ESTIMATES = Object.freeze({
   source_de_feu: "1 pc"
 });
 
+const INCOMPLETE_V3_COMPONENT_KEYS = new Set([
+  "a_completer",
+  "materielle_non_precisee_explicitement_dans_le_manuel_des_joueurs",
+  "consommation_explicitement_indiquee_dans_la_description",
+  "disparait_quand_le_sort_est_lance",
+  "pour_chaque_monstre_vise",
+  "creation_d_un_objet_mineral",
+  "creation_d_un_objet_vegetal",
+  "invocation_d_un_elemental_de_l_air",
+  "invocation_d_un_elemental_de_l_eau",
+  "invocation_d_un_elemental_de_terre",
+  "invocation_d_un_elemental_du_feu"
+]);
+
+const TOKEN_ALIASES = Object.freeze({
+  amandes: "amande",
+  araignees: "araignee",
+  baies: "baie",
+  baguettes: "baguette",
+  bougies: "bougie",
+  chandelles: "chandelle",
+  cheveux: "cheveu",
+  coeurs: "coeur",
+  coquilles: "coquille",
+  cristaux: "cristal",
+  cils: "cil",
+  ecailles: "ecaille",
+  elements: "element",
+  feuilles: "feuille",
+  fleurs: "fleur",
+  fragments: "fragment",
+  graines: "graine",
+  glands: "gland",
+  gemmes: "gemme",
+  herbes: "herbe",
+  lucioles: "luciole",
+  materiaux: "materiau",
+  matieres: "matiere",
+  metaux: "metal",
+  minerais: "mineral",
+  minerales: "mineral",
+  morceaux: "morceau",
+  objets: "objet",
+  ossements: "ossement",
+  perles: "perle",
+  pierres: "pierre",
+  plumes: "plume",
+  poudres: "poudre",
+  racines: "racine",
+  rares: "rare",
+  resines: "resine",
+  runes: "rune",
+  sels: "sel",
+  spheres: "sphere",
+  statuettes: "statuette",
+  tiges: "tige",
+  vers: "ver",
+  vegetaux: "vegetal",
+  vegetales: "vegetal"
+});
+
+const PLURAL_EXCEPTIONS = new Set([
+  "bois", "bras", "corps", "fois", "gaz", "mais", "mois", "os", "pays", "pois", "prix", "tres"
+]);
+
 const PRICE_TIERS = [
   { copper: 1, label: "1 pc" },
   { copper: 5, label: "5 pc" },
@@ -80,13 +146,45 @@ const PRICE_TIERS = [
 const text = value => String(value ?? "").replace(/\s+/g, " ").trim();
 const clone = value => value === undefined ? undefined : JSON.parse(JSON.stringify(value));
 const asArray = value => Array.isArray(value) ? value : value == null || value === "" ? [] : [value];
+
 const slug = value => text(value)
   .toLowerCase()
+  .replace(/œ/g, "oe")
+  .replace(/æ/g, "ae")
   .normalize("NFD")
   .replace(/[\u0300-\u036f]/g, "")
   .replace(/[’']/g, "'")
   .replace(/[^a-z0-9]+/g, "_")
   .replace(/^_+|_+$/g, "");
+
+function normalizeToken(token) {
+  const raw = text(token);
+  if (!raw) return "";
+  if (TOKEN_ALIASES[raw]) return TOKEN_ALIASES[raw];
+  if (raw.endsWith("s") && raw.length > 3 && !PLURAL_EXCEPTIONS.has(raw)) return raw.slice(0, -1);
+  return raw;
+}
+
+function tokensFor(value) {
+  const tokens = new Set();
+  for (const raw of slug(value).split("_").filter(Boolean)) {
+    tokens.add(raw);
+    tokens.add(normalizeToken(raw));
+  }
+  return tokens;
+}
+
+function entryTokens(entry) {
+  const result = new Set();
+  for (const value of [...entry.names, ...entry.rawKeys, entry.key]) {
+    for (const token of tokensFor(value)) result.add(token);
+  }
+  return result;
+}
+
+function hasAny(tokens, values) {
+  return values.some(value => tokens.has(value));
+}
 
 function readJson(file, fallback = null) {
   try { return JSON.parse(fs.readFileSync(file, "utf8")); }
@@ -140,15 +238,13 @@ function componentKey(value) {
 }
 
 function componentSourceRules(spell) {
-  const system = spell?.system ?? {};
-  return Array.isArray(system.composants_materiels) ? system.composants_materiels : [];
+  return Array.isArray(spell?.system?.composants_materiels) ? spell.system.composants_materiels : [];
 }
 
 /*
  * Source unique : system.composants_materiels du JSON V3.
- * Cette fonction ne lit ni descriptions, ni notes, ni tags, ni texte libre.
- * Les noms sont conservés tels qu'ils sont déclarés dans V3 : aucune découpe
- * par « et », virgule ou autre formulation naturelle n'est faite.
+ * Aucune description, note, tag ou texte libre ne sert à produire un composant.
+ * Chaque entrée V3 complète reste une seule unité de catalogue.
  */
 function collectV3ComponentLeaves(value, spell, inherited = {}, output = []) {
   if (Array.isArray(value)) {
@@ -329,15 +425,8 @@ function explicitPriceFromName(value) {
   const match = text(value).match(/(\d[\d\s.,]*)\s*(pp|po|pe|pa|pc)\b/i);
   if (!match) return null;
   const amount = Number(match[1].replace(/\s/g, "").replace(",", "."));
-  return Number.isFinite(amount) && amount > 0 ? `${Number.isInteger(amount) ? amount : String(amount).replace(".", ",")} ${match[2].toLowerCase()}` : null;
-}
-
-function tokensFor(value) {
-  return new Set(slug(value).split("_").filter(Boolean));
-}
-
-function hasAny(tokens, values) {
-  return values.some(value => tokens.has(value));
+  if (!Number.isFinite(amount) || amount <= 0) return null;
+  return `${Number.isInteger(amount) ? amount : String(amount).replace(".", ",")} ${match[2].toLowerCase()}`;
 }
 
 function tierPrice(label) {
@@ -349,21 +438,24 @@ function lowerOneTier(price) {
   return PRICE_TIERS[Math.max(0, index - 1)];
 }
 
+function defaultEstimateRule(entry) {
+  if (INCOMPLETE_V3_COMPONENT_KEYS.has(entry.key)) return "estimation_defaut_v3_incomplet";
+  if (/^(de_|l_|reduit_|reduite_|sertie_|formant_|repartie_)/.test(entry.key)) return "estimation_defaut_fragment_v3";
+  return "estimation_defaut";
+}
+
 function estimatePrice(entry) {
   const canonical = EXACT_ESTIMATES[entry.key];
   if (canonical) return { price: canonical, rule: "estimation_exacte" };
 
-  const tokens = new Set();
-  for (const name of entry.names) for (const token of tokensFor(name)) tokens.add(token);
-  for (const key of entry.rawKeys) for (const token of tokensFor(key)) tokens.add(token);
-
+  const tokens = entryTokens(entry);
   let tier;
   let rule;
 
-  if (hasAny(tokens, ["diamant", "rubis", "saphir", "topaze", "opale", "emeraude"])) {
+  if (hasAny(tokens, ["diamant", "rubis", "saphir", "topaze", "opale", "emeraude"]) || (hasAny(tokens, ["pierre", "gemme"]) && hasAny(tokens, ["precieux", "precieu", "rare"]))) {
     tier = tierPrice("100 po");
     rule = "gemme_precieuse";
-  } else if (hasAny(tokens, ["jade", "ambre", "ivoire", "perle", "agate"])) {
+  } else if (hasAny(tokens, ["agate", "ambre", "citrine", "jade", "ivoire", "perle", "gemme"])) {
     tier = tierPrice("10 po");
     rule = "matiere_precieuse";
   } else if (hasAny(tokens, ["platine"])) {
@@ -372,30 +464,36 @@ function estimatePrice(entry) {
   } else if (hasAny(tokens, ["or", "argent", "electrum"])) {
     tier = tierPrice("10 po");
     rule = "metal_precieux";
-  } else if (hasAny(tokens, ["dragon", "demon", "diable", "celeste", "elemental", "golem", "licorne", "sphinx", "chimere", "manticore", "hydre", "magique", "enchante", "rare"])) {
+  } else if (hasAny(tokens, ["dragon", "demon", "diable", "celeste", "elemental", "golem", "licorne", "sphinx", "chimere", "manticore", "hydre", "magique", "enchante", "emprisonnement", "heroisme"]) || (tokens.has("objet") && tokens.has("valeur"))) {
     tier = tierPrice("50 po");
     rule = "matiere_exceptionnelle";
-  } else if (hasAny(tokens, ["venin", "poison", "antidote", "mandragore", "safran", "orchidee", "alchimique", "alchimie", "mercure", "glande", "cerveau", "coeur", "foie"])) {
+  } else if (hasAny(tokens, ["venin", "poison", "antidote", "mandragore", "safran", "orchidee", "alchimique", "alchimie", "mercure", "glande", "cerveau", "foie"])) {
     tier = tierPrice("5 po");
     rule = "reagent_rare";
-  } else if (hasAny(tokens, ["poudre", "soufre", "souffre", "phosphore", "salpetre", "charbon", "chaux", "resine", "gomme", "huile", "vinaigre", "alcool", "encre", "metal", "fer", "cuivre", "laiton", "zinc", "plomb", "etain"])) {
+  } else if (hasAny(tokens, ["cristal", "quartz", "mica", "granit", "alun", "talc", "prisme", "mineral", "pierre"])) {
+    tier = tierPrice("1 po");
+    rule = "matiere_minerale";
+  } else if (hasAny(tokens, ["poudre", "soufre", "phosphore", "salpetre", "charbon", "chaux", "resine", "gomme", "huile", "vinaigre", "alcool", "encre", "metal", "fer", "cuivre", "laiton", "zinc", "plomb", "etain", "aimante", "magnetique"])) {
     tier = tierPrice("1 po");
     rule = "reagent_courant";
-  } else if (hasAny(tokens, ["sang", "os", "peau", "fourrure", "carapace", "coquille", "araignee", "luciole", "ver", "plume", "cil", "cheveux", "langue", "patte", "chair"])) {
+  } else if (hasAny(tokens, ["sang", "os", "peau", "fourrure", "carapace", "coquille", "araignee", "luciole", "ver", "plume", "cil", "cheveu", "langue", "patte", "chair", "coeur", "ecaille", "cocon", "guano", "fiente", "bouse", "toison", "corne"])) {
     tier = tierPrice("1 pa");
     rule = "matiere_animale";
-  } else if (hasAny(tokens, ["feuille", "fleur", "racine", "graine", "baie", "amande", "ail", "cire", "ficelle", "laine", "paille", "brin", "brindille", "ecorce", "herbe", "miel", "beurre", "farine", "poireau", "houx", "gland"])) {
+  } else if (hasAny(tokens, ["feuille", "fleur", "racine", "graine", "baie", "amande", "ail", "cire", "ficelle", "laine", "paille", "brin", "brindille", "ecorce", "herbe", "miel", "beurre", "farine", "poireau", "houx", "gland", "bois", "roseau", "pomme", "navet", "reglisse", "legume", "sesame"])) {
     tier = tierPrice("5 pc");
     rule = "matiere_vegetale_ou_vivriere";
-  } else if (hasAny(tokens, ["argile", "boue", "terre", "humus", "caillou", "silex", "craie", "sable", "cendre", "suie", "poussiere", "goutte", "grain", "eau", "feu", "flamme"])) {
+  } else if (hasAny(tokens, ["argile", "boue", "terre", "humus", "caillou", "silex", "craie", "sable", "cendre", "suie", "poussiere", "goutte", "grain", "eau", "feu", "flamme", "bitume", "melasse", "poix"])) {
     tier = tierPrice("1 pc");
     rule = "matiere_naturelle";
+  } else if (hasAny(tokens, ["bougie", "chandelle", "fil", "cuir", "gant", "sac", "fiole", "baquet", "tambour", "figurine", "statuette", "pelle", "sifflet", "marteau", "massue", "lame", "baguette", "tige", "barre", "brassiere", "couronne", "fourchette", "replique", "livre", "objet", "receptacle"])) {
+    tier = tierPrice("1 po");
+    rule = "objet_fabrique_courant";
   } else {
     tier = tierPrice("1 po");
-    rule = "objet_ou_matiere_courante";
+    rule = defaultEstimateRule(entry);
   }
 
-  if (hasAny(tokens, ["pincee", "goutte", "grain"]) && rule !== "matiere_naturelle") {
+  if (hasAny(tokens, ["pincee", "goutte", "grain"]) && !["matiere_naturelle", "estimation_defaut_v3_incomplet", "estimation_defaut_fragment_v3"].includes(rule)) {
     tier = lowerOneTier(tier);
     rule = `${rule}_petite_quantite`;
   }
@@ -525,6 +623,12 @@ function createComponent(template, entry, priceRow, id, sort) {
   return item;
 }
 
+function isDefaultEstimate(source) {
+  return source === "estimation_defaut"
+    || source === "estimation_defaut_v3_incomplet"
+    || source === "estimation_defaut_fragment_v3";
+}
+
 function createAudit(catalog, allEquipment) {
   const index = equipmentIndex(allEquipment);
   const components = [];
@@ -534,13 +638,15 @@ function createAudit(catalog, allEquipment) {
     composantsUniques: 0,
     coutExpliciteSort: 0,
     prixEquipement: 0,
-    prixPredit: 0
+    prixPredit: 0,
+    prixDefaut: 0
   };
 
   for (const entry of catalog.entries.values()) {
     const resolved = classifyPrice(entry, index);
     if (resolved.source === "cout_explicite_sort" || resolved.source === "cout_explicite_sort_maximum" || resolved.source === "cout_explicite_nom") summary.coutExpliciteSort += 1;
     else if (resolved.source === "prix_equipement") summary.prixEquipement += 1;
+    else if (isDefaultEstimate(resolved.source)) summary.prixDefaut += 1;
     else summary.prixPredit += 1;
 
     components.push({
@@ -569,7 +675,7 @@ function createAudit(catalog, allEquipment) {
     version: VERSION,
     source: SOURCE_V3,
     cible: EQUIPMENT_COMPENDIUM,
-    policy: "Les composants proviennent exclusivement de system.composants_materiels dans le JSON V3. Le compendium équipements est complété à partir de cette liste. Les prix sont explicites dans system.prix.",
+    policy: "Les composants proviennent exclusivement de system.composants_materiels dans le JSON V3. Le compendium équipements est complété à partir de cette liste. Les prix sont explicitement stockés dans system.prix.",
     summary,
     components
   };
@@ -638,7 +744,7 @@ function main() {
 
   const summary = audit.summary;
   console.log(`[ADD2E][COMPONENT_PRICE_AUDIT] ${summary.composantsUniques} composant(s) unique(s) issus exclusivement de ${SOURCE_V3}.`);
-  console.log(`[ADD2E][COMPONENT_PRICE_AUDIT] ${summary.coutExpliciteSort} prix explicite(s), ${summary.prixEquipement} prix d'équipement, ${summary.prixPredit} estimation(s).`);
+  console.log(`[ADD2E][COMPONENT_PRICE_AUDIT] ${summary.coutExpliciteSort} prix explicite(s), ${summary.prixEquipement} prix d'équipement, ${summary.prixPredit} estimation(s), ${summary.prixDefaut} fallback(s) explicite(s).`);
 
   if (args.auditOnly) return;
 
