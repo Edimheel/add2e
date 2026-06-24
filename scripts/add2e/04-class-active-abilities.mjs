@@ -1,6 +1,6 @@
 // ============================================================
 // ADD2E — Capacités activables de classe : exécution on_use
-// Version : 2026-06-24-active-class-abilities-thief-source-filter-v6
+// Version : 2026-06-24-active-class-abilities-thief-final-resolver-v7
 // Format accepté pour les objets classe :
 // - system.activeClassFeatures : boutons / capacités utilisables
 // - system.classFeatures       : capacités passives ou mixtes
@@ -8,7 +8,7 @@
 // - anciens alias conservés : capacitesClasse, classFeaturesDebloquees
 // ============================================================
 
-const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-06-24-active-class-abilities-thief-source-filter-v6";
+const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-06-24-active-class-abilities-thief-final-resolver-v7";
 globalThis.ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = ADD2E_CLASS_ACTIVE_ABILITIES_VERSION;
 console.log("[ADD2E][CAPACITES][VERSION]", ADD2E_CLASS_ACTIVE_ABILITIES_VERSION);
 
@@ -382,7 +382,7 @@ const ADD2E_THIEF_SKILL_ROWS = [
 const ADD2E_THIEF_SKILL_ALIASES = {
   pick_pockets: "pickpocket", pick_pocket: "pickpocket", pickpockets: "pickpocket", pickpocket: "pickpocket",
   open_locks: "crochetage_serrures", open_lock: "crochetage_serrures", crochetage: "crochetage_serrures", crochetage_serrures: "crochetage_serrures", ouverture_serrures: "crochetage_serrures", ouverture_de_serrures: "crochetage_serrures",
-  find_remove_traps: "detection_pieges", find_traps: "detection_pieges", remove_traps: "detection_pieges", detect_traps: "detection_pieges", detection_pieges: "detection_pieges", detection_de_pieges: "detection_pieges", desamorcage_pieges: "detection_pieges",
+  find_remove_traps: "detection_pieges", find_traps: "detection_pieges", remove_traps: "detection_pieges", detect_traps: "detection_pieges", detection_pieges: "detection_pieges", detection_de_pieges: "detection_de_pieges", desamorcage_pieges: "detection_pieges",
   move_silently: "deplacement_silencieux", deplacement_silencieux: "deplacement_silencieux",
   hide_in_shadows: "dissimulation", dissimulation: "dissimulation", dissimulation_dans_l_ombre: "dissimulation", dissimulation_dans_lombre: "dissimulation",
   hear_noise: "ecoute", hear_noises: "ecoute", listen: "ecoute", detect_noise: "ecoute", ecoute: "ecoute",
@@ -496,3 +496,34 @@ try { globalThis.add2eFindClassFeatureFromElement = add2eFindClassFeatureFromEle
 try { globalThis.add2eGetActorClassProgression = add2eGetActorClassProgression; } catch (_e) {}
 try { globalThis.add2eGetActorThiefSkillTable = add2eGetActorThiefSkillTable; } catch (_e) {}
 try { globalThis.ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = ADD2E_CLASS_ACTIVE_ABILITIES_VERSION; } catch (_e) {}
+
+function add2eFilterBlockedThiefClassFeatures(actor, features) {
+  const list = Array.isArray(features) ? features : [];
+  const status = add2eThiefActivityStatus(actor);
+  if (!status?.applies || status.ok !== false) return list;
+  return list.filter(feature => !add2eIsThiefClassFeature(feature));
+}
+
+function add2eInstallThiefActivityFeatureResolverGuard() {
+  const install = () => {
+    const resolver = globalThis.add2eGetActorActivableClassFeatures;
+    if (typeof resolver !== "function" || resolver.__add2eThiefActivityFeatureResolverGuard === true) return;
+
+    const guarded = function add2eGetActorActivableClassFeaturesWithThiefEquipmentGuard(actor, options = {}) {
+      const result = resolver.call(this, actor, options);
+      const filter = features => add2eFilterBlockedThiefClassFeatures(actor, features);
+      return typeof result?.then === "function" ? result.then(filter) : filter(result);
+    };
+
+    guarded.__add2eThiefActivityFeatureResolverGuard = true;
+    guarded.__add2eThiefActivityFeatureResolverOriginal = resolver;
+    globalThis.add2eGetActorActivableClassFeatures = guarded;
+  };
+
+  const deferInstall = () => setTimeout(install, 0);
+  if (game?.ready) deferInstall();
+  else Hooks.once("ready", deferInstall);
+}
+
+add2eInstallThiefActivityFeatureResolverGuard();
+try { globalThis.add2eFilterBlockedThiefClassFeatures = add2eFilterBlockedThiefClassFeatures; } catch (_e) {}
