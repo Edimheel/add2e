@@ -4,17 +4,17 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const VERSION = "2026-06-24-component-canonical-price-audit-v12";
+const VERSION = "2026-06-24-component-unit-price-estimator-v13";
 const SOURCE_V3 = "fvtt-spells-all-normalise-mecanique-v3.json";
 const CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
 const EQUIPMENT_COMPENDIUM = "compendium_equipements.json";
 
-/**
- * Aliases de formulation dans les profils de sorts.
- * La clé reste volontairement explicite : aucune déduction sémantique large
- * n'est faite sur les matières rares, les gemmes ou les morceaux d'animaux.
+/*
+ * Le prix final est toujours écrit explicitement dans system.prix.
+ * Ces règles servent uniquement à produire ce prix au moment de la génération.
+ * Elles ne sont jamais lues par le marchand en jeu.
  */
-const COMPONENT_CANONICAL_ALIASES = Object.freeze({
+const CANONICAL_ALIASES = Object.freeze({
   gousse_d_ail: "ail",
   ail_la_gousse: "ail",
   encens_a_bruler: "encens",
@@ -26,11 +26,7 @@ const COMPONENT_CANONICAL_ALIASES = Object.freeze({
   holy_symbol: "symbole_sacre"
 });
 
-/**
- * Canonical component key -> slug(s) of real, non-generated equipment items.
- * These items are never recreated as consumable components.
- */
-const COMPONENT_EQUIPMENT_ALIASES = Object.freeze({
+const EQUIPMENT_ALIASES = Object.freeze({
   ail: ["ail_la_gousse"],
   aconit: ["aconit_le_brin"],
   belladone: ["belladone_le_brin"],
@@ -43,11 +39,21 @@ const COMPONENT_EQUIPMENT_ALIASES = Object.freeze({
   symbole_religieux_en_argent: ["symbole_beni_argent"]
 });
 
-const INVALID_COMPONENT_PATTERNS = [
+const IGNORED_COMPONENT_PATTERNS = [
   /^a_(?:completer|determiner|verifier)$/,
   /^(?:de_)?(?:bois|fer|argent|or|cuivre)$/,
   /^(?:disparait|apparait|pour_chaque|selon_|quand_le_sort|le_sort_est|invocation_d_un_elemental)/,
   /^(?:aucun|inconnu|non_defini|non_precise)$/
+];
+
+const PRICE_RULES = [
+  { price: "50 po", test: /(?:demon|diable|celeste|elemental|dragon|licorne|sphinx|chimere|manticore|hydre|golem|magique|enchant|exotique|tres_rare|rare)/ },
+  { price: "25 po", test: /(?:ambre|perle|gemme|cristal|corail|ivoire|argent|or|electrum|platine|ecaille|griffon|basilic|sang_de_dragon|os_de_dragon)/ },
+  { price: "5 po", test: /(?:venin|poison|antidote|organe|oeil|langue|coeur|foie|cerveau|plante_rare|champignon|truffe|mousse|lichen|alchim)/ },
+  { price: "1 po", test: /(?:poudre|soufre|phosphore|sel|huile|alcool|vin|vinaigre|resine|gomme|metal|fer|cuivre|etain|plomb)/ },
+  { price: "1 pa", test: /(?:liquide|graisse|sang|morceau|ecorce|coquille|os|bois|cuir|tissu|parchemin)/ },
+  { price: "5 pc", test: /(?:feuille|herbe|fleur|racine|ail|cire|ficelle|laine|brin|petit_os|baie|graine)/ },
+  { price: "1 pc", test: /(?:goutte|pincee|grain|poil|plume|poussiere|sable|cendre|terre)/ }
 ];
 
 const text = value => String(value ?? "").replace(/\s+/g, " ").trim();
@@ -90,6 +96,10 @@ function setItems(document, items) {
   return document;
 }
 
+function unique(values) {
+  return [...new Set(values.map(text).filter(Boolean))];
+}
+
 function isSpell(item) {
   return String(item?.type ?? item?.system?.type ?? "").toLowerCase() === "sort";
 }
@@ -121,67 +131,55 @@ function isComponentItem(item) {
     || add2e.vendorKind === "component";
 }
 
-function canonicalComponentSlug(value) {
+function canonicalSlug(value) {
   const raw = slug(value);
-  return COMPONENT_CANONICAL_ALIASES[raw] ?? raw;
-}
-
-function consumptionState(value) {
-  const mode = slug(value);
-  if (!mode) return "consomme";
-  if (mode === "optionnel") return "optionnel";
-  if (mode.includes("non_consomme") || mode.includes("reutilis") || mode.includes("permanent")) return "non_consomme";
-  return "consomme";
+  return CANONICAL_ALIASES[raw] ?? raw;
 }
 
 function readLeaf(rule, spell, inherited = {}, pathLabel = "") {
   if (!rule || typeof rule !== "object" || Array.isArray(rule)) {
-    throw new Error(`Composant V3 invalide pour ${spell.name}${pathLabel ? ` (${pathLabel})` : ""}. Un composant doit être un objet structuré.`);
+    throw new Error(`Composant V3 invalide pour ${spell.name}${pathLabel ? ` (${pathLabel})` : ""}.`);
   }
 
   const name = text(rule.nom);
   if (!name) throw new Error(`Composant sans nom pour ${spell.name}${pathLabel ? ` (${pathLabel})` : ""}.`);
 
-  const component = clone(rule);
-  const quantity = Number(component.quantite);
+  const quantity = Number(rule.quantite);
   if (!Number.isFinite(quantity) || quantity <= 0) {
     throw new Error(`Quantité invalide pour « ${name} » dans ${spell.name}.`);
   }
 
-  const consumption = text(component.consommation ?? inherited.consommation) || "consomme";
   const rawSlug = slug(name);
   return {
-    componentName: name,
-    componentSlug: canonicalComponentSlug(rawSlug),
-    rawComponentSlug: rawSlug,
+    key: canonicalSlug(rawSlug),
+    rawSlug,
+    name,
     detail: {
       nom: text(spell.name ?? spell.system?.nom),
       id: text(spell._id ?? spell.id),
       classe: spellClass(spell),
       niveau: itemLevel(spell),
       composant_nom: name,
-      composant_slug_brut: rawSlug,
-      composant_slug_canonique: canonicalComponentSlug(rawSlug),
       quantite: quantity,
-      consommation: consumption,
-      cout_po: component.cout_po ?? null,
-      source: component.source ?? null,
-      condition: component.condition ?? inherited.condition ?? null,
-      notes: component.notes ?? null,
-      alternativeGroup: component.alternativeGroup ?? inherited.alternativeGroup ?? null,
-      mode: component.mode ?? inherited.mode ?? null,
-      composant: component
+      consommation: text(rule.consommation ?? inherited.consommation) || "consomme",
+      cout_po: rule.cout_po ?? null,
+      condition: rule.condition ?? inherited.condition ?? null,
+      notes: rule.notes ?? null,
+      alternativeGroup: rule.alternativeGroup ?? inherited.alternativeGroup ?? null,
+      mode: rule.mode ?? inherited.mode ?? null
     }
   };
 }
 
 function walkMaterialRules(rules, spell, inherited = {}, pathLabel = "racine", output = []) {
-  if (!Array.isArray(rules)) throw new Error(`Composants matériels non structurés pour ${spell.name}. Le champ doit être un tableau.`);
+  if (!Array.isArray(rules)) throw new Error(`Composants matériels non structurés pour ${spell.name}.`);
 
   for (let index = 0; index < rules.length; index += 1) {
     const rule = rules[index];
     const label = `${pathLabel}.${index + 1}`;
-    if (!rule || typeof rule !== "object" || Array.isArray(rule)) throw new Error(`Composant V3 invalide pour ${spell.name} (${label}).`);
+    if (!rule || typeof rule !== "object" || Array.isArray(rule)) {
+      throw new Error(`Composant V3 invalide pour ${spell.name} (${label}).`);
+    }
 
     const context = {
       consommation: rule.consommation ?? inherited.consommation ?? null,
@@ -207,7 +205,7 @@ function detailKey(detail) {
     detail.nom,
     detail.classe,
     detail.niveau,
-    detail.composant_slug_brut,
+    detail.composant_nom,
     detail.quantite,
     detail.consommation,
     detail.cout_po ?? "",
@@ -218,8 +216,8 @@ function detailKey(detail) {
   ].join("|");
 }
 
-function buildComponentCatalog(spells) {
-  const catalog = new Map();
+function buildCatalog(spells) {
+  const entries = new Map();
   let linkedSpellEntries = 0;
 
   for (const spell of spells) {
@@ -228,45 +226,150 @@ function buildComponentCatalog(spells) {
     if (!rules.length) continue;
 
     for (const usage of walkMaterialRules(rules, spell)) {
-      if (!usage.componentSlug) throw new Error(`Slug vide pour le composant « ${usage.componentName} » de ${spell.name}.`);
-      if (!catalog.has(usage.componentSlug)) {
-        catalog.set(usage.componentSlug, {
-          name: usage.componentName,
-          rawSlugs: new Set(),
+      if (!usage.key) throw new Error(`Slug vide pour le composant « ${usage.name} » de ${spell.name}.`);
+      if (!entries.has(usage.key)) {
+        entries.set(usage.key, {
+          key: usage.key,
+          name: usage.name,
           names: new Set(),
+          rawSlugs: new Set(),
           details: []
         });
       }
-      const entry = catalog.get(usage.componentSlug);
-      entry.rawSlugs.add(usage.rawComponentSlug);
-      entry.names.add(usage.componentName);
+      const entry = entries.get(usage.key);
+      entry.names.add(usage.name);
+      entry.rawSlugs.add(usage.rawSlug);
       entry.details.push(usage.detail);
       linkedSpellEntries += 1;
     }
   }
 
-  for (const entry of catalog.values()) {
-    const details = new Map();
-    for (const detail of entry.details) details.set(detailKey(detail), detail);
-    entry.details = [...details.values()].sort((left, right) =>
-      String(left.nom).localeCompare(String(right.nom), "fr")
-      || String(left.classe).localeCompare(String(right.classe), "fr")
-      || Number(left.niveau) - Number(right.niveau)
-      || String(left.alternativeGroup ?? "").localeCompare(String(right.alternativeGroup ?? ""), "fr")
-    );
-    entry.rawSlugs = [...entry.rawSlugs].sort((left, right) => left.localeCompare(right, "fr"));
+  for (const entry of entries.values()) {
+    const deduped = new Map();
+    for (const detail of entry.details) deduped.set(detailKey(detail), detail);
+    entry.details = [...deduped.values()];
     entry.names = [...entry.names].sort((left, right) => left.localeCompare(right, "fr"));
+    entry.rawSlugs = [...entry.rawSlugs].sort((left, right) => left.localeCompare(right, "fr"));
     entry.name = entry.names[0] ?? entry.name;
   }
 
   return {
-    entries: new Map([...catalog.entries()].sort(([left], [right]) => left.localeCompare(right, "fr"))),
+    entries: new Map([...entries.entries()].sort(([left], [right]) => left.localeCompare(right, "fr"))),
     linkedSpellEntries
   };
 }
 
-function unique(values) {
-  return [...new Set(values.map(text).filter(Boolean))];
+function numericPo(value) {
+  const raw = typeof value === "number"
+    ? value
+    : typeof value === "string"
+      ? Number(value.replace(",", "."))
+      : value && typeof value === "object"
+        ? Number(value.po ?? value.value ?? value.valeur ?? value.amount ?? NaN)
+        : NaN;
+  return Number.isFinite(raw) && raw > 0 ? raw : null;
+}
+
+function normalizeNumber(raw) {
+  let value = String(raw ?? "").replace(/\s/g, "");
+  if (/^\d{1,3}(?:\.\d{3})+$/.test(value)) value = value.replace(/\./g, "");
+  else value = value.replace(",", ".");
+  const number = Number(value);
+  if (!Number.isFinite(number) || number <= 0) return null;
+  return Number.isInteger(number) ? String(number) : String(number).replace(".", ",");
+}
+
+function explicitPriceFromName(value) {
+  const match = String(value ?? "").replace(/\u00a0/g, " ").match(/(\d[\d\s.,]*)\s*(pp|po|pe|pa|pc)\b/i);
+  if (!match) return null;
+  const amount = normalizeNumber(match[1]);
+  return amount ? `${amount} ${match[2].toLowerCase()}` : null;
+}
+
+function currentPrice(item) {
+  const system = item?.system ?? {};
+  const raw = system.prix ?? system.price ?? null;
+  if (typeof raw === "number" && raw > 0) return `${raw} ${text(system.devise ?? system.currency ?? "po").toLowerCase() || "po"}`;
+  if (typeof raw === "string" && raw.trim()) return text(raw);
+  if (raw && typeof raw === "object") {
+    const value = raw.valeur ?? raw.value ?? raw.montant ?? raw.amount;
+    const currency = raw.devise ?? raw.currency ?? system.devise ?? system.currency ?? "po";
+    if (Number.isFinite(Number(value)) && Number(value) > 0) return `${Number(value)} ${text(currency).toLowerCase() || "po"}`;
+  }
+  return null;
+}
+
+function itemSlug(item) {
+  return slug(item?.system?.slug ?? item?.flags?.add2e?.slug ?? item?.name ?? item?.system?.nom);
+}
+
+function booleanValue(value) {
+  if (value === true) return true;
+  if (value === false) return false;
+  if (value === null || value === undefined || value === "") return null;
+  const normalized = text(value).toLowerCase();
+  if (["true", "1", "oui", "yes", "on"].includes(normalized)) return true;
+  if (["false", "0", "non", "no", "off"].includes(normalized)) return false;
+  return null;
+}
+
+function isReusableEquipment(item) {
+  const system = item?.system ?? {};
+  const flags = item?.flags?.add2e ?? {};
+  const reusable = booleanValue(system.reutilisable ?? system.réutilisable ?? system.reusable ?? flags.reutilisable ?? flags.réutilisable ?? flags.reusable);
+  if (reusable === true) return true;
+  const consumable = booleanValue(system.consommable ?? system.consumable ?? flags.consommable ?? flags.consumable);
+  return consumable === false;
+}
+
+function baseEquipmentIndex(items) {
+  const index = new Map();
+  for (const item of items.filter(item => !isComponentItem(item))) {
+    const key = itemSlug(item);
+    if (!key) continue;
+    if (!index.has(key)) index.set(key, []);
+    index.get(key).push(item);
+  }
+  return index;
+}
+
+function candidateEquipmentSlugs(entry) {
+  return unique([
+    entry.key,
+    ...entry.rawSlugs,
+    ...(EQUIPMENT_ALIASES[entry.key] ?? [])
+  ]);
+}
+
+function equipmentMatches(entry, equipmentIndex) {
+  const seen = new Set();
+  const items = [];
+  for (const candidate of candidateEquipmentSlugs(entry)) {
+    for (const item of equipmentIndex.get(candidate) ?? []) {
+      const identity = text(item?._id ?? item?.id ?? item?.name);
+      if (seen.has(identity)) continue;
+      seen.add(identity);
+      items.push(item);
+    }
+  }
+  return items;
+}
+
+function isIgnoredEntry(entry) {
+  return [entry.key, ...entry.rawSlugs].some(key => IGNORED_COMPONENT_PATTERNS.some(pattern => pattern.test(key)));
+}
+
+function predictedPrice(entry) {
+  for (const name of entry.names) {
+    const explicit = explicitPriceFromName(name);
+    if (explicit) return explicit;
+  }
+
+  const haystack = slug([...entry.names, ...entry.rawSlugs, entry.key].join(" "));
+  for (const rule of PRICE_RULES) {
+    if (rule.test.test(haystack)) return rule.price;
+  }
+  return "1 po";
 }
 
 function componentTags(existing, componentSlug) {
@@ -279,7 +382,6 @@ function componentTags(existing, componentSlug) {
     || /^objet:/i.test(value)
     || /^composant:/i.test(value)
   ));
-
   return unique([
     "objet",
     "categorie:composant_sort",
@@ -302,7 +404,6 @@ function componentEffectTags(existing, componentSlug) {
     || /^objet_/i.test(value)
     || /^composant_/i.test(value)
   ));
-
   return unique([
     "objet",
     "categorie_composant_sort",
@@ -328,308 +429,135 @@ function makeId(seed, usedIds) {
   }
 }
 
-function numericPo(value) {
-  const raw = typeof value === "number"
-    ? value
-    : typeof value === "string"
-      ? Number(value.replace(",", "."))
-      : value && typeof value === "object"
-        ? Number(value.po ?? value.value ?? value.valeur ?? value.amount ?? NaN)
-        : NaN;
-  return Number.isFinite(raw) && raw > 0 ? raw : null;
-}
-
-function currentPrice(item) {
-  const system = item?.system ?? {};
-  const raw = system.prix ?? system.price ?? null;
-  if (typeof raw === "number" && raw > 0) return `${raw} ${text(system.devise ?? system.currency ?? "po").toLowerCase() || "po"}`;
-  if (typeof raw === "string" && raw.trim()) return text(raw);
-  if (raw && typeof raw === "object") {
-    const value = raw.valeur ?? raw.value ?? raw.montant ?? raw.amount;
-    const devise = raw.devise ?? raw.currency ?? system.devise ?? system.currency ?? "po";
-    if (Number.isFinite(Number(value)) && Number(value) > 0) return `${Number(value)} ${text(devise).toLowerCase() || "po"}`;
-  }
-  return null;
-}
-
-function itemSlug(item) {
-  return slug(item?.system?.slug ?? item?.flags?.add2e?.slug ?? item?.name ?? item?.system?.nom);
-}
-
-function itemIdentity(item) {
-  return text(item?._id ?? item?.id ?? item?.uuid ?? itemSlug(item) ?? item?.name);
-}
-
-function booleanValue(value) {
-  if (value === true) return true;
-  if (value === false) return false;
-  if (value === null || value === undefined || value === "") return null;
-  const valueText = text(value).toLowerCase();
-  if (["true", "1", "oui", "yes", "on"].includes(valueText)) return true;
-  if (["false", "0", "non", "no", "off"].includes(valueText)) return false;
-  return null;
-}
-
-function isReusableEquipment(item) {
-  const system = item?.system ?? {};
-  const add2e = item?.flags?.add2e ?? {};
-  const explicit = booleanValue(system.reutilisable ?? system.réutilisable ?? system.reusable ?? add2e.reutilisable ?? add2e.réutilisable ?? add2e.reusable);
-  if (explicit === true) return true;
-  const consumable = booleanValue(system.consommable ?? system.consumable ?? add2e.consommable ?? add2e.consumable);
-  return consumable === false;
-}
-
-function baseEquipmentIndex(items) {
-  const index = new Map();
-  for (const item of items.filter(item => !isComponentItem(item))) {
-    const key = itemSlug(item);
-    if (!key) continue;
-    if (!index.has(key)) index.set(key, []);
-    index.get(key).push(item);
-  }
-  return index;
-}
-
-function generatedComponentIndex(items) {
-  const index = new Map();
-  for (const item of items.filter(isComponentItem)) {
-    const key = canonicalComponentSlug(itemSlug(item));
-    if (!key) continue;
-    if (!index.has(key)) index.set(key, []);
-    index.get(key).push(item);
-  }
-  return index;
-}
-
-function candidateEquipmentSlugs(componentSlug) {
-  return unique([componentSlug, ...(COMPONENT_EQUIPMENT_ALIASES[componentSlug] ?? [])]);
-}
-
-function resolveEquipmentMatch(componentSlug, equipmentIndex) {
-  const candidates = candidateEquipmentSlugs(componentSlug);
-  const seen = new Set();
-  const items = [];
-
-  for (const candidate of candidates) {
-    for (const item of equipmentIndex.get(candidate) ?? []) {
-      const identity = itemIdentity(item);
-      if (seen.has(identity)) continue;
-      seen.add(identity);
-      items.push(item);
-    }
-  }
-
-  const prices = [...new Set(items.map(currentPrice).filter(Boolean))].sort((left, right) => left.localeCompare(right, "fr"));
-  return {
-    candidateSlugs: candidates,
-    viaAlias: candidates.some(candidate => candidate !== componentSlug),
-    items,
-    prices,
-    reusable: items.length > 0 && items.every(isReusableEquipment)
-  };
-}
-
-function equipmentAuditItems(items) {
-  return items.map(item => ({
-    id: text(item?._id ?? item?.id),
-    nom: text(item?.name ?? item?.system?.nom),
-    slug: itemSlug(item),
-    prix: currentPrice(item),
-    consommable: booleanValue(item?.system?.consommable ?? item?.system?.consumable),
-    reutilisable: isReusableEquipment(item)
-  }));
-}
-
-function looksInvalidComponent(entry) {
-  const variants = [entry.name, ...entry.names, ...entry.rawSlugs].map(slug);
-  return variants.some(key => INVALID_COMPONENT_PATTERNS.some(pattern => pattern.test(key)));
-}
-
-function auditComponentPrices(catalog, allItems) {
+function auditPrices(catalog, allItems) {
   const equipmentIndex = baseEquipmentIndex(allItems);
-  const componentIndex = generatedComponentIndex(allItems);
   const rows = [];
   const summary = {
     total: 0,
-    coutExpliciteUnique: 0,
-    conflitCoutsExplicites: 0,
-    coutExpliciteQuantiteMultiple: 0,
-    prixEquipementUnique: 0,
-    conflitPrixEquipements: 0,
+    prixExpliciteSort: 0,
+    prixEquipement: 0,
+    prixPredit: 0,
     equipementsReutilisables: 0,
-    consommationMixte: 0,
-    entreesInvalides: 0,
-    sansPrix: 0,
-    anciensComposantsAvecChampsPrix: 0
+    entreesIgnorees: 0,
+    composantsVendables: 0
   };
 
-  for (const [componentSlug, entry] of catalog.entries) {
-    const equipment = resolveEquipmentMatch(componentSlug, equipmentIndex);
-    const oldComponents = componentIndex.get(componentSlug) ?? [];
-    const explicitCosts = entry.details
-      .map(detail => ({
-        sort: detail.nom,
-        classe: detail.classe,
-        niveau: detail.niveau,
-        quantite: Number(detail.quantite) || 1,
-        cout_po: numericPo(detail.cout_po)
-      }))
-      .filter(detail => detail.cout_po !== null);
-    const exactPo = [...new Set(explicitCosts.filter(detail => detail.quantite === 1).map(detail => detail.cout_po))].sort((left, right) => left - right);
-    const hasMultipleQuantityCost = explicitCosts.some(detail => detail.quantite !== 1);
-    const states = [...new Set(entry.details.map(detail => consumptionState(detail.consommation)))];
-    const hasConsumableUsage = states.includes("consomme");
-    const hasReusableOrOptionalUsage = states.some(state => state === "non_consomme" || state === "optionnel");
-    const mixedConsumption = hasConsumableUsage && hasReusableOrOptionalUsage;
-    const legacy = oldComponents.some(item => {
-      const system = item?.system ?? {};
-      return system.cout !== undefined || system.coût !== undefined || system.source_prix !== undefined || system.source_note !== undefined;
-    });
+  for (const entry of catalog.entries.values()) {
+    const equipment = equipmentMatches(entry, equipmentIndex);
+    const equipmentPrices = [...new Set(equipment.map(currentPrice).filter(Boolean))].sort((left, right) => left.localeCompare(right, "fr"));
+    const explicitPo = [...new Set(entry.details.map(detail => numericPo(detail.cout_po)).filter(value => value !== null))].sort((left, right) => left - right);
+    const namedPrices = [...new Set(entry.names.map(explicitPriceFromName).filter(Boolean))];
+    const reusable = equipment.length > 0 && equipment.every(isReusableEquipment);
 
-    let statut = "sans_prix";
-    let classification = "composant_sans_prix";
-    let modeRebuild = "creer_composant";
-    let unitPrice = null;
+    let statut;
+    let mode;
+    let prix = null;
 
-    if (looksInvalidComponent(entry)) {
-      statut = "entree_invalide_a_corriger";
-      classification = "entree_invalide";
-      modeRebuild = "corriger_source";
-      summary.entreesInvalides += 1;
-    } else if (mixedConsumption) {
-      statut = "consommation_mixte_a_corriger";
-      classification = "entree_incoherente";
-      modeRebuild = "corriger_source";
-      summary.consommationMixte += 1;
-    } else if (equipment.reusable) {
-      statut = equipment.prices.length === 1
-        ? "equipement_reutilisable_lie"
-        : equipment.prices.length > 1
-          ? "equipement_reutilisable_variantes"
-          : "equipement_reutilisable_sans_prix";
-      classification = "equipement_reutilisable";
-      modeRebuild = "conserver_equipement_reutilisable";
+    if (isIgnoredEntry(entry)) {
+      statut = "entree_ignoree";
+      mode = "ignorer";
+      summary.entreesIgnorees += 1;
+    } else if (reusable) {
+      statut = "equipement_reutilisable";
+      mode = "conserver_equipement";
       summary.equipementsReutilisables += 1;
-    } else if (hasMultipleQuantityCost) {
-      statut = "cout_explicite_quantite_multiple_a_verifier";
-      classification = "valeur_explicite_sort";
-      summary.coutExpliciteQuantiteMultiple += 1;
-    } else if (exactPo.length === 1) {
-      statut = "cout_explicite_unique";
-      classification = "valeur_explicite_sort";
-      unitPrice = `${exactPo[0]} po`;
-      summary.coutExpliciteUnique += 1;
-    } else if (exactPo.length > 1) {
-      statut = "conflit_couts_explicites";
-      classification = "valeur_explicite_sort";
-      summary.conflitCoutsExplicites += 1;
-    } else if (equipment.prices.length === 1) {
-      statut = "prix_equipement_unique";
-      classification = "composant_tarifable";
-      unitPrice = equipment.prices[0];
-      summary.prixEquipementUnique += 1;
-    } else if (equipment.prices.length > 1) {
-      statut = "conflit_prix_equipements";
-      classification = "composant_tarifable";
-      summary.conflitPrixEquipements += 1;
+    } else if (explicitPo.length) {
+      statut = explicitPo.length === 1 ? "prix_explicite_sort" : "prix_explicite_sort_maximum";
+      mode = "creer_composant";
+      prix = `${explicitPo.at(-1)} po`;
+      summary.prixExpliciteSort += 1;
+      summary.composantsVendables += 1;
+    } else if (namedPrices.length) {
+      statut = "prix_explicite_nom";
+      mode = "creer_composant";
+      prix = namedPrices[0];
+      summary.prixExpliciteSort += 1;
+      summary.composantsVendables += 1;
+    } else if (equipmentPrices.length === 1) {
+      statut = "prix_equipement";
+      mode = "creer_composant";
+      prix = equipmentPrices[0];
+      summary.prixEquipement += 1;
+      summary.composantsVendables += 1;
     } else {
-      summary.sansPrix += 1;
+      statut = "prix_predit";
+      mode = "creer_composant";
+      prix = predictedPrice(entry);
+      summary.prixPredit += 1;
+      summary.composantsVendables += 1;
     }
 
-    if (legacy) summary.anciensComposantsAvecChampsPrix += 1;
-    summary.total += 1;
-
     rows.push({
-      slug: componentSlug,
+      slug: entry.key,
       nom: entry.name,
       variantes: entry.names,
       slugs_bruts: entry.rawSlugs,
       statut,
-      classification,
-      mode_rebuild: modeRebuild,
-      prix_unitaire_propose: unitPrice,
-      consommations: states,
-      equipement_reference: {
-        via_alias: equipment.viaAlias,
-        slugs_recherches: equipment.candidateSlugs,
-        articles: equipmentAuditItems(equipment.items),
-        prix: equipment.prices
-      },
-      couts_explicites: explicitCosts,
-      prix_anciens_composants: [...new Set(oldComponents.map(currentPrice).filter(Boolean))].sort((left, right) => left.localeCompare(right, "fr")),
-      champs_anciens_detectes: legacy,
+      mode_rebuild: mode,
+      prix_unitaire_propose: prix,
+      equipements: equipment.map(item => ({
+        nom: text(item?.name ?? item?.system?.nom),
+        slug: itemSlug(item),
+        prix: currentPrice(item),
+        reutilisable: isReusableEquipment(item)
+      })),
       usages: entry.details.map(detail => ({
         sort: detail.nom,
         classe: detail.classe,
         niveau: detail.niveau,
-        nom_source: detail.composant_nom,
-        slug_source: detail.composant_slug_brut,
         quantite: detail.quantite,
         consommation: detail.consommation,
         cout_po: detail.cout_po ?? null
       }))
     });
+    summary.total += 1;
   }
-
-  const blocking = rows.filter(row => row.mode_rebuild !== "conserver_equipement_reutilisable" && !text(row.prix_unitaire_propose));
-  const reusable = rows.filter(row => row.mode_rebuild === "conserver_equipement_reutilisable");
 
   return {
     version: VERSION,
     equipmentFile: EQUIPMENT_COMPENDIUM,
-    policy: "Prix unitaire uniquement dans system.prix. Un cout_po explicite du sort est prioritaire. Les équipements réutilisables sont conservés dans Équipement et satisfont les composants sans doublon. Aucun fallback marchand.",
+    policy: "Chaque composant vendable possède un system.prix explicite après génération. Priorité : coût explicite du sort, équipement existant, estimation déterministe par matière. Aucun fallback marchand.",
     summary,
-    blocking: {
-      count: blocking.length,
-      slugs: blocking.map(row => row.slug)
-    },
-    reusableEquipment: {
-      count: reusable.length,
-      slugs: reusable.map(row => row.slug)
-    },
     components: rows
   };
 }
 
-function createComponentItem(template, entry, componentSlug, id, sort, unitPrice) {
+function createComponentItem(template, entry, row, id, sort) {
   const item = clone(template);
   const system = item.system ??= {};
   const flags = item.flags ??= {};
   const add2e = flags.add2e ??= {};
-  const details = clone(entry.details);
-  const name = entry.name;
-
-  if (!text(unitPrice)) throw new Error(`Prix unitaire introuvable pour le composant « ${name} ».`);
 
   item._id = id;
-  item.name = name;
+  item.name = entry.name;
   item.type = "objet";
   item.sort = sort;
-  system.nom = name;
+
+  system.nom = entry.name;
   system.type = "objet";
   system.categorie = "composant_sort";
   system.sousType = "composant";
-  system.slug = componentSlug;
+  system.slug = entry.key;
   system.quantite = 1;
   system.equipee = false;
   system.magique = false;
   system.consommable = true;
-  system.description = `Composant de sort : ${name}.`;
-  system.prix = text(unitPrice);
+  system.description = `Composant de sort : ${entry.name}.`;
+  system.prix = row.prix_unitaire_propose;
   delete system.cout;
   delete system.coût;
   delete system.source_prix;
   delete system.source_note;
-  system.source_composant = `${SOURCE_V3} — composants matériels structurés`;
-  system.tags = componentTags(system.tags, componentSlug);
-  system.effectTags = componentEffectTags(system.effectTags, componentSlug);
-  system.sorts_associes = unique(details.map(detail => detail.nom)).sort((left, right) => left.localeCompare(right, "fr"));
-  system.sorts_associes_details = details;
-  system.consommations_associees = unique(details.map(detail => detail.consommation)).sort((left, right) => left.localeCompare(right, "fr"));
-  system.conditions_associees = unique(details.map(detail => detail.condition)).sort((left, right) => left.localeCompare(right, "fr"));
+  delete system.source_composant;
+  system.tags = componentTags(system.tags, entry.key);
+  system.effectTags = componentEffectTags(system.effectTags, entry.key);
+  system.sorts_associes = unique(entry.details.map(detail => detail.nom)).sort((left, right) => left.localeCompare(right, "fr"));
+  system.sorts_associes_details = clone(entry.details);
+  system.consommations_associees = unique(entry.details.map(detail => detail.consommation)).sort((left, right) => left.localeCompare(right, "fr"));
+  system.conditions_associees = unique(entry.details.map(detail => detail.condition)).sort((left, right) => left.localeCompare(right, "fr"));
 
   add2e.schema = "equipement-composant-sort";
-  add2e.slug = componentSlug;
+  add2e.slug = entry.key;
   add2e.generatedBy = "normalize-fvtt-spells-materials-v3";
   add2e.generatedFrom = SOURCE_V3;
   add2e.vendorItem = true;
@@ -639,54 +567,44 @@ function createComponentItem(template, entry, componentSlug, id, sort, unitPrice
   return item;
 }
 
-function rebuildComponentCatalog(spells, componentPriceAudit) {
+function rebuildCatalog(spells, audit) {
   const compendiumFile = path.join(ROOT, EQUIPMENT_COMPENDIUM);
   const compendium = readJson(compendiumFile, null);
   if (!compendium || typeof compendium !== "object") throw new Error(`Compendium introuvable ou invalide : ${EQUIPMENT_COMPENDIUM}`);
 
-  const catalog = buildComponentCatalog(spells);
-  if (!catalog.entries.size) throw new Error(`Aucun composant matériel structuré trouvé dans ${SOURCE_V3}.`);
-
   const allItems = getItems(compendium).map(clone);
-  if (!allItems.length) throw new Error(`${EQUIPMENT_COMPENDIUM} ne contient aucun item.`);
   const oldComponents = allItems.filter(isComponentItem);
-  const auditBySlug = new Map(componentPriceAudit.components.map(row => [row.slug, row]));
-  const toCreate = [...catalog.entries].filter(([componentSlug]) => auditBySlug.get(componentSlug)?.mode_rebuild === "creer_composant");
-
-  const unresolved = toCreate.filter(([componentSlug]) => !text(auditBySlug.get(componentSlug)?.prix_unitaire_propose)).map(([componentSlug]) => componentSlug);
-  const sourceErrors = [...catalog.entries].filter(([componentSlug]) => auditBySlug.get(componentSlug)?.mode_rebuild === "corriger_source").map(([componentSlug]) => componentSlug);
-  if (unresolved.length || sourceErrors.length) {
-    throw new Error(`Reconstruction bloquée : prix ou structure à corriger (${[...unresolved, ...sourceErrors].join(", ")}).`);
-  }
+  const catalog = buildCatalog(spells);
+  const rows = new Map(audit.components.map(row => [row.slug, row]));
+  const toCreate = [...catalog.entries.values()].filter(entry => rows.get(entry.key)?.mode_rebuild === "creer_composant");
 
   if (toCreate.length && !oldComponents.length) {
-    throw new Error(`Aucun composant existant dans ${EQUIPMENT_COMPENDIUM} : impossible de conserver le modèle d’objet du compendium.`);
+    throw new Error(`Aucun composant existant dans ${EQUIPMENT_COMPENDIUM} : impossible de conserver le modèle d'objet.`);
   }
 
   const template = toCreate.length ? clone(oldComponents[0]) : null;
   const retainedItems = allItems.filter(item => !isComponentItem(item));
   const usedIds = new Set(retainedItems.map(item => text(item?._id ?? item?.id)).filter(Boolean));
   const highestSort = allItems.reduce((highest, item) => Math.max(highest, Number(item?.sort) || 0), 0);
-  const recreated = [];
   let sort = highestSort + 1;
+  const generated = [];
 
-  for (const [componentSlug, entry] of toCreate) {
-    const id = makeId(`component:${componentSlug}`, usedIds);
-    const row = auditBySlug.get(componentSlug);
-    recreated.push(createComponentItem(template, entry, componentSlug, id, sort, row.prix_unitaire_propose));
+  for (const entry of toCreate) {
+    const row = rows.get(entry.key);
+    if (!text(row?.prix_unitaire_propose)) throw new Error(`Prix absent pour ${entry.name}.`);
+    generated.push(createComponentItem(template, entry, row, makeId(`component:${entry.key}`, usedIds), sort));
     sort += 1;
   }
 
-  setItems(compendium, [...retainedItems, ...recreated]);
+  setItems(compendium, [...retainedItems, ...generated]);
   writeJson(compendiumFile, compendium);
 
   return {
     file: EQUIPMENT_COMPENDIUM,
-    source: SOURCE_V3,
     deleted: oldComponents.length,
-    created: recreated.length,
-    reusedEquipment: componentPriceAudit.reusableEquipment.count,
-    uniqueComponents: catalog.entries.size,
+    created: generated.length,
+    ignored: audit.components.filter(row => row.mode_rebuild === "ignorer").length,
+    reusableEquipment: audit.components.filter(row => row.mode_rebuild === "conserver_equipement").length,
     linkedSpellEntries: catalog.linkedSpellEntries
   };
 }
@@ -703,51 +621,42 @@ function parseArguments(argv) {
 
 function main() {
   const args = parseArguments(process.argv.slice(2));
-  const sourceFile = path.join(ROOT, args.source);
-  const controlFile = path.join(ROOT, args.control);
-  const source = readJson(sourceFile, null);
-  if (!source || typeof source !== "object") throw new Error(`JSON V3 introuvable ou invalide : ${sourceFile}`);
+  const source = readJson(path.join(ROOT, args.source), null);
+  if (!source || typeof source !== "object") throw new Error(`JSON V3 introuvable ou invalide : ${args.source}`);
 
   const spells = getItems(source).filter(isSpell);
-  if (!spells.length) throw new Error(`Aucun sort trouvé dans ${sourceFile}.`);
+  if (!spells.length) throw new Error(`Aucun sort trouvé dans ${args.source}.`);
 
-  const catalog = buildComponentCatalog(spells);
-  const compendiumFile = path.join(ROOT, EQUIPMENT_COMPENDIUM);
-  const compendium = readJson(compendiumFile, null);
-  if (!compendium || typeof compendium !== "object") throw new Error(`Compendium introuvable ou invalide : ${compendiumFile}`);
-  if (!getItems(compendium).length) throw new Error(`${EQUIPMENT_COMPENDIUM} ne contient aucun item.`);
+  const compendium = readJson(path.join(ROOT, EQUIPMENT_COMPENDIUM), null);
+  if (!compendium || typeof compendium !== "object" || !getItems(compendium).length) {
+    throw new Error(`Compendium introuvable, invalide ou vide : ${EQUIPMENT_COMPENDIUM}`);
+  }
 
-  const componentPriceAudit = auditComponentPrices(catalog, getItems(compendium));
+  const catalog = buildCatalog(spells);
+  const audit = auditPrices(catalog, getItems(compendium));
+  const controlFile = path.join(ROOT, args.control);
   const control = readJson(controlFile, {}) ?? {};
   control.version = VERSION;
-  control.componentPriceAudit = componentPriceAudit;
+  control.componentPriceAudit = audit;
   writeJson(controlFile, control);
 
-  console.log(`[ADD2E][COMPONENT_PRICE_AUDIT] ${componentPriceAudit.summary.total} composant(s) analysé(s) depuis ${EQUIPMENT_COMPENDIUM}.`);
-  console.log(`[ADD2E][COMPONENT_PRICE_AUDIT] ${componentPriceAudit.summary.prixEquipementUnique} prix unitaires résolus depuis les équipements.`);
-  console.log(`[ADD2E][COMPONENT_PRICE_AUDIT] ${componentPriceAudit.reusableEquipment.count} équipement(s) réutilisable(s) liés sans doublon.`);
-  console.log(`[ADD2E][COMPONENT_PRICE_AUDIT] ${componentPriceAudit.summary.entreesInvalides} entrée(s) invalide(s) à corriger dans les sorts.`);
-  console.log(`[ADD2E][COMPONENT_PRICE_AUDIT] ${componentPriceAudit.blocking.count} composant(s) sans prix unitaire résolu ou en conflit.`);
+  console.log(`[ADD2E][COMPONENT_PRICE_AUDIT] ${audit.summary.total} entrée(s) analysée(s).`);
+  console.log(`[ADD2E][COMPONENT_PRICE_AUDIT] ${audit.summary.prixExpliciteSort} prix explicite(s), ${audit.summary.prixEquipement} prix d'équipement, ${audit.summary.prixPredit} prix prédit(s).`);
+  console.log(`[ADD2E][COMPONENT_PRICE_AUDIT] ${audit.summary.equipementsReutilisables} équipement(s) réutilisable(s) conservé(s), ${audit.summary.entreesIgnorees} entrée(s) ignorée(s).`);
 
   if (args.auditOnly) return;
 
-  if (componentPriceAudit.blocking.count) {
-    throw new Error(`Reconstruction bloquée : ${componentPriceAudit.blocking.count} composant(s) n’ont pas de prix unitaire unique ou doivent être corrigés. Exécute d’abord : node audit/tools/normalize-fvtt-spells-materials-v3.mjs --audit-prices`);
-  }
-
-  const rebuilt = rebuildComponentCatalog(spells, componentPriceAudit);
+  const rebuilt = rebuildCatalog(spells, audit);
   control.componentCatalog = {
     ...rebuilt,
-    policy: "Les composants consommables sont recréés uniquement depuis les entrées structurées de fvtt-spells-all-normalise-mecanique-v3.json. Les équipements réutilisables correspondants restent dans Équipement.",
+    policy: "Tous les composants vendables sont recréés avec un system.prix explicite. Les équipements réutilisables restent des équipements et les fragments non matériels sont ignorés.",
     v3Rewritten: false,
     grammarParsing: false
   };
   writeJson(controlFile, control);
 
-  console.log(`[ADD2E][COMPONENT_CATALOG] ${rebuilt.deleted} ancien(s) composant(s) supprimé(s).`);
-  console.log(`[ADD2E][COMPONENT_CATALOG] ${rebuilt.created} composant(s) recréé(s) depuis ${SOURCE_V3}.`);
-  console.log(`[ADD2E][COMPONENT_CATALOG] ${rebuilt.reusedEquipment} équipement(s) réutilisable(s) conservé(s).`);
-  console.log(`[ADD2E][COMPONENT_CATALOG] ${rebuilt.linkedSpellEntries} association(s) sort/composant enregistrée(s).`);
+  console.log(`[ADD2E][COMPONENT_CATALOG] ${rebuilt.deleted} ancien(s) composant(s) supprimé(s), ${rebuilt.created} recréé(s).`);
+  console.log(`[ADD2E][COMPONENT_CATALOG] ${rebuilt.reusableEquipment} équipement(s) réutilisable(s) conservé(s), ${rebuilt.ignored} entrée(s) ignorée(s).`);
 }
 
 main();
