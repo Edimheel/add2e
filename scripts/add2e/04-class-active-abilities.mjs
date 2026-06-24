@@ -1,6 +1,6 @@
 // ============================================================
 // ADD2E — Capacités activables de classe : exécution on_use
-// Version : 2026-06-16-active-class-abilities-source-filter-v3
+// Version : 2026-06-24-active-class-abilities-class-items-v4
 // Format accepté pour les objets classe :
 // - system.activeClassFeatures : boutons / capacités utilisables
 // - system.classFeatures       : capacités passives ou mixtes
@@ -8,7 +8,7 @@
 // - anciens alias conservés : capacitesClasse, classFeaturesDebloquees
 // ============================================================
 
-const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-06-16-active-class-abilities-source-filter-v3";
+const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-06-24-active-class-abilities-class-items-v4";
 globalThis.ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = ADD2E_CLASS_ACTIVE_ABILITIES_VERSION;
 console.log("[ADD2E][CAPACITES][VERSION]", ADD2E_CLASS_ACTIVE_ABILITIES_VERSION);
 
@@ -84,9 +84,10 @@ function add2ePushClassFeatures(out, value, source = "unknown", classSystem = nu
 function add2eGetActorClassSystems(actor) {
   const sys = actor?.system ?? {};
   const classItems = actor?.items?.filter?.(i => String(i?.type || "").toLowerCase() === "classe") ?? [];
-  const isMulticlass = sys.multiclasse?.enabled === true || classItems.length > 1;
 
-  if (isMulticlass && classItems.length) {
+  // Les objets classe embarqués sont la source de vérité, en mono comme en multiclassage.
+  // Cela exclut les reliquats de details_classe après un remplacement de classe.
+  if (classItems.length) {
     return classItems.map(item => {
       const slug = add2eClassSlugFromSystem(item.system ?? {}, item.name);
       return add2eClassSystemEntry(item.system ?? {}, {
@@ -99,33 +100,22 @@ function add2eGetActorClassSystems(actor) {
   }
 
   const details = sys.details_classe && typeof sys.details_classe === "object" ? sys.details_classe : null;
-  const classItem = classItems[0] ?? null;
-  const itemSystem = classItem?.system ?? null;
   const monoLevel = Number(sys.niveau ?? 1) || 1;
-  const sources = [];
 
-  if (details) sources.push(add2eClassSystemEntry(details, {
-    name: details?.label ?? details?.name ?? sys.classe ?? "Classe",
-    slug: add2eClassSlugFromSystem(details, sys.classe),
-    level: monoLevel
-  }));
+  // Secours pour les acteurs anciens qui ne possèdent pas encore d'objet classe.
+  if (details) {
+    return [add2eClassSystemEntry(details, {
+      name: details?.label ?? details?.name ?? sys.classe ?? "Classe",
+      slug: add2eClassSlugFromSystem(details, sys.classe),
+      level: monoLevel
+    })].filter(Boolean);
+  }
 
-  if (itemSystem) sources.push(add2eClassSystemEntry(itemSystem, {
-    name: classItem?.name ?? sys.classe ?? "Classe",
-    slug: add2eClassSlugFromSystem(itemSystem, classItem?.name ?? sys.classe),
-    level: monoLevel,
-    itemId: classItem?.id ?? null
-  }));
-
-  // Secours uniquement pour les acteurs anciens qui n'ont ni details_classe ni item de classe.
-  // Cela évite qu'un reliquat actor.system.capacitesClasse d'une ancienne classe pollue le HUD.
-  if (!sources.length) sources.push(add2eClassSystemEntry(sys, {
+  return [add2eClassSystemEntry(sys, {
     name: sys.classe ?? "Acteur",
     slug: add2eClassSlugFromSystem(sys, sys.classe),
     level: monoLevel
-  }));
-
-  return sources.filter(Boolean);
+  })].filter(Boolean);
 }
 
 function add2eGetActorClassFeatures(actor) {
