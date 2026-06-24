@@ -1,5 +1,5 @@
 // ADD2E — Consommables hérités : compatibilité API, projectiles et délégation composants.
-// Version : 2026-06-24-projectile-exclusive-thrown-weapon-v3
+// Version : 2026-06-24-hybrid-thrown-contact-equipment-v4
 //
 // Les composants de sort sont désormais toujours délégués au moteur central
 // scripts/add2e/22e-consumables-core.mjs pour éviter deux mécaniques concurrentes.
@@ -10,7 +10,7 @@ import {
   add2eRefundSpellComponents as add2eCoreRefundSpellComponents
 } from "./22e-consumables-core.mjs";
 
-const ADD2E_CONSUMABLES_VERSION = "2026-06-24-projectile-exclusive-thrown-weapon-v3";
+const ADD2E_CONSUMABLES_VERSION = "2026-06-24-hybrid-thrown-contact-equipment-v4";
 globalThis.ADD2E_CONSUMABLES_VERSION = ADD2E_CONSUMABLES_VERSION;
 
 function add2eConsumablesLog(...args) {
@@ -575,26 +575,64 @@ function add2eWeaponForContactAttack(weapon) {
   });
 }
 
-async function add2eRestoreHybridWeaponEquipment(actor, itemId, beforeEquipped) {
-  const hybrid = actor?.items?.get?.(itemId) ?? null;
-  if (!hybrid?.system?.equipee) return false;
+function add2eHybridWeaponIsTwoHanded(weapon) {
+  const tags = globalThis.add2eGetItemEquipTags?.(weapon) ?? [];
+  return weapon?.system?.deuxMains === true || tags.includes("usage:deux_mains");
+}
 
-  const updates = [];
-  for (const weapon of actor.items ?? []) {
-    if (!weapon || weapon.id === hybrid.id || !["arme", "weapon"].includes(String(weapon.type ?? "").toLowerCase())) continue;
+function add2eHybridWeaponHasEquippedShield(actor) {
+  return [...(actor?.items ?? [])].find(item => {
+    if (!item?.system?.equipee) return false;
+    if (!["armure", "armor"].includes(String(item.type ?? "").toLowerCase())) return false;
+    return globalThis.add2eIsShield?.(item) === true;
+  }) ?? null;
+}
 
-    if (add2eWeaponHasContactMode(weapon)) {
-      if (weapon.system?.equipee === true) updates.push({ _id: weapon.id, "system.equipee": false });
-      continue;
-    }
+function add2eHybridWeaponClassCheck(actor, weapon) {
+  const check = globalThis.add2eCheckEquipmentAllowedForClass?.(actor, weapon, "arme");
+  if (!check || typeof check !== "object") return { ok: true, classeLabel: "classe inconnue", reason: "check-unavailable" };
+  return check;
+}
 
-    if (beforeEquipped?.has?.(weapon.id) && add2eIsPureDistanceWeapon(weapon) && weapon.system?.equipee !== true) {
-      updates.push({ _id: weapon.id, "system.equipee": true });
+export async function add2eEquipHybridThrownWeaponAsContact(actor, weapon, sheet = null) {
+  if (!actor || !weapon || !add2eIsHybridThrownWeapon(weapon)) return false;
+
+  if (weapon.system?.equipee === true) {
+    await weapon.update({ "system.equipee": false }, { add2eReason: "unequip-hybrid-thrown-weapon" });
+    sheet?._add2eRememberActiveTab?.();
+    sheet?.render?.(false);
+    return true;
+  }
+
+  const check = add2eHybridWeaponClassCheck(actor, weapon);
+  if (!check.ok) {
+    const reason = check.reason === "forbidden"
+      ? `tag interdit : ${check.matchedForbidden}`
+      : "arme non autorisée par les restrictions de classe";
+    ui.notifications?.error?.(`⚠️ Cette arme (« ${weapon.name} ») est interdite pour votre classe (${check.classeLabel}) — ${reason}.`);
+    return false;
+  }
+
+  if (add2eHybridWeaponIsTwoHanded(weapon)) {
+    const shield = add2eHybridWeaponHasEquippedShield(actor);
+    if (shield) {
+      ui.notifications?.error?.(`⚠️ Impossible d'équiper une arme à deux mains si un bouclier est équipé (${shield.name}).`);
+      return false;
     }
   }
 
-  if (updates.length) await actor.updateEmbeddedDocuments("Item", updates, { add2eReason: "hybrid-thrown-weapon-equipment" });
-  return updates.length > 0;
+  const updates = [];
+  for (const other of actor.items ?? []) {
+    if (!other || other.id === weapon.id || !["arme", "weapon"].includes(String(other.type ?? "").toLowerCase())) continue;
+    if (!other.system?.equipee || !add2eWeaponHasContactMode(other)) continue;
+    updates.push({ _id: other.id, "system.equipee": false });
+  }
+  updates.push({ _id: weapon.id, "system.equipee": true });
+
+  await actor.updateEmbeddedDocuments("Item", updates, { add2eReason: "equip-hybrid-thrown-weapon-as-contact" });
+  sheet?._add2eRememberActiveTab?.();
+  sheet?.render?.(false);
+  return true;
 }
 
 function add2eInstallProjectileEquipmentBridge() {
@@ -617,14 +655,14 @@ function add2eInstallProjectileEquipmentBridge() {
       return true;
     }
 
-    const hybridEquipment = action === "equip" && actor && item && !item.system?.equipee && add2eIsHybridThrownWeapon(item);
-    const beforeEquipped = hybridEquipment
-      ? new Set(Array.from(actor.items ?? []).filter(entry => entry?.system?.equipee === true).map(entry => entry.id))
-      : null;
+    // Une dague, un javelot ou une hache de jet sans munition propre est une arme
+    // de contact équipable sans projectile de carquois. Le gestionnaire historique
+    // ne doit donc pas être exécuté pour elle : il la classifierait comme arme de jet.
+    if (action === "equip" && actor && item && add2eIsHybridThrownWeapon(item)) {
+      return add2eEquipHybridThrownWeaponAsContact(actor, item, args?.sheet ?? null);
+    }
 
-    const result = await original.call(this, args);
-    if (hybridEquipment) await add2eRestoreHybridWeaponEquipment(actor, item.id, beforeEquipped);
-    return result;
+    return original.call(this, args);
   };
 
   guarded.__add2eProjectileEquipmentBridge = true;
@@ -688,6 +726,7 @@ const api = {
   add2eGetCompatibleProjectiles,
   add2eGetEquippedProjectileForWeapon,
   add2eEquipProjectile,
+  add2eEquipHybridThrownWeaponAsContact,
   add2eReserveProjectile,
   add2eConsumeProjectileReservation,
   add2eRefundProjectileReservation,
@@ -707,6 +746,7 @@ globalThis.ADD2E_CONSUMABLES = { ...(globalThis.ADD2E_CONSUMABLES ?? {}), ...api
 globalThis.add2eGetCompatibleProjectiles = add2eGetCompatibleProjectiles;
 globalThis.add2eGetEquippedProjectileForWeapon = add2eGetEquippedProjectileForWeapon;
 globalThis.add2eEquipProjectile = add2eEquipProjectile;
+globalThis.add2eEquipHybridThrownWeaponAsContact = add2eEquipHybridThrownWeaponAsContact;
 globalThis.add2eReserveProjectile = add2eReserveProjectile;
 globalThis.add2eConsumeProjectileReservation = add2eConsumeProjectileReservation;
 globalThis.add2eRegisterProjectileSpentInCombat = add2eRegisterProjectileSpentInCombat;
