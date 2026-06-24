@@ -191,7 +191,7 @@ globalThis.Add2eActorSheet.prototype.activateListeners = function activateListen
     ev.originalEvent.dataTransfer.setData("text/plain", JSON.stringify({ type: "Item", uuid: item.uuid }));
   });
 
-  html.find('[data-action]').off().on('click', async ev => {
+  html.find('.window-content [data-action]').off().on('click', async ev => {
     ev.stopPropagation();
     this._add2eRememberActiveTab(html);
 
