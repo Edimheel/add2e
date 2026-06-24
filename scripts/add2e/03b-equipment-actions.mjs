@@ -1,10 +1,10 @@
 // ============================================================
-// ADD2E — Actions d'équipement et usages d'armes centralisés
+// ADD2E — Actions d'équipement et profils d'armes
 // Compatible Foundry V13/V14/V15.
-// Les règles de classe et les tags restent dans 03-equipment-rules.mjs.
+// Les restrictions de classe restent dans 03-equipment-rules.mjs.
 // ============================================================
 
-const ADD2E_EQUIPMENT_ACTIONS_VERSION = "2026-06-24-equipment-actions-central-weapon-usage-v2";
+const ADD2E_EQUIPMENT_ACTIONS_VERSION = "2026-06-24-equipment-actions-attack-window-v3";
 const ADD2E_WEAPON_TYPES = new Set(["arme", "weapon"]);
 const ADD2E_ARMOR_TYPES = new Set(["armure", "armor"]);
 
@@ -50,12 +50,11 @@ function add2eEquipmentHasRange(weapon) {
 }
 
 /**
- * Source unique de la classification métier des armes.
- *
- * - projectile propulsé : utilise une munition de carquois ;
- * - lancer : l'arme elle-même est dépensée ;
- * - hybride : contact et lancer ;
- * - contact : ne dépend jamais du carquois.
+ * Source unique de classification métier des armes.
+ * - projectile propulsé : carquois ;
+ * - arme lancée : l'arme elle-même ;
+ * - arme hybride : contact ou lancer ;
+ * - arme de contact : jamais de carquois.
  */
 export function add2eGetWeaponUsageProfile(weapon) {
   const system = weapon?.system ?? {};
@@ -111,8 +110,6 @@ export function add2eGetWeaponUsageProfile(weapon) {
     ) || (!isProjectilePropulse && !isThrown && !hasRange);
 
   const isHybrid = isThrown && isContact;
-  const requiresEquippedProjectile = hasRange && !isThrown && !isContact;
-
   return {
     category,
     tags: [...tags],
@@ -121,14 +118,14 @@ export function add2eGetWeaponUsageProfile(weapon) {
     isThrown,
     isContact,
     isHybrid,
-    requiresEquippedProjectile,
+    requiresEquippedProjectile: hasRange && !isThrown && !isContact,
     slot: isContact ? "contact" : "distance"
   };
 }
 
 /**
- * Rend les anciennes données projetées compatibles avec les consommateurs
- * historiques qui reconnaissent usage:lancer, sans utiliser le nom de l'arme.
+ * Compatibilité avec les contrôles historiques du carquois.
+ * La normalisation est réalisée à l'équipement, sans migration d'acteurs au démarrage.
  */
 function add2eCanonicalWeaponUsageTags(item) {
   const profile = add2eGetWeaponUsageProfile(item);
@@ -157,8 +154,8 @@ function add2eEquipmentChangesEquipped(changes = {}) {
 }
 
 function add2eInstallWeaponUsageNormalization() {
-  if (globalThis.__ADD2E_WEAPON_USAGE_NORMALIZATION_V2) return;
-  globalThis.__ADD2E_WEAPON_USAGE_NORMALIZATION_V2 = true;
+  if (globalThis.__ADD2E_WEAPON_USAGE_NORMALIZATION_V3) return;
+  globalThis.__ADD2E_WEAPON_USAGE_NORMALIZATION_V3 = true;
 
   Hooks.on("preUpdateItem", (item, changes = {}) => {
     if (!ADD2E_WEAPON_TYPES.has(String(item?.type ?? "").toLowerCase())) return;
@@ -168,26 +165,6 @@ function add2eInstallWeaponUsageNormalization() {
     if (!canonicalTags) return;
     if (changes.system && typeof changes.system === "object") changes.system.tags = canonicalTags;
     else changes["system.tags"] = canonicalTags;
-  });
-
-  Hooks.once("ready", () => {
-    if (!game.user?.isGM) return;
-    window.setTimeout(async () => {
-      for (const actor of game.actors ?? []) {
-        if (actor?.type !== "personnage") continue;
-        const updates = [];
-        for (const item of actor.items ?? []) {
-          if (!ADD2E_WEAPON_TYPES.has(String(item?.type ?? "").toLowerCase())) continue;
-          const canonicalTags = add2eCanonicalWeaponUsageTags(item);
-          if (canonicalTags) updates.push({ _id: item.id, "system.tags": canonicalTags });
-        }
-        if (updates.length) {
-          await actor.updateEmbeddedDocuments("Item", updates, {
-            add2eReason: "normalize-thrown-weapon-usage-tags"
-          });
-        }
-      }
-    }, 0);
   });
 }
 
@@ -228,7 +205,12 @@ function add2eEquipmentIsTwoHanded(item) {
 }
 
 function add2eEquipmentIsAmmunition(item) {
-  return globalThis.ADD2E_CONSUMABLES?.add2eIsAmmunition?.(item) === true;
+  if (globalThis.ADD2E_CONSUMABLES?.add2eIsAmmunition?.(item) === true) return true;
+  const system = item?.system ?? {};
+  const tags = add2eEquipmentTags(item);
+  return String(system.categorie ?? "").toLowerCase() === "munition" ||
+    tags.has("munition") ||
+    tags.has("categorie:munition");
 }
 
 async function add2eHandleAmmunitionEquip(actor, item, sheet) {
@@ -265,6 +247,7 @@ async function add2eHandleWeaponEquip(actor, item, sheet) {
       other?.system?.equipee === true &&
       add2eEquipmentIsShield(other)
     ) ?? null;
+
     if (shield) {
       ui.notifications?.error?.(`⚠️ Impossible d'équiper une arme à deux mains si un bouclier est équipé (${shield.name}).`);
       return false;
@@ -314,6 +297,7 @@ async function add2eHandleArmorEquip(actor, item, sheet) {
       other?.system?.equipee === true &&
       add2eEquipmentIsTwoHanded(other)
     ) ?? null;
+
     if (twoHanded) {
       ui.notifications?.error?.(`⚠️ Impossible d'équiper un bouclier avec une arme à deux mains (${twoHanded.name}) déjà équipée.`);
       return false;
@@ -357,7 +341,8 @@ async function add2eHandleArmorEquip(actor, item, sheet) {
   }
 
   const equippedArmors = [...(actor.items ?? [])].filter(other =>
-    ADD2E_ARMOR_TYPES.has(String(other?.type ?? "").toLowerCase()) && other?.system?.equipee === true
+    ADD2E_ARMOR_TYPES.has(String(other?.type ?? "").toLowerCase()) &&
+    other?.system?.equipee === true
   );
   const armor = equippedArmors.find(other => !add2eEquipmentIsShield(other) && !add2eEquipmentIsHelmet(other));
   const shield = equippedArmors.find(add2eEquipmentIsShield);
@@ -392,7 +377,6 @@ export async function handleItemAction({ actor, action, itemId, itemType, sheet 
   }
 
   if (action !== "equip") return false;
-
   if (add2eEquipmentIsAmmunition(item)) return add2eHandleAmmunitionEquip(actor, item, sheet);
 
   if (effectiveType === "objet") {
@@ -406,23 +390,43 @@ export async function handleItemAction({ actor, action, itemId, itemType, sheet 
   return false;
 }
 
-function add2eWeaponStackQuantity(weapon) {
-  const value = weapon?.system?.quantite ?? weapon?.system?.quantity;
-  if (value === undefined || value === null || value === "") return 1;
-  return Math.max(0, Math.floor(Number(value) || 0));
+function add2eWeaponModeStore() {
+  if (!(globalThis.__ADD2E_WEAPON_ATTACK_MODES_V1 instanceof Map)) {
+    globalThis.__ADD2E_WEAPON_ATTACK_MODES_V1 = new Map();
+  }
+  return globalThis.__ADD2E_WEAPON_ATTACK_MODES_V1;
 }
 
-function add2eWeaponForContactAttack(weapon) {
-  const system = {
-    ...(weapon?.system ?? {}),
-    portee_courte: 0,
-    portee_moyenne: 0,
-    portee_longue: 0,
-    porteeCourte: 0,
-    porteeMoyenne: 0,
-    porteeLongue: 0
-  };
+function add2eWeaponModeKey(actorId, weaponId) {
+  return `${String(actorId ?? "")}|${String(weaponId ?? "")}`;
+}
 
+function add2eSetTransientWeaponAttackMode(actorId, weaponId, mode) {
+  const normalized = String(mode ?? "").toLowerCase() === "throw" ? "throw" : "contact";
+  if (!actorId || !weaponId) return normalized;
+  add2eWeaponModeStore().set(add2eWeaponModeKey(actorId, weaponId), normalized);
+  return normalized;
+}
+
+function add2eTakeTransientWeaponAttackMode(actorId, weaponId, fallback) {
+  const key = add2eWeaponModeKey(actorId, weaponId);
+  const mode = add2eWeaponModeStore().get(key) ?? fallback;
+  add2eWeaponModeStore().delete(key);
+  return String(mode ?? "").toLowerCase() === "throw" ? "throw" : "contact";
+}
+
+function add2eRemoveLegacyThrownAttackBridge() {
+  const current = globalThis.add2eAttackRoll;
+  const original = current?.__add2eThrownWeaponAttackOriginal;
+  if (typeof original !== "function") return false;
+  globalThis.add2eAttackRoll = original;
+  return true;
+}
+
+function add2eWeaponWithCanonicalUsageTags(weapon) {
+  const canonicalTags = add2eCanonicalWeaponUsageTags(weapon);
+  if (!canonicalTags) return weapon;
+  const system = { ...(weapon?.system ?? {}), tags: canonicalTags };
   return new Proxy(weapon, {
     get(target, property, receiver) {
       if (property === "system") return system;
@@ -431,162 +435,83 @@ function add2eWeaponForContactAttack(weapon) {
   });
 }
 
-function add2eEscapeWeaponModeHtml(value) {
-  const div = document.createElement("div");
-  div.textContent = String(value ?? "");
-  return div.innerHTML;
+function add2eReadWeaponStackQuantity(weapon) {
+  const value = weapon?.system?.quantite ?? weapon?.system?.quantity;
+  if (value === undefined || value === null || value === "") return 1;
+  return Math.max(0, Math.floor(Number(value) || 0));
 }
 
-async function add2ePromptThrownWeaponMode(weapon) {
-  const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (!DialogV2) {
-    ui.notifications?.error?.("DialogV2 est indisponible pour choisir le mode d'attaque.");
-    return null;
+async function add2eConsumeThrownWeaponAfterAttack(actor, weapon) {
+  const api = globalThis.ADD2E_CONSUMABLES ?? game?.add2e?.consumables;
+  if (typeof api?.add2eConsumeThrownWeapon !== "function") {
+    console.warn("[ADD2E][WEAPON_USAGE][THROW][NO_CONSUMABLE_API]", { actor: actor?.name, weapon: weapon?.name });
+    return { ok: false, reason: "consumable-api-unavailable" };
   }
-
-  const name = add2eEscapeWeaponModeHtml(weapon?.name ?? "Arme");
-  const image = add2eEscapeWeaponModeHtml(weapon?.img ?? "icons/svg/sword.svg");
-  const content = `
-    <section class="add2e-thrown-mode-dialog" style="box-sizing:border-box;width:430px;max-width:430px;color:#24170a;font-family:inherit;">
-      <div style="display:flex;align-items:center;gap:8px;padding:7px;border:1px solid #d5b15a;border-radius:8px;background:#fff8dd;">
-        <img src="${image}" alt="" style="width:42px;height:42px;object-fit:cover;border-radius:6px;border:1px solid #fff7dc;background:#2a1908;">
-        <div style="min-width:0;">
-          <div style="font-size:.62rem;font-weight:950;text-transform:uppercase;color:#5a3510;">Arme polyvalente</div>
-          <div style="font-size:.95rem;font-weight:950;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${name}">${name}</div>
-        </div>
-      </div>
-      <p style="margin:10px 0 0;color:#5a3510;font-weight:800;line-height:1.35;">Choisis l'emploi de cette arme pour l'attaque.</p>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px;">
-        <div style="padding:7px;border:1px solid #d5b15a;border-radius:7px;background:#fffdf4;">
-          <div style="font-weight:950;color:#5a3510;"><i class="fas fa-hand-fist"></i> Corps à corps</div>
-          <div style="margin-top:3px;font-size:.82rem;color:#5b4b3c;">Aucune consommation. Portée de contact.</div>
-        </div>
-        <div style="padding:7px;border:1px solid #d69a76;border-radius:7px;background:#fff2e8;">
-          <div style="font-weight:950;color:#8f2d22;"><i class="fas fa-bullseye"></i> Lancer</div>
-          <div style="margin-top:3px;font-size:.82rem;color:#5b4b3c;">Une unité est dépensée et pourra être récupérée en fin de combat.</div>
-        </div>
-      </div>
-    </section>`;
-
-  return new Promise(resolve => {
-    let settled = false;
-    const finish = value => {
-      if (!settled) {
-        settled = true;
-        resolve(value);
-      }
-      return value;
-    };
-
-    const dialog = new DialogV2({
-      window: { title: `${weapon?.name ?? "Arme"} — mode d'attaque` },
-      classes: ["add2e", "add2e-attack-dialog", "add2e-thrown-mode-dialog"],
-      position: { width: 460, height: "auto" },
-      content,
-      buttons: [
-        { action: "contact", label: "Corps à corps", default: true, callback: () => finish("contact") },
-        { action: "throw", label: "Lancer", callback: () => finish("throw") },
-        { action: "cancel", label: "Annuler", callback: () => finish(null) }
-      ],
-      default: "contact"
-    });
-
-    dialog.addEventListener?.("close", () => finish(null), { once: true });
-    dialog.render({ force: true });
-  });
+  return api.add2eConsumeThrownWeapon(actor, weapon, 1);
 }
 
-async function add2eAlertThrownWeaponUnavailable(weapon) {
-  const DialogV2 = foundry?.applications?.api?.DialogV2;
-  const message = `${weapon?.name ?? "Cette arme"} n'est plus disponible pour être lancée.`;
-  if (DialogV2?.alert) {
-    await DialogV2.alert({
-      window: { title: "Arme de lancer indisponible" },
-      content: `<p>${add2eEscapeWeaponModeHtml(message)}</p>`,
-      ok: { label: "Compris" },
-      modal: true
-    });
-    return;
-  }
-  ui.notifications?.warn?.(message);
-}
-
-async function add2eConsumeThrownWeapon(actor, weapon) {
-  if (typeof globalThis.add2eConsumeThrownWeapon === "function") {
-    return globalThis.add2eConsumeThrownWeapon(actor, weapon, 1);
-  }
-  return { ok: false, reason: "consumable-api-unavailable" };
-}
-
-function add2eInstallCentralEquipmentHandler() {
-  globalThis.handleItemAction = handleItemAction;
-  globalThis.add2eHandleItemAction = handleItemAction;
-}
-
-function add2eInstallCentralWeaponAttackBridge() {
-  if (globalThis.__ADD2E_CENTRAL_WEAPON_ATTACK_BRIDGE_V2) return true;
-
+/**
+ * La fenêtre d'attaque porte le choix contact/lancer.
+ * Ce pont ne crée aucune fenêtre et ne consomme qu'après un lancer validé.
+ */
+function add2eInstallWeaponUsageAttackBridge() {
   const current = globalThis.add2eAttackRoll;
-  if (typeof current !== "function") return false;
-  const original = typeof current.__add2eThrownWeaponAttackOriginal === "function"
-    ? current.__add2eThrownWeaponAttackOriginal
-    : current;
-  if (original.__add2eCentralWeaponAttackBridge === true) return true;
+  if (typeof current !== "function" || current.__add2eWeaponUsageAttackBridge === true) return false;
 
-  const guarded = async function add2eAttackRollWithCentralWeaponUsage(args = {}) {
+  const guarded = async function add2eAttackRollWithWeaponUsage(args = {}) {
     const actor = args.actor ?? (args.actorId ? game.actors?.get?.(args.actorId) : null);
     const weapon = args.arme ?? (actor && args.itemId ? actor.items?.get?.(args.itemId) : null);
     const profile = add2eGetWeaponUsageProfile(weapon);
 
-    if (!actor || !weapon || !profile.isThrown) return original.call(this, args);
+    if (!actor || !weapon || !profile.isThrown) return current.call(this, args);
 
-    const mode = profile.isHybrid ? await add2ePromptThrownWeaponMode(weapon) : "throw";
-    if (!mode) return false;
+    const defaultMode = profile.isHybrid ? "contact" : "throw";
+    add2eSetTransientWeaponAttackMode(actor.id, weapon.id, defaultMode);
 
-    if (mode === "throw" && add2eWeaponStackQuantity(weapon) <= 0) {
-      await add2eAlertThrownWeaponUnavailable(weapon);
-      return false;
+    try {
+      const weaponForAttack = add2eWeaponWithCanonicalUsageTags(weapon);
+      const result = await current.call(this, { ...args, actor, arme: weaponForAttack });
+      const mode = add2eTakeTransientWeaponAttackMode(actor.id, weapon.id, defaultMode);
+      if (result !== true || mode !== "throw") return result;
+
+      if (add2eReadWeaponStackQuantity(weapon) <= 0) {
+        ui.notifications?.warn?.(`${weapon.name} n'est plus disponible pour être lancée.`);
+        return false;
+      }
+
+      const consumed = await add2eConsumeThrownWeaponAfterAttack(actor, weapon);
+      return consumed?.ok === false ? false : result;
+    } finally {
+      add2eWeaponModeStore().delete(add2eWeaponModeKey(actor.id, weapon.id));
     }
-
-    const attackArgs = mode === "contact"
-      ? { ...args, actor, arme: add2eWeaponForContactAttack(weapon) }
-      : { ...args, actor, arme: weapon };
-    const result = await original.call(this, attackArgs);
-
-    if (result === true && mode === "throw") {
-      const consumption = await add2eConsumeThrownWeapon(actor, weapon);
-      if (consumption?.ok === false) return false;
-    }
-    return result;
   };
 
-  guarded.__add2eCentralWeaponAttackBridge = true;
-  guarded.__add2eCentralWeaponAttackOriginal = original;
+  guarded.__add2eWeaponUsageAttackBridge = true;
+  guarded.__add2eWeaponUsageAttackOriginal = current;
   globalThis.add2eAttackRoll = guarded;
-  globalThis.__ADD2E_CENTRAL_WEAPON_ATTACK_BRIDGE_V2 = true;
   return true;
 }
 
-function add2eScheduleCentralRuntimeBridges() {
-  const install = () => {
-    add2eInstallCentralEquipmentHandler();
-    add2eInstallCentralWeaponAttackBridge();
-  };
+function add2eScheduleWeaponUsageIntegration() {
+  // 21-consumables conserve ses API, mais ses anciens ponts à 0/100 ms
+  // ne doivent plus ouvrir de seconde fenêtre.
+  window.setTimeout(add2eRemoveLegacyThrownAttackBridge, 200);
+  window.setTimeout(add2eRemoveLegacyThrownAttackBridge, 500);
 
-  // 21-consumables installe ses anciens ponts à 0 et 100 ms.
-  // Cette installation, antérieure au pont vendeur de 800 ms, les remplace
-  // par le profil central sans modifier la chaîne arc/arbalète/fronde.
-  window.setTimeout(install, 200);
-  window.setTimeout(install, 500);
+  // Le vendeur installe son pont de carquois à 800 ms. Il reste actif pour
+  // les armes propulsées ; ce pont extérieur gère ensuite les armes lancées.
+  window.setTimeout(add2eInstallWeaponUsageAttackBridge, 900);
+  window.setTimeout(add2eInstallWeaponUsageAttackBridge, 1100);
 }
 
 function add2eInstallEquipmentActions() {
   globalThis.add2eGetWeaponUsageProfile = add2eGetWeaponUsageProfile;
+  globalThis.add2eSetTransientWeaponAttackMode = add2eSetTransientWeaponAttackMode;
   globalThis.add2eHandleItemAction = handleItemAction;
   globalThis.handleItemAction = handleItemAction;
   globalThis.ADD2E_EQUIPMENT_ACTIONS_VERSION = ADD2E_EQUIPMENT_ACTIONS_VERSION;
   add2eInstallWeaponUsageNormalization();
-  Hooks.once("ready", add2eScheduleCentralRuntimeBridges);
+  Hooks.once("ready", add2eScheduleWeaponUsageIntegration);
 }
 
 add2eInstallEquipmentActions();
