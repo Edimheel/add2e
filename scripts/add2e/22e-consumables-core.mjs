@@ -232,7 +232,7 @@ function collectRequirement(out, value) {
     return;
   }
   if (typeof value === "string") {
-    for (const rawPart of asArray(value)) {
+    for (const rawPart of String(value).split(/[,;|\n]+/).map(part => part.trim()).filter(Boolean)) {
       const part = String(rawPart ?? "").replace(/[()\[\]{}]/g, " ").replace(/\s+/g, " ").trim();
       const alternatives = part.split(/\bou\b/gi).map(entry => entry.trim()).filter(Boolean);
       if (alternatives.length > 1) addAlternativeRequirement(out, alternatives);
@@ -694,6 +694,6 @@ export function registerSockets() {
     } catch (err) {
       console.warn("[ADD2E][CONSUMABLES][COMPONENTS][TRANSACTION]", { operation: data.operation, err });
     }
-    game.socket.emit("system.add2e", { type: SOCKET_COMPONENT_RESULT, requestId: payload.requestId, userId: payload.userId, result: { ok } });
+    game.socket.emit("system.add2e", { type: SOCKET_COMPONENT_RESULT, requestId: payload.request_id ?? payload.requestId, userId: payload.userId, result: { ok } });
   });
 }
