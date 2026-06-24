@@ -1,6 +1,6 @@
 // ============================================================
 // ADD2E — Restrictions équipement génériques par tags harmonisés
-// Version : 2026-06-15-multiclass-equipment-union-tags-v1
+// Version : 2026-06-24-thief-activity-equipment-status-v2
 // Source principale : Items "classe" embarqués sur l'acteur.
 // Schéma conseillé des tags d'équipement :
 // - arme / armure / bouclier
@@ -294,6 +294,70 @@ function add2eCheckThiefActivityEquipmentAllowed(actor) {
   return add2eCheckEquippedItemsForClassActivity(actor, "Voleur");
 }
 
+function add2eGetThiefActivityEquipmentStatus(actor) {
+  const thiefClass = add2eFindActorClassSystemByName(actor, "Voleur");
+  if (!thiefClass) {
+    return {
+      applies: false,
+      ok: true,
+      reason: "thief-class-not-present",
+      className: "Voleur",
+      failures: [],
+      blockingItems: [],
+      message: ""
+    };
+  }
+
+  const check = add2eCheckThiefActivityEquipmentAllowed(actor);
+  const failures = Array.isArray(check?.failures) ? check.failures : [];
+  const blockingItems = failures.map(failure => ({
+    id: failure.itemId ?? null,
+    name: String(failure.itemName ?? "Équipement inconnu"),
+    kind: failure.kind ?? null,
+    reason: failure.check?.reason ?? null
+  }));
+  const listed = blockingItems.map(item => item.name).filter(Boolean).join(", ");
+
+  return {
+    applies: true,
+    ok: check?.ok !== false,
+    reason: check?.reason ?? "equipped-items-allowed-for-class-activity",
+    className: "Voleur",
+    failures,
+    blockingItems,
+    message: check?.ok === false
+      ? `Les capacités de voleur sont indisponibles tant que l'équipement incompatible est porté${listed ? ` : ${listed}.` : "."}`
+      : ""
+  };
+}
+
+function add2eInstallThiefActivityRollGuard() {
+  if (globalThis.__ADD2E_THIEF_ACTIVITY_ROLL_GUARD_V1) return;
+  globalThis.__ADD2E_THIEF_ACTIVITY_ROLL_GUARD_V1 = true;
+
+  const install = () => {
+    const original = globalThis.add2eRollThiefSkill;
+    if (typeof original !== "function" || original.__add2eThiefActivityGuard) return;
+
+    const guarded = async function add2eRollThiefSkillWithEquipmentGuard(actor, ...args) {
+      const status = add2eGetThiefActivityEquipmentStatus(actor);
+      if (status.applies && !status.ok) {
+        ui.notifications?.warn?.(status.message || "Les capacités de voleur sont indisponibles avec l'équipement actuellement porté.");
+        return false;
+      }
+      return original.call(this, actor, ...args);
+    };
+    guarded.__add2eThiefActivityGuard = true;
+    guarded.__add2eThiefActivityOriginal = original;
+    globalThis.add2eRollThiefSkill = guarded;
+  };
+
+  if (game?.ready) queueMicrotask(install);
+  else Hooks.once("ready", install);
+}
+
+add2eInstallThiefActivityRollGuard();
+
 globalThis.add2eNormalizeEquipTag = add2eNormalizeEquipTag;
 globalThis.add2eToEquipArray = add2eToEquipArray;
 globalThis.add2eGetActorClassSystem = add2eGetActorClassSystem;
@@ -302,6 +366,7 @@ globalThis.add2eGetItemEquipTags = add2eGetItemEquipTags;
 globalThis.add2eCheckEquipmentAllowedForClass = add2eCheckEquipmentAllowedForClass;
 globalThis.add2eCheckEquippedItemsForClassActivity = add2eCheckEquippedItemsForClassActivity;
 globalThis.add2eCheckThiefActivityEquipmentAllowed = add2eCheckThiefActivityEquipmentAllowed;
+globalThis.add2eGetThiefActivityEquipmentStatus = add2eGetThiefActivityEquipmentStatus;
 try { globalThis.add2eDeepClone = add2eDeepClone; } catch (_e) {}
 try { globalThis.add2ePushEquipTag = add2ePushEquipTag; } catch (_e) {}
 try { globalThis.add2ePushEquipTags = add2ePushEquipTags; } catch (_e) {}
