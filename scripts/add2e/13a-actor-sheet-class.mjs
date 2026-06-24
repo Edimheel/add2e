@@ -1,7 +1,7 @@
 // ========== CLASSE PRINCIPALE PERSONNAGE — ApplicationV2 ==========
 // Feuille personnage ADD2E full ApplicationV2 : aucun héritage appv1, aucun pont ActorSheet.
 
-const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-06-24-application-v2-native-token-config-v5";
+const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-06-24-application-v2-native-token-config-v6";
 const ADD2E_ACTOR_SHEET_V2_CSS_ID = "add2e-application-v2-character-sheet-css";
 const ADD2E_ACTOR_SHEET_V2_CSS_PATH = "systems/add2e/styles/application-v2-character-sheet.css";
 
@@ -106,10 +106,6 @@ class Add2eActorSheet extends ADD2E_ACTOR_SHEET_BASE {
 
     if (Object.keys(updateData).length) await actor.update(updateData);
   }
-
-  get actor() { return this.document; }
-  get object() { return this.document; }
-  get isEditable() { return this.options?.editable ?? this.document?.isOwner ?? false; }
 
   async _prepareContext(options = {}) {
     add2eEnsureApplicationV2CharacterCss();
