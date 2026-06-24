@@ -1,16 +1,13 @@
-// ADD2E — Consommables hérités : compatibilité API, projectiles et délégation composants.
-// Version : 2026-06-24-hybrid-thrown-contact-equipment-v4
-//
-// Les composants de sort sont désormais toujours délégués au moteur central
-// scripts/add2e/22e-consumables-core.mjs pour éviter deux mécaniques concurrentes.
-// La mécanique des projectiles reste déléguée au cœur vendeur/projection.
+// ADD2E — Consommables : composants, munitions, récupération et piles d'armes lancées.
+// Compatible Foundry V13/V14/V15.
+// Le choix contact/lancer appartient exclusivement à la fenêtre d'attaque.
 
 import {
   add2eReserveSpellComponents as add2eCoreReserveSpellComponents,
   add2eRefundSpellComponents as add2eCoreRefundSpellComponents
 } from "./22e-consumables-core.mjs";
 
-const ADD2E_CONSUMABLES_VERSION = "2026-06-24-hybrid-thrown-contact-equipment-v4";
+const ADD2E_CONSUMABLES_VERSION = "2026-06-24-consumables-no-legacy-weapon-dialog-v5";
 globalThis.ADD2E_CONSUMABLES_VERSION = ADD2E_CONSUMABLES_VERSION;
 
 function add2eConsumablesLog(...args) {
@@ -45,17 +42,6 @@ function add2eSlugify(value) {
     .replace(/^_+|_+$/g, "");
 }
 
-function add2eUsageTag(value) {
-  return String(value ?? "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[’']/g, "")
-    .replace(/[\s-]+/g, "_")
-    .replace(/_+/g, "_");
-}
-
 function add2eTagsOf(item) {
   const sys = item?.system ?? {};
   const flags = item?.flags?.add2e ?? {};
@@ -88,10 +74,6 @@ function add2eWeaponStackQuantity(item) {
   return Math.max(0, Math.floor(add2eNumber(value, 0)));
 }
 
-function add2eUpdatePath(path, value) {
-  return { [path]: value };
-}
-
 function add2eSettingBool(key) {
   try { return !!game.settings.get("add2e", key); }
   catch (_err) { return false; }
@@ -114,18 +96,13 @@ function add2eActorDocumentType(actor) {
 }
 
 function add2eActorUsesProjectileInventory(actor) {
-  if (!actor) return false;
-  return add2eActorDocumentType(actor) === "personnage";
+  return !!actor && add2eActorDocumentType(actor) === "personnage";
 }
 
 async function add2eDialogPopup({ title = "Information", content = "", modal = false } = {}) {
   const DialogV2 = foundry?.applications?.api?.DialogV2;
   if (DialogV2?.alert) {
     await DialogV2.alert({ window: { title }, content, ok: { label: "Compris" }, modal });
-    return true;
-  }
-  if (DialogV2?.confirm) {
-    await DialogV2.confirm({ window: { title }, content, yes: { label: "Compris" }, no: { label: "Fermer" }, modal });
     return true;
   }
   ui.notifications?.info?.(String(content).replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim() || title);
@@ -182,15 +159,13 @@ export function add2eIsSpellComponent(item) {
     ...add2eTagsOf(item)
   ].map(add2eSlugify).filter(Boolean);
   if (fields.some(v => v === "composant" || v === "component" || v === "composant_sort" || v === "composants_sort" || v === "composant_de_sort" || v === "spell_component" || v === "material_component")) return true;
-  if (fields.some(v => v.startsWith("composant_") || v.startsWith("composant:") || v.startsWith("component_") || v.startsWith("spell_component_"))) return true;
-  return false;
+  return fields.some(v => v.startsWith("composant_") || v.startsWith("composant:") || v.startsWith("component_") || v.startsWith("spell_component_"));
 }
 
 function add2eWeaponFamily(arme) {
   const sys = arme?.system ?? {};
   const raw = sys.famille_arme ?? sys.famille ?? sys.sousType ?? sys.sous_type ?? arme?.name ?? "";
-  if (Array.isArray(raw)) return raw.map(add2eSlugify);
-  return [add2eSlugify(raw)];
+  return Array.isArray(raw) ? raw.map(add2eSlugify) : [add2eSlugify(raw)];
 }
 
 export function add2eGetWeaponRequiredAmmoType(arme) {
@@ -227,8 +202,7 @@ function add2eAmmoCompatibleWithRequired(item, required, arme = null) {
   if (compat.includes(requiredSlug)) return true;
   const tags = add2eTagsOf(item).map(t => String(t).toLowerCase());
   if (tags.includes(`munition:${requiredSlug}`) || tags.includes(`compatible_munition:${requiredSlug}`) || tags.includes(`compatible:${requiredSlug}`)) return true;
-  const weaponFamilies = add2eWeaponFamily(arme);
-  return weaponFamilies.some(f => tags.includes(`compatible:${f}`) || tags.includes(`compatible_arme:${f}`));
+  return add2eWeaponFamily(arme).some(f => tags.includes(`compatible:${f}`) || tags.includes(`compatible_arme:${f}`));
 }
 
 export function add2eGetCompatibleProjectiles(actor, arme) {
@@ -238,8 +212,8 @@ export function add2eGetCompatibleProjectiles(actor, arme) {
 }
 
 export function add2eGetEquippedProjectileForWeapon(actor, arme) {
-  const projectiles = add2eGetCompatibleProjectiles(actor, arme);
-  return projectiles.find(p => p.system?.equipee === true || p.system?.equipped === true) ?? null;
+  return add2eGetCompatibleProjectiles(actor, arme)
+    .find(projectile => projectile.system?.equipee === true || projectile.system?.equipped === true) ?? null;
 }
 
 export async function add2eEquipProjectile(actor, projectile) {
@@ -367,8 +341,8 @@ export function add2eResolveSpellMaterialComponents(sort) {
           if (clean.length > 1) components.push({ slug: clean.map(v => v.slug).join("__or__"), nom: clean.map(v => v.nom).join(" ou "), quantite: 1, consomme: true, alternatives: clean });
           else if (clean[0]) components.push(clean[0]);
         } else {
-          const c = add2eComponentEntry(part);
-          if (c) components.push(c);
+          const component = add2eComponentEntry(part);
+          if (component) components.push(component);
         }
       }
       return;
@@ -377,15 +351,20 @@ export function add2eResolveSpellMaterialComponents(sort) {
       const alternatives = entry.alternatives ?? entry.options ?? entry.choix ?? entry.auChoix ?? entry.or;
       if (Array.isArray(alternatives) && alternatives.length) { add(alternatives); return; }
       const name = entry.nom ?? entry.name ?? entry.label ?? entry.item ?? entry.itemName ?? entry.component ?? entry.composant ?? entry.slug;
-      const c = add2eComponentEntry(name, entry.quantite ?? entry.quantity ?? entry.qty ?? entry.nombre ?? entry.count ?? 1, entry.consomme ?? entry.consume ?? true);
-      if (c) components.push(c);
+      const component = add2eComponentEntry(name, entry.quantite ?? entry.quantity ?? entry.qty ?? entry.nombre ?? entry.count ?? 1, entry.consomme ?? entry.consume ?? true);
+      if (component) components.push(component);
     }
   };
+
   for (const field of fields) add(field);
   const unique = [];
-  for (const c of components.filter(c => c.slug && c.consomme !== false)) if (!unique.some(u => u.slug === c.slug)) unique.push(c);
+  for (const component of components.filter(component => component.slug && component.consomme !== false)) {
+    if (!unique.some(existing => existing.slug === component.slug)) unique.push(component);
+  }
   const compText = String(sys.composantes ?? sys.components ?? "").toUpperCase();
-  if (!unique.length && /\bM\b/.test(compText)) return [{ slug: "__manual__", nom: "Composant matériel non détaillé", quantite: 0, consomme: false, manual: true }];
+  if (!unique.length && /\bM\b/.test(compText)) {
+    return [{ slug: "__manual__", nom: "Composant matériel non détaillé", quantite: 0, consomme: false, manual: true }];
+  }
   return unique;
 }
 
@@ -405,13 +384,13 @@ async function add2eConsumablesResolveDropItemData(raw) {
   }
   if (!itemData && raw?.pack && raw?.id) {
     const pack = game.packs.get(raw.pack);
-    const ent = pack && await pack.getDocument(raw.id);
-    if (ent instanceof Item) itemData = ent.toObject();
+    const entry = pack && await pack.getDocument(raw.id);
+    if (entry instanceof Item) itemData = entry.toObject();
   }
   if (!itemData && raw?.pack && raw?._id) {
     const pack = game.packs.get(raw.pack);
-    const ent = pack && await pack.getDocument(raw._id);
-    if (ent instanceof Item) itemData = ent.toObject();
+    const entry = pack && await pack.getDocument(raw._id);
+    if (entry instanceof Item) itemData = entry.toObject();
   }
   return itemData;
 }
@@ -421,8 +400,7 @@ function add2eSameAmmunitionIdentity(a, b) {
 }
 
 function add2eDroppedQuantity(itemData) {
-  const qty = add2eNumber(itemData?.system?.quantite ?? itemData?.system?.quantity ?? 1, 1);
-  return Math.max(1, qty);
+  return Math.max(1, add2eNumber(itemData?.system?.quantite ?? itemData?.system?.quantity ?? 1, 1));
 }
 
 export async function add2eTryMergeDroppedAmmunition(sheet, event) {
@@ -454,266 +432,16 @@ function add2eWrapActorSheetDropForAmmunition() {
   };
 }
 
-function add2eWeaponUsageTags(weapon) {
-  return new Set(add2eTagsOf(weapon).map(add2eUsageTag).filter(Boolean));
-}
-
-function add2eWeaponHasThrownMode(weapon) {
-  if (!weapon || !["arme", "weapon"].includes(String(weapon.type ?? "").toLowerCase())) return false;
-  const sys = weapon.system ?? {};
-  const tags = add2eWeaponUsageTags(weapon);
-  return !!(
-    sys.arme_de_jet === true ||
-    sys.armeDeJet === true ||
-    sys.isThrown === true ||
-    Number(sys.portee_courte ?? sys.porteeCourte ?? 0) > 0 ||
-    Number(sys.portee_moyenne ?? sys.porteeMoyenne ?? 0) > 0 ||
-    Number(sys.portee_longue ?? sys.porteeLongue ?? 0) > 0 ||
-    ["usage:lancer", "usage:jet", "usage:arme_de_jet", "categorie:projectile_lance", "trait:arme_de_jet", "type:arme_de_jet"].some(tag => tags.has(tag))
-  );
-}
-
-function add2eWeaponHasContactMode(weapon) {
-  if (!weapon || !["arme", "weapon"].includes(String(weapon.type ?? "").toLowerCase())) return false;
-  const sys = weapon.system ?? {};
-  const tags = add2eWeaponUsageTags(weapon);
-  const explicitContact = !!(
-    sys.arme_de_contact === true ||
-    sys.armeDeContact === true ||
-    sys.isMelee === true ||
-    sys.corps_a_corps === true ||
-    ["usage:corps_a_corps", "usage:contact", "categorie:corps_a_corps", "categorie:contact", "categorie:melee", "type:corps_a_corps", "type:contact", "type:melee"].some(tag => tags.has(tag))
-  );
-  if (explicitContact) return true;
-  if (!add2eWeaponHasThrownMode(weapon)) return true;
-  return !add2eGetWeaponRequiredAmmoType(weapon);
-}
-
-function add2eIsHybridThrownWeapon(weapon) {
-  return add2eWeaponHasThrownMode(weapon) && add2eWeaponHasContactMode(weapon);
-}
-
-function add2eIsPureDistanceWeapon(weapon) {
-  return add2eWeaponHasThrownMode(weapon) && !add2eWeaponHasContactMode(weapon);
-}
-
-async function add2ePromptThrownWeaponMode(weapon) {
-  const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (!DialogV2) {
-    ui.notifications?.error?.("DialogV2 est indisponible pour choisir le mode d'attaque.");
-    return null;
-  }
-
-  const name = add2eEscapeHtml(weapon?.name ?? "Arme");
-  const image = add2eEscapeHtml(weapon?.img ?? "icons/svg/sword.svg");
-  const content = `
-    <section class="add2e-thrown-mode-dialog" style="box-sizing:border-box;width:430px;max-width:430px;color:#24170a;font-family:inherit;">
-      <div style="display:flex;align-items:center;gap:8px;padding:7px;border:1px solid #d5b15a;border-radius:8px;background:#fff8dd;">
-        <img src="${image}" alt="" style="width:42px;height:42px;object-fit:cover;border-radius:6px;border:1px solid #fff7dc;background:#2a1908;">
-        <div style="min-width:0;">
-          <div style="font-size:.62rem;font-weight:950;text-transform:uppercase;color:#5a3510;">Arme polyvalente</div>
-          <div style="font-size:.95rem;font-weight:950;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${name}">${name}</div>
-        </div>
-      </div>
-      <p style="margin:10px 0 0;color:#5a3510;font-weight:800;line-height:1.35;">Choisis l'emploi de cette arme pour l'attaque.</p>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px;">
-        <div style="padding:7px;border:1px solid #d5b15a;border-radius:7px;background:#fffdf4;">
-          <div style="font-weight:950;color:#5a3510;"><i class="fas fa-hand-fist"></i> Corps à corps</div>
-          <div style="margin-top:3px;font-size:.82rem;color:#5b4b3c;">Aucune consommation. Portée de contact.</div>
-        </div>
-        <div style="padding:7px;border:1px solid #d69a76;border-radius:7px;background:#fff2e8;">
-          <div style="font-weight:950;color:#8f2d22;"><i class="fas fa-bullseye"></i> Lancer</div>
-          <div style="margin-top:3px;font-size:.82rem;color:#5b4b3c;">Une unité est dépensée et pourra être récupérée en fin de combat.</div>
-        </div>
-      </div>
-    </section>`;
-
-  return new Promise(resolve => {
-    let settled = false;
-    const finish = value => {
-      if (!settled) {
-        settled = true;
-        resolve(value);
-      }
-      return value;
-    };
-
-    const dialog = new DialogV2({
-      window: { title: `${weapon?.name ?? "Arme"} — mode d'attaque` },
-      classes: ["add2e", "add2e-attack-dialog", "add2e-thrown-mode-dialog"],
-      position: { width: 460, height: "auto" },
-      content,
-      buttons: [
-        { action: "contact", label: "Corps à corps", default: true, callback: () => finish("contact") },
-        { action: "throw", label: "Lancer", callback: () => finish("throw") },
-        { action: "cancel", label: "Annuler", callback: () => finish(null) }
-      ],
-      default: "contact"
-    });
-
-    dialog.addEventListener?.("close", () => finish(null), { once: true });
-    dialog.render({ force: true });
-  });
-}
-
-function add2eWeaponForContactAttack(weapon) {
-  const system = {
-    ...(weapon?.system ?? {}),
-    portee_courte: 0,
-    portee_moyenne: 0,
-    portee_longue: 0,
-    porteeCourte: 0,
-    porteeMoyenne: 0,
-    porteeLongue: 0
-  };
-
-  return new Proxy(weapon, {
-    get(target, property, receiver) {
-      if (property === "system") return system;
-      return Reflect.get(target, property, receiver);
-    }
-  });
-}
-
-function add2eHybridWeaponIsTwoHanded(weapon) {
-  const tags = globalThis.add2eGetItemEquipTags?.(weapon) ?? [];
-  return weapon?.system?.deuxMains === true || tags.includes("usage:deux_mains");
-}
-
-function add2eHybridWeaponHasEquippedShield(actor) {
-  return [...(actor?.items ?? [])].find(item => {
-    if (!item?.system?.equipee) return false;
-    if (!["armure", "armor"].includes(String(item.type ?? "").toLowerCase())) return false;
-    return globalThis.add2eIsShield?.(item) === true;
-  }) ?? null;
-}
-
-function add2eHybridWeaponClassCheck(actor, weapon) {
-  const check = globalThis.add2eCheckEquipmentAllowedForClass?.(actor, weapon, "arme");
-  if (!check || typeof check !== "object") return { ok: true, classeLabel: "classe inconnue", reason: "check-unavailable" };
-  return check;
-}
-
+// Compatibilité API : l'équipement hybride est désormais traité par 03b.
 export async function add2eEquipHybridThrownWeaponAsContact(actor, weapon, sheet = null) {
-  if (!actor || !weapon || !add2eIsHybridThrownWeapon(weapon)) return false;
-
-  if (weapon.system?.equipee === true) {
-    await weapon.update({ "system.equipee": false }, { add2eReason: "unequip-hybrid-thrown-weapon" });
-    sheet?._add2eRememberActiveTab?.();
-    sheet?.render?.(false);
-    return true;
-  }
-
-  const check = add2eHybridWeaponClassCheck(actor, weapon);
-  if (!check.ok) {
-    const reason = check.reason === "forbidden"
-      ? `tag interdit : ${check.matchedForbidden}`
-      : "arme non autorisée par les restrictions de classe";
-    ui.notifications?.error?.(`⚠️ Cette arme (« ${weapon.name} ») est interdite pour votre classe (${check.classeLabel}) — ${reason}.`);
-    return false;
-  }
-
-  if (add2eHybridWeaponIsTwoHanded(weapon)) {
-    const shield = add2eHybridWeaponHasEquippedShield(actor);
-    if (shield) {
-      ui.notifications?.error?.(`⚠️ Impossible d'équiper une arme à deux mains si un bouclier est équipé (${shield.name}).`);
-      return false;
-    }
-  }
-
-  const updates = [];
-  for (const other of actor.items ?? []) {
-    if (!other || other.id === weapon.id || !["arme", "weapon"].includes(String(other.type ?? "").toLowerCase())) continue;
-    if (!other.system?.equipee || !add2eWeaponHasContactMode(other)) continue;
-    updates.push({ _id: other.id, "system.equipee": false });
-  }
-  updates.push({ _id: weapon.id, "system.equipee": true });
-
-  await actor.updateEmbeddedDocuments("Item", updates, { add2eReason: "equip-hybrid-thrown-weapon-as-contact" });
-  sheet?._add2eRememberActiveTab?.();
-  sheet?.render?.(false);
-  return true;
-}
-
-function add2eInstallProjectileEquipmentBridge() {
-  const original = globalThis.handleItemAction;
-  if (typeof original !== "function" || original.__add2eProjectileEquipmentBridge === true) return false;
-
-  const guarded = async function add2eHandleItemActionWithProjectileBridge(args = {}) {
-    const actor = args?.actor ?? null;
-    const action = String(args?.action ?? "").toLowerCase();
-    const item = actor?.items?.get?.(args?.itemId) ?? null;
-
-    if (action === "equip" && actor && item && add2eIsAmmunition(item)) {
-      if (item.system?.equipee === true) {
-        await item.update({ "system.equipee": false }, { add2eReason: "unequip-projectile" });
-      } else {
-        await add2eEquipProjectile(actor, item);
-      }
-      args?.sheet?._add2eRememberActiveTab?.();
-      args?.sheet?.render?.(false);
-      return true;
-    }
-
-    // Une dague, un javelot ou une hache de jet sans munition propre est une arme
-    // de contact équipable sans projectile de carquois. Le gestionnaire historique
-    // ne doit donc pas être exécuté pour elle : il la classifierait comme arme de jet.
-    if (action === "equip" && actor && item && add2eIsHybridThrownWeapon(item)) {
-      return add2eEquipHybridThrownWeaponAsContact(actor, item, args?.sheet ?? null);
-    }
-
-    return original.call(this, args);
-  };
-
-  guarded.__add2eProjectileEquipmentBridge = true;
-  guarded.__add2eProjectileEquipmentOriginal = original;
-  globalThis.handleItemAction = guarded;
-  return true;
-}
-
-function add2eInstallThrownWeaponAttackBridge() {
-  const original = globalThis.add2eAttackRoll;
-  if (typeof original !== "function" || original.__add2eThrownWeaponAttackBridge === true) return false;
-
-  const guarded = async function add2eAttackRollWithThrownWeaponModes(args = {}) {
-    const actor = args.actor ?? (args.actorId ? game.actors?.get?.(args.actorId) : null);
-    const weapon = args.arme ?? (actor && args.itemId ? actor.items?.get?.(args.itemId) : null);
-    if (!actor || !weapon || !add2eIsHybridThrownWeapon(weapon)) return original.call(this, args);
-
-    const mode = await add2ePromptThrownWeaponMode(weapon);
-    if (!mode) return false;
-
-    if (mode === "throw" && add2eActorUsesProjectileInventory(actor) && add2eWeaponStackQuantity(weapon) <= 0) {
-      await add2eConsumablesAlert({
-        title: "Arme de lancer indisponible",
-        message: `${weapon.name} n'est plus disponible pour être lancée.`,
-        icon: "fa-hand"
-      });
-      return false;
-    }
-
-    const attackArgs = mode === "contact"
-      ? { ...args, actor, arme: add2eWeaponForContactAttack(weapon) }
-      : { ...args, actor, arme: weapon };
-    const result = await original.call(this, attackArgs);
-
-    if (result === true && mode === "throw") await add2eConsumeThrownWeapon(actor, weapon, 1);
-    return result;
-  };
-
-  guarded.__add2eThrownWeaponAttackBridge = true;
-  guarded.__add2eThrownWeaponAttackOriginal = original;
-  globalThis.add2eAttackRoll = guarded;
-  return true;
-}
-
-function add2eInstallConsumableRuntimeBridges() {
-  add2eInstallProjectileEquipmentBridge();
-  add2eInstallThrownWeaponAttackBridge();
+  if (!actor || !weapon) return false;
+  const action = globalThis.add2eHandleItemAction ?? globalThis.handleItemAction;
+  if (typeof action !== "function") return false;
+  return action({ actor, action: "equip", itemId: weapon.id, itemType: weapon.type, sheet });
 }
 
 function add2eWrapAttackRollForProjectiles() {
-  globalThis.__ADD2E_ATTACK_PROJECTILES_WRAPPED = "delegated-to-22a-vendor-core-and-thrown-weapon-bridge";
+  globalThis.__ADD2E_ATTACK_PROJECTILES_WRAPPED = "attack-owned-by-04-attack-roll";
   return false;
 }
 
@@ -763,7 +491,5 @@ Hooks.once("ready", () => {
   game.add2e.consumables = { ...(game.add2e.consumables ?? {}), ...api };
   game.add2e.consumablesVersion = ADD2E_CONSUMABLES_VERSION;
   globalThis.ADD2E_CONSUMABLES = { ...(globalThis.ADD2E_CONSUMABLES ?? {}), ...game.add2e.consumables };
-  window.setTimeout(add2eInstallConsumableRuntimeBridges, 0);
-  window.setTimeout(add2eInstallConsumableRuntimeBridges, 100);
   add2eConsumablesLog("ready", ADD2E_CONSUMABLES_VERSION, add2eConsumablesSettings());
 });
