@@ -19,7 +19,6 @@
     "scripts/add2e-action-hud.mjs",
     "scripts/add2e.mjs",
     "scripts/add2e/03b-equipment-actions.mjs",
-    "scripts/add2e/03c-equipment-attack-route.mjs",
     "scripts/add2e/22-vendor.mjs",
     "scripts/08-character-sheet-ui.mjs",
     "scripts/resolveActiveEffectsOnTarget.mjs",
