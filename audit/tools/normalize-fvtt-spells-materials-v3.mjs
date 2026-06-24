@@ -4,7 +4,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const VERSION = "2026-06-23-rebuild-components-from-v3-v9";
+const VERSION = "2026-06-24-component-unit-price-audit-v10";
 const SOURCE_V3 = "fvtt-spells-all-normalise-mecanique-v3.json";
 const CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
 const EQUIPMENT_COMPENDIUM = "compendium_equiepents.json";
@@ -281,7 +281,142 @@ function makeId(seed, usedIds) {
   }
 }
 
-function createComponentItem(template, entry, componentSlug, id, sort) {
+function numericPo(value) {
+  const raw = typeof value === "number"
+    ? value
+    : typeof value === "string"
+      ? Number(value.replace(",", "."))
+      : value && typeof value === "object"
+        ? Number(value.po ?? value.value ?? value.valeur ?? value.amount ?? NaN)
+        : NaN;
+  return Number.isFinite(raw) && raw > 0 ? raw : null;
+}
+
+function currentPrice(item) {
+  const system = item?.system ?? {};
+  const raw = system.prix ?? system.price ?? null;
+  if (typeof raw === "number" && raw > 0) return `${raw} ${text(system.devise ?? system.currency ?? "po").toLowerCase() || "po"}`;
+  if (typeof raw === "string" && raw.trim()) return text(raw);
+  if (raw && typeof raw === "object") {
+    const value = raw.valeur ?? raw.value ?? raw.montant ?? raw.amount;
+    const devise = raw.devise ?? raw.currency ?? system.devise ?? system.currency ?? "po";
+    if (Number.isFinite(Number(value)) && Number(value) > 0) return `${Number(value)} ${text(devise).toLowerCase() || "po"}`;
+  }
+  return null;
+}
+
+function auditComponentPrices(catalog, existingItems) {
+  const existingBySlug = new Map();
+
+  for (const item of existingItems.filter(isComponentItem)) {
+    const key = slug(item?.system?.slug ?? item?.flags?.add2e?.slug ?? item?.name);
+    if (!key) continue;
+    if (!existingBySlug.has(key)) existingBySlug.set(key, []);
+    existingBySlug.get(key).push(item);
+  }
+
+  const rows = [];
+  const summary = {
+    total: 0,
+    explicitUnique: 0,
+    explicitConflict: 0,
+    explicitMultipleQuantity: 0,
+    currentUnique: 0,
+    currentConflict: 0,
+    missing: 0,
+    legacyFields: 0
+  };
+
+  for (const [componentSlug, entry] of catalog.entries) {
+    const currentItems = existingBySlug.get(componentSlug) ?? [];
+    const explicitCosts = entry.details
+      .map(detail => ({
+        sort: detail.nom,
+        classe: detail.classe,
+        niveau: detail.niveau,
+        quantite: Number(detail.quantite) || 1,
+        cout_po: numericPo(detail.cout_po)
+      }))
+      .filter(detail => detail.cout_po !== null);
+
+    const exactPo = [...new Set(
+      explicitCosts
+        .filter(detail => detail.quantite === 1)
+        .map(detail => detail.cout_po)
+    )].sort((left, right) => left - right);
+
+    const hasMultipleQuantityCost = explicitCosts.some(detail => detail.quantite !== 1);
+    const prices = [...new Set(currentItems.map(currentPrice).filter(Boolean))].sort((left, right) => left.localeCompare(right, "fr"));
+    const legacy = currentItems.some(item => {
+      const system = item?.system ?? {};
+      return system.cout !== undefined || system.coût !== undefined || system.source_prix !== undefined || system.source_note !== undefined;
+    });
+
+    let status = "sans_prix";
+    let prix = null;
+    if (hasMultipleQuantityCost) {
+      status = "cout_explicite_quantite_multiple_a_verifier";
+      summary.explicitMultipleQuantity += 1;
+    } else if (exactPo.length === 1) {
+      status = "cout_explicite_unique";
+      prix = `${exactPo[0]} po`;
+      summary.explicitUnique += 1;
+    } else if (exactPo.length > 1) {
+      status = "conflit_couts_explicites";
+      summary.explicitConflict += 1;
+    } else if (prices.length === 1) {
+      status = "prix_actuel_unique_a_valider";
+      prix = prices[0];
+      summary.currentUnique += 1;
+    } else if (prices.length > 1) {
+      status = "conflit_prix_actuels";
+      summary.currentConflict += 1;
+    } else {
+      summary.missing += 1;
+    }
+
+    if (legacy) summary.legacyFields += 1;
+    summary.total += 1;
+
+    rows.push({
+      slug: componentSlug,
+      nom: entry.name,
+      statut: status,
+      prix_unitaire_propose: prix,
+      couts_explicites: explicitCosts,
+      prix_actuels: prices,
+      champs_anciens_detectes: legacy,
+      usages: entry.details.map(detail => ({
+        sort: detail.nom,
+        classe: detail.classe,
+        niveau: detail.niveau,
+        quantite: detail.quantite,
+        consommation: detail.consommation,
+        cout_po: detail.cout_po ?? null
+      }))
+    });
+  }
+
+  const blocking = rows.filter(row => [
+    "conflit_couts_explicites",
+    "cout_explicite_quantite_multiple_a_verifier",
+    "conflit_prix_actuels",
+    "sans_prix"
+  ].includes(row.statut));
+
+  return {
+    version: VERSION,
+    policy: "Prix unitaire uniquement dans system.prix. Aucun fallback marchand. Les champs cout, source_prix et source_note doivent être retirés des composants de sorts.",
+    summary,
+    blocking: {
+      count: blocking.length,
+      slugs: blocking.map(row => row.slug)
+    },
+    components: rows
+  };
+}
+
+function createComponentItem(template, entry, componentSlug, id, sort, unitPrice) {
   const item = clone(template);
   const system = item.system ??= {};
   const flags = item.flags ??= {};
@@ -302,8 +437,15 @@ function createComponentItem(template, entry, componentSlug, id, sort) {
   system.equipee = false;
   system.magique = false;
   system.consommable = true;
+  if (!text(unitPrice)) {
+    throw new Error(`Prix unitaire introuvable pour le composant « ${name} ».`);
+  }
   system.description = `Composant de sort : ${name}.`;
-  system.source_note = `Reconstruit depuis ${SOURCE_V3}.`;
+  system.prix = text(unitPrice);
+  delete system.cout;
+  delete system.coût;
+  delete system.source_prix;
+  delete system.source_note;
   system.source_composant = `${SOURCE_V3} — composants matériels structurés`;
   system.tags = componentTags(system.tags, componentSlug);
   system.effectTags = componentEffectTags(system.effectTags, componentSlug);
@@ -323,7 +465,7 @@ function createComponentItem(template, entry, componentSlug, id, sort) {
   return item;
 }
 
-function rebuildComponentCatalog(spells) {
+function rebuildComponentCatalog(spells, unitPrices = new Map()) {
   const compendiumFile = path.join(ROOT, EQUIPMENT_COMPENDIUM);
   const compendium = readJson(compendiumFile, null);
   if (!compendium || typeof compendium !== "object") {
@@ -350,7 +492,7 @@ function rebuildComponentCatalog(spells) {
 
   for (const [componentSlug, entry] of catalog.entries) {
     const id = makeId(`component:${componentSlug}`, usedIds);
-    recreated.push(createComponentItem(template, entry, componentSlug, id, sort));
+    recreated.push(createComponentItem(template, entry, componentSlug, id, sort, unitPrices.get(componentSlug)));
     sort += 1;
   }
 
@@ -367,9 +509,20 @@ function rebuildComponentCatalog(spells) {
   };
 }
 
+function parseArguments(argv) {
+  const auditOnly = argv.includes("--audit-prices");
+  const positional = argv.filter(value => value && !value.startsWith("--"));
+  return {
+    auditOnly,
+    source: positional[0] || SOURCE_V3,
+    control: positional[1] || CONTROL
+  };
+}
+
 function main() {
-  const sourceFile = path.join(ROOT, process.argv[2] || SOURCE_V3);
-  const controlFile = path.join(ROOT, process.argv[3] || CONTROL);
+  const args = parseArguments(process.argv.slice(2));
+  const sourceFile = path.join(ROOT, args.source);
+  const controlFile = path.join(ROOT, args.control);
   const source = readJson(sourceFile, null);
   if (!source || typeof source !== "object") {
     throw new Error(`JSON V3 introuvable ou invalide : ${sourceFile}`);
@@ -380,20 +533,41 @@ function main() {
     throw new Error(`Aucun sort trouvé dans ${sourceFile}.`);
   }
 
-  const catalog = rebuildComponentCatalog(spells);
+  const catalog = buildComponentCatalog(spells);
+  const compendiumFile = path.join(ROOT, EQUIPMENT_COMPENDIUM);
+  const compendium = readJson(compendiumFile, null);
+  if (!compendium || typeof compendium !== "object") {
+    throw new Error(`Compendium introuvable ou invalide : ${compendiumFile}`);
+  }
+
+  const componentPriceAudit = auditComponentPrices(catalog, getItems(compendium));
   const control = readJson(controlFile, {}) ?? {};
   control.version = VERSION;
+  control.componentPriceAudit = componentPriceAudit;
+  writeJson(controlFile, control);
+
+  console.log(`[ADD2E][COMPONENT_PRICE_AUDIT] ${componentPriceAudit.summary.total} composant(s) analysé(s).`);
+  console.log(`[ADD2E][COMPONENT_PRICE_AUDIT] ${componentPriceAudit.blocking.count} composant(s) sans prix unitaire résolu ou en conflit.`);
+
+  if (args.auditOnly) return;
+
+  if (componentPriceAudit.blocking.count) {
+    throw new Error(`Reconstruction bloquée : ${componentPriceAudit.blocking.count} composant(s) n’ont pas de prix unitaire unique. Exécute d’abord : node audit/tools/normalize-fvtt-spells-materials-v3.mjs --audit-prices`);
+  }
+
+  const unitPrices = new Map(componentPriceAudit.components.map(row => [row.slug, row.prix_unitaire_propose]));
+  const rebuilt = rebuildComponentCatalog(spells, unitPrices);
   control.componentCatalog = {
-    ...catalog,
+    ...rebuilt,
     policy: "Tous les objets composants existants sont supprimés puis recréés uniquement depuis les entrées structurées de fvtt-spells-all-normalise-mecanique-v3.json.",
     v3Rewritten: false,
     grammarParsing: false
   };
   writeJson(controlFile, control);
 
-  console.log(`[ADD2E][COMPONENT_CATALOG] ${catalog.deleted} ancien(s) composant(s) supprimé(s).`);
-  console.log(`[ADD2E][COMPONENT_CATALOG] ${catalog.created} composant(s) recréé(s) depuis ${SOURCE_V3}.`);
-  console.log(`[ADD2E][COMPONENT_CATALOG] ${catalog.linkedSpellEntries} association(s) sort/composant enregistrée(s).`);
+  console.log(`[ADD2E][COMPONENT_CATALOG] ${rebuilt.deleted} ancien(s) composant(s) supprimé(s).`);
+  console.log(`[ADD2E][COMPONENT_CATALOG] ${rebuilt.created} composant(s) recréé(s) depuis ${SOURCE_V3}.`);
+  console.log(`[ADD2E][COMPONENT_CATALOG] ${rebuilt.linkedSpellEntries} association(s) sort/composant enregistrée(s).`);
 }
 
 main();
