@@ -1,6 +1,5 @@
 // ADD2E — Composants de sort : résolution unique, réservation transactionnelle et affichage HUD.
-// Les sorts acteur générés (normal, inverse et variantes) portent leur propre profil matériel.
-// Cette source résolue est utilisée à la fois par le lancement, la feuille et le HUD.
+// Compatible Foundry V13/V14/V15 — DialogV2 uniquement.
 
 import {
   GM_OPERATION_TYPE,
@@ -14,7 +13,7 @@ import {
   esc
 } from "./22a-vendor-core.mjs";
 
-export const ADD2E_CONSUMABLES_VERSION = "2026-06-24-consumables-core-v16-resolved-hud-materials";
+export const ADD2E_CONSUMABLES_VERSION = "2026-06-24-consumables-core-v17-reusable-equipment-links";
 export const SOCKET_COMPONENT_RESULT = "ADD2E_SPELL_COMPONENT_RESULT";
 export const GM_OPERATION_COMPONENT_RESERVE = "vendorReserveSpellComponents";
 export const GM_OPERATION_COMPONENT_REFUND = "vendorRefundSpellComponents";
@@ -24,6 +23,30 @@ const HUD_ID = "add2e-action-hud";
 let hudComponentObserver = null;
 let hudComponentFrame = null;
 let hudComponentPatching = false;
+
+/**
+ * Requirement key -> exact slug(s) of reusable equipment.
+ * These links deliberately do not accept generic substring matches: a mundane
+ * mirror cannot replace the required silver mirror, for example.
+ */
+const REUSABLE_COMPONENT_EQUIPMENT_KEYS = Object.freeze({
+  chapelet_de_priere: ["chapelet_de_priere"],
+  miroir_en_argent: ["miroir_en_argent_petit"],
+  symbole_sacre: ["symbole_beni_bois", "symbole_beni_fer", "symbole_beni_argent"],
+  symbole_religieux_en_argent: ["symbole_beni_argent"]
+});
+
+const COMPONENT_CANONICAL_ALIASES = Object.freeze({
+  gousse_d_ail: "ail",
+  ail_la_gousse: "ail",
+  encens_a_bruler: "encens",
+  encens_allume: "encens",
+  petit_miroir_en_argent: "miroir_en_argent",
+  miroir_en_argent_petit: "miroir_en_argent",
+  symbole_sacre_du_clerc: "symbole_sacre",
+  symbole_saint: "symbole_sacre",
+  holy_symbol: "symbole_sacre"
+});
 
 const asArray = value => Array.isArray(value)
   ? value
@@ -60,6 +83,7 @@ async function componentAlert(message, title = "Composant manquant") {
     <h3 style="margin:0 0 0.45rem 0;"><i class="fas fa-pouch"></i> ${esc(title)}</h3>
     <p style="margin:0;">${esc(clean)}</p>
   </div>`;
+
   if (DialogV2?.alert) {
     await DialogV2.alert({ window: { title }, content, ok: { label: "Compris" }, modal: true });
     return true;
@@ -85,10 +109,16 @@ function itemTextFields(item) {
   ].map(lower).filter(Boolean);
 }
 
-function isSacredSymbolName(value) {
+function canonicalComponentKey(value) {
   const key = slug(value);
+  return COMPONENT_CANONICAL_ALIASES[key] ?? key;
+}
+
+function isSacredSymbolName(value) {
+  const key = canonicalComponentKey(value);
   return key === "symbole_sacre" || key === "holy_symbol" || key === "symbole_saint"
-    || key.startsWith("symbole_sacre_") || key.startsWith("holy_symbol_");
+    || key.startsWith("symbole_sacre_") || key.startsWith("holy_symbol_")
+    || key.startsWith("symbole_beni_") || key.startsWith("symbole_religieux_");
 }
 
 function isSacredSymbolItem(item) {
@@ -97,7 +127,7 @@ function isSacredSymbolItem(item) {
 }
 
 function isKnownLooseComponentName(value) {
-  const key = slug(value);
+  const key = canonicalComponentKey(value);
   if (!key) return false;
   const exact = new Set([
     "eau_benite", "eau_maudite", "eau_benite_ou_maudite", "eau_benite_maudite",
@@ -112,12 +142,12 @@ function isSpellComponentItem(item) {
   if (!item) return false;
   if (vendorIsComponent(item)) return true;
   const fields = itemTextFields(item);
-  if (fields.some(v => v === "component" || v === "composant" || v === "composants")) return true;
-  if (fields.some(v => v === "composant_sort" || v === "composants_sort" || v === "composant_de_sort" || v === "composants_de_sort")) return true;
-  if (fields.some(v => v === "spell_component" || v === "spell_components" || v === "material_component" || v === "material_components")) return true;
-  if (fields.some(v => v.startsWith("composant:") || v.startsWith("component:") || v.startsWith("spell_component:"))) return true;
-  if (fields.some(v => v.includes("composant") && v.includes("sort"))) return true;
-  if (fields.some(v => v.includes("spell") && v.includes("component"))) return true;
+  if (fields.some(value => value === "component" || value === "composant" || value === "composants")) return true;
+  if (fields.some(value => value === "composant_sort" || value === "composants_sort" || value === "composant_de_sort" || value === "composants_de_sort")) return true;
+  if (fields.some(value => value === "spell_component" || value === "spell_components" || value === "material_component" || value === "material_components")) return true;
+  if (fields.some(value => value.startsWith("composant:") || value.startsWith("component:") || value.startsWith("spell_component:"))) return true;
+  if (fields.some(value => value.includes("composant") && value.includes("sort"))) return true;
+  if (fields.some(value => value.includes("spell") && value.includes("component"))) return true;
   return isKnownLooseComponentName(item?.name) || isKnownLooseComponentName(item?.system?.nom);
 }
 
@@ -125,9 +155,9 @@ function booleanValue(value) {
   if (value === true) return true;
   if (value === false) return false;
   if (value === undefined || value === null || value === "") return null;
-  const text = lower(value);
-  if (["true", "1", "yes", "oui", "on"].includes(text)) return true;
-  if (["false", "0", "no", "non", "off"].includes(text)) return false;
+  const valueText = lower(value);
+  if (["true", "1", "yes", "oui", "on"].includes(valueText)) return true;
+  if (["false", "0", "no", "non", "off"].includes(valueText)) return false;
   return null;
 }
 
@@ -153,22 +183,22 @@ function isReusableComponentItem(item) {
   const consumable = booleanValue(system.consommable ?? system.consumable ?? system.consomme ?? system.consume ?? flags.consommable ?? flags.consumable ?? flags.consomme ?? flags.consume);
   if (consumable !== null) return consumable === false;
   const mode = lower(system.consommation ?? system.consumption ?? flags.consommation ?? flags.consumption ?? "");
-  if (/^(non|reutilisable)$/.test(mode) || /reutilis|non[\s_-]*consomm|sans[\s_-]*consomm|permanent/.test(mode)) return true;
+  if (/^(non|reutilisable)$/.test(mode) || /reutilis|non[\s_-]*consomm|sans[\s_-]*consomm/.test(mode)) return true;
   return itemTextFields(item).some(value => /reutilis|non[\s_-]*consomm|sans[\s_-]*consomm/.test(value));
 }
 
 function isOnlyComponentCode(value) {
-  const text = lower(value).replace(/[^a-z]/g, "");
-  return ["v", "s", "m", "vs", "vm", "sm", "vsm", "verbal", "somatique", "materiel", "materielle", "material"].includes(text);
+  const clean = lower(value).replace(/[^a-z]/g, "");
+  return ["v", "s", "m", "vs", "vm", "sm", "vsm", "verbal", "somatique", "materiel", "materielle", "material"].includes(clean);
 }
 
 function cleanComponentName(value) {
-  let text = String(value ?? "").trim();
-  text = text.replace(/[()\[\]{}]/g, " ").replace(/\s+/g, " ").trim();
-  text = text.replace(/[.!?;:]+$/g, "").trim().replace(/^d['’]\s*/i, "");
-  text = text.replace(/^(un|une)?\s*peu\s+de\s+/i, "").replace(/^(un|une|du|de la|de l['’]?|des|le|la|les)\s+/i, "");
-  text = text.replace(/^(quelques|plusieurs)\s+/i, "").replace(/^petit morceau de\s+/i, "").replace(/^morceau de\s+/i, "");
-  return text.replace(/^poignee de\s+/i, "").replace(/^poignée de\s+/i, "").trim();
+  let name = String(value ?? "").trim();
+  name = name.replace(/[()\[\]{}]/g, " ").replace(/\s+/g, " ").trim();
+  name = name.replace(/[.!?;:]+$/g, "").trim().replace(/^d['’]\s*/i, "");
+  name = name.replace(/^(un|une)?\s*peu\s+de\s+/i, "").replace(/^(un|une|du|de la|de l['’]?|des|le|la|les)\s+/i, "");
+  name = name.replace(/^(quelques|plusieurs)\s+/i, "").replace(/^petit morceau de\s+/i, "").replace(/^morceau de\s+/i, "");
+  return name.replace(/^poignee de\s+/i, "").replace(/^poignée de\s+/i, "").trim();
 }
 
 function rawRequirementName(value) {
@@ -188,7 +218,7 @@ function isStructuredAlternative(value) {
 }
 
 function requirementKey(rawName) {
-  const key = slug(cleanComponentName(rawName));
+  const key = canonicalComponentKey(cleanComponentName(rawName));
   return key === "eau_benite_ou_maudite" || key === "eau_benite_maudite" ? "eau_benite" : key;
 }
 
@@ -251,8 +281,11 @@ function collectRequirement(out, value) {
 function spellHasMaterialComponent(sort) {
   const system = sort?.system ?? {};
   const flags = sort?.flags?.add2e ?? {};
-  const text = [system.composantes, system.components, system.componentes, flags.composantes, flags.components, flags.componentes].flatMap(toFieldArray).map(lower).join(" ");
-  return /(^|[^a-z])m([^a-z]|$)|materiel|matériel|material/.test(text);
+  const componentText = [system.composantes, system.components, system.componentes, flags.composantes, flags.components, flags.componentes]
+    .flatMap(toFieldArray)
+    .map(lower)
+    .join(" ");
+  return /(^|[^a-z])m([^a-z]|$)|materiel|matériel|material/.test(componentText);
 }
 
 function collectFields(out, fields) {
@@ -275,6 +308,7 @@ function spellComponentRequirements(sort) {
     sort?.materialComponents, sort?.composants_requis, flags.composants_requis, flags.composants,
     flags.components, flags.requiredComponents, flags.effectTags, flags.effecttags
   ];
+
   for (const field of explicitProfileFields) {
     if (field === undefined || field === null || field === "") continue;
     const profileRequirements = [];
@@ -283,27 +317,32 @@ function spellComponentRequirements(sort) {
     out.push(...profileRequirements);
     break;
   }
+
   if (!out.length) collectFields(out, fallbackFields);
   if (!out.length) {
     for (const tag of [
       ...toFieldArray(system.tags), ...toFieldArray(system.effectTags), ...toFieldArray(system.effecttags),
       ...toFieldArray(flags.tags), ...toFieldArray(flags.effectTags), ...toFieldArray(flags.effecttags)
     ]) {
-      const text = String(tag ?? "").trim();
-      if (/^composant[:_]/i.test(text)) addRequirement(out, text.replace(/^composant[:_]/i, ""), 1);
-      if (/^component[:_]/i.test(text)) addRequirement(out, text.replace(/^component[:_]/i, ""), 1);
-      if (/^spell_component[:_]/i.test(text)) addRequirement(out, text.replace(/^spell_component[:_]/i, ""), 1);
+      const tagText = String(tag ?? "").trim();
+      if (/^composant[:_]/i.test(tagText)) addRequirement(out, tagText.replace(/^composant[:_]/i, ""), 1);
+      if (/^component[:_]/i.test(tagText)) addRequirement(out, tagText.replace(/^component[:_]/i, ""), 1);
+      if (/^spell_component[:_]/i.test(tagText)) addRequirement(out, tagText.replace(/^spell_component[:_]/i, ""), 1);
     }
   }
   return out;
 }
 
 function componentKeyVariants(value) {
-  const base = slug(cleanComponentName(String(value ?? "").replace(/^(composant|component|spell_component)[:_]/i, "")));
+  const raw = slug(cleanComponentName(String(value ?? "").replace(/^(composant|component|spell_component)[:_]/i, "")));
+  const canonical = canonicalComponentKey(raw);
   const keys = new Set();
-  if (base) keys.add(base);
-  if (base.endsWith("s") && base.length > 4) keys.add(base.replace(/s+$/g, ""));
-  if (base === "eau_benite_ou_maudite" || base === "eau_benite_maudite" || (base.includes("eau_benite") && base.includes("maudite"))) {
+  if (raw) keys.add(raw);
+  if (canonical) keys.add(canonical);
+  for (const key of [...keys]) {
+    if (key.endsWith("s") && key.length > 4) keys.add(key.replace(/s+$/g, ""));
+  }
+  if ([...keys].some(key => key === "eau_benite_ou_maudite" || key === "eau_benite_maudite" || (key.includes("eau_benite") && key.includes("maudite")))) {
     keys.add("eau_benite");
     keys.add("eau_maudite");
     keys.add("eau_benite_ou_maudite");
@@ -318,25 +357,46 @@ function componentKeys(item) {
   return [...keys].filter(Boolean);
 }
 
-function requirementKeys(requirement) { return componentKeyVariants(requirement?.key ?? requirement?.name); }
+function requirementKeys(requirement) {
+  return componentKeyVariants(requirement?.key ?? requirement?.name);
+}
 
 function compatibleComponentKey(itemKey, requirementKey) {
   if (!itemKey || !requirementKey) return false;
   if (itemKey === requirementKey) return true;
   const waterKeys = new Set(["eau_benite", "eau_maudite", "eau_benite_ou_maudite", "eau_benite_maudite"]);
   if (waterKeys.has(itemKey) || waterKeys.has(requirementKey)) {
-    return (requirementKey === "eau_benite" || requirementKey === "eau_maudite") && (itemKey === "eau_benite_ou_maudite" || itemKey === "eau_benite_maudite");
+    return (requirementKey === "eau_benite" || requirementKey === "eau_maudite")
+      && (itemKey === "eau_benite_ou_maudite" || itemKey === "eau_benite_maudite");
   }
   return itemKey.includes(requirementKey) || requirementKey.includes(itemKey);
 }
 
-function findActorComponent(actor, requirement) {
+function isLinkedReusableEquipmentForRequirement(item, requirement) {
+  if (!isReusableComponentItem(item)) return false;
+  const requiredEquipmentKeys = new Set();
+  for (const requirementKey of requirementKeys(requirement)) {
+    for (const key of REUSABLE_COMPONENT_EQUIPMENT_KEYS[canonicalComponentKey(requirementKey)] ?? []) {
+      requiredEquipmentKeys.add(key);
+    }
+  }
+  if (!requiredEquipmentKeys.size) return false;
+  return componentKeys(item).some(itemKey => requiredEquipmentKeys.has(itemKey));
+}
+
+function itemSatisfiesRequirement(item, requirement) {
+  if (isLinkedReusableEquipmentForRequirement(item, requirement)) return true;
   const reqKeys = requirementKeys(requirement);
-  const matches = [...(actor?.items ?? [])].filter(isSpellComponentItem).filter(item => {
-    const keys = componentKeys(item);
-    return reqKeys.some(reqKey => keys.some(itemKey => compatibleComponentKey(itemKey, reqKey)));
-  });
-  return matches.find(item => quantity(item) >= Number(requirement?.quantity ?? 1)) ?? matches[0] ?? null;
+  const itemKeys = componentKeys(item);
+  return reqKeys.some(reqKey => itemKeys.some(itemKey => compatibleComponentKey(itemKey, reqKey)));
+}
+
+function findActorComponent(actor, requirement) {
+  const requiredQuantity = Number(requirement?.quantity ?? 1);
+  const matches = [...(actor?.items ?? [])]
+    .filter(item => isSpellComponentItem(item) || isLinkedReusableEquipmentForRequirement(item, requirement))
+    .filter(item => itemSatisfiesRequirement(item, requirement));
+  return matches.find(item => quantity(item) >= requiredQuantity) ?? matches[0] ?? null;
 }
 
 function findActorComponentForRequirement(actor, requirement) {
@@ -360,7 +420,7 @@ export function add2eGetSpellComponentStatus(actor, sort) {
       key: requirement.key,
       quantity: requirement.quantity,
       alternatives: requirement.alternatives ?? null,
-      consume: selectedRequirement.consume !== false,
+      consume: selectedRequirement.consume !== false && !isReusableComponentItem(found?.item),
       available: !!found,
       itemId: found?.item?.id ?? null,
       itemName: found?.item?.name ?? null,
@@ -370,7 +430,9 @@ export function add2eGetSpellComponentStatus(actor, sort) {
   });
 }
 
-function sortByName(a, b) { return String(a?.name ?? "").localeCompare(String(b?.name ?? "")); }
+function sortByName(a, b) {
+  return String(a?.name ?? "").localeCompare(String(b?.name ?? ""), "fr");
+}
 
 function reusableComponentRequirementKeys(actor) {
   const keys = new Set();
@@ -403,10 +465,19 @@ function sortComponentsForActor(actor, items) {
 
 export function prepareActorSheetConsumables(data) {
   const items = [...(data?.actor?.items ?? [])];
-  const objects = Array.isArray(data?.listeObjets) && data.listeObjets.length ? data.listeObjets : items.filter(item => item.type === "objet");
+  const objects = Array.isArray(data?.listeObjets) && data.listeObjets.length
+    ? data.listeObjets
+    : items.filter(item => item.type === "objet");
+
   const carquois = objects.filter(item => isAmmunition(item) && quantity(item) > 0).sort(sortByName);
-  const sacoche = sortComponentsForActor(data?.actor, objects.filter(item => isSpellComponentItem(item) && quantity(item) > 0));
-  const divers = objects.filter(item => !isAmmunition(item) && !isSpellComponentItem(item)).sort(sortByName);
+  const sacoche = sortComponentsForActor(
+    data?.actor,
+    objects.filter(item => isSpellComponentItem(item) && !isReusableComponentItem(item) && quantity(item) > 0)
+  );
+  const divers = objects
+    .filter(item => !isAmmunition(item) && (!isSpellComponentItem(item) || isReusableComponentItem(item)))
+    .sort(sortByName);
+
   data.listeCarquois = carquois;
   data.listeSacocheComposants = sacoche;
   data.listeObjetsDivers = divers;
@@ -442,8 +513,13 @@ function serializableReservation(result) {
     sortId: result?.sortId,
     sortName: result?.sortName,
     consumed: (result?.consumed ?? []).map(entry => ({
-      itemId: entry.itemId, itemName: entry.itemName, before: entry.before, after: entry.after,
-      quantity: entry.quantity, requirement: entry.requirement, groupRequirement: entry.groupRequirement,
+      itemId: entry.itemId,
+      itemName: entry.itemName,
+      before: entry.before,
+      after: entry.after,
+      quantity: entry.quantity,
+      requirement: entry.requirement,
+      groupRequirement: entry.groupRequirement,
       deleted: entry.deleted === true
     }))
   };
@@ -452,10 +528,13 @@ function serializableReservation(result) {
 async function finalizeSpellComponentsLocal(reservation) {
   const actor = game.actors?.get(reservation?.actorId);
   if (!actor) return false;
-  const ids = [...new Set((reservation?.consumed ?? []).filter(entry => Number(entry?.after) <= 0 && entry?.itemId).map(entry => entry.itemId).filter(itemId => {
-    const item = actor.items?.get(itemId);
-    return !!item && quantity(item) <= 0;
-  }))];
+  const ids = [...new Set((reservation?.consumed ?? [])
+    .filter(entry => Number(entry?.after) <= 0 && entry?.itemId)
+    .map(entry => entry.itemId)
+    .filter(itemId => {
+      const item = actor.items?.get(itemId);
+      return !!item && quantity(item) <= 0;
+    }))];
   if (!ids.length) return true;
   await actor.deleteEmbeddedDocuments("Item", ids, { add2eReason: "spell-component-finalized-delete" });
   return true;
@@ -465,7 +544,13 @@ async function cleanupExistingZeroQuantityComponents() {
   if (!game.user?.isGM) return 0;
   let deleted = 0;
   for (const actor of game.actors ?? []) {
-    const ids = [...(actor.items ?? [])].filter(item => String(item?.type ?? "").toLowerCase() === "objet" && isSpellComponentItem(item) && quantity(item) <= 0).map(item => item.id).filter(Boolean);
+    const ids = [...(actor.items ?? [])]
+      .filter(item => String(item?.type ?? "").toLowerCase() === "objet"
+        && isSpellComponentItem(item)
+        && !isReusableComponentItem(item)
+        && quantity(item) <= 0)
+      .map(item => item.id)
+      .filter(Boolean);
     if (!ids.length) continue;
     await actor.deleteEmbeddedDocuments("Item", [...new Set(ids)], { add2eReason: "spell-component-zero-ready-cleanup" });
     deleted += ids.length;
@@ -487,26 +572,53 @@ async function reserveSpellComponentsLocal(actor, sort, requirements = null) {
   const requirementsToReserve = Array.isArray(requirements) && requirements.length ? requirements : spellComponentRequirements(sort);
   if (!requirementsToReserve.length) {
     if (!spellHasMaterialComponent(sort)) return { ok: true, skipped: true, consumed: [] };
-    return { ok: false, blocked: true, consumed: [], message: `${sort?.name ?? "Ce sort"} requiert une composante matérielle, mais aucun composant précis n'est déclaré sur le sort.` };
+    return {
+      ok: false,
+      blocked: true,
+      consumed: [],
+      message: `${sort?.name ?? "Ce sort"} requiert une composante matérielle, mais aucun composant précis n'est déclaré sur le sort.`
+    };
   }
+
   const consumed = [];
   for (const requirement of requirementsToReserve) {
     const found = findActorComponentForRequirement(actor, requirement);
     const item = found?.item ?? null;
     const selectedRequirement = found?.requirement ?? requirement;
     const before = quantity(item);
+
     if (!item || before < selectedRequirement.quantity) {
       for (const entry of [...consumed].reverse()) {
         const live = actor?.items?.get?.(entry.itemId);
-        if (live && quantity(live) === entry.after) await live.update(quantityUpdate(entry.before), { add2eReason: "spell-component-reserve-rollback" });
+        if (live && quantity(live) === entry.after) {
+          await live.update(quantityUpdate(entry.before), { add2eReason: "spell-component-reserve-rollback" });
+        }
       }
-      return { ok: false, blocked: true, consumed: [], missing: requirement, message: `${actor?.name ?? "Le lanceur"} n'a pas le composant requis : ${requirement.name} (${requirement.quantity}).` };
+      return {
+        ok: false,
+        blocked: true,
+        consumed: [],
+        missing: requirement,
+        message: `${actor?.name ?? "Le lanceur"} n'a pas le composant requis : ${requirement.name} (${requirement.quantity}).`
+      };
     }
+
     if (selectedRequirement.consume === false || isReusableComponentItem(item)) continue;
+
     const after = before - selectedRequirement.quantity;
     await item.update(quantityUpdate(after), { add2eReason: "spell-component-reserved-gm" });
-    consumed.push({ itemId: item.id, itemName: item.name, requirement: selectedRequirement, groupRequirement: found?.group, before, after, quantity: selectedRequirement.quantity, deleted: false });
+    consumed.push({
+      itemId: item.id,
+      itemName: item.name,
+      requirement: selectedRequirement,
+      groupRequirement: found?.group,
+      before,
+      after,
+      quantity: selectedRequirement.quantity,
+      deleted: false
+    });
   }
+
   return { ok: true, blocked: false, actorId: actor?.id, sortId: sort?.id, sortName: sort?.name, consumed };
 }
 
@@ -529,7 +641,7 @@ function requestGmComponentOperation(operation, payload) {
     const finish = result => {
       if (done) return;
       done = true;
-      try { game.socket.off?.("system.add2e", handler); } catch (_e) {}
+      try { game.socket.off?.("system.add2e", handler); } catch (_error) {}
       resolve(result);
     };
     const handler = data => {
@@ -544,12 +656,14 @@ function requestGmComponentOperation(operation, payload) {
 
 export async function add2eReserveSpellComponents(actor, sort) {
   if (!componentSettingEnabled()) return { ok: true, skipped: true, consumed: [] };
-  const result = game.user?.isGM ? await reserveSpellComponentsLocal(actor, sort) : await requestGmComponentOperation(GM_OPERATION_COMPONENT_RESERVE, {
-    actorId: actor?.id,
-    sortId: sort?.id,
-    sortName: sort?.name,
-    requirements: spellComponentRequirements(sort)
-  });
+  const result = game.user?.isGM
+    ? await reserveSpellComponentsLocal(actor, sort)
+    : await requestGmComponentOperation(GM_OPERATION_COMPONENT_RESERVE, {
+      actorId: actor?.id,
+      sortId: sort?.id,
+      sortName: sort?.name,
+      requirements: spellComponentRequirements(sort)
+    });
   if (result?.blocked) await componentAlert(result.message || "Composant matériel manquant.");
   return result;
 }
@@ -570,7 +684,9 @@ function hudActor() {
   const actorId = globalThis.add2eHudCheck?.()?.actorId;
   const controlled = canvas?.tokens?.controlled ?? [];
   if (actorId) {
-    const tokenActor = (canvas?.tokens?.placeables ?? []).find(token => token?.actor?.id === actorId)?.actor ?? controlled.find(token => token?.actor?.id === actorId)?.actor ?? null;
+    const tokenActor = (canvas?.tokens?.placeables ?? []).find(token => token?.actor?.id === actorId)?.actor
+      ?? controlled.find(token => token?.actor?.id === actorId)?.actor
+      ?? null;
     return tokenActor ?? game.actors?.get?.(actorId) ?? null;
   }
   return controlled.length === 1 ? controlled[0]?.actor ?? null : game.user?.character ?? null;
@@ -584,10 +700,12 @@ function buildHudComponentBadges(statuses) {
   const wrapper = document.createElement("span");
   wrapper.className = "add2e-hud-components-resolved";
   wrapper.dataset.add2eComponentSignature = componentBadgeSignature(statuses);
+
   const title = document.createElement("span");
   title.className = "component-title";
   title.textContent = "Composants";
   wrapper.append(title);
+
   for (const status of statuses) {
     const badge = document.createElement("span");
     badge.className = status.available ? "component-ok" : "component-bad";
@@ -603,16 +721,19 @@ function patchHudComponentBadges() {
   const root = document.getElementById(HUD_ID);
   const actor = hudActor();
   if (!root || !actor) return;
+
   hudComponentPatching = true;
   try {
     for (const button of root.querySelectorAll('[data-action="cast-spell"][data-item-id]')) {
       const sort = actor.items?.get?.(button.dataset.itemId) ?? null;
       const meta = button.closest(".row")?.querySelector(".meta");
       if (!sort || !meta) continue;
+
       const statuses = add2eGetSpellComponentStatus(actor, sort);
       const signature = componentBadgeSignature(statuses);
       const existing = meta.querySelector(":scope > .add2e-hud-components-resolved");
       if (existing?.dataset?.add2eComponentSignature === signature) continue;
+
       for (const stale of meta.querySelectorAll(":scope > .component-title, :scope > .component-ok, :scope > .component-bad, :scope > .add2e-hud-components-resolved")) stale.remove();
       if (statuses.length) meta.append(buildHudComponentBadges(statuses));
     }
@@ -633,6 +754,7 @@ function scheduleHudComponentBadges() {
 function installHudComponentBadges() {
   if (globalThis.__ADD2E_CONSUMABLES_HUD_COMPONENTS_V1) return false;
   globalThis.__ADD2E_CONSUMABLES_HUD_COMPONENTS_V1 = true;
+
   const observe = () => {
     if (hudComponentObserver || !document.body) return;
     hudComponentObserver = new MutationObserver(() => {
@@ -641,6 +763,7 @@ function installHudComponentBadges() {
     hudComponentObserver.observe(document.body, { childList: true, subtree: true });
     scheduleHudComponentBadges();
   };
+
   if (document.body) observe();
   else Hooks.once("ready", observe);
   return true;
@@ -671,9 +794,11 @@ export function registerGlobals() {
 export function registerSockets() {
   if (globalThis.__ADD2E_CONSUMABLES_SOCKET_V1) return;
   globalThis.__ADD2E_CONSUMABLES_SOCKET_V1 = true;
+
   game.socket?.on?.("system.add2e", async data => {
     if (!game.user?.isGM || data?.type !== GM_OPERATION_TYPE) return;
     if (![GM_OPERATION_COMPONENT_RESERVE, GM_OPERATION_COMPONENT_REFUND, GM_OPERATION_COMPONENT_FINALIZE].includes(data.operation)) return;
+
     const payload = data.payload ?? {};
     if (data.operation === GM_OPERATION_COMPONENT_RESERVE) {
       const actor = game.actors?.get(payload.actorId);
@@ -685,15 +810,28 @@ export function registerSockets() {
         console.warn("[ADD2E][CONSUMABLES][COMPONENTS][RESERVE][GM]", err);
         result = { ok: false, blocked: true, message: err?.message || "Erreur MJ pendant la réservation des composants." };
       }
-      game.socket.emit("system.add2e", { type: SOCKET_COMPONENT_RESULT, requestId: payload.requestId, userId: payload.userId, result: serializableReservation(result) });
+      game.socket.emit("system.add2e", {
+        type: SOCKET_COMPONENT_RESULT,
+        requestId: payload.requestId,
+        userId: payload.userId,
+        result: serializableReservation(result)
+      });
       return;
     }
+
     let ok = false;
     try {
-      ok = data.operation === GM_OPERATION_COMPONENT_REFUND ? await refundSpellComponentsLocal(payload.reservation) : await finalizeSpellComponentsLocal(payload.reservation);
+      ok = data.operation === GM_OPERATION_COMPONENT_REFUND
+        ? await refundSpellComponentsLocal(payload.reservation)
+        : await finalizeSpellComponentsLocal(payload.reservation);
     } catch (err) {
       console.warn("[ADD2E][CONSUMABLES][COMPONENTS][TRANSACTION]", { operation: data.operation, err });
     }
-    game.socket.emit("system.add2e", { type: SOCKET_COMPONENT_RESULT, requestId: payload.request_id ?? payload.requestId, userId: payload.userId, result: { ok } });
+    game.socket.emit("system.add2e", {
+      type: SOCKET_COMPONENT_RESULT,
+      requestId: payload.request_id ?? payload.requestId,
+      userId: payload.userId,
+      result: { ok }
+    });
   });
 }
