@@ -1,6 +1,6 @@
 // ============================================================
 // ADD2E — Capacités activables de classe : exécution on_use
-// Version : 2026-06-24-active-class-abilities-class-items-v4
+// Version : 2026-06-24-active-class-abilities-thief-activity-v5
 // Format accepté pour les objets classe :
 // - system.activeClassFeatures : boutons / capacités utilisables
 // - system.classFeatures       : capacités passives ou mixtes
@@ -8,7 +8,7 @@
 // - anciens alias conservés : capacitesClasse, classFeaturesDebloquees
 // ============================================================
 
-const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-06-24-active-class-abilities-class-items-v4";
+const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-06-24-active-class-abilities-thief-activity-v5";
 globalThis.ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = ADD2E_CLASS_ACTIVE_ABILITIES_VERSION;
 console.log("[ADD2E][CAPACITES][VERSION]", ADD2E_CLASS_ACTIVE_ABILITIES_VERSION);
 
@@ -158,6 +158,30 @@ function add2eIsFeatureActivable(feature) {
   return false;
 }
 
+function add2eIsThiefSkillFeature(feature) {
+  const name = add2eFeatureKey({ name: add2eFeatureName(feature) });
+  const key = add2eFeatureKey({ id: feature?.skillKey ?? feature?.key ?? feature?.slug ?? "" });
+  const joined = `${name} ${key}`;
+  return [
+    "faculte_de_voleur", "facultes_de_voleur", "competence_de_voleur", "competences_de_voleur",
+    "pickpocket", "faire_les_poches", "crochetage", "serrure", "piege", "desamorc",
+    "deplacement_silencieux", "silence", "dissimulation", "cacher", "ecoute", "auditiv",
+    "ouie", "entendre", "bruit", "escalade", "grimper", "lecture_langues",
+    "lecture_des_langues", "frappe_dans_le_dos", "attaque_dans_le_dos", "backstab",
+    "attaque_sournoise", "assassination", "assassinat"
+  ].some(token => joined.includes(token));
+}
+
+function add2eThiefActivityStatus(actor) {
+  try {
+    const status = globalThis.add2eGetThiefActivityEquipmentStatus?.(actor);
+    if (status && typeof status === "object") return status;
+  } catch (err) {
+    console.warn("[ADD2E][CAPACITES][VOLEUR][ACTIVITE]", err);
+  }
+  return { applies: false, ok: true, message: "" };
+}
+
 function add2eFeatureActorLevel(actor, feature = null) {
   const slug = add2eFeatureKey({ id: feature?._add2eClassSlug ?? feature?.classSlug ?? feature?.sourceClassSlug ?? "" });
   if (slug && actor?.system?.niveaux_par_classe?.[slug] !== undefined) return Math.max(1, Number(actor.system.niveaux_par_classe[slug]) || 1);
@@ -165,8 +189,11 @@ function add2eFeatureActorLevel(actor, feature = null) {
 }
 
 function add2eGetActorActivableClassFeatures(actor, { includeLocked = true } = {}) {
+  const thiefStatus = add2eThiefActivityStatus(actor);
   return add2eGetActorClassFeatures(actor).filter(f => {
     if (!add2eIsFeatureActivable(f)) return false;
+    // Les compétences de voleur utilisent le moteur add2eRollThiefSkill et ne sont jamais des scripts on_use.
+    if (thiefStatus.applies && add2eIsThiefSkillFeature(f)) return false;
     if (includeLocked) return true;
     const level = add2eFeatureActorLevel(actor, f);
     return level >= add2eFeatureMinLevel(f) && level <= add2eFeatureMaxLevel(f);
@@ -272,6 +299,24 @@ async function add2eExecuteClassFeatureOnUse(actor, feature, sheet = null) {
   if (level < min || level > max) {
     ui.notifications.warn(`La capacité « ${name} » n'est pas disponible au niveau ${level}.`);
     return false;
+  }
+
+  // Compatibilité avec les anciennes entrées classe : une compétence de voleur
+  // est toujours résolue par le moteur de compétence, jamais par fetch(on_use).
+  if (add2eIsThiefSkillFeature(feature)) {
+    const thiefStatus = add2eThiefActivityStatus(actor);
+    if (thiefStatus.applies && !thiefStatus.ok) {
+      ui.notifications.warn(thiefStatus.message || "Les capacités de voleur sont indisponibles avec l'équipement actuellement porté.");
+      return false;
+    }
+    if (thiefStatus.applies) {
+      if (typeof globalThis.add2eRollThiefSkill !== "function") {
+        ui.notifications.error("Le moteur des compétences de voleur n'est pas chargé.");
+        return false;
+      }
+      const skillKey = feature?.skillKey ?? feature?.key ?? feature?.slug ?? feature?.name ?? name;
+      return (await globalThis.add2eRollThiefSkill(actor, skillKey)) !== false;
+    }
   }
 
   const onUse = add2eFeatureOnUse(feature);
@@ -423,6 +468,7 @@ try { globalThis.add2eFeatureName = add2eFeatureName; } catch (_e) {}
 try { globalThis.add2eFeatureOnUse = add2eFeatureOnUse; } catch (_e) {}
 try { globalThis.add2eFeatureKey = add2eFeatureKey; } catch (_e) {}
 try { globalThis.add2eIsFeatureActivable = add2eIsFeatureActivable; } catch (_e) {}
+try { globalThis.add2eIsThiefSkillFeature = add2eIsThiefSkillFeature; } catch (_e) {}
 try { globalThis.add2eFeatureActorLevel = add2eFeatureActorLevel; } catch (_e) {}
 try { globalThis.add2eGetActorClassSystems = add2eGetActorClassSystems; } catch (_e) {}
 try { globalThis.add2eFindClassFeatureFromElement = add2eFindClassFeatureFromElement; } catch (_e) {}
