@@ -6,7 +6,6 @@ import {
   VENDOR_SETTING,
   registerRecoveryHooks,
   patchActorSheetMoney,
-  patchAttackRollProjectileConsumption,
   registerGlobals,
   isVendorActor,
   findVendor,
@@ -49,7 +48,7 @@ import {
   registerSockets as registerConsumablesSockets
 } from "./22e-consumables-core.mjs";
 
-const ADD2E_SHOP_ORCHESTRATION_VERSION = "2026-06-18-shop-orchestration-spell-components-management-setting-v1";
+const ADD2E_SHOP_ORCHESTRATION_VERSION = "2026-06-24-shop-without-attack-wrapper-v2";
 const ADD2E_SHOP_HP_VERSION = "2026-06-15-shop-hp-one-multiclass-v1";
 const ADD2E_SHOP_HP = 1;
 const SPELL_COMPONENTS_SETTING = "gestionComposantsSorts";
@@ -116,7 +115,7 @@ async function enforceShopActors() {
   if (vendor) {
     await moveVendorToFolder(vendor);
     await updateVendorTokenSize(vendor);
-    if (!Array.from(vendor.items ?? []).some(i => i?.getFlag?.("add2e", "vendorItem") === true)) await ensureVendorStock(vendor);
+    if (!Array.from(vendor.items ?? []).some(item => item?.getFlag?.("add2e", "vendorItem") === true)) await ensureVendorStock(vendor);
   }
 
   let armorer = findArmorer();
@@ -231,7 +230,6 @@ Hooks.once("ready", async () => {
 
   window.setTimeout(bindAllVendorTokens, 500);
   window.setTimeout(bindAllArmorerTokens, 500);
-  window.setTimeout(patchAttackRollProjectileConsumption, 800);
 
   console.log("[ADD2E][SHOP][READY]", {
     vendor: ADD2E_VENDOR_VERSION,
