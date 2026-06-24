@@ -1,6 +1,6 @@
 // ============================================================
 // ADD2E — Restrictions équipement génériques par tags harmonisés
-// Version : 2026-06-24-thief-activity-equipment-status-v3
+// Version : 2026-06-24-thief-activity-body-armor-tag-v4
 // Source principale : Items "classe" embarqués sur l'acteur.
 // Schéma conseillé des tags d'équipement :
 // - arme / armure / bouclier
@@ -8,7 +8,8 @@
 // - slug:<nom_normalise>
 // Règle multiclassée AD&D 2e :
 // - équipement : autorisé si au moins une classe l'autorise ;
-// - activités de voleur : seulement avec armes et armures permises au voleur.
+// - activités de voleur : test indépendant sur l'armure de corps équipée
+//   et le tag exact type_armure:cuir.
 // ============================================================
 
 function add2eDeepClone(value) {
@@ -290,8 +291,61 @@ function add2eCheckEquippedItemsForClassActivity(actor, className) {
   return failures.length ? { ok: false, reason: "equipped-items-not-allowed-for-class-activity", className, failures } : { ok: true, reason: "equipped-items-allowed-for-class-activity", className, failures: [] };
 }
 
+function add2eGetThiefActivityRawArmorTags(item) {
+  const system = item?.system ?? {};
+  return [
+    ...add2eToEquipArray(system.tags),
+    ...add2eToEquipArray(system.tag),
+    ...add2eToEquipArray(system.effectTags),
+    ...add2eToEquipArray(system.effecttags),
+    ...add2eToEquipArray(system.effets),
+    ...add2eToEquipArray(system.effects),
+    ...add2eToEquipArray(item?.flags?.add2e?.tags),
+    ...add2eToEquipArray(item?.flags?.add2e?.effectTags)
+  ].map(tag => String(tag).trim()).filter(Boolean);
+}
+
+function add2eIsThiefActivityBodyArmor(item) {
+  if (item?.system?.equipee !== true) return false;
+  if (!["armure", "armor"].includes(String(item?.type ?? "").toLowerCase())) return false;
+
+  const tags = new Set(add2eGetThiefActivityRawArmorTags(item));
+  if (tags.has("bouclier") || tags.has("type_armure:bouclier") || tags.has("heaume") || tags.has("casque")) return false;
+  if ([...tags].some(tag => tag.startsWith("type_bouclier:") || tag.startsWith("type_heaume:") || tag.startsWith("type_casque:"))) return false;
+  return true;
+}
+
 function add2eCheckThiefActivityEquipmentAllowed(actor) {
-  return add2eCheckEquippedItemsForClassActivity(actor, "Voleur");
+  const className = "Voleur";
+  const classe = add2eFindActorClassSystemByName(actor, className);
+  if (!classe) return { ok: true, reason: "class-not-present", className, failures: [] };
+
+  const failures = [];
+  for (const item of actor?.items ?? []) {
+    if (!add2eIsThiefActivityBodyArmor(item)) continue;
+
+    const itemTags = add2eGetThiefActivityRawArmorTags(item);
+    if (itemTags.includes("type_armure:cuir")) continue;
+
+    failures.push({
+      itemId: item.id,
+      itemName: item.name,
+      kind: "armure",
+      check: {
+        ok: false,
+        reason: "thief-activity-body-armor-not-leather",
+        classe,
+        classeLabel: classe.__classItemName ?? classe.label ?? classe.nom ?? classe.name ?? className,
+        itemTags,
+        requiredTag: "type_armure:cuir",
+        mode: "thief-body-armor-tag"
+      }
+    });
+  }
+
+  return failures.length
+    ? { ok: false, reason: "equipped-body-armor-without-thief-leather-tag", className, failures }
+    : { ok: true, reason: "no-equipped-body-armor-or-exact-leather-tag", className, failures: [] };
 }
 
 function add2eGetThiefActivityEquipmentStatus(actor) {
