@@ -1,6 +1,6 @@
 // ============================================================
 // ADD2E — Capacités activables de classe : exécution on_use
-// Version : 2026-06-24-active-class-abilities-thief-activity-v5
+// Version : 2026-06-24-active-class-abilities-thief-source-filter-v6
 // Format accepté pour les objets classe :
 // - system.activeClassFeatures : boutons / capacités utilisables
 // - system.classFeatures       : capacités passives ou mixtes
@@ -8,7 +8,7 @@
 // - anciens alias conservés : capacitesClasse, classFeaturesDebloquees
 // ============================================================
 
-const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-06-24-active-class-abilities-thief-activity-v5";
+const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-06-24-active-class-abilities-thief-source-filter-v6";
 globalThis.ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = ADD2E_CLASS_ACTIVE_ABILITIES_VERSION;
 console.log("[ADD2E][CAPACITES][VERSION]", ADD2E_CLASS_ACTIVE_ABILITIES_VERSION);
 
@@ -158,6 +158,21 @@ function add2eIsFeatureActivable(feature) {
   return false;
 }
 
+function add2eIsThiefClassFeature(feature) {
+  const values = [
+    feature?._add2eClassSlug,
+    feature?._add2eClassName,
+    feature?.sourceClassSlug,
+    feature?.sourceClassName,
+    feature?.classSlug,
+    feature?.className,
+    feature?.classe,
+    feature?.class
+  ].map(value => add2eFeatureKey({ id: value })).filter(Boolean);
+
+  return values.some(value => value === "voleur" || value.startsWith("voleur_") || value.endsWith("_voleur") || value.includes("voleur"));
+}
+
 function add2eIsThiefSkillFeature(feature) {
   const name = add2eFeatureKey({ name: add2eFeatureName(feature) });
   const key = add2eFeatureKey({ id: feature?.skillKey ?? feature?.key ?? feature?.slug ?? "" });
@@ -192,7 +207,10 @@ function add2eGetActorActivableClassFeatures(actor, { includeLocked = true } = {
   const thiefStatus = add2eThiefActivityStatus(actor);
   return add2eGetActorClassFeatures(actor).filter(f => {
     if (!add2eIsFeatureActivable(f)) return false;
-    // Les compétences de voleur utilisent le moteur add2eRollThiefSkill et ne sont jamais des scripts on_use.
+    // Le panneau rouge remplace complètement le bloc provenant de la classe Voleur.
+    // Les capacités des autres classes, telles que Vade-rétro, restent disponibles.
+    if (thiefStatus.applies && thiefStatus.ok === false && add2eIsThiefClassFeature(f)) return false;
+    // Les compétences Voleur standard sont rendues séparément par le HUD et la feuille.
     if (thiefStatus.applies && add2eIsThiefSkillFeature(f)) return false;
     if (includeLocked) return true;
     const level = add2eFeatureActorLevel(actor, f);
@@ -201,8 +219,10 @@ function add2eGetActorActivableClassFeatures(actor, { includeLocked = true } = {
 }
 
 function add2eGetActorPassiveClassFeatures(actor, { includeLocked = true } = {}) {
+  const thiefStatus = add2eThiefActivityStatus(actor);
   return add2eGetActorClassFeatures(actor).filter(f => {
     if (add2eIsFeatureActivable(f)) return false;
+    if (thiefStatus.applies && thiefStatus.ok === false && add2eIsThiefClassFeature(f)) return false;
     if (includeLocked) return true;
     const level = add2eFeatureActorLevel(actor, f);
     return level >= add2eFeatureMinLevel(f) && level <= add2eFeatureMaxLevel(f);
@@ -468,6 +488,7 @@ try { globalThis.add2eFeatureName = add2eFeatureName; } catch (_e) {}
 try { globalThis.add2eFeatureOnUse = add2eFeatureOnUse; } catch (_e) {}
 try { globalThis.add2eFeatureKey = add2eFeatureKey; } catch (_e) {}
 try { globalThis.add2eIsFeatureActivable = add2eIsFeatureActivable; } catch (_e) {}
+try { globalThis.add2eIsThiefClassFeature = add2eIsThiefClassFeature; } catch (_e) {}
 try { globalThis.add2eIsThiefSkillFeature = add2eIsThiefSkillFeature; } catch (_e) {}
 try { globalThis.add2eFeatureActorLevel = add2eFeatureActorLevel; } catch (_e) {}
 try { globalThis.add2eGetActorClassSystems = add2eGetActorClassSystems; } catch (_e) {}
