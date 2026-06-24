@@ -16,7 +16,7 @@ export {
 // - équipement via handleItemAction.
 // Aucune règle d'arme, projectile, armure, bouclier ou compatibilité n'est dupliquée ici.
 
-const ADD2E_HUD_COMBAT_TABS_VERSION = "2026-06-24-hud-combat-and-thief-activity-v2";
+const ADD2E_HUD_COMBAT_TABS_VERSION = "2026-06-24-hud-combat-and-thief-warning-v3";
 const ADD2E_HUD_ID = "add2e-action-hud";
 const ADD2E_HUD_COMBAT_STYLE_ID = "add2e-action-hud-combat-tabs-style";
 let add2eHudCombatTab = "armes";
@@ -189,8 +189,6 @@ function add2eHudCombatEnsureStyle() {
     #${ADD2E_HUD_ID} .a2e-hud-thief-activity{display:grid;gap:7px;padding:9px;border:1px solid rgba(214,176,90,.38);border-radius:10px;background:rgba(255,250,235,.07)}
     #${ADD2E_HUD_ID} .a2e-hud-thief-warning{border:2px solid #8b0000;background:rgba(255,70,70,.82);color:#111;text-align:center;font-weight:900;line-height:1.3}
     #${ADD2E_HUD_ID} .a2e-hud-thief-warning h3{margin:0;color:#111;font-size:1.08em}
-    #${ADD2E_HUD_ID} .a2e-hud-thief-title{color:#ffe4a1;font-weight:950;font-size:.9em}
-    #${ADD2E_HUD_ID} .a2e-hud-thief-skills{display:grid;gap:6px}
   `;
   document.head.appendChild(style);
 }
@@ -250,49 +248,24 @@ function add2eHudThiefActivityStatus(actor) {
   return { applies: false, ok: true, blockingItems: [], message: "" };
 }
 
-function add2eHudThiefSkillRows(actor) {
-  const table = globalThis.add2eGetActorThiefSkillTable?.(actor);
-  const legacy = globalThis.add2eGetActorThiefSkills?.(actor);
-  const rows = Array.isArray(table) && table.length ? table : (Array.isArray(legacy) ? legacy : []);
-  return rows.filter(row => {
-    const key = String(row?.key ?? "").toLowerCase();
-    return !key.includes("frappe") && !key.includes("backstab");
-  });
-}
-
-function add2eHudThiefActivitySignature(status, rows) {
+function add2eHudThiefActivitySignature(status) {
   return JSON.stringify({
     applies: status?.applies === true,
     ok: status?.ok !== false,
     message: status?.message ?? "",
-    blockingItems: (status?.blockingItems ?? []).map(item => item?.name ?? ""),
-    rows: rows.map(row => [row?.key ?? "", row?.display ?? row?.finalValue ?? row?.value ?? ""])
+    blockingItems: (status?.blockingItems ?? []).map(item => item?.name ?? "")
   });
 }
 
-function add2eHudThiefActivityHtml(status, rows) {
-  if (!status.ok) {
-    const names = (status?.blockingItems ?? []).map(item => String(item?.name ?? "").trim()).filter(Boolean);
-    const equipment = names.length
-      ? `Équipement actuellement incompatible : <strong>${add2eHudCombatEscape(names.join(", "))}</strong>.`
-      : "Un équipement actuellement porté est incompatible avec les activités de voleur.";
-    const message = add2eHudCombatEscape(status?.message || "Les capacités de voleur ne peuvent pas être utilisées avec l'équipement actuellement porté.");
-    return `<div class="a2e-hud-thief-activity a2e-hud-thief-warning">
-      <h3><i class="fas fa-triangle-exclamation"></i> Capacités de voleur indisponibles</h3>
-      <div>${message}</div>
-      <div style="font-size:.84em;">${equipment}</div>
-    </div>`;
-  }
-
-  if (!rows.length) return "";
-  return `<div class="a2e-hud-thief-activity">
-    <div class="a2e-hud-thief-title">Compétences de voleur</div>
-    <div class="a2e-hud-thief-skills">${rows.map(row => {
-      const name = row?.shortLabel ?? row?.label ?? row?.key ?? "Compétence";
-      const value = row?.display ?? `${row?.finalValue ?? row?.value ?? 0}%`;
-      return `<div class="row compact"><div><div class="title">${add2eHudCombatEscape(name)}</div><div class="meta"><span>${add2eHudCombatEscape(value)}</span></div></div><button type="button" class="act" data-add2e-hud-thief-skill="${add2eHudCombatEscape(row?.key ?? "")}">Jet</button></div>`;
-    }).join("")}</div>
-  </div>`;
+function add2eHudThiefActivityWarningHtml(status) {
+  const names = (status?.blockingItems ?? []).map(item => String(item?.name ?? "").trim()).filter(Boolean);
+  const equipment = names.length
+    ? `Équipement actuellement incompatible : <strong>${add2eHudCombatEscape(names.join(", "))}</strong>.`
+    : "Un équipement actuellement porté est incompatible avec les activités de voleur.";
+  const message = add2eHudCombatEscape(status?.message || "Les capacités de voleur ne peuvent pas être utilisées avec l'équipement actuellement porté.");
+  return `<h3><i class="fas fa-triangle-exclamation"></i> Capacités de voleur indisponibles</h3>
+    <div>${message}</div>
+    <div style="font-size:.84em;">${equipment}</div>`;
 }
 
 function add2eHudThiefActivityRender() {
@@ -303,29 +276,23 @@ function add2eHudThiefActivityRender() {
   if (!root || !actor || !section) return;
 
   const status = add2eHudThiefActivityStatus(actor);
-  const rows = status.applies ? add2eHudThiefSkillRows(actor) : [];
-  const signature = add2eHudThiefActivitySignature(status, rows);
-  const current = section.querySelector(":scope > .a2e-hud-thief-activity");
-  if (!status.applies) {
-    current?.remove();
+  const panels = [...section.querySelectorAll(':scope > .a2e-hud-thief-activity')];
+  if (!status.applies || status.ok !== false) {
+    panels.forEach(panel => panel.remove());
     return;
   }
-  if (current?.dataset?.add2eHudThiefSignature === signature) return;
+
+  const signature = add2eHudThiefActivitySignature(status);
+  if (panels.length === 1 && panels[0]?.dataset?.add2eHudThiefSignature === signature) return;
 
   add2eHudThiefActivityRendering = true;
   add2eHudCombatSuppressMutation = true;
   try {
-    current?.remove();
-    const container = document.createElement("div");
-    container.className = "a2e-hud-thief-activity";
-    container.dataset.add2eHudThiefSignature = signature;
-    container.outerHTML = add2eHudThiefActivityHtml(status, rows);
+    panels.forEach(panel => panel.remove());
     const panel = document.createElement("div");
-    panel.className = "a2e-hud-thief-activity";
+    panel.className = "a2e-hud-thief-activity a2e-hud-thief-warning";
     panel.dataset.add2eHudThiefSignature = signature;
-    panel.innerHTML = add2eHudThiefActivityHtml(status, rows).replace(/^<div class="a2e-hud-thief-activity(?: a2e-hud-thief-warning)?">|<\/div>$/g, "");
-    // La chaîne est volontairement injectée comme un seul panneau afin de conserver la grille du HUD.
-    panel.className = status.ok ? "a2e-hud-thief-activity" : "a2e-hud-thief-activity a2e-hud-thief-warning";
+    panel.innerHTML = add2eHudThiefActivityWarningHtml(status);
     section.prepend(panel);
   } finally {
     add2eHudThiefActivityRendering = false;
@@ -363,22 +330,6 @@ function add2eHudCombatInstall() {
   globalThis.__ADD2E_HUD_COMBAT_DELEGATE_SHEET_MECHANICS_V1 = true;
 
   document.addEventListener("click", async event => {
-    const thiefSkill = event.target?.closest?.("[data-add2e-hud-thief-skill]");
-    if (thiefSkill) {
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation?.();
-      const actor = add2eHudCombatCurrentActor();
-      if (!actor) return ui.notifications?.warn?.("Acteur HUD introuvable.");
-      const status = add2eHudThiefActivityStatus(actor);
-      if (status.applies && !status.ok) return ui.notifications?.warn?.(status.message || "Les capacités de voleur sont indisponibles avec l'équipement actuellement porté.");
-      if (typeof globalThis.add2eRollThiefSkill !== "function") return ui.notifications?.error?.("Moteur de compétence de voleur indisponible.");
-      await globalThis.add2eRollThiefSkill(actor, thiefSkill.dataset.add2eHudThiefSkill);
-      globalThis.add2eRefreshActionHud?.();
-      add2eHudThiefActivityScheduleRender();
-      return;
-    }
-
     const tab = event.target?.closest?.("[data-add2e-hud-combat-tab]");
     if (tab) {
       event.preventDefault();
