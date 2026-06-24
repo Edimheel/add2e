@@ -1,7 +1,7 @@
 // ========== CLASSE PRINCIPALE PERSONNAGE — ApplicationV2 ==========
 // Feuille personnage ADD2E full ApplicationV2 : aucun héritage appv1, aucun pont ActorSheet.
 
-const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-06-24-application-v2-native-token-config-v4";
+const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-06-24-application-v2-native-token-config-v5";
 const ADD2E_ACTOR_SHEET_V2_CSS_ID = "add2e-application-v2-character-sheet-css";
 const ADD2E_ACTOR_SHEET_V2_CSS_PATH = "systems/add2e/styles/application-v2-character-sheet.css";
 
@@ -68,21 +68,24 @@ function add2eBindApplicationV2Close(sheet) {
 class Add2eActorSheet extends ADD2E_ACTOR_SHEET_BASE {
   static ADD2E_APPLICATION_V2_VERSION = ADD2E_ACTOR_SHEET_V2_VERSION;
 
-  static DEFAULT_OPTIONS = {
-    id: "add2e-personnage-{id}",
-    classes: ["add2e", "sheet", "actor", "personnage", "add2e-character-v2-app"],
-    tag: "form",
-    position: { width: 1050, height: 900 },
-    window: {
-      title: "ADD2e Personnage",
-      resizable: true
-    },
-    form: {
-      submitOnChange: true,
-      closeOnSubmit: false,
-      handler: Add2eActorSheet._add2eSubmitForm
-    }
-  };
+  static get DEFAULT_OPTIONS() {
+    const parentOptions = super.DEFAULT_OPTIONS ?? {};
+    return foundry.utils.mergeObject(parentOptions, {
+      id: "add2e-personnage-{id}",
+      classes: [...new Set([...(parentOptions.classes ?? []), "add2e", "sheet", "actor", "personnage", "add2e-character-v2-app"])],
+      tag: "form",
+      position: { width: 1050, height: 900 },
+      window: {
+        title: "ADD2e Personnage",
+        resizable: true
+      },
+      form: {
+        submitOnChange: true,
+        closeOnSubmit: false,
+        handler: Add2eActorSheet._add2eSubmitForm
+      }
+    }, { inplace: false });
+  }
 
   static PARTS = {
     main: { template: "systems/add2e/templates/actor/character-sheet.hbs" }
