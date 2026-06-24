@@ -4,23 +4,51 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const VERSION = "2026-06-24-component-equipment-alias-audit-v11";
+const VERSION = "2026-06-24-component-canonical-price-audit-v12";
 const SOURCE_V3 = "fvtt-spells-all-normalise-mecanique-v3.json";
 const CONTROL = "fvtt-spells-all-normalise-mecanique-v3-controle.json";
 const EQUIPMENT_COMPENDIUM = "compendium_equipements.json";
 
-// Un alias relie un nom technique de composant de sort à un article réel du
-// catalogue Équipements. Les valeurs sont toujours des slugs d'objets existants.
+/**
+ * Aliases de formulation dans les profils de sorts.
+ * La clé reste volontairement explicite : aucune déduction sémantique large
+ * n'est faite sur les matières rares, les gemmes ou les morceaux d'animaux.
+ */
+const COMPONENT_CANONICAL_ALIASES = Object.freeze({
+  gousse_d_ail: "ail",
+  ail_la_gousse: "ail",
+  encens_a_bruler: "encens",
+  encens_allume: "encens",
+  petit_miroir_en_argent: "miroir_en_argent",
+  miroir_en_argent_petit: "miroir_en_argent",
+  symbole_sacre_du_clerc: "symbole_sacre",
+  symbole_saint: "symbole_sacre",
+  holy_symbol: "symbole_sacre"
+});
+
+/**
+ * Canonical component key -> slug(s) of real, non-generated equipment items.
+ * These items are never recreated as consumable components.
+ */
 const COMPONENT_EQUIPMENT_ALIASES = Object.freeze({
-  gousse_d_ail: ["ail_la_gousse"],
+  ail: ["ail_la_gousse"],
+  aconit: ["aconit_le_brin"],
+  belladone: ["belladone_le_brin"],
   eau_benite: ["eau_benite_fiole"],
   eau_maudite: ["eau_benite_fiole"],
   encens: ["encens_batonnet"],
-  encens_a_bruler: ["encens_batonnet"],
-  encens_allume: ["encens_batonnet"],
+  chapelet_de_priere: ["chapelet_de_priere"],
   miroir_en_argent: ["miroir_en_argent_petit"],
-  petit_miroir_en_argent: ["miroir_en_argent_petit"]
+  symbole_sacre: ["symbole_beni_bois", "symbole_beni_fer", "symbole_beni_argent"],
+  symbole_religieux_en_argent: ["symbole_beni_argent"]
 });
+
+const INVALID_COMPONENT_PATTERNS = [
+  /^a_(?:completer|determiner|verifier)$/,
+  /^(?:de_)?(?:bois|fer|argent|or|cuivre)$/,
+  /^(?:disparait|apparait|pour_chaque|selon_|quand_le_sort|le_sort_est|invocation_d_un_elemental)/,
+  /^(?:aucun|inconnu|non_defini|non_precise)$/
+];
 
 const text = value => String(value ?? "").replace(/\s+/g, " ").trim();
 const clone = value => value === undefined ? undefined : JSON.parse(JSON.stringify(value));
@@ -93,6 +121,19 @@ function isComponentItem(item) {
     || add2e.vendorKind === "component";
 }
 
+function canonicalComponentSlug(value) {
+  const raw = slug(value);
+  return COMPONENT_CANONICAL_ALIASES[raw] ?? raw;
+}
+
+function consumptionState(value) {
+  const mode = slug(value);
+  if (!mode) return "consomme";
+  if (mode === "optionnel") return "optionnel";
+  if (mode.includes("non_consomme") || mode.includes("reutilis") || mode.includes("permanent")) return "non_consomme";
+  return "consomme";
+}
+
 function readLeaf(rule, spell, inherited = {}, pathLabel = "") {
   if (!rule || typeof rule !== "object" || Array.isArray(rule)) {
     throw new Error(`Composant V3 invalide pour ${spell.name}${pathLabel ? ` (${pathLabel})` : ""}. Un composant doit être un objet structuré.`);
@@ -108,15 +149,19 @@ function readLeaf(rule, spell, inherited = {}, pathLabel = "") {
   }
 
   const consumption = text(component.consommation ?? inherited.consommation) || "consomme";
+  const rawSlug = slug(name);
   return {
     componentName: name,
-    componentSlug: slug(name),
+    componentSlug: canonicalComponentSlug(rawSlug),
+    rawComponentSlug: rawSlug,
     detail: {
       nom: text(spell.name ?? spell.system?.nom),
       id: text(spell._id ?? spell.id),
       classe: spellClass(spell),
       niveau: itemLevel(spell),
       composant_nom: name,
+      composant_slug_brut: rawSlug,
+      composant_slug_canonique: canonicalComponentSlug(rawSlug),
       quantite: quantity,
       consommation: consumption,
       cout_po: component.cout_po ?? null,
@@ -162,7 +207,7 @@ function detailKey(detail) {
     detail.nom,
     detail.classe,
     detail.niveau,
-    detail.composant_nom,
+    detail.composant_slug_brut,
     detail.quantite,
     detail.consommation,
     detail.cout_po ?? "",
@@ -184,8 +229,18 @@ function buildComponentCatalog(spells) {
 
     for (const usage of walkMaterialRules(rules, spell)) {
       if (!usage.componentSlug) throw new Error(`Slug vide pour le composant « ${usage.componentName} » de ${spell.name}.`);
-      if (!catalog.has(usage.componentSlug)) catalog.set(usage.componentSlug, { name: usage.componentName, details: [] });
-      catalog.get(usage.componentSlug).details.push(usage.detail);
+      if (!catalog.has(usage.componentSlug)) {
+        catalog.set(usage.componentSlug, {
+          name: usage.componentName,
+          rawSlugs: new Set(),
+          names: new Set(),
+          details: []
+        });
+      }
+      const entry = catalog.get(usage.componentSlug);
+      entry.rawSlugs.add(usage.rawComponentSlug);
+      entry.names.add(usage.componentName);
+      entry.details.push(usage.detail);
       linkedSpellEntries += 1;
     }
   }
@@ -199,6 +254,9 @@ function buildComponentCatalog(spells) {
       || Number(left.niveau) - Number(right.niveau)
       || String(left.alternativeGroup ?? "").localeCompare(String(right.alternativeGroup ?? ""), "fr")
     );
+    entry.rawSlugs = [...entry.rawSlugs].sort((left, right) => left.localeCompare(right, "fr"));
+    entry.names = [...entry.names].sort((left, right) => left.localeCompare(right, "fr"));
+    entry.name = entry.names[0] ?? entry.name;
   }
 
   return {
@@ -335,7 +393,7 @@ function baseEquipmentIndex(items) {
 function generatedComponentIndex(items) {
   const index = new Map();
   for (const item of items.filter(isComponentItem)) {
-    const key = itemSlug(item);
+    const key = canonicalComponentSlug(itemSlug(item));
     if (!key) continue;
     if (!index.has(key)) index.set(key, []);
     index.get(key).push(item);
@@ -382,6 +440,11 @@ function equipmentAuditItems(items) {
   }));
 }
 
+function looksInvalidComponent(entry) {
+  const variants = [entry.name, ...entry.names, ...entry.rawSlugs].map(slug);
+  return variants.some(key => INVALID_COMPONENT_PATTERNS.some(pattern => pattern.test(key)));
+}
+
 function auditComponentPrices(catalog, allItems) {
   const equipmentIndex = baseEquipmentIndex(allItems);
   const componentIndex = generatedComponentIndex(allItems);
@@ -394,6 +457,8 @@ function auditComponentPrices(catalog, allItems) {
     prixEquipementUnique: 0,
     conflitPrixEquipements: 0,
     equipementsReutilisables: 0,
+    consommationMixte: 0,
+    entreesInvalides: 0,
     sansPrix: 0,
     anciensComposantsAvecChampsPrix: 0
   };
@@ -412,39 +477,60 @@ function auditComponentPrices(catalog, allItems) {
       .filter(detail => detail.cout_po !== null);
     const exactPo = [...new Set(explicitCosts.filter(detail => detail.quantite === 1).map(detail => detail.cout_po))].sort((left, right) => left - right);
     const hasMultipleQuantityCost = explicitCosts.some(detail => detail.quantite !== 1);
+    const states = [...new Set(entry.details.map(detail => consumptionState(detail.consommation)))];
+    const hasConsumableUsage = states.includes("consomme");
+    const hasReusableOrOptionalUsage = states.some(state => state === "non_consomme" || state === "optionnel");
+    const mixedConsumption = hasConsumableUsage && hasReusableOrOptionalUsage;
     const legacy = oldComponents.some(item => {
       const system = item?.system ?? {};
       return system.cout !== undefined || system.coût !== undefined || system.source_prix !== undefined || system.source_note !== undefined;
     });
 
     let statut = "sans_prix";
+    let classification = "composant_sans_prix";
     let modeRebuild = "creer_composant";
     let unitPrice = null;
 
-    if (equipment.reusable) {
+    if (looksInvalidComponent(entry)) {
+      statut = "entree_invalide_a_corriger";
+      classification = "entree_invalide";
+      modeRebuild = "corriger_source";
+      summary.entreesInvalides += 1;
+    } else if (mixedConsumption) {
+      statut = "consommation_mixte_a_corriger";
+      classification = "entree_incoherente";
+      modeRebuild = "corriger_source";
+      summary.consommationMixte += 1;
+    } else if (equipment.reusable) {
       statut = equipment.prices.length === 1
         ? "equipement_reutilisable_lie"
         : equipment.prices.length > 1
           ? "equipement_reutilisable_variantes"
           : "equipement_reutilisable_sans_prix";
+      classification = "equipement_reutilisable";
       modeRebuild = "conserver_equipement_reutilisable";
       summary.equipementsReutilisables += 1;
     } else if (hasMultipleQuantityCost) {
       statut = "cout_explicite_quantite_multiple_a_verifier";
+      classification = "valeur_explicite_sort";
       summary.coutExpliciteQuantiteMultiple += 1;
     } else if (exactPo.length === 1) {
       statut = "cout_explicite_unique";
+      classification = "valeur_explicite_sort";
       unitPrice = `${exactPo[0]} po`;
       summary.coutExpliciteUnique += 1;
     } else if (exactPo.length > 1) {
       statut = "conflit_couts_explicites";
+      classification = "valeur_explicite_sort";
       summary.conflitCoutsExplicites += 1;
     } else if (equipment.prices.length === 1) {
       statut = "prix_equipement_unique";
+      classification = "composant_tarifable";
       unitPrice = equipment.prices[0];
       summary.prixEquipementUnique += 1;
     } else if (equipment.prices.length > 1) {
       statut = "conflit_prix_equipements";
+      classification = "composant_tarifable";
       summary.conflitPrixEquipements += 1;
     } else {
       summary.sansPrix += 1;
@@ -456,9 +542,13 @@ function auditComponentPrices(catalog, allItems) {
     rows.push({
       slug: componentSlug,
       nom: entry.name,
+      variantes: entry.names,
+      slugs_bruts: entry.rawSlugs,
       statut,
+      classification,
       mode_rebuild: modeRebuild,
       prix_unitaire_propose: unitPrice,
+      consommations: states,
       equipement_reference: {
         via_alias: equipment.viaAlias,
         slugs_recherches: equipment.candidateSlugs,
@@ -472,6 +562,8 @@ function auditComponentPrices(catalog, allItems) {
         sort: detail.nom,
         classe: detail.classe,
         niveau: detail.niveau,
+        nom_source: detail.composant_nom,
+        slug_source: detail.composant_slug_brut,
         quantite: detail.quantite,
         consommation: detail.consommation,
         cout_po: detail.cout_po ?? null
@@ -479,18 +571,13 @@ function auditComponentPrices(catalog, allItems) {
     });
   }
 
-  const blocking = rows.filter(row => row.mode_rebuild === "creer_composant" && [
-    "conflit_couts_explicites",
-    "cout_explicite_quantite_multiple_a_verifier",
-    "conflit_prix_equipements",
-    "sans_prix"
-  ].includes(row.statut));
+  const blocking = rows.filter(row => row.mode_rebuild !== "conserver_equipement_reutilisable" && !text(row.prix_unitaire_propose));
   const reusable = rows.filter(row => row.mode_rebuild === "conserver_equipement_reutilisable");
 
   return {
     version: VERSION,
     equipmentFile: EQUIPMENT_COMPENDIUM,
-    policy: "Les prix unitaires des composants consommables sont lus dans system.prix des articles de compendium_equipements.json ou dans un cout_po explicite du sort. Aucun fallback marchand. Les équipements réutilisables sont signalés séparément et ne doivent pas être recréés comme composants.",
+    policy: "Prix unitaire uniquement dans system.prix. Un cout_po explicite du sort est prioritaire. Les équipements réutilisables sont conservés dans Équipement et satisfont les composants sans doublon. Aucun fallback marchand.",
     summary,
     blocking: {
       count: blocking.length,
@@ -563,28 +650,27 @@ function rebuildComponentCatalog(spells, componentPriceAudit) {
   const allItems = getItems(compendium).map(clone);
   if (!allItems.length) throw new Error(`${EQUIPMENT_COMPENDIUM} ne contient aucun item.`);
   const oldComponents = allItems.filter(isComponentItem);
-  if (!oldComponents.length) throw new Error(`Aucun composant existant dans ${EQUIPMENT_COMPENDIUM} : impossible de conserver le modèle d’objet du compendium.`);
-
   const auditBySlug = new Map(componentPriceAudit.components.map(row => [row.slug, row]));
-  const unresolved = [...catalog.entries.keys()].filter(componentSlug => {
-    const row = auditBySlug.get(componentSlug);
-    return !row || (row.mode_rebuild === "creer_composant" && !text(row.prix_unitaire_propose));
-  });
-  if (unresolved.length) throw new Error(`Reconstruction bloquée : prix unitaire absent pour ${unresolved.join(", ")}.`);
+  const toCreate = [...catalog.entries].filter(([componentSlug]) => auditBySlug.get(componentSlug)?.mode_rebuild === "creer_composant");
 
-  const reusable = [...catalog.entries.keys()].filter(componentSlug => auditBySlug.get(componentSlug)?.mode_rebuild === "conserver_equipement_reutilisable");
-  if (reusable.length) {
-    throw new Error(`Reconstruction bloquée : les équipements réutilisables doivent d’abord être reliés au résolveur de composants sans créer de doublon (${reusable.join(", ")}).`);
+  const unresolved = toCreate.filter(([componentSlug]) => !text(auditBySlug.get(componentSlug)?.prix_unitaire_propose)).map(([componentSlug]) => componentSlug);
+  const sourceErrors = [...catalog.entries].filter(([componentSlug]) => auditBySlug.get(componentSlug)?.mode_rebuild === "corriger_source").map(([componentSlug]) => componentSlug);
+  if (unresolved.length || sourceErrors.length) {
+    throw new Error(`Reconstruction bloquée : prix ou structure à corriger (${[...unresolved, ...sourceErrors].join(", ")}).`);
   }
 
-  const template = clone(oldComponents[0]);
+  if (toCreate.length && !oldComponents.length) {
+    throw new Error(`Aucun composant existant dans ${EQUIPMENT_COMPENDIUM} : impossible de conserver le modèle d’objet du compendium.`);
+  }
+
+  const template = toCreate.length ? clone(oldComponents[0]) : null;
   const retainedItems = allItems.filter(item => !isComponentItem(item));
   const usedIds = new Set(retainedItems.map(item => text(item?._id ?? item?.id)).filter(Boolean));
   const highestSort = allItems.reduce((highest, item) => Math.max(highest, Number(item?.sort) || 0), 0);
   const recreated = [];
   let sort = highestSort + 1;
 
-  for (const [componentSlug, entry] of catalog.entries) {
+  for (const [componentSlug, entry] of toCreate) {
     const id = makeId(`component:${componentSlug}`, usedIds);
     const row = auditBySlug.get(componentSlug);
     recreated.push(createComponentItem(template, entry, componentSlug, id, sort, row.prix_unitaire_propose));
@@ -599,6 +685,7 @@ function rebuildComponentCatalog(spells, componentPriceAudit) {
     source: SOURCE_V3,
     deleted: oldComponents.length,
     created: recreated.length,
+    reusedEquipment: componentPriceAudit.reusableEquipment.count,
     uniqueComponents: catalog.entries.size,
     linkedSpellEntries: catalog.linkedSpellEntries
   };
@@ -638,22 +725,20 @@ function main() {
 
   console.log(`[ADD2E][COMPONENT_PRICE_AUDIT] ${componentPriceAudit.summary.total} composant(s) analysé(s) depuis ${EQUIPMENT_COMPENDIUM}.`);
   console.log(`[ADD2E][COMPONENT_PRICE_AUDIT] ${componentPriceAudit.summary.prixEquipementUnique} prix unitaires résolus depuis les équipements.`);
-  console.log(`[ADD2E][COMPONENT_PRICE_AUDIT] ${componentPriceAudit.reusableEquipment.count} équipement(s) réutilisable(s) à relier sans doublon.`);
+  console.log(`[ADD2E][COMPONENT_PRICE_AUDIT] ${componentPriceAudit.reusableEquipment.count} équipement(s) réutilisable(s) liés sans doublon.`);
+  console.log(`[ADD2E][COMPONENT_PRICE_AUDIT] ${componentPriceAudit.summary.entreesInvalides} entrée(s) invalide(s) à corriger dans les sorts.`);
   console.log(`[ADD2E][COMPONENT_PRICE_AUDIT] ${componentPriceAudit.blocking.count} composant(s) sans prix unitaire résolu ou en conflit.`);
 
   if (args.auditOnly) return;
 
   if (componentPriceAudit.blocking.count) {
-    throw new Error(`Reconstruction bloquée : ${componentPriceAudit.blocking.count} composant(s) n’ont pas de prix unitaire unique. Exécute d’abord : node audit/tools/normalize-fvtt-spells-materials-v3.mjs --audit-prices`);
-  }
-  if (componentPriceAudit.reusableEquipment.count) {
-    throw new Error(`Reconstruction bloquée : ${componentPriceAudit.reusableEquipment.count} équipement(s) réutilisable(s) doivent être reliés au résolveur sans être recréés comme composants.`);
+    throw new Error(`Reconstruction bloquée : ${componentPriceAudit.blocking.count} composant(s) n’ont pas de prix unitaire unique ou doivent être corrigés. Exécute d’abord : node audit/tools/normalize-fvtt-spells-materials-v3.mjs --audit-prices`);
   }
 
   const rebuilt = rebuildComponentCatalog(spells, componentPriceAudit);
   control.componentCatalog = {
     ...rebuilt,
-    policy: "Les composants existants sont recréés uniquement depuis les entrées structurées de fvtt-spells-all-normalise-mecanique-v3.json. Les équipements réutilisables correspondants restent des équipements.",
+    policy: "Les composants consommables sont recréés uniquement depuis les entrées structurées de fvtt-spells-all-normalise-mecanique-v3.json. Les équipements réutilisables correspondants restent dans Équipement.",
     v3Rewritten: false,
     grammarParsing: false
   };
@@ -661,6 +746,7 @@ function main() {
 
   console.log(`[ADD2E][COMPONENT_CATALOG] ${rebuilt.deleted} ancien(s) composant(s) supprimé(s).`);
   console.log(`[ADD2E][COMPONENT_CATALOG] ${rebuilt.created} composant(s) recréé(s) depuis ${SOURCE_V3}.`);
+  console.log(`[ADD2E][COMPONENT_CATALOG] ${rebuilt.reusedEquipment} équipement(s) réutilisable(s) conservé(s).`);
   console.log(`[ADD2E][COMPONENT_CATALOG] ${rebuilt.linkedSpellEntries} association(s) sort/composant enregistrée(s).`);
 }
 
