@@ -4,7 +4,7 @@
 // Les restrictions de classe restent dans 03-equipment-rules.mjs.
 // ============================================================
 
-const ADD2E_EQUIPMENT_ACTIONS_VERSION = "2026-06-24-equipment-actions-single-route-v5";
+const ADD2E_EQUIPMENT_ACTIONS_VERSION = "2026-06-24-equipment-actions-single-route-v6";
 const ADD2E_WEAPON_TYPES = new Set(["arme", "weapon"]);
 const ADD2E_ARMOR_TYPES = new Set(["armure", "armor"]);
 
@@ -144,8 +144,8 @@ function add2eEquipmentChangesEquipped(changes = {}) {
 }
 
 function add2eInstallWeaponUsageNormalization() {
-  if (globalThis.__ADD2E_WEAPON_USAGE_NORMALIZATION_V5) return;
-  globalThis.__ADD2E_WEAPON_USAGE_NORMALIZATION_V5 = true;
+  if (globalThis.__ADD2E_WEAPON_USAGE_NORMALIZATION_V6) return;
+  globalThis.__ADD2E_WEAPON_USAGE_NORMALIZATION_V6 = true;
 
   Hooks.on("preUpdateItem", (item, changes = {}) => {
     if (!ADD2E_WEAPON_TYPES.has(String(item?.type ?? "").toLowerCase())) return;
@@ -450,6 +450,21 @@ function add2eStackQuantity(item) {
   return Math.max(0, Math.floor(Number(value) || 0));
 }
 
+function add2eFindEquippedProjectile(actor, weapon) {
+  const compatible = globalThis.add2eGetEquippedProjectileForWeapon?.(actor, weapon) ?? null;
+  if (compatible) return compatible;
+  const isAmmo = globalThis.ADD2E_CONSUMABLES?.add2eIsAmmunition;
+  return [...(actor?.items ?? [])].find(item => item?.system?.equipee === true && typeof isAmmo === "function" && isAmmo(item)) ?? null;
+}
+
+async function add2eSpendProjectileAfterAttack(actor, weapon) {
+  const spend = globalThis.add2eSpendProjectileForAttack
+    ?? game?.add2e?.vendorProjectiles?.spendProjectileForAttack
+    ?? globalThis.ADD2E_VENDOR_PROJECTILES?.spendProjectileForAttack;
+  if (typeof spend !== "function") return { ok: false, reason: "projectile-api-unavailable" };
+  return spend({ actor, arme: weapon });
+}
+
 async function add2eConsumeThrownWeaponAfterAttack(actor, weapon) {
   const api = globalThis.ADD2E_CONSUMABLES ?? game?.add2e?.consumables;
   if (typeof api?.add2eConsumeThrownWeapon !== "function") return { ok: false, reason: "consumable-api-unavailable" };
@@ -477,26 +492,43 @@ function add2eInstallSingleAttackRoute() {
     if (!actor || !weapon) return add2eAttackCore.call(this, args);
 
     const profile = add2eGetWeaponUsageProfile(weapon);
-    if (!profile.isThrown) return add2eAttackCore.call(this, args);
+    if (!profile.isThrown && !profile.isProjectilePropulse) return add2eAttackCore.call(this, args);
 
     const modeKey = add2eWeaponModeKey(actor.id, weapon.id);
     const defaultMode = profile.isHybrid ? "contact" : "throw";
+    let projectile = null;
+
+    if (profile.isProjectilePropulse) {
+      projectile = add2eFindEquippedProjectile(actor, weapon);
+      if (!projectile || add2eStackQuantity(projectile) <= 0) {
+        await add2eSpendProjectileAfterAttack(actor, weapon);
+        return false;
+      }
+    }
+
     if (profile.isHybrid) add2eSetTransientWeaponAttackMode(actor.id, weapon.id, "pending");
 
     try {
-      const attackWeapon = add2eModeAwareWeapon(weapon, actor.id, weapon.id);
+      const attackWeapon = profile.isThrown ? add2eModeAwareWeapon(weapon, actor.id, weapon.id) : weapon;
       const result = await add2eAttackCore.call(this, { ...args, actor, arme: attackWeapon });
+      if (result !== true) return result;
+
+      if (profile.isProjectilePropulse) {
+        const consumedProjectile = await add2eSpendProjectileAfterAttack(actor, weapon);
+        return consumedProjectile?.ok === false ? false : result;
+      }
+
       const mode = profile.isHybrid
         ? add2eTakeTransientWeaponAttackMode(actor.id, weapon.id, defaultMode)
         : "throw";
-      if (result !== true || mode !== "throw") return result;
+      if (mode !== "throw") return result;
 
       if (add2eStackQuantity(weapon) <= 0) {
         ui.notifications?.warn?.(`${weapon.name} n'est plus disponible pour être lancée.`);
         return false;
       }
-      const consumed = await add2eConsumeThrownWeaponAfterAttack(actor, weapon);
-      return consumed?.ok === false ? false : result;
+      const consumedWeapon = await add2eConsumeThrownWeaponAfterAttack(actor, weapon);
+      return consumedWeapon?.ok === false ? false : result;
     } finally {
       if (profile.isHybrid) add2eWeaponModeStore().delete(modeKey);
     }
@@ -518,13 +550,13 @@ function add2eInstallEquipmentActions() {
 
   Hooks.once("ready", () => {
     // Le noyau 04 est chargé avant ready ; aucun pont consommable n'existe encore.
-    if (!add2eCaptureAttackCore()) {
-      window.setTimeout(() => {
-        if (add2eCaptureAttackCore()) add2eInstallSingleAttackRoute();
-      }, 50);
+    if (add2eCaptureAttackCore()) {
+      add2eInstallSingleAttackRoute();
       return;
     }
-    add2eInstallSingleAttackRoute();
+    window.setTimeout(() => {
+      if (add2eCaptureAttackCore()) add2eInstallSingleAttackRoute();
+    }, 50);
   });
 }
 
