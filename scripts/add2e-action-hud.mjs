@@ -16,7 +16,7 @@ export {
 // - équipement via handleItemAction.
 // Aucune règle d'arme, projectile, armure, bouclier ou compatibilité n'est dupliquée ici.
 
-const ADD2E_HUD_COMBAT_TABS_VERSION = "2026-06-24-hud-combat-and-thief-warning-v3";
+const ADD2E_HUD_COMBAT_TABS_VERSION = "2026-06-24-hud-combat-lists-stable-v4";
 const ADD2E_HUD_ID = "add2e-action-hud";
 const ADD2E_HUD_COMBAT_STYLE_ID = "add2e-action-hud-combat-tabs-style";
 let add2eHudCombatTab = "armes";
@@ -73,6 +73,26 @@ function add2eHudCombatWeaponDamage(weapon, objects) {
   return String(helper(weapon, objects) ?? "—");
 }
 
+function add2eHudCombatHybridWeaponAvailability(weapon) {
+  const system = weapon?.system ?? {};
+  const rawQuantity = system.quantite ?? system.quantity;
+  if (rawQuantity === undefined || rawQuantity === null || rawQuantity === "") return null;
+
+  const tags = [
+    ...(Array.isArray(system.tags) ? system.tags : []),
+    ...(Array.isArray(system.effectTags) ? system.effectTags : []),
+    ...(Array.isArray(weapon?.flags?.add2e?.tags) ? weapon.flags.add2e.tags : [])
+  ].map(value => String(value ?? "").toLowerCase());
+  const hasThrownTag = tags.some(tag => tag.includes("usage:lancer") || tag.includes("usage:jet") || tag.includes("arme_de_jet"));
+  const hasThrownRange = Number(system.portee_courte ?? system.porteeCourte ?? 0) > 0 ||
+    Number(system.portee_moyenne ?? system.porteeMoyenne ?? 0) > 0 ||
+    Number(system.portee_longue ?? system.porteeLongue ?? 0) > 0;
+  if (!hasThrownTag && !hasThrownRange) return null;
+
+  const available = Math.max(0, Math.floor(Number(rawQuantity) || 0));
+  return `<span>Disponibles ${add2eHudCombatEscape(available)}</span>`;
+}
+
 function add2eHudCombatCollections(actor) {
   const items = [...(actor?.items ?? [])];
   const objects = items.filter(item => String(item?.type ?? "").toLowerCase() === "objet");
@@ -102,6 +122,7 @@ function add2eHudCombatWeaponRow(weapon, objects) {
   const damage = add2eHudCombatEscape(add2eHudCombatWeaponDamage(weapon, objects));
   const type = add2eHudCombatEscape(weapon?.system?.type_degats ?? "—");
   const factor = add2eHudCombatEscape(weapon?.system?.facteur_rapidité ?? "—");
+  const available = add2eHudCombatHybridWeaponAvailability(weapon) ?? "";
   const actionLabel = equipped ? "Retirer" : "Équiper";
   const attackTitle = add2eHudCombatEscape(`Attaquer avec ${weapon?.name ?? "l'arme"}`);
 
@@ -111,7 +132,7 @@ function add2eHudCombatWeaponRow(weapon, objects) {
     </button>
     <div>
       <div class="title">${add2eHudCombatEscape(weapon?.name ?? "Arme")}</div>
-      <div class="meta">${add2eHudCombatState(weapon)}<span>Dégâts ${damage}</span><span>${type}</span><span>Facteur ${factor}</span></div>
+      <div class="meta">${add2eHudCombatState(weapon)}<span>Dégâts ${damage}</span><span>${type}</span><span>Facteur ${factor}</span>${available}</div>
     </div>
     <button type="button" class="act" data-add2e-hud-combat-action="equip" data-item-id="${itemId}">${actionLabel}</button>
   </div>`;
@@ -238,6 +259,14 @@ function add2eHudCombatScheduleRender() {
   });
 }
 
+function add2eHudCombatScheduleStableRender() {
+  add2eHudCombatScheduleRender();
+  // core.mjs reconstruit le HUD à la suite d'un updateItem. Ces deux passages
+  // restaurent immédiatement les listes complètes après ce rendu tardif.
+  window.setTimeout(add2eHudCombatScheduleRender, 90);
+  window.setTimeout(add2eHudCombatScheduleRender, 180);
+}
+
 function add2eHudThiefActivityStatus(actor) {
   try {
     const status = globalThis.add2eGetThiefActivityEquipmentStatus?.(actor);
@@ -350,7 +379,7 @@ function add2eHudCombatInstall() {
     if (!actor) return ui.notifications?.warn?.("Acteur HUD introuvable.");
     await add2eHudCombatRunAction(actor, button.dataset.itemId, button.dataset.add2eHudCombatAction);
     globalThis.add2eRefreshActionHud?.();
-    add2eHudCombatScheduleRender();
+    add2eHudCombatScheduleStableRender();
   }, true);
 
   add2eHudCombatBodyObserver = new MutationObserver(mutations => {
@@ -359,17 +388,23 @@ function add2eHudCombatInstall() {
       node?.id === ADD2E_HUD_ID || node?.querySelector?.(`#${ADD2E_HUD_ID}`)
     ));
     if (hudAdded) {
-      add2eHudCombatScheduleRender();
+      add2eHudCombatScheduleStableRender();
       add2eHudThiefActivityScheduleRender();
     }
   });
   add2eHudCombatBodyObserver.observe(document.body, { childList: true, subtree: true });
 
+  Hooks.on("updateItem", item => {
+    const actor = add2eHudCombatCurrentActor();
+    if (item?.parent?.id !== actor?.id) return;
+    add2eHudCombatScheduleStableRender();
+  });
+
   const refresh = globalThis.add2eRefreshActionHud;
   if (typeof refresh === "function" && !refresh.__add2eHudCombatDelegated) {
     const wrapped = async function add2eRefreshActionHudWithCombatDelegation(...args) {
       const result = await refresh.apply(this, args);
-      add2eHudCombatScheduleRender();
+      add2eHudCombatScheduleStableRender();
       add2eHudThiefActivityScheduleRender();
       return result;
     };
@@ -379,7 +414,7 @@ function add2eHudCombatInstall() {
 
   game.add2e = game.add2e ?? {};
   game.add2e.actionHudCombatTabsVersion = ADD2E_HUD_COMBAT_TABS_VERSION;
-  add2eHudCombatScheduleRender();
+  add2eHudCombatScheduleStableRender();
   add2eHudThiefActivityScheduleRender();
 }
 
