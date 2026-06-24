@@ -1,6 +1,6 @@
 // ============================================================
 // ADD2E — Restrictions équipement génériques par tags harmonisés
-// Version : 2026-06-24-thief-activity-equipment-status-v2
+// Version : 2026-06-24-thief-activity-equipment-status-v3
 // Source principale : Items "classe" embarqués sur l'acteur.
 // Schéma conseillé des tags d'équipement :
 // - arme / armure / bouclier
@@ -331,6 +331,34 @@ function add2eGetThiefActivityEquipmentStatus(actor) {
   };
 }
 
+function add2eThiefClassLevel(actor, thiefClass) {
+  const rawKey = thiefClass?.slug ?? thiefClass?.label ?? thiefClass?.nom ?? thiefClass?.name ?? thiefClass?.__classItemName ?? "Voleur";
+  const key = add2eNormalizeEquipTag(rawKey);
+  const levels = actor?.system?.niveaux_par_classe ?? {};
+  if (key && levels[key] !== undefined) return Math.max(1, Number(levels[key]) || 1);
+  return Math.max(1, Number(actor?.system?.niveau ?? 1) || 1);
+}
+
+function add2eThiefActivityRollContext(actor) {
+  const thiefClass = add2eFindActorClassSystemByName(actor, "Voleur");
+  if (!thiefClass || !actor) return actor;
+
+  const system = {
+    ...(actor.system ?? {}),
+    classe: thiefClass.__classItemName ?? thiefClass.label ?? thiefClass.nom ?? thiefClass.name ?? "Voleur",
+    details_classe: thiefClass,
+    niveau: add2eThiefClassLevel(actor, thiefClass)
+  };
+
+  return new Proxy(actor, {
+    get(target, property) {
+      if (property === "system") return system;
+      const value = Reflect.get(target, property, target);
+      return typeof value === "function" ? value.bind(target) : value;
+    }
+  });
+}
+
 function add2eInstallThiefActivityRollGuard() {
   if (globalThis.__ADD2E_THIEF_ACTIVITY_ROLL_GUARD_V1) return;
   globalThis.__ADD2E_THIEF_ACTIVITY_ROLL_GUARD_V1 = true;
@@ -345,7 +373,7 @@ function add2eInstallThiefActivityRollGuard() {
         ui.notifications?.warn?.(status.message || "Les capacités de voleur sont indisponibles avec l'équipement actuellement porté.");
         return false;
       }
-      return original.call(this, actor, ...args);
+      return original.call(this, add2eThiefActivityRollContext(actor), ...args);
     };
     guarded.__add2eThiefActivityGuard = true;
     guarded.__add2eThiefActivityOriginal = original;
@@ -380,3 +408,5 @@ try { globalThis.add2eIsHelmet = add2eIsHelmet; } catch (_e) {}
 try { globalThis.add2eLegacyAllowsItemByNameOrTag = add2eLegacyAllowsItemByNameOrTag; } catch (_e) {}
 try { globalThis.add2eCheckEquipmentAllowedForClassSystem = add2eCheckEquipmentAllowedForClassSystem; } catch (_e) {}
 try { globalThis.add2eFindActorClassSystemByName = add2eFindActorClassSystemByName; } catch (_e) {}
+try { globalThis.add2eThiefClassLevel = add2eThiefClassLevel; } catch (_e) {}
+try { globalThis.add2eThiefActivityRollContext = add2eThiefActivityRollContext; } catch (_e) {}
