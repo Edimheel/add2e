@@ -1,6 +1,6 @@
 // ============================================================
 // ADD2E — 08 Character Sheet UI — 02 capacités
-// Version : 2026-06-16-thief-leather-armor-warning-v2
+// Version : 2026-06-24-thief-activity-equipment-status-v3
 // ============================================================
 import { escapeHtml, slug, expose, globalFn } from "./08-character-sheet-ui-00-utils.mjs";
 
@@ -154,10 +154,6 @@ function actorClassSlugs(actor) {
   return values.map(value => slug(value)).filter(Boolean);
 }
 
-function hasVoleurClass(actor) {
-  return actorClassSlugs(actor).some(s => s.includes("voleur"));
-}
-
 function isThiefSkillClass(actor) {
   const slugs = actorClassSlugs(actor);
   const s = classSlug(actor);
@@ -227,108 +223,45 @@ function thiefSkillTone(skill) {
 }
 
 function isThiefSkillFeature(feature) {
+  const fn = globalFn("add2eIsThiefSkillFeature");
+  if (fn) {
+    try { return fn(feature) === true; }
+    catch (_e) {}
+  }
+
   const name = slug(featureName(feature));
   const key = slug(feature?.skillKey ?? feature?.key ?? feature?.slug ?? "");
   const joined = `${name} ${key}`;
-
   return [
-    "faculte_de_voleur",
-    "facultes_de_voleur",
-    "competence_de_voleur",
-    "competences_de_voleur",
-    "pickpocket",
-    "faire_les_poches",
-    "crochetage",
-    "serrure",
-    "piege",
-    "desamorc",
-    "deplacement_silencieux",
-    "silence",
-    "dissimulation",
-    "cacher",
-    "ecoute",
-    "auditiv",
-    "ouie",
-    "entendre",
-    "bruit",
-    "escalade",
-    "grimper",
-    "lecture_langues",
-    "lecture_des_langues",
-    "frappe_dans_le_dos",
-    "attaque_dans_le_dos",
-    "backstab",
-    "attaque_sournoise",
-    "assassination"
+    "faculte_de_voleur", "facultes_de_voleur", "competence_de_voleur", "competences_de_voleur",
+    "pickpocket", "faire_les_poches", "crochetage", "serrure", "piege", "desamorc",
+    "deplacement_silencieux", "silence", "dissimulation", "cacher", "ecoute", "auditiv",
+    "ouie", "entendre", "bruit", "escalade", "grimper", "lecture_langues",
+    "lecture_des_langues", "frappe_dans_le_dos", "attaque_dans_le_dos", "backstab",
+    "attaque_sournoise", "assassination", "assassinat"
   ].some(token => joined.includes(token));
 }
 
-function itemEquipText(item) {
-  const sys = item?.system ?? {};
-  const flags = item?.flags?.add2e ?? {};
-  return [
-    item?.name,
-    sys.nom,
-    sys.categorie,
-    sys.category,
-    sys.type,
-    sys.type_armure,
-    sys.sousType,
-    sys.sous_type,
-    sys.subtype,
-    sys.kind,
-    sys.slot,
-    sys.tags,
-    sys.effectTags,
-    sys.effecttags,
-    flags.tags,
-    flags.effectTags,
-    flags.effecttags
-  ].flatMap(value => Array.isArray(value) ? value : (value && typeof value === "object" ? Object.values(value) : [value]))
-    .map(value => slug(value))
-    .filter(Boolean)
-    .join(" ");
-}
-
-function itemEquipped(item) {
-  const sys = item?.system ?? {};
-  return sys.equipee === true || sys.equipped === true || sys.portee === true || sys.worn === true || sys.estEquipee === true;
-}
-
-function isShieldOrHelmet(item) {
-  const text = itemEquipText(item);
-  try {
-    if (globalThis.add2eIsShield?.(item) === true || globalThis.add2eIsHelmet?.(item) === true) return true;
-  } catch (_e) {}
-  return text.includes("bouclier") || text.includes("heaume") || text.includes("casque");
-}
-
-function equippedBodyArmor(actor) {
-  return Array.from(actor?.items ?? []).find(item =>
-    String(item?.type ?? "").toLowerCase() === "armure" &&
-    itemEquipped(item) &&
-    !isShieldOrHelmet(item)
-  ) ?? null;
-}
-
-function isLeatherArmor(item) {
-  if (!item) return false;
-  const text = itemEquipText(item);
-  return text.includes("cuir") || text.includes("leather");
-}
-
 function thiefArmorRestriction(actor) {
-  if (!hasVoleurClass(actor)) return { ok: true, armor: null };
-  const skills = getThiefSkills(actor);
-  if (!skills.length) return { ok: true, armor: null };
-  const armor = equippedBodyArmor(actor);
-  return { ok: !armor || isLeatherArmor(armor), armor };
+  const fn = globalFn("add2eGetThiefActivityEquipmentStatus");
+  if (fn) {
+    try {
+      const status = fn(actor);
+      if (status && typeof status === "object") return status;
+    } catch (e) {
+      console.warn("[ADD2E][CAPACITES][VOLEUR][EQUIPEMENT] Contrôle central indisponible", e);
+    }
+  }
+  return { applies: false, ok: true, blockingItems: [], message: "" };
 }
 
-function buildThiefArmorWarningPanel(actor, armor) {
-  const armorLabel = armor
-    ? `Armure actuellement portée : <strong>${escapeHtml(armor.name)}</strong>.`
-    : "Aucune armure de corps n’est actuellement portée.";
+function buildThiefArmorWarningPanel(actor, status) {
+  const blockingItems = Array.isArray(status?.blockingItems) ? status.blockingItems : [];
+  const names = blockingItems.map(item => String(item?.name ?? "").trim()).filter(Boolean);
+  const equipmentLabel = names.length
+    ? `Équipement actuellement incompatible : <strong>${escapeHtml(names.join(", "))}</strong>.`
+    : "Un équipement actuellement porté est incompatible avec les activités de voleur.";
+  const message = String(status?.message ?? "").trim() || "Les capacités de voleur ne peuvent pas être utilisées avec l'équipement actuellement porté.";
 
   return `
     <div class="a2e-panel add2e-thief-skills-panel">
@@ -341,8 +274,8 @@ function buildThiefArmorWarningPanel(actor, armor) {
           <i class="fas fa-triangle-exclamation"></i>
           Capacités de voleur indisponibles
         </div>
-        <div>L’armure portée doit être de type cuir, ou aucune armure ne doit être portée, pour utiliser les capacités de voleur.</div>
-        <div style="font-size:.85em;margin-top:8px;color:#111;">${armorLabel}</div>
+        <div>${escapeHtml(message)}</div>
+        <div style="font-size:.85em;margin-top:8px;color:#111;">${equipmentLabel}</div>
       </div>
     </div>`;
 }
@@ -368,15 +301,15 @@ function visibleFeatures(actor) {
 }
 
 function buildThiefSkillsPanel(actor) {
+  const activityStatus = thiefArmorRestriction(actor);
+  if (activityStatus.applies && !activityStatus.ok) return buildThiefArmorWarningPanel(actor, activityStatus);
+
   const level = Number(actor?.system?.niveau ?? 1) || 1;
   const skills = getThiefSkills(actor)
     .filter(skill => !isBackstabLike(`${skill?.key ?? ""} ${skill?.label ?? ""} ${skill?.shortLabel ?? ""}`))
     .filter(skill => level >= readLevel(skill?.minLevel ?? skill?.niveauMin ?? skill?.requiredLevel ?? skill?.level ?? skill?.niveau, 1));
 
   if (!skills.length) return "";
-
-  const armorCheck = thiefArmorRestriction(actor);
-  if (!armorCheck.ok) return buildThiefArmorWarningPanel(actor, armorCheck.armor);
 
   const cards = skills.map(skill => {
     const bonus = Number(skill.bonusTotal ?? 0) || 0;
