@@ -1,7 +1,7 @@
 // ========== CLASSE PRINCIPALE PERSONNAGE — ApplicationV2 ==========
 // Feuille personnage ADD2E full ApplicationV2 : aucun héritage appv1, aucun pont ActorSheet.
 
-const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-05-28-application-v2-token-header-v14-native-token-config-v3";
+const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-06-24-application-v2-native-token-config-v4";
 const ADD2E_ACTOR_SHEET_V2_CSS_ID = "add2e-application-v2-character-sheet-css";
 const ADD2E_ACTOR_SHEET_V2_CSS_PATH = "systems/add2e/styles/application-v2-character-sheet.css";
 
@@ -65,249 +65,6 @@ function add2eBindApplicationV2Close(sheet) {
   }
 }
 
-function add2eTokenConfigPosition(sheet, parent = null) {
-  const options = { parent: parent ?? sheet?.actor ?? sheet?.document ?? null };
-  const pos = sheet?.position ?? {};
-  if (Number.isFinite(pos.top)) options.top = pos.top + 40;
-  if (Number.isFinite(pos.left) && Number.isFinite(pos.width)) options.left = pos.left + Math.max(0, Math.floor((pos.width - 460) / 2));
-  return options;
-}
-
-function add2eIsTokenDocument(document) {
-  return Boolean(document?.documentName === "Token" || document?.constructor?.documentName === "Token" || document?.object?.document === document);
-}
-
-function add2eSameActor(tokenDocument, actor) {
-  if (!tokenDocument || !actor) return false;
-  const tokenActor = tokenDocument.actor ?? tokenDocument.object?.actor ?? null;
-  return tokenActor === actor || tokenActor?.id === actor.id || tokenDocument.actorId === actor.id;
-}
-
-function add2eResolveSceneTokenDocument(sheet, actor) {
-  const candidates = [];
-  if (add2eIsTokenDocument(sheet?.token)) candidates.push(sheet.token);
-  if (add2eIsTokenDocument(sheet?.options?.token)) candidates.push(sheet.options.token);
-  if (add2eIsTokenDocument(actor?.token)) candidates.push(actor.token);
-  if (add2eIsTokenDocument(actor?.parent) && String(actor?.parent?.documentName ?? "") === "Token") candidates.push(actor.parent);
-
-  for (const token of canvas?.tokens?.controlled ?? []) {
-    if (token?.document) candidates.push(token.document);
-  }
-
-  for (const token of actor?.getActiveTokens?.(false, true) ?? []) {
-    if (token?.document) candidates.push(token.document);
-  }
-
-  for (const tokenDocument of candidates) {
-    if (add2eIsTokenDocument(tokenDocument) && add2eSameActor(tokenDocument, actor)) return tokenDocument;
-  }
-
-  return null;
-}
-
-function add2eDescribeTokenTarget(sheet, actor) {
-  const sceneTokenDocument = add2eResolveSceneTokenDocument(sheet, actor);
-  if (sceneTokenDocument) {
-    const sceneName = sceneTokenDocument.parent?.name ?? canvas?.scene?.name ?? "scène";
-    return {
-      mode: "scene-token",
-      label: "Token scène",
-      title: `Configurer uniquement le token posé sur la scène : ${sceneName}`,
-      document: sceneTokenDocument
-    };
-  }
-  return {
-    mode: "prototype-token",
-    label: "Prototype token",
-    title: "Configurer le prototype de token de l'acteur",
-    document: actor?.prototypeToken ?? actor?.prototypeTokenDocument ?? null
-  };
-}
-
-async function add2eRenderApplicationCompat(app, label, options = {}) {
-  if (!app?.render) return false;
-
-  try {
-    await app.render({ ...options, force: true });
-    console.log("[ADD2E][ACTOR_SHEET_V2][TOKEN_CONFIG][OPENED]", `${label} render({force:true})`);
-    return true;
-  } catch (err) {
-    console.warn("[ADD2E][ACTOR_SHEET_V2][TOKEN_CONFIG][RENDER_V2_FAILED]", label, err);
-  }
-
-  try {
-    await app.render(true, options);
-    console.log("[ADD2E][ACTOR_SHEET_V2][TOKEN_CONFIG][OPENED]", `${label} render(true, options)`);
-    return true;
-  } catch (err) {
-    console.warn("[ADD2E][ACTOR_SHEET_V2][TOKEN_CONFIG][RENDER_LEGACY_FAILED]", label, err);
-  }
-
-  return false;
-}
-
-async function add2eTryRenderTokenConfig(label, createApp, options = {}) {
-  try {
-    const app = createApp?.();
-    return await add2eRenderApplicationCompat(app, label, options);
-  } catch (err) {
-    console.warn("[ADD2E][ACTOR_SHEET_V2][TOKEN_CONFIG][TRY_FAILED]", label, err);
-    return false;
-  }
-}
-
-function add2eGetTokenConfigClasses() {
-  return {
-    tokenConfig: ADD2E_SHEETS_API.TokenConfig ?? foundry?.applications?.apps?.TokenConfig ?? CONFIG?.Token?.sheetClass ?? globalThis.TokenConfig ?? null,
-    prototypeConfig: ADD2E_SHEETS_API.PrototypeTokenConfig ?? foundry?.applications?.apps?.PrototypeTokenConfig ?? CONFIG?.Token?.prototypeSheetClass ?? globalThis.PrototypeTokenConfig ?? null
-  };
-}
-
-async function add2eTryNativeActorSheetTokenAction(sheet, target, event = null) {
-  const actions = ADD2E_DOCUMENT_SHEET_V2?.DEFAULT_OPTIONS?.actions ?? {};
-  const actionName = target?.mode === "scene-token" ? "configureToken" : "configurePrototypeToken";
-  const action = actions[actionName];
-  if (typeof action !== "function") return false;
-
-  try {
-    await action.call(sheet, event ?? new PointerEvent("click"), event?.currentTarget ?? null);
-    console.log("[ADD2E][ACTOR_SHEET_V2][TOKEN_CONFIG][OPENED] native ActorSheetV2 action", actionName);
-    return true;
-  } catch (err) {
-    console.warn("[ADD2E][ACTOR_SHEET_V2][TOKEN_CONFIG][NATIVE_ACTION_FAILED]", actionName, err);
-    return false;
-  }
-}
-
-async function add2eRenderTokenDocumentSheet(tokenDocument, options = {}) {
-  if (!tokenDocument) return false;
-
-  const { tokenConfig } = add2eGetTokenConfigClasses();
-  const parent = options.parent ?? tokenDocument.parent ?? null;
-  const renderOptions = { ...options, parent };
-
-  if (await add2eTryRenderTokenConfig("TokenConfig({document,parent})", () => tokenConfig ? new tokenConfig({ document: tokenDocument, parent, ...options }) : null, renderOptions)) return true;
-  if (await add2eTryRenderTokenConfig("TokenConfig({object,parent})", () => tokenConfig ? new tokenConfig({ object: tokenDocument, document: tokenDocument, parent, ...options }) : null, renderOptions)) return true;
-
-  if (tokenDocument.sheet?.render) {
-    if (await add2eRenderApplicationCompat(tokenDocument.sheet, "document.sheet", renderOptions)) {
-      console.log("[ADD2E][ACTOR_SHEET_V2][TOKEN_CONFIG][OPENED] document.sheet", {
-        tokenId: tokenDocument.id,
-        sceneId: tokenDocument.parent?.id ?? null
-      });
-      return true;
-    }
-  }
-
-  if (await add2eTryRenderTokenConfig("TokenConfig(token, options)", () => tokenConfig ? new tokenConfig(tokenDocument, renderOptions) : null, renderOptions)) return true;
-  return false;
-}
-
-async function add2eRenderPrototypeTokenDocumentSheet(tokenDocument, actor, options = {}) {
-  if (!tokenDocument || !actor) return false;
-
-  const { tokenConfig, prototypeConfig } = add2eGetTokenConfigClasses();
-  const prototypeOptions = { parent: actor, actor, ...options };
-
-  if (await add2eTryRenderTokenConfig("PrototypeTokenConfig({document,parent,actor})", () => prototypeConfig ? new prototypeConfig({ document: tokenDocument, parent: actor, actor, ...options }) : null, prototypeOptions)) return true;
-  if (await add2eTryRenderTokenConfig("PrototypeTokenConfig({object,parent,actor})", () => prototypeConfig ? new prototypeConfig({ object: tokenDocument, document: tokenDocument, parent: actor, actor, ...options }) : null, prototypeOptions)) return true;
-  if (await add2eTryRenderTokenConfig("TokenConfig({document,parent,actor})", () => tokenConfig ? new tokenConfig({ document: tokenDocument, parent: actor, actor, ...options }) : null, prototypeOptions)) return true;
-  if (await add2eTryRenderTokenConfig("TokenConfig({object,parent,actor})", () => tokenConfig ? new tokenConfig({ object: tokenDocument, document: tokenDocument, parent: actor, actor, ...options }) : null, prototypeOptions)) return true;
-
-  if (tokenDocument.sheet?.render) {
-    if (await add2eRenderApplicationCompat(tokenDocument.sheet, "prototype.document.sheet", prototypeOptions)) {
-      console.log("[ADD2E][ACTOR_SHEET_V2][TOKEN_CONFIG][OPENED] prototype.document.sheet", { actorId: actor?.id ?? null });
-      return true;
-    }
-  }
-
-  if (await add2eTryRenderTokenConfig("PrototypeTokenConfig(token, options)", () => prototypeConfig ? new prototypeConfig(tokenDocument, prototypeOptions) : null, prototypeOptions)) return true;
-  if (await add2eTryRenderTokenConfig("TokenConfig(token, options)", () => tokenConfig ? new tokenConfig(tokenDocument, prototypeOptions) : null, prototypeOptions)) return true;
-  return false;
-}
-
-async function add2eOpenTokenConfig(sheet, event = null) {
-  const actor = sheet?.actor ?? sheet?.document;
-  if (!actor) return ui.notifications?.warn?.("Aucun acteur associé à cette feuille.");
-
-  if (!(game.user?.isGM || actor.isOwner)) {
-    return ui.notifications?.warn?.("Vous n'avez pas les droits nécessaires pour modifier le token.");
-  }
-
-  event?.preventDefault?.();
-  event?.stopPropagation?.();
-
-  try {
-    const target = add2eDescribeTokenTarget(sheet, actor);
-    const targetDocument = target.document;
-
-    console.log("[ADD2E][ACTOR_SHEET_V2][TOKEN_CONFIG][RESOLVE]", {
-      mode: target.mode,
-      actorId: actor.id,
-      actorName: actor.name,
-      actorIsToken: actor.isToken,
-      tokenId: targetDocument?.id ?? null,
-      tokenName: targetDocument?.name ?? null,
-      sceneId: targetDocument?.parent?.id ?? null,
-      tokenConfigNativeAction: true
-    });
-
-    if (!targetDocument) return ui.notifications?.warn?.("Aucun token configurable trouvé pour cet acteur.");
-
-    if (await add2eTryNativeActorSheetTokenAction(sheet, target, event)) return;
-
-    const options = add2eTokenConfigPosition(sheet, target.mode === "scene-token" ? targetDocument?.parent : actor);
-
-    if (target.mode === "scene-token") {
-      if (await add2eRenderTokenDocumentSheet(targetDocument, options)) return;
-      return ui.notifications?.error?.("Impossible d'ouvrir la configuration du token de scène.");
-    }
-
-    if (await add2eRenderPrototypeTokenDocumentSheet(targetDocument, actor, options)) return;
-    return ui.notifications?.error?.("Impossible d'ouvrir la configuration du prototype de token.");
-  } catch (err) {
-    console.error("[ADD2E][ACTOR_SHEET_V2][TOKEN_CONFIG][ERROR]", err);
-    return ui.notifications?.error?.("Erreur à l'ouverture du token. Voir la console.");
-  }
-}
-
-function add2eEnsureTokenHeaderControl(sheet) {
-  try {
-    const root = add2eGetElementForApplicationV2(sheet);
-    const header = root?.querySelector?.(".window-header");
-    if (!header) return;
-
-    const actor = sheet?.actor ?? sheet?.document;
-    const target = add2eDescribeTokenTarget(sheet, actor);
-    const existing = [...header.querySelectorAll('[data-action="add2e-token-config"], .add2e-token-config')];
-    const controls = header.querySelector(".window-controls, .header-controls") ?? header;
-    const before = controls.querySelector('[data-action="close"], .close, .window-close');
-    const button = existing[0] ?? document.createElement("button");
-
-    for (const duplicate of existing.slice(1)) duplicate.remove();
-
-    button.type = "button";
-    button.className = "header-control icon add2e-token-config";
-    button.dataset.action = "add2e-token-config";
-    button.dataset.add2eTokenMode = target.mode;
-    button.title = target.title;
-    button.setAttribute("aria-label", target.title);
-    button.innerHTML = `<i class="fa-solid ${target.mode === "scene-token" ? "fa-location-dot" : "fa-user-circle"}"></i>`;
-
-    if (button.dataset.add2eTokenBound !== "1") {
-      button.dataset.add2eTokenBound = "1";
-      button.addEventListener("click", ev => add2eOpenTokenConfig(sheet, ev), true);
-    }
-
-    if (!button.parentElement) {
-      if (before?.parentElement === controls) controls.insertBefore(button, before);
-      else controls.appendChild(button);
-    }
-  } catch (err) {
-    console.warn("[ADD2E][ACTOR_SHEET_V2][TOKEN_CONFIG][HEADER_CONTROL] impossible", err);
-  }
-}
-
 class Add2eActorSheet extends ADD2E_ACTOR_SHEET_BASE {
   static ADD2E_APPLICATION_V2_VERSION = ADD2E_ACTOR_SHEET_V2_VERSION;
 
@@ -324,8 +81,7 @@ class Add2eActorSheet extends ADD2E_ACTOR_SHEET_BASE {
       submitOnChange: true,
       closeOnSubmit: false,
       handler: Add2eActorSheet._add2eSubmitForm
-    },
-    actions: {}
+    }
   };
 
   static PARTS = {
@@ -369,7 +125,6 @@ class Add2eActorSheet extends ADD2E_ACTOR_SHEET_BASE {
     await super._onRender?.(context, options);
     add2eEnsureApplicationV2CharacterCss();
     add2eBindApplicationV2Close(this);
-    add2eEnsureTokenHeaderControl(this);
     const html = add2eAsJQuery(add2eGetElementForApplicationV2(this));
     if (!html.length) return;
 
@@ -436,9 +191,6 @@ try {
   globalThis.ADD2E_ACTOR_SHEET_V2_CSS_PATH = ADD2E_ACTOR_SHEET_V2_CSS_PATH;
   globalThis.add2eEnsureApplicationV2CharacterCss = add2eEnsureApplicationV2CharacterCss;
   globalThis.add2eBindApplicationV2Close = add2eBindApplicationV2Close;
-  globalThis.add2eEnsureTokenHeaderControl = add2eEnsureTokenHeaderControl;
-  globalThis.add2eOpenTokenConfig = add2eOpenTokenConfig;
-  globalThis.add2eOpenPrototypeTokenConfig = add2eOpenTokenConfig;
   globalThis.Add2eActorSheet = Add2eActorSheet;
   delete globalThis.ADD2E_ACTOR_SHEET_LEGACY_BRIDGE;
 } catch (_e) {}
