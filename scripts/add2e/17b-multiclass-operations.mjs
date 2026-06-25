@@ -1,14 +1,17 @@
 // ADD2E — Multiclassage : opérations canoniques
-// Les opérations écrivent un seul état de progression : system.multiclasse.classes.
+// Les Items classe sont l'unique état de progression. L'acteur ne conserve
+// que des résumés d'affichage et des métadonnées sans niveaux ni XP par classe.
 
 import {
-  canonicalClassStates,
-  canonicalMulticlass,
+  INTERNAL,
+  canonicalClassState,
   classItems,
+  classProgression,
+  classProgressionUpdate,
   classSlug,
   cloneItemData,
-  INTERNAL,
   itemLabel,
+  multiclassEnabled,
   norm,
   num,
   systemRace,
@@ -21,7 +24,7 @@ import {
   classRaceMaxLevel,
   classTitleForLevel,
   currentRaceOrCompatibleAlternatives,
-  legacyMulticlassMigrationPayload,
+  legacyMulticlassMigrationPlan,
   levelForClassXp,
   minXpForClassLevel,
   monoClassCleanupPayload,
@@ -35,19 +38,7 @@ import {
 import { dialogAlert } from "./17b-multiclass-dialogs.mjs";
 
 const migrationLocks = new Set();
-
-function stateRecords(actor) {
-  return foundry.utils.deepClone(canonicalClassStates(actor));
-}
-
-function classRecordIndex(records, classDocOrIdOrSlug) {
-  const id = typeof classDocOrIdOrSlug === "object" ? classDocOrIdOrSlug?.id : "";
-  const slug = typeof classDocOrIdOrSlug === "object" ? classSlug(classDocOrIdOrSlug) : norm(classDocOrIdOrSlug);
-  return records.findIndex(entry =>
-    (id && String(entry?.itemId ?? "") === String(id))
-    || (slug && norm(entry?.slug) === slug)
-  );
-}
+const migrationWarnings = new Set();
 
 function itemIds(items) {
   return (items ?? []).map(item => item?.id).filter(Boolean);
@@ -96,9 +87,9 @@ function effectBelongsToRemovedClass(effect, keys) {
     || (sourceSlug && keys.slugs.has(sourceSlug));
 }
 
+/** Ne supprime que les sorts et effets explicitement liés à la classe retirée. */
 async function purgeClassBoundContent(actor, classDocs, reason) {
   if (!actor || !classDocs?.length) return { spells: 0, effects: 0 };
-
   const keys = sourceClassKeys(classDocs);
   const spellIds = actor.items
     .filter(item => String(item?.type ?? "").toLowerCase() === "sort" && itemBelongsToRemovedClass(item, keys))
@@ -126,22 +117,43 @@ async function purgeClassBoundContent(actor, classDocs, reason) {
   return { spells: spellIds.length, effects: effectIds.length };
 }
 
-function monoProgressionPayload(actor, classDoc, state) {
-  const classSystem = classDoc?.system ?? {};
-  const maxLevel = classRaceMaxLevel(classDoc, systemRace(actor));
+function normalizeProgression(classDoc, state, raceData) {
+  const maxLevel = classRaceMaxLevel(classDoc, raceData);
   let level = Math.max(1, Math.floor(num(state?.level, 1)));
   let xp = Math.max(0, Math.floor(num(state?.xp, 0)));
-
   if (maxLevel > 0 && level > maxLevel) level = maxLevel;
-  xp = Math.max(xp, minXpForClassLevel(classSystem, level));
+  xp = Math.max(xp, minXpForClassLevel(classDoc?.system ?? {}, level));
+  return { level, xp, maxLevel };
+}
 
-  const currentXp = minXpForClassLevel(classSystem, level);
-  const nextXp = nextXpForClassLevel(classSystem, level);
-  const title = classTitleForLevel(classSystem, level);
+async function writeClassProgression(actor, entries, reason) {
+  const updates = [];
+  for (const entry of entries ?? []) {
+    const doc = entry?.doc ?? actor?.items?.get?.(entry?.itemId) ?? null;
+    if (!doc) continue;
+    const current = classProgression(doc);
+    if (current.hasLevel && current.level === entry.level && current.hasXp && current.xp === entry.xp) continue;
+    const update = classProgressionUpdate(doc, { level: entry.level, xp: entry.xp });
+    if (update) updates.push(update);
+  }
+  if (!updates.length) return 0;
+  await actor.updateEmbeddedDocuments("Item", updates, {
+    [INTERNAL]: true,
+    add2eInternal: true,
+    add2eReason: reason
+  });
+  return updates.length;
+}
+
+function monoProgressionPayload(actor, classDoc, state) {
+  const normalized = normalizeProgression(classDoc, state, systemRace(actor));
+  const classSystem = classDoc?.system ?? {};
+  const currentXp = minXpForClassLevel(classSystem, normalized.level);
+  const nextXp = nextXpForClassLevel(classSystem, normalized.level);
+  const title = classTitleForLevel(classSystem, normalized.level);
   const xpPercent = nextXp > currentXp
-    ? Math.max(0, Math.min(100, Math.floor(((xp - currentXp) / (nextXp - currentXp)) * 100)))
+    ? Math.max(0, Math.min(100, Math.floor(((normalized.xp - currentXp) / (nextXp - currentXp)) * 100)))
     : 100;
-
   return {
     "system.classe": classDoc.name,
     "system.details_classe": {
@@ -153,32 +165,61 @@ function monoProgressionPayload(actor, classDoc, state) {
       sourceItemUuid: classDoc.uuid
     },
     "system.spellcasting": foundry.utils.deepClone(classSystem.spellcasting ?? null),
-    "system.niveau": level,
-    "system.niveau_suggere": level,
-    "system.xp": xp,
+    "system.niveau": normalized.level,
+    "system.niveau_suggere": normalized.level,
+    "system.xp": normalized.xp,
     "system.titre": title,
-    "system.progression_xp": nextXp ? `${xp.toLocaleString()} / ${nextXp.toLocaleString()} XP` : `${xp.toLocaleString()} XP`,
+    "system.progression_xp": nextXp ? `${normalized.xp.toLocaleString()} / ${nextXp.toLocaleString()} XP` : `${normalized.xp.toLocaleString()} XP`,
     "system.xp_next": nextXp,
-    "system.xp_to_next": nextXp ? Math.max(0, nextXp - xp) : 0,
+    "system.xp_to_next": nextXp ? Math.max(0, nextXp - normalized.xp) : 0,
     "system.xp_percent": xpPercent
   };
 }
 
+function migrationWarningKey(actor) {
+  return String(actor?.uuid ?? actor?.id ?? "");
+}
+
+async function notifyMigrationBlocked(actor, plan) {
+  const key = migrationWarningKey(actor);
+  if (migrationWarnings.has(key)) return;
+  migrationWarnings.add(key);
+  const names = (plan?.unresolved ?? []).map(entry => entry.name).filter(Boolean).join(", ") || "classe inconnue";
+  warn("[MIGRATION_BLOCKED]", { actor: actor?.name, unresolved: plan?.unresolved ?? [] });
+  if (game.user?.isGM) ui.notifications?.error?.(`Multiclassage non migré pour ${actor.name} : progression introuvable pour ${names}.`);
+}
+
+/**
+ * Écrit les niveaux/XP historiques sur les Items. Si une classe ne peut pas
+ * être associée avec certitude à une progression, aucune écriture n'est faite.
+ */
 export async function migrateLegacyMulticlassActor(actor) {
   if (!actor || actor.type !== "personnage" || classItems(actor).length <= 1) return null;
-  if (canonicalMulticlass(actor)) return multiclassUpdatePayload(actor);
   if (migrationLocks.has(actor.id)) return null;
-
   migrationLocks.add(actor.id);
   try {
-    const payload = legacyMulticlassMigrationPayload(actor);
-    if (!payload) throw new Error("Impossible de construire l'état multiclasses canonique.");
-    await actor.update(payload, {
-      [INTERNAL]: true,
-      add2eInternal: true,
-      add2eReason: "multiclass-canonical-migration"
+    const plan = legacyMulticlassMigrationPlan(actor);
+    if (!plan.ok) {
+      await notifyMigrationBlocked(actor, plan);
+      return { ok: false, plan };
+    }
+
+    const docs = classItems(actor);
+    const normalized = plan.entries.map(state => {
+      const doc = docs.find(candidate => String(candidate.id) === String(state.itemId)) ?? null;
+      const values = normalizeProgression(doc, state, systemRace(actor));
+      return { ...state, doc, ...values };
     });
-    return payload;
+    await writeClassProgression(actor, normalized, "multiclass-item-progression-migration");
+    const payload = multiclassUpdatePayload(actor);
+    if (payload) {
+      await actor.update(payload, {
+        [INTERNAL]: true,
+        add2eInternal: true,
+        add2eReason: "multiclass-item-progression-summary"
+      });
+    }
+    return { ok: true, plan, payload };
   } finally {
     migrationLocks.delete(actor.id);
   }
@@ -186,14 +227,22 @@ export async function migrateLegacyMulticlassActor(actor) {
 
 export async function ensureCanonicalMulticlassState(actor) {
   if (!actor || actor.type !== "personnage") return null;
-  if (canonicalMulticlass(actor)) return canonicalMulticlass(actor);
-  if (classItems(actor).length <= 1) return null;
-  await migrateLegacyMulticlassActor(actor);
-  return canonicalMulticlass(actor);
+  if (!multiclassEnabled(actor)) return null;
+  const missing = classItems(actor).some(item => {
+    const state = canonicalClassState(actor, item);
+    return !state?.hasLevel || !state?.hasXp;
+  });
+  if (missing) {
+    const result = await migrateLegacyMulticlassActor(actor);
+    if (!result?.ok) return null;
+  }
+  return canonicalMulticlassEntries(actor);
 }
 
 export async function cleanupAfterMonoclassReplace(actor, keepClassDoc, keepState = null, sheet = null) {
   if (!actor || actor.type !== "personnage" || !keepClassDoc) return false;
+  const desired = normalizeProgression(keepClassDoc, keepState ?? monoClassStateFromActor(actor, keepClassDoc), systemRace(actor));
+  await writeClassProgression(actor, [{ doc: keepClassDoc, ...desired }], "multiclass-monoclass-keep-progression");
 
   const unwanted = classItems(actor).filter(doc => doc.id !== keepClassDoc.id);
   await purgeClassBoundContent(actor, unwanted, "multiclass-monoclass-purge");
@@ -207,7 +256,7 @@ export async function cleanupAfterMonoclassReplace(actor, keepClassDoc, keepStat
 
   const payload = {
     ...monoClassCleanupPayload(),
-    ...monoProgressionPayload(actor, keepClassDoc, keepState ?? monoClassStateFromActor(actor, keepClassDoc))
+    ...monoProgressionPayload(actor, keepClassDoc, desired)
   };
   await actor.update(payload, {
     [INTERNAL]: true,
@@ -216,13 +265,10 @@ export async function cleanupAfterMonoclassReplace(actor, keepClassDoc, keepStat
   });
 
   try {
-    if (typeof globalThis.add2eSyncActorSpellsFromClass === "function") {
-      await globalThis.add2eSyncActorSpellsFromClass(actor, keepClassDoc, { mode: "replace", showWait: true });
-    }
+    await globalThis.add2eSyncActorSpellsFromClass?.(actor, keepClassDoc, { mode: "replace", showWait: true });
   } catch (error) {
     warn("[MONO_SPELL_SYNC_ERROR]", { actor: actor.name, error });
   }
-
   sheet?._add2eRememberActiveTab?.();
   sheet?.render?.(false);
   return true;
@@ -239,6 +285,22 @@ export function applyPayloadToSheetData(data, payload) {
     }
     foundry.utils.setProperty(data.actor, path, foundry.utils.deepClone(value));
   }
+  const actor = data.actor;
+  const entries = canonicalMulticlassEntries(actor).map(entry => ({
+    itemId: entry.itemId,
+    name: entry.name,
+    slug: entry.slug,
+    level: entry.level,
+    xp: entry.xp,
+    title: entry.title,
+    nextXp: entry.nextXp,
+    levelMaxRace: entry.levelMaxRace
+  }));
+  data.multiclass = {
+    enabled: entries.length > 1,
+    classes: entries,
+    title: data.actor.system?.titre ?? ""
+  };
   data.progressionCourante = { title: data.actor.system?.titre ?? "" };
   return data;
 }
@@ -256,10 +318,18 @@ export async function applyRaceData(actor, raceData, sheet = null) {
   return true;
 }
 
-function currentOrMigratedStateRecords(actor) {
-  const canonical = canonicalMulticlass(actor);
-  if (!canonical) throw new Error("État multiclasses canonique absent.");
-  return stateRecords(actor);
+async function refreshMulticlassSummary(actor, reason) {
+  const entries = canonicalMulticlassEntries(actor).map(entry => ({ doc: entry.doc, ...entry }));
+  const normalized = entries.map(entry => ({ ...entry, ...normalizeProgression(entry.doc, entry, systemRace(actor)) }));
+  await writeClassProgression(actor, normalized, `${reason}:normalize-items`);
+  const payload = multiclassUpdatePayload(actor);
+  if (!payload) return null;
+  await actor.update(payload, {
+    [INTERNAL]: true,
+    add2eInternal: true,
+    add2eReason: reason
+  });
+  return payload;
 }
 
 export async function addClassAsMulticlass(actor, option, sheet = null) {
@@ -272,12 +342,7 @@ export async function addClassAsMulticlass(actor, option, sheet = null) {
   const slug = classSlug(itemData);
   if (existingDocs.some(doc => classSlug(doc) === slug)) {
     await ensureCanonicalMulticlassState(actor);
-    const payload = multiclassUpdatePayload(actor);
-    if (payload) await actor.update(payload, {
-      [INTERNAL]: true,
-      add2eInternal: true,
-      add2eReason: "multiclass-resync-existing-class"
-    });
+    await refreshMulticlassSummary(actor, "multiclass-resync-existing-class");
     sheet?._add2eRememberActiveTab?.();
     sheet?.render?.(false);
     ui.notifications.info(`${itemLabel(itemData, "Classe")} est déjà présente : multiclassage recalculé.`);
@@ -286,16 +351,19 @@ export async function addClassAsMulticlass(actor, option, sheet = null) {
 
   await applyRaceData(actor, option.raceData, sheet);
 
-  let records;
   if (existingDocs.length === 1) {
-    records = [monoClassStateFromActor(actor, existingDocs[0])];
-  } else {
-    await ensureCanonicalMulticlassState(actor);
-    records = currentOrMigratedStateRecords(actor);
+    const initial = monoClassStateFromActor(actor, existingDocs[0]);
+    const values = normalizeProgression(existingDocs[0], initial, systemRace(actor));
+    await writeClassProgression(actor, [{ doc: existingDocs[0], ...values }], "multiclass-promote-monoclass-item");
+  } else if (!(await ensureCanonicalMulticlassState(actor))) {
+    return false;
   }
 
   const data = cloneItemData(itemData);
   data.type = "classe";
+  data.system = data.system ?? {};
+  data.system.niveau = 1;
+  data.system.xp = minXpForClassLevel(data.system, 1);
   const [created] = await actor.createEmbeddedDocuments("Item", [data], {
     [INTERNAL]: true,
     add2eInternal: true,
@@ -303,27 +371,9 @@ export async function addClassAsMulticlass(actor, option, sheet = null) {
   });
   if (!created) return false;
 
-  records.push(canonicalStateRecord(created, {
-    level: 1,
-    xp: minXpForClassLevel(created.system ?? {}, 1)
-  }));
-
-  const payload = multiclassUpdatePayload(actor, {
-    classStates: records,
-    raceData: systemRace(actor)
-  });
-  if (!payload) throw new Error("Le payload multiclasses n'a pas été généré après ajout de classe.");
-
-  await actor.update(payload, {
-    [INTERNAL]: true,
-    add2eInternal: true,
-    add2eReason: "multiclass-add-class-finalize"
-  });
-
+  await refreshMulticlassSummary(actor, "multiclass-add-class-finalize");
   try {
-    if (typeof globalThis.add2eSyncActorSpellsFromClass === "function") {
-      await globalThis.add2eSyncActorSpellsFromClass(actor, created, { mode: "append", showWait: true });
-    }
+    await globalThis.add2eSyncActorSpellsFromClass?.(actor, created, { mode: "append", showWait: true });
   } catch (error) {
     warn("[SPELL_SYNC_APPEND_ERROR]", { actor: actor.name, className: created.name, error });
   }
@@ -346,7 +396,7 @@ export async function replaceClassInMulticlass(actor, option, sheet = null) {
     || !raceMatchesClassRules(option.raceData, itemData)
     || !classPrerequisitesOk(actor, itemData, option.raceData, { notify: true })) return false;
 
-  await ensureCanonicalMulticlassState(actor);
+  if (!(await ensureCanonicalMulticlassState(actor))) return false;
   const replaced = classItems(actor).find(doc =>
     String(doc.id) === String(option.replacedClassId)
     || classSlug(doc) === norm(option.replacedClassSlug)
@@ -355,18 +405,12 @@ export async function replaceClassInMulticlass(actor, option, sheet = null) {
     ui.notifications.error("Classe à remplacer introuvable dans l'acteur.");
     return false;
   }
-
-  const targetSlug = classSlug(itemData);
-  if (classItems(actor).some(doc => doc.id !== replaced.id && classSlug(doc) === targetSlug)) {
+  if (classItems(actor).some(doc => doc.id !== replaced.id && classSlug(doc) === classSlug(itemData))) {
     ui.notifications.warn(`${itemLabel(itemData, "Classe")} est déjà présente dans le multiclassage.`);
     return false;
   }
 
   await applyRaceData(actor, option.raceData, sheet);
-  const records = currentOrMigratedStateRecords(actor);
-  const replacedIndex = classRecordIndex(records, replaced);
-  if (replacedIndex < 0) throw new Error(`État canonique manquant pour ${replaced.name}.`);
-
   await purgeClassBoundContent(actor, [replaced], "multiclass-replace-purge-class-content");
   await actor.deleteEmbeddedDocuments("Item", [replaced.id], {
     [INTERNAL]: true,
@@ -376,6 +420,9 @@ export async function replaceClassInMulticlass(actor, option, sheet = null) {
 
   const data = cloneItemData(itemData);
   data.type = "classe";
+  data.system = data.system ?? {};
+  data.system.niveau = 1;
+  data.system.xp = minXpForClassLevel(data.system, 1);
   const [created] = await actor.createEmbeddedDocuments("Item", [data], {
     [INTERNAL]: true,
     add2eInternal: true,
@@ -383,27 +430,9 @@ export async function replaceClassInMulticlass(actor, option, sheet = null) {
   });
   if (!created) throw new Error("Création de la classe de remplacement impossible.");
 
-  records.splice(replacedIndex, 1, canonicalStateRecord(created, {
-    level: 1,
-    xp: minXpForClassLevel(created.system ?? {}, 1)
-  }));
-
-  const payload = multiclassUpdatePayload(actor, {
-    classStates: records,
-    raceData: systemRace(actor)
-  });
-  if (!payload) throw new Error("Le payload multiclasses n'a pas été généré après remplacement.");
-
-  await actor.update(payload, {
-    [INTERNAL]: true,
-    add2eInternal: true,
-    add2eReason: "multiclass-replace-finalize"
-  });
-
+  await refreshMulticlassSummary(actor, "multiclass-replace-finalize");
   try {
-    if (typeof globalThis.add2eSyncActorSpellsFromClass === "function") {
-      await globalThis.add2eSyncActorSpellsFromClass(actor, created, { mode: "append", showWait: true });
-    }
+    await globalThis.add2eSyncActorSpellsFromClass?.(actor, created, { mode: "append", showWait: true });
   } catch (error) {
     warn("[SPELL_SYNC_REPLACE_ERROR]", { actor: actor.name, className: created.name, error });
   }
@@ -423,19 +452,16 @@ export async function applyClassAsMonoclass(actor, optionOrItemData, sheet = nul
   const wantedSlug = classSlug(itemData);
   const existing = classItems(actor);
   const existingTarget = existing.find(doc => classSlug(doc) === wantedSlug) ?? null;
-
   let keep = existingTarget;
-  let state = null;
-  if (existing.length > 1) {
-    await ensureCanonicalMulticlassState(actor);
-    const records = stateRecords(actor);
-    const index = existingTarget ? classRecordIndex(records, existingTarget) : -1;
-    state = index >= 0 ? records[index] : null;
-  }
+  let state = existingTarget ? canonicalClassState(actor, existingTarget) : null;
 
+  if (existing.length > 1 && !(await ensureCanonicalMulticlassState(actor))) return false;
   if (!keep) {
     const data = cloneItemData(itemData);
     data.type = "classe";
+    data.system = data.system ?? {};
+    data.system.niveau = Math.max(1, Math.floor(num(actor.system?.niveau, 1)));
+    data.system.xp = Math.max(0, Math.floor(num(actor.system?.xp, 0)));
     const [created] = await actor.createEmbeddedDocuments("Item", [data], {
       [INTERNAL]: true,
       add2eInternal: true,
@@ -443,14 +469,10 @@ export async function applyClassAsMonoclass(actor, optionOrItemData, sheet = nul
     });
     if (!created) return false;
     keep = created;
+    state = canonicalClassState(actor, keep);
   }
 
-  if (!state) {
-    state = monoClassStateFromActor(actor, keep);
-    state.level = Math.max(1, Math.floor(num(actor.system?.niveau, state.level)));
-    state.xp = Math.max(0, Math.floor(num(actor.system?.xp, state.xp)));
-  }
-
+  if (!state?.hasLevel || !state?.hasXp) state = monoClassStateFromActor(actor, keep);
   return cleanupAfterMonoclassReplace(actor, keep, state, sheet);
 }
 
@@ -465,33 +487,17 @@ export async function applyRaceForMulticlass(actor, raceData, sheet = null) {
     );
     return true;
   }
-
-  await ensureCanonicalMulticlassState(actor);
+  if (!(await ensureCanonicalMulticlassState(actor))) return false;
   await applyRaceData(actor, raceData, sheet);
-  const payload = multiclassUpdatePayload(actor, {
-    classStates: currentOrMigratedStateRecords(actor),
-    raceData
-  });
-  if (payload) await actor.update(payload, {
-    [INTERNAL]: true,
-    add2eInternal: true,
-    add2eReason: "multiclass-race-refresh"
-  });
+  await refreshMulticlassSummary(actor, "multiclass-race-refresh");
   sheet?.render?.(false);
   return true;
 }
 
 export async function recalcActor(actor) {
   if (!actor || actor.type !== "personnage" || classItems(actor).length <= 1) return null;
-  await ensureCanonicalMulticlassState(actor);
-  const payload = multiclassUpdatePayload(actor);
-  if (!payload) return null;
-  await actor.update(payload, {
-    [INTERNAL]: true,
-    add2eInternal: true,
-    add2eReason: "multiclass-canonical-recalc"
-  });
-  return payload;
+  if (!(await ensureCanonicalMulticlassState(actor))) return null;
+  return refreshMulticlassSummary(actor, "multiclass-item-progression-recalc");
 }
 
 export { currentRaceOrCompatibleAlternatives };
