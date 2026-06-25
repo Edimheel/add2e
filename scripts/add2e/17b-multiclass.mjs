@@ -34,7 +34,6 @@ import {
 } from "./17b-multiclass-direct-fields.mjs";
 import { compatibleMulticlassClassCandidates, installDropWrapperDeferred } from "./17b-multiclass-drop.mjs";
 
-const multiXpTimers = new Map();
 const multiCombatTimers = new Map();
 globalThis.ADD2E_MULTICLASS_VERSION = MULTICLASS_VERSION;
 
@@ -46,7 +45,13 @@ function installGetDataPatch() {
     const data = await original.apply(this, args);
     if (this.actor?.type !== "personnage" || !multiclassEnabled(this.actor)) return data;
     const payload = multiclassUpdatePayload(this.actor);
-    return payload ? applyPayloadToSheetData(data, payload) : data;
+    const output = payload ? applyPayloadToSheetData(data, payload) : data;
+    if (output?.combatDefense) {
+      output.combatDefense.thaco = output.actor?.system?.thaco ?? output.combatDefense.thaco;
+      output.combatDefense.ac_naturelle = output.actor?.system?.ca_naturel ?? output.combatDefense.ac_naturelle;
+      output.combatDefense.ac_totale = output.actor?.system?.ca_total ?? output.combatDefense.ac_totale;
+    }
+    return output;
   };
   proto.__add2eMulticlassGetDataPatch = MULTICLASS_VERSION;
   return true;
@@ -98,7 +103,12 @@ async function syncMulticlassCombatSummary(actor, { reason = "multiclass-combat-
     });
   }
   if (!Object.keys(updates).length) return false;
-  await actor.update(updates, { add2eInternal: true, add2eMulticlassInternal: true, add2eReason: reason, render: false });
+  await actor.update(updates, {
+    add2eInternal: true,
+    add2eMulticlassInternal: true,
+    add2eReason: reason,
+    render: false
+  });
   return true;
 }
 
@@ -112,61 +122,16 @@ function queueMulticlassCombatSummary(actor, reason) {
   }, 0));
 }
 
-function directClassXpTotal(actor) {
-  return classItems(actor).reduce((sum, item) => sum + Math.max(0, Math.floor(num(item.system?.xp, 0))), 0);
-}
-
-async function applyLegacyTotalXpToItems(actor, requestedTotal) {
-  if (!multiclassEnabled(actor)) return false;
-  const classes = classItems(actor);
-  const current = directClassXpTotal(actor);
-  const target = Math.max(0, Math.floor(num(requestedTotal, current)));
-  let delta = target - current;
-  if (!delta) return true;
-  const sign = delta >= 0 ? 1 : -1;
-  let remaining = Math.abs(delta);
-  const base = Math.floor(remaining / classes.length);
-  let rest = remaining % classes.length;
-  const race = actor.items?.find?.(item => String(item.type ?? "").toLowerCase() === "race") ?? null;
-  const updates = [];
-  for (const item of classes) {
-    const share = base + (rest > 0 ? 1 : 0);
-    if (rest > 0) rest -= 1;
-    const xp = Math.max(0, Math.floor(num(item.system?.xp, 0)) + (share * sign));
-    let level = Math.max(1, Math.floor(levelForClassXp(item.system ?? {}, xp)));
-    const cap = classRaceMaxLevel(item, race);
-    if (cap > 0) level = Math.min(level, cap);
-    updates.push({ _id: item.id, "system.xp": xp, "system.niveau": level });
-    remaining -= share;
-  }
-  await actor.updateEmbeddedDocuments("Item", updates, {
-    add2eInternal: true,
-    add2eMulticlassInternal: true,
-    add2eReason: "legacy-total-xp-to-class-items"
-  });
-  await recalcActor(actor);
-  await syncMulticlassCombatSummary(actor, { reason: "legacy-total-xp-to-class-items" });
-  await globalThis.add2eSyncMulticlassHp?.(actor, { reason: "legacy-total-xp-to-class-items" });
-  return true;
-}
-
 function removePath(changes, dottedPath) {
   if (!changes || !dottedPath) return;
   delete changes[dottedPath];
   const [root, child] = dottedPath.split(".");
   if (root && child && changes[root] && typeof changes[root] === "object") delete changes[root][child];
 }
+
 function readPath(changes, dottedPath) {
   if (Object.prototype.hasOwnProperty.call(changes ?? {}, dottedPath)) return changes[dottedPath];
   return foundry.utils.getProperty(changes ?? {}, dottedPath);
-}
-function queueLegacyTotalXp(actor, target) {
-  const key = String(actor.uuid ?? actor.id);
-  clearTimeout(multiXpTimers.get(key));
-  multiXpTimers.set(key, setTimeout(() => {
-    multiXpTimers.delete(key);
-    applyLegacyTotalXpToItems(actor, target).catch(error => warn("[LEGACY_XP_CONVERSION_ERROR]", { actor: actor.name, error }));
-  }, 0));
 }
 
 function thiefClassItem(actor) {
@@ -177,13 +142,27 @@ function thiefClassItem(actor) {
   }) ?? null;
 }
 
-/** Projection strictement limitée à l'Item Voleur choisi. */
+/**
+ * Adaptateur de transition pour les deux helpers historiques encore présents
+ * dans 06-class-effects-thief.mjs. La projection se limite à l'Item Voleur
+ * exact et ne lit aucun champ de progression historique de l'acteur.
+ */
 function thiefContext(actor, thief = thiefClassItem(actor)) {
   if (!actor || !thief) return null;
   const progression = classProgression(thief);
   if (!progression.hasLevel) return null;
-  const system = { ...(actor.system ?? {}), classe: thief.name, details_classe: foundry.utils.deepClone(thief.system ?? {}), niveau: progression.level, xp: progression.hasXp ? progression.xp : 0 };
-  const items = [thief, ...classItems(actor).filter(item => item.id !== thief.id), ...Array.from(actor.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() !== "classe")];
+  const system = {
+    ...(actor.system ?? {}),
+    classe: thief.name,
+    details_classe: foundry.utils.deepClone(thief.system ?? {}),
+    niveau: progression.level,
+    xp: progression.hasXp ? progression.xp : 0
+  };
+  const items = [
+    thief,
+    ...classItems(actor).filter(item => item.id !== thief.id),
+    ...Array.from(actor.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() !== "classe")
+  ];
   return new Proxy(actor, {
     get(target, property) {
       if (property === "system") return system;
@@ -193,6 +172,7 @@ function thiefContext(actor, thief = thiefClassItem(actor)) {
     }
   });
 }
+
 function installThiefItemProjection() {
   if (globalThis.__ADD2E_THIEF_ITEM_PROJECTION__ === MULTICLASS_VERSION) return;
   for (const name of ["add2eGetActorThiefSkills", "add2eGetActorThiefSkillTable", "add2eGetActorThiefProgression"]) {
@@ -207,6 +187,7 @@ function installThiefItemProjection() {
     projected.__add2eThiefItemProjection = true;
     globalThis[name] = projected;
   }
+
   const originalRoll = globalThis.add2eRollThiefSkill;
   if (typeof originalRoll === "function" && !originalRoll.__add2eThiefItemProjection) {
     const projectedRoll = async function add2eThiefItemProjectedRoll(actor, ...args) {
@@ -214,7 +195,7 @@ function installThiefItemProjection() {
       if (!thief) return originalRoll.call(this, actor, ...args);
       const context = thiefContext(actor, thief);
       if (!context) {
-        ui.notifications?.warn?.("La progression de la classe Voleur doit être migrée avant ce jet.");
+        ui.notifications?.warn?.("La progression de la classe Voleur est absente de son Item classe.");
         return false;
       }
       return originalRoll.call(this, context, ...args);
@@ -222,13 +203,14 @@ function installThiefItemProjection() {
     projectedRoll.__add2eThiefItemProjection = true;
     globalThis.add2eRollThiefSkill = projectedRoll;
   }
+
   const originalLevel = globalThis.add2eThiefClassLevel;
-  globalThis.add2eThiefClassLevel = function add2eThiefItemLevel(actor, thiefSystem = null, fallback = 1) {
+  globalThis.add2eThiefClassLevel = function add2eThiefItemLevel(actor, thiefSystem = null) {
     const requestedId = String(thiefSystem?.__classItemId ?? "");
     const thief = requestedId ? classItems(actor).find(item => String(item.id) === requestedId) : thiefClassItem(actor);
     const progression = thief ? classProgression(thief) : null;
     if (progression?.hasLevel) return progression.level;
-    return typeof originalLevel === "function" && !thief ? originalLevel.call(this, actor, thiefSystem, fallback) : Math.max(1, Number(fallback) || 1);
+    return typeof originalLevel === "function" && !thief ? originalLevel.call(this, actor, thiefSystem) : null;
   };
   globalThis.add2eThiefClassLevel.__add2eThiefItemProjection = true;
   globalThis.__ADD2E_THIEF_ITEM_PROJECTION__ = MULTICLASS_VERSION;
@@ -251,12 +233,14 @@ function installEffectsEngineItemProgressionPatch() {
     }));
     const safeSystem = { ...(actor.system ?? {}), classFeatures: [], details_classe: {} };
     const safeItems = [...blankClasses, ...Array.from(actor.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() !== "classe")];
-    const proxy = new Proxy(actor, { get(target, property) {
-      if (property === "system") return safeSystem;
-      if (property === "items") return safeItems;
-      const value = Reflect.get(target, property, target);
-      return typeof value === "function" ? value.bind(target) : value;
-    }});
+    const proxy = new Proxy(actor, {
+      get(target, property) {
+        if (property === "system") return safeSystem;
+        if (property === "items") return safeItems;
+        const value = Reflect.get(target, property, target);
+        return typeof value === "function" ? value.bind(target) : value;
+      }
+    });
     const tags = new Set(original(proxy) ?? []);
     const addFeatureTags = Engine.addClassFeatureTagsInto?.bind(Engine);
     const addTags = Engine.addTagsInto?.bind(Engine);
@@ -267,7 +251,9 @@ function installEffectsEngineItemProgressionPatch() {
         addFeatureTags?.(tags, item.system?.[field], progression.level);
       }
       const rows = Array.isArray(item.system?.monkProgression) && item.system.monkProgression.length ? item.system.monkProgression : item.system?.progression;
-      const row = Array.isArray(rows) ? (rows.find(entry => Number(entry?.niveau ?? entry?.level) === progression.level) ?? rows[Math.max(0, progression.level - 1)]) : null;
+      const row = Array.isArray(rows)
+        ? (rows.find(entry => Number(entry?.niveau ?? entry?.level) === progression.level) ?? rows[Math.max(0, progression.level - 1)])
+        : null;
       addTags?.(tags, row?.tags);
     }
     return [...new Set([...tags].filter(Boolean))];
@@ -291,7 +277,10 @@ installGetDataPatch();
 Hooks.once("ready", () => {
   installGetDataPatch();
   installDropWrapperDeferred();
-  setTimeout(() => { installThiefItemProjection(); installEffectsEngineItemProgressionPatch(); }, 0);
+  setTimeout(() => {
+    installThiefItemProjection();
+    installEffectsEngineItemProgressionPatch();
+  }, 0);
   if (!game.user?.isGM) return;
   for (const actor of game.actors?.filter(entry => entry.type === "personnage" && classItems(entry).length) ?? []) {
     migrateAndRecalculate(actor).catch(error => warn("[READY_MIGRATION_ERROR]", { actor: actor.name, error }));
@@ -308,20 +297,27 @@ Hooks.on("preUpdateActor", (actor, changes, options = {}) => {
 
   const requestedXp = readPath(changes, "system.xp");
   const requestedLevel = readPath(changes, "system.niveau");
-  for (const path of ["system.xp_par_classe", "system.niveaux_par_classe", "system.titres_par_classe", "system.xp_next_par_classe", "system.niveau_max_par_classe", "system.multiclasse.classes"]) removePath(changes, path);
-  if (requestedXp !== undefined && Number.isFinite(num(requestedXp, NaN))) {
-    removePath(changes, "system.xp");
-    removePath(changes, "system.niveau");
-    removePath(changes, "system.niveau_suggere");
-    removePath(changes, "system.titre");
-    removePath(changes, "system.progression_xp");
-    removePath(changes, "system.xp_next");
-    removePath(changes, "system.xp_to_next");
-    removePath(changes, "system.xp_percent");
-    queueLegacyTotalXp(actor, requestedXp);
-  } else if (requestedLevel !== undefined) {
-    removePath(changes, "system.niveau");
-    ui.notifications?.warn?.("Pour un multiclassé, modifie le niveau sur la ligne de la classe concernée.");
+  for (const path of [
+    "system.xp_par_classe",
+    "system.niveaux_par_classe",
+    "system.titres_par_classe",
+    "system.xp_next_par_classe",
+    "system.niveau_max_par_classe",
+    "system.multiclasse.classes"
+  ]) removePath(changes, path);
+
+  if (requestedXp !== undefined || requestedLevel !== undefined) {
+    for (const path of [
+      "system.xp",
+      "system.niveau",
+      "system.niveau_suggere",
+      "system.titre",
+      "system.progression_xp",
+      "system.xp_next",
+      "system.xp_to_next",
+      "system.xp_percent"
+    ]) removePath(changes, path);
+    ui.notifications?.warn?.("Pour un multiclassé, modifie l’XP ou le niveau directement sur la ligne de la classe concernée.");
   }
   return true;
 });
@@ -341,11 +337,13 @@ Hooks.on("createItem", item => {
   if (String(item.type ?? "").toLowerCase() !== "classe") return;
   setTimeout(() => migrateAndRecalculate(actor).catch(error => warn("[CREATE_CLASS_MIGRATION_ERROR]", error)), 0);
 });
+
 Hooks.on("updateItem", (item, _changes, options = {}) => {
   const actor = item?.parent;
   if (options?.add2eInternal || actor?.type !== "personnage" || String(item?.type ?? "").toLowerCase() !== "classe") return;
   queueMulticlassCombatSummary(actor, "class-item-update-summary");
 });
+
 Hooks.on("deleteItem", item => {
   const actor = item?.parent;
   if (actor?.documentName !== "Actor" || actor.type !== "personnage" || String(item.type ?? "").toLowerCase() !== "classe") return;
