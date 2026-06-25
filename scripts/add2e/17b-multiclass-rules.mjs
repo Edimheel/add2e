@@ -1,12 +1,12 @@
-// ADD2E — Multiclassage : règles et état canonique
-// Item.system est la définition de chaque classe.
-// system.multiclasse.classes est l'unique état de progression multiclasses.
+// ADD2E — Multiclassage : règles et résumés
+// Les Items classe portent leur définition et leur progression.
+// system.multiclasse ne contient que des métadonnées et des résumés d'affichage.
 
 import {
   MULTICLASS_SCHEMA,
-  canonicalClassStates,
-  canonicalMulticlass,
+  canonicalClassState,
   classItems,
+  classProgression,
   classSlug,
   cloneItemData,
   itemLabel,
@@ -236,10 +236,13 @@ function uniqueClassDocs(docs) {
   });
 }
 
-function classDocForRecord(docs, record) {
-  const itemId = String(record?.itemId ?? "");
-  const slug = norm(record?.slug);
-  return docs.find(doc => (itemId && String(doc.id ?? "") === itemId) || (slug && classSlug(doc) === slug)) ?? null;
+function recordForDoc(records, doc) {
+  const id = String(doc?.id ?? "");
+  const slug = classSlug(doc);
+  return (records ?? []).find(record =>
+    (id && String(record?.itemId ?? record?.id ?? "") === id)
+    || (slug && norm(record?.slug ?? record?.name) === slug)
+  ) ?? null;
 }
 
 export function canonicalStateRecord(classDoc, { level = 1, xp = 0 } = {}) {
@@ -249,44 +252,36 @@ export function canonicalStateRecord(classDoc, { level = 1, xp = 0 } = {}) {
     name: classDoc?.name ?? itemLabel(classDoc, "Classe"),
     slug: classSlug(classDoc),
     level: Math.max(1, Math.floor(num(level, 1))),
-    xp: Math.max(0, Math.floor(num(xp, 0))),
-    title: "",
-    nextXp: 0,
-    levelMaxRace: 0
+    xp: Math.max(0, Math.floor(num(xp, 0)))
   };
 }
 
 function materializeEntries(actor, { docs = classItems(actor), classStates = null, raceData = systemRace(actor) } = {}) {
-  const uniqueDocs = uniqueClassDocs(docs);
-  const records = Array.isArray(classStates) ? classStates.filter(Boolean) : canonicalClassStates(actor);
-  if (!records.length || !uniqueDocs.length) return [];
-
-  const consumed = new Set();
   const entries = [];
-  for (const record of records) {
-    const doc = classDocForRecord(uniqueDocs, record);
-    if (!doc || consumed.has(doc.id)) continue;
-    consumed.add(doc.id);
-    const system = foundry.utils.deepClone(doc.system ?? {});
-    let level = Math.max(1, Math.floor(num(record.level, 1)));
-    let xp = Math.max(0, Math.floor(num(record.xp, 0)));
+  for (const doc of uniqueClassDocs(docs)) {
+    const stateOverride = recordForDoc(classStates, doc);
+    const stored = classProgression(doc, {
+      level: stateOverride?.level ?? 1,
+      xp: stateOverride?.xp ?? 0
+    });
+    let level = Math.max(1, Math.floor(num(stateOverride?.level ?? stored.level, 1)));
+    let xp = Math.max(0, Math.floor(num(stateOverride?.xp ?? stored.xp, 0)));
     const maxLevel = classRaceMaxLevel(doc, raceData);
     if (maxLevel > 0 && level > maxLevel) level = maxLevel;
-    xp = Math.max(xp, minXpForClassLevel(system, level));
-    const title = classTitleForLevel(system, level);
+    xp = Math.max(xp, minXpForClassLevel(doc.system ?? {}, level));
     entries.push({
       doc,
       itemId: doc.id ?? null,
       uuid: doc.uuid ?? null,
       name: doc.name ?? itemLabel(doc, "Classe"),
       slug: classSlug(doc),
-      system,
+      system: foundry.utils.deepClone(doc.system ?? {}),
       level,
       xp,
-      title,
-      nextXp: nextXpForClassLevel(system, level),
+      title: classTitleForLevel(doc.system ?? {}, level),
+      nextXp: nextXpForClassLevel(doc.system ?? {}, level),
       levelMaxRace: maxLevel,
-      spellcasting: system.spellcasting ?? null
+      spellcasting: doc.system?.spellcasting ?? null
     });
   }
   return entries;
@@ -307,7 +302,7 @@ function displaySpellcasting(entries) {
     lists,
     usesSlots: true,
     usesPreparation: true,
-    preparationSource: "multiclasse.classes"
+    preparationSource: "class-items"
   } : null;
 }
 
@@ -319,7 +314,8 @@ function clearLegacyClassCopies() {
     "system.-=niveaux_par_classe": null,
     "system.-=titres_par_classe": null,
     "system.-=xp_next_par_classe": null,
-    "system.-=niveau_max_par_classe": null
+    "system.-=niveau_max_par_classe": null,
+    "system.multiclasse.-=classes": null
   };
 }
 
@@ -336,17 +332,6 @@ export function multiclassUpdatePayload(actor, options = {}) {
   const totalXp = entries.reduce((sum, entry) => sum + entry.xp, 0);
   const nextValues = entries.map(entry => entry.nextXp).filter(value => value > 0);
   const nextXp = nextValues.length ? Math.min(...nextValues) : 0;
-  const classes = entries.map(entry => ({
-    itemId: entry.itemId,
-    uuid: entry.uuid,
-    name: entry.name,
-    slug: entry.slug,
-    level: entry.level,
-    xp: entry.xp,
-    title: entry.title,
-    nextXp: entry.nextXp,
-    levelMaxRace: entry.levelMaxRace
-  }));
 
   return {
     "system.multiclasse": {
@@ -354,11 +339,10 @@ export function multiclassUpdatePayload(actor, options = {}) {
       enabled: true,
       mode: "racial",
       xpSplit: "equal",
-      label,
-      classes
+      label
     },
     "system.classe": label,
-    "system.details_classe": { label, name: label, multiclass: true, source: "multiclasse.classes" },
+    "system.details_classe": { label, name: label, multiclass: true, source: "class-items" },
     "system.xp": totalXp,
     "system.niveau": maxLevel,
     "system.niveau_suggere": maxLevel,
@@ -374,48 +358,94 @@ export function multiclassUpdatePayload(actor, options = {}) {
 
 export function monoClassCleanupPayload() {
   return {
-    "system.multiclasse": { schema: MULTICLASS_SCHEMA, enabled: false, mode: "mono", xpSplit: "none", label: "", classes: [] },
+    "system.multiclasse": { schema: MULTICLASS_SCHEMA, enabled: false, mode: "mono", xpSplit: "none", label: "" },
+    "system.multiclasse.-=classes": null,
     ...clearLegacyClassCopies()
   };
 }
 
-// Migration unique : lecture des anciens champs, écriture du schéma 2, puis
-// suppression de tous les champs concurrents dans le même update.
-export function legacyMulticlassMigrationPayload(actor) {
+function hasOwnRecordValue(record, key) {
+  return record && Object.prototype.hasOwnProperty.call(record, key) && Number.isFinite(num(record[key], NaN));
+}
+
+function legacyRecordForDoc(oldRecords, doc) {
+  const id = String(doc?.id ?? "");
+  const slug = classSlug(doc);
+  const byId = oldRecords.filter(entry => id && String(entry?.itemId ?? "") === id);
+  if (byId.length === 1) return byId[0];
+  const bySlug = oldRecords.filter(entry => slug && norm(entry?.slug ?? entry?.name) === slug);
+  return bySlug.length === 1 ? bySlug[0] : null;
+}
+
+/**
+ * Prépare une migration sans jamais inventer une progression pour une classe
+ * dont aucune source historique ne permet l'identification certaine.
+ */
+export function legacyMulticlassMigrationPlan(actor) {
   const docs = uniqueClassDocs(classItems(actor));
-  if (docs.length <= 1) return null;
-  if (canonicalMulticlass(actor)) return multiclassUpdatePayload(actor);
+  if (docs.length <= 1) return { ok: true, entries: [] };
 
-  const sys = actor?.system ?? {};
-  const oldMulti = sys.multiclasse ?? {};
-  const order = Array.isArray(oldMulti.classes)
-    ? oldMulti.classes.map(entry => norm(typeof entry === "string" ? entry : entry?.slug)).filter(Boolean)
-    : [];
-  const oldXp = sys.xp_par_classe && typeof sys.xp_par_classe === "object" ? sys.xp_par_classe : {};
-  const oldLevels = sys.niveaux_par_classe && typeof sys.niveaux_par_classe === "object" ? sys.niveaux_par_classe : {};
-  const inheritedMono = oldMulti?.enabled !== true && Object.keys(oldXp).length === 0 && Object.keys(oldLevels).length === 0;
-  const ordered = [...docs].sort((left, right) => {
-    const leftIndex = order.indexOf(classSlug(left));
-    const rightIndex = order.indexOf(classSlug(right));
-    return (leftIndex < 0 ? Number.MAX_SAFE_INTEGER : leftIndex) - (rightIndex < 0 ? Number.MAX_SAFE_INTEGER : rightIndex);
-  });
+  const system = actor?.system ?? {};
+  const oldMulti = system.multiclasse && typeof system.multiclasse === "object" ? system.multiclasse : {};
+  const oldRecords = Array.isArray(oldMulti.classes) ? oldMulti.classes.filter(entry => entry && typeof entry === "object") : [];
+  const oldXp = system.xp_par_classe && typeof system.xp_par_classe === "object" ? system.xp_par_classe : {};
+  const oldLevels = system.niveaux_par_classe && typeof system.niveaux_par_classe === "object" ? system.niveaux_par_classe : {};
+  const entries = [];
+  const unresolved = [];
 
-  const records = ordered.map((doc, index) => {
+  for (const doc of docs) {
     const slug = classSlug(doc);
-    const xp = Math.max(0, Math.floor(num(oldXp[slug] ?? (inheritedMono && index === 0 ? sys.xp : 0), 0)));
-    const rawLevel = oldLevels[slug] ?? (inheritedMono && index === 0 ? sys.niveau : null);
-    const level = rawLevel === null || rawLevel === undefined
-      ? levelForClassXp(doc.system ?? {}, xp)
-      : Math.max(1, Math.floor(num(rawLevel, 1)));
-    return canonicalStateRecord(doc, { level, xp });
-  });
+    const direct = classProgression(doc);
+    const record = legacyRecordForDoc(oldRecords, doc);
+    const rawXp = direct.hasXp ? direct.xp
+      : (hasOwnRecordValue(record, "xp") ? Math.max(0, Math.floor(num(record.xp, 0)))
+        : (Object.prototype.hasOwnProperty.call(oldXp, slug) ? Math.max(0, Math.floor(num(oldXp[slug], 0))) : null));
+    const rawLevel = direct.hasLevel ? direct.level
+      : (hasOwnRecordValue(record, "level") ? Math.max(1, Math.floor(num(record.level, 1)))
+        : (Object.prototype.hasOwnProperty.call(oldLevels, slug) ? Math.max(1, Math.floor(num(oldLevels[slug], 1))) : null));
 
-  return multiclassUpdatePayload(actor, { docs: ordered, classStates: records, raceData: systemRace(actor) });
+    if (rawXp === null && rawLevel === null) {
+      unresolved.push({ itemId: doc.id, name: doc.name, slug, reason: "progression-absente" });
+      continue;
+    }
+
+    const level = rawLevel ?? levelForClassXp(doc.system ?? {}, rawXp);
+    const xp = rawXp ?? minXpForClassLevel(doc.system ?? {}, level);
+    entries.push(canonicalStateRecord(doc, { level, xp }));
+  }
+
+  return {
+    ok: unresolved.length === 0,
+    entries,
+    unresolved,
+    source: oldRecords.length ? "multiclasse.classes" : (Object.keys(oldXp).length || Object.keys(oldLevels).length ? "legacy-maps" : "class-items")
+  };
+}
+
+/** Compatibilité lecture seule ; l'écriture des Items est faite par operations.mjs. */
+export function legacyMulticlassMigrationPayload(actor) {
+  const plan = legacyMulticlassMigrationPlan(actor);
+  return plan.ok ? multiclassUpdatePayload(actor, { classStates: plan.entries }) : null;
 }
 
 export function monoClassStateFromActor(actor, classDoc) {
+  const direct = classProgression(classDoc);
+  if (direct.hasLevel || direct.hasXp) {
+    return canonicalStateRecord(classDoc, {
+      level: direct.hasLevel ? direct.level : levelForClassXp(classDoc?.system ?? {}, direct.xp),
+      xp: direct.hasXp ? direct.xp : minXpForClassLevel(classDoc?.system ?? {}, direct.level)
+    });
+  }
   return canonicalStateRecord(classDoc, {
     level: Math.max(1, Math.floor(num(actor?.system?.niveau, 1))),
     xp: Math.max(0, Math.floor(num(actor?.system?.xp, 0)))
   });
+}
+
+export function classEntryFromItem(actor, classDoc) {
+  const state = canonicalClassState(actor, classDoc);
+  if (!state) return null;
+  const level = state.hasLevel ? state.level : 1;
+  const xp = state.hasXp ? state.xp : minXpForClassLevel(classDoc?.system ?? {}, level);
+  return canonicalStateRecord(classDoc, { level, xp });
 }
