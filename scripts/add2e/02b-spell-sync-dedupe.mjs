@@ -117,9 +117,11 @@ Hooks.once("ready", () => {
     setTimeout(installWrapper, 250);
     setTimeout(installWrapper, 1000);
   }
+  // 02c a déjà programmé son expansion à 250 ms. Cette migration explicite
+  // s'exécute avant elle, afin que les anciennes copies soient récupérées.
   if (game.user?.isGM) setTimeout(async () => {
     for (const actor of game.actors?.filter?.(entry => entry.type === "personnage") ?? []) await migrateLegacyMaterials(actor, "ready-legacy-material-migration");
-  }, 500);
+  }, 0);
 });
 
 Hooks.on("createItem", (item, _options, userId) => {
