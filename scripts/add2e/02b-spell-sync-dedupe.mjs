@@ -47,6 +47,8 @@ async function migrateLegacyMaterials(actor, reason = "legacy-material-migration
     const system = item.system ?? {};
     if (!hasOwn(system, "composants_materiels_objets")) continue;
     const update = { _id: item.id, "system.-=composants_materiels_objets": null };
+    // Le champ historique est lu uniquement pour récupérer une ancienne copie
+    // sans champ canonique. Un champ canonique vide reste une source valide.
     if (!hasOwn(system, "composants_materiels")) {
       update["system.composants_materiels"] = clone(system.composants_materiels_objets);
       migrated += 1;
@@ -57,6 +59,26 @@ async function migrateLegacyMaterials(actor, reason = "legacy-material-migration
   await actor.updateEmbeddedDocuments("Item", updates, { add2eInternal: true, add2eSpellSync: true, reason, render: false });
   globalThis.add2eRerenderActorSheet?.(actor, false);
   return { migrated, removed: updates.length };
+}
+
+async function safeDeleteIds(actor, ids, reason = "manual") {
+  const requested = [...new Set((Array.isArray(ids) ? ids : []).map(id => String(id ?? "").trim()).filter(Boolean))];
+  const existing = requested.filter(id => actor.items?.has(id));
+  if (!existing.length) return { deleted: 0, skippedMissing: requested.length, requested: requested.length };
+  try {
+    await actor.deleteEmbeddedDocuments("Item", existing, { add2eInternal: true, add2eDedupe: true, reason });
+    return { deleted: existing.length, skippedMissing: requested.length - existing.length, requested: requested.length };
+  } catch (error) {
+    let deleted = 0;
+    let skippedMissing = requested.length - existing.length;
+    for (const id of existing) {
+      const item = actor.items?.get?.(id);
+      if (!item) { skippedMissing += 1; continue; }
+      try { await item.delete({ add2eInternal: true, add2eDedupe: true, reason }); deleted += 1; }
+      catch (oneError) { if (/does not exist|undefined id/i.test(String(oneError?.message ?? oneError))) skippedMissing += 1; else throw oneError; }
+    }
+    return { deleted, skippedMissing, requested: requested.length, error: String(error?.message ?? error ?? "") };
+  }
 }
 
 async function removeDuplicates(actor, reason = "manual") {
@@ -74,18 +96,17 @@ async function removeDuplicates(actor, reason = "manual") {
       groups.set(key, group);
     }
     const ids = [...groups.values()].flatMap(group => group.length > 1 ? group.sort(compareKeep).slice(1).map(item => item.id) : []);
-    if (!ids.length) return { deleted: 0 };
-    const existing = ids.filter(id => actor.items?.has(id));
-    if (!existing.length) return { deleted: 0 };
-    await actor.deleteEmbeddedDocuments("Item", existing, { add2eInternal: true, add2eDedupe: true, reason });
-    return { deleted: existing.length };
+    return ids.length ? safeDeleteIds(actor, ids, reason) : { deleted: 0 };
   } finally {
     RUNNING.delete(runKey);
   }
 }
 
 async function removeDuplicatesEverywhere(reason = "manual-all-actors") {
-  if (!game.user?.isGM) return { actors: 0, deleted: 0 };
+  if (!game.user?.isGM) {
+    ui.notifications?.warn?.("Seul le MJ peut nettoyer les sorts en doublon de tous les acteurs.");
+    return { actors: 0, deleted: 0 };
+  }
   let deleted = 0;
   const results = [];
   for (const actor of game.actors?.filter?.(entry => entry.type === "personnage") ?? []) {
@@ -93,6 +114,7 @@ async function removeDuplicatesEverywhere(reason = "manual-all-actors") {
     deleted += Number(result?.deleted ?? 0) || 0;
     results.push({ actor: actor.name, ...result });
   }
+  ui.notifications?.info?.(`ADD2E : nettoyage terminé (${deleted} sort(s) doublon(s) supprimé(s)).`);
   return { actors: results.length, deleted, results };
 }
 
@@ -133,6 +155,7 @@ Hooks.on("createItem", (item, _options, userId) => {
 });
 
 globalThis.add2eRemoveDuplicateActorSpells = removeDuplicates;
+globalThis.add2eSafeDeleteDuplicateActorSpellIds = safeDeleteIds;
 globalThis.add2eRemoveDuplicateSpellsEverywhere = removeDuplicatesEverywhere;
 globalThis.add2eNormalizeActorSpellMaterials = migrateLegacyMaterials;
 globalThis.add2eSpellDedupeCleanSpellMaterialComponents = system => clone(system?.composants_materiels ?? []);
