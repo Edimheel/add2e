@@ -78,20 +78,26 @@ function canonicalThiefClass(actor, thiefClassSystem = null) {
   ) ?? null;
 }
 
+function installCanonicalThiefFunction(name, bridgeKey) {
+  const original = globalThis[name];
+  if (typeof original !== "function" || original.__add2eCanonicalThiefBridge) return;
+  const wrapped = function add2eCanonicalThiefFunction(actor, ...args) {
+    if (!canonicalMulticlass(actor)) return original.call(this, actor, ...args);
+    const context = classContext(actor, canonicalThiefClass(actor));
+    return context ? original.call(this, context, ...args) : [];
+  };
+  wrapped.__add2eCanonicalThiefBridge = true;
+  wrapped.__add2eCanonicalThiefBridgeKey = bridgeKey;
+  wrapped.__add2eCanonicalThiefOriginal = original;
+  globalThis[name] = wrapped;
+}
+
 function installThiefCanonicalBridge() {
   if (globalThis.__ADD2E_CANONICAL_THIEF_BRIDGE__ === MULTICLASS_VERSION) return;
 
-  const skills = globalThis.add2eGetActorThiefSkills;
-  if (typeof skills === "function" && !skills.__add2eCanonicalThiefBridge) {
-    const wrapped = function add2eCanonicalGetActorThiefSkills(actor, ...args) {
-      if (!canonicalMulticlass(actor)) return skills.call(this, actor, ...args);
-      const context = classContext(actor, canonicalThiefClass(actor));
-      return context ? skills.call(this, context, ...args) : [];
-    };
-    wrapped.__add2eCanonicalThiefBridge = true;
-    wrapped.__add2eCanonicalThiefOriginal = skills;
-    globalThis.add2eGetActorThiefSkills = wrapped;
-  }
+  installCanonicalThiefFunction("add2eGetActorThiefSkills", "skills");
+  installCanonicalThiefFunction("add2eGetActorThiefSkillTable", "table");
+  installCanonicalThiefFunction("add2eGetActorThiefProgression", "progression");
 
   const roll = globalThis.add2eRollThiefSkill;
   if (typeof roll === "function" && !roll.__add2eCanonicalThiefBridge) {
