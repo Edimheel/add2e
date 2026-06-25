@@ -1,5 +1,5 @@
-const ADD2E_SPELL_FAMILY_VERSION = "2026-06-25-spell-family-material-profiles-v8";
-const ADD2E_SPELL_FAMILY_MATERIAL_MIGRATION = "2026-06-25-spell-family-material-profiles-v9";
+const ADD2E_SPELL_FAMILY_VERSION = "2026-06-25-spell-family-material-profiles-v9";
+const ADD2E_SPELL_FAMILY_MATERIAL_MIGRATION = "2026-06-25-spell-family-material-profiles-v10";
 
 const SPELL_FAMILY_PENDING = globalThis.ADD2E_SPELL_FAMILY_PENDING instanceof Set
   ? globalThis.ADD2E_SPELL_FAMILY_PENDING
@@ -14,7 +14,7 @@ globalThis.ADD2E_SPELL_FAMILY_PENDING_REMOVALS = SPELL_FAMILY_PENDING_REMOVALS;
 const clone = value => {
   if (value == null) return value;
   try { return foundry.utils.deepClone(value); }
-  catch (_err) {
+  catch (_error) {
     try { return foundry.utils.duplicate(value); }
     catch (_duplicateError) { return JSON.parse(JSON.stringify(value)); }
   }
@@ -73,30 +73,17 @@ function applySystemOverrides(data, overrides = {}) {
   return result;
 }
 
-function hasStructuredMaterials(value) {
-  return Array.isArray(value) && value.some(entry =>
-    entry && typeof entry === "object" && !Array.isArray(entry)
-    && String(entry.nom ?? entry.name ?? entry.label ?? entry.component ?? entry.composant ?? "").trim()
-  );
-}
-
-function synchronizeMaterialFields(data) {
+function canonicalizeMaterialFields(data) {
   const result = clone(data);
-  const system = result.system ??= {};
-  const primary = system.composants_materiels;
-  const legacy = system.composants_materiels_objets;
-
-  if (!hasStructuredMaterials(primary) && hasStructuredMaterials(legacy)) {
-    system.composants_materiels = clone(legacy);
-  }
-  delete system.composants_materiels_objets;
-
+  result.system ??= {};
+  // composants_materiels est l'unique profil matériel. Aucun fallback ne lit
+  // ni ne reconstruit ce profil depuis le champ historique.
+  delete result.system.composants_materiels_objets;
   return result;
 }
 
 function applyMode(data, mode = null) {
-  const overrides = mode?.systemOverrides ?? {};
-  return synchronizeMaterialFields(applySystemOverrides(data, overrides));
+  return canonicalizeMaterialFields(applySystemOverrides(data, mode?.systemOverrides ?? {}));
 }
 
 function withName(data, name) {
@@ -141,6 +128,7 @@ function expectedSpellFamily(base) {
     const inverseMode = modeFor(profile, "inverse");
     const inverseName = String(inverseMode?.actorItemName ?? inverseMode?.manualName ?? "").trim();
     if (!inverseName) continue;
+
     const keyForProfile = profileKey(profile, name);
     let data = withName(normalData, inverseName);
     data = applyMode(data, inverseMode);
@@ -167,6 +155,7 @@ function expectedSpellFamily(base) {
       const choiceId = String(choice?.id ?? "").trim() || normalize(choice?.nom ?? choice?.name);
       const choiceName = String(choice?.nom ?? choice?.name ?? "").trim();
       if (!choiceId || !choiceName) continue;
+
       let data = withName(normalData, `${name} — ${choiceName}`);
       data = applyMode(data, choice?.systemOverrides ?? choice?.systemOverride ?? null);
       data = markFamily(data, key, "variant", {
@@ -284,7 +273,6 @@ async function ensureSpellFamily(item) {
   const creates = [];
   const createdVariantIds = new Set();
   const conflictingVariantIds = [];
-
   for (const entry of derived) {
     const existing = existingByIdentity.get(entry.id);
     if (existing) {
@@ -340,19 +328,16 @@ async function ensureSpellFamily(item) {
 
 async function expandActorSpellFamilies(actor) {
   if (!actor || actor.type !== "personnage") return { handled: false };
-  let created = 0;
-  let updated = 0;
-  let baseUpdated = 0;
-  let queued = 0;
+  const result = { handled: true, created: 0, updated: 0, baseUpdated: 0, queued: 0 };
   for (const item of actor.items?.filter?.(candidate => String(candidate.type).toLowerCase() === "sort" && !isGeneratedFamilySpell(candidate)) ?? []) {
     if (!actor.items.has(item.id)) continue;
-    const result = await ensureSpellFamily(item);
-    created += result?.created ?? 0;
-    updated += result?.updated ?? 0;
-    baseUpdated += result?.baseUpdated ?? 0;
-    queued += result?.queued ? 1 : 0;
+    const current = await ensureSpellFamily(item);
+    result.created += current?.created ?? 0;
+    result.updated += current?.updated ?? 0;
+    result.baseUpdated += current?.baseUpdated ?? 0;
+    result.queued += current?.queued ? 1 : 0;
   }
-  return { handled: true, created, updated, baseUpdated, queued };
+  return result;
 }
 
 function compareSpellFamilyRows(left, right) {
@@ -360,13 +345,12 @@ function compareSpellFamilyRows(left, right) {
   const rightFamily = right?.flags?.add2e?.spellFamily ?? {};
   const leftName = String(left?.name ?? left?.system?.nom ?? "");
   const rightName = String(right?.name ?? right?.system?.nom ?? "");
-  const leftSource = String(leftFamily.sourceItemName ?? leftName);
-  const rightSource = String(rightFamily.sourceItemName ?? rightName);
-  const sourceCompare = leftSource.localeCompare(rightSource, "fr", { sensitivity: "base" });
+  const sourceCompare = String(leftFamily.sourceItemName ?? leftName)
+    .localeCompare(String(rightFamily.sourceItemName ?? rightName), "fr", { sensitivity: "base" });
   if (sourceCompare) return sourceCompare;
   if (leftFamily.key && leftFamily.key === rightFamily.key) {
-    const leftOrder = Number.isFinite(Number(leftFamily.sortOrder)) ? Number(leftFamily.sortOrder) : leftFamily.kind === "inverse" ? 1 : leftFamily.kind === "variant" ? 10 : 0;
-    const rightOrder = Number.isFinite(Number(rightFamily.sortOrder)) ? Number(rightFamily.sortOrder) : rightFamily.kind === "inverse" ? 1 : rightFamily.kind === "variant" ? 10 : 0;
+    const leftOrder = Number(leftFamily.sortOrder ?? (leftFamily.kind === "inverse" ? 1 : leftFamily.kind === "variant" ? 10 : 0));
+    const rightOrder = Number(rightFamily.sortOrder ?? (rightFamily.kind === "inverse" ? 1 : rightFamily.kind === "variant" ? 10 : 0));
     if (leftOrder !== rightOrder) return leftOrder - rightOrder;
   }
   return leftName.localeCompare(rightName, "fr", { sensitivity: "base" });
@@ -374,33 +358,25 @@ function compareSpellFamilyRows(left, right) {
 
 function sortSpellFamilyRows(data) {
   if (!data || typeof data !== "object") return data;
-  for (const rows of Object.values(data.sortsParNiveau ?? {})) {
-    if (Array.isArray(rows)) rows.sort(compareSpellFamilyRows);
-  }
+  for (const rows of Object.values(data.sortsParNiveau ?? {})) if (Array.isArray(rows)) rows.sort(compareSpellFamilyRows);
   for (const level of Array.isArray(data.add2eSpellLevels) ? data.add2eSpellLevels : []) {
     if (Array.isArray(level?.sorts)) level.sorts.sort(compareSpellFamilyRows);
-    for (const group of Array.isArray(level?.groups) ? level.groups : []) {
-      if (Array.isArray(group?.sorts)) group.sorts.sort(compareSpellFamilyRows);
-    }
+    for (const group of Array.isArray(level?.groups) ? level.groups : []) if (Array.isArray(group?.sorts)) group.sorts.sort(compareSpellFamilyRows);
   }
   return data;
 }
 
-function comparableMaterialData(value) {
-  if (Array.isArray(value)) return value.map(comparableMaterialData);
-  if (value && typeof value === "object") {
-    return Object.fromEntries(Object.keys(value).sort().map(key => [key, comparableMaterialData(value[key])]));
-  }
-  return value ?? null;
-}
-
 function sameMaterialData(left, right) {
-  return JSON.stringify(comparableMaterialData(left)) === JSON.stringify(comparableMaterialData(right));
+  const normalizeValue = value => {
+    if (Array.isArray(value)) return value.map(normalizeValue);
+    if (value && typeof value === "object") return Object.fromEntries(Object.keys(value).sort().map(key => [key, normalizeValue(value[key])]));
+    return value ?? null;
+  };
+  return JSON.stringify(normalizeValue(left)) === JSON.stringify(normalizeValue(right));
 }
 
 function spellFamilyMaterialsNeedMigration(actor, item) {
   if (!actor?.items?.has?.(item?.id)) return false;
-
   const { key, output } = expectedSpellFamily(item);
   const existingByIdentity = new Map();
   for (const actorSpell of actor.items?.filter?.(candidate => String(candidate.type).toLowerCase() === "sort") ?? []) {
@@ -409,37 +385,27 @@ function spellFamilyMaterialsNeedMigration(actor, item) {
     if (identity) existingByIdentity.set(identity, actorSpell);
   }
 
-  for (const entry of output) {
+  return output.some(entry => {
     const actual = entry.id === "base" ? item : existingByIdentity.get(entry.id);
     if (!actual) return true;
-
-    const expectedSystem = entry.data?.system ?? {};
     const actualSystem = actual.system ?? {};
-    if (Object.prototype.hasOwnProperty.call(actualSystem, "composants_materiels_objets")) return true;
-    if (!sameMaterialData(actualSystem.composants_materiels, expectedSystem.composants_materiels)) return true;
-  }
-
-  return false;
+    const expectedSystem = entry.data?.system ?? {};
+    return Object.prototype.hasOwnProperty.call(actualSystem, "composants_materiels_objets")
+      || !sameMaterialData(actualSystem.composants_materiels, expectedSystem.composants_materiels);
+  });
 }
 
 async function migrateExistingSpellFamilyMaterials() {
   if (!game.user?.isGM) return;
   for (const actor of game.actors?.filter?.(candidate => candidate.type === "personnage") ?? []) {
-    const candidates = actor.items?.filter?.(item =>
-      String(item.type).toLowerCase() === "sort"
-      && !isGeneratedFamilySpell(item)
-      && matchingProfiles(item.flags?.add2e?.reversible, item.system).some(profile => profile?.splitOnActorGrant === true)
-    ) ?? [];
-    if (!candidates.length) continue;
-
-    let repaired = false;
-    for (const item of candidates) {
-      if (!actor.items.has(item.id) || !spellFamilyMaterialsNeedMigration(actor, item)) continue;
-      await ensureSpellFamily(item);
-      repaired = true;
+    for (const item of actor.items?.filter?.(candidate =>
+      String(candidate.type).toLowerCase() === "sort"
+      && !isGeneratedFamilySpell(candidate)
+      && matchingProfiles(candidate.flags?.add2e?.reversible, candidate.system).some(profile => profile?.splitOnActorGrant === true)
+    ) ?? []) {
+      if (actor.items.has(item.id) && spellFamilyMaterialsNeedMigration(actor, item)) await ensureSpellFamily(item);
     }
-
-    if (repaired || actor.getFlag?.("add2e", "spellFamilyMaterialMigration") !== ADD2E_SPELL_FAMILY_MATERIAL_MIGRATION) {
+    if (actor.getFlag?.("add2e", "spellFamilyMaterialMigration") !== ADD2E_SPELL_FAMILY_MATERIAL_MIGRATION) {
       await actor.setFlag?.("add2e", "spellFamilyMaterialMigration", ADD2E_SPELL_FAMILY_MATERIAL_MIGRATION);
     }
   }
@@ -470,11 +436,8 @@ Hooks.once("ready", () => {
       }
     };
   }
-
-  if (game.user?.isGM) {
-    setTimeout(() => migrateExistingSpellFamilyMaterials()
-      .catch(error => console.error("[ADD2E][SPELL_FAMILY][MATERIAL_MIGRATION_ERROR]", error)), 250);
-  }
+  if (game.user?.isGM) setTimeout(() => migrateExistingSpellFamilyMaterials()
+    .catch(error => console.error("[ADD2E][SPELL_FAMILY][MATERIAL_MIGRATION_ERROR]", error)), 250);
 });
 
 globalThis.ADD2E_SPELL_FAMILY_VERSION = ADD2E_SPELL_FAMILY_VERSION;
@@ -482,136 +445,179 @@ globalThis.add2eEnsureActorSpellFamily = ensureSpellFamily;
 globalThis.add2eExpandActorSpellFamilies = expandActorSpellFamilies;
 globalThis.add2eSortActorSpellFamilyRows = sortSpellFamilyRows;
 
-const ADD2E_SPELL_CLASS_LEVEL_VERSION="2026-06-23-progression-ceiling-v1";
-function add2eSpellClassLevel(actor,classSlug=""){
-  const actorLevel=Math.max(1,Number(actor?.system?.niveau??actor?.system?.level??1)||1),wanted=normalize(classSlug),classes=actor?.items?.filter?.(item=>String(item?.type??"").toLowerCase()==="classe")??[];
-  const cls=classes.find(item=>[item?.system?.slug,item?.system?.label,item?.system?.nom,item?.system?.name,item?.name].map(normalize).includes(wanted))??classes[0]??null;
-  const read=value=>{const n=Number(value?.niveau??value?.level??value?.value??value);return Number.isFinite(n)&&n>0?Math.floor(n):0};
-  let requested=0;
-  for(const root of [actor?.system?.niveaux_par_classe,actor?.system?.niveauxParClasse,actor?.system?.levelsByClass,actor?.system?.classLevels]){
-    if(!root||typeof root!=="object")continue;
-    for(const [key,value] of Object.entries(root)){if(normalize(key)!==wanted)continue;requested=read(value);break}
-    if(requested)break;
-  }
-  if(!requested&&classes.length>1)requested=read(cls?.system?.niveau??cls?.system?.level??cls?.system?.currentLevel??cls?.system?.niveauActuel);
-  requested=requested||actorLevel;
-  const rows=Array.isArray(cls?.system?.progression)?cls.system.progression:[];
-  const ceiling=rows.reduce((highest,row)=>Math.max(highest,read(row?.niveau??row?.level)),0);
-  return ceiling&&requested>ceiling?ceiling:requested;
-}
-globalThis.ADD2E_SPELL_CLASS_LEVEL_VERSION=ADD2E_SPELL_CLASS_LEVEL_VERSION;
-globalThis.add2eSpellClassLevel=add2eSpellClassLevel;
-
-const ADD2E_SPELL_SYNC_MODAL_VERSION="2026-06-23-modal-fast-level-down-v2";
-const ADD2E_SPELL_SYNC_LEVEL_DOWNS=globalThis.ADD2E_SPELL_SYNC_LEVEL_DOWNS instanceof Map?globalThis.ADD2E_SPELL_SYNC_LEVEL_DOWNS:new Map();
-const ADD2E_SPELL_SYNC_MODAL_STATE=globalThis.ADD2E_SPELL_SYNC_MODAL_STATE instanceof Map?globalThis.ADD2E_SPELL_SYNC_MODAL_STATE:new Map();
-globalThis.ADD2E_SPELL_SYNC_LEVEL_DOWNS=ADD2E_SPELL_SYNC_LEVEL_DOWNS;
-globalThis.ADD2E_SPELL_SYNC_MODAL_STATE=ADD2E_SPELL_SYNC_MODAL_STATE;
-globalThis.ADD2E_SPELL_SYNC_MODAL_VERSION=ADD2E_SPELL_SYNC_MODAL_VERSION;
-
-function add2eSpellSyncRunKey(actor){return String(actor?.uuid??actor?.id??actor?.name??"acteur-inconnu")}
-function add2eSpellSyncCurrentLevel(actor){return Math.max(1,Number(actor?.system?.niveau??actor?.system?.level??1)||1)}
-function add2eSpellSyncChangedLevel(changes){const direct=changes?.system?.niveau??changes?.["system.niveau"]??changes?.system?.level??changes?.["system.level"];const n=Number(direct);return Number.isFinite(n)&&n>0?Math.floor(n):0}
-function add2eSpellSyncClassLabel(cls){return normalize(cls?.system?.slug??cls?.system?.label??cls?.system?.nom??cls?.system?.name??cls?.name??"")}
-function add2eSpellSyncClassIsAutomatic(cls){if(String(cls?.type??"").toLowerCase()!=="classe")return false;const sys=cls?.system??{},slug=add2eSpellSyncClassLabel(cls);if(slug.includes("clerc")||slug.includes("pretre")||slug.includes("priest")||slug.includes("druide")||slug.includes("druid"))return true;let casting=sys.spellcasting??{};if(typeof casting==="string"){try{casting=JSON.parse(casting)}catch(_e){casting={}}}const values=[...asArray(sys.spellLists),...asArray(sys.lists),...asArray(casting?.lists),...asArray(casting?.spellLists)].map(normalize);return values.includes("clerc")||values.includes("druide")}
-function add2eSpellSyncAutoClasses(actor){return actor?.items?.filter?.(add2eSpellSyncClassIsAutomatic)??[]}
-function add2eSpellSyncOpenModal(actor,message="Synchronisation des sorts en cours…"){
-  const key=add2eSpellSyncRunKey(actor),existing=ADD2E_SPELL_SYNC_MODAL_STATE.get(key);
-  if(existing){existing.count+=1;return()=>add2eSpellSyncCloseModal(actor)}
-  const DialogV2=foundry?.applications?.api?.DialogV2;
-  let dialog=null;
-  if(DialogV2){
-    try{
-      dialog=new DialogV2({
-        window:{title:"Synchronisation des sorts"},
-        content:`<section class="add2e-spell-sync-wait" style="min-width:330px;text-align:center;line-height:1.45;padding:8px 4px;"><i class="fas fa-circle-notch fa-spin" style="font-size:2rem;margin:8px;color:#b88924;"></i><p style="margin:8px 0 4px;font-weight:700;">${String(actor?.name??"Personnage")}</p><p style="margin:0;">${message}</p><p style="margin:12px 0 0;font-size:.9em;opacity:.8;">Veuillez patienter. Les actions sur cette fiche sont temporairement bloquées.</p></section>`,
-        buttons:[{action:"wait",label:"Synchronisation en cours…",default:true,callback:()=>false}],
-        close:()=>false
-      },{width:420,height:"auto"});
-      dialog.render({force:true});
-    }catch(error){console.warn("[ADD2E][SPELL_SYNC][WAIT_DIALOG_ERROR]",error)}
-  }
-  ADD2E_SPELL_SYNC_MODAL_STATE.set(key,{count:1,dialog});
-  return()=>add2eSpellSyncCloseModal(actor);
-}
-function add2eSpellSyncCloseModal(actor){
-  const key=add2eSpellSyncRunKey(actor),entry=ADD2E_SPELL_SYNC_MODAL_STATE.get(key);
-  if(!entry)return;
-  entry.count-=1;
-  if(entry.count>0)return;
-  ADD2E_SPELL_SYNC_MODAL_STATE.delete(key);
-  try{entry.dialog?.close?.({force:true})}catch(error){console.warn("[ADD2E][SPELL_SYNC][WAIT_DIALOG_CLOSE_ERROR]",error)}
-}
-function add2eSpellSyncSignature(actor){
-  const classes=actor?.items?.filter?.(item=>String(item?.type??"").toLowerCase()==="classe")??[],multi=actor?.system?.multiclasse?.enabled===true||classes.length>1,sig={};
-  if(!multi)sig.__mono=add2eSpellSyncCurrentLevel(actor);
-  for(const cls of classes){const key=add2eSpellSyncClassLabel(cls)||cls.id||cls.name;if(!key)continue;const stored=Number(cls?.system?.niveau??cls?.system?.level??cls?.system?.currentLevel??cls?.system?.niveauActuel);sig[key]=Number.isFinite(stored)&&stored>0?Math.floor(stored):add2eSpellSyncCurrentLevel(actor)}
-  for(const root of [actor?.system?.niveaux_par_classe,actor?.system?.niveauxParClasse,actor?.system?.levelsByClass,actor?.system?.classLevels]){if(!root||typeof root!=="object")continue;for(const [key,value] of Object.entries(root)){const n=Number(value?.niveau??value?.level??value?.value??value);if(Number.isFinite(n)&&n>0)sig[normalize(key)]=Math.floor(n)}}
-  return sig;
-}
-async function add2eSpellSyncFastLevelDown(actor){
-  const key=add2eSpellSyncRunKey(actor),running=globalThis.ADD2E_SPELL_SYNC_RUNNING;
-  if(!(running instanceof Set)||running.has(key))return false;
-  running.add(key);
-  const release=add2eSpellSyncOpenModal(actor,"Mise à jour des sorts accessibles après la baisse de niveau…");
-  try{
-    const reset=await globalThis.add2eResetActorSpellMemorization?.(actor,"level-down");
-    let deleted=0;
-    for(const classItem of add2eSpellSyncAutoClasses(actor)){
-      const classLevel=globalThis.add2eSpellClassLevel?.(actor,add2eSpellSyncClassLabel(classItem))??add2eSpellSyncCurrentLevel(actor);
-      const result=await globalThis.add2ePruneActorSpellsForClassLevel?.(actor,classItem,classLevel,{notify:false});
-      deleted+=Number(result?.deleted??0)||0;
+const ADD2E_SPELL_CLASS_LEVEL_VERSION = "2026-06-23-progression-ceiling-v1";
+function add2eSpellClassLevel(actor, classSlug = "") {
+  const actorLevel = Math.max(1, Number(actor?.system?.niveau ?? actor?.system?.level ?? 1) || 1);
+  const wanted = normalize(classSlug);
+  const classes = actor?.items?.filter?.(item => String(item?.type ?? "").toLowerCase() === "classe") ?? [];
+  const cls = classes.find(item => [item?.system?.slug, item?.system?.label, item?.system?.nom, item?.system?.name, item?.name].map(normalize).includes(wanted)) ?? classes[0] ?? null;
+  const read = value => {
+    const number = Number(value?.niveau ?? value?.level ?? value?.value ?? value);
+    return Number.isFinite(number) && number > 0 ? Math.floor(number) : 0;
+  };
+  let requested = 0;
+  for (const root of [actor?.system?.niveaux_par_classe, actor?.system?.niveauxParClasse, actor?.system?.levelsByClass, actor?.system?.classLevels]) {
+    if (!root || typeof root !== "object") continue;
+    for (const [key, value] of Object.entries(root)) {
+      if (normalize(key) === wanted) { requested = read(value); break; }
     }
-    await actor.setFlag?.("add2e","autoSpellSyncLevelSignature",add2eSpellSyncSignature(actor));
+    if (requested) break;
+  }
+  if (!requested && classes.length > 1) requested = read(cls?.system?.niveau ?? cls?.system?.level ?? cls?.system?.currentLevel ?? cls?.system?.niveauActuel);
+  requested ||= actorLevel;
+  const ceiling = (Array.isArray(cls?.system?.progression) ? cls.system.progression : [])
+    .reduce((highest, row) => Math.max(highest, read(row?.niveau ?? row?.level)), 0);
+  return ceiling && requested > ceiling ? ceiling : requested;
+}
+globalThis.ADD2E_SPELL_CLASS_LEVEL_VERSION = ADD2E_SPELL_CLASS_LEVEL_VERSION;
+globalThis.add2eSpellClassLevel = add2eSpellClassLevel;
+
+const ADD2E_SPELL_SYNC_MODAL_VERSION = "2026-06-23-modal-fast-level-down-v2";
+const ADD2E_SPELL_SYNC_LEVEL_DOWNS = globalThis.ADD2E_SPELL_SYNC_LEVEL_DOWNS instanceof Map ? globalThis.ADD2E_SPELL_SYNC_LEVEL_DOWNS : new Map();
+const ADD2E_SPELL_SYNC_MODAL_STATE = globalThis.ADD2E_SPELL_SYNC_MODAL_STATE instanceof Map ? globalThis.ADD2E_SPELL_SYNC_MODAL_STATE : new Map();
+globalThis.ADD2E_SPELL_SYNC_LEVEL_DOWNS = ADD2E_SPELL_SYNC_LEVEL_DOWNS;
+globalThis.ADD2E_SPELL_SYNC_MODAL_STATE = ADD2E_SPELL_SYNC_MODAL_STATE;
+globalThis.ADD2E_SPELL_SYNC_MODAL_VERSION = ADD2E_SPELL_SYNC_MODAL_VERSION;
+
+function add2eSpellSyncRunKey(actor) { return String(actor?.uuid ?? actor?.id ?? actor?.name ?? "acteur-inconnu"); }
+function add2eSpellSyncCurrentLevel(actor) { return Math.max(1, Number(actor?.system?.niveau ?? actor?.system?.level ?? 1) || 1); }
+function add2eSpellSyncChangedLevel(changes) {
+  const direct = changes?.system?.niveau ?? changes?.["system.niveau"] ?? changes?.system?.level ?? changes?.["system.level"];
+  const level = Number(direct);
+  return Number.isFinite(level) && level > 0 ? Math.floor(level) : 0;
+}
+function add2eSpellSyncClassLabel(cls) { return normalize(cls?.system?.slug ?? cls?.system?.label ?? cls?.system?.nom ?? cls?.system?.name ?? cls?.name ?? ""); }
+function add2eSpellSyncClassIsAutomatic(cls) {
+  if (String(cls?.type ?? "").toLowerCase() !== "classe") return false;
+  const system = cls?.system ?? {};
+  const slug = add2eSpellSyncClassLabel(cls);
+  if (slug.includes("clerc") || slug.includes("pretre") || slug.includes("priest") || slug.includes("druide") || slug.includes("druid")) return true;
+  let casting = system.spellcasting ?? {};
+  if (typeof casting === "string") { try { casting = JSON.parse(casting); } catch (_error) { casting = {}; } }
+  const values = [...asArray(system.spellLists), ...asArray(system.lists), ...asArray(casting?.lists), ...asArray(casting?.spellLists)].map(normalize);
+  return values.includes("clerc") || values.includes("druide");
+}
+function add2eSpellSyncAutoClasses(actor) { return actor?.items?.filter?.(add2eSpellSyncClassIsAutomatic) ?? []; }
+
+function add2eSpellSyncOpenModal(actor, message = "Synchronisation des sorts en cours…") {
+  const key = add2eSpellSyncRunKey(actor);
+  const existing = ADD2E_SPELL_SYNC_MODAL_STATE.get(key);
+  if (existing) { existing.count += 1; return () => add2eSpellSyncCloseModal(actor); }
+  const DialogV2 = foundry?.applications?.api?.DialogV2;
+  let dialog = null;
+  if (DialogV2) {
+    try {
+      dialog = new DialogV2({
+        window: { title: "Synchronisation des sorts" },
+        content: `<section class="add2e-spell-sync-wait" style="min-width:330px;text-align:center;line-height:1.45;padding:8px 4px;"><i class="fas fa-circle-notch fa-spin" style="font-size:2rem;margin:8px;color:#b88924;"></i><p style="margin:8px 0 4px;font-weight:700;">${String(actor?.name ?? "Personnage")}</p><p style="margin:0;">${message}</p><p style="margin:12px 0 0;font-size:.9em;opacity:.8;">Veuillez patienter. Les actions sur cette fiche sont temporairement bloquées.</p></section>`,
+        buttons: [{ action: "wait", label: "Synchronisation en cours…", default: true, callback: () => false }],
+        close: () => false
+      }, { width: 420, height: "auto" });
+      dialog.render({ force: true });
+    } catch (error) { console.warn("[ADD2E][SPELL_SYNC][WAIT_DIALOG_ERROR]", error); }
+  }
+  ADD2E_SPELL_SYNC_MODAL_STATE.set(key, { count: 1, dialog });
+  return () => add2eSpellSyncCloseModal(actor);
+}
+function add2eSpellSyncCloseModal(actor) {
+  const key = add2eSpellSyncRunKey(actor);
+  const entry = ADD2E_SPELL_SYNC_MODAL_STATE.get(key);
+  if (!entry) return;
+  entry.count -= 1;
+  if (entry.count > 0) return;
+  ADD2E_SPELL_SYNC_MODAL_STATE.delete(key);
+  try { entry.dialog?.close?.({ force: true }); } catch (error) { console.warn("[ADD2E][SPELL_SYNC][WAIT_DIALOG_CLOSE_ERROR]", error); }
+}
+function add2eSpellSyncSignature(actor) {
+  const classes = actor?.items?.filter?.(item => String(item?.type ?? "").toLowerCase() === "classe") ?? [];
+  const multi = actor?.system?.multiclasse?.enabled === true || classes.length > 1;
+  const signature = {};
+  if (!multi) signature.__mono = add2eSpellSyncCurrentLevel(actor);
+  for (const cls of classes) {
+    const key = add2eSpellSyncClassLabel(cls) || cls.id || cls.name;
+    if (!key) continue;
+    const stored = Number(cls?.system?.niveau ?? cls?.system?.level ?? cls?.system?.currentLevel ?? cls?.system?.niveauActuel);
+    signature[key] = Number.isFinite(stored) && stored > 0 ? Math.floor(stored) : add2eSpellSyncCurrentLevel(actor);
+  }
+  for (const root of [actor?.system?.niveaux_par_classe, actor?.system?.niveauxParClasse, actor?.system?.levelsByClass, actor?.system?.classLevels]) {
+    if (!root || typeof root !== "object") continue;
+    for (const [key, value] of Object.entries(root)) {
+      const level = Number(value?.niveau ?? value?.level ?? value?.value ?? value);
+      if (Number.isFinite(level) && level > 0) signature[normalize(key)] = Math.floor(level);
+    }
+  }
+  return signature;
+}
+async function add2eSpellSyncFastLevelDown(actor) {
+  const key = add2eSpellSyncRunKey(actor);
+  const running = globalThis.ADD2E_SPELL_SYNC_RUNNING;
+  if (!(running instanceof Set) || running.has(key)) return false;
+  running.add(key);
+  const release = add2eSpellSyncOpenModal(actor, "Mise à jour des sorts accessibles après la baisse de niveau…");
+  try {
+    const reset = await globalThis.add2eResetActorSpellMemorization?.(actor, "level-down");
+    let deleted = 0;
+    for (const classItem of add2eSpellSyncAutoClasses(actor)) {
+      const classLevel = globalThis.add2eSpellClassLevel?.(actor, add2eSpellSyncClassLabel(classItem)) ?? add2eSpellSyncCurrentLevel(actor);
+      const result = await globalThis.add2ePruneActorSpellsForClassLevel?.(actor, classItem, classLevel, { notify: false });
+      deleted += Number(result?.deleted ?? 0) || 0;
+    }
+    await actor.setFlag?.("add2e", "autoSpellSyncLevelSignature", add2eSpellSyncSignature(actor));
     globalThis.ADD2E_SPELL_SYNC_PREUPDATE_LEVELS?.delete?.(key);
-    if(deleted||Number(reset?.reset??0)>0)globalThis.add2eRerenderActorSheet?.(actor,false);
+    if (deleted || Number(reset?.reset ?? 0) > 0) globalThis.add2eRerenderActorSheet?.(actor, false);
     return true;
-  }catch(error){
-    console.error("[ADD2E][SPELL_SYNC][FAST_LEVEL_DOWN_ERROR]",error);
+  } catch (error) {
+    console.error("[ADD2E][SPELL_SYNC][FAST_LEVEL_DOWN_ERROR]", error);
     ui.notifications?.error?.("Erreur pendant la mise à jour des sorts après la baisse de niveau.");
     return false;
-  }finally{
-    setTimeout(()=>{running.delete(key);release()},180);
+  } finally {
+    setTimeout(() => { running.delete(key); release(); }, 180);
   }
 }
-function add2eSpellSyncWatchScheduledRun(actor){
-  const release=add2eSpellSyncOpenModal(actor),key=add2eSpellSyncRunKey(actor),running=globalThis.ADD2E_SPELL_SYNC_RUNNING;
-  setTimeout(()=>{
-    let attempts=0;
-    const check=()=>{
-      attempts+=1;
-      if(running instanceof Set&&running.has(key)&&attempts<600){setTimeout(check,75);return}
+function add2eSpellSyncWatchScheduledRun(actor) {
+  const release = add2eSpellSyncOpenModal(actor);
+  const key = add2eSpellSyncRunKey(actor);
+  const running = globalThis.ADD2E_SPELL_SYNC_RUNNING;
+  setTimeout(() => {
+    let attempts = 0;
+    const check = () => {
+      attempts += 1;
+      if (running instanceof Set && running.has(key) && attempts < 600) { setTimeout(check, 75); return; }
       release();
     };
     check();
-  },140);
+  }, 140);
 }
-function add2eSpellSyncInstallModalWrapper(){
-  const original=globalThis.add2eSyncActorSpellsFromClass;
-  if(typeof original!=="function"||original.__add2eSyncModalWrapped)return;
-  const wrapped=async function add2eSyncActorSpellsWithModal(actor,classItem,...rest){
-    const release=add2eSpellSyncOpenModal(actor,`Synchronisation des sorts de ${classItem?.name??"classe"}…`);
-    try{return await original.call(this,actor,classItem,...rest)}finally{release()}
+function add2eSpellSyncInstallModalWrapper() {
+  const original = globalThis.add2eSyncActorSpellsFromClass;
+  if (typeof original !== "function" || original.__add2eSyncModalWrapped) return;
+  const wrapped = async function add2eSyncActorSpellsWithModal(actor, classItem, ...rest) {
+    const release = add2eSpellSyncOpenModal(actor, `Synchronisation des sorts de ${classItem?.name ?? "classe"}…`);
+    try { return await original.call(this, actor, classItem, ...rest); }
+    finally { release(); }
   };
-  wrapped.__add2eSyncModalWrapped=true;
-  globalThis.add2eSyncActorSpellsFromClass=wrapped;
+  wrapped.__add2eSyncModalWrapped = true;
+  globalThis.add2eSyncActorSpellsFromClass = wrapped;
 }
-if(!globalThis.__ADD2E_SPELL_SYNC_MODAL_FAST_DOWN_HOOKS__){
-  globalThis.__ADD2E_SPELL_SYNC_MODAL_FAST_DOWN_HOOKS__=true;
-  Hooks.on("preUpdateActor",(actor,changes={},options={})=>{
-    if(!actor||actor.type!=="personnage"||options?.add2eInternal)return;
-    const next=add2eSpellSyncChangedLevel(changes),current=add2eSpellSyncCurrentLevel(actor);
-    if(next&&next<current)ADD2E_SPELL_SYNC_LEVEL_DOWNS.set(add2eSpellSyncRunKey(actor),{from:current,to:next});
+if (!globalThis.__ADD2E_SPELL_SYNC_MODAL_FAST_DOWN_HOOKS__) {
+  globalThis.__ADD2E_SPELL_SYNC_MODAL_FAST_DOWN_HOOKS__ = true;
+  Hooks.on("preUpdateActor", (actor, changes = {}, options = {}) => {
+    if (!actor || actor.type !== "personnage" || options?.add2eInternal) return;
+    const next = add2eSpellSyncChangedLevel(changes);
+    const current = add2eSpellSyncCurrentLevel(actor);
+    if (next && next < current) ADD2E_SPELL_SYNC_LEVEL_DOWNS.set(add2eSpellSyncRunKey(actor), { from: current, to: next });
   });
-  Hooks.on("updateActor",(actor,changes={},options={})=>{
-    if(!game.user?.isGM||!actor||actor.type!=="personnage"||options?.add2eInternal)return;
-    const next=add2eSpellSyncChangedLevel(changes),key=add2eSpellSyncRunKey(actor),down=ADD2E_SPELL_SYNC_LEVEL_DOWNS.get(key);
-    if(down){
+  Hooks.on("updateActor", (actor, changes = {}, options = {}) => {
+    if (!game.user?.isGM || !actor || actor.type !== "personnage" || options?.add2eInternal) return;
+    const next = add2eSpellSyncChangedLevel(changes);
+    const key = add2eSpellSyncRunKey(actor);
+    const down = ADD2E_SPELL_SYNC_LEVEL_DOWNS.get(key);
+    if (down) {
       ADD2E_SPELL_SYNC_LEVEL_DOWNS.delete(key);
-      if(add2eSpellSyncAutoClasses(actor).length)add2eSpellSyncFastLevelDown(actor).catch(error=>console.error("[ADD2E][SPELL_SYNC][FAST_LEVEL_DOWN_UNHANDLED]",error));
+      if (add2eSpellSyncAutoClasses(actor).length) add2eSpellSyncFastLevelDown(actor).catch(error => console.error("[ADD2E][SPELL_SYNC][FAST_LEVEL_DOWN_UNHANDLED]", error));
       return;
     }
-    if(next&&add2eSpellSyncAutoClasses(actor).length)add2eSpellSyncWatchScheduledRun(actor);
+    if (next && add2eSpellSyncAutoClasses(actor).length) add2eSpellSyncWatchScheduledRun(actor);
   });
-  Hooks.once("ready",()=>add2eSpellSyncInstallModalWrapper());
+  Hooks.once("ready", () => add2eSpellSyncInstallModalWrapper());
 }
