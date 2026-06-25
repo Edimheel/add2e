@@ -1,8 +1,10 @@
 // ADD2E — Actor sheet caracs, PV, onglets et rendu — full ApplicationV2
+// La progression de classe provient de l’Item classe exact.
+// Compatible Foundry V13/V14/V15.
 
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant 13c.");
 
-const ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION = "2026-05-29-force-ex-input-v2";
+const ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION = "2026-06-25-force-ex-class-items-v3";
 globalThis.ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION = ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION;
 
 function add2eV2Root(source) {
@@ -35,20 +37,19 @@ function add2eNormalizeClassForExceptionalStrength(value) {
 }
 
 function add2eActorCanUseExceptionalStrength(actor) {
-  const sys = actor?.system ?? {};
-  const classItem = actor?.items?.find?.(i => i.type === "classe") ?? null;
-  const classText = [
-    sys.classe,
-    sys.details_classe?.nom,
-    sys.details_classe?.name,
-    sys.details_classe?.label,
-    classItem?.name,
-    classItem?.system?.nom,
-    classItem?.system?.name,
-    classItem?.system?.label
-  ].map(add2eNormalizeClassForExceptionalStrength).join(" ");
-  return classText.includes("guerrier") || classText.includes("paladin") || classText.includes("ranger");
+  const classItems = Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
+  return classItems.some(classItem => {
+    const text = [
+      classItem?.name,
+      classItem?.system?.slug,
+      classItem?.system?.nom,
+      classItem?.system?.name,
+      classItem?.system?.label
+    ].map(add2eNormalizeClassForExceptionalStrength).join(" ");
+    return text.includes("guerrier") || text.includes("paladin") || text.includes("rodeur") || text.includes("ranger");
+  });
 }
+globalThis.add2eActorCanUseExceptionalStrength = add2eActorCanUseExceptionalStrength;
 
 globalThis.Add2eActorSheet.prototype.autoSetCaracAjustements = async function autoSetCaracAjustements() {
   if (this._autoSetCaracsInProgress) return;
@@ -61,27 +62,25 @@ globalThis.Add2eActorSheet.prototype.autoSetCaracAjustements = async function au
     const CARACS_LIST = ["force", "dexterite", "constitution", "intelligence", "sagesse", "charisme"];
     const baseUpdates = {};
 
-    for (const c of CARACS_LIST) {
-      const baseKey = `${c}_base`;
-      if (typeof s[baseKey] !== "number" || isNaN(s[baseKey])) {
-        baseUpdates[`system.${baseKey}`] = Number(s[c]) || 10;
+    for (const carac of CARACS_LIST) {
+      const baseKey = `${carac}_base`;
+      if (typeof s[baseKey] !== "number" || Number.isNaN(s[baseKey])) {
+        baseUpdates[`system.${baseKey}`] = Number(s[carac]) || 10;
       }
     }
 
     if (Object.keys(baseUpdates).length) await this.actor.update(baseUpdates, { add2eInternal: true });
 
     const totalCaracs = {};
-    for (const c of CARACS_LIST) {
-      const base = Number(this.actor.system?.[`${c}_base`] ?? s[`${c}_base`] ?? 10) || 10;
-      const legacyRace = Number(this.actor.system?.[`${c}_race`] ?? s[`${c}_race`] ?? 0) || 0;
+    for (const carac of CARACS_LIST) {
+      const base = Number(this.actor.system?.[`${carac}_base`] ?? s[`${carac}_base`] ?? 10) || 10;
+      const legacyRace = Number(this.actor.system?.[`${carac}_race`] ?? s[`${carac}_race`] ?? 0) || 0;
       const bonusCaracs = this.actor.system?.bonus_caracteristiques || s.bonus_caracteristiques || {};
-      const bonusRace = Number(bonusCaracs?.[c] ?? 0) || 0;
-      totalCaracs[c] = base + (bonusRace || legacyRace);
+      const bonusRace = Number(bonusCaracs?.[carac] ?? 0) || 0;
+      totalCaracs[carac] = base + (bonusRace || legacyRace);
     }
 
-    const allowExceptional =
-      !!s.details_classe?.allowExceptionalStrength ||
-      add2eActorCanUseExceptionalStrength(this.actor);
+    const allowExceptional = add2eActorCanUseExceptionalStrength(this.actor);
 
     let forceKey = totalCaracs.force;
     const forceEx = Number(s.force_ex || 0);
@@ -134,14 +133,14 @@ globalThis.Add2eActorSheet.prototype.autoSetCaracAjustements = async function au
     };
 
     const diff = {};
-    for (const [k, v] of Object.entries(fullUpdate)) {
-      if (foundry.utils.getProperty(this.actor, k) !== v) diff[k] = v;
+    for (const [path, value] of Object.entries(fullUpdate)) {
+      if (foundry.utils.getProperty(this.actor, path) !== value) diff[path] = value;
     }
 
     if (Object.keys(diff).length) await this.actor.update(diff, { add2eInternal: true });
     if (typeof this.autoSetPointsDeCoup === "function") await this.autoSetPointsDeCoup();
-  } catch (e) {
-    console.error("[ADD2E] Erreur dans autoSetCaracAjustements()", e);
+  } catch (error) {
+    console.error("[ADD2E] Erreur dans autoSetCaracAjustements()", error);
   } finally {
     this._autoSetCaracsInProgress = false;
   }
@@ -152,50 +151,53 @@ globalThis.Add2eActorSheet.prototype.autoSetPointsDeCoup = async function autoSe
     const actor = this.actor;
     if (!actor?.system) return;
 
-    const s = actor.system;
-    const lvl = Math.max(1, Number(s.niveau) || 1);
-    const classeItem = actor.items?.find(i => i.type === "classe");
-    const cls = classeItem?.system || s.details_classe || null;
+    const classes = Array.from(actor.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
+    if (classes.length !== 1) return;
+
+    const classDoc = classes[0];
+    const cls = classDoc.system ?? null;
     if (!cls) return;
 
+    const level = Math.max(1, Number(cls.niveau ?? cls.level) || 1);
     const hitDie = Number(cls.hitDie || 0);
     if (!Number.isFinite(hitDie) || hitDie <= 0) return;
 
+    const s = actor.system;
     const conBonus = Number(s.con_pv || 0);
     let hpRolls = Array.isArray(s.hpRolls) ? [...s.hpRolls] : [];
     if (force) hpRolls = [];
     if (hpRolls.length < 1 || !Number.isFinite(hpRolls[0])) hpRolls[0] = hitDie;
 
-    for (let i = 1; i < lvl; i++) {
-      const cur = hpRolls[i];
-      if (Number.isFinite(cur) && cur >= 1 && cur <= hitDie) continue;
-      hpRolls[i] = 1 + Math.floor(Math.random() * hitDie);
+    for (let index = 1; index < level; index += 1) {
+      const current = hpRolls[index];
+      if (Number.isFinite(current) && current >= 1 && current <= hitDie) continue;
+      hpRolls[index] = 1 + Math.floor(Math.random() * hitDie);
     }
 
     let hpMax = 0;
-    for (let i = 0; i < lvl; i++) hpMax += (i === 0 ? hitDie : (Number(hpRolls[i]) || 1)) + conBonus;
+    for (let index = 0; index < level; index += 1) hpMax += (index === 0 ? hitDie : (Number(hpRolls[index]) || 1)) + conBonus;
     if (!Number.isFinite(hpMax) || hpMax < 1) hpMax = 1;
 
     const sameHpRolls = foundry.utils.deepEqual
       ? foundry.utils.deepEqual(s.hpRolls ?? [], hpRolls)
       : JSON.stringify(s.hpRolls ?? []) === JSON.stringify(hpRolls);
-    const up = {};
-    if (!sameHpRolls) up["system.hpRolls"] = hpRolls;
-    if (Number(s.points_de_coup) !== hpMax) up["system.points_de_coup"] = hpMax;
-    if (syncCurrent && Number(s.pdv) !== hpMax) up["system.pdv"] = hpMax;
-    if (!Object.keys(up).length) return;
+    const updates = {};
+    if (!sameHpRolls) updates["system.hpRolls"] = hpRolls;
+    if (Number(s.points_de_coup) !== hpMax) updates["system.points_de_coup"] = hpMax;
+    if (syncCurrent && Number(s.pdv) !== hpMax) updates["system.pdv"] = hpMax;
+    if (!Object.keys(updates).length) return;
 
-    await actor.update(up, { add2eInternal: true, reason });
-  } catch (e) {
-    console.warn("[ADD2E][HP] Erreur autoSetPointsDeCoup :", e);
+    await actor.update(updates, { add2eInternal: true, reason });
+  } catch (error) {
+    console.warn("[ADD2E][HP] Erreur autoSetPointsDeCoup :", error);
   }
 };
 
 globalThis.Add2eActorSheet.prototype._enableCaracClickAssign = function _enableCaracClickAssign(roller) {
-  add2eV2Jq(this.element).find('.carac-drop-target').each((_i, el) => {
-    el.classList.add("clickable");
-    el.onclick = () => {
-      const carac = el.dataset.carac;
+  add2eV2Jq(this.element).find(".carac-drop-target").each((_index, element) => {
+    element.classList.add("clickable");
+    element.onclick = () => {
+      const carac = element.dataset.carac;
       if (roller.assigned[carac] !== undefined) roller.unassignCarac(carac);
       else roller.assignToCarac(carac);
     };
@@ -208,7 +210,7 @@ globalThis.Add2eActorSheet.prototype._add2eTabStorageKey = function _add2eTabSto
 
 globalThis.Add2eActorSheet.prototype._add2eReadStoredTab = function _add2eReadStoredTab() {
   try { return sessionStorage.getItem(this._add2eTabStorageKey()) || null; }
-  catch (_e) { return null; }
+  catch (_error) { return null; }
 };
 
 globalThis.Add2eActorSheet.prototype._add2eSheetRoot = function _add2eSheetRoot(html = null) {
@@ -230,7 +232,7 @@ globalThis.Add2eActorSheet.prototype._add2eRememberActiveTab = function _add2eRe
   const tab = explicitTab || this._add2eCurrentTabFromHtml(html) || "resume";
   this._add2eActiveTab = tab;
   this._add2eSetNativeActiveTab?.(tab);
-  try { sessionStorage.setItem(this._add2eTabStorageKey(), tab); } catch (_e) {}
+  try { sessionStorage.setItem(this._add2eTabStorageKey(), tab); } catch (_error) {}
   const hidden = this._add2eSheetRoot(html)?.querySelector?.(".a2e-active-tab-input");
   if (hidden) hidden.value = tab;
   return tab;
@@ -242,12 +244,12 @@ globalThis.Add2eActorSheet.prototype._add2eActivateTab = function _add2eActivate
   const tab = tabName || this._add2eActiveTab || this._add2eReadStoredTab() || "resume";
   this._add2eRememberActiveTab(root, tab);
 
-  root.querySelectorAll(".sheet-tabs .item[data-tab], .a2e-tabs .item[data-tab]").forEach(el => {
-    el.classList.toggle("active", el.dataset.tab === tab);
+  root.querySelectorAll(".sheet-tabs .item[data-tab], .a2e-tabs .item[data-tab]").forEach(element => {
+    element.classList.toggle("active", element.dataset.tab === tab);
   });
 
-  root.querySelectorAll(".sheet-body .tab[data-tab], .a2e-tab-content[data-tab]").forEach(el => {
-    el.classList.toggle("active", el.dataset.tab === tab);
+  root.querySelectorAll(".sheet-body .tab[data-tab], .a2e-tab-content[data-tab]").forEach(element => {
+    element.classList.toggle("active", element.dataset.tab === tab);
   });
 
   add2eSyncForceExSelects(root, this.actor);
@@ -263,17 +265,18 @@ globalThis.Add2eActorSheet.prototype._add2eBindPersistentTabs = function _add2eB
 
   if (root.dataset.add2eTabsCaptureBound !== "1") {
     root.dataset.add2eTabsCaptureBound = "1";
-    root.addEventListener("pointerdown", ev => {
-      const tabLink = ev.target.closest?.(".sheet-tabs .item[data-tab], .a2e-tabs .item[data-tab]");
+    root.addEventListener("pointerdown", event => {
+      const tabLink = event.target.closest?.(".sheet-tabs .item[data-tab], .a2e-tabs .item[data-tab]");
       if (tabLink && root.contains(tabLink)) {
         this._add2eRememberActiveTab(root, tabLink.dataset.tab || "resume");
         return;
       }
       this._add2eRememberActiveTab(root);
     }, true);
-    root.addEventListener("change", async ev => {
+
+    root.addEventListener("change", async event => {
       this._add2eRememberActiveTab(root);
-      const field = ev.target?.closest?.("[name='system.force_ex']");
+      const field = event.target?.closest?.("[name='system.force_ex']");
       if (!field) return;
       const value = Math.max(0, Math.min(100, Number(field.value) || 0));
       field.value = String(value);
@@ -287,15 +290,15 @@ globalThis.Add2eActorSheet.prototype._add2eBindPersistentTabs = function _add2eB
 
   add2eV2Jq(root).find(".sheet-tabs .item[data-tab], .a2e-tabs .item[data-tab]")
     .off("click.add2e-tabs")
-    .on("click.add2e-tabs", ev => {
-      ev.preventDefault();
-      const tab = ev.currentTarget.dataset.tab || "resume";
+    .on("click.add2e-tabs", event => {
+      event.preventDefault();
+      const tab = event.currentTarget.dataset.tab || "resume";
       this._add2eActivateTab(tab, root);
     });
 };
 
 globalThis.Add2eActorSheet.prototype.render = function render(force = false, options = {}) {
-  try { if (this.rendered) this._add2eRememberActiveTab(this.element); } catch (_e) {}
+  try { if (this.rendered) this._add2eRememberActiveTab(this.element); } catch (_error) {}
 
   const renderOptions = (typeof force === "object" && force !== null)
     ? force
@@ -305,7 +308,7 @@ globalThis.Add2eActorSheet.prototype.render = function render(force = false, opt
   const refreshUi = () => {
     this._add2eActivateTab(this._add2eActiveTab || this._add2eReadStoredTab() || "resume");
     add2eSyncForceExSelects(this._add2eSheetRoot(this.element), this.actor);
-    try { add2eEnhanceCharacterSheetUi(this, this.element); } catch (_err) {}
+    try { add2eEnhanceCharacterSheetUi(this, this.element); } catch (_error) {}
   };
   for (const delay of [0, 80, 220]) setTimeout(refreshUi, delay);
   return result;
