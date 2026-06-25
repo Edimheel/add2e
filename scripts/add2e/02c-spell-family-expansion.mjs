@@ -1,5 +1,5 @@
-const ADD2E_SPELL_FAMILY_VERSION = "2026-06-23-spell-family-material-profiles-v7";
-const ADD2E_SPELL_FAMILY_MATERIAL_MIGRATION = "2026-06-23-spell-family-material-profiles-v8";
+const ADD2E_SPELL_FAMILY_VERSION = "2026-06-25-spell-family-material-profiles-v8";
+const ADD2E_SPELL_FAMILY_MATERIAL_MIGRATION = "2026-06-25-spell-family-material-profiles-v9";
 
 const SPELL_FAMILY_PENDING = globalThis.ADD2E_SPELL_FAMILY_PENDING instanceof Set
   ? globalThis.ADD2E_SPELL_FAMILY_PENDING
@@ -62,7 +62,6 @@ function matchingProfiles(flag, system) {
 
 const modeFor = (profile, id) => (profile?.modes ?? []).find(mode => String(mode?.id ?? "").toLowerCase() === id) ?? null;
 const profileKey = (profile, name) => [normalize(profile?.class), Number(profile?.level) || 0, normalize(profile?.referenceName ?? name)].join("|");
-const hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object ?? {}, key);
 
 function applySystemOverrides(data, overrides = {}) {
   const result = clone(data);
@@ -81,28 +80,25 @@ function hasStructuredMaterials(value) {
   );
 }
 
-function synchronizeMaterialFields(data, overrides = {}) {
+function synchronizeMaterialFields(data) {
   const result = clone(data);
   const system = result.system ??= {};
-  const structured = system.composants_materiels_objets;
-  const explicitMaterialList = hasOwn(overrides, "composants_materiels") || hasOwn(overrides, "composants_materiels_objets");
+  const primary = system.composants_materiels;
+  const legacy = system.composants_materiels_objets;
 
-  if (hasStructuredMaterials(structured)) {
-    if (!hasOwn(overrides, "composants_materiels") || hasOwn(overrides, "composants_materiels_objets")) {
-      system.composants_materiels = clone(structured);
-    }
-  } else if (hasStructuredMaterials(system.composants_materiels)) {
-    system.composants_materiels_objets = clone(system.composants_materiels);
-  } else if (!explicitMaterialList && Array.isArray(system.composants_materiels_objets) && system.composants_materiels_objets.length) {
-    system.composants_materiels = clone(system.composants_materiels_objets);
+  // Compatibilité de lecture des anciens sorts : le champ historique n'est
+  // utilisé que lorsque le profil canonique est absent. Il n'est jamais recréé.
+  if (!hasStructuredMaterials(primary) && hasStructuredMaterials(legacy)) {
+    system.composants_materiels = clone(legacy);
   }
+  delete system.composants_materiels_objets;
 
   return result;
 }
 
 function applyMode(data, mode = null) {
   const overrides = mode?.systemOverrides ?? {};
-  return synchronizeMaterialFields(applySystemOverrides(data, overrides), overrides);
+  return synchronizeMaterialFields(applySystemOverrides(data, overrides));
 }
 
 function withName(data, name) {
@@ -217,6 +213,9 @@ function itemUpdate(item, expected) {
     system: clone(expected.data.system ?? {}),
     "flags.add2e.spellFamily": clone(add2e.spellFamily)
   };
+  if (Object.prototype.hasOwnProperty.call(item?.system ?? {}, "composants_materiels_objets")) {
+    update["system.-=composants_materiels_objets"] = null;
+  }
   if (add2e.reversibleActorEntry) update["flags.add2e.reversibleActorEntry"] = clone(add2e.reversibleActorEntry);
   if (add2e.variantChoice) update["flags.add2e.variantChoice"] = clone(add2e.variantChoice);
   return update;
@@ -383,7 +382,7 @@ function sortSpellFamilyRows(data) {
   for (const level of Array.isArray(data.add2eSpellLevels) ? data.add2eSpellLevels : []) {
     if (Array.isArray(level?.sorts)) level.sorts.sort(compareSpellFamilyRows);
     for (const group of Array.isArray(level?.groups) ? level.groups : []) {
-      if (Array.isArray(group?.sorts)) group.sorts.sort(compareSpellFamilyRows);
+      if (Array.isArray(group?.sorts)) group.sort(compareSpellFamilyRows);
     }
   }
   return data;
@@ -418,9 +417,8 @@ function spellFamilyMaterialsNeedMigration(actor, item) {
 
     const expectedSystem = entry.data?.system ?? {};
     const actualSystem = actual.system ?? {};
-    for (const field of ["composants_materiels", "composants_materiels_objets"]) {
-      if (!sameMaterialData(actualSystem[field], expectedSystem[field])) return true;
-    }
+    if (Object.prototype.hasOwnProperty.call(actualSystem, "composants_materiels_objets")) return true;
+    if (!sameMaterialData(actualSystem.composants_materiels, expectedSystem.composants_materiels)) return true;
   }
 
   return false;
