@@ -1,5 +1,6 @@
 // ADD2E — Multiclassage canonique — point d'entrée
 // Les Items classe sont la seule source de niveau et d'XP.
+// Compatible Foundry V13/V14/V15 : aucune projection par Proxy d'un Actor.
 
 import {
   MULTICLASS_VERSION,
@@ -165,7 +166,7 @@ function installGetDataPatch() {
   proto.getData = async function add2eItemProgressionMulticlassGetData(...args) {
     const data = await original.apply(this, args);
     if (this.actor?.type !== "personnage" || !multiclassEnabled(this.actor)) return data;
-    const payload = multiclassUpdatePayload(this.actor);
+    const payload = multiclassUpdatePayload(this.actor, { presentation: true });
     const output = payload ? applyPayloadToSheetData(data, payload) : data;
     return syncMulticlassSheetData(this.actor, output);
   };
@@ -377,9 +378,23 @@ function thiefClassItem(actor) {
 }
 
 /**
- * Adaptateur temporaire du moteur Voleur historique : il reçoit toujours
- * l'Item Voleur exact et son niveau, jamais la première classe de l'acteur.
+ * Facade sans Proxy : Foundry conserve ses propriétés non configurables
+ * (notamment EmbeddedCollection items) et le moteur historique reçoit le
+ * système du Voleur exact.
  */
+function actorFacade(actor, overrides = {}) {
+  const facade = Object.create(actor);
+  for (const [key, value] of Object.entries(overrides)) {
+    Object.defineProperty(facade, key, {
+      value,
+      configurable: true,
+      enumerable: false,
+      writable: false
+    });
+  }
+  return facade;
+}
+
 function thiefContext(actor, thief = thiefClassItem(actor)) {
   if (!actor || !thief) return null;
   const progression = classProgression(thief);
@@ -391,19 +406,7 @@ function thiefContext(actor, thief = thiefClassItem(actor)) {
     niveau: progression.level,
     xp: progression.hasXp ? progression.xp : 0
   };
-  const items = [
-    thief,
-    ...classItems(actor).filter(item => item.id !== thief.id),
-    ...Array.from(actor.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() !== "classe")
-  ];
-  return new Proxy(actor, {
-    get(target, property) {
-      if (property === "system") return system;
-      if (property === "items") return items;
-      const value = Reflect.get(target, property, target);
-      return typeof value === "function" ? value.bind(target) : value;
-    }
-  });
+  return actorFacade(actor, { system });
 }
 
 function installThiefItemProjection() {
@@ -466,15 +469,8 @@ function installEffectsEngineItemProgressionPatch() {
     }));
     const safeSystem = { ...(actor.system ?? {}), classFeatures: [], details_classe: {} };
     const safeItems = [...blankClasses, ...Array.from(actor.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() !== "classe")];
-    const proxy = new Proxy(actor, {
-      get(target, property) {
-        if (property === "system") return safeSystem;
-        if (property === "items") return safeItems;
-        const value = Reflect.get(target, property, target);
-        return typeof value === "function" ? value.bind(target) : value;
-      }
-    });
-    const tags = new Set(original(proxy) ?? []);
+    const context = actorFacade(actor, { system: safeSystem, items: safeItems });
+    const tags = new Set(original(context) ?? []);
     const addFeatureTags = Engine.addClassFeatureTagsInto?.bind(Engine);
     const addTags = Engine.addTagsInto?.bind(Engine);
     for (const item of classItems(actor)) {

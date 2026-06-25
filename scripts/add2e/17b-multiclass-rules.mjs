@@ -24,8 +24,8 @@ const MULTICLASS_CANDIDATE_PACKS = {
 const MULTICLASS_CANDIDATE_CACHE = { race: null, classe: null };
 
 function candidateKey(data) {
-  const sys = data?.system ?? {};
-  return norm(data?.name ?? sys.slug ?? sys.label ?? sys.name ?? sys.nom ?? data?.id ?? "");
+  const system = data?.system ?? {};
+  return norm(data?.name ?? system.slug ?? system.label ?? system.name ?? system.nom ?? data?.id ?? "");
 }
 
 function dedupeCandidates(items) {
@@ -306,16 +306,24 @@ function displaySpellcasting(entries) {
   } : null;
 }
 
+/** L'opérateur Foundry remplace définitivement la syntaxe -= dépréciée. */
+function forcedDeletion() {
+  const deletion = foundry?.data?.operators?.ForcedDeletion;
+  if (!deletion) throw new Error("[ADD2E] FoundryData ForcedDeletion est indisponible.");
+  return deletion;
+}
+
 function clearLegacyClassCopies() {
+  const deletion = forcedDeletion();
   return {
-    "system.-=classes": null,
-    "system.-=details_classes": null,
-    "system.-=xp_par_classe": null,
-    "system.-=niveaux_par_classe": null,
-    "system.-=titres_par_classe": null,
-    "system.-=xp_next_par_classe": null,
-    "system.-=niveau_max_par_classe": null,
-    "system.multiclasse.-=classes": null
+    "system.classes": deletion,
+    "system.details_classes": deletion,
+    "system.xp_par_classe": deletion,
+    "system.niveaux_par_classe": deletion,
+    "system.titres_par_classe": deletion,
+    "system.xp_next_par_classe": deletion,
+    "system.niveau_max_par_classe": deletion,
+    "system.multiclasse.classes": deletion
   };
 }
 
@@ -352,14 +360,13 @@ export function multiclassUpdatePayload(actor, options = {}) {
     "system.xp_to_next": nextXp ? Math.max(0, nextXp - Math.min(...entries.map(entry => entry.xp))) : 0,
     "system.xp_percent": 0,
     "system.spellcasting": displaySpellcasting(entries),
-    ...clearLegacyClassCopies()
+    ...(options?.presentation === true ? {} : clearLegacyClassCopies())
   };
 }
 
 export function monoClassCleanupPayload() {
   return {
     "system.multiclasse": { schema: MULTICLASS_SCHEMA, enabled: false, mode: "mono", xpSplit: "none", label: "" },
-    "system.multiclasse.-=classes": null,
     ...clearLegacyClassCopies()
   };
 }
