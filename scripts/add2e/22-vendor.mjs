@@ -48,10 +48,35 @@ import {
   registerSockets as registerConsumablesSockets
 } from "./22e-consumables-core.mjs";
 
-const ADD2E_SHOP_ORCHESTRATION_VERSION = "2026-06-24-shop-without-attack-wrapper-v2";
+const ADD2E_SHOP_ORCHESTRATION_VERSION = "2026-06-25-armorer-source-rules-sync-v3";
 const ADD2E_SHOP_HP_VERSION = "2026-06-15-shop-hp-one-multiclass-v1";
 const ADD2E_SHOP_HP = 1;
 const SPELL_COMPONENTS_SETTING = "gestionComposantsSorts";
+
+// Seuls ces champs sont répliqués depuis le compendium vers le stock déjà
+// existant de l'armurier. Prix, quantité et paramètres de stock sont conservés.
+const ARMORER_WEAPON_RULE_FIELDS = [
+  "tags",
+  "effectTags",
+  "effecttags",
+  "categorie",
+  "category",
+  "type_arme",
+  "typeArme",
+  "arme_de_jet",
+  "armeDeJet",
+  "isThrown",
+  "utilise_munition",
+  "utiliseMunition",
+  "projectileConsomme",
+  "carquois",
+  "portee_courte",
+  "portee_moyenne",
+  "portee_longue",
+  "porteeCourte",
+  "porteeMoyenne",
+  "porteeLongue"
+];
 
 function isShopActor(actor) {
   return isVendorActor(actor) || isArmorerActor(actor);
@@ -93,6 +118,100 @@ function shopActorNeedsHitPointUpdate(actor) {
     || values.some(value => Number(value) !== ADD2E_SHOP_HP);
 }
 
+function armorerRuleSlug(value) {
+  return String(value ?? "")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[’']/g, "_")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function armorerRuleKey(item) {
+  return `arme:${armorerRuleSlug(item?.name)}`;
+}
+
+function armorerClone(value) {
+  if (foundry?.utils?.deepClone) return foundry.utils.deepClone(value);
+  return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
+}
+
+function armorerSameValue(a, b) {
+  return JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+}
+
+async function getArmorerWeaponSources() {
+  const docs = [];
+  const seen = new Set();
+  const ids = ["add2e.armes", "world.armes"];
+
+  for (const [id, pack] of game.packs ?? []) {
+    const text = `${id} ${pack?.metadata?.label ?? ""}`;
+    if (/\barmes?\b|weapons?/i.test(text) && !ids.includes(id)) ids.push(id);
+  }
+
+  for (const id of ids) {
+    const pack = game.packs?.get?.(id);
+    if (!pack) continue;
+    let packDocs = [];
+    try {
+      packDocs = await pack.getDocuments();
+    } catch (error) {
+      console.warn("[ADD2E][ARMORER][SOURCE_SYNC][PACK_READ_FAIL]", id, error);
+      continue;
+    }
+
+    for (const doc of packDocs) {
+      if (doc?.type !== "arme") continue;
+      const key = armorerRuleKey(doc);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      docs.push(doc);
+    }
+  }
+
+  return docs;
+}
+
+/**
+ * Met à jour le stock préexistant de l'armurier sans écraser son économie.
+ * Les nouveaux achats recopient alors la bonne arme depuis ce stock.
+ */
+async function syncArmorerWeaponRules(armorer) {
+  if (!game.user?.isGM || !armorer) return 0;
+
+  const sources = await getArmorerWeaponSources();
+  const sourceByKey = new Map(sources.map(source => [armorerRuleKey(source), source]));
+  const updates = [];
+
+  for (const stockItem of armorer.items ?? []) {
+    if (stockItem?.type !== "arme") continue;
+
+    const catalogKey = stockItem.getFlag?.("add2e", "armorerCatalogKey") ?? armorerRuleKey(stockItem);
+    const source = sourceByKey.get(catalogKey) ?? sourceByKey.get(armorerRuleKey(stockItem));
+    if (!source) continue;
+
+    const sourceSystem = source.system ?? {};
+    const update = { _id: stockItem.id };
+    let changed = false;
+
+    for (const field of ARMORER_WEAPON_RULE_FIELDS) {
+      if (!Object.prototype.hasOwnProperty.call(sourceSystem, field)) continue;
+      if (armorerSameValue(stockItem.system?.[field], sourceSystem[field])) continue;
+      update[`system.${field}`] = armorerClone(sourceSystem[field]);
+      changed = true;
+    }
+
+    if (changed) updates.push(update);
+  }
+
+  if (updates.length) {
+    await armorer.updateEmbeddedDocuments("Item", updates, { add2eReason: "armorer-sync-source-weapon-rules" });
+  }
+
+  return updates.length;
+}
+
 async function enforceShopHitPoints() {
   if (!game.user?.isGM) return false;
 
@@ -123,7 +242,8 @@ async function enforceShopActors() {
   if (armorer) {
     await moveArmorerToFolder(armorer);
     await updateArmorerTokenSize(armorer);
-    if (!Array.from(armorer.items ?? []).length) await ensureArmorerStock(armorer);
+    await ensureArmorerStock(armorer);
+    await syncArmorerWeaponRules(armorer);
   }
 
   return true;
