@@ -1,7 +1,7 @@
-// ADD2E — Déduplication des sorts et migration des composants historiques.
+// ADD2E — Déduplication des sorts et suppression du champ matériel historique.
 // Compatible Foundry V13 / V14 / V15.
 
-const ADD2E_SPELL_SYNC_DEDUPE_VERSION = "2026-06-25-spell-sync-dedupe-v7";
+const ADD2E_SPELL_SYNC_DEDUPE_VERSION = "2026-06-25-spell-sync-dedupe-v8-no-material-fallback";
 const RUNNING = globalThis.ADD2E_SPELL_SYNC_DEDUPE_RUNNING instanceof Set ? globalThis.ADD2E_SPELL_SYNC_DEDUPE_RUNNING : new Set();
 globalThis.ADD2E_SPELL_SYNC_DEDUPE_VERSION = ADD2E_SPELL_SYNC_DEDUPE_VERSION;
 globalThis.ADD2E_SPELL_SYNC_DEDUPE_RUNNING = RUNNING;
@@ -39,26 +39,17 @@ function compareKeep(left, right) {
   return String(left?.id ?? "").localeCompare(String(right?.id ?? ""));
 }
 
-async function migrateLegacyMaterials(actor, reason = "legacy-material-migration") {
-  if (!game.user?.isGM || !actor || actor.type !== "personnage") return { migrated: 0, removed: 0 };
+async function removeLegacyMaterialFields(actor, reason = "legacy-material-cleanup") {
+  if (!game.user?.isGM || !actor || actor.type !== "personnage") return { removed: 0 };
   const updates = [];
-  let migrated = 0;
   for (const item of actor.items?.filter?.(entry => String(entry.type ?? "").toLowerCase() === "sort") ?? []) {
-    const system = item.system ?? {};
-    if (!hasOwn(system, "composants_materiels_objets")) continue;
-    const update = { _id: item.id, "system.-=composants_materiels_objets": null };
-    // Le champ historique est lu uniquement pour récupérer une ancienne copie
-    // sans champ canonique. Un champ canonique vide reste une source valide.
-    if (!hasOwn(system, "composants_materiels")) {
-      update["system.composants_materiels"] = clone(system.composants_materiels_objets);
-      migrated += 1;
-    }
-    updates.push(update);
+    if (!hasOwn(item.system, "composants_materiels_objets")) continue;
+    updates.push({ _id: item.id, "system.-=composants_materiels_objets": null });
   }
-  if (!updates.length) return { migrated: 0, removed: 0 };
+  if (!updates.length) return { removed: 0 };
   await actor.updateEmbeddedDocuments("Item", updates, { add2eInternal: true, add2eSpellSync: true, reason, render: false });
   globalThis.add2eRerenderActorSheet?.(actor, false);
-  return { migrated, removed: updates.length };
+  return { removed: updates.length };
 }
 
 async function safeDeleteIds(actor, ids, reason = "manual") {
@@ -124,9 +115,9 @@ function installWrapper() {
   const wrapped = async function add2eSyncActorSpellsFromClassDedupe(actor, classItem, options = {}) {
     const result = await original(actor, classItem, { ...options, forceCacheRefresh: options.forceCacheRefresh ?? options.mode === "replace" });
     const dedupe = await removeDuplicates(actor, `sync-${options?.mode ?? "replace"}`);
-    const migration = await migrateLegacyMaterials(actor, `sync-${options?.mode ?? "replace"}`);
+    const cleanup = await removeLegacyMaterialFields(actor, `sync-${options?.mode ?? "replace"}`);
     if (dedupe.deleted) result.deleted = (Number(result.deleted) || 0) + dedupe.deleted;
-    if (migration.migrated) result.legacyMaterialsMigrated = migration.migrated;
+    if (cleanup.removed) result.legacyMaterialFieldsRemoved = cleanup.removed;
     return result;
   };
   wrapped._add2eDedupeWrapped = true;
@@ -139,10 +130,9 @@ Hooks.once("ready", () => {
     setTimeout(installWrapper, 250);
     setTimeout(installWrapper, 1000);
   }
-  // 02c a déjà programmé son expansion à 250 ms. Cette migration explicite
-  // s'exécute avant elle, afin que les anciennes copies soient récupérées.
+  // Cette suppression précède l'expansion des familles programmée par 02c.
   if (game.user?.isGM) setTimeout(async () => {
-    for (const actor of game.actors?.filter?.(entry => entry.type === "personnage") ?? []) await migrateLegacyMaterials(actor, "ready-legacy-material-migration");
+    for (const actor of game.actors?.filter?.(entry => entry.type === "personnage") ?? []) await removeLegacyMaterialFields(actor, "ready-legacy-material-cleanup");
   }, 0);
 });
 
@@ -150,13 +140,14 @@ Hooks.on("createItem", (item, _options, userId) => {
   if (String(userId ?? "") !== String(game.user?.id ?? "")) return;
   const actor = item?.parent;
   if (!actor || actor.type !== "personnage" || String(item?.type ?? "").toLowerCase() !== "sort") return;
+  // 02c étend les familles après 50 ms. Cette suppression s'exécute avant elle.
+  setTimeout(() => removeLegacyMaterialFields(actor, "createItem-sort"), 0);
   setTimeout(() => removeDuplicates(actor, "createItem-sort"), 80);
-  setTimeout(() => migrateLegacyMaterials(actor, "createItem-sort"), 120);
 });
 
 globalThis.add2eRemoveDuplicateActorSpells = removeDuplicates;
 globalThis.add2eSafeDeleteDuplicateActorSpellIds = safeDeleteIds;
 globalThis.add2eRemoveDuplicateSpellsEverywhere = removeDuplicatesEverywhere;
-globalThis.add2eNormalizeActorSpellMaterials = migrateLegacyMaterials;
+globalThis.add2eNormalizeActorSpellMaterials = removeLegacyMaterialFields;
 globalThis.add2eSpellDedupeCleanSpellMaterialComponents = system => clone(system?.composants_materiels ?? []);
-globalThis.add2eMigrateActorLegacySpellMaterialFields = migrateLegacyMaterials;
+globalThis.add2eMigrateActorLegacySpellMaterialFields = removeLegacyMaterialFields;
