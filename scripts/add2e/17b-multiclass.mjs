@@ -1,15 +1,17 @@
-// ADD2E — Multiclassage propre — point d'entrée split
-// Version : 2026-06-13-multiclass-split-v1
-//
-// Découpage fonctionnel :
-// - 17b-multiclass-core.mjs : helpers noyau
-// - 17b-multiclass-rules.mjs : règles, progression, payloads
-// - 17b-multiclass-dialogs.mjs : DialogV2 et choix de drop
-// - 17b-multiclass-operations.mjs : opérations acteur
-// - 17b-multiclass-direct-fields.mjs : champs XP/niveau par classe
-// - 17b-multiclass-drop.mjs : interception drop classe/race
+// ADD2E — Multiclassage canonique — point d'entrée
+// Les Items classe sont les définitions. system.multiclasse.classes est le seul
+// état de progression multiclasses ; aucune définition de classe n'est recopiée.
 
-import { MULTICLASS_VERSION, multiclassEnabled, warn } from "./17b-multiclass-core.mjs";
+import {
+  MULTICLASS_VERSION,
+  canonicalClassLevel,
+  canonicalClassState,
+  canonicalMulticlass,
+  classItems,
+  classSlug,
+  multiclassEnabled,
+  warn
+} from "./17b-multiclass-core.mjs";
 import {
   allowedCombosFromRace,
   classRaceMaxLevel,
@@ -19,8 +21,18 @@ import {
   raceAllowsClassSet,
   raceCandidatesForClass
 } from "./17b-multiclass-rules.mjs";
-import { applyPayloadToSheetData, cleanupAfterMonoclassReplace, recalcActor, replaceClassInMulticlass } from "./17b-multiclass-operations.mjs";
-import { bindDirectMulticlassFields, mergeMulticlassChanges, updateDirectMulticlassField } from "./17b-multiclass-direct-fields.mjs";
+import {
+  applyPayloadToSheetData,
+  cleanupAfterMonoclassReplace,
+  migrateLegacyMulticlassActor,
+  recalcActor,
+  replaceClassInMulticlass
+} from "./17b-multiclass-operations.mjs";
+import {
+  bindDirectMulticlassFields,
+  mergeMulticlassChanges,
+  updateDirectMulticlassField
+} from "./17b-multiclass-direct-fields.mjs";
 import { compatibleMulticlassClassCandidates, installDropWrapperDeferred } from "./17b-multiclass-drop.mjs";
 
 globalThis.ADD2E_MULTICLASS_VERSION = MULTICLASS_VERSION;
@@ -28,14 +40,80 @@ globalThis.ADD2E_MULTICLASS_VERSION = MULTICLASS_VERSION;
 function installGetDataPatch() {
   const proto = globalThis.Add2eActorSheet?.prototype;
   if (!proto?.getData || proto.__add2eMulticlassGetDataPatch === MULTICLASS_VERSION) return !!proto?.getData;
+
   const original = proto.getData;
-  proto.getData = async function add2eMulticlassGetData(...args) {
+  proto.getData = async function add2eCanonicalMulticlassGetData(...args) {
     const data = await original.apply(this, args);
-    if (this.actor?.type !== "personnage" || !multiclassEnabled(this.actor)) return data;
-    return applyPayloadToSheetData(data, multiclassUpdatePayload(this.actor));
+    if (this.actor?.type !== "personnage" || !canonicalMulticlass(this.actor)) return data;
+    const payload = multiclassUpdatePayload(this.actor);
+    return payload ? applyPayloadToSheetData(data, payload) : data;
   };
+
   proto.__add2eMulticlassGetDataPatch = MULTICLASS_VERSION;
   return true;
+}
+
+function classContext(actor, classItem) {
+  const state = canonicalClassState(actor, classItem);
+  if (!state || !classItem) return null;
+
+  const system = {
+    ...(actor.system ?? {}),
+    classe: classItem.name,
+    details_classe: foundry.utils.deepClone(classItem.system ?? {}),
+    niveau: canonicalClassLevel(actor, classItem, 1),
+    xp: Number(state.xp) || 0
+  };
+
+  return new Proxy(actor, {
+    get(target, property) {
+      if (property === "system") return system;
+      const value = Reflect.get(target, property, target);
+      return typeof value === "function" ? value.bind(target) : value;
+    }
+  });
+}
+
+function installThiefCanonicalBridge() {
+  if (globalThis.__ADD2E_CANONICAL_THIEF_BRIDGE__ === MULTICLASS_VERSION) return;
+
+  const skills = globalThis.add2eGetActorThiefSkills;
+  if (typeof skills === "function" && !skills.__add2eCanonicalThiefBridge) {
+    const wrapped = function add2eCanonicalGetActorThiefSkills(actor, ...args) {
+      if (!canonicalMulticlass(actor)) return skills.call(this, actor, ...args);
+      const thief = classItems(actor).find(item => classSlug(item) === "voleur") ?? null;
+      const context = classContext(actor, thief);
+      return context ? skills.call(this, context, ...args) : [];
+    };
+    wrapped.__add2eCanonicalThiefBridge = true;
+    wrapped.__add2eCanonicalThiefOriginal = skills;
+    globalThis.add2eGetActorThiefSkills = wrapped;
+  }
+
+  const roll = globalThis.add2eRollThiefSkill;
+  if (typeof roll === "function" && !roll.__add2eCanonicalThiefBridge) {
+    const wrapped = async function add2eCanonicalRollThiefSkill(actor, ...args) {
+      if (!canonicalMulticlass(actor)) return roll.call(this, actor, ...args);
+      const thief = classItems(actor).find(item => classSlug(item) === "voleur") ?? null;
+      const context = classContext(actor, thief);
+      if (!context) {
+        ui.notifications?.warn?.("Cette fiche ne possède pas de classe Voleur.");
+        return false;
+      }
+      return roll.call(this, context, ...args);
+    };
+    wrapped.__add2eCanonicalThiefBridge = true;
+    wrapped.__add2eCanonicalThiefOriginal = roll;
+    globalThis.add2eRollThiefSkill = wrapped;
+  }
+
+  globalThis.__ADD2E_CANONICAL_THIEF_BRIDGE__ = MULTICLASS_VERSION;
+}
+
+async function migrateAndRecalculate(actor) {
+  if (!actor || actor.type !== "personnage" || classItems(actor).length <= 1) return null;
+  await migrateLegacyMulticlassActor(actor);
+  return recalcActor(actor);
 }
 
 installGetDataPatch();
@@ -43,17 +121,21 @@ installGetDataPatch();
 Hooks.once("ready", () => {
   installGetDataPatch();
   installDropWrapperDeferred();
-  if (game.user?.isGM) {
-    for (const actor of game.actors?.filter(a => a.type === "personnage" && multiclassEnabled(a)) ?? []) {
-      recalcActor(actor).catch(err => warn("[READY_RECALC_ERROR]", { actor: actor.name, err }));
-    }
+
+  // Le garde d'équipement Voleur est posé avant ce module. Le pont est donc
+  // installé après lui et ne laisse jamais la classe primaire devenir Voleur.
+  setTimeout(installThiefCanonicalBridge, 0);
+
+  if (!game.user?.isGM) return;
+  for (const actor of game.actors?.filter(entry => entry.type === "personnage" && classItems(entry).length > 1) ?? []) {
+    migrateAndRecalculate(actor).catch(error => warn("[READY_MIGRATION_ERROR]", { actor: actor.name, error }));
   }
 });
 
 Hooks.on("renderActorSheet", bindDirectMulticlassFields);
 Hooks.on("renderAdd2eActorSheet", bindDirectMulticlassFields);
 
-Hooks.on("preUpdateActor", (actor, changes, options) => {
+Hooks.on("preUpdateActor", (actor, changes, options = {}) => {
   if (options?.add2eMulticlassInternal || options?.add2eInternal) return true;
   mergeMulticlassChanges(actor, changes);
   return true;
@@ -61,16 +143,21 @@ Hooks.on("preUpdateActor", (actor, changes, options) => {
 
 Hooks.on("createItem", item => {
   const actor = item?.parent;
-  if (actor?.documentName === "Actor" && actor.type === "personnage" && String(item.type || "").toLowerCase() === "classe") {
-    setTimeout(() => recalcActor(actor).catch(err => warn("[CREATE_ITEM_RECALC_ERROR]", err)), 0);
-  }
+  if (actor?.documentName !== "Actor" || actor.type !== "personnage") return;
+  if (String(item.type ?? "").toLowerCase() !== "classe") return;
+  if (classItems(actor).length <= 1) return;
+  setTimeout(() => migrateAndRecalculate(actor).catch(error => warn("[CREATE_CLASS_MIGRATION_ERROR]", error)), 0);
 });
 
 Hooks.on("deleteItem", item => {
   const actor = item?.parent;
-  if (actor?.documentName === "Actor" && actor.type === "personnage" && String(item.type || "").toLowerCase() === "classe") {
-    setTimeout(() => recalcActor(actor).catch(err => warn("[DELETE_ITEM_RECALC_ERROR]", err)), 0);
-  }
+  if (actor?.documentName !== "Actor" || actor.type !== "personnage") return;
+  if (String(item.type ?? "").toLowerCase() !== "classe") return;
+  setTimeout(() => {
+    if (classItems(actor).length > 1) {
+      migrateAndRecalculate(actor).catch(error => warn("[DELETE_CLASS_RECALC_ERROR]", error));
+    }
+  }, 0);
 });
 
 globalThis.add2eMulticlassEnabled = multiclassEnabled;
@@ -86,5 +173,6 @@ globalThis.add2eMulticlassClassRaceMaxLevel = classRaceMaxLevel;
 globalThis.add2eMulticlassDirectFieldSync = updateDirectMulticlassField;
 globalThis.add2eCleanMonoclassAfterReplace = cleanupAfterMonoclassReplace;
 globalThis.add2eReplaceClassInMulticlass = replaceClassInMulticlass;
+globalThis.add2eMigrateLegacyMulticlassActor = migrateLegacyMulticlassActor;
 
-console.log("[ADD2E][MULTICLASSE][SPLIT_READY]", MULTICLASS_VERSION);
+console.log("[ADD2E][MULTICLASSE][CANONICAL_READY]", MULTICLASS_VERSION);
