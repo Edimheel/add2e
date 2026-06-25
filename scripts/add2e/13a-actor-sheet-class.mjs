@@ -2,7 +2,7 @@
 // Feuille personnage ADD2E full ApplicationV2 : aucun héritage appv1, aucun pont ActorSheet.
 // Le contexte rendu utilise une vue isolée du système de l'acteur.
 
-const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-06-25-application-v2-isolated-context-v8";
+const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-06-25-application-v2-isolated-context-v9";
 const ADD2E_ACTOR_SHEET_V2_CSS_ID = "add2e-application-v2-character-sheet-css";
 const ADD2E_ACTOR_SHEET_V2_CSS_PATH = "systems/add2e/styles/application-v2-character-sheet.css";
 
@@ -59,6 +59,16 @@ function add2eBuildActorSheetView(actor) {
     hasPlayerOwner: actor.hasPlayerOwner === true,
     limited: actor.limited === true
   };
+}
+
+function add2eComposeFinalSheetContext(actor, context) {
+  if (actor?.type !== "personnage" || !context) return context;
+  try {
+    return globalThis.add2eApplyMulticlassProgressionToSheet?.(actor, context) ?? context;
+  } catch (error) {
+    console.warn("[ADD2E][ACTOR_SHEET][MULTICLASS_CONTEXT_ERROR]", { actor: actor?.name, error });
+    return context;
+  }
 }
 
 function add2eEnsureApplicationV2CharacterCss() {
@@ -139,10 +149,12 @@ class Add2eActorSheet extends ADD2E_ACTOR_SHEET_BASE {
 
   async _prepareContext(options = {}) {
     add2eEnsureApplicationV2CharacterCss();
+    const actor = this.document;
     const context = await this.getData(options);
-    context.document = this.document;
-    context.actor ??= add2eBuildActorSheetView(this.document);
-    context.owner = this.document?.isOwner ?? false;
+    context.document = actor;
+    context.actor ??= add2eBuildActorSheetView(actor);
+    add2eComposeFinalSheetContext(actor, context);
+    context.owner = actor?.isOwner ?? false;
     context.editable = this.isEditable;
     context.options = this.options ?? {};
     return context;
