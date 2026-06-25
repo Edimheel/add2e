@@ -1,56 +1,176 @@
-// ADD2E — Actor sheet drop — implémentation compacte legacy
-// Version : 2026-06-16-actor-drop-projectile-tags-only-v1
-//
-// Ce fichier remplace l'ancien 13e monolithique par une implémentation plus courte.
-// Le fichier 13e-actor-sheet-drop.mjs reste un chargeur court.
+// ADD2E — Actor sheet drop — route sûre
+// Compatible Foundry V13/V14/V15. Aucun Dialog V1.
+// Les drops de classe/race sont délégués aux routeurs spécialisés.
 
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant _onDrop.");
 
-const ADD2E_ACTOR_SHEET_DROP_VERSION = "2026-06-16-actor-drop-projectile-tags-only-v1";
+const ADD2E_ACTOR_SHEET_DROP_VERSION = "2026-06-25-actor-drop-safe-v2";
 globalThis.ADD2E_ACTOR_SHEET_DROP_VERSION = ADD2E_ACTOR_SHEET_DROP_VERSION;
-console.log("[ADD2E][DROP][VERSION]", ADD2E_ACTOR_SHEET_DROP_VERSION);
 
-function add2eDropClone(value) {
+function clone(value) {
   if (value === undefined || value === null) return value;
-  try { return foundry.utils.deepClone(value); } catch (_e) {}
-  try { return foundry.utils.duplicate(value); } catch (_e) {}
+  try { return foundry.utils.deepClone(value); } catch (_error) {}
+  try { return foundry.utils.duplicate(value); } catch (_error) {}
   return JSON.parse(JSON.stringify(value));
 }
 
-function add2eDropArray(value) {
-  if (Array.isArray(value)) return value.flatMap(add2eDropArray).filter(v => v !== null && v !== undefined && String(v).trim() !== "");
+function norm(value) {
+  return String(value ?? "").trim().toLowerCase().normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "")
+    .replace(/[^a-z0-9:]+/g, "_").replace(/^_+|_+$/g, "");
+}
+
+function values(value) {
+  if (Array.isArray(value)) return value.flatMap(values).filter(Boolean);
   if (value === null || value === undefined || value === "") return [];
-  if (typeof value === "string") return value.split(/[,;|\n]+/g).map(v => v.trim()).filter(Boolean);
-  if (typeof value === "object") return Object.values(value).flatMap(add2eDropArray).filter(v => v !== null && v !== undefined && String(v).trim() !== "");
+  if (typeof value === "string") return value.split(/[,;|\n]+/g).map(entry => entry.trim()).filter(Boolean);
+  if (typeof value === "object") return Object.values(value).flatMap(values).filter(Boolean);
   return [value];
 }
 
-function add2eDropNormalizeSpellName(value) {
-  return String(value ?? "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/[’']/g, "")
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "");
+function itemType(item) { return String(item?.type ?? "").toLowerCase(); }
+function spellLevel(item) { return Number(item?.system?.niveau ?? item?.system?.level ?? item?.system?.niveau_sort ?? item?.system?.spellLevel ?? 1) || 1; }
+function sameSpell(left, right) {
+  return itemType(left) === "sort" && itemType(right) === "sort"
+    && norm(left?.name) === norm(right?.name)
+    && spellLevel(left) === spellLevel(right);
 }
 
-function add2eDropSpellLevel(itemOrData) {
-  const sys = itemOrData?.system ?? itemOrData ?? {};
-  return Number(sys.niveau ?? sys.level ?? sys.niveau_sort ?? sys.spellLevel ?? 1) || 1;
+async function resolveDropItemData(raw) {
+  if (typeof globalThis.add2eResolveDropItemDataCompendiumFirst === "function") {
+    const resolved = await globalThis.add2eResolveDropItemDataCompendiumFirst(raw).catch(() => null);
+    if (resolved) return clone(resolved);
+  }
+  if (raw?.pack && (raw.id || raw._id)) {
+    const pack = game.packs?.get(raw.pack);
+    const document = pack ? await pack.getDocument(raw.id ?? raw._id).catch(() => null) : null;
+    if (document instanceof Item) return document.toObject();
+  }
+  if (raw?.uuid) {
+    const document = await fromUuid(raw.uuid).catch(() => null);
+    if (document instanceof Item) return document.toObject();
+  }
+  return raw?.data ? clone(raw.data) : null;
 }
 
-function add2eDropSameSpell(a, b) {
-  return String(a?.type ?? "").toLowerCase() === "sort"
-    && String(b?.type ?? "").toLowerCase() === "sort"
-    && add2eDropNormalizeSpellName(a?.name) === add2eDropNormalizeSpellName(b?.name)
-    && add2eDropSpellLevel(a) === add2eDropSpellLevel(b);
+function rawTags(itemData) {
+  const system = itemData?.system ?? {};
+  const flags = itemData?.flags?.add2e ?? {};
+  return [system.tags, system.effectTags, system.effecttags, flags.tags, flags.effectTags, flags.effecttags]
+    .flatMap(values).map(norm).filter(Boolean);
 }
 
-function add2eDropMarkManualSpellList(itemData, targetEntry) {
-  const key = String(targetEntry?.key ?? "").trim().toLowerCase();
+function isThrownWeapon(itemData) {
+  if (itemType(itemData) !== "arme") return false;
+  const system = itemData?.system ?? {};
+  const tags = rawTags(itemData);
+  return system.arme_de_jet === true || system.armeDeJet === true || system.isThrown === true
+    || tags.some(tag => ["usage:lancer", "usage_lancer", "usage:jet", "arme_de_jet", "type_arme:arme_de_jet"].includes(tag));
+}
+
+function projectileType(tags) {
+  for (const tag of tags) {
+    for (const prefix of ["munition:", "projectile:", "ammo:", "ammunition:"]) {
+      if (tag.startsWith(prefix) && tag.length > prefix.length) return tag.slice(prefix.length);
+    }
+  }
+  return "projectile";
+}
+
+function looksLikeProjectile(itemData) {
+  if (!itemData || !["arme", "objet"].includes(itemType(itemData)) || isThrownWeapon(itemData)) return false;
+  const system = itemData.system ?? {};
+  const fields = [system.categorie, system.category, system.type, system.sousType, system.sous_type].map(norm);
+  const tags = rawTags(itemData);
+  return fields.includes("munition") || fields.includes("projectile")
+    || tags.some(tag => tag === "munition" || tag === "projectile" || tag.startsWith("munition:") || tag.startsWith("projectile:") || tag === "trait:munition" || tag === "trait:projectile");
+}
+
+function add2eDropNormalizeProjectileItemData(itemData) {
+  if (!looksLikeProjectile(itemData)) return itemData;
+  const data = clone(itemData);
+  const type = projectileType(rawTags(data));
+  data.type = "objet";
+  data.system = data.system ?? {};
+  data.flags = data.flags ?? {};
+  data.flags.add2e = data.flags.add2e ?? {};
+  const tags = new Set([...rawTags(data), "munition", "projectile", "trait:munition", `munition:${type}`, `projectile:${type}`]);
+  Object.assign(data.system, {
+    categorie: "munition",
+    category: "munition",
+    type: "munition",
+    sousType: type,
+    sous_type: type,
+    munitionType: type,
+    munition_type: type,
+    tags: [...tags]
+  });
+  Object.assign(data.flags.add2e, {
+    kind: "projectile",
+    vendorKind: "projectile",
+    category: "munition",
+    projectile: true,
+    ammunition: true,
+    sourceItemType: itemType(itemData),
+    tags: [...tags]
+  });
+  return data;
+}
+
+function isBoutiqueConsumable(item) {
+  if (itemType(item) !== "objet") return false;
+  const system = item?.system ?? {};
+  const fields = [system.categorie, system.category, system.sousType, system.sous_type, system.type].map(norm);
+  const tags = rawTags(item);
+  return fields.includes("composant_sort") || fields.includes("munition") || tags.includes("composant_sort") || tags.includes("munition") || tags.includes("trait:munition") || tags.some(tag => tag.startsWith("composant:")) || item?.flags?.add2e?.purchasedFromVendor === true;
+}
+
+function classSources(classDocs) {
+  const ids = new Set((classDocs ?? []).map(item => String(item?.id ?? "")).filter(Boolean));
+  const slugs = new Set((classDocs ?? []).map(item => norm(item?.system?.slug ?? item?.name)).filter(Boolean));
+  const uuids = new Set((classDocs ?? []).map(item => String(item?.uuid ?? "")).filter(Boolean));
+  return { ids, slugs, uuids };
+}
+
+function belongsToClass(item, sources) {
+  const flags = item?.flags?.add2e ?? {};
+  const id = String(flags.autoGrantedByClassId ?? flags.sourceClassId ?? flags.sourceItemId ?? flags.classId ?? "");
+  const slug = norm(flags.autoGrantedByClass ?? flags.sourceClassSlug ?? flags.sourceClasse ?? flags.sourceClass ?? flags.classSlug ?? "");
+  return (id && sources.ids.has(id)) || (slug && sources.slugs.has(slug));
+}
+
+async function add2eDropPurgeClassContent(actor, classDocs = []) {
+  if (!actor || !classDocs.length) return { spellsDeleted: 0, effectsDeleted: 0 };
+  const sources = classSources(classDocs);
+  const spellIds = actor.items
+    .filter(item => itemType(item) === "sort" && belongsToClass(item, sources))
+    .map(item => item.id).filter(Boolean);
+  const effectIds = actor.effects
+    .filter(effect => {
+      const flags = effect?.flags?.add2e ?? {};
+      const origin = String(effect?.origin ?? "");
+      const id = String(flags.sourceItemId ?? flags.sourceClassId ?? flags.classId ?? "");
+      const slug = norm(flags.sourceClasse ?? flags.sourceClass ?? flags.classSlug ?? flags.classe ?? "");
+      return [...sources.uuids].some(uuid => uuid && origin === uuid) || (id && sources.ids.has(id)) || (slug && sources.slugs.has(slug));
+    })
+    .map(effect => effect.id).filter(Boolean);
+  if (effectIds.length) await actor.deleteEmbeddedDocuments("ActiveEffect", effectIds, { add2eInternal: true, add2eDropPurge: true, render: false });
+  if (spellIds.length) await actor.deleteEmbeddedDocuments("Item", spellIds, { add2eInternal: true, add2eDropPurge: true, render: false });
+  return { spellsDeleted: spellIds.length, effectsDeleted: effectIds.length };
+}
+
+async function add2eDropBulkDelete(actor, documentName, ids) {
+  const collection = documentName === "Item" ? actor?.items : actor?.effects;
+  const existing = [...new Set((ids ?? []).filter(Boolean))].filter(id => collection?.has?.(id));
+  if (!existing.length) return { deleted: 0, ids: [] };
+  await actor.deleteEmbeddedDocuments(documentName, existing, { add2eInternal: true, add2eDropPurge: true, render: false });
+  return { deleted: existing.length, ids: existing };
+}
+
+function markManualSpellList(itemData, entry) {
+  const key = String(entry?.key ?? "").trim().toLowerCase();
   if (!itemData || !key) return itemData;
-  const data = add2eDropClone(itemData);
+  const data = clone(itemData);
   data.flags = data.flags ?? {};
   data.flags.add2e = data.flags.add2e ?? {};
   data.flags.add2e.learnedSpellLists = [key];
@@ -61,222 +181,16 @@ function add2eDropMarkManualSpellList(itemData, targetEntry) {
   return data;
 }
 
-async function add2eResolveDropItemData(raw) {
-  if (typeof globalThis.add2eResolveDropItemDataCompendiumFirst === "function") {
-    const resolved = await globalThis.add2eResolveDropItemDataCompendiumFirst(raw);
-    if (resolved) return resolved;
-  }
-
-  if (raw.pack && raw.id) {
-    const pack = game.packs.get(raw.pack);
-    const doc = pack ? await pack.getDocument(raw.id) : null;
-    if (doc instanceof Item) return doc.toObject();
-  }
-
-  if (raw.uuid) {
-    const doc = await fromUuid(raw.uuid);
-    if (doc instanceof Item) return doc.toObject();
-  }
-
-  return raw.data ?? null;
-}
-
-function add2eDropIsBoutiqueConsumable(item) {
-  if (!item || String(item.type ?? "").toLowerCase() !== "objet") return false;
-  const sys = item.system ?? {};
-  const flags = item.flags?.add2e ?? {};
-  const categorie = String(sys.categorie ?? sys.category ?? "").trim().toLowerCase();
-  const sousType = String(sys.sousType ?? sys.sous_type ?? "").trim().toLowerCase();
-  const type = String(sys.type ?? "").trim().toLowerCase();
-  const tags = [
-    ...add2eDropArray(sys.tags),
-    ...add2eDropArray(sys.effectTags),
-    ...add2eDropArray(flags.tags)
-  ].map(t => String(t ?? "").trim().toLowerCase()).filter(Boolean);
-
-  return categorie === "composant_sort"
-    || categorie === "munition"
-    || type === "munition"
-    || sousType === "composant"
-    || tags.includes("composant_sort")
-    || tags.includes("munition")
-    || tags.includes("trait:munition")
-    || tags.some(t => t.startsWith("composant:"))
-    || flags.purchasedFromVendor === true;
-}
-
-function add2eDropSlug(value) {
-  return String(value ?? "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/[’']/g, "")
-    .replace(/[^a-z0-9:]+/g, "_")
-    .replace(/^_+|_+$/g, "");
-}
-
-function add2eDropRawTags(itemData) {
-  const sys = itemData?.system ?? {};
-  const flags = itemData?.flags?.add2e ?? {};
-  return [
-    sys.tags,
-    sys.effectTags,
-    sys.effecttags,
-    flags.tags,
-    flags.effectTags,
-    flags.effecttags
-  ].flatMap(add2eDropArray).map(add2eDropSlug).filter(Boolean);
-}
-
-function add2eDropTechnicalTags(itemData) {
-  const sys = itemData?.system ?? {};
-  const flags = itemData?.flags?.add2e ?? {};
-  return [
-    sys.tags,
-    sys.effectTags,
-    sys.effecttags,
-    flags.tags,
-    flags.effectTags,
-    flags.effecttags,
-    flags.kind,
-    flags.vendorKind,
-    flags.category,
-    flags.categorie,
-    flags.type,
-    flags.sousType,
-    flags.sous_type
-  ].flatMap(add2eDropArray).map(add2eDropSlug).filter(Boolean);
-}
-
-function add2eDropTagMarksAmmo(tag) {
-  return tag === "munition"
-    || tag === "munitions"
-    || tag === "projectile"
-    || tag === "projectiles"
-    || tag === "ammo"
-    || tag === "ammunition"
-    || tag === "trait:munition"
-    || tag === "trait:projectile"
-    || tag === "categorie:munition"
-    || tag === "categorie:projectile"
-    || tag === "type:munition"
-    || tag === "type:projectile"
-    || tag === "type_arme:munition"
-    || tag === "type_arme:projectile"
-    || tag.startsWith("munition:")
-    || tag.startsWith("projectile:");
-}
-
-function add2eDropTagMarksThrownWeapon(tag) {
-  return tag === "arme_de_jet"
-    || tag === "usage_lancer"
-    || tag === "usage:lancer"
-    || tag === "usage_jet"
-    || tag === "arme:jet"
-    || tag === "type_arme:jet"
-    || tag === "type_arme:arme_de_jet";
-}
-
-function add2eDropTagValue(tags, prefixes) {
-  for (const tag of tags) {
-    for (const prefix of prefixes) {
-      if (tag.startsWith(prefix) && tag.length > prefix.length) return tag.slice(prefix.length);
-    }
-  }
-  return "";
-}
-
-function add2eDropAmmoType(itemData) {
-  const tags = add2eDropRawTags(itemData);
-  return add2eDropTagValue(tags, ["munition:", "projectile:", "ammo:", "ammunition:"]) || "projectile";
-}
-
-function add2eDropIsThrownWeapon(itemData) {
-  if (String(itemData?.type ?? "").toLowerCase() !== "arme") return false;
-  return add2eDropTechnicalTags(itemData).some(add2eDropTagMarksThrownWeapon);
-}
-
-function add2eDropLooksLikeProjectile(itemData) {
-  if (!itemData) return false;
-  const documentType = String(itemData.type ?? "").toLowerCase();
-  if (!["arme", "objet"].includes(documentType)) return false;
-  if (add2eDropIsThrownWeapon(itemData)) return false;
-  return add2eDropRawTags(itemData).some(add2eDropTagMarksAmmo);
-}
-
-function add2eDropNormalizeProjectileItemData(itemData) {
-  if (!add2eDropLooksLikeProjectile(itemData)) return itemData;
-  const data = add2eDropClone(itemData);
-  const ammoType = add2eDropAmmoType(data);
-  data.type = "objet";
-  data.system = data.system ?? {};
-  data.flags = data.flags ?? {};
-  data.flags.add2e = data.flags.add2e ?? {};
-
-  const tags = new Set([
-    ...add2eDropArray(data.system.tags),
-    ...add2eDropArray(data.system.effectTags),
-    ...add2eDropArray(data.flags.add2e.tags),
-    "munition",
-    "projectile",
-    "trait:munition",
-    `munition:${ammoType}`,
-    `projectile:${ammoType}`
-  ].map(String).filter(Boolean));
-
-  data.system.categorie = "munition";
-  data.system.category = "munition";
-  data.system.type = "munition";
-  data.system.sousType = ammoType;
-  data.system.sous_type = ammoType;
-  data.system.munitionType = ammoType;
-  data.system.munition_type = ammoType;
-  data.system.tags = [...tags];
-  data.flags.add2e.kind = "projectile";
-  data.flags.add2e.vendorKind = "projectile";
-  data.flags.add2e.category = "munition";
-  data.flags.add2e.projectile = true;
-  data.flags.add2e.ammunition = true;
-  data.flags.add2e.sourceItemType = String(itemData.type ?? "");
-  data.flags.add2e.tags = [...tags];
-  return data;
-}
-
-function add2eShouldDeleteEffectForClassPurgeSafe(effect, itemsToDelete) {
-  if (typeof add2eShouldDeleteEffectForClassPurge === "function") return add2eShouldDeleteEffectForClassPurge(effect, itemsToDelete);
-  const origin = String(effect?.origin ?? "");
-  return itemsToDelete.some(i => origin === i.uuid || origin.includes(i.id));
-}
-
-async function add2eDropBulkDelete(actor, documentName, ids) {
-  const collection = documentName === "Item" ? actor?.items : actor?.effects;
-  const existingIds = [...new Set((ids ?? []).filter(Boolean))].filter(id => collection?.has?.(id));
-  if (!existingIds.length) return { deleted: 0, ids: [] };
-  await actor.deleteEmbeddedDocuments(documentName, existingIds, { add2eInternal: true, add2eDropPurge: true, render: false });
-  return { deleted: existingIds.length, ids: existingIds };
-}
-
-async function add2eDropPurgeClassContent(actor) {
-  const typesToDelete = ["classe", "sort", "arme", "armure", "spell", "weapon", "armor"];
-  const itemsToDelete = actor.items.filter(i =>
-    typesToDelete.includes(String(i.type || "").toLowerCase()) || add2eDropIsBoutiqueConsumable(i)
-  );
-  const effectsToDelete = actor.effects.filter(eff => add2eShouldDeleteEffectForClassPurgeSafe(eff, itemsToDelete));
-  const effectResult = await add2eDropBulkDelete(actor, "ActiveEffect", effectsToDelete.map(e => e.id));
-  const itemResult = await add2eDropBulkDelete(actor, "Item", itemsToDelete.map(i => i.id));
-  return { effectsDeleted: effectResult.deleted, itemsDeleted: itemResult.deleted };
-}
-
-async function add2eDropLearnSpellListOnExisting(actor, existingSort, targetEntry) {
-  const key = String(targetEntry?.key ?? "").trim().toLowerCase();
+async function add2eDropLearnSpellListOnExisting(actor, existingSort, entry) {
+  const key = String(entry?.key ?? "").trim().toLowerCase();
   if (!actor || !existingSort || !key) return { handled: false };
-  const current = new Set(add2eDropArray(existingSort.flags?.add2e?.knownSpellLists ?? existingSort.system?.spellLists).map(v => String(v).toLowerCase()));
+  const current = new Set(values(existingSort.flags?.add2e?.knownSpellLists ?? existingSort.system?.spellLists).map(value => String(value).toLowerCase()));
   if (current.has(key)) {
     ui.notifications.warn(`"${existingSort.name}" est déjà connu pour cette liste.`);
     return { handled: true, updated: false };
   }
   current.add(key);
-  const lists = [...current].filter(Boolean);
+  const lists = [...current];
   await existingSort.update({
     "flags.add2e.learnedSpellLists": lists,
     "flags.add2e.knownSpellLists": lists,
@@ -284,162 +198,51 @@ async function add2eDropLearnSpellListOnExisting(actor, existingSort, targetEntr
     "flags.add2e.lastLearnedSpellList": key,
     "system.spellLists": lists
   }, { add2eInternal: true, add2eSpellLearnList: true });
-  ui.notifications.info(`"${existingSort.name}" ajouté à la liste ${targetEntry?.label || key}.`);
-  add2eRerenderActorSheet?.(actor, false);
+  ui.notifications.info(`"${existingSort.name}" ajouté à la liste ${entry?.label || key}.`);
+  actor.sheet?.render?.(false);
   return { handled: true, updated: true };
 }
 
-async function add2eApplyRaceDrop(actor, itemDoc, sheet, autoClassData, autoClassAlignment) {
-  const raceSystem = add2eDropClone(itemDoc.system ?? {});
-  await actor.update({
-    "system.race": itemDoc.name,
-    "system.details_race": {
-      ...raceSystem,
-      name: itemDoc.name,
-      label: raceSystem.label || itemDoc.name,
-      img: itemDoc.img || raceSystem.img || ""
-    },
-    "system.bonus_caracteristiques": raceSystem.bonus_caracteristiques ? add2eDropClone(raceSystem.bonus_caracteristiques) : {}
-  }, { add2eInternal: true });
-
-  if (typeof sheet?.autoSetCaracAjustements === "function") await sheet.autoSetCaracAjustements();
-  if (autoClassData && typeof add2eApplyClassItemDataToActor === "function") {
-    await add2eApplyClassItemDataToActor(actor, autoClassData, sheet, {
-      alignmentCandidate: autoClassAlignment,
-      notify: true,
-      reason: "race-drop-class-auto-compat"
-    });
-  }
-}
-
-async function add2eApplyClassDrop(actor, itemDoc, sheet, alignmentCandidate) {
-  const classSystem = add2eDropClone(itemDoc.system ?? {});
-  const levelClamp = typeof add2eClampLevelToClassMax === "function"
-    ? add2eClampLevelToClassMax(actor, actor.system?.niveau, classSystem, { notify: true })
-    : { changed: false };
-  const alns = typeof add2eClassAllowedAlignments === "function" ? add2eClassAllowedAlignments(classSystem) : [];
-  const updates = {
-    "system.classe": itemDoc.name,
-    "system.details_classe": classSystem,
-    "system.spellcasting": classSystem.spellcasting ?? null,
-    "system.alignements_autorises": alns
-  };
-  if (levelClamp.changed) updates["system.niveau"] = levelClamp.level;
-  if (alignmentCandidate) updates["system.alignement"] = alignmentCandidate;
-  if (itemDoc.system?.progression?.[0]?.sauvegardes) updates["system.sauvegardes"] = foundry.utils.duplicate(itemDoc.system.progression[0].sauvegardes);
-  await actor.update(updates, { add2eInternal: true });
-
-  if (typeof sheet?.autoSetCaracAjustements === "function") await sheet.autoSetCaracAjustements();
-  if (typeof sheet?.autoSetPointsDeCoup === "function") await sheet.autoSetPointsDeCoup({ syncCurrent: true, force: true, reason: "class-drop" });
-  try { if (typeof add2eSyncMonkUnarmedWeapon === "function") await add2eSyncMonkUnarmedWeapon(actor); } catch (e) { console.warn("[ADD2E][MOINE] Erreur synchronisation Main nue après drop classe :", e); }
-  try { if (typeof add2eSyncClassPassiveEffect === "function") await add2eSyncClassPassiveEffect(actor); } catch (e) { console.warn("[ADD2E][CLASSE][EFFETS] Erreur synchronisation des effets de classe :", e); }
-  try {
-    if (typeof add2eSyncActorSpellsFromClass === "function") {
-      const spellSync = await add2eSyncActorSpellsFromClass(actor, itemDoc, { mode: "replace", showWait: true });
-      if (spellSync?.handled) ui.notifications.info(`Sorts de ${itemDoc.name} synchronisés : ${spellSync.imported} importé(s).`);
-    }
-  } catch (e) {
-    console.error("[ADD2E][CLASSE][SORTS] Erreur synchronisation des sorts après drop classe :", e);
-    ui.notifications.error("Erreur pendant la synchronisation des sorts de classe.");
-  }
-}
-
-async function add2eValidateClassRaceDrop(sheet, itemData) {
-  const actor = sheet.actor;
-  let classAlignmentCandidate = null;
-  let autoRaceData = null;
-  let autoClassData = null;
-  let autoClassAlignment = null;
-
-  if (itemData.type === "classe") {
-    classAlignmentCandidate = typeof add2ePickClassAlignment === "function" ? add2ePickClassAlignment(actor, itemData.system ?? {}) : actor.system?.alignement;
-    if (typeof checkClassStatMin === "function") {
-      let ok = checkClassStatMin(actor, itemData, null, classAlignmentCandidate, { silent: true, ignoreLevelMax: true });
-      if (!ok && typeof add2eFindCompatibleRaceForClass === "function") {
-        autoRaceData = add2eFindCompatibleRaceForClass(actor, itemData, classAlignmentCandidate);
-        if (autoRaceData) ok = checkClassStatMin(actor, itemData, autoRaceData, classAlignmentCandidate, { silent: true, ignoreLevelMax: true });
-      }
-      if (!ok) {
-        checkClassStatMin(actor, itemData, autoRaceData, classAlignmentCandidate, { silent: false, ignoreLevelMax: true });
-        add2eRerenderActorSheet?.(actor);
-        return { ok: false };
-      }
-    }
-  }
-
-  if (itemData.type === "race") {
-    const existingClass = actor.items.find(i => i.type === "classe");
-    if (existingClass && typeof checkClassStatMin === "function") {
-      const existingAlignment = typeof add2ePickClassAlignment === "function" ? add2ePickClassAlignment(actor, existingClass.system ?? {}) : actor.system?.alignement;
-      let ok = checkClassStatMin(actor, existingClass, itemData, existingAlignment, { silent: true, ignoreLevelMax: true });
-      if (!ok && typeof add2eFindCompatibleClassForRace === "function") {
-        const compatibleClass = add2eFindCompatibleClassForRace(actor, itemData);
-        if (compatibleClass?.classData) {
-          autoClassData = compatibleClass.classData;
-          autoClassAlignment = compatibleClass.alignmentCandidate;
-          ok = checkClassStatMin(actor, autoClassData, itemData, autoClassAlignment, { silent: true, ignoreLevelMax: true });
-        }
-      }
-      if (!ok) {
-        checkClassStatMin(actor, autoClassData ?? existingClass, itemData, autoClassAlignment ?? existingAlignment, { silent: false, ignoreLevelMax: true });
-        add2eRerenderActorSheet?.(actor);
-        return { ok: false };
-      }
-    }
-  }
-
-  return { ok: true, classAlignmentCandidate, autoRaceData, autoClassData, autoClassAlignment };
-}
-
-async function add2eDropApplyItemEffects(actor, itemDoc) {
-  if (itemDoc.type === "sort" || !itemDoc.effects.contents?.length) return;
-  const actorEffects = itemDoc.effects.contents.map(eff => {
-    const data = foundry.utils.duplicate(eff.toObject());
-    data.origin = itemDoc.uuid;
+async function applyItemEffects(actor, item) {
+  if (!actor || itemType(item) === "sort" || !item.effects?.contents?.length) return;
+  const effects = item.effects.contents.map(effect => {
+    const data = foundry.utils.duplicate(effect.toObject());
+    data.origin = item.uuid;
     data.disabled = false;
     data.transfer = false;
     data.flags = data.flags ?? {};
     data.flags.add2e = {
       ...(data.flags.add2e ?? {}),
-      sourceType: itemDoc.type === "classe" ? "classe" : itemDoc.type,
-      sourceClasse: itemDoc.type === "classe" ? itemDoc.name : undefined,
-      sourceItemId: itemDoc.id,
-      sourceItemUuid: itemDoc.uuid
+      sourceType: item.type,
+      sourceItemId: item.id,
+      sourceItemUuid: item.uuid
     };
     return data;
   });
-  if (actorEffects.length) await actor.createEmbeddedDocuments("ActiveEffect", actorEffects, { add2eInternal: true });
+  if (effects.length) await actor.createEmbeddedDocuments("ActiveEffect", effects, { add2eInternal: true });
 }
 
-function add2eDropGetRoot(sheet) {
+function rootFor(sheet) {
   const element = sheet?.element;
-  if (!element) return null;
-  return element.jquery ? element[0] : element;
+  return element?.jquery ? element[0] : element;
 }
 
-function add2eDropIsItemDrag(event) {
-  try {
-    const raw = JSON.parse(event?.dataTransfer?.getData("text/plain") || "{}");
-    return raw?.type === "Item";
-  } catch (_e) {
-    return false;
-  }
+function isItemDrag(event) {
+  try { return JSON.parse(event?.dataTransfer?.getData("text/plain") || "{}").type === "Item"; }
+  catch (_error) { return false; }
 }
 
-function add2eBindDropAnywhere(sheet) {
-  const root = add2eDropGetRoot(sheet);
-  if (!root || root.dataset.add2eDropAnywhereBound === "1") return;
-  root.dataset.add2eDropAnywhereBound = "1";
-
+function bindDropAnywhere(sheet) {
+  const root = rootFor(sheet);
+  if (!root || root.dataset.add2eDropAnywhereBound === "safe-v2") return;
+  root.dataset.add2eDropAnywhereBound = "safe-v2";
   root.addEventListener("dragover", event => {
-    if (!add2eDropIsItemDrag(event)) return;
+    if (!isItemDrag(event)) return;
     event.preventDefault();
     event.dataTransfer.dropEffect = "copy";
   }, true);
-
   root.addEventListener("drop", async event => {
-    if (!add2eDropIsItemDrag(event)) return;
-    if (event.__add2eDropAnywhereHandled) return;
+    if (!isItemDrag(event) || event.__add2eDropAnywhereHandled) return;
     event.__add2eDropAnywhereHandled = true;
     event.preventDefault();
     event.stopPropagation();
@@ -447,36 +250,48 @@ function add2eBindDropAnywhere(sheet) {
   }, true);
 }
 
-globalThis.Add2eActorSheet.prototype._onDrop = async function _onDrop(event) {
+async function applyClassOrRaceDrop(sheet, itemData) {
+  const actor = sheet.actor;
+  if (itemType(itemData) === "race") {
+    if (classItems(actor).length > 1) return globalThis.add2eApplyRaceForMulticlass?.(actor, itemData, sheet) ?? false;
+    return !!(await globalThis.add2eApplyRaceItemDataToActor?.(actor, itemData, sheet, { notify: true }));
+  }
+  if (itemType(itemData) === "classe") {
+    if (classItems(actor).length) {
+      ui.notifications.warn("Le drop de classe est géré par le routeur multiclasses.");
+      return false;
+    }
+    return !!(await globalThis.add2eApplyClassItemDataToActor?.(actor, itemData, sheet, { notify: true, reason: "safe-class-drop" }));
+  }
+  return false;
+}
+
+function classItems(actor) {
+  return Array.from(actor?.items ?? []).filter(item => itemType(item) === "classe");
+}
+
+globalThis.Add2eActorSheet.prototype._onDrop = async function add2eSafeOnDrop(event, data = null) {
   event.preventDefault?.();
   event.stopPropagation?.();
-
-  let raw;
-  try {
-    raw = JSON.parse(event.dataTransfer?.getData("text/plain") || "{}");
-  } catch (err) {
-    console.warn("[ADD2E][DROP][V2] Drop non JSON ignoré.", err);
-    return false;
+  let raw = data;
+  if (!raw) {
+    try { raw = JSON.parse(event.dataTransfer?.getData("text/plain") || "{}"); }
+    catch (_error) { return false; }
   }
-
-  if (raw.type !== "Item") return false;
-
-  let itemData = await add2eResolveDropItemData(raw);
-  if (!itemData) {
-    console.warn("[ADD2E] _onDrop impossible de reconstruire itemData", raw);
-    return false;
-  }
-
+  if (raw?.type !== "Item") return false;
+  let itemData = await resolveDropItemData(raw);
+  if (!itemData) return false;
   itemData = add2eDropNormalizeProjectileItemData(itemData);
+  const type = itemType(itemData);
+  if (!new Set(["arme", "armure", "sort", "classe", "race", "objet"]).has(type)) return false;
 
-  const VALID = ["arme", "armure", "sort", "classe", "race", "objet"];
-  if (!VALID.includes(itemData.type)) return false;
+  if (["classe", "race"].includes(type)) return applyClassOrRaceDrop(this, itemData);
 
   let spellCheck = null;
-  if (itemData.type === "sort" && typeof add2eCanActorUseSpell === "function") {
-    const source = itemData.uuid ? await fromUuid(itemData.uuid).catch?.(() => null) : null;
+  if (type === "sort" && typeof globalThis.add2eCanActorUseSpell === "function") {
+    const source = itemData.uuid ? await fromUuid(itemData.uuid).catch(() => null) : null;
     const spellSource = source?.system ? source : { name: itemData.name, type: itemData.type, system: itemData.system, flags: itemData.flags };
-    spellCheck = add2eCanActorUseSpell(this.actor, spellSource);
+    spellCheck = globalThis.add2eCanActorUseSpell(this.actor, spellSource);
     if (!spellCheck?.sortLists?.length) {
       ui.notifications.error(`Sort non migré : “${spellSource.name}” n’a pas system.spellLists.`);
       return false;
@@ -485,60 +300,39 @@ globalThis.Add2eActorSheet.prototype._onDrop = async function _onDrop(event) {
       ui.notifications.error(`${this.actor.name} ne peut pas apprendre ou préparer “${spellSource.name}”.`);
       return false;
     }
-    itemData = add2eDropMarkManualSpellList(itemData, spellCheck.entry);
+    itemData = markManualSpellList(itemData, spellCheck.entry);
   }
 
-  const validation = await add2eValidateClassRaceDrop(this, itemData);
-  if (!validation.ok) return false;
-
-  if (itemData.type === "classe" && validation.autoRaceData && typeof add2eApplyRaceItemDataToActor === "function") {
-    await add2eApplyRaceItemDataToActor(this.actor, validation.autoRaceData, this, { notify: true, reason: "class-drop-race-auto-compat" });
-  }
-
-  if (itemData.type === "race") {
-    const raceIds = this.actor.items.filter(i => i.type === "race").map(i => i.id).filter(Boolean);
-    if (raceIds.length) await this.actor.deleteEmbeddedDocuments("Item", raceIds, { add2eInternal: true, render: false });
-    await this.actor.update({ "system.bonus_caracteristiques": {} }, { add2eInternal: true });
-  }
-
-  if (itemData.type === "classe") await add2eDropPurgeClassContent(this.actor);
-
-  if (["arme", "armure", "sort", "objet"].includes(itemData.type)) {
-    const existing = this.actor.items.find(i => i.name === itemData.name && i.type === itemData.type);
-    if (existing) {
-      if (itemData.type === "sort" && add2eDropSameSpell(existing, itemData) && spellCheck?.entry) {
-        const result = await add2eDropLearnSpellListOnExisting(this.actor, existing, spellCheck.entry);
-        if (result?.handled) return result.updated;
-      }
-      ui.notifications.warn(`"${itemData.name}" est déjà présent sur cet acteur.`);
-      return false;
+  const existing = Array.from(this.actor.items ?? []).find(item => item.name === itemData.name && itemType(item) === type) ?? null;
+  if (existing) {
+    if (type === "sort" && sameSpell(existing, itemData) && spellCheck?.entry) {
+      const result = await add2eDropLearnSpellListOnExisting(this.actor, existing, spellCheck.entry);
+      if (result?.handled) return result.updated;
     }
+    ui.notifications.warn(`"${itemData.name}" est déjà présent sur cet acteur.`);
+    return false;
   }
 
-  const [itemDoc] = await this.actor.createEmbeddedDocuments("Item", [foundry.utils.duplicate(itemData)], { add2eInternal: true });
-  if (!itemDoc) return false;
-
-  await add2eDropApplyItemEffects(this.actor, itemDoc);
-
-  if (itemData.type === "race") await add2eApplyRaceDrop(this.actor, itemDoc, this, validation.autoClassData, validation.autoClassAlignment);
-  if (itemData.type === "classe") await add2eApplyClassDrop(this.actor, itemDoc, this, validation.classAlignmentCandidate);
-
+  const [created] = await this.actor.createEmbeddedDocuments("Item", [clone(itemData)], { add2eInternal: true });
+  if (!created) return false;
+  await applyItemEffects(this.actor, created);
+  this._add2eRememberActiveTab?.();
   this.render(false);
   return true;
 };
 
-if (!globalThis.Add2eActorSheet.prototype.__add2eDropAnywhereBoundV1) {
-  globalThis.Add2eActorSheet.prototype.__add2eDropAnywhereBoundV1 = true;
+if (!globalThis.Add2eActorSheet.prototype.__add2eDropAnywhereBoundSafeV2) {
+  globalThis.Add2eActorSheet.prototype.__add2eDropAnywhereBoundSafeV2 = true;
   const previousOnRender = globalThis.Add2eActorSheet.prototype._onRender;
-  globalThis.Add2eActorSheet.prototype._onRender = async function add2eDropAnywhereOnRender(context, options = {}) {
+  globalThis.Add2eActorSheet.prototype._onRender = async function add2eSafeDropOnRender(context, options = {}) {
     const result = await previousOnRender.call(this, context, options);
-    add2eBindDropAnywhere(this);
+    bindDropAnywhere(this);
     return result;
   };
 }
 
-try { globalThis.add2eDropPurgeClassContent = add2eDropPurgeClassContent; } catch (_e) {}
-try { globalThis.add2eDropBulkDelete = add2eDropBulkDelete; } catch (_e) {}
-try { globalThis.add2eDropIsBoutiqueConsumable = add2eDropIsBoutiqueConsumable; } catch (_e) {}
-try { globalThis.add2eDropLearnSpellListOnExisting = add2eDropLearnSpellListOnExisting; } catch (_e) {}
-try { globalThis.add2eDropNormalizeProjectileItemData = add2eDropNormalizeProjectileItemData; } catch (_e) {}
+try { globalThis.add2eDropPurgeClassContent = add2eDropPurgeClassContent; } catch (_error) {}
+try { globalThis.add2eDropBulkDelete = add2eDropBulkDelete; } catch (_error) {}
+try { globalThis.add2eDropIsBoutiqueConsumable = isBoutiqueConsumable; } catch (_error) {}
+try { globalThis.add2eDropLearnSpellListOnExisting = add2eDropLearnSpellListOnExisting; } catch (_error) {}
+try { globalThis.add2eDropNormalizeProjectileItemData = add2eDropNormalizeProjectileItemData; } catch (_error) {}
