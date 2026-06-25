@@ -1,10 +1,9 @@
 // ADD2E — Multiclassage : noyau canonique
-// Source de vérité : objets Item de type "classe" embarqués par l'acteur.
-// Les définitions de classe restent dans Item.system ; l'état de progression
-// multiclasses est porté uniquement par system.multiclasse.classes.
+// Source de vérité : chaque Item embarqué de type "classe".
+// La définition et la progression (system.niveau / system.xp) vivent ensemble.
 
-export const MULTICLASS_VERSION = "2026-06-25-canonical-class-state-v1";
-export const MULTICLASS_SCHEMA = 2;
+export const MULTICLASS_VERSION = "2026-06-25-item-progression-v2";
+export const MULTICLASS_SCHEMA = 3;
 export const INTERNAL = "add2eMulticlassInternal";
 export const TAG = "[ADD2E][MULTICLASSE]";
 
@@ -71,6 +70,16 @@ export function classItems(actor) {
   return contents.filter(item => String(item?.type ?? "").toLowerCase() === "classe");
 }
 
+export function classItem(actor, itemOrSlug) {
+  if (!actor) return null;
+  const itemId = typeof itemOrSlug === "object" ? String(itemOrSlug?.id ?? "") : "";
+  const slug = typeof itemOrSlug === "object" ? classSlug(itemOrSlug) : norm(itemOrSlug);
+  return classItems(actor).find(item =>
+    (itemId && String(item.id ?? "") === itemId)
+    || (slug && classSlug(item) === slug)
+  ) ?? null;
+}
+
 export function raceItem(actor) {
   return actor?.items?.find?.(item => String(item?.type ?? "").toLowerCase() === "race") ?? null;
 }
@@ -86,41 +95,86 @@ export function systemRace(actor, override = null) {
   };
 }
 
-export function canonicalMulticlass(actor) {
-  const value = actor?.system?.multiclasse;
-  if (!value || typeof value !== "object") return null;
-  if (Number(value.schema) !== MULTICLASS_SCHEMA || value.enabled !== true || !Array.isArray(value.classes)) return null;
-  return value;
+function exactInteger(value, minimum = 0) {
+  const parsed = num(value, NaN);
+  if (!Number.isFinite(parsed)) return null;
+  const integer = Math.floor(parsed);
+  return integer >= minimum ? integer : null;
 }
 
-export function canonicalClassStates(actor) {
-  const state = canonicalMulticlass(actor);
-  return state ? state.classes.filter(entry => entry && typeof entry === "object") : [];
+/**
+ * Lit exclusivement les champs de progression de l'Item classe.
+ * Aucun champ de l'acteur n'est consulté ici.
+ */
+export function classProgression(item, { level = 1, xp = 0 } = {}) {
+  const system = item?.system ?? {};
+  const itemLevel = exactInteger(system.niveau, 1);
+  const itemXp = exactInteger(system.xp, 0);
+  return {
+    level: itemLevel ?? Math.max(1, Math.floor(num(level, 1))),
+    xp: itemXp ?? Math.max(0, Math.floor(num(xp, 0))),
+    hasLevel: itemLevel !== null,
+    hasXp: itemXp !== null
+  };
+}
+
+export function classProgressionUpdate(item, { level, xp } = {}) {
+  const update = { _id: item?.id };
+  if (!update._id) return null;
+  if (level !== undefined) update["system.niveau"] = Math.max(1, Math.floor(num(level, 1)));
+  if (xp !== undefined) update["system.xp"] = Math.max(0, Math.floor(num(xp, 0)));
+  return update;
+}
+
+/**
+ * Métadonnées d'acteur uniquement : elles ne portent jamais de progression.
+ */
+export function canonicalMulticlass(actor) {
+  if (actor?.type !== "personnage" || classItems(actor).length <= 1) return null;
+  const stored = actor?.system?.multiclasse;
+  return {
+    schema: MULTICLASS_SCHEMA,
+    enabled: true,
+    mode: stored?.mode === "racial" ? "racial" : "racial",
+    xpSplit: stored?.xpSplit === "equal" ? "equal" : "equal",
+    label: String(stored?.label ?? "")
+  };
 }
 
 export function canonicalClassState(actor, itemOrSlug) {
-  const states = canonicalClassStates(actor);
-  const itemId = typeof itemOrSlug === "object" ? itemOrSlug?.id : "";
-  const slug = typeof itemOrSlug === "object" ? classSlug(itemOrSlug) : norm(itemOrSlug);
-  return states.find(entry =>
-    (itemId && String(entry.itemId ?? "") === String(itemId))
-    || (slug && norm(entry.slug) === slug)
-  ) ?? null;
+  const item = typeof itemOrSlug === "object" && itemOrSlug?.type === "classe"
+    ? itemOrSlug
+    : classItem(actor, itemOrSlug);
+  if (!item) return null;
+  const progression = classProgression(item);
+  return {
+    itemId: item.id ?? null,
+    uuid: item.uuid ?? null,
+    name: item.name ?? itemLabel(item, "Classe"),
+    slug: classSlug(item),
+    level: progression.level,
+    xp: progression.xp,
+    hasLevel: progression.hasLevel,
+    hasXp: progression.hasXp
+  };
+}
+
+export function canonicalClassStates(actor) {
+  return classItems(actor).map(item => canonicalClassState(actor, item)).filter(Boolean);
 }
 
 export function canonicalClassLevel(actor, itemOrSlug, fallback = 1) {
-  const entry = canonicalClassState(actor, itemOrSlug);
-  return Math.max(1, Math.floor(num(entry?.level, fallback)));
+  const state = canonicalClassState(actor, itemOrSlug);
+  return state?.hasLevel ? state.level : Math.max(1, Math.floor(num(fallback, 1)));
 }
 
 export function canonicalClassXp(actor, itemOrSlug, fallback = 0) {
-  const entry = canonicalClassState(actor, itemOrSlug);
-  return Math.max(0, Math.floor(num(entry?.xp, fallback)));
+  const state = canonicalClassState(actor, itemOrSlug);
+  return state?.hasXp ? state.xp : Math.max(0, Math.floor(num(fallback, 0)));
 }
 
 export function multiclassEnabled(actor) {
-  if (actor?.type !== "personnage") return false;
-  return canonicalMulticlass(actor)?.enabled === true || classItems(actor).length > 1;
+  return actor?.type === "personnage" && classItems(actor).length > 1;
 }
 
 export function pickClassAlignment(actor, classData) {
@@ -140,4 +194,5 @@ try {
   globalThis.add2eCanonicalClassState = canonicalClassState;
   globalThis.add2eCanonicalClassLevel = canonicalClassLevel;
   globalThis.add2eCanonicalClassXp = canonicalClassXp;
+  globalThis.add2eClassProgression = classProgression;
 } catch (_error) {}
