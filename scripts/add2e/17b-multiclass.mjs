@@ -40,7 +40,6 @@ globalThis.ADD2E_MULTICLASS_VERSION = MULTICLASS_VERSION;
 function installGetDataPatch() {
   const proto = globalThis.Add2eActorSheet?.prototype;
   if (!proto?.getData || proto.__add2eMulticlassGetDataPatch === MULTICLASS_VERSION) return !!proto?.getData;
-
   const original = proto.getData;
   proto.getData = async function add2eCanonicalMulticlassGetData(...args) {
     const data = await original.apply(this, args);
@@ -48,7 +47,6 @@ function installGetDataPatch() {
     const payload = multiclassUpdatePayload(this.actor);
     return payload ? applyPayloadToSheetData(data, payload) : data;
   };
-
   proto.__add2eMulticlassGetDataPatch = MULTICLASS_VERSION;
   return true;
 }
@@ -56,7 +54,6 @@ function installGetDataPatch() {
 function classContext(actor, classItem) {
   const state = canonicalClassState(actor, classItem);
   if (!state || !classItem) return null;
-
   const system = {
     ...(actor.system ?? {}),
     classe: classItem.name,
@@ -64,7 +61,6 @@ function classContext(actor, classItem) {
     niveau: canonicalClassLevel(actor, classItem, 1),
     xp: Number(state.xp) || 0
   };
-
   return new Proxy(actor, {
     get(target, property) {
       if (property === "system") return system;
@@ -74,6 +70,14 @@ function classContext(actor, classItem) {
   });
 }
 
+function canonicalThiefClass(actor, thiefClassSystem = null) {
+  const itemId = String(thiefClassSystem?.__classItemId ?? "");
+  return classItems(actor).find(item =>
+    (itemId && String(item.id ?? "") === itemId)
+    || classSlug(item) === "voleur"
+  ) ?? null;
+}
+
 function installThiefCanonicalBridge() {
   if (globalThis.__ADD2E_CANONICAL_THIEF_BRIDGE__ === MULTICLASS_VERSION) return;
 
@@ -81,8 +85,7 @@ function installThiefCanonicalBridge() {
   if (typeof skills === "function" && !skills.__add2eCanonicalThiefBridge) {
     const wrapped = function add2eCanonicalGetActorThiefSkills(actor, ...args) {
       if (!canonicalMulticlass(actor)) return skills.call(this, actor, ...args);
-      const thief = classItems(actor).find(item => classSlug(item) === "voleur") ?? null;
-      const context = classContext(actor, thief);
+      const context = classContext(actor, canonicalThiefClass(actor));
       return context ? skills.call(this, context, ...args) : [];
     };
     wrapped.__add2eCanonicalThiefBridge = true;
@@ -94,8 +97,7 @@ function installThiefCanonicalBridge() {
   if (typeof roll === "function" && !roll.__add2eCanonicalThiefBridge) {
     const wrapped = async function add2eCanonicalRollThiefSkill(actor, ...args) {
       if (!canonicalMulticlass(actor)) return roll.call(this, actor, ...args);
-      const thief = classItems(actor).find(item => classSlug(item) === "voleur") ?? null;
-      const context = classContext(actor, thief);
+      const context = classContext(actor, canonicalThiefClass(actor));
       if (!context) {
         ui.notifications?.warn?.("Cette fiche ne possède pas de classe Voleur.");
         return false;
@@ -105,6 +107,18 @@ function installThiefCanonicalBridge() {
     wrapped.__add2eCanonicalThiefBridge = true;
     wrapped.__add2eCanonicalThiefOriginal = roll;
     globalThis.add2eRollThiefSkill = wrapped;
+  }
+
+  const level = globalThis.add2eThiefClassLevel;
+  if (typeof level === "function" && !level.__add2eCanonicalThiefBridge) {
+    const wrapped = function add2eCanonicalThiefClassLevel(actor, thiefClassSystem, fallback = 1) {
+      if (!canonicalMulticlass(actor)) return level.call(this, actor, thiefClassSystem, fallback);
+      const thief = canonicalThiefClass(actor, thiefClassSystem);
+      return thief ? canonicalClassLevel(actor, thief, fallback) : Math.max(1, Number(fallback) || 1);
+    };
+    wrapped.__add2eCanonicalThiefBridge = true;
+    wrapped.__add2eCanonicalThiefOriginal = level;
+    globalThis.add2eThiefClassLevel = wrapped;
   }
 
   globalThis.__ADD2E_CANONICAL_THIEF_BRIDGE__ = MULTICLASS_VERSION;
@@ -121,9 +135,6 @@ installGetDataPatch();
 Hooks.once("ready", () => {
   installGetDataPatch();
   installDropWrapperDeferred();
-
-  // Le garde d'équipement Voleur est posé avant ce module. Le pont est donc
-  // installé après lui et ne laisse jamais la classe primaire devenir Voleur.
   setTimeout(installThiefCanonicalBridge, 0);
 
   if (!game.user?.isGM) return;
@@ -144,8 +155,7 @@ Hooks.on("preUpdateActor", (actor, changes, options = {}) => {
 Hooks.on("createItem", item => {
   const actor = item?.parent;
   if (actor?.documentName !== "Actor" || actor.type !== "personnage") return;
-  if (String(item.type ?? "").toLowerCase() !== "classe") return;
-  if (classItems(actor).length <= 1) return;
+  if (String(item.type ?? "").toLowerCase() !== "classe" || classItems(actor).length <= 1) return;
   setTimeout(() => migrateAndRecalculate(actor).catch(error => warn("[CREATE_CLASS_MIGRATION_ERROR]", error)), 0);
 });
 
