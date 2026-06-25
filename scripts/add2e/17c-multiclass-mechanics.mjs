@@ -3,7 +3,7 @@
 
 import { classItems as coreClassItems, classProgression, classSlug, multiclassEnabled } from "./17b-multiclass-core.mjs";
 
-const VERSION = "2026-06-25-item-progression-mechanics-v4";
+const VERSION = "2026-06-25-item-progression-mechanics-v5";
 const TAG = "[ADD2E][MULTICLASSE][MECA]";
 const timers = new Map();
 
@@ -88,6 +88,33 @@ async function syncHp(actor, { syncCurrent = false, force = false, reason = "mul
   return true;
 }
 
+function applyCompositeProgressionToSheet(actor, data) {
+  const entries = entriesFor(actor);
+  if (!entries.length || !data) return data;
+
+  const thac0 = bestThac0(entries);
+  const saves = bestSaves(entries);
+  const progression = { ...(data.progressionCourante ?? {}), _add2eMulticlassComposite: true };
+  if (thac0 !== null) {
+    progression.thac0 = thac0;
+    progression.thaco = thac0;
+  }
+  if (saves) {
+    progression.savingThrows = foundry.utils.deepClone(saves);
+    progression.sauvegardes = foundry.utils.deepClone(saves);
+  }
+  data.progressionCourante = progression;
+
+  if (data.actor?.system) {
+    if (thac0 !== null) data.actor.system.thaco = thac0;
+    if (saves) data.actor.system.sauvegardes = foundry.utils.deepClone(saves);
+  }
+  if (data.combatDefense) {
+    if (thac0 !== null) data.combatDefense.thaco = thac0;
+  }
+  return data;
+}
+
 function queue(actor, reason) {
   if (!isMulti(actor)) return;
   const id = String(actor.uuid ?? actor.id);
@@ -106,18 +133,29 @@ function queue(actor, reason) {
 function installSheetPatch() {
   const proto = globalThis.Add2eActorSheet?.prototype;
   if (!proto || proto.__add2eMulticlassMechanicsPatch === VERSION) return;
+
   if (typeof proto.autoSetPointsDeCoup === "function" && !proto.__add2eOriginalAutoSetPointsDeCoup) {
     proto.__add2eOriginalAutoSetPointsDeCoup = proto.autoSetPointsDeCoup;
     proto.autoSetPointsDeCoup = async function add2eMulticlassHp(options = {}) {
       return isMulti(this.actor) ? syncHp(this.actor, options) : this.__add2eOriginalAutoSetPointsDeCoup(options);
     };
   }
+
+  if (typeof proto.getData === "function" && !proto.__add2eOriginalMulticlassMechanicsGetData) {
+    proto.__add2eOriginalMulticlassMechanicsGetData = proto.getData;
+    proto.getData = async function add2eMulticlassCompositeSheetData(...args) {
+      const data = await this.__add2eOriginalMulticlassMechanicsGetData.apply(this, args);
+      return isMulti(this.actor) ? applyCompositeProgressionToSheet(this.actor, data) : data;
+    };
+  }
+
   proto.__add2eMulticlassMechanicsPatch = VERSION;
 }
 
 globalThis.add2eSyncMulticlassHp = syncHp;
 globalThis.add2eSyncMulticlassCombatSummary = (actor, options = {}) => syncCombat(actor, options.reason);
 globalThis.add2eMulticlassClassEntries = entriesFor;
+globalThis.add2eApplyMulticlassProgressionToSheet = applyCompositeProgressionToSheet;
 
 Hooks.once("init", installSheetPatch);
 Hooks.once("ready", installSheetPatch);
