@@ -86,8 +86,6 @@ function synchronizeMaterialFields(data) {
   const primary = system.composants_materiels;
   const legacy = system.composants_materiels_objets;
 
-  // Compatibilité de lecture des anciens sorts : le champ historique n'est
-  // utilisé que lorsque le profil canonique est absent. Il n'est jamais recréé.
   if (!hasStructuredMaterials(primary) && hasStructuredMaterials(legacy)) {
     system.composants_materiels = clone(legacy);
   }
@@ -382,7 +380,7 @@ function sortSpellFamilyRows(data) {
   for (const level of Array.isArray(data.add2eSpellLevels) ? data.add2eSpellLevels : []) {
     if (Array.isArray(level?.sorts)) level.sorts.sort(compareSpellFamilyRows);
     for (const group of Array.isArray(level?.groups) ? level.groups : []) {
-      if (Array.isArray(group?.sorts)) group.sort(compareSpellFamilyRows);
+      if (Array.isArray(group?.sorts)) group.sorts.sort(compareSpellFamilyRows);
     }
   }
   return data;
