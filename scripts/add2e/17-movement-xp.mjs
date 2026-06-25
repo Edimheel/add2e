@@ -1,13 +1,8 @@
-// ADD2E — XP + Mouvement
-// Version : 2026-06-22-move-xp-differential-item-sync-v5
-//
-// Principes :
-// - les changements de niveau et d'XP sont déterminés par différence réelle ;
-// - un recalcul de mouvement n'écrit jamais niveau, XP ou titre ;
-// - les changements d'Items sont regroupés par acteur ;
-// - les sorts synchronisés ne déclenchent jamais un recalcul de mouvement.
+// ADD2E — Mouvement et XP monoclasse
+// Les Items classe sont la seule source de progression multiclasses.
+// Compatible Foundry V13/V14/V15.
 
-const VERSION = "2026-06-22-move-xp-differential-item-sync-v5";
+const VERSION = "2026-06-25-movement-mono-xp-item-progression-v6";
 const TAG = "[ADD2E][MOVE_XP]";
 const INTERNAL = "add2eMoveXpInternal";
 const ITEM_RECALC_DELAY_MS = 140;
@@ -69,19 +64,26 @@ function changedUpdatePayload(actor, updates = {}) {
   return Object.fromEntries(Object.entries(updates).filter(([path, value]) => !sameValue(getPath(actor, path), value)));
 }
 
-function classItem(actor) { return actor?.items?.find?.(i => String(i.type || "").toLowerCase() === "classe") ?? null; }
-function classItems(actor) { return actor?.items?.filter?.(i => String(i.type || "").toLowerCase() === "classe") ?? []; }
-function raceItem(actor) { return actor?.items?.find?.(i => String(i.type || "").toLowerCase() === "race") ?? null; }
-function isMulticlassActor(actor) { return actor?.type === "personnage" && (actor.system?.multiclasse?.enabled === true || classItems(actor).length > 1); }
+function classItems(actor) {
+  return Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
+}
 
-function classSlug(item) {
-  const sys = item?.system ?? item ?? {};
-  return norm(sys.slug ?? sys.label ?? sys.nom ?? sys.name ?? item?.name ?? "classe");
+function classItem(actor) {
+  const classes = classItems(actor);
+  return classes.length === 1 ? classes[0] : null;
+}
+
+function raceItem(actor) {
+  return Array.from(actor?.items ?? []).find(item => String(item?.type ?? "").toLowerCase() === "race") ?? null;
+}
+
+function isMulticlassActor(actor) {
+  return actor?.type === "personnage" && classItems(actor).length > 1;
 }
 
 function parseXpRange(raw) {
   const text = String(raw ?? "").trim();
-  const values = text.match(/[0-9][0-9.\s]*/g)?.map(v => num(v, NaN)).filter(Number.isFinite) ?? [];
+  const values = text.match(/[0-9][0-9.\s]*/g)?.map(value => num(value, NaN)).filter(Number.isFinite) ?? [];
   return { min: values[0] ?? 0, max: values[1] ?? null, raw: text };
 }
 
@@ -94,16 +96,18 @@ function xpRows(actor) {
       return { ...row, niveau: num(row?.niveau ?? row?.level ?? index + 1, index + 1), xpMin: range.min, xpMax: range.max, xpLabel: range.raw };
     })
     .filter(row => row.niveau > 0)
-    .sort((a, b) => a.niveau - b.niveau);
+    .sort((left, right) => left.niveau - right.niveau);
 }
 
 function minXpForLevel(actor, level = null) {
-  const lvl = Math.max(1, num(level ?? actor?.system?.niveau, 1));
-  const row = xpRows(actor).find(r => Number(r.niveau) === lvl);
+  if (isMulticlassActor(actor)) return 0;
+  const value = Math.max(1, num(level ?? actor?.system?.niveau, 1));
+  const row = xpRows(actor).find(entry => Number(entry.niveau) === value);
   return Math.max(0, Number(row?.xpMin ?? 0) || 0);
 }
 
 function levelForXp(actor, xpValue) {
+  if (isMulticlassActor(actor)) return null;
   const xp = Math.max(0, Math.floor(num(xpValue, 0)));
   const rows = xpRows(actor);
   if (!rows.length) return Math.max(1, num(actor?.system?.niveau, 1));
@@ -135,6 +139,21 @@ function xpMeta(actor, levelValue, xpValue) {
 }
 
 function computeXp(actor) {
+  if (isMulticlassActor(actor)) {
+    return {
+      xp: null,
+      level: null,
+      requiredMin: null,
+      suggestedLevel: null,
+      nextLevel: null,
+      nextXp: null,
+      xpToNext: null,
+      percent: null,
+      progressionLabel: "Progression gérée par les Items classe",
+      hasProgression: false,
+      multiclass: true
+    };
+  }
   const level = Math.max(1, num(actor?.system?.niveau, 1));
   const xp = Math.max(0, Math.floor(num(actor?.system?.xp, 0)));
   return xpMeta(actor, level, xp);
@@ -147,13 +166,17 @@ function movementFromRaceName(actor) {
 }
 
 function currentProgressionRow(actor) {
-  const level = Math.max(1, num(actor?.system?.niveau, 1));
-  return xpRows(actor).find(row => Number(row.niveau) === level) ?? null;
+  const item = classItem(actor);
+  if (!item) return null;
+  const level = Math.max(1, num(item.system?.niveau ?? item.system?.level, 1));
+  const progression = Array.isArray(item.system?.progression) ? item.system.progression : [];
+  return progression.find(row => Number(row?.niveau ?? row?.level) === level) ?? progression[level - 1] ?? null;
 }
 
 function baseMove(actor) {
+  const item = classItem(actor);
   const row = currentProgressionRow(actor) ?? {};
-  const cls = classItem(actor)?.system ?? actor?.system?.details_classe ?? {};
+  const cls = item?.system ?? {};
   const race = raceItem(actor)?.system ?? {};
   const sys = actor?.system ?? {};
   const storedMovement = sys.mouvement && typeof sys.mouvement === "object" ? sys.mouvement : {};
@@ -197,16 +220,16 @@ function strengthWeightAdjustment(actor) {
 }
 
 function itemWeight(item) {
-  const type = String(item?.type || "").toLowerCase();
+  const type = String(item?.type ?? "").toLowerCase();
   if (["classe", "race", "sort", "spell"].includes(type)) return 0;
-  const sys = item?.system ?? {};
-  const quantity = Math.max(1, num(sys.quantite ?? sys.quantity ?? 1, 1));
-  const weight = num(sys.poids ?? sys.weight ?? sys.encombrement ?? sys.encumbrance ?? 0, 0);
+  const system = item?.system ?? {};
+  const quantity = Math.max(1, num(system.quantite ?? system.quantity ?? 1, 1));
+  const weight = num(system.poids ?? system.weight ?? system.encombrement ?? system.encumbrance ?? 0, 0);
   return Math.max(0, quantity * weight);
 }
 
 function carriedWeight(actor) {
-  return (actor?.items?.contents ?? Array.from(actor?.items ?? [])).reduce((sum, item) => sum + itemWeight(item), 0);
+  return (actor?.items?.contents ?? Array.from(actor?.items ?? [])).reduce((total, item) => total + itemWeight(item), 0);
 }
 
 function computeMovement(actor) {
@@ -257,51 +280,10 @@ function movementUpdates(actor) {
   };
 }
 
-function splitMulticlassXpMap(actor, incomingTotalXp) {
-  const classes = classItems(actor);
-  if (classes.length <= 1) return null;
-  const oldTotal = Math.max(0, Math.floor(num(actor.system?.xp, 0)));
-  const newTotal = Math.max(0, Math.floor(num(incomingTotalXp, oldTotal)));
-  const delta = newTotal - oldTotal;
-  const xpMap = foundry.utils.deepClone(actor.system?.xp_par_classe ?? {});
-  const entries = classes.map(cls => ({ slug: classSlug(cls), cls })).filter(entry => entry.slug);
-  for (const entry of entries) xpMap[entry.slug] = Math.max(0, Math.floor(num(xpMap[entry.slug], 0)));
-  if (delta !== 0) {
-    const sign = delta >= 0 ? 1 : -1;
-    const remaining = Math.abs(delta);
-    const baseShare = Math.floor(remaining / entries.length);
-    let rest = remaining % entries.length;
-    for (const entry of entries) {
-      const add = baseShare + (rest > 0 ? 1 : 0);
-      if (rest > 0) rest -= 1;
-      xpMap[entry.slug] = Math.max(0, xpMap[entry.slug] + add * sign);
-    }
-  }
-  return xpMap;
-}
-
-function multiclassXpUpdates(actor, incomingXp) {
-  const xpMap = splitMulticlassXpMap(actor, incomingXp);
-  if (!xpMap) return null;
-  if (typeof globalThis.add2eMulticlassUpdatePayload === "function") {
-    const payload = globalThis.add2eMulticlassUpdatePayload(actor, null, xpMap, null);
-    if (payload) return payload;
-  }
-  return {
-    "system.xp": Math.max(0, Math.floor(num(incomingXp, actor.system?.xp ?? 0))),
-    "system.xp_par_classe": xpMap
-  };
-}
-
 function flatActorUpdates(actor, { mode = "auto", incoming = {} } = {}) {
   const movementOnly = movementUpdates(actor);
-  if (mode === "movement") {
-    return {
-      updates: movementOnly.updates,
-      xp: computeXp(actor),
-      movement: movementOnly.movement,
-      multiclass: isMulticlassActor(actor)
-    };
+  if (mode === "movement" || isMulticlassActor(actor)) {
+    return { updates: movementOnly.updates, xp: computeXp(actor), movement: movementOnly.movement, multiclass: isMulticlassActor(actor) };
   }
 
   const incomingLevel = incoming["system.niveau"] !== undefined
@@ -310,22 +292,6 @@ function flatActorUpdates(actor, { mode = "auto", incoming = {} } = {}) {
   const incomingXp = incoming["system.xp"] !== undefined
     ? Math.max(0, Math.floor(num(incoming["system.xp"], 0)))
     : Math.max(0, Math.floor(num(actor?.system?.xp, 0)));
-
-  if (isMulticlassActor(actor)) {
-    const updates = { ...movementOnly.updates };
-    if (mode === "xp" && incoming["system.xp"] !== undefined) Object.assign(updates, multiclassXpUpdates(actor, incomingXp) ?? { "system.xp": incomingXp });
-    return {
-      updates,
-      xp: {
-        xp: updates["system.xp"] ?? incomingXp,
-        level: updates["system.niveau"] ?? actor.system?.niveau,
-        suggestedLevel: updates["system.niveau_suggere"] ?? actor.system?.niveau_suggere ?? actor.system?.niveau,
-        progressionLabel: updates["system.progression_xp"] ?? actor.system?.progression_xp ?? ""
-      },
-      movement: movementOnly.movement,
-      multiclass: true
-    };
-  }
 
   let level = incomingLevel;
   let xp = incomingXp;
@@ -370,6 +336,22 @@ async function awardXp(actor, amount, { reason = "Gain d'expérience", percentBo
   const base = Math.max(0, Math.floor(num(amount, 0)));
   const bonus = Math.max(0, Math.floor(base * (num(percentBonus, 0) / 100)));
   const total = base + bonus;
+
+  if (isMulticlassActor(actor)) {
+    const applyCanonical = globalThis.add2eSessionXpApplyToActor;
+    if (typeof applyCanonical !== "function") {
+      ui.notifications.error("Le moteur d’XP canonique des Items classe n’est pas chargé.");
+      return null;
+    }
+    const result = await applyCanonical(actor, total, reason);
+    const details = result?.classes?.map(entry => `${entry.item?.name ?? "Classe"} ${entry.before ?? 0} → ${entry.after ?? 0}`).join(" ; ") ?? "";
+    await ChatMessage.create({
+      speaker: ChatMessage.getSpeaker({ actor }),
+      content: `<div class="add2e-xp-chat" style="border:1px solid #b88924;border-radius:10px;background:#fff8df;padding:.65em .8em;"><h3>Expérience — ${actor.name}</h3><div>${reason ? `<b>${reason}</b><br>` : ""}+${total.toLocaleString()} XP${bonus ? ` dont bonus ${bonus.toLocaleString()} XP` : ""}</div><div>${details}</div><div>Progression multiclasses mise à jour sur les Items classe.</div></div>`
+    });
+    return { total, bonus, ...result };
+  }
+
   const before = Math.max(0, Math.floor(num(actor.system?.xp, 0)));
   const after = before + total;
   const result = flatActorUpdates(actor, { mode: "xp", incoming: { "system.xp": after } });
@@ -379,7 +361,7 @@ async function awardXp(actor, amount, { reason = "Gain d'expérience", percentBo
   const displayedLevel = String(updates["system.niveau"] ?? result.xp.level ?? actor.system?.niveau ?? "-");
   await ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor }),
-    content: `<div class="add2e-xp-chat" style="border:1px solid #b88924;border-radius:10px;background:#fff8df;padding:.65em .8em;"><h3>Expérience — ${actor.name}</h3><div>${reason ? `<b>${reason}</b><br>` : ""}+${total.toLocaleString()} XP${bonus ? ` dont bonus ${bonus.toLocaleString()} XP` : ""}</div><div>${before.toLocaleString()} → <b>${displayedXp.toLocaleString()}</b> XP</div><div>Niveau actuel : <b>${displayedLevel}</b>${result.multiclass ? " — multiclassage" : ""}</div></div>`
+    content: `<div class="add2e-xp-chat" style="border:1px solid #b88924;border-radius:10px;background:#fff8df;padding:.65em .8em;"><h3>Expérience — ${actor.name}</h3><div>${reason ? `<b>${reason}</b><br>` : ""}+${total.toLocaleString()} XP${bonus ? ` dont bonus ${bonus.toLocaleString()} XP` : ""}</div><div>${before.toLocaleString()} → <b>${displayedXp.toLocaleString()}</b> XP</div><div>Niveau actuel : <b>${displayedLevel}</b></div></div>`
   });
   return { before, after: displayedXp, total, bonus, ...result };
 }
@@ -406,33 +388,10 @@ async function promptXp(actor) {
   if (result?.action === "add") await awardXp(actor, result.amount, { reason: result.reason, percentBonus: result.percentBonus });
 }
 
-function rootEl(html) { return html?.jquery ? html[0] : html; }
-function labelOfField(field) { return norm(field?.querySelector?.("label")?.textContent ?? ""); }
-function findField(root, label) { const wanted = norm(label); return [...root.querySelectorAll(".a2e-field")].find(field => labelOfField(field) === wanted) ?? null; }
-
-function ensureXpField(sheet, html) {
-  const actor = sheet?.actor;
-  if (!actor || actor.type !== "personnage" || isMulticlassActor(actor)) return;
-  const root = rootEl(html);
-  if (!root?.querySelector || root.querySelector("input[name='system.xp']")) return;
-  const levelField = findField(root, "Niveau");
-  if (!levelField) return;
-  const field = document.createElement("div");
-  field.className = "a2e-field a2e-xp-field";
-  field.innerHTML = `<label>XP</label><div class="a2e-xp-inline" style="display:grid;grid-template-columns:minmax(0,1fr)31px;gap:5px;align-items:center;"><input type="number" name="system.xp" value="${Number(actor.system?.xp ?? 0)}" min="0" step="1" title="${String(actor.system?.progression_xp ?? "").replace(/"/g, "&quot;")}"><button type="button" class="a2e-icon-btn" data-add2e-mx="xp" title="Ajouter de l'XP" style="height:29px;min-width:31px;padding:0;">+</button></div>`;
-  levelField.insertAdjacentElement("afterend", field);
-}
-
-function bindXpButton(sheet, html) {
-  const actor = sheet?.actor;
-  if (!actor || actor.type !== "personnage" || isMulticlassActor(actor)) return;
-  html.find?.("[data-add2e-mx='xp']")?.off("click.add2eXp").on("click.add2eXp", ev => { ev.preventDefault(); ev.stopPropagation(); promptXp(actor); });
-}
-
 function unitToMeters(distance, unit) {
-  const u = String(unit ?? "").toLowerCase();
-  if (["ft", "feet", "foot", "pied", "pieds", "pi"].includes(u)) return distance * 0.3048;
-  if (["km", "kilometre", "kilomètre", "kilometres", "kilomètres"].includes(u)) return distance * 1000;
+  const value = String(unit ?? "").toLowerCase();
+  if (["ft", "feet", "foot", "pied", "pieds", "pi"].includes(value)) return distance * 0.3048;
+  if (["km", "kilometre", "kilomètre", "kilometres", "kilomètres"].includes(value)) return distance * 1000;
   return distance;
 }
 
@@ -448,9 +407,20 @@ function tokenDistanceMeters(tokenDoc, changes, from = null) {
   return unitToMeters((Math.hypot(nx - ox, ny - oy) / size) * distance, unit);
 }
 
-function combatTurnKey() { const combat = game.combat; return combat ? `${combat.id}:${combat.round ?? 0}:${combat.turn ?? 0}` : null; }
-function spentThisTurn(actor) { const key = combatTurnKey(); if (!key) return 0; return actor.getFlag("add2e", "movementTurnKey") === key ? Number(actor.getFlag("add2e", "movementSpentMeters")) || 0 : 0; }
-function movementOrigin(tokenDoc) { return tokenDoc.getFlag("add2e", "lastAllowedPosition") ?? { x: tokenDoc.x, y: tokenDoc.y }; }
+function combatTurnKey() {
+  const combat = game.combat;
+  return combat ? `${combat.id}:${combat.round ?? 0}:${combat.turn ?? 0}` : null;
+}
+
+function spentThisTurn(actor) {
+  const key = combatTurnKey();
+  return key && actor.getFlag("add2e", "movementTurnKey") === key ? Number(actor.getFlag("add2e", "movementSpentMeters")) || 0 : 0;
+}
+
+function movementOrigin(tokenDoc) {
+  return tokenDoc.getFlag("add2e", "lastAllowedPosition") ?? { x: tokenDoc.x, y: tokenDoc.y };
+}
+
 function movementScaleStatus(distance, max) {
   if (max <= 0) return { key: "red", label: "rouge", color: 0xd91e18, blocked: true };
   if (distance <= max + 0.01) return { key: "green", label: "vert", color: 0x2ecc71, blocked: false };
@@ -463,17 +433,22 @@ function drawMovementScale(tokenDoc, status, distance, max) {
   const Graphics = globalThis.PIXI?.Graphics;
   if (!token || !Graphics) return;
   try {
-    if (!token._add2eMovementScaleRing) { token._add2eMovementScaleRing = new Graphics(); token.addChild(token._add2eMovementScaleRing); }
-    const g = token._add2eMovementScaleRing;
-    const w = Number(token.w ?? token.width ?? canvas.grid.size) || canvas.grid.size;
-    const h = Number(token.h ?? token.height ?? canvas.grid.size) || canvas.grid.size;
-    g.clear();
-    g.lineStyle(5, status.color, 0.95);
-    g.drawRoundedRect(-3, -3, w + 6, h + 6, 10);
-    g.zIndex = 9999;
+    if (!token._add2eMovementScaleRing) {
+      token._add2eMovementScaleRing = new Graphics();
+      token.addChild(token._add2eMovementScaleRing);
+    }
+    const graphics = token._add2eMovementScaleRing;
+    const width = Number(token.w ?? token.width ?? canvas.grid.size) || canvas.grid.size;
+    const height = Number(token.h ?? token.height ?? canvas.grid.size) || canvas.grid.size;
+    graphics.clear();
+    graphics.lineStyle(5, status.color, 0.95);
+    graphics.drawRoundedRect(-3, -3, width + 6, height + 6, 10);
+    graphics.zIndex = 9999;
     token.sortChildren?.();
     token.document.setFlag("add2e", "movementScale", { status: status.key, label: status.label, distance, max, gmFreeMove: game.user.isGM });
-  } catch (err) { console.warn(`${TAG}[TOKEN][SCALE_DRAW_ERROR]`, err); }
+  } catch (error) {
+    console.warn(`${TAG}[TOKEN][SCALE_DRAW_ERROR]`, error);
+  }
 }
 
 function computeTokenMovementScale(tokenDoc, changes = {}, from = null) {
@@ -506,7 +481,10 @@ function validateTokenMovement(tokenDoc, changes, options = {}) {
     ui.notifications.warn(`${actor.name} dépasse son mouvement (${status.label}) : ${next.toFixed(1)} m / ${max.toFixed(1)} m.`);
     return false;
   }
-  if (game.combat) setTimeout(() => { actor.setFlag("add2e", "movementTurnKey", combatTurnKey()); actor.setFlag("add2e", "movementSpentMeters", next); }, 0);
+  if (game.combat) setTimeout(() => {
+    actor.setFlag("add2e", "movementTurnKey", combatTurnKey());
+    actor.setFlag("add2e", "movementSpentMeters", next);
+  }, 0);
   else setTimeout(() => tokenDoc.setFlag("add2e", "lastAllowedPosition", { x: changes.x ?? tokenDoc.x, y: changes.y ?? tokenDoc.y }), 0);
   return true;
 }
@@ -517,12 +495,7 @@ function itemCanAffectMovement(item, hookName, options = {}) {
   const type = String(item.type ?? "").toLowerCase();
   if (["sort", "spell"].includes(type)) return false;
   if (options?.add2eSpellSync || options?.add2eDropPurge || options?.add2eCompendiumTruth) return false;
-
-  if (["classe", "race"].includes(type)) {
-    if (options?.add2eInternal) return hookName === "createItem" || hookName === "updateItem";
-    return true;
-  }
-
+  if (["classe", "race"].includes(type)) return !options?.add2eInternal || hookName === "createItem" || hookName === "updateItem";
   return !options?.add2eInternal;
 }
 
@@ -544,8 +517,7 @@ function changeValue(changes, path) {
 }
 
 function changedPath(actor, changes, path) {
-  if (!foundry.utils.hasProperty(changes, path)) return false;
-  return !sameValue(changeValue(changes, path), getPath(actor, path));
+  return foundry.utils.hasProperty(changes, path) && !sameValue(changeValue(changes, path), getPath(actor, path));
 }
 
 Hooks.once("init", () => {
@@ -557,7 +529,7 @@ Hooks.once("ready", async () => {
   log("[READY]", { version: VERSION });
   if (game.user.isGM) {
     for (const actor of game.actors?.filter(actor => actor.type === "personnage") ?? []) {
-      await recalc(actor, { mode: "auto" }).catch(error => console.warn(`${TAG}[READY][SKIP]`, actor?.name, error));
+      await recalc(actor, { mode: "movement" }).catch(error => console.warn(`${TAG}[READY][SKIP]`, actor?.name, error));
     }
   }
   for (const token of canvas?.tokens?.placeables ?? []) {
@@ -567,7 +539,6 @@ Hooks.once("ready", async () => {
 
 Hooks.on("preUpdateActor", (actor, changes, options) => {
   if (options?.[INTERNAL] || options?.add2eInternal || !actor || actor.type !== "personnage") return true;
-
   const levelChanged = changedPath(actor, changes, "system.niveau");
   const xpChanged = changedPath(actor, changes, "system.xp");
   const movementChanged = [
@@ -578,8 +549,17 @@ Hooks.on("preUpdateActor", (actor, changes, options) => {
     "system.mouvement.base",
     "system.vitesse_deplacement"
   ].some(path => changedPath(actor, changes, path));
-
   if (!levelChanged && !xpChanged && !movementChanged) return true;
+
+  // Les changements de progression multiclasses sont filtrés et traités par 17b.
+  // Ce module ne les transforme jamais en carte ou résumé historique.
+  if (isMulticlassActor(actor) && (levelChanged || xpChanged)) {
+    if (movementChanged) {
+      const derived = changedUpdatePayload(actor, movementUpdates(actor).updates);
+      if (Object.keys(derived).length) foundry.utils.mergeObject(changes, foundry.utils.expandObject(derived), { inplace: true });
+    }
+    return true;
+  }
 
   const incoming = {};
   if (levelChanged) incoming["system.niveau"] = changeValue(changes, "system.niveau");
@@ -593,8 +573,32 @@ Hooks.on("preUpdateActor", (actor, changes, options) => {
   return true;
 });
 
-Hooks.on("renderActorSheet", (sheet, html) => { if (sheet?.actor?.type !== "personnage") return; ensureXpField(sheet, html); bindXpButton(sheet, html); });
-Hooks.on("renderAdd2eActorSheet", (sheet, html) => { if (sheet?.actor?.type !== "personnage") return; ensureXpField(sheet, html); bindXpButton(sheet, html); });
+Hooks.on("renderActorSheet", (sheet, html) => {
+  if (sheet?.actor?.type !== "personnage" || isMulticlassActor(sheet.actor)) return;
+  const root = html?.jquery ? html[0] : html;
+  const levelField = [...root?.querySelectorAll?.(".a2e-field") ?? []].find(field => norm(field.querySelector?.("label")?.textContent ?? "") === "niveau");
+  if (!root || root.querySelector("input[name='system.xp']") || !levelField) return;
+  const field = document.createElement("div");
+  field.className = "a2e-field a2e-xp-field";
+  field.innerHTML = `<label>XP</label><div class="a2e-xp-inline" style="display:grid;grid-template-columns:minmax(0,1fr)31px;gap:5px;align-items:center;"><input type="number" name="system.xp" value="${Number(sheet.actor.system?.xp ?? 0)}" min="0" step="1" title="${String(sheet.actor.system?.progression_xp ?? "").replace(/"/g, "&quot;")}"><button type="button" class="a2e-icon-btn" data-add2e-mx="xp" title="Ajouter de l'XP" style="height:29px;min-width:31px;padding:0;">+</button></div>`;
+  levelField.insertAdjacentElement("afterend", field);
+  field.querySelector("[data-add2e-mx='xp']")?.addEventListener("click", event => {
+    event.preventDefault();
+    event.stopPropagation();
+    promptXp(sheet.actor);
+  });
+});
+
+Hooks.on("renderAdd2eActorSheet", (sheet, html) => {
+  if (sheet?.actor?.type !== "personnage" || isMulticlassActor(sheet.actor)) return;
+  const root = html?.jquery ? html[0] : html;
+  root?.querySelector?.("[data-add2e-mx='xp']")?.addEventListener("click", event => {
+    event.preventDefault();
+    event.stopPropagation();
+    promptXp(sheet.actor);
+  }, { once: true });
+});
+
 Hooks.on("preUpdateToken", (tokenDoc, changes, options) => validateTokenMovement(tokenDoc, changes, options));
 Hooks.on("updateToken", (tokenDoc, changes) => {
   if (!changes || (changes.x === undefined && changes.y === undefined)) return;
@@ -606,7 +610,6 @@ Hooks.on("controlToken", token => {
   token.document.setFlag("add2e", "lastAllowedPosition", { x: token.document.x, y: token.document.y });
   computeTokenMovementScale(token.document, { x: token.document.x, y: token.document.y });
 });
-
 Hooks.on("createItem", (item, options = {}) => queueItemMovementRecalc(item, "createItem", options));
 Hooks.on("updateItem", (item, _changes = {}, options = {}) => queueItemMovementRecalc(item, "updateItem", options));
 Hooks.on("deleteItem", (item, options = {}) => queueItemMovementRecalc(item, "deleteItem", options));
