@@ -34,6 +34,8 @@ import {
 } from "./17b-multiclass-direct-fields.mjs";
 import { compatibleMulticlassClassCandidates, installDropWrapperDeferred } from "./17b-multiclass-drop.mjs";
 
+const multiXpTimers = new Map();
+const multiCombatTimers = new Map();
 globalThis.ADD2E_MULTICLASS_VERSION = MULTICLASS_VERSION;
 
 function installGetDataPatch() {
@@ -71,6 +73,102 @@ async function ensureMonoclassItemProgression(actor, { fromActorSummary = false,
   return true;
 }
 
+function classRow(item) {
+  const progression = classProgression(item);
+  if (!progression.hasLevel) return null;
+  const rows = Array.isArray(item.system?.progression) ? item.system.progression : [];
+  return rows.find(row => Number(row?.niveau ?? row?.level) === progression.level)
+    ?? rows[Math.max(0, progression.level - 1)]
+    ?? null;
+}
+
+async function syncMulticlassCombatSummary(actor, { reason = "multiclass-combat-summary" } = {}) {
+  if (!multiclassEnabled(actor)) return false;
+  const rows = classItems(actor).map(item => ({ item, row: classRow(item) })).filter(entry => entry.row);
+  if (!rows.length) return false;
+  const thacos = rows.map(entry => Number(entry.row?.thac0 ?? entry.row?.thaco)).filter(Number.isFinite);
+  const saves = rows.map(entry => entry.row?.savingThrows ?? entry.row?.sauvegardes ?? entry.row?.saves).filter(Array.isArray);
+  const updates = {};
+  if (thacos.length) updates["system.thaco"] = Math.min(...thacos);
+  if (saves.length) {
+    const length = Math.max(...saves.map(row => row.length));
+    updates["system.sauvegardes"] = Array.from({ length }, (_value, index) => {
+      const values = saves.map(row => Number(row[index])).filter(Number.isFinite);
+      return values.length ? Math.min(...values) : "";
+    });
+  }
+  if (!Object.keys(updates).length) return false;
+  await actor.update(updates, { add2eInternal: true, add2eMulticlassInternal: true, add2eReason: reason, render: false });
+  return true;
+}
+
+function queueMulticlassCombatSummary(actor, reason) {
+  if (!multiclassEnabled(actor)) return;
+  const key = String(actor.uuid ?? actor.id);
+  clearTimeout(multiCombatTimers.get(key));
+  multiCombatTimers.set(key, setTimeout(() => {
+    multiCombatTimers.delete(key);
+    syncMulticlassCombatSummary(actor, { reason }).catch(error => warn("[COMBAT_SUMMARY_ERROR]", { actor: actor.name, error }));
+  }, 0));
+}
+
+function directClassXpTotal(actor) {
+  return classItems(actor).reduce((sum, item) => sum + Math.max(0, Math.floor(num(item.system?.xp, 0))), 0);
+}
+
+async function applyLegacyTotalXpToItems(actor, requestedTotal) {
+  if (!multiclassEnabled(actor)) return false;
+  const classes = classItems(actor);
+  const current = directClassXpTotal(actor);
+  const target = Math.max(0, Math.floor(num(requestedTotal, current)));
+  let delta = target - current;
+  if (!delta) return true;
+  const sign = delta >= 0 ? 1 : -1;
+  let remaining = Math.abs(delta);
+  const base = Math.floor(remaining / classes.length);
+  let rest = remaining % classes.length;
+  const race = actor.items?.find?.(item => String(item.type ?? "").toLowerCase() === "race") ?? null;
+  const updates = [];
+  for (const item of classes) {
+    const share = base + (rest > 0 ? 1 : 0);
+    if (rest > 0) rest -= 1;
+    const xp = Math.max(0, Math.floor(num(item.system?.xp, 0)) + (share * sign));
+    let level = Math.max(1, Math.floor(levelForClassXp(item.system ?? {}, xp)));
+    const cap = classRaceMaxLevel(item, race);
+    if (cap > 0) level = Math.min(level, cap);
+    updates.push({ _id: item.id, "system.xp": xp, "system.niveau": level });
+    remaining -= share;
+  }
+  await actor.updateEmbeddedDocuments("Item", updates, {
+    add2eInternal: true,
+    add2eMulticlassInternal: true,
+    add2eReason: "legacy-total-xp-to-class-items"
+  });
+  await recalcActor(actor);
+  await syncMulticlassCombatSummary(actor, { reason: "legacy-total-xp-to-class-items" });
+  await globalThis.add2eSyncMulticlassHp?.(actor, { reason: "legacy-total-xp-to-class-items" });
+  return true;
+}
+
+function removePath(changes, dottedPath) {
+  if (!changes || !dottedPath) return;
+  delete changes[dottedPath];
+  const [root, child] = dottedPath.split(".");
+  if (root && child && changes[root] && typeof changes[root] === "object") delete changes[root][child];
+}
+function readPath(changes, dottedPath) {
+  if (Object.prototype.hasOwnProperty.call(changes ?? {}, dottedPath)) return changes[dottedPath];
+  return foundry.utils.getProperty(changes ?? {}, dottedPath);
+}
+function queueLegacyTotalXp(actor, target) {
+  const key = String(actor.uuid ?? actor.id);
+  clearTimeout(multiXpTimers.get(key));
+  multiXpTimers.set(key, setTimeout(() => {
+    multiXpTimers.delete(key);
+    applyLegacyTotalXpToItems(actor, target).catch(error => warn("[LEGACY_XP_CONVERSION_ERROR]", { actor: actor.name, error }));
+  }, 0));
+}
+
 function thiefClassItem(actor) {
   return classItems(actor).find(item => {
     const slug = classSlug(item);
@@ -79,22 +177,12 @@ function thiefClassItem(actor) {
   }) ?? null;
 }
 
-/**
- * Projection strictement limitée à l'Item Voleur choisi. Elle ne lit jamais
- * la première classe de l'acteur ; elle garde les helpers historiques pendant
- * leur retrait progressif des feuilles et du HUD.
- */
+/** Projection strictement limitée à l'Item Voleur choisi. */
 function thiefContext(actor, thief = thiefClassItem(actor)) {
   if (!actor || !thief) return null;
   const progression = classProgression(thief);
   if (!progression.hasLevel) return null;
-  const system = {
-    ...(actor.system ?? {}),
-    classe: thief.name,
-    details_classe: foundry.utils.deepClone(thief.system ?? {}),
-    niveau: progression.level,
-    xp: progression.hasXp ? progression.xp : 0
-  };
+  const system = { ...(actor.system ?? {}), classe: thief.name, details_classe: foundry.utils.deepClone(thief.system ?? {}), niveau: progression.level, xp: progression.hasXp ? progression.xp : 0 };
   const items = [thief, ...classItems(actor).filter(item => item.id !== thief.id), ...Array.from(actor.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() !== "classe")];
   return new Proxy(actor, {
     get(target, property) {
@@ -105,11 +193,9 @@ function thiefContext(actor, thief = thiefClassItem(actor)) {
     }
   });
 }
-
 function installThiefItemProjection() {
   if (globalThis.__ADD2E_THIEF_ITEM_PROJECTION__ === MULTICLASS_VERSION) return;
-  const names = ["add2eGetActorThiefSkills", "add2eGetActorThiefSkillTable", "add2eGetActorThiefProgression"];
-  for (const name of names) {
+  for (const name of ["add2eGetActorThiefSkills", "add2eGetActorThiefSkillTable", "add2eGetActorThiefProgression"]) {
     const original = globalThis[name];
     if (typeof original !== "function" || original.__add2eThiefItemProjection) continue;
     const projected = function add2eThiefItemProjectedFunction(actor, ...args) {
@@ -119,10 +205,8 @@ function installThiefItemProjection() {
       return context ? original.call(this, context, ...args) : [];
     };
     projected.__add2eThiefItemProjection = true;
-    projected.__add2eThiefItemProjectionOriginal = original;
     globalThis[name] = projected;
   }
-
   const originalRoll = globalThis.add2eRollThiefSkill;
   if (typeof originalRoll === "function" && !originalRoll.__add2eThiefItemProjection) {
     const projectedRoll = async function add2eThiefItemProjectedRoll(actor, ...args) {
@@ -136,24 +220,59 @@ function installThiefItemProjection() {
       return originalRoll.call(this, context, ...args);
     };
     projectedRoll.__add2eThiefItemProjection = true;
-    projectedRoll.__add2eThiefItemProjectionOriginal = originalRoll;
     globalThis.add2eRollThiefSkill = projectedRoll;
   }
-
   const originalLevel = globalThis.add2eThiefClassLevel;
   globalThis.add2eThiefClassLevel = function add2eThiefItemLevel(actor, thiefSystem = null, fallback = 1) {
     const requestedId = String(thiefSystem?.__classItemId ?? "");
-    const thief = requestedId
-      ? classItems(actor).find(item => String(item.id) === requestedId)
-      : thiefClassItem(actor);
+    const thief = requestedId ? classItems(actor).find(item => String(item.id) === requestedId) : thiefClassItem(actor);
     const progression = thief ? classProgression(thief) : null;
     if (progression?.hasLevel) return progression.level;
-    return typeof originalLevel === "function" && !thief
-      ? originalLevel.call(this, actor, thiefSystem, fallback)
-      : Math.max(1, Number(fallback) || 1);
+    return typeof originalLevel === "function" && !thief ? originalLevel.call(this, actor, thiefSystem, fallback) : Math.max(1, Number(fallback) || 1);
   };
   globalThis.add2eThiefClassLevel.__add2eThiefItemProjection = true;
   globalThis.__ADD2E_THIEF_ITEM_PROJECTION__ = MULTICLASS_VERSION;
+}
+
+function installEffectsEngineItemProgressionPatch() {
+  const Engine = globalThis.Add2eEffectsEngine;
+  if (!Engine?.getActiveTags || Engine.__add2eItemClassTags === MULTICLASS_VERSION) return;
+  const original = Engine.getActiveTags.bind(Engine);
+  Engine.getActiveTags = function add2eItemClassTags(actor) {
+    if (!multiclassEnabled(actor)) return original(actor);
+    const blankClasses = classItems(actor).map(item => ({
+      ...item,
+      system: {
+        ...(item.system ?? {}),
+        classFeatures: [], classFeaturesDebloquees: [], activeClassFeatures: [], activableClassFeatures: [],
+        passiveClassFeatures: [], passiveFeatures: [], capacitesClasse: [], capacitesActives: [], capacitesActivables: [],
+        monkProgression: []
+      }
+    }));
+    const safeSystem = { ...(actor.system ?? {}), classFeatures: [], details_classe: {} };
+    const safeItems = [...blankClasses, ...Array.from(actor.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() !== "classe")];
+    const proxy = new Proxy(actor, { get(target, property) {
+      if (property === "system") return safeSystem;
+      if (property === "items") return safeItems;
+      const value = Reflect.get(target, property, target);
+      return typeof value === "function" ? value.bind(target) : value;
+    }});
+    const tags = new Set(original(proxy) ?? []);
+    const addFeatureTags = Engine.addClassFeatureTagsInto?.bind(Engine);
+    const addTags = Engine.addTagsInto?.bind(Engine);
+    for (const item of classItems(actor)) {
+      const progression = classProgression(item);
+      if (!progression.hasLevel) continue;
+      for (const field of ["classFeatures", "classFeaturesDebloquees", "activeClassFeatures", "activableClassFeatures", "passiveClassFeatures", "passiveFeatures", "capacitesClasse", "capacitesActives", "capacitesActivables"]) {
+        addFeatureTags?.(tags, item.system?.[field], progression.level);
+      }
+      const rows = Array.isArray(item.system?.monkProgression) && item.system.monkProgression.length ? item.system.monkProgression : item.system?.progression;
+      const row = Array.isArray(rows) ? (rows.find(entry => Number(entry?.niveau ?? entry?.level) === progression.level) ?? rows[Math.max(0, progression.level - 1)]) : null;
+      addTags?.(tags, row?.tags);
+    }
+    return [...new Set([...tags].filter(Boolean))];
+  };
+  Engine.__add2eItemClassTags = MULTICLASS_VERSION;
 }
 
 async function migrateAndRecalculate(actor) {
@@ -162,7 +281,9 @@ async function migrateAndRecalculate(actor) {
   if (classItems(actor).length <= 1) return null;
   const migration = await migrateLegacyMulticlassActor(actor);
   if (migration?.ok === false) return null;
-  return recalcActor(actor);
+  const result = await recalcActor(actor);
+  await syncMulticlassCombatSummary(actor, { reason: "multiclass-migration-summary" });
+  return result;
 }
 
 installGetDataPatch();
@@ -170,8 +291,7 @@ installGetDataPatch();
 Hooks.once("ready", () => {
   installGetDataPatch();
   installDropWrapperDeferred();
-  setTimeout(installThiefItemProjection, 0);
-
+  setTimeout(() => { installThiefItemProjection(); installEffectsEngineItemProgressionPatch(); }, 0);
   if (!game.user?.isGM) return;
   for (const actor of game.actors?.filter(entry => entry.type === "personnage" && classItems(entry).length) ?? []) {
     migrateAndRecalculate(actor).catch(error => warn("[READY_MIGRATION_ERROR]", { actor: actor.name, error }));
@@ -184,6 +304,25 @@ Hooks.on("renderAdd2eActorSheet", bindDirectMulticlassFields);
 Hooks.on("preUpdateActor", (actor, changes, options = {}) => {
   if (options?.add2eMulticlassInternal || options?.add2eInternal) return true;
   mergeMulticlassChanges(actor, changes);
+  if (!multiclassEnabled(actor)) return true;
+
+  const requestedXp = readPath(changes, "system.xp");
+  const requestedLevel = readPath(changes, "system.niveau");
+  for (const path of ["system.xp_par_classe", "system.niveaux_par_classe", "system.titres_par_classe", "system.xp_next_par_classe", "system.niveau_max_par_classe", "system.multiclasse.classes"]) removePath(changes, path);
+  if (requestedXp !== undefined && Number.isFinite(num(requestedXp, NaN))) {
+    removePath(changes, "system.xp");
+    removePath(changes, "system.niveau");
+    removePath(changes, "system.niveau_suggere");
+    removePath(changes, "system.titre");
+    removePath(changes, "system.progression_xp");
+    removePath(changes, "system.xp_next");
+    removePath(changes, "system.xp_to_next");
+    removePath(changes, "system.xp_percent");
+    queueLegacyTotalXp(actor, requestedXp);
+  } else if (requestedLevel !== undefined) {
+    removePath(changes, "system.niveau");
+    ui.notifications?.warn?.("Pour un multiclassé, modifie le niveau sur la ligne de la classe concernée.");
+  }
   return true;
 });
 
@@ -202,18 +341,18 @@ Hooks.on("createItem", item => {
   if (String(item.type ?? "").toLowerCase() !== "classe") return;
   setTimeout(() => migrateAndRecalculate(actor).catch(error => warn("[CREATE_CLASS_MIGRATION_ERROR]", error)), 0);
 });
-
+Hooks.on("updateItem", (item, _changes, options = {}) => {
+  const actor = item?.parent;
+  if (options?.add2eInternal || actor?.type !== "personnage" || String(item?.type ?? "").toLowerCase() !== "classe") return;
+  queueMulticlassCombatSummary(actor, "class-item-update-summary");
+});
 Hooks.on("deleteItem", item => {
   const actor = item?.parent;
-  if (actor?.documentName !== "Actor" || actor.type !== "personnage") return;
-  if (String(item.type ?? "").toLowerCase() !== "classe") return;
+  if (actor?.documentName !== "Actor" || actor.type !== "personnage" || String(item.type ?? "").toLowerCase() !== "classe") return;
   setTimeout(() => {
     const remaining = classItems(actor);
-    if (remaining.length > 1) {
-      migrateAndRecalculate(actor).catch(error => warn("[DELETE_CLASS_RECALC_ERROR]", error));
-    } else if (remaining.length === 1) {
-      cleanupAfterMonoclassReplace(actor, remaining[0], null, actor.sheet).catch(error => warn("[DELETE_CLASS_MONO_ERROR]", error));
-    }
+    if (remaining.length > 1) migrateAndRecalculate(actor).catch(error => warn("[DELETE_CLASS_RECALC_ERROR]", error));
+    else if (remaining.length === 1) cleanupAfterMonoclassReplace(actor, remaining[0], null, actor.sheet).catch(error => warn("[DELETE_CLASS_MONO_ERROR]", error));
   }, 0);
 });
 
@@ -232,5 +371,6 @@ globalThis.add2eCleanMonoclassAfterReplace = cleanupAfterMonoclassReplace;
 globalThis.add2eReplaceClassInMulticlass = replaceClassInMulticlass;
 globalThis.add2eMigrateLegacyMulticlassActor = migrateLegacyMulticlassActor;
 globalThis.add2eEnsureMonoclassItemProgression = ensureMonoclassItemProgression;
+globalThis.add2eSyncMulticlassCombatSummary = syncMulticlassCombatSummary;
 
 console.log("[ADD2E][MULTICLASSE][ITEM_PROGRESSION_READY]", MULTICLASS_VERSION);
