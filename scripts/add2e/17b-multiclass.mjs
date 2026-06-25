@@ -5,8 +5,10 @@ import {
   MULTICLASS_VERSION,
   classItems,
   classProgression,
+  classProgressionUpdate,
   classSlug,
   multiclassEnabled,
+  num,
   warn
 } from "./17b-multiclass-core.mjs";
 import {
@@ -45,6 +47,27 @@ function installGetDataPatch() {
     return payload ? applyPayloadToSheetData(data, payload) : data;
   };
   proto.__add2eMulticlassGetDataPatch = MULTICLASS_VERSION;
+  return true;
+}
+
+async function ensureMonoclassItemProgression(actor, { fromActorSummary = false, reason = "monoclass-item-progression" } = {}) {
+  if (!actor || actor.type !== "personnage") return false;
+  const classes = classItems(actor);
+  if (classes.length !== 1) return false;
+  const classDoc = classes[0];
+  const current = classProgression(classDoc);
+  const actorLevel = Math.max(1, Math.floor(num(actor.system?.niveau, 1)));
+  const actorXp = Math.max(0, Math.floor(num(actor.system?.xp, 0)));
+  const level = fromActorSummary || !current.hasLevel ? actorLevel : current.level;
+  const xp = fromActorSummary || !current.hasXp ? actorXp : current.xp;
+  if (current.hasLevel && current.level === level && current.hasXp && current.xp === xp) return true;
+  const update = classProgressionUpdate(classDoc, { level, xp });
+  if (!update) return false;
+  await actor.updateEmbeddedDocuments("Item", [update], {
+    add2eInternal: true,
+    add2eMulticlassInternal: true,
+    add2eReason: reason
+  });
   return true;
 }
 
@@ -134,7 +157,9 @@ function installThiefItemProjection() {
 }
 
 async function migrateAndRecalculate(actor) {
-  if (!actor || actor.type !== "personnage" || classItems(actor).length <= 1) return null;
+  if (!actor || actor.type !== "personnage") return null;
+  if (classItems(actor).length === 1) return ensureMonoclassItemProgression(actor, { reason: "monoclass-item-progression-migration" });
+  if (classItems(actor).length <= 1) return null;
   const migration = await migrateLegacyMulticlassActor(actor);
   if (migration?.ok === false) return null;
   return recalcActor(actor);
@@ -148,7 +173,7 @@ Hooks.once("ready", () => {
   setTimeout(installThiefItemProjection, 0);
 
   if (!game.user?.isGM) return;
-  for (const actor of game.actors?.filter(entry => entry.type === "personnage" && classItems(entry).length > 1) ?? []) {
+  for (const actor of game.actors?.filter(entry => entry.type === "personnage" && classItems(entry).length) ?? []) {
     migrateAndRecalculate(actor).catch(error => warn("[READY_MIGRATION_ERROR]", { actor: actor.name, error }));
   }
 });
@@ -162,10 +187,19 @@ Hooks.on("preUpdateActor", (actor, changes, options = {}) => {
   return true;
 });
 
+Hooks.on("updateActor", (actor, changes, options = {}) => {
+  if (options?.add2eMulticlassInternal || options?.add2eInternal || actor?.type !== "personnage") return;
+  if (classItems(actor).length !== 1) return;
+  const flat = foundry.utils.flattenObject(changes ?? {});
+  if (!(Object.prototype.hasOwnProperty.call(flat, "system.niveau") || Object.prototype.hasOwnProperty.call(flat, "system.xp"))) return;
+  ensureMonoclassItemProgression(actor, { fromActorSummary: true, reason: "monoclass-actor-summary-sync" })
+    .catch(error => warn("[MONO_SYNC_ERROR]", { actor: actor.name, error }));
+});
+
 Hooks.on("createItem", item => {
   const actor = item?.parent;
   if (actor?.documentName !== "Actor" || actor.type !== "personnage") return;
-  if (String(item.type ?? "").toLowerCase() !== "classe" || classItems(actor).length <= 1) return;
+  if (String(item.type ?? "").toLowerCase() !== "classe") return;
   setTimeout(() => migrateAndRecalculate(actor).catch(error => warn("[CREATE_CLASS_MIGRATION_ERROR]", error)), 0);
 });
 
@@ -197,5 +231,6 @@ globalThis.add2eMulticlassDirectFieldSync = updateDirectMulticlassField;
 globalThis.add2eCleanMonoclassAfterReplace = cleanupAfterMonoclassReplace;
 globalThis.add2eReplaceClassInMulticlass = replaceClassInMulticlass;
 globalThis.add2eMigrateLegacyMulticlassActor = migrateLegacyMulticlassActor;
+globalThis.add2eEnsureMonoclassItemProgression = ensureMonoclassItemProgression;
 
 console.log("[ADD2E][MULTICLASSE][ITEM_PROGRESSION_READY]", MULTICLASS_VERSION);
