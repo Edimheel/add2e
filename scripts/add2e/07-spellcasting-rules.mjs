@@ -1,11 +1,11 @@
 // ============================================================
-// ADD2E — Spellcasting générique par lignes de sorts
-// Version : 2026-06-14-spellcasting-multiclass-levels-v5-manual-single-class-level
-// Supporte les classes simples et les multiclasses AD&D 2e.
-// Les listes identiques sont regroupées : clerc, druide, magicien, illusionniste.
-// La mémorisation utilise flags.add2e.memorizedByList pour les vrais sorts uniquement.
+// ADD2E — Spellcasting par Items classe
+// Version : 2026-06-25-spellcasting-item-progression-v6
+// Les Items classe sont l’unique source de niveau et de listes de sorts.
+// Compatible Foundry V13/V14/V15.
 // ============================================================
-globalThis.ADD2E_SPELL_PREPARATION_VERSION = "2026-06-14-spellcasting-multiclass-levels-v5-manual-single-class-level";
+
+globalThis.ADD2E_SPELL_PREPARATION_VERSION = "2026-06-25-spellcasting-item-progression-v6";
 globalThis.ADD2E_SPELL_FX_VERSION = "2026-05-21-spell-fx-central-v1";
 
 function add2eRerenderActorSheet(actor, force = true) {
@@ -18,13 +18,13 @@ function add2eRerenderActorSheet(actor, force = true) {
         return true;
       }
     }
-  } catch (_err) {}
+  } catch (_error) {}
   return false;
 }
 globalThis.add2eRerenderActorSheet = add2eRerenderActorSheet;
 
 function add2eNormalizeSpellKey(value) {
-  const v = String(value ?? "")
+  const normalized = String(value ?? "")
     .trim()
     .toLowerCase()
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -37,7 +37,7 @@ function add2eNormalizeSpellKey(value) {
     wizard: "magicien", mage: "magicien", magic_user: "magicien", magicien: "magicien", magician: "magicien",
     illusionist: "illusionniste", illusionniste: "illusionniste"
   };
-  return aliases[v] || v;
+  return aliases[normalized] || normalized;
 }
 
 function add2eSpellLabel(value) {
@@ -47,8 +47,8 @@ function add2eSpellLabel(value) {
 }
 
 function add2eToArray(value) {
-  if (Array.isArray(value)) return value.filter(v => v !== undefined && v !== null && String(v).trim() !== "");
-  if (typeof value === "string") return value.split(/[,;|]/).map(s => s.trim()).filter(Boolean);
+  if (Array.isArray(value)) return value.filter(entry => entry !== undefined && entry !== null && String(entry).trim() !== "");
+  if (typeof value === "string") return value.split(/[,;|]/).map(entry => entry.trim()).filter(Boolean);
   return [];
 }
 
@@ -68,194 +68,142 @@ function add2eSpellNumber(value, fallback = null) {
   if (value === null || value === undefined || value === "") return fallback;
   if (value && typeof value === "object") {
     for (const key of ["value", "valeur", "total", "current", "base", "max", "niveau", "level", "xp"]) {
-      const n = add2eSpellNumber(value[key], null);
-      if (Number.isFinite(n)) return n;
+      const numeric = add2eSpellNumber(value[key], null);
+      if (Number.isFinite(numeric)) return numeric;
     }
   }
   const raw = String(value ?? "").trim();
   if (!raw) return fallback;
   const match = raw.match(/-?\d+(?:[.,]\d+)?/);
   if (!match) return fallback;
-  const n = Number(match[0].replace(",", "."));
-  return Number.isFinite(n) ? n : fallback;
+  const numeric = Number(match[0].replace(",", "."));
+  return Number.isFinite(numeric) ? numeric : fallback;
 }
 
 function add2eSpellClassItems(actor) {
-  return actor?.items?.filter?.(i => String(i.type || "").toLowerCase() === "classe") ?? [];
+  return Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
 }
 
-function add2eSpellClassSlug(cls) {
-  const sys = cls?.system ?? {};
-  return add2eSpellSlug(sys.slug ?? sys.label ?? sys.nom ?? sys.name ?? cls?.name ?? "classe");
+function add2eSpellClassSlug(classDoc) {
+  const system = classDoc?.system ?? {};
+  return add2eSpellSlug(system.slug ?? system.label ?? system.nom ?? system.name ?? classDoc?.name ?? "classe");
+}
+
+function add2eSpellClassLevelFromItem(classDoc) {
+  for (const value of [
+    classDoc?.system?.niveau,
+    classDoc?.system?.level,
+    classDoc?.system?.currentLevel,
+    classDoc?.system?.niveauActuel
+  ]) {
+    const level = add2eSpellNumber(value, null);
+    if (Number.isFinite(level) && level >= 1) return Math.floor(level);
+  }
+  return 0;
+}
+
+function add2eResolveSpellClassItem(actor, source = null) {
+  const classes = add2eSpellClassItems(actor);
+  if (!classes.length) return null;
+
+  const fromId = candidate => {
+    const id = String(candidate ?? "").trim();
+    return id ? classes.find(classDoc => String(classDoc?.id ?? "") === id) ?? null : null;
+  };
+
+  if (source && typeof source === "object") {
+    const exact = fromId(source.id ?? source.itemId ?? source.classItemId ?? source.sourceClassId ?? source.sourceItemId);
+    if (exact) return exact;
+
+    const sourceSlug = add2eSpellSlug(source.classSlug ?? source.slug ?? source.className ?? source.name ?? "");
+    if (sourceSlug) {
+      const matches = classes.filter(classDoc => add2eSpellClassSlug(classDoc) === sourceSlug);
+      if (matches.length === 1) return matches[0];
+    }
+    return null;
+  }
+
+  if (typeof source === "string" && source.trim()) {
+    const slug = add2eSpellSlug(source);
+    const matches = classes.filter(classDoc => add2eSpellClassSlug(classDoc) === slug);
+    return matches.length === 1 ? matches[0] : null;
+  }
+
+  const spellcasters = classes.filter(classDoc => {
+    const casting = classDoc?.system?.spellcasting;
+    return casting && typeof casting === "object" && casting.enabled !== false;
+  });
+  return spellcasters.length === 1 ? spellcasters[0] : null;
 }
 
 function add2eActorIsMulticlass(actor) {
-  return actor?.system?.multiclasse?.enabled === true || add2eSpellClassItems(actor).length > 1;
+  return add2eSpellClassItems(actor).length > 1;
 }
 
-function add2eSpellManualSingleClassLevel(actor) {
-  if (add2eActorIsMulticlass(actor)) return null;
-  const sys = actor?.system ?? {};
-  for (const value of [sys.niveau, sys.level, sys.niveau_total, sys.levelTotal]) {
-    const n = add2eSpellNumber(value, null);
-    if (Number.isFinite(n) && n >= 1) return Math.max(1, Math.floor(n));
-  }
-  return null;
-}
-
-function add2eSpellReadNestedLevel(root, slug, classId = null) {
-  if (!root || typeof root !== "object") return null;
-  const keys = [slug, classId].filter(Boolean);
-  for (const containerName of ["niveaux_par_classe", "niveauxParClasse", "levelsByClass", "classLevels", "classes", "classData", "multiclassLevels", "multiclasse", "multiclass"]) {
-    const container = root[containerName];
-    if (!container || typeof container !== "object") continue;
-    for (const key of keys) {
-      const direct = add2eSpellNumber(container[key], null);
-      if (Number.isFinite(direct)) return direct;
-      const entry = container[key];
-      const nested = add2eSpellNumber(entry?.niveau ?? entry?.level ?? entry?.currentLevel ?? entry?.niveauActuel ?? entry?.value, null);
-      if (Number.isFinite(nested)) return nested;
-    }
-    for (const nestedName of ["niveaux", "levels", "byClass", "classes", "entries"]) {
-      const nestedContainer = container[nestedName];
-      if (!nestedContainer || typeof nestedContainer !== "object") continue;
-      for (const key of keys) {
-        const direct = add2eSpellNumber(nestedContainer[key], null);
-        if (Number.isFinite(direct)) return direct;
-        const entry = nestedContainer[key];
-        const nested = add2eSpellNumber(entry?.niveau ?? entry?.level ?? entry?.currentLevel ?? entry?.niveauActuel ?? entry?.value, null);
-        if (Number.isFinite(nested)) return nested;
-      }
-    }
-  }
-  return null;
-}
-
-function add2eSpellParseXpRange(raw) {
-  const text = String(raw ?? "").trim();
-  const values = text.match(/[0-9][0-9.\s]*/g)?.map(v => add2eSpellNumber(v, NaN)).filter(Number.isFinite) ?? [];
-  return { min: values[0] ?? 0, max: values[1] ?? null };
-}
-
-function add2eSpellProgressionRows(classSystem) {
-  const progression = Array.isArray(classSystem?.progression) ? classSystem.progression : [];
-  return progression.map((row, index) => {
-    const range = add2eSpellParseXpRange(row?.xp ?? row?.experience ?? row?.xpRange ?? row?.niveau_xp ?? "");
-    return { ...row, niveau: add2eSpellNumber(row?.niveau ?? row?.level, index + 1), xpMin: range.min, xpMax: range.max };
-  }).filter(r => Number(r.niveau) > 0).sort((a, b) => Number(a.niveau) - Number(b.niveau));
-}
-
-function add2eSpellLevelForClassXp(classSystem, xpValue) {
-  const xp = Math.max(0, Math.floor(add2eSpellNumber(xpValue, 0) || 0));
-  const rows = add2eSpellProgressionRows(classSystem);
-  if (!rows.length) return 1;
-  let current = rows[0];
-  for (const row of rows) if (xp >= Number(row.xpMin || 0)) current = row;
-  return Math.max(1, Math.floor(Number(current.niveau) || 1));
-}
-
-function add2eSpellClassLevel(actor, classSlug = null) {
-  const manualSingleClassLevel = add2eSpellManualSingleClassLevel(actor);
-  if (Number.isFinite(manualSingleClassLevel) && manualSingleClassLevel >= 1) return manualSingleClassLevel;
-
-  const slug = add2eSpellSlug(classSlug ?? "");
-  const classItems = add2eSpellClassItems(actor);
-  const cls = slug ? classItems.find(c => add2eSpellClassSlug(c) === slug) : classItems[0];
-  const sys = actor?.system ?? {};
-
-  for (const root of [sys, actor?.flags?.add2e]) {
-    const nested = add2eSpellReadNestedLevel(root, slug, cls?.id);
-    if (Number.isFinite(nested) && nested >= 1) return Math.max(1, Math.floor(nested));
-  }
-
-  for (const value of [cls?.system?.niveau, cls?.system?.level, cls?.system?.currentLevel, cls?.system?.niveauActuel]) {
-    const n = add2eSpellNumber(value, null);
-    if (Number.isFinite(n) && n >= 1) return Math.max(1, Math.floor(n));
-  }
-
-  const xpByClass = sys.xp_par_classe ?? sys.xpParClasse ?? sys.classXp ?? sys.xpByClass ?? {};
-  if (slug && xpByClass && typeof xpByClass === "object" && cls?.system) {
-    const xp = xpByClass[slug] ?? xpByClass[cls.id] ?? xpByClass[cls.name] ?? null;
-    if (xp !== null && xp !== undefined) return add2eSpellLevelForClassXp(cls.system, xp);
-  }
-
-  if (add2eActorIsMulticlass(actor) && slug && cls?.system) {
-    const xp = add2eSpellNumber(sys.xp, null);
-    if (Number.isFinite(xp) && classItems.length <= 1) return add2eSpellLevelForClassXp(cls.system, xp);
-  }
-
-  const fallback = add2eSpellNumber(sys.niveau ?? sys.level ?? sys.niveau_total ?? sys.levelTotal ?? sys.details_classe?.niveau ?? sys.details_classe?.level, 1);
-  return Math.max(1, Math.floor(fallback || 1));
+/** Le niveau est lu exclusivement sur l’Item classe exact. */
+function add2eSpellClassLevel(actor, source = null) {
+  const classDoc = add2eResolveSpellClassItem(actor, source);
+  return classDoc ? add2eSpellClassLevelFromItem(classDoc) : 0;
 }
 
 function add2eSpellClassForEntry(actor, entry) {
-  const firstSource = Array.isArray(entry?.sources) ? entry.sources[0] : null;
-  const slug = add2eSpellSlug(entry?.classSlug ?? firstSource?.classSlug ?? "");
-  if (slug) {
-    const found = add2eSpellClassItems(actor).find(cls => add2eSpellClassSlug(cls) === slug);
-    if (found) return found;
-  }
-  const key = add2eNormalizeSpellKey(entry?.key);
-  return add2eSpellClassItems(actor).find(cls => {
-    const casting = cls?.system?.spellcasting ?? {};
-    const lists = add2eToArray(casting.lists).map(add2eNormalizeSpellKey);
-    if (lists.includes(key)) return true;
-    const entries = Array.isArray(casting.entries) ? casting.entries : Array.isArray(casting.pools) ? casting.pools : [];
-    return entries.some(e => add2eNormalizeSpellKey(e.key ?? e.list ?? e.liste ?? e.name ?? e.label ?? e.type) === key);
-  }) ?? add2eSpellClassItems(actor)[0] ?? null;
+  return add2eResolveSpellClassItem(actor, entry);
 }
 
 function add2eGetActorClassItemForSpellcasting(actor) {
-  return add2eSpellClassItems(actor)[0] || null;
+  return add2eResolveSpellClassItem(actor);
 }
 
 function add2eGetProgressionRowForActor(actor, entry = null) {
-  const classItem = entry ? add2eSpellClassForEntry(actor, entry) : add2eGetActorClassItemForSpellcasting(actor);
-  const details = classItem?.system || actor?.system?.details_classe || {};
-  const progression = Array.isArray(details.progression) ? details.progression : [];
-  const level = entry ? add2eSpellClassLevel(actor, entry.classSlug) : add2eSpellClassLevel(actor, add2eSpellClassSlug(classItem));
+  const classDoc = entry ? add2eSpellClassForEntry(actor, entry) : add2eGetActorClassItemForSpellcasting(actor);
+  if (!classDoc) return {};
+  const level = add2eSpellClassLevel(actor, classDoc);
+  if (level < 1) return {};
+  const progression = Array.isArray(classDoc.system?.progression) ? classDoc.system.progression : [];
   return progression.find(row => Number(row?.niveau ?? row?.level) === level) ?? progression[level - 1] ?? {};
 }
 
 function add2eReadSpellcastingSource(actor) {
-  const classItem = add2eGetActorClassItemForSpellcasting(actor);
-  const classSpellcasting = classItem?.system?.spellcasting;
-  const actorSpellcasting = actor?.system?.spellcasting;
-  if (classSpellcasting && typeof classSpellcasting === "object") return classSpellcasting;
-  if (actorSpellcasting && typeof actorSpellcasting === "object") return actorSpellcasting;
-  return {};
+  const classDoc = add2eGetActorClassItemForSpellcasting(actor);
+  const casting = classDoc?.system?.spellcasting;
+  return casting && typeof casting === "object" ? casting : {};
 }
 
-function add2eEntriesFromCasting(casting, classItem = null) {
-  const classSlug = classItem ? add2eSpellClassSlug(classItem) : null;
-  const className = classItem?.name ?? null;
+function add2eEntriesFromCasting(casting, classDoc = null) {
+  const classSlug = classDoc ? add2eSpellClassSlug(classDoc) : null;
+  const className = classDoc?.name ?? null;
+  const classItemId = classDoc?.id ?? null;
   const rawEntries = Array.isArray(casting?.entries) ? casting.entries : Array.isArray(casting?.pools) ? casting.pools : null;
+
   if (rawEntries) {
-    return rawEntries.map((e, idx) => {
-      const rawKey = e.key ?? e.list ?? e.liste ?? e.name ?? e.label ?? e.type;
+    return rawEntries.map((entry, index) => {
+      const rawKey = entry.key ?? entry.list ?? entry.liste ?? entry.name ?? entry.label ?? entry.type;
       const key = add2eNormalizeSpellKey(rawKey);
       return {
-        index: idx,
+        index,
         key,
-        label: e.label || add2eSpellLabel(key),
-        startsAt: Number(e.startsAt ?? e.startLevel ?? e.niveauDepart ?? casting.startsAt ?? 1) || 1,
-        maxSpellLevel: Number(e.maxSpellLevel ?? e.maxLevel ?? e.maxNiveauSort ?? casting.maxSpellLevel ?? 0) || 0,
-        slotsField: e.slotsField || e.slotField || e.progressionField || null,
-        notes: e.notes || "",
+        label: entry.label || add2eSpellLabel(key),
+        startsAt: Number(entry.startsAt ?? entry.startLevel ?? entry.niveauDepart ?? casting.startsAt ?? 1) || 1,
+        maxSpellLevel: Number(entry.maxSpellLevel ?? entry.maxLevel ?? entry.maxNiveauSort ?? casting.maxSpellLevel ?? 0) || 0,
+        slotsField: entry.slotsField || entry.slotField || entry.progressionField || null,
+        notes: entry.notes || "",
+        classItemId,
         classSlug,
         className
       };
-    }).filter(e => e.key);
+    }).filter(entry => entry.key);
   }
+
   const lists = add2eToArray(casting?.lists).map(add2eNormalizeSpellKey).filter(Boolean);
-  return [...new Set(lists)].map((key, idx) => ({
-    index: idx,
+  return [...new Set(lists)].map((key, index) => ({
+    index,
     key,
     label: add2eSpellLabel(key),
     startsAt: Number(casting?.startsAt ?? 1) || 1,
     maxSpellLevel: Number(casting?.maxSpellLevel ?? 0) || 0,
     slotsField: null,
     notes: casting?.notes || "",
+    classItemId,
     classSlug,
     className
   }));
@@ -263,10 +211,22 @@ function add2eEntriesFromCasting(casting, classItem = null) {
 
 function add2eMergeSpellcastingEntries(entries) {
   const byKey = new Map();
-  for (const entry of entries) {
+  for (const entry of entries ?? []) {
     const key = add2eNormalizeSpellKey(entry?.key);
-    if (!key) continue;
-    if (!byKey.has(key)) byKey.set(key, { ...entry, key, label: add2eSpellLabel(key), classSlug: null, className: null, startsAt: Number(entry.startsAt ?? 1) || 1, maxSpellLevel: Number(entry.maxSpellLevel ?? 0) || 0, sources: [] });
+    if (!key || !entry?.classItemId) continue;
+    if (!byKey.has(key)) {
+      byKey.set(key, {
+        ...entry,
+        key,
+        label: add2eSpellLabel(key),
+        classItemId: null,
+        classSlug: null,
+        className: null,
+        startsAt: Number(entry.startsAt ?? 1) || 1,
+        maxSpellLevel: Number(entry.maxSpellLevel ?? 0) || 0,
+        sources: []
+      });
+    }
     const merged = byKey.get(key);
     merged.sources.push(entry);
     merged.startsAt = Math.min(Number(merged.startsAt ?? 1) || 1, Number(entry.startsAt ?? 1) || 1);
@@ -276,44 +236,42 @@ function add2eMergeSpellcastingEntries(entries) {
 }
 
 function add2eGetSpellcastingEntries(actor) {
-  if (add2eActorIsMulticlass(actor)) {
-    const raw = [];
-    const seen = new Set();
-    for (const cls of add2eSpellClassItems(actor)) {
-      const casting = cls?.system?.spellcasting;
-      if (!casting || typeof casting !== "object" || casting.enabled === false) continue;
-      for (const entry of add2eEntriesFromCasting(casting, cls)) {
-        const key = `${entry.classSlug || "classe"}:${entry.key}`;
-        if (seen.has(key)) continue;
-        seen.add(key);
-        raw.push(entry);
-      }
+  const entries = [];
+  const seen = new Set();
+
+  for (const classDoc of add2eSpellClassItems(actor)) {
+    const casting = classDoc?.system?.spellcasting;
+    if (!casting || typeof casting !== "object" || casting.enabled === false) continue;
+    for (const entry of add2eEntriesFromCasting(casting, classDoc)) {
+      const key = `${entry.classItemId}:${entry.key}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      entries.push(entry);
     }
-    const merged = add2eMergeSpellcastingEntries(raw);
-    if (merged.length) return merged;
   }
-  return add2eMergeSpellcastingEntries(add2eEntriesFromCasting(add2eReadSpellcastingSource(actor), add2eGetActorClassItemForSpellcasting(actor)));
+
+  return add2eMergeSpellcastingEntries(entries);
 }
 
 function add2eGetSpellListsFromItem(sort) {
-  const sys = sort?.system ?? {};
-  const fromLists = add2eToArray(sys.spellLists).map(add2eNormalizeSpellKey).filter(Boolean);
+  const system = sort?.system ?? {};
+  const fromLists = add2eToArray(system.spellLists).map(add2eNormalizeSpellKey).filter(Boolean);
   if (fromLists.length) return [...new Set(fromLists)];
-  const legacy = sys.classe || sys.class || sys.liste;
+  const legacy = system.classe || system.class || system.liste;
   const key = add2eNormalizeSpellKey(legacy);
   return key ? [key] : [];
 }
 
 function add2eIsObjectMagicSpellForPreparation(sort) {
-  const sys = sort?.system ?? {};
+  const system = sort?.system ?? {};
   const flags = sort?.flags?.add2e ?? {};
-  return sys.isPower === true || sys.isObjectPower === true || !!sys.sourceWeaponId || !!sys.sourceItemId || sys.powerIndex !== undefined || flags.sourceType === "objet_magique" || !!flags.sourceItemId || !!flags.sourceWeaponId || String(sys.composantes ?? "").toLowerCase().includes("objet");
+  return system.isPower === true || system.isObjectPower === true || !!system.sourceWeaponId || !!system.sourceItemId || system.powerIndex !== undefined || flags.sourceType === "objet_magique" || !!flags.sourceItemId || !!flags.sourceWeaponId || String(system.composantes ?? "").toLowerCase().includes("objet");
 }
 
 function add2eIsCapacitySpellForPreparation(sort) {
-  const sys = sort?.system ?? {};
+  const system = sort?.system ?? {};
   const flags = sort?.flags?.add2e ?? {};
-  return sys.isCapacity === true || sys.isCapacite === true || sys.usageType === "classFeature" || !!sys.sourceCapacite || !!sys.sourceFeature || flags.sourceType === "capacite" || flags.sourceType === "capacity";
+  return system.isCapacity === true || system.isCapacite === true || system.usageType === "classFeature" || !!system.sourceCapacite || !!system.sourceFeature || flags.sourceType === "capacite" || flags.sourceType === "capacity";
 }
 
 function add2eIsRegularPreparableSpell(sort) {
@@ -322,27 +280,31 @@ function add2eIsRegularPreparableSpell(sort) {
 
 function add2eReadSlotValue(raw, spellLevel, key) {
   if (typeof globalThis.add2eSpellSyncReadSlotValue === "function") return globalThis.add2eSpellSyncReadSlotValue(raw, spellLevel, key);
-  const idx = Math.max(0, Number(spellLevel) - 1);
-  if (Array.isArray(raw)) return add2eSpellNumber(raw[idx], 0) || 0;
-  if (raw && typeof raw === "object") return add2eSpellNumber(raw[spellLevel] ?? raw[String(spellLevel)] ?? raw[idx] ?? raw[String(idx)] ?? raw[key], 0) || 0;
+  const index = Math.max(0, Number(spellLevel) - 1);
+  if (Array.isArray(raw)) return add2eSpellNumber(raw[index], 0) || 0;
+  if (raw && typeof raw === "object") return add2eSpellNumber(raw[spellLevel] ?? raw[String(spellLevel)] ?? raw[index] ?? raw[String(index)] ?? raw[key], 0) || 0;
   if (raw !== undefined && raw !== null && raw !== "") return add2eSpellNumber(raw, 0) || 0;
   return null;
 }
 
 function add2eGetSlotsForSingleEntryLevel(actor, entry, spellLevel) {
-  const row = add2eGetProgressionRowForActor(actor, entry);
+  const classDoc = add2eSpellClassForEntry(actor, entry);
+  if (!classDoc || add2eSpellClassLevel(actor, classDoc) < 1) return 0;
+  const row = add2eGetProgressionRowForActor(actor, classDoc);
+  if (!row || typeof row !== "object") return 0;
+
   const key = add2eNormalizeSpellKey(entry?.key);
   const label = entry?.label || add2eSpellLabel(key);
-  const lvl = Number(spellLevel) || 1;
-  const tryArray = raw => add2eReadSlotValue(raw, lvl, key);
+  const level = Number(spellLevel) || 1;
+  const tryArray = raw => add2eReadSlotValue(raw, level, key);
 
   for (const containerName of ["spellSlotsByList", "spellsByList", "spellsPerLevelByList", "sortsParListe"]) {
-    const c = row?.[containerName];
-    if (!c || typeof c !== "object") continue;
-    for (const [rawContainerKey, value] of Object.entries(c)) {
-      if (add2eNormalizeSpellKey(rawContainerKey) !== key) continue;
-      const v = tryArray(value);
-      if (v !== null) return v;
+    const container = row?.[containerName];
+    if (!container || typeof container !== "object") continue;
+    for (const [rawKey, value] of Object.entries(container)) {
+      if (add2eNormalizeSpellKey(rawKey) !== key) continue;
+      const slots = tryArray(value);
+      if (slots !== null) return slots;
     }
   }
 
@@ -358,25 +320,24 @@ function add2eGetSlotsForSingleEntryLevel(actor, entry, spellLevel) {
   ].filter(Boolean);
 
   for (const field of directFields) {
-    const v = tryArray(row?.[field]);
-    if (v !== null) return v;
+    const slots = tryArray(row?.[field]);
+    if (slots !== null) return slots;
   }
 
-  const v = tryArray(row?.spellsPerLevel) ?? tryArray(row?.sortsParNiveau);
-  return v ?? 0;
+  return tryArray(row?.spellsPerLevel) ?? tryArray(row?.sortsParNiveau) ?? 0;
 }
 
 function add2eGetSlotsForEntryLevel(actor, entry, spellLevel) {
   const sources = Array.isArray(entry?.sources) && entry.sources.length ? entry.sources : [entry];
   let total = 0;
   for (const source of sources) {
-    const actorLevel = add2eSpellClassLevel(actor, source.classSlug);
+    const actorLevel = add2eSpellClassLevel(actor, source);
     const startsAt = Number(source.startsAt || 1);
     const max = Number(source.maxSpellLevel || 0);
-    const lvl = Number(spellLevel) || 1;
+    const level = Number(spellLevel) || 1;
     if (actorLevel < startsAt) continue;
-    if (max && lvl > max) continue;
-    total += add2eGetSlotsForSingleEntryLevel(actor, source, lvl);
+    if (max && level > max) continue;
+    total += add2eGetSlotsForSingleEntryLevel(actor, source, level);
   }
   return total;
 }
@@ -385,10 +346,12 @@ function add2eGetSpellSlotPoolsByLevel(actor) {
   const entries = add2eGetSpellcastingEntries(actor);
   const pools = {};
   for (const entry of entries) {
+    const sources = Array.isArray(entry.sources) && entry.sources.length ? entry.sources : [];
+    if (!sources.length) continue;
     const slotsByLevel = {};
     const maxSpellLevel = Number(entry.maxSpellLevel) || 9;
-    const actorLevel = Math.max(...(entry.sources ?? [entry]).map(s => add2eSpellClassLevel(actor, s.classSlug)));
-    for (let lvl = 1; lvl <= maxSpellLevel; lvl++) slotsByLevel[lvl] = add2eGetSlotsForEntryLevel(actor, entry, lvl);
+    const actorLevel = Math.max(0, ...sources.map(source => add2eSpellClassLevel(actor, source)));
+    for (let level = 1; level <= maxSpellLevel; level += 1) slotsByLevel[level] = add2eGetSlotsForEntryLevel(actor, entry, level);
     pools[entry.key] = { ...entry, actorLevel, slotsByLevel };
   }
   return pools;
@@ -397,7 +360,7 @@ function add2eGetSpellSlotPoolsByLevel(actor) {
 function add2eEntryAvailableForSpell(actor, entry, spellLevel) {
   const sources = Array.isArray(entry?.sources) && entry.sources.length ? entry.sources : [entry];
   return sources.some(source => {
-    const actorLevel = add2eSpellClassLevel(actor, source.classSlug);
+    const actorLevel = add2eSpellClassLevel(actor, source);
     const startsAt = Number(source.startsAt || 1);
     const max = Number(source.maxSpellLevel || 0);
     return actorLevel >= startsAt && (!max || Number(spellLevel) <= max);
@@ -407,12 +370,11 @@ function add2eEntryAvailableForSpell(actor, entry, spellLevel) {
 function add2eGetSpellEntryForSpell(actor, sort) {
   if (!add2eIsRegularPreparableSpell(sort)) return null;
   const spellLevel = Number(sort?.system?.niveau ?? sort?.system?.level ?? 0) || 0;
-  const sortLists = add2eGetSpellListsFromItem(sort);
+  const spellLists = add2eGetSpellListsFromItem(sort);
   const entries = add2eGetSpellcastingEntries(actor);
-  const matches = entries.filter(e => sortLists.includes(e.key));
+  const matches = entries.filter(entry => spellLists.includes(entry.key));
   if (!matches.length) return null;
-  const available = matches.find(e => add2eEntryAvailableForSpell(actor, e, spellLevel));
-  return available || matches[0] || null;
+  return matches.find(entry => add2eEntryAvailableForSpell(actor, entry, spellLevel)) ?? null;
 }
 
 function add2eCanActorUseSpell(actor, sort) {
@@ -420,11 +382,18 @@ function add2eCanActorUseSpell(actor, sort) {
   const spellLevel = Number(sort?.system?.niveau ?? sort?.system?.level ?? 0) || 0;
   const sortLists = add2eGetSpellListsFromItem(sort);
   const entries = add2eGetSpellcastingEntries(actor);
-  const matching = entries.filter(e => sortLists.includes(e.key));
+  const matching = entries.filter(entry => sortLists.includes(entry.key));
   if (!matching.length) return { ok: false, reason: "list", sortLists, entries, entry: null };
-  for (const entry of matching) if (add2eEntryAvailableForSpell(actor, entry, spellLevel)) return { ok: true, reason: "ok", sortLists, entries, entry, actorLevel: add2eSpellClassLevel(actor, entry.sources?.[0]?.classSlug ?? entry.classSlug), spellLevel };
+
+  for (const entry of matching) {
+    if (!add2eEntryAvailableForSpell(actor, entry, spellLevel)) continue;
+    const source = entry.sources?.[0] ?? entry;
+    return { ok: true, reason: "ok", sortLists, entries, entry, actorLevel: add2eSpellClassLevel(actor, source), spellLevel };
+  }
+
   const entry = matching[0] ?? null;
-  return { ok: false, reason: "level", sortLists, entries, entry, actorLevel: entry ? add2eSpellClassLevel(actor, entry.sources?.[0]?.classSlug ?? entry.classSlug) : 0, spellLevel };
+  const source = entry?.sources?.[0] ?? entry;
+  return { ok: false, reason: "level", sortLists, entries, entry, actorLevel: source ? add2eSpellClassLevel(actor, source) : 0, spellLevel };
 }
 
 function add2eGetMemorizedByList(sort) {
@@ -444,8 +413,8 @@ async function add2eSetMemorizedCountForEntry(sort, entry, value) {
   if (!sort || !key || !add2eIsRegularPreparableSpell(sort)) return;
   const byList = add2eGetMemorizedByList(sort);
   byList[key] = Math.max(0, Number(value) || 0);
-  for (const k of Object.keys(byList)) if ((Number(byList[k]) || 0) <= 0) delete byList[k];
-  const total = Object.values(byList).reduce((sum, v) => sum + (Number(v) || 0), 0);
+  for (const listKey of Object.keys(byList)) if ((Number(byList[listKey]) || 0) <= 0) delete byList[listKey];
+  const total = Object.values(byList).reduce((sum, amount) => sum + (Number(amount) || 0), 0);
   const update = { "flags.add2e.memorizedByList": byList, "flags.add2e.memorizedCount": total };
   sort.updateSource?.({ flags: { add2e: { memorizedByList: byList, memorizedCount: total } } });
   await sort.update(update, { render: false, diff: true });
@@ -454,29 +423,28 @@ async function add2eSetMemorizedCountForEntry(sort, entry, value) {
 function add2eGetTotalMemorizedCount(sort) {
   if (!add2eIsRegularPreparableSpell(sort)) return 0;
   const byList = add2eGetMemorizedByList(sort);
-  return Object.values(byList).reduce((sum, v) => sum + (Number(v) || 0), 0);
+  return Object.values(byList).reduce((sum, value) => sum + (Number(value) || 0), 0);
 }
 
 function add2eCountPreparedForEntryLevel(actor, entry, spellLevel) {
   const key = add2eNormalizeSpellKey(entry?.key);
-  const lvl = Number(spellLevel) || 1;
+  const level = Number(spellLevel) || 1;
   let total = 0;
-  for (const s of actor?.items?.filter?.(i => String(i.type || "").toLowerCase() === "sort") ?? []) {
-    if (!add2eIsRegularPreparableSpell(s)) continue;
-    const sLvl = Number(s.system?.niveau ?? s.system?.level ?? 1) || 1;
-    if (sLvl !== lvl) continue;
-    const lists = add2eGetSpellListsFromItem(s);
-    if (lists.includes(key)) total += add2eGetMemorizedCountForEntry(s, entry);
+  for (const sort of Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "sort")) {
+    if (!add2eIsRegularPreparableSpell(sort)) continue;
+    const sortLevel = Number(sort.system?.niveau ?? sort.system?.level ?? 1) || 1;
+    if (sortLevel !== level) continue;
+    const lists = add2eGetSpellListsFromItem(sort);
+    if (lists.includes(key)) total += add2eGetMemorizedCountForEntry(sort, entry);
   }
   return total;
 }
 
-Hooks.on("updateActor", (actor, changed) => {
-  const changedLevel = foundry.utils.hasProperty(changed, "system.niveau") ||
-    foundry.utils.hasProperty(changed, "system.level") ||
-    foundry.utils.hasProperty(changed, "system.niveau_total") ||
-    foundry.utils.hasProperty(changed, "system.levelTotal");
-  if (!changedLevel) return;
+Hooks.on("updateItem", (item, changed) => {
+  const actor = item?.parent;
+  if (actor?.type !== "personnage" || String(item?.type ?? "").toLowerCase() !== "classe") return;
+  const flattened = foundry.utils.flattenObject(changed ?? {});
+  if (!Object.prototype.hasOwnProperty.call(flattened, "system.niveau") && !Object.prototype.hasOwnProperty.call(flattened, "system.level")) return;
   window.setTimeout(() => add2eRerenderActorSheet(actor, true), 30);
 });
 
@@ -518,13 +486,3 @@ const ADD2E_SPELL_FX_PRESETS = {
 };
 
 globalThis.ADD2E_SPELL_FX_PRESETS = ADD2E_SPELL_FX_PRESETS;
-
-function add2eFxColor(preset) {
-  const colors = {
-    divine: "#f5d37a", divine_soft: "#f8e7a1", divine_dark: "#a23a2e", holy: "#ffd76a", dark_prayer: "#5b366e",
-    blessing: "#ffe28a", curse: "#6a2d7a", calm: "#9fd6ff", fear: "#b33a2e", water: "#58bde8",
-    water_dark: "#3c7894", dry: "#d0a35a", detection: "#d7b15a", magic_pulse: "#8660d8", evil_pulse: "#c23b32",
-    good_pulse: "#fff1a8", spark: "#f5d37a"
-  };
-  return colors[preset] || colors.default || "#f5d37a";
-}
