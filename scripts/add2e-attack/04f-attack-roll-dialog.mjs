@@ -2,7 +2,7 @@
 // ADD2E — Dialogue d'attaque ApplicationV2 / DialogV2.
 // Compatible Foundry V13/V14/V15.
 
-const ADD2E_ATTACK_DIALOG_VERSION = "2026-06-24-mixed-weapon-explicit-tags-v5";
+const ADD2E_ATTACK_DIALOG_VERSION = "2026-06-25-mixed-weapon-explicit-tags-v6";
 const ADD2E_ATTACK_DIALOG_WIDTH = 480;
 
 function add2eAttackFormAdapter(root) {
@@ -57,7 +57,7 @@ function add2eAttackUsageTag(value) {
 
 /**
  * La fenêtre ne déduit rien : elle lit uniquement les tags explicites de l'objet.
- * Une arme mixte doit donc porter usage:contact et usage:lancer dans son JSON.
+ * Une arme mixte porte usage:lancer avec usage:contact ou usage:corps_a_corps.
  */
 function add2eAttackExplicitUsageTags(weapon) {
   const system = weapon?.system ?? {};
@@ -361,7 +361,9 @@ export function add2eBuildAttackDialogContent({ actor, arme, cible, backArcInfo,
   const assassinationScore = add2eAttackEscapeHtml(assassinationInfo?.score ?? "0");
 
   const usageTags = add2eAttackExplicitUsageTags(arme);
-  const showWeaponThrow = usageTags.has("usage:contact") && usageTags.has("usage:lancer");
+  const showWeaponThrow = usageTags.has("usage:lancer") && (
+    usageTags.has("usage:contact") || usageTags.has("usage:corps_a_corps")
+  );
 
   const showBackstab = add2eAttackIsThiefOrAssassin(actor) && !!canUseBackstab;
   const showAssassination = add2eAttackIsAssassin(actor) && !!canUseAssassination;
