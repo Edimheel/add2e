@@ -2,7 +2,9 @@
 // ADD2E — Dialogue d'attaque ApplicationV2 / DialogV2.
 // Compatible Foundry V13/V14/V15.
 
-const ADD2E_ATTACK_DIALOG_VERSION = "2026-06-24-mixed-weapon-dialog-v3";
+import { add2eGetCombatStatProfile } from "./03-attack-rules.mjs";
+
+const ADD2E_ATTACK_DIALOG_VERSION = "2026-06-24-mixed-weapon-checkbox-v4";
 const ADD2E_ATTACK_DIALOG_WIDTH = 480;
 
 function add2eAttackFormAdapter(root) {
@@ -215,12 +217,12 @@ function add2eApplyRearOptions(root) {
 
 function add2eApplyWeaponMode(root) {
   const container = add2eAttackRoot(root) ?? root;
-  const selected = container?.querySelector?.('input[name="add2e-weapon-mode"]:checked');
-  if (!container || !selected) return false;
+  const checkbox = container?.querySelector?.("#add2e-weapon-throw");
+  if (!container || !checkbox) return false;
 
   const actorId = container.dataset?.add2eActorId;
   const weaponId = container.dataset?.add2eWeaponId;
-  globalThis.add2eSetTransientWeaponAttackMode?.(actorId, weaponId, selected.value);
+  globalThis.add2eSetTransientWeaponAttackMode?.(actorId, weaponId, checkbox.checked ? "throw" : "contact");
   return true;
 }
 
@@ -257,12 +259,11 @@ function add2eCreateAttackDialogV2Class(DialogV2) {
         select.addEventListener("input", () => add2eApplyRearOptions(root));
       }
 
-      const modes = root.querySelectorAll('input[name="add2e-weapon-mode"]');
-      for (const input of modes) {
-        if (input.dataset.add2eWeaponModeBound === "1") continue;
-        input.dataset.add2eWeaponModeBound = "1";
-        input.addEventListener("change", () => add2eApplyWeaponMode(root));
-        input.addEventListener("input", () => add2eApplyWeaponMode(root));
+      const throwCheckbox = root.querySelector("#add2e-weapon-throw");
+      if (throwCheckbox && throwCheckbox.dataset.add2eWeaponModeBound !== "1") {
+        throwCheckbox.dataset.add2eWeaponModeBound = "1";
+        throwCheckbox.addEventListener("change", () => add2eApplyWeaponMode(root));
+        throwCheckbox.addEventListener("input", () => add2eApplyWeaponMode(root));
       }
 
       add2eApplyRearOptions(root);
@@ -341,13 +342,16 @@ export function add2eBuildAttackDialogContent({ actor, arme, cible, backArcInfo,
   const backstabMultiplier = add2eAttackEscapeHtml(backstabInfo?.multiplier ?? "");
   const assassinationScore = add2eAttackEscapeHtml(assassinationInfo?.score ?? "0");
 
+  // Même profil que le moteur de combat : aucune classification parallèle.
+  const combatProfile = add2eGetCombatStatProfile(arme);
+  const showWeaponThrow = !combatProfile.isProjectilePropulse &&
+    combatProfile.isLancer === true &&
+    combatProfile.isCorpsACorps === true;
+
   // Règle demandée : Voleur = attaque sournoise ; Assassin = les deux.
   const showBackstabForClass = add2eAttackIsThiefOrAssassin(actor) && !!canUseBackstab;
   const showAssassinationForClass = add2eAttackIsAssassin(actor) && !!canUseAssassination;
   const hasRearSpecial = showBackstabForClass || showAssassinationForClass;
-
-  const usageProfile = globalThis.add2eGetWeaponUsageProfile?.(arme) ?? null;
-  const showWeaponMode = usageProfile?.isHybrid === true;
 
   const allowedZones = new Set(["front", "flank", "rear-flank", "rear"]);
   const autoZone = allowedZones.has(String(backArcInfo?.zone ?? "")) ? String(backArcInfo.zone) : "front";
@@ -375,20 +379,12 @@ export function add2eBuildAttackDialogContent({ actor, arme, cible, backArcInfo,
   const checkStyle = "display:flex;align-items:center;gap:6px;width:max-content;white-space:nowrap;font-size:.82rem;font-weight:900;color:#5a3510;line-height:1.15;";
   const checkInputStyle = "width:15px;height:15px;min-width:15px;margin:0;";
 
-  const weaponMode = showWeaponMode ? `
-    <div style="${boxStyle};margin-top:6px;">
-      <div style="${labelStyle}">Mode d'attaque</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:5px;">
-        <label style="display:flex;align-items:center;gap:5px;padding:5px;border:1px solid #d5b15a;border-radius:6px;background:#fff8dd;font-size:.76rem;font-weight:900;color:#5a3510;cursor:pointer;">
-          <input type="radio" name="add2e-weapon-mode" value="contact" checked>
-          <span><i class="fas fa-hand-fist"></i> Contact</span>
-        </label>
-        <label style="display:flex;align-items:center;gap:5px;padding:5px;border:1px solid #d69a76;border-radius:6px;background:#fff2e8;font-size:.76rem;font-weight:900;color:#8f2d22;cursor:pointer;">
-          <input type="radio" name="add2e-weapon-mode" value="throw">
-          <span><i class="fas fa-bullseye"></i> Lancer</span>
-        </label>
-      </div>
-      <div style="margin-top:4px;font-size:.72rem;color:#5b4b3c;">Contact : aucune consommation. Lancer : une unité est dépensée après l'attaque.</div>
+  const weaponThrowOption = showWeaponThrow ? `
+    <div style="margin-top:6px;">
+      <label style="${checkStyle}" title="Décoché : attaque au contact, sans consommation. Coché : l'arme est lancée et une unité est consommée après l'attaque.">
+        <input type="checkbox" id="add2e-weapon-throw" style="${checkInputStyle}">
+        <span style="white-space:nowrap;">Lancer l'arme</span>
+      </label>
     </div>` : "";
 
   return `
@@ -418,7 +414,6 @@ export function add2eBuildAttackDialogContent({ actor, arme, cible, backArcInfo,
             <label for="add2e-bonus-attaque" style="${labelStyle}">Modificateurs</label>
             <input id="add2e-bonus-attaque" type="number" value="0" step="1" style="${inputStyle}">
           </div>
-          ${weaponMode}
         </div>
         <div style="${boxStyle}">
           <label for="add2e-position-zone" style="${labelStyle}">Position</label>
@@ -428,6 +423,7 @@ export function add2eBuildAttackDialogContent({ actor, arme, cible, backArcInfo,
             <option value="rear-flank"${selected("rear-flank")}>Flanc arrière</option>
             <option value="rear"${selected("rear")}>Dos</option>
           </select>
+          ${weaponThrowOption}
           ${hasRearSpecial ? `<div class="add2e-rear-specials"${rearHidden} style="${rearStyle}">
             ${showBackstabForClass ? `<label style="${checkStyle}" title="Dos uniquement · +4 toucher · dégâts ×${backstabMultiplier}"><input type="checkbox" id="add2e-backstab" style="${checkInputStyle}"><span style="white-space:nowrap;">Attaque sournoise</span></label>` : ""}
             ${showAssassinationForClass ? `<label style="${checkStyle}" title="Assassin uniquement · Dos uniquement · ${assassinationScore}% si l’attaque touche"><input type="checkbox" id="add2e-assassinat-confirm" style="${checkInputStyle}"><span style="white-space:nowrap;">Assassinat</span></label>` : ""}
