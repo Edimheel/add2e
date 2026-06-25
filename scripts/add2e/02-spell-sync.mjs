@@ -4,43 +4,20 @@
 // Compatible Foundry V13 / V14 / V15
 // ============================================================
 
-const ADD2E_SPELL_SYNC_VERSION = "2026-06-25-spell-sync-canonical-schema-v3";
+const ADD2E_SPELL_SYNC_VERSION = "2026-06-25-spell-sync-canonical-schema-v4";
 globalThis.ADD2E_SPELL_SYNC_VERSION = ADD2E_SPELL_SYNC_VERSION;
 
-// Champs de jeu canoniques d'un sort. Les métadonnées d'import, de contrôle
-// et les anciens doublons ne font plus partie du modèle synchronisé.
 const ADD2E_SPELL_SYNC_REQUIRED_SYSTEM_KEYS = Object.freeze([
-  "nom",
-  "classe",
-  "spellLists",
-  "niveau",
-  "ecole",
-  "portee",
-  "duree",
-  "zone_effet",
-  "cible",
-  "temps_incantation",
-  "jet_sauvegarde",
-  "composantes",
-  "composants_materiels",
-  "description",
-  "onUse"
+  "nom", "classe", "spellLists", "niveau", "ecole", "portee", "duree",
+  "zone_effet", "cible", "temps_incantation", "jet_sauvegarde", "composantes",
+  "composants_materiels", "description", "onUse"
 ]);
 
-// Ces clés restent tolérées à la lecture des anciens sorts, mais ne sont plus
-// copiées vers le cache ni vers les sorts créés sur les acteurs.
 const ADD2E_SPELL_SYNC_LEGACY_SYSTEM_KEYS = Object.freeze([
-  "type",
-  "onUseCode",
-  "tags",
-  "effectTags",
-  "effecttags",
-  "composants_materiels_objets",
-  "composants_materiels_source",
-  "composants_materiels_reference",
-  "composants_materiels_verification_recommandee",
-  "composants_materiels_note",
-  "composants_materiels_a_renseigner"
+  "type", "onUseCode", "tags", "effectTags", "effecttags",
+  "composants_materiels_objets", "composants_materiels_source",
+  "composants_materiels_reference", "composants_materiels_verification_recommandee",
+  "composants_materiels_note", "composants_materiels_a_renseigner"
 ]);
 
 const ADD2E_SPELL_SYNC_PREUPDATE_LEVELS = globalThis.ADD2E_SPELL_SYNC_PREUPDATE_LEVELS instanceof Map
@@ -66,7 +43,7 @@ function add2eSpellSyncMaybeJson(value) {
   if (!source) return value;
   if ((source.startsWith("{") && source.endsWith("}")) || (source.startsWith("[") && source.endsWith("]"))) {
     try { return JSON.parse(source); }
-    catch (_err) { return value; }
+    catch (_error) { return value; }
   }
   return value;
 }
@@ -101,10 +78,8 @@ function add2eSpellSyncArray(value) {
     for (const key of ["lists", "spellLists", "classes", "classe", "class", "value", "values", "list", "tags", "items"]) {
       if (value[key] !== undefined) return add2eSpellSyncArray(value[key]);
     }
-    const numeric = Object.keys(value)
-      .filter(key => /^\d+$/.test(key))
-      .sort((left, right) => Number(left) - Number(right))
-      .map(key => value[key]);
+    const numeric = Object.keys(value).filter(key => /^\d+$/.test(key))
+      .sort((left, right) => Number(left) - Number(right)).map(key => value[key]);
     if (numeric.length) return add2eSpellSyncArray(numeric);
   }
   return [value];
@@ -133,26 +108,19 @@ function add2eSpellSyncIsPlaceholder(value) {
 
 function add2eSpellSyncCleanPlaceholders(value) {
   if (add2eSpellSyncIsPlaceholder(value)) return "";
-  if (Array.isArray(value)) return value
-    .map(add2eSpellSyncCleanPlaceholders)
+  if (Array.isArray(value)) return value.map(add2eSpellSyncCleanPlaceholders)
     .filter(entry => entry !== "" && entry !== null && entry !== undefined);
   if (value && typeof value === "object") {
-    const clone = add2eSpellSyncClone(value);
-    for (const [key, entry] of Object.entries(clone)) clone[key] = add2eSpellSyncCleanPlaceholders(entry);
-    return clone;
+    const copy = add2eSpellSyncClone(value);
+    for (const [key, entry] of Object.entries(copy)) copy[key] = add2eSpellSyncCleanPlaceholders(entry);
+    return copy;
   }
   return value;
 }
 
-function add2eSpellSyncHasMaterialProfile(value) {
-  if (Array.isArray(value)) return value.length > 0;
-  return value !== undefined && value !== null && value !== "";
-}
-
 function add2eSpellSyncValidateCanonicalData(data) {
   const system = data?.system ?? {};
-  const missing = ADD2E_SPELL_SYNC_REQUIRED_SYSTEM_KEYS
-    .filter(key => !Object.prototype.hasOwnProperty.call(system, key));
+  const missing = ADD2E_SPELL_SYNC_REQUIRED_SYSTEM_KEYS.filter(key => !Object.prototype.hasOwnProperty.call(system, key));
   if (missing.length) console.warn("[ADD2E][SPELL_SYNC][CANONICAL_FIELDS_MISSING]", { name: data?.name, missing });
   return { valid: true, missing };
 }
@@ -166,18 +134,10 @@ function add2eSpellSyncPrepareCompendiumData(data) {
   clean.flags ??= {};
   clean.flags.add2e ??= {};
 
-  // Migration de lecture unique : un ancien profil matériel est repris seulement
-  // lorsqu'aucun profil canonique n'est présent.
-  if (!add2eSpellSyncHasMaterialProfile(clean.system.composants_materiels)
-    && add2eSpellSyncHasMaterialProfile(clean.system.composants_materiels_objets)) {
-    clean.system.composants_materiels = add2eSpellSyncClone(clean.system.composants_materiels_objets);
-  }
-  if (!add2eSpellSyncHasMaterialProfile(clean.system.composants_materiels)) clean.system.composants_materiels = [];
+  // Source unique : aucun champ canonique n'est reconstruit depuis la structure
+  // historique composants_materiels_objets.
+  if (!Array.isArray(clean.system.composants_materiels)) clean.system.composants_materiels = [];
   if (!Array.isArray(clean.system.spellLists)) clean.system.spellLists = add2eSpellSyncArray(clean.system.spellLists);
-
-  // effectProfile est volontairement préservé lorsqu'il existe. Aucun profil vide
-  // n'est créé : le futur générateur d'objets magiques ne doit consommer que des
-  // profils explicitement renseignés.
   for (const key of ADD2E_SPELL_SYNC_LEGACY_SYSTEM_KEYS) delete clean.system[key];
 
   const level = add2eSpellSyncNumber(clean.system.niveau, NaN);
@@ -215,8 +175,6 @@ function add2eSpellSyncClassLists(classItem) {
   const className = add2eSpellSyncNormalize(classItem?.name ?? system.name ?? system.label ?? system.nom ?? "");
   if (className.includes("clerc") || className.includes("pretre") || className.includes("priest") || className.includes("paladin")) lists.push("clerc");
   if (className.includes("druide") || className.includes("druid")) lists.push("druide");
-
-  // Le flux d'auto-synchronisation historique concerne uniquement Clerc et Druide.
   return [...new Set(lists)].filter(list => ["clerc", "druide"].includes(list));
 }
 
@@ -233,8 +191,6 @@ function add2eSpellSyncSpellLists(system = {}) {
     ...add2eSpellSyncArray(system.class), ...add2eSpellSyncArray(system.liste)
   ].map(add2eSpellSyncNormalize).filter(Boolean);
   if (canonical.length) return [...new Set(canonical)];
-
-  // Repli de lecture pour les copies d'acteurs plus anciennes uniquement.
   return [...new Set([
     ...add2eSpellSyncArray(system.tags),
     ...add2eSpellSyncArray(system.effectTags),
@@ -255,10 +211,8 @@ function add2eSpellSyncSlotsArray(value) {
     for (const key of ["slots", "slot", "value", "values", "spellsPerLevel", "SpellsPerLevel", "sortsParNiveau", "sorts_par_niveau", "spells", "spellSlots"]) {
       if (Array.isArray(value[key]) || typeof value[key] === "string") return add2eSpellSyncSlotsArray(value[key]);
     }
-    return Object.keys(value)
-      .filter(key => /^\d+$/.test(key))
-      .sort((left, right) => Number(left) - Number(right))
-      .map(key => value[key]);
+    return Object.keys(value).filter(key => /^\d+$/.test(key))
+      .sort((left, right) => Number(left) - Number(right)).map(key => value[key]);
   }
   return [];
 }
@@ -797,7 +751,7 @@ for (const [name, fn] of Object.entries({
   add2eSpellSyncPrepareCompendiumData
 })) {
   try { globalThis[name] = fn; }
-  catch (_err) {}
+  catch (_error) {}
 }
 
 Hooks.once("ready", () => {
