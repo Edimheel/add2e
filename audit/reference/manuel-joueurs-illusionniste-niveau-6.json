@@ -6,124 +6,17 @@
     "niveau": 6,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_liste_noms_complete_regles_a_completer",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 8,
   "foundryExport": "audit/decoupage_fichier/illusionniste-niveau-6.json",
-  "rules": {
-    "included": [
-      "nom du sort",
-      "classe",
-      "niveau",
-      "ordre dans le tableau du Manuel des joueurs",
-      "nombre de sorts attendu",
-      "variantes explicitement nommées dans le Manuel des joueurs",
-      "réversibilité et nom de l’inverse quand le Manuel le donne"
-    ],
-    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis.",
-    "variantes": "Le tableau variantes est vide lorsqu’aucun choix de forme explicitement nommé ne figure dans le Manuel des joueurs.",
-    "reversibilite": "Le champ reversible est toujours booléen. Le champ inverse vaut null lorsque le Manuel indique un sort réversible sans donner de nom distinct à sa forme inverse."
-  },
   "spells": [
-    {
-      "ordre": 1,
-      "nom": "Illusion permanente",
-      "niveau": 6,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 2,
-      "nom": "Illusion programmée",
-      "niveau": 6,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 3,
-      "nom": "Invocation des animaux",
-      "niveau": 6,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 4,
-      "nom": "Magie demi-ombre",
-      "niveau": 6,
-      "variantes": [
-        {
-          "id": "projectile_magique",
-          "nom": "Projectile magique"
-        },
-        {
-          "id": "boule_de_feu",
-          "nom": "Boule de feu"
-        },
-        {
-          "id": "foudre",
-          "nom": "Foudre"
-        },
-        {
-          "id": "cone_de_froid",
-          "nom": "Cône de froid"
-        },
-        {
-          "id": "mur_de_feu",
-          "nom": "Mur de feu"
-        },
-        {
-          "id": "mur_de_glace",
-          "nom": "Mur de glace"
-        },
-        {
-          "id": "nuage_letal",
-          "nom": "Nuage létal"
-        }
-      ],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 5,
-      "nom": "Ombres",
-      "niveau": 6,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 6,
-      "nom": "Suggestion de masse",
-      "niveau": 6,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 7,
-      "nom": "Vision réelle",
-      "niveau": 6,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 8,
-      "nom": "Voile illusoire",
-      "niveau": 6,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    }
+    {"ordre":1,"nom":"Illusion permanente","ecole":"Illusion/Fantasme","niveau":6,"portee":"1\"/niveau","duree":"permanente","zone_effet":"36 m² + 9 m²/niveau","composantes":"V, S, M","temps_incantation":"6 segments","jet_sauvegarde":"spécial","notes_regles":"La lettre M est explicite dans l’en-tête du Manuel. Le détail matériel ne doit pas être déduit du découpage Foundry.","description":"Le sort crée une force spectrale permanente qui ne demande plus de concentration à l’illusionniste. Une dissipation de la magie peut l’annuler.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":2,"nom":"Illusion programmée","ecole":"Illusion/Fantasme","niveau":6,"portee":"1\"/niveau","duree":"spéciale","zone_effet":"36 m² + 9 m²/niveau","composantes":"V, S, M","temps_incantation":"6 segments","jet_sauvegarde":"spécial","notes_regles":"La lettre M est explicite dans l’en-tête du Manuel. Le détail matériel ne doit pas être déduit du découpage Foundry.","description":"L’illusionniste place une force spectrale qui se déclenche sur ordre ou lorsque la condition choisie est remplie. L’illusion dure au plus un round par niveau de l’illusionniste.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":3,"nom":"Invocation des animaux","ecole":"Conjuration/Appel","niveau":6,"portee":"3\"","duree":"1 round/niveau","zone_effet":"spéciale","composantes":"V, S","temps_incantation":"6 segments","jet_sauvegarde":"aucun","description":"Excepté ses valeurs propres, le sort fonctionne comme Invocation des animaux de clerc. Les animaux appelés viennent prêter assistance selon la liste et les limites du Manuel.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":4,"nom":"Magie demi-ombre","ecole":"Illusion/Fantasme","niveau":6,"portee":"6\" + 1\"/niveau","duree":"spéciale","zone_effet":"spéciale","composantes":"V, S","temps_incantation":"6 segments","jet_sauvegarde":"spécial","description":"L’illusionniste se relie à une source d’énergie pour produire une version plus réelle du sort choisi. Les effets sur une créature qui réussit son jet de protection suivent les pourcentages et dégâts fixés par le Manuel.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[{"id":"projectile_magique","nom":"Projectile magique"},{"id":"boule_de_feu","nom":"Boule de feu"},{"id":"foudre","nom":"Foudre"},{"id":"cone_de_froid","nom":"Cône de froid"},{"id":"mur_de_feu","nom":"Mur de feu"},{"id":"mur_de_glace","nom":"Mur de glace"},{"id":"nuage_letal","nom":"Nuage létal"}],"reversible":false},
+    {"ordre":5,"nom":"Ombres","ecole":"Illusion/Fantasme","niveau":6,"portee":"3\"","duree":"1 round/niveau","zone_effet":"2\" x 2\"","composantes":"V, S","temps_incantation":"6 segments","jet_sauvegarde":"spécial","description":"Le sort crée des ombres plus réelles que les Monstres demi-ombre. Les créatures formées et leurs effets varient selon la résistance des adversaires, comme indiqué par le Manuel.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":6,"nom":"Suggestion de masse","ecole":"Enchantement/Charme","niveau":6,"portee":"3\"","duree":"4 tours + 4 tours/niveau","zone_effet":"une créature/niveau","composantes":"V, M","temps_incantation":"6 segments","jet_sauvegarde":"annule","description":"Le sort applique une même suggestion raisonnable à une créature par niveau d’illusionniste. Les limites et les effets sont ceux de Suggestion, étendus à plusieurs cibles.","composants_materiels_objets":[{"nom":"langue de serpent","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Composante reprise de Suggestion à laquelle le sort renvoie."},{"nom":"miel","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Alternative à une goutte d’huile douce.","notes":null,"alternativeGroup":"suggestion_de_masse"},{"nom":"goutte d’huile douce","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Alternative au miel.","notes":null,"alternativeGroup":"suggestion_de_masse"}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":7,"nom":"Vision réelle","ecole":"Divination","niveau":6,"portee":"au toucher","duree":"1 round/niveau","zone_effet":"champ visuel de 6\"","composantes":"V, S","temps_incantation":"1 round","jet_sauvegarde":"aucun","description":"La créature touchée voit les choses telles qu’elles sont réellement dans son champ visuel : illusions, invisibilités, transformations et autres falsifications magiques sont révélées selon les limites du Manuel. Cette entrée n’est pas réversible.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":8,"nom":"Voile illusoire","ecole":"Illusion/Fantasme","niveau":6,"portee":"1\"/niveau","duree":"1 tour/niveau","zone_effet":"2\" x 2\"/niveau","composantes":"V, S","temps_incantation":"3 segments","jet_sauvegarde":"aucun","description":"Le sort modifie l’apparence d’un groupe de créatures dans la zone, y compris leurs équipements, pour leur donner la forme choisie par l’illusionniste. Il ne confère aucune capacité réelle de la forme imitée.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false}
   ]
 }
