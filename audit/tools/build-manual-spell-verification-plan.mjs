@@ -8,6 +8,7 @@ const DEFAULT_MASTER = "audit/reference/manuel-joueurs-sorts-master.json";
 const DEFAULT_OUTPUT = "audit/rapports/PLAN-VERIFICATION-MANUEL-SORTS.json";
 const TECHNICAL_FIELDS = ["ecole", "portee", "duree", "zone_effet", "composantes", "temps_incantation", "jet_sauvegarde"];
 const PLACEHOLDERS = new Set(["", "a_completer", "a_remplir", "a_renseigner", "todo", "tbd", "inconnu", "non_renseigne", "non_disponible"]);
+const EXPLICIT_DASH_VALUES = new Set(["—", "-"]);
 
 function parseArgs(argv) {
   const options = { audit: DEFAULT_AUDIT, master: DEFAULT_MASTER, output: DEFAULT_OUTPUT };
@@ -40,7 +41,10 @@ function slug(value) {
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "");
 }
-function isPlaceholder(value) { return PLACEHOLDERS.has(slug(value)); }
+function isPlaceholder(value) {
+  const raw = text(value);
+  return !EXPLICIT_DASH_VALUES.has(raw) && PLACEHOLDERS.has(slug(raw));
+}
 function isFile(file) {
   try { return fs.statSync(file).isFile(); }
   catch { return false; }
@@ -236,7 +240,7 @@ function main() {
     descriptionsToArbitrate: files.reduce((sum, file) => sum + file.taskCounts.descriptionsToArbitrate, 0)
   };
   const output = {
-    version: "2026-06-26-manual-spell-verification-plan-v4",
+    version: "2026-06-26-manual-spell-verification-plan-v5",
     generatedAt: new Date().toISOString(),
     sourceOfTruth: "Manuel des joueurs AD&D 2e",
     inputs: { audit: path.relative(ROOT, auditPath), master: path.relative(ROOT, masterPath) },
@@ -244,6 +248,7 @@ function main() {
       "Le fichier maître sert uniquement à vérifier les listes, l'ordre et le nombre issus des tables du Manuel.",
       "P0 signifie exclusivement qu'une référence de sorts classe/niveau diffère du fichier maître issu du Manuel ou que cette référence est indisponible.",
       "Les documents transversaux hors tables de sorts sont exclus du plan et listés séparément ; ils ne peuvent jamais créer un P0.",
+      "Le tiret cadratin (—) et le tiret simple (-) sont des valeurs explicites du Manuel, et non des placeholders.",
       "Le découpage Foundry sert uniquement de comparaison ; une divergence Foundry ne peut jamais classer une référence en P0 ni compléter ou corriger une référence.",
       "Chaque champ marqué transcription ou arbitrage doit être lu dans le Manuel avant toute écriture.",
       "Les références sont corrigées avant tout JSON normalisé."
