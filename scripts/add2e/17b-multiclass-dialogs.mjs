@@ -1,5 +1,5 @@
 // ADD2E — Multiclassage : DialogV2
-// Version : 2026-06-26-multiclass-dialogs-triclass-phb-v4
+// Version : 2026-06-26-multiclass-dialogs-race-combinations-v5
 
 import { classItems, classSlug, esc, itemLabel, norm, systemRace } from "./17b-multiclass-core.mjs";
 import { classRaceMaxLevel, monoClassOptionsForDroppedClass, raceCandidatesForClass, raceCompatibleForMulticlass, raceMatchesClassRules, raceAllowsClassSet, classPrerequisitesOk } from "./17b-multiclass-rules.mjs";
@@ -174,14 +174,14 @@ export async function showClassDropChoiceDialog(actor, droppedClassData, current
   const existingClasses = classItems(actor);
   const classCount = existingClasses.length;
   const isAlreadyMulticlass = classCount > 1;
-  const canAddClass = classCount < 3;
   const current = existingClasses.map(c => c.name).join(" / ") || actor.system?.classe || "Aucune";
   const raceName = itemLabel(systemRace(actor), "Race");
   const droppedName = itemLabel(droppedClassData, "Classe");
 
-  const addOptions = canAddClass
-    ? raceCandidatesForClass(actor, droppedClassData).map(raceData => ({ classData: droppedClassData, raceData }))
-    : [];
+  // raceCandidatesForClass lit les combinaisons portées par chaque Item race.
+  // Il retourne une option uniquement lorsque la classe déposée complète une
+  // combinaison autorisée, y compris une tri-classe déjà déclarée par la race.
+  const addOptions = raceCandidatesForClass(actor, droppedClassData).map(raceData => ({ classData: droppedClassData, raceData }));
   const replacementOptions = isAlreadyMulticlass ? replacementOptionsForDroppedClass(actor, droppedClassData, currentRaceOrCompatibleAlternatives) : [];
   const monoOptions = monoClassOptionsForDroppedClass(actor, droppedClassData);
 
@@ -211,23 +211,18 @@ export async function showClassDropChoiceDialog(actor, droppedClassData, current
     checked: markChecked()
   }));
 
-  const addSectionTitle = classCount === 2
-    ? "Ajouter une troisième classe autorisée"
-    : "Ajouter en multiclassage";
   const sections = [
     sectionHtml("Remplacer une classe du multiclassage", replacementTiles),
     sectionHtml("Passer en monoclasse", monoTiles),
-    sectionHtml(addSectionTitle, addTiles)
+    sectionHtml("Ajouter une classe autorisée par la race", addTiles)
   ].filter(Boolean).join("\n");
 
   const body = sections || add2eStatFailureBody(actor, droppedClassData, currentRaceOrCompatibleAlternatives, isAlreadyMulticlass);
-  const hint = classCount >= 3
-    ? "Ce personnage est déjà tri-classé : le Manuel des joueurs ne permet pas de quatrième classe. Choisis un remplacement ou une bascule en monoclasse."
-    : classCount === 2
-      ? "Une troisième classe est proposée uniquement si la combinaison exacte est autorisée par le Manuel des joueurs."
-      : isAlreadyMulticlass
-        ? "Ce personnage est déjà multiclassé : choisis soit une classe à remplacer, soit une bascule en monoclasse."
-        : "Choisis une évolution : monoclasse ou multiclassage si la race le permet.";
+  const hint = isAlreadyMulticlass
+    ? addOptions.length
+      ? "La race propose une combinaison supplémentaire compatible avec les classes actuelles."
+      : "Aucune classe supplémentaire ne complète une combinaison autorisée par cette race. Choisis un remplacement ou une bascule en monoclasse."
+    : "Choisis une évolution : monoclasse ou multiclassage si la race le permet.";
 
   const content = `<div class="add2e-multiclass-choice" style="display:grid;gap:8px;min-width:580px;max-width:720px;color:#2b1c0d;"><div style="border:1px solid #5c3b12;border-radius:12px;background:linear-gradient(180deg,#3b2612,#1c1208);padding:8px 11px;"><h2 style="margin:0;color:#f9df9a;font-size:1rem;text-transform:uppercase;border:0;">Choisis ton évolution</h2><p style="margin:4px 0 0;color:#fff2c4;font-weight:800;">${esc(hint)}</p></div><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;"><div><b>Classe actuelle</b><br>${esc(current)}</div><div><b>Classe déposée</b><br>${esc(droppedName)}</div><div><b>Race actuelle</b><br>${esc(raceName)}</div></div>${body}</div>`;
   const readChoice = (_event, button, dialog) => {
