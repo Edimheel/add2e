@@ -13,14 +13,14 @@
           </div>
         </div>
 
-        <div class="a2e-id-grid">
+        <div class="a2e-id-grid" style="grid-template-columns:minmax(250px,2fr) minmax(110px,.9fr) minmax(118px,.95fr) minmax(155px,1.2fr) minmax(90px,.75fr);">
           {{#if classProgression.enabled}}
-            <div class="a2e-field a2e-class-progression-field">
+            <div class="a2e-field a2e-class-progression-field" style="grid-column:span 2;min-width:0;">
               <label>Classe</label>
               <input type="text" value="{{actor.system.classe}}" readonly title="{{actor.system.classe}}">
             </div>
           {{else}}
-            <div class="a2e-field">
+            <div class="a2e-field" style="grid-column:span 2;min-width:0;">
               <label>Classe</label>
               <input type="text" name="system.classe" value="{{actor.system.classe}}">
             </div>
@@ -32,21 +32,20 @@
           </div>
 
           {{#if classProgression.enabled}}
-            <div class="a2e-field a2e-class-progression-field">
+            <div class="a2e-field a2e-class-progression-field" style="min-width:0;">
               <label>Niveau</label>
-              <div class="a2e-multiclass-rows" style="display:grid;gap:3px;">
+              <div class="a2e-multiclass-inline" style="display:flex;align-items:center;gap:3px;min-width:0;white-space:nowrap;">
                 {{#each classProgression.classes as |cls|}}
-                  <div class="a2e-multiclass-row" style="display:grid;grid-template-columns:minmax(54px,.9fr) minmax(44px,1fr);gap:4px;align-items:center;">
-                    <span title="{{cls.name}}" style="font-size:.78em;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{cls.name}}</span>
-                    <input type="number"
-                           name="{{#if ../classProgression.isMulticlass}}add2e.classProgression.{{cls.itemId}}.level{{else}}system.niveau{{/if}}"
-                           value="{{cls.level}}"
-                           data-class-id="{{cls.itemId}}"
-                           data-class-progression-field="level"
-                           min="1"
-                           step="1"
-                           title="{{cls.name}} — niveau">
-                  </div>
+                  <input type="number"
+                         name="{{#if ../classProgression.isMulticlass}}add2e.classProgression.{{cls.itemId}}.level{{else}}system.niveau{{/if}}"
+                         value="{{cls.level}}"
+                         data-class-id="{{cls.itemId}}"
+                         data-class-progression-field="level"
+                         min="1"
+                         step="1"
+                         style="min-width:0;flex:1 1 0;text-align:center;padding:4px 2px;"
+                         title="{{cls.name}} — niveau">
+                  {{#unless @last}}<span aria-hidden="true" style="color:var(--a2e-gold-dark);font-weight:900;">/</span>{{/unless}}
                 {{/each}}
               </div>
             </div>
@@ -58,21 +57,20 @@
           {{/if}}
 
           {{#if classProgression.enabled}}
-            <div class="a2e-field a2e-xp-field a2e-class-progression-field">
+            <div class="a2e-field a2e-xp-field a2e-class-progression-field" style="min-width:0;">
               <label>XP</label>
-              <div class="a2e-multiclass-rows" style="display:grid;gap:3px;">
+              <div class="a2e-multiclass-inline" style="display:flex;align-items:center;gap:3px;min-width:0;white-space:nowrap;">
                 {{#each classProgression.classes as |cls|}}
-                  <div class="a2e-multiclass-row" style="display:grid;grid-template-columns:minmax(54px,.9fr) minmax(70px,1fr);gap:4px;align-items:center;">
-                    <span title="{{cls.name}}" style="font-size:.78em;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{cls.name}}</span>
-                    <input type="number"
-                           name="{{#if ../classProgression.isMulticlass}}add2e.classProgression.{{cls.itemId}}.xp{{else}}system.xp{{/if}}"
-                           value="{{cls.xp}}"
-                           data-class-id="{{cls.itemId}}"
-                           data-class-progression-field="xp"
-                           min="0"
-                           step="1"
-                           title="{{cls.name}} — XP / prochain seuil : {{cls.nextXp}}">
-                  </div>
+                  <input type="number"
+                         name="{{#if ../classProgression.isMulticlass}}add2e.classProgression.{{cls.itemId}}.xp{{else}}system.xp{{/if}}"
+                         value="{{cls.xp}}"
+                         data-class-id="{{cls.itemId}}"
+                         data-class-progression-field="xp"
+                         min="0"
+                         step="1"
+                         style="min-width:0;flex:1 1 0;text-align:center;padding:4px 2px;font-size:.9em;"
+                         title="{{cls.name}} — XP / prochain seuil : {{cls.nextXp}}">
+                  {{#unless @last}}<span aria-hidden="true" style="color:var(--a2e-gold-dark);font-weight:900;">/</span>{{/unless}}
                 {{/each}}
               </div>
             </div>
@@ -87,12 +85,19 @@
           {{/if}}
 
           {{#if classProgression.enabled}}
-            <div class="a2e-field a2e-class-progression-field">
+            <div class="a2e-field a2e-class-progression-field" style="grid-column:span 3;min-width:0;">
               <label>Titre</label>
-              <input type="text" value="{{classProgression.title}}" readonly title="{{classProgression.title}}">
+              <div class="a2e-multiclass-titles" style="display:flex;align-items:center;gap:5px;min-width:0;white-space:nowrap;overflow:hidden;">
+                {{#each classProgression.classes as |cls|}}
+                  <span title="{{cls.name}}" style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1 1 0;text-align:center;font-weight:700;color:var(--a2e-gold-dark);">
+                    {{#if cls.title}}{{cls.title}}{{else}}—{{/if}}
+                  </span>
+                  {{#unless @last}}<span aria-hidden="true" style="color:var(--a2e-gold-dark);font-weight:900;">/</span>{{/unless}}
+                {{/each}}
+              </div>
             </div>
           {{else}}
-            <div class="a2e-field">
+            <div class="a2e-field" style="grid-column:span 3;min-width:0;">
               <label>Titre</label>
               <input type="text" value="{{progressionCourante.title}}" readonly>
             </div>
