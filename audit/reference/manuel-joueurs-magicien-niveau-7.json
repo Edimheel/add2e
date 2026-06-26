@@ -6,167 +6,25 @@
     "niveau": 7,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_liste_noms_complete_regles_a_completer",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 16,
   "foundryExport": "audit/decoupage_fichier/magicien-niveau-7.json",
-  "rules": {
-    "included": [
-      "nom du sort",
-      "classe",
-      "niveau",
-      "ordre dans le tableau du Manuel des joueurs",
-      "nombre de sorts attendu",
-      "variantes explicitement nommées dans le Manuel des joueurs",
-      "réversibilité et nom de l’inverse quand le Manuel le donne"
-    ],
-    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis.",
-    "variantes": "Le tableau variantes est vide lorsqu’aucun choix de forme explicitement nommé ne figure dans le Manuel des joueurs.",
-    "reversibilite": "Le champ reversible est toujours booléen. Le champ inverse vaut null lorsque le Manuel indique un sort réversible sans donner de nom distinct à sa forme inverse."
-  },
   "spells": [
-    {
-      "ordre": 1,
-      "nom": "Boule de feu à retardement",
-      "niveau": 7,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 2,
-      "nom": "Cacodémon",
-      "niveau": 7,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 3,
-      "nom": "Charme-plantes",
-      "niveau": 7,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 4,
-      "nom": "Disparition",
-      "niveau": 7,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 5,
-      "nom": "Duo-dimension",
-      "niveau": 7,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 6,
-      "nom": "Épée de Mordenkainen",
-      "niveau": 7,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 7,
-      "nom": "Inversion de la gravité",
-      "niveau": 7,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 8,
-      "nom": "Invisibilité de masse",
-      "niveau": 7,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 9,
-      "nom": "Invocation de monstre V",
-      "niveau": 7,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 10,
-      "nom": "Invocation instantanée de Drawmij",
-      "niveau": 7,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 11,
-      "nom": "Mot de pouvoir : « étourdissement »",
-      "niveau": 7,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 12,
-      "nom": "Poigne de Bigby",
-      "niveau": 7,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 13,
-      "nom": "Porte de phase",
-      "niveau": 7,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 14,
-      "nom": "Simulacre",
-      "niveau": 7,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 15,
-      "nom": "Souhait mineur",
-      "niveau": 7,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 16,
-      "nom": "Statue",
-      "niveau": 7,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    }
+    {"ordre":1,"nom":"Boule de feu à retardement","ecole":"Évocation","niveau":7,"portee":"10\" + 1\"/niveau","duree":"spéciale","zone_effet":"sphère de 2\" de rayon","composantes":"V, S, M","temps_incantation":"7 segments","jet_sauvegarde":"1/2","description":"Le sort crée une boule de feu qui inflige un point supplémentaire par dé de dégâts et explose après un délai de 1 à 50 segments choisi par le magicien. Pour le reste, il fonctionne comme Boule de feu de niveau 3 et ne peut être utilisé sous l’eau.","composants_materiels_objets":[{"nom":"petite boule de fiente de chauve-souris et de souffre","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Composante reprise de Boule de feu de niveau 3.","notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":2,"nom":"Cacodémon","ecole":"Conjuration/Appel","niveau":7,"portee":"1\"","duree":"spéciale","zone_effet":"créature conjurée","composantes":"V, S, M","temps_incantation":"spécial","jet_sauvegarde":"spécial","description":"Le sort invoque un démon de type IV, V ou VI dont le magicien connaît le nom. Le démon doit être contenu dans un pentagramme et le magicien protégé ; il peut être contraint à un service, négocié ou emprisonné, mais le rituel et tout accord restent dangereux et soumis aux règles détaillées du Manuel.","composants_materiels_objets":[{"nom":"chandelle noire allumée","quantite":5,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"brasero","quantite":1,"consommation":"non_consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Contient les charbons ardents du rituel."},{"nom":"charbons ardents","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"soufre","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Brûlé dans le brasero."},{"nom":"fourrure de chauve-souris","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Brûlée dans le brasero."},{"nom":"saindoux","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Brûlé dans le brasero."},{"nom":"suie","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Brûlée dans le brasero."},{"nom":"cristaux d’acide mercuro-nitrique","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Brûlés dans le brasero."},{"nom":"racine de mandragore","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Brûlée dans le brasero."},{"nom":"alcool","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Brûlé dans le brasero."},{"nom":"parchemin avec le nom du démon inscrit en runes et entouré d’un pentacle","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"coupe de sang de mammifère","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Humain de préférence, placée dans le lieu de rétention du cacodémon."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":3,"nom":"Charme-plantes","ecole":"Enchantement/Charme","niveau":7,"portee":"3\"","duree":"permanente","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"1 tour","jet_sauvegarde":"annule","description":"Le magicien commande des formes de vie végétales et peut communiquer avec elles. Elles obéissent au mieux de leurs possibilités sans acquérir de nouveaux pouvoirs ; seules les plantes intelligentes bénéficient d’un jet de protection, avec un malus de –4.","composants_materiels_objets":[{"nom":"pincée d’humus","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"goutte d’eau","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"feuille ou brindille","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":4,"nom":"Disparition","ecole":"Altération","niveau":7,"portee":"au toucher","duree":"spéciale","zone_effet":"spéciale","composantes":"V","temps_incantation":"2 segments","jet_sauvegarde":"aucun","description":"Le sort fait disparaître un objet. S’il pèse au plus 500 po par niveau du magicien, il peut être téléporté ; au-delà, il est placé sur le plan éthéré et remplacé par une réplique de pierre. Le volume et le poids limitent l’effet, et une dissipation réussie rappelle l’objet éthéré.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":5,"nom":"Duo-dimension","ecole":"Altération","niveau":7,"portee":"0","duree":"3 rounds + 1 round/niveau","zone_effet":"personnelle","composantes":"V, S, M","temps_incantation":"7 segments","jet_sauvegarde":"aucun","description":"Le magicien devient bidimensionnel : de profil, il est invisible aux moyens ordinaires et peut traverser les espaces les plus étroits. Lorsqu’il est visible, il subit le triple des dégâts ; une part de lui-même se trouve sur le plan astral, où il risque d’être entraîné par une attaque astrale.","composants_materiels_objets":[{"nom":"figurine plate et fine du magicien en ivoire, or, émail et gemmes","quantite":1,"consommation":"consomme","cout_po":5000,"source":"Manuel des joueurs","condition":null,"notes":"Valeur totale comprise entre 5 000 et 10 000 po."},{"nom":"bande de parchemin","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Courbée en cylindre puis traversée par la figurine lors de l’incantation."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":6,"nom":"Épée de Mordenkainen","ecole":"Évocation","niveau":7,"portee":"3\"","duree":"1 round/niveau","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"7 segments","jet_sauvegarde":"aucun","description":"Le magicien crée une épée de force qu’il manœuvre mentalement. Elle attaque comme un guerrier de la moitié de son niveau, touche même les créatures intangibles ou seulement atteignables par des armes +3, et inflige 5d4 contre les tailles humaines ou moindres, 5d6 contre les plus grandes.","composants_materiels_objets":[{"nom":"épée miniature en platine avec poignée et pommeau en cuivre et zinc","quantite":1,"consommation":"consomme","cout_po":500,"source":"Manuel des joueurs","condition":null,"notes":"Disparaît à la fin du sort ; prix de fabrication de 500 po."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":7,"nom":"Inversion de la gravité","ecole":"Altération","niveau":7,"portee":"1/2\"/niveau","duree":"1 seconde","zone_effet":"surface de 3\" x 3\"","composantes":"V, S, M","temps_incantation":"7 segments","jet_sauvegarde":"aucun","description":"La gravité de la zone est inversée pendant une seconde : créatures et objets non fixés tombent d’environ 5 m vers le haut, puis retombent quand l’effet cesse. Les chocs contre une surface solide causent les dégâts normaux de chute.","composants_materiels_objets":[{"nom":"pierre aimantée","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"limaille de fer","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":8,"nom":"Invisibilité de masse","ecole":"Illusion/Fantasme","niveau":7,"portee":"1\"/niveau","duree":"spéciale","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"7 segments","jet_sauvegarde":"aucun","description":"Le sort fonctionne comme Invisibilité, mais affecte toutes les créatures dans une zone de 3\" x 3\". Il peut donc couvrir plusieurs centaines de créatures de taille humaine, ou un nombre moindre de créatures plus grandes.","composants_materiels_objets":[{"nom":"cil","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Composante reprise du sort Invisibilité auquel le Manuel renvoie.","notes":null},{"nom":"gomme arabique","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Composante reprise du sort Invisibilité auquel le Manuel renvoie.","notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":9,"nom":"Invocation de monstre V","ecole":"Conjuration/Appel","niveau":7,"portee":"7\"","duree":"6 rounds + 1 round/niveau","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"6 segments","jet_sauvegarde":"aucun","description":"Le sort invoque un ou deux monstres de niveau 5, apparaissant après un délai de un à trois rounds. Les règles générales sont celles d’Invocation de monstres I.","composants_materiels_objets":[{"nom":"petit sac","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Composante reprise d’Invocation de monstres I."},{"nom":"petite bougie","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Pas nécessairement allumée ; composante reprise d’Invocation de monstres I."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":10,"nom":"Invocation instantanée de Drawmij","ecole":"Conjuration/Appel","niveau":7,"portee":"infinie + spéciale","duree":"instantanée","zone_effet":"un petit objet","composantes":"V, S, M","temps_incantation":"1 segment","jet_sauvegarde":"aucun","description":"Le magicien rappelle dans sa main un objet non vivant, précisément nommé et touché lors de la préparation, long au plus comme une épée et pesant au plus 75 po. La gemme préparée est écrasée au mot final ; le sort ne peut arracher un objet possédé ni atteindre ceux du Coffre secret de Léomund.","composants_materiels_objets":[{"nom":"gemme préparée","quantite":1,"consommation":"consomme","cout_po":5000,"source":"Manuel des joueurs","condition":null,"notes":"Valeur minimale de 5 000 po ; elle est écrasée lors de l’invocation finale."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":11,"nom":"Mot de pouvoir : « étourdissement »","ecole":"Conjuration/Appel","niveau":7,"portee":"1/2\"/niveau","duree":"spéciale","zone_effet":"une créature","composantes":"V","temps_incantation":"1 segment","jet_sauvegarde":"aucun","description":"La créature visée est étourdie selon ses points de vie actuels : 4d4 rounds de 1 à 30 pv, 2d4 de 31 à 60 pv, 1d4 de 61 à 90 pv ; au-delà de 90 pv, elle n’est pas affectée.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":12,"nom":"Poigne de Bigby","ecole":"Évocation","niveau":7,"portee":"1\"/niveau","duree":"1 round/niveau","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"7 segments","jet_sauvegarde":"aucun","description":"Version supérieure de la Main de force de Bigby, elle immobilise jusqu’à 500 kg ou retient un objet de même masse. Elle peut aussi déplacer des créatures deux fois plus vite que la Main de force.","composants_materiels_objets":[{"nom":"gant en cuir","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":13,"nom":"Porte de phase","ecole":"Altération","niveau":7,"portee":"au toucher","duree":"1 utilisation/2 niveaux","zone_effet":"spéciale","composantes":"V","temps_incantation":"7 segments","jet_sauvegarde":"aucun","description":"Le magicien crée dans une paroi un passage semblable à Passe-muraille, invisible à tous sauf à lui. Il disparaît en l’empruntant puis réapparaît à la sortie ; il peut le traverser une fois par tranche de deux niveaux. Une dissipation de magie suffisamment puissante peut l’annuler.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":14,"nom":"Simulacre","ecole":"Illusion/Fantasme","niveau":7,"portee":"au toucher","duree":"permanente","zone_effet":"une créature","composantes":"V, S, M","temps_incantation":"spécial","jet_sauvegarde":"aucun","description":"Le magicien crée un double d’une créature à partir de glace ou de neige, avec une partie de l’original. Le simulacre possède 51 à 60 % de ses points de vie, reste sous contrôle, mais n’a qu’une partie de sa personnalité, de ses connaissances et de son niveau. Réincarnation puis Souhait mineur sont nécessaires pour lui conférer une force vitale et des connaissances supplémentaires.","composants_materiels_objets":[{"nom":"glace ou neige","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Matière servant à former le double."},{"nom":"morceau de chair de l’original","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"poudre de rubis","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":15,"nom":"Souhait mineur","ecole":"Conjuration/Appel","niveau":7,"portee":"illimitée","duree":"spéciale","zone_effet":"spéciale","composantes":"V","temps_incantation":"spécial","jet_sauvegarde":"spécial","notes_regles":"L’incantation vieillit le magicien d’un an.","description":"Le sort exauce littéralement un souhait, mais seulement partiellement ou pour une durée limitée. Il ne peut changer profondément les réalités du monde ni procurer librement richesse ou expérience ; des souhaits cupides entraînent souvent des conséquences défavorables.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":16,"nom":"Statue","ecole":"Altération","niveau":7,"portee":"au toucher","duree":"6 tours/niveau","zone_effet":"créature touchée","composantes":"V, S, M","temps_incantation":"7 segments","jet_sauvegarde":"spécial","description":"La créature et son équipement prennent l’apparence de pierre tout en gardant leurs sens. Elle peut redevenir normale pendant une seconde puis se repétrifier tant que le sort dure ; la transformation initiale impose un test de résistance aux traumatismes, dont l’échec est mortel.","composants_materiels_objets":[{"nom":"chaux","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Mélangée avec le sable et l’eau."},{"nom":"sable","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Mélangé avec la chaux et l’eau."},{"nom":"goutte d’eau","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Mélangée avec la chaux et le sable."},{"nom":"tige en fer","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Pointe ou clou servant à mélanger les composants."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false}
   ]
 }
