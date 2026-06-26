@@ -18,6 +18,8 @@ import {
 import { notifyLevelCap } from "./17b-multiclass-dialogs.mjs";
 import { ensureCanonicalMulticlassState, recalcActor } from "./17b-multiclass-operations.mjs";
 
+const VERSION = "2026-06-26-class-item-progression-direct-fields-v2";
+
 function parseProgressionField(input) {
   const classId = String(input?.dataset?.classId ?? "").trim();
   const field = String(input?.dataset?.classProgressionField ?? "").trim().toLowerCase();
@@ -147,12 +149,22 @@ async function ensureCanonicalClassItems(actor) {
 
 function capPayload(classDoc, maxLevel) {
   return {
-    "system.classes": [{
-      name: classDoc?.name,
-      slug: classDoc?.system?.slug ?? classDoc?.name,
-      levelMaxRace: maxLevel
-    }]
+    system: {
+      classes: [{
+        name: classDoc?.name,
+        slug: classDoc?.system?.slug ?? classDoc?.name,
+        levelMaxRace: maxLevel
+      }]
+    }
   };
+}
+
+function normalizedCapPayload(payload, classDoc, maxLevel) {
+  const nested = payload?.system?.classes;
+  if (Array.isArray(nested)) return payload;
+  const flattened = payload?.["system.classes"];
+  if (Array.isArray(flattened)) return { system: { classes: flattened } };
+  return capPayload(classDoc, maxLevel);
 }
 
 export async function updateDirectMulticlassField(sheet, input) {
@@ -214,7 +226,15 @@ export async function updateDirectMulticlassField(sheet, input) {
     ui.notifications?.error?.("Erreur pendant la synchronisation après la mise à jour de classe.");
   }
 
-  if (capNotice) await notifyLevelCap(actor, classDoc.system?.slug ?? classDoc.name, capNotice.desired, capNotice.applied, payload ?? capPayload(classDoc, capNotice.maxLevel));
+  if (capNotice) {
+    await notifyLevelCap(
+      actor,
+      classDoc.system?.slug ?? classDoc.name,
+      capNotice.desired,
+      capNotice.applied,
+      normalizedCapPayload(payload, classDoc, capNotice.maxLevel)
+    );
+  }
   sheet?._add2eRememberActiveTab?.();
   sheet?.render?.(false);
   return true;
