@@ -1,5 +1,5 @@
-// ADD2E — Multiclassage : édition directe des Items classe
-// Les contrôles de feuille ne modifient jamais system.multiclasse.classes.
+// ADD2E — Édition directe des Items classe
+// Un monoclasse utilise exactement le même chemin qu'un multiclassé.
 
 import {
   canonicalClassStates,
@@ -23,7 +23,6 @@ function parseProgressionField(input) {
   const field = String(input?.dataset?.classProgressionField ?? "").trim().toLowerCase();
   if (classId && ["level", "xp"].includes(field)) return { classId, field };
 
-  // Lecture temporaire d'un contrôle rendu avant la mise à jour du template.
   const legacy = String(input?.name ?? "").match(/^system\.multiclasse\.classes\.(\d+)\.(level|xp)$/);
   return legacy ? { legacyIndex: Number(legacy[1]), field: legacy[2] } : null;
 }
@@ -82,7 +81,7 @@ function openSpellSyncWaitDialog(actor, message) {
   };
 }
 
-async function syncMulticlassSpellLevel(actor, classDoc, previousLevel, appliedLevel) {
+async function syncSpellLevel(actor, classDoc, previousLevel, appliedLevel) {
   if (!classDoc || previousLevel === appliedLevel || !automaticSpellClass(classDoc)) {
     await storeCanonicalSpellSignature(actor);
     return { handled: false };
@@ -92,7 +91,7 @@ async function syncMulticlassSpellLevel(actor, classDoc, previousLevel, appliedL
   if (appliedLevel < previousLevel) {
     const close = openSpellSyncWaitDialog(actor, `Mise à jour des sorts de ${classDoc.name} après la baisse de niveau…`);
     try {
-      await globalThis.add2eResetActorSpellMemorization?.(actor, "multiclass-item-level-down");
+      await globalThis.add2eResetActorSpellMemorization?.(actor, "class-item-level-down");
       await globalThis.add2ePruneActorSpellsForClassLevel?.(actor, classDoc, appliedLevel, { notify: false });
       await storeCanonicalSpellSignature(actor);
       return { handled: true, direction: "down", maxSpellLevel: afterCap };
@@ -115,28 +114,65 @@ async function syncMulticlassSpellLevel(actor, classDoc, previousLevel, appliedL
   return { handled: true, direction: "up", maxSpellLevel: afterCap };
 }
 
-/** Empêche un formulaire ancien de recréer l'ancien tableau de progression. */
+/** Empêche tout formulaire historique de recréer un tableau de progression acteur. */
 export function mergeMulticlassChanges(actor, changes) {
   if (!actor || actor.type !== "personnage" || !changes?.system?.multiclasse) return;
   if (Object.prototype.hasOwnProperty.call(changes.system.multiclasse, "classes")) {
     delete changes.system.multiclasse.classes;
-    ui.notifications?.warn?.("La progression multiclasses est portée par les Items classe.");
+    ui.notifications?.warn?.("La progression des classes est portée par les Items classe.");
   }
+}
+
+async function ensureCanonicalClassItems(actor) {
+  const direct = globalThis.add2eEnsureCanonicalClassProgression;
+  if (typeof direct === "function") return direct(actor);
+  if (classItems(actor).length > 1) return !!(await ensureCanonicalMulticlassState(actor));
+
+  const classDoc = classItems(actor)[0] ?? null;
+  if (!classDoc) return false;
+  const state = classProgression(classDoc);
+  if (state.hasLevel && state.hasXp) return true;
+  const update = classProgressionUpdate(classDoc, {
+    level: state.hasLevel ? state.level : Math.max(1, Math.floor(num(actor.system?.niveau, 1))),
+    xp: state.hasXp ? state.xp : Math.max(0, Math.floor(num(actor.system?.xp, 0)))
+  });
+  if (!update) return false;
+  await actor.updateEmbeddedDocuments("Item", [update], {
+    [INTERNAL]: true,
+    add2eInternal: true,
+    add2eReason: "single-class-item-progression-migration"
+  });
+  return true;
+}
+
+function capPayload(classDoc, maxLevel) {
+  return {
+    "system.classes": [{
+      name: classDoc?.name,
+      slug: classDoc?.system?.slug ?? classDoc?.name,
+      levelMaxRace: maxLevel
+    }]
+  };
 }
 
 export async function updateDirectMulticlassField(sheet, input) {
   const actor = sheet?.actor ?? sheet?.document;
   const parsed = parseProgressionField(input);
   if (!actor || actor.type !== "personnage" || !parsed) return false;
-  if (!(await ensureCanonicalMulticlassState(actor))) return false;
+  if (!(await ensureCanonicalClassItems(actor))) return false;
 
   const classDoc = classDocForField(actor, parsed);
   if (!classDoc) {
-    ui.notifications?.error?.("Classe multiclassée introuvable.");
+    ui.notifications?.error?.("Classe introuvable sur l'acteur.");
     return false;
   }
 
   const state = classProgression(classDoc);
+  if (!state.hasLevel || !state.hasXp) {
+    ui.notifications?.error?.("La progression de cette classe n’est pas initialisée.");
+    return false;
+  }
+
   const previousLevel = Math.max(1, Math.floor(num(state.level, 1)));
   const requested = Math.max(0, Math.floor(num(input.value, 0)));
   let level = previousLevel;
@@ -152,30 +188,33 @@ export async function updateDirectMulticlassField(sheet, input) {
     const cap = classRaceMaxLevel(classDoc, race);
     level = cap > 0 ? Math.min(desired, cap) : desired;
     xp = minXpForClassLevel(classDoc.system ?? {}, level);
-    if (desired > level) capNotice = { desired, applied: level, slug: classDoc.system?.slug ?? classDoc.name };
+    if (desired > level) capNotice = { desired, applied: level, maxLevel: cap };
   }
 
   const update = classProgressionUpdate(classDoc, { level, xp });
   await actor.updateEmbeddedDocuments("Item", [update], {
     [INTERNAL]: true,
     add2eInternal: true,
-    add2eReason: "multiclass-item-progression-direct-field"
+    add2eReason: "class-item-progression-direct-field"
   });
-  const payload = await recalcActor(actor);
+
+  const multiple = classItems(actor).length > 1;
+  const payload = multiple ? await recalcActor(actor) : null;
+  await globalThis.add2eSyncClassProgressionSummary?.(actor, { reason: "class-item-progression-direct-field" });
 
   try {
-    await globalThis.add2eSyncMulticlassHp?.(actor, {
+    if (multiple) await globalThis.add2eSyncMulticlassHp?.(actor, {
       force: false,
       syncCurrent: false,
-      reason: "multiclass-item-progression-direct-field"
+      reason: "class-item-progression-direct-field"
     });
-    await syncMulticlassSpellLevel(actor, classDoc, previousLevel, level);
+    await syncSpellLevel(actor, classDoc, previousLevel, level);
   } catch (error) {
     warn("[DIRECT_FIELD_POST_SYNC_ERROR]", error);
     ui.notifications?.error?.("Erreur pendant la synchronisation après la mise à jour de classe.");
   }
 
-  if (capNotice) await notifyLevelCap(actor, capNotice.slug, capNotice.desired, capNotice.applied, payload);
+  if (capNotice) await notifyLevelCap(actor, classDoc.system?.slug ?? classDoc.name, capNotice.desired, capNotice.applied, payload ?? capPayload(classDoc, capNotice.maxLevel));
   sheet?._add2eRememberActiveTab?.();
   sheet?.render?.(false);
   return true;
@@ -185,8 +224,8 @@ export function bindDirectMulticlassFields(sheet, html) {
   const actor = sheet?.actor ?? sheet?.document;
   if (!actor || actor.type !== "personnage") return;
   const root = html?.jquery ? html[0] : html;
-  if (!root?.querySelector || root.dataset.add2eMulticlassDirectFields === "item-progression-v3") return;
-  root.dataset.add2eMulticlassDirectFields = "item-progression-v3";
+  if (!root?.querySelector || root.dataset.add2eClassDirectFields === VERSION) return;
+  root.dataset.add2eClassDirectFields = VERSION;
 
   root.addEventListener("change", event => {
     const input = event.target?.closest?.("input[data-class-progression-field], input[name^='system.multiclasse.classes.']");
