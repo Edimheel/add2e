@@ -2,13 +2,14 @@
 // Les Items classe sont la seule source de progression multiclasses.
 // Compatible Foundry V13/V14/V15.
 
-const VERSION = "2026-06-26-movement-v14-alert-scale-v1";
+const VERSION = "2026-06-26-movement-v14-native-hooks-v2";
 const TAG = "[ADD2E][MOVE_XP]";
 const INTERNAL = "add2eMoveXpInternal";
 const ITEM_RECALC_DELAY_MS = 140;
 const MOVE_ALERT_DEDUP_MS = 900;
 const itemRecalcTimers = new Map();
 const movementAlertCache = new Map();
+const nativeMovementCache = new Map();
 
 globalThis.ADD2E_MOVE_XP_VERSION = VERSION;
 
@@ -418,71 +419,38 @@ function usesNativeTokenMovementHooks() {
   return foundryGeneration() >= 14;
 }
 
-function tokenDocumentFromHook(token) {
-  if (!token) return null;
-  if (String(token.documentName ?? "").toLowerCase() === "token") return token;
-  return token.document ?? token;
+function isPoint(value) {
+  return Number.isFinite(Number(value?.x)) && Number.isFinite(Number(value?.y));
 }
 
-function asMovementSequence(value) {
-  if (Array.isArray(value)) return value;
-  if (value instanceof Set || value instanceof Map) return [...value.values()];
-  if (value && typeof value.values === "function") {
-    try { return [...value.values()]; } catch (_error) { return []; }
-  }
-  return [];
+function nativeMovementTarget(tokenDoc, movement = {}) {
+  if (isPoint(movement?.destination)) return { x: Number(movement.destination.x), y: Number(movement.destination.y) };
+  const pending = movement?.pending?.waypoints ?? [];
+  const last = pending[pending.length - 1];
+  if (isPoint(last)) return { x: Number(last.x), y: Number(last.y) };
+  return { x: Number(tokenDoc?.x ?? 0), y: Number(tokenDoc?.y ?? 0) };
 }
 
-function movementPoint(entry) {
-  for (const candidate of [entry?.destination, entry?.to, entry?.point, entry?.position, entry?.waypoint, entry]) {
-    if (Number.isFinite(Number(candidate?.x)) && Number.isFinite(Number(candidate?.y))) {
-      return { x: Number(candidate.x), y: Number(candidate.y) };
-    }
+function nativeMovementOrigin(tokenDoc, movement = {}) {
+  if (isPoint(movement?.origin)) return { x: Number(movement.origin.x), y: Number(movement.origin.y) };
+  return movementOrigin(tokenDoc);
+}
+
+function nativeMovementMeters(tokenDoc, movement = {}, phase = "pre") {
+  const sections = phase === "pre"
+    ? [movement?.pending, movement?.passed]
+    : [movement?.passed, movement?.pending];
+  const unit = tokenDoc?.parent?.grid?.units ?? canvas?.scene?.grid?.units ?? "m";
+
+  for (const section of sections) {
+    const distance = Number(section?.distance);
+    if (Number.isFinite(distance) && distance > 0) return Math.round(unitToMeters(distance, unit) * 100) / 100;
   }
   return null;
 }
 
-function operationMovementPoints(operation = {}) {
-  const collections = [
-    operation?.pending,
-    operation?.passed,
-    operation?.waypoints,
-    operation?.path,
-    operation?.steps,
-    operation?.movement?.pending,
-    operation?.movement?.passed,
-    operation?.movement?.waypoints,
-    operation?.movement?.path,
-    operation?.movement?.steps
-  ];
-
-  for (const collection of collections) {
-    const points = asMovementSequence(collection).map(movementPoint).filter(Boolean);
-    if (points.length) return points;
-  }
-  return [];
-}
-
-function nativeMovementChanges(tokenDoc, changes = {}, operation = {}) {
-  const points = operationMovementPoints(operation);
-  const last = points.at?.(-1) ?? points[points.length - 1] ?? null;
-  return {
-    ...changes,
-    x: changes?.x ?? operation?.destination?.x ?? operation?.to?.x ?? last?.x ?? tokenDoc?.x,
-    y: changes?.y ?? operation?.destination?.y ?? operation?.to?.y ?? last?.y ?? tokenDoc?.y
-  };
-}
-
-function operationDistanceMeters(tokenDoc, operation, origin) {
-  const points = operationMovementPoints(operation);
-  if (!points.length) return null;
-  let previous = origin;
-  let distance = 0;
-  for (const point of points) {
-    distance += tokenDistanceMeters(tokenDoc, point, previous);
-    previous = point;
-  }
-  return Math.round(distance * 100) / 100;
+function nativeMovementCacheKey(tokenDoc, movement = {}) {
+  return `${tokenDoc?.uuid ?? tokenDoc?.id ?? "token"}:${movement?.id ?? "movement"}`;
 }
 
 function combatTurnKey() {
@@ -506,15 +474,7 @@ function movementScaleStatus(distance, max) {
   return { key: "red", label: "rouge", color: 0xd91e18, blocked: true };
 }
 
-function scaleStateChanged(current, next) {
-  return !current
-    || current.status !== next.status
-    || Math.abs(Number(current.distance ?? 0) - Number(next.distance ?? 0)) > 0.01
-    || Math.abs(Number(current.max ?? 0) - Number(next.max ?? 0)) > 0.01
-    || current.gmFreeMove !== next.gmFreeMove;
-}
-
-function drawMovementScale(tokenDoc, status, distance, max, { persist = true, movedByUserId = null } = {}) {
+function drawMovementScale(tokenDoc, status, distance, max) {
   const token = canvas?.tokens?.get?.(tokenDoc.id);
   const Graphics = globalThis.PIXI?.Graphics;
   if (!token || !Graphics) return;
@@ -540,31 +500,10 @@ function drawMovementScale(tokenDoc, status, distance, max, { persist = true, mo
 
     graphics.zIndex = 9999;
     token.sortChildren?.();
-
-    if (persist) {
-      const nextState = {
-        status: status.key,
-        label: status.label,
-        distance,
-        max,
-        gmFreeMove: game.user.isGM,
-        movedByUserId: movedByUserId ?? game.user?.id ?? null
-      };
-      const currentState = tokenDoc.getFlag("add2e", "movementScale");
-      if (scaleStateChanged(currentState, nextState)) {
-        tokenDoc.setFlag("add2e", "movementScale", nextState).catch(error => console.warn(`${TAG}[TOKEN][SCALE_FLAG_ERROR]`, error));
-      }
-    }
+    token._add2eMovementScale = { status: status.key, distance, max };
   } catch (error) {
     console.warn(`${TAG}[TOKEN][SCALE_DRAW_ERROR]`, error);
   }
-}
-
-function redrawStoredMovementScale(tokenDoc) {
-  const state = tokenDoc?.getFlag?.("add2e", "movementScale");
-  if (!state || !tokenDoc) return;
-  const status = movementScaleStatus(Number(state.distance ?? 0) || 0, Number(state.max ?? 0) || 0);
-  drawMovementScale(tokenDoc, status, Number(state.distance ?? 0) || 0, Number(state.max ?? 0) || 0, { persist: false, movedByUserId: state.movedByUserId ?? null });
 }
 
 function escapeHtml(value) {
@@ -583,7 +522,10 @@ function notifyGmsMovementExceeded(tokenDoc, result, { userId = null } = {}) {
   movementAlertCache.set(dedupKey, now);
 
   const movedBy = game.users?.get?.(userId ?? game.user?.id)?.name ?? game.user?.name ?? "Utilisateur";
-  const content = `<div class="add2e-movement-alert" style="border:1px solid ${result.status.key === "red" ? "#b3302d" : "#c78318"};border-radius:8px;background:${result.status.key === "red" ? "#fff0ef" : "#fff7e8"};padding:.55em .7em;"><strong>Déplacement dépassé — ${escapeHtml(result.actor.name)}</strong><div>${escapeHtml(movedBy)} : <b>${result.next.toFixed(1)} m</b> / ${result.max.toFixed(1)} m <span style="color:${result.status.key === "red" ? "#9d1f1c" : "#9a5b05"};">(${result.status.label})</span></div></div>`;
+  const warningColor = result.status.key === "red" ? "#9d1f1c" : "#9a5b05";
+  const borderColor = result.status.key === "red" ? "#b3302d" : "#c78318";
+  const background = result.status.key === "red" ? "#fff0ef" : "#fff7e8";
+  const content = `<div class="add2e-movement-alert" style="border:1px solid ${borderColor};border-radius:8px;background:${background};padding:.55em .7em;"><strong>Déplacement dépassé — ${escapeHtml(result.actor.name)}</strong><div>${escapeHtml(movedBy)} : <b>${result.next.toFixed(1)} m</b> / ${result.max.toFixed(1)} m <span style="color:${warningColor};">(${result.status.label})</span></div></div>`;
   const recipients = ChatMessage.getWhisperRecipients?.("GM")?.map(user => user.id).filter(Boolean) ?? [];
 
   if (recipients.length) {
@@ -601,54 +543,43 @@ function notifyGmsMovementExceeded(tokenDoc, result, { userId = null } = {}) {
 function rememberAllowedMovement(tokenDoc, changes, result) {
   if (!result) return;
   if (game.combat) {
-    setTimeout(() => {
-      result.actor.setFlag("add2e", "movementTurnKey", combatTurnKey());
-      result.actor.setFlag("add2e", "movementSpentMeters", result.next);
-    }, 0);
+    result.actor.setFlag("add2e", "movementTurnKey", combatTurnKey()).catch(error => console.warn(`${TAG}[TOKEN][TURN_FLAG_ERROR]`, error));
+    result.actor.setFlag("add2e", "movementSpentMeters", result.next).catch(error => console.warn(`${TAG}[TOKEN][SPENT_FLAG_ERROR]`, error));
   } else {
-    setTimeout(() => tokenDoc.setFlag("add2e", "lastAllowedPosition", { x: changes.x ?? tokenDoc.x, y: changes.y ?? tokenDoc.y }), 0);
+    tokenDoc.setFlag("add2e", "lastAllowedPosition", { x: changes.x ?? tokenDoc.x, y: changes.y ?? tokenDoc.y }).catch(error => console.warn(`${TAG}[TOKEN][ORIGIN_FLAG_ERROR]`, error));
   }
 }
 
-function computeTokenMovementScale(tokenDoc, changes = {}, from = null, operation = null, movedByUserId = null) {
+function computeTokenMovementScale(tokenDoc, changes = {}, { movement = null, phase = "legacy", from = null } = {}) {
   const actor = tokenDoc.actor;
   if (!actor || actor.type !== "personnage") return null;
-  const movement = computeMovement(actor);
-  const max = Number(movement.actuel ?? actor.system?.movement ?? actor.system?.vitesse_deplacement ?? 0) || 0;
-  const origin = from ?? (game.combat ? { x: tokenDoc.x, y: tokenDoc.y } : movementOrigin(tokenDoc));
-  const nativeDistance = operation ? operationDistanceMeters(tokenDoc, operation, origin) : null;
+
+  const details = computeMovement(actor);
+  const max = Number(details.actuel ?? actor.system?.movement ?? actor.system?.vitesse_deplacement ?? 0) || 0;
+  const origin = from ?? (movement ? nativeMovementOrigin(tokenDoc, movement) : (game.combat ? { x: tokenDoc.x, y: tokenDoc.y } : movementOrigin(tokenDoc)));
+  const nativeDistance = movement ? nativeMovementMeters(tokenDoc, movement, phase) : null;
   const delta = nativeDistance ?? tokenDistanceMeters(tokenDoc, changes, origin);
   const spent = game.combat ? spentThisTurn(actor) : 0;
   const next = Math.round((spent + delta) * 100) / 100;
   const status = movementScaleStatus(next, max);
-  drawMovementScale(tokenDoc, status, next, max, { movedByUserId });
-  return { actor, movement, max, origin, delta, spent, next, status };
+
+  return { actor, movement: details, max, origin, delta, spent, next, status };
 }
 
-function validateTokenMovement(tokenDoc, changes, options = {}, operation = null) {
-  if (options?.add2eIgnoreMovement || !game.settings.get("add2e", "enforceTokenMovement")) return true;
-  if (!changes || (changes.x === undefined && changes.y === undefined)) return true;
+function validateTokenMovement(tokenDoc, changes, options = {}, movement = null) {
+  if (options?.add2eIgnoreMovement || !game.settings.get("add2e", "enforceTokenMovement")) return { allowed: true, result: null };
+  if (!changes || (changes.x === undefined && changes.y === undefined)) return { allowed: true, result: null };
   const actor = tokenDoc.actor;
-  if (!actor || actor.type !== "personnage") return true;
+  if (!actor || actor.type !== "personnage") return { allowed: true, result: null };
 
-  const result = computeTokenMovementScale(tokenDoc, changes, null, operation, options?.userId ?? null);
-  if (!result) return true;
+  const result = computeTokenMovementScale(tokenDoc, changes, { movement, phase: movement ? "pre" : "legacy" });
+  if (!result) return { allowed: true, result: null };
 
-  const { next, max, status } = result;
-  if (next > max + 0.01) notifyGmsMovementExceeded(tokenDoc, result, { userId: options?.userId ?? null });
+  if (result.next > result.max + 0.01) notifyGmsMovementExceeded(tokenDoc, result, { userId: options?.userId ?? game.user?.id ?? null });
+  if (game.user.isGM || !result.status.blocked) return { allowed: true, result };
 
-  if (game.user.isGM) {
-    rememberAllowedMovement(tokenDoc, changes, result);
-    return true;
-  }
-
-  if (status.blocked) {
-    ui.notifications.warn(`${actor.name} dépasse son mouvement (${status.label}) : ${next.toFixed(1)} m / ${max.toFixed(1)} m.`);
-    return false;
-  }
-
-  rememberAllowedMovement(tokenDoc, changes, result);
-  return true;
+  ui.notifications.warn(`${actor.name} dépasse son mouvement (${result.status.label}) : ${result.next.toFixed(1)} m / ${result.max.toFixed(1)} m.`);
+  return { allowed: false, result };
 }
 
 function itemCanAffectMovement(item, hookName, options = {}) {
@@ -682,6 +613,13 @@ function changedPath(actor, changes, path) {
   return foundry.utils.hasProperty(changes, path) && !sameValue(changeValue(changes, path), getPath(actor, path));
 }
 
+function drawResultAfterAnimation(tokenDoc, result, movement = null) {
+  const draw = () => drawMovementScale(tokenDoc, result.status, result.next, result.max);
+  const ended = movement?.animation?.ended;
+  if (ended && typeof ended.then === "function") ended.then(draw).catch(draw);
+  else draw();
+}
+
 Hooks.once("init", () => {
   game.settings.register("add2e", "xpAutoLevel", { name: "ADD2E — XP : niveau automatique", hint: "Quand l'XP atteint un seuil, le niveau est augmenté automatiquement.", scope: "world", config: true, type: Boolean, default: true });
   game.settings.register("add2e", "enforceTokenMovement", { name: "ADD2E — Contrôler le déplacement des tokens", hint: "Bloque les joueurs qui dépassent leur mouvement. Le MJ peut se déplacer librement, reçoit un avertissement et voit l'échelle vert / orange / rouge.", scope: "world", config: true, type: Boolean, default: true });
@@ -695,16 +633,7 @@ Hooks.once("ready", async () => {
     }
   }
   for (const token of canvas?.tokens?.placeables ?? []) {
-    if (token.actor?.type === "personnage") {
-      token.document.setFlag("add2e", "lastAllowedPosition", { x: token.document.x, y: token.document.y });
-      redrawStoredMovementScale(token.document);
-    }
-  }
-});
-
-Hooks.on("canvasReady", () => {
-  for (const token of canvas?.tokens?.placeables ?? []) {
-    if (token.actor?.type === "personnage") redrawStoredMovementScale(token.document);
+    if (token.actor?.type === "personnage") token.document.setFlag("add2e", "lastAllowedPosition", { x: token.document.x, y: token.document.y });
   }
 });
 
@@ -770,37 +699,55 @@ Hooks.on("renderAdd2eActorSheet", (sheet, html) => {
   }, { once: true });
 });
 
-Hooks.on("preMoveToken", (token, changes = {}, operation = {}, userId = null) => {
+Hooks.on("preMoveToken", (tokenDoc, movement, operation = {}) => {
   if (!usesNativeTokenMovementHooks()) return true;
-  const tokenDoc = tokenDocumentFromHook(token);
-  if (!tokenDoc) return true;
-  const target = nativeMovementChanges(tokenDoc, changes, operation);
-  return validateTokenMovement(tokenDoc, target, { ...(operation && typeof operation === "object" ? operation : {}), add2eNativeMovement: true, userId }, operation);
+  if (!tokenDoc?.actor || tokenDoc.actor.type !== "personnage") return true;
+
+  const target = nativeMovementTarget(tokenDoc, movement);
+  const checked = validateTokenMovement(tokenDoc, target, { ...operation, add2eNativeMovement: true, userId: game.user?.id ?? null }, movement);
+  if (!checked.allowed) return false;
+
+  nativeMovementCache.set(nativeMovementCacheKey(tokenDoc, movement), { result: checked.result, target });
+  return true;
 });
 
-Hooks.on("moveToken", (token, _changes = {}, _operation = {}, _userId = null) => {
+Hooks.on("moveToken", (tokenDoc, movement, _operation = {}, user = null) => {
   if (!usesNativeTokenMovementHooks()) return;
-  redrawStoredMovementScale(tokenDocumentFromHook(token));
+  if (!tokenDoc?.actor || tokenDoc.actor.type !== "personnage") return;
+
+  const key = nativeMovementCacheKey(tokenDoc, movement);
+  const cached = nativeMovementCache.get(key) ?? null;
+  nativeMovementCache.delete(key);
+  const target = nativeMovementTarget(tokenDoc, movement);
+  const result = cached?.result ?? computeTokenMovementScale(tokenDoc, target, { movement, phase: "post" });
+  if (!result) return;
+
+  drawResultAfterAnimation(tokenDoc, result, movement);
+  if (!user?.id || game.user?.id === user.id) rememberAllowedMovement(tokenDoc, target, result);
 });
 
 Hooks.on("preUpdateToken", (tokenDoc, changes, options) => {
   if (usesNativeTokenMovementHooks()) return true;
-  return validateTokenMovement(tokenDoc, changes, options);
+  const checked = validateTokenMovement(tokenDoc, changes, options);
+  return checked.allowed;
 });
 
-Hooks.on("updateToken", (tokenDoc, changes) => {
-  const scaleChanged = foundry.utils.hasProperty(changes, "flags.add2e.movementScale");
-  if (scaleChanged) redrawStoredMovementScale(tokenDoc);
+Hooks.on("updateToken", (tokenDoc, changes, _options = {}, userId = null) => {
   if (usesNativeTokenMovementHooks()) return;
   if (!changes || (changes.x === undefined && changes.y === undefined)) return;
   if (!game.settings.get("add2e", "enforceTokenMovement")) return;
-  computeTokenMovementScale(tokenDoc, { x: tokenDoc.x, y: tokenDoc.y });
+
+  const result = computeTokenMovementScale(tokenDoc, { x: tokenDoc.x, y: tokenDoc.y });
+  if (!result) return;
+  drawMovementScale(tokenDoc, result.status, result.next, result.max);
+  if (!userId || game.user?.id === userId) rememberAllowedMovement(tokenDoc, { x: tokenDoc.x, y: tokenDoc.y }, result);
 });
 
 Hooks.on("controlToken", token => {
   if (token?.actor?.type !== "personnage") return;
   token.document.setFlag("add2e", "lastAllowedPosition", { x: token.document.x, y: token.document.y });
-  computeTokenMovementScale(token.document, { x: token.document.x, y: token.document.y });
+  const result = computeTokenMovementScale(token.document, { x: token.document.x, y: token.document.y });
+  if (result) drawMovementScale(token.document, result.status, result.next, result.max);
 });
 
 Hooks.on("createItem", (item, options = {}) => queueItemMovementRecalc(item, "createItem", options));
