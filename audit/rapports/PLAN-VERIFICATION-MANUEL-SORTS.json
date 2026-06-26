@@ -1,6 +1,6 @@
 {
   "version": "2026-06-26-manual-spell-verification-plan-v5",
-  "generatedAt": "2026-06-26T18:02:15.609Z",
+  "generatedAt": "2026-06-26T20:35:50.574Z",
   "sourceOfTruth": "Manuel des joueurs AD&D 2e",
   "inputs": {
     "audit": "audit\\rapports\\AUDIT-REFERENCES-SORTS-GLOBAL.json",
@@ -37,7 +37,7 @@
         "spells": 0
       }
     },
-    "foundryListReviews": 13,
+    "foundryListReviews": 12,
     "unresolvedDecoupage": 0,
     "technicalFieldsToTranscribe": 1715,
     "descriptionsToTranscribe": 260,
@@ -2165,8 +2165,8 @@
             "Charme-personnes",
             "Chute de plume",
             "Compréhension des langues",
-            "Disque flottant de Tenser",
             "Détection de la magie",
+            "Disque flottant de Tenser",
             "Écriture",
             "Effacement",
             "Escalade d’araignée",
@@ -6973,8 +6973,8 @@
             "Hétéromorphisme",
             "Invocation de Monstre VII",
             "Main broyante de Bigby",
-            "Nuée de météores",
             "Mot de pouvoir : « mort »",
+            "Nuée de météores",
             "Seuil",
             "Sort astral",
             "Souhait majeur",
@@ -6991,10 +6991,10 @@
           "decoupage": {
             "missing": [],
             "extra": [],
-            "orderMatches": false
+            "orderMatches": true
           }
         },
-        "foundryListNeedsReview": true,
+        "foundryListNeedsReview": false,
         "auditStatus": "blocked_structural",
         "auditErrors": [
           "Arrêt du temps: champ requis manquant ecole",
@@ -12181,8 +12181,8 @@
           "Charme-personnes",
           "Chute de plume",
           "Compréhension des langues",
-          "Disque flottant de Tenser",
           "Détection de la magie",
+          "Disque flottant de Tenser",
           "Écriture",
           "Effacement",
           "Escalade d’araignée",
@@ -16989,8 +16989,8 @@
           "Hétéromorphisme",
           "Invocation de Monstre VII",
           "Main broyante de Bigby",
-          "Nuée de météores",
           "Mot de pouvoir : « mort »",
+          "Nuée de météores",
           "Seuil",
           "Sort astral",
           "Souhait majeur",
@@ -17007,10 +17007,10 @@
         "decoupage": {
           "missing": [],
           "extra": [],
-          "orderMatches": false
+          "orderMatches": true
         }
       },
-      "foundryListNeedsReview": true,
+      "foundryListNeedsReview": false,
       "auditStatus": "blocked_structural",
       "auditErrors": [
         "Arrêt du temps: champ requis manquant ecole",
