@@ -6,112 +6,17 @@
     "niveau": 5,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_liste_noms_complete_regles_a_completer",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 8,
   "foundryExport": "audit/decoupage_fichier/illusionniste-niveau-5.json",
-  "rules": {
-    "included": [
-      "nom du sort",
-      "classe",
-      "niveau",
-      "ordre dans le tableau du Manuel des joueurs",
-      "nombre de sorts attendu",
-      "variantes explicitement nommées dans le Manuel des joueurs",
-      "réversibilité et nom de l’inverse quand le Manuel le donne"
-    ],
-    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis.",
-    "variantes": "Le tableau variantes est vide lorsqu’aucun choix de forme explicitement nommé ne figure dans le Manuel des joueurs.",
-    "reversibilite": "Le champ reversible est toujours booléen. Le champ inverse vaut null lorsque le Manuel indique un sort réversible sans donner de nom distinct à sa forme inverse."
-  },
   "spells": [
-    {
-      "ordre": 1,
-      "nom": "Chaos",
-      "niveau": 5,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 2,
-      "nom": "Création majeure",
-      "niveau": 5,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 3,
-      "nom": "Holographie",
-      "niveau": 5,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 4,
-      "nom": "Invocation des ombres",
-      "niveau": 5,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 5,
-      "nom": "Labyrinthe",
-      "niveau": 5,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 6,
-      "nom": "Magie des ombres",
-      "niveau": 5,
-      "variantes": [
-        {
-          "id": "projectile_magique",
-          "nom": "Projectile magique"
-        },
-        {
-          "id": "boule_de_feu",
-          "nom": "Boule de feu"
-        },
-        {
-          "id": "foudre",
-          "nom": "Foudre"
-        },
-        {
-          "id": "cone_de_froid",
-          "nom": "Cône de froid"
-        }
-      ],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 7,
-      "nom": "Monstres demi-ombre",
-      "niveau": 5,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 8,
-      "nom": "Porte des ombres",
-      "niveau": 5,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    }
+    {"ordre":1,"nom":"Chaos","ecole":"Enchantement/Charme","niveau":5,"portee":"1/2\"/niveau","duree":"1 round/niveau","zone_effet":"4\" x 4\"","composantes":"V, S, M","temps_incantation":"5 segments","jet_sauvegarde":"spécial","description":"Le sort est comparable à Confusion de druide, mais toutes les créatures de la zone sont affectées. Seuls les combattants et illusionnistes, ainsi que certaines créatures peu intelligentes non magiciennes, peuvent tenter le jet de protection prévu par le Manuel.","composants_materiels_objets":[{"nom":"petit disque de bronze","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"petite tige de fer","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":2,"nom":"Création majeure","ecole":"Altération","niveau":5,"portee":"1\"","duree":"6 tours/niveau","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"1 tour","jet_sauvegarde":"aucun","description":"Comparable à Création mineure, ce sort peut créer des objets minéraux. Il peut aussi créer des objets végétaux, mais ceux-ci ne durent que douze tours par niveau.","composants_materiels_objets":[{"nom":"échantillon de la matière à créer","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Composante de création correspondant à la matière visée."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":3,"nom":"Holographie","ecole":"Altération/Illusion/Fantasme","niveau":5,"portee":"1/2\"/niveau","duree":"1 round/niveau","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"5 segments","jet_sauvegarde":"aucun","description":"Excepté ses valeurs propres, ce sort est le même que l’Holographie de magicien. L’illusionniste crée une image immatérielle de lui-même qui reproduit ses actions dans les limites prévues par le Manuel.","composants_materiels_objets":[{"nom":"petite réplique de l’illusionniste","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Poupée ou figurine représentant le lanceur de sort."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":4,"nom":"Invocation des ombres","ecole":"Conjuration/Appel","niveau":5,"portee":"1\"","duree":"1 round + 1 round/niveau","zone_effet":"1\" x 1\"","composantes":"V, S, M","temps_incantation":"5 segments","jet_sauvegarde":"aucun","description":"L’illusionniste invoque une ombre par tranche de trois niveaux. Ces créatures sont sous son contrôle et combattent ses ennemis jusqu’à la fin du sort, leur destruction ou leur renvoi.","composants_materiels_objets":[{"nom":"morceau de quartz fumé","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":5,"nom":"Labyrinthe","ecole":"Conjuration/Appel","niveau":5,"portee":"1/2\"/niveau","duree":"spéciale","zone_effet":"une créature","composantes":"V, S","temps_incantation":"5 segments","jet_sauvegarde":"aucun","description":"Le sort fonctionne comme Labyrinthe de magicien, avec les valeurs propres de l’illusionniste. La victime est transportée dans un espace extradimensionnel dont elle tente de sortir selon son intelligence.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":6,"nom":"Magie des ombres","ecole":"Illusion/Fantasme","niveau":5,"portee":"5\" + 1\"/niveau","duree":"spéciale","zone_effet":"spéciale","composantes":"V, S","temps_incantation":"5 segments","jet_sauvegarde":"spécial","description":"L’illusionniste produit une version quasi-réelle du sort de magicien choisi. Elle agit pleinement sur une victime qui rate son jet de protection et n’inflige qu’un point de dégât par niveau sur une réussite.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[{"id":"projectile_magique","nom":"Projectile magique"},{"id":"boule_de_feu","nom":"Boule de feu"},{"id":"foudre","nom":"Foudre"},{"id":"cone_de_froid","nom":"Cône de froid"}],"reversible":false},
+    {"ordre":7,"nom":"Monstres demi-ombre","ecole":"Illusion/Fantasme","niveau":5,"portee":"3\"","duree":"1 round/niveau","zone_effet":"2\" x 2\"","composantes":"V, S","temps_incantation":"5 segments","jet_sauvegarde":"spécial","description":"Ce sort est similaire à Monstres des ombres, mais les créatures créées possèdent 40 % de leurs points de vie normaux. Face à une créature qui réussit son jet de protection, elles ont une classe d’armure de 8 et infligent 40 % de leurs dégâts normaux.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":8,"nom":"Porte des ombres","ecole":"Illusion/Fantasme","niveau":5,"portee":"1\"","duree":"1 round/niveau","zone_effet":"spéciale","composantes":"S","temps_incantation":"2 segments","jet_sauvegarde":"aucun","description":"L’illusionniste crée l’illusion d’une porte qu’il franchit alors qu’il devient invisible et se décale. Les observateurs qui entrent dans la porte illusoire croient voir une pièce vide ; vision réelle ou moyen équivalent révèle la supercherie.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false}
   ]
 }
