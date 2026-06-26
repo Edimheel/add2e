@@ -1,7 +1,7 @@
 // ADD2E — Déduplication des sorts et suppression du champ matériel historique.
 // Compatible Foundry V13 / V14 / V15.
 
-const ADD2E_SPELL_SYNC_DEDUPE_VERSION = "2026-06-25-spell-sync-dedupe-v8-no-material-fallback";
+const ADD2E_SPELL_SYNC_DEDUPE_VERSION = "2026-06-26-spell-sync-dedupe-v9-forced-deletion";
 const RUNNING = globalThis.ADD2E_SPELL_SYNC_DEDUPE_RUNNING instanceof Set ? globalThis.ADD2E_SPELL_SYNC_DEDUPE_RUNNING : new Set();
 globalThis.ADD2E_SPELL_SYNC_DEDUPE_VERSION = ADD2E_SPELL_SYNC_DEDUPE_VERSION;
 globalThis.ADD2E_SPELL_SYNC_DEDUPE_RUNNING = RUNNING;
@@ -22,6 +22,12 @@ const keyOf = item => {
   const name = slug(item?.name ?? item?.system?.nom);
   return name ? `${levelOf(item?.system)}|${name}` : "";
 };
+
+function forcedDeletion() {
+  const deletion = foundry?.data?.operators?.ForcedDeletion;
+  if (!deletion) throw new Error("[ADD2E] FoundryData ForcedDeletion est indisponible.");
+  return deletion;
+}
 
 function keepWeight(item) {
   const flags = item?.flags?.add2e ?? {};
@@ -44,7 +50,10 @@ async function removeLegacyMaterialFields(actor, reason = "legacy-material-clean
   const updates = [];
   for (const item of actor.items?.filter?.(entry => String(entry.type ?? "").toLowerCase() === "sort") ?? []) {
     if (!hasOwn(item.system, "composants_materiels_objets")) continue;
-    updates.push({ _id: item.id, "system.-=composants_materiels_objets": null });
+    updates.push({
+      _id: item.id,
+      system: { composants_materiels_objets: forcedDeletion() }
+    });
   }
   if (!updates.length) return { removed: 0 };
   await actor.updateEmbeddedDocuments("Item", updates, { add2eInternal: true, add2eSpellSync: true, reason, render: false });
