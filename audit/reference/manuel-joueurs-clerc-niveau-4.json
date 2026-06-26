@@ -138,6 +138,15 @@
       "description": "quand le clerc lance ce sort, le bénéficiaire est immédiatement capable de savoir si la vérité a été dite. Le sort ne révèle pas la vérité, ni les non-dits, ni les faux-fuyants: il ne fait que détecter les mensonges. Le sort dure un round par niveau du clerc. De la poussière d’or est nécessaire pour lancer détection des mensonges. L’inverse du sort, dissimulation des mensonges, fait que les mensonges paraissent crédibles ou annule simplement les effets d’une détection des mensonges. La composante matérielle de dissimulation des mensonges est de la poussière de laiton.",
       "composants_materiels_objets": [
         {
+          "nom": "poussière d’or",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Sort normal : détection des mensonges.",
+          "notes": null
+        },
+        {
           "nom": "poussière de laiton",
           "quantite": 1,
           "consommation": "consomme",
@@ -334,13 +343,13 @@
       "nom": "Langue",
       "ecole": "Altération",
       "niveau": 4,
-      "portee": "a_verifier_manuellement",
-      "duree": "a_verifier_manuellement",
-      "zone_effet": "a_verifier_manuellement",
-      "composantes": "a_verifier_manuellement",
-      "temps_incantation": "a_verifier_manuellement",
-      "jet_sauvegarde": "a_verifier_manuellement",
-      "description": "",
+      "portee": "0",
+      "duree": "1 tour",
+      "zone_effet": "cercle de 6\" de diamètre",
+      "composantes": "V, S",
+      "temps_incantation": "7 segments",
+      "jet_sauvegarde": "aucun",
+      "description": "ce sort autorise le clerc à parler la langue de toute créature se trouvant dans la zone d’effet, que ce soit une langue raciale ou un langage d’alignement. L’inverse du sort, incompréhension, annule ce sort ou rend incompréhensible toute conversation dans la zone d’effet.",
       "composants_materiels_objets": [],
       "foundry": {
         "nom": "Langue",
@@ -348,7 +357,7 @@
         "img": "systems/add2e/assets/icones/sorts/langue.webp",
         "onUse": "systems/add2e/scripts/sorts/langue.js"
       },
-      "status": "reference_a_verifier_manuellement",
+      "status": "reference_complete_description_normalisee",
       "variantes": [],
       "reversible": true,
       "inverse": "Incompréhension",
@@ -359,22 +368,59 @@
       "nom": "Protection contre le mal sur 3 m",
       "ecole": "Abjuration",
       "niveau": 4,
-      "portee": "a_verifier_manuellement",
-      "duree": "a_verifier_manuellement",
-      "zone_effet": "a_verifier_manuellement",
-      "composantes": "a_verifier_manuellement",
-      "temps_incantation": "a_verifier_manuellement",
-      "jet_sauvegarde": "a_verifier_manuellement",
+      "portee": "au toucher",
+      "duree": "1 tour/niveau",
+      "zone_effet": "sphère de 6 mètres de diamètre",
+      "composantes": "V, S, M",
+      "temps_incantation": "7 segments",
+      "jet_sauvegarde": "aucun",
       "inverse": "Protection contre le bien sur 3 m",
-      "description": "",
-      "composants_materiels_objets": [],
+      "description": "le globe de protection de ce sort est identique à celui du sort de niveau 1, protection contre le mal, sauf qu’il affecte une zone plus importante. La durée du sort est également plus importante. Pour lancer ce sort, le clerc doit tracer un cercle de 6 mètres de diamètre en utilisant de l’eau bénite ou du sang, de l’encens allumé ou des vapeurs de fumier selon l’alignement du clerc et selon que le sort est lancé normalement ou inversé (protection contre le bien sur 3 m).",
+      "composants_materiels_objets": [
+        {
+          "nom": "eau bénite",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Selon l’alignement du clerc et la version normale ou inversée.",
+          "notes": "Employée pour tracer le cercle de 6 mètres de diamètre."
+        },
+        {
+          "nom": "sang",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Selon l’alignement du clerc et la version normale ou inversée.",
+          "notes": "Employé pour tracer le cercle de 6 mètres de diamètre."
+        },
+        {
+          "nom": "encens allumé",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Selon l’alignement du clerc et la version normale ou inversée.",
+          "notes": null
+        },
+        {
+          "nom": "vapeurs de fumier",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Selon l’alignement du clerc et la version normale ou inversée.",
+          "notes": null
+        }
+      ],
       "foundry": {
         "nom": "Protection contre le mal sur 3 m",
         "id": "Stbgz8i1o",
         "img": "systems/add2e/assets/icones/sorts/protection-contre-le-mal-sur-3-m.webp",
         "onUse": "systems/add2e/scripts/sorts/protection-contre-le-mal-sur-3-m.js"
       },
-      "status": "reference_a_verifier_manuellement",
+      "status": "reference_complete_description_normalisee",
       "variantes": [],
       "reversible": true,
       "inverseNameStatus": "manual_explicit"
