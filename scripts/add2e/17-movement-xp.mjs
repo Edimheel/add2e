@@ -2,7 +2,7 @@
 // Les Items classe sont la seule source de progression multiclasses.
 // Compatible Foundry V13/V14/V15.
 
-const VERSION = "2026-06-26-movement-live-preview-v3";
+const VERSION = "2026-06-26-movement-live-preview-v4";
 const TAG = "[ADD2E][MOVE_XP]";
 const INTERNAL = "add2eMoveXpInternal";
 const ITEM_RECALC_DELAY_MS = 140;
@@ -14,6 +14,8 @@ const nativeMovementCache = new Map();
 const movementPreview = {
   token: null,
   origin: null,
+  target: null,
+  event: null,
   frame: null,
   active: false
 };
@@ -626,17 +628,21 @@ function snapDragPoint(token, point) {
 }
 
 function liveDragTarget(token, event) {
+  if (movementPreview.token === token && isPoint(movementPreview.target)) return movementPreview.target;
+
   const data = dragEventData(event);
   const candidates = [
+    token?._dragData?.destination,
+    token?._dragData?.position,
+    token?._preview?.document,
+    token?._preview,
+    token?.preview?.document,
+    token?.preview,
     data?.destination,
     data?.position,
     data?.current,
     event?.destination,
-    event?.position,
-    token?._preview?.document,
-    token?._preview,
-    token?.preview?.document,
-    token?.preview
+    event?.position
   ];
 
   for (const candidate of candidates) {
@@ -653,27 +659,33 @@ function clearLiveMovementPreview(token = null, { clearScale = true } = {}) {
   movementPreview.frame = null;
   movementPreview.active = false;
   movementPreview.origin = null;
+  movementPreview.target = null;
+  movementPreview.event = null;
   movementPreview.token = null;
   hideMovementPreviewLabel();
   if (clearScale && active?.document) clearMovementScale(active.document);
 }
 
-function updateLiveMovementPreview(token, event) {
+function updateLiveMovementPreview(token, event = null, target = null) {
   if (!movementPreview.active || movementPreview.token !== token || !token?.document) return;
-  const target = liveDragTarget(token, event);
-  if (!target) return;
+  const resolvedTarget = target ?? movementPreview.target ?? liveDragTarget(token, event ?? movementPreview.event);
+  if (!resolvedTarget) return;
 
-  const result = computeTokenMovementScale(token.document, target, { from: movementPreview.origin });
+  movementPreview.target = snapDragPoint(token, resolvedTarget);
+  if (event) movementPreview.event = event;
+  const result = computeTokenMovementScale(token.document, movementPreview.target, { from: movementPreview.origin });
   if (!result) return;
   drawMovementScale(token.document, result.status, result.next, result.max);
-  showMovementPreviewLabel(token, event, result);
+  showMovementPreviewLabel(token, movementPreview.event, result);
 }
 
-function scheduleLiveMovementPreview(token, event) {
+function scheduleLiveMovementPreview(token, event = null, target = null) {
+  if (event) movementPreview.event = event;
+  if (target) movementPreview.target = snapDragPoint(token, target);
   if (movementPreview.frame) cancelAnimationFrame(movementPreview.frame);
   movementPreview.frame = requestAnimationFrame(() => {
     movementPreview.frame = null;
-    updateLiveMovementPreview(token, event);
+    updateLiveMovementPreview(token, movementPreview.event, movementPreview.target);
   });
 }
 
@@ -682,6 +694,8 @@ function beginLiveMovementPreview(token, event) {
   if (!token?.document || token.actor?.type !== "personnage") return;
   movementPreview.token = token;
   movementPreview.origin = { x: Number(token.document.x ?? 0), y: Number(token.document.y ?? 0) };
+  movementPreview.target = null;
+  movementPreview.event = event ?? null;
   movementPreview.active = true;
   scheduleLiveMovementPreview(token, event);
 }
@@ -716,6 +730,24 @@ function installMovementDragPreview() {
     wrapped.__add2eMovementPreview = VERSION;
     wrapped.__add2eMovementPreviewOriginal = original;
     proto[method] = wrapped;
+  }
+
+  const destinationMethod = proto._updateDragDestination;
+  if (typeof destinationMethod === "function" && destinationMethod.__add2eMovementDestinationPreview !== VERSION) {
+    const wrappedDestination = function add2eMovementDestinationPreview(point, ...args) {
+      const result = destinationMethod.call(this, point, ...args);
+      const complete = value => {
+        if (movementPreview.active && movementPreview.token === this) {
+          const target = dragPoint(value) ?? dragPoint(point) ?? liveDragTarget(this, movementPreview.event);
+          if (target) scheduleLiveMovementPreview(this, movementPreview.event, target);
+        }
+        return value;
+      };
+      return result?.then ? result.then(complete) : complete(result);
+    };
+    wrappedDestination.__add2eMovementDestinationPreview = VERSION;
+    wrappedDestination.__add2eMovementDestinationPreviewOriginal = destinationMethod;
+    proto._updateDragDestination = wrappedDestination;
   }
 
   if (!globalThis.__ADD2E_MOVEMENT_PREVIEW_ESCAPE_BOUND__) {
