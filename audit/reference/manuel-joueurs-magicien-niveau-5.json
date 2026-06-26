@@ -6,261 +6,33 @@
     "niveau": 5,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_liste_noms_complete_regles_a_completer",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 24,
   "foundryExport": "audit/decoupage_fichier/magicien-niveau-5.json",
-  "rules": {
-    "included": [
-      "nom du sort",
-      "classe",
-      "niveau",
-      "ordre dans le tableau du Manuel des joueurs",
-      "nombre de sorts attendu",
-      "variantes explicitement nommées dans le Manuel des joueurs",
-      "réversibilité et nom de l’inverse quand le Manuel le donne"
-    ],
-    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis.",
-    "variantes": "Le tableau variantes est vide lorsqu’aucun choix de forme explicitement nommé ne figure dans le Manuel des joueurs.",
-    "reversibilite": "Le champ reversible est toujours booléen. Le champ inverse vaut null lorsque le Manuel indique un sort réversible sans donner de nom distinct à sa forme inverse."
-  },
   "spells": [
-    {
-      "ordre": 1,
-      "nom": "Chien fidèle de Mordenkainen",
-      "niveau": 5,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 2,
-      "nom": "Coffre secret de Léomund",
-      "niveau": 5,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 3,
-      "nom": "Cône de froid",
-      "niveau": 5,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 4,
-      "nom": "Contact d'autres plans",
-      "niveau": 5,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 5,
-      "nom": "Croissance animale",
-      "niveau": 5,
-      "variantes": [],
-      "reversible": true,
-      "inverse": null,
-      "inverseNameStatus": "not_named_in_manual",
-      "reversibilityNote": "Le Manuel indique que le sort est réversible sans nom distinct pour l’inverse.",
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 6,
-      "nom": "Débilité mentale",
-      "niveau": 5,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 7,
-      "nom": "Distorsion des distances",
-      "niveau": 5,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 8,
-      "nom": "Eau aérée",
-      "niveau": 5,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 9,
-      "nom": "Extension II",
-      "niveau": 5,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 10,
-      "nom": "Invocation d'élémental",
-      "niveau": 5,
-      "variantes": [
-        {
-          "id": "air",
-          "nom": "Élémental de l’air"
-        },
-        {
-          "id": "eau",
-          "nom": "Élémental de l’eau"
-        },
-        {
-          "id": "terre",
-          "nom": "Élémental de terre"
-        },
-        {
-          "id": "feu",
-          "nom": "Élémental du feu"
-        }
-      ],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 11,
-      "nom": "Invocation de Monstre III",
-      "niveau": 5,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 12,
-      "nom": "Lithomorphose",
-      "niveau": 5,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 13,
-      "nom": "Main d'interposition de Bigby",
-      "niveau": 5,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 14,
-      "nom": "Métempsycose",
-      "niveau": 5,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 15,
-      "nom": "Mur de fer",
-      "niveau": 5,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 16,
-      "nom": "Mur de force",
-      "niveau": 5,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 17,
-      "nom": "Mur de roc",
-      "niveau": 5,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 18,
-      "nom": "Nécro-animation",
-      "niveau": 5,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 19,
-      "nom": "Nuage létal",
-      "niveau": 5,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 20,
-      "nom": "Paralysie des monstres",
-      "niveau": 5,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 21,
-      "nom": "Passe-muraille",
-      "niveau": 5,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 22,
-      "nom": "Téléikinésie",
-      "niveau": 5,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 23,
-      "nom": "Téléportation",
-      "niveau": 5,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 24,
-      "nom": "Transmutation de pierre en boue",
-      "niveau": 5,
-      "variantes": [],
-      "reversible": true,
-      "inverse": "Transmutation de boue en pierre",
-      "inverseNameStatus": "manual_explicit",
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    }
+    {"ordre":1,"nom":"Chien fidèle de Mordenkainen","ecole":"Conjuration/Appel","niveau":5,"portee":"1\"","duree":"2 rounds/niveau","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"5 segments","jet_sauvegarde":"aucun","description":"Le sort invoque un chien de garde fantomatique visible du seul magicien. Il avertit de toute intrusion importante, détecte notamment l’invisibilité et plusieurs formes d’existence inhabituelles, et attaque de dos comme une créature à 10 dés de vie. Il ne peut être attaqué, mais peut être dissipé ; le magicien doit rester à moins de 3\" du lieu gardé.","composants_materiels_objets":[{"nom":"petit sifflet en argent","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"morceau d’os","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"fil","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":2,"nom":"Coffre secret de Léomund","ecole":"Altération/Conjuration/Appel","niveau":5,"portee":"spéciale","duree":"60 jours","zone_effet":"un coffre d’environ 60 cm x 60 cm x 90 cm","composantes":"V, S, M","temps_incantation":"1 tour","jet_sauvegarde":"aucun","description":"Le magicien transfère sur le plan éthéré un coffre de très grande valeur et sa miniature exacte. Le coffre contient 27 dm³ par niveau ; le rappel reste possible tant que la miniature existe. Passé soixante jours, il risque d’être définitivement perdu et, durant son séjour éthéré, son contenu reste exposé aux rencontres indiquées par le Manuel.","composants_materiels_objets":[{"nom":"grand coffre d’artisanat exceptionnel","quantite":1,"consommation":"non_consomme","cout_po":5000,"source":"Manuel des joueurs","condition":null,"notes":"Coffre d’environ 60 cm x 60 cm x 90 cm, réalisé dans les matériaux décrits par le Manuel."},{"nom":"miniature exacte du coffre","quantite":1,"consommation":"non_consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Doit reproduire exactement le coffre avec les mêmes matériaux ; elle sert à rappeler le coffre."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":3,"nom":"Cône de froid","ecole":"Évocation","niveau":5,"portee":"0","duree":"instantanée","zone_effet":"cône spécial","composantes":"V, S, M","temps_incantation":"5 segments","jet_sauvegarde":"1/2","description":"Un cône de froid part des mains du magicien sur 1/2\" par niveau. Il absorbe la chaleur et inflige 1d4+1 dégâts par niveau ; un jet de protection réussi réduit ces dégâts de moitié.","composants_materiels_objets":[{"nom":"petit cône de verre ou de cristal","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":4,"nom":"Contact d'autres plans","ecole":"Divination","niveau":5,"portee":"0","duree":"spéciale","zone_effet":"spéciale","composantes":"V","temps_incantation":"1 tour","jet_sauvegarde":"aucun","description":"Le magicien envoie son esprit sur un autre plan pour poser des questions à une puissance locale. Le nombre de questions dépend de son niveau ; l’éloignement du plan modifie les chances d’obtenir une réponse connue et exacte, ainsi que les risques de folie ou de mort.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":5,"nom":"Croissance animale","ecole":"Altération","niveau":5,"portee":"6\"","duree":"1 round/niveau","zone_effet":"jusqu’à 8 animaux dans un carré de 2\" x 2\"","composantes":"V, S","temps_incantation":"5 segments","jet_sauvegarde":"aucun","description":"Le sort fonctionne comme la croissance animale de druide, avec les valeurs propres du magicien. Il augmente la taille, les dés de vie et les dégâts des animaux ciblés ; sa forme inverse les réduit dans les mêmes proportions.","composants_materiels_objets":[{"nom":"pincée de poudre d’os","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Composante matérielle explicitement indiquée pour la version de magicien."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":true,"inverse":null,"inverseNameStatus":"not_named_in_manual","reversibilityNote":"Le Manuel indique que le sort est réversible sans nom distinct pour l’inverse."},
+    {"ordre":6,"nom":"Débilité mentale","ecole":"Enchantement/Charme","niveau":5,"portee":"1\"/niveau","duree":"permanente","zone_effet":"une créature","composantes":"V, S, M","temps_incantation":"5 segments","jet_sauvegarde":"annule","description":"À l’exception de ses valeurs propres, le sort fonctionne comme débilité mentale de druide : il réduit durablement l’esprit d’une créature qui lance des sorts, jusqu’à guérison, restauration ou souhait majeur. Les modificateurs de jet de protection dépendent du type de magie de la victime.","composants_materiels_objets":[{"nom":"poignée de petites sphères d’argile, de cristal, de verre ou minérales","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":7,"nom":"Distorsion des distances","ecole":"Altération","niveau":5,"portee":"1\"/niveau","duree":"1 tour/niveau","zone_effet":"900 m²/niveau","composantes":"V, S, M","temps_incantation":"6 segments","jet_sauvegarde":"aucun","description":"Le sort ne peut être lancé qu’en présence d’un élémental de terre préalablement conjuré. Celui-ci réduit les distances de moitié ou les double dans la zone, puis retourne sur son plan à la fin de l’effet. Vision réelle révèle l’élémental et le sort ne fonctionne pas sous l’eau.","composants_materiels_objets":[{"nom":"argile grasse","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":8,"nom":"Eau aérée","ecole":"Altération","niveau":5,"portee":"0","duree":"1 tour/niveau","zone_effet":"sphère de 2\" de diamètre ou hémisphère de 4\" de diamètre","composantes":"V, S, M","temps_incantation":"5 segments","jet_sauvegarde":"aucun","description":"Le sort transforme l’eau et les liquides aqueux en milieu respirable. Le globe se déplace avec le magicien ; les créatures aquatiques le fuient en général et ne peuvent pas y respirer par la seule nage.","composants_materiels_objets":[{"nom":"petite poignée de sels alcalins","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Alternative au bromure.","notes":null,"alternativeGroup":"eau_aeree"},{"nom":"petite poignée de bromure","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Alternative aux sels alcalins.","notes":null,"alternativeGroup":"eau_aeree"}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":9,"nom":"Extension II","ecole":"Altération","niveau":5,"portee":"0","duree":"spéciale","zone_effet":"spéciale","composantes":"V","temps_incantation":"4 segments","jet_sauvegarde":"aucun","description":"Le sort fonctionne comme Extension I, mais il augmente de 50 % la durée d’un sort de niveau 1 à 4. Il doit être lancé dans le délai imposé par Extension I après le sort prolongé.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":10,"nom":"Invocation d'élémental","ecole":"Conjuration/Appel","niveau":5,"portee":"6\"","duree":"1 tour/niveau","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"1 tour","jet_sauvegarde":"aucun","description":"Le sort comporte quatre formes, choisies avant la mémorisation, qui invoquent un élémental d’air, d’eau, de terre ou de feu. Le magicien doit se concentrer pour le contrôler ; il existe un risque récurrent qu’il se retourne contre lui, et un élémental d’eau doit rester près d’une étendue d’eau.","composants_materiels_objets":[{"nom":"encens à brûler","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Variante : élémental de l’air.","notes":null,"alternativeGroup":"invocation_elemental"},{"nom":"eau","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Variante : élémental de l’eau.","notes":"Une grande quantité d’eau doit aussi être dans la portée du sort.","alternativeGroup":"invocation_elemental_eau"},{"nom":"sable","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Variante : élémental de l’eau.","notes":null,"alternativeGroup":"invocation_elemental_eau"},{"nom":"souffre","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Variante : élémental du feu.","notes":"Une grande source de feu doit aussi être dans la portée du sort.","alternativeGroup":"invocation_elemental_feu"},{"nom":"phosphore","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Variante : élémental du feu.","notes":null,"alternativeGroup":"invocation_elemental_feu"},{"nom":"argile","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Variante : élémental de terre.","notes":null,"alternativeGroup":"invocation_elemental"}],"status":"reference_complete_description_normalisee","variantes":[{"id":"air","nom":"Élémental de l’air"},{"id":"eau","nom":"Élémental de l’eau"},{"id":"terre","nom":"Élémental de terre"},{"id":"feu","nom":"Élémental du feu"}],"reversible":false},
+    {"ordre":11,"nom":"Invocation de Monstre III","ecole":"Conjuration/Appel","niveau":5,"portee":"5\"","duree":"4 rounds + 1 round/niveau","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"5 segments","jet_sauvegarde":"aucun","description":"Le sort invoque après 1 à 4 rounds de un à quatre monstres de niveau 3. Les règles générales sont celles d’Invocation de monstres I.","composants_materiels_objets":[{"nom":"petit sac","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Composante reprise d’Invocation de monstres I."},{"nom":"petite bougie","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Pas nécessairement allumée ; composante reprise d’Invocation de monstres I."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":12,"nom":"Lithomorphose","ecole":"Altération","niveau":5,"portee":"au toucher","duree":"permanente","zone_effet":"27 dm³/niveau","composantes":"V, S, M","temps_incantation":"1 round","jet_sauvegarde":"aucun","description":"Le magicien donne une nouvelle forme à un volume de roche, par exemple pour créer une porte ou une issue. Les détails fins restent limités et le volume doit tenir dans la zone d’effet.","composants_materiels_objets":[{"nom":"argile grasse façonnée","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Le magicien lui donne approximativement la forme voulue puis touche la pierre avec cette argile."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":13,"nom":"Main d'interposition de Bigby","ecole":"Évocation","niveau":5,"portee":"1\"/niveau","duree":"1 round/niveau","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"5 segments","jet_sauvegarde":"aucun","description":"Une main magique se place entre le magicien et l’adversaire désigné. Sa taille va de celle d’un humain à celle d’un titan ; elle impose un ralentissement aux créatures légères qui tentent de la pousser et exige des armes magiques pour être détruite.","composants_materiels_objets":[{"nom":"gant","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":14,"nom":"Métempsycose","ecole":"Possession","niveau":5,"portee":"1\"/niveau","duree":"spéciale","zone_effet":"une créature","composantes":"V, S, M","temps_incantation":"1 round","jet_sauvegarde":"spécial","description":"Le magicien place sa force vitale dans un réceptacle et tente de prendre le contrôle du corps d’une victime. La résistance dépend de l’écart d’intelligence et de sagesse ; le réceptacle peut conserver l’esprit du magicien si la possession échoue ou si son corps est détruit.","composants_materiels_objets":[{"nom":"réceptacle spécial : grosse gemme ou cristal","quantite":1,"consommation":"non_consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Le réceptacle doit se trouver dans la portée du sort par rapport au corps du magicien ; sa destruction détruit la force vitale contenue."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":15,"nom":"Mur de fer","ecole":"Évocation","niveau":5,"portee":"1/2\"/niveau","duree":"permanente","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"5 segments","jet_sauvegarde":"aucun","description":"Le sort crée un mur de fer vertical de 6 mm d’épaisseur et 1,35 m² de surface par niveau. Il peut s’insérer dans les structures voisines ; créé sans support, il peut tomber et écraser les créatures sous lui. Il reste sujet à la dissipation et aux altérations normales du fer.","composants_materiels_objets":[{"nom":"petit morceau de plaque de fer","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":16,"nom":"Mur de force","ecole":"Évocation","niveau":5,"portee":"3\"","duree":"1 tour + 1 round/niveau","zone_effet":"1,80 m²/niveau","composantes":"V, S, M","temps_incantation":"5 segments","jet_sauvegarde":"aucun","description":"Le magicien crée une barrière invisible immobile, également façonnable en sphère ou hémisphère. Elle résiste aux attaques et à presque toute magie ; désintégration, baguette d’annulation et sphère d’annihilation peuvent la détruire selon les règles du Manuel.","composants_materiels_objets":[{"nom":"pincée de poudre de diamant","quantite":1,"consommation":"consomme","cout_po":10000,"source":"Manuel des joueurs","condition":null,"notes":"Issue d’une ou plusieurs pierres pour une valeur minimale de 10 000 po."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":17,"nom":"Mur de roc","ecole":"Évocation","niveau":5,"portee":"1/2\"/niveau","duree":"permanente","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"5 segments","jet_sauvegarde":"aucun","description":"Le sort crée un mur de granit qui s’unit aux formations rocheuses proches. Il peut obstruer une ouverture ou former un pont sous les contraintes de volume et de support du Manuel ; il cesse seulement par dissipation, désintégration ou destruction normale.","composants_materiels_objets":[{"nom":"petit bloc de granit","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":18,"nom":"Nécro-animation","ecole":"Nécromancie","niveau":5,"portee":"1\"","duree":"permanente","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"5 rounds","jet_sauvegarde":"aucun","description":"À l’exception de ses valeurs propres, le sort fonctionne comme Nécro-animation de clerc : il anime des squelettes ou zombies à partir de restes humains, qui obéissent jusqu’à leur destruction ou la dissipation de la magie.","composants_materiels_objets":[{"nom":"goutte de sang","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"morceau de chair humaine","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"pincée d’os en poudre","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Alternative à une écharde d’os.","notes":null,"alternativeGroup":"necro_animation"},{"nom":"écharde d’os","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Alternative à une pincée d’os en poudre.","notes":null,"alternativeGroup":"necro_animation"}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":19,"nom":"Nuage létal","ecole":"Évocation","niveau":5,"portee":"1\"","duree":"1 round/niveau","zone_effet":"nuage de 4\" de large, 2\" de haut et 2\" d’épaisseur","composantes":"V, S","temps_incantation":"5 segments","jet_sauvegarde":"spécial","description":"Un nuage vert-jaune toxique s’éloigne du magicien à 1\" par round en suivant le sol. Il tue automatiquement les créatures les plus faibles et force les autres à faire des jets contre le poison ; les survivants qui y restent subissent des dégâts à partir du deuxième round. Les vents et la végétation épaisse le dissipent plus vite.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":20,"nom":"Paralysie des monstres","ecole":"Enchantement/Charme","niveau":5,"portee":"1/2\"/niveau","duree":"1 round/niveau","zone_effet":"une à quatre créatures","composantes":"V, S, M","temps_incantation":"5 segments","jet_sauvegarde":"annule","description":"Le sort immobilise une à quatre créatures dans le champ de vision du magicien. Le jet de protection est moins favorable quand moins de cibles sont visées ; une réussite laisse l’effet de Ralentissement.","composants_materiels_objets":[{"nom":"petite barre de métal","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Une barre est nécessaire par monstre visé.","notes":"Peut avoir la taille d’un clou."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":21,"nom":"Passe-muraille","ecole":"Altération","niveau":5,"portee":"3\"","duree":"6 tours + 1 tour/niveau","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"5 segments","jet_sauvegarde":"aucun","description":"Le sort ouvre dans le bois, le plâtre ou la pierre un passage de 1,50 m de large, 2,40 m de haut et 3 m de profondeur. Des applications successives permettent de traverser une paroi très épaisse.","composants_materiels_objets":[{"nom":"pincée de graines de sésame","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":22,"nom":"Téléikinésie","ecole":"Altération","niveau":5,"portee":"1\"/niveau","duree":"2 rounds + 1 round/niveau","zone_effet":"250 po de poids/niveau","composantes":"V, S","temps_incantation":"5 segments","jet_sauvegarde":"aucun","description":"Le magicien déplace des objets par concentration mentale, horizontalement ou verticalement, jusqu’à la limite de poids. La vitesse double à chaque round jusqu’au maximum indiqué par le Manuel ; les victimes peuvent contrer ce pouvoir en dépassant cette limite de poids ou par certains sorts.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":23,"nom":"Téléportation","ecole":"Évocation","niveau":5,"portee":"au toucher","duree":"instantanée","zone_effet":"spéciale","composantes":"V","temps_incantation":"2 segments","jet_sauvegarde":"aucun","description":"Le magicien se transporte instantanément avec la matière qu’il porte ou touche, sans limite de distance sur le même plan. Le poids transportable dépend de son niveau et la précision dépend de sa connaissance du lieu d’arrivée ; une arrivée trop basse dans un lieu solide est fatale.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":24,"nom":"Transmutation de pierre en boue","ecole":"Altération","niveau":5,"portee":"1\"/niveau","duree":"spéciale","zone_effet":"54 m³/niveau","composantes":"V, S, M","temps_incantation":"5 segments","jet_sauvegarde":"aucun","inverse":"Transmutation de boue en pierre","description":"À l’exception de ses valeurs propres, le sort fonctionne comme la transmutation de pierre en boue de druide. Il transforme un volume de pierre naturelle en boue ; l’inverse retransforme la boue en pierre.","composants_materiels_objets":[{"nom":"eau","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Forme normale : transmutation de pierre en boue.","notes":null,"alternativeGroup":"transmutation_pierre_boue"},{"nom":"argile","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Forme normale : transmutation de pierre en boue.","notes":null,"alternativeGroup":"transmutation_pierre_boue"},{"nom":"eau","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Forme inverse : transmutation de boue en pierre.","notes":null,"alternativeGroup":"transmutation_boue_pierre"},{"nom":"sable","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Forme inverse : transmutation de boue en pierre.","notes":null,"alternativeGroup":"transmutation_boue_pierre"}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":true,"inverseNameStatus":"manual_explicit"}
   ]
 }
