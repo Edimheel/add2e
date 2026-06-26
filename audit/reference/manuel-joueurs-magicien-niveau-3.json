@@ -1,250 +1,32 @@
 {
-  "source": {
-    "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf",
-    "reference": "Manuel des joueurs AD&D 2e",
-    "classe": "magicien",
-    "niveau": 3,
-    "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
-  },
-  "status": "reference_liste_noms_complete_regles_a_completer",
-  "expectedCount": 24,
-  "foundryExport": "audit/decoupage_fichier/magicien-niveau-3.json",
-  "rules": {
-    "included": [
-      "nom du sort",
-      "classe",
-      "niveau",
-      "ordre dans le tableau du Manuel des joueurs",
-      "nombre de sorts attendu",
-      "variantes explicitement nommées dans le Manuel des joueurs",
-      "réversibilité et nom de l’inverse quand le Manuel le donne"
-    ],
-    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis.",
-    "variantes": "Le tableau variantes est vide lorsqu’aucun choix de forme explicitement nommé ne figure dans le Manuel des joueurs.",
-    "reversibilite": "Le champ reversible est toujours booléen. Le champ inverse vaut null lorsque le Manuel indique un sort réversible sans donner de nom distinct à sa forme inverse."
-  },
-  "spells": [
-    {
-      "ordre": 1,
-      "nom": "Boule de feu",
-      "niveau": 3,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 2,
-      "nom": "Catalepsie",
-      "niveau": 3,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 3,
-      "nom": "Chaumière de Léomund",
-      "niveau": 3,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 4,
-      "nom": "Clairaudience",
-      "niveau": 3,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 5,
-      "nom": "Clairvoyance",
-      "niveau": 3,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 6,
-      "nom": "Dissipation de la magie",
-      "niveau": 3,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 7,
-      "nom": "Flèche de feu",
-      "niveau": 3,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 8,
-      "nom": "Force fantasmagorique",
-      "niveau": 3,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 9,
-      "nom": "Foudre",
-      "niveau": 3,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 10,
-      "nom": "Infravision",
-      "niveau": 3,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 11,
-      "nom": "Intermittence",
-      "niveau": 3,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 12,
-      "nom": "Invisibilité sur 3 m",
-      "niveau": 3,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 13,
-      "nom": "Invocation de monstres I",
-      "niveau": 3,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 14,
-      "nom": "Langues",
-      "niveau": 3,
-      "variantes": [],
-      "reversible": true,
-      "inverse": "Incompréhension",
-      "inverseNameStatus": "manual_explicit",
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 15,
-      "nom": "Paralysie",
-      "niveau": 3,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 16,
-      "nom": "Protection contre le mal sur 3 m",
-      "niveau": 3,
-      "variantes": [],
-      "reversible": true,
-      "inverse": "Protection contre le bien sur 3 m",
-      "inverseNameStatus": "manual_explicit",
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 17,
-      "nom": "Protection contre les projectiles normaux",
-      "niveau": 3,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 18,
-      "nom": "Rafale de vent",
-      "niveau": 3,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 19,
-      "nom": "Ralentissement",
-      "niveau": 3,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 20,
-      "nom": "Rapidité",
-      "niveau": 3,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 21,
-      "nom": "Respiration aquatique",
-      "niveau": 3,
-      "variantes": [],
-      "reversible": true,
-      "inverse": "Respiration aérienne",
-      "inverseNameStatus": "manual_explicit",
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 22,
-      "nom": "Runes explosives",
-      "niveau": 3,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 23,
-      "nom": "Suggestion",
-      "niveau": 3,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 24,
-      "nom": "Vol",
-      "niveau": 3,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    }
+  "source":{"document":"AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf","reference":"Manuel des joueurs AD&D 2e","classe":"magicien","niveau":3,"note":"Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."},
+  "status":"reference_complete_description_normalisee",
+  "expectedCount":24,
+  "foundryExport":"audit/decoupage_fichier/magicien-niveau-3.json",
+  "spells":[
+    {"ordre":1,"nom":"Boule de feu","ecole":"Évocation","niveau":3,"portee":"10\" + 1\"/niveau","duree":"instantanée","zone_effet":"boule de 2\" de rayon","composantes":"V, S, M","temps_incantation":"3 segments","jet_sauvegarde":"1/2","description":"Une explosion de flammes inflige 1d6 dégâts par niveau du magicien et prend la forme de l’espace disponible. Elle enflamme les matières inflammables ; une créature qui réussit son jet de protection ne subit que la moitié des dégâts.","composants_materiels_objets":[{"nom":"petite boule de fiente de chauve-souris et de souffre","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":2,"nom":"Catalepsie","ecole":"Nécromancie","niveau":3,"portee":"au toucher","duree":"6 rounds + 1 round/niveau","zone_effet":"créature touchée","composantes":"V, S","temps_incantation":"1 segment","jet_sauvegarde":"aucun","description":"Le magicien ou une créature consentante dont les niveaux ou dés de vie n’excèdent pas les siens prend un état de catalepsie semblable à la mort. Elle entend sans voir ni ressentir, subit moitié dégâts et consomme cent fois moins d’air.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":3,"nom":"Chaumière de Léomund","ecole":"Altération","niveau":3,"portee":"0","duree":"6 tours/niveau","zone_effet":"sphère de 3 m de diamètre","composantes":"V, S, M","temps_incantation":"3 segments","jet_sauvegarde":"aucun","description":"Le sort crée autour du magicien une demi-sphère protectrice opaque de l’extérieur, transparente de l’intérieur, qui maintient la température et résiste au vent. Elle ne protège ni contre armes ni contre sorts et disparaît si le magicien la quitte.","composants_materiels_objets":[{"nom":"petite perle de cristal","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Se brise à la fin du sort ou à la destruction de la chaumière."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":4,"nom":"Clairaudience","ecole":"Divination","niveau":3,"portee":"spéciale","duree":"1 round/niveau","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"3 segments","jet_sauvegarde":"aucun","description":"Le magicien entend mentalement les sons d’une zone de 6\" de rayon autour d’un endroit connu ou évident. La distance n’importe pas, mais les murs de métal ou protections magiques bloquent l’écoute.","composants_materiels_objets":[{"nom":"petite corne d’argent","quantite":1,"consommation":"consomme","cout_po":100,"source":"Manuel des joueurs","condition":null,"notes":"Valeur minimale de 100 po ; disparaît au lancement."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":5,"nom":"Clairvoyance","ecole":"Divination","niveau":3,"portee":"spéciale","duree":"1 round/niveau","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"3 segments","jet_sauvegarde":"aucun","description":"Le magicien voit mentalement un endroit connu ou évident. Dans l’obscurité, la vision se limite à 1\" de rayon ; les parois de métal et protections magiques l’empêchent.","composants_materiels_objets":[{"nom":"pincée de poudre de glande pinéale humaine ou humanoïde","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":6,"nom":"Dissipation de la magie","ecole":"Abjuration","niveau":3,"portee":"12\"","duree":"permanente","zone_effet":"cube de 3\" d’arête","composantes":"V, S","temps_incantation":"3 segments","jet_sauvegarde":"aucun","description":"Excepté ses valeurs propres, ce sort fonctionne comme dissipation de la magie de clerc de niveau 3.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":7,"nom":"Flèche de feu","ecole":"Conjuration/Appel","niveau":3,"portee":"au toucher","duree":"1 segment/niveau","zone_effet":"chaque flèche ou carreau touché","composantes":"V, S, M","temps_incantation":"3 segments","jet_sauvegarde":"aucun","description":"Le magicien peut enflammer une flèche ou un carreau par segment. Le projectile doit être tiré avant le round suivant, sinon les flammes le consument ; il peut enflammer la cible et inflige un dégât supplémentaire aux créatures vulnérables au feu.","composants_materiels_objets":[{"nom":"goutte d’huile","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"petit morceau de silex","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":8,"nom":"Force fantasmagorique","ecole":"Illusion/Fantasme","niveau":3,"portee":"8\" + 1\"/niveau","duree":"spéciale","zone_effet":"72 m² + 9 m²/niveau","composantes":"V, S, M","temps_incantation":"3 segments","jet_sauvegarde":"spécial","description":"Le magicien crée une illusion visuelle capable d’infliger des dégâts aux créatures qui y croient. Elle dure jusqu’à ce qu’elle soit frappée, que le magicien cesse sa concentration ou qu’une créature la démasque par son jet de protection.","composants_materiels_objets":[{"nom":"morceau de toison de mouton","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":9,"nom":"Foudre","ecole":"Évocation","niveau":3,"portee":"4\" + 1\"/niveau","duree":"instantanée","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"3 segments","jet_sauvegarde":"1/2","description":"La décharge inflige 1d6 dégâts par niveau et suit une forme bifide ou simple déterminée par le magicien. Elle peut rebondir sur un obstacle non conducteur et, sous l’eau, devient une sphère de 2\" de rayon.","composants_materiels_objets":[{"nom":"fourrure","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"baguette de verre, cristal ou ambre","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":10,"nom":"Infravision","ecole":"Altération","niveau":3,"portee":"au toucher","duree":"12 tours + 6 tours/niveau","zone_effet":"créature touchée","composantes":"V, S, M","temps_incantation":"1 round","jet_sauvegarde":"aucun","description":"Le destinataire voit les différences de chaleur jusqu’à 6\". Les fortes sources de chaleur gênent cette vision et l’invisibilité demeure indétectable.","composants_materiels_objets":[{"nom":"pincée de poudre de carotte séchée","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Alternative à l’agate.","notes":null,"alternativeGroup":"infravision"},{"nom":"agate","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Alternative à la poudre de carotte séchée.","notes":null,"alternativeGroup":"infravision"}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":11,"nom":"Intermittence","ecole":"Altération","niveau":3,"portee":"0","duree":"1 round/niveau","zone_effet":"personnelle","composantes":"V, S","temps_incantation":"1 segment","jet_sauvegarde":"aucun","description":"Le magicien disparaît et réapparaît aléatoirement sur son plan, au cours de chaque round. Pendant ce déplacement, seules les attaques couvrant une large zone peuvent l’atteindre ; ses autres actions ont 75 % de chance de réussir.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":12,"nom":"Invisibilité sur 3 m","ecole":"Illusion/Fantasme","niveau":3,"portee":"au toucher","duree":"spéciale","zone_effet":"3 m de rayon autour de la créature touchée","composantes":"V, S, M","temps_incantation":"3 segments","jet_sauvegarde":"aucun","description":"Le sort fonctionne comme invisibilité mais affecte les créatures présentes dans le rayon de 3 m au lancement. Quiconque quitte ce rayon redevient visible et l’attaque du destinataire rend visibles toutes les créatures initialement affectées.","composants_materiels_objets":[{"nom":"cil","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Composante reprise du sort invisibilité auquel le Manuel renvoie."},{"nom":"gomme arabique","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Composante reprise du sort invisibilité auquel le Manuel renvoie."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":13,"nom":"Invocation de monstres I","ecole":"Conjuration/Appel","niveau":3,"portee":"3\"","duree":"2 rounds + 1 round/niveau","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"3 segments","jet_sauvegarde":"aucun","description":"Après 1 à 4 rounds, le magicien invoque 2 à 8 monstres de niveau 1 qui combattent ses ennemis ou rendent des services possibles jusqu’à la fin du sort, leur mort ou l’ordre d’arrêt.","composants_materiels_objets":[{"nom":"petit sac","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"petite bougie","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Pas nécessairement allumée."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":14,"nom":"Langues","ecole":"Altération","niveau":3,"portee":"0","duree":"1 round/niveau","zone_effet":"cercle de 6\" de diamètre","composantes":"V, M","temps_incantation":"3 segments","jet_sauvegarde":"aucun","inverse":"Incompréhension","description":"Excepté ses valeurs propres, ce sort fonctionne comme langues de clerc de niveau 4. L’inverse, incompréhension, annule le sort ou rend les conversations incompréhensibles dans la zone.","composants_materiels_objets":[{"nom":"petite statuette d’argile représentant une ziggourat","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Se brise quand l’incantation est prononcée."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":true,"inverseNameStatus":"manual_explicit"},
+    {"ordre":15,"nom":"Paralysie","ecole":"Enchantement/Charme","niveau":3,"portee":"12\"","duree":"2 rounds/niveau","zone_effet":"1 à 4 personnes","composantes":"V","temps_incantation":"3 segments","jet_sauvegarde":"annule","description":"Le sort immobilise de une à quatre personnes désignées. Plus il y a de cibles, moins leur jet de protection est pénalisé ; les personnes affectables sont celles détaillées dans le Manuel.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":16,"nom":"Protection contre le mal sur 3 m","ecole":"Abjuration","niveau":3,"portee":"au toucher","duree":"2 rounds/niveau","zone_effet":"sphère de 3 m de rayon autour de la créature touchée","composantes":"V, S, M","temps_incantation":"3 segments","jet_sauvegarde":"aucun","inverse":"Protection contre le bien sur 3 m","description":"Le sort fonctionne comme protection contre le mal de magicien de niveau 1, mais sa sphère protège toutes les créatures dans un rayon de 3 m autour du destinataire. L’inverse protège contre le bien.","composants_materiels_objets":[{"nom":"poudre de fer","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Utilisée pour tracer le cercle.","notes":null},{"nom":"poudre d’argent","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Utilisée pour tracer le cercle.","notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":true,"inverseNameStatus":"manual_explicit"},
+    {"ordre":17,"nom":"Protection contre les projectiles normaux","ecole":"Abjuration","niveau":3,"portee":"au toucher","duree":"1 round/niveau","zone_effet":"créature touchée","composantes":"V, S, M","temps_incantation":"3 segments","jet_sauvegarde":"aucun","description":"Le destinataire est invulnérable aux projectiles ordinaires et subit un point de moins par dé de dégâts des gros ou magiques projectiles. Le sort ne protège pas contre les attaques magiques.","composants_materiels_objets":[{"nom":"morceau de carapace de tortue","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":18,"nom":"Rafale de vent","ecole":"Altération","niveau":3,"portee":"0","duree":"1 segment","zone_effet":"1\" de large, 1\" de long/niveau","composantes":"V, S, M","temps_incantation":"3 segments","jet_sauvegarde":"aucun","description":"Un fort courant d’air part du magicien, éteint les flammes non protégées, repousse certaines créatures volantes et dissipe notamment nuage puant, nuage létal ou obscurcissement.","composants_materiels_objets":[{"nom":"graine de légume","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":19,"nom":"Ralentissement","ecole":"Altération","niveau":3,"portee":"9\" + 1\"/niveau","duree":"3 rounds + 1 round/niveau","zone_effet":"4\" x 4\", 1 créature/niveau","composantes":"V, S, M","temps_incantation":"3 segments","jet_sauvegarde":"aucun","description":"Les créatures affectées se déplacent et attaquent deux fois moins vite. Le sort annule rapidité et peut affecter autant de créatures que le niveau du magicien dans la zone.","composants_materiels_objets":[{"nom":"goutte de mélasse","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":20,"nom":"Rapidité","ecole":"Altération","niveau":3,"portee":"6\" + 1\"/niveau","duree":"3 rounds + 1 round/niveau","zone_effet":"4\" x 4\", 1 créature/niveau","composantes":"V, S, M","temps_incantation":"3 segments","jet_sauvegarde":"aucun","description":"Les créatures affectées doublent vitesse de déplacement et nombre d’attaques, sans accélérer l’incantation des sorts. Le sort annule ralentissement et vieillit chaque créature affectée d’un an.","composants_materiels_objets":[{"nom":"fragment de racine de réglisse","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":21,"nom":"Respiration aquatique","ecole":"Altération","niveau":3,"portee":"au toucher","duree":"3 tours/niveau","zone_effet":"créature touchée","composantes":"V, S, M","temps_incantation":"3 segments","jet_sauvegarde":"aucun","inverse":"Respiration aérienne","description":"Excepté ses valeurs propres, ce sort fonctionne comme respiration aquatique de druide de niveau 3. L’inverse permet à une créature aquatique de respirer dans l’air.","composants_materiels_objets":[{"nom":"petit roseau ou brin de paille","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":true,"inverseNameStatus":"manual_explicit"},
+    {"ordre":22,"nom":"Runes explosives","ecole":"Altération","niveau":3,"portee":"au toucher","duree":"spéciale","zone_effet":"1\" de rayon","composantes":"V, S","temps_incantation":"3 segments","jet_sauvegarde":"aucun ou 1/2","description":"Les runes placées sur un texte explosent quand un lecteur non autorisé les lit, infligeant 6d4+6 dégâts au lecteur et la moitié aux créatures voisines qui réussissent leur jet. Elles restent actives jusqu’au déclenchement ou à une dissipation de la magie.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":23,"nom":"Suggestion","ecole":"Enchantement/Charme","niveau":3,"portee":"3\"","duree":"6 tours + 6 tours/niveau","zone_effet":"une créature","composantes":"V, M","temps_incantation":"3 segments","jet_sauvegarde":"annule","description":"Le magicien suggère une action raisonnable à une créature capable de comprendre ses paroles. Une suggestion nuisible annule le sort ; les morts-vivants y sont insensibles.","composants_materiels_objets":[{"nom":"langue de serpent","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"miel","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Alternative à l’huile douce.","notes":null,"alternativeGroup":"suggestion"},{"nom":"goutte d’huile douce","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Alternative au miel.","notes":null,"alternativeGroup":"suggestion"}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":24,"nom":"Vol","ecole":"Altération","niveau":3,"portee":"au toucher","duree":"1 tour/niveau + 1d6 tours","zone_effet":"créature touchée","composantes":"V, S, M","temps_incantation":"3 segments","jet_sauvegarde":"aucun","description":"Le destinataire vole à 12\", moitié moins en montée et deux fois plus en descente. Sous l’eau, il se déplace à toute profondeur jusqu’à 9\".","composants_materiels_objets":[{"nom":"plume d’aile d’oiseau","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false}
   ]
 }
