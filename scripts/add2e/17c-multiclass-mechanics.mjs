@@ -1,11 +1,11 @@
-// ADD2E — Mécaniques multiclasses canoniques
-// Les Items classe sont la seule source pour la feuille et les règles.
+// ADD2E — Progression de classe canonique
+// Un monoclasse est une collection d'un Item classe ; un multiclassé en a plusieurs.
 // Compatible Foundry V13/V14/V15.
 
-import { MULTICLASS_VERSION, classItems as coreClassItems, classProgression, classSlug, multiclassEnabled } from "./17b-multiclass-core.mjs";
+import { MULTICLASS_VERSION, classItems as coreClassItems, classProgression, classProgressionUpdate, classSlug } from "./17b-multiclass-core.mjs";
 
-const VERSION = "2026-06-25-item-progression-mechanics-v6";
-const TAG = "[ADD2E][MULTICLASSE][MECA]";
+const VERSION = "2026-06-26-class-item-progression-unified-v1";
+const TAG = "[ADD2E][CLASSE][CANONIQUE]";
 const timers = new Map();
 const THIEF_LABELS = {
   pickpocket: "Faire les poches",
@@ -27,8 +27,16 @@ const n = (value, fallback = 0) => {
   return Number.isFinite(out) ? out : fallback;
 };
 const classes = actor => coreClassItems(actor);
-const isMulti = actor => actor?.type === "personnage" && multiclassEnabled(actor);
+const hasClasses = actor => actor?.type === "personnage" && classes(actor).length > 0;
+const isMulti = actor => hasClasses(actor) && classes(actor).length > 1;
 const keyFor = entry => classSlug(entry?.item) || String(entry?.itemId ?? "");
+
+function same(left, right) {
+  if (left === right) return true;
+  return foundry?.utils?.deepEqual
+    ? foundry.utils.deepEqual(left, right)
+    : JSON.stringify(left) === JSON.stringify(right);
+}
 
 function normalize(value) {
   return String(value ?? "")
@@ -66,13 +74,20 @@ function titleFor(entry) {
     && entry.level <= n(row?.maxLevel ?? row?.niveauMax, 999))?.title ?? "").trim();
 }
 
+function currentXpFor(entry) {
+  const row = progressionRows(entry.item).find(value => n(value?.niveau ?? value?.level, 0) === entry.level)
+    ?? progressionRows(entry.item).filter(value => n(value?.niveau ?? value?.level, 0) <= entry.level).at(-1)
+    ?? null;
+  return parseXpMinimum(row?.xp ?? row?.experience ?? row?.xpRange ?? row?.niveau_xp);
+}
+
 function nextXpFor(entry) {
   const next = progressionRows(entry.item).find(row => n(row?.niveau ?? row?.level, 0) > entry.level);
   return next ? parseXpMinimum(next?.xp ?? next?.experience ?? next?.xpRange ?? next?.niveau_xp) : 0;
 }
 
 function entriesFor(actor) {
-  if (!isMulti(actor)) return [];
+  if (!hasClasses(actor)) return [];
   return classes(actor).flatMap(item => {
     const state = classProgression(item);
     if (!state?.hasLevel || !state?.hasXp) return [];
@@ -84,6 +99,7 @@ function entriesFor(actor) {
       name: item.name,
       slug: classSlug(item),
       title: titleFor(entry),
+      currentXp: currentXpFor(entry),
       nextXp: nextXpFor(entry),
       levelMaxRace: 0
     }];
@@ -105,6 +121,7 @@ function bestSaves(entries) {
 }
 
 function combinedSpellcasting(entries) {
+  if (entries.length === 1) return foundry.utils.deepClone(entries[0].system?.spellcasting ?? null);
   const lists = [...new Set(entries.flatMap(entry => {
     const spellcasting = entry.system?.spellcasting;
     return spellcasting?.enabled === true && Array.isArray(spellcasting.lists) ? spellcasting.lists : [];
@@ -120,74 +137,177 @@ function combinedSpellcasting(entries) {
   } : null;
 }
 
-function applyCompositeProgressionToSheet(actor, data) {
-  const entries = entriesFor(actor);
-  if (!entries.length || !data) return data;
+function progressionLines(entries) {
+  return entries.map(entry => ({
+    itemId: entry.itemId,
+    name: entry.name,
+    slug: entry.slug,
+    level: entry.level,
+    xp: entry.xp,
+    title: entry.title,
+    nextXp: entry.nextXp,
+    levelMaxRace: entry.levelMaxRace
+  }));
+}
 
-  const thac0 = bestThac0(entries);
-  const saves = bestSaves(entries);
+function summaryFromEntries(actor, entries) {
+  if (!entries.length) return null;
+  const multi = entries.length > 1;
   const label = entries.map(entry => entry.name).join(" / ");
   const title = entries.map(entry => `${entry.name} ${entry.level}${entry.title ? ` (${entry.title})` : ""}`).join(" / ");
-  const system = data.actor?.system;
+  const totalXp = multi ? entries.reduce((total, entry) => total + entry.xp, 0) : entries[0].xp;
+  const displayLevel = multi ? Math.max(...entries.map(entry => entry.level)) : entries[0].level;
+  const thac0 = bestThac0(entries);
+  const saves = bestSaves(entries);
+  const nextValues = entries.map(entry => entry.nextXp).filter(value => value > 0);
+  const nextXp = multi ? (nextValues.length ? Math.min(...nextValues) : 0) : entries[0].nextXp;
+  const progress = multi
+    ? entries.map(entry => `${entry.name} ${entry.xp.toLocaleString()}${entry.nextXp ? ` / ${entry.nextXp.toLocaleString()} XP` : " XP"}`).join(" — ")
+    : `${entries[0].xp.toLocaleString()}${entries[0].nextXp ? ` / ${entries[0].nextXp.toLocaleString()} XP` : " XP"}`;
+  const minXp = multi ? Math.min(...entries.map(entry => entry.currentXp)) : entries[0].currentXp;
+  const percent = nextXp > minXp ? Math.max(0, Math.min(100, Math.floor(((totalXp - minXp) / (nextXp - minXp)) * 100))) : 100;
+  const stored = actor.system?.multiclasse && typeof actor.system.multiclasse === "object" ? actor.system.multiclasse : {};
+  const { classes: _legacyClasses, ...metadata } = stored;
 
-  if (system) {
-    system.classe = label;
-    system.details_classe = { label, name: label, multiclass: true, source: "class-items" };
-    system.spellcasting = combinedSpellcasting(entries);
-    system.niveau = Math.max(...entries.map(entry => entry.level));
-    system.xp = entries.reduce((total, entry) => total + entry.xp, 0);
-    system.titre = title;
-    system.progression_xp = entries.map(entry => `${entry.name} ${entry.xp.toLocaleString()}${entry.nextXp ? ` / ${entry.nextXp.toLocaleString()} XP` : " XP"}`).join(" — ");
-    if (thac0 !== null) system.thaco = thac0;
-    if (saves) system.sauvegardes = foundry.utils.deepClone(saves);
-  }
+  return {
+    lines: progressionLines(entries),
+    multi,
+    label,
+    title,
+    thac0,
+    saves,
+    values: {
+      classe: label,
+      details_classe: multi
+        ? { label, name: label, multiclass: true, source: "class-items" }
+        : {
+          ...foundry.utils.deepClone(entries[0].system ?? {}),
+          name: entries[0].name,
+          label: entries[0].system?.label ?? entries[0].name,
+          slug: entries[0].slug,
+          sourceItemId: entries[0].itemId,
+          sourceItemUuid: entries[0].item?.uuid
+        },
+      classe_img: multi ? "" : entries[0].item?.img ?? "",
+      spellcasting: combinedSpellcasting(entries),
+      niveau: displayLevel,
+      niveau_suggere: displayLevel,
+      xp: totalXp,
+      titre: title,
+      progression_xp: progress,
+      xp_next: nextXp,
+      xp_to_next: nextXp ? Math.max(0, nextXp - (multi ? Math.min(...entries.map(entry => entry.xp)) : entries[0].xp)) : 0,
+      xp_percent: percent,
+      multiclasse: {
+        ...metadata,
+        schema: Number(metadata.schema ?? 3) || 3,
+        enabled: multi,
+        mode: multi ? "racial" : "mono",
+        xpSplit: multi ? "equal" : "none",
+        label
+      }
+    }
+  };
+}
 
-  data.multiclass = {
+function applySummaryToView(data, summary) {
+  const system = data?.actor?.system;
+  if (!system || !summary) return data;
+  for (const [key, value] of Object.entries(summary.values)) system[key] = foundry.utils.deepClone(value);
+  if (summary.thac0 !== null) system.thaco = summary.thac0;
+  if (summary.saves) system.sauvegardes = foundry.utils.deepClone(summary.saves);
+
+  data.classProgression = {
     enabled: true,
-    classes: entries.map(entry => ({
-      itemId: entry.itemId,
-      name: entry.name,
-      slug: entry.slug,
-      level: entry.level,
-      xp: entry.xp,
-      title: entry.title,
-      nextXp: entry.nextXp,
-      levelMaxRace: entry.levelMaxRace
-    })),
-    title
+    isMulticlass: summary.multi,
+    classes: summary.lines,
+    title: summary.title
+  };
+  data.multiclass = {
+    enabled: summary.multi,
+    classes: summary.lines,
+    title: summary.title
   };
 
-  const progression = { ...(data.progressionCourante ?? {}), title, _add2eMulticlassComposite: true };
-  if (thac0 !== null) {
-    progression.thac0 = thac0;
-    progression.thaco = thac0;
+  const first = summary.lines[0];
+  const progression = summary.multi
+    ? { ...(data.progressionCourante ?? {}), title: summary.title, _add2eMulticlassComposite: true }
+    : foundry.utils.deepClone(entriesFor(data.document ?? data.actor)?.[0]?.row ?? data.progressionCourante ?? {});
+  progression.title = summary.multi ? summary.title : first?.title ?? progression.title ?? "";
+  if (summary.thac0 !== null) {
+    progression.thac0 = summary.thac0;
+    progression.thaco = summary.thac0;
   }
-  if (saves) {
-    progression.savingThrows = foundry.utils.deepClone(saves);
-    progression.sauvegardes = foundry.utils.deepClone(saves);
+  if (summary.saves) {
+    progression.savingThrows = foundry.utils.deepClone(summary.saves);
+    progression.sauvegardes = foundry.utils.deepClone(summary.saves);
   }
   data.progressionCourante = progression;
-
-  if (data.combatDefense && thac0 !== null) data.combatDefense.thaco = thac0;
-  data.canExceptionalStrength = Number(system?.force ?? actor.system?.force) === 18
-    && entries.some(entry => ["guerrier", "paladin", "rodeur", "ranger"].includes(entry.slug));
+  if (data.combatDefense && summary.thac0 !== null) data.combatDefense.thaco = summary.thac0;
+  data.canExceptionalStrength = Number(system.force ?? 0) === 18
+    && summary.lines.some(entry => ["guerrier", "paladin", "rodeur", "ranger"].includes(entry.slug));
   return data;
 }
 
-async function syncCombat(actor, reason = "multiclass-combat-summary") {
+function applyClassProgressionToSheet(actor, data) {
   const entries = entriesFor(actor);
-  if (!entries.length) return false;
+  if (!entries.length || !data) return data;
+  return applySummaryToView(data, summaryFromEntries(actor, entries));
+}
+
+async function ensureCanonicalClassProgression(actor) {
+  if (!hasClasses(actor)) return false;
+  const docs = classes(actor);
+  const missing = docs.filter(item => {
+    const state = classProgression(item);
+    return !state.hasLevel || !state.hasXp;
+  });
+  if (!missing.length) return true;
+
+  if (docs.length > 1) {
+    const migrate = globalThis.add2eMigrateLegacyMulticlassActor;
+    const result = typeof migrate === "function" ? await migrate(actor) : null;
+    return result?.ok === true;
+  }
+
+  const classDoc = docs[0];
+  const update = classProgressionUpdate(classDoc, {
+    level: Math.max(1, Math.floor(n(actor.system?.niveau, 1))),
+    xp: Math.max(0, Math.floor(n(actor.system?.xp, 0)))
+  });
+  if (!update) return false;
+  await actor.updateEmbeddedDocuments("Item", [update], {
+    add2eInternal: true,
+    add2eMulticlassInternal: true,
+    add2eReason: "single-class-item-progression-migration"
+  });
+  return true;
+}
+
+async function syncClassProgressionSummary(actor, { reason = "class-item-progression-summary" } = {}) {
+  if (!(await ensureCanonicalClassProgression(actor))) return false;
+  const entries = entriesFor(actor);
+  const summary = summaryFromEntries(actor, entries);
+  if (!summary) return false;
   const updates = {};
-  const thac0 = bestThac0(entries);
-  const saves = bestSaves(entries);
-  if (thac0 !== null) updates["system.thaco"] = thac0;
-  if (saves) updates["system.sauvegardes"] = saves;
-  if (!Object.keys(updates).length) return false;
-  await actor.update(updates, { add2eInternal: true, add2eMulticlassInternal: true, add2eReason: reason, render: false });
+  for (const [key, value] of Object.entries(summary.values)) {
+    const path = `system.${key}`;
+    if (!same(foundry.utils.getProperty(actor, path), value)) updates[path] = value;
+  }
+  if (summary.thac0 !== null && Number(actor.system?.thaco) !== summary.thac0) updates["system.thaco"] = summary.thac0;
+  if (summary.saves && !same(actor.system?.sauvegardes, summary.saves)) updates["system.sauvegardes"] = summary.saves;
+  if (!Object.keys(updates).length) return true;
+  await actor.update(updates, {
+    add2eInternal: true,
+    add2eMulticlassInternal: true,
+    add2eReason: reason,
+    render: false
+  });
   return true;
 }
 
 async function syncHp(actor, { syncCurrent = false, force = false, reason = "multiclass-item-progression" } = {}) {
+  if (!isMulti(actor)) return false;
   const entries = entriesFor(actor);
   if (!entries.length) return false;
   const rolls = Array.isArray(actor.system?.hpRollsMulticlass) && !force ? foundry.utils.deepClone(actor.system.hpRollsMulticlass) : [];
@@ -300,11 +420,11 @@ function installDirectThiefReaders() {
   globalThis.add2eThiefClassLevel = actor => thiefProgression(actor)?.level ?? null;
 }
 
-function bindDirectMulticlassFields(sheet) {
+function bindDirectClassFields(sheet) {
   const actor = sheet?.document ?? sheet?.actor;
   const root = sheet?.element?.jquery ? sheet.element[0] : sheet?.element;
-  if (!actor || !isMulti(actor) || !root?.addEventListener || root.dataset.add2eMulticlassFieldsV2 === VERSION) return;
-  root.dataset.add2eMulticlassFieldsV2 = VERSION;
+  if (!actor || !hasClasses(actor) || !root?.addEventListener || root.dataset.add2eClassProgressionFields === VERSION) return;
+  root.dataset.add2eClassProgressionFields = VERSION;
   root.addEventListener("change", event => {
     const input = event.target?.closest?.("input[data-class-progression-field]");
     if (!input || !root.contains(input)) return;
@@ -313,7 +433,7 @@ function bindDirectMulticlassFields(sheet) {
     event.stopImmediatePropagation?.();
     const sync = globalThis.add2eMulticlassDirectFieldSync;
     if (typeof sync !== "function") {
-      ui.notifications?.error?.("Le gestionnaire de progression multiclasses est indisponible.");
+      ui.notifications?.error?.("Le gestionnaire de progression de classe est indisponible.");
       return;
     }
     sync(sheet, input).catch(error => console.warn(`${TAG}[DIRECT_FIELD_ERROR]`, error));
@@ -321,14 +441,14 @@ function bindDirectMulticlassFields(sheet) {
 }
 
 function queue(actor, reason) {
-  if (!isMulti(actor)) return;
+  if (!hasClasses(actor)) return;
   const id = String(actor.uuid ?? actor.id);
   clearTimeout(timers.get(id));
   timers.set(id, setTimeout(async () => {
     timers.delete(id);
     try {
-      await syncCombat(actor, `${reason}:combat`);
-      await syncHp(actor, { reason: `${reason}:hp` });
+      await syncClassProgressionSummary(actor, { reason: `${reason}:summary` });
+      if (isMulti(actor)) await syncHp(actor, { reason: `${reason}:hp` });
     } catch (error) {
       console.warn(`${TAG}[SYNC_ERROR]`, { actor: actor?.name, error });
     }
@@ -337,48 +457,60 @@ function queue(actor, reason) {
 
 function installSheetPatch() {
   const proto = globalThis.Add2eActorSheet?.prototype;
-  if (!proto || proto.__add2eMulticlassMechanicsPatch === VERSION) return;
+  if (!proto || proto.__add2eClassProgressionPatch === VERSION) return;
 
   if (typeof proto.autoSetPointsDeCoup === "function" && !proto.__add2eOriginalAutoSetPointsDeCoup) {
     proto.__add2eOriginalAutoSetPointsDeCoup = proto.autoSetPointsDeCoup;
-    proto.autoSetPointsDeCoup = async function add2eMulticlassHp(options = {}) {
+    proto.autoSetPointsDeCoup = async function add2eClassItemHp(options = {}) {
       const actor = this.document ?? this.actor;
       return isMulti(actor) ? syncHp(actor, options) : this.__add2eOriginalAutoSetPointsDeCoup(options);
     };
   }
 
-  if (typeof proto.getData === "function" && !proto.__add2eOriginalMulticlassMechanicsGetData) {
-    proto.__add2eOriginalMulticlassMechanicsGetData = proto.getData;
-    proto.getData = async function add2eMulticlassCompositeSheetData(...args) {
-      const data = await this.__add2eOriginalMulticlassMechanicsGetData.apply(this, args);
-      const actor = this.document ?? this.actor;
-      return isMulti(actor) ? applyCompositeProgressionToSheet(actor, data) : data;
+  if (typeof proto.getData === "function" && !proto.__add2eOriginalClassProgressionGetData) {
+    proto.__add2eOriginalClassProgressionGetData = proto.getData;
+    proto.getData = async function add2eClassProgressionSheetData(...args) {
+      const data = await this.__add2eOriginalClassProgressionGetData.apply(this, args);
+      return applyClassProgressionToSheet(this.document ?? this.actor, data);
     };
   }
 
-  if (typeof proto._onRender === "function" && !proto.__add2eOriginalMulticlassMechanicsOnRender) {
-    proto.__add2eOriginalMulticlassMechanicsOnRender = proto._onRender;
-    proto._onRender = async function add2eMulticlassOnRender(...args) {
-      const result = await this.__add2eOriginalMulticlassMechanicsOnRender.apply(this, args);
-      bindDirectMulticlassFields(this);
+  if (typeof proto._onRender === "function" && !proto.__add2eOriginalClassProgressionOnRender) {
+    proto.__add2eOriginalClassProgressionOnRender = proto._onRender;
+    proto._onRender = async function add2eClassProgressionOnRender(...args) {
+      const result = await this.__add2eOriginalClassProgressionOnRender.apply(this, args);
+      bindDirectClassFields(this);
       return result;
     };
   }
 
-  proto.__add2eMulticlassMechanicsPatch = VERSION;
+  proto.__add2eClassProgressionPatch = VERSION;
 }
 
 globalThis.add2eSyncMulticlassHp = syncHp;
-globalThis.add2eSyncMulticlassCombatSummary = (actor, options = {}) => syncCombat(actor, options.reason);
+globalThis.add2eSyncMulticlassCombatSummary = (actor, options = {}) => syncClassProgressionSummary(actor, options);
 globalThis.add2eMulticlassClassEntries = entriesFor;
-globalThis.add2eApplyMulticlassProgressionToSheet = applyCompositeProgressionToSheet;
-globalThis.add2eBindDirectMulticlassFields = bindDirectMulticlassFields;
+globalThis.add2eApplyMulticlassProgressionToSheet = applyClassProgressionToSheet;
+globalThis.add2eApplyClassProgressionToSheet = applyClassProgressionToSheet;
+globalThis.add2eSyncClassProgressionSummary = syncClassProgressionSummary;
+globalThis.add2eEnsureCanonicalClassProgression = ensureCanonicalClassProgression;
+globalThis.add2eBindDirectMulticlassFields = bindDirectClassFields;
 
 installDirectThiefReaders();
 Hooks.once("init", installSheetPatch);
-Hooks.once("ready", () => {
+Hooks.once("ready", async () => {
   installSheetPatch();
   window.setTimeout(installDirectThiefReaders, 25);
+  if (!game.user?.isGM) return;
+  for (const actor of game.actors?.filter(entry => entry.type === "personnage" && classes(entry).length) ?? []) {
+    try {
+      await ensureCanonicalClassProgression(actor);
+      await syncClassProgressionSummary(actor, { reason: "class-item-progression-ready" });
+      if (isMulti(actor)) await syncHp(actor, { reason: "class-item-progression-ready-hp" });
+    } catch (error) {
+      console.warn(`${TAG}[READY_SYNC_ERROR]`, { actor: actor?.name, error });
+    }
+  }
 });
 setTimeout(installSheetPatch, 0);
 Hooks.on("createItem", item => { if (String(item?.type ?? "").toLowerCase() === "classe") queue(item.parent, "create-class-item"); });
