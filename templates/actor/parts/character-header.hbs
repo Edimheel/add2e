@@ -14,8 +14,8 @@
         </div>
 
         <div class="a2e-id-grid">
-          {{#if multiclass.enabled}}
-            <div class="a2e-field a2e-multiclass-field">
+          {{#if classProgression.enabled}}
+            <div class="a2e-field a2e-class-progression-field">
               <label>Classe</label>
               <input type="text" value="{{actor.system.classe}}" readonly title="{{actor.system.classe}}">
             </div>
@@ -31,15 +31,15 @@
             <input type="text" name="system.race" value="{{actor.system.race}}">
           </div>
 
-          {{#if multiclass.enabled}}
-            <div class="a2e-field a2e-multiclass-field">
+          {{#if classProgression.enabled}}
+            <div class="a2e-field a2e-class-progression-field">
               <label>Niveau</label>
               <div class="a2e-multiclass-rows" style="display:grid;gap:3px;">
-                {{#each multiclass.classes as |cls|}}
+                {{#each classProgression.classes as |cls|}}
                   <div class="a2e-multiclass-row" style="display:grid;grid-template-columns:minmax(54px,.9fr) minmax(44px,1fr);gap:4px;align-items:center;">
                     <span title="{{cls.name}}" style="font-size:.78em;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{cls.name}}</span>
                     <input type="number"
-                           name="add2e.multiclass.{{cls.itemId}}.level"
+                           name="{{#if ../classProgression.isMulticlass}}add2e.classProgression.{{cls.itemId}}.level{{else}}system.niveau{{/if}}"
                            value="{{cls.level}}"
                            data-class-id="{{cls.itemId}}"
                            data-class-progression-field="level"
@@ -57,15 +57,15 @@
             </div>
           {{/if}}
 
-          {{#if multiclass.enabled}}
-            <div class="a2e-field a2e-xp-field a2e-multiclass-field">
+          {{#if classProgression.enabled}}
+            <div class="a2e-field a2e-xp-field a2e-class-progression-field">
               <label>XP</label>
               <div class="a2e-multiclass-rows" style="display:grid;gap:3px;">
-                {{#each multiclass.classes as |cls|}}
+                {{#each classProgression.classes as |cls|}}
                   <div class="a2e-multiclass-row" style="display:grid;grid-template-columns:minmax(54px,.9fr) minmax(70px,1fr);gap:4px;align-items:center;">
                     <span title="{{cls.name}}" style="font-size:.78em;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{cls.name}}</span>
                     <input type="number"
-                           name="add2e.multiclass.{{cls.itemId}}.xp"
+                           name="{{#if ../classProgression.isMulticlass}}add2e.classProgression.{{cls.itemId}}.xp{{else}}system.xp{{/if}}"
                            value="{{cls.xp}}"
                            data-class-id="{{cls.itemId}}"
                            data-class-progression-field="xp"
@@ -86,10 +86,10 @@
             </div>
           {{/if}}
 
-          {{#if multiclass.enabled}}
-            <div class="a2e-field a2e-multiclass-field">
+          {{#if classProgression.enabled}}
+            <div class="a2e-field a2e-class-progression-field">
               <label>Titre</label>
-              <input type="text" value="{{multiclass.title}}" readonly title="{{multiclass.title}}">
+              <input type="text" value="{{classProgression.title}}" readonly title="{{classProgression.title}}">
             </div>
           {{else}}
             <div class="a2e-field">
@@ -129,7 +129,7 @@
 
           <div class="a2e-field">
             <label>THAC0</label>
-            <input type="text" value="{{add2eBestThaco actor combatDefense.thaco}}" readonly title="Meilleur THAC0 parmi les classes actives du multiclassage.">
+            <input type="text" value="{{add2eBestThaco actor combatDefense.thaco}}" readonly title="Meilleur THAC0 parmi les classes actives.">
           </div>
 
         </div>
