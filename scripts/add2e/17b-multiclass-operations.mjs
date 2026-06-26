@@ -39,6 +39,7 @@ import { dialogAlert } from "./17b-multiclass-dialogs.mjs";
 
 const migrationLocks = new Set();
 const migrationWarnings = new Set();
+const ARCANE_LEARNED_SPELL_LISTS = new Set(["magicien", "illusionniste"]);
 
 function itemIds(items) {
   return (items ?? []).map(item => item?.id).filter(Boolean);
@@ -87,12 +88,126 @@ function effectBelongsToRemovedClass(effect, keys) {
     || (sourceSlug && keys.slugs.has(sourceSlug));
 }
 
-/** Ne supprime que les sorts et effets explicitement liés à la classe retirée. */
+function spellListValues(value) {
+  if (value === undefined || value === null || value === "") return [];
+  if (Array.isArray(value)) return value.flatMap(spellListValues);
+  if (typeof value === "string") return value.split(/[,;|\n]+/).map(entry => entry.trim()).filter(Boolean);
+  if (typeof value === "object") {
+    for (const key of ["spellLists", "lists", "classes", "classe", "class", "liste", "list", "value", "values", "items"]) {
+      if (value[key] !== undefined) return spellListValues(value[key]);
+    }
+  }
+  return [value];
+}
+
+function normalizeSpellList(value) {
+  const aliases = {
+    cleric: "clerc", priest: "clerc", pretre: "clerc", paladin: "clerc",
+    druid: "druide",
+    wizard: "magicien", mage: "magicien", magician: "magicien", magic_user: "magicien",
+    illusionist: "illusionniste"
+  };
+  const key = typeof globalThis.add2eNormalizeSpellKey === "function"
+    ? globalThis.add2eNormalizeSpellKey(value)
+    : norm(value);
+  return aliases[key] ?? key;
+}
+
+function spellListsForClass(classDoc) {
+  const system = classDoc?.system ?? {};
+  let casting = system.spellcasting;
+  if (typeof casting === "string") {
+    try { casting = JSON.parse(casting); }
+    catch (_error) { casting = {}; }
+  }
+  const lists = [
+    system.spellLists, system.lists, system.listeSorts, system.liste_sorts,
+    casting?.lists, casting?.spellLists, casting?.list, casting?.classes
+  ].flatMap(spellListValues).map(normalizeSpellList).filter(Boolean);
+  const slug = normalizeSpellList(classSlug(classDoc));
+  if (ARCANE_LEARNED_SPELL_LISTS.has(slug)) lists.push(slug);
+  return new Set(lists);
+}
+
+function spellListsForItem(item) {
+  const system = item?.system ?? {};
+  const flags = item?.flags?.add2e ?? {};
+  return new Set([
+    system.spellLists, system.lists, system.classes, system.classe, system.class, system.liste,
+    flags.learnedSpellLists, flags.knownSpellLists, flags.spellListsResolved
+  ].flatMap(spellListValues).map(normalizeSpellList).filter(Boolean));
+}
+
+function isRegularSpellItem(item) {
+  if (String(item?.type ?? "").toLowerCase() !== "sort") return false;
+  if (typeof globalThis.add2eIsRegularPreparableSpell === "function") {
+    return globalThis.add2eIsRegularPreparableSpell(item) === true;
+  }
+  const system = item?.system ?? {};
+  const flags = item?.flags?.add2e ?? {};
+  return !(system.isPower === true
+    || system.isObjectPower === true
+    || system.isCapacity === true
+    || system.isCapacite === true
+    || system.usageType === "classFeature"
+    || system.sourceWeaponId
+    || system.sourceCapacite
+    || system.sourceFeature
+    || flags.sourceType === "objet_magique"
+    || flags.sourceType === "capacite"
+    || flags.sourceType === "capacity");
+}
+
+function remainingClassesAfterRemoval(actor, removedDocs) {
+  const removedIds = new Set(itemIds(removedDocs).map(String));
+  return classItems(actor).filter(doc => !removedIds.has(String(doc?.id ?? "")));
+}
+
+function activeSpellListsForClasses(classDocs) {
+  const lists = new Set();
+  for (const classDoc of classDocs ?? []) {
+    for (const list of spellListsForClass(classDoc)) lists.add(list);
+  }
+  return lists;
+}
+
+function arcaneListsToPurge(actor, removedDocs) {
+  const removedLists = activeSpellListsForClasses(removedDocs);
+  const retainedLists = activeSpellListsForClasses(remainingClassesAfterRemoval(actor, removedDocs));
+  return {
+    retainedLists,
+    purgeLists: new Set([...removedLists].filter(list => ARCANE_LEARNED_SPELL_LISTS.has(list) && !retainedLists.has(list)))
+  };
+}
+
+function spellStillAccessibleFromRetainedClass(item, retainedLists) {
+  return [...spellListsForItem(item)].some(list => retainedLists.has(list));
+}
+
+function isLearnedArcaneSpellRemovedWithClass(item, purgeLists, retainedLists) {
+  if (!isRegularSpellItem(item) || !purgeLists.size) return false;
+  if (spellStillAccessibleFromRetainedClass(item, retainedLists)) return false;
+  return [...spellListsForItem(item)].some(list => purgeLists.has(list));
+}
+
+/**
+ * Supprime les effets source-liés à la classe retirée, puis les sorts réguliers
+ * Magicien/Illusionniste que le personnage ne peut plus utiliser. Les pouvoirs
+ * d'objets, capacités et sorts encore disponibles depuis une classe conservée
+ * restent intacts.
+ */
 async function purgeClassBoundContent(actor, classDocs, reason) {
-  if (!actor || !classDocs?.length) return { spells: 0, effects: 0 };
+  if (!actor || !classDocs?.length) return { spells: 0, effects: 0, arcaneLists: [] };
   const keys = sourceClassKeys(classDocs);
+  const { retainedLists, purgeLists } = arcaneListsToPurge(actor, classDocs);
   const spellIds = actor.items
-    .filter(item => String(item?.type ?? "").toLowerCase() === "sort" && itemBelongsToRemovedClass(item, keys))
+    .filter(item => {
+      if (String(item?.type ?? "").toLowerCase() !== "sort") return false;
+      const sourceBound = itemBelongsToRemovedClass(item, keys);
+      const retained = isRegularSpellItem(item) && spellStillAccessibleFromRetainedClass(item, retainedLists);
+      if (sourceBound && !retained) return true;
+      return isLearnedArcaneSpellRemovedWithClass(item, purgeLists, retainedLists);
+    })
     .map(item => item.id)
     .filter(Boolean);
   const effectIds = actor.effects
@@ -114,7 +229,7 @@ async function purgeClassBoundContent(actor, classDocs, reason) {
       add2eReason: reason
     });
   }
-  return { spells: spellIds.length, effects: effectIds.length };
+  return { spells: spellIds.length, effects: effectIds.length, arcaneLists: [...purgeLists] };
 }
 
 function normalizeProgression(classDoc, state, raceData) {
