@@ -63,3 +63,370 @@ form.application.add2e.sheet.actor.personnage {
 .application.add2e.sheet.actor.personnage .add2e-character-v3 .sheet-body .a2e-tab-content.active {
   display: block !important;
 }
+
+/* ADD2E — En-tête personnage ApplicationV2 : identité, progression, combat */
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-summary-header,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-summary-header {
+  display: grid;
+  grid-template-columns: 124px minmax(0, 1fr);
+  gap: 14px;
+  align-items: stretch;
+  padding: 12px;
+  border: 1px solid #c69d42;
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 0 0, rgba(255,255,255,.62), transparent 28%),
+    linear-gradient(135deg, rgba(255,250,232,.98), rgba(243,226,172,.92));
+  box-shadow: 0 3px 10px rgba(80, 58, 10, .15);
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-summary-portrait,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-summary-portrait {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-summary-portrait .a2e-portrait,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-summary-portrait .a2e-portrait {
+  width: 124px;
+  height: 124px;
+  margin: 0;
+  border: 2px solid #705015;
+  border-radius: 11px;
+  box-shadow: 0 3px 8px rgba(33, 20, 3, .34);
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-summary-main,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-summary-main {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-summary-identity,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-summary-identity {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 230px);
+  gap: 12px;
+  align-items: end;
+  min-width: 0;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-summary-name-wrap,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-summary-name-wrap,
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-summary-player,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-summary-player {
+  min-width: 0;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-summary-kicker,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-summary-kicker,
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-summary-player label,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-summary-player label {
+  display: block;
+  margin: 0 0 3px;
+  color: #6f4b12;
+  font-size: .72rem;
+  font-weight: 900;
+  letter-spacing: .055em;
+  text-transform: uppercase;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-summary-name-wrap .a2e-name,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-summary-name-wrap .a2e-name {
+  width: 100%;
+  min-height: 38px;
+  padding: 0 5px 4px;
+  border: 0;
+  border-bottom: 2px solid #b88924;
+  border-radius: 0;
+  background: transparent;
+  color: #43260d;
+  font-size: 1.82rem;
+  font-weight: 900;
+  line-height: 1.05;
+  box-shadow: none;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-summary-player input,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-summary-player input {
+  min-height: 33px;
+  padding: 4px 8px;
+  border-color: #d1ad5b;
+  background: rgba(255,253,244,.88);
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-progression-card,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-progression-card {
+  overflow: hidden;
+  border: 1px solid #d1ad5b;
+  border-radius: 10px;
+  background: rgba(255,253,244,.9);
+  min-width: 0;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-progression-card-heading,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-progression-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 26px;
+  padding: 4px 10px;
+  border-bottom: 1px solid #dfc87e;
+  background: linear-gradient(90deg, rgba(234,217,157,.96), rgba(255,247,218,.72));
+  color: #65420e;
+  font-size: .76rem;
+  font-weight: 900;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-progression-status,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-progression-status {
+  padding: 2px 7px;
+  border: 1px solid #a77d21;
+  border-radius: 99px;
+  background: rgba(255,248,214,.84);
+  color: #765213;
+  font-size: .67rem;
+  letter-spacing: .03em;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-progression-overview,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-progression-overview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(148px, .34fr);
+  gap: 8px;
+  padding: 7px 10px;
+  border-bottom: 1px solid #ead9a1;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-progression-overview-field,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-progression-overview-field {
+  min-width: 0;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-progression-overview-field label,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-progression-overview-field label,
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-combat-stat label,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-combat-stat label {
+  display: block;
+  margin: 0 0 2px;
+  color: #765213;
+  font-size: .7rem;
+  font-weight: 900;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-progression-overview-field input,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-progression-overview-field input {
+  min-width: 0;
+  min-height: 30px;
+  padding: 4px 8px;
+  border-color: #d7ba6b;
+  background: rgba(255,254,248,.96);
+  font-weight: 700;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-progression-class-input[readonly],
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-progression-class-input[readonly] {
+  border-color: #dfc77d;
+  background: linear-gradient(90deg, #f7edd1, #fffaf0);
+  color: #4f3510;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-progression-matrix,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-progression-matrix {
+  display: grid;
+  min-width: 0;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-progression-row,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-progression-row {
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr);
+  align-items: center;
+  min-height: 38px;
+  border-bottom: 1px solid #eee0b2;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-progression-row:last-child,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-progression-row:last-child {
+  border-bottom: 0;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-progression-row-label,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-progression-row-label {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-right: 1px solid #eee0b2;
+  background: rgba(249,241,211,.6);
+  color: #72501a;
+  font-size: .76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-progression-values,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-progression-values {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  padding: 4px 10px;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-progression-input,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-progression-input {
+  flex: 0 1 116px;
+  width: auto;
+  min-width: 48px;
+  min-height: 28px;
+  padding: 3px 5px;
+  border-color: #d8bd73;
+  background: #fffdf7;
+  color: #352208;
+  font-weight: 800;
+  text-align: center;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-progression-level-input,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-progression-level-input {
+  max-width: 76px;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-progression-separator,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-progression-separator {
+  flex: 0 0 auto;
+  color: #80591b;
+  font-size: 1.05rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-progression-title-row,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-progression-title-row {
+  min-height: 40px;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-progression-title-values,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-progression-title-values {
+  gap: 9px;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-progression-title,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-progression-title {
+  flex: 0 1 220px;
+  min-width: 0;
+  overflow: hidden;
+  color: #5b3a09;
+  font-size: .98rem;
+  font-weight: 900;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-progression-xp-single .a2e-icon-btn,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-progression-xp-single .a2e-icon-btn {
+  flex: 0 0 29px;
+  width: 29px;
+  min-width: 29px;
+  height: 28px;
+  padding: 0;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-combat-strip,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-combat-strip {
+  display: grid;
+  grid-template-columns: minmax(154px, 1.45fr) minmax(66px, .65fr) minmax(82px, .8fr) minmax(95px, .9fr) minmax(150px, 1.25fr);
+  overflow: hidden;
+  min-width: 0;
+  border: 1px solid #d1ad5b;
+  border-radius: 10px;
+  background: rgba(255,253,244,.88);
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-combat-stat,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-combat-stat {
+  min-width: 0;
+  padding: 6px 9px;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-combat-stat + .a2e-combat-stat,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-combat-stat + .a2e-combat-stat {
+  border-left: 1px solid #ead9a1;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-combat-stat > input,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-combat-stat > input,
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-combat-stat > select,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-combat-stat > select {
+  width: 100%;
+  min-width: 0;
+  min-height: 27px;
+  padding: 2px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #352208;
+  font-weight: 800;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-combat-stat > select,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-combat-stat > select {
+  padding-right: 16px;
+  cursor: pointer;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-combat-pv-values,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-combat-pv-values {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 12px minmax(0, 1fr);
+  gap: 3px;
+  align-items: center;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-combat-pv-values > span,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-combat-pv-values > span {
+  color: #80591b;
+  font-weight: 900;
+  text-align: center;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-combat-pv-values input,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-combat-pv-values input {
+  width: 100%;
+  min-width: 0;
+  min-height: 27px;
+  padding: 2px 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #352208;
+  font-weight: 900;
+  text-align: center;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-combat-pv-values .pv-courant,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-combat-pv-values .pv-courant {
+  color: #8c261d;
+}
+
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-progression-input:focus,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-progression-input:focus,
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-combat-stat input:focus,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-combat-stat input:focus,
+.application.add2e-character-v2-app .add2e-character-v3 .a2e-combat-stat select:focus,
+.application.add2e.sheet.actor.personnage .add2e-character-v3 .a2e-combat-stat select:focus {
+  outline: 2px solid rgba(184,137,36,.52);
+  outline-offset: 1px;
+}
