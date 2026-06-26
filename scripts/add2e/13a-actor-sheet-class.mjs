@@ -2,7 +2,7 @@
 // Feuille personnage ADD2E full ApplicationV2 : aucun héritage appv1, aucun pont ActorSheet.
 // Le contexte rendu utilise une vue isolée du système de l'acteur.
 
-const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-06-25-application-v2-isolated-context-v9";
+const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-06-26-application-v2-class-bound-spells-v10";
 const ADD2E_ACTOR_SHEET_V2_CSS_ID = "add2e-application-v2-character-sheet-css";
 const ADD2E_ACTOR_SHEET_V2_CSS_PATH = "systems/add2e/styles/application-v2-character-sheet.css";
 
@@ -61,12 +61,93 @@ function add2eBuildActorSheetView(actor) {
   };
 }
 
+function add2eNormalizeSpellListForSheet(value) {
+  if (typeof globalThis.add2eNormalizeSpellKey === "function") return globalThis.add2eNormalizeSpellKey(value);
+  return String(value ?? "").trim().toLowerCase().normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+}
+
+function add2eSpellSourcesForSheet(entry) {
+  return Array.isArray(entry?.sources) && entry.sources.length ? entry.sources : [entry];
+}
+
+function add2eSpellEntryAvailableFromClassItem(actor, entry, spellLevel) {
+  const level = Math.max(1, Number(spellLevel) || 1);
+  return add2eSpellSourcesForSheet(entry).some(source => {
+    const classLevel = Number(globalThis.add2eSpellClassLevel?.(actor, source) ?? 0) || 0;
+    const startsAt = Math.max(1, Number(source?.startsAt ?? 1) || 1);
+    const maxSpellLevel = Math.max(0, Number(source?.maxSpellLevel ?? 0) || 0);
+    return classLevel >= startsAt && (!maxSpellLevel || level <= maxSpellLevel);
+  });
+}
+
+/**
+ * 13b construit initialement les groupes de sorts. Cette passe terminale ne
+ * consulte jamais system.niveau : chaque entrée est validée depuis son Item
+ * classe source, ce qui évite qu'un Clerc/Magicien perde une liste au rendu.
+ */
+function add2eRefreshSpellRowsFromClassItems(actor, context) {
+  const entries = globalThis.add2eGetSpellcastingEntries?.(actor);
+  const levels = context?.add2eSpellLevels;
+  const getLists = globalThis.add2eGetSpellListsFromItem;
+  const getMemorized = globalThis.add2eGetMemorizedCountForEntry;
+  const countPrepared = globalThis.add2eCountPreparedForEntryLevel;
+  const getSlots = globalThis.add2eGetSlotsForEntryLevel;
+  const getLabel = globalThis.add2eSpellLabel;
+
+  if (!Array.isArray(entries) || !Array.isArray(levels) || typeof getLists !== "function") return context;
+
+  for (const levelData of levels) {
+    const spellLevel = Math.max(1, Number(levelData?.spellLevel ?? 1) || 1);
+    const rows = Array.isArray(levelData?.sorts) ? levelData.sorts : [];
+
+    for (const row of rows) {
+      if (row?.isRegularSpell !== true) continue;
+      const sort = actor?.items?.get?.(row.id ?? row._id) ?? row;
+      const lists = new Set((getLists(sort) ?? []).map(add2eNormalizeSpellListForSheet).filter(Boolean));
+      const allowed = entries.filter(entry =>
+        lists.has(add2eNormalizeSpellListForSheet(entry?.key))
+        && add2eSpellEntryAvailableFromClassItem(actor, entry, spellLevel)
+      );
+
+      row.entries = allowed.map(entry => {
+        const key = add2eNormalizeSpellListForSheet(entry?.key);
+        const count = typeof getMemorized === "function" ? getMemorized(sort, entry) : 0;
+        const total = typeof countPrepared === "function" ? countPrepared(actor, entry, spellLevel) : 0;
+        const max = typeof getSlots === "function" ? getSlots(actor, entry, spellLevel) : 0;
+        return {
+          key,
+          label: entry?.label || getLabel?.(key) || key,
+          count,
+          total,
+          max,
+          over: max > 0 && total > max
+        };
+      });
+      row.listLabel = allowed.length
+        ? allowed.map(entry => entry?.label || getLabel?.(entry?.key) || entry?.key).join(" / ")
+        : (Array.from(lists).map(key => getLabel?.(key) || key).join(" / ") || "Non autorisé");
+    }
+
+    for (const group of Array.isArray(levelData?.groups) ? levelData.groups : []) {
+      if (group?.kind !== "spell-list") continue;
+      const key = add2eNormalizeSpellListForSheet(group.key);
+      group.sorts = rows.filter(row => row?.isRegularSpell === true
+        && Array.isArray(row.entries)
+        && row.entries.some(entry => add2eNormalizeSpellListForSheet(entry?.key) === key));
+    }
+  }
+  return context;
+}
+
 function add2eComposeFinalSheetContext(actor, context) {
   if (actor?.type !== "personnage" || !context) return context;
   try {
-    return globalThis.add2eApplyMulticlassProgressionToSheet?.(actor, context) ?? context;
+    const composed = globalThis.add2eApplyMulticlassProgressionToSheet?.(actor, context) ?? context;
+    return add2eRefreshSpellRowsFromClassItems(actor, composed);
   } catch (error) {
-    console.warn("[ADD2E][ACTOR_SHEET][MULTICLASS_CONTEXT_ERROR]", { actor: actor?.name, error });
+    console.warn("[ADD2E][ACTOR_SHEET][CLASS_CONTEXT_ERROR]", { actor: actor?.name, error });
     return context;
   }
 }
