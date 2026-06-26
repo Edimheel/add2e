@@ -6,131 +6,21 @@
     "niveau": 3,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_liste_noms_complete_regles_a_completer",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 12,
   "foundryExport": "audit/decoupage_fichier/illusionniste-niveau-3.json",
-  "rules": {
-    "included": [
-      "nom du sort",
-      "classe",
-      "niveau",
-      "ordre dans le tableau du Manuel des joueurs",
-      "nombre de sorts attendu",
-      "variantes explicitement nommées dans le Manuel des joueurs",
-      "réversibilité et nom de l’inverse quand le Manuel le donne"
-    ],
-    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis.",
-    "variantes": "Le tableau variantes est vide lorsqu’aucun choix de forme explicitement nommé ne figure dans le Manuel des joueurs.",
-    "reversibilite": "Le champ reversible est toujours booléen. Le champ inverse vaut null lorsque le Manuel indique un sort réversible sans donner de nom distinct à sa forme inverse."
-  },
   "spells": [
-    {
-      "ordre": 1,
-      "nom": "Corde enchantée",
-      "niveau": 3,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 2,
-      "nom": "Dissipation des illusions",
-      "niveau": 3,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 3,
-      "nom": "Écriture illusoire",
-      "niveau": 3,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 4,
-      "nom": "Effroi",
-      "niveau": 3,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 5,
-      "nom": "Force spectrale",
-      "niveau": 3,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 6,
-      "nom": "Invisibilité sur 3 m",
-      "niveau": 3,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 7,
-      "nom": "Lumière éternelle",
-      "niveau": 3,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 8,
-      "nom": "Non-détection",
-      "niveau": 3,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 9,
-      "nom": "Paralysie musculaire",
-      "niveau": 3,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 10,
-      "nom": "Suggestion",
-      "niveau": 3,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 11,
-      "nom": "Ténèbres éternelles",
-      "niveau": 3,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 12,
-      "nom": "Terrain hallucinatoire",
-      "niveau": 3,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    }
+    {"ordre":1,"nom":"Corde enchantée","ecole":"Altération","niveau":3,"portee":"au toucher","duree":"2 tours/niveau","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"3 segments","jet_sauvegarde":"aucun","description":"Le sort est le même que Corde enchantée de magicien, avec ses valeurs d’illusionniste. Une corde dressée donne accès à un espace extradimensionnel temporaire.","composants_materiels_objets":[{"nom":"poudre de blé","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"parchemin torsadé en forme de boucle","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":2,"nom":"Dissipation des illusions","ecole":"Abjuration","niveau":3,"portee":"1\"/niveau","duree":"permanente","zone_effet":"spéciale","composantes":"V, S","temps_incantation":"3 segments","jet_sauvegarde":"aucun","description":"L’illusionniste peut annuler une force fantasmagorique créée par un non-illusionniste ou tenter de dissiper une illusion/fantasme créée par un autre illusionniste. Pour ce second cas, la chance suit la méthode de Dissipation de la magie du Manuel.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":3,"nom":"Écriture illusoire","ecole":"Illusion/Fantasme","niveau":3,"portee":"0","duree":"permanente","zone_effet":"créature lisant l’écrit","composantes":"V, S, M","temps_incantation":"spécial","jet_sauvegarde":"aucun","description":"L’illusionniste écrit des instructions ou informations qui paraissent magiques ou étrangères. Seuls les lecteurs autorisés les comprennent ; les autres subissent une confusion de 5d4 tours, réduite selon leur niveau. Le sort ne fonctionne pas sous l’eau.","composants_materiels_objets":[{"nom":"encre à base de plomb fabriquée par un alchimiste","quantite":1,"consommation":"consomme","cout_po":100,"source":"Manuel des joueurs","condition":null,"notes":"Prix de l’encre : 100 à 400 po, auxquels s’ajoutent 100 po de rémunération de l’alchimiste."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":4,"nom":"Effroi","ecole":"Illusion/Fantasme","niveau":3,"portee":"0","duree":"spéciale","zone_effet":"cône de 6\" de long, 1/2\" à la base et 3\" de large à l’extrémité","composantes":"V, S","temps_incantation":"3 segments","jet_sauvegarde":"annule","description":"Excepté ses valeurs propres, ce sort est le même qu’Effroi de magicien. Les victimes qui ratent leur jet fuient et peuvent lâcher ce qu’elles tiennent conformément aux règles du Manuel.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":5,"nom":"Force spectrale","ecole":"Illusion/Fantasme","niveau":3,"portee":"6\" + 1\"/niveau","duree":"spéciale","zone_effet":"36 m² + 9 m²/niveau","composantes":"V, S, M","temps_incantation":"3 segments","jet_sauvegarde":"spécial","notes_regles":"La lettre M est explicite dans l’en-tête du Manuel. Le détail matériel ne doit pas être déduit du découpage Foundry.","description":"L’illusion créée inclut sons, odeurs et température. Elle est similaire à Force fantasmagorique améliorée et persiste trois rounds après l’arrêt de la concentration de l’illusionniste.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":6,"nom":"Invisibilité sur 3 m","ecole":"Illusion/Fantasme","niveau":3,"portee":"au toucher","duree":"spéciale","zone_effet":"3 m de rayon autour de la créature touchée","composantes":"V, S","temps_incantation":"3 segments","jet_sauvegarde":"aucun","description":"Le sort fonctionne comme Invisibilité, mais affecte toutes les créatures présentes dans le rayon lors du lancement. Les conditions de rupture suivent les règles du sort d’invisibilité.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":7,"nom":"Lumière éternelle","ecole":"Altération","niveau":3,"portee":"6\"","duree":"permanente","zone_effet":"sphère de 6\" de rayon","composantes":"V, S","temps_incantation":"3 segments","jet_sauvegarde":"aucun","description":"Le sort crée une source de lumière permanente selon les règles de Lumière éternelle. L’entrée d’illusionniste est explicitement non réversible.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":8,"nom":"Non-détection","ecole":"Abjuration","niveau":3,"portee":"0","duree":"1 tour/niveau","zone_effet":"1,50 m de rayon autour du lanceur de sort","composantes":"V, S, M","temps_incantation":"3 segments","jet_sauvegarde":"aucun","notes_regles":"La lettre M est explicite dans l’en-tête du Manuel. Le détail matériel ne doit pas être déduit du découpage Foundry.","description":"Le sort protège l’illusionniste et la zone indiquée contre les détections prévues par le Manuel pendant sa durée.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":9,"nom":"Paralysie musculaire","ecole":"Illusion/Fantasme","niveau":3,"portee":"1\"/niveau","duree":"spéciale","zone_effet":"2\" x 2\"","composantes":"V, S","temps_incantation":"3 segments","jet_sauvegarde":"annule","description":"Les victimes qui ratent leur jet de protection perdent le contrôle de leurs muscles selon les effets et la durée définis par le Manuel.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":10,"nom":"Suggestion","ecole":"Enchantement/Charme","niveau":3,"portee":"3\"","duree":"4 tours + 4 tours/niveau","zone_effet":"une créature","composantes":"V, M","temps_incantation":"3 segments","jet_sauvegarde":"annule","description":"Excepté ses valeurs propres, le sort est le même que Suggestion de magicien. L’illusionniste impose une action raisonnable à une créature capable de comprendre ses paroles.","composants_materiels_objets":[{"nom":"langue de serpent","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"miel","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Alternative à une goutte d’huile douce.","notes":null,"alternativeGroup":"suggestion"},{"nom":"goutte d’huile douce","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Alternative au miel.","notes":null,"alternativeGroup":"suggestion"}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":11,"nom":"Ténèbres éternelles","ecole":"Altération","niveau":3,"portee":"6\"","duree":"permanente","zone_effet":"sphère de 3\" de rayon","composantes":"V, M","temps_incantation":"3 segments","jet_sauvegarde":"aucun","description":"L’illusionniste crée un globe d’obscurité impénétrable. Les effets et composants matériels sont ceux de Ténèbres sur 5 mètres de magicien, avec les valeurs propres de cette entrée.","composants_materiels_objets":[{"nom":"fourrure de chauve-souris","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"morceau de charbon","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Alternative à la goutte de poix.","notes":null,"alternativeGroup":"tenebres_eternelles"},{"nom":"goutte de poix","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Alternative au morceau de charbon.","notes":null,"alternativeGroup":"tenebres_eternelles"}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":12,"nom":"Terrain hallucinatoire","ecole":"Illusion/Fantasme","niveau":3,"portee":"2\" + 2\"/niveau","duree":"spéciale","zone_effet":"4\" x 4\" + 1\" x 1\"/niveau","composantes":"V, S, M","temps_incantation":"5 rounds","jet_sauvegarde":"aucun","description":"Excepté ses valeurs propres, ce sort est le même que Terrain hallucinatoire de magicien. Il masque le terrain réel par une apparence choisie qui persiste jusqu’aux conditions prévues par le Manuel.","composants_materiels_objets":[{"nom":"pierre","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"brindille","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"morceau de plante verte, feuille ou brin d’herbe","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false}
   ]
 }
