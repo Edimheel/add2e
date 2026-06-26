@@ -1,15 +1,24 @@
-const ADD2E_SPELL_FAMILY_VERSION = "2026-06-26-spell-family-material-forced-deletion-v10";
-const ADD2E_SPELL_FAMILY_MATERIAL_MIGRATION = "2026-06-26-spell-family-material-forced-deletion-v11";
+// ADD2E — Expansion atomique des familles de sorts.
+// Une famille est traitée séquentiellement par acteur : aucune course entre
+// création, mise à jour, dédoublonnage ou suppression du parent.
+// Compatible Foundry V13 / V14 / V15.
 
-const SPELL_FAMILY_PENDING = globalThis.ADD2E_SPELL_FAMILY_PENDING instanceof Set
-  ? globalThis.ADD2E_SPELL_FAMILY_PENDING
-  : new Set();
-const SPELL_FAMILY_PENDING_REMOVALS = globalThis.ADD2E_SPELL_FAMILY_PENDING_REMOVALS instanceof Set
-  ? globalThis.ADD2E_SPELL_FAMILY_PENDING_REMOVALS
-  : new Set();
+const ADD2E_SPELL_FAMILY_VERSION = "2026-06-26-spell-family-actor-queue-v12";
+const ADD2E_SPELL_FAMILY_MATERIAL_MIGRATION = "2026-06-26-spell-family-actor-queue-v12";
 
-globalThis.ADD2E_SPELL_FAMILY_PENDING = SPELL_FAMILY_PENDING;
-globalThis.ADD2E_SPELL_FAMILY_PENDING_REMOVALS = SPELL_FAMILY_PENDING_REMOVALS;
+const SPELL_FAMILY_ACTOR_QUEUES = globalThis.ADD2E_SPELL_FAMILY_ACTOR_QUEUES instanceof Map
+  ? globalThis.ADD2E_SPELL_FAMILY_ACTOR_QUEUES
+  : new Map();
+const SPELL_FAMILY_EXPANSION_REQUESTS = globalThis.ADD2E_SPELL_FAMILY_EXPANSION_REQUESTS instanceof Map
+  ? globalThis.ADD2E_SPELL_FAMILY_EXPANSION_REQUESTS
+  : new Map();
+const SPELL_FAMILY_DEDUPE_REQUESTS = globalThis.ADD2E_SPELL_FAMILY_DEDUPE_REQUESTS instanceof Map
+  ? globalThis.ADD2E_SPELL_FAMILY_DEDUPE_REQUESTS
+  : new Map();
+
+globalThis.ADD2E_SPELL_FAMILY_ACTOR_QUEUES = SPELL_FAMILY_ACTOR_QUEUES;
+globalThis.ADD2E_SPELL_FAMILY_EXPANSION_REQUESTS = SPELL_FAMILY_EXPANSION_REQUESTS;
+globalThis.ADD2E_SPELL_FAMILY_DEDUPE_REQUESTS = SPELL_FAMILY_DEDUPE_REQUESTS;
 
 const clone = value => {
   if (value == null) return value;
@@ -53,6 +62,67 @@ const spellLists = system => [...new Set([
   "spellLists", "lists", "classes", "classe", "class", "liste", "tags", "effectTags"
 ].flatMap(key => asArray(system?.[key])).map(normalize).filter(Boolean))];
 const stableSpellKey = data => `${spellLists(data?.system).sort().join("+") || "liste_inconnue"}|${spellLevel(data?.system)}|${normalize(data?.name ?? data?.system?.nom)}`;
+const isGeneratedFamilySpell = item => item?.flags?.add2e?.spellFamily?.generated === true;
+
+function actorQueueKey(actor) {
+  return String(actor?.uuid ?? actor?.id ?? "").trim();
+}
+
+function queueActorSpellFamilyWork(actor, work) {
+  const key = actorQueueKey(actor);
+  if (!key) return Promise.resolve().then(work);
+
+  const previous = SPELL_FAMILY_ACTOR_QUEUES.get(key) ?? Promise.resolve();
+  const run = previous.catch(() => undefined).then(work);
+  const tracked = run.finally(() => {
+    if (SPELL_FAMILY_ACTOR_QUEUES.get(key) === tracked) SPELL_FAMILY_ACTOR_QUEUES.delete(key);
+  });
+  SPELL_FAMILY_ACTOR_QUEUES.set(key, tracked);
+  return run;
+}
+
+function isMissingEmbeddedDocumentError(error) {
+  return /undefined id .* does not exist|Item .* does not exist|does not exist in the EmbeddedCollection/i.test(String(error?.message ?? error ?? ""));
+}
+
+function liveItemUpdates(actor, updates) {
+  return (updates ?? []).filter(update => {
+    const id = String(update?._id ?? "").trim();
+    return id && actor?.items?.has?.(id);
+  });
+}
+
+async function updateLiveItems(actor, updates, options = {}) {
+  const initial = liveItemUpdates(actor, updates);
+  if (!initial.length) return 0;
+  try {
+    await actor.updateEmbeddedDocuments("Item", initial, options);
+    return initial.length;
+  } catch (error) {
+    if (!isMissingEmbeddedDocumentError(error)) throw error;
+    const retry = liveItemUpdates(actor, initial);
+    if (!retry.length) return 0;
+    try {
+      await actor.updateEmbeddedDocuments("Item", retry, options);
+      return retry.length;
+    } catch (retryError) {
+      if (isMissingEmbeddedDocumentError(retryError)) return 0;
+      throw retryError;
+    }
+  }
+}
+
+async function deleteLiveItem(actor, id, options = {}) {
+  const itemId = String(id ?? "").trim();
+  if (!itemId || !actor?.items?.has?.(itemId)) return false;
+  try {
+    await actor.deleteEmbeddedDocuments("Item", [itemId], options);
+    return true;
+  } catch (error) {
+    if (isMissingEmbeddedDocumentError(error)) return false;
+    throw error;
+  }
+}
 
 function matchingProfiles(flag, system) {
   const profiles = Array.isArray(flag?.profiles) ? flag.profiles.filter(Boolean) : [];
@@ -82,8 +152,6 @@ function applySystemOverrides(data, overrides = {}) {
 function canonicalizeMaterialFields(data) {
   const result = clone(data);
   result.system ??= {};
-  // composants_materiels est l'unique profil matériel. Aucun fallback ne lit
-  // ni ne reconstruit ce profil depuis le champ historique.
   delete result.system.composants_materiels_objets;
   return result;
 }
@@ -188,7 +256,6 @@ function expectedSpellFamily(base) {
   };
 }
 
-const isGeneratedFamilySpell = item => item?.flags?.add2e?.spellFamily?.generated === true;
 function familyIdentity(item) {
   const family = item?.flags?.add2e?.spellFamily ?? {};
   if (family.kind === "base") return "base";
@@ -214,64 +281,53 @@ function itemUpdate(item, expected) {
   return update;
 }
 
-function scheduleVariantParentRemoval(actor, id) {
-  const key = `${actor?.uuid ?? actor?.id ?? ""}|${id}`;
-  if (!key || SPELL_FAMILY_PENDING_REMOVALS.has(key)) return false;
-  SPELL_FAMILY_PENDING_REMOVALS.add(key);
-  setTimeout(async () => {
-    try {
-      const parent = actor.items?.get?.(id);
-      if (!parent || String(parent.type).toLowerCase() !== "sort" || isGeneratedFamilySpell(parent)) return;
-      await actor.deleteEmbeddedDocuments("Item", [id], {
-        add2eInternal: true,
-        add2eSpellFamilyExpansion: true,
-        reason: "replace-generic-variant-parent",
-        render: false
-      });
-      globalThis.add2eRerenderActorSheet?.(actor, false);
-    } catch (error) {
-      if (!/does not exist|undefined id/i.test(String(error?.message ?? error))) {
-        console.error("[ADD2E][SPELL_FAMILY][PARENT_REMOVAL_ERROR]", error);
-      }
-    } finally {
-      SPELL_FAMILY_PENDING_REMOVALS.delete(key);
-    }
-  }, 500);
-  return true;
+async function removeVariantParent(actor, id) {
+  const itemId = String(id ?? "").trim();
+  const parent = itemId && actor?.items?.has?.(itemId) ? actor.items.get(itemId) : null;
+  if (!parent || String(parent.type ?? "").toLowerCase() !== "sort" || isGeneratedFamilySpell(parent)) return false;
+  const removed = await deleteLiveItem(actor, itemId, {
+    add2eInternal: true,
+    add2eSpellFamilyExpansion: true,
+    reason: "replace-generic-variant-parent",
+    render: false
+  });
+  if (removed) globalThis.add2eRerenderActorSheet?.(actor, false);
+  return removed;
 }
 
-async function ensureSpellFamily(item) {
+async function ensureSpellFamilyNow(item) {
   const actor = item?.actor ?? item?.parent;
-  if (!actor || actor.documentName !== "Actor" || actor.type !== "personnage" || !actor.items?.has?.(item.id)
-    || String(item?.type).toLowerCase() !== "sort" || isGeneratedFamilySpell(item)) {
-    return { handled: false };
-  }
+  const sourceId = String(item?.id ?? "").trim();
+  if (!actor || actor.documentName !== "Actor" || actor.type !== "personnage" || !sourceId
+    || !actor.items?.has?.(sourceId)) return { handled: false };
 
-  const { key, output } = expectedSpellFamily(item);
+  const source = actor.items.get(sourceId);
+  if (!source || String(source.type ?? "").toLowerCase() !== "sort" || isGeneratedFamilySpell(source)) return { handled: false };
+
+  const { key, output } = expectedSpellFamily(source);
   const derived = output.filter(entry => entry.id !== "base");
   const variants = derived.filter(entry => entry.kind === "variant");
-  if (!derived.length) return { handled: true, created: 0, updated: 0, baseUpdated: 0 };
+  if (!derived.length) return { handled: true, created: 0, updated: 0, baseUpdated: 0, removedParent: false };
 
   const existingByIdentity = new Map();
   const occupiedKeys = new Set();
-  for (const actorSpell of actor.items?.filter?.(candidate => String(candidate.type).toLowerCase() === "sort") ?? []) {
-    if (actorSpell.id !== item.id) occupiedKeys.add(stableSpellKey(actorSpell));
-    if (actorSpell.flags?.add2e?.spellFamily?.key === key) {
-      const identity = familyIdentity(actorSpell);
-      if (identity) existingByIdentity.set(identity, actorSpell);
-    }
+  for (const actorSpell of actor.items?.filter?.(candidate => String(candidate.type ?? "").toLowerCase() === "sort") ?? []) {
+    if (actorSpell.id !== sourceId) occupiedKeys.add(stableSpellKey(actorSpell));
+    if (actorSpell.flags?.add2e?.spellFamily?.key !== key) continue;
+    const identity = familyIdentity(actorSpell);
+    if (identity) existingByIdentity.set(identity, actorSpell);
   }
 
   let baseUpdated = 0;
   if (!variants.length) {
     const baseEntry = output.find(entry => entry.id === "base");
-    if (baseEntry && actor.items.has(item.id)) {
-      await actor.updateEmbeddedDocuments("Item", [itemUpdate(item, baseEntry)], {
+    const liveBase = actor.items?.has?.(sourceId) ? actor.items.get(sourceId) : null;
+    if (baseEntry && liveBase) {
+      baseUpdated = await updateLiveItems(actor, [itemUpdate(liveBase, baseEntry)], {
         add2eInternal: true,
         add2eSpellFamilyExpansion: true,
         render: false
       });
-      baseUpdated = 1;
     }
   }
 
@@ -301,49 +357,86 @@ async function ensureSpellFamily(item) {
     if (entry.kind === "variant") createdVariantIds.add(entry.id);
   }
 
-  if (updates.length) {
-    await actor.updateEmbeddedDocuments("Item", updates, {
-      add2eInternal: true,
-      add2eSpellFamilyExpansion: true,
-      render: false
-    });
-  }
+  const updated = await updateLiveItems(actor, updates, {
+    add2eInternal: true,
+    add2eSpellFamilyExpansion: true,
+    render: false
+  });
+  let created = 0;
   if (creates.length) {
-    await actor.createEmbeddedDocuments("Item", creates, {
+    const createdDocs = await actor.createEmbeddedDocuments("Item", creates, {
       add2eInternal: true,
       add2eSpellFamilyExpansion: true,
       render: false
     });
+    created = createdDocs?.length ?? 0;
   }
 
-  const queued = variants.length > 0 && createdVariantIds.size === variants.length && !conflictingVariantIds.length
-    ? scheduleVariantParentRemoval(actor, item.id)
-    : false;
+  const removeParent = variants.length > 0 && createdVariantIds.size === variants.length && !conflictingVariantIds.length;
+  const removedParent = removeParent ? await removeVariantParent(actor, sourceId) : false;
 
   if (conflictingVariantIds.length) {
     console.warn("[ADD2E][SPELL_FAMILY][KEEP_PARENT_VARIANT_CONFLICT]", {
       actor: actor.name,
-      sort: item.name,
+      sort: source.name,
       conflicts: conflictingVariantIds
     });
   }
-
-  if (baseUpdated || updates.length || creates.length) globalThis.add2eRerenderActorSheet?.(actor, false);
-  return { handled: true, created: creates.length, updated: updates.length, baseUpdated, queued };
+  if (baseUpdated || updated || created) globalThis.add2eRerenderActorSheet?.(actor, false);
+  return { handled: true, created, updated, baseUpdated, removedParent, queued: removedParent };
 }
 
-async function expandActorSpellFamilies(actor) {
+async function expandActorSpellFamiliesNow(actor) {
   if (!actor || actor.type !== "personnage") return { handled: false };
-  const result = { handled: true, created: 0, updated: 0, baseUpdated: 0, queued: 0 };
-  for (const item of actor.items?.filter?.(candidate => String(candidate.type).toLowerCase() === "sort" && !isGeneratedFamilySpell(candidate)) ?? []) {
-    if (!actor.items.has(item.id)) continue;
-    const current = await ensureSpellFamily(item);
+  const result = { handled: true, created: 0, updated: 0, baseUpdated: 0, queued: 0, removedParent: 0 };
+  const sourceIds = Array.from(actor.items ?? [])
+    .filter(item => String(item.type ?? "").toLowerCase() === "sort" && !isGeneratedFamilySpell(item))
+    .map(item => item.id)
+    .filter(Boolean);
+
+  for (const id of sourceIds) {
+    if (!actor.items?.has?.(id)) continue;
+    const current = await ensureSpellFamilyNow(actor.items.get(id));
     result.created += current?.created ?? 0;
     result.updated += current?.updated ?? 0;
     result.baseUpdated += current?.baseUpdated ?? 0;
     result.queued += current?.queued ? 1 : 0;
+    result.removedParent += current?.removedParent ? 1 : 0;
   }
   return result;
+}
+
+function requestActorSpellFamilyExpansion(actor) {
+  const key = actorQueueKey(actor);
+  if (!key) return queueActorSpellFamilyWork(actor, () => expandActorSpellFamiliesNow(actor));
+  const pending = SPELL_FAMILY_EXPANSION_REQUESTS.get(key);
+  if (pending) return pending;
+
+  const request = Promise.resolve()
+    .then(() => queueActorSpellFamilyWork(actor, () => expandActorSpellFamiliesNow(actor)));
+  SPELL_FAMILY_EXPANSION_REQUESTS.set(key, request);
+  request.finally(() => {
+    if (SPELL_FAMILY_EXPANSION_REQUESTS.get(key) === request) SPELL_FAMILY_EXPANSION_REQUESTS.delete(key);
+  });
+  return request;
+}
+
+function requestActorSpellFamilyDedupe(actor, reason = "spell-family-create") {
+  const key = actorQueueKey(actor);
+  if (!key) return Promise.resolve({ deleted: 0 });
+  const pending = SPELL_FAMILY_DEDUPE_REQUESTS.get(key);
+  if (pending) return pending;
+
+  const request = requestActorSpellFamilyExpansion(actor)
+    .then(() => queueActorSpellFamilyWork(actor, async () => {
+      const dedupe = globalThis.add2eRemoveDuplicateActorSpells;
+      return typeof dedupe === "function" ? dedupe(actor, reason) : { deleted: 0 };
+    }));
+  SPELL_FAMILY_DEDUPE_REQUESTS.set(key, request);
+  request.finally(() => {
+    if (SPELL_FAMILY_DEDUPE_REQUESTS.get(key) === request) SPELL_FAMILY_DEDUPE_REQUESTS.delete(key);
+  });
+  return request;
 }
 
 function compareSpellFamilyRows(left, right) {
@@ -385,12 +478,11 @@ function spellFamilyMaterialsNeedMigration(actor, item) {
   if (!actor?.items?.has?.(item?.id)) return false;
   const { key, output } = expectedSpellFamily(item);
   const existingByIdentity = new Map();
-  for (const actorSpell of actor.items?.filter?.(candidate => String(candidate.type).toLowerCase() === "sort") ?? []) {
+  for (const actorSpell of actor.items?.filter?.(candidate => String(candidate.type ?? "").toLowerCase() === "sort") ?? []) {
     if (actorSpell.flags?.add2e?.spellFamily?.key !== key) continue;
     const identity = familyIdentity(actorSpell);
     if (identity) existingByIdentity.set(identity, actorSpell);
   }
-
   return output.some(entry => {
     const actual = entry.id === "base" ? item : existingByIdentity.get(entry.id);
     if (!actual) return true;
@@ -404,13 +496,13 @@ function spellFamilyMaterialsNeedMigration(actor, item) {
 async function migrateExistingSpellFamilyMaterials() {
   if (!game.user?.isGM) return;
   for (const actor of game.actors?.filter?.(candidate => candidate.type === "personnage") ?? []) {
-    for (const item of actor.items?.filter?.(candidate =>
-      String(candidate.type).toLowerCase() === "sort"
-      && !isGeneratedFamilySpell(candidate)
-      && matchingProfiles(candidate.flags?.add2e?.reversible, candidate.system).some(profile => profile?.splitOnActorGrant === true)
-    ) ?? []) {
-      if (actor.items.has(item.id) && spellFamilyMaterialsNeedMigration(actor, item)) await ensureSpellFamily(item);
-    }
+    const needsMigration = Array.from(actor.items ?? []).some(item =>
+      String(item.type ?? "").toLowerCase() === "sort"
+      && !isGeneratedFamilySpell(item)
+      && matchingProfiles(item.flags?.add2e?.reversible, item.system).some(profile => profile?.splitOnActorGrant === true)
+      && spellFamilyMaterialsNeedMigration(actor, item)
+    );
+    if (needsMigration) await requestActorSpellFamilyExpansion(actor);
     if (actor.getFlag?.("add2e", "spellFamilyMaterialMigration") !== ADD2E_SPELL_FAMILY_MATERIAL_MIGRATION) {
       await actor.setFlag?.("add2e", "spellFamilyMaterialMigration", ADD2E_SPELL_FAMILY_MATERIAL_MIGRATION);
     }
@@ -419,20 +511,18 @@ async function migrateExistingSpellFamilyMaterials() {
 
 Hooks.on("createItem", (item, options = {}, userId) => {
   if (options?.add2eSpellFamilyExpansion || String(userId ?? "") !== String(game.user?.id ?? "")
-    || String(item?.type).toLowerCase() !== "sort" || isGeneratedFamilySpell(item)) return;
-  const key = String(item.uuid ?? item.id ?? "");
-  if (!key || SPELL_FAMILY_PENDING.has(key)) return;
-  SPELL_FAMILY_PENDING.add(key);
-  setTimeout(() => ensureSpellFamily(item)
-    .catch(error => console.error("[ADD2E][SPELL_FAMILY][EXPANSION_ERROR]", error))
-    .finally(() => SPELL_FAMILY_PENDING.delete(key)), 50);
+    || String(item?.type ?? "").toLowerCase() !== "sort" || isGeneratedFamilySpell(item)) return;
+  const actor = item?.actor ?? item?.parent;
+  if (!actor || actor.type !== "personnage") return;
+  requestActorSpellFamilyDedupe(actor, "spell-family-create")
+    .catch(error => console.error("[ADD2E][SPELL_FAMILY][EXPANSION_ERROR]", error));
 });
 
 Hooks.once("ready", () => {
   const sheetPrototype = globalThis.Add2eActorSheet?.prototype;
-  if (sheetPrototype && !sheetPrototype.__add2eSpellFamilyDisplaySortingV7 && typeof sheetPrototype.getData === "function") {
+  if (sheetPrototype && !sheetPrototype.__add2eSpellFamilyDisplaySortingV8 && typeof sheetPrototype.getData === "function") {
     const originalGetData = sheetPrototype.getData;
-    sheetPrototype.__add2eSpellFamilyDisplaySortingV7 = true;
+    sheetPrototype.__add2eSpellFamilyDisplaySortingV8 = true;
     sheetPrototype.getData = async function add2eSpellFamilyGetData(...args) {
       const data = await originalGetData.apply(this, args);
       try { return sortSpellFamilyRows(data); }
@@ -442,188 +532,16 @@ Hooks.once("ready", () => {
       }
     };
   }
-  if (game.user?.isGM) setTimeout(() => migrateExistingSpellFamilyMaterials()
-    .catch(error => console.error("[ADD2E][SPELL_FAMILY][MATERIAL_MIGRATION_ERROR]", error)), 250);
+  if (game.user?.isGM) migrateExistingSpellFamilyMaterials()
+    .catch(error => console.error("[ADD2E][SPELL_FAMILY][MATERIAL_MIGRATION_ERROR]", error));
 });
 
 globalThis.ADD2E_SPELL_FAMILY_VERSION = ADD2E_SPELL_FAMILY_VERSION;
-globalThis.add2eEnsureActorSpellFamily = ensureSpellFamily;
-globalThis.add2eExpandActorSpellFamilies = expandActorSpellFamilies;
+globalThis.add2eQueueActorSpellFamilyWork = queueActorSpellFamilyWork;
+globalThis.add2eRequestActorSpellFamilyExpansion = requestActorSpellFamilyExpansion;
+globalThis.add2eEnsureActorSpellFamily = item => {
+  const actor = item?.actor ?? item?.parent;
+  return actor ? queueActorSpellFamilyWork(actor, () => ensureSpellFamilyNow(item)) : Promise.resolve({ handled: false });
+};
+globalThis.add2eExpandActorSpellFamilies = requestActorSpellFamilyExpansion;
 globalThis.add2eSortActorSpellFamilyRows = sortSpellFamilyRows;
-
-const ADD2E_SPELL_CLASS_LEVEL_VERSION = "2026-06-23-progression-ceiling-v1";
-function add2eSpellClassLevel(actor, classSlug = "") {
-  const actorLevel = Math.max(1, Number(actor?.system?.niveau ?? actor?.system?.level ?? 1) || 1);
-  const wanted = normalize(classSlug);
-  const classes = actor?.items?.filter?.(item => String(item?.type ?? "").toLowerCase() === "classe") ?? [];
-  const cls = classes.find(item => [item?.system?.slug, item?.system?.label, item?.system?.nom, item?.system?.name, item?.name].map(normalize).includes(wanted)) ?? classes[0] ?? null;
-  const read = value => {
-    const number = Number(value?.niveau ?? value?.level ?? value?.value ?? value);
-    return Number.isFinite(number) && number > 0 ? Math.floor(number) : 0;
-  };
-  let requested = 0;
-  for (const root of [actor?.system?.niveaux_par_classe, actor?.system?.niveauxParClasse, actor?.system?.levelsByClass, actor?.system?.classLevels]) {
-    if (!root || typeof root !== "object") continue;
-    for (const [key, value] of Object.entries(root)) {
-      if (normalize(key) === wanted) { requested = read(value); break; }
-    }
-    if (requested) break;
-  }
-  if (!requested && classes.length > 1) requested = read(cls?.system?.niveau ?? cls?.system?.level ?? cls?.system?.currentLevel ?? cls?.system?.niveauActuel);
-  requested ||= actorLevel;
-  const ceiling = (Array.isArray(cls?.system?.progression) ? cls.system.progression : [])
-    .reduce((highest, row) => Math.max(highest, read(row?.niveau ?? row?.level)), 0);
-  return ceiling && requested > ceiling ? ceiling : requested;
-}
-globalThis.ADD2E_SPELL_CLASS_LEVEL_VERSION = ADD2E_SPELL_CLASS_LEVEL_VERSION;
-globalThis.add2eSpellClassLevel = add2eSpellClassLevel;
-
-const ADD2E_SPELL_SYNC_MODAL_VERSION = "2026-06-23-modal-fast-level-down-v2";
-const ADD2E_SPELL_SYNC_LEVEL_DOWNS = globalThis.ADD2E_SPELL_SYNC_LEVEL_DOWNS instanceof Map ? globalThis.ADD2E_SPELL_SYNC_LEVEL_DOWNS : new Map();
-const ADD2E_SPELL_SYNC_MODAL_STATE = globalThis.ADD2E_SPELL_SYNC_MODAL_STATE instanceof Map ? globalThis.ADD2E_SPELL_SYNC_MODAL_STATE : new Map();
-globalThis.ADD2E_SPELL_SYNC_LEVEL_DOWNS = ADD2E_SPELL_SYNC_LEVEL_DOWNS;
-globalThis.ADD2E_SPELL_SYNC_MODAL_STATE = ADD2E_SPELL_SYNC_MODAL_STATE;
-globalThis.ADD2E_SPELL_SYNC_MODAL_VERSION = ADD2E_SPELL_SYNC_MODAL_VERSION;
-
-function add2eSpellSyncRunKey(actor) { return String(actor?.uuid ?? actor?.id ?? actor?.name ?? "acteur-inconnu"); }
-function add2eSpellSyncCurrentLevel(actor) { return Math.max(1, Number(actor?.system?.niveau ?? actor?.system?.level ?? 1) || 1); }
-function add2eSpellSyncChangedLevel(changes) {
-  const direct = changes?.system?.niveau ?? changes?.["system.niveau"] ?? changes?.system?.level ?? changes?.["system.level"];
-  const level = Number(direct);
-  return Number.isFinite(level) && level > 0 ? Math.floor(level) : 0;
-}
-function add2eSpellSyncClassLabel(cls) { return normalize(cls?.system?.slug ?? cls?.system?.label ?? cls?.system?.nom ?? cls?.system?.name ?? cls?.name ?? ""); }
-function add2eSpellSyncClassIsAutomatic(cls) {
-  if (String(cls?.type ?? "").toLowerCase() !== "classe") return false;
-  const system = cls?.system ?? {};
-  const slug = add2eSpellSyncClassLabel(cls);
-  if (slug.includes("clerc") || slug.includes("pretre") || slug.includes("priest") || slug.includes("druide") || slug.includes("druid")) return true;
-  let casting = system.spellcasting ?? {};
-  if (typeof casting === "string") { try { casting = JSON.parse(casting); } catch (_error) { casting = {}; } }
-  const values = [...asArray(system.spellLists), ...asArray(system.lists), ...asArray(casting?.lists), ...asArray(casting?.spellLists)].map(normalize);
-  return values.includes("clerc") || values.includes("druide");
-}
-function add2eSpellSyncAutoClasses(actor) { return actor?.items?.filter?.(add2eSpellSyncClassIsAutomatic) ?? []; }
-
-function add2eSpellSyncOpenModal(actor, message = "Synchronisation des sorts en cours…") {
-  const key = add2eSpellSyncRunKey(actor);
-  const existing = ADD2E_SPELL_SYNC_MODAL_STATE.get(key);
-  if (existing) { existing.count += 1; return () => add2eSpellSyncCloseModal(actor); }
-  const DialogV2 = foundry?.applications?.api?.DialogV2;
-  let dialog = null;
-  if (DialogV2) {
-    try {
-      dialog = new DialogV2({
-        window: { title: "Synchronisation des sorts" },
-        content: `<section class="add2e-spell-sync-wait" style="min-width:330px;text-align:center;line-height:1.45;padding:8px 4px;"><i class="fas fa-circle-notch fa-spin" style="font-size:2rem;margin:8px;color:#b88924;"></i><p style="margin:8px 0 4px;font-weight:700;">${String(actor?.name ?? "Personnage")}</p><p style="margin:0;">${message}</p><p style="margin:12px 0 0;font-size:.9em;opacity:.8;">Veuillez patienter. Les actions sur cette fiche sont temporairement bloquées.</p></section>`,
-        buttons: [{ action: "wait", label: "Synchronisation en cours…", default: true, callback: () => false }],
-        close: () => false
-      }, { width: 420, height: "auto" });
-      dialog.render({ force: true });
-    } catch (error) { console.warn("[ADD2E][SPELL_SYNC][WAIT_DIALOG_ERROR]", error); }
-  }
-  ADD2E_SPELL_SYNC_MODAL_STATE.set(key, { count: 1, dialog });
-  return () => add2eSpellSyncCloseModal(actor);
-}
-function add2eSpellSyncCloseModal(actor) {
-  const key = add2eSpellSyncRunKey(actor);
-  const entry = ADD2E_SPELL_SYNC_MODAL_STATE.get(key);
-  if (!entry) return;
-  entry.count -= 1;
-  if (entry.count > 0) return;
-  ADD2E_SPELL_SYNC_MODAL_STATE.delete(key);
-  try { entry.dialog?.close?.({ force: true }); } catch (error) { console.warn("[ADD2E][SPELL_SYNC][WAIT_DIALOG_CLOSE_ERROR]", error); }
-}
-function add2eSpellSyncSignature(actor) {
-  const classes = actor?.items?.filter?.(item => String(item?.type ?? "").toLowerCase() === "classe") ?? [];
-  const multi = actor?.system?.multiclasse?.enabled === true || classes.length > 1;
-  const signature = {};
-  if (!multi) signature.__mono = add2eSpellSyncCurrentLevel(actor);
-  for (const cls of classes) {
-    const key = add2eSpellSyncClassLabel(cls) || cls.id || cls.name;
-    if (!key) continue;
-    const stored = Number(cls?.system?.niveau ?? cls?.system?.level ?? cls?.system?.currentLevel ?? cls?.system?.niveauActuel);
-    signature[key] = Number.isFinite(stored) && stored > 0 ? Math.floor(stored) : add2eSpellSyncCurrentLevel(actor);
-  }
-  for (const root of [actor?.system?.niveaux_par_classe, actor?.system?.niveauxParClasse, actor?.system?.levelsByClass, actor?.system?.classLevels]) {
-    if (!root || typeof root !== "object") continue;
-    for (const [key, value] of Object.entries(root)) {
-      const level = Number(value?.niveau ?? value?.level ?? value?.value ?? value);
-      if (Number.isFinite(level) && level > 0) signature[normalize(key)] = Math.floor(level);
-    }
-  }
-  return signature;
-}
-async function add2eSpellSyncFastLevelDown(actor) {
-  const key = add2eSpellSyncRunKey(actor);
-  const running = globalThis.ADD2E_SPELL_SYNC_RUNNING;
-  if (!(running instanceof Set) || running.has(key)) return false;
-  running.add(key);
-  const release = add2eSpellSyncOpenModal(actor, "Mise à jour des sorts accessibles après la baisse de niveau…");
-  try {
-    const reset = await globalThis.add2eResetActorSpellMemorization?.(actor, "level-down");
-    let deleted = 0;
-    for (const classItem of add2eSpellSyncAutoClasses(actor)) {
-      const classLevel = globalThis.add2eSpellClassLevel?.(actor, add2eSpellSyncClassLabel(classItem)) ?? add2eSpellSyncCurrentLevel(actor);
-      const result = await globalThis.add2ePruneActorSpellsForClassLevel?.(actor, classItem, classLevel, { notify: false });
-      deleted += Number(result?.deleted ?? 0) || 0;
-    }
-    await actor.setFlag?.("add2e", "autoSpellSyncLevelSignature", add2eSpellSyncSignature(actor));
-    globalThis.ADD2E_SPELL_SYNC_PREUPDATE_LEVELS?.delete?.(key);
-    if (deleted || Number(reset?.reset ?? 0) > 0) globalThis.add2eRerenderActorSheet?.(actor, false);
-    return true;
-  } catch (error) {
-    console.error("[ADD2E][SPELL_SYNC][FAST_LEVEL_DOWN_ERROR]", error);
-    ui.notifications?.error?.("Erreur pendant la mise à jour des sorts après la baisse de niveau.");
-    return false;
-  } finally {
-    setTimeout(() => { running.delete(key); release(); }, 180);
-  }
-}
-function add2eSpellSyncWatchScheduledRun(actor) {
-  const release = add2eSpellSyncOpenModal(actor);
-  const key = add2eSpellSyncRunKey(actor);
-  const running = globalThis.ADD2E_SPELL_SYNC_RUNNING;
-  setTimeout(() => {
-    let attempts = 0;
-    const check = () => {
-      attempts += 1;
-      if (running instanceof Set && running.has(key) && attempts < 600) { setTimeout(check, 75); return; }
-      release();
-    };
-    check();
-  }, 140);
-}
-function add2eSpellSyncInstallModalWrapper() {
-  const original = globalThis.add2eSyncActorSpellsFromClass;
-  if (typeof original !== "function" || original.__add2eSyncModalWrapped) return;
-  const wrapped = async function add2eSyncActorSpellsWithModal(actor, classItem, ...rest) {
-    const release = add2eSpellSyncOpenModal(actor, `Synchronisation des sorts de ${classItem?.name ?? "classe"}…`);
-    try { return await original.call(this, actor, classItem, ...rest); }
-    finally { release(); }
-  };
-  wrapped.__add2eSyncModalWrapped = true;
-  globalThis.add2eSyncActorSpellsFromClass = wrapped;
-}
-if (!globalThis.__ADD2E_SPELL_SYNC_MODAL_FAST_DOWN_HOOKS__) {
-  globalThis.__ADD2E_SPELL_SYNC_MODAL_FAST_DOWN_HOOKS__ = true;
-  Hooks.on("preUpdateActor", (actor, changes = {}, options = {}) => {
-    if (!actor || actor.type !== "personnage" || options?.add2eInternal) return;
-    const next = add2eSpellSyncChangedLevel(changes);
-    const current = add2eSpellSyncCurrentLevel(actor);
-    if (next && next < current) ADD2E_SPELL_SYNC_LEVEL_DOWNS.set(add2eSpellSyncRunKey(actor), { from: current, to: next });
-  });
-  Hooks.on("updateActor", (actor, changes = {}, options = {}) => {
-    if (!game.user?.isGM || !actor || actor.type !== "personnage" || options?.add2eInternal) return;
-    const next = add2eSpellSyncChangedLevel(changes);
-    const key = add2eSpellSyncRunKey(actor);
-    const down = ADD2E_SPELL_SYNC_LEVEL_DOWNS.get(key);
-    if (down) {
-      ADD2E_SPELL_SYNC_LEVEL_DOWNS.delete(key);
-      if (add2eSpellSyncAutoClasses(actor).length) add2eSpellSyncFastLevelDown(actor).catch(error => console.error("[ADD2E][SPELL_SYNC][FAST_LEVEL_DOWN_UNHANDLED]", error));
-      return;
-    }
-    if (next && add2eSpellSyncAutoClasses(actor).length) add2eSpellSyncWatchScheduledRun(actor);
-  });
-  Hooks.once("ready", () => add2eSpellSyncInstallModalWrapper());
-}
