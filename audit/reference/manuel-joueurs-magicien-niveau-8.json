@@ -6,176 +6,25 @@
     "niveau": 8,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_liste_noms_complete_regles_a_completer",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 16,
   "foundryExport": "audit/decoupage_fichier/magicien-niveau-8.json",
-  "rules": {
-    "included": [
-      "nom du sort",
-      "classe",
-      "niveau",
-      "ordre dans le tableau du Manuel des joueurs",
-      "nombre de sorts attendu",
-      "variantes explicitement nommées dans le Manuel des joueurs",
-      "réversibilité et nom de l’inverse quand le Manuel le donne"
-    ],
-    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis.",
-    "variantes": "Le tableau variantes est vide lorsqu’aucun choix de forme explicitement nommé ne figure dans le Manuel des joueurs.",
-    "reversibilite": "Le champ reversible est toujours booléen. Le champ inverse vaut null lorsque le Manuel indique un sort réversible sans donner de nom distinct à sa forme inverse."
-  },
   "spells": [
-    {
-      "ordre": 1,
-      "nom": "Antipathie/sympathie",
-      "niveau": 8,
-      "variantes": [
-        {
-          "id": "antipathie",
-          "nom": "Antipathie"
-        },
-        {
-          "id": "sympathie",
-          "nom": "Sympathie"
-        }
-      ],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 2,
-      "nom": "Charme-masse",
-      "niveau": 8,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 3,
-      "nom": "Clone",
-      "niveau": 8,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 4,
-      "nom": "Cristairain",
-      "niveau": 8,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 5,
-      "nom": "Danse irrésistible d'Otto",
-      "niveau": 8,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 6,
-      "nom": "Emprisonnement de l'âme",
-      "niveau": 8,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 7,
-      "nom": "Immunité magique de Serten",
-      "niveau": 8,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 8,
-      "nom": "Invocation de monstre VI",
-      "niveau": 8,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 9,
-      "nom": "Labyrinthe",
-      "niveau": 8,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 10,
-      "nom": "Mot de pouvoir : « cécité »",
-      "niveau": 8,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 11,
-      "nom": "Nuage incendiaire",
-      "niveau": 8,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 12,
-      "nom": "Permanence",
-      "niveau": 8,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 13,
-      "nom": "Poing de Bigby",
-      "niveau": 8,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 14,
-      "nom": "Protection d'esprit",
-      "niveau": 8,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 15,
-      "nom": "Symbole",
-      "niveau": 8,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 16,
-      "nom": "Transformation d'objets",
-      "niveau": 8,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    }
+    {"ordre":1,"nom":"Antipathie/sympathie","ecole":"Enchantement/Charme","niveau":8,"portee":"3\"","duree":"12 tours/niveau","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"6 tours","jet_sauvegarde":"spécial","description":"Le magicien implante dans une zone ou un objet des vibrations qui repoussent ou attirent une créature vivante intelligente ou un alignement précis. Antipathie force à quitter ou éviter la zone ; sympathie force à y revenir ou à conserver l’objet. Le sort ne peut pas être lancé sur un être vivant.","composants_materiels_objets":[{"nom":"morceau d’alun trempé dans du vinaigre","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Variante : antipathie.","notes":null,"alternativeGroup":"antipathie_sympathie"},{"nom":"perles réduites en poudre","quantite":1,"consommation":"consomme","cout_po":1000,"source":"Manuel des joueurs","condition":"Variante : sympathie.","notes":"Valeur minimale de 1 000 po.","alternativeGroup":"antipathie_sympathie"},{"nom":"goutte de miel","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Variante : sympathie.","notes":null,"alternativeGroup":"antipathie_sympathie"}],"status":"reference_complete_description_normalisee","variantes":[{"id":"antipathie","nom":"Antipathie"},{"id":"sympathie","nom":"Sympathie"}],"reversible":false},
+    {"ordre":2,"nom":"Charme-masse","ecole":"Enchantement/Charme","niveau":8,"portee":"1/2\"/niveau","duree":"spéciale","zone_effet":"spéciale","composantes":"V","temps_incantation":"8 segments","jet_sauvegarde":"annule","description":"Le sort charme personnes ou monstres tant que la somme de leurs niveaux ou dés de vie ne dépasse pas deux fois le niveau du magicien. Toutes les cibles doivent se trouver dans la portée et dans une zone de 3\" x 3\" ; elles subissent un malus de –2 à leur jet de protection.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":3,"nom":"Clone","ecole":"Nécromancie","niveau":8,"portee":"au toucher","duree":"permanente","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"1 tour","jet_sauvegarde":"aucun","description":"Le sort crée un duplicata physique d’une personne à partir d’un morceau de sa chair. Le clone possède le même niveau, les mêmes souvenirs et devient une personne distincte ; la coexistence avec l’original pousse normalement l’un ou les deux à la folie. Le clone se forme en deux à huit mois.","composants_materiels_objets":[{"nom":"morceau de chair de l’original","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Le clone reproduit l’original tel qu’il était au moment du prélèvement."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":4,"nom":"Cristairain","ecole":"Altération","niveau":8,"portee":"au toucher","duree":"permanente","zone_effet":"objet touché","composantes":"V, S, M","temps_incantation":"8 segments","jet_sauvegarde":"aucun","description":"Le sort rend un objet de cristal ou de verre aussi dur et solide que l’acier, avec une classe d’armure de 1. Il ne peut affecter qu’un seul objet pesant au plus 5 kg par niveau du magicien.","composants_materiels_objets":[{"nom":"petit morceau de verre","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"petit morceau d’acier","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":5,"nom":"Danse irrésistible d'Otto","ecole":"Enchantement/Charme","niveau":8,"portee":"au toucher","duree":"1d4+1 rounds","zone_effet":"créature touchée","composantes":"V","temps_incantation":"5 segments","jet_sauvegarde":"aucun","description":"La créature touchée se met à danser et ne peut rien faire d’autre. Sa classe d’armure subit un malus de 4, elle ne peut utiliser ni bouclier ni jet de protection ; le magicien doit réussir son jet pour la toucher.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":6,"nom":"Emprisonnement de l'âme","ecole":"Conjuration/Appel","niveau":8,"portee":"1\"","duree":"permanente jusqu’à annulation","zone_effet":"une créature","composantes":"V, S, M","temps_incantation":"spécial + 1 segment","jet_sauvegarde":"annule","description":"Le sort enferme la force vitale d’une créature, et son enveloppe matérielle s’il y a lieu, dans une prison d’âme préparée. Le magicien doit voir la cible et connaître son vrai nom ; la gemme se brise si la cible résiste ou réussit son jet de protection. Une version par objet-détonateur permet de déclencher l’emprisonnement quand la cible l’accepte.","composants_materiels_objets":[{"nom":"gemme-prison de l’âme","quantite":1,"consommation":"non_consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Valeur minimale de 1 000 po par dé de vie ou niveau de la cible. Doit recevoir Enchantement puis Labyrinthe avant l’incantation finale."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":7,"nom":"Immunité magique de Serten","ecole":"Abjuration","niveau":8,"portee":"au toucher","duree":"1 tour/niveau","zone_effet":"créature(s) touchée(s)","composantes":"V, S, M","temps_incantation":"spécial","jet_sauvegarde":"aucun","description":"Le sort confère une protection très forte contre les enchantements et de nombreuses détections ou influences magiques, ainsi que certains pouvoirs psi. Le nombre de cibles est d’une par tranche de quatre niveaux et la durée est partagée entre elles ; l’incantation dure un round par destinataire.","composants_materiels_objets":[{"nom":"diamant réduit en poudre","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Répandu sur les destinataires."},{"nom":"diamant intact","quantite":1,"consommation":"non_consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Chaque destinataire doit en posséder un.","notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":8,"nom":"Invocation de monstre VI","ecole":"Conjuration/Appel","niveau":8,"portee":"8\"","duree":"7 rounds + 1 round/niveau","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"8 segments","jet_sauvegarde":"aucun","description":"Le sort invoque un ou deux monstres de niveau 6, qui apparaissent après un délai de un à trois rounds. Les règles générales sont celles d’Invocation de monstres I.","composants_materiels_objets":[{"nom":"petit sac","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Composante reprise d’Invocation de monstres I."},{"nom":"petite bougie","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Pas nécessairement allumée ; composante reprise d’Invocation de monstres I."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":9,"nom":"Labyrinthe","ecole":"Conjuration/Appel","niveau":8,"portee":"1/2\"/niveau","duree":"spéciale","zone_effet":"une créature","composantes":"V, S","temps_incantation":"3 segments","jet_sauvegarde":"aucun","description":"Le magicien crée un espace extradimensionnel en forme de labyrinthe où la cible erre selon son intelligence ; les minotaures y sont insensibles. La durée d’errance va de 2d4 tours pour une intelligence inférieure à 3 à 1d4 rounds pour une intelligence de 18 ou plus.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":10,"nom":"Mot de pouvoir : « cécité »","ecole":"Conjuration/Appel","niveau":8,"portee":"1/2\"/niveau","duree":"spéciale","zone_effet":"3\" de diamètre","composantes":"V","temps_incantation":"1 segment","jet_sauvegarde":"aucun","description":"Le mot rend aveugles une ou plusieurs créatures dans la zone, jusqu’à un total de 100 points de vie. Pour 50 points de vie ou moins, la cécité dure 1d4+1 tours ; au-delà, elle dure 1d4+1 rounds. Les créatures de plus de 100 points de vie ne sont pas affectées.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":11,"nom":"Nuage incendiaire","ecole":"Altération/Évocation","niveau":8,"portee":"3\"","duree":"4 rounds + 1d6 rounds","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"2 segments","jet_sauvegarde":"1/2","description":"Le sort produit un nuage dense de fumée de 3 m de haut, 6 m de long et 6 m de large. Il s’enflamme du troisième au cinquième round et inflige des dégâts croissants puis décroissants selon le niveau du magicien ; ensuite il reste une fumée inoffensive qui bloque la vue.","composants_materiels_objets":[{"nom":"source de feu","quantite":1,"consommation":"non_consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Requise comme pour Pyrotechnie."},{"nom":"morceaux de fumier","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"pincée de poussière","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":12,"nom":"Permanence","ecole":"Altération","niveau":8,"portee":"spéciale","duree":"permanente","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"2 rounds","jet_sauvegarde":"aucun","notes_regles":"Le Manuel indique V, S, M mais ne nomme pas de composant matériel précis. Chaque Permanence retire normalement un point de constitution au magicien ; la perte est conditionnelle lorsqu’elle vise un objet et certaine pour recharger un objet.","description":"Le sort rend permanents certains sorts personnels listés par le Manuel, ou certains sorts lancés sur une créature, un objet ou une zone. Les conditions de dissipation varient selon l’application et le sort lié.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":13,"nom":"Poing de Bigby","ecole":"Évocation","niveau":8,"portee":"1/2\"/niveau","duree":"1 round/niveau","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"8 segments","jet_sauvegarde":"aucun","description":"Le magicien dirige mentalement un immense poing qui touche toujours mais dont les dégâts dépendent d’un d20, de 1d6 à 4d6. Les meilleurs résultats étourdissent la cible ; le magicien ne peut accomplir aucune autre activité magique pendant la durée du sort.","composants_materiels_objets":[{"nom":"gant en cuir","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"petit objet de quatre anneaux reliés en cuivre et zinc","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Forme légèrement courbe, reliée par une barrette en I."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":14,"nom":"Protection d'esprit","ecole":"Abjuration","niveau":8,"portee":"3\"","duree":"1 jour","zone_effet":"une créature","composantes":"V, S","temps_incantation":"1 segment","jet_sauvegarde":"aucun","description":"La cible devient protégée contre les sorts, objets et pouvoirs qui détectent, influencent ou lisent pensées et émotions, y compris de nombreuses formes de divination, charme, possession, télépathie et pouvoirs psi. Les pouvoirs divins majeurs peuvent cependant franchir cette protection.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":15,"nom":"Symbole","ecole":"Conjuration/Appel","niveau":8,"portee":"au toucher","duree":"spéciale","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"8 segments","jet_sauvegarde":"spécial","description":"Le magicien inscrit un symbole magique sur une surface. Les créatures qui cherchent à le contourner, le toucher, le lire ou franchir le passage déclenchent l’un des huit effets choisis : désespoir, discorde, effroi, étourdissement, insanité, mort, sommeil ou souffrance.","composants_materiels_objets":[{"nom":"diamant réduit en poudre","quantite":1,"consommation":"consomme","cout_po":5000,"source":"Manuel des joueurs","condition":null,"notes":"Valeur minimale de 5 000 po."},{"nom":"opale noire réduite en poudre","quantite":1,"consommation":"consomme","cout_po":5000,"source":"Manuel des joueurs","condition":null,"notes":"Valeur minimale de 5 000 po."}],"status":"reference_complete_description_normalisee","variantes":[{"id":"desespoir","nom":"Désespoir"},{"id":"discorde","nom":"Discorde"},{"id":"effroi","nom":"Effroi"},{"id":"etourdissement","nom":"Étourdissement"},{"id":"insanite","nom":"Insanité"},{"id":"mort","nom":"Mort"},{"id":"sommeil","nom":"Sommeil"},{"id":"souffrance","nom":"Souffrance"}],"reversible":false},
+    {"ordre":16,"nom":"Transformation d'objets","ecole":"Altération","niveau":8,"portee":"1/2\"/niveau","duree":"variable","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"1 round","jet_sauvegarde":"spécial","description":"Le sort transforme une chose vivante ou non en une autre. Pour les transformations proches d’Allométamorphose ou de Pierre en chair, il applique une version plus puissante avec un malus de –4 au jet de protection ; les autres durées dépendent du degré de différence entre les deux formes.","composants_materiels_objets":[{"nom":"mercure","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"gomme arabique","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"fumée","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false}
   ]
 }
