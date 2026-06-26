@@ -2,11 +2,13 @@
 // Les Items classe sont la seule source de progression multiclasses.
 // Compatible Foundry V13/V14/V15.
 
-const VERSION = "2026-06-25-movement-mono-xp-item-progression-v6";
+const VERSION = "2026-06-26-movement-v14-alert-scale-v1";
 const TAG = "[ADD2E][MOVE_XP]";
 const INTERNAL = "add2eMoveXpInternal";
 const ITEM_RECALC_DELAY_MS = 140;
+const MOVE_ALERT_DEDUP_MS = 900;
 const itemRecalcTimers = new Map();
+const movementAlertCache = new Map();
 
 globalThis.ADD2E_MOVE_XP_VERSION = VERSION;
 
@@ -407,6 +409,82 @@ function tokenDistanceMeters(tokenDoc, changes, from = null) {
   return unitToMeters((Math.hypot(nx - ox, ny - oy) / size) * distance, unit);
 }
 
+function foundryGeneration() {
+  const generation = Number(game?.release?.generation ?? String(game?.version ?? "").split(".")[0]);
+  return Number.isFinite(generation) ? generation : 0;
+}
+
+function usesNativeTokenMovementHooks() {
+  return foundryGeneration() >= 14;
+}
+
+function tokenDocumentFromHook(token) {
+  if (!token) return null;
+  if (String(token.documentName ?? "").toLowerCase() === "token") return token;
+  return token.document ?? token;
+}
+
+function asMovementSequence(value) {
+  if (Array.isArray(value)) return value;
+  if (value instanceof Set || value instanceof Map) return [...value.values()];
+  if (value && typeof value.values === "function") {
+    try { return [...value.values()]; } catch (_error) { return []; }
+  }
+  return [];
+}
+
+function movementPoint(entry) {
+  for (const candidate of [entry?.destination, entry?.to, entry?.point, entry?.position, entry?.waypoint, entry]) {
+    if (Number.isFinite(Number(candidate?.x)) && Number.isFinite(Number(candidate?.y))) {
+      return { x: Number(candidate.x), y: Number(candidate.y) };
+    }
+  }
+  return null;
+}
+
+function operationMovementPoints(operation = {}) {
+  const collections = [
+    operation?.pending,
+    operation?.passed,
+    operation?.waypoints,
+    operation?.path,
+    operation?.steps,
+    operation?.movement?.pending,
+    operation?.movement?.passed,
+    operation?.movement?.waypoints,
+    operation?.movement?.path,
+    operation?.movement?.steps
+  ];
+
+  for (const collection of collections) {
+    const points = asMovementSequence(collection).map(movementPoint).filter(Boolean);
+    if (points.length) return points;
+  }
+  return [];
+}
+
+function nativeMovementChanges(tokenDoc, changes = {}, operation = {}) {
+  const points = operationMovementPoints(operation);
+  const last = points.at?.(-1) ?? points[points.length - 1] ?? null;
+  return {
+    ...changes,
+    x: changes?.x ?? operation?.destination?.x ?? operation?.to?.x ?? last?.x ?? tokenDoc?.x,
+    y: changes?.y ?? operation?.destination?.y ?? operation?.to?.y ?? last?.y ?? tokenDoc?.y
+  };
+}
+
+function operationDistanceMeters(tokenDoc, operation, origin) {
+  const points = operationMovementPoints(operation);
+  if (!points.length) return null;
+  let previous = origin;
+  let distance = 0;
+  for (const point of points) {
+    distance += tokenDistanceMeters(tokenDoc, point, previous);
+    previous = point;
+  }
+  return Math.round(distance * 100) / 100;
+}
+
 function combatTurnKey() {
   const combat = game.combat;
   return combat ? `${combat.id}:${combat.round ?? 0}:${combat.turn ?? 0}` : null;
@@ -428,64 +506,148 @@ function movementScaleStatus(distance, max) {
   return { key: "red", label: "rouge", color: 0xd91e18, blocked: true };
 }
 
-function drawMovementScale(tokenDoc, status, distance, max) {
+function scaleStateChanged(current, next) {
+  return !current
+    || current.status !== next.status
+    || Math.abs(Number(current.distance ?? 0) - Number(next.distance ?? 0)) > 0.01
+    || Math.abs(Number(current.max ?? 0) - Number(next.max ?? 0)) > 0.01
+    || current.gmFreeMove !== next.gmFreeMove;
+}
+
+function drawMovementScale(tokenDoc, status, distance, max, { persist = true, movedByUserId = null } = {}) {
   const token = canvas?.tokens?.get?.(tokenDoc.id);
   const Graphics = globalThis.PIXI?.Graphics;
   if (!token || !Graphics) return;
+
   try {
     if (!token._add2eMovementScaleRing) {
       token._add2eMovementScaleRing = new Graphics();
       token.addChild(token._add2eMovementScaleRing);
     }
+
     const graphics = token._add2eMovementScaleRing;
     const width = Number(token.w ?? token.width ?? canvas.grid.size) || canvas.grid.size;
     const height = Number(token.h ?? token.height ?? canvas.grid.size) || canvas.grid.size;
-    graphics.clear();
-    graphics.lineStyle(5, status.color, 0.95);
-    graphics.drawRoundedRect(-3, -3, width + 6, height + 6, 10);
+    graphics.clear?.();
+
+    if (typeof graphics.roundRect === "function" && typeof graphics.stroke === "function") {
+      graphics.roundRect(-3, -3, width + 6, height + 6, 10);
+      graphics.stroke({ width: 5, color: status.color, alpha: 0.95 });
+    } else {
+      graphics.lineStyle(5, status.color, 0.95);
+      graphics.drawRoundedRect(-3, -3, width + 6, height + 6, 10);
+    }
+
     graphics.zIndex = 9999;
     token.sortChildren?.();
-    token.document.setFlag("add2e", "movementScale", { status: status.key, label: status.label, distance, max, gmFreeMove: game.user.isGM });
+
+    if (persist) {
+      const nextState = {
+        status: status.key,
+        label: status.label,
+        distance,
+        max,
+        gmFreeMove: game.user.isGM,
+        movedByUserId: movedByUserId ?? game.user?.id ?? null
+      };
+      const currentState = tokenDoc.getFlag("add2e", "movementScale");
+      if (scaleStateChanged(currentState, nextState)) {
+        tokenDoc.setFlag("add2e", "movementScale", nextState).catch(error => console.warn(`${TAG}[TOKEN][SCALE_FLAG_ERROR]`, error));
+      }
+    }
   } catch (error) {
     console.warn(`${TAG}[TOKEN][SCALE_DRAW_ERROR]`, error);
   }
 }
 
-function computeTokenMovementScale(tokenDoc, changes = {}, from = null) {
+function redrawStoredMovementScale(tokenDoc) {
+  const state = tokenDoc?.getFlag?.("add2e", "movementScale");
+  if (!state || !tokenDoc) return;
+  const status = movementScaleStatus(Number(state.distance ?? 0) || 0, Number(state.max ?? 0) || 0);
+  drawMovementScale(tokenDoc, status, Number(state.distance ?? 0) || 0, Number(state.max ?? 0) || 0, { persist: false, movedByUserId: state.movedByUserId ?? null });
+}
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;" }[character]));
+}
+
+function notifyGmsMovementExceeded(tokenDoc, result, { userId = null } = {}) {
+  if (!result || result.next <= result.max + 0.01) return;
+
+  const sceneId = tokenDoc?.parent?.id ?? canvas?.scene?.id ?? "scene";
+  const turnKey = combatTurnKey() ?? "hors-combat";
+  const dedupKey = `${sceneId}:${tokenDoc?.id ?? "token"}:${turnKey}:${result.status.key}:${Math.round(result.next * 10)}`;
+  const now = Date.now();
+  const previous = movementAlertCache.get(dedupKey) ?? 0;
+  if ((now - previous) < MOVE_ALERT_DEDUP_MS) return;
+  movementAlertCache.set(dedupKey, now);
+
+  const movedBy = game.users?.get?.(userId ?? game.user?.id)?.name ?? game.user?.name ?? "Utilisateur";
+  const content = `<div class="add2e-movement-alert" style="border:1px solid ${result.status.key === "red" ? "#b3302d" : "#c78318"};border-radius:8px;background:${result.status.key === "red" ? "#fff0ef" : "#fff7e8"};padding:.55em .7em;"><strong>Déplacement dépassé — ${escapeHtml(result.actor.name)}</strong><div>${escapeHtml(movedBy)} : <b>${result.next.toFixed(1)} m</b> / ${result.max.toFixed(1)} m <span style="color:${result.status.key === "red" ? "#9d1f1c" : "#9a5b05"};">(${result.status.label})</span></div></div>`;
+  const recipients = ChatMessage.getWhisperRecipients?.("GM")?.map(user => user.id).filter(Boolean) ?? [];
+
+  if (recipients.length) {
+    ChatMessage.create({
+      speaker: ChatMessage.getSpeaker({ actor: result.actor }),
+      whisper: recipients,
+      content,
+      flags: { add2e: { movementAlert: true, tokenId: tokenDoc?.id ?? null, status: result.status.key, distance: result.next, max: result.max } }
+    }).catch(error => console.warn(`${TAG}[TOKEN][GM_ALERT_ERROR]`, error));
+  }
+
+  if (game.user.isGM) ui.notifications.warn(`${result.actor.name} dépasse son mouvement (${result.status.label}) : ${result.next.toFixed(1)} m / ${result.max.toFixed(1)} m.`);
+}
+
+function rememberAllowedMovement(tokenDoc, changes, result) {
+  if (!result) return;
+  if (game.combat) {
+    setTimeout(() => {
+      result.actor.setFlag("add2e", "movementTurnKey", combatTurnKey());
+      result.actor.setFlag("add2e", "movementSpentMeters", result.next);
+    }, 0);
+  } else {
+    setTimeout(() => tokenDoc.setFlag("add2e", "lastAllowedPosition", { x: changes.x ?? tokenDoc.x, y: changes.y ?? tokenDoc.y }), 0);
+  }
+}
+
+function computeTokenMovementScale(tokenDoc, changes = {}, from = null, operation = null, movedByUserId = null) {
   const actor = tokenDoc.actor;
   if (!actor || actor.type !== "personnage") return null;
   const movement = computeMovement(actor);
   const max = Number(movement.actuel ?? actor.system?.movement ?? actor.system?.vitesse_deplacement ?? 0) || 0;
   const origin = from ?? (game.combat ? { x: tokenDoc.x, y: tokenDoc.y } : movementOrigin(tokenDoc));
-  const delta = tokenDistanceMeters(tokenDoc, changes, origin);
+  const nativeDistance = operation ? operationDistanceMeters(tokenDoc, operation, origin) : null;
+  const delta = nativeDistance ?? tokenDistanceMeters(tokenDoc, changes, origin);
   const spent = game.combat ? spentThisTurn(actor) : 0;
   const next = Math.round((spent + delta) * 100) / 100;
   const status = movementScaleStatus(next, max);
-  drawMovementScale(tokenDoc, status, next, max);
+  drawMovementScale(tokenDoc, status, next, max, { movedByUserId });
   return { actor, movement, max, origin, delta, spent, next, status };
 }
 
-function validateTokenMovement(tokenDoc, changes, options = {}) {
+function validateTokenMovement(tokenDoc, changes, options = {}, operation = null) {
   if (options?.add2eIgnoreMovement || !game.settings.get("add2e", "enforceTokenMovement")) return true;
   if (!changes || (changes.x === undefined && changes.y === undefined)) return true;
   const actor = tokenDoc.actor;
   if (!actor || actor.type !== "personnage") return true;
-  const result = computeTokenMovementScale(tokenDoc, changes);
+
+  const result = computeTokenMovementScale(tokenDoc, changes, null, operation, options?.userId ?? null);
   if (!result) return true;
+
   const { next, max, status } = result;
+  if (next > max + 0.01) notifyGmsMovementExceeded(tokenDoc, result, { userId: options?.userId ?? null });
+
   if (game.user.isGM) {
-    if (next > max + 0.01) ui.notifications.info(`${actor.name} dépasse son mouvement (${status.label}) : ${next.toFixed(1)} m / ${max.toFixed(1)} m. Déplacement MJ autorisé.`);
+    rememberAllowedMovement(tokenDoc, changes, result);
     return true;
   }
+
   if (status.blocked) {
     ui.notifications.warn(`${actor.name} dépasse son mouvement (${status.label}) : ${next.toFixed(1)} m / ${max.toFixed(1)} m.`);
     return false;
   }
-  if (game.combat) setTimeout(() => {
-    actor.setFlag("add2e", "movementTurnKey", combatTurnKey());
-    actor.setFlag("add2e", "movementSpentMeters", next);
-  }, 0);
-  else setTimeout(() => tokenDoc.setFlag("add2e", "lastAllowedPosition", { x: changes.x ?? tokenDoc.x, y: changes.y ?? tokenDoc.y }), 0);
+
+  rememberAllowedMovement(tokenDoc, changes, result);
   return true;
 }
 
@@ -522,18 +684,27 @@ function changedPath(actor, changes, path) {
 
 Hooks.once("init", () => {
   game.settings.register("add2e", "xpAutoLevel", { name: "ADD2E — XP : niveau automatique", hint: "Quand l'XP atteint un seuil, le niveau est augmenté automatiquement.", scope: "world", config: true, type: Boolean, default: true });
-  game.settings.register("add2e", "enforceTokenMovement", { name: "ADD2E — Contrôler le déplacement des tokens", hint: "Bloque les joueurs qui dépassent leur mouvement. Le MJ n'est jamais bloqué et voit seulement l'échelle de couleur.", scope: "world", config: true, type: Boolean, default: true });
+  game.settings.register("add2e", "enforceTokenMovement", { name: "ADD2E — Contrôler le déplacement des tokens", hint: "Bloque les joueurs qui dépassent leur mouvement. Le MJ peut se déplacer librement, reçoit un avertissement et voit l'échelle vert / orange / rouge.", scope: "world", config: true, type: Boolean, default: true });
 });
 
 Hooks.once("ready", async () => {
-  log("[READY]", { version: VERSION });
+  log("[READY]", { version: VERSION, generation: foundryGeneration() });
   if (game.user.isGM) {
     for (const actor of game.actors?.filter(actor => actor.type === "personnage") ?? []) {
       await recalc(actor, { mode: "movement" }).catch(error => console.warn(`${TAG}[READY][SKIP]`, actor?.name, error));
     }
   }
   for (const token of canvas?.tokens?.placeables ?? []) {
-    if (token.actor?.type === "personnage") token.document.setFlag("add2e", "lastAllowedPosition", { x: token.document.x, y: token.document.y });
+    if (token.actor?.type === "personnage") {
+      token.document.setFlag("add2e", "lastAllowedPosition", { x: token.document.x, y: token.document.y });
+      redrawStoredMovementScale(token.document);
+    }
+  }
+});
+
+Hooks.on("canvasReady", () => {
+  for (const token of canvas?.tokens?.placeables ?? []) {
+    if (token.actor?.type === "personnage") redrawStoredMovementScale(token.document);
   }
 });
 
@@ -599,17 +770,39 @@ Hooks.on("renderAdd2eActorSheet", (sheet, html) => {
   }, { once: true });
 });
 
-Hooks.on("preUpdateToken", (tokenDoc, changes, options) => validateTokenMovement(tokenDoc, changes, options));
+Hooks.on("preMoveToken", (token, changes = {}, operation = {}, userId = null) => {
+  if (!usesNativeTokenMovementHooks()) return true;
+  const tokenDoc = tokenDocumentFromHook(token);
+  if (!tokenDoc) return true;
+  const target = nativeMovementChanges(tokenDoc, changes, operation);
+  return validateTokenMovement(tokenDoc, target, { ...(operation && typeof operation === "object" ? operation : {}), add2eNativeMovement: true, userId }, operation);
+});
+
+Hooks.on("moveToken", (token, _changes = {}, _operation = {}, _userId = null) => {
+  if (!usesNativeTokenMovementHooks()) return;
+  redrawStoredMovementScale(tokenDocumentFromHook(token));
+});
+
+Hooks.on("preUpdateToken", (tokenDoc, changes, options) => {
+  if (usesNativeTokenMovementHooks()) return true;
+  return validateTokenMovement(tokenDoc, changes, options);
+});
+
 Hooks.on("updateToken", (tokenDoc, changes) => {
+  const scaleChanged = foundry.utils.hasProperty(changes, "flags.add2e.movementScale");
+  if (scaleChanged) redrawStoredMovementScale(tokenDoc);
+  if (usesNativeTokenMovementHooks()) return;
   if (!changes || (changes.x === undefined && changes.y === undefined)) return;
   if (!game.settings.get("add2e", "enforceTokenMovement")) return;
   computeTokenMovementScale(tokenDoc, { x: tokenDoc.x, y: tokenDoc.y });
 });
+
 Hooks.on("controlToken", token => {
   if (token?.actor?.type !== "personnage") return;
   token.document.setFlag("add2e", "lastAllowedPosition", { x: token.document.x, y: token.document.y });
   computeTokenMovementScale(token.document, { x: token.document.x, y: token.document.y });
 });
+
 Hooks.on("createItem", (item, options = {}) => queueItemMovementRecalc(item, "createItem", options));
 Hooks.on("updateItem", (item, _changes = {}, options = {}) => queueItemMovementRecalc(item, "updateItem", options));
 Hooks.on("deleteItem", (item, options = {}) => queueItemMovementRecalc(item, "deleteItem", options));
