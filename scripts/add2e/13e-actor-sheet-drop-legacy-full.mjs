@@ -4,8 +4,12 @@
 
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant _onDrop.");
 
-const ADD2E_ACTOR_SHEET_DROP_VERSION = "2026-06-25-actor-drop-safe-v2";
+const ADD2E_ACTOR_SHEET_DROP_VERSION = "2026-06-26-actor-drop-family-final-render-v3";
+const ADD2E_SPELL_DROP_PENDING = globalThis.ADD2E_SPELL_DROP_PENDING instanceof Set
+  ? globalThis.ADD2E_SPELL_DROP_PENDING
+  : new Set();
 globalThis.ADD2E_ACTOR_SHEET_DROP_VERSION = ADD2E_ACTOR_SHEET_DROP_VERSION;
+globalThis.ADD2E_SPELL_DROP_PENDING = ADD2E_SPELL_DROP_PENDING;
 
 function clone(value) {
   if (value === undefined || value === null) return value;
@@ -34,6 +38,16 @@ function sameSpell(left, right) {
   return itemType(left) === "sort" && itemType(right) === "sort"
     && norm(left?.name) === norm(right?.name)
     && spellLevel(left) === spellLevel(right);
+}
+
+function spellListKey(entry) {
+  const key = String(entry?.key ?? entry ?? "").trim();
+  return typeof globalThis.add2eNormalizeSpellKey === "function" ? globalThis.add2eNormalizeSpellKey(key) : norm(key);
+}
+
+function spellDropKey(actor, itemData, entry) {
+  const actorKey = String(actor?.uuid ?? actor?.id ?? "");
+  return `${actorKey}|${spellListKey(entry)}|${spellLevel(itemData)}|${norm(itemData?.name)}`;
 }
 
 async function resolveDropItemData(raw) {
@@ -168,7 +182,7 @@ async function add2eDropBulkDelete(actor, documentName, ids) {
 }
 
 function markManualSpellList(itemData, entry) {
-  const key = String(entry?.key ?? "").trim().toLowerCase();
+  const key = spellListKey(entry);
   if (!itemData || !key) return itemData;
   const data = clone(itemData);
   data.flags = data.flags ?? {};
@@ -182,13 +196,11 @@ function markManualSpellList(itemData, entry) {
 }
 
 async function add2eDropLearnSpellListOnExisting(actor, existingSort, entry) {
-  const key = String(entry?.key ?? "").trim().toLowerCase();
+  const key = spellListKey(entry);
   if (!actor || !existingSort || !key) return { handled: false };
-  const current = new Set(values(existingSort.flags?.add2e?.knownSpellLists ?? existingSort.system?.spellLists).map(value => String(value).toLowerCase()));
-  if (current.has(key)) {
-    ui.notifications.warn(`"${existingSort.name}" est déjà connu pour cette liste.`);
-    return { handled: true, updated: false };
-  }
+  const current = new Set(values(existingSort.flags?.add2e?.knownSpellLists ?? existingSort.system?.spellLists).map(spellListKey).filter(Boolean));
+  if (current.has(key)) return { handled: true, updated: false, alreadyKnown: true };
+
   current.add(key);
   const lists = [...current];
   await existingSort.update({
@@ -199,8 +211,7 @@ async function add2eDropLearnSpellListOnExisting(actor, existingSort, entry) {
     "system.spellLists": lists
   }, { add2eInternal: true, add2eSpellLearnList: true });
   ui.notifications.info(`"${existingSort.name}" ajouté à la liste ${entry?.label || key}.`);
-  actor.sheet?.render?.(false);
-  return { handled: true, updated: true };
+  return { handled: true, updated: true, alreadyKnown: false };
 }
 
 async function applyItemEffects(actor, item) {
@@ -222,6 +233,32 @@ async function applyItemEffects(actor, item) {
   if (effects.length) await actor.createEmbeddedDocuments("ActiveEffect", effects, { add2eInternal: true });
 }
 
+async function renderDropResult(sheet, actor) {
+  const application = sheet ?? actor?.sheet ?? null;
+  if (!application) return false;
+  try {
+    const rendered = typeof application._add2eNativeRender === "function"
+      ? application._add2eNativeRender(true)
+      : application.render?.({ force: true });
+    await Promise.resolve(rendered);
+    return true;
+  } catch (error) {
+    console.warn("[ADD2E][DROP][RENDER_ERROR]", { actor: actor?.name, error });
+    return false;
+  }
+}
+
+async function finalizeSpellDrop(sheet, actor) {
+  const expand = globalThis.add2eRequestActorSpellFamilyExpansion ?? globalThis.add2eExpandActorSpellFamilies;
+  try {
+    if (typeof expand === "function") await expand(actor);
+  } catch (error) {
+    console.error("[ADD2E][DROP][SPELL_FAMILY_ERROR]", { actor: actor?.name, error });
+    ui.notifications?.error?.("Le sort a été ajouté, mais sa famille n’a pas pu être synchronisée.");
+  }
+  return renderDropResult(sheet, actor);
+}
+
 function rootFor(sheet) {
   const element = sheet?.element;
   return element?.jquery ? element[0] : element;
@@ -234,8 +271,8 @@ function isItemDrag(event) {
 
 function bindDropAnywhere(sheet) {
   const root = rootFor(sheet);
-  if (!root || root.dataset.add2eDropAnywhereBound === "safe-v2") return;
-  root.dataset.add2eDropAnywhereBound = "safe-v2";
+  if (!root || root.dataset.add2eDropAnywhereBound === "safe-v3") return;
+  root.dataset.add2eDropAnywhereBound = "safe-v3";
   root.addEventListener("dragover", event => {
     if (!isItemDrag(event)) return;
     event.preventDefault();
@@ -288,6 +325,7 @@ globalThis.Add2eActorSheet.prototype._onDrop = async function add2eSafeOnDrop(ev
   if (["classe", "race"].includes(type)) return applyClassOrRaceDrop(this, itemData);
 
   let spellCheck = null;
+  let pendingKey = "";
   if (type === "sort" && typeof globalThis.add2eCanActorUseSpell === "function") {
     const source = itemData.uuid ? await fromUuid(itemData.uuid).catch(() => null) : null;
     const spellSource = source?.system ? source : { name: itemData.name, type: itemData.type, system: itemData.system, flags: itemData.flags };
@@ -301,28 +339,43 @@ globalThis.Add2eActorSheet.prototype._onDrop = async function add2eSafeOnDrop(ev
       return false;
     }
     itemData = markManualSpellList(itemData, spellCheck.entry);
-  }
-
-  const existing = Array.from(this.actor.items ?? []).find(item => item.name === itemData.name && itemType(item) === type) ?? null;
-  if (existing) {
-    if (type === "sort" && sameSpell(existing, itemData) && spellCheck?.entry) {
-      const result = await add2eDropLearnSpellListOnExisting(this.actor, existing, spellCheck.entry);
-      if (result?.handled) return result.updated;
+    pendingKey = spellDropKey(this.actor, itemData, spellCheck.entry);
+    if (ADD2E_SPELL_DROP_PENDING.has(pendingKey)) {
+      ui.notifications?.info?.(`Ajout de “${itemData.name}” en cours.`);
+      return true;
     }
-    ui.notifications.warn(`"${itemData.name}" est déjà présent sur cet acteur.`);
-    return false;
+    ADD2E_SPELL_DROP_PENDING.add(pendingKey);
   }
 
-  const [created] = await this.actor.createEmbeddedDocuments("Item", [clone(itemData)], { add2eInternal: true });
-  if (!created) return false;
-  await applyItemEffects(this.actor, created);
-  this._add2eRememberActiveTab?.();
-  this.render(false);
-  return true;
+  try {
+    const existing = Array.from(this.actor.items ?? []).find(item => item.name === itemData.name && itemType(item) === type) ?? null;
+    if (existing) {
+      if (type === "sort" && sameSpell(existing, itemData) && spellCheck?.entry) {
+        const result = await add2eDropLearnSpellListOnExisting(this.actor, existing, spellCheck.entry);
+        if (result?.handled) {
+          await finalizeSpellDrop(this, this.actor);
+          if (result.alreadyKnown) ui.notifications?.info?.(`“${existing.name}” est déjà connu pour cette liste.`);
+          return true;
+        }
+      }
+      ui.notifications.warn(`"${itemData.name}" est déjà présent sur cet acteur.`);
+      return false;
+    }
+
+    const [created] = await this.actor.createEmbeddedDocuments("Item", [clone(itemData)], { add2eInternal: true });
+    if (!created) return false;
+    await applyItemEffects(this.actor, created);
+    this._add2eRememberActiveTab?.();
+    if (type === "sort") await finalizeSpellDrop(this, this.actor);
+    else await renderDropResult(this, this.actor);
+    return true;
+  } finally {
+    if (pendingKey) ADD2E_SPELL_DROP_PENDING.delete(pendingKey);
+  }
 };
 
-if (!globalThis.Add2eActorSheet.prototype.__add2eDropAnywhereBoundSafeV2) {
-  globalThis.Add2eActorSheet.prototype.__add2eDropAnywhereBoundSafeV2 = true;
+if (!globalThis.Add2eActorSheet.prototype.__add2eDropAnywhereBoundSafeV3) {
+  globalThis.Add2eActorSheet.prototype.__add2eDropAnywhereBoundSafeV3 = true;
   const previousOnRender = globalThis.Add2eActorSheet.prototype._onRender;
   globalThis.Add2eActorSheet.prototype._onRender = async function add2eSafeDropOnRender(context, options = {}) {
     const result = await previousOnRender.call(this, context, options);
@@ -335,4 +388,3 @@ try { globalThis.add2eDropPurgeClassContent = add2eDropPurgeClassContent; } catc
 try { globalThis.add2eDropBulkDelete = add2eDropBulkDelete; } catch (_error) {}
 try { globalThis.add2eDropIsBoutiqueConsumable = isBoutiqueConsumable; } catch (_error) {}
 try { globalThis.add2eDropLearnSpellListOnExisting = add2eDropLearnSpellListOnExisting; } catch (_error) {}
-try { globalThis.add2eDropNormalizeProjectileItemData = add2eDropNormalizeProjectileItemData; } catch (_error) {}
