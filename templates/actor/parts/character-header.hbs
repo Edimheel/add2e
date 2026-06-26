@@ -141,7 +141,7 @@
 
       <div class="a2e-combat-stat a2e-combat-movement">
         <label>Mouvement</label>
-        <input type="text" value="{{#if system.movement}}{{system.movement}}{{else}}{{actor.system.movement}}{{/if}} m" readonly>
+        <input type="text" value="{{#if actor.system.mouvement}}{{actor.system.mouvement.actuel}}{{else}}{{#if actor.system.movement}}{{actor.system.movement}}{{else}}{{system.vitesse_deplacement}}{{/if}}{{/if}} m" readonly>
       </div>
 
       <div class="a2e-combat-stat a2e-combat-alignment">
