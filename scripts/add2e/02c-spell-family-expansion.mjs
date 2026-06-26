@@ -1,5 +1,5 @@
-const ADD2E_SPELL_FAMILY_VERSION = "2026-06-25-spell-family-material-profiles-v9";
-const ADD2E_SPELL_FAMILY_MATERIAL_MIGRATION = "2026-06-25-spell-family-material-profiles-v10";
+const ADD2E_SPELL_FAMILY_VERSION = "2026-06-26-spell-family-material-forced-deletion-v10";
+const ADD2E_SPELL_FAMILY_MATERIAL_MIGRATION = "2026-06-26-spell-family-material-forced-deletion-v11";
 
 const SPELL_FAMILY_PENDING = globalThis.ADD2E_SPELL_FAMILY_PENDING instanceof Set
   ? globalThis.ADD2E_SPELL_FAMILY_PENDING
@@ -19,6 +19,12 @@ const clone = value => {
     catch (_duplicateError) { return JSON.parse(JSON.stringify(value)); }
   }
 };
+
+function forcedDeletion() {
+  const deletion = foundry?.data?.operators?.ForcedDeletion;
+  if (!deletion) throw new Error("[ADD2E] FoundryData ForcedDeletion est indisponible.");
+  return deletion;
+}
 
 const normalize = value => String(value ?? "")
   .trim()
@@ -201,7 +207,7 @@ function itemUpdate(item, expected) {
     "flags.add2e.spellFamily": clone(add2e.spellFamily)
   };
   if (Object.prototype.hasOwnProperty.call(item?.system ?? {}, "composants_materiels_objets")) {
-    update["system.-=composants_materiels_objets"] = null;
+    update.system.composants_materiels_objets = forcedDeletion();
   }
   if (add2e.reversibleActorEntry) update["flags.add2e.reversibleActorEntry"] = clone(add2e.reversibleActorEntry);
   if (add2e.variantChoice) update["flags.add2e.variantChoice"] = clone(add2e.variantChoice);
