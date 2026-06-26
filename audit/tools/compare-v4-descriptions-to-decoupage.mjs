@@ -5,13 +5,13 @@ import { fileURLToPath } from "node:url";
 
 // ADD2E — Compare les descriptions V4 aux descriptions_reelle du découpage.
 // Lecture seule : ne modifie jamais V4, les fichiers de découpage ou les références.
-// La liaison est strictement faite par _id / id Foundry, sans rapprochement par nom.
+// La liaison est strictement résolue par identité métier unique : liste/classe + niveau + nom.
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const DEFAULT_V4 = "fvtt-spells-all-normalise-mecanique-v4.json";
 const DEFAULT_DECOUPAGE_DIR = "audit/decoupage_fichier";
 const DEFAULT_REPORT = "audit/rapports/COMPARAISON-DESCRIPTIONS-V4-DECOUPAGE.json";
-const VERSION = "2026-06-26-compare-v4-descriptions-decoupage-v1";
+const VERSION = "2026-06-26-compare-v4-descriptions-decoupage-v2";
 
 function parseArguments(argv) {
   const options = {
@@ -110,6 +110,34 @@ function normalizeDescription(value) {
     .toLocaleLowerCase("fr");
 }
 
+function normalizeName(value) {
+  return decodeEntities(value)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLocaleLowerCase("fr")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function asArray(value) {
+  if (value === undefined || value === null || value === "") return [];
+  if (Array.isArray(value)) return value.flatMap(asArray);
+  if (typeof value === "string") return value.split(/[,;|/]+/).map(part => part.trim()).filter(Boolean);
+  return [value];
+}
+
+function normalizeLists(value) {
+  return [...new Set(asArray(value).map(normalizeName).filter(Boolean))].sort();
+}
+
+function normalizeLevel(value) {
+  const numeric = Number(String(value ?? "").match(/\d+/)?.[0] ?? 0);
+  return Number.isFinite(numeric) && numeric > 0 ? String(Math.floor(numeric)) : "niveau_inconnu";
+}
+
 function compactText(value, maximum = 180) {
   const text = String(value ?? "").replace(/\s+/g, " ").trim();
   return text.length <= maximum ? text : `${text.slice(0, maximum - 1)}…`;
@@ -121,44 +149,65 @@ function firstDifference(left, right) {
   while (index < max && left[index] === right[index]) index += 1;
   if (index === left.length && index === right.length) return null;
   const before = Math.max(0, index - 80);
-  const afterLeft = Math.min(left.length, index + 120);
-  const afterRight = Math.min(right.length, index + 120);
   return {
     index,
-    v4Context: left.slice(before, afterLeft),
-    referenceContext: right.slice(before, afterRight)
+    v4Context: left.slice(before, Math.min(left.length, index + 120)),
+    referenceContext: right.slice(before, Math.min(right.length, index + 120))
   };
-}
-
-function pushById(map, id, row) {
-  const rows = map.get(id) ?? [];
-  rows.push(row);
-  map.set(id, rows);
 }
 
 function rowFromItem(item, sourceFile = null) {
   const system = item?.system ?? {};
+  const name = String(item?.name ?? system?.nom ?? "").trim();
+  const systemNom = String(system?.nom ?? "").trim();
+  const spellLists = normalizeLists(system?.spellLists);
+  const className = normalizeName(system?.classe);
+  const level = normalizeLevel(system?.niveau);
+  const normalizedName = normalizeName(name || systemNom);
+  const keys = {
+    spellLists: spellLists.length && normalizedName
+      ? `lists:${spellLists.join("+")}|niveau:${level}|nom:${normalizedName}`
+      : null,
+    classe: className && normalizedName
+      ? `classe:${className}|niveau:${level}|nom:${normalizedName}`
+      : null
+  };
+
   return {
     id: itemId(item),
-    name: String(item?.name ?? system?.nom ?? "").trim(),
-    systemNom: String(system?.nom ?? "").trim(),
-    className: system?.classe ?? null,
-    spellLists: Array.isArray(system?.spellLists) ? system.spellLists : system?.spellLists ?? null,
-    level: system?.niveau ?? null,
+    name,
+    systemNom,
+    className,
+    spellLists,
+    level,
+    normalizedName,
+    keys,
     description: String(system?.description ?? ""),
     descriptionReelle: String(system?.description_reelle ?? ""),
     sourceFile
   };
 }
 
+function indexRows(rows, keyName) {
+  const index = new Map();
+  for (const row of rows) {
+    const key = row?.keys?.[keyName];
+    if (!key) continue;
+    const candidates = index.get(key) ?? [];
+    candidates.push(row);
+    index.set(key, candidates);
+  }
+  return index;
+}
+
 function scanDecoupage(directory) {
-  const rowsById = new Map();
+  const rows = [];
   const details = {
     files: [],
     parseErrors: [],
     filesWithoutItems: [],
     sortRows: 0,
-    sortsWithoutId: []
+    sortsWithoutIdentity: []
   };
 
   for (const file of listJsonFiles(directory)) {
@@ -183,49 +232,109 @@ function scanDecoupage(directory) {
       fileSorts += 1;
       details.sortRows += 1;
       const row = rowFromItem(item, relative);
-      if (!row.id) {
-        details.sortsWithoutId.push({ file: relative, nom: row.name || row.systemNom });
-        continue;
+      if (!row.normalizedName || row.level === "niveau_inconnu" || (!row.keys.spellLists && !row.keys.classe)) {
+        details.sortsWithoutIdentity.push({ file: relative, id: row.id, nom: row.name || row.systemNom });
       }
-      pushById(rowsById, row.id, row);
+      rows.push(row);
     }
     details.files.push({ file: relative, itemsContainer: key ?? "array", sorts: fileSorts });
   }
 
-  return { rowsById, details };
+  return {
+    rows,
+    indexes: {
+      spellLists: indexRows(rows, "spellLists"),
+      classe: indexRows(rows, "classe")
+    },
+    details
+  };
 }
 
 function scanV4(document) {
   const { key, items } = getItemsContainer(document);
   if (!items) throw new Error("Aucune collection d'items trouvée dans V4.");
 
-  const rowsById = new Map();
+  const rows = [];
   const details = {
     itemsContainer: key ?? "array",
     sourceItems: items.length,
     sortRows: 0,
-    sortsWithoutId: []
+    sortsWithoutIdentity: []
   };
 
   for (const item of items) {
     if (!isSpell(item)) continue;
     details.sortRows += 1;
     const row = rowFromItem(item, null);
-    if (!row.id) {
-      details.sortsWithoutId.push({ nom: row.name || row.systemNom });
-      continue;
+    if (!row.normalizedName || row.level === "niveau_inconnu" || (!row.keys.spellLists && !row.keys.classe)) {
+      details.sortsWithoutIdentity.push({ id: row.id, nom: row.name || row.systemNom });
     }
-    pushById(rowsById, row.id, row);
+    rows.push(row);
   }
 
-  return { rowsById, details };
+  return {
+    rows,
+    indexes: {
+      spellLists: indexRows(rows, "spellLists"),
+      classe: indexRows(rows, "classe")
+    },
+    details
+  };
+}
+
+function rowSummary(row) {
+  return {
+    id: row.id,
+    nom: row.name || row.systemNom,
+    nomSysteme: row.systemNom,
+    classe: row.className || null,
+    listes: row.spellLists,
+    niveau: row.level,
+    fichier: row.sourceFile
+  };
+}
+
+function rowReferenceKey(row) {
+  return `${row.sourceFile ?? "v4"}|${row.id ?? "sans-id"}|${row.keys.spellLists ?? row.keys.classe ?? row.normalizedName}`;
+}
+
+function findResolution(row, v4Indexes, referenceIndexes) {
+  const possible = [];
+  const conflicts = [];
+  for (const method of ["spellLists", "classe"]) {
+    const key = row.keys?.[method];
+    if (!key) continue;
+    const sourceRows = v4Indexes[method].get(key) ?? [];
+    const referenceRows = referenceIndexes[method].get(key) ?? [];
+    if (sourceRows.length === 1 && referenceRows.length === 1) {
+      possible.push({ method, key, reference: referenceRows[0] });
+    } else if (sourceRows.length > 1 || referenceRows.length > 1) {
+      conflicts.push({
+        method,
+        key,
+        v4Candidates: sourceRows.map(rowSummary),
+        decoupageCandidates: referenceRows.map(rowSummary)
+      });
+    }
+  }
+
+  const uniqueReferences = new Map(possible.map(entry => [rowReferenceKey(entry.reference), entry]));
+  if (uniqueReferences.size === 1) {
+    const entries = [...uniqueReferences.values()];
+    const preferred = entries.find(entry => entry.method === "spellLists") ?? entries[0];
+    return { status: "matched", ...preferred, supportingMethods: entries.map(entry => entry.method), conflicts };
+  }
+  if (uniqueReferences.size > 1 || conflicts.length) {
+    return { status: "ambiguous", possibilities: possible, conflicts };
+  }
+  return { status: "unmatched" };
 }
 
 function metadataMismatch(v4, reference) {
   const mismatches = [];
-  if (v4.name && reference.name && v4.name !== reference.name) mismatches.push("name");
-  if (v4.systemNom && reference.systemNom && v4.systemNom !== reference.systemNom) mismatches.push("system.nom");
-  if (String(v4.level ?? "") !== String(reference.level ?? "")) mismatches.push("niveau");
+  if (v4.name && reference.name && normalizeName(v4.name) !== normalizeName(reference.name)) mismatches.push("name");
+  if (v4.systemNom && reference.systemNom && normalizeName(v4.systemNom) !== normalizeName(reference.systemNom)) mismatches.push("system.nom");
+  if (v4.level !== reference.level) mismatches.push("niveau");
   return mismatches;
 }
 
@@ -241,59 +350,92 @@ function makeReport(v4Document, v4File, decoupageDirectory) {
     },
     generatedAt: new Date().toISOString(),
     method: {
-      matching: "strict_foundry_id_only",
+      matching: "unique_canonical_identity",
+      canonicalIdentity: "spellLists ou classe + niveau + nom normalise",
       v4Field: "system.description",
       referenceField: "system.description_reelle",
-      comparison: "normalisation de la mise en forme HTML, entités, espaces, apostrophes et tirets ; aucun rapprochement par nom"
+      comparison: "normalisation de la mise en forme HTML, entités, espaces, apostrophes et tirets ; aucun rapprochement par description"
     },
     scope: {
       v4: v4.details,
       decoupage: decoupage.details
     },
     summary: {
-      matchedUniqueIds: 0,
+      matchedCanonical: 0,
+      matchedBySpellLists: 0,
+      matchedByClasse: 0,
       descriptionsIdentical: 0,
       descriptionsDifferent: 0,
       descriptionsRawDifferentButNormalizedEqual: 0,
       v4DescriptionMissing: 0,
       referenceDescriptionReelleMissing: 0,
-      v4OnlyIds: 0,
-      decoupageOnlyIds: 0,
-      duplicateV4Ids: 0,
-      duplicateDecoupageIds: 0,
-      metadataMismatchOnMatchedIds: 0
+      v4OnlyCanonical: 0,
+      decoupageOnlyCanonical: 0,
+      ambiguousCanonicalMatches: 0,
+      metadataMismatchOnMatchedRows: 0
     },
     candidates: {
       descriptionsDifferent: [],
       v4DescriptionMissing: [],
       referenceDescriptionReelleMissing: [],
-      v4OnlyIds: [],
-      decoupageOnlyIds: [],
-      duplicateV4Ids: [],
-      duplicateDecoupageIds: [],
-      metadataMismatchOnMatchedIds: []
+      v4OnlyCanonical: [],
+      decoupageOnlyCanonical: [],
+      ambiguousCanonicalMatches: [],
+      metadataMismatchOnMatchedRows: []
     },
     matched: []
   };
 
-  const allIds = new Set([...v4.rowsById.keys(), ...decoupage.rowsById.keys()]);
-  for (const id of [...allIds].sort((left, right) => left.localeCompare(right))) {
-    const v4Rows = v4.rowsById.get(id) ?? [];
-    const referenceRows = decoupage.rowsById.get(id) ?? [];
-
-    if (v4Rows.length > 1) {
-      report.summary.duplicateV4Ids += 1;
-      report.candidates.duplicateV4Ids.push({ id, rows: v4Rows.map(row => ({ nom: row.name, sourceFile: row.sourceFile })) });
+  const proposals = [];
+  for (const row of v4.rows) {
+    const resolution = findResolution(row, v4.indexes, decoupage.indexes);
+    if (resolution.status === "matched") {
+      proposals.push({ v4: row, reference: resolution.reference, method: resolution.method, key: resolution.key, supportingMethods: resolution.supportingMethods });
+      continue;
     }
-    if (referenceRows.length > 1) {
-      report.summary.duplicateDecoupageIds += 1;
-      report.candidates.duplicateDecoupageIds.push({ id, rows: referenceRows.map(row => ({ nom: row.name, sourceFile: row.sourceFile })) });
+    if (resolution.status === "ambiguous") {
+      report.summary.ambiguousCanonicalMatches += 1;
+      report.candidates.ambiguousCanonicalMatches.push({
+        v4: rowSummary(row),
+        possibilities: resolution.possibilities.map(entry => ({ method: entry.method, key: entry.key, decoupage: rowSummary(entry.reference) })),
+        conflicts: resolution.conflicts
+      });
+      continue;
     }
-    if (v4Rows.length !== 1 || referenceRows.length !== 1) continue;
+    report.summary.v4OnlyCanonical += 1;
+    report.candidates.v4OnlyCanonical.push(rowSummary(row));
+  }
 
-    const current = v4Rows[0];
-    const reference = referenceRows[0];
-    report.summary.matchedUniqueIds += 1;
+  const proposalsByReference = new Map();
+  for (const proposal of proposals) {
+    const key = rowReferenceKey(proposal.reference);
+    const rows = proposalsByReference.get(key) ?? [];
+    rows.push(proposal);
+    proposalsByReference.set(key, rows);
+  }
+
+  const accepted = [];
+  for (const proposalsForReference of proposalsByReference.values()) {
+    if (proposalsForReference.length === 1) {
+      accepted.push(proposalsForReference[0]);
+      continue;
+    }
+    report.summary.ambiguousCanonicalMatches += proposalsForReference.length;
+    report.candidates.ambiguousCanonicalMatches.push({
+      v4: proposalsForReference.map(proposal => rowSummary(proposal.v4)),
+      decoupage: rowSummary(proposalsForReference[0].reference),
+      reason: "plusieurs sorts V4 correspondent à la même référence du découpage"
+    });
+  }
+
+  const usedReferences = new Set();
+  for (const proposal of accepted) {
+    const current = proposal.v4;
+    const reference = proposal.reference;
+    usedReferences.add(rowReferenceKey(reference));
+    report.summary.matchedCanonical += 1;
+    if (proposal.method === "spellLists") report.summary.matchedBySpellLists += 1;
+    else report.summary.matchedByClasse += 1;
 
     const currentRaw = current.description;
     const referenceRaw = reference.descriptionReelle;
@@ -301,18 +443,24 @@ function makeReport(v4Document, v4File, decoupageDirectory) {
     const referenceNormalized = normalizeDescription(referenceRaw);
     const mismatch = metadataMismatch(current, reference);
     if (mismatch.length) {
-      report.summary.metadataMismatchOnMatchedIds += 1;
-      report.candidates.metadataMismatchOnMatchedIds.push({ id, v4: current, reference: { name: reference.name, systemNom: reference.systemNom, level: reference.level, sourceFile: reference.sourceFile }, mismatches: mismatch });
+      report.summary.metadataMismatchOnMatchedRows += 1;
+      report.candidates.metadataMismatchOnMatchedRows.push({
+        matchMethod: proposal.method,
+        key: proposal.key,
+        v4: rowSummary(current),
+        decoupage: rowSummary(reference),
+        mismatches: mismatch
+      });
     }
 
     if (!currentNormalized) {
       report.summary.v4DescriptionMissing += 1;
-      report.candidates.v4DescriptionMissing.push({ id, nom: current.name || current.systemNom, referenceFile: reference.sourceFile, referencePreview: compactText(referenceRaw) });
+      report.candidates.v4DescriptionMissing.push({ id: current.id, nom: current.name || current.systemNom, decoupageFile: reference.sourceFile, referencePreview: compactText(referenceRaw), matchMethod: proposal.method });
       continue;
     }
     if (!referenceNormalized) {
       report.summary.referenceDescriptionReelleMissing += 1;
-      report.candidates.referenceDescriptionReelleMissing.push({ id, nom: current.name || current.systemNom, decoupageFile: reference.sourceFile, v4Preview: compactText(currentRaw) });
+      report.candidates.referenceDescriptionReelleMissing.push({ id: current.id, nom: current.name || current.systemNom, decoupageFile: reference.sourceFile, v4Preview: compactText(currentRaw), matchMethod: proposal.method });
       continue;
     }
 
@@ -321,21 +469,25 @@ function makeReport(v4Document, v4File, decoupageDirectory) {
     if (normalizedEqual) {
       report.summary.descriptionsIdentical += 1;
       if (!rawEqual) report.summary.descriptionsRawDifferentButNormalizedEqual += 1;
-      report.matched.push({ id, nom: current.name || current.systemNom, status: rawEqual ? "identical_raw" : "identical_normalized", decoupageFile: reference.sourceFile });
+      report.matched.push({ id: current.id, nom: current.name || current.systemNom, status: rawEqual ? "identical_raw" : "identical_normalized", matchMethod: proposal.method, decoupageFile: reference.sourceFile });
       continue;
     }
 
     report.summary.descriptionsDifferent += 1;
-    const difference = {
-      id,
+    report.candidates.descriptionsDifferent.push({
+      id: current.id,
       nom: current.name || current.systemNom,
+      matchMethod: proposal.method,
+      canonicalKey: proposal.key,
       v4: {
+        id: current.id,
         name: current.name,
         systemNom: current.systemNom,
         level: current.level,
         description: currentRaw
       },
       decoupage: {
+        id: reference.id,
         name: reference.name,
         systemNom: reference.systemNom,
         level: reference.level,
@@ -343,22 +495,17 @@ function makeReport(v4Document, v4File, decoupageDirectory) {
         descriptionReelle: referenceRaw
       },
       firstDifference: firstDifference(currentNormalized, referenceNormalized)
-    };
-    report.candidates.descriptionsDifferent.push(difference);
+    });
   }
 
-  for (const [id, rows] of v4.rowsById) {
-    if (decoupage.rowsById.has(id)) continue;
-    report.summary.v4OnlyIds += 1;
-    report.candidates.v4OnlyIds.push({ id, rows: rows.map(row => ({ nom: row.name || row.systemNom, niveau: row.level })) });
-  }
-  for (const [id, rows] of decoupage.rowsById) {
-    if (v4.rowsById.has(id)) continue;
-    report.summary.decoupageOnlyIds += 1;
-    report.candidates.decoupageOnlyIds.push({ id, rows: rows.map(row => ({ nom: row.name || row.systemNom, niveau: row.level, file: row.sourceFile })) });
+  for (const reference of decoupage.rows) {
+    const key = rowReferenceKey(reference);
+    if (usedReferences.has(key)) continue;
+    report.summary.decoupageOnlyCanonical += 1;
+    report.candidates.decoupageOnlyCanonical.push(rowSummary(reference));
   }
 
-  report.notice = "Ce rapport indique uniquement les écarts entre V4 et description_reelle du découpage. Il ne prouve pas encore la conformité au Manuel des joueurs et ne modifie aucune donnée.";
+  report.notice = "Ce rapport compare V4 à description_reelle du découpage. Les écarts signalent des candidats à vérifier dans le Manuel des joueurs ; aucune donnée n'est modifiée automatiquement.";
   return report;
 }
 
