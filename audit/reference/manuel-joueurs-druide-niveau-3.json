@@ -6,146 +6,245 @@
     "niveau": 3,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_liste_noms_complete_regles_a_completer",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 12,
   "foundryExport": "audit/decoupage_fichier/druide-niveau-3.json",
-  "rules": {
-    "included": [
-      "nom du sort",
-      "classe",
-      "niveau",
-      "ordre dans le tableau du Manuel des joueurs",
-      "nombre de sorts attendu",
-      "variantes explicitement nommées dans le Manuel des joueurs",
-      "réversibilité et nom de l’inverse quand le Manuel le donne"
-    ],
-    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis.",
-    "variantes": "Le tableau variantes est vide lorsqu’aucun choix de forme explicitement nommé ne figure dans le Manuel des joueurs.",
-    "reversibilite": "Le champ reversible est toujours booléen. Le champ inverse vaut null lorsque le Manuel indique un sort réversible sans donner de nom distinct à sa forme inverse."
-  },
   "spells": [
     {
       "ordre": 1,
       "nom": "Arbre",
+      "ecole": "Altération",
       "niveau": 3,
+      "portee": "0",
+      "duree": "6 tours + 1 tour/niveau",
+      "zone_effet": "personnelle",
+      "composantes": "V, S, M",
+      "temps_incantation": "5 segments",
+      "jet_sauvegarde": "aucun",
+      "description": "avec ce sort, le druide est capable de prendre l’apparence d’un petit arbre ou arbuste vivant, d’un buisson ou d’un gros tronc mort avec quelques branches. Bien que l’inspection la plus minutieuse ne révèle rien, le druide peut observer tout ce qui se passe autour de lui, comme le ferait un homme normal. Le lanceur du sort peut annuler ce pouvoir magique à n’importe quel moment, se transformant instantanément d’arbre en homme et possédant toutes ses capacités pour entreprendre des actions. Tous les vêtements et l’équipement portés par le druide se transforment avec lui. La classe d’armure et les points de vie de la plante en question sont ceux du druide. Les composantes matérielles de ce sort sont du gui et une petite branche d’arbre.",
+      "composants_materiels_objets": [
+        {"nom": "gui du druide", "quantite": 1, "consommation": "non_consomme", "cout_po": null, "source": "Manuel des joueurs", "condition": null, "notes": "Symbole religieux druidique requis par la règle générale du Manuel pour les sorts avec composante matérielle."},
+        {"nom": "petite branche d’arbre", "quantite": 1, "consommation": "consomme", "cout_po": null, "source": "Manuel des joueurs", "condition": null, "notes": null}
+      ],
+      "status": "reference_complete_description_normalisee",
       "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "reversible": false
     },
     {
       "ordre": 2,
       "nom": "Contre-poison",
+      "ecole": "Altération",
       "niveau": 3,
+      "portee": "au toucher",
+      "duree": "permanente",
+      "zone_effet": "créature touché",
+      "composantes": "V, S",
+      "temps_incantation": "5 segments",
+      "jet_sauvegarde": "aucun",
+      "description": "ce sort est le même que le sort de niveau 4 de clerc contre-poison (voir p.48).",
+      "composants_materiels_objets": [],
+      "status": "reference_complete_description_normalisee",
       "variantes": [],
       "reversible": true,
       "inverse": "Empoisonnement",
-      "inverseNameStatus": "manual_explicit",
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "inverseNameStatus": "manual_explicit"
     },
     {
       "ordre": 3,
       "nom": "Embroussaillement",
+      "ecole": "Altération",
       "niveau": 3,
+      "portee": "16\"",
+      "duree": "permanente",
+      "zone_effet": "surface de 2\" x 2\"/niveau",
+      "composantes": "V, S, M",
+      "temps_incantation": "1 round",
+      "jet_sauvegarde": "aucun",
+      "description": "quand ce sort est lancé, le druide provoque une poussée de la végétation ; les végétaux poussent, s’emmêlent, s’enchevêtrent pour former un fourré très dense, que les créatures doivent tailler ou écarter de force si elles veulent en sortir. Leur vitesse de déplacement dans ces fourrés est de 1\" pour les créatures de taille humaine ou moins et de 2\" pour les créatures de plus grande taille. À noter que la zone affectée doit avoir des buissons et des arbres pour que le sort soit efficace. Les ronces, buissons, plantes rampantes, lianes, racines, arbustes, chardons, épineux, mauvaises herbes, vignes, arbres deviennent assez épais et hauts pour former une barrière. La zone d’effet est de 2\" x 2\" par niveau du druide, sur une surface carrée ou rectangulaire, au choix du druide. Ainsi un druide de niveau 8 peut affecter une surface maximale de 16\" x 16\", 32\" x 8\", 64\" x 4\", 182\" x 2\", etc. Les effets du sort durent jusqu’à ce qu’il soit annulés par un débroussaillement dû au travail, au feu ou à un moyen magique, dissipation de la magie par exemple.",
+      "composants_materiels_objets": [
+        {"nom": "gui du druide", "quantite": 1, "consommation": "non_consomme", "cout_po": null, "source": "Manuel des joueurs", "condition": null, "notes": "Symbole religieux druidique requis par la règle générale du Manuel pour les sorts avec composante matérielle."}
+      ],
+      "status": "reference_complete_description_normalisee",
       "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "reversible": false
     },
     {
       "ordre": 4,
       "nom": "Guérison des maladies",
+      "ecole": "Nécromancie",
       "niveau": 3,
+      "portee": "au toucher",
+      "duree": "permanente",
+      "zone_effet": "créature touchée",
+      "composantes": "V, S, M",
+      "temps_incantation": "1 round",
+      "jet_sauvegarde": "aucun",
+      "description": "ce sort est le même que le sort de niveau 3 de clerc guérison des maladies (voir p.47), excepté le fait que le druide doit avoir du gui. L’inverse, contamination, inflige aussi les maladies.",
+      "composants_materiels_objets": [
+        {"nom": "gui du druide", "quantite": 1, "consommation": "non_consomme", "cout_po": null, "source": "Manuel des joueurs", "condition": null, "notes": "Symbole religieux druidique requis par la règle générale du Manuel pour les sorts avec composante matérielle."}
+      ],
+      "status": "reference_complete_description_normalisee",
       "variantes": [],
       "reversible": true,
       "inverse": "Contamination",
-      "inverseNameStatus": "manual_explicit",
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "inverseNameStatus": "manual_explicit"
     },
     {
       "ordre": 5,
       "nom": "Invocation de la foudre",
+      "ecole": "Altération",
       "niveau": 3,
+      "portee": "0",
+      "duree": "1 tour/niveau",
+      "zone_effet": "72\" de diamètre",
+      "composantes": "V, S, M",
+      "temps_incantation": "1 tour",
+      "jet_sauvegarde": "1/2",
+      "description": "pour que ce sort puisse être lancé, il doit y avoir des conditions climatiques précises du type tempête dans la zone d’effet : une averse importante, des nuages et du vent, un temps chaud et nuageux ou même une tornade. Le druide est alors capable de provoquer des éclairs qui viendront frapper le sol. Chaque éclair causera les dégâts suivants : 2d8 + 1d8 pour chaque niveau du druide ; ainsi un druide de niveau 4 peut créer un éclair qui provoquera 6d8 de dégâts. L’éclair frappe perpendiculairement au sol, là où le druide le désire, jusqu’à une distance de 36\" maximum de rayon. Toute créature se trouvant au point d’impact ou à moins de 1\" du point d’impact de l’éclair subira les dégâts entiers, à moins qu’elle ne réussisse son jet de protection : dans ce cas, elle ne subira que la moitié des dégâts. Le jet de protection, selon qu’il est réussi ou non, indiquera le nombre de d8 qui seront lancés pour déterminer les dégâts : dans le cas d’un druide de niveau 6, 8d8 si le jet de protection est raté, 4d8 s’il est réussi. Le druide peut appeler un éclair par tour et il peut appeler autant d’éclair qu’il a de niveaux, avec un tour de préparation entre chaque éclair. Ce sort n’est utilisable qu’en extérieur. Si un djinn ou un élémentaire d’air est là pour créer un tourbillon, la force des éclairs que peut alors invoquer le druide est réduite de moitié. Ce sort ne peut pas être utilisé sous l’eau.",
+      "composants_materiels_objets": [
+        {"nom": "gui du druide", "quantite": 1, "consommation": "non_consomme", "cout_po": null, "source": "Manuel des joueurs", "condition": null, "notes": "Symbole religieux druidique requis par la règle générale du Manuel pour les sorts avec composante matérielle."}
+      ],
+      "status": "reference_complete_description_normalisee",
       "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "reversible": false
     },
     {
       "ordre": 6,
       "nom": "Invocation d'insectes",
+      "ecole": "Conjuration/Appel",
       "niveau": 3,
+      "portee": "3\"",
+      "duree": "1 round/niveau",
+      "zone_effet": "spéciale",
+      "composantes": "V, S, M",
+      "temps_incantation": "1 round",
+      "jet_sauvegarde": "aucun",
+      "description": "quand ce sort est lancé, le druide attire des insectes (70 % de chances que ce soient des insectes volants). Les insectes invoqués sont des mouches, des abeilles, des bourdons ou des guêpes si ce sont des insectes volants ; des fourmis ou des coléoptères (scarabées) si ce sont des insectes rampants. Un nuage d'insectes volants, ou un essaim de rampants, apparaîtra après le lancement du sort. Ils attaqueront toute créature que désignera le druide. La créature attaquée subira 2 points de dégâts par round de combat et elle ne peut rien faire d'autre que d'essayer de s'éloigner des insectes pendant le temps où elle se fait attaquer. Les insectes peuvent ensuite attaquer une autre créature mais il se passe 1 round entre le moment où ils laissent la première victime pour attaquer la deuxième ; les insectes rampants ne se déplacent que de 3,60 m par round (vitesse maximum sur un sol lisse). En intérieur et sous-sol, le druide a 30 % de chances d'invoquer de 1 à 4 fourmis géantes, à moins que des fourmis géantes soient proches. Les composantes matérielles pour ce sort sont du gui, un pétale de fleur et un peu de boue ou d'argile humide.",
+      "composants_materiels_objets": [
+        {"nom": "gui du druide", "quantite": 1, "consommation": "non_consomme", "cout_po": null, "source": "Manuel des joueurs", "condition": null, "notes": "Symbole religieux druidique requis par la règle générale du Manuel pour les sorts avec composante matérielle."},
+        {"nom": "pétale de fleur", "quantite": 1, "consommation": "consomme", "cout_po": null, "source": "Manuel des joueurs", "condition": null, "notes": null},
+        {"nom": "boue ou argile humide", "quantite": 1, "consommation": "consomme", "cout_po": null, "source": "Manuel des joueurs", "condition": null, "notes": null}
+      ],
+      "status": "reference_complete_description_normalisee",
       "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "reversible": false
     },
     {
       "ordre": 7,
       "nom": "Lithomorphose",
+      "ecole": "Altération",
       "niveau": 3,
+      "portee": "au toucher",
+      "duree": "permanente jusqu'à déclenchement",
+      "zone_effet": "81 dm³ + 27 dm³/niveau",
+      "composantes": "V, S, M",
+      "temps_incantation": "1 round",
+      "jet_sauvegarde": "aucun",
+      "description": "ce sort est exactement le même que le sort de niveau 5 de magicien, lithomorphose (voir p.81), excepté ci-dessus et le fait que le druide a besoin de gui comme composante matérielle supplémentaire.",
+      "composants_materiels_objets": [
+        {"nom": "gui du druide", "quantite": 1, "consommation": "non_consomme", "cout_po": null, "source": "Manuel des joueurs", "condition": null, "notes": "Symbole religieux druidique requis par la règle générale du Manuel pour les sorts avec composante matérielle."}
+      ],
+      "status": "reference_complete_description_normalisee",
       "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "reversible": false
     },
     {
       "ordre": 8,
       "nom": "Paralysie animale",
+      "ecole": "Enchantement/Charme",
       "niveau": 3,
+      "portee": "8\"",
+      "duree": "2 rounds/niveau",
+      "zone_effet": "un à quatre animaux",
+      "composantes": "V, S, M",
+      "temps_incantation": "5 segments",
+      "jet_sauvegarde": "annule",
+      "description": "avec ce sort, le druide peut paralyser de 1 à 4 animaux. Les animaux affectés sont normaux ou de taille géante : mammifères, oiseaux, reptiles. Les monstres ne sont pas affectés par ce sort, comme les centaures, gorgones, harpies, naga, etc. Les aigles, castors géants, chiens, crocodiles, ours, renards, singes et animaux similaires y seront sensibles. Le sort dure 2 rounds par niveau du druide. C’est au druide de choisir le nombre d’animaux qu’il désire paralyser, mais plus il y en a, plus ils auront de chance de ne pas être touchés par le sort. Un poids maximum de 200 kg (50 kg pour les non mammifères) par animal par niveau peut être affecté, donc un druide de niveau 8 peut affecter jusqu’à 1.600 kg de mammifères ou 400 kg de non mammifères, comme des oiseaux ou des reptiles. Chaque animal a droit à un jet de protection : si un seul animal est visé par le druide, il subit un malus de –4 sur son jet de protection ; si deux sont visés, leur malus est de –2 ; si trois sont visés, leur malus est de –1 et si quatre sont visés, leur jet de protection est normal.",
+      "composants_materiels_objets": [
+        {"nom": "gui du druide", "quantite": 1, "consommation": "non_consomme", "cout_po": null, "source": "Manuel des joueurs", "condition": null, "notes": "Symbole religieux druidique requis par la règle générale du Manuel pour les sorts avec composante matérielle."}
+      ],
+      "status": "reference_complete_description_normalisee",
       "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "reversible": false
     },
     {
       "ordre": 9,
       "nom": "Piège sylvestre",
+      "ecole": "Enchantement/Charme",
       "niveau": 3,
+      "portee": "au toucher",
+      "duree": "permanente jusqu'à déclenchement",
+      "zone_effet": "cercle d’un diamètre de 60 cm + 5 cm/niveau",
+      "composantes": "V, S, M",
+      "temps_incantation": "3 rounds",
+      "jet_sauvegarde": "aucun",
+      "description": "ce sort permet au druide de fabriquer un collet, à 90 % indétectable sans moyen magique. Le collet peut être fait avec une liane ou son équivalent, une courroie ou une corde. Quand le sort est lancé sur cet objet, il se confond avec l’endroit où il se trouve. Un des bouts du collet se termine en nœud coulant qui pourra se resserrer autour d’un ou plusieurs membres de la créature marchant à l’intérieur de la zone d’effet. (La tête d’un ver ou d’un serpent peut ainsi être piégée). Si un arbre résistant et flexible est proche, le collet y sera attaché et le pouvoir magique du sort fera que l’arbre se courbera puis se raidira quand la boucle sera resserrée, causant ainsi 1 à 6 points de dégâts à la créature piégée ; cette dernière se trouvera suspendue par le membre attrapé (ou étranglée si c’est la tête ou le cou qui est pris). Si aucun arbre n’est à proximité, la corde s’enroulera autour du corps de la créature, ne lui causant aucun dégât mais l’immobilisant. Le collet est magique ; ainsi pendant une heure, il ne peut être cassé que par une force très importante, celle d’un géant des tempêtes ou plus (23) ; à chaque heure suivante, la magie perd de sa puissance, ce qui fait qu’une force moindre devient suffisante pour briser le collet — 22 après 2 heures, 21 après 3 heures, 20 après 4 heures — jusqu’à ce que 6 heures se soient écoulées ; à ce moment, une force de 18 pourra briser le collet. Après une période de 12 heures, le collet perd ses propriétés magiques, le nœud s’ouvre, libérant ce qu’il tenait. Le matériau du nœud coulant peut toutefois être tranché par n’importe quelle lame magique ou par n’importe quelle arme tranchante maniée avec un bonus de +2 au toucher. En plus du gui, le druide doit posséder une peau de serpent et un morceau d’une créature forte qu’il intégrera au collet.",
+      "composants_materiels_objets": [
+        {"nom": "gui du druide", "quantite": 1, "consommation": "non_consomme", "cout_po": null, "source": "Manuel des joueurs", "condition": null, "notes": "Symbole religieux druidique requis par la règle générale du Manuel pour les sorts avec composante matérielle."},
+        {"nom": "peau de serpent", "quantite": 1, "consommation": "consomme", "cout_po": null, "source": "Manuel des joueurs", "condition": null, "notes": null},
+        {"nom": "morceau d’une créature forte", "quantite": 1, "consommation": "consomme", "cout_po": null, "source": "Manuel des joueurs", "condition": null, "notes": null}
+      ],
+      "status": "reference_complete_description_normalisee",
       "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "reversible": false
     },
     {
       "ordre": 10,
       "nom": "Protection contre le feu",
+      "ecole": "Abjuration",
       "niveau": 3,
+      "portee": "au toucher",
+      "duree": "spéciale",
+      "zone_effet": "créature touchée",
+      "composantes": "V, S, M",
+      "temps_incantation": "5 segments",
+      "jet_sauvegarde": "aucun",
+      "description": "les effets de ce sort diffèrent selon qu’il est lancé sur une créature ou sur le druide lui-même. S’il est lancé sur le druide, il lui confère une invulnérabilité totale aux feux normaux (torches, feu de camp, huile enflammée, etc.). Cette invulnérabilité est aussi efficace contre les feux magiques comme ceux des démons, mains brûlantes, souffle de dragon, boule de feu, graines de feu, tempête de feu, pilier de feu, souffle de molosse satanique, nuée de météores, souffle de pyrohydre, etc. Le sort est capable d’absorber un total cumulatif de 12 points de dégâts par niveau du druide. Le sort se termine si ce total est atteint avant l’expiration normale d'un tour par niveau du druide. Si le sort est lancé sur une autre créature que le druide, il confère l’invulnérabilité aux feux normaux et un bonus de +4 sur les jets de protection contre les attaques basées sur le feu, accompagné d’une réduction de 50 % des dégâts subis.",
+      "composants_materiels_objets": [
+        {"nom": "gui du druide", "quantite": 1, "consommation": "non_consomme", "cout_po": null, "source": "Manuel des joueurs", "condition": null, "notes": "Symbole religieux druidique requis par la règle générale du Manuel pour les sorts avec composante matérielle."}
+      ],
+      "status": "reference_complete_description_normalisee",
       "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "reversible": false
     },
     {
       "ordre": 11,
       "nom": "Pyrotechnie",
+      "ecole": "Altération",
       "niveau": 3,
-      "variantes": [
-        {
-          "id": "feu_d_artifice",
-          "nom": "Feu d’artifice"
-        },
-        {
-          "id": "fumee",
-          "nom": "Fumée"
-        }
+      "portee": "16\"",
+      "duree": "spéciale",
+      "zone_effet": "10 ou 100 fois la source du feu",
+      "composantes": "V, S, M",
+      "temps_incantation": "5 segments",
+      "jet_sauvegarde": "aucun",
+      "description": "ce sort peut avoir deux effets différents. En l’air, il produit un feu d’artifices, coloré et brillant qui dure 1 segment par niveau du druide et qui aveugle temporairement les créatures qui se trouvent dans la zone d’effet ou en dessous, ou celles qui se trouvent à une distance maximale de 12\" et dont le champ de vision n’est pas obstrué. Ou alors, il provoque l’apparition d’une masse de fumée qui s’élève de la source de feu pour former un nuage suffocant qui persiste pendant 1 round par niveau du druide, prenant une forme vaguement circulaire à partir du sol ou prenant la forme du local dans lequel se trouve la zone d’effet ; cette fumée obscurcit la vision à 60 cm. Ce sort demande la présence d’un feu dans la zone autorisée. La zone d’effet de ce sort est de 10 fois le volume de la source de feu en ce qui concerne le feu d’artifices et de 100 fois pour la fumée. Dans les deux cas, la source de feu s’éteint immédiatement quand le sort est lancé. Ce sort ne peut normalement pas être utilisé sous l’eau, mais il peut être incanté et fonctionner à l’intérieur des limites d’un sort d’eau aérée.",
+      "composants_materiels_objets": [
+        {"nom": "gui du druide", "quantite": 1, "consommation": "non_consomme", "cout_po": null, "source": "Manuel des joueurs", "condition": null, "notes": "Symbole religieux druidique requis par la règle générale du Manuel pour les sorts avec composante matérielle."},
+        {"nom": "source de feu", "quantite": 1, "consommation": "non_consomme", "cout_po": null, "source": "Manuel des joueurs", "condition": null, "notes": "Une source de feu doit être présente dans la zone autorisée."}
       ],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "status": "reference_complete_description_normalisee",
+      "variantes": [{"id": "feu_d_artifice", "nom": "Feu d’artifice"}, {"id": "fumee", "nom": "Fumée"}],
+      "reversible": false
     },
     {
       "ordre": 12,
       "nom": "Respiration aquatique",
+      "ecole": "Altération",
       "niveau": 3,
+      "portee": "au toucher",
+      "duree": "6 tours/niveau",
+      "zone_effet": "créature touchée",
+      "composantes": "V, S",
+      "temps_incantation": "5 segments",
+      "jet_sauvegarde": "aucun",
+      "description": "le destinataire de ce sort est capable de respirer sous l’eau pendant la durée du sort, c'est-à-dire 6 tours par niveau du druide (1 heure/niveau). L’inverse, respiration aérienne, permet aux créatures aquatiques de respirer dans l’atmosphère pour une durée identique.",
+      "composants_materiels_objets": [],
+      "status": "reference_complete_description_normalisee",
       "variantes": [],
       "reversible": true,
       "inverse": "Respiration aérienne",
-      "inverseNameStatus": "manual_explicit",
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "inverseNameStatus": "manual_explicit"
     }
   ]
 }
