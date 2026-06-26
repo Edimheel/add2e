@@ -23,6 +23,78 @@ const MULTICLASS_CANDIDATE_PACKS = {
 };
 const MULTICLASS_CANDIDATE_CACHE = { race: null, classe: null };
 
+// Manuel des joueurs AD&D 2e, « Le personnage multi-classé » et descriptions raciales.
+// Les combinaisons sont exactes : aucune combinaison à quatre classes n'existe.
+const PHB_MULTICLASS_COMBINATIONS = Object.freeze({
+  humain: [],
+  nain: [
+    ["guerrier", "voleur"]
+  ],
+  elfe: [
+    ["guerrier", "magicien"],
+    ["guerrier", "voleur"],
+    ["magicien", "voleur"],
+    ["guerrier", "magicien", "voleur"]
+  ],
+  gnome: [
+    ["guerrier", "illusionniste"],
+    ["guerrier", "voleur"],
+    ["illusionniste", "voleur"]
+  ],
+  demi_elfe: [
+    ["clerc", "guerrier"],
+    ["clerc", "ranger"],
+    ["clerc", "magicien"],
+    ["guerrier", "magicien"],
+    ["guerrier", "voleur"],
+    ["magicien", "voleur"],
+    ["clerc", "guerrier", "magicien"]
+  ],
+  demi_orque: [
+    ["clerc", "guerrier"],
+    ["clerc", "voleur"],
+    ["clerc", "assassin"],
+    ["guerrier", "voleur"],
+    ["guerrier", "assassin"]
+  ],
+  petite_gens: [
+    ["guerrier", "voleur"]
+  ]
+});
+
+const CLASS_TOKEN_ALIASES = Object.freeze({
+  cleric: "clerc",
+  priest: "clerc",
+  pretre: "clerc",
+  guerrier: "guerrier",
+  fighter: "guerrier",
+  warrior: "guerrier",
+  magicien: "magicien",
+  mage: "magicien",
+  wizard: "magicien",
+  magician: "magicien",
+  magic_user: "magicien",
+  illusionist: "illusionniste",
+  illusionniste: "illusionniste",
+  thief: "voleur",
+  rogue: "voleur",
+  voleur: "voleur",
+  assassin: "assassin",
+  ranger: "ranger",
+  rodeur: "ranger",
+  druid: "druide",
+  druide: "druide"
+});
+
+function canonicalClassToken(value) {
+  const key = norm(value);
+  return CLASS_TOKEN_ALIASES[key] ?? key;
+}
+
+function raceKey(raceData) {
+  return norm(itemLabel(raceData, "Race"));
+}
+
 function candidateKey(data) {
   const system = data?.system ?? {};
   return norm(data?.name ?? system.slug ?? system.label ?? system.name ?? system.nom ?? data?.id ?? "");
@@ -75,23 +147,29 @@ export async function preloadMulticlassCandidatePacks(type = null) {
 Hooks.once("ready", () => preloadMulticlassCandidatePacks().catch(error => warn("[COMPENDIUM_PRELOAD_ERROR]", error)));
 
 export function comboTokens(combo) {
-  if (Array.isArray(combo)) return combo.map(norm).filter(Boolean);
-  if (typeof combo === "string") return combo.split(/[+/;,|\n]+/).map(norm).filter(Boolean);
-  if (combo && typeof combo === "object" && Array.isArray(combo.classes)) return combo.classes.map(norm).filter(Boolean);
+  if (Array.isArray(combo)) return combo.map(canonicalClassToken).filter(Boolean);
+  if (typeof combo === "string") return combo.split(/[+/;,|\n]+/).map(canonicalClassToken).filter(Boolean);
+  if (combo && typeof combo === "object" && Array.isArray(combo.classes)) return combo.classes.map(canonicalClassToken).filter(Boolean);
   return [];
 }
 
 export function allowedCombosFromRace(raceData) {
+  const canonical = PHB_MULTICLASS_COMBINATIONS[raceKey(raceData)];
+  if (canonical) return canonical.map(combo => [...combo]);
+
   const combos = Array.isArray((raceData?.system ?? raceData ?? {}).multiclassing?.allowedCombinations)
     ? (raceData?.system ?? raceData ?? {}).multiclassing.allowedCombinations
     : [];
-  return combos.map(comboTokens).map(tokens => [...new Set(tokens)]).filter(tokens => tokens.length >= 2);
+  return combos.map(comboTokens).map(tokens => [...new Set(tokens)]).filter(tokens => tokens.length >= 2 && tokens.length <= 3);
 }
 
 export function raceAllowsClassSet(raceData, names) {
-  const wanted = [...new Set((names ?? []).map(norm).filter(Boolean))];
+  const wanted = [...new Set((names ?? []).map(canonicalClassToken).filter(Boolean))];
   if (wanted.length <= 1) return true;
-  return allowedCombosFromRace(raceData).some(combo => wanted.every(key => combo.includes(key)));
+  if (wanted.length > 3) return false;
+  return allowedCombosFromRace(raceData).some(combo =>
+    combo.length === wanted.length && wanted.every(key => combo.includes(key))
+  );
 }
 
 export function classRaceMaxLevel(classData, raceData) {
@@ -159,12 +237,14 @@ export function currentRaceOrCompatibleAlternatives(actor, predicate) {
 
 export function wantedClassNames(actor, classData = null) {
   const names = classItems(actor).map(item => item.name);
-  if (!classData || classItems(actor).some(item => classSlug(item) === classSlug(classData))) return names;
+  if (!classData || classItems(actor).some(item => canonicalClassToken(classSlug(item)) === canonicalClassToken(classSlug(classData)))) return names;
   return [...names, itemLabel(classData, "Classe")];
 }
 
 export function raceCompatibleForMulticlass(actor, classData, raceData) {
-  return raceAllowsClassSet(raceData, wantedClassNames(actor, classData))
+  const wanted = wantedClassNames(actor, classData);
+  return wanted.length <= 3
+    && raceAllowsClassSet(raceData, wanted)
     && raceMatchesClassRules(raceData, classData)
     && classPrerequisitesOk(actor, classData, raceData, { notify: false });
 }
