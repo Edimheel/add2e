@@ -2,7 +2,7 @@
   "version": "2026-06-25-spell-schema-v4-strict-v1",
   "sourceFile": "fvtt-spells-all-normalise-mecanique-v3.json",
   "sourceSha256": "44efb4d68ee962668502f8944f4b336544f9175464cdec84a159317d8e68b552",
-  "generatedAt": "2026-06-25T19:42:00.650Z",
+  "generatedAt": "2026-06-26T06:08:10.328Z",
   "canonicalSystemKeys": [
     "nom",
     "classe",
