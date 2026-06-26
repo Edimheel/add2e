@@ -38,11 +38,11 @@
         </div>
       </div>
 
-      {{#if classProgression.enabled}}
-        <div class="a2e-progression-matrix">
-          <div class="a2e-progression-row">
-            <span class="a2e-progression-row-label">Niveau</span>
-            <div class="a2e-progression-values" aria-label="Niveaux par classe">
+      <div class="a2e-progression-matrix">
+        <div class="a2e-progression-row">
+          <span class="a2e-progression-row-label">Niveau</span>
+          <div class="a2e-progression-values" aria-label="Niveaux par classe">
+            {{#if classProgression.enabled}}
               {{#each classProgression.classes as |cls|}}
                 <input class="a2e-progression-input a2e-progression-level-input"
                        type="number"
@@ -55,12 +55,22 @@
                        title="{{cls.name}} — niveau">
                 {{#unless @last}}<span class="a2e-progression-separator" aria-hidden="true">/</span>{{/unless}}
               {{/each}}
-            </div>
+            {{else}}
+              <input class="a2e-progression-input a2e-progression-level-input"
+                     type="number"
+                     name="system.niveau"
+                     value="{{actor.system.niveau}}"
+                     min="1"
+                     step="1"
+                     title="Niveau">
+            {{/if}}
           </div>
+        </div>
 
-          <div class="a2e-progression-row">
-            <span class="a2e-progression-row-label">XP</span>
-            <div class="a2e-progression-values" aria-label="Expérience par classe">
+        <div class="a2e-progression-row">
+          <span class="a2e-progression-row-label">XP</span>
+          <div class="a2e-progression-values a2e-progression-xp-values" aria-label="Expérience par classe">
+            {{#if classProgression.enabled}}
               {{#each classProgression.classes as |cls|}}
                 <input class="a2e-progression-input a2e-progression-xp-input"
                        type="number"
@@ -73,56 +83,46 @@
                        title="{{cls.name}} — XP / prochain seuil : {{cls.nextXp}}">
                 {{#unless @last}}<span class="a2e-progression-separator" aria-hidden="true">/</span>{{/unless}}
               {{/each}}
-            </div>
+            {{else}}
+              <input class="a2e-progression-input a2e-progression-xp-input"
+                     type="number"
+                     name="system.xp"
+                     value="{{actor.system.xp}}"
+                     min="0"
+                     step="1"
+                     title="{{actor.system.progression_xp}}">
+              <button type="button" class="a2e-icon-btn" data-add2e-mx="xp" title="Ajouter de l'XP">+</button>
+            {{/if}}
           </div>
+        </div>
 
-          <div class="a2e-progression-row a2e-progression-title-row">
-            <span class="a2e-progression-row-label">Titre</span>
-            <div class="a2e-progression-values a2e-progression-title-values" aria-label="Titres par classe">
+        <div class="a2e-progression-row a2e-progression-title-row">
+          <span class="a2e-progression-row-label">Titre</span>
+          <div class="a2e-progression-values a2e-progression-title-values" aria-label="Titres par classe">
+            {{#if classProgression.enabled}}
               {{#each classProgression.classes as |cls|}}
                 <span class="a2e-progression-title" title="{{cls.name}}">
                   {{#if cls.title}}{{cls.title}}{{else}}—{{/if}}
                 </span>
                 {{#unless @last}}<span class="a2e-progression-separator" aria-hidden="true">/</span>{{/unless}}
               {{/each}}
-            </div>
-          </div>
-        </div>
-      {{else}}
-        <div class="a2e-progression-matrix">
-          <div class="a2e-progression-row">
-            <span class="a2e-progression-row-label">Niveau</span>
-            <div class="a2e-progression-values">
-              <input class="a2e-progression-input a2e-progression-level-input" type="number" name="system.niveau" value="{{actor.system.niveau}}" min="1">
-            </div>
-          </div>
-
-          <div class="a2e-progression-row">
-            <span class="a2e-progression-row-label">XP</span>
-            <div class="a2e-progression-values a2e-progression-xp-single">
-              <input class="a2e-progression-input a2e-progression-xp-input" type="number" name="system.xp" value="{{actor.system.xp}}" min="0" step="1" title="{{actor.system.progression_xp}}">
-              <button type="button" class="a2e-icon-btn" data-add2e-mx="xp" title="Ajouter de l'XP">+</button>
-            </div>
-          </div>
-
-          <div class="a2e-progression-row a2e-progression-title-row">
-            <span class="a2e-progression-row-label">Titre</span>
-            <div class="a2e-progression-values a2e-progression-title-values">
+            {{else}}
               <span class="a2e-progression-title">{{progressionCourante.title}}</span>
-            </div>
+            {{/if}}
           </div>
         </div>
-      {{/if}}
+      </div>
     </section>
 
     <section class="a2e-combat-strip" aria-label="Statistiques rapides">
-      <div class="a2e-combat-stat a2e-combat-pv">
-        <label>PV</label>
-        <div class="a2e-combat-pv-values">
-          <input type="number" name="system.pdv" value="{{actor.system.pdv}}" class="pv-courant" aria-label="Points de vie courants" title="Points de vie courants">
-          <span aria-hidden="true">/</span>
-          <input type="text" value="{{actor.system.points_de_coup}}" readonly aria-label="Points de vie maximum" title="Points de vie maximum">
-        </div>
+      <div class="a2e-combat-stat a2e-combat-pv-current">
+        <label for="a2e-pv-current-{{actor.id}}">PV courant</label>
+        <input id="a2e-pv-current-{{actor.id}}" type="number" name="system.pdv" value="{{actor.system.pdv}}" class="pv-courant" title="Points de vie courants">
+      </div>
+
+      <div class="a2e-combat-stat a2e-combat-pv-max">
+        <label>PV max</label>
+        <input type="text" value="{{actor.system.points_de_coup}}" readonly title="Points de vie maximum">
       </div>
 
       <div class="a2e-combat-stat">
