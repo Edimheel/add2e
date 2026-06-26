@@ -6,243 +6,33 @@
     "niveau": 6,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_liste_noms_complete_regles_a_completer",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 24,
   "foundryExport": "audit/decoupage_fichier/magicien-niveau-6.json",
-  "rules": {
-    "included": [
-      "nom du sort",
-      "classe",
-      "niveau",
-      "ordre dans le tableau du Manuel des joueurs",
-      "nombre de sorts attendu",
-      "variantes explicitement nommées dans le Manuel des joueurs",
-      "réversibilité et nom de l’inverse quand le Manuel le donne"
-    ],
-    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis.",
-    "variantes": "Le tableau variantes est vide lorsqu’aucun choix de forme explicitement nommé ne figure dans le Manuel des joueurs.",
-    "reversibilite": "Le champ reversible est toujours booléen. Le champ inverse vaut null lorsque le Manuel indique un sort réversible sans donner de nom distinct à sa forme inverse."
-  },
   "spells": [
-    {
-      "ordre": 1,
-      "nom": "Abaissement des eaux",
-      "niveau": 6,
-      "variantes": [],
-      "reversible": true,
-      "inverse": "Gonflement des eaux",
-      "inverseNameStatus": "manual_explicit",
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 2,
-      "nom": "Bulle anti-magique",
-      "niveau": 6,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 3,
-      "nom": "Chasseur invisible",
-      "niveau": 6,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 4,
-      "nom": "Contrôle du climat",
-      "niveau": 6,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 5,
-      "nom": "Désintégration",
-      "niveau": 6,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 6,
-      "nom": "Enchantement",
-      "niveau": 6,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 7,
-      "nom": "Extension III",
-      "niveau": 6,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 8,
-      "nom": "Glissement de terrain",
-      "niveau": 6,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 9,
-      "nom": "Globe d'invulnérabilité",
-      "niveau": 6,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 10,
-      "nom": "Holographie",
-      "niveau": 6,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 11,
-      "nom": "Incantation mortelle",
-      "niveau": 6,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 12,
-      "nom": "Invocation de monstre IV",
-      "niveau": 6,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 13,
-      "nom": "Main de force de bigby",
-      "niveau": 6,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 14,
-      "nom": "Mythomancie",
-      "niveau": 6,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 15,
-      "nom": "Punition spirituelle",
-      "niveau": 6,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 16,
-      "nom": "Quête magique",
-      "niveau": 6,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 17,
-      "nom": "Réincarnation",
-      "niveau": 6,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 18,
-      "nom": "Répulsion",
-      "niveau": 6,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 19,
-      "nom": "Séparation des eaux",
-      "niveau": 6,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 20,
-      "nom": "Sphère glaciale d'Otiluke",
-      "niveau": 6,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 21,
-      "nom": "Transformation de Tenser",
-      "niveau": 6,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 22,
-      "nom": "Transmutation de pierre en chair",
-      "niveau": 6,
-      "variantes": [],
-      "reversible": true,
-      "inverse": "Transmutation de chair en pierre",
-      "inverseNameStatus": "manual_explicit",
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 23,
-      "nom": "Transvision",
-      "niveau": 6,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 24,
-      "nom": "Vigiles et sentinelles",
-      "niveau": 6,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    }
+    {"ordre":1,"nom":"Abaissement des eaux","ecole":"Altération","niveau":6,"portee":"8\"","duree":"5 rounds/niveau","zone_effet":"1/2\" x 1/2\"/niveau","composantes":"V, S, M","temps_incantation":"1 tour","jet_sauvegarde":"aucun","inverse":"Gonflement des eaux","description":"Excepté ses valeurs propres, le sort fonctionne comme abaissement des eaux de clerc. Il crée une dépression dans l’eau ou un liquide similaire ; l’inverse annule cet effet ou élève le niveau des eaux de 15 cm par niveau du magicien.","composants_materiels_objets":[{"nom":"petite fiole d’eau","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"petite fiole de poussière","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":true,"inverseNameStatus":"manual_explicit"},
+    {"ordre":2,"nom":"Bulle anti-magique","ecole":"Abjuration","niveau":6,"portee":"0","duree":"1 tour/niveau","zone_effet":"sphère de 30 cm de diamètre/niveau","composantes":"V, S","temps_incantation":"1 segment","jet_sauvegarde":"aucun","description":"Une barrière invisible suit le magicien et bloque toutes les formes de magie, y compris les souffles, regards et voix magiques. Les sorts, effets et objets magiques ne fonctionnent pas dans la sphère ; les créatures charmées ou conjurées ne peuvent y entrer, mais les créatures et projectiles normaux peuvent la traverser.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":3,"nom":"Chasseur invisible","ecole":"Conjuration/Appel","niveau":6,"portee":"1\"","duree":"spéciale","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"1 round","jet_sauvegarde":"aucun","description":"Le magicien invoque un chasseur invisible du plan élémentaire de l’air, créature de 8 dés de vie obligée de le servir. Elle peut exécuter ses ordres à grande distance, mais cherchera à détourner les missions prolongées ou compliquées de leur but.","composants_materiels_objets":[{"nom":"encens à brûler","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"bout de corne taillé en forme de croissant","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":4,"nom":"Contrôle du climat","ecole":"Altération","niveau":6,"portee":"0","duree":"4-24 heures","zone_effet":"10 à 40 km²","composantes":"V, S, M","temps_incantation":"1 tour","jet_sauvegarde":"aucun","description":"Excepté ses valeurs propres et ses composants, ce sort fonctionne comme contrôle du climat de clerc. Le magicien modifie progressivement les conditions météorologiques dans la zone, dans les limites des catégories météorologiques décrites par le Manuel.","composants_materiels_objets":[{"nom":"encens à brûler","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"mélange de terre, de bois et d’eau","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":5,"nom":"Désintégration","ecole":"Altération","niveau":6,"portee":"1/2\"/niveau","duree":"permanente","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"6 segments","jet_sauvegarde":"annule","description":"Le sort fait disparaître instantanément et définitivement la matière, y compris certaines manifestations magiques comme une Main de force de Bigby, mais pas le Globe d’invulnérabilité ou la Bulle anti-magique. Il affecte une seule créature ou un seul objet et jusqu’à 27 m³ de matière non vivante.","composants_materiels_objets":[{"nom":"pierre aimantée","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"pincée de poussière","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":6,"nom":"Enchantement","ecole":"Conjuration/Appel","niveau":6,"portee":"au toucher","duree":"spéciale","zone_effet":"un objet","composantes":"V, S, M","temps_incantation":"spécial","jet_sauvegarde":"annule","notes_regles":"Prépare un objet à recevoir des pouvoirs magiques. L’objet doit être impeccable, de très belle facture et composé de matériaux valant au moins 100 po. Le rituel demande deux à dix jours et les composants matériels dépendent de l’objet et des pouvoirs visés ; le Manuel en laisse le choix au MD.","description":"Le magicien prépare un objet non magique de qualité exceptionnelle afin qu’il puisse recevoir les sorts qui lui conféreront ses pouvoirs. Le contact avec l’objet et les délais entre les opérations doivent être respectés ; à défaut, la préparation échoue et doit être recommencée.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":7,"nom":"Extension III","ecole":"Altération","niveau":6,"portee":"0","duree":"spéciale","zone_effet":"spéciale","composantes":"V","temps_incantation":"5 segments","jet_sauvegarde":"aucun","description":"Le sort fonctionne comme Extension I. Il double la durée des sorts de niveaux 1 à 3 et augmente de 50 % celle des sorts de niveaux 4 et 5, sous les mêmes conditions de délai après le sort prolongé.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":8,"nom":"Glissement de terrain","ecole":"Altération","niveau":6,"portee":"1\"/niveau","duree":"permanente","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"spécial","jet_sauvegarde":"aucun","description":"Le sort déplace terre, argile, sable et matériaux semblables afin d’aplanir des dunes, rompre des digues ou déplacer des buttes. Il exige un tour d’incantation par tranche de 150 m² ; modifier réellement le terrain requiert l’aide d’un élémental de terre. Il ne peut ni déplacer ni faire s’écrouler des rochers.","composants_materiels_objets":[{"nom":"mélange de terre, argile, terreau ou sable dans un petit sac","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"lame en fer","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":9,"nom":"Globe d'invulnérabilité","ecole":"Abjuration","niveau":6,"portee":"0","duree":"1 round/niveau","zone_effet":"sphère de 1\" de diamètre","composantes":"V, S, M","temps_incantation":"1 round","jet_sauvegarde":"aucun","description":"Le sort fonctionne comme Globe mineur d’invulnérabilité, mais bloque les sorts de niveaux 1 à 4. Le magicien peut toujours lancer ses sorts depuis l’intérieur et à travers la sphère.","composants_materiels_objets":[{"nom":"perle de verre ou de cristal","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Composante reprise du Globe mineur d’invulnérabilité auquel le Manuel renvoie.","notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":10,"nom":"Holographie","ecole":"Altération/Illusion/Fantasme","niveau":6,"portee":"1\"/niveau","duree":"1 round/niveau","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"6 segments","jet_sauvegarde":"aucun","description":"Le magicien crée une image immatérielle de lui-même qui reproduit ses actions et peut servir de point de départ à ses sorts. Elle ne subit pas les attaques mais peut être dissipée ; elle doit rester dans son champ de vision, sinon le sort cesse.","composants_materiels_objets":[{"nom":"petite réplique du magicien","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Poupée ou figurine représentant le magicien."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":11,"nom":"Incantation mortelle","ecole":"Conjuration/Appel","niveau":6,"portee":"1\"/niveau","duree":"instantanée","zone_effet":"carré de 1/2\" de côté/niveau","composantes":"V, S, M","temps_incantation":"6 segments","jet_sauvegarde":"aucun","description":"Le sort tue instantanément un nombre de créatures déterminé par leurs dés de vie, en commençant normalement par les moins puissantes ou selon la conversion choisie. Il n’affecte ni lycanthropes, ni morts-vivants, ni créatures étrangères au plan matériel primaire.","composants_materiels_objets":[{"nom":"perle noire écrasée","quantite":1,"consommation":"consomme","cout_po":1000,"source":"Manuel des joueurs","condition":null,"notes":"Valeur minimale de 1 000 po."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":12,"nom":"Invocation de monstre IV","ecole":"Conjuration/Appel","niveau":6,"portee":"6\"","duree":"5 rounds + 1 round/niveau","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"6 segments","jet_sauvegarde":"aucun","description":"Le sort invoque un à trois monstres de niveau 4, qui apparaissent après un délai de un à trois rounds. Les règles générales sont celles d’Invocation de monstres I.","composants_materiels_objets":[{"nom":"petit sac","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Composante reprise d’Invocation de monstres I."},{"nom":"petite bougie","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Pas nécessairement allumée ; composante reprise d’Invocation de monstres I."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":13,"nom":"Main de force de bigby","ecole":"Évocation","niveau":6,"portee":"1\"/niveau","duree":"1 round/niveau","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"6 segments","jet_sauvegarde":"aucun","description":"Version renforcée de la Main d’interposition de Bigby, elle repousse jusqu’à 250 kg, ralentit les créatures plus lourdes selon leur masse et peut encaisser autant de dégâts que le magicien a de points de vie. Elle exige des armes magiques pour être touchée et a sa classe d’armure.","composants_materiels_objets":[{"nom":"gant","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":14,"nom":"Mythomancie","ecole":"Divination","niveau":6,"portee":"0","duree":"spéciale","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"spécial","jet_sauvegarde":"aucun","description":"Le sort cherche des informations sur une personne, un lieu ou un objet connu et légendaire. La durée du rituel dépend de la qualité des informations possédées ; la réponse prend souvent une forme énigmatique ou indique l’endroit où poursuivre les recherches.","composants_materiels_objets":[{"nom":"encens","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"morceaux d’ivoire disposés en rectangle","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"sacrifice approprié","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Une potion, un parchemin, un objet magique, une créature ou un autre sacrifice approprié.","notes":"Le choix dépend du rituel."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":15,"nom":"Punition spirituelle","ecole":"Évocation/Abjuration","niveau":6,"portee":"1\" + 30 cm/niveau","duree":"spéciale","zone_effet":"spéciale","composantes":"V, M","temps_incantation":"spécial","jet_sauvegarde":"spécial","description":"Ce rituel protège le magicien contre une créature puissante des plans inférieurs dont il connaît le nom. Le document préparé immobilise et châtie la créature si elle échoue à résister ; le magicien peut aussi s’en servir comme menace pour obtenir sa soumission. Une telle créature devient ensuite son ennemie jurée.","composants_materiels_objets":[{"nom":"feuille de vélin enluminée","quantite":1,"consommation":"consomme","cout_po":1000,"source":"Manuel des joueurs","condition":null,"notes":"Comprend le vélin, les plumes et l’or nécessaires à la préparation ; valeur approximative de 1 000 po."},{"nom":"poudre de rubis","quantite":1,"consommation":"consomme","cout_po":5000,"source":"Manuel des joueurs","condition":null,"notes":"Valeur minimale de 5 000 po par feuille préparée."},{"nom":"sang de démon mort de type I, II ou III","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Mélangé à la poudre de rubis pour l’encre."},{"nom":"pellicule d’or","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Recouvre les bords du vélin."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":16,"nom":"Quête magique","ecole":"Enchantement/Charme","niveau":6,"portee":"au toucher","duree":"spéciale","zone_effet":"créature touchée","composantes":"V","temps_incantation":"4 segments","jet_sauvegarde":"aucun","description":"Le magicien ordonne à une créature intelligente, consciente et libre de sa volonté de rendre un service ou de s’abstenir d’une action. Elle ne peut être contrainte à se tuer ni à accomplir une tâche clairement mortelle ; l’échec ou la déviation entraîne maladie, perte de force puis mort. Seul souhait majeur peut annuler la quête.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":17,"nom":"Réincarnation","ecole":"Nécromancie","niveau":6,"portee":"au toucher","duree":"permanente","zone_effet":"personne touchée","composantes":"V, S, M","temps_incantation":"1 tour","jet_sauvegarde":"aucun","description":"Le sort réincarne une personne morte depuis au plus un jour par niveau du magicien. La nouvelle forme apparaît après un à six tours, déterminée par la table de réincarnation du Manuel ; elle n’impose pas les jets de résistance aux traumatismes ou à la résurrection du sort de druide.","composants_materiels_objets":[{"nom":"petit tambour","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"goutte de sang","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":18,"nom":"Répulsion","ecole":"Abjuration","niveau":6,"portee":"1\"/niveau","duree":"1 round/2 niveaux","zone_effet":"1\" de large","composantes":"V, S, M","temps_incantation":"6 segments","jet_sauvegarde":"aucun","description":"Les créatures de la zone s’éloignent du magicien à 3\" par round ou à leur vitesse de déplacement initiale. Elles continuent de fuir pendant la durée d’un mouvement complet après être sorties de la portée du sort.","composants_materiels_objets":[{"nom":"petites barres de fer magnétisées","quantite":2,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Attachées aux statuettes de chien."},{"nom":"statuette de chien en ivoire","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"statuette de chien en ébène","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":19,"nom":"Séparation des eaux","ecole":"Altération","niveau":6,"portee":"1\"/niveau","duree":"5 rounds/niveau","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"1 tour","jet_sauvegarde":"aucun","description":"Excepté ses valeurs propres et ses composants, le sort fonctionne comme séparation des eaux de clerc. Il détourne l’eau ou un liquide analogue pour former une dépression ou un tunnel sous l’eau selon les limites décrites par le Manuel.","composants_materiels_objets":[{"nom":"feuille de verre ou de cristal","quantite":2,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":20,"nom":"Sphère glaciale d'Otiluke","ecole":"Altération/Évocation","niveau":6,"portee":"spéciale","duree":"spéciale","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"6 segments","jet_sauvegarde":"spécial","description":"Le sort a trois applications : congeler une étendue d’eau, projeter un fin rayon de froid ou créer une petite bille explosive. Le rayon inflige quatre dégâts par niveau si la cible ne l’évite pas ; la bille inflige 4d6 dans un rayon de 3 m, moitié sur un jet réussi. Les trois applications utilisent des composants distincts.","composants_materiels_objets":[{"nom":"fine feuille de cristal de 6 cm²","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Première application : globe à zéro absolu qui gèle l’eau.","notes":null},{"nom":"saphir blanc","quantite":1,"consommation":"consomme","cout_po":1000,"source":"Manuel des joueurs","condition":"Deuxième application : rayon de froid.","notes":"Valeur minimale de 1 000 po."},{"nom":"diamant","quantite":1,"consommation":"consomme","cout_po":1000,"source":"Manuel des joueurs","condition":"Troisième application : bille glaciale à lancer.","notes":"Valeur minimale de 1 000 po."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":21,"nom":"Transformation de Tenser","ecole":"Altération/Évocation","niveau":6,"portee":"0","duree":"1 round/niveau","zone_effet":"personnelle","composantes":"V, S, M","temps_incantation":"6 segments","jet_sauvegarde":"aucun","description":"Le magicien devient une machine de combat : ses points de vie sont doublés, sa classe d’armure gagne 4 points, ses attaques suivent la table des guerriers de même niveau et il attaque deux fois par round avec +2 aux dégâts. L’effet cesse à l’expiration, à la mort de tous ses ennemis, à sa mort ou par dissipation.","composants_materiels_objets":[{"nom":"potion d’héroïsme","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Alternative à une potion de super-héroïsme.","notes":"Bue pendant l’incantation.","alternativeGroup":"transformation_tenser"},{"nom":"potion de super-héroïsme","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Alternative à une potion d’héroïsme.","notes":"Bue pendant l’incantation.","alternativeGroup":"transformation_tenser"}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":22,"nom":"Transmutation de pierre en chair","ecole":"Altération","niveau":6,"portee":"1\"/niveau","duree":"permanente","zone_effet":"une créature","composantes":"V, S, M","temps_incantation":"6 segments","jet_sauvegarde":"spécial","inverse":"Transmutation de chair en pierre","description":"Le sort transforme la pierre en chair et peut rendre à la vie une créature pétrifiée, sous réserve du test de résistance aux traumatismes. L’inverse transforme la chair en pierre avec les mêmes modalités et autorise la cible à un jet de protection.","composants_materiels_objets":[{"nom":"pincée de terre","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Forme normale : pierre en chair.","notes":null,"alternativeGroup":"pierre_chair"},{"nom":"goutte de sang","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Forme normale : pierre en chair.","notes":null,"alternativeGroup":"pierre_chair"},{"nom":"chaux","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Forme inverse : chair en pierre.","notes":null,"alternativeGroup":"chair_pierre"},{"nom":"eau","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Forme inverse : chair en pierre.","notes":null,"alternativeGroup":"chair_pierre"},{"nom":"terre","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Forme inverse : chair en pierre.","notes":null,"alternativeGroup":"chair_pierre"}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":true,"inverseNameStatus":"manual_explicit"},
+    {"ordre":23,"nom":"Transvision","ecole":"Altération","niveau":6,"portee":"au toucher","duree":"1 round/niveau","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"1 round","jet_sauvegarde":"aucun","description":"Le magicien rend transparente une section de métal, pierre ou bois, sauf le plomb, l’or et le platine. Il peut la rendre visible à lui seul ou créer une fenêtre à sens unique ; l’épaisseur possible dépend de la matière mais sa résistance ne change pas.","composants_materiels_objets":[{"nom":"petit morceau de verre ou de cristal","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":24,"nom":"Vigiles et sentinelles","ecole":"Altération/Évocation/Enchantement/Charme","niveau":6,"portee":"0","duree":"6 tours/niveau","zone_effet":"sphère de 1\" de rayon + 1\" de rayon/niveau","composantes":"V, S, M","temps_incantation":"3 tours","jet_sauvegarde":"aucun","description":"Le sort défend une zone connue du magicien : couloirs brumeux, portes verrouillées, portes masquées, escaliers couverts de toiles, confusion des directions et aura magique. Il peut en outre placer un effet parmi lumières dansantes, bouche magique, nuage puant, rafale de vent ou suggestion ; une dissipation annule alors une fonction au hasard.","composants_materiels_objets":[{"nom":"encens à brûler","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"soufre","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"huile","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"cordelette à nœuds","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"sang d’ombre des roches","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"petite baguette d’argent","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false}
   ]
 }
