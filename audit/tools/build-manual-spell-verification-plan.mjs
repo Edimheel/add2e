@@ -41,6 +41,10 @@ function slug(value) {
     .replace(/^_+|_+$/g, "");
 }
 function isPlaceholder(value) { return PLACEHOLDERS.has(slug(value)); }
+function isFile(file) {
+  try { return fs.statSync(file).isFile(); }
+  catch { return false; }
+}
 function collection(document) {
   if (Array.isArray(document)) return document;
   for (const key of ["items", "Item", "Items", "documents", "data", "entries"]) {
@@ -76,6 +80,60 @@ function decoupageNames(file, className, spellLevel) {
     .map(item => text(item?.name ?? item?.system?.nom))
     .filter(Boolean);
 }
+function readNamesSafely(file, reader) {
+  if (!file || !isFile(file)) return { names: [], error: null };
+  try { return { names: reader(file), error: null }; }
+  catch (error) { return { names: [], error: String(error?.message ?? error) }; }
+}
+function referenceBasename(fileName, className, spellLevel) {
+  const direct = path.basename(String(fileName ?? "")).replace(/^manuel-joueurs-/i, "");
+  return direct && direct.endsWith(".json") ? direct : `${slug(className)}-niveau-${spellLevel}.json`;
+}
+function resolveDecoupagePath(foundryExport, referenceFile, className, spellLevel) {
+  const declared = text(foundryExport).replace(/\\/g, path.sep);
+  const fallbackDirectory = path.join(ROOT, "audit", "decoupage_fichier");
+  const baseName = referenceBasename(referenceFile, className, spellLevel);
+  const candidates = [];
+  let declaredPath = null;
+  if (declared) {
+    declaredPath = path.resolve(ROOT, declared);
+    if (isFile(declaredPath)) {
+      return {
+        declared: foundryExport ?? null,
+        resolvedPath: declaredPath,
+        status: "declared_file",
+        candidates: [path.relative(ROOT, declaredPath)]
+      };
+    }
+    let directory = declaredPath;
+    try {
+      if (!fs.statSync(declaredPath).isDirectory()) directory = path.dirname(declaredPath);
+    } catch {
+      directory = path.dirname(declaredPath);
+    }
+    candidates.push(path.join(directory, baseName));
+    candidates.push(path.join(directory, `${slug(className)}-niveau-${spellLevel}.json`));
+  }
+  candidates.push(path.join(fallbackDirectory, baseName));
+  candidates.push(path.join(fallbackDirectory, `${slug(className)}-niveau-${spellLevel}.json`));
+  const unique = [...new Set(candidates)];
+  for (const candidate of unique) {
+    if (isFile(candidate)) {
+      return {
+        declared: foundryExport ?? null,
+        resolvedPath: candidate,
+        status: declared ? "derived_from_directory_or_missing_declaration" : "derived_from_default_directory",
+        candidates: unique.map(file => path.relative(ROOT, file))
+      };
+    }
+  }
+  return {
+    declared: foundryExport ?? null,
+    resolvedPath: null,
+    status: declared ? "unresolved" : "missing_declaration",
+    candidates: unique.map(file => path.relative(ROOT, file))
+  };
+}
 function fieldWork(spell) {
   const missing = [];
   const placeholder = [];
@@ -92,6 +150,8 @@ function fieldWork(spell) {
 }
 function priorityFor({ manualList, fileReport, spellTasks }) {
   const listBlocked = !manualList.available
+    || !manualList.referenceAvailable
+    || !manualList.decoupageAvailable
     || manualList.reference.missing.length
     || manualList.reference.extra.length
     || !manualList.reference.orderMatches
@@ -122,16 +182,23 @@ function main() {
     const lotKey = `${slug(className)}-niveau-${spellLevel}`;
     const manualNames = Array.isArray(master.lots?.[lotKey]) ? master.lots[lotKey].map(text).filter(Boolean) : null;
     const referencePath = path.resolve(ROOT, String(fileReport.referencePath ?? "").replace(/\\/g, path.sep));
-    const decoupagePath = path.resolve(ROOT, String(fileReport.foundryExport ?? "").replace(/\\/g, path.sep));
-    const referenceList = fs.existsSync(referencePath) ? referenceNames(referencePath) : [];
-    const decoupageList = fs.existsSync(decoupagePath) ? decoupageNames(decoupagePath, className, spellLevel) : [];
+    const referenceResult = readNamesSafely(referencePath, referenceNames);
+    const decoupageResolution = resolveDecoupagePath(fileReport.foundryExport, fileReport.file, className, spellLevel);
+    const decoupageResult = readNamesSafely(decoupageResolution.resolvedPath, file => decoupageNames(file, className, spellLevel));
+    const inputErrors = [];
+    if (!isFile(referencePath)) inputErrors.push(`Référence introuvable : ${path.relative(ROOT, referencePath)}`);
+    if (referenceResult.error) inputErrors.push(`Référence illisible : ${referenceResult.error}`);
+    if (!decoupageResolution.resolvedPath) inputErrors.push(`Découpage non résolu (${decoupageResolution.status}).`);
+    if (decoupageResult.error) inputErrors.push(`Découpage illisible : ${decoupageResult.error}`);
     const manualList = {
       available: Array.isArray(manualNames),
       key: lotKey,
       expectedCount: manualNames?.length ?? null,
       names: manualNames ?? [],
-      reference: manualNames ? listDiff(manualNames, referenceList) : { missing: [], extra: referenceList, orderMatches: false },
-      decoupage: manualNames ? listDiff(manualNames, decoupageList) : { missing: [], extra: decoupageList, orderMatches: false }
+      referenceAvailable: isFile(referencePath) && !referenceResult.error,
+      decoupageAvailable: Boolean(decoupageResolution.resolvedPath) && !decoupageResult.error,
+      reference: manualNames ? listDiff(manualNames, referenceResult.names) : { missing: [], extra: referenceResult.names, orderMatches: false },
+      decoupage: manualNames ? listDiff(manualNames, decoupageResult.names) : { missing: [], extra: decoupageResult.names, orderMatches: false }
     };
     const spellTasks = (fileReport.spells ?? []).map(spell => ({ nom: spell.nom, ...fieldWork(spell) }));
     const priority = priorityFor({ manualList, fileReport, spellTasks });
@@ -146,10 +213,11 @@ function main() {
       file: fileReport.file,
       referencePath: fileReport.referencePath,
       foundryExport: fileReport.foundryExport,
+      decoupageResolution,
       source: fileReport.source,
       manualList,
       auditStatus: fileReport.status,
-      auditErrors: fileReport.errors,
+      auditErrors: [...(fileReport.errors ?? []), ...inputErrors],
       taskCounts,
       spellTasks: spellTasks.filter(task => task.missing.length || task.placeholder.length || task.missingDescription || task.compareWithDecoupage.length || task.descriptionDifferent)
     };
@@ -160,13 +228,14 @@ function main() {
     references: files.length,
     spells: audit?.summary?.spells ?? files.reduce((sum, file) => sum + (file.manualList.expectedCount ?? 0), 0),
     byPriority: Object.fromEntries(Object.entries(priorities).map(([priority, rows]) => [priority, { references: rows.length, spells: rows.reduce((sum, row) => sum + (row.manualList.expectedCount ?? 0), 0) }])),
+    unresolvedDecoupage: files.filter(file => !file.manualList.decoupageAvailable).length,
     technicalFieldsToTranscribe: files.reduce((sum, file) => sum + file.taskCounts.technicalFieldsToTranscribe, 0),
     descriptionsToTranscribe: files.reduce((sum, file) => sum + file.taskCounts.descriptionsToTranscribe, 0),
     technicalFieldsToArbitrate: files.reduce((sum, file) => sum + file.taskCounts.technicalFieldsToArbitrate, 0),
     descriptionsToArbitrate: files.reduce((sum, file) => sum + file.taskCounts.descriptionsToArbitrate, 0)
   };
   const output = {
-    version: "2026-06-26-manual-spell-verification-plan-v1",
+    version: "2026-06-26-manual-spell-verification-plan-v2",
     generatedAt: new Date().toISOString(),
     sourceOfTruth: "Manuel des joueurs AD&D 2e",
     inputs: { audit: path.relative(ROOT, auditPath), master: path.relative(ROOT, masterPath) },
@@ -183,6 +252,7 @@ function main() {
   writeJson(outputPath, output);
   console.log(`[ADD2E][MANUAL_VERIFICATION_PLAN] ${summary.references} référence(s), ${summary.spells} sort(s).`);
   for (const [priority, rows] of Object.entries(priorities)) console.log(`[ADD2E][MANUAL_VERIFICATION_PLAN] ${priority}: ${rows.length} référence(s), ${rows.reduce((sum, row) => sum + (row.manualList.expectedCount ?? 0), 0)} sort(s).`);
+  console.log(`[ADD2E][MANUAL_VERIFICATION_PLAN] Découpages non résolus : ${summary.unresolvedDecoupage}.`);
   console.log(`[ADD2E][MANUAL_VERIFICATION_PLAN] À transcrire : ${summary.technicalFieldsToTranscribe} champ(s) technique(s), ${summary.descriptionsToTranscribe} description(s).`);
   console.log(`[ADD2E][MANUAL_VERIFICATION_PLAN] À arbitrer depuis le Manuel : ${summary.technicalFieldsToArbitrate} champ(s) technique(s), ${summary.descriptionsToArbitrate} description(s).`);
   console.log(`[ADD2E][MANUAL_VERIFICATION_PLAN] Plan écrit : ${path.relative(ROOT, outputPath)}`);
