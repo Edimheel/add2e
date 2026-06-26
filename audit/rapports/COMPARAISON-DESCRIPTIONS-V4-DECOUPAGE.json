@@ -1,0 +1,8148 @@
+{
+  "version": "2026-06-26-compare-v4-descriptions-decoupage-v1",
+  "source": {
+    "v4File": "fvtt-spells-all-normalise-mecanique-v4.json",
+    "v4Sha256": "6158977c6910fcefe33eeceeb4cab7d5377525ccf27cfc6659727a805e8b7054",
+    "decoupageDirectory": "audit\\decoupage_fichier"
+  },
+  "generatedAt": "2026-06-26T07:30:14.102Z",
+  "method": {
+    "matching": "strict_foundry_id_only",
+    "v4Field": "system.description",
+    "referenceField": "system.description_reelle",
+    "comparison": "normalisation de la mise en forme HTML, entités, espaces, apostrophes et tirets ; aucun rapprochement par nom"
+  },
+  "scope": {
+    "v4": {
+      "itemsContainer": "items",
+      "sourceItems": 414,
+      "sortRows": 414,
+      "sortsWithoutId": []
+    },
+    "decoupage": {
+      "files": [
+        {
+          "file": "audit\\decoupage_fichier\\clerc-niveau-1.json",
+          "itemsContainer": "items",
+          "sorts": 14
+        },
+        {
+          "file": "audit\\decoupage_fichier\\clerc-niveau-2.json",
+          "itemsContainer": "items",
+          "sorts": 12
+        },
+        {
+          "file": "audit\\decoupage_fichier\\clerc-niveau-3.json",
+          "itemsContainer": "items",
+          "sorts": 13
+        },
+        {
+          "file": "audit\\decoupage_fichier\\clerc-niveau-4.json",
+          "itemsContainer": "items",
+          "sorts": 12
+        },
+        {
+          "file": "audit\\decoupage_fichier\\clerc-niveau-5.json",
+          "itemsContainer": "items",
+          "sorts": 11
+        },
+        {
+          "file": "audit\\decoupage_fichier\\clerc-niveau-6.json",
+          "itemsContainer": "items",
+          "sorts": 10
+        },
+        {
+          "file": "audit\\decoupage_fichier\\clerc-niveau-7.json",
+          "itemsContainer": "items",
+          "sorts": 11
+        },
+        {
+          "file": "audit\\decoupage_fichier\\druide-niveau-1.json",
+          "itemsContainer": "items",
+          "sorts": 12
+        },
+        {
+          "file": "audit\\decoupage_fichier\\druide-niveau-2.json",
+          "itemsContainer": "items",
+          "sorts": 12
+        },
+        {
+          "file": "audit\\decoupage_fichier\\druide-niveau-3.json",
+          "itemsContainer": "items",
+          "sorts": 12
+        },
+        {
+          "file": "audit\\decoupage_fichier\\druide-niveau-4.json",
+          "itemsContainer": "items",
+          "sorts": 13
+        },
+        {
+          "file": "audit\\decoupage_fichier\\druide-niveau-5.json",
+          "itemsContainer": "items",
+          "sorts": 10
+        },
+        {
+          "file": "audit\\decoupage_fichier\\druide-niveau-6.json",
+          "itemsContainer": "items",
+          "sorts": 10
+        },
+        {
+          "file": "audit\\decoupage_fichier\\druide-niveau-7.json",
+          "itemsContainer": "items",
+          "sorts": 10
+        },
+        {
+          "file": "audit\\decoupage_fichier\\illusionniste-niveau-1.json",
+          "itemsContainer": "items",
+          "sorts": 11
+        },
+        {
+          "file": "audit\\decoupage_fichier\\illusionniste-niveau-2.json",
+          "itemsContainer": "items",
+          "sorts": 12
+        },
+        {
+          "file": "audit\\decoupage_fichier\\illusionniste-niveau-3.json",
+          "itemsContainer": "items",
+          "sorts": 12
+        },
+        {
+          "file": "audit\\decoupage_fichier\\illusionniste-niveau-4.json",
+          "itemsContainer": "items",
+          "sorts": 8
+        },
+        {
+          "file": "audit\\decoupage_fichier\\illusionniste-niveau-5.json",
+          "itemsContainer": "items",
+          "sorts": 8
+        },
+        {
+          "file": "audit\\decoupage_fichier\\illusionniste-niveau-6.json",
+          "itemsContainer": "items",
+          "sorts": 8
+        },
+        {
+          "file": "audit\\decoupage_fichier\\illusionniste-niveau-7.json",
+          "itemsContainer": "items",
+          "sorts": 6
+        },
+        {
+          "file": "audit\\decoupage_fichier\\magicien-niveau-1.json",
+          "itemsContainer": "items",
+          "sorts": 30
+        },
+        {
+          "file": "audit\\decoupage_fichier\\magicien-niveau-2.json",
+          "itemsContainer": "items",
+          "sorts": 23
+        },
+        {
+          "file": "audit\\decoupage_fichier\\magicien-niveau-3.json",
+          "itemsContainer": "items",
+          "sorts": 24
+        },
+        {
+          "file": "audit\\decoupage_fichier\\magicien-niveau-4.json",
+          "itemsContainer": "items",
+          "sorts": 24
+        },
+        {
+          "file": "audit\\decoupage_fichier\\magicien-niveau-5.json",
+          "itemsContainer": "items",
+          "sorts": 25
+        },
+        {
+          "file": "audit\\decoupage_fichier\\magicien-niveau-6.json",
+          "itemsContainer": "items",
+          "sorts": 24
+        },
+        {
+          "file": "audit\\decoupage_fichier\\magicien-niveau-7.json",
+          "itemsContainer": "items",
+          "sorts": 16
+        },
+        {
+          "file": "audit\\decoupage_fichier\\magicien-niveau-8.json",
+          "itemsContainer": "items",
+          "sorts": 16
+        },
+        {
+          "file": "audit\\decoupage_fichier\\magicien-niveau-9.json",
+          "itemsContainer": "items",
+          "sorts": 12
+        }
+      ],
+      "parseErrors": [],
+      "filesWithoutItems": [
+        {
+          "file": "audit\\decoupage_fichier\\index.json"
+        }
+      ],
+      "sortRows": 421,
+      "sortsWithoutId": []
+    }
+  },
+  "summary": {
+    "matchedUniqueIds": 0,
+    "descriptionsIdentical": 0,
+    "descriptionsDifferent": 0,
+    "descriptionsRawDifferentButNormalizedEqual": 0,
+    "v4DescriptionMissing": 0,
+    "referenceDescriptionReelleMissing": 0,
+    "v4OnlyIds": 414,
+    "decoupageOnlyIds": 421,
+    "duplicateV4Ids": 0,
+    "duplicateDecoupageIds": 0,
+    "metadataMismatchOnMatchedIds": 0
+  },
+  "candidates": {
+    "descriptionsDifferent": [],
+    "v4DescriptionMissing": [],
+    "referenceDescriptionReelleMissing": [],
+    "v4OnlyIds": [
+      {
+        "id": "0YVY54B6xnKzKX8l",
+        "rows": [
+          {
+            "nom": "Abaissement des eaux",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "IRhbmTSNg8FzU2vK",
+        "rows": [
+          {
+            "nom": "Abaissement des Eaux",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "hhIwBCW9PF1qlbi1",
+        "rows": [
+          {
+            "nom": "Agrandissement",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "NMZrBnmV49se0VSp",
+        "rows": [
+          {
+            "nom": "Allométamorphose",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "u7SxGxq3S6C4OswN",
+        "rows": [
+          {
+            "nom": "Altération de la réalité",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "yKRNfuJSVmEnjWBC",
+        "rows": [
+          {
+            "nom": "Altération des feux normaux",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "sKFQBBzYCkzxYh9r",
+        "rows": [
+          {
+            "nom": "Amitié",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "JhtgtWZRAkJ3BrdU",
+        "rows": [
+          {
+            "nom": "Amitié animale",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "vPQkKlu1CvrOwvRk",
+        "rows": [
+          {
+            "nom": "Animation de la roche",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "dwg8jdChvoXz9XyJ",
+        "rows": [
+          {
+            "nom": "Animation des objets",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "jnSeMRuco1sceZRx",
+        "rows": [
+          {
+            "nom": "Antipathie/sympathie",
+            "niveau": 8
+          }
+        ]
+      },
+      {
+        "id": "2eZfEt7ralh1s1bT",
+        "rows": [
+          {
+            "nom": "Apaisement",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "GHJHMqx9NpKusN5a",
+        "rows": [
+          {
+            "nom": "Aquagenèse",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "nDAX4JCNNDHqLI1L",
+        "rows": [
+          {
+            "nom": "Aquagenèse",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "nUi9r55SPB04zUGy",
+        "rows": [
+          {
+            "nom": "Arbre",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "s7aPnxnHYARac2DI",
+        "rows": [
+          {
+            "nom": "Arme enchantée",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "94B7IHdbosRANIoE",
+        "rows": [
+          {
+            "nom": "Arrêt du temps",
+            "niveau": 9
+          }
+        ]
+      },
+      {
+        "id": "D8PQUF05Fxs71II5",
+        "rows": [
+          {
+            "nom": "Augure",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "ljiQGnd3ZvstRFGN",
+        "rows": [
+          {
+            "nom": "Aura féérique",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "B9PdOCYmZt7RBnzt",
+        "rows": [
+          {
+            "nom": "Aura magique de Nystul",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "ZCNv98sq2v6syueM",
+        "rows": [
+          {
+            "nom": "Autométamorphose",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "N87JGVKUQZToCQ7N",
+        "rows": [
+          {
+            "nom": "Barrière de Lames",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "7PQuDAQPLvNDGUKZ",
+        "rows": [
+          {
+            "nom": "Bâtons à serpents",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "9utH0yJuEXmiUAmx",
+        "rows": [
+          {
+            "nom": "Bâtons à serpents",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "6HJthr72rnvWD6mx",
+        "rows": [
+          {
+            "nom": "Bénédiction",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "HxoKlmAmd0pEK0D8",
+        "rows": [
+          {
+            "nom": "Bouche magique",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "yAr3GEcNUbENpx1y",
+        "rows": [
+          {
+            "nom": "Bouche magique",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "5VvKzOmzGFkr0LiK",
+        "rows": [
+          {
+            "nom": "Bouclier",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "EA2uh7ztvjgEejwM",
+        "rows": [
+          {
+            "nom": "Bouclier anti-animal",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "IrJ8InlYM4vx41YE",
+        "rows": [
+          {
+            "nom": "Bouclier anti-plantes",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "1VcczsdmX9uPreb6",
+        "rows": [
+          {
+            "nom": "Bouclier de feu",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "BJ5vUvwuN7U6AWUB",
+        "rows": [
+          {
+            "nom": "Boule de feu",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "GTJGXLl7R3eFw2dR",
+        "rows": [
+          {
+            "nom": "Boule de feu à retardement",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "Ur7Ua9powIUvkHBc",
+        "rows": [
+          {
+            "nom": "Bruitage",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "lvrqPWKhxRRRHUG3",
+        "rows": [
+          {
+            "nom": "Bruitage",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "YzCyhsoE9qj88fy1",
+        "rows": [
+          {
+            "nom": "Bulle anti-magique",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "FwommBLqCLLiz3Wt",
+        "rows": [
+          {
+            "nom": "Cacodémon",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "hmFN1DChCsoRkumy",
+        "rows": [
+          {
+            "nom": "Cantique",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "LCW2MRccDB2rjSko",
+        "rows": [
+          {
+            "nom": "Catalepsie",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "kWy4fuhw5LAhiQGk",
+        "rows": [
+          {
+            "nom": "Catalepsie",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "ylQbuFMhL0ki7l0Y",
+        "rows": [
+          {
+            "nom": "Catalepsie",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "oaGJgAMHR2GDIYJ3",
+        "rows": [
+          {
+            "nom": "Cécité",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "Z2fEIoqtLQ4cStw4",
+        "rows": [
+          {
+            "nom": "Changement d’apparence",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "4i2ps6jqSwYzWVv5",
+        "rows": [
+          {
+            "nom": "Changement de Plan",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "pfkaidGIajS8CXRe",
+        "rows": [
+          {
+            "nom": "Chaos",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "Ev8Q1MwMPyKhJfnN",
+        "rows": [
+          {
+            "nom": "Chariot de Sustarre",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "CxnAFOapgjT1WAto",
+        "rows": [
+          {
+            "nom": "Charme-masse",
+            "niveau": 8
+          }
+        ]
+      },
+      {
+        "id": "7SQQhiiTPH5N6sjx",
+        "rows": [
+          {
+            "nom": "Charme-monstres",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "JLkQOIGWPjEiuIXV",
+        "rows": [
+          {
+            "nom": "Charme-personnes",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "T5tnambAJE5JbTdn",
+        "rows": [
+          {
+            "nom": "Charme-personnes ou mammifères",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "eNbnWzILDgY9gd4X",
+        "rows": [
+          {
+            "nom": "Charme-plantes",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "LD0CnQGmgW0HxIkP",
+        "rows": [
+          {
+            "nom": "Charme-Serpents",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "wxVC8snP5MZnYV2X",
+        "rows": [
+          {
+            "nom": "Chasseur invisible",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "I5uJyOUIVWKDfq4a",
+        "rows": [
+          {
+            "nom": "Chaumière de Léomund",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "dakPmb85fhJkIq4I",
+        "rows": [
+          {
+            "nom": "Chien fidèle de Mordenkainen",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "7fwlwqdTafjmj1We",
+        "rows": [
+          {
+            "nom": "Chute de plume",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "gC6FUrk4LmkLmls9",
+        "rows": [
+          {
+            "nom": "Clairaudience",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "AJ1RADMvWNFxRsTD",
+        "rows": [
+          {
+            "nom": "Clairvoyance",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "JNZzJotGVhH93ANM",
+        "rows": [
+          {
+            "nom": "Clone",
+            "niveau": 8
+          }
+        ]
+      },
+      {
+        "id": "i2p23iJkO3kqBGJf",
+        "rows": [
+          {
+            "nom": "Coffre secret de Léomund",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "8G2BOElBJR9hP3Mt",
+        "rows": [
+          {
+            "nom": "Communion",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "a3nj2e7CuKvUw3wS",
+        "rows": [
+          {
+            "nom": "Communion avec la nature",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "cBPJ3dTGmEFnyniJ",
+        "rows": [
+          {
+            "nom": "Compréhension des langues",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "oFTDsWXUkeMljlXX",
+        "rows": [
+          {
+            "nom": "Cône de froid",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "1uxlaCyBY5zd6YQR",
+        "rows": [
+          {
+            "nom": "Confusion",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "4pXkvIJhvYUDFUEc",
+        "rows": [
+          {
+            "nom": "Confusion",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "mqqfBWLKaqcPMUWl",
+        "rows": [
+          {
+            "nom": "Confusion",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "Cbk5npwu8XGuo72c",
+        "rows": [
+          {
+            "nom": "Contact d'autres plans",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "XYLaW0CeFa9Bdk5h",
+        "rows": [
+          {
+            "nom": "Contre-poison",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "b6bVGTI8etPskHoh",
+        "rows": [
+          {
+            "nom": "Contre-poison",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "ALc9CyxDGzy2or0T",
+        "rows": [
+          {
+            "nom": "Contrôle de la température sur 3 m",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "DLtALiZ4BzFoNma6",
+        "rows": [
+          {
+            "nom": "Contrôle des vents",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "ADKvD6FRnzxoxm93",
+        "rows": [
+          {
+            "nom": "Contrôle du climat",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "obLjaQ6XdqfOnaY7",
+        "rows": [
+          {
+            "nom": "Contrôle du climat",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "VLfvk9Rs7UmOmA9n",
+        "rows": [
+          {
+            "nom": "Contrôle du Climat",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "c5lMIbY15i31mlA1",
+        "rows": [
+          {
+            "nom": "Corde enchantée",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "tT0jZyp3xYPKWssO",
+        "rows": [
+          {
+            "nom": "Corde enchantée",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "5ZgaFI4tI8IspkX0",
+        "rows": [
+          {
+            "nom": "Création majeure",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "FXEttZkmIP37ImTP",
+        "rows": [
+          {
+            "nom": "Création mineure",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "0IO2ihXC3KayPKzY",
+        "rows": [
+          {
+            "nom": "Cristairain",
+            "niveau": 8
+          }
+        ]
+      },
+      {
+        "id": "hivCnfImkQA01qiS",
+        "rows": [
+          {
+            "nom": "Croc-en-jambe",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "hTU092qsmWaQyvs5",
+        "rows": [
+          {
+            "nom": "Croissance animale",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "pLCcsdH0xFQHSJnj",
+        "rows": [
+          {
+            "nom": "Croissance animale",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "XmjRaJpKwpnrFQaN",
+        "rows": [
+          {
+            "nom": "Danse irrésistible d’Otto",
+            "niveau": 8
+          }
+        ]
+      },
+      {
+        "id": "LdIbXit7szEl9jkX",
+        "rows": [
+          {
+            "nom": "Débilité mentale",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "mFPUfrYtPfyuSiJO",
+        "rows": [
+          {
+            "nom": "Débilité mentale",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "jjKC1eF0je5j78Is",
+        "rows": [
+          {
+            "nom": "Désenvoûtement",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "lnthvFagULUq8Rw8",
+        "rows": [
+          {
+            "nom": "Désenvoûtement",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "tTr5QlJsVjn0dfRw",
+        "rows": [
+          {
+            "nom": "Désinformation",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "aa7wSDHYZgVq2iGQ",
+        "rows": [
+          {
+            "nom": "Désintégration",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "DgqIp7YpkRbgAbCP",
+        "rows": [
+          {
+            "nom": "Détection de l’invisibilité",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "9cebkJ6ih7QuZA9T",
+        "rows": [
+          {
+            "nom": "Détection de la magie",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "E0Grj26xjPH5QUPl",
+        "rows": [
+          {
+            "nom": "Détection de la magie",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "GQ9kLaoBZ08oRCMr",
+        "rows": [
+          {
+            "nom": "Détection de la magie",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "jx1e7Z8axdiWPiGb",
+        "rows": [
+          {
+            "nom": "Détection de la magie",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "fxcsHJ9ckmw8sI8T",
+        "rows": [
+          {
+            "nom": "Détection des Charmes",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "QNeHngI4rW35XD8M",
+        "rows": [
+          {
+            "nom": "Détection des illusions",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "DUd3Pjg0RX8FJTwE",
+        "rows": [
+          {
+            "nom": "Détection des Mensonges",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "HYFJ1x7kaJk5ocNC",
+        "rows": [
+          {
+            "nom": "Détection des Pièges",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "ehqzSLGHowgmvtqr",
+        "rows": [
+          {
+            "nom": "Détection des pièges sylvestres",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "bvs9Tb0eqM0IC3kn",
+        "rows": [
+          {
+            "nom": "Détection du mal",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "mFdL3afrN0cz5c8o",
+        "rows": [
+          {
+            "nom": "Détection du mal",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "nE7FJL0TFFr2ALGw",
+        "rows": [
+          {
+            "nom": "Disparition",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "mrtEEqeB2JhOZDja",
+        "rows": [
+          {
+            "nom": "Disque flottant de Tenser",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "mA2IEzqy325GEgHG",
+        "rows": [
+          {
+            "nom": "Dissipation de l’épuisement",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "cRzgWp4nvoTlyrtH",
+        "rows": [
+          {
+            "nom": "Dissipation de la magie",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "newJAfwBaiHQGSGA",
+        "rows": [
+          {
+            "nom": "Dissipation de la magie",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "3c1WAEsjIBMd1qOl",
+        "rows": [
+          {
+            "nom": "Dissipation de la Magie",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "lUmO8s8C1pUyXb2X",
+        "rows": [
+          {
+            "nom": "Dissipation des illusions",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "gsmcszUnG7u7kgJ1",
+        "rows": [
+          {
+            "nom": "Dissipation du Mal",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "a36vL5M4ZqeH35yv",
+        "rows": [
+          {
+            "nom": "Distorsion des distances",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "SFOrUCc5Jzbz1ibk",
+        "rows": [
+          {
+            "nom": "Distorsion du bois",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "WAqkZhTkRNaOLsu5",
+        "rows": [
+          {
+            "nom": "Divination",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "e2zqYbyh3HvmA4cF",
+        "rows": [
+          {
+            "nom": "Doigt de mort",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "OjK720zcns8Octx6",
+        "rows": [
+          {
+            "nom": "Duo-dimension",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "r57GoMp8uemGvCIl",
+        "rows": [
+          {
+            "nom": "E.S.P.",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "pQL8ALJyvsurFv5Q",
+        "rows": [
+          {
+            "nom": "Eau aérée",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "p0Z2EaLpJ6n0wM3v",
+        "rows": [
+          {
+            "nom": "Écriture",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "GIrxcGwS1mHcmTyY",
+        "rows": [
+          {
+            "nom": "Écriture illusoire",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "H4jxO5BrrBtXaiDP",
+        "rows": [
+          {
+            "nom": "Effacement",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "2ZQ3t0ZmG9n2eE67",
+        "rows": [
+          {
+            "nom": "Effroi",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "IcpIm5dwIgZFa9KQ",
+        "rows": [
+          {
+            "nom": "Effroi",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "IE7btU7SVgdoQwkR",
+        "rows": [
+          {
+            "nom": "Embrasement",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "7aXZTdCKnq1KGlvQ",
+        "rows": [
+          {
+            "nom": "Embroussaillement",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "ev0ychGnDlZ3zzAk",
+        "rows": [
+          {
+            "nom": "Embroussaillement",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "9dxKLEQWSNNDkb9s",
+        "rows": [
+          {
+            "nom": "Émotion",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "t83kNm5KFrQJvkfn",
+        "rows": [
+          {
+            "nom": "Emprisonnement",
+            "niveau": 9
+          }
+        ]
+      },
+      {
+        "id": "ym3WpLqCEJHWPDPd",
+        "rows": [
+          {
+            "nom": "Emprisonnement de l’âme",
+            "niveau": 8
+          }
+        ]
+      },
+      {
+        "id": "OSo6JVBJfYL6Cwdi",
+        "rows": [
+          {
+            "nom": "Enchantement",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "zrh1y7aGC1GB0iBD",
+        "rows": [
+          {
+            "nom": "Enchevêtrement",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "pqzkxMMuKSHeQUYf",
+        "rows": [
+          {
+            "nom": "Épée de Mordenkainen",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "uUdidrFz25IHhLIz",
+        "rows": [
+          {
+            "nom": "Escalade d’araignée",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "MDt2WCOZuYPZQ3p3",
+        "rows": [
+          {
+            "nom": "Excavation",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "X2zf8buQnkNihcvu",
+        "rows": [
+          {
+            "nom": "Exorcisme",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "JDuTDqoRsNX35e8w",
+        "rows": [
+          {
+            "nom": "Expiation",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "CdiTOvbGggHItB6I",
+        "rows": [
+          {
+            "nom": "Extension I",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "FbXAHPYtnO1bKuhZ",
+        "rows": [
+          {
+            "nom": "Extension II",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "f4R9pmjqtuv7GuOf",
+        "rows": [
+          {
+            "nom": "Extension III",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "ry9X4mIoMnGsqLZe",
+        "rows": [
+          {
+            "nom": "Fermeture",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "uCDrOwIOAiwKMZ3z",
+        "rows": [
+          {
+            "nom": "Feu charmeur",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "RiIPOxeCSkdHwfkr",
+        "rows": [
+          {
+            "nom": "Flamme",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "MN6x8LKIOXsZYuIi",
+        "rows": [
+          {
+            "nom": "Fléau d’insectes",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "kHzzwFex1WJe61yo",
+        "rows": [
+          {
+            "nom": "Fléau d’Insectes",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "nbcSWG8ssooYVaJN",
+        "rows": [
+          {
+            "nom": "Flèche de feu",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "9pmbm3xPmP2Q5LK1",
+        "rows": [
+          {
+            "nom": "Force",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "aJyUZl5oE11bOmpK",
+        "rows": [
+          {
+            "nom": "Force fantasmagorique",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "kxZGCx9EjnydVnyI",
+        "rows": [
+          {
+            "nom": "Force fantasmagorique",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "QJ6jXAIuK1OtYcjb",
+        "rows": [
+          {
+            "nom": "Force fantasmagorique améliorée",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "OJYLz9Ly7qSQC5jR",
+        "rows": [
+          {
+            "nom": "Force spectrale",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "wY9RPaVMcX4NvQij",
+        "rows": [
+          {
+            "nom": "Forêt hallucinatoire",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "1Nzdqi9xI5GuDray",
+        "rows": [
+          {
+            "nom": "Foudre",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "rf4bytzl4ZhoJiZm",
+        "rows": [
+          {
+            "nom": "Fracassement",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "jqKRSmKYvznBMZUY",
+        "rows": [
+          {
+            "nom": "Glissement de terrain",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "PJVKaduWtKSjHIOX",
+        "rows": [
+          {
+            "nom": "Globe d’invulnérabilité",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "t2wxdz3Q48CL9eB5",
+        "rows": [
+          {
+            "nom": "Globe mineur d’invulnérabilité",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "2fVYHUCwC3hOaAA3",
+        "rows": [
+          {
+            "nom": "Glyphe de Garde",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "LfqWMDNczJdCrcM1",
+        "rows": [
+          {
+            "nom": "Graines de feu",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "V9vdH1mxoB3cywsx",
+        "rows": [
+          {
+            "nom": "Guérison",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "8pg5K8aHIjfzjiJC",
+        "rows": [
+          {
+            "nom": "Guérison de la Cécité",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "y6hkbwD1tiS9vShV",
+        "rows": [
+          {
+            "nom": "Guérison des maladies",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "TTKZCtdULoGfw7Rk",
+        "rows": [
+          {
+            "nom": "Guérison des Maladies",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "WSZmf543XKOD9wM0",
+        "rows": [
+          {
+            "nom": "Hétéromorphisme",
+            "niveau": 9
+          }
+        ]
+      },
+      {
+        "id": "B2kEHtcYfGoAso0A",
+        "rows": [
+          {
+            "nom": "Holographie",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "DVi6R6vGZ9TucfxP",
+        "rows": [
+          {
+            "nom": "Holographie",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "n3AS5pwvWP9Ez9i0",
+        "rows": [
+          {
+            "nom": "Hypnotisme",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "6tL3QYk8SfAhBrZe",
+        "rows": [
+          {
+            "nom": "Identification",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "4YZaLCCHfhtyzBtT",
+        "rows": [
+          {
+            "nom": "Illusion permanente",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "4qmby0FT6zZYGN3q",
+        "rows": [
+          {
+            "nom": "Illusion programmée",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "QGc78wfrVD5byeCc",
+        "rows": [
+          {
+            "nom": "Image miroir",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "iGdmwUUiSb4Tk1nF",
+        "rows": [
+          {
+            "nom": "Image miroir",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "UgqqkMDv9BEzsp9D",
+        "rows": [
+          {
+            "nom": "Immunité magique de Serten",
+            "niveau": 8
+          }
+        ]
+      },
+      {
+        "id": "0i7mQb5dUyzMJceN",
+        "rows": [
+          {
+            "nom": "Incantation mortelle",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "FnyroTZOxF8yZNhq",
+        "rows": [
+          {
+            "nom": "Infravision",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "oekiFFFaLbvGqF2k",
+        "rows": [
+          {
+            "nom": "Injonction",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "1mVConWAkTuj5eej",
+        "rows": [
+          {
+            "nom": "Intermittence",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "VA5eTLLjyZWFhAOg",
+        "rows": [
+          {
+            "nom": "Inversion de la gravité",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "01RydTSxPKaX7QG2",
+        "rows": [
+          {
+            "nom": "Invisibilité",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "MrmKtDZIpzZ902yJ",
+        "rows": [
+          {
+            "nom": "Invisibilité",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "4r4mMoKIvLHiIEYM",
+        "rows": [
+          {
+            "nom": "Invisibilité améliorée",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "yRfAYzNNizqDeZbB",
+        "rows": [
+          {
+            "nom": "Invisibilité aux animaux",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "7XBVbmfcx1IXok6D",
+        "rows": [
+          {
+            "nom": "Invisibilité de masse",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "I5X3n4HlTDyltbBX",
+        "rows": [
+          {
+            "nom": "Invisibilité sur 3 m",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "bvYD8eQU6XofvarK",
+        "rows": [
+          {
+            "nom": "Invisibilité sur 3 m",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "hPu2RbWmyIO1phZm",
+        "rows": [
+          {
+            "nom": "Invocation animale I",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "SDbqDB2QHC9QOkB7",
+        "rows": [
+          {
+            "nom": "Invocation animale II",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "vIZk1z1NVjgdZvBs",
+        "rows": [
+          {
+            "nom": "Invocation animale III",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "CABGyz1xXrO6x3EP",
+        "rows": [
+          {
+            "nom": "Invocation d’élémental",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "wqe0f2gO7i66Rvat",
+        "rows": [
+          {
+            "nom": "Invocation d'insectes",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "pscw8I4yEY0dsBfH",
+        "rows": [
+          {
+            "nom": "Invocation d'un élémental de terre",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "vqknAfe2M40mHqIF",
+        "rows": [
+          {
+            "nom": "Invocation d'un élémental du feu",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "rzGxGKmcp37ZBLu2",
+        "rows": [
+          {
+            "nom": "Invocation d’un familier",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "eagBQYSlKyR63jBe",
+        "rows": [
+          {
+            "nom": "Invocation de la foudre",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "TNrqTv4q9HTaAQIK",
+        "rows": [
+          {
+            "nom": "Invocation de monstre II",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "0nyNHSDlmYjDNVlz",
+        "rows": [
+          {
+            "nom": "Invocation de Monstre III",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "IqKuzds45XGFG1WK",
+        "rows": [
+          {
+            "nom": "Invocation de monstre IV",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "DhQPgITzPAxBqKZv",
+        "rows": [
+          {
+            "nom": "Invocation de monstre V",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "wqvjEvWplnq7NgO9",
+        "rows": [
+          {
+            "nom": "Invocation de monstre VI",
+            "niveau": 8
+          }
+        ]
+      },
+      {
+        "id": "P41Olqmbn3sAe8Z4",
+        "rows": [
+          {
+            "nom": "Invocation de Monstre VII",
+            "niveau": 9
+          }
+        ]
+      },
+      {
+        "id": "UliH2qkIAbCEBlM7",
+        "rows": [
+          {
+            "nom": "Invocation de monstres I",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "REjOUolegcrpvpkc",
+        "rows": [
+          {
+            "nom": "Invocation des animaux",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "snNDgtIeRXCVwHEW",
+        "rows": [
+          {
+            "nom": "Invocation des animaux",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "ks2jII9d3NPuEfUq",
+        "rows": [
+          {
+            "nom": "Invocation des créatures sylvestres",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "QxKfLSodqKOT7Hkp",
+        "rows": [
+          {
+            "nom": "Invocation des ombres",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "s9b5kmOeVl0Dlihu",
+        "rows": [
+          {
+            "nom": "Invocation du temps",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "3nEQcxE2uCO7z6M4",
+        "rows": [
+          {
+            "nom": "Invocation instantanée de Drawmij",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "9HT0Un6BDZmj3V14",
+        "rows": [
+          {
+            "nom": "Jet de couleurs",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "LMz7hMg9zYYEBAIy",
+        "rows": [
+          {
+            "nom": "Jet prismatique",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "L72DeADQVkMetdY6",
+        "rows": [
+          {
+            "nom": "Labyrinthe",
+            "niveau": 8
+          }
+        ]
+      },
+      {
+        "id": "va813roq1fyaAt3W",
+        "rows": [
+          {
+            "nom": "Labyrinthe",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "GqhJvzLQaGvg7EzM",
+        "rows": [
+          {
+            "nom": "Langage animal",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "MJB9nvrw72pcHrkj",
+        "rows": [
+          {
+            "nom": "Langage animal",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "dO95SDtRoAbJMIgX",
+        "rows": [
+          {
+            "nom": "Langage des Monstres",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "8fiq7SoozYoXQLTa",
+        "rows": [
+          {
+            "nom": "Langage des plantes",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "OrH1n9seGrcSG4T8",
+        "rows": [
+          {
+            "nom": "Langage des Plantes",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "PgUcDldDijij23cC",
+        "rows": [
+          {
+            "nom": "Langue",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "Ko8FqPCnnba63cIG",
+        "rows": [
+          {
+            "nom": "Langues",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "OfeBylLlVTUGICr8",
+        "rows": [
+          {
+            "nom": "Lecture de la magie",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "aKD2pI9FR3loLUPG",
+        "rows": [
+          {
+            "nom": "Lévitation",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "ZwRweb3xYaSxVTyE",
+        "rows": [
+          {
+            "nom": "Lithomancie",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "IV4YSXuUOAUj05dG",
+        "rows": [
+          {
+            "nom": "Lithomorphose",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "NYpodREW4K1XOYlg",
+        "rows": [
+          {
+            "nom": "Lithomorphose",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "tIsxDVRS0fmlI4SZ",
+        "rows": [
+          {
+            "nom": "Localisation d'objets",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "lberh3AASth47TxD",
+        "rows": [
+          {
+            "nom": "Localisation d’objets",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "sehSm9HR8sADGcmT",
+        "rows": [
+          {
+            "nom": "Localisation des animaux",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "AuALy2T24p0X5EjD",
+        "rows": [
+          {
+            "nom": "Localisation des plantes",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "k9LLws85E9b7pedy",
+        "rows": [
+          {
+            "nom": "Lumière",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "1tSKF5fq3USMV6xC",
+        "rows": [
+          {
+            "nom": "Lumière éternelle",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "8i9WyA29E7aZAeck",
+        "rows": [
+          {
+            "nom": "Lumière éternelle",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "S6t42FtijLkZw3Bo",
+        "rows": [
+          {
+            "nom": "Lumière éternelle",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "T8DMCvJQCiRAipQw",
+        "rows": [
+          {
+            "nom": "Lumières dansantes",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "bimRznUiSx3OUHBS",
+        "rows": [
+          {
+            "nom": "Lumières dansantes",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "8D9isdOndxsUhVsu",
+        "rows": [
+          {
+            "nom": "Magie demi-ombre",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "teRGPaPwbmAPQODM",
+        "rows": [
+          {
+            "nom": "Magie des ombres",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "WMJOmBA1WXK5PTww",
+        "rows": [
+          {
+            "nom": "Main broyante de Bigby",
+            "niveau": 9
+          }
+        ]
+      },
+      {
+        "id": "s9sirCSTAAs2TtcO",
+        "rows": [
+          {
+            "nom": "Main d’interposition de Bigby",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "SZsMh2H4F2KFYx42",
+        "rows": [
+          {
+            "nom": "Main de force de Bigby",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "HgPiQ9XwFPEYvA9d",
+        "rows": [
+          {
+            "nom": "Mains brûlantes",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "NQ1WBQf5BOvN9vEE",
+        "rows": [
+          {
+            "nom": "Maladresse",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "9ZZ01TsYtBy036sJ",
+        "rows": [
+          {
+            "nom": "Manne",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "nZVK9jyNYehm4xuh",
+        "rows": [
+          {
+            "nom": "Marche des vents",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "jpPscFTweufamy5i",
+        "rows": [
+          {
+            "nom": "Marteau Spirituel",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "wmz1mjKtoaP6OI8c",
+        "rows": [
+          {
+            "nom": "Message",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "LaAmNNhnIzeIJe01",
+        "rows": [
+          {
+            "nom": "Métal brûlant",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "cvwa2wXcXAewYB4K",
+        "rows": [
+          {
+            "nom": "Métempsycose",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "oqqf1E3xguqmIAA7",
+        "rows": [
+          {
+            "nom": "Monstres demi-ombre",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "7MUNNEogLaVsQTDk",
+        "rows": [
+          {
+            "nom": "Monstres des ombres",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "Gp9EIUdPfgjrcVuR",
+        "rows": [
+          {
+            "nom": "Mort rampante",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "QeZlXJoSDBO3MAoH",
+        "rows": [
+          {
+            "nom": "Mot de pouvoir : « Cécité »",
+            "niveau": 8
+          }
+        ]
+      },
+      {
+        "id": "Zv7N0rqz6AP48y0V",
+        "rows": [
+          {
+            "nom": "Mot de pouvoir : « étourdissement »",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "SXFviGTJiqd7m7TK",
+        "rows": [
+          {
+            "nom": "Mot de pouvoir : « mort »",
+            "niveau": 9
+          }
+        ]
+      },
+      {
+        "id": "ZvDW6pEEpekygxnw",
+        "rows": [
+          {
+            "nom": "Motif hypnotique",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "is0PujUGpVQD8ezb",
+        "rows": [
+          {
+            "nom": "Moyen mnémonique de Rary",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "22ocQvnJG0kGgHid",
+        "rows": [
+          {
+            "nom": "Mur d'épines",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "mdGUnpGILvAvxZGT",
+        "rows": [
+          {
+            "nom": "Mur de brouillard",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "iXzm72s96sluKGaC",
+        "rows": [
+          {
+            "nom": "Mur de fer",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "Pt1DLeAJyMwz3P75",
+        "rows": [
+          {
+            "nom": "Mur de feu",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "hv8wiwk5k4M1VZZQ",
+        "rows": [
+          {
+            "nom": "Mur de feu",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "1gyZAKxnrCOm2bJC",
+        "rows": [
+          {
+            "nom": "Mur de force",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "GfjgRwNcQx8C20lV",
+        "rows": [
+          {
+            "nom": "Mur de glace",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "PQfiQEXiA9FVTnGQ",
+        "rows": [
+          {
+            "nom": "Mur de roc",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "vnpmbhqzBVIIAamX",
+        "rows": [
+          {
+            "nom": "Mur prismatique",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "XJoxijQoJZxhf7iP",
+        "rows": [
+          {
+            "nom": "Mythomancie",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "g7GeyesI07NntV3f",
+        "rows": [
+          {
+            "nom": "Nappe de brouillard",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "spH5PwhQoM9gfOFE",
+        "rows": [
+          {
+            "nom": "Nécro animation",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "KRUdXKNqqRSVEdHa",
+        "rows": [
+          {
+            "nom": "Nécro-animation",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "LtAoor9wFwvfNUJU",
+        "rows": [
+          {
+            "nom": "Nécromancie",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "Ydth0Ev8YqvMuALk",
+        "rows": [
+          {
+            "nom": "Non-détection",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "cnlutPRWmF6jFoIW",
+        "rows": [
+          {
+            "nom": "Nuage incendiaire",
+            "niveau": 8
+          }
+        ]
+      },
+      {
+        "id": "utLk0UExzy0G72Mq",
+        "rows": [
+          {
+            "nom": "Nuage létal",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "0AhbTXbDQ6a3mnIQ",
+        "rows": [
+          {
+            "nom": "Nuage puant",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "mVZLkTTq5Lce5nXY",
+        "rows": [
+          {
+            "nom": "Nuée de météores",
+            "niveau": 9
+          }
+        ]
+      },
+      {
+        "id": "hEB27BRmQL0ADTl8",
+        "rows": [
+          {
+            "nom": "Obscurcissement",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "9vTZnoC8nPK3u73b",
+        "rows": [
+          {
+            "nom": "Œil magique",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "HXOpT5W4pFHcCZcP",
+        "rows": [
+          {
+            "nom": "Ombres",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "MaaSEG12JriDCfGw",
+        "rows": [
+          {
+            "nom": "Or des fous",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "3mspRpEvRrjjwnTz",
+        "rows": [
+          {
+            "nom": "Orientation",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "S78o5vyd7yMowiat",
+        "rows": [
+          {
+            "nom": "Oubli",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "aLGrplFSgjhAcphB",
+        "rows": [
+          {
+            "nom": "Ouverture",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "No37MqJLFJx4oRiv",
+        "rows": [
+          {
+            "nom": "Paralysie",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "W6Sj8HwSrZ7aTvE9",
+        "rows": [
+          {
+            "nom": "Paralysie",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "lebsucrkk3xmnAXy",
+        "rows": [
+          {
+            "nom": "Paralysie animale",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "Sv9SgZ9fHuVw7nqp",
+        "rows": [
+          {
+            "nom": "Paralysie des monstres",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "o18YdqnbWhnPvtZA",
+        "rows": [
+          {
+            "nom": "Paralysie musculaire",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "Zwkg7Puj9oo40NoH",
+        "rows": [
+          {
+            "nom": "Paralysie végétale",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "Y9rz74nnX3VQgH2H",
+        "rows": [
+          {
+            "nom": "Parole sacrée/maudite",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "O7KE15ql1tAfcZxi",
+        "rows": [
+          {
+            "nom": "Passage sans trace",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "8YjlPThMM6DShlqP",
+        "rows": [
+          {
+            "nom": "Passe-muraille",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "iH98gvJ347EP2kNi",
+        "rows": [
+          {
+            "nom": "Passe-plantes",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "RHXt4Voaa4uXzxBT",
+        "rows": [
+          {
+            "nom": "Peau d'écorce",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "FvpsIiMTxRL1oyAX",
+        "rows": [
+          {
+            "nom": "Perception des Alignements",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "B9laoLAGZwajf73n",
+        "rows": [
+          {
+            "nom": "Permanence",
+            "niveau": 8
+          }
+        ]
+      },
+      {
+        "id": "t813ByYcCRCwr4wo",
+        "rows": [
+          {
+            "nom": "Peur",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "UwjGwNQXi8FRdSUz",
+        "rows": [
+          {
+            "nom": "Phytomorphose",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "cCKQeLN5KelJzXnG",
+        "rows": [
+          {
+            "nom": "Phytomorphose",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "X33y2dAjZGb9JSlA",
+        "rows": [
+          {
+            "nom": "Piège à feu",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "rmBfsio4qpgX7ZLj",
+        "rows": [
+          {
+            "nom": "Piège à feu",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "8t8t8EALk6LQv8Ey",
+        "rows": [
+          {
+            "nom": "Piège de Léomund",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "0TYgzP84IkInxeMW",
+        "rows": [
+          {
+            "nom": "Piège sylvestre",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "dvrWiGSZdIIaYvUN",
+        "rows": [
+          {
+            "nom": "Pilier de Feu",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "0xkK9Buc0jJxpDSu",
+        "rows": [
+          {
+            "nom": "Poigne de Bigby",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "BN5mEzkkQSnUhR1e",
+        "rows": [
+          {
+            "nom": "Poigne électrique",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "UM9g4kUt46mvUydu",
+        "rows": [
+          {
+            "nom": "Poing de Bigby",
+            "niveau": 8
+          }
+        ]
+      },
+      {
+        "id": "URFqArhKj13gvSFg",
+        "rows": [
+          {
+            "nom": "Porte de phase",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "OudmSaGLIpq5uBJM",
+        "rows": [
+          {
+            "nom": "Porte des ombres",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "MeCpLlfBZhz02hY4",
+        "rows": [
+          {
+            "nom": "Porte dimensionnelle",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "glgVLdt9Js1nKanK",
+        "rows": [
+          {
+            "nom": "Porte végétale",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "ZFPP402CVGlHbePJ",
+        "rows": [
+          {
+            "nom": "Poussée",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "vjHUivqA0idPmfeK",
+        "rows": [
+          {
+            "nom": "Prévision du temps",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "HnbohpNnUNJMqfhn",
+        "rows": [
+          {
+            "nom": "Prière",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "cHFYU3haq9w9r5vu",
+        "rows": [
+          {
+            "nom": "Projectile magique",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "IylRiIi5l2A39G5O",
+        "rows": [
+          {
+            "nom": "Protection contre la foudre",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "o6nD1XSl7hmY7sgM",
+        "rows": [
+          {
+            "nom": "Protection contre le feu",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "1OUNpTA0bBvpjMnr",
+        "rows": [
+          {
+            "nom": "Protection contre le mal",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "6XPsskIP1l6xoYpH",
+        "rows": [
+          {
+            "nom": "Protection contre le Mal",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "P90fFJ9fk5zV9hQH",
+        "rows": [
+          {
+            "nom": "Protection contre le mal sur 3 m",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "znk4wf2iRZXl5Di3",
+        "rows": [
+          {
+            "nom": "Protection contre le mal sur 3 m",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "weDaeZNuYuohIdGT",
+        "rows": [
+          {
+            "nom": "Protection contre les projectiles normaux",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "P0QG1zOtZeeqdZKw",
+        "rows": [
+          {
+            "nom": "Protection d’esprit",
+            "niveau": 8
+          }
+        ]
+      },
+      {
+        "id": "jDb5v4gVWvGgT58M",
+        "rows": [
+          {
+            "nom": "Punition spirituelle",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "FfIL6h105Lb7hA9H",
+        "rows": [
+          {
+            "nom": "Purification de l'eau",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "bUh71wPwV9S9IMOk",
+        "rows": [
+          {
+            "nom": "Purification de l'eau et des aliments",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "hH9x294SoIoncLe2",
+        "rows": [
+          {
+            "nom": "Pyrotechnie",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "o4zIgFGXeGTNZCnv",
+        "rows": [
+          {
+            "nom": "Pyrotechnie",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "XxyzM65fgfQZXjAE",
+        "rows": [
+          {
+            "nom": "Quête magique",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "G5PaJqNOju6qz4c1",
+        "rows": [
+          {
+            "nom": "Quête Religieuse",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "izqR0b5nssOBMpC8",
+        "rows": [
+          {
+            "nom": "Rafale de vent",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "egvMFe1Oaq1grIDp",
+        "rows": [
+          {
+            "nom": "Ralentissement",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "yPd52KQZYro09dLx",
+        "rows": [
+          {
+            "nom": "Rapidité",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "pfWcP9XkU54NUIXg",
+        "rows": [
+          {
+            "nom": "Rappel",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "FAEaosblvQKBy0mF",
+        "rows": [
+          {
+            "nom": "Rappel à la Vie",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "9XxVaBhdf9ZVwsvj",
+        "rows": [
+          {
+            "nom": "Rayon d’affaiblissement",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "nMJZ1tmzP19v6C0E",
+        "rows": [
+          {
+            "nom": "Réflexion des regards",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "n6OhCMMGbHvT83EM",
+        "rows": [
+          {
+            "nom": "Régénération",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "IXDcOiQqa1VAmc8i",
+        "rows": [
+          {
+            "nom": "Réincarnation",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "zzJcBrSTsHzhVDwE",
+        "rows": [
+          {
+            "nom": "Réincarnation",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "2D0NSxAVoPfB7iYL",
+        "rows": [
+          {
+            "nom": "Réparation",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "yQ2lI4glLLAy3yTS",
+        "rows": [
+          {
+            "nom": "Répulsion",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "LPpebnlkO3kjIQ2h",
+        "rows": [
+          {
+            "nom": "Répulsion des insectes",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "1jjVMk2lYbNyXbzl",
+        "rows": [
+          {
+            "nom": "Répulsion du bois",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "x8LCUcGFtmKMHlgx",
+        "rows": [
+          {
+            "nom": "Résistance au feu",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "u2yvTKRN2k4cEELU",
+        "rows": [
+          {
+            "nom": "Résistance au Froid",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "dcItyyDoQ72yY6uG",
+        "rows": [
+          {
+            "nom": "Respiration aquatique",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "tS5LGSgHYnWY19Ul",
+        "rows": [
+          {
+            "nom": "Respiration aquatique",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "JwLnMwR09gLWqqsy",
+        "rows": [
+          {
+            "nom": "Restauration",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "U1a6CBT5K59CcwyY",
+        "rows": [
+          {
+            "nom": "Résurrection",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "BtXeD7BlWK5hUbG0",
+        "rows": [
+          {
+            "nom": "Retardement du Poison",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "N1B4GBbmkvScgYqZ",
+        "rows": [
+          {
+            "nom": "Runes explosives",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "akho16V4z4aCEiVl",
+        "rows": [
+          {
+            "nom": "Sanctuaire",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "jp6B7Sqow5M5tm4h",
+        "rows": [
+          {
+            "nom": "Saut",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "d5M604jKzN2pbp8j",
+        "rows": [
+          {
+            "nom": "Séparation des eaux",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "mdL95QfXk86A3ULi",
+        "rows": [
+          {
+            "nom": "Séparation des Eaux",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "MGZeCQSAhpKAuQ72",
+        "rows": [
+          {
+            "nom": "Serviteur Aérien",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "IciKX7TeHCvBdLpi",
+        "rows": [
+          {
+            "nom": "Serviteur invisible",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "XEu1qstVrfYsMgMU",
+        "rows": [
+          {
+            "nom": "Seuil",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "dVodeel3Jh54llS9",
+        "rows": [
+          {
+            "nom": "Seuil",
+            "niveau": 9
+          }
+        ]
+      },
+      {
+        "id": "ug9FzInIWJZa1FNr",
+        "rows": [
+          {
+            "nom": "Shillelagh",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "8akGV6jBabpcQCd4",
+        "rows": [
+          {
+            "nom": "Silence sur 5 mètres",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "wudoXVuIXbv6DFEJ",
+        "rows": [
+          {
+            "nom": "Simulacre",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "NBczQwdkP4XAhmKI",
+        "rows": [
+          {
+            "nom": "Soin ultime",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "yWvWWyC4beZEgj1d",
+        "rows": [
+          {
+            "nom": "Soin ultime",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "KrmpgeYj13SaX3Fv",
+        "rows": [
+          {
+            "nom": "Soins majeurs",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "2QxtXCbQ5BfhYb2D",
+        "rows": [
+          {
+            "nom": "Soins Majeurs",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "ETfvwH2v60eRlhxN",
+        "rows": [
+          {
+            "nom": "Soins mineurs",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "QhejuEOxzuy71NKf",
+        "rows": [
+          {
+            "nom": "Soins mineurs",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "qVcYnm71vIJqPD8F",
+        "rows": [
+          {
+            "nom": "Sommeil",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "t79hXXbG5dr6OC9h",
+        "rows": [
+          {
+            "nom": "Sort astral",
+            "niveau": 9
+          }
+        ]
+      },
+      {
+        "id": "yZo8hGOHW8V5Wvdo",
+        "rows": [
+          {
+            "nom": "Sort astral",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "YE6TOa4hgiePuSvm",
+        "rows": [
+          {
+            "nom": "Sort Astral",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "ivT1t9kvRj7F0KT8",
+        "rows": [
+          {
+            "nom": "Sorts de niveau 1 de magicien",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "hYCuz4zg5MiN7iAR",
+        "rows": [
+          {
+            "nom": "Souhait majeur",
+            "niveau": 9
+          }
+        ]
+      },
+      {
+        "id": "xC0Iqqa8Y1GFJNEn",
+        "rows": [
+          {
+            "nom": "Souhait mineur",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "K8wgnDPuYFiLyM7S",
+        "rows": [
+          {
+            "nom": "Sphère glaciale d’Otiluke",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "JQ8TCHA6K8OodbRE",
+        "rows": [
+          {
+            "nom": "Sphère prismatique",
+            "niveau": 9
+          }
+        ]
+      },
+      {
+        "id": "x2K8d8qU98Rv63DL",
+        "rows": [
+          {
+            "nom": "Stase temporelle",
+            "niveau": 9
+          }
+        ]
+      },
+      {
+        "id": "YUI2nFbB9I14rSGw",
+        "rows": [
+          {
+            "nom": "Statue",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "Uva50ITm1lJ731De",
+        "rows": [
+          {
+            "nom": "Suggestion",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "WBtEZ9b7bY9fsMP7",
+        "rows": [
+          {
+            "nom": "Suggestion",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "h4LSRw3HCgYFpj0W",
+        "rows": [
+          {
+            "nom": "Suggestion de masse",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "G2iG3MoGj9JtMk4A",
+        "rows": [
+          {
+            "nom": "Surdité",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "BaYHhz67XdrHVAdY",
+        "rows": [
+          {
+            "nom": "Symbole",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "G7oUZ7E6NSHC4kqy",
+        "rows": [
+          {
+            "nom": "Symbole",
+            "niveau": 8
+          }
+        ]
+      },
+      {
+        "id": "PwvrI6XL8DbwFdeq",
+        "rows": [
+          {
+            "nom": "Télékinésie",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "WivmwLjxqXlI5ryH",
+        "rows": [
+          {
+            "nom": "Téléportation",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "q5Oqr9n0L79DPlkO",
+        "rows": [
+          {
+            "nom": "Tempête de feu",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "TzyCchziN6GgC4P1",
+        "rows": [
+          {
+            "nom": "Tempête de glace",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "0fAMM8WNOiRF6gxf",
+        "rows": [
+          {
+            "nom": "Ténèbres",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "iYSQz4frKjgzMO97",
+        "rows": [
+          {
+            "nom": "Ténèbres éternelles",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "ekAomcqBIgvO7rDb",
+        "rows": [
+          {
+            "nom": "Ténèbres sur 5 mètres",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "8ybl3enfW2yw12hP",
+        "rows": [
+          {
+            "nom": "Terrain hallucinatoire",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "h6RXGPw7DZjPPtBh",
+        "rows": [
+          {
+            "nom": "Terrain hallucinatoire",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "Tm7A5PKcYnQESmDN",
+        "rows": [
+          {
+            "nom": "Toile d’araignée",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "dZfL4o2T0ZuMj4L0",
+        "rows": [
+          {
+            "nom": "Transformation d’objets",
+            "niveau": 8
+          }
+        ]
+      },
+      {
+        "id": "qlYip27rCZTt9rU7",
+        "rows": [
+          {
+            "nom": "Transformation de Tenser",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "EpmjalLmRfxL8g7O",
+        "rows": [
+          {
+            "nom": "Transit végétal",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "42WX4e4SAhKVO0FM",
+        "rows": [
+          {
+            "nom": "Transmutation de pierre en boue",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "RD3EZkWLTesZeJe3",
+        "rows": [
+          {
+            "nom": "Transmutation de pierre en boue",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "qWw9GL3cFGdshWyW",
+        "rows": [
+          {
+            "nom": "Transmutation de pierre en chair",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "DTvzyVTKD6DvLasR",
+        "rows": [
+          {
+            "nom": "Transmutation du métal en bois",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "9NxiIoPP0DZ8tTWb",
+        "rows": [
+          {
+            "nom": "Transvision",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "pv4CHYl6HVitgxqw",
+        "rows": [
+          {
+            "nom": "Tremblement de Terre",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "1GlGOshN39LoljdO",
+        "rows": [
+          {
+            "nom": "Trouble",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "lFM99yfCXnPpl1bk",
+        "rows": [
+          {
+            "nom": "Tueur fantasmagorique",
+            "niveau": 4
+          }
+        ]
+      },
+      {
+        "id": "KwI4SzlPbSxc7b22",
+        "rows": [
+          {
+            "nom": "Ventriloquie",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "Yb7uiLQmh0S9bKpG",
+        "rows": [
+          {
+            "nom": "Ventriloquie",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "uI0REZIkZJzntlMj",
+        "rows": [
+          {
+            "nom": "Verrou magique",
+            "niveau": 2
+          }
+        ]
+      },
+      {
+        "id": "t93QHAzWAqVWhnQQ",
+        "rows": [
+          {
+            "nom": "Vigiles et sentinelles",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "Wue5hLpFdpCj91Sk",
+        "rows": [
+          {
+            "nom": "Vision",
+            "niveau": 7
+          }
+        ]
+      },
+      {
+        "id": "OgxBs734mvVj4NN6",
+        "rows": [
+          {
+            "nom": "Vision réelle",
+            "niveau": 5
+          }
+        ]
+      },
+      {
+        "id": "gVAsQ5D4uVWgUDxw",
+        "rows": [
+          {
+            "nom": "Vision réelle",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "gzVxyV0BkkQznOAu",
+        "rows": [
+          {
+            "nom": "Voile illusoire",
+            "niveau": 6
+          }
+        ]
+      },
+      {
+        "id": "t4mB5AHUviSQPvcZ",
+        "rows": [
+          {
+            "nom": "Vol",
+            "niveau": 3
+          }
+        ]
+      },
+      {
+        "id": "Zg2wEoydngNsIvyV",
+        "rows": [
+          {
+            "nom": "Lumière",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "E9Yo4npKmFqU2Xgl",
+        "rows": [
+          {
+            "nom": "Lumière",
+            "niveau": 1
+          }
+        ]
+      },
+      {
+        "id": "xbOjuFsPWKQCmRmP",
+        "rows": [
+          {
+            "nom": "Détection de l’invisibilité",
+            "niveau": 2
+          }
+        ]
+      }
+    ],
+    "decoupageOnlyIds": [
+      {
+        "id": "XQgdghDowrDCCQ1b",
+        "rows": [
+          {
+            "nom": "Apaisement",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "NxItV2LPH4Cbl5I2",
+        "rows": [
+          {
+            "nom": "Aquagenèse",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "u1L6JpAXZ113qpVG",
+        "rows": [
+          {
+            "nom": "Bénédiction",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "Sxt9iofe7",
+        "rows": [
+          {
+            "nom": "Détection de la magie",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "yAqsU5sPfwAfnzKI",
+        "rows": [
+          {
+            "nom": "Détection du mal",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "3U2YJApOJHhpPi36",
+        "rows": [
+          {
+            "nom": "Injonction",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "Sdlz5sn18",
+        "rows": [
+          {
+            "nom": "Lumière",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "TqhVMP92bVsGe1Ze",
+        "rows": [
+          {
+            "nom": "Protection contre le Mal",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "Smrpqu7x2",
+        "rows": [
+          {
+            "nom": "Purification de l'eau et des aliments",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "i1hJN7EdqPcLTVL1",
+        "rows": [
+          {
+            "nom": "Purification de la Nourriture et de la Boisson",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "2eIiTt870xCg5cX2",
+        "rows": [
+          {
+            "nom": "Résistance au Froid",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "vKWHLf1xrjZNtMdr",
+        "rows": [
+          {
+            "nom": "Sanctuaire",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "41cYJx1D12of5dtp",
+        "rows": [
+          {
+            "nom": "Soins des Blessures Légères",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "Sxchr11u6",
+        "rows": [
+          {
+            "nom": "Soins mineurs",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "Rs2UXeoGOPw95lTa",
+        "rows": [
+          {
+            "nom": "Augure",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "wdtkfJYwuk9dsqR1",
+        "rows": [
+          {
+            "nom": "Cantique",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "tp59YPoHeXjNe6Ym",
+        "rows": [
+          {
+            "nom": "Charme-Serpents",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "QIQwPiiJp7G4g4g7",
+        "rows": [
+          {
+            "nom": "Détection des Charmes",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "Wy1dn4BiE0hw8Llu",
+        "rows": [
+          {
+            "nom": "Détection des Pièges",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "vhPECKdSgNgk4KaP",
+        "rows": [
+          {
+            "nom": "Langage animal",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "6izVz4iVr2hKNNRQ",
+        "rows": [
+          {
+            "nom": "Marteau Spirituel",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "Syawg1fas",
+        "rows": [
+          {
+            "nom": "Paralysie",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "hZHuARHUGpOY5PvR",
+        "rows": [
+          {
+            "nom": "Perception des Alignements",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "7zHxP5ZI6iLBpdla",
+        "rows": [
+          {
+            "nom": "Résistance au feu",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "Z6nSdRcOjfcEapru",
+        "rows": [
+          {
+            "nom": "Retardement du Poison",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "NYOXmMomYixpF5pS",
+        "rows": [
+          {
+            "nom": "Silence sur 5 mètres",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "Sa3zkx6mz",
+        "rows": [
+          {
+            "nom": "Catalepsie",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "D4M1z3FJEUq8qUZN",
+        "rows": [
+          {
+            "nom": "Désenvoûtement",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "XEcAG3l135UrSgp1",
+        "rows": [
+          {
+            "nom": "Dissipation de la Magie",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "upRGuCu26UmMcTaN",
+        "rows": [
+          {
+            "nom": "Glyphe de Garde",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "WS0WlZcSPXN3BzVj",
+        "rows": [
+          {
+            "nom": "Guérison de la Cécité",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "YCzH60fklmXZm4NG",
+        "rows": [
+          {
+            "nom": "Guérison des Maladies",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "Sj06p4tw4",
+        "rows": [
+          {
+            "nom": "Localisation d'objets",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "JYPI9EQRzXnTBajE",
+        "rows": [
+          {
+            "nom": "Localisation d’un Objet",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "MOvZkfwTwOmPaoo6",
+        "rows": [
+          {
+            "nom": "Lumière éternelle",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "mKVH2qdZQt1lTD7R",
+        "rows": [
+          {
+            "nom": "Manne",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "J03xF2w0p1eUArSJ",
+        "rows": [
+          {
+            "nom": "Nécro animation",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "Q2bKJDwPnQ49figr",
+        "rows": [
+          {
+            "nom": "Nécromancie",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "OY8n4w7N4Vw06Gz0",
+        "rows": [
+          {
+            "nom": "Prière",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "2u7CQtfpQUqiKKMi",
+        "rows": [
+          {
+            "nom": "Abaissement des Eaux",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "S30nizlne",
+        "rows": [
+          {
+            "nom": "Bâtons à serpents",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "AlmyxyBQ3JUlncRq",
+        "rows": [
+          {
+            "nom": "Bâtons en Serpents",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "Sjiuuls8d",
+        "rows": [
+          {
+            "nom": "Contre-poison",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "dgAqjED194Zh2Fsx",
+        "rows": [
+          {
+            "nom": "Détection des Mensonges",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "Ioq0hTYTNqY25yTp",
+        "rows": [
+          {
+            "nom": "Divination",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "VzYlAqxdcGsXjLUx",
+        "rows": [
+          {
+            "nom": "Exorcisme",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "NB7cY2JkIVWpAJxi",
+        "rows": [
+          {
+            "nom": "Langage des Plantes",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "Sa1v4ptqy",
+        "rows": [
+          {
+            "nom": "Langue",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "SdDT7AaELrLPFCy7",
+        "rows": [
+          {
+            "nom": "Protection contre le Mal (Rayon de 10 pieds)",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "Stbgz8i1o",
+        "rows": [
+          {
+            "nom": "Protection contre le mal sur 3 m",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "BC3xSS1IBBosglWX",
+        "rows": [
+          {
+            "nom": "Soins Majeurs",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "ArNVRD6NMCcfJVO8",
+        "rows": [
+          {
+            "nom": "Changement de Plan",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "f0xvzPjR5eql4RnX",
+        "rows": [
+          {
+            "nom": "Communion",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "8xjaHEHQJH38zT5v",
+        "rows": [
+          {
+            "nom": "Dissipation du Mal",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "a0RDLD25YSALcpQ3",
+        "rows": [
+          {
+            "nom": "Expiation",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "agSJJopB3wVJ7JnL",
+        "rows": [
+          {
+            "nom": "Fléau d’Insectes",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "JIVPA8sAdvSA48F3",
+        "rows": [
+          {
+            "nom": "Pilier de Feu",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "LEjrYHsqdLZt9u9z",
+        "rows": [
+          {
+            "nom": "Quête Religieuse",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "BDlrjtmEtCW6VeM3",
+        "rows": [
+          {
+            "nom": "Rappel à la Vie",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "Sq1tl2rnm",
+        "rows": [
+          {
+            "nom": "Soin ultime",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "NT2DlgfjeVmmWktM",
+        "rows": [
+          {
+            "nom": "Soins ultime",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "Sg8vv5wrq",
+        "rows": [
+          {
+            "nom": "Vision réelle",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "YhKHovBxDFPT3zjD",
+        "rows": [
+          {
+            "nom": "Animation des objets",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "NfojDpSSWss8K7ox",
+        "rows": [
+          {
+            "nom": "Barrière de Lames",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "oSfALhtUqR6esjsF",
+        "rows": [
+          {
+            "nom": "Guérison",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "Sh66nk11o",
+        "rows": [
+          {
+            "nom": "Invocation des animaux",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "E3sn9oDE2jRcng5n",
+        "rows": [
+          {
+            "nom": "Langage des Monstres",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "zZvMkZh0eT9iXbOV",
+        "rows": [
+          {
+            "nom": "Lithomancie",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "lTY0W2UcSICDXAIu",
+        "rows": [
+          {
+            "nom": "Orientation",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "ojEuPap5qVulUg4p",
+        "rows": [
+          {
+            "nom": "Rappel",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "Ao2pXwVBoC7v1AcZ",
+        "rows": [
+          {
+            "nom": "Séparation des Eaux",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "vq8X8DO5iO7LIWJx",
+        "rows": [
+          {
+            "nom": "Serviteur Aérien",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "MjfD1BtI6Zbmcbkn",
+        "rows": [
+          {
+            "nom": "Asile",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "PSUPfcabfhbrxWG1",
+        "rows": [
+          {
+            "nom": "Contrôle du Climat",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "0vew4Dsadk48WK8X",
+        "rows": [
+          {
+            "nom": "Marche des vents",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "faa1xkvCpaxj8mzy",
+        "rows": [
+          {
+            "nom": "Parole sacrée/maudite",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "wTY2BA9kkcAc3IJu",
+        "rows": [
+          {
+            "nom": "Régénération",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "KV9j89SM2tko3iDL",
+        "rows": [
+          {
+            "nom": "Restauration",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "x3fOxKCADgNdvfyU",
+        "rows": [
+          {
+            "nom": "Résurrection",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "Shi1vnnug",
+        "rows": [
+          {
+            "nom": "Seuil",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "4Aaby7ywbSbUbzLG",
+        "rows": [
+          {
+            "nom": "Sort Astral",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "edocrNiNW6x6TWX1",
+        "rows": [
+          {
+            "nom": "Symbole",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "ruWwPBZl56IRcqt2",
+        "rows": [
+          {
+            "nom": "Tremblement de Terre",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\clerc-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "ilgf9I5cZPQitFJy",
+        "rows": [
+          {
+            "nom": "Amitié animale",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\druide-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "FPCcOTwEZM4FB4AG",
+        "rows": [
+          {
+            "nom": "Aura féérique",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\druide-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "7rYWVSj9qG6J4CgE",
+        "rows": [
+          {
+            "nom": "Détection de la magie",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\druide-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "gb1VJgkDBmpxHRqW",
+        "rows": [
+          {
+            "nom": "Détection des pièges sylvestres",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\druide-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "gchPPB6o9UcwOWO4",
+        "rows": [
+          {
+            "nom": "Enchevêtrement",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\druide-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "wGAk7UDQiD8culJ2",
+        "rows": [
+          {
+            "nom": "Invisibilité aux animaux",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\druide-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "jtVmvY0cNNKzc8sw",
+        "rows": [
+          {
+            "nom": "Langage animal",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\druide-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "AzUlTx8pPfOqZS2Q",
+        "rows": [
+          {
+            "nom": "Localisation des animaux",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\druide-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "ny1kTEpQBJdwExzN",
+        "rows": [
+          {
+            "nom": "Passage sans trace",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\druide-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "evIx4b26WpJLeXyT",
+        "rows": [
+          {
+            "nom": "Prévision du temps",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\druide-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "qWQgy9OIassdDWDQ",
+        "rows": [
+          {
+            "nom": "Purification de l'eau",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\druide-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "XbRgfyOQelhZ1LvY",
+        "rows": [
+          {
+            "nom": "Shillelagh",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\druide-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "Scjl76ai5",
+        "rows": [
+          {
+            "nom": "Aquagenèse",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\druide-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "sRd64Nw20WZ1cSFk",
+        "rows": [
+          {
+            "nom": "Catalepsie",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\druide-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "A5ByNdQ49OPXdHGs",
+        "rows": [
+          {
+            "nom": "Charme-personnes ou mammifères",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\druide-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "j5rfK0nQ9OfvVRP0",
+        "rows": [
+          {
+            "nom": "Croc-en-jambe",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\druide-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "VGjbP8bf6jxpaH2r",
+        "rows": [
+          {
+            "nom": "Distorsion du bois",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\druide-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "bGozecWB2h2bzLHW",
+        "rows": [
+          {
+            "nom": "Flamme",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\druide-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "u9Y1HnfaWsDkiH2j",
+        "rows": [
+          {
+            "nom": "Localisation des plantes",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\druide-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "N7TTlafX2FuoYgAD",
+        "rows": [
+          {
+            "nom": "Métal brûlant",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\druide-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "NU1wGTCbnOH6Oz1H",
+        "rows": [
+          {
+            "nom": "Obscurcissement",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\druide-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "RA3FoJdMhOl9lLSY",
+        "rows": [
+          {
+            "nom": "Peau d'écorce",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\druide-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "Slo4ivq91",
+        "rows": [
+          {
+            "nom": "Piège à feu",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\druide-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "193bqqLSQr0HC1bm",
+        "rows": [
+          {
+            "nom": "Soins mineurs",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\druide-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "gL6K13UI6GzIh3vR",
+        "rows": [
+          {
+            "nom": "Arbre",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\druide-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "cmqFxT1lil3aJ6eL",
+        "rows": [
+          {
+            "nom": "Contre-poison",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\druide-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "Sbg9ej0jd",
+        "rows": [
+          {
+            "nom": "Embroussaillement",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\druide-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "S1k5t1jju",
+        "rows": [
+          {
+            "nom": "Guérison des maladies",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\druide-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "dnVcLvdXrySEeWge",
+        "rows": [
+          {
+            "nom": "Invocation d'insectes",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\druide-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "lfkj1T7y8pa5ARG0",
+        "rows": [
+          {
+            "nom": "Invocation de la foudre",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\druide-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "qDrkAocsXPPoz6ym",
+        "rows": [
+          {
+            "nom": "Lithomorphose",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\druide-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "d5VYBbd8J6A0KZDW",
+        "rows": [
+          {
+            "nom": "Paralysie animale",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\druide-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "ILCNplGHyXKdpH4I",
+        "rows": [
+          {
+            "nom": "Piège sylvestre",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\druide-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "vyq7ewIujEefLfx3",
+        "rows": [
+          {
+            "nom": "Protection contre le feu",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\druide-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "S03e9192t",
+        "rows": [
+          {
+            "nom": "Pyrotechnie",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\druide-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "Fm4984m1dcunpwiB",
+        "rows": [
+          {
+            "nom": "Respiration aquatique",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\druide-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "HVNQPx5qWs1cNFRT",
+        "rows": [
+          {
+            "nom": "Contrôle de la température sur 3 m",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\druide-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "S7hx702hb",
+        "rows": [
+          {
+            "nom": "Dissipation de la magie",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\druide-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "uRwyTvdauqDCIgbO",
+        "rows": [
+          {
+            "nom": "Dissipation de magie",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\druide-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "OMmnUrjpCVcCASNR",
+        "rows": [
+          {
+            "nom": "Embrasement",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\druide-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "jOxhcQtvs1oUOpak",
+        "rows": [
+          {
+            "nom": "Forêt hallucinatoire",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\druide-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "bQVB6rizjkXdUET0",
+        "rows": [
+          {
+            "nom": "Invocation animale I",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\druide-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "TF3ui2XtaRyUwwRG",
+        "rows": [
+          {
+            "nom": "Invocation des créatures sylvestres",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\druide-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "Sqd9hvks6",
+        "rows": [
+          {
+            "nom": "Langage des plantes",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\druide-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "n0ScQmYB3qGB7V3g",
+        "rows": [
+          {
+            "nom": "Paralysie végétale",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\druide-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "VzcxE29VIVIX7Agf",
+        "rows": [
+          {
+            "nom": "Porte végétale",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\druide-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "MgZcW1UgY4vOIats",
+        "rows": [
+          {
+            "nom": "Protection contre la foudre",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\druide-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "R8kqIcaXdLu1nUFh",
+        "rows": [
+          {
+            "nom": "Répulsion des insectes",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\druide-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "Sz67vrc8p",
+        "rows": [
+          {
+            "nom": "Soins majeurs",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\druide-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "tLb7xw1oUqTWIBSP",
+        "rows": [
+          {
+            "nom": "Bâtons à serpents",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\druide-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "nBIJOOTA44bGxVyL",
+        "rows": [
+          {
+            "nom": "Bouclier anti-plantes",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\druide-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "2mQgGKskOfdYgHLB",
+        "rows": [
+          {
+            "nom": "Communion avec la nature",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\druide-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "EtVots6HKBlcVdlr",
+        "rows": [
+          {
+            "nom": "Contrôle des vents",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\druide-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "S0gfyorie",
+        "rows": [
+          {
+            "nom": "Croissance animale",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\druide-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "Sl13yrvj2",
+        "rows": [
+          {
+            "nom": "Fléau d’insectes",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\druide-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "ev1iqqbluPZsooao",
+        "rows": [
+          {
+            "nom": "Invocation animale II",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\druide-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "ibRsKWkteFkyQdDO",
+        "rows": [
+          {
+            "nom": "Mur de feu",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\druide-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "x5iMO3BUv9Ze8igE",
+        "rows": [
+          {
+            "nom": "Passe-plantes",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\druide-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "UxlwIIKcYa8bf6AK",
+        "rows": [
+          {
+            "nom": "Transmutation de pierre en boue",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\druide-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "YiZsypsA769c8dDS",
+        "rows": [
+          {
+            "nom": "Bouclier anti-animal",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\druide-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "Sd2vcuep5",
+        "rows": [
+          {
+            "nom": "Débilité mentale",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\druide-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "xVtsnh3iA6UMGbDy",
+        "rows": [
+          {
+            "nom": "Graines de feu",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\druide-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "nMNhqWS2kUnSRcTD",
+        "rows": [
+          {
+            "nom": "Invocation animale III",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\druide-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "jxGkK0Nw9BmWs5eu",
+        "rows": [
+          {
+            "nom": "Invocation d'un élémental du feu",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\druide-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "8fZOj9M2oULzHaK1",
+        "rows": [
+          {
+            "nom": "Invocation du temps",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\druide-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "vvlyNag1pWQlMqqw",
+        "rows": [
+          {
+            "nom": "Mur d'épines",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\druide-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "MtgHg2ggpRB851uE",
+        "rows": [
+          {
+            "nom": "Répulsion du bois",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\druide-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "2HXdutkNuMd7wEme",
+        "rows": [
+          {
+            "nom": "Soin ultime",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\druide-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "9Y55amDwSzGZYPiM",
+        "rows": [
+          {
+            "nom": "Transit végétal",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\druide-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "ta6CWp0VMuC8z4oI",
+        "rows": [
+          {
+            "nom": "Animation de la roche",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\druide-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "6lBtsrAE6tTEJDJI",
+        "rows": [
+          {
+            "nom": "Chariot de Sustarre",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\druide-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "Siwmacb6r",
+        "rows": [
+          {
+            "nom": "Confusion",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\druide-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "Szz8xxhao",
+        "rows": [
+          {
+            "nom": "Contrôle du climat",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\druide-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "FLwWKlyZWASHf4dY",
+        "rows": [
+          {
+            "nom": "Doigt de mort",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\druide-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "FaufBhAcCD3n9phk",
+        "rows": [
+          {
+            "nom": "Invocation d'un élémental de terre",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\druide-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "QNM2PTjpOuOr5twS",
+        "rows": [
+          {
+            "nom": "Mort rampante",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\druide-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "ytUzMMlAcWovQf2A",
+        "rows": [
+          {
+            "nom": "Réincarnation",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\druide-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "IzJgixDIb7nrR1wQ",
+        "rows": [
+          {
+            "nom": "Tempête de feu",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\druide-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "TpsMHSV6jiYmiht6",
+        "rows": [
+          {
+            "nom": "Transmutation du métal en bois",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\druide-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "xuHjKxIJ94AhH610",
+        "rows": [
+          {
+            "nom": "Bruitage",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "CTePPmPBPiUTyQ8x",
+        "rows": [
+          {
+            "nom": "Changement d’apparence",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "wtxFaRkEeY5m5vGW",
+        "rows": [
+          {
+            "nom": "Détection de l’invisibilité",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "RoPNQW1lonPdXpIL",
+        "rows": [
+          {
+            "nom": "Détection des illusions",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "whLrq31uhuv0Vg2x",
+        "rows": [
+          {
+            "nom": "Force fantasmagorique",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "aJTNURTuGz0aElPr",
+        "rows": [
+          {
+            "nom": "Hypnotisme",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "PingWPeTX4P9EAag",
+        "rows": [
+          {
+            "nom": "Jet de couleurs",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "lnB96ugHg2ZeHjzf",
+        "rows": [
+          {
+            "nom": "Lumières dansantes",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "ActWRo5tz4Wab8sh",
+        "rows": [
+          {
+            "nom": "Mur de brouillard",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "WCOEjYv79WQ8VYqY",
+        "rows": [
+          {
+            "nom": "Réflexion des regards",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "yE4kzcw7UIok8p8Y",
+        "rows": [
+          {
+            "nom": "Ténèbres",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "wBz84BLOyTmGed9y",
+        "rows": [
+          {
+            "nom": "Bouche magique",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "N6fR1IQH2M2CZHwV",
+        "rows": [
+          {
+            "nom": "Cécité",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "uqypjhvmid2zcZip",
+        "rows": [
+          {
+            "nom": "Désinformation",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "St2jkwm4x",
+        "rows": [
+          {
+            "nom": "Détection de la magie",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "EsgoQh0nlj7f2bp6",
+        "rows": [
+          {
+            "nom": "Force fantasmagorique améliorée",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "Ssx6j4e18",
+        "rows": [
+          {
+            "nom": "Image miroir",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "4VA5OcJS8DaXKyVw",
+        "rows": [
+          {
+            "nom": "Invisibilité",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "ChKu6jVRMkzSxKhr",
+        "rows": [
+          {
+            "nom": "Motif hypnotique",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "FYrBpsDerJsdUgz5",
+        "rows": [
+          {
+            "nom": "Nappe de brouillard",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "HeupZXq4vQjY3EK8",
+        "rows": [
+          {
+            "nom": "Surdité",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "zKAqiJZxs9A3MPtd",
+        "rows": [
+          {
+            "nom": "Trouble",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "eKltp2YyNCfdS6Qg",
+        "rows": [
+          {
+            "nom": "Ventriloquie",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "S1h2ue786",
+        "rows": [
+          {
+            "nom": "Corde enchantée",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "OHO4xJXJxW5gygat",
+        "rows": [
+          {
+            "nom": "Dissipation des illusions",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "WweEfY9hLciMDbwM",
+        "rows": [
+          {
+            "nom": "Écriture illusoire",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "Soif3xut2",
+        "rows": [
+          {
+            "nom": "Effroi",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "3xDP7GlFKFXuADfj",
+        "rows": [
+          {
+            "nom": "Force spectrale",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "3iWgC8Mq0KHNLWHX",
+        "rows": [
+          {
+            "nom": "Invisibilité sur 3 m",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "Sjv8diap7",
+        "rows": [
+          {
+            "nom": "Lumière éternelle",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "jMHf785AxLZXArOB",
+        "rows": [
+          {
+            "nom": "Non-détection",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "Pp7IjtyLnkBvooZ8",
+        "rows": [
+          {
+            "nom": "Paralysie musculaire",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "CTNAYVpDwWldT0PT",
+        "rows": [
+          {
+            "nom": "Suggestion",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "9dKrtDMJTTb8uQ69",
+        "rows": [
+          {
+            "nom": "Ténèbres éternelles",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "S98lx26ye",
+        "rows": [
+          {
+            "nom": "Terrain hallucinatoire",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "Sxn92jrvw",
+        "rows": [
+          {
+            "nom": "Confusion",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "XdIvmjAtSNZAr6OD",
+        "rows": [
+          {
+            "nom": "Création mineure",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "wJIL6DTErJknVsvM",
+        "rows": [
+          {
+            "nom": "Dissipation de l’épuisement",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "lJQ17k2WBz4PPxLG",
+        "rows": [
+          {
+            "nom": "Émotion",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "OneHXc9zQXYEFo8z",
+        "rows": [
+          {
+            "nom": "Invisibilité améliorée",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "rAnIttzWwgXNUpNM",
+        "rows": [
+          {
+            "nom": "Monstres des ombres",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "BEdKOeb8qiHSn7cb",
+        "rows": [
+          {
+            "nom": "Phytomorphose",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "83Cg1HWiPXCrqS0c",
+        "rows": [
+          {
+            "nom": "Tueur fantasmagorique",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "h3w9xJRIMFBZSPQK",
+        "rows": [
+          {
+            "nom": "Chaos",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "bfKkGhHAvYuzbb4B",
+        "rows": [
+          {
+            "nom": "Création majeure",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "FrUiFMdhrdEVVoGU",
+        "rows": [
+          {
+            "nom": "Holographie",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "PBTAq8GBzCXTrX17",
+        "rows": [
+          {
+            "nom": "Invocation des ombres",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "Sa6lcn10r",
+        "rows": [
+          {
+            "nom": "Labyrinthe",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "QGnxlhJpGGXH7fpw",
+        "rows": [
+          {
+            "nom": "Magie des ombres",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "zRjgdAjHkaeS13gL",
+        "rows": [
+          {
+            "nom": "Monstres demi-ombre",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "wDl7Rbi8fLQo907c",
+        "rows": [
+          {
+            "nom": "Porte des ombres",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "yZrXoPn8wLsrDl0Y",
+        "rows": [
+          {
+            "nom": "Illusion permanente",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "n7BeLjXJJQDQbrCM",
+        "rows": [
+          {
+            "nom": "Illusion programmée",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "JAla8edUQvbursmM",
+        "rows": [
+          {
+            "nom": "Invocation des animaux",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "cqKzX9eU9thvYrTU",
+        "rows": [
+          {
+            "nom": "Magie demi-ombre",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "xakbt6nUQ0tbeVvH",
+        "rows": [
+          {
+            "nom": "Ombres",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "ouXDv5CbPVKygOnj",
+        "rows": [
+          {
+            "nom": "Suggestion de masse",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "MkQfB6H23z1EPyXq",
+        "rows": [
+          {
+            "nom": "Vision réelle",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "U5UsRJv9W5WnI5Uc",
+        "rows": [
+          {
+            "nom": "Voile illusoire",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "WLWi5ajizykNFffK",
+        "rows": [
+          {
+            "nom": "Altération de la réalité",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "qEqxbIe6jPNTHEgC",
+        "rows": [
+          {
+            "nom": "Jet prismatique",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "ULLJUpLwbeQMLzAt",
+        "rows": [
+          {
+            "nom": "Mur prismatique",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "S6ybq84lw",
+        "rows": [
+          {
+            "nom": "Sort astral",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "yxZAGhZDEaT0e6Am",
+        "rows": [
+          {
+            "nom": "Sorts de niveau 1 de magicien",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "1FDkJAlbuzYtOUON",
+        "rows": [
+          {
+            "nom": "Vision",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\illusionniste-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "Ql44mewOhfw0CGSS",
+        "rows": [
+          {
+            "nom": "Agrandissement",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "aYPpwB93lzPfZUka",
+        "rows": [
+          {
+            "nom": "Altération des feux normaux",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "XWJnBEbhnOoQJ3jA",
+        "rows": [
+          {
+            "nom": "Amitié",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "H8oggIty1B5amxPl",
+        "rows": [
+          {
+            "nom": "Aura magique de Nystul",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "vfbToqj3FmCBkCZY",
+        "rows": [
+          {
+            "nom": "Bouclier",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "vzsXf3ju8KaPX7gg",
+        "rows": [
+          {
+            "nom": "Charme-personnes",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "eHS5KR95WVarU3pc",
+        "rows": [
+          {
+            "nom": "Chute de plume",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "87QO92XmR11xX6d8",
+        "rows": [
+          {
+            "nom": "Compréhension des langues",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "Sxmmsj8ap",
+        "rows": [
+          {
+            "nom": "Détection de la magie",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "yg6KwuVZ0LX0iAJR",
+        "rows": [
+          {
+            "nom": "Disque flottant de Tenser",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "0xDSJQMk6eczXt8X",
+        "rows": [
+          {
+            "nom": "Écriture",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "xRkHrKxTwrMBU0S6",
+        "rows": [
+          {
+            "nom": "Effacement",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "foYtagnFToouiATL",
+        "rows": [
+          {
+            "nom": "Escalade d’araignée",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "R2sA71p9mFINt8Rc",
+        "rows": [
+          {
+            "nom": "Fermeture",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "j4mcEDMWWZDmHxVc",
+        "rows": [
+          {
+            "nom": "Identification",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "uaf9HJHgrTYgwKTG",
+        "rows": [
+          {
+            "nom": "Invocation d’un familier",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "C3BPJmqOmR14lZgX",
+        "rows": [
+          {
+            "nom": "Lecture de la magie",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "1ZPprzuVFnjKQGVz",
+        "rows": [
+          {
+            "nom": "Lumières dansantes",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "KdSGwTV1VKI5YjDI",
+        "rows": [
+          {
+            "nom": "Mains brûlantes",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "K9mYUPeDhXdXBopk",
+        "rows": [
+          {
+            "nom": "Message",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "45kLiQhVEKRId7dy",
+        "rows": [
+          {
+            "nom": "Missile magique",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "m9Z8xebP4Od4RlsP",
+        "rows": [
+          {
+            "nom": "Poigne électrique",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "ZwE7ceveF3dbKFdF",
+        "rows": [
+          {
+            "nom": "Poussée",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "Sr8hvuf42",
+        "rows": [
+          {
+            "nom": "Projectile magique",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "S3owai0q7",
+        "rows": [
+          {
+            "nom": "Protection contre le mal",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "JasfW0d6Q6kD6Ocu",
+        "rows": [
+          {
+            "nom": "Réparation",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "jrbDmeQEatjKE6n5",
+        "rows": [
+          {
+            "nom": "Saut",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "sqe9tEofCRkLumNr",
+        "rows": [
+          {
+            "nom": "Serviteur invisible",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "YzvHRmS0SVf0NDfO",
+        "rows": [
+          {
+            "nom": "Sommeil",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "Sh0s7nf55",
+        "rows": [
+          {
+            "nom": "Ventriloquie",
+            "niveau": 1,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-1.json"
+          }
+        ]
+      },
+      {
+        "id": "Sd3h2eywj",
+        "rows": [
+          {
+            "nom": "Bouche magique",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "Skwo3qibs",
+        "rows": [
+          {
+            "nom": "Bruitage",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "lXUOJQPzhAffHVMC",
+        "rows": [
+          {
+            "nom": "Corde enchantée",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "S744pccyj",
+        "rows": [
+          {
+            "nom": "Détection du mal",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "ySqQUdkEBf3Sav2Z",
+        "rows": [
+          {
+            "nom": "E.S.P.",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "Y6tsRuejC7qRqtCd",
+        "rows": [
+          {
+            "nom": "Force",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "cGT3rT7VlCh7BuWd",
+        "rows": [
+          {
+            "nom": "Fracassement",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "0vUHIpvUNS4TA1XZ",
+        "rows": [
+          {
+            "nom": "Image miroir",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "S3n5s30rh",
+        "rows": [
+          {
+            "nom": "Invisibilité",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "2sz9FJMkEg5Ljywr",
+        "rows": [
+          {
+            "nom": "Lévitation",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "FMsUijIK9egwdICC",
+        "rows": [
+          {
+            "nom": "Localisation d’objets",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "Sejwb1zfk",
+        "rows": [
+          {
+            "nom": "Lumière éternelle",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "fnSR2CAHU3rU3WGm",
+        "rows": [
+          {
+            "nom": "Nuage puant",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "F1AYLNQxgPkbAKvP",
+        "rows": [
+          {
+            "nom": "Or des fous",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "6bFZjficFTtSOd3X",
+        "rows": [
+          {
+            "nom": "Oubli",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "IiCnwcKzkfECzT5b",
+        "rows": [
+          {
+            "nom": "Ouverture",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "nEnY0rOhsUcIvGw9",
+        "rows": [
+          {
+            "nom": "Peur",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "XeoIbrIuWzQQeqhb",
+        "rows": [
+          {
+            "nom": "Piège de Léomund",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "HrKOTw0kqX1w6X3C",
+        "rows": [
+          {
+            "nom": "Pyrotechnie",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "JdNLcU95SJeFJWf0",
+        "rows": [
+          {
+            "nom": "Rayon d’affaiblissement",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "CvNVh364E6mHLbiC",
+        "rows": [
+          {
+            "nom": "Ténèbres sur 5 mètres",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "orptvU3p8BkABXhH",
+        "rows": [
+          {
+            "nom": "Toile d’araignée",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "YzA9lPZieNlGZn1V",
+        "rows": [
+          {
+            "nom": "Verrou magique",
+            "niveau": 2,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-2.json"
+          }
+        ]
+      },
+      {
+        "id": "OdjZbZ6yCK8f7Cej",
+        "rows": [
+          {
+            "nom": "Boule de feu",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "Slpogd4zw",
+        "rows": [
+          {
+            "nom": "Catalepsie",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "eQP2mvNXNEHDkl0Y",
+        "rows": [
+          {
+            "nom": "Chaumière de Léomund",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "bs5Yev27GKosckIi",
+        "rows": [
+          {
+            "nom": "Clairaudience",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "PeKgX0v88L8WqgdP",
+        "rows": [
+          {
+            "nom": "Clairvoyance",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "S1yedhqtw",
+        "rows": [
+          {
+            "nom": "Dissipation de la magie",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "cdoLylDIdTX30880",
+        "rows": [
+          {
+            "nom": "Flèche de feu",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "Sjv9g51wv",
+        "rows": [
+          {
+            "nom": "Force fantasmagorique",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "mURPcJOWStwfHLSD",
+        "rows": [
+          {
+            "nom": "Foudre",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "TVQDVtYjgIIl4Qwp",
+        "rows": [
+          {
+            "nom": "Infravision",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "U6jlnGdUZAhfesYx",
+        "rows": [
+          {
+            "nom": "Intermittence",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "Sleh5na5u",
+        "rows": [
+          {
+            "nom": "Invisibilité sur 3 m",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "azzcDv1FWb4UfqXk",
+        "rows": [
+          {
+            "nom": "Invocation de monstres I",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "m10Pwr1wzT3BZTGP",
+        "rows": [
+          {
+            "nom": "Langues",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "Uer3SMWo8VGodjcf",
+        "rows": [
+          {
+            "nom": "Paralysie",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "RK3Dwq9cpDrc4JKy",
+        "rows": [
+          {
+            "nom": "Protection contre le mal sur 3 m",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "2xS2zLfqcMi0wyu7",
+        "rows": [
+          {
+            "nom": "Protection contre les projectiles normaux",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "4Fefn3TPB5BiMRw8",
+        "rows": [
+          {
+            "nom": "Rafale de vent",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "bKU3hWAg9dK3XNJ2",
+        "rows": [
+          {
+            "nom": "Ralentissement",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "Ua8x9g7HihK7cXGY",
+        "rows": [
+          {
+            "nom": "Rapidité",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "Smspazki5",
+        "rows": [
+          {
+            "nom": "Respiration aquatique",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "s4srAEb0LL48XW0c",
+        "rows": [
+          {
+            "nom": "Runes explosives",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "Siybiihzj",
+        "rows": [
+          {
+            "nom": "Suggestion",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "L0KzlhAHlY5WnALd",
+        "rows": [
+          {
+            "nom": "Vol",
+            "niveau": 3,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-3.json"
+          }
+        ]
+      },
+      {
+        "id": "OwC37LQnhgfxfBPC",
+        "rows": [
+          {
+            "nom": "Allométamorphose",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "i9oPB799yhmXRNTj",
+        "rows": [
+          {
+            "nom": "Arme enchantée",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "PXmZOAl9DCJAeUeJ",
+        "rows": [
+          {
+            "nom": "Autométamorphose",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "EjNM7yMhVXwwaOc4",
+        "rows": [
+          {
+            "nom": "Bouclier de feu",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "Hq0MiaQGHC04aCs8",
+        "rows": [
+          {
+            "nom": "Charme-monstres",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "qc2S7OiREu8cVCKQ",
+        "rows": [
+          {
+            "nom": "Confusion",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "Sq750xrgb",
+        "rows": [
+          {
+            "nom": "Désenvoûtement",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "VTqrTRciI6HhhBw0",
+        "rows": [
+          {
+            "nom": "Effroi",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "WZuRPMokWkRk8S0N",
+        "rows": [
+          {
+            "nom": "Embroussaillement",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "4gmO2NbHZxkLXarh",
+        "rows": [
+          {
+            "nom": "Excavation",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "ol1qo1S9byPbktdo",
+        "rows": [
+          {
+            "nom": "Extension I",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "ej2pDpTcbBp59ioV",
+        "rows": [
+          {
+            "nom": "Feu charmeur",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "OQFWHUXg5wCpvWiU",
+        "rows": [
+          {
+            "nom": "Globe mineur d’invulnérabilité",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "xPNrvuMVoTHmz9GY",
+        "rows": [
+          {
+            "nom": "Invocation de monstre II",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "od5HnEJxmcuxoc7b",
+        "rows": [
+          {
+            "nom": "Maladresse",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "wtQdhwfXLq5KI8dx",
+        "rows": [
+          {
+            "nom": "Moyen mnémonique de Rary",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "Sl22x1gv4",
+        "rows": [
+          {
+            "nom": "Mur de feu",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "Oe6kWMmtqXjUdluK",
+        "rows": [
+          {
+            "nom": "Mur de glace",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "NENvm4CbdMhFClxo",
+        "rows": [
+          {
+            "nom": "Œil magique",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "Sjja6qk18",
+        "rows": [
+          {
+            "nom": "Phytomorphose",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "p9jlQvfec03qUS4e",
+        "rows": [
+          {
+            "nom": "Piège à feu",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "9xooSY6MIFWhmC0h",
+        "rows": [
+          {
+            "nom": "Porte dimensionnelle",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "zPQP5olmpPjaRgmf",
+        "rows": [
+          {
+            "nom": "Tempête de glace",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "afrGD9EO4FsC15qj",
+        "rows": [
+          {
+            "nom": "Terrain hallucinatoire",
+            "niveau": 4,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-4.json"
+          }
+        ]
+      },
+      {
+        "id": "DeyfF4yHmCC6d058",
+        "rows": [
+          {
+            "nom": "Chien fidèle de Mordekainen",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "So9k2n77e",
+        "rows": [
+          {
+            "nom": "Chien fidèle de Mordenkainen",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "YmY1ZfpSrQmJqRIX",
+        "rows": [
+          {
+            "nom": "Coffre secret de Léomund",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "daKCJF4Luaija46f",
+        "rows": [
+          {
+            "nom": "Cône de froid",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "k0JnUphmxVtqdDkd",
+        "rows": [
+          {
+            "nom": "Contact d'autres plans",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "f2k3BWjZABrQKWZW",
+        "rows": [
+          {
+            "nom": "Croissance animale",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "WK5FYRTJv5l03gmy",
+        "rows": [
+          {
+            "nom": "Débilité mentale",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "TyxGTNAe1knBWFwn",
+        "rows": [
+          {
+            "nom": "Distorsion des distances",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "2o6VDQqrx5bx6rLv",
+        "rows": [
+          {
+            "nom": "Eau aérée",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "j8RBv6DtA7saCnGy",
+        "rows": [
+          {
+            "nom": "Extension II",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "naBatu3eatZHd1ZQ",
+        "rows": [
+          {
+            "nom": "Invocation d’élémental",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "PBUGHsDhjfmhPM0p",
+        "rows": [
+          {
+            "nom": "Invocation de Monstre III",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "Smft9cj75",
+        "rows": [
+          {
+            "nom": "Lithomorphose",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "Kmy6PUAQMmaBW2Dn",
+        "rows": [
+          {
+            "nom": "Main d’interposition de Bigby",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "ttJqTVO09PEhayZ1",
+        "rows": [
+          {
+            "nom": "Métempsycose",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "sd1VA2m7L1HNvPxt",
+        "rows": [
+          {
+            "nom": "Mur de fer",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "AefoyJiwmSnT9qEM",
+        "rows": [
+          {
+            "nom": "Mur de force",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "isr5twi7UEGprtel",
+        "rows": [
+          {
+            "nom": "Mur de roc",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "E5Jf7Dh2lk8V5H45",
+        "rows": [
+          {
+            "nom": "Nécro-animation",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "m9giICqkP6PLgPIN",
+        "rows": [
+          {
+            "nom": "Nuage létal",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "C4NFQjWH7tilr2KL",
+        "rows": [
+          {
+            "nom": "Paralysie des monstres",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "319ECVaG7zViAnWl",
+        "rows": [
+          {
+            "nom": "Passe-muraille",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "bRRHc2GEzYv8h3pQ",
+        "rows": [
+          {
+            "nom": "Télékinésie",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "fz3mzpALqk4DBvS8",
+        "rows": [
+          {
+            "nom": "Téléportation",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "Sd3li1719",
+        "rows": [
+          {
+            "nom": "Transmutation de pierre en boue",
+            "niveau": 5,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-5.json"
+          }
+        ]
+      },
+      {
+        "id": "Sqozhllak",
+        "rows": [
+          {
+            "nom": "Abaissement des eaux",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "5WMtm7xIvHpRxLhr",
+        "rows": [
+          {
+            "nom": "Bulle anti-magique",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "9nvajLF9dtYWr6aM",
+        "rows": [
+          {
+            "nom": "Chasseur invisible",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "S4cpb203e",
+        "rows": [
+          {
+            "nom": "Contrôle du climat",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "EnOSTDnyj7jFMgr0",
+        "rows": [
+          {
+            "nom": "Désintégration",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "87ete731gVApgoPg",
+        "rows": [
+          {
+            "nom": "Enchantement",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "CJf7e3HhnfDKa8yU",
+        "rows": [
+          {
+            "nom": "Extension III",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "HpN7G6ucRp5lTSTw",
+        "rows": [
+          {
+            "nom": "Glissement de terrain",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "6I5bM9qnrycTKvFM",
+        "rows": [
+          {
+            "nom": "Globe d’invulnérabilité",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "Srso4sdrs",
+        "rows": [
+          {
+            "nom": "Holographie",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "wCbNKb1p4IKuYZyQ",
+        "rows": [
+          {
+            "nom": "Incantation mortelle",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "RIc3gsPapbFEJrRO",
+        "rows": [
+          {
+            "nom": "Invocation de monstre IV",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "dD4Y9LGSZhXi7HBK",
+        "rows": [
+          {
+            "nom": "Main de force de Bigby",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "EZOEGGOSPq7gZysz",
+        "rows": [
+          {
+            "nom": "Mythomancie",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "BB3iG4AMGXwqim5l",
+        "rows": [
+          {
+            "nom": "Punition spirituelle",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "pw5HMMNe9CTXYfHL",
+        "rows": [
+          {
+            "nom": "Quête magique",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "Shqdpgv1q",
+        "rows": [
+          {
+            "nom": "Réincarnation",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "a6nrRQq6KcoLOCNY",
+        "rows": [
+          {
+            "nom": "Répulsion",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "Sg4dt4buk",
+        "rows": [
+          {
+            "nom": "Séparation des eaux",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "3VZ2hwpNHAeU7JRp",
+        "rows": [
+          {
+            "nom": "Sphère glaciale d’Otiluke",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "zbAIGNpgVHnYqTSo",
+        "rows": [
+          {
+            "nom": "Transformation de Tenser",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "Rayebc1FcgH7qAzl",
+        "rows": [
+          {
+            "nom": "Transmutation de pierre en chair",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "099z397bV3y5hUDt",
+        "rows": [
+          {
+            "nom": "Transvision",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "QBSmwoiVg1fTiVbR",
+        "rows": [
+          {
+            "nom": "Vigiles et sentinelles",
+            "niveau": 6,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-6.json"
+          }
+        ]
+      },
+      {
+        "id": "mV9ra1fRVpnBeCjh",
+        "rows": [
+          {
+            "nom": "Boule de feu à retardement",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "iqIwPvTxcgl4rPbw",
+        "rows": [
+          {
+            "nom": "Cacodémon",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "sH3OXreq75Zw9e9W",
+        "rows": [
+          {
+            "nom": "Charme-plantes",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "m63ZR7K71ZuYpFQW",
+        "rows": [
+          {
+            "nom": "Disparition",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "f8pifdWCFFcLeyvl",
+        "rows": [
+          {
+            "nom": "Duo-dimension",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "IXG8uzCpQ5qpIsN1",
+        "rows": [
+          {
+            "nom": "Épée de Mordenkainen",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "mzAdqJsIUuesaFZp",
+        "rows": [
+          {
+            "nom": "Inversion de la gravité",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "JDNcfhvRpMwstMnV",
+        "rows": [
+          {
+            "nom": "Invisibilité de masse",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "YrbPeiD5D7vKuZga",
+        "rows": [
+          {
+            "nom": "Invocation de monstre V",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "yrBFmSm59mx7Q7HN",
+        "rows": [
+          {
+            "nom": "Invocation instantanée de Drawmij",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "grimbAQpwEflPDvb",
+        "rows": [
+          {
+            "nom": "Mot de pouvoir : « étourdissement »",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "vvhMZVFLUPBZCsMm",
+        "rows": [
+          {
+            "nom": "Poigne de Bigby",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "RZIlm8nxGzJ4NOgu",
+        "rows": [
+          {
+            "nom": "Porte de phase",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "TH7LxMtCxwD0LXBC",
+        "rows": [
+          {
+            "nom": "Simulacre",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "JwVX4SDziizeDdWT",
+        "rows": [
+          {
+            "nom": "Souhait mineur",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "RasgmaIC4muPvU6s",
+        "rows": [
+          {
+            "nom": "Statue",
+            "niveau": 7,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-7.json"
+          }
+        ]
+      },
+      {
+        "id": "BIkKCn2RR7NKs0KA",
+        "rows": [
+          {
+            "nom": "Antipathie/sympathie",
+            "niveau": 8,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-8.json"
+          }
+        ]
+      },
+      {
+        "id": "mwPBqby6Itm7W7CW",
+        "rows": [
+          {
+            "nom": "Charme-masse",
+            "niveau": 8,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-8.json"
+          }
+        ]
+      },
+      {
+        "id": "Jm1AM0ecAlL7BeiN",
+        "rows": [
+          {
+            "nom": "Clone",
+            "niveau": 8,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-8.json"
+          }
+        ]
+      },
+      {
+        "id": "R9WN3By99pDgcg4Y",
+        "rows": [
+          {
+            "nom": "Cristairain",
+            "niveau": 8,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-8.json"
+          }
+        ]
+      },
+      {
+        "id": "MCJR3VlxLTfal1Uc",
+        "rows": [
+          {
+            "nom": "Danse irrésistible d’Otto",
+            "niveau": 8,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-8.json"
+          }
+        ]
+      },
+      {
+        "id": "3qJwKB09NwuQPJ5T",
+        "rows": [
+          {
+            "nom": "Emprisonnement de l’âme",
+            "niveau": 8,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-8.json"
+          }
+        ]
+      },
+      {
+        "id": "XMCoIYELAPOZIT3n",
+        "rows": [
+          {
+            "nom": "Immunité magique de Serten",
+            "niveau": 8,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-8.json"
+          }
+        ]
+      },
+      {
+        "id": "QWjB3yW5ZTZsqP51",
+        "rows": [
+          {
+            "nom": "Invocation de monstre VI",
+            "niveau": 8,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-8.json"
+          }
+        ]
+      },
+      {
+        "id": "ORN3az8leSKqVf47",
+        "rows": [
+          {
+            "nom": "Labyrinthe",
+            "niveau": 8,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-8.json"
+          }
+        ]
+      },
+      {
+        "id": "6mTt7KT00qtGZmjU",
+        "rows": [
+          {
+            "nom": "Mot de pouvoir : « Cécité »",
+            "niveau": 8,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-8.json"
+          }
+        ]
+      },
+      {
+        "id": "RXlGxnjPaqWQmINd",
+        "rows": [
+          {
+            "nom": "Nuage incendiaire",
+            "niveau": 8,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-8.json"
+          }
+        ]
+      },
+      {
+        "id": "BPaga50F4U0MdJmM",
+        "rows": [
+          {
+            "nom": "Permanence",
+            "niveau": 8,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-8.json"
+          }
+        ]
+      },
+      {
+        "id": "pNKBYV5nREzT4rbP",
+        "rows": [
+          {
+            "nom": "Poing de Bigby",
+            "niveau": 8,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-8.json"
+          }
+        ]
+      },
+      {
+        "id": "vrCUvwu6dEY2mQpa",
+        "rows": [
+          {
+            "nom": "Protection d’esprit",
+            "niveau": 8,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-8.json"
+          }
+        ]
+      },
+      {
+        "id": "Sgvc3uuqk",
+        "rows": [
+          {
+            "nom": "Symbole",
+            "niveau": 8,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-8.json"
+          }
+        ]
+      },
+      {
+        "id": "6SpRQBy7sR53Ptsm",
+        "rows": [
+          {
+            "nom": "Transformation d’objets",
+            "niveau": 8,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-8.json"
+          }
+        ]
+      },
+      {
+        "id": "tWKvW4ahVQ2ANiFR",
+        "rows": [
+          {
+            "nom": "Arrêt du temps",
+            "niveau": 9,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-9.json"
+          }
+        ]
+      },
+      {
+        "id": "iykW82ri4ir2kJbY",
+        "rows": [
+          {
+            "nom": "Emprisonnement",
+            "niveau": 9,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-9.json"
+          }
+        ]
+      },
+      {
+        "id": "SaSj5P1VI9svAYyC",
+        "rows": [
+          {
+            "nom": "Hétéromorphisme",
+            "niveau": 9,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-9.json"
+          }
+        ]
+      },
+      {
+        "id": "ahm7oemgFvV85Lkp",
+        "rows": [
+          {
+            "nom": "Invocation de Monstre VII",
+            "niveau": 9,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-9.json"
+          }
+        ]
+      },
+      {
+        "id": "pDjjfXthimcJF8L7",
+        "rows": [
+          {
+            "nom": "Main broyante de Bigby",
+            "niveau": 9,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-9.json"
+          }
+        ]
+      },
+      {
+        "id": "4WhGYPz6t6SX2ImV",
+        "rows": [
+          {
+            "nom": "Mot de pouvoir : « mort »",
+            "niveau": 9,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-9.json"
+          }
+        ]
+      },
+      {
+        "id": "lbCWMQBWvtqGvi65",
+        "rows": [
+          {
+            "nom": "Nuée de météores",
+            "niveau": 9,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-9.json"
+          }
+        ]
+      },
+      {
+        "id": "MmczinwlejcFyrC0",
+        "rows": [
+          {
+            "nom": "Seuil",
+            "niveau": 9,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-9.json"
+          }
+        ]
+      },
+      {
+        "id": "S3uv2zi0o",
+        "rows": [
+          {
+            "nom": "Sort astral",
+            "niveau": 9,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-9.json"
+          }
+        ]
+      },
+      {
+        "id": "9Uvnif7ea2lFaGpn",
+        "rows": [
+          {
+            "nom": "Souhait majeur",
+            "niveau": 9,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-9.json"
+          }
+        ]
+      },
+      {
+        "id": "UNXXLQYQfLs7yKMJ",
+        "rows": [
+          {
+            "nom": "Sphère prismatique",
+            "niveau": 9,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-9.json"
+          }
+        ]
+      },
+      {
+        "id": "T61EpbWgHCtr2BRH",
+        "rows": [
+          {
+            "nom": "Stase temporelle",
+            "niveau": 9,
+            "file": "audit\\decoupage_fichier\\magicien-niveau-9.json"
+          }
+        ]
+      }
+    ],
+    "duplicateV4Ids": [],
+    "duplicateDecoupageIds": [],
+    "metadataMismatchOnMatchedIds": []
+  },
+  "matched": [],
+  "notice": "Ce rapport indique uniquement les écarts entre V4 et description_reelle du découpage. Il ne prouve pas encore la conformité au Manuel des joueurs et ne modifie aucune donnée."
+}
