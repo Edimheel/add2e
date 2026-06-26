@@ -113,6 +113,23 @@ function main() {
   const sourceClass = text(reference?.source?.classe);
   const sourceLevel = Number(reference?.source?.niveau ?? 0);
   if (!sourceClass || !sourceLevel) throw new Error("La référence doit fournir source.classe et source.niveau.");
+  const referenceKeys = reference.spells.map(spell => spellKey(sourceClass, spell?.niveau ?? sourceLevel, spell?.nom));
+  if (referenceKeys.some(key => !key)) throw new Error("Au moins une entrée de référence ne possède pas une identité exploitable.");
+  if (new Set(referenceKeys).size !== referenceKeys.length) throw new Error("Doublon d’identité dans la référence.");
+  const groupPrefix = `${slug(sourceClass)}|${sourceLevel}|`;
+  const decoupageKeys = [...index.keys()].filter(key => key.startsWith(groupPrefix));
+  const referenceKeySet = new Set(referenceKeys);
+  const missingFromDecoupage = referenceKeys.filter(key => !index.has(key));
+  const missingFromReference = decoupageKeys.filter(key => !referenceKeySet.has(key));
+  if (missingFromDecoupage.length || missingFromReference.length) {
+    throw new Error(`Identités différentes entre référence et découpage. Référence sans source : ${missingFromDecoupage.join(", ") || "aucune"}. Découpage sans référence : ${missingFromReference.join(", ") || "aucune"}.`);
+  }
+  if (reference.expectedCount && reference.spells.length !== Number(reference.expectedCount)) {
+    throw new Error(`Nombre de sorts de référence invalide : ${reference.spells.length}, attendu ${reference.expectedCount}.`);
+  }
+  if (decoupageKeys.length !== reference.spells.length) {
+    throw new Error(`Nombre de sorts différent entre référence (${reference.spells.length}) et découpage (${decoupageKeys.length}).`);
+  }
   const allChanges = [];
   for (const spell of reference.spells) {
     const source = ensureReferenceSpell(spell, sourceClass, sourceLevel, index);
