@@ -6,131 +6,227 @@
     "niveau": 1,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_liste_noms_complete_regles_a_completer",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 12,
   "foundryExport": "audit/decoupage_fichier/illusionniste-niveau-1.json",
-  "rules": {
-    "included": [
-      "nom du sort",
-      "classe",
-      "niveau",
-      "ordre dans le tableau du Manuel des joueurs",
-      "nombre de sorts attendu",
-      "variantes explicitement nommées dans le Manuel des joueurs",
-      "réversibilité et nom de l’inverse quand le Manuel le donne"
-    ],
-    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis.",
-    "variantes": "Le tableau variantes est vide lorsqu’aucun choix de forme explicitement nommé ne figure dans le Manuel des joueurs.",
-    "reversibilite": "Le champ reversible est toujours booléen. Le champ inverse vaut null lorsque le Manuel indique un sort réversible sans donner de nom distinct à sa forme inverse."
-  },
   "spells": [
     {
       "ordre": 1,
       "nom": "Bruitage",
+      "ecole": "Illusion/Fantasme",
       "niveau": 1,
+      "portee": "6\" + 1\"/niveau",
+      "duree": "2 rounds/niveau",
+      "zone_effet": "portée d’ouïe",
+      "composantes": "V, M",
+      "temps_incantation": "1 segment",
+      "jet_sauvegarde": "spécial",
+      "description": "Excepté ses valeurs propres, ce sort est le même que Bruitage de magicien. Il crée un son dont le volume et le déplacement apparent dépendent du lanceur ; une créature qui le met en doute peut ne plus l’entendre après un jet de protection réussi.",
+      "composants_materiels_objets": [
+        {"nom":"morceau de laine","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Alternative à la cire.","notes":null,"alternativeGroup":"bruitage"},
+        {"nom":"cire","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Alternative à la laine.","notes":null,"alternativeGroup":"bruitage"}
+      ],
+      "status": "reference_complete_description_normalisee",
       "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "reversible": false
     },
     {
       "ordre": 2,
       "nom": "Changement d’apparence",
+      "ecole": "Illusion/Fantasme",
       "niveau": 1,
+      "portee": "0",
+      "duree": "2d6 rounds + 2 rounds/niveau",
+      "zone_effet": "l’illusionniste",
+      "composantes": "V, S",
+      "temps_incantation": "1 segment",
+      "jet_sauvegarde": "aucun",
+      "description": "L’illusionniste altère son apparence visible, sa taille apparente, ses vêtements et son équipement. Le sort ne change ni sa voix, ni son odeur, ni ses capacités physiques ; les observateurs peuvent déceler l’illusion selon les règles du Manuel.",
+      "composants_materiels_objets": [],
+      "status": "reference_complete_description_normalisee",
       "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "reversible": false
     },
     {
       "ordre": 3,
       "nom": "Détection de l’invisibilité",
+      "ecole": "Divination",
       "niveau": 1,
+      "portee": "1\"/niveau",
+      "duree": "5 rounds/niveau",
+      "zone_effet": "1\" de large",
+      "composantes": "V, S, M",
+      "temps_incantation": "1 segment",
+      "jet_sauvegarde": "aucun",
+      "notes_regles": "La lettre M est explicite dans l’en-tête du Manuel. Le détail matériel ne doit pas être déduit du découpage Foundry.",
+      "description": "L’illusionniste voit les créatures et objets invisibles dans la zone de son regard. Le sort ne l’aide pas à voir à travers les obstacles ordinaires.",
+      "composants_materiels_objets": [],
+      "status": "reference_complete_description_normalisee",
       "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "reversible": false
     },
     {
       "ordre": 4,
       "nom": "Détection des illusions",
+      "ecole": "Divination",
       "niveau": 1,
+      "portee": "au toucher",
+      "duree": "3 rounds + 2 rounds/niveau",
+      "zone_effet": "champ visuel de 1\" de large, 1\"/niveau de long",
+      "composantes": "V, S, M",
+      "temps_incantation": "1 segment",
+      "jet_sauvegarde": "aucun",
+      "notes_regles": "La lettre M est explicite dans l’en-tête du Manuel. Le détail matériel ne doit pas être déduit du découpage Foundry.",
+      "description": "Le sort permet à la créature touchée de distinguer les illusions et fantasmes qui se trouvent dans son champ visuel pendant la durée indiquée.",
+      "composants_materiels_objets": [],
+      "status": "reference_complete_description_normalisee",
       "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "reversible": false
     },
     {
       "ordre": 5,
       "nom": "Force fantasmagorique",
+      "ecole": "Illusion/Fantasme",
       "niveau": 1,
+      "portee": "6\" + 1\"/niveau",
+      "duree": "spéciale",
+      "zone_effet": "36 m² + 9 m²/niveau",
+      "composantes": "V, S, M",
+      "temps_incantation": "1 segment",
+      "jet_sauvegarde": "spécial",
+      "description": "L’illusionniste crée une illusion visuelle qui peut inclure les effets sensoriels admis par le Manuel. Elle agit contre les créatures qui y croient et cesse notamment lorsqu’elle est démasquée ou que le lanceur ne peut plus la maintenir.",
+      "composants_materiels_objets": [
+        {"nom":"morceau de toison de mouton","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}
+      ],
+      "status": "reference_complete_description_normalisee",
       "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "reversible": false
     },
     {
       "ordre": 6,
       "nom": "Hypnotisme",
+      "ecole": "Enchantement/Charme",
       "niveau": 1,
+      "portee": "3\"",
+      "duree": "1 round + 1 round/niveau",
+      "zone_effet": "de 1 à 6 créatures",
+      "composantes": "V, S",
+      "temps_incantation": "1 segment",
+      "jet_sauvegarde": "annule",
+      "description": "Le sort fascine de une à six créatures qui ratent leur jet de protection. Tant qu’elles restent hypnotisées, elles demeurent immobiles et vulnérables aux actions prévues par le Manuel.",
+      "composants_materiels_objets": [],
+      "status": "reference_complete_description_normalisee",
       "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "reversible": false
     },
     {
       "ordre": 7,
       "nom": "Jet de couleurs",
+      "ecole": "Altération",
       "niveau": 1,
+      "portee": "1\"/niveau",
+      "duree": "1 segment",
+      "zone_effet": "éventail de 1/2\" x 2\" x 2\"",
+      "composantes": "V, S, M",
+      "temps_incantation": "1 segment",
+      "jet_sauvegarde": "spécial",
+      "description": "Un jet de lumière multicolore jaillit des mains de l’illusionniste et affecte de une à six créatures dans l’éventail. Les effets dépendent des dés de vie des victimes, de l’aveuglement temporaire à l’inconscience selon la table du Manuel.",
+      "composants_materiels_objets": [
+        {"nom":"poudres colorées rouge, jaune et bleue","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Les trois poudres sont projetées pendant l’incantation."}
+      ],
+      "status": "reference_complete_description_normalisee",
       "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "reversible": false
     },
     {
       "ordre": 8,
       "nom": "Lumière",
+      "ecole": "Altération",
       "niveau": 1,
+      "portee": "6\"",
+      "duree": "1 tour/niveau",
+      "zone_effet": "sphère de 2\" de rayon",
+      "composantes": "V, S",
+      "temps_incantation": "1 segment",
+      "jet_sauvegarde": "aucun",
+      "description": "Le sort crée une lumière comparable à celle du sort de clerc du même nom. Cette entrée propre de l’illusionniste n’est pas réversible.",
+      "composants_materiels_objets": [],
+      "status": "reference_complete_description_normalisee",
       "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "reversible": false
     },
     {
       "ordre": 9,
       "nom": "Lumières dansantes",
+      "ecole": "Altération",
       "niveau": 1,
+      "portee": "4\" + 1\"/niveau",
+      "duree": "2 rounds/niveau",
+      "zone_effet": "spéciale",
+      "composantes": "V, S, M",
+      "temps_incantation": "1 segment",
+      "jet_sauvegarde": "aucun",
+      "description": "Excepté ses valeurs propres, le sort est le même que Lumières dansantes de magicien. Il crée jusqu’à quatre lumières mobiles dirigées par l’illusionniste.",
+      "composants_materiels_objets": [
+        {"nom":"phosphore","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Alternative au ver luisant.","notes":null,"alternativeGroup":"lumieres_dansantes"},
+        {"nom":"ver luisant","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Alternative au phosphore.","notes":null,"alternativeGroup":"lumieres_dansantes"}
+      ],
+      "status": "reference_complete_description_normalisee",
       "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "reversible": false
     },
     {
       "ordre": 10,
       "nom": "Mur de brouillard",
+      "ecole": "Altération",
       "niveau": 1,
+      "portee": "3\"",
+      "duree": "2d4 rounds + 1 round/niveau",
+      "zone_effet": "cube de 2\" d’arête/niveau",
+      "composantes": "V, S, M",
+      "temps_incantation": "1 segment",
+      "jet_sauvegarde": "aucun",
+      "description": "L’illusionniste crée un mur de vapeurs épaisses qui réduit vision et infravision à 60 cm. Un vent puissant peut le dissiper et le sort ne fonctionne pas sous l’eau.",
+      "composants_materiels_objets": [
+        {"nom":"poudre de poix séchée","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}
+      ],
+      "status": "reference_complete_description_normalisee",
       "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "reversible": false
     },
     {
       "ordre": 11,
       "nom": "Réflexion des regards",
+      "ecole": "Altération",
       "niveau": 1,
+      "portee": "0",
+      "duree": "1 round",
+      "zone_effet": "spéciale",
+      "composantes": "V, S",
+      "temps_incantation": "1 segment",
+      "jet_sauvegarde": "aucun",
+      "description": "Une surface semblable à un miroir apparaît devant l’illusionniste. Les attaques fondées sur le regard sont réfléchies vers leur auteur, qui conserve un jet de protection contre son propre effet.",
+      "composants_materiels_objets": [],
+      "status": "reference_complete_description_normalisee",
       "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "reversible": false
     },
     {
       "ordre": 12,
       "nom": "Ténèbres",
+      "ecole": "Altération",
       "niveau": 1,
+      "portee": "1\"/niveau",
+      "duree": "2d4 rounds + 1 round/niveau",
+      "zone_effet": "sphère de 5 m de rayon",
+      "composantes": "V, S",
+      "temps_incantation": "1 segment",
+      "jet_sauvegarde": "aucun",
+      "description": "Le sort crée une sphère d’obscurité de 5 m de rayon selon les règles de lumière et d’obscurité du Manuel. Il est une entrée distincte de Lumière et n’en constitue pas l’inverse.",
+      "composants_materiels_objets": [],
+      "status": "reference_complete_description_normalisee",
       "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
+      "reversible": false
     }
   ]
 }
