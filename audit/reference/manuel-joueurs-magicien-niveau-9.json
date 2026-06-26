@@ -24,117 +24,17 @@
     "reversibilite": "Le champ reversible est toujours booléen. Le champ inverse vaut null lorsque le Manuel indique un sort réversible sans donner de nom distinct à sa forme inverse."
   },
   "spells": [
-    {
-      "ordre": 1,
-      "nom": "Arrêt du temps",
-      "niveau": 9,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 2,
-      "nom": "Emprisonnement",
-      "niveau": 9,
-      "variantes": [],
-      "reversible": true,
-      "inverse": "Libération",
-      "inverseNameStatus": "manual_explicit",
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 3,
-      "nom": "Hétéromorphisme",
-      "niveau": 9,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 4,
-      "nom": "Invocation de Monstre VII",
-      "niveau": 9,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 5,
-      "nom": "Main broyante de Bigby",
-      "niveau": 9,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 6,
-      "nom": "Nuée de météores",
-      "niveau": 9,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 7,
-      "nom": "Mot de pouvoir : « mort »",
-      "niveau": 9,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 8,
-      "nom": "Seuil",
-      "niveau": 9,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 9,
-      "nom": "Sort astral",
-      "niveau": 9,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 10,
-      "nom": "Souhait majeur",
-      "niveau": 9,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 11,
-      "nom": "Sphère prismatique",
-      "niveau": 9,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 12,
-      "nom": "Stase temporelle",
-      "niveau": 9,
-      "variantes": [],
-      "reversible": true,
-      "inverse": "Rétablissement temporel",
-      "inverseNameStatus": "manual_explicit",
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    }
+    {"ordre": 1, "nom": "Arrêt du temps", "niveau": 9, "variantes": [], "reversible": false, "status": "nom_reference_tableau_manuel_joueurs", "regles_detaillees": "a_completer_depuis_description_du_sort"},
+    {"ordre": 2, "nom": "Emprisonnement", "niveau": 9, "variantes": [], "reversible": true, "inverse": "Libération", "inverseNameStatus": "manual_explicit", "status": "nom_reference_tableau_manuel_joueurs", "regles_detaillees": "a_completer_depuis_description_du_sort"},
+    {"ordre": 3, "nom": "Hétéromorphisme", "niveau": 9, "variantes": [], "reversible": false, "status": "nom_reference_tableau_manuel_joueurs", "regles_detaillees": "a_completer_depuis_description_du_sort"},
+    {"ordre": 4, "nom": "Invocation de Monstre VII", "niveau": 9, "variantes": [], "reversible": false, "status": "nom_reference_tableau_manuel_joueurs", "regles_detaillees": "a_completer_depuis_description_du_sort"},
+    {"ordre": 5, "nom": "Main broyante de Bigby", "niveau": 9, "variantes": [], "reversible": false, "status": "nom_reference_tableau_manuel_joueurs", "regles_detaillees": "a_completer_depuis_description_du_sort"},
+    {"ordre": 6, "nom": "Mot de pouvoir : « mort »", "niveau": 9, "variantes": [], "reversible": false, "status": "nom_reference_tableau_manuel_joueurs", "regles_detaillees": "a_completer_depuis_description_du_sort"},
+    {"ordre": 7, "nom": "Nuée de météores", "niveau": 9, "variantes": [], "reversible": false, "status": "nom_reference_tableau_manuel_joueurs", "regles_detaillees": "a_completer_depuis_description_du_sort"},
+    {"ordre": 8, "nom": "Seuil", "niveau": 9, "variantes": [], "reversible": false, "status": "nom_reference_tableau_manuel_joueurs", "regles_detaillees": "a_completer_depuis_description_du_sort"},
+    {"ordre": 9, "nom": "Sort astral", "niveau": 9, "variantes": [], "reversible": false, "status": "nom_reference_tableau_manuel_joueurs", "regles_detaillees": "a_completer_depuis_description_du_sort"},
+    {"ordre": 10, "nom": "Souhait majeur", "niveau": 9, "variantes": [], "reversible": false, "status": "nom_reference_tableau_manuel_joueurs", "regles_detaillees": "a_completer_depuis_description_du_sort"},
+    {"ordre": 11, "nom": "Sphère prismatique", "niveau": 9, "variantes": [], "reversible": false, "status": "nom_reference_tableau_manuel_joueurs", "regles_detaillees": "a_completer_depuis_description_du_sort"},
+    {"ordre": 12, "nom": "Stase temporelle", "niveau": 9, "variantes": [], "reversible": true, "inverse": "Rétablissement temporel", "inverseNameStatus": "manual_explicit", "status": "nom_reference_tableau_manuel_joueurs", "regles_detaillees": "a_completer_depuis_description_du_sort"}
   ]
 }
