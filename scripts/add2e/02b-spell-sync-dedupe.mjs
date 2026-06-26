@@ -1,7 +1,7 @@
 // ADD2E — Déduplication des sorts et suppression du champ matériel historique.
 // Compatible Foundry V13 / V14 / V15.
 
-const ADD2E_SPELL_SYNC_DEDUPE_VERSION = "2026-06-26-spell-sync-dedupe-v9-forced-deletion";
+const ADD2E_SPELL_SYNC_DEDUPE_VERSION = "2026-06-26-spell-sync-dedupe-v10-list-aware";
 const RUNNING = globalThis.ADD2E_SPELL_SYNC_DEDUPE_RUNNING instanceof Set ? globalThis.ADD2E_SPELL_SYNC_DEDUPE_RUNNING : new Set();
 globalThis.ADD2E_SPELL_SYNC_DEDUPE_VERSION = ADD2E_SPELL_SYNC_DEDUPE_VERSION;
 globalThis.ADD2E_SPELL_SYNC_DEDUPE_RUNNING = RUNNING;
@@ -18,10 +18,46 @@ const slug = value => String(value ?? "").trim().toLowerCase().normalize("NFD")
   .replace(/\s*\([^)]*\)\s*$/g, "").replace(/[\s\-]+/g, "_")
   .replace(/_+/g, "_").replace(/^_+|_+$/g, "");
 const levelOf = system => Number(String(system?.niveau ?? system?.niveau_sort ?? system?.spellLevel ?? system?.level ?? 0).match(/\d+/)?.[0] ?? 0) || 0;
-const keyOf = item => {
+
+function asSpellListArray(value) {
+  if (value === undefined || value === null || value === "") return [];
+  if (Array.isArray(value)) return value.flatMap(asSpellListArray);
+  if (typeof value === "string") return value.split(/[,;|\n]+/).map(entry => entry.trim()).filter(Boolean);
+  if (typeof value === "object") {
+    for (const key of ["spellLists", "lists", "classes", "classe", "class", "liste", "value", "values", "items"]) {
+      if (value[key] !== undefined) return asSpellListArray(value[key]);
+    }
+  }
+  return [value];
+}
+
+function normalizeSpellList(value) {
+  const aliases = {
+    cleric: "clerc", priest: "clerc", pretre: "clerc", paladin: "clerc",
+    druid: "druide",
+    wizard: "magicien", mage: "magicien", magician: "magicien", magic_user: "magicien",
+    illusionist: "illusionniste"
+  };
+  const normalized = typeof globalThis.add2eNormalizeSpellKey === "function"
+    ? globalThis.add2eNormalizeSpellKey(value)
+    : slug(value);
+  return aliases[normalized] ?? normalized;
+}
+
+function listKeyOf(item) {
+  const system = item?.system ?? {};
+  const resolved = item?.flags?.add2e?.spellListsResolved;
+  const lists = [
+    system.spellLists, system.lists, system.classes, system.classe, system.class, system.liste,
+    resolved
+  ].flatMap(asSpellListArray).map(normalizeSpellList).filter(Boolean);
+  return [...new Set(lists)].sort().join("+") || "liste_inconnue";
+}
+
+function keyOf(item) {
   const name = slug(item?.name ?? item?.system?.nom);
-  return name ? `${levelOf(item?.system)}|${name}` : "";
-};
+  return name ? `${listKeyOf(item)}|${levelOf(item?.system)}|${name}` : "";
+}
 
 function forcedDeletion() {
   const deletion = foundry?.data?.operators?.ForcedDeletion;
@@ -50,10 +86,7 @@ async function removeLegacyMaterialFields(actor, reason = "legacy-material-clean
   const updates = [];
   for (const item of actor.items?.filter?.(entry => String(entry.type ?? "").toLowerCase() === "sort") ?? []) {
     if (!hasOwn(item.system, "composants_materiels_objets")) continue;
-    updates.push({
-      _id: item.id,
-      system: { composants_materiels_objets: forcedDeletion() }
-    });
+    updates.push({ _id: item.id, system: { composants_materiels_objets: forcedDeletion() } });
   }
   if (!updates.length) return { removed: 0 };
   await actor.updateEmbeddedDocuments("Item", updates, { add2eInternal: true, add2eSpellSync: true, reason, render: false });
@@ -75,7 +108,10 @@ async function safeDeleteIds(actor, ids, reason = "manual") {
       const item = actor.items?.get?.(id);
       if (!item) { skippedMissing += 1; continue; }
       try { await item.delete({ add2eInternal: true, add2eDedupe: true, reason }); deleted += 1; }
-      catch (oneError) { if (/does not exist|undefined id/i.test(String(oneError?.message ?? oneError))) skippedMissing += 1; else throw oneError; }
+      catch (oneError) {
+        if (/does not exist|undefined id/i.test(String(oneError?.message ?? oneError))) skippedMissing += 1;
+        else throw oneError;
+      }
     }
     return { deleted, skippedMissing, requested: requested.length, error: String(error?.message ?? error ?? "") };
   }
@@ -139,7 +175,6 @@ Hooks.once("ready", () => {
     setTimeout(installWrapper, 250);
     setTimeout(installWrapper, 1000);
   }
-  // Cette suppression précède l'expansion des familles programmée par 02c.
   if (game.user?.isGM) setTimeout(async () => {
     for (const actor of game.actors?.filter?.(entry => entry.type === "personnage") ?? []) await removeLegacyMaterialFields(actor, "ready-legacy-material-cleanup");
   }, 0);
@@ -149,8 +184,8 @@ Hooks.on("createItem", (item, _options, userId) => {
   if (String(userId ?? "") !== String(game.user?.id ?? "")) return;
   const actor = item?.parent;
   if (!actor || actor.type !== "personnage" || String(item?.type ?? "").toLowerCase() !== "sort") return;
-  // 02c étend les familles après 50 ms. Cette suppression s'exécute avant elle.
   setTimeout(() => removeLegacyMaterialFields(actor, "createItem-sort"), 0);
+  // 02c étend une famille après 50 ms ; la déduplication par liste intervient ensuite.
   setTimeout(() => removeDuplicates(actor, "createItem-sort"), 80);
 });
 
