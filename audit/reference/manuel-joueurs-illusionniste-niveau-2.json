@@ -6,131 +6,21 @@
     "niveau": 2,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_liste_noms_complete_regles_a_completer",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 12,
   "foundryExport": "audit/decoupage_fichier/illusionniste-niveau-2.json",
-  "rules": {
-    "included": [
-      "nom du sort",
-      "classe",
-      "niveau",
-      "ordre dans le tableau du Manuel des joueurs",
-      "nombre de sorts attendu",
-      "variantes explicitement nommées dans le Manuel des joueurs",
-      "réversibilité et nom de l’inverse quand le Manuel le donne"
-    ],
-    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis.",
-    "variantes": "Le tableau variantes est vide lorsqu’aucun choix de forme explicitement nommé ne figure dans le Manuel des joueurs.",
-    "reversibilite": "Le champ reversible est toujours booléen. Le champ inverse vaut null lorsque le Manuel indique un sort réversible sans donner de nom distinct à sa forme inverse."
-  },
   "spells": [
-    {
-      "ordre": 1,
-      "nom": "Bouche magique",
-      "niveau": 2,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 2,
-      "nom": "Cécité",
-      "niveau": 2,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 3,
-      "nom": "Désinformation",
-      "niveau": 2,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 4,
-      "nom": "Détection de la magie",
-      "niveau": 2,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 5,
-      "nom": "Force fantasmagorique améliorée",
-      "niveau": 2,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 6,
-      "nom": "Image miroir",
-      "niveau": 2,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 7,
-      "nom": "Invisibilité",
-      "niveau": 2,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 8,
-      "nom": "Motif hypnotique",
-      "niveau": 2,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 9,
-      "nom": "Nappe de brouillard",
-      "niveau": 2,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 10,
-      "nom": "Surdité",
-      "niveau": 2,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 11,
-      "nom": "Trouble",
-      "niveau": 2,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 12,
-      "nom": "Ventriloquie",
-      "niveau": 2,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    }
+    {"ordre":1,"nom":"Bouche magique","ecole":"Altération","niveau":2,"portee":"spéciale","duree":"spéciale","zone_effet":"un objet","composantes":"V, S, M","temps_incantation":"2 segments","jet_sauvegarde":"aucun","description":"Le sort place sur un objet une bouche qui prononce un message défini lorsque la condition choisie survient. Cette condition vise une créature dans les limites précisées par le Manuel.","composants_materiels_objets":[{"nom":"petit morceau de rayon de miel","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":2,"nom":"Cécité","ecole":"Illusion/Fantasme","niveau":2,"portee":"3\"","duree":"spéciale","zone_effet":"une créature","composantes":"V","temps_incantation":"2 segments","jet_sauvegarde":"annule","description":"La créature qui rate son jet de protection devient aveugle. L’effet persiste jusqu’à ce qu’il soit annulé selon les moyens précisés par le Manuel.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":3,"nom":"Désinformation","ecole":"Illusion/Fantasme","niveau":2,"portee":"3\"","duree":"1 round/niveau","zone_effet":"spéciale","composantes":"V, S","temps_incantation":"2 segments","jet_sauvegarde":"annule","description":"Le sort fausse les informations produites par les sorts de détection visant une personne ou un objet. Sur un jet de protection raté du lanceur de détection, les renseignements obtenus sont faux ou inversés selon le type de détection.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":4,"nom":"Détection de la magie","ecole":"Divination","niveau":2,"portee":"0","duree":"2 rounds/niveau","zone_effet":"1\" de large, 6\" de long","composantes":"V, S","temps_incantation":"2 segments","jet_sauvegarde":"aucun","description":"Excepté ses valeurs propres, le sort est semblable à Détection de la magie de clerc. Il révèle la présence de magie dans la zone observée.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":5,"nom":"Force fantasmagorique améliorée","ecole":"Illusion/Fantasme","niveau":2,"portee":"6\" + 1\"/niveau","duree":"spéciale","zone_effet":"36 m² + 9 m²/niveau","composantes":"V, S, M","temps_incantation":"2 segments","jet_sauvegarde":"aucun","description":"Le sort est une force fantasmagorique que l’illusionniste maintient avec une concentration réduite. Il peut se déplacer à demi-vitesse, ne peut lancer de sort pendant ce temps et l’illusion persiste deux rounds après l’arrêt de sa concentration.","composants_materiels_objets":[{"nom":"morceau de toison de mouton","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Composante de la force fantasmagorique à laquelle le Manuel renvoie.","notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":6,"nom":"Image miroir","ecole":"Illusion/Fantasme","niveau":2,"portee":"0","duree":"3 rounds/niveau","zone_effet":"1,80 m de rayon autour du lanceur de sort","composantes":"V, S","temps_incantation":"2 segments","jet_sauvegarde":"aucun","description":"L’illusionniste crée de deux à cinq sosies qui reproduisent ses gestes. Une image touchée disparaît ; les autres durent jusqu’à être touchées ou jusqu’à la fin du sort.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":7,"nom":"Invisibilité","ecole":"Illusion/Fantasme","niveau":2,"portee":"au toucher","duree":"spéciale","zone_effet":"créature touchée","composantes":"V, S","temps_incantation":"2 segments","jet_sauvegarde":"aucun","description":"Excepté ses valeurs propres, ce sort est le même qu’Invisibilité de magicien. L’effet s’achève notamment lorsque le destinataire attaque ou que la magie est dissipée.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":8,"nom":"Motif hypnotique","ecole":"Illusion/Fantasme","niveau":2,"portee":"0","duree":"spéciale","zone_effet":"surface carrée de 3\" x 3\"","composantes":"S, M","temps_incantation":"2 segments","jet_sauvegarde":"annule","notes_regles":"La lettre M est explicite dans l’en-tête du Manuel. Le détail matériel n’est pas déduit d’une autre classe ou du découpage Foundry.","description":"Le sort crée un motif visuel qui fascine les créatures présentes dans la zone et qui ratent leur jet de protection. Les conditions de rupture de l’effet sont celles décrites par le Manuel.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":9,"nom":"Nappe de brouillard","ecole":"Altération","niveau":2,"portee":"1\"","duree":"4 rounds + 1 round/niveau","zone_effet":"nuage de 4\" de large, 2\" de haut et 2\" de profondeur","composantes":"V, S","temps_incantation":"2 segments","jet_sauvegarde":"aucun","description":"Le sort crée une nappe de brouillard qui obstrue la vision. Une rafale de vent la dissipe en un round.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":10,"nom":"Surdité","ecole":"Illusion/Fantasme","niveau":2,"portee":"6\"","duree":"spéciale","zone_effet":"une créature","composantes":"V, S, M","temps_incantation":"2 segments","jet_sauvegarde":"annule","description":"La créature qui rate son jet de protection devient totalement sourde. Seule une dissipation de la magie ou l’intervention du lanceur de sort met fin à l’effet.","composants_materiels_objets":[{"nom":"cire d’abeille","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":11,"nom":"Trouble","ecole":"Illusion/Fantasme","niveau":2,"portee":"0","duree":"3 rounds + 1 round/niveau","zone_effet":"l’illusionniste","composantes":"V, S","temps_incantation":"2 segments","jet_sauvegarde":"aucun","description":"La silhouette de l’illusionniste devient floue et ondulante. Les attaques subissent les pénalités précisées par le Manuel et il obtient un bonus contre les attaques magiques directement dirigées contre lui.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":12,"nom":"Ventriloquie","ecole":"Illusion/Fantasme","niveau":2,"portee":"1\"/niveau ; 9\" maximum","duree":"4 rounds + 1 round/niveau","zone_effet":"un objet","composantes":"V, M","temps_incantation":"2 segments","jet_sauvegarde":"aucun","description":"Excepté ses valeurs propres, ce sort est le même que Ventriloquie de magicien. Le lanceur fait provenir une voix ou un son d’un objet situé dans la portée autorisée.","composants_materiels_objets":[{"nom":"petit parchemin mis en cône","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false}
   ]
 }
