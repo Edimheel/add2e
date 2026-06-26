@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=IM+Fell+French+Canon:ital@0;1&display=swap");
+
 /* ADD2E — compatibilité feuille personnage ApplicationV2 */
 .application.add2e-character-v2-app,
 .application.add2e.sheet.actor.personnage,
@@ -74,10 +76,10 @@ form.application.add2e.sheet.actor.personnage {
   border: 1px solid #c69d42;
   border-radius: 14px;
   background:
-    radial-gradient(circle at 0 0, rgba(255,255,255,.62), transparent 28%),
+    radial-gradient(circle at 0 0, rgba(255,255,255,.66), transparent 28%),
     linear-gradient(135deg, rgba(255,250,232,.98), rgba(243,226,172,.92));
   box-shadow: 0 3px 10px rgba(80, 58, 10, .15);
-  font-family: "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+  font-family: "IM FELL French Canon", "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
 }
 
 :is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-summary-header input,
@@ -142,9 +144,9 @@ form.application.add2e.sheet.actor.personnage {
   background: transparent;
   box-shadow: none;
   color: #43260d;
-  font-family: "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
-  font-size: 1.9rem;
-  font-weight: 900;
+  font-family: "IM FELL French Canon", "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+  font-size: 2rem;
+  font-weight: 700;
   line-height: 1.05;
 }
 
@@ -167,25 +169,26 @@ form.application.add2e.sheet.actor.personnage {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 26px;
+  min-height: 27px;
   padding: 4px 10px;
   border-bottom: 1px solid #dfc87e;
   background: linear-gradient(90deg, rgba(234,217,157,.96), rgba(255,247,218,.72));
   color: #65420e;
-  font-size: .8rem;
-  font-weight: 900;
+  font-size: .9rem;
+  font-weight: 700;
   letter-spacing: .04em;
   text-transform: uppercase;
 }
 
 :is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-progression-status {
-  padding: 2px 7px;
-  border: 1px solid #a77d21;
+  padding: 2px 8px;
+  border: 1px solid #6f4d9f;
   border-radius: 99px;
-  background: rgba(255,248,214,.84);
-  color: #765213;
+  background: #efe7fa;
+  color: #55327f;
   font-family: var(--font-primary, Signika, sans-serif);
   font-size: .67rem;
+  font-weight: 800;
   letter-spacing: .03em;
 }
 
@@ -208,6 +211,100 @@ form.application.add2e.sheet.actor.personnage {
   border-color: #d7ba6b;
   background: rgba(255,254,248,.96);
   font-weight: 700;
+}
+
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-progression-overview-race input {
+  border-color: #7bb7a4;
+  background: #e9f5f0;
+  color: #175d4b;
+}
+
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-class-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 1px 0;
+}
+
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-class-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 3px 10px 4px;
+  border: 1px solid #b78e35;
+  border-radius: 999px;
+  background: #f8edcf;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.62), 0 1px 2px rgba(71,45,8,.13);
+  color: #65420e;
+  font-family: "IM FELL French Canon", "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+  font-size: 1.02rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-class-badge--clerc {
+  border-color: #2c719e;
+  background: #dcebfa;
+  color: #18496e;
+}
+
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-class-badge--guerrier {
+  border-color: #a74025;
+  background: #f7ddd3;
+  color: #6d2113;
+}
+
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-class-badge--magicien {
+  border-color: #7746a5;
+  background: #ecdef8;
+  color: #48236c;
+}
+
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-class-badge--illusionniste {
+  border-color: #a13f91;
+  background: #f7dff1;
+  color: #6b1b5f;
+}
+
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-class-badge--voleur {
+  border-color: #268168;
+  background: #d9f1e8;
+  color: #0d5945;
+}
+
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-class-badge--assassin {
+  border-color: #922e40;
+  background: #f1d8dc;
+  color: #591321;
+}
+
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-class-badge--druide,
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-class-badge--ranger,
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-class-badge--rodeur {
+  border-color: #55832d;
+  background: #e5f2d7;
+  color: #2f5a18;
+}
+
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-class-badge--paladin {
+  border-color: #a67a20;
+  background: #f8edc9;
+  color: #68460d;
+}
+
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-class-badge--barde {
+  border-color: #3e789b;
+  background: #dcecf6;
+  color: #1f5273;
+}
+
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-class-badge--moine {
+  border-color: #ad6722;
+  background: #f9e4ca;
+  color: #713a08;
 }
 
 :is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-progression-class-input[readonly] {
@@ -241,11 +338,25 @@ form.application.add2e.sheet.actor.personnage {
   align-items: center;
   padding: 4px 10px;
   border-right: 1px solid #eee0b2;
-  background: rgba(249,241,211,.6);
   color: #72501a;
-  font-size: .78rem;
-  font-weight: 900;
+  font-size: .8rem;
+  font-weight: 700;
   text-transform: uppercase;
+}
+
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-progression-row:nth-child(1) .a2e-progression-row-label {
+  background: #fbf0cd;
+  color: #74500f;
+}
+
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-progression-row:nth-child(2) .a2e-progression-row-label {
+  background: #e5eef9;
+  color: #245a89;
+}
+
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-progression-row:nth-child(3) .a2e-progression-row-label {
+  background: #f0e7f7;
+  color: #6a4189;
 }
 
 :is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-progression-values {
@@ -269,6 +380,18 @@ form.application.add2e.sheet.actor.personnage {
   text-align: center;
 }
 
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-progression-level-input {
+  border-color: #c99d35;
+  background: #fff7df;
+  color: #715014;
+}
+
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-progression-xp-input {
+  border-color: #80a6c6;
+  background: #edf5fc;
+  color: #275a84;
+}
+
 :is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-progression-separator {
   flex: 0 0 auto;
   color: #80591b;
@@ -283,15 +406,17 @@ form.application.add2e.sheet.actor.personnage {
 
 :is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-progression-title-values {
   gap: 9px;
+  background: #fdf6ff;
 }
 
 :is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-progression-title {
   flex: 1 1 0;
   min-width: 0;
   overflow: hidden;
-  color: #5b3a09;
-  font-size: 1rem;
-  font-weight: 900;
+  color: #633986;
+  font-family: "IM FELL French Canon", "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+  font-size: 1.08rem;
+  font-weight: 700;
   text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -303,6 +428,9 @@ form.application.add2e.sheet.actor.personnage {
   min-width: 29px;
   height: 28px;
   padding: 0;
+  border-color: #6b94ba;
+  background: #dfeefa;
+  color: #245a89;
 }
 
 :is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-combat-strip {
@@ -320,7 +448,9 @@ form.application.add2e.sheet.actor.personnage {
   align-content: center;
   min-width: 0;
   min-height: 57px;
-  padding: 7px 10px;
+  padding: 6px 10px 7px;
+  border-top: 3px solid #b9943f;
+  background: rgba(255,253,244,.86);
 }
 
 :is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-combat-stat + .a2e-combat-stat {
@@ -349,8 +479,64 @@ form.application.add2e.sheet.actor.personnage {
   cursor: pointer;
 }
 
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-combat-pv-current {
+  border-top-color: #b63d37;
+  background: #fff0ee;
+}
+
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-combat-pv-current label,
 :is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-combat-pv-current > input {
   color: #8c261d;
+}
+
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-combat-pv-max {
+  border-top-color: #aa7b20;
+  background: #fff7df;
+}
+
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-combat-pv-max label,
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-combat-pv-max > input {
+  color: #704f11;
+}
+
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-combat-ca {
+  border-top-color: #2e76a6;
+  background: #edf6fc;
+}
+
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-combat-ca label,
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-combat-ca > input {
+  color: #1e5b85;
+}
+
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-combat-thaco {
+  border-top-color: #bd7524;
+  background: #fff1dc;
+}
+
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-combat-thaco label,
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-combat-thaco > input {
+  color: #7a4105;
+}
+
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-combat-movement {
+  border-top-color: #397d6f;
+  background: #e9f5f0;
+}
+
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-combat-movement label,
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-combat-movement > input {
+  color: #155d4d;
+}
+
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-combat-alignment {
+  border-top-color: #7a509b;
+  background: #f2eafa;
+}
+
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-combat-alignment label,
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-combat-alignment > select {
+  color: #593575;
 }
 
 :is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage) .add2e-character-v3 .a2e-progression-input:focus,
