@@ -275,7 +275,7 @@
       "temps_incantation": "8 segments",
       "jet_sauvegarde": "1/2",
       "composants_materiels_source": "pincée de soufre",
-      "description": "quand le clerc lance ce sort, une colonne de feu se forme à l’endroit voulu par lui. Chaque créature se trouvant dans cette zone doit lancer un jet de protection. Si le jet de protection est raté, les créatures dans la zone d’effet subissent de 6 à 48 points de dommage (6d8). Si ce jet de protection est réussi, les dégâts subis ne sont que de 3 à 24 points de vie (3d8). Ce sort ne peut pas être utilisé sous l’eau. La composante matérielle de ce sort est une pincée de souffre. QUÊTE RELIGIEUSE (Enchantement/Charme) Niveau: 5 Composantes: V, S, M Portée: 6\" Temps d'incantation: 8 segments Durée: jusqu'à accomplissement Jet de protection: annule Zone d'effet: une créature",
+      "description": "quand le clerc lance ce sort, une colonne de feu se forme à l’endroit voulu par lui. Chaque créature se trouvant dans cette zone doit lancer un jet de protection. Si le jet de protection est raté, les créatures dans la zone d’effet subissent de 6 à 48 points de dommage (6d8). Si ce jet de protection est réussi, les dégâts subis ne sont que de 3 à 24 points de vie (3d8). Ce sort ne peut pas être utilisé sous l’eau. La composante matérielle de ce sort est une pincée de souffre.",
       "composants_materiels_objets": [
         {
           "nom": "pincée de souffre",
