@@ -135,7 +135,17 @@
       "temps_incantation": "1 round",
       "jet_sauvegarde": "aucun",
       "description": "quand ce sort est lancé, le clerc détecte les émanations magiques sur une largeur de 1\" et une longueur de 3\" dans la direction qu’il regarde. Le clerc peut pivoter de 60° par round. Les murs de pierre épais de 30 cm et plus, une épaisseur de métal de 3 cm et plus ou une épaisseur de bois de 90 cm et plus empêchent le sort de fonctionner. Le clerc peut discerner si la magie est forte ou faible. Pour lancer ce sort, le clerc a besoin de son symbole sacré.",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "symbole sacré du clerc",
+          "quantite": 1,
+          "consommation": "non_consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Objet religieux requis ; non consommé."
+        }
+      ],
       "foundry": {
         "nom": "Détection de la magie",
         "id": "Sxt9iofe7",
@@ -159,7 +169,17 @@
       "jet_sauvegarde": "aucun",
       "inverse": "Détection du bien",
       "description": "ce sort permet de découvrir les émanations du mal, ou du bien pour le sort inverse, de toute créature ou tout objet. Un alignement mauvais ou un objet maudit irradiera une aura maléfique, mais pas un piège ou une vipère. La durée du sort est de 1 tour + ½ tour par niveau; donc un clerc de niveau 1 pourra détecter le mal pendant 1 tour ½, un clerc de niveau 2 pendant 2 tours, etc. Le sort a une zone d’effet de 1\" de large et le clerc doit faire face à l’endroit, l’objet ou la créature qu’il examine. Seuls le degré de mal (faible, moyen, fort, extraordinaire) et sa nature générale (en attente, méchant, triomphant, etc.) sont révélés. Si le mal est extraordinaire, le clerc a 10 % de chance par niveau du clerc d’en déterminer la tendance (loyal, neutre ou chaotique). Pour lancer ce sort, le clerc a besoin de son symbole sacré, qu’il tient devant lui.",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "symbole sacré du clerc",
+          "quantite": 1,
+          "consommation": "non_consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": null,
+          "notes": "Objet religieux requis ; tenu devant le clerc et non consommé."
+        }
+      ],
       "foundry": {
         "nom": "Détection du mal",
         "id": "yAqsU5sPfwAfnzKI",
@@ -232,7 +252,44 @@
       "jet_sauvegarde": "aucun",
       "inverse": "Protection contre le bien",
       "description": "quand ce sort est lancé, il agit comme si une armure magique protégeait le destinataire. La protection entoure la créature touchée à 30 cm de distance, la protégeant des contacts corporels des créatures enchantées ou invoquées (neutres, bonnes ou mauvaises) qui utilisent des attaques naturelles (griffes, morsure, etc.), tels que les chasseurs invisibles, démons, diables, diablotins, djinns, élémentaux, éfrits, esprit des eaux, maître des vents, quasits, salamandres, serviteurs aériens, sorcières des ténèbres et xorns. Le destinataire est également protégé contre les animaux et les monstres invoqués (neutres, bons ou mauvais). De plus, toute attaque tentée par des créatures mauvaises subit un malus de –2 à «la probabilité de toucher» la créature protégée, et tout jet de protection éventuel se fait à +2. Ce sort peut être inversé pour devenir alors une protection contre le bien (mais il continue quand même de garder à distance les créatures enchantées mauvaises). Pour lancer le sort, le clerc doit tracer un cercle de 90 cm de diamètre sur le sol avec de l’eau bénite pour le sort de protection contre le mal et avec du sang pour la protection contre le bien, ou alors en utilisant de l’encens allumé ou des vapeurs de fumier, selon qu’il veut se protéger du mal ou du bien.",
-      "composants_materiels_objets": [],
+      "composants_materiels_objets": [
+        {
+          "nom": "eau bénite",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Protection contre le mal ; utilisée pour tracer le cercle.",
+          "notes": null
+        },
+        {
+          "nom": "sang",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Protection contre le bien ; utilisée pour tracer le cercle.",
+          "notes": null
+        },
+        {
+          "nom": "encens allumé",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative selon l’alignement et la version normale ou inversée.",
+          "notes": null
+        },
+        {
+          "nom": "vapeurs de fumier",
+          "quantite": 1,
+          "consommation": "consomme",
+          "cout_po": null,
+          "source": "Manuel des joueurs",
+          "condition": "Alternative selon l’alignement et la version normale ou inversée.",
+          "notes": null
+        }
+      ],
       "foundry": {
         "nom": "Protection contre le Mal",
         "id": "TqhVMP92bVsGe1Ze",
