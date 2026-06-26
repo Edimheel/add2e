@@ -1,257 +1,32 @@
 {
-  "source": {
-    "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf",
-    "reference": "Manuel des joueurs AD&D 2e",
-    "classe": "magicien",
-    "niveau": 2,
-    "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
-  },
-  "status": "reference_liste_noms_complete_regles_a_completer",
-  "expectedCount": 24,
-  "foundryExport": "audit/decoupage_fichier/magicien-niveau-2.json",
-  "rules": {
-    "included": [
-      "nom du sort",
-      "classe",
-      "niveau",
-      "ordre dans le tableau du Manuel des joueurs",
-      "nombre de sorts attendu",
-      "variantes explicitement nommées dans le Manuel des joueurs",
-      "réversibilité et nom de l’inverse quand le Manuel le donne"
-    ],
-    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis.",
-    "variantes": "Le tableau variantes est vide lorsqu’aucun choix de forme explicitement nommé ne figure dans le Manuel des joueurs.",
-    "reversibilite": "Le champ reversible est toujours booléen. Le champ inverse vaut null lorsque le Manuel indique un sort réversible sans donner de nom distinct à sa forme inverse."
-  },
-  "spells": [
-    {
-      "ordre": 1,
-      "nom": "Bouche magique",
-      "niveau": 2,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 2,
-      "nom": "Bruitage",
-      "niveau": 2,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 3,
-      "nom": "Corde enchantée",
-      "niveau": 2,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 4,
-      "nom": "Détection de l'invisibilité",
-      "niveau": 2,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 5,
-      "nom": "Détection du mal",
-      "niveau": 2,
-      "variantes": [],
-      "reversible": true,
-      "inverse": "Détection du bien",
-      "inverseNameStatus": "manual_explicit",
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 6,
-      "nom": "E.S.P.",
-      "niveau": 2,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 7,
-      "nom": "Force",
-      "niveau": 2,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 8,
-      "nom": "Fracassement",
-      "niveau": 2,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 9,
-      "nom": "Image miroir",
-      "niveau": 2,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 10,
-      "nom": "Invisibilité",
-      "niveau": 2,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 11,
-      "nom": "Lévitation",
-      "niveau": 2,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 12,
-      "nom": "Localisation d'objets",
-      "niveau": 2,
-      "variantes": [],
-      "reversible": true,
-      "inverse": "Dissimulation d’objets",
-      "inverseNameStatus": "manual_explicit",
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 13,
-      "nom": "Lumière éternelle",
-      "niveau": 2,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 14,
-      "nom": "Nuage puant",
-      "niveau": 2,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 15,
-      "nom": "Or des fous",
-      "niveau": 2,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 16,
-      "nom": "Oubli",
-      "niveau": 2,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 17,
-      "nom": "Ouverture",
-      "niveau": 2,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 18,
-      "nom": "Peur",
-      "niveau": 2,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 19,
-      "nom": "Piège de Léomund",
-      "niveau": 2,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 20,
-      "nom": "Pyrotechnie",
-      "niveau": 2,
-      "variantes": [
-        {
-          "id": "feu_d_artifice",
-          "nom": "Feu d’artifice"
-        },
-        {
-          "id": "fumee",
-          "nom": "Fumée"
-        }
-      ],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 21,
-      "nom": "Rayon d'affaiblissement",
-      "niveau": 2,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 22,
-      "nom": "Ténèbres sur 5 mètres",
-      "niveau": 2,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 23,
-      "nom": "Toile d'araignée",
-      "niveau": 2,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 24,
-      "nom": "Verrou magique",
-      "niveau": 2,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    }
+  "source":{"document":"AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf","reference":"Manuel des joueurs AD&D 2e","classe":"magicien","niveau":2,"note":"Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."},
+  "status":"reference_complete_description_normalisee",
+  "expectedCount":24,
+  "foundryExport":"audit/decoupage_fichier/magicien-niveau-2.json",
+  "spells":[
+    {"ordre":1,"nom":"Bouche magique","ecole":"Altération","niveau":2,"portee":"spéciale","duree":"spéciale","zone_effet":"un objet","composantes":"V, S, M","temps_incantation":"2 segments","jet_sauvegarde":"aucun","description":"Le sort place sur un objet une bouche qui prononce, sous une condition définie, un message de vingt-cinq mots au plus. Son déclenchement peut viser une créature dans la portée de 1/2\" par niveau et la bouche ne distingue pas les créatures invisibles, les alignements, niveaux, dés de vie ou classes sans indices extérieurs.","composants_materiels_objets":[{"nom":"petit morceau de rayon de miel","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":2,"nom":"Bruitage","ecole":"Illusion/Fantasme","niveau":2,"portee":"6\" + 1\"/niveau","duree":"2 rounds/niveau","zone_effet":"portée d’ouïe","composantes":"V, M","temps_incantation":"2 segments","jet_sauvegarde":"spécial","description":"Le magicien crée un bruit qui semble se déplacer ou rester fixe ; son volume augmente avec son niveau. Une créature qui le met en doute peut réussir un jet de protection et ne plus entendre qu’un bruit faible ou rien.","composants_materiels_objets":[{"nom":"morceau de laine","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Alternative à la cire.","notes":null,"alternativeGroup":"bruitage"},{"nom":"cire","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Alternative à la laine.","notes":null,"alternativeGroup":"bruitage"}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":3,"nom":"Corde enchantée","ecole":"Altération","niveau":2,"portee":"au toucher","duree":"2 tours/niveau","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"2 segments","jet_sauvegarde":"aucun","description":"Une corde de 1,50 m à 9 m se dresse vers un espace extradimensionnel pouvant abriter le magicien et jusqu’à cinq compagnons. Ils doivent en redescendre avant la fin du sort sous peine de tomber.","composants_materiels_objets":[{"nom":"poudre de blé","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"parchemin torsadé en forme de boucle","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":4,"nom":"Détection de l'invisibilité","ecole":"Divination","niveau":2,"portee":"1\"/niveau","duree":"5 rounds/niveau","zone_effet":"1\" de large","composantes":"V, S, M","temps_incantation":"2 segments","jet_sauvegarde":"aucun","description":"Le magicien voit dans sa ligne de vue les créatures et objets invisibles, astraux, éthérés, cachés ou hors de phase.","composants_materiels_objets":[{"nom":"pincée de talc","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Répandue au lancement."},{"nom":"poudre d’argent","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Répandue au lancement."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":5,"nom":"Détection du mal","ecole":"Divination","niveau":2,"portee":"6\"","duree":"5 rounds/niveau","zone_effet":"1\" de large","composantes":"V, S","temps_incantation":"2 segments","jet_sauvegarde":"aucun","inverse":"Détection du bien","description":"Ce sort fonctionne comme la détection du mal de clerc, mais le magicien n’apprend que l’intensité et non la tendance éthique. L’inverse détecte le bien.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":true,"inverseNameStatus":"manual_explicit"},
+    {"ordre":6,"nom":"E.S.P.","ecole":"Divination","niveau":2,"portee":"1/2\"/niveau, 9\" maximum","duree":"1 round/niveau","zone_effet":"une créature par examen","composantes":"V, S, M","temps_incantation":"2 segments","jet_sauvegarde":"aucun","description":"Le magicien détecte les pensées immédiates d’une créature à portée, sauf les êtres sans esprit. Il examine une créature par round et la roche, le métal ou le plomb peuvent faire obstacle au sort.","composants_materiels_objets":[{"nom":"pièce de cuivre","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":7,"nom":"Force","ecole":"Altération","niveau":2,"portee":"au toucher","duree":"6 tours/niveau","zone_effet":"personne touchée","composantes":"V, S, M","temps_incantation":"1 tour","jet_sauvegarde":"aucun","description":"Le sort augmente temporairement la force de la personne touchée selon sa classe, sous réserve de ses limites. Un guerrier, paladin ou ranger ayant déjà 18 en force gagne de la force exceptionnelle.","composants_materiels_objets":[{"nom":"cheveux d’un animal particulièrement fort","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Alternative à l’excrément.","notes":"Exemples : singe, ours ou bœuf.","alternativeGroup":"force"},{"nom":"excrément d’un animal particulièrement fort","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Alternative aux cheveux.","notes":"Exemples : singe, ours ou bœuf.","alternativeGroup":"force"}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":8,"nom":"Fracassement","ecole":"Altération","niveau":2,"portee":"6\"","duree":"permanente","zone_effet":"un objet","composantes":"V, S, M","temps_incantation":"2 segments","jet_sauvegarde":"annule","description":"Le sort brise les objets non magiques de cristal, verre, céramique ou porcelaine pesant au plus 100 po par niveau du magicien, s’ils ratent leur jet de protection contre les coups critiques.","composants_materiels_objets":[{"nom":"éclat de mica","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":9,"nom":"Image miroir","ecole":"Illusion/Fantasme","niveau":2,"portee":"0","duree":"2 rounds/niveau","zone_effet":"1,80 m de rayon autour du jeteur de sort","composantes":"V, S","temps_incantation":"2 segments","jet_sauvegarde":"aucun","description":"Le magicien crée de un à quatre images de lui-même qui reproduisent ses gestes. Une image touchée disparaît ; les autres subsistent jusqu’à être touchées ou jusqu’à la fin du sort.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":10,"nom":"Invisibilité","ecole":"Illusion/Fantasme","niveau":2,"portee":"au toucher","duree":"spéciale","zone_effet":"créature touchée","composantes":"V, S, M","temps_incantation":"2 segments","jet_sauvegarde":"aucun","description":"La créature touchée devient invisible à la vision normale et à l’infravision, mais elle fait toujours du bruit. L’effet cesse si elle attaque, l’annule ou est dissipé.","composants_materiels_objets":[{"nom":"cil","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Mis dans de la gomme arabique."},{"nom":"gomme arabique","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":11,"nom":"Lévitation","ecole":"Altération","niveau":2,"portee":"2\"/niveau","duree":"1 tour/niveau","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"2 segments","jet_sauvegarde":"annule","description":"Le magicien fait léviter jusqu’à 1 000 po par niveau. Il peut monter ou descendre, mais ne crée pas de mouvement horizontal ; une cible non consentante peut annuler l’effet par un jet de protection.","composants_materiels_objets":[{"nom":"boucle de cuir","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Alternative au fil d’or.","notes":null,"alternativeGroup":"levitation"},{"nom":"fil d’or courbé en forme d’hameçon","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Alternative à la boucle de cuir.","notes":null,"alternativeGroup":"levitation"}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":12,"nom":"Localisation d'objets","ecole":"Divination","niveau":2,"portee":"2\"/niveau","duree":"1 round/niveau","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"2 segments","jet_sauvegarde":"aucun","inverse":"Dissimulation d’objets","description":"Le magicien détermine la direction d’un objet connu ou familier dans la portée. L’inverse le dissimule contre cette détection et les moyens similaires ; aucune version ne fonctionne sur un être vivant.","composants_materiels_objets":[{"nom":"pierre aimantée","quantite":1,"consommation":"non_consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":true,"inverseNameStatus":"manual_explicit"},
+    {"ordre":13,"nom":"Lumière éternelle","ecole":"Altération","niveau":2,"portee":"6\"","duree":"permanente","zone_effet":"sphère de 6\" de rayon","composantes":"V, S","temps_incantation":"2 segments","jet_sauvegarde":"aucun","description":"À l’exception de sa portée de 6\" et de l’absence de forme inverse, ce sort fonctionne comme lumière éternelle de clerc de niveau 2.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":14,"nom":"Nuage puant","ecole":"Évocation","niveau":2,"portee":"3\"","duree":"1 round/niveau","zone_effet":"nuage de 2\" x 2\" x 2\"","composantes":"V, S, M","temps_incantation":"2 segments","jet_sauvegarde":"spécial","description":"Le sort crée un nuage de vapeurs nauséabondes. Les créatures qui ratent leur jet de protection contre le poison restent sans défense pendant 2 à 5 rounds ; une rafale de vent le dissipe rapidement.","composants_materiels_objets":[{"nom":"œuf pourri","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Alternative aux feuilles de symplocarpe fétide.","notes":null,"alternativeGroup":"nuage_puant"},{"nom":"feuilles de symplocarpe fétide","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Alternative à l’œuf pourri.","notes":null,"alternativeGroup":"nuage_puant"}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":15,"nom":"Or des fous","ecole":"Altération","niveau":2,"portee":"1\"","duree":"6 tours/niveau","zone_effet":"27 dm³ par niveau du magicien","composantes":"V, S, M","temps_incantation":"1 round","jet_sauvegarde":"aucun","description":"Le sort transforme temporairement des objets et pièces de cuivre en or. Un coup de fer forgé peut les ramener au cuivre selon la gemme employée.","composants_materiels_objets":[{"nom":"citrine réduite en poudre","quantite":1,"consommation":"consomme","cout_po":50,"source":"Manuel des joueurs","condition":"30 % de chance qu’un coup de fer forgé rende l’or en cuivre.","notes":null,"alternativeGroup":"or_des_fous"},{"nom":"ambre réduit en poudre","quantite":1,"consommation":"consomme","cout_po":100,"source":"Manuel des joueurs","condition":"25 % de chance qu’un coup de fer forgé rende l’or en cuivre.","notes":null,"alternativeGroup":"or_des_fous"},{"nom":"topaze réduite en poudre","quantite":1,"consommation":"consomme","cout_po":500,"source":"Manuel des joueurs","condition":"10 % de chance qu’un coup de fer forgé rende l’or en cuivre.","notes":null,"alternativeGroup":"or_des_fous"},{"nom":"topaze orientale (corindon) réduite en poudre","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"1 % de chance qu’un coup de fer forgé rende l’or en cuivre.","notes":null,"alternativeGroup":"or_des_fous"}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":16,"nom":"Oubli","ecole":"Illusion/Fantasme","niveau":2,"portee":"3\"","duree":"permanente","zone_effet":"2\" x 2\"","composantes":"V, S","temps_incantation":"2 segments","jet_sauvegarde":"annule","description":"Les créatures qui ratent leur jet de protection oublient le round précédent, plus une minute par tranche de trois niveaux. Guérison, restauration ou souhait majeur peuvent restaurer cette mémoire.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":17,"nom":"Ouverture","ecole":"Altération","niveau":2,"portee":"6\"","duree":"spéciale","zone_effet":"1 m²/niveau","composantes":"V","temps_incantation":"1 segment","jet_sauvegarde":"aucun","description":"Le sort ouvre portes, serrures, coffres, boîtes, chaînes et fers. Sur un verrou magique, il suspend le verrou pendant un tour ; il n’agit ni sur des barreaux ni sur une herse.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":18,"nom":"Peur","ecole":"Enchantement/Charme","niveau":2,"portee":"1\"","duree":"3-12 rounds","zone_effet":"une créature","composantes":"V, S, M","temps_incantation":"2 segments","jet_sauvegarde":"annule","description":"Une créature de moins de six dés de vie ou niveaux qui rate son jet de protection tremble de peur. Acculée, elle combat avec –1 au toucher, aux dégâts et aux jets de protection.","composants_materiels_objets":[{"nom":"morceau d’os de mort-vivant","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Exemples : squelette, zombie, goule, ghast ou momie."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":19,"nom":"Piège de Léomund","ecole":"Illusion/Fantasme","niveau":2,"portee":"au toucher","duree":"permanente","zone_effet":"objet touché","composantes":"V, S, M","temps_incantation":"3 rounds","jet_sauvegarde":"aucun","description":"Ce faux piège affecte un petit mécanisme et vise à tromper les voleurs. Il ne provoque aucun effet si on l’ignore.","composants_materiels_objets":[{"nom":"morceau de fer pyriteux","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Pierre à feu utilisée pour toucher l’objet à piéger."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":20,"nom":"Pyrotechnie","ecole":"Altération","niveau":2,"portee":"12\"","duree":"spéciale","zone_effet":"10 ou 100 fois la source de feu utilisée","composantes":"V, S","temps_incantation":"2 segments","jet_sauvegarde":"aucun","description":"À l’exception de ses valeurs propres, ce sort fonctionne comme pyrotechnie de druide de niveau 3 : il transforme une source de feu en feu d’artifice ou en fumée puis l’éteint.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[{"id":"feu_d_artifice","nom":"Feu d’artifice"},{"id":"fumee","nom":"Fumée"}],"reversible":false},
+    {"ordre":21,"nom":"Rayon d'affaiblissement","ecole":"Enchantement/Charme","niveau":2,"portee":"1\" + 1/4\"/niveau","duree":"1 round/niveau","zone_effet":"une créature","composantes":"V, S","temps_incantation":"2 segments","jet_sauvegarde":"annule","description":"Le rayon réduit de 25 % la force et les capacités physiques de la cible, plus 2 % par niveau au-dessus du troisième. Un jet de protection réussi annule l’effet.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":22,"nom":"Ténèbres sur 5 mètres","ecole":"Altération","niveau":2,"portee":"1\"/niveau","duree":"1 tour + 1 round/niveau","zone_effet":"sphère de 5 m de rayon","composantes":"V, M","temps_incantation":"2 segments","jet_sauvegarde":"aucun","description":"Le sort crée une obscurité totale que l’infravision et l’ultravision ne percent pas. Les interactions avec lumière et lumière éternelle suivent les règles du Manuel.","composants_materiels_objets":[{"nom":"fourrure de chauve-souris","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"morceau de charbon","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Alternative à la goutte de poix.","notes":null,"alternativeGroup":"tenebres_sur_5m"},{"nom":"goutte de poix","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Alternative au morceau de charbon.","notes":null,"alternativeGroup":"tenebres_sur_5m"}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":23,"nom":"Toile d'araignée","ecole":"Évocation","niveau":2,"portee":"1/2\"/niveau","duree":"2 tours/niveau","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"2 segments","jet_sauvegarde":"annule ou 1/2","description":"Le sort crée une toile gluante qui exige deux points d’ancrage opposés. Les créatures prises doivent se libérer selon leur force ; le feu détruit la toile et peut blesser les créatures encore prises.","composants_materiels_objets":[{"nom":"toile d’araignée","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":24,"nom":"Verrou magique","ecole":"Altération","niveau":2,"portee":"au toucher","duree":"permanente","zone_effet":"2,70 m²/niveau","composantes":"V, S","temps_incantation":"2 segments","jet_sauvegarde":"aucun","description":"Le magicien ferme magiquement une porte, un coffre ou un portail. Ouverture, dissipation de la magie ou un magicien d’au moins quatre niveaux supérieurs le suspendent sans l’annuler définitivement.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false}
   ]
 }
