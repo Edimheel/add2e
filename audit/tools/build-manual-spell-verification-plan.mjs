@@ -68,6 +68,9 @@ function listDiff(expected, actual) {
     orderMatches: sameOrder(expected, actual)
   };
 }
+function matchesExpectedList(diff) {
+  return !diff.missing.length && !diff.extra.length && diff.orderMatches;
+}
 function referenceNames(file) {
   const document = readJson(file);
   return Array.isArray(document?.spells) ? document.spells.map(spell => text(spell?.nom)).filter(Boolean) : [];
@@ -94,16 +97,10 @@ function resolveDecoupagePath(foundryExport, referenceFile, className, spellLeve
   const fallbackDirectory = path.join(ROOT, "audit", "decoupage_fichier");
   const baseName = referenceBasename(referenceFile, className, spellLevel);
   const candidates = [];
-  let declaredPath = null;
   if (declared) {
-    declaredPath = path.resolve(ROOT, declared);
+    const declaredPath = path.resolve(ROOT, declared);
     if (isFile(declaredPath)) {
-      return {
-        declared: foundryExport ?? null,
-        resolvedPath: declaredPath,
-        status: "declared_file",
-        candidates: [path.relative(ROOT, declaredPath)]
-      };
+      return { declared: foundryExport ?? null, resolvedPath: declaredPath, status: "declared_file", candidates: [path.relative(ROOT, declaredPath)] };
     }
     let directory = declaredPath;
     try {
@@ -119,20 +116,10 @@ function resolveDecoupagePath(foundryExport, referenceFile, className, spellLeve
   const unique = [...new Set(candidates)];
   for (const candidate of unique) {
     if (isFile(candidate)) {
-      return {
-        declared: foundryExport ?? null,
-        resolvedPath: candidate,
-        status: declared ? "derived_from_directory_or_missing_declaration" : "derived_from_default_directory",
-        candidates: unique.map(file => path.relative(ROOT, file))
-      };
+      return { declared: foundryExport ?? null, resolvedPath: candidate, status: declared ? "derived_from_directory_or_missing_declaration" : "derived_from_default_directory", candidates: unique.map(file => path.relative(ROOT, file)) };
     }
   }
-  return {
-    declared: foundryExport ?? null,
-    resolvedPath: null,
-    status: declared ? "unresolved" : "missing_declaration",
-    candidates: unique.map(file => path.relative(ROOT, file))
-  };
+  return { declared: foundryExport ?? null, resolvedPath: null, status: declared ? "unresolved" : "missing_declaration", candidates: unique.map(file => path.relative(ROOT, file)) };
 }
 function fieldWork(spell) {
   const missing = [];
@@ -149,20 +136,13 @@ function fieldWork(spell) {
   return { missing, placeholder, compareWithDecoupage, missingDescription, descriptionDifferent };
 }
 function priorityFor({ manualList, fileReport, spellTasks }) {
-  const listBlocked = !manualList.available
-    || !manualList.referenceAvailable
-    || !manualList.decoupageAvailable
-    || manualList.reference.missing.length
-    || manualList.reference.extra.length
-    || !manualList.reference.orderMatches
-    || manualList.decoupage.missing.length
-    || manualList.decoupage.extra.length
-    || !manualList.decoupage.orderMatches;
-  if (listBlocked) return "P0_LISTE_MANUEL";
+  const referenceListBlocked = !manualList.available || !manualList.referenceAvailable || !matchesExpectedList(manualList.reference);
+  if (referenceListBlocked) return "P0_LISTE_MANUEL";
   const transcriptionNeeded = spellTasks.some(task => task.missing.length || task.placeholder.length || task.missingDescription);
   if (transcriptionNeeded) return "P1_TRANSCRIPTION_MANUEL";
+  const foundryListNeedsReview = !manualList.decoupageAvailable || !matchesExpectedList(manualList.decoupage);
   const comparisonNeeded = spellTasks.some(task => task.compareWithDecoupage.length || task.descriptionDifferent);
-  if (comparisonNeeded || fileReport.summary.technicalDifferences || fileReport.summary.descriptionDifferences) return "P2_ARBITRAGE_MANUEL";
+  if (foundryListNeedsReview || comparisonNeeded || fileReport.summary.technicalDifferences || fileReport.summary.descriptionDifferences) return "P2_ARBITRAGE_MANUEL";
   return "P3_CONFIRMATION_MANUEL";
 }
 
@@ -200,6 +180,7 @@ function main() {
       reference: manualNames ? listDiff(manualNames, referenceResult.names) : { missing: [], extra: referenceResult.names, orderMatches: false },
       decoupage: manualNames ? listDiff(manualNames, decoupageResult.names) : { missing: [], extra: decoupageResult.names, orderMatches: false }
     };
+    const foundryListNeedsReview = !manualList.decoupageAvailable || !matchesExpectedList(manualList.decoupage);
     const spellTasks = (fileReport.spells ?? []).map(spell => ({ nom: spell.nom, ...fieldWork(spell) }));
     const priority = priorityFor({ manualList, fileReport, spellTasks });
     const taskCounts = {
@@ -216,6 +197,7 @@ function main() {
       decoupageResolution,
       source: fileReport.source,
       manualList,
+      foundryListNeedsReview,
       auditStatus: fileReport.status,
       auditErrors: [...(fileReport.errors ?? []), ...inputErrors],
       taskCounts,
@@ -228,6 +210,7 @@ function main() {
     references: files.length,
     spells: audit?.summary?.spells ?? files.reduce((sum, file) => sum + (file.manualList.expectedCount ?? 0), 0),
     byPriority: Object.fromEntries(Object.entries(priorities).map(([priority, rows]) => [priority, { references: rows.length, spells: rows.reduce((sum, row) => sum + (row.manualList.expectedCount ?? 0), 0) }])),
+    foundryListReviews: files.filter(file => file.foundryListNeedsReview).length,
     unresolvedDecoupage: files.filter(file => !file.manualList.decoupageAvailable).length,
     technicalFieldsToTranscribe: files.reduce((sum, file) => sum + file.taskCounts.technicalFieldsToTranscribe, 0),
     descriptionsToTranscribe: files.reduce((sum, file) => sum + file.taskCounts.descriptionsToTranscribe, 0),
@@ -235,13 +218,14 @@ function main() {
     descriptionsToArbitrate: files.reduce((sum, file) => sum + file.taskCounts.descriptionsToArbitrate, 0)
   };
   const output = {
-    version: "2026-06-26-manual-spell-verification-plan-v2",
+    version: "2026-06-26-manual-spell-verification-plan-v3",
     generatedAt: new Date().toISOString(),
     sourceOfTruth: "Manuel des joueurs AD&D 2e",
     inputs: { audit: path.relative(ROOT, auditPath), master: path.relative(ROOT, masterPath) },
     rules: [
       "Le fichier maître sert uniquement à vérifier les listes, l'ordre et le nombre issus des tables du Manuel.",
-      "Le découpage Foundry sert uniquement de comparaison ; il ne peut jamais compléter ou corriger une référence.",
+      "P0 signifie exclusivement qu'une référence diffère du fichier maître issu du Manuel ou que cette référence est indisponible.",
+      "Le découpage Foundry sert uniquement de comparaison ; une divergence Foundry ne peut jamais classer une référence en P0 ni compléter ou corriger une référence.",
       "Chaque champ marqué transcription ou arbitrage doit être lu dans le Manuel avant toute écriture.",
       "Les références sont corrigées avant tout JSON normalisé."
     ],
@@ -252,6 +236,7 @@ function main() {
   writeJson(outputPath, output);
   console.log(`[ADD2E][MANUAL_VERIFICATION_PLAN] ${summary.references} référence(s), ${summary.spells} sort(s).`);
   for (const [priority, rows] of Object.entries(priorities)) console.log(`[ADD2E][MANUAL_VERIFICATION_PLAN] ${priority}: ${rows.length} référence(s), ${rows.reduce((sum, row) => sum + (row.manualList.expectedCount ?? 0), 0)} sort(s).`);
+  console.log(`[ADD2E][MANUAL_VERIFICATION_PLAN] Listes Foundry à arbitrer : ${summary.foundryListReviews}.`);
   console.log(`[ADD2E][MANUAL_VERIFICATION_PLAN] Découpages non résolus : ${summary.unresolvedDecoupage}.`);
   console.log(`[ADD2E][MANUAL_VERIFICATION_PLAN] À transcrire : ${summary.technicalFieldsToTranscribe} champ(s) technique(s), ${summary.descriptionsToTranscribe} description(s).`);
   console.log(`[ADD2E][MANUAL_VERIFICATION_PLAN] À arbitrer depuis le Manuel : ${summary.technicalFieldsToArbitrate} champ(s) technique(s), ${summary.descriptionsToArbitrate} description(s).`);
