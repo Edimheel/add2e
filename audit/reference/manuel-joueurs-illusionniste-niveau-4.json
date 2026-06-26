@@ -6,95 +6,17 @@
     "niveau": 4,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_liste_noms_complete_regles_a_completer",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 8,
   "foundryExport": "audit/decoupage_fichier/illusionniste-niveau-4.json",
-  "rules": {
-    "included": [
-      "nom du sort",
-      "classe",
-      "niveau",
-      "ordre dans le tableau du Manuel des joueurs",
-      "nombre de sorts attendu",
-      "variantes explicitement nommées dans le Manuel des joueurs",
-      "réversibilité et nom de l’inverse quand le Manuel le donne"
-    ],
-    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis.",
-    "variantes": "Le tableau variantes est vide lorsqu’aucun choix de forme explicitement nommé ne figure dans le Manuel des joueurs.",
-    "reversibilite": "Le champ reversible est toujours booléen. Le champ inverse vaut null lorsque le Manuel indique un sort réversible sans donner de nom distinct à sa forme inverse."
-  },
   "spells": [
-    {
-      "ordre": 1,
-      "nom": "Confusion",
-      "niveau": 4,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 2,
-      "nom": "Création mineure",
-      "niveau": 4,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 3,
-      "nom": "Dissipation de l'épuisement",
-      "niveau": 4,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 4,
-      "nom": "Émotion",
-      "niveau": 4,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 5,
-      "nom": "Invisibilité améliorée",
-      "niveau": 4,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 6,
-      "nom": "Monstres des ombres",
-      "niveau": 4,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 7,
-      "nom": "Phytomorphose",
-      "niveau": 4,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 8,
-      "nom": "Tueur fantasmagorique",
-      "niveau": 4,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    }
+    {"ordre":1,"nom":"Confusion","ecole":"Enchantement/Charme","niveau":4,"portee":"8\"","duree":"1 round/niveau","zone_effet":"4\" x 4\" maximum","composantes":"V, S, M","temps_incantation":"4 segments","jet_sauvegarde":"spécial","notes_regles":"La lettre M est explicite dans l’en-tête du Manuel. Le détail matériel ne doit pas être déduit du découpage Foundry.","description":"Le sort provoque une confusion chez les créatures de la zone. Les effets, la répartition des actions possibles et les jets de protection suivent les règles du Manuel.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":2,"nom":"Création mineure","ecole":"Altération","niveau":4,"portee":"au toucher","duree":"6 tours/niveau","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"1 tour","jet_sauvegarde":"aucun","notes_regles":"La lettre M est explicite dans l’en-tête du Manuel. Le détail matériel ne doit pas être déduit du découpage Foundry.","description":"L’illusionniste crée temporairement un objet non vivant de matière végétale dans les limites de volume et de qualité indiquées par le Manuel.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":3,"nom":"Dissipation de l’épuisement","ecole":"Illusion/Fantasme","niveau":4,"portee":"au toucher","duree":"3 tours/niveau","zone_effet":"de 1 à 4 personnes","composantes":"V, S","temps_incantation":"4 segments","jet_sauvegarde":"aucun","description":"Le sort retire la fatigue et l’épuisement des personnes touchées, selon les limites et les effets précis du Manuel.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":4,"nom":"Émotion","ecole":"Enchantement/Charme","niveau":4,"portee":"1\"/niveau","duree":"spéciale","zone_effet":"4\" x 4\"","composantes":"V, S","temps_incantation":"4 segments","jet_sauvegarde":"annule","description":"Le sort provoque chez les créatures de la zone l’émotion choisie par l’illusionniste : peur, haine, espoir, désespoir ou rage, avec les effets et restrictions définis par le Manuel.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[{"id":"peur","nom":"Peur"},{"id":"haine","nom":"Haine"},{"id":"espoir","nom":"Espoir"},{"id":"desespoir","nom":"Désespoir"},{"id":"rage","nom":"Rage"}],"reversible":false},
+    {"ordre":5,"nom":"Invisibilité améliorée","ecole":"Illusion/Fantasme","niveau":4,"portee":"au toucher","duree":"4 rounds + 1 round/niveau","zone_effet":"une créature","composantes":"V, S","temps_incantation":"4 segments","jet_sauvegarde":"aucun","description":"Le sort rend la créature invisible de façon plus difficile à détecter que les autres invisibilités : les catégories de détection sont abaissées de deux niveaux. L’effet peut persister malgré certaines actions selon les règles du Manuel.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":6,"nom":"Monstres des ombres","ecole":"Illusion/Fantasme","niveau":4,"portee":"3\"","duree":"1 round/niveau","zone_effet":"2\" x 2\"","composantes":"V, S","temps_incantation":"4 segments","jet_sauvegarde":"spécial","description":"L’illusionniste crée des monstres issus des ombres. Ils possèdent une réalité partielle qui dépend du jet de protection des adversaires, conformément aux valeurs du Manuel.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":7,"nom":"Phytomorphose","ecole":"Illusion/Fantasme","niveau":4,"portee":"1\"/niveau","duree":"spéciale","zone_effet":"1\" x 1\"/niveau","composantes":"V, S","temps_incantation":"4 segments","jet_sauvegarde":"aucun","description":"Le sort produit l’effet de phytomorphose décrit dans le Manuel : une illusion végétale qui modifie l’apparence de la zone sans modifier matériellement le terrain.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":8,"nom":"Tueur fantasmagorique","ecole":"Illusion/Fantasme","niveau":4,"portee":"1/2\"/niveau","duree":"1 round/niveau","zone_effet":"une créature","composantes":"V, S","temps_incantation":"4 segments","jet_sauvegarde":"spécial","description":"La victime voit la forme la plus terrifiante que son esprit puisse concevoir. Elle doit résister au sort et aux effets de terreur ; une cible inconsciente ne peut plus être blessée par ce sort.","composants_materiels_objets":[],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false}
   ]
 }
