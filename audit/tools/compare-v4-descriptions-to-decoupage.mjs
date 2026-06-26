@@ -1,92 +1,64 @@
-import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 // ADD2E — Compare les descriptions V4 aux descriptions_reelle du découpage.
 // Lecture seule : ne modifie jamais V4, les fichiers de découpage ou les références.
-// La liaison est strictement résolue par identité métier unique : liste/classe + niveau + nom.
+// Liaison stricte par classe + niveau + nom normalisé, sans rapprochement par description.
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const DEFAULT_V4 = "fvtt-spells-all-normalise-mecanique-v4.json";
-const DEFAULT_DECOUPAGE_DIR = "audit/decoupage_fichier";
+const DEFAULT_DECOUPAGE = "audit/decoupage_fichier";
 const DEFAULT_REPORT = "audit/rapports/COMPARAISON-DESCRIPTIONS-V4-DECOUPAGE.json";
-const VERSION = "2026-06-26-compare-v4-descriptions-decoupage-v2";
+const VERSION = "2026-06-26-compare-v4-descriptions-decoupage-v3";
+const PLACEHOLDERS = new Set(["a_completer", "a_remplir", "a_renseigner", "todo", "tbd", "inconnu", "non_renseigne", "non_disponible"]);
 
-function parseArguments(argv) {
-  const options = {
-    v4: DEFAULT_V4,
-    decoupage: DEFAULT_DECOUPAGE_DIR,
-    report: DEFAULT_REPORT,
-    write: true
-  };
-
+function optionsFrom(argv) {
+  const options = { v4: DEFAULT_V4, decoupage: DEFAULT_DECOUPAGE, report: DEFAULT_REPORT, write: true };
   for (let index = 0; index < argv.length; index += 1) {
-    const argument = argv[index];
+    const arg = argv[index];
     const value = argv[index + 1];
-    if (argument === "--v4" && value) { options.v4 = value; index += 1; }
-    else if (argument === "--decoupage" && value) { options.decoupage = value; index += 1; }
-    else if (argument === "--report" && value) { options.report = value; index += 1; }
-    else if (argument === "--dry-run") options.write = false;
-    else if (argument === "--help") {
-      console.log([
-        "Usage : node audit/tools/compare-v4-descriptions-to-decoupage.mjs",
-        "       [--v4 <fichier-v4>] [--decoupage <repertoire>] [--report <rapport-json>] [--dry-run]"
-      ].join("\n"));
-      process.exit(0);
-    }
+    if (arg === "--v4" && value) { options.v4 = value; index += 1; }
+    else if (arg === "--decoupage" && value) { options.decoupage = value; index += 1; }
+    else if (arg === "--report" && value) { options.report = value; index += 1; }
+    else if (arg === "--dry-run") options.write = false;
   }
-
   return options;
 }
 
-function readJson(file) {
-  return JSON.parse(fs.readFileSync(file, "utf8"));
-}
-
-function writeJson(file, value) {
+function readJson(file) { return JSON.parse(fs.readFileSync(file, "utf8")); }
+function writeJson(file, data) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`, "utf8");
+  fs.writeFileSync(file, `${JSON.stringify(data, null, 2)}\n`, "utf8");
 }
 
-function sha256(value) {
-  return crypto.createHash("sha256").update(JSON.stringify(value)).digest("hex");
-}
-
-function listJsonFiles(directory) {
-  const output = [];
+function jsonFiles(directory) {
+  const files = [];
   const visit = current => {
     for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
       const full = path.join(current, entry.name);
       if (entry.isDirectory()) visit(full);
-      else if (entry.isFile() && entry.name.toLowerCase().endsWith(".json")) output.push(full);
+      else if (entry.isFile() && entry.name.toLowerCase().endsWith(".json")) files.push(full);
     }
   };
   visit(directory);
-  return output.sort((left, right) => left.localeCompare(right, "fr", { sensitivity: "base" }));
+  return files.sort((left, right) => left.localeCompare(right, "fr", { sensitivity: "base" }));
 }
 
-function getItemsContainer(document) {
-  if (Array.isArray(document)) return { key: null, items: document };
+function collection(document) {
+  if (Array.isArray(document)) return document;
   for (const key of ["items", "Item", "Items", "documents", "data", "entries"]) {
-    if (Array.isArray(document?.[key])) return { key, items: document[key] };
+    if (Array.isArray(document?.[key])) return document[key];
   }
-  return { key: null, items: null };
+  return null;
 }
 
-function isSpell(item) {
-  return String(item?.type ?? item?.system?.type ?? "").toLowerCase() === "sort";
-}
+function isSpell(item) { return String(item?.type ?? item?.system?.type ?? "").toLowerCase() === "sort"; }
 
-function itemId(item) {
-  const id = item?._id ?? item?.id ?? null;
-  return id === null || id === undefined || String(id).trim() === "" ? null : String(id);
-}
-
-function decodeEntities(value) {
+function decode(value) {
   return String(value ?? "")
-    .replace(/&#x([0-9a-f]+);/gi, (_match, hex) => String.fromCodePoint(Number.parseInt(hex, 16)))
-    .replace(/&#([0-9]+);/g, (_match, decimal) => String.fromCodePoint(Number.parseInt(decimal, 10)))
+    .replace(/&#x([0-9a-f]+);/gi, (_m, hex) => String.fromCodePoint(Number.parseInt(hex, 16)))
+    .replace(/&#([0-9]+);/g, (_m, decimal) => String.fromCodePoint(Number.parseInt(decimal, 10)))
     .replace(/&nbsp;/gi, " ")
     .replace(/&amp;/gi, "&")
     .replace(/&quot;/gi, "\"")
@@ -95,8 +67,24 @@ function decodeEntities(value) {
     .replace(/&gt;/gi, ">");
 }
 
-function normalizeDescription(value) {
-  return decodeEntities(value)
+function nameKey(value) {
+  return decode(value)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .trim()
+    .toLocaleLowerCase("fr")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function levelKey(value) {
+  const parsed = Number(String(value ?? "").match(/\d+/)?.[0] ?? 0);
+  return Number.isFinite(parsed) && parsed > 0 ? String(Math.floor(parsed)) : "niveau_inconnu";
+}
+
+function descriptionBase(value) {
+  return decode(value)
     .replace(/<\s*br\s*\/?>/gi, "\n")
     .replace(/<\s*\/\s*p\s*>/gi, "\n")
     .replace(/<[^>]*>/g, " ")
@@ -110,37 +98,20 @@ function normalizeDescription(value) {
     .toLocaleLowerCase("fr");
 }
 
-function normalizeName(value) {
-  return decodeEntities(value)
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[’']/g, "")
+function descriptionFormatting(value) {
+  return descriptionBase(value)
+    .replace(/\s+([,;:!?])/g, "$1")
+    .replace(/([«])\s+/g, "$1")
+    .replace(/\s+([»])/g, "$1")
     .replace(/\s+/g, " ")
-    .trim()
-    .toLocaleLowerCase("fr")
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "");
+    .trim();
 }
 
-function asArray(value) {
-  if (value === undefined || value === null || value === "") return [];
-  if (Array.isArray(value)) return value.flatMap(asArray);
-  if (typeof value === "string") return value.split(/[,;|/]+/).map(part => part.trim()).filter(Boolean);
-  return [value];
-}
-
-function normalizeLists(value) {
-  return [...new Set(asArray(value).map(normalizeName).filter(Boolean))].sort();
-}
-
-function normalizeLevel(value) {
-  const numeric = Number(String(value ?? "").match(/\d+/)?.[0] ?? 0);
-  return Number.isFinite(numeric) && numeric > 0 ? String(Math.floor(numeric)) : "niveau_inconnu";
-}
-
-function compactText(value, maximum = 180) {
-  const text = String(value ?? "").replace(/\s+/g, " ").trim();
-  return text.length <= maximum ? text : `${text.slice(0, maximum - 1)}…`;
+function descriptionContent(value) {
+  return descriptionFormatting(value)
+    .replace(/[.,;:!?()[\]{}"«»…/]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function firstDifference(left, right) {
@@ -148,194 +119,123 @@ function firstDifference(left, right) {
   let index = 0;
   while (index < max && left[index] === right[index]) index += 1;
   if (index === left.length && index === right.length) return null;
-  const before = Math.max(0, index - 80);
+  const from = Math.max(0, index - 80);
   return {
     index,
-    v4Context: left.slice(before, Math.min(left.length, index + 120)),
-    referenceContext: right.slice(before, Math.min(right.length, index + 120))
+    v4Context: left.slice(from, Math.min(left.length, index + 120)),
+    referenceContext: right.slice(from, Math.min(right.length, index + 120))
   };
 }
 
-function rowFromItem(item, sourceFile = null) {
+function isPlaceholder(value) {
+  const normalized = nameKey(value);
+  return !normalized || PLACEHOLDERS.has(normalized);
+}
+
+function identity(item) {
   const system = item?.system ?? {};
-  const name = String(item?.name ?? system?.nom ?? "").trim();
-  const systemNom = String(system?.nom ?? "").trim();
-  const spellLists = normalizeLists(system?.spellLists);
-  const className = normalizeName(system?.classe);
-  const level = normalizeLevel(system?.niveau);
-  const normalizedName = normalizeName(name || systemNom);
-  const keys = {
-    spellLists: spellLists.length && normalizedName
-      ? `lists:${spellLists.join("+")}|niveau:${level}|nom:${normalizedName}`
-      : null,
-    classe: className && normalizedName
-      ? `classe:${className}|niveau:${level}|nom:${normalizedName}`
-      : null
-  };
+  const name = String(item?.name ?? system.nom ?? "").trim();
+  const className = nameKey(system.classe);
+  const level = levelKey(system.niveau);
+  const normalizedName = nameKey(name || system.nom);
+  return className && level !== "niveau_inconnu" && normalizedName
+    ? `classe:${className}|niveau:${level}|nom:${normalizedName}`
+    : null;
+}
 
+function row(item, sourceFile = null) {
+  const system = item?.system ?? {};
+  const name = String(item?.name ?? system.nom ?? "").trim();
   return {
-    id: itemId(item),
-    name,
-    systemNom,
-    className,
-    spellLists,
-    level,
-    normalizedName,
-    keys,
-    description: String(system?.description ?? ""),
-    descriptionReelle: String(system?.description_reelle ?? ""),
-    sourceFile
+    id: String(item?._id ?? item?.id ?? "") || null,
+    nom: name || String(system.nom ?? "").trim(),
+    classe: String(system.classe ?? "").trim(),
+    niveau: levelKey(system.niveau),
+    key: identity(item),
+    description: String(system.description ?? ""),
+    descriptionReelle: String(system.description_reelle ?? ""),
+    fichier: sourceFile
   };
 }
 
-function indexRows(rows, keyName) {
+function add(index, key, value) {
+  if (!key) return;
+  const values = index.get(key) ?? [];
+  values.push(value);
+  index.set(key, values);
+}
+
+function scanV4(document) {
+  const items = collection(document);
+  if (!items) throw new Error("Aucune collection d'items trouvée dans V4.");
+  const rows = items.filter(isSpell).map(item => row(item));
   const index = new Map();
-  for (const row of rows) {
-    const key = row?.keys?.[keyName];
-    if (!key) continue;
-    const candidates = index.get(key) ?? [];
-    candidates.push(row);
-    index.set(key, candidates);
-  }
-  return index;
+  for (const item of rows) add(index, item.key, item);
+  return { rows, index, sourceItems: items.length };
 }
 
 function scanDecoupage(directory) {
   const rows = [];
-  const details = {
-    files: [],
-    parseErrors: [],
-    filesWithoutItems: [],
-    sortRows: 0,
-    sortsWithoutIdentity: []
-  };
-
-  for (const file of listJsonFiles(directory)) {
-    const relative = path.relative(ROOT, file);
+  const parseErrors = [];
+  const filesWithoutItems = [];
+  for (const file of jsonFiles(directory)) {
     let document;
-    try {
-      document = readJson(file);
-    } catch (error) {
-      details.parseErrors.push({ file: relative, error: String(error?.message ?? error) });
+    try { document = readJson(file); }
+    catch (error) {
+      parseErrors.push({ file: path.relative(ROOT, file), error: String(error?.message ?? error) });
       continue;
     }
-
-    const { key, items } = getItemsContainer(document);
+    const items = collection(document);
     if (!items) {
-      details.filesWithoutItems.push({ file: relative });
+      filesWithoutItems.push(path.relative(ROOT, file));
       continue;
     }
-
-    let fileSorts = 0;
-    for (const item of items) {
-      if (!isSpell(item)) continue;
-      fileSorts += 1;
-      details.sortRows += 1;
-      const row = rowFromItem(item, relative);
-      if (!row.normalizedName || row.level === "niveau_inconnu" || (!row.keys.spellLists && !row.keys.classe)) {
-        details.sortsWithoutIdentity.push({ file: relative, id: row.id, nom: row.name || row.systemNom });
-      }
-      rows.push(row);
-    }
-    details.files.push({ file: relative, itemsContainer: key ?? "array", sorts: fileSorts });
+    for (const item of items) if (isSpell(item)) rows.push(row(item, path.relative(ROOT, file)));
   }
+  const index = new Map();
+  for (const item of rows) add(index, item.key, item);
+  return { rows, index, parseErrors, filesWithoutItems };
+}
 
+function compact(value, max = 180) {
+  const text = String(value ?? "").replace(/\s+/g, " ").trim();
+  return text.length <= max ? text : `${text.slice(0, max - 1)}…`;
+}
+
+function pair(current, reference) {
   return {
-    rows,
-    indexes: {
-      spellLists: indexRows(rows, "spellLists"),
-      classe: indexRows(rows, "classe")
+    id: current.id,
+    nom: current.nom,
+    cle: current.key,
+    v4: {
+      id: current.id,
+      nom: current.nom,
+      classe: current.classe,
+      niveau: current.niveau,
+      description: current.description
     },
-    details
-  };
-}
-
-function scanV4(document) {
-  const { key, items } = getItemsContainer(document);
-  if (!items) throw new Error("Aucune collection d'items trouvée dans V4.");
-
-  const rows = [];
-  const details = {
-    itemsContainer: key ?? "array",
-    sourceItems: items.length,
-    sortRows: 0,
-    sortsWithoutIdentity: []
-  };
-
-  for (const item of items) {
-    if (!isSpell(item)) continue;
-    details.sortRows += 1;
-    const row = rowFromItem(item, null);
-    if (!row.normalizedName || row.level === "niveau_inconnu" || (!row.keys.spellLists && !row.keys.classe)) {
-      details.sortsWithoutIdentity.push({ id: row.id, nom: row.name || row.systemNom });
+    decoupage: {
+      id: reference.id,
+      nom: reference.nom,
+      classe: reference.classe,
+      niveau: reference.niveau,
+      fichier: reference.fichier,
+      descriptionReelle: reference.descriptionReelle
     }
-    rows.push(row);
-  }
-
-  return {
-    rows,
-    indexes: {
-      spellLists: indexRows(rows, "spellLists"),
-      classe: indexRows(rows, "classe")
-    },
-    details
   };
 }
 
-function rowSummary(row) {
-  return {
-    id: row.id,
-    nom: row.name || row.systemNom,
-    nomSysteme: row.systemNom,
-    classe: row.className || null,
-    listes: row.spellLists,
-    niveau: row.level,
-    fichier: row.sourceFile
-  };
-}
-
-function rowReferenceKey(row) {
-  return `${row.sourceFile ?? "v4"}|${row.id ?? "sans-id"}|${row.keys.spellLists ?? row.keys.classe ?? row.normalizedName}`;
-}
-
-function findResolution(row, v4Indexes, referenceIndexes) {
-  const possible = [];
-  const conflicts = [];
-  for (const method of ["spellLists", "classe"]) {
-    const key = row.keys?.[method];
-    if (!key) continue;
-    const sourceRows = v4Indexes[method].get(key) ?? [];
-    const referenceRows = referenceIndexes[method].get(key) ?? [];
-    if (sourceRows.length === 1 && referenceRows.length === 1) {
-      possible.push({ method, key, reference: referenceRows[0] });
-    } else if (sourceRows.length > 1 || referenceRows.length > 1) {
-      conflicts.push({
-        method,
-        key,
-        v4Candidates: sourceRows.map(rowSummary),
-        decoupageCandidates: referenceRows.map(rowSummary)
-      });
-    }
-  }
-
-  const uniqueReferences = new Map(possible.map(entry => [rowReferenceKey(entry.reference), entry]));
-  if (uniqueReferences.size === 1) {
-    const entries = [...uniqueReferences.values()];
-    const preferred = entries.find(entry => entry.method === "spellLists") ?? entries[0];
-    return { status: "matched", ...preferred, supportingMethods: entries.map(entry => entry.method), conflicts };
-  }
-  if (uniqueReferences.size > 1 || conflicts.length) {
-    return { status: "ambiguous", possibilities: possible, conflicts };
-  }
-  return { status: "unmatched" };
-}
-
-function metadataMismatch(v4, reference) {
-  const mismatches = [];
-  if (v4.name && reference.name && normalizeName(v4.name) !== normalizeName(reference.name)) mismatches.push("name");
-  if (v4.systemNom && reference.systemNom && normalizeName(v4.systemNom) !== normalizeName(reference.systemNom)) mismatches.push("system.nom");
-  if (v4.level !== reference.level) mismatches.push("niveau");
-  return mismatches;
+function compare(current, reference) {
+  const currentFormat = descriptionFormatting(current.description);
+  const referenceFormat = descriptionFormatting(reference.descriptionReelle);
+  if (!currentFormat) return { kind: "v4_missing" };
+  if (isPlaceholder(reference.descriptionReelle)) return { kind: "reference_placeholder_or_empty", value: nameKey(reference.descriptionReelle) || "empty" };
+  if (current.description === reference.descriptionReelle) return { kind: "identical_raw" };
+  if (currentFormat === referenceFormat) return { kind: "formatting_only", detail: "whitespace_or_typography" };
+  const currentContent = descriptionContent(current.description);
+  const referenceContent = descriptionContent(reference.descriptionReelle);
+  if (currentContent === referenceContent) return { kind: "formatting_only", detail: "punctuation_only" };
+  return { kind: "content_different", currentContent, referenceContent };
 }
 
 function makeReport(v4Document, v4File, decoupageDirectory) {
@@ -345,187 +245,123 @@ function makeReport(v4Document, v4File, decoupageDirectory) {
     version: VERSION,
     source: {
       v4File,
-      v4Sha256: sha256(v4Document),
       decoupageDirectory: path.relative(ROOT, decoupageDirectory)
     },
     generatedAt: new Date().toISOString(),
     method: {
-      matching: "unique_canonical_identity",
-      canonicalIdentity: "spellLists ou classe + niveau + nom normalise",
+      matching: "unique_class_level_normalized_name",
       v4Field: "system.description",
       referenceField: "system.description_reelle",
-      comparison: "normalisation de la mise en forme HTML, entités, espaces, apostrophes et tirets ; aucun rapprochement par description"
-    },
-    scope: {
-      v4: v4.details,
-      decoupage: decoupage.details
+      classification: "identique brut, formatage seul, référence incomplète, différence de contenu"
     },
     summary: {
+      v4Spells: v4.rows.length,
+      decoupageSpells: decoupage.rows.length,
       matchedCanonical: 0,
-      matchedBySpellLists: 0,
-      matchedByClasse: 0,
       descriptionsIdentical: 0,
+      descriptionsIdenticalRaw: 0,
+      descriptionsFormattingOnly: 0,
+      descriptionsContentDifferent: 0,
       descriptionsDifferent: 0,
       descriptionsRawDifferentButNormalizedEqual: 0,
       v4DescriptionMissing: 0,
-      referenceDescriptionReelleMissing: 0,
+      referencePlaceholderOrEmpty: 0,
       v4OnlyCanonical: 0,
       decoupageOnlyCanonical: 0,
       ambiguousCanonicalMatches: 0,
-      metadataMismatchOnMatchedRows: 0
+      decoupageParseErrors: decoupage.parseErrors.length
     },
     candidates: {
+      descriptionsFormattingOnly: [],
+      descriptionsContentDifferent: [],
       descriptionsDifferent: [],
       v4DescriptionMissing: [],
-      referenceDescriptionReelleMissing: [],
+      referencePlaceholderOrEmpty: [],
       v4OnlyCanonical: [],
       decoupageOnlyCanonical: [],
-      ambiguousCanonicalMatches: [],
-      metadataMismatchOnMatchedRows: []
+      ambiguousCanonicalMatches: []
     },
     matched: []
   };
 
-  const proposals = [];
-  for (const row of v4.rows) {
-    const resolution = findResolution(row, v4.indexes, decoupage.indexes);
-    if (resolution.status === "matched") {
-      proposals.push({ v4: row, reference: resolution.reference, method: resolution.method, key: resolution.key, supportingMethods: resolution.supportingMethods });
+  const usedReferences = new Set();
+  for (const current of v4.rows) {
+    if (!current.key) {
+      report.summary.v4OnlyCanonical += 1;
+      report.candidates.v4OnlyCanonical.push({ id: current.id, nom: current.nom, reason: "identite_incomplete" });
       continue;
     }
-    if (resolution.status === "ambiguous") {
+    const references = decoupage.index.get(current.key) ?? [];
+    const v4Candidates = v4.index.get(current.key) ?? [];
+    if (references.length !== 1 || v4Candidates.length !== 1) {
       report.summary.ambiguousCanonicalMatches += 1;
       report.candidates.ambiguousCanonicalMatches.push({
-        v4: rowSummary(row),
-        possibilities: resolution.possibilities.map(entry => ({ method: entry.method, key: entry.key, decoupage: rowSummary(entry.reference) })),
-        conflicts: resolution.conflicts
+        cle: current.key,
+        v4: v4Candidates.map(value => ({ id: value.id, nom: value.nom })),
+        decoupage: references.map(value => ({ id: value.id, nom: value.nom, fichier: value.fichier }))
       });
       continue;
     }
-    report.summary.v4OnlyCanonical += 1;
-    report.candidates.v4OnlyCanonical.push(rowSummary(row));
-  }
 
-  const proposalsByReference = new Map();
-  for (const proposal of proposals) {
-    const key = rowReferenceKey(proposal.reference);
-    const rows = proposalsByReference.get(key) ?? [];
-    rows.push(proposal);
-    proposalsByReference.set(key, rows);
-  }
-
-  const accepted = [];
-  for (const proposalsForReference of proposalsByReference.values()) {
-    if (proposalsForReference.length === 1) {
-      accepted.push(proposalsForReference[0]);
-      continue;
-    }
-    report.summary.ambiguousCanonicalMatches += proposalsForReference.length;
-    report.candidates.ambiguousCanonicalMatches.push({
-      v4: proposalsForReference.map(proposal => rowSummary(proposal.v4)),
-      decoupage: rowSummary(proposalsForReference[0].reference),
-      reason: "plusieurs sorts V4 correspondent à la même référence du découpage"
-    });
-  }
-
-  const usedReferences = new Set();
-  for (const proposal of accepted) {
-    const current = proposal.v4;
-    const reference = proposal.reference;
-    usedReferences.add(rowReferenceKey(reference));
+    const reference = references[0];
+    usedReferences.add(`${reference.fichier}|${reference.id}|${reference.key}`);
     report.summary.matchedCanonical += 1;
-    if (proposal.method === "spellLists") report.summary.matchedBySpellLists += 1;
-    else report.summary.matchedByClasse += 1;
+    const result = compare(current, reference);
+    const data = pair(current, reference);
 
-    const currentRaw = current.description;
-    const referenceRaw = reference.descriptionReelle;
-    const currentNormalized = normalizeDescription(currentRaw);
-    const referenceNormalized = normalizeDescription(referenceRaw);
-    const mismatch = metadataMismatch(current, reference);
-    if (mismatch.length) {
-      report.summary.metadataMismatchOnMatchedRows += 1;
-      report.candidates.metadataMismatchOnMatchedRows.push({
-        matchMethod: proposal.method,
-        key: proposal.key,
-        v4: rowSummary(current),
-        decoupage: rowSummary(reference),
-        mismatches: mismatch
-      });
-    }
-
-    if (!currentNormalized) {
-      report.summary.v4DescriptionMissing += 1;
-      report.candidates.v4DescriptionMissing.push({ id: current.id, nom: current.name || current.systemNom, decoupageFile: reference.sourceFile, referencePreview: compactText(referenceRaw), matchMethod: proposal.method });
-      continue;
-    }
-    if (!referenceNormalized) {
-      report.summary.referenceDescriptionReelleMissing += 1;
-      report.candidates.referenceDescriptionReelleMissing.push({ id: current.id, nom: current.name || current.systemNom, decoupageFile: reference.sourceFile, v4Preview: compactText(currentRaw), matchMethod: proposal.method });
-      continue;
-    }
-
-    const normalizedEqual = currentNormalized === referenceNormalized;
-    const rawEqual = currentRaw === referenceRaw;
-    if (normalizedEqual) {
+    if (result.kind === "identical_raw") {
       report.summary.descriptionsIdentical += 1;
-      if (!rawEqual) report.summary.descriptionsRawDifferentButNormalizedEqual += 1;
-      report.matched.push({ id: current.id, nom: current.name || current.systemNom, status: rawEqual ? "identical_raw" : "identical_normalized", matchMethod: proposal.method, decoupageFile: reference.sourceFile });
-      continue;
+      report.summary.descriptionsIdenticalRaw += 1;
+      report.matched.push({ id: current.id, nom: current.nom, status: "identical_raw", fichier: reference.fichier });
+    } else if (result.kind === "formatting_only") {
+      report.summary.descriptionsIdentical += 1;
+      report.summary.descriptionsFormattingOnly += 1;
+      report.summary.descriptionsRawDifferentButNormalizedEqual += 1;
+      report.candidates.descriptionsFormattingOnly.push({ ...data, detail: result.detail, firstDifference: firstDifference(current.description, reference.descriptionReelle) });
+      report.matched.push({ id: current.id, nom: current.nom, status: "formatting_only", detail: result.detail, fichier: reference.fichier });
+    } else if (result.kind === "v4_missing") {
+      report.summary.v4DescriptionMissing += 1;
+      report.candidates.v4DescriptionMissing.push({ ...data, referencePreview: compact(reference.descriptionReelle) });
+    } else if (result.kind === "reference_placeholder_or_empty") {
+      report.summary.referencePlaceholderOrEmpty += 1;
+      report.candidates.referencePlaceholderOrEmpty.push({ ...data, placeholder: result.value, v4Preview: compact(current.description) });
+    } else {
+      report.summary.descriptionsContentDifferent += 1;
+      report.summary.descriptionsDifferent += 1;
+      const difference = { ...data, firstDifference: firstDifference(result.currentContent, result.referenceContent) };
+      report.candidates.descriptionsContentDifferent.push(difference);
+      report.candidates.descriptionsDifferent.push(difference);
     }
-
-    report.summary.descriptionsDifferent += 1;
-    report.candidates.descriptionsDifferent.push({
-      id: current.id,
-      nom: current.name || current.systemNom,
-      matchMethod: proposal.method,
-      canonicalKey: proposal.key,
-      v4: {
-        id: current.id,
-        name: current.name,
-        systemNom: current.systemNom,
-        level: current.level,
-        description: currentRaw
-      },
-      decoupage: {
-        id: reference.id,
-        name: reference.name,
-        systemNom: reference.systemNom,
-        level: reference.level,
-        file: reference.sourceFile,
-        descriptionReelle: referenceRaw
-      },
-      firstDifference: firstDifference(currentNormalized, referenceNormalized)
-    });
   }
 
   for (const reference of decoupage.rows) {
-    const key = rowReferenceKey(reference);
+    const key = `${reference.fichier}|${reference.id}|${reference.key}`;
     if (usedReferences.has(key)) continue;
     report.summary.decoupageOnlyCanonical += 1;
-    report.candidates.decoupageOnlyCanonical.push(rowSummary(reference));
+    report.candidates.decoupageOnlyCanonical.push({ id: reference.id, nom: reference.nom, cle: reference.key, fichier: reference.fichier });
   }
 
-  report.notice = "Ce rapport compare V4 à description_reelle du découpage. Les écarts signalent des candidats à vérifier dans le Manuel des joueurs ; aucune donnée n'est modifiée automatiquement.";
+  report.scope = {
+    decoupageParseErrors: decoupage.parseErrors,
+    decoupageFilesWithoutItems: decoupage.filesWithoutItems
+  };
+  report.notice = "Les différences de contenu sont des candidats à vérifier dans le Manuel des joueurs. Aucun sort n'est modifié par cet outil.";
   return report;
 }
 
 function main() {
-  const options = parseArguments(process.argv.slice(2));
+  const options = optionsFrom(process.argv.slice(2));
   const v4Path = path.resolve(ROOT, options.v4);
   const decoupagePath = path.resolve(ROOT, options.decoupage);
   const reportPath = path.resolve(ROOT, options.report);
-
-  const v4Document = readJson(v4Path);
-  const report = makeReport(v4Document, path.relative(ROOT, v4Path), decoupagePath);
+  const report = makeReport(readJson(v4Path), path.relative(ROOT, v4Path), decoupagePath);
   if (options.write) writeJson(reportPath, report);
-
   console.log("[ADD2E][COMPARE_V4_DESCRIPTIONS]", {
     version: VERSION,
     v4: path.relative(ROOT, v4Path),
     decoupage: path.relative(ROOT, decoupagePath),
     report: options.write ? path.relative(ROOT, reportPath) : "dry-run",
-    summary: report.summary,
-    decoupageParseErrors: report.scope.decoupage.parseErrors.length
+    summary: report.summary
   });
 }
 
