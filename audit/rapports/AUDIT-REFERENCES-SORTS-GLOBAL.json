@@ -1,6 +1,6 @@
 {
   "version": "2026-06-26-reference-global-audit-v1",
-  "generatedAt": "2026-06-26T15:07:18.920Z",
+  "generatedAt": "2026-06-26T16:41:17.535Z",
   "scope": {
     "referenceDirectory": "audit\\reference",
     "sourceOfTruth": "Manuel des joueurs AD&D 2e",
@@ -19,8 +19,8 @@
     "missingReferenceFields": 2198,
     "placeholderFields": 64,
     "technicalDifferences": 226,
-    "missingDescriptions": 340,
-    "descriptionDifferences": 22,
+    "missingDescriptions": 338,
+    "descriptionDifferences": 23,
     "identityDifferences": 15,
     "structuralErrors": 2848
   },
@@ -2079,10 +2079,7 @@
         "Identités différentes : référence sans découpage 0, découpage sans référence 2.",
         "Nombre différent : référence 10, découpage 12."
       ],
-      "warnings": [
-        "Langue: description vide ou a importer",
-        "Protection contre le mal sur 3 m: description vide ou a importer"
-      ],
+      "warnings": [],
       "summary": {
         "referenceSpells": 10,
         "decoupageSpells": 12,
@@ -2090,8 +2087,8 @@
         "missingReferenceFields": 0,
         "placeholderFields": 0,
         "technicalDifferences": 21,
-        "missingDescriptions": 2,
-        "descriptionDifferences": 3,
+        "missingDescriptions": 0,
+        "descriptionDifferences": 5,
         "identityDifferences": 2
       },
       "spells": [
@@ -2479,9 +2476,7 @@
           "key": "clerc|4|langue",
           "schema": {
             "errors": [],
-            "warnings": [
-              "description vide ou a importer"
-            ]
+            "warnings": []
           },
           "integrity": {
             "missing": []
@@ -2493,39 +2488,39 @@
               "comparison": "missing_decoupage_value"
             },
             "portee": {
-              "value": "a_verifier_manuellement",
+              "value": "0",
               "source": "a_completer",
               "comparison": "missing_decoupage_value"
             },
             "duree": {
-              "value": "a_verifier_manuellement",
+              "value": "1 tour",
               "source": "a_completer",
               "comparison": "missing_decoupage_value"
             },
             "zone_effet": {
-              "value": "a_verifier_manuellement",
+              "value": "cercle de 6\" de diamètre",
               "source": "a_completer",
               "comparison": "missing_decoupage_value"
             },
             "composantes": {
-              "value": "a_verifier_manuellement",
+              "value": "V, S",
               "source": "a_completer",
               "comparison": "missing_decoupage_value"
             },
             "temps_incantation": {
-              "value": "a_verifier_manuellement",
+              "value": "7 segments",
               "source": "a_completer",
               "comparison": "missing_decoupage_value"
             },
             "jet_sauvegarde": {
-              "value": "a_verifier_manuellement",
+              "value": "aucun",
               "source": "a_completer",
               "comparison": "missing_decoupage_value"
             }
           },
           "description": {
-            "present": false,
-            "comparison": "missing_reference_description"
+            "present": true,
+            "comparison": "different"
           },
           "sourceFound": true
         },
@@ -2535,9 +2530,7 @@
           "key": "clerc|4|protection_contre_le_mal_sur_3_m",
           "schema": {
             "errors": [],
-            "warnings": [
-              "description vide ou a importer"
-            ]
+            "warnings": []
           },
           "integrity": {
             "missing": []
@@ -2549,39 +2542,39 @@
               "comparison": "missing_decoupage_value"
             },
             "portee": {
-              "value": "a_verifier_manuellement",
+              "value": "au toucher",
               "source": "a_completer",
               "comparison": "missing_decoupage_value"
             },
             "duree": {
-              "value": "a_verifier_manuellement",
+              "value": "1 tour/niveau",
               "source": "a_completer",
               "comparison": "missing_decoupage_value"
             },
             "zone_effet": {
-              "value": "a_verifier_manuellement",
+              "value": "sphère de 6 mètres de diamètre",
               "source": "a_completer",
               "comparison": "missing_decoupage_value"
             },
             "composantes": {
-              "value": "a_verifier_manuellement",
+              "value": "V, S, M",
               "source": "a_completer",
               "comparison": "missing_decoupage_value"
             },
             "temps_incantation": {
-              "value": "a_verifier_manuellement",
+              "value": "7 segments",
               "source": "a_completer",
               "comparison": "missing_decoupage_value"
             },
             "jet_sauvegarde": {
-              "value": "a_verifier_manuellement",
+              "value": "aucun",
               "source": "a_completer",
               "comparison": "missing_decoupage_value"
             }
           },
           "description": {
-            "present": false,
-            "comparison": "missing_reference_description"
+            "present": true,
+            "comparison": "different"
           },
           "sourceFound": true
         },
@@ -2668,7 +2661,7 @@
         "placeholderFields": 0,
         "technicalDifferences": 34,
         "missingDescriptions": 0,
-        "descriptionDifferences": 4,
+        "descriptionDifferences": 3,
         "identityDifferences": 1
       },
       "spells": [
@@ -2992,7 +2985,7 @@
           },
           "description": {
             "present": true,
-            "comparison": "different"
+            "comparison": "equal_formatting_only"
           },
           "sourceFound": true
         },

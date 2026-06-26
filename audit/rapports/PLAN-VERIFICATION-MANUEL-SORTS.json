@@ -1,6 +1,6 @@
 {
-  "version": "2026-06-26-manual-spell-verification-plan-v4",
-  "generatedAt": "2026-06-26T16:08:42.434Z",
+  "version": "2026-06-26-manual-spell-verification-plan-v5",
+  "generatedAt": "2026-06-26T16:41:51.696Z",
   "sourceOfTruth": "Manuel des joueurs AD&D 2e",
   "inputs": {
     "audit": "audit\\rapports\\AUDIT-REFERENCES-SORTS-GLOBAL.json",
@@ -10,6 +10,7 @@
     "Le fichier maître sert uniquement à vérifier les listes, l'ordre et le nombre issus des tables du Manuel.",
     "P0 signifie exclusivement qu'une référence de sorts classe/niveau diffère du fichier maître issu du Manuel ou que cette référence est indisponible.",
     "Les documents transversaux hors tables de sorts sont exclus du plan et listés séparément ; ils ne peuvent jamais créer un P0.",
+    "Le tiret cadratin (—) et le tiret simple (-) sont des valeurs explicites du Manuel, et non des placeholders.",
     "Le découpage Foundry sert uniquement de comparaison ; une divergence Foundry ne peut jamais classer une référence en P0 ni compléter ou corriger une référence.",
     "Chaque champ marqué transcription ou arbitrage doit être lu dans le Manuel avant toute écriture.",
     "Les références sont corrigées avant tout JSON normalisé."
@@ -24,12 +25,12 @@
         "spells": 0
       },
       "P1_TRANSCRIPTION_MANUEL": {
-        "references": 25,
-        "spells": 360
+        "references": 23,
+        "spells": 338
       },
       "P2_ARBITRAGE_MANUEL": {
-        "references": 5,
-        "spells": 54
+        "references": 7,
+        "spells": 76
       },
       "P3_CONFIRMATION_MANUEL": {
         "references": 0,
@@ -38,10 +39,10 @@
     },
     "foundryListReviews": 13,
     "unresolvedDecoupage": 0,
-    "technicalFieldsToTranscribe": 2262,
-    "descriptionsToTranscribe": 340,
+    "technicalFieldsToTranscribe": 2261,
+    "descriptionsToTranscribe": 338,
     "technicalFieldsToArbitrate": 226,
-    "descriptionsToArbitrate": 22
+    "descriptionsToArbitrate": 23
   },
   "excludedSupportDocuments": [
     {
@@ -63,382 +64,6 @@
   "priorities": {
     "P0_LISTE_MANUEL": [],
     "P1_TRANSCRIPTION_MANUEL": [
-      {
-        "priority": "P1_TRANSCRIPTION_MANUEL",
-        "file": "manuel-joueurs-clerc-niveau-2.json",
-        "referencePath": "audit\\reference\\manuel-joueurs-clerc-niveau-2.json",
-        "foundryExport": "audit/decoupage_fichier/clerc-niveau-2.json",
-        "decoupageResolution": {
-          "declared": "audit/decoupage_fichier/clerc-niveau-2.json",
-          "resolvedPath": "Z:\\systems\\add2e\\audit\\decoupage_fichier\\clerc-niveau-2.json",
-          "status": "declared_file",
-          "candidates": [
-            "audit\\decoupage_fichier\\clerc-niveau-2.json"
-          ]
-        },
-        "source": {
-          "classe": "Clerc",
-          "niveau": 2,
-          "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf"
-        },
-        "manualList": {
-          "available": true,
-          "key": "clerc-niveau-2",
-          "expectedCount": 12,
-          "names": [
-            "Augure",
-            "Cantique",
-            "Charme-serpents",
-            "Détection des charmes",
-            "Détection des pièges",
-            "Langage animal",
-            "Marteau spirituel",
-            "Paralysie",
-            "Perception des alignements",
-            "Résistance au feu",
-            "Retardement du poison",
-            "Silence sur 5 mètres"
-          ],
-          "referenceAvailable": true,
-          "decoupageAvailable": true,
-          "reference": {
-            "missing": [],
-            "extra": [],
-            "orderMatches": true
-          },
-          "decoupage": {
-            "missing": [],
-            "extra": [],
-            "orderMatches": true
-          }
-        },
-        "foundryListNeedsReview": false,
-        "auditStatus": "manual_review_required",
-        "auditErrors": [],
-        "taskCounts": {
-          "technicalFieldsToTranscribe": 1,
-          "descriptionsToTranscribe": 0,
-          "technicalFieldsToArbitrate": 34,
-          "descriptionsToArbitrate": 2
-        },
-        "spellTasks": [
-          {
-            "nom": "Augure",
-            "missing": [],
-            "placeholder": [
-              "zone_effet"
-            ],
-            "compareWithDecoupage": [
-              "temps_incantation"
-            ],
-            "missingDescription": false,
-            "descriptionDifferent": false
-          },
-          {
-            "nom": "Cantique",
-            "missing": [],
-            "placeholder": [],
-            "compareWithDecoupage": [
-              "zone_effet",
-              "temps_incantation"
-            ],
-            "missingDescription": false,
-            "descriptionDifferent": true
-          },
-          {
-            "nom": "Charme-serpents",
-            "missing": [],
-            "placeholder": [],
-            "compareWithDecoupage": [
-              "portee",
-              "zone_effet",
-              "temps_incantation"
-            ],
-            "missingDescription": false,
-            "descriptionDifferent": false
-          },
-          {
-            "nom": "Détection des charmes",
-            "missing": [],
-            "placeholder": [],
-            "compareWithDecoupage": [
-              "portee",
-              "duree",
-              "temps_incantation"
-            ],
-            "missingDescription": false,
-            "descriptionDifferent": false
-          },
-          {
-            "nom": "Détection des pièges",
-            "missing": [],
-            "placeholder": [],
-            "compareWithDecoupage": [
-              "portee",
-              "duree",
-              "zone_effet",
-              "temps_incantation"
-            ],
-            "missingDescription": false,
-            "descriptionDifferent": false
-          },
-          {
-            "nom": "Langage animal",
-            "missing": [],
-            "placeholder": [],
-            "compareWithDecoupage": [
-              "duree",
-              "zone_effet",
-              "temps_incantation"
-            ],
-            "missingDescription": false,
-            "descriptionDifferent": false
-          },
-          {
-            "nom": "Marteau spirituel",
-            "missing": [],
-            "placeholder": [],
-            "compareWithDecoupage": [
-              "portee",
-              "duree",
-              "temps_incantation"
-            ],
-            "missingDescription": false,
-            "descriptionDifferent": false
-          },
-          {
-            "nom": "Paralysie",
-            "missing": [],
-            "placeholder": [],
-            "compareWithDecoupage": [],
-            "missingDescription": false,
-            "descriptionDifferent": true
-          },
-          {
-            "nom": "Perception des alignements",
-            "missing": [],
-            "placeholder": [],
-            "compareWithDecoupage": [
-              "portee",
-              "duree",
-              "zone_effet",
-              "temps_incantation",
-              "jet_sauvegarde"
-            ],
-            "missingDescription": false,
-            "descriptionDifferent": false
-          },
-          {
-            "nom": "Résistance au feu",
-            "missing": [],
-            "placeholder": [],
-            "compareWithDecoupage": [
-              "portee",
-              "duree",
-              "temps_incantation"
-            ],
-            "missingDescription": false,
-            "descriptionDifferent": false
-          },
-          {
-            "nom": "Retardement du poison",
-            "missing": [],
-            "placeholder": [],
-            "compareWithDecoupage": [
-              "portee",
-              "duree",
-              "temps_incantation"
-            ],
-            "missingDescription": false,
-            "descriptionDifferent": false
-          },
-          {
-            "nom": "Silence sur 5 mètres",
-            "missing": [],
-            "placeholder": [],
-            "compareWithDecoupage": [
-              "portee",
-              "duree",
-              "zone_effet",
-              "temps_incantation"
-            ],
-            "missingDescription": false,
-            "descriptionDifferent": false
-          }
-        ]
-      },
-      {
-        "priority": "P1_TRANSCRIPTION_MANUEL",
-        "file": "manuel-joueurs-clerc-niveau-4.json",
-        "referencePath": "audit\\reference\\manuel-joueurs-clerc-niveau-4.json",
-        "foundryExport": "audit/decoupage_fichier/clerc-niveau-4.json",
-        "decoupageResolution": {
-          "declared": "audit/decoupage_fichier/clerc-niveau-4.json",
-          "resolvedPath": "Z:\\systems\\add2e\\audit\\decoupage_fichier\\clerc-niveau-4.json",
-          "status": "declared_file",
-          "candidates": [
-            "audit\\decoupage_fichier\\clerc-niveau-4.json"
-          ]
-        },
-        "source": {
-          "classe": "Clerc",
-          "niveau": 4,
-          "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf"
-        },
-        "manualList": {
-          "available": true,
-          "key": "clerc-niveau-4",
-          "expectedCount": 10,
-          "names": [
-            "Abaissement des eaux",
-            "Bâtons à serpents",
-            "Contre-poison",
-            "Détection des mensonges",
-            "Divination",
-            "Exorcisme",
-            "Langage des plantes",
-            "Langue",
-            "Protection contre le mal sur 3 m",
-            "Soins majeurs"
-          ],
-          "referenceAvailable": true,
-          "decoupageAvailable": true,
-          "reference": {
-            "missing": [],
-            "extra": [],
-            "orderMatches": true
-          },
-          "decoupage": {
-            "missing": [],
-            "extra": [
-              "Bâtons en Serpents",
-              "Protection contre le Mal (Rayon de 10 pieds)"
-            ],
-            "orderMatches": false
-          }
-        },
-        "foundryListNeedsReview": true,
-        "auditStatus": "blocked_structural",
-        "auditErrors": [
-          "Identités différentes : référence sans découpage 0, découpage sans référence 2.",
-          "Nombre différent : référence 10, découpage 12."
-        ],
-        "taskCounts": {
-          "technicalFieldsToTranscribe": 0,
-          "descriptionsToTranscribe": 2,
-          "technicalFieldsToArbitrate": 21,
-          "descriptionsToArbitrate": 3
-        },
-        "spellTasks": [
-          {
-            "nom": "Abaissement des eaux",
-            "missing": [],
-            "placeholder": [],
-            "compareWithDecoupage": [
-              "portee",
-              "duree",
-              "zone_effet",
-              "temps_incantation"
-            ],
-            "missingDescription": false,
-            "descriptionDifferent": false
-          },
-          {
-            "nom": "Bâtons à serpents",
-            "missing": [],
-            "placeholder": [],
-            "compareWithDecoupage": [],
-            "missingDescription": false,
-            "descriptionDifferent": true
-          },
-          {
-            "nom": "Contre-poison",
-            "missing": [],
-            "placeholder": [],
-            "compareWithDecoupage": [],
-            "missingDescription": false,
-            "descriptionDifferent": true
-          },
-          {
-            "nom": "Détection des mensonges",
-            "missing": [],
-            "placeholder": [],
-            "compareWithDecoupage": [
-              "portee",
-              "duree",
-              "zone_effet",
-              "temps_incantation",
-              "jet_sauvegarde"
-            ],
-            "missingDescription": false,
-            "descriptionDifferent": false
-          },
-          {
-            "nom": "Divination",
-            "missing": [],
-            "placeholder": [],
-            "compareWithDecoupage": [
-              "zone_effet",
-              "temps_incantation"
-            ],
-            "missingDescription": false,
-            "descriptionDifferent": false
-          },
-          {
-            "nom": "Exorcisme",
-            "missing": [],
-            "placeholder": [],
-            "compareWithDecoupage": [
-              "portee",
-              "duree",
-              "zone_effet",
-              "temps_incantation",
-              "jet_sauvegarde"
-            ],
-            "missingDescription": false,
-            "descriptionDifferent": false
-          },
-          {
-            "nom": "Langage des plantes",
-            "missing": [],
-            "placeholder": [],
-            "compareWithDecoupage": [
-              "duree",
-              "zone_effet",
-              "temps_incantation"
-            ],
-            "missingDescription": false,
-            "descriptionDifferent": false
-          },
-          {
-            "nom": "Langue",
-            "missing": [],
-            "placeholder": [],
-            "compareWithDecoupage": [],
-            "missingDescription": true,
-            "descriptionDifferent": false
-          },
-          {
-            "nom": "Protection contre le mal sur 3 m",
-            "missing": [],
-            "placeholder": [],
-            "compareWithDecoupage": [],
-            "missingDescription": true,
-            "descriptionDifferent": false
-          },
-          {
-            "nom": "Soins majeurs",
-            "missing": [],
-            "placeholder": [],
-            "compareWithDecoupage": [
-              "portee",
-              "temps_incantation"
-            ],
-            "missingDescription": false,
-            "descriptionDifferent": true
-          }
-        ]
-      },
       {
         "priority": "P1_TRANSCRIPTION_MANUEL",
         "file": "manuel-joueurs-druide-niveau-1.json",
@@ -10258,6 +9883,208 @@
       },
       {
         "priority": "P2_ARBITRAGE_MANUEL",
+        "file": "manuel-joueurs-clerc-niveau-2.json",
+        "referencePath": "audit\\reference\\manuel-joueurs-clerc-niveau-2.json",
+        "foundryExport": "audit/decoupage_fichier/clerc-niveau-2.json",
+        "decoupageResolution": {
+          "declared": "audit/decoupage_fichier/clerc-niveau-2.json",
+          "resolvedPath": "Z:\\systems\\add2e\\audit\\decoupage_fichier\\clerc-niveau-2.json",
+          "status": "declared_file",
+          "candidates": [
+            "audit\\decoupage_fichier\\clerc-niveau-2.json"
+          ]
+        },
+        "source": {
+          "classe": "Clerc",
+          "niveau": 2,
+          "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf"
+        },
+        "manualList": {
+          "available": true,
+          "key": "clerc-niveau-2",
+          "expectedCount": 12,
+          "names": [
+            "Augure",
+            "Cantique",
+            "Charme-serpents",
+            "Détection des charmes",
+            "Détection des pièges",
+            "Langage animal",
+            "Marteau spirituel",
+            "Paralysie",
+            "Perception des alignements",
+            "Résistance au feu",
+            "Retardement du poison",
+            "Silence sur 5 mètres"
+          ],
+          "referenceAvailable": true,
+          "decoupageAvailable": true,
+          "reference": {
+            "missing": [],
+            "extra": [],
+            "orderMatches": true
+          },
+          "decoupage": {
+            "missing": [],
+            "extra": [],
+            "orderMatches": true
+          }
+        },
+        "foundryListNeedsReview": false,
+        "auditStatus": "manual_review_required",
+        "auditErrors": [],
+        "taskCounts": {
+          "technicalFieldsToTranscribe": 0,
+          "descriptionsToTranscribe": 0,
+          "technicalFieldsToArbitrate": 34,
+          "descriptionsToArbitrate": 2
+        },
+        "spellTasks": [
+          {
+            "nom": "Augure",
+            "missing": [],
+            "placeholder": [],
+            "compareWithDecoupage": [
+              "temps_incantation"
+            ],
+            "missingDescription": false,
+            "descriptionDifferent": false
+          },
+          {
+            "nom": "Cantique",
+            "missing": [],
+            "placeholder": [],
+            "compareWithDecoupage": [
+              "zone_effet",
+              "temps_incantation"
+            ],
+            "missingDescription": false,
+            "descriptionDifferent": true
+          },
+          {
+            "nom": "Charme-serpents",
+            "missing": [],
+            "placeholder": [],
+            "compareWithDecoupage": [
+              "portee",
+              "zone_effet",
+              "temps_incantation"
+            ],
+            "missingDescription": false,
+            "descriptionDifferent": false
+          },
+          {
+            "nom": "Détection des charmes",
+            "missing": [],
+            "placeholder": [],
+            "compareWithDecoupage": [
+              "portee",
+              "duree",
+              "temps_incantation"
+            ],
+            "missingDescription": false,
+            "descriptionDifferent": false
+          },
+          {
+            "nom": "Détection des pièges",
+            "missing": [],
+            "placeholder": [],
+            "compareWithDecoupage": [
+              "portee",
+              "duree",
+              "zone_effet",
+              "temps_incantation"
+            ],
+            "missingDescription": false,
+            "descriptionDifferent": false
+          },
+          {
+            "nom": "Langage animal",
+            "missing": [],
+            "placeholder": [],
+            "compareWithDecoupage": [
+              "duree",
+              "zone_effet",
+              "temps_incantation"
+            ],
+            "missingDescription": false,
+            "descriptionDifferent": false
+          },
+          {
+            "nom": "Marteau spirituel",
+            "missing": [],
+            "placeholder": [],
+            "compareWithDecoupage": [
+              "portee",
+              "duree",
+              "temps_incantation"
+            ],
+            "missingDescription": false,
+            "descriptionDifferent": false
+          },
+          {
+            "nom": "Paralysie",
+            "missing": [],
+            "placeholder": [],
+            "compareWithDecoupage": [],
+            "missingDescription": false,
+            "descriptionDifferent": true
+          },
+          {
+            "nom": "Perception des alignements",
+            "missing": [],
+            "placeholder": [],
+            "compareWithDecoupage": [
+              "portee",
+              "duree",
+              "zone_effet",
+              "temps_incantation",
+              "jet_sauvegarde"
+            ],
+            "missingDescription": false,
+            "descriptionDifferent": false
+          },
+          {
+            "nom": "Résistance au feu",
+            "missing": [],
+            "placeholder": [],
+            "compareWithDecoupage": [
+              "portee",
+              "duree",
+              "temps_incantation"
+            ],
+            "missingDescription": false,
+            "descriptionDifferent": false
+          },
+          {
+            "nom": "Retardement du poison",
+            "missing": [],
+            "placeholder": [],
+            "compareWithDecoupage": [
+              "portee",
+              "duree",
+              "temps_incantation"
+            ],
+            "missingDescription": false,
+            "descriptionDifferent": false
+          },
+          {
+            "nom": "Silence sur 5 mètres",
+            "missing": [],
+            "placeholder": [],
+            "compareWithDecoupage": [
+              "portee",
+              "duree",
+              "zone_effet",
+              "temps_incantation"
+            ],
+            "missingDescription": false,
+            "descriptionDifferent": false
+          }
+        ]
+      },
+      {
+        "priority": "P2_ARBITRAGE_MANUEL",
         "file": "manuel-joueurs-clerc-niveau-3.json",
         "referencePath": "audit\\reference\\manuel-joueurs-clerc-niveau-3.json",
         "foundryExport": "audit/decoupage_fichier/clerc-niveau-3.json",
@@ -10460,6 +10287,178 @@
       },
       {
         "priority": "P2_ARBITRAGE_MANUEL",
+        "file": "manuel-joueurs-clerc-niveau-4.json",
+        "referencePath": "audit\\reference\\manuel-joueurs-clerc-niveau-4.json",
+        "foundryExport": "audit/decoupage_fichier/clerc-niveau-4.json",
+        "decoupageResolution": {
+          "declared": "audit/decoupage_fichier/clerc-niveau-4.json",
+          "resolvedPath": "Z:\\systems\\add2e\\audit\\decoupage_fichier\\clerc-niveau-4.json",
+          "status": "declared_file",
+          "candidates": [
+            "audit\\decoupage_fichier\\clerc-niveau-4.json"
+          ]
+        },
+        "source": {
+          "classe": "Clerc",
+          "niveau": 4,
+          "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf"
+        },
+        "manualList": {
+          "available": true,
+          "key": "clerc-niveau-4",
+          "expectedCount": 10,
+          "names": [
+            "Abaissement des eaux",
+            "Bâtons à serpents",
+            "Contre-poison",
+            "Détection des mensonges",
+            "Divination",
+            "Exorcisme",
+            "Langage des plantes",
+            "Langue",
+            "Protection contre le mal sur 3 m",
+            "Soins majeurs"
+          ],
+          "referenceAvailable": true,
+          "decoupageAvailable": true,
+          "reference": {
+            "missing": [],
+            "extra": [],
+            "orderMatches": true
+          },
+          "decoupage": {
+            "missing": [],
+            "extra": [
+              "Bâtons en Serpents",
+              "Protection contre le Mal (Rayon de 10 pieds)"
+            ],
+            "orderMatches": false
+          }
+        },
+        "foundryListNeedsReview": true,
+        "auditStatus": "blocked_structural",
+        "auditErrors": [
+          "Identités différentes : référence sans découpage 0, découpage sans référence 2.",
+          "Nombre différent : référence 10, découpage 12."
+        ],
+        "taskCounts": {
+          "technicalFieldsToTranscribe": 0,
+          "descriptionsToTranscribe": 0,
+          "technicalFieldsToArbitrate": 21,
+          "descriptionsToArbitrate": 5
+        },
+        "spellTasks": [
+          {
+            "nom": "Abaissement des eaux",
+            "missing": [],
+            "placeholder": [],
+            "compareWithDecoupage": [
+              "portee",
+              "duree",
+              "zone_effet",
+              "temps_incantation"
+            ],
+            "missingDescription": false,
+            "descriptionDifferent": false
+          },
+          {
+            "nom": "Bâtons à serpents",
+            "missing": [],
+            "placeholder": [],
+            "compareWithDecoupage": [],
+            "missingDescription": false,
+            "descriptionDifferent": true
+          },
+          {
+            "nom": "Contre-poison",
+            "missing": [],
+            "placeholder": [],
+            "compareWithDecoupage": [],
+            "missingDescription": false,
+            "descriptionDifferent": true
+          },
+          {
+            "nom": "Détection des mensonges",
+            "missing": [],
+            "placeholder": [],
+            "compareWithDecoupage": [
+              "portee",
+              "duree",
+              "zone_effet",
+              "temps_incantation",
+              "jet_sauvegarde"
+            ],
+            "missingDescription": false,
+            "descriptionDifferent": false
+          },
+          {
+            "nom": "Divination",
+            "missing": [],
+            "placeholder": [],
+            "compareWithDecoupage": [
+              "zone_effet",
+              "temps_incantation"
+            ],
+            "missingDescription": false,
+            "descriptionDifferent": false
+          },
+          {
+            "nom": "Exorcisme",
+            "missing": [],
+            "placeholder": [],
+            "compareWithDecoupage": [
+              "portee",
+              "duree",
+              "zone_effet",
+              "temps_incantation",
+              "jet_sauvegarde"
+            ],
+            "missingDescription": false,
+            "descriptionDifferent": false
+          },
+          {
+            "nom": "Langage des plantes",
+            "missing": [],
+            "placeholder": [],
+            "compareWithDecoupage": [
+              "duree",
+              "zone_effet",
+              "temps_incantation"
+            ],
+            "missingDescription": false,
+            "descriptionDifferent": false
+          },
+          {
+            "nom": "Langue",
+            "missing": [],
+            "placeholder": [],
+            "compareWithDecoupage": [],
+            "missingDescription": false,
+            "descriptionDifferent": true
+          },
+          {
+            "nom": "Protection contre le mal sur 3 m",
+            "missing": [],
+            "placeholder": [],
+            "compareWithDecoupage": [],
+            "missingDescription": false,
+            "descriptionDifferent": true
+          },
+          {
+            "nom": "Soins majeurs",
+            "missing": [],
+            "placeholder": [],
+            "compareWithDecoupage": [
+              "portee",
+              "temps_incantation"
+            ],
+            "missingDescription": false,
+            "descriptionDifferent": true
+          }
+        ]
+      },
+      {
+        "priority": "P2_ARBITRAGE_MANUEL",
         "file": "manuel-joueurs-clerc-niveau-5.json",
         "referencePath": "audit\\reference\\manuel-joueurs-clerc-niveau-5.json",
         "foundryExport": "audit/decoupage_fichier/clerc-niveau-5.json",
@@ -10517,7 +10516,7 @@
           "technicalFieldsToTranscribe": 0,
           "descriptionsToTranscribe": 0,
           "technicalFieldsToArbitrate": 34,
-          "descriptionsToArbitrate": 4
+          "descriptionsToArbitrate": 3
         },
         "spellTasks": [
           {
@@ -10598,7 +10597,7 @@
               "zone_effet"
             ],
             "missingDescription": false,
-            "descriptionDifferent": true
+            "descriptionDifferent": false
           },
           {
             "nom": "Quête religieuse",
@@ -11037,382 +11036,6 @@
     "P3_CONFIRMATION_MANUEL": []
   },
   "files": [
-    {
-      "priority": "P1_TRANSCRIPTION_MANUEL",
-      "file": "manuel-joueurs-clerc-niveau-2.json",
-      "referencePath": "audit\\reference\\manuel-joueurs-clerc-niveau-2.json",
-      "foundryExport": "audit/decoupage_fichier/clerc-niveau-2.json",
-      "decoupageResolution": {
-        "declared": "audit/decoupage_fichier/clerc-niveau-2.json",
-        "resolvedPath": "Z:\\systems\\add2e\\audit\\decoupage_fichier\\clerc-niveau-2.json",
-        "status": "declared_file",
-        "candidates": [
-          "audit\\decoupage_fichier\\clerc-niveau-2.json"
-        ]
-      },
-      "source": {
-        "classe": "Clerc",
-        "niveau": 2,
-        "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf"
-      },
-      "manualList": {
-        "available": true,
-        "key": "clerc-niveau-2",
-        "expectedCount": 12,
-        "names": [
-          "Augure",
-          "Cantique",
-          "Charme-serpents",
-          "Détection des charmes",
-          "Détection des pièges",
-          "Langage animal",
-          "Marteau spirituel",
-          "Paralysie",
-          "Perception des alignements",
-          "Résistance au feu",
-          "Retardement du poison",
-          "Silence sur 5 mètres"
-        ],
-        "referenceAvailable": true,
-        "decoupageAvailable": true,
-        "reference": {
-          "missing": [],
-          "extra": [],
-          "orderMatches": true
-        },
-        "decoupage": {
-          "missing": [],
-          "extra": [],
-          "orderMatches": true
-        }
-      },
-      "foundryListNeedsReview": false,
-      "auditStatus": "manual_review_required",
-      "auditErrors": [],
-      "taskCounts": {
-        "technicalFieldsToTranscribe": 1,
-        "descriptionsToTranscribe": 0,
-        "technicalFieldsToArbitrate": 34,
-        "descriptionsToArbitrate": 2
-      },
-      "spellTasks": [
-        {
-          "nom": "Augure",
-          "missing": [],
-          "placeholder": [
-            "zone_effet"
-          ],
-          "compareWithDecoupage": [
-            "temps_incantation"
-          ],
-          "missingDescription": false,
-          "descriptionDifferent": false
-        },
-        {
-          "nom": "Cantique",
-          "missing": [],
-          "placeholder": [],
-          "compareWithDecoupage": [
-            "zone_effet",
-            "temps_incantation"
-          ],
-          "missingDescription": false,
-          "descriptionDifferent": true
-        },
-        {
-          "nom": "Charme-serpents",
-          "missing": [],
-          "placeholder": [],
-          "compareWithDecoupage": [
-            "portee",
-            "zone_effet",
-            "temps_incantation"
-          ],
-          "missingDescription": false,
-          "descriptionDifferent": false
-        },
-        {
-          "nom": "Détection des charmes",
-          "missing": [],
-          "placeholder": [],
-          "compareWithDecoupage": [
-            "portee",
-            "duree",
-            "temps_incantation"
-          ],
-          "missingDescription": false,
-          "descriptionDifferent": false
-        },
-        {
-          "nom": "Détection des pièges",
-          "missing": [],
-          "placeholder": [],
-          "compareWithDecoupage": [
-            "portee",
-            "duree",
-            "zone_effet",
-            "temps_incantation"
-          ],
-          "missingDescription": false,
-          "descriptionDifferent": false
-        },
-        {
-          "nom": "Langage animal",
-          "missing": [],
-          "placeholder": [],
-          "compareWithDecoupage": [
-            "duree",
-            "zone_effet",
-            "temps_incantation"
-          ],
-          "missingDescription": false,
-          "descriptionDifferent": false
-        },
-        {
-          "nom": "Marteau spirituel",
-          "missing": [],
-          "placeholder": [],
-          "compareWithDecoupage": [
-            "portee",
-            "duree",
-            "temps_incantation"
-          ],
-          "missingDescription": false,
-          "descriptionDifferent": false
-        },
-        {
-          "nom": "Paralysie",
-          "missing": [],
-          "placeholder": [],
-          "compareWithDecoupage": [],
-          "missingDescription": false,
-          "descriptionDifferent": true
-        },
-        {
-          "nom": "Perception des alignements",
-          "missing": [],
-          "placeholder": [],
-          "compareWithDecoupage": [
-            "portee",
-            "duree",
-            "zone_effet",
-            "temps_incantation",
-            "jet_sauvegarde"
-          ],
-          "missingDescription": false,
-          "descriptionDifferent": false
-        },
-        {
-          "nom": "Résistance au feu",
-          "missing": [],
-          "placeholder": [],
-          "compareWithDecoupage": [
-            "portee",
-            "duree",
-            "temps_incantation"
-          ],
-          "missingDescription": false,
-          "descriptionDifferent": false
-        },
-        {
-          "nom": "Retardement du poison",
-          "missing": [],
-          "placeholder": [],
-          "compareWithDecoupage": [
-            "portee",
-            "duree",
-            "temps_incantation"
-          ],
-          "missingDescription": false,
-          "descriptionDifferent": false
-        },
-        {
-          "nom": "Silence sur 5 mètres",
-          "missing": [],
-          "placeholder": [],
-          "compareWithDecoupage": [
-            "portee",
-            "duree",
-            "zone_effet",
-            "temps_incantation"
-          ],
-          "missingDescription": false,
-          "descriptionDifferent": false
-        }
-      ]
-    },
-    {
-      "priority": "P1_TRANSCRIPTION_MANUEL",
-      "file": "manuel-joueurs-clerc-niveau-4.json",
-      "referencePath": "audit\\reference\\manuel-joueurs-clerc-niveau-4.json",
-      "foundryExport": "audit/decoupage_fichier/clerc-niveau-4.json",
-      "decoupageResolution": {
-        "declared": "audit/decoupage_fichier/clerc-niveau-4.json",
-        "resolvedPath": "Z:\\systems\\add2e\\audit\\decoupage_fichier\\clerc-niveau-4.json",
-        "status": "declared_file",
-        "candidates": [
-          "audit\\decoupage_fichier\\clerc-niveau-4.json"
-        ]
-      },
-      "source": {
-        "classe": "Clerc",
-        "niveau": 4,
-        "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf"
-      },
-      "manualList": {
-        "available": true,
-        "key": "clerc-niveau-4",
-        "expectedCount": 10,
-        "names": [
-          "Abaissement des eaux",
-          "Bâtons à serpents",
-          "Contre-poison",
-          "Détection des mensonges",
-          "Divination",
-          "Exorcisme",
-          "Langage des plantes",
-          "Langue",
-          "Protection contre le mal sur 3 m",
-          "Soins majeurs"
-        ],
-        "referenceAvailable": true,
-        "decoupageAvailable": true,
-        "reference": {
-          "missing": [],
-          "extra": [],
-          "orderMatches": true
-        },
-        "decoupage": {
-          "missing": [],
-          "extra": [
-            "Bâtons en Serpents",
-            "Protection contre le Mal (Rayon de 10 pieds)"
-          ],
-          "orderMatches": false
-        }
-      },
-      "foundryListNeedsReview": true,
-      "auditStatus": "blocked_structural",
-      "auditErrors": [
-        "Identités différentes : référence sans découpage 0, découpage sans référence 2.",
-        "Nombre différent : référence 10, découpage 12."
-      ],
-      "taskCounts": {
-        "technicalFieldsToTranscribe": 0,
-        "descriptionsToTranscribe": 2,
-        "technicalFieldsToArbitrate": 21,
-        "descriptionsToArbitrate": 3
-      },
-      "spellTasks": [
-        {
-          "nom": "Abaissement des eaux",
-          "missing": [],
-          "placeholder": [],
-          "compareWithDecoupage": [
-            "portee",
-            "duree",
-            "zone_effet",
-            "temps_incantation"
-          ],
-          "missingDescription": false,
-          "descriptionDifferent": false
-        },
-        {
-          "nom": "Bâtons à serpents",
-          "missing": [],
-          "placeholder": [],
-          "compareWithDecoupage": [],
-          "missingDescription": false,
-          "descriptionDifferent": true
-        },
-        {
-          "nom": "Contre-poison",
-          "missing": [],
-          "placeholder": [],
-          "compareWithDecoupage": [],
-          "missingDescription": false,
-          "descriptionDifferent": true
-        },
-        {
-          "nom": "Détection des mensonges",
-          "missing": [],
-          "placeholder": [],
-          "compareWithDecoupage": [
-            "portee",
-            "duree",
-            "zone_effet",
-            "temps_incantation",
-            "jet_sauvegarde"
-          ],
-          "missingDescription": false,
-          "descriptionDifferent": false
-        },
-        {
-          "nom": "Divination",
-          "missing": [],
-          "placeholder": [],
-          "compareWithDecoupage": [
-            "zone_effet",
-            "temps_incantation"
-          ],
-          "missingDescription": false,
-          "descriptionDifferent": false
-        },
-        {
-          "nom": "Exorcisme",
-          "missing": [],
-          "placeholder": [],
-          "compareWithDecoupage": [
-            "portee",
-            "duree",
-            "zone_effet",
-            "temps_incantation",
-            "jet_sauvegarde"
-          ],
-          "missingDescription": false,
-          "descriptionDifferent": false
-        },
-        {
-          "nom": "Langage des plantes",
-          "missing": [],
-          "placeholder": [],
-          "compareWithDecoupage": [
-            "duree",
-            "zone_effet",
-            "temps_incantation"
-          ],
-          "missingDescription": false,
-          "descriptionDifferent": false
-        },
-        {
-          "nom": "Langue",
-          "missing": [],
-          "placeholder": [],
-          "compareWithDecoupage": [],
-          "missingDescription": true,
-          "descriptionDifferent": false
-        },
-        {
-          "nom": "Protection contre le mal sur 3 m",
-          "missing": [],
-          "placeholder": [],
-          "compareWithDecoupage": [],
-          "missingDescription": true,
-          "descriptionDifferent": false
-        },
-        {
-          "nom": "Soins majeurs",
-          "missing": [],
-          "placeholder": [],
-          "compareWithDecoupage": [
-            "portee",
-            "temps_incantation"
-          ],
-          "missingDescription": false,
-          "descriptionDifferent": true
-        }
-      ]
-    },
     {
       "priority": "P1_TRANSCRIPTION_MANUEL",
       "file": "manuel-joueurs-druide-niveau-1.json",
@@ -21230,6 +20853,208 @@
     },
     {
       "priority": "P2_ARBITRAGE_MANUEL",
+      "file": "manuel-joueurs-clerc-niveau-2.json",
+      "referencePath": "audit\\reference\\manuel-joueurs-clerc-niveau-2.json",
+      "foundryExport": "audit/decoupage_fichier/clerc-niveau-2.json",
+      "decoupageResolution": {
+        "declared": "audit/decoupage_fichier/clerc-niveau-2.json",
+        "resolvedPath": "Z:\\systems\\add2e\\audit\\decoupage_fichier\\clerc-niveau-2.json",
+        "status": "declared_file",
+        "candidates": [
+          "audit\\decoupage_fichier\\clerc-niveau-2.json"
+        ]
+      },
+      "source": {
+        "classe": "Clerc",
+        "niveau": 2,
+        "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf"
+      },
+      "manualList": {
+        "available": true,
+        "key": "clerc-niveau-2",
+        "expectedCount": 12,
+        "names": [
+          "Augure",
+          "Cantique",
+          "Charme-serpents",
+          "Détection des charmes",
+          "Détection des pièges",
+          "Langage animal",
+          "Marteau spirituel",
+          "Paralysie",
+          "Perception des alignements",
+          "Résistance au feu",
+          "Retardement du poison",
+          "Silence sur 5 mètres"
+        ],
+        "referenceAvailable": true,
+        "decoupageAvailable": true,
+        "reference": {
+          "missing": [],
+          "extra": [],
+          "orderMatches": true
+        },
+        "decoupage": {
+          "missing": [],
+          "extra": [],
+          "orderMatches": true
+        }
+      },
+      "foundryListNeedsReview": false,
+      "auditStatus": "manual_review_required",
+      "auditErrors": [],
+      "taskCounts": {
+        "technicalFieldsToTranscribe": 0,
+        "descriptionsToTranscribe": 0,
+        "technicalFieldsToArbitrate": 34,
+        "descriptionsToArbitrate": 2
+      },
+      "spellTasks": [
+        {
+          "nom": "Augure",
+          "missing": [],
+          "placeholder": [],
+          "compareWithDecoupage": [
+            "temps_incantation"
+          ],
+          "missingDescription": false,
+          "descriptionDifferent": false
+        },
+        {
+          "nom": "Cantique",
+          "missing": [],
+          "placeholder": [],
+          "compareWithDecoupage": [
+            "zone_effet",
+            "temps_incantation"
+          ],
+          "missingDescription": false,
+          "descriptionDifferent": true
+        },
+        {
+          "nom": "Charme-serpents",
+          "missing": [],
+          "placeholder": [],
+          "compareWithDecoupage": [
+            "portee",
+            "zone_effet",
+            "temps_incantation"
+          ],
+          "missingDescription": false,
+          "descriptionDifferent": false
+        },
+        {
+          "nom": "Détection des charmes",
+          "missing": [],
+          "placeholder": [],
+          "compareWithDecoupage": [
+            "portee",
+            "duree",
+            "temps_incantation"
+          ],
+          "missingDescription": false,
+          "descriptionDifferent": false
+        },
+        {
+          "nom": "Détection des pièges",
+          "missing": [],
+          "placeholder": [],
+          "compareWithDecoupage": [
+            "portee",
+            "duree",
+            "zone_effet",
+            "temps_incantation"
+          ],
+          "missingDescription": false,
+          "descriptionDifferent": false
+        },
+        {
+          "nom": "Langage animal",
+          "missing": [],
+          "placeholder": [],
+          "compareWithDecoupage": [
+            "duree",
+            "zone_effet",
+            "temps_incantation"
+          ],
+          "missingDescription": false,
+          "descriptionDifferent": false
+        },
+        {
+          "nom": "Marteau spirituel",
+          "missing": [],
+          "placeholder": [],
+          "compareWithDecoupage": [
+            "portee",
+            "duree",
+            "temps_incantation"
+          ],
+          "missingDescription": false,
+          "descriptionDifferent": false
+        },
+        {
+          "nom": "Paralysie",
+          "missing": [],
+          "placeholder": [],
+          "compareWithDecoupage": [],
+          "missingDescription": false,
+          "descriptionDifferent": true
+        },
+        {
+          "nom": "Perception des alignements",
+          "missing": [],
+          "placeholder": [],
+          "compareWithDecoupage": [
+            "portee",
+            "duree",
+            "zone_effet",
+            "temps_incantation",
+            "jet_sauvegarde"
+          ],
+          "missingDescription": false,
+          "descriptionDifferent": false
+        },
+        {
+          "nom": "Résistance au feu",
+          "missing": [],
+          "placeholder": [],
+          "compareWithDecoupage": [
+            "portee",
+            "duree",
+            "temps_incantation"
+          ],
+          "missingDescription": false,
+          "descriptionDifferent": false
+        },
+        {
+          "nom": "Retardement du poison",
+          "missing": [],
+          "placeholder": [],
+          "compareWithDecoupage": [
+            "portee",
+            "duree",
+            "temps_incantation"
+          ],
+          "missingDescription": false,
+          "descriptionDifferent": false
+        },
+        {
+          "nom": "Silence sur 5 mètres",
+          "missing": [],
+          "placeholder": [],
+          "compareWithDecoupage": [
+            "portee",
+            "duree",
+            "zone_effet",
+            "temps_incantation"
+          ],
+          "missingDescription": false,
+          "descriptionDifferent": false
+        }
+      ]
+    },
+    {
+      "priority": "P2_ARBITRAGE_MANUEL",
       "file": "manuel-joueurs-clerc-niveau-3.json",
       "referencePath": "audit\\reference\\manuel-joueurs-clerc-niveau-3.json",
       "foundryExport": "audit/decoupage_fichier/clerc-niveau-3.json",
@@ -21432,6 +21257,178 @@
     },
     {
       "priority": "P2_ARBITRAGE_MANUEL",
+      "file": "manuel-joueurs-clerc-niveau-4.json",
+      "referencePath": "audit\\reference\\manuel-joueurs-clerc-niveau-4.json",
+      "foundryExport": "audit/decoupage_fichier/clerc-niveau-4.json",
+      "decoupageResolution": {
+        "declared": "audit/decoupage_fichier/clerc-niveau-4.json",
+        "resolvedPath": "Z:\\systems\\add2e\\audit\\decoupage_fichier\\clerc-niveau-4.json",
+        "status": "declared_file",
+        "candidates": [
+          "audit\\decoupage_fichier\\clerc-niveau-4.json"
+        ]
+      },
+      "source": {
+        "classe": "Clerc",
+        "niveau": 4,
+        "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf"
+      },
+      "manualList": {
+        "available": true,
+        "key": "clerc-niveau-4",
+        "expectedCount": 10,
+        "names": [
+          "Abaissement des eaux",
+          "Bâtons à serpents",
+          "Contre-poison",
+          "Détection des mensonges",
+          "Divination",
+          "Exorcisme",
+          "Langage des plantes",
+          "Langue",
+          "Protection contre le mal sur 3 m",
+          "Soins majeurs"
+        ],
+        "referenceAvailable": true,
+        "decoupageAvailable": true,
+        "reference": {
+          "missing": [],
+          "extra": [],
+          "orderMatches": true
+        },
+        "decoupage": {
+          "missing": [],
+          "extra": [
+            "Bâtons en Serpents",
+            "Protection contre le Mal (Rayon de 10 pieds)"
+          ],
+          "orderMatches": false
+        }
+      },
+      "foundryListNeedsReview": true,
+      "auditStatus": "blocked_structural",
+      "auditErrors": [
+        "Identités différentes : référence sans découpage 0, découpage sans référence 2.",
+        "Nombre différent : référence 10, découpage 12."
+      ],
+      "taskCounts": {
+        "technicalFieldsToTranscribe": 0,
+        "descriptionsToTranscribe": 0,
+        "technicalFieldsToArbitrate": 21,
+        "descriptionsToArbitrate": 5
+      },
+      "spellTasks": [
+        {
+          "nom": "Abaissement des eaux",
+          "missing": [],
+          "placeholder": [],
+          "compareWithDecoupage": [
+            "portee",
+            "duree",
+            "zone_effet",
+            "temps_incantation"
+          ],
+          "missingDescription": false,
+          "descriptionDifferent": false
+        },
+        {
+          "nom": "Bâtons à serpents",
+          "missing": [],
+          "placeholder": [],
+          "compareWithDecoupage": [],
+          "missingDescription": false,
+          "descriptionDifferent": true
+        },
+        {
+          "nom": "Contre-poison",
+          "missing": [],
+          "placeholder": [],
+          "compareWithDecoupage": [],
+          "missingDescription": false,
+          "descriptionDifferent": true
+        },
+        {
+          "nom": "Détection des mensonges",
+          "missing": [],
+          "placeholder": [],
+          "compareWithDecoupage": [
+            "portee",
+            "duree",
+            "zone_effet",
+            "temps_incantation",
+            "jet_sauvegarde"
+          ],
+          "missingDescription": false,
+          "descriptionDifferent": false
+        },
+        {
+          "nom": "Divination",
+          "missing": [],
+          "placeholder": [],
+          "compareWithDecoupage": [
+            "zone_effet",
+            "temps_incantation"
+          ],
+          "missingDescription": false,
+          "descriptionDifferent": false
+        },
+        {
+          "nom": "Exorcisme",
+          "missing": [],
+          "placeholder": [],
+          "compareWithDecoupage": [
+            "portee",
+            "duree",
+            "zone_effet",
+            "temps_incantation",
+            "jet_sauvegarde"
+          ],
+          "missingDescription": false,
+          "descriptionDifferent": false
+        },
+        {
+          "nom": "Langage des plantes",
+          "missing": [],
+          "placeholder": [],
+          "compareWithDecoupage": [
+            "duree",
+            "zone_effet",
+            "temps_incantation"
+          ],
+          "missingDescription": false,
+          "descriptionDifferent": false
+        },
+        {
+          "nom": "Langue",
+          "missing": [],
+          "placeholder": [],
+          "compareWithDecoupage": [],
+          "missingDescription": false,
+          "descriptionDifferent": true
+        },
+        {
+          "nom": "Protection contre le mal sur 3 m",
+          "missing": [],
+          "placeholder": [],
+          "compareWithDecoupage": [],
+          "missingDescription": false,
+          "descriptionDifferent": true
+        },
+        {
+          "nom": "Soins majeurs",
+          "missing": [],
+          "placeholder": [],
+          "compareWithDecoupage": [
+            "portee",
+            "temps_incantation"
+          ],
+          "missingDescription": false,
+          "descriptionDifferent": true
+        }
+      ]
+    },
+    {
+      "priority": "P2_ARBITRAGE_MANUEL",
       "file": "manuel-joueurs-clerc-niveau-5.json",
       "referencePath": "audit\\reference\\manuel-joueurs-clerc-niveau-5.json",
       "foundryExport": "audit/decoupage_fichier/clerc-niveau-5.json",
@@ -21489,7 +21486,7 @@
         "technicalFieldsToTranscribe": 0,
         "descriptionsToTranscribe": 0,
         "technicalFieldsToArbitrate": 34,
-        "descriptionsToArbitrate": 4
+        "descriptionsToArbitrate": 3
       },
       "spellTasks": [
         {
@@ -21570,7 +21567,7 @@
             "zone_effet"
           ],
           "missingDescription": false,
-          "descriptionDifferent": true
+          "descriptionDifferent": false
         },
         {
           "nom": "Quête religieuse",
