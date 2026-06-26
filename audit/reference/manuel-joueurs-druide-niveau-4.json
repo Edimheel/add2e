@@ -6,138 +6,21 @@
     "niveau": 4,
     "note": "Le Manuel des joueurs est la source de vérité pour toutes les règles ADD2E."
   },
-  "status": "reference_liste_noms_complete_regles_a_completer",
+  "status": "reference_complete_description_normalisee",
   "expectedCount": 12,
   "foundryExport": "audit/decoupage_fichier/druide-niveau-4.json",
-  "rules": {
-    "included": [
-      "nom du sort",
-      "classe",
-      "niveau",
-      "ordre dans le tableau du Manuel des joueurs",
-      "nombre de sorts attendu",
-      "variantes explicitement nommées dans le Manuel des joueurs",
-      "réversibilité et nom de l’inverse quand le Manuel le donne"
-    ],
-    "warning": "Les règles détaillées restent à compléter depuis la description du sort dans le Manuel des joueurs. Ne pas utiliser ce fichier pour corriger portée, durée, composantes détaillées, jet de sauvegarde ou effet mécanique tant que ces champs ne sont pas remplis.",
-    "variantes": "Le tableau variantes est vide lorsqu’aucun choix de forme explicitement nommé ne figure dans le Manuel des joueurs.",
-    "reversibilite": "Le champ reversible est toujours booléen. Le champ inverse vaut null lorsque le Manuel indique un sort réversible sans donner de nom distinct à sa forme inverse."
-  },
   "spells": [
-    {
-      "ordre": 1,
-      "nom": "Contrôle de la température sur 3 m",
-      "niveau": 4,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 2,
-      "nom": "Dissipation de la magie",
-      "niveau": 4,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 3,
-      "nom": "Embrasement",
-      "niveau": 4,
-      "variantes": [],
-      "reversible": true,
-      "inverse": "Extinction",
-      "inverseNameStatus": "manual_explicit",
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 4,
-      "nom": "Forêt hallucinatoire",
-      "niveau": 4,
-      "variantes": [],
-      "reversible": true,
-      "inverse": null,
-      "inverseNameStatus": "not_named_in_manual",
-      "reversibilityNote": "Le Manuel indique que le sort est réversible sans nom distinct pour l’inverse.",
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 5,
-      "nom": "Invocation animale I",
-      "niveau": 4,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 6,
-      "nom": "Invocation des créatures sylvestres",
-      "niveau": 4,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 7,
-      "nom": "Langage des plantes",
-      "niveau": 4,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 8,
-      "nom": "Paralysie végétale",
-      "niveau": 4,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 9,
-      "nom": "Porte végétale",
-      "niveau": 4,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 10,
-      "nom": "Protection contre la foudre",
-      "niveau": 4,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 11,
-      "nom": "Répulsion des insectes",
-      "niveau": 4,
-      "variantes": [],
-      "reversible": false,
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    },
-    {
-      "ordre": 12,
-      "nom": "Soins majeurs",
-      "niveau": 4,
-      "variantes": [],
-      "reversible": true,
-      "inverse": "Blessures majeures",
-      "inverseNameStatus": "manual_explicit",
-      "status": "nom_reference_tableau_manuel_joueurs",
-      "regles_detaillees": "a_completer_depuis_description_du_sort"
-    }
+    {"ordre":1,"nom":"Contrôle de la température sur 3 m","ecole":"Altération","niveau":4,"portee":"0","duree":"4 tours + 1 tour/niveau","zone_effet":"sphère de 6 m de diamètre","composantes":"V, S, M","temps_incantation":"6 segments","jet_sauvegarde":"aucun","description":"quand ce sort est lancé, la température de la zone entourant le druide peut être élevée ou abaissée de 5°C par niveau du druide. Ainsi, un druide de niveau 10 pourra augmenter ou baisser la température de 1°C à 50°C. Ce sort dure 4 tours plus 1 tour par niveau du druide, c.-à-d. que lancé par un druide de niveau 10, il dure 14 tours.","composants_materiels_objets":[{"nom":"gui du druide","quantite":1,"consommation":"non_consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Symbole religieux druidique requis par la règle générale du Manuel pour les sorts avec composante matérielle."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":2,"nom":"Dissipation de la magie","ecole":"Abjuration","niveau":4,"portee":"8\"","duree":"permanente","zone_effet":"cube de 4\" d’arête","composantes":"V, S, M","temps_incantation":"6 segments","jet_sauvegarde":"aucun","description":"excepté ci-dessus, ce sort est le même que le sort de niveau 3 de clerc dissipation de la magie (voir p.46).","composants_materiels_objets":[{"nom":"gui du druide","quantite":1,"consommation":"non_consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Symbole religieux druidique requis par la règle générale du Manuel pour les sorts avec composante matérielle."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":3,"nom":"Embrasement","ecole":"Altération","niveau":4,"portee":"4\"","duree":"1 round","zone_effet":"carré de 3,60 m de côté","composantes":"V, S, M","temps_incantation":"6 segments","jet_sauvegarde":"aucun","description":"au moyen de ce sort, le druide crée un feu d’environ 3,60 m de côté, c'est-à-dire à peu près 13 m2. Ce feu ne dure qu’un round, mais il inflige de 1 à 4 points de dégâts aux créatures se trouvant dans la zone d’effet ; de plus, les matériaux comme les vêtements, l’huile, le papier, le parchemin, le bois et d’une façon générale les matières inflammables prendront feu. L’inverse du sort, extinction, éteint n’importe quel feu normal (charbon, huile, cire, bois, etc.) dans la zone d’effet. Ce sort ne peut normalement pas être utilisé sous l’eau, mais il peut être incanté et fonctionner à l’intérieur des limites d’un sort d’eau aérée.","composants_materiels_objets":[{"nom":"gui du druide","quantite":1,"consommation":"non_consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Symbole religieux druidique requis par la règle générale du Manuel pour les sorts avec composante matérielle."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":true,"inverse":"Extinction","inverseNameStatus":"manual_explicit"},
+    {"ordre":4,"nom":"Forêt hallucinatoire","ecole":"Illusion/Fantasme","niveau":4,"portee":"8\"","duree":"permanente","zone_effet":"carré de 4\" de côté/niveau","composantes":"V, S, M","temps_incantation":"6 segments","jet_sauvegarde":"aucun","description":"en lançant ce sort, le druide fait apparaître une forêt hallucinatoire. Cette forêt illusoire semble tout à fait naturelle et est indiscernable d’une forêt normale. D’autres druides, ainsi que les créatures comme les centaures, dryades, dragons verts, nymphes, satyres ou sylvaniens verront la forêt comme ce qu’elle est vraiment : une illusion. Toutes les autres créatures seront sujettes à l’illusion ; les mouvements et ordres de marche seront affectés en conséquence. Cette forêt persiste jusqu’à ce qu’un sort de dissipation de la magie soit lancé dessus ou alors que l’inverse de ce sort soit lancé. La forme de la zone d’effet est soit carrée soit rectangulaire, avec une profondeur d’au moins 4\" dans tous les cas ; le druide peut créer la zone là où il désire et il n’est pas obligé de lui donner sa taille maximale. La lisière de la forêt apparaîtra à 8\" du druide maximum, selon sa volonté.","composants_materiels_objets":[{"nom":"gui du druide","quantite":1,"consommation":"non_consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Symbole religieux druidique requis par la règle générale du Manuel pour les sorts avec composante matérielle."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":true,"inverse":null,"inverseNameStatus":"not_named_in_manual","reversibilityNote":"Le Manuel indique que le sort est réversible sans nom distinct pour l’inverse."},
+    {"ordre":5,"nom":"Invocation animale I","ecole":"Conjuration/Appel","niveau":4,"portee":"4\"/niveau","duree":"spéciale","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"6 segments","jet_sauvegarde":"aucun","description":"avec ce sort, le druide peut invoquer jusqu’à 8 animaux du type qu’il désire et annonce au moment de l’invocation, à condition que le type d’animal soit dans la portée du sort. Ces animaux ne peuvent pas avoir plus de 4 dés de vie chacun. Ils aideront le druide par les moyens qu’ils possèdent, restant jusqu’à la fin d’un combat, jusqu’à ce qu’une mission spécifique soit accomplie, jusqu’à ce que le druide soit en sécurité ou jusqu’à ce qu’il les renvoie. En cas d’échec parce que le type d’animal invoqué par le druide ne se trouve pas dans la portée du sort, le druide peut refaire une tentative avec un autre type d’animal. Au total, le druide a droit à 3 tentatives. Par exemple, le druide invoque des chiens sauvages, mais il n’y en a pas, puis il appelle des faucons, sans succès, enfin, il tente de faire venir des chevaux sauvages. Que sa dernière tentative soit réussie ou non, il n’a plus droit à un nouvel essai. Le MD déterminera les probabilités de présence de l’animal invoqué par le druide. Hormis les animaux de classe géante, les monstres et les animaux fantastiques ne peuvent pas être invoqués, donc pas de chimère, de dragons, de gorgones ou de manticores, etc. Ce sort ne peut pas être utilisé sous l’eau.","composants_materiels_objets":[{"nom":"gui du druide","quantite":1,"consommation":"non_consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Symbole religieux druidique requis par la règle générale du Manuel pour les sorts avec composante matérielle."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":6,"nom":"Invocation des créatures sylvestres","ecole":"Conjuration/Appel","niveau":4,"portee":"12\" + 1\"/niveau","duree":"spéciale","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"spécial","jet_sauvegarde":"annule","description":"avec ce sort, le druide est capable d’invoquer certaines créatures sylvestres. Naturellement, ce sort ne fonctionne qu’en extérieur, mais pas uniquement dans des zones forestières. Le druide commence l’incantation et la continue sans interruption jusqu’à ce qu’une créature apparaisse ou que deux tours se soient écoulés (la verbalisation et les gestes sont faciles et ne sont donc pas fatiguant pour le lanceur du sort). Un seul type des créatures ci-dessous peut être invoqué : les créatures viendront seulement si elles sont dans la portée du sort : 1-4 centaures 2-8 lutins 1-4 dryades 1-8 pixies 1-6 esprits follets 1-4 satyres 1 licorne 1 sylvanien (Le MD consultera sa carte de la région ou déterminera la probabilité de présence des types de créatures citées dans les limites de la portée du sort au moment où il est lancé). Les (ou la) créatures appelées ont droit à un jet de protection pour échapper à l’invocation, mais avec un malus de –4. Toute créature sylvestre invoquée sera favorablement disposée envers le druide et apportera toute l’aide qu’elle peut. Cependant, si le lanceur de sort ou un de ses compagnons est d’alignement mauvais, les créatures invoquées ont droit à un autre jet de protection, mais cette fois avec un bonus de +4, ceci quand elles arrivent à moins de 1\" de la personne mauvaise. Si le jet de protection est réussi, les créatures chercheront immédiatement à s’enfuir. Dans tous les cas, si le druide demande aux créatures de combattre pour lui, elles lanceront un dé de pourcentage de réaction à la loyauté basée sur le charisme du druide et sur les rapports que le druide a eu avec ces créatures. Ce sort ne peut pas être utilisé sous l’eau. Les composantes matérielles sont une pomme de pin et 8 baies de houx.","composants_materiels_objets":[{"nom":"gui du druide","quantite":1,"consommation":"non_consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Symbole religieux druidique requis par la règle générale du Manuel pour les sorts avec composante matérielle."},{"nom":"pomme de pin","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null},{"nom":"baies de houx","quantite":8,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":7,"nom":"Langage des plantes","ecole":"Altération","niveau":4,"portee":"0","duree":"2 rounds/niveau","zone_effet":"cercle de 8\" de diamètre","composantes":"V, S, M","temps_incantation":"1 tour","jet_sauvegarde":"aucun","description":"excepté ci-dessus et le fait que la composante matérielle est typiquement druidique (à savoir du gui), ce sort est le même que le sort de niveau 4 de clerc langage des plantes.","composants_materiels_objets":[{"nom":"gui du druide","quantite":1,"consommation":"non_consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Symbole religieux druidique requis par la règle générale du Manuel pour les sorts avec composante matérielle."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":8,"nom":"Paralysie végétale","ecole":"Enchantement/Charme","niveau":4,"portee":"8\"","duree":"1 round/niveau","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"6 segments","jet_sauvegarde":"annule","description":"ce sort affecte les végétaux de la façon suivante : 1) il stoppe les plantes qui se déplacent 2) il empêche les végétaux de s’emmêler, de pousser, de se développer ou de se rapprocher 3) il empêche les matières végétales de faire du bruit et de bouger à cause d’autre chose que le vent Ce sort s’applique à toute forme de végétaux, y compris les plantes parasites et les champignons, et aussi ceux magiquement animés et ceux qui ont reçu un pouvoir magique. Ce sort affecte aussi les monstres comme les limons verts, les moisissures, les tertres errants, les criards, les sylvaniens, etc. Ce sort affecte de 1 à 4 plantes ou de 4 à 16 m² de terrain d’herbe ou de moisissures. Si une seule plante (ou 4 m² de terrain) est choisie comme cible par le druide, le jet de protection de la plante est lancé avec un malus de –4 ; si 2 plantes (ou 8 m²) sont visées, les jets de protection sont à –2 ; si 3 plantes (ou 12 m²) sont visées, le jet de protection est à –1 ; et si le maximum de 4 plantes (ou 16 m²) est choisi par le druide, le jet de protection est normal.","composants_materiels_objets":[{"nom":"gui du druide","quantite":1,"consommation":"non_consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Symbole religieux druidique requis par la règle générale du Manuel pour les sorts avec composante matérielle."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":9,"nom":"Porte végétale","ecole":"Altération","niveau":4,"portee":"au toucher","duree":"1 tour/niveau","zone_effet":"spéciale","composantes":"V, S, M","temps_incantation":"6 segments","jet_sauvegarde":"aucun","description":"ce sort crée un passage, une porte magique à travers les arbres, les sous-bois, les fourrés ou toute autre végétation similaire, y compris celle de nature magique. Ce passage est ouvert uniquement pour le druide qui lance ce sort, pour les druides de niveau supérieur ou pour des dryades. Cette porte permet au druide d’entrer dans un tronc d’arbre et d’y rester jusqu’à la fin du sort. Si l’arbre est coupé ou brûlé, le druide doit quitter cet arbre avant qu’il ne tombe ou soit consumé ou alors il sera aussi tué. La durée du sort est de 1 tour par niveau du lanceur de sort. Si le druide choisit de rester dans un chêne, le sort dure 9 fois plus longtemps ; si l’arbre choisi est un frêne, il dure 3 fois plus longtemps. Le passage créé par le druide fait au maximum 1,20 m de large, 2,40 m de haut sur une longueur de 3,60 m/ niveau du druide.","composants_materiels_objets":[{"nom":"gui du druide","quantite":1,"consommation":"non_consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Symbole religieux druidique requis par la règle générale du Manuel pour les sorts avec composante matérielle."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":10,"nom":"Protection contre la foudre","ecole":"Abjuration","niveau":4,"portee":"au toucher","duree":"spéciale","zone_effet":"créature touchée","composantes":"V, S, M","temps_incantation":"6 segments","jet_sauvegarde":"aucun","description":"ce sort est exactement le même que le sort de niveau 3, protection contre le feu, sauf qu’il s’applique à l’électricité et à la foudre.","composants_materiels_objets":[{"nom":"gui du druide","quantite":1,"consommation":"non_consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Symbole religieux druidique requis par la règle générale du Manuel pour les sorts avec composante matérielle."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":11,"nom":"Répulsion des insectes","ecole":"Abjuration/Altération","niveau":4,"portee":"0","duree":"1 tour/niveau","zone_effet":"3 mètres de rayon autour du lanceur de sort","composantes":"V, S, M","temps_incantation":"1 round","jet_sauvegarde":"aucun","description":"quand ce sort est lancé, le druide crée une barrière invisible qui fait que tout insecte normal ne peut s’approcher à moins de 3 m du lanceur de sort. Les insectes avec 2 dés de vie ou plus, s’ils réussissent leur jet de protection contre les sorts, peuvent tout de même passer, mais ils subiront alors de 1 à 6 points de dégâts. Ce sort n’a aucun pouvoir sur les arachnides, les myriapodes et autres créatures similaires ; il affecte seulement les vrais insectes. Les composantes matérielles sont du gui et l’un des éléments suivants : plusieurs soucis écrasés, un poireau écrasé, 7 feuilles de navet écrasées ou un peu de résine d’arbre à camphre.","composants_materiels_objets":[{"nom":"gui du druide","quantite":1,"consommation":"non_consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Symbole religieux druidique requis par la règle générale du Manuel pour les sorts avec composante matérielle."},{"nom":"soucis écrasés","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Un des matériaux alternatifs du sort.","notes":null,"alternativeGroup":"materiel_repulsion_insectes"},{"nom":"poireau écrasé","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Un des matériaux alternatifs du sort.","notes":null,"alternativeGroup":"materiel_repulsion_insectes"},{"nom":"sept feuilles de navet écrasées","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Un des matériaux alternatifs du sort.","notes":null,"alternativeGroup":"materiel_repulsion_insectes"},{"nom":"résine d’arbre à camphre","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Un des matériaux alternatifs du sort.","notes":null,"alternativeGroup":"materiel_repulsion_insectes"}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":false},
+    {"ordre":12,"nom":"Soins majeurs","ecole":"Nécromancie","niveau":4,"portee":"au toucher","duree":"permanente","zone_effet":"créature touchée","composantes":"V, S, M","temps_incantation":"6 segments","jet_sauvegarde":"aucun","description":"ce sort est le même que le sort de niveau 4 de clerc, soins majeurs (voir p.49), mais le druide doit utiliser du gui, de n’importe quelle sorte, comme composante matérielle.","composants_materiels_objets":[{"nom":"gui du druide","quantite":1,"consommation":"non_consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Symbole religieux druidique requis par la règle générale du Manuel pour les sorts avec composante matérielle."}],"status":"reference_complete_description_normalisee","variantes":[],"reversible":true,"inverse":"Blessures majeures","inverseNameStatus":"manual_explicit"}
   ]
 }
