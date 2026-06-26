@@ -26,7 +26,11 @@
         <div class="a2e-progression-overview-field a2e-progression-overview-class">
           <label>Classe</label>
           {{#if classProgression.enabled}}
-            <input class="a2e-progression-class-input" type="text" value="{{actor.system.classe}}" readonly title="{{actor.system.classe}}">
+            <div class="a2e-class-badges" title="{{actor.system.classe}}" aria-label="Classes du personnage">
+              {{#each classProgression.classes as |cls|}}
+                <span class="a2e-class-badge a2e-class-badge--{{cls.slug}}">{{cls.name}}</span>
+              {{/each}}
+            </div>
           {{else}}
             <input class="a2e-progression-class-input" type="text" name="system.classe" value="{{actor.system.classe}}">
           {{/if}}
@@ -125,17 +129,17 @@
         <input type="text" value="{{actor.system.points_de_coup}}" readonly title="Points de vie maximum">
       </div>
 
-      <div class="a2e-combat-stat">
+      <div class="a2e-combat-stat a2e-combat-ca">
         <label>CA</label>
         <input type="text" value="{{actor.system.ca_total}}" readonly>
       </div>
 
-      <div class="a2e-combat-stat">
+      <div class="a2e-combat-stat a2e-combat-thaco">
         <label>THAC0</label>
         <input type="text" value="{{add2eBestThaco actor combatDefense.thaco}}" readonly title="Meilleur THAC0 parmi les classes actives.">
       </div>
 
-      <div class="a2e-combat-stat">
+      <div class="a2e-combat-stat a2e-combat-movement">
         <label>Mouvement</label>
         <input type="text" value="{{#if system.movement}}{{system.movement}}{{else}}{{actor.system.movement}}{{/if}} m" readonly>
       </div>
