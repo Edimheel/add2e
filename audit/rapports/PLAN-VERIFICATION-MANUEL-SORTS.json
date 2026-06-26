@@ -1,6 +1,6 @@
 {
-  "version": "2026-06-26-manual-spell-verification-plan-v3",
-  "generatedAt": "2026-06-26T16:00:30.068Z",
+  "version": "2026-06-26-manual-spell-verification-plan-v4",
+  "generatedAt": "2026-06-26T16:08:42.434Z",
   "sourceOfTruth": "Manuel des joueurs AD&D 2e",
   "inputs": {
     "audit": "audit\\rapports\\AUDIT-REFERENCES-SORTS-GLOBAL.json",
@@ -8,17 +8,19 @@
   },
   "rules": [
     "Le fichier maître sert uniquement à vérifier les listes, l'ordre et le nombre issus des tables du Manuel.",
-    "P0 signifie exclusivement qu'une référence diffère du fichier maître issu du Manuel ou que cette référence est indisponible.",
+    "P0 signifie exclusivement qu'une référence de sorts classe/niveau diffère du fichier maître issu du Manuel ou que cette référence est indisponible.",
+    "Les documents transversaux hors tables de sorts sont exclus du plan et listés séparément ; ils ne peuvent jamais créer un P0.",
     "Le découpage Foundry sert uniquement de comparaison ; une divergence Foundry ne peut jamais classer une référence en P0 ni compléter ou corriger une référence.",
     "Chaque champ marqué transcription ou arbitrage doit être lu dans le Manuel avant toute écriture.",
     "Les références sont corrigées avant tout JSON normalisé."
   ],
   "summary": {
-    "references": 33,
+    "references": 30,
     "spells": 414,
+    "excludedSupportDocuments": 3,
     "byPriority": {
       "P0_LISTE_MANUEL": {
-        "references": 3,
+        "references": 0,
         "spells": 0
       },
       "P1_TRANSCRIPTION_MANUEL": {
@@ -34,169 +36,32 @@
         "spells": 0
       }
     },
-    "foundryListReviews": 16,
-    "unresolvedDecoupage": 3,
+    "foundryListReviews": 13,
+    "unresolvedDecoupage": 0,
     "technicalFieldsToTranscribe": 2262,
     "descriptionsToTranscribe": 340,
     "technicalFieldsToArbitrate": 226,
     "descriptionsToArbitrate": 22
   },
+  "excludedSupportDocuments": [
+    {
+      "file": "manuel-joueurs-composants-materiels.json",
+      "referencePath": "audit\\reference\\manuel-joueurs-composants-materiels.json",
+      "reason": "document_transversal_hors_table_classe_niveau"
+    },
+    {
+      "file": "manuel-joueurs-illusionniste-reversibilite.json",
+      "referencePath": "audit\\reference\\manuel-joueurs-illusionniste-reversibilite.json",
+      "reason": "document_transversal_hors_table_classe_niveau"
+    },
+    {
+      "file": "manuel-joueurs-reversibilite.json",
+      "referencePath": "audit\\reference\\manuel-joueurs-reversibilite.json",
+      "reason": "document_transversal_hors_table_classe_niveau"
+    }
+  ],
   "priorities": {
-    "P0_LISTE_MANUEL": [
-      {
-        "priority": "P0_LISTE_MANUEL",
-        "file": "manuel-joueurs-composants-materiels.json",
-        "referencePath": "audit\\reference\\manuel-joueurs-composants-materiels.json",
-        "foundryExport": null,
-        "decoupageResolution": {
-          "declared": null,
-          "resolvedPath": null,
-          "status": "missing_declaration",
-          "candidates": [
-            "audit\\decoupage_fichier\\composants-materiels.json",
-            "audit\\decoupage_fichier\\-niveau-0.json"
-          ]
-        },
-        "source": {
-          "classe": null,
-          "niveau": null,
-          "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf"
-        },
-        "manualList": {
-          "available": false,
-          "key": "-niveau-0",
-          "expectedCount": null,
-          "names": [],
-          "referenceAvailable": true,
-          "decoupageAvailable": false,
-          "reference": {
-            "missing": [],
-            "extra": [],
-            "orderMatches": false
-          },
-          "decoupage": {
-            "missing": [],
-            "extra": [],
-            "orderMatches": false
-          }
-        },
-        "foundryListNeedsReview": true,
-        "auditStatus": "blocked",
-        "auditErrors": [
-          "spells doit etre un tableau.",
-          "Découpage non résolu (missing_declaration)."
-        ],
-        "taskCounts": {
-          "technicalFieldsToTranscribe": 0,
-          "descriptionsToTranscribe": 0,
-          "technicalFieldsToArbitrate": 0,
-          "descriptionsToArbitrate": 0
-        },
-        "spellTasks": []
-      },
-      {
-        "priority": "P0_LISTE_MANUEL",
-        "file": "manuel-joueurs-illusionniste-reversibilite.json",
-        "referencePath": "audit\\reference\\manuel-joueurs-illusionniste-reversibilite.json",
-        "foundryExport": null,
-        "decoupageResolution": {
-          "declared": null,
-          "resolvedPath": null,
-          "status": "missing_declaration",
-          "candidates": [
-            "audit\\decoupage_fichier\\illusionniste-reversibilite.json",
-            "audit\\decoupage_fichier\\illusionniste-niveau-0.json"
-          ]
-        },
-        "source": {
-          "classe": "illusionniste",
-          "niveau": null,
-          "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf"
-        },
-        "manualList": {
-          "available": false,
-          "key": "illusionniste-niveau-0",
-          "expectedCount": null,
-          "names": [],
-          "referenceAvailable": true,
-          "decoupageAvailable": false,
-          "reference": {
-            "missing": [],
-            "extra": [],
-            "orderMatches": false
-          },
-          "decoupage": {
-            "missing": [],
-            "extra": [],
-            "orderMatches": false
-          }
-        },
-        "foundryListNeedsReview": true,
-        "auditStatus": "blocked",
-        "auditErrors": [
-          "spells doit etre un tableau.",
-          "Découpage non résolu (missing_declaration)."
-        ],
-        "taskCounts": {
-          "technicalFieldsToTranscribe": 0,
-          "descriptionsToTranscribe": 0,
-          "technicalFieldsToArbitrate": 0,
-          "descriptionsToArbitrate": 0
-        },
-        "spellTasks": []
-      },
-      {
-        "priority": "P0_LISTE_MANUEL",
-        "file": "manuel-joueurs-reversibilite.json",
-        "referencePath": "audit\\reference\\manuel-joueurs-reversibilite.json",
-        "foundryExport": null,
-        "decoupageResolution": {
-          "declared": null,
-          "resolvedPath": null,
-          "status": "missing_declaration",
-          "candidates": [
-            "audit\\decoupage_fichier\\reversibilite.json",
-            "audit\\decoupage_fichier\\-niveau-0.json"
-          ]
-        },
-        "source": {
-          "classe": null,
-          "niveau": null,
-          "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf"
-        },
-        "manualList": {
-          "available": false,
-          "key": "-niveau-0",
-          "expectedCount": null,
-          "names": [],
-          "referenceAvailable": true,
-          "decoupageAvailable": false,
-          "reference": {
-            "missing": [],
-            "extra": [],
-            "orderMatches": false
-          },
-          "decoupage": {
-            "missing": [],
-            "extra": [],
-            "orderMatches": false
-          }
-        },
-        "foundryListNeedsReview": true,
-        "auditStatus": "blocked",
-        "auditErrors": [
-          "spells doit etre un tableau.",
-          "Découpage non résolu (missing_declaration)."
-        ],
-        "taskCounts": {
-          "technicalFieldsToTranscribe": 0,
-          "descriptionsToTranscribe": 0,
-          "technicalFieldsToArbitrate": 0,
-          "descriptionsToArbitrate": 0
-        },
-        "spellTasks": []
-      }
-    ],
+    "P0_LISTE_MANUEL": [],
     "P1_TRANSCRIPTION_MANUEL": [
       {
         "priority": "P1_TRANSCRIPTION_MANUEL",
@@ -11172,159 +11037,6 @@
     "P3_CONFIRMATION_MANUEL": []
   },
   "files": [
-    {
-      "priority": "P0_LISTE_MANUEL",
-      "file": "manuel-joueurs-composants-materiels.json",
-      "referencePath": "audit\\reference\\manuel-joueurs-composants-materiels.json",
-      "foundryExport": null,
-      "decoupageResolution": {
-        "declared": null,
-        "resolvedPath": null,
-        "status": "missing_declaration",
-        "candidates": [
-          "audit\\decoupage_fichier\\composants-materiels.json",
-          "audit\\decoupage_fichier\\-niveau-0.json"
-        ]
-      },
-      "source": {
-        "classe": null,
-        "niveau": null,
-        "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf"
-      },
-      "manualList": {
-        "available": false,
-        "key": "-niveau-0",
-        "expectedCount": null,
-        "names": [],
-        "referenceAvailable": true,
-        "decoupageAvailable": false,
-        "reference": {
-          "missing": [],
-          "extra": [],
-          "orderMatches": false
-        },
-        "decoupage": {
-          "missing": [],
-          "extra": [],
-          "orderMatches": false
-        }
-      },
-      "foundryListNeedsReview": true,
-      "auditStatus": "blocked",
-      "auditErrors": [
-        "spells doit etre un tableau.",
-        "Découpage non résolu (missing_declaration)."
-      ],
-      "taskCounts": {
-        "technicalFieldsToTranscribe": 0,
-        "descriptionsToTranscribe": 0,
-        "technicalFieldsToArbitrate": 0,
-        "descriptionsToArbitrate": 0
-      },
-      "spellTasks": []
-    },
-    {
-      "priority": "P0_LISTE_MANUEL",
-      "file": "manuel-joueurs-illusionniste-reversibilite.json",
-      "referencePath": "audit\\reference\\manuel-joueurs-illusionniste-reversibilite.json",
-      "foundryExport": null,
-      "decoupageResolution": {
-        "declared": null,
-        "resolvedPath": null,
-        "status": "missing_declaration",
-        "candidates": [
-          "audit\\decoupage_fichier\\illusionniste-reversibilite.json",
-          "audit\\decoupage_fichier\\illusionniste-niveau-0.json"
-        ]
-      },
-      "source": {
-        "classe": "illusionniste",
-        "niveau": null,
-        "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf"
-      },
-      "manualList": {
-        "available": false,
-        "key": "illusionniste-niveau-0",
-        "expectedCount": null,
-        "names": [],
-        "referenceAvailable": true,
-        "decoupageAvailable": false,
-        "reference": {
-          "missing": [],
-          "extra": [],
-          "orderMatches": false
-        },
-        "decoupage": {
-          "missing": [],
-          "extra": [],
-          "orderMatches": false
-        }
-      },
-      "foundryListNeedsReview": true,
-      "auditStatus": "blocked",
-      "auditErrors": [
-        "spells doit etre un tableau.",
-        "Découpage non résolu (missing_declaration)."
-      ],
-      "taskCounts": {
-        "technicalFieldsToTranscribe": 0,
-        "descriptionsToTranscribe": 0,
-        "technicalFieldsToArbitrate": 0,
-        "descriptionsToArbitrate": 0
-      },
-      "spellTasks": []
-    },
-    {
-      "priority": "P0_LISTE_MANUEL",
-      "file": "manuel-joueurs-reversibilite.json",
-      "referencePath": "audit\\reference\\manuel-joueurs-reversibilite.json",
-      "foundryExport": null,
-      "decoupageResolution": {
-        "declared": null,
-        "resolvedPath": null,
-        "status": "missing_declaration",
-        "candidates": [
-          "audit\\decoupage_fichier\\reversibilite.json",
-          "audit\\decoupage_fichier\\-niveau-0.json"
-        ]
-      },
-      "source": {
-        "classe": null,
-        "niveau": null,
-        "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf"
-      },
-      "manualList": {
-        "available": false,
-        "key": "-niveau-0",
-        "expectedCount": null,
-        "names": [],
-        "referenceAvailable": true,
-        "decoupageAvailable": false,
-        "reference": {
-          "missing": [],
-          "extra": [],
-          "orderMatches": false
-        },
-        "decoupage": {
-          "missing": [],
-          "extra": [],
-          "orderMatches": false
-        }
-      },
-      "foundryListNeedsReview": true,
-      "auditStatus": "blocked",
-      "auditErrors": [
-        "spells doit etre un tableau.",
-        "Découpage non résolu (missing_declaration)."
-      ],
-      "taskCounts": {
-        "technicalFieldsToTranscribe": 0,
-        "descriptionsToTranscribe": 0,
-        "technicalFieldsToArbitrate": 0,
-        "descriptionsToArbitrate": 0
-      },
-      "spellTasks": []
-    },
     {
       "priority": "P1_TRANSCRIPTION_MANUEL",
       "file": "manuel-joueurs-clerc-niveau-2.json",
