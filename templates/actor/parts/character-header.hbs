@@ -1,142 +1,153 @@
-    <header class="a2e-header">
-      <div>
-        <img class="a2e-portrait" src="{{actor.img}}" alt="Portrait du personnage" data-edit="img">
+<header class="a2e-header a2e-summary-header">
+  <div class="a2e-summary-portrait">
+    <img class="a2e-portrait" src="{{actor.img}}" alt="Portrait du personnage" data-edit="img">
+  </div>
+
+  <div class="a2e-summary-main">
+    <div class="a2e-summary-identity">
+      <div class="a2e-summary-name-wrap">
+        <span class="a2e-summary-kicker">Personnage</span>
+        <input class="a2e-name" type="text" name="name" value="{{actor.name}}" aria-label="Nom du personnage">
       </div>
 
-      <div>
-        <div class="a2e-name-line">
-          <input class="a2e-name" type="text" name="name" value="{{actor.name}}" aria-label="Nom du personnage">
+      <div class="a2e-summary-player">
+        <label for="a2e-player-{{actor.id}}">Joueur</label>
+        <input id="a2e-player-{{actor.id}}" type="text" name="system.nom_joueur" value="{{actor.system.nom_joueur}}">
+      </div>
+    </div>
 
-          <div class="a2e-field a2e-player-top">
-            <label>Joueur</label>
-            <input type="text" name="system.nom_joueur" value="{{actor.system.nom_joueur}}">
-          </div>
+    <section class="a2e-progression-card" aria-label="Identité et progression">
+      <div class="a2e-progression-card-heading">
+        <span>Identité &amp; progression</span>
+        {{#if classProgression.isMulticlass}}<span class="a2e-progression-status">Multiclassé</span>{{/if}}
+      </div>
+
+      <div class="a2e-progression-overview">
+        <div class="a2e-progression-overview-field a2e-progression-overview-class">
+          <label>Classe</label>
+          {{#if classProgression.enabled}}
+            <input class="a2e-progression-class-input" type="text" value="{{actor.system.classe}}" readonly title="{{actor.system.classe}}">
+          {{else}}
+            <input class="a2e-progression-class-input" type="text" name="system.classe" value="{{actor.system.classe}}">
+          {{/if}}
         </div>
 
-        <div class="a2e-id-grid" style="grid-template-columns:minmax(250px,2fr) minmax(110px,.9fr) minmax(118px,.95fr) minmax(155px,1.2fr) minmax(90px,.75fr);">
-          {{#if classProgression.enabled}}
-            <div class="a2e-field a2e-class-progression-field" style="grid-column:span 2;min-width:0;">
-              <label>Classe</label>
-              <input type="text" value="{{actor.system.classe}}" readonly title="{{actor.system.classe}}">
-            </div>
-          {{else}}
-            <div class="a2e-field" style="grid-column:span 2;min-width:0;">
-              <label>Classe</label>
-              <input type="text" name="system.classe" value="{{actor.system.classe}}">
-            </div>
-          {{/if}}
+        <div class="a2e-progression-overview-field a2e-progression-overview-race">
+          <label for="a2e-race-{{actor.id}}">Race</label>
+          <input id="a2e-race-{{actor.id}}" type="text" name="system.race" value="{{actor.system.race}}">
+        </div>
+      </div>
 
-          <div class="a2e-field">
-            <label>Race</label>
-            <input type="text" name="system.race" value="{{actor.system.race}}">
-          </div>
-
-          {{#if classProgression.enabled}}
-            <div class="a2e-field a2e-class-progression-field" style="min-width:0;">
-              <label>Niveau</label>
-              <div class="a2e-multiclass-inline" style="display:flex;align-items:center;gap:3px;min-width:0;white-space:nowrap;">
-                {{#each classProgression.classes as |cls|}}
-                  <input type="number"
-                         name="{{#if ../classProgression.isMulticlass}}add2e.classProgression.{{cls.itemId}}.level{{else}}system.niveau{{/if}}"
-                         value="{{cls.level}}"
-                         data-class-id="{{cls.itemId}}"
-                         data-class-progression-field="level"
-                         min="1"
-                         step="1"
-                         style="min-width:0;flex:1 1 0;text-align:center;padding:4px 2px;"
-                         title="{{cls.name}} — niveau">
-                  {{#unless @last}}<span aria-hidden="true" style="color:var(--a2e-gold-dark);font-weight:900;">/</span>{{/unless}}
-                {{/each}}
-              </div>
-            </div>
-          {{else}}
-            <div class="a2e-field">
-              <label>Niveau</label>
-              <input type="number" name="system.niveau" value="{{actor.system.niveau}}" min="1">
-            </div>
-          {{/if}}
-
-          {{#if classProgression.enabled}}
-            <div class="a2e-field a2e-xp-field a2e-class-progression-field" style="min-width:0;">
-              <label>XP</label>
-              <div class="a2e-multiclass-inline" style="display:flex;align-items:center;gap:3px;min-width:0;white-space:nowrap;">
-                {{#each classProgression.classes as |cls|}}
-                  <input type="number"
-                         name="{{#if ../classProgression.isMulticlass}}add2e.classProgression.{{cls.itemId}}.xp{{else}}system.xp{{/if}}"
-                         value="{{cls.xp}}"
-                         data-class-id="{{cls.itemId}}"
-                         data-class-progression-field="xp"
-                         min="0"
-                         step="1"
-                         style="min-width:0;flex:1 1 0;text-align:center;padding:4px 2px;font-size:.9em;"
-                         title="{{cls.name}} — XP / prochain seuil : {{cls.nextXp}}">
-                  {{#unless @last}}<span aria-hidden="true" style="color:var(--a2e-gold-dark);font-weight:900;">/</span>{{/unless}}
-                {{/each}}
-              </div>
-            </div>
-          {{else}}
-            <div class="a2e-field a2e-xp-field">
-              <label>XP</label>
-              <div class="a2e-xp-inline">
-                <input type="number" name="system.xp" value="{{actor.system.xp}}" min="0" step="1" title="{{actor.system.progression_xp}}">
-                <button type="button" class="a2e-icon-btn" data-add2e-mx="xp" title="Ajouter de l'XP">+</button>
-              </div>
-            </div>
-          {{/if}}
-
-          {{#if classProgression.enabled}}
-            <div class="a2e-field a2e-class-progression-field" style="grid-column:span 3;min-width:0;">
-              <label>Titre</label>
-              <div class="a2e-multiclass-titles" style="display:flex;align-items:center;gap:5px;min-width:0;white-space:nowrap;overflow:hidden;">
-                {{#each classProgression.classes as |cls|}}
-                  <span title="{{cls.name}}" style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1 1 0;text-align:center;font-weight:700;color:var(--a2e-gold-dark);">
-                    {{#if cls.title}}{{cls.title}}{{else}}—{{/if}}
-                  </span>
-                  {{#unless @last}}<span aria-hidden="true" style="color:var(--a2e-gold-dark);font-weight:900;">/</span>{{/unless}}
-                {{/each}}
-              </div>
-            </div>
-          {{else}}
-            <div class="a2e-field" style="grid-column:span 3;min-width:0;">
-              <label>Titre</label>
-              <input type="text" value="{{progressionCourante.title}}" readonly>
-            </div>
-          {{/if}}
-
-          <div class="a2e-field">
-            <label>Alignement</label>
-            <select name="system.alignement">
-              {{#each alignementsDisponibles as |algn|}}
-                <option value="{{algn}}" {{#if (eq ../actor.system.alignement algn)}}selected{{/if}}>{{algn}}</option>
+      {{#if classProgression.enabled}}
+        <div class="a2e-progression-matrix">
+          <div class="a2e-progression-row">
+            <span class="a2e-progression-row-label">Niveau</span>
+            <div class="a2e-progression-values" aria-label="Niveaux par classe">
+              {{#each classProgression.classes as |cls|}}
+                <input class="a2e-progression-input a2e-progression-level-input"
+                       type="number"
+                       name="{{#if ../classProgression.isMulticlass}}add2e.classProgression.{{cls.itemId}}.level{{else}}system.niveau{{/if}}"
+                       value="{{cls.level}}"
+                       data-class-id="{{cls.itemId}}"
+                       data-class-progression-field="level"
+                       min="1"
+                       step="1"
+                       title="{{cls.name}} — niveau">
+                {{#unless @last}}<span class="a2e-progression-separator" aria-hidden="true">/</span>{{/unless}}
               {{/each}}
-            </select>
+            </div>
           </div>
 
-          <div class="a2e-field">
-            <label>Mouvement</label>
-            <input type="text" value="{{#if system.movement}}{{system.movement}}{{else}}{{actor.system.movement}}{{/if}} m" readonly>
+          <div class="a2e-progression-row">
+            <span class="a2e-progression-row-label">XP</span>
+            <div class="a2e-progression-values" aria-label="Expérience par classe">
+              {{#each classProgression.classes as |cls|}}
+                <input class="a2e-progression-input a2e-progression-xp-input"
+                       type="number"
+                       name="{{#if ../classProgression.isMulticlass}}add2e.classProgression.{{cls.itemId}}.xp{{else}}system.xp{{/if}}"
+                       value="{{cls.xp}}"
+                       data-class-id="{{cls.itemId}}"
+                       data-class-progression-field="xp"
+                       min="0"
+                       step="1"
+                       title="{{cls.name}} — XP / prochain seuil : {{cls.nextXp}}">
+                {{#unless @last}}<span class="a2e-progression-separator" aria-hidden="true">/</span>{{/unless}}
+              {{/each}}
+            </div>
           </div>
 
-          <div class="a2e-field">
-            <label>PV max</label>
-            <input type="text" value="{{actor.system.points_de_coup}}" readonly>
+          <div class="a2e-progression-row a2e-progression-title-row">
+            <span class="a2e-progression-row-label">Titre</span>
+            <div class="a2e-progression-values a2e-progression-title-values" aria-label="Titres par classe">
+              {{#each classProgression.classes as |cls|}}
+                <span class="a2e-progression-title" title="{{cls.name}}">
+                  {{#if cls.title}}{{cls.title}}{{else}}—{{/if}}
+                </span>
+                {{#unless @last}}<span class="a2e-progression-separator" aria-hidden="true">/</span>{{/unless}}
+              {{/each}}
+            </div>
+          </div>
+        </div>
+      {{else}}
+        <div class="a2e-progression-matrix">
+          <div class="a2e-progression-row">
+            <span class="a2e-progression-row-label">Niveau</span>
+            <div class="a2e-progression-values">
+              <input class="a2e-progression-input a2e-progression-level-input" type="number" name="system.niveau" value="{{actor.system.niveau}}" min="1">
+            </div>
           </div>
 
-          <div class="a2e-field">
-            <label>PV courant</label>
-            <input type="number" name="system.pdv" value="{{actor.system.pdv}}" class="pv-courant">
+          <div class="a2e-progression-row">
+            <span class="a2e-progression-row-label">XP</span>
+            <div class="a2e-progression-values a2e-progression-xp-single">
+              <input class="a2e-progression-input a2e-progression-xp-input" type="number" name="system.xp" value="{{actor.system.xp}}" min="0" step="1" title="{{actor.system.progression_xp}}">
+              <button type="button" class="a2e-icon-btn" data-add2e-mx="xp" title="Ajouter de l'XP">+</button>
+            </div>
           </div>
 
-          <div class="a2e-field">
-            <label>CA</label>
-            <input type="text" value="{{actor.system.ca_total}}" readonly>
+          <div class="a2e-progression-row a2e-progression-title-row">
+            <span class="a2e-progression-row-label">Titre</span>
+            <div class="a2e-progression-values a2e-progression-title-values">
+              <span class="a2e-progression-title">{{progressionCourante.title}}</span>
+            </div>
           </div>
+        </div>
+      {{/if}}
+    </section>
 
-          <div class="a2e-field">
-            <label>THAC0</label>
-            <input type="text" value="{{add2eBestThaco actor combatDefense.thaco}}" readonly title="Meilleur THAC0 parmi les classes actives.">
-          </div>
-
+    <section class="a2e-combat-strip" aria-label="Statistiques rapides">
+      <div class="a2e-combat-stat a2e-combat-pv">
+        <label>PV</label>
+        <div class="a2e-combat-pv-values">
+          <input type="number" name="system.pdv" value="{{actor.system.pdv}}" class="pv-courant" aria-label="Points de vie courants" title="Points de vie courants">
+          <span aria-hidden="true">/</span>
+          <input type="text" value="{{actor.system.points_de_coup}}" readonly aria-label="Points de vie maximum" title="Points de vie maximum">
         </div>
       </div>
-    </header>
+
+      <div class="a2e-combat-stat">
+        <label>CA</label>
+        <input type="text" value="{{actor.system.ca_total}}" readonly>
+      </div>
+
+      <div class="a2e-combat-stat">
+        <label>THAC0</label>
+        <input type="text" value="{{add2eBestThaco actor combatDefense.thaco}}" readonly title="Meilleur THAC0 parmi les classes actives.">
+      </div>
+
+      <div class="a2e-combat-stat">
+        <label>Mouvement</label>
+        <input type="text" value="{{#if system.movement}}{{system.movement}}{{else}}{{actor.system.movement}}{{/if}} m" readonly>
+      </div>
+
+      <div class="a2e-combat-stat a2e-combat-alignment">
+        <label for="a2e-alignment-{{actor.id}}">Alignement</label>
+        <select id="a2e-alignment-{{actor.id}}" name="system.alignement">
+          {{#each alignementsDisponibles as |algn|}}
+            <option value="{{algn}}" {{#if (eq ../actor.system.alignement algn)}}selected{{/if}}>{{algn}}</option>
+          {{/each}}
+        </select>
+      </div>
+    </section>
+  </div>
+</header>
