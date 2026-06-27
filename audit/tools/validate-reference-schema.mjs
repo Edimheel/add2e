@@ -37,70 +37,82 @@ const requiredIdentityFields = ["ordre", "nom", "niveau", "variantes", "reversib
 const technicalFields = ["ecole", "portee", "duree", "zone_effet", "composantes", "temps_incantation", "jet_sauvegarde"];
 const placeholders = new Set(["", "a_completer", "a_remplir", "a_renseigner", "todo", "tbd", "inconnu", "non_renseigne", "non_disponible"]);
 
-// Table fermée : ces rapprochements ont été contrôlés dans le rapport d'audit.
-// Elle ne renomme jamais un item Foundry et ne modifie jamais les références du Manuel.
+// Rapprochements nécessaires lorsque l'item Foundry ne possède pas le titre canonique.
+// Cette table ne renomme jamais Foundry et ne modifie jamais les références du Manuel.
 const identityAliases = new Map([
-  [
-    "clerc|1|purification_de_leau_et_des_aliments",
-    {
-      sourceKey: "clerc|1|purification_de_la_nourriture_et_de_la_boisson",
-      note: "Alias historique Foundry du sort canonique « Purification de l'eau et des aliments »."
-    }
-  ],
-  [
-    "clerc|1|soins_mineurs",
-    {
-      sourceKey: "clerc|1|soins_des_blessures_legeres",
-      note: "Alias historique Foundry du sort canonique « Soins mineurs »."
-    }
-  ],
-  [
-    "clerc|4|batons_a_serpents",
-    {
-      sourceKey: "clerc|4|batons_en_serpents",
-      note: "Variation de préposition dans le titre Foundry."
-    }
-  ],
-  [
-    "clerc|4|protection_contre_le_mal_sur_3_m",
-    {
-      sourceKey: "clerc|4|protection_contre_le_mal_rayon_de_10_pieds",
-      note: "Même sort, titre Foundry exprimé en mesure impériale."
-    }
-  ],
-  [
-    "clerc|5|soin_ultime",
-    {
-      sourceKey: "clerc|5|soins_ultime",
-      note: "Variation singulier/pluriel dans le titre Foundry."
-    }
-  ],
-  [
-    "druide|4|dissipation_de_la_magie",
-    {
-      sourceKey: "druide|4|dissipation_de_magie",
-      note: "Variation d'article dans le titre Foundry."
-    }
-  ],
-  [
-    "magicien|1|projectile_magique",
-    {
-      sourceKey: "magicien|1|missile_magique",
-      note: "Ancien intitulé Foundry du sort canonique « Projectile magique »."
-    }
-  ],
-  [
-    "magicien|5|chien_fidele_de_mordenkainen",
-    {
-      sourceKey: "magicien|5|chien_fidele_de_mordekainen",
-      note: "Orthographe historique Foundry de Mordenkainen."
-    }
-  ],
   [
     "magicien|5|teleikinesie",
     {
       sourceKey: "magicien|5|telekinesie",
       note: "Variation orthographique dans le titre Foundry."
+    }
+  ]
+]);
+
+// Des doublons Foundry historiques coexistent avec l'item portant le titre canonique.
+// Ils restent signalés, mais ne constituent ni un sort manquant ni une identité bloquante.
+const legacyFoundryDuplicates = new Map([
+  [
+    "clerc|1|purification_de_la_nourriture_et_de_la_boisson",
+    {
+      referenceKey: "clerc|1|purification_de_leau_et_des_aliments",
+      note: "Ancien titre Foundry de « Purification de l'eau et des aliments »."
+    }
+  ],
+  [
+    "clerc|1|soins_des_blessures_legeres",
+    {
+      referenceKey: "clerc|1|soins_mineurs",
+      note: "Ancien titre Foundry de « Soins mineurs »."
+    }
+  ],
+  [
+    "clerc|3|localisation_dun_objet",
+    {
+      referenceKey: "clerc|3|localisation_dobjets",
+      note: "Ancien singulier Foundry de « Localisation d'objets »."
+    }
+  ],
+  [
+    "clerc|4|batons_en_serpents",
+    {
+      referenceKey: "clerc|4|batons_a_serpents",
+      note: "Variation de préposition dans le titre Foundry."
+    }
+  ],
+  [
+    "clerc|4|protection_contre_le_mal_rayon_de_10_pieds",
+    {
+      referenceKey: "clerc|4|protection_contre_le_mal_sur_3_m",
+      note: "Même sort, titre Foundry exprimé en mesure impériale."
+    }
+  ],
+  [
+    "clerc|5|soins_ultime",
+    {
+      referenceKey: "clerc|5|soin_ultime",
+      note: "Variation singulier/pluriel dans le titre Foundry."
+    }
+  ],
+  [
+    "druide|4|dissipation_de_magie",
+    {
+      referenceKey: "druide|4|dissipation_de_la_magie",
+      note: "Variation d'article dans le titre Foundry."
+    }
+  ],
+  [
+    "magicien|1|missile_magique",
+    {
+      referenceKey: "magicien|1|projectile_magique",
+      note: "Ancien intitulé Foundry de « Projectile magique »."
+    }
+  ],
+  [
+    "magicien|5|chien_fidele_de_mordekainen",
+    {
+      referenceKey: "magicien|5|chien_fidele_de_mordenkainen",
+      note: "Orthographe historique Foundry de Mordenkainen."
     }
   ]
 ]);
@@ -148,7 +160,7 @@ function writeJson(filePath, value) {
 function filesInReferenceDirectory() {
   return fs.readdirSync(referenceDir)
     .filter((file) => SPELL_REFERENCE_FILE_PATTERN.test(file))
-    .sort((a, b) => a.localeCompare(b, "fr"));
+    .sort((left, right) => left.localeCompare(right, "fr"));
 }
 
 function text(value) {
@@ -232,22 +244,15 @@ function normalizedComparable(value, { punctuation = false } = {}) {
 
 function validateSpell(file, index, spell, errors, warnings) {
   const label = `${file} > spells[${index}] ${spell?.nom ?? "sans_nom"}`;
-
   for (const field of forbiddenDescriptionFields) {
     if (Object.prototype.hasOwnProperty.call(spell, field)) errors.push(`${label}: champ interdit ${field}`);
   }
-
   for (const field of requiredSpellFields) {
     if (!Object.prototype.hasOwnProperty.call(spell, field)) errors.push(`${label}: champ requis manquant ${field}`);
   }
-
-  if (typeof spell.description !== "string") {
-    errors.push(`${label}: description doit etre une chaine`);
-  } else if (!spell.description.trim()) {
-    warnings.push(`${label}: description vide ou a importer`);
-  }
-
-  if (typeof spell.description === "string" && /\n/.test(spell.description)) {
+  if (typeof spell?.description !== "string") errors.push(`${label}: description doit etre une chaine`);
+  else if (!spell.description.trim()) warnings.push(`${label}: description vide ou a importer`);
+  if (typeof spell?.description === "string" && /\n/.test(spell.description)) {
     errors.push(`${label}: description non normalisee, retours ligne interdits`);
   }
 }
@@ -288,9 +293,7 @@ function reportField(referenceValue, sourceValue) {
   if (!Object.prototype.hasOwnProperty.call(referenceValue.owner, referenceValue.field)) return "missing_reference_field";
   if (isPlaceholder(referenceValue.value)) return "reference_placeholder";
   if (isPlaceholder(sourceValue)) return "missing_decoupage_value";
-  const referenceNormalized = normalizedComparable(referenceValue.value);
-  const sourceNormalized = normalizedComparable(sourceValue);
-  return referenceNormalized === sourceNormalized ? "equal" : "different";
+  return normalizedComparable(referenceValue.value) === normalizedComparable(sourceValue) ? "equal" : "different";
 }
 
 function reportDescription(referenceValue, sourceValue) {
@@ -298,7 +301,9 @@ function reportDescription(referenceValue, sourceValue) {
   if (!sourceValue) return "missing_decoupage_description";
   if (referenceValue === sourceValue) return "equal_raw";
   if (normalizedComparable(referenceValue) === normalizedComparable(sourceValue)) return "equal_formatting_only";
-  if (normalizedComparable(referenceValue, { punctuation: true }) === normalizedComparable(sourceValue, { punctuation: true })) return "equal_punctuation_only";
+  if (normalizedComparable(referenceValue, { punctuation: true }) === normalizedComparable(sourceValue, { punctuation: true })) {
+    return "equal_punctuation_only";
+  }
   return "different";
 }
 
@@ -313,12 +318,10 @@ function identityDetails(identity, extra = {}) {
   };
 }
 
-function resolveSourceIdentity(referenceKey, decoupageKeySet) {
-  if (decoupageKeySet.has(referenceKey)) {
-    return { sourceKey: referenceKey, match: "direct", note: null };
-  }
+function resolveSourceIdentity(referenceKey, sourceKeys) {
+  if (sourceKeys.has(referenceKey)) return { sourceKey: referenceKey, match: "direct", note: null };
   const alias = identityAliases.get(referenceKey);
-  if (alias && decoupageKeySet.has(alias.sourceKey)) {
+  if (alias && sourceKeys.has(alias.sourceKey)) {
     return { sourceKey: alias.sourceKey, match: "alias", note: alias.note };
   }
   return { sourceKey: null, match: "missing", note: null };
@@ -346,18 +349,20 @@ function auditReferenceFile(file) {
       descriptionDifferences: 0,
       identityDifferences: 0,
       aliasMatches: 0,
-      creationCandidates: 0,
+      requiredFoundryInstances: 0,
       referenceOnly: 0,
-      decoupageOnly: 0,
+      unresolvedDecoupageOnly: 0,
+      legacyFoundryDuplicates: 0,
       outOfScopeFoundryOnly: 0,
       referenceDuplicates: 0,
       decoupageDuplicates: 0
     },
     identity: {
       aliases: [],
-      creationCandidates: [],
+      requiredFoundryInstances: [],
       referenceOnly: [],
-      decoupageOnly: [],
+      unresolvedDecoupageOnly: [],
+      legacyFoundryDuplicates: [],
       outOfScopeFoundryOnly: [],
       referenceDuplicates: [],
       decoupageDuplicates: []
@@ -400,7 +405,6 @@ function auditReferenceFile(file) {
 
   const referenceKeys = new Set();
   const referenceIndex = new Map();
-  const duplicates = [];
   for (const [index, spell] of reference.spells.entries()) {
     const level = levelValue(spell?.niveau ?? sourceLevel);
     const key = spellKey(sourceClass, level, spell?.nom);
@@ -408,14 +412,8 @@ function auditReferenceFile(file) {
       output.errors.push(`spells[${index}] identité inexploitable.`);
       continue;
     }
-    const identity = {
-      key,
-      nom: text(spell?.nom),
-      classe: sourceClass,
-      niveau: level
-    };
+    const identity = { key, nom: text(spell?.nom), classe: sourceClass, niveau: level };
     if (referenceKeys.has(key)) {
-      duplicates.push(key);
       output.identity.referenceDuplicates.push(identityDetails(identity));
     } else {
       referenceIndex.set(key, identity);
@@ -423,7 +421,9 @@ function auditReferenceFile(file) {
     referenceKeys.add(key);
   }
   output.summary.referenceDuplicates = output.identity.referenceDuplicates.length;
-  if (duplicates.length) output.errors.push(`Doublons de référence : ${[...new Set(duplicates)].join(", ")}`);
+  if (output.summary.referenceDuplicates) {
+    output.errors.push(`Doublons de référence : ${output.identity.referenceDuplicates.map((entry) => entry.key).join(", ")}`);
+  }
 
   let decoupage;
   if (!output.foundryExport) {
@@ -435,7 +435,7 @@ function auditReferenceFile(file) {
         .map((key) => identityDetails(decoupage.index.get(key) ?? { key }))
         .filter(Boolean);
       output.summary.decoupageDuplicates = output.identity.decoupageDuplicates.length;
-      if (decoupage.duplicates.length) {
+      if (output.summary.decoupageDuplicates) {
         output.errors.push(`Doublons dans découpage : ${[...new Set(decoupage.duplicates)].join(", ")}`);
       }
     } catch (error) {
@@ -449,66 +449,73 @@ function auditReferenceFile(file) {
   output.summary.decoupageSpells = decoupageKeys.length;
 
   const matchedSourceKeys = new Set();
-  const sourceMatchByReferenceKey = new Map();
-  const referenceOnly = [];
-
+  const resolvedByReferenceKey = new Map();
   for (const referenceKey of referenceKeys) {
     const resolved = resolveSourceIdentity(referenceKey, decoupageKeySet);
-    sourceMatchByReferenceKey.set(referenceKey, resolved);
+    resolvedByReferenceKey.set(referenceKey, resolved);
     if (!resolved.sourceKey) {
-      referenceOnly.push(referenceKey);
+      const identity = identityDetails(referenceIndex.get(referenceKey) ?? { key: referenceKey }, {
+        disposition: "foundry_instance_required"
+      });
+      output.identity.referenceOnly.push(identity);
+      output.identity.requiredFoundryInstances.push(identity);
       continue;
     }
     matchedSourceKeys.add(resolved.sourceKey);
     if (resolved.match === "alias") {
-      const referenceIdentity = referenceIndex.get(referenceKey) ?? { key: referenceKey };
-      const sourceIdentity = decoupage?.index.get(resolved.sourceKey) ?? { key: resolved.sourceKey };
       output.identity.aliases.push({
-        reference: identityDetails(referenceIdentity),
-        decoupage: identityDetails(sourceIdentity),
+        reference: identityDetails(referenceIndex.get(referenceKey) ?? { key: referenceKey }),
+        decoupage: identityDetails(decoupage?.index.get(resolved.sourceKey) ?? { key: resolved.sourceKey }),
         note: resolved.note
       });
     }
   }
 
-  const decoupageOnly = [];
   for (const sourceKey of decoupageKeys) {
     if (matchedSourceKeys.has(sourceKey)) continue;
     const sourceIdentity = decoupage?.index.get(sourceKey) ?? { key: sourceKey };
+    const legacy = legacyFoundryDuplicates.get(sourceKey);
+    if (legacy && referenceKeys.has(legacy.referenceKey)) {
+      output.identity.legacyFoundryDuplicates.push({
+        canonicalReference: identityDetails(referenceIndex.get(legacy.referenceKey) ?? { key: legacy.referenceKey }),
+        decoupage: identityDetails(sourceIdentity),
+        note: legacy.note
+      });
+      continue;
+    }
     const outOfScopeReason = foundryOutOfManualScope.get(sourceKey);
     if (outOfScopeReason) {
       output.identity.outOfScopeFoundryOnly.push(identityDetails(sourceIdentity, { reason: outOfScopeReason }));
-    } else {
-      decoupageOnly.push(sourceKey);
+      continue;
     }
+    output.identity.unresolvedDecoupageOnly.push(identityDetails(sourceIdentity));
   }
-
-  output.identity.referenceOnly = referenceOnly
-    .map((key) => identityDetails(referenceIndex.get(key) ?? { key }, { disposition: "creation_candidate_required" }))
-    .filter(Boolean);
-  output.identity.creationCandidates = [...output.identity.referenceOnly];
-  output.identity.decoupageOnly = decoupageOnly
-    .map((key) => identityDetails(decoupage?.index.get(key) ?? { key }))
-    .filter(Boolean);
 
   output.summary.aliasMatches = output.identity.aliases.length;
+  output.summary.requiredFoundryInstances = output.identity.requiredFoundryInstances.length;
   output.summary.referenceOnly = output.identity.referenceOnly.length;
-  output.summary.creationCandidates = output.identity.creationCandidates.length;
-  output.summary.decoupageOnly = output.identity.decoupageOnly.length;
+  output.summary.unresolvedDecoupageOnly = output.identity.unresolvedDecoupageOnly.length;
+  output.summary.legacyFoundryDuplicates = output.identity.legacyFoundryDuplicates.length;
   output.summary.outOfScopeFoundryOnly = output.identity.outOfScopeFoundryOnly.length;
-  output.summary.decoupageSpellsInManualScope = output.summary.decoupageSpells - output.summary.outOfScopeFoundryOnly;
-  output.summary.identityDifferences = output.summary.referenceOnly + output.summary.decoupageOnly;
+  output.summary.decoupageSpellsInManualScope = output.summary.decoupageSpells
+    - output.summary.legacyFoundryDuplicates
+    - output.summary.outOfScopeFoundryOnly;
+  output.summary.identityDifferences = output.summary.requiredFoundryInstances + output.summary.unresolvedDecoupageOnly;
 
   if (output.summary.identityDifferences) {
-    output.errors.push(`Identités non résolues : référence sans découpage ${output.summary.referenceOnly}, découpage sans référence ${output.summary.decoupageOnly}.`);
+    output.errors.push(
+      `Identités non résolues : instances Foundry requises ${output.summary.requiredFoundryInstances}, découpage sans référence ${output.summary.unresolvedDecoupageOnly}.`
+    );
   }
   if (!output.summary.identityDifferences && output.summary.decoupageSpellsInManualScope !== output.summary.referenceSpells) {
-    output.errors.push(`Nombre incohérent après rapprochements : référence ${output.summary.referenceSpells}, découpage dans le périmètre du Manuel ${output.summary.decoupageSpellsInManualScope}.`);
+    output.errors.push(
+      `Nombre incohérent après rapprochements : référence ${output.summary.referenceSpells}, découpage dans le périmètre du Manuel ${output.summary.decoupageSpellsInManualScope}.`
+    );
   }
 
   for (const [index, spell] of reference.spells.entries()) {
     const key = spellKey(sourceClass, spell?.niveau ?? sourceLevel, spell?.nom);
-    const resolved = key ? sourceMatchByReferenceKey.get(key) : null;
+    const resolved = key ? resolvedByReferenceKey.get(key) : null;
     const source = resolved?.sourceKey && decoupage ? decoupage.index.get(resolved.sourceKey) : null;
     const spellReport = {
       ordre: spell?.ordre ?? null,
@@ -584,11 +591,9 @@ function auditReferenceFile(file) {
 
 function schemaOnly() {
   if (!fs.existsSync(referenceDir)) throw new Error(`Reference dir missing: ${referenceDir}`);
-  const files = filesInReferenceDirectory();
   const errors = [];
   const warnings = [];
-
-  for (const file of files) {
+  for (const file of filesInReferenceDirectory()) {
     const data = readJson(path.join(referenceDir, file));
     if (!Array.isArray(data.spells)) {
       errors.push(`${file}: spells doit etre un tableau`);
@@ -596,25 +601,24 @@ function schemaOnly() {
     }
     data.spells.forEach((spell, index) => validateSpell(file, index, spell, errors, warnings));
   }
-
   for (const warning of warnings) console.warn(`[WARN] ${warning}`);
   if (errors.length) {
     for (const error of errors) console.error(`[ERROR] ${error}`);
     process.exit(1);
   }
-  console.log(`References de sorts validees: ${files.length}`);
+  console.log(`References de sorts validees: ${filesInReferenceDirectory().length}`);
   console.log(`Avertissements: ${warnings.length}`);
 }
 
 function auditAll(options) {
   if (!fs.existsSync(referenceDir)) throw new Error(`Reference dir missing: ${referenceDir}`);
-  const files = filesInReferenceDirectory();
-  const reports = files.map(auditReferenceFile);
+  const reports = filesInReferenceDirectory().map(auditReferenceFile);
   const structuralIdentity = {
     aliases: reports.flatMap((report) => report.identity.aliases.map((entry) => ({ file: report.file, ...entry }))),
-    creationCandidates: reports.flatMap((report) => report.identity.creationCandidates.map((entry) => ({ file: report.file, ...entry }))),
+    requiredFoundryInstances: reports.flatMap((report) => report.identity.requiredFoundryInstances.map((entry) => ({ file: report.file, ...entry }))),
+    legacyFoundryDuplicates: reports.flatMap((report) => report.identity.legacyFoundryDuplicates.map((entry) => ({ file: report.file, ...entry }))),
     foundryOutOfManualScope: reports.flatMap((report) => report.identity.outOfScopeFoundryOnly.map((entry) => ({ file: report.file, ...entry }))),
-    unresolvedDecoupageOnly: reports.flatMap((report) => report.identity.decoupageOnly.map((entry) => ({ file: report.file, ...entry })))
+    unresolvedDecoupageOnly: reports.flatMap((report) => report.identity.unresolvedDecoupageOnly.map((entry) => ({ file: report.file, ...entry })))
   };
   const summary = {
     references: reports.length,
@@ -629,16 +633,17 @@ function auditAll(options) {
     descriptionDifferences: reports.reduce((sum, report) => sum + report.summary.descriptionDifferences, 0),
     identityDifferences: reports.reduce((sum, report) => sum + report.summary.identityDifferences, 0),
     aliasMatches: reports.reduce((sum, report) => sum + report.summary.aliasMatches, 0),
-    creationCandidates: reports.reduce((sum, report) => sum + report.summary.creationCandidates, 0),
+    requiredFoundryInstances: reports.reduce((sum, report) => sum + report.summary.requiredFoundryInstances, 0),
+    legacyFoundryDuplicates: reports.reduce((sum, report) => sum + report.summary.legacyFoundryDuplicates, 0),
     referenceOnly: reports.reduce((sum, report) => sum + report.summary.referenceOnly, 0),
-    decoupageOnly: reports.reduce((sum, report) => sum + report.summary.decoupageOnly, 0),
+    unresolvedDecoupageOnly: reports.reduce((sum, report) => sum + report.summary.unresolvedDecoupageOnly, 0),
     outOfScopeFoundryOnly: reports.reduce((sum, report) => sum + report.summary.outOfScopeFoundryOnly, 0),
     referenceDuplicates: reports.reduce((sum, report) => sum + report.summary.referenceDuplicates, 0),
     decoupageDuplicates: reports.reduce((sum, report) => sum + report.summary.decoupageDuplicates, 0),
     structuralErrors: reports.reduce((sum, report) => sum + report.errors.length, 0)
   };
   const audit = {
-    version: "2026-06-27-reference-global-audit-v3",
+    version: "2026-06-27-reference-global-audit-v4",
     generatedAt: new Date().toISOString(),
     scope: {
       referenceDirectory: path.relative(repoRoot, referenceDir),
@@ -647,7 +652,8 @@ function auditAll(options) {
       componentsSourceOfTruth: "fvtt-spells-all-normalise-mecanique-v3.json",
       componentsRule: "Les composants matériels sont lus depuis V3 et ne sont pas déduits, corrigés ou modifiés depuis les références ou le découpage.",
       decoupageRole: "Contrôle Foundry lecture seule ; jamais une source de correction des références.",
-      identityAliasesRole: "Table fermée de rapprochements de titres, sans renommage des données Foundry ni des références du Manuel."
+      identityAliasesRole: "Table fermée de rapprochements de titres, sans renommage des données Foundry ni des références du Manuel.",
+      requiredFoundryInstancesRole: "Les instances requises sont des items Foundry distincts par classe, niveau et spellLists."
     },
     manualVerification: {
       status: "not_performed_by_automation",
@@ -661,7 +667,7 @@ function auditAll(options) {
   console.log(`[ADD2E][REFERENCE_AUDIT] ${summary.references} référence(s), ${summary.spells} sort(s).`);
   console.log(`[ADD2E][REFERENCE_AUDIT] ${summary.referencesReadyForManualConfirmation} prête(s), ${summary.referencesManualReviewRequired} à vérifier, ${summary.referencesBlockedStructural} bloquée(s).`);
   console.log(`[ADD2E][REFERENCE_AUDIT] Champs absents ${summary.missingReferenceFields}, placeholders ${summary.placeholderFields}, divergences techniques ${summary.technicalDifferences}, descriptions absentes ${summary.missingDescriptions}, divergences descriptions ${summary.descriptionDifferences}.`);
-  console.log(`[ADD2E][REFERENCE_AUDIT] Identités : alias ${summary.aliasMatches}, créations candidates ${summary.creationCandidates}, référence seule ${summary.referenceOnly}, découpage seul ${summary.decoupageOnly}, hors périmètre ${summary.outOfScopeFoundryOnly}.`);
+  console.log(`[ADD2E][REFERENCE_AUDIT] Identités : alias ${summary.aliasMatches}, instances Foundry requises ${summary.requiredFoundryInstances}, doublons historiques ${summary.legacyFoundryDuplicates}, découpage non résolu ${summary.unresolvedDecoupageOnly}, hors périmètre ${summary.outOfScopeFoundryOnly}.`);
   console.log("[ADD2E][REFERENCE_AUDIT] Les composants matériels restent exclusivement pilotés par V3.");
 
   if (options.report) {
@@ -669,7 +675,13 @@ function auditAll(options) {
     writeJson(reportPath, audit);
     console.log(`[ADD2E][REFERENCE_AUDIT] Rapport écrit : ${path.relative(repoRoot, reportPath)}`);
   }
-  if (summary.structuralErrors || (options.strict && (summary.missingReferenceFields || summary.placeholderFields || summary.technicalDifferences || summary.missingDescriptions || summary.descriptionDifferences))) {
+  if (summary.structuralErrors || (options.strict && (
+    summary.missingReferenceFields
+    || summary.placeholderFields
+    || summary.technicalDifferences
+    || summary.missingDescriptions
+    || summary.descriptionDifferences
+  ))) {
     process.exitCode = 1;
   }
 }
