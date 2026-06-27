@@ -29,13 +29,14 @@ import { vendorRecordProjectileSpent, consumeSpellComponent } from "./15b3-gm-re
 
 const ADD2E_ATTACK_PLAYER_LOCAL_CHAT = "ADD2E_ATTACK_PLAYER_LOCAL_CHAT";
 const ADD2E_ATTACK_GM_DETAIL_CHAT = "ADD2E_ATTACK_GM_DETAIL_CHAT";
-const LOCAL_CHAT_VERSION = "2026-06-27-gm-relay-familiar-v1";
+const LOCAL_CHAT_VERSION = "2026-06-27-gm-relay-familiar-v2";
 const LOG = "[ADD2E][ATTACK_CHAT_RELAY]";
 const FAMILIAR_SCOPE = "add2e";
 const FAMILIAR_FLAG = "familiar";
 const FAMILIAR_RANGE_DEFAULT = 12;
 const familiarMoveOrigins = new Map();
 const familiarSyncQueued = new Set();
+const familiarDissolvingLinks = new Set();
 
 globalThis.ADD2E_LOCAL_PLAYER_ATTACK_CHAT_RELAY_VERSION = LOCAL_CHAT_VERSION;
 
@@ -55,7 +56,7 @@ function responsiblePlayerId(targets = []) {
     return user && !user.isGM;
   });
   if (anyTarget) return anyTarget;
-  return Array.from(game.users ?? []).find(u => u.active && !u.isGM)?.id ?? null;
+  return Array.from(game.users ?? []).find(user => user.active && !user.isGM)?.id ?? null;
 }
 
 async function createPersistentPlayerAttackChat(payload = {}) {
@@ -76,8 +77,8 @@ async function createPersistentPlayerAttackChat(payload = {}) {
       flags: { add2e: { attackChatVisibility: "players-only", attackChatVisibilityVersion: LOCAL_CHAT_VERSION, localAttackKey: key, createdByPlayerRelay: true } }
     });
     return true;
-  } catch (err) {
-    console.error(`${LOG}[PLAYER_CHAT_CREATE_ERROR]`, err);
+  } catch (error) {
+    console.error(`${LOG}[PLAYER_CHAT_CREATE_ERROR]`, error);
     return false;
   }
 }
@@ -106,6 +107,7 @@ function familiarClone(value) {
 
 function familiarNormalize(value) { return relayNormalize(value); }
 function familiarFlag(actor) { return actor?.getFlag?.(FAMILIAR_SCOPE, FAMILIAR_FLAG) ?? actor?.flags?.[FAMILIAR_SCOPE]?.[FAMILIAR_FLAG] ?? null; }
+function familiarEffectFlag(effect) { return effect?.flags?.add2e?.familiar ?? effect?.getFlag?.(FAMILIAR_SCOPE, FAMILIAR_FLAG) ?? null; }
 function familiarIsRelation(value) { return !!(value && typeof value === "object" && value.actorId); }
 function familiarScene(sceneId = null) { return resolveScene(sceneId); }
 
@@ -140,26 +142,29 @@ function familiarCenter(tokenDoc) {
   if (!tokenDoc) return null;
   const scene = tokenDoc.parent ?? canvas?.scene ?? null;
   const size = Number(scene?.grid?.size ?? canvas?.grid?.size ?? 100) || 100;
-  return { x: Number(tokenDoc.x ?? 0) + Number(tokenDoc.width ?? 1) * size / 2, y: Number(tokenDoc.y ?? 0) + Number(tokenDoc.height ?? 1) * size / 2 };
+  return {
+    x: Number(tokenDoc.x ?? 0) + Number(tokenDoc.width ?? 1) * size / 2,
+    y: Number(tokenDoc.y ?? 0) + Number(tokenDoc.height ?? 1) * size / 2
+  };
 }
 
 function familiarGridDistance(tokenA, tokenB) {
-  const a = familiarCenter(tokenA), b = familiarCenter(tokenB);
+  const a = familiarCenter(tokenA);
+  const b = familiarCenter(tokenB);
   if (!a || !b) return Infinity;
-  const grid = canvas?.grid;
-  if (grid && typeof grid.measurePath === "function") {
+  if (canvas?.grid && typeof canvas.grid.measurePath === "function") {
     try {
-      const result = grid.measurePath([a, b], { gridSpaces: true });
+      const result = canvas.grid.measurePath([a, b], { gridSpaces: true });
       const value = Number(result?.distance ?? result?.gridDistance ?? result?.spaces ?? result?.cost ?? result);
       if (Number.isFinite(value)) return value;
-    } catch (_err) {}
+    } catch (_error) {}
   }
   const size = Number(tokenA?.parent?.grid?.size ?? canvas?.grid?.size ?? 100) || 100;
   return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y)) / size;
 }
 
 function familiarEffectsForLink(caster, linkId) {
-  return Array.from(caster?.effects ?? []).filter(effect => (effect?.flags?.add2e?.familiar ?? effect?.getFlag?.("add2e", "familiar") ?? null)?.linkId === linkId);
+  return Array.from(caster?.effects ?? []).filter(effect => familiarEffectFlag(effect)?.linkId === linkId);
 }
 
 function familiarOwnerIds(actor) {
@@ -169,19 +174,18 @@ function familiarOwnerIds(actor) {
     .map(([userId]) => userId)
     .filter(userId => {
       const user = game.users?.get?.(userId);
-      return user?.active && !user?.isGM;
+      return user?.active && !user.isGM;
     }))];
 }
 
 async function familiarRangeMessage(caster, relation, inRange, distance) {
   const recipients = familiarOwnerIds(caster);
   if (!recipients.length) return;
-  const label = relation?.label ?? "familier";
-  const color = inRange ? "#2f8f46" : "#b33a2e";
   const title = inRange ? "LIAISON RÉTABLIE" : "FAMILIER TROP ÉLOIGNÉ";
+  const color = inRange ? "#2f8f46" : "#b33a2e";
   const text = inRange
-    ? `${label} est à nouveau à portée. Les effets du familier sont réactivés.`
-    : `${label} est à ${distance.toFixed(1)} cases. Les effets du familier sont suspendus au-delà de ${relation.range ?? FAMILIAR_RANGE_DEFAULT} cases.`;
+    ? `${relation.label ?? "Familier"} est à nouveau à portée. Les effets du familier sont réactivés.`
+    : `${relation.label ?? "Familier"} est à ${distance.toFixed(1)} cases. Les effets du familier sont suspendus au-delà de ${relation.range ?? FAMILIAR_RANGE_DEFAULT} cases.`;
   await ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor: caster }),
     whisper: recipients,
@@ -191,11 +195,9 @@ async function familiarRangeMessage(caster, relation, inRange, distance) {
 }
 
 async function familiarSetBenefitsEnabled(caster, relation, enabled) {
-  const updates = [];
-  for (const effect of familiarEffectsForLink(caster, relation.linkId)) {
-    if ((effect.flags?.add2e?.familiar ?? {}).kind !== "benefit" || effect.disabled === !enabled) continue;
-    updates.push(effect.update({ disabled: !enabled }));
-  }
+  const updates = familiarEffectsForLink(caster, relation.linkId)
+    .filter(effect => familiarEffectFlag(effect)?.kind === "benefit" && effect.disabled === enabled)
+    .map(effect => effect.update({ disabled: !enabled }));
   if (updates.length) await Promise.all(updates);
 }
 
@@ -212,6 +214,52 @@ async function familiarWriteRelation(caster, relation) {
       follow: relation.follow !== false
     });
   }
+}
+
+async function dissolveFamiliar(caster, relation = familiarFlag(caster), { removeEffects = true } = {}) {
+  if (!isResponsibleGM() || !caster || !familiarIsRelation(relation) || !relation.linkId) return false;
+  const key = `${caster.id}:${relation.linkId}`;
+  if (familiarDissolvingLinks.has(key)) return false;
+  familiarDissolvingLinks.add(key);
+
+  try {
+    if (removeEffects) {
+      const effectIds = familiarEffectsForLink(caster, relation.linkId).map(effect => effect.id).filter(Boolean);
+      if (effectIds.length) await caster.deleteEmbeddedDocuments("ActiveEffect", effectIds, { add2eFamiliarDissolve: true });
+    }
+
+    for (const scene of game.scenes?.contents ?? []) {
+      const tokenIds = Array.from(scene.tokens ?? [])
+        .filter(token => token?.actorId === relation.actorId || token?.flags?.add2e?.familiar?.linkId === relation.linkId)
+        .map(token => token.id)
+        .filter(Boolean);
+      if (tokenIds.length) await scene.deleteEmbeddedDocuments("Token", tokenIds, { add2eFamiliarDissolve: true });
+    }
+
+    const familiarActor = relation.actorId ? game.actors?.get?.(relation.actorId) ?? null : null;
+    const familiarRelation = familiarFlag(familiarActor);
+    if (familiarActor && (familiarRelation?.linkId === relation.linkId || familiarRelation?.masterActorId === caster.id)) {
+      await familiarActor.delete({ add2eFamiliarDissolve: true });
+    }
+
+    if (familiarFlag(caster)?.linkId === relation.linkId) {
+      await caster.unsetFlag(FAMILIAR_SCOPE, FAMILIAR_FLAG);
+    }
+    return true;
+  } finally {
+    setTimeout(() => familiarDissolvingLinks.delete(key), 0);
+  }
+}
+
+function familiarHandleEffectDeletion(effect, options = {}) {
+  if (!isResponsibleGM() || options?.add2eFamiliarDissolve) return;
+  const data = familiarEffectFlag(effect);
+  if (!data?.linkId) return;
+  const parent = effect?.parent?.documentName === "Actor" ? effect.parent : null;
+  const caster = parent ?? game.actors?.get?.(data.masterActorId) ?? null;
+  const relation = familiarFlag(caster);
+  if (!caster || relation?.linkId !== data.linkId) return;
+  dissolveFamiliar(caster, relation).catch(error => console.error("[ADD2E][FAMILIAR][DISSOLVE]", error));
 }
 
 async function syncFamiliarForCaster(caster, { notify = false } = {}) {
@@ -252,7 +300,10 @@ function familiarQueueSync(caster, options = {}) {
 }
 
 function familiarOriginKey(tokenDoc) { return `${tokenDoc?.parent?.id ?? "scene"}:${tokenDoc?.id ?? "token"}`; }
-function familiarGeneration() { const generation = Number(game?.release?.generation ?? String(game?.version ?? "").split(".")[0]); return Number.isFinite(generation) ? generation : 0; }
+function familiarGeneration() {
+  const generation = Number(game?.release?.generation ?? String(game?.version ?? "").split(".")[0]);
+  return Number.isFinite(generation) ? generation : 0;
+}
 function familiarUsesNativeMovementHooks() { return familiarGeneration() >= 14; }
 function familiarPoint(value, fallback = null) {
   const point = value?.destination ?? value?.origin ?? value;
@@ -261,7 +312,7 @@ function familiarPoint(value, fallback = null) {
 function familiarMasterFromRelation(relation) { return relation?.masterActorId ? game.actors?.get?.(relation.masterActorId) ?? null : null; }
 function familiarCasterForFamiliarActor(actor) {
   const direct = familiarMasterFromRelation(familiarFlag(actor));
-  return direct ?? Array.from(game.actors ?? []).find(candidate => familiarFlag(candidate)?.actorId === actor?.id) ?? null;
+  return direct ?? Array.from(game.actors?.contents ?? []).find(candidate => familiarFlag(candidate)?.actorId === actor?.id) ?? null;
 }
 
 async function familiarSetFollow(payload = {}) {
@@ -290,7 +341,8 @@ async function familiarFollowMasterMove(masterToken, origin, destination) {
   }
   const from = familiarPoint(origin, { x: masterToken.x, y: masterToken.y });
   const to = familiarPoint(destination, { x: masterToken.x, y: masterToken.y });
-  const dx = Number(to.x) - Number(from.x), dy = Number(to.y) - Number(from.y);
+  const dx = Number(to.x) - Number(from.x);
+  const dy = Number(to.y) - Number(from.y);
   if (Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01) {
     await familiarToken.update({ x: Number(familiarToken.x) + dx, y: Number(familiarToken.y) + dy }, { add2eFamiliarFollow: true, add2eIgnoreMovement: true, render: true });
   }
@@ -321,7 +373,15 @@ async function familiarHandleMove(tokenDoc, changes, options = {}) {
 
 function familiarEffectData(caster, payload, relation) {
   const familiar = payload.familiar ?? {};
-  const common = { linkId: relation.linkId, masterActorId: caster.id, masterActorUuid: caster.uuid, familiarActorId: relation.actorId, familiarTokenId: relation.tokenId, familiarLabel: relation.label, range: relation.range };
+  const common = {
+    linkId: relation.linkId,
+    masterActorId: caster.id,
+    masterActorUuid: caster.uuid,
+    familiarActorId: relation.actorId,
+    familiarTokenId: relation.tokenId,
+    familiarLabel: relation.label,
+    range: relation.range
+  };
   const baseTags = ["familier", `familier:${familiar.key ?? "inconnu"}`, `familier:portee:${relation.range}`];
   const img = familiar.img || "icons/svg/aura.svg";
   const changes = [];
@@ -367,7 +427,8 @@ function familiarEffectData(caster, payload, relation) {
 function familiarNormalActorData(caster, payload) {
   const familiar = payload.familiar ?? {};
   const hp = Math.max(2, Math.min(4, Number(familiar.hp) || 2));
-  const label = familiar.label ?? "Familier", img = familiar.img || "icons/svg/mystery-man.svg";
+  const label = familiar.label ?? "Familier";
+  const img = familiar.img || "icons/svg/mystery-man.svg";
   return {
     name: `${label} — familier de ${caster.name}`,
     type: "monster",
@@ -436,32 +497,46 @@ async function familiarCreateToken(scene, familiarActor, casterToken, relation) 
   return token ?? null;
 }
 
-async function familiarDeleteStaleEffects(caster, linkId) {
-  const ids = familiarEffectsForLink(caster, linkId).map(effect => effect.id).filter(Boolean);
-  if (ids.length) await caster.deleteEmbeddedDocuments("ActiveEffect", ids);
-}
-
 export async function createFamiliar(payload = {}) {
   if (!isResponsibleGM()) return false;
   const caster = await resolveActor(payload);
   const scene = familiarScene(payload.sceneId);
   const casterToken = scene?.tokens?.get?.(payload.casterTokenId) ?? null;
   const familiar = payload.familiar ?? {};
-  if (!caster || caster.type !== "personnage" || !scene || !casterToken || !familiar?.key || !familiar?.label) {
-    console.warn("[ADD2E][FAMILIAR][CREATE] Données d’invocation invalides.", payload);
-    return false;
-  }
+  if (!caster || caster.type !== "personnage" || !scene || !casterToken || !familiar?.key || !familiar?.label) return false;
+
   const existing = familiarFlag(caster);
-  if (existing?.actorId && game.actors?.get?.(existing.actorId)) return false;
-  if (existing?.linkId) await familiarDeleteStaleEffects(caster, existing.linkId);
+  if (existing?.linkId) {
+    const existingActor = existing.actorId ? game.actors?.get?.(existing.actorId) ?? null : null;
+    const existingEffects = familiarEffectsForLink(caster, existing.linkId);
+    if (existingActor && existingEffects.length) return false;
+    await dissolveFamiliar(caster, existing, { removeEffects: existingEffects.length > 0 });
+  }
+
   const actorData = familiar.special === true ? await familiarSpecialActorData(caster, payload) : familiarNormalActorData(caster, payload);
   if (!actorData) {
     ui.notifications.warn(`Invocation d’un familier : l’acteur de compendium « ${familiar.label} » est introuvable.`);
     return false;
   }
+
   const familiarActor = await Actor.create(actorData);
   if (!familiarActor) return false;
-  const relation = { version: LOCAL_CHAT_VERSION, linkId: payload.requestId, actorId: familiarActor.id, actorUuid: familiarActor.uuid, label: familiar.label, key: familiar.key, sceneId: scene.id, masterTokenId: casterToken.id, tokenId: null, follow: true, inRange: null, range: Math.max(1, Number(familiar.range) || FAMILIAR_RANGE_DEFAULT), special: familiar.special === true, createdAt: Date.now() };
+  const relation = {
+    version: LOCAL_CHAT_VERSION,
+    linkId: payload.requestId,
+    actorId: familiarActor.id,
+    actorUuid: familiarActor.uuid,
+    label: familiar.label,
+    key: familiar.key,
+    sceneId: scene.id,
+    masterTokenId: casterToken.id,
+    tokenId: null,
+    follow: true,
+    inRange: null,
+    range: Math.max(1, Number(familiar.range) || FAMILIAR_RANGE_DEFAULT),
+    special: familiar.special === true,
+    createdAt: Date.now()
+  };
   const familiarToken = await familiarCreateToken(scene, familiarActor, casterToken, relation);
   if (!familiarToken) {
     await familiarActor.delete();
@@ -475,13 +550,14 @@ export async function createFamiliar(payload = {}) {
 }
 
 async function familiarUseEffect(actor, effect) {
-  const data = effect?.flags?.add2e?.familiar ?? effect?.getFlag?.("add2e", "familiar") ?? null;
+  const data = familiarEffectFlag(effect);
   if (!actor || !data?.action) return false;
   const relation = familiarFlag(actor);
   if (!familiarIsRelation(relation) || relation.linkId !== data.linkId) {
     ui.notifications.warn("Ce lien de familier n’est plus valide.");
     return false;
   }
+
   if (data.action === "share-senses") {
     if (relation.inRange !== true) {
       ui.notifications.warn(`${relation.label} est hors de portée : le partage des sens est suspendu.`);
@@ -496,6 +572,7 @@ async function familiarUseEffect(actor, effect) {
     });
     return true;
   }
+
   if (data.action === "toggle-follow") {
     const nextFollow = relation.follow === false;
     const payload = { actorId: actor.id, actorUuid: actor.uuid, follow: nextFollow };
@@ -531,6 +608,8 @@ function installAttackChatRelay() {
 function installFamiliarController() {
   if (globalThis.ADD2E_FAMILIAR_CONTROLLER_VERSION === LOCAL_CHAT_VERSION) return;
   globalThis.ADD2E_FAMILIAR_CONTROLLER_VERSION = LOCAL_CHAT_VERSION;
+
+  Hooks.on("deleteActiveEffect", (effect, options = {}) => familiarHandleEffectDeletion(effect, options));
   Hooks.on("preUpdateToken", (tokenDoc, changes) => {
     if (familiarUsesNativeMovementHooks() || !changes || (changes.x === undefined && changes.y === undefined)) return;
     familiarMoveOrigins.set(familiarOriginKey(tokenDoc), { x: Number(tokenDoc.x ?? 0), y: Number(tokenDoc.y ?? 0) });
@@ -556,7 +635,9 @@ function installFamiliarController() {
   Hooks.on("canvasReady", () => {
     if (!isResponsibleGM()) return;
     setTimeout(() => {
-      for (const caster of game.actors ?? []) if (familiarIsRelation(familiarFlag(caster))) familiarQueueSync(caster, { notify: false });
+      for (const caster of game.actors?.contents ?? []) {
+        if (familiarIsRelation(familiarFlag(caster))) familiarQueueSync(caster, { notify: false });
+      }
     }, 100);
   });
 }
@@ -620,6 +701,6 @@ globalThis.add2eAttackChatRelayDebug = function add2eAttackChatRelayDebug() {
     isGM: game.user?.isGM,
     ready: game?.ready,
     hasSocket: !!game?.socket,
-    players: Array.from(game.users ?? []).filter(u => !u.isGM).map(u => ({ id: u.id, name: u.name, active: u.active }))
+    players: Array.from(game.users ?? []).filter(user => !user.isGM).map(user => ({ id: user.id, name: user.name, active: user.active }))
   };
 };
