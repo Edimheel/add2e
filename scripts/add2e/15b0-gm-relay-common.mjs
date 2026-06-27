@@ -9,6 +9,7 @@ export const PROJECTILE_FLAG = "projectilesDepensesCombat";
 const FAMILIAR_SCOPE = "add2e";
 const FAMILIAR_FLAG = "familiar";
 const FAMILIAR_ARTWORK_REPAIR_VERSION = "2026-06-27-familiar-artwork-png-v2";
+const FAMILIAR_EFFECT_ACTION_BRIDGE_VERSION = "2026-06-27-familiar-effect-actions-v1";
 const FAMILIAR_ASSET_BASE = "systems/add2e/assets/token";
 const FAMILIAR_ASSETS = Object.freeze({
   chat_noir: `${FAMILIAR_ASSET_BASE}/chat-noir.png`,
@@ -104,6 +105,42 @@ function familiarTokenMatches(tokenDoc, relation) {
     || tokenDoc.flags?.[FAMILIAR_SCOPE]?.[FAMILIAR_FLAG]?.linkId === relation.linkId;
 }
 
+function familiarEffectActionForName(name) {
+  const normalized = String(name ?? "")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[—–-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (normalized.startsWith("familier partage des sens")) return "share-senses";
+  if (normalized.startsWith("familier suivi automatique")) return "toggle-follow";
+  return "";
+}
+
+function familiarEffectActionTitle(action) {
+  if (action === "share-senses") return "Partager les sens du familier";
+  if (action === "toggle-follow") return "Activer ou désactiver le suivi automatique";
+  return "Utiliser l’effet de familier";
+}
+
+function familiarEffectActionIcon(action) {
+  return action === "share-senses" ? "fa-eye" : "fa-sync-alt";
+}
+
+function registerFamiliarEffectHandlebarsHelpers() {
+  if (typeof Handlebars === "undefined") return false;
+  if (!Handlebars.helpers.add2eFamiliarEffectAction) {
+    Handlebars.registerHelper("add2eFamiliarEffectAction", familiarEffectActionForName);
+  }
+  if (!Handlebars.helpers.add2eFamiliarEffectActionTitle) {
+    Handlebars.registerHelper("add2eFamiliarEffectActionTitle", familiarEffectActionTitle);
+  }
+  if (!Handlebars.helpers.add2eFamiliarEffectActionIcon) {
+    Handlebars.registerHelper("add2eFamiliarEffectActionIcon", familiarEffectActionIcon);
+  }
+  return true;
+}
+
 async function syncFamiliarArtwork(caster) {
   if (!isResponsibleGM() || !caster) return false;
   const relation = familiarRelation(caster);
@@ -180,4 +217,45 @@ export function installFamiliarArtworkRepair() {
   return true;
 }
 
+function installFamiliarEffectActionBridge() {
+  registerFamiliarEffectHandlebarsHelpers();
+  if (globalThis.ADD2E_FAMILIAR_EFFECT_ACTION_BRIDGE_VERSION === FAMILIAR_EFFECT_ACTION_BRIDGE_VERSION) return true;
+  if (typeof document === "undefined") return false;
+  globalThis.ADD2E_FAMILIAR_EFFECT_ACTION_BRIDGE_VERSION = FAMILIAR_EFFECT_ACTION_BRIDGE_VERSION;
+
+  document.addEventListener("click", async event => {
+    const control = event.target?.closest?.(".a2e-familiar-effect-action");
+    if (!control) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation?.();
+
+    const actorId = String(control.dataset.actorId ?? "");
+    const effectId = String(control.dataset.effectId ?? "");
+    const expectedAction = String(control.dataset.familiarAction ?? "");
+    const actor = actorId ? game.actors?.get?.(actorId) ?? null : null;
+    const effect = actor?.effects?.get?.(effectId) ?? null;
+    const data = familiarEffectRelation(effect);
+
+    if (!actor || !effect || data?.kind !== "action" || data.action !== expectedAction) {
+      return ui.notifications.warn("Cette action de familier n’est plus valide.");
+    }
+    if (typeof globalThis.add2eUseFamiliarEffect !== "function") {
+      return ui.notifications.warn("Le relais de familier n’est pas encore prêt.");
+    }
+
+    try {
+      await globalThis.add2eUseFamiliarEffect(actor, effect);
+      if (actor.sheet?.rendered) actor.sheet.render(false);
+    } catch (error) {
+      console.error("[ADD2E][FAMILIAR][EFFECT_ACTION]", error);
+      ui.notifications.error("Impossible d’utiliser cette action de familier.");
+    }
+  }, true);
+  return true;
+}
+
+registerFamiliarEffectHandlebarsHelpers();
 installFamiliarArtworkRepair();
+installFamiliarEffectActionBridge();

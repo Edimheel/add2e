@@ -24,6 +24,9 @@
                       <td class="effect-description a2e-small">{{{eff.description}}}</td>
                       <td>
                         <div class="a2e-actions">
+                          {{#if (add2eFamiliarEffectAction eff.name)}}
+                            <a class="a2e-action-icon a2e-familiar-effect-action" data-actor-id="{{../actor.id}}" data-effect-id="{{eff.id}}" data-familiar-action="{{add2eFamiliarEffectAction eff.name}}" title="{{add2eFamiliarEffectActionTitle (add2eFamiliarEffectAction eff.name)}}"><i class="fas {{add2eFamiliarEffectActionIcon (add2eFamiliarEffectAction eff.name)}}"></i></a>
+                          {{/if}}
                           <a class="a2e-action-icon a2e-action-edit effect-edit" data-effect-id="{{eff.id}}" title="Éditer"><i class="fas fa-edit"></i></a>
                           <a class="a2e-action-icon a2e-action-delete effect-delete" data-effect-id="{{eff.id}}" title="Supprimer"><i class="fas fa-trash"></i></a>
                         </div>
