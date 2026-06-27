@@ -1,9 +1,11 @@
 {
-  "version": "2026-06-26-reference-global-audit-v1",
-  "generatedAt": "2026-06-27T06:10:28.383Z",
+  "version": "2026-06-27-reference-global-audit-v2",
+  "generatedAt": "2026-06-27T08:50:58.946Z",
   "scope": {
     "referenceDirectory": "audit\\reference",
     "sourceOfTruth": "Manuel des joueurs AD&D 2e",
+    "componentsSourceOfTruth": "fvtt-spells-all-normalise-mecanique-v3.json",
+    "componentsRule": "Les composants matériels sont lus depuis V3 et ne sont pas déduits depuis les références ou le découpage.",
     "decoupageRole": "Contrôle Foundry lecture seule ; jamais une source de correction des références."
   },
   "manualVerification": {
@@ -22,6 +24,10 @@
     "missingDescriptions": 0,
     "descriptionDifferences": 309,
     "identityDifferences": 15,
+    "referenceOnly": 4,
+    "decoupageOnly": 11,
+    "referenceDuplicates": 0,
+    "decoupageDuplicates": 0,
     "structuralErrors": 22
   },
   "references": [
@@ -49,7 +55,30 @@
         "technicalDifferences": 19,
         "missingDescriptions": 0,
         "descriptionDifferences": 4,
-        "identityDifferences": 2
+        "identityDifferences": 2,
+        "referenceOnly": 0,
+        "decoupageOnly": 2,
+        "referenceDuplicates": 0,
+        "decoupageDuplicates": 0
+      },
+      "identity": {
+        "referenceOnly": [],
+        "decoupageOnly": [
+          {
+            "key": "clerc|1|purification_de_la_nourriture_et_de_la_boisson",
+            "nom": "Purification de la Nourriture et de la Boisson",
+            "classe": "Clerc",
+            "niveau": 1
+          },
+          {
+            "key": "clerc|1|soins_des_blessures_legeres",
+            "nom": "Soins des Blessures Légères",
+            "classe": "Clerc",
+            "niveau": 1
+          }
+        ],
+        "referenceDuplicates": [],
+        "decoupageDuplicates": []
       },
       "spells": [
         {
@@ -727,7 +756,17 @@
         "technicalDifferences": 34,
         "missingDescriptions": 0,
         "descriptionDifferences": 2,
-        "identityDifferences": 0
+        "identityDifferences": 0,
+        "referenceOnly": 0,
+        "decoupageOnly": 0,
+        "referenceDuplicates": 0,
+        "decoupageDuplicates": 0
+      },
+      "identity": {
+        "referenceOnly": [],
+        "decoupageOnly": [],
+        "referenceDuplicates": [],
+        "decoupageDuplicates": []
       },
       "spells": [
         {
@@ -1408,7 +1447,24 @@
         "technicalDifferences": 30,
         "missingDescriptions": 0,
         "descriptionDifferences": 3,
-        "identityDifferences": 1
+        "identityDifferences": 1,
+        "referenceOnly": 0,
+        "decoupageOnly": 1,
+        "referenceDuplicates": 0,
+        "decoupageDuplicates": 0
+      },
+      "identity": {
+        "referenceOnly": [],
+        "decoupageOnly": [
+          {
+            "key": "clerc|3|localisation_dun_objet",
+            "nom": "Localisation d’un Objet",
+            "classe": "Clerc",
+            "niveau": 3
+          }
+        ],
+        "referenceDuplicates": [],
+        "decoupageDuplicates": []
       },
       "spells": [
         {
@@ -2089,7 +2145,30 @@
         "technicalDifferences": 21,
         "missingDescriptions": 0,
         "descriptionDifferences": 5,
-        "identityDifferences": 2
+        "identityDifferences": 2,
+        "referenceOnly": 0,
+        "decoupageOnly": 2,
+        "referenceDuplicates": 0,
+        "decoupageDuplicates": 0
+      },
+      "identity": {
+        "referenceOnly": [],
+        "decoupageOnly": [
+          {
+            "key": "clerc|4|batons_en_serpents",
+            "nom": "Bâtons en Serpents",
+            "classe": "Clerc",
+            "niveau": 4
+          },
+          {
+            "key": "clerc|4|protection_contre_le_mal_rayon_de_10_pieds",
+            "nom": "Protection contre le Mal (Rayon de 10 pieds)",
+            "classe": "Clerc",
+            "niveau": 4
+          }
+        ],
+        "referenceDuplicates": [],
+        "decoupageDuplicates": []
       },
       "spells": [
         {
@@ -2662,7 +2741,24 @@
         "technicalDifferences": 34,
         "missingDescriptions": 0,
         "descriptionDifferences": 3,
-        "identityDifferences": 1
+        "identityDifferences": 1,
+        "referenceOnly": 0,
+        "decoupageOnly": 1,
+        "referenceDuplicates": 0,
+        "decoupageDuplicates": 0
+      },
+      "identity": {
+        "referenceOnly": [],
+        "decoupageOnly": [
+          {
+            "key": "clerc|5|soins_ultime",
+            "nom": "Soins ultime",
+            "classe": "Clerc",
+            "niveau": 5
+          }
+        ],
+        "referenceDuplicates": [],
+        "decoupageDuplicates": []
       },
       "spells": [
         {
@@ -3232,7 +3328,17 @@
         "technicalDifferences": 44,
         "missingDescriptions": 0,
         "descriptionDifferences": 2,
-        "identityDifferences": 0
+        "identityDifferences": 0,
+        "referenceOnly": 0,
+        "decoupageOnly": 0,
+        "referenceDuplicates": 0,
+        "decoupageDuplicates": 0
+      },
+      "identity": {
+        "referenceOnly": [],
+        "decoupageOnly": [],
+        "referenceDuplicates": [],
+        "decoupageDuplicates": []
       },
       "spells": [
         {
@@ -3805,7 +3911,24 @@
         "technicalDifferences": 44,
         "missingDescriptions": 0,
         "descriptionDifferences": 4,
-        "identityDifferences": 1
+        "identityDifferences": 1,
+        "referenceOnly": 0,
+        "decoupageOnly": 1,
+        "referenceDuplicates": 0,
+        "decoupageDuplicates": 0
+      },
+      "identity": {
+        "referenceOnly": [],
+        "decoupageOnly": [
+          {
+            "key": "clerc|7|asile",
+            "nom": "Asile",
+            "classe": "Clerc",
+            "niveau": 7
+          }
+        ],
+        "referenceDuplicates": [],
+        "decoupageDuplicates": []
       },
       "spells": [
         {
@@ -4377,7 +4500,17 @@
         "technicalDifferences": 0,
         "missingDescriptions": 0,
         "descriptionDifferences": 0,
-        "identityDifferences": 0
+        "identityDifferences": 0,
+        "referenceOnly": 0,
+        "decoupageOnly": 0,
+        "referenceDuplicates": 0,
+        "decoupageDuplicates": 0
+      },
+      "identity": {
+        "referenceOnly": [],
+        "decoupageOnly": [],
+        "referenceDuplicates": [],
+        "decoupageDuplicates": []
       },
       "spells": [],
       "manualVerification": {
@@ -4406,7 +4539,17 @@
         "technicalDifferences": 60,
         "missingDescriptions": 0,
         "descriptionDifferences": 1,
-        "identityDifferences": 0
+        "identityDifferences": 0,
+        "referenceOnly": 0,
+        "decoupageOnly": 0,
+        "referenceDuplicates": 0,
+        "decoupageDuplicates": 0
+      },
+      "identity": {
+        "referenceOnly": [],
+        "decoupageOnly": [],
+        "referenceDuplicates": [],
+        "decoupageDuplicates": []
       },
       "spells": [
         {
@@ -5084,7 +5227,17 @@
         "technicalDifferences": 50,
         "missingDescriptions": 0,
         "descriptionDifferences": 5,
-        "identityDifferences": 0
+        "identityDifferences": 0,
+        "referenceOnly": 0,
+        "decoupageOnly": 0,
+        "referenceDuplicates": 0,
+        "decoupageDuplicates": 0
+      },
+      "identity": {
+        "referenceOnly": [],
+        "decoupageOnly": [],
+        "referenceDuplicates": [],
+        "decoupageDuplicates": []
       },
       "spells": [
         {
@@ -5762,7 +5915,17 @@
         "technicalDifferences": 43,
         "missingDescriptions": 0,
         "descriptionDifferences": 4,
-        "identityDifferences": 0
+        "identityDifferences": 0,
+        "referenceOnly": 0,
+        "decoupageOnly": 0,
+        "referenceDuplicates": 0,
+        "decoupageDuplicates": 0
+      },
+      "identity": {
+        "referenceOnly": [],
+        "decoupageOnly": [],
+        "referenceDuplicates": [],
+        "decoupageDuplicates": []
       },
       "spells": [
         {
@@ -6443,7 +6606,24 @@
         "technicalDifferences": 43,
         "missingDescriptions": 0,
         "descriptionDifferences": 3,
-        "identityDifferences": 1
+        "identityDifferences": 1,
+        "referenceOnly": 0,
+        "decoupageOnly": 1,
+        "referenceDuplicates": 0,
+        "decoupageDuplicates": 0
+      },
+      "identity": {
+        "referenceOnly": [],
+        "decoupageOnly": [
+          {
+            "key": "druide|4|dissipation_de_magie",
+            "nom": "Dissipation de magie",
+            "classe": "Druide",
+            "niveau": 4
+          }
+        ],
+        "referenceDuplicates": [],
+        "decoupageDuplicates": []
       },
       "spells": [
         {
@@ -7121,7 +7301,17 @@
         "technicalDifferences": 35,
         "missingDescriptions": 0,
         "descriptionDifferences": 8,
-        "identityDifferences": 0
+        "identityDifferences": 0,
+        "referenceOnly": 0,
+        "decoupageOnly": 0,
+        "referenceDuplicates": 0,
+        "decoupageDuplicates": 0
+      },
+      "identity": {
+        "referenceOnly": [],
+        "decoupageOnly": [],
+        "referenceDuplicates": [],
+        "decoupageDuplicates": []
       },
       "spells": [
         {
@@ -7691,7 +7881,17 @@
         "technicalDifferences": 41,
         "missingDescriptions": 0,
         "descriptionDifferences": 4,
-        "identityDifferences": 0
+        "identityDifferences": 0,
+        "referenceOnly": 0,
+        "decoupageOnly": 0,
+        "referenceDuplicates": 0,
+        "decoupageDuplicates": 0
+      },
+      "identity": {
+        "referenceOnly": [],
+        "decoupageOnly": [],
+        "referenceDuplicates": [],
+        "decoupageDuplicates": []
       },
       "spells": [
         {
@@ -8261,7 +8461,17 @@
         "technicalDifferences": 39,
         "missingDescriptions": 0,
         "descriptionDifferences": 5,
-        "identityDifferences": 0
+        "identityDifferences": 0,
+        "referenceOnly": 0,
+        "decoupageOnly": 0,
+        "referenceDuplicates": 0,
+        "decoupageDuplicates": 0
+      },
+      "identity": {
+        "referenceOnly": [],
+        "decoupageOnly": [],
+        "referenceDuplicates": [],
+        "decoupageDuplicates": []
       },
       "spells": [
         {
@@ -8834,7 +9044,24 @@
         "technicalDifferences": 57,
         "missingDescriptions": 0,
         "descriptionDifferences": 11,
-        "identityDifferences": 1
+        "identityDifferences": 1,
+        "referenceOnly": 1,
+        "decoupageOnly": 0,
+        "referenceDuplicates": 0,
+        "decoupageDuplicates": 0
+      },
+      "identity": {
+        "referenceOnly": [
+          {
+            "key": "illusionniste|1|lumiere",
+            "nom": "Lumière",
+            "classe": "illusionniste",
+            "niveau": 1
+          }
+        ],
+        "decoupageOnly": [],
+        "referenceDuplicates": [],
+        "decoupageDuplicates": []
       },
       "spells": [
         {
@@ -9512,7 +9739,17 @@
         "technicalDifferences": 44,
         "missingDescriptions": 0,
         "descriptionDifferences": 12,
-        "identityDifferences": 0
+        "identityDifferences": 0,
+        "referenceOnly": 0,
+        "decoupageOnly": 0,
+        "referenceDuplicates": 0,
+        "decoupageDuplicates": 0
+      },
+      "identity": {
+        "referenceOnly": [],
+        "decoupageOnly": [],
+        "referenceDuplicates": [],
+        "decoupageDuplicates": []
       },
       "spells": [
         {
@@ -10190,7 +10427,17 @@
         "technicalDifferences": 36,
         "missingDescriptions": 0,
         "descriptionDifferences": 12,
-        "identityDifferences": 0
+        "identityDifferences": 0,
+        "referenceOnly": 0,
+        "decoupageOnly": 0,
+        "referenceDuplicates": 0,
+        "decoupageDuplicates": 0
+      },
+      "identity": {
+        "referenceOnly": [],
+        "decoupageOnly": [],
+        "referenceDuplicates": [],
+        "decoupageDuplicates": []
       },
       "spells": [
         {
@@ -10868,7 +11115,17 @@
         "technicalDifferences": 33,
         "missingDescriptions": 0,
         "descriptionDifferences": 8,
-        "identityDifferences": 0
+        "identityDifferences": 0,
+        "referenceOnly": 0,
+        "decoupageOnly": 0,
+        "referenceDuplicates": 0,
+        "decoupageDuplicates": 0
+      },
+      "identity": {
+        "referenceOnly": [],
+        "decoupageOnly": [],
+        "referenceDuplicates": [],
+        "decoupageDuplicates": []
       },
       "spells": [
         {
@@ -11330,7 +11587,17 @@
         "technicalDifferences": 37,
         "missingDescriptions": 0,
         "descriptionDifferences": 8,
-        "identityDifferences": 0
+        "identityDifferences": 0,
+        "referenceOnly": 0,
+        "decoupageOnly": 0,
+        "referenceDuplicates": 0,
+        "decoupageDuplicates": 0
+      },
+      "identity": {
+        "referenceOnly": [],
+        "decoupageOnly": [],
+        "referenceDuplicates": [],
+        "decoupageDuplicates": []
       },
       "spells": [
         {
@@ -11792,7 +12059,17 @@
         "technicalDifferences": 34,
         "missingDescriptions": 0,
         "descriptionDifferences": 8,
-        "identityDifferences": 0
+        "identityDifferences": 0,
+        "referenceOnly": 0,
+        "decoupageOnly": 0,
+        "referenceDuplicates": 0,
+        "decoupageDuplicates": 0
+      },
+      "identity": {
+        "referenceOnly": [],
+        "decoupageOnly": [],
+        "referenceDuplicates": [],
+        "decoupageDuplicates": []
       },
       "spells": [
         {
@@ -12254,7 +12531,17 @@
         "technicalDifferences": 19,
         "missingDescriptions": 0,
         "descriptionDifferences": 6,
-        "identityDifferences": 0
+        "identityDifferences": 0,
+        "referenceOnly": 0,
+        "decoupageOnly": 0,
+        "referenceDuplicates": 0,
+        "decoupageDuplicates": 0
+      },
+      "identity": {
+        "referenceOnly": [],
+        "decoupageOnly": [],
+        "referenceDuplicates": [],
+        "decoupageDuplicates": []
       },
       "spells": [
         {
@@ -12610,7 +12897,17 @@
         "technicalDifferences": 0,
         "missingDescriptions": 0,
         "descriptionDifferences": 0,
-        "identityDifferences": 0
+        "identityDifferences": 0,
+        "referenceOnly": 0,
+        "decoupageOnly": 0,
+        "referenceDuplicates": 0,
+        "decoupageDuplicates": 0
+      },
+      "identity": {
+        "referenceOnly": [],
+        "decoupageOnly": [],
+        "referenceDuplicates": [],
+        "decoupageDuplicates": []
       },
       "spells": [],
       "manualVerification": {
@@ -12641,7 +12938,31 @@
         "technicalDifferences": 97,
         "missingDescriptions": 0,
         "descriptionDifferences": 29,
-        "identityDifferences": 2
+        "identityDifferences": 2,
+        "referenceOnly": 1,
+        "decoupageOnly": 1,
+        "referenceDuplicates": 0,
+        "decoupageDuplicates": 0
+      },
+      "identity": {
+        "referenceOnly": [
+          {
+            "key": "magicien|1|lumiere",
+            "nom": "Lumière",
+            "classe": "magicien",
+            "niveau": 1
+          }
+        ],
+        "decoupageOnly": [
+          {
+            "key": "magicien|1|missile_magique",
+            "nom": "Missile magique",
+            "classe": "Magicien",
+            "niveau": 1
+          }
+        ],
+        "referenceDuplicates": [],
+        "decoupageDuplicates": []
       },
       "spells": [
         {
@@ -14294,7 +14615,24 @@
         "technicalDifferences": 93,
         "missingDescriptions": 0,
         "descriptionDifferences": 23,
-        "identityDifferences": 1
+        "identityDifferences": 1,
+        "referenceOnly": 1,
+        "decoupageOnly": 0,
+        "referenceDuplicates": 0,
+        "decoupageDuplicates": 0
+      },
+      "identity": {
+        "referenceOnly": [
+          {
+            "key": "magicien|2|detection_de_linvisibilite",
+            "nom": "Détection de l'invisibilité",
+            "classe": "magicien",
+            "niveau": 2
+          }
+        ],
+        "decoupageOnly": [],
+        "referenceDuplicates": [],
+        "decoupageDuplicates": []
       },
       "spells": [
         {
@@ -15620,7 +15958,17 @@
         "technicalDifferences": 91,
         "missingDescriptions": 0,
         "descriptionDifferences": 24,
-        "identityDifferences": 0
+        "identityDifferences": 0,
+        "referenceOnly": 0,
+        "decoupageOnly": 0,
+        "referenceDuplicates": 0,
+        "decoupageDuplicates": 0
+      },
+      "identity": {
+        "referenceOnly": [],
+        "decoupageOnly": [],
+        "referenceDuplicates": [],
+        "decoupageDuplicates": []
       },
       "spells": [
         {
@@ -16946,7 +17294,17 @@
         "technicalDifferences": 103,
         "missingDescriptions": 0,
         "descriptionDifferences": 24,
-        "identityDifferences": 0
+        "identityDifferences": 0,
+        "referenceOnly": 0,
+        "decoupageOnly": 0,
+        "referenceDuplicates": 0,
+        "decoupageDuplicates": 0
+      },
+      "identity": {
+        "referenceOnly": [],
+        "decoupageOnly": [],
+        "referenceDuplicates": [],
+        "decoupageDuplicates": []
       },
       "spells": [
         {
@@ -18275,7 +18633,37 @@
         "technicalDifferences": 101,
         "missingDescriptions": 0,
         "descriptionDifferences": 23,
-        "identityDifferences": 3
+        "identityDifferences": 3,
+        "referenceOnly": 1,
+        "decoupageOnly": 2,
+        "referenceDuplicates": 0,
+        "decoupageDuplicates": 0
+      },
+      "identity": {
+        "referenceOnly": [
+          {
+            "key": "magicien|5|teleikinesie",
+            "nom": "Téléikinésie",
+            "classe": "magicien",
+            "niveau": 5
+          }
+        ],
+        "decoupageOnly": [
+          {
+            "key": "magicien|5|chien_fidele_de_mordekainen",
+            "nom": "Chien fidèle de Mordekainen",
+            "classe": "Magicien",
+            "niveau": 5
+          },
+          {
+            "key": "magicien|5|telekinesie",
+            "nom": "Télékinésie",
+            "classe": "Magicien",
+            "niveau": 5
+          }
+        ],
+        "referenceDuplicates": [],
+        "decoupageDuplicates": []
       },
       "spells": [
         {
@@ -19601,7 +19989,17 @@
         "technicalDifferences": 91,
         "missingDescriptions": 0,
         "descriptionDifferences": 24,
-        "identityDifferences": 0
+        "identityDifferences": 0,
+        "referenceOnly": 0,
+        "decoupageOnly": 0,
+        "referenceDuplicates": 0,
+        "decoupageDuplicates": 0
+      },
+      "identity": {
+        "referenceOnly": [],
+        "decoupageOnly": [],
+        "referenceDuplicates": [],
+        "decoupageDuplicates": []
       },
       "spells": [
         {
@@ -20927,7 +21325,17 @@
         "technicalDifferences": 71,
         "missingDescriptions": 0,
         "descriptionDifferences": 16,
-        "identityDifferences": 0
+        "identityDifferences": 0,
+        "referenceOnly": 0,
+        "decoupageOnly": 0,
+        "referenceDuplicates": 0,
+        "decoupageDuplicates": 0
+      },
+      "identity": {
+        "referenceOnly": [],
+        "decoupageOnly": [],
+        "referenceDuplicates": [],
+        "decoupageDuplicates": []
       },
       "spells": [
         {
@@ -21821,7 +22229,17 @@
         "technicalDifferences": 75,
         "missingDescriptions": 0,
         "descriptionDifferences": 16,
-        "identityDifferences": 0
+        "identityDifferences": 0,
+        "referenceOnly": 0,
+        "decoupageOnly": 0,
+        "referenceDuplicates": 0,
+        "decoupageDuplicates": 0
+      },
+      "identity": {
+        "referenceOnly": [],
+        "decoupageOnly": [],
+        "referenceDuplicates": [],
+        "decoupageDuplicates": []
       },
       "spells": [
         {
@@ -22715,7 +23133,17 @@
         "technicalDifferences": 55,
         "missingDescriptions": 0,
         "descriptionDifferences": 12,
-        "identityDifferences": 0
+        "identityDifferences": 0,
+        "referenceOnly": 0,
+        "decoupageOnly": 0,
+        "referenceDuplicates": 0,
+        "decoupageDuplicates": 0
+      },
+      "identity": {
+        "referenceOnly": [],
+        "decoupageOnly": [],
+        "referenceDuplicates": [],
+        "decoupageDuplicates": []
       },
       "spells": [
         {
@@ -23395,7 +23823,17 @@
         "technicalDifferences": 0,
         "missingDescriptions": 0,
         "descriptionDifferences": 0,
-        "identityDifferences": 0
+        "identityDifferences": 0,
+        "referenceOnly": 0,
+        "decoupageOnly": 0,
+        "referenceDuplicates": 0,
+        "decoupageDuplicates": 0
+      },
+      "identity": {
+        "referenceOnly": [],
+        "decoupageOnly": [],
+        "referenceDuplicates": [],
+        "decoupageDuplicates": []
       },
       "spells": [],
       "manualVerification": {
