@@ -85,8 +85,7 @@ function add2eFamiliarNormalForRoll(value) {
 }
 
 async function add2eFamiliarRoll(formula) {
-  const roll = new Roll(formula);
-  const evaluated = typeof roll.evaluateSync === "function" ? roll.evaluateSync() : await roll.evaluate({ async: true });
+  const evaluated = await new Roll(formula).evaluate();
   if (game.dice3d?.showForRoll) await game.dice3d.showForRoll(evaluated);
   return evaluated;
 }
