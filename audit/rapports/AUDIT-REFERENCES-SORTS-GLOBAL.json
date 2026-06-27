@@ -1,6 +1,6 @@
 {
-  "version": "2026-06-27-reference-global-audit-v3",
-  "generatedAt": "2026-06-27T11:10:56.070Z",
+  "version": "2026-06-27-reference-global-audit-v4",
+  "generatedAt": "2026-06-27T11:41:01.822Z",
   "scope": {
     "referenceDirectory": "audit\\reference",
     "referenceFileSelection": "Uniquement les références classe/niveau Clerc, Druide, Magicien et Illusionniste.",
@@ -8,7 +8,8 @@
     "componentsSourceOfTruth": "fvtt-spells-all-normalise-mecanique-v3.json",
     "componentsRule": "Les composants matériels sont lus depuis V3 et ne sont pas déduits, corrigés ou modifiés depuis les références ou le découpage.",
     "decoupageRole": "Contrôle Foundry lecture seule ; jamais une source de correction des références.",
-    "identityAliasesRole": "Table fermée de rapprochements de titres, sans renommage des données Foundry ni des références du Manuel."
+    "identityAliasesRole": "Table fermée de rapprochements de titres, sans renommage des données Foundry ni des références du Manuel.",
+    "requiredFoundryInstancesRole": "Les instances requises sont des items Foundry distincts par classe, niveau et spellLists."
   },
   "manualVerification": {
     "status": "not_performed_by_automation",
@@ -33,14 +34,14 @@
         "note": "Variation orthographique dans le titre Foundry."
       }
     ],
-    "creationCandidates": [
+    "requiredFoundryInstances": [
       {
         "file": "manuel-joueurs-illusionniste-niveau-1.json",
         "key": "illusionniste|1|lumiere",
         "nom": "Lumière",
         "classe": "illusionniste",
         "niveau": 1,
-        "disposition": "creation_candidate_required"
+        "disposition": "foundry_instance_required"
       },
       {
         "file": "manuel-joueurs-magicien-niveau-1.json",
@@ -48,7 +49,7 @@
         "nom": "Lumière",
         "classe": "magicien",
         "niveau": 1,
-        "disposition": "creation_candidate_required"
+        "disposition": "foundry_instance_required"
       },
       {
         "file": "manuel-joueurs-magicien-niveau-2.json",
@@ -56,7 +57,153 @@
         "nom": "Détection de l'invisibilité",
         "classe": "magicien",
         "niveau": 2,
-        "disposition": "creation_candidate_required"
+        "disposition": "foundry_instance_required"
+      }
+    ],
+    "legacyFoundryDuplicates": [
+      {
+        "file": "manuel-joueurs-clerc-niveau-1.json",
+        "canonicalReference": {
+          "key": "clerc|1|purification_de_leau_et_des_aliments",
+          "nom": "Purification de l'eau et des aliments",
+          "classe": "Clerc",
+          "niveau": 1
+        },
+        "decoupage": {
+          "key": "clerc|1|purification_de_la_nourriture_et_de_la_boisson",
+          "nom": "Purification de la Nourriture et de la Boisson",
+          "classe": "Clerc",
+          "niveau": 1
+        },
+        "note": "Ancien titre Foundry de « Purification de l'eau et des aliments »."
+      },
+      {
+        "file": "manuel-joueurs-clerc-niveau-1.json",
+        "canonicalReference": {
+          "key": "clerc|1|soins_mineurs",
+          "nom": "Soins mineurs",
+          "classe": "Clerc",
+          "niveau": 1
+        },
+        "decoupage": {
+          "key": "clerc|1|soins_des_blessures_legeres",
+          "nom": "Soins des Blessures Légères",
+          "classe": "Clerc",
+          "niveau": 1
+        },
+        "note": "Ancien titre Foundry de « Soins mineurs »."
+      },
+      {
+        "file": "manuel-joueurs-clerc-niveau-3.json",
+        "canonicalReference": {
+          "key": "clerc|3|localisation_dobjets",
+          "nom": "Localisation d'objets",
+          "classe": "Clerc",
+          "niveau": 3
+        },
+        "decoupage": {
+          "key": "clerc|3|localisation_dun_objet",
+          "nom": "Localisation d’un Objet",
+          "classe": "Clerc",
+          "niveau": 3
+        },
+        "note": "Ancien singulier Foundry de « Localisation d'objets »."
+      },
+      {
+        "file": "manuel-joueurs-clerc-niveau-4.json",
+        "canonicalReference": {
+          "key": "clerc|4|batons_a_serpents",
+          "nom": "Bâtons à serpents",
+          "classe": "Clerc",
+          "niveau": 4
+        },
+        "decoupage": {
+          "key": "clerc|4|batons_en_serpents",
+          "nom": "Bâtons en Serpents",
+          "classe": "Clerc",
+          "niveau": 4
+        },
+        "note": "Variation de préposition dans le titre Foundry."
+      },
+      {
+        "file": "manuel-joueurs-clerc-niveau-4.json",
+        "canonicalReference": {
+          "key": "clerc|4|protection_contre_le_mal_sur_3_m",
+          "nom": "Protection contre le mal sur 3 m",
+          "classe": "Clerc",
+          "niveau": 4
+        },
+        "decoupage": {
+          "key": "clerc|4|protection_contre_le_mal_rayon_de_10_pieds",
+          "nom": "Protection contre le Mal (Rayon de 10 pieds)",
+          "classe": "Clerc",
+          "niveau": 4
+        },
+        "note": "Même sort, titre Foundry exprimé en mesure impériale."
+      },
+      {
+        "file": "manuel-joueurs-clerc-niveau-5.json",
+        "canonicalReference": {
+          "key": "clerc|5|soin_ultime",
+          "nom": "Soin ultime",
+          "classe": "Clerc",
+          "niveau": 5
+        },
+        "decoupage": {
+          "key": "clerc|5|soins_ultime",
+          "nom": "Soins ultime",
+          "classe": "Clerc",
+          "niveau": 5
+        },
+        "note": "Variation singulier/pluriel dans le titre Foundry."
+      },
+      {
+        "file": "manuel-joueurs-druide-niveau-4.json",
+        "canonicalReference": {
+          "key": "druide|4|dissipation_de_la_magie",
+          "nom": "Dissipation de la magie",
+          "classe": "druide",
+          "niveau": 4
+        },
+        "decoupage": {
+          "key": "druide|4|dissipation_de_magie",
+          "nom": "Dissipation de magie",
+          "classe": "Druide",
+          "niveau": 4
+        },
+        "note": "Variation d'article dans le titre Foundry."
+      },
+      {
+        "file": "manuel-joueurs-magicien-niveau-1.json",
+        "canonicalReference": {
+          "key": "magicien|1|projectile_magique",
+          "nom": "Projectile magique",
+          "classe": "magicien",
+          "niveau": 1
+        },
+        "decoupage": {
+          "key": "magicien|1|missile_magique",
+          "nom": "Missile magique",
+          "classe": "Magicien",
+          "niveau": 1
+        },
+        "note": "Ancien intitulé Foundry de « Projectile magique »."
+      },
+      {
+        "file": "manuel-joueurs-magicien-niveau-5.json",
+        "canonicalReference": {
+          "key": "magicien|5|chien_fidele_de_mordenkainen",
+          "nom": "Chien fidèle de Mordenkainen",
+          "classe": "magicien",
+          "niveau": 5
+        },
+        "decoupage": {
+          "key": "magicien|5|chien_fidele_de_mordekainen",
+          "nom": "Chien fidèle de Mordekainen",
+          "classe": "Magicien",
+          "niveau": 5
+        },
+        "note": "Orthographe historique Foundry de Mordenkainen."
       }
     ],
     "foundryOutOfManualScope": [
@@ -69,92 +216,29 @@
         "reason": "Entrée Foundry additionnelle hors liste des sorts de Clerc niveau 7 du Manuel des joueurs."
       }
     ],
-    "unresolvedDecoupageOnly": [
-      {
-        "file": "manuel-joueurs-clerc-niveau-1.json",
-        "key": "clerc|1|purification_de_la_nourriture_et_de_la_boisson",
-        "nom": "Purification de la Nourriture et de la Boisson",
-        "classe": "Clerc",
-        "niveau": 1
-      },
-      {
-        "file": "manuel-joueurs-clerc-niveau-1.json",
-        "key": "clerc|1|soins_des_blessures_legeres",
-        "nom": "Soins des Blessures Légères",
-        "classe": "Clerc",
-        "niveau": 1
-      },
-      {
-        "file": "manuel-joueurs-clerc-niveau-3.json",
-        "key": "clerc|3|localisation_dun_objet",
-        "nom": "Localisation d’un Objet",
-        "classe": "Clerc",
-        "niveau": 3
-      },
-      {
-        "file": "manuel-joueurs-clerc-niveau-4.json",
-        "key": "clerc|4|batons_en_serpents",
-        "nom": "Bâtons en Serpents",
-        "classe": "Clerc",
-        "niveau": 4
-      },
-      {
-        "file": "manuel-joueurs-clerc-niveau-4.json",
-        "key": "clerc|4|protection_contre_le_mal_rayon_de_10_pieds",
-        "nom": "Protection contre le Mal (Rayon de 10 pieds)",
-        "classe": "Clerc",
-        "niveau": 4
-      },
-      {
-        "file": "manuel-joueurs-clerc-niveau-5.json",
-        "key": "clerc|5|soins_ultime",
-        "nom": "Soins ultime",
-        "classe": "Clerc",
-        "niveau": 5
-      },
-      {
-        "file": "manuel-joueurs-druide-niveau-4.json",
-        "key": "druide|4|dissipation_de_magie",
-        "nom": "Dissipation de magie",
-        "classe": "Druide",
-        "niveau": 4
-      },
-      {
-        "file": "manuel-joueurs-magicien-niveau-1.json",
-        "key": "magicien|1|missile_magique",
-        "nom": "Missile magique",
-        "classe": "Magicien",
-        "niveau": 1
-      },
-      {
-        "file": "manuel-joueurs-magicien-niveau-5.json",
-        "key": "magicien|5|chien_fidele_de_mordekainen",
-        "nom": "Chien fidèle de Mordekainen",
-        "classe": "Magicien",
-        "niveau": 5
-      }
-    ]
+    "unresolvedDecoupageOnly": []
   },
   "summary": {
     "references": 30,
     "referencesReadyForManualConfirmation": 0,
-    "referencesManualReviewRequired": 21,
-    "referencesBlockedStructural": 9,
+    "referencesManualReviewRequired": 27,
+    "referencesBlockedStructural": 3,
     "spells": 414,
     "missingReferenceFields": 0,
     "placeholderFields": 1,
     "technicalDifferences": 1579,
     "missingDescriptions": 0,
     "descriptionDifferences": 310,
-    "identityDifferences": 12,
+    "identityDifferences": 3,
     "aliasMatches": 1,
-    "creationCandidates": 3,
+    "requiredFoundryInstances": 3,
+    "legacyFoundryDuplicates": 9,
     "referenceOnly": 3,
-    "decoupageOnly": 9,
+    "unresolvedDecoupageOnly": 0,
     "outOfScopeFoundryOnly": 1,
     "referenceDuplicates": 0,
     "decoupageDuplicates": 0,
-    "structuralErrors": 9
+    "structuralErrors": 3
   },
   "references": [
     {
@@ -166,46 +250,64 @@
         "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf"
       },
       "foundryExport": "audit/decoupage_fichier/clerc-niveau-1.json",
-      "status": "blocked_structural",
-      "errors": [
-        "Identités non résolues : référence sans découpage 0, découpage sans référence 2."
-      ],
+      "status": "manual_review_required",
+      "errors": [],
       "warnings": [],
       "summary": {
         "referenceSpells": 12,
         "decoupageSpells": 14,
-        "decoupageSpellsInManualScope": 14,
+        "decoupageSpellsInManualScope": 12,
         "expectedCount": 12,
         "missingReferenceFields": 0,
         "placeholderFields": 0,
         "technicalDifferences": 19,
         "missingDescriptions": 0,
         "descriptionDifferences": 4,
-        "identityDifferences": 2,
+        "identityDifferences": 0,
         "aliasMatches": 0,
-        "creationCandidates": 0,
+        "requiredFoundryInstances": 0,
         "referenceOnly": 0,
-        "decoupageOnly": 2,
+        "unresolvedDecoupageOnly": 0,
+        "legacyFoundryDuplicates": 2,
         "outOfScopeFoundryOnly": 0,
         "referenceDuplicates": 0,
         "decoupageDuplicates": 0
       },
       "identity": {
         "aliases": [],
-        "creationCandidates": [],
+        "requiredFoundryInstances": [],
         "referenceOnly": [],
-        "decoupageOnly": [
+        "unresolvedDecoupageOnly": [],
+        "legacyFoundryDuplicates": [
           {
-            "key": "clerc|1|purification_de_la_nourriture_et_de_la_boisson",
-            "nom": "Purification de la Nourriture et de la Boisson",
-            "classe": "Clerc",
-            "niveau": 1
+            "canonicalReference": {
+              "key": "clerc|1|purification_de_leau_et_des_aliments",
+              "nom": "Purification de l'eau et des aliments",
+              "classe": "Clerc",
+              "niveau": 1
+            },
+            "decoupage": {
+              "key": "clerc|1|purification_de_la_nourriture_et_de_la_boisson",
+              "nom": "Purification de la Nourriture et de la Boisson",
+              "classe": "Clerc",
+              "niveau": 1
+            },
+            "note": "Ancien titre Foundry de « Purification de l'eau et des aliments »."
           },
           {
-            "key": "clerc|1|soins_des_blessures_legeres",
-            "nom": "Soins des Blessures Légères",
-            "classe": "Clerc",
-            "niveau": 1
+            "canonicalReference": {
+              "key": "clerc|1|soins_mineurs",
+              "nom": "Soins mineurs",
+              "classe": "Clerc",
+              "niveau": 1
+            },
+            "decoupage": {
+              "key": "clerc|1|soins_des_blessures_legeres",
+              "nom": "Soins des Blessures Légères",
+              "classe": "Clerc",
+              "niveau": 1
+            },
+            "note": "Ancien titre Foundry de « Soins mineurs »."
           }
         ],
         "outOfScopeFoundryOnly": [],
@@ -927,18 +1029,20 @@
         "descriptionDifferences": 2,
         "identityDifferences": 0,
         "aliasMatches": 0,
-        "creationCandidates": 0,
+        "requiredFoundryInstances": 0,
         "referenceOnly": 0,
-        "decoupageOnly": 0,
+        "unresolvedDecoupageOnly": 0,
+        "legacyFoundryDuplicates": 0,
         "outOfScopeFoundryOnly": 0,
         "referenceDuplicates": 0,
         "decoupageDuplicates": 0
       },
       "identity": {
         "aliases": [],
-        "creationCandidates": [],
+        "requiredFoundryInstances": [],
         "referenceOnly": [],
-        "decoupageOnly": [],
+        "unresolvedDecoupageOnly": [],
+        "legacyFoundryDuplicates": [],
         "outOfScopeFoundryOnly": [],
         "referenceDuplicates": [],
         "decoupageDuplicates": []
@@ -1643,40 +1747,49 @@
         "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf"
       },
       "foundryExport": "audit/decoupage_fichier/clerc-niveau-3.json",
-      "status": "blocked_structural",
-      "errors": [
-        "Identités non résolues : référence sans découpage 0, découpage sans référence 1."
-      ],
+      "status": "manual_review_required",
+      "errors": [],
       "warnings": [],
       "summary": {
         "referenceSpells": 12,
         "decoupageSpells": 13,
-        "decoupageSpellsInManualScope": 13,
+        "decoupageSpellsInManualScope": 12,
         "expectedCount": 12,
         "missingReferenceFields": 0,
         "placeholderFields": 0,
         "technicalDifferences": 30,
         "missingDescriptions": 0,
         "descriptionDifferences": 3,
-        "identityDifferences": 1,
+        "identityDifferences": 0,
         "aliasMatches": 0,
-        "creationCandidates": 0,
+        "requiredFoundryInstances": 0,
         "referenceOnly": 0,
-        "decoupageOnly": 1,
+        "unresolvedDecoupageOnly": 0,
+        "legacyFoundryDuplicates": 1,
         "outOfScopeFoundryOnly": 0,
         "referenceDuplicates": 0,
         "decoupageDuplicates": 0
       },
       "identity": {
         "aliases": [],
-        "creationCandidates": [],
+        "requiredFoundryInstances": [],
         "referenceOnly": [],
-        "decoupageOnly": [
+        "unresolvedDecoupageOnly": [],
+        "legacyFoundryDuplicates": [
           {
-            "key": "clerc|3|localisation_dun_objet",
-            "nom": "Localisation d’un Objet",
-            "classe": "Clerc",
-            "niveau": 3
+            "canonicalReference": {
+              "key": "clerc|3|localisation_dobjets",
+              "nom": "Localisation d'objets",
+              "classe": "Clerc",
+              "niveau": 3
+            },
+            "decoupage": {
+              "key": "clerc|3|localisation_dun_objet",
+              "nom": "Localisation d’un Objet",
+              "classe": "Clerc",
+              "niveau": 3
+            },
+            "note": "Ancien singulier Foundry de « Localisation d'objets »."
           }
         ],
         "outOfScopeFoundryOnly": [],
@@ -2383,46 +2496,64 @@
         "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf"
       },
       "foundryExport": "audit/decoupage_fichier/clerc-niveau-4.json",
-      "status": "blocked_structural",
-      "errors": [
-        "Identités non résolues : référence sans découpage 0, découpage sans référence 2."
-      ],
+      "status": "manual_review_required",
+      "errors": [],
       "warnings": [],
       "summary": {
         "referenceSpells": 10,
         "decoupageSpells": 12,
-        "decoupageSpellsInManualScope": 12,
+        "decoupageSpellsInManualScope": 10,
         "expectedCount": 10,
         "missingReferenceFields": 0,
         "placeholderFields": 0,
         "technicalDifferences": 21,
         "missingDescriptions": 0,
         "descriptionDifferences": 5,
-        "identityDifferences": 2,
+        "identityDifferences": 0,
         "aliasMatches": 0,
-        "creationCandidates": 0,
+        "requiredFoundryInstances": 0,
         "referenceOnly": 0,
-        "decoupageOnly": 2,
+        "unresolvedDecoupageOnly": 0,
+        "legacyFoundryDuplicates": 2,
         "outOfScopeFoundryOnly": 0,
         "referenceDuplicates": 0,
         "decoupageDuplicates": 0
       },
       "identity": {
         "aliases": [],
-        "creationCandidates": [],
+        "requiredFoundryInstances": [],
         "referenceOnly": [],
-        "decoupageOnly": [
+        "unresolvedDecoupageOnly": [],
+        "legacyFoundryDuplicates": [
           {
-            "key": "clerc|4|batons_en_serpents",
-            "nom": "Bâtons en Serpents",
-            "classe": "Clerc",
-            "niveau": 4
+            "canonicalReference": {
+              "key": "clerc|4|batons_a_serpents",
+              "nom": "Bâtons à serpents",
+              "classe": "Clerc",
+              "niveau": 4
+            },
+            "decoupage": {
+              "key": "clerc|4|batons_en_serpents",
+              "nom": "Bâtons en Serpents",
+              "classe": "Clerc",
+              "niveau": 4
+            },
+            "note": "Variation de préposition dans le titre Foundry."
           },
           {
-            "key": "clerc|4|protection_contre_le_mal_rayon_de_10_pieds",
-            "nom": "Protection contre le Mal (Rayon de 10 pieds)",
-            "classe": "Clerc",
-            "niveau": 4
+            "canonicalReference": {
+              "key": "clerc|4|protection_contre_le_mal_sur_3_m",
+              "nom": "Protection contre le mal sur 3 m",
+              "classe": "Clerc",
+              "niveau": 4
+            },
+            "decoupage": {
+              "key": "clerc|4|protection_contre_le_mal_rayon_de_10_pieds",
+              "nom": "Protection contre le Mal (Rayon de 10 pieds)",
+              "classe": "Clerc",
+              "niveau": 4
+            },
+            "note": "Même sort, titre Foundry exprimé en mesure impériale."
           }
         ],
         "outOfScopeFoundryOnly": [],
@@ -3015,40 +3146,49 @@
         "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf"
       },
       "foundryExport": "audit/decoupage_fichier/clerc-niveau-5.json",
-      "status": "blocked_structural",
-      "errors": [
-        "Identités non résolues : référence sans découpage 0, découpage sans référence 1."
-      ],
+      "status": "manual_review_required",
+      "errors": [],
       "warnings": [],
       "summary": {
         "referenceSpells": 10,
         "decoupageSpells": 11,
-        "decoupageSpellsInManualScope": 11,
+        "decoupageSpellsInManualScope": 10,
         "expectedCount": 10,
         "missingReferenceFields": 0,
         "placeholderFields": 0,
         "technicalDifferences": 34,
         "missingDescriptions": 0,
         "descriptionDifferences": 3,
-        "identityDifferences": 1,
+        "identityDifferences": 0,
         "aliasMatches": 0,
-        "creationCandidates": 0,
+        "requiredFoundryInstances": 0,
         "referenceOnly": 0,
-        "decoupageOnly": 1,
+        "unresolvedDecoupageOnly": 0,
+        "legacyFoundryDuplicates": 1,
         "outOfScopeFoundryOnly": 0,
         "referenceDuplicates": 0,
         "decoupageDuplicates": 0
       },
       "identity": {
         "aliases": [],
-        "creationCandidates": [],
+        "requiredFoundryInstances": [],
         "referenceOnly": [],
-        "decoupageOnly": [
+        "unresolvedDecoupageOnly": [],
+        "legacyFoundryDuplicates": [
           {
-            "key": "clerc|5|soins_ultime",
-            "nom": "Soins ultime",
-            "classe": "Clerc",
-            "niveau": 5
+            "canonicalReference": {
+              "key": "clerc|5|soin_ultime",
+              "nom": "Soin ultime",
+              "classe": "Clerc",
+              "niveau": 5
+            },
+            "decoupage": {
+              "key": "clerc|5|soins_ultime",
+              "nom": "Soins ultime",
+              "classe": "Clerc",
+              "niveau": 5
+            },
+            "note": "Variation singulier/pluriel dans le titre Foundry."
           }
         ],
         "outOfScopeFoundryOnly": [],
@@ -3656,18 +3796,20 @@
         "descriptionDifferences": 2,
         "identityDifferences": 0,
         "aliasMatches": 0,
-        "creationCandidates": 0,
+        "requiredFoundryInstances": 0,
         "referenceOnly": 0,
-        "decoupageOnly": 0,
+        "unresolvedDecoupageOnly": 0,
+        "legacyFoundryDuplicates": 0,
         "outOfScopeFoundryOnly": 0,
         "referenceDuplicates": 0,
         "decoupageDuplicates": 0
       },
       "identity": {
         "aliases": [],
-        "creationCandidates": [],
+        "requiredFoundryInstances": [],
         "referenceOnly": [],
-        "decoupageOnly": [],
+        "unresolvedDecoupageOnly": [],
+        "legacyFoundryDuplicates": [],
         "outOfScopeFoundryOnly": [],
         "referenceDuplicates": [],
         "decoupageDuplicates": []
@@ -4273,18 +4415,20 @@
         "descriptionDifferences": 4,
         "identityDifferences": 0,
         "aliasMatches": 0,
-        "creationCandidates": 0,
+        "requiredFoundryInstances": 0,
         "referenceOnly": 0,
-        "decoupageOnly": 0,
+        "unresolvedDecoupageOnly": 0,
+        "legacyFoundryDuplicates": 0,
         "outOfScopeFoundryOnly": 1,
         "referenceDuplicates": 0,
         "decoupageDuplicates": 0
       },
       "identity": {
         "aliases": [],
-        "creationCandidates": [],
+        "requiredFoundryInstances": [],
         "referenceOnly": [],
-        "decoupageOnly": [],
+        "unresolvedDecoupageOnly": [],
+        "legacyFoundryDuplicates": [],
         "outOfScopeFoundryOnly": [
           {
             "key": "clerc|7|asile",
@@ -4898,18 +5042,20 @@
         "descriptionDifferences": 1,
         "identityDifferences": 0,
         "aliasMatches": 0,
-        "creationCandidates": 0,
+        "requiredFoundryInstances": 0,
         "referenceOnly": 0,
-        "decoupageOnly": 0,
+        "unresolvedDecoupageOnly": 0,
+        "legacyFoundryDuplicates": 0,
         "outOfScopeFoundryOnly": 0,
         "referenceDuplicates": 0,
         "decoupageDuplicates": 0
       },
       "identity": {
         "aliases": [],
-        "creationCandidates": [],
+        "requiredFoundryInstances": [],
         "referenceOnly": [],
-        "decoupageOnly": [],
+        "unresolvedDecoupageOnly": [],
+        "legacyFoundryDuplicates": [],
         "outOfScopeFoundryOnly": [],
         "referenceDuplicates": [],
         "decoupageDuplicates": []
@@ -5629,18 +5775,20 @@
         "descriptionDifferences": 5,
         "identityDifferences": 0,
         "aliasMatches": 0,
-        "creationCandidates": 0,
+        "requiredFoundryInstances": 0,
         "referenceOnly": 0,
-        "decoupageOnly": 0,
+        "unresolvedDecoupageOnly": 0,
+        "legacyFoundryDuplicates": 0,
         "outOfScopeFoundryOnly": 0,
         "referenceDuplicates": 0,
         "decoupageDuplicates": 0
       },
       "identity": {
         "aliases": [],
-        "creationCandidates": [],
+        "requiredFoundryInstances": [],
         "referenceOnly": [],
-        "decoupageOnly": [],
+        "unresolvedDecoupageOnly": [],
+        "legacyFoundryDuplicates": [],
         "outOfScopeFoundryOnly": [],
         "referenceDuplicates": [],
         "decoupageDuplicates": []
@@ -6360,18 +6508,20 @@
         "descriptionDifferences": 4,
         "identityDifferences": 0,
         "aliasMatches": 0,
-        "creationCandidates": 0,
+        "requiredFoundryInstances": 0,
         "referenceOnly": 0,
-        "decoupageOnly": 0,
+        "unresolvedDecoupageOnly": 0,
+        "legacyFoundryDuplicates": 0,
         "outOfScopeFoundryOnly": 0,
         "referenceDuplicates": 0,
         "decoupageDuplicates": 0
       },
       "identity": {
         "aliases": [],
-        "creationCandidates": [],
+        "requiredFoundryInstances": [],
         "referenceOnly": [],
-        "decoupageOnly": [],
+        "unresolvedDecoupageOnly": [],
+        "legacyFoundryDuplicates": [],
         "outOfScopeFoundryOnly": [],
         "referenceDuplicates": [],
         "decoupageDuplicates": []
@@ -7076,40 +7226,49 @@
         "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf"
       },
       "foundryExport": "audit/decoupage_fichier/druide-niveau-4.json",
-      "status": "blocked_structural",
-      "errors": [
-        "Identités non résolues : référence sans découpage 0, découpage sans référence 1."
-      ],
+      "status": "manual_review_required",
+      "errors": [],
       "warnings": [],
       "summary": {
         "referenceSpells": 12,
         "decoupageSpells": 13,
-        "decoupageSpellsInManualScope": 13,
+        "decoupageSpellsInManualScope": 12,
         "expectedCount": 12,
         "missingReferenceFields": 0,
         "placeholderFields": 0,
         "technicalDifferences": 43,
         "missingDescriptions": 0,
         "descriptionDifferences": 3,
-        "identityDifferences": 1,
+        "identityDifferences": 0,
         "aliasMatches": 0,
-        "creationCandidates": 0,
+        "requiredFoundryInstances": 0,
         "referenceOnly": 0,
-        "decoupageOnly": 1,
+        "unresolvedDecoupageOnly": 0,
+        "legacyFoundryDuplicates": 1,
         "outOfScopeFoundryOnly": 0,
         "referenceDuplicates": 0,
         "decoupageDuplicates": 0
       },
       "identity": {
         "aliases": [],
-        "creationCandidates": [],
+        "requiredFoundryInstances": [],
         "referenceOnly": [],
-        "decoupageOnly": [
+        "unresolvedDecoupageOnly": [],
+        "legacyFoundryDuplicates": [
           {
-            "key": "druide|4|dissipation_de_magie",
-            "nom": "Dissipation de magie",
-            "classe": "Druide",
-            "niveau": 4
+            "canonicalReference": {
+              "key": "druide|4|dissipation_de_la_magie",
+              "nom": "Dissipation de la magie",
+              "classe": "druide",
+              "niveau": 4
+            },
+            "decoupage": {
+              "key": "druide|4|dissipation_de_magie",
+              "nom": "Dissipation de magie",
+              "classe": "Druide",
+              "niveau": 4
+            },
+            "note": "Variation d'article dans le titre Foundry."
           }
         ],
         "outOfScopeFoundryOnly": [],
@@ -7831,18 +7990,20 @@
         "descriptionDifferences": 8,
         "identityDifferences": 0,
         "aliasMatches": 0,
-        "creationCandidates": 0,
+        "requiredFoundryInstances": 0,
         "referenceOnly": 0,
-        "decoupageOnly": 0,
+        "unresolvedDecoupageOnly": 0,
+        "legacyFoundryDuplicates": 0,
         "outOfScopeFoundryOnly": 0,
         "referenceDuplicates": 0,
         "decoupageDuplicates": 0
       },
       "identity": {
         "aliases": [],
-        "creationCandidates": [],
+        "requiredFoundryInstances": [],
         "referenceOnly": [],
-        "decoupageOnly": [],
+        "unresolvedDecoupageOnly": [],
+        "legacyFoundryDuplicates": [],
         "outOfScopeFoundryOnly": [],
         "referenceDuplicates": [],
         "decoupageDuplicates": []
@@ -8448,18 +8609,20 @@
         "descriptionDifferences": 4,
         "identityDifferences": 0,
         "aliasMatches": 0,
-        "creationCandidates": 0,
+        "requiredFoundryInstances": 0,
         "referenceOnly": 0,
-        "decoupageOnly": 0,
+        "unresolvedDecoupageOnly": 0,
+        "legacyFoundryDuplicates": 0,
         "outOfScopeFoundryOnly": 0,
         "referenceDuplicates": 0,
         "decoupageDuplicates": 0
       },
       "identity": {
         "aliases": [],
-        "creationCandidates": [],
+        "requiredFoundryInstances": [],
         "referenceOnly": [],
-        "decoupageOnly": [],
+        "unresolvedDecoupageOnly": [],
+        "legacyFoundryDuplicates": [],
         "outOfScopeFoundryOnly": [],
         "referenceDuplicates": [],
         "decoupageDuplicates": []
@@ -9065,18 +9228,20 @@
         "descriptionDifferences": 5,
         "identityDifferences": 0,
         "aliasMatches": 0,
-        "creationCandidates": 0,
+        "requiredFoundryInstances": 0,
         "referenceOnly": 0,
-        "decoupageOnly": 0,
+        "unresolvedDecoupageOnly": 0,
+        "legacyFoundryDuplicates": 0,
         "outOfScopeFoundryOnly": 0,
         "referenceDuplicates": 0,
         "decoupageDuplicates": 0
       },
       "identity": {
         "aliases": [],
-        "creationCandidates": [],
+        "requiredFoundryInstances": [],
         "referenceOnly": [],
-        "decoupageOnly": [],
+        "unresolvedDecoupageOnly": [],
+        "legacyFoundryDuplicates": [],
         "outOfScopeFoundryOnly": [],
         "referenceDuplicates": [],
         "decoupageDuplicates": []
@@ -9669,7 +9834,7 @@
       "foundryExport": "audit/decoupage_fichier/illusionniste-niveau-1.json",
       "status": "blocked_structural",
       "errors": [
-        "Identités non résolues : référence sans découpage 1, découpage sans référence 0."
+        "Identités non résolues : instances Foundry requises 1, découpage sans référence 0."
       ],
       "warnings": [],
       "summary": {
@@ -9684,22 +9849,23 @@
         "descriptionDifferences": 11,
         "identityDifferences": 1,
         "aliasMatches": 0,
-        "creationCandidates": 1,
+        "requiredFoundryInstances": 1,
         "referenceOnly": 1,
-        "decoupageOnly": 0,
+        "unresolvedDecoupageOnly": 0,
+        "legacyFoundryDuplicates": 0,
         "outOfScopeFoundryOnly": 0,
         "referenceDuplicates": 0,
         "decoupageDuplicates": 0
       },
       "identity": {
         "aliases": [],
-        "creationCandidates": [
+        "requiredFoundryInstances": [
           {
             "key": "illusionniste|1|lumiere",
             "nom": "Lumière",
             "classe": "illusionniste",
             "niveau": 1,
-            "disposition": "creation_candidate_required"
+            "disposition": "foundry_instance_required"
           }
         ],
         "referenceOnly": [
@@ -9708,10 +9874,11 @@
             "nom": "Lumière",
             "classe": "illusionniste",
             "niveau": 1,
-            "disposition": "creation_candidate_required"
+            "disposition": "foundry_instance_required"
           }
         ],
-        "decoupageOnly": [],
+        "unresolvedDecoupageOnly": [],
+        "legacyFoundryDuplicates": [],
         "outOfScopeFoundryOnly": [],
         "referenceDuplicates": [],
         "decoupageDuplicates": []
@@ -10431,18 +10598,20 @@
         "descriptionDifferences": 12,
         "identityDifferences": 0,
         "aliasMatches": 0,
-        "creationCandidates": 0,
+        "requiredFoundryInstances": 0,
         "referenceOnly": 0,
-        "decoupageOnly": 0,
+        "unresolvedDecoupageOnly": 0,
+        "legacyFoundryDuplicates": 0,
         "outOfScopeFoundryOnly": 0,
         "referenceDuplicates": 0,
         "decoupageDuplicates": 0
       },
       "identity": {
         "aliases": [],
-        "creationCandidates": [],
+        "requiredFoundryInstances": [],
         "referenceOnly": [],
-        "decoupageOnly": [],
+        "unresolvedDecoupageOnly": [],
+        "legacyFoundryDuplicates": [],
         "outOfScopeFoundryOnly": [],
         "referenceDuplicates": [],
         "decoupageDuplicates": []
@@ -11162,18 +11331,20 @@
         "descriptionDifferences": 12,
         "identityDifferences": 0,
         "aliasMatches": 0,
-        "creationCandidates": 0,
+        "requiredFoundryInstances": 0,
         "referenceOnly": 0,
-        "decoupageOnly": 0,
+        "unresolvedDecoupageOnly": 0,
+        "legacyFoundryDuplicates": 0,
         "outOfScopeFoundryOnly": 0,
         "referenceDuplicates": 0,
         "decoupageDuplicates": 0
       },
       "identity": {
         "aliases": [],
-        "creationCandidates": [],
+        "requiredFoundryInstances": [],
         "referenceOnly": [],
-        "decoupageOnly": [],
+        "unresolvedDecoupageOnly": [],
+        "legacyFoundryDuplicates": [],
         "outOfScopeFoundryOnly": [],
         "referenceDuplicates": [],
         "decoupageDuplicates": []
@@ -11893,18 +12064,20 @@
         "descriptionDifferences": 8,
         "identityDifferences": 0,
         "aliasMatches": 0,
-        "creationCandidates": 0,
+        "requiredFoundryInstances": 0,
         "referenceOnly": 0,
-        "decoupageOnly": 0,
+        "unresolvedDecoupageOnly": 0,
+        "legacyFoundryDuplicates": 0,
         "outOfScopeFoundryOnly": 0,
         "referenceDuplicates": 0,
         "decoupageDuplicates": 0
       },
       "identity": {
         "aliases": [],
-        "creationCandidates": [],
+        "requiredFoundryInstances": [],
         "referenceOnly": [],
-        "decoupageOnly": [],
+        "unresolvedDecoupageOnly": [],
+        "legacyFoundryDuplicates": [],
         "outOfScopeFoundryOnly": [],
         "referenceDuplicates": [],
         "decoupageDuplicates": []
@@ -12396,18 +12569,20 @@
         "descriptionDifferences": 8,
         "identityDifferences": 0,
         "aliasMatches": 0,
-        "creationCandidates": 0,
+        "requiredFoundryInstances": 0,
         "referenceOnly": 0,
-        "decoupageOnly": 0,
+        "unresolvedDecoupageOnly": 0,
+        "legacyFoundryDuplicates": 0,
         "outOfScopeFoundryOnly": 0,
         "referenceDuplicates": 0,
         "decoupageDuplicates": 0
       },
       "identity": {
         "aliases": [],
-        "creationCandidates": [],
+        "requiredFoundryInstances": [],
         "referenceOnly": [],
-        "decoupageOnly": [],
+        "unresolvedDecoupageOnly": [],
+        "legacyFoundryDuplicates": [],
         "outOfScopeFoundryOnly": [],
         "referenceDuplicates": [],
         "decoupageDuplicates": []
@@ -12899,18 +13074,20 @@
         "descriptionDifferences": 8,
         "identityDifferences": 0,
         "aliasMatches": 0,
-        "creationCandidates": 0,
+        "requiredFoundryInstances": 0,
         "referenceOnly": 0,
-        "decoupageOnly": 0,
+        "unresolvedDecoupageOnly": 0,
+        "legacyFoundryDuplicates": 0,
         "outOfScopeFoundryOnly": 0,
         "referenceDuplicates": 0,
         "decoupageDuplicates": 0
       },
       "identity": {
         "aliases": [],
-        "creationCandidates": [],
+        "requiredFoundryInstances": [],
         "referenceOnly": [],
-        "decoupageOnly": [],
+        "unresolvedDecoupageOnly": [],
+        "legacyFoundryDuplicates": [],
         "outOfScopeFoundryOnly": [],
         "referenceDuplicates": [],
         "decoupageDuplicates": []
@@ -13402,18 +13579,20 @@
         "descriptionDifferences": 6,
         "identityDifferences": 0,
         "aliasMatches": 0,
-        "creationCandidates": 0,
+        "requiredFoundryInstances": 0,
         "referenceOnly": 0,
-        "decoupageOnly": 0,
+        "unresolvedDecoupageOnly": 0,
+        "legacyFoundryDuplicates": 0,
         "outOfScopeFoundryOnly": 0,
         "referenceDuplicates": 0,
         "decoupageDuplicates": 0
       },
       "identity": {
         "aliases": [],
-        "creationCandidates": [],
+        "requiredFoundryInstances": [],
         "referenceOnly": [],
-        "decoupageOnly": [],
+        "unresolvedDecoupageOnly": [],
+        "legacyFoundryDuplicates": [],
         "outOfScopeFoundryOnly": [],
         "referenceDuplicates": [],
         "decoupageDuplicates": []
@@ -13778,37 +13957,38 @@
       "foundryExport": "audit/decoupage_fichier/magicien-niveau-1.json",
       "status": "blocked_structural",
       "errors": [
-        "Identités non résolues : référence sans découpage 1, découpage sans référence 1."
+        "Identités non résolues : instances Foundry requises 1, découpage sans référence 0."
       ],
       "warnings": [],
       "summary": {
         "referenceSpells": 30,
         "decoupageSpells": 30,
-        "decoupageSpellsInManualScope": 30,
+        "decoupageSpellsInManualScope": 29,
         "expectedCount": 30,
         "missingReferenceFields": 0,
         "placeholderFields": 0,
         "technicalDifferences": 97,
         "missingDescriptions": 0,
         "descriptionDifferences": 29,
-        "identityDifferences": 2,
+        "identityDifferences": 1,
         "aliasMatches": 0,
-        "creationCandidates": 1,
+        "requiredFoundryInstances": 1,
         "referenceOnly": 1,
-        "decoupageOnly": 1,
+        "unresolvedDecoupageOnly": 0,
+        "legacyFoundryDuplicates": 1,
         "outOfScopeFoundryOnly": 0,
         "referenceDuplicates": 0,
         "decoupageDuplicates": 0
       },
       "identity": {
         "aliases": [],
-        "creationCandidates": [
+        "requiredFoundryInstances": [
           {
             "key": "magicien|1|lumiere",
             "nom": "Lumière",
             "classe": "magicien",
             "niveau": 1,
-            "disposition": "creation_candidate_required"
+            "disposition": "foundry_instance_required"
           }
         ],
         "referenceOnly": [
@@ -13817,15 +13997,25 @@
             "nom": "Lumière",
             "classe": "magicien",
             "niveau": 1,
-            "disposition": "creation_candidate_required"
+            "disposition": "foundry_instance_required"
           }
         ],
-        "decoupageOnly": [
+        "unresolvedDecoupageOnly": [],
+        "legacyFoundryDuplicates": [
           {
-            "key": "magicien|1|missile_magique",
-            "nom": "Missile magique",
-            "classe": "Magicien",
-            "niveau": 1
+            "canonicalReference": {
+              "key": "magicien|1|projectile_magique",
+              "nom": "Projectile magique",
+              "classe": "magicien",
+              "niveau": 1
+            },
+            "decoupage": {
+              "key": "magicien|1|missile_magique",
+              "nom": "Missile magique",
+              "classe": "Magicien",
+              "niveau": 1
+            },
+            "note": "Ancien intitulé Foundry de « Projectile magique »."
           }
         ],
         "outOfScopeFoundryOnly": [],
@@ -15560,7 +15750,7 @@
       "foundryExport": "audit/decoupage_fichier/magicien-niveau-2.json",
       "status": "blocked_structural",
       "errors": [
-        "Identités non résolues : référence sans découpage 1, découpage sans référence 0."
+        "Identités non résolues : instances Foundry requises 1, découpage sans référence 0."
       ],
       "warnings": [],
       "summary": {
@@ -15575,22 +15765,23 @@
         "descriptionDifferences": 23,
         "identityDifferences": 1,
         "aliasMatches": 0,
-        "creationCandidates": 1,
+        "requiredFoundryInstances": 1,
         "referenceOnly": 1,
-        "decoupageOnly": 0,
+        "unresolvedDecoupageOnly": 0,
+        "legacyFoundryDuplicates": 0,
         "outOfScopeFoundryOnly": 0,
         "referenceDuplicates": 0,
         "decoupageDuplicates": 0
       },
       "identity": {
         "aliases": [],
-        "creationCandidates": [
+        "requiredFoundryInstances": [
           {
             "key": "magicien|2|detection_de_linvisibilite",
             "nom": "Détection de l'invisibilité",
             "classe": "magicien",
             "niveau": 2,
-            "disposition": "creation_candidate_required"
+            "disposition": "foundry_instance_required"
           }
         ],
         "referenceOnly": [
@@ -15599,10 +15790,11 @@
             "nom": "Détection de l'invisibilité",
             "classe": "magicien",
             "niveau": 2,
-            "disposition": "creation_candidate_required"
+            "disposition": "foundry_instance_required"
           }
         ],
-        "decoupageOnly": [],
+        "unresolvedDecoupageOnly": [],
+        "legacyFoundryDuplicates": [],
         "outOfScopeFoundryOnly": [],
         "referenceDuplicates": [],
         "decoupageDuplicates": []
@@ -17006,18 +17198,20 @@
         "descriptionDifferences": 24,
         "identityDifferences": 0,
         "aliasMatches": 0,
-        "creationCandidates": 0,
+        "requiredFoundryInstances": 0,
         "referenceOnly": 0,
-        "decoupageOnly": 0,
+        "unresolvedDecoupageOnly": 0,
+        "legacyFoundryDuplicates": 0,
         "outOfScopeFoundryOnly": 0,
         "referenceDuplicates": 0,
         "decoupageDuplicates": 0
       },
       "identity": {
         "aliases": [],
-        "creationCandidates": [],
+        "requiredFoundryInstances": [],
         "referenceOnly": [],
-        "decoupageOnly": [],
+        "unresolvedDecoupageOnly": [],
+        "legacyFoundryDuplicates": [],
         "outOfScopeFoundryOnly": [],
         "referenceDuplicates": [],
         "decoupageDuplicates": []
@@ -18421,18 +18615,20 @@
         "descriptionDifferences": 24,
         "identityDifferences": 0,
         "aliasMatches": 0,
-        "creationCandidates": 0,
+        "requiredFoundryInstances": 0,
         "referenceOnly": 0,
-        "decoupageOnly": 0,
+        "unresolvedDecoupageOnly": 0,
+        "legacyFoundryDuplicates": 0,
         "outOfScopeFoundryOnly": 0,
         "referenceDuplicates": 0,
         "decoupageDuplicates": 0
       },
       "identity": {
         "aliases": [],
-        "creationCandidates": [],
+        "requiredFoundryInstances": [],
         "referenceOnly": [],
-        "decoupageOnly": [],
+        "unresolvedDecoupageOnly": [],
+        "legacyFoundryDuplicates": [],
         "outOfScopeFoundryOnly": [],
         "referenceDuplicates": [],
         "decoupageDuplicates": []
@@ -19821,26 +20017,25 @@
         "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf"
       },
       "foundryExport": "audit/decoupage_fichier/magicien-niveau-5.json",
-      "status": "blocked_structural",
-      "errors": [
-        "Identités non résolues : référence sans découpage 0, découpage sans référence 1."
-      ],
+      "status": "manual_review_required",
+      "errors": [],
       "warnings": [],
       "summary": {
         "referenceSpells": 24,
         "decoupageSpells": 25,
-        "decoupageSpellsInManualScope": 25,
+        "decoupageSpellsInManualScope": 24,
         "expectedCount": 24,
         "missingReferenceFields": 0,
         "placeholderFields": 0,
         "technicalDifferences": 106,
         "missingDescriptions": 0,
         "descriptionDifferences": 24,
-        "identityDifferences": 1,
+        "identityDifferences": 0,
         "aliasMatches": 1,
-        "creationCandidates": 0,
+        "requiredFoundryInstances": 0,
         "referenceOnly": 0,
-        "decoupageOnly": 1,
+        "unresolvedDecoupageOnly": 0,
+        "legacyFoundryDuplicates": 1,
         "outOfScopeFoundryOnly": 0,
         "referenceDuplicates": 0,
         "decoupageDuplicates": 0
@@ -19863,14 +20058,24 @@
             "note": "Variation orthographique dans le titre Foundry."
           }
         ],
-        "creationCandidates": [],
+        "requiredFoundryInstances": [],
         "referenceOnly": [],
-        "decoupageOnly": [
+        "unresolvedDecoupageOnly": [],
+        "legacyFoundryDuplicates": [
           {
-            "key": "magicien|5|chien_fidele_de_mordekainen",
-            "nom": "Chien fidèle de Mordekainen",
-            "classe": "Magicien",
-            "niveau": 5
+            "canonicalReference": {
+              "key": "magicien|5|chien_fidele_de_mordenkainen",
+              "nom": "Chien fidèle de Mordenkainen",
+              "classe": "magicien",
+              "niveau": 5
+            },
+            "decoupage": {
+              "key": "magicien|5|chien_fidele_de_mordekainen",
+              "nom": "Chien fidèle de Mordekainen",
+              "classe": "Magicien",
+              "niveau": 5
+            },
+            "note": "Orthographe historique Foundry de Mordenkainen."
           }
         ],
         "outOfScopeFoundryOnly": [],
@@ -21276,18 +21481,20 @@
         "descriptionDifferences": 24,
         "identityDifferences": 0,
         "aliasMatches": 0,
-        "creationCandidates": 0,
+        "requiredFoundryInstances": 0,
         "referenceOnly": 0,
-        "decoupageOnly": 0,
+        "unresolvedDecoupageOnly": 0,
+        "legacyFoundryDuplicates": 0,
         "outOfScopeFoundryOnly": 0,
         "referenceDuplicates": 0,
         "decoupageDuplicates": 0
       },
       "identity": {
         "aliases": [],
-        "creationCandidates": [],
+        "requiredFoundryInstances": [],
         "referenceOnly": [],
-        "decoupageOnly": [],
+        "unresolvedDecoupageOnly": [],
+        "legacyFoundryDuplicates": [],
         "outOfScopeFoundryOnly": [],
         "referenceDuplicates": [],
         "decoupageDuplicates": []
@@ -22691,18 +22898,20 @@
         "descriptionDifferences": 16,
         "identityDifferences": 0,
         "aliasMatches": 0,
-        "creationCandidates": 0,
+        "requiredFoundryInstances": 0,
         "referenceOnly": 0,
-        "decoupageOnly": 0,
+        "unresolvedDecoupageOnly": 0,
+        "legacyFoundryDuplicates": 0,
         "outOfScopeFoundryOnly": 0,
         "referenceDuplicates": 0,
         "decoupageDuplicates": 0
       },
       "identity": {
         "aliases": [],
-        "creationCandidates": [],
+        "requiredFoundryInstances": [],
         "referenceOnly": [],
-        "decoupageOnly": [],
+        "unresolvedDecoupageOnly": [],
+        "legacyFoundryDuplicates": [],
         "outOfScopeFoundryOnly": [],
         "referenceDuplicates": [],
         "decoupageDuplicates": []
@@ -23650,18 +23859,20 @@
         "descriptionDifferences": 16,
         "identityDifferences": 0,
         "aliasMatches": 0,
-        "creationCandidates": 0,
+        "requiredFoundryInstances": 0,
         "referenceOnly": 0,
-        "decoupageOnly": 0,
+        "unresolvedDecoupageOnly": 0,
+        "legacyFoundryDuplicates": 0,
         "outOfScopeFoundryOnly": 0,
         "referenceDuplicates": 0,
         "decoupageDuplicates": 0
       },
       "identity": {
         "aliases": [],
-        "creationCandidates": [],
+        "requiredFoundryInstances": [],
         "referenceOnly": [],
-        "decoupageOnly": [],
+        "unresolvedDecoupageOnly": [],
+        "legacyFoundryDuplicates": [],
         "outOfScopeFoundryOnly": [],
         "referenceDuplicates": [],
         "decoupageDuplicates": []
@@ -24609,18 +24820,20 @@
         "descriptionDifferences": 12,
         "identityDifferences": 0,
         "aliasMatches": 0,
-        "creationCandidates": 0,
+        "requiredFoundryInstances": 0,
         "referenceOnly": 0,
-        "decoupageOnly": 0,
+        "unresolvedDecoupageOnly": 0,
+        "legacyFoundryDuplicates": 0,
         "outOfScopeFoundryOnly": 0,
         "referenceDuplicates": 0,
         "decoupageDuplicates": 0
       },
       "identity": {
         "aliases": [],
-        "creationCandidates": [],
+        "requiredFoundryInstances": [],
         "referenceOnly": [],
-        "decoupageOnly": [],
+        "unresolvedDecoupageOnly": [],
+        "legacyFoundryDuplicates": [],
         "outOfScopeFoundryOnly": [],
         "referenceDuplicates": [],
         "decoupageDuplicates": []
