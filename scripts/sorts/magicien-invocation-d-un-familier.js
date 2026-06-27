@@ -7,22 +7,23 @@ const ADD2E_FAMILIAR_OPERATION = "ADD2E_GM_OPERATION";
 const ADD2E_FAMILIAR_RANGE = 12;
 const ADD2E_FAMILIAR_ASSET_BASE = "systems/add2e/assets/token";
 const ADD2E_FAMILIAR_ASSETS = Object.freeze({
-  chat_noir: `${ADD2E_FAMILIAR_ASSET_BASE}/chat-noir.webp`,
-  corbeau: `${ADD2E_FAMILIAR_ASSET_BASE}/corbeau.webp`,
-  faucon: `${ADD2E_FAMILIAR_ASSET_BASE}/faucon.webp`,
-  crapaud: `${ADD2E_FAMILIAR_ASSET_BASE}/crapaud.webp`,
-  belette: `${ADD2E_FAMILIAR_ASSET_BASE}/belette.webp`,
-  quasit: `${ADD2E_FAMILIAR_ASSET_BASE}/quasit.webp`,
-  pseudo_dragon: `${ADD2E_FAMILIAR_ASSET_BASE}/pseudo-dragon.webp`,
-  lutin: `${ADD2E_FAMILIAR_ASSET_BASE}/lutin.webp`,
-  diablotin: `${ADD2E_FAMILIAR_ASSET_BASE}/diablotin.webp`
+  chat_noir: `${ADD2E_FAMILIAR_ASSET_BASE}/chat-noir.png`,
+  corbeau: `${ADD2E_FAMILIAR_ASSET_BASE}/corbeau.png`,
+  faucon: `${ADD2E_FAMILIAR_ASSET_BASE}/faucon.png`,
+  hibou: `${ADD2E_FAMILIAR_ASSET_BASE}/hibou.png`,
+  crapaud: `${ADD2E_FAMILIAR_ASSET_BASE}/crapaud.png`,
+  belette: `${ADD2E_FAMILIAR_ASSET_BASE}/belette.png`,
+  quasit: `${ADD2E_FAMILIAR_ASSET_BASE}/quasit.png`,
+  pseudo_dragon: `${ADD2E_FAMILIAR_ASSET_BASE}/pseudo-dragon.png`,
+  lutin: `${ADD2E_FAMILIAR_ASSET_BASE}/lutin.png`,
+  diablotin: `${ADD2E_FAMILIAR_ASSET_BASE}/diablotin.png`
 });
 
 const ADD2E_NORMAL_FAMILIARS = [
   { max: 4, key: "chat_noir", label: "Chat noir", img: ADD2E_FAMILIAR_ASSETS.chat_noir, senses: "Excellente vision nocturne et ouïe supérieure.", tags: ["familier:sens:vision_nocturne", "familier:sens:ouie_superieure"] },
   { max: 6, key: "corbeau", label: "Corbeau", img: ADD2E_FAMILIAR_ASSETS.corbeau, senses: "Vision excellente.", tags: ["familier:sens:vision_excellente"] },
   { max: 8, key: "faucon", label: "Faucon", img: ADD2E_FAMILIAR_ASSETS.faucon, senses: "Vision de loin exceptionnelle.", tags: ["familier:sens:vision_lointaine_exceptionnelle"] },
-  { max: 10, key: "hibou", label: "Hibou / chat huant", img: "icons/creatures/birds/owl-flying-brown.webp", senses: "Vision nocturne égale à la vision diurne humaine et ouïe supérieure.", tags: ["familier:sens:vision_nocturne_humaine_diurne", "familier:sens:ouie_superieure"] },
+  { max: 10, key: "hibou", label: "Hibou / chat huant", img: ADD2E_FAMILIAR_ASSETS.hibou, senses: "Vision nocturne égale à la vision diurne humaine et ouïe supérieure.", tags: ["familier:sens:vision_nocturne_humaine_diurne", "familier:sens:ouie_superieure"] },
   { max: 12, key: "crapaud", label: "Crapaud", img: ADD2E_FAMILIAR_ASSETS.crapaud, senses: "Angle de vision très large.", tags: ["familier:sens:vision_angle_large"] },
   { max: 14, key: "belette", label: "Belette", img: ADD2E_FAMILIAR_ASSETS.belette, senses: "Ouïe supérieure et odorat exceptionnel.", tags: ["familier:sens:ouie_superieure", "familier:sens:odorat_exceptionnel"] }
 ];
