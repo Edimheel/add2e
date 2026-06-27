@@ -68858,15 +68858,27 @@
         ],
         "niveau": 1,
         "ecole": "Altération",
-        "portee": "12\"",
-        "duree": "6 tours + 1 tour/niveau",
-        "zone_effet": "sphère de 2\" de rayon",
+        "portee": {
+          "valeur": "6\"",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "1 tour/niveau",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "sphère de 2\" de rayon",
+          "unite": "texte"
+        },
         "cible": "selon description texte",
-        "temps_incantation": "4 segments",
+        "temps_incantation": {
+          "valeur": "1 segment",
+          "unite": "texte"
+        },
         "jet_sauvegarde": "aucun",
         "composantes": "V, S",
         "composants_materiels": [],
-        "description": "Avec les paramètres indiqués ci-dessus, ce sort produit les mêmes effets que Lumière de clerc de niveau 1, mais il n’a aucune forme inverse.",
+        "description": "à l’exception de ses valeurs propres et du fait qu’il n’est pas réversible, ce sort fonctionne comme lumière de clerc de niveau 1.",
         "onUse": "systems/add2e/scripts/sorts/lumiere.js",
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
@@ -68898,7 +68910,7 @@
           "importerVersion": "2026-06-11-import-sorts-v2-no-merge-same-name",
           "importedAt": "2026-06-16T19:58:26.755Z",
           "onUseUnchanged": true,
-          "originalOnUse": "systems/add2e/scripts/sorts/illusionniste-lumiere.js",
+          "originalOnUse": "systems/add2e/scripts/sorts/lumiere.js",
           "routedClass": "Magicien",
           "spellListsResolved": [
             "Magicien"
@@ -68912,7 +68924,9 @@
           "canonicalSpellFields": {
             "version": "2026-06-16-cleric-l1-canonical-fields-v3"
           },
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "requiredFoundryInstance": true,
+          "requiredFoundryInstanceKey": "magicien|1|lumiere"
         },
         "add2eExport": {
           "folderPath": "Sorts / Magicien / Niveau 1",
@@ -68950,21 +68964,27 @@
         ],
         "niveau": 1,
         "ecole": "Altération",
-        "portee": "12\"",
-        "duree": "6 tours + 1 tour/niveau",
-        "zone_effet": "sphère de 2\" de rayon",
+        "portee": {
+          "valeur": "6\"",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "1 tour/niveau",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "sphère de 2\" de rayon",
+          "unite": "texte"
+        },
         "cible": "selon description texte",
-        "temps_incantation": "4 segments",
+        "temps_incantation": {
+          "valeur": "1 segment",
+          "unite": "texte"
+        },
         "jet_sauvegarde": "aucun",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "symbole sacré",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
-        "description": "ce sort provoque une excitation des molécules qui se mettent alors à briller. La lumière créée est semblable à celle d’une torche et éclaire dans une zone de 4\" de diamètre. La lumière dure 6 tours (1 heure) plus 1 tour/niveau du clerc, à moins que le clerc annule cette lumière d’un mot. Si le sort de lumière est lancé sur une créature, son éventuelle résistance à la magie s’applique et un jet de protection est autorisé. Un succès indique que la zone de lumière se crée derrière la créature visée, plutôt que sur elle. Dans tous les autres cas, le sort prend effet là où le clerc le désire, tant qu’il n’y a pas d’obstacles entre lui et la portée du sort. Le clerc peut lancer son sort dans les airs, sur une pierre, du métal, du bois, etc. Si ce sort est lancé sur le visage ou sur les yeux d’une créature, la lumière aura tendance à l’aveugler (comme si une très forte lumière était placée devant ses yeux). Ses attaques et ses jets de protection subissent alors –4 pour toucher et même sa classe d’armure subi ce malus. À noter que ce sort ne «bouge pas», bien qu’il puisse être lancé sur une créature ou un objet mobile. Ce sort est réversible, créant alors une zone de ténèbres dans les mêmes conditions, sauf en ce qui concerne la durée, qui est alors la moitié du sort normal.",
+        "composantes": "V, S",
+        "composants_materiels": [],
+        "description": "Le sort crée une lumière comparable à celle du sort de clerc du même nom. Cette entrée propre de l’illusionniste n’est pas réversible.",
         "onUse": "systems/add2e/scripts/sorts/lumiere.js",
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
@@ -68996,7 +69016,7 @@
           "importerVersion": "2026-06-11-import-sorts-v2-no-merge-same-name",
           "importedAt": "2026-06-16T19:58:26.755Z",
           "onUseUnchanged": true,
-          "originalOnUse": "systems/add2e/scripts/sorts/illusionniste-lumiere.js",
+          "originalOnUse": "systems/add2e/scripts/sorts/lumiere.js",
           "routedClass": "Illusionniste",
           "spellListsResolved": [
             "Illusionniste"
@@ -69010,7 +69030,9 @@
           "canonicalSpellFields": {
             "version": "2026-06-16-cleric-l1-canonical-fields-v3"
           },
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "requiredFoundryInstance": true,
+          "requiredFoundryInstanceKey": "illusionniste|1|lumiere"
         },
         "add2eExport": {
           "folderPath": "Sorts / Illusionniste / Niveau 1",
@@ -69037,23 +69059,35 @@
       }
     },
     {
-      "name": "Détection de l’invisibilité",
+      "name": "Détection de l'invisibilité",
       "type": "sort",
       "img": "systems/add2e/assets/icones/sorts/illusionniste-detection-de-l-invisibilite.webp",
       "system": {
-        "nom": "Détection de l’invisibilité",
+        "nom": "Détection de l'invisibilité",
         "classe": "Magicien",
         "spellLists": [
           "Magicien"
         ],
         "niveau": 2,
         "ecole": "Divination",
-        "portee": "spéciale texte",
-        "duree": "spéciale texte",
-        "zone_effet": "selon description texte",
+        "portee": {
+          "valeur": "1\"/niveau",
+          "unite": "texte"
+        },
+        "duree": {
+          "valeur": "5 rounds/niveau",
+          "unite": "texte"
+        },
+        "zone_effet": {
+          "valeur": "1\" de large",
+          "unite": "texte"
+        },
         "cible": "selon description texte",
-        "temps_incantation": "spécial texte",
-        "jet_sauvegarde": "Spécial",
+        "temps_incantation": {
+          "valeur": "2 segments",
+          "unite": "texte"
+        },
+        "jet_sauvegarde": "aucun",
         "composantes": "V, S, M",
         "composants_materiels": [
           {
@@ -69067,7 +69101,7 @@
             "consommation": "consomme"
           }
         ],
-        "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 2 de magicien détection de l’invisibilité (voir p.70).",
+        "description": "Le magicien voit dans sa ligne de vue les créatures et objets invisibles, astraux, éthérés, cachés ou hors de phase.",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-detection-de-l-invisibilite.js",
         "effectProfile": {
           "version": "2026-06-16-add2e-spell-effects-v1",
@@ -69090,15 +69124,14 @@
       },
       "effects": [
         {
-          "name": "Détection de l’invisibilité",
+          "name": "Détection de l'invisibilité",
           "flags": {
             "add2e": {
               "tags": [
+                "detection:invisibilite",
                 "classe:magicien",
                 "liste:magicien",
                 "niveau:2",
-                "sort:detection_de_l_invisibilite",
-                "detection:invisibilite",
                 "sort:detection_de_linvisibilite",
                 "ecole:divination"
               ]
@@ -69155,7 +69188,9 @@
             "Magicien"
           ],
           "importKey": "detection_de_linvisibilite|sort|illusionniste|1",
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1"
+          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+          "requiredFoundryInstance": true,
+          "requiredFoundryInstanceKey": "magicien|2|detection_de_linvisibilite"
         },
         "add2eExport": {
           "folderPath": "Sorts / Illusionniste / Niveau 2",
