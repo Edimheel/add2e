@@ -8,18 +8,19 @@ export const PROJECTILE_FLAG = "projectilesDepensesCombat";
 
 const FAMILIAR_SCOPE = "add2e";
 const FAMILIAR_FLAG = "familiar";
-const FAMILIAR_ARTWORK_REPAIR_VERSION = "2026-06-27-familiar-artwork-webp-v1";
+const FAMILIAR_ARTWORK_REPAIR_VERSION = "2026-06-27-familiar-artwork-png-v2";
 const FAMILIAR_ASSET_BASE = "systems/add2e/assets/token";
 const FAMILIAR_ASSETS = Object.freeze({
-  chat_noir: `${FAMILIAR_ASSET_BASE}/chat-noir.webp`,
-  corbeau: `${FAMILIAR_ASSET_BASE}/corbeau.webp`,
-  faucon: `${FAMILIAR_ASSET_BASE}/faucon.webp`,
-  crapaud: `${FAMILIAR_ASSET_BASE}/crapaud.webp`,
-  belette: `${FAMILIAR_ASSET_BASE}/belette.webp`,
-  quasit: `${FAMILIAR_ASSET_BASE}/quasit.webp`,
-  pseudo_dragon: `${FAMILIAR_ASSET_BASE}/pseudo-dragon.webp`,
-  lutin: `${FAMILIAR_ASSET_BASE}/lutin.webp`,
-  diablotin: `${FAMILIAR_ASSET_BASE}/diablotin.webp`
+  chat_noir: `${FAMILIAR_ASSET_BASE}/chat-noir.png`,
+  corbeau: `${FAMILIAR_ASSET_BASE}/corbeau.png`,
+  faucon: `${FAMILIAR_ASSET_BASE}/faucon.png`,
+  hibou: `${FAMILIAR_ASSET_BASE}/hibou.png`,
+  crapaud: `${FAMILIAR_ASSET_BASE}/crapaud.png`,
+  belette: `${FAMILIAR_ASSET_BASE}/belette.png`,
+  quasit: `${FAMILIAR_ASSET_BASE}/quasit.png`,
+  pseudo_dragon: `${FAMILIAR_ASSET_BASE}/pseudo-dragon.png`,
+  lutin: `${FAMILIAR_ASSET_BASE}/lutin.png`,
+  diablotin: `${FAMILIAR_ASSET_BASE}/diablotin.png`
 });
 const familiarArtworkQueue = new Set();
 
@@ -55,7 +56,7 @@ export async function resolveActor(payload = {}) {
 
   if (payload.tokenId) {
     const scene = resolveScene(payload.sceneId);
-    const tokenDoc = scene?.tokens?.get(payload.tokenId) ?? canvas?.scene?.tokens?.get?.(payload.tokenId) ?? null;
+    const tokenDoc = scene?.tokens?.get?.(payload.tokenId) ?? canvas?.scene?.tokens?.get?.(payload.tokenId) ?? null;
     if (tokenDoc?.actor) return tokenDoc.actor;
 
     const placeable = canvas?.tokens?.get?.(payload.tokenId) ?? canvas?.tokens?.placeables?.find?.(t => t?.id === payload.tokenId || t?.document?.id === payload.tokenId) ?? null;
