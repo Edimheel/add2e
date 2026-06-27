@@ -1,168 +1,309 @@
 // ADD2E — onUse Magicien : Invocation d’un familier
-// Version : 2026-05-05-magicien-n1-9-v2
-// Retour attendu : true = sort consommé, false = sort non consommé.
+// Compatible Foundry V13/V14/V15.
+// Le tirage est fait immédiatement par le lanceur ; la création world est relayée au MJ responsable.
 
-const ADD2E_SORT_CONFIG = {
-  "name": "Invocation d’un familier",
-  "slug": "invocation_d_un_familier",
-  "level": 1,
-  "kind": "summon",
-  "description": "Invocation d’un familier invoque, appelle ou crée une créature, un serviteur ou une force magique. Le script note l’invocation ; l’acteur correspondant doit être créé ou lié par le MD.",
-  "dice": null,
-  "modes": [
-    {
-      "id": "normal",
-      "label": "Invocation d’un familier"
-    }
-  ]
+const ADD2E_FAMILIAR_ONUSE_VERSION = "2026-06-27-familiar-immediate-roll-v1";
+const ADD2E_FAMILIAR_SOCKET = "system.add2e";
+const ADD2E_FAMILIAR_OPERATION = "ADD2E_GM_OPERATION";
+const ADD2E_FAMILIAR_RANGE = 12;
+
+const ADD2E_NORMAL_FAMILIARS = [
+  {
+    max: 4,
+    key: "chat_noir",
+    label: "Chat noir",
+    img: "icons/creatures/mammals/cat-black.webp",
+    senses: "Excellente vision nocturne et ouïe supérieure.",
+    tags: ["familier:sens:vision_nocturne", "familier:sens:ouie_superieure"]
+  },
+  {
+    max: 6,
+    key: "corbeau",
+    label: "Corbeau",
+    img: "icons/creatures/birds/crow-flying-black.webp",
+    senses: "Vision excellente.",
+    tags: ["familier:sens:vision_excellente"]
+  },
+  {
+    max: 8,
+    key: "faucon",
+    label: "Faucon",
+    img: "icons/creatures/birds/hawk-flying-brown.webp",
+    senses: "Vision de loin exceptionnelle.",
+    tags: ["familier:sens:vision_lointaine_exceptionnelle"]
+  },
+  {
+    max: 10,
+    key: "hibou",
+    label: "Hibou / chat huant",
+    img: "icons/creatures/birds/owl-flying-brown.webp",
+    senses: "Vision nocturne égale à la vision diurne humaine et ouïe supérieure.",
+    tags: ["familier:sens:vision_nocturne_humaine_diurne", "familier:sens:ouie_superieure"]
+  },
+  {
+    max: 12,
+    key: "crapaud",
+    label: "Crapaud",
+    img: "icons/creatures/amphibians/frog-green.webp",
+    senses: "Angle de vision très large.",
+    tags: ["familier:sens:vision_angle_large"]
+  },
+  {
+    max: 14,
+    key: "belette",
+    label: "Belette",
+    img: "icons/creatures/mammals/weasel-tan.webp",
+    senses: "Ouïe supérieure et odorat exceptionnel.",
+    tags: ["familier:sens:ouie_superieure", "familier:sens:odorat_exceptionnel"]
+  }
+];
+
+const ADD2E_SPECIAL_FAMILIARS = {
+  quasit: {
+    key: "quasit",
+    label: "Quasit",
+    aliases: ["quasit"],
+    img: "icons/creatures/abilities/demon-winged-horned-yellow.webp",
+    description: "Lien télépathique, impressions sensorielles, infravision, résistance à la magie de 25 %, régénération et avantage de niveau selon le Bestiaire.",
+    tags: ["familier:quasit", "familier:lien_telepathique", "familier:partage_sens", "familier:sens:infravision", "resistance:magie:25", "familier:regeneration:1_round", "familier:bonus_niveau:1"]
+  },
+  pseudo_dragon: {
+    key: "pseudo_dragon",
+    label: "Pseudo-dragon",
+    aliases: ["pseudo-dragon", "pseudo dragon", "dragonet, pseudo-dragon", "dragonet pseudo-dragon"],
+    img: "icons/creatures/reptiles/dragon-horned-blue.webp",
+    description: "Lien télépathique et partage des sens ; les pouvoirs magiques du pseudo-dragon sont disponibles selon le Bestiaire.",
+    tags: ["familier:pseudo_dragon", "familier:lien_telepathique", "familier:partage_sens", "familier:sens:telepathie", "resistance:magie:35"]
+  },
+  lutin: {
+    key: "lutin",
+    label: "Lutin",
+    aliases: ["lutin"],
+    img: "icons/creatures/humanoids/elf-forest-green.webp",
+    description: "Dextérité féerique, jamais surpris et +2 à tous les jets de protection.",
+    tags: ["familier:lutin", "familier:jamais_surpris", "immunite:surprise", "bonus_save:2"],
+    dexterityTo18: true
+  },
+  diablotin: {
+    key: "diablotin",
+    label: "Diablotin",
+    aliases: ["diablotin", "imp"],
+    img: "icons/creatures/abilities/demon-winged-horned-red.webp",
+    description: "Lien télépathique, impressions sensorielles, infravision, résistance à la magie de 25 %, régénération et avantage de niveau selon le Bestiaire.",
+    tags: ["familier:diablotin", "familier:lien_telepathique", "familier:partage_sens", "familier:sens:infravision", "resistance:magie:25", "familier:regeneration:1_round", "familier:bonus_niveau:1"]
+  }
 };
-const ADD2E_ONUSE_TAG = "[ADD2E][SORT_ONUSE][MAGICIEN]";
 
-function add2eHtmlEscape(value) {
-  const div = document.createElement("div");
-  div.innerText = String(value ?? "");
-  return div.innerHTML;
+function add2eFamiliarNorm(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
 }
 
-function add2eCasterLevel(actor) {
-  return Number(actor?.system?.niveau ?? actor?.system?.level ?? actor?.system?.details?.niveau ?? 1) || 1;
+function add2eFamiliarEscape(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
-async function add2eEvalRoll(formula) {
-  return await new Roll(formula).evaluate();
+function add2eFamiliarCasterToken(caster) {
+  const contextual = (typeof token !== "undefined" && token) ? token : null;
+  return contextual
+    ?? canvas?.tokens?.controlled?.find?.(entry => entry?.actor?.id === caster?.id)
+    ?? caster?.getActiveTokens?.()?.[0]
+    ?? null;
 }
 
-function add2eDamageFormula(raw, level) {
-  const s = String(raw || "1d6");
-  if (s === "leveld3") return `${Math.max(1, level)}d3`;
-  if (s === "leveld4+level") return `${Math.max(1, level)}d4+${level}`;
-  if (s === "leveld6") return `${Math.max(1, Math.min(10, level))}d6`;
-  if (s === "1d8+level") return `1d8+${level}`;
-  if (s === "1d6+level") return `1d6+${level}`;
-  if (s === "special" || s === "variable") return "1d20";
-  return s;
+function add2eFamiliarActorLevel(caster) {
+  const value = Number(caster?.system?.niveau ?? caster?.system?.level ?? 1);
+  return Number.isFinite(value) && value > 0 ? Math.floor(value) : 1;
 }
 
-function add2eRoundCount(level) {
-  return Math.max(1, level);
+function add2eFamiliarAlignment(caster) {
+  return add2eFamiliarNorm(
+    caster?.system?.alignement
+    ?? caster?.system?.alignment
+    ?? caster?.system?.details?.alignement
+    ?? caster?.system?.details?.alignment
+    ?? ""
+  );
 }
 
-function add2eGetCasterToken() {
-  return token ?? args?.[0]?.token ?? canvas?.tokens?.controlled?.[0] ?? null;
+function add2eFamiliarSpecialForAlignment(alignment) {
+  const a = add2eFamiliarNorm(alignment);
+  const loyal = a.includes("loyal");
+  const chaotic = a.includes("chaotique");
+  const good = a.includes("bon");
+  const evil = a.includes("mauvais");
+  const neutral = a === "neutre" || a.includes("neutre");
+
+  if (chaotic && (evil || neutral)) return ADD2E_SPECIAL_FAMILIARS.quasit;
+  if (loyal && evil) return ADD2E_SPECIAL_FAMILIARS.diablotin;
+  if (neutral && evil) return ADD2E_SPECIAL_FAMILIARS.diablotin;
+  if (loyal && (neutral || good)) return ADD2E_SPECIAL_FAMILIARS.lutin;
+  if (a === "neutre" || (chaotic && good) || (neutral && good)) return ADD2E_SPECIAL_FAMILIARS.pseudo_dragon;
+  return null;
 }
 
-function add2eGetTargets({ fallbackCaster = true } = {}) {
-  const targets = Array.from(game.user.targets ?? []);
-  if (targets.length) return targets;
-  const casterToken = add2eGetCasterToken();
-  return (fallbackCaster && casterToken) ? [casterToken] : [];
+function add2eFamiliarNormalForRoll(value) {
+  return ADD2E_NORMAL_FAMILIARS.find(entry => value <= entry.max) ?? null;
 }
 
-async function add2eChat(title, html, speakerToken = null, options = {}) {
-  const casterToken = speakerToken ?? add2eGetCasterToken();
-  const casterActor = actor ?? casterToken?.actor ?? null;
-  const casterName = casterActor?.name ?? casterToken?.name ?? "Magicien";
-  const spellName = item?.name ?? title ?? "Sort de magicien";
-  const casterImg = casterToken?.document?.texture?.src ?? casterActor?.img ?? "icons/svg/mystery-man.svg";
-  const spellImg = item?.img ?? "icons/svg/book.svg";
-  const targets = Array.from(game.user.targets ?? []);
-  const targetLabel = options.targetLabel ?? (targets.length ? targets.map(t => t.name).join(", ") : casterName);
-  const outcome = options.outcome ?? title ?? spellName;
-  const rule = options.rule ?? "";
+function add2eFamiliarExistingLink(caster) {
+  return caster?.getFlag?.("add2e", "familiar") ?? caster?.flags?.add2e?.familiar ?? null;
+}
+
+async function add2eFamiliarRoll(formula) {
+  const roll = await new Roll(formula).evaluate({ async: true });
+  if (game.dice3d) await game.dice3d.showForRoll(roll);
+  return roll;
+}
+
+async function add2eFamiliarChat(caster, casterToken, html) {
+  const style = CONST.CHAT_MESSAGE_STYLES
+    ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER }
+    : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 };
+
   await ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor: casterActor, token: casterToken }),
+    speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken }),
     content: `
-      <div class="add2e-chat-card add2e-magicien-sort" style="border:1px solid #8e63c7;border-radius:8px;overflow:hidden;background:#f6f0ff;color:#2d2144;font-family:var(--font-primary);">
-        <div style="display:flex;align-items:center;gap:8px;background:#5b3f8c;color:#fff;padding:7px 9px;">
-          <img src="${add2eHtmlEscape(casterImg)}" style="width:42px;height:42px;object-fit:cover;border-radius:50%;border:2px solid #d8c3ff;background:#fff;" />
-          <div style="flex:1;line-height:1.05;">
-            <div style="font-weight:800;font-size:14px;">${add2eHtmlEscape(casterName)}</div>
-            <div style="font-size:12px;font-weight:700;">lance ${add2eHtmlEscape(spellName)}</div>
-          </div>
-          <div style="font-weight:800;font-size:12px;text-align:center;white-space:nowrap;">Sort profane</div>
-          <img src="${add2eHtmlEscape(spellImg)}" style="width:34px;height:34px;object-fit:cover;border-radius:3px;border:1px solid #d8c3ff;background:#fff;" />
+      <div class="add2e-spell-card" style="border:1px solid #8e63c7;border-radius:10px;overflow:hidden;background:#f8f3ff;color:#2d2144;">
+        <div style="display:flex;align-items:center;gap:9px;padding:8px 10px;background:#5b3f8c;color:#fff;">
+          <img src="${add2eFamiliarEscape(item?.img ?? "icons/svg/book.svg")}" style="width:34px;height:34px;border:1px solid #d8c3ff;border-radius:4px;background:#fff;object-fit:cover;">
+          <div><b>${add2eFamiliarEscape(caster?.name ?? "Magicien")}</b><br><span style="font-size:.88em;">Invocation d’un familier</span></div>
         </div>
-        <div style="padding:9px 10px 10px 10px;background:#f6f0ff;">
-          <div style="font-size:13px;margin:0 0 6px 0;"><b>Cible :</b> ${add2eHtmlEscape(targetLabel)}</div>
-          <div style="border:1px solid #8e63c7;border-radius:6px;background:#fffaff;padding:8px;text-align:center;margin-bottom:7px;">
-            <div style="color:#6c31b5;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.3px;">${add2eHtmlEscape(outcome)}</div>
-            <div style="font-size:13px;line-height:1.35;text-align:center;">${html}</div>
-          </div>
-          <details style="border:1px solid #8e63c7;border-radius:5px;background:#fffaff;padding:5px 7px;">
-            <summary style="cursor:pointer;font-weight:800;color:#4a2e78;">Règle appliquée</summary>
-            <div style="margin-top:5px;font-size:12px;line-height:1.35;">${rule || "Effet du sort appliqué selon sa description et l’arbitrage du MD."}</div>
-          </details>
-        </div>
-      </div>`
+        <div style="padding:10px;">${html}</div>
+      </div>`,
+    ...style
   });
 }
 
-async function add2eApplyEffect(targetActor, name, tags, rounds = 0) {
-  if (!targetActor) return false;
-  await targetActor.createEmbeddedDocuments("ActiveEffect", [{
-    name,
-    img: item?.img || "icons/svg/aura.svg",
-    disabled: false,
-    transfer: false,
-    type: "base",
-    system: {},
-    changes: [],
-    duration: { rounds: rounds || undefined, startRound: game.combat?.round ?? null, startTime: game.time?.worldTime ?? null, combat: game.combat?.id ?? null },
-    description: ADD2E_SORT_CONFIG.description,
-    flags: { add2e: { tags } }
-  }]);
-  return true;
+const caster = (typeof actor !== "undefined" && actor) ? actor : null;
+const casterToken = add2eFamiliarCasterToken(caster);
+
+if (!caster || caster.type !== "personnage") {
+  ui.notifications.warn("Invocation d’un familier : le lanceur doit être un personnage.");
+  return false;
 }
 
-async function add2eAskNote(config) {
-  const needsNote = ["note","summon","summon_note","movement","terrain","utility","detection"].includes(config.kind) || (config.modes?.length > 1);
-  if (!needsNote) return { mode: "normal", note: "" };
-  return await new Promise(resolve => {
-    let done = false;
-    const finish = v => { if (!done) { done = true; resolve(v); } };
-    const buttons = {};
-    for (const m of config.modes ?? [{id:"normal",label:config.name}]) {
-      buttons[m.id] = { label: m.label, callback: html => finish({ mode:m.id, note: html.find("[name='note']").val() ?? "" }) };
+if (!casterToken?.document) {
+  ui.notifications.warn("Invocation d’un familier : le magicien doit avoir un token sur la scène.");
+  return false;
+}
+
+const previous = add2eFamiliarExistingLink(caster);
+if (previous?.actorId && game.actors?.get?.(previous.actorId)) {
+  ui.notifications.warn(`${caster.name} possède déjà un familier.`);
+  return false;
+}
+
+const level = add2eFamiliarActorLevel(caster);
+const primary = await add2eFamiliarRoll("1d20");
+const levelModifier = Math.floor(level / 3);
+const adjusted = Math.max(1, Number(primary.total) - levelModifier);
+
+let confirm = null;
+let familiar = null;
+let normal = false;
+let hp = null;
+let failureReason = "";
+
+// Table du Manuel : le d20 détermine si un familier est dans la portée.
+// Après ajustement de niveau, un résultat de 15 ou moins impose un second jet de d16
+// qui détermine le familier final (16 = aucun familier).
+if (adjusted > 15) {
+  failureReason = "Aucun familier n’est dans la portée du sort.";
+} else {
+  confirm = await add2eFamiliarRoll("1d16");
+  const finalResult = Number(confirm.total);
+
+  if (finalResult === 16) {
+    failureReason = "Aucun familier n’est dans la portée du sort.";
+  } else if (finalResult === 15) {
+    familiar = add2eFamiliarSpecialForAlignment(add2eFamiliarAlignment(caster));
+    if (!familiar) failureReason = `L’alignement « ${caster.system?.alignement ?? "non renseigné"} » ne permet pas de déterminer le familier spécial.`;
+  } else {
+    familiar = add2eFamiliarNormalForRoll(finalResult);
+    normal = !!familiar;
+    if (familiar) {
+      const hpRoll = await add2eFamiliarRoll("1d3+1");
+      hp = Number(hpRoll.total);
     }
-    buttons.cancel = { label: "Annuler", callback: () => finish(null) };
-    new Dialog({
-      title: config.name,
-      content: `<form><p><b>${add2eHtmlEscape(config.name)}</b></p><div class="form-group"><label>Note / paramètres</label><textarea name="note" rows="3"></textarea></div></form>`,
-      buttons,
-      default: Object.keys(buttons)[0],
-      close: () => finish(null)
-    }).render(true);
+  }
+}
+
+if (!familiar) {
+  const confirmLine = confirm ? `<div><b>Tirage final 1d16 :</b> ${confirm.total}</div>` : "";
+  await add2eFamiliarChat(caster, casterToken, `
+    <div style="text-align:center;color:#8a1f18;font-weight:900;">AUCUN FAMILIER</div>
+    <div style="margin-top:6px;"><b>Jet 1d20 :</b> ${primary.total}${levelModifier ? ` − ${levelModifier} (niveaux) = <b>${adjusted}</b>` : ` = <b>${adjusted}</b>`}</div>
+    ${confirmLine}
+    <p style="margin:.55em 0 0;">${add2eFamiliarEscape(failureReason || "Le tirage ne permet pas de déterminer un familier.")}</p>
+  `);
+  return true;
+}
+
+const requestId = `familiar-${caster.id}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+const payload = {
+  requestId,
+  sceneId: casterToken.document.parent?.id ?? canvas?.scene?.id ?? null,
+  casterActorId: caster.id,
+  casterActorUuid: caster.uuid,
+  casterTokenId: casterToken.document.id,
+  casterTokenUuid: casterToken.document.uuid,
+  familiar: {
+    key: familiar.key,
+    label: familiar.label,
+    img: familiar.img,
+    aliases: familiar.aliases ?? [familiar.label],
+    special: familiar === ADD2E_SPECIAL_FAMILIARS.quasit
+      || familiar === ADD2E_SPECIAL_FAMILIARS.pseudo_dragon
+      || familiar === ADD2E_SPECIAL_FAMILIARS.lutin
+      || familiar === ADD2E_SPECIAL_FAMILIARS.diablotin,
+    normal,
+    hp,
+    armorClass: normal ? 7 : null,
+    senses: familiar.senses ?? familiar.description ?? "",
+    tags: familiar.tags ?? [],
+    dexterityTo18: familiar.dexterityTo18 === true,
+    range: ADD2E_FAMILIAR_RANGE
+  },
+  roll: {
+    primary: Number(primary.total),
+    levelModifier,
+    adjusted,
+    confirm: confirm ? Number(confirm.total) : null
+  }
+};
+
+const detail = normal
+  ? `Familier normal : <b>${add2eFamiliarEscape(familiar.label)}</b> — CA 7, ${hp} PV.`
+  : `Familier spécial : <b>${add2eFamiliarEscape(familiar.label)}</b>.`;
+
+await add2eFamiliarChat(caster, casterToken, `
+  <div style="text-align:center;color:#2f8f46;font-weight:900;">FAMILIER INVOQUÉ</div>
+  <div style="margin-top:6px;"><b>Jet 1d20 :</b> ${primary.total}${levelModifier ? ` − ${levelModifier} (niveaux) = <b>${adjusted}</b>` : ` = <b>${adjusted}</b>`}</div>
+  ${confirm ? `<div><b>Tirage final 1d16 :</b> ${confirm.total}</div>` : ""}
+  <p style="margin:.55em 0 0;">${detail}</p>
+  <p style="margin:.35em 0 0;">Le familier suit le magicien par défaut. Ses effets sont actifs à 12 cases ou moins.</p>
+`);
+
+if (game.user?.isGM && game.user?.isActiveGM && typeof globalThis.add2eCreateFamiliar === "function") {
+  const created = await globalThis.add2eCreateFamiliar(payload);
+  if (!created) return false;
+} else {
+  game.socket.emit(ADD2E_FAMILIAR_SOCKET, {
+    type: ADD2E_FAMILIAR_OPERATION,
+    operation: "createFamiliar",
+    payload
   });
 }
 
-const choice = await add2eAskNote(ADD2E_SORT_CONFIG);
-if (!choice) return false;
-
-const level = add2eCasterLevel(actor);
-const targets = add2eGetTargets({ fallbackCaster: ADD2E_SORT_CONFIG.kind !== "damage" });
-const baseTags = [`sort:${ADD2E_SORT_CONFIG.slug}`, "classe:magicien", "liste:magicien", `niveau:${ADD2E_SORT_CONFIG.level}`, `type:${ADD2E_SORT_CONFIG.kind}`];
-
-console.log(`${ADD2E_ONUSE_TAG}[START]`, { sort: ADD2E_SORT_CONFIG.name, actor: actor?.name, level, targets: targets.map(t => t.name), mode: choice.mode });
-
-if (ADD2E_SORT_CONFIG.kind === "damage") {
-  const formula = add2eDamageFormula(ADD2E_SORT_CONFIG.dice, level);
-  const roll = await add2eEvalRoll(formula);
-  await roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor, token: add2eGetCasterToken() }), flavor: ADD2E_SORT_CONFIG.name });
-  await add2eChat(ADD2E_SORT_CONFIG.name, `
-    <p>Jet indicatif : <b>${roll.total}</b> (${formula})</p>
-    ${targets.length ? `<p>Cible(s) : ${targets.map(t => `<b>${add2eHtmlEscape(t.name)}</b>`).join(", ")}</p>` : "<p>Aucune cible sélectionnée : appliquer manuellement si nécessaire.</p>"}
-  `, null, { outcome: "EFFET OFFENSIF", rule: add2eHtmlEscape(ADD2E_SORT_CONFIG.description) });
-  return true;
-}
-
-if (["condition","protection"].includes(ADD2E_SORT_CONFIG.kind)) {
-  for (const t of targets) await add2eApplyEffect(t.actor, ADD2E_SORT_CONFIG.name, baseTags, add2eRoundCount(level));
-  await add2eChat(ADD2E_SORT_CONFIG.name, `<p>Effet actif appliqué à : ${targets.map(t => `<b>${add2eHtmlEscape(t.name)}</b>`).join(", ")}</p>`, null, { outcome: "EFFET ACTIF", rule: add2eHtmlEscape(ADD2E_SORT_CONFIG.description) });
-  return true;
-}
-
-await add2eChat(ADD2E_SORT_CONFIG.name, `
-  <p>${add2eHtmlEscape(ADD2E_SORT_CONFIG.description)}</p>
-  ${choice.note ? `<p>Note : <b>${add2eHtmlEscape(choice.note)}</b></p>` : ""}
-`, null, { outcome: ADD2E_SORT_CONFIG.name.toUpperCase(), rule: add2eHtmlEscape(ADD2E_SORT_CONFIG.description) });
 return true;
