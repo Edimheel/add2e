@@ -43,8 +43,10 @@ function parseArgs(argv) {
     const value = argv[index + 1];
     if (arg === "--audit-all") options.auditAll = true;
     else if (arg === "--strict") options.strict = true;
-    else if (arg === "--report" && value) { options.report = value; index += 1; }
-    else if (arg === "--help" || arg === "-h") {
+    else if (arg === "--report" && value) {
+      options.report = value;
+      index += 1;
+    } else if (arg === "--help" || arg === "-h") {
       console.log("Usage:");
       console.log("  node audit/tools/validate-reference-schema.mjs");
       console.log(`  node audit/tools/validate-reference-schema.mjs --audit-all [--report ${DEFAULT_AUDIT_REPORT}] [--strict]`);
@@ -198,7 +200,7 @@ function sourceIndex(document) {
       nom: text(item.name ?? system.nom),
       classe: text(system.classe),
       niveau: levelValue(system.niveau),
-      technical: Object.fromEntries(technicalFields.map(field => [field, technicalValue(system, field)])),
+      technical: Object.fromEntries(technicalFields.map((field) => [field, technicalValue(system, field)])),
       description: descriptionValue(system)
     });
   }
@@ -223,6 +225,16 @@ function reportDescription(referenceValue, sourceValue) {
   return "different";
 }
 
+function identityDetails(identity) {
+  if (!identity) return null;
+  return {
+    key: identity.key ?? null,
+    nom: text(identity.nom) || null,
+    classe: text(identity.classe) || null,
+    niveau: levelValue(identity.niveau) || null
+  };
+}
+
 function auditReferenceFile(file) {
   const absoluteReference = path.join(referenceDir, file);
   const output = {
@@ -242,7 +254,17 @@ function auditReferenceFile(file) {
       technicalDifferences: 0,
       missingDescriptions: 0,
       descriptionDifferences: 0,
-      identityDifferences: 0
+      identityDifferences: 0,
+      referenceOnly: 0,
+      decoupageOnly: 0,
+      referenceDuplicates: 0,
+      decoupageDuplicates: 0
+    },
+    identity: {
+      referenceOnly: [],
+      decoupageOnly: [],
+      referenceDuplicates: [],
+      decoupageDuplicates: []
     },
     spells: [],
     manualVerification: {
@@ -261,7 +283,11 @@ function auditReferenceFile(file) {
 
   const sourceClass = text(reference?.source?.classe);
   const sourceLevel = levelValue(reference?.source?.niveau);
-  output.source = { classe: sourceClass || null, niveau: sourceLevel || null, document: text(reference?.source?.document) || null };
+  output.source = {
+    classe: sourceClass || null,
+    niveau: sourceLevel || null,
+    document: text(reference?.source?.document) || null
+  };
   output.foundryExport = deriveDecoupagePath(file, reference);
   output.summary.expectedCount = Number(reference?.expectedCount ?? 0) || null;
 
@@ -277,16 +303,30 @@ function auditReferenceFile(file) {
   }
 
   const referenceKeys = new Set();
+  const referenceIndex = new Map();
   const duplicates = [];
   for (const [index, spell] of reference.spells.entries()) {
-    const key = spellKey(sourceClass, spell?.niveau ?? sourceLevel, spell?.nom);
+    const level = levelValue(spell?.niveau ?? sourceLevel);
+    const key = spellKey(sourceClass, level, spell?.nom);
     if (!key) {
       output.errors.push(`spells[${index}] identité inexploitable.`);
       continue;
     }
-    if (referenceKeys.has(key)) duplicates.push(key);
+    const identity = {
+      key,
+      nom: text(spell?.nom),
+      classe: sourceClass,
+      niveau: level
+    };
+    if (referenceKeys.has(key)) {
+      duplicates.push(key);
+      output.identity.referenceDuplicates.push(identityDetails(identity));
+    } else {
+      referenceIndex.set(key, identity);
+    }
     referenceKeys.add(key);
   }
+  output.summary.referenceDuplicates = output.identity.referenceDuplicates.length;
   if (duplicates.length) output.errors.push(`Doublons de référence : ${[...new Set(duplicates)].join(", ")}`);
 
   let decoupage;
@@ -295,18 +335,32 @@ function auditReferenceFile(file) {
   } else {
     try {
       decoupage = sourceIndex(readJson(path.resolve(repoRoot, output.foundryExport)));
-      if (decoupage.duplicates.length) output.errors.push(`Doublons dans découpage : ${[...new Set(decoupage.duplicates)].join(", ")}`);
+      output.identity.decoupageDuplicates = decoupage.duplicates
+        .map((key) => identityDetails(decoupage.index.get(key) ?? { key }))
+        .filter(Boolean);
+      output.summary.decoupageDuplicates = output.identity.decoupageDuplicates.length;
+      if (decoupage.duplicates.length) {
+        output.errors.push(`Doublons dans découpage : ${[...new Set(decoupage.duplicates)].join(", ")}`);
+      }
     } catch (error) {
       output.errors.push(`Découpage introuvable ou invalide (${output.foundryExport}) : ${String(error?.message ?? error)}`);
     }
   }
 
   const groupPrefix = sourceClass && sourceLevel ? `${slug(sourceClass)}|${sourceLevel}|` : "";
-  const decoupageKeys = decoupage ? [...decoupage.index.keys()].filter(key => key.startsWith(groupPrefix)) : [];
+  const decoupageKeys = decoupage ? [...decoupage.index.keys()].filter((key) => key.startsWith(groupPrefix)) : [];
   output.summary.decoupageSpells = decoupageKeys.length;
   const decoupageKeySet = new Set(decoupageKeys);
-  const referenceOnly = [...referenceKeys].filter(key => !decoupageKeySet.has(key));
-  const decoupageOnly = decoupageKeys.filter(key => !referenceKeys.has(key));
+  const referenceOnly = [...referenceKeys].filter((key) => !decoupageKeySet.has(key));
+  const decoupageOnly = decoupageKeys.filter((key) => !referenceKeys.has(key));
+  output.identity.referenceOnly = referenceOnly
+    .map((key) => identityDetails(referenceIndex.get(key) ?? { key }))
+    .filter(Boolean);
+  output.identity.decoupageOnly = decoupageOnly
+    .map((key) => identityDetails(decoupage?.index.get(key) ?? { key }))
+    .filter(Boolean);
+  output.summary.referenceOnly = output.identity.referenceOnly.length;
+  output.summary.decoupageOnly = output.identity.decoupageOnly.length;
   if (referenceOnly.length || decoupageOnly.length) {
     output.summary.identityDifferences = referenceOnly.length + decoupageOnly.length;
     output.errors.push(`Identités différentes : référence sans découpage ${referenceOnly.length}, découpage sans référence ${decoupageOnly.length}.`);
@@ -340,13 +394,19 @@ function auditReferenceFile(file) {
     }
     if (typeof spell?.description !== "string") spellReport.schema.errors.push("description doit etre une chaine");
     else if (!spell.description.trim()) spellReport.schema.warnings.push("description vide ou a importer");
-    if (typeof spell?.description === "string" && /\n/.test(spell.description)) spellReport.schema.errors.push("description non normalisee, retours ligne interdits");
+    if (typeof spell?.description === "string" && /\n/.test(spell.description)) {
+      spellReport.schema.errors.push("description non normalisee, retours ligne interdits");
+    }
 
     for (const field of technicalFields) {
       const present = Object.prototype.hasOwnProperty.call(spell ?? {}, field);
       const value = present ? spell[field] : undefined;
       const comparison = source ? reportField({ owner: spell, field, value }, source.technical[field]) : "source_not_found";
-      spellReport.technical[field] = { value: present ? value : null, source: source?.technical[field] ?? null, comparison };
+      spellReport.technical[field] = {
+        value: present ? value : null,
+        source: source?.technical[field] ?? null,
+        comparison
+      };
       if (!present) output.summary.missingReferenceFields += 1;
       else if (isPlaceholder(value)) output.summary.placeholderFields += 1;
       if (comparison === "different") output.summary.technicalDifferences += 1;
@@ -360,8 +420,8 @@ function auditReferenceFile(file) {
     if (!spellReport.description.present) output.summary.missingDescriptions += 1;
     if (descriptionComparison === "different") output.summary.descriptionDifferences += 1;
 
-    output.errors.push(...spellReport.schema.errors.map(message => `${spellReport.nom ?? `spells[${index}]`}: ${message}`));
-    output.warnings.push(...spellReport.schema.warnings.map(message => `${spellReport.nom ?? `spells[${index}]`}: ${message}`));
+    output.errors.push(...spellReport.schema.errors.map((message) => `${spellReport.nom ?? `spells[${index}]`}: ${message}`));
+    output.warnings.push(...spellReport.schema.warnings.map((message) => `${spellReport.nom ?? `spells[${index}]`}: ${message}`));
     if (spellReport.integrity.missing.length) {
       output.errors.push(`${spellReport.nom ?? `spells[${index}]`}: champs d'intégrité manquants ${spellReport.integrity.missing.join(", ")}`);
     }
@@ -373,7 +433,11 @@ function auditReferenceFile(file) {
     || output.summary.missingDescriptions
     || output.summary.technicalDifferences
     || output.summary.descriptionDifferences;
-  output.status = output.errors.length ? "blocked_structural" : hasCompletenessProblems ? "manual_review_required" : "ready_for_manual_confirmation";
+  output.status = output.errors.length
+    ? "blocked_structural"
+    : hasCompletenessProblems
+      ? "manual_review_required"
+      : "ready_for_manual_confirmation";
   return output;
 }
 
@@ -407,9 +471,9 @@ function auditAll(options) {
   const reports = files.map(auditReferenceFile);
   const summary = {
     references: reports.length,
-    referencesReadyForManualConfirmation: reports.filter(report => report.status === "ready_for_manual_confirmation").length,
-    referencesManualReviewRequired: reports.filter(report => report.status === "manual_review_required").length,
-    referencesBlockedStructural: reports.filter(report => report.status === "blocked_structural" || report.status === "blocked").length,
+    referencesReadyForManualConfirmation: reports.filter((report) => report.status === "ready_for_manual_confirmation").length,
+    referencesManualReviewRequired: reports.filter((report) => report.status === "manual_review_required").length,
+    referencesBlockedStructural: reports.filter((report) => report.status === "blocked_structural" || report.status === "blocked").length,
     spells: reports.reduce((sum, report) => sum + report.summary.referenceSpells, 0),
     missingReferenceFields: reports.reduce((sum, report) => sum + report.summary.missingReferenceFields, 0),
     placeholderFields: reports.reduce((sum, report) => sum + report.summary.placeholderFields, 0),
@@ -417,14 +481,20 @@ function auditAll(options) {
     missingDescriptions: reports.reduce((sum, report) => sum + report.summary.missingDescriptions, 0),
     descriptionDifferences: reports.reduce((sum, report) => sum + report.summary.descriptionDifferences, 0),
     identityDifferences: reports.reduce((sum, report) => sum + report.summary.identityDifferences, 0),
+    referenceOnly: reports.reduce((sum, report) => sum + report.summary.referenceOnly, 0),
+    decoupageOnly: reports.reduce((sum, report) => sum + report.summary.decoupageOnly, 0),
+    referenceDuplicates: reports.reduce((sum, report) => sum + report.summary.referenceDuplicates, 0),
+    decoupageDuplicates: reports.reduce((sum, report) => sum + report.summary.decoupageDuplicates, 0),
     structuralErrors: reports.reduce((sum, report) => sum + report.errors.length, 0)
   };
   const audit = {
-    version: "2026-06-26-reference-global-audit-v1",
+    version: "2026-06-27-reference-global-audit-v2",
     generatedAt: new Date().toISOString(),
     scope: {
       referenceDirectory: path.relative(repoRoot, referenceDir),
       sourceOfTruth: "Manuel des joueurs AD&D 2e",
+      componentsSourceOfTruth: "fvtt-spells-all-normalise-mecanique-v3.json",
+      componentsRule: "Les composants matériels sont lus depuis V3 et ne sont pas déduits depuis les références ou le découpage.",
       decoupageRole: "Contrôle Foundry lecture seule ; jamais une source de correction des références."
     },
     manualVerification: {
@@ -437,6 +507,7 @@ function auditAll(options) {
   console.log(`[ADD2E][REFERENCE_AUDIT] ${summary.references} référence(s), ${summary.spells} sort(s).`);
   console.log(`[ADD2E][REFERENCE_AUDIT] ${summary.referencesReadyForManualConfirmation} prête(s), ${summary.referencesManualReviewRequired} à vérifier, ${summary.referencesBlockedStructural} bloquée(s).`);
   console.log(`[ADD2E][REFERENCE_AUDIT] Champs absents ${summary.missingReferenceFields}, placeholders ${summary.placeholderFields}, divergences techniques ${summary.technicalDifferences}, descriptions absentes ${summary.missingDescriptions}, divergences descriptions ${summary.descriptionDifferences}.`);
+  console.log(`[ADD2E][REFERENCE_AUDIT] Identités : référence seule ${summary.referenceOnly}, découpage seul ${summary.decoupageOnly}, doublons référence ${summary.referenceDuplicates}, doublons découpage ${summary.decoupageDuplicates}.`);
   console.log("[ADD2E][REFERENCE_AUDIT] Contrôle manuel obligatoire : le rapport ne déduit jamais les règles depuis le découpage.");
 
   if (options.report) {
