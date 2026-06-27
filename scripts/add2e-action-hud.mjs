@@ -16,7 +16,7 @@ export {
 // - équipement via handleItemAction.
 // Aucune règle d'arme, projectile, armure, bouclier ou compatibilité n'est dupliquée ici.
 
-const ADD2E_HUD_COMBAT_TABS_VERSION = "2026-06-24-hud-combat-lists-stable-v4";
+const ADD2E_HUD_COMBAT_TABS_VERSION = "2026-06-27-hud-combat-lists-familiar-actions-v5";
 const ADD2E_HUD_ID = "add2e-action-hud";
 const ADD2E_HUD_COMBAT_STYLE_ID = "add2e-action-hud-combat-tabs-style";
 let add2eHudCombatTab = "armes";
@@ -28,6 +28,8 @@ let add2eHudCombatRootObserver = null;
 let add2eHudCombatObservedRoot = null;
 let add2eHudThiefActivityRenderScheduled = false;
 let add2eHudThiefActivityRendering = false;
+let add2eHudFamiliarActionsRenderScheduled = false;
+let add2eHudFamiliarActionsRendering = false;
 
 function add2eHudCombatEscape(value) {
   try { return foundry.utils.escapeHTML(String(value ?? "")); }
@@ -210,6 +212,10 @@ function add2eHudCombatEnsureStyle() {
     #${ADD2E_HUD_ID} .a2e-hud-thief-activity{display:grid;gap:7px;padding:9px;border:1px solid rgba(214,176,90,.38);border-radius:10px;background:rgba(255,250,235,.07)}
     #${ADD2E_HUD_ID} .a2e-hud-thief-warning{border:2px solid #8b0000;background:rgba(255,70,70,.82);color:#111;text-align:center;font-weight:900;line-height:1.3}
     #${ADD2E_HUD_ID} .a2e-hud-thief-warning h3{margin:0;color:#111;font-size:1.08em}
+    #${ADD2E_HUD_ID} .a2e-hud-familiar-actions{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:7px 8px;border:1px solid rgba(113,155,218,.7);border-radius:10px;background:rgba(58,88,136,.22)}
+    #${ADD2E_HUD_ID} .a2e-hud-familiar-actions-title{flex:1 1 100%;color:#d9ebff;font-size:.82em;font-weight:900}
+    #${ADD2E_HUD_ID} .a2e-hud-familiar-action{display:inline-flex;align-items:center;gap:5px;min-height:30px;padding:5px 9px;border:1px solid rgba(152,194,255,.75);border-radius:8px;background:rgba(90,136,204,.32);color:#eff7ff;font-size:.8em;font-weight:900;cursor:pointer}
+    #${ADD2E_HUD_ID} .a2e-hud-familiar-action:hover{filter:brightness(1.2)}
   `;
   document.head.appendChild(style);
 }
@@ -224,6 +230,7 @@ function add2eHudCombatObserveRoot(root) {
     if (!add2eHudCombatSuppressMutation) {
       add2eHudCombatScheduleRender();
       add2eHudThiefActivityScheduleRender();
+      add2eHudFamiliarActionsScheduleRender();
     }
   });
   add2eHudCombatRootObserver.observe(root, { childList: true, subtree: true });
@@ -261,10 +268,89 @@ function add2eHudCombatScheduleRender() {
 
 function add2eHudCombatScheduleStableRender() {
   add2eHudCombatScheduleRender();
+  add2eHudFamiliarActionsScheduleRender();
   // core.mjs reconstruit le HUD à la suite d'un updateItem. Ces deux passages
   // restaurent immédiatement les listes complètes après ce rendu tardif.
   window.setTimeout(add2eHudCombatScheduleRender, 90);
   window.setTimeout(add2eHudCombatScheduleRender, 180);
+  window.setTimeout(add2eHudFamiliarActionsScheduleRender, 90);
+  window.setTimeout(add2eHudFamiliarActionsScheduleRender, 180);
+}
+
+function add2eHudFamiliarEffectData(effect) {
+  return effect?.flags?.add2e?.familiar ?? effect?.getFlag?.("add2e", "familiar") ?? null;
+}
+
+function add2eHudFamiliarActionEffects(actor) {
+  return Array.from(actor?.effects ?? [])
+    .filter(effect => effect?.disabled !== true && effect?.isSuppressed !== true)
+    .map(effect => ({ effect, data: add2eHudFamiliarEffectData(effect) }))
+    .filter(({ data }) => data?.kind === "action" && ["share-senses", "toggle-follow"].includes(String(data.action ?? "")));
+}
+
+function add2eHudFamiliarActionInfo(data = {}) {
+  if (data.action === "share-senses") {
+    return { icon: "fa-eye", label: "Vision partagée", title: "Voir avec les sens du familier" };
+  }
+  return { icon: "fa-link", label: "Suivi", title: "Activer ou désactiver le suivi automatique" };
+}
+
+function add2eHudFamiliarActionsSignature(actor, rows) {
+  return JSON.stringify({
+    actorId: actor?.id ?? "",
+    rows: rows.map(({ effect, data }) => ({ id: effect?.id ?? effect?._id ?? "", action: data?.action ?? "", name: effect?.name ?? "", description: effect?.description ?? "" }))
+  });
+}
+
+function add2eHudFamiliarActionsHtml(actor, rows) {
+  const controls = rows.map(({ effect, data }) => {
+    const info = add2eHudFamiliarActionInfo(data);
+    return `<button type="button" class="a2e-hud-familiar-action a2e-familiar-effect-action" data-actor-id="${add2eHudCombatEscape(actor.id)}" data-effect-id="${add2eHudCombatEscape(effect.id ?? effect._id ?? "")}" data-familiar-action="${add2eHudCombatEscape(data.action)}" title="${add2eHudCombatEscape(info.title)}"><i class="fas ${info.icon}"></i> ${add2eHudCombatEscape(info.label)}</button>`;
+  }).join("");
+  return `<div class="a2e-hud-familiar-actions-title"><i class="fas fa-paw"></i> Commandes du familier</div>${controls}`;
+}
+
+function add2eHudFamiliarActionsRender() {
+  if (add2eHudFamiliarActionsRendering) return;
+  const root = document.getElementById(ADD2E_HUD_ID);
+  const actor = add2eHudCombatCurrentActor();
+  const section = root?.querySelector?.('[data-section="effets"]');
+  if (!root || !actor || !section) return;
+
+  const rows = add2eHudFamiliarActionEffects(actor);
+  const existing = section.querySelector(':scope > .a2e-hud-familiar-actions');
+  if (!rows.length) {
+    existing?.remove?.();
+    return;
+  }
+
+  const signature = add2eHudFamiliarActionsSignature(actor, rows);
+  if (existing?.dataset?.add2eHudFamiliarSignature === signature) return;
+
+  add2eHudFamiliarActionsRendering = true;
+  add2eHudCombatSuppressMutation = true;
+  try {
+    add2eHudCombatEnsureStyle();
+    existing?.remove?.();
+    const panel = document.createElement("div");
+    panel.className = "a2e-hud-familiar-actions";
+    panel.dataset.add2eHudFamiliarSignature = signature;
+    panel.innerHTML = add2eHudFamiliarActionsHtml(actor, rows);
+    section.prepend(panel);
+  } finally {
+    add2eHudFamiliarActionsRendering = false;
+    window.setTimeout(() => { add2eHudCombatSuppressMutation = false; }, 0);
+  }
+}
+
+function add2eHudFamiliarActionsScheduleRender() {
+  if (add2eHudFamiliarActionsRenderScheduled) return;
+  add2eHudFamiliarActionsRenderScheduled = true;
+  const raf = globalThis.requestAnimationFrame ?? (callback => window.setTimeout(callback, 16));
+  raf(() => {
+    add2eHudFamiliarActionsRenderScheduled = false;
+    add2eHudFamiliarActionsRender();
+  });
 }
 
 function add2eHudThiefActivityStatus(actor) {
@@ -390,6 +476,7 @@ function add2eHudCombatInstall() {
     if (hudAdded) {
       add2eHudCombatScheduleStableRender();
       add2eHudThiefActivityScheduleRender();
+      add2eHudFamiliarActionsScheduleRender();
     }
   });
   add2eHudCombatBodyObserver.observe(document.body, { childList: true, subtree: true });
@@ -406,6 +493,7 @@ function add2eHudCombatInstall() {
       const result = await refresh.apply(this, args);
       add2eHudCombatScheduleStableRender();
       add2eHudThiefActivityScheduleRender();
+      add2eHudFamiliarActionsScheduleRender();
       return result;
     };
     wrapped.__add2eHudCombatDelegated = true;
@@ -416,6 +504,7 @@ function add2eHudCombatInstall() {
   game.add2e.actionHudCombatTabsVersion = ADD2E_HUD_COMBAT_TABS_VERSION;
   add2eHudCombatScheduleStableRender();
   add2eHudThiefActivityScheduleRender();
+  add2eHudFamiliarActionsScheduleRender();
 }
 
 if (game?.ready) add2eHudCombatInstall();
