@@ -16,12 +16,12 @@
       "ecole": "Illusion/Fantasme",
       "niveau": 1,
       "portee": "6\" + 1\"/niveau",
-      "duree": "2 rounds/niveau",
+      "duree": "3 rounds/niveau",
       "zone_effet": "portée d’ouïe",
       "composantes": "V, M",
-      "temps_incantation": "1 segment",
+      "temps_incantation": "5 segments",
       "jet_sauvegarde": "spécial",
-      "description": "Excepté ses valeurs propres, ce sort est le même que Bruitage de magicien. Il crée un son dont le volume et le déplacement apparent dépendent du lanceur ; une créature qui le met en doute peut ne plus l’entendre après un jet de protection réussi.",
+      "description": "Excepté ses valeurs propres, ce sort fonctionne comme Bruitage de magicien de niveau 2 : il crée un son dont le volume et la provenance apparente sont choisis par le lanceur ; une créature qui reconnaît l’illusion peut l’ignorer.",
       "composants_materiels_objets": [
         {"nom":"morceau de laine","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Alternative à la cire.","notes":null,"alternativeGroup":"bruitage"},
         {"nom":"cire","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Alternative à la laine.","notes":null,"alternativeGroup":"bruitage"}
@@ -41,7 +41,7 @@
       "composantes": "V, S",
       "temps_incantation": "1 segment",
       "jet_sauvegarde": "aucun",
-      "description": "L’illusionniste altère son apparence visible, sa taille apparente, ses vêtements et son équipement. Le sort ne change ni sa voix, ni son odeur, ni ses capacités physiques ; les observateurs peuvent déceler l’illusion selon les règles du Manuel.",
+      "description": "L’illusionniste altère son apparence visible, ses vêtements et son équipement : il peut paraître 30 cm plus grand ou plus petit, plus maigre ou plus gros, humain, humanoïde ou autre bipède de forme humaine. Le sort ne change ni sa voix, ni son odeur, ni ses capacités physiques.",
       "composants_materiels_objets": [],
       "status": "reference_complete_description_normalisee",
       "variantes": [],
@@ -59,7 +59,7 @@
       "temps_incantation": "1 segment",
       "jet_sauvegarde": "aucun",
       "notes_regles": "La lettre M est explicite dans l’en-tête du Manuel. Le détail matériel ne doit pas être déduit du découpage Foundry.",
-      "description": "L’illusionniste voit les créatures et objets invisibles dans la zone de son regard. Le sort ne l’aide pas à voir à travers les obstacles ordinaires.",
+      "description": "Excepté ses valeurs propres, ce sort fonctionne comme Détection de l’invisibilité de magicien de niveau 2. L’illusionniste voit les créatures et objets invisibles dans la zone de son regard, sans voir à travers les obstacles ordinaires.",
       "composants_materiels_objets": [],
       "status": "reference_complete_description_normalisee",
       "variantes": [],
@@ -77,7 +77,7 @@
       "temps_incantation": "1 segment",
       "jet_sauvegarde": "aucun",
       "notes_regles": "La lettre M est explicite dans l’en-tête du Manuel. Le détail matériel ne doit pas être déduit du découpage Foundry.",
-      "description": "Le sort permet à la créature touchée de distinguer les illusions et fantasmes qui se trouvent dans son champ visuel pendant la durée indiquée.",
+      "description": "L’illusionniste voit et reconnaît une illusion pour ce qu’elle est réellement. Il peut faire constater l’illusion à une autre créature en la touchant de ses deux mains pendant qu’elle regarde l’illusion.",
       "composants_materiels_objets": [],
       "status": "reference_complete_description_normalisee",
       "variantes": [],
@@ -94,7 +94,7 @@
       "composantes": "V, S, M",
       "temps_incantation": "1 segment",
       "jet_sauvegarde": "spécial",
-      "description": "L’illusionniste crée une illusion visuelle qui peut inclure les effets sensoriels admis par le Manuel. Elle agit contre les créatures qui y croient et cesse notamment lorsqu’elle est démasquée ou que le lanceur ne peut plus la maintenir.",
+      "description": "Excepté ses valeurs propres, ce sort fonctionne comme Force fantasmagorique de magicien de niveau 3. L’illusionniste la maintient avec un minimum de concentration, peut se déplacer à la moitié de sa vitesse sans lancer de sort, y inclure des bruits mineurs mais aucune parole compréhensible ; elle persiste 2 rounds après l’arrêt de sa concentration.",
       "composants_materiels_objets": [
         {"nom":"morceau de toison de mouton","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}
       ],
@@ -113,7 +113,7 @@
       "composantes": "V, S",
       "temps_incantation": "1 segment",
       "jet_sauvegarde": "annule",
-      "description": "Le sort fascine de une à six créatures qui ratent leur jet de protection. Tant qu’elles restent hypnotisées, elles demeurent immobiles et vulnérables aux actions prévues par le Manuel.",
+      "description": "Les gestes et incantations de l’illusionniste rendent les créatures affectées réceptives à une suggestion formulée après le lancement. Le lanceur ne connaît la réussite ou l’échec qu’après avoir fait cette suggestion ; les créatures qui réussissent leur jet de protection ne sont pas hypnotisées.",
       "composants_materiels_objets": [],
       "status": "reference_complete_description_normalisee",
       "variantes": [],
@@ -130,7 +130,7 @@
       "composantes": "V, S, M",
       "temps_incantation": "1 segment",
       "jet_sauvegarde": "spécial",
-      "description": "Un jet de lumière multicolore jaillit des mains de l’illusionniste et affecte de une à six créatures dans l’éventail. Les effets dépendent des dés de vie des victimes, de l’aveuglement temporaire à l’inconscience selon la table du Manuel.",
+      "description": "Un jet de lumière vive jaillit en éventail des mains de l’illusionniste et affecte de une à six créatures. Les effets, de l’aveuglement temporaire à l’inconscience, dépendent des dés de vie des victimes selon la table du Manuel ; les créatures de niveau supérieur au lanceur et celles de 6 DV ou plus ont droit à un jet de protection.",
       "composants_materiels_objets": [
         {"nom":"poudres colorées rouge, jaune et bleue","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":"Les trois poudres sont projetées pendant l’incantation."}
       ],
@@ -149,7 +149,7 @@
       "composantes": "V, S",
       "temps_incantation": "1 segment",
       "jet_sauvegarde": "aucun",
-      "description": "Le sort crée une lumière comparable à celle du sort de clerc du même nom. Cette entrée propre de l’illusionniste n’est pas réversible.",
+      "description": "Excepté ses valeurs propres et le fait qu’il n’est pas réversible, ce sort fonctionne comme Lumière de clerc de niveau 1. Il peut aveugler efficacement une créature lorsque la lumière atteint ses organes visuels.",
       "composants_materiels_objets": [],
       "status": "reference_complete_description_normalisee",
       "variantes": [],
@@ -166,7 +166,7 @@
       "composantes": "V, S, M",
       "temps_incantation": "1 segment",
       "jet_sauvegarde": "aucun",
-      "description": "Excepté ses valeurs propres, le sort est le même que Lumières dansantes de magicien. Il crée jusqu’à quatre lumières mobiles dirigées par l’illusionniste.",
+      "description": "Excepté ses valeurs propres, ce sort fonctionne comme Lumières dansantes de magicien de niveau 1. Il crée jusqu’à quatre lumières mobiles dirigées par l’illusionniste tant qu’il se concentre sur leurs déplacements.",
       "composants_materiels_objets": [
         {"nom":"phosphore","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Alternative au ver luisant.","notes":null,"alternativeGroup":"lumieres_dansantes"},
         {"nom":"ver luisant","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Alternative au phosphore.","notes":null,"alternativeGroup":"lumieres_dansantes"}
@@ -186,7 +186,7 @@
       "composantes": "V, S, M",
       "temps_incantation": "1 segment",
       "jet_sauvegarde": "aucun",
-      "description": "L’illusionniste crée un mur de vapeurs épaisses qui réduit vision et infravision à 60 cm. Un vent puissant peut le dissiper et le sort ne fonctionne pas sous l’eau.",
+      "description": "L’illusionniste crée un mur de vapeurs épaisses à portée, qui limite la vision et l’infravision à 60 cm. Il forme un cube de 2\" d’arête par niveau, peut être dissipé par un vent puissant et ne fonctionne pas sous l’eau.",
       "composants_materiels_objets": [
         {"nom":"poudre de poix séchée","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":null,"notes":null}
       ],
@@ -222,7 +222,7 @@
       "composantes": "V, S",
       "temps_incantation": "1 segment",
       "jet_sauvegarde": "aucun",
-      "description": "Le sort crée une sphère d’obscurité de 5 m de rayon selon les règles de lumière et d’obscurité du Manuel. Il est une entrée distincte de Lumière et n’en constitue pas l’inverse.",
+      "description": "Excepté ses valeurs propres, ce sort fonctionne comme Ténèbres sur 5 mètres de magicien de niveau 2. Il crée une sphère d’obscurité de 5 m de rayon selon les règles de lumière et d’obscurité du Manuel.",
       "composants_materiels_objets": [],
       "status": "reference_complete_description_normalisee",
       "variantes": [],
