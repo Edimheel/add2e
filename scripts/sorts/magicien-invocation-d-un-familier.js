@@ -66,6 +66,15 @@ function add2eFamiliarExistingLink(caster) {
   return caster?.getFlag?.("add2e", "familiar") ?? caster?.flags?.add2e?.familiar ?? null;
 }
 
+function add2eFamiliarHasLinkedEffects(caster, relation) {
+  const linkId = String(relation?.linkId ?? "");
+  if (!linkId) return false;
+  return Array.from(caster?.effects ?? []).some(effect => {
+    const data = effect?.flags?.add2e?.familiar ?? effect?.getFlag?.("add2e", "familiar") ?? null;
+    return data?.linkId === linkId;
+  });
+}
+
 function add2eFamiliarSpecialForAlignment(caster) {
   const a = add2eFamiliarNorm(caster?.system?.alignement ?? caster?.system?.alignment ?? caster?.system?.details?.alignement ?? caster?.system?.details?.alignment ?? "");
   const loyal = a.includes("loyal");
@@ -117,7 +126,7 @@ if (!casterToken?.document) {
 }
 
 const previous = add2eFamiliarExistingLink(caster);
-if (previous?.actorId && game.actors?.get?.(previous.actorId)) {
+if (previous?.actorId && game.actors?.get?.(previous.actorId) && add2eFamiliarHasLinkedEffects(caster, previous)) {
   ui.notifications.warn(`${caster.name} possède déjà un familier.`);
   return false;
 }
