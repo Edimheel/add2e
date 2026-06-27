@@ -5,14 +5,27 @@
 const ADD2E_FAMILIAR_SOCKET = "system.add2e";
 const ADD2E_FAMILIAR_OPERATION = "ADD2E_GM_OPERATION";
 const ADD2E_FAMILIAR_RANGE = 12;
+const ADD2E_FAMILIAR_ASSET_BASE = "systems/add2e/assets/tokens/familiers";
+const ADD2E_FAMILIAR_ASSETS = Object.freeze({
+  chat_noir: `${ADD2E_FAMILIAR_ASSET_BASE}/chat-noir.png`,
+  corbeau: `${ADD2E_FAMILIAR_ASSET_BASE}/corbeau.png`,
+  faucon: `${ADD2E_FAMILIAR_ASSET_BASE}/faucon.png`,
+  hibou: `${ADD2E_FAMILIAR_ASSET_BASE}/hibou.png`,
+  crapaud: `${ADD2E_FAMILIAR_ASSET_BASE}/crapaud.png`,
+  belette: `${ADD2E_FAMILIAR_ASSET_BASE}/belette.png`,
+  quasit: `${ADD2E_FAMILIAR_ASSET_BASE}/quasit.png`,
+  pseudo_dragon: `${ADD2E_FAMILIAR_ASSET_BASE}/pseudo-dragon.png`,
+  lutin: `${ADD2E_FAMILIAR_ASSET_BASE}/lutin.png`,
+  diablotin: `${ADD2E_FAMILIAR_ASSET_BASE}/diablotin.png`
+});
 
 const ADD2E_NORMAL_FAMILIARS = [
-  { max: 4, key: "chat_noir", label: "Chat noir", img: "icons/creatures/mammals/cat-black.webp", senses: "Excellente vision nocturne et ouïe supérieure.", tags: ["familier:sens:vision_nocturne", "familier:sens:ouie_superieure"] },
-  { max: 6, key: "corbeau", label: "Corbeau", img: "icons/creatures/birds/crow-flying-black.webp", senses: "Vision excellente.", tags: ["familier:sens:vision_excellente"] },
-  { max: 8, key: "faucon", label: "Faucon", img: "icons/creatures/birds/hawk-flying-brown.webp", senses: "Vision de loin exceptionnelle.", tags: ["familier:sens:vision_lointaine_exceptionnelle"] },
-  { max: 10, key: "hibou", label: "Hibou / chat huant", img: "icons/creatures/birds/owl-flying-brown.webp", senses: "Vision nocturne égale à la vision diurne humaine et ouïe supérieure.", tags: ["familier:sens:vision_nocturne_humaine_diurne", "familier:sens:ouie_superieure"] },
-  { max: 12, key: "crapaud", label: "Crapaud", img: "icons/creatures/amphibians/frog-green.webp", senses: "Angle de vision très large.", tags: ["familier:sens:vision_angle_large"] },
-  { max: 14, key: "belette", label: "Belette", img: "icons/creatures/mammals/weasel-tan.webp", senses: "Ouïe supérieure et odorat exceptionnel.", tags: ["familier:sens:ouie_superieure", "familier:sens:odorat_exceptionnel"] }
+  { max: 4, key: "chat_noir", label: "Chat noir", img: ADD2E_FAMILIAR_ASSETS.chat_noir, senses: "Excellente vision nocturne et ouïe supérieure.", tags: ["familier:sens:vision_nocturne", "familier:sens:ouie_superieure"] },
+  { max: 6, key: "corbeau", label: "Corbeau", img: ADD2E_FAMILIAR_ASSETS.corbeau, senses: "Vision excellente.", tags: ["familier:sens:vision_excellente"] },
+  { max: 8, key: "faucon", label: "Faucon", img: ADD2E_FAMILIAR_ASSETS.faucon, senses: "Vision de loin exceptionnelle.", tags: ["familier:sens:vision_lointaine_exceptionnelle"] },
+  { max: 10, key: "hibou", label: "Hibou / chat huant", img: ADD2E_FAMILIAR_ASSETS.hibou, senses: "Vision nocturne égale à la vision diurne humaine et ouïe supérieure.", tags: ["familier:sens:vision_nocturne_humaine_diurne", "familier:sens:ouie_superieure"] },
+  { max: 12, key: "crapaud", label: "Crapaud", img: ADD2E_FAMILIAR_ASSETS.crapaud, senses: "Angle de vision très large.", tags: ["familier:sens:vision_angle_large"] },
+  { max: 14, key: "belette", label: "Belette", img: ADD2E_FAMILIAR_ASSETS.belette, senses: "Ouïe supérieure et odorat exceptionnel.", tags: ["familier:sens:ouie_superieure", "familier:sens:odorat_exceptionnel"] }
 ];
 
 const ADD2E_SPECIAL_FAMILIARS = {
@@ -20,7 +33,7 @@ const ADD2E_SPECIAL_FAMILIARS = {
     key: "quasit",
     label: "Quasit",
     aliases: ["quasit"],
-    img: "icons/creatures/abilities/demon-winged-horned-yellow.webp",
+    img: ADD2E_FAMILIAR_ASSETS.quasit,
     senses: "Lien télépathique, partage des sens incluant l’infravision ; le quasit peut servir d’éclaireur et de garde.",
     tags: ["familier:quasit", "familier:communication_telepathique", "familier:partage_sens", "familier:sens:infravision"],
     masterResistances: [{ type: "magie", percent: 25 }],
@@ -32,7 +45,7 @@ const ADD2E_SPECIAL_FAMILIARS = {
     key: "pseudo_dragon",
     label: "Pseudo-dragon",
     aliases: ["pseudo-dragon", "pseudo dragon", "dragonnet, pseudo-dragon", "dragonnet pseudo-dragon", "dragonnet"],
-    img: "icons/creatures/reptiles/dragon-horned-blue.webp",
+    img: ADD2E_FAMILIAR_ASSETS.pseudo_dragon,
     senses: "Communication télépathique et transmission de tout ce que le pseudo-dragon voit ou entend ; il possède l’infravision et peut se camoufler ou devenir invisible.",
     tags: ["familier:pseudo_dragon", "familier:communication_telepathique", "familier:partage_sens", "familier:sens:infravision", "familier:camouflage", "familier:invisibilite"],
     masterResistances: [{ type: "magie", percent: 35 }]
@@ -41,7 +54,7 @@ const ADD2E_SPECIAL_FAMILIARS = {
     key: "lutin",
     label: "Lutin",
     aliases: ["lutin"],
-    img: "icons/creatures/humanoids/elf-forest-green.webp",
+    img: ADD2E_FAMILIAR_ASSETS.lutin,
     senses: "Le lutin est un ami et un compagnon ; il sert d’éclaireur, d’espion et de garde.",
     tags: ["familier:lutin", "familier:partage_sens"],
     dexterityTo18: true,
@@ -52,7 +65,7 @@ const ADD2E_SPECIAL_FAMILIARS = {
     key: "diablotin",
     label: "Diablotin",
     aliases: ["diablotin", "imp"],
-    img: "icons/creatures/abilities/demon-winged-horned-red.webp",
+    img: ADD2E_FAMILIAR_ASSETS.diablotin,
     senses: "Lien télépathique, partage des sens incluant l’infravision ; le diablotin peut servir d’éclaireur et de garde.",
     tags: ["familier:diablotin", "familier:communication_telepathique", "familier:partage_sens", "familier:sens:infravision"],
     masterResistances: [{ type: "magie", percent: 25 }],
@@ -96,6 +109,45 @@ function hasLinkedEffects(caster, relation) {
     const data = effect?.flags?.add2e?.familiar ?? effect?.getFlag?.("add2e", "familiar") ?? null;
     return data?.linkId === linkId;
   });
+}
+
+function familiarAssetFor(relation) {
+  return ADD2E_FAMILIAR_ASSETS[String(relation?.key ?? "")] ?? null;
+}
+
+async function repairExistingFamiliarArtwork(caster, relation) {
+  const src = familiarAssetFor(relation);
+  if (!caster || !relation?.linkId || !src) return false;
+
+  const familiarActor = relation.actorId ? game.actors?.get?.(relation.actorId) ?? null : null;
+  if (familiarActor) {
+    await familiarActor.update({
+      img: src,
+      "prototypeToken.texture.src": src
+    }, { add2eFamiliarArtworkRepair: true, add2eInternal: true });
+  }
+
+  for (const scene of game.scenes?.contents ?? []) {
+    const tokenIds = Array.from(scene.tokens ?? [])
+      .filter(entry => entry?.actorId === relation.actorId || entry?.flags?.add2e?.familiar?.linkId === relation.linkId)
+      .map(entry => entry.id)
+      .filter(Boolean);
+    if (tokenIds.length) {
+      await scene.updateEmbeddedDocuments("Token", tokenIds.map(_id => ({
+        _id,
+        "texture.src": src
+      })), { add2eFamiliarArtworkRepair: true, render: true });
+    }
+  }
+
+  const effectUpdates = Array.from(caster.effects ?? [])
+    .filter(effect => {
+      const data = effect?.flags?.add2e?.familiar ?? effect?.getFlag?.("add2e", "familiar") ?? null;
+      return data?.linkId === relation.linkId && effect.img !== src;
+    })
+    .map(effect => effect.update({ img: src }, { add2eFamiliarArtworkRepair: true }));
+  if (effectUpdates.length) await Promise.all(effectUpdates);
+  return true;
 }
 
 function normalFamiliarFor(result) {
@@ -150,6 +202,7 @@ if (!casterToken?.document) {
 
 const previous = familiarLink(caster);
 if (previous?.actorId && game.actors?.get?.(previous.actorId) && hasLinkedEffects(caster, previous)) {
+  await repairExistingFamiliarArtwork(caster, previous);
   ui.notifications.warn(`${caster.name} possède déjà un familier.`);
   return false;
 }
@@ -236,6 +289,7 @@ await chat(caster, casterToken, `<div style="text-align:center;color:#2f8f46;fon
 
 if (isResponsibleGM() && typeof globalThis.add2eCreateFamiliar === "function") {
   if (!await globalThis.add2eCreateFamiliar(payload)) return false;
+  await repairExistingFamiliarArtwork(caster, familiarLink(caster));
 } else {
   game.socket.emit(ADD2E_FAMILIAR_SOCKET, { type: ADD2E_FAMILIAR_OPERATION, operation: "createFamiliar", payload });
 }
