@@ -1,15 +1,21 @@
 {
-  "version": "2026-06-27-reference-global-audit-v4",
-  "generatedAt": "2026-06-27T15:19:47.135Z",
+  "version": "2026-06-27-reference-global-audit-v5",
+  "generatedAt": "2026-06-27T16:48:13.701Z",
   "scope": {
     "referenceDirectory": "audit\\reference",
     "referenceFileSelection": "Uniquement les références classe/niveau Clerc, Druide, Magicien et Illusionniste.",
     "sourceOfTruth": "Manuel des joueurs AD&D 2e",
     "componentsSourceOfTruth": "fvtt-spells-all-normalise-mecanique-v3.json",
     "componentsRule": "Les composants matériels sont lus depuis V3 et ne sont pas déduits, corrigés ou modifiés depuis les références ou le découpage.",
-    "decoupageRole": "Contrôle Foundry lecture seule ; jamais une source de correction des références.",
+    "decoupageRole": "Contrôle historique lecture seule ; les écarts qui sont vérifiés dans V4 sont informatifs et non bloquants.",
+    "v4Integration": {
+      "path": "fvtt-spells-all-normalise-mecanique-v4.json",
+      "status": "loaded",
+      "error": null,
+      "role": "V4 vérifie les instances absentes du découpage historique : classe, niveau, dossier et spellLists."
+    },
     "identityAliasesRole": "Table fermée de rapprochements de titres, sans renommage des données Foundry ni des références du Manuel.",
-    "requiredFoundryInstancesRole": "Les instances requises sont des items Foundry distincts par classe, niveau et spellLists."
+    "requiredFoundryInstancesRole": "Une instance absente du découpage devient non bloquante seulement lorsqu'elle est vérifiée dans V4 avec sa classe, son niveau, son dossier et sa spellLists propres."
   },
   "manualVerification": {
     "status": "not_performed_by_automation",
@@ -34,14 +40,14 @@
         "note": "Variation orthographique dans le titre Foundry."
       }
     ],
-    "requiredFoundryInstances": [
+    "decoupageMissingReferences": [
       {
         "file": "manuel-joueurs-illusionniste-niveau-1.json",
         "key": "illusionniste|1|lumiere",
         "nom": "Lumière",
         "classe": "illusionniste",
         "niveau": 1,
-        "disposition": "foundry_instance_required"
+        "disposition": "historical_decoupage_missing"
       },
       {
         "file": "manuel-joueurs-magicien-niveau-1.json",
@@ -49,7 +55,7 @@
         "nom": "Lumière",
         "classe": "magicien",
         "niveau": 1,
-        "disposition": "foundry_instance_required"
+        "disposition": "historical_decoupage_missing"
       },
       {
         "file": "manuel-joueurs-magicien-niveau-2.json",
@@ -57,9 +63,90 @@
         "nom": "Détection de l'invisibilité",
         "classe": "magicien",
         "niveau": 2,
-        "disposition": "foundry_instance_required"
+        "disposition": "historical_decoupage_missing"
       }
     ],
+    "v4VerifiedFoundryInstances": [
+      {
+        "file": "manuel-joueurs-illusionniste-niveau-1.json",
+        "key": "illusionniste|1|lumiere",
+        "nom": "Lumière",
+        "classe": "illusionniste",
+        "niveau": 1,
+        "disposition": "historical_decoupage_missing",
+        "v4": {
+          "status": "verified",
+          "errors": [],
+          "item": {
+            "id": "E9Yo4npKmFqU2Xgl",
+            "classe": "Illusionniste",
+            "niveau": 1,
+            "spellLists": [
+              "Illusionniste"
+            ],
+            "folder": {
+              "id": "DZvZqNRwkHJoTbWu",
+              "nom": "Niveau 1",
+              "niveau": 1,
+              "classe": "Illusionniste"
+            }
+          }
+        }
+      },
+      {
+        "file": "manuel-joueurs-magicien-niveau-1.json",
+        "key": "magicien|1|lumiere",
+        "nom": "Lumière",
+        "classe": "magicien",
+        "niveau": 1,
+        "disposition": "historical_decoupage_missing",
+        "v4": {
+          "status": "verified",
+          "errors": [],
+          "item": {
+            "id": "Zg2wEoydngNsIvyV",
+            "classe": "Magicien",
+            "niveau": 1,
+            "spellLists": [
+              "Magicien"
+            ],
+            "folder": {
+              "id": "ti9EBwYx3OHoVvTB",
+              "nom": "Niveau 1",
+              "niveau": 1,
+              "classe": "Magicien"
+            }
+          }
+        }
+      },
+      {
+        "file": "manuel-joueurs-magicien-niveau-2.json",
+        "key": "magicien|2|detection_de_linvisibilite",
+        "nom": "Détection de l'invisibilité",
+        "classe": "magicien",
+        "niveau": 2,
+        "disposition": "historical_decoupage_missing",
+        "v4": {
+          "status": "verified",
+          "errors": [],
+          "item": {
+            "id": "xbOjuFsPWKQCmRmP",
+            "classe": "Magicien",
+            "niveau": 2,
+            "spellLists": [
+              "Magicien"
+            ],
+            "folder": {
+              "id": "ScqmKiWr6f2z1e6d",
+              "nom": "Niveau 2",
+              "niveau": 2,
+              "classe": "Magicien"
+            }
+          }
+        }
+      }
+    ],
+    "requiredFoundryInstances": [],
     "legacyFoundryDuplicates": [
       {
         "file": "manuel-joueurs-clerc-niveau-1.json",
@@ -221,24 +308,26 @@
   "summary": {
     "references": 30,
     "referencesReadyForManualConfirmation": 0,
-    "referencesManualReviewRequired": 27,
-    "referencesBlockedStructural": 3,
+    "referencesManualReviewRequired": 30,
+    "referencesBlockedStructural": 0,
     "spells": 414,
     "missingReferenceFields": 0,
     "placeholderFields": 1,
     "technicalDifferences": 1579,
     "missingDescriptions": 0,
     "descriptionDifferences": 310,
-    "identityDifferences": 3,
+    "identityDifferences": 0,
     "aliasMatches": 1,
-    "requiredFoundryInstances": 3,
+    "decoupageMissingReferences": 3,
+    "v4VerifiedFoundryInstances": 3,
+    "requiredFoundryInstances": 0,
     "legacyFoundryDuplicates": 9,
-    "referenceOnly": 3,
+    "referenceOnly": 0,
     "unresolvedDecoupageOnly": 0,
     "outOfScopeFoundryOnly": 1,
     "referenceDuplicates": 0,
     "decoupageDuplicates": 0,
-    "structuralErrors": 3
+    "structuralErrors": 0
   },
   "references": [
     {
@@ -257,6 +346,8 @@
         "referenceSpells": 12,
         "decoupageSpells": 14,
         "decoupageSpellsInManualScope": 12,
+        "v4VerifiedFoundryInstances": 0,
+        "decoupageMissingReferences": 0,
         "expectedCount": 12,
         "missingReferenceFields": 0,
         "placeholderFields": 0,
@@ -275,6 +366,8 @@
       },
       "identity": {
         "aliases": [],
+        "decoupageMissingReferences": [],
+        "v4VerifiedFoundryInstances": [],
         "requiredFoundryInstances": [],
         "referenceOnly": [],
         "unresolvedDecoupageOnly": [],
@@ -322,6 +415,7 @@
           "sourceKey": "clerc|1|apaisement",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -379,6 +473,7 @@
           "sourceKey": "clerc|1|aquagenese",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -436,6 +531,7 @@
           "sourceKey": "clerc|1|benediction",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -493,6 +589,7 @@
           "sourceKey": "clerc|1|detection_de_la_magie",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -550,6 +647,7 @@
           "sourceKey": "clerc|1|detection_du_mal",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -607,6 +705,7 @@
           "sourceKey": "clerc|1|injonction",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -664,6 +763,7 @@
           "sourceKey": "clerc|1|lumiere",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -721,6 +821,7 @@
           "sourceKey": "clerc|1|protection_contre_le_mal",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -778,6 +879,7 @@
           "sourceKey": "clerc|1|purification_de_leau_et_des_aliments",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -835,6 +937,7 @@
           "sourceKey": "clerc|1|resistance_au_froid",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -892,6 +995,7 @@
           "sourceKey": "clerc|1|sanctuaire",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -949,6 +1053,7 @@
           "sourceKey": "clerc|1|soins_mineurs",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -1002,7 +1107,7 @@
       ],
       "manualVerification": {
         "status": "not_verified_by_this_tool",
-        "note": "Cet audit compare structure et découpage Foundry. Il ne peut pas démontrer la conformité au Manuel des joueurs."
+        "note": "Cet audit compare structure, découpage historique et présence V4. Il ne peut pas démontrer la conformité au Manuel des joueurs."
       }
     },
     {
@@ -1021,6 +1126,8 @@
         "referenceSpells": 12,
         "decoupageSpells": 12,
         "decoupageSpellsInManualScope": 12,
+        "v4VerifiedFoundryInstances": 0,
+        "decoupageMissingReferences": 0,
         "expectedCount": 12,
         "missingReferenceFields": 0,
         "placeholderFields": 1,
@@ -1039,6 +1146,8 @@
       },
       "identity": {
         "aliases": [],
+        "decoupageMissingReferences": [],
+        "v4VerifiedFoundryInstances": [],
         "requiredFoundryInstances": [],
         "referenceOnly": [],
         "unresolvedDecoupageOnly": [],
@@ -1055,6 +1164,7 @@
           "sourceKey": "clerc|2|augure",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -1112,6 +1222,7 @@
           "sourceKey": "clerc|2|cantique",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -1169,6 +1280,7 @@
           "sourceKey": "clerc|2|charme_serpents",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -1226,6 +1338,7 @@
           "sourceKey": "clerc|2|detection_des_charmes",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -1283,6 +1396,7 @@
           "sourceKey": "clerc|2|detection_des_pieges",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -1340,6 +1454,7 @@
           "sourceKey": "clerc|2|langage_animal",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -1397,6 +1512,7 @@
           "sourceKey": "clerc|2|marteau_spirituel",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -1454,6 +1570,7 @@
           "sourceKey": "clerc|2|paralysie",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -1511,6 +1628,7 @@
           "sourceKey": "clerc|2|perception_des_alignements",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -1568,6 +1686,7 @@
           "sourceKey": "clerc|2|resistance_au_feu",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -1625,6 +1744,7 @@
           "sourceKey": "clerc|2|retardement_du_poison",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -1682,6 +1802,7 @@
           "sourceKey": "clerc|2|silence_sur_5_metres",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -1735,7 +1856,7 @@
       ],
       "manualVerification": {
         "status": "not_verified_by_this_tool",
-        "note": "Cet audit compare structure et découpage Foundry. Il ne peut pas démontrer la conformité au Manuel des joueurs."
+        "note": "Cet audit compare structure, découpage historique et présence V4. Il ne peut pas démontrer la conformité au Manuel des joueurs."
       }
     },
     {
@@ -1754,6 +1875,8 @@
         "referenceSpells": 12,
         "decoupageSpells": 13,
         "decoupageSpellsInManualScope": 12,
+        "v4VerifiedFoundryInstances": 0,
+        "decoupageMissingReferences": 0,
         "expectedCount": 12,
         "missingReferenceFields": 0,
         "placeholderFields": 0,
@@ -1772,6 +1895,8 @@
       },
       "identity": {
         "aliases": [],
+        "decoupageMissingReferences": [],
+        "v4VerifiedFoundryInstances": [],
         "requiredFoundryInstances": [],
         "referenceOnly": [],
         "unresolvedDecoupageOnly": [],
@@ -1804,6 +1929,7 @@
           "sourceKey": "clerc|3|catalepsie",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -1861,6 +1987,7 @@
           "sourceKey": "clerc|3|desenvoutement",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -1918,6 +2045,7 @@
           "sourceKey": "clerc|3|dissipation_de_la_magie",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -1975,6 +2103,7 @@
           "sourceKey": "clerc|3|glyphe_de_garde",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -2032,6 +2161,7 @@
           "sourceKey": "clerc|3|guerison_de_la_cecite",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -2089,6 +2219,7 @@
           "sourceKey": "clerc|3|guerison_des_maladies",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -2146,6 +2277,7 @@
           "sourceKey": "clerc|3|localisation_dobjets",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -2203,6 +2335,7 @@
           "sourceKey": "clerc|3|lumiere_eternelle",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -2260,6 +2393,7 @@
           "sourceKey": "clerc|3|manne",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -2317,6 +2451,7 @@
           "sourceKey": "clerc|3|necro_animation",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -2374,6 +2509,7 @@
           "sourceKey": "clerc|3|necromancie",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -2431,6 +2567,7 @@
           "sourceKey": "clerc|3|priere",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -2484,7 +2621,7 @@
       ],
       "manualVerification": {
         "status": "not_verified_by_this_tool",
-        "note": "Cet audit compare structure et découpage Foundry. Il ne peut pas démontrer la conformité au Manuel des joueurs."
+        "note": "Cet audit compare structure, découpage historique et présence V4. Il ne peut pas démontrer la conformité au Manuel des joueurs."
       }
     },
     {
@@ -2503,6 +2640,8 @@
         "referenceSpells": 10,
         "decoupageSpells": 12,
         "decoupageSpellsInManualScope": 10,
+        "v4VerifiedFoundryInstances": 0,
+        "decoupageMissingReferences": 0,
         "expectedCount": 10,
         "missingReferenceFields": 0,
         "placeholderFields": 0,
@@ -2521,6 +2660,8 @@
       },
       "identity": {
         "aliases": [],
+        "decoupageMissingReferences": [],
+        "v4VerifiedFoundryInstances": [],
         "requiredFoundryInstances": [],
         "referenceOnly": [],
         "unresolvedDecoupageOnly": [],
@@ -2568,6 +2709,7 @@
           "sourceKey": "clerc|4|abaissement_des_eaux",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -2625,6 +2767,7 @@
           "sourceKey": "clerc|4|batons_a_serpents",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -2682,6 +2825,7 @@
           "sourceKey": "clerc|4|contre_poison",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -2739,6 +2883,7 @@
           "sourceKey": "clerc|4|detection_des_mensonges",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -2796,6 +2941,7 @@
           "sourceKey": "clerc|4|divination",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -2853,6 +2999,7 @@
           "sourceKey": "clerc|4|exorcisme",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -2910,6 +3057,7 @@
           "sourceKey": "clerc|4|langage_des_plantes",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -2967,6 +3115,7 @@
           "sourceKey": "clerc|4|langue",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -3024,6 +3173,7 @@
           "sourceKey": "clerc|4|protection_contre_le_mal_sur_3_m",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -3081,6 +3231,7 @@
           "sourceKey": "clerc|4|soins_majeurs",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -3134,7 +3285,7 @@
       ],
       "manualVerification": {
         "status": "not_verified_by_this_tool",
-        "note": "Cet audit compare structure et découpage Foundry. Il ne peut pas démontrer la conformité au Manuel des joueurs."
+        "note": "Cet audit compare structure, découpage historique et présence V4. Il ne peut pas démontrer la conformité au Manuel des joueurs."
       }
     },
     {
@@ -3153,6 +3304,8 @@
         "referenceSpells": 10,
         "decoupageSpells": 11,
         "decoupageSpellsInManualScope": 10,
+        "v4VerifiedFoundryInstances": 0,
+        "decoupageMissingReferences": 0,
         "expectedCount": 10,
         "missingReferenceFields": 0,
         "placeholderFields": 0,
@@ -3171,6 +3324,8 @@
       },
       "identity": {
         "aliases": [],
+        "decoupageMissingReferences": [],
+        "v4VerifiedFoundryInstances": [],
         "requiredFoundryInstances": [],
         "referenceOnly": [],
         "unresolvedDecoupageOnly": [],
@@ -3203,6 +3358,7 @@
           "sourceKey": "clerc|5|changement_de_plan",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -3260,6 +3416,7 @@
           "sourceKey": "clerc|5|communion",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -3317,6 +3474,7 @@
           "sourceKey": "clerc|5|dissipation_du_mal",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -3374,6 +3532,7 @@
           "sourceKey": "clerc|5|expiation",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -3431,6 +3590,7 @@
           "sourceKey": "clerc|5|fleau_dinsectes",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -3488,6 +3648,7 @@
           "sourceKey": "clerc|5|pilier_de_feu",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -3545,6 +3706,7 @@
           "sourceKey": "clerc|5|quete_religieuse",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -3602,6 +3764,7 @@
           "sourceKey": "clerc|5|rappel_a_la_vie",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -3659,6 +3822,7 @@
           "sourceKey": "clerc|5|soin_ultime",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -3716,6 +3880,7 @@
           "sourceKey": "clerc|5|vision_reelle",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -3769,7 +3934,7 @@
       ],
       "manualVerification": {
         "status": "not_verified_by_this_tool",
-        "note": "Cet audit compare structure et découpage Foundry. Il ne peut pas démontrer la conformité au Manuel des joueurs."
+        "note": "Cet audit compare structure, découpage historique et présence V4. Il ne peut pas démontrer la conformité au Manuel des joueurs."
       }
     },
     {
@@ -3788,6 +3953,8 @@
         "referenceSpells": 10,
         "decoupageSpells": 10,
         "decoupageSpellsInManualScope": 10,
+        "v4VerifiedFoundryInstances": 0,
+        "decoupageMissingReferences": 0,
         "expectedCount": 10,
         "missingReferenceFields": 0,
         "placeholderFields": 0,
@@ -3806,6 +3973,8 @@
       },
       "identity": {
         "aliases": [],
+        "decoupageMissingReferences": [],
+        "v4VerifiedFoundryInstances": [],
         "requiredFoundryInstances": [],
         "referenceOnly": [],
         "unresolvedDecoupageOnly": [],
@@ -3822,6 +3991,7 @@
           "sourceKey": "clerc|6|animation_des_objets",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -3879,6 +4049,7 @@
           "sourceKey": "clerc|6|barriere_de_lames",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -3936,6 +4107,7 @@
           "sourceKey": "clerc|6|guerison",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -3993,6 +4165,7 @@
           "sourceKey": "clerc|6|invocation_des_animaux",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -4050,6 +4223,7 @@
           "sourceKey": "clerc|6|langage_des_monstres",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -4107,6 +4281,7 @@
           "sourceKey": "clerc|6|lithomancie",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -4164,6 +4339,7 @@
           "sourceKey": "clerc|6|orientation",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -4221,6 +4397,7 @@
           "sourceKey": "clerc|6|rappel",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -4278,6 +4455,7 @@
           "sourceKey": "clerc|6|separation_des_eaux",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -4335,6 +4513,7 @@
           "sourceKey": "clerc|6|serviteur_aerien",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -4388,7 +4567,7 @@
       ],
       "manualVerification": {
         "status": "not_verified_by_this_tool",
-        "note": "Cet audit compare structure et découpage Foundry. Il ne peut pas démontrer la conformité au Manuel des joueurs."
+        "note": "Cet audit compare structure, découpage historique et présence V4. Il ne peut pas démontrer la conformité au Manuel des joueurs."
       }
     },
     {
@@ -4407,6 +4586,8 @@
         "referenceSpells": 10,
         "decoupageSpells": 11,
         "decoupageSpellsInManualScope": 10,
+        "v4VerifiedFoundryInstances": 0,
+        "decoupageMissingReferences": 0,
         "expectedCount": 10,
         "missingReferenceFields": 0,
         "placeholderFields": 0,
@@ -4425,6 +4606,8 @@
       },
       "identity": {
         "aliases": [],
+        "decoupageMissingReferences": [],
+        "v4VerifiedFoundryInstances": [],
         "requiredFoundryInstances": [],
         "referenceOnly": [],
         "unresolvedDecoupageOnly": [],
@@ -4449,6 +4632,7 @@
           "sourceKey": "clerc|7|controle_du_climat",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -4506,6 +4690,7 @@
           "sourceKey": "clerc|7|marche_des_vents",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -4563,6 +4748,7 @@
           "sourceKey": "clerc|7|parole_sacree_maudite",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -4620,6 +4806,7 @@
           "sourceKey": "clerc|7|regeneration",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -4677,6 +4864,7 @@
           "sourceKey": "clerc|7|restauration",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -4734,6 +4922,7 @@
           "sourceKey": "clerc|7|resurrection",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -4791,6 +4980,7 @@
           "sourceKey": "clerc|7|seuil",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -4848,6 +5038,7 @@
           "sourceKey": "clerc|7|sort_astral",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -4905,6 +5096,7 @@
           "sourceKey": "clerc|7|symbole",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -4962,6 +5154,7 @@
           "sourceKey": "clerc|7|tremblement_de_terre",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -5015,7 +5208,7 @@
       ],
       "manualVerification": {
         "status": "not_verified_by_this_tool",
-        "note": "Cet audit compare structure et découpage Foundry. Il ne peut pas démontrer la conformité au Manuel des joueurs."
+        "note": "Cet audit compare structure, découpage historique et présence V4. Il ne peut pas démontrer la conformité au Manuel des joueurs."
       }
     },
     {
@@ -5034,6 +5227,8 @@
         "referenceSpells": 12,
         "decoupageSpells": 12,
         "decoupageSpellsInManualScope": 12,
+        "v4VerifiedFoundryInstances": 0,
+        "decoupageMissingReferences": 0,
         "expectedCount": 12,
         "missingReferenceFields": 0,
         "placeholderFields": 0,
@@ -5052,6 +5247,8 @@
       },
       "identity": {
         "aliases": [],
+        "decoupageMissingReferences": [],
+        "v4VerifiedFoundryInstances": [],
         "requiredFoundryInstances": [],
         "referenceOnly": [],
         "unresolvedDecoupageOnly": [],
@@ -5068,6 +5265,7 @@
           "sourceKey": "druide|1|amitie_animale",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -5125,6 +5323,7 @@
           "sourceKey": "druide|1|aura_feerique",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -5182,6 +5381,7 @@
           "sourceKey": "druide|1|detection_de_la_magie",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -5239,6 +5439,7 @@
           "sourceKey": "druide|1|detection_des_pieges_sylvestres",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -5296,6 +5497,7 @@
           "sourceKey": "druide|1|enchevetrement",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -5353,6 +5555,7 @@
           "sourceKey": "druide|1|invisibilite_aux_animaux",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -5410,6 +5613,7 @@
           "sourceKey": "druide|1|langage_animal",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -5467,6 +5671,7 @@
           "sourceKey": "druide|1|localisation_des_animaux",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -5524,6 +5729,7 @@
           "sourceKey": "druide|1|passage_sans_trace",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -5581,6 +5787,7 @@
           "sourceKey": "druide|1|prevision_du_temps",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -5638,6 +5845,7 @@
           "sourceKey": "druide|1|purification_de_leau",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -5695,6 +5903,7 @@
           "sourceKey": "druide|1|shillelagh",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -5748,7 +5957,7 @@
       ],
       "manualVerification": {
         "status": "not_verified_by_this_tool",
-        "note": "Cet audit compare structure et découpage Foundry. Il ne peut pas démontrer la conformité au Manuel des joueurs."
+        "note": "Cet audit compare structure, découpage historique et présence V4. Il ne peut pas démontrer la conformité au Manuel des joueurs."
       }
     },
     {
@@ -5767,6 +5976,8 @@
         "referenceSpells": 12,
         "decoupageSpells": 12,
         "decoupageSpellsInManualScope": 12,
+        "v4VerifiedFoundryInstances": 0,
+        "decoupageMissingReferences": 0,
         "expectedCount": 12,
         "missingReferenceFields": 0,
         "placeholderFields": 0,
@@ -5785,6 +5996,8 @@
       },
       "identity": {
         "aliases": [],
+        "decoupageMissingReferences": [],
+        "v4VerifiedFoundryInstances": [],
         "requiredFoundryInstances": [],
         "referenceOnly": [],
         "unresolvedDecoupageOnly": [],
@@ -5801,6 +6014,7 @@
           "sourceKey": "druide|2|aquagenese",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -5858,6 +6072,7 @@
           "sourceKey": "druide|2|catalepsie",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -5915,6 +6130,7 @@
           "sourceKey": "druide|2|charme_personnes_ou_mammiferes",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -5972,6 +6188,7 @@
           "sourceKey": "druide|2|croc_en_jambe",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -6029,6 +6246,7 @@
           "sourceKey": "druide|2|distorsion_du_bois",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -6086,6 +6304,7 @@
           "sourceKey": "druide|2|flamme",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -6143,6 +6362,7 @@
           "sourceKey": "druide|2|localisation_des_plantes",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -6200,6 +6420,7 @@
           "sourceKey": "druide|2|metal_brulant",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -6257,6 +6478,7 @@
           "sourceKey": "druide|2|obscurcissement",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -6314,6 +6536,7 @@
           "sourceKey": "druide|2|peau_decorce",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -6371,6 +6594,7 @@
           "sourceKey": "druide|2|piege_a_feu",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -6428,6 +6652,7 @@
           "sourceKey": "druide|2|soins_mineurs",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -6481,7 +6706,7 @@
       ],
       "manualVerification": {
         "status": "not_verified_by_this_tool",
-        "note": "Cet audit compare structure et découpage Foundry. Il ne peut pas démontrer la conformité au Manuel des joueurs."
+        "note": "Cet audit compare structure, découpage historique et présence V4. Il ne peut pas démontrer la conformité au Manuel des joueurs."
       }
     },
     {
@@ -6500,6 +6725,8 @@
         "referenceSpells": 12,
         "decoupageSpells": 12,
         "decoupageSpellsInManualScope": 12,
+        "v4VerifiedFoundryInstances": 0,
+        "decoupageMissingReferences": 0,
         "expectedCount": 12,
         "missingReferenceFields": 0,
         "placeholderFields": 0,
@@ -6518,6 +6745,8 @@
       },
       "identity": {
         "aliases": [],
+        "decoupageMissingReferences": [],
+        "v4VerifiedFoundryInstances": [],
         "requiredFoundryInstances": [],
         "referenceOnly": [],
         "unresolvedDecoupageOnly": [],
@@ -6534,6 +6763,7 @@
           "sourceKey": "druide|3|arbre",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -6591,6 +6821,7 @@
           "sourceKey": "druide|3|contre_poison",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -6648,6 +6879,7 @@
           "sourceKey": "druide|3|embroussaillement",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -6705,6 +6937,7 @@
           "sourceKey": "druide|3|guerison_des_maladies",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -6762,6 +6995,7 @@
           "sourceKey": "druide|3|invocation_de_la_foudre",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -6819,6 +7053,7 @@
           "sourceKey": "druide|3|invocation_dinsectes",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -6876,6 +7111,7 @@
           "sourceKey": "druide|3|lithomorphose",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -6933,6 +7169,7 @@
           "sourceKey": "druide|3|paralysie_animale",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -6990,6 +7227,7 @@
           "sourceKey": "druide|3|piege_sylvestre",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -7047,6 +7285,7 @@
           "sourceKey": "druide|3|protection_contre_le_feu",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -7104,6 +7343,7 @@
           "sourceKey": "druide|3|pyrotechnie",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -7161,6 +7401,7 @@
           "sourceKey": "druide|3|respiration_aquatique",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -7214,7 +7455,7 @@
       ],
       "manualVerification": {
         "status": "not_verified_by_this_tool",
-        "note": "Cet audit compare structure et découpage Foundry. Il ne peut pas démontrer la conformité au Manuel des joueurs."
+        "note": "Cet audit compare structure, découpage historique et présence V4. Il ne peut pas démontrer la conformité au Manuel des joueurs."
       }
     },
     {
@@ -7233,6 +7474,8 @@
         "referenceSpells": 12,
         "decoupageSpells": 13,
         "decoupageSpellsInManualScope": 12,
+        "v4VerifiedFoundryInstances": 0,
+        "decoupageMissingReferences": 0,
         "expectedCount": 12,
         "missingReferenceFields": 0,
         "placeholderFields": 0,
@@ -7251,6 +7494,8 @@
       },
       "identity": {
         "aliases": [],
+        "decoupageMissingReferences": [],
+        "v4VerifiedFoundryInstances": [],
         "requiredFoundryInstances": [],
         "referenceOnly": [],
         "unresolvedDecoupageOnly": [],
@@ -7283,6 +7528,7 @@
           "sourceKey": "druide|4|controle_de_la_temperature_sur_3_m",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -7340,6 +7586,7 @@
           "sourceKey": "druide|4|dissipation_de_la_magie",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -7397,6 +7644,7 @@
           "sourceKey": "druide|4|embrasement",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -7454,6 +7702,7 @@
           "sourceKey": "druide|4|foret_hallucinatoire",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -7511,6 +7760,7 @@
           "sourceKey": "druide|4|invocation_animale_i",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -7568,6 +7818,7 @@
           "sourceKey": "druide|4|invocation_des_creatures_sylvestres",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -7625,6 +7876,7 @@
           "sourceKey": "druide|4|langage_des_plantes",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -7682,6 +7934,7 @@
           "sourceKey": "druide|4|paralysie_vegetale",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -7739,6 +7992,7 @@
           "sourceKey": "druide|4|porte_vegetale",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -7796,6 +8050,7 @@
           "sourceKey": "druide|4|protection_contre_la_foudre",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -7853,6 +8108,7 @@
           "sourceKey": "druide|4|repulsion_des_insectes",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -7910,6 +8166,7 @@
           "sourceKey": "druide|4|soins_majeurs",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -7963,7 +8220,7 @@
       ],
       "manualVerification": {
         "status": "not_verified_by_this_tool",
-        "note": "Cet audit compare structure et découpage Foundry. Il ne peut pas démontrer la conformité au Manuel des joueurs."
+        "note": "Cet audit compare structure, découpage historique et présence V4. Il ne peut pas démontrer la conformité au Manuel des joueurs."
       }
     },
     {
@@ -7982,6 +8239,8 @@
         "referenceSpells": 10,
         "decoupageSpells": 10,
         "decoupageSpellsInManualScope": 10,
+        "v4VerifiedFoundryInstances": 0,
+        "decoupageMissingReferences": 0,
         "expectedCount": 10,
         "missingReferenceFields": 0,
         "placeholderFields": 0,
@@ -8000,6 +8259,8 @@
       },
       "identity": {
         "aliases": [],
+        "decoupageMissingReferences": [],
+        "v4VerifiedFoundryInstances": [],
         "requiredFoundryInstances": [],
         "referenceOnly": [],
         "unresolvedDecoupageOnly": [],
@@ -8016,6 +8277,7 @@
           "sourceKey": "druide|5|batons_a_serpents",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -8073,6 +8335,7 @@
           "sourceKey": "druide|5|bouclier_anti_plantes",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -8130,6 +8393,7 @@
           "sourceKey": "druide|5|communion_avec_la_nature",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -8187,6 +8451,7 @@
           "sourceKey": "druide|5|controle_des_vents",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -8244,6 +8509,7 @@
           "sourceKey": "druide|5|croissance_animale",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -8301,6 +8567,7 @@
           "sourceKey": "druide|5|fleau_dinsectes",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -8358,6 +8625,7 @@
           "sourceKey": "druide|5|invocation_animale_ii",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -8415,6 +8683,7 @@
           "sourceKey": "druide|5|mur_de_feu",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -8472,6 +8741,7 @@
           "sourceKey": "druide|5|passe_plantes",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -8529,6 +8799,7 @@
           "sourceKey": "druide|5|transmutation_de_pierre_en_boue",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -8582,7 +8853,7 @@
       ],
       "manualVerification": {
         "status": "not_verified_by_this_tool",
-        "note": "Cet audit compare structure et découpage Foundry. Il ne peut pas démontrer la conformité au Manuel des joueurs."
+        "note": "Cet audit compare structure, découpage historique et présence V4. Il ne peut pas démontrer la conformité au Manuel des joueurs."
       }
     },
     {
@@ -8601,6 +8872,8 @@
         "referenceSpells": 10,
         "decoupageSpells": 10,
         "decoupageSpellsInManualScope": 10,
+        "v4VerifiedFoundryInstances": 0,
+        "decoupageMissingReferences": 0,
         "expectedCount": 10,
         "missingReferenceFields": 0,
         "placeholderFields": 0,
@@ -8619,6 +8892,8 @@
       },
       "identity": {
         "aliases": [],
+        "decoupageMissingReferences": [],
+        "v4VerifiedFoundryInstances": [],
         "requiredFoundryInstances": [],
         "referenceOnly": [],
         "unresolvedDecoupageOnly": [],
@@ -8635,6 +8910,7 @@
           "sourceKey": "druide|6|bouclier_anti_animal",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -8692,6 +8968,7 @@
           "sourceKey": "druide|6|debilite_mentale",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -8749,6 +9026,7 @@
           "sourceKey": "druide|6|graines_de_feu",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -8806,6 +9084,7 @@
           "sourceKey": "druide|6|invocation_animale_iii",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -8863,6 +9142,7 @@
           "sourceKey": "druide|6|invocation_dun_elemental_du_feu",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -8920,6 +9200,7 @@
           "sourceKey": "druide|6|invocation_du_temps",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -8977,6 +9258,7 @@
           "sourceKey": "druide|6|mur_depines",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -9034,6 +9316,7 @@
           "sourceKey": "druide|6|repulsion_du_bois",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -9091,6 +9374,7 @@
           "sourceKey": "druide|6|soin_ultime",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -9148,6 +9432,7 @@
           "sourceKey": "druide|6|transit_vegetal",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -9201,7 +9486,7 @@
       ],
       "manualVerification": {
         "status": "not_verified_by_this_tool",
-        "note": "Cet audit compare structure et découpage Foundry. Il ne peut pas démontrer la conformité au Manuel des joueurs."
+        "note": "Cet audit compare structure, découpage historique et présence V4. Il ne peut pas démontrer la conformité au Manuel des joueurs."
       }
     },
     {
@@ -9220,6 +9505,8 @@
         "referenceSpells": 10,
         "decoupageSpells": 10,
         "decoupageSpellsInManualScope": 10,
+        "v4VerifiedFoundryInstances": 0,
+        "decoupageMissingReferences": 0,
         "expectedCount": 10,
         "missingReferenceFields": 0,
         "placeholderFields": 0,
@@ -9238,6 +9525,8 @@
       },
       "identity": {
         "aliases": [],
+        "decoupageMissingReferences": [],
+        "v4VerifiedFoundryInstances": [],
         "requiredFoundryInstances": [],
         "referenceOnly": [],
         "unresolvedDecoupageOnly": [],
@@ -9254,6 +9543,7 @@
           "sourceKey": "druide|7|animation_de_la_roche",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -9311,6 +9601,7 @@
           "sourceKey": "druide|7|chariot_de_sustarre",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -9368,6 +9659,7 @@
           "sourceKey": "druide|7|confusion",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -9425,6 +9717,7 @@
           "sourceKey": "druide|7|controle_du_climat",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -9482,6 +9775,7 @@
           "sourceKey": "druide|7|doigt_de_mort",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -9539,6 +9833,7 @@
           "sourceKey": "druide|7|invocation_dun_elemental_de_terre",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -9596,6 +9891,7 @@
           "sourceKey": "druide|7|mort_rampante",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -9653,6 +9949,7 @@
           "sourceKey": "druide|7|reincarnation",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -9710,6 +10007,7 @@
           "sourceKey": "druide|7|tempete_de_feu",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -9767,6 +10065,7 @@
           "sourceKey": "druide|7|transmutation_du_metal_en_bois",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -9820,7 +10119,7 @@
       ],
       "manualVerification": {
         "status": "not_verified_by_this_tool",
-        "note": "Cet audit compare structure et découpage Foundry. Il ne peut pas démontrer la conformité au Manuel des joueurs."
+        "note": "Cet audit compare structure, découpage historique et présence V4. Il ne peut pas démontrer la conformité au Manuel des joueurs."
       }
     },
     {
@@ -9832,25 +10131,25 @@
         "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf"
       },
       "foundryExport": "audit/decoupage_fichier/illusionniste-niveau-1.json",
-      "status": "blocked_structural",
-      "errors": [
-        "Identités non résolues : instances Foundry requises 1, découpage sans référence 0."
-      ],
+      "status": "manual_review_required",
+      "errors": [],
       "warnings": [],
       "summary": {
         "referenceSpells": 12,
         "decoupageSpells": 11,
         "decoupageSpellsInManualScope": 11,
+        "v4VerifiedFoundryInstances": 1,
+        "decoupageMissingReferences": 1,
         "expectedCount": 12,
         "missingReferenceFields": 0,
         "placeholderFields": 0,
         "technicalDifferences": 57,
         "missingDescriptions": 0,
         "descriptionDifferences": 11,
-        "identityDifferences": 1,
+        "identityDifferences": 0,
         "aliasMatches": 0,
-        "requiredFoundryInstances": 1,
-        "referenceOnly": 1,
+        "requiredFoundryInstances": 0,
+        "referenceOnly": 0,
         "unresolvedDecoupageOnly": 0,
         "legacyFoundryDuplicates": 0,
         "outOfScopeFoundryOnly": 0,
@@ -9859,24 +10158,44 @@
       },
       "identity": {
         "aliases": [],
-        "requiredFoundryInstances": [
+        "decoupageMissingReferences": [
           {
             "key": "illusionniste|1|lumiere",
             "nom": "Lumière",
             "classe": "illusionniste",
             "niveau": 1,
-            "disposition": "foundry_instance_required"
+            "disposition": "historical_decoupage_missing"
           }
         ],
-        "referenceOnly": [
+        "v4VerifiedFoundryInstances": [
           {
             "key": "illusionniste|1|lumiere",
             "nom": "Lumière",
             "classe": "illusionniste",
             "niveau": 1,
-            "disposition": "foundry_instance_required"
+            "disposition": "historical_decoupage_missing",
+            "v4": {
+              "status": "verified",
+              "errors": [],
+              "item": {
+                "id": "E9Yo4npKmFqU2Xgl",
+                "classe": "Illusionniste",
+                "niveau": 1,
+                "spellLists": [
+                  "Illusionniste"
+                ],
+                "folder": {
+                  "id": "DZvZqNRwkHJoTbWu",
+                  "nom": "Niveau 1",
+                  "niveau": 1,
+                  "classe": "Illusionniste"
+                }
+              }
+            }
           }
         ],
+        "requiredFoundryInstances": [],
+        "referenceOnly": [],
         "unresolvedDecoupageOnly": [],
         "legacyFoundryDuplicates": [],
         "outOfScopeFoundryOnly": [],
@@ -9891,6 +10210,7 @@
           "sourceKey": "illusionniste|1|bruitage",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -9948,6 +10268,7 @@
           "sourceKey": "illusionniste|1|changement_dapparence",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -10005,6 +10326,7 @@
           "sourceKey": "illusionniste|1|detection_de_linvisibilite",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -10062,6 +10384,7 @@
           "sourceKey": "illusionniste|1|detection_des_illusions",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -10119,6 +10442,7 @@
           "sourceKey": "illusionniste|1|force_fantasmagorique",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -10176,6 +10500,7 @@
           "sourceKey": "illusionniste|1|hypnotisme",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -10233,6 +10558,7 @@
           "sourceKey": "illusionniste|1|jet_de_couleurs",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -10288,8 +10614,26 @@
           "nom": "Lumière",
           "key": "illusionniste|1|lumiere",
           "sourceKey": null,
-          "identityMatch": "missing",
+          "identityMatch": "decoupage_missing_v4_verified",
           "identityNote": null,
+          "v4Integration": {
+            "status": "verified",
+            "errors": [],
+            "item": {
+              "id": "E9Yo4npKmFqU2Xgl",
+              "classe": "Illusionniste",
+              "niveau": 1,
+              "spellLists": [
+                "Illusionniste"
+              ],
+              "folder": {
+                "id": "DZvZqNRwkHJoTbWu",
+                "nom": "Niveau 1",
+                "niveau": 1,
+                "classe": "Illusionniste"
+              }
+            }
+          },
           "schema": {
             "errors": [],
             "warnings": []
@@ -10347,6 +10691,7 @@
           "sourceKey": "illusionniste|1|lumieres_dansantes",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -10404,6 +10749,7 @@
           "sourceKey": "illusionniste|1|mur_de_brouillard",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -10461,6 +10807,7 @@
           "sourceKey": "illusionniste|1|reflexion_des_regards",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -10518,6 +10865,7 @@
           "sourceKey": "illusionniste|1|tenebres",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -10571,7 +10919,7 @@
       ],
       "manualVerification": {
         "status": "not_verified_by_this_tool",
-        "note": "Cet audit compare structure et découpage Foundry. Il ne peut pas démontrer la conformité au Manuel des joueurs."
+        "note": "Cet audit compare structure, découpage historique et présence V4. Il ne peut pas démontrer la conformité au Manuel des joueurs."
       }
     },
     {
@@ -10590,6 +10938,8 @@
         "referenceSpells": 12,
         "decoupageSpells": 12,
         "decoupageSpellsInManualScope": 12,
+        "v4VerifiedFoundryInstances": 0,
+        "decoupageMissingReferences": 0,
         "expectedCount": 12,
         "missingReferenceFields": 0,
         "placeholderFields": 0,
@@ -10608,6 +10958,8 @@
       },
       "identity": {
         "aliases": [],
+        "decoupageMissingReferences": [],
+        "v4VerifiedFoundryInstances": [],
         "requiredFoundryInstances": [],
         "referenceOnly": [],
         "unresolvedDecoupageOnly": [],
@@ -10624,6 +10976,7 @@
           "sourceKey": "illusionniste|2|bouche_magique",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -10681,6 +11034,7 @@
           "sourceKey": "illusionniste|2|cecite",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -10738,6 +11092,7 @@
           "sourceKey": "illusionniste|2|desinformation",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -10795,6 +11150,7 @@
           "sourceKey": "illusionniste|2|detection_de_la_magie",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -10852,6 +11208,7 @@
           "sourceKey": "illusionniste|2|force_fantasmagorique_amelioree",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -10909,6 +11266,7 @@
           "sourceKey": "illusionniste|2|image_miroir",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -10966,6 +11324,7 @@
           "sourceKey": "illusionniste|2|invisibilite",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -11023,6 +11382,7 @@
           "sourceKey": "illusionniste|2|motif_hypnotique",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -11080,6 +11440,7 @@
           "sourceKey": "illusionniste|2|nappe_de_brouillard",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -11137,6 +11498,7 @@
           "sourceKey": "illusionniste|2|surdite",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -11194,6 +11556,7 @@
           "sourceKey": "illusionniste|2|trouble",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -11251,6 +11614,7 @@
           "sourceKey": "illusionniste|2|ventriloquie",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -11304,7 +11668,7 @@
       ],
       "manualVerification": {
         "status": "not_verified_by_this_tool",
-        "note": "Cet audit compare structure et découpage Foundry. Il ne peut pas démontrer la conformité au Manuel des joueurs."
+        "note": "Cet audit compare structure, découpage historique et présence V4. Il ne peut pas démontrer la conformité au Manuel des joueurs."
       }
     },
     {
@@ -11323,6 +11687,8 @@
         "referenceSpells": 12,
         "decoupageSpells": 12,
         "decoupageSpellsInManualScope": 12,
+        "v4VerifiedFoundryInstances": 0,
+        "decoupageMissingReferences": 0,
         "expectedCount": 12,
         "missingReferenceFields": 0,
         "placeholderFields": 0,
@@ -11341,6 +11707,8 @@
       },
       "identity": {
         "aliases": [],
+        "decoupageMissingReferences": [],
+        "v4VerifiedFoundryInstances": [],
         "requiredFoundryInstances": [],
         "referenceOnly": [],
         "unresolvedDecoupageOnly": [],
@@ -11357,6 +11725,7 @@
           "sourceKey": "illusionniste|3|corde_enchantee",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -11414,6 +11783,7 @@
           "sourceKey": "illusionniste|3|dissipation_des_illusions",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -11471,6 +11841,7 @@
           "sourceKey": "illusionniste|3|ecriture_illusoire",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -11528,6 +11899,7 @@
           "sourceKey": "illusionniste|3|effroi",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -11585,6 +11957,7 @@
           "sourceKey": "illusionniste|3|force_spectrale",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -11642,6 +12015,7 @@
           "sourceKey": "illusionniste|3|invisibilite_sur_3_m",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -11699,6 +12073,7 @@
           "sourceKey": "illusionniste|3|lumiere_eternelle",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -11756,6 +12131,7 @@
           "sourceKey": "illusionniste|3|non_detection",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -11813,6 +12189,7 @@
           "sourceKey": "illusionniste|3|paralysie_musculaire",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -11870,6 +12247,7 @@
           "sourceKey": "illusionniste|3|suggestion",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -11927,6 +12305,7 @@
           "sourceKey": "illusionniste|3|tenebres_eternelles",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -11984,6 +12363,7 @@
           "sourceKey": "illusionniste|3|terrain_hallucinatoire",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -12037,7 +12417,7 @@
       ],
       "manualVerification": {
         "status": "not_verified_by_this_tool",
-        "note": "Cet audit compare structure et découpage Foundry. Il ne peut pas démontrer la conformité au Manuel des joueurs."
+        "note": "Cet audit compare structure, découpage historique et présence V4. Il ne peut pas démontrer la conformité au Manuel des joueurs."
       }
     },
     {
@@ -12056,6 +12436,8 @@
         "referenceSpells": 8,
         "decoupageSpells": 8,
         "decoupageSpellsInManualScope": 8,
+        "v4VerifiedFoundryInstances": 0,
+        "decoupageMissingReferences": 0,
         "expectedCount": 8,
         "missingReferenceFields": 0,
         "placeholderFields": 0,
@@ -12074,6 +12456,8 @@
       },
       "identity": {
         "aliases": [],
+        "decoupageMissingReferences": [],
+        "v4VerifiedFoundryInstances": [],
         "requiredFoundryInstances": [],
         "referenceOnly": [],
         "unresolvedDecoupageOnly": [],
@@ -12090,6 +12474,7 @@
           "sourceKey": "illusionniste|4|confusion",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -12147,6 +12532,7 @@
           "sourceKey": "illusionniste|4|creation_mineure",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -12204,6 +12590,7 @@
           "sourceKey": "illusionniste|4|dissipation_de_lepuisement",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -12261,6 +12648,7 @@
           "sourceKey": "illusionniste|4|emotion",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -12318,6 +12706,7 @@
           "sourceKey": "illusionniste|4|invisibilite_amelioree",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -12375,6 +12764,7 @@
           "sourceKey": "illusionniste|4|monstres_des_ombres",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -12432,6 +12822,7 @@
           "sourceKey": "illusionniste|4|phytomorphose",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -12489,6 +12880,7 @@
           "sourceKey": "illusionniste|4|tueur_fantasmagorique",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -12542,7 +12934,7 @@
       ],
       "manualVerification": {
         "status": "not_verified_by_this_tool",
-        "note": "Cet audit compare structure et découpage Foundry. Il ne peut pas démontrer la conformité au Manuel des joueurs."
+        "note": "Cet audit compare structure, découpage historique et présence V4. Il ne peut pas démontrer la conformité au Manuel des joueurs."
       }
     },
     {
@@ -12561,6 +12953,8 @@
         "referenceSpells": 8,
         "decoupageSpells": 8,
         "decoupageSpellsInManualScope": 8,
+        "v4VerifiedFoundryInstances": 0,
+        "decoupageMissingReferences": 0,
         "expectedCount": 8,
         "missingReferenceFields": 0,
         "placeholderFields": 0,
@@ -12579,6 +12973,8 @@
       },
       "identity": {
         "aliases": [],
+        "decoupageMissingReferences": [],
+        "v4VerifiedFoundryInstances": [],
         "requiredFoundryInstances": [],
         "referenceOnly": [],
         "unresolvedDecoupageOnly": [],
@@ -12595,6 +12991,7 @@
           "sourceKey": "illusionniste|5|chaos",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -12652,6 +13049,7 @@
           "sourceKey": "illusionniste|5|creation_majeure",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -12709,6 +13107,7 @@
           "sourceKey": "illusionniste|5|holographie",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -12766,6 +13165,7 @@
           "sourceKey": "illusionniste|5|invocation_des_ombres",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -12823,6 +13223,7 @@
           "sourceKey": "illusionniste|5|labyrinthe",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -12880,6 +13281,7 @@
           "sourceKey": "illusionniste|5|magie_des_ombres",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -12937,6 +13339,7 @@
           "sourceKey": "illusionniste|5|monstres_demi_ombre",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -12994,6 +13397,7 @@
           "sourceKey": "illusionniste|5|porte_des_ombres",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -13047,7 +13451,7 @@
       ],
       "manualVerification": {
         "status": "not_verified_by_this_tool",
-        "note": "Cet audit compare structure et découpage Foundry. Il ne peut pas démontrer la conformité au Manuel des joueurs."
+        "note": "Cet audit compare structure, découpage historique et présence V4. Il ne peut pas démontrer la conformité au Manuel des joueurs."
       }
     },
     {
@@ -13066,6 +13470,8 @@
         "referenceSpells": 8,
         "decoupageSpells": 8,
         "decoupageSpellsInManualScope": 8,
+        "v4VerifiedFoundryInstances": 0,
+        "decoupageMissingReferences": 0,
         "expectedCount": 8,
         "missingReferenceFields": 0,
         "placeholderFields": 0,
@@ -13084,6 +13490,8 @@
       },
       "identity": {
         "aliases": [],
+        "decoupageMissingReferences": [],
+        "v4VerifiedFoundryInstances": [],
         "requiredFoundryInstances": [],
         "referenceOnly": [],
         "unresolvedDecoupageOnly": [],
@@ -13100,6 +13508,7 @@
           "sourceKey": "illusionniste|6|illusion_permanente",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -13157,6 +13566,7 @@
           "sourceKey": "illusionniste|6|illusion_programmee",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -13214,6 +13624,7 @@
           "sourceKey": "illusionniste|6|invocation_des_animaux",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -13271,6 +13682,7 @@
           "sourceKey": "illusionniste|6|magie_demi_ombre",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -13328,6 +13740,7 @@
           "sourceKey": "illusionniste|6|ombres",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -13385,6 +13798,7 @@
           "sourceKey": "illusionniste|6|suggestion_de_masse",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -13442,6 +13856,7 @@
           "sourceKey": "illusionniste|6|vision_reelle",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -13499,6 +13914,7 @@
           "sourceKey": "illusionniste|6|voile_illusoire",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -13552,7 +13968,7 @@
       ],
       "manualVerification": {
         "status": "not_verified_by_this_tool",
-        "note": "Cet audit compare structure et découpage Foundry. Il ne peut pas démontrer la conformité au Manuel des joueurs."
+        "note": "Cet audit compare structure, découpage historique et présence V4. Il ne peut pas démontrer la conformité au Manuel des joueurs."
       }
     },
     {
@@ -13571,6 +13987,8 @@
         "referenceSpells": 6,
         "decoupageSpells": 6,
         "decoupageSpellsInManualScope": 6,
+        "v4VerifiedFoundryInstances": 0,
+        "decoupageMissingReferences": 0,
         "expectedCount": 6,
         "missingReferenceFields": 0,
         "placeholderFields": 0,
@@ -13589,6 +14007,8 @@
       },
       "identity": {
         "aliases": [],
+        "decoupageMissingReferences": [],
+        "v4VerifiedFoundryInstances": [],
         "requiredFoundryInstances": [],
         "referenceOnly": [],
         "unresolvedDecoupageOnly": [],
@@ -13605,6 +14025,7 @@
           "sourceKey": "illusionniste|7|alteration_de_la_realite",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -13662,6 +14083,7 @@
           "sourceKey": "illusionniste|7|jet_prismatique",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -13719,6 +14141,7 @@
           "sourceKey": "illusionniste|7|mur_prismatique",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -13776,6 +14199,7 @@
           "sourceKey": "illusionniste|7|sort_astral",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -13833,6 +14257,7 @@
           "sourceKey": "illusionniste|7|vision",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -13890,6 +14315,7 @@
           "sourceKey": "illusionniste|7|sorts_de_niveau_1_de_magicien",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -13943,7 +14369,7 @@
       ],
       "manualVerification": {
         "status": "not_verified_by_this_tool",
-        "note": "Cet audit compare structure et découpage Foundry. Il ne peut pas démontrer la conformité au Manuel des joueurs."
+        "note": "Cet audit compare structure, découpage historique et présence V4. Il ne peut pas démontrer la conformité au Manuel des joueurs."
       }
     },
     {
@@ -13955,25 +14381,25 @@
         "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf"
       },
       "foundryExport": "audit/decoupage_fichier/magicien-niveau-1.json",
-      "status": "blocked_structural",
-      "errors": [
-        "Identités non résolues : instances Foundry requises 1, découpage sans référence 0."
-      ],
+      "status": "manual_review_required",
+      "errors": [],
       "warnings": [],
       "summary": {
         "referenceSpells": 30,
         "decoupageSpells": 30,
         "decoupageSpellsInManualScope": 29,
+        "v4VerifiedFoundryInstances": 1,
+        "decoupageMissingReferences": 1,
         "expectedCount": 30,
         "missingReferenceFields": 0,
         "placeholderFields": 0,
         "technicalDifferences": 97,
         "missingDescriptions": 0,
         "descriptionDifferences": 29,
-        "identityDifferences": 1,
+        "identityDifferences": 0,
         "aliasMatches": 0,
-        "requiredFoundryInstances": 1,
-        "referenceOnly": 1,
+        "requiredFoundryInstances": 0,
+        "referenceOnly": 0,
         "unresolvedDecoupageOnly": 0,
         "legacyFoundryDuplicates": 1,
         "outOfScopeFoundryOnly": 0,
@@ -13982,24 +14408,44 @@
       },
       "identity": {
         "aliases": [],
-        "requiredFoundryInstances": [
+        "decoupageMissingReferences": [
           {
             "key": "magicien|1|lumiere",
             "nom": "Lumière",
             "classe": "magicien",
             "niveau": 1,
-            "disposition": "foundry_instance_required"
+            "disposition": "historical_decoupage_missing"
           }
         ],
-        "referenceOnly": [
+        "v4VerifiedFoundryInstances": [
           {
             "key": "magicien|1|lumiere",
             "nom": "Lumière",
             "classe": "magicien",
             "niveau": 1,
-            "disposition": "foundry_instance_required"
+            "disposition": "historical_decoupage_missing",
+            "v4": {
+              "status": "verified",
+              "errors": [],
+              "item": {
+                "id": "Zg2wEoydngNsIvyV",
+                "classe": "Magicien",
+                "niveau": 1,
+                "spellLists": [
+                  "Magicien"
+                ],
+                "folder": {
+                  "id": "ti9EBwYx3OHoVvTB",
+                  "nom": "Niveau 1",
+                  "niveau": 1,
+                  "classe": "Magicien"
+                }
+              }
+            }
           }
         ],
+        "requiredFoundryInstances": [],
+        "referenceOnly": [],
         "unresolvedDecoupageOnly": [],
         "legacyFoundryDuplicates": [
           {
@@ -14030,6 +14476,7 @@
           "sourceKey": "magicien|1|agrandissement",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -14087,6 +14534,7 @@
           "sourceKey": "magicien|1|alteration_des_feux_normaux",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -14144,6 +14592,7 @@
           "sourceKey": "magicien|1|amitie",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -14201,6 +14650,7 @@
           "sourceKey": "magicien|1|aura_magique_de_nystul",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -14258,6 +14708,7 @@
           "sourceKey": "magicien|1|bouclier",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -14315,6 +14766,7 @@
           "sourceKey": "magicien|1|charme_personnes",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -14372,6 +14824,7 @@
           "sourceKey": "magicien|1|chute_de_plume",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -14429,6 +14882,7 @@
           "sourceKey": "magicien|1|comprehension_des_langues",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -14486,6 +14940,7 @@
           "sourceKey": "magicien|1|detection_de_la_magie",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -14543,6 +14998,7 @@
           "sourceKey": "magicien|1|disque_flottant_de_tenser",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -14600,6 +15056,7 @@
           "sourceKey": "magicien|1|ecriture",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -14657,6 +15114,7 @@
           "sourceKey": "magicien|1|effacement",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -14714,6 +15172,7 @@
           "sourceKey": "magicien|1|escalade_daraignee",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -14771,6 +15230,7 @@
           "sourceKey": "magicien|1|fermeture",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -14828,6 +15288,7 @@
           "sourceKey": "magicien|1|identification",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -14885,6 +15346,7 @@
           "sourceKey": "magicien|1|invocation_dun_familier",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -14942,6 +15404,7 @@
           "sourceKey": "magicien|1|lecture_de_la_magie",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -14997,8 +15460,26 @@
           "nom": "Lumière",
           "key": "magicien|1|lumiere",
           "sourceKey": null,
-          "identityMatch": "missing",
+          "identityMatch": "decoupage_missing_v4_verified",
           "identityNote": null,
+          "v4Integration": {
+            "status": "verified",
+            "errors": [],
+            "item": {
+              "id": "Zg2wEoydngNsIvyV",
+              "classe": "Magicien",
+              "niveau": 1,
+              "spellLists": [
+                "Magicien"
+              ],
+              "folder": {
+                "id": "ti9EBwYx3OHoVvTB",
+                "nom": "Niveau 1",
+                "niveau": 1,
+                "classe": "Magicien"
+              }
+            }
+          },
           "schema": {
             "errors": [],
             "warnings": []
@@ -15056,6 +15537,7 @@
           "sourceKey": "magicien|1|lumieres_dansantes",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -15113,6 +15595,7 @@
           "sourceKey": "magicien|1|mains_brulantes",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -15170,6 +15653,7 @@
           "sourceKey": "magicien|1|message",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -15227,6 +15711,7 @@
           "sourceKey": "magicien|1|poigne_electrique",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -15284,6 +15769,7 @@
           "sourceKey": "magicien|1|poussee",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -15341,6 +15827,7 @@
           "sourceKey": "magicien|1|projectile_magique",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -15398,6 +15885,7 @@
           "sourceKey": "magicien|1|protection_contre_le_mal",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -15455,6 +15943,7 @@
           "sourceKey": "magicien|1|reparation",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -15512,6 +16001,7 @@
           "sourceKey": "magicien|1|saut",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -15569,6 +16059,7 @@
           "sourceKey": "magicien|1|serviteur_invisible",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -15626,6 +16117,7 @@
           "sourceKey": "magicien|1|sommeil",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -15683,6 +16175,7 @@
           "sourceKey": "magicien|1|ventriloquie",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -15736,7 +16229,7 @@
       ],
       "manualVerification": {
         "status": "not_verified_by_this_tool",
-        "note": "Cet audit compare structure et découpage Foundry. Il ne peut pas démontrer la conformité au Manuel des joueurs."
+        "note": "Cet audit compare structure, découpage historique et présence V4. Il ne peut pas démontrer la conformité au Manuel des joueurs."
       }
     },
     {
@@ -15748,25 +16241,25 @@
         "document": "AD&D-Manuel-des-joueurs-restauré-mars-2024.pdf"
       },
       "foundryExport": "audit/decoupage_fichier/magicien-niveau-2.json",
-      "status": "blocked_structural",
-      "errors": [
-        "Identités non résolues : instances Foundry requises 1, découpage sans référence 0."
-      ],
+      "status": "manual_review_required",
+      "errors": [],
       "warnings": [],
       "summary": {
         "referenceSpells": 24,
         "decoupageSpells": 23,
         "decoupageSpellsInManualScope": 23,
+        "v4VerifiedFoundryInstances": 1,
+        "decoupageMissingReferences": 1,
         "expectedCount": 24,
         "missingReferenceFields": 0,
         "placeholderFields": 0,
         "technicalDifferences": 93,
         "missingDescriptions": 0,
         "descriptionDifferences": 23,
-        "identityDifferences": 1,
+        "identityDifferences": 0,
         "aliasMatches": 0,
-        "requiredFoundryInstances": 1,
-        "referenceOnly": 1,
+        "requiredFoundryInstances": 0,
+        "referenceOnly": 0,
         "unresolvedDecoupageOnly": 0,
         "legacyFoundryDuplicates": 0,
         "outOfScopeFoundryOnly": 0,
@@ -15775,24 +16268,44 @@
       },
       "identity": {
         "aliases": [],
-        "requiredFoundryInstances": [
+        "decoupageMissingReferences": [
           {
             "key": "magicien|2|detection_de_linvisibilite",
             "nom": "Détection de l'invisibilité",
             "classe": "magicien",
             "niveau": 2,
-            "disposition": "foundry_instance_required"
+            "disposition": "historical_decoupage_missing"
           }
         ],
-        "referenceOnly": [
+        "v4VerifiedFoundryInstances": [
           {
             "key": "magicien|2|detection_de_linvisibilite",
             "nom": "Détection de l'invisibilité",
             "classe": "magicien",
             "niveau": 2,
-            "disposition": "foundry_instance_required"
+            "disposition": "historical_decoupage_missing",
+            "v4": {
+              "status": "verified",
+              "errors": [],
+              "item": {
+                "id": "xbOjuFsPWKQCmRmP",
+                "classe": "Magicien",
+                "niveau": 2,
+                "spellLists": [
+                  "Magicien"
+                ],
+                "folder": {
+                  "id": "ScqmKiWr6f2z1e6d",
+                  "nom": "Niveau 2",
+                  "niveau": 2,
+                  "classe": "Magicien"
+                }
+              }
+            }
           }
         ],
+        "requiredFoundryInstances": [],
+        "referenceOnly": [],
         "unresolvedDecoupageOnly": [],
         "legacyFoundryDuplicates": [],
         "outOfScopeFoundryOnly": [],
@@ -15807,6 +16320,7 @@
           "sourceKey": "magicien|2|bouche_magique",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -15864,6 +16378,7 @@
           "sourceKey": "magicien|2|bruitage",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -15921,6 +16436,7 @@
           "sourceKey": "magicien|2|corde_enchantee",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -15976,8 +16492,26 @@
           "nom": "Détection de l'invisibilité",
           "key": "magicien|2|detection_de_linvisibilite",
           "sourceKey": null,
-          "identityMatch": "missing",
+          "identityMatch": "decoupage_missing_v4_verified",
           "identityNote": null,
+          "v4Integration": {
+            "status": "verified",
+            "errors": [],
+            "item": {
+              "id": "xbOjuFsPWKQCmRmP",
+              "classe": "Magicien",
+              "niveau": 2,
+              "spellLists": [
+                "Magicien"
+              ],
+              "folder": {
+                "id": "ScqmKiWr6f2z1e6d",
+                "nom": "Niveau 2",
+                "niveau": 2,
+                "classe": "Magicien"
+              }
+            }
+          },
           "schema": {
             "errors": [],
             "warnings": []
@@ -16035,6 +16569,7 @@
           "sourceKey": "magicien|2|detection_du_mal",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -16092,6 +16627,7 @@
           "sourceKey": "magicien|2|e_s_p",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -16149,6 +16685,7 @@
           "sourceKey": "magicien|2|force",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -16206,6 +16743,7 @@
           "sourceKey": "magicien|2|fracassement",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -16263,6 +16801,7 @@
           "sourceKey": "magicien|2|image_miroir",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -16320,6 +16859,7 @@
           "sourceKey": "magicien|2|invisibilite",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -16377,6 +16917,7 @@
           "sourceKey": "magicien|2|levitation",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -16434,6 +16975,7 @@
           "sourceKey": "magicien|2|localisation_dobjets",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -16491,6 +17033,7 @@
           "sourceKey": "magicien|2|lumiere_eternelle",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -16548,6 +17091,7 @@
           "sourceKey": "magicien|2|nuage_puant",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -16605,6 +17149,7 @@
           "sourceKey": "magicien|2|or_des_fous",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -16662,6 +17207,7 @@
           "sourceKey": "magicien|2|oubli",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -16719,6 +17265,7 @@
           "sourceKey": "magicien|2|ouverture",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -16776,6 +17323,7 @@
           "sourceKey": "magicien|2|peur",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -16833,6 +17381,7 @@
           "sourceKey": "magicien|2|piege_de_leomund",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -16890,6 +17439,7 @@
           "sourceKey": "magicien|2|pyrotechnie",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -16947,6 +17497,7 @@
           "sourceKey": "magicien|2|rayon_daffaiblissement",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -17004,6 +17555,7 @@
           "sourceKey": "magicien|2|tenebres_sur_5_metres",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -17061,6 +17613,7 @@
           "sourceKey": "magicien|2|toile_daraignee",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -17118,6 +17671,7 @@
           "sourceKey": "magicien|2|verrou_magique",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -17171,7 +17725,7 @@
       ],
       "manualVerification": {
         "status": "not_verified_by_this_tool",
-        "note": "Cet audit compare structure et découpage Foundry. Il ne peut pas démontrer la conformité au Manuel des joueurs."
+        "note": "Cet audit compare structure, découpage historique et présence V4. Il ne peut pas démontrer la conformité au Manuel des joueurs."
       }
     },
     {
@@ -17190,6 +17744,8 @@
         "referenceSpells": 24,
         "decoupageSpells": 24,
         "decoupageSpellsInManualScope": 24,
+        "v4VerifiedFoundryInstances": 0,
+        "decoupageMissingReferences": 0,
         "expectedCount": 24,
         "missingReferenceFields": 0,
         "placeholderFields": 0,
@@ -17208,6 +17764,8 @@
       },
       "identity": {
         "aliases": [],
+        "decoupageMissingReferences": [],
+        "v4VerifiedFoundryInstances": [],
         "requiredFoundryInstances": [],
         "referenceOnly": [],
         "unresolvedDecoupageOnly": [],
@@ -17224,6 +17782,7 @@
           "sourceKey": "magicien|3|boule_de_feu",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -17281,6 +17840,7 @@
           "sourceKey": "magicien|3|catalepsie",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -17338,6 +17898,7 @@
           "sourceKey": "magicien|3|chaumiere_de_leomund",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -17395,6 +17956,7 @@
           "sourceKey": "magicien|3|clairaudience",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -17452,6 +18014,7 @@
           "sourceKey": "magicien|3|clairvoyance",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -17509,6 +18072,7 @@
           "sourceKey": "magicien|3|dissipation_de_la_magie",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -17566,6 +18130,7 @@
           "sourceKey": "magicien|3|fleche_de_feu",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -17623,6 +18188,7 @@
           "sourceKey": "magicien|3|force_fantasmagorique",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -17680,6 +18246,7 @@
           "sourceKey": "magicien|3|foudre",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -17737,6 +18304,7 @@
           "sourceKey": "magicien|3|infravision",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -17794,6 +18362,7 @@
           "sourceKey": "magicien|3|intermittence",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -17851,6 +18420,7 @@
           "sourceKey": "magicien|3|invisibilite_sur_3_m",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -17908,6 +18478,7 @@
           "sourceKey": "magicien|3|invocation_de_monstres_i",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -17965,6 +18536,7 @@
           "sourceKey": "magicien|3|langues",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -18022,6 +18594,7 @@
           "sourceKey": "magicien|3|paralysie",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -18079,6 +18652,7 @@
           "sourceKey": "magicien|3|protection_contre_le_mal_sur_3_m",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -18136,6 +18710,7 @@
           "sourceKey": "magicien|3|protection_contre_les_projectiles_normaux",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -18193,6 +18768,7 @@
           "sourceKey": "magicien|3|rafale_de_vent",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -18250,6 +18826,7 @@
           "sourceKey": "magicien|3|ralentissement",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -18307,6 +18884,7 @@
           "sourceKey": "magicien|3|rapidite",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -18364,6 +18942,7 @@
           "sourceKey": "magicien|3|respiration_aquatique",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -18421,6 +19000,7 @@
           "sourceKey": "magicien|3|runes_explosives",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -18478,6 +19058,7 @@
           "sourceKey": "magicien|3|suggestion",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -18535,6 +19116,7 @@
           "sourceKey": "magicien|3|vol",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -18588,7 +19170,7 @@
       ],
       "manualVerification": {
         "status": "not_verified_by_this_tool",
-        "note": "Cet audit compare structure et découpage Foundry. Il ne peut pas démontrer la conformité au Manuel des joueurs."
+        "note": "Cet audit compare structure, découpage historique et présence V4. Il ne peut pas démontrer la conformité au Manuel des joueurs."
       }
     },
     {
@@ -18607,6 +19189,8 @@
         "referenceSpells": 24,
         "decoupageSpells": 24,
         "decoupageSpellsInManualScope": 24,
+        "v4VerifiedFoundryInstances": 0,
+        "decoupageMissingReferences": 0,
         "expectedCount": 24,
         "missingReferenceFields": 0,
         "placeholderFields": 0,
@@ -18625,6 +19209,8 @@
       },
       "identity": {
         "aliases": [],
+        "decoupageMissingReferences": [],
+        "v4VerifiedFoundryInstances": [],
         "requiredFoundryInstances": [],
         "referenceOnly": [],
         "unresolvedDecoupageOnly": [],
@@ -18641,6 +19227,7 @@
           "sourceKey": "magicien|4|allometamorphose",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -18698,6 +19285,7 @@
           "sourceKey": "magicien|4|arme_enchantee",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -18755,6 +19343,7 @@
           "sourceKey": "magicien|4|autometamorphose",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -18812,6 +19401,7 @@
           "sourceKey": "magicien|4|bouclier_de_feu",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -18869,6 +19459,7 @@
           "sourceKey": "magicien|4|charme_monstres",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -18926,6 +19517,7 @@
           "sourceKey": "magicien|4|confusion",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -18983,6 +19575,7 @@
           "sourceKey": "magicien|4|desenvoutement",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -19040,6 +19633,7 @@
           "sourceKey": "magicien|4|effroi",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -19097,6 +19691,7 @@
           "sourceKey": "magicien|4|embroussaillement",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -19154,6 +19749,7 @@
           "sourceKey": "magicien|4|excavation",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -19211,6 +19807,7 @@
           "sourceKey": "magicien|4|extension_i",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -19268,6 +19865,7 @@
           "sourceKey": "magicien|4|feu_charmeur",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -19325,6 +19923,7 @@
           "sourceKey": "magicien|4|globe_mineur_dinvulnerabilite",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -19382,6 +19981,7 @@
           "sourceKey": "magicien|4|invocation_de_monstre_ii",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -19439,6 +20039,7 @@
           "sourceKey": "magicien|4|maladresse",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -19496,6 +20097,7 @@
           "sourceKey": "magicien|4|moyen_mnemonique_de_rary",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -19553,6 +20155,7 @@
           "sourceKey": "magicien|4|mur_de_feu",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -19610,6 +20213,7 @@
           "sourceKey": "magicien|4|mur_de_glace",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -19667,6 +20271,7 @@
           "sourceKey": "magicien|4|il_magique",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -19724,6 +20329,7 @@
           "sourceKey": "magicien|4|phytomorphose",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -19781,6 +20387,7 @@
           "sourceKey": "magicien|4|piege_a_feu",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -19838,6 +20445,7 @@
           "sourceKey": "magicien|4|porte_dimensionnelle",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -19895,6 +20503,7 @@
           "sourceKey": "magicien|4|tempete_de_glace",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -19952,6 +20561,7 @@
           "sourceKey": "magicien|4|terrain_hallucinatoire",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -20005,7 +20615,7 @@
       ],
       "manualVerification": {
         "status": "not_verified_by_this_tool",
-        "note": "Cet audit compare structure et découpage Foundry. Il ne peut pas démontrer la conformité au Manuel des joueurs."
+        "note": "Cet audit compare structure, découpage historique et présence V4. Il ne peut pas démontrer la conformité au Manuel des joueurs."
       }
     },
     {
@@ -20024,6 +20634,8 @@
         "referenceSpells": 24,
         "decoupageSpells": 25,
         "decoupageSpellsInManualScope": 24,
+        "v4VerifiedFoundryInstances": 0,
+        "decoupageMissingReferences": 0,
         "expectedCount": 24,
         "missingReferenceFields": 0,
         "placeholderFields": 0,
@@ -20058,6 +20670,8 @@
             "note": "Variation orthographique dans le titre Foundry."
           }
         ],
+        "decoupageMissingReferences": [],
+        "v4VerifiedFoundryInstances": [],
         "requiredFoundryInstances": [],
         "referenceOnly": [],
         "unresolvedDecoupageOnly": [],
@@ -20090,6 +20704,7 @@
           "sourceKey": "magicien|5|chien_fidele_de_mordenkainen",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -20147,6 +20762,7 @@
           "sourceKey": "magicien|5|coffre_secret_de_leomund",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -20204,6 +20820,7 @@
           "sourceKey": "magicien|5|cone_de_froid",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -20261,6 +20878,7 @@
           "sourceKey": "magicien|5|contact_dautres_plans",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -20318,6 +20936,7 @@
           "sourceKey": "magicien|5|croissance_animale",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -20375,6 +20994,7 @@
           "sourceKey": "magicien|5|debilite_mentale",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -20432,6 +21052,7 @@
           "sourceKey": "magicien|5|distorsion_des_distances",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -20489,6 +21110,7 @@
           "sourceKey": "magicien|5|eau_aeree",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -20546,6 +21168,7 @@
           "sourceKey": "magicien|5|extension_ii",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -20603,6 +21226,7 @@
           "sourceKey": "magicien|5|invocation_delemental",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -20660,6 +21284,7 @@
           "sourceKey": "magicien|5|invocation_de_monstre_iii",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -20717,6 +21342,7 @@
           "sourceKey": "magicien|5|lithomorphose",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -20774,6 +21400,7 @@
           "sourceKey": "magicien|5|main_dinterposition_de_bigby",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -20831,6 +21458,7 @@
           "sourceKey": "magicien|5|metempsycose",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -20888,6 +21516,7 @@
           "sourceKey": "magicien|5|mur_de_fer",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -20945,6 +21574,7 @@
           "sourceKey": "magicien|5|mur_de_force",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -21002,6 +21632,7 @@
           "sourceKey": "magicien|5|mur_de_roc",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -21059,6 +21690,7 @@
           "sourceKey": "magicien|5|necro_animation",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -21116,6 +21748,7 @@
           "sourceKey": "magicien|5|nuage_letal",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -21173,6 +21806,7 @@
           "sourceKey": "magicien|5|paralysie_des_monstres",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -21230,6 +21864,7 @@
           "sourceKey": "magicien|5|passe_muraille",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -21287,6 +21922,7 @@
           "sourceKey": "magicien|5|telekinesie",
           "identityMatch": "alias",
           "identityNote": "Variation orthographique dans le titre Foundry.",
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -21344,6 +21980,7 @@
           "sourceKey": "magicien|5|teleportation",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -21401,6 +22038,7 @@
           "sourceKey": "magicien|5|transmutation_de_pierre_en_boue",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -21454,7 +22092,7 @@
       ],
       "manualVerification": {
         "status": "not_verified_by_this_tool",
-        "note": "Cet audit compare structure et découpage Foundry. Il ne peut pas démontrer la conformité au Manuel des joueurs."
+        "note": "Cet audit compare structure, découpage historique et présence V4. Il ne peut pas démontrer la conformité au Manuel des joueurs."
       }
     },
     {
@@ -21473,6 +22111,8 @@
         "referenceSpells": 24,
         "decoupageSpells": 24,
         "decoupageSpellsInManualScope": 24,
+        "v4VerifiedFoundryInstances": 0,
+        "decoupageMissingReferences": 0,
         "expectedCount": 24,
         "missingReferenceFields": 0,
         "placeholderFields": 0,
@@ -21491,6 +22131,8 @@
       },
       "identity": {
         "aliases": [],
+        "decoupageMissingReferences": [],
+        "v4VerifiedFoundryInstances": [],
         "requiredFoundryInstances": [],
         "referenceOnly": [],
         "unresolvedDecoupageOnly": [],
@@ -21507,6 +22149,7 @@
           "sourceKey": "magicien|6|abaissement_des_eaux",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -21564,6 +22207,7 @@
           "sourceKey": "magicien|6|bulle_anti_magique",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -21621,6 +22265,7 @@
           "sourceKey": "magicien|6|chasseur_invisible",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -21678,6 +22323,7 @@
           "sourceKey": "magicien|6|controle_du_climat",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -21735,6 +22381,7 @@
           "sourceKey": "magicien|6|desintegration",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -21792,6 +22439,7 @@
           "sourceKey": "magicien|6|enchantement",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -21849,6 +22497,7 @@
           "sourceKey": "magicien|6|extension_iii",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -21906,6 +22555,7 @@
           "sourceKey": "magicien|6|glissement_de_terrain",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -21963,6 +22613,7 @@
           "sourceKey": "magicien|6|globe_dinvulnerabilite",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -22020,6 +22671,7 @@
           "sourceKey": "magicien|6|holographie",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -22077,6 +22729,7 @@
           "sourceKey": "magicien|6|incantation_mortelle",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -22134,6 +22787,7 @@
           "sourceKey": "magicien|6|invocation_de_monstre_iv",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -22191,6 +22845,7 @@
           "sourceKey": "magicien|6|main_de_force_de_bigby",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -22248,6 +22903,7 @@
           "sourceKey": "magicien|6|mythomancie",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -22305,6 +22961,7 @@
           "sourceKey": "magicien|6|punition_spirituelle",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -22362,6 +23019,7 @@
           "sourceKey": "magicien|6|quete_magique",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -22419,6 +23077,7 @@
           "sourceKey": "magicien|6|reincarnation",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -22476,6 +23135,7 @@
           "sourceKey": "magicien|6|repulsion",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -22533,6 +23193,7 @@
           "sourceKey": "magicien|6|separation_des_eaux",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -22590,6 +23251,7 @@
           "sourceKey": "magicien|6|sphere_glaciale_dotiluke",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -22647,6 +23309,7 @@
           "sourceKey": "magicien|6|transformation_de_tenser",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -22704,6 +23367,7 @@
           "sourceKey": "magicien|6|transmutation_de_pierre_en_chair",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -22761,6 +23425,7 @@
           "sourceKey": "magicien|6|transvision",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -22818,6 +23483,7 @@
           "sourceKey": "magicien|6|vigiles_et_sentinelles",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -22871,7 +23537,7 @@
       ],
       "manualVerification": {
         "status": "not_verified_by_this_tool",
-        "note": "Cet audit compare structure et découpage Foundry. Il ne peut pas démontrer la conformité au Manuel des joueurs."
+        "note": "Cet audit compare structure, découpage historique et présence V4. Il ne peut pas démontrer la conformité au Manuel des joueurs."
       }
     },
     {
@@ -22890,6 +23556,8 @@
         "referenceSpells": 16,
         "decoupageSpells": 16,
         "decoupageSpellsInManualScope": 16,
+        "v4VerifiedFoundryInstances": 0,
+        "decoupageMissingReferences": 0,
         "expectedCount": 16,
         "missingReferenceFields": 0,
         "placeholderFields": 0,
@@ -22908,6 +23576,8 @@
       },
       "identity": {
         "aliases": [],
+        "decoupageMissingReferences": [],
+        "v4VerifiedFoundryInstances": [],
         "requiredFoundryInstances": [],
         "referenceOnly": [],
         "unresolvedDecoupageOnly": [],
@@ -22924,6 +23594,7 @@
           "sourceKey": "magicien|7|boule_de_feu_a_retardement",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -22981,6 +23652,7 @@
           "sourceKey": "magicien|7|cacodemon",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -23038,6 +23710,7 @@
           "sourceKey": "magicien|7|charme_plantes",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -23095,6 +23768,7 @@
           "sourceKey": "magicien|7|disparition",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -23152,6 +23826,7 @@
           "sourceKey": "magicien|7|duo_dimension",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -23209,6 +23884,7 @@
           "sourceKey": "magicien|7|epee_de_mordenkainen",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -23266,6 +23942,7 @@
           "sourceKey": "magicien|7|inversion_de_la_gravite",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -23323,6 +24000,7 @@
           "sourceKey": "magicien|7|invisibilite_de_masse",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -23380,6 +24058,7 @@
           "sourceKey": "magicien|7|invocation_de_monstre_v",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -23437,6 +24116,7 @@
           "sourceKey": "magicien|7|invocation_instantanee_de_drawmij",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -23494,6 +24174,7 @@
           "sourceKey": "magicien|7|mot_de_pouvoir_etourdissement",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -23551,6 +24232,7 @@
           "sourceKey": "magicien|7|poigne_de_bigby",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -23608,6 +24290,7 @@
           "sourceKey": "magicien|7|porte_de_phase",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -23665,6 +24348,7 @@
           "sourceKey": "magicien|7|simulacre",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -23722,6 +24406,7 @@
           "sourceKey": "magicien|7|souhait_mineur",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -23779,6 +24464,7 @@
           "sourceKey": "magicien|7|statue",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -23832,7 +24518,7 @@
       ],
       "manualVerification": {
         "status": "not_verified_by_this_tool",
-        "note": "Cet audit compare structure et découpage Foundry. Il ne peut pas démontrer la conformité au Manuel des joueurs."
+        "note": "Cet audit compare structure, découpage historique et présence V4. Il ne peut pas démontrer la conformité au Manuel des joueurs."
       }
     },
     {
@@ -23851,6 +24537,8 @@
         "referenceSpells": 16,
         "decoupageSpells": 16,
         "decoupageSpellsInManualScope": 16,
+        "v4VerifiedFoundryInstances": 0,
+        "decoupageMissingReferences": 0,
         "expectedCount": 16,
         "missingReferenceFields": 0,
         "placeholderFields": 0,
@@ -23869,6 +24557,8 @@
       },
       "identity": {
         "aliases": [],
+        "decoupageMissingReferences": [],
+        "v4VerifiedFoundryInstances": [],
         "requiredFoundryInstances": [],
         "referenceOnly": [],
         "unresolvedDecoupageOnly": [],
@@ -23885,6 +24575,7 @@
           "sourceKey": "magicien|8|antipathie_sympathie",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -23942,6 +24633,7 @@
           "sourceKey": "magicien|8|charme_masse",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -23999,6 +24691,7 @@
           "sourceKey": "magicien|8|clone",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -24056,6 +24749,7 @@
           "sourceKey": "magicien|8|cristairain",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -24113,6 +24807,7 @@
           "sourceKey": "magicien|8|danse_irresistible_dotto",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -24170,6 +24865,7 @@
           "sourceKey": "magicien|8|emprisonnement_de_lame",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -24227,6 +24923,7 @@
           "sourceKey": "magicien|8|immunite_magique_de_serten",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -24284,6 +24981,7 @@
           "sourceKey": "magicien|8|invocation_de_monstre_vi",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -24341,6 +25039,7 @@
           "sourceKey": "magicien|8|labyrinthe",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -24398,6 +25097,7 @@
           "sourceKey": "magicien|8|mot_de_pouvoir_cecite",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -24455,6 +25155,7 @@
           "sourceKey": "magicien|8|nuage_incendiaire",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -24512,6 +25213,7 @@
           "sourceKey": "magicien|8|permanence",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -24569,6 +25271,7 @@
           "sourceKey": "magicien|8|poing_de_bigby",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -24626,6 +25329,7 @@
           "sourceKey": "magicien|8|protection_desprit",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -24683,6 +25387,7 @@
           "sourceKey": "magicien|8|symbole",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -24740,6 +25445,7 @@
           "sourceKey": "magicien|8|transformation_dobjets",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -24793,7 +25499,7 @@
       ],
       "manualVerification": {
         "status": "not_verified_by_this_tool",
-        "note": "Cet audit compare structure et découpage Foundry. Il ne peut pas démontrer la conformité au Manuel des joueurs."
+        "note": "Cet audit compare structure, découpage historique et présence V4. Il ne peut pas démontrer la conformité au Manuel des joueurs."
       }
     },
     {
@@ -24812,6 +25518,8 @@
         "referenceSpells": 12,
         "decoupageSpells": 12,
         "decoupageSpellsInManualScope": 12,
+        "v4VerifiedFoundryInstances": 0,
+        "decoupageMissingReferences": 0,
         "expectedCount": 12,
         "missingReferenceFields": 0,
         "placeholderFields": 0,
@@ -24830,6 +25538,8 @@
       },
       "identity": {
         "aliases": [],
+        "decoupageMissingReferences": [],
+        "v4VerifiedFoundryInstances": [],
         "requiredFoundryInstances": [],
         "referenceOnly": [],
         "unresolvedDecoupageOnly": [],
@@ -24846,6 +25556,7 @@
           "sourceKey": "magicien|9|arret_du_temps",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -24903,6 +25614,7 @@
           "sourceKey": "magicien|9|emprisonnement",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -24960,6 +25672,7 @@
           "sourceKey": "magicien|9|heteromorphisme",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -25017,6 +25730,7 @@
           "sourceKey": "magicien|9|invocation_de_monstre_vii",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -25074,6 +25788,7 @@
           "sourceKey": "magicien|9|main_broyante_de_bigby",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -25131,6 +25846,7 @@
           "sourceKey": "magicien|9|mot_de_pouvoir_mort",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -25188,6 +25904,7 @@
           "sourceKey": "magicien|9|nuee_de_meteores",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -25245,6 +25962,7 @@
           "sourceKey": "magicien|9|seuil",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -25302,6 +26020,7 @@
           "sourceKey": "magicien|9|sort_astral",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -25359,6 +26078,7 @@
           "sourceKey": "magicien|9|souhait_majeur",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -25416,6 +26136,7 @@
           "sourceKey": "magicien|9|sphere_prismatique",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -25473,6 +26194,7 @@
           "sourceKey": "magicien|9|stase_temporelle",
           "identityMatch": "direct",
           "identityNote": null,
+          "v4Integration": null,
           "schema": {
             "errors": [],
             "warnings": []
@@ -25526,7 +26248,7 @@
       ],
       "manualVerification": {
         "status": "not_verified_by_this_tool",
-        "note": "Cet audit compare structure et découpage Foundry. Il ne peut pas démontrer la conformité au Manuel des joueurs."
+        "note": "Cet audit compare structure, découpage historique et présence V4. Il ne peut pas démontrer la conformité au Manuel des joueurs."
       }
     }
   ]
