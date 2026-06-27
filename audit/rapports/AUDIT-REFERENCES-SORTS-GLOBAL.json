@@ -1,6 +1,6 @@
 {
   "version": "2026-06-27-reference-global-audit-v3",
-  "generatedAt": "2026-06-27T11:00:18.801Z",
+  "generatedAt": "2026-06-27T11:10:56.070Z",
   "scope": {
     "referenceDirectory": "audit\\reference",
     "referenceFileSelection": "Uniquement les références classe/niveau Clerc, Druide, Magicien et Illusionniste.",
