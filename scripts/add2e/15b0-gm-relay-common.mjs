@@ -1,5 +1,8 @@
-// ADD2E — Relais MJ : utilitaires partagés.
+// ADD2E — Utilitaires partagés du relais MJ.
 // Compatible Foundry V13/V14/V15.
+
+import "./15a-validation-hooks.mjs";
+import "./15c-amitie-controller.mjs";
 
 export const ADD2E_SOCKET = "system.add2e";
 export const ADD2E_GM_OPERATION = "ADD2E_GM_OPERATION";
@@ -8,10 +11,9 @@ export const PROJECTILE_FLAG = "projectilesDepensesCombat";
 
 const FAMILIAR_SCOPE = "add2e";
 const FAMILIAR_FLAG = "familiar";
-const FAMILIAR_ARTWORK_REPAIR_VERSION = "2026-06-27-familiar-artwork-png-v2";
-const FAMILIAR_EFFECT_ACTION_BRIDGE_VERSION = "2026-06-27-familiar-effect-actions-v2";
-const FAMILIAR_FOLLOW_BRIDGE_VERSION = "2026-06-27-familiar-follow-default-v1";
-const FAMILIAR_EFFECT_PRESENTATION_VERSION = "2026-06-27-familiar-effect-presentation-v1";
+const FAMILIAR_ARTWORK_VERSION = "2026-06-27-familiar-artwork-single-relay-v3";
+const FAMILIAR_EFFECT_UI_VERSION = "2026-06-27-familiar-effect-ui-single-relay-v3";
+const FAMILIAR_SELECTION_FIX_VERSION = "2026-06-27-familiar-selection-single-relay-v1";
 const FAMILIAR_ASSET_BASE = "systems/add2e/assets/token";
 const FAMILIAR_ASSETS = Object.freeze({
   chat_noir: `${FAMILIAR_ASSET_BASE}/chat-noir.png`,
@@ -25,9 +27,11 @@ const FAMILIAR_ASSETS = Object.freeze({
   lutin: `${FAMILIAR_ASSET_BASE}/lutin.png`,
   diablotin: `${FAMILIAR_ASSET_BASE}/diablotin.png`
 });
-const familiarArtworkQueue = new Set();
-const familiarFollowQueue = new Set();
-const familiarEffectPresentationQueue = new Set();
+
+const artworkQueue = new Set();
+const presentationQueue = new Set();
+let hudObserver = null;
+let hudPruneQueued = false;
 
 export function isResponsibleGM() {
   if (!game.user?.isGM) return false;
@@ -36,7 +40,7 @@ export function isResponsibleGM() {
 }
 
 export function resolveScene(sceneId) {
-  return game.scenes?.get?.(sceneId) || canvas?.scene || game.scenes?.active || null;
+  return game.scenes?.get?.(sceneId) ?? canvas?.scene ?? game.scenes?.active ?? null;
 }
 
 export async function resolveActor(payload = {}) {
@@ -44,39 +48,36 @@ export async function resolveActor(payload = {}) {
     try {
       const doc = await fromUuid(payload.actorUuid);
       if (doc) return doc;
-    } catch (e) {
-      console.warn("[ADD2E][GM-RELAY] actorUuid non résolu :", payload.actorUuid, e);
+    } catch (error) {
+      console.warn("[ADD2E][GM-RELAY] actorUuid non résolu :", payload.actorUuid, error);
     }
   }
-
   if (payload.tokenUuid) {
     try {
       const doc = await fromUuid(payload.tokenUuid);
       if (doc?.actor) return doc.actor;
       if (doc?.document?.actor) return doc.document.actor;
-    } catch (e) {
-      console.warn("[ADD2E][GM-RELAY] tokenUuid non résolu :", payload.tokenUuid, e);
+    } catch (error) {
+      console.warn("[ADD2E][GM-RELAY] tokenUuid non résolu :", payload.tokenUuid, error);
     }
   }
-
   if (payload.tokenId) {
     const scene = resolveScene(payload.sceneId);
-    const tokenDoc = scene?.tokens?.get(payload.tokenId) ?? canvas?.scene?.tokens?.get?.(payload.tokenId) ?? null;
+    const tokenDoc = scene?.tokens?.get?.(payload.tokenId) ?? canvas?.scene?.tokens?.get?.(payload.tokenId) ?? null;
     if (tokenDoc?.actor) return tokenDoc.actor;
-
-    const placeable = canvas?.tokens?.get?.(payload.tokenId) ?? canvas?.tokens?.placeables?.find?.(t => t?.id === payload.tokenId || t?.document?.id === payload.tokenId) ?? null;
+    const placeable = canvas?.tokens?.get?.(payload.tokenId)
+      ?? canvas?.tokens?.placeables?.find?.(entry => entry?.id === payload.tokenId || entry?.document?.id === payload.tokenId)
+      ?? null;
     if (placeable?.actor) return placeable.actor;
     if (placeable?.document?.actor) return placeable.document.actor;
   }
-
-  if (payload.actorId) return game.actors?.get?.(payload.actorId) ?? null;
-  return null;
+  return payload.actorId ? game.actors?.get?.(payload.actorId) ?? null : null;
 }
 
 export function relayArray(value) {
   if (!value) return [];
   if (Array.isArray(value)) return value.flatMap(relayArray).filter(Boolean);
-  if (typeof value === "string") return value.split(/[,;|\n]+/).map(v => v.trim()).filter(Boolean);
+  if (typeof value === "string") return value.split(/[,;|\n]+/).map(entry => entry.trim()).filter(Boolean);
   return [value];
 }
 
@@ -90,361 +91,265 @@ export function relayNormalize(value) {
     .replace(/_+/g, "_");
 }
 
-function familiarRelation(actor) {
+function relation(actor) {
   return actor?.getFlag?.(FAMILIAR_SCOPE, FAMILIAR_FLAG) ?? actor?.flags?.[FAMILIAR_SCOPE]?.[FAMILIAR_FLAG] ?? null;
 }
 
-function familiarEffectRelation(effect) {
+function effectData(effect) {
   return effect?.flags?.[FAMILIAR_SCOPE]?.[FAMILIAR_FLAG] ?? effect?.getFlag?.(FAMILIAR_SCOPE, FAMILIAR_FLAG) ?? null;
 }
 
-function familiarArtworkSource(relation) {
-  return FAMILIAR_ASSETS[String(relation?.key ?? "")] ?? null;
+function assetFor(link) {
+  return FAMILIAR_ASSETS[String(link?.key ?? "")] ?? null;
 }
 
-function familiarTokenMatches(tokenDoc, relation) {
-  if (!tokenDoc || !relation?.linkId) return false;
-  return tokenDoc.actorId === relation.actorId
-    || tokenDoc.actor?.id === relation.actorId
-    || tokenDoc.flags?.[FAMILIAR_SCOPE]?.[FAMILIAR_FLAG]?.linkId === relation.linkId;
+function tokenMatches(tokenDoc, link) {
+  if (!tokenDoc || !link?.linkId) return false;
+  return tokenDoc.actorId === link.actorId
+    || tokenDoc.actor?.id === link.actorId
+    || tokenDoc.flags?.[FAMILIAR_SCOPE]?.[FAMILIAR_FLAG]?.linkId === link.linkId;
 }
 
-function familiarIsCasterRelation(relation) {
-  return !!(relation?.linkId && relation?.actorId);
-}
-
-function familiarEffectActionForName(name) {
-  const normalized = String(name ?? "")
+function actionFromName(name) {
+  const value = String(name ?? "")
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/[—–-]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
-  if (normalized.startsWith("familier partage des sens") || normalized.startsWith("familier vision partagee")) return "share-senses";
-  if (normalized.startsWith("familier suivi automatique")) return "toggle-follow";
+  if (value.startsWith("familier partage des sens") || value.startsWith("familier vision partagee")) return "share-senses";
+  if (value.startsWith("familier suivi automatique")) return "toggle-follow";
   return "";
 }
 
-function familiarEffectActionTitle(action) {
-  if (action === "share-senses") return "Voir avec les sens du familier";
-  if (action === "toggle-follow") return "Activer ou désactiver le suivi automatique";
-  return "Utiliser l’effet de familier";
+function actionTitle(action) {
+  return action === "share-senses" ? "Voir avec les sens du familier" : "Activer ou désactiver le suivi automatique";
 }
 
-function familiarEffectActionIcon(action) {
+function actionIcon(action) {
   return action === "share-senses" ? "fa-eye" : "fa-link";
 }
 
-function registerFamiliarEffectHandlebarsHelpers() {
-  if (typeof Handlebars === "undefined") return false;
-  if (!Handlebars.helpers.add2eFamiliarEffectAction) {
-    Handlebars.registerHelper("add2eFamiliarEffectAction", familiarEffectActionForName);
-  }
-  if (!Handlebars.helpers.add2eFamiliarEffectActionTitle) {
-    Handlebars.registerHelper("add2eFamiliarEffectActionTitle", familiarEffectActionTitle);
-  }
-  if (!Handlebars.helpers.add2eFamiliarEffectActionIcon) {
-    Handlebars.registerHelper("add2eFamiliarEffectActionIcon", familiarEffectActionIcon);
-  }
-  return true;
+function registerHelpers() {
+  if (typeof Handlebars === "undefined") return;
+  if (!Handlebars.helpers.add2eFamiliarEffectAction) Handlebars.registerHelper("add2eFamiliarEffectAction", actionFromName);
+  if (!Handlebars.helpers.add2eFamiliarEffectActionTitle) Handlebars.registerHelper("add2eFamiliarEffectActionTitle", actionTitle);
+  if (!Handlebars.helpers.add2eFamiliarEffectActionIcon) Handlebars.registerHelper("add2eFamiliarEffectActionIcon", actionIcon);
 }
 
-function familiarSceneGridSize(scene) {
-  return Math.max(1, Number(scene?.grid?.size ?? canvas?.grid?.size ?? 100) || 100);
+function effectTags(effect) {
+  const value = effect?.flags?.add2e?.tags ?? effect?.getFlag?.("add2e", "tags") ?? [];
+  return Array.isArray(value) ? value : relayArray(value);
 }
 
-function familiarTokenForRelation(scene, relation) {
-  if (!scene || !relation?.actorId) return null;
-  const preferred = relation.tokenId ? scene.tokens?.get?.(relation.tokenId) ?? null : null;
-  if (preferred?.actorId === relation.actorId || preferred?.actor?.id === relation.actorId) return preferred;
-  return Array.from(scene.tokens ?? []).find(tokenDoc => familiarTokenMatches(tokenDoc, relation)) ?? null;
-}
-
-function familiarFollowOffset(relation, masterToken, familiarToken, scene) {
-  const saved = relation?.followOffset;
-  const savedX = Number(saved?.x);
-  const savedY = Number(saved?.y);
-  if (Number.isFinite(savedX) && Number.isFinite(savedY)) return { x: savedX, y: savedY };
-
-  const x = Number(familiarToken?.x) - Number(masterToken?.x);
-  const y = Number(familiarToken?.y) - Number(masterToken?.y);
-  if (Number.isFinite(x) && Number.isFinite(y)) return { x, y };
-  return { x: familiarSceneGridSize(scene), y: 0 };
-}
-
-async function syncDefaultFamiliarFollow(masterToken, changes = {}, options = {}) {
-  if (!isResponsibleGM() || options?.add2eFamiliarFollow === true) return false;
-  if (changes.x === undefined && changes.y === undefined) return false;
-
-  const caster = masterToken?.actor ?? game.actors?.get?.(masterToken?.actorId) ?? null;
-  const relation = familiarRelation(caster);
-  if (!caster || !familiarIsCasterRelation(relation) || relation.follow === false) return false;
-
-  const scene = masterToken?.parent ?? resolveScene(relation.sceneId);
-  const familiarToken = familiarTokenForRelation(scene, relation);
-  if (!scene || !familiarToken) return false;
-
-  const offset = familiarFollowOffset(relation, masterToken, familiarToken, scene);
-  const nextRelation = {
-    ...relation,
-    sceneId: scene.id ?? relation.sceneId ?? null,
-    masterTokenId: masterToken.id ?? relation.masterTokenId ?? null,
-    tokenId: familiarToken.id ?? relation.tokenId ?? null,
-    follow: true,
-    followOffset: offset
-  };
-  if (
-    relation.follow !== true
-    || relation.sceneId !== nextRelation.sceneId
-    || relation.masterTokenId !== nextRelation.masterTokenId
-    || relation.tokenId !== nextRelation.tokenId
-    || Number(relation.followOffset?.x) !== offset.x
-    || Number(relation.followOffset?.y) !== offset.y
-  ) {
-    await caster.setFlag(FAMILIAR_SCOPE, FAMILIAR_FLAG, nextRelation);
-  }
-
-  const x = Number(masterToken.x) + offset.x;
-  const y = Number(masterToken.y) + offset.y;
-  if (!Number.isFinite(x) || !Number.isFinite(y)) return false;
-  if (Math.abs(Number(familiarToken.x) - x) < 0.01 && Math.abs(Number(familiarToken.y) - y) < 0.01) return true;
-
-  await familiarToken.update({ x, y }, {
-    add2eFamiliarFollow: true,
-    add2eIgnoreMovement: true,
-    render: true
-  });
-  return true;
-}
-
-function queueDefaultFamiliarFollow(masterToken, changes, options) {
-  if (!isResponsibleGM() || !masterToken?.id || (changes?.x === undefined && changes?.y === undefined)) return;
-  const key = `${masterToken.parent?.id ?? "scene"}:${masterToken.id}`;
-  if (familiarFollowQueue.has(key)) return;
-  familiarFollowQueue.add(key);
-  setTimeout(() => {
-    familiarFollowQueue.delete(key);
-    syncDefaultFamiliarFollow(masterToken, changes ?? {}, options ?? {}).catch(error => console.error("[ADD2E][FAMILIAR][FOLLOW]", error));
-  }, 0);
-}
-
-function familiarTags(effect) {
-  const raw = effect?.flags?.add2e?.tags ?? effect?.getFlag?.("add2e", "tags") ?? [];
-  return Array.isArray(raw) ? raw : String(raw ?? "").split(/[,;|\n]+/).map(value => value.trim()).filter(Boolean);
-}
-
-function familiarSensoryText(effect, data) {
-  const recorded = String(data?.senses ?? "").trim();
-  if (recorded) return recorded;
-  const desc = String(effect?.description ?? "").replace(/<[^>]*>/g, "").trim();
-  if (desc && !desc.startsWith("Bénéfice passif")) return desc;
-  return "Sens propres du familier disponibles par la vision partagée.";
-}
-
-function familiarPresentationForEffect(effect, relation) {
-  const data = familiarEffectRelation(effect);
-  if (!data?.linkId || data.linkId !== relation?.linkId) return null;
-  const tags = familiarTags(effect);
-  const action = data.kind === "action" ? String(data.action ?? "") : "";
-  const inRange = relation.inRange !== false;
-
-  if (action === "share-senses") {
+function presentation(effect, link) {
+  const data = effectData(effect);
+  if (!data?.linkId || data.linkId !== link?.linkId) return null;
+  const label = link.label ?? data.familiarLabel ?? "familier";
+  const range = link.range ?? data.range ?? 12;
+  const inRange = link.inRange !== false;
+  if (data.kind === "action" && data.action === "share-senses") {
     return {
-      name: `Familier — Vision partagée (${relation.label ?? data.familiarLabel ?? "familier"})`,
-      description: inRange
-        ? `Action : cliquer sur l’œil pour sélectionner le token de ${relation.label ?? data.familiarLabel ?? "familier"}, centrer la carte et utiliser sa vision de scène.`
-        : `Action suspendue : ${relation.label ?? data.familiarLabel ?? "Le familier"} est hors de portée de ${relation.range ?? 12} cases.`
+      name: `Familier — Vision partagée (${label})`,
+      description: inRange ? `Action : utiliser l’œil pour sélectionner uniquement ${label}, centrer la scène et exploiter sa vision.` : `Action suspendue : ${label} est hors de portée de ${range} cases.`
     };
   }
-
-  if (action === "toggle-follow") {
-    const follow = relation.follow !== false;
+  if (data.kind === "action" && data.action === "toggle-follow") {
+    const active = link.follow !== false;
     return {
-      name: `Familier — Suivi automatique (${follow ? "actif" : "désactivé"})`,
-      description: follow
-        ? `Actif par défaut : ${relation.label ?? data.familiarLabel ?? "le familier"} conserve sa position relative et suit chaque déplacement du token du magicien. Cliquer sur le lien pour le laisser en déplacement libre.`
-        : `Désactivé : ${relation.label ?? data.familiarLabel ?? "le familier"} reste en déplacement libre. Cliquer sur le lien pour réactiver le suivi automatique.`
+      name: `Familier — Suivi automatique (${active ? "actif" : "désactivé"})`,
+      description: active ? `Actif : ${label} suit le token du magicien. Utiliser le lien pour le passer en déplacement libre.` : `Désactivé : ${label} reste en déplacement libre. Utiliser le lien pour réactiver le suivi.`
     };
   }
-
-  const isSensoryBenefit = data.kind === "benefit" && tags.some(tag => String(tag).startsWith("familier:sens:"));
-  if (isSensoryBenefit) {
-    const senses = familiarSensoryText(effect, data);
+  if (data.kind === "benefit" && effectTags(effect).some(tag => String(tag).startsWith("familier:sens:"))) {
+    const senses = String(data.senses ?? effect.description ?? "Sens propres du familier.").replace(/<[^>]*>/g, "").trim();
     return {
-      name: `Familier — Sens transmis (${relation.label ?? data.familiarLabel ?? "familier"})`,
-      description: `Bénéfice passif à ${relation.range ?? 12} cases ou moins : ${senses} Utiliser l’effet « Vision partagée » pour sélectionner le token et exploiter ces sens sur la scène.` ,
+      name: `Familier — Sens transmis (${label})`,
+      description: `Bénéfice passif à ${range} cases ou moins : ${senses} Utiliser « Vision partagée » pour observer depuis le token du familier.`,
       senses
     };
   }
-
   return null;
 }
 
-async function syncFamiliarEffectPresentation(caster) {
+async function syncPresentation(caster) {
   if (!isResponsibleGM() || !caster) return false;
-  const relation = familiarRelation(caster);
-  if (!familiarIsCasterRelation(relation)) return false;
-
+  const link = relation(caster);
+  if (!link?.linkId || !link?.actorId) return false;
   const updates = [];
-  for (const effect of Array.from(caster.effects ?? [])) {
-    const presentation = familiarPresentationForEffect(effect, relation);
-    if (!presentation) continue;
-    const data = familiarEffectRelation(effect) ?? {};
-    const change = {};
-    if (effect.name !== presentation.name) change.name = presentation.name;
-    if (effect.description !== presentation.description) change.description = presentation.description;
-    if (presentation.senses && data.senses !== presentation.senses) change["flags.add2e.familiar.senses"] = presentation.senses;
-    if (Object.keys(change).length) updates.push(effect.update(change, { add2eFamiliarEffectPresentation: true }));
+  for (const effect of caster.effects ?? []) {
+    const display = presentation(effect, link);
+    if (!display) continue;
+    const data = effectData(effect) ?? {};
+    const update = {};
+    if (effect.name !== display.name) update.name = display.name;
+    if (effect.description !== display.description) update.description = display.description;
+    if (display.senses && data.senses !== display.senses) update["flags.add2e.familiar.senses"] = display.senses;
+    if (Object.keys(update).length) updates.push(effect.update(update, { add2eFamiliarPresentation: true, add2eInternal: true }));
   }
   if (updates.length) await Promise.all(updates);
   return updates.length > 0;
 }
 
-function queueFamiliarEffectPresentation(caster) {
-  if (!isResponsibleGM() || !caster?.id || familiarEffectPresentationQueue.has(caster.id)) return;
-  familiarEffectPresentationQueue.add(caster.id);
+function queuePresentation(caster) {
+  if (!isResponsibleGM() || !caster?.id || presentationQueue.has(caster.id)) return;
+  presentationQueue.add(caster.id);
   setTimeout(() => {
-    familiarEffectPresentationQueue.delete(caster.id);
-    syncFamiliarEffectPresentation(caster).catch(error => console.error("[ADD2E][FAMILIAR][PRESENTATION]", error));
-  }, 30);
+    presentationQueue.delete(caster.id);
+    syncPresentation(caster).catch(error => console.error("[ADD2E][FAMILIAR][PRESENTATION]", error));
+  }, 25);
 }
 
-async function syncFamiliarArtwork(caster) {
+async function syncArtwork(caster) {
   if (!isResponsibleGM() || !caster) return false;
-  const relation = familiarRelation(caster);
-  const src = familiarArtworkSource(relation);
-  if (!relation?.actorId || !relation?.linkId || !src) return false;
-
-  const familiarActor = game.actors?.get?.(relation.actorId) ?? null;
-  if (familiarActor) {
-    const actorChanges = {};
-    if (familiarActor.img !== src) actorChanges.img = src;
-    if (familiarActor.prototypeToken?.texture?.src !== src) actorChanges["prototypeToken.texture.src"] = src;
-    if (Object.keys(actorChanges).length) {
-      await familiarActor.update(actorChanges, { add2eFamiliarArtworkRepair: true, add2eInternal: true });
-    }
+  const link = relation(caster);
+  const src = assetFor(link);
+  if (!link?.actorId || !link?.linkId || !src) return false;
+  const familiar = game.actors?.get?.(link.actorId) ?? null;
+  if (familiar) {
+    const update = {};
+    if (familiar.img !== src) update.img = src;
+    if (familiar.prototypeToken?.texture?.src !== src) update["prototypeToken.texture.src"] = src;
+    if (Object.keys(update).length) await familiar.update(update, { add2eFamiliarArtworkRepair: true, add2eInternal: true });
   }
-
   for (const scene of game.scenes?.contents ?? []) {
     const updates = Array.from(scene.tokens ?? [])
-      .filter(tokenDoc => familiarTokenMatches(tokenDoc, relation) && tokenDoc.texture?.src !== src)
+      .filter(tokenDoc => tokenMatches(tokenDoc, link) && tokenDoc.texture?.src !== src)
       .map(tokenDoc => ({ _id: tokenDoc.id, "texture.src": src }));
-    if (updates.length) {
-      await scene.updateEmbeddedDocuments("Token", updates, { add2eFamiliarArtworkRepair: true, render: true });
-    }
+    if (updates.length) await scene.updateEmbeddedDocuments("Token", updates, { add2eFamiliarArtworkRepair: true, render: true });
   }
-
-  const effectUpdates = Array.from(caster.effects ?? [])
-    .filter(effect => familiarEffectRelation(effect)?.linkId === relation.linkId && effect.img !== src)
-    .map(effect => effect.update({ img: src }, { add2eFamiliarArtworkRepair: true }));
-  if (effectUpdates.length) await Promise.all(effectUpdates);
+  const effects = Array.from(caster.effects ?? [])
+    .filter(effect => effectData(effect)?.linkId === link.linkId && effect.img !== src)
+    .map(effect => effect.update({ img: src }, { add2eFamiliarArtworkRepair: true, add2eInternal: true }));
+  if (effects.length) await Promise.all(effects);
   return true;
 }
 
-function queueFamiliarArtworkSync(caster) {
-  if (!isResponsibleGM() || !caster?.id || familiarArtworkQueue.has(caster.id)) return;
-  familiarArtworkQueue.add(caster.id);
+function queueArtwork(caster) {
+  if (!isResponsibleGM() || !caster?.id || artworkQueue.has(caster.id)) return;
+  artworkQueue.add(caster.id);
   setTimeout(() => {
-    familiarArtworkQueue.delete(caster.id);
-    syncFamiliarArtwork(caster).catch(error => console.error("[ADD2E][FAMILIAR][ARTWORK]", error));
+    artworkQueue.delete(caster.id);
+    syncArtwork(caster).catch(error => console.error("[ADD2E][FAMILIAR][ARTWORK]", error));
   }, 50);
 }
 
-export function installFamiliarArtworkRepair() {
-  if (globalThis.ADD2E_FAMILIAR_ARTWORK_REPAIR_VERSION === FAMILIAR_ARTWORK_REPAIR_VERSION) return true;
-  globalThis.ADD2E_FAMILIAR_ARTWORK_REPAIR_VERSION = FAMILIAR_ARTWORK_REPAIR_VERSION;
+function pruneHudRows() {
+  hudPruneQueued = false;
+  const section = document.getElementById("add2e-action-hud")?.querySelector?.('[data-section="effets"]');
+  if (!section) return;
+  for (const row of section.querySelectorAll(".row.effect-row")) {
+    if (["share-senses", "toggle-follow"].includes(actionFromName(row.querySelector(".title")?.textContent ?? ""))) row.remove();
+  }
+}
 
-  Hooks.on("createActiveEffect", effect => {
-    if (!isResponsibleGM()) return;
-    const data = familiarEffectRelation(effect);
-    const caster = effect?.parent?.documentName === "Actor" ? effect.parent : null;
-    if (data?.linkId && familiarRelation(caster)?.linkId === data.linkId) {
-      queueFamiliarArtworkSync(caster);
-      queueFamiliarEffectPresentation(caster);
-    }
-  });
+function scheduleHudPrune() {
+  if (hudPruneQueued) return;
+  hudPruneQueued = true;
+  (globalThis.requestAnimationFrame ?? (callback => setTimeout(callback, 16)))(pruneHudRows);
+}
 
-  Hooks.on("createToken", tokenDoc => {
-    if (!isResponsibleGM()) return;
-    const data = tokenDoc?.flags?.[FAMILIAR_SCOPE]?.[FAMILIAR_FLAG] ?? null;
-    const caster = data?.masterActorId ? game.actors?.get?.(data.masterActorId) ?? null : null;
-    if (caster) {
-      queueFamiliarArtworkSync(caster);
-      queueFamiliarEffectPresentation(caster);
-    }
-  });
-
-  Hooks.on("updateActor", actor => {
-    if (!isResponsibleGM() || !familiarIsCasterRelation(familiarRelation(actor))) return;
-    queueFamiliarEffectPresentation(actor);
-  });
-
-  Hooks.on("canvasReady", () => {
-    if (!isResponsibleGM()) return;
-    setTimeout(() => {
-      for (const caster of game.actors?.contents ?? []) {
-        if (!familiarIsCasterRelation(familiarRelation(caster))) continue;
-        queueFamiliarArtworkSync(caster);
-        queueFamiliarEffectPresentation(caster);
-      }
-    }, 100);
-  });
-
-  globalThis.add2eSyncFamiliarArtwork = () => Promise.all(
-    Array.from(game.actors?.contents ?? [])
-      .filter(caster => familiarArtworkSource(familiarRelation(caster)))
-      .map(caster => syncFamiliarArtwork(caster))
-  );
+function selectOnlyFamiliar(actor) {
+  const link = relation(actor);
+  if (!link?.tokenId || canvas?.scene?.id !== link.sceneId) return false;
+  const placeable = canvas?.tokens?.get?.(link.tokenId)
+    ?? canvas?.tokens?.placeables?.find?.(token => token?.id === link.tokenId || token?.document?.id === link.tokenId)
+    ?? null;
+  if (!placeable?.actor?.isOwner) return false;
+  canvas?.tokens?.releaseAll?.();
+  placeable.control?.({ releaseOthers: true });
+  canvas?.animatePan?.({ x: placeable.center?.x, y: placeable.center?.y, duration: 250 });
   return true;
 }
 
-function installDefaultFamiliarFollowBridge() {
-  if (globalThis.ADD2E_FAMILIAR_FOLLOW_BRIDGE_VERSION === FAMILIAR_FOLLOW_BRIDGE_VERSION) return true;
-  globalThis.ADD2E_FAMILIAR_FOLLOW_BRIDGE_VERSION = FAMILIAR_FOLLOW_BRIDGE_VERSION;
-  Hooks.on("updateToken", (tokenDoc, changes = {}, options = {}) => queueDefaultFamiliarFollow(tokenDoc, changes, options));
-  return true;
-}
-
-function installFamiliarEffectActionBridge() {
-  registerFamiliarEffectHandlebarsHelpers();
-  if (globalThis.ADD2E_FAMILIAR_EFFECT_ACTION_BRIDGE_VERSION === FAMILIAR_EFFECT_ACTION_BRIDGE_VERSION) return true;
-  if (typeof document === "undefined") return false;
-  globalThis.ADD2E_FAMILIAR_EFFECT_ACTION_BRIDGE_VERSION = FAMILIAR_EFFECT_ACTION_BRIDGE_VERSION;
-
+function installUiBridge() {
+  registerHelpers();
+  if (globalThis.ADD2E_FAMILIAR_EFFECT_UI_VERSION === FAMILIAR_EFFECT_UI_VERSION) return;
+  globalThis.ADD2E_FAMILIAR_EFFECT_UI_VERSION = FAMILIAR_EFFECT_UI_VERSION;
   document.addEventListener("click", async event => {
     const control = event.target?.closest?.(".a2e-familiar-effect-action");
     if (!control) return;
-
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation?.();
-
-    const actorId = String(control.dataset.actorId ?? "");
-    const effectId = String(control.dataset.effectId ?? "");
-    const expectedAction = String(control.dataset.familiarAction ?? "");
-    const actor = actorId ? game.actors?.get?.(actorId) ?? null : null;
-    const effect = actor?.effects?.get?.(effectId) ?? null;
-    const data = familiarEffectRelation(effect);
-
-    if (!actor || !effect || data?.kind !== "action" || data.action !== expectedAction) {
-      return ui.notifications.warn("Cette action de familier n’est plus valide.");
-    }
-    if (typeof globalThis.add2eUseFamiliarEffect !== "function") {
-      return ui.notifications.warn("Le relais de familier n’est pas encore prêt.");
-    }
-
+    const actor = game.actors?.get?.(String(control.dataset.actorId ?? "")) ?? null;
+    const effect = actor?.effects?.get?.(String(control.dataset.effectId ?? "")) ?? null;
+    const data = effectData(effect);
+    if (!actor || !effect || data?.kind !== "action" || data.action !== String(control.dataset.familiarAction ?? "")) return ui.notifications.warn("Cette action de familier n’est plus valide.");
+    if (typeof globalThis.add2eUseFamiliarEffect !== "function") return ui.notifications.warn("Le relais de familier n’est pas disponible.");
     try {
       await globalThis.add2eUseFamiliarEffect(actor, effect);
-      if (actor.sheet?.rendered) actor.sheet.render(false);
+      actor.sheet?.rendered && actor.sheet.render(false);
+      globalThis.add2eRefreshActionHud?.();
     } catch (error) {
-      console.error("[ADD2E][FAMILIAR][EFFECT_ACTION]", error);
+      console.error("[ADD2E][FAMILIAR][ACTION]", error);
       ui.notifications.error("Impossible d’utiliser cette action de familier.");
     }
   }, true);
-  return true;
+  Hooks.once("ready", () => {
+    hudObserver ??= new MutationObserver(scheduleHudPrune);
+    hudObserver.observe(document.body, { childList: true, subtree: true });
+    scheduleHudPrune();
+  });
 }
 
-registerFamiliarEffectHandlebarsHelpers();
-installFamiliarArtworkRepair();
-installDefaultFamiliarFollowBridge();
-installFamiliarEffectActionBridge();
+function installSelectionFix() {
+  if (globalThis.ADD2E_FAMILIAR_SELECTION_FIX_VERSION === FAMILIAR_SELECTION_FIX_VERSION) return;
+  globalThis.ADD2E_FAMILIAR_SELECTION_FIX_VERSION = FAMILIAR_SELECTION_FIX_VERSION;
+  Hooks.once("ready", () => {
+    const original = globalThis.add2eUseFamiliarEffect;
+    if (typeof original !== "function" || original.__add2eSingleSelectionPatch) return;
+    const wrapped = async function add2eUseFamiliarEffectWithSingleSelection(actor, effect, ...args) {
+      const action = effectData(effect)?.action;
+      const result = await original.call(this, actor, effect, ...args);
+      if (result && action === "share-senses") selectOnlyFamiliar(actor);
+      return result;
+    };
+    wrapped.__add2eSingleSelectionPatch = true;
+    globalThis.add2eUseFamiliarEffect = wrapped;
+  });
+}
+
+function installArtworkAndPresentation() {
+  if (globalThis.ADD2E_FAMILIAR_ARTWORK_VERSION === FAMILIAR_ARTWORK_VERSION) return;
+  globalThis.ADD2E_FAMILIAR_ARTWORK_VERSION = FAMILIAR_ARTWORK_VERSION;
+  Hooks.on("createActiveEffect", effect => {
+    if (!isResponsibleGM()) return;
+    const caster = effect?.parent?.documentName === "Actor" ? effect.parent : null;
+    const data = effectData(effect);
+    if (data?.linkId && relation(caster)?.linkId === data.linkId) {
+      queueArtwork(caster);
+      queuePresentation(caster);
+    }
+  });
+  Hooks.on("createToken", tokenDoc => {
+    if (!isResponsibleGM()) return;
+    const masterActorId = tokenDoc?.flags?.[FAMILIAR_SCOPE]?.[FAMILIAR_FLAG]?.masterActorId;
+    const caster = masterActorId ? game.actors?.get?.(masterActorId) ?? null : null;
+    if (caster) {
+      queueArtwork(caster);
+      queuePresentation(caster);
+    }
+  });
+  Hooks.on("updateActor", actor => {
+    if (isResponsibleGM() && relation(actor)?.linkId) queuePresentation(actor);
+  });
+  Hooks.on("canvasReady", () => {
+    if (!isResponsibleGM()) return;
+    setTimeout(() => {
+      for (const actor of game.actors?.contents ?? []) {
+        if (!relation(actor)?.linkId) continue;
+        queueArtwork(actor);
+        queuePresentation(actor);
+      }
+    }, 100);
+  });
+  globalThis.add2eSyncFamiliarArtwork = () => Promise.all(
+    Array.from(game.actors?.contents ?? []).filter(actor => assetFor(relation(actor))).map(actor => syncArtwork(actor))
+  );
+}
+
+registerHelpers();
+installArtworkAndPresentation();
+installUiBridge();
+installSelectionFix();
