@@ -5,7 +5,6 @@
 import { escapeHtml, formatDuration, expose } from "./08-character-sheet-ui-00-utils.mjs";
 
 globalThis.ADD2E_CHARACTER_EFFECTS_UI_VERSION = "2026-06-27-familiar-effect-actions-v1";
-console.log("[ADD2E][CHARACTER_UI][EFFECTS][VERSION]", globalThis.ADD2E_CHARACTER_EFFECTS_UI_VERSION);
 
 function familiarAction(effect) {
   const data = effect?.flags?.add2e?.familiar ?? effect?.getFlag?.("add2e", "familiar") ?? null;
