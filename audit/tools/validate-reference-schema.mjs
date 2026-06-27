@@ -7,6 +7,7 @@ const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 const referenceDir = path.join(repoRoot, "audit/reference");
 const DEFAULT_AUDIT_REPORT = "audit/rapports/AUDIT-REFERENCES-SORTS-GLOBAL.json";
+const SPELL_REFERENCE_FILE_PATTERN = /^manuel-joueurs-(clerc|druide|magicien|illusionniste)-niveau-[1-9]\.json$/;
 
 const forbiddenDescriptionFields = [
   "description_exacte_manuel",
@@ -35,6 +36,83 @@ const requiredSpellFields = [
 const requiredIdentityFields = ["ordre", "nom", "niveau", "variantes", "reversible", "status"];
 const technicalFields = ["ecole", "portee", "duree", "zone_effet", "composantes", "temps_incantation", "jet_sauvegarde"];
 const placeholders = new Set(["", "a_completer", "a_remplir", "a_renseigner", "todo", "tbd", "inconnu", "non_renseigne", "non_disponible"]);
+
+// Table fermée : ces rapprochements ont été contrôlés dans le rapport d'audit.
+// Elle ne renomme jamais un item Foundry et ne modifie jamais les références du Manuel.
+const identityAliases = new Map([
+  [
+    "clerc|1|purification_de_leau_et_des_aliments",
+    {
+      sourceKey: "clerc|1|purification_de_la_nourriture_et_de_la_boisson",
+      note: "Alias historique Foundry du sort canonique « Purification de l'eau et des aliments »."
+    }
+  ],
+  [
+    "clerc|1|soins_mineurs",
+    {
+      sourceKey: "clerc|1|soins_des_blessures_legeres",
+      note: "Alias historique Foundry du sort canonique « Soins mineurs »."
+    }
+  ],
+  [
+    "clerc|4|batons_a_serpents",
+    {
+      sourceKey: "clerc|4|batons_en_serpents",
+      note: "Variation de préposition dans le titre Foundry."
+    }
+  ],
+  [
+    "clerc|4|protection_contre_le_mal_sur_3_m",
+    {
+      sourceKey: "clerc|4|protection_contre_le_mal_rayon_de_10_pieds",
+      note: "Même sort, titre Foundry exprimé en mesure impériale."
+    }
+  ],
+  [
+    "clerc|5|soin_ultime",
+    {
+      sourceKey: "clerc|5|soins_ultime",
+      note: "Variation singulier/pluriel dans le titre Foundry."
+    }
+  ],
+  [
+    "druide|4|dissipation_de_la_magie",
+    {
+      sourceKey: "druide|4|dissipation_de_magie",
+      note: "Variation d'article dans le titre Foundry."
+    }
+  ],
+  [
+    "magicien|1|projectile_magique",
+    {
+      sourceKey: "magicien|1|missile_magique",
+      note: "Ancien intitulé Foundry du sort canonique « Projectile magique »."
+    }
+  ],
+  [
+    "magicien|5|chien_fidele_de_mordenkainen",
+    {
+      sourceKey: "magicien|5|chien_fidele_de_mordekainen",
+      note: "Orthographe historique Foundry de Mordenkainen."
+    }
+  ],
+  [
+    "magicien|5|teleikinesie",
+    {
+      sourceKey: "magicien|5|telekinesie",
+      note: "Variation orthographique dans le titre Foundry."
+    }
+  ]
+]);
+
+// Ces entrées Foundry n'appartiennent pas à la liste de sorts du Manuel ciblée.
+// Elles restent visibles dans le rapport, mais ne bloquent pas le rapprochement.
+const foundryOutOfManualScope = new Map([
+  [
+    "clerc|7|asile",
+    "Entrée Foundry additionnelle hors liste des sorts de Clerc niveau 7 du Manuel des joueurs."
+  ]
+]);
 
 function parseArgs(argv) {
   const options = { auditAll: false, report: null, strict: false };
@@ -69,8 +147,7 @@ function writeJson(filePath, value) {
 
 function filesInReferenceDirectory() {
   return fs.readdirSync(referenceDir)
-    .filter((file) => /^manuel-joueurs-.*\.json$/.test(file))
-    .filter((file) => file !== "manuel-joueurs-sorts-master.json")
+    .filter((file) => SPELL_REFERENCE_FILE_PATTERN.test(file))
     .sort((a, b) => a.localeCompare(b, "fr"));
 }
 
@@ -225,14 +302,26 @@ function reportDescription(referenceValue, sourceValue) {
   return "different";
 }
 
-function identityDetails(identity) {
+function identityDetails(identity, extra = {}) {
   if (!identity) return null;
   return {
     key: identity.key ?? null,
     nom: text(identity.nom) || null,
     classe: text(identity.classe) || null,
-    niveau: levelValue(identity.niveau) || null
+    niveau: levelValue(identity.niveau) || null,
+    ...extra
   };
+}
+
+function resolveSourceIdentity(referenceKey, decoupageKeySet) {
+  if (decoupageKeySet.has(referenceKey)) {
+    return { sourceKey: referenceKey, match: "direct", note: null };
+  }
+  const alias = identityAliases.get(referenceKey);
+  if (alias && decoupageKeySet.has(alias.sourceKey)) {
+    return { sourceKey: alias.sourceKey, match: "alias", note: alias.note };
+  }
+  return { sourceKey: null, match: "missing", note: null };
 }
 
 function auditReferenceFile(file) {
@@ -248,6 +337,7 @@ function auditReferenceFile(file) {
     summary: {
       referenceSpells: 0,
       decoupageSpells: 0,
+      decoupageSpellsInManualScope: 0,
       expectedCount: null,
       missingReferenceFields: 0,
       placeholderFields: 0,
@@ -255,14 +345,20 @@ function auditReferenceFile(file) {
       missingDescriptions: 0,
       descriptionDifferences: 0,
       identityDifferences: 0,
+      aliasMatches: 0,
+      creationCandidates: 0,
       referenceOnly: 0,
       decoupageOnly: 0,
+      outOfScopeFoundryOnly: 0,
       referenceDuplicates: 0,
       decoupageDuplicates: 0
     },
     identity: {
+      aliases: [],
+      creationCandidates: [],
       referenceOnly: [],
       decoupageOnly: [],
+      outOfScopeFoundryOnly: [],
       referenceDuplicates: [],
       decoupageDuplicates: []
     },
@@ -349,33 +445,78 @@ function auditReferenceFile(file) {
 
   const groupPrefix = sourceClass && sourceLevel ? `${slug(sourceClass)}|${sourceLevel}|` : "";
   const decoupageKeys = decoupage ? [...decoupage.index.keys()].filter((key) => key.startsWith(groupPrefix)) : [];
-  output.summary.decoupageSpells = decoupageKeys.length;
   const decoupageKeySet = new Set(decoupageKeys);
-  const referenceOnly = [...referenceKeys].filter((key) => !decoupageKeySet.has(key));
-  const decoupageOnly = decoupageKeys.filter((key) => !referenceKeys.has(key));
+  output.summary.decoupageSpells = decoupageKeys.length;
+
+  const matchedSourceKeys = new Set();
+  const sourceMatchByReferenceKey = new Map();
+  const referenceOnly = [];
+
+  for (const referenceKey of referenceKeys) {
+    const resolved = resolveSourceIdentity(referenceKey, decoupageKeySet);
+    sourceMatchByReferenceKey.set(referenceKey, resolved);
+    if (!resolved.sourceKey) {
+      referenceOnly.push(referenceKey);
+      continue;
+    }
+    matchedSourceKeys.add(resolved.sourceKey);
+    if (resolved.match === "alias") {
+      const referenceIdentity = referenceIndex.get(referenceKey) ?? { key: referenceKey };
+      const sourceIdentity = decoupage?.index.get(resolved.sourceKey) ?? { key: resolved.sourceKey };
+      output.identity.aliases.push({
+        reference: identityDetails(referenceIdentity),
+        decoupage: identityDetails(sourceIdentity),
+        note: resolved.note
+      });
+    }
+  }
+
+  const decoupageOnly = [];
+  for (const sourceKey of decoupageKeys) {
+    if (matchedSourceKeys.has(sourceKey)) continue;
+    const sourceIdentity = decoupage?.index.get(sourceKey) ?? { key: sourceKey };
+    const outOfScopeReason = foundryOutOfManualScope.get(sourceKey);
+    if (outOfScopeReason) {
+      output.identity.outOfScopeFoundryOnly.push(identityDetails(sourceIdentity, { reason: outOfScopeReason }));
+    } else {
+      decoupageOnly.push(sourceKey);
+    }
+  }
+
   output.identity.referenceOnly = referenceOnly
-    .map((key) => identityDetails(referenceIndex.get(key) ?? { key }))
+    .map((key) => identityDetails(referenceIndex.get(key) ?? { key }, { disposition: "creation_candidate_required" }))
     .filter(Boolean);
+  output.identity.creationCandidates = [...output.identity.referenceOnly];
   output.identity.decoupageOnly = decoupageOnly
     .map((key) => identityDetails(decoupage?.index.get(key) ?? { key }))
     .filter(Boolean);
+
+  output.summary.aliasMatches = output.identity.aliases.length;
   output.summary.referenceOnly = output.identity.referenceOnly.length;
+  output.summary.creationCandidates = output.identity.creationCandidates.length;
   output.summary.decoupageOnly = output.identity.decoupageOnly.length;
-  if (referenceOnly.length || decoupageOnly.length) {
-    output.summary.identityDifferences = referenceOnly.length + decoupageOnly.length;
-    output.errors.push(`Identités différentes : référence sans découpage ${referenceOnly.length}, découpage sans référence ${decoupageOnly.length}.`);
+  output.summary.outOfScopeFoundryOnly = output.identity.outOfScopeFoundryOnly.length;
+  output.summary.decoupageSpellsInManualScope = output.summary.decoupageSpells - output.summary.outOfScopeFoundryOnly;
+  output.summary.identityDifferences = output.summary.referenceOnly + output.summary.decoupageOnly;
+
+  if (output.summary.identityDifferences) {
+    output.errors.push(`Identités non résolues : référence sans découpage ${output.summary.referenceOnly}, découpage sans référence ${output.summary.decoupageOnly}.`);
   }
-  if (decoupage && decoupageKeys.length !== reference.spells.length) {
-    output.errors.push(`Nombre différent : référence ${reference.spells.length}, découpage ${decoupageKeys.length}.`);
+  if (!output.summary.identityDifferences && output.summary.decoupageSpellsInManualScope !== output.summary.referenceSpells) {
+    output.errors.push(`Nombre incohérent après rapprochements : référence ${output.summary.referenceSpells}, découpage dans le périmètre du Manuel ${output.summary.decoupageSpellsInManualScope}.`);
   }
 
   for (const [index, spell] of reference.spells.entries()) {
     const key = spellKey(sourceClass, spell?.niveau ?? sourceLevel, spell?.nom);
-    const source = key && decoupage ? decoupage.index.get(key) : null;
+    const resolved = key ? sourceMatchByReferenceKey.get(key) : null;
+    const source = resolved?.sourceKey && decoupage ? decoupage.index.get(resolved.sourceKey) : null;
     const spellReport = {
       ordre: spell?.ordre ?? null,
       nom: text(spell?.nom) || null,
       key,
+      sourceKey: resolved?.sourceKey ?? null,
+      identityMatch: resolved?.match ?? "missing",
+      identityNote: resolved?.note ?? null,
       schema: { errors: [], warnings: [] },
       integrity: { missing: [] },
       technical: {},
@@ -461,7 +602,7 @@ function schemaOnly() {
     for (const error of errors) console.error(`[ERROR] ${error}`);
     process.exit(1);
   }
-  console.log(`References validees: ${files.length}`);
+  console.log(`References de sorts validees: ${files.length}`);
   console.log(`Avertissements: ${warnings.length}`);
 }
 
@@ -469,6 +610,12 @@ function auditAll(options) {
   if (!fs.existsSync(referenceDir)) throw new Error(`Reference dir missing: ${referenceDir}`);
   const files = filesInReferenceDirectory();
   const reports = files.map(auditReferenceFile);
+  const structuralIdentity = {
+    aliases: reports.flatMap((report) => report.identity.aliases.map((entry) => ({ file: report.file, ...entry }))),
+    creationCandidates: reports.flatMap((report) => report.identity.creationCandidates.map((entry) => ({ file: report.file, ...entry }))),
+    foundryOutOfManualScope: reports.flatMap((report) => report.identity.outOfScopeFoundryOnly.map((entry) => ({ file: report.file, ...entry }))),
+    unresolvedDecoupageOnly: reports.flatMap((report) => report.identity.decoupageOnly.map((entry) => ({ file: report.file, ...entry })))
+  };
   const summary = {
     references: reports.length,
     referencesReadyForManualConfirmation: reports.filter((report) => report.status === "ready_for_manual_confirmation").length,
@@ -481,34 +628,41 @@ function auditAll(options) {
     missingDescriptions: reports.reduce((sum, report) => sum + report.summary.missingDescriptions, 0),
     descriptionDifferences: reports.reduce((sum, report) => sum + report.summary.descriptionDifferences, 0),
     identityDifferences: reports.reduce((sum, report) => sum + report.summary.identityDifferences, 0),
+    aliasMatches: reports.reduce((sum, report) => sum + report.summary.aliasMatches, 0),
+    creationCandidates: reports.reduce((sum, report) => sum + report.summary.creationCandidates, 0),
     referenceOnly: reports.reduce((sum, report) => sum + report.summary.referenceOnly, 0),
     decoupageOnly: reports.reduce((sum, report) => sum + report.summary.decoupageOnly, 0),
+    outOfScopeFoundryOnly: reports.reduce((sum, report) => sum + report.summary.outOfScopeFoundryOnly, 0),
     referenceDuplicates: reports.reduce((sum, report) => sum + report.summary.referenceDuplicates, 0),
     decoupageDuplicates: reports.reduce((sum, report) => sum + report.summary.decoupageDuplicates, 0),
     structuralErrors: reports.reduce((sum, report) => sum + report.errors.length, 0)
   };
   const audit = {
-    version: "2026-06-27-reference-global-audit-v2",
+    version: "2026-06-27-reference-global-audit-v3",
     generatedAt: new Date().toISOString(),
     scope: {
       referenceDirectory: path.relative(repoRoot, referenceDir),
+      referenceFileSelection: "Uniquement les références classe/niveau Clerc, Druide, Magicien et Illusionniste.",
       sourceOfTruth: "Manuel des joueurs AD&D 2e",
       componentsSourceOfTruth: "fvtt-spells-all-normalise-mecanique-v3.json",
-      componentsRule: "Les composants matériels sont lus depuis V3 et ne sont pas déduits depuis les références ou le découpage.",
-      decoupageRole: "Contrôle Foundry lecture seule ; jamais une source de correction des références."
+      componentsRule: "Les composants matériels sont lus depuis V3 et ne sont pas déduits, corrigés ou modifiés depuis les références ou le découpage.",
+      decoupageRole: "Contrôle Foundry lecture seule ; jamais une source de correction des références.",
+      identityAliasesRole: "Table fermée de rapprochements de titres, sans renommage des données Foundry ni des références du Manuel."
     },
     manualVerification: {
       status: "not_performed_by_automation",
       note: "Aucun résultat de cet audit ne constitue une confirmation de conformité au Manuel. Les écarts et valeurs doivent être contrôlés dans le Manuel avant toute modification de référence."
     },
+    structuralIdentity,
     summary,
     references: reports
   };
+
   console.log(`[ADD2E][REFERENCE_AUDIT] ${summary.references} référence(s), ${summary.spells} sort(s).`);
   console.log(`[ADD2E][REFERENCE_AUDIT] ${summary.referencesReadyForManualConfirmation} prête(s), ${summary.referencesManualReviewRequired} à vérifier, ${summary.referencesBlockedStructural} bloquée(s).`);
   console.log(`[ADD2E][REFERENCE_AUDIT] Champs absents ${summary.missingReferenceFields}, placeholders ${summary.placeholderFields}, divergences techniques ${summary.technicalDifferences}, descriptions absentes ${summary.missingDescriptions}, divergences descriptions ${summary.descriptionDifferences}.`);
-  console.log(`[ADD2E][REFERENCE_AUDIT] Identités : référence seule ${summary.referenceOnly}, découpage seul ${summary.decoupageOnly}, doublons référence ${summary.referenceDuplicates}, doublons découpage ${summary.decoupageDuplicates}.`);
-  console.log("[ADD2E][REFERENCE_AUDIT] Contrôle manuel obligatoire : le rapport ne déduit jamais les règles depuis le découpage.");
+  console.log(`[ADD2E][REFERENCE_AUDIT] Identités : alias ${summary.aliasMatches}, créations candidates ${summary.creationCandidates}, référence seule ${summary.referenceOnly}, découpage seul ${summary.decoupageOnly}, hors périmètre ${summary.outOfScopeFoundryOnly}.`);
+  console.log("[ADD2E][REFERENCE_AUDIT] Les composants matériels restent exclusivement pilotés par V3.");
 
   if (options.report) {
     const reportPath = path.resolve(repoRoot, options.report);
