@@ -7,6 +7,7 @@ const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "../..");
 const referenceDir = path.join(repoRoot, "audit/reference");
 const DEFAULT_AUDIT_REPORT = "audit/rapports/AUDIT-REFERENCES-SORTS-GLOBAL.json";
+const DEFAULT_V4_EXPORT = "fvtt-spells-all-normalise-mecanique-v4.json";
 const SPELL_REFERENCE_FILE_PATTERN = /^manuel-joueurs-(clerc|druide|magicien|illusionniste)-niveau-[1-9]\.json$/;
 
 const forbiddenDescriptionFields = [
@@ -37,7 +38,7 @@ const requiredIdentityFields = ["ordre", "nom", "niveau", "variantes", "reversib
 const technicalFields = ["ecole", "portee", "duree", "zone_effet", "composantes", "temps_incantation", "jet_sauvegarde"];
 const placeholders = new Set(["", "a_completer", "a_remplir", "a_renseigner", "todo", "tbd", "inconnu", "non_renseigne", "non_disponible"]);
 
-// Rapprochements nécessaires lorsque l'item Foundry ne possède pas le titre canonique.
+// Rapprochements nécessaires lorsque l'item du découpage historique ne possède pas le titre canonique.
 // Cette table ne renomme jamais Foundry et ne modifie jamais les références du Manuel.
 const identityAliases = new Map([
   [
@@ -49,81 +50,24 @@ const identityAliases = new Map([
   ]
 ]);
 
-// Des doublons Foundry historiques coexistent avec l'item portant le titre canonique.
+// Des doublons historiques coexistent avec l'item portant le titre canonique dans le découpage.
 // Ils restent signalés, mais ne constituent ni un sort manquant ni une identité bloquante.
 const legacyFoundryDuplicates = new Map([
-  [
-    "clerc|1|purification_de_la_nourriture_et_de_la_boisson",
-    {
-      referenceKey: "clerc|1|purification_de_leau_et_des_aliments",
-      note: "Ancien titre Foundry de « Purification de l'eau et des aliments »."
-    }
-  ],
-  [
-    "clerc|1|soins_des_blessures_legeres",
-    {
-      referenceKey: "clerc|1|soins_mineurs",
-      note: "Ancien titre Foundry de « Soins mineurs »."
-    }
-  ],
-  [
-    "clerc|3|localisation_dun_objet",
-    {
-      referenceKey: "clerc|3|localisation_dobjets",
-      note: "Ancien singulier Foundry de « Localisation d'objets »."
-    }
-  ],
-  [
-    "clerc|4|batons_en_serpents",
-    {
-      referenceKey: "clerc|4|batons_a_serpents",
-      note: "Variation de préposition dans le titre Foundry."
-    }
-  ],
-  [
-    "clerc|4|protection_contre_le_mal_rayon_de_10_pieds",
-    {
-      referenceKey: "clerc|4|protection_contre_le_mal_sur_3_m",
-      note: "Même sort, titre Foundry exprimé en mesure impériale."
-    }
-  ],
-  [
-    "clerc|5|soins_ultime",
-    {
-      referenceKey: "clerc|5|soin_ultime",
-      note: "Variation singulier/pluriel dans le titre Foundry."
-    }
-  ],
-  [
-    "druide|4|dissipation_de_magie",
-    {
-      referenceKey: "druide|4|dissipation_de_la_magie",
-      note: "Variation d'article dans le titre Foundry."
-    }
-  ],
-  [
-    "magicien|1|missile_magique",
-    {
-      referenceKey: "magicien|1|projectile_magique",
-      note: "Ancien intitulé Foundry de « Projectile magique »."
-    }
-  ],
-  [
-    "magicien|5|chien_fidele_de_mordekainen",
-    {
-      referenceKey: "magicien|5|chien_fidele_de_mordenkainen",
-      note: "Orthographe historique Foundry de Mordenkainen."
-    }
-  ]
+  ["clerc|1|purification_de_la_nourriture_et_de_la_boisson", { referenceKey: "clerc|1|purification_de_leau_et_des_aliments", note: "Ancien titre Foundry de « Purification de l'eau et des aliments »." }],
+  ["clerc|1|soins_des_blessures_legeres", { referenceKey: "clerc|1|soins_mineurs", note: "Ancien titre Foundry de « Soins mineurs »." }],
+  ["clerc|3|localisation_dun_objet", { referenceKey: "clerc|3|localisation_dobjets", note: "Ancien singulier Foundry de « Localisation d'objets »." }],
+  ["clerc|4|batons_en_serpents", { referenceKey: "clerc|4|batons_a_serpents", note: "Variation de préposition dans le titre Foundry." }],
+  ["clerc|4|protection_contre_le_mal_rayon_de_10_pieds", { referenceKey: "clerc|4|protection_contre_le_mal_sur_3_m", note: "Même sort, titre Foundry exprimé en mesure impériale." }],
+  ["clerc|5|soins_ultime", { referenceKey: "clerc|5|soin_ultime", note: "Variation singulier/pluriel dans le titre Foundry." }],
+  ["druide|4|dissipation_de_magie", { referenceKey: "druide|4|dissipation_de_la_magie", note: "Variation d'article dans le titre Foundry." }],
+  ["magicien|1|missile_magique", { referenceKey: "magicien|1|projectile_magique", note: "Ancien intitulé Foundry de « Projectile magique »." }],
+  ["magicien|5|chien_fidele_de_mordekainen", { referenceKey: "magicien|5|chien_fidele_de_mordenkainen", note: "Orthographe historique Foundry de Mordenkainen." }]
 ]);
 
-// Ces entrées Foundry n'appartiennent pas à la liste de sorts du Manuel ciblée.
+// Ces entrées du découpage n'appartiennent pas à la liste de sorts du Manuel ciblée.
 // Elles restent visibles dans le rapport, mais ne bloquent pas le rapprochement.
 const foundryOutOfManualScope = new Map([
-  [
-    "clerc|7|asile",
-    "Entrée Foundry additionnelle hors liste des sorts de Clerc niveau 7 du Manuel des joueurs."
-  ]
+  ["clerc|7|asile", "Entrée Foundry additionnelle hors liste des sorts de Clerc niveau 7 du Manuel des joueurs."]
 ]);
 
 function parseArgs(argv) {
@@ -289,6 +233,84 @@ function sourceIndex(document) {
   return { index, duplicates };
 }
 
+function v4Index(document) {
+  const items = collection(document);
+  if (!items) throw new Error("V4 sans collection d'items.");
+  const folders = new Map((Array.isArray(document?.folders) ? document.folders : [])
+    .map((folder) => [text(folder?._id ?? folder?.id), folder])
+    .filter(([id]) => Boolean(id)));
+  const index = new Map();
+  const duplicates = [];
+
+  for (const item of items) {
+    if (!isSpell(item)) continue;
+    const system = item.system ?? {};
+    const key = spellKey(system.classe, system.niveau, item.name ?? system.nom);
+    if (!key) continue;
+    const levelFolder = folders.get(text(item?.folder));
+    const classFolder = levelFolder ? folders.get(text(levelFolder?.folder)) : null;
+    const record = {
+      key,
+      id: text(item?._id ?? item?.id) || null,
+      nom: text(item.name ?? system.nom),
+      classe: text(system.classe),
+      niveau: levelValue(system.niveau),
+      spellLists: Array.isArray(system.spellLists) ? system.spellLists.map(text).filter(Boolean) : [],
+      folder: {
+        id: text(levelFolder?._id ?? levelFolder?.id) || null,
+        nom: text(levelFolder?.name) || null,
+        niveau: levelValue(levelFolder?.name),
+        classe: text(classFolder?.name) || null
+      }
+    };
+    const entries = index.get(key) ?? [];
+    entries.push(record);
+    index.set(key, entries);
+    if (entries.length > 1) duplicates.push(key);
+  }
+  return { index, duplicates };
+}
+
+function loadV4Integration() {
+  const relativePath = DEFAULT_V4_EXPORT;
+  const absolutePath = path.resolve(repoRoot, relativePath);
+  try {
+    const index = v4Index(readJson(absolutePath));
+    return { path: relativePath, index, error: null };
+  } catch (error) {
+    return { path: relativePath, index: null, error: String(error?.message ?? error) };
+  }
+}
+
+function verifyV4Instance(v4, identity) {
+  if (v4?.error) {
+    return { status: "unavailable", item: null, errors: [`V4 indisponible : ${v4.error}`] };
+  }
+  const matches = v4?.index?.index.get(identity.key) ?? [];
+  if (!matches.length) {
+    return { status: "missing", item: null, errors: ["Aucun item V4 ne correspond à classe + niveau + nom."] };
+  }
+  if (matches.length > 1) {
+    return { status: "duplicate", item: null, errors: [`${matches.length} items V4 correspondent à classe + niveau + nom.`] };
+  }
+
+  const item = matches[0];
+  const errors = [];
+  if (slug(item.classe) !== slug(identity.classe)) errors.push("classe V4 incorrecte.");
+  if (item.niveau !== identity.niveau) errors.push("niveau V4 incorrect.");
+  if (item.spellLists.length !== 1 || slug(item.spellLists[0]) !== slug(identity.classe)) {
+    errors.push("spellLists doit contenir uniquement la classe de l'instance.");
+  }
+  if (slug(item.folder.classe) !== slug(identity.classe) || item.folder.niveau !== identity.niveau) {
+    errors.push("dossier V4 classe/niveau incorrect.");
+  }
+  return {
+    status: errors.length ? "invalid" : "verified",
+    item,
+    errors
+  };
+}
+
 function reportField(referenceValue, sourceValue) {
   if (!Object.prototype.hasOwnProperty.call(referenceValue.owner, referenceValue.field)) return "missing_reference_field";
   if (isPlaceholder(referenceValue.value)) return "reference_placeholder";
@@ -327,7 +349,21 @@ function resolveSourceIdentity(referenceKey, sourceKeys) {
   return { sourceKey: null, match: "missing", note: null };
 }
 
-function auditReferenceFile(file) {
+function v4Details(check) {
+  return {
+    status: check.status,
+    errors: check.errors,
+    item: check.item ? {
+      id: check.item.id,
+      classe: check.item.classe,
+      niveau: check.item.niveau,
+      spellLists: check.item.spellLists,
+      folder: check.item.folder
+    } : null
+  };
+}
+
+function auditReferenceFile(file, v4) {
   const absoluteReference = path.join(referenceDir, file);
   const output = {
     file,
@@ -341,6 +377,8 @@ function auditReferenceFile(file) {
       referenceSpells: 0,
       decoupageSpells: 0,
       decoupageSpellsInManualScope: 0,
+      v4VerifiedFoundryInstances: 0,
+      decoupageMissingReferences: 0,
       expectedCount: null,
       missingReferenceFields: 0,
       placeholderFields: 0,
@@ -359,6 +397,8 @@ function auditReferenceFile(file) {
     },
     identity: {
       aliases: [],
+      decoupageMissingReferences: [],
+      v4VerifiedFoundryInstances: [],
       requiredFoundryInstances: [],
       referenceOnly: [],
       unresolvedDecoupageOnly: [],
@@ -370,7 +410,7 @@ function auditReferenceFile(file) {
     spells: [],
     manualVerification: {
       status: "not_verified_by_this_tool",
-      note: "Cet audit compare structure et découpage Foundry. Il ne peut pas démontrer la conformité au Manuel des joueurs."
+      note: "Cet audit compare structure, découpage historique et présence V4. Il ne peut pas démontrer la conformité au Manuel des joueurs."
     }
   };
 
@@ -406,18 +446,15 @@ function auditReferenceFile(file) {
   const referenceKeys = new Set();
   const referenceIndex = new Map();
   for (const [index, spell] of reference.spells.entries()) {
-    const level = levelValue(spell?.niveau ?? sourceLevel);
-    const key = spellKey(sourceClass, level, spell?.nom);
+    const spellLevel = levelValue(spell?.niveau ?? sourceLevel);
+    const key = spellKey(sourceClass, spellLevel, spell?.nom);
     if (!key) {
       output.errors.push(`spells[${index}] identité inexploitable.`);
       continue;
     }
-    const identity = { key, nom: text(spell?.nom), classe: sourceClass, niveau: level };
-    if (referenceKeys.has(key)) {
-      output.identity.referenceDuplicates.push(identityDetails(identity));
-    } else {
-      referenceIndex.set(key, identity);
-    }
+    const identity = { key, nom: text(spell?.nom), classe: sourceClass, niveau: spellLevel };
+    if (referenceKeys.has(key)) output.identity.referenceDuplicates.push(identityDetails(identity));
+    else referenceIndex.set(key, identity);
     referenceKeys.add(key);
   }
   output.summary.referenceDuplicates = output.identity.referenceDuplicates.length;
@@ -450,15 +487,26 @@ function auditReferenceFile(file) {
 
   const matchedSourceKeys = new Set();
   const resolvedByReferenceKey = new Map();
+  const v4ByReferenceKey = new Map();
   for (const referenceKey of referenceKeys) {
     const resolved = resolveSourceIdentity(referenceKey, decoupageKeySet);
     resolvedByReferenceKey.set(referenceKey, resolved);
     if (!resolved.sourceKey) {
-      const identity = identityDetails(referenceIndex.get(referenceKey) ?? { key: referenceKey }, {
-        disposition: "foundry_instance_required"
-      });
-      output.identity.referenceOnly.push(identity);
-      output.identity.requiredFoundryInstances.push(identity);
+      const identity = referenceIndex.get(referenceKey) ?? { key: referenceKey };
+      const historical = identityDetails(identity, { disposition: "historical_decoupage_missing" });
+      const check = verifyV4Instance(v4, identity);
+      v4ByReferenceKey.set(referenceKey, check);
+      output.identity.decoupageMissingReferences.push(historical);
+      if (check.status === "verified") {
+        output.identity.v4VerifiedFoundryInstances.push({ ...historical, v4: v4Details(check) });
+      } else {
+        const required = identityDetails(identity, {
+          disposition: "foundry_instance_required",
+          v4: v4Details(check)
+        });
+        output.identity.referenceOnly.push(required);
+        output.identity.requiredFoundryInstances.push(required);
+      }
       continue;
     }
     matchedSourceKeys.add(resolved.sourceKey);
@@ -492,6 +540,8 @@ function auditReferenceFile(file) {
   }
 
   output.summary.aliasMatches = output.identity.aliases.length;
+  output.summary.decoupageMissingReferences = output.identity.decoupageMissingReferences.length;
+  output.summary.v4VerifiedFoundryInstances = output.identity.v4VerifiedFoundryInstances.length;
   output.summary.requiredFoundryInstances = output.identity.requiredFoundryInstances.length;
   output.summary.referenceOnly = output.identity.referenceOnly.length;
   output.summary.unresolvedDecoupageOnly = output.identity.unresolvedDecoupageOnly.length;
@@ -504,12 +554,13 @@ function auditReferenceFile(file) {
 
   if (output.summary.identityDifferences) {
     output.errors.push(
-      `Identités non résolues : instances Foundry requises ${output.summary.requiredFoundryInstances}, découpage sans référence ${output.summary.unresolvedDecoupageOnly}.`
+      `Identités non résolues : instances V4 requises ${output.summary.requiredFoundryInstances}, découpage sans référence ${output.summary.unresolvedDecoupageOnly}.`
     );
   }
-  if (!output.summary.identityDifferences && output.summary.decoupageSpellsInManualScope !== output.summary.referenceSpells) {
+  const comparableFoundryCount = output.summary.decoupageSpellsInManualScope + output.summary.v4VerifiedFoundryInstances;
+  if (!output.summary.identityDifferences && comparableFoundryCount !== output.summary.referenceSpells) {
     output.errors.push(
-      `Nombre incohérent après rapprochements : référence ${output.summary.referenceSpells}, découpage dans le périmètre du Manuel ${output.summary.decoupageSpellsInManualScope}.`
+      `Nombre incohérent après rapprochements : référence ${output.summary.referenceSpells}, découpage dans le périmètre du Manuel ${output.summary.decoupageSpellsInManualScope}, instances V4 vérifiées ${output.summary.v4VerifiedFoundryInstances}.`
     );
   }
 
@@ -517,13 +568,15 @@ function auditReferenceFile(file) {
     const key = spellKey(sourceClass, spell?.niveau ?? sourceLevel, spell?.nom);
     const resolved = key ? resolvedByReferenceKey.get(key) : null;
     const source = resolved?.sourceKey && decoupage ? decoupage.index.get(resolved.sourceKey) : null;
+    const v4Check = key ? v4ByReferenceKey.get(key) : null;
     const spellReport = {
       ordre: spell?.ordre ?? null,
       nom: text(spell?.nom) || null,
       key,
       sourceKey: resolved?.sourceKey ?? null,
-      identityMatch: resolved?.match ?? "missing",
+      identityMatch: resolved?.match === "missing" && v4Check?.status === "verified" ? "decoupage_missing_v4_verified" : (resolved?.match ?? "missing"),
       identityNote: resolved?.note ?? null,
+      v4Integration: v4Check ? v4Details(v4Check) : null,
       schema: { errors: [], warnings: [] },
       integrity: { missing: [] },
       technical: {},
@@ -612,9 +665,12 @@ function schemaOnly() {
 
 function auditAll(options) {
   if (!fs.existsSync(referenceDir)) throw new Error(`Reference dir missing: ${referenceDir}`);
-  const reports = filesInReferenceDirectory().map(auditReferenceFile);
+  const v4 = loadV4Integration();
+  const reports = filesInReferenceDirectory().map((file) => auditReferenceFile(file, v4));
   const structuralIdentity = {
     aliases: reports.flatMap((report) => report.identity.aliases.map((entry) => ({ file: report.file, ...entry }))),
+    decoupageMissingReferences: reports.flatMap((report) => report.identity.decoupageMissingReferences.map((entry) => ({ file: report.file, ...entry }))),
+    v4VerifiedFoundryInstances: reports.flatMap((report) => report.identity.v4VerifiedFoundryInstances.map((entry) => ({ file: report.file, ...entry }))),
     requiredFoundryInstances: reports.flatMap((report) => report.identity.requiredFoundryInstances.map((entry) => ({ file: report.file, ...entry }))),
     legacyFoundryDuplicates: reports.flatMap((report) => report.identity.legacyFoundryDuplicates.map((entry) => ({ file: report.file, ...entry }))),
     foundryOutOfManualScope: reports.flatMap((report) => report.identity.outOfScopeFoundryOnly.map((entry) => ({ file: report.file, ...entry }))),
@@ -633,6 +689,8 @@ function auditAll(options) {
     descriptionDifferences: reports.reduce((sum, report) => sum + report.summary.descriptionDifferences, 0),
     identityDifferences: reports.reduce((sum, report) => sum + report.summary.identityDifferences, 0),
     aliasMatches: reports.reduce((sum, report) => sum + report.summary.aliasMatches, 0),
+    decoupageMissingReferences: reports.reduce((sum, report) => sum + report.summary.decoupageMissingReferences, 0),
+    v4VerifiedFoundryInstances: reports.reduce((sum, report) => sum + report.summary.v4VerifiedFoundryInstances, 0),
     requiredFoundryInstances: reports.reduce((sum, report) => sum + report.summary.requiredFoundryInstances, 0),
     legacyFoundryDuplicates: reports.reduce((sum, report) => sum + report.summary.legacyFoundryDuplicates, 0),
     referenceOnly: reports.reduce((sum, report) => sum + report.summary.referenceOnly, 0),
@@ -643,7 +701,7 @@ function auditAll(options) {
     structuralErrors: reports.reduce((sum, report) => sum + report.errors.length, 0)
   };
   const audit = {
-    version: "2026-06-27-reference-global-audit-v4",
+    version: "2026-06-27-reference-global-audit-v5",
     generatedAt: new Date().toISOString(),
     scope: {
       referenceDirectory: path.relative(repoRoot, referenceDir),
@@ -651,9 +709,15 @@ function auditAll(options) {
       sourceOfTruth: "Manuel des joueurs AD&D 2e",
       componentsSourceOfTruth: "fvtt-spells-all-normalise-mecanique-v3.json",
       componentsRule: "Les composants matériels sont lus depuis V3 et ne sont pas déduits, corrigés ou modifiés depuis les références ou le découpage.",
-      decoupageRole: "Contrôle Foundry lecture seule ; jamais une source de correction des références.",
+      decoupageRole: "Contrôle historique lecture seule ; les écarts qui sont vérifiés dans V4 sont informatifs et non bloquants.",
+      v4Integration: {
+        path: v4.path,
+        status: v4.error ? "unavailable" : "loaded",
+        error: v4.error,
+        role: "V4 vérifie les instances absentes du découpage historique : classe, niveau, dossier et spellLists."
+      },
       identityAliasesRole: "Table fermée de rapprochements de titres, sans renommage des données Foundry ni des références du Manuel.",
-      requiredFoundryInstancesRole: "Les instances requises sont des items Foundry distincts par classe, niveau et spellLists."
+      requiredFoundryInstancesRole: "Une instance absente du découpage devient non bloquante seulement lorsqu'elle est vérifiée dans V4 avec sa classe, son niveau, son dossier et sa spellLists propres."
     },
     manualVerification: {
       status: "not_performed_by_automation",
@@ -667,7 +731,7 @@ function auditAll(options) {
   console.log(`[ADD2E][REFERENCE_AUDIT] ${summary.references} référence(s), ${summary.spells} sort(s).`);
   console.log(`[ADD2E][REFERENCE_AUDIT] ${summary.referencesReadyForManualConfirmation} prête(s), ${summary.referencesManualReviewRequired} à vérifier, ${summary.referencesBlockedStructural} bloquée(s).`);
   console.log(`[ADD2E][REFERENCE_AUDIT] Champs absents ${summary.missingReferenceFields}, placeholders ${summary.placeholderFields}, divergences techniques ${summary.technicalDifferences}, descriptions absentes ${summary.missingDescriptions}, divergences descriptions ${summary.descriptionDifferences}.`);
-  console.log(`[ADD2E][REFERENCE_AUDIT] Identités : alias ${summary.aliasMatches}, instances Foundry requises ${summary.requiredFoundryInstances}, doublons historiques ${summary.legacyFoundryDuplicates}, découpage non résolu ${summary.unresolvedDecoupageOnly}, hors périmètre ${summary.outOfScopeFoundryOnly}.`);
+  console.log(`[ADD2E][REFERENCE_AUDIT] Identités : alias ${summary.aliasMatches}, écarts découpage historiques ${summary.decoupageMissingReferences}, instances V4 vérifiées ${summary.v4VerifiedFoundryInstances}, instances V4 requises ${summary.requiredFoundryInstances}, doublons historiques ${summary.legacyFoundryDuplicates}, découpage non résolu ${summary.unresolvedDecoupageOnly}, hors périmètre ${summary.outOfScopeFoundryOnly}.`);
   console.log("[ADD2E][REFERENCE_AUDIT] Les composants matériels restent exclusivement pilotés par V3.");
 
   if (options.report) {
