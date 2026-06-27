@@ -6,8 +6,10 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const V3_FILE = "fvtt-spells-all-normalise-mecanique-v3.json";
 const V4_FILE = "fvtt-spells-all-normalise-mecanique-v4.json";
+const REFERENCE_DIR = path.join(ROOT, "audit/reference");
+const REFERENCE_FILE_PATTERN = /^manuel-joueurs-(clerc|druide|magicien|illusionniste)-niveau-[1-9]\.json$/;
 
-// V3 n'est jamais écrit. Il fournit uniquement system.composants_materiels.
+// Trois items V4 distincts requis par l'audit d'identité.
 const TARGETS = [
   { ref: "audit/reference/manuel-joueurs-illusionniste-niveau-1.json", name: "Lumière", classe: "Illusionniste", niveau: 1, model: ["Clerc", 1, "Lumière"], componentSource: ["Clerc", 1, "Lumière"] },
   { ref: "audit/reference/manuel-joueurs-magicien-niveau-1.json", name: "Lumière", classe: "Magicien", niveau: 1, model: ["Clerc", 1, "Lumière"], componentSource: ["Clerc", 1, "Lumière"] },
@@ -21,6 +23,25 @@ const slug = value => text(value).normalize("NFD").replace(/[\u0300-\u036f]/g, "
 const isSpell = item => String(item?.type ?? item?.system?.type ?? "").toLowerCase() === "sort";
 const read = file => JSON.parse(fs.readFileSync(file, "utf8"));
 const write = (file, data) => fs.writeFileSync(file, `${JSON.stringify(data, null, 2)}\n`, "utf8");
+const spellKey = (classe, niveau, name) => {
+  const classKey = slug(classe);
+  const nameKey = slug(name);
+  const spellLevel = level(niveau);
+  return classKey && nameKey && spellLevel ? `${classKey}|${spellLevel}|${nameKey}` : null;
+};
+
+function parseArgs(argv) {
+  const syncManualComponents = argv.includes("--sync-manual-components");
+  const applyRequiredInstances = argv.includes("--required-instances") || !syncManualComponents;
+  if (argv.includes("--help") || argv.includes("-h")) {
+    console.log("Usage:");
+    console.log("  node audit/tools/apply-required-foundry-spell-instances.mjs [--dry-run]");
+    console.log("  node audit/tools/apply-required-foundry-spell-instances.mjs --sync-manual-components [--dry-run]");
+    console.log("  node audit/tools/apply-required-foundry-spell-instances.mjs --sync-manual-components --required-instances [--dry-run]");
+    process.exit(0);
+  }
+  return { dryRun: argv.includes("--dry-run"), syncManualComponents, applyRequiredInstances };
+}
 
 function find(items, classe, niveau, name, label) {
   const found = items.filter(item => isSpell(item)
@@ -59,13 +80,86 @@ function setTags(tags, target, reference) {
   return [...new Set([...retained, `classe:${slug(target.classe)}`, `liste:${slug(target.classe)}`, `niveau:${target.niveau}`, `sort:${slug(reference.nom)}`, `ecole:${slug(reference.ecole)}`])];
 }
 
-function main() {
-  const dryRun = process.argv.includes("--dry-run");
-  const v3 = read(path.join(ROOT, V3_FILE));
-  const v4Path = path.join(ROOT, V4_FILE);
-  const v4 = read(v4Path);
-  if (!Array.isArray(v3?.items) || !Array.isArray(v4?.items)) throw new Error("V3 ou V4 ne contient pas items.");
+function hasMaterialComponent(composantes) {
+  return /(^|[,;\s])M(?=$|[,;\s().])/u.test(text(composantes).toUpperCase());
+}
 
+function hasMaterialEntries(value) {
+  if (Array.isArray(value)) return value.length > 0;
+  return value !== undefined && value !== null && value !== "";
+}
+
+function referencePolicies() {
+  const policies = new Map();
+  const files = fs.readdirSync(REFERENCE_DIR)
+    .filter(file => REFERENCE_FILE_PATTERN.test(file))
+    .sort((left, right) => left.localeCompare(right, "fr"));
+
+  for (const file of files) {
+    const document = read(path.join(REFERENCE_DIR, file));
+    const classe = text(document?.source?.classe);
+    const defaultLevel = level(document?.source?.niveau);
+    if (!classe || !defaultLevel || !Array.isArray(document?.spells)) {
+      throw new Error(`Référence invalide : audit/reference/${file}.`);
+    }
+    for (const spell of document.spells) {
+      const key = spellKey(classe, spell?.niveau ?? defaultLevel, spell?.nom);
+      if (!key) throw new Error(`Identité de référence invalide : audit/reference/${file}.`);
+      if (policies.has(key)) throw new Error(`Référence du Manuel dupliquée : ${key}.`);
+      const composantes = text(spell?.composantes);
+      if (!composantes) throw new Error(`Composantes absentes dans audit/reference/${file} pour ${spell?.nom ?? key}.`);
+      policies.set(key, {
+        key,
+        file: `audit/reference/${file}`,
+        nom: text(spell.nom),
+        classe,
+        niveau: level(spell?.niveau ?? defaultLevel),
+        composantes,
+        hasMaterial: hasMaterialComponent(composantes)
+      });
+    }
+  }
+  return policies;
+}
+
+function syncNoMaterialEntries(document, policies, sourceLabel) {
+  const changes = [];
+  const items = Array.isArray(document?.items) ? document.items : [];
+  for (const item of items) {
+    if (!isSpell(item)) continue;
+    const system = item.system ??= {};
+    const key = spellKey(system.classe, system.niveau, item.name ?? system.nom);
+    const policy = key ? policies.get(key) : null;
+    if (!policy || policy.hasMaterial) continue;
+
+    const updated = [];
+    if (text(system.composantes) !== policy.composantes) {
+      system.composantes = policy.composantes;
+      updated.push("composantes");
+    }
+    if (hasMaterialEntries(system.composants_materiels)) {
+      system.composants_materiels = [];
+      updated.push("composants_materiels");
+    }
+    if (updated.length) {
+      changes.push({ source: sourceLabel, key, nom: policy.nom, classe: policy.classe, niveau: policy.niveau, updated });
+    }
+  }
+  return changes;
+}
+
+function syncManualComponents(v3, v4, dryRun) {
+  const policies = referencePolicies();
+  const v3Changes = syncNoMaterialEntries(v3, policies, "V3");
+  const v4Changes = syncNoMaterialEntries(v4, policies, "V4");
+  if (!dryRun) {
+    if (v3Changes.length) write(path.join(ROOT, V3_FILE), v3);
+    if (v4Changes.length) write(path.join(ROOT, V4_FILE), v4);
+  }
+  return { policies: policies.size, v3Changes, v4Changes };
+}
+
+function applyRequiredInstances(v3, v4) {
   const items = v4.items.map(copy);
   const usedIds = new Set(items.map(item => text(item?._id ?? item?.id)).filter(Boolean));
   const usedEffectIds = new Set(items.flatMap(item => Array.isArray(item?.effects) ? item.effects : []).map(effect => text(effect?._id ?? effect?.id)).filter(Boolean));
@@ -104,7 +198,9 @@ function main() {
     item.system.composantes = reference.composantes;
     item.system.jet_sauvegarde = reference.jet_sauvegarde;
     item.system.description = reference.description;
-    item.system.composants_materiels = copy(componentItem.system?.composants_materiels ?? []);
+    item.system.composants_materiels = hasMaterialComponent(reference.composantes)
+      ? copy(componentItem.system?.composants_materiels ?? [])
+      : [];
     item.system.onUse ||= reference?.foundry?.onUse ?? "";
 
     item.flags ??= {};
@@ -134,10 +230,36 @@ function main() {
   }
 
   v4.items = items;
-  if (!dryRun) write(v4Path, v4);
-  console.log(`[ADD2E][REQUIRED_SPELL_INSTANCES] ${dryRun ? "simulation" : "V4 mis à jour"}`);
-  for (const line of log) console.log(`[ADD2E][REQUIRED_SPELL_INSTANCES] ${line}`);
-  console.log("[ADD2E][REQUIRED_SPELL_INSTANCES] composants lus depuis V3 ; V3 non modifié.");
+  return log;
+}
+
+function main() {
+  const args = parseArgs(process.argv.slice(2));
+  const v3Path = path.join(ROOT, V3_FILE);
+  const v4Path = path.join(ROOT, V4_FILE);
+  const v3 = read(v3Path);
+  const v4 = read(v4Path);
+  if (!Array.isArray(v3?.items) || !Array.isArray(v4?.items)) throw new Error("V3 ou V4 ne contient pas items.");
+
+  if (args.syncManualComponents) {
+    const synced = syncManualComponents(v3, v4, args.dryRun);
+    console.log(`[ADD2E][MANUAL_COMPONENT_SYNC] ${args.dryRun ? "simulation" : "synchronisation terminée"} : ${synced.policies} références chargées.`);
+    for (const change of [...synced.v3Changes, ...synced.v4Changes]) {
+      console.log(`[ADD2E][MANUAL_COMPONENT_SYNC] ${change.source} ${change.classe} niveau ${change.niveau} — ${change.nom} : ${change.updated.join(", ")}.`);
+    }
+    console.log(`[ADD2E][MANUAL_COMPONENT_SYNC] V3 : ${synced.v3Changes.length} correction(s) ; V4 : ${synced.v4Changes.length} correction(s).`);
+  }
+
+  if (args.applyRequiredInstances) {
+    const log = applyRequiredInstances(v3, v4);
+    if (!args.dryRun) write(v4Path, v4);
+    console.log(`[ADD2E][REQUIRED_SPELL_INSTANCES] ${args.dryRun ? "simulation" : "V4 mis à jour"}`);
+    for (const line of log) console.log(`[ADD2E][REQUIRED_SPELL_INSTANCES] ${line}`);
+  }
+
+  if (args.syncManualComponents && !args.dryRun) {
+    console.log("[ADD2E][MANUAL_COMPONENT_SYNC] Exécute ensuite normalize-fvtt-spells-materials-v3.mjs pour régénérer le catalogue marchand depuis V3 nettoyé.");
+  }
 }
 
 main();
