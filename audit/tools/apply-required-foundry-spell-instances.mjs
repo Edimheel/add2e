@@ -30,17 +30,28 @@ const spellKey = (classe, niveau, name) => {
   return classKey && nameKey && spellLevel ? `${classKey}|${spellLevel}|${nameKey}` : null;
 };
 
+function optionValue(argv, option) {
+  const index = argv.indexOf(option);
+  if (index < 0) return null;
+  const value = argv[index + 1];
+  if (!value || value.startsWith("--")) throw new Error(`Valeur manquante pour ${option}.`);
+  return value;
+}
+
 function parseArgs(argv) {
   const syncManualComponents = argv.includes("--sync-manual-components");
-  const applyRequiredInstances = argv.includes("--required-instances") || !syncManualComponents;
+  const diagnoseManualComponents = argv.includes("--diagnose-manual-components");
+  const diagnosticFilter = optionValue(argv, "--filter");
+  const applyRequiredInstances = argv.includes("--required-instances") || (!syncManualComponents && !diagnoseManualComponents);
   if (argv.includes("--help") || argv.includes("-h")) {
     console.log("Usage:");
     console.log("  node audit/tools/apply-required-foundry-spell-instances.mjs [--dry-run]");
     console.log("  node audit/tools/apply-required-foundry-spell-instances.mjs --sync-manual-components [--dry-run]");
+    console.log("  node audit/tools/apply-required-foundry-spell-instances.mjs --diagnose-manual-components [--filter Bruitage]");
     console.log("  node audit/tools/apply-required-foundry-spell-instances.mjs --sync-manual-components --required-instances [--dry-run]");
     process.exit(0);
   }
-  return { dryRun: argv.includes("--dry-run"), syncManualComponents, applyRequiredInstances };
+  return { dryRun: argv.includes("--dry-run"), syncManualComponents, diagnoseManualComponents, diagnosticFilter, applyRequiredInstances };
 }
 
 function find(items, classe, niveau, name, label) {
@@ -84,9 +95,13 @@ function hasMaterialComponent(composantes) {
   return /(^|[,;\s])M(?=$|[,;\s().])/u.test(text(composantes).toUpperCase());
 }
 
+function materialEntryCount(value) {
+  if (Array.isArray(value)) return value.length;
+  return value === undefined || value === null || value === "" ? 0 : 1;
+}
+
 function hasMaterialEntries(value) {
-  if (Array.isArray(value)) return value.length > 0;
-  return value !== undefined && value !== null && value !== "";
+  return materialEntryCount(value) > 0;
 }
 
 function referencePolicies() {
@@ -120,6 +135,97 @@ function referencePolicies() {
     }
   }
   return policies;
+}
+
+function spellItemsByKey(document) {
+  const index = new Map();
+  for (const item of Array.isArray(document?.items) ? document.items : []) {
+    if (!isSpell(item)) continue;
+    const system = item.system ?? {};
+    const key = spellKey(system.classe, system.niveau, item.name ?? system.nom);
+    if (!key) continue;
+    const entries = index.get(key) ?? [];
+    entries.push(item);
+    index.set(key, entries);
+  }
+  return index;
+}
+
+function componentDiagnosticEntry(policy, sourceLabel, matches) {
+  if (!matches.length) {
+    return { source: sourceLabel, status: "introuvable", count: 0, composantes: null, composantsMateriels: null };
+  }
+  if (matches.length > 1) {
+    return { source: sourceLabel, status: "ambigu", count: matches.length, composantes: null, composantsMateriels: null };
+  }
+  const system = matches[0].system ?? {};
+  const composantes = text(system.composantes);
+  const composantsMateriels = materialEntryCount(system.composants_materiels);
+  const fields = [];
+  if (composantes !== policy.composantes) fields.push("composantes");
+  if (composantsMateriels) fields.push("composants_materiels");
+  return {
+    source: sourceLabel,
+    status: fields.length ? "a_corriger" : "deja_conforme",
+    count: 1,
+    id: text(matches[0]._id ?? matches[0].id) || null,
+    composantes,
+    composantsMateriels,
+    fields
+  };
+}
+
+function matchesFilter(policy, filter) {
+  if (!filter) return true;
+  const normalizedFilter = slug(filter);
+  return policy.key.includes(normalizedFilter) || slug(policy.nom).includes(normalizedFilter);
+}
+
+function diagnoseManualComponents(v3, v4, filter) {
+  const policies = referencePolicies();
+  const v3Index = spellItemsByKey(v3);
+  const v4Index = spellItemsByKey(v4);
+  const entries = [...policies.values()]
+    .filter(policy => !policy.hasMaterial)
+    .filter(policy => matchesFilter(policy, filter))
+    .sort((left, right) => left.key.localeCompare(right.key, "fr"))
+    .map(policy => ({
+      policy,
+      v3: componentDiagnosticEntry(policy, "V3", v3Index.get(policy.key) ?? []),
+      v4: componentDiagnosticEntry(policy, "V4", v4Index.get(policy.key) ?? [])
+    }));
+
+  const summary = {
+    referencesSansM: entries.length,
+    v3DejaConformes: entries.filter(entry => entry.v3.status === "deja_conforme").length,
+    v3ACorriger: entries.filter(entry => entry.v3.status === "a_corriger").length,
+    v3Introuvables: entries.filter(entry => entry.v3.status === "introuvable").length,
+    v3Ambigus: entries.filter(entry => entry.v3.status === "ambigu").length,
+    v4DejaConformes: entries.filter(entry => entry.v4.status === "deja_conforme").length,
+    v4ACorriger: entries.filter(entry => entry.v4.status === "a_corriger").length,
+    v4Introuvables: entries.filter(entry => entry.v4.status === "introuvable").length,
+    v4Ambigus: entries.filter(entry => entry.v4.status === "ambigu").length
+  };
+  return { entries, summary };
+}
+
+function displayDiagnosticSource(entry) {
+  if (entry.status === "deja_conforme") return `${entry.source}=déjà conforme (${entry.composantes}; ${entry.composantsMateriels} matière)`;
+  if (entry.status === "a_corriger") return `${entry.source}=à corriger (${entry.composantes || "composantes absentes"}; ${entry.composantsMateriels} matière ; ${entry.fields.join(", ")})`;
+  if (entry.status === "ambigu") return `${entry.source}=ambigu (${entry.count} items)`;
+  return `${entry.source}=introuvable`;
+}
+
+function printManualComponentDiagnostic(diagnostic, filter) {
+  const suffix = filter ? `, filtre « ${filter} »` : "";
+  console.log(`[ADD2E][MANUAL_COMPONENT_DIAG] ${diagnostic.summary.referencesSansM} référence(s) sans M${suffix}.`);
+  for (const entry of diagnostic.entries) {
+    const policy = entry.policy;
+    console.log(`[ADD2E][MANUAL_COMPONENT_DIAG] ${policy.classe} niveau ${policy.niveau} — ${policy.nom} | Manuel=${policy.composantes} | ${displayDiagnosticSource(entry.v3)} | ${displayDiagnosticSource(entry.v4)}.`);
+  }
+  const summary = diagnostic.summary;
+  console.log(`[ADD2E][MANUAL_COMPONENT_DIAG] V3 conforme ${summary.v3DejaConformes}, à corriger ${summary.v3ACorriger}, introuvable ${summary.v3Introuvables}, ambigu ${summary.v3Ambigus}.`);
+  console.log(`[ADD2E][MANUAL_COMPONENT_DIAG] V4 conforme ${summary.v4DejaConformes}, à corriger ${summary.v4ACorriger}, introuvable ${summary.v4Introuvables}, ambigu ${summary.v4Ambigus}.`);
 }
 
 function syncNoMaterialEntries(document, policies, sourceLabel) {
@@ -240,6 +346,10 @@ function main() {
   const v3 = read(v3Path);
   const v4 = read(v4Path);
   if (!Array.isArray(v3?.items) || !Array.isArray(v4?.items)) throw new Error("V3 ou V4 ne contient pas items.");
+
+  if (args.diagnoseManualComponents) {
+    printManualComponentDiagnostic(diagnoseManualComponents(v3, v4, args.diagnosticFilter), args.diagnosticFilter);
+  }
 
   if (args.syncManualComponents) {
     const synced = syncManualComponents(v3, v4, args.dryRun);
