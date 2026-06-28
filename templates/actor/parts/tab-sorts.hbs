@@ -207,7 +207,17 @@
                                     </td>
                                     <td>{{sort.ecole}}</td>
                                     <td>{{spellComponentTypes sort}}</td>
-                                    <td>{{sort.composants_materiels}}</td>
+                                    <td>
+                                      {{#if sort.has_composants_materiels_status}}
+                                        <div class="add2e-spell-material-statuses" style="display:flex;flex-wrap:wrap;align-items:center;gap:3px 5px;line-height:1.25;">
+                                          {{#each sort.composants_materiels_status as |component|}}
+                                            <span class="add2e-spell-material-status {{#if component.available}}available{{else}}missing{{/if}}" title="{{component.title}}" style="font-weight:700;{{#if component.available}}color:#1f7a1f;{{else}}color:#b33a2e;{{/if}}">{{component.label}}{{#if component.showQuantity}} ×{{component.quantity}}{{/if}}</span>{{#unless @last}}<span class="a2e-muted">·</span>{{/unless}}
+                                          {{/each}}
+                                        </div>
+                                      {{else}}
+                                        <span class="a2e-muted">{{sort.composants_materiels}}</span>
+                                      {{/if}}
+                                    </td>
                                     <td>
                                       <div class="a2e-actions">
                                         <a class="a2e-action-icon a2e-action-edit sort-edit" data-sort-id="{{sort.id}}" title="Éditer"><i class="fas fa-edit"></i></a>
