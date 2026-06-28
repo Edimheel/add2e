@@ -4,8 +4,8 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const EQUIPMENT_FILE = "sources/Item-Equipements.json";
-const V3_FILE = "fvtt-spells-all-normalise-mecanique-v3.json";
-const VERSION = "2026-06-28-component-price-rarity-v1";
+const V4_FILE = "fvtt-spells-all-normalise-mecanique-v4.json";
+const VERSION = "2026-06-28-component-price-from-v4-v2";
 
 const BANDS = {
   trivial: { label: "très commun / collecte immédiate", prices: ["1 pc", "2 pc", "3 pc", "4 pc", "5 pc", "6 pc", "8 pc", "9 pc"] },
@@ -17,7 +17,7 @@ const BANDS = {
 };
 
 const text = value => String(value ?? "").replace(/\s+/g, " ").trim();
-const hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object ?? {}, key);
+const own = (object, key) => Object.prototype.hasOwnProperty.call(object ?? {}, key);
 const read = file => JSON.parse(fs.readFileSync(file, "utf8"));
 const write = (file, value) => fs.writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`, "utf8");
 const clone = value => JSON.parse(JSON.stringify(value));
@@ -25,8 +25,12 @@ const clone = value => JSON.parse(JSON.stringify(value));
 function fold(value) {
   return text(value).normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, " ").toLocaleLowerCase("fr");
 }
-function slug(value) {
+function key(value) {
   return fold(value).replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+}
+function title(value) {
+  const result = text(value);
+  return result ? result[0].toLocaleUpperCase("fr") + result.slice(1) : result;
 }
 function hash(value) {
   let result = 2166136261;
@@ -36,42 +40,36 @@ function hash(value) {
   }
   return result >>> 0;
 }
-function candidateKeys(name) {
-  const direct = slug(name);
-  const simplified = fold(name)
-    .replace(/^(?:un|une|des|du|de la|de l|d)\s+/i, "")
-    .replace(/^(?:petite?|grand(?:e)?|minuscule|fine?|grosse?)\s+/i, "")
-    .replace(/^(?:pincee|goutte|grain|morceau|brin|poignee|fragment|once|fiole|sachet|poudre)\s+(?:de|d)\s+/i, "")
-    .replace(/^(?:aile|plume|ecaille|poil|fourrure|dent|os)\s+(?:de|d)\s+/i, "");
-  return [...new Set([direct, slug(simplified)])].filter(Boolean);
+function stableId(value, used) {
+  let salt = 0;
+  while (true) {
+    const id = `${hash(`${value}:${salt}:a`).toString(16).padStart(8, "0")}${hash(`${value}:${salt}:b`).toString(16).padStart(8, "0")}`;
+    if (!used.has(id)) {
+      used.add(id);
+      return id;
+    }
+    salt += 1;
+  }
 }
 function collection(document) {
   if (Array.isArray(document)) return document;
-  for (const key of ["documents", "items", "Item", "Items", "data", "entries"]) if (Array.isArray(document?.[key])) return document[key];
+  for (const field of ["documents", "items", "Item", "Items", "data", "entries"]) if (Array.isArray(document?.[field])) return document[field];
   return null;
 }
 function isSpell(item) {
   return fold(item?.type ?? item?.system?.type) === "sort";
 }
-function isComponent(document) {
-  const system = document?.system ?? {};
-  const category = fold(system.categorie ?? system.category);
-  const subtype = fold(system.sousType ?? system.sous_type ?? system.type);
-  const tags = Array.isArray(system.tags) ? system.tags.map(fold) : [];
-  return category === "composant_sort" || subtype === "composant" || tags.some(tag => tag === "composant_sort" || tag.startsWith("composant:"));
-}
-function number(value) {
-  const result = Number(String(value ?? "").replace(",", "."));
+function asNumber(value) {
+  const result = typeof value === "number" ? value : Number(String(value ?? "").replace(",", "."));
   return Number.isFinite(result) ? result : null;
 }
-function parsePrice(value) {
-  if (typeof value === "number" && Number.isFinite(value) && value > 0) return { po: value, label: formatPo(value) };
-  const match = text(value).match(/^([0-9]+(?:[\.,][0-9]+)?)\s*(pp|po|pe|pa|pc)?$/i);
+function pricePo(value) {
+  const match = text(value).match(/^([0-9]+(?:[.,][0-9]+)?)\s*(pp|po|pe|pa|pc)?$/i);
   if (!match) return null;
   const amount = Number(match[1].replace(",", "."));
   const unit = (match[2] ?? "po").toLocaleLowerCase("fr");
-  const rates = { pp: 5, po: 1, pe: 0.5, pa: 0.1, pc: 0.01 };
-  return Number.isFinite(amount) && amount > 0 && hasOwn(rates, unit) ? { po: amount * rates[unit], label: `${amount} ${unit}` } : null;
+  const rates = { pp: 5, po: 1, pe: .5, pa: .1, pc: .01 };
+  return Number.isFinite(amount) && amount > 0 && own(rates, unit) ? amount * rates[unit] : null;
 }
 function formatPo(value) {
   const pc = Math.max(1, Math.round(Number(value) * 100));
@@ -80,90 +78,179 @@ function formatPo(value) {
   return pc % 100 === 0 ? `${pc / 100} po` : `${pc / 100} po`;
 }
 function price(label) {
-  const parsed = parsePrice(label);
-  if (!parsed) throw new Error(`Prix invalide : ${label}.`);
-  return parsed;
+  const po = pricePo(label);
+  if (!(po > 0)) throw new Error(`Prix invalide : ${label}.`);
+  return { label, po };
 }
-function classify(document) {
-  const system = document?.system ?? {};
-  const body = fold([document?.name, system.nom, system.description, system.source_note, ...(Array.isArray(system.tags) ? system.tags : [])].join(" "));
-  if (/diamant|rubis|saphir|emeraude|topaze|opale|perle|gemme|pierre precieuse|cristal pur|poudre de diamant|ivoire|platine/.test(body)) return "precious";
-  if (/ambre|mercure|or\b|argent\b|electrum|myrrhe|encens rare|parfum|ambre gris|corail|nacre|soie/.test(body)) return "rare";
-  if (/miroir|aimant|lentille|cloche|grelot|aiguille|anneau|bague|clef|cle|fiole|flacon|figurine|maquette|miniature|statuette|masque|fil d|tissu|corde|poupee/.test(body)) return "crafted";
-  if (/poudre|gomme|resine|cire|soufre|salpetre|phosphore|pigment|teinture|huile|alcool|vinaigre|sel|argile|verre|plante rare|racine rare|champignon rare|mousse rare/.test(body)) return "prepared";
-  if (/goutte d eau|goutte de sang|salive|poussiere|cendre|terre|boue|sable|brin d herbe|insecte|toile d araignee|poil|ongle|coquille vide/.test(body)) return "trivial";
+function isReusable(entry) {
+  const name = fold(entry?.nom);
+  const use = fold(entry?.consommation);
+  return /reutilis|non consom|focus/.test(use) || /symbole sacre|gui(?: druidique| majeur)?|chapelet|livre de priere|symbole religieux|objet de priere/.test(name);
+}
+function status(entry) {
+  const name = text(entry?.nom);
+  const value = fold(name);
+  if (!value || /\ba completer\b|\ba remplir\b|materielle? non precise/.test(value)) return "excluded_placeholder";
+  if (/consommation explicitement indiquee|disparait quand|pour chaque|l un des elements|objet similaire|objets magiques|objet de valeur|source de feu|\bcreature\b|\bl original\b|\breduite? en poudre\b|\brepartie sur\b/.test(value)) return "excluded_text";
+  if (/\bpotion\b|parchemin magique|gemme d emprisonnement|objet magique|sang de dragon|os de dragon|diamant d une valeur|gemme non detruite|coffre de grande valeur|\breceptacle\b/.test(value)) return "manual_special";
+  return isReusable(entry) ? "reusable" : "sellable";
+}
+function rarity(name, note = "") {
+  const value = fold(`${name} ${note}`);
+  if (/diamant|rubis|saphir|emeraude|topaze|opale|perle|gemme|pierre precieuse|poudre de diamant|poudre de perle|poudre de rubis|ivoire|platine|jade/.test(value)) return "precious";
+  if (/ambre|mercure|or\b|argent\b|electrum|myrrhe|encens|parfum|corail|nacre|soie|safran|orchidee/.test(value)) return "rare";
+  if (/miroir|aimant|lentille|cloche|grelot|aiguille|anneau|bague|clef|cle\b|fiole|flacon|figurine|maquette|miniature|statuette|masque|fil de|tissu|corde|sifflet|baguette|barre de metal|tige de metal|lame en fer|plaque de fer|coffre|gant|pelle|baquet|tambour|couronne/.test(value)) return "crafted";
+  if (/poudre|gomme|resine|cire|soufre|salpetre|phosphore|pigment|teinture|huile|alcool|vinaigre|sel|argile|verre|encre|charbon|poix|chaux|miel|beurre|creme|limaille|alun/.test(value)) return "prepared";
+  if (/goutte|salive|poussiere|cendre|terre|boue|sable|brin|insecte|toile d araignee|poil|ongle|coquille|feuille morte|caillou|motte de terre/.test(value)) return "trivial";
   return "common";
 }
-function allMaterials(v3) {
-  const items = collection(v3);
-  if (!items) throw new Error(`${V3_FILE} ne contient pas de collection d'items.`);
+function v4Materials(v4) {
+  const items = collection(v4);
+  if (!items) throw new Error(`${V4_FILE} ne contient pas de collection d'items.`);
   const result = [];
   for (const item of items) {
     if (!isSpell(item) || !Array.isArray(item?.system?.composants_materiels)) continue;
     for (let index = 0; index < item.system.composants_materiels.length; index += 1) {
       const entry = item.system.composants_materiels[index];
-      if (text(entry?.nom)) result.push({ item, entry, index, name: text(entry.nom) });
+      result.push({
+        item,
+        entry,
+        index,
+        name: text(entry?.nom),
+        status: status(entry),
+        spell: text(item?.name ?? item?.system?.nom),
+        className: text(item?.system?.classe),
+        level: Number(item?.system?.niveau ?? 0) || null
+      });
     }
   }
   return result;
 }
-function directCosts(materials) {
-  const costs = new Map();
+function materialGroups(materials) {
+  const groups = new Map();
   for (const material of materials) {
-    const value = number(material.entry?.cout_po);
-    if (!(value > 0)) continue;
-    for (const key of candidateKeys(material.name)) {
-      const entries = costs.get(key) ?? [];
-      entries.push(value);
-      costs.set(key, entries);
-    }
+    if (!material.name || !["sellable", "reusable"].includes(material.status)) continue;
+    const id = key(material.name);
+    const group = groups.get(id) ?? { id, name: title(material.name), kind: material.status, items: [], unitCosts: new Set(), notes: new Set(), spells: new Set() };
+    if (material.status === "reusable") group.kind = "reusable";
+    const cost = asNumber(material.entry?.cout_po);
+    const quantity = Math.max(1, Math.floor(asNumber(material.entry?.quantite) ?? 1));
+    if (cost > 0) group.unitCosts.add(Math.round((cost / quantity) * 100000) / 100000);
+    if (text(material.entry?.notes)) group.notes.add(text(material.entry.notes));
+    group.spells.add(material.spell);
+    group.items.push(material);
+    groups.set(id, group);
   }
-  return costs;
+  return groups;
 }
-function uniqueCost(keys, costs) {
-  const values = new Set();
-  for (const key of keys) for (const value of costs.get(key) ?? []) values.add(value);
-  if (!values.size) return { value: null, conflict: false };
-  if (values.size === 1) return { value: [...values][0], conflict: false };
-  return { value: null, conflict: true, values: [...values].sort((a, b) => a - b) };
-}
-function componentIndex(documents) {
-  const index = new Map();
+function equipmentIndex(documents) {
+  const byName = new Map();
+  const usedIds = new Set();
+  let maxSort = 0;
   for (const document of documents) {
-    if (!isComponent(document)) continue;
-    for (const key of candidateKeys(document?.name ?? document?.system?.nom)) {
-      const entries = index.get(key) ?? [];
-      entries.push(document);
-      index.set(key, entries);
+    const id = key(document?.name ?? document?.system?.nom);
+    if (id) {
+      const list = byName.get(id) ?? [];
+      list.push(document);
+      byName.set(id, list);
     }
+    if (text(document?._id ?? document?.id)) usedIds.add(text(document?._id ?? document?.id));
+    maxSort = Math.max(maxSort, Number(document?.sort ?? 0) || 0);
   }
-  return index;
+  return { byName, usedIds, maxSort };
 }
-function findComponent(name, index) {
-  const found = new Set();
-  for (const key of candidateKeys(name)) for (const document of index.get(key) ?? []) found.add(document);
-  if (!found.size) return { document: null, ambiguous: false };
-  if (found.size > 1) return { document: null, ambiguous: true, names: [...found].map(item => text(item?.name ?? item?.system?.nom)).sort((a, b) => a.localeCompare(b, "fr")) };
-  return { document: [...found][0], ambiguous: false };
+function matchEquipment(group, index) {
+  const list = index.byName.get(group.id) ?? [];
+  return list.length === 1 ? { document: list[0] } : list.length > 1 ? { conflict: list.map(doc => text(doc?.name ?? doc?.system?.nom)) } : { document: null };
 }
-function choosePrice(document, costs) {
+function existingPrice(document) {
+  const system = document?.system ?? {};
+  const label = text(system.prix ?? system.cout);
+  const po = pricePo(label);
+  return po > 0 ? { label, po, source: text(system.source_prix) || "Prix existant du compendium." } : null;
+}
+function decide(group, document) {
+  const explicit = [...group.unitCosts].sort((a, b) => a - b);
+  if (explicit.length === 1) {
+    const result = { label: formatPo(explicit[0]), po: explicit[0] };
+    return { price: result, origin: "explicit_v4", source: `Coût explicite V4 : ${result.label}.`, rarity: null };
+  }
+  const old = existingPrice(document);
+  if (old) return { price: old, origin: "existing_compendium", source: old.source, rarity: null };
+  const band = rarity(group.name, [...group.notes].join(" "));
+  const label = BANDS[band].prices[hash(group.id) % BANDS[band].prices.length];
+  return {
+    price: price(label),
+    origin: explicit.length > 1 ? "automatic_after_v4_conflict" : "automatic_rarity",
+    source: explicit.length > 1
+      ? `Tarif marchand ADD2E — rareté ${BANDS[band].label}; coûts unitaires V4 incompatibles (${explicit.join(", ")} PO), tarif déterministe ${VERSION}.`
+      : `Tarif marchand ADD2E — rareté ${BANDS[band].label}; variation déterministe par composant (${VERSION}).`,
+    rarity: band,
+    conflicts: explicit.length > 1 ? explicit : null
+  };
+}
+function tagData(group) {
+  const flags = ["objet", "categorie:composant_sort", "sous_type:composant", `objet:${group.id}`, "composant_sort", group.kind === "reusable" ? "reutilisable" : "consommable", `composant:${group.id}`];
+  return { tags: flags, effectTags: flags.map(value => value.replace(/:/g, "_")) };
+}
+function createDocument(group, decision, id, sort) {
+  const reusable = group.kind === "reusable";
+  const tags = tagData(group);
+  return {
+    name: group.name,
+    type: "objet",
+    img: "icons/commodities/materials/powder-blue.webp",
+    system: {
+      nom: group.name,
+      type: "objet",
+      categorie: "composant_sort",
+      sousType: "composant",
+      prix: decision.price.label,
+      cout: decision.price.label,
+      quantite: 1,
+      poids: reusable ? .1 : .05,
+      poids_unite: "kg",
+      poids_encombrement_po: reusable ? 2 : 1,
+      equipee: false,
+      magique: false,
+      consommable: !reusable,
+      description: `Composant de sort : ${group.name}.`,
+      source_prix: decision.source,
+      source_poids: "Guide du Maître — Appendice O quand équivalent standard ; sinon poids/encombrement estimé.",
+      source_note: reusable ? "Composant réutilisable référencé dans V4." : "Composant matériel référencé dans V4.",
+      tags: tags.tags,
+      effectTags: tags.effectTags,
+      sorts_associes: [...group.spells].filter(Boolean).sort((a, b) => a.localeCompare(b, "fr")),
+      source_composant: "V4 — composants matériels des sorts ADD2E"
+    },
+    effects: [],
+    flags: { add2e: { schema: "equipement-composant-sort", slug: group.id, sourceRules: "ADD2E V4 — composants matériels", generatedBy: "price-spell-components.mjs", generatedAt: VERSION } },
+    _id: id,
+    sort,
+    ownership: { default: 0 }
+  };
+}
+function previewUpdate(document, group, decision) {
+  const system = document?.system ?? {};
+  const changed = [];
+  for (const [field, value] of Object.entries({ prix: decision.price.label, cout: decision.price.label, source_prix: decision.source })) {
+    if (JSON.stringify(system[field]) !== JSON.stringify(value)) changed.push(field);
+  }
+  if (own(system, "consommable") && system.consommable !== (group.kind !== "reusable")) changed.push("consommable");
+  return changed;
+}
+function applyUpdate(document, group, decision) {
   const system = document.system ??= {};
-  const existing = parsePrice(system.prix ?? system.cout);
-  if (existing) return { price: existing, kind: "existing", rarity: null, source: text(system.source_prix) || "Prix existant conservé." };
-  const exact = uniqueCost(candidateKeys(document?.name ?? system.nom), costs);
-  if (exact.value != null) return { price: { po: exact.value, label: formatPo(exact.value) }, kind: "explicit_v3", rarity: null, source: `Coût explicite relevé dans V3 (${formatPo(exact.value)}), conservé pour le marchand.` };
-  const rarity = classify(document);
-  const label = BANDS[rarity].prices[hash(slug(document?.name ?? system.nom)) % BANDS[rarity].prices.length];
-  const source = exact.conflict
-    ? `Tarif marchand ADD2E — rareté ${BANDS[rarity].label}; coûts V3 incompatibles (${exact.values.join(", ")} PO), tarif déterministe ${VERSION}.`
-    : `Tarif marchand ADD2E — rareté ${BANDS[rarity].label}; variation déterministe par composant (${VERSION}).`;
-  return { price: price(label), kind: exact.conflict ? "automatic_after_v3_conflict" : "automatic", rarity, conflict: exact.values ?? null, source };
-}
-function rounded(value) {
-  return Math.round(Number(value) * 100000) / 100000;
+  system.prix = decision.price.label;
+  system.cout = decision.price.label;
+  system.source_prix = decision.source;
+  if (own(system, "consommable")) system.consommable = group.kind !== "reusable";
+  if (Array.isArray(system.sorts_associes)) {
+    system.sorts_associes = [...new Set([...system.sorts_associes.map(text), ...group.spells])].filter(Boolean).sort((a, b) => a.localeCompare(b, "fr"));
+  }
 }
 function parseArgs(argv) {
-  const options = { apply: false, report: null, showAll: false };
+  const options = { apply: false, showAll: false, report: null };
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === "--diagnose") options.apply = false;
@@ -176,119 +263,132 @@ function parseArgs(argv) {
       index += 1;
     } else if (arg === "--help" || arg === "-h") {
       console.log("Usage:");
-      console.log("  node audit/tools/price-spell-components.mjs --diagnose [--show-all] [--report audit/rapports/PRIX-COMPOSANTS.json]");
-      console.log("  node audit/tools/price-spell-components.mjs --apply [--show-all] [--report audit/rapports/PRIX-COMPOSANTS.json]");
-      console.log("--apply modifie uniquement sources/Item-Equipements.json et fvtt-spells-all-normalise-mecanique-v3.json. V4 est exclue.");
+      console.log("  node audit/tools/price-spell-components.mjs --diagnose [--show-all] [--report audit/rapports/PRIX-COMPOSANTS-V4.json]");
+      console.log("  node audit/tools/price-spell-components.mjs --apply [--show-all] [--report audit/rapports/PRIX-COMPOSANTS-V4.json]");
+      console.log("--apply modifie uniquement sources/Item-Equipements.json et fvtt-spells-all-normalise-mecanique-v4.json. V3 est exclue.");
       process.exit(0);
     } else throw new Error(`Argument inconnu : ${arg}`);
   }
   return options;
 }
-function plan(equipment, v3) {
+function buildPlan(equipment, v4) {
   const documents = collection(equipment);
   if (!documents) throw new Error(`${EQUIPMENT_FILE} ne contient pas de collection documents.`);
-  const components = documents.filter(isComponent);
-  const materials = allMaterials(v3);
-  const costs = directCosts(materials);
-  const decisions = new Map();
-  const changes = [];
-  const conflicts = [];
+  const materials = v4Materials(v4);
+  const groups = materialGroups(materials);
+  const index = equipmentIndex(documents);
   const summary = {
-    equipmentComponents: components.length,
-    existingPrices: 0,
-    automaticPrices: 0,
-    explicitV3Prices: 0,
-    automaticAfterV3Conflicts: 0,
-    synchronizedTwinFields: 0,
-    rarity: Object.fromEntries(Object.keys(BANDS).map(key => [key, 0])),
-    v3MaterialEntries: materials.length,
-    v3CostsPreserved: 0,
-    v3CostsToFill: 0,
-    v3Unmatched: 0,
-    v3Ambiguous: 0
+    v4MaterialEntries: materials.length,
+    v4SellableEntries: materials.filter(entry => entry.status === "sellable").length,
+    v4ReusableEntries: materials.filter(entry => entry.status === "reusable").length,
+    v4ExcludedPlaceholders: materials.filter(entry => entry.status === "excluded_placeholder").length,
+    v4ExcludedText: materials.filter(entry => entry.status === "excluded_text").length,
+    v4ManualSpecial: materials.filter(entry => entry.status === "manual_special").length,
+    cataloguedComponents: groups.size,
+    matchedEquipment: 0,
+    createdEquipment: 0,
+    equipmentUpdates: 0,
+    ambiguousEquipment: 0,
+    explicitV4UnitCosts: 0,
+    explicitV4Conflicts: 0,
+    v4CostsPreserved: 0,
+    v4CostsToFill: 0,
+    v4CostsBlocked: 0,
+    rarity: Object.fromEntries(Object.keys(BANDS).map(name => [name, 0]))
   };
-  for (const document of components) {
-    const selected = choosePrice(document, costs);
-    decisions.set(document, selected);
-    if (selected.kind === "existing") summary.existingPrices += 1;
-    if (selected.kind === "automatic") summary.automaticPrices += 1;
-    if (selected.kind === "explicit_v3") summary.explicitV3Prices += 1;
-    if (selected.kind === "automatic_after_v3_conflict") { summary.automaticAfterV3Conflicts += 1; conflicts.push({ name: text(document?.name ?? document?.system?.nom), valuesPo: selected.conflict }); }
-    if (selected.rarity) summary.rarity[selected.rarity] += 1;
-    const system = document.system ?? {};
-    const samePrice = text(system.prix) === selected.price.label;
-    const sameCost = text(system.cout) === selected.price.label;
-    const sameSource = text(system.source_prix) === selected.source;
-    if (!samePrice || !sameCost || !sameSource) {
-      if (selected.kind === "existing" && (!samePrice || !sameCost)) summary.synchronizedTwinFields += 1;
-      changes.push({ document, name: text(document?.name ?? system.nom), previousPrix: text(system.prix), previousCout: text(system.cout), price: selected.price.label, pricePo: selected.price.po, kind: selected.kind, rarity: selected.rarity, source: selected.source });
+  const manual = materials.filter(entry => ["excluded_placeholder", "excluded_text", "manual_special"].includes(entry.status)).map(entry => ({ spell: entry.spell, classe: entry.className, niveau: entry.level, material: entry.name, status: entry.status }));
+  const documentsPlan = [];
+  const groupsPlan = new Map();
+  for (const group of [...groups.values()].sort((a, b) => a.name.localeCompare(b.name, "fr"))) {
+    const found = matchEquipment(group, index);
+    if (found.conflict) {
+      summary.ambiguousEquipment += 1;
+      manual.push({ spell: null, classe: null, niveau: null, material: group.name, status: "ambiguous_equipment", candidates: found.conflict });
+      groupsPlan.set(group.id, null);
+      continue;
     }
+    const decision = decide(group, found.document);
+    if (decision.rarity) summary.rarity[decision.rarity] += 1;
+    if (decision.origin === "explicit_v4") summary.explicitV4UnitCosts += 1;
+    if (decision.origin === "automatic_after_v4_conflict") summary.explicitV4Conflicts += 1;
+    const action = found.document ? (previewUpdate(found.document, group, decision).length ? "update" : "keep") : "create";
+    if (found.document) summary.matchedEquipment += 1;
+    else summary.createdEquipment += 1;
+    if (action === "update") summary.equipmentUpdates += 1;
+    const entry = { action, document: found.document ?? null, group, decision, changedFields: found.document ? previewUpdate(found.document, group, decision) : [] };
+    documentsPlan.push(entry);
+    groupsPlan.set(group.id, entry);
   }
-  const index = componentIndex(components);
-  const v3Changes = [];
+  const v4Costs = [];
   for (const material of materials) {
-    if (number(material.entry?.cout_po) > 0) { summary.v3CostsPreserved += 1; continue; }
-    const match = findComponent(material.name, index);
-    if (match.ambiguous) { summary.v3Ambiguous += 1; v3Changes.push({ ...material, action: "ambiguous", names: match.names }); continue; }
-    if (!match.document) { summary.v3Unmatched += 1; v3Changes.push({ ...material, action: "missing" }); continue; }
-    const selected = decisions.get(match.document);
-    const quantity = Math.max(1, Number(material.entry?.quantite ?? 1) || 1);
-    const costPo = rounded(selected.price.po * quantity);
-    summary.v3CostsToFill += 1;
-    v3Changes.push({ ...material, action: "fill", componentName: text(match.document?.name ?? match.document?.system?.nom), quantity, price: selected.price.label, costPo });
+    if (asNumber(material.entry?.cout_po) > 0) {
+      summary.v4CostsPreserved += 1;
+      continue;
+    }
+    const planned = groupsPlan.get(key(material.name));
+    if (!planned) {
+      summary.v4CostsBlocked += 1;
+      continue;
+    }
+    const quantity = Math.max(1, Math.floor(asNumber(material.entry?.quantite) ?? 1));
+    const costPo = Math.round(planned.decision.price.po * quantity * 100000) / 100000;
+    v4Costs.push({ material, planned, quantity, costPo });
+    summary.v4CostsToFill += 1;
   }
-  return { components, materials, changes, v3Changes, conflicts, summary };
+  return { documents, materials, documentsPlan, v4Costs, manual, summary };
 }
-function apply(plan) {
-  for (const change of plan.changes) {
-    const system = change.document.system ??= {};
-    system.prix = change.price;
-    system.cout = change.price;
-    system.source_prix = change.source;
+function applyPlan(plan, equipment) {
+  const documents = collection(equipment);
+  const index = equipmentIndex(documents);
+  let sort = index.maxSort;
+  for (const entry of plan.documentsPlan) {
+    if (entry.action === "create") {
+      sort += 1000;
+      documents.push(createDocument(entry.group, entry.decision, stableId(`component:${entry.group.id}`, index.usedIds), sort));
+    } else if (entry.action === "update") applyUpdate(entry.document, entry.group, entry.decision);
   }
-  for (const change of plan.v3Changes) if (change.action === "fill") change.entry.cout_po = change.costPo;
+  for (const entry of plan.v4Costs) entry.material.entry.cout_po = entry.costPo;
 }
 function report(plan) {
   return {
     version: VERSION,
-    scope: { equipment: EQUIPMENT_FILE, v3: V3_FILE, v4: "exclue", policy: "Prix existants préservés ; prix vides complétés par rareté avec variation déterministe ; cout_po V3 rempli à partir du prix unitaire marchand multiplié par quantite." },
+    scope: { sourceOfTruth: V4_FILE, equipment: EQUIPMENT_FILE, v3: "exclue", policy: "Prix existants et cout_po V4 explicites préservés. Les valeurs V4 vides reçoivent prix marchand unitaire × quantite. Les placeholders, textes et composants spéciaux restent à validation manuelle." },
     summary: clone(plan.summary),
-    componentChanges: plan.changes.map(change => ({ name: change.name, previousPrix: change.previousPrix, previousCout: change.previousCout, price: change.price, pricePo: change.pricePo, kind: change.kind, rarity: change.rarity, source: change.source })),
-    v3Changes: plan.v3Changes.map(change => ({ spell: text(change.item?.name ?? change.item?.system?.nom), classe: text(change.item?.system?.classe), niveau: Number(change.item?.system?.niveau ?? 0) || null, material: change.name, action: change.action, component: change.componentName ?? null, quantity: change.quantity ?? null, price: change.price ?? null, costPo: change.costPo ?? null, candidates: change.names ?? null })),
-    explicitCostConflicts: plan.conflicts
+    equipment: plan.documentsPlan.map(entry => ({ action: entry.action, name: entry.group.name, kind: entry.group.kind, price: entry.decision.price.label, pricePo: entry.decision.price.po, origin: entry.decision.origin, rarity: entry.decision.rarity, changedFields: entry.changedFields, spells: [...entry.group.spells].filter(Boolean).sort((a, b) => a.localeCompare(b, "fr")) })),
+    v4Costs: plan.v4Costs.map(entry => ({ spell: entry.material.spell, classe: entry.material.className, niveau: entry.material.level, material: entry.material.name, quantity: entry.quantity, unitPrice: entry.planned.decision.price.label, costPo: entry.costPo })),
+    manual: plan.manual
   };
 }
 function print(plan, options) {
-  const summary = plan.summary;
-  console.log(`[ADD2E][COMPONENT_PRICE] ${VERSION}.`);
-  console.log(`[ADD2E][COMPONENT_PRICE] Compendium : ${summary.equipmentComponents} composant(s), prix existants ${summary.existingPrices}, prix à générer ${summary.automaticPrices}, coûts explicites V3 ${summary.explicitV3Prices}, conflits V3 traités par rareté ${summary.automaticAfterV3Conflicts}.`);
-  console.log(`[ADD2E][COMPONENT_PRICE] Rareté : très commun ${summary.rarity.trivial}, commun ${summary.rarity.common}, préparé ${summary.rarity.prepared}, travaillé ${summary.rarity.crafted}, rare ${summary.rarity.rare}, précieux ${summary.rarity.precious}.`);
-  console.log(`[ADD2E][COMPONENT_PRICE] V3 : ${summary.v3MaterialEntries} entrée(s), cout_po conservé ${summary.v3CostsPreserved}, à remplir ${summary.v3CostsToFill}, sans composant compendium ${summary.v3Unmatched}, rapprochement ambigu ${summary.v3Ambiguous}.`);
-  for (const change of options.showAll ? plan.changes : plan.changes.filter(change => change.kind !== "existing")) {
-    console.log(`[ADD2E][COMPONENT_PRICE] ${change.name} : ${change.previousPrix || "vide"} → ${change.price}${change.rarity ? ` — ${BANDS[change.rarity].label}` : ""}.`);
+  const s = plan.summary;
+  console.log(`[ADD2E][COMPONENT_PRICE_V4] ${VERSION}.`);
+  console.log(`[ADD2E][COMPONENT_PRICE_V4] V4 : ${s.v4MaterialEntries} entrée(s), vendables ${s.v4SellableEntries}, réutilisables ${s.v4ReusableEntries}, placeholders exclus ${s.v4ExcludedPlaceholders}, textes exclus ${s.v4ExcludedText}, spéciaux à valider ${s.v4ManualSpecial}.`);
+  console.log(`[ADD2E][COMPONENT_PRICE_V4] Compendium : ${s.cataloguedComponents} composant(s), existants ${s.matchedEquipment}, créations ${s.createdEquipment}, mises à jour ${s.equipmentUpdates}, ambigus ${s.ambiguousEquipment}.`);
+  console.log(`[ADD2E][COMPONENT_PRICE_V4] Prix : coûts V4 explicites ${s.explicitV4UnitCosts}, conflits explicites ${s.explicitV4Conflicts}, très commun ${s.rarity.trivial}, commun ${s.rarity.common}, préparé ${s.rarity.prepared}, travaillé ${s.rarity.crafted}, rare ${s.rarity.rare}, précieux ${s.rarity.precious}.`);
+  console.log(`[ADD2E][COMPONENT_PRICE_V4] cout_po V4 : conservé ${s.v4CostsPreserved}, à remplir ${s.v4CostsToFill}, bloqué pour revue ${s.v4CostsBlocked}.`);
+  for (const entry of options.showAll ? plan.documentsPlan : plan.documentsPlan.filter(entry => entry.action !== "keep")) {
+    console.log(`[ADD2E][COMPONENT_PRICE_V4] ${entry.action} : ${entry.group.name} — ${entry.decision.price.label}${entry.decision.rarity ? ` — ${BANDS[entry.decision.rarity].label}` : ""}.`);
   }
-  for (const change of plan.v3Changes.filter(change => change.action !== "fill")) {
-    console.log(`[ADD2E][COMPONENT_PRICE] V3 ${change.action} : ${text(change.item?.name ?? change.item?.system?.nom)} — ${change.name}${change.names ? ` (${change.names.join(", ")})` : ""}.`);
-  }
+  for (const entry of plan.manual) console.log(`[ADD2E][COMPONENT_PRICE_V4] revue ${entry.status} : ${entry.spell ? `${entry.spell} — ` : ""}${entry.material}.`);
 }
 function main() {
   const options = parseArgs(process.argv.slice(2));
   const equipmentPath = path.join(ROOT, EQUIPMENT_FILE);
-  const v3Path = path.join(ROOT, V3_FILE);
+  const v4Path = path.join(ROOT, V4_FILE);
   const equipment = read(equipmentPath);
-  const v3 = read(v3Path);
-  const output = plan(equipment, v3);
-  print(output, options);
+  const v4 = read(v4Path);
+  const plan = buildPlan(equipment, v4);
+  print(plan, options);
   if (options.report) {
     const reportPath = path.resolve(ROOT, options.report);
-    write(reportPath, report(output));
-    console.log(`[ADD2E][COMPONENT_PRICE] Rapport écrit : ${path.relative(ROOT, reportPath)}.`);
+    write(reportPath, report(plan));
+    console.log(`[ADD2E][COMPONENT_PRICE_V4] Rapport écrit : ${path.relative(ROOT, reportPath)}.`);
   }
   if (options.apply) {
-    apply(output);
+    applyPlan(plan, equipment);
     write(equipmentPath, equipment);
-    write(v3Path, v3);
-    console.log(`[ADD2E][COMPONENT_PRICE] Appliqué : ${EQUIPMENT_FILE} et ${V3_FILE}. V4 n'est pas modifiée.`);
+    write(v4Path, v4);
+    console.log(`[ADD2E][COMPONENT_PRICE_V4] Appliqué : ${EQUIPMENT_FILE} et ${V4_FILE}. V3 n'est pas modifiée.`);
   }
 }
 main();
