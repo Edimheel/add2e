@@ -16,7 +16,7 @@ export {
 // - équipement via handleItemAction.
 // Aucune règle d'arme, projectile, armure, bouclier ou compatibilité n'est dupliquée ici.
 
-const ADD2E_HUD_COMBAT_TABS_VERSION = "2026-06-27-hud-combat-lists-familiar-actions-v5";
+const ADD2E_HUD_COMBAT_TABS_VERSION = "2026-06-28-hud-combat-lists-familiar-actions-spell-memory-v6";
 const ADD2E_HUD_ID = "add2e-action-hud";
 const ADD2E_HUD_COMBAT_STYLE_ID = "add2e-action-hud-combat-tabs-style";
 let add2eHudCombatTab = "armes";
@@ -30,6 +30,8 @@ let add2eHudThiefActivityRenderScheduled = false;
 let add2eHudThiefActivityRendering = false;
 let add2eHudFamiliarActionsRenderScheduled = false;
 let add2eHudFamiliarActionsRendering = false;
+let add2eHudSpellMemorySyncScheduled = false;
+let add2eHudSpellMemorySyncing = false;
 
 function add2eHudCombatEscape(value) {
   try { return foundry.utils.escapeHTML(String(value ?? "")); }
@@ -220,6 +222,169 @@ function add2eHudCombatEnsureStyle() {
   document.head.appendChild(style);
 }
 
+function add2eHudSpellNumericTree(value) {
+  if (typeof value === "number" && Number.isFinite(value)) return Math.max(0, Math.floor(value));
+  if (typeof value === "string" && value.trim() !== "") {
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? Math.max(0, Math.floor(numeric)) : 0;
+  }
+  if (!value || typeof value !== "object" || Array.isArray(value)) return 0;
+  return Object.values(value).reduce((sum, child) => sum + add2eHudSpellNumericTree(child), 0);
+}
+
+function add2eHudSpellMemorizedCount(sort) {
+  try {
+    const total = globalThis.add2eGetTotalMemorizedCount?.(sort);
+    if (total !== undefined && total !== null && total !== "") {
+      const numeric = Number(total);
+      if (Number.isFinite(numeric)) return Math.max(0, Math.floor(numeric));
+    }
+  } catch (_error) {}
+
+  const flags = sort?.flags?.add2e ?? {};
+  const direct = sort?.getFlag?.("add2e", "memorizedCount") ?? flags.memorizedCount;
+  if (direct !== undefined && direct !== null && direct !== "") {
+    const numeric = Number(direct);
+    return Number.isFinite(numeric) ? Math.max(0, Math.floor(numeric)) : 0;
+  }
+
+  const byList = sort?.getFlag?.("add2e", "memorizedByList") ?? flags.memorizedByList;
+  return add2eHudSpellNumericTree(byList);
+}
+
+function add2eHudSpellIsObjectPower(sort) {
+  const system = sort?.system ?? {};
+  if (system.isPower === true || system.isObjectPower === true || system.sourceWeaponId || system.sourceItemId || system.powerIndex !== undefined) return true;
+  try { return globalThis.add2eIsObjectMagicSpellForPreparation?.(sort) === true; }
+  catch (_error) { return false; }
+}
+
+function add2eHudSpellLevel(sort) {
+  return Math.max(0, Math.floor(Number(sort?.system?.niveau ?? sort?.system?.level ?? sort?.system?.niveau_sort ?? 0) || 0));
+}
+
+function add2eHudSpellListLabel(sort) {
+  const system = sort?.system ?? {};
+  const rawValues = [
+    system.liste, system.list, system.spellList, system.classe, system.class,
+    system.sourceClasse, system.casterClass,
+    ...(Array.isArray(system.lists) ? system.lists : [system.lists]),
+    ...(Array.isArray(system.listes) ? system.listes : [system.listes]),
+    ...(Array.isArray(system.classes) ? system.classes : [system.classes])
+  ];
+  const raw = rawValues.map(value => String(value ?? "").trim()).find(Boolean) || "Mag";
+  const normalized = String(raw)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, "_");
+  if (normalized.includes("clerc") || normalized.includes("pretre") || normalized.includes("priest")) return "Clerc";
+  if (normalized.includes("druid") || normalized.includes("druide")) return "Dru";
+  if (normalized.includes("ranger")) return "Rng";
+  if (normalized.includes("paladin")) return "Pal";
+  if (normalized.includes("mag") || normalized.includes("wizard") || normalized.includes("mage")) return "Mag";
+  return String(raw).slice(0, 6);
+}
+
+function add2eHudSpellGroupKey(sort) {
+  return `${add2eHudSpellListLabel(sort)}|${add2eHudSpellLevel(sort)}`;
+}
+
+function add2eHudSpellGroups(actor) {
+  const groups = new Map();
+  for (const sort of Array.from(actor?.items ?? [])) {
+    if (String(sort?.type ?? "").toLowerCase() !== "sort" || add2eHudSpellIsObjectPower(sort)) continue;
+    const memorized = add2eHudSpellMemorizedCount(sort);
+    if (memorized <= 0) continue;
+    const key = add2eHudSpellGroupKey(sort);
+    const current = groups.get(key) ?? { spells: 0, memorized: 0 };
+    current.spells += 1;
+    current.memorized += memorized;
+    groups.set(key, current);
+  }
+  return groups;
+}
+
+function add2eHudSpellMemorySignature(actor, groups) {
+  return JSON.stringify({
+    actorId: actor?.id ?? "",
+    groups: [...groups.entries()].map(([key, value]) => [key, value.spells, value.memorized]),
+    spells: Array.from(actor?.items ?? [])
+      .filter(item => String(item?.type ?? "").toLowerCase() === "sort")
+      .map(item => [item.id, add2eHudSpellMemorizedCount(item)])
+  });
+}
+
+function add2eHudSpellMemorySynchronize() {
+  if (add2eHudSpellMemorySyncing) return;
+  const root = document.getElementById(ADD2E_HUD_ID);
+  const actor = add2eHudCombatCurrentActor();
+  const section = root?.querySelector?.('[data-section="sorts"]');
+  if (!root || !actor || !section) return;
+
+  const groups = add2eHudSpellGroups(actor);
+  const signature = add2eHudSpellMemorySignature(actor, groups);
+  if (section.dataset.add2eHudSpellMemorySignature === signature) return;
+
+  add2eHudSpellMemorySyncing = true;
+  add2eHudCombatSuppressMutation = true;
+  try {
+    const groupButtons = [...section.querySelectorAll('button[data-action="select-spell-group"][data-spell-group]')];
+    let activeMissing = false;
+    let firstAvailable = null;
+
+    for (const button of groupButtons) {
+      const group = groups.get(button.dataset.spellGroup ?? "");
+      if (!group) {
+        if (button.classList.contains("active")) activeMissing = true;
+        button.remove();
+        continue;
+      }
+      firstAvailable ??= button;
+      const badge = button.querySelector("span");
+      if (badge) badge.textContent = String(group.memorized);
+    }
+
+    for (const button of [...section.querySelectorAll('button[data-action="cast-spell"][data-item-id]')]) {
+      const sort = actor.items?.get?.(button.dataset.itemId) ?? null;
+      const row = button.closest?.(".row");
+      const memorized = sort ? add2eHudSpellMemorizedCount(sort) : 0;
+      if (!row || memorized <= 0) {
+        row?.remove?.();
+        continue;
+      }
+      const badge = [...row.querySelectorAll(".meta span")]
+        .find(element => /^Mémorisé\s+/i.test(String(element.textContent ?? "")));
+      if (badge) badge.textContent = `Mémorisé ${memorized}`;
+    }
+
+    if (!groups.size) {
+      section.innerHTML = '<div class="empty">Aucun sort mémorisé.</div>';
+    } else if (activeMissing && firstAvailable?.isConnected) {
+      window.setTimeout(() => firstAvailable.click(), 0);
+    } else if (!section.querySelector('button[data-action="cast-spell"]')) {
+      const list = section.querySelector(".spell-list");
+      if (list) list.innerHTML = '<div class="empty">Aucun sort mémorisé.</div>';
+    }
+
+    section.dataset.add2eHudSpellMemorySignature = signature;
+  } finally {
+    add2eHudSpellMemorySyncing = false;
+    window.setTimeout(() => { add2eHudCombatSuppressMutation = false; }, 0);
+  }
+}
+
+function add2eHudSpellMemoryScheduleSync() {
+  if (add2eHudSpellMemorySyncScheduled) return;
+  add2eHudSpellMemorySyncScheduled = true;
+  const raf = globalThis.requestAnimationFrame ?? (callback => window.setTimeout(callback, 16));
+  raf(() => {
+    add2eHudSpellMemorySyncScheduled = false;
+    add2eHudSpellMemorySynchronize();
+  });
+}
+
 function add2eHudCombatObserveRoot(root) {
   if (add2eHudCombatObservedRoot === root) return;
   add2eHudCombatRootObserver?.disconnect?.();
@@ -231,6 +396,7 @@ function add2eHudCombatObserveRoot(root) {
       add2eHudCombatScheduleRender();
       add2eHudThiefActivityScheduleRender();
       add2eHudFamiliarActionsScheduleRender();
+      add2eHudSpellMemoryScheduleSync();
     }
   });
   add2eHudCombatRootObserver.observe(root, { childList: true, subtree: true });
@@ -269,12 +435,15 @@ function add2eHudCombatScheduleRender() {
 function add2eHudCombatScheduleStableRender() {
   add2eHudCombatScheduleRender();
   add2eHudFamiliarActionsScheduleRender();
+  add2eHudSpellMemoryScheduleSync();
   // core.mjs reconstruit le HUD à la suite d'un updateItem. Ces deux passages
   // restaurent immédiatement les listes complètes après ce rendu tardif.
   window.setTimeout(add2eHudCombatScheduleRender, 90);
   window.setTimeout(add2eHudCombatScheduleRender, 180);
   window.setTimeout(add2eHudFamiliarActionsScheduleRender, 90);
   window.setTimeout(add2eHudFamiliarActionsScheduleRender, 180);
+  window.setTimeout(add2eHudSpellMemoryScheduleSync, 90);
+  window.setTimeout(add2eHudSpellMemoryScheduleSync, 180);
 }
 
 function add2eHudFamiliarEffectData(effect) {
@@ -477,6 +646,7 @@ function add2eHudCombatInstall() {
       add2eHudCombatScheduleStableRender();
       add2eHudThiefActivityScheduleRender();
       add2eHudFamiliarActionsScheduleRender();
+      add2eHudSpellMemoryScheduleSync();
     }
   });
   add2eHudCombatBodyObserver.observe(document.body, { childList: true, subtree: true });
@@ -494,6 +664,7 @@ function add2eHudCombatInstall() {
       add2eHudCombatScheduleStableRender();
       add2eHudThiefActivityScheduleRender();
       add2eHudFamiliarActionsScheduleRender();
+      add2eHudSpellMemoryScheduleSync();
       return result;
     };
     wrapped.__add2eHudCombatDelegated = true;
@@ -505,6 +676,7 @@ function add2eHudCombatInstall() {
   add2eHudCombatScheduleStableRender();
   add2eHudThiefActivityScheduleRender();
   add2eHudFamiliarActionsScheduleRender();
+  add2eHudSpellMemoryScheduleSync();
 }
 
 if (game?.ready) add2eHudCombatInstall();
