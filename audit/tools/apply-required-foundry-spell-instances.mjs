@@ -8,6 +8,8 @@ const V4_FILE = "fvtt-spells-all-normalise-mecanique-v4.json";
 const REFERENCE_DIR = path.join(ROOT, "audit/reference");
 const REFERENCE_FILE_PATTERN = /^manuel-joueurs-(clerc|druide|magicien|illusionniste)-niveau-[1-9]\.json$/;
 const HEADER_FIELDS = ["ecole", "portee", "duree", "zone_effet", "temps_incantation", "jet_sauvegarde"];
+const COMPONENT_FIELDS = ["composantes", "composants_materiels"];
+const DESCRIPTION_FIELDS = ["description_reelle", "description"];
 const FIELD_KEYS = {
   ecole: ["ecole", "école"],
   portee: ["portee", "portée"],
@@ -16,13 +18,10 @@ const FIELD_KEYS = {
   temps_incantation: ["temps_incantation"],
   jet_sauvegarde: ["jet_sauvegarde"]
 };
+// Rapprochements lecture seule : les titres V4 ne sont jamais modifiés.
 const V4_LOOKUP_ALIASES = new Map([
   ["magicien|5|teleikinesie", "magicien|5|telekinesie"]
 ]);
-const COMPONENT_LOOKUP_ALIASES = new Map([
-  ["magicien|5|teleikinesie", "magicien|5|telekinesie"]
-]);
-const COMPONENT_FIELDS = ["composantes", "composants_materiels"];
 
 const text = value => String(value ?? "").replace(/\s+/g, " ").trim();
 const level = value => Number(String(value ?? "").match(/\d+/)?.[0] ?? 0) || 0;
@@ -59,6 +58,13 @@ function normalize(value) {
     .toLocaleLowerCase("fr");
 }
 
+function normalizeDescription(value) {
+  return normalize(String(value ?? "")
+    .replace(/<\s*br\s*\/?>/gi, " ")
+    .replace(/<\s*\/\s*p\s*>/gi, " ")
+    .replace(/<[^>]*>/g, " "));
+}
+
 function scalar(value) {
   if (value == null) return "";
   if (typeof value === "object" && !Array.isArray(value)) return text(value.valeur ?? value.value ?? value.texte ?? "");
@@ -84,10 +90,16 @@ function setHeaderValue(system, field, value) {
   } else system[key] = value;
 }
 
+function descriptionField(system) {
+  return DESCRIPTION_FIELDS.find(field => hasOwn(system, field)) ?? null;
+}
+
 function parseArgs(argv) {
   const modes = {
     diagnoseHeaders: argv.includes("--diagnose-v4-headers"),
     syncHeaders: argv.includes("--sync-v4-headers"),
+    diagnoseDescriptions: argv.includes("--diagnose-v4-descriptions"),
+    syncDescriptions: argv.includes("--sync-v4-descriptions"),
     diagnoseComponents: argv.includes("--diagnose-v3-to-v4"),
     syncComponents: argv.includes("--sync-v3-to-v4"),
     diagnoseAllComponents: argv.includes("--diagnose-v4-components-from-v3"),
@@ -97,12 +109,14 @@ function parseArgs(argv) {
     console.log("Usage:");
     console.log("  node audit/tools/apply-required-foundry-spell-instances.mjs --diagnose-v4-headers");
     console.log("  node audit/tools/apply-required-foundry-spell-instances.mjs --sync-v4-headers [--dry-run]");
+    console.log("  node audit/tools/apply-required-foundry-spell-instances.mjs --diagnose-v4-descriptions");
+    console.log("  node audit/tools/apply-required-foundry-spell-instances.mjs --sync-v4-descriptions [--dry-run]");
     console.log("  node audit/tools/apply-required-foundry-spell-instances.mjs --diagnose-v4-components-from-v3");
     console.log("  node audit/tools/apply-required-foundry-spell-instances.mjs --sync-v4-components-from-v3 [--dry-run]");
     console.log("  node audit/tools/apply-required-foundry-spell-instances.mjs --diagnose-v3-to-v4 --class Illusionniste --level 1 --name Bruitage");
     console.log("  node audit/tools/apply-required-foundry-spell-instances.mjs --sync-v3-to-v4 --class Illusionniste --level 1 --name Bruitage [--dry-run]");
     console.log("");
-    console.log("Le mode global composants lit V3, contrôle M et recopie uniquement composantes et composants_materiels dans V4.");
+    console.log("Le mode descriptions lit les références et n'écrit que le champ de description existant dans V4.");
     process.exit(0);
   }
   if (Object.values(modes).filter(Boolean).length !== 1) throw new Error("Choisis exactement un mode.");
@@ -149,8 +163,8 @@ function one(index, key, sourceLabel) {
   return entries[0];
 }
 
-function loadHeaders() {
-  const headers = new Map();
+function loadReferences() {
+  const references = new Map();
   const files = fs.readdirSync(REFERENCE_DIR)
     .filter(file => REFERENCE_FILE_PATTERN.test(file))
     .sort((left, right) => left.localeCompare(right, "fr"));
@@ -164,22 +178,35 @@ function loadHeaders() {
       const spellLevel = level(spell?.niveau ?? defaultLevel);
       const name = text(spell?.nom);
       const key = keyOf(className, spellLevel, name);
-      if (!key || headers.has(key)) throw new Error(`Référence invalide ou dupliquée : ${file} — ${name}.`);
-      const values = {};
+      if (!key || references.has(key)) throw new Error(`Référence invalide ou dupliquée : ${file} — ${name}.`);
+      const headers = {};
       for (const field of HEADER_FIELDS) {
         if (!hasOwn(spell, field) || !text(spell[field])) throw new Error(`Entête incomplet : ${file} — ${name} (${field}).`);
-        values[field] = text(spell[field]);
+        headers[field] = text(spell[field]);
       }
-      headers.set(key, { key, className, spellLevel, name, values });
+      if (typeof spell?.description !== "string" || !spell.description.trim()) {
+        throw new Error(`Description de référence absente : ${file} — ${name}.`);
+      }
+      if (/\r?\n/.test(spell.description)) {
+        throw new Error(`Description de référence non normalisée : ${file} — ${name}.`);
+      }
+      references.set(key, {
+        key,
+        className,
+        spellLevel,
+        name,
+        headers,
+        description: spell.description
+      });
     }
   }
-  return headers;
+  return references;
 }
 
-function headerChanges(headers, v4Index) {
-  const changes = [];
+function resolveTargets(references, v4Index, operation) {
+  const targets = [];
   const errors = [];
-  for (const reference of headers.values()) {
+  for (const reference of references.values()) {
     const lookupKey = V4_LOOKUP_ALIASES.get(reference.key) ?? reference.key;
     const matches = v4Index.get(lookupKey) ?? [];
     if (!matches.length) {
@@ -190,37 +217,88 @@ function headerChanges(headers, v4Index) {
       errors.push(`${reference.className} niveau ${reference.spellLevel} — ${reference.name} : ${matches.length} instances V4.`);
       continue;
     }
-    const item = matches[0];
-    const system = item.system ?? {};
-    const fields = HEADER_FIELDS.filter(field => normalize(headerValue(system, field)) !== normalize(reference.values[field]));
-    if (fields.length) changes.push({ reference, item, fields });
+    targets.push({ reference, item: matches[0] });
   }
-  if (errors.length) throw new Error(`Synchronisation des entêtes annulée:\n${errors.join("\n")}`);
-  return changes;
+  if (errors.length) throw new Error(`${operation} annulée :\n${errors.join("\n")}`);
+  return targets;
 }
 
-function printHeaderResult(labelText, headers, changes) {
+function headerChanges(references, v4Index) {
+  return resolveTargets(references, v4Index, "Synchronisation des entêtes")
+    .map(({ reference, item }) => {
+      const system = item.system ?? {};
+      const fields = HEADER_FIELDS.filter(field => normalize(headerValue(system, field)) !== normalize(reference.headers[field]));
+      return { reference, item, fields };
+    })
+    .filter(change => change.fields.length);
+}
+
+function printHeaderResult(labelText, references, changes) {
   const byField = Object.fromEntries(HEADER_FIELDS.map(field => [field, 0]));
   for (const change of changes) for (const field of change.fields) byField[field] += 1;
-  console.log(`[ADD2E][V4_HEADER_SYNC] ${labelText} : ${headers.size} référence(s), ${changes.length} sort(s), ${changes.reduce((sum, change) => sum + change.fields.length, 0)} champ(s).`);
+  console.log(`[ADD2E][V4_HEADER_SYNC] ${labelText} : ${references.size} référence(s), ${changes.length} sort(s), ${changes.reduce((sum, change) => sum + change.fields.length, 0)} champ(s).`);
   console.log(`[ADD2E][V4_HEADER_SYNC] École ${byField.ecole}, portée ${byField.portee}, durée ${byField.duree}, zone ${byField.zone_effet}, incantation ${byField.temps_incantation}, sauvegarde ${byField.jet_sauvegarde}.`);
   for (const change of changes) console.log(`[ADD2E][V4_HEADER_SYNC] ${change.reference.className} niveau ${change.reference.spellLevel} — ${change.reference.name} : ${change.fields.join(", ")}.`);
   console.log("[ADD2E][V4_HEADER_SYNC] Composantes, composants_materiels, descriptions et titres V4 exclus.");
 }
 
 function runHeaders(args) {
-  const headers = loadHeaders();
+  const references = loadReferences();
   const file = path.join(ROOT, V4_FILE);
   const v4 = read(file);
-  const changes = headerChanges(headers, indexItems(v4));
+  const changes = headerChanges(references, indexItems(v4));
   if (args.syncHeaders && !args.dryRun && changes.length) {
     for (const change of changes) {
       const system = change.item.system ??= {};
-      for (const field of change.fields) setHeaderValue(system, field, change.reference.values[field]);
+      for (const field of change.fields) setHeaderValue(system, field, change.reference.headers[field]);
     }
     write(file, v4);
   }
-  printHeaderResult(args.diagnoseHeaders ? "diagnostic" : args.dryRun ? "simulation" : "V4 mis à jour", headers, changes);
+  printHeaderResult(args.diagnoseHeaders ? "diagnostic" : args.dryRun ? "simulation" : "V4 mis à jour", references, changes);
+}
+
+function descriptionChanges(references, v4Index) {
+  const targets = resolveTargets(references, v4Index, "Synchronisation des descriptions");
+  const errors = [];
+  const changes = [];
+  const fields = { description_reelle: 0, description: 0 };
+  for (const { reference, item } of targets) {
+    const system = item.system ?? {};
+    const field = descriptionField(system);
+    if (!field) {
+      errors.push(`${reference.className} niveau ${reference.spellLevel} — ${reference.name} : aucun champ description_reelle ou description dans V4.`);
+      continue;
+    }
+    if (normalizeDescription(system[field]) === normalizeDescription(reference.description)) continue;
+    fields[field] += 1;
+    changes.push({ reference, item, field });
+  }
+  if (errors.length) throw new Error(`Synchronisation des descriptions annulée :\n${errors.join("\n")}`);
+  return { targets, changes, fields };
+}
+
+function printDescriptionResult(labelText, references, result) {
+  console.log(`[ADD2E][V4_DESCRIPTION_SYNC] ${labelText} : ${references.size} référence(s), ${result.targets.length} correspondance(s) V4, ${result.changes.length} description(s) à mettre à jour.`);
+  console.log(`[ADD2E][V4_DESCRIPTION_SYNC] description_reelle ${result.fields.description_reelle}, description ${result.fields.description}.`);
+  for (const change of result.changes) {
+    console.log(`[ADD2E][V4_DESCRIPTION_SYNC] ${change.reference.className} niveau ${change.reference.spellLevel} — ${change.reference.name} : ${change.field}.`);
+  }
+  console.log("[ADD2E][V4_DESCRIPTION_SYNC] Seule la description issue de la référence est écrite dans V4 ; entêtes, composants, titres et V3 restent inchangés.");
+}
+
+function runDescriptions(args) {
+  const references = loadReferences();
+  const file = path.join(ROOT, V4_FILE);
+  const v4 = read(file);
+  const result = descriptionChanges(references, indexItems(v4));
+  if (args.syncDescriptions && !args.dryRun && result.changes.length) {
+    for (const change of result.changes) {
+      const system = change.item.system ??= {};
+      system[change.field] = change.reference.description;
+    }
+    write(file, v4);
+  }
+  printDescriptionResult(args.diagnoseDescriptions ? "diagnostic" : args.dryRun ? "simulation" : "V4 mis à jour", references, result);
 }
 
 function hasMMarker(value) {
@@ -276,7 +354,7 @@ function collectGlobalComponentTargets(v3, v4) {
     }
     const source = sourceEntries[0];
     sourceItems.push(source);
-    const lookupKey = COMPONENT_LOOKUP_ALIASES.get(sourceKey) ?? sourceKey;
+    const lookupKey = V4_LOOKUP_ALIASES.get(sourceKey) ?? sourceKey;
     const targetEntries = v4Index.get(lookupKey) ?? [];
     if (!targetEntries.length) {
       errors.push(`${label(source)} : absent de V4.`);
@@ -294,21 +372,14 @@ function collectGlobalComponentTargets(v3, v4) {
 
   const v4Only = [];
   for (const [v4Key, entries] of v4Index.entries()) {
-    if (!mappedV4Keys.has(v4Key)) {
-      for (const item of entries) v4Only.push(label(item));
-    }
+    if (!mappedV4Keys.has(v4Key)) for (const item of entries) v4Only.push(label(item));
   }
 
-  const coherence = {
-    materiaux_sans_M: [],
-    M_sans_architecture: [],
-    M_architecture_vide: []
-  };
+  const coherence = { materiaux_sans_M: [], M_sans_architecture: [], M_architecture_vide: [] };
   for (const source of sourceItems) {
     const status = componentCoherence(source);
     if (status) coherence[status].push(label(source));
   }
-
   return { sourceItems, targets, errors, v4Only, coherence };
 }
 
@@ -364,5 +435,6 @@ function runTargetedComponents(args) {
 
 const args = parseArgs(process.argv.slice(2));
 if (args.diagnoseHeaders || args.syncHeaders) runHeaders(args);
+else if (args.diagnoseDescriptions || args.syncDescriptions) runDescriptions(args);
 else if (args.diagnoseAllComponents || args.syncAllComponents) runAllComponents(args);
 else runTargetedComponents(args);
