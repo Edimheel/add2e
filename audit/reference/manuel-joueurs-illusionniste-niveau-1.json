@@ -18,14 +18,11 @@
       "portee": "6\" + 1\"/niveau",
       "duree": "3 rounds/niveau",
       "zone_effet": "portée d’ouïe",
-      "composantes": "V, M",
+      "composantes": "V, S",
       "temps_incantation": "5 segments",
       "jet_sauvegarde": "spécial",
       "description": "Excepté ses valeurs propres, ce sort fonctionne comme Bruitage de magicien de niveau 2 : il crée un son dont le volume et la provenance apparente sont choisis par le lanceur ; une créature qui reconnaît l’illusion peut l’ignorer.",
-      "composants_materiels_objets": [
-        {"nom":"morceau de laine","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Alternative à la cire.","notes":null,"alternativeGroup":"bruitage"},
-        {"nom":"cire","quantite":1,"consommation":"consomme","cout_po":null,"source":"Manuel des joueurs","condition":"Alternative à la laine.","notes":null,"alternativeGroup":"bruitage"}
-      ],
+      "composants_materiels_objets": [],
       "status": "reference_complete_description_normalisee",
       "variantes": [],
       "reversible": false
