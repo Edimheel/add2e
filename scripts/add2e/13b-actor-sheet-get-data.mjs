@@ -1,6 +1,6 @@
 // ADD2E — Actor sheet getData ApplicationV2
 // Full V2 : aucun appel ActorSheet.prototype.
-// Version : 2026-06-17-spell-row-material-components-display-v2
+// Version : 2026-06-28-spell-row-component-availability-v3
 
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant getData.");
 
@@ -408,6 +408,41 @@ globalThis.Add2eActorSheet.prototype.getData = async function getData() {
     return clean.length ? clean.join(", ") : "—";
   };
 
+  const add2eSpellRowComponentStatuses = (sort) => {
+    if (typeof globalThis.add2eGetSpellComponentStatus !== "function") return [];
+
+    let statuses = [];
+    try {
+      statuses = globalThis.add2eGetSpellComponentStatus(this.actor, sort) ?? [];
+    } catch (error) {
+      console.warn("[ADD2E][SHEET][SPELL_COMPONENT_STATUS] Lecture impossible", { actor: this.actor?.name, sort: sort?.name, error });
+      return [];
+    }
+
+    if (!Array.isArray(statuses)) return [];
+    return statuses.map(status => {
+      const alternativeNames = Array.isArray(status?.alternatives)
+        ? status.alternatives
+          .map(alternative => add2eNormalizeMaterialLabel(alternative?.name ?? alternative?.label ?? alternative?.key ?? ""))
+          .filter(Boolean)
+        : [];
+      const label = alternativeNames.length
+        ? alternativeNames.join(" ou ")
+        : add2eNormalizeMaterialLabel(status?.name ?? status?.selectedName ?? status?.key ?? "");
+      const quantity = Math.max(1, Number(status?.quantity ?? status?.selectedQuantity ?? 1) || 1);
+      const available = status?.available === true;
+      return {
+        label: label || "Composant",
+        available,
+        quantity,
+        showQuantity: quantity > 1 && !alternativeNames.length,
+        title: available
+          ? `Composant disponible${quantity > 1 ? ` (quantité requise : ${quantity})` : ""}`
+          : `Composant manquant ou quantité insuffisante${quantity > 1 ? ` (quantité requise : ${quantity})` : ""}`
+      };
+    }).filter(status => status.label && status.label !== "Composant");
+  };
+
   const add2eBuildSpellRowForHbs = (sort, spellLevel) => {
     const spellLists = add2eGetSpellListsFromItem(sort);
     const allowedEntries = add2eSpellEntriesForHbs.filter(entry => {
@@ -421,6 +456,10 @@ globalThis.Add2eActorSheet.prototype.getData = async function getData() {
     const isObjectPower = add2eIsObjectPowerRow(sort);
     const isCapacity = add2eIsCapacitySpellRow(sort);
     const s = sort.system ?? {};
+    const composantsMaterielsStatus = add2eSpellRowComponentStatuses(sort);
+    const composantsMateriels = composantsMaterielsStatus.length
+      ? composantsMaterielsStatus.map(status => `${status.label}${status.showQuantity ? ` ×${status.quantity}` : ""}`).join(", ")
+      : add2eSpellRowMaterialDisplay(s);
 
     return {
       id: sort.id || sort._id,
@@ -433,7 +472,9 @@ globalThis.Add2eActorSheet.prototype.getData = async function getData() {
       ecole: s?.école || s?.ecole || s?.school || "",
       description: s?.description || "",
       composantes: s?.composantes || "",
-      composants_materiels: add2eSpellRowMaterialDisplay(s),
+      composants_materiels: composantsMateriels,
+      composants_materiels_status: composantsMaterielsStatus,
+      has_composants_materiels_status: composantsMaterielsStatus.length > 0,
       composants_materiels_brut: foundry.utils.deepClone(s?.composants_materiels ?? []),
       composants_materiels_objets: foundry.utils.deepClone(s?.composants_materiels_objets ?? []),
       composants_materiels_source: s?.composants_materiels_source || "",
