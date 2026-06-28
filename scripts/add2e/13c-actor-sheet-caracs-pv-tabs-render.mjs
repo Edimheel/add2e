@@ -5,7 +5,9 @@
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant 13c.");
 
 const ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION = "2026-06-25-force-ex-class-items-v3";
+const ADD2E_HP_MODIFIERS_VERSION = "2026-06-28-generic-hp-modifiers-v1";
 globalThis.ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION = ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION;
+globalThis.ADD2E_HP_MODIFIERS_VERSION = ADD2E_HP_MODIFIERS_VERSION;
 
 function add2eV2Root(source) {
   if (!source) return null;
@@ -51,13 +53,266 @@ function add2eActorCanUseExceptionalStrength(actor) {
 }
 globalThis.add2eActorCanUseExceptionalStrength = add2eActorCanUseExceptionalStrength;
 
-function add2eFamiliarHpShareAmount(actor) {
-  const share = actor?.getFlag?.("add2e", "familiarHpShare")
-    ?? actor?.flags?.add2e?.familiarHpShare
-    ?? null;
-  const amount = Number(share?.amount ?? 0);
-  return share?.linkId && Number.isFinite(amount) && amount > 0 ? Math.floor(amount) : 0;
+function add2eClone(value) {
+  if (typeof foundry?.utils?.deepClone === "function") return foundry.utils.deepClone(value);
+  if (typeof foundry?.utils?.duplicate === "function") return foundry.utils.duplicate(value);
+  return JSON.parse(JSON.stringify(value ?? {}));
 }
+
+function add2eNumber(value, fallback = 0) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
+}
+
+function add2eUpdateHas(changes, path) {
+  if (Object.prototype.hasOwnProperty.call(changes ?? {}, path)) return true;
+  return typeof foundry?.utils?.hasProperty === "function" && foundry.utils.hasProperty(changes ?? {}, path);
+}
+
+function add2eUpdateRead(changes, path) {
+  if (Object.prototype.hasOwnProperty.call(changes ?? {}, path)) return changes[path];
+  return foundry?.utils?.getProperty?.(changes ?? {}, path);
+}
+
+function add2eUpdateWrite(changes, path, value) {
+  changes[path] = value;
+}
+
+function add2eHpModifierRegistry(value) {
+  const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  const registry = {};
+  for (const [sourceId, raw] of Object.entries(source)) {
+    const id = String(sourceId ?? "").trim();
+    if (!id || !raw || typeof raw !== "object") continue;
+    const amount = Math.trunc(add2eNumber(raw.amount ?? raw.value ?? raw.bonus, 0));
+    if (!amount) continue;
+    registry[id] = {
+      ...add2eClone(raw),
+      amount,
+      label: String(raw.label ?? raw.name ?? id)
+    };
+  }
+  return registry;
+}
+
+function add2eHpModifierTotal(registry) {
+  return Object.values(add2eHpModifierRegistry(registry))
+    .reduce((total, modifier) => total + add2eNumber(modifier.amount, 0), 0);
+}
+
+function add2eActorHpModifiers(actor) {
+  return add2eHpModifierRegistry(
+    actor?.getFlag?.("add2e", "hpModifiers")
+      ?? actor?.flags?.add2e?.hpModifiers
+      ?? {}
+  );
+}
+
+function add2eActorHpModifierTotal(actor) {
+  return add2eHpModifierTotal(add2eActorHpModifiers(actor));
+}
+
+function add2eFamiliarLegacyShare(actor, changes = null) {
+  const value = changes && add2eUpdateHas(changes, "flags.add2e.familiarHpShare")
+    ? add2eUpdateRead(changes, "flags.add2e.familiarHpShare")
+    : actor?.getFlag?.("add2e", "familiarHpShare") ?? actor?.flags?.add2e?.familiarHpShare ?? null;
+  if (!value || typeof value !== "object") return null;
+  const linkId = String(value.linkId ?? actor?.getFlag?.("add2e", "familiar")?.linkId ?? actor?.flags?.add2e?.familiar?.linkId ?? "").trim();
+  const amount = Math.max(0, Math.floor(add2eNumber(value.amount, 0)));
+  return linkId ? { linkId, amount } : null;
+}
+
+function add2eFamiliarModifierSource(linkId) {
+  return `familier:${String(linkId ?? "").trim()}`;
+}
+
+function add2eFamiliarPenaltySource(linkId) {
+  return `familier-penalite:${String(linkId ?? "").trim()}`;
+}
+
+function add2eApplyLegacyFamiliarShareToRegistry(actor, changes) {
+  const share = add2eFamiliarLegacyShare(actor, changes);
+  if (!share) return null;
+  const registry = add2eActorHpModifiers(actor);
+  const source = add2eFamiliarModifierSource(share.linkId);
+  if (share.amount > 0) {
+    registry[source] = {
+      amount: share.amount,
+      label: "Vitalité partagée du familier",
+      kind: "familier",
+      temporary: true,
+      linkId: share.linkId
+    };
+  } else {
+    delete registry[source];
+  }
+  add2eUpdateWrite(changes, "flags.add2e.hpModifiers", registry);
+  return registry;
+}
+
+function add2eApplyLegacyFamiliarDeathPenaltyToRegistry(actor, changes) {
+  const nextMax = add2eNumber(add2eUpdateRead(changes, "system.points_de_coup"), NaN);
+  const previousMax = add2eNumber(actor?.system?.points_de_coup, NaN);
+  const linkId = String(actor?.getFlag?.("add2e", "familiar")?.linkId ?? actor?.flags?.add2e?.familiar?.linkId ?? "").trim();
+  const penalty = Number.isFinite(previousMax) && Number.isFinite(nextMax) ? Math.max(0, Math.floor(previousMax - nextMax)) : 0;
+  if (!linkId || !penalty) return null;
+  const registry = add2eActorHpModifiers(actor);
+  registry[add2eFamiliarPenaltySource(linkId)] = {
+    amount: -penalty,
+    label: "Pénalité de mort du familier",
+    kind: "familier",
+    persistent: true,
+    linkId
+  };
+  add2eUpdateWrite(changes, "flags.add2e.hpModifiers", registry);
+  return registry;
+}
+
+function add2eApplyHpModifiersPreUpdate(actor, changes = {}, options = {}) {
+  if (options?.add2eHpModifiersFinal === true) return;
+
+  const previousRegistry = add2eActorHpModifiers(actor);
+  const previousTotal = add2eHpModifierTotal(previousRegistry);
+  let registryChanged = add2eUpdateHas(changes, "flags.add2e.hpModifiers");
+
+  if (options?.add2eFamiliarHpShare === true) {
+    add2eApplyLegacyFamiliarShareToRegistry(actor, changes);
+    return;
+  }
+
+  if (options?.add2eFamiliarDeathPenalty === true) {
+    add2eApplyLegacyFamiliarDeathPenaltyToRegistry(actor, changes);
+    return;
+  }
+
+  if (options?.add2eHpModifiersMigration === true) return;
+
+  const nextRegistry = registryChanged
+    ? add2eHpModifierRegistry(add2eUpdateRead(changes, "flags.add2e.hpModifiers"))
+    : previousRegistry;
+  const nextTotal = add2eHpModifierTotal(nextRegistry);
+  const nextMaxPresent = add2eUpdateHas(changes, "system.points_de_coup");
+  const nextCurrentPresent = add2eUpdateHas(changes, "system.pdv");
+  const previousMax = add2eNumber(actor?.system?.points_de_coup, NaN);
+  const previousCurrent = add2eNumber(actor?.system?.pdv, NaN);
+
+  if (registryChanged) {
+    add2eUpdateWrite(changes, "flags.add2e.hpModifiers", nextRegistry);
+    const delta = nextTotal - previousTotal;
+    if (!nextMaxPresent && Number.isFinite(previousMax)) {
+      add2eUpdateWrite(changes, "system.points_de_coup", Math.max(1, previousMax + delta));
+    }
+    if (!nextCurrentPresent && Number.isFinite(previousCurrent)) {
+      add2eUpdateWrite(changes, "system.pdv", previousCurrent + delta);
+    }
+    return;
+  }
+
+  if (!nextMaxPresent || !previousTotal) return;
+  const calculatedBaseMax = add2eNumber(add2eUpdateRead(changes, "system.points_de_coup"), NaN);
+  if (!Number.isFinite(calculatedBaseMax)) return;
+  add2eUpdateWrite(changes, "system.points_de_coup", Math.max(1, calculatedBaseMax + previousTotal));
+
+  if (!nextCurrentPresent) return;
+  const calculatedBaseCurrent = add2eNumber(add2eUpdateRead(changes, "system.pdv"), NaN);
+  if (Number.isFinite(calculatedBaseCurrent)) add2eUpdateWrite(changes, "system.pdv", calculatedBaseCurrent + previousTotal);
+}
+
+async function add2eSetActorHpModifier(actor, sourceId, modifier = {}, { reason = "hp-modifier" } = {}) {
+  if (!actor || !String(sourceId ?? "").trim()) return false;
+  const source = String(sourceId).trim();
+  const registry = add2eActorHpModifiers(actor);
+  const amount = Math.trunc(add2eNumber(modifier.amount ?? modifier.value ?? modifier.bonus, 0));
+  if (!amount) delete registry[source];
+  else registry[source] = {
+    ...add2eClone(registry[source] ?? {}),
+    ...add2eClone(modifier),
+    amount,
+    label: String(modifier.label ?? modifier.name ?? registry[source]?.label ?? source)
+  };
+  await actor.update({ "flags.add2e.hpModifiers": registry }, {
+    add2eHpModifiers: true,
+    add2eReason: reason
+  });
+  return true;
+}
+
+async function add2eRemoveActorHpModifier(actor, sourceId, options = {}) {
+  return add2eSetActorHpModifier(actor, sourceId, { amount: 0 }, options);
+}
+
+async function add2eRecalculateActorHpModifiers(actor, { reason = "hp-modifier-recalculate" } = {}) {
+  if (!actor?.system) return false;
+  const classes = Array.from(actor.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
+  if (classes.length > 1 && typeof globalThis.add2eSyncMulticlassHp === "function") {
+    await globalThis.add2eSyncMulticlassHp(actor, { syncCurrent: false, reason });
+    return true;
+  }
+  if (typeof actor.sheet?.autoSetPointsDeCoup === "function") {
+    await actor.sheet.autoSetPointsDeCoup({ syncCurrent: false, reason });
+    return true;
+  }
+  return false;
+}
+
+async function add2eMigrateLegacyFamiliarHpShare(actor) {
+  if (!game.user?.isGM || !actor?.system) return false;
+  const share = add2eFamiliarLegacyShare(actor);
+  if (!share?.amount) return false;
+  const source = add2eFamiliarModifierSource(share.linkId);
+  const currentRegistry = add2eActorHpModifiers(actor);
+  if (currentRegistry[source]) return false;
+
+  const beforeMax = add2eNumber(actor.system.points_de_coup, NaN);
+  const beforeCurrent = add2eNumber(actor.system.pdv, NaN);
+  const nextRegistry = {
+    ...currentRegistry,
+    [source]: {
+      amount: share.amount,
+      label: "Vitalité partagée du familier",
+      kind: "familier",
+      temporary: true,
+      linkId: share.linkId
+    }
+  };
+  await actor.update({ "flags.add2e.hpModifiers": nextRegistry }, {
+    add2eHpModifiersMigration: true,
+    add2eReason: "migrate-legacy-familiar-hp-share"
+  });
+
+  const recalculated = await add2eRecalculateActorHpModifiers(actor, { reason: "migrate-legacy-familiar-hp-share" });
+  if (!recalculated || !Number.isFinite(beforeMax) || !Number.isFinite(beforeCurrent)) return recalculated;
+  const delta = add2eNumber(actor.system.points_de_coup, beforeMax) - beforeMax;
+  if (!delta) return true;
+  await actor.update({ "system.pdv": beforeCurrent + delta }, {
+    add2eHpModifiersFinal: true,
+    add2eReason: "migrate-legacy-familiar-hp-current"
+  });
+  return true;
+}
+
+function add2eInstallHpModifierRegistry() {
+  if (globalThis.__ADD2E_HP_MODIFIER_REGISTRY_VERSION__ === ADD2E_HP_MODIFIERS_VERSION) return;
+  globalThis.__ADD2E_HP_MODIFIER_REGISTRY_VERSION__ = ADD2E_HP_MODIFIERS_VERSION;
+
+  Hooks.on("preUpdateActor", add2eApplyHpModifiersPreUpdate);
+  Hooks.once("ready", () => {
+    if (!game.user?.isGM) return;
+    setTimeout(() => {
+      for (const actor of game.actors?.contents ?? []) {
+        add2eMigrateLegacyFamiliarHpShare(actor).catch(error => console.warn("[ADD2E][HP_MODIFIERS][MIGRATION]", { actor: actor?.name, error }));
+      }
+    }, 200);
+  });
+
+  globalThis.add2eGetActorHpModifiers = actor => add2eClone(add2eActorHpModifiers(actor));
+  globalThis.add2eGetActorHpModifierTotal = actor => add2eActorHpModifierTotal(actor);
+  globalThis.add2eSetActorHpModifier = add2eSetActorHpModifier;
+  globalThis.add2eRemoveActorHpModifier = add2eRemoveActorHpModifier;
+  globalThis.add2eRecalculateActorHpModifiers = add2eRecalculateActorHpModifiers;
+}
+
+add2eInstallHpModifierRegistry();
 
 globalThis.Add2eActorSheet.prototype.autoSetCaracAjustements = async function autoSetCaracAjustements() {
   if (this._autoSetCaracsInProgress) return;
@@ -185,7 +440,6 @@ globalThis.Add2eActorSheet.prototype.autoSetPointsDeCoup = async function autoSe
     let hpMax = 0;
     for (let index = 0; index < level; index += 1) hpMax += (index === 0 ? hitDie : (Number(hpRolls[index]) || 1)) + conBonus;
     if (!Number.isFinite(hpMax) || hpMax < 1) hpMax = 1;
-    hpMax += add2eFamiliarHpShareAmount(actor);
 
     const sameHpRolls = foundry.utils.deepEqual
       ? foundry.utils.deepEqual(s.hpRolls ?? [], hpRolls)
