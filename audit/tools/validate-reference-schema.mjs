@@ -36,6 +36,8 @@ const requiredSpellFields = [
 
 const requiredIdentityFields = ["ordre", "nom", "niveau", "variantes", "reversible", "status"];
 const technicalFields = ["ecole", "portee", "duree", "zone_effet", "composantes", "temps_incantation", "jet_sauvegarde"];
+// La comparaison référence → V4 exclut strictement les composants, pilotés par V3.
+const v4NonMaterialTechnicalFields = technicalFields.filter((field) => field !== "composantes");
 const placeholders = new Set(["", "a_completer", "a_remplir", "a_renseigner", "todo", "tbd", "inconnu", "non_renseigne", "non_disponible"]);
 
 // Rapprochements nécessaires lorsque l'item du découpage historique ne possède pas le titre canonique.
@@ -261,7 +263,10 @@ function v4Index(document) {
         nom: text(levelFolder?.name) || null,
         niveau: levelValue(levelFolder?.name),
         classe: text(classFolder?.name) || null
-      }
+      },
+      // Les composants restent hors de cet index de contenu V4.
+      technical: Object.fromEntries(v4NonMaterialTechnicalFields.map((field) => [field, technicalValue(system, field)])),
+      description: descriptionValue(system)
     };
     const entries = index.get(key) ?? [];
     entries.push(record);
@@ -318,12 +323,30 @@ function reportField(referenceValue, sourceValue) {
   return normalizedComparable(referenceValue.value) === normalizedComparable(sourceValue) ? "equal" : "different";
 }
 
+function reportV4Field(referenceValue, v4Value) {
+  if (!Object.prototype.hasOwnProperty.call(referenceValue.owner, referenceValue.field)) return "missing_reference_field";
+  if (isPlaceholder(referenceValue.value)) return "reference_placeholder";
+  if (isPlaceholder(v4Value)) return "missing_v4_value";
+  return normalizedComparable(referenceValue.value) === normalizedComparable(v4Value) ? "equal" : "different";
+}
+
 function reportDescription(referenceValue, sourceValue) {
   if (typeof referenceValue !== "string" || !referenceValue.trim()) return "missing_reference_description";
   if (!sourceValue) return "missing_decoupage_description";
   if (referenceValue === sourceValue) return "equal_raw";
   if (normalizedComparable(referenceValue) === normalizedComparable(sourceValue)) return "equal_formatting_only";
   if (normalizedComparable(referenceValue, { punctuation: true }) === normalizedComparable(sourceValue, { punctuation: true })) {
+    return "equal_punctuation_only";
+  }
+  return "different";
+}
+
+function reportV4Description(referenceValue, v4Value) {
+  if (typeof referenceValue !== "string" || !referenceValue.trim()) return "missing_reference_description";
+  if (!v4Value) return "missing_v4_description";
+  if (referenceValue === v4Value) return "equal_raw";
+  if (normalizedComparable(referenceValue) === normalizedComparable(v4Value)) return "equal_formatting_only";
+  if (normalizedComparable(referenceValue, { punctuation: true }) === normalizedComparable(v4Value, { punctuation: true })) {
     return "equal_punctuation_only";
   }
   return "different";
@@ -393,7 +416,14 @@ function auditReferenceFile(file, v4) {
       legacyFoundryDuplicates: 0,
       outOfScopeFoundryOnly: 0,
       referenceDuplicates: 0,
-      decoupageDuplicates: 0
+      decoupageDuplicates: 0,
+      v4ContentComparableItems: 0,
+      v4ContentUnavailableItems: 0,
+      v4ContentInvalidItems: 0,
+      v4TechnicalDifferences: 0,
+      v4MissingTechnicalValues: 0,
+      v4MissingDescriptions: 0,
+      v4DescriptionDifferences: 0
     },
     identity: {
       aliases: [],
@@ -566,21 +596,48 @@ function auditReferenceFile(file, v4) {
 
   for (const [index, spell] of reference.spells.entries()) {
     const key = spellKey(sourceClass, spell?.niveau ?? sourceLevel, spell?.nom);
+    const identity = key ? referenceIndex.get(key) ?? {
+      key,
+      nom: text(spell?.nom),
+      classe: sourceClass,
+      niveau: levelValue(spell?.niveau ?? sourceLevel)
+    } : null;
     const resolved = key ? resolvedByReferenceKey.get(key) : null;
     const source = resolved?.sourceKey && decoupage ? decoupage.index.get(resolved.sourceKey) : null;
-    const v4Check = key ? v4ByReferenceKey.get(key) : null;
+    const historicalV4Check = key ? v4ByReferenceKey.get(key) : null;
+    const v4ContentCheck = identity ? verifyV4Instance(v4, identity) : {
+      status: "invalid_reference_identity",
+      item: null,
+      errors: ["Identité de référence inexploitable."]
+    };
     const spellReport = {
       ordre: spell?.ordre ?? null,
       nom: text(spell?.nom) || null,
       key,
       sourceKey: resolved?.sourceKey ?? null,
-      identityMatch: resolved?.match === "missing" && v4Check?.status === "verified" ? "decoupage_missing_v4_verified" : (resolved?.match ?? "missing"),
+      identityMatch: resolved?.match === "missing" && historicalV4Check?.status === "verified" ? "decoupage_missing_v4_verified" : (resolved?.match ?? "missing"),
       identityNote: resolved?.note ?? null,
-      v4Integration: v4Check ? v4Details(v4Check) : null,
+      v4Integration: historicalV4Check ? v4Details(historicalV4Check) : null,
       schema: { errors: [], warnings: [] },
       integrity: { missing: [] },
       technical: {},
       description: null,
+      // Audit de contenu V4, distinct du contrôle historique du découpage.
+      // Les composants n'y figurent jamais : V3 en reste la source de vérité.
+      v4Content: {
+        status: v4ContentCheck.status,
+        errors: v4ContentCheck.errors,
+        item: v4ContentCheck.item ? {
+          id: v4ContentCheck.item.id,
+          classe: v4ContentCheck.item.classe,
+          niveau: v4ContentCheck.item.niveau,
+          spellLists: v4ContentCheck.item.spellLists,
+          folder: v4ContentCheck.item.folder
+        } : null,
+        technical: {},
+        description: null,
+        excludedFields: ["composantes", "composants_materiels"]
+      },
       sourceFound: Boolean(source)
     };
 
@@ -620,6 +677,45 @@ function auditReferenceFile(file, v4) {
     };
     if (!spellReport.description.present) output.summary.missingDescriptions += 1;
     if (descriptionComparison === "different") output.summary.descriptionDifferences += 1;
+
+    if (v4ContentCheck.item) {
+      output.summary.v4ContentComparableItems += 1;
+      if (v4ContentCheck.status === "invalid") output.summary.v4ContentInvalidItems += 1;
+      for (const field of v4NonMaterialTechnicalFields) {
+        const present = Object.prototype.hasOwnProperty.call(spell ?? {}, field);
+        const value = present ? spell[field] : undefined;
+        const comparison = reportV4Field({ owner: spell, field, value }, v4ContentCheck.item.technical[field]);
+        spellReport.v4Content.technical[field] = {
+          reference: present ? value : null,
+          v4: v4ContentCheck.item.technical[field] || null,
+          comparison
+        };
+        if (comparison === "different") output.summary.v4TechnicalDifferences += 1;
+        if (comparison === "missing_v4_value") output.summary.v4MissingTechnicalValues += 1;
+      }
+      const v4DescriptionComparison = reportV4Description(spell?.description, v4ContentCheck.item.description);
+      spellReport.v4Content.description = {
+        referencePresent: typeof spell?.description === "string" && Boolean(spell.description.trim()),
+        v4Present: Boolean(v4ContentCheck.item.description),
+        comparison: v4DescriptionComparison
+      };
+      if (v4DescriptionComparison === "different") output.summary.v4DescriptionDifferences += 1;
+      if (v4DescriptionComparison === "missing_v4_description") output.summary.v4MissingDescriptions += 1;
+    } else {
+      output.summary.v4ContentUnavailableItems += 1;
+      for (const field of v4NonMaterialTechnicalFields) {
+        spellReport.v4Content.technical[field] = {
+          reference: Object.prototype.hasOwnProperty.call(spell ?? {}, field) ? spell[field] : null,
+          v4: null,
+          comparison: `v4_${v4ContentCheck.status}`
+        };
+      }
+      spellReport.v4Content.description = {
+        referencePresent: typeof spell?.description === "string" && Boolean(spell.description.trim()),
+        v4Present: false,
+        comparison: `v4_${v4ContentCheck.status}`
+      };
+    }
 
     output.errors.push(...spellReport.schema.errors.map((message) => `${spellReport.nom ?? `spells[${index}]`}: ${message}`));
     output.warnings.push(...spellReport.schema.warnings.map((message) => `${spellReport.nom ?? `spells[${index}]`}: ${message}`));
@@ -698,17 +794,24 @@ function auditAll(options) {
     outOfScopeFoundryOnly: reports.reduce((sum, report) => sum + report.summary.outOfScopeFoundryOnly, 0),
     referenceDuplicates: reports.reduce((sum, report) => sum + report.summary.referenceDuplicates, 0),
     decoupageDuplicates: reports.reduce((sum, report) => sum + report.summary.decoupageDuplicates, 0),
-    structuralErrors: reports.reduce((sum, report) => sum + report.errors.length, 0)
+    structuralErrors: reports.reduce((sum, report) => sum + report.errors.length, 0),
+    v4ContentComparableItems: reports.reduce((sum, report) => sum + report.summary.v4ContentComparableItems, 0),
+    v4ContentUnavailableItems: reports.reduce((sum, report) => sum + report.summary.v4ContentUnavailableItems, 0),
+    v4ContentInvalidItems: reports.reduce((sum, report) => sum + report.summary.v4ContentInvalidItems, 0),
+    v4TechnicalDifferences: reports.reduce((sum, report) => sum + report.summary.v4TechnicalDifferences, 0),
+    v4MissingTechnicalValues: reports.reduce((sum, report) => sum + report.summary.v4MissingTechnicalValues, 0),
+    v4MissingDescriptions: reports.reduce((sum, report) => sum + report.summary.v4MissingDescriptions, 0),
+    v4DescriptionDifferences: reports.reduce((sum, report) => sum + report.summary.v4DescriptionDifferences, 0)
   };
   const audit = {
-    version: "2026-06-27-reference-global-audit-v5",
+    version: "2026-06-28-reference-v4-content-audit-v6",
     generatedAt: new Date().toISOString(),
     scope: {
       referenceDirectory: path.relative(repoRoot, referenceDir),
       referenceFileSelection: "Uniquement les références classe/niveau Clerc, Druide, Magicien et Illusionniste.",
       sourceOfTruth: "Manuel des joueurs AD&D 2e",
       componentsSourceOfTruth: "fvtt-spells-all-normalise-mecanique-v3.json",
-      componentsRule: "Les composants matériels sont lus depuis V3 et ne sont pas déduits, corrigés ou modifiés depuis les références ou le découpage.",
+      componentsRule: "Les composants et composants matériels sont pilotés par V3. Ils sont exclus de la comparaison référence → V4 et ne sont jamais modifiés par ce validateur.",
       decoupageRole: "Contrôle historique lecture seule ; les écarts qui sont vérifiés dans V4 sont informatifs et non bloquants.",
       v4Integration: {
         path: v4.path,
@@ -716,12 +819,18 @@ function auditAll(options) {
         error: v4.error,
         role: "V4 vérifie les instances absentes du découpage historique : classe, niveau, dossier et spellLists."
       },
+      v4ContentAudit: {
+        role: "Inventaire référence → V4 des champs non matériels pour préparer des corrections V4 ciblées.",
+        technicalFields: v4NonMaterialTechnicalFields,
+        description: true,
+        excludedFields: ["composantes", "composants_materiels"]
+      },
       identityAliasesRole: "Table fermée de rapprochements de titres, sans renommage des données Foundry ni des références du Manuel.",
       requiredFoundryInstancesRole: "Une instance absente du découpage devient non bloquante seulement lorsqu'elle est vérifiée dans V4 avec sa classe, son niveau, son dossier et sa spellLists propres."
     },
     manualVerification: {
       status: "not_performed_by_automation",
-      note: "Aucun résultat de cet audit ne constitue une confirmation de conformité au Manuel. Les écarts et valeurs doivent être contrôlés dans le Manuel avant toute modification de référence."
+      note: "Aucun résultat de cet audit ne constitue une confirmation de conformité au Manuel. Les écarts et valeurs doivent être contrôlés dans le Manuel avant toute modification de référence ou de V4."
     },
     structuralIdentity,
     summary,
@@ -730,9 +839,10 @@ function auditAll(options) {
 
   console.log(`[ADD2E][REFERENCE_AUDIT] ${summary.references} référence(s), ${summary.spells} sort(s).`);
   console.log(`[ADD2E][REFERENCE_AUDIT] ${summary.referencesReadyForManualConfirmation} prête(s), ${summary.referencesManualReviewRequired} à vérifier, ${summary.referencesBlockedStructural} bloquée(s).`);
-  console.log(`[ADD2E][REFERENCE_AUDIT] Champs absents ${summary.missingReferenceFields}, placeholders ${summary.placeholderFields}, divergences techniques ${summary.technicalDifferences}, descriptions absentes ${summary.missingDescriptions}, divergences descriptions ${summary.descriptionDifferences}.`);
+  console.log(`[ADD2E][REFERENCE_AUDIT] Champs absents ${summary.missingReferenceFields}, placeholders ${summary.placeholderFields}, divergences techniques historiques ${summary.technicalDifferences}, descriptions historiques ${summary.descriptionDifferences}.`);
+  console.log(`[ADD2E][REFERENCE_AUDIT] V4 non matériel : items comparables ${summary.v4ContentComparableItems}, indisponibles ${summary.v4ContentUnavailableItems}, identités invalides ${summary.v4ContentInvalidItems}, divergences techniques ${summary.v4TechnicalDifferences}, champs V4 manquants ${summary.v4MissingTechnicalValues}, descriptions manquantes ${summary.v4MissingDescriptions}, divergences descriptions ${summary.v4DescriptionDifferences}.`);
   console.log(`[ADD2E][REFERENCE_AUDIT] Identités : alias ${summary.aliasMatches}, écarts découpage historiques ${summary.decoupageMissingReferences}, instances V4 vérifiées ${summary.v4VerifiedFoundryInstances}, instances V4 requises ${summary.requiredFoundryInstances}, doublons historiques ${summary.legacyFoundryDuplicates}, découpage non résolu ${summary.unresolvedDecoupageOnly}, hors périmètre ${summary.outOfScopeFoundryOnly}.`);
-  console.log("[ADD2E][REFERENCE_AUDIT] Les composants matériels restent exclusivement pilotés par V3.");
+  console.log("[ADD2E][REFERENCE_AUDIT] Les composants restent exclusivement pilotés par V3.");
 
   if (options.report) {
     const reportPath = path.resolve(repoRoot, options.report);
