@@ -8073,25 +8073,8 @@
         "cible": "selon description texte",
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "type": "alternative",
-            "alternatives": [
-              {
-                "nom": "laine",
-                "quantite": 1,
-                "consommation": "consomme",
-                "notes": "Quantité conventionnelle ADD2E : 1. Texte du Manuel : morceau de laine."
-              },
-              {
-                "nom": "cire",
-                "quantite": 1,
-                "consommation": "consomme"
-              }
-            ]
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "composants_materiels_source": "La composante matérielle est un morceau de laine ou un peu de cire.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
@@ -8995,14 +8978,8 @@
         "cible": "selon description texte",
         "temps_incantation": "1 segment",
         "jet_sauvegarde": "aucun",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "a completer",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
@@ -10448,14 +10425,8 @@
         "cible": "selon description texte",
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "jeu de 3 coquilles de noisettes",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
@@ -16411,14 +16382,8 @@
         "cible": "selon description texte",
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "pincée de poudre d’os",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "composants_materiels_source": "pincée de poudre d’os",
         "composants_materiels_reference": "Recherche dans le texte du Manuel des joueurs",
         "composants_materiels_verification_recommandee": true,
@@ -17360,14 +17325,8 @@
         "cible": "1 créature ou objet",
         "temps_incantation": "4 segments",
         "jet_sauvegarde": "spécial",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "a completer",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
@@ -18104,14 +18063,8 @@
         "cible": "selon description texte",
         "temps_incantation": "1 segment",
         "jet_sauvegarde": "aucun",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "a completer",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui",
         "composants_materiels_verification_recommandee": "true",
@@ -18222,14 +18175,8 @@
         "cible": "",
         "temps_incantation": "2 segments",
         "jet_sauvegarde": "aucun",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "a completer",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
@@ -20035,14 +19982,8 @@
         "cible": "1 direction",
         "temps_incantation": "2 segments",
         "jet_sauvegarde": "aucun",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "a completer",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "true",
@@ -20989,14 +20930,8 @@
         "cible": "effet magique texte",
         "temps_incantation": "3 segments",
         "jet_sauvegarde": "aucun",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "a completer",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
@@ -23825,14 +23760,8 @@
         "cible": "selon description texte",
         "temps_incantation": "3 segments",
         "jet_sauvegarde": "annule",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "a completer",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
@@ -24320,19 +24249,8 @@
         "cible": "selon description texte",
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "gui",
-            "quantite": 1,
-            "consommation": "consomme"
-          },
-          {
-            "nom": "petite branche d’arbre",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "composants_materiels_source": "gui et une petite branche d’arbre",
         "composants_materiels_reference": "Recherche dans le texte du Manuel des joueurs",
         "composants_materiels_verification_recommandee": true,
@@ -32498,14 +32416,8 @@
         "cible": "selon description texte",
         "temps_incantation": "2 segments",
         "jet_sauvegarde": "aucun",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "a completer",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
@@ -33757,14 +33669,8 @@
         "cible": "selon description texte",
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "cil mis dans de la gomme arabique",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "composants_materiels_source": "Les composantes matérielles sont un cil mis dans de la gomme arabique.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": true,
@@ -38780,14 +38686,8 @@
         "cible": "selon description texte",
         "temps_incantation": "5 segments",
         "jet_sauvegarde": "aucun",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "a completer",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
@@ -40109,7 +40009,7 @@
         "cible": "",
         "temps_incantation": "7 segments",
         "jet_sauvegarde": "aucun",
-        "composantes": "a_verifier_manuellement",
+        "composantes": "V, S",
         "composants_materiels": [],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
@@ -42336,14 +42236,8 @@
         "cible": "objet, point ou créature texte",
         "temps_incantation": "2 segments",
         "jet_sauvegarde": "aucun",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "a completer",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
@@ -42758,14 +42652,8 @@
         "cible": "",
         "temps_incantation": "3 segments",
         "jet_sauvegarde": "aucun",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "a completer",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
@@ -46307,7 +46195,7 @@
         "cible": "selon description texte",
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
-        "composantes": "V, S",
+        "composantes": "V",
         "composants_materiels": [],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
@@ -46449,7 +46337,7 @@
         "cible": "selon description texte",
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
-        "composantes": "V, S",
+        "composantes": "V",
         "composants_materiels": [],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
@@ -46591,7 +46479,7 @@
         "cible": "selon description texte",
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
-        "composantes": "V, S",
+        "composantes": "V",
         "composants_materiels": [],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
@@ -51608,14 +51496,8 @@
         "cible": "selon description texte",
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
-        "composantes": "V, M",
-        "composants_materiels": [
-          {
-            "nom": "symbole sacré du clerc",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V",
+        "composants_materiels": [],
         "composants_materiels_source": "symbole sacré du clerc",
         "composants_materiels_reference": "Règle/usage général clérical ; composant exact à vérifier si le sort précise un complément",
         "composants_materiels_verification_recommandee": true,
@@ -54155,15 +54037,8 @@
         "cible": "selon description texte",
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "morceaux d'écorce",
-            "quantite": 1,
-            "consommation": "consomme",
-            "notes": "Quantité conventionnelle ADD2E : 1. Texte du Manuel : poignée de morceaux d'écorce."
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "composants_materiels_source": "La composante matérielle est une poignée de morceaux d'écorce.",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
@@ -56069,19 +55944,8 @@
         "cible": "selon description texte",
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
-        "composantes": "V, M",
-        "composants_materiels": [
-          {
-            "nom": "pincée de poussière",
-            "quantite": 1,
-            "consommation": "consomme"
-          },
-          {
-            "nom": "gouttes d’eau",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V",
+        "composants_materiels": [],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
@@ -58853,19 +58717,8 @@
         "cible": "selon description texte",
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "Gant en cuir",
-            "quantite": 1,
-            "consommation": "consomme"
-          },
-          {
-            "nom": "formant une ligne légèrement courbe",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "composants_materiels_source": "gant en cuir et un petit objet fait de 4 anneaux reliés entre eux, formant une ligne légèrement courbe, le tout attaché par une barrette en forme de « I »",
         "composants_materiels_reference": "Recherche dans le texte du Manuel des joueurs",
         "composants_materiels_verification_recommandee": true,
@@ -59666,14 +59519,8 @@
         "cible": "selon description texte",
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "gui druidique",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "composants_materiels_source": "gui druidique",
         "composants_materiels_reference": "Règle générale du Manuel : tout sort de druide avec composante matérielle implique du gui",
         "composants_materiels_verification_recommandee": true,
@@ -63673,24 +63520,8 @@
         "cible": "selon description texte",
         "temps_incantation": "1 round texte",
         "jet_sauvegarde": "Spécial",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "alternatives": [
-              {
-                "nom": "petit roseau",
-                "quantite": 1,
-                "consommation": "consomme"
-              },
-              {
-                "nom": "brin de paille",
-                "quantite": 1,
-                "consommation": "consomme",
-                "notes": "Quantité conventionnelle ADD2E : 1. Texte du Manuel : un brin de paille."
-              }
-            ]
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "composants_materiels_source": "petit roseau ou un brin de paille",
         "composants_materiels_reference": "Description du sort extraite du Manuel des joueurs",
         "composants_materiels_verification_recommandee": "true",
@@ -69169,14 +69000,8 @@
         "cible": "selon description texte",
         "temps_incantation": "9 segments",
         "jet_sauvegarde": "aucun",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "a completer",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
@@ -69285,14 +69110,8 @@
         "cible": "",
         "temps_incantation": "3 tours",
         "jet_sauvegarde": "aucun",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "a completer",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",
@@ -69633,7 +69452,7 @@
         "cible": "selon description texte",
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
-        "composantes": "*",
+        "composantes": "spéciales",
         "composants_materiels": [],
         "composants_materiels_source": "",
         "composants_materiels_reference": "",
@@ -76726,14 +76545,8 @@
         "cible": "selon description texte",
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "symbole sacré du clerc",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "composants_materiels_source": "symbole sacré du clerc",
         "composants_materiels_reference": "Règle/usage général clérical ; composant exact à vérifier si le sort précise un complément",
         "composants_materiels_verification_recommandee": true,
@@ -77294,14 +77107,8 @@
         "cible": "selon description texte",
         "temps_incantation": "4 segments",
         "jet_sauvegarde": "aucun",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "symbole sacré",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "composants_materiels_source": "a_completer",
         "composants_materiels_reference": "",
         "composants_materiels_verification_recommandee": "",

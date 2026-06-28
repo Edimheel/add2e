@@ -7254,25 +7254,8 @@
         "cible": "selon description texte",
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "type": "alternative",
-            "alternatives": [
-              {
-                "nom": "laine",
-                "quantite": 1,
-                "consommation": "consomme",
-                "notes": "Quantité conventionnelle ADD2E : 1. Texte du Manuel : morceau de laine."
-              },
-              {
-                "nom": "cire",
-                "quantite": 1,
-                "consommation": "consomme"
-              }
-            ]
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 2 de magicien bruitage (voir p.70).",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-bruitage.js",
         "effectProfile": {
@@ -8095,14 +8078,8 @@
         "cible": "selon description texte",
         "temps_incantation": "1 segment",
         "jet_sauvegarde": "aucun",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "a completer",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "description": "grâce à ce sort, le magicien, ou toute créature dont le niveau d’expérience ou les dés de vie n’excèdent pas ceux du lanceur de sort, peut être placé dans un état de catalepsie, indiscernable de la mort. Cependant la créature affectée peut sentir, entendre et savoir ce qui se passe autour d’elle; mais la vue et les sensations ne sont pas possibles. Ainsi une blessure ou un mauvais traitement corporel ne sera pas ressenti, la créature n’aura aucune réaction et les dégâts subis seront divisés par 2. De plus, une personne en état de catalepsie sera insensible aux effets de la paralysie, du poison ou d’une perte d’énergie. Cependant, un poison injecté dans une personne en état de catalepsie deviendra effectif quand cette personne sortira de cet état cataleptique, bien qu’un jet de protection soit autorisé. Seule une personne consentante peut être affectée par ce sort. Le destinataire du sort consomme 100 fois moins d’air que la normale. Le lanceur de sort est capable de mettre fin au sort quand il le désire; mais il faudra un round complet à la créature sortant de la catalepsie pour retrouver toutes ses fonctions corporelles.",
         "onUse": "systems/add2e/scripts/sorts/catalepsie.js",
         "effectProfile": {
@@ -9368,14 +9345,8 @@
         "cible": "selon description texte",
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "jeu de 3 coquilles de noisettes",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "description": "excepté ci-dessus, ce sort est identique au sort de niveau 7 de druide confusion (voir p.64). Cependant, il affecte une base de 2 à 16 créatures. La composante matérielle est un jeu de 3 coquilles de noisettes.",
         "onUse": "systems/add2e/scripts/sorts/magicien-charme-monstres.js",
         "effectProfile": {
@@ -14604,14 +14575,8 @@
         "cible": "selon description texte",
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "pincée de poudre d’os",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "description": "excepté ci-dessus et le fait que la composante matérielle soit une pincée de poudre d’os, ce sort est le même que le sort de niveau 5 de druide croissance animale (voir p.61).",
         "onUse": "systems/add2e/scripts/sorts/magicien-croissance-animale.js",
         "effectProfile": {
@@ -15458,14 +15423,8 @@
         "cible": "1 créature ou objet",
         "temps_incantation": "4 segments",
         "jet_sauvegarde": "spécial",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "a completer",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 3 de clerc désenvoûtement (voir p.46).",
         "onUse": "systems/add2e/scripts/sorts/desenvoutement.js",
         "effectProfile": {
@@ -16104,14 +16063,8 @@
         "cible": "selon description texte",
         "temps_incantation": "1 segment",
         "jet_sauvegarde": "aucun",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "a completer",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 1 de clerc détection de la magie (voir p.43), sauf que le magicien peut détecter si la magie est très faible, faible, moyenne, forte ou très forte. Le magicien a aussi 10% de chance par niveau de découvrir le type de magie (Divination, Appel, Altération, Charme…). Si la magie est de plusieurs types (Enchantement/Charme par exemple) effectuer un tirage pour chacun d’eux.",
         "onUse": "systems/add2e/scripts/sorts/detection-de-la-magie.js",
         "effectProfile": {
@@ -16199,14 +16152,8 @@
         "cible": "",
         "temps_incantation": "2 segments",
         "jet_sauvegarde": "aucun",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "a completer",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "description": "ce sort est semblable au sort de niveau 1 de clerc détection de la magie (voir p.43).",
         "onUse": "systems/add2e/scripts/sorts/detection-de-la-magie.js",
         "effectProfile": {
@@ -17867,14 +17814,8 @@
         "cible": "1 direction",
         "temps_incantation": "2 segments",
         "jet_sauvegarde": "aucun",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "a completer",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 1 de clerc détection du mal (voir p.44). À noter que le magicien ne détecte que l’intensité du mal, mais pas la tendance éthique comme le permet le sort de clerc.",
         "onUse": "systems/add2e/scripts/sorts/detection-du-mal.js",
         "effectProfile": {
@@ -18742,14 +18683,8 @@
         "cible": "effet magique texte",
         "temps_incantation": "3 segments",
         "jet_sauvegarde": "aucun",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "a completer",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 3 de clerc dissipation de la magie (voir p.46).",
         "onUse": "systems/add2e/scripts/sorts/dissipation-de-la-magie.js",
         "effectProfile": {
@@ -21256,14 +21191,8 @@
         "cible": "selon description texte",
         "temps_incantation": "3 segments",
         "jet_sauvegarde": "annule",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "a completer",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 4 de magicien effroi (voir p.77).",
         "onUse": "systems/add2e/scripts/sorts/effroi.js",
         "effectProfile": {
@@ -21686,19 +21615,8 @@
         "cible": "selon description texte",
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "gui",
-            "quantite": 1,
-            "consommation": "consomme"
-          },
-          {
-            "nom": "petite branche d’arbre",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 3 de druide embroussaillement (voir p.58).",
         "onUse": "systems/add2e/scripts/sorts/magicien-embroussaillement.js",
         "effectProfile": {
@@ -28947,14 +28865,8 @@
         "cible": "selon description texte",
         "temps_incantation": "2 segments",
         "jet_sauvegarde": "aucun",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "a completer",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "description": "excepté ci-dessus et le fait que de 2 à 5 sosies (1d4+1) apparaissent, ce sort est le même que le sort de niveau 2 de magicien image miroir (voir p.71).",
         "onUse": "systems/add2e/scripts/sorts/image-miroir.js",
         "effectProfile": {
@@ -30068,14 +29980,8 @@
         "cible": "selon description texte",
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "cil mis dans de la gomme arabique",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 2 de magicien invisibilité (voir p.71).",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-invisibilite.js",
         "effectProfile": {
@@ -34514,14 +34420,8 @@
         "cible": "selon description texte",
         "temps_incantation": "5 segments",
         "jet_sauvegarde": "aucun",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "a completer",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 8 de magicien labyrinthe (voir p.91).",
         "onUse": "systems/add2e/scripts/sorts/labyrinthe.js",
         "effectProfile": {
@@ -35719,7 +35619,7 @@
         "cible": "",
         "temps_incantation": "7 segments",
         "jet_sauvegarde": "aucun",
-        "composantes": "a_verifier_manuellement",
+        "composantes": "V, S",
         "composants_materiels": [],
         "description": "ce sort autorise le clerc à parler la langue de toute créature se trouvant dans la zone d’effet, que ce soit une langue raciale ou un langage d’alignement. L’inverse du sort, incompréhension, annule ce sort ou rend incompréhensible toute conversation dans la zone d’effet.",
         "onUse": "systems/add2e/scripts/sorts/langue.js",
@@ -37684,14 +37584,8 @@
         "cible": "objet, point ou créature texte",
         "temps_incantation": "2 segments",
         "jet_sauvegarde": "aucun",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "a completer",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "description": "ce sort est le même que le sort de niveau 2 de clerc lumière éternelle, excepté le fait que la portée n’est que de 6\" au lieu de 12\" et que le magicien ne peut pas l’inverser.",
         "onUse": "systems/add2e/scripts/sorts/lumiere-eternelle.js",
         "effectProfile": {
@@ -38069,14 +37963,8 @@
         "cible": "",
         "temps_incantation": "3 segments",
         "jet_sauvegarde": "aucun",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "a completer",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 3 de clerc lumière éternelle (voir p.47). Note: sort non réversible.",
         "onUse": "systems/add2e/scripts/sorts/lumiere-eternelle.js",
         "effectProfile": {
@@ -41299,7 +41187,7 @@
         "cible": "selon description texte",
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
-        "composantes": "V, S",
+        "composantes": "V",
         "composants_materiels": [],
         "description": "quand ce mot est prononcé, une ou plusieurs créatures se trouvant dans la portée et la zone d’effet deviennent temporairement aveugles. Le sort affecte 100 points de vie maximum, mais sa durée dépend du nombre des points de vie des créatures affectées. Si le sort affecte 50 points de vie ou moins, le sort dure de 2 à 5 tours (1d4+1); s’il affecte 51 points de vie ou plus, la durée n’est que de 2 à 5 rounds. Le magicien doit indiquer quelle(s) créature(s) il veut rendre aveugle(s); il doit en désigner une qui représentera le centre de la zone d’effet, ceci avant de déterminer les résultats du sort. Les créatures avec plus de 100 points de vie ne sont pas affectées. Ce sort peut être annulé avec les sorts suivants: guérison de la cécité, dissipation de la magie.",
         "onUse": "systems/add2e/scripts/sorts/magicien-mot-de-pouvoir-cecite.js",
@@ -41432,7 +41320,7 @@
         "cible": "selon description texte",
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
-        "composantes": "V, S",
+        "composantes": "V",
         "composants_materiels": [],
         "description": "quand ce mot est prononcé, la créature, que le magicien a choisie comme victime, est étourdie, chancelante et incapable de penser ou d’agir de façon cohérente pendant un certain nombre de rounds. Le magicien doit faire face à sa victime et cette dernière doit être dans la portée du sort. Les créatures ayant de 1 à 30 points de vie sont étourdies pendant 4 à 16 rounds (4d4). Les créatures ayant de 31 à 60 points de vie sont étourdies pendant 2 à 8 rounds (2d4). Les créatures ayant de 61 à 90 points de vie sont étourdies pendant 1 à 4 rounds (1d4). Les créatures ayant plus de 90 points de vie ne sont pas affectées par le sort. À noter que les points de vie pris en compte sont ceux de la créature au moment où le sort est lancé et non pas ceux qu’elle possède quand elle n’est pas blessée.",
         "onUse": "systems/add2e/scripts/sorts/magicien-mot-de-pouvoir-etourdissement.js",
@@ -41565,7 +41453,7 @@
         "cible": "selon description texte",
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
-        "composantes": "V, S",
+        "composantes": "V",
         "composants_materiels": [],
         "description": "quand ce mot est prononcé, une ou plusieurs créatures se trouvant dans la portée du sort et dans la zone d’effet meurent. Ce sort tue 1 créature avec 60 points de vie maximum ou bien 2 créatures ou plus avec 10 points de vie maximum chacune pour un total de 120 points de vie. La décision d’affecter une ou plusieurs créatures doit être annoncée, ainsi que la portée choisie et l’endroit correspondant au centre de la zone d’effet.",
         "onUse": "systems/add2e/scripts/sorts/magicien-mot-de-pouvoir-mort.js",
@@ -46047,14 +45935,8 @@
         "cible": "selon description texte",
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
-        "composantes": "V, M",
-        "composants_materiels": [
-          {
-            "nom": "symbole sacré du clerc",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V",
+        "composants_materiels": [],
         "description": "ce sort est le même que le sort de niveau 1 protection contre le mal, sauf en ce qui concerne la zone d’effet. Voir p.44 le sort de niveau 1 de clerc protection contre le mal pour plus d’informations.",
         "onUse": "systems/add2e/scripts/sorts/magicien-paralysie.js",
         "effectProfile": {
@@ -48360,15 +48242,8 @@
         "cible": "selon description texte",
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "morceaux d'écorce",
-            "quantite": 1,
-            "consommation": "consomme",
-            "notes": "Quantité conventionnelle ADD2E : 1. Texte du Manuel : poignée de morceaux d'écorce."
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 4 de magicien phytomorphose (voir p.78).",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-phytomorphose.js",
         "effectProfile": {
@@ -50054,19 +49929,8 @@
         "cible": "selon description texte",
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
-        "composantes": "V, M",
-        "composants_materiels": [
-          {
-            "nom": "pincée de poussière",
-            "quantite": 1,
-            "consommation": "consomme"
-          },
-          {
-            "nom": "gouttes d’eau",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V",
+        "composants_materiels": [],
         "description": "avec ce sort, le magicien se déplace instantanément de 3\" maximum par niveau qu’il a atteint. Cette forme spéciale de téléportation est sûre, il n’y a pas d’erreur possible et le magicien arrive toujours exactement à l’endroit désiré, soit en visualisant simplement l’endroit, soit en énonçant la distance et la direction (Exemple: 30\" vers le bas en ligne droite; direction nord-ouest, vers le haut à 45°, à 42\"). S’il arrive à un endroit déjà occupé par un corps solide, il reste sur le plan astral jusqu’à ce qu’il soit localisé par quelque créature charitable qui consente à lancer sur lui une dissipation de la magie, car le magicien y demeure étourdi et ne peut lancer aucun sort lui-même. Si le magicien arrive à un endroit sans aucun support, il tombera et subira les dégâts en conséquence, à moins qu’il n’ait un moyen magique de l’éviter. Le magicien peut transporter avec lui un maximum de 5.000 po (250 kg) de matière non vivante, la moitié s’il s’agit de matière vivante. Le fait de lancer ce sort requiert ensuite un temps de récupération d’une durée de 7 segments. TEMPÊTE DE GLACE (Évocation)",
         "onUse": "systems/add2e/scripts/sorts/magicien-porte-dimensionnelle.js",
         "effectProfile": {
@@ -52539,19 +52403,8 @@
         "cible": "selon description texte",
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "Gant en cuir",
-            "quantite": 1,
-            "consommation": "consomme"
-          },
-          {
-            "nom": "formant une ligne légèrement courbe",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "description": "avec ce sort puissant, la créature affectée est complètement protégée de tous les objets et/ou sorts qui détectent, influencent ou lisent les pensées et/ou les émotions. Cette protection inclut: augure, charme, confusion, débilité mentale, divination, effroi, toutes les formes d’empathies, emprisonnement de l’âme, ESP, injonction, possession, suggestion, suggestion de masse, suzeraineté, télépathie, tueur fantasmagorique et autres à la discrétion du MD. Cette protection s’étend aussi à la prévention de détection/ information par des boules de cristal ou autres objets d’espionnage, clairaudience, clairvoyance, communion, contact d’autres plans et même aux détections ou attaques faites par souhait (souhait mineur, souhait majeur, altération de la réalité). Bien sûr, les pouvoirs divins puissants sont capables de pénétrer une telle protection. Ce sort protège aussi des pouvoirs psi de détection et/ ou d’influence: domination (ou domination de masse), hypnose, invisibilité (ce pouvoir psi est en rapport avec l’esprit), prémonition, plus les pouvoirs aux effets identiques à ceux des sorts déjà listés plus haut.",
         "onUse": "systems/add2e/scripts/sorts/magicien-protection-d-esprit.js",
         "effectProfile": {
@@ -53261,14 +53114,8 @@
         "cible": "selon description texte",
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "gui druidique",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 3 de druide pyrotechnie (voir p.59).",
         "onUse": "systems/add2e/scripts/sorts/magicien-pyrotechnie.js",
         "effectProfile": {
@@ -56868,24 +56715,8 @@
         "cible": "selon description texte",
         "temps_incantation": "1 round texte",
         "jet_sauvegarde": "Spécial",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "alternatives": [
-              {
-                "nom": "petit roseau",
-                "quantite": 1,
-                "consommation": "consomme"
-              },
-              {
-                "nom": "brin de paille",
-                "quantite": 1,
-                "consommation": "consomme",
-                "notes": "Quantité conventionnelle ADD2E : 1. Texte du Manuel : un brin de paille."
-              }
-            ]
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "description": "le destinataire de ce sort est capable de respirer sous l’eau pendant la durée du sort, c'est-à-dire 6 tours par niveau du druide (1 heure/niveau). L’inverse, respiration aérienne, permet aux créatures aquatiques de respirer dans l’atmosphère pour une durée identique.",
         "onUse": "systems/add2e/scripts/sorts/druide-respiration-aquatique.js",
         "effectProfile": {
@@ -61800,14 +61631,8 @@
         "cible": "selon description texte",
         "temps_incantation": "9 segments",
         "jet_sauvegarde": "aucun",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "a completer",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "description": "excepté ci-dessus, ce sort est le même que le sort de niveau 7 de clerc sort astral (voir p.53).",
         "onUse": "systems/add2e/scripts/sorts/sort-astral.js",
         "effectProfile": {
@@ -61893,14 +61718,8 @@
         "cible": "",
         "temps_incantation": "3 tours",
         "jet_sauvegarde": "aucun",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "a completer",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "description": "ce sort est le même que le sort de niveau 7 de clerc sort astral (voir p.53).",
         "onUse": "systems/add2e/scripts/sorts/sort-astral.js",
         "effectProfile": {
@@ -62204,7 +62023,7 @@
         "cible": "selon description texte",
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
-        "composantes": "*",
+        "composantes": "spéciales",
         "composants_materiels": [],
         "description": "l’illusionniste obtient 4 sorts de niveau 1 de magicien parmi la liste suivante quand il atteint le niveau 14 d’expérience et il peut en apprendre un de plus pour chaque progression de niveau. Agrandissement Fermeture Altération des feux normaux Lecture de la magie Amitié Mains brûlantes Aura magique de Nystul Message Bouclier Poigne électrique Charme-personnes Projectile magique Chute de plume Protection contre le mal Compréhension des langues Réparation Disque flottant de Tenser Serviteur invisible Effacement Sommeil L’illusionniste peut apprendre n’importe quel sort de la liste précédente. Il doit rechercher ces sorts de la même manière que le ferait le magicien. Si l’illusionniste choisit ce sort, il peut apprendre 4 sorts ou plus de cette liste, formant en tout un sort de niveau 7.",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-sorts-de-niveau-1-de-magicien.js",
@@ -68451,14 +68270,8 @@
         "cible": "selon description texte",
         "temps_incantation": "spécial texte",
         "jet_sauvegarde": "Spécial",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "symbole sacré du clerc",
-            "quantite": 1,
-            "consommation": "consomme"
-          }
-        ],
+        "composantes": "V, S",
+        "composants_materiels": [],
         "description": "ce sort ressemble beaucoup au sort de niveau 5 de clerc vision réelle (voir p.50). Cependant, il ne permet pas de déterminer les alignements.",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-vision-reelle.js",
         "effectProfile": {

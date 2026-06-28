@@ -1,6 +1,6 @@
 {
   "version": "2026-06-27-reference-global-audit-v5",
-  "generatedAt": "2026-06-27T16:48:13.701Z",
+  "generatedAt": "2026-06-28T06:42:52.234Z",
   "scope": {
     "referenceDirectory": "audit\\reference",
     "referenceFileSelection": "Uniquement les références classe/niveau Clerc, Druide, Magicien et Illusionniste.",
@@ -313,7 +313,7 @@
     "spells": 414,
     "missingReferenceFields": 0,
     "placeholderFields": 1,
-    "technicalDifferences": 1579,
+    "technicalDifferences": 1578,
     "missingDescriptions": 0,
     "descriptionDifferences": 310,
     "identityDifferences": 0,
@@ -10143,7 +10143,7 @@
         "expectedCount": 12,
         "missingReferenceFields": 0,
         "placeholderFields": 0,
-        "technicalDifferences": 57,
+        "technicalDifferences": 56,
         "missingDescriptions": 0,
         "descriptionDifferences": 11,
         "identityDifferences": 0,
@@ -10230,7 +10230,7 @@
               "comparison": "different"
             },
             "duree": {
-              "value": "2 rounds/niveau",
+              "value": "3 rounds/niveau",
               "source": "spéciale",
               "comparison": "different"
             },
@@ -10240,12 +10240,12 @@
               "comparison": "different"
             },
             "composantes": {
-              "value": "V, M",
+              "value": "V, S",
               "source": "V, S",
-              "comparison": "different"
+              "comparison": "equal"
             },
             "temps_incantation": {
-              "value": "1 segment",
+              "value": "5 segments",
               "source": "spécial",
               "comparison": "different"
             },

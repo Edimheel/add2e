@@ -1,5 +1,5 @@
 {
-  "version": "2026-06-24-spell-description-header-audit-v1",
+  "version": "2026-06-24-component-catalog-merchant-filter-v16",
   "input": "fvtt-spells-all-normalise-mecanique-v1.json",
   "output": "fvtt-spells-all-normalise-mecanique-v3.json",
   "clercAuditFiles": [
@@ -19326,15 +19326,12 @@
     "existingMaterialFieldsNormalized": 0
   },
   "componentCatalog": {
-    "file": "compendium_equiepents.json",
+    "version": "2026-06-24-component-catalog-merchant-filter-v16",
     "source": "fvtt-spells-all-normalise-mecanique-v3.json",
-    "deleted": 477,
-    "created": 304,
-    "uniqueComponents": 304,
-    "linkedSpellEntries": 503,
-    "policy": "Tous les objets composants existants sont supprimés puis recréés uniquement depuis les entrées structurées de fvtt-spells-all-normalise-mecanique-v3.json.",
-    "v3Rewritten": false,
-    "grammarParsing": false
+    "cible": "compendium_equipements.json",
+    "composantsSupprimes": 304,
+    "composantsCrees": 262,
+    "objetsNonComposantsConserves": 97
   },
   "componentPriceAudit": {
     "version": "2026-06-24-component-catalog-merchant-filter-v16",
@@ -19343,13 +19340,13 @@
     "policy": "Les composants sont lus exclusivement dans system.composants_materiels du JSON V3. Le compendium équipements est créé depuis les seules entrées vendables. Les entrées de règle ou incomplètes restent dans l'audit, hors catalogue marchand.",
     "summary": {
       "sortsAnalyses": 414,
-      "occurrencesV3": 503,
-      "composantsUniques": 300,
-      "composantsVendables": 263,
-      "horsCatalogueMarchand": 37,
+      "occurrencesV3": 472,
+      "composantsUniques": 298,
+      "composantsVendables": 262,
+      "horsCatalogueMarchand": 36,
       "coutExpliciteSort": 2,
       "prixEquipement": 9,
-      "prixPredit": 252,
+      "prixPredit": 251,
       "prixDefaut": 0
     },
     "components": [
@@ -19366,14 +19363,6 @@
         "equipements_equivalents": [],
         "usages": [
           {
-            "sort": "Catalepsie",
-            "classe": "Magicien",
-            "niveau": 3,
-            "quantite": 1,
-            "consommation": "consomme",
-            "cout_po": null
-          },
-          {
             "sort": "Confusion",
             "classe": "Illusionniste",
             "niveau": 4,
@@ -19385,102 +19374,6 @@
             "sort": "Corde enchantée",
             "classe": "Illusionniste",
             "niveau": 3,
-            "quantite": 1,
-            "consommation": "consomme",
-            "cout_po": null
-          },
-          {
-            "sort": "Désenvoûtement",
-            "classe": "Magicien",
-            "niveau": 4,
-            "quantite": 1,
-            "consommation": "consomme",
-            "cout_po": null
-          },
-          {
-            "sort": "Détection de la magie",
-            "classe": "Magicien",
-            "niveau": 1,
-            "quantite": 1,
-            "consommation": "consomme",
-            "cout_po": null
-          },
-          {
-            "sort": "Détection de la magie",
-            "classe": "Illusionniste",
-            "niveau": 2,
-            "quantite": 1,
-            "consommation": "consomme",
-            "cout_po": null
-          },
-          {
-            "sort": "Détection du mal",
-            "classe": "Magicien",
-            "niveau": 2,
-            "quantite": 1,
-            "consommation": "consomme",
-            "cout_po": null
-          },
-          {
-            "sort": "Dissipation de la magie",
-            "classe": "Magicien",
-            "niveau": 3,
-            "quantite": 1,
-            "consommation": "consomme",
-            "cout_po": null
-          },
-          {
-            "sort": "Effroi",
-            "classe": "Illusionniste",
-            "niveau": 3,
-            "quantite": 1,
-            "consommation": "consomme",
-            "cout_po": null
-          },
-          {
-            "sort": "Image miroir",
-            "classe": "Illusionniste",
-            "niveau": 2,
-            "quantite": 1,
-            "consommation": "consomme",
-            "cout_po": null
-          },
-          {
-            "sort": "Labyrinthe",
-            "classe": "Illusionniste",
-            "niveau": 5,
-            "quantite": 1,
-            "consommation": "consomme",
-            "cout_po": null
-          },
-          {
-            "sort": "Lumière éternelle",
-            "classe": "Magicien",
-            "niveau": 2,
-            "quantite": 1,
-            "consommation": "consomme",
-            "cout_po": null
-          },
-          {
-            "sort": "Lumière éternelle",
-            "classe": "Illusionniste",
-            "niveau": 3,
-            "quantite": 1,
-            "consommation": "consomme",
-            "cout_po": null
-          },
-          {
-            "sort": "Sort astral",
-            "classe": "Magicien",
-            "niveau": 9,
-            "quantite": 1,
-            "consommation": "consomme",
-            "cout_po": null
-          },
-          {
-            "sort": "Sort astral",
-            "classe": "Illusionniste",
-            "niveau": 7,
             "quantite": 1,
             "consommation": "consomme",
             "cout_po": null
@@ -19980,14 +19873,6 @@
         "usages": [
           {
             "sort": "Respiration aquatique",
-            "classe": "Druide",
-            "niveau": 3,
-            "quantite": 1,
-            "consommation": "consomme",
-            "cout_po": null
-          },
-          {
-            "sort": "Respiration aquatique",
             "classe": "Magicien",
             "niveau": 3,
             "quantite": 1,
@@ -20308,14 +20193,6 @@
             "quantite": 1,
             "consommation": "consomme",
             "cout_po": null
-          },
-          {
-            "sort": "Invisibilité",
-            "classe": "Illusionniste",
-            "niveau": 2,
-            "quantite": 1,
-            "consommation": "consomme",
-            "cout_po": null
           }
         ]
       },
@@ -20387,14 +20264,6 @@
             "sort": "Bruitage",
             "classe": "Magicien",
             "niveau": 2,
-            "quantite": 1,
-            "consommation": "consomme",
-            "cout_po": null
-          },
-          {
-            "sort": "Bruitage",
-            "classe": "Illusionniste",
-            "niveau": 1,
             "quantite": 1,
             "consommation": "consomme",
             "cout_po": null
@@ -21871,28 +21740,6 @@
         ]
       },
       {
-        "slug": "formant_une_ligne_legerement_courbe",
-        "nom": "formant une ligne légèrement courbe",
-        "variantes": [
-          "formant une ligne légèrement courbe"
-        ],
-        "vendable": false,
-        "statut": "hors_catalogue_marchand",
-        "prix": null,
-        "origine_prix": "hors_catalogue_marchand",
-        "equipements_equivalents": [],
-        "usages": [
-          {
-            "sort": "Protection d’esprit",
-            "classe": "Magicien",
-            "niveau": 8,
-            "quantite": 1,
-            "consommation": "consomme",
-            "cout_po": null
-          }
-        ]
-      },
-      {
         "slug": "fourchette_d_argent",
         "nom": "fourchette d’argent",
         "variantes": [
@@ -22040,14 +21887,6 @@
           },
           {
             "sort": "Poing de Bigby",
-            "classe": "Magicien",
-            "niveau": 8,
-            "quantite": 1,
-            "consommation": "consomme",
-            "cout_po": null
-          },
-          {
-            "sort": "Protection d’esprit",
             "classe": "Magicien",
             "niveau": 8,
             "quantite": 1,
@@ -22428,14 +22267,6 @@
         "equipements_equivalents": [],
         "usages": [
           {
-            "sort": "Porte dimensionnelle",
-            "classe": "Magicien",
-            "niveau": 4,
-            "quantite": 1,
-            "consommation": "consomme",
-            "cout_po": null
-          },
-          {
             "sort": "Tempête de glace",
             "classe": "Magicien",
             "niveau": 4,
@@ -22583,14 +22414,6 @@
             "sort": "Doigt de mort",
             "classe": "Druide",
             "niveau": 7,
-            "quantite": 1,
-            "consommation": "consomme",
-            "cout_po": null
-          },
-          {
-            "sort": "Embroussaillement",
-            "classe": "Magicien",
-            "niveau": 4,
             "quantite": 1,
             "consommation": "consomme",
             "cout_po": null
@@ -22978,14 +22801,6 @@
             "cout_po": null
           },
           {
-            "sort": "Pyrotechnie",
-            "classe": "Magicien",
-            "niveau": 2,
-            "quantite": 1,
-            "consommation": "consomme",
-            "cout_po": null
-          },
-          {
             "sort": "Répulsion du bois",
             "classe": "Druide",
             "niveau": 6,
@@ -23227,9 +23042,8 @@
       },
       {
         "slug": "jeu_de_3_coquilles_de_noisettes",
-        "nom": "jeu de 3 coquilles de noisettes",
+        "nom": "Jeu de 3 coquilles de noisettes",
         "variantes": [
-          "jeu de 3 coquilles de noisettes",
           "Jeu de 3 coquilles de noisettes"
         ],
         "vendable": true,
@@ -23238,14 +23052,6 @@
         "origine_prix": "matiere_animale",
         "equipements_equivalents": [],
         "usages": [
-          {
-            "sort": "Charme-monstres",
-            "classe": "Magicien",
-            "niveau": 4,
-            "quantite": 1,
-            "consommation": "consomme",
-            "cout_po": null
-          },
           {
             "sort": "Confusion",
             "classe": "Magicien",
@@ -23360,14 +23166,6 @@
             "sort": "Bruitage",
             "classe": "Magicien",
             "niveau": 2,
-            "quantite": 1,
-            "consommation": "consomme",
-            "cout_po": null
-          },
-          {
-            "sort": "Bruitage",
-            "classe": "Illusionniste",
-            "niveau": 1,
             "quantite": 1,
             "consommation": "consomme",
             "cout_po": null
@@ -23988,14 +23786,6 @@
         "origine_prix": "matiere_vegetale_ou_vivriere",
         "equipements_equivalents": [],
         "usages": [
-          {
-            "sort": "Phytomorphose",
-            "classe": "Illusionniste",
-            "niveau": 4,
-            "quantite": 1,
-            "consommation": "consomme",
-            "cout_po": null
-          },
           {
             "sort": "Phytomorphose",
             "classe": "Magicien",
@@ -24718,14 +24508,6 @@
         "usages": [
           {
             "sort": "Respiration aquatique",
-            "classe": "Druide",
-            "niveau": 3,
-            "quantite": 1,
-            "consommation": "consomme",
-            "cout_po": null
-          },
-          {
-            "sort": "Respiration aquatique",
             "classe": "Magicien",
             "niveau": 3,
             "quantite": 1,
@@ -25008,14 +24790,6 @@
             "sort": "Arbre",
             "classe": "Druide",
             "niveau": 3,
-            "quantite": 1,
-            "consommation": "consomme",
-            "cout_po": null
-          },
-          {
-            "sort": "Embroussaillement",
-            "classe": "Magicien",
-            "niveau": 4,
             "quantite": 1,
             "consommation": "consomme",
             "cout_po": null
@@ -25569,28 +25343,6 @@
         ]
       },
       {
-        "slug": "pincee_de_poudre_d_os",
-        "nom": "pincée de poudre d’os",
-        "variantes": [
-          "pincée de poudre d’os"
-        ],
-        "vendable": true,
-        "statut": "catalogue_marchand",
-        "prix": "1 pa",
-        "origine_prix": "reagent_courant_petite_quantite",
-        "equipements_equivalents": [],
-        "usages": [
-          {
-            "sort": "Croissance animale",
-            "classe": "Magicien",
-            "niveau": 5,
-            "quantite": 1,
-            "consommation": "consomme",
-            "cout_po": null
-          }
-        ]
-      },
-      {
         "slug": "pincee_de_poudre_de_carotte_sechee",
         "nom": "Pincée de poudre de carotte séchée",
         "variantes": [
@@ -25732,14 +25484,6 @@
             "sort": "Désintégration",
             "classe": "Magicien",
             "niveau": 6,
-            "quantite": 1,
-            "consommation": "consomme",
-            "cout_po": null
-          },
-          {
-            "sort": "Porte dimensionnelle",
-            "classe": "Magicien",
-            "niveau": 4,
             "quantite": 1,
             "consommation": "consomme",
             "cout_po": null
@@ -27227,14 +26971,6 @@
             "cout_po": null
           },
           {
-            "sort": "Paralysie",
-            "classe": "Magicien",
-            "niveau": 3,
-            "quantite": 1,
-            "consommation": "consomme",
-            "cout_po": null
-          },
-          {
             "sort": "Quête Religieuse",
             "classe": "Clerc",
             "niveau": 5,
@@ -27278,22 +27014,6 @@
             "sort": "Soins mineurs",
             "classe": "Druide",
             "niveau": 2,
-            "quantite": 1,
-            "consommation": "consomme",
-            "cout_po": null
-          },
-          {
-            "sort": "Vision réelle",
-            "classe": "Illusionniste",
-            "niveau": 6,
-            "quantite": 1,
-            "consommation": "consomme",
-            "cout_po": null
-          },
-          {
-            "sort": "Lumière",
-            "classe": "Illusionniste",
-            "niveau": 1,
             "quantite": 1,
             "consommation": "consomme",
             "cout_po": null
