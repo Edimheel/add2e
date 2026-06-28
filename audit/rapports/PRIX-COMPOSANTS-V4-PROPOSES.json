@@ -1,0 +1,7123 @@
+{
+  "version": "2026-06-28-component-price-from-v4-v2",
+  "scope": {
+    "sourceOfTruth": "fvtt-spells-all-normalise-mecanique-v4.json",
+    "equipment": "sources/Item-Equipements.json",
+    "v3": "exclue",
+    "policy": "Prix existants et cout_po V4 explicites préservés. Les valeurs V4 vides reçoivent prix marchand unitaire × quantite. Les placeholders, textes et composants spéciaux restent à validation manuelle."
+  },
+  "summary": {
+    "v4MaterialEntries": 439,
+    "v4SellableEntries": 299,
+    "v4ReusableEntries": 81,
+    "v4ExcludedPlaceholders": 33,
+    "v4ExcludedText": 20,
+    "v4ManualSpecial": 6,
+    "cataloguedComponents": 231,
+    "matchedEquipment": 33,
+    "createdEquipment": 198,
+    "equipmentUpdates": 30,
+    "ambiguousEquipment": 0,
+    "explicitV4UnitCosts": 2,
+    "explicitV4Conflicts": 0,
+    "v4CostsPreserved": 2,
+    "v4CostsToFill": 378,
+    "v4CostsBlocked": 59,
+    "rarity": {
+      "trivial": 16,
+      "common": 103,
+      "prepared": 46,
+      "crafted": 22,
+      "rare": 19,
+      "precious": 20
+    }
+  },
+  "equipment": [
+    {
+      "action": "create",
+      "name": "Agate",
+      "kind": "sellable",
+      "price": "4 pa",
+      "pricePo": 0.4,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Infravision"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Aiguille de pin",
+      "kind": "reusable",
+      "price": "6 po",
+      "pricePo": 6,
+      "origin": "automatic_rarity",
+      "rarity": "crafted",
+      "changedFields": [],
+      "spells": [
+        "Passage sans trace"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Amandes",
+      "kind": "sellable",
+      "price": "15 pa",
+      "pricePo": 1.5,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [],
+      "spells": [
+        "Fléau d’Insectes"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Araignée vivante",
+      "kind": "sellable",
+      "price": "5 pa",
+      "pricePo": 0.5,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Escalade d’araignée"
+      ]
+    },
+    {
+      "action": "update",
+      "name": "Argile",
+      "kind": "sellable",
+      "price": "18 pa",
+      "pricePo": 1.8,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [
+        "prix",
+        "cout",
+        "source_prix"
+      ],
+      "spells": [
+        "Lithomancie",
+        "Transmutation de pierre en boue"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Argile grasse",
+      "kind": "sellable",
+      "price": "5 po",
+      "pricePo": 5,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [],
+      "spells": [
+        "Distorsion des distances",
+        "Lithomorphose"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Argile humide",
+      "kind": "sellable",
+      "price": "15 pa",
+      "pricePo": 1.5,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [],
+      "spells": [
+        "Invocation d'insectes"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Baguette fourchue métallique, sorte de diapason",
+      "kind": "sellable",
+      "price": "3 po",
+      "pricePo": 3,
+      "origin": "automatic_rarity",
+      "rarity": "crafted",
+      "changedFields": [],
+      "spells": [
+        "Changement de Plan"
+      ]
+    },
+    {
+      "action": "update",
+      "name": "Baies de houx",
+      "kind": "sellable",
+      "price": "18 pc",
+      "pricePo": 0.18,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [
+        "prix",
+        "cout",
+        "source_prix"
+      ],
+      "spells": [
+        "Chariot de Sustarre",
+        "Graines de feu",
+        "Invocation des créatures sylvestres",
+        "Piège à feu"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Beurre)",
+      "kind": "sellable",
+      "price": "7 pa",
+      "pricePo": 0.7000000000000001,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [],
+      "spells": [
+        "Maladresse"
+      ]
+    },
+    {
+      "action": "update",
+      "name": "Bois",
+      "kind": "sellable",
+      "price": "4 pa",
+      "pricePo": 0.4,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [
+        "prix",
+        "cout",
+        "source_prix"
+      ],
+      "spells": [
+        "Chariot de Sustarre",
+        "Serviteur invisible"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Boue",
+      "kind": "sellable",
+      "price": "5 pc",
+      "pricePo": 0.05,
+      "origin": "automatic_rarity",
+      "rarity": "trivial",
+      "changedFields": [],
+      "spells": [
+        "Invocation d'insectes"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Bout de corne taillé en forme de croissant",
+      "kind": "sellable",
+      "price": "7 pc",
+      "pricePo": 0.07,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Chasseur invisible"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Bout de ficelle",
+      "kind": "sellable",
+      "price": "18 pc",
+      "pricePo": 0.18,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Serviteur invisible"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Brassière en cuivre",
+      "kind": "sellable",
+      "price": "15 pc",
+      "pricePo": 0.15,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Invocation d’un familier"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Brindille",
+      "kind": "sellable",
+      "price": "1 pc",
+      "pricePo": 0.01,
+      "origin": "automatic_rarity",
+      "rarity": "trivial",
+      "changedFields": [],
+      "spells": [
+        "Terrain hallucinatoire"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Caillou",
+      "kind": "sellable",
+      "price": "9 pa",
+      "pricePo": 0.9,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [],
+      "spells": [
+        "Tremblement de Terre"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Carapace de tortue",
+      "kind": "sellable",
+      "price": "8 pa",
+      "pricePo": 0.8,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Protection contre les projectiles normaux"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Carbone en poudre",
+      "kind": "sellable",
+      "price": "5 po",
+      "pricePo": 5,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [],
+      "spells": [
+        "Arme enchantée"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Chair humaine",
+      "kind": "sellable",
+      "price": "9 pa",
+      "pricePo": 0.9,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [],
+      "spells": [
+        "Nécro animation",
+        "Nécro-animation"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Chapelet",
+      "kind": "reusable",
+      "price": "5 pa",
+      "pricePo": 0.5,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Expiation"
+      ]
+    },
+    {
+      "action": "keep",
+      "name": "Chapelet de prière",
+      "kind": "reusable",
+      "price": "1 po",
+      "pricePo": 1,
+      "origin": "existing_compendium",
+      "rarity": null,
+      "changedFields": [],
+      "spells": [
+        "Contrôle du Climat",
+        "Prière"
+      ]
+    },
+    {
+      "action": "update",
+      "name": "Charbon",
+      "kind": "sellable",
+      "price": "7 pa",
+      "pricePo": 0.7000000000000001,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [
+        "prix",
+        "cout",
+        "source_prix"
+      ],
+      "spells": [
+        "Piège à feu",
+        "Ténèbres éternelles"
+      ]
+    },
+    {
+      "action": "update",
+      "name": "Chaux",
+      "kind": "sellable",
+      "price": "9 pa",
+      "pricePo": 0.9,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [
+        "prix",
+        "cout",
+        "source_prix"
+      ],
+      "spells": [
+        "Transmutation de pierre en chair"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Cheveux",
+      "kind": "sellable",
+      "price": "4 pa",
+      "pricePo": 0.4,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Force"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Cil mis dans de la gomme arabique",
+      "kind": "sellable",
+      "price": "3 po",
+      "pricePo": 3,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [],
+      "spells": [
+        "Invisibilité"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Cils",
+      "kind": "sellable",
+      "price": "3 pa",
+      "pricePo": 0.30000000000000004,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Invisibilité de masse",
+        "Invisibilité sur 3 m"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Cinq chandelles noires allumées",
+      "kind": "sellable",
+      "price": "4 pa",
+      "pricePo": 0.4,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Cacodémon"
+      ]
+    },
+    {
+      "action": "update",
+      "name": "Cire",
+      "kind": "sellable",
+      "price": "4 po",
+      "pricePo": 4,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [
+        "prix",
+        "cout",
+        "source_prix"
+      ],
+      "spells": [
+        "Bruitage"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Cire d’abeille",
+      "kind": "sellable",
+      "price": "2 po",
+      "pricePo": 2,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [],
+      "spells": [
+        "Motif hypnotique",
+        "Surdité"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Citron en poudre",
+      "kind": "sellable",
+      "price": "2 po",
+      "pricePo": 2,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [],
+      "spells": [
+        "Arme enchantée"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Cocon de chenille",
+      "kind": "sellable",
+      "price": "7 pc",
+      "pricePo": 0.07,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Allométamorphose"
+      ]
+    },
+    {
+      "action": "update",
+      "name": "Coquille d’œuf",
+      "kind": "sellable",
+      "price": "3 pc",
+      "pricePo": 0.03,
+      "origin": "automatic_rarity",
+      "rarity": "trivial",
+      "changedFields": [
+        "prix",
+        "cout",
+        "source_prix"
+      ],
+      "spells": [
+        "Main broyante de Bigby"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Création d’un objet minéral",
+      "kind": "sellable",
+      "price": "3 pa",
+      "pricePo": 0.30000000000000004,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Création majeure"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Création d’un objet végétal",
+      "kind": "sellable",
+      "price": "6 pa",
+      "pricePo": 0.6000000000000001,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Création majeure"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Crème faite d’huile, de poudre de pavot et d’essence d’orchidée rose",
+      "kind": "sellable",
+      "price": "75 po",
+      "pricePo": 75,
+      "origin": "automatic_rarity",
+      "rarity": "rare",
+      "changedFields": [],
+      "spells": [
+        "Vision réelle"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Crème pour les yeux faite de poudre de champignons très rares, de safran et de graisse",
+      "kind": "sellable",
+      "price": "40 po",
+      "pricePo": 40,
+      "origin": "automatic_rarity",
+      "rarity": "rare",
+      "changedFields": [],
+      "spells": [
+        "Vision réelle"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Cristal clair",
+      "kind": "sellable",
+      "price": "7 pc",
+      "pricePo": 0.07,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Lecture de la magie"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "De bois",
+      "kind": "sellable",
+      "price": "4 pa",
+      "pricePo": 0.4,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Contrôle du climat"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "De l’argile (eau",
+      "kind": "sellable",
+      "price": "15 pa",
+      "pricePo": 1.5,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [],
+      "spells": [
+        "Transmutation de pierre en boue"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Diamant",
+      "kind": "sellable",
+      "price": "150 po",
+      "pricePo": 150,
+      "origin": "automatic_rarity",
+      "rarity": "precious",
+      "changedFields": [],
+      "spells": [
+        "Immunité magique de Serten",
+        "Sphère glaciale d’Otiluke"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Eau",
+      "kind": "sellable",
+      "price": "2 pa",
+      "pricePo": 0.2,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Contrôle du climat",
+        "Transmutation de pierre en boue"
+      ]
+    },
+    {
+      "action": "keep",
+      "name": "Eau bénite",
+      "kind": "sellable",
+      "price": "25 po",
+      "pricePo": 25,
+      "origin": "existing_compendium",
+      "rarity": null,
+      "changedFields": [],
+      "spells": [
+        "Bénédiction",
+        "Communion",
+        "Dissipation du Mal",
+        "Exorcisme",
+        "Marche des vents",
+        "Protection contre le Mal",
+        "Régénération",
+        "Résurrection"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Eau maudite",
+      "kind": "sellable",
+      "price": "4 pa",
+      "pricePo": 0.4,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Bénédiction",
+        "Dissipation du Mal",
+        "Exorcisme",
+        "Marche des vents",
+        "Régénération",
+        "Résurrection"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Écailles de serpent",
+      "kind": "sellable",
+      "price": "5 po",
+      "pricePo": 5,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [],
+      "spells": [
+        "Bâtons à serpents"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Écharde d’os",
+      "kind": "sellable",
+      "price": "5 pa",
+      "pricePo": 0.5,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Nécro animation"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Éclat de mica",
+      "kind": "sellable",
+      "price": "9 pc",
+      "pricePo": 0.09,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Fracassement"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Écorce de chêne",
+      "kind": "sellable",
+      "price": "18 pc",
+      "pricePo": 0.18,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Peau d'écorce"
+      ]
+    },
+    {
+      "action": "keep",
+      "name": "Encens",
+      "kind": "sellable",
+      "price": "1 po",
+      "pricePo": 1,
+      "origin": "existing_compendium",
+      "rarity": null,
+      "changedFields": [],
+      "spells": [
+        "Communion",
+        "Divination",
+        "Expiation",
+        "Glyphe de Garde",
+        "Nécromancie"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Encens à brûler",
+      "kind": "sellable",
+      "price": "30 po",
+      "pricePo": 30,
+      "origin": "automatic_rarity",
+      "rarity": "rare",
+      "changedFields": [],
+      "spells": [
+        "Contrôle du climat"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Encens allumé",
+      "kind": "sellable",
+      "price": "20 po",
+      "pricePo": 20,
+      "origin": "automatic_rarity",
+      "rarity": "rare",
+      "changedFields": [],
+      "spells": [
+        "Protection contre le Mal"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Encre à base de plomb",
+      "kind": "sellable",
+      "price": "12 pa",
+      "pricePo": 1.2000000000000002,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [],
+      "spells": [
+        "Écriture illusoire"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Encre composée de sécrétion de calmar",
+      "kind": "sellable",
+      "price": "2 po",
+      "pricePo": 2,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [],
+      "spells": [
+        "Moyen mnémonique de Rary"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Encre fine faite de substances rares",
+      "kind": "sellable",
+      "price": "12 pa",
+      "pricePo": 1.2000000000000002,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [],
+      "spells": [
+        "Écriture"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Épée miniature en platine avec poignée",
+      "kind": "sellable",
+      "price": "400 po",
+      "pricePo": 400,
+      "origin": "automatic_rarity",
+      "rarity": "precious",
+      "changedFields": [],
+      "spells": [
+        "Épée de Mordenkainen"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Fer pyriteux",
+      "kind": "sellable",
+      "price": "12 pc",
+      "pricePo": 0.12,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Piège de Léomund"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Feu",
+      "kind": "sellable",
+      "price": "4 pa",
+      "pricePo": 0.4,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Marche des vents"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Feuille",
+      "kind": "sellable",
+      "price": "9 pc",
+      "pricePo": 0.09,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Terrain hallucinatoire"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Feuille d’infusion encore humides",
+      "kind": "sellable",
+      "price": "12 pc",
+      "pricePo": 0.12,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Augure"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Feuille de chêne",
+      "kind": "sellable",
+      "price": "5 pa",
+      "pricePo": 0.5,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Fléau d’insectes"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Feuille de trèfle",
+      "kind": "sellable",
+      "price": "15 pc",
+      "pricePo": 0.15,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Shillelagh"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Feuille morte de chêne",
+      "kind": "sellable",
+      "price": "9 pc",
+      "pricePo": 0.09,
+      "origin": "automatic_rarity",
+      "rarity": "trivial",
+      "changedFields": [],
+      "spells": [
+        "Catalepsie"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Feuilles de navet écrasées",
+      "kind": "sellable",
+      "price": "7 pc",
+      "pricePo": 0.07,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Répulsion des insectes"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Feuilles de symplocarpe fétide",
+      "kind": "sellable",
+      "price": "4 pa",
+      "pricePo": 0.4,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Nuage puant"
+      ]
+    },
+    {
+      "action": "update",
+      "name": "Ficelle",
+      "kind": "sellable",
+      "price": "7 pc",
+      "pricePo": 0.07,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [
+        "prix",
+        "cout",
+        "source_prix"
+      ],
+      "spells": [
+        "Moyen mnémonique de Rary"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Figurine plate",
+      "kind": "sellable",
+      "price": "8 pa",
+      "pricePo": 0.8,
+      "origin": "automatic_rarity",
+      "rarity": "crafted",
+      "changedFields": [],
+      "spells": [
+        "Duo-dimension"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Fil",
+      "kind": "sellable",
+      "price": "4 pa",
+      "pricePo": 0.4,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Chien fidèle de Mordenkainen"
+      ]
+    },
+    {
+      "action": "update",
+      "name": "Fil de cuivre",
+      "kind": "sellable",
+      "price": "12 pa",
+      "pricePo": 1.2000000000000002,
+      "origin": "automatic_rarity",
+      "rarity": "crafted",
+      "changedFields": [
+        "prix",
+        "cout",
+        "source_prix"
+      ],
+      "spells": [
+        "Message"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Fine feuille de cristal de 6 cm²",
+      "kind": "sellable",
+      "price": "2 pa",
+      "pricePo": 0.2,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Sphère glaciale d’Otiluke"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Flamme",
+      "kind": "sellable",
+      "price": "5 po",
+      "pricePo": 5,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [],
+      "spells": [
+        "Langage des Plantes"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Flammes chaudes",
+      "kind": "sellable",
+      "price": "4 pa",
+      "pricePo": 0.4,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Bouclier de feu"
+      ]
+    },
+    {
+      "action": "update",
+      "name": "Fourrure",
+      "kind": "sellable",
+      "price": "4 pa",
+      "pricePo": 0.4,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [
+        "prix",
+        "cout",
+        "source_prix"
+      ],
+      "spells": [
+        "Foudre"
+      ]
+    },
+    {
+      "action": "update",
+      "name": "Fourrure de chauve souris",
+      "kind": "sellable",
+      "price": "15 pc",
+      "pricePo": 0.15,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [
+        "prix",
+        "cout",
+        "source_prix"
+      ],
+      "spells": [
+        "Œil magique",
+        "Ténèbres éternelles"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Fragment de racine de réglisse",
+      "kind": "sellable",
+      "price": "6 pa",
+      "pricePo": 0.6000000000000001,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Rapidité"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Gant",
+      "kind": "sellable",
+      "price": "8 po",
+      "pricePo": 8,
+      "origin": "automatic_rarity",
+      "rarity": "crafted",
+      "changedFields": [],
+      "spells": [
+        "Main d’interposition de Bigby",
+        "Main de force de Bigby"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Gant en cuir",
+      "kind": "sellable",
+      "price": "15 pa",
+      "pricePo": 1.5,
+      "origin": "automatic_rarity",
+      "rarity": "crafted",
+      "changedFields": [],
+      "spells": [
+        "Poigne de Bigby",
+        "Poing de Bigby"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Gant en peau de serpent",
+      "kind": "sellable",
+      "price": "3 po",
+      "pricePo": 3,
+      "origin": "automatic_rarity",
+      "rarity": "crafted",
+      "changedFields": [],
+      "spells": [
+        "Main broyante de Bigby"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Glands de chêne",
+      "kind": "sellable",
+      "price": "3 pa",
+      "pricePo": 0.30000000000000004,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Graines de feu"
+      ]
+    },
+    {
+      "action": "update",
+      "name": "Gomme arabique",
+      "kind": "sellable",
+      "price": "18 pa",
+      "pricePo": 1.8,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [
+        "prix",
+        "cout",
+        "source_prix"
+      ],
+      "spells": [
+        "Invisibilité de masse",
+        "Invisibilité sur 3 m"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Gousse d’ail",
+      "kind": "sellable",
+      "price": "9 pc",
+      "pricePo": 0.09,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Retardement du Poison"
+      ]
+    },
+    {
+      "action": "update",
+      "name": "Goutte d’eau",
+      "kind": "sellable",
+      "price": "15 pa",
+      "pricePo": 1.5,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [
+        "prix",
+        "cout",
+        "source_prix"
+      ],
+      "spells": [
+        "Aquagenèse",
+        "Langage des Plantes",
+        "Statue"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Goutte d’huile",
+      "kind": "sellable",
+      "price": "9 pa",
+      "pricePo": 0.9,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [],
+      "spells": [
+        "Flèche de feu"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Goutte de bitume",
+      "kind": "sellable",
+      "price": "8 pc",
+      "pricePo": 0.08,
+      "origin": "automatic_rarity",
+      "rarity": "trivial",
+      "changedFields": [],
+      "spells": [
+        "Escalade d’araignée"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Goutte de mélasse",
+      "kind": "sellable",
+      "price": "1 pc",
+      "pricePo": 0.01,
+      "origin": "automatic_rarity",
+      "rarity": "trivial",
+      "changedFields": [],
+      "spells": [
+        "Ralentissement"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Goutte de mercure",
+      "kind": "sellable",
+      "price": "60 po",
+      "pricePo": 60,
+      "origin": "automatic_rarity",
+      "rarity": "rare",
+      "changedFields": [],
+      "spells": [
+        "Disque flottant de Tenser",
+        "Lithomancie",
+        "Résistance au feu"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Goutte de poix",
+      "kind": "sellable",
+      "price": "15 pa",
+      "pricePo": 1.5,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [],
+      "spells": [
+        "Ténèbres éternelles"
+      ]
+    },
+    {
+      "action": "update",
+      "name": "Goutte de sang",
+      "kind": "sellable",
+      "price": "18 pa",
+      "pricePo": 1.8,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [
+        "prix",
+        "cout",
+        "source_prix"
+      ],
+      "spells": [
+        "Nécro animation",
+        "Nécro-animation",
+        "Réincarnation",
+        "Transmutation de pierre en chair"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Gouttes d’eau",
+      "kind": "sellable",
+      "price": "4 pc",
+      "pricePo": 0.04,
+      "origin": "automatic_rarity",
+      "rarity": "trivial",
+      "changedFields": [],
+      "spells": [
+        "Tempête de glace"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Grain de sucre",
+      "kind": "sellable",
+      "price": "18 pa",
+      "pricePo": 1.8,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [],
+      "spells": [
+        "Fléau d’Insectes"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Graine de légume",
+      "kind": "sellable",
+      "price": "7 pc",
+      "pricePo": 0.07,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Rafale de vent"
+      ]
+    },
+    {
+      "action": "update",
+      "name": "Guano de chauve-souris",
+      "kind": "sellable",
+      "price": "5 pa",
+      "pricePo": 0.5,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [
+        "prix",
+        "cout",
+        "source_prix"
+      ],
+      "spells": [
+        "Boule de feu à retardement"
+      ]
+    },
+    {
+      "action": "update",
+      "name": "Gui",
+      "kind": "reusable",
+      "price": "8 pa",
+      "pricePo": 0.8,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [
+        "prix",
+        "cout",
+        "source_prix"
+      ],
+      "spells": [
+        "Amitié animale",
+        "Animation de la roche",
+        "Arbre",
+        "Bâtons à serpents",
+        "Catalepsie",
+        "Chariot de Sustarre",
+        "Confusion",
+        "Doigt de mort",
+        "Fléau d’insectes",
+        "Invocation d'insectes",
+        "Invocation d'un élémental de terre",
+        "Langage des plantes",
+        "Lithomorphose",
+        "Mort rampante",
+        "Passage sans trace",
+        "Peau d'écorce",
+        "Piège sylvestre",
+        "Réincarnation",
+        "Répulsion des insectes",
+        "Shillelagh",
+        "Soin ultime",
+        "Soins majeurs",
+        "Tempête de feu",
+        "Transmutation du métal en bois"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Gui druidique",
+      "kind": "reusable",
+      "price": "9 pc",
+      "pricePo": 0.09,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Bouclier anti-animal",
+        "Bouclier anti-plantes",
+        "Communion avec la nature",
+        "Contrôle de la température sur 3 m",
+        "Contrôle des vents",
+        "Croc-en-jambe",
+        "Détection de la magie",
+        "Détection des pièges sylvestres",
+        "Distorsion du bois",
+        "Embrasement",
+        "Enchevêtrement",
+        "Flamme",
+        "Forêt hallucinatoire",
+        "Invocation animale I",
+        "Invocation animale II",
+        "Invocation animale III",
+        "Invocation d'un élémental du feu",
+        "Invocation de la foudre",
+        "Invocation du temps",
+        "Localisation des animaux",
+        "Localisation des plantes",
+        "Métal brûlant",
+        "Mur d'épines",
+        "Paralysie animale",
+        "Paralysie végétale",
+        "Passe-plantes",
+        "Porte végétale",
+        "Prévision du temps",
+        "Protection contre la foudre",
+        "Protection contre le feu",
+        "Répulsion du bois"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Gui majeur",
+      "kind": "reusable",
+      "price": "6 pa",
+      "pricePo": 0.6000000000000001,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Contrôle du climat",
+        "Transmutation du métal en bois"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Houx",
+      "kind": "sellable",
+      "price": "2 pa",
+      "pricePo": 0.2,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Fléau d’insectes",
+        "Invisibilité aux animaux"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Invocation d’un élémental de l’air",
+      "kind": "sellable",
+      "price": "9 pc",
+      "pricePo": 0.09,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Invocation d’élémental"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Invocation d’un élémental de l’eau",
+      "kind": "sellable",
+      "price": "7 pc",
+      "pricePo": 0.07,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Invocation d’élémental"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Invocation d’un élémental de terre",
+      "kind": "sellable",
+      "price": "4 pc",
+      "pricePo": 0.04,
+      "origin": "automatic_rarity",
+      "rarity": "trivial",
+      "changedFields": [],
+      "spells": [
+        "Invocation d’élémental"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Invocation d’un élémental du feu",
+      "kind": "sellable",
+      "price": "5 pa",
+      "pricePo": 0.5,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Invocation d’élémental"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Jeu d’objets divinatoires en os ou en ivoire, sous forme de bâtonnets ou de runes gravées",
+      "kind": "sellable",
+      "price": "80 po",
+      "pricePo": 80,
+      "origin": "automatic_rarity",
+      "rarity": "precious",
+      "changedFields": [],
+      "spells": [
+        "Orientation"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Jeu de 3 coquilles de noisettes",
+      "kind": "sellable",
+      "price": "1 pc",
+      "pricePo": 0.01,
+      "origin": "automatic_rarity",
+      "rarity": "trivial",
+      "changedFields": [],
+      "spells": [
+        "Confusion"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Jeu de baguettes serties de gemmes",
+      "kind": "sellable",
+      "price": "750 po",
+      "pricePo": 750,
+      "origin": "automatic_rarity",
+      "rarity": "precious",
+      "changedFields": [],
+      "spells": [
+        "Augure"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "L’eau",
+      "kind": "sellable",
+      "price": "4 pa",
+      "pricePo": 0.4,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Transmutation de pierre en boue"
+      ]
+    },
+    {
+      "action": "update",
+      "name": "Laine",
+      "kind": "sellable",
+      "price": "15 pc",
+      "pricePo": 0.15,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [
+        "prix",
+        "cout",
+        "source_prix"
+      ],
+      "spells": [
+        "Bruitage",
+        "Force fantasmagorique améliorée",
+        "Force spectrale",
+        "Illusion permanente",
+        "Illusion programmée"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Lait solidifié (crème épaisse",
+      "kind": "sellable",
+      "price": "7 pa",
+      "pricePo": 0.7000000000000001,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [],
+      "spells": [
+        "Maladresse"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Lame en fer",
+      "kind": "sellable",
+      "price": "15 pa",
+      "pricePo": 1.5,
+      "origin": "automatic_rarity",
+      "rarity": "crafted",
+      "changedFields": [],
+      "spells": [
+        "Glissement de terrain"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Langue de serpent",
+      "kind": "sellable",
+      "price": "12 pc",
+      "pricePo": 0.12,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Suggestion",
+        "Suggestion de masse"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Limaille de fer",
+      "kind": "sellable",
+      "price": "15 pa",
+      "pricePo": 1.5,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [],
+      "spells": [
+        "Inversion de la gravité"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Livre de prière",
+      "kind": "reusable",
+      "price": "15 pc",
+      "pricePo": 0.15,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Expiation"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Luciole vivante",
+      "kind": "sellable",
+      "price": "4 pa",
+      "pricePo": 0.4,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Bouclier de feu"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Marteau de guerre normal",
+      "kind": "sellable",
+      "price": "6 pa",
+      "pricePo": 0.6000000000000001,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Marteau Spirituel"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Massue en chêne",
+      "kind": "sellable",
+      "price": "5 pa",
+      "pricePo": 0.5,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Shillelagh"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Matière grasse",
+      "kind": "sellable",
+      "price": "15 pa",
+      "pricePo": 1.5,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [],
+      "spells": [
+        "Fléau d’Insectes"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Matière végétale similaire",
+      "kind": "sellable",
+      "price": "8 pa",
+      "pricePo": 0.8,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Création mineure"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Mélange de terre",
+      "kind": "sellable",
+      "price": "2 pc",
+      "pricePo": 0.02,
+      "origin": "automatic_rarity",
+      "rarity": "trivial",
+      "changedFields": [],
+      "spells": [
+        "Contrôle du climat",
+        "Glissement de terrain"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Mercure",
+      "kind": "sellable",
+      "price": "10 po",
+      "pricePo": 10,
+      "origin": "automatic_rarity",
+      "rarity": "rare",
+      "changedFields": [],
+      "spells": [
+        "Symbole",
+        "Transformation d’objets"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Miroir en argent",
+      "kind": "sellable",
+      "price": "15 po",
+      "pricePo": 15,
+      "origin": "automatic_rarity",
+      "rarity": "rare",
+      "changedFields": [],
+      "spells": [
+        "Sanctuaire"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Morceau d’alun trempé dans du vinaigre",
+      "kind": "sellable",
+      "price": "2 po",
+      "pricePo": 2,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [],
+      "spells": [
+        "Antipathie/sympathie"
+      ]
+    },
+    {
+      "action": "update",
+      "name": "Morceau d’écorce",
+      "kind": "sellable",
+      "price": "9 pa",
+      "pricePo": 0.9,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [
+        "prix",
+        "cout",
+        "source_prix"
+      ],
+      "spells": [
+        "Bâtons à serpents"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Morceau d’os",
+      "kind": "sellable",
+      "price": "8 pa",
+      "pricePo": 0.8,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Chien fidèle de Mordenkainen"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Morceau d’os de mort vivant",
+      "kind": "sellable",
+      "price": "8 pa",
+      "pricePo": 0.8,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Peur"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Morceaux d'écorce",
+      "kind": "sellable",
+      "price": "15 pc",
+      "pricePo": 0.15,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Phytomorphose"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Morceaux d’ivoire",
+      "kind": "sellable",
+      "price": "100 po",
+      "pricePo": 100,
+      "origin": "automatic_rarity",
+      "rarity": "precious",
+      "changedFields": [],
+      "spells": [
+        "Mythomancie"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Motte de terre",
+      "kind": "sellable",
+      "price": "12 pa",
+      "pricePo": 1.2000000000000002,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [],
+      "spells": [
+        "Tremblement de Terre"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Nourriture appréciée par l’animal",
+      "kind": "sellable",
+      "price": "4 pa",
+      "pricePo": 0.4,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Amitié animale"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Objet de prière",
+      "kind": "reusable",
+      "price": "15 pc",
+      "pricePo": 0.15,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Régénération"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Objets divinatoires similaires",
+      "kind": "sellable",
+      "price": "250 po",
+      "pricePo": 250,
+      "origin": "automatic_rarity",
+      "rarity": "precious",
+      "changedFields": [],
+      "spells": [
+        "Augure"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Os en poudre",
+      "kind": "sellable",
+      "price": "12 pa",
+      "pricePo": 1.2000000000000002,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [],
+      "spells": [
+        "Nécro-animation"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Paire de petites barres de fer magnétisées",
+      "kind": "sellable",
+      "price": "12 pc",
+      "pricePo": 0.12,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Répulsion"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Parchemin",
+      "kind": "sellable",
+      "price": "3 pa",
+      "pricePo": 0.30000000000000004,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Mythomancie"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Parchemin mis en cône",
+      "kind": "sellable",
+      "price": "8 pa",
+      "pricePo": 0.8,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Ventriloquie"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Parchemin torsadé en forme de boucle",
+      "kind": "sellable",
+      "price": "3 po",
+      "pricePo": 3,
+      "origin": "automatic_rarity",
+      "rarity": "crafted",
+      "changedFields": [],
+      "spells": [
+        "Corde enchantée"
+      ]
+    },
+    {
+      "action": "update",
+      "name": "Patte arrière de sauterelle",
+      "kind": "sellable",
+      "price": "2 pa",
+      "pricePo": 0.2,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [
+        "prix",
+        "cout",
+        "source_prix"
+      ],
+      "spells": [
+        "Saut"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Peau de serpent",
+      "kind": "sellable",
+      "price": "5 pa",
+      "pricePo": 0.5,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Piège sylvestre"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Pelle miniature",
+      "kind": "sellable",
+      "price": "6 po",
+      "pricePo": 6,
+      "origin": "automatic_rarity",
+      "rarity": "crafted",
+      "changedFields": [],
+      "spells": [
+        "Excavation"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Perle",
+      "kind": "sellable",
+      "price": "100 po",
+      "pricePo": 100,
+      "origin": "automatic_rarity",
+      "rarity": "precious",
+      "changedFields": [],
+      "spells": [
+        "Identification"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Perle écrasée d’au moins 100 po",
+      "kind": "sellable",
+      "price": "100 po",
+      "pricePo": 100,
+      "origin": "explicit_v4",
+      "rarity": null,
+      "changedFields": [],
+      "spells": [
+        "Augure"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Perle noire écrasée",
+      "kind": "sellable",
+      "price": "200 po",
+      "pricePo": 200,
+      "origin": "automatic_rarity",
+      "rarity": "precious",
+      "changedFields": [],
+      "spells": [
+        "Incantation mortelle"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Pétale de fleur",
+      "kind": "sellable",
+      "price": "2 pa",
+      "pricePo": 0.2,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Invocation d'insectes"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Petit baquet",
+      "kind": "sellable",
+      "price": "3 po",
+      "pricePo": 3,
+      "origin": "automatic_rarity",
+      "rarity": "crafted",
+      "changedFields": [],
+      "spells": [
+        "Excavation"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Petit bloc de granit",
+      "kind": "sellable",
+      "price": "15 pc",
+      "pricePo": 0.15,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Mur de roc"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Petit miroir en argent",
+      "kind": "sellable",
+      "price": "18 po",
+      "pricePo": 18,
+      "origin": "automatic_rarity",
+      "rarity": "rare",
+      "changedFields": [],
+      "spells": [
+        "Soins mineurs"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Petit morceau d’acier",
+      "kind": "sellable",
+      "price": "8 pa",
+      "pricePo": 0.8,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Cristairain"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Petit sac",
+      "kind": "sellable",
+      "price": "2 pa",
+      "pricePo": 0.2,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Glissement de terrain",
+        "Invocation de monstre II",
+        "Invocation de Monstre III",
+        "Invocation de monstre IV",
+        "Invocation de monstre V",
+        "Invocation de monstre VI",
+        "Invocation de Monstre VII",
+        "Invocation de monstres I"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Petit sifflet en argent",
+      "kind": "sellable",
+      "price": "60 po",
+      "pricePo": 60,
+      "origin": "automatic_rarity",
+      "rarity": "rare",
+      "changedFields": [],
+      "spells": [
+        "Chien fidèle de Mordenkainen"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Petit tambour",
+      "kind": "sellable",
+      "price": "3 po",
+      "pricePo": 3,
+      "origin": "automatic_rarity",
+      "rarity": "crafted",
+      "changedFields": [],
+      "spells": [
+        "Réincarnation"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Petite baguette d’argent",
+      "kind": "sellable",
+      "price": "10 po",
+      "pricePo": 10,
+      "origin": "automatic_rarity",
+      "rarity": "rare",
+      "changedFields": [],
+      "spells": [
+        "Vigiles et sentinelles"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Petite barre de métal",
+      "kind": "sellable",
+      "price": "18 pa",
+      "pricePo": 1.8,
+      "origin": "automatic_rarity",
+      "rarity": "crafted",
+      "changedFields": [],
+      "spells": [
+        "Paralysie des monstres"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Petite bougie",
+      "kind": "sellable",
+      "price": "5 pa",
+      "pricePo": 0.5,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Invocation de monstre II",
+        "Invocation de Monstre III",
+        "Invocation de monstre IV",
+        "Invocation de monstre V",
+        "Invocation de monstre VI",
+        "Invocation de Monstre VII",
+        "Invocation de monstres I"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Petite boule composée de fiente de chauve souris",
+      "kind": "sellable",
+      "price": "18 pc",
+      "pricePo": 0.18,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Boule de feu"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Petite branche d’arbre",
+      "kind": "sellable",
+      "price": "6 pa",
+      "pricePo": 0.6000000000000001,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Arbre"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Petite corne d’argent",
+      "kind": "sellable",
+      "price": "35 po",
+      "pricePo": 35,
+      "origin": "automatic_rarity",
+      "rarity": "rare",
+      "changedFields": [],
+      "spells": [
+        "Clairaudience"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Petite couronne de jade",
+      "kind": "sellable",
+      "price": "400 po",
+      "pricePo": 400,
+      "origin": "automatic_rarity",
+      "rarity": "precious",
+      "changedFields": [],
+      "spells": [
+        "Hétéromorphisme"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Petite fiole d’eau",
+      "kind": "sellable",
+      "price": "5 po",
+      "pricePo": 5,
+      "origin": "automatic_rarity",
+      "rarity": "crafted",
+      "changedFields": [],
+      "spells": [
+        "Abaissement des eaux"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Petite fiole de poussière",
+      "kind": "sellable",
+      "price": "3 po",
+      "pricePo": 3,
+      "origin": "automatic_rarity",
+      "rarity": "crafted",
+      "changedFields": [],
+      "spells": [
+        "Abaissement des eaux"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Petite perle de cristal",
+      "kind": "sellable",
+      "price": "125 po",
+      "pricePo": 125,
+      "origin": "automatic_rarity",
+      "rarity": "precious",
+      "changedFields": [],
+      "spells": [
+        "Chaumière de Léomund"
+      ]
+    },
+    {
+      "action": "update",
+      "name": "Petite plume",
+      "kind": "sellable",
+      "price": "8 pa",
+      "pricePo": 0.8,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [
+        "prix",
+        "cout",
+        "source_prix"
+      ],
+      "spells": [
+        "Chute de plume"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Petite réplique du magicien",
+      "kind": "sellable",
+      "price": "6 pa",
+      "pricePo": 0.6000000000000001,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Holographie"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Petite statuette d’argile représentant une ziggourat",
+      "kind": "sellable",
+      "price": "6 po",
+      "pricePo": 6,
+      "origin": "automatic_rarity",
+      "rarity": "crafted",
+      "changedFields": [],
+      "spells": [
+        "Langues"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Petite tige de fer",
+      "kind": "sellable",
+      "price": "18 pc",
+      "pricePo": 0.18,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Chaos"
+      ]
+    },
+    {
+      "action": "update",
+      "name": "Phosphore",
+      "kind": "sellable",
+      "price": "5 po",
+      "pricePo": 5,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [
+        "prix",
+        "cout",
+        "source_prix"
+      ],
+      "spells": [
+        "Mur de feu",
+        "Nuage incendiaire",
+        "Symbole"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Pièce de cuivre",
+      "kind": "sellable",
+      "price": "5 pa",
+      "pricePo": 0.5,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "E.S.P."
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Pierre aimantée",
+      "kind": "sellable",
+      "price": "4 po",
+      "pricePo": 4,
+      "origin": "automatic_rarity",
+      "rarity": "crafted",
+      "changedFields": [],
+      "spells": [
+        "Localisation d'objets"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Pierre d’ambre",
+      "kind": "sellable",
+      "price": "35 po",
+      "pricePo": 35,
+      "origin": "automatic_rarity",
+      "rarity": "rare",
+      "changedFields": [],
+      "spells": [
+        "Or des fous"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Pierres précieuses",
+      "kind": "sellable",
+      "price": "7 pc",
+      "pricePo": 0.07,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Divination"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Pincée d’humus",
+      "kind": "sellable",
+      "price": "9 pc",
+      "pricePo": 0.09,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Charme-plantes"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Pincée d’os en poudre",
+      "kind": "sellable",
+      "price": "12 pa",
+      "pricePo": 1.2000000000000002,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [],
+      "spells": [
+        "Nécro animation"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Pincée de bouse",
+      "kind": "sellable",
+      "price": "15 pa",
+      "pricePo": 1.5,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [],
+      "spells": [
+        "Langage des Plantes"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Pincée de graines de sésame",
+      "kind": "sellable",
+      "price": "12 pc",
+      "pricePo": 0.12,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Passe-muraille"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Pincée de poudre de carotte séchée",
+      "kind": "sellable",
+      "price": "15 pa",
+      "pricePo": 1.5,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [],
+      "spells": [
+        "Infravision"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Pincée de poudre de cuivre",
+      "kind": "sellable",
+      "price": "4 po",
+      "pricePo": 4,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [],
+      "spells": [
+        "Poussée"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Pincée de poudre de diamant",
+      "kind": "sellable",
+      "price": "80 po",
+      "pricePo": 80,
+      "origin": "automatic_rarity",
+      "rarity": "precious",
+      "changedFields": [],
+      "spells": [
+        "Non-détection"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Pincée de poudre de diamant (issue d’une",
+      "kind": "sellable",
+      "price": "80 po",
+      "pricePo": 80,
+      "origin": "automatic_rarity",
+      "rarity": "precious",
+      "changedFields": [],
+      "spells": [
+        "Mur de force"
+      ]
+    },
+    {
+      "action": "update",
+      "name": "Pincée de poussière",
+      "kind": "sellable",
+      "price": "18 pa",
+      "pricePo": 1.8,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [
+        "prix",
+        "cout",
+        "source_prix"
+      ],
+      "spells": [
+        "Abaissement des Eaux",
+        "Aquagenèse",
+        "Désintégration",
+        "Tempête de glace",
+        "Tremblement de Terre"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Pincée de poussière d’un cimetière",
+      "kind": "sellable",
+      "price": "15 pa",
+      "pricePo": 1.5,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [],
+      "spells": [
+        "Catalepsie"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Pincée de sable",
+      "kind": "sellable",
+      "price": "6 pc",
+      "pricePo": 0.06,
+      "origin": "automatic_rarity",
+      "rarity": "trivial",
+      "changedFields": [],
+      "spells": [
+        "Jet de couleurs"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Pincée de sable fin",
+      "kind": "sellable",
+      "price": "9 pc",
+      "pricePo": 0.09,
+      "origin": "automatic_rarity",
+      "rarity": "trivial",
+      "changedFields": [],
+      "spells": [
+        "Sommeil"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Pincée de souffre",
+      "kind": "sellable",
+      "price": "9 pa",
+      "pricePo": 0.9,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [],
+      "spells": [
+        "Pilier de Feu",
+        "Résistance au Froid"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Pincée de suie",
+      "kind": "sellable",
+      "price": "18 pc",
+      "pricePo": 0.18,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Compréhension des langues"
+      ]
+    },
+    {
+      "action": "update",
+      "name": "Pincée de talc",
+      "kind": "sellable",
+      "price": "8 pa",
+      "pricePo": 0.8,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [
+        "prix",
+        "cout",
+        "source_prix"
+      ],
+      "spells": [
+        "Détection de l'invisibilité",
+        "Détection de l’invisibilité"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Plante verte",
+      "kind": "sellable",
+      "price": "2 pa",
+      "pricePo": 0.2,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Terrain hallucinatoire"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Plaque d’ivoire",
+      "kind": "sellable",
+      "price": "100 po",
+      "pricePo": 100,
+      "origin": "automatic_rarity",
+      "rarity": "precious",
+      "changedFields": [],
+      "spells": [
+        "Moyen mnémonique de Rary"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Plaque de fer",
+      "kind": "sellable",
+      "price": "5 po",
+      "pricePo": 5,
+      "origin": "automatic_rarity",
+      "rarity": "crafted",
+      "changedFields": [],
+      "spells": [
+        "Mur de fer"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Plume d’aile d’oiseau",
+      "kind": "sellable",
+      "price": "8 pa",
+      "pricePo": 0.8,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Vol"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Plume de hibou trempée dans du vin",
+      "kind": "sellable",
+      "price": "6 pa",
+      "pricePo": 0.6000000000000001,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Identification"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Poireau écrasé",
+      "kind": "sellable",
+      "price": "3 pa",
+      "pricePo": 0.30000000000000004,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Répulsion des insectes"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Pomme de pin",
+      "kind": "sellable",
+      "price": "4 pa",
+      "pricePo": 0.4,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Invocation des créatures sylvestres"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Pommeau en cuivre",
+      "kind": "sellable",
+      "price": "8 pa",
+      "pricePo": 0.8,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Épée de Mordenkainen"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Poudre composée de diamant",
+      "kind": "sellable",
+      "price": "750 po",
+      "pricePo": 750,
+      "origin": "automatic_rarity",
+      "rarity": "precious",
+      "changedFields": [],
+      "spells": [
+        "Stase temporelle"
+      ]
+    },
+    {
+      "action": "update",
+      "name": "Poudre d’argent",
+      "kind": "sellable",
+      "price": "20 po",
+      "pricePo": 20,
+      "origin": "automatic_rarity",
+      "rarity": "rare",
+      "changedFields": [
+        "prix",
+        "cout",
+        "source_prix"
+      ],
+      "spells": [
+        "Protection contre le mal",
+        "Protection contre le mal sur 3 m"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Poudre d’argent qu’il faut répandre",
+      "kind": "sellable",
+      "price": "8 po",
+      "pricePo": 8,
+      "origin": "automatic_rarity",
+      "rarity": "rare",
+      "changedFields": [],
+      "spells": [
+        "Détection de l'invisibilité",
+        "Détection de l’invisibilité"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Poudre d’un diamant d’au moins 2 000 po",
+      "kind": "sellable",
+      "price": "2000 po",
+      "pricePo": 2000,
+      "origin": "explicit_v4",
+      "rarity": null,
+      "changedFields": [],
+      "spells": [
+        "Glyphe de Garde"
+      ]
+    },
+    {
+      "action": "update",
+      "name": "Poudre de blé",
+      "kind": "sellable",
+      "price": "4 po",
+      "pricePo": 4,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [
+        "prix",
+        "cout",
+        "source_prix"
+      ],
+      "spells": [
+        "Corde enchantée"
+      ]
+    },
+    {
+      "action": "update",
+      "name": "Poudre de fer",
+      "kind": "sellable",
+      "price": "50 po",
+      "pricePo": 50,
+      "origin": "automatic_rarity",
+      "rarity": "rare",
+      "changedFields": [
+        "prix",
+        "cout",
+        "source_prix"
+      ],
+      "spells": [
+        "Agrandissement",
+        "Protection contre le mal"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Poudre de poix séchés",
+      "kind": "sellable",
+      "price": "12 pa",
+      "pricePo": 1.2000000000000002,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [],
+      "spells": [
+        "Mur de brouillard"
+      ]
+    },
+    {
+      "action": "update",
+      "name": "Poudre de rubis",
+      "kind": "sellable",
+      "price": "500 po",
+      "pricePo": 500,
+      "origin": "automatic_rarity",
+      "rarity": "precious",
+      "changedFields": [
+        "prix",
+        "cout",
+        "source_prix"
+      ],
+      "spells": [
+        "Simulacre"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Poussière de laiton",
+      "kind": "sellable",
+      "price": "3 pc",
+      "pricePo": 0.03,
+      "origin": "automatic_rarity",
+      "rarity": "trivial",
+      "changedFields": [],
+      "spells": [
+        "Détection des Mensonges"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Prisme minéral",
+      "kind": "sellable",
+      "price": "4 pa",
+      "pricePo": 0.4,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Lecture de la magie"
+      ]
+    },
+    {
+      "action": "update",
+      "name": "Quartz",
+      "kind": "sellable",
+      "price": "8 pa",
+      "pricePo": 0.8,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [
+        "prix",
+        "cout",
+        "source_prix"
+      ],
+      "spells": [
+        "Mur de glace"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Quartz fumé",
+      "kind": "sellable",
+      "price": "6 pa",
+      "pricePo": 0.6000000000000001,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Invocation des ombres"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Queues de lucioles ou vers luisants morts",
+      "kind": "sellable",
+      "price": "7 pc",
+      "pricePo": 0.07,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Bouclier de feu"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Racine de mandragore",
+      "kind": "sellable",
+      "price": "15 pc",
+      "pricePo": 0.15,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Cacodémon"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Rayon de miel",
+      "kind": "sellable",
+      "price": "2 po",
+      "pricePo": 2,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [],
+      "spells": [
+        "Bouche magique"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Réplique miniature du coffre",
+      "kind": "sellable",
+      "price": "18 pa",
+      "pricePo": 1.8,
+      "origin": "automatic_rarity",
+      "rarity": "crafted",
+      "changedFields": [],
+      "spells": [
+        "Coffre secret de Léomund"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Résine d’arbre à camphre",
+      "kind": "sellable",
+      "price": "9 pa",
+      "pricePo": 0.9,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [],
+      "spells": [
+        "Répulsion des insectes"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Sable",
+      "kind": "sellable",
+      "price": "8 pc",
+      "pricePo": 0.08,
+      "origin": "automatic_rarity",
+      "rarity": "trivial",
+      "changedFields": [],
+      "spells": [
+        "Statue",
+        "Transmutation de pierre en boue"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Sable pour l’inverse)",
+      "kind": "sellable",
+      "price": "6 pc",
+      "pricePo": 0.06,
+      "origin": "automatic_rarity",
+      "rarity": "trivial",
+      "changedFields": [],
+      "spells": [
+        "Transmutation de pierre en boue"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Saindoux",
+      "kind": "sellable",
+      "price": "5 pa",
+      "pricePo": 0.5,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Cacodémon"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Sang",
+      "kind": "sellable",
+      "price": "6 pa",
+      "pricePo": 0.6000000000000001,
+      "origin": "automatic_rarity",
+      "rarity": "crafted",
+      "changedFields": [],
+      "spells": [
+        "Protection contre le Mal"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Sang d’ombre des roches",
+      "kind": "sellable",
+      "price": "18 pc",
+      "pricePo": 0.18,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Vigiles et sentinelles"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Saphir",
+      "kind": "sellable",
+      "price": "500 po",
+      "pricePo": 500,
+      "origin": "automatic_rarity",
+      "rarity": "precious",
+      "changedFields": [],
+      "spells": [
+        "Invocation instantanée de Drawmij"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Saphir blanc",
+      "kind": "sellable",
+      "price": "250 po",
+      "pricePo": 250,
+      "origin": "automatic_rarity",
+      "rarity": "precious",
+      "changedFields": [],
+      "spells": [
+        "Sphère glaciale d’Otiluke"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Sertie de gemmes",
+      "kind": "sellable",
+      "price": "80 po",
+      "pricePo": 80,
+      "origin": "automatic_rarity",
+      "rarity": "precious",
+      "changedFields": [],
+      "spells": [
+        "Duo-dimension"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Sifflet en argent",
+      "kind": "sellable",
+      "price": "18 po",
+      "pricePo": 18,
+      "origin": "automatic_rarity",
+      "rarity": "rare",
+      "changedFields": [],
+      "spells": [
+        "Chien fidèle de Mordenkainen"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Silex",
+      "kind": "sellable",
+      "price": "6 pa",
+      "pricePo": 0.6000000000000001,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Flèche de feu"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Soie",
+      "kind": "sellable",
+      "price": "75 po",
+      "pricePo": 75,
+      "origin": "automatic_rarity",
+      "rarity": "rare",
+      "changedFields": [],
+      "spells": [
+        "Aura magique de Nystul"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Soie multicolore extrêmement fine",
+      "kind": "sellable",
+      "price": "50 po",
+      "pricePo": 50,
+      "origin": "automatic_rarity",
+      "rarity": "rare",
+      "changedFields": [],
+      "spells": [
+        "Feu charmeur"
+      ]
+    },
+    {
+      "action": "update",
+      "name": "Soufre",
+      "kind": "sellable",
+      "price": "12 pa",
+      "pricePo": 1.2000000000000002,
+      "origin": "automatic_rarity",
+      "rarity": "prepared",
+      "changedFields": [
+        "prix",
+        "cout",
+        "source_prix"
+      ],
+      "spells": [
+        "Boule de feu à retardement",
+        "Nuage incendiaire",
+        "Vigiles et sentinelles"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Suie",
+      "kind": "sellable",
+      "price": "8 pa",
+      "pricePo": 0.8,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Cacodémon"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Symbole religieux en argent",
+      "kind": "reusable",
+      "price": "10 po",
+      "pricePo": 10,
+      "origin": "automatic_rarity",
+      "rarity": "rare",
+      "changedFields": [],
+      "spells": [
+        "Prière"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Symbole sacré",
+      "kind": "reusable",
+      "price": "2 pa",
+      "pricePo": 0.2,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Détection de la magie",
+        "Détection du mal",
+        "Retardement du Poison"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Symbole sacré du clerc",
+      "kind": "reusable",
+      "price": "18 pc",
+      "pricePo": 0.18,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Abaissement des Eaux",
+        "Catalepsie",
+        "Communion",
+        "Contrôle du Climat",
+        "Dissipation du Mal",
+        "Divination",
+        "Exorcisme",
+        "Expiation",
+        "Nécromancie",
+        "Quête Religieuse",
+        "Résurrection",
+        "Sanctuaire",
+        "Séparation des Eaux",
+        "Soins mineurs"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Tige de métal droite et rigide",
+      "kind": "sellable",
+      "price": "6 pa",
+      "pricePo": 0.6000000000000001,
+      "origin": "automatic_rarity",
+      "rarity": "crafted",
+      "changedFields": [],
+      "spells": [
+        "Paralysie"
+      ]
+    },
+    {
+      "action": "update",
+      "name": "Toile d’araignée",
+      "kind": "sellable",
+      "price": "8 pc",
+      "pricePo": 0.08,
+      "origin": "automatic_rarity",
+      "rarity": "trivial",
+      "changedFields": [
+        "prix",
+        "cout",
+        "source_prix"
+      ],
+      "spells": [
+        "Toile d’araignée"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Toison de mouton",
+      "kind": "sellable",
+      "price": "3 pa",
+      "pricePo": 0.30000000000000004,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Force fantasmagorique"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Topaze",
+      "kind": "sellable",
+      "price": "125 po",
+      "pricePo": 125,
+      "origin": "automatic_rarity",
+      "rarity": "precious",
+      "changedFields": [],
+      "spells": [
+        "Or des fous"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Topaze orientale",
+      "kind": "sellable",
+      "price": "200 po",
+      "pricePo": 200,
+      "origin": "automatic_rarity",
+      "rarity": "precious",
+      "changedFields": [],
+      "spells": [
+        "Or des fous"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Vapeurs de fumier",
+      "kind": "sellable",
+      "price": "18 pa",
+      "pricePo": 1.8,
+      "origin": "automatic_rarity",
+      "rarity": "crafted",
+      "changedFields": [],
+      "spells": [
+        "Protection contre le Mal"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Vélin enluminé",
+      "kind": "sellable",
+      "price": "18 pc",
+      "pricePo": 0.18,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Punition spirituelle"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Ver luisant vivant",
+      "kind": "sellable",
+      "price": "8 pa",
+      "pricePo": 0.8,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Bouclier de feu"
+      ]
+    },
+    {
+      "action": "create",
+      "name": "Zinc",
+      "kind": "sellable",
+      "price": "8 pa",
+      "pricePo": 0.8,
+      "origin": "automatic_rarity",
+      "rarity": "common",
+      "changedFields": [],
+      "spells": [
+        "Épée de Mordenkainen"
+      ]
+    }
+  ],
+  "v4Costs": [
+    {
+      "spell": "Abaissement des eaux",
+      "classe": "Magicien",
+      "niveau": 6,
+      "material": "petite fiole d’eau",
+      "quantity": 1,
+      "unitPrice": "5 po",
+      "costPo": 5
+    },
+    {
+      "spell": "Abaissement des eaux",
+      "classe": "Magicien",
+      "niveau": 6,
+      "material": "petite fiole de poussière",
+      "quantity": 1,
+      "unitPrice": "3 po",
+      "costPo": 3
+    },
+    {
+      "spell": "Abaissement des Eaux",
+      "classe": "Clerc",
+      "niveau": 4,
+      "material": "symbole sacré du clerc",
+      "quantity": 1,
+      "unitPrice": "18 pc",
+      "costPo": 0.18
+    },
+    {
+      "spell": "Abaissement des Eaux",
+      "classe": "Clerc",
+      "niveau": 4,
+      "material": "pincée de poussière",
+      "quantity": 1,
+      "unitPrice": "18 pa",
+      "costPo": 1.8
+    },
+    {
+      "spell": "Agrandissement",
+      "classe": "Magicien",
+      "niveau": 1,
+      "material": "poudre de fer",
+      "quantity": 1,
+      "unitPrice": "50 po",
+      "costPo": 50
+    },
+    {
+      "spell": "Allométamorphose",
+      "classe": "Magicien",
+      "niveau": 4,
+      "material": "cocon de chenille",
+      "quantity": 1,
+      "unitPrice": "7 pc",
+      "costPo": 0.07
+    },
+    {
+      "spell": "Amitié animale",
+      "classe": "Druide",
+      "niveau": 1,
+      "material": "gui",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Amitié animale",
+      "classe": "Druide",
+      "niveau": 1,
+      "material": "nourriture appréciée par l’animal",
+      "quantity": 1,
+      "unitPrice": "4 pa",
+      "costPo": 0.4
+    },
+    {
+      "spell": "Animation de la roche",
+      "classe": "Druide",
+      "niveau": 7,
+      "material": "gui",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Antipathie/sympathie",
+      "classe": "Magicien",
+      "niveau": 8,
+      "material": "Morceau d’alun trempé dans du vinaigre",
+      "quantity": 1,
+      "unitPrice": "2 po",
+      "costPo": 2
+    },
+    {
+      "spell": "Aquagenèse",
+      "classe": "Clerc",
+      "niveau": 1,
+      "material": "goutte d’eau",
+      "quantity": 1,
+      "unitPrice": "15 pa",
+      "costPo": 1.5
+    },
+    {
+      "spell": "Aquagenèse",
+      "classe": "Clerc",
+      "niveau": 1,
+      "material": "pincée de poussière",
+      "quantity": 1,
+      "unitPrice": "18 pa",
+      "costPo": 1.8
+    },
+    {
+      "spell": "Arbre",
+      "classe": "Druide",
+      "niveau": 3,
+      "material": "gui",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Arbre",
+      "classe": "Druide",
+      "niveau": 3,
+      "material": "petite branche d’arbre",
+      "quantity": 1,
+      "unitPrice": "6 pa",
+      "costPo": 0.6
+    },
+    {
+      "spell": "Arme enchantée",
+      "classe": "Magicien",
+      "niveau": 4,
+      "material": "carbone en poudre",
+      "quantity": 1,
+      "unitPrice": "5 po",
+      "costPo": 5
+    },
+    {
+      "spell": "Arme enchantée",
+      "classe": "Magicien",
+      "niveau": 4,
+      "material": "citron en poudre",
+      "quantity": 1,
+      "unitPrice": "2 po",
+      "costPo": 2
+    },
+    {
+      "spell": "Augure",
+      "classe": "Clerc",
+      "niveau": 2,
+      "material": "jeu de baguettes serties de gemmes",
+      "quantity": 1,
+      "unitPrice": "750 po",
+      "costPo": 750
+    },
+    {
+      "spell": "Augure",
+      "classe": "Clerc",
+      "niveau": 2,
+      "material": "objets divinatoires similaires",
+      "quantity": 1,
+      "unitPrice": "250 po",
+      "costPo": 250
+    },
+    {
+      "spell": "Augure",
+      "classe": "Clerc",
+      "niveau": 2,
+      "material": "feuille d’infusion encore humides",
+      "quantity": 1,
+      "unitPrice": "12 pc",
+      "costPo": 0.12
+    },
+    {
+      "spell": "Aura magique de Nystul",
+      "classe": "Magicien",
+      "niveau": 1,
+      "material": "soie",
+      "quantity": 1,
+      "unitPrice": "75 po",
+      "costPo": 75
+    },
+    {
+      "spell": "Bâtons à serpents",
+      "classe": "Clerc",
+      "niveau": 4,
+      "material": "morceau d’écorce",
+      "quantity": 1,
+      "unitPrice": "9 pa",
+      "costPo": 0.9
+    },
+    {
+      "spell": "Bâtons à serpents",
+      "classe": "Clerc",
+      "niveau": 4,
+      "material": "écailles de serpent",
+      "quantity": 1,
+      "unitPrice": "5 po",
+      "costPo": 5
+    },
+    {
+      "spell": "Bâtons à serpents",
+      "classe": "Druide",
+      "niveau": 5,
+      "material": "gui",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Bénédiction",
+      "classe": "Clerc",
+      "niveau": 1,
+      "material": "eau bénite",
+      "quantity": 1,
+      "unitPrice": "25 po",
+      "costPo": 25
+    },
+    {
+      "spell": "Bénédiction",
+      "classe": "Clerc",
+      "niveau": 1,
+      "material": "eau maudite",
+      "quantity": 1,
+      "unitPrice": "4 pa",
+      "costPo": 0.4
+    },
+    {
+      "spell": "Bouche magique",
+      "classe": "Illusionniste",
+      "niveau": 2,
+      "material": "rayon de miel",
+      "quantity": 1,
+      "unitPrice": "2 po",
+      "costPo": 2
+    },
+    {
+      "spell": "Bouche magique",
+      "classe": "Magicien",
+      "niveau": 2,
+      "material": "rayon de miel",
+      "quantity": 1,
+      "unitPrice": "2 po",
+      "costPo": 2
+    },
+    {
+      "spell": "Bouclier anti-animal",
+      "classe": "Druide",
+      "niveau": 6,
+      "material": "gui druidique",
+      "quantity": 1,
+      "unitPrice": "9 pc",
+      "costPo": 0.09
+    },
+    {
+      "spell": "Bouclier anti-plantes",
+      "classe": "Druide",
+      "niveau": 5,
+      "material": "gui druidique",
+      "quantity": 1,
+      "unitPrice": "9 pc",
+      "costPo": 0.09
+    },
+    {
+      "spell": "Bouclier de feu",
+      "classe": "Magicien",
+      "niveau": 4,
+      "material": "Flammes chaudes",
+      "quantity": 1,
+      "unitPrice": "4 pa",
+      "costPo": 0.4
+    },
+    {
+      "spell": "Bouclier de feu",
+      "classe": "Magicien",
+      "niveau": 4,
+      "material": "luciole vivante",
+      "quantity": 1,
+      "unitPrice": "4 pa",
+      "costPo": 0.4
+    },
+    {
+      "spell": "Bouclier de feu",
+      "classe": "Magicien",
+      "niveau": 4,
+      "material": "ver luisant vivant",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Bouclier de feu",
+      "classe": "Magicien",
+      "niveau": 4,
+      "material": "queues de lucioles ou vers luisants morts",
+      "quantity": 1,
+      "unitPrice": "7 pc",
+      "costPo": 0.07
+    },
+    {
+      "spell": "Boule de feu",
+      "classe": "Magicien",
+      "niveau": 3,
+      "material": "Petite boule composée de fiente de chauve souris",
+      "quantity": 1,
+      "unitPrice": "18 pc",
+      "costPo": 0.18
+    },
+    {
+      "spell": "Boule de feu à retardement",
+      "classe": "Magicien",
+      "niveau": 7,
+      "material": "soufre",
+      "quantity": 1,
+      "unitPrice": "12 pa",
+      "costPo": 1.2
+    },
+    {
+      "spell": "Boule de feu à retardement",
+      "classe": "Magicien",
+      "niveau": 7,
+      "material": "guano de chauve-souris",
+      "quantity": 1,
+      "unitPrice": "5 pa",
+      "costPo": 0.5
+    },
+    {
+      "spell": "Bruitage",
+      "classe": "Magicien",
+      "niveau": 2,
+      "material": "laine",
+      "quantity": 1,
+      "unitPrice": "15 pc",
+      "costPo": 0.15
+    },
+    {
+      "spell": "Bruitage",
+      "classe": "Magicien",
+      "niveau": 2,
+      "material": "cire",
+      "quantity": 1,
+      "unitPrice": "4 po",
+      "costPo": 4
+    },
+    {
+      "spell": "Cacodémon",
+      "classe": "Magicien",
+      "niveau": 7,
+      "material": "Cinq chandelles noires allumées",
+      "quantity": 1,
+      "unitPrice": "4 pa",
+      "costPo": 0.4
+    },
+    {
+      "spell": "Cacodémon",
+      "classe": "Magicien",
+      "niveau": 7,
+      "material": "Saindoux",
+      "quantity": 1,
+      "unitPrice": "5 pa",
+      "costPo": 0.5
+    },
+    {
+      "spell": "Cacodémon",
+      "classe": "Magicien",
+      "niveau": 7,
+      "material": "Suie",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Cacodémon",
+      "classe": "Magicien",
+      "niveau": 7,
+      "material": "Racine de mandragore",
+      "quantity": 1,
+      "unitPrice": "15 pc",
+      "costPo": 0.15
+    },
+    {
+      "spell": "Catalepsie",
+      "classe": "Clerc",
+      "niveau": 3,
+      "material": "pincée de poussière d’un cimetière",
+      "quantity": 1,
+      "unitPrice": "15 pa",
+      "costPo": 1.5
+    },
+    {
+      "spell": "Catalepsie",
+      "classe": "Clerc",
+      "niveau": 3,
+      "material": "symbole sacré du clerc",
+      "quantity": 1,
+      "unitPrice": "18 pc",
+      "costPo": 0.18
+    },
+    {
+      "spell": "Catalepsie",
+      "classe": "Druide",
+      "niveau": 2,
+      "material": "feuille morte de chêne",
+      "quantity": 1,
+      "unitPrice": "9 pc",
+      "costPo": 0.09
+    },
+    {
+      "spell": "Catalepsie",
+      "classe": "Druide",
+      "niveau": 2,
+      "material": "gui",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Changement de Plan",
+      "classe": "Clerc",
+      "niveau": 5,
+      "material": "baguette fourchue métallique, sorte de diapason",
+      "quantity": 1,
+      "unitPrice": "3 po",
+      "costPo": 3
+    },
+    {
+      "spell": "Chaos",
+      "classe": "Illusionniste",
+      "niveau": 5,
+      "material": "petite tige de fer",
+      "quantity": 1,
+      "unitPrice": "18 pc",
+      "costPo": 0.18
+    },
+    {
+      "spell": "Chariot de Sustarre",
+      "classe": "Druide",
+      "niveau": 7,
+      "material": "gui",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Chariot de Sustarre",
+      "classe": "Druide",
+      "niveau": 7,
+      "material": "bois",
+      "quantity": 1,
+      "unitPrice": "4 pa",
+      "costPo": 0.4
+    },
+    {
+      "spell": "Chariot de Sustarre",
+      "classe": "Druide",
+      "niveau": 7,
+      "material": "baies de houx",
+      "quantity": 1,
+      "unitPrice": "18 pc",
+      "costPo": 0.18
+    },
+    {
+      "spell": "Charme-plantes",
+      "classe": "Magicien",
+      "niveau": 7,
+      "material": "pincée d’humus",
+      "quantity": 1,
+      "unitPrice": "9 pc",
+      "costPo": 0.09
+    },
+    {
+      "spell": "Chasseur invisible",
+      "classe": "Magicien",
+      "niveau": 6,
+      "material": "Bout de corne taillé en forme de croissant",
+      "quantity": 1,
+      "unitPrice": "7 pc",
+      "costPo": 0.07
+    },
+    {
+      "spell": "Chaumière de Léomund",
+      "classe": "Magicien",
+      "niveau": 3,
+      "material": "petite perle de cristal",
+      "quantity": 1,
+      "unitPrice": "125 po",
+      "costPo": 125
+    },
+    {
+      "spell": "Chien fidèle de Mordenkainen",
+      "classe": "Magicien",
+      "niveau": 5,
+      "material": "petit sifflet en argent",
+      "quantity": 1,
+      "unitPrice": "60 po",
+      "costPo": 60
+    },
+    {
+      "spell": "Chien fidèle de Mordenkainen",
+      "classe": "Magicien",
+      "niveau": 5,
+      "material": "morceau d’os",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Chien fidèle de Mordenkainen",
+      "classe": "Magicien",
+      "niveau": 5,
+      "material": "fil",
+      "quantity": 1,
+      "unitPrice": "4 pa",
+      "costPo": 0.4
+    },
+    {
+      "spell": "Chien fidèle de Mordenkainen",
+      "classe": "Magicien",
+      "niveau": 5,
+      "material": "sifflet en argent",
+      "quantity": 1,
+      "unitPrice": "18 po",
+      "costPo": 18
+    },
+    {
+      "spell": "Chute de plume",
+      "classe": "Magicien",
+      "niveau": 1,
+      "material": "Petite plume",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Clairaudience",
+      "classe": "Magicien",
+      "niveau": 3,
+      "material": "petite corne d’argent",
+      "quantity": 1,
+      "unitPrice": "35 po",
+      "costPo": 35
+    },
+    {
+      "spell": "Coffre secret de Léomund",
+      "classe": "Magicien",
+      "niveau": 5,
+      "material": "réplique miniature du coffre",
+      "quantity": 1,
+      "unitPrice": "18 pa",
+      "costPo": 1.8
+    },
+    {
+      "spell": "Communion",
+      "classe": "Clerc",
+      "niveau": 5,
+      "material": "symbole sacré du clerc",
+      "quantity": 1,
+      "unitPrice": "18 pc",
+      "costPo": 0.18
+    },
+    {
+      "spell": "Communion",
+      "classe": "Clerc",
+      "niveau": 5,
+      "material": "eau bénite",
+      "quantity": 1,
+      "unitPrice": "25 po",
+      "costPo": 25
+    },
+    {
+      "spell": "Communion",
+      "classe": "Clerc",
+      "niveau": 5,
+      "material": "encens",
+      "quantity": 1,
+      "unitPrice": "1 po",
+      "costPo": 1
+    },
+    {
+      "spell": "Communion avec la nature",
+      "classe": "Druide",
+      "niveau": 5,
+      "material": "gui druidique",
+      "quantity": 1,
+      "unitPrice": "9 pc",
+      "costPo": 0.09
+    },
+    {
+      "spell": "Compréhension des langues",
+      "classe": "Magicien",
+      "niveau": 1,
+      "material": "Pincée de suie",
+      "quantity": 1,
+      "unitPrice": "18 pc",
+      "costPo": 0.18
+    },
+    {
+      "spell": "Confusion",
+      "classe": "Druide",
+      "niveau": 7,
+      "material": "gui",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Confusion",
+      "classe": "Magicien",
+      "niveau": 4,
+      "material": "Jeu de 3 coquilles de noisettes",
+      "quantity": 1,
+      "unitPrice": "1 pc",
+      "costPo": 0.01
+    },
+    {
+      "spell": "Contrôle de la température sur 3 m",
+      "classe": "Druide",
+      "niveau": 4,
+      "material": "gui druidique",
+      "quantity": 1,
+      "unitPrice": "9 pc",
+      "costPo": 0.09
+    },
+    {
+      "spell": "Contrôle des vents",
+      "classe": "Druide",
+      "niveau": 5,
+      "material": "gui druidique",
+      "quantity": 1,
+      "unitPrice": "9 pc",
+      "costPo": 0.09
+    },
+    {
+      "spell": "Contrôle du climat",
+      "classe": "Druide",
+      "niveau": 7,
+      "material": "gui majeur",
+      "quantity": 1,
+      "unitPrice": "6 pa",
+      "costPo": 0.6
+    },
+    {
+      "spell": "Contrôle du climat",
+      "classe": "Magicien",
+      "niveau": 6,
+      "material": "encens à brûler",
+      "quantity": 1,
+      "unitPrice": "30 po",
+      "costPo": 30
+    },
+    {
+      "spell": "Contrôle du climat",
+      "classe": "Magicien",
+      "niveau": 6,
+      "material": "mélange de terre",
+      "quantity": 1,
+      "unitPrice": "2 pc",
+      "costPo": 0.02
+    },
+    {
+      "spell": "Contrôle du climat",
+      "classe": "Magicien",
+      "niveau": 6,
+      "material": "de bois",
+      "quantity": 1,
+      "unitPrice": "4 pa",
+      "costPo": 0.4
+    },
+    {
+      "spell": "Contrôle du climat",
+      "classe": "Magicien",
+      "niveau": 6,
+      "material": "eau",
+      "quantity": 1,
+      "unitPrice": "2 pa",
+      "costPo": 0.2
+    },
+    {
+      "spell": "Contrôle du Climat",
+      "classe": "Clerc",
+      "niveau": 7,
+      "material": "symbole sacré du clerc",
+      "quantity": 1,
+      "unitPrice": "18 pc",
+      "costPo": 0.18
+    },
+    {
+      "spell": "Contrôle du Climat",
+      "classe": "Clerc",
+      "niveau": 7,
+      "material": "chapelet de prière",
+      "quantity": 1,
+      "unitPrice": "1 po",
+      "costPo": 1
+    },
+    {
+      "spell": "Corde enchantée",
+      "classe": "Magicien",
+      "niveau": 2,
+      "material": "Poudre de blé",
+      "quantity": 1,
+      "unitPrice": "4 po",
+      "costPo": 4
+    },
+    {
+      "spell": "Corde enchantée",
+      "classe": "Magicien",
+      "niveau": 2,
+      "material": "Parchemin torsadé en forme de boucle",
+      "quantity": 1,
+      "unitPrice": "3 po",
+      "costPo": 3
+    },
+    {
+      "spell": "Création majeure",
+      "classe": "Illusionniste",
+      "niveau": 5,
+      "material": "Création d’un objet minéral",
+      "quantity": 1,
+      "unitPrice": "3 pa",
+      "costPo": 0.3
+    },
+    {
+      "spell": "Création majeure",
+      "classe": "Illusionniste",
+      "niveau": 5,
+      "material": "Création d’un objet végétal",
+      "quantity": 1,
+      "unitPrice": "6 pa",
+      "costPo": 0.6
+    },
+    {
+      "spell": "Création mineure",
+      "classe": "Illusionniste",
+      "niveau": 4,
+      "material": "matière végétale similaire",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Cristairain",
+      "classe": "Magicien",
+      "niveau": 8,
+      "material": "Petit morceau d’acier",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Croc-en-jambe",
+      "classe": "Druide",
+      "niveau": 2,
+      "material": "gui druidique",
+      "quantity": 1,
+      "unitPrice": "9 pc",
+      "costPo": 0.09
+    },
+    {
+      "spell": "Désintégration",
+      "classe": "Magicien",
+      "niveau": 6,
+      "material": "pincée de poussière",
+      "quantity": 1,
+      "unitPrice": "18 pa",
+      "costPo": 1.8
+    },
+    {
+      "spell": "Détection de l’invisibilité",
+      "classe": "Illusionniste",
+      "niveau": 1,
+      "material": "pincée de talc",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Détection de l’invisibilité",
+      "classe": "Illusionniste",
+      "niveau": 1,
+      "material": "poudre d’argent qu’il faut répandre",
+      "quantity": 1,
+      "unitPrice": "8 po",
+      "costPo": 8
+    },
+    {
+      "spell": "Détection de la magie",
+      "classe": "Clerc",
+      "niveau": 1,
+      "material": "symbole sacré",
+      "quantity": 1,
+      "unitPrice": "2 pa",
+      "costPo": 0.2
+    },
+    {
+      "spell": "Détection de la magie",
+      "classe": "Druide",
+      "niveau": 1,
+      "material": "gui druidique",
+      "quantity": 1,
+      "unitPrice": "9 pc",
+      "costPo": 0.09
+    },
+    {
+      "spell": "Détection des Mensonges",
+      "classe": "Clerc",
+      "niveau": 4,
+      "material": "poussière de laiton",
+      "quantity": 1,
+      "unitPrice": "3 pc",
+      "costPo": 0.03
+    },
+    {
+      "spell": "Détection des pièges sylvestres",
+      "classe": "Druide",
+      "niveau": 1,
+      "material": "gui druidique",
+      "quantity": 1,
+      "unitPrice": "9 pc",
+      "costPo": 0.09
+    },
+    {
+      "spell": "Détection du mal",
+      "classe": "Clerc",
+      "niveau": 1,
+      "material": "symbole sacré",
+      "quantity": 1,
+      "unitPrice": "2 pa",
+      "costPo": 0.2
+    },
+    {
+      "spell": "Disque flottant de Tenser",
+      "classe": "Magicien",
+      "niveau": 1,
+      "material": "Goutte de mercure",
+      "quantity": 1,
+      "unitPrice": "60 po",
+      "costPo": 60
+    },
+    {
+      "spell": "Dissipation du Mal",
+      "classe": "Clerc",
+      "niveau": 5,
+      "material": "symbole sacré du clerc",
+      "quantity": 1,
+      "unitPrice": "18 pc",
+      "costPo": 0.18
+    },
+    {
+      "spell": "Dissipation du Mal",
+      "classe": "Clerc",
+      "niveau": 5,
+      "material": "eau bénite",
+      "quantity": 1,
+      "unitPrice": "25 po",
+      "costPo": 25
+    },
+    {
+      "spell": "Dissipation du Mal",
+      "classe": "Clerc",
+      "niveau": 5,
+      "material": "eau maudite",
+      "quantity": 1,
+      "unitPrice": "4 pa",
+      "costPo": 0.4
+    },
+    {
+      "spell": "Distorsion des distances",
+      "classe": "Magicien",
+      "niveau": 5,
+      "material": "argile grasse",
+      "quantity": 1,
+      "unitPrice": "5 po",
+      "costPo": 5
+    },
+    {
+      "spell": "Distorsion du bois",
+      "classe": "Druide",
+      "niveau": 2,
+      "material": "gui druidique",
+      "quantity": 1,
+      "unitPrice": "9 pc",
+      "costPo": 0.09
+    },
+    {
+      "spell": "Divination",
+      "classe": "Clerc",
+      "niveau": 4,
+      "material": "encens",
+      "quantity": 1,
+      "unitPrice": "1 po",
+      "costPo": 1
+    },
+    {
+      "spell": "Divination",
+      "classe": "Clerc",
+      "niveau": 4,
+      "material": "symbole sacré du clerc",
+      "quantity": 1,
+      "unitPrice": "18 pc",
+      "costPo": 0.18
+    },
+    {
+      "spell": "Divination",
+      "classe": "Clerc",
+      "niveau": 4,
+      "material": "pierres précieuses",
+      "quantity": 1,
+      "unitPrice": "7 pc",
+      "costPo": 0.07
+    },
+    {
+      "spell": "Doigt de mort",
+      "classe": "Druide",
+      "niveau": 7,
+      "material": "gui",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Duo-dimension",
+      "classe": "Magicien",
+      "niveau": 7,
+      "material": "Figurine plate",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Duo-dimension",
+      "classe": "Magicien",
+      "niveau": 7,
+      "material": "Sertie de gemmes",
+      "quantity": 1,
+      "unitPrice": "80 po",
+      "costPo": 80
+    },
+    {
+      "spell": "E.S.P.",
+      "classe": "Magicien",
+      "niveau": 2,
+      "material": "pièce de cuivre",
+      "quantity": 1,
+      "unitPrice": "5 pa",
+      "costPo": 0.5
+    },
+    {
+      "spell": "Écriture",
+      "classe": "Magicien",
+      "niveau": 1,
+      "material": "encre fine faite de substances rares",
+      "quantity": 1,
+      "unitPrice": "12 pa",
+      "costPo": 1.2
+    },
+    {
+      "spell": "Écriture illusoire",
+      "classe": "Illusionniste",
+      "niveau": 3,
+      "material": "encre à base de plomb",
+      "quantity": 1,
+      "unitPrice": "12 pa",
+      "costPo": 1.2
+    },
+    {
+      "spell": "Embrasement",
+      "classe": "Druide",
+      "niveau": 4,
+      "material": "gui druidique",
+      "quantity": 1,
+      "unitPrice": "9 pc",
+      "costPo": 0.09
+    },
+    {
+      "spell": "Enchevêtrement",
+      "classe": "Druide",
+      "niveau": 1,
+      "material": "gui druidique",
+      "quantity": 1,
+      "unitPrice": "9 pc",
+      "costPo": 0.09
+    },
+    {
+      "spell": "Épée de Mordenkainen",
+      "classe": "Magicien",
+      "niveau": 7,
+      "material": "épée miniature en platine avec poignée",
+      "quantity": 1,
+      "unitPrice": "400 po",
+      "costPo": 400
+    },
+    {
+      "spell": "Épée de Mordenkainen",
+      "classe": "Magicien",
+      "niveau": 7,
+      "material": "pommeau en cuivre",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Épée de Mordenkainen",
+      "classe": "Magicien",
+      "niveau": 7,
+      "material": "zinc",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Escalade d’araignée",
+      "classe": "Magicien",
+      "niveau": 1,
+      "material": "Goutte de bitume",
+      "quantity": 1,
+      "unitPrice": "8 pc",
+      "costPo": 0.08
+    },
+    {
+      "spell": "Escalade d’araignée",
+      "classe": "Magicien",
+      "niveau": 1,
+      "material": "Araignée vivante",
+      "quantity": 1,
+      "unitPrice": "5 pa",
+      "costPo": 0.5
+    },
+    {
+      "spell": "Excavation",
+      "classe": "Magicien",
+      "niveau": 4,
+      "material": "Pelle miniature",
+      "quantity": 1,
+      "unitPrice": "6 po",
+      "costPo": 6
+    },
+    {
+      "spell": "Excavation",
+      "classe": "Magicien",
+      "niveau": 4,
+      "material": "petit baquet",
+      "quantity": 1,
+      "unitPrice": "3 po",
+      "costPo": 3
+    },
+    {
+      "spell": "Exorcisme",
+      "classe": "Clerc",
+      "niveau": 4,
+      "material": "symbole sacré du clerc",
+      "quantity": 1,
+      "unitPrice": "18 pc",
+      "costPo": 0.18
+    },
+    {
+      "spell": "Exorcisme",
+      "classe": "Clerc",
+      "niveau": 4,
+      "material": "eau bénite",
+      "quantity": 1,
+      "unitPrice": "25 po",
+      "costPo": 25
+    },
+    {
+      "spell": "Exorcisme",
+      "classe": "Clerc",
+      "niveau": 4,
+      "material": "eau maudite",
+      "quantity": 1,
+      "unitPrice": "4 pa",
+      "costPo": 0.4
+    },
+    {
+      "spell": "Expiation",
+      "classe": "Clerc",
+      "niveau": 5,
+      "material": "symbole sacré du clerc",
+      "quantity": 1,
+      "unitPrice": "18 pc",
+      "costPo": 0.18
+    },
+    {
+      "spell": "Expiation",
+      "classe": "Clerc",
+      "niveau": 5,
+      "material": "chapelet",
+      "quantity": 1,
+      "unitPrice": "5 pa",
+      "costPo": 0.5
+    },
+    {
+      "spell": "Expiation",
+      "classe": "Clerc",
+      "niveau": 5,
+      "material": "livre de prière",
+      "quantity": 1,
+      "unitPrice": "15 pc",
+      "costPo": 0.15
+    },
+    {
+      "spell": "Expiation",
+      "classe": "Clerc",
+      "niveau": 5,
+      "material": "encens",
+      "quantity": 1,
+      "unitPrice": "1 po",
+      "costPo": 1
+    },
+    {
+      "spell": "Feu charmeur",
+      "classe": "Magicien",
+      "niveau": 4,
+      "material": "soie multicolore extrêmement fine",
+      "quantity": 1,
+      "unitPrice": "50 po",
+      "costPo": 50
+    },
+    {
+      "spell": "Flamme",
+      "classe": "Druide",
+      "niveau": 2,
+      "material": "gui druidique",
+      "quantity": 1,
+      "unitPrice": "9 pc",
+      "costPo": 0.09
+    },
+    {
+      "spell": "Fléau d’insectes",
+      "classe": "Druide",
+      "niveau": 5,
+      "material": "gui",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Fléau d’insectes",
+      "classe": "Druide",
+      "niveau": 5,
+      "material": "houx",
+      "quantity": 1,
+      "unitPrice": "2 pa",
+      "costPo": 0.2
+    },
+    {
+      "spell": "Fléau d’insectes",
+      "classe": "Druide",
+      "niveau": 5,
+      "material": "feuille de chêne",
+      "quantity": 1,
+      "unitPrice": "5 pa",
+      "costPo": 0.5
+    },
+    {
+      "spell": "Fléau d’Insectes",
+      "classe": "Clerc",
+      "niveau": 5,
+      "material": "grain de sucre",
+      "quantity": 1,
+      "unitPrice": "18 pa",
+      "costPo": 1.8
+    },
+    {
+      "spell": "Fléau d’Insectes",
+      "classe": "Clerc",
+      "niveau": 5,
+      "material": "amandes",
+      "quantity": 1,
+      "unitPrice": "15 pa",
+      "costPo": 1.5
+    },
+    {
+      "spell": "Fléau d’Insectes",
+      "classe": "Clerc",
+      "niveau": 5,
+      "material": "matière grasse",
+      "quantity": 1,
+      "unitPrice": "15 pa",
+      "costPo": 1.5
+    },
+    {
+      "spell": "Flèche de feu",
+      "classe": "Magicien",
+      "niveau": 3,
+      "material": "goutte d’huile",
+      "quantity": 1,
+      "unitPrice": "9 pa",
+      "costPo": 0.9
+    },
+    {
+      "spell": "Flèche de feu",
+      "classe": "Magicien",
+      "niveau": 3,
+      "material": "silex",
+      "quantity": 1,
+      "unitPrice": "6 pa",
+      "costPo": 0.6
+    },
+    {
+      "spell": "Force",
+      "classe": "Magicien",
+      "niveau": 2,
+      "material": "cheveux",
+      "quantity": 1,
+      "unitPrice": "4 pa",
+      "costPo": 0.4
+    },
+    {
+      "spell": "Force fantasmagorique",
+      "classe": "Illusionniste",
+      "niveau": 1,
+      "material": "toison de mouton",
+      "quantity": 1,
+      "unitPrice": "3 pa",
+      "costPo": 0.3
+    },
+    {
+      "spell": "Force fantasmagorique",
+      "classe": "Magicien",
+      "niveau": 3,
+      "material": "toison de mouton",
+      "quantity": 1,
+      "unitPrice": "3 pa",
+      "costPo": 0.3
+    },
+    {
+      "spell": "Force fantasmagorique améliorée",
+      "classe": "Illusionniste",
+      "niveau": 2,
+      "material": "laine",
+      "quantity": 1,
+      "unitPrice": "15 pc",
+      "costPo": 0.15
+    },
+    {
+      "spell": "Force spectrale",
+      "classe": "Illusionniste",
+      "niveau": 3,
+      "material": "laine",
+      "quantity": 1,
+      "unitPrice": "15 pc",
+      "costPo": 0.15
+    },
+    {
+      "spell": "Forêt hallucinatoire",
+      "classe": "Druide",
+      "niveau": 4,
+      "material": "gui druidique",
+      "quantity": 1,
+      "unitPrice": "9 pc",
+      "costPo": 0.09
+    },
+    {
+      "spell": "Foudre",
+      "classe": "Magicien",
+      "niveau": 3,
+      "material": "fourrure",
+      "quantity": 1,
+      "unitPrice": "4 pa",
+      "costPo": 0.4
+    },
+    {
+      "spell": "Fracassement",
+      "classe": "Magicien",
+      "niveau": 2,
+      "material": "Éclat de mica",
+      "quantity": 1,
+      "unitPrice": "9 pc",
+      "costPo": 0.09
+    },
+    {
+      "spell": "Glissement de terrain",
+      "classe": "Magicien",
+      "niveau": 6,
+      "material": "mélange de terre",
+      "quantity": 1,
+      "unitPrice": "2 pc",
+      "costPo": 0.02
+    },
+    {
+      "spell": "Glissement de terrain",
+      "classe": "Magicien",
+      "niveau": 6,
+      "material": "petit sac",
+      "quantity": 1,
+      "unitPrice": "2 pa",
+      "costPo": 0.2
+    },
+    {
+      "spell": "Glissement de terrain",
+      "classe": "Magicien",
+      "niveau": 6,
+      "material": "lame en fer",
+      "quantity": 1,
+      "unitPrice": "15 pa",
+      "costPo": 1.5
+    },
+    {
+      "spell": "Glyphe de Garde",
+      "classe": "Clerc",
+      "niveau": 3,
+      "material": "encens",
+      "quantity": 1,
+      "unitPrice": "1 po",
+      "costPo": 1
+    },
+    {
+      "spell": "Graines de feu",
+      "classe": "Druide",
+      "niveau": 6,
+      "material": "glands de chêne",
+      "quantity": 1,
+      "unitPrice": "3 pa",
+      "costPo": 0.3
+    },
+    {
+      "spell": "Graines de feu",
+      "classe": "Druide",
+      "niveau": 6,
+      "material": "baies de houx",
+      "quantity": 1,
+      "unitPrice": "18 pc",
+      "costPo": 0.18
+    },
+    {
+      "spell": "Hétéromorphisme",
+      "classe": "Magicien",
+      "niveau": 9,
+      "material": "Petite couronne de jade",
+      "quantity": 1,
+      "unitPrice": "400 po",
+      "costPo": 400
+    },
+    {
+      "spell": "Holographie",
+      "classe": "Illusionniste",
+      "niveau": 5,
+      "material": "petite réplique du magicien",
+      "quantity": 1,
+      "unitPrice": "6 pa",
+      "costPo": 0.6
+    },
+    {
+      "spell": "Holographie",
+      "classe": "Magicien",
+      "niveau": 6,
+      "material": "petite réplique du magicien",
+      "quantity": 1,
+      "unitPrice": "6 pa",
+      "costPo": 0.6
+    },
+    {
+      "spell": "Identification",
+      "classe": "Magicien",
+      "niveau": 1,
+      "material": "Perle",
+      "quantity": 1,
+      "unitPrice": "100 po",
+      "costPo": 100
+    },
+    {
+      "spell": "Identification",
+      "classe": "Magicien",
+      "niveau": 1,
+      "material": "Plume de hibou trempée dans du vin",
+      "quantity": 1,
+      "unitPrice": "6 pa",
+      "costPo": 0.6
+    },
+    {
+      "spell": "Illusion permanente",
+      "classe": "Illusionniste",
+      "niveau": 6,
+      "material": "laine",
+      "quantity": 1,
+      "unitPrice": "15 pc",
+      "costPo": 0.15
+    },
+    {
+      "spell": "Illusion programmée",
+      "classe": "Illusionniste",
+      "niveau": 6,
+      "material": "laine",
+      "quantity": 1,
+      "unitPrice": "15 pc",
+      "costPo": 0.15
+    },
+    {
+      "spell": "Immunité magique de Serten",
+      "classe": "Magicien",
+      "niveau": 8,
+      "material": "diamant",
+      "quantity": 1,
+      "unitPrice": "150 po",
+      "costPo": 150
+    },
+    {
+      "spell": "Incantation mortelle",
+      "classe": "Magicien",
+      "niveau": 6,
+      "material": "Perle noire écrasée",
+      "quantity": 1,
+      "unitPrice": "200 po",
+      "costPo": 200
+    },
+    {
+      "spell": "Infravision",
+      "classe": "Magicien",
+      "niveau": 3,
+      "material": "Pincée de poudre de carotte séchée",
+      "quantity": 1,
+      "unitPrice": "15 pa",
+      "costPo": 1.5
+    },
+    {
+      "spell": "Infravision",
+      "classe": "Magicien",
+      "niveau": 3,
+      "material": "Agate",
+      "quantity": 1,
+      "unitPrice": "4 pa",
+      "costPo": 0.4
+    },
+    {
+      "spell": "Inversion de la gravité",
+      "classe": "Magicien",
+      "niveau": 7,
+      "material": "Limaille de fer",
+      "quantity": 1,
+      "unitPrice": "15 pa",
+      "costPo": 1.5
+    },
+    {
+      "spell": "Invisibilité",
+      "classe": "Magicien",
+      "niveau": 2,
+      "material": "cil mis dans de la gomme arabique",
+      "quantity": 1,
+      "unitPrice": "3 po",
+      "costPo": 3
+    },
+    {
+      "spell": "Invisibilité aux animaux",
+      "classe": "Druide",
+      "niveau": 1,
+      "material": "houx",
+      "quantity": 1,
+      "unitPrice": "2 pa",
+      "costPo": 0.2
+    },
+    {
+      "spell": "Invisibilité de masse",
+      "classe": "Magicien",
+      "niveau": 7,
+      "material": "cils",
+      "quantity": 1,
+      "unitPrice": "3 pa",
+      "costPo": 0.3
+    },
+    {
+      "spell": "Invisibilité de masse",
+      "classe": "Magicien",
+      "niveau": 7,
+      "material": "gomme arabique",
+      "quantity": 1,
+      "unitPrice": "18 pa",
+      "costPo": 1.8
+    },
+    {
+      "spell": "Invisibilité sur 3 m",
+      "classe": "Magicien",
+      "niveau": 3,
+      "material": "cils",
+      "quantity": 1,
+      "unitPrice": "3 pa",
+      "costPo": 0.3
+    },
+    {
+      "spell": "Invisibilité sur 3 m",
+      "classe": "Magicien",
+      "niveau": 3,
+      "material": "gomme arabique",
+      "quantity": 1,
+      "unitPrice": "18 pa",
+      "costPo": 1.8
+    },
+    {
+      "spell": "Invocation animale I",
+      "classe": "Druide",
+      "niveau": 4,
+      "material": "gui druidique",
+      "quantity": 1,
+      "unitPrice": "9 pc",
+      "costPo": 0.09
+    },
+    {
+      "spell": "Invocation animale II",
+      "classe": "Druide",
+      "niveau": 5,
+      "material": "gui druidique",
+      "quantity": 1,
+      "unitPrice": "9 pc",
+      "costPo": 0.09
+    },
+    {
+      "spell": "Invocation animale III",
+      "classe": "Druide",
+      "niveau": 6,
+      "material": "gui druidique",
+      "quantity": 1,
+      "unitPrice": "9 pc",
+      "costPo": 0.09
+    },
+    {
+      "spell": "Invocation d’élémental",
+      "classe": "Magicien",
+      "niveau": 5,
+      "material": "Invocation d’un élémental de l’air",
+      "quantity": 1,
+      "unitPrice": "9 pc",
+      "costPo": 0.09
+    },
+    {
+      "spell": "Invocation d’élémental",
+      "classe": "Magicien",
+      "niveau": 5,
+      "material": "Invocation d’un élémental de l’eau",
+      "quantity": 1,
+      "unitPrice": "7 pc",
+      "costPo": 0.07
+    },
+    {
+      "spell": "Invocation d’élémental",
+      "classe": "Magicien",
+      "niveau": 5,
+      "material": "Invocation d’un élémental du feu",
+      "quantity": 1,
+      "unitPrice": "5 pa",
+      "costPo": 0.5
+    },
+    {
+      "spell": "Invocation d’élémental",
+      "classe": "Magicien",
+      "niveau": 5,
+      "material": "Invocation d’un élémental de terre",
+      "quantity": 1,
+      "unitPrice": "4 pc",
+      "costPo": 0.04
+    },
+    {
+      "spell": "Invocation d'insectes",
+      "classe": "Druide",
+      "niveau": 3,
+      "material": "gui",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Invocation d'insectes",
+      "classe": "Druide",
+      "niveau": 3,
+      "material": "pétale de fleur",
+      "quantity": 1,
+      "unitPrice": "2 pa",
+      "costPo": 0.2
+    },
+    {
+      "spell": "Invocation d'insectes",
+      "classe": "Druide",
+      "niveau": 3,
+      "material": "boue",
+      "quantity": 1,
+      "unitPrice": "5 pc",
+      "costPo": 0.05
+    },
+    {
+      "spell": "Invocation d'insectes",
+      "classe": "Druide",
+      "niveau": 3,
+      "material": "argile humide",
+      "quantity": 1,
+      "unitPrice": "15 pa",
+      "costPo": 1.5
+    },
+    {
+      "spell": "Invocation d'un élémental de terre",
+      "classe": "Druide",
+      "niveau": 7,
+      "material": "gui",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Invocation d'un élémental du feu",
+      "classe": "Druide",
+      "niveau": 6,
+      "material": "gui druidique",
+      "quantity": 1,
+      "unitPrice": "9 pc",
+      "costPo": 0.09
+    },
+    {
+      "spell": "Invocation d’un familier",
+      "classe": "Magicien",
+      "niveau": 1,
+      "material": "Brassière en cuivre",
+      "quantity": 1,
+      "unitPrice": "15 pc",
+      "costPo": 0.15
+    },
+    {
+      "spell": "Invocation de la foudre",
+      "classe": "Druide",
+      "niveau": 3,
+      "material": "gui druidique",
+      "quantity": 1,
+      "unitPrice": "9 pc",
+      "costPo": 0.09
+    },
+    {
+      "spell": "Invocation de monstre II",
+      "classe": "Magicien",
+      "niveau": 4,
+      "material": "petit sac",
+      "quantity": 1,
+      "unitPrice": "2 pa",
+      "costPo": 0.2
+    },
+    {
+      "spell": "Invocation de monstre II",
+      "classe": "Magicien",
+      "niveau": 4,
+      "material": "petite bougie",
+      "quantity": 1,
+      "unitPrice": "5 pa",
+      "costPo": 0.5
+    },
+    {
+      "spell": "Invocation de Monstre III",
+      "classe": "Magicien",
+      "niveau": 5,
+      "material": "petit sac",
+      "quantity": 1,
+      "unitPrice": "2 pa",
+      "costPo": 0.2
+    },
+    {
+      "spell": "Invocation de Monstre III",
+      "classe": "Magicien",
+      "niveau": 5,
+      "material": "petite bougie",
+      "quantity": 1,
+      "unitPrice": "5 pa",
+      "costPo": 0.5
+    },
+    {
+      "spell": "Invocation de monstre IV",
+      "classe": "Magicien",
+      "niveau": 6,
+      "material": "petit sac",
+      "quantity": 1,
+      "unitPrice": "2 pa",
+      "costPo": 0.2
+    },
+    {
+      "spell": "Invocation de monstre IV",
+      "classe": "Magicien",
+      "niveau": 6,
+      "material": "petite bougie",
+      "quantity": 1,
+      "unitPrice": "5 pa",
+      "costPo": 0.5
+    },
+    {
+      "spell": "Invocation de monstre V",
+      "classe": "Magicien",
+      "niveau": 7,
+      "material": "petit sac",
+      "quantity": 1,
+      "unitPrice": "2 pa",
+      "costPo": 0.2
+    },
+    {
+      "spell": "Invocation de monstre V",
+      "classe": "Magicien",
+      "niveau": 7,
+      "material": "petite bougie",
+      "quantity": 1,
+      "unitPrice": "5 pa",
+      "costPo": 0.5
+    },
+    {
+      "spell": "Invocation de monstre VI",
+      "classe": "Magicien",
+      "niveau": 8,
+      "material": "petit sac",
+      "quantity": 1,
+      "unitPrice": "2 pa",
+      "costPo": 0.2
+    },
+    {
+      "spell": "Invocation de monstre VI",
+      "classe": "Magicien",
+      "niveau": 8,
+      "material": "petite bougie",
+      "quantity": 1,
+      "unitPrice": "5 pa",
+      "costPo": 0.5
+    },
+    {
+      "spell": "Invocation de Monstre VII",
+      "classe": "Magicien",
+      "niveau": 9,
+      "material": "petit sac",
+      "quantity": 1,
+      "unitPrice": "2 pa",
+      "costPo": 0.2
+    },
+    {
+      "spell": "Invocation de Monstre VII",
+      "classe": "Magicien",
+      "niveau": 9,
+      "material": "petite bougie",
+      "quantity": 1,
+      "unitPrice": "5 pa",
+      "costPo": 0.5
+    },
+    {
+      "spell": "Invocation de monstres I",
+      "classe": "Magicien",
+      "niveau": 3,
+      "material": "petit sac",
+      "quantity": 1,
+      "unitPrice": "2 pa",
+      "costPo": 0.2
+    },
+    {
+      "spell": "Invocation de monstres I",
+      "classe": "Magicien",
+      "niveau": 3,
+      "material": "petite bougie",
+      "quantity": 1,
+      "unitPrice": "5 pa",
+      "costPo": 0.5
+    },
+    {
+      "spell": "Invocation des créatures sylvestres",
+      "classe": "Druide",
+      "niveau": 4,
+      "material": "pomme de pin",
+      "quantity": 1,
+      "unitPrice": "4 pa",
+      "costPo": 0.4
+    },
+    {
+      "spell": "Invocation des créatures sylvestres",
+      "classe": "Druide",
+      "niveau": 4,
+      "material": "baies de houx",
+      "quantity": 8,
+      "unitPrice": "18 pc",
+      "costPo": 1.44
+    },
+    {
+      "spell": "Invocation des ombres",
+      "classe": "Illusionniste",
+      "niveau": 5,
+      "material": "quartz fumé",
+      "quantity": 1,
+      "unitPrice": "6 pa",
+      "costPo": 0.6
+    },
+    {
+      "spell": "Invocation du temps",
+      "classe": "Druide",
+      "niveau": 6,
+      "material": "gui druidique",
+      "quantity": 1,
+      "unitPrice": "9 pc",
+      "costPo": 0.09
+    },
+    {
+      "spell": "Invocation instantanée de Drawmij",
+      "classe": "Magicien",
+      "niveau": 7,
+      "material": "saphir",
+      "quantity": 1,
+      "unitPrice": "500 po",
+      "costPo": 500
+    },
+    {
+      "spell": "Jet de couleurs",
+      "classe": "Illusionniste",
+      "niveau": 1,
+      "material": "Pincée de sable",
+      "quantity": 1,
+      "unitPrice": "6 pc",
+      "costPo": 0.06
+    },
+    {
+      "spell": "Langage des plantes",
+      "classe": "Druide",
+      "niveau": 4,
+      "material": "gui",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Langage des Plantes",
+      "classe": "Clerc",
+      "niveau": 4,
+      "material": "goutte d’eau",
+      "quantity": 1,
+      "unitPrice": "15 pa",
+      "costPo": 1.5
+    },
+    {
+      "spell": "Langage des Plantes",
+      "classe": "Clerc",
+      "niveau": 4,
+      "material": "pincée de bouse",
+      "quantity": 1,
+      "unitPrice": "15 pa",
+      "costPo": 1.5
+    },
+    {
+      "spell": "Langage des Plantes",
+      "classe": "Clerc",
+      "niveau": 4,
+      "material": "flamme",
+      "quantity": 1,
+      "unitPrice": "5 po",
+      "costPo": 5
+    },
+    {
+      "spell": "Langues",
+      "classe": "Magicien",
+      "niveau": 3,
+      "material": "Petite statuette d’argile représentant une ziggourat",
+      "quantity": 1,
+      "unitPrice": "6 po",
+      "costPo": 6
+    },
+    {
+      "spell": "Lecture de la magie",
+      "classe": "Magicien",
+      "niveau": 1,
+      "material": "Cristal clair",
+      "quantity": 1,
+      "unitPrice": "7 pc",
+      "costPo": 0.07
+    },
+    {
+      "spell": "Lecture de la magie",
+      "classe": "Magicien",
+      "niveau": 1,
+      "material": "Prisme minéral",
+      "quantity": 1,
+      "unitPrice": "4 pa",
+      "costPo": 0.4
+    },
+    {
+      "spell": "Lithomancie",
+      "classe": "Clerc",
+      "niveau": 6,
+      "material": "goutte de mercure",
+      "quantity": 1,
+      "unitPrice": "60 po",
+      "costPo": 60
+    },
+    {
+      "spell": "Lithomancie",
+      "classe": "Clerc",
+      "niveau": 6,
+      "material": "argile",
+      "quantity": 1,
+      "unitPrice": "18 pa",
+      "costPo": 1.8
+    },
+    {
+      "spell": "Lithomorphose",
+      "classe": "Magicien",
+      "niveau": 5,
+      "material": "argile grasse",
+      "quantity": 1,
+      "unitPrice": "5 po",
+      "costPo": 5
+    },
+    {
+      "spell": "Lithomorphose",
+      "classe": "Druide",
+      "niveau": 3,
+      "material": "gui",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Localisation d'objets",
+      "classe": "Clerc",
+      "niveau": 3,
+      "material": "pierre aimantée",
+      "quantity": 1,
+      "unitPrice": "4 po",
+      "costPo": 4
+    },
+    {
+      "spell": "Localisation des animaux",
+      "classe": "Druide",
+      "niveau": 1,
+      "material": "gui druidique",
+      "quantity": 1,
+      "unitPrice": "9 pc",
+      "costPo": 0.09
+    },
+    {
+      "spell": "Localisation des plantes",
+      "classe": "Druide",
+      "niveau": 2,
+      "material": "gui druidique",
+      "quantity": 1,
+      "unitPrice": "9 pc",
+      "costPo": 0.09
+    },
+    {
+      "spell": "Main broyante de Bigby",
+      "classe": "Magicien",
+      "niveau": 9,
+      "material": "Gant en peau de serpent",
+      "quantity": 1,
+      "unitPrice": "3 po",
+      "costPo": 3
+    },
+    {
+      "spell": "Main broyante de Bigby",
+      "classe": "Magicien",
+      "niveau": 9,
+      "material": "Coquille d’œuf",
+      "quantity": 1,
+      "unitPrice": "3 pc",
+      "costPo": 0.03
+    },
+    {
+      "spell": "Main d’interposition de Bigby",
+      "classe": "Magicien",
+      "niveau": 5,
+      "material": "Gant",
+      "quantity": 1,
+      "unitPrice": "8 po",
+      "costPo": 8
+    },
+    {
+      "spell": "Main de force de Bigby",
+      "classe": "Magicien",
+      "niveau": 6,
+      "material": "Gant",
+      "quantity": 1,
+      "unitPrice": "8 po",
+      "costPo": 8
+    },
+    {
+      "spell": "Maladresse",
+      "classe": "Magicien",
+      "niveau": 4,
+      "material": "lait solidifié (crème épaisse",
+      "quantity": 1,
+      "unitPrice": "7 pa",
+      "costPo": 0.7
+    },
+    {
+      "spell": "Maladresse",
+      "classe": "Magicien",
+      "niveau": 4,
+      "material": "Beurre)",
+      "quantity": 1,
+      "unitPrice": "7 pa",
+      "costPo": 0.7
+    },
+    {
+      "spell": "Marche des vents",
+      "classe": "Clerc",
+      "niveau": 7,
+      "material": "feu",
+      "quantity": 1,
+      "unitPrice": "4 pa",
+      "costPo": 0.4
+    },
+    {
+      "spell": "Marche des vents",
+      "classe": "Clerc",
+      "niveau": 7,
+      "material": "eau bénite",
+      "quantity": 1,
+      "unitPrice": "25 po",
+      "costPo": 25
+    },
+    {
+      "spell": "Marche des vents",
+      "classe": "Clerc",
+      "niveau": 7,
+      "material": "eau maudite",
+      "quantity": 1,
+      "unitPrice": "4 pa",
+      "costPo": 0.4
+    },
+    {
+      "spell": "Marteau Spirituel",
+      "classe": "Clerc",
+      "niveau": 2,
+      "material": "marteau de guerre normal",
+      "quantity": 1,
+      "unitPrice": "6 pa",
+      "costPo": 0.6
+    },
+    {
+      "spell": "Message",
+      "classe": "Magicien",
+      "niveau": 1,
+      "material": "fil de cuivre",
+      "quantity": 1,
+      "unitPrice": "12 pa",
+      "costPo": 1.2
+    },
+    {
+      "spell": "Métal brûlant",
+      "classe": "Druide",
+      "niveau": 2,
+      "material": "gui druidique",
+      "quantity": 1,
+      "unitPrice": "9 pc",
+      "costPo": 0.09
+    },
+    {
+      "spell": "Mort rampante",
+      "classe": "Druide",
+      "niveau": 7,
+      "material": "gui",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Motif hypnotique",
+      "classe": "Illusionniste",
+      "niveau": 2,
+      "material": "cire d’abeille",
+      "quantity": 1,
+      "unitPrice": "2 po",
+      "costPo": 2
+    },
+    {
+      "spell": "Moyen mnémonique de Rary",
+      "classe": "Magicien",
+      "niveau": 4,
+      "material": "ficelle",
+      "quantity": 1,
+      "unitPrice": "7 pc",
+      "costPo": 0.07
+    },
+    {
+      "spell": "Moyen mnémonique de Rary",
+      "classe": "Magicien",
+      "niveau": 4,
+      "material": "Plaque d’ivoire",
+      "quantity": 1,
+      "unitPrice": "100 po",
+      "costPo": 100
+    },
+    {
+      "spell": "Moyen mnémonique de Rary",
+      "classe": "Magicien",
+      "niveau": 4,
+      "material": "Encre composée de sécrétion de calmar",
+      "quantity": 1,
+      "unitPrice": "2 po",
+      "costPo": 2
+    },
+    {
+      "spell": "Mur d'épines",
+      "classe": "Druide",
+      "niveau": 6,
+      "material": "gui druidique",
+      "quantity": 1,
+      "unitPrice": "9 pc",
+      "costPo": 0.09
+    },
+    {
+      "spell": "Mur de brouillard",
+      "classe": "Illusionniste",
+      "niveau": 1,
+      "material": "Poudre de poix séchés",
+      "quantity": 1,
+      "unitPrice": "12 pa",
+      "costPo": 1.2
+    },
+    {
+      "spell": "Mur de fer",
+      "classe": "Magicien",
+      "niveau": 5,
+      "material": "plaque de fer",
+      "quantity": 1,
+      "unitPrice": "5 po",
+      "costPo": 5
+    },
+    {
+      "spell": "Mur de feu",
+      "classe": "Druide",
+      "niveau": 5,
+      "material": "phosphore",
+      "quantity": 1,
+      "unitPrice": "5 po",
+      "costPo": 5
+    },
+    {
+      "spell": "Mur de feu",
+      "classe": "Magicien",
+      "niveau": 4,
+      "material": "phosphore",
+      "quantity": 1,
+      "unitPrice": "5 po",
+      "costPo": 5
+    },
+    {
+      "spell": "Mur de force",
+      "classe": "Magicien",
+      "niveau": 5,
+      "material": "Pincée de poudre de diamant (issue d’une",
+      "quantity": 1,
+      "unitPrice": "80 po",
+      "costPo": 80
+    },
+    {
+      "spell": "Mur de glace",
+      "classe": "Magicien",
+      "niveau": 4,
+      "material": "quartz",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Mur de roc",
+      "classe": "Magicien",
+      "niveau": 5,
+      "material": "Petit bloc de granit",
+      "quantity": 1,
+      "unitPrice": "15 pc",
+      "costPo": 0.15
+    },
+    {
+      "spell": "Mythomancie",
+      "classe": "Magicien",
+      "niveau": 6,
+      "material": "Morceaux d’ivoire",
+      "quantity": 1,
+      "unitPrice": "100 po",
+      "costPo": 100
+    },
+    {
+      "spell": "Mythomancie",
+      "classe": "Magicien",
+      "niveau": 6,
+      "material": "Parchemin",
+      "quantity": 1,
+      "unitPrice": "3 pa",
+      "costPo": 0.3
+    },
+    {
+      "spell": "Nécro animation",
+      "classe": "Clerc",
+      "niveau": 3,
+      "material": "goutte de sang",
+      "quantity": 1,
+      "unitPrice": "18 pa",
+      "costPo": 1.8
+    },
+    {
+      "spell": "Nécro animation",
+      "classe": "Clerc",
+      "niveau": 3,
+      "material": "chair humaine",
+      "quantity": 1,
+      "unitPrice": "9 pa",
+      "costPo": 0.9
+    },
+    {
+      "spell": "Nécro animation",
+      "classe": "Clerc",
+      "niveau": 3,
+      "material": "pincée d’os en poudre",
+      "quantity": 1,
+      "unitPrice": "12 pa",
+      "costPo": 1.2
+    },
+    {
+      "spell": "Nécro animation",
+      "classe": "Clerc",
+      "niveau": 3,
+      "material": "écharde d’os",
+      "quantity": 1,
+      "unitPrice": "5 pa",
+      "costPo": 0.5
+    },
+    {
+      "spell": "Nécro-animation",
+      "classe": "Magicien",
+      "niveau": 5,
+      "material": "goutte de sang",
+      "quantity": 1,
+      "unitPrice": "18 pa",
+      "costPo": 1.8
+    },
+    {
+      "spell": "Nécro-animation",
+      "classe": "Magicien",
+      "niveau": 5,
+      "material": "chair humaine",
+      "quantity": 1,
+      "unitPrice": "9 pa",
+      "costPo": 0.9
+    },
+    {
+      "spell": "Nécro-animation",
+      "classe": "Magicien",
+      "niveau": 5,
+      "material": "os en poudre",
+      "quantity": 1,
+      "unitPrice": "12 pa",
+      "costPo": 1.2
+    },
+    {
+      "spell": "Nécromancie",
+      "classe": "Clerc",
+      "niveau": 3,
+      "material": "symbole sacré du clerc",
+      "quantity": 1,
+      "unitPrice": "18 pc",
+      "costPo": 0.18
+    },
+    {
+      "spell": "Nécromancie",
+      "classe": "Clerc",
+      "niveau": 3,
+      "material": "encens",
+      "quantity": 1,
+      "unitPrice": "1 po",
+      "costPo": 1
+    },
+    {
+      "spell": "Non-détection",
+      "classe": "Illusionniste",
+      "niveau": 3,
+      "material": "Pincée de poudre de diamant",
+      "quantity": 1,
+      "unitPrice": "80 po",
+      "costPo": 80
+    },
+    {
+      "spell": "Nuage incendiaire",
+      "classe": "Magicien",
+      "niveau": 8,
+      "material": "soufre",
+      "quantity": 1,
+      "unitPrice": "12 pa",
+      "costPo": 1.2
+    },
+    {
+      "spell": "Nuage incendiaire",
+      "classe": "Magicien",
+      "niveau": 8,
+      "material": "phosphore",
+      "quantity": 1,
+      "unitPrice": "5 po",
+      "costPo": 5
+    },
+    {
+      "spell": "Nuage puant",
+      "classe": "Magicien",
+      "niveau": 2,
+      "material": "feuilles de symplocarpe fétide",
+      "quantity": 1,
+      "unitPrice": "4 pa",
+      "costPo": 0.4
+    },
+    {
+      "spell": "Œil magique",
+      "classe": "Magicien",
+      "niveau": 4,
+      "material": "fourrure de chauve souris",
+      "quantity": 1,
+      "unitPrice": "15 pc",
+      "costPo": 0.15
+    },
+    {
+      "spell": "Or des fous",
+      "classe": "Magicien",
+      "niveau": 2,
+      "material": "pierre d’ambre",
+      "quantity": 1,
+      "unitPrice": "35 po",
+      "costPo": 35
+    },
+    {
+      "spell": "Or des fous",
+      "classe": "Magicien",
+      "niveau": 2,
+      "material": "topaze",
+      "quantity": 1,
+      "unitPrice": "125 po",
+      "costPo": 125
+    },
+    {
+      "spell": "Or des fous",
+      "classe": "Magicien",
+      "niveau": 2,
+      "material": "topaze orientale",
+      "quantity": 1,
+      "unitPrice": "200 po",
+      "costPo": 200
+    },
+    {
+      "spell": "Orientation",
+      "classe": "Clerc",
+      "niveau": 6,
+      "material": "jeu d’objets divinatoires en os ou en ivoire, sous forme de bâtonnets ou de runes gravées",
+      "quantity": 1,
+      "unitPrice": "80 po",
+      "costPo": 80
+    },
+    {
+      "spell": "Paralysie",
+      "classe": "Clerc",
+      "niveau": 2,
+      "material": "tige de métal droite et rigide",
+      "quantity": 1,
+      "unitPrice": "6 pa",
+      "costPo": 0.6
+    },
+    {
+      "spell": "Paralysie animale",
+      "classe": "Druide",
+      "niveau": 3,
+      "material": "gui druidique",
+      "quantity": 1,
+      "unitPrice": "9 pc",
+      "costPo": 0.09
+    },
+    {
+      "spell": "Paralysie des monstres",
+      "classe": "Magicien",
+      "niveau": 5,
+      "material": "Petite barre de métal",
+      "quantity": 1,
+      "unitPrice": "18 pa",
+      "costPo": 1.8
+    },
+    {
+      "spell": "Paralysie végétale",
+      "classe": "Druide",
+      "niveau": 4,
+      "material": "gui druidique",
+      "quantity": 1,
+      "unitPrice": "9 pc",
+      "costPo": 0.09
+    },
+    {
+      "spell": "Passage sans trace",
+      "classe": "Druide",
+      "niveau": 1,
+      "material": "gui",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Passage sans trace",
+      "classe": "Druide",
+      "niveau": 1,
+      "material": "aiguille de pin",
+      "quantity": 1,
+      "unitPrice": "6 po",
+      "costPo": 6
+    },
+    {
+      "spell": "Passe-muraille",
+      "classe": "Magicien",
+      "niveau": 5,
+      "material": "Pincée de graines de sésame",
+      "quantity": 1,
+      "unitPrice": "12 pc",
+      "costPo": 0.12
+    },
+    {
+      "spell": "Passe-plantes",
+      "classe": "Druide",
+      "niveau": 5,
+      "material": "gui druidique",
+      "quantity": 1,
+      "unitPrice": "9 pc",
+      "costPo": 0.09
+    },
+    {
+      "spell": "Peau d'écorce",
+      "classe": "Druide",
+      "niveau": 2,
+      "material": "gui",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Peau d'écorce",
+      "classe": "Druide",
+      "niveau": 2,
+      "material": "écorce de chêne",
+      "quantity": 1,
+      "unitPrice": "18 pc",
+      "costPo": 0.18
+    },
+    {
+      "spell": "Peur",
+      "classe": "Magicien",
+      "niveau": 2,
+      "material": "morceau d’os de mort vivant",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Phytomorphose",
+      "classe": "Magicien",
+      "niveau": 4,
+      "material": "morceaux d'écorce",
+      "quantity": 1,
+      "unitPrice": "15 pc",
+      "costPo": 0.15
+    },
+    {
+      "spell": "Piège à feu",
+      "classe": "Druide",
+      "niveau": 2,
+      "material": "baies de houx",
+      "quantity": 1,
+      "unitPrice": "18 pc",
+      "costPo": 0.18
+    },
+    {
+      "spell": "Piège à feu",
+      "classe": "Druide",
+      "niveau": 2,
+      "material": "charbon",
+      "quantity": 1,
+      "unitPrice": "7 pa",
+      "costPo": 0.7
+    },
+    {
+      "spell": "Piège de Léomund",
+      "classe": "Magicien",
+      "niveau": 2,
+      "material": "fer pyriteux",
+      "quantity": 1,
+      "unitPrice": "12 pc",
+      "costPo": 0.12
+    },
+    {
+      "spell": "Piège sylvestre",
+      "classe": "Druide",
+      "niveau": 3,
+      "material": "gui",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Piège sylvestre",
+      "classe": "Druide",
+      "niveau": 3,
+      "material": "peau de serpent",
+      "quantity": 1,
+      "unitPrice": "5 pa",
+      "costPo": 0.5
+    },
+    {
+      "spell": "Pilier de Feu",
+      "classe": "Clerc",
+      "niveau": 5,
+      "material": "pincée de souffre",
+      "quantity": 1,
+      "unitPrice": "9 pa",
+      "costPo": 0.9
+    },
+    {
+      "spell": "Poigne de Bigby",
+      "classe": "Magicien",
+      "niveau": 7,
+      "material": "Gant en cuir",
+      "quantity": 1,
+      "unitPrice": "15 pa",
+      "costPo": 1.5
+    },
+    {
+      "spell": "Poing de Bigby",
+      "classe": "Magicien",
+      "niveau": 8,
+      "material": "Gant en cuir",
+      "quantity": 1,
+      "unitPrice": "15 pa",
+      "costPo": 1.5
+    },
+    {
+      "spell": "Porte végétale",
+      "classe": "Druide",
+      "niveau": 4,
+      "material": "gui druidique",
+      "quantity": 1,
+      "unitPrice": "9 pc",
+      "costPo": 0.09
+    },
+    {
+      "spell": "Poussée",
+      "classe": "Magicien",
+      "niveau": 1,
+      "material": "Pincée de poudre de cuivre",
+      "quantity": 1,
+      "unitPrice": "4 po",
+      "costPo": 4
+    },
+    {
+      "spell": "Prévision du temps",
+      "classe": "Druide",
+      "niveau": 1,
+      "material": "gui druidique",
+      "quantity": 1,
+      "unitPrice": "9 pc",
+      "costPo": 0.09
+    },
+    {
+      "spell": "Prière",
+      "classe": "Clerc",
+      "niveau": 3,
+      "material": "symbole religieux en argent",
+      "quantity": 1,
+      "unitPrice": "10 po",
+      "costPo": 10
+    },
+    {
+      "spell": "Prière",
+      "classe": "Clerc",
+      "niveau": 3,
+      "material": "chapelet de prière",
+      "quantity": 1,
+      "unitPrice": "1 po",
+      "costPo": 1
+    },
+    {
+      "spell": "Protection contre la foudre",
+      "classe": "Druide",
+      "niveau": 4,
+      "material": "gui druidique",
+      "quantity": 1,
+      "unitPrice": "9 pc",
+      "costPo": 0.09
+    },
+    {
+      "spell": "Protection contre le feu",
+      "classe": "Druide",
+      "niveau": 3,
+      "material": "gui druidique",
+      "quantity": 1,
+      "unitPrice": "9 pc",
+      "costPo": 0.09
+    },
+    {
+      "spell": "Protection contre le mal",
+      "classe": "Magicien",
+      "niveau": 1,
+      "material": "Poudre de fer",
+      "quantity": 1,
+      "unitPrice": "50 po",
+      "costPo": 50
+    },
+    {
+      "spell": "Protection contre le mal",
+      "classe": "Magicien",
+      "niveau": 1,
+      "material": "Poudre d’argent",
+      "quantity": 1,
+      "unitPrice": "20 po",
+      "costPo": 20
+    },
+    {
+      "spell": "Protection contre le Mal",
+      "classe": "Clerc",
+      "niveau": 1,
+      "material": "eau bénite",
+      "quantity": 1,
+      "unitPrice": "25 po",
+      "costPo": 25
+    },
+    {
+      "spell": "Protection contre le Mal",
+      "classe": "Clerc",
+      "niveau": 1,
+      "material": "encens allumé",
+      "quantity": 1,
+      "unitPrice": "20 po",
+      "costPo": 20
+    },
+    {
+      "spell": "Protection contre le Mal",
+      "classe": "Clerc",
+      "niveau": 1,
+      "material": "sang",
+      "quantity": 1,
+      "unitPrice": "6 pa",
+      "costPo": 0.6
+    },
+    {
+      "spell": "Protection contre le Mal",
+      "classe": "Clerc",
+      "niveau": 1,
+      "material": "vapeurs de fumier",
+      "quantity": 1,
+      "unitPrice": "18 pa",
+      "costPo": 1.8
+    },
+    {
+      "spell": "Protection contre le mal sur 3 m",
+      "classe": "Magicien",
+      "niveau": 3,
+      "material": "poudre d’argent",
+      "quantity": 1,
+      "unitPrice": "20 po",
+      "costPo": 20
+    },
+    {
+      "spell": "Protection contre les projectiles normaux",
+      "classe": "Magicien",
+      "niveau": 3,
+      "material": "carapace de tortue",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Punition spirituelle",
+      "classe": "Magicien",
+      "niveau": 6,
+      "material": "vélin enluminé",
+      "quantity": 1,
+      "unitPrice": "18 pc",
+      "costPo": 0.18
+    },
+    {
+      "spell": "Quête Religieuse",
+      "classe": "Clerc",
+      "niveau": 5,
+      "material": "symbole sacré du clerc",
+      "quantity": 1,
+      "unitPrice": "18 pc",
+      "costPo": 0.18
+    },
+    {
+      "spell": "Rafale de vent",
+      "classe": "Magicien",
+      "niveau": 3,
+      "material": "Graine de légume",
+      "quantity": 1,
+      "unitPrice": "7 pc",
+      "costPo": 0.07
+    },
+    {
+      "spell": "Ralentissement",
+      "classe": "Magicien",
+      "niveau": 3,
+      "material": "Goutte de mélasse",
+      "quantity": 1,
+      "unitPrice": "1 pc",
+      "costPo": 0.01
+    },
+    {
+      "spell": "Rapidité",
+      "classe": "Magicien",
+      "niveau": 3,
+      "material": "Fragment de racine de réglisse",
+      "quantity": 1,
+      "unitPrice": "6 pa",
+      "costPo": 0.6
+    },
+    {
+      "spell": "Régénération",
+      "classe": "Clerc",
+      "niveau": 7,
+      "material": "objet de prière",
+      "quantity": 1,
+      "unitPrice": "15 pc",
+      "costPo": 0.15
+    },
+    {
+      "spell": "Régénération",
+      "classe": "Clerc",
+      "niveau": 7,
+      "material": "eau bénite",
+      "quantity": 1,
+      "unitPrice": "25 po",
+      "costPo": 25
+    },
+    {
+      "spell": "Régénération",
+      "classe": "Clerc",
+      "niveau": 7,
+      "material": "eau maudite",
+      "quantity": 1,
+      "unitPrice": "4 pa",
+      "costPo": 0.4
+    },
+    {
+      "spell": "Réincarnation",
+      "classe": "Druide",
+      "niveau": 7,
+      "material": "gui",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Réincarnation",
+      "classe": "Magicien",
+      "niveau": 6,
+      "material": "petit tambour",
+      "quantity": 1,
+      "unitPrice": "3 po",
+      "costPo": 3
+    },
+    {
+      "spell": "Réincarnation",
+      "classe": "Magicien",
+      "niveau": 6,
+      "material": "goutte de sang",
+      "quantity": 1,
+      "unitPrice": "18 pa",
+      "costPo": 1.8
+    },
+    {
+      "spell": "Répulsion",
+      "classe": "Magicien",
+      "niveau": 6,
+      "material": "Paire de petites barres de fer magnétisées",
+      "quantity": 1,
+      "unitPrice": "12 pc",
+      "costPo": 0.12
+    },
+    {
+      "spell": "Répulsion des insectes",
+      "classe": "Druide",
+      "niveau": 4,
+      "material": "gui",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Répulsion des insectes",
+      "classe": "Druide",
+      "niveau": 4,
+      "material": "poireau écrasé",
+      "quantity": 1,
+      "unitPrice": "3 pa",
+      "costPo": 0.3
+    },
+    {
+      "spell": "Répulsion des insectes",
+      "classe": "Druide",
+      "niveau": 4,
+      "material": "feuilles de navet écrasées",
+      "quantity": 7,
+      "unitPrice": "7 pc",
+      "costPo": 0.49
+    },
+    {
+      "spell": "Répulsion des insectes",
+      "classe": "Druide",
+      "niveau": 4,
+      "material": "résine d’arbre à camphre",
+      "quantity": 1,
+      "unitPrice": "9 pa",
+      "costPo": 0.9
+    },
+    {
+      "spell": "Répulsion du bois",
+      "classe": "Druide",
+      "niveau": 6,
+      "material": "gui druidique",
+      "quantity": 1,
+      "unitPrice": "9 pc",
+      "costPo": 0.09
+    },
+    {
+      "spell": "Résistance au feu",
+      "classe": "Clerc",
+      "niveau": 2,
+      "material": "goutte de mercure",
+      "quantity": 1,
+      "unitPrice": "60 po",
+      "costPo": 60
+    },
+    {
+      "spell": "Résistance au Froid",
+      "classe": "Clerc",
+      "niveau": 1,
+      "material": "pincée de souffre",
+      "quantity": 1,
+      "unitPrice": "9 pa",
+      "costPo": 0.9
+    },
+    {
+      "spell": "Résurrection",
+      "classe": "Clerc",
+      "niveau": 7,
+      "material": "symbole sacré du clerc",
+      "quantity": 1,
+      "unitPrice": "18 pc",
+      "costPo": 0.18
+    },
+    {
+      "spell": "Résurrection",
+      "classe": "Clerc",
+      "niveau": 7,
+      "material": "eau bénite",
+      "quantity": 1,
+      "unitPrice": "25 po",
+      "costPo": 25
+    },
+    {
+      "spell": "Résurrection",
+      "classe": "Clerc",
+      "niveau": 7,
+      "material": "eau maudite",
+      "quantity": 1,
+      "unitPrice": "4 pa",
+      "costPo": 0.4
+    },
+    {
+      "spell": "Retardement du Poison",
+      "classe": "Clerc",
+      "niveau": 2,
+      "material": "symbole sacré",
+      "quantity": 1,
+      "unitPrice": "2 pa",
+      "costPo": 0.2
+    },
+    {
+      "spell": "Retardement du Poison",
+      "classe": "Clerc",
+      "niveau": 2,
+      "material": "gousse d’ail",
+      "quantity": 1,
+      "unitPrice": "9 pc",
+      "costPo": 0.09
+    },
+    {
+      "spell": "Sanctuaire",
+      "classe": "Clerc",
+      "niveau": 1,
+      "material": "symbole sacré du clerc",
+      "quantity": 1,
+      "unitPrice": "18 pc",
+      "costPo": 0.18
+    },
+    {
+      "spell": "Sanctuaire",
+      "classe": "Clerc",
+      "niveau": 1,
+      "material": "miroir en argent",
+      "quantity": 1,
+      "unitPrice": "15 po",
+      "costPo": 15
+    },
+    {
+      "spell": "Saut",
+      "classe": "Magicien",
+      "niveau": 1,
+      "material": "patte arrière de sauterelle",
+      "quantity": 1,
+      "unitPrice": "2 pa",
+      "costPo": 0.2
+    },
+    {
+      "spell": "Séparation des Eaux",
+      "classe": "Clerc",
+      "niveau": 6,
+      "material": "symbole sacré du clerc",
+      "quantity": 1,
+      "unitPrice": "18 pc",
+      "costPo": 0.18
+    },
+    {
+      "spell": "Serviteur invisible",
+      "classe": "Magicien",
+      "niveau": 1,
+      "material": "Bout de ficelle",
+      "quantity": 1,
+      "unitPrice": "18 pc",
+      "costPo": 0.18
+    },
+    {
+      "spell": "Serviteur invisible",
+      "classe": "Magicien",
+      "niveau": 1,
+      "material": "bois",
+      "quantity": 1,
+      "unitPrice": "4 pa",
+      "costPo": 0.4
+    },
+    {
+      "spell": "Shillelagh",
+      "classe": "Druide",
+      "niveau": 1,
+      "material": "massue en chêne",
+      "quantity": 1,
+      "unitPrice": "5 pa",
+      "costPo": 0.5
+    },
+    {
+      "spell": "Shillelagh",
+      "classe": "Druide",
+      "niveau": 1,
+      "material": "gui",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Shillelagh",
+      "classe": "Druide",
+      "niveau": 1,
+      "material": "feuille de trèfle",
+      "quantity": 1,
+      "unitPrice": "15 pc",
+      "costPo": 0.15
+    },
+    {
+      "spell": "Simulacre",
+      "classe": "Magicien",
+      "niveau": 7,
+      "material": "poudre de rubis",
+      "quantity": 1,
+      "unitPrice": "500 po",
+      "costPo": 500
+    },
+    {
+      "spell": "Soin ultime",
+      "classe": "Druide",
+      "niveau": 6,
+      "material": "gui",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Soins majeurs",
+      "classe": "Druide",
+      "niveau": 4,
+      "material": "gui",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Soins mineurs",
+      "classe": "Druide",
+      "niveau": 2,
+      "material": "symbole sacré du clerc",
+      "quantity": 1,
+      "unitPrice": "18 pc",
+      "costPo": 0.18
+    },
+    {
+      "spell": "Soins mineurs",
+      "classe": "Druide",
+      "niveau": 2,
+      "material": "petit miroir en argent",
+      "quantity": 1,
+      "unitPrice": "18 po",
+      "costPo": 18
+    },
+    {
+      "spell": "Sommeil",
+      "classe": "Magicien",
+      "niveau": 1,
+      "material": "Pincée de sable fin",
+      "quantity": 1,
+      "unitPrice": "9 pc",
+      "costPo": 0.09
+    },
+    {
+      "spell": "Sphère glaciale d’Otiluke",
+      "classe": "Magicien",
+      "niveau": 6,
+      "material": "fine feuille de cristal de 6 cm²",
+      "quantity": 1,
+      "unitPrice": "2 pa",
+      "costPo": 0.2
+    },
+    {
+      "spell": "Sphère glaciale d’Otiluke",
+      "classe": "Magicien",
+      "niveau": 6,
+      "material": "saphir blanc",
+      "quantity": 1,
+      "unitPrice": "250 po",
+      "costPo": 250
+    },
+    {
+      "spell": "Sphère glaciale d’Otiluke",
+      "classe": "Magicien",
+      "niveau": 6,
+      "material": "diamant",
+      "quantity": 1,
+      "unitPrice": "150 po",
+      "costPo": 150
+    },
+    {
+      "spell": "Stase temporelle",
+      "classe": "Magicien",
+      "niveau": 9,
+      "material": "Poudre composée de diamant",
+      "quantity": 1,
+      "unitPrice": "750 po",
+      "costPo": 750
+    },
+    {
+      "spell": "Statue",
+      "classe": "Magicien",
+      "niveau": 7,
+      "material": "sable",
+      "quantity": 1,
+      "unitPrice": "8 pc",
+      "costPo": 0.08
+    },
+    {
+      "spell": "Statue",
+      "classe": "Magicien",
+      "niveau": 7,
+      "material": "goutte d’eau",
+      "quantity": 1,
+      "unitPrice": "15 pa",
+      "costPo": 1.5
+    },
+    {
+      "spell": "Suggestion",
+      "classe": "Magicien",
+      "niveau": 3,
+      "material": "langue de serpent",
+      "quantity": 1,
+      "unitPrice": "12 pc",
+      "costPo": 0.12
+    },
+    {
+      "spell": "Suggestion de masse",
+      "classe": "Illusionniste",
+      "niveau": 6,
+      "material": "langue de serpent",
+      "quantity": 1,
+      "unitPrice": "12 pc",
+      "costPo": 0.12
+    },
+    {
+      "spell": "Surdité",
+      "classe": "Illusionniste",
+      "niveau": 2,
+      "material": "cire d’abeille",
+      "quantity": 1,
+      "unitPrice": "2 po",
+      "costPo": 2
+    },
+    {
+      "spell": "Symbole",
+      "classe": "Clerc",
+      "niveau": 7,
+      "material": "mercure",
+      "quantity": 1,
+      "unitPrice": "10 po",
+      "costPo": 10
+    },
+    {
+      "spell": "Symbole",
+      "classe": "Clerc",
+      "niveau": 7,
+      "material": "phosphore",
+      "quantity": 1,
+      "unitPrice": "5 po",
+      "costPo": 5
+    },
+    {
+      "spell": "Tempête de feu",
+      "classe": "Druide",
+      "niveau": 7,
+      "material": "gui",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Tempête de glace",
+      "classe": "Magicien",
+      "niveau": 4,
+      "material": "pincée de poussière",
+      "quantity": 1,
+      "unitPrice": "18 pa",
+      "costPo": 1.8
+    },
+    {
+      "spell": "Tempête de glace",
+      "classe": "Magicien",
+      "niveau": 4,
+      "material": "gouttes d’eau",
+      "quantity": 1,
+      "unitPrice": "4 pc",
+      "costPo": 0.04
+    },
+    {
+      "spell": "Ténèbres éternelles",
+      "classe": "Illusionniste",
+      "niveau": 3,
+      "material": "fourrure de chauve souris",
+      "quantity": 1,
+      "unitPrice": "15 pc",
+      "costPo": 0.15
+    },
+    {
+      "spell": "Ténèbres éternelles",
+      "classe": "Illusionniste",
+      "niveau": 3,
+      "material": "charbon",
+      "quantity": 1,
+      "unitPrice": "7 pa",
+      "costPo": 0.7
+    },
+    {
+      "spell": "Ténèbres éternelles",
+      "classe": "Illusionniste",
+      "niveau": 3,
+      "material": "goutte de poix",
+      "quantity": 1,
+      "unitPrice": "15 pa",
+      "costPo": 1.5
+    },
+    {
+      "spell": "Terrain hallucinatoire",
+      "classe": "Magicien",
+      "niveau": 4,
+      "material": "Brindille",
+      "quantity": 1,
+      "unitPrice": "1 pc",
+      "costPo": 0.01
+    },
+    {
+      "spell": "Terrain hallucinatoire",
+      "classe": "Magicien",
+      "niveau": 4,
+      "material": "plante verte",
+      "quantity": 1,
+      "unitPrice": "2 pa",
+      "costPo": 0.2
+    },
+    {
+      "spell": "Terrain hallucinatoire",
+      "classe": "Magicien",
+      "niveau": 4,
+      "material": "Feuille",
+      "quantity": 1,
+      "unitPrice": "9 pc",
+      "costPo": 0.09
+    },
+    {
+      "spell": "Toile d’araignée",
+      "classe": "Magicien",
+      "niveau": 2,
+      "material": "toile d’araignée",
+      "quantity": 1,
+      "unitPrice": "8 pc",
+      "costPo": 0.08
+    },
+    {
+      "spell": "Transformation d’objets",
+      "classe": "Magicien",
+      "niveau": 8,
+      "material": "mercure",
+      "quantity": 1,
+      "unitPrice": "10 po",
+      "costPo": 10
+    },
+    {
+      "spell": "Transmutation de pierre en boue",
+      "classe": "Druide",
+      "niveau": 5,
+      "material": "l’eau",
+      "quantity": 1,
+      "unitPrice": "4 pa",
+      "costPo": 0.4
+    },
+    {
+      "spell": "Transmutation de pierre en boue",
+      "classe": "Druide",
+      "niveau": 5,
+      "material": "de l’argile (eau",
+      "quantity": 1,
+      "unitPrice": "15 pa",
+      "costPo": 1.5
+    },
+    {
+      "spell": "Transmutation de pierre en boue",
+      "classe": "Druide",
+      "niveau": 5,
+      "material": "sable pour l’inverse)",
+      "quantity": 1,
+      "unitPrice": "6 pc",
+      "costPo": 0.06
+    },
+    {
+      "spell": "Transmutation de pierre en boue",
+      "classe": "Magicien",
+      "niveau": 5,
+      "material": "eau",
+      "quantity": 1,
+      "unitPrice": "2 pa",
+      "costPo": 0.2
+    },
+    {
+      "spell": "Transmutation de pierre en boue",
+      "classe": "Magicien",
+      "niveau": 5,
+      "material": "argile",
+      "quantity": 1,
+      "unitPrice": "18 pa",
+      "costPo": 1.8
+    },
+    {
+      "spell": "Transmutation de pierre en boue",
+      "classe": "Magicien",
+      "niveau": 5,
+      "material": "sable",
+      "quantity": 1,
+      "unitPrice": "8 pc",
+      "costPo": 0.08
+    },
+    {
+      "spell": "Transmutation de pierre en chair",
+      "classe": "Magicien",
+      "niveau": 6,
+      "material": "goutte de sang",
+      "quantity": 1,
+      "unitPrice": "18 pa",
+      "costPo": 1.8
+    },
+    {
+      "spell": "Transmutation de pierre en chair",
+      "classe": "Magicien",
+      "niveau": 6,
+      "material": "Chaux",
+      "quantity": 1,
+      "unitPrice": "9 pa",
+      "costPo": 0.9
+    },
+    {
+      "spell": "Transmutation du métal en bois",
+      "classe": "Druide",
+      "niveau": 7,
+      "material": "gui",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Transmutation du métal en bois",
+      "classe": "Druide",
+      "niveau": 7,
+      "material": "gui majeur",
+      "quantity": 1,
+      "unitPrice": "6 pa",
+      "costPo": 0.6
+    },
+    {
+      "spell": "Tremblement de Terre",
+      "classe": "Clerc",
+      "niveau": 7,
+      "material": "pincée de poussière",
+      "quantity": 1,
+      "unitPrice": "18 pa",
+      "costPo": 1.8
+    },
+    {
+      "spell": "Tremblement de Terre",
+      "classe": "Clerc",
+      "niveau": 7,
+      "material": "caillou",
+      "quantity": 1,
+      "unitPrice": "9 pa",
+      "costPo": 0.9
+    },
+    {
+      "spell": "Tremblement de Terre",
+      "classe": "Clerc",
+      "niveau": 7,
+      "material": "motte de terre",
+      "quantity": 1,
+      "unitPrice": "12 pa",
+      "costPo": 1.2
+    },
+    {
+      "spell": "Ventriloquie",
+      "classe": "Magicien",
+      "niveau": 1,
+      "material": "parchemin mis en cône",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Ventriloquie",
+      "classe": "Illusionniste",
+      "niveau": 2,
+      "material": "parchemin mis en cône",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Vigiles et sentinelles",
+      "classe": "Magicien",
+      "niveau": 6,
+      "material": "soufre",
+      "quantity": 1,
+      "unitPrice": "12 pa",
+      "costPo": 1.2
+    },
+    {
+      "spell": "Vigiles et sentinelles",
+      "classe": "Magicien",
+      "niveau": 6,
+      "material": "sang d’ombre des roches",
+      "quantity": 1,
+      "unitPrice": "18 pc",
+      "costPo": 0.18
+    },
+    {
+      "spell": "Vigiles et sentinelles",
+      "classe": "Magicien",
+      "niveau": 6,
+      "material": "Petite baguette d’argent",
+      "quantity": 1,
+      "unitPrice": "10 po",
+      "costPo": 10
+    },
+    {
+      "spell": "Vision réelle",
+      "classe": "Clerc",
+      "niveau": 5,
+      "material": "crème pour les yeux faite de poudre de champignons très rares, de safran et de graisse",
+      "quantity": 1,
+      "unitPrice": "40 po",
+      "costPo": 40
+    },
+    {
+      "spell": "Vision réelle",
+      "classe": "Clerc",
+      "niveau": 5,
+      "material": "crème faite d’huile, de poudre de pavot et d’essence d’orchidée rose",
+      "quantity": 1,
+      "unitPrice": "75 po",
+      "costPo": 75
+    },
+    {
+      "spell": "Vol",
+      "classe": "Magicien",
+      "niveau": 3,
+      "material": "plume d’aile d’oiseau",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Détection de l'invisibilité",
+      "classe": "Magicien",
+      "niveau": 2,
+      "material": "pincée de talc",
+      "quantity": 1,
+      "unitPrice": "8 pa",
+      "costPo": 0.8
+    },
+    {
+      "spell": "Détection de l'invisibilité",
+      "classe": "Magicien",
+      "niveau": 2,
+      "material": "poudre d’argent qu’il faut répandre",
+      "quantity": 1,
+      "unitPrice": "8 po",
+      "costPo": 8
+    }
+  ],
+  "manual": [
+    {
+      "spell": "Amitié",
+      "classe": "Magicien",
+      "niveau": 1,
+      "material": "",
+      "status": "excluded_placeholder"
+    },
+    {
+      "spell": "Augure",
+      "classe": "Clerc",
+      "niveau": 2,
+      "material": "os de dragon",
+      "status": "manual_special"
+    },
+    {
+      "spell": "Chariot de Sustarre",
+      "classe": "Druide",
+      "niveau": 7,
+      "material": "source de feu",
+      "status": "excluded_text"
+    },
+    {
+      "spell": "Charme-plantes",
+      "classe": "Magicien",
+      "niveau": 7,
+      "material": "",
+      "status": "excluded_placeholder"
+    },
+    {
+      "spell": "Clairvoyance",
+      "classe": "Magicien",
+      "niveau": 3,
+      "material": "",
+      "status": "excluded_placeholder"
+    },
+    {
+      "spell": "Clone",
+      "classe": "Magicien",
+      "niveau": 8,
+      "material": "chair de l’original",
+      "status": "excluded_text"
+    },
+    {
+      "spell": "Coffre secret de Léomund",
+      "classe": "Magicien",
+      "niveau": 5,
+      "material": "coffre de grande valeur",
+      "status": "manual_special"
+    },
+    {
+      "spell": "Cône de froid",
+      "classe": "Magicien",
+      "niveau": 5,
+      "material": "",
+      "status": "excluded_placeholder"
+    },
+    {
+      "spell": "Confusion",
+      "classe": "Illusionniste",
+      "niveau": 4,
+      "material": "a completer",
+      "status": "excluded_placeholder"
+    },
+    {
+      "spell": "Contrôle du Climat",
+      "classe": "Clerc",
+      "niveau": 7,
+      "material": "objet similaire au chapelet de prière",
+      "status": "excluded_text"
+    },
+    {
+      "spell": "Corde enchantée",
+      "classe": "Illusionniste",
+      "niveau": 3,
+      "material": "a completer",
+      "status": "excluded_placeholder"
+    },
+    {
+      "spell": "Croissance animale",
+      "classe": "Druide",
+      "niveau": 5,
+      "material": "Matérielle non précisée explicitement dans le Manuel des joueurs",
+      "status": "excluded_placeholder"
+    },
+    {
+      "spell": "Débilité mentale",
+      "classe": "Magicien",
+      "niveau": 5,
+      "material": "",
+      "status": "excluded_placeholder"
+    },
+    {
+      "spell": "Détection des illusions",
+      "classe": "Illusionniste",
+      "niveau": 1,
+      "material": "",
+      "status": "excluded_placeholder"
+    },
+    {
+      "spell": "Dissipation de la magie",
+      "classe": "Druide",
+      "niveau": 4,
+      "material": "Matérielle non précisée explicitement dans le Manuel des joueurs",
+      "status": "excluded_placeholder"
+    },
+    {
+      "spell": "Divination",
+      "classe": "Clerc",
+      "niveau": 4,
+      "material": "créature",
+      "status": "excluded_text"
+    },
+    {
+      "spell": "Divination",
+      "classe": "Clerc",
+      "niveau": 4,
+      "material": "objets magiques",
+      "status": "excluded_text"
+    },
+    {
+      "spell": "Eau aérée",
+      "classe": "Magicien",
+      "niveau": 5,
+      "material": "",
+      "status": "excluded_placeholder"
+    },
+    {
+      "spell": "Effroi",
+      "classe": "Magicien",
+      "niveau": 4,
+      "material": "",
+      "status": "excluded_placeholder"
+    },
+    {
+      "spell": "Embroussaillement",
+      "classe": "Druide",
+      "niveau": 3,
+      "material": "Matérielle non précisée explicitement dans le Manuel des joueurs",
+      "status": "excluded_placeholder"
+    },
+    {
+      "spell": "Emprisonnement de l’âme",
+      "classe": "Magicien",
+      "niveau": 8,
+      "material": "gemme d’emprisonnement",
+      "status": "manual_special"
+    },
+    {
+      "spell": "Épée de Mordenkainen",
+      "classe": "Magicien",
+      "niveau": 7,
+      "material": "Disparaît quand le sort est lancé",
+      "status": "excluded_text"
+    },
+    {
+      "spell": "Foudre",
+      "classe": "Magicien",
+      "niveau": 3,
+      "material": "",
+      "status": "excluded_placeholder"
+    },
+    {
+      "spell": "Globe d’invulnérabilité",
+      "classe": "Magicien",
+      "niveau": 6,
+      "material": "",
+      "status": "excluded_placeholder"
+    },
+    {
+      "spell": "Globe mineur d’invulnérabilité",
+      "classe": "Magicien",
+      "niveau": 4,
+      "material": "",
+      "status": "excluded_placeholder"
+    },
+    {
+      "spell": "Guérison des maladies",
+      "classe": "Druide",
+      "niveau": 3,
+      "material": "Matérielle non précisée explicitement dans le Manuel des joueurs",
+      "status": "excluded_placeholder"
+    },
+    {
+      "spell": "Lévitation",
+      "classe": "Magicien",
+      "niveau": 2,
+      "material": "",
+      "status": "excluded_placeholder"
+    },
+    {
+      "spell": "Localisation d’objets",
+      "classe": "Magicien",
+      "niveau": 2,
+      "material": "",
+      "status": "excluded_placeholder"
+    },
+    {
+      "spell": "Lumières dansantes",
+      "classe": "Magicien",
+      "niveau": 1,
+      "material": "",
+      "status": "excluded_placeholder"
+    },
+    {
+      "spell": "Métempsycose",
+      "classe": "Magicien",
+      "niveau": 5,
+      "material": "réceptacle",
+      "status": "manual_special"
+    },
+    {
+      "spell": "Moyen mnémonique de Rary",
+      "classe": "Magicien",
+      "niveau": 4,
+      "material": "Soit de sang de dragon noir",
+      "status": "manual_special"
+    },
+    {
+      "spell": "Or des fous",
+      "classe": "Magicien",
+      "niveau": 2,
+      "material": "citrine réduite en poudre",
+      "status": "excluded_text"
+    },
+    {
+      "spell": "Or des fous",
+      "classe": "Magicien",
+      "niveau": 2,
+      "material": "Réduite en poudre",
+      "status": "excluded_text"
+    },
+    {
+      "spell": "Or des fous",
+      "classe": "Magicien",
+      "niveau": 2,
+      "material": "répartie sur le métal",
+      "status": "excluded_text"
+    },
+    {
+      "spell": "Or des fous",
+      "classe": "Magicien",
+      "niveau": 2,
+      "material": "Gemme non détruite",
+      "status": "manual_special"
+    },
+    {
+      "spell": "Paralysie des monstres",
+      "classe": "Magicien",
+      "niveau": 5,
+      "material": "Pour chaque monstre visé",
+      "status": "excluded_text"
+    },
+    {
+      "spell": "Piège à feu",
+      "classe": "Magicien",
+      "niveau": 4,
+      "material": "",
+      "status": "excluded_placeholder"
+    },
+    {
+      "spell": "Piège sylvestre",
+      "classe": "Druide",
+      "niveau": 3,
+      "material": "morceau d’une créature forte",
+      "status": "excluded_text"
+    },
+    {
+      "spell": "Prière",
+      "classe": "Clerc",
+      "niveau": 3,
+      "material": "objet similaire ayant la même utilisation",
+      "status": "excluded_text"
+    },
+    {
+      "spell": "Pyrotechnie",
+      "classe": "Druide",
+      "niveau": 3,
+      "material": "Matérielle non précisée explicitement dans le Manuel des joueurs",
+      "status": "excluded_placeholder"
+    },
+    {
+      "spell": "Réparation",
+      "classe": "Magicien",
+      "niveau": 1,
+      "material": "",
+      "status": "excluded_placeholder"
+    },
+    {
+      "spell": "Répulsion des insectes",
+      "classe": "Druide",
+      "niveau": 4,
+      "material": "l’un des éléments suivants: plusieurs soucis écrasés",
+      "status": "excluded_text"
+    },
+    {
+      "spell": "Répulsion des insectes",
+      "classe": "Druide",
+      "niveau": 4,
+      "material": "Consommation explicitement indiquée dans la description",
+      "status": "excluded_text"
+    },
+    {
+      "spell": "Respiration aquatique",
+      "classe": "Magicien",
+      "niveau": 3,
+      "material": "",
+      "status": "excluded_placeholder"
+    },
+    {
+      "spell": "Respiration aquatique",
+      "classe": "Magicien",
+      "niveau": 3,
+      "material": "",
+      "status": "excluded_placeholder"
+    },
+    {
+      "spell": "Séparation des eaux",
+      "classe": "Magicien",
+      "niveau": 6,
+      "material": "",
+      "status": "excluded_placeholder"
+    },
+    {
+      "spell": "Simulacre",
+      "classe": "Magicien",
+      "niveau": 7,
+      "material": "l’original",
+      "status": "excluded_text"
+    },
+    {
+      "spell": "Suggestion",
+      "classe": "Magicien",
+      "niveau": 3,
+      "material": "",
+      "status": "excluded_placeholder"
+    },
+    {
+      "spell": "Suggestion",
+      "classe": "Illusionniste",
+      "niveau": 3,
+      "material": "",
+      "status": "excluded_placeholder"
+    },
+    {
+      "spell": "Suggestion de masse",
+      "classe": "Illusionniste",
+      "niveau": 6,
+      "material": "",
+      "status": "excluded_placeholder"
+    },
+    {
+      "spell": "Symbole",
+      "classe": "Magicien",
+      "niveau": 8,
+      "material": "diamant réduit en poudre",
+      "status": "excluded_text"
+    },
+    {
+      "spell": "Symbole",
+      "classe": "Magicien",
+      "niveau": 8,
+      "material": "Réduit en poudre",
+      "status": "excluded_text"
+    },
+    {
+      "spell": "Symbole",
+      "classe": "Magicien",
+      "niveau": 8,
+      "material": "opale noire réduite en poudre",
+      "status": "excluded_text"
+    },
+    {
+      "spell": "Symbole",
+      "classe": "Magicien",
+      "niveau": 8,
+      "material": "Réduite en poudre",
+      "status": "excluded_text"
+    },
+    {
+      "spell": "Ténèbres sur 5 mètres",
+      "classe": "Magicien",
+      "niveau": 2,
+      "material": "",
+      "status": "excluded_placeholder"
+    },
+    {
+      "spell": "Terrain hallucinatoire",
+      "classe": "Illusionniste",
+      "niveau": 3,
+      "material": "a completer",
+      "status": "excluded_placeholder"
+    },
+    {
+      "spell": "Transformation de Tenser",
+      "classe": "Magicien",
+      "niveau": 6,
+      "material": "",
+      "status": "excluded_placeholder"
+    },
+    {
+      "spell": "Transvision",
+      "classe": "Magicien",
+      "niveau": 6,
+      "material": "",
+      "status": "excluded_placeholder"
+    },
+    {
+      "spell": "Vision",
+      "classe": "Illusionniste",
+      "niveau": 7,
+      "material": "objet de valeur à sacrifier",
+      "status": "excluded_text"
+    }
+  ]
+}
