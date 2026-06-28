@@ -1,5 +1,40 @@
 // ADD2E — Validation hooks et compatibilité legacy.
 
+const ADD2E_FAMILIAR_HP_BRIDGE_VERSION = "2026-06-28-familiar-hp-bridge-v1";
+globalThis.ADD2E_FAMILIAR_HP_BRIDGE_VERSION = ADD2E_FAMILIAR_HP_BRIDGE_VERSION;
+
+if (!globalThis.__ADD2E_FAMILIAR_HP_BRIDGE_REGISTERED__) {
+  globalThis.__ADD2E_FAMILIAR_HP_BRIDGE_REGISTERED__ = true;
+
+  // 13c a déjà converti l'état du familier vers le registre générique
+  // flags.add2e.hpModifiers. Ce second hook s'exécute ensuite et applique
+  // le delta identique aux PV max et courants, y compris au départ.
+  Hooks.on("preUpdateActor", (actor, changes = {}, options = {}) => {
+    if (options?.add2eFamiliarHpShare !== true) return;
+
+    const read = (source, path) => Object.prototype.hasOwnProperty.call(source ?? {}, path)
+      ? source[path]
+      : foundry?.utils?.getProperty?.(source ?? {}, path);
+    const number = (value, fallback = 0) => {
+      const result = Number(value);
+      return Number.isFinite(result) ? result : fallback;
+    };
+    const before = actor?.getFlag?.("add2e", "familiarHpShare") ?? actor?.flags?.add2e?.familiarHpShare ?? null;
+    const after = read(changes, "flags.add2e.familiarHpShare");
+    const linkId = String(after?.linkId ?? before?.linkId ?? "").trim();
+    if (!linkId || !after || typeof after !== "object") return;
+
+    const previous = String(before?.linkId ?? "") === linkId ? Math.max(0, Math.floor(number(before?.amount, 0))) : 0;
+    const desired = Math.max(0, Math.floor(number(after?.amount, 0)));
+    const delta = desired - previous;
+    const max = number(actor?.system?.points_de_coup, NaN);
+    const current = number(actor?.system?.pdv, NaN);
+
+    if (Number.isFinite(max)) changes["system.points_de_coup"] = Math.max(1, max + delta);
+    if (Number.isFinite(current)) changes["system.pdv"] = current + delta;
+  });
+}
+
 Hooks.once("ready", () => {
   add2eRegisterClassItemSheet();
 
