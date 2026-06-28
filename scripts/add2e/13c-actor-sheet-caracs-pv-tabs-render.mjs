@@ -51,6 +51,14 @@ function add2eActorCanUseExceptionalStrength(actor) {
 }
 globalThis.add2eActorCanUseExceptionalStrength = add2eActorCanUseExceptionalStrength;
 
+function add2eFamiliarHpShareAmount(actor) {
+  const share = actor?.getFlag?.("add2e", "familiarHpShare")
+    ?? actor?.flags?.add2e?.familiarHpShare
+    ?? null;
+  const amount = Number(share?.amount ?? 0);
+  return share?.linkId && Number.isFinite(amount) && amount > 0 ? Math.floor(amount) : 0;
+}
+
 globalThis.Add2eActorSheet.prototype.autoSetCaracAjustements = async function autoSetCaracAjustements() {
   if (this._autoSetCaracsInProgress) return;
   if (!this.actor?.system) return;
@@ -177,6 +185,7 @@ globalThis.Add2eActorSheet.prototype.autoSetPointsDeCoup = async function autoSe
     let hpMax = 0;
     for (let index = 0; index < level; index += 1) hpMax += (index === 0 ? hitDie : (Number(hpRolls[index]) || 1)) + conBonus;
     if (!Number.isFinite(hpMax) || hpMax < 1) hpMax = 1;
+    hpMax += add2eFamiliarHpShareAmount(actor);
 
     const sameHpRolls = foundry.utils.deepEqual
       ? foundry.utils.deepEqual(s.hpRolls ?? [], hpRolls)
