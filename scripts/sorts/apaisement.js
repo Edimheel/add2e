@@ -1,18 +1,19 @@
 /**
  * ADD2E — Apaisement / Épouvante
  * Clerc niveau 1
- * Version : 2026-06-06-apaisement-time-engine-v1
+ * Version : 2026-06-28-apaisement-source-item-v3
  *
  * Contrat onUse : true = sort consommé, false = sort non consommé.
+ * Chaque item lance exclusivement son propre effet : aucun choix de variante.
  * Épouvante conserve la règle existante : pas de fallback de mouvement.
  */
 
-console.log("%c[ADD2E][APAISEMENT] 2026-06-06-apaisement-time-engine-v1", "color:#b88924;font-weight:bold;");
+console.log("%c[ADD2E][APAISEMENT] 2026-06-28-apaisement-source-item-v3", "color:#b88924;font-weight:bold;");
 
 const __add2eOnUseResult = await (async () => {
   const DialogV2 = foundry.applications?.api?.DialogV2;
   if (!DialogV2) {
-    ui.notifications.error("Apaisement : DialogV2 introuvable. Foundry V13/V14 requis.");
+    ui.notifications.error("Apaisement / Épouvante : DialogV2 introuvable. Foundry V13/V14/V15 requis.");
     return false;
   }
 
@@ -33,6 +34,33 @@ const __add2eOnUseResult = await (async () => {
     .replace(/[^a-z0-9:]+/g, "_")
     .replace(/_+/g, "_")
     .replace(/^_|_$/g, "");
+
+  function resolveSpellMode(sourceItem) {
+    const exactMode = value => {
+      const key = norm(value);
+      if (key === "epouvante") return "epouvante";
+      if (key === "apaisement") return "apaisement";
+      return null;
+    };
+
+    const nameMode = exactMode(sourceItem?.name);
+    if (nameMode) return nameMode;
+
+    const candidates = [
+      sourceItem?.system?.nom,
+      sourceItem?.system?.label,
+      sourceItem?.system?.slug,
+      sourceItem?.system?.spellKey,
+      sourceItem?.system?.sortKey,
+      sourceItem?.flags?.add2e?.spellKey,
+      sourceItem?.flags?.add2e?.slug,
+      sourceItem?.flags?.add2e?.variantKey,
+      sourceItem?.flags?.add2e?.reversible?.key,
+      sourceItem?.flags?.add2e?.reversible?.variant
+    ];
+    const modes = new Set(candidates.map(exactMode).filter(Boolean));
+    return modes.size === 1 ? Array.from(modes)[0] : null;
+  }
 
   function num(value) {
     if (typeof value === "number") return Number.isFinite(value) ? value : NaN;
@@ -350,44 +378,52 @@ const __add2eOnUseResult = await (async () => {
 
   let sourceItem = (typeof item !== "undefined" && item) ? item : ((typeof sort !== "undefined" && sort) ? sort : this);
   if ((!sourceItem || !sourceItem.system) && typeof args !== "undefined" && args?.[0]?.item) sourceItem = args[0].item;
-  if (!sourceItem) { ui.notifications.error("Apaisement : sort introuvable."); return false; }
+  if (!sourceItem) { ui.notifications.error("Apaisement / Épouvante : sort introuvable."); return false; }
+
+  const mode = resolveSpellMode(sourceItem);
+  if (!mode) {
+    ui.notifications.error(`Apaisement / Épouvante : impossible d’identifier le sort lancé (« ${sourceItem.name ?? "sans nom"} »). Le lancement est annulé pour éviter d’appliquer la mauvaise variante.`);
+    return false;
+  }
+  const title = mode === "epouvante" ? "Épouvante" : "Apaisement";
 
   const casterTokenObj = canvas.tokens.controlled[0] ?? ((typeof token !== "undefined" && token) ? token : null);
-  if (!casterTokenObj) { ui.notifications.warn("Sélectionne le token du lanceur avant d’utiliser Apaisement."); return false; }
+  if (!casterTokenObj) { ui.notifications.warn(`Sélectionne le token du lanceur avant d’utiliser ${title}.`); return false; }
 
   const casterTokenDoc = casterTokenObj.document;
   const caster = casterTokenObj.actor ?? sourceItem.parent ?? actor;
-  if (!caster) { ui.notifications.error("Apaisement : lanceur introuvable."); return false; }
+  if (!caster) { ui.notifications.error(`${title} : lanceur introuvable.`); return false; }
 
   const targets = Array.from(game.user.targets ?? []);
-  if (targets.length !== 1) { ui.notifications.warn("Apaisement : cible exactement une créature."); return false; }
+  if (targets.length !== 1) { ui.notifications.warn(`${title} : cible exactement une créature.`); return false; }
 
   const targetTokenObj = targets[0];
   const targetTokenDoc = targetTokenObj.document;
   const targetActorDoc = targetTokenObj.actor;
-  if (!targetActorDoc) { ui.notifications.warn("Apaisement : cible sans acteur."); return false; }
-  if (!tokensAtTouch(casterTokenObj, targetTokenObj)) { ui.notifications.warn("Apaisement : la cible doit être au toucher."); return false; }
+  if (!targetActorDoc) { ui.notifications.warn(`${title} : cible sans acteur.`); return false; }
+  if (!tokensAtTouch(casterTokenObj, targetTokenObj)) { ui.notifications.warn(`${title} : la cible doit être au toucher.`); return false; }
 
   const casterLevel = Math.max(1, Number(caster.system?.niveau) || Number(caster.system?.level) || 1);
-  const content = `<form class="add2e-apaisement-form" style="font-family:var(--font-primary);display:flex;flex-direction:column;gap:8px;"><div class="form-group"><label style="font-weight:bold;">Version du sort :</label><select name="mode" style="width:100%;"><option value="apaisement">Apaisement — protection contre la peur</option><option value="epouvante">Épouvante — inverse du sort</option></select></div><label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" name="touchConfirmed" checked><span>La cible est consentante ou le contact a été réussi.</span></label><div style="font-size:0.9em;color:#666;border-top:1px solid #ddd;padding-top:6px;"><div><b>Cible :</b> ${esc(targetActorDoc.name)}</div><div><b>Niveau du clerc :</b> ${casterLevel}</div><div><b>Apaisement :</b> +4 aux JS contre peur magique pendant 1 tour.</div><div><b>Épouvante :</b> fuite immédiate au maximum du déplacement, puis peur pendant ${casterLevel} round(s).</div></div></form>`;
+  const modeDescription = mode === "epouvante"
+    ? `<div><b>Épouvante :</b> fuite immédiate au maximum du déplacement, puis peur pendant ${casterLevel} round(s).</div>`
+    : "<div><b>Apaisement :</b> +4 aux JS contre peur magique pendant 1 tour.</div>";
+  const content = `<form class="add2e-apaisement-form" style="font-family:var(--font-primary);display:flex;flex-direction:column;gap:8px;"><div style="font-size:0.95em;color:${COLORS.dark};"><b>Sort lancé :</b> ${esc(title)}</div><label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" name="touchConfirmed" checked><span>La cible est consentante ou le contact a été réussi.</span></label><div style="font-size:0.9em;color:#666;border-top:1px solid #ddd;padding-top:6px;"><div><b>Cible :</b> ${esc(targetActorDoc.name)}</div><div><b>Niveau du clerc :</b> ${casterLevel}</div>${modeDescription}</div></form>`;
 
   const dialogResult = await DialogV2.wait({
-    window: { title: "Lancement : Apaisement" },
+    window: { title: `Lancement : ${title}` },
     add2eTheme: "cleric",
     add2eImg: sourceItem.img || "icons/magic/holy/barrier-shield-winged-blue.webp",
     content,
     buttons: [
-      { action: "cast", label: "Lancer", icon: "fa-solid fa-hands-praying", default: true, callback: (event, button) => ({ mode: String(button.form.elements.mode?.value || "apaisement"), touchConfirmed: !!button.form.elements.touchConfirmed?.checked }) },
+      { action: "cast", label: "Lancer", icon: "fa-solid fa-hands-praying", default: true, callback: (event, button) => ({ touchConfirmed: !!button.form.elements.touchConfirmed?.checked }) },
       { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => null }
     ],
     rejectClose: false
   });
 
   if (!dialogResult) return false;
-  if (!dialogResult.touchConfirmed) { ui.notifications.warn("Apaisement : le contact n’est pas confirmé. Le sort n’est pas lancé."); return false; }
+  if (!dialogResult.touchConfirmed) { ui.notifications.warn(`${title} : le contact n’est pas confirmé. Le sort n’est pas lancé.`); return false; }
 
-  const mode = dialogResult.mode === "epouvante" ? "epouvante" : "apaisement";
-  const title = mode === "epouvante" ? "Épouvante" : "Apaisement";
   let resultHtml = "";
 
   if (mode === "apaisement") {
