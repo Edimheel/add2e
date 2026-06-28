@@ -12,7 +12,7 @@ export const PROJECTILE_FLAG = "projectilesDepensesCombat";
 const SCOPE = "add2e";
 const FAMILIAR = "familiar";
 const ARTWORK_VERSION = "2026-06-27-familiar-artwork-v6";
-const UI_VERSION = "2026-06-27-familiar-ui-v6";
+const UI_VERSION = "2026-06-28-familiar-ui-v7";
 const ASSETS = Object.freeze({
   chat_noir: "systems/add2e/assets/token/chat-noir.png",
   corbeau: "systems/add2e/assets/token/corbeau.png",
@@ -182,6 +182,16 @@ function scheduleHudRefresh() {
   raf(refreshHud);
 }
 
+function refreshHudAfterFamiliarSelection() {
+  globalThis.add2eRefreshActionHud?.();
+  scheduleHudRefresh();
+}
+
+function scheduleHudAfterFamiliarSelection() {
+  window.setTimeout(refreshHudAfterFamiliarSelection, 100);
+  window.setTimeout(refreshHudAfterFamiliarSelection, 220);
+}
+
 function installUi() {
   registerHelpers();
   if (globalThis.ADD2E_FAMILIAR_EFFECT_UI_VERSION === UI_VERSION) return;
@@ -210,6 +220,11 @@ function installUi() {
       ui.notifications.error("Impossible d’utiliser cette action de familier.");
     }
   }, true);
+
+  Hooks.on("controlToken", (token, controlled) => {
+    if (!controlled || !linkFor(token?.actor)?.linkId) return;
+    scheduleHudAfterFamiliarSelection();
+  });
 
   Hooks.once("ready", () => {
     hudObserver ??= new MutationObserver(scheduleHudRefresh);
