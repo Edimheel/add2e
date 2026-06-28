@@ -5,6 +5,7 @@ import { classItems, classSlug, esc, itemLabel, norm, systemRace } from "./17b-m
 import { classRaceMaxLevel, monoClassOptionsForDroppedClass, raceCandidatesForClass, raceCompatibleForMulticlass, raceMatchesClassRules, raceAllowsClassSet, classPrerequisitesOk } from "./17b-multiclass-rules.mjs";
 
 export async function dialogAlert(title, content, { classes = ["add2e-multiclass-alert"], okLabel = "OK" } = {}) {
+  installDialogButtonTheme();
   const DialogV2 = foundry?.applications?.api?.DialogV2;
   if (DialogV2?.alert) return DialogV2.alert({ window: { title }, content, ok: { label: okLabel }, modal: true, classes });
   if (DialogV2?.wait) {
