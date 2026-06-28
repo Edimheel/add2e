@@ -1,22 +1,16 @@
 /**
  * ADD2E — Apaisement / Épouvante
  * Clerc niveau 1
- * Version : 2026-06-28-apaisement-source-item-v3
+ * Version : 2026-06-28-apaisement-touch-resolution-v4
  *
  * Contrat onUse : true = sort consommé, false = sort non consommé.
  * Chaque item lance exclusivement son propre effet : aucun choix de variante.
- * Épouvante conserve la règle existante : pas de fallback de mouvement.
+ * Apaisement sur un personnage est consenti ; les autres contacts exigent un toucher.
  */
 
-console.log("%c[ADD2E][APAISEMENT] 2026-06-28-apaisement-source-item-v3", "color:#b88924;font-weight:bold;");
+console.log("%c[ADD2E][APAISEMENT] 2026-06-28-apaisement-touch-resolution-v4", "color:#b88924;font-weight:bold;");
 
 const __add2eOnUseResult = await (async () => {
-  const DialogV2 = foundry.applications?.api?.DialogV2;
-  if (!DialogV2) {
-    ui.notifications.error("Apaisement / Épouvante : DialogV2 introuvable. Foundry V13/V14/V15 requis.");
-    return false;
-  }
-
   const COLORS = { main: "#b88924", dark: "#6f4b12", pale: "#fff7df", pale2: "#fffaf0", border: "#e2bc63", success: "#2f8f46", fail: "#b33a2e", warn: "#b88924" };
 
   const esc = value => String(value ?? "")
@@ -79,6 +73,12 @@ const __add2eOnUseResult = await (async () => {
     return Number.isFinite(parsed) ? parsed : NaN;
   }
 
+  function readNumber(value) {
+    if (value === undefined || value === null || value === "") return null;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
   function chatStyleData() {
     return CONST.CHAT_MESSAGE_STYLES
       ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER }
@@ -126,8 +126,8 @@ const __add2eOnUseResult = await (async () => {
     return actorDoc.effects.filter(effect => {
       const name = norm(effect.name);
       const tags = effectTags(effect);
-      if (mode === "epouvante") return name.includes("epouvante") || name.includes("peur") || wantedNorm.some(t => tags.includes(t));
-      return name.includes("apaisement") || name.includes("apaise") || wantedNorm.some(t => tags.includes(t));
+      if (mode === "epouvante") return name.includes("epouvante") || name.includes("peur") || wantedNorm.some(tag => tags.includes(tag));
+      return name.includes("apaisement") || name.includes("apaise") || wantedNorm.some(tag => tags.includes(tag));
     });
   }
 
@@ -138,8 +138,8 @@ const __add2eOnUseResult = await (async () => {
     if (game.user.isGM || actorDoc.isOwner) {
       if (wanted.length) {
         const ids = Array.from(actorDoc.effects ?? [])
-          .filter(e => wanted.some(t => effectTags(e).includes(t)))
-          .map(e => e.id)
+          .filter(effect => wanted.some(tag => effectTags(effect).includes(tag)))
+          .map(effect => effect.id)
           .filter(Boolean);
         if (ids.length) await actorDoc.deleteEmbeddedDocuments("ActiveEffect", ids);
       }
@@ -159,7 +159,7 @@ const __add2eOnUseResult = await (async () => {
   async function deleteEffects(actorDoc, effects) {
     if (!effects?.length) return { deleted: 0, blocked: false };
     if (game.user.isGM || actorDoc.isOwner) {
-      const ids = effects.map(e => e.id).filter(Boolean);
+      const ids = effects.map(effect => effect.id).filter(Boolean);
       if (ids.length) await actorDoc.deleteEmbeddedDocuments("ActiveEffect", ids);
       return { deleted: ids.length, blocked: false };
     }
@@ -182,17 +182,69 @@ const __add2eOnUseResult = await (async () => {
     return gapX <= 0.01 && gapY <= 0.01;
   }
 
+  function getThac0(actorDoc) {
+    const sys = actorDoc?.system ?? {};
+    if (actorDoc?.type === "personnage") {
+      const classeItem = actorDoc.items?.find(itemDoc => itemDoc.type === "classe");
+      const niveau = Number(sys.niveau) || 1;
+      const progression = Array.isArray(classeItem?.system?.progression)
+        ? classeItem.system.progression[niveau - 1]
+        : null;
+      const progressionThac0 = readNumber(progression?.thac0);
+      if (progressionThac0 !== null) return progressionThac0;
+    }
+    return readNumber(sys.thac0) ?? 20;
+  }
+
+  function getTargetCA(targetActor, caster, sourceItem) {
+    const sys = targetActor?.system ?? {};
+    if (targetActor?.type === "personnage" && typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getMagicPassiveDefense === "function") {
+      const details = Add2eEffectsEngine.getMagicPassiveDefense(targetActor, {
+        source: "spell-touch-attack",
+        attacker: caster?.name,
+        weapon: sourceItem?.name ?? "Apaisement"
+      });
+      const ca = readNumber(details?.caTotal);
+      if (ca !== null) return { ca, source: "effects-engine:magic-passive-defense" };
+    }
+    return {
+      ca: readNumber(sys.armorClass) ?? readNumber(sys.ca_total) ?? readNumber(sys.ca) ?? 10,
+      source: "actor-system"
+    };
+  }
+
+  async function rollTouchAttack({ caster, targetActor, sourceItem }) {
+    const thac0 = getThac0(caster);
+    const caInfo = getTargetCA(targetActor, caster, sourceItem);
+    const seuil = thac0 - caInfo.ca;
+    const roll = await new Roll("1d20").evaluate({ async: true });
+    if (game.dice3d) await game.dice3d.showForRoll(roll);
+    const d20 = Number(roll.total) || 0;
+    const success = d20 === 20 || (d20 !== 1 && d20 >= seuil);
+    return { roll, d20, thac0, ca: caInfo.ca, caSource: caInfo.source, seuil, success };
+  }
+
+  function touchResultHtml(touch) {
+    if (!touch) return "";
+    const color = touch.success ? COLORS.success : COLORS.fail;
+    const background = touch.success ? "#f1fff4" : "#fff5f2";
+    return `<div style="margin-bottom:7px;border:1px solid ${color};background:${background};border-radius:6px;padding:7px;text-align:center;color:${COLORS.dark};"><b style="color:${color};">JET DE TOUCHER ${touch.success ? "RÉUSSI" : "RATÉ"}</b><br>Jet : <b>${touch.d20}</b> / Seuil : <b>${touch.seuil}</b><br><span style="font-size:0.85em;">THAC0 ${touch.thac0} - CA ${touch.ca} = ${touch.seuil}</span></div>`;
+  }
+
   function unitToMeters(distance, unit) {
-    const u = String(unit ?? "").toLowerCase();
-    if (["ft", "feet", "foot", "pied", "pieds", "pi"].includes(u)) return distance * 0.3048;
-    if (["km", "kilometre", "kilomètre", "kilometres", "kilomètres"].includes(u)) return distance * 1000;
+    const normalizedUnit = String(unit ?? "").toLowerCase();
+    if (["ft", "feet", "foot", "pied", "pieds", "pi"].includes(normalizedUnit)) return distance * 0.3048;
+    if (["km", "kilometre", "kilomètre", "kilometres", "kilomètres"].includes(normalizedUnit)) return distance * 1000;
     return distance;
   }
 
   function tokenCenter(tokenDoc) {
     const scene = tokenDoc?.parent ?? canvas.scene;
     const grid = Number(scene?.grid?.size ?? canvas.grid?.size ?? 100) || 100;
-    return { x: Number(tokenDoc?.x ?? 0) + Number(tokenDoc?.width ?? 1) * grid / 2, y: Number(tokenDoc?.y ?? 0) + Number(tokenDoc?.height ?? 1) * grid / 2 };
+    return {
+      x: Number(tokenDoc?.x ?? 0) + Number(tokenDoc?.width ?? 1) * grid / 2,
+      y: Number(tokenDoc?.y ?? 0) + Number(tokenDoc?.height ?? 1) * grid / 2
+    };
   }
 
   function getMovementMeters(actorDoc) {
@@ -232,16 +284,16 @@ const __add2eOnUseResult = await (async () => {
     const gridUnits = scene?.grid?.units ?? canvas.scene?.grid?.units ?? "m";
     const metersPerGrid = Math.max(0.01, unitToMeters(gridDistance, gridUnits));
     const maxPixels = Math.max(0, Number(maxMeters) || 0) / metersPerGrid * grid;
-    const c = tokenCenter(casterDoc);
-    const t = tokenCenter(targetDoc);
-    let dx = t.x - c.x;
-    let dy = t.y - c.y;
-    let len = Math.hypot(dx, dy);
-    if (!Number.isFinite(len) || len < 1) { dx = 1; dy = 0; len = 1; }
+    const casterCenter = tokenCenter(casterDoc);
+    const targetCenter = tokenCenter(targetDoc);
+    let dx = targetCenter.x - casterCenter.x;
+    let dy = targetCenter.y - casterCenter.y;
+    let length = Math.hypot(dx, dy);
+    if (!Number.isFinite(length) || length < 1) { dx = 1; dy = 0; length = 1; }
     const tokenWidthPx = Number(targetDoc.width ?? 1) * grid;
     const tokenHeightPx = Number(targetDoc.height ?? 1) * grid;
-    let x = t.x + (dx / len) * maxPixels - tokenWidthPx / 2;
-    let y = t.y + (dy / len) * maxPixels - tokenHeightPx / 2;
+    let x = targetCenter.x + (dx / length) * maxPixels - tokenWidthPx / 2;
+    let y = targetCenter.y + (dy / length) * maxPixels - tokenHeightPx / 2;
     x = Math.round(x / grid) * grid;
     y = Math.round(y / grid) * grid;
     const maxX = Math.max(0, Number(scene?.width ?? canvas.dimensions?.width ?? x) - tokenWidthPx);
@@ -249,7 +301,7 @@ const __add2eOnUseResult = await (async () => {
     x = Math.max(0, Math.min(maxX, x));
     y = Math.max(0, Math.min(maxY, y));
     const movedMeters = unitToMeters((Math.hypot(x - Number(targetDoc.x ?? 0), y - Number(targetDoc.y ?? 0)) / grid) * gridDistance, gridUnits);
-    return { x, y, maxMeters: Math.round(maxMeters * 100) / 100, movedMeters: Math.round(movedMeters * 100) / 100, from: { x: Number(targetDoc.x ?? 0), y: Number(targetDoc.y ?? 0) }, grid, gridDistance, gridUnits };
+    return { x, y, maxMeters: Math.round(maxMeters * 100) / 100, movedMeters: Math.round(movedMeters * 100) / 100, from: { x: Number(targetDoc.x ?? 0), y: Number(targetDoc.y ?? 0) } };
   }
 
   async function moveTokenForEpouvante(casterDoc, targetDoc, actorDoc) {
@@ -259,7 +311,6 @@ const __add2eOnUseResult = await (async () => {
 
     const dest = fleeDestination(casterDoc, targetDoc, move.value);
     console.log("[ADD2E][APAISEMENT][EPOUVANTE][DESTINATION]", { actor: actorDoc?.name, move, dest });
-
     if (!Number.isFinite(dest.x) || !Number.isFinite(dest.y)) return { moved: false, requested: false, fatal: true, reason: "Destination de fuite invalide.", maxMeters: move.value, movedMeters: 0 };
     if (Math.abs(dest.x - Number(targetDoc.x ?? 0)) < 1 && Math.abs(dest.y - Number(targetDoc.y ?? 0)) < 1) return { moved: false, requested: false, fatal: false, reason: "La cible ne peut pas être éloignée davantage dans cette direction.", ...dest };
 
@@ -268,7 +319,6 @@ const __add2eOnUseResult = await (async () => {
     const updateOptions = { add2eIgnoreMovement: true, add2eForcedMovement: true, add2eReason: "epouvante-forced-flee" };
 
     console.log("[ADD2E][APAISEMENT][EPOUVANTE][MOVE_ATTEMPT]", { user: game.user.name, isGM: game.user.isGM, target: targetDoc?.name, tokenId: targetDoc?.id, updateData, updateOptions });
-
     if (game.user.isGM) {
       try {
         const updated = await targetDoc.update(updateData, updateOptions);
@@ -289,13 +339,13 @@ const __add2eOnUseResult = await (async () => {
     if (actorDoc.type === "monster") {
       try {
         const data = await actorDoc.sheet.getData();
-        const val = Number(data?.calculatedSaves?.sorts);
-        if (Number.isFinite(val) && val > 0) return val;
-      } catch (e) { console.warn("[ADD2E][APAISEMENT] sauvegarde monstre impossible", e); }
+        const value = Number(data?.calculatedSaves?.sorts);
+        if (Number.isFinite(value) && value > 0) return value;
+      } catch (error) { console.warn("[ADD2E][APAISEMENT] sauvegarde monstre impossible", error); }
     }
     for (const raw of [actorDoc.system?.sauvegarde_sortileges, actorDoc.system?.sauvegardes?.sortileges, actorDoc.system?.saves?.sorts, actorDoc.system?.calculatedSaves?.sorts]) {
-      const val = Number(raw);
-      if (Number.isFinite(val) && val > 0) return val;
+      const value = Number(raw);
+      if (Number.isFinite(value) && value > 0) return value;
     }
     return NaN;
   }
@@ -305,9 +355,7 @@ const __add2eOnUseResult = await (async () => {
     const tags = isFear
       ? ["sort:apaisement", "etat:epouvante", "etat:peur", "controle:fuite"]
       : ["sort:apaisement", "etat:apaise", "bonus_js_peur:4", "bonus_save_vs:peur:4"];
-    const endMessage = isFear
-      ? "L’épouvante de {actor} prend fin."
-      : "L’apaisement de {actor} prend fin.";
+    const endMessage = isFear ? "L’épouvante de {actor} prend fin." : "L’apaisement de {actor} prend fin.";
     const time = timeApi();
     return time?.flags?.({
       source: "apaisement.js",
@@ -356,12 +404,7 @@ const __add2eOnUseResult = await (async () => {
       description: isFear
         ? `Épouvante : la victime touchée fuit le plus vite possible et le plus loin possible du clerc pendant ${rounds} round(s).`
         : "Apaisement : +4 aux jets de protection contre les attaques magiques provoquant la peur pendant 1 tour.",
-      flags: {
-        add2e: {
-          ...timeFlags({ sourceItem, caster, targetActor, mode, rounds }),
-          tags
-        }
-      },
+      flags: { add2e: { ...timeFlags({ sourceItem, caster, targetActor, mode, rounds }), tags } },
       changes: []
     };
   }
@@ -389,41 +432,28 @@ const __add2eOnUseResult = await (async () => {
 
   const casterTokenObj = canvas.tokens.controlled[0] ?? ((typeof token !== "undefined" && token) ? token : null);
   if (!casterTokenObj) { ui.notifications.warn(`Sélectionne le token du lanceur avant d’utiliser ${title}.`); return false; }
-
   const casterTokenDoc = casterTokenObj.document;
-  const caster = casterTokenObj.actor ?? sourceItem.parent ?? actor;
+  const caster = casterTokenObj.actor ?? sourceItem.parent ?? ((typeof actor !== "undefined" && actor) ? actor : null);
   if (!caster) { ui.notifications.error(`${title} : lanceur introuvable.`); return false; }
 
   const targets = Array.from(game.user.targets ?? []);
   if (targets.length !== 1) { ui.notifications.warn(`${title} : cible exactement une créature.`); return false; }
-
   const targetTokenObj = targets[0];
   const targetTokenDoc = targetTokenObj.document;
   const targetActorDoc = targetTokenObj.actor;
   if (!targetActorDoc) { ui.notifications.warn(`${title} : cible sans acteur.`); return false; }
   if (!tokensAtTouch(casterTokenObj, targetTokenObj)) { ui.notifications.warn(`${title} : la cible doit être au toucher.`); return false; }
 
+  const targetIsConsentingCharacter = mode === "apaisement" && targetActorDoc.type === "personnage";
+  const touch = targetIsConsentingCharacter ? null : await rollTouchAttack({ caster, targetActor: targetActorDoc, sourceItem });
+  if (touch && !touch.success) {
+    const resultHtml = `${touchResultHtml(touch)}<div style="border:1px solid ${COLORS.fail};background:#fff5f2;border-radius:6px;padding:8px;text-align:center;color:${COLORS.dark};"><div style="font-weight:bold;color:${COLORS.fail};">CONTACT MANQUÉ</div><div>L’effet du sort n’est pas appliqué.</div></div>`;
+    await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor: caster }), content: spellCard({ caster, sourceItem, targetActor: targetActorDoc, title, resultHtml, mode }), ...chatStyleData() });
+    return true;
+  }
+
+  const touchHtml = touchResultHtml(touch);
   const casterLevel = Math.max(1, Number(caster.system?.niveau) || Number(caster.system?.level) || 1);
-  const modeDescription = mode === "epouvante"
-    ? `<div><b>Épouvante :</b> fuite immédiate au maximum du déplacement, puis peur pendant ${casterLevel} round(s).</div>`
-    : "<div><b>Apaisement :</b> +4 aux JS contre peur magique pendant 1 tour.</div>";
-  const content = `<form class="add2e-apaisement-form" style="font-family:var(--font-primary);display:flex;flex-direction:column;gap:8px;"><div style="font-size:0.95em;color:${COLORS.dark};"><b>Sort lancé :</b> ${esc(title)}</div><label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" name="touchConfirmed" checked><span>La cible est consentante ou le contact a été réussi.</span></label><div style="font-size:0.9em;color:#666;border-top:1px solid #ddd;padding-top:6px;"><div><b>Cible :</b> ${esc(targetActorDoc.name)}</div><div><b>Niveau du clerc :</b> ${casterLevel}</div>${modeDescription}</div></form>`;
-
-  const dialogResult = await DialogV2.wait({
-    window: { title: `Lancement : ${title}` },
-    add2eTheme: "cleric",
-    add2eImg: sourceItem.img || "icons/magic/holy/barrier-shield-winged-blue.webp",
-    content,
-    buttons: [
-      { action: "cast", label: "Lancer", icon: "fa-solid fa-hands-praying", default: true, callback: (event, button) => ({ touchConfirmed: !!button.form.elements.touchConfirmed?.checked }) },
-      { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => null }
-    ],
-    rejectClose: false
-  });
-
-  if (!dialogResult) return false;
-  if (!dialogResult.touchConfirmed) { ui.notifications.warn(`${title} : le contact n’est pas confirmé. Le sort n’est pas lancé.`); return false; }
-
   let resultHtml = "";
 
   if (mode === "apaisement") {
@@ -450,7 +480,7 @@ const __add2eOnUseResult = await (async () => {
       ["etat:apaise", "bonus_js_peur:4", "bonus_save_vs:peur:4"]
     );
     if (!created) return false;
-    resultHtml = `<div style="border:1px solid ${COLORS.border};background:#fffdf4;border-radius:6px;padding:8px;text-align:center;color:${COLORS.dark};"><div style="font-weight:bold;color:${COLORS.success};">APAISEMENT APPLIQUÉ</div><div>Bonus : <b>+4</b> aux JS contre les attaques magiques provoquant la peur.</div><div>Durée : <b>1 tour</b> / ${rounds} rounds.</div></div>${saveHtml}`;
+    resultHtml = `${touchHtml}<div style="border:1px solid ${COLORS.border};background:#fffdf4;border-radius:6px;padding:8px;text-align:center;color:${COLORS.dark};"><div style="font-weight:bold;color:${COLORS.success};">APAISEMENT APPLIQUÉ</div><div>Bonus : <b>+4</b> aux JS contre les attaques magiques provoquant la peur.</div><div>Durée : <b>1 tour</b> / ${rounds} rounds.</div></div>${saveHtml}`;
   }
 
   if (mode === "epouvante") {
@@ -473,7 +503,7 @@ const __add2eOnUseResult = await (async () => {
         ? `<div>Déplacement appliqué : <b>${moveResult.movedMeters} m</b> sur un maximum de ${moveResult.maxMeters} m.</div>`
         : `<div>${esc(moveResult.reason)}</div>`;
     const clearHtml = deleteResult.deleted ? `<div>Apaisement retiré : <b>${deleteResult.deleted}</b>.</div>` : "";
-    resultHtml = `<div style="border:1px solid ${COLORS.fail};background:#fff5f2;border-radius:6px;padding:8px;text-align:center;color:${COLORS.dark};"><div style="font-weight:bold;color:${COLORS.fail};">ÉPOUVANTE APPLIQUÉE</div>${moveHtml}<div>Durée : <b>${rounds} round(s)</b>.</div>${clearHtml}</div>`;
+    resultHtml = `${touchHtml}<div style="border:1px solid ${COLORS.fail};background:#fff5f2;border-radius:6px;padding:8px;text-align:center;color:${COLORS.dark};"><div style="font-weight:bold;color:${COLORS.fail};">ÉPOUVANTE APPLIQUÉE</div>${moveHtml}<div>Durée : <b>${rounds} round(s)</b>.</div>${clearHtml}</div>`;
   }
 
   await globalThis.ADD2E_PLAY_SPELL_FX?.(mode === "epouvante" ? "epouvante" : "apaisement", { casterToken: casterTokenObj, targetToken: targetTokenObj });
