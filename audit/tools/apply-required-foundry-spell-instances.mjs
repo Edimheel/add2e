@@ -10,6 +10,7 @@ const REFERENCE_FILE_PATTERN = /^manuel-joueurs-(clerc|druide|magicien|illusionn
 const HEADER_FIELDS = ["ecole", "portee", "duree", "zone_effet", "temps_incantation", "jet_sauvegarde"];
 const COMPONENT_FIELDS = ["composantes", "composants_materiels"];
 const DESCRIPTION_FIELDS = ["description_reelle", "description"];
+const REVERSIBLE_FIELDS = ["reversible", "inverse", "variantes", "inverseNameStatus"];
 const FIELD_KEYS = {
   ecole: ["ecole", "école"],
   portee: ["portee", "portée"],
@@ -103,7 +104,9 @@ function parseArgs(argv) {
     diagnoseComponents: argv.includes("--diagnose-v3-to-v4"),
     syncComponents: argv.includes("--sync-v3-to-v4"),
     diagnoseAllComponents: argv.includes("--diagnose-v4-components-from-v3"),
-    syncAllComponents: argv.includes("--sync-v4-components-from-v3")
+    syncAllComponents: argv.includes("--sync-v4-components-from-v3"),
+    diagnoseReversible: argv.includes("--diagnose-v4-reversible"),
+    syncReversible: argv.includes("--sync-v4-reversible")
   };
   if (argv.includes("--help") || argv.includes("-h")) {
     console.log("Usage:");
@@ -115,8 +118,11 @@ function parseArgs(argv) {
     console.log("  node audit/tools/apply-required-foundry-spell-instances.mjs --sync-v4-components-from-v3 [--dry-run]");
     console.log("  node audit/tools/apply-required-foundry-spell-instances.mjs --diagnose-v3-to-v4 --class Illusionniste --level 1 --name Bruitage");
     console.log("  node audit/tools/apply-required-foundry-spell-instances.mjs --sync-v3-to-v4 --class Illusionniste --level 1 --name Bruitage [--dry-run]");
+    console.log("  node audit/tools/apply-required-foundry-spell-instances.mjs --diagnose-v4-reversible --class Clerc --level 1 --name \"Détection du mal\"");
+    console.log("  node audit/tools/apply-required-foundry-spell-instances.mjs --sync-v4-reversible --class Clerc --level 1 --name \"Détection du mal\" [--dry-run]");
     console.log("");
     console.log("Le mode descriptions lit les références et n'écrit que le champ de description existant dans V4.");
+    console.log("Le mode réversible ciblé ne crée aucun sort ; il écrit uniquement reversible, inverse, variantes et inverseNameStatus depuis la référence.");
     process.exit(0);
   }
   if (Object.values(modes).filter(Boolean).length !== 1) throw new Error("Choisis exactement un mode.");
@@ -132,11 +138,12 @@ function parseArgs(argv) {
     const index = argv.indexOf(option);
     return index < 0 ? null : argv[index + 1];
   };
-  if (args.diagnoseComponents || args.syncComponents) {
+  const targeted = args.diagnoseComponents || args.syncComponents || args.diagnoseReversible || args.syncReversible;
+  if (targeted) {
     args.className = value("--class");
     args.spellLevel = level(value("--level"));
     args.name = value("--name");
-    if (!args.className || !args.spellLevel || !args.name) throw new Error("--class, --level et --name sont obligatoires pour le mode composants ciblé.");
+    if (!args.className || !args.spellLevel || !args.name) throw new Error("--class, --level et --name sont obligatoires pour ce mode ciblé.");
   }
   return args;
 }
@@ -161,6 +168,15 @@ function one(index, key, sourceLabel) {
   if (!entries.length) throw new Error(`${sourceLabel} absent : ${key}.`);
   if (entries.length > 1) throw new Error(`${sourceLabel} ambigu : ${key} (${entries.map(item => item._id ?? item.id ?? "sans_id").join(", ")}).`);
   return entries[0];
+}
+
+function reversibilityFromSpell(spell) {
+  return {
+    reversible: spell?.reversible === true,
+    inverse: hasOwn(spell ?? {}, "inverse") ? text(spell.inverse) : null,
+    variantes: hasOwn(spell ?? {}, "variantes") ? clone(spell.variantes) : null,
+    inverseNameStatus: hasOwn(spell ?? {}, "inverseNameStatus") ? text(spell.inverseNameStatus) : null
+  };
 }
 
 function loadReferences() {
@@ -196,7 +212,8 @@ function loadReferences() {
         spellLevel,
         name,
         headers,
-        description: spell.description
+        description: spell.description,
+        reversibility: reversibilityFromSpell(spell)
       });
     }
   }
@@ -299,6 +316,65 @@ function runDescriptions(args) {
     write(file, v4);
   }
   printDescriptionResult(args.diagnoseDescriptions ? "diagnostic" : args.dryRun ? "simulation" : "V4 mis à jour", references, result);
+}
+
+function reversibilityFromReference(reference) {
+  const data = reference?.reversibility;
+  if (!data || typeof data.reversible !== "boolean") throw new Error(`${reference?.name ?? "Référence"} : champ reversible absent ou invalide.`);
+  if (!data.reversible) return data;
+  if (!data.inverse) throw new Error(`${reference.name} : inverse explicite absent de la référence.`);
+  if (!Array.isArray(data.variantes)) throw new Error(`${reference.name} : variantes absentes ou invalides dans la référence.`);
+  if (!data.inverseNameStatus) throw new Error(`${reference.name} : inverseNameStatus absent de la référence.`);
+  return data;
+}
+
+function reversibleFieldChanges(reference, targetSystem) {
+  const source = reversibilityFromReference(reference);
+  const fields = [];
+  if (targetSystem.reversible !== source.reversible) fields.push("reversible");
+  if (source.reversible) {
+    if (normalize(targetSystem.inverse) !== normalize(source.inverse)) fields.push("inverse");
+    if (!sameJson(targetSystem.variantes, source.variantes)) fields.push("variantes");
+    if (normalize(targetSystem.inverseNameStatus) !== normalize(source.inverseNameStatus)) fields.push("inverseNameStatus");
+  }
+  return { source, fields };
+}
+
+function writeReversibleFields(targetSystem, source) {
+  targetSystem.reversible = source.reversible;
+  if (source.reversible) {
+    targetSystem.inverse = source.inverse;
+    targetSystem.variantes = clone(source.variantes);
+    targetSystem.inverseNameStatus = source.inverseNameStatus;
+  } else {
+    delete targetSystem.inverse;
+    delete targetSystem.variantes;
+    delete targetSystem.inverseNameStatus;
+  }
+}
+
+function runTargetedReversible(args) {
+  const references = loadReferences();
+  const referenceKey = keyOf(args.className, args.spellLevel, args.name);
+  const reference = references.get(referenceKey);
+  if (!reference) throw new Error(`Référence absente : ${args.className} niveau ${args.spellLevel} — ${args.name}.`);
+
+  const file = path.join(ROOT, V4_FILE);
+  const v4 = read(file);
+  const v4Index = indexItems(v4);
+  const v4Key = V4_LOOKUP_ALIASES.get(referenceKey) ?? referenceKey;
+  const target = one(v4Index, v4Key, "V4");
+  const result = reversibleFieldChanges(reference, target.system ?? {});
+
+  console.log(`[ADD2E][V4_REVERSIBLE_SYNC] ${args.diagnoseReversible ? "diagnostic" : args.dryRun ? "simulation" : "V4 mis à jour" : ${label(target)}.`);
+  console.log(`[ADD2E][V4_REVERSIBLE_SYNC] référence : reversible ${result.source.reversible}, inverse ${result.source.inverse ?? "aucun"}, variantes ${Array.isArray(result.source.variantes) ? result.source.variantes.length : "absentes"}, inverseNameStatus ${result.source.inverseNameStatus ?? "aucun"}.`);
+  console.log(`[ADD2E][V4_REVERSIBLE_SYNC] champs ${result.fields.length ? result.fields.join(", ") : "déjà synchronisés"}.`);
+  console.log("[ADD2E][V4_REVERSIBLE_SYNC] Aucun item inverse n'est créé ; seuls les champs réversibles de l'item V4 ciblé sont concernés.");
+
+  if (args.syncReversible && !args.dryRun && result.fields.length) {
+    writeReversibleFields(target.system ??= {}, result.source);
+    write(file, v4);
+  }
 }
 
 function hasMMarker(value) {
@@ -436,5 +512,6 @@ function runTargetedComponents(args) {
 const args = parseArgs(process.argv.slice(2));
 if (args.diagnoseHeaders || args.syncHeaders) runHeaders(args);
 else if (args.diagnoseDescriptions || args.syncDescriptions) runDescriptions(args);
+else if (args.diagnoseReversible || args.syncReversible) runTargetedReversible(args);
 else if (args.diagnoseAllComponents || args.syncAllComponents) runAllComponents(args);
 else runTargetedComponents(args);
