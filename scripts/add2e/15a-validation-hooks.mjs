@@ -1,6 +1,6 @@
 // ADD2E — Validation hooks et compatibilité legacy.
 
-const ADD2E_FAMILIAR_HP_BRIDGE_VERSION = "2026-06-28-familiar-hp-bridge-v2";
+const ADD2E_FAMILIAR_HP_BRIDGE_VERSION = "2026-06-28-familiar-hp-bridge-v3";
 globalThis.ADD2E_FAMILIAR_HP_BRIDGE_VERSION = ADD2E_FAMILIAR_HP_BRIDGE_VERSION;
 
 const add2eFamHpNumber = (value, fallback = 0) => {
@@ -11,14 +11,6 @@ const add2eFamHpNumber = (value, fallback = 0) => {
 function add2eFamHpRead(source, path) {
   if (Object.prototype.hasOwnProperty.call(source ?? {}, path)) return source[path];
   return foundry?.utils?.getProperty?.(source ?? {}, path);
-}
-
-function add2eFamHpWrite(source, path, value) {
-  if (Object.prototype.hasOwnProperty.call(source ?? {}, path)) {
-    source[path] = value;
-    return;
-  }
-  foundry?.utils?.setProperty?.(source, path, value);
 }
 
 function add2eFamHpState(actor, changes = null) {
@@ -107,10 +99,18 @@ async function add2eFamHpReconcileActor(actor) {
     updates[`flags.add2e.hpModifiers.-=${source}`] = null;
     changed = true;
   }
+
   if (desiredSource) {
-    updates[`flags.add2e.hpModifiers.${desiredSource}`] = add2eFamHpRecord(desired.linkId, desired.amount);
-    changed = true;
+    const current = registry[desiredSource];
+    if (!current
+      || add2eFamHpNumber(current.amount, 0) !== desired.amount
+      || current.kind !== "familier"
+      || current.temporary !== true) {
+      updates[`flags.add2e.hpModifiers.${desiredSource}`] = add2eFamHpRecord(desired.linkId, desired.amount);
+      changed = true;
+    }
   }
+
   if (!changed) return false;
 
   await actor.update(updates, {
@@ -137,13 +137,12 @@ if (!globalThis.__ADD2E_FAMILIAR_HP_BRIDGE_REGISTERED__) {
 
   Hooks.on("preUpdateActor", (actor, changes = {}, options = {}) => {
     if (options?.add2eFamiliarHpShare === true) {
-      const before = add2eFamHpState(actor);
       const after = add2eFamHpState(actor, changes);
       if (!after) return;
       const source = add2eFamHpSource(after.linkId);
       delete changes["flags.add2e.hpModifiers"];
-      if (after.amount > 0) add2eFamHpWrite(changes, `flags.add2e.hpModifiers.${source}`, add2eFamHpRecord(after.linkId, after.amount));
-      else add2eFamHpWrite(changes, `flags.add2e.hpModifiers.-=${source}`, null);
+      if (after.amount > 0) changes[`flags.add2e.hpModifiers.${source}`] = add2eFamHpRecord(after.linkId, after.amount);
+      else changes[`flags.add2e.hpModifiers.-=${source}`] = null;
       return;
     }
 
@@ -154,13 +153,13 @@ if (!globalThis.__ADD2E_FAMILIAR_HP_BRIDGE_REGISTERED__) {
       const penalty = Number.isFinite(previous) && Number.isFinite(next) ? Math.max(0, Math.floor(previous - next)) : 0;
       if (!linkId || !penalty) return;
       delete changes["flags.add2e.hpModifiers"];
-      add2eFamHpWrite(changes, `flags.add2e.hpModifiers.familier-penalite:${linkId}`, {
+      changes[`flags.add2e.hpModifiers.familier-penalite:${linkId}`] = {
         amount: -penalty,
         label: "Pénalité de mort du familier",
         kind: "familier",
         persistent: true,
         linkId
-      });
+      };
     }
   });
 
