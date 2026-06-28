@@ -19,7 +19,6 @@ const FIELD_KEYS = {
   temps_incantation: ["temps_incantation"],
   jet_sauvegarde: ["jet_sauvegarde"]
 };
-// Rapprochements lecture seule : les titres V4 ne sont jamais modifiés.
 const V4_LOOKUP_ALIASES = new Map([
   ["magicien|5|teleikinesie", "magicien|5|telekinesie"]
 ]);
@@ -200,12 +199,8 @@ function loadReferences() {
         if (!hasOwn(spell, field) || !text(spell[field])) throw new Error(`Entête incomplet : ${file} — ${name} (${field}).`);
         headers[field] = text(spell[field]);
       }
-      if (typeof spell?.description !== "string" || !spell.description.trim()) {
-        throw new Error(`Description de référence absente : ${file} — ${name}.`);
-      }
-      if (/\r?\n/.test(spell.description)) {
-        throw new Error(`Description de référence non normalisée : ${file} — ${name}.`);
-      }
+      if (typeof spell?.description !== "string" || !spell.description.trim()) throw new Error(`Description de référence absente : ${file} — ${name}.`);
+      if (/\r?\n/.test(spell.description)) throw new Error(`Description de référence non normalisée : ${file} — ${name}.`);
       references.set(key, {
         key,
         className,
@@ -297,9 +292,7 @@ function descriptionChanges(references, v4Index) {
 function printDescriptionResult(labelText, references, result) {
   console.log(`[ADD2E][V4_DESCRIPTION_SYNC] ${labelText} : ${references.size} référence(s), ${result.targets.length} correspondance(s) V4, ${result.changes.length} description(s) à mettre à jour.`);
   console.log(`[ADD2E][V4_DESCRIPTION_SYNC] description_reelle ${result.fields.description_reelle}, description ${result.fields.description}.`);
-  for (const change of result.changes) {
-    console.log(`[ADD2E][V4_DESCRIPTION_SYNC] ${change.reference.className} niveau ${change.reference.spellLevel} — ${change.reference.name} : ${change.field}.`);
-  }
+  for (const change of result.changes) console.log(`[ADD2E][V4_DESCRIPTION_SYNC] ${change.reference.className} niveau ${change.reference.spellLevel} — ${change.reference.name} : ${change.field}.`);
   console.log("[ADD2E][V4_DESCRIPTION_SYNC] Seule la description issue de la référence est écrite dans V4 ; entêtes, composants, titres et V3 restent inchangés.");
 }
 
@@ -365,8 +358,9 @@ function runTargetedReversible(args) {
   const v4Key = V4_LOOKUP_ALIASES.get(referenceKey) ?? referenceKey;
   const target = one(v4Index, v4Key, "V4");
   const result = reversibleFieldChanges(reference, target.system ?? {});
+  const mode = args.diagnoseReversible ? "diagnostic" : args.dryRun ? "simulation" : "V4 mis à jour";
 
-  console.log(`[ADD2E][V4_REVERSIBLE_SYNC] ${args.diagnoseReversible ? "diagnostic" : args.dryRun ? "simulation" : "V4 mis à jour" : ${label(target)}.`);
+  console.log(`[ADD2E][V4_REVERSIBLE_SYNC] ${mode} : ${label(target)}.`);
   console.log(`[ADD2E][V4_REVERSIBLE_SYNC] référence : reversible ${result.source.reversible}, inverse ${result.source.inverse ?? "aucun"}, variantes ${Array.isArray(result.source.variantes) ? result.source.variantes.length : "absentes"}, inverseNameStatus ${result.source.inverseNameStatus ?? "aucun"}.`);
   console.log(`[ADD2E][V4_REVERSIBLE_SYNC] champs ${result.fields.length ? result.fields.join(", ") : "déjà synchronisés"}.`);
   console.log("[ADD2E][V4_REVERSIBLE_SYNC] Aucun item inverse n'est créé ; seuls les champs réversibles de l'item V4 ciblé sont concernés.");
@@ -462,9 +456,7 @@ function collectGlobalComponentTargets(v3, v4) {
 function printComponentCoherence(coherence) {
   const total = coherence.materiaux_sans_M.length + coherence.M_sans_architecture.length + coherence.M_architecture_vide.length;
   console.log(`[ADD2E][V3_COMPONENT_COHERENCE] ${total} incohérence(s) V3 : matériaux sans M ${coherence.materiaux_sans_M.length}, M sans architecture ${coherence.M_sans_architecture.length}, M avec architecture vide ${coherence.M_architecture_vide.length}.`);
-  for (const [kind, labels] of Object.entries(coherence)) {
-    for (const entry of labels) console.log(`[ADD2E][V3_COMPONENT_COHERENCE] ${kind} : ${entry}.`);
-  }
+  for (const [kind, labels] of Object.entries(coherence)) for (const entry of labels) console.log(`[ADD2E][V3_COMPONENT_COHERENCE] ${kind} : ${entry}.`);
 }
 
 function printGlobalComponentResult(labelText, state) {
@@ -486,9 +478,7 @@ function runAllComponents(args) {
   printComponentCoherence(state.coherence);
   if (state.errors.length) throw new Error(`Synchronisation V3 → V4 annulée :\n${state.errors.join("\n")}`);
   if (args.syncAllComponents && !args.dryRun) {
-    for (const target of state.targets) {
-      if (target.fields.length) copyComponentFields(target.source.system ?? {}, target.target.system ??= {}, target.fields);
-    }
+    for (const target of state.targets) if (target.fields.length) copyComponentFields(target.source.system ?? {}, target.target.system ??= {}, target.fields);
     if (state.targets.some(target => target.fields.length)) write(file, v4);
   }
   printGlobalComponentResult(args.diagnoseAllComponents ? "diagnostic" : args.dryRun ? "simulation" : "V4 mis à jour", state);
