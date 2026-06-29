@@ -1,4 +1,4 @@
-const ADD2E_ITEM_SHEETS_VERSION = "2026-06-16-item-sheets-sort-canonical-display-v1";
+const ADD2E_ITEM_SHEETS_VERSION = "2026-06-29-item-sheet-contextmenu-permissions-v2";
 globalThis.ADD2E_ITEM_SHEETS_VERSION = ADD2E_ITEM_SHEETS_VERSION;
 
 const { ApplicationV2 } = foundry.applications.api;
@@ -274,8 +274,22 @@ class Add2eItemSheetV2 extends ApplicationV2 {
     return this.item?.name ?? super.title;
   }
 
+  _canUserView(user) {
+    const limited = CONST?.DOCUMENT_OWNERSHIP_LEVELS?.LIMITED ?? 1;
+    return this.item?.testUserPermission?.(user, limited) === true;
+  }
+
+  _canUserEdit(user) {
+    const owner = CONST?.DOCUMENT_OWNERSHIP_LEVELS?.OWNER ?? 3;
+    return this.item?.testUserPermission?.(user, owner) === true;
+  }
+
+  get isEditable() {
+    return this._canUserEdit(game.user);
+  }
+
   get editable() {
-    return this.item?.isOwner === true || game.user?.isGM === true;
+    return this.isEditable;
   }
 
   render(options = {}) {
