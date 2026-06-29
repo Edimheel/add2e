@@ -17878,31 +17878,25 @@
                 "reversible": true,
                 "inverseNameStatus": "manual_explicit",
                 "modes": [
-                  {
-                    "id": "normal",
-                    "actorItemName": "Détection du mal",
-                    "manualName": "Détection du mal",
-                    "copySourceItem": true,
-                    "systemOverrides": {
-                      "composants_materiels": [],
-                      "composants_materiels_objets": [],
-                      "composantes": "V, S, M"
-                    },
-                    "materialReference": []
-                  },
-                  {
-                    "id": "inverse",
-                    "actorItemName": "Détection du bien",
-                    "manualName": "Détection du bien",
-                    "copySourceItem": true,
-                    "systemOverrides": {
-                      "composants_materiels": [],
-                      "composants_materiels_objets": [],
-                      "composantes": "V, S, M"
-                    },
-                    "materialReference": []
-                  }
-                ],
+  {
+    "id": "normal",
+    "actorItemName": "Détection du mal",
+    "manualName": "Détection du mal",
+    "copySourceItem": true,
+    "systemOverrides": {
+      "composantes": "V, S, M"
+    }
+  },
+  {
+    "id": "inverse",
+    "actorItemName": "Détection du bien",
+    "manualName": "Détection du bien",
+    "copySourceItem": true,
+    "systemOverrides": {
+      "composantes": "V, S, M"
+    }
+  }
+],
                 "splitOnActorGrant": true
               }
             ]

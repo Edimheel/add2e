@@ -3,3 +3,7 @@
 2026/06/28-21:09:43.872206 7f55fbefc0 Level-0 table #625: 1658131 bytes OK
 2026/06/28-21:09:43.887361 7f55fbefc0 Delete type=0 #623
 2026/06/28-21:09:43.888409 7f55fbefc0 Delete type=3 #622
+2026/06/29-07:47:32.171841 7f5521efc0 Compacting 1@0 + 1@1 files
+2026/06/29-07:47:32.225584 7f5521efc0 Generated table #627@0: 947 keys, 750128 bytes
+2026/06/29-07:47:32.225652 7f5521efc0 Compacted 1@0 + 1@1 files => 750128 bytes
+2026/06/29-07:47:32.231407 7f5521efc0 compacted to: files[ 0 1 0 0 0 0 0 ]
