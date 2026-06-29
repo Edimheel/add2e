@@ -17981,7 +17981,11 @@
               "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
             }
           ]
-        }
+        },
+        "reversible": true,
+        "inverse": "Détection du bien",
+        "variantes": [],
+        "inverseNameStatus": "manual_explicit"
       },
       "effects": [
         {
