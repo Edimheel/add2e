@@ -13,8 +13,29 @@ const pick = (object, keys, fallback = "") => {
 };
 const toList = value => Array.isArray(value) ? value : String(value ?? "").split(/[,;|\n]+/).map(v => v.trim()).filter(Boolean);
 const slug = value => String(value ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
-const requiredFields = ["classe", "spellLists", "niveau", "ecole", "portee", "duree", "zone_effet", "cible", "temps_incantation", "jet_sauvegarde", "composantes", "composants_materiels", "description", "onUse"];
-const optionalFields = ["effectProfile"];
+const requiredFields = ["classe", "spellLists", "niveau", "ecole", "portee", "duree", "zone_effet", "cible", "temps_incantation", "jet_sauvegarde", "composantes", "composants_materiels", "effectProfile", "description", "onUse"];
+
+function generatedEffectProfile(item) {
+  switch (slug(item.name)) {
+    case "abaissement_des_eaux":
+      return {
+        mechanic: "terrain",
+        operation: "lower_or_raise_water",
+        modes: [
+          { id: "abaissement", label: "Abaissement des eaux" },
+          { id: "haussement", label: "Haussement des eaux" }
+        ],
+        target: { min: 0, max: null },
+        limits: "Résolution et dimensions déterminées par le MJ."
+      };
+    default:
+      return {
+        mechanic: "manual",
+        operation: "manual_resolution",
+        target: { min: 0, max: null }
+      };
+  }
+}
 
 const input = JSON.parse(fs.readFileSync(sourceFile, "utf8"));
 const output = {
@@ -26,12 +47,16 @@ const output = {
   items: []
 };
 const folderIds = new Set(output.folders.map(folder => folder._id));
+const generatedProfiles = [];
 for (const item of input.items ?? []) {
   if (item.type !== "sort") throw new Error(`Item non-sort : ${item.name ?? "sans nom"}`);
   if (item.folder && !folderIds.has(item.folder)) throw new Error(`${item.name} : dossier introuvable`);
   const lists = [...new Set(toList(pick(item.system, ["spellLists", "classe", "class", "liste"], [])).map(slug).filter(Boolean))];
   if (!lists.length) throw new Error(`${item.name} : spellLists absent`);
   const flags = item.flags?.add2e ? { add2e: clone(item.flags.add2e) } : undefined;
+  const existingProfile = own(item.system, "effectProfile");
+  const effectProfile = existingProfile ? clone(item.system.effectProfile) : generatedEffectProfile(item);
+  if (!existingProfile) generatedProfiles.push(item.name);
   const system = {
     classe: String(pick(item.system, ["classe", "class", "liste"], lists[0])),
     spellLists: lists,
@@ -45,26 +70,26 @@ for (const item of input.items ?? []) {
     jet_sauvegarde: pick(item.system, ["jet_sauvegarde", "jetSauvegarde", "savingThrow"]),
     composantes: pick(item.system, ["composantes", "components"]),
     composants_materiels: pick(item.system, ["composants_materiels", "composantsMateriels", "materialComponents"], []),
+    effectProfile,
     description: pick(item.system, ["description", "description_reelle", "description_texte", "description_html"]),
-    onUse: pick(item.system, ["onUse", "onuse", "on_use"]),
-    ...(own(item.system, "effectProfile") ? { effectProfile: clone(item.system.effectProfile) } : {})
+    onUse: pick(item.system, ["onUse", "onuse", "on_use"])
   };
-  const expected = [...requiredFields, ...(own(item.system, "effectProfile") ? optionalFields : [])].sort();
-  if (JSON.stringify(Object.keys(system).sort()) !== JSON.stringify(expected)) throw new Error(`${item.name} : contrat invalide`);
+  if (JSON.stringify(Object.keys(system).sort()) !== JSON.stringify([...requiredFields].sort())) throw new Error(`${item.name} : contrat invalide`);
   output.items.push({ _id: item._id, name: item.name, type: "sort", img: item.img, folder: item.folder ?? null, sort: item.sort ?? 0, system, ...(flags ? { flags } : {}), ...(item.effects?.length ? { effects: clone(item.effects) } : {}) });
 }
 const inputEffectProfiles = (input.items ?? []).filter(item => own(item.system, "effectProfile")).length;
 const outputEffectProfiles = output.items.filter(item => own(item.system, "effectProfile")).length;
-if (inputEffectProfiles !== outputEffectProfiles) throw new Error(`effectProfile perdu : ${inputEffectProfiles} source, ${outputEffectProfiles} sortie`);
+if (outputEffectProfiles !== output.items.length) throw new Error(`effectProfile absent dans la sortie : ${outputEffectProfiles}/${output.items.length}`);
 const report = {
-  version: "2026-06-29-v4-compact-schema-v4",
+  version: "2026-06-29-v4-compact-schema-v5",
   spells: output.items.length,
-  effectProfiles: { input: inputEffectProfiles, output: outputEffectProfiles },
+  effectProfiles: { input: inputEffectProfiles, generated: generatedProfiles, output: outputEffectProfiles },
   inputBytes: fs.statSync(sourceFile).size,
   outputBytes: Buffer.byteLength(JSON.stringify(output, null, 2)),
-  contract: { requiredFields, optionalFields },
-  conclusion: "effectProfile est conservé à l’identique lorsqu’il est présent."
+  contract: { requiredFields },
+  conclusion: "Chaque sort possède system.effectProfile. Les profils existants sont conservés à l’identique ; les profils absents sont générés explicitement."
 };
 fs.writeFileSync(reportFile, `${JSON.stringify(report, null, 2)}\n`, "utf8");
 if (process.argv.includes("--write")) fs.writeFileSync(sourceFile, `${JSON.stringify(output, null, 2)}\n`, "utf8");
-console.log(`[ADD2E][V4_COMPACT] ${output.items.length} sorts ; effectProfile ${inputEffectProfiles} → ${outputEffectProfiles}.`);
+console.log(`[ADD2E][V4_COMPACT] ${output.items.length} sorts ; effectProfile ${inputEffectProfiles} + ${generatedProfiles.length} → ${outputEffectProfiles}.`);
+if (generatedProfiles.length) console.log(`[ADD2E][V4_COMPACT] effectProfile généré : ${generatedProfiles.join(", ")}.`);
