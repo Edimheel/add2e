@@ -1,8 +1,8 @@
 // ADD2E — Protection contre le Mal / Protection contre le Bien
-// Version : 2026-06-29-protection-generic-action-rule-v5
+// Version : 2026-06-29-protection-manual-barrier-v6
 // Compatible Foundry V13/V14/V15.
 
-const ADD2E_PROTECTION_VFX_VERSION = "2026-06-29-protection-generic-action-rule-v5";
+const ADD2E_PROTECTION_VFX_VERSION = "2026-06-29-protection-manual-barrier-v6";
 
 const __add2eOnUseResult = await (async () => {
   const normalize = value => String(value ?? "").trim().toLowerCase().normalize("NFD")
@@ -48,6 +48,26 @@ const __add2eOnUseResult = await (async () => {
   if (!mode) { ui.notifications.error(`Protection : variante introuvable pour « ${sourceItem.name ?? "sans nom"} ».`); return false; }
 
   const isGood = mode === "bien";
+  const barrierRule = isGood
+    ? {
+      kind: "block_action",
+      action: "attaque",
+      requireContact: true,
+      subjectAllTags: ["creature:enchantee", "alignement:mauvais"],
+      actionAllTags: ["type_arme:naturelle"],
+      label: "La barrière magique tient cette créature enchantée mauvaise à distance."
+    }
+    : {
+      kind: "block_action",
+      action: "attaque",
+      requireContact: true,
+      subjectAnyTags: ["creature:enchantee", "creature:animal", "creature:invoquee"],
+      actionAllTags: ["type_arme:naturelle"],
+      label: "La barrière magique empêche cette attaque naturelle de toucher la cible."
+    };
+  const barrierDescription = isGood
+    ? "Les attaques naturelles au contact des créatures enchantées mauvaises sont bloquées."
+    : "Les attaques naturelles au contact des créatures enchantées, des animaux et des monstres invoqués sont bloquées.";
   const modeInfo = {
     key: isGood ? "bien" : "mal",
     label: isGood ? "Protection contre le Bien" : "Protection contre le Mal",
@@ -56,14 +76,8 @@ const __add2eOnUseResult = await (async () => {
     tags: isGood
       ? ["sort:protection_contre_le_bien", "protection:bien", "bonus_save:2", "malus_attaque_vs:bon:2"]
       : ["sort:protection_contre_le_mal", "protection:mal", "bonus_save:2", "malus_attaque_vs:mauvais:2"],
-    rules: [{
-      kind: "block_action",
-      action: "attaque",
-      requireContact: true,
-      subjectAnyTags: ["creature:enchantee", "creature:invoquee"],
-      actionAllTags: ["type_arme:naturelle"],
-      label: "La barrière magique empêche cette attaque naturelle de toucher la cible."
-    }]
+    rules: [barrierRule],
+    barrierDescription
   };
 
   const targets = Array.from(game.user.targets ?? []);
@@ -77,12 +91,39 @@ const __add2eOnUseResult = await (async () => {
   );
   if (!touch) { ui.notifications.warn(`${modeInfo.label} : la cible doit être au toucher.`); return false; }
 
-  const level = (() => {
-    for (const value of [actorDoc.system?.niveau, actorDoc.system?.level, actorDoc.system?.details?.niveau, actorDoc.system?.details?.level]) {
-      const number = Number(value); if (Number.isFinite(number) && number > 0) return number;
-    }
-    return 1;
-  })();
+  const readPositiveLevel = value => {
+    const number = Number(value);
+    return Number.isFinite(number) && number > 0 ? Math.floor(number) : null;
+  };
+  const isClericItem = classItem => {
+    if (classItem?.type !== "classe") return false;
+    const names = [classItem.name, classItem.system?.label, classItem.system?.nom, classItem.system?.name, classItem.system?.slug]
+      .map(normalize)
+      .filter(Boolean);
+    return names.some(name => name === "clerc" || name.includes("clerc"));
+  };
+  const clericItem = Array.from(actorDoc.items ?? []).find(isClericItem) ?? null;
+  const clericLevelCandidates = [
+    clericItem?.system?.niveau,
+    clericItem?.system?.level,
+    clericItem?.system?.details?.niveau,
+    clericItem?.system?.details?.level,
+    actorDoc.system?.details_classe?.clerc?.niveau,
+    actorDoc.system?.details_classe?.clerc?.level,
+    actorDoc.system?.classes?.clerc?.niveau,
+    actorDoc.system?.classes?.clerc?.level,
+    actorDoc.system?.multiclass?.clerc?.niveau,
+    actorDoc.system?.multiclass?.clerc?.level,
+    actorDoc.system?.niveaux?.clerc,
+    actorDoc.flags?.add2e?.multiclass?.clerc?.niveau,
+    actorDoc.flags?.add2e?.multiclass?.clerc?.level
+  ];
+  const level = clericLevelCandidates.map(readPositiveLevel).find(Number.isFinite)
+    ?? [actorDoc.system?.niveau, actorDoc.system?.level, actorDoc.system?.details?.niveau, actorDoc.system?.details?.level]
+      .map(readPositiveLevel)
+      .find(Number.isFinite)
+    ?? 1;
+
   const time = game.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
   const rounds = time?.toRounds?.("level*3", "round", { level }) ?? Math.max(1, level) * 3;
   const duration = time?.durationData?.(rounds) ?? { rounds, startRound: game.combat?.round ?? null, startTurn: game.combat?.turn ?? null, startTime: game.time?.worldTime ?? null, combat: game.combat?.id ?? null };
@@ -95,7 +136,7 @@ const __add2eOnUseResult = await (async () => {
     disabled: false,
     transfer: false,
     duration,
-    description: `${modeInfo.label}. Attaques de l'alignement concerné : –2 ; jets de protection : +2. Les attaques naturelles au contact des créatures enchantées ou invoquées sont bloquées. Durée : ${rounds} rounds.`,
+    description: `${modeInfo.label}. Attaques de l'alignement concerné : –2 ; jets de protection : +2. ${modeInfo.barrierDescription} Durée : ${rounds} rounds.`,
     flags: { add2e: { ...timeFlags, spellName: modeInfo.label, spellKey: modeInfo.spellKey, level, sourceItemUuid: sourceItem.uuid ?? null, casterId: actorDoc.id ?? null, casterUuid: actorDoc.uuid ?? null, targetId: targetToken.actor.id ?? null, targetUuid: targetToken.actor.uuid ?? null, tags: modeInfo.tags, rules: modeInfo.rules } },
     changes: []
   };
@@ -143,7 +184,7 @@ const __add2eOnUseResult = await (async () => {
   const alignment = isGood ? "bonnes" : "mauvaises";
   await ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor: actorDoc, token: casterToken }),
-    content: `<div class="add2e-spell-card add2e-spell-card-clerc" style="border-radius:12px;overflow:hidden;border:1px solid #e2bc63;background:#fffaf0;font-family:var(--font-primary);"><div style="padding:8px 12px;background:linear-gradient(90deg,#6f4b12,#b88924);color:#fff;display:flex;gap:10px;align-items:center;"><img src="${esc(actorDoc.img || "icons/svg/mystery-man.svg")}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;"><div style="flex:1"><b>${esc(actorDoc.name)}</b><br><span style="font-size:.85em">lance ${esc(modeInfo.label)}</span></div><img src="${esc(sourceItem.img || "systems/add2e/assets/icones/sorts/protection-contre-le-mal.webp")}" style="width:30px;height:30px;border-radius:4px;"></div><div style="padding:10px;color:#6f4b12"><div><b>Cible :</b> ${esc(targetToken.name ?? targetToken.actor.name)}</div><div style="margin-top:6px;text-align:center;border:1px solid #e2bc63;border-radius:6px;padding:7px"><b>${esc(modeInfo.label.toUpperCase())}</b><br>Durée : <b>${rounds} rounds</b><br>Attaques ${alignment} : <b>–2</b> ; jets de protection : <b>+2</b>.</div></div></div>`,
+    content: `<div class="add2e-spell-card add2e-spell-card-clerc" style="border-radius:12px;overflow:hidden;border:1px solid #e2bc63;background:#fffaf0;font-family:var(--font-primary);"><div style="padding:8px 12px;background:linear-gradient(90deg,#6f4b12,#b88924);color:#fff;display:flex;gap:10px;align-items:center;"><img src="${esc(actorDoc.img || "icons/svg/mystery-man.svg")}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;"><div style="flex:1"><b>${esc(actorDoc.name)}</b><br><span style="font-size:.85em">lance ${esc(modeInfo.label)}</span></div><img src="${esc(sourceItem.img || "systems/add2e/assets/icones/sorts/protection-contre-le-mal.webp")}" style="width:30px;height:30px;border-radius:4px;"></div><div style="padding:10px;color:#6f4b12"><div><b>Cible :</b> ${esc(targetToken.name ?? targetToken.actor.name)}</div><div style="margin-top:6px;text-align:center;border:1px solid #e2bc63;border-radius:6px;padding:7px"><b>${esc(modeInfo.label.toUpperCase())}</b><br>Durée : <b>${rounds} rounds</b><br>Attaques ${alignment} : <b>–2</b> ; jets de protection : <b>+2</b>.</div><div style="margin-top:6px;font-size:.84em;line-height:1.35">${esc(modeInfo.barrierDescription)}</div></div></div>`,
     ...style()
   });
   return true;
