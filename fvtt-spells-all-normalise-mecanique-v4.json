@@ -17878,25 +17878,31 @@
                 "reversible": true,
                 "inverseNameStatus": "manual_explicit",
                 "modes": [
-  {
-    "id": "normal",
-    "actorItemName": "Détection du mal",
-    "manualName": "Détection du mal",
-    "copySourceItem": true,
-    "systemOverrides": {
-      "composantes": "V, S, M"
-    }
-  },
-  {
-    "id": "inverse",
-    "actorItemName": "Détection du bien",
-    "manualName": "Détection du bien",
-    "copySourceItem": true,
-    "systemOverrides": {
-      "composantes": "V, S, M"
-    }
-  }
-],
+                  {
+                    "id": "normal",
+                    "actorItemName": "Détection du mal",
+                    "manualName": "Détection du mal",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [],
+                      "composants_materiels_objets": [],
+                      "composantes": "V, S, M"
+                    },
+                    "materialReference": []
+                  },
+                  {
+                    "id": "inverse",
+                    "actorItemName": "Détection du bien",
+                    "manualName": "Détection du bien",
+                    "copySourceItem": true,
+                    "systemOverrides": {
+                      "composants_materiels": [],
+                      "composants_materiels_objets": [],
+                      "composantes": "V, S, M"
+                    },
+                    "materialReference": []
+                  }
+                ],
                 "splitOnActorGrant": true
               }
             ]
@@ -17927,335 +17933,318 @@
       "_id": "bvs9Tb0eqM0IC3kn",
       "sort": 0
     },
-    {
-      "name": "Détection du mal",
-      "type": "sort",
-      "img": "systems/add2e/assets/icones/sorts/detection-du-mal.webp",
-      "system": {
-        "nom": "Détection du mal",
-        "classe": "Clerc",
-        "spellLists": [
-          "Clerc"
-        ],
-        "niveau": 1,
-        "ecole": "Divination",
-        "portee": "12\"",
-        "duree": "1 tour + ½ tour par niveau",
-        "zone_effet": "1\" de large",
-        "cible": "1 direction",
-        "temps_incantation": "1 round",
-        "jet_sauvegarde": "Aucun",
-        "composantes": "V, S, M",
-        "composants_materiels": [
-          {
-            "nom": "symbole sacré",
-            "quantite": 1,
-            "consommation": "non_consomme",
-            "source": "Manuel des joueurs",
-            "condition": "Le clerc tient son symbole sacré devant lui.",
-            "notes": "Objet religieux non consommé ; identique pour l’inverse Détection du bien."
-          }
-        ],
-        "description": "ce sort permet de découvrir les émanations du mal, ou du bien pour le sort inverse, de toute créature ou tout objet. Un alignement mauvais ou un objet maudit irradiera une aura maléfique, mais pas un piège ou une vipère. La durée du sort est de 1 tour + ½ tour par niveau; donc un clerc de niveau 1 pourra détecter le mal pendant 1 tour ½, un clerc de niveau 2 pendant 2 tours, etc. Le sort a une zone d’effet de 1\" de large et le clerc doit faire face à l’endroit, l’objet ou la créature qu’il examine. Seuls le degré de mal (faible, moyen, fort, extraordinaire) et sa nature générale (en attente, méchant, triomphant, etc.) sont révélés. Si le mal est extraordinaire, le clerc a 10 % de chance par niveau du clerc d’en déterminer la tendance (loyal, neutre ou chaotique). Pour lancer ce sort, le clerc a besoin de son symbole sacré, qu’il tient devant lui.",
-        "onUse": "systems/add2e/scripts/sorts/detection-du-mal.js",
-        "effectProfile": {
-          "version": "2026-06-16-add2e-spell-effects-v1",
-          "source": "manual-normalized-clerc-n1",
-          "effects": [
-            {
-              "id": "detection_du_mal",
-              "label": "Détection du mal",
-              "kind": "clerc_effect",
-              "automation": "active_effect_or_mj_aid",
-              "tags": [
-                "effet:detection_du_mal",
-                "classe:clerc",
-                "niveau:1"
-              ],
-              "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
-            }
-          ]
-        },
-        "reversible": true,
-        "inverse": "Détection du bien",
-        "variantes": [],
-        "inverseNameStatus": "manual_explicit"
-      },
+{
+  "name": "Détection du mal",
+  "type": "sort",
+  "img": "systems/add2e/assets/icones/sorts/detection-du-mal.webp",
+  "system": {
+    "nom": "Détection du mal",
+    "classe": "Clerc",
+    "spellLists": [
+      "Clerc"
+    ],
+    "niveau": 1,
+    "ecole": "Divination",
+    "portee": "12\"",
+    "duree": "1 tour + ½ tour par niveau",
+    "zone_effet": "1\" de large",
+    "cible": "1 direction",
+    "temps_incantation": "1 round",
+    "jet_sauvegarde": "Aucun",
+    "composantes": "V, S, M",
+    "composants_materiels": [
+      {
+        "nom": "symbole sacré",
+        "quantite": 1,
+        "consommation": "non_consomme",
+        "source": "Manuel des joueurs",
+        "condition": "Le clerc tient son symbole sacré devant lui.",
+        "notes": "Objet religieux non consommé ; identique pour l’inverse Détection du bien."
+      }
+    ],
+    "description": "ce sort permet de découvrir les émanations du mal, ou du bien pour le sort inverse, de toute créature ou tout objet. Un alignement mauvais ou un objet maudit irradiera une aura maléfique, mais pas un piège ou une vipère. La durée du sort est de 1 tour + ½ tour par niveau; donc un clerc de niveau 1 pourra détecter le mal pendant 1 tour ½, un clerc de niveau 2 pendant 2 tours, etc. Le sort a une zone d’effet de 1\" de large et le clerc doit faire face à l’endroit, l’objet ou la créature qu’il examine. Seuls le degré de mal (faible, moyen, fort, extraordinaire) et sa nature générale (en attente, méchant, triomphant, etc.) sont révélés. Si le mal est extraordinaire, le clerc a 10 % de chance par niveau du clerc d’en déterminer la tendance (loyal, neutre ou chaotique). Pour lancer ce sort, le clerc a besoin de son symbole sacré, qu’il tient devant lui.",
+    "onUse": "systems/add2e/scripts/sorts/detection-du-mal.js",
+    "effectProfile": {
+      "version": "2026-06-16-add2e-spell-effects-v1",
+      "source": "manual-normalized-clerc-n1",
       "effects": [
         {
-          "name": "Détection du mal",
-          "flags": {
-            "add2e": {
-              "tags": [
-                "classe:clerc",
-                "liste:clerc",
-                "niveau:1",
-                "sort:detection_du_mal",
-                "detection:mal",
-                "reversible:detection_du_bien",
-                "aura:alignement",
-                "ecole:divination"
-              ]
-            }
-          },
-          "duration": {
-            "value": 0,
-            "units": "rounds",
-            "expiry": "turnStart",
-            "expired": false
-          },
-          "disabled": true,
-          "transfer": false,
-          "img": "systems/add2e/assets/icones/sorts/detection-du-mal.webp",
-          "type": "base",
-          "system": {
-            "changes": []
-          },
-          "description": "",
-          "tint": "#ffffff",
-          "statuses": [],
-          "start": null,
-          "showIcon": 1,
-          "origin": "Item.mFdL3afrN0cz5c8o",
-          "_id": "LvXi7HlAyjKRAAz7",
-          "folder": null,
-          "sort": 0,
-          "_stats": {
-            "coreVersion": "14.363",
-            "systemId": "add2e",
-            "systemVersion": "0.1.20",
-            "createdTime": 1781639907025,
-            "modifiedTime": 1781639907025,
-            "lastModifiedBy": "3qitoEt1cN3Qhvig",
-            "compendiumSource": null,
-            "duplicateSource": null,
-            "exportSource": null
-          }
-        },
-        {
-          "name": "Détection du mal",
-          "flags": {
-            "add2e": {
-              "tags": [
-                "classe:clerc",
-                "liste:clerc",
-                "niveau:1",
-                "sort:detection_du_mal",
-                "detection:mal",
-                "reversible:detection_du_bien",
-                "aura:alignement",
-                "ecole:divination"
-              ]
-            }
-          },
-          "duration": {
-            "value": 0,
-            "units": "rounds",
-            "expiry": "turnStart",
-            "expired": false
-          },
-          "disabled": true,
-          "transfer": false,
-          "img": "systems/add2e/assets/icones/sorts/detection-du-mal.webp",
-          "type": "base",
-          "system": {
-            "changes": []
-          },
-          "description": "",
-          "tint": "#ffffff",
-          "statuses": [],
-          "start": null,
-          "showIcon": 1,
-          "origin": "Item.mFdL3afrN0cz5c8o",
-          "_id": "FOXKFutCfTPR5rkG",
-          "folder": null,
-          "sort": 0,
-          "_stats": {
-            "coreVersion": "14.363",
-            "systemId": "add2e",
-            "systemVersion": "0.1.20",
-            "createdTime": 1781639907026,
-            "modifiedTime": 1781639907026,
-            "lastModifiedBy": "3qitoEt1cN3Qhvig",
-            "compendiumSource": null,
-            "duplicateSource": null,
-            "exportSource": null
-          }
-        },
-        {
-          "name": "Détection du mal",
-          "flags": {
-            "add2e": {
-              "tags": [
-                "classe:clerc",
-                "liste:clerc",
-                "niveau:1",
-                "sort:detection_du_mal",
-                "detection:mal",
-                "reversible:detection_du_bien",
-                "aura:alignement",
-                "ecole:divination"
-              ]
-            }
-          },
-          "duration": {
-            "value": 0,
-            "units": "rounds",
-            "expiry": "turnStart",
-            "expired": false
-          },
-          "disabled": true,
-          "transfer": false,
-          "img": "systems/add2e/assets/icones/sorts/detection-du-mal.webp",
-          "type": "base",
-          "system": {
-            "changes": []
-          },
-          "description": "",
-          "tint": "#ffffff",
-          "statuses": [],
-          "start": null,
-          "showIcon": 1,
-          "origin": "Item.mFdL3afrN0cz5c8o",
-          "_id": "pxk31mtvyS4UmoSI",
-          "folder": null,
-          "sort": 0,
-          "_stats": {
-            "coreVersion": "14.363",
-            "systemId": "add2e",
-            "systemVersion": "0.1.20",
-            "createdTime": 1781639907027,
-            "modifiedTime": 1781639907027,
-            "lastModifiedBy": "3qitoEt1cN3Qhvig",
-            "compendiumSource": null,
-            "duplicateSource": null,
-            "exportSource": null
-          }
+          "id": "detection_du_mal",
+          "label": "Détection du mal",
+          "kind": "clerc_effect",
+          "automation": "active_effect_or_mj_aid",
+          "tags": [
+            "effet:detection_du_mal",
+            "classe:clerc",
+            "niveau:1"
+          ],
+          "notes": "Profil mécanique clerc normalisé ; l’effet détaillé reste porté par la description, les tags existants et le script onUse du sort."
         }
-      ],
+      ]
+    },
+    "reversible": true,
+    "inverse": "Détection du bien",
+    "variantes": [],
+    "inverseNameStatus": "manual_explicit"
+  },
+  "effects": [
+    {
+      "name": "Détection du mal",
       "flags": {
         "add2e": {
-          "onUsePackVersion": "v6-counter-vfx",
-          "spellPack": "magicien-niveaux-1-9",
-          "scriptFlatNoSubdir": true,
-          "importedBy": "ADD2E import sorts",
-          "importerVersion": "2026-06-11-import-sorts-v2-no-merge-same-name",
-          "importedAt": "2026-06-16T19:58:26.392Z",
-          "onUseUnchanged": true,
-          "originalOnUse": "systems/add2e/scripts/sorts/detection-du-mal.js",
-          "routedClass": "Clerc",
-          "spellListsResolved": [
-            "Clerc"
-          ],
-          "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
-          "dispatchSource": "export game.items",
-          "importKey": "detection_du_mal|sort|clerc|1",
-          "canonicalSpellFields": {
-            "version": "2026-06-16-cleric-l1-canonical-fields-v3"
-          },
-          "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
-          "reversible": {
-            "version": "2026-06-23-compendium-equipements-materials-v7",
-            "managedBy": "normalize-fvtt-spells-materials-v3",
-            "enabled": true,
-            "choiceTiming": "memorization",
-            "splitOnActorGrant": true,
-            "profiles": [
-              {
-                "class": "clerc",
-                "level": 1,
-                "referenceName": "Détection du mal",
-                "foundryItemName": "Détection du mal",
-                "referenceFiles": [
-                  "audit/reference/manuel-joueurs-clerc-niveau-1.json",
-                  "audit/reference/manuel-joueurs-composants-materiels.json",
-                  "audit/reference/manuel-joueurs-reversibilite.json"
-                ],
-                "reversible": true,
-                "inverseNameStatus": "manual_explicit",
-                "modes": [
-                  {
-                    "id": "normal",
-                    "actorItemName": "Détection du mal",
-                    "manualName": "Détection du mal",
-                    "copySourceItem": true,
-                    "systemOverrides": {
-                      "composants_materiels": [],
-                      "composants_materiels_objets": [],
-                      "composantes": "V, S, M"
-                    },
-                    "materialReference": []
-                  },
-                  {
-                    "id": "inverse",
-                    "actorItemName": "Détection du bien",
-                    "manualName": "Détection du bien",
-                    "copySourceItem": true,
-                    "systemOverrides": {
-                      "composants_materiels": [
-                        {
-                          "nom": "symbole sacré",
-                          "quantite": 1,
-                          "consommation": "non_consomme",
-                          "source": "Manuel des joueurs",
-                          "condition": "Le clerc tient son symbole sacré devant lui.",
-                          "notes": "Objet religieux non consommé ; identique pour l’inverse Détection du bien."
-                        }
-                      ],
-                      "composants_materiels_objets": [
-                        {
-                          "nom": "symbole sacré",
-                          "quantite": 1,
-                          "consommation": "non_consomme",
-                          "source": "Manuel des joueurs",
-                          "condition": "Le clerc tient son symbole sacré devant lui.",
-                          "notes": "Objet religieux non consommé ; identique pour l’inverse Détection du bien."
-                        }
-                      ],
-                      "composantes": "V, S, M"
-                    },
-                    "materialReference": [
-                      {
-                        "nom": "symbole sacré",
-                        "quantite": 1,
-                        "consommation": "non_consomme",
-                        "source": "Manuel des joueurs",
-                        "condition": "Le clerc tient son symbole sacré devant lui.",
-                        "notes": "Objet religieux non consommé ; identique pour l’inverse Détection du bien."
-                      }
-                    ]
-                  }
-                ],
-                "splitOnActorGrant": true
-              }
-            ]
-          }
-        },
-        "add2eExport": {
-          "folderPath": "Sorts / Clerc / Niveau 1",
-          "sourceFolderId": "drnwQQ9thhmKNqbB",
-          "exportedAt": "2026-05-22T09:57:29.890Z"
+          "tags": [
+            "classe:clerc",
+            "liste:clerc",
+            "niveau:1",
+            "sort:detection_du_mal",
+            "detection:mal",
+            "reversible:detection_du_bien",
+            "aura:alignement",
+            "ecole:divination"
+          ]
         }
       },
-      "folder": "k4Ti1YbGDrptgNGG",
-      "_id": "mFdL3afrN0cz5c8o",
-      "sort": 500000,
-      "ownership": {
-        "default": 0,
-        "3qitoEt1cN3Qhvig": 3
+      "duration": {
+        "value": 0,
+        "units": "rounds",
+        "expiry": "turnStart",
+        "expired": false
       },
+      "disabled": true,
+      "transfer": false,
+      "img": "systems/add2e/assets/icones/sorts/detection-du-mal.webp",
+      "type": "base",
+      "system": {
+        "changes": []
+      },
+      "description": "",
+      "tint": "#ffffff",
+      "statuses": [],
+      "start": null,
+      "showIcon": 1,
+      "origin": "Item.mFdL3afrN0cz5c8o",
+      "_id": "LvXi7HlAyjKRAAz7",
+      "folder": null,
+      "sort": 0,
       "_stats": {
         "coreVersion": "14.363",
         "systemId": "add2e",
         "systemVersion": "0.1.20",
-        "createdTime": 1781638688262,
-        "modifiedTime": 1781639966221,
+        "createdTime": 1781639907025,
+        "modifiedTime": 1781639907025,
         "lastModifiedBy": "3qitoEt1cN3Qhvig",
         "compendiumSource": null,
         "duplicateSource": null,
         "exportSource": null
       }
     },
+    {
+      "name": "Détection du mal",
+      "flags": {
+        "add2e": {
+          "tags": [
+            "classe:clerc",
+            "liste:clerc",
+            "niveau:1",
+            "sort:detection_du_mal",
+            "detection:mal",
+            "reversible:detection_du_bien",
+            "aura:alignement",
+            "ecole:divination"
+          ]
+        }
+      },
+      "duration": {
+        "value": 0,
+        "units": "rounds",
+        "expiry": "turnStart",
+        "expired": false
+      },
+      "disabled": true,
+      "transfer": false,
+      "img": "systems/add2e/assets/icones/sorts/detection-du-mal.webp",
+      "type": "base",
+      "system": {
+        "changes": []
+      },
+      "description": "",
+      "tint": "#ffffff",
+      "statuses": [],
+      "start": null,
+      "showIcon": 1,
+      "origin": "Item.mFdL3afrN0cz5c8o",
+      "_id": "FOXKFutCfTPR5rkG",
+      "folder": null,
+      "sort": 0,
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.20",
+        "createdTime": 1781639907026,
+        "modifiedTime": 1781639907026,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
+    },
+    {
+      "name": "Détection du mal",
+      "flags": {
+        "add2e": {
+          "tags": [
+            "classe:clerc",
+            "liste:clerc",
+            "niveau:1",
+            "sort:detection_du_mal",
+            "detection:mal",
+            "reversible:detection_du_bien",
+            "aura:alignement",
+            "ecole:divination"
+          ]
+        }
+      },
+      "duration": {
+        "value": 0,
+        "units": "rounds",
+        "expiry": "turnStart",
+        "expired": false
+      },
+      "disabled": true,
+      "transfer": false,
+      "img": "systems/add2e/assets/icones/sorts/detection-du-mal.webp",
+      "type": "base",
+      "system": {
+        "changes": []
+      },
+      "description": "",
+      "tint": "#ffffff",
+      "statuses": [],
+      "start": null,
+      "showIcon": 1,
+      "origin": "Item.mFdL3afrN0cz5c8o",
+      "_id": "pxk31mtvyS4UmoSI",
+      "folder": null,
+      "sort": 0,
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.20",
+        "createdTime": 1781639907027,
+        "modifiedTime": 1781639907027,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": null,
+        "duplicateSource": null,
+        "exportSource": null
+      }
+    }
+  ],
+  "flags": {
+    "add2e": {
+      "onUsePackVersion": "v6-counter-vfx",
+      "spellPack": "clerc-niveau-1",
+      "scriptFlatNoSubdir": true,
+      "importedBy": "ADD2E import sorts",
+      "importerVersion": "2026-06-11-import-sorts-v2-no-merge-same-name",
+      "importedAt": "2026-06-16T19:58:26.392Z",
+      "onUseUnchanged": true,
+      "originalOnUse": "systems/add2e/scripts/sorts/detection-du-mal.js",
+      "routedClass": "Clerc",
+      "spellListsResolved": [
+        "Clerc"
+      ],
+      "dispatchVersion": "2026-05-05-clerc-druide-dispatch-v1",
+      "dispatchSource": "export game.items",
+      "importKey": "detection_du_mal|sort|clerc|1",
+      "canonicalSpellFields": {
+        "version": "2026-06-16-cleric-l1-canonical-fields-v3"
+      },
+      "canonicalSystemFields": "2026-06-17-normalize-fvtt-spells-canonical-v1",
+      "reversible": {
+        "version": "2026-06-23-compendium-equipements-materials-v7",
+        "managedBy": "normalize-fvtt-spells-materials-v3",
+        "enabled": true,
+        "choiceTiming": "memorization",
+        "splitOnActorGrant": true,
+        "profiles": [
+          {
+            "class": "clerc",
+            "level": 1,
+            "referenceName": "Détection du mal",
+            "foundryItemName": "Détection du mal",
+            "referenceFiles": [
+              "audit/reference/manuel-joueurs-clerc-niveau-1.json",
+              "audit/reference/manuel-joueurs-composants-materiels.json",
+              "audit/reference/manuel-joueurs-reversibilite.json"
+            ],
+            "reversible": true,
+            "inverseNameStatus": "manual_explicit",
+            "modes": [
+              {
+                "id": "normal",
+                "actorItemName": "Détection du mal",
+                "manualName": "Détection du mal",
+                "copySourceItem": true,
+                "systemOverrides": {},
+                "materialReference": [
+                  {
+                    "nom": "symbole sacré",
+                    "quantite": 1,
+                    "consommation": "non_consomme",
+                    "source": "Manuel des joueurs",
+                    "condition": "Le clerc tient son symbole sacré devant lui.",
+                    "notes": "Objet religieux non consommé ; identique pour l’inverse Détection du bien."
+                  }
+                ]
+              },
+              {
+                "id": "inverse",
+                "actorItemName": "Détection du bien",
+                "manualName": "Détection du bien",
+                "copySourceItem": true,
+                "systemOverrides": {},
+                "materialReference": [
+                  {
+                    "nom": "symbole sacré",
+                    "quantite": 1,
+                    "consommation": "non_consomme",
+                    "source": "Manuel des joueurs",
+                    "condition": "Le clerc tient son symbole sacré devant lui.",
+                    "notes": "Objet religieux non consommé ; identique pour l’inverse Détection du bien."
+                  }
+                ]
+              }
+            ],
+            "splitOnActorGrant": true
+          }
+        ]
+      }
+    },
+    "add2eExport": {
+      "folderPath": "Sorts / Clerc / Niveau 1",
+      "sourceFolderId": "drnwQQ9thhmKNqbB",
+      "exportedAt": "2026-05-22T09:57:29.890Z"
+    }
+  },
+  "folder": "k4Ti1YbGDrptgNGG",
+  "_id": "mFdL3afrN0cz5c8o",
+  "sort": 500000,
+  "ownership": {
+    "default": 0,
+    "3qitoEt1cN3Qhvig": 3
+  },
+  "_stats": {
+    "coreVersion": "14.363",
+    "systemId": "add2e",
+    "systemVersion": "0.1.20",
+    "createdTime": 1781638688262,
+    "modifiedTime": 1781639966221,
+    "lastModifiedBy": "3qitoEt1cN3Qhvig",
+    "compendiumSource": null,
+    "duplicateSource": null,
+    "exportSource": null
+  }
+}
     {
       "name": "Disparition",
       "type": "sort",
