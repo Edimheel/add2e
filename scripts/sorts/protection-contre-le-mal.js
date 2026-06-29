@@ -1,8 +1,22 @@
 // ADD2E — Protection contre le Mal / Protection contre le Bien
+<<<<<<< Updated upstream
 // Version : 2026-06-29-protection-generic-action-rule-v5
 // Compatible Foundry V13/V14/V15.
 
 const ADD2E_PROTECTION_VFX_VERSION = "2026-06-29-protection-generic-action-rule-v5";
+=======
+<<<<<<< HEAD
+// Version : 2026-06-29-protection-manuel-effects-v4
+// Compatible Foundry V13/V14/V15.
+
+const ADD2E_PROTECTION_VFX_VERSION = "2026-06-29-protection-manuel-effects-v4";
+=======
+// Version : 2026-06-29-protection-generic-action-rule-v5
+// Compatible Foundry V13/V14/V15.
+
+const ADD2E_PROTECTION_VFX_VERSION = "2026-06-29-protection-generic-action-rule-v5";
+>>>>>>> da5d0e7c2888427a76bfe6ef5fcbc6e3e3577148
+>>>>>>> Stashed changes
 
 const __add2eOnUseResult = await (async () => {
   const normalize = value => String(value ?? "").trim().toLowerCase().normalize("NFD")
@@ -54,6 +68,13 @@ const __add2eOnUseResult = await (async () => {
     spellKey: isGood ? "protection_contre_le_bien" : "protection_contre_le_mal",
     jb2aKey: isGood ? "jb2a.aura_themed.01.inward" : "jb2a.ward.rune.yellow",
     tags: isGood
+<<<<<<< Updated upstream
+=======
+<<<<<<< HEAD
+      ? ["sort:protection_contre_le_bien", "protection:bien", "bonus_save:2", "malus_attaque_vs:bon:2", "barriere_contact:creature_enchantee_mauvaise:naturelle"]
+      : ["sort:protection_contre_le_mal", "protection:mal", "bonus_save:2", "malus_attaque_creature_mauvaise:2", "barriere_contact:creature_enchantee_ou_invoquee:naturelle"]
+=======
+>>>>>>> Stashed changes
       ? ["sort:protection_contre_le_bien", "protection:bien", "bonus_save:2", "malus_attaque_vs:bon:2"]
       : ["sort:protection_contre_le_mal", "protection:mal", "bonus_save:2", "malus_attaque_vs:mauvais:2"],
     rules: [{
@@ -64,6 +85,10 @@ const __add2eOnUseResult = await (async () => {
       actionAllTags: ["type_arme:naturelle"],
       label: "La barrière magique empêche cette attaque naturelle de toucher la cible."
     }]
+<<<<<<< Updated upstream
+=======
+>>>>>>> da5d0e7c2888427a76bfe6ef5fcbc6e3e3577148
+>>>>>>> Stashed changes
   };
 
   const targets = Array.from(game.user.targets ?? []);
@@ -95,22 +120,71 @@ const __add2eOnUseResult = await (async () => {
     disabled: false,
     transfer: false,
     duration,
+<<<<<<< Updated upstream
     description: `${modeInfo.label}. Attaques de l'alignement concerné : –2 ; jets de protection : +2. Les attaques naturelles au contact des créatures enchantées ou invoquées sont bloquées. Durée : ${rounds} rounds.`,
     flags: { add2e: { ...timeFlags, spellName: modeInfo.label, spellKey: modeInfo.spellKey, level, sourceItemUuid: sourceItem.uuid ?? null, casterId: actorDoc.id ?? null, casterUuid: actorDoc.uuid ?? null, targetId: targetToken.actor.id ?? null, targetUuid: targetToken.actor.uuid ?? null, tags: modeInfo.tags, rules: modeInfo.rules } },
+=======
+<<<<<<< HEAD
+    description: `${modeInfo.label}. Attaques de l’alignement concerné : –2 ; jets de protection : +2. Durée : ${rounds} rounds.`,
+    flags: { add2e: { ...timeFlags, spellName: modeInfo.label, spellKey: modeInfo.spellKey, level, sourceItemUuid: sourceItem.uuid ?? null, casterId: actorDoc.id ?? null, casterUuid: actorDoc.uuid ?? null, targetId: targetToken.actor.id ?? null, targetUuid: targetToken.actor.uuid ?? null, tags: modeInfo.tags } },
+=======
+    description: `${modeInfo.label}. Attaques de l’alignement concerné : –2 ; jets de protection : +2. Les attaques naturelles au contact des créatures enchantées ou invoquées sont bloquées. Durée : ${rounds} rounds.`,
+    flags: { add2e: { ...timeFlags, spellName: modeInfo.label, spellKey: modeInfo.spellKey, level, sourceItemUuid: sourceItem.uuid ?? null, casterId: actorDoc.id ?? null, casterUuid: actorDoc.uuid ?? null, targetId: targetToken.actor.id ?? null, targetUuid: targetToken.actor.uuid ?? null, tags: modeInfo.tags, rules: modeInfo.rules } },
+>>>>>>> da5d0e7c2888427a76bfe6ef5fcbc6e3e3577148
+>>>>>>> Stashed changes
     changes: []
   };
 
   const isProtection = effect => {
     const activeFlags = effect?.flags?.add2e ?? {};
     const spellKey = normalize(activeFlags.spellKey ?? activeFlags.spell?.slug);
+<<<<<<< Updated upstream
     const activeTags = toArray(activeFlags.tags).map(normalize);
     return ["protection_contre_le_mal", "protection_contre_le_bien"].includes(spellKey) || activeTags.includes("sort:protection_contre_le_mal") || activeTags.includes("sort:protection_contre_le_bien");
+=======
+<<<<<<< HEAD
+    const tags = toArray(activeFlags.tags).map(normalize);
+    return ["protection_contre_le_mal", "protection_contre_le_bien"].includes(spellKey) || tags.includes("sort:protection_contre_le_mal") || tags.includes("sort:protection_contre_le_bien");
+=======
+    const activeTags = toArray(activeFlags.tags).map(normalize);
+    return ["protection_contre_le_mal", "protection_contre_le_bien"].includes(spellKey) || activeTags.includes("sort:protection_contre_le_mal") || activeTags.includes("sort:protection_contre_le_bien");
+>>>>>>> da5d0e7c2888427a76bfe6ef5fcbc6e3e3577148
+>>>>>>> Stashed changes
   };
   const removeIds = Array.from(targetToken.actor.effects ?? []).filter(isProtection).map(effect => effect.id).filter(Boolean);
   if (game.user.isGM || targetToken.actor.isOwner) {
     if (removeIds.length) await targetToken.actor.deleteEmbeddedDocuments("ActiveEffect", removeIds);
     await targetToken.actor.createEmbeddedDocuments("ActiveEffect", [effectData]);
   } else {
+<<<<<<< Updated upstream
+    if (!game.socket) { ui.notifications.error("Protection : socket indisponible."); return false; }
+    game.socket.emit("system.add2e", { type: "ADD2E_GM_OPERATION", operation: "createActiveEffect", payload: { actorUuid: targetToken.actor.uuid, actorId: targetToken.actor.id, effectData, fromUserId: game.user.id, sentAt: Date.now() } });
+=======
+<<<<<<< HEAD
+    game.socket?.emit?.("system.add2e", { type: "ADD2E_GM_OPERATION", operation: "createActiveEffect", payload: { actorUuid: targetToken.actor.uuid, actorId: targetToken.actor.id, effectData, fromUserId: game.user.id, sentAt: Date.now() } });
+>>>>>>> Stashed changes
+  }
+
+  const vfxName = `add2e-protection-ward:${canvas.scene?.id ?? "scene"}:${targetToken.document?.id ?? targetToken.id}`;
+  const endVfx = tokenDoc => {
+    if (!tokenDoc) return;
+    const name = `add2e-protection-ward:${canvas.scene?.id ?? "scene"}:${tokenDoc.document?.id ?? tokenDoc.id}`;
+    try { globalThis.Sequencer?.EffectManager?.endEffects?.({ name, object: tokenDoc }); } catch (_error) {}
+    try { globalThis.Sequencer?.EffectManager?.endEffects?.({ name }); } catch (_error) {}
+  };
+  if (globalThis.ADD2E_PROTECTION_WARD_HOOKS_VERSION !== ADD2E_PROTECTION_VFX_VERSION) {
+    globalThis.ADD2E_PROTECTION_WARD_HOOKS_VERSION = ADD2E_PROTECTION_VFX_VERSION;
+    const stopWard = effect => {
+      if (!isProtection(effect)) return;
+      for (const activeToken of effect.parent?.getActiveTokens?.() ?? []) endVfx(activeToken);
+    };
+<<<<<<< Updated upstream
+    Hooks.on("deleteActiveEffect", stopWard);
+    Hooks.on("updateActiveEffect", (effect, changes) => { if (changes?.disabled === true || changes?.disabled === 1) stopWard(effect); });
+=======
+    Hooks.on("deleteActiveEffect", endWard);
+    Hooks.on("updateActiveEffect", (effect, changes) => { if (changes?.disabled === true || changes?.disabled === 1) endWard(effect); });
+=======
     if (!game.socket) { ui.notifications.error("Protection : socket indisponible."); return false; }
     game.socket.emit("system.add2e", { type: "ADD2E_GM_OPERATION", operation: "createActiveEffect", payload: { actorUuid: targetToken.actor.uuid, actorId: targetToken.actor.id, effectData, fromUserId: game.user.id, sentAt: Date.now() } });
   }
@@ -130,13 +204,26 @@ const __add2eOnUseResult = await (async () => {
     };
     Hooks.on("deleteActiveEffect", stopWard);
     Hooks.on("updateActiveEffect", (effect, changes) => { if (changes?.disabled === true || changes?.disabled === 1) stopWard(effect); });
+>>>>>>> da5d0e7c2888427a76bfe6ef5fcbc6e3e3577148
+>>>>>>> Stashed changes
   }
   try {
     const database = globalThis.Sequencer?.Database;
     const available = typeof database?.getEntry === "function" ? !!database.getEntry(modeInfo.jb2aKey) : true;
     if (available && typeof Sequence !== "undefined") {
+<<<<<<< Updated upstream
       endVfx(targetToken);
       await new Sequence().effect().file(modeInfo.jb2aKey).attachTo(targetToken).persist(true).name(vfxName).belowTokens(false).scaleToObject(1.5).opacity(.95).play();
+=======
+<<<<<<< HEAD
+      try { globalThis.Sequencer?.EffectManager?.endEffects?.({ name: visualName, object: targetToken }); } catch (_error) {}
+      try { globalThis.Sequencer?.EffectManager?.endEffects?.({ name: visualName }); } catch (_error) {}
+      await new Sequence().effect().file(modeInfo.jb2aKey).attachTo(targetToken).persist(true).name(visualName).belowTokens(false).scaleToObject(1.5).opacity(.95).play();
+=======
+      endVfx(targetToken);
+      await new Sequence().effect().file(modeInfo.jb2aKey).attachTo(targetToken).persist(true).name(vfxName).belowTokens(false).scaleToObject(1.5).opacity(.95).play();
+>>>>>>> da5d0e7c2888427a76bfe6ef5fcbc6e3e3577148
+>>>>>>> Stashed changes
     }
   } catch (_error) {}
 
