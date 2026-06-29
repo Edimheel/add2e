@@ -1,8 +1,8 @@
 // scripts/add2e-attack/05-jb2a-vfx.mjs
 // ADD2E — VFX JB2A Premium sécurisés pour sorts et attaques d'armes.
-// Version : 2026-06-29-persistent-darkness-ground-v1
+// Version : 2026-06-29-persistent-darkness-ground-v2
 
-globalThis.ADD2E_JB2A_VFX_VERSION = "2026-06-29-persistent-darkness-ground-v1";
+globalThis.ADD2E_JB2A_VFX_VERSION = "2026-06-29-persistent-darkness-ground-v2";
 
 const ADD2E_JB2A_WEAPON_FX_DEDUPE_MS = 1200;
 globalThis.__ADD2E_JB2A_WEAPON_FX_DEDUPE_KEYS ??= new Map();
@@ -165,6 +165,15 @@ function add2eNormalizeFxKey(value) {
     .replace(/^_|_$/g, "");
 }
 
+function add2eNormalizeEffectTag(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/\s+/g, "_");
+}
+
 function add2eArray(value) {
   if (value === undefined || value === null || value === "") return [];
   if (Array.isArray(value)) return value.flatMap(add2eArray);
@@ -248,12 +257,12 @@ async function add2ePickJb2aFiles(preset = "divine", max = 2, explicitCandidates
 }
 
 function add2eEffectFlags(effect) {
-  return effect?.flags?.add2e ?? effect?.getFlag?.("add2e") ?? {};
+  return effect?.flags?.add2e ?? {};
 }
 
 function add2eEffectTags(effect) {
   return add2eArray(add2eEffectFlags(effect)?.tags)
-    .map(add2eNormalizeFxKey)
+    .map(add2eNormalizeEffectTag)
     .filter(Boolean);
 }
 
