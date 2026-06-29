@@ -28,6 +28,70 @@ const ALIASES = {
   onUse: ["onUse", "onuse", "on_use"]
 };
 
+// Sorts sans entree declarative et sans ADD2E_SORT_CONFIG. Chaque cle est un slug ADD2E.
+const PROFILE_OVERRIDES = Object.freeze({
+  agrandissement: { mechanic: "buff_debuff", operation: "enlarge" },
+  apaisement: { mechanic: "status", operation: "calm_emotions" },
+  benediction: { mechanic: "buff_debuff", operation: "bless" },
+  boule_de_feu: { mechanic: "damage", operation: "fireball", dice: "leveld6", damageType: "fire" },
+  changement_d_apparence: { mechanic: "utility", operation: "disguise_self" },
+  charme_personnes: { mechanic: "status", operation: "charm_person", status: ["charmed", "charm"] },
+  chien_fidele_de_mordenkainen: { mechanic: "summon", operation: "faithful_hound" },
+  contact_d_autres_plans: { mechanic: "divination", operation: "contact_other_plane" },
+  danse_irresistible_d_otto: { mechanic: "status", operation: "irresistible_dance", status: ["dancing", "incapacitated"] },
+  detection_de_l_invisibilite: { mechanic: "detection", operation: "invisibility" },
+  dissipation_de_l_epuisement: { mechanic: "status", operation: "remove_exhaustion" },
+  doigt_de_mort: { mechanic: "damage", operation: "finger_of_death", damageType: "death" },
+  embrasement: { mechanic: "damage", operation: "ignite", damageType: "fire" },
+  emprisonnement_de_l_ame: { mechanic: "status", operation: "soul_trap", status: ["imprisoned"] },
+  enchevetrement: { mechanic: "status", operation: "entangle", status: ["restrained", "entangled"] },
+  escalade_d_araignee: { mechanic: "movement", operation: "spider_climb" },
+  flamme: { mechanic: "damage", operation: "flame", damageType: "fire" },
+  fleau_d_insectes: { mechanic: "summon", operation: "insect_plague" },
+  foudre: { mechanic: "damage", operation: "lightning", damageType: "lightning" },
+  globe_d_invulnerabilite: { mechanic: "protection", operation: "globe_of_invulnerability" },
+  globe_mineur_d_invulnerabilite: { mechanic: "protection", operation: "minor_globe_of_invulnerability" },
+  graines_de_feu: { mechanic: "damage", operation: "fire_seeds", damageType: "fire" },
+  guerison_de_la_cecite: { mechanic: "status", operation: "cure_blindness", status: ["blind"] },
+  injonction: { mechanic: "status", operation: "command" },
+  invisibilite_aux_animaux: { mechanic: "protection", operation: "invisibility_to_animals" },
+  invocation_animale_i: { mechanic: "summon", operation: "animal_summoning_1" },
+  invocation_animale_ii: { mechanic: "summon", operation: "animal_summoning_2" },
+  invocation_animale_iii: { mechanic: "summon", operation: "animal_summoning_3" },
+  invocation_d_elemental: { mechanic: "summon", operation: "elemental_summoning" },
+  invocation_d_insectes: { mechanic: "summon", operation: "insect_summoning" },
+  invocation_d_un_elemental_de_terre: { mechanic: "summon", operation: "earth_elemental" },
+  invocation_d_un_elemental_du_feu: { mechanic: "summon", operation: "fire_elemental" },
+  invocation_d_un_familier: { mechanic: "summon", operation: "find_familiar" },
+  invocation_de_la_foudre: { mechanic: "damage", operation: "call_lightning", damageType: "lightning" },
+  invocation_des_creatures_sylvestres: { mechanic: "summon", operation: "woodland_beings" },
+  invocation_du_temps: { mechanic: "utility", operation: "weather_summoning" },
+  langue: { mechanic: "communication", operation: "tongues" },
+  main_d_interposition_de_bigby: { mechanic: "protection", operation: "bigby_interposing_hand" },
+  mains_brulantes: { mechanic: "damage", operation: "burning_hands", damageType: "fire" },
+  manne: { mechanic: "creation", operation: "create_food_water" },
+  mur_d_epines: { mechanic: "terrain", operation: "wall_of_thorns" },
+  necromancie: { mechanic: "communication", operation: "speak_with_dead" },
+  nuage_puant: { mechanic: "terrain", operation: "stinking_cloud" },
+  il_magique: { mechanic: "detection", operation: "arcane_eye" },
+  peau_d_ecorce: { mechanic: "protection", operation: "barkskin" },
+  perception_des_alignements: { mechanic: "detection", operation: "alignment" },
+  peur: { mechanic: "status", operation: "fear", status: ["frightened", "fear"] },
+  poigne_electrique: { mechanic: "damage", operation: "shocking_grasp", damageType: "lightning" },
+  projectile_magique: { mechanic: "damage", operation: "magic_missile", damageType: "force" },
+  protection_d_esprit: { mechanic: "protection", operation: "mind_protection" },
+  purification_de_l_eau: { mechanic: "utility", operation: "purify_water" },
+  purification_de_l_eau_et_des_aliments: { mechanic: "utility", operation: "purify_food_and_drink" },
+  rayon_d_affaiblissement: { mechanic: "status", operation: "ray_of_enfeeblement", status: ["weakened"] },
+  retardement_du_poison: { mechanic: "status", operation: "delay_poison" },
+  sanctuaire: { mechanic: "protection", operation: "sanctuary" },
+  silence_sur_5_metres: { mechanic: "silence", operation: "silence_zone" },
+  sommeil: { mechanic: "status", operation: "sleep", status: ["sleeping", "unconscious"] },
+  sphere_glaciale_d_otiluke: { mechanic: "damage", operation: "freezing_sphere", damageType: "cold" },
+  toile_d_araignee: { mechanic: "terrain", operation: "web" },
+  transformation_d_objets: { mechanic: "utility", operation: "polymorph_any_object" }
+});
+
 const own = (object, key) => Object.prototype.hasOwnProperty.call(object ?? {}, key);
 const clone = value => JSON.parse(JSON.stringify(value));
 const text = value => String(value ?? "").trim();
@@ -169,7 +233,7 @@ const catalogModule = await import(pathToFileURL(path.join(SPELL_SCRIPTS, "add2e
 const catalogEntries = catalogModule.ADD2E_SPELL_CATALOG ?? {};
 const catalogBySlug = new Map(Object.values(catalogEntries).map(entry => [slug(entry.slug || entry.name), entry]));
 const onUse = loadOnUseConfigs();
-const audit = { preserved: [], catalog: [], onUseConfig: [], manualFallback: [], replacedGeneratedFallback: [] };
+const audit = { preserved: [], catalog: [], onUseConfig: [], overrides: [], unresolved: [], replacedGeneratedFallback: [] };
 
 function effectProfile(item, system) {
   const current = system.effectProfile;
@@ -179,11 +243,13 @@ function effectProfile(item, system) {
   const classSlug = slug(pick(system, ALIASES.classe, ""));
   const catalog = catalogBySlug.get(spellSlug);
   const config = onUse.byClassAndSlug.get(`${classSlug}:${spellSlug}`) ?? onUse.bySlug.get(spellSlug);
+  const override = PROFILE_OVERRIDES[spellSlug];
   if (currentIsFallback) audit.replacedGeneratedFallback.push(item.name);
   if (catalog) { audit.catalog.push(item.name); return catalogProfile(catalog); }
   if (config) { audit.onUseConfig.push({ name: item.name, file: config.file }); return configProfile(config); }
-  audit.manualFallback.push(item.name);
-  return { mechanic: "manual", operation: "manual_resolution", target: { min: 0, max: null } };
+  if (override) { audit.overrides.push(item.name); return clone(override); }
+  audit.unresolved.push(item.name);
+  throw new Error(`${item.name} : effectProfile absent de la source mécanique, du catalogue, des scripts onUse et des surcharges.`);
 }
 
 const folders = (input.folders ?? []).map(folder => Object.fromEntries(FOLDER_FIELDS.filter(key => own(folder, key)).map(key => [key, clone(folder[key])])));
@@ -226,17 +292,17 @@ const outputProfiles = output.items.filter(item => own(item.system, "effectProfi
 if (outputProfiles !== output.items.length) throw new Error(`effectProfile absent : ${outputProfiles}/${output.items.length}.`);
 const bytes = value => Buffer.byteLength(`${JSON.stringify(value, null, 2)}\n`, "utf8");
 const report = {
-  version: "2026-06-29-v4-compact-schema-v6",
+  version: "2026-06-29-v4-compact-schema-v7",
   generatedAt: new Date().toISOString(),
   source: path.relative(ROOT, sourceFile).replace(/\\/g, "/"),
   contract: { itemFields: ITEM_FIELDS, folderFields: FOLDER_FIELDS, systemFields: REQUIRED_FIELDS, effectProfile: "obligatoire sur chaque sort" },
   summary: { spells: items.length, folders: folders.length, inputBytes: fs.statSync(sourceFile).size, outputBytes: bytes(output), effectProfiles: outputProfiles },
   effectProfiles: audit,
   onUseConfigFiles: onUse.files,
-  conclusion: "Chaque sort possède un effectProfile. Les profils déclaratifs et onUse sont dérivés des sources mécaniques ; le profil manuel n'est utilisé qu'en dernier recours."
+  conclusion: "Chaque sort possède un effectProfile explicite issu du JSON, du catalogue, d'un script onUse ou d'une surcharge nommée. Aucun profil manuel générique n'est admis."
 };
 report.summary.bytesRemoved = report.summary.inputBytes - report.summary.outputBytes;
 writeJson(reportFile, report);
 if (argv.includes("--write")) writeJson(sourceFile, output);
 console.log(`[ADD2E][V4_COMPACT] ${items.length} sorts ; effectProfile ${outputProfiles}/${items.length}.`);
-console.log(`[ADD2E][V4_COMPACT] profils : ${audit.preserved.length} conservés, ${audit.catalog.length} catalogue, ${audit.onUseConfig.length} onUse, ${audit.manualFallback.length} manuel.`);
+console.log(`[ADD2E][V4_COMPACT] profils : ${audit.preserved.length} conservés, ${audit.catalog.length} catalogue, ${audit.onUseConfig.length} onUse, ${audit.overrides.length} surcharges, ${audit.unresolved.length} non résolus.`);
