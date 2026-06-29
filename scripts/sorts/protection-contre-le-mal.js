@@ -1,17 +1,16 @@
 /**
  * ADD2E — Protection contre le Mal / Protection contre le Bien
  * Clerc niveau 1
- * Version : 2026-06-06-protection-mal-time-engine-v1
+ * Version : 2026-06-29-protection-ward-runes-v2
  *
  * Contrat onUse : true = consommé ; false = non consommé.
+ * Compatible Foundry V13/V14/V15. DialogV2 uniquement.
  */
-
-console.log("%c[ADD2E][PROTECTION_MAL] 2026-06-06-protection-mal-time-engine-v1", "color:#b88924;font-weight:bold;");
 
 const __add2eOnUseResult = await (async () => {
   const DialogV2 = foundry.applications?.api?.DialogV2;
-  if (!DialogV2) {
-    ui.notifications.error("Protection contre le Mal : DialogV2 introuvable.");
+  if (!DialogV2?.wait) {
+    ui.notifications.error("Protection : DialogV2 indisponible.");
     return false;
   }
 
@@ -22,33 +21,27 @@ const __add2eOnUseResult = await (async () => {
     .replace(/\"/g, "&quot;")
     .replace(/'/g, "&#039;");
 
-  function chatStyleData() {
-    return CONST.CHAT_MESSAGE_STYLES
-      ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER }
-      : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 };
-  }
+  const chatStyleData = () => CONST.CHAT_MESSAGE_STYLES
+    ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER }
+    : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 };
 
-  function sourceItemFromContext() {
+  const sourceItemFromContext = () => {
     if (typeof sort !== "undefined" && sort) return sort;
     if (typeof item !== "undefined" && item) return item;
     if (typeof this !== "undefined" && this?.documentName === "Item") return this;
     if (typeof spell !== "undefined" && spell) return spell;
     if (typeof args !== "undefined" && args?.[0]?.item) return args[0].item;
     return null;
-  }
+  };
 
-  function casterFromContext(sourceItem) {
-    return (typeof actor !== "undefined" && actor) ? actor : sourceItem?.parent;
-  }
+  const casterFromContext = sourceItem => (typeof actor !== "undefined" && actor) ? actor : sourceItem?.parent;
 
-  function casterTokenFor(caster) {
-    return canvas.tokens?.controlled?.[0]
-      ?? ((typeof token !== "undefined" && token) ? token : null)
-      ?? caster?.getActiveTokens?.()[0]
-      ?? null;
-  }
+  const casterTokenFor = caster => canvas.tokens?.controlled?.[0]
+    ?? ((typeof token !== "undefined" && token) ? token : null)
+    ?? caster?.getActiveTokens?.()[0]
+    ?? null;
 
-  function getLevel(actorDoc) {
+  const getLevel = actorDoc => {
     const candidates = [
       actorDoc?.system?.niveau,
       actorDoc?.system?.level,
@@ -57,13 +50,13 @@ const __add2eOnUseResult = await (async () => {
       actorDoc?.system?.details_classe?.niveau
     ];
     for (const raw of candidates) {
-      const n = Number(raw);
-      if (Number.isFinite(n) && n > 0) return n;
+      const value = Number(raw);
+      if (Number.isFinite(value) && value > 0) return value;
     }
     return 1;
-  }
+  };
 
-  function tokensAuContact(a, b) {
+  const tokensAuContact = (a, b) => {
     if (!a || !b || a.id === b.id) return true;
     try {
       const gridSize = canvas.grid?.size || 100;
@@ -78,17 +71,17 @@ const __add2eOnUseResult = await (async () => {
       const gapX = Math.max(0, bLeft - aRight, aLeft - bRight);
       const gapY = Math.max(0, bTop - aBottom, aTop - bBottom);
       return gapX <= 0.01 && gapY <= 0.01;
-    } catch (_err) {
+    } catch (_error) {
       return false;
     }
-  }
+  };
 
-  function roundDuration(level) {
+  const roundDuration = level => {
     const time = game.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
     return time?.toRounds?.("level*3", "round", { level }) ?? (Math.max(1, Number(level) || 1) * 3);
-  }
+  };
 
-  function durationData(rounds) {
+  const durationData = rounds => {
     const time = game.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
     return time?.durationData?.(rounds) ?? {
       rounds,
@@ -97,51 +90,33 @@ const __add2eOnUseResult = await (async () => {
       startTime: game.time?.worldTime ?? null,
       combat: game.combat?.id ?? null
     };
-  }
+  };
 
-  function aeAddChange(key, value, priority = 20) {
+  const aeAddChange = (key, value, priority = 20) => {
     if (CONST.ACTIVE_EFFECT_CHANGE_TYPES) return { key, type: "add", phase: "final", value: String(value), priority };
     return { key, mode: CONST.ACTIVE_EFFECT_MODES.ADD, value: String(value), priority };
-  }
+  };
 
-  function modeData(mode) {
+  const modeData = mode => {
     const isGood = mode === "bien";
     return {
       key: isGood ? "bien" : "mal",
       label: isGood ? "Protection contre le Bien" : "Protection contre le Mal",
       spellKey: isGood ? "protection_contre_le_bien" : "protection_contre_le_mal",
+      jb2aKey: isGood ? "jb2a.ward.rune.red" : "jb2a.ward.rune.yellow",
+      fallbackPreset: isGood ? "protection_dark" : "protection",
       tags: isGood
         ? ["sort:protection_contre_le_bien", "protection:bien", "bonus_ca:2", "bonus_save_vs:bien:2", "barriere:creatures_invoquees", "malus_toucher_ennemi:2"]
         : ["sort:protection_contre_le_mal", "protection:mal", "bonus_ca:2", "bonus_save_vs:mal:2", "barriere:creatures_invoquees", "malus_toucher_ennemi:2"]
     };
-  }
+  };
 
-  function timeFlags({ sourceItem, caster, targetActor, modeInfo, rounds, level }) {
+  const timeFlags = ({ sourceItem, caster, targetActor, modeInfo, rounds, level }) => {
     const time = game.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
     const endMessage = modeInfo.key === "bien"
       ? "La protection contre le bien de {actor} prend fin."
       : "La protection contre le mal de {actor} prend fin.";
-
-    return time?.flags?.({
-      source: "protection-contre-le-mal.js",
-      rounds,
-      unit: "round",
-      endMessage,
-      extra: {
-        spellName: modeInfo.label,
-        spellKey: modeInfo.spellKey,
-        level,
-        sourceItemUuid: sourceItem?.uuid ?? null,
-        casterId: caster?.id ?? null,
-        casterUuid: caster?.uuid ?? null,
-        targetId: targetActor?.id ?? null,
-        targetUuid: targetActor?.uuid ?? null,
-        tags: modeInfo.tags
-      }
-    }) ?? {
-      timeEngine: { managed: true, unit: "round", totalRounds: rounds },
-      roundEngine: { managed: true, unit: "round", totalRounds: rounds, endMessage },
-      endMessage,
+    const extra = {
       spellName: modeInfo.label,
       spellKey: modeInfo.spellKey,
       level,
@@ -152,9 +127,21 @@ const __add2eOnUseResult = await (async () => {
       targetUuid: targetActor?.uuid ?? null,
       tags: modeInfo.tags
     };
-  }
+    return time?.flags?.({
+      source: "protection-contre-le-mal.js",
+      rounds,
+      unit: "round",
+      endMessage,
+      extra
+    }) ?? {
+      timeEngine: { managed: true, unit: "round", totalRounds: rounds },
+      roundEngine: { managed: true, unit: "round", totalRounds: rounds, endMessage },
+      endMessage,
+      ...extra
+    };
+  };
 
-  function effectData({ sourceItem, caster, targetActor, modeInfo, level }) {
+  const effectData = ({ sourceItem, caster, targetActor, modeInfo, level }) => {
     const rounds = roundDuration(level);
     return {
       name: modeInfo.label,
@@ -175,9 +162,9 @@ const __add2eOnUseResult = await (async () => {
         aeAddChange("system.bonus_sauvegarde", 2)
       ]
     };
-  }
+  };
 
-  function emitGmOperation(operation, payload) {
+  const emitGmOperation = (operation, payload) => {
     if (!game.socket) return false;
     game.socket.emit("system.add2e", {
       type: "ADD2E_GM_OPERATION",
@@ -185,19 +172,19 @@ const __add2eOnUseResult = await (async () => {
       payload: { ...(payload ?? {}), fromUserId: game.user.id, sentAt: Date.now() }
     });
     return true;
-  }
+  };
 
-  async function applyEffect(targetActor, data) {
+  const applyEffect = async (targetActor, data) => {
     if (!targetActor) return false;
     const removeTags = ["sort:protection_contre_le_mal", "sort:protection_contre_le_bien"];
 
     if (game.user.isGM || targetActor.isOwner) {
       const oldIds = Array.from(targetActor.effects ?? [])
-        .filter(e => {
-          const tags = e.flags?.add2e?.tags ?? [];
-          return Array.isArray(tags) && removeTags.some(t => tags.includes(t));
+        .filter(effect => {
+          const tags = effect.flags?.add2e?.tags ?? [];
+          return Array.isArray(tags) && removeTags.some(tag => tags.includes(tag));
         })
-        .map(e => e.id)
+        .map(effect => effect.id)
         .filter(Boolean);
       if (oldIds.length) await targetActor.deleteEmbeddedDocuments("ActiveEffect", oldIds);
       await targetActor.createEmbeddedDocuments("ActiveEffect", [data]);
@@ -209,16 +196,44 @@ const __add2eOnUseResult = await (async () => {
       actorId: targetActor.id,
       effectData: data
     });
-
     if (!emitted) {
-      ui.notifications.error("Protection contre le Mal : socket indisponible, impossible de demander l’effet au MJ.");
+      ui.notifications.error("Protection : socket indisponible, impossible de demander l’effet au MJ.");
       return false;
     }
-
     return true;
-  }
+  };
 
-  async function createChat({ caster, sourceItem, targetToken, modeInfo, rounds }) {
+  const applySequencerMethod = (effect, method, ...args) => {
+    try {
+      if (typeof effect?.[method] === "function") effect[method](...args);
+    } catch (_error) {}
+    return effect;
+  };
+
+  const playProtectionWard = async (targetToken, modeInfo) => {
+    if (!targetToken) return false;
+    if (typeof Sequence !== "undefined") {
+      try {
+        const sequence = new Sequence();
+        const ward = sequence.effect().file(modeInfo.jb2aKey).attachTo(targetToken);
+        applySequencerMethod(ward, "scaleToObject", 1.35);
+        applySequencerMethod(ward, "opacity", 0.95);
+        applySequencerMethod(ward, "aboveLighting");
+        await sequence.play();
+        return true;
+      } catch (_error) {
+        // Une installation JB2A incomplète conserve le visuel précédent comme repli.
+      }
+    }
+
+    try {
+      return await globalThis.ADD2E_CLERC_PLAY_LAUNCH_FX?.(targetToken, modeInfo.fallbackPreset, { maxFiles: 1 }) === true;
+    } catch (_error) {
+      return false;
+    }
+  };
+
+  const createChat = async ({ caster, sourceItem, targetToken, modeInfo, rounds }) => {
     await ChatMessage.create({
       speaker: ChatMessage.getSpeaker({ actor: caster }),
       content: `
@@ -249,35 +264,35 @@ const __add2eOnUseResult = await (async () => {
         </div>`,
       ...chatStyleData()
     });
-  }
+  };
 
   const sourceItem = sourceItemFromContext();
   if (!sourceItem) {
-    ui.notifications.error("Protection contre le Mal : sort introuvable.");
+    ui.notifications.error("Protection : sort introuvable.");
     return false;
   }
 
   const caster = casterFromContext(sourceItem);
   if (!caster) {
-    ui.notifications.error("Protection contre le Mal : lanceur introuvable.");
+    ui.notifications.error("Protection : lanceur introuvable.");
     return false;
   }
 
   const casterToken = casterTokenFor(caster);
   if (!casterToken) {
-    ui.notifications.warn("Protection contre le Mal : sélectionne le token du lanceur.");
+    ui.notifications.warn("Protection : sélectionne le token du lanceur.");
     return false;
   }
 
   const targets = Array.from(game.user.targets ?? []);
   if (targets.length !== 1 || !targets[0]?.actor) {
-    ui.notifications.warn("Protection contre le Mal : cible exactement une créature touchée.");
+    ui.notifications.warn("Protection : cible exactement une créature touchée.");
     return false;
   }
 
   const targetToken = targets[0];
   if (!tokensAuContact(casterToken, targetToken)) {
-    ui.notifications.warn("Protection contre le Mal : la cible doit être au toucher.");
+    ui.notifications.warn("Protection : la cible doit être au toucher.");
     return false;
   }
 
@@ -304,38 +319,28 @@ const __add2eOnUseResult = await (async () => {
         label: "Lancer",
         icon: "fa-solid fa-shield-halved",
         default: true,
-        callback: (event, button) => ({ mode: String(button.form.elements.mode?.value || "mal") })
+        callback: (_event, button) => ({ mode: String(button.form?.elements?.mode?.value || "mal") })
       },
       { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => null }
     ],
     rejectClose: false
   });
-
   if (!result) return false;
 
   const level = getLevel(caster);
   const modeInfo = modeData(result.mode === "bien" ? "bien" : "mal");
   const rounds = roundDuration(level);
   const data = effectData({ sourceItem, caster, targetActor: targetToken.actor, modeInfo, level });
-  const ok = await applyEffect(targetToken.actor, data);
-  if (!ok) return false;
+  const applied = await applyEffect(targetToken.actor, data);
+  if (!applied) return false;
 
-  try {
-    await globalThis.ADD2E_CLERC_PLAY_LAUNCH_FX?.(targetToken, "protection");
-    await globalThis.ADD2E_PLAY_SPELL_FX?.("protection", { casterToken, targetToken });
-  } catch (err) {
-    console.warn("[ADD2E][PROTECTION_MAL][VFX][IGNORED]", err);
-  }
-
+  void playProtectionWard(targetToken, modeInfo);
   await createChat({ caster, sourceItem, targetToken, modeInfo, rounds });
-
-  console.log("[ADD2E][protection-contre-le-mal.js][ONUSE_RESULT]", true);
   return true;
 })();
 
 if (__add2eOnUseResult !== true && __add2eOnUseResult !== false) {
-  console.error("[ADD2E][ONUSE][BAD_RETURN_STRICT] Le script onUse doit retourner true ou false.", { script: "protection-contre-le-mal.js", result: __add2eOnUseResult });
-  ui.notifications?.error?.("Protection contre le Mal : le script onUse n'a pas retourné true/false.");
+  ui.notifications?.error?.("Protection : le script onUse n'a pas retourné true/false.");
   return false;
 }
 
