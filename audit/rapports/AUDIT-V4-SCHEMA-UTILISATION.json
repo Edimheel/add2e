@@ -1,6 +1,6 @@
 {
-  "version": "2026-06-29-v4-compact-schema-v6",
-  "generatedAt": "2026-06-29T14:56:17.352Z",
+  "version": "2026-06-29-v4-compact-schema-v7",
+  "generatedAt": "2026-06-29T16:02:00.354Z",
   "source": "fvtt-spells-all-normalise-mecanique-v4.json",
   "contract": {
     "itemFields": [
@@ -45,1370 +45,369 @@
   "summary": {
     "spells": 414,
     "folders": 35,
-    "inputBytes": 1635806,
-    "outputBytes": 1658704,
+    "inputBytes": 1658704,
+    "outputBytes": 1654522,
     "effectProfiles": 414,
-    "bytesRemoved": -22898
+    "bytesRemoved": 4182
   },
   "effectProfiles": {
     "preserved": [
       "Abaissement des eaux",
-      "Abaissement des Eaux"
-    ],
-    "catalog": [
+      "Abaissement des Eaux",
+      "Allométamorphose",
+      "Altération de la réalité",
+      "Altération des feux normaux",
+      "Amitié",
+      "Amitié animale",
+      "Animation de la roche",
+      "Animation des objets",
+      "Antipathie/sympathie",
+      "Aquagenèse",
+      "Aquagenèse",
+      "Arbre",
+      "Arme enchantée",
+      "Arrêt du temps",
       "Augure",
+      "Aura féérique",
+      "Aura magique de Nystul",
+      "Autométamorphose",
+      "Barrière de Lames",
+      "Bâtons à serpents",
+      "Bâtons à serpents",
+      "Bouche magique",
+      "Bouche magique",
+      "Bouclier",
+      "Bouclier anti-animal",
+      "Bouclier anti-plantes",
+      "Bouclier de feu",
+      "Boule de feu à retardement",
+      "Bruitage",
+      "Bruitage",
+      "Bulle anti-magique",
+      "Cacodémon",
       "Cantique",
       "Catalepsie",
       "Catalepsie",
       "Catalepsie",
+      "Cécité",
+      "Changement de Plan",
+      "Chaos",
+      "Chariot de Sustarre",
+      "Charme-masse",
+      "Charme-monstres",
+      "Charme-personnes ou mammifères",
+      "Charme-plantes",
       "Charme-Serpents",
+      "Chasseur invisible",
+      "Chaumière de Léomund",
+      "Chute de plume",
+      "Clairaudience",
+      "Clairvoyance",
+      "Clone",
+      "Coffre secret de Léomund",
+      "Communion",
+      "Communion avec la nature",
+      "Compréhension des langues",
+      "Cône de froid",
+      "Confusion",
+      "Confusion",
+      "Confusion",
+      "Contre-poison",
+      "Contre-poison",
+      "Contrôle de la température sur 3 m",
+      "Contrôle des vents",
+      "Contrôle du climat",
+      "Contrôle du climat",
+      "Contrôle du Climat",
+      "Corde enchantée",
+      "Corde enchantée",
+      "Création majeure",
+      "Création mineure",
+      "Cristairain",
+      "Croc-en-jambe",
+      "Croissance animale",
+      "Croissance animale",
+      "Débilité mentale",
+      "Débilité mentale",
+      "Désenvoûtement",
+      "Désenvoûtement",
+      "Désinformation",
+      "Désintégration",
+      "Détection de la magie",
+      "Détection de la magie",
+      "Détection de la magie",
+      "Détection de la magie",
       "Détection des Charmes",
+      "Détection des illusions",
+      "Détection des Mensonges",
       "Détection des Pièges",
+      "Détection des pièges sylvestres",
+      "Détection du mal",
+      "Détection du mal",
+      "Disparition",
+      "Disque flottant de Tenser",
+      "Dissipation de la magie",
+      "Dissipation de la magie",
+      "Dissipation de la Magie",
+      "Dissipation des illusions",
+      "Dissipation du Mal",
+      "Distorsion des distances",
+      "Distorsion du bois",
+      "Divination",
+      "Duo-dimension",
+      "E.S.P.",
+      "Eau aérée",
+      "Écriture",
+      "Écriture illusoire",
+      "Effacement",
+      "Effroi",
+      "Effroi",
+      "Embroussaillement",
+      "Embroussaillement",
+      "Émotion",
+      "Emprisonnement",
+      "Enchantement",
+      "Épée de Mordenkainen",
+      "Excavation",
+      "Exorcisme",
+      "Expiation",
+      "Extension I",
+      "Extension II",
+      "Extension III",
+      "Fermeture",
+      "Feu charmeur",
+      "Flèche de feu",
+      "Force",
+      "Force fantasmagorique",
+      "Force fantasmagorique",
+      "Force fantasmagorique améliorée",
+      "Force spectrale",
+      "Forêt hallucinatoire",
+      "Fracassement",
+      "Glissement de terrain",
+      "Glyphe de Garde",
+      "Guérison",
       "Guérison des maladies",
       "Guérison des Maladies",
+      "Hétéromorphisme",
+      "Holographie",
+      "Holographie",
+      "Hypnotisme",
+      "Identification",
+      "Illusion permanente",
+      "Illusion programmée",
+      "Image miroir",
+      "Image miroir",
+      "Immunité magique de Serten",
+      "Incantation mortelle",
+      "Infravision",
+      "Intermittence",
+      "Inversion de la gravité",
+      "Invisibilité",
+      "Invisibilité",
+      "Invisibilité améliorée",
+      "Invisibilité de masse",
+      "Invisibilité sur 3 m",
+      "Invisibilité sur 3 m",
+      "Invocation de monstre II",
+      "Invocation de Monstre III",
+      "Invocation de monstre IV",
+      "Invocation de monstre V",
+      "Invocation de monstre VI",
+      "Invocation de Monstre VII",
+      "Invocation de monstres I",
+      "Invocation des animaux",
+      "Invocation des animaux",
+      "Invocation des ombres",
+      "Invocation instantanée de Drawmij",
+      "Jet de couleurs",
+      "Jet prismatique",
+      "Labyrinthe",
+      "Labyrinthe",
+      "Langage animal",
+      "Langage animal",
+      "Langage des Monstres",
+      "Langage des plantes",
+      "Langage des Plantes",
+      "Langues",
+      "Lecture de la magie",
+      "Lévitation",
+      "Lithomancie",
+      "Lithomorphose",
+      "Lithomorphose",
       "Localisation d'objets",
       "Localisation d’objets",
+      "Localisation des animaux",
+      "Localisation des plantes",
+      "Lumière",
+      "Lumière éternelle",
+      "Lumière éternelle",
+      "Lumière éternelle",
+      "Lumières dansantes",
+      "Lumières dansantes",
+      "Magie demi-ombre",
+      "Magie des ombres",
+      "Main broyante de Bigby",
+      "Main de force de Bigby",
+      "Maladresse",
+      "Marche des vents",
       "Marteau Spirituel",
+      "Message",
+      "Métal brûlant",
+      "Métempsycose",
+      "Monstres demi-ombre",
+      "Monstres des ombres",
+      "Mort rampante",
+      "Mot de pouvoir : « Cécité »",
+      "Mot de pouvoir : « étourdissement »",
+      "Mot de pouvoir : « mort »",
+      "Motif hypnotique",
+      "Moyen mnémonique de Rary",
+      "Mur de brouillard",
+      "Mur de fer",
+      "Mur de feu",
+      "Mur de feu",
+      "Mur de force",
+      "Mur de glace",
+      "Mur de roc",
+      "Mur prismatique",
+      "Mythomancie",
+      "Nappe de brouillard",
+      "Nécro animation",
+      "Nécro-animation",
+      "Non-détection",
+      "Nuage incendiaire",
+      "Nuage létal",
+      "Nuée de météores",
+      "Obscurcissement",
+      "Ombres",
+      "Or des fous",
+      "Orientation",
+      "Oubli",
+      "Ouverture",
       "Paralysie",
       "Paralysie",
+      "Paralysie animale",
+      "Paralysie des monstres",
+      "Paralysie musculaire",
+      "Paralysie végétale",
+      "Parole sacrée/maudite",
+      "Passage sans trace",
+      "Passe-muraille",
+      "Passe-plantes",
+      "Permanence",
+      "Phytomorphose",
+      "Phytomorphose",
+      "Piège à feu",
+      "Piège à feu",
+      "Piège de Léomund",
+      "Piège sylvestre",
+      "Pilier de Feu",
+      "Poigne de Bigby",
+      "Poing de Bigby",
+      "Porte de phase",
+      "Porte des ombres",
+      "Porte dimensionnelle",
+      "Porte végétale",
+      "Poussée",
+      "Prévision du temps",
       "Prière",
-      "Résistance au feu"
+      "Protection contre la foudre",
+      "Protection contre le feu",
+      "Protection contre le mal",
+      "Protection contre le Mal",
+      "Protection contre le mal sur 3 m",
+      "Protection contre le mal sur 3 m",
+      "Protection contre les projectiles normaux",
+      "Punition spirituelle",
+      "Pyrotechnie",
+      "Pyrotechnie",
+      "Quête magique",
+      "Quête Religieuse",
+      "Rafale de vent",
+      "Ralentissement",
+      "Rapidité",
+      "Rappel",
+      "Rappel à la Vie",
+      "Réflexion des regards",
+      "Régénération",
+      "Réincarnation",
+      "Réincarnation",
+      "Réparation",
+      "Répulsion",
+      "Répulsion des insectes",
+      "Répulsion du bois",
+      "Résistance au feu",
+      "Résistance au Froid",
+      "Respiration aquatique",
+      "Respiration aquatique",
+      "Restauration",
+      "Résurrection",
+      "Runes explosives",
+      "Saut",
+      "Séparation des eaux",
+      "Séparation des Eaux",
+      "Serviteur Aérien",
+      "Serviteur invisible",
+      "Seuil",
+      "Seuil",
+      "Shillelagh",
+      "Simulacre",
+      "Soin ultime",
+      "Soin ultime",
+      "Soins majeurs",
+      "Soins Majeurs",
+      "Soins mineurs",
+      "Soins mineurs",
+      "Sort astral",
+      "Sort astral",
+      "Sort Astral",
+      "Sorts de niveau 1 de magicien",
+      "Souhait majeur",
+      "Souhait mineur",
+      "Sphère prismatique",
+      "Stase temporelle",
+      "Statue",
+      "Suggestion",
+      "Suggestion",
+      "Suggestion de masse",
+      "Surdité",
+      "Symbole",
+      "Symbole",
+      "Télékinésie",
+      "Téléportation",
+      "Tempête de feu",
+      "Tempête de glace",
+      "Ténèbres",
+      "Ténèbres éternelles",
+      "Ténèbres sur 5 mètres",
+      "Terrain hallucinatoire",
+      "Terrain hallucinatoire",
+      "Transformation de Tenser",
+      "Transit végétal",
+      "Transmutation de pierre en boue",
+      "Transmutation de pierre en boue",
+      "Transmutation de pierre en chair",
+      "Transmutation du métal en bois",
+      "Transvision",
+      "Tremblement de Terre",
+      "Trouble",
+      "Tueur fantasmagorique",
+      "Ventriloquie",
+      "Ventriloquie",
+      "Verrou magique",
+      "Vigiles et sentinelles",
+      "Vision",
+      "Vision réelle",
+      "Vision réelle",
+      "Voile illusoire",
+      "Vol",
+      "Lumière",
+      "Lumière"
     ],
-    "onUseConfig": [
-      {
-        "name": "Allométamorphose",
-        "file": "scripts/sorts/magicien-allometamorphose.js"
-      },
-      {
-        "name": "Altération de la réalité",
-        "file": "scripts/sorts/illusionniste-alteration-de-la-realite.js"
-      },
-      {
-        "name": "Altération des feux normaux",
-        "file": "scripts/sorts/magicien-alteration-des-feux-normaux.js"
-      },
-      {
-        "name": "Amitié",
-        "file": "scripts/sorts/magicien-amitie.js"
-      },
-      {
-        "name": "Amitié animale",
-        "file": "scripts/sorts/druide-amitie-animale.js"
-      },
-      {
-        "name": "Animation de la roche",
-        "file": "scripts/sorts/druide-animation-de-la-roche.js"
-      },
-      {
-        "name": "Animation des objets",
-        "file": "scripts/sorts/animation-des-objets.js"
-      },
-      {
-        "name": "Antipathie/sympathie",
-        "file": "scripts/sorts/magicien-antipathie-sympathie.js"
-      },
-      {
-        "name": "Aquagenèse",
-        "file": "scripts/sorts/druide-aquagenese.js"
-      },
-      {
-        "name": "Aquagenèse",
-        "file": "scripts/sorts/druide-aquagenese.js"
-      },
-      {
-        "name": "Arbre",
-        "file": "scripts/sorts/druide-arbre.js"
-      },
-      {
-        "name": "Arme enchantée",
-        "file": "scripts/sorts/magicien-arme-enchantee.js"
-      },
-      {
-        "name": "Arrêt du temps",
-        "file": "scripts/sorts/magicien-arret-du-temps.js"
-      },
-      {
-        "name": "Aura féérique",
-        "file": "scripts/sorts/druide-aura-feerique.js"
-      },
-      {
-        "name": "Aura magique de Nystul",
-        "file": "scripts/sorts/magicien-aura-magique-de-nystul.js"
-      },
-      {
-        "name": "Autométamorphose",
-        "file": "scripts/sorts/magicien-autometamorphose.js"
-      },
-      {
-        "name": "Barrière de Lames",
-        "file": "scripts/sorts/barriere-de-lames.js"
-      },
-      {
-        "name": "Bâtons à serpents",
-        "file": "scripts/sorts/druide-batons-a-serpents.js"
-      },
-      {
-        "name": "Bâtons à serpents",
-        "file": "scripts/sorts/druide-batons-a-serpents.js"
-      },
-      {
-        "name": "Bouche magique",
-        "file": "scripts/sorts/magicien-bouche-magique.js"
-      },
-      {
-        "name": "Bouche magique",
-        "file": "scripts/sorts/magicien-bouche-magique.js"
-      },
-      {
-        "name": "Bouclier",
-        "file": "scripts/sorts/bouclier.js"
-      },
-      {
-        "name": "Bouclier anti-animal",
-        "file": "scripts/sorts/druide-bouclier-anti-animal.js"
-      },
-      {
-        "name": "Bouclier anti-plantes",
-        "file": "scripts/sorts/druide-bouclier-anti-plantes.js"
-      },
-      {
-        "name": "Bouclier de feu",
-        "file": "scripts/sorts/magicien-bouclier-de-feu.js"
-      },
-      {
-        "name": "Boule de feu à retardement",
-        "file": "scripts/sorts/magicien-boule-de-feu-a-retardement.js"
-      },
-      {
-        "name": "Bruitage",
-        "file": "scripts/sorts/magicien-bruitage.js"
-      },
-      {
-        "name": "Bruitage",
-        "file": "scripts/sorts/magicien-bruitage.js"
-      },
-      {
-        "name": "Bulle anti-magique",
-        "file": "scripts/sorts/magicien-bulle-anti-magique.js"
-      },
-      {
-        "name": "Cacodémon",
-        "file": "scripts/sorts/magicien-cacodemon.js"
-      },
-      {
-        "name": "Cécité",
-        "file": "scripts/sorts/illusionniste-cecite.js"
-      },
-      {
-        "name": "Changement de Plan",
-        "file": "scripts/sorts/changement-de-plan.js"
-      },
-      {
-        "name": "Chaos",
-        "file": "scripts/sorts/illusionniste-chaos.js"
-      },
-      {
-        "name": "Chariot de Sustarre",
-        "file": "scripts/sorts/druide-chariot-de-sustarre.js"
-      },
-      {
-        "name": "Charme-masse",
-        "file": "scripts/sorts/magicien-charme-masse.js"
-      },
-      {
-        "name": "Charme-monstres",
-        "file": "scripts/sorts/magicien-charme-monstres.js"
-      },
-      {
-        "name": "Charme-personnes ou mammifères",
-        "file": "scripts/sorts/druide-charme-personnes-ou-mammiferes.js"
-      },
-      {
-        "name": "Charme-plantes",
-        "file": "scripts/sorts/magicien-charme-plantes.js"
-      },
-      {
-        "name": "Chasseur invisible",
-        "file": "scripts/sorts/magicien-chasseur-invisible.js"
-      },
-      {
-        "name": "Chaumière de Léomund",
-        "file": "scripts/sorts/magicien-chaumiere-de-leomund.js"
-      },
-      {
-        "name": "Chute de plume",
-        "file": "scripts/sorts/magicien-chute-de-plume.js"
-      },
-      {
-        "name": "Clairaudience",
-        "file": "scripts/sorts/magicien-clairaudience.js"
-      },
-      {
-        "name": "Clairvoyance",
-        "file": "scripts/sorts/magicien-clairvoyance.js"
-      },
-      {
-        "name": "Clone",
-        "file": "scripts/sorts/magicien-clone.js"
-      },
-      {
-        "name": "Coffre secret de Léomund",
-        "file": "scripts/sorts/magicien-coffre-secret-de-leomund.js"
-      },
-      {
-        "name": "Communion",
-        "file": "scripts/sorts/communion.js"
-      },
-      {
-        "name": "Communion avec la nature",
-        "file": "scripts/sorts/druide-communion-avec-la-nature.js"
-      },
-      {
-        "name": "Compréhension des langues",
-        "file": "scripts/sorts/magicien-comprehension-des-langues.js"
-      },
-      {
-        "name": "Cône de froid",
-        "file": "scripts/sorts/magicien-cone-de-froid.js"
-      },
-      {
-        "name": "Confusion",
-        "file": "scripts/sorts/magicien-confusion.js"
-      },
-      {
-        "name": "Confusion",
-        "file": "scripts/sorts/magicien-confusion.js"
-      },
-      {
-        "name": "Confusion",
-        "file": "scripts/sorts/magicien-confusion.js"
-      },
-      {
-        "name": "Contre-poison",
-        "file": "scripts/sorts/druide-contre-poison.js"
-      },
-      {
-        "name": "Contre-poison",
-        "file": "scripts/sorts/druide-contre-poison.js"
-      },
-      {
-        "name": "Contrôle de la température sur 3 m",
-        "file": "scripts/sorts/druide-controle-de-la-temperature-sur-3-m.js"
-      },
-      {
-        "name": "Contrôle des vents",
-        "file": "scripts/sorts/druide-controle-des-vents.js"
-      },
-      {
-        "name": "Contrôle du climat",
-        "file": "scripts/sorts/magicien-controle-du-climat.js"
-      },
-      {
-        "name": "Contrôle du climat",
-        "file": "scripts/sorts/magicien-controle-du-climat.js"
-      },
-      {
-        "name": "Contrôle du Climat",
-        "file": "scripts/sorts/magicien-controle-du-climat.js"
-      },
-      {
-        "name": "Corde enchantée",
-        "file": "scripts/sorts/magicien-corde-enchantee.js"
-      },
-      {
-        "name": "Corde enchantée",
-        "file": "scripts/sorts/magicien-corde-enchantee.js"
-      },
-      {
-        "name": "Création majeure",
-        "file": "scripts/sorts/illusionniste-creation-majeure.js"
-      },
-      {
-        "name": "Création mineure",
-        "file": "scripts/sorts/illusionniste-creation-mineure.js"
-      },
-      {
-        "name": "Cristairain",
-        "file": "scripts/sorts/magicien-cristairain.js"
-      },
-      {
-        "name": "Croc-en-jambe",
-        "file": "scripts/sorts/druide-croc-en-jambe.js"
-      },
-      {
-        "name": "Croissance animale",
-        "file": "scripts/sorts/magicien-croissance-animale.js"
-      },
-      {
-        "name": "Croissance animale",
-        "file": "scripts/sorts/magicien-croissance-animale.js"
-      },
-      {
-        "name": "Débilité mentale",
-        "file": "scripts/sorts/magicien-debilite-mentale.js"
-      },
-      {
-        "name": "Débilité mentale",
-        "file": "scripts/sorts/magicien-debilite-mentale.js"
-      },
-      {
-        "name": "Désenvoûtement",
-        "file": "scripts/sorts/magicien-desenvoutement.js"
-      },
-      {
-        "name": "Désenvoûtement",
-        "file": "scripts/sorts/magicien-desenvoutement.js"
-      },
-      {
-        "name": "Désinformation",
-        "file": "scripts/sorts/illusionniste-desinformation.js"
-      },
-      {
-        "name": "Désintégration",
-        "file": "scripts/sorts/magicien-desintegration.js"
-      },
-      {
-        "name": "Détection de la magie",
-        "file": "scripts/sorts/magicien-detection-de-la-magie.js"
-      },
-      {
-        "name": "Détection de la magie",
-        "file": "scripts/sorts/magicien-detection-de-la-magie.js"
-      },
-      {
-        "name": "Détection de la magie",
-        "file": "scripts/sorts/magicien-detection-de-la-magie.js"
-      },
-      {
-        "name": "Détection de la magie",
-        "file": "scripts/sorts/magicien-detection-de-la-magie.js"
-      },
-      {
-        "name": "Détection des illusions",
-        "file": "scripts/sorts/illusionniste-detection-des-illusions.js"
-      },
-      {
-        "name": "Détection des Mensonges",
-        "file": "scripts/sorts/detection-des-mensonges.js"
-      },
-      {
-        "name": "Détection des pièges sylvestres",
-        "file": "scripts/sorts/druide-detection-des-pieges-sylvestres.js"
-      },
-      {
-        "name": "Détection du mal",
-        "file": "scripts/sorts/magicien-detection-du-mal.js"
-      },
-      {
-        "name": "Détection du mal",
-        "file": "scripts/sorts/magicien-detection-du-mal.js"
-      },
-      {
-        "name": "Disparition",
-        "file": "scripts/sorts/magicien-disparition.js"
-      },
-      {
-        "name": "Disque flottant de Tenser",
-        "file": "scripts/sorts/magicien-disque-flottant-de-tenser.js"
-      },
-      {
-        "name": "Dissipation de la magie",
-        "file": "scripts/sorts/magicien-dissipation-de-la-magie.js"
-      },
-      {
-        "name": "Dissipation de la magie",
-        "file": "scripts/sorts/magicien-dissipation-de-la-magie.js"
-      },
-      {
-        "name": "Dissipation de la Magie",
-        "file": "scripts/sorts/magicien-dissipation-de-la-magie.js"
-      },
-      {
-        "name": "Dissipation des illusions",
-        "file": "scripts/sorts/illusionniste-dissipation-des-illusions.js"
-      },
-      {
-        "name": "Dissipation du Mal",
-        "file": "scripts/sorts/dissipation-du-mal.js"
-      },
-      {
-        "name": "Distorsion des distances",
-        "file": "scripts/sorts/magicien-distorsion-des-distances.js"
-      },
-      {
-        "name": "Distorsion du bois",
-        "file": "scripts/sorts/distorsion-du-bois.js"
-      },
-      {
-        "name": "Divination",
-        "file": "scripts/sorts/divination.js"
-      },
-      {
-        "name": "Duo-dimension",
-        "file": "scripts/sorts/magicien-duo-dimension.js"
-      },
-      {
-        "name": "E.S.P.",
-        "file": "scripts/sorts/magicien-e-s-p.js"
-      },
-      {
-        "name": "Eau aérée",
-        "file": "scripts/sorts/magicien-eau-aeree.js"
-      },
-      {
-        "name": "Écriture",
-        "file": "scripts/sorts/magicien-ecriture.js"
-      },
-      {
-        "name": "Écriture illusoire",
-        "file": "scripts/sorts/illusionniste-ecriture-illusoire.js"
-      },
-      {
-        "name": "Effacement",
-        "file": "scripts/sorts/magicien-effacement.js"
-      },
-      {
-        "name": "Effroi",
-        "file": "scripts/sorts/magicien-effroi.js"
-      },
-      {
-        "name": "Effroi",
-        "file": "scripts/sorts/magicien-effroi.js"
-      },
-      {
-        "name": "Embroussaillement",
-        "file": "scripts/sorts/magicien-embroussaillement.js"
-      },
-      {
-        "name": "Embroussaillement",
-        "file": "scripts/sorts/magicien-embroussaillement.js"
-      },
-      {
-        "name": "Émotion",
-        "file": "scripts/sorts/illusionniste-emotion.js"
-      },
-      {
-        "name": "Emprisonnement",
-        "file": "scripts/sorts/magicien-emprisonnement.js"
-      },
-      {
-        "name": "Enchantement",
-        "file": "scripts/sorts/magicien-enchantement.js"
-      },
-      {
-        "name": "Épée de Mordenkainen",
-        "file": "scripts/sorts/magicien-epee-de-mordenkainen.js"
-      },
-      {
-        "name": "Excavation",
-        "file": "scripts/sorts/magicien-excavation.js"
-      },
-      {
-        "name": "Exorcisme",
-        "file": "scripts/sorts/exorcisme.js"
-      },
-      {
-        "name": "Expiation",
-        "file": "scripts/sorts/expiation.js"
-      },
-      {
-        "name": "Extension I",
-        "file": "scripts/sorts/magicien-extension-i.js"
-      },
-      {
-        "name": "Extension II",
-        "file": "scripts/sorts/magicien-extension-ii.js"
-      },
-      {
-        "name": "Extension III",
-        "file": "scripts/sorts/magicien-extension-iii.js"
-      },
-      {
-        "name": "Fermeture",
-        "file": "scripts/sorts/magicien-fermeture.js"
-      },
-      {
-        "name": "Feu charmeur",
-        "file": "scripts/sorts/magicien-feu-charmeur.js"
-      },
-      {
-        "name": "Flèche de feu",
-        "file": "scripts/sorts/magicien-fleche-de-feu.js"
-      },
-      {
-        "name": "Force",
-        "file": "scripts/sorts/magicien-force.js"
-      },
-      {
-        "name": "Force fantasmagorique",
-        "file": "scripts/sorts/magicien-force-fantasmagorique.js"
-      },
-      {
-        "name": "Force fantasmagorique",
-        "file": "scripts/sorts/magicien-force-fantasmagorique.js"
-      },
-      {
-        "name": "Force fantasmagorique améliorée",
-        "file": "scripts/sorts/illusionniste-force-fantasmagorique-amelioree.js"
-      },
-      {
-        "name": "Force spectrale",
-        "file": "scripts/sorts/illusionniste-force-spectrale.js"
-      },
-      {
-        "name": "Forêt hallucinatoire",
-        "file": "scripts/sorts/foret-hallucinatoire.js"
-      },
-      {
-        "name": "Fracassement",
-        "file": "scripts/sorts/magicien-fracassement.js"
-      },
-      {
-        "name": "Glissement de terrain",
-        "file": "scripts/sorts/magicien-glissement-de-terrain.js"
-      },
-      {
-        "name": "Glyphe de Garde",
-        "file": "scripts/sorts/glyphe-de-garde.js"
-      },
-      {
-        "name": "Guérison",
-        "file": "scripts/sorts/guerison.js"
-      },
-      {
-        "name": "Hétéromorphisme",
-        "file": "scripts/sorts/magicien-heteromorphisme.js"
-      },
-      {
-        "name": "Holographie",
-        "file": "scripts/sorts/magicien-holographie.js"
-      },
-      {
-        "name": "Holographie",
-        "file": "scripts/sorts/magicien-holographie.js"
-      },
-      {
-        "name": "Hypnotisme",
-        "file": "scripts/sorts/illusionniste-hypnotisme.js"
-      },
-      {
-        "name": "Identification",
-        "file": "scripts/sorts/magicien-identification.js"
-      },
-      {
-        "name": "Illusion permanente",
-        "file": "scripts/sorts/illusionniste-illusion-permanente.js"
-      },
-      {
-        "name": "Illusion programmée",
-        "file": "scripts/sorts/illusionniste-illusion-programmee.js"
-      },
-      {
-        "name": "Image miroir",
-        "file": "scripts/sorts/magicien-image-miroir.js"
-      },
-      {
-        "name": "Image miroir",
-        "file": "scripts/sorts/magicien-image-miroir.js"
-      },
-      {
-        "name": "Immunité magique de Serten",
-        "file": "scripts/sorts/magicien-immunite-magique-de-serten.js"
-      },
-      {
-        "name": "Incantation mortelle",
-        "file": "scripts/sorts/magicien-incantation-mortelle.js"
-      },
-      {
-        "name": "Infravision",
-        "file": "scripts/sorts/magicien-infravision.js"
-      },
-      {
-        "name": "Intermittence",
-        "file": "scripts/sorts/magicien-intermittence.js"
-      },
-      {
-        "name": "Inversion de la gravité",
-        "file": "scripts/sorts/magicien-inversion-de-la-gravite.js"
-      },
-      {
-        "name": "Invisibilité",
-        "file": "scripts/sorts/magicien-invisibilite.js"
-      },
-      {
-        "name": "Invisibilité",
-        "file": "scripts/sorts/magicien-invisibilite.js"
-      },
-      {
-        "name": "Invisibilité améliorée",
-        "file": "scripts/sorts/illusionniste-invisibilite-amelioree.js"
-      },
-      {
-        "name": "Invisibilité de masse",
-        "file": "scripts/sorts/magicien-invisibilite-de-masse.js"
-      },
-      {
-        "name": "Invisibilité sur 3 m",
-        "file": "scripts/sorts/magicien-invisibilite-sur-3-m.js"
-      },
-      {
-        "name": "Invisibilité sur 3 m",
-        "file": "scripts/sorts/magicien-invisibilite-sur-3-m.js"
-      },
-      {
-        "name": "Invocation de monstre II",
-        "file": "scripts/sorts/magicien-invocation-de-monstre-ii.js"
-      },
-      {
-        "name": "Invocation de Monstre III",
-        "file": "scripts/sorts/magicien-invocation-de-monstre-iii.js"
-      },
-      {
-        "name": "Invocation de monstre IV",
-        "file": "scripts/sorts/magicien-invocation-de-monstre-iv.js"
-      },
-      {
-        "name": "Invocation de monstre V",
-        "file": "scripts/sorts/magicien-invocation-de-monstre-v.js"
-      },
-      {
-        "name": "Invocation de monstre VI",
-        "file": "scripts/sorts/magicien-invocation-de-monstre-vi.js"
-      },
-      {
-        "name": "Invocation de Monstre VII",
-        "file": "scripts/sorts/magicien-invocation-de-monstre-vii.js"
-      },
-      {
-        "name": "Invocation de monstres I",
-        "file": "scripts/sorts/magicien-invocation-de-monstres-i.js"
-      },
-      {
-        "name": "Invocation des animaux",
-        "file": "scripts/sorts/invocation-des-animaux.js"
-      },
-      {
-        "name": "Invocation des animaux",
-        "file": "scripts/sorts/invocation-des-animaux.js"
-      },
-      {
-        "name": "Invocation des ombres",
-        "file": "scripts/sorts/illusionniste-invocation-des-ombres.js"
-      },
-      {
-        "name": "Invocation instantanée de Drawmij",
-        "file": "scripts/sorts/magicien-invocation-instantanee-de-drawmij.js"
-      },
-      {
-        "name": "Jet de couleurs",
-        "file": "scripts/sorts/illusionniste-jet-de-couleurs.js"
-      },
-      {
-        "name": "Jet prismatique",
-        "file": "scripts/sorts/illusionniste-jet-prismatique.js"
-      },
-      {
-        "name": "Labyrinthe",
-        "file": "scripts/sorts/magicien-labyrinthe.js"
-      },
-      {
-        "name": "Labyrinthe",
-        "file": "scripts/sorts/magicien-labyrinthe.js"
-      },
-      {
-        "name": "Langage animal",
-        "file": "scripts/sorts/druide-langage-animal.js"
-      },
-      {
-        "name": "Langage animal",
-        "file": "scripts/sorts/druide-langage-animal.js"
-      },
-      {
-        "name": "Langage des Monstres",
-        "file": "scripts/sorts/langage-des-monstres.js"
-      },
-      {
-        "name": "Langage des plantes",
-        "file": "scripts/sorts/langage-des-plantes.js"
-      },
-      {
-        "name": "Langage des Plantes",
-        "file": "scripts/sorts/langage-des-plantes.js"
-      },
-      {
-        "name": "Langues",
-        "file": "scripts/sorts/magicien-langues.js"
-      },
-      {
-        "name": "Lecture de la magie",
-        "file": "scripts/sorts/magicien-lecture-de-la-magie.js"
-      },
-      {
-        "name": "Lévitation",
-        "file": "scripts/sorts/magicien-levitation.js"
-      },
-      {
-        "name": "Lithomancie",
-        "file": "scripts/sorts/lithomancie.js"
-      },
-      {
-        "name": "Lithomorphose",
-        "file": "scripts/sorts/magicien-lithomorphose.js"
-      },
-      {
-        "name": "Lithomorphose",
-        "file": "scripts/sorts/magicien-lithomorphose.js"
-      },
-      {
-        "name": "Localisation des animaux",
-        "file": "scripts/sorts/druide-localisation-des-animaux.js"
-      },
-      {
-        "name": "Localisation des plantes",
-        "file": "scripts/sorts/druide-localisation-des-plantes.js"
-      },
-      {
-        "name": "Lumière",
-        "file": "scripts/sorts/magicien-lumiere.js"
-      },
-      {
-        "name": "Lumière éternelle",
-        "file": "scripts/sorts/magicien-lumiere-eternelle.js"
-      },
-      {
-        "name": "Lumière éternelle",
-        "file": "scripts/sorts/magicien-lumiere-eternelle.js"
-      },
-      {
-        "name": "Lumière éternelle",
-        "file": "scripts/sorts/magicien-lumiere-eternelle.js"
-      },
-      {
-        "name": "Lumières dansantes",
-        "file": "scripts/sorts/magicien-lumieres-dansantes.js"
-      },
-      {
-        "name": "Lumières dansantes",
-        "file": "scripts/sorts/magicien-lumieres-dansantes.js"
-      },
-      {
-        "name": "Magie demi-ombre",
-        "file": "scripts/sorts/illusionniste-magie-demi-ombre.js"
-      },
-      {
-        "name": "Magie des ombres",
-        "file": "scripts/sorts/illusionniste-magie-des-ombres.js"
-      },
-      {
-        "name": "Main broyante de Bigby",
-        "file": "scripts/sorts/magicien-main-broyante-de-bigby.js"
-      },
-      {
-        "name": "Main de force de Bigby",
-        "file": "scripts/sorts/magicien-main-de-force-de-bigby.js"
-      },
-      {
-        "name": "Maladresse",
-        "file": "scripts/sorts/magicien-maladresse.js"
-      },
-      {
-        "name": "Marche des vents",
-        "file": "scripts/sorts/marche-des-vents.js"
-      },
-      {
-        "name": "Message",
-        "file": "scripts/sorts/magicien-message.js"
-      },
-      {
-        "name": "Métal brûlant",
-        "file": "scripts/sorts/metal-brulant.js"
-      },
-      {
-        "name": "Métempsycose",
-        "file": "scripts/sorts/magicien-metempsycose.js"
-      },
-      {
-        "name": "Monstres demi-ombre",
-        "file": "scripts/sorts/illusionniste-monstres-demi-ombre.js"
-      },
-      {
-        "name": "Monstres des ombres",
-        "file": "scripts/sorts/illusionniste-monstres-des-ombres.js"
-      },
-      {
-        "name": "Mort rampante",
-        "file": "scripts/sorts/druide-mort-rampante.js"
-      },
-      {
-        "name": "Mot de pouvoir : « Cécité »",
-        "file": "scripts/sorts/magicien-mot-de-pouvoir-cecite.js"
-      },
-      {
-        "name": "Mot de pouvoir : « étourdissement »",
-        "file": "scripts/sorts/magicien-mot-de-pouvoir-etourdissement.js"
-      },
-      {
-        "name": "Mot de pouvoir : « mort »",
-        "file": "scripts/sorts/magicien-mot-de-pouvoir-mort.js"
-      },
-      {
-        "name": "Motif hypnotique",
-        "file": "scripts/sorts/illusionniste-motif-hypnotique.js"
-      },
-      {
-        "name": "Moyen mnémonique de Rary",
-        "file": "scripts/sorts/magicien-moyen-mnemonique-de-rary.js"
-      },
-      {
-        "name": "Mur de brouillard",
-        "file": "scripts/sorts/illusionniste-mur-de-brouillard.js"
-      },
-      {
-        "name": "Mur de fer",
-        "file": "scripts/sorts/magicien-mur-de-fer.js"
-      },
-      {
-        "name": "Mur de feu",
-        "file": "scripts/sorts/magicien-mur-de-feu.js"
-      },
-      {
-        "name": "Mur de feu",
-        "file": "scripts/sorts/magicien-mur-de-feu.js"
-      },
-      {
-        "name": "Mur de force",
-        "file": "scripts/sorts/magicien-mur-de-force.js"
-      },
-      {
-        "name": "Mur de glace",
-        "file": "scripts/sorts/magicien-mur-de-glace.js"
-      },
-      {
-        "name": "Mur de roc",
-        "file": "scripts/sorts/magicien-mur-de-roc.js"
-      },
-      {
-        "name": "Mur prismatique",
-        "file": "scripts/sorts/illusionniste-mur-prismatique.js"
-      },
-      {
-        "name": "Mythomancie",
-        "file": "scripts/sorts/magicien-mythomancie.js"
-      },
-      {
-        "name": "Nappe de brouillard",
-        "file": "scripts/sorts/illusionniste-nappe-de-brouillard.js"
-      },
-      {
-        "name": "Nécro animation",
-        "file": "scripts/sorts/magicien-necro-animation.js"
-      },
-      {
-        "name": "Nécro-animation",
-        "file": "scripts/sorts/magicien-necro-animation.js"
-      },
-      {
-        "name": "Non-détection",
-        "file": "scripts/sorts/illusionniste-non-detection.js"
-      },
-      {
-        "name": "Nuage incendiaire",
-        "file": "scripts/sorts/magicien-nuage-incendiaire.js"
-      },
-      {
-        "name": "Nuage létal",
-        "file": "scripts/sorts/magicien-nuage-letal.js"
-      },
-      {
-        "name": "Nuée de météores",
-        "file": "scripts/sorts/magicien-nuee-de-meteores.js"
-      },
-      {
-        "name": "Obscurcissement",
-        "file": "scripts/sorts/obscurcissement.js"
-      },
-      {
-        "name": "Ombres",
-        "file": "scripts/sorts/illusionniste-ombres.js"
-      },
-      {
-        "name": "Or des fous",
-        "file": "scripts/sorts/magicien-or-des-fous.js"
-      },
-      {
-        "name": "Orientation",
-        "file": "scripts/sorts/orientation.js"
-      },
-      {
-        "name": "Oubli",
-        "file": "scripts/sorts/magicien-oubli.js"
-      },
-      {
-        "name": "Ouverture",
-        "file": "scripts/sorts/magicien-ouverture.js"
-      },
-      {
-        "name": "Paralysie animale",
-        "file": "scripts/sorts/druide-paralysie-animale.js"
-      },
-      {
-        "name": "Paralysie des monstres",
-        "file": "scripts/sorts/magicien-paralysie-des-monstres.js"
-      },
-      {
-        "name": "Paralysie musculaire",
-        "file": "scripts/sorts/illusionniste-paralysie-musculaire.js"
-      },
-      {
-        "name": "Paralysie végétale",
-        "file": "scripts/sorts/druide-paralysie-vegetale.js"
-      },
-      {
-        "name": "Parole sacrée/maudite",
-        "file": "scripts/sorts/parole-sacree-maudite.js"
-      },
-      {
-        "name": "Passage sans trace",
-        "file": "scripts/sorts/druide-passage-sans-trace.js"
-      },
-      {
-        "name": "Passe-muraille",
-        "file": "scripts/sorts/magicien-passe-muraille.js"
-      },
-      {
-        "name": "Passe-plantes",
-        "file": "scripts/sorts/druide-passe-plantes.js"
-      },
-      {
-        "name": "Permanence",
-        "file": "scripts/sorts/magicien-permanence.js"
-      },
-      {
-        "name": "Phytomorphose",
-        "file": "scripts/sorts/magicien-phytomorphose.js"
-      },
-      {
-        "name": "Phytomorphose",
-        "file": "scripts/sorts/magicien-phytomorphose.js"
-      },
-      {
-        "name": "Piège à feu",
-        "file": "scripts/sorts/magicien-piege-a-feu.js"
-      },
-      {
-        "name": "Piège à feu",
-        "file": "scripts/sorts/magicien-piege-a-feu.js"
-      },
-      {
-        "name": "Piège de Léomund",
-        "file": "scripts/sorts/magicien-piege-de-leomund.js"
-      },
-      {
-        "name": "Piège sylvestre",
-        "file": "scripts/sorts/druide-piege-sylvestre.js"
-      },
-      {
-        "name": "Pilier de Feu",
-        "file": "scripts/sorts/pilier-de-feu.js"
-      },
-      {
-        "name": "Poigne de Bigby",
-        "file": "scripts/sorts/magicien-poigne-de-bigby.js"
-      },
-      {
-        "name": "Poing de Bigby",
-        "file": "scripts/sorts/magicien-poing-de-bigby.js"
-      },
-      {
-        "name": "Porte de phase",
-        "file": "scripts/sorts/magicien-porte-de-phase.js"
-      },
-      {
-        "name": "Porte des ombres",
-        "file": "scripts/sorts/illusionniste-porte-des-ombres.js"
-      },
-      {
-        "name": "Porte dimensionnelle",
-        "file": "scripts/sorts/magicien-porte-dimensionnelle.js"
-      },
-      {
-        "name": "Porte végétale",
-        "file": "scripts/sorts/porte-vegetale.js"
-      },
-      {
-        "name": "Poussée",
-        "file": "scripts/sorts/magicien-poussee.js"
-      },
-      {
-        "name": "Prévision du temps",
-        "file": "scripts/sorts/druide-prevision-du-temps.js"
-      },
-      {
-        "name": "Protection contre la foudre",
-        "file": "scripts/sorts/protection-contre-la-foudre.js"
-      },
-      {
-        "name": "Protection contre le feu",
-        "file": "scripts/sorts/druide-protection-contre-le-feu.js"
-      },
-      {
-        "name": "Protection contre le mal",
-        "file": "scripts/sorts/magicien-protection-contre-le-mal.js"
-      },
-      {
-        "name": "Protection contre le Mal",
-        "file": "scripts/sorts/magicien-protection-contre-le-mal.js"
-      },
-      {
-        "name": "Protection contre le mal sur 3 m",
-        "file": "scripts/sorts/magicien-protection-contre-le-mal-sur-3-m.js"
-      },
-      {
-        "name": "Protection contre le mal sur 3 m",
-        "file": "scripts/sorts/magicien-protection-contre-le-mal-sur-3-m.js"
-      },
-      {
-        "name": "Protection contre les projectiles normaux",
-        "file": "scripts/sorts/magicien-protection-contre-les-projectiles-normaux.js"
-      },
-      {
-        "name": "Punition spirituelle",
-        "file": "scripts/sorts/magicien-punition-spirituelle.js"
-      },
-      {
-        "name": "Pyrotechnie",
-        "file": "scripts/sorts/pyrotechnie.js"
-      },
-      {
-        "name": "Pyrotechnie",
-        "file": "scripts/sorts/magicien-pyrotechnie.js"
-      },
-      {
-        "name": "Quête magique",
-        "file": "scripts/sorts/magicien-quete-magique.js"
-      },
-      {
-        "name": "Quête Religieuse",
-        "file": "scripts/sorts/quete-religieuse.js"
-      },
-      {
-        "name": "Rafale de vent",
-        "file": "scripts/sorts/magicien-rafale-de-vent.js"
-      },
-      {
-        "name": "Ralentissement",
-        "file": "scripts/sorts/magicien-ralentissement.js"
-      },
-      {
-        "name": "Rapidité",
-        "file": "scripts/sorts/magicien-rapidite.js"
-      },
-      {
-        "name": "Rappel",
-        "file": "scripts/sorts/rappel.js"
-      },
-      {
-        "name": "Rappel à la Vie",
-        "file": "scripts/sorts/rappel-a-la-vie.js"
-      },
-      {
-        "name": "Réflexion des regards",
-        "file": "scripts/sorts/illusionniste-reflexion-des-regards.js"
-      },
-      {
-        "name": "Régénération",
-        "file": "scripts/sorts/regeneration.js"
-      },
-      {
-        "name": "Réincarnation",
-        "file": "scripts/sorts/magicien-reincarnation.js"
-      },
-      {
-        "name": "Réincarnation",
-        "file": "scripts/sorts/magicien-reincarnation.js"
-      },
-      {
-        "name": "Réparation",
-        "file": "scripts/sorts/magicien-reparation.js"
-      },
-      {
-        "name": "Répulsion",
-        "file": "scripts/sorts/magicien-repulsion.js"
-      },
-      {
-        "name": "Répulsion des insectes",
-        "file": "scripts/sorts/repulsion-des-insectes.js"
-      },
-      {
-        "name": "Répulsion du bois",
-        "file": "scripts/sorts/druide-repulsion-du-bois.js"
-      },
-      {
-        "name": "Résistance au Froid",
-        "file": "scripts/sorts/resistance-au-froid.js"
-      },
-      {
-        "name": "Respiration aquatique",
-        "file": "scripts/sorts/respiration-aquatique.js"
-      },
-      {
-        "name": "Respiration aquatique",
-        "file": "scripts/sorts/magicien-respiration-aquatique.js"
-      },
-      {
-        "name": "Restauration",
-        "file": "scripts/sorts/restauration.js"
-      },
-      {
-        "name": "Résurrection",
-        "file": "scripts/sorts/resurrection.js"
-      },
-      {
-        "name": "Runes explosives",
-        "file": "scripts/sorts/magicien-runes-explosives.js"
-      },
-      {
-        "name": "Saut",
-        "file": "scripts/sorts/magicien-saut.js"
-      },
-      {
-        "name": "Séparation des eaux",
-        "file": "scripts/sorts/magicien-separation-des-eaux.js"
-      },
-      {
-        "name": "Séparation des Eaux",
-        "file": "scripts/sorts/separation-des-eaux.js"
-      },
-      {
-        "name": "Serviteur Aérien",
-        "file": "scripts/sorts/serviteur-aerien.js"
-      },
-      {
-        "name": "Serviteur invisible",
-        "file": "scripts/sorts/magicien-serviteur-invisible.js"
-      },
-      {
-        "name": "Seuil",
-        "file": "scripts/sorts/seuil.js"
-      },
-      {
-        "name": "Seuil",
-        "file": "scripts/sorts/magicien-seuil.js"
-      },
-      {
-        "name": "Shillelagh",
-        "file": "scripts/sorts/druide-shillelagh.js"
-      },
-      {
-        "name": "Simulacre",
-        "file": "scripts/sorts/magicien-simulacre.js"
-      },
-      {
-        "name": "Soin ultime",
-        "file": "scripts/sorts/soin-ultime.js"
-      },
-      {
-        "name": "Soin ultime",
-        "file": "scripts/sorts/soin-ultime.js"
-      },
-      {
-        "name": "Soins majeurs",
-        "file": "scripts/sorts/druide-soins-majeurs.js"
-      },
-      {
-        "name": "Soins Majeurs",
-        "file": "scripts/sorts/druide-soins-majeurs.js"
-      },
-      {
-        "name": "Soins mineurs",
-        "file": "scripts/sorts/druide-soins-mineurs.js"
-      },
-      {
-        "name": "Soins mineurs",
-        "file": "scripts/sorts/druide-soins-mineurs.js"
-      },
-      {
-        "name": "Sort astral",
-        "file": "scripts/sorts/magicien-sort-astral.js"
-      },
-      {
-        "name": "Sort astral",
-        "file": "scripts/sorts/sort-astral.js"
-      },
-      {
-        "name": "Sort Astral",
-        "file": "scripts/sorts/sort-astral.js"
-      },
-      {
-        "name": "Sorts de niveau 1 de magicien",
-        "file": "scripts/sorts/illusionniste-sorts-de-niveau-1-de-magicien.js"
-      },
-      {
-        "name": "Souhait majeur",
-        "file": "scripts/sorts/magicien-souhait-majeur.js"
-      },
-      {
-        "name": "Souhait mineur",
-        "file": "scripts/sorts/magicien-souhait-mineur.js"
-      },
-      {
-        "name": "Sphère prismatique",
-        "file": "scripts/sorts/magicien-sphere-prismatique.js"
-      },
-      {
-        "name": "Stase temporelle",
-        "file": "scripts/sorts/magicien-stase-temporelle.js"
-      },
-      {
-        "name": "Statue",
-        "file": "scripts/sorts/magicien-statue.js"
-      },
-      {
-        "name": "Suggestion",
-        "file": "scripts/sorts/magicien-suggestion.js"
-      },
-      {
-        "name": "Suggestion",
-        "file": "scripts/sorts/magicien-suggestion.js"
-      },
-      {
-        "name": "Suggestion de masse",
-        "file": "scripts/sorts/illusionniste-suggestion-de-masse.js"
-      },
-      {
-        "name": "Surdité",
-        "file": "scripts/sorts/illusionniste-surdite.js"
-      },
-      {
-        "name": "Symbole",
-        "file": "scripts/sorts/symbole.js"
-      },
-      {
-        "name": "Symbole",
-        "file": "scripts/sorts/magicien-symbole.js"
-      },
-      {
-        "name": "Télékinésie",
-        "file": "scripts/sorts/magicien-telekinesie.js"
-      },
-      {
-        "name": "Téléportation",
-        "file": "scripts/sorts/magicien-teleportation.js"
-      },
-      {
-        "name": "Tempête de feu",
-        "file": "scripts/sorts/druide-tempete-de-feu.js"
-      },
-      {
-        "name": "Tempête de glace",
-        "file": "scripts/sorts/magicien-tempete-de-glace.js"
-      },
-      {
-        "name": "Ténèbres",
-        "file": "scripts/sorts/illusionniste-tenebres.js"
-      },
-      {
-        "name": "Ténèbres éternelles",
-        "file": "scripts/sorts/illusionniste-tenebres-eternelles.js"
-      },
-      {
-        "name": "Ténèbres sur 5 mètres",
-        "file": "scripts/sorts/magicien-tenebres-sur-5-metres.js"
-      },
-      {
-        "name": "Terrain hallucinatoire",
-        "file": "scripts/sorts/magicien-terrain-hallucinatoire.js"
-      },
-      {
-        "name": "Terrain hallucinatoire",
-        "file": "scripts/sorts/magicien-terrain-hallucinatoire.js"
-      },
-      {
-        "name": "Transformation de Tenser",
-        "file": "scripts/sorts/magicien-transformation-de-tenser.js"
-      },
-      {
-        "name": "Transit végétal",
-        "file": "scripts/sorts/druide-transit-vegetal.js"
-      },
-      {
-        "name": "Transmutation de pierre en boue",
-        "file": "scripts/sorts/magicien-transmutation-de-pierre-en-boue.js"
-      },
-      {
-        "name": "Transmutation de pierre en boue",
-        "file": "scripts/sorts/magicien-transmutation-de-pierre-en-boue.js"
-      },
-      {
-        "name": "Transmutation de pierre en chair",
-        "file": "scripts/sorts/magicien-transmutation-de-pierre-en-chair.js"
-      },
-      {
-        "name": "Transmutation du métal en bois",
-        "file": "scripts/sorts/druide-transmutation-du-metal-en-bois.js"
-      },
-      {
-        "name": "Transvision",
-        "file": "scripts/sorts/magicien-transvision.js"
-      },
-      {
-        "name": "Tremblement de Terre",
-        "file": "scripts/sorts/tremblement-de-terre.js"
-      },
-      {
-        "name": "Trouble",
-        "file": "scripts/sorts/illusionniste-trouble.js"
-      },
-      {
-        "name": "Tueur fantasmagorique",
-        "file": "scripts/sorts/illusionniste-tueur-fantasmagorique.js"
-      },
-      {
-        "name": "Ventriloquie",
-        "file": "scripts/sorts/magicien-ventriloquie.js"
-      },
-      {
-        "name": "Ventriloquie",
-        "file": "scripts/sorts/magicien-ventriloquie.js"
-      },
-      {
-        "name": "Verrou magique",
-        "file": "scripts/sorts/magicien-verrou-magique.js"
-      },
-      {
-        "name": "Vigiles et sentinelles",
-        "file": "scripts/sorts/magicien-vigiles-et-sentinelles.js"
-      },
-      {
-        "name": "Vision",
-        "file": "scripts/sorts/illusionniste-vision.js"
-      },
-      {
-        "name": "Vision réelle",
-        "file": "scripts/sorts/vision-reelle.js"
-      },
-      {
-        "name": "Vision réelle",
-        "file": "scripts/sorts/vision-reelle.js"
-      },
-      {
-        "name": "Voile illusoire",
-        "file": "scripts/sorts/illusionniste-voile-illusoire.js"
-      },
-      {
-        "name": "Vol",
-        "file": "scripts/sorts/magicien-vol.js"
-      },
-      {
-        "name": "Lumière",
-        "file": "scripts/sorts/magicien-lumiere.js"
-      },
-      {
-        "name": "Lumière",
-        "file": "scripts/sorts/magicien-lumiere.js"
-      }
-    ],
-    "manualFallback": [
+    "catalog": [],
+    "onUseConfig": [],
+    "overrides": [
       "Agrandissement",
       "Apaisement",
       "Bénédiction",
@@ -1472,188 +471,34 @@
       "Transformation d’objets",
       "Détection de l'invisibilité"
     ],
+    "unresolved": [],
     "replacedGeneratedFallback": [
       "Agrandissement",
-      "Allométamorphose",
-      "Altération de la réalité",
-      "Altération des feux normaux",
-      "Amitié",
-      "Amitié animale",
-      "Animation de la roche",
-      "Animation des objets",
-      "Antipathie/sympathie",
       "Apaisement",
-      "Aquagenèse",
-      "Aquagenèse",
-      "Arbre",
-      "Arme enchantée",
-      "Arrêt du temps",
-      "Augure",
-      "Aura féérique",
-      "Aura magique de Nystul",
-      "Autométamorphose",
-      "Barrière de Lames",
-      "Bâtons à serpents",
-      "Bâtons à serpents",
       "Bénédiction",
-      "Bouche magique",
-      "Bouche magique",
-      "Bouclier",
-      "Bouclier anti-animal",
-      "Bouclier anti-plantes",
-      "Bouclier de feu",
       "Boule de feu",
-      "Boule de feu à retardement",
-      "Bruitage",
-      "Bruitage",
-      "Bulle anti-magique",
-      "Cacodémon",
-      "Cantique",
-      "Catalepsie",
-      "Catalepsie",
-      "Catalepsie",
-      "Cécité",
       "Changement d’apparence",
-      "Changement de Plan",
-      "Chaos",
-      "Chariot de Sustarre",
-      "Charme-masse",
-      "Charme-monstres",
       "Charme-personnes",
-      "Charme-personnes ou mammifères",
-      "Charme-plantes",
-      "Charme-Serpents",
-      "Chasseur invisible",
-      "Chaumière de Léomund",
       "Chien fidèle de Mordenkainen",
-      "Chute de plume",
-      "Clairaudience",
-      "Clairvoyance",
-      "Clone",
-      "Coffre secret de Léomund",
-      "Communion",
-      "Communion avec la nature",
-      "Compréhension des langues",
-      "Cône de froid",
-      "Confusion",
-      "Confusion",
-      "Confusion",
       "Contact d'autres plans",
-      "Contre-poison",
-      "Contre-poison",
-      "Contrôle de la température sur 3 m",
-      "Contrôle des vents",
-      "Contrôle du climat",
-      "Contrôle du climat",
-      "Contrôle du Climat",
-      "Corde enchantée",
-      "Corde enchantée",
-      "Création majeure",
-      "Création mineure",
-      "Cristairain",
-      "Croc-en-jambe",
-      "Croissance animale",
-      "Croissance animale",
       "Danse irrésistible d’Otto",
-      "Débilité mentale",
-      "Débilité mentale",
-      "Désenvoûtement",
-      "Désenvoûtement",
-      "Désinformation",
-      "Désintégration",
       "Détection de l’invisibilité",
-      "Détection de la magie",
-      "Détection de la magie",
-      "Détection de la magie",
-      "Détection de la magie",
-      "Détection des Charmes",
-      "Détection des illusions",
-      "Détection des Mensonges",
-      "Détection des Pièges",
-      "Détection des pièges sylvestres",
-      "Détection du mal",
-      "Détection du mal",
-      "Disparition",
-      "Disque flottant de Tenser",
       "Dissipation de l’épuisement",
-      "Dissipation de la magie",
-      "Dissipation de la magie",
-      "Dissipation de la Magie",
-      "Dissipation des illusions",
-      "Dissipation du Mal",
-      "Distorsion des distances",
-      "Distorsion du bois",
-      "Divination",
       "Doigt de mort",
-      "Duo-dimension",
-      "E.S.P.",
-      "Eau aérée",
-      "Écriture",
-      "Écriture illusoire",
-      "Effacement",
-      "Effroi",
-      "Effroi",
       "Embrasement",
-      "Embroussaillement",
-      "Embroussaillement",
-      "Émotion",
-      "Emprisonnement",
       "Emprisonnement de l’âme",
-      "Enchantement",
       "Enchevêtrement",
-      "Épée de Mordenkainen",
       "Escalade d’araignée",
-      "Excavation",
-      "Exorcisme",
-      "Expiation",
-      "Extension I",
-      "Extension II",
-      "Extension III",
-      "Fermeture",
-      "Feu charmeur",
       "Flamme",
       "Fléau d’insectes",
       "Fléau d’Insectes",
-      "Flèche de feu",
-      "Force",
-      "Force fantasmagorique",
-      "Force fantasmagorique",
-      "Force fantasmagorique améliorée",
-      "Force spectrale",
-      "Forêt hallucinatoire",
       "Foudre",
-      "Fracassement",
-      "Glissement de terrain",
       "Globe d’invulnérabilité",
       "Globe mineur d’invulnérabilité",
-      "Glyphe de Garde",
       "Graines de feu",
-      "Guérison",
       "Guérison de la Cécité",
-      "Guérison des maladies",
-      "Guérison des Maladies",
-      "Hétéromorphisme",
-      "Holographie",
-      "Holographie",
-      "Hypnotisme",
-      "Identification",
-      "Illusion permanente",
-      "Illusion programmée",
-      "Image miroir",
-      "Image miroir",
-      "Immunité magique de Serten",
-      "Incantation mortelle",
-      "Infravision",
       "Injonction",
-      "Intermittence",
-      "Inversion de la gravité",
-      "Invisibilité",
-      "Invisibilité",
-      "Invisibilité améliorée",
       "Invisibilité aux animaux",
-      "Invisibilité de masse",
-      "Invisibilité sur 3 m",
-      "Invisibilité sur 3 m",
       "Invocation animale I",
       "Invocation animale II",
       "Invocation animale III",
@@ -1663,227 +508,32 @@
       "Invocation d'un élémental du feu",
       "Invocation d’un familier",
       "Invocation de la foudre",
-      "Invocation de monstre II",
-      "Invocation de Monstre III",
-      "Invocation de monstre IV",
-      "Invocation de monstre V",
-      "Invocation de monstre VI",
-      "Invocation de Monstre VII",
-      "Invocation de monstres I",
-      "Invocation des animaux",
-      "Invocation des animaux",
       "Invocation des créatures sylvestres",
-      "Invocation des ombres",
       "Invocation du temps",
-      "Invocation instantanée de Drawmij",
-      "Jet de couleurs",
-      "Jet prismatique",
-      "Labyrinthe",
-      "Labyrinthe",
-      "Langage animal",
-      "Langage animal",
-      "Langage des Monstres",
-      "Langage des plantes",
-      "Langage des Plantes",
       "Langue",
-      "Langues",
-      "Lecture de la magie",
-      "Lévitation",
-      "Lithomancie",
-      "Lithomorphose",
-      "Lithomorphose",
-      "Localisation d'objets",
-      "Localisation d’objets",
-      "Localisation des animaux",
-      "Localisation des plantes",
-      "Lumière",
-      "Lumière éternelle",
-      "Lumière éternelle",
-      "Lumière éternelle",
-      "Lumières dansantes",
-      "Lumières dansantes",
-      "Magie demi-ombre",
-      "Magie des ombres",
-      "Main broyante de Bigby",
       "Main d’interposition de Bigby",
-      "Main de force de Bigby",
       "Mains brûlantes",
-      "Maladresse",
       "Manne",
-      "Marche des vents",
-      "Marteau Spirituel",
-      "Message",
-      "Métal brûlant",
-      "Métempsycose",
-      "Monstres demi-ombre",
-      "Monstres des ombres",
-      "Mort rampante",
-      "Mot de pouvoir : « Cécité »",
-      "Mot de pouvoir : « étourdissement »",
-      "Mot de pouvoir : « mort »",
-      "Motif hypnotique",
-      "Moyen mnémonique de Rary",
       "Mur d'épines",
-      "Mur de brouillard",
-      "Mur de fer",
-      "Mur de feu",
-      "Mur de feu",
-      "Mur de force",
-      "Mur de glace",
-      "Mur de roc",
-      "Mur prismatique",
-      "Mythomancie",
-      "Nappe de brouillard",
-      "Nécro animation",
-      "Nécro-animation",
       "Nécromancie",
-      "Non-détection",
-      "Nuage incendiaire",
-      "Nuage létal",
       "Nuage puant",
-      "Nuée de météores",
-      "Obscurcissement",
       "Œil magique",
-      "Ombres",
-      "Or des fous",
-      "Orientation",
-      "Oubli",
-      "Ouverture",
-      "Paralysie",
-      "Paralysie",
-      "Paralysie animale",
-      "Paralysie des monstres",
-      "Paralysie musculaire",
-      "Paralysie végétale",
-      "Parole sacrée/maudite",
-      "Passage sans trace",
-      "Passe-muraille",
-      "Passe-plantes",
       "Peau d'écorce",
       "Perception des Alignements",
-      "Permanence",
       "Peur",
-      "Phytomorphose",
-      "Phytomorphose",
-      "Piège à feu",
-      "Piège à feu",
-      "Piège de Léomund",
-      "Piège sylvestre",
-      "Pilier de Feu",
-      "Poigne de Bigby",
       "Poigne électrique",
-      "Poing de Bigby",
-      "Porte de phase",
-      "Porte des ombres",
-      "Porte dimensionnelle",
-      "Porte végétale",
-      "Poussée",
-      "Prévision du temps",
-      "Prière",
       "Projectile magique",
-      "Protection contre la foudre",
-      "Protection contre le feu",
-      "Protection contre le mal",
-      "Protection contre le Mal",
-      "Protection contre le mal sur 3 m",
-      "Protection contre le mal sur 3 m",
-      "Protection contre les projectiles normaux",
       "Protection d’esprit",
-      "Punition spirituelle",
       "Purification de l'eau",
       "Purification de l'eau et des aliments",
-      "Pyrotechnie",
-      "Pyrotechnie",
-      "Quête magique",
-      "Quête Religieuse",
-      "Rafale de vent",
-      "Ralentissement",
-      "Rapidité",
-      "Rappel",
-      "Rappel à la Vie",
       "Rayon d’affaiblissement",
-      "Réflexion des regards",
-      "Régénération",
-      "Réincarnation",
-      "Réincarnation",
-      "Réparation",
-      "Répulsion",
-      "Répulsion des insectes",
-      "Répulsion du bois",
-      "Résistance au feu",
-      "Résistance au Froid",
-      "Respiration aquatique",
-      "Respiration aquatique",
-      "Restauration",
-      "Résurrection",
       "Retardement du Poison",
-      "Runes explosives",
       "Sanctuaire",
-      "Saut",
-      "Séparation des eaux",
-      "Séparation des Eaux",
-      "Serviteur Aérien",
-      "Serviteur invisible",
-      "Seuil",
-      "Seuil",
-      "Shillelagh",
       "Silence sur 5 mètres",
-      "Simulacre",
-      "Soin ultime",
-      "Soin ultime",
-      "Soins majeurs",
-      "Soins Majeurs",
-      "Soins mineurs",
-      "Soins mineurs",
       "Sommeil",
-      "Sort astral",
-      "Sort astral",
-      "Sort Astral",
-      "Sorts de niveau 1 de magicien",
-      "Souhait majeur",
-      "Souhait mineur",
       "Sphère glaciale d’Otiluke",
-      "Sphère prismatique",
-      "Stase temporelle",
-      "Statue",
-      "Suggestion",
-      "Suggestion",
-      "Suggestion de masse",
-      "Surdité",
-      "Symbole",
-      "Symbole",
-      "Télékinésie",
-      "Téléportation",
-      "Tempête de feu",
-      "Tempête de glace",
-      "Ténèbres",
-      "Ténèbres éternelles",
-      "Ténèbres sur 5 mètres",
-      "Terrain hallucinatoire",
-      "Terrain hallucinatoire",
       "Toile d’araignée",
       "Transformation d’objets",
-      "Transformation de Tenser",
-      "Transit végétal",
-      "Transmutation de pierre en boue",
-      "Transmutation de pierre en boue",
-      "Transmutation de pierre en chair",
-      "Transmutation du métal en bois",
-      "Transvision",
-      "Tremblement de Terre",
-      "Trouble",
-      "Tueur fantasmagorique",
-      "Ventriloquie",
-      "Ventriloquie",
-      "Verrou magique",
-      "Vigiles et sentinelles",
-      "Vision",
-      "Vision réelle",
-      "Vision réelle",
-      "Voile illusoire",
-      "Vol",
-      "Lumière",
-      "Lumière",
       "Détection de l'invisibilité"
     ]
   },
@@ -2276,5 +926,5 @@
     "scripts/sorts/tremblement-de-terre.js",
     "scripts/sorts/vision-reelle.js"
   ],
-  "conclusion": "Chaque sort possède un effectProfile. Les profils déclaratifs et onUse sont dérivés des sources mécaniques ; le profil manuel n'est utilisé qu'en dernier recours."
+  "conclusion": "Chaque sort possède un effectProfile explicite issu du JSON, du catalogue, d'un script onUse ou d'une surcharge nommée. Aucun profil manuel générique n'est admis."
 }

@@ -836,12 +836,8 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "buff_debuff",
+          "operation": "enlarge"
         },
         "description": "ce sort augmente temporairement la taille et le poids d’une créature ou d’un objet visible. Une créature vivante augmente de 20 % par niveau du magicien, jusqu’à 200 % ; un objet augmente de 10 % par niveau, jusqu’à 100 %. Le volume maximum affecté est de 270 dm³ par niveau pour les matières vivantes et de 135 dm³ par niveau pour les matières non vivantes. Les pouvoirs magiques de l’objet ne changent pas. L’inverse, rétrécissement, annule agrandissement ou réduit aux mêmes proportions. Une cible non consentante a droit au jet de protection.",
         "onUse": "systems/add2e/scripts/sorts/magicien-agrandissement.js"
@@ -1840,12 +1836,8 @@
         "composantes": "V, S",
         "composants_materiels": [],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "status",
+          "operation": "calm_emotions"
         },
         "description": "en touchant la créature concernée, le clerc lui insuffle du courage, augmentant ainsi pendant 1 tour son jet de protection de +4 contre les attaques magiques provoquant la peur. Si la créature est déjà sujette à un sort de peur après avoir raté son jet de protection, le sort permet un autre jet de protection avec un bonus de +1 pour chaque niveau du clerc, c'est-à-dire +2 pour un clerc de niveau 2, +3 pour un clerc de niveau 3, etc. Une «probabilité de toucher» doit être réussie pour toucher les créatures non consentantes. L’inverse du sort, épouvante, fait fuir la victime touchée le plus vite possible et le plus loin possible du clerc, et ce, pendant 1 round par niveau du clerc. Un sort d’épouvante peut être annulé par son inverse, et vice-versa.",
         "onUse": "systems/add2e/scripts/sorts/apaisement.js"
@@ -3977,12 +3969,8 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "buff_debuff",
+          "operation": "bless"
         },
         "description": "en lançant ce sort, le clerc augmente le moral des créatures amicales de +1. De plus, cela augmente leurs «probabilités de toucher» de +1. Cependant, ce sort n’agit que sur ceux qui ne sont pas encore engagés dans un combat. Le lanceur de sort détermine à quelle portée il lance son sort (maximum 6\"), il affectera alors les créatures se trouvant dans une zone de 5\" x 5\". L’inverse du sort, malédiction, peut être lancé sur des ennemis; ceux-ci voient donc baisser leur moral et leur «probabilité de toucher» de –1. En plus des composantes verbales et somatiques, ce sort nécessite de l’eau bénite, ou maudite pour l’inverse.",
         "onUse": "systems/add2e/scripts/sorts/benediction.js"
@@ -4851,12 +4839,10 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "damage",
+          "operation": "fireball",
+          "dice": "leveld6",
+          "damageType": "fire"
         },
         "description": "Une explosion de flammes inflige 1d6 dégâts par niveau du magicien et prend la forme de l’espace disponible. Elle enflamme les matières inflammables ; une créature qui réussit son jet de protection ne subit que la moitié des dégâts.",
         "onUse": "systems/add2e/scripts/sorts/magicien-boule-de-feu.js"
@@ -6005,12 +5991,8 @@
         "composantes": "V, S",
         "composants_materiels": [],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "utility",
+          "operation": "disguise_self"
         },
         "description": "L’illusionniste altère son apparence visible, ses vêtements et son équipement : il peut paraître 30 cm plus grand ou plus petit, plus maigre ou plus gros, humain, humanoïde ou autre bipède de forme humaine. Le sort ne change ni sa voix, ni son odeur, ni ses capacités physiques.",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-changement-d-apparence.js"
@@ -6657,12 +6639,12 @@
         "composantes": "V, S",
         "composants_materiels": [],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "status",
+          "operation": "charm_person",
+          "status": [
+            "charmed",
+            "charm"
+          ]
         },
         "description": "à l’exception de la cible autorisée, ce sort fonctionne comme charme-personnes ou mammifères du druide de niveau 2. Le magicien ne peut charmer que les personnes, c’est-à-dire les humains et les humanoïdes bipèdes de taille humaine ou moindre cités par le Manuel ; les autres règles et effets du sort de druide s’appliquent alors uniquement à ces personnes.",
         "onUse": "systems/add2e/scripts/sorts/charme_personne.js"
@@ -7508,12 +7490,8 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "summon",
+          "operation": "faithful_hound"
         },
         "description": "Le sort invoque un chien de garde fantomatique visible du seul magicien. Il avertit de toute intrusion importante, détecte notamment l’invisibilité et plusieurs formes d’existence inhabituelles, et attaque de dos comme une créature à 10 dés de vie. Il ne peut être attaqué, mais peut être dissipé ; le magicien doit rester à moins de 3\" du lieu gardé.",
         "onUse": "systems/add2e/scripts/sorts/chien-fidele-de-mordenkainen.js"
@@ -8699,12 +8677,8 @@
         "composantes": "V",
         "composants_materiels": [],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "divination",
+          "operation": "contact_other_plane"
         },
         "description": "Le magicien envoie son esprit sur un autre plan pour poser des questions à une puissance locale. Le nombre de questions dépend de son niveau ; l’éloignement du plan modifie les chances d’obtenir une réponse connue et exacte, ainsi que les risques de folie ou de mort.",
         "onUse": "systems/add2e/scripts/sorts/magicien-contact-d-autres-plans.js"
@@ -10240,12 +10214,12 @@
         "composantes": "V",
         "composants_materiels": [],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "status",
+          "operation": "irresistible_dance",
+          "status": [
+            "dancing",
+            "incapacitated"
+          ]
         },
         "description": "La créature touchée se met à danser et ne peut rien faire d’autre. Sa classe d’armure subit un malus de 4, elle ne peut utiliser ni bouclier ni jet de protection ; le magicien doit réussir son jet pour la toucher.",
         "onUse": "systems/add2e/scripts/sorts/magicien-danse-irresistible-d-otto.js"
@@ -10971,12 +10945,8 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "detection",
+          "operation": "invisibility"
         },
         "description": "Excepté ses valeurs propres, ce sort fonctionne comme Détection de l’invisibilité de magicien de niveau 2. L’illusionniste voit les créatures et objets invisibles dans la zone de son regard, sans voir à travers les obstacles ordinaires.",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-detection-de-l-invisibilite.js"
@@ -12988,12 +12958,8 @@
         "composantes": "V, S",
         "composants_materiels": [],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "status",
+          "operation": "remove_exhaustion"
         },
         "description": "Le sort retire la fatigue et l’épuisement des personnes touchées, selon les limites et les effets précis du Manuel.",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-dissipation-de-l-epuisement.js"
@@ -14208,12 +14174,9 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "damage",
+          "operation": "finger_of_death",
+          "damageType": "death"
         },
         "description": "ce sort provoque un arrêt du cœur chez la victime. Le druide prononce l’incantation, pointe son doigt vers la créature qui, à moins qu’elle ne réussisse un jet de protection (auquel cas le sort est annulé), meurt instantanément.",
         "onUse": "systems/add2e/scripts/sorts/druide-doigt-de-mort.js"
@@ -14968,12 +14931,9 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "damage",
+          "operation": "ignite",
+          "damageType": "fire"
         },
         "description": "au moyen de ce sort, le druide crée un feu d’environ 3,60 m de côté, c'est-à-dire à peu près 13 m2. Ce feu ne dure qu’un round, mais il inflige de 1 à 4 points de dégâts aux créatures se trouvant dans la zone d’effet ; de plus, les matériaux comme les vêtements, l’huile, le papier, le parchemin, le bois et d’une façon générale les matières inflammables prendront feu. L’inverse du sort, extinction, éteint n’importe quel feu normal (charbon, huile, cire, bois, etc.) dans la zone d’effet. Ce sort ne peut normalement pas être utilisé sous l’eau, mais il peut être incanté et fonctionner à l’intérieur des limites d’un sort d’eau aérée.",
         "onUse": "systems/add2e/scripts/sorts/druide-embrasement.js"
@@ -15479,12 +15439,11 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "status",
+          "operation": "soul_trap",
+          "status": [
+            "imprisoned"
+          ]
         },
         "description": "Le sort enferme la force vitale d’une créature, et son enveloppe matérielle s’il y a lieu, dans une prison d’âme préparée. Le magicien doit voir la cible et connaître son vrai nom ; la gemme se brise si la cible résiste ou réussit son jet de protection. Une version par objet-détonateur permet de déclencher l’emprisonnement quand la cible l’accepte.",
         "onUse": "systems/add2e/scripts/sorts/magicien-emprisonnement-de-l-ame.js"
@@ -15656,12 +15615,12 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "status",
+          "operation": "entangle",
+          "status": [
+            "restrained",
+            "entangled"
+          ]
         },
         "description": "avec ce sort, le druide provoque une croissance importante et ultra-rapide des plantes dans la zone d’effet, afin d'enchevêtrer les créatures qui s’y trouvent. L’herbe, les mauvaises herbes, les buissons et même les arbres se développent, s’entremêlent et s’enroulent autour des créatures, les immobilisant ainsi pour la durée du sort. Si une créature réussit son jet de protection, elle est ralentie à 50 % pendant la durée du sort.",
         "onUse": "systems/add2e/scripts/sorts/druide-enchevetrement.js"
@@ -15859,12 +15818,8 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "movement",
+          "operation": "spider_climb"
         },
         "description": "la créature touchée peut se déplacer sur une surface verticale à la vitesse de 3\" et se tenir au plafond, à condition d’avoir mains et pieds nus. Elle ne peut tenir aucun objet pesant moins de 50 po, car ces objets se collent à ses mains ou pieds ; un magicien sous cet effet ne peut donc utiliser de composantes matérielles légères.",
         "onUse": "systems/add2e/scripts/sorts/magicien-escalade-d-araignee.js"
@@ -16804,12 +16759,9 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "damage",
+          "operation": "flame",
+          "damageType": "fire"
         },
         "description": "une flamme brillante, égale à la lueur d’une torche, jaillit de la paume du druide. Cette flamme magique dure pendant 2 rounds par niveau du druide. Elle n’est pas dangereuse pour le druide, mais elle peut enflammer des matériaux inflammables (papier, vêtements, bois sec, huile, etc.). Le druide peut lancer cette flamme comme un projectile, à une distance de 4\" (en considérant la cible à courte portée et en traitant un échec avec le système des grenades pour déterminer l’endroit où la flamme tombe). Une créature touchée par la flamme subit 1d4+1 points de dégâts plus les dégâts produits par le feu que la créature, les matériaux qu’elle porte ou les objets alentours peuvent subir. La composante matérielle est du gui.",
         "onUse": "systems/add2e/scripts/sorts/druide-flamme.js"
@@ -16905,12 +16857,8 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "summon",
+          "operation": "insect_plague"
         },
         "description": "excepté ci-dessus et le fait que la composante matérielle soit du gui ou son substitut, le houx ou les feuilles de chêne, ce sort est le même que le sort de niveau 5 de clerc fléau d’insectes (voir p.50).",
         "onUse": "systems/add2e/scripts/sorts/fleau-dinsectes.js"
@@ -16958,12 +16906,8 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "summon",
+          "operation": "insect_plague"
         },
         "description": "quand ce sort est lancé par un clerc, une horde d’insectes rampants, sauteurs et volants se forme en un épais nuage. Ces insectes obscurcissent la vue, la limitant à 3\". Quel que soit leur classe d’armure, les créatures à l’intérieur de ce nuage subissent 1 point de dégât par round, à cause des piqûres et morsures multiples. Le MD fera un test de moral pour les créatures ayant moins de 5 dés de vie. Si le test échoue, elle fuiront le plus rapidement possible droit devant elles jusqu’à ce qu’elles soient à plus de 24\" du nuage d’insectes; notez que les créatures ayant 2 DV ou moins agiront automatiquement de la sorte (pas de test de moral). Une fumée épaisse et abondante éloignera les insectes. Le feu aura le même effet. Un mur de feu en forme d’anneau éloignera les insectes de son champ d’action et une boule de feu éparpillera simplement les insectes à l’endroit de l’explosion pendant 1 tour. La foudre, le froid ou la glace agissent de manières similaires. Le nuage persiste pendant 1 tour pour chaque niveau du clerc, puis il se disperse. Le nuage se forme à l’endroit où le clerc le désire, jusqu’à un maximum de 36\"; l’endroit que cible le clerc constitue le centre du nuage d’insectes. Ensuite, le nuage ne bouge plus; il ne sort pas de sa zone d’effet. Ce sort peut être contré par le sort dissipation de la magie lancé sur le centre du nuage. Un cube de force (un objet magique spécifique) peut éloigner les insectes d’une personne se trouvant au centre du nuage, mais l’invisibilité n’offre aucune protection. Ce sort ne peut pas être utilisé sous l’eau. Les composantes matérielles de ce sort sont quelques grains de sucre, des amandes et de la matière grasse.",
         "onUse": "systems/add2e/scripts/sorts/clerc-niveaux-5-6-7/fleau-d-insectes.js"
@@ -17804,12 +17748,9 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "damage",
+          "operation": "lightning",
+          "damageType": "lightning"
         },
         "description": "La décharge inflige 1d6 dégâts par niveau et suit une forme bifide ou simple déterminée par le magicien. Elle peut rebondir sur un obstacle non conducteur et, sous l’eau, devient une sphère de 2\" de rayon.",
         "onUse": "systems/add2e/scripts/sorts/magicien-foudre.js"
@@ -18083,12 +18024,8 @@
         "composantes": "V, S, M",
         "composants_materiels": [],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "protection",
+          "operation": "globe_of_invulnerability"
         },
         "description": "Le sort fonctionne comme Globe mineur d’invulnérabilité, mais bloque les sorts de niveaux 1 à 4. Le magicien peut toujours lancer ses sorts depuis l’intérieur et à travers la sphère.",
         "onUse": "systems/add2e/scripts/sorts/magicien-globe-d-invulnerabilite.js"
@@ -18168,12 +18105,8 @@
         "composantes": "V, S, M",
         "composants_materiels": [],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "protection",
+          "operation": "minor_globe_of_invulnerability"
         },
         "description": "Une sphère autour du magicien bloque les sorts de niveaux 1 à 3, y compris leur zone d’effet. Les sorts de niveau 4 ou plus la traversent et le magicien peut lancer ses sorts vers l’extérieur.",
         "onUse": "systems/add2e/scripts/sorts/magicien-globe-mineur-d-invulnerabilite.js"
@@ -18465,12 +18398,9 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "damage",
+          "operation": "fire_seeds",
+          "damageType": "fire"
         },
         "description": "ce sort crée des projectiles spéciaux ou des foyers incendiaires qui brûlent en dégageant énormément de chaleur. Le druide peut lancer ces graines jusqu’à 4\" (en considérant la cible à courte portée et en traitant un échec avec le système des grenades pour déterminer où frappe la graine) ou les placer à un endroit puis les enflammer avec un mot de commande. Les glands servent de projectiles, alors que les baies de houx sont utilisées comme foyers incendiaires. Le sort crée jusqu’à 4 glands-graines de feu ou 8 baies de houx-graines de feu. Les glands s’enflamment en frappant la cible, causant 2 à 16 (2d8) points de dégât et enflammant les matières inflammables, dans un diamètre de 1\" autour du point d’impact. Les baies de houx sont trop légères pour en faire des projectiles ; elles peuvent être placées ou lancées jusqu’à 1,80 m et elles s’enflamment à la prononciation d’un mot de commande. Les baies causent de 1 à 8 points de dégâts à toute créature se trouvant au maximum à ½\" du foyer et les matières inflammables prennent feu. La portée du mot de commande pour les baies est de 4\". Toutes les graines de feu perdent leur pouvoir après une période de 1 tour par niveau du druide ; c'est-à-dire qu’un druide de niveau 13 peut utiliser des graines de feu qui resteront efficaces pendant 13 tours maximum. Les cibles des glands doivent être touchées par eux. Si le jet de protection est réussi, les créatures se trouvant dans la zone d’effet ne subissent que la moitié des dégâts, mais les créatures directement touchées subissent les dégâts sans jet de protection. Ce sort ne peut pas être utilisé sous l’eau. À noter que les composantes matérielles de ce sort ne sont que des glands de chêne et/ou des baies de houx.",
         "onUse": "systems/add2e/scripts/sorts/druide-graines-de-feu.js"
@@ -18830,12 +18760,11 @@
         "composantes": "V, S",
         "composants_materiels": [],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "status",
+          "operation": "cure_blindness",
+          "status": [
+            "blind"
+          ]
         },
         "description": "en touchant la créature aveugle, le clerc peut lui rendre la vue. Il peut guérir pratiquement toutes les formes de cécité. Le sort ne régénère cependant pas les organes détruits à la suite de blessures ou de maladies. L’inverse du sort, cécité, rend une victime aveugle, mais le clerc doit alors réussir un jet pour toucher et la victime a le droit à un jet de protection qui, s’il est réussit, annule les effets du sort.",
         "onUse": "systems/add2e/scripts/sorts/guerison-de-la-cecite-ou-de-la-surdite.js"
@@ -20412,12 +20341,8 @@
         "composantes": "V",
         "composants_materiels": [],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "status",
+          "operation": "command"
         },
         "description": "ce sort autorise le clerc à donner un ordre d’un seul mot. L’injonction doit être prononcée dans une langue que la créature peut comprendre. Cette dernière obéira du mieux qu’elle peut si l’ordre donné est clair et univoque. Par exemple: «suicide» sera considéré comme un nom et non comme un verbe et n’aura donc aucun effet. L’injonction «meurs» fera tomber la victime en catalepsie pour un round, mais elle se relèvera ensuite sans problème. Les injonctions typiques sont: arrête, reviens, fuis, donne, etc. Les morts-vivants ne sont pas affectés par ce sort. Les créatures ayant une intelligence de 13 ou plus, et les créatures ayant au moins 6 dés de vie (ou niveaux d’expérience), sont autorisées à lancer un jet de protection contre les sorts. (Les créatures avec 13 ou plus d’intelligence ET au moins 6 dés de vie n’ont PAS 2 jets de protection).",
         "onUse": "systems/add2e/scripts/sorts/injonction.js"
@@ -21001,12 +20926,8 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "protection",
+          "operation": "invisibility_to_animals"
         },
         "description": "quand ce sort est lancé, la créature touchée devient totalement indétectable aux yeux des animaux normaux ayant une intelligence inférieure à 6. Les animaux normaux incluent les variétés géantes, mais excluent ceux possédant des habilités ou pouvoirs magiques. La créature affectée par ce sort est capable de marcher parmi les animaux ou de passer entre eux comme s’il n’existait pas. Par exemple, il peut se tenir à côté de lions affamés ou d’un tyrannosaure rex sans qu’il soit remarqué. Par contre, un palefroi de la nuit, un molosse satanique ou un loup des glaces remarquera certainement la créature. La composante matérielle de ce sort est du houx avec lequel le druide doit se frotter.",
         "onUse": "systems/add2e/scripts/sorts/druide-invisibilite-aux-animaux.js"
@@ -21323,12 +21244,8 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "summon",
+          "operation": "animal_summoning_1"
         },
         "description": "avec ce sort, le druide peut invoquer jusqu’à 8 animaux du type qu’il désire et annonce au moment de l’invocation, à condition que le type d’animal soit dans la portée du sort. Ces animaux ne peuvent pas avoir plus de 4 dés de vie chacun. Ils aideront le druide par les moyens qu’ils possèdent, restant jusqu’à la fin d’un combat, jusqu’à ce qu’une mission spécifique soit accomplie, jusqu’à ce que le druide soit en sécurité ou jusqu’à ce qu’il les renvoie. En cas d’échec parce que le type d’animal invoqué par le druide ne se trouve pas dans la portée du sort, le druide peut refaire une tentative avec un autre type d’animal. Au total, le druide a droit à 3 tentatives. Par exemple, le druide invoque des chiens sauvages, mais il n’y en a pas, puis il appelle des faucons, sans succès, enfin, il tente de faire venir des chevaux sauvages. Que sa dernière tentative soit réussie ou non, il n’a plus droit à un nouvel essai. Le MD déterminera les probabilités de présence de l’animal invoqué par le druide. Hormis les animaux de classe géante, les monstres et les animaux fantastiques ne peuvent pas être invoqués, donc pas de chimère, de dragons, de gorgones ou de manticores, etc. Ce sort ne peut pas être utilisé sous l’eau.",
         "onUse": "systems/add2e/scripts/sorts/druide-invocation-animale-i.js"
@@ -21413,12 +21330,8 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "summon",
+          "operation": "animal_summoning_2"
         },
         "description": "ce sort a la même durée et les mêmes effets que le sort de niveau 4, invocation animale I, sauf que le druide peut invoquer jusqu’à 6 animaux de 8 dés de vie maximum chacun ou 12 animaux de 4 dés de vie maximum chacun.",
         "onUse": "systems/add2e/scripts/sorts/druide-invocation-animale-ii.js"
@@ -21503,12 +21416,8 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "summon",
+          "operation": "animal_summoning_3"
         },
         "description": "ce sort a la même durée et les mêmes effets que le sort de niveau 4, invocation animale I, sauf que le druide peut invoquer jusqu’à 4 animaux de 16 dés de vie maximum chacun ou 8 animaux de 8 dés de vie maximum chacun ou 16 animaux de 4 dés de vie maximum chacun.",
         "onUse": "systems/add2e/scripts/sorts/druide-invocation-animale-iii.js"
@@ -21608,12 +21517,8 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "summon",
+          "operation": "elemental_summoning"
         },
         "description": "Le sort comporte quatre formes, choisies avant la mémorisation, qui invoquent un élémental d’air, d’eau, de terre ou de feu. Le magicien doit se concentrer pour le contrôler ; il existe un risque récurrent qu’il se retourne contre lui, et un élémental d’eau doit rester près d’une étendue d’eau.",
         "onUse": "systems/add2e/scripts/sorts/magicien-invocation-d-elemental.js"
@@ -21768,12 +21673,8 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "summon",
+          "operation": "insect_summoning"
         },
         "description": "quand ce sort est lancé, le druide attire des insectes (70 % de chances que ce soient des insectes volants). Les insectes invoqués sont des mouches, des abeilles, des bourdons ou des guêpes si ce sont des insectes volants ; des fourmis ou des coléoptères (scarabées) si ce sont des insectes rampants. Un nuage d'insectes volants, ou un essaim de rampants, apparaîtra après le lancement du sort. Ils attaqueront toute créature que désignera le druide. La créature attaquée subira 2 points de dégâts par round de combat et elle ne peut rien faire d'autre que d'essayer de s'éloigner des insectes pendant le temps où elle se fait attaquer. Les insectes peuvent ensuite attaquer une autre créature mais il se passe 1 round entre le moment où ils laissent la première victime pour attaquer la deuxième ; les insectes rampants ne se déplacent que de 3,60 m par round (vitesse maximum sur un sol lisse). En intérieur et sous-sol, le druide a 30 % de chances d'invoquer de 1 à 4 fourmis géantes, à moins que des fourmis géantes soient proches. Les composantes matérielles pour ce sort sont du gui, un pétale de fleur et un peu de boue ou d'argile humide.",
         "onUse": "systems/add2e/scripts/sorts/druide-invocation-d-insectes.js"
@@ -21859,12 +21760,8 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "summon",
+          "operation": "earth_elemental"
         },
         "description": "quand un druide lance ce sort, il invoque un élémental de terre de 16 dés de vie. Le druide n’a qu’à le commander et il obtient ce qu’il désire car l’élémental ne considère pas le druide comme un ennemi. L’élémentaire reste jusqu’à ce qu’il soit détruit, dissipé ou renvoyé par l’inverse du sort (voir invocation d’un élémental du feu p.62). Un élémental de terre invoqué sous l’eau doit rester sur le fond de la mer ou du cours d’eau à partir duquel il a été créé et ne peut « nager » ou quitter le sol. Il peut en revanche s’attaquer à des créatures ou des constructions reposant sur le sol ou souterraines.",
         "onUse": "systems/add2e/scripts/sorts/druide-invocation-d-un-elemental-de-terre.js"
@@ -22002,12 +21899,8 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "summon",
+          "operation": "fire_elemental"
         },
         "description": "en lançant ce sort, le druide ouvre une porte sur le plan élémentaire du feu et un puissant élémental du feu (voir Règles AVANCÉES DE DONJONS & DRAGONS, MANUEL DES MONSTRES) est invoqué pour venir près du druide. Voici les chances de trouver ces différentes créatures : 01-85 élémental du feu de 16 dés de vie 86-94 2 à 4 salamandres 95-98 un éfrit 99-00 élémental du feu surpuissant : de 21 à 24 dés de vie (d4+20) Du fait des relations entre le druide et les forces naturelles et élémentaires, le lanceur du sort n’a pas à craindre que l’élémental se retourne contre lui ; donc la concentration sur les activités de l’élémental du feu (ou des autres créatures invoquées) et la protection d’un cercle magique ne sont pas nécessaires. L’élémental invoqué aidera le druide de toutes ses possibilités, y compris en attaquant les ennemis du jeteur de sort. La créature invoquée reste pour un maximum de 1 tour par niveau du druide, à moins qu’elle ne soit renvoyée dans son plan à cause d’une attaque, d’une dissipation de la magie, d’une parole sacrée/maudite ou par l’inverse du sort, dissipation d’un élémental du feu. Seul un druide peut renvoyer, par le sort inversé, les salamandres, les éfrits ou les élémentaux surpuissants. Ce sort ne peut pas être utilisé sous l’eau.",
         "onUse": "systems/add2e/scripts/sorts/druide-invocation-d-un-elemental-du-feu.js"
@@ -22145,12 +22038,8 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "summon",
+          "operation": "find_familiar"
         },
         "description": "le magicien tente d’attirer un familier, une seule fois par an. Il n’en choisit pas le type ; le Maître de Donjon détermine secrètement le résultat et les familiers spéciaux peuvent réussir un jet de protection, auquel cas aucun familier ne pourra être invoqué pendant un an. Un familier normal apporte ses points de vie et ses sens au magicien à 12\" ou moins, mais sa mort coûte définitivement le double de ses points de vie au maître.",
         "onUse": "systems/add2e/scripts/sorts/magicien-invocation-d-un-familier.js"
@@ -22236,12 +22125,9 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "damage",
+          "operation": "call_lightning",
+          "damageType": "lightning"
         },
         "description": "pour que ce sort puisse être lancé, il doit y avoir des conditions climatiques précises du type tempête dans la zone d’effet : une averse importante, des nuages et du vent, un temps chaud et nuageux ou même une tornade. Le druide est alors capable de provoquer des éclairs qui viendront frapper le sol. Chaque éclair causera les dégâts suivants : 2d8 + 1d8 pour chaque niveau du druide ; ainsi un druide de niveau 4 peut créer un éclair qui provoquera 6d8 de dégâts. L’éclair frappe perpendiculairement au sol, là où le druide le désire, jusqu’à une distance de 36\" maximum de rayon. Toute créature se trouvant au point d’impact ou à moins de 1\" du point d’impact de l’éclair subira les dégâts entiers, à moins qu’elle ne réussisse son jet de protection : dans ce cas, elle ne subira que la moitié des dégâts. Le jet de protection, selon qu’il est réussi ou non, indiquera le nombre de d8 qui seront lancés pour déterminer les dégâts : dans le cas d’un druide de niveau 6, 8d8 si le jet de protection est raté, 4d8 s’il est réussi. Le druide peut appeler un éclair par tour et il peut appeler autant d’éclair qu’il a de niveaux, avec un tour de préparation entre chaque éclair. Ce sort n’est utilisable qu’en extérieur. Si un djinn ou un élémentaire d’air est là pour créer un tourbillon, la force des éclairs que peut alors invoquer le druide est réduite de moitié. Ce sort ne peut pas être utilisé sous l’eau.",
         "onUse": "systems/add2e/scripts/sorts/druide-invocation-de-la-foudre.js"
@@ -23134,12 +23020,8 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "summon",
+          "operation": "woodland_beings"
         },
         "description": "avec ce sort, le druide est capable d’invoquer certaines créatures sylvestres. Naturellement, ce sort ne fonctionne qu’en extérieur, mais pas uniquement dans des zones forestières. Le druide commence l’incantation et la continue sans interruption jusqu’à ce qu’une créature apparaisse ou que deux tours se soient écoulés (la verbalisation et les gestes sont faciles et ne sont donc pas fatiguant pour le lanceur du sort). Un seul type des créatures ci-dessous peut être invoqué : les créatures viendront seulement si elles sont dans la portée du sort : 1-4 centaures 2-8 lutins 1-4 dryades 1-8 pixies 1-6 esprits follets 1-4 satyres 1 licorne 1 sylvanien (Le MD consultera sa carte de la région ou déterminera la probabilité de présence des types de créatures citées dans les limites de la portée du sort au moment où il est lancé). Les (ou la) créatures appelées ont droit à un jet de protection pour échapper à l’invocation, mais avec un malus de –4. Toute créature sylvestre invoquée sera favorablement disposée envers le druide et apportera toute l’aide qu’elle peut. Cependant, si le lanceur de sort ou un de ses compagnons est d’alignement mauvais, les créatures invoquées ont droit à un autre jet de protection, mais cette fois avec un bonus de +4, ceci quand elles arrivent à moins de 1\" de la personne mauvaise. Si le jet de protection est réussi, les créatures chercheront immédiatement à s’enfuir. Dans tous les cas, si le druide demande aux créatures de combattre pour lui, elles lanceront un dé de pourcentage de réaction à la loyauté basée sur le charisme du druide et sur les rapports que le druide a eu avec ces créatures. Ce sort ne peut pas être utilisé sous l’eau. Les composantes matérielles sont une pomme de pin et 8 baies de houx.",
         "onUse": "systems/add2e/scripts/sorts/druide-invocation-des-creatures-sylvestres.js"
@@ -23318,12 +23200,8 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "utility",
+          "operation": "weather_summoning"
         },
         "description": "ce sort est similaire au sort de clerc contrôle du climat (voir p.52). En lançant ce sort, le druide est capable de créer des conditions climatiques spéciales, mais en rapport avec la saison et le climat de la région où il se trouve. Ainsi, au printemps, le druide peut créer une tornade, un orage, une tempête de neige fondue ou une vague de froid. En été, il peut créer une pluie torrentielle, une vague de canicule, une averse de grêle, etc. En automne, il peut invoquer une vague de froid ou de chaleur, du brouillard, de la neige, etc. Et en hiver, il peut créer une vague de froid intense, du blizzard, etc. Les vents de puissance exceptionnelle (les ouragans) peuvent être invoqués près des côtes, à la fin de l’hiver ou au début du printemps. Le temps ainsi créé n’est pas sous le contrôle du druide. Une tornade pourra ne durer qu'un tour tandis que d'autres types de phénomènes dureront des heures voire des jours. La zone d’effet est également variable : elle va de 2,6 km2 à 260 km2 ou plus. Plusieurs druides peuvent agir de concert pour que le changement de temps soit plus important. Dans une période de 4 tours après le lancement du sort, le changement du climat commence à se faire sentir ; le ciel s’éclaircit, l’air devient plus chaud, le vent se lève, etc. Le temps invoqué par le druide se met définitivement en place 6 à 17 tours (d12+5) après le lancement du sort. Ce sort ne peut pas être utilisé sous l’eau. Tout autre gui que le gui majeur diminuera les effets du sort.",
         "onUse": "systems/add2e/scripts/sorts/druide-invocation-du-temps.js"
@@ -24659,12 +24537,8 @@
         "composantes": "V, S",
         "composants_materiels": [],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "communication",
+          "operation": "tongues"
         },
         "description": "ce sort autorise le clerc à parler la langue de toute créature se trouvant dans la zone d’effet, que ce soit une langue raciale ou un langage d’alignement. L’inverse du sort, incompréhension, annule ce sort ou rend incompréhensible toute conversation dans la zone d’effet.",
         "onUse": "systems/add2e/scripts/sorts/langue.js"
@@ -26946,12 +26820,8 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "protection",
+          "operation": "bigby_interposing_hand"
         },
         "description": "Une main magique se place entre le magicien et l’adversaire désigné. Sa taille va de celle d’un humain à celle d’un titan ; elle impose un ralentissement aux créatures légères qui tentent de la pousser et exige des armes magiques pour être détruite.",
         "onUse": "systems/add2e/scripts/sorts/magicien-main-d-interposition-de-bigby.js"
@@ -27123,12 +26993,9 @@
         "composantes": "V, S",
         "composants_materiels": [],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "damage",
+          "operation": "burning_hands",
+          "damageType": "fire"
         },
         "description": "des flammes d’environ 1 m de long jaillissent des doigts du magicien sur un arc horizontal d’environ 120°. Toute créature dans la zone subit 1 point de dégât par niveau du magicien, sans jet de protection, et les matières inflammables touchées prennent feu. Le sort peut fonctionner dans les limites d’eau aérée.",
         "onUse": "systems/add2e/scripts/sorts/magicien-mains-brulantes.js"
@@ -27305,12 +27172,8 @@
         "composantes": "V, S",
         "composants_materiels": [],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "creation",
+          "operation": "create_food_water"
         },
         "description": "quand ce sort est lancé, le clerc fait apparaître de l’eau et de la nourriture. Les aliments créés sont très nourrissants et pour chacun de ses niveaux, le clerc peut créer de quoi rassasier 3 créatures de taille humaine ou une créature de la taille d’un cheval, et ce pour une journée entière. Pour chaque niveau que le clerc a atteint, il peur créer 27 dm³ de nourriture et/ou d’eau, c.-à-d. 54 dm³ au niveau 2, 81 dm³ au niveau 3, 108 dm³ au niveau 4, etc.; ou alors, le clerc peut créer nourriture et eau en quantités égales: 27 dm³ d'aliments et 27 dm³ d'eau au niveau 2, etc.",
         "onUse": "systems/add2e/scripts/sorts/creation-de-nourriture-et-d-eau.js"
@@ -29120,12 +28983,8 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "terrain",
+          "operation": "wall_of_thorns"
         },
         "description": "ce sort crée une barrière de buissons et de fourrés très épais, remplis de ronces excessivement coupantes et longues comme un doigt humain. Toute créature essayant de passer à travers ce mur (ou simplement le percutant) subit 8 point de dégâts plus un nombre de points égaux à sa classe d’armure en ignorant les bonus dus à la dextérité, soit 10 points ou moins ; une classe d’armure négative diminue les points de dégâts. Toute créature se trouvant dans la zone d’effet quand le sort est lancé est considérée comme ayant percuté le mur d’épines et doit en plus s’en extirper. Les dégâts sont exprimés pour une tranche de 1\" d’épaisseur du mur. Il faut au moins 4 tours pour se dégager du mur en le tailladant si ce dernier fait 1\" d’épaisseur. Les feux normaux n’ont aucun effet sur les ronces, mais un feu magique les brûlera en deux tours ; mais le mur d’épines deviendra alors un mur de feu, dont la face inoffensive se trouvera du côté du druide (voir le sort mur de feu p.61). Le côté le plus proche du mur peut apparaître jusqu’à une distance de 8\" du druide, selon son désir. Le sort dure 1 tour par niveau du druide. Le mur occupe un volume de 1\" x 1\" x 1\" par niveau du druide ; donc, un druide de niveau 14 peut créer un mur de la forme qu’il veut ; par exemple : 7\" de long, 2\" de haut (ou de profondeur) et de 1\" de profondeur (ou de hauteur). Le druide forme son mur selon l’utilisation qu’il veut en faire.",
         "onUse": "systems/add2e/scripts/sorts/druide-mur-d-epines.js"
@@ -30409,12 +30268,8 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "communication",
+          "operation": "speak_with_dead"
         },
         "description": "en lançant ce sort, le clerc peut poser plusieurs questions à une créature morte depuis une période de temps précise et recevoir des réponses en fonction des connaissances de la créature morte. Le clerc doit être capable de converser dans la langue de la créature morte. Le temps depuis lequel la créature est morte est un facteur à prendre en compte car seuls les clercs les plus puissants peuvent parler avec des créatures décédées depuis longtemps. De la même manière, le nombre de questions et la durée du sort dépendent aussi du niveau du clerc. Ce dernier a besoin de son symbole sacré; il doit aussi brûler de l’encens au-dessus du corps, des restes ou de la partie concernés. Niveau d'expérience Temps maximum écoulé depuis la mort Durée du sort Nombre de questions 6e et moins 1 semaine 1 round 2 7e-8e 1 mois 3 rounds 3 9e-12e 1 année 1 tour 4 13e-15e 10 ans 2 tours 5 16e-20e 100 ans 3 tours 6 21e et plus 1.000 ans 6 tours 7",
         "onUse": "systems/add2e/scripts/sorts/communication-avec-les-morts.js"
@@ -30880,12 +30735,8 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "terrain",
+          "operation": "stinking_cloud"
         },
         "description": "Le sort crée un nuage de vapeurs nauséabondes. Les créatures qui ratent leur jet de protection contre le poison restent sans défense pendant 2 à 5 rounds ; une rafale de vent le dissipe rapidement.",
         "onUse": "systems/add2e/scripts/sorts/magicien-nuage-puant.js"
@@ -31145,12 +30996,8 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "detection",
+          "operation": "arcane_eye"
         },
         "description": "Le magicien crée un œil invisible qui se déplace et lui transmet des informations visuelles. Il possède une infravision sur 3 m et voit jusqu’à 18 m dans une zone éclairée.",
         "onUse": "systems/add2e/scripts/sorts/magicien-il-magique.js"
@@ -32926,12 +32773,8 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "protection",
+          "operation": "barkskin"
         },
         "description": "quand le druide lance ce sort sur une créature, cette créature obtient un bonus de 1 sur sa classe d’armure, la peau devenant aussi dure que de l’écorce. En plus, le bonus de 1 s’applique aussi aux jets de protection contre toutes les formes d’attaque, sauf la magie. Ce sort peut être lancé sur le druide lui-même ou sur un autre personnage. En plus du gui, le druide doit avoir une poignée d’écorce de chêne comme composante matérielle.",
         "onUse": "systems/add2e/scripts/sorts/druide-peau-d-ecorce.js"
@@ -33011,12 +32854,8 @@
         "composantes": "V, S",
         "composants_materiels": [],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "detection",
+          "operation": "alignment"
         },
         "description": "Ce sort permet au clerc de connaître exactement l’alignement d’une personne : humaine, semi-humaine ou non-humaine. Jusqu’à 10 personnes peuvent ainsi être examinées. L’inverse de ce sort, confusion de l’alignement, cache totalement l’alignement d’une personne pendant 1 tour et si un nouveau sort de perception de l’alignement est lancé ensuite sur cette personne, dans la limite de la durée, il sera inefficace. L’inverse peut cacher l’alignement d’une personne pendant un tour, 2 personnes pendant 5 rounds, etc. Certains objets magiques annulent le pouvoir de ce sort.",
         "onUse": "systems/add2e/scripts/sorts/connaissance-des-alignements.js"
@@ -33499,12 +33338,12 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "status",
+          "operation": "fear",
+          "status": [
+            "frightened",
+            "fear"
+          ]
         },
         "description": "Une créature de moins de six dés de vie ou niveaux qui rate son jet de protection tremble de peur. Acculée, elle combat avec –1 au toucher, aux dégâts et aux jets de protection.",
         "onUse": "systems/add2e/scripts/sorts/magicien-peur.js"
@@ -34332,12 +34171,9 @@
         "composantes": "V, S",
         "composants_materiels": [],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "damage",
+          "operation": "shocking_grasp",
+          "damageType": "lightning"
         },
         "description": "le magicien emmagasine une charge électrique qui inflige 1d8 points de dégâts, plus 1 point par niveau du magicien, à la créature qu’il touche. La décharge ne se produit pas si la victime touche d’elle-même le magicien.",
         "onUse": "systems/add2e/scripts/sorts/magicien-poigne-electrique.js"
@@ -35263,12 +35099,9 @@
         "composantes": "V, S",
         "composants_materiels": [],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "damage",
+          "operation": "magic_missile",
+          "damageType": "force"
         },
         "description": "le sort crée un ou plusieurs projectiles magiques qui partent des doigts du magicien et touchent automatiquement leurs cibles. Chaque projectile inflige 1d4+1 points de dégâts. Le magicien obtient un projectile supplémentaire au niveau 3 puis tous les deux niveaux, et peut répartir ces projectiles entre plusieurs cibles dans la zone d’effet.",
         "onUse": "systems/add2e/scripts/sorts/projectile-magique.js"
@@ -36487,12 +36320,8 @@
         "composantes": "V, S",
         "composants_materiels": [],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "protection",
+          "operation": "mind_protection"
         },
         "description": "La cible devient protégée contre les sorts, objets et pouvoirs qui détectent, influencent ou lisent pensées et émotions, y compris de nombreuses formes de divination, charme, possession, télépathie et pouvoirs psi. Les pouvoirs divins majeurs peuvent cependant franchir cette protection.",
         "onUse": "systems/add2e/scripts/sorts/magicien-protection-d-esprit.js"
@@ -36664,12 +36493,8 @@
         "composantes": "V, S",
         "composants_materiels": [],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "utility",
+          "operation": "purify_water"
         },
         "description": "avec ce sort, de l’eau sale, contaminée, polluée est rendue claire, pure et potable. Le druide peut ainsi purifier 27 dm3 par niveau. L’inverse du sort, corruption de l’eau, fonctionne de la même manière, mais avec les effets inverses. De l’eau bénite/maudite peut être polluée.",
         "onUse": "systems/add2e/scripts/sorts/druide-purification-de-l-eau.js"
@@ -36803,12 +36628,8 @@
         "composantes": "V, S",
         "composants_materiels": [],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "utility",
+          "operation": "purify_food_and_drink"
         },
         "description": "ce sort permet de purifier toute nourriture et toute eau polluée, moisie, pourrie, empoisonnée. L’inverse du sort, corruption de l’eau et des aliments, rend la nourriture impropre à la consommation et l’eau polluée et non potable; l’inverse profane même l’eau bénite. L’eau maudite est altérée par une purification de l’eau.",
         "onUse": "systems/add2e/scripts/sorts/purification-de-leau-et-des-aliments.js"
@@ -38084,12 +37905,11 @@
         "composantes": "V, S",
         "composants_materiels": [],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "status",
+          "operation": "ray_of_enfeeblement",
+          "status": [
+            "weakened"
+          ]
         },
         "description": "Le rayon réduit de 25 % la force et les capacités physiques de la cible, plus 2 % par niveau au-dessus du troisième. Un jet de protection réussi annule l’effet.",
         "onUse": "systems/add2e/scripts/sorts/magicien-rayon-d-affaiblissement.js"
@@ -40529,12 +40349,8 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "status",
+          "operation": "delay_poison"
         },
         "description": "Quand ce sort est lancé sur une personne empoisonnée, il ralentit très sensiblement les effets du poison. Il peut même redonner la vie à un individu mort par empoisonnement s’il est lancé sur la victime dans un laps de temps inférieur ou égal à 1 tour par niveau du clerc ; par exemple, un clerc de niveau 10 pourra temporairement sauver une personne empoisonnée et morte depuis un maximum de 10 tours. Si ce sort ne neutralise pas le poison, il empêche toutefois de subir des dégâts importants. La victime, cependant, perdra 1 point de vie par tour, sans pourtant ne jamais descendre au dessous de 1 point de vie. Les composantes matérielles pour ce sort sont le symbole sacré du clerc et une gousse d’ail qu’il doit écraser et répandre sur les pieds nus de la victime.",
         "onUse": "systems/add2e/scripts/sorts/ralentissement-du-poison.js"
@@ -40970,12 +40786,8 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "protection",
+          "operation": "sanctuary"
         },
         "description": "quand un clerc lance un sort sanctuaire, tout adversaire doit lancer un jet de protection contre les sorts. Si le jet de protection est raté, l’adversaire ignorera totalement le clerc et attaquera quelqu’un d’autre. Si le jet de protection est réussi, le clerc pourra être sujet aux attaques de cet adversaire. À noter que ce sort n’empêche pas les effets des sorts de zone (boule de feu, tempête de glace, etc.). Pendant la période de protection que donne ce sort, le clerc ne peut faire aucune action offensive, mais il peut utiliser des sorts non-violents, des sorts qui ne représentent pas une agression; il peut par exemple guérir les blessures de quelqu’un ou lancer une bénédiction, un augure, un cantique, une lumière pour éclairer (pas sur un adversaire!), etc. Ce sort peut être lancé sur une créature autre que le clerc lui-même. Les composantes matérielles de ce sort sont le symbole sacré du clerc et un petit miroir en argent.",
         "onUse": "systems/add2e/scripts/sorts/sanctuaire.js"
@@ -42017,12 +41829,8 @@
         "composantes": "V, S",
         "composants_materiels": [],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "silence",
+          "operation": "silence_zone"
         },
         "description": "En lançant ce sort, le clerc crée une zone de silence. Tout bruit est stoppé, donc aucune conversation n’est possible ; les sorts ayant une composante verbale ne peuvent être lancés et aucun bruit ne sortira de cette zone. Ce sort peut être lancé dans les airs ou sur un objet ou même sur une créature ; si cette créature se déplace ou si l’objet est déplacé, la zone de silence se déplace avec. Si la créature n’est pas consentante, elle a le droit à un jet de protection et s’il est réussi, la zone de silence se crée derrière elle (et ne se déplace donc pas avec elle). Le sort dure 2 rounds par niveau du clerc, c'est-à-dire 2 rounds au 1er niveau, 4 au 2e niveau, etc.",
         "onUse": "systems/add2e/scripts/sorts/silence-rayon-de-15-pieds.js"
@@ -43286,12 +43094,12 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "status",
+          "operation": "sleep",
+          "status": [
+            "sleeping",
+            "unconscious"
+          ]
         },
         "description": "le sort plonge une ou plusieurs créatures dans le sommeil, à l’exception des morts-vivants et d’autres créatures indiquées dans le Manuel des Monstres. Les cibles se trouvent dans un cercle de 3\" de diamètre ; les créatures aux dés de vie les plus faibles sont affectées d’abord. Les coups ou blessures réveillent les victimes, qui ont besoin d’un round entier pour reprendre leurs esprits.",
         "onUse": "systems/add2e/scripts/sorts/sommeil.js"
@@ -44086,12 +43894,9 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "damage",
+          "operation": "freezing_sphere",
+          "damageType": "cold"
         },
         "description": "Le sort a trois applications : congeler une étendue d’eau, projeter un fin rayon de froid ou créer une petite bille explosive. Le rayon inflige quatre dégâts par niveau si la cible ne l’évite pas ; la bille inflige 4d6 dans un rayon de 3 m, moitié sur un jet réussi. Les trois applications utilisent des composants distincts.",
         "onUse": "systems/add2e/scripts/sorts/magicien-sphere-glaciale-d-otiluke.js"
@@ -45916,12 +45721,8 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "terrain",
+          "operation": "web"
         },
         "description": "Le sort crée une toile gluante qui exige deux points d’ancrage opposés. Les créatures prises doivent se libérer selon leur force ; le feu détruit la toile et peut blesser les créatures encore prises.",
         "onUse": "systems/add2e/scripts/sorts/magicien-toile-d-araignee.js"
@@ -46007,12 +45808,8 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "utility",
+          "operation": "polymorph_any_object"
         },
         "description": "Le sort transforme une chose vivante ou non en une autre. Pour les transformations proches d’Allométamorphose ou de Pierre en chair, il applique une version plus puissante avec un malus de –4 au jet de protection ; les autres durées dépendent du degré de différence entre les deux formes.",
         "onUse": "systems/add2e/scripts/sorts/magicien-transformation-d-objets.js"
@@ -48223,12 +48020,8 @@
           }
         ],
         "effectProfile": {
-          "mechanic": "manual",
-          "operation": "manual_resolution",
-          "target": {
-            "min": 0,
-            "max": null
-          }
+          "mechanic": "detection",
+          "operation": "invisibility"
         },
         "description": "Le magicien voit dans sa ligne de vue les créatures et objets invisibles, astraux, éthérés, cachés ou hors de phase.",
         "onUse": "systems/add2e/scripts/sorts/illusionniste-detection-de-l-invisibilite.js"
