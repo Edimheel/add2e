@@ -1,8 +1,8 @@
 // scripts/add2e-attack/05-jb2a-vfx.mjs
 // ADD2E — VFX JB2A Premium sécurisés pour sorts et attaques d'armes.
-// Version : 2026-06-29-persistent-darkness-ground-v2
+// Version : 2026-06-29-persistent-darkness-ground-v3
 
-globalThis.ADD2E_JB2A_VFX_VERSION = "2026-06-29-persistent-darkness-ground-v2";
+globalThis.ADD2E_JB2A_VFX_VERSION = "2026-06-29-persistent-darkness-ground-v3";
 
 const ADD2E_JB2A_WEAPON_FX_DEDUPE_MS = 1200;
 globalThis.__ADD2E_JB2A_WEAPON_FX_DEDUPE_KEYS ??= new Map();
@@ -51,6 +51,7 @@ const ADD2E_JB2A_WEAPON_SPECIAL = [
 ];
 
 const ADD2E_JB2A_DARKNESS_GROUND = [
+  "modules/JB2A_DnD5e/Library/4th_Level/Black_Tentacles/BlackTentacles_01_Dark_Purple_600x600.webm",
   "modules/jb2a_patreon/Library/1st_Level/Darkness/Darkness_01_Regular_Black_600x600.webm",
   "modules/JB2A_DnD5e/Library/1st_Level/Darkness/Darkness_01_Regular_Black_600x600.webm",
   "modules/jb2a_patreon/Library/Generic/Marker/MarkerFear_01_Dark_Purple_400x400.webm",
