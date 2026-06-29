@@ -1,25 +1,39 @@
 /**
  * ADD2E — Protection contre le Mal / Protection contre le Bien
  * Clerc niveau 1
- * Version : 2026-06-29-protection-ward-runes-v2
+ * Version : 2026-06-29-protection-auto-mode-persistent-ward-v3
  *
  * Contrat onUse : true = consommé ; false = non consommé.
- * Compatible Foundry V13/V14/V15. DialogV2 uniquement.
+ * Compatible Foundry V13/V14/V15. Aucun dialogue n'est requis :
+ * la variante est déterminée par l'item réellement lancé.
  */
 
-const __add2eOnUseResult = await (async () => {
-  const DialogV2 = foundry.applications?.api?.DialogV2;
-  if (!DialogV2?.wait) {
-    ui.notifications.error("Protection : DialogV2 indisponible.");
-    return false;
-  }
+const ADD2E_PROTECTION_VFX_VERSION = "2026-06-29-protection-auto-mode-persistent-ward-v3";
 
+const __add2eOnUseResult = await (async () => {
   const esc = value => String(value ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/\"/g, "&quot;")
     .replace(/'/g, "&#039;");
+
+  const normalize = value => String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9:]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
+
+  const toArray = value => {
+    if (value === undefined || value === null || value === "") return [];
+    if (Array.isArray(value)) return value.flatMap(toArray);
+    if (value instanceof Set) return [...value];
+    if (typeof value?.values === "function" && typeof value !== "string") return [...value.values()];
+    return [value];
+  };
 
   const chatStyleData = () => CONST.CHAT_MESSAGE_STYLES
     ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER }
@@ -36,8 +50,8 @@ const __add2eOnUseResult = await (async () => {
 
   const casterFromContext = sourceItem => (typeof actor !== "undefined" && actor) ? actor : sourceItem?.parent;
 
-  const casterTokenFor = caster => canvas.tokens?.controlled?.[0]
-    ?? ((typeof token !== "undefined" && token) ? token : null)
+  const casterTokenFor = caster => canvas.tokens?.controlled?.find(tokenDoc => tokenDoc?.actor?.id === caster?.id)
+    ?? ((typeof token !== "undefined" && token?.actor?.id === caster?.id) ? token : null)
     ?? caster?.getActiveTokens?.()[0]
     ?? null;
 
@@ -47,13 +61,16 @@ const __add2eOnUseResult = await (async () => {
       actorDoc?.system?.level,
       actorDoc?.system?.details?.niveau,
       actorDoc?.system?.details?.level,
+      actorDoc?.system?.details_classe?.clerc?.niveau,
       actorDoc?.system?.details_classe?.niveau
     ];
     for (const raw of candidates) {
       const value = Number(raw);
       if (Number.isFinite(value) && value > 0) return value;
     }
-    return 1;
+    const cleric = Array.from(actorDoc?.items ?? []).find(entry => entry?.type === "classe" && normalize(entry?.name).includes("clerc"));
+    const clericLevel = Number(cleric?.system?.niveau ?? cleric?.system?.level);
+    return Number.isFinite(clericLevel) && clericLevel > 0 ? clericLevel : 1;
   };
 
   const tokensAuContact = (a, b) => {
@@ -97,14 +114,55 @@ const __add2eOnUseResult = await (async () => {
     return { key, mode: CONST.ACTIVE_EFFECT_MODES.ADD, value: String(value), priority };
   };
 
+  const modeFromText = value => {
+    const key = normalize(value);
+    if (!key) return null;
+    const hasGood = key.includes("protection_contre_le_bien") || key === "bien";
+    const hasEvil = key.includes("protection_contre_le_mal") || key === "mal";
+    if (hasGood === hasEvil) return null;
+    return hasGood ? "bien" : "mal";
+  };
+
+  const resolveMode = sourceItem => {
+    const flags = sourceItem?.flags?.add2e ?? {};
+    const directValues = [
+      sourceItem?.name,
+      sourceItem?.system?.nom,
+      flags?.reversibleActorEntry?.name,
+      flags?.reversibleActorEntry?.displayName,
+      flags?.reversibleActorEntry?.inverseName
+    ];
+    for (const value of directValues) {
+      const resolved = modeFromText(value);
+      if (resolved) return resolved;
+    }
+
+    const explicitMode = normalize(flags?.reversibleActorEntry?.mode);
+    if (["inverse", "bien"].includes(explicitMode)) return "bien";
+    if (["normal", "base", "mal"].includes(explicitMode)) return "mal";
+
+    const remainingValues = [
+      sourceItem?.system?.slug,
+      sourceItem?.system?.spellKey,
+      flags?.spellKey,
+      flags?.slug,
+      flags?.spellFamily?.kind,
+      flags?.spellFamily?.reversibleMode
+    ];
+    for (const value of remainingValues) {
+      const resolved = modeFromText(value);
+      if (resolved) return resolved;
+    }
+    return null;
+  };
+
   const modeData = mode => {
     const isGood = mode === "bien";
     return {
       key: isGood ? "bien" : "mal",
       label: isGood ? "Protection contre le Bien" : "Protection contre le Mal",
       spellKey: isGood ? "protection_contre_le_bien" : "protection_contre_le_mal",
-      jb2aKey: isGood ? "jb2a.ward.rune.red" : "jb2a.ward.rune.yellow",
-      fallbackPreset: isGood ? "protection_dark" : "protection",
+      jb2aKey: isGood ? "jb2a.aura_themed.01.inward" : "jb2a.ward.rune.yellow",
       tags: isGood
         ? ["sort:protection_contre_le_bien", "protection:bien", "bonus_ca:2", "bonus_save_vs:bien:2", "barriere:creatures_invoquees", "malus_toucher_ennemi:2"]
         : ["sort:protection_contre_le_mal", "protection:mal", "bonus_ca:2", "bonus_save_vs:mal:2", "barriere:creatures_invoquees", "malus_toucher_ennemi:2"]
@@ -164,6 +222,80 @@ const __add2eOnUseResult = await (async () => {
     };
   };
 
+  const effectIsProtection = effect => {
+    const flags = effect?.flags?.add2e ?? {};
+    const spellKey = normalize(flags?.spellKey ?? flags?.spell?.slug);
+    const tags = toArray(flags?.tags).map(normalize);
+    return ["protection_contre_le_mal", "protection_contre_le_bien"].includes(spellKey)
+      || tags.includes("sort:protection_contre_le_mal")
+      || tags.includes("sort:protection_contre_le_bien");
+  };
+
+  const vfxNameForToken = tokenDoc => {
+    const sceneId = canvas?.scene?.id ?? "scene";
+    const tokenId = tokenDoc?.document?.id ?? tokenDoc?.id ?? "token";
+    return `add2e-protection-ward:${sceneId}:${tokenId}`;
+  };
+
+  const endProtectionWardForToken = tokenDoc => {
+    if (!tokenDoc) return false;
+    const name = vfxNameForToken(tokenDoc);
+    try { globalThis.Sequencer?.EffectManager?.endEffects?.({ name, object: tokenDoc }); } catch (_error) {}
+    try { globalThis.Sequencer?.EffectManager?.endEffects?.({ name }); } catch (_error) {}
+    return true;
+  };
+
+  const registerProtectionWardHooks = () => {
+    if (globalThis.ADD2E_PROTECTION_WARD_HOOKS_VERSION === ADD2E_PROTECTION_VFX_VERSION) return;
+    globalThis.ADD2E_PROTECTION_WARD_HOOKS_VERSION = ADD2E_PROTECTION_VFX_VERSION;
+
+    const stopWard = effect => {
+      if (!effectIsProtection(effect)) return;
+      for (const tokenDoc of effect?.parent?.getActiveTokens?.() ?? []) endProtectionWardForToken(tokenDoc);
+    };
+
+    Hooks.on("deleteActiveEffect", stopWard);
+    Hooks.on("updateActiveEffect", (effect, changes) => {
+      if (changes?.disabled === true || changes?.disabled === 1) stopWard(effect);
+    });
+  };
+
+  const sequencerEntryExists = entry => {
+    if (!entry || typeof Sequence !== "function") return false;
+    try {
+      const db = globalThis.Sequencer?.Database;
+      if (typeof db?.getEntry === "function") return !!db.getEntry(entry);
+      if (typeof db?.getPathsUnder === "function") {
+        const parent = entry.split(".").slice(0, -1).join(".");
+        return (db.getPathsUnder(parent) ?? []).includes(entry);
+      }
+    } catch (_error) {}
+    return true;
+  };
+
+  const playProtectionWard = async (targetToken, modeInfo) => {
+    if (!targetToken || typeof Sequence !== "function" || !canvas?.ready) return false;
+    if (!sequencerEntryExists(modeInfo.jb2aKey)) return false;
+
+    endProtectionWardForToken(targetToken);
+    const name = vfxNameForToken(targetToken);
+    try {
+      await new Sequence()
+        .effect()
+        .file(modeInfo.jb2aKey)
+        .attachTo(targetToken)
+        .persist(true)
+        .name(name)
+        .belowTokens(false)
+        .scaleToObject(1.5)
+        .opacity(0.95)
+        .play();
+      return true;
+    } catch (_error) {
+      return false;
+    }
+  };
+
   const emitGmOperation = (operation, payload) => {
     if (!game.socket) return false;
     game.socket.emit("system.add2e", {
@@ -176,14 +308,9 @@ const __add2eOnUseResult = await (async () => {
 
   const applyEffect = async (targetActor, data) => {
     if (!targetActor) return false;
-    const removeTags = ["sort:protection_contre_le_mal", "sort:protection_contre_le_bien"];
-
     if (game.user.isGM || targetActor.isOwner) {
       const oldIds = Array.from(targetActor.effects ?? [])
-        .filter(effect => {
-          const tags = effect.flags?.add2e?.tags ?? [];
-          return Array.isArray(tags) && removeTags.some(tag => tags.includes(tag));
-        })
+        .filter(effectIsProtection)
         .map(effect => effect.id)
         .filter(Boolean);
       if (oldIds.length) await targetActor.deleteEmbeddedDocuments("ActiveEffect", oldIds);
@@ -203,39 +330,9 @@ const __add2eOnUseResult = await (async () => {
     return true;
   };
 
-  const applySequencerMethod = (effect, method, ...args) => {
-    try {
-      if (typeof effect?.[method] === "function") effect[method](...args);
-    } catch (_error) {}
-    return effect;
-  };
-
-  const playProtectionWard = async (targetToken, modeInfo) => {
-    if (!targetToken) return false;
-    if (typeof Sequence !== "undefined") {
-      try {
-        const sequence = new Sequence();
-        const ward = sequence.effect().file(modeInfo.jb2aKey).attachTo(targetToken);
-        applySequencerMethod(ward, "scaleToObject", 1.35);
-        applySequencerMethod(ward, "opacity", 0.95);
-        applySequencerMethod(ward, "aboveLighting");
-        await sequence.play();
-        return true;
-      } catch (_error) {
-        // Une installation JB2A incomplète conserve le visuel précédent comme repli.
-      }
-    }
-
-    try {
-      return await globalThis.ADD2E_CLERC_PLAY_LAUNCH_FX?.(targetToken, modeInfo.fallbackPreset, { maxFiles: 1 }) === true;
-    } catch (_error) {
-      return false;
-    }
-  };
-
   const createChat = async ({ caster, sourceItem, targetToken, modeInfo, rounds }) => {
     await ChatMessage.create({
-      speaker: ChatMessage.getSpeaker({ actor: caster }),
+      speaker: ChatMessage.getSpeaker({ actor: caster, token: casterTokenFor(caster) }),
       content: `
         <div class="add2e-spell-card add2e-spell-card-clerc" style="border-radius:12px;box-shadow:0 4px 10px #0002;background:linear-gradient(135deg,#fffaf0 0%,#fff7df 100%);border:1.5px solid #e2bc63;overflow:hidden;padding:0;font-family:var(--font-primary);">
           <div style="background:linear-gradient(90deg,#6f4b12 0%,#b88924 100%);padding:8px 12px;color:white;display:flex;align-items:center;gap:10px;border-bottom:2px solid #8a611d;">
@@ -272,69 +369,45 @@ const __add2eOnUseResult = await (async () => {
     return false;
   }
 
+  const mode = resolveMode(sourceItem);
+  if (!mode) {
+    ui.notifications.error(`Protection : impossible d’identifier la variante lancée (« ${sourceItem.name ?? "sans nom"} »).`);
+    return false;
+  }
+  const modeInfo = modeData(mode);
+
   const caster = casterFromContext(sourceItem);
   if (!caster) {
-    ui.notifications.error("Protection : lanceur introuvable.");
+    ui.notifications.error(`${modeInfo.label} : lanceur introuvable.`);
     return false;
   }
 
   const casterToken = casterTokenFor(caster);
   if (!casterToken) {
-    ui.notifications.warn("Protection : sélectionne le token du lanceur.");
+    ui.notifications.warn(`${modeInfo.label} : sélectionne le token du lanceur.`);
     return false;
   }
 
   const targets = Array.from(game.user.targets ?? []);
   if (targets.length !== 1 || !targets[0]?.actor) {
-    ui.notifications.warn("Protection : cible exactement une créature touchée.");
+    ui.notifications.warn(`${modeInfo.label} : cible exactement une créature touchée.`);
     return false;
   }
 
   const targetToken = targets[0];
   if (!tokensAuContact(casterToken, targetToken)) {
-    ui.notifications.warn("Protection : la cible doit être au toucher.");
+    ui.notifications.warn(`${modeInfo.label} : la cible doit être au toucher.`);
     return false;
   }
 
-  const result = await DialogV2.wait({
-    window: { title: "Lancement : Protection" },
-    add2eTheme: "cleric",
-    add2eImg: sourceItem.img || "systems/add2e/assets/icones/sorts/protection-contre-le-mal.webp",
-    content: `
-      <form style="font-family:var(--font-primary);display:flex;flex-direction:column;gap:8px;">
-        <div class="form-group">
-          <label style="font-weight:bold;">Version :</label>
-          <select name="mode" style="width:100%;">
-            <option value="mal">Protection contre le Mal</option>
-            <option value="bien">Protection contre le Bien</option>
-          </select>
-        </div>
-        <div style="font-size:0.9em;color:#6f4b12;border-top:1px solid #e2bc63;padding-top:6px;">
-          Durée : 3 rounds par niveau. Cible au toucher : ${esc(targetToken.name)}.
-        </div>
-      </form>`,
-    buttons: [
-      {
-        action: "cast",
-        label: "Lancer",
-        icon: "fa-solid fa-shield-halved",
-        default: true,
-        callback: (_event, button) => ({ mode: String(button.form?.elements?.mode?.value || "mal") })
-      },
-      { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => null }
-    ],
-    rejectClose: false
-  });
-  if (!result) return false;
-
+  registerProtectionWardHooks();
   const level = getLevel(caster);
-  const modeInfo = modeData(result.mode === "bien" ? "bien" : "mal");
   const rounds = roundDuration(level);
   const data = effectData({ sourceItem, caster, targetActor: targetToken.actor, modeInfo, level });
   const applied = await applyEffect(targetToken.actor, data);
   if (!applied) return false;
 
-  void playProtectionWard(targetToken, modeInfo);
+  await playProtectionWard(targetToken, modeInfo);
   await createChat({ caster, sourceItem, targetToken, modeInfo, rounds });
   return true;
 })();
