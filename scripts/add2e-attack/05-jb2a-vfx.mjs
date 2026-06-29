@@ -1,8 +1,8 @@
 // scripts/add2e-attack/05-jb2a-vfx.mjs
 // ADD2E — VFX JB2A Premium sécurisés pour sorts et attaques d'armes.
-// Version : 2026-06-19-v15-oriented-weapon-effects
+// Version : 2026-06-29-persistent-darkness-ground-v1
 
-globalThis.ADD2E_JB2A_VFX_VERSION = "2026-06-19-v15-oriented-weapon-effects";
+globalThis.ADD2E_JB2A_VFX_VERSION = "2026-06-29-persistent-darkness-ground-v1";
 
 const ADD2E_JB2A_WEAPON_FX_DEDUPE_MS = 1200;
 globalThis.__ADD2E_JB2A_WEAPON_FX_DEDUPE_KEYS ??= new Map();
@@ -48,6 +48,13 @@ const ADD2E_JB2A_WEAPON_SPECIAL = [
   "modules/JB2A_DnD5e/Library/Generic/Conditions/Boon01/ConditionBoon01_012_Green_600x600.webm",
   "modules/JB2A_DnD5e/Library/Generic/Weapon_Attacks/Melee/Sword01_06_Regular_White_800x600.webm",
   ...ADD2E_JB2A_VISIBLE_IMPACT
+];
+
+const ADD2E_JB2A_DARKNESS_GROUND = [
+  "modules/jb2a_patreon/Library/1st_Level/Darkness/Darkness_01_Regular_Black_600x600.webm",
+  "modules/JB2A_DnD5e/Library/1st_Level/Darkness/Darkness_01_Regular_Black_600x600.webm",
+  "modules/jb2a_patreon/Library/Generic/Marker/MarkerFear_01_Dark_Purple_400x400.webm",
+  "modules/JB2A_DnD5e/Library/Generic/Marker/MarkerFear_01_Dark_Purple_400x400.webm"
 ];
 
 const ADD2E_JB2A_PRESET_CANDIDATES = {
@@ -99,7 +106,7 @@ const ADD2E_JB2A_PRESET_CANDIDATES = {
     ...ADD2E_JB2A_VISIBLE_IMPACT
   ],
   calm: [
-    "modules/JB2A_DnD5e/Library/Generic/Butterflies/ButterfliesInwardBurst01_01_Regular_BluePurple_600x600.webm",
+    "modules/JB2A_DnD5e/Library/Generic/Butterflies/ButterfliesInwardBurst01_Regular_BluePurple_600x600.webm",
     ...ADD2E_JB2A_VISIBLE_IMPACT
   ],
   heal: [
@@ -110,6 +117,7 @@ const ADD2E_JB2A_PRESET_CANDIDATES = {
     "modules/JB2A_DnD5e/Library/Generic/Marker/MarkerLightIntro_01_Regular_Blue_400x400.webm",
     ...ADD2E_JB2A_VISIBLE_IMPACT
   ],
+  darkness: ADD2E_JB2A_DARKNESS_GROUND,
   weapon_slash: [...ADD2E_JB2A_WEAPON_SLASH],
   weapon_cleave: [...ADD2E_JB2A_WEAPON_CLEAVE],
   weapon_pierce: [...ADD2E_JB2A_WEAPON_PIERCE],
@@ -140,7 +148,8 @@ const ADD2E_SPELL_KEY_TO_JB2A_PRESET = {
   epouvante: "fear",
   soins_des_blessures_legeres: "heal",
   soins_mineurs: "heal",
-  blessures_legeres: "curse"
+  blessures_legeres: "curse",
+  tenebres: "darkness"
 };
 
 const ADD2E_JB2A_FILE_CACHE = new Map();
@@ -236,6 +245,142 @@ async function add2ePickJb2aFiles(preset = "divine", max = 2, explicitCandidates
   }
   if (!files.length) console.warn("[ADD2E][JB2A][MISSING_PRESET] Aucun fichier JB2A direct trouvé pour le preset.", { preset: key, candidates });
   return [...new Set(files)];
+}
+
+function add2eEffectFlags(effect) {
+  return effect?.flags?.add2e ?? effect?.getFlag?.("add2e") ?? {};
+}
+
+function add2eEffectTags(effect) {
+  return add2eArray(add2eEffectFlags(effect)?.tags)
+    .map(add2eNormalizeFxKey)
+    .filter(Boolean);
+}
+
+function add2eDarknessEffectName(effect) {
+  const identity = effect?.uuid ?? `${effect?.parent?.uuid ?? "actor"}:${effect?.id ?? effect?._id ?? "effect"}`;
+  return `add2e-tenebres:${identity}`;
+}
+
+function add2eUnitToMeters(value, unit) {
+  const key = String(unit ?? "m").toLowerCase();
+  if (["ft", "feet", "foot", "pied", "pieds", "pi"].includes(key)) return value * 0.3048;
+  if (["yd", "yard", "yards", "verge", "verges"].includes(key)) return value * 0.9144;
+  if (["km", "kilometre", "kilomètre", "kilometres", "kilomètres"].includes(key)) return value * 1000;
+  return value;
+}
+
+function add2eGroundScaleForFile(scene, file, radiusMeters = 6) {
+  const gridSize = Number(scene?.grid?.size ?? canvas?.grid?.size ?? 100) || 100;
+  const gridDistance = Number(scene?.grid?.distance ?? canvas?.grid?.distance ?? 1) || 1;
+  const gridMeters = Math.max(0.0001, add2eUnitToMeters(gridDistance, scene?.grid?.units ?? canvas?.scene?.grid?.units ?? "m"));
+  const diameterPixels = (Math.max(0.1, Number(radiusMeters) || 6) * 2 / gridMeters) * gridSize;
+  const dimensions = String(file ?? "").match(/_(\d+)x(\d+)\.webm$/i);
+  const nativePixels = Math.max(1, Number(dimensions?.[1] ?? 600), Number(dimensions?.[2] ?? 600));
+  return Math.max(0.15, Math.min(12, diameterPixels / nativePixels));
+}
+
+function add2eCurrentSceneTokenObject(scene, tokenId) {
+  if (!scene || scene.id !== canvas?.scene?.id || !tokenId) return null;
+  return canvas.tokens?.get?.(tokenId)
+    ?? canvas.tokens?.placeables?.find?.(token => token?.id === tokenId || token?.document?.id === tokenId)
+    ?? null;
+}
+
+function add2ePayloadPoint(scene, payload = {}) {
+  if (Number.isFinite(Number(payload.x)) && Number.isFinite(Number(payload.y))) {
+    return { x: Number(payload.x), y: Number(payload.y) };
+  }
+  const tokenDoc = payload.tokenId ? scene?.tokens?.get?.(payload.tokenId) ?? null : null;
+  if (!tokenDoc) return null;
+  const size = Number(scene?.grid?.size ?? canvas?.grid?.size ?? 100) || 100;
+  return {
+    x: Number(tokenDoc.x ?? 0) + ((Number(tokenDoc.width ?? 1) || 1) * size / 2),
+    y: Number(tokenDoc.y ?? 0) + ((Number(tokenDoc.height ?? 1) || 1) * size / 2)
+  };
+}
+
+async function add2eEndPersistentGroundFx(name) {
+  if (!name || !globalThis.Sequencer?.EffectManager?.endEffects) return false;
+  try {
+    await globalThis.Sequencer.EffectManager.endEffects({ name });
+    return true;
+  } catch (_error) {
+    return false;
+  }
+}
+
+async function add2ePlayPersistentDarknessGround(effect) {
+  try {
+    if (typeof Sequence === "undefined" || !globalThis.Sequencer?.EffectManager) return false;
+    if (effect?.disabled) return false;
+    if (!add2eEffectTags(effect).includes("sort:tenebres")) return false;
+
+    const payload = add2eEffectFlags(effect)?.lightPayload ?? null;
+    const scene = game.scenes?.get?.(payload?.sceneId) ?? canvas?.scene ?? null;
+    if (!payload || !scene || scene.id !== canvas?.scene?.id) return false;
+
+    const point = add2ePayloadPoint(scene, payload);
+    if (!point) return false;
+
+    const files = await add2ePickJb2aFiles("darkness", 1);
+    if (!files.length) return false;
+
+    const name = add2eDarknessEffectName(effect);
+    await add2eEndPersistentGroundFx(name);
+
+    const tokenObj = payload.type === "token" ? add2eCurrentSceneTokenObject(scene, payload.tokenId) : null;
+    const seq = new Sequence();
+    const visual = seq.effect().file(files[0]);
+    if (tokenObj) visual.attachTo(tokenObj);
+    else visual.atLocation(point);
+
+    add2eCallEffectMethod(visual, "name", name);
+    add2eCallEffectMethod(visual, "persist");
+    add2eCallEffectMethod(visual, "scale", add2eGroundScaleForFile(scene, files[0], 6));
+    add2eCallEffectMethod(visual, "opacity", 0.95);
+    add2eCallEffectMethod(visual, "tint", "#000000");
+    add2eCallEffectMethod(visual, "belowTokens", true);
+    add2eCallEffectMethod(visual, "aboveLighting");
+    add2eCallEffectMethod(visual, "fadeIn", 150);
+    await seq.play();
+    return true;
+  } catch (_error) {
+    return false;
+  }
+}
+
+async function add2eClearPersistentDarknessGround(effect) {
+  if (!add2eEffectTags(effect).includes("sort:tenebres")) return false;
+  return add2eEndPersistentGroundFx(add2eDarknessEffectName(effect));
+}
+
+async function add2eRestorePersistentDarknessGrounds() {
+  if (!canvas?.ready) return;
+  for (const actor of game.actors?.contents ?? []) {
+    for (const effect of actor.effects ?? []) {
+      await add2ePlayPersistentDarknessGround(effect);
+    }
+  }
+}
+
+function add2eInstallPersistentDarknessGroundHooks() {
+  if (globalThis.__ADD2E_PERSISTENT_DARKNESS_GROUND_VERSION === globalThis.ADD2E_JB2A_VFX_VERSION) return;
+  globalThis.__ADD2E_PERSISTENT_DARKNESS_GROUND_VERSION = globalThis.ADD2E_JB2A_VFX_VERSION;
+
+  Hooks.on("createActiveEffect", effect => {
+    void add2ePlayPersistentDarknessGround(effect);
+  });
+  Hooks.on("deleteActiveEffect", effect => {
+    void add2eClearPersistentDarknessGround(effect);
+  });
+  Hooks.on("updateActiveEffect", (effect, changes) => {
+    if (changes?.disabled === true) void add2eClearPersistentDarknessGround(effect);
+    if (changes?.disabled === false) void add2ePlayPersistentDarknessGround(effect);
+  });
+  Hooks.on("canvasReady", () => {
+    void add2eRestorePersistentDarknessGrounds();
+  });
 }
 
 export async function add2ePlayJb2aPremiumFx(target, preset = "divine", options = {}) {
@@ -453,15 +598,21 @@ async function add2ePlayCentralSpellFx(spellKey = "divine", context = {}) {
 globalThis.ADD2E_CLERC_PLAY_LAUNCH_FX = add2ePlayJb2aPremiumFx;
 globalThis.ADD2E_PLAY_SPELL_FX = add2ePlayCentralSpellFx;
 globalThis.ADD2E_PLAY_WEAPON_FX = add2ePlayWeaponAttackFx;
+globalThis.ADD2E_PLAY_PERSISTENT_DARKNESS_GROUND = add2ePlayPersistentDarknessGround;
+globalThis.ADD2E_END_PERSISTENT_GROUND_FX = add2eEndPersistentGroundFx;
 globalThis.ADD2E_JB2A_PRESET_CANDIDATES = ADD2E_JB2A_PRESET_CANDIDATES;
 globalThis.ADD2E_SPELL_KEY_TO_JB2A_PRESET = ADD2E_SPELL_KEY_TO_JB2A_PRESET;
+add2eInstallPersistentDarknessGroundHooks();
 add2eScheduleWeaponAttackPatch();
 
 Hooks.once("ready", () => {
   globalThis.ADD2E_PLAY_SPELL_FX = add2ePlayCentralSpellFx;
   globalThis.ADD2E_PLAY_WEAPON_FX = add2ePlayWeaponAttackFx;
+  globalThis.ADD2E_PLAY_PERSISTENT_DARKNESS_GROUND = add2ePlayPersistentDarknessGround;
+  globalThis.ADD2E_END_PERSISTENT_GROUND_FX = add2eEndPersistentGroundFx;
   globalThis.ADD2E_JB2A_PRESET_CANDIDATES = ADD2E_JB2A_PRESET_CANDIDATES;
   globalThis.ADD2E_SPELL_KEY_TO_JB2A_PRESET = ADD2E_SPELL_KEY_TO_JB2A_PRESET;
+  add2eInstallPersistentDarknessGroundHooks();
   add2eScheduleWeaponAttackPatch();
   console.log("[ADD2E][JB2A][VERSION]", globalThis.ADD2E_JB2A_VFX_VERSION);
 });
