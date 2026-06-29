@@ -18,43 +18,22 @@ function add2eNormalizeEffectType(effectType) {
     .replace(/\s+/g, "_")
     .trim();
 
-  if (["charme", "charm", "sommeil", "sleep"].includes(raw)) {
-    return "charme_sommeil";
-  }
+  if (["charme", "charm", "sommeil", "sleep"].includes(raw)) return "charme_sommeil";
 
   const aliasMagie = [
-    "magie",
-    "magic",
-    "sort",
-    "sorts",
-    "baguette",
-    "baguettes",
-    "badine",
-    "baton",
-    "batons",
-    "batonnet",
-    "batonnets",
-    "paralysie",
-    "paralyse",
-    "petrification",
-    "petrifications",
-    "petrify",
-    "souffle"
+    "magie", "magic", "sort", "sorts", "baguette", "baguettes", "badine", "baton", "batons",
+    "batonnet", "batonnets", "paralysie", "paralyse", "petrification", "petrifications", "petrify", "souffle"
   ];
 
   if (aliasMagie.some(type => raw.includes(type))) return "magie";
   if (raw.includes("poison")) return "poison";
-
   return raw;
 }
 
 function add2eGetActiveTagsForResolve(actor) {
-  if (globalThis.Add2eEffectsEngine?.getActiveTags) {
-    return globalThis.Add2eEffectsEngine.getActiveTags(actor);
-  }
+  if (globalThis.Add2eEffectsEngine?.getActiveTags) return globalThis.Add2eEffectsEngine.getActiveTags(actor);
 
   const tags = [];
-
   if (actor?.effects) {
     for (const eff of actor.effects) {
       if (eff.disabled) continue;
@@ -62,7 +41,6 @@ function add2eGetActiveTagsForResolve(actor) {
       if (Array.isArray(effTags)) tags.push(...effTags);
     }
   }
-
   return [...new Set(tags.map(t => String(t).toLowerCase()))];
 }
 
@@ -72,39 +50,31 @@ function add2eGetBonusSaveConstitutionForResolve(actor, effectType) {
   }
 
   const sys = actor?.system || {};
-
-  const c =
-    Number(sys.constitution || 0) ||
-    (
-      Number(sys.constitution_base || 0) +
-      Number(sys.constitution_race || sys.bonus_caracteristiques?.constitution || 0)
-    );
-
+  const c = Number(sys.constitution || 0) || (
+    Number(sys.constitution_base || 0) +
+    Number(sys.constitution_race || sys.bonus_caracteristiques?.constitution || 0)
+  );
   return Math.max(0, Math.min(5, Math.floor(c / 3.5)));
+}
+
+function add2eGetGenericSaveBonusForResolve(actor, effectType) {
+  if (!globalThis.Add2eEffectsEngine?.getSaveBonusVs) return 0;
+  return Number(globalThis.Add2eEffectsEngine.getSaveBonusVs(actor, effectType) || 0);
 }
 
 async function resolveActiveEffectsOnTarget(actor, effectType) {
   if (!actor) {
     console.warn("[RESOLVE AE] Appel sans acteur.");
-    return {
-      annulé: false,
-      résiste: false,
-      details: "Aucune cible",
-      pct: 0,
-      jet: 0,
-      bonus: 0
-    };
+    return { annulé: false, résiste: false, details: "Aucune cible", pct: 0, jet: 0, bonus: 0 };
   }
 
   const tags = add2eGetActiveTagsForResolve(actor);
-
   const effectNorm = String(effectType ?? "")
     .toLowerCase()
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/[’']/g, "")
     .replace(/\s+/g, "_")
     .trim();
-
   const typeSauvegarde = add2eNormalizeEffectType(effectType);
 
   console.log(`[RESOLVE AE] Tags actifs pour ${actor.name}:`, tags);
@@ -112,11 +82,9 @@ async function resolveActiveEffectsOnTarget(actor, effectType) {
 
   // 1. Immunité totale ou protection.
   const immuneKeys = new Set([effectNorm, typeSauvegarde]);
-
   for (const key of immuneKeys) {
     if (tags.includes(`immunite:${key}`) || tags.includes(`protection:${key}`)) {
       console.log(`[RESOLVE AE] ${actor.name} immunisé/protégé contre ${effectType}`);
-
       return {
         annulé: true,
         résiste: false,
@@ -130,7 +98,6 @@ async function resolveActiveEffectsOnTarget(actor, effectType) {
 
   // 2. Résistance chiffrée resistance:type:valeur.
   let resistTag = null;
-
   for (const key of immuneKeys) {
     resistTag = tags.find(t => t.startsWith(`resistance:${key}:`));
     if (resistTag) break;
@@ -138,13 +105,11 @@ async function resolveActiveEffectsOnTarget(actor, effectType) {
 
   if (resistTag) {
     let pct = Number(resistTag.split(":")[2]) || 0;
-
     if (pct >= 0 && pct <= 1) pct *= 100;
     pct = Math.max(0, Math.min(100, pct));
 
     const jet = Math.ceil(Math.random() * 100);
     const reussite = jet <= pct;
-
     const result = {
       annulé: false,
       résiste: reussite,
@@ -173,7 +138,6 @@ async function resolveActiveEffectsOnTarget(actor, effectType) {
     try {
       const color = reussite ? "#1f8f3a" : "#b42318";
       const label = reussite ? "RÉSISTANCE RÉUSSIE" : "RÉSISTANCE ÉCHOUÉE";
-
       ChatMessage.create({
         speaker: ChatMessage.getSpeaker({ actor }),
         content: `
@@ -184,8 +148,7 @@ async function resolveActiveEffectsOnTarget(actor, effectType) {
             <p style="margin:3px 0;"><b>Chance :</b> ${pct}%</p>
             <p style="margin:3px 0;"><b>Jet d100 :</b> ${jet}</p>
             <p style="margin:6px 0 0 0; font-weight:bold; color:${color};">${label}</p>
-          </div>
-        `
+          </div>`
       });
     } catch (e) {
       console.warn("[RESOLVE AE] Impossible de créer le message chat de résistance.", e);
@@ -194,42 +157,29 @@ async function resolveActiveEffectsOnTarget(actor, effectType) {
     return result;
   }
 
-  // 3. Bonus de sauvegarde racial ou magique basé sur la Constitution.
-  const bonusSave = add2eGetBonusSaveConstitutionForResolve(actor, effectType);
+  // 3. Les bonus numériques se cumulent : Constitution + ActiveEffects.
+  // Cette addition ne s'applique qu'après les immunités/résistances, comme avant.
+  const bonusConstitution = add2eGetBonusSaveConstitutionForResolve(actor, effectType);
+  const bonusEffets = add2eGetGenericSaveBonusForResolve(actor, effectType);
+  const bonusTotal = bonusConstitution + bonusEffets;
 
-  if (bonusSave) {
-    console.log(`[RESOLVE AE] Bonus de sauvegarde constitution appliqué (${typeSauvegarde}) : +${bonusSave}`);
+  if (bonusTotal) {
+    const composantes = [];
+    if (bonusConstitution) composantes.push(`Constitution +${bonusConstitution}`);
+    if (bonusEffets) composantes.push(`Effets ${bonusEffets >= 0 ? "+" : ""}${bonusEffets}`);
+    console.log(`[RESOLVE AE] Bonus de sauvegarde cumulés (${typeSauvegarde}) : ${composantes.join(" ; ")} = ${bonusTotal >= 0 ? "+" : ""}${bonusTotal}`);
 
     return {
       annulé: false,
       résiste: false,
-      details: `Bonus de sauvegarde (${typeSauvegarde}) +${bonusSave}`,
+      details: `Bonus de sauvegarde (${typeSauvegarde}) ${bonusTotal >= 0 ? "+" : ""}${bonusTotal}${composantes.length ? ` — ${composantes.join(" ; ")}` : ""}`,
       pct: 0,
       jet: 0,
-      bonus: bonusSave
-    };
-  }
-
-  // 4. Autres bonus numériques éventuels.
-  let bonusNumerique = 0;
-
-  if (globalThis.Add2eEffectsEngine?.getSaveBonusVs) {
-    bonusNumerique += Number(globalThis.Add2eEffectsEngine.getSaveBonusVs(actor, effectType) || 0);
-  }
-
-  if (bonusNumerique) {
-    return {
-      annulé: false,
-      résiste: false,
-      details: `Bonus de sauvegarde (${typeSauvegarde}) ${bonusNumerique >= 0 ? "+" : ""}${bonusNumerique}`,
-      pct: 0,
-      jet: 0,
-      bonus: bonusNumerique
+      bonus: bonusTotal
     };
   }
 
   console.log(`[RESOLVE AE] Aucun effet spécial pour ${effectType} sur ${actor.name}.`);
-
   return {
     annulé: false,
     résiste: false,
