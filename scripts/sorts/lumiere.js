@@ -1,13 +1,13 @@
 /**
  * ADD2E — Lumière / Ténèbres
  * Clerc niveau 1 — Altération
- * Version : 2026-06-29-lumiere-tenebres-manual-resolution-v2
+ * Version : 2026-06-29-lumiere-tenebres-direct-target-v3
  *
  * Contrat onUse : true = sort consommé ; false = sort non consommé.
- * Compatible Foundry V13/V14/V15. DialogV2 uniquement.
+ * Compatible Foundry V13/V14/V15. DialogV2 uniquement lorsqu’un arbitrage MJ est requis.
  */
 
-const ADD2E_LUMIERE_VERSION = "2026-06-29-lumiere-tenebres-manual-resolution-v2";
+const ADD2E_LUMIERE_VERSION = "2026-06-29-lumiere-tenebres-direct-target-v3";
 
 function add2eLumiereEmitGMOperation(operation, payload) {
   if (!game.socket) return false;
@@ -92,8 +92,7 @@ globalThis.ADD2E_LUMIERE_RESTORE_TOKEN_LIGHT = async payload => {
     angle: payload.originalAngle ?? 360,
     animation: payload.originalAnimation ?? { type: null, speed: 5, intensity: 5, reverse: false }
   };
-  const originalLight = foundry.utils.deepClone(payload.originalLight ?? legacyLight);
-  const updateData = { light: originalLight };
+  const updateData = { light: foundry.utils.deepClone(payload.originalLight ?? legacyLight) };
 
   if (game.user.isGM || tokenDoc.isOwner) {
     await tokenDoc.update(updateData);
@@ -125,11 +124,6 @@ if (globalThis.ADD2E_LUMIERE_HOOKS_VERSION !== ADD2E_LUMIERE_VERSION) {
 
 const __add2eOnUseResult = await (async () => {
   const DialogV2 = foundry.applications?.api?.DialogV2;
-  if (!DialogV2?.wait) {
-    ui.notifications.error("Lumière / Ténèbres : DialogV2 indisponible.");
-    return false;
-  }
-
   const COLORS = {
     main: "#b88924",
     dark: "#6f4b12",
@@ -140,7 +134,6 @@ const __add2eOnUseResult = await (async () => {
     fail: "#b33a2e",
     warn: "#b88924"
   };
-
   const RANGE_METERS = 36;
   const RADIUS_METERS = 6;
   const BRIGHT_METERS = 3;
@@ -175,15 +168,14 @@ const __add2eOnUseResult = await (async () => {
     return false;
   }
 
-  function resolveMode(itemDoc) {
-    const resolveOne = value => {
+  const resolveMode = itemDoc => {
+    const fromValue = value => {
       const key = norm(value);
       if (["lumiere", "normal", "base"].includes(key)) return "lumiere";
       if (["tenebres", "inverse"].includes(key)) return "tenebres";
       return null;
     };
-
-    const candidates = [
+    const modes = new Set([
       itemDoc?.name,
       itemDoc?.system?.nom,
       itemDoc?.system?.slug,
@@ -193,10 +185,9 @@ const __add2eOnUseResult = await (async () => {
       itemDoc?.flags?.add2e?.spellFamily?.reversibleMode,
       itemDoc?.flags?.add2e?.spellKey,
       itemDoc?.flags?.add2e?.slug
-    ];
-    const modes = new Set(candidates.map(resolveOne).filter(Boolean));
+    ].map(fromValue).filter(Boolean));
     return modes.size === 1 ? Array.from(modes)[0] : null;
-  }
+  };
 
   const mode = resolveMode(sourceItem);
   if (!mode) {
@@ -207,14 +198,13 @@ const __add2eOnUseResult = await (async () => {
   const isDarkness = mode === "tenebres";
   const spellName = isDarkness ? "Ténèbres" : "Lumière";
   const spellKey = isDarkness ? "tenebres" : "lumiere";
-
   const caster = (typeof actor !== "undefined" && actor) ? actor : sourceItem.parent;
   if (!caster) {
     ui.notifications.error(`${spellName} : lanceur introuvable.`);
     return false;
   }
 
-  const casterToken = canvas.tokens?.controlled?.find(tokenDoc => tokenDoc?.actor?.id === caster.id)
+  const casterToken = canvas.tokens?.controlled?.find(placeable => placeable?.actor?.id === caster.id)
     ?? ((typeof token !== "undefined" && token?.actor?.id === caster.id) ? token : null)
     ?? caster.getActiveTokens?.()[0]
     ?? null;
@@ -223,36 +213,34 @@ const __add2eOnUseResult = await (async () => {
     return false;
   }
 
-  function clericLevel(actorDoc) {
+  const clericLevel = actorDoc => {
     const system = actorDoc?.system ?? {};
-    const direct = [
+    for (const raw of [
       system.details_classe?.clerc?.niveau,
       system.classes?.clerc?.niveau,
       system.niveau,
       system.level,
       system.details?.niveau,
       system.details?.level
-    ];
-    for (const raw of direct) {
-      const value = Number(raw);
-      if (Number.isFinite(value) && value > 0) return value;
+    ]) {
+      const level = Number(raw);
+      if (Number.isFinite(level) && level > 0) return level;
     }
-
-    const clericClass = Array.from(actorDoc?.items ?? []).find(itemDoc =>
-      itemDoc.type === "classe" && norm(itemDoc.name).includes("clerc")
+    const cleric = Array.from(actorDoc?.items ?? []).find(entry =>
+      entry.type === "classe" && norm(entry.name).includes("clerc")
     );
-    for (const raw of [clericClass?.system?.niveau, clericClass?.system?.level]) {
-      const value = Number(raw);
-      if (Number.isFinite(value) && value > 0) return value;
+    for (const raw of [cleric?.system?.niveau, cleric?.system?.level]) {
+      const level = Number(raw);
+      if (Number.isFinite(level) && level > 0) return level;
     }
     return 1;
-  }
+  };
 
   const level = clericLevel(caster);
   const normalDurationRounds = 60 + (10 * level);
   const durationRounds = isDarkness ? Math.floor(normalDurationRounds / 2) : normalDurationRounds;
 
-  function durationData(rounds) {
+  const durationData = rounds => {
     const time = game.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
     return time?.durationData?.(rounds) ?? {
       rounds,
@@ -261,43 +249,41 @@ const __add2eOnUseResult = await (async () => {
       startTime: game.time?.worldTime ?? null,
       combat: game.combat?.id ?? null
     };
-  }
+  };
 
-  function sceneUnitToMeters(value, unit) {
+  const unitToMeters = (value, unit) => {
     const key = String(unit ?? "m").toLowerCase();
     if (["ft", "feet", "foot", "pied", "pieds", "pi"].includes(key)) return value * 0.3048;
     if (["yd", "yard", "yards", "verge", "verges"].includes(key)) return value * 0.9144;
     if (["km", "kilometre", "kilomètre", "kilometres", "kilomètres"].includes(key)) return value * 1000;
     return value;
-  }
+  };
 
-  function metersToSceneUnits(meters) {
+  const metersToSceneUnits = meters => {
     const unit = canvas.scene?.grid?.units ?? "m";
-    return meters / Math.max(0.0001, sceneUnitToMeters(1, unit));
-  }
+    return meters / Math.max(0.0001, unitToMeters(1, unit));
+  };
 
-  function distanceMeters(from, to) {
+  const distanceMeters = (from, to) => {
     const gridSize = Number(canvas.grid?.size ?? canvas.scene?.grid?.size ?? 100) || 100;
     const gridDistance = Number(canvas.scene?.grid?.distance ?? 1) || 1;
     const unit = canvas.scene?.grid?.units ?? "m";
-    const pixels = Math.hypot(Number(to?.x ?? 0) - Number(from?.x ?? 0), Number(to?.y ?? 0) - Number(from?.y ?? 0));
-    return sceneUnitToMeters((pixels / gridSize) * gridDistance, unit);
-  }
+    const distancePixels = Math.hypot(Number(to?.x ?? 0) - Number(from?.x ?? 0), Number(to?.y ?? 0) - Number(from?.y ?? 0));
+    return unitToMeters((distancePixels / gridSize) * gridDistance, unit);
+  };
 
-  function hasBlockingWall(from, to) {
+  const withinRange = point => distanceMeters(casterToken.center, point) <= RANGE_METERS + 0.1;
+
+  const hasBlockingWall = (from, to) => {
     try {
       if (!canvas.walls?.checkCollision || typeof Ray === "undefined") return false;
       return canvas.walls.checkCollision(new Ray(from, to), { type: "sight", mode: "any" }) === true;
     } catch (_error) {
       return false;
     }
-  }
+  };
 
-  function withinRange(point) {
-    return distanceMeters(casterToken.center, point) <= RANGE_METERS + 0.1;
-  }
-
-  function nativeCanvasPoint() {
+  const chooseCanvasPoint = () => {
     ui.notifications.info(`${spellName} : clique sur la scène pour choisir le point d’effet. Échap ou clic droit annule.`);
     return new Promise(resolve => {
       const stage = canvas.stage;
@@ -316,39 +302,42 @@ const __add2eOnUseResult = await (async () => {
         resolve(point);
       };
       const onKeyDown = event => {
-        if (event.key === "Escape") finish(null);
+        if (event.key === "Escape") {
+          event.preventDefault?.();
+          finish(null);
+        }
       };
       const onPointerDown = event => {
         const button = Number(event?.button ?? event?.nativeEvent?.button ?? event?.data?.originalEvent?.button ?? 0);
         if (button === 2) return finish(null);
         if (button !== 0) return;
 
-        const local = event?.getLocalPosition?.(stage)
+        event?.stopPropagation?.();
+        event?.data?.originalEvent?.preventDefault?.();
+        const point = event?.getLocalPosition?.(stage)
           ?? event?.data?.getLocalPosition?.(stage)
           ?? stage.toLocal?.(event?.global ?? event?.data?.global ?? null)
           ?? null;
-        if (!local || !Number.isFinite(Number(local.x)) || !Number.isFinite(Number(local.y))) {
+        if (!point || !Number.isFinite(Number(point.x)) || !Number.isFinite(Number(point.y))) {
           ui.notifications.warn(`${spellName} : position de la scène illisible.`);
           return finish(null);
         }
-        finish({ x: Number(local.x), y: Number(local.y) });
+        finish({ x: Number(point.x), y: Number(point.y) });
       };
 
       stage.on("pointerdown", onPointerDown);
       window.addEventListener("keydown", onKeyDown, true);
     });
-  }
+  };
 
-  function getTargetSave(actorDoc) {
+  const targetSave = actorDoc => {
     const system = actorDoc?.system ?? {};
     const read = value => {
       if (typeof value === "number" && Number.isFinite(value) && value > 0) return value;
-      const matched = String(value ?? "").match(/\d+(?:[.,]\d+)?/);
-      const parsed = Number(matched?.[0]?.replace(",", "."));
+      const parsed = Number(String(value ?? "").match(/\d+(?:[.,]\d+)?/)?.[0]?.replace(",", "."));
       return Number.isFinite(parsed) && parsed > 0 ? parsed : NaN;
     };
-
-    const candidates = [
+    for (const candidate of [
       Array.isArray(system.sauvegardes) ? system.sauvegardes[4] : null,
       system.sauvegarde_sortileges,
       system.sauvegarde_sorts,
@@ -360,17 +349,15 @@ const __add2eOnUseResult = await (async () => {
       system.calculatedSaves?.sorts,
       system.calculatedSaves?.spell,
       system.calculatedSaves?.spells
-    ];
-    for (const candidate of candidates) {
+    ]) {
       const value = read(candidate);
       if (Number.isFinite(value)) return value;
     }
     return NaN;
-  }
+  };
 
-  function magicResistance(actorDoc) {
+  const magicResistance = actorDoc => {
     if (!actorDoc) return { applicable: false, resisted: false, chance: 0, roll: null, source: "" };
-
     const engine = globalThis.Add2eEffectsEngine;
     if (typeof engine?.checkResistanceDetails === "function") {
       const result = engine.checkResistanceDetails(actorDoc, "magie", { chat: false });
@@ -389,13 +376,12 @@ const __add2eOnUseResult = await (async () => {
     const raw = system.resistance_magie ?? system.resistanceMagie ?? system.magicResistance ?? system.rm ?? system.mr ?? null;
     const chance = Number(String(raw ?? "").replace(",", "."));
     if (!Number.isFinite(chance) || chance <= 0) return { applicable: false, resisted: false, chance: 0, roll: null, source: "" };
-
     const cappedChance = Math.max(0, Math.min(100, chance));
     const roll = Math.ceil(Math.random() * 100);
     return { applicable: true, resisted: roll <= cappedChance, chance: cappedChance, roll, source: "system.resistance_magie" };
-  }
+  };
 
-  function lightConfiguration() {
+  const lightConfiguration = () => {
     const radius = metersToSceneUnits(RADIUS_METERS);
     const bright = metersToSceneUnits(BRIGHT_METERS);
     if (isDarkness) {
@@ -404,9 +390,9 @@ const __add2eOnUseResult = await (async () => {
         bright: 0,
         angle: 360,
         color: "#000000",
-        alpha: 0.85,
+        alpha: 1,
         coloration: 1,
-        luminosity: -0.5,
+        luminosity: -1,
         attenuation: 0.5,
         animation: { type: null, speed: 5, intensity: 5, reverse: false }
       };
@@ -422,32 +408,18 @@ const __add2eOnUseResult = await (async () => {
       attenuation: 0.5,
       animation: { type: "torch", speed: 2, intensity: 2, reverse: false }
     };
-  }
+  };
 
-  function activeEffectTags({ destination, eyeEffect = false }) {
-    const tags = [
-      `sort:${spellKey}`,
-      `etat:${spellKey}`,
-      `mode:${spellKey}`,
-      `lumiere_destination:${destination}`,
-      "duree:round"
-    ];
-    if (destination === "point" || destination === "derriere") tags.push("ambient_light");
-    if (destination === "token" || destination === "yeux") tags.push("illumination:token");
-    if (eyeEffect) {
-      tags.push(
-        "etat:aveugle",
-        "aveuglement:lumiere",
-        "bonus_attaque:-4",
-        "bonus_save:-4",
-        "bonus_ca:-4",
-        "bonus_attaque_ennemi:4"
-      );
-    }
-    return tags;
-  }
+  const effectTags = destination => [
+    `sort:${spellKey}`,
+    `etat:${spellKey}`,
+    `mode:${spellKey}`,
+    `lumiere_destination:${destination}`,
+    "duree:round",
+    destination === "point" || destination === "derriere" ? "ambient_light" : "illumination:token"
+  ];
 
-  function timeFlags({ targetActor = null, destination, payload, tags }) {
+  const timeFlags = ({ targetActor = null, destination, payload, tags }) => {
     const time = game.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
     const endMessage = `${spellName} de {actor} prend fin.`;
     const extra = {
@@ -469,46 +441,38 @@ const __add2eOnUseResult = await (async () => {
       endMessage,
       ...extra
     };
-  }
+  };
 
-  function effectData({ anchorActor, targetActor = null, destination, payload, eyeEffect = false }) {
-    const tags = activeEffectTags({ destination, eyeEffect });
-    const effectName = eyeEffect
-      ? `${spellName} : aveuglement`
-      : destination === "point" || destination === "derriere"
-        ? `${spellName} : zone`
-        : spellName;
+  const effectData = ({ targetActor = null, destination, payload }) => {
+    const tags = effectTags(destination);
     return {
-      name: effectName,
+      name: destination === "point" || destination === "derriere" ? `${spellName} : zone` : spellName,
       img: sourceItem.img || (isDarkness ? "icons/magic/unholy/projectile-smoke-black.webp" : "icons/svg/light.svg"),
       origin: sourceItem.uuid ?? null,
       disabled: false,
       transfer: false,
       duration: durationData(durationRounds),
-      description: eyeEffect
-        ? `${spellName} sur les yeux : -4 au toucher, aux jets de sauvegarde et à la CA.`
-        : `${spellName} maintient son effet pendant ${durationRounds} rounds.`,
+      description: `${spellName} maintient son effet pendant ${durationRounds} rounds.`,
       flags: {
         add2e: {
           ...timeFlags({ targetActor, destination, payload, tags }),
           lightPayload: payload,
-          tags,
-          anchorActorId: anchorActor?.id ?? null
+          tags
         }
       },
       changes: []
     };
-  }
+  };
 
-  function effectTags(effect) {
+  const activeTags = effect => {
     const raw = effect?.flags?.add2e?.tags ?? effect?.getFlag?.("add2e", "tags") ?? [];
     return (Array.isArray(raw) ? raw : String(raw).split(/[,;|\n]+/)).map(norm).filter(Boolean);
-  }
+  };
 
-  async function replaceSpellEffect(actorDoc, data) {
+  const replaceSpellEffect = async (actorDoc, data) => {
     if (!actorDoc) return false;
     const previousIds = Array.from(actorDoc.effects ?? [])
-      .filter(effect => effectTags(effect).some(tag => tag === "sort:lumiere" || tag === "sort:tenebres"))
+      .filter(effect => activeTags(effect).some(tag => tag === "sort:lumiere" || tag === "sort:tenebres"))
       .map(effect => effect.id)
       .filter(Boolean);
 
@@ -524,20 +488,23 @@ const __add2eOnUseResult = await (async () => {
       effectData: data,
       removeEffectIds: previousIds
     });
-  }
+  };
 
-  async function updateTokenLight(tokenDoc, config) {
+  const updateTokenLight = async (tokenDoc, config) => {
     if (!tokenDoc) return false;
-    const sceneId = tokenDoc.parent?.id ?? canvas.scene?.id ?? null;
     const updateData = { light: config };
     if (game.user.isGM || tokenDoc.isOwner) {
       await tokenDoc.update(updateData);
       return true;
     }
-    return add2eLumiereEmitGMOperation("updateToken", { sceneId, tokenId: tokenDoc.id, updateData });
-  }
+    return add2eLumiereEmitGMOperation("updateToken", {
+      sceneId: tokenDoc.parent?.id ?? canvas.scene?.id ?? null,
+      tokenId: tokenDoc.id,
+      updateData
+    });
+  };
 
-  async function createAmbient(point, config, destination) {
+  const createAmbient = async (point, config, destination) => {
     const scene = canvas.scene;
     if (!scene) return { ok: false, payload: null };
 
@@ -558,12 +525,12 @@ const __add2eOnUseResult = await (async () => {
       y: point.y,
       rotation: 0,
       walls: true,
-      vision: false,
+      vision: isDarkness,
       config,
       flags
     };
-    let lightId = null;
 
+    let lightId = null;
     if (game.user.isGM) {
       const created = await scene.createEmbeddedDocuments("AmbientLight", [ambientData]);
       lightId = created?.[0]?.id ?? null;
@@ -573,6 +540,9 @@ const __add2eOnUseResult = await (async () => {
         sceneId: scene.id,
         x: point.x,
         y: point.y,
+        rotation: 0,
+        walls: true,
+        vision: isDarkness,
         dim: config.dim,
         bright: config.bright,
         angle: config.angle,
@@ -601,9 +571,9 @@ const __add2eOnUseResult = await (async () => {
         y: point.y
       }
     };
-  }
+  };
 
-  function pointBehindTarget(targetToken) {
+  const pointBehindTarget = targetToken => {
     const origin = casterToken.center;
     const target = targetToken.center;
     const dx = Number(target.x) - Number(origin.x);
@@ -612,68 +582,46 @@ const __add2eOnUseResult = await (async () => {
     const gridSize = Number(canvas.grid?.size ?? canvas.scene?.grid?.size ?? 100) || 100;
     const offset = Math.max(gridSize / 2, Number(targetToken.w ?? gridSize) / 2, Number(targetToken.h ?? gridSize) / 2) + 8;
     return { x: target.x + ((dx / length) * offset), y: target.y + ((dy / length) * offset) };
+  };
+
+  const targets = Array.from(game.user.targets ?? []).filter(target => !!target?.actor);
+  if (targets.length > 1) {
+    ui.notifications.warn(`${spellName} : sélectionne une seule cible ou aucune pour un point sur la scène.`);
+    return false;
   }
 
-  const selectedTargets = Array.from(game.user.targets ?? []);
-  const hasSingleTarget = selectedTargets.length === 1 && !!selectedTargets[0]?.actor;
-  const targetOptions = hasSingleTarget
-    ? `<option value="token">Sur la créature ciblée</option><option value="yeux">Sur le visage ou les yeux</option>`
-    : "";
-
-  const choice = await DialogV2.wait({
-    window: { title: `Lancement : ${spellName}` },
-    position: { width: 390 },
-    add2eTheme: "cleric",
-    add2eImg: sourceItem.img || "icons/svg/light.svg",
-    content: `<form style="font-family:var(--font-primary);display:flex;flex-direction:column;gap:7px;"><div class="form-group"><label style="font-weight:bold;">Destination :</label><select name="destination" style="width:100%;">${targetOptions}<option value="point" ${hasSingleTarget ? "" : "selected"}>Point / objet sur la scène</option></select></div><div style="font-size:.85em;color:${COLORS.dark};border-top:1px solid ${COLORS.border};padding-top:6px;"><div><b>Portée :</b> 12&quot; (36 m)</div><div><b>Rayon :</b> 2&quot; (6 m)</div><div><b>Durée :</b> ${durationRounds} rounds${isDarkness ? " — moitié de Lumière" : ""}</div>${hasSingleTarget ? "<div>Une résistance magique, puis un jet de protection, sont appliqués à une cible hostile.</div>" : ""}</div></form>`,
-    buttons: [
-      { action: "cast", label: "Lancer", icon: isDarkness ? "fa-solid fa-moon" : "fa-solid fa-sun", default: true, callback: (_event, button) => ({ destination: String(button.form?.elements?.destination?.value ?? "point") }) },
-      { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => null }
-    ],
-    rejectClose: false
-  });
-  if (!choice) return false;
-
   const config = lightConfiguration();
-  let targetToken = null;
-  let targetActor = null;
-  let destinationPoint = null;
-  let destinationLabel = "";
+  const targetToken = targets[0] ?? null;
+  const targetActor = targetToken?.actor ?? null;
+  const destination = targetToken ? "token" : "point";
+  const destinationLabel = targetToken?.name ?? "Point choisi sur la scène";
   let outcome = "";
   let outcomeColor = COLORS.success;
-  let details = [];
+  const details = [];
   let anchorActor = caster;
   let anchorEffect = null;
 
-  if (choice.destination === "point") {
-    destinationPoint = await nativeCanvasPoint();
-    if (!destinationPoint) return false;
-    if (!withinRange(destinationPoint)) {
+  if (!targetToken) {
+    const point = await chooseCanvasPoint();
+    if (!point) return false;
+    if (!withinRange(point)) {
       ui.notifications.warn(`${spellName} : le point est hors de portée (12\").`);
       return false;
     }
-    if (hasBlockingWall(casterToken.center, destinationPoint)) {
+    if (hasBlockingWall(casterToken.center, point)) {
       ui.notifications.warn(`${spellName} : un obstacle bloque la ligne d’effet.`);
       return false;
     }
 
-    const ambient = await createAmbient(destinationPoint, config, "point");
+    const ambient = await createAmbient(point, config, "point");
     if (!ambient.ok) {
       ui.notifications.error(`${spellName} : impossible de créer la zone.`);
       return false;
     }
-    anchorEffect = effectData({ anchorActor: caster, destination: "point", payload: ambient.payload });
-    destinationLabel = "Point choisi sur la scène";
+    anchorEffect = effectData({ destination: "point", payload: ambient.payload });
     outcome = isDarkness ? "ZONE DE TÉNÈBRES CRÉÉE" : "ZONE DE LUMIÈRE CRÉÉE";
-    details = [`Rayon : 6 m`, `Durée : ${durationRounds} rounds`];
+    details.push("Rayon : 6 m", `Durée : ${durationRounds} rounds`);
   } else {
-    if (!hasSingleTarget) {
-      ui.notifications.warn(`${spellName} : sélectionne exactement une créature.`);
-      return false;
-    }
-    targetToken = selectedTargets[0];
-    targetActor = targetToken.actor;
-
     if (!withinRange(targetToken.center)) {
       ui.notifications.warn(`${spellName} : cible hors de portée (12\").`);
       return false;
@@ -683,13 +631,11 @@ const __add2eOnUseResult = await (async () => {
       return false;
     }
 
-    destinationLabel = targetToken.name ?? targetActor.name;
     const sameToken = targetToken.id === casterToken.id;
     const sameActor = targetActor.id === caster.id;
     const needsDefense = !sameToken && !sameActor;
-
     let resistance = { applicable: false, resisted: false, chance: 0, roll: null };
-    let save = { applicable: false, threshold: NaN, bonus: 0, roll: null, total: null, success: false, manual: false };
+    let save = { threshold: NaN, bonus: 0, roll: null, total: null, success: false, manual: false };
 
     if (needsDefense) {
       resistance = magicResistance(targetActor);
@@ -699,15 +645,16 @@ const __add2eOnUseResult = await (async () => {
       if (resistance.resisted) {
         outcome = "RÉSISTANCE MAGIQUE RÉUSSIE";
         outcomeColor = COLORS.fail;
+        details.push("Aucun effet n’est appliqué à la cible.");
       }
     }
 
     if (!outcome && needsDefense) {
-      const threshold = getTargetSave(targetActor);
-      const effectEngine = globalThis.Add2eEffectsEngine;
-      const bonus = Number(effectEngine?.getSaveBonusVs?.(targetActor, "sorts") ?? 0)
-        + Number(effectEngine?.getBonusSaveConstitution?.(targetActor, "sorts") ?? 0);
-      save = { applicable: true, threshold, bonus, roll: null, total: null, success: false, manual: false };
+      const threshold = targetSave(targetActor);
+      const engine = globalThis.Add2eEffectsEngine;
+      const bonus = Number(engine?.getSaveBonusVs?.(targetActor, "sorts") ?? 0)
+        + Number(engine?.getBonusSaveConstitution?.(targetActor, "sorts") ?? 0);
+      save = { threshold, bonus, roll: null, total: null, success: false, manual: false };
 
       if (Number.isFinite(threshold)) {
         const roll = await new Roll("1d20").evaluate({ async: true });
@@ -715,38 +662,42 @@ const __add2eOnUseResult = await (async () => {
         save.roll = Number(roll.total) || 0;
         save.total = save.roll + bonus;
         save.success = save.total >= threshold;
-      } else if (game.user.isGM) {
+      } else {
+        if (!DialogV2?.wait || !game.user.isGM) {
+          ui.notifications.warn(`${spellName} : la sauvegarde de la cible est absente. Le MJ doit arbitrer.`);
+          return false;
+        }
         const decision = await DialogV2.wait({
           window: { title: `${spellName} — sauvegarde MJ` },
           position: { width: 350 },
           content: `<p>La sauvegarde contre les sorts de <b>${esc(targetActor.name)}</b> est absente.</p><p>Le MJ décide du résultat.</p>`,
           buttons: [
-            { action: "success", label: "Réussite : placer derrière", callback: () => true },
-            { action: "failure", label: "Échec : appliquer sur la cible", default: true, callback: () => false },
-            { action: "cancel", label: "Annuler", callback: () => null }
+            { action: "success", label: "Réussite : placer derrière", callback: () => ({ saveSuccess: true }) },
+            { action: "failure", label: "Échec : appliquer sur la cible", default: true, callback: () => ({ saveSuccess: false }) },
+            { action: "cancel", label: "Annuler", callback: () => ({ cancelled: true }) }
           ],
           rejectClose: false
         });
-        if (decision === null) return false;
+        if (!decision || decision.cancelled === true || typeof decision.saveSuccess !== "boolean") return false;
         save.manual = true;
-        save.success = decision === true;
-      } else {
-        ui.notifications.warn(`${spellName} : la sauvegarde de la cible est absente. Le MJ doit arbitrer.`);
-        return false;
+        save.success = decision.saveSuccess;
       }
 
-      if (save.manual) details.push(`Jet de protection : arbitrage MJ — ${save.success ? "réussi" : "raté"}`);
-      else details.push(`Jet de protection : ${save.roll}${save.bonus ? `${save.bonus >= 0 ? "+" : ""}${save.bonus}` : ""} = ${save.total} / ${save.threshold} — ${save.success ? "réussi" : "raté"}`);
+      if (save.manual) {
+        details.push(`Jet de protection : arbitrage MJ — ${save.success ? "réussi" : "raté"}`);
+      } else {
+        details.push(`Jet de protection : ${save.roll}${save.bonus ? `${save.bonus >= 0 ? "+" : ""}${save.bonus}` : ""} = ${save.total} / ${save.threshold} — ${save.success ? "réussi" : "raté"}`);
+      }
     }
 
     if (!outcome && save.success) {
-      destinationPoint = pointBehindTarget(targetToken);
-      const ambient = await createAmbient(destinationPoint, config, "derriere");
+      const point = pointBehindTarget(targetToken);
+      const ambient = await createAmbient(point, config, "derriere");
       if (!ambient.ok) {
         ui.notifications.error(`${spellName} : impossible de créer la zone derrière la cible.`);
         return false;
       }
-      anchorEffect = effectData({ anchorActor: caster, targetActor, destination: "derriere", payload: ambient.payload });
+      anchorEffect = effectData({ targetActor, destination: "derriere", payload: ambient.payload });
       anchorActor = caster;
       outcome = "SAUVEGARDE RÉUSSIE";
       outcomeColor = COLORS.warn;
@@ -754,7 +705,6 @@ const __add2eOnUseResult = await (async () => {
     }
 
     if (!outcome) {
-      const originalLight = foundry.utils.deepClone(targetToken.document?.light ?? {});
       const tokenPayload = {
         type: "token",
         sceneId: targetToken.document?.parent?.id ?? canvas.scene?.id ?? null,
@@ -762,7 +712,7 @@ const __add2eOnUseResult = await (async () => {
         actorId: targetActor.id,
         actorUuid: targetActor.uuid,
         spellName,
-        originalLight
+        originalLight: foundry.utils.deepClone(targetToken.document?.light ?? {})
       };
       const updated = await updateTokenLight(targetToken.document, config);
       if (!updated) {
@@ -770,28 +720,16 @@ const __add2eOnUseResult = await (async () => {
         return false;
       }
 
-      const eyeEffect = choice.destination === "yeux";
       anchorActor = targetActor;
-      anchorEffect = effectData({
-        anchorActor,
-        targetActor,
-        destination: eyeEffect ? "yeux" : "token",
-        payload: tokenPayload,
-        eyeEffect
-      });
-      outcome = eyeEffect ? "AVEUGLEMENT APPLIQUÉ" : (isDarkness ? "TÉNÈBRES APPLIQUÉES" : "LUMIÈRE APPLIQUÉE");
-      outcomeColor = eyeEffect ? COLORS.warn : COLORS.success;
-      if (eyeEffect) details.push("Malus : -4 au toucher, aux jets de protection et à la classe d’armure.");
-    }
-
-    if (resistance.resisted) {
-      details.push("Aucun effet n’est appliqué à la cible.");
+      anchorEffect = effectData({ targetActor, destination, payload: tokenPayload });
+      outcome = isDarkness ? "TÉNÈBRES APPLIQUÉES" : "LUMIÈRE APPLIQUÉE";
+      outcomeColor = COLORS.success;
     }
   }
 
   if (anchorEffect) {
-    const effectCreated = await replaceSpellEffect(anchorActor, anchorEffect);
-    if (!effectCreated) {
+    const created = await replaceSpellEffect(anchorActor, anchorEffect);
+    if (!created) {
       ui.notifications.error(`${spellName} : l’effet actif n’a pas pu être créé.`);
       return false;
     }
@@ -805,8 +743,8 @@ const __add2eOnUseResult = await (async () => {
     ? `<ul style="margin:6px 0 0 18px;text-align:left;">${details.map(detail => `<li>${esc(detail)}</li>`).join("")}</ul>`
     : "";
   const ruleHtml = isDarkness
-    ? `Ténèbres est l’inverse de Lumière. Elle se place dans les mêmes conditions, mais dure la moitié de la durée normale.`
-    : `Lumière éclaire une sphère de 2&quot; de rayon pendant 6 tours + 1 tour par niveau. Sur une créature, sa résistance magique puis son jet de protection s’appliquent ; une sauvegarde réussie place l’effet derrière la cible.`;
+    ? "Ténèbres est l’inverse de Lumière. Sans cible, elle est posée au clic sur la scène ; avec une cible, elle est appliquée directement à cette cible."
+    : "Lumière éclaire une sphère de 2&quot; de rayon pendant 6 tours + 1 tour par niveau. Sans cible, elle est posée au clic sur la scène ; avec une cible, elle est appliquée directement à cette cible.";
 
   await ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken }),
