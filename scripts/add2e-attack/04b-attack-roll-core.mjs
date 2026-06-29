@@ -12,7 +12,7 @@ import {
 } from "./03-attack-rules.mjs";
 import { add2eAttackMeasureContactAndDistance } from "./04g-attack-roll-range.mjs";
 
-export const ADD2E_ATTACK_ROLL_CORE_VERSION = "2026-06-29-generic-effect-action-gates-v3";
+export const ADD2E_ATTACK_ROLL_CORE_VERSION = "2026-06-29-generic-effect-action-gates-v4";
 
 const ADD2E_NATURAL_CONTACT_ATTACKS = new Set([
   "griffe", "griffes", "morsure", "bec", "serre", "serres", "dard", "queue", "coup_de_queue",
@@ -124,9 +124,11 @@ function add2eBuildActorContextTags(actor, engine) {
   for (const rawTag of [...tags]) {
     const tag = add2eNormalizeAttackTag(rawTag);
     if (!tag) continue;
-    if (tag.startsWith("invocation:") || tag.startsWith("summon:") || tag.startsWith("summoned:")) tags.add("creature:invoquee");
     if (tag.includes("enchante")) tags.add("creature:enchantee");
     if (tag.includes("animal")) tags.add("creature:animal");
+    if (tag === "mauvais" || tag.includes("_mauvais") || tag.includes("evil")) tags.add("alignement:mauvais");
+    if (tag === "bon" || tag.includes("_bon") || tag.includes("good")) tags.add("alignement:bon");
+    if (tag === "neutre" || tag.includes("_neutre") || tag.includes("neutral")) tags.add("alignement:neutre");
   }
 
   const alignment = [system.alignement, system.alignment, system.details?.alignment]
