@@ -8,7 +8,7 @@ import { installEffectsEngineDamage } from "./effects-engine/30-resistance-damag
 import { installEffectsEngineMonk } from "./effects-engine/40-monk.mjs";
 import { installEffectsEngineAnalysis } from "./effects-engine/50-analysis.mjs";
 
-globalThis.ADD2E_EFFECTS_ENGINE_VERSION = "2026-06-30-action-gate-single-save-v2";
+globalThis.ADD2E_EFFECTS_ENGINE_VERSION = "2026-06-30-action-gate-owner-block-notice-v3";
 
 class Add2eEffectsEngine {}
 
@@ -56,6 +56,17 @@ function installGateOnUseOutcomeContract(Engine) {
     writable: true,
     async value(actor, action = {}) {
       const result = await evaluate.call(this, actor, action);
+      const actionType = this.normalizeKey(action?.type ?? "");
+      const actionScope = this.normalizeKey(action?.ruleScope ?? "");
+      const ownerBlock = actionType === "attaque" && (actionScope === "owner" || actionScope === "self")
+        ? result?.matchedRules?.find(entry => entry?.kind === "block_action")
+        : null;
+
+      if (ownerBlock) {
+        const effectName = String(ownerBlock?.source?.effectName ?? "Effet actif").trim() || "Effet actif";
+        ui.notifications?.info?.(`${effectName} est actif : aucune action offensive n'est possible.`);
+      }
+
       for (const gate of result?.gateResults ?? []) {
         if (gate?.kind !== "save_gate" || gate.allowed === false) continue;
         const rule = gate.rule ?? {};
