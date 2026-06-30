@@ -14,6 +14,7 @@ const ADD2E_SPELL = Object.freeze({
 });
 
 const ADD2E_TRANSFORM_GROUP = "agrandissement-retrecissement";
+const ADD2E_ENLARGE_DIALOG_STYLE_ID = "add2e-enlarge-dialog-theme";
 
 function add2eNormalize(value) {
   return String(value ?? "")
@@ -122,12 +123,69 @@ function add2eTransformationMetrics({ mode, targetKind, level }) {
   };
 }
 
+function add2eInstallCastingDialogTheme() {
+  if (!document?.head || document.getElementById(ADD2E_ENLARGE_DIALOG_STYLE_ID)) return;
+
+  const style = document.createElement("style");
+  style.id = ADD2E_ENLARGE_DIALOG_STYLE_ID;
+  style.textContent = `
+    .application.add2e-enlarge-window .window-header,
+    .app.add2e-enlarge-window .window-header {
+      background: linear-gradient(135deg, #351447, #6d2d82 70%, #8d4eac) !important;
+      border-bottom: 1px solid #a965c0 !important;
+      color: #fff !important;
+    }
+    .application.add2e-enlarge-window .window-header .window-title,
+    .application.add2e-enlarge-window .window-header .header-button,
+    .app.add2e-enlarge-window .window-header .window-title,
+    .app.add2e-enlarge-window .window-header .header-button {
+      color: #fff !important;
+      text-shadow: none !important;
+    }
+    .application.add2e-enlarge-window .window-content,
+    .app.add2e-enlarge-window .window-content {
+      background: #f5edf8 !important;
+      padding: 10px !important;
+    }
+    .application.add2e-enlarge-window .window-footer,
+    .application.add2e-enlarge-window .form-footer,
+    .app.add2e-enlarge-window .window-footer,
+    .app.add2e-enlarge-window .form-footer {
+      background: #eadcf1 !important;
+      border-top: 1px solid #c494d5 !important;
+      padding: 8px 10px !important;
+    }
+    .application.add2e-enlarge-window button,
+    .app.add2e-enlarge-window button {
+      background: #f8f1fb !important;
+      border: 1px solid #8e53a4 !important;
+      border-radius: 5px !important;
+      box-shadow: none !important;
+      color: #4e1d64 !important;
+      font-weight: 700 !important;
+    }
+    .application.add2e-enlarge-window button[data-action="cast"],
+    .app.add2e-enlarge-window button[data-action="cast"] {
+      background: linear-gradient(135deg, #6d2d82, #8d4eac) !important;
+      border-color: #5d206f !important;
+      color: #fff !important;
+    }
+    .application.add2e-enlarge-window button:hover,
+    .app.add2e-enlarge-window button:hover {
+      filter: brightness(1.06);
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 async function add2eConfirmCasting({ target, mode, level, targetKind, consenting }) {
   const DialogV2 = foundry?.applications?.api?.DialogV2;
   if (!DialogV2?.wait) {
     ui.notifications?.error?.("Agrandissement : DialogV2 est indisponible.");
     return null;
   }
+
+  add2eInstallCastingDialogTheme();
 
   const metrics = add2eTransformationMetrics({ mode, targetKind, level });
   const modeLabel = add2eModeLabel(mode);
@@ -155,6 +213,7 @@ async function add2eConfirmCasting({ target, mode, level, targetKind, consenting
 
   return DialogV2.wait({
     window: { title: modeLabel },
+    classes: ["add2e-enlarge-window"],
     position: { width: 330 },
     content,
     modal: true,
