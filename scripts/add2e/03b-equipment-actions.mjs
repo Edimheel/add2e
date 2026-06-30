@@ -629,10 +629,7 @@ function add2eInstallSingleAttackRoute() {
     if (!actor || !weapon) return add2eAttackCore.call(this, args);
 
     const actionGate = await add2eResolveEquipmentAttackGate({ actor, weapon, args });
-    if (actionGate.allowed === false) {
-      ui.notifications?.warn?.(actionGate.details?.[0] ?? "Cette attaque est empêchée par un effet actif.");
-      return false;
-    }
+    if (actionGate.allowed === false) return false;
 
     const profile = add2eGetWeaponUsageProfile(weapon);
     if (!profile.isThrown && !profile.isProjectilePropulse) return add2eAttackCore.call(this, args);
