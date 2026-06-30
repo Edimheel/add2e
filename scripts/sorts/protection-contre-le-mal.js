@@ -1,7 +1,7 @@
 // ADD2E — Protection contre le Mal / Protection contre le Bien
 // Compatible Foundry V13/V14/V15.
 
-const ADD2E_PROTECTION_VFX_VERSION = "2026-06-30-protection-vfx-card-v7";
+const ADD2E_PROTECTION_VFX_VERSION = "2026-06-30-protection-vfx-direct-path-v8";
 
 const __add2eProtectionResult = await (async () => {
   const normalize = value => String(value ?? "").trim().toLowerCase().normalize("NFD")
@@ -36,7 +36,9 @@ const __add2eProtectionResult = await (async () => {
   const modeInfo = {
     label: isGood ? "Protection contre le Bien" : "Protection contre le Mal",
     spellKey: isGood ? "protection_contre_le_bien" : "protection_contre_le_mal",
-    vfx: isGood ? "jb2a.aura_themed.01.inward" : "jb2a.ward.rune.yellow",
+    vfx: isGood
+      ? "jb2a.aura_themed.01.inward"
+      : "modules/JB2A_DnD5e/Library/Generic/Template/Circle/Aura/AuraThemedOutwardCompleteCold01_01_Regular_Blue_700x700.webm",
     alignmentLabel: isGood ? "bonnes" : "mauvaises",
     tags: isGood ? ["sort:protection_contre_le_bien", "protection:bien", "bonus_save:2", "malus_attaque_vs:bon:2"] : ["sort:protection_contre_le_mal", "protection:mal", "bonus_save:2", "malus_attaque_vs:mauvais:2"],
     rule: isGood ? { kind: "block_action", action: "attaque", requireContact: true, subjectAllTags: ["creature:enchantee", "alignement:mauvais"], actionAllTags: ["type_arme:naturelle"], label: "La barrière magique tient cette créature enchantée mauvaise à distance." } : { kind: "block_action", action: "attaque", requireContact: true, subjectAnyTags: ["creature:enchantee", "creature:animal", "creature:invoquee"], actionAllTags: ["type_arme:naturelle"], label: "La barrière magique empêche cette attaque naturelle de toucher la cible." },
@@ -96,7 +98,8 @@ const __add2eProtectionResult = await (async () => {
     Hooks.on("updateActiveEffect", (effect, changes) => { if (changes?.disabled === true || changes?.disabled === 1) clearWard(effect); });
   }
   try {
-    const available = typeof globalThis.Sequencer?.Database?.getEntry === "function" ? !!globalThis.Sequencer.Database.getEntry(modeInfo.vfx) : true;
+    const isDirectFile = modeInfo.vfx.includes("/");
+    const available = isDirectFile || typeof globalThis.Sequencer?.Database?.getEntry !== "function" || !!globalThis.Sequencer.Database.getEntry(modeInfo.vfx);
     if (available && typeof Sequence !== "undefined") {
       stopVfx(targetToken);
       await new Sequence().effect().file(modeInfo.vfx).attachTo(targetToken).persist(true).name(effectName).belowTokens(false).scaleToObject(1.1).opacity(.95).play();
