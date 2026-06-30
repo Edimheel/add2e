@@ -132,55 +132,37 @@ async function add2eConfirmCasting({ target, mode, level, targetKind, consenting
   const metrics = add2eTransformationMetrics({ mode, targetKind, level });
   const modeLabel = add2eModeLabel(mode);
   const targetLabel = target?.name ?? "Cible";
-  const targetTypeLabel = targetKind === "objet" ? "Objet" : "Créature";
-  const formulaLabel = targetKind === "objet"
-    ? `10 % × niveau ${level}`
-    : `20 % × niveau ${level}`;
   const appliedLabel = mode === "retrecissement"
     ? `${metrics.displayPercent} % de la taille normale`
-    : `+${metrics.percentage} % (taille × ${metrics.enlargementFactor})`;
-  const consentLabel = consenting
-    ? "Cible consentante — aucun jet de protection."
-    : "Acteur monstre — jet de protection contre les sorts.";
+    : `+${metrics.percentage} % · taille × ${metrics.enlargementFactor}`;
+  const saveLine = consenting
+    ? ""
+    : `<div style="margin-top:8px;padding:6px 8px;border-radius:5px;background:#f0e3f7;color:#54226a;font-size:11px;font-weight:700;text-align:center;">Jet de protection contre les sorts</div>`;
 
   const content = `
-    <section class="add2e-dialog add2e-enlarge-dialog" style="overflow:hidden;border:1px solid #7b3f98;border-radius:10px;background:#f8f2fb;box-shadow:0 5px 18px rgba(72,28,94,.20);">
-      <header style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:linear-gradient(135deg,#351447,#6d2d82 65%,#8d4eac);color:#fff;">
-        <div style="display:grid;place-items:center;width:36px;height:36px;border-radius:50%;background:#ecdaf6;border:1px solid #fff;color:#4e1d64;font-size:19px;">✦</div>
-        <div style="min-width:0;">
-          <div style="font-family:var(--font-primary);font-size:15px;font-weight:800;letter-spacing:.2px;">${add2eEscapeHtml(modeLabel)}</div>
-          <div style="font-size:11px;opacity:.9;">Sort de Magicien — niveau 1</div>
-        </div>
+    <section class="add2e-dialog add2e-enlarge-dialog" style="width:270px;overflow:hidden;border:1px solid #7b3f98;border-radius:8px;background:#faf6fc;color:#36223d;">
+      <header style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:linear-gradient(135deg,#351447,#6d2d82 70%,#8d4eac);color:#fff;">
+        <span style="display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#ecdaf6;color:#4e1d64;font-weight:900;">✦</span>
+        <span style="font-size:14px;font-weight:800;">${add2eEscapeHtml(modeLabel)}</span>
       </header>
-      <div style="padding:13px 14px;color:#3e2648;">
-        <div style="display:grid;grid-template-columns:1fr auto;gap:8px 12px;align-items:center;padding:9px 10px;border:1px solid #d7b8e8;border-radius:7px;background:#fffaff;">
-          <span style="font-weight:700;color:#54226a;">Cible</span>
-          <span style="text-align:right;font-weight:800;">${add2eEscapeHtml(targetLabel)}</span>
-          <span style="font-weight:700;color:#54226a;">Nature</span>
-          <span style="text-align:right;">${targetTypeLabel}</span>
-          <span style="font-weight:700;color:#54226a;">Variation imposée</span>
-          <span style="text-align:right;color:#6b2d82;font-weight:900;">${appliedLabel}</span>
-          <span style="font-weight:700;color:#54226a;">Formule du Manuel</span>
-          <span style="text-align:right;">${formulaLabel}</span>
-          <span style="font-weight:700;color:#54226a;">Durée</span>
-          <span style="text-align:right;">${level} tour${level > 1 ? "s" : ""} · ${level * 10} rounds</span>
-        </div>
-        <div style="margin-top:10px;padding:9px 10px;border-left:4px solid #7b3f98;border-radius:4px;background:#f0e3f7;color:#4d2160;font-size:12px;line-height:1.4;">
-          <b>Résolution :</b> ${consentLabel}
-        </div>
-        <p style="margin:10px 0 0;font-size:11.5px;line-height:1.4;color:#5d3a6b;">La taille n’est pas choisie : elle est calculée strictement selon le Manuel des joueurs. Rétrécissement applique le rapport inverse.</p>
+      <div style="padding:10px 11px;">
+        <div style="font-size:13px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${add2eEscapeHtml(targetLabel)}</div>
+        <div style="margin-top:7px;color:#6b2d82;font-size:13px;font-weight:900;">${appliedLabel}</div>
+        <div style="margin-top:4px;font-size:12px;color:#5f4768;">${level} tour${level > 1 ? "s" : ""} · ${level * 10} rounds</div>
+        ${saveLine}
       </div>
     </section>`;
 
   return DialogV2.wait({
     window: { title: modeLabel },
+    position: { width: 330 },
     content,
     modal: true,
     rejectClose: false,
     buttons: [
       {
         action: "cast",
-        label: "Lancer le sort",
+        label: "Lancer",
         default: true,
         callback: () => ({ targetKind, consenting })
       },
