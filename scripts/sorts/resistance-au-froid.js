@@ -7,6 +7,11 @@ const __add2eColdResistanceResult = await (async () => {
     name: "Résistance au froid",
     slug: "resistance_au_froid",
     naturalColdLimit: -18,
+    damageResolution: Object.freeze({
+      onUse: "systems/add2e/scripts/sorts/resistance-au-froid.js",
+      mode: "damageResolved",
+      element: "froid"
+    }),
     tags: [
       "sort:resistance_au_froid",
       "etat:resistance_froid",
@@ -37,6 +42,81 @@ const __add2eColdResistanceResult = await (async () => {
   const chatStyle = () => CONST.CHAT_MESSAGE_STYLES
     ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER }
     : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 };
+
+  const damageEvent = typeof args !== "undefined" ? args?.[0] ?? null : null;
+  if (damageEvent?.add2eMode === CONFIG.damageResolution.mode) {
+    const resolution = damageEvent.damageResolution ?? {};
+    const targetActor = damageEvent.targetActor ?? (typeof actor !== "undefined" ? actor : null);
+    const targetToken = damageEvent.targetToken ?? damageEvent.token ?? (typeof token !== "undefined" ? token : null);
+    const effectFlags = damageEvent.effectFlags ?? damageEvent.effect?.flags?.add2e ?? {};
+
+    if (!targetActor || !resolution?.applied) return false;
+
+    const casterName = String(effectFlags.casterName ?? "Clerc");
+    const casterImg = String(effectFlags.casterImg ?? "icons/svg/mystery-man.svg");
+    const spellImg = String(effectFlags.sourceSpellImg ?? "icons/magic/defensive/shield-barrier-glowing-blue.webp");
+    const targetName = targetToken?.name ?? targetActor.name ?? "Cible";
+    const originalDamage = Math.max(0, Number(resolution.original ?? damageEvent.damage?.original) || 0);
+    const finalDamage = Math.max(0, Number(resolution.amount ?? damageEvent.damage?.final) || 0);
+    const naturalProtection = resolution.naturalProtection === true;
+    const save = resolution.save ?? null;
+
+    const saveLabel = naturalProtection
+      ? "Aucun — froid naturel couvert"
+      : save?.canRoll
+        ? `${save.total} / ${save.threshold} (${save.bonus >= 0 ? "+" : ""}${save.bonus})`
+        : "Indisponible";
+    const resultLabel = naturalProtection
+      ? "Protection intégrale"
+      : save?.canRoll
+        ? (save.success ? "Jet réussi — dégâts au quart" : "Jet échoué — dégâts de moitié")
+        : "Jet indisponible — dégâts de moitié";
+    const ruleText = naturalProtection
+      ? `Température déclarée : ${resolution.context?.temperature ?? "—"} °C. La protection couvre le froid naturel jusqu’à ${resolution.naturalLimit ?? CONFIG.naturalColdLimit} °C.`
+      : save?.canRoll
+        ? `Le jet de protection contre le froid reçoit ${save.bonus >= 0 ? "+" : ""}${save.bonus}. ${save.success ? "Les dégâts sont réduits au quart." : "Les dégâts sont réduits de moitié."}`
+        : "Le seuil de jet de protection est indisponible ; la réduction de moitié est appliquée.";
+
+    const card = `
+      <div class="add2e-chat-card add2e-clerc-sort add2e-sort-resistance-au-froid" style="border:1px solid #e2bc63;border-radius:8px;overflow:hidden;background:#fff7df;color:#422e0e;font-family:var(--font-primary);">
+        <div style="display:flex;align-items:center;gap:8px;background:#6f4b12;color:#fff;padding:7px 9px;">
+          <img src="${escapeHtml(casterImg)}" style="width:42px;height:42px;object-fit:cover;border-radius:50%;border:2px solid #f7df9a;background:#fff;" />
+          <div style="flex:1;line-height:1.05;"><div style="font-weight:800;font-size:14px;">${escapeHtml(casterName)}</div><div style="font-size:12px;font-weight:700;">protège ${escapeHtml(targetName)} contre le froid</div></div>
+          <div style="font-weight:800;font-size:12px;text-align:center;white-space:nowrap;">Sort divin</div>
+          <img src="${escapeHtml(spellImg)}" style="width:34px;height:34px;object-fit:cover;border-radius:3px;border:1px solid #f7df9a;background:#fff;" />
+        </div>
+        <div style="padding:9px 10px 10px 10px;background:#fff7df;">
+          <div style="border:1px solid #e2bc63;border-radius:6px;background:#fffdf7;padding:8px;margin-bottom:7px;">
+            <div style="color:#2f6f9f;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.3px;text-align:center;">Résistance au froid</div>
+            <table style="width:100%;border-collapse:collapse;margin-top:6px;font-size:13px;">
+              <tbody>
+                <tr><td style="padding:4px 6px;"><b>Cible</b></td><td style="padding:4px 6px;text-align:right;">${escapeHtml(targetName)}</td></tr>
+                <tr><td style="padding:4px 6px;"><b>Dégâts reçus</b></td><td style="padding:4px 6px;text-align:right;">${originalDamage}</td></tr>
+                <tr><td style="padding:4px 6px;"><b>Jet de protection</b></td><td style="padding:4px 6px;text-align:right;">${escapeHtml(saveLabel)}</td></tr>
+                <tr><td style="padding:4px 6px;"><b>Résultat</b></td><td style="padding:4px 6px;text-align:right;">${escapeHtml(resultLabel)}</td></tr>
+                <tr><td style="padding:4px 6px;"><b>Dégâts subis</b></td><td style="padding:4px 6px;text-align:right;"><b>${finalDamage}</b></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <details style="border:1px solid #e2bc63;border-radius:5px;background:#fffdf7;padding:5px 7px;margin-top:7px;">
+            <summary style="cursor:pointer;font-weight:800;color:#6f4b12;">Règle appliquée</summary>
+            <div style="margin-top:5px;font-size:12px;line-height:1.35;">${escapeHtml(ruleText)}</div>
+          </details>
+        </div>
+      </div>`;
+
+    try {
+      await ChatMessage.create({
+        speaker: ChatMessage.getSpeaker({ actor: targetActor, token: targetToken }),
+        content: card,
+        ...chatStyle()
+      });
+      return true;
+    } catch (error) {
+      console.error("[ADD2E][RESISTANCE_FROID][DAMAGE_CARD][ERROR]", error);
+      return false;
+    }
+  }
 
   const sourceItem = typeof sort !== "undefined" && sort
     ? sort
@@ -210,9 +290,11 @@ const __add2eColdResistanceResult = await (async () => {
     }
   }
 
+  const casterImg = casterToken?.document?.texture?.src ?? caster.img ?? "icons/svg/mystery-man.svg";
+  const spellImg = sourceItem.img ?? "icons/magic/defensive/shield-barrier-glowing-blue.webp";
   const effectData = {
     name: CONFIG.name,
-    img: sourceItem.img ?? "icons/magic/defensive/shield-barrier-glowing-blue.webp",
+    img: spellImg,
     origin: sourceItem.uuid ?? null,
     disabled: false,
     transfer: false,
@@ -226,14 +308,18 @@ const __add2eColdResistanceResult = await (async () => {
         sourceSpell: sourceItem.name ?? CONFIG.name,
         sourceSpellId: sourceItem.id ?? null,
         sourceSpellKey: CONFIG.slug,
+        sourceSpellImg: spellImg,
         casterId: caster.id,
         casterUuid: caster.uuid,
+        casterName: caster.name,
+        casterImg,
         effectType: "cold_resistance",
         durationTours: level,
         naturalColdLimit: CONFIG.naturalColdLimit,
         saveBonusVsCold: 3,
         failedSaveMultiplier: 0.5,
-        successfulSaveMultiplier: 0.25
+        successfulSaveMultiplier: 0.25,
+        damageResolution: CONFIG.damageResolution
       }
     }
   };
@@ -265,13 +351,13 @@ const __add2eColdResistanceResult = await (async () => {
   const card = `
     <div class="add2e-spell-card add2e-spell-card-clerc" style="border-radius:12px;box-shadow:0 4px 10px #0002;background:linear-gradient(135deg,#fffaf0,#fff7df);border:1.5px solid #e2bc63;overflow:hidden;padding:0;font-family:var(--font-primary);">
       <div style="background:linear-gradient(90deg,#6f4b12,#b88924);padding:8px 12px;color:#fff;display:flex;align-items:center;gap:10px;border-bottom:2px solid #8a611d;">
-        <img src="${escapeHtml(casterToken?.document?.texture?.src ?? caster.img ?? "icons/svg/mystery-man.svg")}" style="width:36px;height:36px;border-radius:50%;border:2px solid #fff;object-fit:cover;">
+        <img src="${escapeHtml(casterImg)}" style="width:36px;height:36px;border-radius:50%;border:2px solid #fff;object-fit:cover;">
         <div style="line-height:1.2;flex:1;">
           <div style="font-weight:bold;font-size:1.05em;">${escapeHtml(caster.name)}</div>
           <div style="font-size:.85em;opacity:.95;">lance <b>${escapeHtml(sourceItem.name ?? CONFIG.name)}</b></div>
         </div>
         <div style="text-align:right;font-size:.78em;opacity:.95;">Sort divin</div>
-        <img src="${escapeHtml(sourceItem.img ?? "icons/magic/defensive/shield-barrier-glowing-blue.webp")}" style="width:32px;height:32px;border-radius:4px;background:#fff;object-fit:cover;">
+        <img src="${escapeHtml(spellImg)}" style="width:32px;height:32px;border-radius:4px;background:#fff;object-fit:cover;">
       </div>
       <div style="padding:10px;color:#6f4b12;">
         <div style="margin-bottom:7px;font-size:.95em;"><b>Cible :</b> ${escapeHtml(targetLabel)}</div>
