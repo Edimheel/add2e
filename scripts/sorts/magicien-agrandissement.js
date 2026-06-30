@@ -87,9 +87,10 @@ function add2eMagicianLevel(casterActor) {
 function add2eExactlyOneVisibleTarget() {
   const targets = Array.from(game.user?.targets ?? []).filter(target => target?.actor);
   if (targets.length !== 1) {
-    ui.notifications?.warn?.("Agrandissement : sélectionne exactement une créature ou un objet représenté par un token.");
+    ui.notifications?.warn?.("Agrandissement : sélectionne exactement une cible visible.");
     return null;
   }
+
   const target = targets[0];
   if (target.document?.hidden === true && !game.user?.isGM) {
     ui.notifications?.warn?.("Agrandissement : la cible doit être visible.");
@@ -98,70 +99,13 @@ function add2eExactlyOneVisibleTarget() {
   return target;
 }
 
-function add2eDialogForm(button, dialog, fallbackId) {
-  return button?.form
-    ?? dialog?.element?.querySelector?.("form")
-    ?? dialog?.element?.[0]?.querySelector?.("form")
-    ?? document.getElementById(fallbackId)
-    ?? null;
+function add2eTargetKind(targetToken) {
+  const actorType = add2eNormalize(targetToken?.actor?.type);
+  return ["objet", "object", "item"].includes(actorType) ? "objet" : "creature";
 }
 
-async function add2eAskCastingDetails({ target, mode, level }) {
-  const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (!DialogV2?.wait) {
-    ui.notifications?.error?.("Agrandissement : DialogV2 est indisponible.");
-    return null;
-  }
-
-  const formId = `add2e-enlarge-${foundry?.utils?.randomID?.(8) ?? Date.now()}`;
-  const modeLabel = add2eModeLabel(mode);
-  const creaturePct = Math.min(200, level * 20);
-  const objectPct = Math.min(100, level * 10);
-  const content = `
-    <form id="${formId}" class="add2e-dialog add2e-enlarge-dialog">
-      <p style="margin:0 0 8px 0;"><b>${add2eEscapeHtml(modeLabel)}</b> cible <b>${add2eEscapeHtml(target.name)}</b>.</p>
-      <p style="margin:0 0 10px 0;font-size:12px;line-height:1.35;">Une créature vivante varie de 20 % par niveau (maximum 200 %). Un objet varie de 10 % par niveau (maximum 100 %). Rétrécissement applique le rapport inverse.</p>
-      <div class="form-group">
-        <label>Nature de la cible</label>
-        <select name="targetKind">
-          <option value="creature">Créature vivante — ${creaturePct} %</option>
-          <option value="objet">Objet — ${objectPct} %</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label style="display:flex;gap:8px;align-items:center;"><input type="checkbox" name="consenting" checked /> Cible consentante</label>
-      </div>
-      <p style="margin:4px 0 0 0;font-size:12px;opacity:.85;">Une créature non consentante effectue un jet de protection contre les sorts. Aucun bonus d’attaque, de dégâts ou de Force chiffré n’est inventé par le système.</p>
-    </form>`;
-
-  const read = form => {
-    const data = new FormData(form);
-    const targetKind = String(data.get("targetKind") ?? "creature") === "objet" ? "objet" : "creature";
-    return {
-      targetKind,
-      consenting: targetKind === "objet" || data.get("consenting") === "on"
-    };
-  };
-
-  return DialogV2.wait({
-    window: { title: modeLabel },
-    content,
-    modal: true,
-    rejectClose: false,
-    buttons: [
-      {
-        action: "cast",
-        label: "Lancer",
-        default: true,
-        callback: (_event, button, dialog) => read(add2eDialogForm(button, dialog, formId))
-      },
-      {
-        action: "cancel",
-        label: "Annuler",
-        callback: () => null
-      }
-    ]
-  });
+function add2eTargetIsConsenting(targetToken) {
+  return add2eNormalize(targetToken?.actor?.type) !== "monster";
 }
 
 function add2eTransformationMetrics({ mode, targetKind, level }) {
@@ -176,6 +120,77 @@ function add2eTransformationMetrics({ mode, targetKind, level }) {
     factor,
     displayPercent: Math.round(factor * 1000) / 10
   };
+}
+
+async function add2eConfirmCasting({ target, mode, level, targetKind, consenting }) {
+  const DialogV2 = foundry?.applications?.api?.DialogV2;
+  if (!DialogV2?.wait) {
+    ui.notifications?.error?.("Agrandissement : DialogV2 est indisponible.");
+    return null;
+  }
+
+  const metrics = add2eTransformationMetrics({ mode, targetKind, level });
+  const modeLabel = add2eModeLabel(mode);
+  const targetLabel = target?.name ?? "Cible";
+  const targetTypeLabel = targetKind === "objet" ? "Objet" : "Créature";
+  const formulaLabel = targetKind === "objet"
+    ? `10 % × niveau ${level}`
+    : `20 % × niveau ${level}`;
+  const appliedLabel = mode === "retrecissement"
+    ? `${metrics.displayPercent} % de la taille normale`
+    : `+${metrics.percentage} % (taille × ${metrics.enlargementFactor})`;
+  const consentLabel = consenting
+    ? "Cible consentante — aucun jet de protection."
+    : "Acteur monstre — jet de protection contre les sorts.";
+
+  const content = `
+    <section class="add2e-dialog add2e-enlarge-dialog" style="overflow:hidden;border:1px solid #7b3f98;border-radius:10px;background:#f8f2fb;box-shadow:0 5px 18px rgba(72,28,94,.20);">
+      <header style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:linear-gradient(135deg,#351447,#6d2d82 65%,#8d4eac);color:#fff;">
+        <div style="display:grid;place-items:center;width:36px;height:36px;border-radius:50%;background:#ecdaf6;border:1px solid #fff;color:#4e1d64;font-size:19px;">✦</div>
+        <div style="min-width:0;">
+          <div style="font-family:var(--font-primary);font-size:15px;font-weight:800;letter-spacing:.2px;">${add2eEscapeHtml(modeLabel)}</div>
+          <div style="font-size:11px;opacity:.9;">Sort de Magicien — niveau 1</div>
+        </div>
+      </header>
+      <div style="padding:13px 14px;color:#3e2648;">
+        <div style="display:grid;grid-template-columns:1fr auto;gap:8px 12px;align-items:center;padding:9px 10px;border:1px solid #d7b8e8;border-radius:7px;background:#fffaff;">
+          <span style="font-weight:700;color:#54226a;">Cible</span>
+          <span style="text-align:right;font-weight:800;">${add2eEscapeHtml(targetLabel)}</span>
+          <span style="font-weight:700;color:#54226a;">Nature</span>
+          <span style="text-align:right;">${targetTypeLabel}</span>
+          <span style="font-weight:700;color:#54226a;">Variation imposée</span>
+          <span style="text-align:right;color:#6b2d82;font-weight:900;">${appliedLabel}</span>
+          <span style="font-weight:700;color:#54226a;">Formule du Manuel</span>
+          <span style="text-align:right;">${formulaLabel}</span>
+          <span style="font-weight:700;color:#54226a;">Durée</span>
+          <span style="text-align:right;">${level} tour${level > 1 ? "s" : ""} · ${level * 10} rounds</span>
+        </div>
+        <div style="margin-top:10px;padding:9px 10px;border-left:4px solid #7b3f98;border-radius:4px;background:#f0e3f7;color:#4d2160;font-size:12px;line-height:1.4;">
+          <b>Résolution :</b> ${consentLabel}
+        </div>
+        <p style="margin:10px 0 0;font-size:11.5px;line-height:1.4;color:#5d3a6b;">La taille n’est pas choisie : elle est calculée strictement selon le Manuel des joueurs. Rétrécissement applique le rapport inverse.</p>
+      </div>
+    </section>`;
+
+  return DialogV2.wait({
+    window: { title: modeLabel },
+    content,
+    modal: true,
+    rejectClose: false,
+    buttons: [
+      {
+        action: "cast",
+        label: "Lancer le sort",
+        default: true,
+        callback: () => ({ targetKind, consenting })
+      },
+      {
+        action: "cancel",
+        label: "Annuler",
+        callback: () => null
+      }
+    ]
+  });
 }
 
 function add2eCanModifyActor(actorDoc) {
@@ -239,7 +254,7 @@ function add2eEffectTags({ mode, targetKind, metrics, level }) {
   ];
 }
 
-function add2eBuildEffectData({ casterActor, casterToken, targetToken, spellItem, mode, targetKind, level, metrics }) {
+function add2eBuildEffectData({ casterActor, targetToken, spellItem, mode, targetKind, level, metrics }) {
   const modeLabel = add2eModeLabel(mode);
   const rounds = Math.max(10, level * 10);
   const tags = add2eEffectTags({ mode, targetKind, metrics, level });
@@ -352,20 +367,20 @@ async function add2ePostSpellCard({ casterActor, casterToken, spellItem, targetT
   await ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor: casterActor, token: casterToken }),
     content: `
-      <div class="add2e-chat-card add2e-magicien-sort" style="border:1px solid #8e63c7;border-radius:8px;overflow:hidden;background:#f6f0ff;color:#2d2144;font-family:var(--font-primary);">
-        <div style="display:flex;align-items:center;gap:8px;background:#5b3f8c;color:#fff;padding:7px 9px;">
-          <img src="${add2eEscapeHtml(casterImg)}" style="width:42px;height:42px;object-fit:cover;border-radius:50%;border:2px solid #d8c3ff;background:#fff;" />
+      <div class="add2e-chat-card add2e-magicien-sort" style="border:1px solid #7b3f98;border-radius:8px;overflow:hidden;background:#f8f2fb;color:#34203d;font-family:var(--font-primary);">
+        <div style="display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#351447,#6d2d82 65%,#8d4eac);color:#fff;padding:7px 9px;">
+          <img src="${add2eEscapeHtml(casterImg)}" style="width:42px;height:42px;object-fit:cover;border-radius:50%;border:2px solid #ecdaf6;background:#fff;" />
           <div style="flex:1;line-height:1.05;"><div style="font-weight:800;font-size:14px;">${add2eEscapeHtml(casterName)}</div><div style="font-size:12px;font-weight:700;">lance ${add2eEscapeHtml(modeLabel)}</div></div>
-          <img src="${add2eEscapeHtml(spellImg)}" style="width:34px;height:34px;object-fit:cover;border-radius:3px;border:1px solid #d8c3ff;background:#fff;" />
+          <img src="${add2eEscapeHtml(spellImg)}" style="width:34px;height:34px;object-fit:cover;border-radius:3px;border:1px solid #ecdaf6;background:#fff;" />
         </div>
-        <div style="padding:9px 10px 10px;background:#f6f0ff;">
+        <div style="padding:9px 10px 10px;background:#f8f2fb;">
           <div style="font-size:13px;margin:0 0 6px 0;"><b>Cible :</b> ${add2eEscapeHtml(targetToken?.name ?? "Cible")}</div>
-          <div style="border:1px solid #8e63c7;border-radius:6px;background:#fffaff;padding:8px;text-align:center;margin-bottom:7px;">
-            <div style="color:#6c31b5;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.3px;">${add2eEscapeHtml(outcome)}</div>
+          <div style="border:1px solid #b77bd0;border-radius:6px;background:#fffaff;padding:8px;text-align:center;margin-bottom:7px;">
+            <div style="color:#6b2d82;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.3px;">${add2eEscapeHtml(outcome)}</div>
             <div style="font-size:13px;line-height:1.35;text-align:center;">${detail}</div>
           </div>
           <div style="font-size:12px;line-height:1.4;"><b>${targetKind === "objet" ? "Objet" : "Créature vivante"}</b> — ${ratioLine}<br />Durée : <b>${level} tour${level > 1 ? "s" : ""}</b> (${level * 10} rounds).${relayed ? "<br />Application demandée au MJ." : ""}</div>
-          <details style="margin-top:7px;border:1px solid #8e63c7;border-radius:5px;background:#fffaff;padding:5px 7px;"><summary style="cursor:pointer;font-weight:800;color:#4a2e78;">Règle du Manuel</summary><div style="margin-top:5px;font-size:12px;line-height:1.35;">Une créature visible varie de 20 % par niveau du magicien, jusqu’à 200 %. Un objet visible varie de 10 % par niveau, jusqu’à 100 %. Rétrécissement annule Agrandissement ou applique le rapport inverse. Une créature non consentante a droit à un jet de protection contre les sorts.</div></details>
+          <details style="margin-top:7px;border:1px solid #b77bd0;border-radius:5px;background:#fffaff;padding:5px 7px;"><summary style="cursor:pointer;font-weight:800;color:#54226a;">Règle du Manuel</summary><div style="margin-top:5px;font-size:12px;line-height:1.35;">Une créature visible varie de 20 % par niveau du magicien, jusqu’à 200 %. Un objet visible varie de 10 % par niveau, jusqu’à 100 %. Rétrécissement annule Agrandissement ou applique le rapport inverse. Un acteur monstre a droit à un jet de protection contre les sorts.</div></details>
         </div>
       </div>`
   });
@@ -384,13 +399,14 @@ if (!targetToken) return false;
 
 const mode = add2eSpellMode(spellItem);
 const level = add2eMagicianLevel(casterActor);
-const choice = await add2eAskCastingDetails({ target: targetToken, mode, level });
+const targetKind = add2eTargetKind(targetToken);
+const consenting = add2eTargetIsConsenting(targetToken);
+const choice = await add2eConfirmCasting({ target: targetToken, mode, level, targetKind, consenting });
 if (!choice) return false;
 
 const metrics = add2eTransformationMetrics({ mode, targetKind: choice.targetKind, level });
 const effectData = add2eBuildEffectData({
   casterActor,
-  casterToken,
   targetToken,
   spellItem,
   mode,
@@ -426,7 +442,7 @@ if (choice.targetKind === "creature" && !choice.consenting) {
       level,
       metrics,
       outcome: "EFFET ANNULÉ",
-      detail: "La cible non consentante réussit son jet de protection contre les sorts."
+      detail: "L’acteur monstre réussit son jet de protection contre les sorts."
     });
     return true;
   }
