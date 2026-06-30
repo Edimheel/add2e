@@ -1,5 +1,5 @@
 // ADD2E — onUse Magicien : Altération des feux normaux
-// Version : 2026-05-25-magicien-alteration-feux-normaux-chat-only-v2
+// Version : 2026-07-01-magicien-alteration-feux-normaux-purple-chat-v3
 //
 // Sort à carte de chat uniquement.
 // Aucun ActiveEffect, aucun changement d'acteur, aucune cible obligatoire.
@@ -65,20 +65,20 @@ async function add2eChatAlterationFeuxNormaux(actorDoc) {
     speaker: ChatMessage.getSpeaker({ actor: actorDoc, token: casterToken }),
     content: `
       <div class="add2e-chat-card add2e-magicien-sort add2e-sort-chat-only add2e-sort-alteration-feux"
-           style="border:1px solid #8e63c7;border-radius:8px;overflow:hidden;background:#f6f0ff;color:#2d2144;font-family:var(--font-primary);">
-        <div style="display:flex;align-items:center;gap:8px;background:#5b3f8c;color:#fff;padding:7px 9px;">
-          <img src="${add2eHtmlEscape(casterImg)}" style="width:42px;height:42px;object-fit:cover;border-radius:50%;border:2px solid #d8c3ff;background:#fff;" />
+           style="border:1px solid #7b3f98;border-radius:8px;overflow:hidden;background:#f8f2fb;color:#34203d;font-family:var(--font-primary);">
+        <div style="display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#351447,#6d2d82 65%,#8d4eac);color:#fff;padding:7px 9px;">
+          <img src="${add2eHtmlEscape(casterImg)}" style="width:42px;height:42px;object-fit:cover;border-radius:50%;border:2px solid #ecdaf6;background:#fff;" />
           <div style="flex:1;line-height:1.05;">
             <div style="font-weight:800;font-size:14px;">${add2eHtmlEscape(casterName)}</div>
             <div style="font-size:12px;font-weight:700;">lance ${add2eHtmlEscape(ADD2E_SORT_CONFIG.name)}</div>
           </div>
           <div style="font-weight:800;font-size:12px;text-align:center;white-space:nowrap;">Magicien niv. 1</div>
-          <img src="${add2eHtmlEscape(spellImg)}" style="width:34px;height:34px;object-fit:cover;border-radius:3px;border:1px solid #d8c3ff;background:#fff;" />
+          <img src="${add2eHtmlEscape(spellImg)}" style="width:34px;height:34px;object-fit:cover;border-radius:3px;border:1px solid #ecdaf6;background:#fff;" />
         </div>
 
-        <div style="padding:9px 10px 10px 10px;background:#f6f0ff;">
-          <div style="border:1px solid #8e63c7;border-radius:6px;background:#fffaff;padding:8px;text-align:center;margin-bottom:7px;">
-            <div style="color:#6c31b5;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.3px;">Sort lancé</div>
+        <div style="padding:9px 10px 10px 10px;background:#f8f2fb;">
+          <div style="border:1px solid #b77bd0;border-radius:6px;background:#fffaff;padding:8px;text-align:center;margin-bottom:7px;">
+            <div style="color:#6b2d82;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.3px;">Sort lancé</div>
             <div style="font-size:13px;line-height:1.35;text-align:left;">
               <p style="margin:.25em 0;">Les flammes normales frémissent et se plient à la volonté du magicien.</p>
               <p style="margin:.25em 0;">Leur éclat change d'intensité, sans que leur chaleur ne soit altérée.</p>
@@ -86,8 +86,8 @@ async function add2eChatAlterationFeuxNormaux(actorDoc) {
             </div>
           </div>
 
-          <details style="border:1px solid #8e63c7;border-radius:5px;background:#fffaff;padding:5px 7px;">
-            <summary style="cursor:pointer;font-weight:800;color:#4a2e78;">Paramètres du sort</summary>
+          <details style="border:1px solid #b77bd0;border-radius:5px;background:#fffaff;padding:5px 7px;">
+            <summary style="cursor:pointer;font-weight:800;color:#54226a;">Paramètres du sort</summary>
             <div style="margin-top:5px;font-size:12px;line-height:1.35;">
               <p><b>École :</b> ${add2eHtmlEscape(ADD2E_SORT_CONFIG.school)} — <b>Portée :</b> ${add2eHtmlEscape(ADD2E_SORT_CONFIG.rangeText)}.</p>
               <p><b>Zone :</b> ${add2eHtmlEscape(ADD2E_SORT_CONFIG.areaText)}.</p>
