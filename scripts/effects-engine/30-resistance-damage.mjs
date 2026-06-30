@@ -1,5 +1,5 @@
 // ADD2E — Effects Engine / résistances et dégâts élémentaires.
-// Extraction fonctionnelle sans changement de règle ni correction de compatibilité.
+// Les cartes de sort sont portées par leurs scripts onUse.
 
 const register = (Engine, methods) => Object.defineProperties(
   Engine,
@@ -122,38 +122,6 @@ export function installEffectsEngineDamage(Engine) {
       };
     },
 
-    escapeChatHtml(value) {
-      return String(value ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    },
-
-    async createDamageResistanceChat(actor, result) {
-      if (!result?.applied || typeof ChatMessage === "undefined") return;
-
-      const title = result.naturalProtection
-        ? `PROTECTION CONTRE LE ${String(result.element ?? "").toUpperCase()} NATUREL`
-        : `RÉSISTANCE AU ${String(result.element ?? "").toUpperCase()}`;
-
-      const rule = result.naturalProtection
-        ? `Température déclarée : ${result.context.temperature} °C. Protection active jusqu’à ${result.naturalLimit} °C.`
-        : result.save?.canRoll
-          ? `Jet de protection : ${result.save.total} / seuil ${result.save.threshold}, bonus ${result.save.bonus >= 0 ? "+" : ""}${result.save.bonus}. ${result.save.success ? "Dégâts réduits au quart." : "Dégâts réduits de moitié."}`
-          : "Jet de protection indisponible : dégâts réduits de moitié.";
-
-      const escape = this.escapeChatHtml;
-      await ChatMessage.create({
-        speaker: ChatMessage.getSpeaker({ actor }),
-        content: `<div class="add2e-chat-card add2e-damage-resistance-card" style="font-family:var(--font-primary);background:#eef7ff;border:1px solid #5aa3d8;border-radius:8px;padding:9px;color:#15344a;"><div style="font-weight:900;color:#1f6f9f;font-size:1.05em;margin-bottom:5px;">${escape(title)}</div><div><b>${escape(actor?.name ?? "La cible")}</b> bénéficie d’une protection active.</div><div style="margin-top:5px;">${escape(rule)}</div><div style="margin-top:5px;font-weight:800;">Dégâts : <b>${result.original}</b> → <b>${result.amount}</b></div></div>`,
-        ...(CONST.CHAT_MESSAGE_STYLES
-          ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER }
-          : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 })
-      });
-    },
-
     async resolveIncomingDamage(actor, { amount = 0, type = "", details = "", chat = true } = {}) {
       const original = Math.max(0, Number(amount) || 0);
       if (!actor || original <= 0) return { amount: original, applied: false, original };
@@ -170,7 +138,7 @@ export function installEffectsEngineDamage(Engine) {
         && Number.isFinite(naturalLimit)
         && context.temperature >= naturalLimit
       ) {
-        const result = {
+        return {
           amount: 0,
           applied: true,
           original,
@@ -180,8 +148,6 @@ export function installEffectsEngineDamage(Engine) {
           naturalLimit,
           save: null
         };
-        if (chat) await this.createDamageResistanceChat(actor, result);
-        return result;
       }
 
       const rule = this.getDamageResistanceRule(actor, context.element);
@@ -191,7 +157,7 @@ export function installEffectsEngineDamage(Engine) {
       const multiplier = save.canRoll && save.success ? rule.succeededMultiplier : rule.failedMultiplier;
       const reduced = Math.max(1, Math.floor(original * multiplier));
 
-      const result = {
+      return {
         amount: reduced,
         applied: true,
         original,
@@ -201,9 +167,6 @@ export function installEffectsEngineDamage(Engine) {
         save,
         naturalProtection: false
       };
-
-      if (chat) await this.createDamageResistanceChat(actor, result);
-      return result;
     }
   });
 }
