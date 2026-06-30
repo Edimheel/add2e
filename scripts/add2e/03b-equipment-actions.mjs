@@ -4,7 +4,7 @@
 // Les restrictions de classe restent dans 03-equipment-rules.mjs.
 // ============================================================
 
-const ADD2E_EQUIPMENT_ACTIONS_VERSION = "2026-06-24-equipment-actions-single-route-v6";
+const ADD2E_EQUIPMENT_ACTIONS_VERSION = "2026-06-30-equipment-actions-action-gate-v7";
 const ADD2E_WEAPON_TYPES = new Set(["arme", "weapon"]);
 const ADD2E_ARMOR_TYPES = new Set(["armure", "armor"]);
 
@@ -471,6 +471,143 @@ async function add2eConsumeThrownWeaponAfterAttack(actor, weapon) {
   return api.add2eConsumeThrownWeapon(actor, weapon, 1);
 }
 
+function add2eActionGateTargetToken(args = {}) {
+  return args.targetToken ?? args.cibleToken ?? Array.from(game.user?.targets ?? [])[0] ?? null;
+}
+
+function add2eActionGateTargetActor(token) {
+  return token?.actor
+    ?? token?.document?.actor
+    ?? (token?.document?.actorId ? game.actors?.get?.(token.document.actorId) : null)
+    ?? null;
+}
+
+function add2eActionGateSourceToken(actor, args = {}) {
+  return args.token
+    ?? args.sourceToken
+    ?? (canvas?.tokens?.controlled ?? []).find(token => token?.actor?.id === actor?.id || token?.document?.actorId === actor?.id)
+    ?? actor?.getActiveTokens?.()[0]
+    ?? actor?.token?.object
+    ?? actor?.token
+    ?? null;
+}
+
+async function add2eRunActionGateOnUse({ gateResults = [], actor, cible, sourceToken, targetToken, weapon, actionTags = [] } = {}) {
+  for (const result of gateResults) {
+    if (result?.kind !== "save_gate") continue;
+    const rule = result?.rule ?? {};
+    const scriptPath = String(rule.onUse ?? rule.handler?.onUse ?? "").trim();
+    if (!scriptPath) continue;
+
+    try {
+      const response = await fetch(scriptPath, { cache: "no-store" });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const code = await response.text();
+      const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
+      const effect = result?.source?.effect ?? null;
+      const effectActor = result?.source?.actor ?? cible ?? null;
+      const event = {
+        add2eMode: String(rule.onUseMode ?? rule.handler?.mode ?? "actionGateResolved"),
+        actionGate: {
+          kind: result.kind,
+          allowed: result.allowed !== false,
+          label: result.label ?? "",
+          save: result.save ?? null,
+          rule
+        },
+        effect,
+        effectId: effect?.id ?? null,
+        effectFlags: effect?.flags?.add2e ?? {},
+        action: {
+          type: "attaque",
+          actor,
+          sourceActor: actor,
+          sourceToken,
+          targetActor: cible,
+          targetToken,
+          weapon,
+          contact: false,
+          actionTags
+        }
+      };
+      const handler = new AsyncFunction("actor", "item", "sort", "token", "args", "sourceItem", code);
+      await handler.call(effect, effectActor, null, null, targetToken, [event], null);
+    } catch (error) {
+      console.error("[ADD2E][ACTION_GATE][ONUSE][ERROR]", {
+        scriptPath,
+        actor: actor?.name,
+        target: cible?.name,
+        error
+      });
+    }
+  }
+}
+
+async function add2eResolveEquipmentAttackGate({ actor, weapon, args = {} } = {}) {
+  const engine = globalThis.Add2eEffectsEngine;
+  if (typeof engine?.evaluateActionRules !== "function" || !actor || !weapon) {
+    return { allowed: true, details: [] };
+  }
+
+  const targetToken = add2eActionGateTargetToken(args);
+  const cible = add2eActionGateTargetActor(targetToken);
+  if (!targetToken || !cible) return { allowed: true, details: [] };
+
+  const sourceToken = add2eActionGateSourceToken(actor, args);
+  const actionTags = [...add2eEquipmentTags(weapon)];
+  const action = {
+    type: "attaque",
+    actor,
+    sourceActor: actor,
+    sourceToken,
+    targetActor: cible,
+    targetToken,
+    weapon,
+    contact: false,
+    actionTags
+  };
+  const actorTags = engine.getContextTags?.(actor) ?? engine.getActiveTags?.(actor) ?? [];
+  const targetTags = engine.getContextTags?.(cible) ?? engine.getActiveTags?.(cible) ?? [];
+
+  const ownerRules = await engine.evaluateActionRules(actor, {
+    ...action,
+    ruleScope: "owner",
+    subjectTags: targetTags
+  });
+  await add2eRunActionGateOnUse({
+    gateResults: ownerRules.gateResults,
+    actor,
+    cible,
+    sourceToken,
+    targetToken,
+    weapon,
+    actionTags
+  });
+  if (ownerRules.allowed === false) {
+    return { allowed: false, details: ownerRules.details ?? [] };
+  }
+
+  const targetRules = await engine.evaluateActionRules(cible, {
+    ...action,
+    ruleScope: "target",
+    subjectTags: actorTags,
+    saveActor: actor
+  });
+  await add2eRunActionGateOnUse({
+    gateResults: targetRules.gateResults,
+    actor,
+    cible,
+    sourceToken,
+    targetToken,
+    weapon,
+    actionTags
+  });
+  return {
+    allowed: targetRules.allowed !== false,
+    details: targetRules.details ?? []
+  };
+}
+
 let add2eAttackCore = null;
 
 function add2eCaptureAttackCore() {
@@ -490,6 +627,12 @@ function add2eInstallSingleAttackRoute() {
     const actor = args.actor ?? (args.actorId ? game.actors?.get?.(args.actorId) : null);
     const weapon = args.arme ?? (actor && args.itemId ? actor.items?.get?.(args.itemId) : null);
     if (!actor || !weapon) return add2eAttackCore.call(this, args);
+
+    const actionGate = await add2eResolveEquipmentAttackGate({ actor, weapon, args });
+    if (actionGate.allowed === false) {
+      ui.notifications?.warn?.(actionGate.details?.[0] ?? "Cette attaque est empêchée par un effet actif.");
+      return false;
+    }
 
     const profile = add2eGetWeaponUsageProfile(weapon);
     if (!profile.isThrown && !profile.isProjectilePropulse) return add2eAttackCore.call(this, args);
