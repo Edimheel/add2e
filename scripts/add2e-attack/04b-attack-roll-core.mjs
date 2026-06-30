@@ -11,7 +11,7 @@ import {
 } from "./03-attack-rules.mjs";
 import { add2eAttackMeasureContactAndDistance } from "./04g-attack-roll-range.mjs";
 
-export const ADD2E_ATTACK_ROLL_CORE_VERSION = "2026-06-30-generic-effect-action-gates-v5";
+export const ADD2E_ATTACK_ROLL_CORE_VERSION = "2026-06-30-generic-effect-action-gates-v6";
 
 const ADD2E_NATURAL_CONTACT_ATTACKS = new Set([
   "griffe", "griffes", "morsure", "bec", "serre", "serres", "dard", "queue", "coup_de_queue",
@@ -206,8 +206,11 @@ async function add2eEvaluateGenericActionGate(args = {}) {
   };
 }
 
-async function add2eRunGenericActionGateHandlers(gate) {
+async function add2eRunGenericActionGateHandlers(gate, { allowed = null } = {}) {
   for (const result of gate?.gateResults ?? []) {
+    const resultAllowed = result?.allowed !== false;
+    if (typeof allowed === "boolean" && resultAllowed !== allowed) continue;
+
     const rule = result?.rule ?? {};
     const scriptPath = String(rule.onUse ?? rule.handler?.onUse ?? "").trim();
     if (!scriptPath) continue;
@@ -223,7 +226,7 @@ async function add2eRunGenericActionGateHandlers(gate) {
         add2eMode: String(rule.onUseMode ?? rule.handler?.mode ?? "actionGateResolved"),
         actionGate: {
           kind: result.kind,
-          allowed: result.allowed !== false,
+          allowed: resultAllowed,
           label: result.label ?? "",
           save: result.save ?? null,
           rule
@@ -258,12 +261,15 @@ async function add2eRunGenericActionGateHandlers(gate) {
 
 export async function add2eAttackRoll(args = {}) {
   const gate = await add2eEvaluateGenericActionGate(args);
-  await add2eRunGenericActionGateHandlers(gate);
   if (gate?.allowed === false) {
+    await add2eRunGenericActionGateHandlers(gate, { allowed: false });
     ui.notifications?.warn?.(gate.details?.[0] ?? "Cette attaque est empêchée par un effet actif.");
     return false;
   }
-  return add2eAttackRollCore(args);
+
+  const attackResult = await add2eAttackRollCore(args);
+  await add2eRunGenericActionGateHandlers(gate, { allowed: true });
+  return attackResult;
 }
 
 globalThis.add2eAttackRoll = add2eAttackRoll;
