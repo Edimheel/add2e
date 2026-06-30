@@ -1,230 +1,213 @@
-// ADD2E — onUse Magicien : Agrandissement / Retrecissement
-// Version : 2026-05-24-magicien-agrandissement-v3-player-gm-relay
-// Retour attendu : true = sort consomme, false = sort non consomme.
+// ADD2E — onUse Magicien : Agrandissement / Rétrécissement
+// Compatible Foundry V13/V14/V15.
+// Contrat : return true consomme le sort ; return false rembourse la réservation.
+// Les composants, la durée, le jet de sauvegarde et la transformation de token
+// sont délégués aux services génériques du système.
 
-const ADD2E_SORT_NAME = "Agrandissement";
-const ADD2E_SORT_SLUG = "agrandissement";
-const ADD2E_SORT_LEVEL = 1;
-const ADD2E_ONUSE_TAG = "[ADD2E][SORT_ONUSE][AGRANDISSEMENT]";
-const ADD2E_AGRANDISSEMENT_RULE = "Agrandissement : portee 1/2 pouce par niveau, duree 1 tour par niveau, jet de protection annule si cible non consentante. La taille, le poids et la force effective varient de 10% par niveau, jusqu'a un maximum de 50%. L'inverse, Retrecissement, reduit dans les memes proportions.";
+const ADD2E_SPELL = Object.freeze({
+  name: "Agrandissement",
+  slug: "agrandissement",
+  level: 1,
+  school: "Altération",
+  range: "1/2\" par niveau",
+  duration: "1 tour par niveau"
+});
 
-function add2eHtmlEscape(value) {
+const ADD2E_TRANSFORM_GROUP = "agrandissement-retrecissement";
+
+function add2eNormalize(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function add2eEscapeHtml(value) {
   const div = document.createElement("div");
-  div.innerText = String(value ?? "");
+  div.textContent = String(value ?? "");
   return div.innerHTML;
 }
 
-function add2eGetGlobal(name) {
-  try { return globalThis?.[name]; } catch (_) { return undefined; }
+function add2eClone(value) {
+  if (foundry?.utils?.deepClone) return foundry.utils.deepClone(value);
+  if (foundry?.utils?.duplicate) return foundry.utils.duplicate(value);
+  return JSON.parse(JSON.stringify(value));
 }
 
-function add2eGetItem() {
-  return (typeof item !== "undefined" && item) ? item : add2eGetGlobal("item") ?? null;
+function add2eCurrentItem() {
+  return typeof item !== "undefined" && item ? item : null;
 }
 
-function add2eGetActor() {
+function add2eCurrentActor() {
   if (typeof actor !== "undefined" && actor) return actor;
-  const t = add2eGetCasterToken();
-  return t?.actor ?? add2eGetGlobal("actor") ?? null;
+  return typeof args !== "undefined" && Array.isArray(args) ? args[0]?.actor ?? null : null;
 }
 
-function add2eGetCasterToken() {
+function add2eCurrentToken() {
   if (typeof token !== "undefined" && token) return token;
-  const args0 = (typeof args !== "undefined" && Array.isArray(args)) ? args[0] : null;
-  return args0?.token ?? canvas?.tokens?.controlled?.[0] ?? null;
+  if (typeof args !== "undefined" && Array.isArray(args) && args[0]?.token) return args[0].token;
+  const actorDoc = add2eCurrentActor();
+  return canvas?.tokens?.controlled?.find?.(entry => entry.actor?.id === actorDoc?.id)
+    ?? actorDoc?.getActiveTokens?.()?.[0]
+    ?? null;
 }
 
-function add2eCasterLevel(casterActor) {
-  const sys = casterActor?.system ?? {};
-  const candidates = [
-    sys.niveau,
-    sys.level,
-    sys.details?.niveau,
-    sys.details?.level,
-    sys.details_classe?.niveau,
-    sys.details_classe?.level
-  ];
-  for (const raw of candidates) {
-    const n = Number(raw);
-    if (Number.isFinite(n) && n > 0) return Math.max(1, Math.floor(n));
+function add2eSpellMode(spellItem) {
+  const key = add2eNormalize(spellItem?.name ?? spellItem?.system?.nom ?? "");
+  return key.startsWith("retrecissement") ? "retrecissement" : "agrandissement";
+}
+
+function add2eModeLabel(mode) {
+  return mode === "retrecissement" ? "Rétrécissement" : "Agrandissement";
+}
+
+function add2eMagicianLevel(casterActor) {
+  try {
+    const canonical = Number(globalThis.add2eCanonicalClassLevel?.(casterActor, "magicien", 0));
+    if (Number.isFinite(canonical) && canonical > 0) return Math.floor(canonical);
+  } catch (_error) {}
+
+  const classItem = Array.from(casterActor?.items ?? []).find(entry => {
+    if (String(entry?.type ?? "").toLowerCase() !== "classe") return false;
+    const values = [entry.name, entry.system?.slug, entry.system?.label, entry.system?.nom, entry.system?.name];
+    return values.map(add2eNormalize).includes("magicien");
+  }) ?? null;
+
+  const classLevel = Number(classItem?.system?.niveau ?? classItem?.system?.level);
+  if (Number.isFinite(classLevel) && classLevel > 0) return Math.floor(classLevel);
+
+  const actorLevel = Number(casterActor?.system?.niveau ?? casterActor?.system?.level ?? 1);
+  return Math.max(1, Math.floor(Number.isFinite(actorLevel) ? actorLevel : 1));
+}
+
+function add2eExactlyOneVisibleTarget() {
+  const targets = Array.from(game.user?.targets ?? []).filter(target => target?.actor);
+  if (targets.length !== 1) {
+    ui.notifications?.warn?.("Agrandissement : sélectionne exactement une créature ou un objet représenté par un token.");
+    return null;
   }
-  return 1;
-}
-
-function add2eGetTargets({ fallbackCaster = true } = {}) {
-  const targets = Array.from(game.user?.targets ?? []);
-  if (targets.length) return targets;
-  const casterToken = add2eGetCasterToken();
-  return (fallbackCaster && casterToken) ? [casterToken] : [];
-}
-
-function add2eReadSaveVsSpells(targetActor) {
-  const sys = targetActor?.system ?? {};
-  const candidates = [
-    Array.isArray(sys.sauvegardes) ? sys.sauvegardes[4] : null,
-    Array.isArray(sys.savingThrows) ? sys.savingThrows[4] : null,
-    sys.sauvegarde_sortileges,
-    sys.sauvegarde_sorts,
-    sys.sauvegardes?.sortileges,
-    sys.sauvegardes?.sorts,
-    sys.saves?.sorts,
-    sys.saves?.spell,
-    sys.saves?.spells,
-    sys.saves?.magic,
-    sys.calculatedSaves?.sorts,
-    sys.calculatedSaves?.spell,
-    sys.calculatedSaves?.spells,
-    sys.jp_sort,
-    sys.jp_sorts,
-    sys.jp?.sorts,
-    sys.jp?.sortileges,
-    sys.jet_protection?.sorts,
-    sys.jet_protection?.sortileges,
-    sys.jetProtection?.sorts
-  ];
-  for (const raw of candidates) {
-    const n = Number(raw);
-    if (Number.isFinite(n) && n > 0) return n;
+  const target = targets[0];
+  if (target.document?.hidden === true && !game.user?.isGM) {
+    ui.notifications?.warn?.("Agrandissement : la cible doit être visible.");
+    return null;
   }
-  return NaN;
+  return target;
 }
 
-async function add2eRollSaveVsSpells(targetActor) {
-  const saveVal = add2eReadSaveVsSpells(targetActor);
-  if (!Number.isFinite(saveVal) || saveVal <= 0) {
-    return { canRoll: false, saveVal: NaN, roll: null, total: 0, success: false };
+function add2eDialogForm(button, dialog, fallbackId) {
+  return button?.form
+    ?? dialog?.element?.querySelector?.("form")
+    ?? dialog?.element?.[0]?.querySelector?.("form")
+    ?? document.getElementById(fallbackId)
+    ?? null;
+}
+
+async function add2eAskCastingDetails({ target, mode, level }) {
+  const DialogV2 = foundry?.applications?.api?.DialogV2;
+  if (!DialogV2?.wait) {
+    ui.notifications?.error?.("Agrandissement : DialogV2 est indisponible.");
+    return null;
   }
-  const roll = await new Roll("1d20").evaluate();
-  return {
-    canRoll: true,
-    saveVal,
-    roll,
-    total: Number(roll.total) || 0,
-    success: (Number(roll.total) || 0) >= saveVal
+
+  const formId = `add2e-enlarge-${foundry?.utils?.randomID?.(8) ?? Date.now()}`;
+  const modeLabel = add2eModeLabel(mode);
+  const creaturePct = Math.min(200, level * 20);
+  const objectPct = Math.min(100, level * 10);
+  const content = `
+    <form id="${formId}" class="add2e-dialog add2e-enlarge-dialog">
+      <p style="margin:0 0 8px 0;"><b>${add2eEscapeHtml(modeLabel)}</b> cible <b>${add2eEscapeHtml(target.name)}</b>.</p>
+      <p style="margin:0 0 10px 0;font-size:12px;line-height:1.35;">Une créature vivante varie de 20 % par niveau (maximum 200 %). Un objet varie de 10 % par niveau (maximum 100 %). Rétrécissement applique le rapport inverse.</p>
+      <div class="form-group">
+        <label>Nature de la cible</label>
+        <select name="targetKind">
+          <option value="creature">Créature vivante — ${creaturePct} %</option>
+          <option value="objet">Objet — ${objectPct} %</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label style="display:flex;gap:8px;align-items:center;"><input type="checkbox" name="consenting" checked /> Cible consentante</label>
+      </div>
+      <p style="margin:4px 0 0 0;font-size:12px;opacity:.85;">Une créature non consentante effectue un jet de protection contre les sorts. Aucun bonus d’attaque, de dégâts ou de Force chiffré n’est inventé par le système.</p>
+    </form>`;
+
+  const read = form => {
+    const data = new FormData(form);
+    const targetKind = String(data.get("targetKind") ?? "creature") === "objet" ? "objet" : "creature";
+    return {
+      targetKind,
+      consenting: targetKind === "objet" || data.get("consenting") === "on"
+    };
   };
-}
 
-async function add2eAskAgrandissement(level) {
-  const pct = Math.min(50, Math.max(10, level * 10));
-  return await new Promise(resolve => {
-    let done = false;
-    const finish = value => { if (!done) { done = true; resolve(value); } };
-    new Dialog({
-      title: "Agrandissement / Retrecissement",
-      content: `
-        <form>
-          <p><b>Agrandissement</b> modifie temporairement la taille de 10% par niveau, jusqu'a 50%.</p>
-          <div class="form-group">
-            <label>Mode</label>
-            <select name="mode">
-              <option value="agrandissement">Agrandissement</option>
-              <option value="retrecissement">Retrecissement</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Variation calculee</label>
-            <input type="text" value="${pct}%" disabled />
-          </div>
-          <div class="form-group">
-            <label>Cible consentante</label>
-            <input type="checkbox" name="consentante" checked />
-          </div>
-          <div class="form-group">
-            <label>Modificateur toucher applique par le MD</label>
-            <input type="number" name="bonusAttaque" value="0" step="1" />
-          </div>
-          <div class="form-group">
-            <label>Modificateur degats applique par le MD</label>
-            <input type="number" name="bonusDegats" value="0" step="1" />
-          </div>
-          <p style="font-size:12px;opacity:.85;">Si la cible n'est pas consentante, un jet de protection contre les sorts annule l'effet.</p>
-        </form>`,
-      buttons: {
-        cast: {
-          label: "Lancer le sort",
-          callback: html => finish({
-            mode: String(html.find("[name='mode']").val() || "agrandissement"),
-            consentante: !!html.find("[name='consentante']").prop("checked"),
-            bonusAttaque: Number(html.find("[name='bonusAttaque']").val()) || 0,
-            bonusDegats: Number(html.find("[name='bonusDegats']").val()) || 0
-          })
-        },
-        cancel: { label: "Annuler", callback: () => finish(null) }
+  return DialogV2.wait({
+    window: { title: modeLabel },
+    content,
+    modal: true,
+    rejectClose: false,
+    buttons: [
+      {
+        action: "cast",
+        label: "Lancer",
+        default: true,
+        callback: (_event, button, dialog) => read(add2eDialogForm(button, dialog, formId))
       },
-      default: "cast",
-      close: () => finish(null)
-    }).render(true);
+      {
+        action: "cancel",
+        label: "Annuler",
+        callback: () => null
+      }
+    ]
   });
 }
 
-function add2eEffectTags({ mode, level, pct, bonusAttaque, bonusDegats }) {
-  const isShrink = mode === "retrecissement";
-  const tags = [
-    `sort:${ADD2E_SORT_SLUG}`,
-    "classe:magicien",
-    "liste:magicien",
-    `niveau:${ADD2E_SORT_LEVEL}`,
-    "ecole:alteration",
-    "type:taille",
-    "reversible:retrecissement",
-    isShrink ? "etat:retrecissement" : "etat:agrandissement",
-    isShrink ? "taille:reduite" : "taille:agrandie",
-    isShrink ? "poids:reduit" : "poids:augmente",
-    isShrink ? "force_effective:reduite" : "force_effective:augmentee",
-    `variation_taille_pct:${pct}`,
-    `duree_rounds:${level * 10}`
-  ];
-
-  if (bonusAttaque) {
-    tags.push(`bonus_attaque:${bonusAttaque}`);
-    tags.push(`bonus:toucher:${bonusAttaque}`);
-  }
-  if (bonusDegats) {
-    tags.push(`bonus_degats:${bonusDegats}`);
-    tags.push(`bonus:degats:${bonusDegats}`);
-  }
-  return tags;
-}
-
-function add2eRoundSize(value) {
-  const n = Number(value);
-  if (!Number.isFinite(n)) return 1;
-  return Math.max(0.2, Math.round(n * 1000) / 1000);
+function add2eTransformationMetrics({ mode, targetKind, level }) {
+  const percentage = targetKind === "objet"
+    ? Math.min(100, Math.max(10, level * 10))
+    : Math.min(200, Math.max(20, level * 20));
+  const enlargementFactor = 1 + (percentage / 100);
+  const factor = mode === "retrecissement" ? 1 / enlargementFactor : enlargementFactor;
+  return {
+    percentage,
+    enlargementFactor,
+    factor,
+    displayPercent: Math.round(factor * 1000) / 10
+  };
 }
 
 function add2eCanModifyActor(actorDoc) {
   if (!actorDoc) return false;
   if (game.user?.isGM) return true;
-  return !!actorDoc.isOwner || actorDoc.testUserPermission?.(game.user, "OWNER") === true;
+  try { return actorDoc.isOwner === true || actorDoc.testUserPermission?.(game.user, "OWNER") === true; }
+  catch (_error) { return false; }
 }
 
-function add2eCanUpdateToken(tokenDoc) {
+function add2eCanModifyToken(targetToken) {
+  const tokenDoc = targetToken?.document ?? targetToken;
   if (!tokenDoc) return false;
   if (game.user?.isGM) return true;
-  try {
-    if (typeof tokenDoc.canUserModify === "function") return tokenDoc.canUserModify(game.user, "update");
-  } catch (_err) {}
-  return false;
+  try { return tokenDoc.canUserModify?.(game.user, "update") === true; }
+  catch (_error) { return false; }
 }
 
-function add2eSocketPayloadForTarget(targetToken, extra = {}) {
+function add2eSocketPayload(targetToken, extra = {}) {
+  const tokenDoc = targetToken?.document ?? targetToken;
   return {
-    sceneId: targetToken?.document?.parent?.id ?? targetToken?.scene?.id ?? canvas?.scene?.id ?? null,
-    tokenId: targetToken?.document?.id ?? targetToken?.id ?? null,
+    sceneId: tokenDoc?.parent?.id ?? canvas?.scene?.id ?? null,
+    tokenId: tokenDoc?.id ?? targetToken?.id ?? null,
     actorId: targetToken?.actor?.id ?? null,
     actorUuid: targetToken?.actor?.uuid ?? null,
     ...extra
   };
 }
 
-function add2eEmitGMOperation(operation, payload) {
-  if (!game.socket) {
-    ui.notifications?.error(`${ADD2E_SORT_NAME} : socket Foundry indisponible, effet non applique.`);
-    return false;
-  }
-  const activeGM = game.users?.activeGM ?? game.users?.find?.(u => u.active && u.isGM) ?? null;
-  if (!game.user?.isGM && !activeGM) {
-    ui.notifications?.error(`${ADD2E_SORT_NAME} : aucun MJ actif pour appliquer l'effet.`);
+function add2eEmitGmOperation(operation, payload) {
+  const activeGM = game.users?.activeGM ?? Array.from(game.users ?? []).find(user => user.active && user.isGM) ?? null;
+  if (!game.socket || (!game.user?.isGM && !activeGM)) {
+    ui.notifications?.error?.("Agrandissement : aucun MJ actif ne peut appliquer cet effet.");
     return false;
   }
   game.socket.emit("system.add2e", {
@@ -232,265 +215,245 @@ function add2eEmitGMOperation(operation, payload) {
     operation,
     payload: { ...(payload ?? {}), fromUserId: game.user.id, sentAt: Date.now() }
   });
-  console.log(`${ADD2E_ONUSE_TAG}[GM_RELAY_EMIT]`, { operation, payload });
   return true;
 }
 
-function add2eBuildTokenScaleUpdate(targetToken, { mode, pct, effectId }) {
-  const doc = targetToken?.document;
-  if (!doc) return null;
+function add2eEffectTags({ mode, targetKind, metrics, level }) {
+  const shrinking = mode === "retrecissement";
+  return [
+    `sort:${shrinking ? "retrecissement" : "agrandissement"}`,
+    "classe:magicien",
+    "liste:magicien",
+    "ecole:alteration",
+    "type:taille",
+    "reversible:retrecissement",
+    `cible:${targetKind}`,
+    shrinking ? "etat:retrecissement" : "etat:agrandissement",
+    shrinking ? "taille:reduite" : "taille:agrandie",
+    shrinking ? "poids:reduit" : "poids:augmente",
+    shrinking ? "force_effective:reduite" : "force_effective:augmentee",
+    `variation_reference_pct:${metrics.percentage}`,
+    `facteur_taille:${String(metrics.factor).replace(".", "_")}`,
+    `niveau_lanceur:${level}`,
+    `duree_rounds:${level * 10}`
+  ];
+}
 
-  const isShrink = mode === "retrecissement";
-  const factor = isShrink ? Math.max(0.2, 1 - (pct / 100)) : 1 + (pct / 100);
-  const oldWidth = Number(doc.width ?? 1) || 1;
-  const oldHeight = Number(doc.height ?? 1) || 1;
-  const oldScaleX = Number(doc.texture?.scaleX ?? 1) || 1;
-  const oldScaleY = Number(doc.texture?.scaleY ?? 1) || 1;
-  const oldX = Number(doc.x ?? 0) || 0;
-  const oldY = Number(doc.y ?? 0) || 0;
-  const gridSize = Number(canvas?.scene?.grid?.size ?? 0) || 0;
-  const newWidth = add2eRoundSize(oldWidth * factor);
-  const newHeight = add2eRoundSize(oldHeight * factor);
-  const newScaleX = add2eRoundSize(oldScaleX * factor);
-  const newScaleY = add2eRoundSize(oldScaleY * factor);
-  const updateData = {
-    width: newWidth,
-    height: newHeight,
-    "texture.scaleX": newScaleX,
-    "texture.scaleY": newScaleY,
-    "flags.add2e.agrandissement": {
-      effectId: effectId ?? null,
-      mode,
-      pct,
-      factor,
-      previous: {
-        width: oldWidth,
-        height: oldHeight,
-        scaleX: oldScaleX,
-        scaleY: oldScaleY,
-        x: oldX,
-        y: oldY
-      },
-      current: {
-        width: newWidth,
-        height: newHeight,
-        scaleX: newScaleX,
-        scaleY: newScaleY
+function add2eBuildEffectData({ casterActor, casterToken, targetToken, spellItem, mode, targetKind, level, metrics }) {
+  const modeLabel = add2eModeLabel(mode);
+  const rounds = Math.max(10, level * 10);
+  const tags = add2eEffectTags({ mode, targetKind, metrics, level });
+  const engine = game.add2e?.time;
+  if (typeof engine?.effectData !== "function") return null;
+
+  const detail = mode === "retrecissement"
+    ? `Taille et poids ramenés à ${metrics.displayPercent} % de leur valeur normale.`
+    : `Taille et poids augmentés de ${metrics.percentage} % (facteur ${metrics.displayPercent} %).`;
+
+  const effect = engine.effectData({
+    name: modeLabel,
+    img: spellItem?.img ?? "icons/magic/control/debuff-energy-hold-teal.webp",
+    origin: spellItem?.uuid ?? null,
+    rounds,
+    unit: "round",
+    description: `${detail} La Force effective est signalée par les tags de l’effet, sans conversion chiffrée non décrite par le Manuel.`,
+    tags,
+    changes: [],
+    source: "spell",
+    caster: casterActor,
+    sourceItem: spellItem,
+    endMessage: `${modeLabel} prend fin sur {actor}.`,
+    extraFlags: {
+      spell: {
+        slug: ADD2E_SPELL.slug,
+        name: modeLabel,
+        class: "Magicien",
+        level: ADD2E_SPELL.level,
+        casterId: casterActor?.id ?? null,
+        casterUuid: casterActor?.uuid ?? null,
+        casterName: casterActor?.name ?? "",
+        targetActorId: targetToken?.actor?.id ?? null,
+        targetTokenId: targetToken?.document?.id ?? targetToken?.id ?? null,
+        targetKind,
+        mode,
+        casterLevel: level,
+        factor: metrics.factor,
+        sourceItemId: spellItem?.id ?? null,
+        sourceItemUuid: spellItem?.uuid ?? null
       }
     }
-  };
-
-  if (gridSize > 0) {
-    updateData.x = Math.round(oldX + ((oldWidth - newWidth) * gridSize / 2));
-    updateData.y = Math.round(oldY + ((oldHeight - newHeight) * gridSize / 2));
-  }
-
-  return { updateData, stats: { factor, newWidth, newHeight, newScaleX, newScaleY } };
-}
-
-async function add2eApplyTokenScale(targetToken, { mode, pct, effectId }) {
-  const built = add2eBuildTokenScaleUpdate(targetToken, { mode, pct, effectId });
-  if (!built) return null;
-
-  const tokenDoc = targetToken.document;
-  if (add2eCanUpdateToken(tokenDoc)) {
-    await tokenDoc.update(built.updateData);
-    return { ...built.stats, mode: "direct" };
-  }
-
-  const emitted = add2eEmitGMOperation("updateToken", add2eSocketPayloadForTarget(targetToken, {
-    updateData: built.updateData,
-    source: ADD2E_SORT_SLUG
-  }));
-
-  return emitted ? { ...built.stats, mode: "gm-relay" } : null;
-}
-
-async function add2eCreateEffectOnTarget(targetToken, effectData) {
-  const targetActor = targetToken?.actor;
-  if (!targetActor) return { created: [], mode: "missing-actor" };
-
-  if (add2eCanModifyActor(targetActor)) {
-    const created = await targetActor.createEmbeddedDocuments("ActiveEffect", [effectData]);
-    return { created, mode: "direct" };
-  }
-
-  const emitted = add2eEmitGMOperation("createActiveEffect", add2eSocketPayloadForTarget(targetToken, {
-    effectData,
-    source: ADD2E_SORT_SLUG
-  }));
-
-  return { created: [], mode: emitted ? "gm-relay" : "failed" };
-}
-
-async function add2eApplyEffect(targetToken, { mode, level, pct, bonusAttaque, bonusDegats }) {
-  const targetActor = targetToken?.actor;
-  if (!targetActor) return null;
-
-  const currentItem = add2eGetItem();
-  const isShrink = mode === "retrecissement";
-  const rounds = Math.max(10, level * 10);
-  const name = isShrink ? "Retrecissement" : "Agrandissement";
-  const tags = add2eEffectTags({ mode, level, pct, bonusAttaque, bonusDegats });
-  const effectData = {
-    name,
-    img: currentItem?.img || "icons/svg/growth.svg",
-    disabled: false,
-    transfer: false,
-    type: "base",
-    system: {},
-    changes: [],
-    duration: {
-      rounds,
-      startRound: game.combat?.round ?? null,
-      startTime: game.time?.worldTime ?? null,
-      combat: game.combat?.id ?? null
-    },
-    description: `${name} : variation temporaire de taille de ${pct}%. Duree ${rounds} rounds.`,
-    flags: { add2e: { tags } }
-  };
-
-  const effectResult = await add2eCreateEffectOnTarget(targetToken, effectData);
-  const effectId = effectResult.created?.[0]?.id ?? null;
-  const tokenScale = await add2eApplyTokenScale(targetToken, { mode, pct, effectId });
-
-  console.log(`${ADD2E_ONUSE_TAG}[APPLY_EFFECT]`, {
-    target: targetToken?.name,
-    actor: targetActor?.name,
-    effectMode: effectResult.mode,
-    tokenScaleMode: tokenScale?.mode ?? null,
-    effectId,
-    tags
   });
 
-  return { tags, tokenScale, effectId, effectMode: effectResult.mode };
+  effect.type = "base";
+  effect.system ??= {};
+  effect.changes ??= [];
+  return effect;
 }
 
-async function add2eChat(title, html, speakerToken = null, options = {}) {
-  const casterToken = speakerToken ?? add2eGetCasterToken();
-  const casterActor = add2eGetActor() ?? casterToken?.actor ?? null;
-  const currentItem = add2eGetItem();
+async function add2eApplyTransformation({ targetToken, effectData, metrics, mode }) {
+  const targetActor = targetToken?.actor;
+  if (!targetActor || !effectData) return { ok: false, reason: "missing-target" };
+
+  const existing = globalThis.add2eFindTokenTransformationEffects?.(targetActor, targetToken, { group: ADD2E_TRANSFORM_GROUP }) ?? [];
+  const opposite = existing.filter(effect => String(effect?.flags?.add2e?.tokenTransform?.mode ?? "") !== mode);
+
+  if (add2eCanModifyActor(targetActor) && add2eCanModifyToken(targetToken)) {
+    return globalThis.add2eApplyTimedTokenTransformation?.({
+      actor: targetActor,
+      token: targetToken,
+      effectData,
+      factor: metrics.factor,
+      group: ADD2E_TRANSFORM_GROUP,
+      mode,
+      source: `spell:${ADD2E_SPELL.slug}`
+    }) ?? { ok: false, reason: "transform-service-missing" };
+  }
+
+  if (existing.length) {
+    if (opposite.length) {
+      const emitted = add2eEmitGmOperation("deleteActiveEffects", add2eSocketPayload(targetToken, {
+        effectIds: opposite.map(effect => effect.id).filter(Boolean)
+      }));
+      return emitted ? { ok: true, cancelled: true, relayed: true } : { ok: false, reason: "relay-unavailable" };
+    }
+
+    ui.notifications?.warn?.(`${add2eModeLabel(mode)} est déjà actif sur cette cible. Seul le MJ peut actuellement renouveler cet effet.`);
+    return { ok: false, reason: "active-transform-without-permission" };
+  }
+
+  const prepared = globalThis.add2ePrepareTokenTransformation?.({
+    token: targetToken,
+    factor: metrics.factor,
+    group: ADD2E_TRANSFORM_GROUP,
+    mode,
+    source: `spell:${ADD2E_SPELL.slug}`
+  });
+  if (!prepared) return { ok: false, reason: "transform-service-missing" };
+
+  const remoteEffect = add2eClone(effectData);
+  remoteEffect.flags ??= {};
+  remoteEffect.flags.add2e ??= {};
+  remoteEffect.flags.add2e.tokenTransform = prepared.transform;
+
+  const effectSent = add2eEmitGmOperation("createActiveEffect", add2eSocketPayload(targetToken, { effectData: remoteEffect }));
+  const tokenSent = effectSent && add2eEmitGmOperation("updateToken", add2eSocketPayload(targetToken, { updateData: prepared.updateData }));
+  return tokenSent ? { ok: true, relayed: true, cancelled: false } : { ok: false, reason: "relay-unavailable" };
+}
+
+async function add2ePostSpellCard({ casterActor, casterToken, spellItem, targetToken, mode, targetKind, level, metrics, outcome, detail, relayed = false }) {
   const casterName = casterActor?.name ?? casterToken?.name ?? "Magicien";
-  const spellName = currentItem?.name ?? title ?? ADD2E_SORT_NAME;
   const casterImg = casterToken?.document?.texture?.src ?? casterActor?.img ?? "icons/svg/mystery-man.svg";
-  const spellImg = currentItem?.img ?? "icons/svg/book.svg";
-  const targetLabel = options.targetLabel ?? casterName;
-  const outcome = options.outcome ?? title ?? spellName;
-  const rule = options.rule ?? ADD2E_AGRANDISSEMENT_RULE;
+  const spellImg = spellItem?.img ?? "icons/svg/book.svg";
+  const modeLabel = add2eModeLabel(mode);
+  const ratioLine = mode === "retrecissement"
+    ? `Rapport inverse : <b>${metrics.displayPercent} %</b> de la taille et du poids normaux.`
+    : `Variation : <b>+${metrics.percentage} %</b> de taille et de poids.`;
 
   await ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor: casterActor, token: casterToken }),
     content: `
       <div class="add2e-chat-card add2e-magicien-sort" style="border:1px solid #8e63c7;border-radius:8px;overflow:hidden;background:#f6f0ff;color:#2d2144;font-family:var(--font-primary);">
         <div style="display:flex;align-items:center;gap:8px;background:#5b3f8c;color:#fff;padding:7px 9px;">
-          <img src="${add2eHtmlEscape(casterImg)}" style="width:42px;height:42px;object-fit:cover;border-radius:50%;border:2px solid #d8c3ff;background:#fff;" />
-          <div style="flex:1;line-height:1.05;">
-            <div style="font-weight:800;font-size:14px;">${add2eHtmlEscape(casterName)}</div>
-            <div style="font-size:12px;font-weight:700;">lance ${add2eHtmlEscape(spellName)}</div>
-          </div>
-          <div style="font-weight:800;font-size:12px;text-align:center;white-space:nowrap;">Sort profane</div>
-          <img src="${add2eHtmlEscape(spellImg)}" style="width:34px;height:34px;object-fit:cover;border-radius:3px;border:1px solid #d8c3ff;background:#fff;" />
+          <img src="${add2eEscapeHtml(casterImg)}" style="width:42px;height:42px;object-fit:cover;border-radius:50%;border:2px solid #d8c3ff;background:#fff;" />
+          <div style="flex:1;line-height:1.05;"><div style="font-weight:800;font-size:14px;">${add2eEscapeHtml(casterName)}</div><div style="font-size:12px;font-weight:700;">lance ${add2eEscapeHtml(modeLabel)}</div></div>
+          <img src="${add2eEscapeHtml(spellImg)}" style="width:34px;height:34px;object-fit:cover;border-radius:3px;border:1px solid #d8c3ff;background:#fff;" />
         </div>
-        <div style="padding:9px 10px 10px 10px;background:#f6f0ff;">
-          <div style="font-size:13px;margin:0 0 6px 0;"><b>Cible :</b> ${add2eHtmlEscape(targetLabel)}</div>
+        <div style="padding:9px 10px 10px;background:#f6f0ff;">
+          <div style="font-size:13px;margin:0 0 6px 0;"><b>Cible :</b> ${add2eEscapeHtml(targetToken?.name ?? "Cible")}</div>
           <div style="border:1px solid #8e63c7;border-radius:6px;background:#fffaff;padding:8px;text-align:center;margin-bottom:7px;">
-            <div style="color:#6c31b5;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.3px;">${add2eHtmlEscape(outcome)}</div>
-            <div style="font-size:13px;line-height:1.35;text-align:center;">${html}</div>
+            <div style="color:#6c31b5;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.3px;">${add2eEscapeHtml(outcome)}</div>
+            <div style="font-size:13px;line-height:1.35;text-align:center;">${detail}</div>
           </div>
-          <details style="border:1px solid #8e63c7;border-radius:5px;background:#fffaff;padding:5px 7px;">
-            <summary style="cursor:pointer;font-weight:800;color:#4a2e78;">Regle appliquee</summary>
-            <div style="margin-top:5px;font-size:12px;line-height:1.35;">${add2eHtmlEscape(rule)}</div>
-          </details>
+          <div style="font-size:12px;line-height:1.4;"><b>${targetKind === "objet" ? "Objet" : "Créature vivante"}</b> — ${ratioLine}<br />Durée : <b>${level} tour${level > 1 ? "s" : ""}</b> (${level * 10} rounds).${relayed ? "<br />Application demandée au MJ." : ""}</div>
+          <details style="margin-top:7px;border:1px solid #8e63c7;border-radius:5px;background:#fffaff;padding:5px 7px;"><summary style="cursor:pointer;font-weight:800;color:#4a2e78;">Règle du Manuel</summary><div style="margin-top:5px;font-size:12px;line-height:1.35;">Une créature visible varie de 20 % par niveau du magicien, jusqu’à 200 %. Un objet visible varie de 10 % par niveau, jusqu’à 100 %. Rétrécissement annule Agrandissement ou applique le rapport inverse. Une créature non consentante a droit à un jet de protection contre les sorts.</div></details>
         </div>
       </div>`
   });
 }
 
-const casterActor = add2eGetActor();
-if (!casterActor) {
-  ui.notifications?.warn("Agrandissement : aucun lanceur trouve.");
+const casterActor = add2eCurrentActor();
+const spellItem = add2eCurrentItem();
+const casterToken = add2eCurrentToken();
+if (!casterActor || !spellItem) {
+  ui.notifications?.warn?.("Agrandissement : lanceur ou sort introuvable.");
   return false;
 }
 
-const level = add2eCasterLevel(casterActor);
-const pct = Math.min(50, Math.max(10, level * 10));
-const choice = await add2eAskAgrandissement(level);
+const targetToken = add2eExactlyOneVisibleTarget();
+if (!targetToken) return false;
+
+const mode = add2eSpellMode(spellItem);
+const level = add2eMagicianLevel(casterActor);
+const choice = await add2eAskCastingDetails({ target: targetToken, mode, level });
 if (!choice) return false;
 
-const targets = add2eGetTargets({ fallbackCaster: true });
-if (!targets.length) {
-  ui.notifications?.warn("Agrandissement : aucune cible trouvee.");
+const metrics = add2eTransformationMetrics({ mode, targetKind: choice.targetKind, level });
+const effectData = add2eBuildEffectData({
+  casterActor,
+  casterToken,
+  targetToken,
+  spellItem,
+  mode,
+  targetKind: choice.targetKind,
+  level,
+  metrics
+});
+if (!effectData) {
+  ui.notifications?.error?.("Agrandissement : moteur de durée ADD2E indisponible.");
   return false;
 }
 
-console.log(`${ADD2E_ONUSE_TAG}[START]`, {
-  actor: casterActor?.name,
-  level,
-  pct,
-  targets: targets.map(t => t.name),
-  choice
-});
-
-const applied = [];
-const resisted = [];
-const missingSave = [];
-const tokenScaled = [];
-const relayed = [];
-
-for (const target of targets) {
-  const targetActor = target?.actor;
-  if (!targetActor) continue;
-
-  if (!choice.consentante) {
-    const save = await add2eRollSaveVsSpells(targetActor);
-    if (save.roll) {
-      await save.roll.toMessage({
-        speaker: ChatMessage.getSpeaker({ actor: targetActor, token: target }),
-        flavor: `${targetActor.name} — Jet de protection contre les sorts (${ADD2E_SORT_NAME})`
-      });
-    }
-
-    if (!save.canRoll) {
-      missingSave.push(target.name);
-      continue;
-    }
-
-    if (save.success) {
-      resisted.push(`${target.name} (${save.total}/${save.saveVal})`);
-      continue;
-    }
-  }
-
-  const result = await add2eApplyEffect(target, {
-    mode: choice.mode,
-    level,
-    pct,
-    bonusAttaque: choice.bonusAttaque,
-    bonusDegats: choice.bonusDegats
+if (choice.targetKind === "creature" && !choice.consenting) {
+  const save = await globalThis.add2eRollSavingThrow?.(targetToken.actor, {
+    index: 4,
+    label: "Sorts",
+    sourceName: add2eModeLabel(mode),
+    token: targetToken,
+    createChat: true
   });
-  applied.push(target.name);
-  if (result?.tokenScale) tokenScaled.push(`${target.name} x${Math.round(result.tokenScale.factor * 100) / 100}`);
-  if (result?.effectMode === "gm-relay" || result?.tokenScale?.mode === "gm-relay") relayed.push(target.name);
+  if (!save?.ok) {
+    ui.notifications?.error?.("Agrandissement : jet de protection contre les sorts introuvable pour cette cible.");
+    return false;
+  }
+  if (save.success) {
+    await add2ePostSpellCard({
+      casterActor,
+      casterToken,
+      spellItem,
+      targetToken,
+      mode,
+      targetKind: choice.targetKind,
+      level,
+      metrics,
+      outcome: "EFFET ANNULÉ",
+      detail: "La cible non consentante réussit son jet de protection contre les sorts."
+    });
+    return true;
+  }
 }
 
-const modeLabel = choice.mode === "retrecissement" ? "Retrecissement" : "Agrandissement";
-const bonusLines = [];
-if (choice.bonusAttaque) bonusLines.push(`Toucher : ${choice.bonusAttaque >= 0 ? "+" : ""}${choice.bonusAttaque}`);
-if (choice.bonusDegats) bonusLines.push(`Degats : ${choice.bonusDegats >= 0 ? "+" : ""}${choice.bonusDegats}`);
+const application = await add2eApplyTransformation({ targetToken, effectData, metrics, mode });
+if (!application?.ok) {
+  ui.notifications?.error?.("Agrandissement : l’effet n’a pas pu être appliqué.");
+  return false;
+}
 
-await add2eChat(modeLabel, `
-  <p><b>${add2eHtmlEscape(modeLabel)}</b> : variation temporaire de <b>${pct}%</b>.</p>
-  <p>Duree : <b>${level * 10} rounds</b> (${level} tour(s)).</p>
-  ${applied.length ? `<p>Effet applique : <b>${applied.map(add2eHtmlEscape).join(", ")}</b></p>` : ""}
-  ${tokenScaled.length ? `<p>Token redimensionne : <b>${tokenScaled.map(add2eHtmlEscape).join(", ")}</b></p>` : ""}
-  ${relayed.length ? `<p>Application via relais MJ : <b>${relayed.map(add2eHtmlEscape).join(", ")}</b></p>` : ""}
-  ${resisted.length ? `<p>Jet de protection reussi, effet annule : <b>${resisted.map(add2eHtmlEscape).join(", ")}</b></p>` : ""}
-  ${missingSave.length ? `<p>Jet de protection introuvable, effet non applique : <b>${missingSave.map(add2eHtmlEscape).join(", ")}</b></p>` : ""}
-  ${bonusLines.length ? `<p>Modificateurs MD : <b>${bonusLines.map(add2eHtmlEscape).join(" ; ")}</b></p>` : ""}
-`, null, {
-  outcome: applied.length ? "EFFET ACTIF" : "EFFET ANNULE",
-  targetLabel: targets.map(t => t.name).join(", "),
-  rule: ADD2E_AGRANDISSEMENT_RULE
+await add2ePostSpellCard({
+  casterActor,
+  casterToken,
+  spellItem,
+  targetToken,
+  mode,
+  targetKind: choice.targetKind,
+  level,
+  metrics,
+  outcome: application.cancelled ? "EFFET ANNULÉ" : "EFFET ACTIF",
+  detail: application.cancelled
+    ? `${add2eModeLabel(mode)} dissipe l’effet inverse déjà actif sur la cible.`
+    : mode === "retrecissement"
+      ? "La cible est réduite selon le rapport inverse calculé."
+      : "La cible est agrandie selon la proportion calculée.",
+  relayed: application.relayed === true
 });
 
 return true;
