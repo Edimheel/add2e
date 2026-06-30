@@ -1,153 +1,92 @@
 // ADD2E — Protection contre le Mal / Protection contre le Bien
-// Version : 2026-06-29-protection-generic-action-rule-v5
-// Compatible Foundry V13/V14/V15.
-
-const ADD2E_PROTECTION_VFX_VERSION = "2026-06-29-protection-generic-action-rule-v5";
->>>>>>> Stashed changes
-=======
-// Version : 2026-06-29-protection-manual-barrier-v6
 // Compatible Foundry V13/V14/V15.
 
 const ADD2E_PROTECTION_VFX_VERSION = "2026-06-29-protection-manual-barrier-v6";
->>>>>>> 87b416478ddd192e3b50a2721d38904b85c23dcd
 
-const __add2eOnUseResult = await (async () => {
+const __add2eProtectionResult = await (async () => {
   const normalize = value => String(value ?? "").trim().toLowerCase().normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "").replace(/[^a-z0-9:]+/g, "_")
-    .replace(/_+/g, "_").replace(/^_+|_+$/g, "");
-  const toArray = value => value === undefined || value === null || value === "" ? []
-    : Array.isArray(value) ? value.flatMap(toArray)
-      : value instanceof Set ? [...value]
-        : typeof value?.values === "function" && typeof value !== "string" ? [...value.values()]
-          : [value];
-  const esc = value => String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#039;");
-  const style = () => CONST.CHAT_MESSAGE_STYLES ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER } : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 };
+    .replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "")
+    .replace(/[^a-z0-9:]+/g, "_").replace(/_+/g, "_").replace(/^_+|_+$/g, "");
+  const escapeHtml = value => String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#039;");
+  const chatStyle = () => CONST.CHAT_MESSAGE_STYLES
+    ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER }
+    : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 };
   const sourceItem = typeof sort !== "undefined" && sort ? sort
     : typeof item !== "undefined" && item ? item
       : typeof spell !== "undefined" && spell ? spell
-        : typeof args !== "undefined" && args?.[0]?.item ? args[0].item : null;
-  if (!sourceItem) { ui.notifications.error("Protection : sort introuvable."); return false; }
+        : typeof args !== "undefined" && args?.[0]?.item ? args[0].item
+          : typeof this !== "undefined" && this?.documentName === "Item" ? this : null;
+  if (!sourceItem) return ui.notifications.error("Protection : sort introuvable."), false;
 
-  const actorDoc = typeof actor !== "undefined" && actor ? actor : sourceItem.parent;
-  if (!actorDoc) { ui.notifications.error("Protection : lanceur introuvable."); return false; }
-  const casterToken = canvas.tokens?.controlled?.find(t => t?.actor?.id === actorDoc.id)
-    ?? (typeof token !== "undefined" && token?.actor?.id === actorDoc.id ? token : null)
-    ?? actorDoc.getActiveTokens?.()[0] ?? null;
-  if (!casterToken) { ui.notifications.warn("Protection : sélectionne le token du lanceur."); return false; }
+  const caster = typeof actor !== "undefined" && actor ? actor : sourceItem.parent;
+  if (!caster) return ui.notifications.error("Protection : lanceur introuvable."), false;
+  const casterToken = canvas.tokens?.controlled?.find(t => t?.actor?.id === caster.id)
+    ?? (typeof token !== "undefined" && token?.actor?.id === caster.id ? token : null)
+    ?? caster.getActiveTokens?.()[0]
+    ?? null;
+  if (!casterToken) return ui.notifications.warn("Protection : sélectionne le token du lanceur."), false;
 
   const flags = sourceItem.flags?.add2e ?? {};
-  const identifyMode = value => {
-    const key = normalize(value);
-    const good = key.includes("protection_contre_le_bien") || key === "bien";
-    const evil = key.includes("protection_contre_le_mal") || key === "mal";
-    return good === evil ? null : (good ? "bien" : "mal");
-  };
+  const values = [sourceItem.name, sourceItem.system?.nom, sourceItem.system?.slug, sourceItem.system?.spellKey, flags.spellKey, flags.slug, flags.reversibleActorEntry?.name, flags.reversibleActorEntry?.displayName];
   let mode = null;
-  for (const value of [sourceItem.name, sourceItem.system?.nom, flags?.reversibleActorEntry?.name, flags?.reversibleActorEntry?.displayName, sourceItem.system?.slug, sourceItem.system?.spellKey, flags?.spellKey, flags?.slug]) {
-    mode = identifyMode(value);
-    if (mode) break;
+  for (const value of values) {
+    const key = normalize(value);
+    if (key.includes("protection_contre_le_bien") || key === "bien") { mode = "bien"; break; }
+    if (key.includes("protection_contre_le_mal") || key === "mal") { mode = "mal"; break; }
   }
   if (!mode) {
-    const reversibleMode = normalize(flags?.reversibleActorEntry?.mode ?? flags?.spellFamily?.reversibleMode);
+    const reversibleMode = normalize(flags.reversibleActorEntry?.mode ?? flags.spellFamily?.reversibleMode);
     if (["inverse", "bien"].includes(reversibleMode)) mode = "bien";
     if (["normal", "base", "mal"].includes(reversibleMode)) mode = "mal";
   }
-  if (!mode) { ui.notifications.error(`Protection : variante introuvable pour « ${sourceItem.name ?? "sans nom"} ».`); return false; }
+  if (!mode) return ui.notifications.error(`Protection : variante introuvable pour « ${sourceItem.name ?? "sans nom"} ».`), false;
 
   const isGood = mode === "bien";
-  const barrierRule = isGood
-    ? {
-      kind: "block_action",
-      action: "attaque",
-      requireContact: true,
-      subjectAllTags: ["creature:enchantee", "alignement:mauvais"],
-      actionAllTags: ["type_arme:naturelle"],
-      label: "La barrière magique tient cette créature enchantée mauvaise à distance."
-    }
-    : {
-      kind: "block_action",
-      action: "attaque",
-      requireContact: true,
-      subjectAnyTags: ["creature:enchantee", "creature:animal", "creature:invoquee"],
-      actionAllTags: ["type_arme:naturelle"],
-      label: "La barrière magique empêche cette attaque naturelle de toucher la cible."
-    };
-  const barrierDescription = isGood
-    ? "Les attaques naturelles au contact des créatures enchantées mauvaises sont bloquées."
-    : "Les attaques naturelles au contact des créatures enchantées, des animaux et des monstres invoqués sont bloquées.";
   const modeInfo = {
-    key: isGood ? "bien" : "mal",
     label: isGood ? "Protection contre le Bien" : "Protection contre le Mal",
     spellKey: isGood ? "protection_contre_le_bien" : "protection_contre_le_mal",
-    jb2aKey: isGood ? "jb2a.aura_themed.01.inward" : "jb2a.ward.rune.yellow",
+    vfx: isGood ? "jb2a.aura_themed.01.inward" : "jb2a.ward.rune.yellow",
     tags: isGood
       ? ["sort:protection_contre_le_bien", "protection:bien", "bonus_save:2", "malus_attaque_vs:bon:2"]
       : ["sort:protection_contre_le_mal", "protection:mal", "bonus_save:2", "malus_attaque_vs:mauvais:2"],
-      ? ["sort:protection_contre_le_bien", "protection:bien", "bonus_save:2", "malus_attaque_vs:bon:2"]
-      : ["sort:protection_contre_le_mal", "protection:mal", "bonus_save:2", "malus_attaque_vs:mauvais:2"],
-    rules: [{
-      kind: "block_action",
-      action: "attaque",
-      requireContact: true,
-      subjectAnyTags: ["creature:enchantee", "creature:invoquee"],
-      actionAllTags: ["type_arme:naturelle"],
-      label: "La barrière magique empêche cette attaque naturelle de toucher la cible."
-    }]
->>>>>>> Stashed changes
-=======
-    rules: [barrierRule],
-    barrierDescription
->>>>>>> 87b416478ddd192e3b50a2721d38904b85c23dcd
+    rule: isGood
+      ? { kind: "block_action", action: "attaque", requireContact: true, subjectAllTags: ["creature:enchantee", "alignement:mauvais"], actionAllTags: ["type_arme:naturelle"], label: "La barrière magique tient cette créature enchantée mauvaise à distance." }
+      : { kind: "block_action", action: "attaque", requireContact: true, subjectAnyTags: ["creature:enchantee", "creature:animal", "creature:invoquee"], actionAllTags: ["type_arme:naturelle"], label: "La barrière magique empêche cette attaque naturelle de toucher la cible." },
+    barrierText: isGood
+      ? "Les attaques naturelles au contact des créatures enchantées mauvaises sont bloquées."
+      : "Les attaques naturelles au contact des créatures enchantées, des animaux et des monstres invoqués sont bloquées."
   };
 
   const targets = Array.from(game.user.targets ?? []);
-  if (targets.length !== 1 || !targets[0]?.actor) { ui.notifications.warn(`${modeInfo.label} : cible exactement une créature touchée.`); return false; }
-  const targetToken = targets[0];
-  const gridSize = canvas.grid?.size || 100;
-  const a = casterToken.document, b = targetToken.document;
-  const touch = casterToken.id === targetToken.id || (
-    Math.max(0, b.x / gridSize - (a.x / gridSize + (a.width || 1)), a.x / gridSize - (b.x / gridSize + (b.width || 1))) <= .01 &&
-    Math.max(0, b.y / gridSize - (a.y / gridSize + (a.height || 1)), a.y / gridSize - (b.y / gridSize + (b.height || 1))) <= .01
+  const targetToken = targets.length === 1 ? targets[0] : null;
+  if (!targetToken?.actor) return ui.notifications.warn(`${modeInfo.label} : cible exactement une créature touchée.`), false;
+  const grid = canvas.grid?.size || 100;
+  const sourceDoc = casterToken.document;
+  const targetDoc = targetToken.document;
+  const inTouch = casterToken.id === targetToken.id || (
+    Math.max(0, targetDoc.x / grid - (sourceDoc.x / grid + (sourceDoc.width || 1)), sourceDoc.x / grid - (targetDoc.x / grid + (targetDoc.width || 1))) <= .01 &&
+    Math.max(0, targetDoc.y / grid - (sourceDoc.y / grid + (sourceDoc.height || 1)), sourceDoc.y / grid - (targetDoc.y / grid + (targetDoc.height || 1))) <= .01
   );
-  if (!touch) { ui.notifications.warn(`${modeInfo.label} : la cible doit être au toucher.`); return false; }
+  if (!inTouch) return ui.notifications.warn(`${modeInfo.label} : la cible doit être au toucher.`), false;
 
-  const readPositiveLevel = value => {
+  const positive = value => {
     const number = Number(value);
     return Number.isFinite(number) && number > 0 ? Math.floor(number) : null;
   };
-  const isClericItem = classItem => {
-    if (classItem?.type !== "classe") return false;
-    const names = [classItem.name, classItem.system?.label, classItem.system?.nom, classItem.system?.name, classItem.system?.slug]
-      .map(normalize)
-      .filter(Boolean);
-    return names.some(name => name === "clerc" || name.includes("clerc"));
-  };
-  const clericItem = Array.from(actorDoc.items ?? []).find(isClericItem) ?? null;
-  const clericLevelCandidates = [
-    clericItem?.system?.niveau,
-    clericItem?.system?.level,
-    clericItem?.system?.details?.niveau,
-    clericItem?.system?.details?.level,
-    actorDoc.system?.details_classe?.clerc?.niveau,
-    actorDoc.system?.details_classe?.clerc?.level,
-    actorDoc.system?.classes?.clerc?.niveau,
-    actorDoc.system?.classes?.clerc?.level,
-    actorDoc.system?.multiclass?.clerc?.niveau,
-    actorDoc.system?.multiclass?.clerc?.level,
-    actorDoc.system?.niveaux?.clerc,
-    actorDoc.flags?.add2e?.multiclass?.clerc?.niveau,
-    actorDoc.flags?.add2e?.multiclass?.clerc?.level
-  ];
-  const level = clericLevelCandidates.map(readPositiveLevel).find(Number.isFinite)
-    ?? [actorDoc.system?.niveau, actorDoc.system?.level, actorDoc.system?.details?.niveau, actorDoc.system?.details?.level]
-      .map(readPositiveLevel)
-      .find(Number.isFinite)
-    ?? 1;
-
+  const cleric = Array.from(caster.items ?? []).find(entry => entry?.type === "classe" && [entry.name, entry.system?.label, entry.system?.nom, entry.system?.slug].map(normalize).some(key => key === "clerc" || key.includes("clerc")));
+  const level = [
+    cleric?.system?.niveau, cleric?.system?.level,
+    caster.system?.details_classe?.clerc?.niveau, caster.system?.details_classe?.clerc?.level,
+    caster.system?.classes?.clerc?.niveau, caster.system?.classes?.clerc?.level,
+    caster.system?.multiclass?.clerc?.niveau, caster.system?.multiclass?.clerc?.level,
+    caster.system?.niveaux?.clerc,
+    caster.flags?.add2e?.multiclass?.clerc?.niveau, caster.flags?.add2e?.multiclass?.clerc?.level,
+    caster.system?.niveau, caster.system?.level, caster.system?.details?.niveau, caster.system?.details?.level
+  ].map(positive).find(Number.isFinite) ?? 1;
   const time = game.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
-  const rounds = time?.toRounds?.("level*3", "round", { level }) ?? Math.max(1, level) * 3;
-  const duration = time?.durationData?.(rounds) ?? { rounds, startRound: game.combat?.round ?? null, startTurn: game.combat?.turn ?? null, startTime: game.time?.worldTime ?? null, combat: game.combat?.id ?? null };
+  const rounds = time?.toRounds?.("level*3", "round", { level }) ?? level * 3;
   const endMessage = isGood ? "La protection contre le bien de {actor} prend fin." : "La protection contre le mal de {actor} prend fin.";
+  const duration = time?.durationData?.(rounds) ?? { rounds, startRound: game.combat?.round ?? null, startTurn: game.combat?.turn ?? null, startTime: game.time?.worldTime ?? null, combat: game.combat?.id ?? null };
   const timeFlags = time?.flags?.({ source: "protection-contre-le-mal.js", rounds, unit: "round", endMessage, extra: {} }) ?? { timeEngine: { managed: true, unit: "round", totalRounds: rounds }, roundEngine: { managed: true, unit: "round", totalRounds: rounds, endMessage }, endMessage };
   const effectData = {
     name: modeInfo.label,
@@ -156,65 +95,56 @@ const __add2eOnUseResult = await (async () => {
     disabled: false,
     transfer: false,
     duration,
-    description: `${modeInfo.label}. Attaques de l'alignement concerné : –2 ; jets de protection : +2. Durée : ${rounds} rounds.`,
-    flags: { add2e: { ...timeFlags, spellName: modeInfo.label, spellKey: modeInfo.spellKey, level, sourceItemUuid: sourceItem.uuid ?? null, casterId: actorDoc.id ?? null, casterUuid: actorDoc.uuid ?? null, targetId: targetToken.actor.id ?? null, targetUuid: targetToken.actor.uuid ?? null, tags: modeInfo.tags, rules: modeInfo.rules } },
-=======
-    description: `${modeInfo.label}. Attaques de l'alignement concerné : –2 ; jets de protection : +2. Durée : ${rounds} rounds.`,
-    flags: { add2e: { ...timeFlags, spellName: modeInfo.label, spellKey: modeInfo.spellKey, level, sourceItemUuid: sourceItem.uuid ?? null, casterId: actorDoc.id ?? null, casterUuid: actorDoc.uuid ?? null, targetId: targetToken.actor.id ?? null, targetUuid: targetToken.actor.uuid ?? null, tags: modeInfo.tags, rules: modeInfo.rules } },
->>>>>>> Stashed changes
-    changes: []
+    changes: [],
+    description: `${modeInfo.label}. Attaques de l'alignement concerné : –2 ; jets de protection : +2. ${modeInfo.barrierText} Durée : ${rounds} rounds.`,
+    flags: { add2e: { ...timeFlags, spellName: modeInfo.label, spellKey: modeInfo.spellKey, level, sourceItemUuid: sourceItem.uuid ?? null, casterId: caster.id, casterUuid: caster.uuid ?? null, targetId: targetToken.actor.id, targetUuid: targetToken.actor.uuid ?? null, tags: modeInfo.tags, rules: [modeInfo.rule] } }
   };
 
   const isProtection = effect => {
-    const activeFlags = effect?.flags?.add2e ?? {};
-    const spellKey = normalize(activeFlags.spellKey ?? activeFlags.spell?.slug);
-    const activeTags = toArray(activeFlags.tags).map(normalize);
-    return ["protection_contre_le_mal", "protection_contre_le_bien"].includes(spellKey) || activeTags.includes("sort:protection_contre_le_mal") || activeTags.includes("sort:protection_contre_le_bien");
->>>>>>> Stashed changes
+    const effectFlags = effect?.flags?.add2e ?? {};
+    const spellKey = normalize(effectFlags.spellKey ?? effectFlags.spell?.slug);
+    const tags = Array.isArray(effectFlags.tags) ? effectFlags.tags.map(normalize) : [];
+    return ["protection_contre_le_mal", "protection_contre_le_bien"].includes(spellKey) || tags.includes("sort:protection_contre_le_mal") || tags.includes("sort:protection_contre_le_bien");
   };
-  const removeIds = Array.from(targetToken.actor.effects ?? []).filter(isProtection).map(effect => effect.id).filter(Boolean);
+  const priorIds = Array.from(targetToken.actor.effects ?? []).filter(isProtection).map(effect => effect.id).filter(Boolean);
   if (game.user.isGM || targetToken.actor.isOwner) {
-    if (removeIds.length) await targetToken.actor.deleteEmbeddedDocuments("ActiveEffect", removeIds);
+    if (priorIds.length) await targetToken.actor.deleteEmbeddedDocuments("ActiveEffect", priorIds);
     await targetToken.actor.createEmbeddedDocuments("ActiveEffect", [effectData]);
   } else {
-    if (!game.socket) { ui.notifications.error("Protection : socket indisponible."); return false; }
+    if (!game.socket) return ui.notifications.error("Protection : socket indisponible."), false;
     game.socket.emit("system.add2e", { type: "ADD2E_GM_OPERATION", operation: "createActiveEffect", payload: { actorUuid: targetToken.actor.uuid, actorId: targetToken.actor.id, effectData, fromUserId: game.user.id, sentAt: Date.now() } });
   }
 
-  const vfxName = `add2e-protection-ward:${canvas.scene?.id ?? "scene"}:${targetToken.document?.id ?? targetToken.id}`;
-  const endVfx = tokenDoc => {
-    if (!tokenDoc) return;
-    const name = `add2e-protection-ward:${canvas.scene?.id ?? "scene"}:${tokenDoc.document?.id ?? tokenDoc.id}`;
+  const effectName = `add2e-protection-ward:${canvas.scene?.id ?? "scene"}:${targetToken.id}`;
+  const stopVfx = tokenDoc => {
+    const name = `add2e-protection-ward:${canvas.scene?.id ?? "scene"}:${tokenDoc?.id ?? tokenDoc?.document?.id ?? ""}`;
     try { globalThis.Sequencer?.EffectManager?.endEffects?.({ name, object: tokenDoc }); } catch (_error) {}
     try { globalThis.Sequencer?.EffectManager?.endEffects?.({ name }); } catch (_error) {}
   };
   if (globalThis.ADD2E_PROTECTION_WARD_HOOKS_VERSION !== ADD2E_PROTECTION_VFX_VERSION) {
     globalThis.ADD2E_PROTECTION_WARD_HOOKS_VERSION = ADD2E_PROTECTION_VFX_VERSION;
-    const stopWard = effect => {
+    const clearWard = effect => {
       if (!isProtection(effect)) return;
-      for (const activeToken of effect.parent?.getActiveTokens?.() ?? []) endVfx(activeToken);
+      for (const activeToken of effect.parent?.getActiveTokens?.() ?? []) stopVfx(activeToken);
     };
-    Hooks.on("deleteActiveEffect", stopWard);
-    Hooks.on("updateActiveEffect", (effect, changes) => { if (changes?.disabled === true || changes?.disabled === 1) stopWard(effect); });
->>>>>>> Stashed changes
+    Hooks.on("deleteActiveEffect", clearWard);
+    Hooks.on("updateActiveEffect", (effect, changes) => { if (changes?.disabled === true || changes?.disabled === 1) clearWard(effect); });
   }
   try {
-    const database = globalThis.Sequencer?.Database;
-    const available = typeof database?.getEntry === "function" ? !!database.getEntry(modeInfo.jb2aKey) : true;
+    const available = typeof globalThis.Sequencer?.Database?.getEntry === "function" ? !!globalThis.Sequencer.Database.getEntry(modeInfo.vfx) : true;
     if (available && typeof Sequence !== "undefined") {
-      endVfx(targetToken);
-      await new Sequence().effect().file(modeInfo.jb2aKey).attachTo(targetToken).persist(true).name(vfxName).belowTokens(false).scaleToObject(1.5).opacity(.95).play();
->>>>>>> Stashed changes
+      stopVfx(targetToken);
+      await new Sequence().effect().file(modeInfo.vfx).attachTo(targetToken).persist(true).name(effectName).belowTokens(false).scaleToObject(1.5).opacity(.95).play();
     }
   } catch (_error) {}
 
   const alignment = isGood ? "bonnes" : "mauvaises";
   await ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor: actorDoc, token: casterToken }),
-    content: `<div class="add2e-spell-card add2e-spell-card-clerc" style="border-radius:12px;overflow:hidden;border:1px solid #e2bc63;background:#fffaf0;font-family:var(--font-primary);"><div style="padding:8px 12px;background:linear-gradient(90deg,#6f4b12,#b88924);color:#fff;display:flex;gap:10px;align-items:center;"><img src="${esc(actorDoc.img || "icons/svg/mystery-man.svg")}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;"><div style="flex:1"><b>${esc(actorDoc.name)}</b><br><span style="font-size:.85em">lance ${esc(modeInfo.label)}</span></div><img src="${esc(sourceItem.img || "systems/add2e/assets/icones/sorts/protection-contre-le-mal.webp")}" style="width:30px;height:30px;border-radius:4px;"></div><div style="padding:10px;color:#6f4b12"><div><b>Cible :</b> ${esc(targetToken.name ?? targetToken.actor.name)}</div><div style="margin-top:6px;text-align:center;border:1px solid #e2bc63;border-radius:6px;padding:7px"><b>${esc(modeInfo.label.toUpperCase())}</b><br>Durée : <b>${rounds} rounds</b><br>Attaques ${alignment} : <b>–2</b> ; jets de protection : <b>+2</b>.</div><div style="margin-top:6px;font-size:.84em;line-height:1.35">${esc(modeInfo.barrierDescription)}</div></div></div>`,
-    ...style()
+    speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken }),
+    content: `<div class="add2e-spell-card add2e-spell-card-clerc"><b>${escapeHtml(caster.name)}</b> lance <b>${escapeHtml(modeInfo.label)}</b> sur <b>${escapeHtml(targetToken.name ?? targetToken.actor.name)}</b>.<br>Durée : <b>${rounds} rounds</b> — Attaques ${alignment} : <b>–2</b> ; jets de protection : <b>+2</b>.<br>${escapeHtml(modeInfo.barrierText)}</div>`,
+    ...chatStyle()
   });
   return true;
 })();
 
-return __add2eOnUseResult === true ? true : false;
+return __add2eProtectionResult === true ? true : false;
