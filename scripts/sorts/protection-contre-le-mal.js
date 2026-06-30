@@ -39,7 +39,7 @@ const __add2eProtectionResult = await (async () => {
     vfx: isGood
       ? "jb2a.aura_themed.01.inward"
       : "modules/JB2A_DnD5e/Library/Generic/Template/Circle/Aura/AuraThemedOutwardCompleteCold01_01_Regular_Blue_700x700.webm",
-    vfxScale: isGood ? 1.1 : 1.75,
+    vfxScale: 1.75,
     alignmentLabel: isGood ? "bonnes" : "mauvaises",
     tags: isGood ? ["sort:protection_contre_le_bien", "protection:bien", "bonus_save:2", "malus_attaque_vs:bon:2"] : ["sort:protection_contre_le_mal", "protection:mal", "bonus_save:2", "malus_attaque_vs:mauvais:2"],
     rule: isGood ? { kind: "block_action", action: "attaque", requireContact: true, subjectAllTags: ["creature:enchantee", "alignement:mauvais"], actionAllTags: ["type_arme:naturelle"], label: "La barrière magique tient cette créature enchantée mauvaise à distance." } : { kind: "block_action", action: "attaque", requireContact: true, subjectAnyTags: ["creature:enchantee", "creature:animal", "creature:invoquee"], actionAllTags: ["type_arme:naturelle"], label: "La barrière magique empêche cette attaque naturelle de toucher la cible." },
