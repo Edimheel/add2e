@@ -1,5 +1,5 @@
 // ADD2E — Effects Engine / tags, capacités et résistances générales.
-// Extraction fonctionnelle sans changement de règle.
+// Les règles d'action restent génériques : aucun sort n'est nommé ici.
 
 const register = (Engine, methods) => Object.defineProperties(
   Engine,
@@ -222,7 +222,12 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
           for (const rule of this.toRules(raw)) {
             rules.push({
               ...rule,
-              source: { effectId: effect.id ?? null, effectName: effect.name ?? "" }
+              source: {
+                effectId: effect.id ?? null,
+                effectName: effect.name ?? "",
+                effect,
+                actor
+              }
             });
           }
         }
@@ -234,41 +239,158 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
       return this.toArray(raw).map(tag => this.normalizeTag(tag)).filter(Boolean);
     },
 
-    evaluateActionRules(actor, action = {}) {
+    actionRuleScopeMatches(rule, action = {}) {
+      const requested = this.normalizeKey(action.ruleScope ?? "target");
+      const scope = this.normalizeKey(rule.scope ?? rule.ruleScope ?? "target");
+      if (requested === "owner" || requested === "self") return scope === "owner" || scope === "self";
+      return scope !== "owner" && scope !== "self";
+    },
+
+    actionRuleMatches(rule, actionType, subjectTags, actionTags, action = {}) {
+      const actions = this.ruleTags(rule.actions ?? rule.action);
+      if (actions.length && !actions.includes(actionType)) return false;
+      if (rule.requireContact === true && action.contact !== true) return false;
+
+      const subjectAny = this.ruleTags(rule.subjectAnyTags);
+      const subjectAll = this.ruleTags(rule.subjectAllTags);
+      const actionAny = this.ruleTags(rule.actionAnyTags);
+      const actionAll = this.ruleTags(rule.actionAllTags);
+
+      if (subjectAny.length && !subjectAny.some(tag => subjectTags.has(tag))) return false;
+      if (subjectAll.length && !subjectAll.every(tag => subjectTags.has(tag))) return false;
+      if (actionAny.length && !actionAny.some(tag => actionTags.has(tag))) return false;
+      if (actionAll.length && !actionAll.every(tag => actionTags.has(tag))) return false;
+      return true;
+    },
+
+    getActionSaveThreshold(actor, saveType = "sorts") {
+      const system = actor?.system ?? {};
+      const type = this.normalizeKey(saveType);
+      const index = {
+        mort: 0,
+        paralysie: 0,
+        poison: 0,
+        baguette: 1,
+        wand: 1,
+        petrification: 2,
+        transformation: 2,
+        souffle: 3,
+        breath: 3,
+        sort: 4,
+        sortilege: 4,
+        spell: 4,
+        magie: 4,
+        magic: 4
+      }[type];
+      if (Number.isInteger(index) && Array.isArray(system.sauvegardes)) {
+        const fromArray = this.readNumber(system.sauvegardes[index]);
+        if (Number.isFinite(fromArray) && fromArray > 0) return fromArray;
+      }
+
+      const candidates = type === "sort" || type === "sortilege" || type === "spell" || type === "magie" || type === "magic"
+        ? [
+          system.sauvegarde_sortileges,
+          system.sauvegarde_sorts,
+          system.sauvegardes?.sortileges,
+          system.sauvegardes?.sorts,
+          system.saves?.sorts,
+          system.saves?.spell,
+          system.saves?.spells,
+          system.saves?.magic,
+          system.calculatedSaves?.sorts,
+          system.calculatedSaves?.spell,
+          system.calculatedSaves?.spells,
+          system.jp_sort,
+          system.jp_sorts,
+          system.jp?.sorts,
+          system.jp?.sortileges
+        ]
+        : [
+          system.sauvegardes?.[type],
+          system.saves?.[type],
+          system.calculatedSaves?.[type],
+          system.jp?.[type]
+        ];
+      return this.readNumber(...candidates);
+    },
+
+    async rollActionSave(actor, saveType = "sorts", bonus = 0) {
+      const threshold = this.getActionSaveThreshold(actor, saveType);
+      const value = Number(bonus) || 0;
+      if (!Number.isFinite(threshold) || threshold <= 0) {
+        return {
+          canRoll: false,
+          type: String(saveType ?? ""),
+          threshold: NaN,
+          total: 0,
+          success: false,
+          bonus: value,
+          roll: null
+        };
+      }
+
+      const formula = value ? `1d20${value >= 0 ? "+" : ""}${value}` : "1d20";
+      const roll = await new Roll(formula).evaluate();
+      if (game.dice3d) await game.dice3d.showForRoll(roll);
+      const total = Number(roll.total) || 0;
+      return {
+        canRoll: true,
+        type: String(saveType ?? ""),
+        threshold,
+        total,
+        success: total >= threshold,
+        bonus: value,
+        roll
+      };
+    },
+
+    async evaluateActionRules(actor, action = {}) {
       const actionType = this.normalizeKey(action?.type ?? "");
       const subjectTags = new Set(this.ruleTags(action?.subjectTags ?? action?.actorTags));
       const actionTags = new Set(this.ruleTags(action?.actionTags));
       const matchedRules = [];
+      const gateResults = [];
 
       for (const rule of this.getActiveRules(actor)) {
-        if (this.normalizeTag(rule.kind) !== "block_action") continue;
+        const kind = this.normalizeKey(rule.kind);
+        if (kind !== "block_action" && kind !== "save_gate") continue;
+        if (!this.actionRuleScopeMatches(rule, action)) continue;
+        if (!this.actionRuleMatches(rule, actionType, subjectTags, actionTags, action)) continue;
 
-        const actions = this.ruleTags(rule.actions ?? rule.action);
-        if (actions.length && !actions.includes(actionType)) continue;
-        if (rule.requireContact === true && action?.contact !== true) continue;
+        if (kind === "block_action") {
+          matchedRules.push({
+            kind: "block_action",
+            label: String(rule.label ?? "Action bloquée par un effet actif."),
+            source: rule.source ?? null,
+            rule
+          });
+          continue;
+        }
 
-        const subjectAny = this.ruleTags(rule.subjectAnyTags);
-        const subjectAll = this.ruleTags(rule.subjectAllTags);
-        const actionAny = this.ruleTags(rule.actionAnyTags);
-        const actionAll = this.ruleTags(rule.actionAllTags);
-
-        if (subjectAny.length && !subjectAny.some(tag => subjectTags.has(tag))) continue;
-        if (subjectAll.length && !subjectAll.every(tag => subjectTags.has(tag))) continue;
-        if (actionAny.length && !actionAny.some(tag => actionTags.has(tag))) continue;
-        if (actionAll.length && !actionAll.every(tag => actionTags.has(tag))) continue;
-
-        matchedRules.push({
-          kind: "block_action",
-          label: String(rule.label ?? "Action bloquée par un effet actif."),
+        const save = await this.rollActionSave(
+          action.saveActor ?? action.actor ?? action.sourceActor ?? null,
+          rule.saveType ?? "sorts",
+          Number(rule.saveBonus) || 0
+        );
+        const failureMode = this.normalizeKey(rule.onFailure ?? rule.onFail ?? "block");
+        const allowed = save.canRoll ? save.success : failureMode !== "block";
+        const entry = {
+          kind: "save_gate",
+          label: String(rule.label ?? "Un jet de protection est requis avant cette action."),
           source: rule.source ?? null,
-          rule
-        });
+          rule,
+          save,
+          allowed
+        };
+        gateResults.push(entry);
+        if (!allowed) matchedRules.push(entry);
       }
 
       return {
         allowed: matchedRules.length === 0,
         blocked: matchedRules.length > 0,
         matchedRules,
+        gateResults,
         details: matchedRules.map(entry => entry.label)
       };
     },
