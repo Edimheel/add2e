@@ -108,9 +108,7 @@ export function installEffectsEngineDamage(Engine) {
 
       const value = Number(bonus) || 0;
       const formula = value ? `1d20${value >= 0 ? "+" : ""}${value}` : "1d20";
-
-      // Conservé à l'identique pendant ce split : correction V14/V15 traitée séparément.
-      const roll = await new Roll(formula).evaluate({ async: true });
+      const roll = await new Roll(formula).evaluate();
 
       if (game.dice3d) await game.dice3d.showForRoll(roll);
       const total = Number(roll.total) || 0;
