@@ -1,6 +1,6 @@
 // ============================================================
 // ADD2E — Restrictions équipement génériques par tags harmonisés
-// Version : 2026-06-24-thief-activity-body-armor-tag-v4
+// Version : 2026-06-30-enforce-class-weapon-equipment-v5
 // Source principale : Items "classe" embarqués sur l'acteur.
 // Schéma conseillé des tags d'équipement :
 // - arme / armure / bouclier
@@ -266,6 +266,88 @@ function add2eCheckEquipmentAllowedForClass(actor, item, kind) {
   return add2eCheckEquipmentAllowedForClassSystem(add2eGetActorClassSystem(actor), item, kind);
 }
 
+function add2eIsWeaponItem(item) {
+  return ["arme", "weapon"].includes(String(item?.type ?? "").toLowerCase());
+}
+
+function add2eGetForbiddenEquippedWeapons(actor) {
+  const failures = [];
+  for (const item of actor?.items ?? []) {
+    if (!add2eIsWeaponItem(item) || item?.system?.equipee !== true) continue;
+    const check = add2eCheckEquipmentAllowedForClass(actor, item, "arme");
+    if (!check.ok) failures.push({ item, check });
+  }
+  return failures;
+}
+
+async function add2eReconcileEquippedWeaponsForClass(actor) {
+  if (!actor?.items || !actor?.updateEmbeddedDocuments) return { updated: [], failures: [] };
+
+  const failures = add2eGetForbiddenEquippedWeapons(actor);
+  const updates = failures
+    .map(({ item }) => item?.id ? { _id: item.id, "system.equipee": false } : null)
+    .filter(Boolean);
+
+  if (updates.length) await actor.updateEmbeddedDocuments("Item", updates);
+  return { updated: updates.map(update => update._id), failures };
+}
+
+function add2eGetPendingEquippedState(changes) {
+  if (!changes || typeof changes !== "object") return undefined;
+  if (Object.prototype.hasOwnProperty.call(changes, "system.equipee")) return changes["system.equipee"];
+  if (changes.system && Object.prototype.hasOwnProperty.call(changes.system, "equipee")) return changes.system.equipee;
+  return undefined;
+}
+
+function add2eInstallWeaponClassEquipmentGuard() {
+  if (globalThis.__ADD2E_WEAPON_CLASS_EQUIPMENT_GUARD_V1) return;
+  globalThis.__ADD2E_WEAPON_CLASS_EQUIPMENT_GUARD_V1 = true;
+
+  const queuedActors = new Set();
+  const schedule = actor => {
+    if (!actor?.id || queuedActors.has(actor.id)) return;
+    queuedActors.add(actor.id);
+    queueMicrotask(async () => {
+      try {
+        await add2eReconcileEquippedWeaponsForClass(actor);
+      } finally {
+        queuedActors.delete(actor.id);
+      }
+    });
+  };
+
+  Hooks.on("preUpdateItem", (item, changes) => {
+    if (!add2eIsWeaponItem(item) || add2eGetPendingEquippedState(changes) !== true) return;
+
+    const actor = item.parent;
+    if (!actor) return;
+    const check = add2eCheckEquipmentAllowedForClass(actor, item, "arme");
+    if (check.ok) return;
+
+    const classLabel = check.multiclass
+      ? add2eGetActorClassItems(actor).map(cls => cls.name).filter(Boolean).join(" / ")
+      : check.classeLabel;
+    ui.notifications?.warn?.(`Cette arme (« ${item.name} ») est interdite pour ${classLabel || "la classe de cet acteur"}.`);
+    return false;
+  });
+
+  const scheduleForRelatedItem = item => {
+    const type = String(item?.type ?? "").toLowerCase();
+    if (type === "classe" || add2eIsWeaponItem(item)) schedule(item?.parent);
+  };
+
+  Hooks.on("createItem", scheduleForRelatedItem);
+  Hooks.on("updateItem", scheduleForRelatedItem);
+  Hooks.on("deleteItem", scheduleForRelatedItem);
+
+  const reconcileAllActors = () => {
+    for (const actor of game?.actors?.contents ?? []) schedule(actor);
+  };
+
+  if (game?.ready) reconcileAllActors();
+  else Hooks.once("ready", reconcileAllActors);
+}
+
 function add2eFindActorClassSystemByName(actor, className) {
   const wanted = add2eNormalizeEquipTag(className);
   const classItems = add2eGetActorClassItems(actor);
@@ -438,6 +520,7 @@ function add2eInstallThiefActivityRollGuard() {
   else Hooks.once("ready", install);
 }
 
+add2eInstallWeaponClassEquipmentGuard();
 add2eInstallThiefActivityRollGuard();
 
 globalThis.add2eNormalizeEquipTag = add2eNormalizeEquipTag;
@@ -464,3 +547,6 @@ try { globalThis.add2eCheckEquipmentAllowedForClassSystem = add2eCheckEquipmentA
 try { globalThis.add2eFindActorClassSystemByName = add2eFindActorClassSystemByName; } catch (_e) {}
 try { globalThis.add2eThiefClassLevel = add2eThiefClassLevel; } catch (_e) {}
 try { globalThis.add2eThiefActivityRollContext = add2eThiefActivityRollContext; } catch (_e) {}
+try { globalThis.add2eIsWeaponItem = add2eIsWeaponItem; } catch (_e) {}
+try { globalThis.add2eGetForbiddenEquippedWeapons = add2eGetForbiddenEquippedWeapons; } catch (_e) {}
+try { globalThis.add2eReconcileEquippedWeaponsForClass = add2eReconcileEquippedWeaponsForClass; } catch (_e) {}
