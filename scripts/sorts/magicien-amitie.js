@@ -727,7 +727,11 @@ try {
 
   await add2eChatAmitie(ADD2E_ACTOR, level, results);
 } finally {
-  await add2eDeleteLinkedTemplate(zone, "targets-resolved");
+  try {
+    await add2eDeleteLinkedTemplate(zone, "targets-resolved");
+  } finally {
+    canvas?.tokens?.activate?.();
+  }
 }
 
 console.log(`${ADD2E_ONUSE_TAG}[DONE]`, {
