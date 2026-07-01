@@ -1,168 +1,68 @@
-// ADD2E — onUse Magicien : Détection de la magie
-// Version : 2026-05-05-magicien-n1-9-v2
-// Retour attendu : true = sort consommé, false = sort non consommé.
-
-const ADD2E_SORT_CONFIG = {
-  "name": "Détection de la magie",
-  "slug": "detection_de_la_magie",
-  "level": 1,
-  "kind": "detection",
-  "description": "Détection de la magie donne au magicien une perception, une lecture ou une information magique. Les protections, obstacles et limites exactes restent à résoudre selon la règle du sort.",
-  "dice": null,
-  "modes": [
-    {
-      "id": "normal",
-      "label": "Détection de la magie"
-    }
-  ]
-};
-const ADD2E_ONUSE_TAG = "[ADD2E][SORT_ONUSE][MAGICIEN]";
-
-function add2eHtmlEscape(value) {
-  const div = document.createElement("div");
-  div.innerText = String(value ?? "");
-  return div.innerHTML;
+// ADD2E — Détection de la magie — Foundry V13/V14/V15, DialogV2.
+// Lit le contrat générique flags.add2e.magicAura, notamment Aura magique de Nystul.
+const A = typeof actor !== "undefined" ? actor : null;
+const I = typeof item !== "undefined" ? item : (typeof sort !== "undefined" ? sort : null);
+const T = typeof token !== "undefined" ? token : null;
+const R = typeof args !== "undefined" ? args : [];
+const C = Object.freeze({ name: "Détection de la magie", slug: "detection_de_la_magie", img: "icons/magic/perception/eye-ringed-glow-angry-large-purple.webp" });
+const esc = v => { const d = document.createElement("div"); d.innerText = String(v ?? ""); return d.innerHTML; };
+const norm = v => String(v ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "").replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+const array = v => Array.isArray(v) ? v : typeof v === "string" ? v.split(/[,;|\n]+/).filter(Boolean) : [];
+const number = (...values) => { for (const v of values) { if (v && typeof v === "object") { const n = number(v.value, v.valeur, v.total, v.score); if (Number.isFinite(n)) return n; } const m = String(v ?? "").replace(",", ".").match(/-?\d+(?:\.\d+)?/); if (m && Number.isFinite(Number(m[0]))) return Number(m[0]); } return null; };
+const casterToken = actorDoc => T ?? R?.[0]?.token ?? canvas?.tokens?.controlled?.find(t => t.actor?.id === actorDoc?.id) ?? actorDoc?.getActiveTokens?.()?.[0] ?? canvas?.tokens?.controlled?.[0] ?? null;
+const carried = itemDoc => ["equipee", "equipped", "portee", "worn", "tenu", "carried"].some(k => itemDoc?.system?.[k] === true);
+const formOf = (button, dialog, id) => button?.form ?? dialog?.element?.querySelector?.("form") ?? dialog?.element?.[0]?.querySelector?.("form") ?? document.getElementById(id);
+const valueOf = (form, key) => String(new FormData(form).get(key) ?? "").trim();
+function saveVsSpells(actorDoc) {
+  const s = actorDoc?.system ?? {}; const direct = number(s.sauvegarde_sortileges, s.sauvegarde_sortilege, s.saveSorts, s.saveSpells, s.saves?.sorts, s.saves?.spells, s.savingThrows?.sorts, s.savingThrows?.spells, s.sauvegardes?.sorts, s.sauvegardes?.sortileges);
+  if (Number.isFinite(direct)) return direct;
+  for (const set of [s.sauvegardes, s.savingThrows]) {
+    if (!Array.isArray(set)) continue;
+    const named = set.find(x => /sort|spell/i.test(String(x?.type ?? x?.key ?? x?.name ?? x?.label ?? x?.nom ?? ""))); const namedValue = number(named?.value, named?.valeur, named?.total, named?.score); if (Number.isFinite(namedValue)) return namedValue;
+    const values = set.map(x => number(x)).filter(Number.isFinite); if (values.length >= 5) return values[4]; if (values.length) return values.at(-1);
+  }
+  for (const raw of [s.sauvegardes, s.savingThrows]) if (typeof raw === "string") { const labeled = raw.match(/(?:sortil[eè]ges?|sorts?|spells?)\D*(\d+)/i); if (labeled) return Number(labeled[1]); }
+  return null;
 }
-
-function add2eCasterLevel(actor) {
-  return Number(actor?.system?.niveau ?? actor?.system?.level ?? actor?.system?.details?.niveau ?? 1) || 1;
+async function rollSave(actorDoc) { const target = saveVsSpells(actorDoc); if (!Number.isFinite(target)) return { available: false }; const roll = await new Roll("1d20").evaluate({ async: true }); return { available: true, total: Number(roll.total), target, success: Number(roll.total) >= target }; }
+function aura(effect) {
+  if (!effect || effect.disabled) return null;
+  const f = effect.flags?.add2e ?? {}, m = f.magicAura ?? {}, s = f.spell ?? {}, tags = array(f.tags).map(norm);
+  if (m.detectedAsMagical === true) return { kind: m.kind ?? "magic_aura", objectName: m.objectName ?? s.objectName ?? effect.name, itemId: m.itemId ?? s.itemId ?? null, itemUuid: m.itemUuid ?? s.itemUuid ?? null, revealableWhenHeld: m.revealableWhenHeld === true, revealSave: m.revealSave ?? "spells" };
+  if (s.slug === "aura_magique_de_nystul" || tags.includes("sort_aura_magique_de_nystul")) return { kind: "false_magic_aura", objectName: s.objectName ?? effect.name, itemId: s.itemId ?? null, itemUuid: s.itemUuid ?? null, revealableWhenHeld: true, revealSave: "spells" };
+  return null;
 }
-
-async function add2eEvalRoll(formula) {
-  return await new Roll(formula).evaluate();
+async function inspect(detector, target) {
+  const holder = target?.actor; if (!holder) return [];
+  const out = [];
+  for (const a of [...(holder.effects ?? [])].map(aura).filter(Boolean)) {
+    const ownedItem = holder.id === detector.id && a.itemId ? (holder.items?.get(a.itemId) ?? [...(holder.items ?? [])].find(i => i.uuid === a.itemUuid)) : null;
+    const heldByDetector = a.revealableWhenHeld && carried(ownedItem);
+    if (a.kind === "false_magic_aura" && heldByDetector && norm(a.revealSave) === "spells") {
+      const save = await rollSave(detector); out.push({ state: !save.available ? "manual" : save.success ? "revealed" : "false", a, save });
+    } else out.push({ state: a.kind === "false_magic_aura" ? "false" : "magical", a, save: null });
+  }
+  return out;
 }
-
-function add2eDamageFormula(raw, level) {
-  const s = String(raw || "1d6");
-  if (s === "leveld3") return `${Math.max(1, level)}d3`;
-  if (s === "leveld4+level") return `${Math.max(1, level)}d4+${level}`;
-  if (s === "leveld6") return `${Math.max(1, Math.min(10, level))}d6`;
-  if (s === "1d8+level") return `1d8+${level}`;
-  if (s === "1d6+level") return `1d6+${level}`;
-  if (s === "special" || s === "variable") return "1d20";
-  return s;
+async function choose() {
+  const DialogV2 = foundry?.applications?.api?.DialogV2; if (!DialogV2?.wait) { ui.notifications?.error?.(`${C.name} : DialogV2 indisponible.`); return null; }
+  const id = `add2e-detect-magic-${foundry?.utils?.randomID?.(8) ?? Date.now()}`;
+  return DialogV2.wait({ window: { title: C.name }, modal: true, rejectClose: false, content: `<form id="${id}" class="add2e-dialog"><p>Cible un jeton pour examiner son équipement ; sans cible, le sort examine l'équipement du lanceur.</p><div class="form-group"><label>Note MD (facultative)</label><textarea name="note" rows="3"></textarea></div></form>`, buttons: [{ action: "cast", label: "Détecter", default: true, callback: (_e,b,d) => ({ note: valueOf(formOf(b,d,id), "note") }) }, { action: "cancel", label: "Annuler", callback: () => null }] });
 }
-
-function add2eRoundCount(level) {
-  return Math.max(1, level);
+function line(result) {
+  const name = esc(result.a.objectName ?? "Objet");
+  if (result.state === "revealed") return `<li><b>${name}</b> : la supercherie est révélée par le jet de protection contre les sorts (${result.save.total} / ${result.save.target}).</li>`;
+  if (result.state === "manual") return `<li><b>${name}</b> : aura magique détectée ; le MD résout le jet de protection contre les sorts du détenteur.</li>`;
+  if (result.state === "false") return `<li><b>${name}</b> : une aura magique est détectée, mais sa nature ne peut pas être révélée.</li>`;
+  return `<li><b>${name}</b> : une aura magique est détectée.</li>`;
 }
-
-function add2eGetCasterToken() {
-  return token ?? args?.[0]?.token ?? canvas?.tokens?.controlled?.[0] ?? null;
+async function chat(targets, results, note) {
+  const tokenDoc = casterToken(A), casterName = A?.name ?? tokenDoc?.name ?? "Magicien", casterImg = tokenDoc?.document?.texture?.src ?? A?.img ?? "icons/svg/mystery-man.svg", targetNames = targets.map(t => t.name).join(", ") || casterName;
+  const details = results.length ? `<ul style="margin:.35em 0;padding-left:1.25em;font-size:13px;line-height:1.4">${results.map(line).join("")}</ul>` : `<p>Aucune aura artificielle connue d'ADD2E n'est détectée sur l'équipement examiné.</p>`;
+  await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor: A, token: tokenDoc }), content: `<div class="add2e-chat-card add2e-magicien-sort add2e-sort-detection-magie" style="border:1px solid #8e63c7;border-radius:8px;overflow:hidden;background:#f6f0ff;color:#2d2144;font-family:var(--font-primary)"><div style="display:flex;align-items:center;gap:8px;background:#5b3f8c;color:#fff;padding:7px 9px"><img src="${esc(casterImg)}" style="width:42px;height:42px;object-fit:cover;border-radius:50%;border:2px solid #d8c3ff;background:#fff"><div style="flex:1"><b>${esc(casterName)}</b><div style="font-size:12px;font-weight:700">lance ${C.name}</div></div><div style="font-weight:800;font-size:12px">Sort profane</div><img src="${esc(I?.img || C.img)}" style="width:34px;height:34px;object-fit:cover;border-radius:3px;border:1px solid #d8c3ff;background:#fff"></div><div style="padding:9px 10px"><div style="border:1px solid #8e63c7;border-radius:6px;background:#fffaff;padding:8px"><div style="color:#6c31b5;font-weight:900;text-align:center">PERCEPTION MAGIQUE</div><p><b>Équipement examiné :</b> ${esc(targetNames)}.</p>${details}${note ? `<p style="font-size:12px"><b>Note MD :</b> ${esc(note)}</p>` : ""}</div><details style="margin-top:7px"><summary>Règle appliquée</summary><p>Une fausse aura déclarée dans <code>flags.add2e.magicAura</code> paraît magique. Si le détecteur tient l'objet de Nystul, son jet de protection contre les sorts peut révéler la supercherie.</p></details></div></div>` });
 }
-
-function add2eGetTargets({ fallbackCaster = true } = {}) {
-  const targets = Array.from(game.user.targets ?? []);
-  if (targets.length) return targets;
-  const casterToken = add2eGetCasterToken();
-  return (fallbackCaster && casterToken) ? [casterToken] : [];
-}
-
-async function add2eChat(title, html, speakerToken = null, options = {}) {
-  const casterToken = speakerToken ?? add2eGetCasterToken();
-  const casterActor = actor ?? casterToken?.actor ?? null;
-  const casterName = casterActor?.name ?? casterToken?.name ?? "Magicien";
-  const spellName = item?.name ?? title ?? "Sort de magicien";
-  const casterImg = casterToken?.document?.texture?.src ?? casterActor?.img ?? "icons/svg/mystery-man.svg";
-  const spellImg = item?.img ?? "icons/svg/book.svg";
-  const targets = Array.from(game.user.targets ?? []);
-  const targetLabel = options.targetLabel ?? (targets.length ? targets.map(t => t.name).join(", ") : casterName);
-  const outcome = options.outcome ?? title ?? spellName;
-  const rule = options.rule ?? "";
-  await ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor: casterActor, token: casterToken }),
-    content: `
-      <div class="add2e-chat-card add2e-magicien-sort" style="border:1px solid #8e63c7;border-radius:8px;overflow:hidden;background:#f6f0ff;color:#2d2144;font-family:var(--font-primary);">
-        <div style="display:flex;align-items:center;gap:8px;background:#5b3f8c;color:#fff;padding:7px 9px;">
-          <img src="${add2eHtmlEscape(casterImg)}" style="width:42px;height:42px;object-fit:cover;border-radius:50%;border:2px solid #d8c3ff;background:#fff;" />
-          <div style="flex:1;line-height:1.05;">
-            <div style="font-weight:800;font-size:14px;">${add2eHtmlEscape(casterName)}</div>
-            <div style="font-size:12px;font-weight:700;">lance ${add2eHtmlEscape(spellName)}</div>
-          </div>
-          <div style="font-weight:800;font-size:12px;text-align:center;white-space:nowrap;">Sort profane</div>
-          <img src="${add2eHtmlEscape(spellImg)}" style="width:34px;height:34px;object-fit:cover;border-radius:3px;border:1px solid #d8c3ff;background:#fff;" />
-        </div>
-        <div style="padding:9px 10px 10px 10px;background:#f6f0ff;">
-          <div style="font-size:13px;margin:0 0 6px 0;"><b>Cible :</b> ${add2eHtmlEscape(targetLabel)}</div>
-          <div style="border:1px solid #8e63c7;border-radius:6px;background:#fffaff;padding:8px;text-align:center;margin-bottom:7px;">
-            <div style="color:#6c31b5;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.3px;">${add2eHtmlEscape(outcome)}</div>
-            <div style="font-size:13px;line-height:1.35;text-align:center;">${html}</div>
-          </div>
-          <details style="border:1px solid #8e63c7;border-radius:5px;background:#fffaff;padding:5px 7px;">
-            <summary style="cursor:pointer;font-weight:800;color:#4a2e78;">Règle appliquée</summary>
-            <div style="margin-top:5px;font-size:12px;line-height:1.35;">${rule || "Effet du sort appliqué selon sa description et l’arbitrage du MD."}</div>
-          </details>
-        </div>
-      </div>`
-  });
-}
-
-async function add2eApplyEffect(targetActor, name, tags, rounds = 0) {
-  if (!targetActor) return false;
-  await targetActor.createEmbeddedDocuments("ActiveEffect", [{
-    name,
-    img: item?.img || "icons/svg/aura.svg",
-    disabled: false,
-    transfer: false,
-    type: "base",
-    system: {},
-    changes: [],
-    duration: { rounds: rounds || undefined, startRound: game.combat?.round ?? null, startTime: game.time?.worldTime ?? null, combat: game.combat?.id ?? null },
-    description: ADD2E_SORT_CONFIG.description,
-    flags: { add2e: { tags } }
-  }]);
-  return true;
-}
-
-async function add2eAskNote(config) {
-  const needsNote = ["note","summon","summon_note","movement","terrain","utility","detection"].includes(config.kind) || (config.modes?.length > 1);
-  if (!needsNote) return { mode: "normal", note: "" };
-  return await new Promise(resolve => {
-    let done = false;
-    const finish = v => { if (!done) { done = true; resolve(v); } };
-    const buttons = {};
-    for (const m of config.modes ?? [{id:"normal",label:config.name}]) {
-      buttons[m.id] = { label: m.label, callback: html => finish({ mode:m.id, note: html.find("[name='note']").val() ?? "" }) };
-    }
-    buttons.cancel = { label: "Annuler", callback: () => finish(null) };
-    new Dialog({
-      title: config.name,
-      content: `<form><p><b>${add2eHtmlEscape(config.name)}</b></p><div class="form-group"><label>Note / paramètres</label><textarea name="note" rows="3"></textarea></div></form>`,
-      buttons,
-      default: Object.keys(buttons)[0],
-      close: () => finish(null)
-    }).render(true);
-  });
-}
-
-const choice = await add2eAskNote(ADD2E_SORT_CONFIG);
-if (!choice) return false;
-
-const level = add2eCasterLevel(actor);
-const targets = add2eGetTargets({ fallbackCaster: ADD2E_SORT_CONFIG.kind !== "damage" });
-const baseTags = [`sort:${ADD2E_SORT_CONFIG.slug}`, "classe:magicien", "liste:magicien", `niveau:${ADD2E_SORT_CONFIG.level}`, `type:${ADD2E_SORT_CONFIG.kind}`];
-
-console.log(`${ADD2E_ONUSE_TAG}[START]`, { sort: ADD2E_SORT_CONFIG.name, actor: actor?.name, level, targets: targets.map(t => t.name), mode: choice.mode });
-
-if (ADD2E_SORT_CONFIG.kind === "damage") {
-  const formula = add2eDamageFormula(ADD2E_SORT_CONFIG.dice, level);
-  const roll = await add2eEvalRoll(formula);
-  await roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor, token: add2eGetCasterToken() }), flavor: ADD2E_SORT_CONFIG.name });
-  await add2eChat(ADD2E_SORT_CONFIG.name, `
-    <p>Jet indicatif : <b>${roll.total}</b> (${formula})</p>
-    ${targets.length ? `<p>Cible(s) : ${targets.map(t => `<b>${add2eHtmlEscape(t.name)}</b>`).join(", ")}</p>` : "<p>Aucune cible sélectionnée : appliquer manuellement si nécessaire.</p>"}
-  `, null, { outcome: "EFFET OFFENSIF", rule: add2eHtmlEscape(ADD2E_SORT_CONFIG.description) });
-  return true;
-}
-
-if (["condition","protection"].includes(ADD2E_SORT_CONFIG.kind)) {
-  for (const t of targets) await add2eApplyEffect(t.actor, ADD2E_SORT_CONFIG.name, baseTags, add2eRoundCount(level));
-  await add2eChat(ADD2E_SORT_CONFIG.name, `<p>Effet actif appliqué à : ${targets.map(t => `<b>${add2eHtmlEscape(t.name)}</b>`).join(", ")}</p>`, null, { outcome: "EFFET ACTIF", rule: add2eHtmlEscape(ADD2E_SORT_CONFIG.description) });
-  return true;
-}
-
-await add2eChat(ADD2E_SORT_CONFIG.name, `
-  <p>${add2eHtmlEscape(ADD2E_SORT_CONFIG.description)}</p>
-  ${choice.note ? `<p>Note : <b>${add2eHtmlEscape(choice.note)}</b></p>` : ""}
-`, null, { outcome: ADD2E_SORT_CONFIG.name.toUpperCase(), rule: add2eHtmlEscape(ADD2E_SORT_CONFIG.description) });
-return true;
+if (!A) { ui.notifications?.warn?.(`${C.name} : acteur lanceur introuvable.`); return false; }
+const choice = await choose(); if (!choice) return false;
+const targets = [...(game.user?.targets ?? [])].filter(t => t?.actor); if (!targets.length && casterToken(A)) targets.push(casterToken(A));
+const results = []; for (const target of targets) results.push(...await inspect(A, target));
+await chat(targets, results, choice.note); return true;
