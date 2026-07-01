@@ -1,7 +1,7 @@
 // ============================================================
 // ADD2E — 08 Character Sheet UI — 00 utilitaires
 // ============================================================
-export const ADD2E_CHARACTER_SHEET_UI_VERSION = "2026-07-01-character-ui-duration-engine-v11";
+export const ADD2E_CHARACTER_SHEET_UI_VERSION = "2026-07-01-character-ui-duration-flags-v12";
 
 export function escapeHtml(value) {
   return String(value ?? "")
@@ -110,7 +110,48 @@ function finiteDuration(value) {
   return Number.isFinite(number) ? Math.max(0, Math.floor(number)) : null;
 }
 
+function add2eCurrentDurationTick() {
+  try {
+    const tick = finiteDuration(globalThis.game?.settings?.get?.("add2e", "worldTimeTick"));
+    if (tick !== null) return tick;
+  } catch (_error) {}
+
+  try {
+    const tick = finiteDuration(globalThis.game?.add2e?.time?.currentTick?.());
+    if (tick !== null) return tick;
+  } catch (_error) {}
+
+  return 0;
+}
+
+function add2eManagedEffectRemainingRounds(effect) {
+  const flags = effect?.flags?.add2e ?? {};
+  const timeEngine = flags.timeEngine ?? {};
+  const roundEngine = flags.roundEngine ?? {};
+  const total = finiteDuration(
+    timeEngine.totalRounds
+      ?? roundEngine.totalRounds
+      ?? flags.durationRounds
+      ?? flags.dureeRounds
+      ?? flags.duree_rounds
+  );
+
+  if (total === null || total <= 0) return null;
+
+  const startTick = finiteDuration(
+    timeEngine.startTick
+      ?? timeEngine.createdAtTick
+      ?? roundEngine.startTick
+      ?? flags.startTick
+  ) ?? 0;
+  const elapsed = Math.max(0, add2eCurrentDurationTick() - startTick);
+  return Math.max(0, total - elapsed);
+}
+
 export function formatDuration(effect) {
+  const managedRemaining = add2eManagedEffectRemainingRounds(effect);
+  if (managedRemaining !== null) return `${managedRemaining} rounds`;
+
   try {
     const remaining = globalThis.game?.add2e?.time?.remainingRounds?.(effect)?.remaining;
     const rounds = finiteDuration(remaining);
@@ -126,7 +167,7 @@ export function formatDuration(effect) {
   const seconds = finiteDuration(effect?.duration?.seconds);
   if (seconds !== null) return `${seconds} sec`;
 
-  return "—";
+  return effect?.isTemporary ? "Temporaire" : "Permanente";
 }
 
 expose("ADD2E_CHARACTER_SHEET_UI_VERSION", ADD2E_CHARACTER_SHEET_UI_VERSION);
