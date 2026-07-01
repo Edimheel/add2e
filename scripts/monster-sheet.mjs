@@ -6,7 +6,7 @@
  * - Nettoyage visuel automatique
  */
 
-const ADD2E_MONSTER_SHEET_VERSION = "2026-07-01-monster-unrestricted-weapons-v3";
+const ADD2E_MONSTER_SHEET_VERSION = "2026-07-01-monster-equipment-state-scroll-v4";
 globalThis.ADD2E_MONSTER_SHEET_VERSION = ADD2E_MONSTER_SHEET_VERSION;
 
 const { ApplicationV2 } = foundry.applications.api;
@@ -19,12 +19,12 @@ const FIGHTER_SAVES = [
   { level: 1,  saves: [14, 16, 15, 17, 17] },
   { level: 3,  saves: [13, 15, 14, 16, 16] },
   { level: 5,  saves: [11, 13, 12, 13, 14] },
-  { level: 7,  saves: [10, 9, 9, 11] },
-  { level: 9,  saves: [8,  10, 9, 9, 11] },
-  { level: 11, saves: [7,  9, 8, 8, 10] },
-  { level: 13, saves: [5,  7, 6, 5, 8]  },
-  { level: 15, saves: [4,  7, 5, 4, 7]  },
-  { level: 17, saves: [3,  6, 5, 4, 7]  }
+  { level: 7,  saves: [10, 12, 11, 12, 13] },
+  { level: 9,  saves: [8,  10, 9,  9,  11] },
+  { level: 11, saves: [7,  9,  8,  8,  10] },
+  { level: 13, saves: [5,  7,  6,  5,  8]  },
+  { level: 15, saves: [4,  6,  5,  4,  7]  },
+  { level: 17, saves: [3,  5,  4,  4,  6]  }
 ];
 
 const ADD2E_LINKED_PACKS = {
@@ -379,6 +379,7 @@ export class Add2eMonsterSheet extends ApplicationV2 {
     this.actor = document;
     this.object = document;
     this.document = document;
+    this._add2ePendingView = null;
   }
 
   get title() {
@@ -490,6 +491,7 @@ export class Add2eMonsterSheet extends ApplicationV2 {
 
   _replaceHTML(result, content, _options) {
     content.replaceChildren(...result.childNodes);
+    this._restoreViewAfterRender(content);
     this.activateListeners(content);
   }
 
@@ -497,6 +499,50 @@ export class Add2eMonsterSheet extends ApplicationV2 {
     const updateData = foundry.utils.flattenObject(formData ?? {});
     if (!updateData.name || String(updateData.name).trim() === "") updateData.name = this.actor.name;
     await this.actor.update(updateData);
+  }
+
+  _captureViewBeforeRender(root) {
+    const sheetRoot = root?.matches?.(".add2e-monster-readable-sheet")
+      ? root
+      : root?.querySelector?.(".add2e-monster-readable-sheet")
+        ?? null;
+    const body = sheetRoot?.querySelector?.(".sheet-body") ?? null;
+    const activeTab = sheetRoot?.querySelector?.(".sheet-tabs .item.active")?.dataset?.tab ?? "combat";
+    return {
+      activeTab,
+      scrollTop: body?.scrollTop ?? 0,
+      scrollLeft: body?.scrollLeft ?? 0
+    };
+  }
+
+  _renderPreservingView(root) {
+    this._add2ePendingView = this._captureViewBeforeRender(root);
+    this.render(false);
+  }
+
+  _restoreViewAfterRender(content) {
+    const view = this._add2ePendingView;
+    this._add2ePendingView = null;
+    if (!view) return;
+
+    requestAnimationFrame(() => {
+      const sheetRoot = content?.querySelector?.(".add2e-monster-readable-sheet") ?? null;
+      if (!sheetRoot) return;
+
+      const activeTab = view.activeTab || "combat";
+      for (const link of sheetRoot.querySelectorAll(".sheet-tabs .item")) {
+        link.classList.toggle("active", link.dataset.tab === activeTab);
+      }
+      for (const panel of sheetRoot.querySelectorAll(".tab")) {
+        panel.classList.toggle("active", panel.dataset.tab === activeTab);
+      }
+
+      const body = sheetRoot.querySelector(".sheet-body");
+      if (body) {
+        body.scrollTop = view.scrollTop;
+        body.scrollLeft = view.scrollLeft;
+      }
+    });
   }
 
   _activateAutoSubmit(root) {
@@ -535,6 +581,7 @@ export class Add2eMonsterSheet extends ApplicationV2 {
       const index = Number(btn.data("saveIndex"));
       const seuil = parseInt(btn.data("saveVal")) || 20;
       const labels = ["Paralysie / Mort", "Baguettes", "Pétrification", "Souffle", "Sorts"];
+      const label = labels[index] || "Sauvegarde";
       const colors = ["#16a085", "#f39c12", "#8e44ad", "#d35400", "#c0392b"];
       const icons = ["fa-skull-crossbones", "fa-magic", "fa-cubes", "fa-wind", "fa-scroll"];
       const color = colors[index] || "#444";
@@ -584,10 +631,10 @@ export class Add2eMonsterSheet extends ApplicationV2 {
       ev.preventDefault();
       const id = $(ev.currentTarget).data("itemId");
       const item = this.actor.items.get(id);
-      if (item) {
-        await this._onEquipItem(item);
-        this.render(false);
-      }
+      if (!item) return;
+
+      const changed = await this._onEquipItem(item);
+      if (changed) this._renderPreservingView(root);
     });
 
     html.find(".hydrate-linked-items").off("click.add2e-monster-hydrate").on("click.add2e-monster-hydrate", async ev => {
@@ -681,26 +728,37 @@ export class Add2eMonsterSheet extends ApplicationV2 {
     document.head.appendChild(style);
   }
 
+  async _setMonsterItemEquipped(item, equipped, reason) {
+    if (!item?.id || !this.actor?.updateEmbeddedDocuments) return false;
+
+    const updated = await this.actor.updateEmbeddedDocuments(
+      "Item",
+      [{ _id: item.id, "system.equipee": equipped === true }],
+      { add2eReason: reason }
+    );
+    const current = this.actor.items.get(item.id) ?? updated?.[0] ?? null;
+    return current?.system?.equipee === (equipped === true);
+  }
+
   async _onEquipItem(item) {
-    const dejaEquipee = item.system.equipee === true;
+    const dejaEquipee = item?.system?.equipee === true;
+    const prochainEtat = !dejaEquipee;
 
     if (item.type === "arme") {
-      await item.update({ "system.equipee": !dejaEquipee });
-      return;
+      return this._setMonsterItemEquipped(item, prochainEtat, prochainEtat ? "monster-equip-weapon" : "monster-unequip-weapon");
     }
 
     if (item.type === "armure") {
-      if (dejaEquipee) {
-        await item.update({ "system.equipee": false });
-        await this._recalculerCA();
-        return;
-      }
-      await item.update({ "system.equipee": true });
-      await this._recalculerCA();
-      return;
+      const changed = await this._setMonsterItemEquipped(item, prochainEtat, prochainEtat ? "monster-equip-armor" : "monster-unequip-armor");
+      if (changed) await this._recalculerCA();
+      return changed;
     }
 
-    if (["objet", "equipement", "consommable", "loot", "conteneur"].includes(item.type)) await item.update({ "system.equipee": !dejaEquipee });
+    if (["objet", "equipement", "consommable", "loot", "conteneur"].includes(item.type)) {
+      return this._setMonsterItemEquipped(item, prochainEtat, prochainEtat ? "monster-equip-item" : "monster-unequip-item");
+    }
+
+    return false;
   }
 
   async _recalculerCA() {
