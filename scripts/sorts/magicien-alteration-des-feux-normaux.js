@@ -1,15 +1,15 @@
 // ADD2E — onUse Magicien : Altération des feux normaux
-// Version : 2026-07-01-magicien-alteration-feux-normaux-purple-chat-v3
+// Version : 2026-07-01-magicien-alteration-feux-normaux-timed-effect-v4
 //
-// Sort à carte de chat uniquement.
-// Aucun ActiveEffect, aucun changement d'acteur, aucune cible obligatoire.
+// Le feu reste géré par l'arbitrage de jeu. L'ActiveEffect temporaire porté par
+// le lanceur sert uniquement au suivi de la durée 1 round par niveau.
+// Compatible Foundry V13/V14/V15.
 //
 // Contrat avec scripts/add2e-attack/06-cast-spell.mjs :
 // - return true  => le sort est lancé, le slot mémorisé réservé est consommé ;
 // - return false => annulation technique, le slot mémorisé réservé est remboursé.
 // La consommation du slot n'est PAS faite ici : elle est centralisée dans add2eCastSpell.
 
-const ADD2E_ONUSE_TAG = "[ADD2E][SORT_ONUSE][MAGICIEN][ALTERATION_FEUX_NORMAUX]";
 const ADD2E_ACTOR = typeof actor !== "undefined" ? actor : null;
 const ADD2E_ITEM = typeof item !== "undefined" ? item : null;
 const ADD2E_TOKEN = typeof token !== "undefined" ? token : null;
@@ -34,14 +34,41 @@ function add2eHtmlEscape(value) {
   return div.innerHTML;
 }
 
+function add2eNormalize(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
 function add2eCasterLevel(actorDoc) {
-  return Number(
+  try {
+    const canonical = Number(globalThis.add2eCanonicalClassLevel?.(actorDoc, "magicien", 0));
+    if (Number.isFinite(canonical) && canonical > 0) return Math.floor(canonical);
+  } catch (_error) {}
+
+  const classItem = Array.from(actorDoc?.items ?? []).find(entry => {
+    if (String(entry?.type ?? "").toLowerCase() !== "classe") return false;
+    return [entry.name, entry.system?.slug, entry.system?.label, entry.system?.nom, entry.system?.name]
+      .map(add2eNormalize)
+      .includes("magicien");
+  }) ?? null;
+
+  const classLevel = Number(classItem?.system?.niveau ?? classItem?.system?.level);
+  if (Number.isFinite(classLevel) && classLevel > 0) return Math.floor(classLevel);
+
+  const fallback = Number(
     actorDoc?.system?.niveau ??
     actorDoc?.system?.level ??
     actorDoc?.system?.details?.niveau ??
     actorDoc?.system?.details?.level ??
     1
-  ) || 1;
+  );
+  return Math.max(1, Math.floor(Number.isFinite(fallback) ? fallback : 1));
 }
 
 function add2eGetCasterToken(actorDoc) {
@@ -53,12 +80,68 @@ function add2eGetCasterToken(actorDoc) {
     ?? null;
 }
 
-async function add2eChatAlterationFeuxNormaux(actorDoc) {
+async function add2eCreateAlterationFeuxEffect(actorDoc, level) {
+  const time = game.add2e?.time;
+  if (typeof time?.effectData !== "function" || typeof time?.createTimedActiveEffect !== "function") {
+    ui.notifications?.error?.("Altération des feux normaux : moteur de durée ADD2E indisponible.");
+    return null;
+  }
+
+  const durationRounds = Math.max(1, Math.floor(Number(level) || 1));
+  const effectData = time.effectData({
+    name: ADD2E_SORT_CONFIG.name,
+    img: ADD2E_ITEM?.img ?? ADD2E_SORT_CONFIG.imgFallback,
+    origin: ADD2E_ITEM?.uuid ?? null,
+    rounds: durationRounds,
+    unit: "round",
+    description: `Altération d'un feu normal active pendant ${durationRounds} round${durationRounds > 1 ? "s" : ""}.`,
+    tags: [
+      `sort:${ADD2E_SORT_CONFIG.slug}`,
+      "classe:magicien",
+      "liste:magicien",
+      "niveau:1",
+      "ecole:alteration",
+      "etat:alteration_des_feux_normaux",
+      "duree:1_round_par_niveau"
+    ],
+    changes: [],
+    source: "spell",
+    caster: actorDoc,
+    sourceItem: ADD2E_ITEM,
+    endMessage: `${ADD2E_SORT_CONFIG.name} prend fin sur {actor}.`,
+    extraFlags: {
+      spell: {
+        slug: ADD2E_SORT_CONFIG.slug,
+        name: ADD2E_SORT_CONFIG.name,
+        class: "Magicien",
+        level: ADD2E_SORT_CONFIG.level,
+        casterLevel: durationRounds,
+        durationRounds
+      }
+    }
+  });
+
+  effectData.type = "base";
+  effectData.system ??= {};
+  effectData.changes ??= [];
+
+  const result = await time.createTimedActiveEffect(actorDoc, effectData, {
+    removeTags: [`sort:${ADD2E_SORT_CONFIG.slug}`]
+  });
+
+  if (!result?.ok) {
+    ui.notifications?.error?.("Altération des feux normaux : l'effet de durée n'a pas pu être créé.");
+    return null;
+  }
+
+  return result.effect;
+}
+
+async function add2eChatAlterationFeuxNormaux(actorDoc, level) {
   const casterToken = add2eGetCasterToken(actorDoc);
   const casterName = actorDoc?.name ?? casterToken?.name ?? "Magicien";
   const casterImg = casterToken?.document?.texture?.src ?? actorDoc?.img ?? "icons/svg/mystery-man.svg";
   const spellImg = ADD2E_ITEM?.img ?? ADD2E_SORT_CONFIG.imgFallback;
-  const level = add2eCasterLevel(actorDoc);
   const durationRounds = Math.max(1, level);
 
   await ChatMessage.create({
@@ -101,22 +184,13 @@ async function add2eChatAlterationFeuxNormaux(actorDoc) {
 
 if (!ADD2E_ACTOR) {
   ui.notifications?.warn?.("Altération des feux normaux : acteur lanceur introuvable.");
-  console.warn(`${ADD2E_ONUSE_TAG}[NO_ACTOR] Acteur lanceur introuvable : remboursement du slot mémorisé par le dispatcher.`);
   return false;
 }
 
-console.log(`${ADD2E_ONUSE_TAG}[START]`, {
-  actor: ADD2E_ACTOR?.name,
-  sort: ADD2E_ITEM?.name,
-  mode: "chat_only",
-  technicalEffect: false
-});
+const ADD2E_CASTER_LEVEL = add2eCasterLevel(ADD2E_ACTOR);
+const ADD2E_DURATION_EFFECT = await add2eCreateAlterationFeuxEffect(ADD2E_ACTOR, ADD2E_CASTER_LEVEL);
+if (!ADD2E_DURATION_EFFECT) return false;
 
-await add2eChatAlterationFeuxNormaux(ADD2E_ACTOR);
-
-console.log(`${ADD2E_ONUSE_TAG}[DONE]`, {
-  consumedByDispatcher: true,
-  technicalEffect: false
-});
+await add2eChatAlterationFeuxNormaux(ADD2E_ACTOR, ADD2E_CASTER_LEVEL);
 
 return true;
