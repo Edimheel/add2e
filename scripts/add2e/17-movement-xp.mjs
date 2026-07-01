@@ -1,19 +1,17 @@
 // ADD2E — XP + Mouvement
-// Version : 2026-07-01-token-turn-movement-v1
+// Version : 2026-05-21-clean-v2-gm-free-move-scale
 //
 // Principes :
 // - pas de patch de render()
 // - pas d'actor.update() depuis getData()
 // - ajustements XP/niveau dans preUpdateActor pour éviter les rendus en cascade
 // - contrôle token sur la valeur affichée de mouvement en mètres
-// - cumul de combat attaché au token et à son tour courant
 // - MJ : jamais bloqué, mais échelle couleur visible
 // - Joueurs : blocage si dépassement, avec échelle couleur visible
 
-const VERSION = "2026-07-01-token-turn-movement-v1";
+const VERSION = "2026-05-21-clean-v2-gm-free-move-scale";
 const TAG = "[ADD2E][MOVE_XP]";
 const INTERNAL = "add2eMoveXpInternal";
-const MOVEMENT_TURN_STATE_FLAG = "movementTurnState";
 
 globalThis.ADD2E_MOVE_XP_VERSION = VERSION;
 
@@ -406,22 +404,10 @@ function combatTurnKey() {
   return combat ? `${combat.id}:${combat.round ?? 0}:${combat.turn ?? 0}` : null;
 }
 
-function spentThisTurn(tokenDoc) {
+function spentThisTurn(actor) {
   const key = combatTurnKey();
-  if (!key || !tokenDoc) return 0;
-  const state = tokenDoc.getFlag("add2e", MOVEMENT_TURN_STATE_FLAG) ?? {};
-  return state.key === key ? Number(state.spentMeters) || 0 : 0;
-}
-
-function rememberSpentThisTurn(tokenDoc, spentMeters) {
-  const key = combatTurnKey();
-  if (!key || !tokenDoc) return;
-  const state = {
-    key,
-    spentMeters: Math.max(0, Math.round((Number(spentMeters) || 0) * 100) / 100)
-  };
-  tokenDoc.setFlag("add2e", MOVEMENT_TURN_STATE_FLAG, state)
-    .catch(err => console.warn(`${TAG}[TOKEN][TURN_STATE_ERROR]`, err));
+  if (!key) return 0;
+  return actor.getFlag("add2e", "movementTurnKey") === key ? Number(actor.getFlag("add2e", "movementSpentMeters")) || 0 : 0;
 }
 
 function movementOrigin(tokenDoc) {
@@ -476,7 +462,7 @@ function computeTokenMovementScale(tokenDoc, changes = {}, from = null) {
   const max = Number(movement.actuel ?? actor.system?.movement ?? actor.system?.vitesse_deplacement ?? 0) || 0;
   const origin = from ?? (game.combat ? { x: tokenDoc.x, y: tokenDoc.y } : movementOrigin(tokenDoc));
   const delta = tokenDistanceMeters(tokenDoc, changes, origin);
-  const spent = game.combat ? spentThisTurn(tokenDoc) : 0;
+  const spent = game.combat ? spentThisTurn(actor) : 0;
   const next = Math.round((spent + delta) * 100) / 100;
   const status = movementScaleStatus(next, max);
 
@@ -521,7 +507,10 @@ function validateTokenMovement(tokenDoc, changes, options = {}) {
   }
 
   if (game.combat) {
-    setTimeout(() => rememberSpentThisTurn(tokenDoc, next), 0);
+    setTimeout(() => {
+      actor.setFlag("add2e", "movementTurnKey", combatTurnKey());
+      actor.setFlag("add2e", "movementSpentMeters", next);
+    }, 0);
   } else {
     setTimeout(() => tokenDoc.setFlag("add2e", "lastAllowedPosition", { x: changes.x ?? tokenDoc.x, y: changes.y ?? tokenDoc.y }), 0);
   }
@@ -607,6 +596,13 @@ for (const hookName of ["createItem", "updateItem", "deleteItem"]) {
     if (actor?.documentName === "Actor" && actor.type === "personnage") recalc(actor, { mode: "movement" }).catch(err => console.warn(`${TAG}[${hookName}]`, err));
   });
 }
+
+Hooks.on("updateCombat", () => {
+  if (!game.user.isGM) return;
+  for (const combatant of game.combat?.combatants ?? []) {
+    if (combatant.actor?.type === "personnage") combatant.actor.setFlag("add2e", "movementTurnKey", combatTurnKey());
+  }
+});
 
 globalThis.add2eComputeXp = computeXp;
 globalThis.add2eComputeMovement = computeMovement;
