@@ -1,5 +1,5 @@
 // ADD2E — Marchand V2 compact.
-// Version : 2026-06-23-merchant-component-spell-links-v2
+// Version : 2026-07-01-merchant-safe-actions-v3
 
 import {
   findVendor,
@@ -25,8 +25,7 @@ import {
 } from "./22a-vendor-core.mjs";
 import { normalizeShopCurrency, ADD2E_VENDOR_PLAYER_BUY } from "./22x-vendor-socket-bootstrap.mjs";
 
-const VERSION = "2026-06-23-merchant-component-spell-links-v2";
-const DIAG = "[ADD2E][MERCHANT_APP][BUY_DIAG]";
+const VERSION = "2026-07-01-merchant-safe-actions-v3";
 
 const arr = value => Array.isArray(value)
   ? value.flatMap(arr)
@@ -63,10 +62,6 @@ const COMPONENT_NAME_ALIASES = new Map(Object.entries({
   eau_maudite: "Eau maudite"
 }));
 
-function diag(label, data = {}) {
-  console.warn(`${DIAG}[${label}]`, { user: game.user?.name, userId: game.user?.id, isGM: game.user?.isGM, version: VERSION, ...data });
-}
-
 function canonicalName(name) {
   const raw = String(name ?? "").trim();
   return COMPONENT_NAME_ALIASES.get(slug(raw)) ?? raw;
@@ -95,9 +90,9 @@ function preferVisibleStockItem(left, right) {
 function collapseCanonicalStock(items = []) {
   const groups = new Map();
   for (const item of items) {
-    const groupKey = canonicalStockKey(item);
-    if (!groups.has(groupKey)) groups.set(groupKey, []);
-    groups.get(groupKey).push(item);
+    const key = canonicalStockKey(item);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(item);
   }
   return [...groups.values()]
     .map(group => group.length === 1 ? group[0] : group.reduce(preferVisibleStockItem, group[0]))
@@ -183,7 +178,7 @@ function memorized(spell) {
   try {
     const value = Number(globalThis.add2eGetTotalMemorizedCount?.(spell));
     if (Number.isFinite(value) && value > 0) return Math.floor(value);
-  } catch (_error) {}
+  } catch (_) {}
   const raw = spell?.getFlag?.("add2e", "memorizedByList") ?? spell?.flags?.add2e?.memorizedByList ?? {};
   if (raw && typeof raw === "object" && !Array.isArray(raw)) return Object.values(raw).reduce((sum, value) => sum + (Number(value) || 0), 0);
   return Number(spell?.getFlag?.("add2e", "memorizedCount") ?? spell?.flags?.add2e?.memorizedCount ?? 0) || 0;
@@ -238,9 +233,9 @@ function ownedQuantity(actor, item) {
   return Array.from(actor.items ?? []).filter(actorItem => sameOwnedItem(item, actorItem)).reduce((sum, actorItem) => sum + actorItemQty(actorItem), 0);
 }
 
-function articleLabel(ctx, item) {
+function articleLabel(context, item) {
   const name = canonicalItemName(item);
-  return ctx.buyer ? `${name} (${ownedQuantity(ctx.buyer, item)})` : name;
+  return context.buyer ? `${name} (${ownedQuantity(context.buyer, item)})` : name;
 }
 
 function itemTags(item) {
@@ -289,41 +284,41 @@ function rowTabs(item, use) {
 }
 
 function actionIcon(action, icon, title, disabled = false, extraClass = "") {
-  const disabledAttrs = disabled ? 'aria-disabled="true" data-disabled="1"' : `data-action="${action}" role="button" tabindex="0"`;
-  return `<i class="fas ${icon} add2e-vendor-action-icon ${extraClass} ${disabled ? "disabled" : ""}" title="${esc(title)}" aria-label="${esc(title)}" ${disabledAttrs}></i>`;
+  const attrs = disabled ? 'aria-disabled="true" data-disabled="1"' : `data-action="${action}" role="button" tabindex="0"`;
+  return `<i class="fas ${icon} add2e-vendor-action-icon ${extraClass} ${disabled ? "disabled" : ""}" title="${esc(title)}" aria-label="${esc(title)}" ${attrs}></i>`;
 }
 
-function rowHtml(item, ctx, use, visible = true) {
+function rowHtml(item, context, use, visible = true) {
   const kind = vendorKind(item);
   const itemQty = quantity(item);
-  const disabled = !ctx.buyer || itemQty <= 0;
+  const disabled = !context.buyer || itemQty <= 0;
   const names = displaySpellNames(item, use);
   const spellLabel = names.length ? names.join(", ") : "—";
-  const gm = ctx.isGM ? `<td class="col-mj add2e-vendor-gm-actions"><input class="s stock-input" type="number" min="0" value="${itemQty}" title="Stock"><span class="vendor-icon-group">${actionIcon("stock", "fa-boxes-stacked", "Définir le stock", false, "stock")} ${actionIcon("assign", "fa-hand-holding", "Donner à l’acheteur", disabled, "assign")}</span></td>` : "";
-  return `<tr data-id="${esc(item.id)}" style="${visible ? "" : "display:none"}"><td class="col-article">${esc(articleLabel(ctx, item))}</td><td class="col-type" title="${esc(kind)}"><span class="type-pill">${esc(kind)}</span></td><td class="col-sorts" title="${esc(spellLabel)}">${esc(spellLabel)}</td><td class="col-prix">${esc(priceLabel(item))}</td><td class="col-stock">${itemQty}</td><td class="col-qty"><input class="q" type="number" min="1" value="1" title="Quantité"></td><td class="col-action">${actionIcon("buy", "fa-cart-shopping", "Acheter", disabled, "buy")}</td>${gm}</tr>`;
+  const gm = context.isGM ? `<td class="col-mj add2e-vendor-gm-actions"><input class="s stock-input" type="number" min="0" value="${itemQty}" title="Stock"><span class="vendor-icon-group">${actionIcon("stock", "fa-boxes-stacked", "Définir le stock", false, "stock")} ${actionIcon("assign", "fa-hand-holding", "Donner à l’acheteur", disabled, "assign")}</span></td>` : "";
+  return `<tr data-id="${esc(item.id)}" style="${visible ? "" : "display:none"}"><td class="col-article">${esc(articleLabel(context, item))}</td><td class="col-type" title="${esc(kind)}"><span class="type-pill">${esc(kind)}</span></td><td class="col-sorts" title="${esc(spellLabel)}">${esc(spellLabel)}</td><td class="col-prix">${esc(priceLabel(item))}</td><td class="col-stock">${itemQty}</td><td class="col-qty"><input class="q" type="number" min="1" value="1" title="Quantité"></td><td class="col-action">${actionIcon("buy", "fa-cart-shopping", "Acheter", disabled, "buy")}</td>${gm}</tr>`;
 }
 
-function itemVisibleForContext(item, ctx, use) {
+function itemVisibleForContext(item, context, use) {
   const tabs = rowTabs(item, use);
   const spellNames = displaySpellNames(item, use);
-  const haystack = lower(`${item.name} ${canonicalItemName(item)} ${articleLabel(ctx, item)} ${vendorKind(item)} ${bazaarSection(item)} ${spellNames.join(" ")}`);
-  return (ctx.tab === "all" || tabs.includes(ctx.tab)) && (!ctx.search || haystack.includes(lower(ctx.search)));
+  const haystack = lower(`${item.name} ${canonicalItemName(item)} ${articleLabel(context, item)} ${vendorKind(item)} ${bazaarSection(item)} ${spellNames.join(" ")}`);
+  return (context.tab === "all" || tabs.includes(context.tab)) && (!context.search || haystack.includes(lower(context.search)));
 }
 
-function tableHeader(ctx) {
-  return `<thead><tr><th class="col-article">Article</th><th class="col-type">Type</th><th class="col-sorts">Sorts</th><th class="col-prix">Prix</th><th class="col-stock">Stock</th><th class="col-qty">Qté</th><th class="col-action"></th>${ctx.isGM ? '<th class="col-mj">MJ</th>' : ""}</tr></thead>`;
+function tableHeader(context) {
+  return `<thead><tr><th class="col-article">Article</th><th class="col-type">Type</th><th class="col-sorts">Sorts</th><th class="col-prix">Prix</th><th class="col-stock">Stock</th><th class="col-qty">Qté</th><th class="col-action"></th>${context.isGM ? '<th class="col-mj">MJ</th>' : ""}</tr></thead>`;
 }
 
-function renderFlatTable(ctx, rows) {
-  return `<div class="add2e-vendor-scroll"><table class="add2e-vendor-table">${tableHeader(ctx)}<tbody>${rows}</tbody></table></div>`;
+function renderFlatTable(context, rows) {
+  return `<div class="add2e-vendor-scroll"><table class="add2e-vendor-table">${tableHeader(context)}<tbody>${rows}</tbody></table></div>`;
 }
 
-function renderBazaarAccordion(ctx) {
+function renderBazaarAccordion(context) {
   const groups = new Map();
-  for (const item of ctx.items) {
+  for (const item of context.items) {
     if (!isBazaarItem(item)) continue;
-    const use = usage(ctx.buyer, item);
-    if (!itemVisibleForContext(item, ctx, use)) continue;
+    const use = usage(context.buyer, item);
+    if (!itemVisibleForContext(item, context, use)) continue;
     const section = bazaarSection(item);
     if (!groups.has(section)) groups.set(section, []);
     groups.get(section).push({ item, use });
@@ -332,8 +327,8 @@ function renderBazaarAccordion(ctx) {
   if (!sections.length) return '<div class="add2e-vendor-scroll"><p class="a2e-muted">Aucun article dans le bazard.</p></div>';
   return `<div class="add2e-vendor-scroll add2e-vendor-bazaar-list">${sections.map(([section, entries]) => {
     entries.sort((left, right) => String(canonicalItemName(left.item)).localeCompare(String(canonicalItemName(right.item)), "fr"));
-    const rows = entries.map(entry => rowHtml(entry.item, ctx, entry.use, true)).join("");
-    return `<details class="add2e-vendor-bazaar-section"><summary><span>${esc(section)}</span><strong>${entries.length}</strong></summary><table class="add2e-vendor-table">${tableHeader(ctx)}<tbody>${rows}</tbody></table></details>`;
+    const rows = entries.map(entry => rowHtml(entry.item, context, entry.use, true)).join("");
+    return `<details class="add2e-vendor-bazaar-section"><summary><span>${esc(section)}</span><strong>${entries.length}</strong></summary><table class="add2e-vendor-table">${tableHeader(context)}<tbody>${rows}</tbody></table></details>`;
   }).join("")}</div>`;
 }
 
@@ -344,10 +339,13 @@ function vendorStyle() {
 async function confirmPlayerBuy(item, qty) {
   const DialogV2 = foundry?.applications?.api?.DialogV2;
   const total = formatMoney(priceCopper(item) * qty);
-  diag("PLAYER_CONFIRM_OPEN", { item: item?.name, itemId: item?.id, qty, total });
-  const ok = await (DialogV2?.confirm?.({ window: { title: "Confirmer l’achat" }, content: `<p>Acheter <b>${qty} × ${esc(canonicalItemName(item))}</b> pour <b>${total}</b> ?</p>`, yes: { label: "Acheter" }, no: { label: "Annuler" }, modal: true }) ?? false);
-  diag("PLAYER_CONFIRM_CLOSE", { item: item?.name, itemId: item?.id, qty, ok });
-  return ok;
+  return DialogV2?.confirm?.({
+    window: { title: "Confirmer l’achat" },
+    content: `<p>Acheter <b>${qty} × ${esc(canonicalItemName(item))}</b> pour <b>${total}</b> ?</p>`,
+    yes: { label: "Acheter" },
+    no: { label: "Annuler" },
+    modal: true
+  }) ?? false;
 }
 
 class Add2eMerchantApp extends foundry.applications.api.ApplicationV2 {
@@ -362,7 +360,6 @@ class Add2eMerchantApp extends foundry.applications.api.ApplicationV2 {
   }
 
   get title() { return `${this.vendor?.name ?? "Marchand"}${this.buyer ? ` — ${this.buyer.name}` : ""}`; }
-
   stock() { return collapseCanonicalStock(Array.from(this.vendor?.items ?? []).filter(isStockItem)); }
 
   async _prepareContext() {
@@ -370,23 +367,27 @@ class Add2eMerchantApp extends foundry.applications.api.ApplicationV2 {
     return { vendor: this.vendor, buyer: this.buyer, items: this.stock(), isGM: game.user?.isGM === true, tab: this.tab, search: this.search };
   }
 
-  async _renderHTML(ctx) {
-    if (ctx.tab === "equipment") ctx.tab = "bazaar";
+  async _renderHTML(context) {
+    if (context.tab === "equipment") context.tab = "bazaar";
     let prepCount = 0;
     let knownCount = 0;
-    const computed = ctx.items.map(item => ({ item, use: usage(ctx.buyer, item) }));
+    const computed = context.items.map(item => ({ item, use: usage(context.buyer, item) }));
     for (const entry of computed) {
       if (entry.use.prep > 0) prepCount += 1;
       if (entry.use.known > 0) knownCount += 1;
     }
     const nav = [["all", "Tous"], ["prepared", `Mémorisés (${prepCount})`], ["known", `Connus (${knownCount})`], ["components", "Composants"], ["projectiles", "Projectiles"], ["bazaar", "Bazard"]]
-      .map(([id, label]) => `<button data-tab="${id}" ${ctx.tab === id ? "style='outline:2px solid #fff'" : ""}>${label}</button>`).join("");
-    const visibleRows = computed.filter(({ item, use }) => ctx.tab !== "bazaar" && itemVisibleForContext(item, ctx, use)).map(({ item, use }) => rowHtml(item, ctx, use, true)).join("");
-    const list = ctx.tab === "bazaar" ? renderBazaarAccordion(ctx) : renderFlatTable(ctx, visibleRows || `<tr><td colspan="${ctx.isGM ? 8 : 7}" class="a2e-muted">Aucun article.</td></tr>`);
-    const buyer = ctx.isGM ? `<select class="buyer">${buyerOptions(ctx.buyer?.id)}</select>` : `<b>${esc(ctx.buyer?.name ?? "aucun")}</b>`;
-    const restock = ctx.isGM ? '<i class="fas fa-rotate add2e-vendor-toolbar-icon" data-action="restock" role="button" tabindex="0" title="Restock global" aria-label="Restock global"></i>' : "";
+      .map(([id, label]) => `<button data-tab="${id}" ${context.tab === id ? "style='outline:2px solid #fff'" : ""}>${label}</button>`).join("");
+    const visibleRows = computed
+      .filter(({ item, use }) => context.tab !== "bazaar" && itemVisibleForContext(item, context, use))
+      .map(({ item, use }) => rowHtml(item, context, use, true)).join("");
+    const list = context.tab === "bazaar"
+      ? renderBazaarAccordion(context)
+      : renderFlatTable(context, visibleRows || `<tr><td colspan="${context.isGM ? 8 : 7}" class="a2e-muted">Aucun article.</td></tr>`);
+    const buyer = context.isGM ? `<select class="buyer">${buyerOptions(context.buyer?.id)}</select>` : `<b>${esc(context.buyer?.name ?? "aucun")}</b>`;
+    const restock = context.isGM ? '<i class="fas fa-rotate add2e-vendor-toolbar-icon" data-action="restock" role="button" tabindex="0" title="Restock global" aria-label="Restock global"></i>' : "";
     const div = document.createElement("section");
-    div.innerHTML = `${vendorStyle()}<p><span>Acheteur :</span> ${buyer} <strong>${ctx.buyer ? esc(formatMoney(getMoney(ctx.buyer))) : ""}</strong></p><div>${nav}${restock}</div><input class="search" value="${esc(ctx.search)}" placeholder="Recherche">${list}`;
+    div.innerHTML = `${vendorStyle()}<p><span>Acheteur :</span> ${buyer} <strong>${context.buyer ? esc(formatMoney(getMoney(context.buyer))) : ""}</strong></p><div>${nav}${restock}</div><input class="search" value="${esc(context.search)}" placeholder="Recherche">${list}`;
     return div;
   }
 
@@ -395,6 +396,7 @@ class Add2eMerchantApp extends foundry.applications.api.ApplicationV2 {
   async _onRender(context, options) {
     await super._onRender?.(context, options);
     const root = this.element;
+    if (!root?.querySelector) return;
     root.querySelector(".buyer")?.addEventListener("change", event => { this.buyer = game.actors.get(event.currentTarget.value) ?? this.buyer; this.render({ force: true }); });
     root.querySelector(".search")?.addEventListener("input", event => { this.search = event.currentTarget.value ?? ""; this.render({ force: true }); });
     root.querySelectorAll("button[data-tab]").forEach(button => button.addEventListener("click", event => { this.tab = event.currentTarget.dataset.tab; this.render({ force: true }); }));
@@ -403,33 +405,56 @@ class Add2eMerchantApp extends foundry.applications.api.ApplicationV2 {
 
   async playerBuy(item, qty) {
     qty = Math.max(1, Math.floor(Number(qty) || 1));
-    diag("PLAYER_BUY_ENTER", { vendor: this.vendor?.name, vendorId: this.vendor?.id, buyer: this.buyer?.name, buyerId: this.buyer?.id, buyerUuid: this.buyer?.uuid, item: item?.name, itemId: item?.id, qty, stock: quantity(item) });
     if (!this.vendor || !this.buyer || !item) return false;
     if (quantity(item) < qty) return alertBox("Stock insuffisant", `${canonicalItemName(item)} : stock disponible ${quantity(item)}.`).then(() => false);
     if (!await confirmPlayerBuy(item, qty)) return false;
-    const requestId = foundry.utils.randomID();
-    diag("PLAYER_BUY_EMIT", { socketType: ADD2E_VENDOR_PLAYER_BUY, requestId, vendorId: this.vendor.id, buyerId: this.buyer.id, buyerUuid: this.buyer.uuid, itemId: item.id, qty });
-    game.socket?.emit?.("system.add2e", { type: ADD2E_VENDOR_PLAYER_BUY, requestId, userId: game.user.id, vendorId: this.vendor.id, buyerId: this.buyer.id, buyerUuid: this.buyer.uuid, itemId: item.id, quantity: qty });
+    game.socket?.emit?.("system.add2e", {
+      type: ADD2E_VENDOR_PLAYER_BUY,
+      requestId: foundry.utils.randomID(),
+      userId: game.user.id,
+      vendorId: this.vendor.id,
+      buyerId: this.buyer.id,
+      buyerUuid: this.buyer.uuid,
+      itemId: item.id,
+      quantity: qty
+    });
     return true;
   }
 
   async click(event) {
-    if (event.currentTarget?.dataset?.disabled === "1") return;
-    const action = event.currentTarget.dataset.action;
-    diag("CLICK", { action, isGM: game.user?.isGM });
-    if (action === "restock") { await restockAll(this.vendor); return this.render({ force: true }); }
-    const row = event.currentTarget.closest("tr");
-    const item = this.vendor.items.get(row?.dataset.id);
-    if (action === "stock") { await setStock(item, row.querySelector(".s")?.value); return this.render({ force: true }); }
+    const target = event.currentTarget;
+    if (target?.dataset?.disabled === "1") return;
+    const action = target?.dataset?.action;
+    if (!action) return;
+    if (action === "restock") {
+      await restockAll(this.vendor);
+      return this.render({ force: true });
+    }
+
+    const row = target.closest("tr[data-id]");
+    const itemId = row?.dataset?.id;
+    const item = itemId ? this.vendor?.items?.get(itemId) : null;
+    if (!row || !item) return;
+
+    if (action === "stock") {
+      const stockInput = row.querySelector(".s");
+      if (!stockInput) return;
+      await setStock(item, stockInput.value);
+      return this.render({ force: true });
+    }
     if (action === "assign") return this.assign(item);
+    if (action !== "buy") return;
+
     normalizeShopCurrency();
-    if (!game.user?.isGM) return this.playerBuy(item, row.querySelector(".q")?.value);
-    diag("GM_BUY_DIRECT", { vendorId: this.vendor?.id, buyerId: this.buyer?.id, itemId: item?.id, quantity: row.querySelector(".q")?.value });
-    const ok = await buy({ vendor: this.vendor, buyer: this.buyer, item, quantity: row.querySelector(".q")?.value });
+    const quantityInput = row.querySelector(".q");
+    const requestedQuantity = quantityInput?.value;
+    if (!game.user?.isGM) return this.playerBuy(item, requestedQuantity);
+    const ok = await buy({ vendor: this.vendor, buyer: this.buyer, item, quantity: requestedQuantity });
     if (ok) this.render({ force: true });
   }
 
   async assign(item) {
+    if (!item) return;
     if (!this.buyer) return alertBox("Aucun acteur", "Choisis d’abord un acteur acheteur présent sur la scène.");
     const result = await assignItemToToken({ vendor: this.vendor, item, token: { actor: this.buyer, name: this.buyer.name }, quantity: 1 });
     result.ok ? ui.notifications.info(result.message) : ui.notifications.warn(result.message);
@@ -485,7 +510,7 @@ export function bindAllVendorTokens() {
       token.interactive = true;
       token.on?.("pointertap", event => { event?.stopPropagation?.(); openFromToken(token); });
       token.on?.("pointerup", event => { event?.stopPropagation?.(); openFromToken(token); });
-    } catch (_error) {}
+    } catch (_) {}
   }
 }
 
