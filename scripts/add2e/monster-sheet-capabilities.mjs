@@ -1,9 +1,9 @@
 // ADD2E — Affichage détaillé des monstres
-// Version : 2026-07-01-v4-monster-actorsheetv2-view-delegates
+// Version : 2026-07-01-v5-monster-ranged-projectile-bridge
 // But : séparer les capacités informatives MJ des effets système activables.
 // Foundry V13/V14/V15 : en V14, les feuilles d'acteur ApplicationV2 doivent être raccordées via ActorSheetV2/DocumentSheetV2.
 
-const ADD2E_MONSTER_CAPABILITIES_VERSION = "2026-07-01-v4-monster-actorsheetv2-view-delegates";
+const ADD2E_MONSTER_CAPABILITIES_VERSION = "2026-07-01-v5-monster-ranged-projectile-bridge";
 globalThis.ADD2E_MONSTER_CAPABILITIES_VERSION = ADD2E_MONSTER_CAPABILITIES_VERSION;
 
 function esc(value) {
@@ -164,6 +164,51 @@ function buildDetails(actor) {
     </section>`;
 }
 
+function isMonsterActor(actor) {
+  return [actor?.type, actor?._source?.type, actor?.baseActor?.type, actor?.document?.type]
+    .some(type => norm(type) === "monster");
+}
+
+function isProjectilePropulsedWeapon(weapon) {
+  return globalThis.add2eGetWeaponUsageProfile?.(weapon)?.isProjectilePropulse === true;
+}
+
+function monsterVirtualProjectile(weapon) {
+  const weaponId = String(weapon?.id ?? weapon?._id ?? "weapon").replace(/[^a-zA-Z0-9_-]/g, "") || "weapon";
+  return {
+    id: `add2e-monster-projectile-${weaponId}`,
+    name: "Munitions de monstre",
+    type: "objet",
+    img: weapon?.img ?? "icons/svg/target.svg",
+    system: {
+      equipee: true,
+      equipped: true,
+      quantite: 1,
+      quantity: 1,
+      categorie: "munition",
+      munitionType: "virtuel"
+    },
+    flags: { add2e: { monsterVirtualProjectile: true } }
+  };
+}
+
+function installMonsterRangedProjectileBridge() {
+  const current = globalThis.add2eGetEquippedProjectileForWeapon;
+  if (typeof current !== "function") return false;
+  if (current.__add2eMonsterRangedProjectileBridge === true) return true;
+
+  const original = current;
+  const wrapped = function add2eGetEquippedProjectileForMonsterRangedAttack(actor, weapon) {
+    if (isMonsterActor(actor) && isProjectilePropulsedWeapon(weapon)) return monsterVirtualProjectile(weapon);
+    return original.call(this, actor, weapon);
+  };
+
+  wrapped.__add2eMonsterRangedProjectileBridge = true;
+  wrapped.__add2eMonsterRangedProjectileOriginal = original;
+  globalThis.add2eGetEquippedProjectileForWeapon = wrapped;
+  return true;
+}
+
 function installMonsterActorSheetFallback(actor) {
   if (!actor || actor.type !== "monster") return false;
   if (actor.__add2eMonsterSheetFallback === ADD2E_MONSTER_CAPABILITIES_VERSION) return false;
@@ -291,9 +336,11 @@ Hooks.on("renderAdd2eMonsterSheet", (app, html, data) => {
 });
 
 Hooks.once("ready", () => {
+  installMonsterRangedProjectileBridge();
   registerMonsterActorSheetV2Wrapper();
   installMonsterActorSheetFallbacks();
   setTimeout(() => {
+    installMonsterRangedProjectileBridge();
     registerMonsterActorSheetV2Wrapper();
     installMonsterActorSheetFallbacks();
   }, 500);
