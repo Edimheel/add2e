@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — Gestion du temps hors combat.
-// Version : 2026-06-18-world-time-any-gm-v1
+// Version : 2026-07-01-world-time-normalize-before-advance-v2
 //
 // Rôle :
 // - Avancer le temps de jeu hors combat par commandes MJ.
@@ -17,12 +17,13 @@ import {
   add2eRegisterTimeEngineApi,
   add2eTimeAdvanceTick,
   add2eTimeCurrentTick,
+  add2eTimeNormalizeActorEffects,
   add2eTimeToRounds
 } from "./19a-time-engine.mjs";
 import { add2eExpireTemporaryEffectsForActor } from "./18c-active-effects-expiration.mjs";
 import { add2eSyncActorVitalStatus, add2eVitalRegisterStatusEffects } from "./18b-vital-status-sync.mjs";
 
-export const ADD2E_WORLD_TIME_ENGINE_VERSION = "2026-06-18-world-time-any-gm-v1";
+export const ADD2E_WORLD_TIME_ENGINE_VERSION = "2026-07-01-world-time-normalize-before-advance-v2";
 
 const TAG = "[ADD2E][WORLD_TIME]";
 const TOOL_NAME = "add2e-world-time";
@@ -102,6 +103,26 @@ function renderOpenMonsterSheets(actor = null) {
   }
 }
 
+async function normalizeWorldActorEffects(actorRows, currentRound) {
+  let normalized = 0;
+  let skipped = 0;
+  let errors = 0;
+
+  for (const { actor, source } of actorRows) {
+    try {
+      const result = await add2eTimeNormalizeActorEffects(actor, currentRound);
+      normalized += Number(result?.normalized ?? 0);
+      skipped += Number(result?.skipped ?? 0);
+      errors += Number(result?.errors ?? 0);
+    } catch (err) {
+      errors += 1;
+      console.error(`${TAG}[ACTOR_NORMALIZE_FAILED]`, { actor: actor?.name, actorId: actor?.id, actorUuid: actor?.uuid, source, err });
+    }
+  }
+
+  return { actors: actorRows.length, normalized, skipped, errors };
+}
+
 async function notifyAdvance({ before, after, delta, label, reason, expired }) {
   try {
     const gmIds = ChatMessage.getWhisperRecipients?.("GM")?.map(u => u.id).filter(Boolean) ?? [];
@@ -114,7 +135,7 @@ async function notifyAdvance({ before, after, delta, label, reason, expired }) {
   } catch (err) { warn("[CHAT_NOTIFY_FAILED]", { err }); }
 }
 
-export async function add2eWorldTimeExpireAllActors({ reason = "world-time", currentRound = null } = {}) {
+export async function add2eWorldTimeExpireAllActors({ reason = "world-time", currentRound = null, normalize = true } = {}) {
   if (!isWorldTimeGM()) return { ok: false, reason: "not-gm", actors: 0, deleted: 0, messages: 0, rows: [] };
   add2eRegisterTimeEngineApi();
   add2eVitalRegisterStatusEffects();
@@ -127,7 +148,7 @@ export async function add2eWorldTimeExpireAllActors({ reason = "world-time", cur
   for (const { actor, source } of actorRows) {
     try {
       const round = currentRound ?? game.combat?.round ?? 0;
-      await game.add2e?.time?.normalizeActorEffects?.(actor, round);
+      if (normalize) await add2eTimeNormalizeActorEffects(actor, round);
       const result = await add2eExpireTemporaryEffectsForActor(actor, currentRound ?? game.combat?.round ?? null);
       await add2eSyncActorVitalStatus(actor, { reason });
       if (actor.type === "monster") renderOpenMonsterSheets(actor);
@@ -162,15 +183,17 @@ export async function add2eWorldTimeAdvance({ value = 1, unit = "round", reason 
   }
 
   const before = add2eTimeCurrentTick();
+  const actorRows = allWorldActors();
+  const normalized = await normalizeWorldActorEffects(actorRows, game.combat?.round ?? 0);
   const advanced = await add2eTimeAdvanceTick(rounds, { reason: reason || `advance-${amount}-${unit}` });
   const after = add2eTimeCurrentTick();
-  const expired = await add2eWorldTimeExpireAllActors({ reason: `world-time:${unit}` });
+  const expired = await add2eWorldTimeExpireAllActors({ reason: `world-time:${unit}`, normalize: false });
   const label = `${amount} ${unitLabel(unit)}${amount > 1 ? "s" : ""}`;
 
   await notifyAdvance({ before, after, delta: rounds, label, reason, expired });
   ui.notifications?.info?.(`Temps ADD2E avancé : ${label} (${rounds} round(s)). Effets expirés : ${expired.deleted ?? 0}.`);
 
-  const result = { ok: true, before, after, delta: rounds, value: amount, unit, label, reason, advanced, expired };
+  const result = { ok: true, before, after, delta: rounds, value: amount, unit, label, reason, normalized, advanced, expired };
   log("[ADVANCE]", result);
   return result;
 }
