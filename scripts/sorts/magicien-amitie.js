@@ -1,6 +1,6 @@
 // ADD2E — onUse Magicien : Amitié
 // Compatible Foundry V13/V14/V15.
-// La zone est une distance de règle et jamais un nombre de cases.
+// La zone est exprimée dans l'unité tactique AD&D du manuel, jamais en cases.
 
 const ADD2E_ONUSE_TAG = "[ADD2E][SORT_ONUSE][MAGICIEN][AMITIE]";
 const ADD2E_ACTOR = typeof actor !== "undefined" ? actor : null;
@@ -18,8 +18,8 @@ const ADD2E_SORT_CONFIG = Object.freeze({
   castingTimeText: "1 segment",
   saveText: "Spécial",
   areaText: "sphère d’un rayon de 1\" + 1\" par niveau",
-  areaUnit: "ft",
-  feetPerAdndInch: 10,
+  areaUnit: "adnd-inch",
+  areaUsage: "area",
   materialText: "craie ou farine blanche, noir de fumée ou suie, vermillon",
   img: "systems/add2e/assets/icones/sorts/magicien-amitie.webp",
   imgFallback: "icons/magic/control/hypnosis-mesmerism-eye.webp"
@@ -76,9 +76,9 @@ function add2eReadNumber(...values) {
 }
 
 function add2eCasterLevel(actorDoc) {
-  const classItem = Array.from(actorDoc?.items ?? []).find(item => {
-    if (!/(classe|class)/.test(add2eNormalize(item?.type))) return false;
-    const label = add2eNormalize(item?.name ?? item?.system?.nom);
+  const classItem = Array.from(actorDoc?.items ?? []).find(entry => {
+    if (!/(classe|class)/.test(add2eNormalize(entry?.type))) return false;
+    const label = add2eNormalize(entry?.name ?? entry?.system?.nom);
     return label === "magicien" || label.includes("magicien");
   }) ?? null;
 
@@ -109,36 +109,28 @@ function add2eGetCasterToken(actorDoc) {
 }
 
 function add2eAreaRadiusInches(level) {
-  // Manuel des joueurs : 1" + 1"/niveau.
+  // Manuel : 1" + 1" par niveau. Ici " est l'unité tactique AD&D.
   return 1 + Math.max(1, Math.floor(Number(level) || 1));
 }
 
-function add2eAreaRadiusFeet(level) {
-  return add2eAreaRadiusInches(level) * ADD2E_SORT_CONFIG.feetPerAdndInch;
-}
-
-function add2eSceneArea(level) {
-  const radiusFeet = add2eAreaRadiusFeet(level);
+function add2eFallbackSceneArea(level) {
+  const sourceDistance = add2eAreaRadiusInches(level);
+  const sourceMeters = sourceDistance * 3;
   const scene = canvas?.scene ?? null;
-  const generic = globalThis.add2eSceneDistance;
-
-  if (typeof generic === "function") {
-    const result = generic({ scene, distance: radiusFeet, unit: ADD2E_SORT_CONFIG.areaUnit });
-    if (Number.isFinite(Number(result?.sceneDistance)) && Number.isFinite(Number(result?.pixels))) return result;
-  }
-
-  const sceneUnits = String(scene?.grid?.units ?? scene?.grid?.unit ?? "ft").toLowerCase();
-  const metric = /^(m|metre|metres|meter|meters)$/.test(sceneUnits);
+  const unit = String(scene?.grid?.units ?? scene?.grid?.unit ?? "ft").trim().toLowerCase();
+  const metric = /^(m|metre|metres|meter|meters)$/.test(unit);
   const sceneUnit = metric ? "m" : "ft";
-  const sceneDistance = metric ? radiusFeet * 0.3048 : radiusFeet;
+  const sceneDistance = metric ? sourceMeters : sourceMeters / 0.3048;
   const gridDistance = Math.max(0.000001, Number(scene?.grid?.distance) || 1);
   const gridSize = Math.max(1, Number(scene?.grid?.size ?? canvas?.grid?.size) || 100);
   const gridCells = sceneDistance / gridDistance;
 
   return {
-    sourceDistance: radiusFeet,
-    sourceUnit: "ft",
-    sourceLabel: `${radiusFeet} pi`,
+    sourceDistance,
+    sourceUnit: "adnd-inch",
+    sourceLabel: `${sourceDistance}\"`,
+    sourceMeters,
+    tactical: { usage: "area", environment: "interior", metersPerInch: 3 },
     sceneDistance,
     sceneUnit,
     sceneLabel: `${Math.round(sceneDistance * 1000) / 1000} ${sceneUnit}`,
@@ -149,6 +141,20 @@ function add2eSceneArea(level) {
   };
 }
 
+function add2eSceneArea(level) {
+  const generic = globalThis.add2eSceneDistance;
+  if (typeof generic === "function") {
+    const area = generic({
+      scene: canvas?.scene ?? null,
+      distance: add2eAreaRadiusInches(level),
+      unit: ADD2E_SORT_CONFIG.areaUnit,
+      usage: ADD2E_SORT_CONFIG.areaUsage
+    });
+    if (Number.isFinite(Number(area?.sceneDistance)) && Number.isFinite(Number(area?.pixels))) return area;
+  }
+  return add2eFallbackSceneArea(level);
+}
+
 function add2eDisplayNumber(value, decimals = 3) {
   const number = Number(value);
   if (!Number.isFinite(number)) return "—";
@@ -157,7 +163,7 @@ function add2eDisplayNumber(value, decimals = 3) {
 
 function add2eAreaRadiusText(level) {
   const area = add2eSceneArea(level);
-  return `${add2eAreaRadiusFeet(level)} pieds (${add2eDisplayNumber(area.sceneDistance)} ${area.sceneUnit} ; ${add2eDisplayNumber(area.gridCells, 2)} case${Math.abs(area.gridCells - 1) < 0.001 ? "" : "s"})`;
+  return `${add2eAreaRadiusInches(level)}\" AD&D (${add2eDisplayNumber(area.sceneDistance)} ${area.sceneUnit} ; ${add2eDisplayNumber(area.gridCells, 2)} case${Math.abs(area.gridCells - 1) < 0.001 ? "" : "s"})`;
 }
 
 function add2eEffectDuration(level) {
@@ -193,7 +199,6 @@ function add2eCanvasEventPosition(event) {
   const original = event?.data?.originalEvent ?? event?.nativeEvent ?? event;
   const rect = canvas?.app?.view?.getBoundingClientRect?.();
   if (!original || !rect) return null;
-
   return {
     x: ((original.clientX - rect.left) / rect.width) * canvas.dimensions.width,
     y: ((original.clientY - rect.top) / rect.height) * canvas.dimensions.height
@@ -207,7 +212,7 @@ function add2eBuildTemplateData(center, level, templateRequestId) {
     user: game.user.id,
     x: Number(center.x),
     y: Number(center.y),
-    // MeasuredTemplate.distance est toujours dans l'unité déclarée par la scène.
+    // La valeur est exprimée dans l'unité choisie pour la scène Foundry.
     distance: area.sceneDistance,
     direction: 0,
     fillColor: "#b36bff",
@@ -217,8 +222,10 @@ function add2eBuildTemplateData(center, level, templateRequestId) {
         spell: ADD2E_SORT_CONFIG.slug,
         spellName: ADD2E_SORT_CONFIG.name,
         templateRequestId,
-        radiusInches: add2eAreaRadiusInches(level),
-        areaRadiusFeet: area.sourceDistance,
+        areaRadiusInches: add2eAreaRadiusInches(level),
+        areaUnit: ADD2E_SORT_CONFIG.areaUnit,
+        areaUsage: ADD2E_SORT_CONFIG.areaUsage,
+        areaRadiusMeters: area.sourceMeters,
         areaRadiusSceneDistance: area.sceneDistance,
         areaRadiusSceneUnit: area.sceneUnit,
         areaRadiusGridCells: area.gridCells,
@@ -255,7 +262,6 @@ function add2eEmitGmOperation(operation, payload) {
 
 async function add2eTryCreateSceneTemplate(templateData, previewTemplate, templateRequestId) {
   if (!canvas?.scene?.createEmbeddedDocuments) return { persisted: false, templateId: null, via: "none" };
-
   try {
     const created = await canvas.scene.createEmbeddedDocuments("MeasuredTemplate", [add2eClone(templateData)]);
     previewTemplate?.destroy?.({ children: true });
@@ -316,14 +322,12 @@ async function add2eChooseNativeTemplateZone(level, casterToken, templateRequest
   return new Promise(resolve => {
     let done = false;
     let current = { ...casterCenter };
-
     const cleanup = () => {
       canvas.stage.off("mousemove", onMove);
       canvas.stage.off("mousedown", onConfirm);
       canvas.stage.off("rightdown", onCancel);
       if (view?.style) view.style.cursor = previousCursor;
     };
-
     const finish = async value => {
       if (done) return;
       done = true;
@@ -333,7 +337,6 @@ async function add2eChooseNativeTemplateZone(level, casterToken, templateRequest
         resolve(null);
         return;
       }
-
       const templateData = add2eBuildTemplateData(value, level, templateRequestId);
       const creation = await add2eTryCreateSceneTemplate(templateData, previewTemplate, templateRequestId);
       resolve({
@@ -347,14 +350,12 @@ async function add2eChooseNativeTemplateZone(level, casterToken, templateRequest
         templateVia: creation.via
       });
     };
-
     const refresh = position => {
       if (!position) return;
       current = { x: Number(position.x), y: Number(position.y) };
       previewTemplate?.document?.updateSource?.({ x: current.x, y: current.y });
       previewTemplate?.refresh?.();
     };
-
     const onMove = event => {
       event?.stopPropagation?.();
       refresh(add2eCanvasEventPosition(event));
@@ -423,7 +424,6 @@ function add2eReadSaveVsSpells(actorDoc) {
     if (values.length >= 5) return values[4];
     if (values.length) return values.at(-1);
   }
-
   return null;
 }
 
@@ -521,7 +521,9 @@ function add2eBuildTargetEffect({ targetToken, casterActor, choice, level, modif
           casterLevel: level,
           durationRounds: Math.max(1, level),
           areaRadiusInches: add2eAreaRadiusInches(level),
-          areaRadiusFeet: area.sourceDistance,
+          areaUnit: ADD2E_SORT_CONFIG.areaUnit,
+          areaUsage: ADD2E_SORT_CONFIG.areaUsage,
+          areaRadiusMeters: area.sourceMeters,
           areaRadiusSceneDistance: area.sceneDistance,
           areaRadiusSceneUnit: area.sceneUnit,
           areaRadiusGridCells: area.gridCells,
@@ -680,8 +682,8 @@ console.log(`${ADD2E_ONUSE_TAG}[START]`, {
   templateVia: zone.templateVia,
   templateRequestId: zone.templateRequestId,
   templateId: zone.templateId,
-  radiusInches: add2eAreaRadiusInches(level),
-  radiusFeet: area.sourceDistance,
+  radiusTacticalInches: add2eAreaRadiusInches(level),
+  radiusMeters: area.sourceMeters,
   radiusSceneDistance: area.sceneDistance,
   radiusSceneUnit: area.sceneUnit,
   radiusGridCells: area.gridCells,
