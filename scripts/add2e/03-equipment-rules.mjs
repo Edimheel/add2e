@@ -1,6 +1,6 @@
 // ============================================================
 // ADD2E — Restrictions équipement génériques par tags harmonisés
-// Version : 2026-06-30-enforce-class-weapon-equipment-v5
+// Version : 2026-07-01-monster-unrestricted-weapons-v6
 // Source principale : Items "classe" embarqués sur l'acteur.
 // Schéma conseillé des tags d'équipement :
 // - arme / armure / bouclier
@@ -10,6 +10,7 @@
 // - équipement : autorisé si au moins une classe l'autorise ;
 // - activités de voleur : test indépendant sur l'armure de corps équipée
 //   et le tag exact type_armure:cuir.
+// Les acteurs monster ne sont pas soumis aux restrictions de classe.
 // ============================================================
 
 function add2eDeepClone(value) {
@@ -88,6 +89,10 @@ function add2eGetActorClassItems(actor) {
 
 function add2eActorIsMulticlass(actor) {
   return actor?.system?.multiclasse?.enabled === true || add2eGetActorClassItems(actor).length > 1;
+}
+
+function add2eActorBypassesClassEquipmentRestrictions(actor) {
+  return String(actor?.type ?? "").toLowerCase() === "monster";
 }
 
 function add2eGetActorClassItem(actor) {
@@ -255,6 +260,10 @@ function add2eCheckEquipmentAllowedForClassSystem(classe, item, kind) {
 }
 
 function add2eCheckEquipmentAllowedForClass(actor, item, kind) {
+  if (add2eActorBypassesClassEquipmentRestrictions(actor)) {
+    return { ok: true, reason: "monster-unrestricted", actorType: "monster", kind, classe: null, classeLabel: null, mode: "monster-bypass" };
+  }
+
   const classItems = add2eGetActorClassItems(actor);
   if (add2eActorIsMulticlass(actor) && classItems.length > 1) {
     const checks = classItems.map(cls => add2eCheckEquipmentAllowedForClassSystem(add2eClassSystemFromItem(cls, actor), item, kind));
@@ -271,6 +280,8 @@ function add2eIsWeaponItem(item) {
 }
 
 function add2eGetForbiddenEquippedWeapons(actor) {
+  if (add2eActorBypassesClassEquipmentRestrictions(actor)) return [];
+
   const failures = [];
   for (const item of actor?.items ?? []) {
     if (!add2eIsWeaponItem(item) || item?.system?.equipee !== true) continue;
@@ -320,7 +331,7 @@ function add2eInstallWeaponClassEquipmentGuard() {
     if (!add2eIsWeaponItem(item) || add2eGetPendingEquippedState(changes) !== true) return;
 
     const actor = item.parent;
-    if (!actor) return;
+    if (!actor || add2eActorBypassesClassEquipmentRestrictions(actor)) return;
     const check = add2eCheckEquipmentAllowedForClass(actor, item, "arme");
     if (check.ok) return;
 
