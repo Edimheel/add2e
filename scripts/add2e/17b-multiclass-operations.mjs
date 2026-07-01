@@ -45,17 +45,31 @@ function itemIds(items) {
   return (items ?? []).map(item => item?.id).filter(Boolean);
 }
 
+function classNameKeys(classDoc) {
+  const system = classDoc?.system ?? {};
+  return [
+    classDoc?.name,
+    system.nom,
+    system.name,
+    system.label,
+    system.slug,
+    classSlug(classDoc)
+  ].map(norm).filter(Boolean);
+}
+
 function sourceClassKeys(classDocs) {
   const ids = new Set();
   const uuids = new Set();
   const slugs = new Set();
+  const names = new Set();
   for (const doc of classDocs ?? []) {
     if (doc?.id) ids.add(String(doc.id));
     if (doc?.uuid) uuids.add(String(doc.uuid));
     const slug = classSlug(doc);
     if (slug) slugs.add(slug);
+    for (const name of classNameKeys(doc)) names.add(name);
   }
-  return { ids, uuids, slugs };
+  return { ids, uuids, slugs, names };
 }
 
 function itemBelongsToRemovedClass(item, keys) {
@@ -78,14 +92,89 @@ function itemBelongsToRemovedClass(item, keys) {
   return (sourceId && keys.ids.has(sourceId)) || (sourceSlug && keys.slugs.has(sourceSlug));
 }
 
+function effectClassLabels(effect) {
+  const flags = effect?.flags?.add2e ?? {};
+  return [
+    effect?.name,
+    effect?.label,
+    flags.autoGrantedByClass,
+    flags.sourceClassName,
+    flags.sourceItemName,
+    flags.sourceClass,
+    flags.sourceClasse,
+    flags.className,
+    flags.classe
+  ].map(norm).filter(Boolean);
+}
+
+function effectReferencesClassName(effect, keys) {
+  const names = effectClassLabels(effect);
+  return names.some(value => keys.names.has(value)
+    || [...keys.names].some(name => value.startsWith(`${name}_`) || value.endsWith(`_${name}`) || value.includes(`_${name}_`)));
+}
+
 function effectBelongsToRemovedClass(effect, keys) {
   const flags = effect?.flags?.add2e ?? {};
   const origin = String(effect?.origin ?? "");
-  const sourceId = String(flags.sourceItemId ?? flags.sourceClassId ?? flags.classId ?? "");
-  const sourceSlug = norm(flags.sourceClasse ?? flags.sourceClass ?? flags.classSlug ?? flags.classe ?? "");
-  return [...keys.uuids].some(uuid => uuid && origin === uuid)
+  const sourceId = String(
+    flags.sourceItemId
+    ?? flags.sourceClassId
+    ?? flags.classId
+    ?? flags.sourceId
+    ?? ""
+  );
+  const sourceSlug = norm(
+    flags.sourceClasse
+    ?? flags.sourceClass
+    ?? flags.classSlug
+    ?? flags.classe
+    ?? flags.className
+    ?? ""
+  );
+  const sourceType = norm(flags.sourceType ?? flags.source_type ?? flags.type ?? flags.kind ?? "");
+  const exactLabel = effectClassLabels(effect).some(value => keys.names.has(value));
+  const classTaggedLabel = ["classe", "class"].includes(sourceType) && effectReferencesClassName(effect, keys);
+  const originMatches = [...keys.uuids].some(uuid => uuid && (origin === uuid || origin.startsWith(`${uuid}.`)))
+    || [...keys.ids].some(id => id && (origin.includes(`.Item.${id}.`) || origin.endsWith(`.Item.${id}`)));
+  return originMatches
     || (sourceId && keys.ids.has(sourceId))
-    || (sourceSlug && keys.slugs.has(sourceSlug));
+    || (sourceSlug && keys.slugs.has(sourceSlug))
+    || exactLabel
+    || classTaggedLabel;
+}
+
+function isMissingEmbeddedDocumentError(error) {
+  return /ActiveEffect .* does not exist|Item .* does not exist|undefined id .* does not exist|does not exist in the EmbeddedCollection/i.test(String(error?.message ?? error ?? ""));
+}
+
+function embeddedCollection(actor, documentName) {
+  return documentName === "ActiveEffect" ? actor?.effects : actor?.items;
+}
+
+async function deleteLiveEmbeddedDocuments(actor, documentName, ids, options = {}) {
+  const requested = [...new Set((ids ?? []).map(id => String(id ?? "").trim()).filter(Boolean))];
+  const collection = embeddedCollection(actor, documentName);
+  const existing = requested.filter(id => collection?.has?.(id));
+  if (!existing.length) return 0;
+
+  try {
+    await actor.deleteEmbeddedDocuments(documentName, existing, options);
+    return existing.length;
+  } catch (error) {
+    if (!isMissingEmbeddedDocumentError(error)) throw error;
+  }
+
+  let deleted = 0;
+  for (const id of existing) {
+    if (!embeddedCollection(actor, documentName)?.has?.(id)) continue;
+    try {
+      await actor.deleteEmbeddedDocuments(documentName, [id], options);
+      deleted += 1;
+    } catch (error) {
+      if (!isMissingEmbeddedDocumentError(error)) throw error;
+    }
+  }
+  return deleted;
 }
 
 function spellListValues(value) {
@@ -215,21 +304,17 @@ async function purgeClassBoundContent(actor, classDocs, reason) {
     .map(effect => effect.id)
     .filter(Boolean);
 
-  if (effectIds.length) {
-    await actor.deleteEmbeddedDocuments("ActiveEffect", effectIds, {
-      [INTERNAL]: true,
-      add2eInternal: true,
-      add2eReason: reason
-    });
-  }
-  if (spellIds.length) {
-    await actor.deleteEmbeddedDocuments("Item", spellIds, {
-      [INTERNAL]: true,
-      add2eInternal: true,
-      add2eReason: reason
-    });
-  }
-  return { spells: spellIds.length, effects: effectIds.length, arcaneLists: [...purgeLists] };
+  const effectCount = await deleteLiveEmbeddedDocuments(actor, "ActiveEffect", effectIds, {
+    [INTERNAL]: true,
+    add2eInternal: true,
+    add2eReason: reason
+  });
+  const spellCount = await deleteLiveEmbeddedDocuments(actor, "Item", spellIds, {
+    [INTERNAL]: true,
+    add2eInternal: true,
+    add2eReason: reason
+  });
+  return { spells: spellCount, effects: effectCount, arcaneLists: [...purgeLists] };
 }
 
 function normalizeProgression(classDoc, state, raceData) {
@@ -361,13 +446,11 @@ export async function cleanupAfterMonoclassReplace(actor, keepClassDoc, keepStat
 
   const unwanted = classItems(actor).filter(doc => doc.id !== keepClassDoc.id);
   await purgeClassBoundContent(actor, unwanted, "multiclass-monoclass-purge");
-  if (unwanted.length) {
-    await actor.deleteEmbeddedDocuments("Item", itemIds(unwanted), {
-      [INTERNAL]: true,
-      add2eInternal: true,
-      add2eReason: "multiclass-monoclass-delete-classes"
-    });
-  }
+  await deleteLiveEmbeddedDocuments(actor, "Item", itemIds(unwanted), {
+    [INTERNAL]: true,
+    add2eInternal: true,
+    add2eReason: "multiclass-monoclass-delete-classes"
+  });
 
   const payload = {
     ...monoClassCleanupPayload(),
@@ -527,7 +610,7 @@ export async function replaceClassInMulticlass(actor, option, sheet = null) {
 
   await applyRaceData(actor, option.raceData, sheet);
   await purgeClassBoundContent(actor, [replaced], "multiclass-replace-purge-class-content");
-  await actor.deleteEmbeddedDocuments("Item", [replaced.id], {
+  await deleteLiveEmbeddedDocuments(actor, "Item", [replaced.id], {
     [INTERNAL]: true,
     add2eInternal: true,
     add2eReason: "multiclass-replace-delete-class"
@@ -557,62 +640,3 @@ export async function replaceClassInMulticlass(actor, option, sheet = null) {
   ui.notifications.info(`Classe remplacée : ${replaced.name} → ${created.name}.`);
   return true;
 }
-
-export async function applyClassAsMonoclass(actor, optionOrItemData, sheet = null) {
-  const itemData = optionOrItemData?.classData ?? optionOrItemData;
-  const raceData = optionOrItemData?.raceData ?? systemRace(actor);
-  if (!actor || !itemData || !classPrerequisitesOk(actor, itemData, raceData, { notify: true })) return false;
-
-  await applyRaceData(actor, raceData, sheet);
-  const wantedSlug = classSlug(itemData);
-  const existing = classItems(actor);
-  const existingTarget = existing.find(doc => classSlug(doc) === wantedSlug) ?? null;
-  let keep = existingTarget;
-  let state = existingTarget ? canonicalClassState(actor, existingTarget) : null;
-
-  if (existing.length > 1 && !(await ensureCanonicalMulticlassState(actor))) return false;
-  if (!keep) {
-    const data = cloneItemData(itemData);
-    data.type = "classe";
-    data.system = data.system ?? {};
-    data.system.niveau = Math.max(1, Math.floor(num(actor.system?.niveau, 1)));
-    data.system.xp = Math.max(0, Math.floor(num(actor.system?.xp, 0)));
-    const [created] = await actor.createEmbeddedDocuments("Item", [data], {
-      [INTERNAL]: true,
-      add2eInternal: true,
-      add2eReason: "multiclass-monoclass-create-class"
-    });
-    if (!created) return false;
-    keep = created;
-    state = canonicalClassState(actor, keep);
-  }
-
-  if (!state?.hasLevel || !state?.hasXp) state = monoClassStateFromActor(actor, keep);
-  return cleanupAfterMonoclassReplace(actor, keep, state, sheet);
-}
-
-export async function applyRaceForMulticlass(actor, raceData, sheet = null) {
-  if (!actor || classItems(actor).length <= 1) return false;
-  const docs = classItems(actor);
-  const allowed = docs.every(doc => raceCompatibleForMulticlass(actor, doc, raceData));
-  if (!allowed) {
-    await dialogAlert(
-      "ADD2E — Race incompatible",
-      `<p>La race <b>${itemLabel(raceData, "Race")}</b> n'est pas compatible avec le multiclassage actuel.</p>`
-    );
-    return true;
-  }
-  if (!(await ensureCanonicalMulticlassState(actor))) return false;
-  await applyRaceData(actor, raceData, sheet);
-  await refreshMulticlassSummary(actor, "multiclass-race-refresh");
-  sheet?.render?.(false);
-  return true;
-}
-
-export async function recalcActor(actor) {
-  if (!actor || actor.type !== "personnage" || classItems(actor).length <= 1) return null;
-  if (!(await ensureCanonicalMulticlassState(actor))) return null;
-  return refreshMulticlassSummary(actor, "multiclass-item-progression-recalc");
-}
-
-export { currentRaceOrCompatibleAlternatives };
