@@ -7,9 +7,9 @@ const C = Object.freeze({
   name: "Aura magique de Nystul", slug: "aura_magique_de_nystul", level: 1,
   school: "Illusion/Fantasme", range: "au toucher", duration: "1 jour par niveau",
   casting: "1 round", save: "spécial", area: "un objet de 50 po maximum par niveau",
-  material: "un petit morceau de soie",
-  img: "systems/add2e/assets/icones/sorts/magicien-aura-magique-de-nystul.svg"
+  material: "un petit morceau de soie"
 });
+const spellImg = () => String(I?.img ?? "").trim() || "icons/svg/aura.svg";
 const clone = v => foundry?.utils?.deepClone?.(v) ?? JSON.parse(JSON.stringify(v));
 const esc = v => { const d = document.createElement("div"); d.innerText = String(v ?? ""); return d.innerHTML; };
 const norm = v => String(v ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "").replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
@@ -73,7 +73,7 @@ async function choose(actorDoc, level) {
 function effectData(choice, level) {
   const days = Math.max(1, level), itemDoc = choice.item, itemId = itemDoc?.id ?? null;
   return {
-    name: `Aura magique illusoire — ${choice.objectName}`, img: C.img, disabled: false, transfer: false, type: "base", system: {}, changes: [], origin: I?.uuid ?? null,
+    name: `Aura magique illusoire — ${choice.objectName}`, img: spellImg(), disabled: false, transfer: false, type: "base", system: {}, changes: [], origin: I?.uuid ?? null,
     duration: { seconds: days * 86400, startTime: game.time?.worldTime ?? null, startRound: game.combat?.round ?? null, combat: game.combat?.id ?? null },
     description: `${choice.objectName} paraît magique à une détection. Le détenteur peut découvrir la supercherie avec un jet de protection contre les sorts lorsqu'il tient l'objet.`,
     flags: { add2e: {
@@ -96,7 +96,7 @@ async function apply(choice, data) {
 }
 async function chat(choice, level, replaced) {
   const tokenDoc = casterToken(A), casterName = A?.name ?? tokenDoc?.name ?? "Magicien", casterImg = tokenDoc?.document?.texture?.src ?? A?.img ?? "icons/svg/mystery-man.svg", days = Math.max(1, level);
-  await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor: A, token: tokenDoc }), content: `<div class="add2e-chat-card add2e-magicien-sort add2e-sort-aura-nystul" style="border:1px solid #8e63c7;border-radius:8px;overflow:hidden;background:#f6f0ff;color:#2d2144;font-family:var(--font-primary)"><div style="display:flex;align-items:center;gap:8px;background:#5b3f8c;color:#fff;padding:7px 9px"><img src="${esc(casterImg)}" style="width:42px;height:42px;object-fit:cover;border-radius:50%;border:2px solid #d8c3ff;background:#fff"><div style="flex:1"><b>${esc(casterName)}</b><div style="font-size:12px;font-weight:700">lance ${esc(C.name)}</div></div><div style="font-weight:800;font-size:12px">Magicien niv. ${level}</div><img src="${esc(C.img)}" style="width:34px;height:34px;object-fit:cover;border-radius:3px;border:1px solid #d8c3ff;background:#fff"></div><div style="padding:9px 10px"><div style="border:1px solid #8e63c7;border-radius:6px;background:#fffaff;padding:8px"><div style="color:#6c31b5;font-weight:900;text-align:center">AURA ILLUSOIRE</div><p><b>${esc(choice.objectName)}</b> paraît désormais magique à une détection de la magie.</p><p>Sa nature ne peut pas être révélée. Si le détecteur tient lui-même l'objet, un jet de protection contre les sorts réussi découvre la supercherie.</p>${replaced ? "<p>L'ancienne aura illusoire est remplacée.</p>" : ""}<p><b>Durée :</b> ${days} jour${days > 1 ? "s" : ""}.</p></div><details style="margin-top:7px"><summary>Paramètres du sort</summary><p><b>École :</b> ${C.school} — <b>Portée :</b> ${C.range} — <b>Zone :</b> ${C.area}.</p><p><b>Composantes :</b> V, S, M (${C.material}) — <b>Incantation :</b> ${C.casting} — <b>Jet :</b> ${C.save}.</p></details></div></div>` });
+  await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor: A, token: tokenDoc }), content: `<div class="add2e-chat-card add2e-magicien-sort add2e-sort-aura-nystul" style="border:1px solid #8e63c7;border-radius:8px;overflow:hidden;background:#f6f0ff;color:#2d2144;font-family:var(--font-primary)"><div style="display:flex;align-items:center;gap:8px;background:#5b3f8c;color:#fff;padding:7px 9px"><img src="${esc(casterImg)}" style="width:42px;height:42px;object-fit:cover;border-radius:50%;border:2px solid #d8c3ff;background:#fff"><div style="flex:1"><b>${esc(casterName)}</b><div style="font-size:12px;font-weight:700">lance ${esc(C.name)}</div></div><div style="font-weight:800;font-size:12px">Magicien niv. ${level}</div><img src="${esc(spellImg())}" style="width:34px;height:34px;object-fit:cover;border-radius:3px;border:1px solid #d8c3ff;background:#fff"></div><div style="padding:9px 10px"><div style="border:1px solid #8e63c7;border-radius:6px;background:#fffaff;padding:8px"><div style="color:#6c31b5;font-weight:900;text-align:center">AURA ILLUSOIRE</div><p><b>${esc(choice.objectName)}</b> paraît désormais magique à une détection de la magie.</p><p>Sa nature ne peut pas être révélée. Si le détecteur tient lui-même l'objet, un jet de protection contre les sorts réussi découvre la supercherie.</p>${replaced ? "<p>L'ancienne aura illusoire est remplacée.</p>" : ""}<p><b>Durée :</b> ${days} jour${days > 1 ? "s" : ""}.</p></div><details style="margin-top:7px"><summary>Paramètres du sort</summary><p><b>École :</b> ${C.school} — <b>Portée :</b> ${C.range} — <b>Zone :</b> ${C.area}.</p><p><b>Composantes :</b> V, S, M (${C.material}) — <b>Incantation :</b> ${C.casting} — <b>Jet :</b> ${C.save}.</p></details></div></div>` });
 }
 if (!A) { ui.notifications?.warn?.(`${C.name} : acteur lanceur introuvable.`); return false; }
 const level = casterLevel(A), choice = await choose(A, level);
