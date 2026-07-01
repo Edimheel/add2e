@@ -1,7 +1,7 @@
 // ADD2E — Déduplication des sorts et suppression du champ matériel historique.
 // Compatible Foundry V13 / V14 / V15.
 
-const ADD2E_SPELL_SYNC_DEDUPE_VERSION = "2026-06-26-spell-sync-dedupe-v11-serialized";
+const ADD2E_SPELL_SYNC_DEDUPE_VERSION = "2026-07-01-spell-sync-dedupe-v12-serialized-primary-sync";
 const RUNNING = globalThis.ADD2E_SPELL_SYNC_DEDUPE_RUNNING instanceof Set ? globalThis.ADD2E_SPELL_SYNC_DEDUPE_RUNNING : new Set();
 globalThis.ADD2E_SPELL_SYNC_DEDUPE_VERSION = ADD2E_SPELL_SYNC_DEDUPE_VERSION;
 globalThis.ADD2E_SPELL_SYNC_DEDUPE_RUNNING = RUNNING;
@@ -163,7 +163,13 @@ function installWrapper() {
   const original = globalThis.add2eSyncActorSpellsFromClass;
   if (typeof original !== "function" || original._add2eDedupeWrapped) return typeof original === "function";
   const wrapped = async function add2eSyncActorSpellsFromClassDedupe(actor, classItem, options = {}) {
-    const result = await original(actor, classItem, { ...options, forceCacheRefresh: options.forceCacheRefresh ?? options.mode === "replace" });
+    // La synchronisation principale, la création des familles réversibles et la
+    // déduplication utilisent une file unique par acteur. Sans cela, une famille
+    // pouvait retirer un sort entre le calcul et la suppression de ses IDs.
+    const result = await queue(actor, () => original(actor, classItem, {
+      ...options,
+      forceCacheRefresh: options.forceCacheRefresh ?? options.mode === "replace"
+    }));
     await waitForFamilyExpansion(actor);
     const post = await queue(actor, async () => ({
       dedupe: await removeDuplicates(actor, `sync-${options?.mode ?? "replace"}`),
