@@ -6,7 +6,7 @@
  * - Nettoyage visuel automatique
  */
 
-const ADD2E_MONSTER_SHEET_VERSION = "2026-05-24-monster-sheet-application-v2";
+const ADD2E_MONSTER_SHEET_VERSION = "2026-07-01-monster-unrestricted-weapons-v3";
 globalThis.ADD2E_MONSTER_SHEET_VERSION = ADD2E_MONSTER_SHEET_VERSION;
 
 const { ApplicationV2 } = foundry.applications.api;
@@ -19,12 +19,12 @@ const FIGHTER_SAVES = [
   { level: 1,  saves: [14, 16, 15, 17, 17] },
   { level: 3,  saves: [13, 15, 14, 16, 16] },
   { level: 5,  saves: [11, 13, 12, 13, 14] },
-  { level: 7,  saves: [10, 12, 11, 12, 13] },
-  { level: 9,  saves: [8,  10, 9,  9,  11] },
-  { level: 11, saves: [7,  9,  8,  8,  10] },
-  { level: 13, saves: [5,  7,  6,  5,  8]  },
-  { level: 15, saves: [4,  6,  5,  4,  7]  },
-  { level: 17, saves: [3,  5,  4,  4,  6]  }
+  { level: 7,  saves: [10, 9, 9, 11] },
+  { level: 9,  saves: [8,  10, 9, 9, 11] },
+  { level: 11, saves: [7,  9, 8, 8, 10] },
+  { level: 13, saves: [5,  7, 6, 5, 8]  },
+  { level: 15, saves: [4,  7, 5, 4, 7]  },
+  { level: 17, saves: [3,  6, 5, 4, 7]  }
 ];
 
 const ADD2E_LINKED_PACKS = {
@@ -131,13 +131,11 @@ function __add2eFindWorldItem(name, type) {
 async function __add2eGetPackIndex(packId) {
   if (!packId) return [];
   if (ADD2E_LINKED_INDEX_CACHE.has(packId)) return ADD2E_LINKED_INDEX_CACHE.get(packId);
-
   const pack = game.packs.get(packId);
   if (!pack) {
     ADD2E_LINKED_INDEX_CACHE.set(packId, []);
     return [];
   }
-
   const idx = Array.from(await pack.getIndex({ fields: ["name", "type"] }) ?? []);
   ADD2E_LINKED_INDEX_CACHE.set(packId, idx);
   return idx;
@@ -152,7 +150,6 @@ async function __add2eFindPackItem(name, type, packId) {
   const idx = await __add2eGetPackIndex(packId);
   const entry = idx.find(e => __add2eNormalize(e.name) === wanted && (!e.type || e.type === type))
     || idx.find(e => __add2eNormalize(e.name) === wanted);
-
   if (!entry) return null;
 
   const doc = await pack.getDocument(entry._id);
@@ -538,7 +535,6 @@ export class Add2eMonsterSheet extends ApplicationV2 {
       const index = Number(btn.data("saveIndex"));
       const seuil = parseInt(btn.data("saveVal")) || 20;
       const labels = ["Paralysie / Mort", "Baguettes", "Pétrification", "Souffle", "Sorts"];
-      const label = labels[index] || "Sauvegarde";
       const colors = ["#16a085", "#f39c12", "#8e44ad", "#d35400", "#c0392b"];
       const icons = ["fa-skull-crossbones", "fa-magic", "fa-cubes", "fa-wind", "fa-scroll"];
       const color = colors[index] || "#444";
@@ -686,22 +682,10 @@ export class Add2eMonsterSheet extends ApplicationV2 {
   }
 
   async _onEquipItem(item) {
-    const actor = this.actor;
     const dejaEquipee = item.system.equipee === true;
 
     if (item.type === "arme") {
-      if (dejaEquipee) {
-        await item.update({ "system.equipee": false });
-        return;
-      }
-      if (item.system.deuxMains) {
-        const bouclier = actor.items.find(i => i.type === "armure" && i.system.equipee && i.name.toLowerCase().includes("bouclier"));
-        if (bouclier) {
-          ui.notifications.warn("Impossible : Bouclier équipé.");
-          return;
-        }
-      }
-      await item.update({ "system.equipee": true });
+      await item.update({ "system.equipee": !dejaEquipee });
       return;
     }
 
