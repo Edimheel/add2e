@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — Expiration des effets temporaires.
-// Version : 2026-07-01-active-effects-expiration-linked-groups-v2
+// Version : 2026-07-01-active-effects-expiration-world-time-priority-v3
 // ============================================================================
 
 import { add2eVitalEffectKind } from "./18a-vital-status-core.mjs";
@@ -11,7 +11,7 @@ import {
   add2eTimeRemainingRounds
 } from "./19a-time-engine.mjs";
 
-export const ADD2E_ACTIVE_EFFECTS_EXPIRATION_VERSION = "2026-07-01-active-effects-expiration-linked-groups-v2";
+export const ADD2E_ACTIVE_EFFECTS_EXPIRATION_VERSION = "2026-07-01-active-effects-expiration-world-time-priority-v3";
 
 const LINKED_EFFECT_GROUP_FLAG = "linkedEffectGroup";
 const LINKED_EFFECT_GROUP_HOOKS_FLAG = "ADD2E_LINKED_EFFECT_GROUP_HOOKS_REGISTERED";
@@ -198,31 +198,11 @@ function hasTimedDuration(effect) {
     Number.isFinite(Number(flags.duration?.durationRounds));
 }
 
-function combatRemaining(effect, currentRound) {
-  const duration = effect?.duration ?? {};
-  const totalRounds = numeric(duration.rounds, NaN);
-  const startRound = numeric(duration.startRound, NaN);
-  const round = numeric(currentRound, NaN);
-  if (!Number.isFinite(totalRounds) || totalRounds <= 0) return null;
-  if (!Number.isFinite(startRound) || startRound <= 0) return null;
-  if (!Number.isFinite(round) || round <= 0) return null;
-  const elapsed = Math.max(0, round - startRound);
-  return {
-    totalRounds,
-    elapsed,
-    remaining: Math.max(0, totalRounds - elapsed),
-    startRound,
-    currentRound: round,
-    clock: "combat"
-  };
-}
-
 function remainingForEffect(effect, currentRound) {
-  const byCombat = combatRemaining(effect, currentRound);
-  if (byCombat) return byCombat;
-
-  const byTime = add2eTimeRemainingRounds(effect, currentRound);
-  if (byTime) return byTime;
+  // Le helper canonique choisit startTick ADD2E lorsqu'il existe, puis conserve
+  // startRound pour les anciens effets qui ne possèdent pas de tick global.
+  const canonical = add2eTimeRemainingRounds(effect, currentRound);
+  if (canonical) return canonical;
 
   const nativeRemaining = numeric(effect?.duration?.remaining, NaN);
   if (Number.isFinite(nativeRemaining)) return { remaining: nativeRemaining, clock: "native" };
