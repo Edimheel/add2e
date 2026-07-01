@@ -1,6 +1,6 @@
-// ADD2E — Core armurier : stock armes/armures/projectiles, achats, affectation MJ et compatibilité acteur.
+// ADD2E — Core armurier : stock armes, armures et projectiles du compendium.
 
-export const ADD2E_ARMORER_VERSION = "2026-07-01-armorer-v6-world-projectile-stock";
+export const ADD2E_ARMORER_VERSION = "2026-07-01-armorer-v7-canonical-projectile-catalog";
 export const ARMORER_SCOPE = "add2e";
 export const ARMORER_NAME = "Armurier";
 export const ARMORER_FOLDER = "ADD2E — Boutique";
@@ -49,23 +49,29 @@ function ammunitionNameMatch(item) {
   return /\b(fleche|fleches|flèche|flèches|carreau|carreaux|trait|traits|bille|billes|aiguille|aiguilles|pierre de fronde|pierres de fronde|balle d[’']arquebuse|balles d[’']arquebuse)\b/i.test(String(item?.name ?? ""));
 }
 
+/**
+ * La source add2e.armes conserve certaines munitions comme type "arme" et
+ * leur attribue aussi le tag projectile_propulse. Ce tag décrit le mode de
+ * lancement ; il ne doit jamais exclure une entrée déjà marquée munition.
+ */
 export function isArmorerAmmunition(item) {
   if (!item) return false;
   const s = item.system ?? {};
   const fields = [s.categorie, s.category, s.sousType, s.sous_type, s.type, s.subtype, s.kind, s.slot].map(lower).filter(Boolean);
   const t = tags(item);
   const name = lower(item.name);
+  const accepted = new Set([
+    "munition", "munitions", "projectile", "projectiles", "ammo", "ammunition",
+    "trait:munition", "trait:projectile", "categorie:munition", "categorie:projectile",
+    "type:munition", "type:projectile", "type_arme:munition"
+  ]);
 
   if (/\b(carquois|quiver|etui|etuis|étui|étuis|sac|sacoche|container|contenant|boite|boîte|bourse)\b/.test(name)) return false;
   if (fields.some(v => ["carquois", "quiver", "contenant", "container", "sac", "sacoche"].includes(v))) return false;
   if (t.some(v => ["carquois", "quiver", "contenant", "container", "sac", "sacoche"].includes(v))) return false;
 
-  if (fields.some(v => ["munition", "munitions", "ammo", "ammunition"].includes(v))) return true;
-  if (t.some(v => v === "munition" || v === "trait:munition" || v === "categorie:munition" || v === "type:munition" || v.startsWith("munition:"))) return true;
-
-  if (t.some(v => ["usage:projectile_propulse", "type_arme:projectile_propulse", "trait:projectile_propulse"].includes(v))) return false;
-  if (fields.some(v => ["projectile_propulse", "arc", "arbalete", "arbalète", "fronde"].includes(v))) return false;
-
+  if (fields.some(v => accepted.has(v))) return true;
+  if (t.some(v => accepted.has(v) || v.startsWith("munition:") || v.startsWith("projectile:"))) return true;
   return ammunitionNameMatch(item);
 }
 
@@ -221,9 +227,9 @@ async function collectSources() {
     out.push(doc);
   };
 
+  // add2e.armes est la source canonique des munitions vendues par l’armurier.
   for (const pid of packIds("armes")) for (const doc of await readPack(pid)) add(doc);
   for (const pid of packIds("armures")) for (const doc of await readPack(pid)) add(doc);
-  // Les munitions importées en objets Monde ne résident pas forcément dans add2e.armes.
   for (const item of game.items ?? []) add(item);
   return out.sort((a, b) => String(armorerKind(a)).localeCompare(String(armorerKind(b))) || String(a.name).localeCompare(String(b.name)));
 }
@@ -265,9 +271,27 @@ function pseudoItemFromData(data) {
 }
 
 export async function getArmorerDisplayItems(armorer) {
+  // Côté MJ, la fenêtre force la présence du catalogue complet avant affichage.
+  if (game.user?.isGM && armorer) await ensureStock(armorer);
   const actorItems = Array.from(armorer?.items ?? []).filter(isArmorerStockItem);
   if (actorItems.length) return actorItems;
   return (await buildStockData()).map(pseudoItemFromData);
+}
+
+function projectileStockUpdates(existing) {
+  return existing.flatMap(item => {
+    if (!isArmorerAmmunition(item)) return [];
+    const previousMax = num(item?.getFlag?.(ARMORER_SCOPE, "armorerStockMax"), quantity(item));
+    const desiredMax = defaultStock(item);
+    if (previousMax >= desiredMax) return [];
+    const update = {
+      _id: item.id,
+      "flags.add2e.armorerStockMax": desiredMax
+    };
+    // Un stock intact hérité de l’ancien maximum est rehaussé au maximum normal de munition.
+    if (quantity(item) === previousMax) update["system.quantite"] = desiredMax;
+    return [update];
+  });
 }
 
 export async function ensureStock(armorer) {
@@ -276,8 +300,10 @@ export async function ensureStock(armorer) {
   const existing = Array.from(armorer.items ?? []);
   const create = docs.filter(d => !existing.some(i => sameItem(i, d)));
   if (create.length) await armorer.createEmbeddedDocuments("Item", create, { add2eReason: "armorer-ensure-stock" });
+  const updates = projectileStockUpdates(Array.from(armorer.items ?? []));
+  if (updates.length) await armorer.updateEmbeddedDocuments("Item", updates, { add2eReason: "armorer-projectile-stock-upgrade" });
   if (create.length) ui.notifications?.info?.(`${armorer.name} : ${create.length} article(s) ajouté(s) au stock.`);
-  return create.length;
+  return create.length + updates.length;
 }
 
 export function findArmorer() {
@@ -561,8 +587,8 @@ function queueWorldItemStockSync() {
 }
 
 function registerWorldItemCatalogSync() {
-  if (globalThis.__ADD2E_ARMORER_WORLD_ITEM_CATALOG_SYNC_V6) return;
-  globalThis.__ADD2E_ARMORER_WORLD_ITEM_CATALOG_SYNC_V6 = true;
+  if (globalThis.__ADD2E_ARMORER_WORLD_ITEM_CATALOG_SYNC_V7) return;
+  globalThis.__ADD2E_ARMORER_WORLD_ITEM_CATALOG_SYNC_V7 = true;
   Hooks.on("createItem", item => {
     if (item?.parent || !isArmorerStockItem(item)) return;
     queueWorldItemStockSync();
@@ -574,8 +600,8 @@ function registerWorldItemCatalogSync() {
 }
 
 export function registerSockets() {
-  if (globalThis.__ADD2E_ARMORER_SOCKET_REGISTERED_V5_AMMUNITION_TO_QUIVER) return;
-  globalThis.__ADD2E_ARMORER_SOCKET_REGISTERED_V5_AMMUNITION_TO_QUIVER = true;
+  if (globalThis.__ADD2E_ARMORER_SOCKET_REGISTERED_V7_CANONICAL_PROJECTILES) return;
+  globalThis.__ADD2E_ARMORER_SOCKET_REGISTERED_V7_CANONICAL_PROJECTILES = true;
 
   game.socket?.on?.("system.add2e", async data => {
     if (!data || typeof data !== "object") return;
