@@ -1,10 +1,6 @@
 // ADD2E — onUse Magicien : Amitié
-// Version : 2026-05-25-magicien-amitie-gabarit-natif-cleanup-v5
-//
-// Contrat avec scripts/add2e-attack/06-cast-spell.mjs :
-// - return true  => le sort est lancé, le slot mémorisé réservé est consommé ;
-// - return false => annulation technique, le slot mémorisé réservé est remboursé.
-// La consommation du slot n'est PAS faite ici : elle est centralisée dans add2eCastSpell.
+// Compatible Foundry V13/V14/V15.
+// La zone est une distance de règle et jamais un nombre de cases.
 
 const ADD2E_ONUSE_TAG = "[ADD2E][SORT_ONUSE][MAGICIEN][AMITIE]";
 const ADD2E_ACTOR = typeof actor !== "undefined" ? actor : null;
@@ -12,7 +8,7 @@ const ADD2E_ITEM = typeof item !== "undefined" ? item : null;
 const ADD2E_TOKEN = typeof token !== "undefined" ? token : null;
 const ADD2E_ARGS = typeof args !== "undefined" ? args : [];
 
-const ADD2E_SORT_CONFIG = {
+const ADD2E_SORT_CONFIG = Object.freeze({
   name: "Amitié",
   slug: "amitie",
   level: 1,
@@ -22,10 +18,12 @@ const ADD2E_SORT_CONFIG = {
   castingTimeText: "1 segment",
   saveText: "Spécial",
   areaText: "sphère d’un rayon de 1\" + 1\" par niveau",
+  areaUnit: "ft",
+  feetPerAdndInch: 10,
   materialText: "craie ou farine blanche, noir de fumée ou suie, vermillon",
   img: "systems/add2e/assets/icones/sorts/magicien-amitie.webp",
   imgFallback: "icons/magic/control/hypnosis-mesmerism-eye.webp"
-};
+});
 
 function add2eClone(value) {
   if (foundry?.utils?.deepClone) return foundry.utils.deepClone(value);
@@ -45,67 +43,127 @@ function add2eHtmlEscape(value) {
   return div.innerHTML;
 }
 
+function add2eNormalize(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
 function add2eSpellImg() {
   const img = ADD2E_ITEM?.img || "";
   if (img && !String(img).includes("magicien-amitie.webp")) return img;
   return ADD2E_SORT_CONFIG.imgFallback;
 }
 
+function add2eReadNumber(...values) {
+  for (const value of values) {
+    if (value === undefined || value === null || value === "") continue;
+    if (typeof value === "object") {
+      const nested = add2eReadNumber(value.value, value.valeur, value.total, value.current, value.max);
+      if (Number.isFinite(nested)) return nested;
+      continue;
+    }
+    const match = String(value).replace(",", ".").match(/-?\d+(?:\.\d+)?/);
+    if (!match) continue;
+    const number = Number(match[0]);
+    if (Number.isFinite(number)) return number;
+  }
+  return null;
+}
+
 function add2eCasterLevel(actorDoc) {
-  return Number(
-    actorDoc?.system?.niveau ??
-    actorDoc?.system?.level ??
-    actorDoc?.system?.details?.niveau ??
-    actorDoc?.system?.details?.level ??
-    1
-  ) || 1;
+  const classItem = Array.from(actorDoc?.items ?? []).find(item => {
+    if (!/(classe|class)/.test(add2eNormalize(item?.type))) return false;
+    const label = add2eNormalize(item?.name ?? item?.system?.nom);
+    return label === "magicien" || label.includes("magicien");
+  }) ?? null;
+
+  const classLevel = add2eReadNumber(
+    classItem?.system?.niveau,
+    classItem?.system?.level,
+    classItem?.system?.details?.niveau,
+    classItem?.system?.details?.level
+  );
+  if (Number.isFinite(classLevel) && classLevel > 0) return Math.floor(classLevel);
+
+  const actorLevel = add2eReadNumber(
+    actorDoc?.system?.niveau,
+    actorDoc?.system?.level,
+    actorDoc?.system?.details?.niveau,
+    actorDoc?.system?.details?.level
+  );
+  return Math.max(1, Math.floor(actorLevel || 1));
 }
 
 function add2eGetCasterToken(actorDoc) {
   return ADD2E_TOKEN
     ?? ADD2E_ARGS?.[0]?.token
-    ?? canvas?.tokens?.controlled?.find(t => t.actor?.id === actorDoc?.id)
+    ?? canvas?.tokens?.controlled?.find(tokenDoc => tokenDoc.actor?.id === actorDoc?.id)
     ?? actorDoc?.getActiveTokens?.()?.[0]
     ?? canvas?.tokens?.controlled?.[0]
     ?? null;
 }
 
 function add2eAreaRadiusInches(level) {
-  return 1 + Math.max(1, level);
+  // Manuel des joueurs : 1" + 1"/niveau.
+  return 1 + Math.max(1, Math.floor(Number(level) || 1));
 }
 
-function add2eAreaRadiusGridCells(level) {
-  return add2eAreaRadiusInches(level);
+function add2eAreaRadiusFeet(level) {
+  return add2eAreaRadiusInches(level) * ADD2E_SORT_CONFIG.feetPerAdndInch;
+}
+
+function add2eSceneArea(level) {
+  const radiusFeet = add2eAreaRadiusFeet(level);
+  const scene = canvas?.scene ?? null;
+  const generic = globalThis.add2eSceneDistance;
+
+  if (typeof generic === "function") {
+    const result = generic({ scene, distance: radiusFeet, unit: ADD2E_SORT_CONFIG.areaUnit });
+    if (Number.isFinite(Number(result?.sceneDistance)) && Number.isFinite(Number(result?.pixels))) return result;
+  }
+
+  const sceneUnits = String(scene?.grid?.units ?? scene?.grid?.unit ?? "ft").toLowerCase();
+  const metric = /^(m|metre|metres|meter|meters)$/.test(sceneUnits);
+  const sceneUnit = metric ? "m" : "ft";
+  const sceneDistance = metric ? radiusFeet * 0.3048 : radiusFeet;
+  const gridDistance = Math.max(0.000001, Number(scene?.grid?.distance) || 1);
+  const gridSize = Math.max(1, Number(scene?.grid?.size ?? canvas?.grid?.size) || 100);
+  const gridCells = sceneDistance / gridDistance;
+
+  return {
+    sourceDistance: radiusFeet,
+    sourceUnit: "ft",
+    sourceLabel: `${radiusFeet} pi`,
+    sceneDistance,
+    sceneUnit,
+    sceneLabel: `${Math.round(sceneDistance * 1000) / 1000} ${sceneUnit}`,
+    gridDistance,
+    gridSize,
+    gridCells,
+    pixels: gridCells * gridSize
+  };
+}
+
+function add2eDisplayNumber(value, decimals = 3) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return "—";
+  return String(Math.round(number * (10 ** decimals)) / (10 ** decimals)).replace(".", ",");
 }
 
 function add2eAreaRadiusText(level) {
-  const cells = add2eAreaRadiusGridCells(level);
-  return `${add2eAreaRadiusInches(level)}\" (${cells} case${cells > 1 ? "s" : ""})`;
-}
-
-function add2eGridSize() {
-  return Number(canvas?.grid?.size) || Number(canvas?.scene?.grid?.size) || 100;
-}
-
-function add2eGridDistance() {
-  return Number(canvas?.scene?.grid?.distance) || 5;
-}
-
-function add2eRadiusPixels(level) {
-  return add2eAreaRadiusGridCells(level) * add2eGridSize();
-}
-
-function add2eTemplateDistance(level) {
-  return add2eAreaRadiusGridCells(level) * add2eGridDistance();
-}
-
-async function add2eRollFormula(formula) {
-  return await new Roll(formula).evaluate({ async: true });
+  const area = add2eSceneArea(level);
+  return `${add2eAreaRadiusFeet(level)} pieds (${add2eDisplayNumber(area.sceneDistance)} ${area.sceneUnit} ; ${add2eDisplayNumber(area.gridCells, 2)} case${Math.abs(area.gridCells - 1) < 0.001 ? "" : "s"})`;
 }
 
 function add2eEffectDuration(level) {
+  const rounds = Math.max(1, Math.floor(Number(level) || 1));
   return {
-    rounds: Math.max(1, level),
+    rounds,
     startRound: game.combat?.round ?? null,
     startTime: game.time?.worldTime ?? null,
     combat: game.combat?.id ?? null
@@ -115,13 +173,12 @@ function add2eEffectDuration(level) {
 function add2eTokenCenter(tokenDocOrPlaceable) {
   const placeable = tokenDocOrPlaceable?.object ?? tokenDocOrPlaceable;
   if (placeable?.center) return { x: Number(placeable.center.x), y: Number(placeable.center.y) };
+
   const doc = tokenDocOrPlaceable?.document ?? tokenDocOrPlaceable;
-  const gridSize = add2eGridSize();
-  const width = Number(doc?.width) || 1;
-  const height = Number(doc?.height) || 1;
+  const gridSize = Number(canvas?.scene?.grid?.size ?? canvas?.grid?.size) || 100;
   return {
-    x: Number(doc?.x ?? 0) + (width * gridSize) / 2,
-    y: Number(doc?.y ?? 0) + (height * gridSize) / 2
+    x: Number(doc?.x ?? 0) + (Math.max(1, Number(doc?.width) || 1) * gridSize) / 2,
+    y: Number(doc?.y ?? 0) + (Math.max(1, Number(doc?.height) || 1) * gridSize) / 2
   };
 }
 
@@ -130,26 +187,28 @@ function add2eCanvasEventPosition(event) {
     const point = event?.data?.getLocalPosition?.(canvas.stage)
       ?? event?.getLocalPosition?.(canvas.stage)
       ?? null;
-
     if (point) return { x: Number(point.x), y: Number(point.y) };
-  } catch (_err) {}
+  } catch (_error) {}
 
   const original = event?.data?.originalEvent ?? event?.nativeEvent ?? event;
   const rect = canvas?.app?.view?.getBoundingClientRect?.();
   if (!original || !rect) return null;
 
-  const x = ((original.clientX - rect.left) / rect.width) * canvas.dimensions.width;
-  const y = ((original.clientY - rect.top) / rect.height) * canvas.dimensions.height;
-  return { x, y };
+  return {
+    x: ((original.clientX - rect.left) / rect.width) * canvas.dimensions.width,
+    y: ((original.clientY - rect.top) / rect.height) * canvas.dimensions.height
+  };
 }
 
 function add2eBuildTemplateData(center, level, templateRequestId) {
+  const area = add2eSceneArea(level);
   return {
     t: "circle",
     user: game.user.id,
     x: Number(center.x),
     y: Number(center.y),
-    distance: add2eTemplateDistance(level),
+    // MeasuredTemplate.distance est toujours dans l'unité déclarée par la scène.
+    distance: area.sceneDistance,
     direction: 0,
     fillColor: "#b36bff",
     borderColor: "#fff2a8",
@@ -158,8 +217,11 @@ function add2eBuildTemplateData(center, level, templateRequestId) {
         spell: ADD2E_SORT_CONFIG.slug,
         spellName: ADD2E_SORT_CONFIG.name,
         templateRequestId,
-        radiusGridCells: add2eAreaRadiusGridCells(level),
         radiusInches: add2eAreaRadiusInches(level),
+        areaRadiusFeet: area.sourceDistance,
+        areaRadiusSceneDistance: area.sceneDistance,
+        areaRadiusSceneUnit: area.sceneUnit,
+        areaRadiusGridCells: area.gridCells,
         casterId: ADD2E_ACTOR?.id ?? null,
         casterUuid: ADD2E_ACTOR?.uuid ?? null,
         sourceItemId: ADD2E_ITEM?.id ?? null,
@@ -174,12 +236,11 @@ async function add2eCreateNativePreviewTemplate(initialCenter, level, templateRe
   const TemplateObject = CONFIG?.MeasuredTemplate?.objectClass;
   if (!TemplateDocument || !TemplateObject || !canvas?.templates) return null;
 
-  const doc = new TemplateDocument(add2eBuildTemplateData(initialCenter, level, templateRequestId), { parent: canvas.scene });
-  const template = new TemplateObject(doc);
-  const previewLayer = canvas.templates.preview ?? canvas.templates;
-
+  const document = new TemplateDocument(add2eBuildTemplateData(initialCenter, level, templateRequestId), { parent: canvas.scene });
+  const template = new TemplateObject(document);
+  const layer = canvas.templates.preview ?? canvas.templates;
   await template.draw();
-  previewLayer.addChild(template);
+  layer.addChild(template);
   template.refresh?.();
   return template;
 }
@@ -193,18 +254,14 @@ function add2eEmitGmOperation(operation, payload) {
 }
 
 async function add2eTryCreateSceneTemplate(templateData, previewTemplate, templateRequestId) {
-  if (!canvas?.scene?.createEmbeddedDocuments) {
-    return { persisted: false, templateId: null, via: "none" };
-  }
+  if (!canvas?.scene?.createEmbeddedDocuments) return { persisted: false, templateId: null, via: "none" };
 
   try {
     const created = await canvas.scene.createEmbeddedDocuments("MeasuredTemplate", [add2eClone(templateData)]);
-    const templateId = created?.[0]?.id ?? null;
     previewTemplate?.destroy?.({ children: true });
-    return { persisted: true, templateId, via: "direct" };
-  } catch (err) {
-    console.warn(`${ADD2E_ONUSE_TAG}[TEMPLATE_CREATE_DENIED] Création du gabarit demandée au MJ.`, err);
-
+    return { persisted: true, templateId: created?.[0]?.id ?? null, via: "direct" };
+  } catch (error) {
+    console.warn(`${ADD2E_ONUSE_TAG}[TEMPLATE_CREATE_DENIED] Création du gabarit relayée au MJ.`, error);
     add2eEmitGmOperation("createMeasuredTemplate", {
       sceneId: canvas?.scene?.id ?? null,
       templateData,
@@ -212,18 +269,13 @@ async function add2eTryCreateSceneTemplate(templateData, previewTemplate, templa
       spell: ADD2E_SORT_CONFIG.slug,
       spellName: ADD2E_SORT_CONFIG.name
     });
-
-    setTimeout(() => {
-      try { previewTemplate?.destroy?.({ children: true }); } catch (_err) {}
-    }, 1500);
-
+    setTimeout(() => previewTemplate?.destroy?.({ children: true }), 1500);
     return { persisted: true, templateId: null, via: "gm-relay" };
   }
 }
 
 async function add2eDeleteLinkedTemplate(zone, reason = "cleanup") {
   if (!zone?.templateRequestId) return false;
-
   const payload = {
     sceneId: zone.sceneId ?? canvas?.scene?.id ?? null,
     templateId: zone.templateId ?? null,
@@ -233,14 +285,12 @@ async function add2eDeleteLinkedTemplate(zone, reason = "cleanup") {
   };
 
   if (game.user?.isGM && canvas?.scene?.deleteEmbeddedDocuments) {
-    const scene = canvas.scene;
-    const ids = Array.from(scene.templates ?? [])
-      .filter(t => t.id === payload.templateId || t.flags?.add2e?.templateRequestId === payload.templateRequestId)
-      .map(t => t.id)
+    const ids = Array.from(canvas.scene.templates ?? [])
+      .filter(template => template.id === payload.templateId || template.flags?.add2e?.templateRequestId === payload.templateRequestId)
+      .map(template => template.id)
       .filter(Boolean);
-
     if (ids.length) {
-      await scene.deleteEmbeddedDocuments("MeasuredTemplate", ids);
+      await canvas.scene.deleteEmbeddedDocuments("MeasuredTemplate", ids);
       return true;
     }
   }
@@ -263,7 +313,7 @@ async function add2eChooseNativeTemplateZone(level, casterToken, templateRequest
   canvas.templates.activate?.();
   ui.notifications?.info?.("Amitié : cliquez sur la scène pour placer la zone, clic droit pour annuler.");
 
-  return await new Promise(resolve => {
+  return new Promise(resolve => {
     let done = false;
     let current = { ...casterCenter };
 
@@ -279,7 +329,7 @@ async function add2eChooseNativeTemplateZone(level, casterToken, templateRequest
       done = true;
       cleanup();
       if (!value) {
-        try { previewTemplate?.destroy?.({ children: true }); } catch (_err) {}
+        try { previewTemplate?.destroy?.({ children: true }); } catch (_error) {}
         resolve(null);
         return;
       }
@@ -298,9 +348,9 @@ async function add2eChooseNativeTemplateZone(level, casterToken, templateRequest
       });
     };
 
-    const refresh = pos => {
-      if (!pos) return;
-      current = { x: Number(pos.x), y: Number(pos.y) };
+    const refresh = position => {
+      if (!position) return;
+      current = { x: Number(position.x), y: Number(position.y) };
       previewTemplate?.document?.updateSource?.({ x: current.x, y: current.y });
       previewTemplate?.refresh?.();
     };
@@ -309,15 +359,12 @@ async function add2eChooseNativeTemplateZone(level, casterToken, templateRequest
       event?.stopPropagation?.();
       refresh(add2eCanvasEventPosition(event));
     };
-
     const onConfirm = event => {
       event?.stopPropagation?.();
       event?.data?.originalEvent?.preventDefault?.();
-      const pos = add2eCanvasEventPosition(event) ?? current;
-      refresh(pos);
+      refresh(add2eCanvasEventPosition(event) ?? current);
       finish(current);
     };
-
     const onCancel = event => {
       event?.stopPropagation?.();
       event?.data?.originalEvent?.preventDefault?.();
@@ -332,77 +379,49 @@ async function add2eChooseNativeTemplateZone(level, casterToken, templateRequest
 }
 
 function add2eTokensInZone(center, level, casterToken) {
-  const radiusPx = add2eRadiusPixels(level);
+  const radiusPixels = add2eSceneArea(level).pixels;
   const casterId = casterToken?.id ?? casterToken?.document?.id ?? null;
   return (canvas?.tokens?.placeables ?? [])
-    .filter(t => t?.actor && t.id !== casterId)
-    .filter(t => {
-      const c = add2eTokenCenter(t);
-      const dx = c.x - center.x;
-      const dy = c.y - center.y;
-      return Math.sqrt(dx * dx + dy * dy) <= radiusPx;
+    .filter(target => target?.actor && target.id !== casterId)
+    .filter(target => {
+      const targetCenter = add2eTokenCenter(target);
+      return Math.hypot(targetCenter.x - center.x, targetCenter.y - center.y) <= radiusPixels;
     });
 }
 
-function add2eReadNumber(...values) {
-  for (const value of values) {
-    if (value === undefined || value === null || value === "") continue;
-    if (typeof value === "object") {
-      const nested = add2eReadNumber(value.value, value.valeur, value.total, value.current, value.max);
-      if (Number.isFinite(nested)) return nested;
-      continue;
-    }
-    const match = String(value).replace(",", ".").match(/-?\d+(?:\.\d+)?/);
-    if (!match) continue;
-    const n = Number(match[0]);
-    if (Number.isFinite(n)) return n;
-  }
-  return null;
-}
-
 function add2eReadSaveVsSpells(actorDoc) {
-  const s = actorDoc?.system ?? {};
+  const system = actorDoc?.system ?? {};
   const direct = add2eReadNumber(
-    s.sauvegarde_sortileges,
-    s.sauvegarde_sortilege,
-    s.saveSorts,
-    s.saveSpells,
-    s.saves?.sorts,
-    s.saves?.spells,
-    s.savingThrows?.sorts,
-    s.savingThrows?.spells,
-    s.sauvegardes?.sorts,
-    s.sauvegardes?.sortileges
+    system.sauvegarde_sortileges,
+    system.sauvegarde_sortilege,
+    system.saveSorts,
+    system.saveSpells,
+    system.saves?.sorts,
+    system.saves?.spells,
+    system.savingThrows?.sorts,
+    system.savingThrows?.spells,
+    system.sauvegardes?.sorts,
+    system.sauvegardes?.sortileges
   );
   if (Number.isFinite(direct)) return direct;
 
-  if (Array.isArray(s.sauvegardes) && s.sauvegardes.length) {
-    const named = s.sauvegardes.find(x => /sort|spell/i.test(String(x?.type ?? x?.key ?? x?.name ?? x?.label ?? x?.nom ?? "")));
+  for (const collection of [system.sauvegardes, system.savingThrows]) {
+    if (!Array.isArray(collection)) continue;
+    const named = collection.find(entry => /sort|spell/i.test(String(entry?.type ?? entry?.key ?? entry?.name ?? entry?.label ?? entry?.nom ?? "")));
     const namedValue = add2eReadNumber(named?.value, named?.valeur, named?.total, named?.score);
     if (Number.isFinite(namedValue)) return namedValue;
-
-    const nums = s.sauvegardes.map(v => add2eReadNumber(v)).filter(Number.isFinite);
-    if (nums.length >= 5) return nums[4];
-    if (nums.length) return nums[nums.length - 1];
+    const values = collection.map(entry => add2eReadNumber(entry)).filter(Number.isFinite);
+    if (values.length >= 5) return values[4];
+    if (values.length) return values.at(-1);
   }
 
-  if (Array.isArray(s.savingThrows) && s.savingThrows.length) {
-    const named = s.savingThrows.find(x => /sort|spell/i.test(String(x?.type ?? x?.key ?? x?.name ?? x?.label ?? x?.nom ?? "")));
-    const namedValue = add2eReadNumber(named?.value, named?.valeur, named?.total, named?.score);
-    if (Number.isFinite(namedValue)) return namedValue;
-
-    const nums = s.savingThrows.map(v => add2eReadNumber(v)).filter(Number.isFinite);
-    if (nums.length >= 5) return nums[4];
-    if (nums.length) return nums[nums.length - 1];
-  }
-
-  for (const raw of [s.savingThrows, s.sauvegardes]) {
+  for (const raw of [system.savingThrows, system.sauvegardes]) {
     if (typeof raw !== "string") continue;
     const labeled = raw.match(/(?:sortil[eè]ges?|sorts?|spells?)\D*(\d+)/i);
     if (labeled) return Number(labeled[1]);
-    const nums = raw.match(/\d+/g)?.map(Number).filter(Number.isFinite) ?? [];
-    if (nums.length >= 5) return nums[4];
-    if (nums.length) return nums[nums.length - 1];
+    const values = raw.match(/\d+/g)?.map(Number).filter(Number.isFinite) ?? [];
+    if (values.length >= 5) return values[4];
+    if (values.length) return values.at(-1);
   }
 
   return null;
@@ -416,34 +435,33 @@ function add2eSaveBonus(actorDoc) {
       spell: ADD2E_SORT_CONFIG.slug
     });
     return Number(analyzed?.bonus_save) || 0;
-  } catch (_err) {
+  } catch (_error) {
     return 0;
   }
 }
 
 function add2eIsAnimalIntelligenceOrLess(actorDoc) {
-  const s = actorDoc?.system ?? {};
-  const n = add2eReadNumber(s.intelligence, s.int, s.intel, s.mental?.intelligence);
-  if (Number.isFinite(n)) return n <= 2;
-  const text = String(s.intelligence ?? s.intelligenceText ?? s.intelligence_monstre ?? s.description ?? "").toLowerCase();
+  const system = actorDoc?.system ?? {};
+  const number = add2eReadNumber(system.intelligence, system.int, system.intel, system.mental?.intelligence);
+  if (Number.isFinite(number)) return number <= 2;
+  const text = String(system.intelligence ?? system.intelligenceText ?? system.intelligence_monstre ?? system.description ?? "").toLowerCase();
   return /animal|non.?intelligent|semi.?intelligent|faible/.test(text);
 }
 
 async function add2eRollTargetSave(actorDoc) {
   const saveTarget = add2eReadSaveVsSpells(actorDoc);
   const bonus = add2eSaveBonus(actorDoc);
-  const roll = await add2eRollFormula("1d20");
+  const roll = await new Roll("1d20").evaluate({ async: true });
   const total = Number(roll.total) + bonus;
   const hasSave = Number.isFinite(saveTarget);
-  const success = hasSave ? total >= saveTarget : null;
-  return { roll, saveTarget, bonus, total, hasSave, success };
+  return { roll, saveTarget, bonus, total, hasSave, success: hasSave ? total >= saveTarget : null };
 }
 
 function add2eBuildTargetEffect({ targetToken, casterActor, choice, level, modifier, saveData, zone }) {
   const favorable = choice === "favorable";
-  const signed = favorable ? Math.abs(modifier) : -Math.abs(modifier);
-  const mode = CONST?.ACTIVE_EFFECT_MODES?.OVERRIDE ?? 5;
-  const casterSlug = String(casterActor?.id ?? "caster").replace(/[^a-zA-Z0-9_\-]/g, "_");
+  const signedModifier = favorable ? Math.abs(modifier) : -Math.abs(modifier);
+  const area = add2eSceneArea(level);
+  const casterSlug = String(casterActor?.id ?? "caster").replace(/[^a-zA-Z0-9_-]/g, "_");
 
   return {
     name: favorable ? "Amitié — impression favorable" : "Amitié — irritation",
@@ -454,8 +472,8 @@ function add2eBuildTargetEffect({ targetToken, casterActor, choice, level, modif
     system: {},
     changes: [{
       key: `flags.add2e.amitie.${casterSlug}.charismeApparent`,
-      mode,
-      value: String(signed),
+      mode: CONST?.ACTIVE_EFFECT_MODES?.OVERRIDE ?? 5,
+      value: String(signedModifier),
       priority: 20
     }],
     duration: add2eEffectDuration(level),
@@ -495,7 +513,7 @@ function add2eBuildTargetEffect({ targetToken, casterActor, choice, level, modif
           targetTokenId: targetToken?.id ?? null,
           targetActorUuid: targetToken?.actor?.uuid ?? null,
           reaction: favorable ? "favorable" : "irritated",
-          charismaApparentModifier: signed,
+          charismaApparentModifier: signedModifier,
           saveRoll: saveData?.roll?.total ?? null,
           saveBonus: saveData?.bonus ?? 0,
           saveTotal: saveData?.total ?? null,
@@ -503,7 +521,10 @@ function add2eBuildTargetEffect({ targetToken, casterActor, choice, level, modif
           casterLevel: level,
           durationRounds: Math.max(1, level),
           areaRadiusInches: add2eAreaRadiusInches(level),
-          areaRadiusGridCells: add2eAreaRadiusGridCells(level),
+          areaRadiusFeet: area.sourceDistance,
+          areaRadiusSceneDistance: area.sceneDistance,
+          areaRadiusSceneUnit: area.sceneUnit,
+          areaRadiusGridCells: area.gridCells,
           templateRequestId: zone?.templateRequestId ?? null,
           templateId: zone?.templateId ?? null,
           templateSceneId: zone?.sceneId ?? canvas?.scene?.id ?? null,
@@ -517,54 +538,53 @@ function add2eBuildTargetEffect({ targetToken, casterActor, choice, level, modif
 
 async function add2eApplyEffectOnTarget(targetToken, effectData) {
   if (!targetToken?.actor || !effectData) return false;
+  if (game.user?.isGM || targetToken.actor.isOwner) {
+    try {
+      await targetToken.actor.createEmbeddedDocuments("ActiveEffect", [add2eClone(effectData)]);
+      return true;
+    } catch (error) {
+      console.warn(`${ADD2E_ONUSE_TAG}[DIRECT_EFFECT_FAILED] Passage par relais MJ.`, error);
+    }
+  }
 
-  const payload = {
+  add2eEmitGmOperation("createActiveEffect", {
     actorUuid: targetToken.actor.uuid,
     actorId: targetToken.actor.id,
     sceneId: canvas?.scene?.id ?? null,
     tokenId: targetToken.document?.id ?? targetToken.id ?? null,
     effectData
-  };
-
-  if (game.user?.isGM || targetToken.actor.isOwner) {
-    try {
-      await targetToken.actor.createEmbeddedDocuments("ActiveEffect", [add2eClone(effectData)]);
-      return true;
-    } catch (err) {
-      console.warn(`${ADD2E_ONUSE_TAG}[DIRECT_EFFECT_FAILED] Passage par relais MJ.`, err);
-    }
-  }
-
-  add2eEmitGmOperation("createActiveEffect", payload);
+  });
   return true;
 }
 
 async function add2eResolveAmitieTarget(targetToken, casterActor, level, zone) {
   if (!targetToken?.actor) return null;
-
   if (add2eIsAnimalIntelligenceOrLess(targetToken.actor)) {
     return { token: targetToken, actor: targetToken.actor, status: "ignored", label: "non affecté", modifier: 0, saveData: null, effectRequested: false };
   }
 
   const saveData = await add2eRollTargetSave(targetToken.actor);
-
   if (!saveData.hasSave) {
     return { token: targetToken, actor: targetToken.actor, status: "manual", label: "à résoudre par le MD", modifier: 0, saveData, effectRequested: false };
   }
 
-  if (saveData.success) {
-    const modRoll = await add2eRollFormula("1d4");
-    const modifier = Math.abs(Number(modRoll.total) || 1);
-    const effectData = add2eBuildTargetEffect({ targetToken, casterActor, choice: "irritated", level, modifier, saveData, zone });
-    const effectRequested = await add2eApplyEffectOnTarget(targetToken, effectData);
-    return { token: targetToken, actor: targetToken.actor, status: "success", label: "résiste et s’irrite", modifier: -modifier, saveData, effectRequested };
-  }
-
-  const modRoll = await add2eRollFormula("2d4");
-  const modifier = Math.abs(Number(modRoll.total) || 1);
-  const effectData = add2eBuildTargetEffect({ targetToken, casterActor, choice: "favorable", level, modifier, saveData, zone });
+  const successfulSave = saveData.success === true;
+  const modifierRoll = await new Roll(successfulSave ? "1d4" : "2d4").evaluate({ async: true });
+  const modifier = Math.abs(Number(modifierRoll.total) || 1);
+  const effectData = add2eBuildTargetEffect({
+    targetToken,
+    casterActor,
+    choice: successfulSave ? "irritated" : "favorable",
+    level,
+    modifier,
+    saveData,
+    zone
+  });
   const effectRequested = await add2eApplyEffectOnTarget(targetToken, effectData);
-  return { token: targetToken, actor: targetToken.actor, status: "failure", label: "favorable", modifier, saveData, effectRequested };
+
+  return successfulSave
+    ? { token: targetToken, actor: targetToken.actor, status: "success", label: "résiste et s’irrite", modifier: -modifier, saveData, effectRequested }
+    : { token: targetToken, actor: targetToken.actor, status: "failure", label: "favorable", modifier, saveData, effectRequested };
 }
 
 function add2eResultLine(result) {
@@ -577,11 +597,10 @@ function add2eResultLine(result) {
 
   const total = Number(result.saveData?.total ?? result.saveData?.roll?.total ?? 0);
   const bonus = Number(result.saveData?.bonus ?? 0);
-  const seuil = result.saveData?.saveTarget;
-  const mod = Number(result.modifier) || 0;
-  const modText = mod > 0 ? `+${mod}` : `${mod}`;
-
-  return `<tr><td>${name}</td><td>${add2eHtmlEscape(String(total))}${bonus ? ` <small>(${bonus > 0 ? "+" : ""}${bonus})</small>` : ""}</td><td>${add2eHtmlEscape(String(seuil))}</td><td>${add2eHtmlEscape(result.label)} <b>${add2eHtmlEscape(modText)}</b></td></tr>`;
+  const threshold = result.saveData?.saveTarget;
+  const modifier = Number(result.modifier) || 0;
+  const modifierText = modifier > 0 ? `+${modifier}` : `${modifier}`;
+  return `<tr><td>${name}</td><td>${add2eHtmlEscape(String(total))}${bonus ? ` <small>(${bonus > 0 ? "+" : ""}${bonus})</small>` : ""}</td><td>${add2eHtmlEscape(String(threshold))}</td><td>${add2eHtmlEscape(result.label)} <b>${add2eHtmlEscape(modifierText)}</b></td></tr>`;
 }
 
 async function add2eChatAmitie(actorDoc, level, results) {
@@ -606,14 +625,14 @@ async function add2eChatAmitie(actorDoc, level, results) {
             <div style="font-weight:800;font-size:14px;">${add2eHtmlEscape(casterName)}</div>
             <div style="font-size:12px;font-weight:700;">lance ${add2eHtmlEscape(ADD2E_SORT_CONFIG.name)}</div>
           </div>
-          <div style="font-weight:800;font-size:12px;text-align:center;white-space:nowrap;">Magicien niv. 1</div>
+          <div style="font-weight:800;font-size:12px;text-align:center;white-space:nowrap;">Magicien niv. ${level}</div>
           <img src="${add2eHtmlEscape(spellImg)}" style="width:34px;height:34px;object-fit:cover;border-radius:3px;border:1px solid #d8c3ff;background:#fff;" />
         </div>
-        <div style="padding:9px 10px 10px 10px;background:#f6f0ff;">
+        <div style="padding:9px 10px 10px;background:#f6f0ff;">
           <div style="border:1px solid #8e63c7;border-radius:6px;background:#fffaff;padding:8px;margin-bottom:7px;">
             <div style="color:#6c31b5;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.3px;text-align:center;">Enchantement social</div>
             <p style="margin:.35em 0;font-size:13px;line-height:1.35;">Le visage du magicien se pare de signes colorés et son aura devient plus marquante.</p>
-            <p style="margin:.35em 0;font-size:13px;line-height:1.35;"><b>Rayon :</b> ${add2eHtmlEscape(radiusText)} — <b>Durée :</b> ${add2eHtmlEscape(ADD2E_SORT_CONFIG.durationText)} (${durationRounds} round${durationRounds > 1 ? "s" : ""}).</p>
+            <p style="margin:.35em 0;font-size:13px;line-height:1.35;"><b>Rayon :</b> ${add2eHtmlEscape(radiusText)} — <b>Durée :</b> ${durationRounds} round${durationRounds > 1 ? "s" : ""}.</p>
           </div>
           <table style="width:100%;border-collapse:collapse;background:#fffaff;border:1px solid #8e63c7;font-size:12px;">
             <thead><tr style="background:#e8d9ff;color:#2d2144;"><th style="text-align:left;padding:4px;border-bottom:1px solid #8e63c7;">Créature</th><th style="text-align:center;padding:4px;border-bottom:1px solid #8e63c7;">Jet</th><th style="text-align:center;padding:4px;border-bottom:1px solid #8e63c7;">Seuil</th><th style="text-align:left;padding:4px;border-bottom:1px solid #8e63c7;">Réaction</th></tr></thead>
@@ -648,11 +667,12 @@ if (!zone) {
   return false;
 }
 
+const area = add2eSceneArea(level);
 const targetTokens = add2eTokensInZone(zone, level, casterToken);
 const results = [];
 
 console.log(`${ADD2E_ONUSE_TAG}[START]`, {
-  actor: ADD2E_ACTOR?.name,
+  actor: ADD2E_ACTOR.name,
   sort: ADD2E_ITEM?.name,
   level,
   zoneCenter: { x: zone.x, y: zone.y },
@@ -661,9 +681,12 @@ console.log(`${ADD2E_ONUSE_TAG}[START]`, {
   templateRequestId: zone.templateRequestId,
   templateId: zone.templateId,
   radiusInches: add2eAreaRadiusInches(level),
-  radiusGridCells: add2eAreaRadiusGridCells(level),
-  radiusPixels: add2eRadiusPixels(level),
-  targets: targetTokens.map(t => ({ name: t.name, actor: t.actor?.name }))
+  radiusFeet: area.sourceDistance,
+  radiusSceneDistance: area.sceneDistance,
+  radiusSceneUnit: area.sceneUnit,
+  radiusGridCells: area.gridCells,
+  radiusPixels: area.pixels,
+  targets: targetTokens.map(target => ({ name: target.name, actor: target.actor?.name }))
 });
 
 for (const targetToken of targetTokens) {
@@ -673,7 +696,7 @@ for (const targetToken of targetTokens) {
 
 await add2eChatAmitie(ADD2E_ACTOR, level, results);
 
-if (!results.some(r => r.effectRequested)) {
+if (!results.some(result => result.effectRequested)) {
   await add2eDeleteLinkedTemplate(zone, "no-active-effect");
 }
 
@@ -683,13 +706,13 @@ console.log(`${ADD2E_ONUSE_TAG}[DONE]`, {
   templatePersisted: zone.persisted,
   templateVia: zone.templateVia,
   templateRequestId: zone.templateRequestId,
-  results: results.map(r => ({
-    token: r.token?.name,
-    status: r.status,
-    saveTotal: r.saveData?.total ?? null,
-    saveTarget: r.saveData?.saveTarget ?? null,
-    modifier: r.modifier,
-    effectRequested: r.effectRequested
+  results: results.map(result => ({
+    token: result.token?.name,
+    status: result.status,
+    saveTotal: result.saveData?.total ?? null,
+    saveTarget: result.saveData?.saveTarget ?? null,
+    modifier: result.modifier,
+    effectRequested: result.effectRequested
   }))
 });
 
