@@ -1,6 +1,7 @@
 // ============================================================================
 // ADD2E — Point d'entrée : moteur de temps, rounds + états vitaux.
-// Version : 2026-07-01-active-effects-token-transform-save-v2
+// Version : 2026-07-01-active-effects-monster-time-v3
+// Compatible Foundry V13/V14/V15.
 // ============================================================================
 
 import { ADD2E_VITAL_STATUS_CORE_VERSION } from "./add2e/18a-vital-status-core.mjs";
@@ -35,8 +36,9 @@ import {
 
 const ADD2E_TOKEN_TRANSFORM_VERSION = "2026-07-01-timed-token-transform-v1";
 const ADD2E_TOKEN_TRANSFORM_FLAG = "tokenTransform";
+const ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION = "2026-07-01-active-effects-monster-time-v3";
 
-globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = "2026-07-01-active-effects-token-transform-save-v2";
+globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION;
 globalThis.ADD2E_VITAL_STATUS_CORE_VERSION = ADD2E_VITAL_STATUS_CORE_VERSION;
 globalThis.ADD2E_VITAL_STATUS_SYNC_VERSION = ADD2E_VITAL_STATUS_SYNC_VERSION;
 globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRATION_VERSION = ADD2E_ACTIVE_EFFECTS_EXPIRATION_VERSION;
@@ -52,7 +54,7 @@ globalThis.add2eWorldTimeAdvance = add2eWorldTimeAdvance;
 globalThis.add2eWorldTimeExpireAllActors = add2eWorldTimeExpireAllActors;
 
 console.log("[ADD2E][AUTO-REMOVE][VERSION]", {
-  entry: globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION,
+  entry: ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION,
   core: ADD2E_VITAL_STATUS_CORE_VERSION,
   sync: ADD2E_VITAL_STATUS_SYNC_VERSION,
   expiration: ADD2E_ACTIVE_EFFECTS_EXPIRATION_VERSION,
@@ -158,10 +160,6 @@ function add2eTokenTransformUpdate(tokenDocument, dimensions, { clear = false, m
   return update;
 }
 
-/**
- * Prépare une transformation de dimensions sans modifier le token.
- * Réutilisable par tout sort ou capacité temporaire affectant un token.
- */
 export function add2ePrepareTokenTransformation({ token, factor = 1, group = "generic", mode = "default", id = null, source = "effect" } = {}) {
   const tokenDocument = add2eTokenDocument(token);
   const scene = add2eTokenScene(tokenDocument);
@@ -195,9 +193,6 @@ export function add2ePrepareTokenTransformation({ token, factor = 1, group = "ge
   };
 }
 
-/**
- * Recherche les ActiveEffects portant une transformation générique du token.
- */
 export function add2eFindTokenTransformationEffects(actor, token, { group = null, includeDisabled = false } = {}) {
   const tokenDocument = add2eTokenDocument(token);
   if (!actor || !tokenDocument) return [];
@@ -209,11 +204,6 @@ export function add2eFindTokenTransformationEffects(actor, token, { group = null
   });
 }
 
-/**
- * Restaure les dimensions normales sans ramener le token à son ancienne case.
- * Le centre courant est conservé, afin qu'un token déplacé pendant l'effet ne
- * soit jamais téléporté à la fin de la durée.
- */
 export async function add2eRestoreTokenTransformationFromEffect(effect, { reason = "effect-removed" } = {}) {
   const transform = add2eTokenTransformData(effect);
   if (!transform?.id || !transform?.original) return { ok: false, reason: "no-transform" };
@@ -257,10 +247,6 @@ export async function add2eDeleteTokenTransformationEffects(actor, effects = [],
   return { deleted: ids.length, ids };
 }
 
-/**
- * Crée un ActiveEffect temporaire et transforme un token en une seule opération.
- * Un effet du même groupe remplace son équivalent ; le mode inverse l'annule.
- */
 export async function add2eApplyTimedTokenTransformation({ actor, token, effectData, factor, group = "generic", mode = "default", source = "effect" } = {}) {
   const tokenDocument = add2eTokenDocument(token);
   if (!actor || !tokenDocument || !effectData) return { ok: false, reason: "missing-document" };
@@ -316,10 +302,6 @@ function add2eSavingThrowThreshold(actor, index) {
   return NaN;
 }
 
-/**
- * Jet de sauvegarde unique et réutilisable : le bonus d'ActiveEffects est
- * appliqué comme dans les cartes de feuille et de HUD.
- */
 export async function add2eRollSavingThrow(actor, { index = 4, label = null, sourceName = "", token = null, createChat = true } = {}) {
   const saveIndex = Math.max(0, Math.floor(add2eNumber(index, 4)));
   const saveLabel = label || add2eSavingThrowNames()[saveIndex] || "Jet de sauvegarde";
@@ -376,17 +358,11 @@ function add2eEffectDurationLabel(effect) {
   const remainingData = add2eTimeRemainingRounds(effect, add2eCurrentRoundForEffects());
   const remaining = Number(remainingData?.remaining);
   const total = Number(remainingData?.totalRounds);
-
-  if (Number.isFinite(remaining)) {
-    if (Number.isFinite(total) && total > 0) return `${remaining} / ${total} rds`;
-    return `${remaining} rds`;
-  }
-
+  if (Number.isFinite(remaining)) return Number.isFinite(total) && total > 0 ? `${remaining} / ${total} rds` : `${remaining} rds`;
   if (Number.isFinite(Number(effect?.duration?.remaining))) return `${Number(effect.duration.remaining)} rds`;
   if (Number.isFinite(Number(effect?.duration?.rounds))) return `${Number(effect.duration.rounds)} rds`;
   if (Number.isFinite(Number(effect?.duration?.seconds))) return `${Number(effect.duration.seconds)} s`;
-  if (effect?.isTemporary) return "Temporaire";
-  return "Permanente";
+  return effect?.isTemporary ? "Temporaire" : "Permanente";
 }
 
 function add2eEffectDescription(effect) {
@@ -411,31 +387,72 @@ function add2eBuildMonsterEffectRow(effect) {
 function add2eInstallMonsterEffectDurationPatch() {
   const proto = globalThis.Add2eMonsterSheet?.prototype;
   if (!proto?.getData) return false;
-  if (proto.__add2eMonsterEffectDurationPatch === globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION) return true;
+  if (proto.__add2eMonsterEffectDurationPatch === ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION) return true;
 
   const original = proto.getData;
   proto.getData = async function add2eMonsterGetDataWithTimedEffects(...args) {
     const data = await original.apply(this, args);
-    if (this.actor?.type === "monster") {
-      data.activeEffectsList = Array.from(this.actor.effects ?? []).map(add2eBuildMonsterEffectRow);
-    }
+    if (this.actor?.type === "monster") data.activeEffectsList = Array.from(this.actor.effects ?? []).map(add2eBuildMonsterEffectRow);
     return data;
   };
 
-  proto.__add2eMonsterEffectDurationPatch = globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION;
-  console.log("[ADD2E][AUTO-REMOVE][MONSTER_DURATION_PATCH] installé");
+  proto.__add2eMonsterEffectDurationPatch = ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION;
   return true;
 }
 
 function add2eRenderOpenMonsterSheets(actor = null) {
-  const windows = Object.values(ui.windows ?? {});
-  for (const app of windows) {
+  for (const app of Object.values(ui.windows ?? {})) {
     const sheetActor = app?.actor ?? app?.object ?? app?.document ?? null;
     if (!sheetActor || sheetActor.type !== "monster") continue;
-    if (actor && sheetActor.id !== actor.id) continue;
-    try { app.render(false); }
-    catch (_err) {}
+    if (actor && sheetActor.id !== actor.id && sheetActor.uuid !== actor.uuid) continue;
+    try { app.render(false); } catch (_error) {}
   }
+}
+
+function add2eCollectionValues(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value;
+  if (typeof value.contents !== "undefined") return Array.from(value.contents ?? []);
+  if (typeof value.values === "function") return Array.from(value.values());
+  if (typeof value[Symbol.iterator] === "function" && typeof value !== "string") return Array.from(value);
+  return [];
+}
+
+function add2eTokenActor(tokenLike) {
+  return tokenLike?.actor ?? tokenLike?.document?.actor ?? tokenLike?.object?.actor ?? null;
+}
+
+function add2eCombatantActor(combatant) {
+  return combatant?.actor ?? combatant?.token?.actor ?? combatant?.token?.document?.actor ?? null;
+}
+
+function add2ePushMonsterActor(out, seen, actor, source = "unknown", sourceKey = "") {
+  if (!actor || actor.type !== "monster") return;
+  const key = String(actor?.uuid ?? actor?.id ?? sourceKey ?? actor?.name ?? "");
+  if (!key || seen.has(key)) return;
+  seen.add(key);
+  out.push({ actor, source });
+}
+
+function add2eMonsterActorsForNormalization() {
+  const out = [];
+  const seen = new Set();
+  for (const actor of add2eCollectionValues(game.actors)) add2ePushMonsterActor(out, seen, actor, "world-actor");
+  for (const combatant of add2eCollectionValues(game.combat?.combatants)) add2ePushMonsterActor(out, seen, add2eCombatantActor(combatant), "combatant", combatant?.id ?? combatant?.tokenId ?? "");
+  for (const token of canvas?.tokens?.placeables ?? []) add2ePushMonsterActor(out, seen, add2eTokenActor(token), "canvas-token", token?.document?.uuid ?? token?.id ?? "");
+  for (const scene of add2eCollectionValues(game.scenes)) {
+    for (const tokenDocument of add2eCollectionValues(scene?.tokens)) {
+      add2ePushMonsterActor(out, seen, add2eTokenActor(tokenDocument), "scene-token", tokenDocument?.uuid ?? `${scene?.id ?? "scene"}.${tokenDocument?.id ?? "token"}`);
+    }
+  }
+  return out;
+}
+
+async function add2eNormalizeMonsterActorEffects(actor, { source = "unknown" } = {}) {
+  if (!actor || actor.type !== "monster") return { normalized: 0, skipped: 0, errors: 0 };
+  const result = await add2eTimeNormalizeActorEffects(actor, add2eCurrentRoundForEffects());
+  if (result.normalized) add2eRenderOpenMonsterSheets(actor);
+  return { ...result, source };
 }
 
 async function add2eNormalizeCreatedEffect(effect) {
@@ -446,8 +463,8 @@ async function add2eNormalizeCreatedEffect(effect) {
   try {
     await add2eTimeNormalizeEffect(effect, add2eCurrentRoundForEffects());
   } catch (err) {
-    const msg = String(err?.message || err || "");
-    if (!msg.includes("does not exist") && !msg.includes("n'existe pas")) {
+    const message = String(err?.message || err || "");
+    if (!message.includes("does not exist") && !message.includes("n'existe pas")) {
       console.warn("[ADD2E][AUTO-REMOVE][CREATE_EFFECT_NORMALIZE_FAILED]", { actor: actor.name, effect: effect.name, effectId: effect.id, err });
     }
   }
@@ -455,42 +472,46 @@ async function add2eNormalizeCreatedEffect(effect) {
 }
 
 async function add2eNormalizeExistingMonsterEffects() {
-  if (!game.user?.isGM) return;
-  for (const actor of game.actors ?? []) {
-    if (actor?.type !== "monster") continue;
+  if (!game.user?.isGM) return { actors: 0, normalized: 0, errors: 0 };
+  const rows = add2eMonsterActorsForNormalization();
+  let normalized = 0;
+  let errors = 0;
+  for (const { actor, source } of rows) {
     try {
-      await add2eTimeNormalizeActorEffects(actor, add2eCurrentRoundForEffects());
+      const result = await add2eNormalizeMonsterActorEffects(actor, { source });
+      normalized += Number(result.normalized ?? 0);
+      errors += Number(result.errors ?? 0);
     } catch (err) {
-      console.warn("[ADD2E][AUTO-REMOVE][MONSTER_EFFECTS_NORMALIZE_FAILED]", { actor: actor.name, actorId: actor.id, err });
+      errors += 1;
+      console.warn("[ADD2E][AUTO-REMOVE][MONSTER_EFFECTS_NORMALIZE_FAILED]", { actor: actor.name, actorId: actor.id, actorUuid: actor.uuid ?? null, source, err });
     }
   }
+  return { actors: rows.length, normalized, errors };
 }
 
 Hooks.once("init", add2eRegisterTimeEngineApi);
 Hooks.once("init", add2eVitalRegisterStatusEffects);
 Hooks.once("setup", add2eRegisterTimeEngineApi);
 Hooks.once("setup", add2eVitalRegisterStatusEffects);
+Hooks.once("setup", () => {
+  add2eInstallMonsterEffectDurationPatch();
+  window.setTimeout(add2eInstallMonsterEffectDurationPatch, 0);
+});
 Hooks.once("ready", add2eRegisterTimeEngineApi);
 Hooks.once("ready", add2eVitalRegisterStatusEffects);
 Hooks.once("ready", add2eRegisterWorldTimeEngine);
 Hooks.once("ready", add2eRegisterRoundEngineHooks);
 
-Hooks.on("updateActor", async (actor, changed, options, userId) => {
-  if (!game.user?.isGM) return;
-  if (options?.add2eVitalStatusSync) return;
-
+Hooks.on("updateActor", async (actor, changed, options) => {
+  if (!game.user?.isGM || options?.add2eVitalStatusSync) return;
   const hpChanged = foundry.utils.hasProperty(changed, "system.pdv") ||
     foundry.utils.hasProperty(changed, "system.pv") ||
     foundry.utils.hasProperty(changed, "system.hp") ||
     foundry.utils.hasProperty(changed, "system.points_de_coup");
-
-  if (!hpChanged) return;
-  window.setTimeout(() => add2eSyncActorVitalStatus(actor, { reason: "updateActor:hp" }), 30);
+  if (hpChanged) window.setTimeout(() => add2eSyncActorVitalStatus(actor, { reason: "updateActor:hp" }), 30);
 });
 
-Hooks.on("createActiveEffect", async effect => {
-  await add2eNormalizeCreatedEffect(effect);
-});
+Hooks.on("createActiveEffect", effect => add2eNormalizeCreatedEffect(effect));
 
 Hooks.on("updateActiveEffect", async (effect, changed = {}) => {
   if (game.user?.isGM && Object.prototype.hasOwnProperty.call(changed, "disabled")) {
@@ -505,38 +526,31 @@ Hooks.on("deleteActiveEffect", async effect => {
   await add2eRestoreTokenTransformationFromEffect(effect, { reason: "effect-deleted" });
   const actor = effect?.parent;
   const temporaryItemId = effect?.flags?.add2e?.temporaryItemId;
-  if (actor?.documentName === "Actor" && temporaryItemId && actor.items?.get(temporaryItemId)) {
-    await actor.deleteEmbeddedDocuments("Item", [temporaryItemId]);
-  }
+  if (actor?.documentName === "Actor" && temporaryItemId && actor.items?.get(temporaryItemId)) await actor.deleteEmbeddedDocuments("Item", [temporaryItemId]);
   if (actor?.type === "monster") add2eRenderOpenMonsterSheets(actor);
 });
 
-Hooks.on("updateCombat", (combat, changed) => {
+Hooks.on("createToken", tokenDocument => {
+  const actor = tokenDocument?.actor;
+  if (!game.user?.isGM || actor?.type !== "monster") return;
+  add2eNormalizeMonsterActorEffects(actor, { source: "create-token" })
+    .catch(err => console.warn("[ADD2E][AUTO-REMOVE][CREATE_TOKEN_MONSTER_NORMALIZE_FAILED]", { actor: actor.name, actorId: actor.id, err }));
+});
+
+Hooks.on("updateCombat", (_combat, changed) => {
   if (!changed || (!Object.prototype.hasOwnProperty.call(changed, "round") && !Object.prototype.hasOwnProperty.call(changed, "turn"))) return;
   window.setTimeout(() => add2eRenderOpenMonsterSheets(), 50);
 });
 
 Hooks.once("ready", () => {
   if (!game.user?.isGM) return;
-
-  window.setTimeout(() => {
+  window.setTimeout(async () => {
     add2eRegisterTimeEngineApi();
     add2eRegisterWorldTimeEngine();
     add2eVitalRegisterStatusEffects();
     add2eInstallMonsterEffectDurationPatch();
-    add2eNormalizeExistingMonsterEffects();
-
-    for (const actor of game.actors ?? []) {
-      add2eSyncActorVitalStatus(actor, { reason: "ready-scan" });
-    }
-
-    for (const token of canvas?.tokens?.placeables ?? []) {
-      if (token?.actor) add2eSyncActorVitalStatus(token.actor, { reason: "ready-token-scan" });
-    }
+    await add2eNormalizeExistingMonsterEffects();
+    for (const actor of game.actors ?? []) add2eSyncActorVitalStatus(actor, { reason: "ready-scan" });
+    for (const token of canvas?.tokens?.placeables ?? []) if (token?.actor) add2eSyncActorVitalStatus(token.actor, { reason: "ready-token-scan" });
   }, 500);
-});
-
-Hooks.once("ready", () => {
-  add2eInstallMonsterEffectDurationPatch();
-  window.setTimeout(add2eInstallMonsterEffectDurationPatch, 1000);
 });
