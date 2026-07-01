@@ -2,7 +2,7 @@
 // ADD2E — Helpers globaux encore utilisés par la feuille legacy
 // ============================================================
 
-const ADD2E_LEGACY_GLOBAL_HELPERS_VERSION = "2026-07-01-legacy-global-helpers-v6-scene-distance";
+const ADD2E_LEGACY_GLOBAL_HELPERS_VERSION = "2026-07-01-legacy-global-helpers-v7-adnd-tactical-distance";
 globalThis.ADD2E_LEGACY_GLOBAL_HELPERS_VERSION = ADD2E_LEGACY_GLOBAL_HELPERS_VERSION;
 console.log("[ADD2E][LEGACY_GLOBAL_HELPERS][VERSION]", ADD2E_LEGACY_GLOBAL_HELPERS_VERSION);
 
@@ -111,9 +111,9 @@ function add2eLegacyNormalize(value) {
 
 // ============================================================
 // ADD2E — Conversion générique des distances de scène
-// - la règle fournit une distance physique (pieds, mètres, etc.)
-// - Foundry reçoit la distance exprimée dans l'unité de la scène
-// - les cases et pixels sont des valeurs dérivées, jamais une source de règle
+// Les unités physiques restent physiques. L'unité `adnd-inch` est une unité
+// tactique du manuel : 3 m pour une zone, 3 m/intérieur ou 9 m/extérieur pour
+// une portée. Les cases et pixels sont toujours des valeurs dérivées.
 // ============================================================
 
 const ADD2E_DISTANCE_UNIT_METERS = Object.freeze({
@@ -125,32 +125,68 @@ const ADD2E_DISTANCE_UNIT_METERS = Object.freeze({
   mi: 1609.344
 });
 
+const ADD2E_TACTICAL_INCH_METERS = Object.freeze({
+  area: 3,
+  rangeInterior: 3,
+  rangeExterior: 9
+});
+
 function add2eSceneDistanceNumber(value, fallback = NaN) {
   const number = Number(value);
   return Number.isFinite(number) ? number : fallback;
 }
 
+function add2eSceneDistanceUsage(value) {
+  const normalized = add2eLegacyNormalize(value).replace(/_/g, "");
+  return ["range", "portee", "portee_sort", "spellrange"].includes(normalized) ? "range" : "area";
+}
+
+function add2eSceneDistanceEnvironment(value) {
+  const normalized = add2eLegacyNormalize(value).replace(/_/g, "");
+  return ["exterior", "outside", "outdoor", "exterieur", "dehors"].includes(normalized) ? "exterior" : "interior";
+}
+
 function add2eSceneDistanceUnit(value, fallback = "ft") {
   const normalized = add2eLegacyNormalize(value).replace(/_/g, "");
+  if (["adndinch", "adndtacticalinch", "tacticalinch", "tacticalinches", "pouceadnd", "poucetactique", "poucestactiques"].includes(normalized)) return "adnd-inch";
   if (["in", "inch", "inches", "pouce", "pouces"].includes(normalized)) return "in";
   if (["ft", "foot", "feet", "pied", "pieds"].includes(normalized)) return "ft";
   if (["yd", "yard", "yards", "verge", "verges"].includes(normalized)) return "yd";
   if (["m", "meter", "meters", "metre", "metres"].includes(normalized)) return "m";
   if (["km", "kilometer", "kilometers", "kilometre", "kilometres"].includes(normalized)) return "km";
   if (["mi", "mile", "miles"].includes(normalized)) return "mi";
-  return ADD2E_DISTANCE_UNIT_METERS[fallback] ? fallback : "ft";
+  return ADD2E_DISTANCE_UNIT_METERS[fallback] || fallback === "adnd-inch" ? fallback : "ft";
 }
 
 function add2eSceneDistanceUnitLabel(unit) {
-  return ({ in: "po", ft: "pi", yd: "yd", m: "m", km: "km", mi: "mi" })[unit] ?? unit;
+  return ({ "adnd-inch": "\"", in: "po", ft: "pi", yd: "yd", m: "m", km: "km", mi: "mi" })[unit] ?? unit;
 }
 
-function add2eConvertSceneDistance(value, fromUnit = "ft", toUnit = "ft") {
+function add2eTacticalInchMeters({ usage = "area", environment = "interior" } = {}) {
+  const resolvedUsage = add2eSceneDistanceUsage(usage);
+  const resolvedEnvironment = add2eSceneDistanceEnvironment(environment);
+  if (resolvedUsage === "range") {
+    return resolvedEnvironment === "exterior"
+      ? ADD2E_TACTICAL_INCH_METERS.rangeExterior
+      : ADD2E_TACTICAL_INCH_METERS.rangeInterior;
+  }
+  return ADD2E_TACTICAL_INCH_METERS.area;
+}
+
+function add2eDistanceMeters(value, unit = "ft", options = {}) {
   const source = add2eSceneDistanceNumber(value, NaN);
-  const from = add2eSceneDistanceUnit(fromUnit);
-  const to = add2eSceneDistanceUnit(toUnit);
+  const resolvedUnit = add2eSceneDistanceUnit(unit);
   if (!Number.isFinite(source)) return NaN;
-  return source * ADD2E_DISTANCE_UNIT_METERS[from] / ADD2E_DISTANCE_UNIT_METERS[to];
+  if (resolvedUnit === "adnd-inch") return source * add2eTacticalInchMeters(options);
+  return source * ADD2E_DISTANCE_UNIT_METERS[resolvedUnit];
+}
+
+function add2eConvertSceneDistance(value, fromUnit = "ft", toUnit = "ft", options = {}) {
+  const meters = add2eDistanceMeters(value, fromUnit, options);
+  const target = add2eSceneDistanceUnit(toUnit);
+  if (!Number.isFinite(meters)) return NaN;
+  if (target === "adnd-inch") return meters / add2eTacticalInchMeters(options);
+  return meters / ADD2E_DISTANCE_UNIT_METERS[target];
 }
 
 /**
@@ -159,11 +195,20 @@ function add2eConvertSceneDistance(value, fromUnit = "ft", toUnit = "ft") {
  * - gridCells : nombre réel de cases, éventuellement fractionnaire ;
  * - pixels : rayon à utiliser pour les tests géométriques sur le canvas.
  */
-function add2eSceneDistance({ scene = canvas?.scene ?? null, distance = 0, unit = "ft" } = {}) {
+function add2eSceneDistance({
+  scene = canvas?.scene ?? null,
+  distance = 0,
+  unit = "ft",
+  usage = "area",
+  environment = "interior"
+} = {}) {
   const sourceDistance = Math.max(0, add2eSceneDistanceNumber(distance, 0));
   const sourceUnit = add2eSceneDistanceUnit(unit);
+  const resolvedUsage = add2eSceneDistanceUsage(usage);
+  const resolvedEnvironment = add2eSceneDistanceEnvironment(environment);
+  const sourceMeters = add2eDistanceMeters(sourceDistance, sourceUnit, { usage: resolvedUsage, environment: resolvedEnvironment });
   const sceneUnit = add2eSceneDistanceUnit(scene?.grid?.units ?? scene?.grid?.unit ?? "ft");
-  const sceneDistance = add2eConvertSceneDistance(sourceDistance, sourceUnit, sceneUnit);
+  const sceneDistance = add2eConvertSceneDistance(sourceMeters, "m", sceneUnit, { usage: resolvedUsage, environment: resolvedEnvironment });
   const gridDistance = Math.max(0.000001, add2eSceneDistanceNumber(scene?.grid?.distance, 1));
   const gridSize = Math.max(1, add2eSceneDistanceNumber(scene?.grid?.size ?? canvas?.grid?.size, 100));
   const gridCells = sceneDistance / gridDistance;
@@ -171,7 +216,13 @@ function add2eSceneDistance({ scene = canvas?.scene ?? null, distance = 0, unit 
   return {
     sourceDistance,
     sourceUnit,
-    sourceLabel: `${sourceDistance} ${add2eSceneDistanceUnitLabel(sourceUnit)}`,
+    sourceLabel: sourceUnit === "adnd-inch" ? `${sourceDistance}\"` : `${sourceDistance} ${add2eSceneDistanceUnitLabel(sourceUnit)}`,
+    sourceMeters,
+    tactical: sourceUnit === "adnd-inch" ? {
+      usage: resolvedUsage,
+      environment: resolvedEnvironment,
+      metersPerInch: add2eTacticalInchMeters({ usage: resolvedUsage, environment: resolvedEnvironment })
+    } : null,
     sceneDistance,
     sceneUnit,
     sceneLabel: `${Math.round(sceneDistance * 1000) / 1000} ${add2eSceneDistanceUnitLabel(sceneUnit)}`,
@@ -184,12 +235,14 @@ function add2eSceneDistance({ scene = canvas?.scene ?? null, distance = 0, unit 
 
 globalThis.add2eConvertSceneDistance = add2eConvertSceneDistance;
 globalThis.add2eSceneDistance = add2eSceneDistance;
+globalThis.add2eTacticalInchMeters = add2eTacticalInchMeters;
 
 Hooks.once("ready", () => {
   game.add2e ??= {};
   game.add2e.scene ??= {};
   game.add2e.scene.convertDistance = add2eConvertSceneDistance;
   game.add2e.scene.distance = add2eSceneDistance;
+  game.add2e.scene.tacticalInchMeters = add2eTacticalInchMeters;
 });
 
 function add2eLegacyArray(value) {
