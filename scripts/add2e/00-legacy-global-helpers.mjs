@@ -2,7 +2,7 @@
 // ADD2E — Helpers globaux encore utilisés par la feuille legacy
 // ============================================================
 
-const ADD2E_LEGACY_GLOBAL_HELPERS_VERSION = "2026-06-22-legacy-global-helpers-v5-image-capture";
+const ADD2E_LEGACY_GLOBAL_HELPERS_VERSION = "2026-07-01-legacy-global-helpers-v6-scene-distance";
 globalThis.ADD2E_LEGACY_GLOBAL_HELPERS_VERSION = ADD2E_LEGACY_GLOBAL_HELPERS_VERSION;
 console.log("[ADD2E][LEGACY_GLOBAL_HELPERS][VERSION]", ADD2E_LEGACY_GLOBAL_HELPERS_VERSION);
 
@@ -108,6 +108,89 @@ function add2eLegacyNormalize(value) {
     .replace(/[\s\-]+/g, "_")
     .replace(/_+/g, "_");
 }
+
+// ============================================================
+// ADD2E — Conversion générique des distances de scène
+// - la règle fournit une distance physique (pieds, mètres, etc.)
+// - Foundry reçoit la distance exprimée dans l'unité de la scène
+// - les cases et pixels sont des valeurs dérivées, jamais une source de règle
+// ============================================================
+
+const ADD2E_DISTANCE_UNIT_METERS = Object.freeze({
+  in: 0.0254,
+  ft: 0.3048,
+  yd: 0.9144,
+  m: 1,
+  km: 1000,
+  mi: 1609.344
+});
+
+function add2eSceneDistanceNumber(value, fallback = NaN) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
+}
+
+function add2eSceneDistanceUnit(value, fallback = "ft") {
+  const normalized = add2eLegacyNormalize(value).replace(/_/g, "");
+  if (["in", "inch", "inches", "pouce", "pouces"].includes(normalized)) return "in";
+  if (["ft", "foot", "feet", "pied", "pieds"].includes(normalized)) return "ft";
+  if (["yd", "yard", "yards", "verge", "verges"].includes(normalized)) return "yd";
+  if (["m", "meter", "meters", "metre", "metres"].includes(normalized)) return "m";
+  if (["km", "kilometer", "kilometers", "kilometre", "kilometres"].includes(normalized)) return "km";
+  if (["mi", "mile", "miles"].includes(normalized)) return "mi";
+  return ADD2E_DISTANCE_UNIT_METERS[fallback] ? fallback : "ft";
+}
+
+function add2eSceneDistanceUnitLabel(unit) {
+  return ({ in: "po", ft: "pi", yd: "yd", m: "m", km: "km", mi: "mi" })[unit] ?? unit;
+}
+
+function add2eConvertSceneDistance(value, fromUnit = "ft", toUnit = "ft") {
+  const source = add2eSceneDistanceNumber(value, NaN);
+  const from = add2eSceneDistanceUnit(fromUnit);
+  const to = add2eSceneDistanceUnit(toUnit);
+  if (!Number.isFinite(source)) return NaN;
+  return source * ADD2E_DISTANCE_UNIT_METERS[from] / ADD2E_DISTANCE_UNIT_METERS[to];
+}
+
+/**
+ * Retourne la même distance sous trois formes cohérentes :
+ * - sceneDistance : valeur à passer à MeasuredTemplate.distance ;
+ * - gridCells : nombre réel de cases, éventuellement fractionnaire ;
+ * - pixels : rayon à utiliser pour les tests géométriques sur le canvas.
+ */
+function add2eSceneDistance({ scene = canvas?.scene ?? null, distance = 0, unit = "ft" } = {}) {
+  const sourceDistance = Math.max(0, add2eSceneDistanceNumber(distance, 0));
+  const sourceUnit = add2eSceneDistanceUnit(unit);
+  const sceneUnit = add2eSceneDistanceUnit(scene?.grid?.units ?? scene?.grid?.unit ?? "ft");
+  const sceneDistance = add2eConvertSceneDistance(sourceDistance, sourceUnit, sceneUnit);
+  const gridDistance = Math.max(0.000001, add2eSceneDistanceNumber(scene?.grid?.distance, 1));
+  const gridSize = Math.max(1, add2eSceneDistanceNumber(scene?.grid?.size ?? canvas?.grid?.size, 100));
+  const gridCells = sceneDistance / gridDistance;
+
+  return {
+    sourceDistance,
+    sourceUnit,
+    sourceLabel: `${sourceDistance} ${add2eSceneDistanceUnitLabel(sourceUnit)}`,
+    sceneDistance,
+    sceneUnit,
+    sceneLabel: `${Math.round(sceneDistance * 1000) / 1000} ${add2eSceneDistanceUnitLabel(sceneUnit)}`,
+    gridDistance,
+    gridSize,
+    gridCells,
+    pixels: gridCells * gridSize
+  };
+}
+
+globalThis.add2eConvertSceneDistance = add2eConvertSceneDistance;
+globalThis.add2eSceneDistance = add2eSceneDistance;
+
+Hooks.once("ready", () => {
+  game.add2e ??= {};
+  game.add2e.scene ??= {};
+  game.add2e.scene.convertDistance = add2eConvertSceneDistance;
+  game.add2e.scene.distance = add2eSceneDistance;
+});
 
 function add2eLegacyArray(value) {
   if (!value) return [];
