@@ -1,9 +1,9 @@
 // ADD2E — Affichage détaillé des monstres
-// Version : 2026-06-12-v3-monster-actorsheetv2-wrapper
+// Version : 2026-07-01-v4-monster-actorsheetv2-view-delegates
 // But : séparer les capacités informatives MJ des effets système activables.
 // Foundry V13/V14/V15 : en V14, les feuilles d'acteur ApplicationV2 doivent être raccordées via ActorSheetV2/DocumentSheetV2.
 
-const ADD2E_MONSTER_CAPABILITIES_VERSION = "2026-06-12-v3-monster-actorsheetv2-wrapper";
+const ADD2E_MONSTER_CAPABILITIES_VERSION = "2026-07-01-v4-monster-actorsheetv2-view-delegates";
 globalThis.ADD2E_MONSTER_CAPABILITIES_VERSION = ADD2E_MONSTER_CAPABILITIES_VERSION;
 
 function esc(value) {
@@ -222,9 +222,13 @@ function registerMonsterActorSheetV2Wrapper() {
     async _renderHTML(context, options) { return globalThis.Add2eMonsterSheet.prototype._renderHTML.call(this, context, options); }
     _replaceHTML(result, content, options) { return globalThis.Add2eMonsterSheet.prototype._replaceHTML.call(this, result, content, options); }
     async _updateObject(event, formData) { return globalThis.Add2eMonsterSheet.prototype._updateObject.call(this, event, formData); }
+    _captureViewBeforeRender(root) { return globalThis.Add2eMonsterSheet.prototype._captureViewBeforeRender.call(this, root); }
+    _renderPreservingView(root) { return globalThis.Add2eMonsterSheet.prototype._renderPreservingView.call(this, root); }
+    _restoreViewAfterRender(content) { return globalThis.Add2eMonsterSheet.prototype._restoreViewAfterRender.call(this, content); }
     _activateAutoSubmit(root) { return globalThis.Add2eMonsterSheet.prototype._activateAutoSubmit.call(this, root); }
     activateListeners(content) { return globalThis.Add2eMonsterSheet.prototype.activateListeners.call(this, content); }
     _injectLayoutFix() { return globalThis.Add2eMonsterSheet.prototype._injectLayoutFix.call(this); }
+    async _setMonsterItemEquipped(item, equipped, reason) { return globalThis.Add2eMonsterSheet.prototype._setMonsterItemEquipped.call(this, item, equipped, reason); }
     async _onEquipItem(item) { return globalThis.Add2eMonsterSheet.prototype._onEquipItem.call(this, item); }
     async _recalculerCA() { return globalThis.Add2eMonsterSheet.prototype._recalculerCA.call(this); }
   }
