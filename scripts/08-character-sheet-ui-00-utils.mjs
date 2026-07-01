@@ -1,7 +1,7 @@
 // ============================================================
 // ADD2E — 08 Character Sheet UI — 00 utilitaires
 // ============================================================
-export const ADD2E_CHARACTER_SHEET_UI_VERSION = "2026-05-19-character-ui-split-v10-monk-refresh";
+export const ADD2E_CHARACTER_SHEET_UI_VERSION = "2026-07-01-character-ui-duration-engine-v11";
 
 export function escapeHtml(value) {
   return String(value ?? "")
@@ -105,10 +105,27 @@ export function getMemorizedSpellsByLevel(actor) {
   return countByLevel;
 }
 
+function finiteDuration(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.max(0, Math.floor(number)) : null;
+}
+
 export function formatDuration(effect) {
-  if (typeof effect?.duration?.remaining !== "undefined") return `${effect.duration.remaining} rounds`;
-  if (typeof effect?.duration?.rounds !== "undefined") return `${effect.duration.rounds} rounds`;
-  if (typeof effect?.duration?.seconds !== "undefined") return `${effect.duration.seconds} sec`;
+  try {
+    const remaining = globalThis.game?.add2e?.time?.remainingRounds?.(effect)?.remaining;
+    const rounds = finiteDuration(remaining);
+    if (rounds !== null) return `${rounds} rounds`;
+  } catch (_error) {}
+
+  const nativeRemaining = finiteDuration(effect?.duration?.remaining);
+  if (nativeRemaining !== null) return `${nativeRemaining} rounds`;
+
+  const nativeRounds = finiteDuration(effect?.duration?.rounds);
+  if (nativeRounds !== null) return `${nativeRounds} rounds`;
+
+  const seconds = finiteDuration(effect?.duration?.seconds);
+  if (seconds !== null) return `${seconds} sec`;
+
   return "—";
 }
 
