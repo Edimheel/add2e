@@ -4,7 +4,7 @@
 // Compatible Foundry V13 / V14 / V15
 // ============================================================
 
-const ADD2E_SPELL_SYNC_VERSION = "2026-07-01-spell-sync-class-isolation-v5";
+const ADD2E_SPELL_SYNC_VERSION = "2026-07-01-spell-sync-ranger-druid-v6";
 globalThis.ADD2E_SPELL_SYNC_VERSION = ADD2E_SPELL_SYNC_VERSION;
 
 const ADD2E_SPELL_SYNC_REQUIRED_SYSTEM_KEYS = Object.freeze([
@@ -30,7 +30,7 @@ const ADD2E_SPELL_SYNC_RUNNING = globalThis.ADD2E_SPELL_SYNC_RUNNING instanceof 
   : new Set();
 globalThis.ADD2E_SPELL_SYNC_RUNNING = ADD2E_SPELL_SYNC_RUNNING;
 
-const ADD2E_SPELL_SYNC_AUTO_CLASS_SLUGS = new Set(["clerc", "druide"]);
+const ADD2E_SPELL_SYNC_AUTO_CLASS_SLUGS = new Set(["clerc", "druide", "ranger"]);
 
 function add2eSpellSyncClone(value) {
   if (value === undefined || value === null) return value;
@@ -184,12 +184,34 @@ function add2eSpellSyncClassIdentityForItem(classItem) {
   return add2eSpellSyncClassIdentity(system.slug ?? system.label ?? system.nom ?? system.name ?? classItem?.name ?? "classe");
 }
 
+function add2eSpellSyncRangerDruidEntry(classItem) {
+  if (add2eSpellSyncClassIdentityForItem(classItem) !== "ranger") return null;
+  const casting = add2eSpellSyncMaybeJson(classItem?.system?.spellcasting);
+  const entries = Array.isArray(casting?.entries) ? casting.entries : [];
+  for (const entry of entries) {
+    const key = add2eSpellSyncNormalize(entry?.key ?? entry?.list ?? entry?.liste ?? entry?.name ?? entry?.label ?? entry?.type ?? "");
+    if (key !== "druide") continue;
+    return {
+      key: "druide",
+      startsAt: Math.max(1, add2eSpellSyncNumber(entry?.startsAt ?? entry?.startLevel ?? entry?.niveauDepart ?? 8, 8) || 8),
+      maxSpellLevel: Math.max(1, add2eSpellSyncNumber(entry?.maxSpellLevel ?? entry?.maxLevel ?? entry?.maxNiveauSort ?? 3, 3) || 3),
+      slotsField: String(entry?.slotsField ?? entry?.slotField ?? entry?.progressionField ?? "spellsPerLevelDruide").trim() || "spellsPerLevelDruide"
+    };
+  }
+  return null;
+}
+
 function add2eSpellSyncIsAutoSyncedClass(classItem) {
-  return ADD2E_SPELL_SYNC_AUTO_CLASS_SLUGS.has(add2eSpellSyncClassIdentityForItem(classItem));
+  const identity = add2eSpellSyncClassIdentityForItem(classItem);
+  if (!ADD2E_SPELL_SYNC_AUTO_CLASS_SLUGS.has(identity)) return false;
+  return identity !== "ranger" || !!add2eSpellSyncRangerDruidEntry(classItem);
 }
 
 function add2eSpellSyncClassLists(classItem) {
   if (!add2eSpellSyncIsAutoSyncedClass(classItem)) return [];
+  const classIdentity = add2eSpellSyncClassIdentityForItem(classItem);
+  if (classIdentity === "ranger") return ["druide"];
+
   const system = classItem?.system ?? {};
   const spellcasting = add2eSpellSyncMaybeJson(system.spellcasting);
   const values = [
@@ -201,9 +223,8 @@ function add2eSpellSyncClassLists(classItem) {
     ...add2eSpellSyncArray(spellcasting?.classes)
   ];
   const lists = values.map(add2eSpellSyncNormalize).filter(Boolean);
-  const className = add2eSpellSyncClassIdentityForItem(classItem);
-  if (className === "clerc") lists.push("clerc");
-  if (className === "druide") lists.push("druide");
+  if (classIdentity === "clerc") lists.push("clerc");
+  if (classIdentity === "druide") lists.push("druide");
   return [...new Set(lists)].filter(list => ["clerc", "druide"].includes(list));
 }
 
@@ -389,25 +410,43 @@ async function add2eResetActorSpellMemorization(actor, reason = "level-down") {
   return { reset: updates.length };
 }
 
+function add2eSpellSyncRangerDruidSlots(row, rangerEntry) {
+  if (!row || typeof row !== "object" || !rangerEntry) return null;
+  if (rangerEntry.slotsField && row[rangerEntry.slotsField] !== undefined) return row[rangerEntry.slotsField];
+  for (const field of ["spellSlotsByList", "spellsByList", "spellsPerLevelByList", "sortsParListe"]) {
+    const container = row[field];
+    if (!container || typeof container !== "object") continue;
+    for (const [key, value] of Object.entries(container)) {
+      if (add2eSpellSyncNormalize(key) === "druide") return value;
+    }
+  }
+  return null;
+}
+
 function add2eSpellSyncMaxSpellLevel(classItem, actorLevel) {
   const system = classItem?.system ?? {};
   const spellcasting = add2eSpellSyncMaybeJson(system.spellcasting);
+  const rangerEntry = add2eSpellSyncRangerDruidEntry(classItem);
   const level = Math.max(1, Number(actorLevel) || 1);
-  const startsAt = Math.max(1, Number(spellcasting?.startsAt ?? system.startsAt ?? 1) || 1);
-  const hardMax = Math.max(1, Number(spellcasting?.maxSpellLevel ?? system.maxSpellLevel ?? 9) || 9);
+  const startsAt = Math.max(1, Number(rangerEntry?.startsAt ?? spellcasting?.startsAt ?? system.startsAt ?? 1) || 1);
+  const hardMax = Math.max(1, Number(rangerEntry?.maxSpellLevel ?? spellcasting?.maxSpellLevel ?? system.maxSpellLevel ?? 9) || 9);
   if (level < startsAt) return 0;
   const progression = add2eSpellSyncMaybeJson(system.progression);
   const rows = Array.isArray(progression) ? progression : [];
   const row = rows.find(entry => Number(entry?.niveau ?? entry?.level) === level) ?? rows[level - 1] ?? null;
   let highest = 0;
   if (row && typeof row === "object") {
-    for (const key of ["spellsPerLevel", "SpellsPerLevel", "sortsParNiveau", "sorts_par_niveau", "spells", "slots", "spellSlots"]) {
-      add2eSpellSyncSlotsArray(row[key]).forEach((value, index) => {
+    const rangerSlots = add2eSpellSyncRangerDruidSlots(row, rangerEntry);
+    const sources = rangerSlots !== null
+      ? [rangerSlots]
+      : ["spellsPerLevel", "SpellsPerLevel", "sortsParNiveau", "sorts_par_niveau", "spells", "slots", "spellSlots"].map(key => row[key]);
+    for (const source of sources) {
+      add2eSpellSyncSlotsArray(source).forEach((value, index) => {
         if (add2eSpellSyncNumber(value, 0) > 0) highest = Math.max(highest, index + 1);
       });
     }
   }
-  return highest > 0 ? Math.min(highest, hardMax) : Math.min(1, hardMax);
+  return highest > 0 ? Math.min(highest, hardMax) : 0;
 }
 
 function add2eSpellSyncClassLevel(actor, classItem = null) {
@@ -752,7 +791,7 @@ async function add2eResyncSelectedActorSpells(options = {}) {
   let deleted = 0;
   const classes = add2eSpellSyncClassItems(actor).filter(classItem => add2eSpellSyncClassLists(classItem).length);
   if (!classes.length) {
-    ui.notifications.info("Aucune classe à auto-synchroniser. Seuls Clerc et Druide sont alimentés automatiquement.");
+    ui.notifications.info("Aucune classe à auto-synchroniser. Seuls Clerc, Druide et les sorts druidiques du Rôdeur sont alimentés automatiquement.");
     return { handled: true, imported, deleted, skippedAutoSync: true };
   }
   for (const classItem of classes) {
