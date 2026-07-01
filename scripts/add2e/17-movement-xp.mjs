@@ -2,12 +2,13 @@
 // Les Items classe sont la seule source de progression multiclasses.
 // Compatible Foundry V13/V14/V15.
 
-const VERSION = "2026-06-26-movement-live-preview-v4";
+const VERSION = "2026-07-01-token-turn-movement-v5";
 const TAG = "[ADD2E][MOVE_XP]";
 const INTERNAL = "add2eMoveXpInternal";
 const ITEM_RECALC_DELAY_MS = 140;
 const MOVE_ALERT_DEDUP_MS = 900;
 const MOVE_PREVIEW_LABEL_ID = "add2e-movement-preview";
+const MOVEMENT_TURN_STATE_FLAG = "movementTurnState";
 const itemRecalcTimers = new Map();
 const movementAlertCache = new Map();
 const nativeMovementCache = new Map();
@@ -467,9 +468,11 @@ function combatTurnKey() {
   return combat ? `${combat.id}:${combat.round ?? 0}:${combat.turn ?? 0}` : null;
 }
 
-function spentThisTurn(actor) {
+function spentThisTurn(tokenDoc) {
   const key = combatTurnKey();
-  return key && actor.getFlag("add2e", "movementTurnKey") === key ? Number(actor.getFlag("add2e", "movementSpentMeters")) || 0 : 0;
+  if (!key || !tokenDoc) return 0;
+  const state = tokenDoc.getFlag("add2e", MOVEMENT_TURN_STATE_FLAG) ?? {};
+  return state.key === key ? Math.max(0, Number(state.spentMeters) || 0) : 0;
 }
 
 function movementOrigin(tokenDoc) {
@@ -793,10 +796,16 @@ function notifyGmsMovementExceeded(tokenDoc, result, { userId = null } = {}) {
 }
 
 function rememberAllowedMovement(tokenDoc, changes, result) {
-  if (!result) return;
+  if (!result || !tokenDoc) return;
   if (game.combat) {
-    result.actor.setFlag("add2e", "movementTurnKey", combatTurnKey()).catch(error => console.warn(`${TAG}[TOKEN][TURN_FLAG_ERROR]`, error));
-    result.actor.setFlag("add2e", "movementSpentMeters", result.next).catch(error => console.warn(`${TAG}[TOKEN][SPENT_FLAG_ERROR]`, error));
+    const key = combatTurnKey();
+    if (!key) return;
+    const state = {
+      key,
+      spentMeters: Math.max(0, Math.round((Number(result.next) || 0) * 100) / 100)
+    };
+    tokenDoc.setFlag("add2e", MOVEMENT_TURN_STATE_FLAG, state)
+      .catch(error => console.warn(`${TAG}[TOKEN][TURN_STATE_ERROR]`, error));
   } else {
     tokenDoc.setFlag("add2e", "lastAllowedPosition", { x: changes.x ?? tokenDoc.x, y: changes.y ?? tokenDoc.y }).catch(error => console.warn(`${TAG}[TOKEN][ORIGIN_FLAG_ERROR]`, error));
   }
@@ -811,7 +820,7 @@ function computeTokenMovementScale(tokenDoc, changes = {}, { movement = null, ph
   const origin = from ?? (movement ? nativeMovementOrigin(tokenDoc, movement) : (game.combat ? { x: tokenDoc.x, y: tokenDoc.y } : movementOrigin(tokenDoc)));
   const nativeDistance = movement ? nativeMovementMeters(tokenDoc, movement, phase) : null;
   const delta = nativeDistance ?? tokenDistanceMeters(tokenDoc, changes, origin);
-  const spent = game.combat ? spentThisTurn(actor) : 0;
+  const spent = game.combat ? spentThisTurn(tokenDoc) : 0;
   const next = Math.round((spent + delta) * 100) / 100;
   const status = movementScaleStatus(next, max);
 
@@ -1008,12 +1017,6 @@ Hooks.on("controlToken", token => {
 Hooks.on("createItem", (item, options = {}) => queueItemMovementRecalc(item, "createItem", options));
 Hooks.on("updateItem", (item, _changes = {}, options = {}) => queueItemMovementRecalc(item, "updateItem", options));
 Hooks.on("deleteItem", (item, options = {}) => queueItemMovementRecalc(item, "deleteItem", options));
-Hooks.on("updateCombat", () => {
-  if (!game.user.isGM) return;
-  for (const combatant of game.combat?.combatants ?? []) {
-    if (combatant.actor?.type === "personnage") combatant.actor.setFlag("add2e", "movementTurnKey", combatTurnKey());
-  }
-});
 
 globalThis.add2eComputeXp = computeXp;
 globalThis.add2eComputeMovement = computeMovement;
