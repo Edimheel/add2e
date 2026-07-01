@@ -4,7 +4,7 @@
 
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant _onDrop.");
 
-const ADD2E_ACTOR_SHEET_DROP_VERSION = "2026-06-26-actor-drop-family-final-render-v3";
+const ADD2E_ACTOR_SHEET_DROP_VERSION = "2026-07-01-actor-drop-list-instances-v4";
 const ADD2E_SPELL_DROP_PENDING = globalThis.ADD2E_SPELL_DROP_PENDING instanceof Set
   ? globalThis.ADD2E_SPELL_DROP_PENDING
   : new Set();
@@ -43,6 +43,41 @@ function sameSpell(left, right) {
 function spellListKey(entry) {
   const key = String(entry?.key ?? entry ?? "").trim();
   return typeof globalThis.add2eNormalizeSpellKey === "function" ? globalThis.add2eNormalizeSpellKey(key) : norm(key);
+}
+
+function spellListLabel(entry) {
+  const key = spellListKey(entry);
+  return { clerc: "Clerc", druide: "Druide", magicien: "Magicien", illusionniste: "Illusionniste" }[key] ?? String(entry?.label ?? entry ?? key);
+}
+
+function spellListsOf(itemData) {
+  const system = itemData?.system ?? {};
+  const add2e = itemData?.flags?.add2e ?? {};
+  return [...new Set([
+    system.spellLists,
+    system.lists,
+    system.classes,
+    system.classe,
+    system.class,
+    system.liste,
+    add2e.knownSpellLists,
+    add2e.learnedSpellLists,
+    add2e.autoGrantedSpellList,
+    add2e.spellListsResolved
+  ].flatMap(values).map(spellListKey).filter(Boolean))];
+}
+
+function hasSpellList(itemData, entry) {
+  const key = spellListKey(entry);
+  return !!key && spellListsOf(itemData).includes(key);
+}
+
+function sameSpellInstance(left, right, entry) {
+  return sameSpell(left, right) && hasSpellList(left, entry);
+}
+
+function isGeneratedSpellFamily(item) {
+  return item?.flags?.add2e?.spellFamily?.generated === true;
 }
 
 function spellDropKey(actor, itemData, entry) {
@@ -192,26 +227,126 @@ function markManualSpellList(itemData, entry) {
   data.flags.add2e.manuallyLearnedSpell = true;
   data.flags.add2e.lastLearnedSpellList = key;
   foundry.utils.setProperty(data, "system.spellLists", [key]);
+  foundry.utils.setProperty(data, "system.classe", spellListLabel(key));
   return data;
+}
+
+function manualSpellInstanceUpdate(item, entry) {
+  const key = spellListKey(entry);
+  return {
+    _id: item.id,
+    "system.spellLists": [key],
+    "system.classe": spellListLabel(key),
+    "flags.add2e.learnedSpellLists": [key],
+    "flags.add2e.knownSpellLists": [key],
+    "flags.add2e.manuallyLearnedSpell": true,
+    "flags.add2e.lastLearnedSpellList": key
+  };
+}
+
+function manualSpellCloneForList(source, entry) {
+  const data = typeof source?.toObject === "function" ? source.toObject() : clone(source);
+  const key = spellListKey(entry);
+  if (!data || !key) return null;
+  delete data._id;
+  delete data._stats;
+  data.folder = null;
+  data.flags = data.flags ?? {};
+  data.flags.add2e = data.flags.add2e ?? {};
+  for (const flag of [
+    "autoGrantedByClass", "autoGrantedByClassId", "autoGrantedSpellSync", "autoGrantedSpellList",
+    "autoGrantedAtActorLevel", "sourceStableSpellKey", "stableSpellKey", "spellListsResolved",
+    "spellFamily", "reversibleActorEntry", "variantChoice"
+  ]) delete data.flags.add2e[flag];
+  return markManualSpellList(data, key);
+}
+
+async function removeGeneratedSpellFamilyChildren(actor, sourceItemId) {
+  const sourceId = String(sourceItemId ?? "").trim();
+  if (!actor || !sourceId) return { deleted: 0 };
+  const ids = actor.items
+    .filter(item => itemType(item) === "sort"
+      && isGeneratedSpellFamily(item)
+      && String(item?.flags?.add2e?.spellFamily?.sourceItemId ?? "") === sourceId)
+    .map(item => item.id)
+    .filter(id => actor.items.has(id));
+  if (!ids.length) return { deleted: 0 };
+  try {
+    await actor.deleteEmbeddedDocuments("Item", ids, {
+      add2eInternal: true,
+      add2eSpellFamilyExpansion: true,
+      add2eSpellListSplit: true,
+      render: false
+    });
+    return { deleted: ids.length };
+  } catch (error) {
+    if (!/does not exist/i.test(String(error?.message ?? error))) throw error;
+    const live = ids.filter(id => actor.items.has(id));
+    if (!live.length) return { deleted: 0 };
+    await actor.deleteEmbeddedDocuments("Item", live, {
+      add2eInternal: true,
+      add2eSpellFamilyExpansion: true,
+      add2eSpellListSplit: true,
+      render: false
+    });
+    return { deleted: live.length };
+  }
+}
+
+async function splitLegacyMergedManualSpell(actor, itemData, entry) {
+  const targetList = spellListKey(entry);
+  if (!actor || !itemData || !targetList) return { handled: false };
+
+  const merged = actor.items
+    .filter(item => itemType(item) === "sort"
+      && !isGeneratedSpellFamily(item)
+      && sameSpell(item, itemData)
+      && hasSpellList(item, targetList)
+      && spellListsOf(item).length > 1)
+    .find(item => item?.flags?.add2e?.manuallyLearnedSpell === true || values(item?.flags?.add2e?.knownSpellLists).length > 0)
+    ?? null;
+  if (!merged) return { handled: false };
+
+  const lists = spellListsOf(merged);
+  const retainedList = lists.find(list => list !== targetList) ?? lists[0];
+  if (!retainedList) return { handled: false };
+
+  const existingByList = new Set(actor.items
+    .filter(item => item.id !== merged.id && itemType(item) === "sort" && sameSpell(item, itemData))
+    .flatMap(spellListsOf));
+
+  await removeGeneratedSpellFamilyChildren(actor, merged.id);
+  if (!actor.items.has(merged.id)) return { handled: false };
+  await actor.updateEmbeddedDocuments("Item", [manualSpellInstanceUpdate(merged, retainedList)], {
+    add2eInternal: true,
+    add2eSpellListSplit: true,
+    render: false
+  });
+
+  const creates = [];
+  for (const list of lists.filter(list => list !== retainedList && !existingByList.has(list))) {
+    const source = list === targetList ? itemData : merged;
+    const data = list === targetList ? markManualSpellList(source, list) : manualSpellCloneForList(source, list);
+    if (data) creates.push(data);
+  }
+  if (creates.length) {
+    await actor.createEmbeddedDocuments("Item", creates, {
+      add2eInternal: true,
+      add2eSpellFamilyExpansion: true,
+      add2eSpellListSplit: true,
+      render: false
+    });
+  }
+
+  return { handled: true, retainedList, created: creates.length };
 }
 
 async function add2eDropLearnSpellListOnExisting(actor, existingSort, entry) {
   const key = spellListKey(entry);
   if (!actor || !existingSort || !key) return { handled: false };
-  const current = new Set(values(existingSort.flags?.add2e?.knownSpellLists ?? existingSort.system?.spellLists).map(spellListKey).filter(Boolean));
-  if (current.has(key)) return { handled: true, updated: false, alreadyKnown: true };
-
-  current.add(key);
-  const lists = [...current];
-  await existingSort.update({
-    "flags.add2e.learnedSpellLists": lists,
-    "flags.add2e.knownSpellLists": lists,
-    "flags.add2e.manuallyLearnedSpell": true,
-    "flags.add2e.lastLearnedSpellList": key,
-    "system.spellLists": lists
-  }, { add2eInternal: true, add2eSpellLearnList: true });
-  ui.notifications.info(`"${existingSort.name}" ajouté à la liste ${entry?.label || key}.`);
-  return { handled: true, updated: true, alreadyKnown: false };
+  const current = new Set(spellListsOf(existingSort));
+  if (!current.has(key)) return { handled: false, requiresSeparateItem: true };
+  return { handled: true, updated: false, alreadyKnown: true };
 }
 
 async function applyItemEffects(actor, item) {
@@ -348,21 +483,29 @@ globalThis.Add2eActorSheet.prototype._onDrop = async function add2eSafeOnDrop(ev
   }
 
   try {
-    const existing = Array.from(this.actor.items ?? []).find(item => item.name === itemData.name && itemType(item) === type) ?? null;
+    if (type === "sort" && spellCheck?.entry) {
+      const repaired = await splitLegacyMergedManualSpell(this.actor, itemData, spellCheck.entry);
+      if (repaired.handled) {
+        await finalizeSpellDrop(this, this.actor);
+        ui.notifications.info(`“${itemData.name}” a été séparé par liste de sorts.`);
+        return true;
+      }
+    }
+
+    const existing = type === "sort" && spellCheck?.entry
+      ? Array.from(this.actor.items ?? []).find(item => itemType(item) === "sort" && sameSpellInstance(item, itemData, spellCheck.entry)) ?? null
+      : Array.from(this.actor.items ?? []).find(item => item.name === itemData.name && itemType(item) === type) ?? null;
     if (existing) {
       if (type === "sort" && sameSpell(existing, itemData) && spellCheck?.entry) {
-        const result = await add2eDropLearnSpellListOnExisting(this.actor, existing, spellCheck.entry);
-        if (result?.handled) {
-          await finalizeSpellDrop(this, this.actor);
-          if (result.alreadyKnown) ui.notifications?.info?.(`“${existing.name}” est déjà connu pour cette liste.`);
-          return true;
-        }
+        await finalizeSpellDrop(this, this.actor);
+        ui.notifications?.info?.(`“${existing.name}” est déjà connu pour la liste ${spellListLabel(spellCheck.entry)}.`);
+        return true;
       }
       ui.notifications.warn(`"${itemData.name}" est déjà présent sur cet acteur.`);
       return false;
     }
 
-    const [created] = await this.actor.createEmbeddedDocuments("Item", [clone(itemData)], { add2eInternal: true });
+    const [created] = await this.actor.createEmbeddedDocuments("Item", [clone(itemData)], { add2eInternal: true, add2eSpellListDrop: type === "sort" });
     if (!created) return false;
     await applyItemEffects(this.actor, created);
     this._add2eRememberActiveTab?.();
@@ -388,3 +531,4 @@ try { globalThis.add2eDropPurgeClassContent = add2eDropPurgeClassContent; } catc
 try { globalThis.add2eDropBulkDelete = add2eDropBulkDelete; } catch (_error) {}
 try { globalThis.add2eDropIsBoutiqueConsumable = isBoutiqueConsumable; } catch (_error) {}
 try { globalThis.add2eDropLearnSpellListOnExisting = add2eDropLearnSpellListOnExisting; } catch (_error) {}
+try { globalThis.add2eDropSplitLegacyMergedManualSpell = splitLegacyMergedManualSpell; } catch (_error) {}
