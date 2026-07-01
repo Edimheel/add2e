@@ -640,3 +640,62 @@ export async function replaceClassInMulticlass(actor, option, sheet = null) {
   ui.notifications.info(`Classe remplacée : ${replaced.name} → ${created.name}.`);
   return true;
 }
+
+export async function applyClassAsMonoclass(actor, optionOrItemData, sheet = null) {
+  const itemData = optionOrItemData?.classData ?? optionOrItemData;
+  const raceData = optionOrItemData?.raceData ?? systemRace(actor);
+  if (!actor || !itemData || !classPrerequisitesOk(actor, itemData, raceData, { notify: true })) return false;
+
+  await applyRaceData(actor, raceData, sheet);
+  const wantedSlug = classSlug(itemData);
+  const existing = classItems(actor);
+  const existingTarget = existing.find(doc => classSlug(doc) === wantedSlug) ?? null;
+  let keep = existingTarget;
+  let state = existingTarget ? canonicalClassState(actor, existingTarget) : null;
+
+  if (existing.length > 1 && !(await ensureCanonicalMulticlassState(actor))) return false;
+  if (!keep) {
+    const data = cloneItemData(itemData);
+    data.type = "classe";
+    data.system = data.system ?? {};
+    data.system.niveau = Math.max(1, Math.floor(num(actor.system?.niveau, 1)));
+    data.system.xp = Math.max(0, Math.floor(num(actor.system?.xp, 0)));
+    const [created] = await actor.createEmbeddedDocuments("Item", [data], {
+      [INTERNAL]: true,
+      add2eInternal: true,
+      add2eReason: "multiclass-monoclass-create-class"
+    });
+    if (!created) return false;
+    keep = created;
+    state = canonicalClassState(actor, keep);
+  }
+
+  if (!state?.hasLevel || !state?.hasXp) state = monoClassStateFromActor(actor, keep);
+  return cleanupAfterMonoclassReplace(actor, keep, state, sheet);
+}
+
+export async function applyRaceForMulticlass(actor, raceData, sheet = null) {
+  if (!actor || classItems(actor).length <= 1) return false;
+  const docs = classItems(actor);
+  const allowed = docs.every(doc => raceCompatibleForMulticlass(actor, doc, raceData));
+  if (!allowed) {
+    await dialogAlert(
+      "ADD2E — Race incompatible",
+      `<p>La race <b>${itemLabel(raceData, "Race")}</b> n'est pas compatible avec le multiclassage actuel.</p>`
+    );
+    return true;
+  }
+  if (!(await ensureCanonicalMulticlassState(actor))) return false;
+  await applyRaceData(actor, raceData, sheet);
+  await refreshMulticlassSummary(actor, "multiclass-race-refresh");
+  sheet?.render?.(false);
+  return true;
+}
+
+export async function recalcActor(actor) {
+  if (!actor || actor.type !== "personnage" || classItems(actor).length <= 1) return null;
+  if (!(await ensureCanonicalMulticlassState(actor))) return null;
+  return refreshMulticlassSummary(actor, "multiclass-item-progression-recalc");
+}
+
+export { currentRaceOrCompatibleAlternatives };
