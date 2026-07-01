@@ -694,45 +694,45 @@ if (!zone) {
   return false;
 }
 
-const area = add2eSceneArea(level);
-const targetTokens = add2eTokensInZone(zone, level, casterToken);
 const results = [];
+try {
+  const area = add2eSceneArea(level);
+  const targetTokens = add2eTokensInZone(zone, level, casterToken);
 
-console.log(`${ADD2E_ONUSE_TAG}[START]`, {
-  actor: ADD2E_ACTOR.name,
-  sort: ADD2E_ITEM?.name,
-  level,
-  zoneCenter: { x: zone.x, y: zone.y },
-  templatePersisted: zone.persisted,
-  templateVia: zone.templateVia,
-  templateRequestId: zone.templateRequestId,
-  templateId: zone.templateId,
-  areaMeasure: area.measure,
-  diameterTacticalInches: add2eAreaDiameterInches(level),
-  diameterMeters: area.diameterMeters,
-  diameterSceneDistance: area.diameterSceneDistance,
-  diameterSceneUnit: area.sceneUnit,
-  diameterGridCells: area.diameterGridCells,
-  radiusSceneDistance: area.radiusSceneDistance,
-  radiusGridCells: area.radiusGridCells,
-  radiusPixels: area.radiusPixels,
-  targets: targetTokens.map(target => ({ name: target.name, actor: target.actor?.name }))
-});
+  console.log(`${ADD2E_ONUSE_TAG}[START]`, {
+    actor: ADD2E_ACTOR.name,
+    sort: ADD2E_ITEM?.name,
+    level,
+    zoneCenter: { x: zone.x, y: zone.y },
+    templatePersisted: zone.persisted,
+    templateVia: zone.templateVia,
+    templateRequestId: zone.templateRequestId,
+    templateId: zone.templateId,
+    areaMeasure: area.measure,
+    diameterTacticalInches: add2eAreaDiameterInches(level),
+    diameterMeters: area.diameterMeters,
+    diameterSceneDistance: area.diameterSceneDistance,
+    diameterSceneUnit: area.sceneUnit,
+    diameterGridCells: area.diameterGridCells,
+    radiusSceneDistance: area.radiusSceneDistance,
+    radiusGridCells: area.radiusGridCells,
+    radiusPixels: area.radiusPixels,
+    targets: targetTokens.map(target => ({ name: target.name, actor: target.actor?.name }))
+  });
 
-for (const targetToken of targetTokens) {
-  const result = await add2eResolveAmitieTarget(targetToken, ADD2E_ACTOR, level, zone);
-  if (result) results.push(result);
-}
+  for (const targetToken of targetTokens) {
+    const result = await add2eResolveAmitieTarget(targetToken, ADD2E_ACTOR, level, zone);
+    if (result) results.push(result);
+  }
 
-await add2eChatAmitie(ADD2E_ACTOR, level, results);
-
-if (!results.some(result => result.effectRequested)) {
-  await add2eDeleteLinkedTemplate(zone, "no-active-effect");
+  await add2eChatAmitie(ADD2E_ACTOR, level, results);
+} finally {
+  await add2eDeleteLinkedTemplate(zone, "targets-resolved");
 }
 
 console.log(`${ADD2E_ONUSE_TAG}[DONE]`, {
   consumedByDispatcher: true,
-  targetCount: targetTokens.length,
+  targetCount: results.length,
   templatePersisted: zone.persisted,
   templateVia: zone.templateVia,
   templateRequestId: zone.templateRequestId,
