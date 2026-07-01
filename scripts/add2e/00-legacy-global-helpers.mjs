@@ -2,7 +2,7 @@
 // ADD2E — Helpers globaux encore utilisés par la feuille legacy
 // ============================================================
 
-const ADD2E_LEGACY_GLOBAL_HELPERS_VERSION = "2026-07-01-legacy-global-helpers-v7-adnd-tactical-distance";
+const ADD2E_LEGACY_GLOBAL_HELPERS_VERSION = "2026-07-01-legacy-global-helpers-v8-distance-measure";
 globalThis.ADD2E_LEGACY_GLOBAL_HELPERS_VERSION = ADD2E_LEGACY_GLOBAL_HELPERS_VERSION;
 console.log("[ADD2E][LEGACY_GLOBAL_HELPERS][VERSION]", ADD2E_LEGACY_GLOBAL_HELPERS_VERSION);
 
@@ -113,7 +113,8 @@ function add2eLegacyNormalize(value) {
 // ADD2E — Conversion générique des distances de scène
 // Les unités physiques restent physiques. L'unité `adnd-inch` est une unité
 // tactique du manuel : 3 m pour une zone, 3 m/intérieur ou 9 m/extérieur pour
-// une portée. Les cases et pixels sont toujours des valeurs dérivées.
+// une portée. `measure` indique si la valeur de règle est un rayon ou diamètre.
+// Les gabarits Foundry reçoivent toujours un rayon.
 // ============================================================
 
 const ADD2E_DISTANCE_UNIT_METERS = Object.freeze({
@@ -146,6 +147,11 @@ function add2eSceneDistanceEnvironment(value) {
   return ["exterior", "outside", "outdoor", "exterieur", "dehors"].includes(normalized) ? "exterior" : "interior";
 }
 
+function add2eSceneDistanceMeasure(value) {
+  const normalized = add2eLegacyNormalize(value).replace(/_/g, "");
+  return ["diameter", "diametre", "diametere", "diam"].includes(normalized) ? "diameter" : "radius";
+}
+
 function add2eSceneDistanceUnit(value, fallback = "ft") {
   const normalized = add2eLegacyNormalize(value).replace(/_/g, "");
   if (["adndinch", "adndtacticalinch", "tacticalinch", "tacticalinches", "pouceadnd", "poucetactique", "poucestactiques"].includes(normalized)) return "adnd-inch";
@@ -155,7 +161,7 @@ function add2eSceneDistanceUnit(value, fallback = "ft") {
   if (["m", "meter", "meters", "metre", "metres"].includes(normalized)) return "m";
   if (["km", "kilometer", "kilometers", "kilometre", "kilometres"].includes(normalized)) return "km";
   if (["mi", "mile", "miles"].includes(normalized)) return "mi";
-  return ADD2E_DISTANCE_UNIT_METERS[fallback] || fallback === "adnd-inch" ? fallback : "ft";
+  return (fallback === "adnd-inch" || ADD2E_DISTANCE_UNIT_METERS[fallback]) ? fallback : "ft";
 }
 
 function add2eSceneDistanceUnitLabel(unit) {
@@ -190,46 +196,67 @@ function add2eConvertSceneDistance(value, fromUnit = "ft", toUnit = "ft", option
 }
 
 /**
- * Retourne la même distance sous trois formes cohérentes :
- * - sceneDistance : valeur à passer à MeasuredTemplate.distance ;
- * - gridCells : nombre réel de cases, éventuellement fractionnaire ;
- * - pixels : rayon à utiliser pour les tests géométriques sur le canvas.
+ * Retourne une distance de règle sous toutes les formes nécessaires à Foundry.
+ * `distance` décrit la mesure de règle ; `measure` vaut `radius` ou `diameter`.
+ * `sceneDistance`, `gridCells` et `pixels` restent volontairement le RAYON à
+ * transmettre au gabarit ou au test géométrique, afin de rester compatibles
+ * avec les usages existants.
  */
 function add2eSceneDistance({
   scene = canvas?.scene ?? null,
   distance = 0,
   unit = "ft",
   usage = "area",
-  environment = "interior"
+  environment = "interior",
+  measure = "radius"
 } = {}) {
   const sourceDistance = Math.max(0, add2eSceneDistanceNumber(distance, 0));
   const sourceUnit = add2eSceneDistanceUnit(unit);
   const resolvedUsage = add2eSceneDistanceUsage(usage);
   const resolvedEnvironment = add2eSceneDistanceEnvironment(environment);
-  const sourceMeters = add2eDistanceMeters(sourceDistance, sourceUnit, { usage: resolvedUsage, environment: resolvedEnvironment });
+  const resolvedMeasure = add2eSceneDistanceMeasure(measure);
+  const measureMeters = add2eDistanceMeters(sourceDistance, sourceUnit, { usage: resolvedUsage, environment: resolvedEnvironment });
+  const radiusMeters = resolvedMeasure === "diameter" ? measureMeters / 2 : measureMeters;
+  const diameterMeters = radiusMeters * 2;
   const sceneUnit = add2eSceneDistanceUnit(scene?.grid?.units ?? scene?.grid?.unit ?? "ft");
-  const sceneDistance = add2eConvertSceneDistance(sourceMeters, "m", sceneUnit, { usage: resolvedUsage, environment: resolvedEnvironment });
+  const radiusSceneDistance = add2eConvertSceneDistance(radiusMeters, "m", sceneUnit, { usage: resolvedUsage, environment: resolvedEnvironment });
+  const diameterSceneDistance = add2eConvertSceneDistance(diameterMeters, "m", sceneUnit, { usage: resolvedUsage, environment: resolvedEnvironment });
   const gridDistance = Math.max(0.000001, add2eSceneDistanceNumber(scene?.grid?.distance, 1));
   const gridSize = Math.max(1, add2eSceneDistanceNumber(scene?.grid?.size ?? canvas?.grid?.size, 100));
-  const gridCells = sceneDistance / gridDistance;
+  const radiusGridCells = radiusSceneDistance / gridDistance;
+  const diameterGridCells = diameterSceneDistance / gridDistance;
+  const radiusPixels = radiusGridCells * gridSize;
+  const diameterPixels = diameterGridCells * gridSize;
 
   return {
     sourceDistance,
     sourceUnit,
     sourceLabel: sourceUnit === "adnd-inch" ? `${sourceDistance}\"` : `${sourceDistance} ${add2eSceneDistanceUnitLabel(sourceUnit)}`,
-    sourceMeters,
+    measure: resolvedMeasure,
+    measureMeters,
+    // Conservé pour les appels déjà basés sur une distance de règle unique.
+    sourceMeters: measureMeters,
     tactical: sourceUnit === "adnd-inch" ? {
       usage: resolvedUsage,
       environment: resolvedEnvironment,
       metersPerInch: add2eTacticalInchMeters({ usage: resolvedUsage, environment: resolvedEnvironment })
     } : null,
-    sceneDistance,
+    radiusMeters,
+    diameterMeters,
+    // Alias de compatibilité : toujours le rayon, comme MeasuredTemplate.distance.
+    sceneDistance: radiusSceneDistance,
+    gridCells: radiusGridCells,
+    pixels: radiusPixels,
     sceneUnit,
-    sceneLabel: `${Math.round(sceneDistance * 1000) / 1000} ${add2eSceneDistanceUnitLabel(sceneUnit)}`,
+    sceneLabel: `${Math.round(radiusSceneDistance * 1000) / 1000} ${add2eSceneDistanceUnitLabel(sceneUnit)}`,
     gridDistance,
     gridSize,
-    gridCells,
-    pixels: gridCells * gridSize
+    radiusSceneDistance,
+    radiusGridCells,
+    radiusPixels,
+    diameterSceneDistance,
+    diameterGridCells,
+    diameterPixels
   };
 }
 
