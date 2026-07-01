@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — Service générique de gestion du temps et des durées.
-// Version : 2026-06-06-time-engine-world-tick-v1
+// Version : 2026-07-01-time-engine-foundry-duration-value-v2
 //
 // Rôle :
 // - Fournit un format commun pour les durées en rounds.
@@ -11,7 +11,7 @@
 // - Compatible Foundry V13/V14/V15.
 // ============================================================================
 
-export const ADD2E_TIME_ENGINE_VERSION = "2026-06-06-time-engine-world-tick-v1";
+export const ADD2E_TIME_ENGINE_VERSION = "2026-07-01-time-engine-foundry-duration-value-v2";
 
 const TAG = "[ADD2E][TIME_ENGINE]";
 const FLAG_SCOPE = "add2e";
@@ -300,6 +300,16 @@ function firstNumber(...values) {
   return NaN;
 }
 
+function nativeValueDurationToRounds(duration = {}) {
+  const value = number(duration?.value, NaN);
+  if (!Number.isFinite(value) || value <= 0) return 0;
+
+  const unit = add2eTimeNormalizeUnit(duration?.units ?? "round");
+  if (!["round", "turn", "minute", "hour", "segment"].includes(unit)) return 0;
+
+  return add2eTimeToRounds(value, unit);
+}
+
 export function add2eTimeRoundsFromEffect(effect) {
   const duration = effect?.duration ?? {};
   const flags = effect?.flags?.[FLAG_SCOPE] ?? {};
@@ -309,6 +319,9 @@ export function add2eTimeRoundsFromEffect(effect) {
 
   const nativeRounds = firstNumber(duration.rounds);
   if (Number.isFinite(nativeRounds) && nativeRounds > 0) return nativeRounds;
+
+  const nativeValueRounds = nativeValueDurationToRounds(duration);
+  if (nativeValueRounds > 0) return nativeValueRounds;
 
   const explicitRounds = firstNumber(
     flags.rounds,
@@ -378,14 +391,17 @@ export async function add2eTimeNormalizeEffect(effect, currentRound = game.comba
 
   const duration = effect.duration ?? {};
   const hasNativeRounds = Number.isFinite(number(duration.rounds, NaN));
+  const hasNativeValueDuration = nativeValueDurationToRounds(duration) > 0;
   const hasStartRound = Number.isFinite(number(duration.startRound, NaN));
   const hasStartTick = Number.isFinite(add2eTimeStartTickFromEffect(effect));
   const totalRounds = Math.max(1, Math.floor(rounds));
   const currentTick = add2eTimeCurrentTick();
   const patch = {};
 
-  if (!hasNativeRounds) patch["duration.rounds"] = totalRounds;
-  if (!hasStartRound) patch["duration.startRound"] = Number(currentRound) || game.combat?.round || 1;
+  // Les effets Foundry V14/V15 stockent leur durée native dans value/units.
+  // Ne pas leur injecter le format historique rounds/startRound.
+  if (!hasNativeRounds && !hasNativeValueDuration) patch["duration.rounds"] = totalRounds;
+  if (!hasStartRound && !hasNativeValueDuration) patch["duration.startRound"] = Number(currentRound) || game.combat?.round || 1;
 
   patch["flags.add2e.timeEngine.version"] = ADD2E_TIME_ENGINE_VERSION;
   patch["flags.add2e.timeEngine.managed"] = true;
