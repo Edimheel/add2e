@@ -17,9 +17,10 @@ const ADD2E_SORT_CONFIG = Object.freeze({
   durationText: "1 round par niveau",
   castingTimeText: "1 segment",
   saveText: "Spécial",
-  areaText: "sphère d’un rayon de 1\" + 1\" par niveau",
+  areaText: "sphère d’un diamètre de 1\" + 1\" par niveau",
   areaUnit: "adnd-inch",
   areaUsage: "area",
+  areaMeasure: "diameter",
   materialText: "craie ou farine blanche, noir de fumée ou suie, vermillon",
   img: "systems/add2e/assets/icones/sorts/magicien-amitie.webp",
   imgFallback: "icons/magic/control/hypnosis-mesmerism-eye.webp"
@@ -108,36 +109,49 @@ function add2eGetCasterToken(actorDoc) {
     ?? null;
 }
 
-function add2eAreaRadiusInches(level) {
-  // Manuel : 1" + 1" par niveau. Ici " est l'unité tactique AD&D.
+function add2eAreaDiameterInches(level) {
+  // Convention ADD2E : 1" + 1"/niveau est le diamètre tactique de la sphère.
   return 1 + Math.max(1, Math.floor(Number(level) || 1));
 }
 
 function add2eFallbackSceneArea(level) {
-  const sourceDistance = add2eAreaRadiusInches(level);
-  const sourceMeters = sourceDistance * 3;
+  const diameterInches = add2eAreaDiameterInches(level);
+  const diameterMeters = diameterInches * 3;
+  const radiusMeters = diameterMeters / 2;
   const scene = canvas?.scene ?? null;
   const unit = String(scene?.grid?.units ?? scene?.grid?.unit ?? "ft").trim().toLowerCase();
   const metric = /^(m|metre|metres|meter|meters)$/.test(unit);
   const sceneUnit = metric ? "m" : "ft";
-  const sceneDistance = metric ? sourceMeters : sourceMeters / 0.3048;
+  const radiusSceneDistance = metric ? radiusMeters : radiusMeters / 0.3048;
+  const diameterSceneDistance = radiusSceneDistance * 2;
   const gridDistance = Math.max(0.000001, Number(scene?.grid?.distance) || 1);
   const gridSize = Math.max(1, Number(scene?.grid?.size ?? canvas?.grid?.size) || 100);
-  const gridCells = sceneDistance / gridDistance;
+  const radiusGridCells = radiusSceneDistance / gridDistance;
+  const diameterGridCells = diameterSceneDistance / gridDistance;
 
   return {
-    sourceDistance,
+    sourceDistance: diameterInches,
     sourceUnit: "adnd-inch",
-    sourceLabel: `${sourceDistance}\"`,
-    sourceMeters,
+    sourceLabel: `${diameterInches}\"`,
+    measure: "diameter",
+    measureMeters: diameterMeters,
+    sourceMeters: diameterMeters,
     tactical: { usage: "area", environment: "interior", metersPerInch: 3 },
-    sceneDistance,
+    radiusMeters,
+    diameterMeters,
+    sceneDistance: radiusSceneDistance,
+    gridCells: radiusGridCells,
+    pixels: radiusGridCells * gridSize,
     sceneUnit,
-    sceneLabel: `${Math.round(sceneDistance * 1000) / 1000} ${sceneUnit}`,
+    sceneLabel: `${Math.round(radiusSceneDistance * 1000) / 1000} ${sceneUnit}`,
     gridDistance,
     gridSize,
-    gridCells,
-    pixels: gridCells * gridSize
+    radiusSceneDistance,
+    radiusGridCells,
+    radiusPixels: radiusGridCells * gridSize,
+    diameterSceneDistance,
+    diameterGridCells,
+    diameterPixels: diameterGridCells * gridSize
   };
 }
 
@@ -146,9 +160,10 @@ function add2eSceneArea(level) {
   if (typeof generic === "function") {
     const area = generic({
       scene: canvas?.scene ?? null,
-      distance: add2eAreaRadiusInches(level),
+      distance: add2eAreaDiameterInches(level),
       unit: ADD2E_SORT_CONFIG.areaUnit,
-      usage: ADD2E_SORT_CONFIG.areaUsage
+      usage: ADD2E_SORT_CONFIG.areaUsage,
+      measure: ADD2E_SORT_CONFIG.areaMeasure
     });
     if (Number.isFinite(Number(area?.sceneDistance)) && Number.isFinite(Number(area?.pixels))) return area;
   }
@@ -161,9 +176,10 @@ function add2eDisplayNumber(value, decimals = 3) {
   return String(Math.round(number * (10 ** decimals)) / (10 ** decimals)).replace(".", ",");
 }
 
-function add2eAreaRadiusText(level) {
+function add2eAreaDiameterText(level) {
   const area = add2eSceneArea(level);
-  return `${add2eAreaRadiusInches(level)}\" AD&D (${add2eDisplayNumber(area.sceneDistance)} ${area.sceneUnit} ; ${add2eDisplayNumber(area.gridCells, 2)} case${Math.abs(area.gridCells - 1) < 0.001 ? "" : "s"})`;
+  const suffix = Math.abs(area.diameterGridCells - 1) < 0.001 ? "case" : "cases";
+  return `${add2eAreaDiameterInches(level)}\" AD&D de diamètre (${add2eDisplayNumber(area.diameterSceneDistance)} ${area.sceneUnit} ; ${add2eDisplayNumber(area.diameterGridCells, 2)} ${suffix})`;
 }
 
 function add2eEffectDuration(level) {
@@ -212,7 +228,7 @@ function add2eBuildTemplateData(center, level, templateRequestId) {
     user: game.user.id,
     x: Number(center.x),
     y: Number(center.y),
-    // La valeur est exprimée dans l'unité choisie pour la scène Foundry.
+    // MeasuredTemplate.distance reçoit toujours le rayon, ici dérivé du diamètre.
     distance: area.sceneDistance,
     direction: 0,
     fillColor: "#b36bff",
@@ -222,13 +238,17 @@ function add2eBuildTemplateData(center, level, templateRequestId) {
         spell: ADD2E_SORT_CONFIG.slug,
         spellName: ADD2E_SORT_CONFIG.name,
         templateRequestId,
-        areaRadiusInches: add2eAreaRadiusInches(level),
+        areaMeasure: ADD2E_SORT_CONFIG.areaMeasure,
+        areaDiameterInches: add2eAreaDiameterInches(level),
         areaUnit: ADD2E_SORT_CONFIG.areaUnit,
         areaUsage: ADD2E_SORT_CONFIG.areaUsage,
-        areaRadiusMeters: area.sourceMeters,
-        areaRadiusSceneDistance: area.sceneDistance,
-        areaRadiusSceneUnit: area.sceneUnit,
-        areaRadiusGridCells: area.gridCells,
+        areaDiameterMeters: area.diameterMeters,
+        areaDiameterSceneDistance: area.diameterSceneDistance,
+        areaDiameterSceneUnit: area.sceneUnit,
+        areaDiameterGridCells: area.diameterGridCells,
+        areaRadiusMeters: area.radiusMeters,
+        areaRadiusSceneDistance: area.radiusSceneDistance,
+        areaRadiusGridCells: area.radiusGridCells,
         casterId: ADD2E_ACTOR?.id ?? null,
         casterUuid: ADD2E_ACTOR?.uuid ?? null,
         sourceItemId: ADD2E_ITEM?.id ?? null,
@@ -380,7 +400,8 @@ async function add2eChooseNativeTemplateZone(level, casterToken, templateRequest
 }
 
 function add2eTokensInZone(center, level, casterToken) {
-  const radiusPixels = add2eSceneArea(level).pixels;
+  const area = add2eSceneArea(level);
+  const radiusPixels = Number(area.radiusPixels ?? area.pixels) || 0;
   const casterId = casterToken?.id ?? casterToken?.document?.id ?? null;
   return (canvas?.tokens?.placeables ?? [])
     .filter(target => target?.actor && target.id !== casterId)
@@ -520,13 +541,17 @@ function add2eBuildTargetEffect({ targetToken, casterActor, choice, level, modif
           saveTarget: saveData?.saveTarget ?? null,
           casterLevel: level,
           durationRounds: Math.max(1, level),
-          areaRadiusInches: add2eAreaRadiusInches(level),
+          areaMeasure: ADD2E_SORT_CONFIG.areaMeasure,
+          areaDiameterInches: add2eAreaDiameterInches(level),
           areaUnit: ADD2E_SORT_CONFIG.areaUnit,
           areaUsage: ADD2E_SORT_CONFIG.areaUsage,
-          areaRadiusMeters: area.sourceMeters,
-          areaRadiusSceneDistance: area.sceneDistance,
-          areaRadiusSceneUnit: area.sceneUnit,
-          areaRadiusGridCells: area.gridCells,
+          areaDiameterMeters: area.diameterMeters,
+          areaDiameterSceneDistance: area.diameterSceneDistance,
+          areaDiameterSceneUnit: area.sceneUnit,
+          areaDiameterGridCells: area.diameterGridCells,
+          areaRadiusMeters: area.radiusMeters,
+          areaRadiusSceneDistance: area.radiusSceneDistance,
+          areaRadiusGridCells: area.radiusGridCells,
           templateRequestId: zone?.templateRequestId ?? null,
           templateId: zone?.templateId ?? null,
           templateSceneId: zone?.sceneId ?? canvas?.scene?.id ?? null,
@@ -611,7 +636,7 @@ async function add2eChatAmitie(actorDoc, level, results) {
   const casterImg = casterToken?.document?.texture?.src ?? actorDoc?.img ?? "icons/svg/mystery-man.svg";
   const spellImg = add2eSpellImg();
   const durationRounds = Math.max(1, level);
-  const radiusText = add2eAreaRadiusText(level);
+  const diameterText = add2eAreaDiameterText(level);
   const tableRows = results.length
     ? results.map(add2eResultLine).join("\n")
     : `<tr><td colspan="4">Aucune créature n’est prise dans l’enchantement.</td></tr>`;
@@ -634,7 +659,7 @@ async function add2eChatAmitie(actorDoc, level, results) {
           <div style="border:1px solid #8e63c7;border-radius:6px;background:#fffaff;padding:8px;margin-bottom:7px;">
             <div style="color:#6c31b5;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.3px;text-align:center;">Enchantement social</div>
             <p style="margin:.35em 0;font-size:13px;line-height:1.35;">Le visage du magicien se pare de signes colorés et son aura devient plus marquante.</p>
-            <p style="margin:.35em 0;font-size:13px;line-height:1.35;"><b>Rayon :</b> ${add2eHtmlEscape(radiusText)} — <b>Durée :</b> ${durationRounds} round${durationRounds > 1 ? "s" : ""}.</p>
+            <p style="margin:.35em 0;font-size:13px;line-height:1.35;"><b>Diamètre :</b> ${add2eHtmlEscape(diameterText)} — <b>Durée :</b> ${durationRounds} round${durationRounds > 1 ? "s" : ""}.</p>
           </div>
           <table style="width:100%;border-collapse:collapse;background:#fffaff;border:1px solid #8e63c7;font-size:12px;">
             <thead><tr style="background:#e8d9ff;color:#2d2144;"><th style="text-align:left;padding:4px;border-bottom:1px solid #8e63c7;">Créature</th><th style="text-align:center;padding:4px;border-bottom:1px solid #8e63c7;">Jet</th><th style="text-align:center;padding:4px;border-bottom:1px solid #8e63c7;">Seuil</th><th style="text-align:left;padding:4px;border-bottom:1px solid #8e63c7;">Réaction</th></tr></thead>
@@ -682,12 +707,15 @@ console.log(`${ADD2E_ONUSE_TAG}[START]`, {
   templateVia: zone.templateVia,
   templateRequestId: zone.templateRequestId,
   templateId: zone.templateId,
-  radiusTacticalInches: add2eAreaRadiusInches(level),
-  radiusMeters: area.sourceMeters,
-  radiusSceneDistance: area.sceneDistance,
-  radiusSceneUnit: area.sceneUnit,
-  radiusGridCells: area.gridCells,
-  radiusPixels: area.pixels,
+  areaMeasure: area.measure,
+  diameterTacticalInches: add2eAreaDiameterInches(level),
+  diameterMeters: area.diameterMeters,
+  diameterSceneDistance: area.diameterSceneDistance,
+  diameterSceneUnit: area.sceneUnit,
+  diameterGridCells: area.diameterGridCells,
+  radiusSceneDistance: area.radiusSceneDistance,
+  radiusGridCells: area.radiusGridCells,
+  radiusPixels: area.radiusPixels,
   targets: targetTokens.map(target => ({ name: target.name, actor: target.actor?.name }))
 });
 
