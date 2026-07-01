@@ -4,7 +4,7 @@
 // Compatible Foundry V13 / V14 / V15
 // ============================================================
 
-const ADD2E_SPELL_SYNC_VERSION = "2026-06-25-spell-sync-canonical-schema-v4";
+const ADD2E_SPELL_SYNC_VERSION = "2026-07-01-spell-sync-class-isolation-v5";
 globalThis.ADD2E_SPELL_SYNC_VERSION = ADD2E_SPELL_SYNC_VERSION;
 
 const ADD2E_SPELL_SYNC_REQUIRED_SYSTEM_KEYS = Object.freeze([
@@ -29,6 +29,8 @@ const ADD2E_SPELL_SYNC_RUNNING = globalThis.ADD2E_SPELL_SYNC_RUNNING instanceof 
   ? globalThis.ADD2E_SPELL_SYNC_RUNNING
   : new Set();
 globalThis.ADD2E_SPELL_SYNC_RUNNING = ADD2E_SPELL_SYNC_RUNNING;
+
+const ADD2E_SPELL_SYNC_AUTO_CLASS_SLUGS = new Set(["clerc", "druide"]);
 
 function add2eSpellSyncClone(value) {
   if (value === undefined || value === null) return value;
@@ -65,6 +67,23 @@ function add2eSpellSyncNormalize(value) {
     druid: "druide", druids: "druide", druides: "druide", druidique: "druide",
     wizard: "magicien", mage: "magicien", magician: "magicien", magic_user: "magicien",
     illusionist: "illusionniste"
+  };
+  return aliases[normalized] ?? normalized;
+}
+
+function add2eSpellSyncClassIdentity(value) {
+  const normalized = String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/\s*\([^)]*\)\s*$/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  const aliases = {
+    cleric: "clerc", clerical: "clerc", clercs: "clerc", priest: "clerc", priests: "clerc", pretre: "clerc", pretres: "clerc",
+    druid: "druide", druids: "druide", druides: "druide", druidique: "druide"
   };
   return aliases[normalized] ?? normalized;
 }
@@ -160,7 +179,17 @@ function add2eSpellSyncClassSlug(classItem) {
   return add2eSpellSyncNormalize(system.slug ?? system.label ?? system.nom ?? system.name ?? classItem?.name ?? "classe");
 }
 
+function add2eSpellSyncClassIdentityForItem(classItem) {
+  const system = classItem?.system ?? {};
+  return add2eSpellSyncClassIdentity(system.slug ?? system.label ?? system.nom ?? system.name ?? classItem?.name ?? "classe");
+}
+
+function add2eSpellSyncIsAutoSyncedClass(classItem) {
+  return ADD2E_SPELL_SYNC_AUTO_CLASS_SLUGS.has(add2eSpellSyncClassIdentityForItem(classItem));
+}
+
 function add2eSpellSyncClassLists(classItem) {
+  if (!add2eSpellSyncIsAutoSyncedClass(classItem)) return [];
   const system = classItem?.system ?? {};
   const spellcasting = add2eSpellSyncMaybeJson(system.spellcasting);
   const values = [
@@ -172,9 +201,9 @@ function add2eSpellSyncClassLists(classItem) {
     ...add2eSpellSyncArray(spellcasting?.classes)
   ];
   const lists = values.map(add2eSpellSyncNormalize).filter(Boolean);
-  const className = add2eSpellSyncNormalize(classItem?.name ?? system.name ?? system.label ?? system.nom ?? "");
-  if (className.includes("clerc") || className.includes("pretre") || className.includes("priest") || className.includes("paladin")) lists.push("clerc");
-  if (className.includes("druide") || className.includes("druid")) lists.push("druide");
+  const className = add2eSpellSyncClassIdentityForItem(classItem);
+  if (className === "clerc") lists.push("clerc");
+  if (className === "druide") lists.push("druide");
   return [...new Set(lists)].filter(list => ["clerc", "druide"].includes(list));
 }
 
@@ -259,6 +288,40 @@ function add2eSpellSyncIsCompendiumOwnedActorSpell(item) {
   const flags = item?.flags?.add2e ?? {};
   const source = String(item?._stats?.compendiumSource ?? item?.flags?.core?.sourceId ?? flags.sourceUuid ?? flags.sourceId ?? "");
   return flags.autoGrantedSpellSync === true || !!flags.autoGrantedByClassId || !!flags.autoGrantedByClass || source.includes("add2e.sorts");
+}
+
+function add2eSpellSyncClassSourceNames(classItem) {
+  const system = classItem?.system ?? {};
+  return new Set([
+    classItem?.name,
+    system.slug,
+    system.label,
+    system.nom,
+    system.name
+  ].map(add2eSpellSyncNormalize).filter(Boolean));
+}
+
+function add2eSpellSyncSpellBelongsToClass(item, classItem) {
+  const flags = item?.flags?.add2e ?? {};
+  const classId = String(classItem?.id ?? "");
+  const sourceId = String(
+    flags.autoGrantedByClassId
+    ?? flags.sourceClassId
+    ?? flags.sourceItemId
+    ?? flags.classId
+    ?? ""
+  );
+  if (classId && sourceId === classId) return true;
+  const sourceNames = add2eSpellSyncClassSourceNames(classItem);
+  const sourceName = add2eSpellSyncNormalize(
+    flags.autoGrantedByClass
+    ?? flags.sourceClass
+    ?? flags.sourceClasse
+    ?? flags.className
+    ?? flags.classSlug
+    ?? ""
+  );
+  return !!sourceName && sourceNames.has(sourceName);
 }
 
 function add2eSpellSyncExistingKeys(actor, cache = null, options = {}) {
@@ -505,6 +568,7 @@ async function add2ePruneActorSpellsForClassLevel(actor, classItem, actorLevel, 
   const maxSpellLevel = add2eSpellSyncMaxSpellLevel(classItem, level);
   const ids = [];
   for (const sort of actor.items?.filter?.(item => String(item?.type ?? "").toLowerCase() === "sort") ?? []) {
+    if (!add2eSpellSyncSpellBelongsToClass(sort, classItem) && add2eSpellSyncClassItems(actor).length > 1) continue;
     if (!add2eSpellSyncMatchesClassLists(sort.system ?? {}, classLists)) continue;
     if (!add2eSpellSyncCanUseSpellLevel(actor, classLists, add2eSpellSyncSpellLevel(sort.system ?? {}), maxSpellLevel, { importMode: true })) ids.push(sort.id);
   }
@@ -528,7 +592,8 @@ function add2eSpellSyncActorSpellKeyMap(actor) {
 
 async function add2eSyncActorSpellsFromClass(actor, classItem, options = {}) {
   if (!actor || !classItem || classItem.type !== "classe") return { handled: false, imported: 0, deleted: 0 };
-  const mode = options.mode === "missing" ? "missing" : "replace";
+  const requestedMode = String(options.mode ?? "replace").toLowerCase();
+  const mode = ["replace", "missing", "append"].includes(requestedMode) ? requestedMode : "replace";
   const classLists = add2eSpellSyncClassLists(classItem);
   if (!classLists.length) return { handled: false, imported: 0, deleted: 0, reason: "not-auto-synced-class" };
 
@@ -549,7 +614,7 @@ async function add2eSyncActorSpellsFromClass(actor, classItem, options = {}) {
     }
 
     const wanted = new Set(classLists.map(add2eSpellSyncNormalize));
-    const selected = [];
+    let selected = [];
     const selectedKeys = new Set();
     for (const entry of cache.entries) {
       if (entry.level < minSpellLevel) continue;
@@ -563,20 +628,30 @@ async function add2eSyncActorSpellsFromClass(actor, classItem, options = {}) {
     const memories = new Map();
     const idsToDelete = [];
     const actorSpells = add2eSpellSyncActorSpellKeyMap(actor);
+    const protectedKeys = new Set();
+    const isMulticlass = add2eSpellSyncClassItems(actor).length > 1;
     if (mode === "replace") {
       for (const item of actor.items.filter(entry => String(entry?.type ?? "").toLowerCase() === "sort")) {
-        if (!add2eSpellSyncMatchesClassLists(item.system ?? {}, classLists) && !add2eSpellSyncIsCompendiumOwnedActorSpell(item)) continue;
+        const belongsToCurrentClass = add2eSpellSyncSpellBelongsToClass(item, classItem);
+        const legacySingleClassSpell = !isMulticlass && add2eSpellSyncMatchesClassLists(item.system ?? {}, classLists);
         const key = add2eSpellSyncStableKey(item.name, item.system ?? {});
+        if (!belongsToCurrentClass && !legacySingleClassSpell) {
+          if (key) protectedKeys.add(key);
+          continue;
+        }
         if (key) memories.set(key, add2eSpellSyncMemorizationSnapshot(item));
         idsToDelete.push(item.id);
       }
-    } else {
+      selected = selected.filter(entry => !protectedKeys.has(entry.stableKey));
+    } else if (mode === "missing") {
       for (const entry of selected) {
         for (const item of actorSpells.get(entry.stableKey) ?? []) {
           memories.set(entry.stableKey, add2eSpellSyncMemorizationSnapshot(item));
           idsToDelete.push(item.id);
         }
       }
+    } else {
+      selected = selected.filter(entry => !(actorSpells.get(entry.stableKey)?.length));
     }
 
     const existing = [...new Set(idsToDelete)].filter(id => actor.items.has(id));
@@ -721,6 +796,7 @@ for (const [name, fn] of Object.entries({
   add2eSpellSyncNormalize,
   add2eSpellSyncArray,
   add2eSpellSyncClassLists,
+  add2eSpellSyncIsAutoSyncedClass,
   add2eSpellSyncSpellLevel,
   add2eSpellSyncSpellLists,
   add2eSpellSyncNumber,
