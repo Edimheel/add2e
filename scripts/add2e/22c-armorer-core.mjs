@@ -1,6 +1,6 @@
-// ADD2E — Core armurier : stock armes/armures, achats, affectation MJ et compatibilité acteur.
+// ADD2E — Core armurier : stock armes/armures/projectiles, achats, affectation MJ et compatibilité acteur.
 
-export const ADD2E_ARMORER_VERSION = "2026-06-02-armorer-v5-ammunition-to-quiver";
+export const ADD2E_ARMORER_VERSION = "2026-07-01-armorer-v6-world-projectile-stock";
 export const ARMORER_SCOPE = "add2e";
 export const ARMORER_NAME = "Armurier";
 export const ARMORER_FOLDER = "ADD2E — Boutique";
@@ -77,6 +77,7 @@ export const itemKey = item => `${isArmorerAmmunition(item) ? "munition" : item?
 
 let ARMORER_CATALOG_CACHE = null;
 let ARMORER_CATALOG_PROMISE = null;
+let ARMORER_WORLD_ITEM_SYNC_TIMER = null;
 export function clearArmorerCatalogCache() { ARMORER_CATALOG_CACHE = null; ARMORER_CATALOG_PROMISE = null; }
 
 function packIds(kind) {
@@ -222,6 +223,8 @@ async function collectSources() {
 
   for (const pid of packIds("armes")) for (const doc of await readPack(pid)) add(doc);
   for (const pid of packIds("armures")) for (const doc of await readPack(pid)) add(doc);
+  // Les munitions importées en objets Monde ne résident pas forcément dans add2e.armes.
+  for (const item of game.items ?? []) add(item);
   return out.sort((a, b) => String(armorerKind(a)).localeCompare(String(armorerKind(b))) || String(a.name).localeCompare(String(b.name)));
 }
 
@@ -547,6 +550,29 @@ export function usabilityForActor(actor, item) {
   return { state: "neutral", usable: true, label: "Article", reason: "Article hors armurerie" };
 }
 
+function queueWorldItemStockSync() {
+  clearArmorerCatalogCache();
+  if (!game.user?.isGM || ARMORER_WORLD_ITEM_SYNC_TIMER) return;
+  ARMORER_WORLD_ITEM_SYNC_TIMER = window.setTimeout(async () => {
+    ARMORER_WORLD_ITEM_SYNC_TIMER = null;
+    const armorer = findArmorer();
+    if (armorer) await ensureStock(armorer);
+  }, 150);
+}
+
+function registerWorldItemCatalogSync() {
+  if (globalThis.__ADD2E_ARMORER_WORLD_ITEM_CATALOG_SYNC_V6) return;
+  globalThis.__ADD2E_ARMORER_WORLD_ITEM_CATALOG_SYNC_V6 = true;
+  Hooks.on("createItem", item => {
+    if (item?.parent || !isArmorerStockItem(item)) return;
+    queueWorldItemStockSync();
+  });
+  Hooks.on("deleteItem", item => {
+    if (item?.parent || !isArmorerStockItem(item)) return;
+    clearArmorerCatalogCache();
+  });
+}
+
 export function registerSockets() {
   if (globalThis.__ADD2E_ARMORER_SOCKET_REGISTERED_V5_AMMUNITION_TO_QUIVER) return;
   globalThis.__ADD2E_ARMORER_SOCKET_REGISTERED_V5_AMMUNITION_TO_QUIVER = true;
@@ -601,6 +627,7 @@ export function registerGlobals() {
     isArmorerAmmunition
   });
 
+  registerWorldItemCatalogSync();
   globalThis.ADD2E_ARMORER_VERSION = ADD2E_ARMORER_VERSION;
   globalThis.add2eCreateDefaultArmorer = createArmorer;
   globalThis.add2eArmorerUsability = usabilityForActor;
