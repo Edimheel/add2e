@@ -249,6 +249,16 @@ async function add2eRollRacialCapability(actor, capabilityId) {
   return result;
 }
 
+function resolveHudActor() {
+  const actorId = globalThis.add2eHudCheck?.().actorId ?? "";
+  return (canvas?.tokens?.controlled ?? []).find(token => token?.actor?.id === actorId)?.actor
+    ?? (canvas?.tokens?.placeables ?? []).find(token => token?.actor?.id === actorId)?.actor
+    ?? game.actors?.get?.(actorId)
+    ?? canvas?.tokens?.controlled?.[0]?.actor
+    ?? game.user?.character
+    ?? null;
+}
+
 function installStrictRacialProfileAuthority(Engine) {
   const defer = globalThis.queueMicrotask ?? (callback => Promise.resolve().then(callback));
   defer(() => {
@@ -443,16 +453,16 @@ function installStrictRacialEffectsSheetDataBridge() {
     proto.getData = wrapped;
   });
 
-  if (!globalThis.ADD2E_RACIAL_STRICT_SHEET_CLICK_BRIDGE_INSTALLED) {
-    globalThis.ADD2E_RACIAL_STRICT_SHEET_CLICK_BRIDGE_INSTALLED = true;
+  if (!globalThis.ADD2E_RACIAL_STRICT_CLICK_BRIDGE_INSTALLED) {
+    globalThis.ADD2E_RACIAL_STRICT_CLICK_BRIDGE_INSTALLED = true;
     document.addEventListener("click", event => {
-      const button = event.target?.closest?.(".add2e-racial-capability-roll[data-racial-capability-id]");
-      if (!button || button.closest?.(`#add2e-action-hud`)) return;
+      const button = event.target?.closest?.(".add2e-racial-capability-roll[data-racial-capability-id], #add2e-action-hud [data-add2e-hud-racial-action][data-racial-capability-id]");
+      if (!button) return;
       event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation?.();
       const actorId = button.dataset.actorId ?? "";
-      const actor = game.actors?.get?.(actorId) ?? null;
+      const actor = actorId ? game.actors?.get?.(actorId) : resolveHudActor();
       if (!actor) return ui.notifications?.warn?.("Acteur introuvable pour la capacité raciale.");
       void globalThis.add2eRollRacialCapability?.(actor, button.dataset.racialCapabilityId);
     }, true);
