@@ -1,7 +1,7 @@
-// ADD2E — Déduplication des sorts et suppression du champ matériel historique.
-// Compatible Foundry V13 / V14 / V15.
+// ADD2E — Déduplication et orchestration des synchronisations de sorts.
+// Compatible Foundry V13 / V14 / V15. DialogV2 uniquement.
 
-const ADD2E_SPELL_SYNC_DEDUPE_VERSION = "2026-07-01-spell-sync-dedupe-v12-serialized-primary-sync";
+const ADD2E_SPELL_SYNC_DEDUPE_VERSION = "2026-07-02-spell-sync-dedupe-progress-v13";
 const RUNNING = globalThis.ADD2E_SPELL_SYNC_DEDUPE_RUNNING instanceof Set ? globalThis.ADD2E_SPELL_SYNC_DEDUPE_RUNNING : new Set();
 globalThis.ADD2E_SPELL_SYNC_DEDUPE_VERSION = ADD2E_SPELL_SYNC_DEDUPE_VERSION;
 globalThis.ADD2E_SPELL_SYNC_DEDUPE_RUNNING = RUNNING;
@@ -18,6 +18,15 @@ const slug = value => String(value ?? "").trim().toLowerCase().normalize("NFD")
   .replace(/\s*\([^)]*\)\s*$/g, "").replace(/[\s\-]+/g, "_")
   .replace(/_+/g, "_").replace(/^_+|_+$/g, "");
 const levelOf = system => Number(String(system?.niveau ?? system?.niveau_sort ?? system?.spellLevel ?? system?.level ?? 0).match(/\d+/)?.[0] ?? 0) || 0;
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
 
 function values(value) {
   if (value === undefined || value === null || value === "") return [];
@@ -61,6 +70,62 @@ function queue(actor, work) {
 
 function liveUpdates(actor, updates) {
   return updates.filter(update => String(update?._id ?? "") && actor?.items?.has?.(update._id));
+}
+
+function spellSyncDialogV2() {
+  return foundry?.applications?.api?.DialogV2 ?? null;
+}
+
+function spellSyncActorLevel(actor, classItem, options = {}) {
+  const supplied = Number(options?.actorLevel);
+  if (Number.isFinite(supplied) && supplied >= 1) return Math.floor(supplied);
+  const resolved = Number(globalThis.add2eSpellClassLevel?.(actor, classItem));
+  if (Number.isFinite(resolved) && resolved >= 1) return Math.floor(resolved);
+  return Math.max(1, levelOf(classItem?.system) || 1);
+}
+
+function spellSyncMaxLevel(actor, classItem, options = {}) {
+  const level = spellSyncActorLevel(actor, classItem, options);
+  const max = Number(globalThis.add2eSpellSyncMaxSpellLevel?.(classItem, level));
+  return Number.isFinite(max) && max > 0 ? Math.floor(max) : 0;
+}
+
+function openSpellSyncProgress(actor, classItem, options = {}) {
+  if (options?.showWait === false || spellSyncMaxLevel(actor, classItem, options) < 1) return null;
+  const DialogV2 = spellSyncDialogV2();
+  if (!DialogV2) return null;
+
+  const id = `add2e-spell-sync-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const className = escapeHtml(classItem?.name ?? "Classe");
+  const actorName = escapeHtml(actor?.name ?? "Personnage");
+  const dialog = new DialogV2({
+    window: { title: "Synchronisation des sorts", resizable: false },
+    content: `
+      <section data-add2e-spell-sync="${id}" style="min-width:360px;padding:10px 12px;border:1px solid #6d4a1f;border-radius:8px;background:linear-gradient(180deg,#fff8e6,#ead4a2);color:#2d2011;">
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:7px;">
+          <i class="fas fa-book-sparkles" aria-hidden="true" style="font-size:1.45rem;color:#805514;"></i>
+          <div><strong>Synchronisation des sorts</strong><br><small>${actorName} — ${className}</small></div>
+        </div>
+        <div data-add2e-spell-sync-stage style="font-weight:700;">Lecture du compendium…</div>
+        <div style="height:6px;margin-top:10px;overflow:hidden;border-radius:999px;background:#c9ae72;"><div data-add2e-spell-sync-bar style="width:22%;height:100%;background:#805514;transition:width .2s ease;"></div></div>
+      </section>`,
+    buttons: [],
+    close: () => undefined
+  }, { width: 430, height: "auto" });
+  dialog.render({ force: true });
+
+  const setStage = (label, progress) => {
+    const root = document.querySelector(`[data-add2e-spell-sync="${id}"]`);
+    const stage = root?.querySelector?.("[data-add2e-spell-sync-stage]");
+    const bar = root?.querySelector?.("[data-add2e-spell-sync-bar]");
+    if (stage) stage.textContent = String(label ?? "");
+    if (bar && Number.isFinite(Number(progress))) bar.style.width = `${Math.max(0, Math.min(100, Number(progress)))}%`;
+  };
+
+  return {
+    setStage,
+    close: () => setTimeout(() => dialog.close?.({ force: true }), 160)
+  };
 }
 
 async function removeLegacyMaterialFields(actor, reason = "legacy-material-cleanup") {
@@ -159,25 +224,45 @@ async function waitForFamilyExpansion(actor) {
   return typeof expand === "function" ? expand(actor) : { handled: false };
 }
 
+function resultChanged(result) {
+  return ["imported", "updated", "deleted"].some(key => Number(result?.[key] ?? 0) > 0);
+}
+
 function installWrapper() {
   const original = globalThis.add2eSyncActorSpellsFromClass;
   if (typeof original !== "function" || original._add2eDedupeWrapped) return typeof original === "function";
   const wrapped = async function add2eSyncActorSpellsFromClassDedupe(actor, classItem, options = {}) {
-    // La synchronisation principale, la création des familles réversibles et la
-    // déduplication utilisent une file unique par acteur. Sans cela, une famille
-    // pouvait retirer un sort entre le calcul et la suppression de ses IDs.
-    const result = await queue(actor, () => original(actor, classItem, {
-      ...options,
-      forceCacheRefresh: options.forceCacheRefresh ?? options.mode === "replace"
-    }));
-    await waitForFamilyExpansion(actor);
-    const post = await queue(actor, async () => ({
-      dedupe: await removeDuplicates(actor, `sync-${options?.mode ?? "replace"}`),
-      cleanup: await removeLegacyMaterialFields(actor, `sync-${options?.mode ?? "replace"}`)
-    }));
-    if (post.dedupe.deleted) result.deleted = (Number(result.deleted) || 0) + post.dedupe.deleted;
-    if (post.cleanup.removed) result.legacyMaterialFieldsRemoved = post.cleanup.removed;
-    return result;
+    // Une seule file protège la synchronisation, les familles réversibles et la déduplication.
+    // Le cache du compendium est conservé pendant la session ; une resynchronisation
+    // explicite l'invalide déjà avant de passer ici.
+    const progress = openSpellSyncProgress(actor, classItem, options);
+    try {
+      progress?.setStage("Lecture du compendium et synchronisation des sorts…", 36);
+      const result = await queue(actor, () => original(actor, classItem, {
+        ...options,
+        showWait: false,
+        forceCacheRefresh: options?.forceCacheRefreshExplicit === true
+      }));
+
+      if (!resultChanged(result)) {
+        progress?.setStage("Aucune modification nécessaire.", 100);
+        return result;
+      }
+
+      progress?.setStage("Mise à jour des familles réversibles…", 68);
+      await waitForFamilyExpansion(actor);
+      progress?.setStage("Vérification des doublons et des données historiques…", 88);
+      const post = await queue(actor, async () => ({
+        dedupe: await removeDuplicates(actor, `sync-${options?.mode ?? "replace"}`),
+        cleanup: await removeLegacyMaterialFields(actor, `sync-${options?.mode ?? "replace"}`)
+      }));
+      if (post.dedupe.deleted) result.deleted = (Number(result.deleted) || 0) + post.dedupe.deleted;
+      if (post.cleanup.removed) result.legacyMaterialFieldsRemoved = post.cleanup.removed;
+      progress?.setStage("Synchronisation terminée.", 100);
+      return result;
+    } finally {
+      progress?.close();
+    }
   };
   wrapped._add2eDedupeWrapped = true;
   globalThis.add2eSyncActorSpellsFromClass = wrapped;
