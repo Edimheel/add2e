@@ -17,6 +17,15 @@ function clone(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
+function htmlEscape(value) {
+  try { return foundry.utils.escapeHTML(String(value ?? "")); } catch {}
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
 function records(value) {
   if (Array.isArray(value)) return value.filter(Boolean);
   if (value && typeof value === "object") return Object.values(value).filter(Boolean);
@@ -38,7 +47,6 @@ function scalarList(value) {
 
 function directRaceItem(actor) {
   const races = Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "race");
-  // Une seule Race Item est la règle du système : aucune recherche par nom, slug ou snapshot.
   return races.length === 1 ? races[0] : null;
 }
 
@@ -119,6 +127,18 @@ function compilePassiveTags(engine, profile) {
   return [...new Set(tags.map(tag => engine.normalizeTag(tag)).filter(Boolean))];
 }
 
+function racialIconClass(capability = {}) {
+  const key = String(capability.id ?? capability.key ?? capability.label ?? capability.name ?? "")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  if (key.includes("porte")) return "fa-door-closed";
+  if (key.includes("pente")) return "fa-mountain";
+  if (key.includes("direction") || key.includes("profondeur")) return "fa-compass";
+  if (key.includes("paroi") || key.includes("construction")) return "fa-hammer";
+  if (key.includes("piege")) return "fa-triangle-exclamation";
+  if (key.includes("surprise")) return "fa-user-ninja";
+  return "fa-dice-d20";
+}
+
 function createVirtualEffects(context) {
   const sourceName = context?.source?.name ?? "Race";
   if (!context?.source) return [];
@@ -175,24 +195,58 @@ function directRacialCapabilities(engine, actor) {
     if (!id || !label || !description) return [];
     const formula = String(raw.formula ?? raw.die ?? "").trim();
     const successAt = engine.readNumber(raw.successAt, raw.maxSuccess, raw.threshold, raw.pct);
+    const canRoll = Boolean(formula) && Number.isFinite(successAt) && successAt > 0;
     return [{
       ...clone(raw),
       id,
       key: engine.normalizeTag(id),
       label,
       description,
+      formula,
+      successAt,
+      rollLabel: canRoll ? `${formula} ≤ ${successAt}` : "",
+      iconClass: String(raw.iconClass ?? raw.faIcon ?? "").trim() || racialIconClass({ ...raw, id, label }),
       index,
       sourceId: context.source.id,
       sourceName: context.source.name,
       activable: raw.activable !== false,
-      canRoll: Boolean(formula) && Number.isFinite(successAt) && successAt > 0
+      canRoll
     }];
   });
 }
 
-function racialRequirementResult(capability, context = {}) {
-  const requirements = scalarList(capability?.requires).map(String).filter(Boolean);
-  return { requirements, missing: requirements.filter(key => context?.[key] !== true) };
+async function add2eRollRacialCapability(actor, capabilityId) {
+  const engine = globalThis.Add2eEffectsEngine;
+  if (!actor || typeof engine?.rollRacialCapability !== "function") {
+    ui.notifications?.warn?.("Capacité raciale indisponible.");
+    return null;
+  }
+  if (!game.user?.isGM && !actor.isOwner && !actor.testUserPermission?.(game.user, "OWNER")) {
+    ui.notifications?.warn?.("Vous ne pouvez pas utiliser les capacités de cet acteur.");
+    return null;
+  }
+  const result = await engine.rollRacialCapability(actor, capabilityId);
+  if (!result?.ok) {
+    ui.notifications?.warn?.("Cette capacité raciale n’a pas de jet défini.");
+    return result;
+  }
+  const capability = result.capability;
+  const success = result.success === true;
+  const border = success ? "#197d5a" : "#9d352c";
+  const background = success ? "#eefaf4" : "#fff0ee";
+  const title = success ? "Réussite" : "Échec";
+  const content = `<div class="add2e-card-racial" style="border:2px solid ${border};border-radius:12px;padding:10px;background:${background};color:#24180f;font-family:var(--font-primary);">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><i class="fas ${htmlEscape(capability.iconClass || "fa-dice-d20")}" style="font-size:1.55em;color:${border};"></i><strong style="font-size:1.08em;color:${border};">${htmlEscape(capability.label)}</strong><span style="margin-left:auto;font-weight:900;">Capacité raciale</span></div>
+    <div>Jet : <strong>${htmlEscape(result.formula)}</strong> = <strong>${htmlEscape(result.total)}</strong> / réussite sur <strong>${htmlEscape(result.successAt)}</strong> ou moins.</div>
+    <div style="margin-top:5px;font-weight:900;color:${border};">${title}</div>
+    <div style="margin-top:6px;font-size:.9em;line-height:1.35;">${htmlEscape(capability.description)}</div>
+  </div>`;
+  await ChatMessage.create({
+    speaker: ChatMessage.getSpeaker({ actor }),
+    content,
+    flags: { add2e: { racialCapability: { actorId: actor.id, raceSourceId: capability.sourceId, capabilityId: capability.id, success } } }
+  });
+  return result;
 }
 
 function installStrictRacialProfileAuthority(Engine) {
@@ -312,11 +366,9 @@ function installStrictRacialProfileAuthority(Engine) {
       rollRacialCapability: {
         configurable: true,
         writable: true,
-        async value(actor, capabilityId, context = {}) {
+        async value(actor, capabilityId) {
           const capability = this.getRacialCapability(actor, capabilityId);
           if (!actor || !capability) return { ok: false, success: false, reason: "capability-not-found" };
-          const requirement = racialRequirementResult(capability, context);
-          if (requirement.missing.length) return { ok: false, success: false, reason: "requirements-missing", capability, missing: requirement.missing, requirements: requirement.requirements };
           const formula = String(capability.formula ?? capability.die ?? "").trim();
           const successAt = this.readNumber(capability.successAt, capability.maxSuccess, capability.threshold, capability.pct);
           if (!formula || !Number.isFinite(successAt) || successAt <= 0) return { ok: false, success: false, reason: "invalid-capability", capability };
@@ -331,13 +383,13 @@ function installStrictRacialProfileAuthority(Engine) {
             roll,
             total,
             successAt,
-            formula,
-            context,
-            requirements: requirement.requirements
+            formula
           };
         }
       }
     });
+
+    globalThis.add2eRollRacialCapability = add2eRollRacialCapability;
 
     if (typeof inheritedGetActiveTags === "function") {
       Object.defineProperty(Engine, "getActiveTags", {
@@ -369,7 +421,6 @@ function installStrictRacialProfileAuthority(Engine) {
   });
 }
 
-// Pont de données uniquement : aucun rendu ni écouteur de l'interface ici.
 function installStrictRacialEffectsSheetDataBridge() {
   if (globalThis.ADD2E_RACIAL_STRICT_EFFECTS_SHEET_DATA_BRIDGE_INSTALLED || typeof Hooks === "undefined") return;
   globalThis.ADD2E_RACIAL_STRICT_EFFECTS_SHEET_DATA_BRIDGE_INSTALLED = true;
@@ -380,15 +431,32 @@ function installStrictRacialEffectsSheetDataBridge() {
     const wrapped = async function add2eGetDataWithStrictRacialEffects(...args) {
       const data = await base.apply(this, args);
       const actor = this.actor ?? data?.actor;
-      const virtual = globalThis.Add2eEffectsEngine?.getRacialVirtualEffects?.(actor) ?? [];
+      const engine = globalThis.Add2eEffectsEngine;
+      const virtual = engine?.getRacialVirtualEffects?.(actor) ?? [];
       const active = Array.isArray(data.activeEffectsList) ? data.activeEffectsList : [];
       const seen = new Set(active.map(effect => String(effect?.id ?? "")));
       data.activeEffectsList = [...virtual.filter(effect => !seen.has(String(effect?.id ?? ""))), ...active];
+      data.activeRacialCapabilities = engine?.getRacialCapabilities?.(actor)?.filter(capability => capability?.activable !== false) ?? [];
       return data;
     };
     wrapped.__add2eStrictRacialEffectsSheetDataBridge = true;
     proto.getData = wrapped;
   });
+
+  if (!globalThis.ADD2E_RACIAL_STRICT_SHEET_CLICK_BRIDGE_INSTALLED) {
+    globalThis.ADD2E_RACIAL_STRICT_SHEET_CLICK_BRIDGE_INSTALLED = true;
+    document.addEventListener("click", event => {
+      const button = event.target?.closest?.(".add2e-racial-capability-roll[data-racial-capability-id]");
+      if (!button || button.closest?.(`#add2e-action-hud`)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation?.();
+      const actorId = button.dataset.actorId ?? "";
+      const actor = game.actors?.get?.(actorId) ?? null;
+      if (!actor) return ui.notifications?.warn?.("Acteur introuvable pour la capacité raciale.");
+      void globalThis.add2eRollRacialCapability?.(actor, button.dataset.racialCapabilityId);
+    }, true);
+  }
 }
 
 function installRacialImmunityAliases(Engine) {
