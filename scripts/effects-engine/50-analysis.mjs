@@ -11,6 +11,29 @@ const register = (Engine, methods) => Object.defineProperties(
   ]))
 );
 
+function installRacialImmunityAliases(Engine) {
+  queueMicrotask(() => {
+    if (Engine.__add2eRacialImmunityAliasesInstalled || typeof Engine.hasImmunity !== 'function') return;
+    Engine.__add2eRacialImmunityAliasesInstalled = true;
+    const previous = Engine.hasImmunity.bind(Engine);
+    Object.defineProperty(Engine, 'hasImmunity', {
+      configurable: true,
+      writable: true,
+      value(actor, type) {
+        const normalized = this.normalizeTag(type);
+        const aliases = new Set([normalized]);
+        if (normalized === 'peur' || normalized === 'fear') {
+          aliases.add('peur');
+          aliases.add('fear');
+        }
+        const tags = this.getActiveTags(actor);
+        if ([...aliases].some(alias => tags.includes(`immunite:${alias}`) || tags.includes(`protection:${alias}`))) return true;
+        return previous(actor, type);
+      }
+    });
+  });
+}
+
 export function installEffectsEngineAnalysis(Engine) {
   register(Engine, {
     analyze(actor, action = {}) {
@@ -59,4 +82,5 @@ export function installEffectsEngineAnalysis(Engine) {
   });
 
   installRacialProfileFallbacks(Engine);
+  installRacialImmunityAliases(Engine);
 }
