@@ -3,8 +3,8 @@
 // création, mise à jour, dédoublonnage ou suppression du parent.
 // Compatible Foundry V13 / V14 / V15.
 
-const ADD2E_SPELL_FAMILY_VERSION = "2026-06-26-spell-family-actor-queue-v12";
-const ADD2E_SPELL_FAMILY_MATERIAL_MIGRATION = "2026-06-26-spell-family-actor-queue-v12";
+const ADD2E_SPELL_FAMILY_VERSION = "2026-07-02-spell-family-source-id-v13";
+const ADD2E_SPELL_FAMILY_MATERIAL_MIGRATION = "2026-07-02-spell-family-source-id-v13";
 
 const SPELL_FAMILY_ACTOR_QUEUES = globalThis.ADD2E_SPELL_FAMILY_ACTOR_QUEUES instanceof Map
   ? globalThis.ADD2E_SPELL_FAMILY_ACTOR_QUEUES
@@ -64,6 +64,23 @@ const spellLists = system => [...new Set([
 const stableSpellKey = data => `${spellLists(data?.system).sort().join("+") || "liste_inconnue"}|${spellLevel(data?.system)}|${normalize(data?.name ?? data?.system?.nom)}`;
 const isGeneratedFamilySpell = item => item?.flags?.add2e?.spellFamily?.generated === true;
 
+function familySourceId(item) {
+  return String(item?.id ?? item?._id ?? item?.flags?.add2e?.spellFamily?.sourceItemId ?? "").trim();
+}
+
+function familyKeyFor(item) {
+  const sourceId = familySourceId(item);
+  return sourceId ? `source:${sourceId}` : `legacy:${stableSpellKey(item)}`;
+}
+
+function familyChildBelongsToSource(item, sourceId, key, legacyKey) {
+  if (!isGeneratedFamilySpell(item)) return false;
+  const family = item?.flags?.add2e?.spellFamily ?? {};
+  const itemSourceId = String(family.sourceItemId ?? "").trim();
+  if (sourceId && itemSourceId) return itemSourceId === sourceId;
+  return !itemSourceId && (family.key === key || family.key === legacyKey);
+}
+
 function actorQueueKey(actor) {
   return String(actor?.uuid ?? actor?.id ?? "").trim();
 }
@@ -122,6 +139,14 @@ async function deleteLiveItem(actor, id, options = {}) {
     if (isMissingEmbeddedDocumentError(error)) return false;
     throw error;
   }
+}
+
+async function deleteLiveItems(actor, ids, options = {}) {
+  let deleted = 0;
+  for (const id of [...new Set((ids ?? []).map(value => String(value ?? "").trim()).filter(Boolean))]) {
+    if (await deleteLiveItem(actor, id, options)) deleted += 1;
+  }
+  return deleted;
 }
 
 function matchingProfiles(flag, system) {
@@ -186,14 +211,16 @@ function markFamily(data, key, kind, extra = {}, sortOrder = 0) {
 function expectedSpellFamily(base) {
   const source = typeof base?.toObject === "function" ? base.toObject() : clone(base);
   const name = String(source?.name ?? source?.system?.nom ?? "").trim();
-  const key = stableSpellKey(source);
+  const sourceId = familySourceId(base);
+  const key = familyKeyFor(base);
+  const legacyKey = stableSpellKey(source);
   const reversibleProfiles = matchingProfiles(source?.flags?.add2e?.reversible, source?.system);
   const normalMode = reversibleProfiles.map(profile => modeFor(profile, "normal")).find(Boolean);
   const normalData = applyMode(source, normalMode);
   const output = [{
     id: "base",
     kind: "base",
-    data: markFamily(normalData, key, "base", { sourceItemId: base.id, sourceItemName: name }, 0)
+    data: markFamily(normalData, key, "base", { sourceItemId: sourceId, sourceItemName: name }, 0)
   }];
 
   let inverseOrder = 1;
@@ -207,7 +234,7 @@ function expectedSpellFamily(base) {
     let data = withName(normalData, inverseName);
     data = applyMode(data, inverseMode);
     data = markFamily(data, key, "inverse", {
-      sourceItemId: base.id,
+      sourceItemId: sourceId,
       sourceItemName: name,
       profileKey: keyForProfile,
       reversibleMode: "inverse",
@@ -233,7 +260,7 @@ function expectedSpellFamily(base) {
       let data = withName(normalData, `${name} — ${choiceName}`);
       data = applyMode(data, choice?.systemOverrides ?? choice?.systemOverride ?? null);
       data = markFamily(data, key, "variant", {
-        sourceItemId: base.id,
+        sourceItemId: sourceId,
         sourceItemName: name,
         profileKey: keyForProfile,
         variantChoiceId: choiceId,
@@ -252,6 +279,8 @@ function expectedSpellFamily(base) {
 
   return {
     key,
+    legacyKey,
+    sourceId,
     output: [...new Map(output.map(entry => [`${entry.id}|${stableSpellKey(entry.data)}`, entry])).values()]
   };
 }
@@ -276,6 +305,13 @@ function itemUpdate(item, expected) {
   if (Object.prototype.hasOwnProperty.call(item?.system ?? {}, "composants_materiels_objets")) {
     update.system.composants_materiels_objets = forcedDeletion();
   }
+  for (const key of [
+    "autoGrantedByClass", "autoGrantedByClassId", "autoGrantedSpellSync", "autoGrantedAtActorLevel",
+    "autoGrantedSpellLists", "grantedSpellLists", "learnedSpellLists", "knownSpellLists",
+    "manuallyLearnedSpell", "lastLearnedSpellList", "spellListsResolved"
+  ]) {
+    if (Object.prototype.hasOwnProperty.call(add2e, key)) update[`flags.add2e.${key}`] = clone(add2e[key]);
+  }
   if (add2e.reversibleActorEntry) update["flags.add2e.reversibleActorEntry"] = clone(add2e.reversibleActorEntry);
   if (add2e.variantChoice) update["flags.add2e.variantChoice"] = clone(add2e.variantChoice);
   return update;
@@ -295,6 +331,13 @@ async function removeVariantParent(actor, id) {
   return removed;
 }
 
+function chooseFamilyChild(existing, candidate, key) {
+  const existingKey = String(existing?.flags?.add2e?.spellFamily?.key ?? "");
+  const candidateKey = String(candidate?.flags?.add2e?.spellFamily?.key ?? "");
+  if (existingKey !== key && candidateKey === key) return candidate;
+  return existing;
+}
+
 async function ensureSpellFamilyNow(item) {
   const actor = item?.actor ?? item?.parent;
   const sourceId = String(item?.id ?? "").trim();
@@ -304,18 +347,34 @@ async function ensureSpellFamilyNow(item) {
   const source = actor.items.get(sourceId);
   if (!source || String(source.type ?? "").toLowerCase() !== "sort" || isGeneratedFamilySpell(source)) return { handled: false };
 
-  const { key, output } = expectedSpellFamily(source);
+  const expectedFamily = expectedSpellFamily(source);
+  const { key, legacyKey, output } = expectedFamily;
   const derived = output.filter(entry => entry.id !== "base");
   const variants = derived.filter(entry => entry.kind === "variant");
-  if (!derived.length) return { handled: true, created: 0, updated: 0, baseUpdated: 0, removedParent: false };
+  const expectedIdentities = new Set(derived.map(entry => entry.id));
 
   const existingByIdentity = new Map();
   const occupiedKeys = new Set();
+  const staleIds = new Set();
   for (const actorSpell of actor.items?.filter?.(candidate => String(candidate.type ?? "").toLowerCase() === "sort") ?? []) {
-    if (actorSpell.id !== sourceId) occupiedKeys.add(stableSpellKey(actorSpell));
-    if (actorSpell.flags?.add2e?.spellFamily?.key !== key) continue;
+    const related = familyChildBelongsToSource(actorSpell, sourceId, key, legacyKey);
+    if (actorSpell.id !== sourceId && !related) occupiedKeys.add(stableSpellKey(actorSpell));
+    if (!related) continue;
+
     const identity = familyIdentity(actorSpell);
-    if (identity) existingByIdentity.set(identity, actorSpell);
+    if (!identity || !expectedIdentities.has(identity)) {
+      staleIds.add(actorSpell.id);
+      continue;
+    }
+    const existing = existingByIdentity.get(identity);
+    if (!existing) {
+      existingByIdentity.set(identity, actorSpell);
+      continue;
+    }
+    const kept = chooseFamilyChild(existing, actorSpell, key);
+    const removed = kept.id === existing.id ? actorSpell : existing;
+    existingByIdentity.set(identity, kept);
+    staleIds.add(removed.id);
   }
 
   let baseUpdated = 0;
@@ -372,6 +431,13 @@ async function ensureSpellFamilyNow(item) {
     created = createdDocs?.length ?? 0;
   }
 
+  const removed = await deleteLiveItems(actor, staleIds, {
+    add2eInternal: true,
+    add2eSpellFamilyExpansion: true,
+    reason: "remove-obsolete-family-child",
+    render: false
+  });
+
   const removeParent = variants.length > 0 && createdVariantIds.size === variants.length && !conflictingVariantIds.length;
   const removedParent = removeParent ? await removeVariantParent(actor, sourceId) : false;
 
@@ -382,13 +448,13 @@ async function ensureSpellFamilyNow(item) {
       conflicts: conflictingVariantIds
     });
   }
-  if (baseUpdated || updated || created) globalThis.add2eRerenderActorSheet?.(actor, false);
-  return { handled: true, created, updated, baseUpdated, removedParent, queued: removedParent };
+  if (baseUpdated || updated || created || removed) globalThis.add2eRerenderActorSheet?.(actor, false);
+  return { handled: true, created, updated, removed, baseUpdated, removedParent, queued: removedParent };
 }
 
 async function expandActorSpellFamiliesNow(actor) {
   if (!actor || actor.type !== "personnage") return { handled: false };
-  const result = { handled: true, created: 0, updated: 0, baseUpdated: 0, queued: 0, removedParent: 0 };
+  const result = { handled: true, created: 0, updated: 0, removed: 0, baseUpdated: 0, queued: 0, removedParent: 0 };
   const sourceIds = Array.from(actor.items ?? [])
     .filter(item => String(item.type ?? "").toLowerCase() === "sort" && !isGeneratedFamilySpell(item))
     .map(item => item.id)
@@ -399,6 +465,7 @@ async function expandActorSpellFamiliesNow(actor) {
     const current = await ensureSpellFamilyNow(actor.items.get(id));
     result.created += current?.created ?? 0;
     result.updated += current?.updated ?? 0;
+    result.removed += current?.removed ?? 0;
     result.baseUpdated += current?.baseUpdated ?? 0;
     result.queued += current?.queued ? 1 : 0;
     result.removedParent += current?.removedParent ? 1 : 0;
@@ -447,7 +514,7 @@ function compareSpellFamilyRows(left, right) {
   const sourceCompare = String(leftFamily.sourceItemName ?? leftName)
     .localeCompare(String(rightFamily.sourceItemName ?? rightName), "fr", { sensitivity: "base" });
   if (sourceCompare) return sourceCompare;
-  if (leftFamily.key && leftFamily.key === rightFamily.key) {
+  if (leftFamily.sourceItemId && leftFamily.sourceItemId === rightFamily.sourceItemId) {
     const leftOrder = Number(leftFamily.sortOrder ?? (leftFamily.kind === "inverse" ? 1 : leftFamily.kind === "variant" ? 10 : 0));
     const rightOrder = Number(rightFamily.sortOrder ?? (rightFamily.kind === "inverse" ? 1 : rightFamily.kind === "variant" ? 10 : 0));
     if (leftOrder !== rightOrder) return leftOrder - rightOrder;
@@ -474,12 +541,31 @@ function sameMaterialData(left, right) {
   return JSON.stringify(normalizeValue(left)) === JSON.stringify(normalizeValue(right));
 }
 
+function spellFamilyNeedsReconciliation(actor, item) {
+  if (!actor?.items?.has?.(item?.id)) return false;
+  const { key, legacyKey, sourceId, output } = expectedSpellFamily(item);
+  const baseFamily = item?.flags?.add2e?.spellFamily ?? {};
+  if (baseFamily.key !== key || String(baseFamily.sourceItemId ?? "") !== sourceId) return true;
+
+  const expected = new Set(output.filter(entry => entry.id !== "base").map(entry => entry.id));
+  const counts = new Map();
+  for (const actorSpell of actor.items?.filter?.(candidate => String(candidate.type ?? "").toLowerCase() === "sort") ?? []) {
+    if (!familyChildBelongsToSource(actorSpell, sourceId, key, legacyKey)) continue;
+    const identity = familyIdentity(actorSpell);
+    if (!identity || !expected.has(identity)) return true;
+    if (actorSpell.flags?.add2e?.spellFamily?.key !== key) return true;
+    counts.set(identity, (counts.get(identity) ?? 0) + 1);
+  }
+  return [...expected].some(identity => counts.get(identity) !== 1);
+}
+
 function spellFamilyMaterialsNeedMigration(actor, item) {
   if (!actor?.items?.has?.(item?.id)) return false;
-  const { key, output } = expectedSpellFamily(item);
+  if (spellFamilyNeedsReconciliation(actor, item)) return true;
+  const { key, legacyKey, sourceId, output } = expectedSpellFamily(item);
   const existingByIdentity = new Map();
   for (const actorSpell of actor.items?.filter?.(candidate => String(candidate.type ?? "").toLowerCase() === "sort") ?? []) {
-    if (actorSpell.flags?.add2e?.spellFamily?.key !== key) continue;
+    if (!familyChildBelongsToSource(actorSpell, sourceId, key, legacyKey)) continue;
     const identity = familyIdentity(actorSpell);
     if (identity) existingByIdentity.set(identity, actorSpell);
   }
