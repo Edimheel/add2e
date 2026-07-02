@@ -1,5 +1,5 @@
-// ADD2E — Effects Engine / analyse de contexte et autorité raciale stricte.
-// Les règles raciales viennent exclusivement de system.racialProfile.
+// ADD2E — Effects Engine / analyse et règles raciales strictes.
+// La seule source raciale est la Race Item de l'acteur et son system.racialProfile.
 
 const register = (Engine, methods) => Object.defineProperties(
   Engine,
@@ -10,75 +10,11 @@ const register = (Engine, methods) => Object.defineProperties(
 );
 
 const ADD2E_RACIAL_CONTEXT_CACHE = new WeakMap();
-const ADD2E_RACIAL_HUD_ID = "add2e-action-hud";
-const ADD2E_RACIAL_HUD_STYLE_ID = "add2e-racial-profile-hud-style";
 
 function clone(value) {
   try { return foundry.utils.deepClone(value); } catch {}
   try { return foundry.utils.duplicate(value); } catch {}
   return JSON.parse(JSON.stringify(value));
-}
-
-function htmlEscape(value) {
-  try { return foundry.utils.escapeHTML(String(value ?? "")); } catch {}
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
-}
-
-function raceSelectionValue(actor) {
-  const raw = actor?.system?.race;
-  if (raw && typeof raw === "object") return String(raw.value ?? raw.id ?? raw.name ?? raw.label ?? "").trim();
-  return String(raw ?? "").trim();
-}
-
-function directRaceItem(engine, actor) {
-  const races = Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "race");
-  if (!races.length) return null;
-  const wanted = raceSelectionValue(actor);
-  if (!wanted) return races.length === 1 ? races[0] : null;
-  const wantedNormalized = engine.normalizeTag(wanted);
-  return races.find(item => [item.id, item._id, item.uuid, item.name, item.system?.slug, item.system?.label]
-    .some(value => String(value ?? "") === wanted || engine.normalizeTag(value) === wantedNormalized)) ?? null;
-}
-
-function directRacialContext(engine, actor) {
-  if (!actor || typeof actor !== "object") return { source: null, profile: null, passiveTags: [], virtualEffects: [] };
-  const sourceItem = directRaceItem(engine, actor);
-  const signature = `${sourceItem?.id ?? ""}|${sourceItem?._stats?.modifiedTime ?? ""}|${raceSelectionValue(actor)}`;
-  const cached = ADD2E_RACIAL_CONTEXT_CACHE.get(actor);
-  if (cached?.signature === signature) return cached;
-
-  const source = sourceItem ? {
-    id: sourceItem.id ?? sourceItem._id ?? sourceItem.uuid ?? sourceItem.name,
-    uuid: sourceItem.uuid ?? "",
-    name: sourceItem.name ?? "",
-    system: sourceItem.system ?? {},
-    item: sourceItem
-  } : null;
-  const raw = source?.system?.racialProfile;
-  const profile = raw && typeof raw === "object" && !Array.isArray(raw) && String(raw.id ?? "").trim()
-    ? { ...clone(raw), sourceId: source.id, sourceName: source.name, sourceSystem: source.system }
-    : null;
-  const context = { signature, source, profile, passiveTags: profile ? compilePassiveTags(engine, profile) : [], virtualEffects: [] };
-  context.virtualEffects = createVirtualEffects(context);
-  ADD2E_RACIAL_CONTEXT_CACHE.set(actor, context);
-  return context;
-}
-
-function scalarList(value) {
-  if (value === undefined || value === null || value === "") return [];
-  if (Array.isArray(value)) return value.flatMap(scalarList).filter(Boolean);
-  if (value instanceof Set) return [...value].flatMap(scalarList).filter(Boolean);
-  if (typeof value === "object") {
-    for (const key of ["values", "items", "list", "tags", "effectTags", "entries"]) {
-      if (value[key] !== undefined) return scalarList(value[key]);
-    }
-    return [];
-  }
-  return [value];
 }
 
 function records(value) {
@@ -87,13 +23,57 @@ function records(value) {
   return [];
 }
 
-function racialCapabilityKey(engine, value) {
-  return engine.normalizeTag(String(value ?? ""));
+function scalarList(value) {
+  if (value === undefined || value === null || value === "") return [];
+  if (Array.isArray(value)) return value.flatMap(scalarList).filter(Boolean);
+  if (value instanceof Set) return [...value].flatMap(scalarList).filter(Boolean);
+  if (typeof value === "object") {
+    for (const key of ["values", "items", "list", "entries"]) {
+      if (value[key] !== undefined) return scalarList(value[key]);
+    }
+    return [];
+  }
+  return [value];
+}
+
+function directRaceItem(actor) {
+  const races = Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "race");
+  // Une seule Race Item est la règle du système : aucune recherche par nom, slug ou snapshot.
+  return races.length === 1 ? races[0] : null;
+}
+
+function directRacialContext(engine, actor) {
+  if (!actor || typeof actor !== "object") return { source: null, profile: null, passiveTags: [], virtualEffects: [] };
+  const item = directRaceItem(actor);
+  const signature = `${item?.id ?? ""}|${item?._stats?.modifiedTime ?? ""}`;
+  const cached = ADD2E_RACIAL_CONTEXT_CACHE.get(actor);
+  if (cached?.signature === signature) return cached;
+
+  const source = item ? {
+    id: item.id ?? item._id ?? item.uuid ?? "",
+    uuid: item.uuid ?? "",
+    name: item.name ?? "",
+    system: item.system ?? {},
+    item
+  } : null;
+  const rawProfile = source?.system?.racialProfile;
+  const profile = rawProfile && typeof rawProfile === "object" && !Array.isArray(rawProfile) && String(rawProfile.id ?? "").trim()
+    ? { ...clone(rawProfile), sourceId: source.id, sourceName: source.name, sourceSystem: source.system }
+    : null;
+  const context = {
+    signature,
+    source,
+    profile,
+    passiveTags: profile ? compilePassiveTags(engine, profile) : [],
+    virtualEffects: []
+  };
+  context.virtualEffects = createVirtualEffects(context);
+  ADD2E_RACIAL_CONTEXT_CACHE.set(actor, context);
+  return context;
 }
 
 function compilePassiveTags(engine, profile) {
   const tags = [];
-  engine.addTagsInto(tags, profile.passiveTags);
   const vision = profile.vision ?? {};
   const range = engine.readNumber(vision.range, vision.distance);
   if (engine.normalizeTag(vision.type ?? vision.mode ?? "") === "infravision" && Number.isFinite(range) && range > 0) tags.push(`infravision:${range}`);
@@ -157,17 +137,18 @@ function createVirtualEffects(context) {
       capabilityId: ""
     }];
   }
+
   const entries = [];
-  const add = (raw, kind) => {
+  const push = (raw, kind) => {
     if (!raw || typeof raw !== "object") return;
     const key = String(raw.id ?? raw.key ?? raw.label ?? raw.name ?? `${kind}-${entries.length}`);
-    const label = String(raw.label ?? raw.name ?? key).trim();
+    const name = String(raw.label ?? raw.name ?? key).trim();
     const description = String(raw.description ?? "").trim();
-    if (!label || !description) return;
+    if (!name || !description) return;
     entries.push({
       id: `racial:${context.source.id}:${kind}:${key}`,
-      name: label,
-      img: raw.img ?? raw.icon ?? (kind === "capability" ? "icons/svg/d20.svg" : "icons/svg/aura.svg"),
+      name,
+      img: raw.img ?? raw.icon ?? (kind === "capability" ? "icons/svg/d20-grey.svg" : "icons/svg/aura.svg"),
       description,
       duration: kind === "capability" ? "Conditionnel" : "Permanent",
       sourceName: `Race — ${sourceName}`,
@@ -178,46 +159,40 @@ function createVirtualEffects(context) {
       capabilityId: kind === "capability" ? key : ""
     });
   };
-  for (const passive of records(context.profile.passives)) add(passive, "passive");
-  for (const capability of records(context.profile.capabilities)) add(capability, "capability");
+  for (const passive of records(context.profile.passives)) push(passive, "passive");
+  for (const capability of records(context.profile.capabilities)) push(capability, "capability");
   return entries;
 }
 
 function directRacialCapabilities(engine, actor) {
   const context = directRacialContext(engine, actor);
   if (!context.source || !context.profile) return [];
-  return records(context.profile.capabilities).flatMap((capability, index) => {
-    if (!capability || typeof capability !== "object") return [];
-    const id = String(capability.id ?? capability.key ?? "").trim();
-    const label = String(capability.label ?? capability.name ?? id).trim();
-    const description = String(capability.description ?? "").trim();
+  return records(context.profile.capabilities).flatMap((raw, index) => {
+    if (!raw || typeof raw !== "object") return [];
+    const id = String(raw.id ?? raw.key ?? "").trim();
+    const label = String(raw.label ?? raw.name ?? id).trim();
+    const description = String(raw.description ?? "").trim();
     if (!id || !label || !description) return [];
+    const formula = String(raw.formula ?? raw.die ?? "").trim();
+    const successAt = engine.readNumber(raw.successAt, raw.maxSuccess, raw.threshold, raw.pct);
     return [{
-      ...clone(capability),
+      ...clone(raw),
       id,
+      key: engine.normalizeTag(id),
       label,
       description,
       index,
       sourceId: context.source.id,
       sourceName: context.source.name,
-      canRoll: Boolean(String(capability.formula ?? "").trim()) && Number.isFinite(engine.readNumber(capability.successAt))
+      activable: raw.activable !== false,
+      canRoll: Boolean(formula) && Number.isFinite(successAt) && successAt > 0
     }];
   });
 }
 
-function legacyRaceMechanicalTags(engine, actor) {
-  const tags = [];
-  const races = Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "race");
-  for (const item of races) {
-    engine.addTagsInto(tags, item.system?.effectTags);
-    engine.addTagsInto(tags, item.system?.effecttags);
-    engine.addTagsInto(tags, item.system?.effects);
-    engine.addTagsInto(tags, item.system?.effets);
-    engine.addEmbeddedItemEffectTagsInto(tags, item);
-  }
-  engine.addTagsInto(tags, actor?.flags?.add2e?.racialTags);
-  try { engine.addTagsInto(tags, actor?.getFlag?.("add2e", "racialTags")); } catch {}
-  return new Set(tags.map(tag => engine.normalizeTag(tag)).filter(Boolean));
+function racialRequirementResult(capability, context = {}) {
+  const requirements = scalarList(capability?.requires).map(String).filter(Boolean);
+  return { requirements, missing: requirements.filter(key => context?.[key] !== true) };
 }
 
 function installStrictRacialProfileAuthority(Engine) {
@@ -278,31 +253,87 @@ function installStrictRacialProfileAuthority(Engine) {
         configurable: true,
         writable: true,
         value(actor, capabilityId) {
-          const wanted = racialCapabilityKey(this, capabilityId);
+          const wanted = this.normalizeTag(capabilityId);
           if (!wanted) return null;
-          return this.getRacialCapabilities(actor).find(capability => racialCapabilityKey(this, capability.id) === wanted) ?? null;
+          return this.getRacialCapabilities(actor).find(capability => this.normalizeTag(capability.id) === wanted) ?? null;
+        }
+      },
+      getRacialVision: {
+        configurable: true,
+        writable: true,
+        value(actor) {
+          const profile = this.getRacialContext(actor).profile;
+          const vision = profile?.vision ?? {};
+          const range = this.readNumber(vision.range, vision.distance);
+          const type = this.normalizeTag(vision.type ?? vision.mode ?? "");
+          return type === "infravision" && Number.isFinite(range) && range > 0
+            ? { type: "infravision", range }
+            : { type: "", range: 0 };
+        }
+      },
+      syncRacialVision: {
+        configurable: true,
+        writable: true,
+        async value(actor) {
+          if (!actor?.update) return { applied: false, reason: "missing-actor" };
+          const vision = this.getRacialVision(actor);
+          const state = actor.getFlag?.("add2e", "racialVision") ?? actor.flags?.add2e?.racialVision ?? null;
+          const current = actor.prototypeToken?.sight ?? actor._source?.prototypeToken?.sight ?? {};
+          const sceneUnits = this.normalizeTag(canvas?.scene?.grid?.units ?? "");
+          const range = sceneUnits.includes("ft") || sceneUnits.includes("feet") || sceneUnits.includes("pied") ? vision.range * 3.28084 : vision.range;
+          if (!vision.range) {
+            if (!state?.base) return { applied: false, reason: "no-racial-vision" };
+            await actor.update({
+              "prototypeToken.sight.enabled": state.base.enabled,
+              "prototypeToken.sight.range": state.base.range,
+              "prototypeToken.sight.visionMode": state.base.visionMode
+            }, { add2eInternal: true });
+            await actor.unsetFlag?.("add2e", "racialVision");
+            return { applied: true, restored: true, range: 0 };
+          }
+          const darkvision = globalThis.CONFIG?.Canvas?.visionModes?.darkvision ? "darkvision" : "";
+          const base = state?.base ?? {
+            enabled: current.enabled ?? false,
+            range: Number(current.range) || 0,
+            visionMode: current.visionMode ?? "basic"
+          };
+          const nextRange = Math.max(Number(current.range) || 0, range);
+          const nextMode = darkvision && (!current.visionMode || current.visionMode === "basic") ? darkvision : (current.visionMode ?? "basic");
+          if (current.enabled === true && Number(current.range) === nextRange && current.visionMode === nextMode) return { applied: false, reason: "already-synced", range: nextRange, visionMode: nextMode };
+          await actor.update({
+            "prototypeToken.sight.enabled": true,
+            "prototypeToken.sight.range": nextRange,
+            "prototypeToken.sight.visionMode": nextMode
+          }, { add2eInternal: true });
+          await actor.setFlag?.("add2e", "racialVision", { base, range, visionMode: nextMode, type: vision.type });
+          return { applied: true, range: nextRange, visionMode: nextMode };
         }
       },
       rollRacialCapability: {
         configurable: true,
         writable: true,
-        async value(actor, capabilityId) {
+        async value(actor, capabilityId, context = {}) {
           const capability = this.getRacialCapability(actor, capabilityId);
-          if (!capability) return { ok: false, reason: "missing-capability", capability: null };
-          const formula = String(capability.formula ?? "").trim();
-          const successAt = this.readNumber(capability.successAt);
-          if (!formula || !Number.isFinite(successAt)) return { ok: false, reason: "not-rollable", capability };
+          if (!actor || !capability) return { ok: false, success: false, reason: "capability-not-found" };
+          const requirement = racialRequirementResult(capability, context);
+          if (requirement.missing.length) return { ok: false, success: false, reason: "requirements-missing", capability, missing: requirement.missing, requirements: requirement.requirements };
+          const formula = String(capability.formula ?? capability.die ?? "").trim();
+          const successAt = this.readNumber(capability.successAt, capability.maxSuccess, capability.threshold, capability.pct);
+          if (!formula || !Number.isFinite(successAt) || successAt <= 0) return { ok: false, success: false, reason: "invalid-capability", capability };
           const roll = await new Roll(formula).evaluate();
           if (game?.dice3d?.showForRoll) await game.dice3d.showForRoll(roll);
           const total = Number(roll.total);
           return {
             ok: Number.isFinite(total),
+            success: Number.isFinite(total) && total <= successAt,
             reason: Number.isFinite(total) ? "rolled" : "invalid-roll",
             capability,
             roll,
             total,
             successAt,
-            success: Number.isFinite(total) && total <= successAt
+            formula,
+            context,
+            requirements: requirement.requirements
           };
         }
       }
@@ -313,8 +344,10 @@ function installStrictRacialProfileAuthority(Engine) {
         configurable: true,
         writable: true,
         value(actor) {
-          const legacy = legacyRaceMechanicalTags(this, actor);
-          return inheritedGetActiveTags(actor).filter(tag => !legacy.has(this.normalizeTag(tag)));
+          return [...new Set([
+            ...inheritedGetActiveTags(actor),
+            ...this.getRacialPassiveTags(actor)
+          ].map(tag => this.normalizeTag(tag)).filter(Boolean))];
         }
       });
     }
@@ -329,260 +362,32 @@ function installStrictRacialProfileAuthority(Engine) {
       Hooks.on("createItem", invalidate);
       Hooks.on("updateItem", invalidate);
       Hooks.on("deleteItem", invalidate);
-      Hooks.on("updateActor", (actor, changes) => {
-        if (changes?.system?.race === undefined && changes?.system?.details_race === undefined) return;
-        Engine.invalidateRacialContext(actor);
+      Hooks.once("ready", () => {
+        for (const actor of game.actors ?? []) Promise.resolve(Engine.syncRacialVision?.(actor)).catch(() => {});
       });
     }
   });
 }
 
-function installStrictRacialEffectsSheetBridge() {
-  if (globalThis.ADD2E_RACIAL_STRICT_EFFECTS_SHEET_BRIDGE_INSTALLED || typeof Hooks === "undefined") return;
-  globalThis.ADD2E_RACIAL_STRICT_EFFECTS_SHEET_BRIDGE_INSTALLED = true;
+// Pont de données uniquement : aucun rendu ni écouteur de l'interface ici.
+function installStrictRacialEffectsSheetDataBridge() {
+  if (globalThis.ADD2E_RACIAL_STRICT_EFFECTS_SHEET_DATA_BRIDGE_INSTALLED || typeof Hooks === "undefined") return;
+  globalThis.ADD2E_RACIAL_STRICT_EFFECTS_SHEET_DATA_BRIDGE_INSTALLED = true;
   Hooks.once("ready", () => {
     const proto = globalThis.Add2eActorSheet?.prototype;
     const base = proto?.getData;
-    if (typeof base !== "function" || base.__add2eStrictRacialEffectsBridge) return;
+    if (typeof base !== "function" || base.__add2eStrictRacialEffectsSheetDataBridge) return;
     const wrapped = async function add2eGetDataWithStrictRacialEffects(...args) {
       const data = await base.apply(this, args);
-      const engine = globalThis.Add2eEffectsEngine;
       const actor = this.actor ?? data?.actor;
-      const virtual = engine?.getRacialVirtualEffects?.(actor) ?? [];
+      const virtual = globalThis.Add2eEffectsEngine?.getRacialVirtualEffects?.(actor) ?? [];
       const active = Array.isArray(data.activeEffectsList) ? data.activeEffectsList : [];
       const seen = new Set(active.map(effect => String(effect?.id ?? "")));
       data.activeEffectsList = [...virtual.filter(effect => !seen.has(String(effect?.id ?? ""))), ...active];
       return data;
     };
-    wrapped.__add2eStrictRacialEffectsBridge = true;
+    wrapped.__add2eStrictRacialEffectsSheetDataBridge = true;
     proto.getData = wrapped;
-  });
-}
-
-function racialHudActor() {
-  const actorId = globalThis.add2eHudCheck?.().actorId ?? "";
-  if (!actorId) return null;
-  const fromCanvas = [
-    ...(canvas?.tokens?.controlled ?? []),
-    ...(canvas?.tokens?.placeables ?? [])
-  ].find(token => token?.actor?.id === actorId)?.actor;
-  return fromCanvas ?? game.actors?.get?.(actorId) ?? null;
-}
-
-function racialHudConditionLabel(value) {
-  const labels = {
-    within_three_meters: "à 3 m ou moins",
-    search_active: "recherche active",
-    underground: "sous terre",
-    concentration: "concentration",
-    alone: "isolé",
-    no_metal_armor: "sans armure de métal",
-    opens_door: "après ouverture d’une porte"
-  };
-  const key = String(value ?? "").trim();
-  return labels[key] ?? key.replaceAll("_", " ");
-}
-
-function racialHudConditions(capability) {
-  return scalarList(capability?.requires).map(racialHudConditionLabel).filter(Boolean);
-}
-
-function racialHudEnsureStyle() {
-  if (document.getElementById(ADD2E_RACIAL_HUD_STYLE_ID)) return;
-  const style = document.createElement("style");
-  style.id = ADD2E_RACIAL_HUD_STYLE_ID;
-  style.textContent = `
-#${ADD2E_RACIAL_HUD_ID} .a2e-hud-racial-panel{display:grid;gap:6px;padding:7px;border:1px solid rgba(113,155,218,.72);border-radius:10px;background:rgba(58,88,136,.20)}
-#${ADD2E_RACIAL_HUD_ID} .a2e-hud-racial-title{color:#d9ebff;font-size:.82em;font-weight:900}
-#${ADD2E_RACIAL_HUD_ID} .a2e-hud-racial-row{display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:8px;align-items:center;padding:6px;border:1px solid rgba(152,194,255,.48);border-radius:8px;background:rgba(8,15,28,.20)}
-#${ADD2E_RACIAL_HUD_ID} .a2e-hud-racial-row img{width:34px;height:34px;border-radius:7px;object-fit:cover;border:1px solid rgba(152,194,255,.68)}
-#${ADD2E_RACIAL_HUD_ID} .a2e-hud-racial-name{color:#eff7ff;font-weight:900}
-#${ADD2E_RACIAL_HUD_ID} .a2e-hud-racial-meta{display:flex;flex-wrap:wrap;gap:4px 8px;color:#c7dcf5;font-size:.76em;font-weight:750;margin-top:2px}
-#${ADD2E_RACIAL_HUD_ID} .a2e-hud-racial-description{color:#d6e8ff;font-size:.76em;line-height:1.35;margin-top:3px}
-#${ADD2E_RACIAL_HUD_ID} .a2e-hud-racial-use{min-width:78px;min-height:30px;padding:4px 9px;border:1px solid #98c2ff;border-radius:8px;background:linear-gradient(180deg,#c8e0ff,#6f9fdd);color:#101b2e;font-size:.8em;font-weight:950;cursor:pointer}
-`;
-  document.head.appendChild(style);
-}
-
-function racialHudPassiveHtml(effect) {
-  return `<div class="a2e-hud-racial-row">
-  <img src="${htmlEscape(effect.img || "icons/svg/aura.svg")}" alt="">
-  <div><div class="a2e-hud-racial-name">${htmlEscape(effect.name)}</div><div class="a2e-hud-racial-meta"><span>${htmlEscape(effect.sourceName)}</span><span>${htmlEscape(effect.duration || "Permanent")}</span></div><div class="a2e-hud-racial-description">${htmlEscape(effect.description)}</div></div>
-  <span aria-hidden="true"></span>
-</div>`;
-}
-
-function racialHudCapabilityHtml(capability) {
-  const conditions = racialHudConditions(capability);
-  const formula = String(capability.formula ?? "").trim();
-  const successAt = Number(capability.successAt);
-  const roll = capability.canRoll ? `<span>Jet ${htmlEscape(formula)} : réussite ≤ ${htmlEscape(successAt)}</span>` : "<span>Capacité narrative</span>";
-  const conditionLabel = conditions.length ? `<span>Conditions : ${htmlEscape(conditions.join(", "))}</span>` : "";
-  const button = capability.canRoll
-    ? `<button type="button" class="a2e-hud-racial-use" data-add2e-racial-capability-id="${htmlEscape(capability.id)}">Utiliser</button>`
-    : "<span aria-hidden=\"true\"></span>";
-  return `<div class="a2e-hud-racial-row">
-  <img src="${htmlEscape(capability.img || capability.icon || "icons/svg/d20.svg")}" alt="">
-  <div><div class="a2e-hud-racial-name">${htmlEscape(capability.label)}</div><div class="a2e-hud-racial-meta"><span>Capacité raciale</span>${roll}${conditionLabel}</div><div class="a2e-hud-racial-description">${htmlEscape(capability.description)}</div></div>
-  ${button}
-</div>`;
-}
-
-function racialHudSignature(actor, passives, capabilities) {
-  return JSON.stringify({
-    actorId: actor?.id ?? "",
-    passives: passives.map(effect => [effect.id, effect.name, effect.description]),
-    capabilities: capabilities.map(capability => [capability.id, capability.label, capability.description, capability.formula, capability.successAt, capability.requires])
-  });
-}
-
-function racialHudRender() {
-  const root = document.getElementById(ADD2E_RACIAL_HUD_ID);
-  const actor = racialHudActor();
-  const engine = globalThis.Add2eEffectsEngine;
-  if (!root || !actor || typeof engine?.getRacialVirtualEffects !== "function") return;
-
-  racialHudEnsureStyle();
-  const passives = engine.getRacialPassiveEffects?.(actor) ?? engine.getRacialVirtualEffects(actor).filter(effect => effect.kind !== "capability");
-  const capabilities = engine.getRacialCapabilities?.(actor) ?? [];
-  const signature = racialHudSignature(actor, passives, capabilities);
-
-  const effectsSection = root.querySelector('[data-section="effets"]');
-  if (effectsSection) {
-    const existing = effectsSection.querySelector(':scope > .a2e-hud-racial-effects');
-    if (!passives.length) existing?.remove?.();
-    else if (existing?.dataset?.add2eRacialHudSignature !== signature) {
-      existing?.remove?.();
-      const panel = document.createElement("div");
-      panel.className = "a2e-hud-racial-panel a2e-hud-racial-effects";
-      panel.dataset.add2eRacialHudSignature = signature;
-      panel.innerHTML = `<div class="a2e-hud-racial-title"><i class="fas fa-dna"></i> Effets raciaux</div>${passives.map(racialHudPassiveHtml).join("")}`;
-      effectsSection.prepend(panel);
-    }
-  }
-
-  const capabilitiesSection = root.querySelector('[data-section="capacites"]');
-  if (capabilitiesSection) {
-    const existing = capabilitiesSection.querySelector(':scope > .a2e-hud-racial-capabilities');
-    if (!capabilities.length) existing?.remove?.();
-    else if (existing?.dataset?.add2eRacialHudSignature !== signature) {
-      existing?.remove?.();
-      const panel = document.createElement("div");
-      panel.className = "a2e-hud-racial-panel a2e-hud-racial-capabilities";
-      panel.dataset.add2eRacialHudSignature = signature;
-      panel.innerHTML = `<div class="a2e-hud-racial-title"><i class="fas fa-dice-d20"></i> Capacités raciales</div>${capabilities.map(racialHudCapabilityHtml).join("")}`;
-      capabilitiesSection.prepend(panel);
-    }
-  }
-}
-
-let racialHudRenderScheduled = false;
-let racialHudObservedRoot = null;
-let racialHudRootObserver = null;
-
-function racialHudScheduleRender() {
-  if (racialHudRenderScheduled) return;
-  racialHudRenderScheduled = true;
-  const schedule = globalThis.requestAnimationFrame ?? (callback => window.setTimeout(callback, 16));
-  schedule(() => {
-    racialHudRenderScheduled = false;
-    racialHudRender();
-  });
-}
-
-function racialHudObserveRoot() {
-  const root = document.getElementById(ADD2E_RACIAL_HUD_ID);
-  if (root === racialHudObservedRoot) return;
-  racialHudRootObserver?.disconnect?.();
-  racialHudObservedRoot = root ?? null;
-  if (!root) return;
-  racialHudRootObserver = new MutationObserver(racialHudScheduleRender);
-  racialHudRootObserver.observe(root, { childList: true, subtree: true });
-  racialHudScheduleRender();
-}
-
-async function racialHudUseCapability(capabilityId) {
-  const actor = racialHudActor();
-  const engine = globalThis.Add2eEffectsEngine;
-  if (!actor || typeof engine?.getRacialCapability !== "function") return false;
-  if (!game.user?.isGM && !actor.isOwner && !actor.testUserPermission?.(game.user, "OWNER")) {
-    ui.notifications.warn("Vous ne pouvez pas utiliser les capacités de cet acteur.");
-    return false;
-  }
-
-  const capability = engine.getRacialCapability(actor, capabilityId);
-  if (!capability) {
-    ui.notifications.warn("Capacité raciale introuvable dans le profil strict de la race.");
-    return false;
-  }
-  if (!capability.canRoll) {
-    ui.notifications.warn(`La capacité « ${capability.label} » ne possède pas de jet défini.`);
-    return false;
-  }
-
-  const conditions = racialHudConditions(capability);
-  const conditionText = conditions.length
-    ? `<p><strong>Conditions à confirmer :</strong> ${htmlEscape(conditions.join(", "))}.</p>`
-    : "";
-  const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (!DialogV2?.confirm) {
-    ui.notifications.error("DialogV2 est indisponible.");
-    return false;
-  }
-  const confirmed = await DialogV2.confirm({
-    window: { title: `Capacité raciale : ${capability.label}` },
-    content: `<p>${htmlEscape(capability.description)}</p><p><strong>Jet :</strong> ${htmlEscape(capability.formula)} — réussite sur ${htmlEscape(capability.successAt)} ou moins.</p>${conditionText}`,
-    yes: { label: "Lancer le jet", icon: "fas fa-dice-d20" },
-    no: { label: "Annuler" }
-  });
-  if (!confirmed) return false;
-
-  const result = await engine.rollRacialCapability(actor, capability.id);
-  if (!result?.ok) {
-    ui.notifications.error("Le jet de capacité raciale n’a pas pu être résolu.");
-    return false;
-  }
-
-  const outcome = result.success ? "Réussite" : "Échec";
-  const color = result.success ? "#1f8f4d" : "#b3261e";
-  const content = `<div class="add2e-chat-card" style="border:1px solid ${color};border-radius:9px;padding:9px;background:#fffdf6;color:#2c2212;">
-  <div style="font-weight:900;color:${color};">${htmlEscape(outcome)} — ${htmlEscape(capability.label)}</div>
-  <div style="margin-top:4px;">${htmlEscape(actor.name)} : <strong>${htmlEscape(result.total)}</strong> avec ${htmlEscape(capability.formula)} ; réussite ≤ <strong>${htmlEscape(result.successAt)}</strong>.</div>
-  <div style="margin-top:4px;font-size:.88em;">${htmlEscape(capability.description)}</div>
-</div>`;
-  await ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor }),
-    content,
-    flags: { add2e: { racialCapability: { actorId: actor.id, raceSourceId: capability.sourceId, capabilityId: capability.id, success: result.success } } }
-  });
-  return true;
-}
-
-function installStrictRacialHudBridge() {
-  if (globalThis.ADD2E_RACIAL_STRICT_HUD_BRIDGE_INSTALLED || typeof Hooks === "undefined") return;
-  globalThis.ADD2E_RACIAL_STRICT_HUD_BRIDGE_INSTALLED = true;
-  Hooks.once("ready", () => {
-    const bodyObserver = new MutationObserver(() => {
-      racialHudObserveRoot();
-      racialHudScheduleRender();
-    });
-    bodyObserver.observe(document.body, { childList: true, subtree: true });
-    document.addEventListener("click", event => {
-      const button = event.target?.closest?.("button[data-add2e-racial-capability-id]");
-      if (!button || !document.getElementById(ADD2E_RACIAL_HUD_ID)?.contains(button)) return;
-      event.preventDefault();
-      event.stopPropagation();
-      void racialHudUseCapability(button.dataset.add2eRacialCapabilityId);
-    }, true);
-    for (const hookName of ["controlToken", "updateActor", "createItem", "updateItem", "deleteItem"]) {
-      Hooks.on(hookName, () => {
-        racialHudObserveRoot();
-        racialHudScheduleRender();
-      });
-    }
-    racialHudObserveRoot();
-    racialHudScheduleRender();
-    window.setTimeout(() => { racialHudObserveRoot(); racialHudScheduleRender(); }, 120);
   });
 }
 
@@ -657,7 +462,6 @@ export function installEffectsEngineAnalysis(Engine) {
   });
 
   installStrictRacialProfileAuthority(Engine);
-  installStrictRacialEffectsSheetBridge();
-  installStrictRacialHudBridge();
+  installStrictRacialEffectsSheetDataBridge();
   installRacialImmunityAliases(Engine);
 }
