@@ -105,17 +105,26 @@
         {{#if activeRacialCapabilities.length}}
           {{#each activeRacialCapabilities as |capability|}}
             <div class="a2e-panel" style="box-shadow:none;">
-              <h3>{{capability.label}}</h3>
+              <h3 style="display:flex;align-items:center;gap:8px;">
+                {{#if capability.canRoll}}
+                  <button type="button"
+                          class="a2e-action-icon add2e-racial-capability-roll"
+                          data-actor-id="{{../actor.id}}"
+                          data-racial-capability-id="{{capability.id}}"
+                          title="Tester {{capability.label}}"
+                          style="width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;">
+                    <i class="fas {{capability.iconClass}}"></i>
+                  </button>
+                {{else}}
+                  <span class="a2e-action-icon" style="width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;"><i class="fas {{capability.iconClass}}"></i></span>
+                {{/if}}
+                <span>{{capability.label}}</span>
+                {{#if capability.rollLabel}}
+                  <small class="a2e-muted"> — {{capability.rollLabel}}</small>
+                {{/if}}
+              </h3>
               <div class="a2e-panel-body a2e-small">
                 <p style="margin-top:0;">{{capability.description}}</p>
-                <div class="a2e-actions" style="justify-content:flex-start;margin-top:8px;">
-                  <button type="button"
-                          class="a2e-btn blue add2e-racial-capability-roll"
-                          data-actor-id="{{../actor.id}}"
-                          data-racial-capability-id="{{capability.id}}">
-                    <i class="fas fa-dice-d20"></i>&nbsp;Utiliser
-                  </button>
-                </div>
               </div>
             </div>
           {{/each}}
