@@ -3,7 +3,7 @@
 
 import { add2eNormalizeAttackTag, add2eTagSetMatches } from "./03-attack-rules.mjs";
 
-export const ADD2E_ATTACK_MODIFIERS_VERSION = "2026-06-30-generic-target-modifiers-v10";
+export const ADD2E_ATTACK_MODIFIERS_VERSION = "2026-07-02-effects-engine-racial-tags-v11";
 
 function add2eAttackPushNormalizedTag(set, value) {
   if (!set || value === undefined || value === null || value === "") return;
@@ -65,45 +65,9 @@ export function add2eAttackBuildActorTagSet(actor) {
   return actorTags;
 }
 
-function add2eAttackTagSetHasMatcher(tagSet, matcher) {
-  const m = add2eNormalizeAttackTag(matcher);
-  if (!m) return false;
-  if (tagSet.has(m)) return true;
-  const stripped = m
-    .replace(/^race:/, "")
-    .replace(/^type:/, "")
-    .replace(/^type_monstre:/, "")
-    .replace(/^creature:/, "")
-    .replace(/^alignement:/, "")
-    .replace(/^alignment:/, "");
-  if (tagSet.has(stripped)) return true;
-  for (const tag of tagSet) {
-    if (tag === m || tag === stripped) return true;
-    if (tag.endsWith(`:${m}`) || tag.endsWith(`:${stripped}`)) return true;
-    if (tag.includes(m) || tag.includes(stripped)) return true;
-  }
-  return false;
-}
-
-function add2eAttackIsEvilTagSet(tagSet) {
-  return add2eAttackTagSetHasMatcher(tagSet, "alignement:mauvais")
-    || add2eAttackTagSetHasMatcher(tagSet, "alignment:evil")
-    || add2eAttackTagSetHasMatcher(tagSet, "loyal_mauvais")
-    || add2eAttackTagSetHasMatcher(tagSet, "neutre_mauvais")
-    || add2eAttackTagSetHasMatcher(tagSet, "chaotique_mauvais")
-    || add2eAttackTagSetHasMatcher(tagSet, "mauvais")
-    || add2eAttackTagSetHasMatcher(tagSet, "evil");
-}
-
 function add2eAttackParseSignedValue(rawValue, defaultValue = 0) {
   const n = Number(String(rawValue ?? "").trim());
   return Number.isFinite(n) ? n : defaultValue;
-}
-
-function add2eAttackTagSetHasPrefix(tagSet, prefix) {
-  const p = add2eNormalizeAttackTag(prefix);
-  for (const tag of tagSet) if (tag.startsWith(p)) return true;
-  return false;
 }
 
 function add2eAttackGetActiveTargetEffectTags(cible) {
@@ -156,62 +120,21 @@ export async function add2eAttackResolveTargetAttackGate({ actor, cible, actionT
 }
 
 export function add2eAttackComputeTargetDefensiveAttackModifiers({ actor, cible }) {
-  let value = 0;
-  const details = [];
   if (!actor || !cible || typeof Add2eEffectsEngine === "undefined" || typeof Add2eEffectsEngine.getActiveTags !== "function") {
-    return { value, details, attackerTags: new Set(), targetEffectTags: new Set() };
+    return { value: 0, details: [], attackerTags: new Set(), targetEffectTags: new Set() };
   }
 
-  const attackerTags = add2eAttackBuildActorTagSet(actor);
   const targetEffectTags = add2eAttackGetActiveTargetEffectTags(cible);
-  const isEvil = add2eAttackIsEvilTagSet(attackerTags);
-  const hasProtectionSpecificMalus = targetEffectTags.has("protection:mal")
-    && add2eAttackTagSetHasPrefix(targetEffectTags, "malus_attaque_creature_mauvaise:");
+  const defense = typeof Add2eEffectsEngine.getAttackModifierAgainst === "function"
+    ? Add2eEffectsEngine.getAttackModifierAgainst(cible, actor)
+    : { value: 0, details: [], attackerTags: add2eAttackBuildActorTagSet(actor) };
 
-  for (const rawTag of targetEffectTags) {
-    const tag = add2eNormalizeAttackTag(rawTag);
-    if (!tag) continue;
-
-    if (tag.startsWith("malus_toucher_ennemi:") || tag.startsWith("malus_attaque_ennemi:")) {
-      if (hasProtectionSpecificMalus) continue;
-      const amount = Math.abs(add2eAttackParseSignedValue(tag.split(":")[1], 0));
-      if (amount) {
-        value -= amount;
-        details.push(`Effet défensif cible : -${amount} au toucher`);
-      }
-      continue;
-    }
-
-    if (tag.startsWith("malus_attaque_creature_mauvaise:")) {
-      const amount = Math.abs(add2eAttackParseSignedValue(tag.split(":")[1], 0));
-      if (amount && isEvil) {
-        value -= amount;
-        details.push(`Protection contre le Mal : -${amount} au toucher`);
-      }
-      continue;
-    }
-
-    if (tag.startsWith("malus_attaque_vs:") || tag.startsWith("malus_toucher_vs:")) {
-      const parts = tag.split(":");
-      const amount = Math.abs(add2eAttackParseSignedValue(parts.at(-1), 0));
-      const matcher = parts.slice(1, -1).join(":");
-      if (amount && matcher && add2eAttackTagSetHasMatcher(attackerTags, matcher)) {
-        value -= amount;
-        details.push(`Effet défensif cible (${matcher}) : -${amount} au toucher`);
-      }
-      continue;
-    }
-
-    if (tag.startsWith("bonus_attaque_ennemi:")) {
-      const amount = add2eAttackParseSignedValue(tag.split(":")[1], 0);
-      if (amount) {
-        value += amount;
-        details.push(`Effet défensif cible : ${amount >= 0 ? "+" : ""}${amount} au toucher`);
-      }
-    }
-  }
-
-  return { value, details, attackerTags, targetEffectTags };
+  return {
+    value: Number(defense.value) || 0,
+    details: defense.details ?? [],
+    attackerTags: defense.attackerTags ?? add2eAttackBuildActorTagSet(actor),
+    targetEffectTags
+  };
 }
 
 export function add2eAttackComputeActiveAttackModifiers({ actor, cible, combatProfile }) {
@@ -220,10 +143,15 @@ export function add2eAttackComputeActiveAttackModifiers({ actor, cible, combatPr
   let bonusRacialVs = 0;
   const targetTags = add2eAttackBuildTargetTagSet(cible);
   let targetDefensiveAttackDetails = [];
+  let racialTargetAttackDetails = [];
 
   if (typeof Add2eEffectsEngine !== "undefined") {
-    const typeCible = cible?.system?.type_monstre || cible?.system?.race || "";
-    bonusRacialVs = Add2eEffectsEngine.getBonusToucheVs(actor, typeCible);
+    const racialAttack = typeof Add2eEffectsEngine.getAttackBonusAgainst === "function"
+      ? Add2eEffectsEngine.getAttackBonusAgainst(actor, cible)
+      : { value: 0, details: [] };
+    bonusRacialVs = Number(racialAttack.value) || 0;
+    racialTargetAttackDetails = racialAttack.details ?? [];
+
     const activeTags = Add2eEffectsEngine.getActiveTags(actor) ?? [];
     const touch = { value: 0, details: [] };
     const damage = { value: 0, details: [] };
@@ -261,7 +189,14 @@ export function add2eAttackComputeActiveAttackModifiers({ actor, cible, combatPr
     }
   }
 
-  return { bonusToucheEffets, bonusDegatsEffets, bonusRacialVs, targetTags, targetDefensiveAttackDetails };
+  return {
+    bonusToucheEffets,
+    bonusDegatsEffets,
+    bonusRacialVs,
+    targetTags,
+    targetDefensiveAttackDetails,
+    racialTargetAttackDetails
+  };
 }
 
 globalThis.ADD2E_ATTACK_MODIFIERS_VERSION = ADD2E_ATTACK_MODIFIERS_VERSION;
