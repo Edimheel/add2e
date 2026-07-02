@@ -1,10 +1,12 @@
 // ADD2E — Déduplication et orchestration des synchronisations de sorts.
 // Compatible Foundry V13 / V14 / V15. DialogV2 uniquement.
 
-const ADD2E_SPELL_SYNC_DEDUPE_VERSION = "2026-07-02-spell-sync-progress-v14";
+const ADD2E_SPELL_SYNC_DEDUPE_VERSION = "2026-07-02-spell-sync-progress-v15";
 const RUNNING = globalThis.ADD2E_SPELL_SYNC_DEDUPE_RUNNING instanceof Set ? globalThis.ADD2E_SPELL_SYNC_DEDUPE_RUNNING : new Set();
+const RECENT_SYNCS = globalThis.ADD2E_SPELL_SYNC_RECENT instanceof Map ? globalThis.ADD2E_SPELL_SYNC_RECENT : new Map();
 globalThis.ADD2E_SPELL_SYNC_DEDUPE_VERSION = ADD2E_SPELL_SYNC_DEDUPE_VERSION;
 globalThis.ADD2E_SPELL_SYNC_DEDUPE_RUNNING = RUNNING;
+globalThis.ADD2E_SPELL_SYNC_RECENT = RECENT_SYNCS;
 
 const hasOwn = (object, key) => Object.prototype.hasOwnProperty.call(object ?? {}, key);
 const clone = value => {
@@ -20,12 +22,8 @@ const slug = value => String(value ?? "").trim().toLowerCase().normalize("NFD")
 const levelOf = system => Number(String(system?.niveau ?? system?.niveau_sort ?? system?.spellLevel ?? system?.level ?? 0).match(/\d+/)?.[0] ?? 0) || 0;
 
 function escapeHtml(value) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+  return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 }
 
 function values(value) {
@@ -41,9 +39,7 @@ function values(value) {
 }
 
 function normalizeSpellList(value) {
-  return typeof globalThis.add2eNormalizeSpellKey === "function"
-    ? globalThis.add2eNormalizeSpellKey(value)
-    : slug(value);
+  return typeof globalThis.add2eNormalizeSpellKey === "function" ? globalThis.add2eNormalizeSpellKey(value) : slug(value);
 }
 
 function unionSpellLists(...sources) {
@@ -79,9 +75,7 @@ function liveUpdates(actor, updates) {
   return updates.filter(update => String(update?._id ?? "") && actor?.items?.has?.(update._id));
 }
 
-function spellSyncDialogV2() {
-  return foundry?.applications?.api?.DialogV2 ?? null;
-}
+function spellSyncDialogV2() { return foundry?.applications?.api?.DialogV2 ?? null; }
 
 function spellSyncActorLevel(actor, classItem, options = {}) {
   const supplied = Number(options?.actorLevel);
@@ -97,11 +91,16 @@ function spellSyncMaxLevel(actor, classItem, options = {}) {
   return Number.isFinite(max) && max > 0 ? Math.floor(max) : 0;
 }
 
+function spellSyncSignature(actor, classItem, options = {}) {
+  const actorKey = String(actor?.uuid ?? actor?.id ?? "");
+  const classKey = String(classItem?.id ?? classItem?.uuid ?? slug(classItem?.name));
+  return `${actorKey}|${classKey}|${spellSyncActorLevel(actor, classItem, options)}`;
+}
+
 function openSpellSyncProgress(actor, classItem, options = {}) {
   if (options?.showWait === false || spellSyncMaxLevel(actor, classItem, options) < 1) return null;
   const DialogV2 = spellSyncDialogV2();
   if (!DialogV2) return null;
-
   const id = `add2e-spell-sync-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   const className = escapeHtml(classItem?.name ?? "Classe");
   const actorName = escapeHtml(actor?.name ?? "Personnage");
@@ -109,10 +108,7 @@ function openSpellSyncProgress(actor, classItem, options = {}) {
     window: { title: "Synchronisation des sorts", resizable: false },
     content: `
       <section data-add2e-spell-sync="${id}" style="min-width:360px;padding:10px 12px;border:1px solid #6d4a1f;border-radius:8px;background:linear-gradient(180deg,#fff8e6,#ead4a2);color:#2d2011;">
-        <div style="display:flex;align-items:center;gap:9px;margin-bottom:7px;">
-          <i class="fas fa-book-sparkles" aria-hidden="true" style="font-size:1.45rem;color:#805514;"></i>
-          <div><strong>Synchronisation des sorts</strong><br><small>${actorName} — ${className}</small></div>
-        </div>
+        <div style="display:flex;align-items:center;gap:9px;margin-bottom:7px;"><i class="fas fa-book-sparkles" aria-hidden="true" style="font-size:1.45rem;color:#805514;"></i><div><strong>Synchronisation des sorts</strong><br><small>${actorName} — ${className}</small></div></div>
         <div data-add2e-spell-sync-stage style="font-weight:700;">Lecture du compendium…</div>
         <div style="height:6px;margin-top:10px;overflow:hidden;border-radius:999px;background:#c9ae72;"><div data-add2e-spell-sync-bar style="width:22%;height:100%;background:#805514;transition:width .2s ease;"></div></div>
       </section>`,
@@ -120,7 +116,6 @@ function openSpellSyncProgress(actor, classItem, options = {}) {
     close: () => undefined
   }, { width: 430, height: "auto" });
   dialog.render({ force: true });
-
   const setStage = (label, progress) => {
     const root = document.querySelector(`[data-add2e-spell-sync="${id}"]`);
     const stage = root?.querySelector?.("[data-add2e-spell-sync-stage]");
@@ -128,28 +123,20 @@ function openSpellSyncProgress(actor, classItem, options = {}) {
     if (stage) stage.textContent = String(label ?? "");
     if (bar && Number.isFinite(Number(progress))) bar.style.width = `${Math.max(0, Math.min(100, Number(progress)))}%`;
   };
-
   return { setStage, close: () => setTimeout(() => dialog.close?.({ force: true }), 160) };
 }
 
 /**
- * 16-preparation-display restreint volontairement un sort auto-accordé aux
- * listes de sa classe source. Lorsqu'un même Item reçoit ensuite une liste
- * manuelle, celle-ci doit s'ajouter à cette restriction, jamais la remplacer.
+ * Les listes manuelles sont cumulées avec la restriction auto-accordée.
+ * Elles ne réintroduisent pas system.spellLists du compendium sur un sort
+ * automatiquement accordé : seules les autorisations explicites sont ajoutées.
  */
 function installSharedSpellListUnion() {
   const original = globalThis.add2eGetSpellListsFromItem;
   if (typeof original !== "function" || original._add2eSharedListUnion) return typeof original === "function";
-
   const wrapped = function add2eGetSpellListsFromItemSharedLists(sort) {
     const flags = sort?.flags?.add2e ?? {};
-    return unionSpellLists(
-      original(sort),
-      flags.grantedSpellLists,
-      flags.autoGrantedSpellLists,
-      flags.learnedSpellLists,
-      flags.knownSpellLists
-    );
+    return unionSpellLists(original(sort), flags.grantedSpellLists, flags.autoGrantedSpellLists, flags.learnedSpellLists, flags.knownSpellLists);
   };
   wrapped._add2eSharedListUnion = true;
   globalThis.add2eGetSpellListsFromItem = wrapped;
@@ -158,8 +145,7 @@ function installSharedSpellListUnion() {
 
 async function removeLegacyMaterialFields(actor, reason = "legacy-material-cleanup") {
   if (!game.user?.isGM || !actor || actor.type !== "personnage") return { removed: 0 };
-  const updates = Array.from(actor.items ?? [])
-    .filter(item => String(item.type ?? "").toLowerCase() === "sort" && hasOwn(item.system, "composants_materiels_objets"))
+  const updates = Array.from(actor.items ?? []).filter(item => String(item.type ?? "").toLowerCase() === "sort" && hasOwn(item.system, "composants_materiels_objets"))
     .map(item => ({ _id: item.id, system: { composants_materiels_objets: forcedDeletion() } }));
   const live = liveUpdates(actor, updates);
   if (!live.length) return { removed: 0 };
@@ -226,9 +212,7 @@ async function removeDuplicates(actor, reason = "manual") {
     }
     const ids = [...groups.values()].flatMap(group => group.length > 1 ? group.sort(compareKeep).slice(1).map(item => item.id) : []);
     return ids.length ? safeDeleteIds(actor, ids, reason) : { deleted: 0 };
-  } finally {
-    RUNNING.delete(runKey);
-  }
+  } finally { RUNNING.delete(runKey); }
 }
 
 async function removeDuplicatesEverywhere(reason = "manual-all-actors") {
@@ -252,22 +236,28 @@ async function waitForFamilyExpansion(actor) {
   return typeof expand === "function" ? expand(actor) : { handled: false };
 }
 
-function resultChanged(result) {
-  return ["imported", "updated", "deleted"].some(key => Number(result?.[key] ?? 0) > 0);
-}
+function resultChanged(result) { return ["imported", "updated", "deleted"].some(key => Number(result?.[key] ?? 0) > 0); }
 
 function installWrapper() {
   const original = globalThis.add2eSyncActorSpellsFromClass;
   if (typeof original !== "function" || original._add2eDedupeWrapped) return typeof original === "function";
   const wrapped = async function add2eSyncActorSpellsFromClassDedupe(actor, classItem, options = {}) {
+    const signature = spellSyncSignature(actor, classItem, options);
+    const now = Date.now();
+    const prior = RECENT_SYNCS.get(signature);
+    const requestedMode = String(options?.mode ?? "replace").toLowerCase();
+    const duplicateReplace = requestedMode === "replace" && prior && now - prior < 3000;
+    const effectiveMode = duplicateReplace ? "missing" : requestedMode;
     const progress = openSpellSyncProgress(actor, classItem, options);
     try {
-      progress?.setStage("Lecture du compendium et synchronisation des sorts…", 36);
+      progress?.setStage(duplicateReplace ? "Vérification d’une synchronisation déjà effectuée…" : "Lecture du compendium et synchronisation des sorts…", 36);
       const result = await queue(actor, () => original(actor, classItem, {
         ...options,
+        mode: effectiveMode,
         showWait: false,
         forceCacheRefresh: options?.forceCacheRefreshExplicit === true
       }));
+      RECENT_SYNCS.set(signature, Date.now());
       if (!resultChanged(result)) {
         progress?.setStage("Aucune modification nécessaire.", 100);
         return result;
@@ -276,16 +266,14 @@ function installWrapper() {
       await waitForFamilyExpansion(actor);
       progress?.setStage("Vérification des doublons et des données historiques…", 88);
       const post = await queue(actor, async () => ({
-        dedupe: await removeDuplicates(actor, `sync-${options?.mode ?? "replace"}`),
-        cleanup: await removeLegacyMaterialFields(actor, `sync-${options?.mode ?? "replace"}`)
+        dedupe: await removeDuplicates(actor, `sync-${effectiveMode}`),
+        cleanup: await removeLegacyMaterialFields(actor, `sync-${effectiveMode}`)
       }));
       if (post.dedupe.deleted) result.deleted = (Number(result.deleted) || 0) + post.dedupe.deleted;
       if (post.cleanup.removed) result.legacyMaterialFieldsRemoved = post.cleanup.removed;
       progress?.setStage("Synchronisation terminée.", 100);
       return result;
-    } finally {
-      progress?.close();
-    }
+    } finally { progress?.close(); }
   };
   wrapped._add2eDedupeWrapped = true;
   globalThis.add2eSyncActorSpellsFromClass = wrapped;
@@ -297,8 +285,8 @@ Hooks.once("ready", () => {
     setTimeout(installWrapper, 0);
     setTimeout(installWrapper, 250);
   }
-  // 16-preparation-display est importé après ce module. Le timer garantit que
-  // son adaptateur de mémorisation est déjà installé avant cette union.
+  // 16-preparation-display est importé après ce module : le timer laisse son
+  // adaptateur s'installer avant d'ajouter les listes apprises explicites.
   setTimeout(() => {
     if (installSharedSpellListUnion()) {
       for (const app of Object.values(ui.windows ?? {})) {
