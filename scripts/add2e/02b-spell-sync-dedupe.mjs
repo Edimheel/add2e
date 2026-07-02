@@ -112,10 +112,17 @@ function openSpellSyncProgress(actor, classItem, options = {}) {
         <div data-add2e-spell-sync-stage style="font-weight:700;">Lecture du compendium…</div>
         <div style="height:6px;margin-top:10px;overflow:hidden;border-radius:999px;background:#c9ae72;"><div data-add2e-spell-sync-bar style="width:22%;height:100%;background:#805514;transition:width .2s ease;"></div></div>
       </section>`,
-    buttons: [],
+    // DialogV2 requiert au moins un bouton, même pour une fenêtre de progression.
+    // Le pied est masqué immédiatement après rendu : le dialogue reste informatif.
+    buttons: [{ action: "add2e-technical-progress", label: "Fermer", callback: () => undefined }],
     close: () => undefined
   }, { width: 430, height: "auto" });
   dialog.render({ force: true });
+  setTimeout(() => {
+    const root = document.querySelector(`[data-add2e-spell-sync="${id}"]`);
+    const application = root?.closest?.(".application, .window-app, .app, .dialog") ?? null;
+    for (const footer of application?.querySelectorAll?.(".form-footer, .dialog-buttons, footer") ?? []) footer.style.display = "none";
+  }, 0);
   const setStage = (label, progress) => {
     const root = document.querySelector(`[data-add2e-spell-sync="${id}"]`);
     const stage = root?.querySelector?.("[data-add2e-spell-sync-stage]");
