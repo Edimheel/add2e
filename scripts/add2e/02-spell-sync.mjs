@@ -4,7 +4,7 @@
 // Compatible Foundry V13 / V14 / V15
 // ============================================================
 
-const ADD2E_SPELL_SYNC_VERSION = "2026-07-01-spell-sync-ranger-druid-v6";
+const ADD2E_SPELL_SYNC_VERSION = "2026-07-02-spell-sync-shared-item-v7";
 globalThis.ADD2E_SPELL_SYNC_VERSION = ADD2E_SPELL_SYNC_VERSION;
 
 const ADD2E_SPELL_SYNC_REQUIRED_SYSTEM_KEYS = Object.freeze([
@@ -153,8 +153,6 @@ function add2eSpellSyncPrepareCompendiumData(data) {
   clean.flags ??= {};
   clean.flags.add2e ??= {};
 
-  // Source unique : aucun champ canonique n'est reconstruit depuis la structure
-  // historique composants_materiels_objets.
   if (!Array.isArray(clean.system.composants_materiels)) clean.system.composants_materiels = [];
   if (!Array.isArray(clean.system.spellLists)) clean.system.spellLists = add2eSpellSyncArray(clean.system.spellLists);
   for (const key of ADD2E_SPELL_SYNC_LEGACY_SYSTEM_KEYS) delete clean.system[key];
@@ -299,6 +297,19 @@ function add2eSpellSyncStableKey(name, system = {}, listOverride = "") {
   const lists = listOverride ? [listOverride] : add2eSpellSyncSpellLists(system);
   const listKey = [...new Set(lists.map(add2eSpellSyncNormalize).filter(Boolean))].sort().join("+") || "liste_inconnue";
   return `${listKey}|${level}|${spellName}`;
+}
+
+function add2eSpellSyncIdentityKey(name, system = {}) {
+  const spellName = add2eSpellSyncNormalize(name ?? system.nom ?? system.name ?? "");
+  const level = add2eSpellSyncSpellLevel(system);
+  return spellName && level > 0 ? `${level}|${spellName}` : "";
+}
+
+function add2eSpellSyncUnionLists(...values) {
+  return [...new Set(values
+    .flatMap(value => add2eSpellSyncArray(value))
+    .map(add2eSpellSyncNormalize)
+    .filter(Boolean))];
 }
 
 function add2eSpellSyncCacheKeySet(cache) {
@@ -552,7 +563,7 @@ async function add2eBuildSpellSyncCache({ force = false } = {}) {
 
     if (byStableKey.has(stableKey)) {
       const kept = byStableKey.get(stableKey);
-      kept.lists = [...new Set([...kept.lists, ...lists])].sort();
+      kept.lists = add2eSpellSyncUnionLists(kept.lists, lists);
       foundry.utils.setProperty(kept.data, "system.spellLists", kept.lists);
       foundry.utils.setProperty(kept.data, "flags.add2e.spellListsResolved", kept.lists);
       duplicateKeys.push({ key: stableKey, kept: kept.name, merged: data.name });
@@ -629,12 +640,100 @@ function add2eSpellSyncActorSpellKeyMap(actor) {
   return result;
 }
 
+function add2eSpellSyncActorSpellIdentityMap(actor) {
+  const result = new Map();
+  for (const item of actor?.items?.filter?.(entry => String(entry?.type ?? "").toLowerCase() === "sort") ?? []) {
+    if (item?.flags?.add2e?.spellFamily?.generated === true) continue;
+    const key = add2eSpellSyncIdentityKey(item.name, item.system ?? {});
+    if (!key) continue;
+    if (!result.has(key)) result.set(key, []);
+    result.get(key).push(item);
+  }
+  return result;
+}
+
+function add2eSpellSyncSourceClassLists(actor, item) {
+  const flags = item?.flags?.add2e ?? {};
+  const sourceId = String(flags.autoGrantedByClassId ?? flags.sourceClassId ?? flags.sourceItemId ?? flags.classId ?? "");
+  let classItem = sourceId ? actor?.items?.get?.(sourceId) ?? null : null;
+  if (!classItem) {
+    const sourceNames = new Set([
+      flags.autoGrantedByClass,
+      flags.sourceClass,
+      flags.sourceClasse,
+      flags.className,
+      flags.classSlug
+    ].map(add2eSpellSyncNormalize).filter(Boolean));
+    if (sourceNames.size) classItem = add2eSpellSyncClassItems(actor)
+      .find(candidate => add2eSpellSyncClassSourceNames(candidate).some(name => sourceNames.has(name))) ?? null;
+  }
+  return classItem ? add2eSpellSyncClassLists(classItem) : [];
+}
+
+function add2eSpellSyncGrantedListsForItem(actor, item) {
+  const flags = item?.flags?.add2e ?? {};
+  const explicit = add2eSpellSyncUnionLists(
+    flags.grantedSpellLists,
+    flags.learnedSpellLists,
+    flags.knownSpellLists,
+    flags.autoGrantedSpellLists
+  );
+  const auto = add2eSpellSyncIsCompendiumOwnedActorSpell(item)
+    ? add2eSpellSyncSourceClassLists(actor, item)
+    : [];
+  return add2eSpellSyncUnionLists(explicit, auto, explicit.length || auto.length ? [] : add2eSpellSyncSpellLists(item?.system ?? {}));
+}
+
+function add2eSpellSyncAutoGrantedListsForItem(actor, item) {
+  const flags = item?.flags?.add2e ?? {};
+  if (!add2eSpellSyncIsCompendiumOwnedActorSpell(item)) return [];
+  return add2eSpellSyncUnionLists(flags.autoGrantedSpellLists, add2eSpellSyncSourceClassLists(actor, item));
+}
+
+function add2eSpellSyncMergeUpdate(actor, item, entry, classLists) {
+  const systemLists = add2eSpellSyncUnionLists(add2eSpellSyncSpellLists(item.system ?? {}), entry.lists);
+  const grantedLists = add2eSpellSyncUnionLists(add2eSpellSyncGrantedListsForItem(actor, item), classLists);
+  const nextSystem = { ...(item.system ?? {}), spellLists: systemLists };
+  const update = {
+    _id: item.id,
+    "system.spellLists": systemLists,
+    "flags.add2e.spellListsResolved": systemLists,
+    "flags.add2e.grantedSpellLists": grantedLists,
+    "flags.add2e.stableSpellKey": add2eSpellSyncStableKey(item.name, nextSystem)
+  };
+  const autoGrantedLists = add2eSpellSyncAutoGrantedListsForItem(actor, item);
+  if (autoGrantedLists.length) update["flags.add2e.autoGrantedSpellLists"] = add2eSpellSyncUnionLists(autoGrantedLists, classLists);
+  return update;
+}
+
+function add2eSpellSyncCollapseSelectedEntries(entries = []) {
+  const byIdentity = new Map();
+  for (const sourceEntry of entries) {
+    const identity = add2eSpellSyncIdentityKey(sourceEntry.name, sourceEntry.data?.system ?? {});
+    if (!identity) continue;
+    const prior = byIdentity.get(identity);
+    if (!prior) {
+      byIdentity.set(identity, {
+        ...sourceEntry,
+        data: add2eSpellSyncClone(sourceEntry.data),
+        lists: [...sourceEntry.lists]
+      });
+      continue;
+    }
+    prior.lists = add2eSpellSyncUnionLists(prior.lists, sourceEntry.lists);
+    prior.data.system ??= {};
+    prior.data.system.spellLists = [...prior.lists];
+    prior.stableKey = add2eSpellSyncStableKey(prior.name, prior.data.system);
+  }
+  return [...byIdentity.values()];
+}
+
 async function add2eSyncActorSpellsFromClass(actor, classItem, options = {}) {
-  if (!actor || !classItem || classItem.type !== "classe") return { handled: false, imported: 0, deleted: 0 };
+  if (!actor || !classItem || classItem.type !== "classe") return { handled: false, imported: 0, updated: 0, deleted: 0 };
   const requestedMode = String(options.mode ?? "replace").toLowerCase();
   const mode = ["replace", "missing", "append"].includes(requestedMode) ? requestedMode : "replace";
   const classLists = add2eSpellSyncClassLists(classItem);
-  if (!classLists.length) return { handled: false, imported: 0, deleted: 0, reason: "not-auto-synced-class" };
+  if (!classLists.length) return { handled: false, imported: 0, updated: 0, deleted: 0, reason: "not-auto-synced-class" };
 
   const actorLevel = Math.max(1, Number(options.actorLevel ?? add2eSpellSyncClassLevel(actor, classItem)) || 1);
   const maxSpellLevel = add2eSpellSyncMaxSpellLevel(classItem, actorLevel);
@@ -645,67 +744,82 @@ async function add2eSyncActorSpellsFromClass(actor, classItem, options = {}) {
     const cache = await add2eBuildSpellSyncCache({ force: !!options.forceCacheRefresh || mode === "replace" });
     if (!cache.entries.length) {
       ui.notifications.error("Aucun sort trouvé dans add2e.sorts.");
-      return { handled: true, imported: 0, deleted: 0, maxSpellLevel, error: "empty-cache" };
+      return { handled: true, imported: 0, updated: 0, deleted: 0, maxSpellLevel, error: "empty-cache" };
     }
     if (maxSpellLevel < 1 || minSpellLevel > maxSpellLevel) {
       await add2eSpellSyncSetLastMax(actor, maxSpellLevel);
-      return { handled: true, imported: 0, deleted: 0, maxSpellLevel, mode };
+      return { handled: true, imported: 0, updated: 0, deleted: 0, maxSpellLevel, mode };
     }
 
     const wanted = new Set(classLists.map(add2eSpellSyncNormalize));
-    let selected = [];
-    const selectedKeys = new Set();
+    const selectedByStableKey = new Map();
     for (const entry of cache.entries) {
       if (entry.level < minSpellLevel) continue;
       if (!add2eSpellSyncCanUseSpellLevel(actor, classLists, entry.level, maxSpellLevel, { importMode: true })) continue;
       if (!entry.lists.some(list => wanted.has(list))) continue;
-      if (selectedKeys.has(entry.stableKey)) continue;
-      selectedKeys.add(entry.stableKey);
-      selected.push(entry);
+      if (!selectedByStableKey.has(entry.stableKey)) selectedByStableKey.set(entry.stableKey, entry);
     }
+    let selected = add2eSpellSyncCollapseSelectedEntries([...selectedByStableKey.values()]);
 
     const memories = new Map();
     const idsToDelete = [];
     const actorSpells = add2eSpellSyncActorSpellKeyMap(actor);
-    const protectedKeys = new Set();
+    const actorSpellsByIdentity = add2eSpellSyncActorSpellIdentityMap(actor);
+    const protectedIdentities = new Set();
     const isMulticlass = add2eSpellSyncClassItems(actor).length > 1;
+    let mergeUpdates = [];
+
     if (mode === "replace") {
       for (const item of actor.items.filter(entry => String(entry?.type ?? "").toLowerCase() === "sort")) {
         const belongsToCurrentClass = add2eSpellSyncSpellBelongsToClass(item, classItem);
         const legacySingleClassSpell = !isMulticlass && add2eSpellSyncMatchesClassLists(item.system ?? {}, classLists);
-        const key = add2eSpellSyncStableKey(item.name, item.system ?? {});
+        const identity = add2eSpellSyncIdentityKey(item.name, item.system ?? {});
         if (!belongsToCurrentClass && !legacySingleClassSpell) {
-          if (key) protectedKeys.add(key);
+          if (identity) protectedIdentities.add(identity);
           continue;
         }
-        if (key) memories.set(key, add2eSpellSyncMemorizationSnapshot(item));
+        if (identity) memories.set(identity, add2eSpellSyncMemorizationSnapshot(item));
         idsToDelete.push(item.id);
       }
-      selected = selected.filter(entry => !protectedKeys.has(entry.stableKey));
-    } else if (mode === "missing") {
-      for (const entry of selected) {
-        for (const item of actorSpells.get(entry.stableKey) ?? []) {
-          memories.set(entry.stableKey, add2eSpellSyncMemorizationSnapshot(item));
-          idsToDelete.push(item.id);
-        }
-      }
+      selected = selected.filter(entry => !protectedIdentities.has(add2eSpellSyncIdentityKey(entry.name, entry.data?.system ?? {})));
     } else {
-      selected = selected.filter(entry => !(actorSpells.get(entry.stableKey)?.length));
+      const creates = [];
+      for (const entry of selected) {
+        const identity = add2eSpellSyncIdentityKey(entry.name, entry.data?.system ?? {});
+        const existing = (actorSpellsByIdentity.get(identity) ?? [])[0] ?? null;
+        if (existing) {
+          mergeUpdates.push(add2eSpellSyncMergeUpdate(actor, existing, entry, classLists));
+          continue;
+        }
+        creates.push(entry);
+      }
+      selected = creates;
     }
 
     const existing = [...new Set(idsToDelete)].filter(id => actor.items.has(id));
     if (existing.length) await actor.deleteEmbeddedDocuments("Item", existing, { add2eInternal: true, add2eSpellSync: true, add2eCompendiumTruth: true });
 
+    const liveMergeUpdates = mergeUpdates.filter(update => actor.items.has(update._id));
+    if (liveMergeUpdates.length) await actor.updateEmbeddedDocuments("Item", liveMergeUpdates, {
+      add2eInternal: true,
+      add2eSpellSync: true,
+      add2eSharedSpellMerge: true
+    });
+
     const createData = selected.map(entry => {
       const data = add2eSpellSyncPrepareCompendiumData(add2eSpellSyncClone(entry.data));
       delete data._id;
       data.folder = null;
+      const grantedLists = add2eSpellSyncUnionLists(classLists);
       foundry.utils.setProperty(data, "flags.add2e.autoGrantedByClass", classItem.name);
       foundry.utils.setProperty(data, "flags.add2e.autoGrantedByClassId", classItem.id);
       foundry.utils.setProperty(data, "flags.add2e.autoGrantedSpellSync", true);
+      foundry.utils.setProperty(data, "flags.add2e.autoGrantedSpellLists", grantedLists);
+      foundry.utils.setProperty(data, "flags.add2e.grantedSpellLists", grantedLists);
       foundry.utils.setProperty(data, "flags.add2e.autoGrantedAtActorLevel", actorLevel);
-      foundry.utils.setProperty(data, "flags.add2e.stableSpellKey", entry.stableKey);
-      const memory = memories.get(entry.stableKey);
+      foundry.utils.setProperty(data, "flags.add2e.stableSpellKey", add2eSpellSyncStableKey(data.name, data.system ?? {}));
+      const identity = add2eSpellSyncIdentityKey(data.name, data.system ?? {});
+      const memory = memories.get(identity);
       if (memory && options.preserveMemorization !== false) {
         foundry.utils.setProperty(data, "flags.add2e.memorizedCount", memory.count);
         foundry.utils.setProperty(data, "flags.add2e.memorizedByList", memory.byList);
@@ -715,13 +829,27 @@ async function add2eSyncActorSpellsFromClass(actor, classItem, options = {}) {
 
     if (createData.length) await actor.createEmbeddedDocuments("Item", createData, { add2eInternal: true, add2eSpellSync: true });
     await add2eSpellSyncSetLastMax(actor, maxSpellLevel);
-    const summary = { actor: actor.name, classe: classItem.name, actorLevel, classLists, maxSpellLevel, minSpellLevel, deleted: existing.length, imported: createData.length, mode, cacheEntries: cache.entries.length, cacheDocs: cache.docsCount, rejectedSpells: [] };
+    const summary = {
+      actor: actor.name,
+      classe: classItem.name,
+      actorLevel,
+      classLists,
+      maxSpellLevel,
+      minSpellLevel,
+      deleted: existing.length,
+      updated: liveMergeUpdates.length,
+      imported: createData.length,
+      mode,
+      cacheEntries: cache.entries.length,
+      cacheDocs: cache.docsCount,
+      rejectedSpells: []
+    };
     console.info("[ADD2E][CLASS_DROP_SPELLS][DONE]", summary);
     return { handled: true, ...summary };
   } catch (error) {
     console.error("[ADD2E][CLASS_DROP_SPELLS][ERROR]", error);
     ui.notifications.error("Erreur pendant la synchronisation des sorts depuis le compendium add2e.sorts.");
-    return { handled: true, imported: 0, deleted: 0, error: String(error?.message ?? error) };
+    return { handled: true, imported: 0, updated: 0, deleted: 0, error: String(error?.message ?? error) };
   } finally {
     add2eSpellSyncCloseWaitMessage(waitDialog);
   }
@@ -738,6 +866,7 @@ async function add2eSyncNewSpellLevelsAfterActorLevelChange(actor, newLevel = nu
     const levelDecreased = add2eSpellSyncHasLevelDecrease(previous, current);
     const classes = add2eSpellSyncClassItems(actor).filter(classItem => add2eSpellSyncClassLists(classItem).length);
     let imported = 0;
+    let updated = 0;
     let deleted = 0;
     let reset = 0;
 
@@ -746,7 +875,7 @@ async function add2eSyncNewSpellLevelsAfterActorLevelChange(actor, newLevel = nu
       await add2eSpellSyncSetLevelSignature(actor, current);
       ADD2E_SPELL_SYNC_PREUPDATE_LEVELS.delete(actor.uuid || actor.id);
       if (reset) globalThis.add2eRerenderActorSheet?.(actor, false);
-      return { handled: true, imported, deleted, reset, levelDecreased, skippedAutoSync: true };
+      return { handled: true, imported, updated, deleted, reset, levelDecreased, skippedAutoSync: true };
     }
 
     for (const classItem of classes) {
@@ -768,13 +897,14 @@ async function add2eSyncNewSpellLevelsAfterActorLevelChange(actor, newLevel = nu
         preserveMemorization: !levelDecreased
       });
       imported += result?.imported ?? 0;
+      updated += result?.updated ?? 0;
       deleted += result?.deleted ?? 0;
     }
 
     await add2eSpellSyncSetLevelSignature(actor, current);
     ADD2E_SPELL_SYNC_PREUPDATE_LEVELS.delete(actor.uuid || actor.id);
-    if (imported || deleted || reset) globalThis.add2eRerenderActorSheet?.(actor, false);
-    return { handled: true, imported, deleted, reset, levelDecreased };
+    if (imported || updated || deleted || reset) globalThis.add2eRerenderActorSheet?.(actor, false);
+    return { handled: true, imported, updated, deleted, reset, levelDecreased };
   } finally {
     ADD2E_SPELL_SYNC_RUNNING.delete(runKey);
   }
@@ -788,11 +918,12 @@ async function add2eResyncSelectedActorSpells(options = {}) {
   }
   add2eInvalidateSpellSyncCache();
   let imported = 0;
+  let updated = 0;
   let deleted = 0;
   const classes = add2eSpellSyncClassItems(actor).filter(classItem => add2eSpellSyncClassLists(classItem).length);
   if (!classes.length) {
-    ui.notifications.info("Aucune classe à auto-synchroniser. Seuls Clerc, Druide et les sorts druidiques du Rôdeur sont alimentés automatiquement.");
-    return { handled: true, imported, deleted, skippedAutoSync: true };
+    ui.notifications.info("Aucune classe à auto-synchroniser. Seuls Clerc, Druide et les sorts druidiques du Ranger sont alimentés automatiquement.");
+    return { handled: true, imported, updated, deleted, skippedAutoSync: true };
   }
   for (const classItem of classes) {
     const result = await add2eSyncActorSpellsFromClass(actor, classItem, {
@@ -803,11 +934,12 @@ async function add2eResyncSelectedActorSpells(options = {}) {
       forceCacheRefresh: true
     });
     imported += result?.imported ?? 0;
+    updated += result?.updated ?? 0;
     deleted += result?.deleted ?? 0;
   }
-  ui.notifications.info(imported > 0 ? `Sorts synchronisés depuis le compendium : ${imported}.` : "Aucun sort synchronisé depuis le compendium.");
-  if (imported || deleted) globalThis.add2eRerenderActorSheet?.(actor, false);
-  return { handled: true, imported, deleted };
+  ui.notifications.info(imported > 0 ? `Sorts synchronisés depuis le compendium : ${imported}.` : updated > 0 ? `Sorts existants enrichis : ${updated}.` : "Aucun sort synchronisé depuis le compendium.");
+  if (imported || updated || deleted) globalThis.add2eRerenderActorSheet?.(actor, false);
+  return { handled: true, imported, updated, deleted };
 }
 
 function add2eSpellSyncChangeTouchesLevels(changes = {}) {
@@ -846,6 +978,7 @@ for (const [name, fn] of Object.entries({
   add2eSpellSyncSlotProbe,
   add2eSpellSyncCanUseSpellLevel,
   add2eSpellSyncStableKey,
+  add2eSpellSyncIdentityKey,
   add2eSpellSyncExistingKeys,
   add2eSpellSyncMaxExistingLevel,
   add2eSpellSyncGetLastMax,
