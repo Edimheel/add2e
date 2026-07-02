@@ -1,0 +1,115 @@
+// ADD2E — Actor sheet getData : CA, équipement et synthèse de combat.
+
+export function add2ePrepareActorSheetCombatData({ actor, data, sys, progressionCourante, isMonk }) {
+  const armure = data.listeArmures.find(i => i.system.equipee && !(i.name.toLowerCase().includes('bouclier') || i.name.toLowerCase().includes('heaume') || i.name.toLowerCase().includes('casque')));
+  const bouclier = data.listeArmures.find(i => i.system.equipee && i.name.toLowerCase().includes('bouclier'));
+  const heaume = data.listeArmures.find(i => i.system.equipee && (i.name.toLowerCase().includes('heaume') || i.name.toLowerCase().includes('casque')));
+
+  const acArmure = armure ? (Number(armure.system.ac) || 10) : 10;
+  const acBouclier = bouclier ? (Number(bouclier.system.ac) || 0) : 0;
+  const acHeaume = heaume ? (Number(heaume.system.ac) || 0) : 0;
+  const bonusAcArmure = armure ? (Number(armure.system.bonus_ac) || 0) : 0;
+  const bonusAcBouclier = bouclier ? (Number(bouclier.system.bonus_ac) || 0) : 0;
+  const bonusAcHeaume = heaume ? (Number(heaume.system.bonus_ac) || 0) : 0;
+  const bonusDex = typeof sys.dex_def === "number" ? sys.dex_def : 0;
+
+  sys.armure_equipee = armure || null;
+  sys.bouclier_equipe = bouclier || null;
+  sys.heaume_equipe = heaume || null;
+
+  let caPhysique = 10;
+  if (isMonk && progressionCourante && typeof progressionCourante.monkAC !== "undefined") {
+    caPhysique = progressionCourante.monkAC;
+  } else {
+    const baseDepart = armure ? acArmure : 10;
+    caPhysique = baseDepart + bonusDex + bonusAcArmure;
+    if (bouclier) caPhysique = caPhysique - acBouclier + bonusAcBouclier;
+    if (heaume) caPhysique = caPhysique - acHeaume + bonusAcHeaume;
+  }
+
+  let magicDefense = null;
+  if (typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getMagicPassiveDefense === "function") {
+    magicDefense = Add2eEffectsEngine.getMagicPassiveDefense(actor, { physicalCA: caPhysique, armure, bouclier, heaume, source: "actor-sheet" });
+    sys.ca_naturel = magicDefense.caNaturel;
+    sys.ca_total = magicDefense.caTotal;
+  } else {
+    sys.ca_naturel = caPhysique;
+    let caTotale = caPhysique;
+    if (typeof Add2eEffectsEngine !== "undefined") {
+      const bonusMagique = Add2eEffectsEngine.getCABonus(actor);
+      if (bonusMagique !== 0) caTotale -= bonusMagique;
+    }
+    sys.ca_total = caTotale;
+  }
+  if (actor.system.ca_total !== sys.ca_total || actor.system.ca_naturel !== sys.ca_naturel) {
+    actor.update({ "system.ca_naturel": sys.ca_naturel, "system.ca_total": sys.ca_total });
+  }
+
+  let bonusArmureToucher = 0;
+  let bonusArmureDegats = 0;
+  for (const piece of [armure, bouclier, heaume].filter(Boolean)) {
+    bonusArmureToucher += Number(piece.system.bonus_toucher || 0);
+    bonusArmureDegats += Number(piece.system.bonus_degats || 0);
+  }
+
+  const arme = data.listeArmes.find(i => i.system.equipee) || null;
+  sys.arme_equipee = arme;
+
+  const thaco = data.progressionCourante?.thac0 || sys.thaco || 20;
+  const typeDegats = arme?.system.type_degats || "";
+  const armeBonusToucher = arme ? (
+    typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getMagicWeaponBonus === "function"
+      ? Add2eEffectsEngine.getMagicWeaponBonus(arme, "hit")
+      : Number(arme.system.bonus_hit || 0)
+  ) : 0;
+  const armeBonusDegats = arme ? (
+    typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getMagicWeaponBonus === "function"
+      ? Add2eEffectsEngine.getMagicWeaponBonus(arme, "damage")
+      : Number(arme.system.bonus_dom || 0)
+  ) : 0;
+  let bonusToucher = 0;
+  let bonusDegats = 0;
+
+  if (arme) {
+    if ((typeDegats || "").includes("tranchant") || (typeDegats || "").includes("contondant")) {
+      bonusToucher = (Number(sys.force_bonus_toucher) || 0) + armeBonusToucher + bonusArmureToucher;
+      bonusDegats = (Number(sys.force_bonus_degats) || 0) + armeBonusDegats + bonusArmureDegats;
+    } else if ((typeDegats || "").includes("perforant")) {
+      bonusToucher = (Number(sys.dex_att) || 0) + armeBonusToucher + bonusArmureToucher;
+      bonusDegats = (Number(sys.dex_att) || 0) + armeBonusDegats + bonusArmureDegats;
+    } else {
+      bonusToucher = armeBonusToucher + bonusArmureToucher;
+      bonusDegats = armeBonusDegats + bonusArmureDegats;
+    }
+  }
+
+  const degatsMoyen = arme?.system.dégâts?.contre_moyen || "-";
+  const degatsGrand = arme?.system.dégâts?.contre_grand || "-";
+  const degatsAffiche = degatsMoyen + " / " + degatsGrand;
+
+  data.combatDefense = {
+    armure: armure ? armure.name : "<em>Aucune</em>",
+    bouclier: bouclier ? bouclier.name : "<em>Aucun</em>",
+    heaume: heaume ? heaume.name : "<em>Aucun</em>",
+    ac_naturelle: sys.ca_naturel,
+    ac_totale: sys.ca_total,
+    objets_magiques_defense: magicDefense,
+    arme: arme ? arme.name : "<em>Aucune</em>",
+    thaco,
+    degats: degatsAffiche,
+    type_degats: typeDegats,
+    bonus_toucher: bonusToucher,
+    bonus_degats: bonusDegats
+  };
+
+  data.saveTitles = [
+    "Jet de Paralysie / Poison / Mort magique",
+    "Jet de Pétrification / Polymorphose",
+    "Jet de Baguettes",
+    "Jet de Souffles",
+    "Jet de Sortilèges"
+  ];
+  data.saveShortLabels = ["Paralysie", "Pétrif.", "Baguettes", "Souffles", "Sorts"];
+  data.forceExValues = [];
+  for (let i = 1; i <= 100; i++) data.forceExValues.push({ value: i, label: i === 100 ? "00" : i.toString().padStart(2, "0") });
+}
