@@ -1,5 +1,5 @@
 // ADD2E — Effects Engine / défenses, CA et bonus de sauvegarde.
-// Extraction fonctionnelle sans changement de règle.
+// Les identités de monstre sont comparées strictement à partir de leurs champs et tags techniques.
 
 const register = (Engine, methods) => Object.defineProperties(
   Engine,
@@ -8,6 +8,17 @@ const register = (Engine, methods) => Object.defineProperties(
     { value, configurable: true, writable: true }
   ]))
 );
+
+const ADD2E_COMBAT_IDENTITY_PREFIXES = [
+  "type_monstre:",
+  "monstre:",
+  "race:",
+  "creature:",
+  "creature_label:",
+  "type:",
+  "alignement:",
+  "alignment:"
+];
 
 export function installEffectsEngineDefense(Engine) {
   register(Engine, {
@@ -268,54 +279,73 @@ export function installEffectsEngineDefense(Engine) {
       return bonus;
     },
 
+    isCombatIdentityTag(tag) {
+      const normalized = this.normalizeTag(tag);
+      if (!normalized || normalized.length < 3) return false;
+      return ADD2E_COMBAT_IDENTITY_PREFIXES.some(prefix => normalized.startsWith(prefix));
+    },
+
     getCombatantTagSet(subject) {
       const tags = new Set();
       const system = subject?.system ?? {};
-      const add = raw => {
+      const addField = raw => {
         for (const value of this.toArray(raw)) {
           const tag = this.normalizeTag(value);
-          if (!tag) continue;
-          tags.add(tag);
-          tags.add(tag.replace(/^race:/, "").replace(/^type:/, "").replace(/^type_monstre:/, "").replace(/^creature:/, "").replace(/^alignement:/, "").replace(/^alignment:/, ""));
+          if (tag && tag.length >= 3) tags.add(tag);
         }
       };
+      const addIdentityTags = raw => {
+        for (const value of this.toArray(raw)) {
+          const tag = this.normalizeTag(value);
+          if (!this.isCombatIdentityTag(tag)) continue;
+          tags.add(tag);
+          const bare = tag.replace(/^(?:race|type|type_monstre|monstre|creature|creature_label|alignement|alignment):/, "");
+          if (bare && bare.length >= 3) tags.add(bare);
+        }
+      };
+
+      // Champs d’identité : l’espèce system.type_monstre est prioritaire pour les monstres.
+      addField(subject?.type);
+      addField(system.race);
+      addField(system.type_monstre);
+      addField(system.type);
+      addField(system.categorie);
+      addField(system.alignement);
+      addField(system.alignment);
+      addField(system.details?.alignment);
+
+      // Tags structurés uniquement. Les chaînes dégradées et les tags non identitaires sont ignorés.
       for (const raw of [
-        subject?.name,
-        subject?.type,
-        system.race,
-        system.type,
-        system.type_monstre,
-        system.categorie,
-        system.alignement,
-        system.alignment,
-        system.details?.alignment,
         system.tags,
         system.effectTags,
         subject?.flags?.add2e?.tags,
         subject?.flags?.add2e?.effectTags,
         this.getActiveTags(subject)
-      ]) add(raw);
+      ]) addIdentityTags(raw);
+
       return tags;
     },
 
     combatantTagSetMatches(tagSet, matcher) {
       const wanted = this.normalizeTag(matcher);
       if (!wanted) return false;
-      if (tagSet?.has?.(wanted)) return true;
-      const stripped = wanted
-        .replace(/^race:/, "")
-        .replace(/^type:/, "")
-        .replace(/^type_monstre:/, "")
-        .replace(/^creature:/, "")
-        .replace(/^alignement:/, "")
-        .replace(/^alignment:/, "");
-      if (tagSet?.has?.(stripped)) return true;
-      for (const tag of tagSet ?? []) {
-        if (tag === wanted || tag === stripped) return true;
-        if (tag.endsWith(`:${wanted}`) || tag.endsWith(`:${stripped}`)) return true;
-        if (tag.includes(wanted) || tag.includes(stripped)) return true;
-      }
-      return false;
+      const stripped = wanted.replace(/^(?:race|type|type_monstre|monstre|creature|creature_label|alignement|alignment):/, "");
+      if (!stripped) return false;
+
+      const exactCandidates = new Set([
+        wanted,
+        stripped,
+        `type_monstre:${stripped}`,
+        `monstre:${stripped}`,
+        `race:${stripped}`,
+        `creature:${stripped}`,
+        `creature_label:${stripped}`,
+        `type:${stripped}`,
+        `alignement:${stripped}`,
+        `alignment:${stripped}`
+      ]);
+
+      return [...exactCandidates].some(candidate => tagSet?.has?.(candidate));
     },
 
     isEvilCombatant(subject) {
