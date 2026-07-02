@@ -266,6 +266,157 @@ export function installEffectsEngineDefense(Engine) {
         if (this.normalizeKey(target) === normalized) bonus += Number(value) || 0;
       }
       return bonus;
+    },
+
+    getCombatantTagSet(subject) {
+      const tags = new Set();
+      const system = subject?.system ?? {};
+      const add = raw => {
+        for (const value of this.toArray(raw)) {
+          const tag = this.normalizeTag(value);
+          if (!tag) continue;
+          tags.add(tag);
+          tags.add(tag.replace(/^race:/, "").replace(/^type:/, "").replace(/^type_monstre:/, "").replace(/^creature:/, "").replace(/^alignement:/, "").replace(/^alignment:/, ""));
+        }
+      };
+      for (const raw of [
+        subject?.name,
+        subject?.type,
+        system.race,
+        system.type,
+        system.type_monstre,
+        system.categorie,
+        system.alignement,
+        system.alignment,
+        system.details?.alignment,
+        system.tags,
+        system.effectTags,
+        subject?.flags?.add2e?.tags,
+        subject?.flags?.add2e?.effectTags,
+        this.getActiveTags(subject)
+      ]) add(raw);
+      return tags;
+    },
+
+    combatantTagSetMatches(tagSet, matcher) {
+      const wanted = this.normalizeTag(matcher);
+      if (!wanted) return false;
+      if (tagSet?.has?.(wanted)) return true;
+      const stripped = wanted
+        .replace(/^race:/, "")
+        .replace(/^type:/, "")
+        .replace(/^type_monstre:/, "")
+        .replace(/^creature:/, "")
+        .replace(/^alignement:/, "")
+        .replace(/^alignment:/, "");
+      if (tagSet?.has?.(stripped)) return true;
+      for (const tag of tagSet ?? []) {
+        if (tag === wanted || tag === stripped) return true;
+        if (tag.endsWith(`:${wanted}`) || tag.endsWith(`:${stripped}`)) return true;
+        if (tag.includes(wanted) || tag.includes(stripped)) return true;
+      }
+      return false;
+    },
+
+    isEvilCombatant(subject) {
+      const tags = this.getCombatantTagSet(subject);
+      return [
+        "alignement:mauvais",
+        "alignment:evil",
+        "loyal_mauvais",
+        "neutre_mauvais",
+        "chaotique_mauvais",
+        "mauvais",
+        "evil"
+      ].some(tag => this.combatantTagSetMatches(tags, tag));
+    },
+
+    getAttackModifierAgainst(defender, attacker) {
+      const defenderTags = this.getActiveTags(defender);
+      const attackerTags = this.getCombatantTagSet(attacker);
+      const details = [];
+      let value = 0;
+      const isEvil = this.isEvilCombatant(attacker);
+      const hasProtectionSpecificMalus = defenderTags.includes("protection:mal")
+        && defenderTags.some(tag => tag.startsWith("malus_attaque_creature_mauvaise:"));
+
+      for (const rawTag of defenderTags) {
+        const tag = this.normalizeTag(rawTag);
+        if (!tag) continue;
+
+        if (tag.startsWith("bonus_ca_vs:")) {
+          const parts = tag.split(":");
+          const matcher = parts.slice(1, -1).join(":");
+          const amount = this.readNumber(parts.at(-1)) ?? 0;
+          if (matcher && amount && this.combatantTagSetMatches(attackerTags, matcher)) {
+            const modifier = -Math.abs(amount);
+            value += modifier;
+            details.push(`Défense raciale (${matcher}) : ${modifier} au toucher`);
+          }
+          continue;
+        }
+
+        if (tag.startsWith("malus_toucher_ennemi:") || tag.startsWith("malus_attaque_ennemi:")) {
+          if (hasProtectionSpecificMalus) continue;
+          const amount = Math.abs(this.readNumber(tag.split(":")[1]) ?? 0);
+          if (amount) {
+            value -= amount;
+            details.push(`Effet défensif cible : -${amount} au toucher`);
+          }
+          continue;
+        }
+
+        if (tag.startsWith("malus_attaque_creature_mauvaise:")) {
+          const amount = Math.abs(this.readNumber(tag.split(":")[1]) ?? 0);
+          if (amount && isEvil) {
+            value -= amount;
+            details.push(`Protection contre le Mal : -${amount} au toucher`);
+          }
+          continue;
+        }
+
+        if (tag.startsWith("malus_attaque_vs:") || tag.startsWith("malus_toucher_vs:")) {
+          const parts = tag.split(":");
+          const matcher = parts.slice(1, -1).join(":");
+          const amount = Math.abs(this.readNumber(parts.at(-1)) ?? 0);
+          if (matcher && amount && this.combatantTagSetMatches(attackerTags, matcher)) {
+            value -= amount;
+            details.push(`Effet défensif cible (${matcher}) : -${amount} au toucher`);
+          }
+          continue;
+        }
+
+        if (tag.startsWith("bonus_attaque_ennemi:")) {
+          const amount = this.readNumber(tag.split(":")[1]) ?? 0;
+          if (amount) {
+            value += amount;
+            details.push(`Effet défensif cible : ${amount >= 0 ? "+" : ""}${amount} au toucher`);
+          }
+        }
+      }
+
+      return { value, details, attackerTags, defenderTags };
+    },
+
+    getAttackBonusAgainst(attacker, defender) {
+      const attackerTags = this.getActiveTags(attacker);
+      const defenderTags = this.getCombatantTagSet(defender);
+      const details = [];
+      let value = 0;
+
+      for (const rawTag of attackerTags) {
+        const tag = this.normalizeTag(rawTag);
+        if (!tag?.startsWith("bonus_touche_vs:")) continue;
+        const parts = tag.split(":");
+        const matcher = parts.slice(1, -1).join(":");
+        const amount = this.readNumber(parts.at(-1)) ?? 0;
+        if (matcher && amount && this.combatantTagSetMatches(defenderTags, matcher)) {
+          value += amount;
+          details.push(`Bonus racial contre ${matcher} : ${amount >= 0 ? "+" : ""}${amount} au toucher`);
+        }
+      }
+
+      return { value, details, attackerTags, defenderTags };
     }
   });
 }
