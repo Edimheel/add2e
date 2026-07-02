@@ -1,7 +1,7 @@
 // ADD2E — Déduplication et orchestration des synchronisations de sorts.
 // Compatible Foundry V13 / V14 / V15. DialogV2 uniquement.
 
-const ADD2E_SPELL_SYNC_DEDUPE_VERSION = "2026-07-02-spell-sync-dedupe-progress-v13";
+const ADD2E_SPELL_SYNC_DEDUPE_VERSION = "2026-07-02-spell-sync-progress-v14";
 const RUNNING = globalThis.ADD2E_SPELL_SYNC_DEDUPE_RUNNING instanceof Set ? globalThis.ADD2E_SPELL_SYNC_DEDUPE_RUNNING : new Set();
 globalThis.ADD2E_SPELL_SYNC_DEDUPE_VERSION = ADD2E_SPELL_SYNC_DEDUPE_VERSION;
 globalThis.ADD2E_SPELL_SYNC_DEDUPE_RUNNING = RUNNING;
@@ -40,12 +40,19 @@ function values(value) {
   return [value];
 }
 
+function normalizeSpellList(value) {
+  return typeof globalThis.add2eNormalizeSpellKey === "function"
+    ? globalThis.add2eNormalizeSpellKey(value)
+    : slug(value);
+}
+
+function unionSpellLists(...sources) {
+  return [...new Set(sources.flatMap(values).map(normalizeSpellList).filter(Boolean))];
+}
+
 function listKeyOf(item) {
   const aliases = { cleric: "clerc", priest: "clerc", pretre: "clerc", paladin: "clerc", druid: "druide", wizard: "magicien", mage: "magicien", magician: "magicien", magic_user: "magicien", illusionist: "illusionniste" };
-  const normalize = value => {
-    const key = typeof globalThis.add2eNormalizeSpellKey === "function" ? globalThis.add2eNormalizeSpellKey(value) : slug(value);
-    return aliases[key] ?? key;
-  };
+  const normalize = value => aliases[normalizeSpellList(value)] ?? normalizeSpellList(value);
   const system = item?.system ?? {};
   const lists = [system.spellLists, system.lists, system.classes, system.classe, system.class, system.liste, item?.flags?.add2e?.spellListsResolved]
     .flatMap(values).map(normalize).filter(Boolean);
@@ -122,10 +129,31 @@ function openSpellSyncProgress(actor, classItem, options = {}) {
     if (bar && Number.isFinite(Number(progress))) bar.style.width = `${Math.max(0, Math.min(100, Number(progress)))}%`;
   };
 
-  return {
-    setStage,
-    close: () => setTimeout(() => dialog.close?.({ force: true }), 160)
+  return { setStage, close: () => setTimeout(() => dialog.close?.({ force: true }), 160) };
+}
+
+/**
+ * 16-preparation-display restreint volontairement un sort auto-accordé aux
+ * listes de sa classe source. Lorsqu'un même Item reçoit ensuite une liste
+ * manuelle, celle-ci doit s'ajouter à cette restriction, jamais la remplacer.
+ */
+function installSharedSpellListUnion() {
+  const original = globalThis.add2eGetSpellListsFromItem;
+  if (typeof original !== "function" || original._add2eSharedListUnion) return typeof original === "function";
+
+  const wrapped = function add2eGetSpellListsFromItemSharedLists(sort) {
+    const flags = sort?.flags?.add2e ?? {};
+    return unionSpellLists(
+      original(sort),
+      flags.grantedSpellLists,
+      flags.autoGrantedSpellLists,
+      flags.learnedSpellLists,
+      flags.knownSpellLists
+    );
   };
+  wrapped._add2eSharedListUnion = true;
+  globalThis.add2eGetSpellListsFromItem = wrapped;
+  return true;
 }
 
 async function removeLegacyMaterialFields(actor, reason = "legacy-material-cleanup") {
@@ -232,9 +260,6 @@ function installWrapper() {
   const original = globalThis.add2eSyncActorSpellsFromClass;
   if (typeof original !== "function" || original._add2eDedupeWrapped) return typeof original === "function";
   const wrapped = async function add2eSyncActorSpellsFromClassDedupe(actor, classItem, options = {}) {
-    // Une seule file protège la synchronisation, les familles réversibles et la déduplication.
-    // Le cache du compendium est conservé pendant la session ; une resynchronisation
-    // explicite l'invalide déjà avant de passer ici.
     const progress = openSpellSyncProgress(actor, classItem, options);
     try {
       progress?.setStage("Lecture du compendium et synchronisation des sorts…", 36);
@@ -243,12 +268,10 @@ function installWrapper() {
         showWait: false,
         forceCacheRefresh: options?.forceCacheRefreshExplicit === true
       }));
-
       if (!resultChanged(result)) {
         progress?.setStage("Aucune modification nécessaire.", 100);
         return result;
       }
-
       progress?.setStage("Mise à jour des familles réversibles…", 68);
       await waitForFamilyExpansion(actor);
       progress?.setStage("Vérification des doublons et des données historiques…", 88);
@@ -274,6 +297,16 @@ Hooks.once("ready", () => {
     setTimeout(installWrapper, 0);
     setTimeout(installWrapper, 250);
   }
+  // 16-preparation-display est importé après ce module. Le timer garantit que
+  // son adaptateur de mémorisation est déjà installé avant cette union.
+  setTimeout(() => {
+    if (installSharedSpellListUnion()) {
+      for (const app of Object.values(ui.windows ?? {})) {
+        const actor = app?.actor ?? app?.document ?? app?.object;
+        if (actor?.type === "personnage") app.render?.(false);
+      }
+    }
+  }, 0);
   if (!game.user?.isGM) return;
   for (const actor of game.actors?.filter?.(entry => entry.type === "personnage") ?? []) {
     queue(actor, () => removeLegacyMaterialFields(actor, "ready-legacy-material-cleanup"))
