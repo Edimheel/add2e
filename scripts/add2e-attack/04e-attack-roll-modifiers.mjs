@@ -3,7 +3,7 @@
 
 import { add2eNormalizeAttackTag, add2eTagSetMatches } from "./03-attack-rules.mjs";
 
-export const ADD2E_ATTACK_MODIFIERS_VERSION = "2026-07-02-effects-engine-racial-tags-v11";
+export const ADD2E_ATTACK_MODIFIERS_VERSION = "2026-07-02-effects-engine-racial-tags-v12";
 
 function add2eAttackPushNormalizedTag(set, value) {
   if (!set || value === undefined || value === null || value === "") return;
@@ -141,6 +141,7 @@ export function add2eAttackComputeActiveAttackModifiers({ actor, cible, combatPr
   let bonusToucheEffets = 0;
   let bonusDegatsEffets = 0;
   let bonusRacialVs = 0;
+  let bonusDefenseCible = 0;
   const targetTags = add2eAttackBuildTargetTagSet(cible);
   let targetDefensiveAttackDetails = [];
   let racialTargetAttackDetails = [];
@@ -183,16 +184,20 @@ export function add2eAttackComputeActiveAttackModifiers({ actor, cible, combatPr
     if (damage.value) bonusDegatsEffets += damage.value;
 
     const targetDefensive = add2eAttackComputeTargetDefensiveAttackModifiers({ actor, cible });
-    if (targetDefensive.value !== 0 || targetDefensive.details.length) {
-      bonusToucheEffets += targetDefensive.value;
-      targetDefensiveAttackDetails = targetDefensive.details;
-    }
+    bonusDefenseCible = Number(targetDefensive.value) || 0;
+    targetDefensiveAttackDetails = targetDefensive.details ?? [];
   }
 
+  // La carte existante affiche bonusToucheEffets mais totalise séparément bonusRacialVs.
+  // Les fusionner ici évite une seconde règle d'affichage tout en conservant exactement le même total final.
+  const bonusToucheAffiche = bonusToucheEffets + bonusRacialVs + bonusDefenseCible;
+
   return {
-    bonusToucheEffets,
+    bonusToucheEffets: bonusToucheAffiche,
     bonusDegatsEffets,
-    bonusRacialVs,
+    bonusRacialVs: 0,
+    bonusRacialVsReported: bonusRacialVs,
+    bonusDefenseCible,
     targetTags,
     targetDefensiveAttackDetails,
     racialTargetAttackDetails
