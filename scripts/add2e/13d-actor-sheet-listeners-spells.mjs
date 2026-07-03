@@ -1,7 +1,54 @@
 // ADD2E — Actor sheet listeners : sorts, mémorisation et pouvoirs d'objets.
 
+function add2eBindModernSheetSpellPreparationControls(sheet, html) {
+  const actor = sheet?.actor ?? null;
+  const root = html?.jquery ? html[0] : (html?.[0] ?? html);
+  if (!actor?.items || !root || typeof root.querySelectorAll !== "function") return;
+
+  const handler = globalThis.add2eHandleSpellPreparationButton;
+  const buttons = Array.from(root.querySelectorAll(".a2e-spell-entry-plus, .a2e-spell-entry-minus"));
+  if (typeof handler !== "function") {
+    if (globalThis.ADD2E_DEBUG_SPELL_PREP === true && buttons.length) {
+      console.warn("[ADD2E][SPELL_PREP][SHEET_BIND_13D_UNAVAILABLE]", { actor: actor.name, actorId: actor.id, controls: buttons.length });
+    }
+    return;
+  }
+
+  for (const button of buttons) {
+    button.dataset.actorId = String(actor.id ?? "");
+    button.dataset.actorUuid = String(actor.uuid ?? "");
+    if (button.dataset.add2ePrepBound === "1") continue;
+
+    button.dataset.add2ePrepBound = "1";
+    button.addEventListener("pointerdown", event => {
+      event.preventDefault();
+      event.stopPropagation();
+    }, { capture: true });
+    button.addEventListener("mousedown", event => {
+      event.preventDefault();
+      event.stopPropagation();
+    }, { capture: true });
+    button.addEventListener("click", event => {
+      void handler(button, event, actor);
+    }, { capture: true });
+  }
+
+  if (globalThis.ADD2E_DEBUG_SPELL_PREP === true && buttons.length) {
+    console.info("[ADD2E][SPELL_PREP][SHEET_BIND_13D]", {
+      actor: actor.name,
+      actorId: actor.id,
+      actorUuid: actor.uuid,
+      controls: buttons.length
+    });
+  }
+}
+
 export function add2eBindActorSheetSpellListeners(sheet, html) {
   const self = sheet;
+
+  // La feuille V2 peut afficher un acteur synthétique de token. Les boutons
+  // modernes de préparation doivent conserver ce document exact au clic.
+  add2eBindModernSheetSpellPreparationControls(self, html);
 
   html.find('.toggle-sort-desc-chat').off('click').on('click', function(ev) {
     ev.preventDefault();
