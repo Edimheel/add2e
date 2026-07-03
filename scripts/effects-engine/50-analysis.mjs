@@ -199,8 +199,10 @@ function directRacialCapabilities(engine, actor) {
     const formula = String(raw.formula ?? raw.die ?? "").trim();
     const successAt = engine.readNumber(raw.successAt, raw.maxSuccess, raw.threshold, raw.pct);
     const canRoll = Boolean(formula) && Number.isFinite(successAt) && successAt > 0;
+    const capability = clone(raw);
+    delete capability.requires;
     return [{
-      ...clone(raw),
+      ...capability,
       id,
       key: engine.normalizeTag(id),
       label,
