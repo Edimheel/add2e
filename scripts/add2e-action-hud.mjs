@@ -12,7 +12,7 @@ export {
 // ADD2E — Sous-onglets Combat du HUD.
 // Cette vue délègue les mécaniques aux fonctions existantes de la feuille.
 
-const ADD2E_HUD_COMBAT_TABS_VERSION = "2026-07-02-hud-racial-capabilities-v7";
+const ADD2E_HUD_COMBAT_TABS_VERSION = "2026-07-03-hud-racial-sheet-delegation-v8";
 const ADD2E_HUD_ID = "add2e-action-hud";
 const ADD2E_HUD_COMBAT_STYLE_ID = "add2e-action-hud-combat-tabs-style";
 let add2eHudCombatTab = "armes";
@@ -546,27 +546,32 @@ function add2eHudThiefActivityScheduleRender() {
 }
 
 // ---------------------------------------------------------------------------
-// Racial HUD — lecture seule des profils stricts ; l'icône lance la capacité.
+// Racial HUD — affichage des données de la feuille ; les actions sont déléguées
+// au contrôleur unique add2eUseRacialCapabilityFromElement.
 // ---------------------------------------------------------------------------
 
 function add2eHudRacialEngine() {
   const engine = globalThis.Add2eEffectsEngine;
-  return typeof engine?.getRacialVirtualEffects === "function" ? engine : null;
+  return typeof engine?.getRacialActions === "function" ? engine : null;
 }
 
 function add2eHudRacialPassives(actor) {
   const engine = add2eHudRacialEngine();
   if (!engine) return [];
   return engine.getRacialPassiveEffects?.(actor)
-    ?? engine.getRacialVirtualEffects(actor).filter(effect => effect?.kind !== "capability");
+    ?? engine.getRacialVirtualEffects?.(actor)?.filter(effect => effect?.kind !== "capability")
+    ?? [];
 }
 
 function add2eHudRacialCapabilities(actor) {
-  return add2eHudRacialEngine()?.getRacialCapabilities?.(actor)?.filter(capability => capability?.activable !== false) ?? [];
+  return add2eHudRacialEngine()?.getRacialActions?.(actor)?.filter(capability => capability?.activable !== false) ?? [];
 }
 
 function add2eHudRacialIcon(capability) {
+  const explicit = String(capability?.iconClass ?? "").trim();
+  if (explicit) return explicit;
   const key = String(capability?.id ?? capability?.label ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  if (key.includes("infravision") || key.includes("vision")) return "fa-eye";
   if (key.includes("porte")) return "fa-door-closed";
   if (key.includes("pente")) return "fa-mountain";
   if (key.includes("direction") || key.includes("profondeur")) return "fa-compass";
@@ -584,7 +589,8 @@ function add2eHudRacialRequirementLabel(value) {
     concentration: "concentration",
     alone: "isolé",
     no_metal_armor: "sans armure de métal",
-    opens_door: "après ouverture d’une porte"
+    opens_door: "après ouverture d’une porte",
+    no_intense_light: "aucune lumière ou chaleur intense"
   }[String(value ?? "").trim()] ?? String(value ?? "").replaceAll("_", " ");
 }
 
@@ -598,7 +604,7 @@ function add2eHudRacialSignature(actor, passives, capabilities) {
   return JSON.stringify({
     actorId: actor?.id ?? "",
     passives: passives.map(effect => [effect.id, effect.name, effect.description]),
-    capabilities: capabilities.map(capability => [capability.id, capability.label, capability.description, capability.formula, capability.successAt, capability.requires])
+    capabilities: capabilities.map(capability => [capability.id, capability.label, capability.description, capability.formula, capability.successAt, capability.requires, capability.actionType, capability.enabled])
   });
 }
 
@@ -611,17 +617,22 @@ function add2eHudRacialPassiveRow(effect) {
 }
 
 function add2eHudRacialCapabilityRow(capability) {
-  const conditions = add2eHudRacialRequirements(capability);
-  const rollLabel = capability.canRoll ? `Jet ${capability.formula} : réussite ≤ ${capability.successAt}` : "Capacité narrative";
+  const isVisionToggle = capability?.actionType === "vision-toggle";
+  const conditions = (!isVisionToggle || capability?.enabled !== true) ? add2eHudRacialRequirements(capability) : [];
+  const state = isVisionToggle
+    ? (capability?.enabled ? "Active" : "Inactive")
+    : (capability?.canRoll ? `Jet ${capability.formula} : réussite ≤ ${capability.successAt}` : "Capacité narrative");
   const conditionLabel = conditions.length ? `<span>Conditions : ${add2eHudCombatEscape(conditions.join(", "))}</span>` : "";
-  const title = capability.canRoll ? `Lancer ${capability.label}` : capability.label;
-  const icon = add2eHudRacialIcon(capability);
-  const control = capability.canRoll
-    ? `<button type="button" class="img-act a2e-hud-racial-icon" data-add2e-hud-racial-action="roll" data-racial-capability-id="${add2eHudCombatEscape(capability.id)}" title="${add2eHudCombatEscape(title)}"><i class="fas ${icon}"></i></button>`
+  const title = isVisionToggle
+    ? `${capability?.enabled ? "Désactiver" : "Activer"} ${capability.label}`
+    : (capability.canRoll ? `Lancer ${capability.label}` : capability.label);
+  const icon = isVisionToggle && capability?.enabled ? "fa-eye-slash" : add2eHudRacialIcon(capability);
+  const control = (isVisionToggle || capability.canRoll)
+    ? `<button type="button" class="img-act a2e-hud-racial-icon" data-add2e-hud-racial-action="use" data-racial-capability-id="${add2eHudCombatEscape(capability.id)}" title="${add2eHudCombatEscape(title)}"><i class="fas ${icon}"></i></button>`
     : `<span aria-hidden="true"></span>`;
   return `<div class="row a2e-hud-racial-row">
     ${control}
-    <div><div class="title">${add2eHudCombatEscape(capability.label)}</div><div class="meta"><span>Capacité raciale</span><span>${add2eHudCombatEscape(rollLabel)}</span>${conditionLabel}</div><div class="a2e-hud-racial-description">${add2eHudCombatEscape(capability.description)}</div></div>
+    <div><div class="title">${add2eHudCombatEscape(capability.label)}</div><div class="meta"><span>Capacité raciale</span><span>${add2eHudCombatEscape(state)}</span>${conditionLabel}</div><div class="a2e-hud-racial-description">${add2eHudCombatEscape(capability.description)}</div></div>
   </div>`;
 }
 
@@ -663,7 +674,7 @@ function add2eHudRacialRender() {
         const panel = document.createElement("div");
         panel.className = "a2e-hud-racial-panel a2e-hud-racial-capabilities";
         panel.dataset.add2eHudRacialSignature = signature;
-        panel.innerHTML = `<div class="a2e-hud-racial-title"><i class="fas fa-dice-d20"></i> Capacités raciales</div>${capabilities.map(add2eHudRacialCapabilityRow).join("")}`;
+        panel.innerHTML = `<div class="a2e-hud-racial-title"><i class="fas fa-dna"></i> Capacités raciales</div>${capabilities.map(add2eHudRacialCapabilityRow).join("")}`;
         capabilitiesSection.prepend(panel);
         for (const empty of capabilitiesSection.querySelectorAll(':scope > .empty')) empty.remove();
       }
@@ -684,97 +695,15 @@ function add2eHudRacialScheduleRender() {
   });
 }
 
-function add2eHudRacialDialogRoot(button, dialog) {
-  return button?.form?.querySelector?.(".add2e-hud-racial-capability-form")
-    ?? dialog?.element?.querySelector?.(".add2e-hud-racial-capability-form")
-    ?? document.querySelector?.(".add2e-hud-racial-capability-form")
-    ?? null;
-}
-
-async function add2eHudRacialPrompt(actor, capability) {
-  const keys = Array.isArray(capability?.requires) ? capability.requires.map(String) : [];
-  if (!keys.length) return {};
-  const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (!DialogV2) {
-    ui.notifications?.error?.("DialogV2 est indisponible.");
-    return null;
-  }
-  const checks = keys.map(key => {
-    const name = String(key).replace(/[^a-zA-Z0-9_-]/g, "_");
-    return `<label style="display:flex;gap:8px;align-items:flex-start;margin:6px 0;font-weight:700;"><input type="checkbox" name="${name}"><span>${add2eHudCombatEscape(add2eHudRacialRequirementLabel(key))}</span></label>`;
-  }).join("");
-  return new Promise(resolve => {
-    let settled = false;
-    const finish = value => {
-      if (!settled) {
-        settled = true;
-        resolve(value);
-      }
-      return value;
-    };
-    const dialog = new DialogV2({
-      window: { title: `Capacité raciale — ${capability.label}` },
-      classes: ["add2e", "add2e-racial-capability-dialog"],
-      position: { width: 460, height: "auto" },
-      content: `<form class="add2e-hud-racial-capability-form" style="display:grid;gap:8px;"><div style="font-weight:900;font-size:1.05em;">${add2eHudCombatEscape(capability.label)}</div><div>${add2eHudCombatEscape(capability.description)}</div><div style="border:1px solid rgba(90,65,15,.35);border-radius:8px;padding:8px;background:rgba(255,248,222,.55);"><div style="font-weight:800;margin-bottom:5px;">Conditions à confirmer</div>${checks}</div></form>`,
-      buttons: [
-        {
-          action: "roll",
-          label: "Lancer le jet",
-          icon: "fas fa-dice-d20",
-          default: true,
-          callback: (_event, button, dlg) => {
-            const root = add2eHudRacialDialogRoot(button, dlg);
-            const context = {};
-            for (const key of keys) context[key] = !!root?.querySelector?.(`[name="${String(key).replace(/[^a-zA-Z0-9_-]/g, "_")}"]`)?.checked;
-            return finish(context);
-          }
-        },
-        { action: "cancel", label: "Annuler", callback: () => finish(null) }
-      ],
-      default: "roll"
-    });
-    dialog.addEventListener?.("close", () => finish(null), { once: true });
-    Promise.resolve(dialog.render({ force: true })).catch(() => finish(null));
-  });
-}
-
-async function add2eHudRacialPostResult(actor, result) {
-  const capability = result.capability;
-  const success = result.success === true;
-  const color = success ? "#2f8f46" : "#b33a2e";
-  const content = `<div class="add2e-chat-card" style="border:1px solid ${color};border-radius:8px;padding:8px;"><div style="font-weight:900;color:${color};">${add2eHudCombatEscape(capability.label)} — ${success ? "RÉUSSITE" : "ÉCHEC"}</div><div><b>${add2eHudCombatEscape(actor.name)}</b> : ${add2eHudCombatEscape(result.formula)} = <b>${add2eHudCombatEscape(result.total)}</b> / réussite ≤ <b>${add2eHudCombatEscape(result.successAt)}</b></div><div style="margin-top:4px;font-size:.88em;">${add2eHudCombatEscape(capability.description)}</div></div>`;
-  await ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor }),
-    content,
-    flags: { add2e: { racialCapability: { actorId: actor.id, raceSourceId: capability.sourceId, capabilityId: capability.id, success } } }
-  });
-}
-
 async function add2eHudRacialRun(actor, capabilityId) {
-  const engine = add2eHudRacialEngine();
-  if (!actor || !engine) return false;
-  if (!game.user?.isGM && !actor.isOwner && !actor.testUserPermission?.(game.user, "OWNER")) {
-    ui.notifications?.warn?.("Vous ne pouvez pas utiliser les capacités de cet acteur.");
+  const use = globalThis.add2eUseRacialCapabilityFromElement;
+  if (typeof use !== "function") {
+    ui.notifications?.error?.("Le contrôleur des capacités raciales de la feuille n’est pas chargé.");
     return false;
   }
-  const capability = engine.getRacialCapability?.(actor, capabilityId);
-  if (!capability?.canRoll) {
-    ui.notifications?.warn?.("Cette capacité raciale n’a pas de jet défini.");
-    return false;
-  }
-  const context = await add2eHudRacialPrompt(actor, capability);
-  if (context === null) return false;
-  const result = await engine.rollRacialCapability(actor, capability.id, context);
-  if (!result?.ok) {
-    if (result?.reason === "requirements-missing") {
-      const labels = (result.missing ?? []).map(add2eHudRacialRequirementLabel).join(", ");
-      ui.notifications?.warn?.(`Conditions manquantes : ${labels}.`);
-    } else ui.notifications?.error?.("Le jet de capacité raciale n’a pas pu être résolu.");
-    return false;
-  }
-  await add2eHudRacialPostResult(actor, result);
-  return true;
+  const relay = document.createElement("button");
+  relay.dataset.racialCapabilityId = String(capabilityId ?? "");
+  return use(actor, relay, null);
 }
 
 async function add2eHudCombatRunAction(actor, itemId, action) {
@@ -803,6 +732,7 @@ function add2eHudCombatInstall() {
       const actor = add2eHudCombatCurrentActor();
       if (!actor) return ui.notifications?.warn?.("Acteur HUD introuvable.");
       await add2eHudRacialRun(actor, racial.dataset.racialCapabilityId);
+      add2eHudRacialScheduleRender();
       return;
     }
 
