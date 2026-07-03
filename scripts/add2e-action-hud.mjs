@@ -10,9 +10,10 @@ export {
 } from "./add2e-action-hud/core.mjs";
 
 // ADD2E — Sous-onglets Combat du HUD.
-// Cette vue délègue les mécaniques aux fonctions existantes de la feuille.
+// Cette vue lit les données préparées par la feuille et délègue les actions
+// au contrôleur unique d'équipement de la feuille.
 
-const ADD2E_HUD_COMBAT_TABS_VERSION = "2026-07-03-hud-racial-sheet-delegation-v8";
+const ADD2E_HUD_COMBAT_TABS_VERSION = "2026-07-03-hud-combat-sheet-data-v9";
 const ADD2E_HUD_ID = "add2e-action-hud";
 const ADD2E_HUD_COMBAT_STYLE_ID = "add2e-action-hud-combat-tabs-style";
 let add2eHudCombatTab = "armes";
@@ -95,19 +96,24 @@ function add2eHudCombatHybridWeaponAvailability(weapon) {
   return `<span>Disponibles ${add2eHudCombatEscape(available)}</span>`;
 }
 
-function add2eHudCombatCollections(actor) {
-  const items = [...(actor?.items ?? [])];
-  const objects = items.filter(item => String(item?.type ?? "").toLowerCase() === "objet");
-  const data = { actor, listeObjets: objects };
-  const prepare = game?.add2e?.consumables?.prepareActorSheetConsumables
-    ?? globalThis.ADD2E_CONSUMABLES?.prepareActorSheetConsumables;
-  if (typeof prepare === "function") prepare(data);
+async function add2eHudCombatSheetData(actor) {
+  const sheet = actor?.sheet ?? null;
+  if (typeof sheet?.getData !== "function") return null;
+  try {
+    return await sheet.getData();
+  } catch (_error) {
+    return null;
+  }
+}
 
+function add2eHudCombatCollections(sheetData) {
+  const collection = value => Array.isArray(value) ? value : [];
   return {
-    objects,
-    weapons: items.filter(item => String(item?.type ?? "").toLowerCase() === "arme"),
-    armors: items.filter(item => String(item?.type ?? "").toLowerCase() === "armure"),
-    projectiles: Array.isArray(data.listeCarquois) ? data.listeCarquois : []
+    objects: collection(sheetData?.listeObjets),
+    weapons: collection(sheetData?.listeArmes),
+    armors: collection(sheetData?.listeArmures),
+    projectiles: collection(sheetData?.listeCarquois),
+    equipment: collection(sheetData?.listeObjetsDivers)
   };
 }
 
@@ -171,22 +177,40 @@ function add2eHudCombatArmorRow(armor) {
   </div>`;
 }
 
+function add2eHudCombatEquipmentRow(item) {
+  const itemId = add2eHudCombatEscape(add2eHudCombatItemId(item));
+  const quantity = item?.system?.quantite ?? item?.system?.quantity ?? "—";
+  const weight = item?.system?.poids ?? "—";
+  const actionLabel = add2eHudCombatIsEquipped(item) ? "Retirer" : "Équiper";
+
+  return `<div class="row equipment-row">
+    <img src="${add2eHudCombatEscape(item?.img || "icons/svg/item-bag.svg")}" alt="">
+    <div>
+      <div class="title">${add2eHudCombatEscape(item?.name ?? "Objet")}</div>
+      <div class="meta">${add2eHudCombatState(item)}<span>Qté ${add2eHudCombatEscape(quantity)}</span><span>Poids ${add2eHudCombatEscape(weight)}</span></div>
+    </div>
+    <button type="button" class="act" data-add2e-hud-combat-action="equip" data-item-id="${itemId}">${actionLabel}</button>
+  </div>`;
+}
+
 function add2eHudCombatSubtab(key, label, count) {
   return `<button type="button" class="a2e-hud-combat-subtab ${add2eHudCombatTab === key ? "active" : ""}" data-add2e-hud-combat-tab="${key}">${label} <span>${count}</span></button>`;
 }
 
-function add2eHudCombatContent(actor) {
-  const { objects, weapons, projectiles, armors } = add2eHudCombatCollections(actor);
-  if (!["armes", "projectiles", "armures"].includes(add2eHudCombatTab)) add2eHudCombatTab = "armes";
+function add2eHudCombatContent(sheetData) {
+  const { objects, weapons, projectiles, armors, equipment } = add2eHudCombatCollections(sheetData);
+  if (!["armes", "projectiles", "armures", "equipement"].includes(add2eHudCombatTab)) add2eHudCombatTab = "armes";
   const tabs = `<div class="a2e-hud-combat-subtabs">
     ${add2eHudCombatSubtab("armes", "Armes", weapons.length)}
     ${add2eHudCombatSubtab("projectiles", "Projectiles", projectiles.length)}
     ${add2eHudCombatSubtab("armures", "Armures", armors.length)}
+    ${add2eHudCombatSubtab("equipement", "Équipement", equipment.length)}
   </div>`;
 
   let rows = "";
   if (add2eHudCombatTab === "projectiles") rows = projectiles.map(add2eHudCombatProjectileRow).join("") || '<div class="empty">Aucun projectile dans le carquois.</div>';
   else if (add2eHudCombatTab === "armures") rows = armors.map(add2eHudCombatArmorRow).join("") || '<div class="empty">Aucune armure.</div>';
+  else if (add2eHudCombatTab === "equipement") rows = equipment.map(add2eHudCombatEquipmentRow).join("") || '<div class="empty">Aucun équipement.</div>';
   else rows = weapons.map(weapon => add2eHudCombatWeaponRow(weapon, objects)).join("") || '<div class="empty">Aucune arme.</div>';
   return `<div class="spell-layout"><div class="a2e-hud-combat-panel">${tabs}<div class="a2e-hud-combat-list">${rows}</div></div></div>`;
 }
@@ -373,7 +397,7 @@ function add2eHudCombatObserveRoot(root) {
   add2eHudCombatRootObserver.observe(root, { childList: true, subtree: true });
 }
 
-function add2eHudCombatRender() {
+async function add2eHudCombatRender() {
   if (add2eHudCombatRendering) return;
   const root = document.getElementById(ADD2E_HUD_ID);
   const actor = add2eHudCombatCurrentActor();
@@ -385,7 +409,11 @@ function add2eHudCombatRender() {
   try {
     add2eHudCombatEnsureStyle();
     add2eHudCombatObserveRoot(root);
-    section.innerHTML = add2eHudCombatContent(actor);
+    const sheetData = await add2eHudCombatSheetData(actor);
+    if (!root.isConnected || add2eHudCombatCurrentActor()?.id !== actor.id) return;
+    section.innerHTML = sheetData
+      ? add2eHudCombatContent(sheetData)
+      : '<div class="empty">Données de combat de la feuille indisponibles.</div>';
   } finally {
     add2eHudCombatRendering = false;
     window.setTimeout(() => { add2eHudCombatSuppressMutation = false; }, 0);
