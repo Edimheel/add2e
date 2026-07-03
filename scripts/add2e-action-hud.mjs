@@ -9,11 +9,10 @@ export {
   add2eCloseActionHud
 } from "./add2e-action-hud/core.mjs";
 
-// ADD2E — Sous-onglets Combat du HUD.
-// Cette vue lit les données préparées par la feuille et délègue les actions
-// au contrôleur unique d'équipement de la feuille.
+// ADD2E — Vues HUD complémentaires.
+// Les listes et les actions d'équipement sont celles de la feuille.
 
-const ADD2E_HUD_COMBAT_TABS_VERSION = "2026-07-03-hud-combat-sheet-data-v9";
+const ADD2E_HUD_COMBAT_TABS_VERSION = "2026-07-03-hud-sheet-equipment-tab-v10";
 const ADD2E_HUD_ID = "add2e-action-hud";
 const ADD2E_HUD_COMBAT_STYLE_ID = "add2e-action-hud-combat-tabs-style";
 let add2eHudCombatTab = "armes";
@@ -177,7 +176,7 @@ function add2eHudCombatArmorRow(armor) {
   </div>`;
 }
 
-function add2eHudCombatEquipmentRow(item) {
+function add2eHudEquipmentRow(item) {
   const itemId = add2eHudCombatEscape(add2eHudCombatItemId(item));
   const quantity = item?.system?.quantite ?? item?.system?.quantity ?? "—";
   const weight = item?.system?.poids ?? "—";
@@ -198,21 +197,25 @@ function add2eHudCombatSubtab(key, label, count) {
 }
 
 function add2eHudCombatContent(sheetData) {
-  const { objects, weapons, projectiles, armors, equipment } = add2eHudCombatCollections(sheetData);
-  if (!["armes", "projectiles", "armures", "equipement"].includes(add2eHudCombatTab)) add2eHudCombatTab = "armes";
+  const { objects, weapons, projectiles, armors } = add2eHudCombatCollections(sheetData);
+  if (!["armes", "projectiles", "armures"].includes(add2eHudCombatTab)) add2eHudCombatTab = "armes";
   const tabs = `<div class="a2e-hud-combat-subtabs">
     ${add2eHudCombatSubtab("armes", "Armes", weapons.length)}
     ${add2eHudCombatSubtab("projectiles", "Projectiles", projectiles.length)}
     ${add2eHudCombatSubtab("armures", "Armures", armors.length)}
-    ${add2eHudCombatSubtab("equipement", "Équipement", equipment.length)}
   </div>`;
 
   let rows = "";
   if (add2eHudCombatTab === "projectiles") rows = projectiles.map(add2eHudCombatProjectileRow).join("") || '<div class="empty">Aucun projectile dans le carquois.</div>';
   else if (add2eHudCombatTab === "armures") rows = armors.map(add2eHudCombatArmorRow).join("") || '<div class="empty">Aucune armure.</div>';
-  else if (add2eHudCombatTab === "equipement") rows = equipment.map(add2eHudCombatEquipmentRow).join("") || '<div class="empty">Aucun équipement.</div>';
   else rows = weapons.map(weapon => add2eHudCombatWeaponRow(weapon, objects)).join("") || '<div class="empty">Aucune arme.</div>';
   return `<div class="spell-layout"><div class="a2e-hud-combat-panel">${tabs}<div class="a2e-hud-combat-list">${rows}</div></div></div>`;
+}
+
+function add2eHudEquipmentContent(sheetData, moneyHtml = "") {
+  const { equipment } = add2eHudCombatCollections(sheetData);
+  const rows = equipment.map(add2eHudEquipmentRow).join("") || '<div class="empty">Aucun équipement.</div>';
+  return `${moneyHtml}<div class="a2e-hud-equipment-list">${rows}</div>`;
 }
 
 function add2eHudCombatEnsureStyle() {
@@ -223,9 +226,9 @@ function add2eHudCombatEnsureStyle() {
     #${ADD2E_HUD_ID} .a2e-hud-combat-subtabs{display:flex;flex-wrap:wrap;gap:6px;padding-bottom:4px;border-bottom:1px solid rgba(214,176,90,.28)}
     #${ADD2E_HUD_ID} .a2e-hud-combat-subtab{min-height:30px;padding:5px 10px;border:1px solid rgba(214,176,90,.55);border-radius:999px;background:rgba(214,176,90,.12);color:#ffe4a1;font-weight:900;font-size:.82em;cursor:pointer}
     #${ADD2E_HUD_ID} .a2e-hud-combat-subtab.active{background:linear-gradient(180deg,#f0c66d,#c78d2e);color:#211307}
-    #${ADD2E_HUD_ID} .a2e-hud-combat-list{display:grid;gap:6px;max-height:260px;overflow-y:auto;padding-right:3px}
-    #${ADD2E_HUD_ID} .a2e-hud-combat-list .state{min-width:64px;text-align:center;font-weight:900;border:1px solid rgba(214,176,90,.35);border-radius:999px;padding:2px 6px;background:rgba(0,0,0,.18)}
-    #${ADD2E_HUD_ID} .a2e-hud-combat-list .equip-bad{color:#ffb1a8}
+    #${ADD2E_HUD_ID} .a2e-hud-combat-list,#${ADD2E_HUD_ID} .a2e-hud-equipment-list{display:grid;gap:6px;max-height:260px;overflow-y:auto;padding-right:3px}
+    #${ADD2E_HUD_ID} .a2e-hud-combat-list .state,#${ADD2E_HUD_ID} .a2e-hud-equipment-list .state{min-width:64px;text-align:center;font-weight:900;border:1px solid rgba(214,176,90,.35);border-radius:999px;padding:2px 6px;background:rgba(0,0,0,.18)}
+    #${ADD2E_HUD_ID} .a2e-hud-combat-list .equip-bad,#${ADD2E_HUD_ID} .a2e-hud-equipment-list .equip-bad{color:#ffb1a8}
     #${ADD2E_HUD_ID} .a2e-hud-thief-activity{display:grid;gap:7px;padding:9px;border:1px solid rgba(214,176,90,.38);border-radius:10px;background:rgba(255,250,235,.07)}
     #${ADD2E_HUD_ID} .a2e-hud-thief-warning{border:2px solid #8b0000;background:rgba(255,70,70,.82);color:#111;text-align:center;font-weight:900;line-height:1.3}
     #${ADD2E_HUD_ID} .a2e-hud-thief-warning h3{margin:0;color:#111;font-size:1.08em}
@@ -402,18 +405,27 @@ async function add2eHudCombatRender() {
   const root = document.getElementById(ADD2E_HUD_ID);
   const actor = add2eHudCombatCurrentActor();
   if (!root || !actor) return;
-  const section = root.querySelector('[data-section="attaques"]');
-  if (!section) return;
+  const combatSection = root.querySelector('[data-section="attaques"]');
+  const equipmentSection = root.querySelector('[data-section="equipement"]');
+  if (!combatSection && !equipmentSection) return;
   add2eHudCombatRendering = true;
   add2eHudCombatSuppressMutation = true;
   try {
     add2eHudCombatEnsureStyle();
     add2eHudCombatObserveRoot(root);
+    const moneyHtml = equipmentSection?.querySelector?.(".money-row")?.outerHTML ?? "";
     const sheetData = await add2eHudCombatSheetData(actor);
     if (!root.isConnected || add2eHudCombatCurrentActor()?.id !== actor.id) return;
-    section.innerHTML = sheetData
-      ? add2eHudCombatContent(sheetData)
-      : '<div class="empty">Données de combat de la feuille indisponibles.</div>';
+    if (combatSection) {
+      combatSection.innerHTML = sheetData
+        ? add2eHudCombatContent(sheetData)
+        : '<div class="empty">Données de combat de la feuille indisponibles.</div>';
+    }
+    if (equipmentSection) {
+      equipmentSection.innerHTML = sheetData
+        ? add2eHudEquipmentContent(sheetData, moneyHtml)
+        : `${moneyHtml}<div class="empty">Données d’équipement de la feuille indisponibles.</div>`;
+    }
   } finally {
     add2eHudCombatRendering = false;
     window.setTimeout(() => { add2eHudCombatSuppressMutation = false; }, 0);
@@ -438,7 +450,7 @@ function add2eHudCombatScheduleStableRender() {
   window.setTimeout(add2eHudCombatScheduleRender, 90);
   window.setTimeout(add2eHudCombatScheduleRender, 180);
   window.setTimeout(add2eHudFamiliarActionsScheduleRender, 90);
-  window.setTimeout(add2eHudFamiliarActionsScheduleRender, 180);
+  window.setTimeout(add2eHudFamiliarActionsRender, 180);
   window.setTimeout(add2eHudSpellMemoryScheduleSync, 90);
   window.setTimeout(add2eHudSpellMemoryScheduleSync, 180);
   window.setTimeout(add2eHudRacialScheduleRender, 90);
