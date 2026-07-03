@@ -72,6 +72,194 @@ function injectRacialHudStyles() {
       filter:brightness(1.15) saturate(1.1);
       transform:scale(1.12);
     }
+
+    /* Le contenu Capacités est produit par la même source que la feuille. */
+    #add2e-action-hud section[data-section="capacites"] > .a2e-hud-racial-capabilities,
+    #add2e-action-hud section[data-section="effets"] > .a2e-hud-racial-effects {
+      display:none !important;
+    }
+    #add2e-action-hud .add2e-capacites-hud-root {
+      display:grid;
+      gap:7px;
+    }
+    #add2e-action-hud .add2e-capacites-grid-modern {
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:7px;
+    }
+    #add2e-action-hud .add2e-capacites-modern-root .a2e-panel {
+      border:1px solid rgba(214,176,90,.52);
+      border-radius:10px;
+      background:rgba(255,250,235,.06);
+      overflow:hidden;
+    }
+    #add2e-action-hud .add2e-capacites-modern-root .a2e-panel h2 {
+      margin:0;
+      padding:7px 9px;
+      color:#ffe4a1;
+      font-size:.9em;
+      border-bottom:1px solid rgba(214,176,90,.32);
+      background:rgba(0,0,0,.16);
+    }
+    #add2e-action-hud .add2e-capacites-modern-root .a2e-panel-body {
+      padding:7px;
+    }
+    #add2e-action-hud .a2e-thief-skills-inline {
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(145px,1fr));
+      gap:7px;
+    }
+    #add2e-action-hud .a2e-thief-skill-card {
+      display:grid;
+      grid-template-columns:1fr 24px;
+      grid-template-rows:auto auto auto;
+      gap:2px 4px;
+      align-items:center;
+      padding:7px;
+      border:1px solid rgba(214,176,90,.58);
+      border-radius:9px;
+      background:rgba(0,0,0,.18);
+      min-width:0;
+      overflow:hidden;
+    }
+    #add2e-action-hud .a2e-thief-skill-card.has-feature-img {
+      grid-template-columns:28px minmax(0,1fr) 24px;
+      grid-template-rows:auto auto auto auto;
+      gap:3px 5px;
+    }
+    #add2e-action-hud .a2e-thief-skill-feature-img {
+      grid-column:1;
+      grid-row:1 / span 4;
+      width:26px;
+      height:26px;
+      border-radius:6px;
+      object-fit:cover;
+      border:1px solid rgba(214,176,90,.65);
+      background:rgba(0,0,0,.25);
+    }
+    #add2e-action-hud .a2e-thief-skill-name {
+      grid-column:1;
+      font-weight:950;
+      color:#fff4cf;
+      line-height:1.05;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    #add2e-action-hud .has-feature-img .a2e-thief-skill-name {
+      grid-column:2;
+      white-space:normal;
+    }
+    #add2e-action-hud .a2e-thief-skill-total {
+      grid-column:1;
+      font-size:1.12em;
+      font-weight:950;
+      color:#8fd2ff;
+      line-height:1.05;
+    }
+    #add2e-action-hud .has-feature-img .a2e-thief-skill-total,
+    #add2e-action-hud .has-feature-img .a2e-thief-skill-detail,
+    #add2e-action-hud .has-feature-img .a2e-thief-skill-description {
+      grid-column:2;
+    }
+    #add2e-action-hud .a2e-thief-skill-detail {
+      grid-column:1;
+      display:flex;
+      gap:4px;
+      flex-wrap:nowrap;
+      align-items:center;
+      color:#d1bd84;
+      font-size:.78em;
+      font-weight:800;
+      white-space:nowrap;
+      min-width:0;
+    }
+    #add2e-action-hud .a2e-thief-skill-description {
+      color:#d9d1b9;
+      font-size:.76em;
+      line-height:1.25;
+    }
+    #add2e-action-hud .a2e-thief-skill-bonus {
+      border-radius:999px;
+      padding:1px 5px;
+      border:1px solid rgba(218,194,118,.76);
+      background:rgba(255,247,220,.12);
+      font-weight:950;
+      white-space:nowrap;
+    }
+    #add2e-action-hud .a2e-thief-skill-bonus.positive { color:#8dffbd; }
+    #add2e-action-hud .a2e-thief-skill-bonus.negative { color:#ffaaa1; }
+    #add2e-action-hud .a2e-thief-skill-bonus.neutral { color:#d1bd84; }
+    #add2e-action-hud .a2e-thief-skill-action {
+      grid-column:2;
+      grid-row:1 / span 3;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      min-width:24px;
+    }
+    #add2e-action-hud .has-feature-img .a2e-thief-skill-action {
+      grid-column:3;
+      grid-row:1 / span 4;
+    }
+    #add2e-action-hud .add2e-thief-skill-roll,
+    #add2e-action-hud .add2e-feature-icon-only {
+      width:24px;
+      min-width:24px;
+      height:24px;
+      min-height:24px;
+      padding:0;
+      margin:0;
+      border:0;
+      outline:0;
+      border-radius:0;
+      background:transparent;
+      color:#7ac8ff;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      box-shadow:none;
+      line-height:1;
+      appearance:none;
+      -webkit-appearance:none;
+    }
+    #add2e-action-hud .add2e-thief-skill-roll:hover,
+    #add2e-action-hud .add2e-feature-icon-only:hover {
+      filter:brightness(1.14) saturate(1.08);
+      transform:scale(1.12);
+    }
+    #add2e-action-hud .add2e-feature-icon-only.is-enabled { color:#7dffaf; }
+    #add2e-action-hud .add2e-feature-icon-only.is-disabled { color:#ff8e85; }
+    #add2e-action-hud .add2e-feature-icon-only.is-roll { color:#7ac8ff; }
+    #add2e-action-hud .a2e-feature-card-list {
+      display:grid;
+      gap:7px;
+    }
+    #add2e-action-hud .a2e-feature-card {
+      padding:7px 8px;
+      border:1px solid rgba(218,194,118,.58);
+      border-radius:9px;
+      background:rgba(0,0,0,.16);
+    }
+    #add2e-action-hud .a2e-feature-card-title {
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+      align-items:center;
+      color:#fff4cf;
+    }
+    #add2e-action-hud .a2e-feature-card-title strong {
+      min-width:0;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    #add2e-action-hud .a2e-feature-card-desc {
+      margin-top:5px;
+      color:#d9d1b9;
+      font-size:.84em;
+      line-height:1.28;
+    }
   `;
   document.head.appendChild(style);
 }
@@ -109,6 +297,21 @@ export function injectCharacterUiStyles(sheetRoot) {
       min-width:0;
       overflow:hidden;
     }
+    .add2e-character-v3 .a2e-thief-skill-card.has-feature-img {
+      grid-template-columns:28px minmax(0,1fr) 24px;
+      grid-template-rows:auto auto auto auto;
+      gap:3px 5px;
+    }
+    .add2e-character-v3 .a2e-thief-skill-feature-img {
+      grid-column:1;
+      grid-row:1 / span 4;
+      width:26px;
+      height:26px;
+      border-radius:6px;
+      object-fit:cover;
+      border:1px solid #d6b05a;
+      background:#fff7dc;
+    }
     .add2e-character-v3 .a2e-thief-skill-name {
       grid-column:1;
       font-weight:950;
@@ -118,12 +321,21 @@ export function injectCharacterUiStyles(sheetRoot) {
       overflow:hidden;
       text-overflow:ellipsis;
     }
+    .add2e-character-v3 .has-feature-img .a2e-thief-skill-name {
+      grid-column:2;
+      white-space:normal;
+    }
     .add2e-character-v3 .a2e-thief-skill-total {
       grid-column:1;
       font-size:1.12em;
       font-weight:950;
       color:#184a82;
       line-height:1.05;
+    }
+    .add2e-character-v3 .has-feature-img .a2e-thief-skill-total,
+    .add2e-character-v3 .has-feature-img .a2e-thief-skill-detail,
+    .add2e-character-v3 .has-feature-img .a2e-thief-skill-description {
+      grid-column:2;
     }
     .add2e-character-v3 .a2e-thief-skill-detail {
       grid-column:1;
@@ -136,6 +348,11 @@ export function injectCharacterUiStyles(sheetRoot) {
       font-weight:800;
       white-space:nowrap;
       min-width:0;
+    }
+    .add2e-character-v3 .a2e-thief-skill-description {
+      color:#594b30;
+      font-size:.78em;
+      line-height:1.25;
     }
     .add2e-character-v3 .a2e-thief-skill-bonus {
       border-radius:999px;
@@ -155,6 +372,10 @@ export function injectCharacterUiStyles(sheetRoot) {
       align-items:center;
       justify-content:center;
       min-width:24px;
+    }
+    .add2e-character-v3 .has-feature-img .a2e-thief-skill-action {
+      grid-column:3;
+      grid-row:1 / span 4;
     }
     .add2e-character-v3 .add2e-thief-skill-roll {
       --a2e-thief-icon-color:#2b82c8;
