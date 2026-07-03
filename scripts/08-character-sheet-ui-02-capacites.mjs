@@ -1,6 +1,6 @@
 // ============================================================
 // ADD2E — 08 Character Sheet UI — 02 capacités
-// Version : 2026-07-03-racial-capacities-merged-v2
+// Version : 2026-07-03-racial-capacities-direct-actions-v3
 // ============================================================
 import { escapeHtml, slug, expose, globalFn } from "./08-character-sheet-ui-00-utils.mjs";
 
@@ -412,86 +412,6 @@ function buildFeaturesPanel(actor) {
     </div>`;
 }
 
-function racialRequirements(entry) {
-  const value = entry?.requires;
-  if (Array.isArray(value)) return value.map(String).filter(Boolean);
-  if (value instanceof Set) return [...value].map(String).filter(Boolean);
-  if (value && typeof value === "object") return Object.values(value).map(String).filter(Boolean);
-  return value ? [String(value)] : [];
-}
-
-function racialRequirementLabel(value) {
-  return {
-    within_three_meters: "à 3 m ou moins",
-    search_active: "recherche active",
-    underground: "sous terre",
-    concentration: "concentration",
-    alone: "isolé",
-    no_metal_armor: "sans armure de métal",
-    opens_door: "après ouverture d’une porte",
-    no_intense_light: "aucune source de lumière ou de chaleur intense"
-  }[String(value ?? "").trim()] ?? String(value ?? "").replaceAll("_", " ");
-}
-
-function racialDialogRoot(button, dialog) {
-  return button?.form?.querySelector?.(".add2e-racial-capability-form")
-    ?? dialog?.element?.querySelector?.(".add2e-racial-capability-form")
-    ?? document.querySelector?.(".add2e-racial-capability-form")
-    ?? null;
-}
-
-async function promptRacialAction(entry) {
-  const isVisionToggle = entry?.actionType === "vision-toggle";
-  const enablingVision = isVisionToggle && entry?.enabled !== true;
-  const requirements = (!isVisionToggle || enablingVision) ? racialRequirements(entry) : [];
-  if (!requirements.length) return {};
-  const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (!DialogV2) {
-    ui.notifications?.error?.("DialogV2 est indisponible.");
-    return null;
-  }
-  const checks = requirements.map(key => {
-    const name = String(key).replace(/[^a-zA-Z0-9_-]/g, "_");
-    return `<label style="display:flex;gap:8px;align-items:flex-start;margin:6px 0;font-weight:700;"><input type="checkbox" name="${name}"><span>${escapeHtml(racialRequirementLabel(key))}</span></label>`;
-  }).join("");
-  const actionLabel = isVisionToggle ? "Confirmer" : "Lancer le jet";
-  const title = isVisionToggle ? `${entry.enabled ? "Désactiver" : "Activer"} — ${entry.label}` : `Capacité raciale — ${entry.label}`;
-  return new Promise(resolve => {
-    let settled = false;
-    const finish = value => {
-      if (!settled) {
-        settled = true;
-        resolve(value);
-      }
-      return value;
-    };
-    const dialog = new DialogV2({
-      window: { title },
-      classes: ["add2e", "add2e-racial-capability-dialog"],
-      position: { width: 460, height: "auto" },
-      content: `<form class="add2e-racial-capability-form" style="display:grid;gap:8px;"><div style="font-weight:900;font-size:1.05em;">${escapeHtml(entry.label)}</div><div>${escapeHtml(entry.description)}</div><div style="border:1px solid rgba(90,65,15,.35);border-radius:8px;padding:8px;background:rgba(255,248,222,.55);"><div style="font-weight:800;margin-bottom:5px;">Conditions à confirmer</div>${checks}</div></form>`,
-      buttons: [
-        {
-          action: "confirm",
-          label: actionLabel,
-          icon: isVisionToggle ? "fas fa-eye" : "fas fa-dice-d20",
-          default: true,
-          callback: (_event, button, dlg) => {
-            const root = racialDialogRoot(button, dlg);
-            const context = {};
-            for (const key of requirements) context[key] = !!root?.querySelector?.(`[name="${String(key).replace(/[^a-zA-Z0-9_-]/g, "_")}"]`)?.checked;
-            return finish(context);
-          }
-        },
-        { action: "cancel", label: "Annuler", callback: () => finish(null) }
-      ],
-      default: "confirm"
-    });
-    dialog.addEventListener?.("close", () => finish(null), { once: true });
-    Promise.resolve(dialog.render({ force: true })).catch(() => finish(null));
-  });
-}
-
 async function postRacialResult(actor, result) {
   const capability = result.capability;
   const success = result.success === true;
@@ -517,8 +437,6 @@ async function useRacialCapabilityFromElement(actor, element, sheet = null) {
     ui.notifications?.warn?.("Capacité raciale introuvable.");
     return false;
   }
-  const context = await promptRacialAction(entry);
-  if (context === null) return false;
 
   if (entry.actionType === "vision-toggle") {
     const enabling = entry.enabled !== true;
@@ -533,10 +451,9 @@ async function useRacialCapabilityFromElement(actor, element, sheet = null) {
     return true;
   }
 
-  const result = await engine.rollRacialCapability?.(actor, entry.id, context);
+  const result = await engine.rollRacialCapability?.(actor, entry.id);
   if (!result?.ok) {
-    if (result?.reason === "requirements-missing") ui.notifications?.warn?.(`Conditions manquantes : ${(result.missing ?? []).map(racialRequirementLabel).join(", ")}.`);
-    else ui.notifications?.error?.("Le jet de capacité raciale n’a pas pu être résolu.");
+    ui.notifications?.error?.("Le jet de capacité raciale n’a pas pu être résolu.");
     return false;
   }
   await postRacialResult(actor, result);
