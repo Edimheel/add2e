@@ -2,9 +2,86 @@
 // ADD2E — 08 Character Sheet UI — 03 styles
 // ============================================================
 
+const ADD2E_RACIAL_HUD_STYLE_ID = "add2e-racial-capabilities-compact-style";
+
+function injectRacialHudStyles() {
+  if (document.getElementById(ADD2E_RACIAL_HUD_STYLE_ID)) return;
+  const style = document.createElement("style");
+  style.id = ADD2E_RACIAL_HUD_STYLE_ID;
+  style.textContent = `
+    #add2e-action-hud .a2e-hud-racial-panel {
+      display:contents;
+    }
+    #add2e-action-hud .a2e-hud-racial-title {
+      display:none !important;
+    }
+    #add2e-action-hud .a2e-hud-racial-effects .a2e-hud-racial-row:has(> img[src*="eye.svg"]) {
+      display:none !important;
+    }
+    #add2e-action-hud .a2e-hud-racial-effects .a2e-hud-racial-row .meta,
+    #add2e-action-hud .a2e-hud-racial-effects .a2e-hud-racial-row .a2e-hud-racial-description {
+      display:none !important;
+    }
+    #add2e-action-hud .a2e-hud-racial-capabilities .a2e-hud-racial-row {
+      min-height:34px;
+      border-color:rgba(214,176,90,.34);
+      background:rgba(0,0,0,.10);
+    }
+    #add2e-action-hud .a2e-hud-racial-capabilities .a2e-hud-racial-row .a2e-hud-racial-description {
+      display:none !important;
+    }
+    #add2e-action-hud .a2e-hud-racial-capabilities .a2e-hud-racial-row .title {
+      display:inline;
+      font-weight:900;
+    }
+    #add2e-action-hud .a2e-hud-racial-capabilities .a2e-hud-racial-row .meta {
+      display:inline !important;
+      margin-left:5px;
+      font-size:.82em;
+    }
+    #add2e-action-hud .a2e-hud-racial-capabilities .a2e-hud-racial-row .meta span {
+      display:none !important;
+    }
+    #add2e-action-hud .a2e-hud-racial-capabilities .a2e-hud-racial-row .meta span:nth-child(2) {
+      display:inline !important;
+    }
+    #add2e-action-hud .a2e-hud-racial-capabilities .a2e-hud-racial-row .meta span:nth-child(2)::before {
+      content:" — ";
+    }
+    #add2e-action-hud .a2e-hud-racial-capabilities .a2e-hud-racial-row:has(.fa-eye, .fa-eye-slash) .meta {
+      display:none !important;
+    }
+    #add2e-action-hud .a2e-hud-racial-icon {
+      width:28px !important;
+      min-width:28px !important;
+      height:28px !important;
+      min-height:28px !important;
+      padding:0 !important;
+      border:0 !important;
+      border-radius:0 !important;
+      background:transparent !important;
+      box-shadow:none !important;
+    }
+    #add2e-action-hud .a2e-hud-racial-icon:has(.fa-eye) {
+      color:#c23b35 !important;
+    }
+    #add2e-action-hud .a2e-hud-racial-icon:has(.fa-eye-slash) {
+      color:#2a9a54 !important;
+    }
+    #add2e-action-hud .a2e-hud-racial-icon:hover {
+      filter:brightness(1.15) saturate(1.1);
+      transform:scale(1.12);
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+if (game?.ready) injectRacialHudStyles();
+else Hooks.once("ready", injectRacialHudStyles);
+
 export function injectCharacterUiStyles(sheetRoot) {
   if (!sheetRoot) return;
-
+  injectRacialHudStyles();
   sheetRoot.querySelectorAll("style[data-add2e-ui-enhance-split]").forEach(s => s.remove());
 
   const style = document.createElement("style");
