@@ -8,6 +8,10 @@ const ADD2E_HUD_CAPABILITIES_TABS_FLAG = "__ADD2E_HUD_CAPABILITIES_TABS_V1";
 let add2eHudCapabilitiesTab = "classe";
 let add2eHudCapabilitiesObserver = null;
 
+function add2eHudFeatureName(feature) {
+  return String(feature?._add2eHudLabel ?? feature?.name ?? feature?.label ?? feature?.title ?? feature?.nom ?? "Capacité").trim();
+}
+
 function hudCapabilitiesSection() {
   return document.querySelector('#add2e-action-hud section[data-section="capacites"]');
 }
@@ -37,7 +41,7 @@ function setupHudCapabilitiesTabs() {
     tabs.className = "a2e-hud-capability-subtabs";
     tabs.innerHTML = `<button type="button" data-add2e-capability-tab="classe">Classe</button><button type="button" data-add2e-capability-tab="racial">Racial</button>`;
   }
-  section.prepend(tabs);
+  if (section.firstElementChild !== tabs) section.prepend(tabs);
 
   const racialPanel = section.querySelector(':scope > .a2e-hud-racial-capabilities');
   for (const child of Array.from(section.children)) {
@@ -57,6 +61,7 @@ function scheduleHudCapabilitiesTabs() {
 function installHudCapabilitiesTabs() {
   if (globalThis[ADD2E_HUD_CAPABILITIES_TABS_FLAG]) return;
   globalThis[ADD2E_HUD_CAPABILITIES_TABS_FLAG] = true;
+  globalThis.add2eFeatureName ??= add2eHudFeatureName;
 
   document.addEventListener("click", event => {
     const button = event.target?.closest?.('[data-add2e-capability-tab]');
@@ -214,15 +219,7 @@ export function injectCharacterUiStyles(sheetRoot) {
     }
     .add2e-character-v3 button.a2e-thief-skill-card { cursor:pointer; }
     .add2e-character-v3 button.a2e-thief-skill-card:hover { border-color:#8f6515; background:#fff8e3; transform:translateY(-1px); }
-    .add2e-character-v3 .a2e-thief-skill-name {
-      color:#3d2b0a;
-      font-size:.94em;
-      font-weight:950;
-      line-height:1.18;
-      white-space:normal;
-      overflow:visible;
-      text-overflow:clip;
-    }
+    .add2e-character-v3 .a2e-thief-skill-name { color:#3d2b0a; font-size:.94em; font-weight:950; line-height:1.18; white-space:normal; overflow:visible; text-overflow:clip; }
     .add2e-character-v3 .a2e-thief-skill-total { color:#184a82; font-size:1.18em; font-weight:950; line-height:1; }
     .add2e-character-v3 .a2e-thief-skill-bonus-line { color:#7f704d; font-size:.78em; font-weight:850; }
     .add2e-character-v3 .a2e-thief-skill-card.is-static { background:#f8f0d9; }
