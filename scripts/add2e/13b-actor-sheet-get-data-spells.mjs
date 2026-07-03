@@ -47,6 +47,20 @@ export function add2ePopulateActorSheetSpellData({ actor, data, items }) {
   const add2eSpellItemLevel = (sort) => Number(sort?.system?.niveau ?? sort?.system?.level ?? 1) || 1;
   const add2eEntryLabelForHbs = (entry) => entry?.label || add2eSpellLabel(entry?.key);
   const add2eEntryKeyForHbs = (entry) => add2eNormalizeSpellKey(entry?.key);
+  const add2eStableSpellNameForHbs = (value) => String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+  const add2eStableSpellKeyForHbs = (sort, spellLevel, spellLists = []) => {
+    const configured = String(sort?.flags?.add2e?.stableSpellKey ?? sort?.flags?.add2e?.spellStableKey ?? "").trim();
+    if (configured) return configured;
+    const name = add2eStableSpellNameForHbs(sort?.name ?? sort?.system?.nom ?? "");
+    const lists = [...new Set((spellLists ?? []).map(add2eNormalizeSpellKey).filter(Boolean))].sort().join("+") || "liste_inconnue";
+    return name ? `${lists}|${Number(spellLevel) || add2eSpellItemLevel(sort)}|${name}` : "";
+  };
 
   const add2eMaxSpellLevelFromEntries = add2eSpellEntriesForHbs.reduce((max, entry) => Math.max(max, Number(entry?.maxSpellLevel ?? 0) || 0), 0);
   const add2eMaxSpellLevelFromItems = sorts.reduce((max, sort) => Math.max(max, add2eSpellItemLevel(sort)), 0);
@@ -200,6 +214,9 @@ export function add2ePopulateActorSheetSpellData({ actor, data, items }) {
     const isObjectPower = add2eIsObjectPowerRow(sort);
     const isCapacity = add2eIsCapacitySpellRow(sort);
     const s = sort.system ?? {};
+    const flags = foundry.utils.deepClone(sort.flags ?? {});
+    const stableSpellKey = add2eStableSpellKeyForHbs(sort, spellLevel, spellLists);
+    if (stableSpellKey) flags.add2e = { ...(flags.add2e && typeof flags.add2e === "object" ? flags.add2e : {}), stableSpellKey };
     const composantsMaterielsStatus = add2eSpellRowComponentStatuses(sort);
     const composantsMateriels = composantsMaterielsStatus.length ? composantsMaterielsStatus.map(status => `${status.label}${status.showQuantity ? ` ×${status.quantity}` : ""}`).join(", ") : add2eSpellRowMaterialDisplay(s);
 
@@ -210,7 +227,8 @@ export function add2ePopulateActorSheetSpellData({ actor, data, items }) {
       name: sort.name || "Sort",
       img: sort.img || "icons/svg/book.svg",
       system: foundry.utils.deepClone(s),
-      flags: foundry.utils.deepClone(sort.flags ?? {}),
+      flags,
+      stableSpellKey,
       ecole: s?.école || s?.ecole || s?.school || "",
       description: s?.description || "",
       composantes: s?.composantes || "",
