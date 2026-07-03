@@ -1,7 +1,7 @@
 // ADD2E — Déduplication et orchestration des synchronisations de sorts.
 // Compatible Foundry V13 / V14 / V15. DialogV2 uniquement.
 
-const ADD2E_SPELL_SYNC_DEDUPE_VERSION = "2026-07-03-spell-sync-rerender-v16";
+const ADD2E_SPELL_SYNC_DEDUPE_VERSION = "2026-07-03-spell-sync-drop-progress-v17";
 const RUNNING = globalThis.ADD2E_SPELL_SYNC_DEDUPE_RUNNING instanceof Set ? globalThis.ADD2E_SPELL_SYNC_DEDUPE_RUNNING : new Set();
 const RECENT_SYNCS = globalThis.ADD2E_SPELL_SYNC_RECENT instanceof Map ? globalThis.ADD2E_SPELL_SYNC_RECENT : new Map();
 globalThis.ADD2E_SPELL_SYNC_DEDUPE_VERSION = ADD2E_SPELL_SYNC_DEDUPE_VERSION;
@@ -99,6 +99,17 @@ function spellSyncSignature(actor, classItem, options = {}) {
 
 function openSpellSyncProgress(actor, classItem, options = {}) {
   if (options?.showWait === false || spellSyncMaxLevel(actor, classItem, options) < 1) return null;
+
+  if (globalThis.add2eDropProgressIsActive?.(actor)) {
+    return {
+      setStage: (label, progress) => globalThis.add2eDropProgressUpdate?.(actor, label, {
+        progress: Math.max(60, Math.min(92, Number(progress) || 70)),
+        detail: `Synchronisation des sorts ${classItem?.name ?? "classe"}.`
+      }),
+      close: () => undefined
+    };
+  }
+
   const DialogV2 = spellSyncDialogV2();
   if (!DialogV2) return null;
   const id = `add2e-spell-sync-${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -112,8 +123,6 @@ function openSpellSyncProgress(actor, classItem, options = {}) {
         <div data-add2e-spell-sync-stage style="font-weight:700;">Lecture du compendium…</div>
         <div style="height:6px;margin-top:10px;overflow:hidden;border-radius:999px;background:#c9ae72;"><div data-add2e-spell-sync-bar style="width:22%;height:100%;background:#805514;transition:width .2s ease;"></div></div>
       </section>`,
-    // DialogV2 requiert au moins un bouton, même pour une fenêtre de progression.
-    // Le pied est masqué immédiatement après rendu : le dialogue reste informatif.
     buttons: [{ action: "add2e-technical-progress", label: "Fermer", callback: () => undefined }],
     close: () => undefined
   }, { width: 430, height: "auto" });
@@ -133,11 +142,6 @@ function openSpellSyncProgress(actor, classItem, options = {}) {
   return { setStage, close: () => setTimeout(() => dialog.close?.({ force: true }), 160) };
 }
 
-/**
- * Les listes manuelles sont cumulées avec la restriction auto-accordée.
- * Elles ne réintroduisent pas system.spellLists du compendium sur un sort
- * automatiquement accordé : seules les autorisations explicites sont ajoutées.
- */
 function installSharedSpellListUnion() {
   const original = globalThis.add2eGetSpellListsFromItem;
   if (typeof original !== "function" || original._add2eSharedListUnion) return typeof original === "function";
@@ -257,7 +261,7 @@ function installWrapper() {
     const effectiveMode = duplicateReplace ? "missing" : requestedMode;
     const progress = openSpellSyncProgress(actor, classItem, options);
     try {
-      progress?.setStage(duplicateReplace ? "Vérification d’une synchronisation déjà effectuée…" : "Lecture du compendium et synchronisation des sorts…", 36);
+      progress?.setStage(duplicateReplace ? "Vérification d’une synchronisation déjà effectuée…" : "Lecture du compendium et synchronisation des sorts…", 66);
       const result = await queue(actor, () => original(actor, classItem, {
         ...options,
         mode: effectiveMode,
@@ -266,21 +270,19 @@ function installWrapper() {
       }));
       RECENT_SYNCS.set(signature, Date.now());
       if (!resultChanged(result)) {
-        progress?.setStage("Aucune modification nécessaire.", 100);
+        progress?.setStage("Aucune modification nécessaire.", 82);
         return result;
       }
-      progress?.setStage("Mise à jour des familles réversibles…", 68);
+      progress?.setStage("Mise à jour des familles réversibles…", 76);
       await waitForFamilyExpansion(actor);
-      progress?.setStage("Vérification des doublons et des données historiques…", 88);
+      progress?.setStage("Vérification des doublons et des données historiques…", 86);
       const post = await queue(actor, async () => ({
         dedupe: await removeDuplicates(actor, `sync-${effectiveMode}`),
         cleanup: await removeLegacyMaterialFields(actor, `sync-${effectiveMode}`)
       }));
       if (post.dedupe.deleted) result.deleted = (Number(result.deleted) || 0) + post.dedupe.deleted;
       if (post.cleanup.removed) result.legacyMaterialFieldsRemoved = post.cleanup.removed;
-      progress?.setStage("Synchronisation terminée.", 100);
-      // Les sorts peuvent avoir été recréés avec de nouveaux IDs. Le rendu doit
-      // intervenir après toute la chaîne afin que les boutons portent ces IDs.
+      progress?.setStage("Synchronisation des sorts terminée.", 92);
       globalThis.add2eRerenderActorSheet?.(actor, false);
       return result;
     } finally { progress?.close(); }
@@ -295,8 +297,6 @@ Hooks.once("ready", () => {
     setTimeout(installWrapper, 0);
     setTimeout(installWrapper, 250);
   }
-  // 16-preparation-display est importé après ce module : le timer laisse son
-  // adaptateur s'installer avant d'ajouter les listes apprises explicites.
   setTimeout(() => {
     if (installSharedSpellListUnion()) {
       for (const app of Object.values(ui.windows ?? {})) {
