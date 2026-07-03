@@ -1,5 +1,5 @@
 // Charme-Personne.js — ADD2E corrigé
-// Version : 2026-05-05-v2-safe-onuse
+// Version : 2026-07-03-racial-spell-save-v3
 // Compatible : Sorts, Objets (Bâton, Anneau...)
 // Retour attendu : true = consommé, false = non consommé.
 
@@ -107,6 +107,52 @@ return await (async () => {
     }
 
     return 15;
+  };
+
+  const rollSaveVsSpell = async (targetActor, wisdomBonus = 0) => {
+    const engine = globalThis.Add2eEffectsEngine;
+    const bonusWisdom = Number(wisdomBonus) || 0;
+
+    if (typeof engine?.rollActionSave === "function") {
+      const result = await engine.rollActionSave(targetActor, "sorts", bonusWisdom);
+      if (result?.canRoll) {
+        return {
+          total: Number(result.total) || 0,
+          threshold: Number(result.threshold) || getSaveVsSpell(targetActor),
+          success: result.success === true,
+          wisdomBonus: bonusWisdom,
+          racialBonus: Number(result.racialBonus) || 0,
+          usedEngine: true
+        };
+      }
+    }
+
+    // Le seuil historique de secours est conservé lorsque l'acteur ne possède
+    // aucune valeur de sauvegarde exploitable. Le bonus racial reste appliqué.
+    const threshold = getSaveVsSpell(targetActor);
+    const racialBonus = Number(engine?.getSaveBonus?.(targetActor, "sorts")) || 0;
+    const totalBonus = bonusWisdom + racialBonus;
+    const formula = totalBonus ? `1d20${totalBonus >= 0 ? "+" : ""}${totalBonus}` : "1d20";
+    const roll = await new Roll(formula).evaluate();
+    if (game.dice3d) await game.dice3d.showForRoll(roll);
+    const total = Number(roll.total) || 0;
+    return {
+      total,
+      threshold,
+      success: total >= threshold,
+      wisdomBonus: bonusWisdom,
+      racialBonus,
+      usedEngine: false
+    };
+  };
+
+  const saveBonusLabel = (save) => {
+    const details = [];
+    const wisdom = Number(save?.wisdomBonus) || 0;
+    const racial = Number(save?.racialBonus) || 0;
+    if (wisdom) details.push(`${wisdom >= 0 ? "+" : ""}${wisdom} Sag`);
+    if (racial) details.push(`${racial >= 0 ? "+" : ""}${racial} racial`);
+    return details.length ? `(${details.join(" ; ")})` : "";
   };
 
   const createOrSocketEffect = async (targetToken, effectData) => {
@@ -227,12 +273,9 @@ return await (async () => {
 
     const wis = getSagesse(targetActor);
     const wisBonus = wis >= 15 ? wis - 14 : 0;
-    const saveValue = getSaveVsSpell(targetActor);
-    const roll = await new Roll("1d20").evaluate();
-
-    if (game.dice3d) await game.dice3d.showForRoll(roll);
-
-    const success = (Number(roll.total) + wisBonus) >= saveValue;
+    const save = await rollSaveVsSpell(targetActor, wisBonus);
+    const success = save.success;
+    const saveDetails = saveBonusLabel(save);
     let chatContent = "";
 
     if (success) {
@@ -240,14 +283,14 @@ return await (async () => {
         ${resistanceLine}
         <div style="border:1px solid #27ae60;background:#eafaf1;padding:5px;border-radius:5px;text-align:center;margin-bottom:5px;">
           <div style="color:#27ae60;font-weight:bold;">🛡️ RÉSISTE AU CHARME</div>
-          <div style="font-size:0.9em;">Jet : <b>${roll.total}</b> ${wisBonus ? `(+${wisBonus} Sag)` : ""} vs <b>${saveValue}</b></div>
+          <div style="font-size:0.9em;">Jet total : <b>${save.total}</b> ${saveDetails} vs <b>${save.threshold}</b></div>
         </div>`;
     } else {
       chatContent = `
         ${resistanceLine}
         <div style="border:1px solid #c0392b;background:#fdedec;padding:5px;border-radius:5px;text-align:center;margin-bottom:5px;">
           <div style="color:#c0392b;font-weight:bold;">💖 CHARMÉ !</div>
-          <div style="font-size:0.9em;">Jet : <b>${roll.total}</b> ${wisBonus ? `(+${wisBonus} Sag)` : ""} vs <b>${saveValue}</b></div>
+          <div style="font-size:0.9em;">Jet total : <b>${save.total}</b> ${saveDetails} vs <b>${save.threshold}</b></div>
           <div style="font-size:0.85em;font-style:italic;margin-top:3px;">La cible considère le lanceur comme son ami.</div>
         </div>`;
 
