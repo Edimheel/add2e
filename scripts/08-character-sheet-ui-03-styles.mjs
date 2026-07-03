@@ -1,19 +1,25 @@
 // ============================================================
 // ADD2E — 08 Character Sheet UI — 03 styles
-// Tuiles feuille et subdivision compacte Classe / Racial du HUD.
+// Tuiles feuille et présentation compacte Classe / Racial du HUD.
 // ============================================================
 
 const ADD2E_CAPABILITIES_STYLE_ID = "add2e-capabilities-sheet-styles";
-const ADD2E_HUD_CAPABILITIES_TABS_FLAG = "__ADD2E_HUD_CAPABILITIES_TABS_V1";
+const ADD2E_HUD_CAPABILITIES_TABS_FLAG = "__ADD2E_HUD_CAPABILITIES_TABS_V2";
+const ADD2E_THIEF_DIALOG_FLAG = "__ADD2E_THIEF_DIALOG_STYLE_V1";
 let add2eHudCapabilitiesTab = "classe";
 let add2eHudCapabilitiesObserver = null;
+let add2eThiefDialogObserver = null;
 
 function add2eHudFeatureName(feature) {
   return String(feature?._add2eHudLabel ?? feature?.name ?? feature?.label ?? feature?.title ?? feature?.nom ?? "Capacité").trim();
 }
 
+function hudRoot() {
+  return document.getElementById("add2e-action-hud");
+}
+
 function hudCapabilitiesSection() {
-  return document.querySelector('#add2e-action-hud section[data-section="capacites"]');
+  return hudRoot()?.querySelector?.('section[data-section="capacites"]') ?? null;
 }
 
 function setHudCapabilitiesTab(section, value) {
@@ -31,6 +37,19 @@ function setHudCapabilitiesTab(section, value) {
   }
 }
 
+function decorateHudClassFeatureControls(section) {
+  for (const button of section?.querySelectorAll?.('button.act[data-action="use-feature"]') ?? []) {
+    const row = button.closest?.(".row.compact");
+    if (!row) continue;
+    if (row.firstElementChild !== button) row.prepend(button);
+    if (button.dataset.add2eIconControl !== "true") {
+      button.dataset.add2eIconControl = "true";
+      button.setAttribute("aria-label", button.title || "Utiliser la capacité");
+      button.innerHTML = '<i class="fas fa-bolt" aria-hidden="true"></i>';
+    }
+  }
+}
+
 function setupHudCapabilitiesTabs() {
   const section = hudCapabilitiesSection();
   if (!section) return;
@@ -39,7 +58,7 @@ function setupHudCapabilitiesTabs() {
   if (!tabs) {
     tabs = document.createElement("div");
     tabs.className = "a2e-hud-capability-subtabs";
-    tabs.innerHTML = `<button type="button" data-add2e-capability-tab="classe">Classe</button><button type="button" data-add2e-capability-tab="racial">Racial</button>`;
+    tabs.innerHTML = '<button type="button" data-add2e-capability-tab="classe">Classe</button><button type="button" data-add2e-capability-tab="racial">Racial</button>';
   }
   if (section.firstElementChild !== tabs) section.prepend(tabs);
 
@@ -50,6 +69,7 @@ function setupHudCapabilitiesTabs() {
   }
   if (racialPanel) racialPanel.dataset.add2eCapabilityGroup = "racial";
 
+  decorateHudClassFeatureControls(section);
   setHudCapabilitiesTab(section, add2eHudCapabilitiesTab);
 }
 
@@ -58,20 +78,45 @@ function scheduleHudCapabilitiesTabs() {
   raf(setupHudCapabilitiesTabs);
 }
 
+function restoreHudCapabilitiesTab() {
+  const root = hudRoot();
+  if (!root) return;
+  const nav = root.querySelector?.('.a2e-hud-tab[data-tab="capacites"]');
+  if (nav && !nav.classList.contains("active")) nav.click();
+  const section = hudCapabilitiesSection();
+  if (section) setHudCapabilitiesTab(section, add2eHudCapabilitiesTab);
+}
+
 function installHudCapabilitiesTabs() {
   if (globalThis[ADD2E_HUD_CAPABILITIES_TABS_FLAG]) return;
   globalThis[ADD2E_HUD_CAPABILITIES_TABS_FLAG] = true;
   globalThis.add2eFeatureName ??= add2eHudFeatureName;
 
   document.addEventListener("click", event => {
-    const button = event.target?.closest?.('[data-add2e-capability-tab]');
-    if (!button || button.disabled) return;
-    const section = button.closest?.('section[data-section="capacites"]');
+    const subtab = event.target?.closest?.('[data-add2e-capability-tab]');
+    if (subtab && !subtab.disabled) {
+      const section = subtab.closest?.('section[data-section="capacites"]');
+      if (!section) return;
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation?.();
+      setHudCapabilitiesTab(section, subtab.dataset.add2eCapabilityTab);
+      return;
+    }
+
+    const featureButton = event.target?.closest?.('#add2e-action-hud button.act[data-action="use-feature"]');
+    if (!featureButton) return;
+    const section = featureButton.closest?.('section[data-section="capacites"]');
     if (!section) return;
-    event.preventDefault();
-    event.stopPropagation();
-    event.stopImmediatePropagation?.();
-    setHudCapabilitiesTab(section, button.dataset.add2eCapabilityTab);
+    const retainedSubtab = add2eHudCapabilitiesTab;
+    window.setTimeout(() => {
+      add2eHudCapabilitiesTab = retainedSubtab;
+      restoreHudCapabilitiesTab();
+    }, 0);
+    window.setTimeout(() => {
+      add2eHudCapabilitiesTab = retainedSubtab;
+      restoreHudCapabilitiesTab();
+    }, 120);
   }, true);
 
   add2eHudCapabilitiesObserver = new MutationObserver(mutations => {
@@ -82,6 +127,44 @@ function installHudCapabilitiesTabs() {
   scheduleHudCapabilitiesTabs();
 }
 
+function thiefDialogWindow(form) {
+  return form?.closest?.(".application, .window-app, .app, .dialog") ?? null;
+}
+
+function styleThiefDialogs(root = document) {
+  const forms = root?.matches?.(".add2e-thief-roll-dialog")
+    ? [root]
+    : Array.from(root?.querySelectorAll?.(".add2e-thief-roll-dialog") ?? []);
+  for (const form of forms) {
+    const windowElement = thiefDialogWindow(form);
+    if (!windowElement) continue;
+    windowElement.classList.add("add2e-thief-dialog-window", "add2e-theme-cleric");
+    form.dataset.add2eThiefDialog = "true";
+    const cancel = windowElement.querySelector?.('button[data-action="cancel"]');
+    if (!cancel || cancel.dataset.add2eCancelGuard === "true") continue;
+    cancel.dataset.add2eCancelGuard = "true";
+    cancel.addEventListener("click", event => {
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation?.();
+      const close = windowElement.querySelector?.('.header-control.close, .window-header [data-action="close"], [data-action="close"]');
+      if (close) close.click();
+    }, true);
+  }
+}
+
+function installThiefDialogStyle() {
+  if (globalThis[ADD2E_THIEF_DIALOG_FLAG]) return;
+  globalThis[ADD2E_THIEF_DIALOG_FLAG] = true;
+  add2eThiefDialogObserver = new MutationObserver(mutations => {
+    for (const mutation of mutations) for (const node of mutation.addedNodes ?? []) {
+      if (node?.nodeType === Node.ELEMENT_NODE) styleThiefDialogs(node);
+    }
+  });
+  add2eThiefDialogObserver.observe(document.body, { childList: true, subtree: true });
+  styleThiefDialogs();
+}
+
 function injectHudCapabilityStyles() {
   const existing = document.getElementById(ADD2E_CAPABILITIES_STYLE_ID);
   existing?.remove?.();
@@ -89,94 +172,40 @@ function injectHudCapabilityStyles() {
   const style = document.createElement("style");
   style.id = ADD2E_CAPABILITIES_STYLE_ID;
   style.textContent = `
-    /* Les panneaux raciaux sont fournis par le moteur racial du HUD. */
-    #add2e-action-hud section[data-section="capacites"] > .a2e-hud-capability-subtabs {
-      display:flex;
-      gap:6px;
-      padding-bottom:4px;
-      border-bottom:1px solid rgba(214,176,90,.28);
-    }
-    #add2e-action-hud .a2e-hud-capability-subtabs button {
-      min-height:30px;
-      padding:5px 11px;
-      border:1px solid rgba(214,176,90,.55);
-      border-radius:999px;
-      background:rgba(214,176,90,.12);
-      color:#ffe4a1;
-      font-weight:900;
-      font-size:.82em;
-      cursor:pointer;
-    }
-    #add2e-action-hud .a2e-hud-capability-subtabs button.active {
-      background:linear-gradient(180deg,#f0c66d,#c78d2e);
-      color:#211307;
-    }
+    /* Sous-onglets compacts du HUD. */
+    #add2e-action-hud section[data-section="capacites"] > .a2e-hud-capability-subtabs { display:flex; gap:6px; padding-bottom:4px; border-bottom:1px solid rgba(214,176,90,.28); }
+    #add2e-action-hud .a2e-hud-capability-subtabs button { min-height:30px; padding:5px 11px; border:1px solid rgba(214,176,90,.55); border-radius:999px; background:rgba(214,176,90,.12); color:#ffe4a1; font-weight:900; font-size:.82em; cursor:pointer; }
+    #add2e-action-hud .a2e-hud-capability-subtabs button.active { background:linear-gradient(180deg,#f0c66d,#c78d2e); color:#211307; }
     #add2e-action-hud .a2e-hud-capability-subtabs button:disabled { opacity:.45; cursor:default; }
     #add2e-action-hud section[data-section="capacites"][data-add2e-capability-tab="classe"] > .a2e-hud-racial-capabilities { display:none !important; }
     #add2e-action-hud section[data-section="capacites"][data-add2e-capability-tab="racial"] > [data-add2e-capability-group="classe"] { display:none !important; }
     #add2e-action-hud section[data-section="capacites"][data-add2e-capability-tab="racial"] > .a2e-hud-racial-capabilities { display:grid !important; gap:7px; }
     #add2e-action-hud section[data-section="capacites"] > .a2e-hud-racial-capabilities .a2e-hud-racial-title { display:none !important; }
 
-    /* Même ligne compacte que les capacités de classe. */
-    #add2e-action-hud section[data-section="capacites"] .a2e-hud-racial-row {
-      grid-template-columns:minmax(0,1fr) auto !important;
-      min-height:38px !important;
-      padding:6px !important;
-    }
-    #add2e-action-hud section[data-section="capacites"] .a2e-hud-racial-row > div {
-      grid-column:1;
-      grid-row:1;
-      min-width:0;
-    }
-    #add2e-action-hud section[data-section="capacites"] .a2e-hud-racial-row > .a2e-hud-racial-icon {
-      grid-column:2;
-      grid-row:1;
-      width:32px !important;
-      min-width:32px !important;
-      height:30px !important;
-      min-height:30px !important;
-      padding:0 !important;
-      border:1px solid rgba(101,184,255,.82) !important;
-      border-radius:8px !important;
-      background:rgba(43,112,177,.24) !important;
-      color:#8fd2ff !important;
-      box-shadow:none !important;
-    }
-    #add2e-action-hud section[data-section="capacites"] .a2e-hud-racial-row > .a2e-hud-racial-icon:hover {
-      color:#d7f1ff !important;
-      border-color:#d7f1ff !important;
-      filter:brightness(1.16);
-      transform:scale(1.08);
-    }
+    /* Même ordre pour les deux sources : icône, puis libellé. */
+    #add2e-action-hud section[data-section="capacites"] .row.compact:has(> button.act[data-action="use-feature"]),
+    #add2e-action-hud section[data-section="capacites"] .a2e-hud-racial-row { grid-template-columns:32px minmax(0,1fr) !important; min-height:38px !important; padding:6px !important; }
+    #add2e-action-hud section[data-section="capacites"] .row.compact > button.act[data-action="use-feature"],
+    #add2e-action-hud section[data-section="capacites"] .a2e-hud-racial-row > .a2e-hud-racial-icon { grid-column:1 !important; grid-row:1 !important; width:32px !important; min-width:32px !important; height:30px !important; min-height:30px !important; padding:0 !important; border:1px solid rgba(101,184,255,.82) !important; border-radius:8px !important; background:rgba(43,112,177,.24) !important; color:#8fd2ff !important; box-shadow:none !important; }
+    #add2e-action-hud section[data-section="capacites"] .row.compact > div,
+    #add2e-action-hud section[data-section="capacites"] .a2e-hud-racial-row > div { grid-column:2 !important; grid-row:1 !important; min-width:0; }
+    #add2e-action-hud section[data-section="capacites"] .row.compact > button.act[data-action="use-feature"] i { font-size:14px; pointer-events:none; }
+    #add2e-action-hud section[data-section="capacites"] .row.compact > button.act[data-action="use-feature"]:hover,
+    #add2e-action-hud section[data-section="capacites"] .a2e-hud-racial-row > .a2e-hud-racial-icon:hover { color:#d7f1ff !important; border-color:#d7f1ff !important; filter:brightness(1.16); transform:scale(1.08); }
     #add2e-action-hud section[data-section="capacites"] .a2e-hud-racial-row .a2e-hud-racial-description { display:none !important; }
     #add2e-action-hud section[data-section="capacites"] .a2e-hud-racial-row .meta { margin-top:2px; }
 
-    /* Le HUD natif reste inchangé, à l’exception du texte Utiliser devenu icône. */
-    #add2e-action-hud button.act[data-action="use-feature"] {
-      width:32px;
-      min-width:32px;
-      min-height:30px;
-      padding:0;
-      border:1px solid rgba(101,184,255,.82);
-      border-radius:8px;
-      background:rgba(43,112,177,.24);
-      color:#8fd2ff;
-      font-size:0;
-      box-shadow:none;
-    }
-    #add2e-action-hud button.act[data-action="use-feature"]::before {
-      content:"\\f0e7";
-      font-family:"Font Awesome 6 Free","Font Awesome 5 Free";
-      font-weight:900;
-      font-size:14px;
-      line-height:1;
-    }
-    #add2e-action-hud button.act[data-action="use-feature"]:hover {
-      color:#d7f1ff;
-      border-color:#d7f1ff;
-      filter:brightness(1.16);
-      transform:scale(1.08);
-    }
+    /* Fenêtre DialogV2 de voleur, même palette ADD2E que les autres popups. */
+    .application.add2e-thief-dialog-window,.window-app.add2e-thief-dialog-window,.app.add2e-thief-dialog-window,.dialog.add2e-thief-dialog-window { border:2px solid #c99a36 !important; border-radius:16px !important; overflow:hidden !important; box-shadow:0 10px 26px rgba(0,0,0,.22) !important; background:linear-gradient(180deg,#fffaf0,#f3e6c8) !important; }
+    .application.add2e-thief-dialog-window .window-header,.window-app.add2e-thief-dialog-window .window-header,.app.add2e-thief-dialog-window .window-header,.dialog.add2e-thief-dialog-window .window-header { background:linear-gradient(90deg,#6f4b12,#b88924) !important; color:#fff !important; border-bottom:2px solid #c99a36 !important; }
+    .application.add2e-thief-dialog-window .window-content,.window-app.add2e-thief-dialog-window .window-content,.app.add2e-thief-dialog-window .window-content,.dialog.add2e-thief-dialog-window .window-content { background:linear-gradient(180deg,#fffaf0,#f3e6c8) !important; color:#2d2011 !important; padding:12px !important; }
+    .add2e-thief-roll-dialog { display:grid; gap:10px; padding:10px; margin:0; border:1px solid #c99a36; border-radius:10px; background:rgba(255,255,255,.76); color:#2d2011; }
+    .add2e-thief-roll-dialog label { display:block; margin-bottom:4px; color:#6f4b12; font-weight:900; }
+    .add2e-thief-roll-dialog input[type="number"] { width:100%; box-sizing:border-box; padding:6px 8px; border:1px solid #c99a36; border-radius:7px; background:#fffdf8; color:#2d2011; }
+    .add2e-thief-dialog-window .dialog-buttons { gap:8px; padding-top:10px; }
+    .add2e-thief-dialog-window .dialog-buttons button.default,
+    .add2e-thief-dialog-window .dialog-buttons button[data-action="roll"] { background:linear-gradient(180deg,#b88924,#6f4b12) !important; color:#fff !important; border:1px solid #c99a36 !important; border-radius:9px !important; font-weight:900 !important; }
+    .add2e-thief-dialog-window .dialog-buttons button[data-action="cancel"] { border:1px solid #c99a36 !important; border-radius:9px !important; background:#fffaf0 !important; color:#6f4b12 !important; font-weight:800 !important; }
   `;
   document.head.appendChild(style);
 }
@@ -184,10 +213,12 @@ function injectHudCapabilityStyles() {
 if (game?.ready) {
   injectHudCapabilityStyles();
   installHudCapabilitiesTabs();
+  installThiefDialogStyle();
 } else {
   Hooks.once("ready", () => {
     injectHudCapabilityStyles();
     installHudCapabilitiesTabs();
+    installThiefDialogStyle();
   });
 }
 
@@ -197,32 +228,44 @@ export function injectCharacterUiStyles(sheetRoot) {
   sheetRoot.querySelectorAll("style[data-add2e-capabilities-sheet-style]").forEach(node => node.remove());
 
   const style = document.createElement("style");
-  style.dataset.add2eCapabilitiesSheetStyle = "1";
+  style.dataset.add2eCapabilitiesSheetStyle = "2";
   style.textContent = `
     .add2e-character-v3 .add2e-capacites-modern-root { display:grid; gap:10px; }
     .add2e-character-v3 .add2e-capacites-grid-modern { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
-    .add2e-character-v3 .a2e-thief-skills-inline { display:grid; grid-template-columns:repeat(auto-fit,minmax(148px,1fr)); gap:8px; }
-    .add2e-character-v3 .a2e-thief-skill-card {
-      display:grid;
-      grid-template-rows:auto auto auto;
-      align-content:center;
-      gap:5px;
-      min-height:112px;
-      width:100%;
-      padding:10px 8px;
-      border:1px solid #d6b05a;
-      border-radius:9px;
-      background:#fffdf6;
-      box-shadow:0 1px 3px rgba(80,58,10,.10);
-      text-align:center;
-      font-family:inherit;
+    .add2e-character-v3 .a2e-thief-skills-inline { display:grid !important; grid-template-columns:repeat(5,minmax(0,1fr)) !important; gap:10px !important; align-items:stretch !important; }
+    .add2e-character-v3 .a2e-thief-skill-card,
+    .add2e-character-v3 button.a2e-thief-skill-card {
+      display:flex !important;
+      flex-direction:column !important;
+      align-items:center !important;
+      justify-content:center !important;
+      gap:7px !important;
+      min-width:0 !important;
+      min-height:126px !important;
+      width:100% !important;
+      box-sizing:border-box !important;
+      margin:0 !important;
+      padding:12px 10px !important;
+      border:1px solid #d6b05a !important;
+      border-radius:10px !important;
+      background:#fffdf6 !important;
+      color:#3d2b0a !important;
+      box-shadow:0 1px 3px rgba(80,58,10,.10) !important;
+      text-align:center !important;
+      font:inherit !important;
+      appearance:none !important;
+      -webkit-appearance:none !important;
+      overflow:hidden !important;
     }
-    .add2e-character-v3 button.a2e-thief-skill-card { cursor:pointer; }
-    .add2e-character-v3 button.a2e-thief-skill-card:hover { border-color:#8f6515; background:#fff8e3; transform:translateY(-1px); }
-    .add2e-character-v3 .a2e-thief-skill-name { color:#3d2b0a; font-size:.94em; font-weight:950; line-height:1.18; white-space:normal; overflow:visible; text-overflow:clip; }
-    .add2e-character-v3 .a2e-thief-skill-total { color:#184a82; font-size:1.18em; font-weight:950; line-height:1; }
-    .add2e-character-v3 .a2e-thief-skill-bonus-line { color:#7f704d; font-size:.78em; font-weight:850; }
-    .add2e-character-v3 .a2e-thief-skill-card.is-static { background:#f8f0d9; }
+    .add2e-character-v3 button.a2e-thief-skill-card { cursor:pointer !important; }
+    .add2e-character-v3 button.a2e-thief-skill-card:hover { border-color:#8f6515 !important; background:#fff8e3 !important; transform:translateY(-1px); }
+    .add2e-character-v3 .a2e-thief-skill-name,
+    .add2e-character-v3 .a2e-thief-skill-total,
+    .add2e-character-v3 .a2e-thief-skill-bonus-line { display:block !important; position:static !important; float:none !important; width:100% !important; margin:0 !important; padding:0 !important; white-space:normal !important; overflow:visible !important; text-overflow:clip !important; }
+    .add2e-character-v3 .a2e-thief-skill-name { color:#3d2b0a !important; font-size:.96em !important; font-weight:950 !important; line-height:1.2 !important; }
+    .add2e-character-v3 .a2e-thief-skill-total { color:#184a82 !important; font-size:1.22em !important; font-weight:950 !important; line-height:1 !important; }
+    .add2e-character-v3 .a2e-thief-skill-bonus-line { color:#7f704d !important; font-size:.82em !important; font-weight:850 !important; line-height:1.18 !important; }
+    .add2e-character-v3 .a2e-thief-skill-card.is-static { background:#f8f0d9 !important; }
     .add2e-character-v3 .a2e-feature-card-list { display:grid; gap:7px; }
     .add2e-character-v3 .a2e-feature-card { padding:8px; border:1px solid #dac276; border-radius:9px; background:#fffdf6; }
     .add2e-character-v3 .a2e-feature-card-title { display:flex; align-items:center; gap:7px; color:#3d2b0a; }
@@ -234,7 +277,9 @@ export function injectCharacterUiStyles(sheetRoot) {
     .add2e-character-v3 .add2e-feature-icon-only.is-enabled { color:#23884d; }
     .add2e-character-v3 .add2e-feature-icon-only.is-disabled { color:#b6332e; }
     .add2e-character-v3 .add2e-feature-icon-only.is-roll { color:#1d6fae; }
-    @media (max-width:680px) { .add2e-character-v3 .add2e-capacites-grid-modern { grid-template-columns:1fr; } }
+    @media (max-width:980px) { .add2e-character-v3 .a2e-thief-skills-inline { grid-template-columns:repeat(4,minmax(0,1fr)) !important; } }
+    @media (max-width:760px) { .add2e-character-v3 .a2e-thief-skills-inline { grid-template-columns:repeat(3,minmax(0,1fr)) !important; } .add2e-character-v3 .add2e-capacites-grid-modern { grid-template-columns:1fr; } }
+    @media (max-width:520px) { .add2e-character-v3 .a2e-thief-skills-inline { grid-template-columns:repeat(2,minmax(0,1fr)) !important; } }
   `;
   sheetRoot.prepend(style);
 }
