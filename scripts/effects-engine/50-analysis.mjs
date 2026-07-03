@@ -12,6 +12,8 @@ const register = (Engine, methods) => Object.defineProperties(
 const ADD2E_RACIAL_CONTEXT_CACHE = new WeakMap();
 
 function clone(value) {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
   try { return foundry.utils.deepClone(value); } catch {}
   try { return foundry.utils.duplicate(value); } catch {}
   return JSON.parse(JSON.stringify(value));
@@ -130,6 +132,7 @@ function compilePassiveTags(engine, profile) {
 function racialIconClass(capability = {}) {
   const key = String(capability.id ?? capability.key ?? capability.label ?? capability.name ?? "")
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  if (key.includes("infravision") || key.includes("vision")) return "fa-eye";
   if (key.includes("porte")) return "fa-door-closed";
   if (key.includes("pente")) return "fa-mountain";
   if (key.includes("direction") || key.includes("profondeur")) return "fa-compass";
@@ -209,13 +212,142 @@ function directRacialCapabilities(engine, actor) {
       index,
       sourceId: context.source.id,
       sourceName: context.source.name,
+      actionType: "roll",
       activable: raw.activable !== false,
       canRoll
     }];
   });
 }
 
-async function add2eRollRacialCapability(actor, capabilityId) {
+function normalizeSight(sight = {}) {
+  return {
+    enabled: sight?.enabled === true,
+    range: Math.max(0, Number(sight?.range) || 0),
+    visionMode: String(sight?.visionMode ?? "basic") || "basic"
+  };
+}
+
+function sightEquals(left, right) {
+  const a = normalizeSight(left);
+  const b = normalizeSight(right);
+  return a.enabled === b.enabled && a.range === b.range && a.visionMode === b.visionMode;
+}
+
+function activeActorTokens(actor) {
+  const tokens = actor?.getActiveTokens?.() ?? [];
+  return tokens.filter(token => token?.document && (token?.actor?.id === actor?.id || token?.document?.actorId === actor?.id));
+}
+
+function sceneRange(engine, rangeMeters) {
+  const units = engine.normalizeTag(canvas?.scene?.grid?.units ?? "");
+  return units.includes("ft") || units.includes("feet") || units.includes("pied") ? rangeMeters * 3.28084 : rangeMeters;
+}
+
+function visionModeForSight(current = {}) {
+  const darkvision = globalThis.CONFIG?.Canvas?.visionModes?.darkvision ? "darkvision" : "";
+  if (darkvision && (!current?.visionMode || current.visionMode === "basic")) return darkvision;
+  return String(current?.visionMode ?? "basic") || "basic";
+}
+
+function actionRequirements(entry) {
+  return scalarList(entry?.requires)
+    .map(value => String(value ?? "").trim())
+    .filter(Boolean);
+}
+
+async function updateSightDocument(document, sight, options = {}) {
+  if (!document?.update) return false;
+  const current = normalizeSight(document?.sight ?? document?._source?.sight ?? {});
+  const next = normalizeSight(sight);
+  if (sightEquals(current, next)) return false;
+  await document.update({
+    "sight.enabled": next.enabled,
+    "sight.range": next.range,
+    "sight.visionMode": next.visionMode
+  }, options);
+  return true;
+}
+
+async function restoreRacialVision(engine, actor, state, { reason = "racial-vision-disable" } = {}) {
+  if (!actor?.update) return { applied: false, reason: "missing-actor" };
+  const base = state?.base ?? {};
+  const prototype = normalizeSight(base.prototype ?? base);
+  const currentPrototype = normalizeSight(actor.prototypeToken?.sight ?? actor._source?.prototypeToken?.sight ?? {});
+  let applied = false;
+  if (!sightEquals(currentPrototype, prototype)) {
+    await actor.update({
+      "prototypeToken.sight.enabled": prototype.enabled,
+      "prototypeToken.sight.range": prototype.range,
+      "prototypeToken.sight.visionMode": prototype.visionMode
+    }, { add2eInternal: true, add2eReason: reason });
+    applied = true;
+  }
+
+  const tokenBases = base.tokens && typeof base.tokens === "object" ? base.tokens : {};
+  for (const token of activeActorTokens(actor)) {
+    const tokenBase = tokenBases[token.id] ?? prototype;
+    try {
+      applied = (await updateSightDocument(token.document, tokenBase, { add2eInternal: true, add2eReason: reason })) || applied;
+    } catch (error) {
+      console.warn("[ADD2E][RACIAL_VISION][RESTORE_TOKEN]", { actor: actor.name, token: token.name, error });
+    }
+  }
+
+  await actor.unsetFlag?.("add2e", "racialVision");
+  return { applied, restored: true, enabled: false, range: 0 };
+}
+
+async function enableRacialVision(engine, actor, vision, state, { reason = "racial-vision-enable" } = {}) {
+  if (!actor?.update) return { applied: false, reason: "missing-actor" };
+  const currentPrototype = normalizeSight(actor.prototypeToken?.sight ?? actor._source?.prototypeToken?.sight ?? {});
+  const legacyBase = state?.base && typeof state.base === "object" ? state.base : null;
+  const base = legacyBase ? clone(legacyBase) : { prototype: currentPrototype, tokens: {} };
+  if (!base.prototype) base.prototype = currentPrototype;
+  if (!base.tokens || typeof base.tokens !== "object") base.tokens = {};
+
+  const range = sceneRange(engine, vision.range);
+  const nextPrototype = {
+    enabled: true,
+    range: Math.max(currentPrototype.range, range),
+    visionMode: visionModeForSight(currentPrototype)
+  };
+  let applied = false;
+  if (!sightEquals(currentPrototype, nextPrototype)) {
+    await actor.update({
+      "prototypeToken.sight.enabled": nextPrototype.enabled,
+      "prototypeToken.sight.range": nextPrototype.range,
+      "prototypeToken.sight.visionMode": nextPrototype.visionMode
+    }, { add2eInternal: true, add2eReason: reason });
+    applied = true;
+  }
+
+  for (const token of activeActorTokens(actor)) {
+    const current = normalizeSight(token.document?.sight ?? token.document?._source?.sight ?? {});
+    if (!base.tokens[token.id]) base.tokens[token.id] = current;
+    const next = {
+      enabled: true,
+      range: Math.max(current.range, range),
+      visionMode: visionModeForSight(current)
+    };
+    try {
+      applied = (await updateSightDocument(token.document, next, { add2eInternal: true, add2eReason: reason })) || applied;
+    } catch (error) {
+      console.warn("[ADD2E][RACIAL_VISION][ENABLE_TOKEN]", { actor: actor.name, token: token.name, error });
+    }
+  }
+
+  const nextState = {
+    enabled: true,
+    base,
+    range,
+    visionMode: nextPrototype.visionMode,
+    type: vision.type
+  };
+  await actor.setFlag?.("add2e", "racialVision", nextState);
+  return { applied, enabled: true, range, visionMode: nextPrototype.visionMode };
+}
+
+async function add2eRollRacialCapability(actor, capabilityId, context = {}) {
   const engine = globalThis.Add2eEffectsEngine;
   if (!actor || typeof engine?.rollRacialCapability !== "function") {
     ui.notifications?.warn?.("Capacité raciale indisponible.");
@@ -225,9 +357,9 @@ async function add2eRollRacialCapability(actor, capabilityId) {
     ui.notifications?.warn?.("Vous ne pouvez pas utiliser les capacités de cet acteur.");
     return null;
   }
-  const result = await engine.rollRacialCapability(actor, capabilityId);
+  const result = await engine.rollRacialCapability(actor, capabilityId, context);
   if (!result?.ok) {
-    ui.notifications?.warn?.("Cette capacité raciale n’a pas de jet défini.");
+    ui.notifications?.warn?.("Cette capacité raciale n’a pas pu être résolue.");
     return result;
   }
   const capability = result.capability;
@@ -247,16 +379,6 @@ async function add2eRollRacialCapability(actor, capabilityId) {
     flags: { add2e: { racialCapability: { actorId: actor.id, raceSourceId: capability.sourceId, capabilityId: capability.id, success } } }
   });
   return result;
-}
-
-function resolveHudActor() {
-  const actorId = globalThis.add2eHudCheck?.().actorId ?? "";
-  return (canvas?.tokens?.controlled ?? []).find(token => token?.actor?.id === actorId)?.actor
-    ?? (canvas?.tokens?.placeables ?? []).find(token => token?.actor?.id === actorId)?.actor
-    ?? game.actors?.get?.(actorId)
-    ?? canvas?.tokens?.controlled?.[0]?.actor
-    ?? game.user?.character
-    ?? null;
 }
 
 function installStrictRacialProfileAuthority(Engine) {
@@ -313,15 +435,6 @@ function installStrictRacialProfileAuthority(Engine) {
         writable: true,
         value(actor) { return directRacialCapabilities(this, actor); }
       },
-      getRacialCapability: {
-        configurable: true,
-        writable: true,
-        value(actor, capabilityId) {
-          const wanted = this.normalizeTag(capabilityId);
-          if (!wanted) return null;
-          return this.getRacialCapabilities(actor).find(capability => this.normalizeTag(capability.id) === wanted) ?? null;
-        }
-      },
       getRacialVision: {
         configurable: true,
         writable: true,
@@ -335,6 +448,77 @@ function installStrictRacialProfileAuthority(Engine) {
             : { type: "", range: 0 };
         }
       },
+      getRacialVisionState: {
+        configurable: true,
+        writable: true,
+        value(actor) {
+          const vision = this.getRacialVision(actor);
+          const raw = actor?.getFlag?.("add2e", "racialVision") ?? actor?.flags?.add2e?.racialVision ?? null;
+          const enabled = vision.range > 0 && (raw?.enabled === true || (raw?.enabled === undefined && !!raw?.base));
+          return {
+            available: vision.range > 0,
+            enabled,
+            type: vision.type,
+            range: vision.range,
+            state: raw && typeof raw === "object" ? clone(raw) : null
+          };
+        }
+      },
+      getRacialActions: {
+        configurable: true,
+        writable: true,
+        value(actor) {
+          const vision = this.getRacialVisionState(actor);
+          const actions = [];
+          if (vision.available) {
+            actions.push({
+              id: "infravision",
+              key: "infravision",
+              label: `Infravision ${vision.range} m`,
+              description: "Active ou désactive l’infravision raciale. Elle est sans effet à proximité d’une source de lumière ou de chaleur intense.",
+              img: "icons/svg/eye.svg",
+              iconClass: "fa-eye",
+              sourceId: this.getRacialContext(actor).source?.id ?? "",
+              sourceName: this.getRacialContext(actor).source?.name ?? "Race",
+              actionType: "vision-toggle",
+              enabled: vision.enabled,
+              activable: true,
+              canRoll: false,
+              requires: ["no_intense_light"]
+            });
+          }
+          return [...actions, ...this.getRacialCapabilities(actor).filter(capability => capability?.activable !== false)];
+        }
+      },
+      getRacialAction: {
+        configurable: true,
+        writable: true,
+        value(actor, actionId) {
+          const wanted = this.normalizeTag(actionId);
+          if (!wanted) return null;
+          return this.getRacialActions(actor).find(action => this.normalizeTag(action.id) === wanted) ?? null;
+        }
+      },
+      getRacialCapability: {
+        configurable: true,
+        writable: true,
+        value(actor, capabilityId) {
+          const wanted = this.normalizeTag(capabilityId);
+          if (!wanted) return null;
+          return this.getRacialCapabilities(actor).find(capability => this.normalizeTag(capability.id) === wanted) ?? null;
+        }
+      },
+      setRacialVision: {
+        configurable: true,
+        writable: true,
+        async value(actor, enabled, options = {}) {
+          if (!actor?.update) return { applied: false, reason: "missing-actor" };
+          const vision = this.getRacialVision(actor);
+          const state = actor.getFlag?.("add2e", "racialVision") ?? actor.flags?.add2e?.racialVision ?? null;
+          if (!enabled || !vision.range) return restoreRacialVision(this, actor, state, options);
+          return enableRacialVision(this, actor, vision, state, options);
+        }
+      },
       syncRacialVision: {
         configurable: true,
         writable: true,
@@ -342,43 +526,23 @@ function installStrictRacialProfileAuthority(Engine) {
           if (!actor?.update) return { applied: false, reason: "missing-actor" };
           const vision = this.getRacialVision(actor);
           const state = actor.getFlag?.("add2e", "racialVision") ?? actor.flags?.add2e?.racialVision ?? null;
-          const current = actor.prototypeToken?.sight ?? actor._source?.prototypeToken?.sight ?? {};
-          const sceneUnits = this.normalizeTag(canvas?.scene?.grid?.units ?? "");
-          const range = sceneUnits.includes("ft") || sceneUnits.includes("feet") || sceneUnits.includes("pied") ? vision.range * 3.28084 : vision.range;
+          const enabled = state?.enabled === true || (state?.enabled === undefined && !!state?.base);
           if (!vision.range) {
             if (!state?.base) return { applied: false, reason: "no-racial-vision" };
-            await actor.update({
-              "prototypeToken.sight.enabled": state.base.enabled,
-              "prototypeToken.sight.range": state.base.range,
-              "prototypeToken.sight.visionMode": state.base.visionMode
-            }, { add2eInternal: true });
-            await actor.unsetFlag?.("add2e", "racialVision");
-            return { applied: true, restored: true, range: 0 };
+            return restoreRacialVision(this, actor, state, { reason: "racial-vision-race-removed" });
           }
-          const darkvision = globalThis.CONFIG?.Canvas?.visionModes?.darkvision ? "darkvision" : "";
-          const base = state?.base ?? {
-            enabled: current.enabled ?? false,
-            range: Number(current.range) || 0,
-            visionMode: current.visionMode ?? "basic"
-          };
-          const nextRange = Math.max(Number(current.range) || 0, range);
-          const nextMode = darkvision && (!current.visionMode || current.visionMode === "basic") ? darkvision : (current.visionMode ?? "basic");
-          if (current.enabled === true && Number(current.range) === nextRange && current.visionMode === nextMode) return { applied: false, reason: "already-synced", range: nextRange, visionMode: nextMode };
-          await actor.update({
-            "prototypeToken.sight.enabled": true,
-            "prototypeToken.sight.range": nextRange,
-            "prototypeToken.sight.visionMode": nextMode
-          }, { add2eInternal: true });
-          await actor.setFlag?.("add2e", "racialVision", { base, range, visionMode: nextMode, type: vision.type });
-          return { applied: true, range: nextRange, visionMode: nextMode };
+          if (!enabled) return { applied: false, reason: "disabled" };
+          return enableRacialVision(this, actor, vision, state, { reason: "racial-vision-sync" });
         }
       },
       rollRacialCapability: {
         configurable: true,
         writable: true,
-        async value(actor, capabilityId) {
+        async value(actor, capabilityId, context = {}) {
           const capability = this.getRacialCapability(actor, capabilityId);
           if (!actor || !capability) return { ok: false, success: false, reason: "capability-not-found" };
+          const missing = actionRequirements(capability).filter(key => context?.[key] !== true);
+          if (missing.length) return { ok: false, success: false, reason: "requirements-missing", capability, missing };
           const formula = String(capability.formula ?? capability.die ?? "").trim();
           const successAt = this.readNumber(capability.successAt, capability.maxSuccess, capability.threshold, capability.pct);
           if (!formula || !Number.isFinite(successAt) || successAt <= 0) return { ok: false, success: false, reason: "invalid-capability", capability };
@@ -419,13 +583,17 @@ function installStrictRacialProfileAuthority(Engine) {
       const invalidate = item => {
         if (String(item?.type ?? "").toLowerCase() !== "race") return;
         Engine.invalidateRacialContext(item.parent);
-        Promise.resolve(Engine.syncRacialVision?.(item.parent)).catch(() => {});
+        Promise.resolve(Engine.syncRacialVision?.(item.parent)).catch(error => console.warn("[ADD2E][RACIAL_VISION][SYNC]", error));
       };
       Hooks.on("createItem", invalidate);
       Hooks.on("updateItem", invalidate);
       Hooks.on("deleteItem", invalidate);
+      Hooks.on("createToken", tokenDocument => {
+        const actor = tokenDocument?.actor;
+        if (actor) Promise.resolve(Engine.syncRacialVision?.(actor)).catch(error => console.warn("[ADD2E][RACIAL_VISION][TOKEN]", error));
+      });
       Hooks.once("ready", () => {
-        for (const actor of game.actors ?? []) Promise.resolve(Engine.syncRacialVision?.(actor)).catch(() => {});
+        for (const actor of game.actors ?? []) Promise.resolve(Engine.syncRacialVision?.(actor)).catch(error => console.warn("[ADD2E][RACIAL_VISION][READY]", error));
       });
     }
   });
@@ -446,27 +614,12 @@ function installStrictRacialEffectsSheetDataBridge() {
       const active = Array.isArray(data.activeEffectsList) ? data.activeEffectsList : [];
       const seen = new Set(active.map(effect => String(effect?.id ?? "")));
       data.activeEffectsList = [...virtual.filter(effect => !seen.has(String(effect?.id ?? ""))), ...active];
-      data.activeRacialCapabilities = engine?.getRacialCapabilities?.(actor)?.filter(capability => capability?.activable !== false) ?? [];
+      data.activeRacialCapabilities = engine?.getRacialActions?.(actor) ?? [];
       return data;
     };
     wrapped.__add2eStrictRacialEffectsSheetDataBridge = true;
     proto.getData = wrapped;
   });
-
-  if (!globalThis.ADD2E_RACIAL_STRICT_CLICK_BRIDGE_INSTALLED) {
-    globalThis.ADD2E_RACIAL_STRICT_CLICK_BRIDGE_INSTALLED = true;
-    document.addEventListener("click", event => {
-      const button = event.target?.closest?.(".add2e-racial-capability-roll[data-racial-capability-id], #add2e-action-hud [data-add2e-hud-racial-action][data-racial-capability-id]");
-      if (!button) return;
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation?.();
-      const actorId = button.dataset.actorId ?? "";
-      const actor = actorId ? game.actors?.get?.(actorId) : resolveHudActor();
-      if (!actor) return ui.notifications?.warn?.("Acteur introuvable pour la capacité raciale.");
-      void globalThis.add2eRollRacialCapability?.(actor, button.dataset.racialCapabilityId);
-    }, true);
-  }
 }
 
 function installRacialImmunityAliases(Engine) {
