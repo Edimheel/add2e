@@ -1,7 +1,7 @@
 // ADD2E — Déduplication et orchestration des synchronisations de sorts.
 // Compatible Foundry V13 / V14 / V15. DialogV2 uniquement.
 
-const ADD2E_SPELL_SYNC_DEDUPE_VERSION = "2026-07-02-spell-sync-progress-v15";
+const ADD2E_SPELL_SYNC_DEDUPE_VERSION = "2026-07-03-spell-sync-rerender-v16";
 const RUNNING = globalThis.ADD2E_SPELL_SYNC_DEDUPE_RUNNING instanceof Set ? globalThis.ADD2E_SPELL_SYNC_DEDUPE_RUNNING : new Set();
 const RECENT_SYNCS = globalThis.ADD2E_SPELL_SYNC_RECENT instanceof Map ? globalThis.ADD2E_SPELL_SYNC_RECENT : new Map();
 globalThis.ADD2E_SPELL_SYNC_DEDUPE_VERSION = ADD2E_SPELL_SYNC_DEDUPE_VERSION;
@@ -279,6 +279,9 @@ function installWrapper() {
       if (post.dedupe.deleted) result.deleted = (Number(result.deleted) || 0) + post.dedupe.deleted;
       if (post.cleanup.removed) result.legacyMaterialFieldsRemoved = post.cleanup.removed;
       progress?.setStage("Synchronisation terminée.", 100);
+      // Les sorts peuvent avoir été recréés avec de nouveaux IDs. Le rendu doit
+      // intervenir après toute la chaîne afin que les boutons portent ces IDs.
+      globalThis.add2eRerenderActorSheet?.(actor, false);
       return result;
     } finally { progress?.close(); }
   };
