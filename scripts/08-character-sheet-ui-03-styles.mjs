@@ -142,22 +142,45 @@ export function injectCharacterUiStyles(sheetRoot) {
       align-items:center;
       color:#3d2b0a;
     }
-    .add2e-character-v3 .a2e-feature-card-title span {
-      font-size:.82em;
-      font-weight:900;
-      color:#6f4b12;
-      white-space:nowrap;
+    .add2e-character-v3 .a2e-feature-card-title strong {
+      min-width:0;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
     .add2e-character-v3 .a2e-feature-card-desc {
       margin-top:5px;
       font-size:.9em;
       line-height:1.28;
     }
-    .add2e-character-v3 .a2e-feature-actions {
-      margin-top:7px;
-      display:flex;
-      justify-content:flex-start;
+    .add2e-character-v3 .add2e-feature-icon-only {
+      width:30px !important;
+      min-width:30px !important;
+      height:30px !important;
+      min-height:30px !important;
+      margin:0 !important;
+      padding:0 !important;
+      border:0 !important;
+      border-radius:0 !important;
+      background:transparent !important;
+      box-shadow:none !important;
+      color:#1d6fae !important;
+      display:inline-flex !important;
+      align-items:center !important;
+      justify-content:center !important;
+      cursor:pointer !important;
+      line-height:1 !important;
     }
+    .add2e-character-v3 .add2e-feature-icon-only i {
+      font-size:1.2rem;
+      pointer-events:none;
+    }
+    .add2e-character-v3 .add2e-feature-icon-only:hover {
+      filter:brightness(1.12) saturate(1.1);
+      transform:scale(1.12);
+    }
+    .add2e-character-v3 .add2e-feature-icon-only.is-enabled { color:#23884d !important; }
+    .add2e-character-v3 .add2e-feature-icon-only.is-disabled { color:#b6332e !important; }
+    .add2e-character-v3 .add2e-feature-icon-only.is-roll { color:#1d6fae !important; }
     .add2e-character-v3 .add2e-effects-table td,
     .add2e-character-v3 .add2e-effects-table th {
       vertical-align:middle;
