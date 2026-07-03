@@ -6,7 +6,7 @@ import { currentRaceOrCompatibleAlternatives, raceCompatibleForMulticlass, world
 import { showClassDropChoiceDialog } from "./17b-multiclass-dialogs.mjs";
 import { addClassAsMulticlass, applyClassAsMonoclass, applyRaceForMulticlass, replaceClassInMulticlass } from "./17b-multiclass-operations.mjs";
 
-const ADD2E_DROP_PROGRESS_VERSION = "2026-07-03-class-drop-progress-v1";
+const ADD2E_DROP_PROGRESS_VERSION = "2026-07-03-class-drop-spell-transaction-v2";
 const DROP_PROGRESS = globalThis.ADD2E_DROP_PROGRESS instanceof Map ? globalThis.ADD2E_DROP_PROGRESS : new Map();
 globalThis.ADD2E_DROP_PROGRESS = DROP_PROGRESS;
 globalThis.ADD2E_DROP_PROGRESS_VERSION = ADD2E_DROP_PROGRESS_VERSION;
@@ -143,6 +143,194 @@ async function dropProgressRefreshSheet(sheet, actor) {
   await new Promise(resolve => setTimeout(resolve, 0));
 }
 
+function dropSpellNorm(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function dropIsAutomaticClassSpell(item) {
+  if (String(item?.type ?? "").toLowerCase() !== "sort") return false;
+  const flags = item?.flags?.add2e ?? {};
+  return flags.autoGrantedSpellSync === true || !!flags.autoGrantedByClassId || !!flags.autoGrantedByClass;
+}
+
+function dropAutomaticSpellSourceId(item) {
+  const flags = item?.flags?.add2e ?? {};
+  return String(flags.autoGrantedByClassId ?? flags.sourceClassId ?? flags.sourceItemId ?? flags.classId ?? "").trim();
+}
+
+function dropAutomaticSpellSourceName(item) {
+  const flags = item?.flags?.add2e ?? {};
+  return dropSpellNorm(flags.autoGrantedByClass ?? flags.sourceClass ?? flags.sourceClasse ?? flags.className ?? flags.classSlug ?? "");
+}
+
+function dropGeneratedSpellBelongsToAutomaticSource(item, sourceIds, sourceNames) {
+  const flags = item?.flags?.add2e ?? {};
+  const family = flags.spellFamily ?? {};
+  if (family.generated !== true) return false;
+  const sourceId = String(family.sourceItemId ?? family.sourceId ?? "").trim();
+  const sourceName = dropSpellNorm(family.sourceItemName ?? family.sourceName ?? "");
+  return (sourceId && sourceIds.has(sourceId)) || (sourceName && sourceNames.has(sourceName));
+}
+
+function dropAutomaticSpellClasses(actor) {
+  return classItems(actor).filter(classDoc => {
+    try {
+      const lists = globalThis.add2eSpellSyncClassLists?.(classDoc) ?? [];
+      return Array.isArray(lists) && lists.length > 0;
+    } catch (_error) {
+      return false;
+    }
+  });
+}
+
+function dropClassSpellLevel(actor, classDoc) {
+  const resolved = Number(globalThis.add2eSpellClassLevel?.(actor, classDoc));
+  if (Number.isFinite(resolved) && resolved >= 1) return Math.floor(resolved);
+  return Math.max(1, Number(classDoc?.system?.niveau ?? actor?.system?.niveau ?? 1) || 1);
+}
+
+function dropClassMaxSpellLevel(actor, classDoc) {
+  const level = dropClassSpellLevel(actor, classDoc);
+  const max = Number(globalThis.add2eSpellSyncMaxSpellLevel?.(classDoc, level));
+  return Number.isFinite(max) && max > 0 ? Math.floor(max) : 0;
+}
+
+function dropClassHasAutomaticSpells(actor, classDoc) {
+  const classId = String(classDoc?.id ?? "");
+  const className = dropSpellNorm(classDoc?.name ?? classDoc?.system?.label ?? classDoc?.system?.slug ?? "");
+  return actor?.items?.some?.(item => {
+    if (!dropIsAutomaticClassSpell(item)) return false;
+    const sourceId = dropAutomaticSpellSourceId(item);
+    const sourceName = dropAutomaticSpellSourceName(item);
+    return (classId && sourceId === classId) || (className && sourceName === className);
+  }) === true;
+}
+
+async function dropDeleteLiveItems(actor, ids, reason) {
+  const live = [...new Set((ids ?? []).map(id => String(id ?? "").trim()).filter(id => actor?.items?.has?.(id)))];
+  if (!live.length) return 0;
+  try {
+    await actor.deleteEmbeddedDocuments("Item", live, {
+      add2eInternal: true,
+      add2eClassDropSpellTransaction: true,
+      add2eReason: reason,
+      render: false
+    });
+    return live.length;
+  } catch (error) {
+    if (!/does not exist/i.test(String(error?.message ?? error))) throw error;
+  }
+
+  let deleted = 0;
+  for (const id of live) {
+    if (!actor?.items?.has?.(id)) continue;
+    try {
+      await actor.deleteEmbeddedDocuments("Item", [id], {
+        add2eInternal: true,
+        add2eClassDropSpellTransaction: true,
+        add2eReason: reason,
+        render: false
+      });
+      deleted += 1;
+    } catch (error) {
+      if (!/does not exist/i.test(String(error?.message ?? error))) throw error;
+    }
+  }
+  return deleted;
+}
+
+async function purgeAutomaticClassSpellsForDrop(actor) {
+  const automatic = Array.from(actor?.items ?? []).filter(dropIsAutomaticClassSpell);
+  const sourceIds = new Set(automatic.map(dropAutomaticSpellSourceId).filter(Boolean));
+  const sourceNames = new Set(automatic.map(dropAutomaticSpellSourceName).filter(Boolean));
+  const ids = Array.from(actor?.items ?? [])
+    .filter(item => dropIsAutomaticClassSpell(item) || dropGeneratedSpellBelongsToAutomaticSource(item, sourceIds, sourceNames))
+    .map(item => item.id)
+    .filter(Boolean);
+  return dropDeleteLiveItems(actor, ids, "class-drop-spell-transaction-purge");
+}
+
+async function rebuildAutomaticClassSpellsAfterDrop(actor) {
+  const sources = dropAutomaticSpellClasses(actor);
+  const sync = globalThis.add2eSyncActorSpellsFromClass;
+  if (sources.length && typeof sync !== "function") throw new Error("Synchroniseur automatique de sorts introuvable.");
+
+  let imported = 0;
+  let updated = 0;
+  let deleted = 0;
+  let rebuiltClasses = 0;
+  const details = [];
+
+  for (let index = 0; index < sources.length; index += 1) {
+    const classDoc = sources[index];
+    const level = dropClassSpellLevel(actor, classDoc);
+    const maxSpellLevel = dropClassMaxSpellLevel(actor, classDoc);
+    if (maxSpellLevel < 1) {
+      details.push(`${classDoc.name} : aucun niveau de sort disponible`);
+      continue;
+    }
+    if (dropClassHasAutomaticSpells(actor, classDoc)) {
+      details.push(`${classDoc.name} : déjà rechargé`);
+      continue;
+    }
+
+    const progress = 66 + Math.round(((index + 1) / Math.max(1, sources.length)) * 20);
+    dropProgressUpdate(actor, `Rechargement des sorts ${classDoc.name}…`, {
+      progress,
+      detail: `Compendium, familles réversibles et déduplication pour ${classDoc.name}.`
+    });
+    const result = await sync(actor, classDoc, {
+      mode: "replace",
+      actorLevel: level,
+      minSpellLevel: 1,
+      showWait: true,
+      forceCacheRefresh: true,
+      forceCacheRefreshExplicit: true,
+      preserveMemorization: false,
+      add2eClassDropSpellTransaction: true
+    });
+    imported += Math.max(0, Number(result?.imported ?? 0) || 0);
+    updated += Math.max(0, Number(result?.updated ?? 0) || 0);
+    deleted += Math.max(0, Number(result?.deleted ?? 0) || 0);
+    rebuiltClasses += 1;
+    details.push(`${classDoc.name} : ${Math.max(0, Number(result?.imported ?? 0) || 0)} sort(s) chargé(s)`);
+  }
+
+  const automaticSpellCount = Array.from(actor?.items ?? []).filter(dropIsAutomaticClassSpell).length;
+  return { sources, imported, updated, deleted, rebuiltClasses, automaticSpellCount, details };
+}
+
+async function runClassSpellTransaction(actor) {
+  dropProgressUpdate(actor, "Purge des sorts automatiques de la classe précédente…", {
+    progress: 48,
+    detail: "Les sorts fournis automatiquement par une ancienne classe sont retirés avant la mise à jour."
+  });
+  const purged = await purgeAutomaticClassSpellsForDrop(actor);
+  await new Promise(resolve => setTimeout(resolve, 0));
+  return { purged };
+}
+
+async function completeClassSpellTransaction(actor, initial = {}) {
+  dropProgressUpdate(actor, "Vérification et rechargement des sorts de classe…", {
+    progress: 62,
+    detail: "Chaque classe de sort automatique encore présente doit posséder ses propres Items de sort."
+  });
+  const rebuilt = await rebuildAutomaticClassSpellsAfterDrop(actor);
+  dropProgressUpdate(actor, "Sorts de classe vérifiés…", {
+    progress: 90,
+    detail: rebuilt.sources.length
+      ? `${rebuilt.automaticSpellCount} sort(s) automatique(s) présents. ${rebuilt.details.join(" · ")}`
+      : "Aucune classe à sort automatique restante."
+  });
+  return { ...initial, ...rebuilt };
+}
+
 try { globalThis.add2eDropProgressBegin = dropProgressOpen; } catch (_error) {}
 try { globalThis.add2eDropProgressUpdate = dropProgressUpdate; } catch (_error) {}
 try { globalThis.add2eDropProgressIsActive = dropProgressActive; } catch (_error) {}
@@ -183,8 +371,6 @@ async function applyFirstClassSafely(sheet, classData) {
   if (!actor || classItems(actor).length) return false;
 
   dropProgressUpdate(actor, "Vérification de la race et des prérequis…", { progress: 16 });
-  // Le wrapper race/classe existant choisit une race compatible avec DialogV2
-  // lorsqu'elle est nécessaire. Cette route retourne alors déjà la classe créée.
   const raceResult = await globalThis.add2eEnsureCompatibleRaceForClassDrop?.(actor, classData, sheet);
   if (raceResult?.handled) return raceResult.ok === true;
   if (raceResult?.ok === false) return false;
@@ -212,6 +398,7 @@ async function runClassDropWithProgress(sheet, itemData) {
   let result = false;
   try {
     dropProgressUpdate(actor, "Analyse de la classe déposée…", { progress: 8 });
+    const preTransaction = await runClassSpellTransaction(actor);
     const existing = classItems(actor);
     if (!existing.length) {
       result = await applyFirstClassSafely(sheet, itemData);
@@ -237,6 +424,7 @@ async function runClassDropWithProgress(sheet, itemData) {
       return false;
     }
 
+    await completeClassSpellTransaction(actor, preTransaction);
     await dropProgressRefreshSheet(sheet, actor);
     dropProgressFinish(actor, { success: true });
     return true;
