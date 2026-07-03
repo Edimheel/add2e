@@ -1,7 +1,7 @@
 /**
  * ADD2E — Injonction
  * Clerc niveau 1 — Enchantement/Charme
- * Version : 2026-06-29-injonction-command-select-v3
+ * Version : 2026-07-03-injonction-racial-save-v4
  *
  * Contrat onUse : true = consommé ; false = non consommé.
  */
@@ -150,9 +150,40 @@ const __add2eOnUseResult = await (async () => {
     return NaN;
   })();
 
-  let save = { required: requiresSave, rolled: null, target: saveTarget, success: false, manual: false };
+  const rollSpellSave = async (targetActor, fallbackThreshold) => {
+    const engine = globalThis.Add2eEffectsEngine;
+    if (typeof engine?.rollActionSave === "function") {
+      const result = await engine.rollActionSave(targetActor, "sorts");
+      if (result?.canRoll) {
+        return {
+          total: Number(result.total) || 0,
+          threshold: Number(result.threshold) || fallbackThreshold,
+          success: result.success === true,
+          racialBonus: Number(result.racialBonus) || 0,
+          usedEngine: true
+        };
+      }
+    }
+
+    if (!Number.isFinite(fallbackThreshold)) return null;
+    const racialBonus = Number(engine?.getSaveBonus?.(targetActor, "sorts")) || 0;
+    const formula = racialBonus ? `1d20${racialBonus >= 0 ? "+" : ""}${racialBonus}` : "1d20";
+    const roll = await new Roll(formula).evaluate({ async: true });
+    if (game.dice3d) await game.dice3d.showForRoll(roll);
+    const total = Number(roll.total) || 0;
+    return {
+      total,
+      threshold: fallbackThreshold,
+      success: total >= fallbackThreshold,
+      racialBonus,
+      usedEngine: false
+    };
+  };
+
+  let save = { required: requiresSave, rolled: null, target: saveTarget, success: false, manual: false, racialBonus: 0 };
   if (requiresSave && !isUndead && !specialNoEffect) {
-    if (!Number.isFinite(saveTarget)) {
+    const automaticSave = await rollSpellSave(target, saveTarget);
+    if (!automaticSave) {
       if (!game.user.isGM) {
         ui.notifications.warn("Injonction : sauvegarde de la cible introuvable. Le MJ doit arbitrer ce lancement.");
         return false;
@@ -169,11 +200,9 @@ const __add2eOnUseResult = await (async () => {
         rejectClose: false
       });
       if (decision === null) return false;
-      save = { required: true, rolled: null, target: null, success: decision === true, manual: true };
+      save = { required: true, rolled: null, target: null, success: decision === true, manual: true, racialBonus: 0 };
     } else {
-      const roll = await new Roll("1d20").evaluate({ async: true });
-      if (game.dice3d) await game.dice3d.showForRoll(roll);
-      save = { required: true, rolled: roll.total, target: saveTarget, success: roll.total >= saveTarget, manual: false };
+      save = { required: true, rolled: automaticSave.total, target: automaticSave.threshold, success: automaticSave.success, manual: false, racialBonus: automaticSave.racialBonus };
     }
   }
 
@@ -238,9 +267,10 @@ const __add2eOnUseResult = await (async () => {
     await globalThis.ADD2E_PLAY_SPELL_FX?.("injonction", { casterToken, targetToken, jb2aOptions: { maxFiles: 2, scaleToObject: 1.25, opacity: 0.9 } });
   } catch (_error) {}
 
+  const racialSaveDetail = Number(save.racialBonus) ? ` <span style="font-size:.84em;">(${save.racialBonus >= 0 ? "+" : ""}${save.racialBonus} racial)</span>` : "";
   const saveHtml = !save.required ? "<div><b>Jet de protection :</b> non requis.</div>"
     : save.manual ? `<div><b>Jet de protection :</b> arbitrage MJ - ${save.success ? "réussi" : "raté"}.</div>`
-    : `<div><b>Jet de protection :</b> ${save.rolled} / ${save.target} - <b style="color:${save.success ? COLORS.success : COLORS.fail};">${save.success ? "réussi" : "raté"}</b>.</div>`;
+    : `<div><b>Jet de protection :</b> ${save.rolled} / ${save.target}${racialSaveDetail} - <b style="color:${save.success ? COLORS.success : COLORS.fail};">${save.success ? "réussi" : "raté"}</b>.</div>`;
   const outcomeData = {
     applied: { title: "INJONCTION APPLIQUÉE", color: COLORS.success, text: commandType === "catalepsy" ? "La cible tombe en catalepsie pour un round." : commandType === "halt" ? "La cible doit cesser toute action pendant un round." : commandType === "flee" ? "La cible doit s’éloigner du clerc pendant un round." : commandType === "return" ? "La cible doit revenir vers le clerc pendant un round." : commandType === "give" ? "La cible doit remettre un objet porté, si elle le peut." : "L’ordre est enregistré pour l’arbitrage du MJ." },
     immune: { title: "CIBLE INSENSIBLE", color: COLORS.warn, text: "Les morts-vivants ne sont pas affectés par Injonction." },
