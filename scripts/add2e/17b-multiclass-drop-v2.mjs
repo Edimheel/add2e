@@ -6,7 +6,7 @@ import { currentRaceOrCompatibleAlternatives, raceCompatibleForMulticlass, world
 import { showClassDropChoiceDialog } from "./17b-multiclass-dialogs.mjs";
 import { addClassAsMulticlass, applyClassAsMonoclass, applyRaceForMulticlass, replaceClassInMulticlass } from "./17b-multiclass-operations.mjs";
 
-const ADD2E_DROP_PROGRESS_VERSION = "2026-07-03-class-drop-spell-transaction-v2";
+const ADD2E_DROP_PROGRESS_VERSION = "2026-07-03-class-drop-spell-transaction-v3";
 const DROP_PROGRESS = globalThis.ADD2E_DROP_PROGRESS instanceof Map ? globalThis.ADD2E_DROP_PROGRESS : new Map();
 globalThis.ADD2E_DROP_PROGRESS = DROP_PROGRESS;
 globalThis.ADD2E_DROP_PROGRESS_VERSION = ADD2E_DROP_PROGRESS_VERSION;
@@ -79,7 +79,6 @@ function dropProgressOpen(actor, { className = "" } = {}) {
             <div style="height:7px;margin-top:10px;overflow:hidden;border-radius:999px;background:#c9ae72;"><div data-add2e-drop-bar style="width:4%;height:100%;background:#805514;transition:width .2s ease;"></div></div>
             <ol data-add2e-drop-steps style="display:grid;gap:4px;margin:11px 0 0;padding:0;list-style:none;font-size:.85rem;"></ol>
           </section>`,
-        // DialogV2 impose un bouton. Le pied est masqué après rendu : la fenêtre reste informative.
         buttons: [{ action: "add2e-progress-technical", label: "Fermer", callback: () => undefined }],
         modal: false,
         rejectClose: false,
@@ -256,6 +255,16 @@ async function purgeAutomaticClassSpellsForDrop(actor) {
   return dropDeleteLiveItems(actor, ids, "class-drop-spell-transaction-purge");
 }
 
+async function runClassSpellTransaction(actor) {
+  dropProgressUpdate(actor, "Purge des sorts automatiques de la classe précédente…", {
+    progress: 48,
+    detail: "Les sorts fournis automatiquement par une ancienne classe sont retirés avant la mise à jour."
+  });
+  const purged = await purgeAutomaticClassSpellsForDrop(actor);
+  await new Promise(resolve => setTimeout(resolve, 0));
+  return { purged };
+}
+
 async function rebuildAutomaticClassSpellsAfterDrop(actor) {
   const sources = dropAutomaticSpellClasses(actor);
   const sync = globalThis.add2eSyncActorSpellsFromClass;
@@ -304,16 +313,6 @@ async function rebuildAutomaticClassSpellsAfterDrop(actor) {
 
   const automaticSpellCount = Array.from(actor?.items ?? []).filter(dropIsAutomaticClassSpell).length;
   return { sources, imported, updated, deleted, rebuiltClasses, automaticSpellCount, details };
-}
-
-async function runClassSpellTransaction(actor) {
-  dropProgressUpdate(actor, "Purge des sorts automatiques de la classe précédente…", {
-    progress: 48,
-    detail: "Les sorts fournis automatiquement par une ancienne classe sont retirés avant la mise à jour."
-  });
-  const purged = await purgeAutomaticClassSpellsForDrop(actor);
-  await new Promise(resolve => setTimeout(resolve, 0));
-  return { purged };
 }
 
 async function completeClassSpellTransaction(actor, initial = {}) {
@@ -396,22 +395,26 @@ async function runClassDropWithProgress(sheet, itemData) {
   const actor = sheet.actor;
   dropProgressOpen(actor, { className: itemLabel(itemData, "Classe") });
   let result = false;
+  let preTransaction = { purged: 0 };
   try {
     dropProgressUpdate(actor, "Analyse de la classe déposée…", { progress: 8 });
-    const preTransaction = await runClassSpellTransaction(actor);
     const existing = classItems(actor);
     if (!existing.length) {
+      preTransaction = await runClassSpellTransaction(actor);
       result = await applyFirstClassSafely(sheet, itemData);
     } else {
       dropProgressUpdate(actor, "Choix de l’évolution du personnage…", { progress: 18, detail: "Choisis le mode mono-classe, multiclassage ou remplacement." });
       const choice = await showClassDropChoiceDialog(actor, itemData, currentRaceOrCompatibleAlternatives);
       if (choice?.action === "monoclass" && choice.option) {
+        preTransaction = await runClassSpellTransaction(actor);
         dropProgressUpdate(actor, "Retour en monoclassage : purge et recalcul…", { progress: 36 });
         result = await applyClassAsMonoclass(actor, choice.option, sheet);
       } else if (choice?.action === "multiclass" && choice.option) {
+        preTransaction = await runClassSpellTransaction(actor);
         dropProgressUpdate(actor, "Ajout de la classe au multiclassage…", { progress: 36 });
         result = await addClassAsMulticlass(actor, choice.option, sheet);
       } else if (choice?.action === "replace-class" && choice.option) {
+        preTransaction = await runClassSpellTransaction(actor);
         dropProgressUpdate(actor, "Remplacement de la classe : purge et recalcul…", { progress: 36 });
         result = await replaceClassInMulticlass(actor, choice.option, sheet);
       } else {
