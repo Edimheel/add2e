@@ -1,6 +1,6 @@
 // ============================================================
 // ADD2E — 08 Character Sheet UI — 02 capacités
-// Version : 2026-07-03-racial-capacities-direct-actions-v3
+// Version : 2026-07-03-racial-capabilities-chat-card-v4
 // ============================================================
 import { escapeHtml, slug, expose, globalFn } from "./08-character-sheet-ui-00-utils.mjs";
 
@@ -412,15 +412,74 @@ function buildFeaturesPanel(actor) {
     </div>`;
 }
 
+function racialChatPortrait(actor) {
+  const name = escapeHtml(actor?.name ?? "Acteur");
+  const img = escapeHtml(actor?.img ?? "");
+  const visual = img
+    ? `<img src="${img}" alt="${name}" style="width:32px;height:32px;border-radius:999px;object-fit:cover;border:1px solid rgba(216,255,255,.72);background:#0a2745;">`
+    : `<span style="width:32px;height:32px;border-radius:999px;display:inline-grid;place-items:center;border:1px solid rgba(216,255,255,.72);background:#0a2745;"><i class="fas fa-user"></i></span>`;
+  return `<div style="display:flex;align-items:center;gap:7px;min-width:0;">${visual}<div style="min-width:0;"><div style="font-size:.67rem;font-weight:900;text-transform:uppercase;color:#b8f4f2;line-height:1;">Capacité raciale</div><div style="font-size:.93rem;font-weight:950;color:#fff;line-height:1.12;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px;">${name}</div></div></div>`;
+}
+
+function buildRacialChatCard(actor, { title, icon = "fa-dice-d20", badge, badgeColor, body, description = "" }) {
+  const safeTitle = escapeHtml(title);
+  const safeBadge = escapeHtml(badge);
+  const safeDescription = escapeHtml(description);
+  return `<div class="add2e-chat-card add2e-racial-chat-card" style="font-family:var(--font-primary);border:1px solid #287f9d;border-radius:12px;background:linear-gradient(180deg,#f0fdff 0%,#d8f3f6 100%);box-shadow:0 2px 9px rgba(5,54,77,.24);overflow:hidden;color:#102a3e;">
+    <div style="display:flex;align-items:center;gap:8px;background:linear-gradient(90deg,#0b2745,#176c7f);color:#fff;padding:8px 10px;border-bottom:2px solid #60c6c7;">
+      <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">${racialChatPortrait(actor)}<i class="fas ${escapeHtml(icon)}" style="color:#82ece6;font-size:1.15rem;flex:0 0 auto;"></i><div style="font-size:.95rem;font-weight:950;line-height:1.14;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${safeTitle}</div></div>
+      <div style="white-space:nowrap;border:1px solid rgba(255,255,255,.45);background:${escapeHtml(badgeColor)};color:#fff;border-radius:999px;padding:4px 9px;font-weight:950;font-size:.84rem;">${safeBadge}</div>
+    </div>
+    <div style="padding:10px;">${body}${safeDescription ? `<div style="margin-top:8px;font-size:.9rem;line-height:1.35;color:#31556a;">${safeDescription}</div>` : ""}</div>
+  </div>`;
+}
+
+function racialRollSummary(result) {
+  return `<div style="border:1px solid #73bfc8;background:#f4ffff;border-radius:9px;padding:8px;text-align:center;">
+    <div style="font-size:.72rem;font-weight:950;text-transform:uppercase;color:#1d657a;">Jet racial</div>
+    <div style="font-size:1.12rem;font-weight:950;color:#123b54;margin-top:2px;"><i class="fas fa-dice-d20"></i> ${escapeHtml(result.formula)} = <span style="color:#0c7892;">${escapeHtml(result.total)}</span></div>
+    <div style="margin-top:3px;font-size:.84rem;font-weight:800;color:#31556a;">Réussite sur ${escapeHtml(result.successAt)} ou moins</div>
+  </div>`;
+}
+
 async function postRacialResult(actor, result) {
   const capability = result.capability;
   const success = result.success === true;
-  const color = success ? "#2f8f46" : "#b33a2e";
-  const content = `<div class="add2e-chat-card" style="border:1px solid ${color};border-radius:8px;padding:8px;"><div style="font-weight:900;color:${color};">${escapeHtml(capability.label)} — ${success ? "RÉUSSITE" : "ÉCHEC"}</div><div><b>${escapeHtml(actor.name)}</b> : ${escapeHtml(result.formula)} = <b>${escapeHtml(result.total)}</b> / réussite ≤ <b>${escapeHtml(result.successAt)}</b></div><div style="margin-top:4px;font-size:.88em;">${escapeHtml(capability.description)}</div></div>`;
+  const outcome = success
+    ? { label: "Réussite", color: "#19875d", icon: "fa-check" }
+    : { label: "Échec", color: "#b7473f", icon: "fa-xmark" };
+  const content = buildRacialChatCard(actor, {
+    title: capability.label,
+    icon: capability.iconClass || "fa-dice-d20",
+    badge: outcome.label,
+    badgeColor: outcome.color,
+    body: `${racialRollSummary(result)}<div style="margin-top:8px;border:1px solid ${outcome.color};background:${success ? "#eefbf5" : "#fff2f1"};border-radius:9px;padding:8px 10px;font-weight:900;color:${outcome.color};"><i class="fas ${outcome.icon}"></i> ${outcome.label}</div>`,
+    description: capability.description
+  });
   await ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor }),
     content,
-    flags: { add2e: { racialCapability: { actorId: actor.id, raceSourceId: capability.sourceId, capabilityId: capability.id, success } } }
+    flags: { add2e: { racialCapability: { actorId: actor.id, raceSourceId: capability.sourceId, capabilityId: capability.id, success, kind: "roll" } } }
+  });
+}
+
+async function postRacialVisionResult(actor, entry, enabled) {
+  const label = enabled ? "Activée" : "Désactivée";
+  const color = enabled ? "#19875d" : "#a34a41";
+  const action = enabled ? "L’infravision raciale est active sur le prototype et les tokens présents de cet acteur." : "La vision enregistrée avant l’infravision est restaurée sur le prototype et les tokens présents.";
+  const body = `<div style="border:1px solid #73bfc8;background:#f4ffff;border-radius:9px;padding:9px 10px;line-height:1.35;"><div style="font-size:.72rem;font-weight:950;text-transform:uppercase;color:#1d657a;">Vision raciale</div><div style="font-size:1rem;font-weight:950;color:#123b54;margin-top:3px;"><i class="fas fa-eye"></i> ${escapeHtml(entry.label)}</div><div style="margin-top:5px;color:#31556a;">${escapeHtml(action)}</div></div>`;
+  const content = buildRacialChatCard(actor, {
+    title: entry.label,
+    icon: "fa-eye",
+    badge: label,
+    badgeColor: color,
+    body,
+    description: "Capacité raciale"
+  });
+  await ChatMessage.create({
+    speaker: ChatMessage.getSpeaker({ actor }),
+    content,
+    flags: { add2e: { racialCapability: { actorId: actor.id, raceSourceId: entry.sourceId, capabilityId: entry.id, enabled, kind: "vision" } } }
   });
 }
 
@@ -445,7 +504,7 @@ async function useRacialCapabilityFromElement(actor, element, sheet = null) {
       ui.notifications?.error?.("Impossible de modifier l’infravision raciale.");
       return false;
     }
-    ui.notifications?.info?.(`${entry.label} ${enabling ? "activée" : "désactivée"}.`);
+    await postRacialVisionResult(actor, entry, enabling);
     sheet?.render?.(false);
     await globalThis.add2eRefreshActionHud?.();
     return true;
