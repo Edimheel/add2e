@@ -1,8 +1,13 @@
 // ============================================================
 // ADD2E — 08 Character Sheet UI — 02 capacités
-// Version : 2026-07-03-racial-capabilities-chat-header-v5
+// Version : 2026-07-03-capabilities-sheet-hud-mirror-v6
 // ============================================================
 import { escapeHtml, slug, expose, globalFn } from "./08-character-sheet-ui-00-utils.mjs";
+
+const ADD2E_HUD_ID = "add2e-action-hud";
+const ADD2E_HUD_CAPABILITIES_MIRROR_FLAG = "__ADD2E_CAPABILITIES_HUD_MIRROR_V1";
+let add2eHudCapabilitiesMirrorScheduled = false;
+let add2eHudCapabilitiesObserver = null;
 
 function featureName(feature) {
   return String(feature?.name ?? feature?.label ?? feature?.title ?? feature?.nom ?? "Capacité").trim();
@@ -37,6 +42,17 @@ function featureMaxLevel(feature) {
     feature?.max,
     999
   );
+}
+
+function featureActorLevel(actor, feature) {
+  const classLevel = readLevel(feature?._add2eClassLevel, NaN);
+  if (Number.isFinite(classLevel) && classLevel >= 1) return classLevel;
+  return Math.max(1, readLevel(actor?.system?.niveau, 1));
+}
+
+function featureAvailable(actor, feature) {
+  const level = featureActorLevel(actor, feature);
+  return level >= featureMinLevel(feature) && level <= featureMaxLevel(feature);
 }
 
 function featureOnUse(feature) {
@@ -133,6 +149,26 @@ function getThiefSkills(actor) {
   return [];
 }
 
+function normalizeThiefSkillKey(value) {
+  const fn = globalFn("add2eNormalizeThiefSkillKey");
+  if (fn) {
+    try {
+      const key = String(fn(value) ?? "").trim();
+      if (key) return key;
+    } catch (_e) {}
+  }
+  return slug(value)
+    .replace(/^pick_pockets?$/, "pickpocket")
+    .replace(/^open_locks?$/, "crochetage_serrures")
+    .replace(/^find_remove_traps?$/, "detection_pieges")
+    .replace(/^move_silently$/, "deplacement_silencieux")
+    .replace(/^hide_in_shadows$/, "dissimulation")
+    .replace(/^(hear_noise|detect_noise)$/, "ecoute")
+    .replace(/^climb_walls?$/, "escalade")
+    .replace(/^read_languages?$/, "lecture_langues")
+    .replace(/^(backstab|attaque_dans_le_dos)$/, "frappe_dans_le_dos");
+}
+
 function classSlug(actor) {
   return slug(
     actor?.system?.classe ??
@@ -161,11 +197,9 @@ function isThiefSkillClass(actor) {
 }
 
 function thiefSkillPanelTitle(actor) {
-  const s = classSlug(actor);
-  if (s.includes("moine")) return "Compétences spéciales du moine";
-  if (s.includes("assassin")) return "Compétences de voleur / assassin";
-  if (s.includes("voleur")) return "Compétences de voleur";
-  if (actorClassSlugs(actor).some(x => x.includes("voleur"))) return "Compétences de voleur";
+  const slugs = actorClassSlugs(actor);
+  if (slugs.some(s => s.includes("assassin"))) return "Compétences de voleur / assassin";
+  if (slugs.some(s => s.includes("moine"))) return "Compétences spéciales du moine";
   return "Compétences de voleur";
 }
 
@@ -202,6 +236,7 @@ function thiefSkillIcon(skill) {
   if (isListenLike(s)) return "fa-ear-listen";
   if (s.includes("escalade") || s.includes("grimper")) return "fa-mountain";
   if (s.includes("langue")) return "fa-language";
+  if (isBackstabLike(s)) return "fa-dagger";
   return "fa-dice-d20";
 }
 
@@ -215,6 +250,7 @@ function thiefSkillTone(skill) {
   if (s.includes("escalade") || s.includes("grimper")) return "climb";
   if (s.includes("langue")) return "language";
   if (s.includes("pickpocket") || s.includes("poche")) return "pocket";
+  if (isBackstabLike(s)) return "backstab";
   return "default";
 }
 
@@ -271,7 +307,6 @@ function buildThiefArmorWarningPanel(actor, status) {
 }
 
 function visibleFeatures(actor) {
-  const level = Number(actor?.system?.niveau ?? 1) || 1;
   const thiefSkills = getThiefSkills(actor);
   const usesThiefSkillTiles = thiefSkills.length > 0 || isThiefSkillClass(actor);
   const hasListenTile = thiefSkills.some(s => isListenLike(`${s?.key ?? ""} ${s?.label ?? ""} ${s?.shortLabel ?? ""}`));
@@ -279,47 +314,86 @@ function visibleFeatures(actor) {
 
   return allClassFeatures(actor)
     .map((feature, index) => ({ feature, index }))
-    .filter(({ feature }) => level >= featureMinLevel(feature) && level <= featureMaxLevel(feature))
+    .filter(({ feature }) => featureAvailable(actor, feature))
     .filter(({ feature }) => !(usesThiefSkillTiles && isThiefSkillFeature(feature)))
     .filter(({ feature }) => !(hasListenTile && isListenLike(`${featureName(feature)} ${feature?.key ?? ""} ${feature?.skillKey ?? ""} ${feature?.slug ?? ""}`)))
     .filter(({ feature }) => {
-      const key = `${slug(featureName(feature))}|${featureMinLevel(feature)}|${isFeatureActivable(feature) ? "A" : "P"}`;
+      const classId = String(feature?._add2eClassItemId ?? feature?._add2eClassSlug ?? "");
+      const key = `${classId}|${slug(featureName(feature))}|${featureMinLevel(feature)}|${isFeatureActivable(feature) ? "A" : "P"}`;
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
     });
 }
 
+function thiefFeatureEntries(actor, skills) {
+  const byKey = new Map(skills.map(skill => [normalizeThiefSkillKey(skill.key), skill]));
+  const used = new Set();
+  const entries = [];
+
+  for (const [index, feature] of allClassFeatures(actor).entries()) {
+    if (!isFeatureActivable(feature) || !isThiefSkillFeature(feature) || !featureAvailable(actor, feature)) continue;
+    const key = normalizeThiefSkillKey(feature?.skillKey ?? feature?.key ?? feature?.slug ?? featureName(feature));
+    const skill = byKey.get(key);
+    if (!skill || used.has(key)) continue;
+    used.add(key);
+    entries.push({ feature, index, skill, key });
+  }
+
+  return { entries, used };
+}
+
+function thiefSkillBonusHtml(skill) {
+  const bonus = Number(skill?.bonusTotal ?? 0) || 0;
+  return bonus === 0
+    ? `<span class="a2e-thief-skill-bonus neutral">+0%</span>`
+    : `<span class="a2e-thief-skill-bonus ${bonus > 0 ? "positive" : "negative"}">${bonus > 0 ? "+" : ""}${bonus}%</span>`;
+}
+
+function thiefSkillCard(skill, { feature = null, index = null } = {}) {
+  const iconClass = thiefSkillIcon(skill);
+  const tone = thiefSkillTone(skill);
+  const title = feature ? featureName(feature) : (skill.shortLabel || skill.label || skill.key);
+  const description = feature ? String(feature?.description ?? feature?.desc ?? feature?.text ?? "").trim() : "";
+  const img = feature ? String(feature?.img ?? "").trim() : "";
+  const action = feature
+    ? `<button type="button" class="add2e-feature-use add2e-feature-icon-only" data-feature-index="${escapeHtml(index)}" data-feature-name="${escapeHtml(title)}" data-skill-key="${escapeHtml(feature?.skillKey ?? skill.key)}" data-on-use="${escapeHtml(featureOnUse(feature))}" title="Utiliser ${escapeHtml(title)}" aria-label="Utiliser ${escapeHtml(title)}"><i class="fas ${iconClass}"></i></button>`
+    : skill.canRoll === false
+      ? `<span class="a2e-muted">—</span>`
+      : `<button type="button" class="add2e-thief-skill-roll" data-skill-key="${escapeHtml(skill.key)}" data-skill-tone="${escapeHtml(tone)}" title="Tester ${escapeHtml(title)}" aria-label="Tester ${escapeHtml(title)}"><i class="fas ${iconClass}"></i></button>`;
+
+  return `
+    <div class="a2e-thief-skill-card ${img ? "has-feature-img" : ""}" title="${escapeHtml(skill.breakdownTitle ?? "")}">
+      ${img ? `<img class="a2e-thief-skill-feature-img" src="${escapeHtml(img)}" alt="">` : ""}
+      <div class="a2e-thief-skill-name">${escapeHtml(title)}</div>
+      <div class="a2e-thief-skill-total">${escapeHtml(skill.display ?? `${skill.finalValue ?? skill.value ?? 0}%`)}</div>
+      <div class="a2e-thief-skill-detail"><span>Base ${escapeHtml(skill.baseDisplay ?? `${skill.base ?? 0}%`)}</span>${thiefSkillBonusHtml(skill)}</div>
+      ${description ? `<div class="a2e-thief-skill-description">${escapeHtml(description)}</div>` : ""}
+      <div class="a2e-thief-skill-action">${action}</div>
+    </div>`;
+}
+
 function buildThiefSkillsPanel(actor) {
   const activityStatus = thiefArmorRestriction(actor);
   if (activityStatus.applies && !activityStatus.ok) return buildThiefArmorWarningPanel(actor, activityStatus);
 
-  const level = Number(actor?.system?.niveau ?? 1) || 1;
-  const skills = getThiefSkills(actor)
-    .filter(skill => !isBackstabLike(`${skill?.key ?? ""} ${skill?.label ?? ""} ${skill?.shortLabel ?? ""}`))
-    .filter(skill => level >= readLevel(skill?.minLevel ?? skill?.niveauMin ?? skill?.requiredLevel ?? skill?.level ?? skill?.niveau, 1));
+  const skills = getThiefSkills(actor);
   if (!skills.length) return "";
 
-  const cards = skills.map(skill => {
-    const bonus = Number(skill.bonusTotal ?? 0) || 0;
-    const bonusHtml = bonus === 0
-      ? `<span class="a2e-thief-skill-bonus neutral">+0%</span>`
-      : `<span class="a2e-thief-skill-bonus ${bonus > 0 ? "positive" : "negative"}">${bonus > 0 ? "+" : ""}${bonus}%</span>`;
-    const iconClass = thiefSkillIcon(skill);
-    const tone = thiefSkillTone(skill);
-    const action = skill.canRoll === false
-      ? `<span class="a2e-muted">—</span>`
-      : `<button type="button" class="add2e-thief-skill-roll" data-skill-key="${escapeHtml(skill.key)}" data-skill-tone="${escapeHtml(tone)}" title="Tester ${escapeHtml(skill.label ?? skill.shortLabel ?? skill.key)}" aria-label="Tester ${escapeHtml(skill.label ?? skill.shortLabel ?? skill.key)}"><i class="fas ${iconClass}"></i></button>`;
-    return `
-      <div class="a2e-thief-skill-card" title="${escapeHtml(skill.breakdownTitle ?? "")}">
-        <div class="a2e-thief-skill-name">${escapeHtml(skill.shortLabel || skill.label || skill.key)}</div>
-        <div class="a2e-thief-skill-total">${escapeHtml(skill.display ?? `${skill.finalValue ?? skill.value ?? 0}%`)}</div>
-        <div class="a2e-thief-skill-detail"><span>Base ${escapeHtml(skill.baseDisplay ?? `${skill.base ?? 0}%`)}</span>${bonusHtml}</div>
-        <div class="a2e-thief-skill-action">${action}</div>
-      </div>`;
-  }).join("");
+  const { entries, used } = thiefFeatureEntries(actor, skills);
+  const fallback = skills.filter(skill => {
+    const key = normalizeThiefSkillKey(skill.key);
+    if (used.has(key)) return false;
+    return !isBackstabLike(`${skill?.key ?? ""} ${skill?.label ?? ""} ${skill?.shortLabel ?? ""}`);
+  });
+  const cards = [
+    ...entries.map(entry => thiefSkillCard(entry.skill, entry)),
+    ...fallback.map(skill => thiefSkillCard(skill))
+  ].join("");
+  if (!cards) return "";
 
-  return `<div class="a2e-panel add2e-thief-skills-panel"><h2>${escapeHtml(thiefSkillPanelTitle(actor))}</h2><div class="a2e-panel-body"><div class="a2e-thief-skills-inline" style="grid-template-columns:repeat(${skills.length}, minmax(0, 1fr));">${cards}</div></div></div>`;
+  const total = entries.length + fallback.length;
+  return `<div class="a2e-panel add2e-thief-skills-panel"><h2>${escapeHtml(thiefSkillPanelTitle(actor))}</h2><div class="a2e-panel-body"><div class="a2e-thief-skills-inline" style="grid-template-columns:repeat(${total}, minmax(0, 1fr));">${cards}</div></div></div>`;
 }
 
 function racialEngine() {
@@ -410,6 +484,10 @@ function buildFeaturesPanel(actor) {
       <div class="a2e-panel"><h2>Capacités activables</h2><div class="a2e-panel-body a2e-feature-card-list">${activeHtml}</div></div>
       <div class="a2e-panel"><h2>Capacités passives</h2><div class="a2e-panel-body a2e-feature-card-list">${passiveHtml}</div></div>
     </div>`;
+}
+
+function buildCapabilitiesContent(actor) {
+  return `${buildThiefSkillsPanel(actor)}${buildFeaturesPanel(actor)}`;
 }
 
 function racialChatPortrait(actor) {
@@ -522,6 +600,100 @@ async function useRacialCapabilityFromElement(actor, element, sheet = null) {
   return true;
 }
 
+function bindCapabilitiesInteractions(root, actor, sheet = null) {
+  if (!root || !actor) return;
+
+  for (const button of root.querySelectorAll(".add2e-thief-skill-roll")) {
+    button.onclick = async event => {
+      event.preventDefault();
+      event.stopPropagation();
+      const fn = globalFn("add2eRollThiefSkill");
+      if (!fn) return ui.notifications.error("Le moteur des compétences de voleur n'est pas chargé.");
+      await fn(actor, button.dataset.skillKey);
+      return false;
+    };
+  }
+
+  for (const button of root.querySelectorAll(".add2e-feature-use")) {
+    button.onclick = async event => {
+      event.preventDefault();
+      event.stopPropagation();
+      const fn = globalFn("add2eUseClassFeatureFromElement");
+      if (!fn) return ui.notifications.error("Le moteur des capacités de classe n'est pas chargé.");
+      await fn(actor, button, sheet);
+      return false;
+    };
+  }
+
+  for (const button of root.querySelectorAll(".add2e-racial-capability-use")) {
+    button.onclick = async event => {
+      event.preventDefault();
+      event.stopPropagation();
+      await useRacialCapabilityFromElement(actor, button, sheet);
+      return false;
+    };
+  }
+}
+
+function hudMirrorActor() {
+  const actorId = String(globalThis.add2eHudCheck?.()?.actorId ?? "").trim();
+  if (!actorId) return null;
+  return (canvas?.tokens?.controlled ?? []).find(token => token?.actor?.id === actorId)?.actor
+    ?? (canvas?.tokens?.placeables ?? []).find(token => token?.actor?.id === actorId)?.actor
+    ?? game.actors?.get?.(actorId)
+    ?? null;
+}
+
+function renderHudCapabilitiesMirror() {
+  const hud = document.getElementById(ADD2E_HUD_ID);
+  const section = hud?.querySelector?.('[data-section="capacites"]');
+  const actor = hudMirrorActor();
+  if (!hud || !section || !actor || actor.type !== "personnage") return;
+
+  const content = buildCapabilitiesContent(actor);
+  const signature = `${actor.uuid ?? actor.id}|${content}`;
+  if (section.dataset.add2eCapabilitiesMirrorSignature === signature) return;
+
+  section.innerHTML = `<div class="add2e-capacites-modern-root add2e-capacites-hud-root">${content}</div>`;
+  section.dataset.add2eCapabilitiesMirrorSignature = signature;
+  bindCapabilitiesInteractions(section, actor, null);
+}
+
+function scheduleHudCapabilitiesMirror() {
+  if (add2eHudCapabilitiesMirrorScheduled) return;
+  add2eHudCapabilitiesMirrorScheduled = true;
+  const raf = globalThis.requestAnimationFrame ?? (callback => window.setTimeout(callback, 16));
+  raf(() => {
+    add2eHudCapabilitiesMirrorScheduled = false;
+    renderHudCapabilitiesMirror();
+  });
+}
+
+function mutationTouchesHud(mutations) {
+  return mutations.some(mutation => {
+    if (mutation.target?.closest?.(`#${ADD2E_HUD_ID}`)) return true;
+    return [...(mutation.addedNodes ?? []), ...(mutation.removedNodes ?? [])].some(node => {
+      if (node?.id === ADD2E_HUD_ID) return true;
+      return Boolean(node?.querySelector?.(`#${ADD2E_HUD_ID}`));
+    });
+  });
+}
+
+function installHudCapabilitiesMirror() {
+  if (globalThis[ADD2E_HUD_CAPABILITIES_MIRROR_FLAG]) return;
+  globalThis[ADD2E_HUD_CAPABILITIES_MIRROR_FLAG] = true;
+
+  add2eHudCapabilitiesObserver = new MutationObserver(mutations => {
+    if (mutationTouchesHud(mutations)) scheduleHudCapabilitiesMirror();
+  });
+  add2eHudCapabilitiesObserver.observe(document.body, { childList: true, subtree: true });
+
+  for (const hook of ["updateActor", "createItem", "updateItem", "deleteItem", "createActiveEffect", "updateActiveEffect", "deleteActiveEffect"]) {
+    Hooks.on(hook, () => scheduleHudCapabilitiesMirror());
+  }
+  scheduleHudCapabilitiesMirror();
+}
+
 export function injectCapacitesTab(sheet, sheetRoot) {
   const actor = sheet?.actor ?? sheet?.document;
   if (!actor || actor.type !== "personnage") return;
@@ -531,45 +703,19 @@ export function injectCapacitesTab(sheet, sheetRoot) {
 
   const wrapper = document.createElement("div");
   wrapper.className = "add2e-capacites-modern-root";
-  wrapper.innerHTML = `${buildThiefSkillsPanel(actor)}${buildFeaturesPanel(actor)}`;
+  wrapper.innerHTML = buildCapabilitiesContent(actor);
   tab.replaceChildren(wrapper);
-
-  $(wrapper).find(".add2e-thief-skill-roll")
-    .off("click.add2e-thief-skill-roll")
-    .on("click.add2e-thief-skill-roll", async ev => {
-      ev.preventDefault();
-      ev.stopPropagation();
-      const fn = globalFn("add2eRollThiefSkill");
-      if (!fn) return ui.notifications.error("Le moteur des compétences de voleur n'est pas chargé.");
-      await fn(actor, ev.currentTarget.dataset.skillKey);
-      return false;
-    });
-
-  $(wrapper).find(".add2e-feature-use")
-    .off("click.add2e-feature-use-modern")
-    .on("click.add2e-feature-use-modern", async ev => {
-      ev.preventDefault();
-      ev.stopPropagation();
-      const fn = globalFn("add2eUseClassFeatureFromElement");
-      if (!fn) return ui.notifications.error("Le moteur des capacités de classe n'est pas chargé.");
-      await fn(actor, ev.currentTarget, sheet);
-      return false;
-    });
-
-  $(wrapper).find(".add2e-racial-capability-use")
-    .off("click.add2e-racial-capability-use")
-    .on("click.add2e-racial-capability-use", async ev => {
-      ev.preventDefault();
-      ev.stopPropagation();
-      await useRacialCapabilityFromElement(actor, ev.currentTarget, sheet);
-      return false;
-    });
+  bindCapabilitiesInteractions(wrapper, actor, sheet);
 }
 
 expose("add2eUiFeatureName", featureName);
 expose("add2eUiAllClassFeatures", allClassFeatures);
 expose("add2eUiGetThiefSkills", getThiefSkills);
 expose("add2eUiBuildThiefSkillsPanel", buildThiefSkillsPanel);
+expose("add2eUiBuildCapabilitiesContent", buildCapabilitiesContent);
 expose("add2eUiCheckThiefArmorRestriction", thiefArmorRestriction);
 expose("add2eUseRacialCapabilityFromElement", useRacialCapabilityFromElement);
 expose("add2eUiInjectCapacitesTab", injectCapacitesTab);
+
+if (game?.ready) installHudCapabilitiesMirror();
+else Hooks.once("ready", installHudCapabilitiesMirror);
