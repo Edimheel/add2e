@@ -1,15 +1,56 @@
 // ============================================================
 // ADD2E — Capacités activables de classe : exécution on_use
-// Les Items classe sont la seule source de niveau.
+// Les Items classe sont la source de vérité pour les niveaux et les capacités.
+// Compatible Foundry V13 / V14 / V15.
 // ============================================================
 
-const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-06-25-active-class-abilities-item-level-v8";
+const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-07-03-thief-json-hud-data-v10";
+const ADD2E_THIEF_DEFAULT_ORDER = [
+  "pickpocket",
+  "crochetage_serrures",
+  "detection_pieges",
+  "deplacement_silencieux",
+  "dissimulation",
+  "ecoute",
+  "escalade",
+  "frappe_dans_le_dos"
+];
+const ADD2E_THIEF_DEFAULT_LABELS = {
+  pickpocket: "Pickpocket",
+  crochetage_serrures: "Crochetage de serrures",
+  detection_pieges: "Détection/désamorçage des pièges",
+  deplacement_silencieux: "Déplacement silencieux",
+  dissimulation: "Dissimulation dans l’ombre",
+  ecoute: "Acuité auditive",
+  escalade: "Escalade",
+  frappe_dans_le_dos: "Attaque dans le dos",
+  lecture_langues: "Lecture des langues"
+};
+const ADD2E_THIEF_SKILL_ALIASES = {
+  pick_pockets: "pickpocket", pick_pocket: "pickpocket", pickpockets: "pickpocket", pickpocket: "pickpocket",
+  open_locks: "crochetage_serrures", open_lock: "crochetage_serrures", crochetage: "crochetage_serrures", crochetage_serrures: "crochetage_serrures", ouverture_serrures: "crochetage_serrures", ouverture_de_serrures: "crochetage_serrures",
+  find_remove_traps: "detection_pieges", find_traps: "detection_pieges", remove_traps: "detection_pieges", detect_traps: "detection_pieges", detection_pieges: "detection_pieges", detection_de_pieges: "detection_pieges", desamorcage_pieges: "detection_pieges", desamorcage_de_pieges: "detection_pieges",
+  move_silently: "deplacement_silencieux", deplacement_silencieux: "deplacement_silencieux",
+  hide_in_shadows: "dissimulation", dissimulation: "dissimulation", dissimulation_dans_l_ombre: "dissimulation", dissimulation_dans_lombre: "dissimulation",
+  hear_noise: "ecoute", hear_noises: "ecoute", detect_noise: "ecoute", listen: "ecoute", acuite_auditive: "ecoute", ecoute: "ecoute",
+  climb_walls: "escalade", climb_wall: "escalade", escalade: "escalade",
+  backstab: "frappe_dans_le_dos", attaque_dans_le_dos: "frappe_dans_le_dos", frappe_dans_le_dos: "frappe_dans_le_dos",
+  read_languages: "lecture_langues", read_language: "lecture_langues", lecture_langues: "lecture_langues", lecture_des_langues: "lecture_langues"
+};
+
+// Le HUD garde son rendu compact natif. Cette valeur empêche la surcouche de
+// l’onglet Capacités de remplacer son HTML par celui de la feuille.
+globalThis.__ADD2E_CAPABILITIES_HUD_MIRROR_V1 = true;
 globalThis.ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = ADD2E_CLASS_ACTIVE_ABILITIES_VERSION;
-console.log("[ADD2E][CAPACITES][VERSION]", ADD2E_CLASS_ACTIVE_ABILITIES_VERSION);
+
+function add2eClone(value) {
+  if (foundry?.utils?.deepClone) return foundry.utils.deepClone(value);
+  return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
+}
 
 function add2eToClassFeatureArray(value) {
-  if (Array.isArray(value)) return value.filter(v => v && typeof v === "object");
-  if (value && typeof value === "object") return Object.values(value).filter(v => v && typeof v === "object");
+  if (Array.isArray(value)) return value.filter(entry => entry && typeof entry === "object");
+  if (value && typeof value === "object") return Object.values(value).filter(entry => entry && typeof entry === "object");
   return [];
 }
 
@@ -24,7 +65,7 @@ function add2eFeatureMaxLevel(feature) {
 }
 
 function add2eFeatureName(feature) {
-  return String(feature?.name ?? feature?.label ?? feature?.title ?? feature?.nom ?? "").trim();
+  return String(feature?._add2eHudLabel ?? feature?.name ?? feature?.label ?? feature?.title ?? feature?.nom ?? "").trim();
 }
 
 function add2eFeatureOnUse(feature) {
@@ -42,6 +83,16 @@ function add2eFeatureKey(feature) {
     .replace(/[_\s-]+/g, "_");
 }
 
+function add2eNormalizeThiefSkillKeyLocal(value) {
+  const raw = String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[_\s-]+/g, "_");
+  return ADD2E_THIEF_SKILL_ALIASES[raw] ?? raw;
+}
+
 function add2eClassSlugFromSystem(system, name = "") {
   return add2eFeatureKey({ id: system?.slug ?? system?.label ?? system?.nom ?? system?.name ?? name });
 }
@@ -49,16 +100,54 @@ function add2eClassSlugFromSystem(system, name = "") {
 function add2eClassItemLevel(item, fallback = null) {
   const value = Number(item?.system?.niveau ?? item?.system?.level);
   if (Number.isFinite(value) && value >= 1) return Math.floor(value);
-  const defaultValue = Number(fallback);
-  return Number.isFinite(defaultValue) && defaultValue >= 1 ? Math.floor(defaultValue) : null;
+  const fallbackValue = Number(fallback);
+  return Number.isFinite(fallbackValue) && fallbackValue >= 1 ? Math.floor(fallbackValue) : null;
+}
+
+function add2eIsThiefClassIdentity(system, name = "") {
+  const value = add2eClassSlugFromSystem(system, name);
+  return value === "voleur" || value.includes("voleur") || value === "assassin" || value.includes("assassin");
+}
+
+function add2eNormalizeThiefProgressionSystem(system, name = "") {
+  const copy = add2eClone(system ?? {}) ?? {};
+  if (!add2eIsThiefClassIdentity(copy, name)) return copy;
+
+  copy.thiefSkillLabels = {
+    ...ADD2E_THIEF_DEFAULT_LABELS,
+    ...(copy.thiefSkillLabels && typeof copy.thiefSkillLabels === "object" ? copy.thiefSkillLabels : {})
+  };
+  copy.thiefSkillOrder = Array.isArray(copy.thiefSkillOrder) && copy.thiefSkillOrder.length
+    ? copy.thiefSkillOrder.map(add2eNormalizeThiefSkillKeyLocal)
+    : [...ADD2E_THIEF_DEFAULT_ORDER];
+
+  if (!Array.isArray(copy.progression)) return copy;
+  copy.progression = copy.progression.map(sourceRow => {
+    const row = { ...(sourceRow ?? {}) };
+    const rawSkills = row.thiefSkills && typeof row.thiefSkills === "object" && !Array.isArray(row.thiefSkills)
+      ? { ...row.thiefSkills }
+      : {};
+
+    // Nouveau JSON Voleur : ces deux valeurs sont séparées de thiefSkills.
+    const backstab = Number(row.backstabMultiplier);
+    if (Number.isFinite(backstab) && backstab > 0) rawSkills.frappe_dans_le_dos = backstab;
+
+    const readLanguages = Number(row.readLanguages);
+    if (Number.isFinite(readLanguages) && readLanguages > 0) rawSkills.lecture_langues = readLanguages;
+
+    row.thiefSkills = rawSkills;
+    return row;
+  });
+  return copy;
 }
 
 function add2eClassSystemEntry(system, { name = "", slug = "", level = null, itemId = null } = {}) {
   if (!system || typeof system !== "object" || !Number.isInteger(level) || level < 1) return null;
+  const normalizedSystem = add2eNormalizeThiefProgressionSystem(system, name);
   return {
-    ...system,
-    _add2eClassSlug: slug || add2eClassSlugFromSystem(system, name),
-    _add2eClassName: name || system.label || system.nom || system.name || "Classe",
+    ...normalizedSystem,
+    _add2eClassSlug: slug || add2eClassSlugFromSystem(normalizedSystem, name),
+    _add2eClassName: name || normalizedSystem.label || normalizedSystem.nom || normalizedSystem.name || "Classe",
     _add2eClassLevel: level,
     _add2eClassItemId: itemId
   };
@@ -92,30 +181,26 @@ function add2eGetActorClassSystems(actor) {
 }
 
 function add2eGetActorClassFeatures(actor) {
-  const features = [];
+  const output = [];
   const seen = new Set();
-
   for (const system of add2eGetActorClassSystems(actor)) {
-    add2ePushClassFeatures(features, system.activeClassFeatures, "activeClassFeatures", system);
-    add2ePushClassFeatures(features, system.activableClassFeatures, "activableClassFeatures", system);
-    add2ePushClassFeatures(features, system.classFeaturesActives, "classFeaturesActives", system);
-    add2ePushClassFeatures(features, system.capacitesActives, "capacitesActives", system);
-    add2ePushClassFeatures(features, system.capacitesActivables, "capacitesActivables", system);
-    add2ePushClassFeatures(features, system.classFeatures, "classFeatures", system);
-    add2ePushClassFeatures(features, system.classFeaturesDebloquees, "classFeaturesDebloquees", system);
-    add2ePushClassFeatures(features, system.capacitesClasse, "capacitesClasse", system);
-    add2ePushClassFeatures(features, system.passiveClassFeatures, "passiveClassFeatures", system);
-    add2ePushClassFeatures(features, system.passiveFeatures, "passiveFeatures", system);
-    add2ePushClassFeatures(features, system.capacitesPassives, "capacitesPassives", system);
+    add2ePushClassFeatures(output, system.activeClassFeatures, "activeClassFeatures", system);
+    add2ePushClassFeatures(output, system.activableClassFeatures, "activableClassFeatures", system);
+    add2ePushClassFeatures(output, system.classFeaturesActives, "classFeaturesActives", system);
+    add2ePushClassFeatures(output, system.capacitesActives, "capacitesActives", system);
+    add2ePushClassFeatures(output, system.capacitesActivables, "capacitesActivables", system);
+    add2ePushClassFeatures(output, system.classFeatures, "classFeatures", system);
+    add2ePushClassFeatures(output, system.classFeaturesDebloquees, "classFeaturesDebloquees", system);
+    add2ePushClassFeatures(output, system.capacitesClasse, "capacitesClasse", system);
+    add2ePushClassFeatures(output, system.passiveClassFeatures, "passiveClassFeatures", system);
+    add2ePushClassFeatures(output, system.passiveFeatures, "passiveFeatures", system);
+    add2ePushClassFeatures(output, system.capacitesPassives, "capacitesPassives", system);
   }
 
-  return features.filter(feature => {
+  return output.filter(feature => {
     const key = add2eFeatureKey(feature);
-    const onUse = add2eFeatureOnUse(feature);
-    const source = String(feature?._add2eFeatureSource ?? "");
-    const classId = String(feature?._add2eClassItemId ?? feature?._add2eClassSlug ?? "");
-    const unique = `${classId}|${key}|${onUse}|${source}`;
-    if (!key && !onUse) return false;
+    const unique = `${feature?._add2eClassItemId ?? feature?._add2eClassSlug ?? ""}|${key}|${add2eFeatureOnUse(feature)}|${feature?._add2eFeatureSource ?? ""}`;
+    if (!key && !add2eFeatureOnUse(feature)) return false;
     if (seen.has(unique)) return false;
     seen.add(unique);
     return true;
@@ -127,36 +212,24 @@ function add2eIsFeatureActivable(feature) {
   if (feature.activable === true) return true;
   if (feature.active === true && feature.passive !== true) return true;
   if (feature.usageType === "classFeature" && add2eFeatureOnUse(feature)) return true;
-  if (String(feature?._add2eFeatureSource ?? "") === "activeClassFeatures") return true;
-  return false;
+  return String(feature?._add2eFeatureSource ?? "") === "activeClassFeatures";
 }
 
 function add2eIsThiefClassFeature(feature) {
-  const values = [
-    feature?._add2eClassSlug,
-    feature?._add2eClassName,
-    feature?.sourceClassSlug,
-    feature?.sourceClassName,
-    feature?.classSlug,
-    feature?.className,
-    feature?.classe,
-    feature?.class
-  ].map(value => add2eFeatureKey({ id: value })).filter(Boolean);
-
-  return values.some(value => value === "voleur" || value.startsWith("voleur_") || value.endsWith("_voleur") || value.includes("voleur"));
+  const values = [feature?._add2eClassSlug, feature?._add2eClassName, feature?.sourceClassSlug, feature?.sourceClassName, feature?.classSlug, feature?.className, feature?.classe, feature?.class]
+    .map(value => add2eFeatureKey({ id: value })).filter(Boolean);
+  return values.some(value => value === "voleur" || value.includes("voleur") || value === "assassin" || value.includes("assassin"));
 }
 
 function add2eIsThiefSkillFeature(feature) {
-  const name = add2eFeatureKey({ name: add2eFeatureName(feature) });
-  const key = add2eFeatureKey({ id: feature?.skillKey ?? feature?.key ?? feature?.slug ?? "" });
+  const name = add2eFeatureKey({ name: feature?.name ?? feature?.label ?? feature?.title ?? "" });
+  const key = add2eNormalizeThiefSkillKeyLocal(feature?.skillKey ?? feature?.key ?? feature?.slug ?? "");
   const joined = `${name} ${key}`;
   return [
-    "faculte_de_voleur", "facultes_de_voleur", "competence_de_voleur", "competences_de_voleur",
     "pickpocket", "faire_les_poches", "crochetage", "serrure", "piege", "desamorc",
-    "deplacement_silencieux", "silence", "dissimulation", "cacher", "ecoute", "auditiv",
-    "ouie", "entendre", "bruit", "escalade", "grimper", "lecture_langues",
-    "lecture_des_langues", "frappe_dans_le_dos", "attaque_dans_le_dos", "backstab",
-    "attaque_sournoise", "assassination", "assassinat"
+    "deplacement_silencieux", "dissimulation", "ecoute", "auditiv", "hear_noise",
+    "escalade", "climb", "lecture_langues", "read_languages", "frappe_dans_le_dos", "backstab",
+    "assassinat", "assassination"
   ].some(token => joined.includes(token));
 }
 
@@ -164,8 +237,8 @@ function add2eThiefActivityStatus(actor) {
   try {
     const status = globalThis.add2eGetThiefActivityEquipmentStatus?.(actor);
     if (status && typeof status === "object") return status;
-  } catch (err) {
-    console.warn("[ADD2E][CAPACITES][VOLEUR][ACTIVITE]", err);
+  } catch (error) {
+    console.warn("[ADD2E][CAPACITES][VOLEUR][ACTIVITE]", error);
   }
   return { applies: false, ok: true, message: "" };
 }
@@ -175,16 +248,40 @@ function add2eFeatureActorLevel(_actor, feature = null) {
   return Number.isFinite(level) && level >= 1 ? Math.floor(level) : null;
 }
 
+function add2eFindThiefSkill(actor, feature) {
+  const key = add2eNormalizeThiefSkillKeyLocal(feature?.skillKey ?? feature?.key ?? feature?.slug ?? feature?.name ?? "");
+  const rows = globalThis.add2eGetActorThiefSkills?.(actor) ?? [];
+  return rows.find(row => add2eNormalizeThiefSkillKeyLocal(row?.key ?? row?.label ?? "") === key) ?? null;
+}
+
+function add2eHudFeatureLabel(feature, skill) {
+  const label = String(feature?.name ?? feature?.label ?? "Capacité").trim();
+  const display = String(skill?.display ?? "").trim();
+  return display ? `${label} — ${display}` : label;
+}
+
 function add2eGetActorActivableClassFeatures(actor, { includeLocked = true } = {}) {
   const thiefStatus = add2eThiefActivityStatus(actor);
-  return add2eGetActorClassFeatures(actor).filter(feature => {
-    if (!add2eIsFeatureActivable(feature)) return false;
-    if (thiefStatus.applies && thiefStatus.ok === false && add2eIsThiefClassFeature(feature)) return false;
-    if (thiefStatus.applies && add2eIsThiefSkillFeature(feature)) return false;
-    if (includeLocked) return true;
-    const level = add2eFeatureActorLevel(actor, feature);
-    return level !== null && level >= add2eFeatureMinLevel(feature) && level <= add2eFeatureMaxLevel(feature);
-  });
+  return add2eGetActorClassFeatures(actor)
+    .filter(feature => add2eIsFeatureActivable(feature))
+    .filter(feature => {
+      if (thiefStatus.applies && thiefStatus.ok === false && add2eIsThiefClassFeature(feature)) return false;
+      if (includeLocked) return true;
+      const level = add2eFeatureActorLevel(actor, feature);
+      return level !== null && level >= add2eFeatureMinLevel(feature) && level <= add2eFeatureMaxLevel(feature);
+    })
+    .map(feature => {
+      if (!add2eIsThiefSkillFeature(feature)) return feature;
+      const skill = add2eFindThiefSkill(actor, feature);
+      // Lecture des langues n’existe pas avant son niveau d’acquisition.
+      if (!skill) return null;
+      return {
+        ...feature,
+        _add2eThiefSkill: skill,
+        _add2eHudLabel: add2eHudFeatureLabel(feature, skill)
+      };
+    })
+    .filter(Boolean);
 }
 
 function add2eGetActorPassiveClassFeatures(actor, { includeLocked = true } = {}) {
@@ -199,17 +296,18 @@ function add2eGetActorPassiveClassFeatures(actor, { includeLocked = true } = {})
 }
 
 function add2eDatasetValue(dataset, keys) {
-  if (!dataset) return undefined;
-  for (const key of keys) if (dataset[key] !== undefined && dataset[key] !== null && String(dataset[key]).trim() !== "") return dataset[key];
+  for (const key of keys) {
+    const value = dataset?.[key];
+    if (value !== undefined && value !== null && String(value).trim() !== "") return value;
+  }
   return undefined;
 }
 
 function add2eFindClassFeatureFromElement(actor, element) {
   const allFeatures = add2eGetActorClassFeatures(actor);
-  const activeFeatures = add2eGetActorActivableClassFeatures(actor);
+  const activeFeatures = add2eGetActorActivableClassFeatures(actor, { includeLocked: false });
   const el = element instanceof HTMLElement ? element : element?.[0];
   if (!el) return null;
-
   const holder = el.closest?.("[data-feature-index], [data-feature-name], [data-feature-id], [data-feature-key], [data-on-use], [data-skill-key]") ?? el;
   const dataset = holder?.dataset ?? el?.dataset ?? {};
 
@@ -219,98 +317,65 @@ function add2eFindClassFeatureFromElement(actor, element) {
     if (Number.isInteger(index)) {
       const byOriginalIndex = allFeatures[index];
       if (add2eIsFeatureActivable(byOriginalIndex)) return byOriginalIndex;
-      const byActiveIndex = activeFeatures[index];
-      if (byActiveIndex) return byActiveIndex;
+      if (activeFeatures[index]) return activeFeatures[index];
     }
   }
 
-  const rawOnUse = add2eDatasetValue(dataset, ["onUse", "onuse", "on_use"]);
-  if (rawOnUse !== undefined) {
-    const wanted = String(rawOnUse).trim();
-    const byScript = activeFeatures.find(feature => add2eFeatureOnUse(feature) === wanted);
-    if (byScript) return byScript;
-  }
-
-  const rawSkillKey = add2eDatasetValue(dataset, ["skillKey", "skill", "competence", "competenceKey"]);
-  if (rawSkillKey !== undefined) {
-    const wanted = typeof add2eNormalizeThiefSkillKey === "function" ? add2eNormalizeThiefSkillKey(rawSkillKey) : add2eFeatureKey({ skillKey: rawSkillKey });
-    const bySkill = activeFeatures.find(feature => {
-      const skill = typeof add2eNormalizeThiefSkillKey === "function"
-        ? add2eNormalizeThiefSkillKey(feature.skillKey ?? feature.key ?? feature.slug ?? feature.name)
-        : add2eFeatureKey({ skillKey: feature.skillKey ?? feature.key ?? feature.slug ?? feature.name });
-      return skill === wanted;
-    });
+  const rawSkill = add2eDatasetValue(dataset, ["skillKey", "skill", "competence", "competenceKey"]);
+  if (rawSkill !== undefined) {
+    const wanted = add2eNormalizeThiefSkillKeyLocal(rawSkill);
+    const bySkill = activeFeatures.find(feature => add2eNormalizeThiefSkillKeyLocal(feature?.skillKey ?? feature?.key ?? feature?.slug ?? feature?.name) === wanted);
     if (bySkill) return bySkill;
   }
 
   const rawId = add2eDatasetValue(dataset, ["featureId", "featureKey", "id", "key"]);
   if (rawId !== undefined) {
     const wanted = add2eFeatureKey({ id: rawId });
-    const byId = activeFeatures.find(feature => [feature.id, feature._id, feature.key, feature.slug, feature.skillKey, feature.name, feature.label, feature.title, feature.nom]
-      .map(value => add2eFeatureKey({ id: value })).filter(Boolean).includes(wanted));
+    const byId = activeFeatures.find(feature => [feature.id, feature._id, feature.key, feature.slug, feature.skillKey, feature.name, feature.label]
+      .map(value => add2eFeatureKey({ id: value })).includes(wanted));
     if (byId) return byId;
   }
 
   const rawName = add2eDatasetValue(dataset, ["featureName", "name", "feature", "nom"]);
   if (rawName !== undefined) {
     const wanted = add2eFeatureKey({ name: rawName });
-    const byName = activeFeatures.find(feature => add2eFeatureKey({ name: add2eFeatureName(feature) }) === wanted);
+    const byName = activeFeatures.find(feature => add2eFeatureKey({ name: feature?.name ?? feature?.label ?? "" }) === wanted);
     if (byName) return byName;
   }
-
-  let cursor = el;
-  for (let depth = 0; cursor && depth < 8; depth += 1, cursor = cursor.parentElement) {
-    const text = add2eFeatureKey({ name: cursor.textContent ?? "" });
-    if (!text || text === "utiliser") continue;
-    const matches = activeFeatures.filter(feature => {
-      const name = add2eFeatureKey({ name: add2eFeatureName(feature) });
-      return name && text.includes(name);
-    });
-    if (matches.length === 1) return matches[0];
-  }
-
   return activeFeatures.length === 1 ? activeFeatures[0] : null;
 }
 
 async function add2eExecuteClassFeatureOnUse(actor, feature, sheet = null) {
-  if (!actor) {
-    ui.notifications.error("Capacité de classe : acteur introuvable.");
-    return false;
-  }
-  if (!feature) {
-    ui.notifications.error("Capacité de classe introuvable dans les données de l'acteur.");
-    return false;
-  }
+  if (!actor) return ui.notifications.error("Capacité de classe : acteur introuvable."), false;
+  if (!feature) return ui.notifications.error("Capacité de classe introuvable dans les données de l’acteur."), false;
 
   const level = add2eFeatureActorLevel(actor, feature);
   const min = add2eFeatureMinLevel(feature);
   const max = add2eFeatureMaxLevel(feature);
-  const name = add2eFeatureName(feature) || "Capacité";
-
+  const name = String(feature?.name ?? feature?.label ?? "Capacité").trim();
   if (level === null || level < min || level > max) {
-    ui.notifications.warn(`La capacité « ${name} » n'est pas disponible pour sa classe à son niveau actuel.`);
+    ui.notifications.warn(`La capacité « ${name} » n’est pas disponible pour sa classe à son niveau actuel.`);
     return false;
   }
 
   if (add2eIsThiefSkillFeature(feature)) {
     const thiefStatus = add2eThiefActivityStatus(actor);
     if (thiefStatus.applies && !thiefStatus.ok) {
-      ui.notifications.warn(thiefStatus.message || "Les capacités de voleur sont indisponibles avec l'équipement actuellement porté.");
+      ui.notifications.warn(thiefStatus.message || "Les capacités de voleur sont indisponibles avec l’équipement actuellement porté.");
       return false;
     }
-    if (thiefStatus.applies) {
-      if (typeof globalThis.add2eRollThiefSkill !== "function") {
-        ui.notifications.error("Le moteur des compétences de voleur n'est pas chargé.");
-        return false;
-      }
-      const skillKey = feature?.skillKey ?? feature?.key ?? feature?.slug ?? feature?.name ?? name;
-      return (await globalThis.add2eRollThiefSkill(actor, skillKey)) !== false;
+    const roll = globalThis.add2eRollThiefSkill;
+    if (typeof roll !== "function") {
+      ui.notifications.error("Le moteur des compétences de voleur n’est pas chargé.");
+      return false;
     }
+    const skillKey = add2eNormalizeThiefSkillKeyLocal(feature?.skillKey ?? feature?.key ?? feature?.slug ?? feature?.name ?? name);
+    return (await roll(actor, skillKey)) !== false;
   }
 
   const onUse = add2eFeatureOnUse(feature);
   if (!onUse) {
-    ui.notifications.warn(`La capacité « ${name} » n'a pas de script on_use.`);
+    ui.notifications.warn(`La capacité « ${name} » n’a pas de script on_use.`);
     return false;
   }
 
@@ -327,41 +392,13 @@ async function add2eExecuteClassFeatureOnUse(actor, feature, sheet = null) {
     return result !== false;
   } catch (error) {
     console.error("[ADD2E][CAPACITE][ON_USE][ERREUR]", { actor: actor.name, feature: name, onUse, error });
-    ui.notifications.error(`Erreur pendant l'utilisation de « ${name} » : ${error.message}`);
+    ui.notifications.error(`Erreur pendant l’utilisation de « ${name} » : ${error.message}`);
     return false;
   }
 }
 
 async function add2eUseClassFeatureFromElement(actor, element, sheet = null) {
   return add2eExecuteClassFeatureOnUse(actor, add2eFindClassFeatureFromElement(actor, element), sheet);
-}
-
-const ADD2E_THIEF_SKILL_ROWS = [
-  ["pickpocket", "Pickpocket"],
-  ["crochetage_serrures", "Crochetage / ouverture des serrures"],
-  ["detection_pieges", "Détection / désamorçage des pièges"],
-  ["deplacement_silencieux", "Déplacement silencieux"],
-  ["dissimulation", "Dissimulation"],
-  ["ecoute", "Écoute"],
-  ["escalade", "Escalade"],
-  ["lecture_langues", "Lecture des langues"]
-];
-
-const ADD2E_THIEF_SKILL_ALIASES = {
-  pick_pockets: "pickpocket", pick_pocket: "pickpocket", pickpockets: "pickpocket", pickpocket: "pickpocket",
-  open_locks: "crochetage_serrures", open_lock: "crochetage_serrures", crochetage: "crochetage_serrures", crochetage_serrures: "crochetage_serrures", ouverture_serrures: "crochetage_serrures", ouverture_de_serrures: "crochetage_serrures",
-  find_remove_traps: "detection_pieges", find_traps: "detection_pieges", remove_traps: "detection_pieges", detect_traps: "detection_pieges", detection_pieges: "detection_pieges", detection_de_pieges: "detection_pieges", desamorcage_pieges: "detection_pieges",
-  move_silently: "deplacement_silencieux", deplacement_silencieux: "deplacement_silencieux",
-  hide_in_shadows: "dissimulation", dissimulation: "dissimulation", dissimulation_dans_l_ombre: "dissimulation", dissimulation_dans_lombre: "dissimulation",
-  hear_noise: "ecoute", hear_noises: "ecoute", listen: "ecoute", detect_noise: "ecoute", ecoute: "ecoute",
-  climb_walls: "escalade", climb_wall: "escalade", escalade: "escalade",
-  read_languages: "lecture_langues", read_language: "lecture_langues", lecture_langues: "lecture_langues", lecture_des_langues: "lecture_langues"
-};
-
-function add2eNormalizeThiefSkillKeyLocal(value) {
-  if (typeof globalThis.add2eNormalizeThiefSkillKey === "function") return globalThis.add2eNormalizeThiefSkillKey(value);
-  const raw = String(value ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "").replace(/[_\s-]+/g, "_");
-  return ADD2E_THIEF_SKILL_ALIASES[raw] ?? raw;
 }
 
 function add2eGetActorClassProgression(actor, classSlug = null) {
@@ -371,60 +408,74 @@ function add2eGetActorClassProgression(actor, classSlug = null) {
     ? systems.filter(system => system._add2eClassSlug === wanted || add2eFeatureKey({ id: system._add2eClassName }) === wanted)
       .concat(systems.filter(system => system._add2eClassSlug !== wanted && add2eFeatureKey({ id: system._add2eClassName }) !== wanted))
     : systems;
-
   for (const system of ordered) {
-    const level = system._add2eClassLevel;
     const progression = system?.progression;
+    const level = system?._add2eClassLevel;
     if (!Array.isArray(progression) || !Number.isInteger(level)) continue;
-    const byLevel = progression.find(row => Number(row?.level ?? row?.niveau ?? 0) === level);
-    if (byLevel) return byLevel;
-    if (progression[level - 1]) return progression[level - 1];
+    const row = progression.find(entry => Number(entry?.niveau ?? entry?.level ?? 0) === level) ?? progression[level - 1] ?? null;
+    if (row) return row;
   }
   return null;
 }
 
-function add2eIsThiefClassSystem(system) {
-  const values = [
-    system?._add2eClassSlug,
-    system?._add2eClassName,
-    system?.slug,
-    system?.label,
-    system?.nom,
-    system?.name,
-    ...(Array.isArray(system?.tags) ? system.tags : []),
-    ...(Array.isArray(system?.effectTags) ? system.effectTags : [])
-  ].map(value => add2eFeatureKey({ id: value })).filter(Boolean);
-  return values.some(value => value === "voleur" || value.includes("voleur"));
-}
-
 function add2eGetActorThiefProgression(actor) {
-  const thiefSystem = add2eGetActorClassSystems(actor).find(add2eIsThiefClassSystem);
+  const thiefSystem = add2eGetActorClassSystems(actor).find(system => add2eIsThiefClassIdentity(system, system?._add2eClassName));
   return thiefSystem ? add2eGetActorClassProgression(actor, thiefSystem._add2eClassSlug) : null;
 }
 
 function add2eGetActorThiefSkillTable(actor) {
   const progression = add2eGetActorThiefProgression(actor);
-  const raw = progression?.thiefSkills ?? progression?.voleurSkills ?? progression?.competencesVoleur ?? null;
-  const output = {};
-
-  if (raw && typeof raw === "object" && !Array.isArray(raw)) {
-    for (const [key, value] of Object.entries(raw)) output[add2eNormalizeThiefSkillKeyLocal(key)] = Number(value ?? 0) || 0;
+  const raw = progression?.thiefSkills && typeof progression.thiefSkills === "object" ? progression.thiefSkills : {};
+  const rows = [];
+  for (const key of ADD2E_THIEF_DEFAULT_ORDER) {
+    if (raw[key] === undefined || raw[key] === null) continue;
+    const value = Number(raw[key]) || 0;
+    const multiplier = key === "frappe_dans_le_dos";
+    rows.push({ key, label: ADD2E_THIEF_DEFAULT_LABELS[key], base: value, value, finalValue: value, bonusTotal: 0, display: multiplier ? `×${value}` : `${value}%`, baseDisplay: multiplier ? `×${value}` : `${value}%`, type: multiplier ? "multiplier" : "percent", canRoll: !multiplier });
   }
-
-  if (!Object.keys(output).length && Array.isArray(progression?.skills)) {
-    const keys = ADD2E_THIEF_SKILL_ROWS.map(([key]) => key);
-    for (let index = 0; index < keys.length; index += 1) output[keys[index]] = Number(progression.skills[index] ?? 0) || 0;
+  if (raw.lecture_langues !== undefined && raw.lecture_langues !== null) {
+    const value = Number(raw.lecture_langues) || 0;
+    rows.push({ key: "lecture_langues", label: ADD2E_THIEF_DEFAULT_LABELS.lecture_langues, base: value, value, finalValue: value, bonusTotal: 0, display: `${value}%`, baseDisplay: `${value}%`, type: "percent", canRoll: true });
   }
-
-  return ADD2E_THIEF_SKILL_ROWS.map(([key, label]) => ({
-    key,
-    label,
-    value: output[key] ?? 0,
-    display: `${output[key] ?? 0}%`,
-    type: "percent",
-    canRoll: true
-  })).filter(row => Object.prototype.hasOwnProperty.call(output, row.key));
+  return rows;
 }
+
+function add2eRestoreHudCapabilityPresentation() {
+  const id = "add2e-hud-capability-presentation-reset";
+  document.getElementById(id)?.remove();
+  const style = document.createElement("style");
+  style.id = id;
+  style.textContent = `
+    #add2e-action-hud section[data-section="capacites"] > .a2e-hud-racial-capabilities,
+    #add2e-action-hud section[data-section="effets"] > .a2e-hud-racial-effects,
+    #add2e-action-hud .a2e-hud-racial-panel { display:grid !important; }
+    #add2e-action-hud .a2e-hud-racial-title { display:block !important; }
+    #add2e-action-hud .a2e-hud-racial-effects .a2e-hud-racial-row .meta { display:flex !important; }
+    #add2e-action-hud .a2e-hud-racial-effects .a2e-hud-racial-row .a2e-hud-racial-description,
+    #add2e-action-hud .a2e-hud-racial-capabilities .a2e-hud-racial-row .a2e-hud-racial-description { display:block !important; }
+    #add2e-action-hud .add2e-capacites-hud-root { display:none !important; }
+  `;
+  document.head.appendChild(style);
+}
+
+Hooks.once("init", () => {
+  // 06-class-effects-thief.mjs est chargé avant init : son normaliseur existe ici.
+  const previous = globalThis.add2eNormalizeThiefSkillKey;
+  if (!globalThis.__ADD2E_THIEF_SKILL_ALIAS_NORMALIZER_V2) {
+    globalThis.__ADD2E_THIEF_SKILL_ALIAS_NORMALIZER_V2 = true;
+    globalThis.add2eNormalizeThiefSkillKey = value => {
+      const local = add2eNormalizeThiefSkillKeyLocal(value);
+      if (local !== String(value ?? "")) return local;
+      const normalized = typeof previous === "function" ? previous(value) : local;
+      return ADD2E_THIEF_SKILL_ALIASES[normalized] ?? normalized;
+    };
+  }
+});
+
+Hooks.once("ready", () => {
+  add2eRestoreHudCapabilityPresentation();
+  Hooks.on("renderActorSheet", () => setTimeout(add2eRestoreHudCapabilityPresentation, 0));
+});
 
 globalThis.add2eFeatureMinLevel = add2eFeatureMinLevel;
 globalThis.add2eFeatureMaxLevel = add2eFeatureMaxLevel;
@@ -439,3 +490,4 @@ globalThis.add2eUseClassFeatureFromElement = add2eUseClassFeatureFromElement;
 globalThis.add2eGetActorClassProgression = add2eGetActorClassProgression;
 globalThis.add2eGetActorThiefProgression = add2eGetActorThiefProgression;
 globalThis.add2eGetActorThiefSkillTable = add2eGetActorThiefSkillTable;
+globalThis.add2eNormalizeThiefSkillKeyLocal = add2eNormalizeThiefSkillKeyLocal;
