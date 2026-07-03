@@ -1,6 +1,6 @@
 // ============================================================
 // ADD2E — 08 Character Sheet UI — 02 capacités
-// Version : 2026-07-03-racial-capabilities-chat-card-v4
+// Version : 2026-07-03-racial-capabilities-chat-header-v5
 // ============================================================
 import { escapeHtml, slug, expose, globalFn } from "./08-character-sheet-ui-00-utils.mjs";
 
@@ -415,10 +415,9 @@ function buildFeaturesPanel(actor) {
 function racialChatPortrait(actor) {
   const name = escapeHtml(actor?.name ?? "Acteur");
   const img = escapeHtml(actor?.img ?? "");
-  const visual = img
-    ? `<img src="${img}" alt="${name}" style="width:32px;height:32px;border-radius:999px;object-fit:cover;border:1px solid rgba(216,255,255,.72);background:#0a2745;">`
-    : `<span style="width:32px;height:32px;border-radius:999px;display:inline-grid;place-items:center;border:1px solid rgba(216,255,255,.72);background:#0a2745;"><i class="fas fa-user"></i></span>`;
-  return `<div style="display:flex;align-items:center;gap:7px;min-width:0;">${visual}<div style="min-width:0;"><div style="font-size:.67rem;font-weight:900;text-transform:uppercase;color:#b8f4f2;line-height:1;">Capacité raciale</div><div style="font-size:.93rem;font-weight:950;color:#fff;line-height:1.12;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px;">${name}</div></div></div>`;
+  return img
+    ? `<img src="${img}" alt="${name}" style="width:30px;height:30px;border-radius:999px;object-fit:cover;border:1px solid rgba(216,255,255,.72);background:#0a2745;display:block;">`
+    : `<span style="width:30px;height:30px;border-radius:999px;display:inline-grid;place-items:center;border:1px solid rgba(216,255,255,.72);background:#0a2745;"><i class="fas fa-user"></i></span>`;
 }
 
 function buildRacialChatCard(actor, { title, icon = "fa-dice-d20", badge, badgeColor, body, description = "" }) {
@@ -426,9 +425,13 @@ function buildRacialChatCard(actor, { title, icon = "fa-dice-d20", badge, badgeC
   const safeBadge = escapeHtml(badge);
   const safeDescription = escapeHtml(description);
   return `<div class="add2e-chat-card add2e-racial-chat-card" style="font-family:var(--font-primary);border:1px solid #287f9d;border-radius:12px;background:linear-gradient(180deg,#f0fdff 0%,#d8f3f6 100%);box-shadow:0 2px 9px rgba(5,54,77,.24);overflow:hidden;color:#102a3e;">
-    <div style="display:flex;align-items:center;gap:8px;background:linear-gradient(90deg,#0b2745,#176c7f);color:#fff;padding:8px 10px;border-bottom:2px solid #60c6c7;">
-      <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">${racialChatPortrait(actor)}<i class="fas ${escapeHtml(icon)}" style="color:#82ece6;font-size:1.15rem;flex:0 0 auto;"></i><div style="font-size:.95rem;font-weight:950;line-height:1.14;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${safeTitle}</div></div>
-      <div style="white-space:nowrap;border:1px solid rgba(255,255,255,.45);background:${escapeHtml(badgeColor)};color:#fff;border-radius:999px;padding:4px 9px;font-weight:950;font-size:.84rem;">${safeBadge}</div>
+    <div style="display:grid;grid-template-columns:30px minmax(0,1fr) auto;align-items:center;column-gap:8px;background:linear-gradient(90deg,#0b2745,#176c7f);color:#fff;padding:8px 10px;border-bottom:2px solid #60c6c7;">
+      ${racialChatPortrait(actor)}
+      <div style="min-width:0;display:grid;gap:2px;">
+        <div style="font-size:.66rem;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:#b8f4f2;line-height:1.05;">Capacité raciale</div>
+        <div style="display:flex;align-items:flex-start;gap:6px;min-width:0;"><i class="fas ${escapeHtml(icon)}" style="color:#82ece6;font-size:1rem;line-height:1.18;flex:0 0 auto;"></i><div title="${safeTitle}" style="font-size:.98rem;font-weight:950;line-height:1.16;min-width:0;white-space:normal;overflow-wrap:normal;word-break:normal;">${safeTitle}</div></div>
+      </div>
+      <div style="justify-self:end;align-self:center;white-space:nowrap;border:1px solid rgba(255,255,255,.45);background:${escapeHtml(badgeColor)};color:#fff;border-radius:999px;padding:4px 9px;font-weight:950;font-size:.84rem;line-height:1;">${safeBadge}</div>
     </div>
     <div style="padding:10px;">${body}${safeDescription ? `<div style="margin-top:8px;font-size:.9rem;line-height:1.35;color:#31556a;">${safeDescription}</div>` : ""}</div>
   </div>`;
