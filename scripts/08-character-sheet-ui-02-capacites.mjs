@@ -4,7 +4,7 @@
 // ============================================================
 import { escapeHtml, slug, expose, globalFn } from "./08-character-sheet-ui-00-utils.mjs";
 
-const ADD2E_CAPABILITIES_SHEET_VERSION = "2026-07-03-sheet-tiles-no-hud-mirror-v7";
+const ADD2E_CAPABILITIES_SHEET_VERSION = "2026-07-03-thief-tiles-totals-v8";
 
 function readNumber(value, fallback = 0) {
   const number = Number(value);
@@ -104,10 +104,19 @@ function isThiefSkillFeature(feature) {
 
 function getThiefSkills(actor) {
   const fn = globalFn("add2eGetActorThiefSkills");
-  if (!fn) return [];
-  try { return Array.from(fn(actor) ?? []); }
+  if (fn) {
+    try {
+      const skills = Array.from(fn(actor) ?? []);
+      if (skills.length) return skills;
+    } catch (error) {
+      console.warn("[ADD2E][CAPACITES][THIEF_SKILLS]", error);
+    }
+  }
+  const fallback = globalFn("add2eGetActorThiefSkillTable");
+  if (!fallback) return [];
+  try { return Array.from(fallback(actor) ?? []); }
   catch (error) {
-    console.warn("[ADD2E][CAPACITES][THIEF_SKILLS]", error);
+    console.warn("[ADD2E][CAPACITES][THIEF_SKILLS_FALLBACK]", error);
     return [];
   }
 }
@@ -126,85 +135,40 @@ function thiefPanelTitle(actor) {
     : "Compétences de voleur";
 }
 
-function skillIcon(skill) {
-  const key = normalizeSkillKey(skill?.key ?? skill?.label ?? "");
-  if (key === "pickpocket") return "fa-hand-holding";
-  if (key === "crochetage_serrures") return "fa-key";
-  if (key === "detection_pieges") return "fa-triangle-exclamation";
-  if (key === "deplacement_silencieux") return "fa-shoe-prints";
-  if (key === "dissimulation") return "fa-user-secret";
-  if (key === "ecoute") return "fa-ear-listen";
-  if (key === "escalade") return "fa-mountain";
-  if (key === "lecture_langues") return "fa-language";
-  if (key === "frappe_dans_le_dos") return "fa-dagger";
-  return "fa-dice-d20";
-}
-
-function skillTone(skill) {
-  const key = normalizeSkillKey(skill?.key ?? skill?.label ?? "");
-  return {
-    crochetage_serrures: "lock",
-    detection_pieges: "trap",
-    deplacement_silencieux: "move",
-    dissimulation: "hide",
-    ecoute: "listen",
-    escalade: "climb",
-    lecture_langues: "language",
-    pickpocket: "pocket",
-    frappe_dans_le_dos: "backstab"
-  }[key] ?? "default";
-}
-
 function skillByKey(skills) {
   return new Map(skills.map(skill => [normalizeSkillKey(skill?.key ?? skill?.label ?? ""), skill]));
 }
 
-function iconControl({ className, icon, title, data = "" }) {
-  return `<button type="button" class="${className}" ${data} title="${escapeHtml(title)}" aria-label="${escapeHtml(title)}"><i class="fas ${icon}"></i></button>`;
+function signedPercent(value) {
+  const bonus = readNumber(value, 0);
+  return `${bonus >= 0 ? "+" : ""}${bonus}%`;
 }
 
 function thiefTile(skill, feature = null, featureIndex = null) {
   const name = feature ? featureName(feature) : String(skill?.shortLabel ?? skill?.label ?? "Compétence");
   const key = normalizeSkillKey(feature?.skillKey ?? skill?.key ?? name);
-  const img = String(feature?.img ?? "").trim();
   const display = String(skill?.display ?? `${readNumber(skill?.finalValue ?? skill?.value ?? 0)}%`);
-  const base = String(skill?.baseDisplay ?? `${readNumber(skill?.base ?? skill?.value ?? 0)}%`);
   const bonus = readNumber(skill?.bonusTotal, 0);
-  const description = String(feature?.description ?? "").trim();
   const canRoll = skill?.canRoll !== false;
-  const action = feature && canRoll
-    ? iconControl({
-      className: "add2e-feature-use add2e-feature-icon-only",
-      icon: skillIcon(skill),
-      title: `Tester ${name}`,
-      data: `data-feature-index="${featureIndex}" data-feature-name="${escapeHtml(name)}" data-skill-key="${escapeHtml(key)}" data-on-use="${escapeHtml(featureOnUse(feature))}"`
-    })
-    : canRoll
-      ? iconControl({
-        className: "add2e-thief-skill-roll",
-        icon: skillIcon(skill),
-        title: `Tester ${name}`,
-        data: `data-skill-key="${escapeHtml(key)}" data-skill-tone="${skillTone(skill)}"`
-      })
-      : `<span class="a2e-thief-skill-static" title="${escapeHtml(String(skill?.note ?? "Valeur automatique"))}"><i class="fas ${skillIcon(skill)}"></i></span>`;
+  const className = `a2e-thief-skill-card ${canRoll ? "is-rollable" : "is-static"}`;
+  const content = `<span class="a2e-thief-skill-name">${escapeHtml(name)}</span><strong class="a2e-thief-skill-total">${escapeHtml(display)}</strong><span class="a2e-thief-skill-bonus-line">Bonus total : ${escapeHtml(signedPercent(bonus))}</span>`;
 
-  return `<div class="a2e-thief-skill-card ${img ? "has-feature-img" : ""}" title="${escapeHtml(String(skill?.breakdownTitle ?? ""))}">
-    ${img ? `<img class="a2e-thief-skill-feature-img" src="${escapeHtml(img)}" alt="">` : ""}
-    <div class="a2e-thief-skill-name">${escapeHtml(name)}</div>
-    <div class="a2e-thief-skill-total">${escapeHtml(display)}</div>
-    <div class="a2e-thief-skill-detail"><span>Base ${escapeHtml(base)}</span><span class="a2e-thief-skill-bonus ${bonus > 0 ? "positive" : bonus < 0 ? "negative" : "neutral"}">${bonus >= 0 ? "+" : ""}${bonus}%</span></div>
-    ${description ? `<div class="a2e-thief-skill-description">${escapeHtml(description)}</div>` : ""}
-    <div class="a2e-thief-skill-action">${action}</div>
-  </div>`;
+  if (!canRoll) return `<div class="${className}" title="${escapeHtml(String(skill?.note ?? "Valeur automatique"))}">${content}</div>`;
+
+  if (feature) {
+    return `<button type="button" class="${className} add2e-feature-use" data-feature-index="${featureIndex}" data-feature-name="${escapeHtml(name)}" data-skill-key="${escapeHtml(key)}" data-on-use="${escapeHtml(featureOnUse(feature))}" title="Tester ${escapeHtml(name)}">${content}</button>`;
+  }
+
+  return `<button type="button" class="${className} add2e-thief-skill-roll" data-skill-key="${escapeHtml(key)}" title="Tester ${escapeHtml(name)}">${content}</button>`;
 }
 
 function buildThiefTiles(actor) {
   const skills = getThiefSkills(actor);
   if (!skills.length) return "";
+
   const byKey = skillByKey(skills);
   const used = new Set();
   const featureTiles = [];
-
   classFeatures(actor).forEach((feature, index) => {
     if (!featureIsActive(feature) || !isThiefSkillFeature(feature) || !featureAvailable(actor, feature)) return;
     const key = normalizeSkillKey(feature?.skillKey ?? feature?.key ?? feature?.slug ?? featureName(feature));
@@ -223,6 +187,10 @@ function buildThiefTiles(actor) {
   return `<div class="a2e-panel add2e-thief-skills-panel"><h2>${escapeHtml(thiefPanelTitle(actor))}</h2><div class="a2e-panel-body"><div class="a2e-thief-skills-inline">${tiles.join("")}</div></div></div>`;
 }
 
+function iconControl({ className, icon, title, data = "" }) {
+  return `<button type="button" class="${className}" ${data} title="${escapeHtml(title)}" aria-label="${escapeHtml(title)}"><i class="fas ${icon}"></i></button>`;
+}
+
 function buildClassCard(feature, index, active) {
   const name = featureName(feature);
   const image = String(feature?.img ?? "").trim();
@@ -235,10 +203,7 @@ function buildClassCard(feature, index, active) {
       data: `data-feature-index="${index}" data-feature-name="${escapeHtml(name)}" data-feature-key="${escapeHtml(feature?.key ?? feature?.skillKey ?? feature?.slug ?? "")}" data-on-use="${escapeHtml(featureOnUse(feature))}"`
     })
     : "";
-  return `<div class="a2e-feature-card ${active ? "is-activable" : "is-passive"}">
-    <div class="a2e-feature-card-title">${image ? `<img class="a2e-feature-card-img" src="${escapeHtml(image)}" alt="">` : ""}<strong>${escapeHtml(name)}</strong>${action}</div>
-    ${description ? `<div class="a2e-feature-card-desc">${escapeHtml(description)}</div>` : ""}
-  </div>`;
+  return `<div class="a2e-feature-card ${active ? "is-activable" : "is-passive"}"><div class="a2e-feature-card-title">${image ? `<img class="a2e-feature-card-img" src="${escapeHtml(image)}" alt="">` : ""}<strong>${escapeHtml(name)}</strong>${action}</div>${description ? `<div class="a2e-feature-card-desc">${escapeHtml(description)}</div>` : ""}</div>`;
 }
 
 function racialEngine() {
@@ -255,8 +220,7 @@ function buildRacialCard(entry) {
 }
 
 function buildCapabilities(actor) {
-  const all = classFeatures(actor).map((feature, index) => ({ feature, index }))
-    .filter(({ feature }) => featureAvailable(actor, feature));
+  const all = classFeatures(actor).map((feature, index) => ({ feature, index })).filter(({ feature }) => featureAvailable(actor, feature));
   const thiefPresent = isThiefOrAssassin(actor) || getThiefSkills(actor).length > 0;
   const nonThief = all.filter(({ feature }) => !(thiefPresent && isThiefSkillFeature(feature)));
   const classActive = nonThief.filter(({ feature }) => featureIsActive(feature));
@@ -270,10 +234,7 @@ function buildCapabilities(actor) {
     ...racialPassives.filter(effect => !slug(`${effect?.id ?? ""} ${effect?.name ?? ""}`).includes("infravision")).map(effect => `<div class="a2e-feature-card is-passive"><div class="a2e-feature-card-title"><strong>${escapeHtml(effect?.name ?? "Avantage racial")}</strong></div>${effect?.description ? `<div class="a2e-feature-card-desc">${escapeHtml(effect.description)}</div>` : ""}</div>`)
   ];
 
-  return `<div class="a2e-grid-2 add2e-capacites-grid-modern">
-    <div class="a2e-panel"><h2>Capacités activables</h2><div class="a2e-panel-body a2e-feature-card-list">${active.length ? active.join("") : `<p class="a2e-muted">Aucune capacité activable disponible à ce niveau.</p>`}</div></div>
-    <div class="a2e-panel"><h2>Capacités passives</h2><div class="a2e-panel-body a2e-feature-card-list">${passive.length ? passive.join("") : `<p class="a2e-muted">Aucune capacité passive disponible à ce niveau.</p>`}</div></div>
-  </div>`;
+  return `<div class="a2e-grid-2 add2e-capacites-grid-modern"><div class="a2e-panel"><h2>Capacités activables</h2><div class="a2e-panel-body a2e-feature-card-list">${active.length ? active.join("") : `<p class="a2e-muted">Aucune capacité activable disponible à ce niveau.</p>`}</div></div><div class="a2e-panel"><h2>Capacités passives</h2><div class="a2e-panel-body a2e-feature-card-list">${passive.length ? passive.join("") : `<p class="a2e-muted">Aucune capacité passive disponible à ce niveau.</p>`}</div></div></div>`;
 }
 
 async function useRacialCapabilityFromElement(actor, element, sheet = null) {
@@ -291,10 +252,7 @@ async function useRacialCapabilityFromElement(actor, element, sheet = null) {
     const enabled = capability.enabled !== true;
     const result = await engine.setRacialVision?.(actor, enabled, { reason: "racial-capability-sheet" });
     if (!result || result.reason === "missing-actor") return ui.notifications?.error?.("Impossible de modifier l’infravision raciale."), false;
-    await ChatMessage.create({
-      speaker: ChatMessage.getSpeaker({ actor }),
-      content: `<div class="add2e-card-test"><b>${escapeHtml(capability.label)}</b> : ${enabled ? "activée" : "désactivée"}.</div>`
-    });
+    await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: `<div class="add2e-card-test"><b>${escapeHtml(capability.label)}</b> : ${enabled ? "activée" : "désactivée"}.</div>` });
     sheet?.render?.(false);
     await globalThis.add2eRefreshActionHud?.();
     return true;
@@ -302,10 +260,7 @@ async function useRacialCapabilityFromElement(actor, element, sheet = null) {
 
   const result = await engine.rollRacialCapability?.(actor, capability.id);
   if (!result?.ok) return ui.notifications?.error?.("Le jet de capacité raciale n’a pas pu être résolu."), false;
-  await ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor }),
-    content: `<div class="add2e-card-test"><b>${escapeHtml(capability.label)}</b> — Jet ${escapeHtml(result.formula)} : <b>${escapeHtml(result.total)}</b> / ${escapeHtml(result.successAt)} — <b>${result.success ? "Réussite" : "Échec"}</b></div>`
-  });
+  await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: `<div class="add2e-card-test"><b>${escapeHtml(capability.label)}</b> — Jet ${escapeHtml(result.formula)} : <b>${escapeHtml(result.total)}</b> / ${escapeHtml(result.successAt)} — <b>${result.success ? "Réussite" : "Échec"}</b></div>` });
   return true;
 }
 
@@ -343,11 +298,10 @@ export function injectCapacitesTab(sheet, sheetRoot) {
   const tab = sheetRoot?.querySelector?.('.sheet-body .a2e-tab-content[data-tab="capacites"], .sheet-body .tab[data-tab="capacites"]');
   if (!tab) return;
 
-  const content = `${buildThiefTiles(actor)}${buildCapabilities(actor)}`;
   const wrapper = document.createElement("div");
   wrapper.className = "add2e-capacites-modern-root";
   wrapper.dataset.add2eCapabilitiesVersion = ADD2E_CAPABILITIES_SHEET_VERSION;
-  wrapper.innerHTML = content;
+  wrapper.innerHTML = `${buildThiefTiles(actor)}${buildCapabilities(actor)}`;
   tab.replaceChildren(wrapper);
   bindCapabilities(wrapper, actor, sheet);
 }
