@@ -182,15 +182,15 @@
                               </thead>
                               <tbody>
                                 {{#each group.sorts as |sort|}}
-                                  <tr class="sort-row" data-sort-id="{{sort.id}}">
+                                  <tr class="sort-row" data-sort-id="{{sort.id}}" data-spell-stable-key="{{sort.flags.add2e.stableSpellKey}}" data-spell-name="{{sort.name}}" data-spell-level="{{sort.system.niveau}}">
                                     <td>
                                       {{#if sort.entries.length}}
                                         {{#each sort.entries as |entry|}}
                                           {{#if (eq entry.key group.key)}}
-                                            <div class="add2e-spell-prep-entry" style="white-space:nowrap;">
-                                              <a class="a2e-action-icon a2e-action-remove a2e-spell-entry-minus" data-sort-id="{{sort.id}}" data-entry-key="{{entry.key}}" title="Retirer une préparation {{entry.label}}"><i class="fas fa-minus-circle"></i></a>
+                                            <div class="add2e-spell-prep-entry" style="white-space:nowrap;" data-sort-id="{{sort.id}}" data-spell-stable-key="{{sort.flags.add2e.stableSpellKey}}" data-spell-name="{{sort.name}}" data-spell-level="{{sort.system.niveau}}" data-entry-key="{{entry.key}}">
+                                              <a class="a2e-action-icon a2e-action-remove a2e-spell-entry-minus" data-sort-id="{{sort.id}}" data-spell-stable-key="{{sort.flags.add2e.stableSpellKey}}" data-spell-name="{{sort.name}}" data-spell-level="{{sort.system.niveau}}" data-entry-key="{{entry.key}}" title="Retirer une préparation {{entry.label}}"><i class="fas fa-minus-circle"></i></a>
                                               <span class="sort-memorize-badge" data-add2e-memorized-count="{{entry.count}}">{{entry.count}}</span>
-                                              <a class="a2e-action-icon a2e-action-add a2e-spell-entry-plus" data-sort-id="{{sort.id}}" data-entry-key="{{entry.key}}" title="Ajouter une préparation {{entry.label}}"><i class="fas fa-plus-circle"></i></a>
+                                              <a class="a2e-action-icon a2e-action-add a2e-spell-entry-plus" data-sort-id="{{sort.id}}" data-spell-stable-key="{{sort.flags.add2e.stableSpellKey}}" data-spell-name="{{sort.name}}" data-spell-level="{{sort.system.niveau}}" data-entry-key="{{entry.key}}" title="Ajouter une préparation {{entry.label}}"><i class="fas fa-plus-circle"></i></a>
                                             </div>
                                           {{/if}}
                                         {{/each}}
@@ -199,10 +199,10 @@
                                       {{/if}}
                                     </td>
                                     <td class="sort-drag">
-                                      <img class="sort-cast-img" data-sort-id="{{sort.id}}" src="{{sort.img}}" title="Lancer {{sort.name}}" draggable="true" style="width:34px;height:34px;border-radius:5px;object-fit:cover;cursor:pointer;">
+                                      <img class="sort-cast-img" data-sort-id="{{sort.id}}" data-spell-stable-key="{{sort.flags.add2e.stableSpellKey}}" src="{{sort.img}}" title="Lancer {{sort.name}}" draggable="true" style="width:34px;height:34px;border-radius:5px;object-fit:cover;cursor:pointer;">
                                     </td>
                                     <td>
-                                      <a class="sort-name-link toggle-sort-desc-chat" data-sort-id="{{sort.id}}" title="Afficher / masquer la description">{{sort.name}}</a>
+                                      <a class="sort-name-link toggle-sort-desc-chat" data-sort-id="{{sort.id}}" data-spell-stable-key="{{sort.flags.add2e.stableSpellKey}}" title="Afficher / masquer la description">{{sort.name}}</a>
                                       {{#if sort.listLabel}}<div class="a2e-muted a2e-small">{{sort.listLabel}}</div>{{/if}}
                                     </td>
                                     <td>{{sort.ecole}}</td>
