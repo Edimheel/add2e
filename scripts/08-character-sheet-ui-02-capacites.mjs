@@ -1,6 +1,6 @@
 // ============================================================
 // ADD2E — 08 Character Sheet UI — 02 capacités
-// Version : 2026-06-24-thief-activity-equipment-status-v3
+// Version : 2026-07-03-racial-sheet-controller-v1
 // ============================================================
 import { escapeHtml, slug, expose, globalFn } from "./08-character-sheet-ui-00-utils.mjs";
 
@@ -376,6 +376,201 @@ function buildClassFeaturesPanel(actor) {
     </div>`;
 }
 
+function racialEngine() {
+  const engine = globalThis.Add2eEffectsEngine;
+  return typeof engine?.getRacialActions === "function" ? engine : null;
+}
+
+function racialRequirements(entry) {
+  const value = entry?.requires;
+  if (Array.isArray(value)) return value.map(String).filter(Boolean);
+  if (value instanceof Set) return [...value].map(String).filter(Boolean);
+  if (value && typeof value === "object") return Object.values(value).map(String).filter(Boolean);
+  return value ? [String(value)] : [];
+}
+
+function racialRequirementLabel(value) {
+  return {
+    within_three_meters: "à 3 m ou moins",
+    search_active: "recherche active",
+    underground: "sous terre",
+    concentration: "concentration",
+    alone: "isolé",
+    no_metal_armor: "sans armure de métal",
+    opens_door: "après ouverture d’une porte",
+    no_intense_light: "aucune source de lumière ou de chaleur intense"
+  }[String(value ?? "").trim()] ?? String(value ?? "").replaceAll("_", " ");
+}
+
+function racialActions(actor) {
+  return racialEngine()?.getRacialActions?.(actor)?.filter(entry => entry?.activable !== false) ?? [];
+}
+
+function racialPassives(actor) {
+  return racialEngine()?.getRacialPassiveEffects?.(actor) ?? [];
+}
+
+function racialActionIcon(entry) {
+  return String(entry?.iconClass ?? "").trim() || (entry?.actionType === "vision-toggle" ? "fa-eye" : "fa-dice-d20");
+}
+
+function buildRacialActionCard(entry) {
+  const toggle = entry?.actionType === "vision-toggle";
+  const enabled = entry?.enabled === true;
+  const actionLabel = toggle ? (enabled ? "Désactiver" : "Activer") : "Utiliser";
+  const actionIcon = toggle ? (enabled ? "fa-eye-slash" : "fa-eye") : "fa-bolt";
+  const state = toggle ? (enabled ? "Active" : "Inactive") : (entry?.rollLabel ? `Jet ${entry.rollLabel}` : "Disponible");
+  const requirements = !toggle || !enabled ? racialRequirements(entry) : [];
+  const requirementLine = requirements.length
+    ? `<div class="a2e-feature-card-desc"><small>Conditions : ${escapeHtml(requirements.map(racialRequirementLabel).join(", "))}</small></div>`
+    : "";
+  return `
+    <div class="a2e-feature-card add2e-racial-feature-card">
+      <div class="a2e-feature-card-title"><strong><i class="fas ${escapeHtml(racialActionIcon(entry))}"></i> ${escapeHtml(entry.label)}</strong><span>${escapeHtml(state)}</span></div>
+      <div class="a2e-feature-card-desc">${escapeHtml(entry.description)}</div>
+      ${requirementLine}
+      <div class="a2e-feature-actions"><button type="button" class="a2e-btn blue add2e-racial-capability-use" data-racial-capability-id="${escapeHtml(entry.id)}"><i class="fas ${actionIcon}"></i>&nbsp;${actionLabel}</button></div>
+    </div>`;
+}
+
+function buildRacialPassiveCard(effect) {
+  return `
+    <div class="a2e-feature-card add2e-racial-feature-card">
+      <div class="a2e-feature-card-title"><strong><img src="${escapeHtml(effect?.img || "icons/svg/aura.svg")}" alt="" style="width:18px;height:18px;object-fit:cover;vertical-align:middle;border:0;"> ${escapeHtml(effect?.name ?? "Avantage racial")}</strong><span>Permanent</span></div>
+      <div class="a2e-feature-card-desc">${escapeHtml(effect?.description ?? "")}</div>
+    </div>`;
+}
+
+function buildRacialFeaturesPanel(actor) {
+  const actions = racialActions(actor);
+  const passives = racialPassives(actor);
+  if (!actions.length && !passives.length) return "";
+  const actionsHtml = actions.length
+    ? actions.map(buildRacialActionCard).join("")
+    : `<p class="a2e-muted">Aucune capacité raciale activable.</p>`;
+  const passivesHtml = passives.length
+    ? passives.map(buildRacialPassiveCard).join("")
+    : `<p class="a2e-muted">Aucun avantage racial passif.</p>`;
+  return `
+    <div class="a2e-grid-2 add2e-capacites-grid-modern add2e-racial-capacites-grid">
+      <div class="a2e-panel"><h2><i class="fas fa-dna"></i> Capacités raciales</h2><div class="a2e-panel-body a2e-feature-card-list">${actionsHtml}</div></div>
+      <div class="a2e-panel"><h2><i class="fas fa-shield-halved"></i> Avantages raciaux</h2><div class="a2e-panel-body a2e-feature-card-list">${passivesHtml}</div></div>
+    </div>`;
+}
+
+function racialDialogRoot(button, dialog) {
+  return button?.form?.querySelector?.(".add2e-racial-capability-form")
+    ?? dialog?.element?.querySelector?.(".add2e-racial-capability-form")
+    ?? document.querySelector?.(".add2e-racial-capability-form")
+    ?? null;
+}
+
+async function promptRacialAction(entry) {
+  const isVisionToggle = entry?.actionType === "vision-toggle";
+  const enablingVision = isVisionToggle && entry?.enabled !== true;
+  const requirements = (!isVisionToggle || enablingVision) ? racialRequirements(entry) : [];
+  if (!requirements.length) return {};
+  const DialogV2 = foundry?.applications?.api?.DialogV2;
+  if (!DialogV2) {
+    ui.notifications?.error?.("DialogV2 est indisponible.");
+    return null;
+  }
+  const checks = requirements.map(key => {
+    const name = String(key).replace(/[^a-zA-Z0-9_-]/g, "_");
+    return `<label style="display:flex;gap:8px;align-items:flex-start;margin:6px 0;font-weight:700;"><input type="checkbox" name="${name}"><span>${escapeHtml(racialRequirementLabel(key))}</span></label>`;
+  }).join("");
+  const actionLabel = isVisionToggle ? "Confirmer" : "Lancer le jet";
+  const title = isVisionToggle
+    ? `${entry.enabled ? "Désactiver" : "Activer"} — ${entry.label}`
+    : `Capacité raciale — ${entry.label}`;
+  return new Promise(resolve => {
+    let settled = false;
+    const finish = value => {
+      if (!settled) {
+        settled = true;
+        resolve(value);
+      }
+      return value;
+    };
+    const dialog = new DialogV2({
+      window: { title },
+      classes: ["add2e", "add2e-racial-capability-dialog"],
+      position: { width: 460, height: "auto" },
+      content: `<form class="add2e-racial-capability-form" style="display:grid;gap:8px;"><div style="font-weight:900;font-size:1.05em;">${escapeHtml(entry.label)}</div><div>${escapeHtml(entry.description)}</div><div style="border:1px solid rgba(90,65,15,.35);border-radius:8px;padding:8px;background:rgba(255,248,222,.55);"><div style="font-weight:800;margin-bottom:5px;">Conditions à confirmer</div>${checks}</div></form>`,
+      buttons: [
+        {
+          action: "confirm",
+          label: actionLabel,
+          icon: isVisionToggle ? "fas fa-eye" : "fas fa-dice-d20",
+          default: true,
+          callback: (_event, button, dlg) => {
+            const root = racialDialogRoot(button, dlg);
+            const context = {};
+            for (const key of requirements) context[key] = !!root?.querySelector?.(`[name="${String(key).replace(/[^a-zA-Z0-9_-]/g, "_")}"]`)?.checked;
+            return finish(context);
+          }
+        },
+        { action: "cancel", label: "Annuler", callback: () => finish(null) }
+      ],
+      default: "confirm"
+    });
+    dialog.addEventListener?.("close", () => finish(null), { once: true });
+    Promise.resolve(dialog.render({ force: true })).catch(() => finish(null));
+  });
+}
+
+async function postRacialResult(actor, result) {
+  const capability = result.capability;
+  const success = result.success === true;
+  const color = success ? "#2f8f46" : "#b33a2e";
+  const content = `<div class="add2e-chat-card" style="border:1px solid ${color};border-radius:8px;padding:8px;"><div style="font-weight:900;color:${color};">${escapeHtml(capability.label)} — ${success ? "RÉUSSITE" : "ÉCHEC"}</div><div><b>${escapeHtml(actor.name)}</b> : ${escapeHtml(result.formula)} = <b>${escapeHtml(result.total)}</b> / réussite ≤ <b>${escapeHtml(result.successAt)}</b></div><div style="margin-top:4px;font-size:.88em;">${escapeHtml(capability.description)}</div></div>`;
+  await ChatMessage.create({
+    speaker: ChatMessage.getSpeaker({ actor }),
+    content,
+    flags: { add2e: { racialCapability: { actorId: actor.id, raceSourceId: capability.sourceId, capabilityId: capability.id, success } } }
+  });
+}
+
+async function useRacialCapabilityFromElement(actor, element, sheet = null) {
+  const engine = racialEngine();
+  const capabilityId = String(element?.dataset?.racialCapabilityId ?? element?.dataset?.racialActionId ?? "").trim();
+  if (!actor || !engine || !capabilityId) return false;
+  if (!game.user?.isGM && !actor.isOwner && !actor.testUserPermission?.(game.user, "OWNER")) {
+    ui.notifications?.warn?.("Vous ne pouvez pas utiliser les capacités de cet acteur.");
+    return false;
+  }
+  const entry = engine.getRacialAction?.(actor, capabilityId);
+  if (!entry) {
+    ui.notifications?.warn?.("Capacité raciale introuvable.");
+    return false;
+  }
+  const context = await promptRacialAction(entry);
+  if (context === null) return false;
+
+  if (entry.actionType === "vision-toggle") {
+    const enabling = entry.enabled !== true;
+    const result = await engine.setRacialVision?.(actor, enabling, { reason: "racial-capability-sheet" });
+    if (!result || result.reason === "missing-actor") {
+      ui.notifications?.error?.("Impossible de modifier l’infravision raciale.");
+      return false;
+    }
+    ui.notifications?.info?.(`${entry.label} ${enabling ? "activée" : "désactivée"}.`);
+    sheet?.render?.(false);
+    await globalThis.add2eRefreshActionHud?.();
+    return true;
+  }
+
+  const result = await engine.rollRacialCapability?.(actor, entry.id, context);
+  if (!result?.ok) {
+    if (result?.reason === "requirements-missing") {
+      ui.notifications?.warn?.(`Conditions manquantes : ${(result.missing ?? []).map(racialRequirementLabel).join(", ")}.`);
+    } else ui.notifications?.error?.("Le jet de capacité raciale n’a pas pu être résolu.");
+    return false;
+  }
+  await postRacialResult(actor, result);
+  return true;
+}
+
 export function injectCapacitesTab(sheet, sheetRoot) {
   const actor = sheet?.actor ?? sheet?.document;
   if (!actor || actor.type !== "personnage") return;
@@ -385,7 +580,7 @@ export function injectCapacitesTab(sheet, sheetRoot) {
 
   const wrapper = document.createElement("div");
   wrapper.className = "add2e-capacites-modern-root";
-  wrapper.innerHTML = `${buildThiefSkillsPanel(actor)}${buildClassFeaturesPanel(actor)}`;
+  wrapper.innerHTML = `${buildThiefSkillsPanel(actor)}${buildClassFeaturesPanel(actor)}${buildRacialFeaturesPanel(actor)}`;
 
   tab.replaceChildren(wrapper);
 
@@ -410,6 +605,15 @@ export function injectCapacitesTab(sheet, sheetRoot) {
       await fn(actor, ev.currentTarget, sheet);
       return false;
     });
+
+  $(wrapper).find(".add2e-racial-capability-use")
+    .off("click.add2e-racial-capability-use")
+    .on("click.add2e-racial-capability-use", async ev => {
+      ev.preventDefault();
+      ev.stopPropagation();
+      await useRacialCapabilityFromElement(actor, ev.currentTarget, sheet);
+      return false;
+    });
 }
 
 expose("add2eUiFeatureName", featureName);
@@ -417,4 +621,6 @@ expose("add2eUiAllClassFeatures", allClassFeatures);
 expose("add2eUiGetThiefSkills", getThiefSkills);
 expose("add2eUiBuildThiefSkillsPanel", buildThiefSkillsPanel);
 expose("add2eUiCheckThiefArmorRestriction", thiefArmorRestriction);
+expose("add2eUiBuildRacialFeaturesPanel", buildRacialFeaturesPanel);
+expose("add2eUseRacialCapabilityFromElement", useRacialCapabilityFromElement);
 expose("add2eUiInjectCapacitesTab", injectCapacitesTab);
