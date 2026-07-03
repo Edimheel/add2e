@@ -2,14 +2,6 @@
 
 export function add2eBindActorSheetSpellListeners(sheet, html) {
   const self = sheet;
-  const actorId = String(sheet.actor?.id ?? "");
-
-  // 16-preparation-display.mjs résout le sort depuis le bouton après un rendu.
-  // L'acteur de la feuille est donc inscrit explicitement, sans dépendre du token sélectionné.
-  if (actorId) {
-    html.attr("data-actor-id", actorId);
-    html.find(".a2e-spell-entry-plus, .a2e-spell-entry-minus, .sort-memorize-plus, .sort-memorize-minus").attr("data-actor-id", actorId);
-  }
 
   html.find('.toggle-sort-desc-chat').off('click').on('click', function(ev) {
     ev.preventDefault();
