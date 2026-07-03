@@ -1,6 +1,6 @@
 // ============================================================
 // ADD2E — 08 Character Sheet UI — 02 capacités
-// Version : 2026-07-03-racial-sheet-controller-v1
+// Version : 2026-07-03-racial-capacities-merged-v2
 // ============================================================
 import { escapeHtml, slug, expose, globalFn } from "./08-character-sheet-ui-00-utils.mjs";
 
@@ -194,7 +194,6 @@ function thiefSkillSlug(skill) {
 
 function thiefSkillIcon(skill) {
   const s = thiefSkillSlug(skill);
-
   if (s.includes("pickpocket") || s.includes("poche")) return "fa-hand-holding";
   if (s.includes("crochetage") || s.includes("serrure")) return "fa-key";
   if (s.includes("piege") || s.includes("desamorc")) return "fa-triangle-exclamation";
@@ -203,13 +202,11 @@ function thiefSkillIcon(skill) {
   if (isListenLike(s)) return "fa-ear-listen";
   if (s.includes("escalade") || s.includes("grimper")) return "fa-mountain";
   if (s.includes("langue")) return "fa-language";
-
   return "fa-dice-d20";
 }
 
 function thiefSkillTone(skill) {
   const s = thiefSkillSlug(skill);
-
   if (s.includes("crochetage") || s.includes("serrure")) return "lock";
   if (s.includes("piege") || s.includes("desamorc")) return "trap";
   if (s.includes("silence")) return "move";
@@ -218,7 +215,6 @@ function thiefSkillTone(skill) {
   if (s.includes("escalade") || s.includes("grimper")) return "climb";
   if (s.includes("langue")) return "language";
   if (s.includes("pickpocket") || s.includes("poche")) return "pocket";
-
   return "default";
 }
 
@@ -266,14 +262,8 @@ function buildThiefArmorWarningPanel(actor, status) {
   return `
     <div class="a2e-panel add2e-thief-skills-panel">
       <h2>${escapeHtml(thiefSkillPanelTitle(actor))}</h2>
-      <div
-        class="a2e-panel-body a2e-thief-armor-warning"
-        style="border:2px solid #8b0000;background:rgba(255,70,70,.82);color:#111;border-radius:12px;padding:18px;text-align:center;font-size:1.25em;font-weight:900;line-height:1.35;"
-      >
-        <div style="font-size:1.45em;color:#111;margin-bottom:8px;">
-          <i class="fas fa-triangle-exclamation"></i>
-          Capacités de voleur indisponibles
-        </div>
+      <div class="a2e-panel-body a2e-thief-armor-warning" style="border:2px solid #8b0000;background:rgba(255,70,70,.82);color:#111;border-radius:12px;padding:18px;text-align:center;font-size:1.25em;font-weight:900;line-height:1.35;">
+        <div style="font-size:1.45em;color:#111;margin-bottom:8px;"><i class="fas fa-triangle-exclamation"></i> Capacités de voleur indisponibles</div>
         <div>${escapeHtml(message)}</div>
         <div style="font-size:.85em;margin-top:8px;color:#111;">${equipmentLabel}</div>
       </div>
@@ -308,7 +298,6 @@ function buildThiefSkillsPanel(actor) {
   const skills = getThiefSkills(actor)
     .filter(skill => !isBackstabLike(`${skill?.key ?? ""} ${skill?.label ?? ""} ${skill?.shortLabel ?? ""}`))
     .filter(skill => level >= readLevel(skill?.minLevel ?? skill?.niveauMin ?? skill?.requiredLevel ?? skill?.level ?? skill?.niveau, 1));
-
   if (!skills.length) return "";
 
   const cards = skills.map(skill => {
@@ -321,7 +310,6 @@ function buildThiefSkillsPanel(actor) {
     const action = skill.canRoll === false
       ? `<span class="a2e-muted">—</span>`
       : `<button type="button" class="add2e-thief-skill-roll" data-skill-key="${escapeHtml(skill.key)}" data-skill-tone="${escapeHtml(tone)}" title="Tester ${escapeHtml(skill.label ?? skill.shortLabel ?? skill.key)}" aria-label="Tester ${escapeHtml(skill.label ?? skill.shortLabel ?? skill.key)}"><i class="fas ${iconClass}"></i></button>`;
-
     return `
       <div class="a2e-thief-skill-card" title="${escapeHtml(skill.breakdownTitle ?? "")}">
         <div class="a2e-thief-skill-name">${escapeHtml(skill.shortLabel || skill.label || skill.key)}</div>
@@ -331,11 +319,34 @@ function buildThiefSkillsPanel(actor) {
       </div>`;
   }).join("");
 
-  return `
-    <div class="a2e-panel add2e-thief-skills-panel">
-      <h2>${escapeHtml(thiefSkillPanelTitle(actor))}</h2>
-      <div class="a2e-panel-body"><div class="a2e-thief-skills-inline" style="grid-template-columns:repeat(${skills.length}, minmax(0, 1fr));">${cards}</div></div>
-    </div>`;
+  return `<div class="a2e-panel add2e-thief-skills-panel"><h2>${escapeHtml(thiefSkillPanelTitle(actor))}</h2><div class="a2e-panel-body"><div class="a2e-thief-skills-inline" style="grid-template-columns:repeat(${skills.length}, minmax(0, 1fr));">${cards}</div></div></div>`;
+}
+
+function racialEngine() {
+  const engine = globalThis.Add2eEffectsEngine;
+  return typeof engine?.getRacialActions === "function" ? engine : null;
+}
+
+function racialActions(actor) {
+  return racialEngine()?.getRacialActions?.(actor)?.filter(entry => entry?.activable !== false) ?? [];
+}
+
+function racialPassives(actor) {
+  const passives = racialEngine()?.getRacialPassiveEffects?.(actor) ?? [];
+  return passives.filter(effect => {
+    const key = slug(`${effect?.id ?? ""} ${effect?.name ?? ""}`);
+    return !key.includes("infravision");
+  });
+}
+
+function racialActionIcon(entry) {
+  return String(entry?.iconClass ?? "").trim() || (entry?.actionType === "vision-toggle" ? "fa-eye" : "fa-dice-d20");
+}
+
+function racialActionLabel(entry) {
+  if (entry?.actionType === "vision-toggle") return String(entry?.label ?? "Infravision");
+  const roll = String(entry?.rollLabel ?? "").trim();
+  return roll ? `${String(entry?.label ?? "Capacité raciale")} — Jet ${roll}` : String(entry?.label ?? "Capacité raciale");
 }
 
 function buildFeatureCard(actor, feature, index, mode) {
@@ -343,42 +354,62 @@ function buildFeatureCard(actor, feature, index, mode) {
   const desc = String(feature?.description ?? feature?.desc ?? feature?.text ?? "").trim();
   const onUse = featureOnUse(feature);
   const skillKey = feature?.skillKey ?? feature?.key ?? feature?.slug ?? "";
-  const uses = feature?.uses?.label ?? feature?.usageLabel ?? "Disponible";
-  const button = mode === "active"
-    ? `<div class="a2e-feature-actions"><button type="button" class="a2e-btn blue add2e-feature-use" data-feature-index="${index}" data-feature-name="${escapeHtml(name)}" data-skill-key="${escapeHtml(skillKey)}" data-on-use="${escapeHtml(onUse)}"><i class="fas fa-bolt"></i>&nbsp;Utiliser</button></div>`
+  const action = mode === "active"
+    ? `<button type="button" class="add2e-feature-use add2e-feature-icon-only" data-feature-index="${index}" data-feature-name="${escapeHtml(name)}" data-skill-key="${escapeHtml(skillKey)}" data-on-use="${escapeHtml(onUse)}" title="Utiliser ${escapeHtml(name)}" aria-label="Utiliser ${escapeHtml(name)}"><i class="fas fa-bolt"></i></button>`
     : "";
-
   return `
-    <div class="a2e-feature-card">
-      <div class="a2e-feature-card-title"><strong>${escapeHtml(name)}</strong><span>${mode === "active" ? escapeHtml(uses) : "Actif"}</span></div>
-      ${desc ? `<div class="a2e-feature-card-desc">${desc}</div>` : ""}
-      ${button}
+    <div class="a2e-feature-card ${mode === "active" ? "is-activable" : "is-passive"}">
+      <div class="a2e-feature-card-title"><strong>${escapeHtml(name)}</strong>${action}</div>
+      ${mode === "passive" && desc ? `<div class="a2e-feature-card-desc">${escapeHtml(desc)}</div>` : ""}
     </div>`;
 }
 
-function buildClassFeaturesPanel(actor) {
+function buildRacialActionCard(entry) {
+  const isVisionToggle = entry?.actionType === "vision-toggle";
+  const enabled = entry?.enabled === true;
+  const icon = isVisionToggle && enabled ? "fa-eye" : (isVisionToggle ? "fa-eye-slash" : racialActionIcon(entry));
+  const stateClass = isVisionToggle ? (enabled ? "is-enabled" : "is-disabled") : "is-roll";
+  const label = racialActionLabel(entry);
+  const title = isVisionToggle
+    ? `${enabled ? "Désactiver" : "Activer"} ${entry.label}`
+    : `Utiliser ${entry.label}`;
+  return `
+    <div class="a2e-feature-card add2e-racial-feature-card is-activable">
+      <div class="a2e-feature-card-title">
+        <strong>${escapeHtml(label)}</strong>
+        <button type="button" class="add2e-racial-capability-use add2e-feature-icon-only ${stateClass}" data-racial-capability-id="${escapeHtml(entry.id)}" title="${escapeHtml(title)}" aria-label="${escapeHtml(title)}"><i class="fas ${icon}"></i></button>
+      </div>
+    </div>`;
+}
+
+function buildRacialPassiveCard(effect) {
+  return `
+    <div class="a2e-feature-card add2e-racial-feature-card is-passive">
+      <div class="a2e-feature-card-title"><strong>${escapeHtml(effect?.name ?? "Avantage racial")}</strong></div>
+      ${effect?.description ? `<div class="a2e-feature-card-desc">${escapeHtml(effect.description)}</div>` : ""}
+    </div>`;
+}
+
+function buildFeaturesPanel(actor) {
   const features = visibleFeatures(actor);
-  const active = features.filter(({ feature }) => isFeatureActivable(feature));
-  const passive = features.filter(({ feature }) => !isFeatureActivable(feature));
+  const classActive = features.filter(({ feature }) => isFeatureActivable(feature));
+  const classPassive = features.filter(({ feature }) => !isFeatureActivable(feature));
+  const active = [
+    ...classActive.map(entry => buildFeatureCard(actor, entry.feature, entry.index, "active")),
+    ...racialActions(actor).map(buildRacialActionCard)
+  ];
+  const passive = [
+    ...classPassive.map(entry => buildFeatureCard(actor, entry.feature, entry.index, "passive")),
+    ...racialPassives(actor).map(buildRacialPassiveCard)
+  ];
 
-  const activeHtml = active.length
-    ? active.map(entry => buildFeatureCard(actor, entry.feature, entry.index, "active")).join("")
-    : `<p class="a2e-muted">Aucune capacité activable disponible à ce niveau.</p>`;
-
-  const passiveHtml = passive.length
-    ? passive.map(entry => buildFeatureCard(actor, entry.feature, entry.index, "passive")).join("")
-    : `<p class="a2e-muted">Aucune capacité passive disponible à ce niveau.</p>`;
-
+  const activeHtml = active.length ? active.join("") : `<p class="a2e-muted">Aucune capacité activable disponible à ce niveau.</p>`;
+  const passiveHtml = passive.length ? passive.join("") : `<p class="a2e-muted">Aucune capacité passive disponible à ce niveau.</p>`;
   return `
     <div class="a2e-grid-2 add2e-capacites-grid-modern">
       <div class="a2e-panel"><h2>Capacités activables</h2><div class="a2e-panel-body a2e-feature-card-list">${activeHtml}</div></div>
       <div class="a2e-panel"><h2>Capacités passives</h2><div class="a2e-panel-body a2e-feature-card-list">${passiveHtml}</div></div>
     </div>`;
-}
-
-function racialEngine() {
-  const engine = globalThis.Add2eEffectsEngine;
-  return typeof engine?.getRacialActions === "function" ? engine : null;
 }
 
 function racialRequirements(entry) {
@@ -400,62 +431,6 @@ function racialRequirementLabel(value) {
     opens_door: "après ouverture d’une porte",
     no_intense_light: "aucune source de lumière ou de chaleur intense"
   }[String(value ?? "").trim()] ?? String(value ?? "").replaceAll("_", " ");
-}
-
-function racialActions(actor) {
-  return racialEngine()?.getRacialActions?.(actor)?.filter(entry => entry?.activable !== false) ?? [];
-}
-
-function racialPassives(actor) {
-  return racialEngine()?.getRacialPassiveEffects?.(actor) ?? [];
-}
-
-function racialActionIcon(entry) {
-  return String(entry?.iconClass ?? "").trim() || (entry?.actionType === "vision-toggle" ? "fa-eye" : "fa-dice-d20");
-}
-
-function buildRacialActionCard(entry) {
-  const toggle = entry?.actionType === "vision-toggle";
-  const enabled = entry?.enabled === true;
-  const actionLabel = toggle ? (enabled ? "Désactiver" : "Activer") : "Utiliser";
-  const actionIcon = toggle ? (enabled ? "fa-eye-slash" : "fa-eye") : "fa-bolt";
-  const state = toggle ? (enabled ? "Active" : "Inactive") : (entry?.rollLabel ? `Jet ${entry.rollLabel}` : "Disponible");
-  const requirements = !toggle || !enabled ? racialRequirements(entry) : [];
-  const requirementLine = requirements.length
-    ? `<div class="a2e-feature-card-desc"><small>Conditions : ${escapeHtml(requirements.map(racialRequirementLabel).join(", "))}</small></div>`
-    : "";
-  return `
-    <div class="a2e-feature-card add2e-racial-feature-card">
-      <div class="a2e-feature-card-title"><strong><i class="fas ${escapeHtml(racialActionIcon(entry))}"></i> ${escapeHtml(entry.label)}</strong><span>${escapeHtml(state)}</span></div>
-      <div class="a2e-feature-card-desc">${escapeHtml(entry.description)}</div>
-      ${requirementLine}
-      <div class="a2e-feature-actions"><button type="button" class="a2e-btn blue add2e-racial-capability-use" data-racial-capability-id="${escapeHtml(entry.id)}"><i class="fas ${actionIcon}"></i>&nbsp;${actionLabel}</button></div>
-    </div>`;
-}
-
-function buildRacialPassiveCard(effect) {
-  return `
-    <div class="a2e-feature-card add2e-racial-feature-card">
-      <div class="a2e-feature-card-title"><strong><img src="${escapeHtml(effect?.img || "icons/svg/aura.svg")}" alt="" style="width:18px;height:18px;object-fit:cover;vertical-align:middle;border:0;"> ${escapeHtml(effect?.name ?? "Avantage racial")}</strong><span>Permanent</span></div>
-      <div class="a2e-feature-card-desc">${escapeHtml(effect?.description ?? "")}</div>
-    </div>`;
-}
-
-function buildRacialFeaturesPanel(actor) {
-  const actions = racialActions(actor);
-  const passives = racialPassives(actor);
-  if (!actions.length && !passives.length) return "";
-  const actionsHtml = actions.length
-    ? actions.map(buildRacialActionCard).join("")
-    : `<p class="a2e-muted">Aucune capacité raciale activable.</p>`;
-  const passivesHtml = passives.length
-    ? passives.map(buildRacialPassiveCard).join("")
-    : `<p class="a2e-muted">Aucun avantage racial passif.</p>`;
-  return `
-    <div class="a2e-grid-2 add2e-capacites-grid-modern add2e-racial-capacites-grid">
-      <div class="a2e-panel"><h2><i class="fas fa-dna"></i> Capacités raciales</h2><div class="a2e-panel-body a2e-feature-card-list">${actionsHtml}</div></div>
-      <div class="a2e-panel"><h2><i class="fas fa-shield-halved"></i> Avantages raciaux</h2><div class="a2e-panel-body a2e-feature-card-list">${passivesHtml}</div></div>
-    </div>`;
 }
 
 function racialDialogRoot(button, dialog) {
@@ -480,9 +455,7 @@ async function promptRacialAction(entry) {
     return `<label style="display:flex;gap:8px;align-items:flex-start;margin:6px 0;font-weight:700;"><input type="checkbox" name="${name}"><span>${escapeHtml(racialRequirementLabel(key))}</span></label>`;
   }).join("");
   const actionLabel = isVisionToggle ? "Confirmer" : "Lancer le jet";
-  const title = isVisionToggle
-    ? `${entry.enabled ? "Désactiver" : "Activer"} — ${entry.label}`
-    : `Capacité raciale — ${entry.label}`;
+  const title = isVisionToggle ? `${entry.enabled ? "Désactiver" : "Activer"} — ${entry.label}` : `Capacité raciale — ${entry.label}`;
   return new Promise(resolve => {
     let settled = false;
     const finish = value => {
@@ -562,9 +535,8 @@ async function useRacialCapabilityFromElement(actor, element, sheet = null) {
 
   const result = await engine.rollRacialCapability?.(actor, entry.id, context);
   if (!result?.ok) {
-    if (result?.reason === "requirements-missing") {
-      ui.notifications?.warn?.(`Conditions manquantes : ${(result.missing ?? []).map(racialRequirementLabel).join(", ")}.`);
-    } else ui.notifications?.error?.("Le jet de capacité raciale n’a pas pu être résolu.");
+    if (result?.reason === "requirements-missing") ui.notifications?.warn?.(`Conditions manquantes : ${(result.missing ?? []).map(racialRequirementLabel).join(", ")}.`);
+    else ui.notifications?.error?.("Le jet de capacité raciale n’a pas pu être résolu.");
     return false;
   }
   await postRacialResult(actor, result);
@@ -580,8 +552,7 @@ export function injectCapacitesTab(sheet, sheetRoot) {
 
   const wrapper = document.createElement("div");
   wrapper.className = "add2e-capacites-modern-root";
-  wrapper.innerHTML = `${buildThiefSkillsPanel(actor)}${buildClassFeaturesPanel(actor)}${buildRacialFeaturesPanel(actor)}`;
-
+  wrapper.innerHTML = `${buildThiefSkillsPanel(actor)}${buildFeaturesPanel(actor)}`;
   tab.replaceChildren(wrapper);
 
   $(wrapper).find(".add2e-thief-skill-roll")
@@ -621,6 +592,5 @@ expose("add2eUiAllClassFeatures", allClassFeatures);
 expose("add2eUiGetThiefSkills", getThiefSkills);
 expose("add2eUiBuildThiefSkillsPanel", buildThiefSkillsPanel);
 expose("add2eUiCheckThiefArmorRestriction", thiefArmorRestriction);
-expose("add2eUiBuildRacialFeaturesPanel", buildRacialFeaturesPanel);
 expose("add2eUseRacialCapabilityFromElement", useRacialCapabilityFromElement);
 expose("add2eUiInjectCapacitesTab", injectCapacitesTab);
