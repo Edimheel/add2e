@@ -4,21 +4,9 @@
 
 import { MULTICLASS_VERSION, classItems as coreClassItems, classProgression, classProgressionUpdate, classSlug } from "./17b-multiclass-core.mjs";
 
-const VERSION = "2026-06-26-class-item-progression-unified-v1";
+const VERSION = "2026-07-04-class-item-progression-unified-v2";
 const TAG = "[ADD2E][CLASSE][CANONIQUE]";
 const timers = new Map();
-const THIEF_LABELS = {
-  pickpocket: "Faire les poches",
-  crochetage_serrures: "Crochetage de serrures",
-  detection_pieges: "Détection/désamorçage des pièges",
-  deplacement_silencieux: "Déplacement silencieux",
-  dissimulation: "Dissimulation dans l’ombre",
-  ecoute: "Écoute",
-  escalade: "Escalade",
-  frappe_dans_le_dos: "Frappe dans le dos",
-  lecture_langues: "Lecture des langues",
-  assassinat: "Assassinat"
-};
 
 globalThis.ADD2E_MULTICLASS_MECHANICS_VERSION = VERSION;
 
@@ -36,18 +24,6 @@ function same(left, right) {
   return foundry?.utils?.deepEqual
     ? foundry.utils.deepEqual(left, right)
     : JSON.stringify(left) === JSON.stringify(right);
-}
-
-function normalize(value) {
-  return String(value ?? "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[’']/g, "")
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/_+/g, "_")
-    .replace(/^_+|_+$/g, "");
 }
 
 function progressionRows(item) {
@@ -340,86 +316,6 @@ async function syncHp(actor, { syncCurrent = false, force = false, reason = "mul
   return true;
 }
 
-function thiefItem(actor) {
-  return classes(actor).find(item => {
-    const system = item.system ?? {};
-    const tags = Array.isArray(system.tags) ? system.tags : [];
-    const values = [item.name, system.slug, system.label, system.nom, system.name, ...tags].map(normalize);
-    return values.some(value => value === "voleur" || value === "classe_voleur" || value.includes("voleur"));
-  }) ?? null;
-}
-
-function thiefKey(value) {
-  const raw = normalize(value)
-    .replace(/^competences?_voleur_?/, "")
-    .replace(/^thief_skill_?/, "")
-    .replace(/^voleur_?/, "");
-  const aliases = {
-    pick_pockets: "pickpocket", pick_pocket: "pickpocket", pickpockets: "pickpocket", vol_a_la_tire: "pickpocket", tire_laine: "pickpocket",
-    open_locks: "crochetage_serrures", open_lock: "crochetage_serrures", crochetage: "crochetage_serrures", crochetage_serrure: "crochetage_serrures", ouverture_de_serrures: "crochetage_serrures",
-    find_remove_traps: "detection_pieges", find_traps: "detection_pieges", remove_traps: "detection_pieges", detect_traps: "detection_pieges", desamorcage_pieges: "detection_pieges",
-    move_silently: "deplacement_silencieux", deplacement_en_silence: "deplacement_silencieux", silence: "deplacement_silencieux",
-    hide_in_shadows: "dissimulation", dissimulation_dans_l_ombre: "dissimulation",
-    detect_noise: "ecoute", acuite_auditive: "ecoute", ecouter: "ecoute",
-    climb_walls: "escalade", grimper: "escalade",
-    backstab: "frappe_dans_le_dos", attaque_dans_le_dos: "frappe_dans_le_dos", dos: "frappe_dans_le_dos",
-    read_languages: "lecture_langues", lecture_des_langues: "lecture_langues", langues: "lecture_langues",
-    assassination: "assassinat", assassiner: "assassinat", competence_assassin: "assassinat"
-  };
-  return aliases[raw] ?? raw;
-}
-
-function thiefProgression(actor) {
-  const item = thiefItem(actor);
-  if (!item) return null;
-  const state = classProgression(item);
-  if (!state.hasLevel) return null;
-  return { item, system: item.system ?? {}, level: state.level, row: rowFor(item, state.level) };
-}
-
-function thiefSkills(actor) {
-  const progression = thiefProgression(actor);
-  if (!progression) return [];
-  const { system, row } = progression;
-  const labels = system.thiefSkillLabels && typeof system.thiefSkillLabels === "object" ? system.thiefSkillLabels : {};
-  const structured = row?.thiefSkills ?? row?.voleurSkills ?? row?.competencesVoleur ?? {};
-  const legacyValues = Array.isArray(row?.skills) ? row.skills : [];
-  const legacyLabels = Array.isArray(system.skillLabels) ? system.skillLabels : [];
-  const order = Array.isArray(system.thiefSkillOrder) && system.thiefSkillOrder.length
-    ? system.thiefSkillOrder
-    : (Object.keys(labels).length ? Object.keys(labels) : (Object.keys(structured).length ? Object.keys(structured) : Object.keys(THIEF_LABELS)));
-  const rows = [];
-  const seen = new Set();
-
-  for (let index = 0; index < order.length; index += 1) {
-    const key = thiefKey(order[index]);
-    if (!key || seen.has(key)) continue;
-    const raw = structured?.[key] ?? structured?.[order[index]] ?? legacyValues[index];
-    if (raw === undefined || raw === null || raw === "") continue;
-    const value = Math.max(0, n(raw, 0));
-    seen.add(key);
-    rows.push({
-      key,
-      label: String(labels?.[key] ?? labels?.[order[index]] ?? legacyLabels[index] ?? THIEF_LABELS[key] ?? order[index]),
-      value,
-      finalValue: value,
-      base: value,
-      display: key === "frappe_dans_le_dos" ? `×${value}` : `${value}%`,
-      type: key === "frappe_dans_le_dos" ? "multiplier" : "percent",
-      canRoll: key !== "frappe_dans_le_dos"
-    });
-  }
-  return rows;
-}
-
-function installDirectThiefReaders() {
-  globalThis.__ADD2E_THIEF_ITEM_PROJECTION__ = MULTICLASS_VERSION;
-  globalThis.add2eGetActorThiefProgression = actor => thiefProgression(actor)?.row ?? null;
-  globalThis.add2eGetActorThiefSkillTable = actor => thiefSkills(actor);
-  globalThis.add2eGetActorThiefSkills = actor => thiefSkills(actor);
-  globalThis.add2eThiefClassLevel = actor => thiefProgression(actor)?.level ?? null;
-}
-
 function bindDirectClassFields(sheet) {
   const actor = sheet?.document ?? sheet?.actor;
   const root = sheet?.element?.jquery ? sheet.element[0] : sheet?.element;
@@ -496,11 +392,9 @@ globalThis.add2eSyncClassProgressionSummary = syncClassProgressionSummary;
 globalThis.add2eEnsureCanonicalClassProgression = ensureCanonicalClassProgression;
 globalThis.add2eBindDirectMulticlassFields = bindDirectClassFields;
 
-installDirectThiefReaders();
 Hooks.once("init", installSheetPatch);
 Hooks.once("ready", async () => {
   installSheetPatch();
-  window.setTimeout(installDirectThiefReaders, 25);
   if (!game.user?.isGM) return;
   for (const actor of game.actors?.filter(entry => entry.type === "personnage" && classes(entry).length) ?? []) {
     try {
