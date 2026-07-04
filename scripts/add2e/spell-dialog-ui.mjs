@@ -1,6 +1,6 @@
-// ADD2E — UI commune des popups de sorts
-// Version : 2026-05-21-v6-safe-no-observer-loop
-const VERSION = "2026-05-21-v6-safe-no-observer-loop";
+// ADD2E — UI commune des popups ADD2E
+// Version : 2026-07-04-v7-thief-dialog-theme
+const VERSION = "2026-07-04-v7-thief-dialog-theme";
 globalThis.ADD2E_SPELL_DIALOG_UI_VERSION = VERSION;
 
 function esc(v) {
@@ -27,7 +27,8 @@ const THEMES = {
   cleric: { label: "Clerc", bg: "#fffaf0", accent: "#f3e6c8", dark: "#6f4b12", main: "#b88924", border: "#c99a36", text: "#2d2011", labelColor: "#6f4b12" },
   druid: { label: "Druide", bg: "#f4faef", accent: "#dfeccd", dark: "#264a23", main: "#719c4a", border: "#7fa45d", text: "#202d1a", labelColor: "#355428" },
   wizard: { label: "Magicien", bg: "#f8f3ff", accent: "#e8ddfb", dark: "#2e1c5a", main: "#6b49b8", border: "#8060cc", text: "#211735", labelColor: "#4b3684" },
-  illusionist: { label: "Illusionniste", bg: "#f9f7ff", accent: "#dff2ff", dark: "#275a8a", main: "#925ac6", border: "#70a9d6", text: "#1e3043", labelColor: "#315d83" }
+  illusionist: { label: "Illusionniste", bg: "#f9f7ff", accent: "#dff2ff", dark: "#275a8a", main: "#925ac6", border: "#70a9d6", text: "#1e3043", labelColor: "#315d83" },
+  thief: { label: "Voleur", bg: "#eff9fa", accent: "#cce9ed", dark: "#164a58", main: "#2a8293", border: "#3b9daf", text: "#14333b", labelColor: "#1b6372" }
 };
 
 const SPELL_THEME_HINTS = new Map([
@@ -57,6 +58,7 @@ function themeData(theme) {
 function guessTheme({ title = "", content = "", theme = null } = {}) {
   if (theme && THEMES[theme]) return theme;
   const text = norm(`${title} ${content}`);
+  if (text.includes("voleur") || text.includes("assassin") || text.includes("thief")) return "thief";
   if (text.includes("illusionniste") || text.includes("illusionist")) return "illusionist";
   if (text.includes("magicien") || text.includes("wizard")) return "wizard";
   if (text.includes("druide") || text.includes("druid")) return "druid";
@@ -68,6 +70,7 @@ function guessTheme({ title = "", content = "", theme = null } = {}) {
 function guessIcon({ title = "", content = "", img = null } = {}) {
   if (img) return img;
   const text = norm(`${title} ${content}`);
+  if (text.includes("voleur") || text.includes("assassin") || text.includes("thief")) return "icons/svg/eye.svg";
   for (const [hint, icon] of SPELL_ICON_HINTS) if (text.includes(hint)) return icon;
   return "icons/svg/book.svg";
 }
@@ -103,12 +106,13 @@ function ensureStyles() {
 .application.add2e-spell-dialog-window.add2e-theme-druid,.window-app.add2e-spell-dialog-window.add2e-theme-druid,.app.add2e-spell-dialog-window.add2e-theme-druid,.dialog.add2e-spell-dialog-window.add2e-theme-druid,.application:has(.add2e-spell-dialog-theme-druid),.window-app:has(.add2e-spell-dialog-theme-druid),.app:has(.add2e-spell-dialog-theme-druid),.dialog:has(.add2e-spell-dialog-theme-druid){--a2e-bg:#f4faef;--a2e-accent:#dfeccd;--a2e-dark:#264a23;--a2e-main:#719c4a;--a2e-border:#7fa45d;--a2e-text:#202d1a;--a2e-label:#355428;}
 .application.add2e-spell-dialog-window.add2e-theme-wizard,.window-app.add2e-spell-dialog-window.add2e-theme-wizard,.app.add2e-spell-dialog-window.add2e-theme-wizard,.dialog.add2e-spell-dialog-window.add2e-theme-wizard,.application:has(.add2e-spell-dialog-theme-wizard),.window-app:has(.add2e-spell-dialog-theme-wizard),.app:has(.add2e-spell-dialog-theme-wizard),.dialog:has(.add2e-spell-dialog-theme-wizard){--a2e-bg:#f8f3ff;--a2e-accent:#e8ddfb;--a2e-dark:#2e1c5a;--a2e-main:#6b49b8;--a2e-border:#8060cc;--a2e-text:#211735;--a2e-label:#4b3684;}
 .application.add2e-spell-dialog-window.add2e-theme-illusionist,.window-app.add2e-spell-dialog-window.add2e-theme-illusionist,.app.add2e-spell-dialog-window.add2e-theme-illusionist,.dialog.add2e-spell-dialog-window.add2e-theme-illusionist,.application:has(.add2e-spell-dialog-theme-illusionist),.window-app:has(.add2e-spell-dialog-theme-illusionist),.app:has(.add2e-spell-dialog-theme-illusionist),.dialog:has(.add2e-spell-dialog-theme-illusionist){--a2e-bg:#f9f7ff;--a2e-accent:#dff2ff;--a2e-dark:#275a8a;--a2e-main:#925ac6;--a2e-border:#70a9d6;--a2e-text:#1e3043;--a2e-label:#315d83;}
+.application.add2e-spell-dialog-window.add2e-theme-thief,.window-app.add2e-spell-dialog-window.add2e-theme-thief,.app.add2e-spell-dialog-window.add2e-theme-thief,.dialog.add2e-spell-dialog-window.add2e-theme-thief,.application:has(.add2e-spell-dialog-theme-thief),.window-app:has(.add2e-spell-dialog-theme-thief),.app:has(.add2e-spell-dialog-theme-thief),.dialog:has(.add2e-spell-dialog-theme-thief){--a2e-bg:#eff9fa;--a2e-accent:#cce9ed;--a2e-dark:#164a58;--a2e-main:#2a8293;--a2e-border:#3b9daf;--a2e-text:#14333b;--a2e-label:#1b6372;}
 .application.add2e-spell-dialog-window,.window-app.add2e-spell-dialog-window,.app.add2e-spell-dialog-window,.dialog.add2e-spell-dialog-window,.application:has(.add2e-spell-dialog-shell),.window-app:has(.add2e-spell-dialog-shell),.app:has(.add2e-spell-dialog-shell),.dialog:has(.add2e-spell-dialog-shell){border:2px solid var(--a2e-border) !important;border-radius:16px !important;overflow:hidden !important;box-shadow:0 10px 26px rgba(0,0,0,.22) !important;background:linear-gradient(180deg,var(--a2e-bg),var(--a2e-accent)) !important;background-color:var(--a2e-bg) !important;}
 .application.add2e-spell-dialog-window .window-header,.window-app.add2e-spell-dialog-window .window-header,.app.add2e-spell-dialog-window .window-header,.dialog.add2e-spell-dialog-window .window-header,.application:has(.add2e-spell-dialog-shell) .window-header,.window-app:has(.add2e-spell-dialog-shell) .window-header,.app:has(.add2e-spell-dialog-shell) .window-header,.dialog:has(.add2e-spell-dialog-shell) .window-header{background:linear-gradient(90deg,var(--a2e-dark),var(--a2e-main)) !important;color:white !important;border-bottom:2px solid var(--a2e-border) !important;}
 .application.add2e-spell-dialog-window .window-content,.window-app.add2e-spell-dialog-window .window-content,.app.add2e-spell-dialog-window .window-content,.dialog.add2e-spell-dialog-window .window-content,.application:has(.add2e-spell-dialog-shell) .window-content,.window-app:has(.add2e-spell-dialog-shell) .window-content,.app:has(.add2e-spell-dialog-shell) .window-content,.dialog:has(.add2e-spell-dialog-shell) .window-content{background:linear-gradient(180deg,var(--a2e-bg),var(--a2e-accent)) !important;color:var(--a2e-text) !important;padding:10px !important;}
 .application.add2e-spell-dialog-window .dialog-buttons,.window-app.add2e-spell-dialog-window .dialog-buttons,.app.add2e-spell-dialog-window .dialog-buttons,.dialog.add2e-spell-dialog-window .dialog-buttons,.application:has(.add2e-spell-dialog-shell) .dialog-buttons,.window-app:has(.add2e-spell-dialog-shell) .dialog-buttons,.app:has(.add2e-spell-dialog-shell) .dialog-buttons,.dialog:has(.add2e-spell-dialog-shell) .dialog-buttons{background:transparent !important;padding:10px 0 0 0 !important;gap:8px !important;}
-.application.add2e-spell-dialog-window .dialog-buttons button.default,.application.add2e-spell-dialog-window .dialog-buttons button[data-action="cast"],.window-app.add2e-spell-dialog-window .dialog-buttons button.default,.window-app.add2e-spell-dialog-window .dialog-buttons button[data-action="cast"],.app.add2e-spell-dialog-window .dialog-buttons button.default,.app.add2e-spell-dialog-window .dialog-buttons button[data-action="cast"],.dialog.add2e-spell-dialog-window .dialog-buttons button.default,.dialog.add2e-spell-dialog-window .dialog-buttons button[data-action="cast"],.application:has(.add2e-spell-dialog-shell) .dialog-buttons button.default,.application:has(.add2e-spell-dialog-shell) .dialog-buttons button[data-action="cast"],.window-app:has(.add2e-spell-dialog-shell) .dialog-buttons button.default,.window-app:has(.add2e-spell-dialog-shell) .dialog-buttons button[data-action="cast"],.app:has(.add2e-spell-dialog-shell) .dialog-buttons button.default,.app:has(.add2e-spell-dialog-shell) .dialog-buttons button[data-action="cast"],.dialog:has(.add2e-spell-dialog-shell) .dialog-buttons button.default,.dialog:has(.add2e-spell-dialog-shell) .dialog-buttons button[data-action="cast"]{background:linear-gradient(180deg,var(--a2e-main),var(--a2e-dark)) !important;color:white !important;border:1px solid var(--a2e-border) !important;border-radius:9px !important;font-weight:800 !important;box-shadow:0 2px 6px rgba(0,0,0,.18) !important;}
-.application.add2e-spell-dialog-window .dialog-buttons button:not(.default):not([data-action="cast"]),.window-app.add2e-spell-dialog-window .dialog-buttons button:not(.default):not([data-action="cast"]),.app.add2e-spell-dialog-window .dialog-buttons button:not(.default):not([data-action="cast"]),.dialog.add2e-spell-dialog-window .dialog-buttons button:not(.default):not([data-action="cast"]),.application:has(.add2e-spell-dialog-shell) .dialog-buttons button:not(.default):not([data-action="cast"]),.window-app:has(.add2e-spell-dialog-shell) .dialog-buttons button:not(.default):not([data-action="cast"]),.app:has(.add2e-spell-dialog-shell) .dialog-buttons button:not(.default):not([data-action="cast"]),.dialog:has(.add2e-spell-dialog-shell) .dialog-buttons button:not(.default):not([data-action="cast"]){border-radius:9px !important;font-weight:700 !important;}
+.application.add2e-spell-dialog-window .dialog-buttons button.default,.application.add2e-spell-dialog-window .dialog-buttons button[data-action="cast"],.application.add2e-spell-dialog-window .dialog-buttons button[data-action="roll"],.window-app.add2e-spell-dialog-window .dialog-buttons button.default,.window-app.add2e-spell-dialog-window .dialog-buttons button[data-action="cast"],.window-app.add2e-spell-dialog-window .dialog-buttons button[data-action="roll"],.app.add2e-spell-dialog-window .dialog-buttons button.default,.app.add2e-spell-dialog-window .dialog-buttons button[data-action="cast"],.app.add2e-spell-dialog-window .dialog-buttons button[data-action="roll"],.dialog.add2e-spell-dialog-window .dialog-buttons button.default,.dialog.add2e-spell-dialog-window .dialog-buttons button[data-action="cast"],.dialog.add2e-spell-dialog-window .dialog-buttons button[data-action="roll"],.application:has(.add2e-spell-dialog-shell) .dialog-buttons button.default,.application:has(.add2e-spell-dialog-shell) .dialog-buttons button[data-action="cast"],.application:has(.add2e-spell-dialog-shell) .dialog-buttons button[data-action="roll"],.window-app:has(.add2e-spell-dialog-shell) .dialog-buttons button.default,.window-app:has(.add2e-spell-dialog-shell) .dialog-buttons button[data-action="cast"],.window-app:has(.add2e-spell-dialog-shell) .dialog-buttons button[data-action="roll"],.app:has(.add2e-spell-dialog-shell) .dialog-buttons button.default,.app:has(.add2e-spell-dialog-shell) .dialog-buttons button[data-action="cast"],.app:has(.add2e-spell-dialog-shell) .dialog-buttons button[data-action="roll"],.dialog:has(.add2e-spell-dialog-shell) .dialog-buttons button.default,.dialog:has(.add2e-spell-dialog-shell) .dialog-buttons button[data-action="cast"],.dialog:has(.add2e-spell-dialog-shell) .dialog-buttons button[data-action="roll"]{background:linear-gradient(180deg,var(--a2e-main),var(--a2e-dark)) !important;color:white !important;border:1px solid var(--a2e-border) !important;border-radius:9px !important;font-weight:800 !important;box-shadow:0 2px 6px rgba(0,0,0,.18) !important;}
+.application.add2e-spell-dialog-window .dialog-buttons button:not(.default):not([data-action="cast"]):not([data-action="roll"]),.window-app.add2e-spell-dialog-window .dialog-buttons button:not(.default):not([data-action="cast"]):not([data-action="roll"]),.app.add2e-spell-dialog-window .dialog-buttons button:not(.default):not([data-action="cast"]):not([data-action="roll"]),.dialog.add2e-spell-dialog-window .dialog-buttons button:not(.default):not([data-action="cast"]):not([data-action="roll"]),.application:has(.add2e-spell-dialog-shell) .dialog-buttons button:not(.default):not([data-action="cast"]):not([data-action="roll"]),.window-app:has(.add2e-spell-dialog-shell) .dialog-buttons button:not(.default):not([data-action="cast"]):not([data-action="roll"]),.app:has(.add2e-spell-dialog-shell) .dialog-buttons button:not(.default):not([data-action="cast"]):not([data-action="roll"]),.dialog:has(.add2e-spell-dialog-shell) .dialog-buttons button:not(.default):not([data-action="cast"]):not([data-action="roll"]){border-radius:9px !important;font-weight:700 !important;}
 .add2e-spell-dialog-shell{border-radius:14px;overflow:hidden;border:2px solid var(--a2e-border);background:linear-gradient(180deg,var(--a2e-bg),var(--a2e-accent));color:var(--a2e-text);font-family:var(--font-primary);}
 .add2e-spell-dialog-header{display:flex;align-items:center;gap:10px;padding:10px 12px;background:linear-gradient(90deg,var(--a2e-dark),var(--a2e-main));color:white;border-bottom:2px solid var(--a2e-border);}
 .add2e-spell-dialog-header img{width:42px;height:42px;border-radius:8px;background:rgba(255,255,255,.95);object-fit:cover;border:2px solid rgba(255,255,255,.9);flex:0 0 auto;}
@@ -135,11 +139,15 @@ function primaryButtonClass(buttons) {
 function wrapDialogOptions(options = {}) {
   const windowTitle = String(options?.window?.title ?? options?.title ?? "");
   const content = String(options?.content ?? "");
-  if (!windowTitle.toLowerCase().startsWith("lancement")) return options;
+  const isSpellDialog = windowTitle.toLowerCase().startsWith("lancement");
+  const isThiefDialog = content.includes("add2e-thief-roll-dialog");
+  if (!isSpellDialog && !isThiefDialog) return options;
   if (content.includes("add2e-spell-dialog-shell")) return options;
 
-  const rawTitle = windowTitle.replace(/^Lancement\s*:\s*/i, "").trim() || "Sort";
-  const theme = guessTheme({ title: windowTitle, content, theme: options?.add2eTheme });
+  const rawTitle = isSpellDialog
+    ? (windowTitle.replace(/^Lancement\s*:\s*/i, "").trim() || "Sort")
+    : (windowTitle.trim() || "Compétence de voleur");
+  const theme = isThiefDialog ? "thief" : guessTheme({ title: windowTitle, content, theme: options?.add2eTheme });
   const t = themeData(theme);
   const img = guessIcon({ title: rawTitle, content, img: options?.add2eImg });
   const classes = Array.isArray(options?.window?.classes) ? [...options.window.classes] : [];
@@ -149,7 +157,7 @@ function wrapDialogOptions(options = {}) {
     ...options,
     window: { ...(options.window ?? {}), classes: [...new Set(classes)] },
     classes: [...new Set([...(Array.isArray(options.classes) ? options.classes : []), "add2e-spell-dialog-window", `add2e-theme-${theme}`])],
-    content: shell({ theme, title: rawTitle, subtitle: `Sort — ${t.label}`, img, body: content })
+    content: shell({ theme, title: rawTitle, subtitle: isThiefDialog ? "Compétence de voleur" : `Sort — ${t.label}`, img, body: content })
   };
 }
 
@@ -164,7 +172,45 @@ function patchDialogV2() {
   console.log("[ADD2E][SPELL_DIALOG_UI][PATCH_DIALOGV2] actif");
 }
 
+function asHtmlElement(html) {
+  if (html instanceof HTMLElement) return html;
+  if (html?.[0] instanceof HTMLElement) return html[0];
+  return null;
+}
+
+function styleThiefSkillChat(message, html) {
+  const root = asHtmlElement(html);
+  if (!root) return;
+  const content = String(message?.content ?? "");
+  if (!/Compétence de voleur|Compétence d’assassin/i.test(content)) return;
+
+  for (const card of root.querySelectorAll(".add2e-card-test")) {
+    if (card.dataset.add2eThiefTheme === VERSION) continue;
+    card.dataset.add2eThiefTheme = VERSION;
+    card.style.setProperty("border", "2px solid #3b9daf", "important");
+    card.style.setProperty("background", "linear-gradient(180deg, #f4fcfd, #cce9ed)", "important");
+    card.style.setProperty("color", "#14333b", "important");
+    card.style.setProperty("box-shadow", "0 3px 10px rgba(22, 74, 88, .16)", "important");
+
+    const header = card.firstElementChild;
+    if (header instanceof HTMLElement) {
+      header.style.setProperty("margin", "-.75em -1em .65em", "important");
+      header.style.setProperty("padding", ".55em .7em", "important");
+      header.style.setProperty("background", "linear-gradient(90deg, #164a58, #2a8293)", "important");
+      header.style.setProperty("color", "#ffffff", "important");
+      for (const element of header.querySelectorAll("i, b, span")) element.style.setProperty("color", "#ffffff", "important");
+    }
+  }
+}
+
+function registerThiefSkillChatTheme() {
+  if (globalThis.__ADD2E_THIEF_SKILL_CHAT_THEME_V1) return;
+  globalThis.__ADD2E_THIEF_SKILL_CHAT_THEME_V1 = true;
+  Hooks.on("renderChatMessage", styleThiefSkillChat);
+}
+
 globalThis.ADD2E_SPELL_DIALOG_UI = { version: VERSION, themes: THEMES, shell, primaryButtonClass, ensureStyles, guessTheme, guessIcon, wrapDialogOptions, esc };
 Hooks.once("ready", () => { ensureStyles(); patchDialogV2(); });
+registerThiefSkillChatTheme();
 ensureStyles();
 console.log("[ADD2E][SPELL_DIALOG_UI][VERSION]", VERSION);
