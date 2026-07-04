@@ -218,13 +218,14 @@ function injectGlobalCapabilityStyles() {
   const style = document.createElement("style");
   style.id = ADD2E_CAPABILITIES_STYLE_ID;
   style.textContent = `
-    /* Feuille personnage : sept compétences Voleur sur une seule ligne. */
+    /* Feuille personnage : illustrations cliquables des capacités de voleur. */
     .add2e-character-v2-app .add2e-character-v3 .add2e-capacites-modern-root,
     .add2e-character-v3 .add2e-capacites-modern-root { display:grid; gap:10px; }
+
     .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skills-inline,
     .add2e-character-v3 .a2e-thief-skills-inline {
       display:grid !important;
-      grid-template-columns:repeat(7, minmax(0, 1fr)) !important;
+      grid-template-columns:repeat(8, minmax(0, 1fr)) !important;
       gap:7px !important;
       align-items:stretch !important;
     }
@@ -233,24 +234,24 @@ function injectGlobalCapabilityStyles() {
     .add2e-character-v3 .a2e-thief-skill-card,
     .add2e-character-v3 button.a2e-thief-skill-card {
       display:grid !important;
-      grid-template-columns:28px minmax(0, 1fr) !important;
-      grid-template-rows:30px 18px 18px !important;
-      column-gap:6px !important;
-      row-gap:2px !important;
+      grid-template-columns:minmax(0, 1fr) !important;
+      grid-template-rows:60px auto 20px 18px !important;
+      gap:3px !important;
       align-items:center !important;
+      justify-items:center !important;
       min-width:0 !important;
-      min-height:88px !important;
+      min-height:132px !important;
       width:100% !important;
       box-sizing:border-box !important;
       margin:0 !important;
-      padding:9px 8px !important;
+      padding:7px 5px !important;
       border:1px solid #d6b05a !important;
       border-radius:9px !important;
       background:#fffdf6 !important;
       background-image:none !important;
       color:#3d2b0a !important;
       box-shadow:0 1px 3px rgba(80,58,10,.10) !important;
-      text-align:left !important;
+      text-align:center !important;
       font:inherit !important;
       appearance:none !important;
       -webkit-appearance:none !important;
@@ -259,35 +260,57 @@ function injectGlobalCapabilityStyles() {
     .add2e-character-v2-app .add2e-character-v3 button.a2e-thief-skill-card,
     .add2e-character-v3 button.a2e-thief-skill-card { cursor:pointer !important; }
     .add2e-character-v2-app .add2e-character-v3 button.a2e-thief-skill-card:hover,
-    .add2e-character-v3 button.a2e-thief-skill-card:hover { border-color:#8f6515 !important; background:#fff8e3 !important; transform:translateY(-1px); }
-    .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skill-action,
-    .add2e-character-v3 .a2e-thief-skill-action {
+    .add2e-character-v3 button.a2e-thief-skill-card:hover {
+      border-color:#8f6515 !important;
+      background:#fff8e3 !important;
+      transform:translateY(-1px);
+    }
+    .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skill-art,
+    .add2e-character-v3 .a2e-thief-skill-art {
       grid-column:1 !important;
-      grid-row:1 / span 3 !important;
+      grid-row:1 !important;
       display:flex !important;
       align-items:center !important;
       justify-content:center !important;
-      font-size:1.08em !important;
+      width:58px !important;
+      height:58px !important;
+      overflow:hidden !important;
+      border:1px solid #8f6515 !important;
+      border-radius:8px !important;
+      background:#34220d !important;
+      box-shadow:0 1px 2px rgba(42,25,5,.35) !important;
+    }
+    .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skill-art img,
+    .add2e-character-v3 .a2e-thief-skill-art img {
+      display:block !important;
+      width:100% !important;
+      height:100% !important;
+      object-fit:cover !important;
+      border:0 !important;
+      transition:transform .12s ease, filter .12s ease;
+    }
+    .add2e-character-v2-app .add2e-character-v3 button.a2e-thief-skill-card:hover .a2e-thief-skill-art img,
+    .add2e-character-v3 button.a2e-thief-skill-card:hover .a2e-thief-skill-art img {
+      filter:brightness(1.07) saturate(1.06);
+      transform:scale(1.05);
     }
     .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skill-name,
     .add2e-character-v3 .a2e-thief-skill-name {
-      grid-column:2 !important;
-      grid-row:1 !important;
+      grid-column:1 !important;
+      grid-row:2 !important;
       display:block !important;
       min-width:0 !important;
       color:#3d2b0a !important;
-      font-size:.72em !important;
+      font-size:.68em !important;
       font-weight:950 !important;
-      line-height:1.05 !important;
+      line-height:1.04 !important;
       white-space:normal !important;
-      overflow:visible !important;
-      text-overflow:clip !important;
       overflow-wrap:anywhere !important;
     }
     .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skill-total,
     .add2e-character-v3 .a2e-thief-skill-total {
-      grid-column:2 !important;
-      grid-row:2 !important;
+      grid-column:1 !important;
+      grid-row:3 !important;
       display:block !important;
       color:#184a82 !important;
       font-size:1.04em !important;
@@ -296,35 +319,88 @@ function injectGlobalCapabilityStyles() {
     }
     .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skill-detail,
     .add2e-character-v3 .a2e-thief-skill-detail {
-      grid-column:2 !important;
-      grid-row:3 !important;
+      grid-column:1 !important;
+      grid-row:4 !important;
       display:flex !important;
-      gap:4px !important;
+      gap:3px !important;
       flex-wrap:nowrap !important;
       align-items:center !important;
+      justify-content:center !important;
       min-width:0 !important;
       color:#7f704d !important;
-      font-size:.66em !important;
+      font-size:.61em !important;
       font-weight:850 !important;
       line-height:1 !important;
       white-space:nowrap !important;
     }
     .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skill-bonus,
-    .add2e-character-v3 .a2e-thief-skill-bonus { border-radius:999px !important; padding:1px 4px !important; border:1px solid #dac276 !important; background:#fff7dc !important; font-weight:950 !important; }
+    .add2e-character-v3 .a2e-thief-skill-bonus {
+      border-radius:999px !important;
+      padding:1px 4px !important;
+      border:1px solid #dac276 !important;
+      background:#fff7dc !important;
+      font-weight:950 !important;
+    }
     .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skill-bonus.positive,
     .add2e-character-v3 .a2e-thief-skill-bonus.positive { color:#1f7c4d !important; }
     .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skill-bonus.negative,
     .add2e-character-v3 .a2e-thief-skill-bonus.negative { color:#a1261b !important; }
     .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skill-bonus.neutral,
     .add2e-character-v3 .a2e-thief-skill-bonus.neutral { color:#7f704d !important; }
-    .add2e-character-v3 .a2e-thief-skill-card[data-skill-tone="lock"] .a2e-thief-skill-action { color:#168a4a !important; }
-    .add2e-character-v3 .a2e-thief-skill-card[data-skill-tone="trap"] .a2e-thief-skill-action { color:#d88916 !important; }
-    .add2e-character-v3 .a2e-thief-skill-card[data-skill-tone="move"] .a2e-thief-skill-action { color:#2b82c8 !important; }
-    .add2e-character-v3 .a2e-thief-skill-card[data-skill-tone="hide"] .a2e-thief-skill-action { color:#8a4bb3 !important; }
-    .add2e-character-v3 .a2e-thief-skill-card[data-skill-tone="listen"] .a2e-thief-skill-action { color:#2f9a9a !important; }
-    .add2e-character-v3 .a2e-thief-skill-card[data-skill-tone="climb"] .a2e-thief-skill-action { color:#c66a1d !important; }
-    .add2e-character-v3 .a2e-thief-skill-card[data-skill-tone="language"] .a2e-thief-skill-action { color:#6c5bd5 !important; }
-    .add2e-character-v3 .a2e-thief-skill-card[data-skill-tone="pocket"] .a2e-thief-skill-action { color:#1f8f54 !important; }
+
+    /* Capacités de classe : l’illustration remplace le bouton éclair. */
+    .add2e-character-v2-app .add2e-character-v3 .a2e-feature-card:has(> .a2e-feature-card-visual),
+    .add2e-character-v3 .a2e-feature-card:has(> .a2e-feature-card-visual) {
+      display:grid !important;
+      grid-template-columns:66px minmax(0, 1fr) !important;
+      gap:9px !important;
+      align-items:start !important;
+    }
+    .add2e-character-v2-app .add2e-character-v3 .a2e-feature-card-visual,
+    .add2e-character-v3 .a2e-feature-card-visual {
+      grid-column:1 !important;
+      display:flex !important;
+      align-items:flex-start !important;
+      justify-content:center !important;
+    }
+    .add2e-character-v2-app .add2e-character-v3 .a2e-feature-card-content,
+    .add2e-character-v3 .a2e-feature-card-content { grid-column:2 !important; min-width:0 !important; }
+    .add2e-character-v2-app .add2e-character-v3 .a2e-feature-image-button,
+    .add2e-character-v3 .a2e-feature-image-button {
+      width:62px !important;
+      height:62px !important;
+      min-width:62px !important;
+      min-height:62px !important;
+      padding:0 !important;
+      margin:0 !important;
+      overflow:hidden !important;
+      border:1px solid #8f6515 !important;
+      border-radius:8px !important;
+      background:#34220d !important;
+      cursor:pointer !important;
+      box-shadow:0 1px 2px rgba(42,25,5,.35) !important;
+    }
+    .add2e-character-v2-app .add2e-character-v3 .a2e-feature-image-button:hover,
+    .add2e-character-v3 .a2e-feature-image-button:hover { border-color:#5d3f0d !important; transform:translateY(-1px) !important; }
+    .add2e-character-v2-app .add2e-character-v3 .a2e-feature-image-static,
+    .add2e-character-v3 .a2e-feature-image-static {
+      display:block !important;
+      width:62px !important;
+      height:62px !important;
+      overflow:hidden !important;
+      border:1px solid #a48033 !important;
+      border-radius:8px !important;
+      background:#34220d !important;
+      opacity:.88 !important;
+    }
+    .add2e-character-v2-app .add2e-character-v3 .a2e-feature-card-img,
+    .add2e-character-v3 .a2e-feature-card-img {
+      display:block !important;
+      width:100% !important;
+      height:100% !important;
+      object-fit:cover !important;
+      border:0 !important;
+    }
 
     /* Sous-onglets compacts du HUD. */
     #add2e-action-hud section[data-section="capacites"] > .a2e-hud-capability-subtabs { display:flex; gap:6px; padding-bottom:4px; border-bottom:1px solid rgba(214,176,90,.28); }
@@ -349,6 +425,11 @@ function injectGlobalCapabilityStyles() {
     .application.add2e-thief-dialog-window .window-header,.window-app.add2e-thief-dialog-window .window-header,.app.add2e-thief-dialog-window .window-header,.dialog.add2e-thief-dialog-window .window-header { background:linear-gradient(90deg,#6f4b12,#b88924) !important; color:#fff !important; border-bottom:2px solid #c99a36 !important; }
     .application.add2e-thief-dialog-window .window-content,.window-app.add2e-thief-dialog-window .window-content,.app.add2e-thief-dialog-window .window-content,.dialog.add2e-thief-dialog-window .window-content { background:linear-gradient(180deg,#fffaf0,#f3e6c8) !important; color:#2d2011 !important; padding:12px !important; }
     .add2e-thief-roll-dialog { display:grid; gap:10px; padding:10px; margin:0; border:1px solid #c99a36; border-radius:10px; background:rgba(255,255,255,.76); color:#2d2011; }
+
+    @media (max-width: 900px) {
+      .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skills-inline,
+      .add2e-character-v3 .a2e-thief-skills-inline { grid-template-columns:repeat(4, minmax(0, 1fr)) !important; }
+    }
   `;
   document.head.appendChild(style);
 }
