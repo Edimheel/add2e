@@ -4,7 +4,7 @@
 // Compatible Foundry V13 / V14 / V15.
 // ============================================================
 
-const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-07-03-thief-json-hud-data-v10";
+const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-07-04-thief-progression-clean-v11";
 const ADD2E_THIEF_DEFAULT_ORDER = [
   "pickpocket",
   "crochetage_serrures",
@@ -113,31 +113,26 @@ function add2eNormalizeThiefProgressionSystem(system, name = "") {
   const copy = add2eClone(system ?? {}) ?? {};
   if (!add2eIsThiefClassIdentity(copy, name)) return copy;
 
-  copy.thiefSkillLabels = {
-    ...ADD2E_THIEF_DEFAULT_LABELS,
-    ...(copy.thiefSkillLabels && typeof copy.thiefSkillLabels === "object" ? copy.thiefSkillLabels : {})
-  };
-  copy.thiefSkillOrder = Array.isArray(copy.thiefSkillOrder) && copy.thiefSkillOrder.length
-    ? copy.thiefSkillOrder.map(add2eNormalizeThiefSkillKeyLocal)
-    : [...ADD2E_THIEF_DEFAULT_ORDER];
+  // La progression numérique est portée exclusivement par progression[].skills.
+  // Les anciens objets et libellés stockés dans les Items peuvent être décalés
+  // et ne doivent plus influencer les bases affichées ou les jets.
+  delete copy.skillLabels;
+  delete copy.thiefSkillLabels;
+  delete copy.thiefSkillOrder;
 
-  if (!Array.isArray(copy.progression)) return copy;
-  copy.progression = copy.progression.map(sourceRow => {
-    const row = { ...(sourceRow ?? {}) };
-    const rawSkills = row.thiefSkills && typeof row.thiefSkills === "object" && !Array.isArray(row.thiefSkills)
-      ? { ...row.thiefSkills }
-      : {};
+  if (Array.isArray(copy.progression)) {
+    copy.progression = copy.progression.map(sourceRow => {
+      const row = { ...(sourceRow ?? {}) };
+      delete row.thiefSkills;
+      delete row.backstabMultiplier;
+      return row;
+    });
+  }
 
-    // Nouveau JSON Voleur : ces deux valeurs sont séparées de thiefSkills.
-    const backstab = Number(row.backstabMultiplier);
-    if (Number.isFinite(backstab) && backstab > 0) rawSkills.frappe_dans_le_dos = backstab;
-
-    const readLanguages = Number(row.readLanguages);
-    if (Number.isFinite(readLanguages) && readLanguages > 0) rawSkills.lecture_langues = readLanguages;
-
-    row.thiefSkills = rawSkills;
-    return row;
-  });
+  // Schéma technique non sérialisé : il décrit uniquement l’ordre fixe du
+  // tableau skills et ne contient aucune valeur de progression.
+  copy.thiefSkillLabels = { ...ADD2E_THIEF_DEFAULT_LABELS };
+  copy.thiefSkillOrder = [...ADD2E_THIEF_DEFAULT_ORDER];
   return copy;
 }
 
@@ -425,17 +420,19 @@ function add2eGetActorThiefProgression(actor) {
 
 function add2eGetActorThiefSkillTable(actor) {
   const progression = add2eGetActorThiefProgression(actor);
-  const raw = progression?.thiefSkills && typeof progression.thiefSkills === "object" ? progression.thiefSkills : {};
+  const values = Array.isArray(progression?.skills) ? progression.skills : [];
   const rows = [];
-  for (const key of ADD2E_THIEF_DEFAULT_ORDER) {
-    if (raw[key] === undefined || raw[key] === null) continue;
-    const value = Number(raw[key]) || 0;
+
+  ADD2E_THIEF_DEFAULT_ORDER.forEach((key, index) => {
+    if (values[index] === undefined || values[index] === null) return;
+    const value = Number(values[index]) || 0;
     const multiplier = key === "frappe_dans_le_dos";
     rows.push({ key, label: ADD2E_THIEF_DEFAULT_LABELS[key], base: value, value, finalValue: value, bonusTotal: 0, display: multiplier ? `×${value}` : `${value}%`, baseDisplay: multiplier ? `×${value}` : `${value}%`, type: multiplier ? "multiplier" : "percent", canRoll: !multiplier });
-  }
-  if (raw.lecture_langues !== undefined && raw.lecture_langues !== null) {
-    const value = Number(raw.lecture_langues) || 0;
-    rows.push({ key: "lecture_langues", label: ADD2E_THIEF_DEFAULT_LABELS.lecture_langues, base: value, value, finalValue: value, bonusTotal: 0, display: `${value}%`, baseDisplay: `${value}%`, type: "percent", canRoll: true });
+  });
+
+  const readLanguages = Number(progression?.readLanguages ?? progression?.lectureLangues ?? progression?.lecture_langues);
+  if (Number.isFinite(readLanguages) && readLanguages > 0) {
+    rows.push({ key: "lecture_langues", label: ADD2E_THIEF_DEFAULT_LABELS.lecture_langues, base: readLanguages, value: readLanguages, finalValue: readLanguages, bonusTotal: 0, display: `${readLanguages}%`, baseDisplay: `${readLanguages}%`, type: "percent", canRoll: true });
   }
   return rows;
 }
