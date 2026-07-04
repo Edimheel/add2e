@@ -1,38 +1,56 @@
 <form class="{{cssClass}} add2e-item-v2-sheet add2e-race-sheet" autocomplete="off">
   <style>
-    .add2e-race-sheet{--gold:#d0b16b;--panel:#fffdf7;--soft:#fff8df;--accent:#2f6f55;height:100%;min-height:0;display:flex;flex-direction:column;overflow:hidden;background:linear-gradient(135deg,#f8efd7 0%,#e4d7b0 100%);color:#2f241c}.add2e-race-sheet *{box-sizing:border-box}.add2e-race-sheet .sheet-header{display:flex;gap:12px;align-items:flex-start;padding:10px;border-bottom:1px solid var(--gold);background:rgba(255,248,224,.72);flex:0 0 auto}.add2e-race-sheet .profile-img{width:96px;height:96px;object-fit:cover;border:1px solid #7a5a28;border-radius:50%;background:#111;cursor:pointer}.add2e-race-sheet .header-fields{flex:1;display:grid;gap:7px;min-width:0}.add2e-race-sheet h1{margin:0}.add2e-race-sheet input,.add2e-race-sheet textarea,.add2e-race-sheet select{width:100%;border:1px solid #b9a15d;border-radius:5px;background:#fffaf0;color:#1d1606;padding:5px 7px}.add2e-race-sheet label span{display:block;font-weight:800;color:#6f4b12;font-size:.78rem;text-transform:uppercase;letter-spacing:.02em;margin-bottom:2px}.add2e-race-sheet .grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.add2e-race-sheet .grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.add2e-race-sheet .sheet-tabs{display:flex;gap:4px;padding:8px 10px 0;margin:0;background:rgba(250,242,216,.85);border-bottom:1px solid var(--gold);overflow-x:auto;flex:0 0 auto}.add2e-race-sheet .sheet-tabs .item{padding:7px 12px;border:1px solid var(--gold);border-bottom:0;border-radius:7px 7px 0 0;background:#fffdf4;color:#6f4b12;font-weight:900;text-decoration:none;white-space:nowrap;cursor:pointer}.add2e-race-sheet .sheet-tabs .item.active{background:linear-gradient(180deg,#3f8a66,#235842);color:#fff;border-color:#235842}.add2e-race-sheet .sheet-body{flex:1 1 auto;min-height:0;overflow:auto;padding:12px}.add2e-race-sheet .content.hidden{display:none!important}.add2e-race-sheet .content.active{display:block}.add2e-race-sheet fieldset{border:1px solid var(--gold);border-radius:8px;background:var(--panel);padding:10px;margin:0 0 12px}.add2e-race-sheet legend{font-weight:900;color:#6f4b12;padding:0 6px}.add2e-race-sheet textarea{min-height:110px;resize:vertical}.add2e-race-sheet .row{display:grid;grid-template-columns:120px 1fr;gap:8px;align-items:center;margin-bottom:7px}.add2e-race-sheet .mini-grid{display:grid;grid-template-columns:1fr 78px 78px;gap:6px;align-items:center;margin-bottom:6px}.add2e-race-sheet .cap-row{margin-bottom:6px}.add2e-race-sheet .muted{color:#7f704d;font-style:italic}.add2e-race-sheet .note{font-size:.85em;color:#6f6040;margin-top:4px}
+    .add2e-race-sheet{--gold:#d0b16b;--panel:#fffdf7;--soft:#fff8df;--accent:#2f6f55;height:100%;min-height:0;display:flex;flex-direction:column;overflow:hidden;background:linear-gradient(135deg,#f8efd7 0%,#e4d7b0 100%);color:#2f241c}.add2e-race-sheet *{box-sizing:border-box}.add2e-race-sheet .sheet-header{display:flex;gap:12px;align-items:flex-start;padding:10px;border-bottom:1px solid var(--gold);background:rgba(255,248,224,.72);flex:0 0 auto}.add2e-race-sheet .profile-img{width:96px;height:96px;object-fit:cover;border:1px solid #7a5a28;border-radius:50%;background:#111;cursor:pointer}.add2e-race-sheet .header-fields{flex:1;display:grid;gap:7px;min-width:0}.add2e-race-sheet h1{margin:0}.add2e-race-sheet input,.add2e-race-sheet textarea,.add2e-race-sheet select{width:100%;border:1px solid #b9a15d;border-radius:5px;background:#fffaf0;color:#1d1606;padding:5px 7px}.add2e-race-sheet input[readonly],.add2e-race-sheet textarea[readonly]{background:#f3ead1;color:#5f512e;cursor:default}.add2e-race-sheet label span{display:block;font-weight:800;color:#6f4b12;font-size:.78rem;text-transform:uppercase;letter-spacing:.02em;margin-bottom:2px}.add2e-race-sheet .grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.add2e-race-sheet .grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.add2e-race-sheet .sheet-tabs{display:flex;gap:4px;padding:8px 10px 0;margin:0;background:rgba(250,242,216,.85);border-bottom:1px solid var(--gold);overflow-x:auto;flex:0 0 auto}.add2e-race-sheet .sheet-tabs .item{padding:7px 12px;border:1px solid var(--gold);border-bottom:0;border-radius:7px 7px 0 0;background:#fffdf4;color:#6f4b12;font-weight:900;text-decoration:none;white-space:nowrap;cursor:pointer}.add2e-race-sheet .sheet-tabs .item.active{background:linear-gradient(180deg,#3f8a66,#235842);color:#fff;border-color:#235842}.add2e-race-sheet .sheet-body{flex:1 1 auto;min-height:0;overflow:auto;padding:12px}.add2e-race-sheet .content.hidden{display:none!important}.add2e-race-sheet .content.active{display:block}.add2e-race-sheet fieldset{border:1px solid var(--gold);border-radius:8px;background:var(--panel);padding:10px;margin:0 0 12px}.add2e-race-sheet legend{font-weight:900;color:#6f4b12;padding:0 6px}.add2e-race-sheet textarea{min-height:110px;resize:vertical}.add2e-race-sheet .row{display:grid;grid-template-columns:160px minmax(0,1fr);gap:8px;align-items:center;margin-bottom:7px}.add2e-race-sheet .mini-grid{display:grid;grid-template-columns:1fr 78px 78px;gap:6px;align-items:center;margin-bottom:6px}.add2e-race-sheet .cap-row{margin-bottom:6px}.add2e-race-sheet .muted{color:#7f704d;font-style:italic}.add2e-race-sheet .note{font-size:.85em;color:#6f6040;margin-top:4px}.add2e-race-sheet .tag-list{display:flex;gap:5px;flex-wrap:wrap}.add2e-race-sheet .tag{padding:3px 7px;border:1px solid #d8c07d;border-radius:999px;background:#fff7da;font-size:.82em;font-weight:800;color:#635126}.add2e-race-sheet .rule-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px 8px;border-bottom:1px dashed #d8c07d}.add2e-race-sheet .rule-row:last-child{border-bottom:0}.add2e-race-sheet .value{font-weight:900;color:#1f6d4e}.add2e-race-sheet .value.negative{color:#a1261b}.add2e-race-sheet .profile-card{padding:8px;border:1px solid #e1cf93;border-radius:7px;background:#fffaf0;margin-bottom:7px}.add2e-race-sheet .profile-card h3{margin:0 0 4px;color:#2f6f55;font-size:.95em}.add2e-race-sheet .profile-card p{margin:0;color:#57492d;font-size:.9em;white-space:pre-wrap}.add2e-race-sheet .technical-table{display:grid;grid-template-columns:180px minmax(0,1fr);gap:5px 8px;align-items:center}.add2e-race-sheet .technical-table strong{color:#6f4b12}.add2e-race-sheet .empty{margin:0;padding:8px;color:#7f704d;font-style:italic}
   </style>
+
   <header class="sheet-header">
     <img class="profile-img" src="{{img}}" alt="Icône {{item.name}}" data-edit="img" title="{{item.name}}"/>
     <div class="header-fields">
       <h1><input type="text" name="name" value="{{item.name}}" placeholder="Nom de la race" style="font-size:1.3rem;font-weight:900;"/></h1>
       <div class="grid-3">
         <label><span>Type</span><input type="text" value="{{item.type}}" disabled/></label>
-        <label><span>Mouvement</span><input type="text" name="system.movement" value="{{system.movement}}"/></label>
+        <label><span>Vitesse</span><input type="text" name="system.vitesse" value="{{system.vitesse}}"/></label>
         <label><span>Taille</span><input type="text" name="system.taille" value="{{system.taille}}"/></label>
       </div>
       <label><span>Description courte</span><textarea name="system.description" rows="2" placeholder="Brève description...">{{system.description}}</textarea></label>
     </div>
   </header>
+
   <nav class="tabs sheet-tabs" data-group="primary">
     <a class="item active" data-tab="resume">Résumé</a>
     <a class="item" data-tab="caracs">Caractéristiques</a>
+    <a class="item" data-tab="voleur">Voleur</a>
+    <a class="item" data-tab="classes">Multiclasse</a>
+    <a class="item" data-tab="racial">Profil racial</a>
     <a class="item" data-tab="capacites">Capacités</a>
-    <a class="item" data-tab="classes">Classes</a>
+    <a class="item" data-tab="technique">Technique</a>
     <a class="item" data-tab="description">Description</a>
   </nav>
+
   <section class="sheet-body">
     <div class="content active" data-tab="resume">
       <fieldset><legend>Informations générales</legend>
         <div class="grid-2">
           <label><span>Langues connues</span><textarea name="system.langues" rows="4" placeholder="Langues séparées par une virgule">{{system.langues}}</textarea></label>
           <div>
-            <label><span>Âge départ</span><input type="text" name="system.âge_debut" value="{{system.âge_debut}}"/></label>
+            <label><span>Slug</span><input type="text" name="system.slug" value="{{system.slug}}"/></label>
+            <label style="margin-top:8px;"><span>Vitesse de déplacement</span><input type="text" name="system.vitesse_deplacement" value="{{system.vitesse_deplacement}}"/></label>
+            <label style="margin-top:8px;"><span>Âge départ</span><input type="text" name="system.âge_debut" value="{{system.âge_debut}}"/></label>
             <label style="margin-top:8px;"><span>Espérance de vie</span><input type="text" name="system.espérance_vie" value="{{system.espérance_vie}}"/></label>
           </div>
         </div>
       </fieldset>
+
+      <fieldset><legend>Tags d’identification</legend>
+        <div class="tag-list">
+          {{#each system.tags}}<span class="tag">{{this}}</span>{{else}}<span class="muted">Aucun tag.</span>{{/each}}
+        </div>
+        <div class="tag-list" style="margin-top:7px;">
+          {{#each system.identityTags}}<span class="tag">{{this}}</span>{{/each}}
+        </div>
+      </fieldset>
     </div>
+
     <div class="content hidden" data-tab="caracs">
       <fieldset><legend>Bonus / malus de caractéristiques</legend>
         <div class="grid-2">
@@ -41,10 +59,11 @@
           {{/each}}
         </div>
         <div class="grid-2" style="margin-top:8px;">
-          <label><span>Nouvelle carac</span><input type="text" name="system.bonus_caracteristiques.NEW_KEY" value="" placeholder="force"/></label>
+          <label><span>Nouvelle caractéristique</span><input type="text" name="system.bonus_caracteristiques.NEW_KEY" value="" placeholder="force"/></label>
           <label><span>Valeur</span><input type="number" name="system.bonus_caracteristiques.NEW_VAL" value="0"/></label>
         </div>
       </fieldset>
+
       <fieldset><legend>Minimum / maximum</legend>
         {{#each system.min_caracteristiques}}
           <div class="mini-grid">
@@ -55,21 +74,103 @@
         {{else}}<p class="muted">Aucune limite de caractéristique définie.</p>{{/each}}
       </fieldset>
     </div>
+
+    <div class="content hidden" data-tab="voleur">
+      <fieldset><legend>Ajustements raciaux des compétences de voleur</legend>
+        <p class="note">Valeurs lues directement depuis <code>system.thief_adjustments</code>. Elles sont affichées en lecture seule pour conserver les données importées.</p>
+        {{#each system.thief_adjustments}}
+          <div class="rule-row"><strong>{{@key}}</strong><span class="value {{#if (lt this 0)}}negative{{/if}}">{{this}} %</span></div>
+        {{else}}<p class="empty">Cette race ne possède aucun ajustement de compétences de voleur.</p>{{/each}}
+      </fieldset>
+    </div>
+
+    <div class="content hidden" data-tab="classes">
+      <fieldset><legend>Combinaisons de multiclassage autorisées</legend>
+        {{#each system.multiclassing.allowedCombinations}}
+          <div class="rule-row"><strong>{{@key}}</strong><span class="value">{{this}}</span></div>
+        {{else}}<p class="empty">Aucune combinaison autorisée définie.</p>{{/each}}
+      </fieldset>
+
+      <fieldset><legend>Limites de classes</legend>
+        {{#each system.limites_classes}}
+          <div class="row"><strong>{{@key}}</strong><input type="text" name="system.limites_classes.{{@key}}" value="{{this}}"/></div>
+        {{else}}<p class="empty">Aucune limite de classe définie.</p>{{/each}}
+      </fieldset>
+    </div>
+
+    <div class="content hidden" data-tab="racial">
+      <fieldset><legend>Identité et vision</legend>
+        <div class="technical-table">
+          <strong>Identifiant</strong><input type="text" readonly value="{{system.racialProfile.id}}"/>
+          <strong>Version du profil</strong><input type="text" readonly value="{{system.racialProfile.version}}"/>
+          <strong>Type de vision</strong><input type="text" readonly value="{{system.racialProfile.vision.type}}"/>
+          <strong>Portée de vision</strong><input type="text" readonly value="{{system.racialProfile.vision.range}}"/>
+        </div>
+      </fieldset>
+
+      <fieldset><legend>Résistances</legend>
+        {{#each system.racialProfile.resistances}}
+          <div class="profile-card"><h3>{{this.types}}</h3><p>{{this.percent}} %</p></div>
+        {{else}}<p class="empty">Aucune résistance renseignée.</p>{{/each}}
+      </fieldset>
+
+      <fieldset><legend>Modificateurs d’attaque et de défense</legend>
+        {{#each system.racialProfile.attackModifiers}}
+          <div class="profile-card"><h3>{{this.mode}} — {{this.value}}</h3><p>Armes : {{this.weapons}}<br>Cibles : {{this.targets}}</p></div>
+        {{else}}<p class="empty">Aucun modificateur d’attaque ou de défense renseigné.</p>{{/each}}
+      </fieldset>
+
+      <fieldset><legend>Bonus de sauvegarde</legend>
+        {{#each system.racialProfile.saveBonuses}}
+          <div class="profile-card"><h3>{{this.mode}}</h3><p>Catégories : {{this.categories}}</p></div>
+        {{else}}<p class="empty">Aucun bonus de sauvegarde renseigné.</p>{{/each}}
+      </fieldset>
+
+      <fieldset><legend>Immunités</legend>
+        <div class="tag-list">{{#each system.racialProfile.immunities}}<span class="tag">{{this}}</span>{{else}}<span class="muted">Aucune immunité renseignée.</span>{{/each}}</div>
+      </fieldset>
+
+      <fieldset><legend>Effets passifs</legend>
+        {{#each system.racialProfile.passives}}
+          <div class="profile-card"><h3>{{this.label}}</h3><p><strong>{{this.id}}</strong><br>{{this.description}}</p></div>
+        {{else}}<p class="empty">Aucun effet passif renseigné.</p>{{/each}}
+      </fieldset>
+    </div>
+
     <div class="content hidden" data-tab="capacites">
-      <fieldset><legend>Capacités raciales</legend>
+      <fieldset><legend>Capacités raciales générales</legend>
         {{#each system.capacites}}
           <div class="cap-row"><input type="text" name="system.capacites.{{@index}}" value="{{this}}"/></div>
         {{else}}<p class="muted">Aucune capacité définie.</p>{{/each}}
         <div class="cap-row"><input type="text" name="system.capacites.NEW" value="" placeholder="+ Ajouter une capacité"/></div>
       </fieldset>
-    </div>
-    <div class="content hidden" data-tab="classes">
-      <fieldset><legend>Limites de classes</legend>
-        {{#each system.limites_classes}}
-          <div class="row"><strong>{{@key}}</strong><input type="text" name="system.limites_classes.{{@key}}" value="{{this}}"/></div>
-        {{else}}<p class="muted">Aucune limite de classe définie.</p>{{/each}}
+
+      <fieldset><legend>Capacités du profil racial</legend>
+        {{#each system.racialProfile.capabilities}}
+          <div class="profile-card"><h3>{{this.label}}</h3><p><strong>{{this.id}}</strong><br>Formule : {{this.formula}} — réussite : {{this.successAt}}<br>Conditions : {{this.requires}}<br>{{this.description}}</p></div>
+        {{else}}<p class="empty">Aucune capacité de profil renseignée.</p>{{/each}}
       </fieldset>
     </div>
+
+    <div class="content hidden" data-tab="technique">
+      <fieldset><legend>Données techniques de l’Item</legend>
+        <p class="note">Ces informations sont celles réellement portées par l’Item de race ouvert. Elles permettent de vérifier l’import avant de tester le voleur.</p>
+        <div class="technical-table">
+          <strong>Label</strong><input type="text" readonly value="{{system.label}}"/>
+          <strong>Slug</strong><input type="text" readonly value="{{system.slug}}"/>
+          <strong>Vitesse</strong><input type="text" readonly value="{{system.vitesse}}"/>
+          <strong>Vitesse déplacement</strong><input type="text" readonly value="{{system.vitesse_deplacement}}"/>
+          <strong>OnUse</strong><input type="text" readonly value="{{system.onUse}}"/>
+          <strong>Effect tags</strong><input type="text" readonly value="{{system.effectTags}}"/>
+        </div>
+      </fieldset>
+
+      <fieldset><legend>Tags</legend>
+        <div class="tag-list">{{#each system.tags}}<span class="tag">{{this}}</span>{{else}}<span class="muted">Aucun tag.</span>{{/each}}</div>
+        <div class="tag-list" style="margin-top:7px;">{{#each system.effectTags}}<span class="tag">{{this}}</span>{{/each}}</div>
+      </fieldset>
+    </div>
+
     <div class="content hidden" data-tab="description">
       <fieldset><legend>Description détaillée</legend><textarea name="system.description_longue" rows="10" placeholder="Description détaillée...">{{system.description_longue}}</textarea></fieldset>
       <fieldset><legend>Notes MJ / Références</legend><textarea name="system.note_md" rows="8" placeholder="Zone MJ, sources, errata...">{{system.note_md}}</textarea></fieldset>
