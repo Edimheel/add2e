@@ -3,197 +3,95 @@
 
 import "./13b-actor-sheet-get-data-core.mjs";
 
-const ADD2E_THIEF_RACIAL_SYNC_FLAG = "__ADD2E_THIEF_RACIAL_SYNC_V2";
+const ADD2E_THIEF_SHEET_BRIDGE_FLAG = "__ADD2E_THIEF_SHEET_BRIDGE_V3";
 const ADD2E_THIEF_TWO_LINE_STYLE_ID = "add2e-thief-two-line-labels";
+const ADD2E_THIEF_DIAG_CACHE = new Map();
 
-function add2eThiefNormalizeSkillKey(value) {
-  try {
-    const normalized = globalThis.add2eNormalizeThiefSkillKey?.(value);
-    if (normalized) return String(normalized);
-  } catch (_error) {}
+function add2eThiefRaceItem(actor) {
+  return Array.from(actor?.items ?? []).find(item => String(item?.type ?? "").toLowerCase() === "race") ?? null;
+}
 
-  const raw = String(value ?? "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/[’']/g, "")
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "");
+function add2eThiefRaceDiagnostic(actor) {
+  const item = add2eThiefRaceItem(actor);
+  const itemSystem = item?.system ?? {};
+  const details = actor?.system?.details_race ?? {};
+  const adjustments = itemSystem.thief_adjustments
+    ?? itemSystem.multiclassing?.thief_adjustments
+    ?? details.thief_adjustments
+    ?? details.multiclassing?.thief_adjustments
+    ?? null;
+
   return {
-    pick_pockets: "pickpocket",
-    pick_pocket: "pickpocket",
-    open_locks: "crochetage_serrures",
-    find_remove_traps: "detection_pieges",
-    move_silently: "deplacement_silencieux",
-    hide_in_shadows: "dissimulation",
-    hear_noise: "ecoute",
-    detect_noise: "ecoute",
-    climb_walls: "escalade",
-    backstab: "frappe_dans_le_dos",
-    read_languages: "lecture_langues"
-  }[raw] ?? raw;
-}
-
-function add2eThiefHasEntries(value) {
-  if (Array.isArray(value)) return value.length > 0;
-  if (typeof value === "string") return value.trim() !== "";
-  return Boolean(value && typeof value === "object" && Object.keys(value).length > 0);
-}
-
-function add2eThiefRaceSystemSources(actor) {
-  const raceItem = Array.from(actor?.items ?? []).find(item => String(item?.type ?? "").toLowerCase() === "race") ?? null;
-  return [raceItem?.system, actor?.system?.details_race].filter(source => source && typeof source === "object");
-}
-
-function add2eGetAuthoritativeThiefRaceAdjustments(actor) {
-  const nestedKeys = ["thief_adjustments", "thiefSkillAdjustments", "thief_bonuses", "thiefSkillBonuses"];
-  const directKeys = ["thief_adjustments", "thiefSkillAdjustments", "thief_bonuses", "thiefSkillBonuses", "bonus_competences_voleur", "bonus_competence_voleur"];
-
-  for (const source of add2eThiefRaceSystemSources(actor)) {
-    for (const key of nestedKeys) {
-      if (add2eThiefHasEntries(source.multiclassing?.[key])) return source.multiclassing[key];
-    }
-  }
-  for (const source of add2eThiefRaceSystemSources(actor)) {
-    for (const key of directKeys) {
-      if (add2eThiefHasEntries(source[key])) return source[key];
-    }
-  }
-  return null;
-}
-
-function add2eThiefReadBonusValue(value) {
-  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
-  if (typeof value === "string") return Number(value) || 0;
-  if (value && typeof value === "object") return Number(value.value ?? value.bonus ?? value.mod ?? value.adjustment ?? value.valeur ?? value.malus ?? 0) || 0;
-  return 0;
-}
-
-function add2eThiefMapBonus(map, skillKey) {
-  if (!map) return 0;
-  const wanted = add2eThiefNormalizeSkillKey(skillKey);
-  const accepts = rawKey => [wanted, "all", "toutes", "global", "*"].includes(add2eThiefNormalizeSkillKey(rawKey));
-  let total = 0;
-
-  if (Array.isArray(map)) {
-    for (const entry of map) {
-      if (!entry || typeof entry !== "object") continue;
-      const rawKey = entry.key ?? entry.skill ?? entry.competence ?? entry.compétence ?? entry.name ?? entry.label ?? entry.id ?? "all";
-      if (accepts(rawKey)) total += add2eThiefReadBonusValue(entry);
-    }
-    return total;
-  }
-
-  if (typeof map !== "object") return 0;
-  for (const [rawKey, rawValue] of Object.entries(map)) {
-    if (accepts(rawKey)) total += add2eThiefReadBonusValue(rawValue);
-  }
-  return total;
-}
-
-function add2eThiefSigned(value) {
-  const number = Number(value) || 0;
-  return `${number >= 0 ? "+" : ""}${number}`;
-}
-
-function add2eIsRacialThiefBonus(entry) {
-  return /^race(?:\s|—|-|$)/i.test(String(entry?.label ?? "").trim());
-}
-
-function add2eApplyAuthoritativeThiefRaceAdjustments(actor, rows) {
-  const map = add2eGetAuthoritativeThiefRaceAdjustments(actor);
-  if (!map || !Array.isArray(rows)) return rows;
-
-  return rows.map(row => {
-    if (!row || row.type === "multiplier") return row;
-
-    const priorBonuses = Array.isArray(row.bonuses) ? row.bonuses : [];
-    const inheritedRace = priorBonuses.filter(add2eIsRacialThiefBonus);
-    const bonuses = priorBonuses.filter(entry => !add2eIsRacialThiefBonus(entry));
-    const oldRaceTotal = inheritedRace.reduce((total, entry) => total + (Number(entry?.value) || 0), 0);
-    const racialValue = add2eThiefMapBonus(map, row.key ?? row.label);
-    if (racialValue !== 0) bonuses.push({ label: "Race", value: racialValue });
-
-    const base = Number(row.base ?? 0) || 0;
-    const oldFinal = Number(row.finalValue ?? row.value ?? base) || 0;
-    const finalValue = Math.max(0, oldFinal - oldRaceTotal + racialValue);
-    const bonusTotal = bonuses.reduce((total, entry) => total + (Number(entry?.value) || 0), 0);
-    return {
-      ...row,
-      bonuses,
-      bonusTotal,
-      value: finalValue,
-      finalValue,
-      display: `${finalValue}%`,
-      breakdownTitle: [`Base ${base}%`, ...bonuses.map(entry => `${entry.label} ${add2eThiefSigned(entry.value)}%`)].join(" | ")
-    };
-  });
-}
-
-function add2eEscapeChat(value) {
-  return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-}
-
-function add2eInstallThiefRacialSynchronization() {
-  if (globalThis[ADD2E_THIEF_RACIAL_SYNC_FLAG]) return;
-
-  const originalSkills = globalThis.add2eGetActorThiefSkills;
-  if (typeof originalSkills !== "function") return;
-
-  globalThis[ADD2E_THIEF_RACIAL_SYNC_FLAG] = true;
-  const synchronizedSkills = (actor, ...args) => add2eApplyAuthoritativeThiefRaceAdjustments(actor, originalSkills(actor, ...args));
-  globalThis.add2eGetActorThiefSkills = synchronizedSkills;
-
-  const originalTable = globalThis.add2eGetActorThiefSkillTable;
-  if (typeof originalTable === "function") {
-    globalThis.add2eGetActorThiefSkillTable = actor => synchronizedSkills(actor) ?? originalTable(actor);
-  }
-
-  const promptModifiers = globalThis.add2ePromptThiefSkillModifiers;
-  if (typeof promptModifiers !== "function") return;
-
-  globalThis.add2eRollThiefSkill = async function add2eRollThiefSkillWithRacialAdjustments(actor, key) {
-    if (!actor) return ui.notifications.warn("Acteur introuvable."), false;
-    const wanted = add2eThiefNormalizeSkillKey(key);
-    const skill = synchronizedSkills(actor).find(entry => add2eThiefNormalizeSkillKey(entry?.key ?? entry?.label) === wanted) ?? null;
-    if (!skill) return ui.notifications.warn("Compétence de voleur introuvable pour ce niveau."), false;
-    if (skill.canRoll === false) return ui.notifications.info(`${skill.label} : ${skill.display}. Aucun jet automatique requis.`), false;
-
-    const options = await promptModifiers(actor, skill);
-    if (!options) return false;
-    const situational = Number(options.mod || 0) || 0;
-    const targetLevel = Number(options.targetLevel || 0) || 0;
-    const targetPenalty = skill.key === "pickpocket" && targetLevel > 3 ? -5 * (targetLevel - 3) : 0;
-    const finalValue = Math.max(0, Number(skill.value || 0) + situational + targetPenalty);
-    const roll = await new Roll("1d100").evaluate({ async: true });
-    if (game.dice3d) await game.dice3d.showForRoll(roll);
-
-    const success = roll.total <= finalValue;
-    const noticed = skill.key === "pickpocket" && roll.total >= finalValue + 21;
-    const isAssassination = skill.key === "assassinat";
-    const color = success ? "#1f8f4d" : "#b3261e";
-    const details = [{ label: "Base", value: skill.base }, ...(skill.bonuses ?? []), ...(situational !== 0 ? [{ label: "Situation", value: situational }] : []), ...(targetPenalty !== 0 ? [{ label: `Cible niveau ${targetLevel}`, value: targetPenalty }] : [])];
-    const detailText = details.map(entry => `${add2eEscapeChat(entry.label)} ${add2eThiefSigned(entry.value)}%`).join(" ; ");
-
-    await ChatMessage.create({
-      speaker: ChatMessage.getSpeaker({ actor }),
-      content: `<div class="add2e-card-test" style="border-radius:12px;border:1px solid ${color};background:#fffdf6;padding:.75em 1em;font-family:var(--font-primary);"><div style="display:flex;align-items:center;gap:.6em;margin-bottom:.4em;"><i class="fas fa-mask" style="color:${color};font-size:1.5em;"></i><b style="color:${color};font-size:1.12em;">${add2eEscapeChat(skill.label)}</b><span style="margin-left:auto;color:#666;">${isAssassination ? "Compétence d’assassin" : "Compétence de voleur"}</span></div><div>Score final : <b>${finalValue}%</b> — Jet : <b>${roll.total}</b></div><div style="font-size:.9em;color:#555;margin-top:.35em;">${detailText}</div><div style="margin-top:.35em;font-weight:800;color:${color};">${success ? "Réussite" : "Échec"}</div>${isAssassination && success ? "<div style=\"margin-top:.25em;color:#1f8f4d;font-weight:700;\">Assassinat réussi : effet létal à appliquer selon les conditions de scène et l’arbitrage du MJ.</div>" : ""}${isAssassination && !success ? "<div style=\"margin-top:.25em;color:#b3261e;font-weight:700;\">Assassinat manqué.</div>" : ""}${noticed ? "<div style=\"margin-top:.25em;color:#b3261e;font-weight:700;\">La victime remarque la tentative de pickpocket.</div>" : ""}</div>`
-    });
-    return true;
+    actor: actor?.name ?? "",
+    actorId: actor?.id ?? "",
+    race: item?.name ?? details.label ?? actor?.system?.race ?? "",
+    raceItemId: item?.id ?? "",
+    raceSlug: itemSystem.slug ?? details.slug ?? "",
+    thief_adjustments: adjustments
   };
+}
+
+function add2eLogThiefRows(actor, rows) {
+  if (globalThis.ADD2E_DEBUG_THIEF_RACIAL !== true) return;
+
+  const source = add2eThiefRaceDiagnostic(actor);
+  const view = rows.map(row => ({
+    key: row?.key ?? "",
+    base: row?.base ?? 0,
+    bonusTotal: row?.bonusTotal ?? 0,
+    bonuses: Array.isArray(row?.bonuses) ? row.bonuses.map(entry => `${entry?.label ?? "Bonus"} ${Number(entry?.value ?? 0) >= 0 ? "+" : ""}${Number(entry?.value ?? 0)}%`).join(" | ") : "",
+    finalValue: row?.finalValue ?? row?.value ?? 0
+  }));
+  const signature = JSON.stringify({ source, view });
+  const cacheKey = String(actor?.uuid ?? actor?.id ?? source.race ?? "thief");
+  if (ADD2E_THIEF_DIAG_CACHE.get(cacheKey) === signature) return;
+  ADD2E_THIEF_DIAG_CACHE.set(cacheKey, signature);
+
+  console.info("[ADD2E][THIEF_DIAG][SOURCE]", source);
+  console.table(view);
+}
+
+function add2eCanonicalThiefRows(actor) {
+  const getSkills = globalThis.add2eGetActorThiefSkills;
+  if (typeof getSkills !== "function") {
+    console.warn("[ADD2E][THIEF_DIAG][MISSING_CANONICAL]", { actor: actor?.name ?? "" });
+    return [];
+  }
+
+  const rows = Array.from(getSkills(actor) ?? []);
+  add2eLogThiefRows(actor, rows);
+  return rows;
+}
+
+function add2eInstallThiefSheetBridge() {
+  const getSkills = globalThis.add2eGetActorThiefSkills;
+  if (typeof getSkills !== "function") return;
+
+  globalThis.add2eGetActorThiefSkillTable = actor => add2eCanonicalThiefRows(actor);
 }
 
 function add2eInstallThiefTwoLineLabels() {
   document.getElementById(ADD2E_THIEF_TWO_LINE_STYLE_ID)?.remove();
+
   const style = document.createElement("style");
   style.id = ADD2E_THIEF_TWO_LINE_STYLE_ID;
   style.textContent = `
     .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skill-card,
     .add2e-character-v2-app .add2e-character-v3 button.a2e-thief-skill-card,
     .add2e-character-v3 .a2e-thief-skill-card,
-    .add2e-character-v3 button.a2e-thief-skill-card { grid-template-rows:30px 18px 18px !important; min-height:88px !important; }
+    .add2e-character-v3 button.a2e-thief-skill-card {
+      grid-template-rows:32px 18px 18px !important;
+      min-height:88px !important;
+    }
     .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skill-name,
-    .add2e-character-v3 .a2e-thief-skill-name { font-size:.72em !important; line-height:1.05 !important; white-space:normal !important; overflow:visible !important; text-overflow:clip !important; overflow-wrap:anywhere !important; }
+    .add2e-character-v3 .a2e-thief-skill-name {
+      font-size:.70em !important;
+      line-height:1.05 !important;
+      white-space:normal !important;
+      overflow:visible !important;
+      text-overflow:clip !important;
+      overflow-wrap:anywhere !important;
+    }
     .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skill-total,
     .add2e-character-v3 .a2e-thief-skill-total { font-size:1.02em !important; }
     .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skill-detail,
@@ -202,10 +100,23 @@ function add2eInstallThiefTwoLineLabels() {
   document.head.appendChild(style);
 }
 
-function add2eBootThiefSheetSynchronization() {
-  add2eInstallThiefRacialSynchronization();
-  window.setTimeout(add2eInstallThiefTwoLineLabels, 0);
+function add2eRefreshThiefSheetBridge() {
+  add2eInstallThiefSheetBridge();
+  add2eInstallThiefTwoLineLabels();
 }
 
-if (game?.ready) add2eBootThiefSheetSynchronization();
-else Hooks.once("ready", add2eBootThiefSheetSynchronization);
+function add2eBootThiefSheetBridge() {
+  if (globalThis[ADD2E_THIEF_SHEET_BRIDGE_FLAG]) return;
+  globalThis[ADD2E_THIEF_SHEET_BRIDGE_FLAG] = true;
+  globalThis.ADD2E_DEBUG_THIEF_RACIAL ??= true;
+
+  add2eRefreshThiefSheetBridge();
+  window.setTimeout(add2eRefreshThiefSheetBridge, 50);
+
+  Hooks.on("renderActorSheet", () => {
+    window.setTimeout(add2eRefreshThiefSheetBridge, 0);
+  });
+}
+
+if (game?.ready) add2eBootThiefSheetBridge();
+else Hooks.once("ready", add2eBootThiefSheetBridge);
