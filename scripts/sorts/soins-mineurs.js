@@ -119,6 +119,38 @@ const __add2eMinorCureResult = await (async () => {
     return result;
   }
 
+  function requestGmHealing({ amount, details }) {
+    if (amount <= 0) return true;
+    if (!game.socket?.emit) {
+      ui.notifications?.error?.(`${CURE} : relais MJ indisponible.`);
+      return false;
+    }
+    const hasActiveGM = Array.from(game.users ?? []).some(user => user.active && user.isGM);
+    if (!hasActiveGM) {
+      ui.notifications?.error?.(`${CURE} : aucun MJ actif ne peut appliquer les soins.`);
+      return false;
+    }
+
+    game.socket.emit("system.add2e", {
+      type: "ADD2E_GM_OPERATION",
+      operation: "applyDamage",
+      payload: {
+        actorUuid: target.uuid ?? null,
+        actorId: target.id,
+        sceneId: canvas?.scene?.id ?? null,
+        tokenId: targetToken.document?.id ?? targetToken.id ?? null,
+        montant: -amount,
+        type: "soin",
+        details,
+        casterId: caster.id ?? null,
+        casterUuid: caster.uuid ?? null,
+        sourceItemId: spell.id ?? null,
+        sourceItemUuid: spell.uuid ?? null
+      }
+    });
+    return true;
+  }
+
   async function createAdd2eSpellCard({ title, targetName, status, resultHtml, rule }) {
     await ChatMessage.create({
       speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken }),
@@ -157,10 +189,7 @@ const __add2eMinorCureResult = await (async () => {
     if (game.user?.isGM || target.isOwner) {
       await target.update({ "system.pdv": after }, { add2eReason: "soins-mineurs" });
       await globalThis.add2eSyncActorVitalStatus?.(target, { reason: "soins-mineurs" });
-    } else if (typeof game.add2e?.requestGM === "function") {
-      game.add2e.requestGM({ type: "applyDamage", actorId: target.id, montant: -restored });
-    } else {
-      ui.notifications?.error?.(`${CURE} : droits insuffisants pour soigner ${target.name}.`);
+    } else if (!requestGmHealing({ amount: restored, details: `${CURE} : ${restored} PV rendus` })) {
       return false;
     }
 
