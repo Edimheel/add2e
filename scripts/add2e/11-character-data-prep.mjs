@@ -5,9 +5,6 @@
 const ADD2E_MULTICLASS_HP_SYNC_VERSION = "2026-06-13-multiclass-hp-current-gain-v1";
 globalThis.ADD2E_MULTICLASS_HP_SYNC_VERSION = ADD2E_MULTICLASS_HP_SYNC_VERSION;
 const ADD2E_MULTICLASS_HP_SYNC_LOCK = new Set();
-const ADD2E_THIEF_CLASS_PROGRESS_MIGRATION_VERSION = "2026-07-04-embedded-thief-skills-clean-v1";
-const ADD2E_THIEF_CLASS_PROGRESS_LOCK = new Set();
-globalThis.ADD2E_THIEF_CLASS_PROGRESS_MIGRATION_VERSION = ADD2E_THIEF_CLASS_PROGRESS_MIGRATION_VERSION;
 
 function add2eIsMulticlassCharacter(actor) {
   if (!actor || actor.type !== "personnage") return false;
@@ -23,138 +20,6 @@ function add2eMulticlassHpRelevant(changes = {}) {
     || foundry.utils.hasProperty(changes, "system.details_classes")
     || foundry.utils.hasProperty(changes, "system.multiclasse")
     || foundry.utils.hasProperty(changes, "system.classe");
-}
-
-function add2eNormalizeMigrationKey(value) {
-  return String(value ?? "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/[’']/g, "")
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "");
-}
-
-function add2eIsThiefOrAssassinClassItem(item) {
-  if (String(item?.type ?? "").toLowerCase() !== "classe") return false;
-  const system = item?.system ?? {};
-  const key = [item?.name, system.slug, system.label, system.nom, system.name, system.classe]
-    .map(add2eNormalizeMigrationKey)
-    .filter(Boolean)
-    .join(" ");
-  return key.includes("voleur") || key.includes("assassin");
-}
-
-function add2eThiefClassReferenceKey(itemOrSystem) {
-  const system = itemOrSystem?.system ?? itemOrSystem ?? {};
-  const name = itemOrSystem?.name ?? system.label ?? system.nom ?? system.name ?? system.slug ?? "";
-  const key = add2eNormalizeMigrationKey(system.slug ?? system.label ?? system.nom ?? system.name ?? name);
-  if (key.includes("assassin")) return "assassin";
-  if (key.includes("voleur")) return "voleur";
-  return "";
-}
-
-function add2eCleanThiefProgressionRow(row) {
-  const copy = foundry.utils.duplicate(row ?? {});
-  delete copy.thiefSkills;
-  delete copy.backstabMultiplier;
-  return copy;
-}
-
-function add2eCleanThiefClassSystemForActor(sourceSystem = {}) {
-  const clean = foundry.utils.duplicate(sourceSystem) ?? {};
-  delete clean.skillLabels;
-  delete clean.thiefSkillLabels;
-  delete clean.thiefSkillOrder;
-  if (Array.isArray(clean.progression)) clean.progression = clean.progression.map(add2eCleanThiefProgressionRow);
-  return clean;
-}
-
-async function add2eFindReferenceThiefClassSystem(referenceKey) {
-  const pack = game.packs?.get?.("add2e.classes") ?? null;
-  if (!pack || !referenceKey) return null;
-
-  try { await pack.getIndex?.(); } catch (_error) {}
-  const index = Array.from(pack.index ?? []);
-  const entry = index.find(doc => add2eThiefClassReferenceKey({ name: doc.name, system: doc.system ?? {} }) === referenceKey)
-    ?? index.find(doc => add2eNormalizeMigrationKey(doc.name).includes(referenceKey));
-  if (!entry?._id) return null;
-
-  const doc = await pack.getDocument(entry._id);
-  return doc?.system ? add2eCleanThiefClassSystemForActor(doc.system) : null;
-}
-
-function add2eProgressionSkillsSignature(progression) {
-  return Array.isArray(progression)
-    ? progression.map(row => Array.isArray(row?.skills) ? row.skills.join(",") : "").join("|")
-    : "";
-}
-
-async function add2eMigrateEmbeddedThiefClassProgressions(actor, { reason = "ready-thief-class-progression-clean" } = {}) {
-  if (!game.user?.isGM || actor?.type !== "personnage") return false;
-  const lockKey = String(actor.id ?? actor.uuid ?? actor.name ?? "");
-  if (!lockKey || ADD2E_THIEF_CLASS_PROGRESS_LOCK.has(lockKey)) return false;
-
-  ADD2E_THIEF_CLASS_PROGRESS_LOCK.add(lockKey);
-  try {
-    let changed = false;
-
-    for (const item of actor.items?.filter?.(add2eIsThiefOrAssassinClassItem) ?? []) {
-      const referenceKey = add2eThiefClassReferenceKey(item);
-      const referenceSystem = await add2eFindReferenceThiefClassSystem(referenceKey);
-      if (!referenceSystem?.progression?.length) continue;
-
-      const currentSignature = add2eProgressionSkillsSignature(item.system?.progression);
-      const referenceSignature = add2eProgressionSkillsSignature(referenceSystem.progression);
-      const hasObsolete = Boolean(item.system?.skillLabels || item.system?.thiefSkillLabels || item.system?.thiefSkillOrder)
-        || (Array.isArray(item.system?.progression) && item.system.progression.some(row => row?.thiefSkills || row?.backstabMultiplier !== undefined));
-      if (currentSignature === referenceSignature && !hasObsolete) continue;
-
-      await item.update({
-        "system.progression": referenceSystem.progression,
-        "system.-=skillLabels": null,
-        "system.-=thiefSkillLabels": null,
-        "system.-=thiefSkillOrder": null,
-        "flags.add2e.thiefProgressionMigration": {
-          version: ADD2E_THIEF_CLASS_PROGRESS_MIGRATION_VERSION,
-          source: "Compendium.add2e.classes",
-          reason
-        }
-      }, { add2eInternal: true, add2eReason: reason, render: false });
-      changed = true;
-    }
-
-    const details = actor.system?.details_classe;
-    if (details && typeof details === "object" && add2eThiefClassReferenceKey(details)) {
-      const referenceSystem = await add2eFindReferenceThiefClassSystem(add2eThiefClassReferenceKey(details));
-      if (referenceSystem?.progression?.length) {
-        const currentSignature = add2eProgressionSkillsSignature(details.progression);
-        const referenceSignature = add2eProgressionSkillsSignature(referenceSystem.progression);
-        const hasObsolete = Boolean(details.skillLabels || details.thiefSkillLabels || details.thiefSkillOrder)
-          || (Array.isArray(details.progression) && details.progression.some(row => row?.thiefSkills || row?.backstabMultiplier !== undefined));
-        if (currentSignature !== referenceSignature || hasObsolete) {
-          await actor.update({
-            "system.details_classe.progression": referenceSystem.progression,
-            "system.details_classe.-=skillLabels": null,
-            "system.details_classe.-=thiefSkillLabels": null,
-            "system.details_classe.-=thiefSkillOrder": null
-          }, { add2eInternal: true, add2eReason: reason, render: false });
-          changed = true;
-        }
-      }
-    }
-
-    if (changed) {
-      console.info("[ADD2E][VOLEUR][MIGRATION_PROGRESSIONS]", { actor: actor.name, reason });
-      if (actor.sheet?.rendered) actor.sheet.render(false);
-    }
-    return changed;
-  } catch (error) {
-    console.warn("[ADD2E][VOLEUR][MIGRATION_PROGRESSIONS][ERROR]", { actor: actor?.name, error });
-    return false;
-  } finally {
-    ADD2E_THIEF_CLASS_PROGRESS_LOCK.delete(lockKey);
-  }
 }
 
 async function add2eSyncMulticlassHp(actor, { force = false, syncCurrent = false, reason = "multiclass-hp-sync" } = {}) {
@@ -447,15 +312,6 @@ Hooks.once("ready", () => {
   }, 750);
 });
 
-Hooks.once("ready", () => {
-  window.setTimeout(async () => {
-    if (!game.user?.isGM) return;
-    for (const actor of game.actors?.contents ?? []) {
-      await add2eMigrateEmbeddedThiefClassProgressions(actor, { reason: "ready-thief-class-progression-clean" });
-    }
-  }, 900);
-});
-
 // Exposition globale conservée pour compatibilité avec le code legacy et les scripts onUse.
 try { globalThis.FORCE_TABLE = FORCE_TABLE; } catch (_e) {}
 try { globalThis.INTELLIGENCE_TABLE = INTELLIGENCE_TABLE; } catch (_e) {}
@@ -468,4 +324,3 @@ try { globalThis.majImageToken = majImageToken; } catch (_e) {}
 try { globalThis.plageToRollFormula = plageToRollFormula; } catch (_e) {}
 try { globalThis.rollHitDice = rollHitDice; } catch (_e) {}
 try { globalThis.add2eSyncMulticlassHp = add2eSyncMulticlassHp; } catch (_e) {}
-try { globalThis.add2eMigrateEmbeddedThiefClassProgressions = add2eMigrateEmbeddedThiefClassProgressions; } catch (_e) {}
