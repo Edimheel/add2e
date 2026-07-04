@@ -25,6 +25,70 @@ const ADD2E_PROJECTILE_RECOVERY_RATE = 0.6;
 const ADD2E_ITEM_REFRESH_DELAY_MS = 80;
 const add2eItemRefreshTimers = new Map();
 
+function add2eNormalizeThiefTooltipKey(value) {
+  const normalizer = globalThis.add2eNormalizeThiefSkillKey;
+  if (typeof normalizer === "function") {
+    try {
+      const key = String(normalizer(value) ?? "").trim();
+      if (key) return key;
+    } catch (_error) {}
+  }
+  return String(value ?? "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[_\s-]+/g, "_");
+}
+
+function add2eThiefTooltipRaceLabel(actor) {
+  const raceItem = Array.from(actor?.items ?? []).find(item => String(item?.type ?? "").toLowerCase() === "race");
+  return String(raceItem?.name ?? actor?.system?.details_race?.label ?? actor?.system?.details_race?.name ?? actor?.system?.race ?? "Race").trim() || "Race";
+}
+
+function add2eThiefTooltipSigned(value) {
+  const number = Number(value) || 0;
+  return `${number >= 0 ? "+" : ""}${number}%`;
+}
+
+function add2eThiefBonusTooltip(actor, skill) {
+  const entries = Array.isArray(skill?.bonuses) ? skill.bonuses : [];
+  const lines = entries
+    .map(entry => {
+      const value = Number(entry?.value) || 0;
+      if (!value) return "";
+      const source = String(entry?.label ?? "Bonus").trim();
+      const label = source === "Race" ? `Race — ${add2eThiefTooltipRaceLabel(actor)}` : source;
+      return `${label} ${add2eThiefTooltipSigned(value)}`;
+    })
+    .filter(Boolean);
+  if (!lines.length) return "Aucun bonus appliqué.";
+  return `Bonus total ${add2eThiefTooltipSigned(skill?.bonusTotal)}\n${lines.join("\n")}`;
+}
+
+function add2eApplyThiefBonusTooltips(actor, sheetRoot) {
+  const readSkills = globalThis.add2eGetActorThiefSkills;
+  if (!actor || typeof readSkills !== "function" || !sheetRoot) return;
+
+  let skills = [];
+  try {
+    skills = Array.from(readSkills(actor) ?? []);
+  } catch (error) {
+    console.warn("[ADD2E][CAPACITES][VOLEUR][INFOBULLE] Lecture impossible.", error);
+    return;
+  }
+
+  const byKey = new Map(skills.map(skill => [add2eNormalizeThiefTooltipKey(skill?.key ?? skill?.label), skill]));
+  for (const card of sheetRoot.querySelectorAll(".a2e-thief-skill-card[data-skill-key]")) {
+    const skill = byKey.get(add2eNormalizeThiefTooltipKey(card.dataset.skillKey));
+    const badge = card.querySelector(".a2e-thief-skill-bonus");
+    if (!skill || !badge) continue;
+    const tooltip = add2eThiefBonusTooltip(actor, skill);
+    badge.title = tooltip;
+    badge.setAttribute("aria-label", tooltip);
+  }
+}
+
 export function add2eEnhanceCharacterSheetUi(sheet, html) {
   const actor = sheet?.actor ?? sheet?.document;
   if (!actor || actor.type !== "personnage") return;
@@ -34,6 +98,7 @@ export function add2eEnhanceCharacterSheetUi(sheet, html) {
 
   injectEffectsTab(sheet, sheetRoot);
   injectCapacitesTab(sheet, sheetRoot);
+  add2eApplyThiefBonusTooltips(actor, sheetRoot);
   injectCharacterUiStyles(sheetRoot);
   add2eApplySpellJsonColumns(sheet, sheetRoot);
 
