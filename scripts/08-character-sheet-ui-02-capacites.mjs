@@ -4,7 +4,7 @@
 // ============================================================
 import { escapeHtml, slug, expose, globalFn } from "./08-character-sheet-ui-00-utils.mjs";
 
-const ADD2E_CAPABILITIES_SHEET_VERSION = "2026-07-03-thief-tiles-totals-v8";
+const ADD2E_CAPABILITIES_SHEET_VERSION = "2026-07-03-thief-compact-cards-v9";
 
 function readNumber(value, fallback = 0) {
   const number = Number(value);
@@ -16,10 +16,7 @@ function featureName(feature) {
 }
 
 function featureMinLevel(feature) {
-  return Math.max(1, readNumber(
-    feature?.minLevel ?? feature?.minimumLevel ?? feature?.niveauMin ?? feature?.requiredLevel ?? feature?.niveauRequis ?? feature?.levelRequired ?? feature?.level ?? feature?.niveau,
-    1
-  ));
+  return Math.max(1, readNumber(feature?.minLevel ?? feature?.minimumLevel ?? feature?.niveauMin ?? feature?.requiredLevel ?? feature?.niveauRequis ?? feature?.levelRequired ?? feature?.level ?? feature?.niveau, 1));
 }
 
 function featureMaxLevel(feature) {
@@ -96,10 +93,7 @@ function isThiefSkillFeature(feature) {
     catch (_error) {}
   }
   const text = `${slug(featureName(feature))} ${normalizeSkillKey(feature?.skillKey ?? feature?.key ?? feature?.slug ?? "")}`;
-  return [
-    "pickpocket", "crochetage", "serrure", "piege", "desamorc", "deplacement_silencieux", "dissimulation",
-    "ecoute", "hear_noise", "escalade", "frappe_dans_le_dos", "backstab", "lecture_langues"
-  ].some(key => text.includes(key));
+  return ["pickpocket", "crochetage", "serrure", "piege", "desamorc", "deplacement_silencieux", "dissimulation", "ecoute", "hear_noise", "escalade", "frappe_dans_le_dos", "backstab", "lecture_langues"].some(key => text.includes(key));
 }
 
 function getThiefSkills(actor) {
@@ -144,22 +138,49 @@ function signedPercent(value) {
   return `${bonus >= 0 ? "+" : ""}${bonus}%`;
 }
 
+function thiefSkillIcon(key) {
+  const normalized = normalizeSkillKey(key);
+  if (normalized.includes("crochetage")) return "fa-key";
+  if (normalized.includes("piege")) return "fa-exclamation-triangle";
+  if (normalized.includes("deplacement")) return "fa-dice-d20";
+  if (normalized.includes("dissimulation")) return "fa-user-secret";
+  if (normalized.includes("ecoute")) return "fa-ear-listen";
+  if (normalized.includes("escalade")) return "fa-mountain";
+  if (normalized.includes("lecture")) return "fa-book-open";
+  if (normalized.includes("frappe") || normalized.includes("backstab")) return "fa-crosshairs";
+  return "fa-hand-holding";
+}
+
+function thiefSkillTone(key) {
+  const normalized = normalizeSkillKey(key);
+  if (normalized.includes("crochetage")) return "lock";
+  if (normalized.includes("piege")) return "trap";
+  if (normalized.includes("deplacement")) return "move";
+  if (normalized.includes("dissimulation")) return "hide";
+  if (normalized.includes("ecoute")) return "listen";
+  if (normalized.includes("escalade")) return "climb";
+  if (normalized.includes("lecture")) return "language";
+  if (normalized.includes("frappe") || normalized.includes("backstab")) return "backstab";
+  return "pocket";
+}
+
 function thiefTile(skill, feature = null, featureIndex = null) {
   const name = feature ? featureName(feature) : String(skill?.shortLabel ?? skill?.label ?? "Compétence");
   const key = normalizeSkillKey(feature?.skillKey ?? skill?.key ?? name);
   const display = String(skill?.display ?? `${readNumber(skill?.finalValue ?? skill?.value ?? 0)}%`);
+  const base = String(skill?.baseDisplay ?? `${readNumber(skill?.base, 0)}%`);
   const bonus = readNumber(skill?.bonusTotal, 0);
+  const bonusClass = bonus > 0 ? "positive" : bonus < 0 ? "negative" : "neutral";
   const canRoll = skill?.canRoll !== false;
-  const className = `a2e-thief-skill-card ${canRoll ? "is-rollable" : "is-static"}`;
-  const content = `<span class="a2e-thief-skill-name">${escapeHtml(name)}</span><strong class="a2e-thief-skill-total">${escapeHtml(display)}</strong><span class="a2e-thief-skill-bonus-line">Bonus total : ${escapeHtml(signedPercent(bonus))}</span>`;
+  const content = `<span class="a2e-thief-skill-name">${escapeHtml(name)}</span><strong class="a2e-thief-skill-total">${escapeHtml(display)}</strong><span class="a2e-thief-skill-detail"><span>Base ${escapeHtml(base)}</span><span class="a2e-thief-skill-bonus ${bonusClass}">${escapeHtml(signedPercent(bonus))}</span></span><span class="a2e-thief-skill-action"><i class="fas ${thiefSkillIcon(key)}" aria-hidden="true"></i></span>`;
 
-  if (!canRoll) return `<div class="${className}" title="${escapeHtml(String(skill?.note ?? "Valeur automatique"))}">${content}</div>`;
+  if (!canRoll) return `<div class="a2e-thief-skill-card is-static" title="${escapeHtml(String(skill?.note ?? "Valeur automatique"))}">${content}</div>`;
 
   if (feature) {
-    return `<button type="button" class="${className} add2e-feature-use" data-feature-index="${featureIndex}" data-feature-name="${escapeHtml(name)}" data-skill-key="${escapeHtml(key)}" data-on-use="${escapeHtml(featureOnUse(feature))}" title="Tester ${escapeHtml(name)}">${content}</button>`;
+    return `<button type="button" class="a2e-thief-skill-card is-rollable add2e-feature-use" data-feature-index="${featureIndex}" data-feature-name="${escapeHtml(name)}" data-skill-key="${escapeHtml(key)}" data-skill-tone="${escapeHtml(thiefSkillTone(key))}" data-on-use="${escapeHtml(featureOnUse(feature))}" title="Tester ${escapeHtml(name)}">${content}</button>`;
   }
 
-  return `<button type="button" class="${className} add2e-thief-skill-roll" data-skill-key="${escapeHtml(key)}" title="Tester ${escapeHtml(name)}">${content}</button>`;
+  return `<button type="button" class="a2e-thief-skill-card is-rollable add2e-thief-skill-roll" data-skill-key="${escapeHtml(key)}" data-skill-tone="${escapeHtml(thiefSkillTone(key))}" title="Tester ${escapeHtml(name)}">${content}</button>`;
 }
 
 function buildThiefTiles(actor) {
