@@ -4,7 +4,7 @@
 // ============================================================
 import { escapeHtml, slug, expose, globalFn } from "./08-character-sheet-ui-00-utils.mjs";
 
-const ADD2E_CAPABILITIES_SHEET_VERSION = "2026-07-04-thief-bonus-tooltips-v11";
+const ADD2E_CAPABILITIES_SHEET_VERSION = "2026-07-04-thief-bonus-tooltips-v12";
 
 function readNumber(value, fallback = 0) {
   const number = Number(value);
@@ -192,15 +192,20 @@ function thiefTile(actor, skill, feature = null, featureIndex = null) {
   const bonusClass = bonus > 0 ? "positive" : bonus < 0 ? "negative" : "neutral";
   const bonusTitle = thiefBonusBreakdown(actor, skill);
   const canRoll = skill?.canRoll !== false;
+  const tileTitle = [
+    canRoll ? `Tester ${name}` : String(skill?.note ?? "Valeur automatique"),
+    `Base ${base}`,
+    bonusTitle
+  ].join("\n");
   const content = `<span class="a2e-thief-skill-name">${escapeHtml(name)}</span><strong class="a2e-thief-skill-total">${escapeHtml(display)}</strong><span class="a2e-thief-skill-detail"><span>Base ${escapeHtml(base)}</span><span class="a2e-thief-skill-bonus ${bonusClass}" title="${escapeHtml(bonusTitle)}">${escapeHtml(signedPercent(bonus))}</span></span><span class="a2e-thief-skill-action"><i class="fas ${thiefSkillIcon(key)}" aria-hidden="true"></i></span>`;
 
-  if (!canRoll) return `<div class="a2e-thief-skill-card is-static" title="${escapeHtml(String(skill?.note ?? "Valeur automatique"))}">${content}</div>`;
+  if (!canRoll) return `<div class="a2e-thief-skill-card is-static" title="${escapeHtml(tileTitle)}">${content}</div>`;
 
   if (feature) {
-    return `<button type="button" class="a2e-thief-skill-card is-rollable add2e-thief-feature-roll" data-feature-index="${featureIndex}" data-feature-name="${escapeHtml(name)}" data-skill-key="${escapeHtml(key)}" data-skill-tone="${escapeHtml(thiefSkillTone(key))}" data-on-use="${escapeHtml(featureOnUse(feature))}" title="Tester ${escapeHtml(name)}">${content}</button>`;
+    return `<button type="button" class="a2e-thief-skill-card is-rollable add2e-thief-feature-roll" data-feature-index="${featureIndex}" data-feature-name="${escapeHtml(name)}" data-skill-key="${escapeHtml(key)}" data-skill-tone="${escapeHtml(thiefSkillTone(key))}" data-on-use="${escapeHtml(featureOnUse(feature))}" title="${escapeHtml(tileTitle)}">${content}</button>`;
   }
 
-  return `<button type="button" class="a2e-thief-skill-card is-rollable add2e-thief-skill-roll" data-skill-key="${escapeHtml(key)}" data-skill-tone="${escapeHtml(thiefSkillTone(key))}" title="Tester ${escapeHtml(name)}">${content}</button>`;
+  return `<button type="button" class="a2e-thief-skill-card is-rollable add2e-thief-skill-roll" data-skill-key="${escapeHtml(key)}" data-skill-tone="${escapeHtml(thiefSkillTone(key))}" title="${escapeHtml(tileTitle)}">${content}</button>`;
 }
 
 function buildThiefTiles(actor) {
