@@ -4,7 +4,7 @@
 // ============================================================
 import { escapeHtml, slug, expose, globalFn } from "./08-character-sheet-ui-00-utils.mjs";
 
-const ADD2E_CAPABILITIES_SHEET_VERSION = "2026-07-03-thief-compact-cards-v9";
+const ADD2E_CAPABILITIES_SHEET_VERSION = "2026-07-04-thief-compact-cards-v10";
 
 function readNumber(value, fallback = 0) {
   const number = Number(value);
@@ -82,8 +82,14 @@ function normalizeSkillKey(value) {
     climb_walls: "escalade",
     backstab: "frappe_dans_le_dos",
     attaque_dans_le_dos: "frappe_dans_le_dos",
+    attaque_sournoise: "frappe_dans_le_dos",
+    sneak_attack: "frappe_dans_le_dos",
     read_languages: "lecture_langues"
   }[raw] ?? raw;
+}
+
+function isHiddenThiefSkill(value) {
+  return normalizeSkillKey(value) === "frappe_dans_le_dos";
 }
 
 function isThiefSkillFeature(feature) {
@@ -147,7 +153,6 @@ function thiefSkillIcon(key) {
   if (normalized.includes("ecoute")) return "fa-ear-listen";
   if (normalized.includes("escalade")) return "fa-mountain";
   if (normalized.includes("lecture")) return "fa-book-open";
-  if (normalized.includes("frappe") || normalized.includes("backstab")) return "fa-crosshairs";
   return "fa-hand-holding";
 }
 
@@ -160,7 +165,6 @@ function thiefSkillTone(key) {
   if (normalized.includes("ecoute")) return "listen";
   if (normalized.includes("escalade")) return "climb";
   if (normalized.includes("lecture")) return "language";
-  if (normalized.includes("frappe") || normalized.includes("backstab")) return "backstab";
   return "pocket";
 }
 
@@ -177,14 +181,14 @@ function thiefTile(skill, feature = null, featureIndex = null) {
   if (!canRoll) return `<div class="a2e-thief-skill-card is-static" title="${escapeHtml(String(skill?.note ?? "Valeur automatique"))}">${content}</div>`;
 
   if (feature) {
-    return `<button type="button" class="a2e-thief-skill-card is-rollable add2e-feature-use" data-feature-index="${featureIndex}" data-feature-name="${escapeHtml(name)}" data-skill-key="${escapeHtml(key)}" data-skill-tone="${escapeHtml(thiefSkillTone(key))}" data-on-use="${escapeHtml(featureOnUse(feature))}" title="Tester ${escapeHtml(name)}">${content}</button>`;
+    return `<button type="button" class="a2e-thief-skill-card is-rollable add2e-thief-feature-roll" data-feature-index="${featureIndex}" data-feature-name="${escapeHtml(name)}" data-skill-key="${escapeHtml(key)}" data-skill-tone="${escapeHtml(thiefSkillTone(key))}" data-on-use="${escapeHtml(featureOnUse(feature))}" title="Tester ${escapeHtml(name)}">${content}</button>`;
   }
 
   return `<button type="button" class="a2e-thief-skill-card is-rollable add2e-thief-skill-roll" data-skill-key="${escapeHtml(key)}" data-skill-tone="${escapeHtml(thiefSkillTone(key))}" title="Tester ${escapeHtml(name)}">${content}</button>`;
 }
 
 function buildThiefTiles(actor) {
-  const skills = getThiefSkills(actor);
+  const skills = getThiefSkills(actor).filter(skill => !isHiddenThiefSkill(skill?.key ?? skill?.label ?? ""));
   if (!skills.length) return "";
 
   const byKey = skillByKey(skills);
@@ -193,6 +197,7 @@ function buildThiefTiles(actor) {
   classFeatures(actor).forEach((feature, index) => {
     if (!featureIsActive(feature) || !isThiefSkillFeature(feature) || !featureAvailable(actor, feature)) return;
     const key = normalizeSkillKey(feature?.skillKey ?? feature?.key ?? feature?.slug ?? featureName(feature));
+    if (isHiddenThiefSkill(key)) return;
     const skill = byKey.get(key);
     if (!skill || used.has(key)) return;
     used.add(key);
@@ -295,7 +300,7 @@ function bindCapabilities(root, actor, sheet) {
       await roll(actor, button.dataset.skillKey);
     };
   }
-  for (const button of root.querySelectorAll(".add2e-feature-use")) {
+  for (const button of root.querySelectorAll(".add2e-feature-use, .add2e-thief-feature-roll")) {
     button.onclick = async event => {
       event.preventDefault();
       event.stopPropagation();
