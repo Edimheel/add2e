@@ -4,7 +4,7 @@
 // ============================================================
 import { escapeHtml, slug, expose, globalFn } from "./08-character-sheet-ui-00-utils.mjs";
 
-const ADD2E_CAPABILITIES_SHEET_VERSION = "2026-07-04-thief-compact-cards-v10";
+const ADD2E_CAPABILITIES_SHEET_VERSION = "2026-07-04-thief-bonus-tooltips-v11";
 
 function readNumber(value, fallback = 0) {
   const number = Number(value);
@@ -144,6 +144,21 @@ function signedPercent(value) {
   return `${bonus >= 0 ? "+" : ""}${bonus}%`;
 }
 
+function thiefRaceLabel(actor) {
+  const raceItem = Array.from(actor?.items ?? []).find(item => String(item?.type ?? "").toLowerCase() === "race");
+  return String(raceItem?.name ?? actor?.system?.details_race?.label ?? actor?.system?.race ?? "Race").trim() || "Race";
+}
+
+function thiefBonusBreakdown(actor, skill) {
+  const bonuses = Array.from(skill?.bonuses ?? []).filter(bonus => Number.isFinite(Number(bonus?.value)) && Number(bonus.value) !== 0);
+  if (!bonuses.length) return "Aucun bonus ou malus.";
+  const race = thiefRaceLabel(actor);
+  return bonuses.map(bonus => {
+    const source = String(bonus?.label ?? "Bonus").trim() || "Bonus";
+    return `${source === "Race" ? `Race — ${race}` : source} ${signedPercent(bonus.value)}`;
+  }).join(" | ");
+}
+
 function thiefSkillIcon(key) {
   const normalized = normalizeSkillKey(key);
   if (normalized.includes("crochetage")) return "fa-key";
@@ -168,15 +183,16 @@ function thiefSkillTone(key) {
   return "pocket";
 }
 
-function thiefTile(skill, feature = null, featureIndex = null) {
+function thiefTile(actor, skill, feature = null, featureIndex = null) {
   const name = feature ? featureName(feature) : String(skill?.shortLabel ?? skill?.label ?? "Compétence");
   const key = normalizeSkillKey(feature?.skillKey ?? skill?.key ?? name);
   const display = String(skill?.display ?? `${readNumber(skill?.finalValue ?? skill?.value ?? 0)}%`);
   const base = String(skill?.baseDisplay ?? `${readNumber(skill?.base, 0)}%`);
   const bonus = readNumber(skill?.bonusTotal, 0);
   const bonusClass = bonus > 0 ? "positive" : bonus < 0 ? "negative" : "neutral";
+  const bonusTitle = thiefBonusBreakdown(actor, skill);
   const canRoll = skill?.canRoll !== false;
-  const content = `<span class="a2e-thief-skill-name">${escapeHtml(name)}</span><strong class="a2e-thief-skill-total">${escapeHtml(display)}</strong><span class="a2e-thief-skill-detail"><span>Base ${escapeHtml(base)}</span><span class="a2e-thief-skill-bonus ${bonusClass}">${escapeHtml(signedPercent(bonus))}</span></span><span class="a2e-thief-skill-action"><i class="fas ${thiefSkillIcon(key)}" aria-hidden="true"></i></span>`;
+  const content = `<span class="a2e-thief-skill-name">${escapeHtml(name)}</span><strong class="a2e-thief-skill-total">${escapeHtml(display)}</strong><span class="a2e-thief-skill-detail"><span>Base ${escapeHtml(base)}</span><span class="a2e-thief-skill-bonus ${bonusClass}" title="${escapeHtml(bonusTitle)}">${escapeHtml(signedPercent(bonus))}</span></span><span class="a2e-thief-skill-action"><i class="fas ${thiefSkillIcon(key)}" aria-hidden="true"></i></span>`;
 
   if (!canRoll) return `<div class="a2e-thief-skill-card is-static" title="${escapeHtml(String(skill?.note ?? "Valeur automatique"))}">${content}</div>`;
 
@@ -201,12 +217,12 @@ function buildThiefTiles(actor) {
     const skill = byKey.get(key);
     if (!skill || used.has(key)) return;
     used.add(key);
-    featureTiles.push(thiefTile(skill, feature, index));
+    featureTiles.push(thiefTile(actor, skill, feature, index));
   });
 
   const remaining = skills
     .filter(skill => !used.has(normalizeSkillKey(skill?.key ?? skill?.label ?? "")))
-    .map(skill => thiefTile(skill));
+    .map(skill => thiefTile(actor, skill));
   const tiles = [...featureTiles, ...remaining];
   if (!tiles.length) return "";
 
