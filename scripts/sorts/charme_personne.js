@@ -1,10 +1,11 @@
 // Charme-Personne.js — ADD2E corrigé
-// Version : 2026-07-03-racial-spell-save-v3
+// Version : 2026-07-04-periodic-charm-save-v4
 // Compatible : Sorts, Objets (Bâton, Anneau...)
 // Retour attendu : true = consommé, false = non consommé.
 
 return await (async () => {
   const TAG = "[ADD2E][SORT_ONUSE][CHARME_PERSONNE]";
+  const PERIODIC_VERSION = "2026-07-04-charm-person-periodic-saves-v1";
 
   const htmlEscape = (value) => {
     const div = document.createElement("div");
@@ -91,7 +92,60 @@ return await (async () => {
     });
   }
 
-  const getSagesse = (a) => Number(a?.system?.sagesse ?? a?.system?.sagesse_base ?? a?.system?.abilities?.wis?.value ?? 0) || 0;
+  const getSagesse = (a) => Number(a?.system?.sagesse ?? a?.system?.sagesse_base ?? a?.system?.sag_aff ?? a?.system?.abilities?.wis?.value ?? 0) || 0;
+  const getIntelligence = (a) => Number(a?.system?.intelligence ?? a?.system?.intelligence_base ?? a?.system?.int_aff ?? a?.system?.abilities?.int?.value ?? 0) || 0;
+
+  const currentTimeTick = () => {
+    const fromApi = game.add2e?.time?.currentTick?.() ?? globalThis.ADD2E_TIME_ENGINE?.currentTick?.();
+    const value = Number(fromApi);
+    if (Number.isFinite(value) && value >= 0) return Math.floor(value);
+
+    try {
+      const setting = Number(game.settings?.get?.("add2e", "worldTimeTick"));
+      if (Number.isFinite(setting) && setting >= 0) return Math.floor(setting);
+    } catch (_error) {}
+
+    return 0;
+  };
+
+  const charmSaveInterval = (intelligence) => {
+    const value = Math.max(0, Math.floor(Number(intelligence) || 0));
+    if (value <= 3) return { days: 90, label: "3 mois" };
+    if (value <= 6) return { days: 60, label: "2 mois" };
+    if (value <= 9) return { days: 30, label: "1 mois" };
+    if (value <= 12) return { days: 21, label: "3 semaines" };
+    if (value <= 14) return { days: 14, label: "2 semaines" };
+    if (value <= 16) return { days: 7, label: "1 semaine" };
+    if (value === 17) return { days: 3, label: "3 jours" };
+    if (value === 18) return { days: 2, label: "2 jours" };
+    return { days: 1, label: "1 jour" };
+  };
+
+  const charmPeriodicSaveData = (targetActor) => {
+    const intelligence = getIntelligence(targetActor);
+    const interval = charmSaveInterval(intelligence);
+    const hours = interval.days * 24;
+    let intervalTicks = Number(game.add2e?.time?.toRounds?.(hours, "hour"));
+    if (!Number.isFinite(intervalTicks) || intervalTicks <= 0) intervalTicks = interval.days * 24 * 60;
+    intervalTicks = Math.max(1, Math.floor(intervalTicks));
+
+    const createdAtTick = currentTimeTick();
+    return {
+      version: PERIODIC_VERSION,
+      enabled: true,
+      kind: "charme_personne",
+      spellName: sourceItem.name,
+      intelligence,
+      intervalDays: interval.days,
+      intervalLabel: interval.label,
+      intervalTicks,
+      createdAtTick,
+      nextSaveTick: createdAtTick + intervalTicks,
+      lastSaveTick: null,
+      attempts: 0,
+      calendarAssumption: "1 mois = 30 jours de temps ADD2E"
+    };
+  };
 
   const getSaveVsSpell = (a) => {
     const sys = a?.system ?? {};
@@ -286,12 +340,14 @@ return await (async () => {
           <div style="font-size:0.9em;">Jet total : <b>${save.total}</b> ${saveDetails} vs <b>${save.threshold}</b></div>
         </div>`;
     } else {
+      const periodicSave = charmPeriodicSaveData(targetActor);
       chatContent = `
         ${resistanceLine}
         <div style="border:1px solid #c0392b;background:#fdedec;padding:5px;border-radius:5px;text-align:center;margin-bottom:5px;">
           <div style="color:#c0392b;font-weight:bold;">💖 CHARMÉ !</div>
           <div style="font-size:0.9em;">Jet total : <b>${save.total}</b> ${saveDetails} vs <b>${save.threshold}</b></div>
           <div style="font-size:0.85em;font-style:italic;margin-top:3px;">La cible considère le lanceur comme son ami.</div>
+          <div style="font-size:0.82em;margin-top:5px;color:#6c3483;">Nouveau jet de sauvegarde dans <b>${htmlEscape(periodicSave.intervalLabel)}</b> (Intelligence ${periodicSave.intelligence}).</div>
         </div>`;
 
       await removeExistingCharm(targetActor);
@@ -301,9 +357,18 @@ return await (async () => {
         img: "icons/svg/status/heart.svg",
         icon: "icons/svg/status/heart.svg",
         origin: sourceItem.uuid,
-        duration: { seconds: 3600 },
+        duration: {},
         disabled: false,
-        flags: { add2e: { tags: ["charme", "mental"], sourceId: caster.id } }
+        flags: {
+          add2e: {
+            tags: ["charme", "mental", "sort:charme_personne"],
+            sourceId: caster.id,
+            sourceUuid: caster.uuid ?? null,
+            sourceName: caster.name,
+            spellName: sourceItem.name,
+            charmPeriodicSave: periodicSave
+          }
+        }
       };
 
       await createOrSocketEffect(targetToken, effectData);
