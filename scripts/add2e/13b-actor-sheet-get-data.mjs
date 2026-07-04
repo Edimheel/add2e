@@ -1,10 +1,7 @@
-// ADD2E — Actor sheet getData : orchestrateur ApplicationV2.
+// ADD2E — Point d'entrée getData de la feuille ApplicationV2.
+// Les comportements restent répartis en modules fonctionnels.
 
-import { add2ePrepareActorSheetBaseData } from "./13b-actor-sheet-get-data-base.mjs";
-import { add2ePrepareActorSheetCombatData } from "./13b-actor-sheet-get-data-combat.mjs";
-import { add2ePopulateActorSheetSpellData } from "./13b-actor-sheet-get-data-spells.mjs";
-
-if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant getData.");
+import "./13b-actor-sheet-get-data-core.mjs";
 
 const ADD2E_THIEF_RACIAL_SYNC_FLAG = "__ADD2E_THIEF_RACIAL_SYNC_V2";
 const ADD2E_THIEF_TWO_LINE_STYLE_ID = "add2e-thief-two-line-labels";
@@ -53,27 +50,22 @@ function add2eGetAuthoritativeThiefRaceAdjustments(actor) {
   const directKeys = ["thief_adjustments", "thiefSkillAdjustments", "thief_bonuses", "thiefSkillBonuses", "bonus_competences_voleur", "bonus_competence_voleur"];
 
   for (const source of add2eThiefRaceSystemSources(actor)) {
-    const multiclassing = source.multiclassing;
     for (const key of nestedKeys) {
-      if (add2eThiefHasEntries(multiclassing?.[key])) return multiclassing[key];
+      if (add2eThiefHasEntries(source.multiclassing?.[key])) return source.multiclassing[key];
     }
   }
-
   for (const source of add2eThiefRaceSystemSources(actor)) {
     for (const key of directKeys) {
-      if (add2eThiefHasEntries(source?.[key])) return source[key];
+      if (add2eThiefHasEntries(source[key])) return source[key];
     }
   }
-
   return null;
 }
 
 function add2eThiefReadBonusValue(value) {
   if (typeof value === "number") return Number.isFinite(value) ? value : 0;
   if (typeof value === "string") return Number(value) || 0;
-  if (value && typeof value === "object") {
-    return Number(value.value ?? value.bonus ?? value.mod ?? value.adjustment ?? value.valeur ?? value.malus ?? 0) || 0;
-  }
+  if (value && typeof value === "object") return Number(value.value ?? value.bonus ?? value.mod ?? value.adjustment ?? value.valeur ?? value.malus ?? 0) || 0;
   return 0;
 }
 
@@ -85,11 +77,9 @@ function add2eThiefMapBonus(map, skillKey) {
 
   if (Array.isArray(map)) {
     for (const entry of map) {
-      if (!entry) continue;
-      if (typeof entry === "object") {
-        const rawKey = entry.key ?? entry.skill ?? entry.competence ?? entry.compétence ?? entry.name ?? entry.label ?? entry.id ?? "all";
-        if (accepts(rawKey)) total += add2eThiefReadBonusValue(entry);
-      }
+      if (!entry || typeof entry !== "object") continue;
+      const rawKey = entry.key ?? entry.skill ?? entry.competence ?? entry.compétence ?? entry.name ?? entry.label ?? entry.id ?? "all";
+      if (accepts(rawKey)) total += add2eThiefReadBonusValue(entry);
     }
     return total;
   }
@@ -117,23 +107,17 @@ function add2eApplyAuthoritativeThiefRaceAdjustments(actor, rows) {
   return rows.map(row => {
     if (!row || row.type === "multiplier") return row;
 
-    const key = add2eThiefNormalizeSkillKey(row.key ?? row.label);
     const priorBonuses = Array.isArray(row.bonuses) ? row.bonuses : [];
     const inheritedRace = priorBonuses.filter(add2eIsRacialThiefBonus);
     const bonuses = priorBonuses.filter(entry => !add2eIsRacialThiefBonus(entry));
     const oldRaceTotal = inheritedRace.reduce((total, entry) => total + (Number(entry?.value) || 0), 0);
-    const racialValue = add2eThiefMapBonus(map, key);
+    const racialValue = add2eThiefMapBonus(map, row.key ?? row.label);
     if (racialValue !== 0) bonuses.push({ label: "Race", value: racialValue });
 
     const base = Number(row.base ?? 0) || 0;
     const oldFinal = Number(row.finalValue ?? row.value ?? base) || 0;
     const finalValue = Math.max(0, oldFinal - oldRaceTotal + racialValue);
     const bonusTotal = bonuses.reduce((total, entry) => total + (Number(entry?.value) || 0), 0);
-    const breakdownTitle = [
-      `Base ${base}%`,
-      ...bonuses.map(entry => `${entry.label} ${add2eThiefSigned(entry.value)}%`)
-    ].join(" | ");
-
     return {
       ...row,
       bonuses,
@@ -141,18 +125,13 @@ function add2eApplyAuthoritativeThiefRaceAdjustments(actor, rows) {
       value: finalValue,
       finalValue,
       display: `${finalValue}%`,
-      breakdownTitle
+      breakdownTitle: [`Base ${base}%`, ...bonuses.map(entry => `${entry.label} ${add2eThiefSigned(entry.value)}%`)].join(" | ")
     };
   });
 }
 
 function add2eEscapeChat(value) {
-  return String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+  return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
 
 function add2eInstallThiefRacialSynchronization() {
@@ -163,7 +142,6 @@ function add2eInstallThiefRacialSynchronization() {
 
   globalThis[ADD2E_THIEF_RACIAL_SYNC_FLAG] = true;
   const synchronizedSkills = (actor, ...args) => add2eApplyAuthoritativeThiefRaceAdjustments(actor, originalSkills(actor, ...args));
-  synchronizedSkills.__add2eThiefRacialSync = true;
   globalThis.add2eGetActorThiefSkills = synchronizedSkills;
 
   const originalTable = globalThis.add2eGetActorThiefSkillTable;
@@ -176,7 +154,6 @@ function add2eInstallThiefRacialSynchronization() {
 
   globalThis.add2eRollThiefSkill = async function add2eRollThiefSkillWithRacialAdjustments(actor, key) {
     if (!actor) return ui.notifications.warn("Acteur introuvable."), false;
-
     const wanted = add2eThiefNormalizeSkillKey(key);
     const skill = synchronizedSkills(actor).find(entry => add2eThiefNormalizeSkillKey(entry?.key ?? entry?.label) === wanted) ?? null;
     if (!skill) return ui.notifications.warn("Compétence de voleur introuvable pour ce niveau."), false;
@@ -184,7 +161,6 @@ function add2eInstallThiefRacialSynchronization() {
 
     const options = await promptModifiers(actor, skill);
     if (!options) return false;
-
     const situational = Number(options.mod || 0) || 0;
     const targetLevel = Number(options.targetLevel || 0) || 0;
     const targetPenalty = skill.key === "pickpocket" && targetLevel > 3 ? -5 * (targetLevel - 3) : 0;
@@ -196,12 +172,7 @@ function add2eInstallThiefRacialSynchronization() {
     const noticed = skill.key === "pickpocket" && roll.total >= finalValue + 21;
     const isAssassination = skill.key === "assassinat";
     const color = success ? "#1f8f4d" : "#b3261e";
-    const details = [
-      { label: "Base", value: skill.base },
-      ...(skill.bonuses ?? []),
-      ...(situational !== 0 ? [{ label: "Situation", value: situational }] : []),
-      ...(targetPenalty !== 0 ? [{ label: `Cible niveau ${targetLevel}`, value: targetPenalty }] : [])
-    ];
+    const details = [{ label: "Base", value: skill.base }, ...(skill.bonuses ?? []), ...(situational !== 0 ? [{ label: "Situation", value: situational }] : []), ...(targetPenalty !== 0 ? [{ label: `Cible niveau ${targetLevel}`, value: targetPenalty }] : [])];
     const detailText = details.map(entry => `${add2eEscapeChat(entry.label)} ${add2eThiefSigned(entry.value)}%`).join(" ; ");
 
     await ChatMessage.create({
@@ -220,19 +191,9 @@ function add2eInstallThiefTwoLineLabels() {
     .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skill-card,
     .add2e-character-v2-app .add2e-character-v3 button.a2e-thief-skill-card,
     .add2e-character-v3 .a2e-thief-skill-card,
-    .add2e-character-v3 button.a2e-thief-skill-card {
-      grid-template-rows:30px 18px 18px !important;
-      min-height:88px !important;
-    }
+    .add2e-character-v3 button.a2e-thief-skill-card { grid-template-rows:30px 18px 18px !important; min-height:88px !important; }
     .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skill-name,
-    .add2e-character-v3 .a2e-thief-skill-name {
-      font-size:.72em !important;
-      line-height:1.05 !important;
-      white-space:normal !important;
-      overflow:visible !important;
-      text-overflow:clip !important;
-      overflow-wrap:anywhere !important;
-    }
+    .add2e-character-v3 .a2e-thief-skill-name { font-size:.72em !important; line-height:1.05 !important; white-space:normal !important; overflow:visible !important; text-overflow:clip !important; overflow-wrap:anywhere !important; }
     .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skill-total,
     .add2e-character-v3 .a2e-thief-skill-total { font-size:1.02em !important; }
     .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skill-detail,
@@ -248,32 +209,3 @@ function add2eBootThiefSheetSynchronization() {
 
 if (game?.ready) add2eBootThiefSheetSynchronization();
 else Hooks.once("ready", add2eBootThiefSheetSynchronization);
-
-globalThis.Add2eActorSheet.prototype.getData = async function getData() {
-  const data = this._add2eNativeGetData();
-  const state = add2ePrepareActorSheetBaseData({ sheet: this, data });
-
-  add2ePrepareActorSheetCombatData({
-    actor: state.actor,
-    data,
-    sys: state.sys,
-    progressionCourante: state.progressionCourante,
-    isMonk: state.isMonk
-  });
-
-  add2ePopulateActorSheetSpellData({ actor: state.actor, data, items: state.items });
-
-  data.activeEffectsList = this.actor.effects.map(eff => {
-    let desc = eff.getFlag("core", "description") || eff.flags?.add2e?.desc || eff.description || "";
-    if (!desc && eff.flags?.add2e?.tags) desc = "<small>" + eff.flags.add2e.tags.join(", ") + "</small>";
-    let durationStr = "";
-    if (typeof eff.duration?.remaining !== "undefined") durationStr = `${eff.duration.remaining} rounds`;
-    else if (typeof eff.duration?.rounds !== "undefined") durationStr = `${eff.duration.rounds} rounds`;
-    else if (typeof eff.duration?.seconds !== "undefined") durationStr = `${eff.duration.seconds} sec`;
-    return { id: eff.id, name: eff.name || "", img: eff.img || "icons/svg/aura.svg", description: desc, duration: durationStr, sourceName: eff.parent?.name || eff.origin || "" };
-  });
-
-  data.alignementsDisponibles = (state.sys.alignements_autorises && Array.isArray(state.sys.alignements_autorises)) ? state.sys.alignements_autorises : [];
-  data.activeTab = this._add2eGetNativeActiveTab?.() || this._add2eActiveTab || this._add2eReadStoredTab?.() || "resume";
-  return data;
-};
