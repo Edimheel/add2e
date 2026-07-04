@@ -32,5 +32,6 @@ globalThis.Add2eActorSheet.prototype.getData = async function getData() {
 
   data.alignementsDisponibles = (state.sys.alignements_autorises && Array.isArray(state.sys.alignements_autorises)) ? state.sys.alignements_autorises : [];
   data.activeTab = this._add2eGetNativeActiveTab?.() || this._add2eActiveTab || this._add2eReadStoredTab?.() || "resume";
+  this._add2ePreparedData = data;
   return data;
 };
