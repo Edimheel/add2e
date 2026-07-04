@@ -234,7 +234,7 @@ function injectGlobalCapabilityStyles() {
     .add2e-character-v3 button.a2e-thief-skill-card {
       display:grid !important;
       grid-template-columns:28px minmax(0, 1fr) !important;
-      grid-template-rows:24px 20px 22px !important;
+      grid-template-rows:30px 18px 18px !important;
       column-gap:6px !important;
       row-gap:2px !important;
       align-items:center !important;
@@ -276,12 +276,13 @@ function injectGlobalCapabilityStyles() {
       display:block !important;
       min-width:0 !important;
       color:#3d2b0a !important;
-      font-size:.82em !important;
+      font-size:.72em !important;
       font-weight:950 !important;
-      line-height:1.1 !important;
-      white-space:nowrap !important;
-      overflow:hidden !important;
-      text-overflow:ellipsis !important;
+      line-height:1.05 !important;
+      white-space:normal !important;
+      overflow:visible !important;
+      text-overflow:clip !important;
+      overflow-wrap:anywhere !important;
     }
     .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skill-total,
     .add2e-character-v3 .a2e-thief-skill-total {
@@ -289,7 +290,7 @@ function injectGlobalCapabilityStyles() {
       grid-row:2 !important;
       display:block !important;
       color:#184a82 !important;
-      font-size:1.08em !important;
+      font-size:1.04em !important;
       font-weight:950 !important;
       line-height:1 !important;
     }
@@ -303,7 +304,7 @@ function injectGlobalCapabilityStyles() {
       align-items:center !important;
       min-width:0 !important;
       color:#7f704d !important;
-      font-size:.70em !important;
+      font-size:.66em !important;
       font-weight:850 !important;
       line-height:1 !important;
       white-space:nowrap !important;
