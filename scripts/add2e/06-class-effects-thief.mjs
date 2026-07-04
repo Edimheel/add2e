@@ -239,15 +239,6 @@ function add2ePushThiefBonus(out, label, map, key) {
   if (value !== 0) out.push({ label, value });
 }
 
-const ADD2E_THIEF_RACIAL_ADJUSTMENTS = {
-  demi_elfe: { pickpocket: 10, dissimulation: 5 },
-  demi_orque: { pickpocket: -5, crochetage_serrures: 5, detection_pieges: 5, ecoute: 5, escalade: 5, lecture_langues: -10 },
-  elfe: { pickpocket: 5, crochetage_serrures: -5, deplacement_silencieux: 5, dissimulation: 10, ecoute: 5 },
-  gnome: { crochetage_serrures: 5, detection_pieges: 10, deplacement_silencieux: 5, dissimulation: 5, ecoute: 10, escalade: -15 },
-  nain: { crochetage_serrures: 10, detection_pieges: 15, escalade: -10, lecture_langues: -5 },
-  petite_gens: { pickpocket: 5, crochetage_serrures: 5, detection_pieges: 5, deplacement_silencieux: 10, dissimulation: 15, ecoute: 5, escalade: -15, lecture_langues: -5 }
-};
-
 const ADD2E_THIEF_RACIAL_SLUG_ALIASES = {
   demi_elf: "demi_elfe", half_elf: "demi_elfe", halfelf: "demi_elfe",
   demi_orc: "demi_orque", demi_orque: "demi_orque", half_orc: "demi_orque", halforc: "demi_orque",
@@ -256,8 +247,47 @@ const ADD2E_THIEF_RACIAL_SLUG_ALIASES = {
   halfling: "petite_gens", petite_gens: "petite_gens", petit_gens: "petite_gens", petite_gen: "petite_gens"
 };
 
+function add2eNormalizeRaceReference(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
 function add2eGetActorRaceItem(actor) {
-  return actor?.items?.find?.(item => String(item?.type ?? "").toLowerCase() === "race") ?? null;
+  const races = Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "race");
+  if (!races.length) return null;
+
+  const stored = actor?.system?.race;
+  const details = actor?.system?.details_race ?? {};
+  const rawReferences = [
+    ...(stored && typeof stored === "object" ? [stored.id, stored._id, stored.uuid, stored.slug, stored.name, stored.nom, stored.label] : [stored]),
+    actor?.system?.raceId,
+    actor?.system?.race_id,
+    details.id,
+    details._id,
+    details.slug,
+    details.name,
+    details.nom,
+    details.label
+  ].map(value => String(value ?? "").trim()).filter(Boolean);
+
+  const byId = races.find(item => rawReferences.some(reference => reference === item.id || reference === item.uuid));
+  if (byId) return byId;
+
+  const references = new Set(rawReferences.map(add2eNormalizeRaceReference).filter(Boolean));
+  const byIdentity = races.find(item => {
+    const system = item?.system ?? {};
+    const identities = [item?.name, system.slug, system.name, system.nom, system.label]
+      .map(add2eNormalizeRaceReference)
+      .filter(Boolean);
+    return identities.some(identity => references.has(identity));
+  });
+
+  return byIdentity ?? races[0];
 }
 
 function add2eGetActorRaceSystem(actor) {
@@ -460,18 +490,13 @@ function add2eGetActiveTagThiefBonuses(actor, key) {
 function add2eGetThiefSkillBonuses(actor, key) {
   const out = [];
   const details = add2eGetThiefClassSystem(actor);
+  const raceItem = add2eGetActorRaceItem(actor);
   const race = add2eGetActorRaceSystem(actor);
   for (const map of [actor?.system?.thiefSkillAdjustments, actor?.system?.thiefSkillBonuses, actor?.system?.voleurSkillAdjustments, actor?.system?.voleurSkillBonuses, actor?.system?.bonus_competences_voleur, actor?.system?.bonusCompetencesVoleur]) add2ePushThiefBonus(out, "Acteur", map, key);
   for (const map of [details.thiefSkillAdjustments, details.thiefSkillBonuses, details.thief_adjustments, details.thief_bonuses, details.voleurSkillAdjustments, details.voleurSkillBonuses, details.bonus_competences_voleur, details.bonus_competence_voleur, details.bonus_voleur, details.malus_competences_voleur, details.skillBonuses?.voleur, details.skillAdjustments?.voleur]) add2ePushThiefBonus(out, "Classe", map, key);
 
-  const explicitRaceMaps = add2eGetExplicitRaceThiefBonusMaps(race);
-  if (explicitRaceMaps.length) {
-    for (const map of explicitRaceMaps) add2ePushThiefBonus(out, "Race", map, key);
-  } else {
-    const raceSlug = add2eGetActorRaceSlug(actor, race);
-    const canonicalMap = ADD2E_THIEF_RACIAL_ADJUSTMENTS[raceSlug] ?? null;
-    add2ePushThiefBonus(out, raceSlug ? `Race — ${raceSlug.replace(/_/g, " ")}` : "Race", canonicalMap, key);
-  }
+  const raceLabel = String(raceItem?.name ?? race?.label ?? race?.nom ?? race?.name ?? "Race").trim() || "Race";
+  for (const map of add2eGetExplicitRaceThiefBonusMaps(race)) add2ePushThiefBonus(out, `Race — ${raceLabel}`, map, key);
 
   const dexBonus = add2eGetThiefDexBonus(actor, key);
   if (dexBonus.value !== 0) out.push(dexBonus);
@@ -604,6 +629,7 @@ async function add2eRollThiefSkill(actor, key) {
 }
 
 globalThis.add2eGetActorThiefSkills = add2eGetActorThiefSkills;
+globalThis.add2eGetActorThiefSkillTable = actor => add2eGetActorThiefSkills(actor);
 globalThis.add2eRollThiefSkill = add2eRollThiefSkill;
 globalThis.add2eParseThiefBonusTag = add2eParseThiefBonusTag;
 
@@ -789,6 +815,7 @@ try { globalThis.add2eThiefToArray = add2eThiefToArray; } catch (_e) {}
 try { globalThis.add2eReadThiefBonusValue = add2eReadThiefBonusValue; } catch (_e) {}
 try { globalThis.add2eGetThiefBonusFromMap = add2eGetThiefBonusFromMap; } catch (_e) {}
 try { globalThis.add2ePushThiefBonus = add2ePushThiefBonus; } catch (_e) {}
+try { globalThis.add2eGetActorRaceItem = add2eGetActorRaceItem; } catch (_e) {}
 try { globalThis.add2eGetActorRaceSystem = add2eGetActorRaceSystem; } catch (_e) {}
 try { globalThis.add2eGetActorRaceSlug = add2eGetActorRaceSlug; } catch (_e) {}
 try { globalThis.add2eGetThiefClassSystem = add2eGetThiefClassSystem; } catch (_e) {}
@@ -801,6 +828,7 @@ try { globalThis.add2eGetThiefSkillBonuses = add2eGetThiefSkillBonuses; } catch 
 try { globalThis.add2eFormatSigned = add2eFormatSigned; } catch (_e) {}
 try { globalThis.add2eBuildThiefSkillRow = add2eBuildThiefSkillRow; } catch (_e) {}
 try { globalThis.add2eGetActorThiefSkills = add2eGetActorThiefSkills; } catch (_e) {}
+try { globalThis.add2eGetActorThiefSkillTable = actor => add2eGetActorThiefSkills(actor); } catch (_e) {}
 try { globalThis.add2ePromptThiefSkillModifiers = add2ePromptThiefSkillModifiers; } catch (_e) {}
 try { globalThis.add2eRollThiefSkill = add2eRollThiefSkill; } catch (_e) {}
 try { globalThis.handleItemAction = handleItemAction; } catch (_e) {}
