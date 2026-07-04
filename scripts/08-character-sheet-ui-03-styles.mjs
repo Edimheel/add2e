@@ -4,9 +4,11 @@
 // ============================================================
 
 const ADD2E_CAPABILITIES_STYLE_ID = "add2e-capabilities-global-style";
-const ADD2E_HUD_CAPABILITIES_TABS_FLAG = "__ADD2E_HUD_CAPABILITIES_TABS_V5";
+const ADD2E_HUD_CAPABILITIES_TABS_FLAG = "__ADD2E_HUD_CAPABILITIES_TABS_V6";
 const ADD2E_THIEF_DIALOG_FLAG = "__ADD2E_THIEF_DIALOG_STYLE_V4";
 const ADD2E_THIEF_DEX_SYNC_FLAG = "__ADD2E_THIEF_DEX_SYNC_V1";
+const ADD2E_CAPABILITY_ICON_ROOT = "systems/add2e/assets/icones/capacites";
+
 let add2eHudCapabilitiesTab = "classe";
 let add2eHudCapabilitiesObserver = null;
 let add2eThiefDialogObserver = null;
@@ -22,6 +24,34 @@ function hudRoot() {
 
 function hudCapabilitiesSection() {
   return hudRoot()?.querySelector?.('section[data-section="capacites"]') ?? null;
+}
+
+function normalizeCapabilityLabel(value) {
+  return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[’']/g, "_")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function hudCapabilityImage(label) {
+  const key = normalizeCapabilityLabel(label);
+  const files = [
+    [/vade_retro|repousser_morts_vivants/, "vade-retro.webp"],
+    [/pickpocket|pick_pocket|vol_a_la_tire/, "pickpocket.webp"],
+    [/crochetage|serrure/, "crochetage-serrures.webp"],
+    [/piege|desamorc/, "detection-pieges.webp"],
+    [/deplacement_silencieux/, "deplacement-silencieux.webp"],
+    [/dissimulation|dans_l_ombre|cache_dans_l_ombre/, "dissimulation.webp"],
+    [/acuite_auditive|ecoute|bruit/, "ecoute.webp"],
+    [/escalade|grimper/, "escalade.webp"],
+    [/lecture_des_langues|lire_les_langues/, "lecture-langues.webp"],
+    [/attaque_dans_le_dos|frappe_dans_le_dos|backstab/, "frappe-dans-le-dos.webp"]
+  ];
+  const entry = files.find(([pattern]) => pattern.test(key));
+  return entry ? `${ADD2E_CAPABILITY_ICON_ROOT}/${entry[1]}` : "";
 }
 
 function setHudCapabilitiesTab(section, value) {
@@ -44,9 +74,23 @@ function decorateHudClassFeatureControls(section) {
     const row = button.closest?.(".row.compact");
     if (!row) continue;
     if (row.firstElementChild !== button) row.prepend(button);
+
+    const label = String(row.querySelector?.(".title")?.textContent ?? "").trim();
+    const image = hudCapabilityImage(label);
+    button.setAttribute("aria-label", button.title || `Utiliser ${label || "la capacité"}`);
+
+    if (image) {
+      if (button.dataset.add2eCapabilityImage !== image) {
+        button.dataset.add2eCapabilityImage = image;
+        button.innerHTML = `<img src="${image}" alt="" aria-hidden="true">`;
+      }
+      button.classList.add("a2e-hud-capability-image");
+      continue;
+    }
+
+    button.classList.remove("a2e-hud-capability-image");
     if (button.dataset.add2eIconControl !== "true") {
       button.dataset.add2eIconControl = "true";
-      button.setAttribute("aria-label", button.title || "Utiliser la capacité");
       button.innerHTML = '<i class="fas fa-bolt" aria-hidden="true"></i>';
     }
   }
@@ -146,8 +190,7 @@ function styleThiefDialogs(root = document) {
       event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation?.();
-      const close = windowElement.querySelector?.('.header-control.close, .window-header [data-action="close"], [data-action="close"]');
-      close?.click?.();
+      windowElement.querySelector?.('.header-control.close, .window-header [data-action="close"], [data-action="close"]')?.click?.();
     }, true);
   }
 }
@@ -212,13 +255,12 @@ function synchronizeThiefDexterity(sheetRoot) {
 }
 
 function injectGlobalCapabilityStyles() {
-  const existing = document.getElementById(ADD2E_CAPABILITIES_STYLE_ID);
-  existing?.remove?.();
+  document.getElementById(ADD2E_CAPABILITIES_STYLE_ID)?.remove?.();
 
   const style = document.createElement("style");
   style.id = ADD2E_CAPABILITIES_STYLE_ID;
   style.textContent = `
-    /* Feuille personnage : illustrations cliquables des capacités de voleur. */
+    /* Feuille personnage : vignettes de capacité réduites. */
     .add2e-character-v2-app .add2e-character-v3 .add2e-capacites-modern-root,
     .add2e-character-v3 .add2e-capacites-modern-root { display:grid; gap:10px; }
 
@@ -235,16 +277,16 @@ function injectGlobalCapabilityStyles() {
     .add2e-character-v3 button.a2e-thief-skill-card {
       display:grid !important;
       grid-template-columns:minmax(0, 1fr) !important;
-      grid-template-rows:60px auto 20px 18px !important;
-      gap:3px !important;
+      grid-template-rows:48px auto 19px 17px !important;
+      gap:2px !important;
       align-items:center !important;
       justify-items:center !important;
       min-width:0 !important;
-      min-height:132px !important;
+      min-height:116px !important;
       width:100% !important;
       box-sizing:border-box !important;
       margin:0 !important;
-      padding:7px 5px !important;
+      padding:6px 5px !important;
       border:1px solid #d6b05a !important;
       border-radius:9px !important;
       background:#fffdf6 !important;
@@ -260,11 +302,7 @@ function injectGlobalCapabilityStyles() {
     .add2e-character-v2-app .add2e-character-v3 button.a2e-thief-skill-card,
     .add2e-character-v3 button.a2e-thief-skill-card { cursor:pointer !important; }
     .add2e-character-v2-app .add2e-character-v3 button.a2e-thief-skill-card:hover,
-    .add2e-character-v3 button.a2e-thief-skill-card:hover {
-      border-color:#8f6515 !important;
-      background:#fff8e3 !important;
-      transform:translateY(-1px);
-    }
+    .add2e-character-v3 button.a2e-thief-skill-card:hover { border-color:#8f6515 !important; background:#fff8e3 !important; transform:translateY(-1px); }
     .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skill-art,
     .add2e-character-v3 .a2e-thief-skill-art {
       grid-column:1 !important;
@@ -272,11 +310,11 @@ function injectGlobalCapabilityStyles() {
       display:flex !important;
       align-items:center !important;
       justify-content:center !important;
-      width:58px !important;
-      height:58px !important;
+      width:46px !important;
+      height:46px !important;
       overflow:hidden !important;
       border:1px solid #8f6515 !important;
-      border-radius:8px !important;
+      border-radius:7px !important;
       background:#34220d !important;
       box-shadow:0 1px 2px rgba(42,25,5,.35) !important;
     }
@@ -290,10 +328,7 @@ function injectGlobalCapabilityStyles() {
       transition:transform .12s ease, filter .12s ease;
     }
     .add2e-character-v2-app .add2e-character-v3 button.a2e-thief-skill-card:hover .a2e-thief-skill-art img,
-    .add2e-character-v3 button.a2e-thief-skill-card:hover .a2e-thief-skill-art img {
-      filter:brightness(1.07) saturate(1.06);
-      transform:scale(1.05);
-    }
+    .add2e-character-v3 button.a2e-thief-skill-card:hover .a2e-thief-skill-art img { filter:brightness(1.07) saturate(1.06); transform:scale(1.04); }
     .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skill-name,
     .add2e-character-v3 .a2e-thief-skill-name {
       grid-column:1 !important;
@@ -301,46 +336,18 @@ function injectGlobalCapabilityStyles() {
       display:block !important;
       min-width:0 !important;
       color:#3d2b0a !important;
-      font-size:.68em !important;
+      font-size:.66em !important;
       font-weight:950 !important;
-      line-height:1.04 !important;
+      line-height:1.02 !important;
       white-space:normal !important;
       overflow-wrap:anywhere !important;
     }
     .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skill-total,
-    .add2e-character-v3 .a2e-thief-skill-total {
-      grid-column:1 !important;
-      grid-row:3 !important;
-      display:block !important;
-      color:#184a82 !important;
-      font-size:1.04em !important;
-      font-weight:950 !important;
-      line-height:1 !important;
-    }
+    .add2e-character-v3 .a2e-thief-skill-total { grid-column:1 !important; grid-row:3 !important; display:block !important; color:#184a82 !important; font-size:1em !important; font-weight:950 !important; line-height:1 !important; }
     .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skill-detail,
-    .add2e-character-v3 .a2e-thief-skill-detail {
-      grid-column:1 !important;
-      grid-row:4 !important;
-      display:flex !important;
-      gap:3px !important;
-      flex-wrap:nowrap !important;
-      align-items:center !important;
-      justify-content:center !important;
-      min-width:0 !important;
-      color:#7f704d !important;
-      font-size:.61em !important;
-      font-weight:850 !important;
-      line-height:1 !important;
-      white-space:nowrap !important;
-    }
+    .add2e-character-v3 .a2e-thief-skill-detail { grid-column:1 !important; grid-row:4 !important; display:flex !important; gap:3px !important; flex-wrap:nowrap !important; align-items:center !important; justify-content:center !important; min-width:0 !important; color:#7f704d !important; font-size:.60em !important; font-weight:850 !important; line-height:1 !important; white-space:nowrap !important; }
     .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skill-bonus,
-    .add2e-character-v3 .a2e-thief-skill-bonus {
-      border-radius:999px !important;
-      padding:1px 4px !important;
-      border:1px solid #dac276 !important;
-      background:#fff7dc !important;
-      font-weight:950 !important;
-    }
+    .add2e-character-v3 .a2e-thief-skill-bonus { border-radius:999px !important; padding:1px 4px !important; border:1px solid #dac276 !important; background:#fff7dc !important; font-weight:950 !important; }
     .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skill-bonus.positive,
     .add2e-character-v3 .a2e-thief-skill-bonus.positive { color:#1f7c4d !important; }
     .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skill-bonus.negative,
@@ -348,61 +355,27 @@ function injectGlobalCapabilityStyles() {
     .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skill-bonus.neutral,
     .add2e-character-v3 .a2e-thief-skill-bonus.neutral { color:#7f704d !important; }
 
-    /* Capacités de classe : l’illustration remplace le bouton éclair. */
+    /* Capacités de classe : illustration plus compacte. */
     .add2e-character-v2-app .add2e-character-v3 .a2e-feature-card:has(> .a2e-feature-card-visual),
-    .add2e-character-v3 .a2e-feature-card:has(> .a2e-feature-card-visual) {
-      display:grid !important;
-      grid-template-columns:66px minmax(0, 1fr) !important;
-      gap:9px !important;
-      align-items:start !important;
-    }
+    .add2e-character-v3 .a2e-feature-card:has(> .a2e-feature-card-visual) { display:grid !important; grid-template-columns:54px minmax(0, 1fr) !important; gap:8px !important; align-items:start !important; }
     .add2e-character-v2-app .add2e-character-v3 .a2e-feature-card-visual,
-    .add2e-character-v3 .a2e-feature-card-visual {
-      grid-column:1 !important;
-      display:flex !important;
-      align-items:flex-start !important;
-      justify-content:center !important;
-    }
+    .add2e-character-v3 .a2e-feature-card-visual { grid-column:1 !important; display:flex !important; align-items:flex-start !important; justify-content:center !important; }
     .add2e-character-v2-app .add2e-character-v3 .a2e-feature-card-content,
     .add2e-character-v3 .a2e-feature-card-content { grid-column:2 !important; min-width:0 !important; }
     .add2e-character-v2-app .add2e-character-v3 .a2e-feature-image-button,
-    .add2e-character-v3 .a2e-feature-image-button {
-      width:62px !important;
-      height:62px !important;
-      min-width:62px !important;
-      min-height:62px !important;
-      padding:0 !important;
-      margin:0 !important;
-      overflow:hidden !important;
-      border:1px solid #8f6515 !important;
-      border-radius:8px !important;
-      background:#34220d !important;
-      cursor:pointer !important;
-      box-shadow:0 1px 2px rgba(42,25,5,.35) !important;
-    }
+    .add2e-character-v2-app .add2e-character-v3 .a2e-feature-image-static,
+    .add2e-character-v3 .a2e-feature-image-button,
+    .add2e-character-v3 .a2e-feature-image-static { width:50px !important; height:50px !important; min-width:50px !important; min-height:50px !important; padding:0 !important; margin:0 !important; overflow:hidden !important; border:1px solid #8f6515 !important; border-radius:7px !important; background:#34220d !important; box-shadow:0 1px 2px rgba(42,25,5,.35) !important; }
+    .add2e-character-v2-app .add2e-character-v3 .a2e-feature-image-button,
+    .add2e-character-v3 .a2e-feature-image-button { cursor:pointer !important; }
     .add2e-character-v2-app .add2e-character-v3 .a2e-feature-image-button:hover,
     .add2e-character-v3 .a2e-feature-image-button:hover { border-color:#5d3f0d !important; transform:translateY(-1px) !important; }
     .add2e-character-v2-app .add2e-character-v3 .a2e-feature-image-static,
-    .add2e-character-v3 .a2e-feature-image-static {
-      display:block !important;
-      width:62px !important;
-      height:62px !important;
-      overflow:hidden !important;
-      border:1px solid #a48033 !important;
-      border-radius:8px !important;
-      background:#34220d !important;
-      opacity:.88 !important;
-    }
+    .add2e-character-v3 .a2e-feature-image-static { opacity:.88 !important; }
     .add2e-character-v2-app .add2e-character-v3 .a2e-feature-card-img,
-    .add2e-character-v3 .a2e-feature-card-img {
-      display:block !important;
-      width:100% !important;
-      height:100% !important;
-      object-fit:cover !important;
-      border:0 !important;
-    }
+    .add2e-character-v3 .a2e-feature-card-img { display:block !important; width:100% !important; height:100% !important; object-fit:cover !important; border:0 !important; }
 
-    /* Sous-onglets compacts du HUD. */
+    /* HUD : mêmes illustrations pour les capacités correspondantes. */
     #add2e-action-hud section[data-section="capacites"] > .a2e-hud-capability-subtabs { display:flex; gap:6px; padding-bottom:4px; border-bottom:1px solid rgba(214,176,90,.28); }
     #add2e-action-hud .a2e-hud-capability-subtabs button { min-height:30px; padding:5px 11px; border:1px solid rgba(214,176,90,.55); border-radius:999px; background:rgba(214,176,90,.12); color:#ffe4a1; font-weight:900; font-size:.82em; cursor:pointer; }
     #add2e-action-hud .a2e-hud-capability-subtabs button.active { background:linear-gradient(180deg,#f0c66d,#c78d2e); color:#211307; }
@@ -412,12 +385,14 @@ function injectGlobalCapabilityStyles() {
     #add2e-action-hud section[data-section="capacites"][data-add2e-capability-tab="racial"] > .a2e-hud-racial-capabilities { display:grid !important; gap:7px; }
     #add2e-action-hud section[data-section="capacites"] > .a2e-hud-racial-capabilities .a2e-hud-racial-title { display:none !important; }
     #add2e-action-hud section[data-section="capacites"] .row.compact:has(> button.act[data-action="use-feature"]),
-    #add2e-action-hud section[data-section="capacites"] .a2e-hud-racial-row { grid-template-columns:32px minmax(0,1fr) !important; min-height:38px !important; padding:6px !important; }
+    #add2e-action-hud section[data-section="capacites"] .a2e-hud-racial-row { grid-template-columns:30px minmax(0,1fr) !important; min-height:34px !important; padding:5px !important; }
     #add2e-action-hud section[data-section="capacites"] .row.compact > button.act[data-action="use-feature"],
-    #add2e-action-hud section[data-section="capacites"] .a2e-hud-racial-row > .a2e-hud-racial-icon { grid-column:1 !important; grid-row:1 !important; width:32px !important; min-width:32px !important; height:30px !important; min-height:30px !important; padding:0 !important; border:1px solid rgba(101,184,255,.82) !important; border-radius:8px !important; background:rgba(43,112,177,.24) !important; color:#8fd2ff !important; box-shadow:none !important; }
+    #add2e-action-hud section[data-section="capacites"] .a2e-hud-racial-row > .a2e-hud-racial-icon { grid-column:1 !important; grid-row:1 !important; width:28px !important; min-width:28px !important; height:28px !important; min-height:28px !important; padding:0 !important; border:1px solid rgba(101,184,255,.82) !important; border-radius:7px !important; background:rgba(43,112,177,.24) !important; color:#8fd2ff !important; box-shadow:none !important; overflow:hidden !important; }
+    #add2e-action-hud section[data-section="capacites"] .row.compact > button.a2e-hud-capability-image { border-color:rgba(214,176,90,.85) !important; background:#211307 !important; }
+    #add2e-action-hud section[data-section="capacites"] .row.compact > button.a2e-hud-capability-image img { display:block !important; width:24px !important; height:24px !important; object-fit:cover !important; border:0 !important; border-radius:5px !important; pointer-events:none !important; }
     #add2e-action-hud section[data-section="capacites"] .row.compact > div,
     #add2e-action-hud section[data-section="capacites"] .a2e-hud-racial-row > div { grid-column:2 !important; grid-row:1 !important; min-width:0; }
-    #add2e-action-hud section[data-section="capacites"] .row.compact > button.act[data-action="use-feature"] i { font-size:14px; pointer-events:none; }
+    #add2e-action-hud section[data-section="capacites"] .row.compact > button.act[data-action="use-feature"] i { font-size:13px; pointer-events:none; }
     #add2e-action-hud section[data-section="capacites"] .a2e-hud-racial-row .a2e-hud-racial-description { display:none !important; }
 
     /* DialogV2 des compétences de voleur. */
