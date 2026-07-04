@@ -1,11 +1,9 @@
 // scripts/add2e-attack/04i-attack-roll-chat-card.mjs
 // ADD2E — Cartes de chat d'attaque.
-// Les cartes joueurs sont des ChatMessage persistants ; la carte détaillée reste MJ uniquement.
+// La carte narrative est publique ; la carte détaillée reste MJ uniquement.
 // Compatible Foundry V13/V14/V15.
 
-const VERSION = "2026-07-04-attack-chat-persistent-player-card-v21";
-const SOCKET = "system.add2e";
-const PLAYER_ROLEPLAY_TYPE = "ADD2E_ATTACK_PLAYER_LOCAL_CHAT";
+const VERSION = "2026-07-04-attack-chat-public-message-v22";
 const LOG = "[ADD2E][ATTACK_CHAT]";
 
 globalThis.ADD2E_ATTACK_CHAT_VISIBILITY_VERSION = VERSION;
@@ -74,20 +72,16 @@ function roleplay(ctx) {
 
 function gmUsers() {
   const recipients = ChatMessage.getWhisperRecipients?.("GM") ?? [];
-  const users = recipients.length ? recipients : Array.from(game.users ?? []).filter(u => u.isGM);
-  return users.filter(u => u?.id);
+  const users = recipients.length ? recipients : Array.from(game.users ?? []).filter(user => user.isGM);
+  return users.filter(user => user?.id);
 }
 
 function gmIds() {
-  return gmUsers().map(u => u.id).filter(Boolean);
+  return gmUsers().map(user => user.id).filter(Boolean);
 }
 
 function playerUsers() {
-  return Array.from(game.users ?? []).filter(u => u && !u.isGM && u.id);
-}
-
-function playerIds() {
-  return playerUsers().map(u => u.id).filter(Boolean);
+  return Array.from(game.users ?? []).filter(user => user && !user.isGM && user.id);
 }
 
 function rollSummary(ctx) {
@@ -125,10 +119,10 @@ function portrait(name, img, fallbackIcon = "fa-user") {
 function cardShell(kind, ctx, inner) {
   const o = outcome(ctx);
   const isGM = kind === "gm";
-  const cls = isGM ? "add2e-attack-chat-card-gm-v20" : "add2e-attack-chat-card-player-v20";
+  const cssClass = isGM ? "add2e-attack-chat-card-gm-v20" : "add2e-attack-chat-card-player-v20";
   const attackerImg = ctx.chatImg || ctx.actor?.img || "";
   const defenderImg = ctx.cible?.token?.texture?.src || ctx.cible?.img || "";
-  return `<div class="add2e-chat-card ${cls}" style="font-family:var(--font-primary);border:1px solid #b58b3a;border-radius:12px;background:linear-gradient(180deg,#fffaf0 0%,#f3e4bf 100%);box-shadow:0 2px 9px rgba(66,39,8,.22);overflow:hidden;color:#2c2212;">
+  return `<div class="add2e-chat-card ${cssClass}" style="font-family:var(--font-primary);border:1px solid #b58b3a;border-radius:12px;background:linear-gradient(180deg,#fffaf0 0%,#f3e4bf 100%);box-shadow:0 2px 9px rgba(66,39,8,.22);overflow:hidden;color:#2c2212;">
     <div style="display:flex;align-items:center;gap:8px;background:linear-gradient(90deg,#3d2307,#8b5e20);color:#fff;padding:8px 10px;border-bottom:2px solid #d7b45a;">
       <div style="display:flex;align-items:center;gap:7px;min-width:0;flex:1;">
         ${portrait(ctx.actor?.name, attackerImg, "fa-user")}
@@ -199,27 +193,33 @@ function buildGmCard(ctx) {
   `);
 }
 
-function sendPlayerRoleplayCard(ctx) {
-  const users = playerIds();
-  if (!users.length) return false;
-  if (!game.socket?.emit) {
-    console.warn(`${LOG}[PLAYER_ROLEPLAY][SOCKET_UNAVAILABLE]`, { version: VERSION, actor: ctx.actor?.name ?? null });
+async function sendPlayerRoleplayCard(ctx) {
+  const messageId = `attack-roleplay-${game.user?.id ?? "unknown"}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const content = buildPublicCard(ctx);
+  if (!content) return false;
+
+  try {
+    await ChatMessage.create({
+      speaker: ChatMessage.getSpeaker({ actor: ctx.actor }),
+      content,
+      avatar: ctx.chatImg,
+      whisper: [],
+      blind: false,
+      flags: {
+        add2e: {
+          attackChatVisibility: "public",
+          attackChatVisibilityVersion: VERSION,
+          attackMessageId: messageId,
+          createdByAttackRoll: true
+        }
+      }
+    });
+    return true;
+  } catch (error) {
+    console.error(`${LOG}[PUBLIC_CARD]`, error);
+    ui.notifications?.error?.("Impossible de publier le message d’attaque.");
     return false;
   }
-
-  const messageId = `attack-roleplay-${game.user?.id ?? "unknown"}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  const payload = {
-    id: messageId,
-    messageId,
-    userIds: users,
-    speaker: ChatMessage.getSpeaker({ actor: ctx.actor }),
-    content: buildPublicCard(ctx),
-    avatar: ctx.chatImg,
-    version: VERSION
-  };
-
-  game.socket.emit(SOCKET, { type: PLAYER_ROLEPLAY_TYPE, payload });
-  return true;
 }
 
 function installVisibilityGuard() {
@@ -243,14 +243,13 @@ installVisibilityGuard();
 globalThis.add2eAttackChatDebug = function add2eAttackChatDebug() {
   return {
     version: VERSION,
-    playerRoleplaySocketType: PLAYER_ROLEPLAY_TYPE,
+    publicCard: true,
     guardRegistered: globalThis.__ADD2E_ATTACK_CHAT_VISIBILITY_GUARD,
     user: game.user?.name,
     userId: game.user?.id,
     isGM: game.user?.isGM,
     ready: game?.ready,
-    hasSocket: !!game?.socket,
-    players: playerUsers().map(u => ({ id: u.id, name: u.name, active: u.active }))
+    players: playerUsers().map(user => ({ id: user.id, name: user.name, active: user.active }))
   };
 };
 
