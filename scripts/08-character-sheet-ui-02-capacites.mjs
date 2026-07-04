@@ -4,8 +4,9 @@
 // ============================================================
 import { escapeHtml, slug, expose, globalFn } from "./08-character-sheet-ui-00-utils.mjs";
 
-const ADD2E_CAPABILITIES_SHEET_VERSION = "2026-07-04-capacity-illustrations-v1";
+const ADD2E_CAPABILITIES_SHEET_VERSION = "2026-07-04-racial-capability-artwork-v1";
 const ADD2E_CAPABILITY_ICON_ROOT = "systems/add2e/assets/icones/capacites";
+const ADD2E_RACIAL_ARTWORK_FLAG = "__ADD2E_RACIAL_CAPABILITY_ARTWORK_V1";
 
 function readNumber(value, fallback = 0) {
   const number = Number(value);
@@ -222,6 +223,24 @@ function classFeatureImage(feature) {
   return String(feature?.img ?? feature?.image ?? "").trim();
 }
 
+function racialCapabilityImage(id, label = "") {
+  const key = slug(`${id ?? ""} ${label ?? ""}`);
+  const images = [
+    [/infravision|vision_infrarouge/, "infravision.webp"],
+    [/porte_secrete|secret_door|secret_porte/, "detection-portes-secretes.webp"],
+    [/ouie|auditive|hear_noise|bruit/, "ouie-affutee.webp"],
+    [/pente|direction|profondeur|paroi|construction|pierre|stonework/, "sens-de-la-pierre.webp"],
+    [/compartiment|cachette|cache_secret|hidden_cache/, "detection-compartiments-secrets.webp"],
+    [/piege|trap/, "detection-pieges.webp"],
+    [/discretion|surprise|camouflage|furtiv/, "discretion-naturelle.webp"],
+    [/charme|charm/, "resistance-charmes.webp"],
+    [/sommeil|sleep/, "resistance-sommeil.webp"],
+    [/poison|venin/, "resistance-poison.webp"]
+  ];
+  const match = images.find(([pattern]) => pattern.test(key));
+  return match ? capacityIcon(match[1]) : "";
+}
+
 function plainFeatureDescription(feature) {
   const raw = String(feature?.description ?? feature?.desc ?? feature?.text ?? "").trim();
   if (!raw) return "";
@@ -314,9 +333,15 @@ function racialEngine() {
 function buildRacialCard(entry) {
   const vision = entry?.actionType === "vision-toggle";
   const enabled = entry?.enabled === true;
-  const icon = vision ? (enabled ? "fa-eye" : "fa-eye-slash") : (entry?.iconClass || "fa-dice-d20");
-  const title = vision ? `${enabled ? "Désactiver" : "Activer"} ${entry.label}` : `Utiliser ${entry.label}`;
-  return `<div class="a2e-feature-card add2e-racial-feature-card is-activable"><div class="a2e-feature-card-title"><strong>${escapeHtml(entry?.label ?? "Capacité raciale")}</strong>${iconControl({ className: `add2e-racial-capability-use add2e-feature-icon-only ${vision ? (enabled ? "is-enabled" : "is-disabled") : "is-roll"}`, icon, title, data: `data-racial-capability-id="${escapeHtml(entry?.id ?? "")}"` })}</div>${entry?.description ? `<div class="a2e-feature-card-desc">${escapeHtml(entry.description)}</div>` : ""}</div>`;
+  const name = String(entry?.label ?? "Capacité raciale").trim() || "Capacité raciale";
+  const title = vision ? `${enabled ? "Désactiver" : "Activer"} ${name}` : `Utiliser ${name}`;
+  const image = racialCapabilityImage(entry?.id ?? entry?.key, name);
+  const data = `data-racial-capability-id="${escapeHtml(entry?.id ?? "")}"`;
+  const visual = image
+    ? `<button type="button" class="add2e-racial-capability-use a2e-feature-image-button ${vision ? (enabled ? "is-enabled" : "is-disabled") : "is-roll"}" ${data} title="${escapeHtml(title)}" aria-label="${escapeHtml(title)}"><img class="a2e-feature-card-img" src="${escapeHtml(image)}" alt=""></button>`
+    : iconControl({ className: `add2e-racial-capability-use add2e-feature-icon-only ${vision ? (enabled ? "is-enabled" : "is-disabled") : "is-roll"}`, icon: vision ? (enabled ? "fa-eye" : "fa-eye-slash") : (entry?.iconClass || "fa-dice-d20"), title, data });
+
+  return `<div class="a2e-feature-card add2e-racial-feature-card is-activable">${visual ? `<div class="a2e-feature-card-visual">${visual}</div>` : ""}<div class="a2e-feature-card-content"><div class="a2e-feature-card-title"><strong>${escapeHtml(name)}</strong></div>${entry?.description ? `<div class="a2e-feature-card-desc">${escapeHtml(entry.description)}</div>` : ""}</div></div>`;
 }
 
 function buildCapabilities(actor) {
@@ -394,6 +419,35 @@ function bindCapabilities(root, actor, sheet) {
   }
 }
 
+function decorateRacialHudArtwork(root = document) {
+  const buttons = root?.matches?.("button.a2e-hud-racial-icon[data-racial-capability-id]")
+    ? [root]
+    : Array.from(root?.querySelectorAll?.("button.a2e-hud-racial-icon[data-racial-capability-id]") ?? []);
+  for (const button of buttons) {
+    const row = button.closest?.(".a2e-hud-racial-row");
+    const label = String(row?.querySelector?.(".title")?.textContent ?? "").trim();
+    const image = racialCapabilityImage(button.dataset.racialCapabilityId, label);
+    if (!image || button.dataset.add2eRacialArtwork === image) continue;
+    button.dataset.add2eRacialArtwork = image;
+    button.classList.add("a2e-hud-racial-capability-art");
+    button.innerHTML = `<img src="${escapeHtml(image)}" alt="" aria-hidden="true" style="display:block!important;width:24px!important;height:24px!important;object-fit:cover!important;border:0!important;border-radius:5px!important;pointer-events:none!important;">`;
+  }
+}
+
+function installRacialHudArtwork() {
+  if (globalThis[ADD2E_RACIAL_ARTWORK_FLAG]) return;
+  globalThis[ADD2E_RACIAL_ARTWORK_FLAG] = true;
+  const observer = new MutationObserver(mutations => {
+    for (const mutation of mutations) {
+      for (const node of mutation.addedNodes ?? []) {
+        if (node?.nodeType === Node.ELEMENT_NODE) decorateRacialHudArtwork(node);
+      }
+    }
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+  decorateRacialHudArtwork();
+}
+
 export function injectCapacitesTab(sheet, sheetRoot) {
   const actor = sheet?.actor ?? sheet?.document;
   if (!actor || actor.type !== "personnage") return;
@@ -408,6 +462,9 @@ export function injectCapacitesTab(sheet, sheetRoot) {
   tab.replaceChildren(wrapper);
   bindCapabilities(wrapper, actor, sheet);
 }
+
+if (game?.ready) installRacialHudArtwork();
+else Hooks.once("ready", installRacialHudArtwork);
 
 expose("add2eUiFeatureName", featureName);
 expose("add2eUiGetThiefSkills", getThiefSkills);
