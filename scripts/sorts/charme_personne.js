@@ -1,5 +1,5 @@
 // Charme-personne — ADD2E
-// Version : 2026-07-04-generic-periodic-save-v6
+// Version : 2026-07-04-generic-periodic-save-v7
 // Compatible Foundry V13/V14/V15.
 
 return await (async () => {
@@ -23,18 +23,42 @@ return await (async () => {
     return false;
   }
 
+  const refund = async reason => {
+    if (reason) ui.notifications.warn(reason);
+    try {
+      if (sourceItem.type === "sort") return;
+      const globalCharges = await sourceItem.getFlag?.("add2e", "global_charges");
+      if (globalCharges !== undefined) {
+        await sourceItem.setFlag("add2e", "global_charges", Number(globalCharges) + 1);
+        ui.notifications.info(`Charge restituée à ${sourceItem.name}.`);
+        return;
+      }
+      if (sourceItem.system?.isPower && sourceItem.system?.sourceWeaponId) {
+        const parentItem = caster.items?.get(sourceItem.system.sourceWeaponId);
+        const index = sourceItem.system.powerIndex;
+        const charges = await parentItem?.getFlag?.("add2e", `charges_${index}`);
+        if (parentItem && charges !== undefined) {
+          await parentItem.setFlag("add2e", `charges_${index}`, Number(charges) + 1);
+          ui.notifications.info("Charge restituée.");
+        }
+      }
+    } catch (error) { console.warn(`${TAG}[REFUND_FAILED]`, error); }
+  };
+
   const targets = Array.from(game.user.targets ?? []);
   if (!targets.length) {
-    ui.notifications.warn("Vous devez cibler une créature.");
+    await refund("Vous devez cibler une créature.");
     return false;
   }
 
   if (!game.add2eCharmeHooksRegistered) {
     game.add2eCharmeHooksRegistered = true;
     const stopVfx = effect => {
-      if (!String(effect?.name ?? effect?.label ?? "").toLowerCase().includes("charme")) return;
+      const label = String(effect?.name ?? effect?.label ?? "").toLowerCase();
+      if (!label.includes("charmé") && !label.includes("charme")) return;
+      if (typeof Sequencer === "undefined") return;
       for (const token of effect?.parent?.getActiveTokens?.() ?? []) {
-        try { Sequencer?.EffectManager?.endEffects?.({ name: `charme-effect-${token.id}`, object: token }); }
+        try { Sequencer.EffectManager.endEffects({ name: `charme-effect-${token.id}`, object: token }); }
         catch (error) { console.warn(`${TAG}[VFX_END_FAILED]`, error); }
       }
     };
@@ -128,10 +152,12 @@ return await (async () => {
       if (result?.canRoll) return { total: Number(result.total) || 0, threshold: Number(result.threshold) || threshold(targetActor), success: result.success === true, wisdomBonus, racialBonus: Number(result.racialBonus) || 0 };
     }
     const racialBonus = Number(engine?.getSaveBonus?.(targetActor, "sorts")) || 0;
-    const roll = await new Roll(`1d20${wisdomBonus + racialBonus >= 0 ? "+" : ""}${wisdomBonus + racialBonus}`).evaluate({ async: true });
+    const modifier = wisdomBonus + racialBonus;
+    const roll = await new Roll(`1d20${modifier >= 0 ? "+" : ""}${modifier}`).evaluate({ async: true });
     if (game.dice3d) await game.dice3d.showForRoll(roll);
     const total = Number(roll.total) || 0;
-    return { total, threshold: threshold(targetActor), success: total >= threshold(targetActor), wisdomBonus, racialBonus };
+    const saveThreshold = threshold(targetActor);
+    return { total, threshold: saveThreshold, success: total >= saveThreshold, wisdomBonus, racialBonus };
   };
   const saveDetails = save => {
     const values = [];
@@ -153,7 +179,7 @@ return await (async () => {
   const playVfx = async targetToken => {
     if (typeof Sequence === "undefined") return;
     try {
-      Sequencer?.EffectManager?.endEffects?.({ name: `charme-effect-${targetToken.id}`, object: targetToken });
+      if (typeof Sequencer !== "undefined") Sequencer.EffectManager.endEffects({ name: `charme-effect-${targetToken.id}`, object: targetToken });
       await new Sequence().effect().file("jb2a.cast_generic.02.blue").attachTo(targetToken).persist(true).name(`charme-effect-${targetToken.id}`).scaleToObject(1.5).opacity(0.8).belowTokens(false).play();
     } catch (error) { console.warn(`${TAG}[VFX_FAILED]`, error); }
   };
