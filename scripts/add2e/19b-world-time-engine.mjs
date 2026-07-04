@@ -1,11 +1,12 @@
 // ============================================================================
 // ADD2E — Gestion du temps hors combat.
-// Version : 2026-07-01-world-time-normalize-before-advance-v2
+// Version : 2026-07-04-world-time-charm-periodic-saves-v3
 //
 // Rôle :
 // - Avancer le temps de jeu hors combat par commandes MJ.
 // - Réutiliser le même tick global que le moteur de combat.
 // - Expirer les ActiveEffect gérés par ADD2E_TIME_ENGINE.
+// - Gérer les sauvegardes périodiques de Charme-personne.
 // - Inclure les acteurs synthétiques de tokens, notamment les monstres non liés.
 // - Fournir une interface MJ ApplicationV2 + DialogV2.
 // - Ajouter le bouton Temps dans la barre gauche avec le même modèle que XP.
@@ -23,12 +24,17 @@ import {
 import { add2eExpireTemporaryEffectsForActor } from "./18c-active-effects-expiration.mjs";
 import { add2eSyncActorVitalStatus, add2eVitalRegisterStatusEffects } from "./18b-vital-status-sync.mjs";
 
-export const ADD2E_WORLD_TIME_ENGINE_VERSION = "2026-07-01-world-time-normalize-before-advance-v2";
+export const ADD2E_WORLD_TIME_ENGINE_VERSION = "2026-07-04-world-time-charm-periodic-saves-v3";
 
 const TAG = "[ADD2E][WORLD_TIME]";
 const TOOL_NAME = "add2e-world-time";
+const CHARM_PERIODIC_SAVE_FLAG = "charmPeriodicSave";
+const CHARM_PERIODIC_SAVE_VERSION = "2026-07-04-charm-person-periodic-saves-v2";
+const CHARM_PERIODIC_SAVE_PROCESSING = new Set();
 let APP_INSTANCE = null;
 let TOOLBAR_HOOK_REGISTERED = false;
+let CHARM_PERIODIC_SAVE_HOOK_REGISTERED = false;
+let CHARM_PERIODIC_SAVE_SCHEDULED = false;
 
 function log(label, data = {}) { console.log(`${TAG}${label}`, data); }
 function warn(label, data = {}) { console.warn(`${TAG}${label}`, data); }
@@ -36,6 +42,12 @@ function esc(value) { return String(value ?? "").replace(/&/g, "&amp;").replace(
 function chatStyleData() { return CONST.CHAT_MESSAGE_STYLES ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER } : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 }; }
 function isWorldTimeGM() { return game.user?.isGM === true; }
 function unitLabel(unit) { return ({ segment: "segment", round: "round", turn: "tour", minute: "minute", hour: "heure" })[unit] ?? unit ?? "round"; }
+
+function isResponsibleWorldTimeGM() {
+  if (!game.user?.isGM) return false;
+  if (typeof game.user.isActiveGM === "boolean") return game.user.isActiveGM;
+  return game.users?.activeGM?.id === game.user.id || !game.users?.activeGM;
+}
 
 function actorScanKey(actor, sourceKey = "") {
   return actor?.uuid ?? actor?.id ?? sourceKey ?? actor?.name ?? foundry.utils.randomID();
@@ -103,6 +115,233 @@ function renderOpenMonsterSheets(actor = null) {
   }
 }
 
+function charmState(effect) {
+  const state = effect?.flags?.add2e?.[CHARM_PERIODIC_SAVE_FLAG];
+  if (!state || typeof state !== "object" || state.enabled !== true) return null;
+
+  const intervalTicks = Math.max(1, Math.floor(Number(state.intervalTicks)));
+  const nextSaveTick = Math.floor(Number(state.nextSaveTick));
+  if (!Number.isFinite(intervalTicks) || !Number.isFinite(nextSaveTick)) return null;
+
+  return {
+    ...state,
+    intelligence: Math.max(0, Math.floor(Number(state.intelligence) || 0)),
+    intervalTicks,
+    nextSaveTick,
+    attempts: Math.max(0, Math.floor(Number(state.attempts) || 0)),
+    intervalLabel: String(state.intervalLabel || "délai spécial")
+  };
+}
+
+function charmSaveThreshold(actor) {
+  const system = actor?.system ?? {};
+  const direct = Number(system.sauvegardes?.sorts ?? system.saves?.spells ?? system.save_spells ?? NaN);
+  if (Number.isFinite(direct) && direct > 0) return direct;
+
+  const level = Math.max(1, Number(system.niveau ?? system.level ?? 1) || 1);
+  const classItem = actor?.items?.find?.(entry => entry.type === "classe");
+  const saves = classItem?.system?.progression?.[level - 1]?.savingThrows;
+  const fromClass = Array.isArray(saves) ? Number(saves[4]) : NaN;
+  return Number.isFinite(fromClass) && fromClass > 0 ? fromClass : 15;
+}
+
+function charmWisdom(actor) {
+  return Number(
+    actor?.system?.sagesse
+      ?? actor?.system?.sagesse_base
+      ?? actor?.system?.sag_aff
+      ?? actor?.system?.abilities?.wis?.value
+      ?? 0
+  ) || 0;
+}
+
+async function charmRollSave(actor) {
+  const engine = globalThis.Add2eEffectsEngine;
+  const wisdom = charmWisdom(actor);
+  const wisdomBonus = wisdom >= 15 ? wisdom - 14 : 0;
+
+  if (typeof engine?.rollActionSave === "function") {
+    const result = await engine.rollActionSave(actor, "sorts", wisdomBonus);
+    if (result?.canRoll) {
+      return {
+        total: Number(result.total) || 0,
+        threshold: Number(result.threshold) || charmSaveThreshold(actor),
+        success: result.success === true,
+        wisdomBonus,
+        racialBonus: Number(result.racialBonus) || 0
+      };
+    }
+  }
+
+  const threshold = charmSaveThreshold(actor);
+  const racialBonus = Number(engine?.getSaveBonus?.(actor, "sorts")) || 0;
+  const totalBonus = wisdomBonus + racialBonus;
+  const formula = totalBonus ? `1d20${totalBonus >= 0 ? "+" : ""}${totalBonus}` : "1d20";
+  const roll = await new Roll(formula).evaluate({ async: true });
+  if (game.dice3d) await game.dice3d.showForRoll(roll);
+
+  const total = Number(roll.total) || 0;
+  return { total, threshold, success: total >= threshold, wisdomBonus, racialBonus };
+}
+
+function charmSaveDetails(save) {
+  const details = [];
+  const wisdom = Number(save?.wisdomBonus) || 0;
+  const racial = Number(save?.racialBonus) || 0;
+  if (wisdom) details.push(`${wisdom >= 0 ? "+" : ""}${wisdom} Sag`);
+  if (racial) details.push(`${racial >= 0 ? "+" : ""}${racial} racial`);
+  return details.length ? ` (${details.join(" ; ")})` : "";
+}
+
+function charmRecipients(actor) {
+  const ids = new Set();
+  for (const user of ChatMessage.getWhisperRecipients?.("GM") ?? []) if (user?.id) ids.add(user.id);
+
+  const ownerLevel = CONST.DOCUMENT_OWNERSHIP_LEVELS?.OWNER ?? 3;
+  for (const user of game.users ?? []) {
+    if (!user || user.isGM) continue;
+    let owner = false;
+    try { owner = actor?.testUserPermission?.(user, "OWNER") === true; }
+    catch (_error) {}
+    if (!owner) {
+      const explicit = Number(actor?.ownership?.[user.id] ?? actor?.permission?.[user.id] ?? 0);
+      const fallback = Number(actor?.ownership?.default ?? actor?.permission?.default ?? 0);
+      owner = explicit >= ownerLevel || fallback >= ownerLevel;
+    }
+    if (owner) ids.add(user.id);
+  }
+  return Array.from(ids);
+}
+
+async function endCharmVfx(actor) {
+  if (typeof Sequencer === "undefined") return;
+  for (const token of actor?.getActiveTokens?.() ?? []) {
+    try {
+      Sequencer.EffectManager.endEffects({ name: `charme-effect-${token.id}`, object: token });
+    } catch (error) {
+      warn("[CHARM_PERIODIC_SAVE][VFX_END_FAILED]", { actor: actor?.name, tokenId: token?.id, error });
+    }
+  }
+}
+
+async function notifyCharmPeriodicSave(actor, effect, state, attempts, { escaped = false, nextSaveTick = null } = {}) {
+  const whisper = charmRecipients(actor);
+  if (!whisper.length || !attempts.length) return false;
+
+  const last = attempts[attempts.length - 1];
+  const actorName = actor?.name ?? "La cible";
+  const spellName = state.spellName || "Charme-personne";
+  const img = effect?.img || effect?.icon || actor?.img || "icons/svg/status/heart.svg";
+  const countText = attempts.length === 1
+    ? `Jet : <b>${last.total}</b>${esc(charmSaveDetails(last))} contre <b>${last.threshold}</b>.`
+    : `${attempts.length} jets périodiques étaient dus ; dernier jet : <b>${last.total}</b>${esc(charmSaveDetails(last))} contre <b>${last.threshold}</b>.`;
+  const outcome = escaped
+    ? `${esc(actorName)} réussit son jet et se libère du charme.`
+    : `${esc(actorName)} reste charmé. Prochain jet dans <b>${esc(state.intervalLabel)}</b>.`;
+  const next = !escaped && Number.isFinite(Number(nextSaveTick))
+    ? `<div style="margin-top:5px;font-size:11px;color:#5d4037;">Prochain contrôle au tick ADD2E <b>${Math.floor(Number(nextSaveTick))}</b>.</div>`
+    : "";
+
+  await ChatMessage.create({
+    speaker: ChatMessage.getSpeaker({ actor }),
+    whisper,
+    content: `<div class="add2e-chat-card add2e-charm-periodic-save" style="border:1px solid #8e44ad;border-radius:8px;overflow:hidden;background:#fff7fd;color:#3c1c46;font-family:var(--font-primary);"><div style="display:flex;align-items:center;gap:8px;background:#7d3c98;color:#fff;padding:7px 9px;"><img src="${esc(img)}" style="width:36px;height:36px;object-fit:cover;border-radius:4px;border:1px solid #e8daef;background:#fff;"><div style="flex:1;line-height:1.15;"><div style="font-weight:900;font-size:13px;">Sauvegarde périodique</div><div style="font-size:12px;opacity:.95;">${esc(spellName)}</div></div></div><div style="padding:8px 10px;background:#fff7fd;"><div style="font-size:13px;margin-bottom:5px;"><b>Cible :</b> ${esc(actorName)}</div><div style="border:1px solid ${escaped ? "#2e8b57" : "#b9770e"};border-radius:6px;background:#fff;padding:8px;text-align:center;font-size:13px;line-height:1.35;"><div style="font-weight:900;color:${escaped ? "#1e8449" : "#af601a"};">${escaped ? "CHARME ROMPU" : "CHARME MAINTENU"}</div><div style="margin-top:4px;">${outcome}</div><div style="margin-top:4px;">${countText}</div></div>${next}<div style="margin-top:6px;font-size:11px;color:#6c3483;text-align:center;">Intelligence : ${state.intelligence}</div></div></div>`,
+    flags: { add2e: { charmPeriodicSaveMessage: true, actorId: actor?.id ?? null, actorUuid: actor?.uuid ?? null, effectId: effect?.id ?? null, escaped, attempts: attempts.length, tick: add2eTimeCurrentTick(), version: CHARM_PERIODIC_SAVE_VERSION } },
+    ...chatStyleData()
+  });
+  return true;
+}
+
+async function processCharmPeriodicEffect(actor, effect) {
+  const state = charmState(effect);
+  if (!state || !actor?.effects?.get?.(effect.id) || effect.disabled) return { processed: false, reason: "inactive" };
+  if (!isResponsibleWorldTimeGM()) return { processed: false, reason: "not-responsible-gm" };
+
+  const key = `${actor?.uuid ?? actor?.id ?? "actor"}::${effect.id}`;
+  if (CHARM_PERIODIC_SAVE_PROCESSING.has(key)) return { processed: false, reason: "already-processing" };
+
+  CHARM_PERIODIC_SAVE_PROCESSING.add(key);
+  try {
+    const currentTick = add2eTimeCurrentTick();
+    if (currentTick < state.nextSaveTick) return { processed: false, reason: "not-due", nextSaveTick: state.nextSaveTick };
+
+    const attempts = [];
+    let dueTick = state.nextSaveTick;
+    let escaped = false;
+    const maximum = 1000;
+
+    while (dueTick <= currentTick && attempts.length < maximum) {
+      const save = await charmRollSave(actor);
+      attempts.push({ ...save, dueTick });
+      if (save.success) {
+        escaped = true;
+        break;
+      }
+      dueTick += state.intervalTicks;
+    }
+
+    if (!attempts.length) return { processed: false, reason: "no-attempt" };
+
+    if (escaped) {
+      await endCharmVfx(actor);
+      if (actor.effects?.get?.(effect.id)) await actor.deleteEmbeddedDocuments("ActiveEffect", [effect.id], { add2eCharmPeriodicSave: true });
+      await notifyCharmPeriodicSave(actor, effect, state, attempts, { escaped: true });
+      return { processed: true, escaped: true, attempts: attempts.length };
+    }
+
+    await effect.update({
+      [`flags.add2e.${CHARM_PERIODIC_SAVE_FLAG}.nextSaveTick`]: dueTick,
+      [`flags.add2e.${CHARM_PERIODIC_SAVE_FLAG}.lastSaveTick`]: attempts[attempts.length - 1].dueTick,
+      [`flags.add2e.${CHARM_PERIODIC_SAVE_FLAG}.attempts`]: state.attempts + attempts.length,
+      [`flags.add2e.${CHARM_PERIODIC_SAVE_FLAG}.lastCheckTick`]: currentTick
+    }, { add2eCharmPeriodicSave: true });
+    await notifyCharmPeriodicSave(actor, effect, state, attempts, { escaped: false, nextSaveTick: dueTick });
+    return { processed: true, escaped: false, attempts: attempts.length, nextSaveTick: dueTick };
+  } catch (error) {
+    console.error(`${TAG}[CHARM_PERIODIC_SAVE][PROCESS_FAILED]`, { actor: actor?.name, effectId: effect?.id, error });
+    return { processed: false, reason: "error", error };
+  } finally {
+    CHARM_PERIODIC_SAVE_PROCESSING.delete(key);
+  }
+}
+
+export async function add2eWorldTimeProcessPeriodicCharms({ reason = "manual" } = {}) {
+  if (!isResponsibleWorldTimeGM()) return { ok: false, reason: "not-responsible-gm", actors: 0, processed: 0, escaped: 0 };
+
+  const rows = allWorldActors();
+  let processed = 0;
+  let escaped = 0;
+  for (const { actor } of rows) {
+    for (const effect of Array.from(actor.effects ?? [])) {
+      const result = await processCharmPeriodicEffect(actor, effect);
+      if (result.processed) processed += 1;
+      if (result.escaped) escaped += 1;
+    }
+  }
+
+  return { ok: true, reason, actors: rows.length, processed, escaped, tick: add2eTimeCurrentTick() };
+}
+
+function schedulePeriodicCharmProcessing(reason) {
+  if (!isResponsibleWorldTimeGM() || CHARM_PERIODIC_SAVE_SCHEDULED) return;
+  CHARM_PERIODIC_SAVE_SCHEDULED = true;
+  window.setTimeout(() => {
+    CHARM_PERIODIC_SAVE_SCHEDULED = false;
+    add2eWorldTimeProcessPeriodicCharms({ reason })
+      .catch(error => console.error(`${TAG}[CHARM_PERIODIC_SAVE][SCHEDULE_FAILED]`, { reason, error }));
+  }, 0);
+}
+
+function registerPeriodicCharmSaveHook() {
+  if (CHARM_PERIODIC_SAVE_HOOK_REGISTERED) return false;
+  CHARM_PERIODIC_SAVE_HOOK_REGISTERED = true;
+  Hooks.on("updateSetting", setting => {
+    const key = String(setting?.key ?? setting?.id ?? "");
+    if (key === "add2e.worldTimeTick") schedulePeriodicCharmProcessing("time-tick");
+  });
+  return true;
+}
+
 async function normalizeWorldActorEffects(actorRows, currentRound) {
   let normalized = 0;
   let skipped = 0;
@@ -140,6 +379,7 @@ export async function add2eWorldTimeExpireAllActors({ reason = "world-time", cur
   add2eRegisterTimeEngineApi();
   add2eVitalRegisterStatusEffects();
 
+  const periodicCharms = await add2eWorldTimeProcessPeriodicCharms({ reason: `${reason}:periodic-charms` });
   const actorRows = allWorldActors();
   const rows = [];
   let deleted = 0;
@@ -163,7 +403,7 @@ export async function add2eWorldTimeExpireAllActors({ reason = "world-time", cur
     }
   }
 
-  const result = { ok: true, reason, actors: actorRows.length, deleted, messages, rows, tick: add2eTimeCurrentTick() };
+  const result = { ok: true, reason, actors: actorRows.length, deleted, messages, rows, periodicCharms, tick: add2eTimeCurrentTick() };
   log("[EXPIRE_ALL]", result);
   return result;
 }
@@ -300,6 +540,7 @@ function registerToolbarHook() {
 }
 
 registerToolbarHook();
+registerPeriodicCharmSaveHook();
 globalThis.add2eInstallWorldTimeSceneButton = installSceneControlButton;
 
 export function add2eRegisterWorldTimeEngine() {
@@ -309,13 +550,18 @@ export function add2eRegisterWorldTimeEngine() {
   game.add2e.time.worldVersion = ADD2E_WORLD_TIME_ENGINE_VERSION;
   game.add2e.time.advance = add2eWorldTimeAdvance;
   game.add2e.time.expireAll = add2eWorldTimeExpireAllActors;
+  game.add2e.time.processPeriodicCharms = add2eWorldTimeProcessPeriodicCharms;
   game.add2e.time.open = add2eOpenWorldTimeApplication;
   globalThis.ADD2E_WORLD_TIME_ENGINE_VERSION = ADD2E_WORLD_TIME_ENGINE_VERSION;
+  globalThis.ADD2E_CHARM_PERIODIC_SAVE_VERSION = CHARM_PERIODIC_SAVE_VERSION;
   globalThis.ADD2EWorldTimeApplication = ADD2EWorldTimeApplication;
   globalThis.add2eWorldTimeAdvance = add2eWorldTimeAdvance;
   globalThis.add2eWorldTimeExpireAllActors = add2eWorldTimeExpireAllActors;
+  globalThis.add2eWorldTimeProcessPeriodicCharms = add2eWorldTimeProcessPeriodicCharms;
   globalThis.add2eOpenWorldTimeApplication = add2eOpenWorldTimeApplication;
   registerToolbarHook();
-  log("[REGISTERED]", { version: ADD2E_WORLD_TIME_ENGINE_VERSION, tick: add2eTimeCurrentTick(), toolbar: "xp-pattern", scan: "world+tokens+combatants" });
+  registerPeriodicCharmSaveHook();
+  schedulePeriodicCharmProcessing("world-time-ready");
+  log("[REGISTERED]", { version: ADD2E_WORLD_TIME_ENGINE_VERSION, tick: add2eTimeCurrentTick(), toolbar: "xp-pattern", scan: "world+tokens+combatants", charmPeriodicSave: CHARM_PERIODIC_SAVE_VERSION });
   return true;
 }
