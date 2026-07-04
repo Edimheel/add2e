@@ -4,7 +4,7 @@
 // ============================================================
 import { escapeHtml, slug, expose, globalFn } from "./08-character-sheet-ui-00-utils.mjs";
 
-const ADD2E_CAPABILITIES_SHEET_VERSION = "2026-07-04-thief-bonus-tooltips-v12";
+const ADD2E_CAPABILITIES_SHEET_VERSION = "2026-07-04-thief-activity-sheet-source-v13";
 
 function readNumber(value, fallback = 0) {
   const number = Number(value);
@@ -159,6 +159,31 @@ function thiefBonusBreakdown(actor, skill) {
   }).join(" | ");
 }
 
+function thiefActivityForSheet(sheet, actor) {
+  const prepared = sheet?._add2ePreparedData?.thiefActivity;
+  if (prepared && typeof prepared === "object") return prepared;
+  const getActivity = globalFn("add2eGetThiefActivityEquipmentStatus");
+  if (!getActivity) return { applies: false, ok: true, blockingItems: [], message: "" };
+  try { return getActivity(actor) ?? { applies: false, ok: true, blockingItems: [], message: "" }; }
+  catch (error) {
+    console.warn("[ADD2E][CAPACITES][THIEF_ACTIVITY]", error);
+    return { applies: false, ok: true, blockingItems: [], message: "" };
+  }
+}
+
+function thiefActivityBlocked(activity) {
+  return activity?.applies === true && activity?.ok === false;
+}
+
+function thiefActivityWarning(activity) {
+  if (!thiefActivityBlocked(activity)) return "";
+  const names = Array.from(activity?.blockingItems ?? [])
+    .map(item => String(item?.name ?? "").trim())
+    .filter(Boolean);
+  const equipment = names.length ? `Équipement incompatible : ${names.join(", ")}.` : "Équipement actuellement incompatible.";
+  return `<div class="a2e-thief-activity-warning" role="alert" style="display:flex;gap:8px;align-items:flex-start;margin:0 0 9px;padding:8px 10px;border:1px solid #b3261e;border-radius:8px;background:#fff0ed;color:#7a160e;font-weight:700;"><i class="fas fa-triangle-exclamation" aria-hidden="true" style="margin-top:2px;"></i><div><strong>Capacités de voleur indisponibles</strong><br><span>${escapeHtml(activity.message)}</span><br><small>${escapeHtml(equipment)}</small></div></div>`;
+}
+
 function thiefSkillIcon(key) {
   const normalized = normalizeSkillKey(key);
   if (normalized.includes("crochetage")) return "fa-key";
@@ -183,7 +208,7 @@ function thiefSkillTone(key) {
   return "pocket";
 }
 
-function thiefTile(actor, skill, feature = null, featureIndex = null) {
+function thiefTile(actor, skill, feature = null, featureIndex = null, activity = null) {
   const name = feature ? featureName(feature) : String(skill?.shortLabel ?? skill?.label ?? "Compétence");
   const key = normalizeSkillKey(feature?.skillKey ?? skill?.key ?? name);
   const display = String(skill?.display ?? `${readNumber(skill?.finalValue ?? skill?.value ?? 0)}%`);
@@ -192,14 +217,17 @@ function thiefTile(actor, skill, feature = null, featureIndex = null) {
   const bonusClass = bonus > 0 ? "positive" : bonus < 0 ? "negative" : "neutral";
   const bonusTitle = thiefBonusBreakdown(actor, skill);
   const canRoll = skill?.canRoll !== false;
+  const blocked = canRoll && thiefActivityBlocked(activity);
   const tileTitle = [
-    canRoll ? `Tester ${name}` : String(skill?.note ?? "Valeur automatique"),
+    blocked ? String(activity?.message ?? "Capacité indisponible") : (canRoll ? `Tester ${name}` : String(skill?.note ?? "Valeur automatique")),
     `Base ${base}`,
     bonusTitle
   ].join("\n");
   const content = `<span class="a2e-thief-skill-name">${escapeHtml(name)}</span><strong class="a2e-thief-skill-total">${escapeHtml(display)}</strong><span class="a2e-thief-skill-detail"><span>Base ${escapeHtml(base)}</span><span class="a2e-thief-skill-bonus ${bonusClass}" title="${escapeHtml(bonusTitle)}">${escapeHtml(signedPercent(bonus))}</span></span><span class="a2e-thief-skill-action"><i class="fas ${thiefSkillIcon(key)}" aria-hidden="true"></i></span>`;
 
-  if (!canRoll) return `<div class="a2e-thief-skill-card is-static" title="${escapeHtml(tileTitle)}">${content}</div>`;
+  if (!canRoll || blocked) {
+    return `<div class="a2e-thief-skill-card ${blocked ? "is-disabled" : "is-static"}" ${blocked ? 'aria-disabled="true" style="opacity:.55;cursor:not-allowed;filter:grayscale(.45);"' : ""} title="${escapeHtml(tileTitle)}">${content}</div>`;
+  }
 
   if (feature) {
     return `<button type="button" class="a2e-thief-skill-card is-rollable add2e-thief-feature-roll" data-feature-index="${featureIndex}" data-feature-name="${escapeHtml(name)}" data-skill-key="${escapeHtml(key)}" data-skill-tone="${escapeHtml(thiefSkillTone(key))}" data-on-use="${escapeHtml(featureOnUse(feature))}" title="${escapeHtml(tileTitle)}">${content}</button>`;
@@ -208,7 +236,7 @@ function thiefTile(actor, skill, feature = null, featureIndex = null) {
   return `<button type="button" class="a2e-thief-skill-card is-rollable add2e-thief-skill-roll" data-skill-key="${escapeHtml(key)}" data-skill-tone="${escapeHtml(thiefSkillTone(key))}" title="${escapeHtml(tileTitle)}">${content}</button>`;
 }
 
-function buildThiefTiles(actor) {
+function buildThiefTiles(actor, activity = null) {
   const skills = getThiefSkills(actor).filter(skill => !isHiddenThiefSkill(skill?.key ?? skill?.label ?? ""));
   if (!skills.length) return "";
 
@@ -222,16 +250,16 @@ function buildThiefTiles(actor) {
     const skill = byKey.get(key);
     if (!skill || used.has(key)) return;
     used.add(key);
-    featureTiles.push(thiefTile(actor, skill, feature, index));
+    featureTiles.push(thiefTile(actor, skill, feature, index, activity));
   });
 
   const remaining = skills
     .filter(skill => !used.has(normalizeSkillKey(skill?.key ?? skill?.label ?? "")))
-    .map(skill => thiefTile(actor, skill));
+    .map(skill => thiefTile(actor, skill, null, null, activity));
   const tiles = [...featureTiles, ...remaining];
   if (!tiles.length) return "";
 
-  return `<div class="a2e-panel add2e-thief-skills-panel"><h2>${escapeHtml(thiefPanelTitle(actor))}</h2><div class="a2e-panel-body"><div class="a2e-thief-skills-inline">${tiles.join("")}</div></div></div>`;
+  return `<div class="a2e-panel add2e-thief-skills-panel"><h2>${escapeHtml(thiefPanelTitle(actor))}</h2><div class="a2e-panel-body">${thiefActivityWarning(activity)}<div class="a2e-thief-skills-inline">${tiles.join("")}</div></div></div>`;
 }
 
 function iconControl({ className, icon, title, data = "" }) {
@@ -345,10 +373,11 @@ export function injectCapacitesTab(sheet, sheetRoot) {
   const tab = sheetRoot?.querySelector?.('.sheet-body .a2e-tab-content[data-tab="capacites"], .sheet-body .tab[data-tab="capacites"]');
   if (!tab) return;
 
+  const activity = thiefActivityForSheet(sheet, actor);
   const wrapper = document.createElement("div");
   wrapper.className = "add2e-capacites-modern-root";
   wrapper.dataset.add2eCapabilitiesVersion = ADD2E_CAPABILITIES_SHEET_VERSION;
-  wrapper.innerHTML = `${buildThiefTiles(actor)}${buildCapabilities(actor)}`;
+  wrapper.innerHTML = `${buildThiefTiles(actor, activity)}${buildCapabilities(actor)}`;
   tab.replaceChildren(wrapper);
   bindCapabilities(wrapper, actor, sheet);
 }
