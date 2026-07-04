@@ -1,14 +1,16 @@
 // ============================================================
 // ADD2E — 08 Character Sheet UI — 03 styles
-// Styles globaux pour la feuille ApplicationV2 et le HUD compact.
+// Présentation des tuiles et HUD compact.
 // ============================================================
 
 const ADD2E_CAPABILITIES_STYLE_ID = "add2e-capabilities-global-style";
-const ADD2E_HUD_CAPABILITIES_TABS_FLAG = "__ADD2E_HUD_CAPABILITIES_TABS_V4";
-const ADD2E_THIEF_DIALOG_FLAG = "__ADD2E_THIEF_DIALOG_STYLE_V3";
+const ADD2E_HUD_CAPABILITIES_TABS_FLAG = "__ADD2E_HUD_CAPABILITIES_TABS_V5";
+const ADD2E_THIEF_DIALOG_FLAG = "__ADD2E_THIEF_DIALOG_STYLE_V4";
+const ADD2E_THIEF_DEX_SYNC_FLAG = "__ADD2E_THIEF_DEX_SYNC_V1";
 let add2eHudCapabilitiesTab = "classe";
 let add2eHudCapabilitiesObserver = null;
 let add2eThiefDialogObserver = null;
+const add2eThiefDexteritySyncs = new Map();
 
 function add2eHudFeatureName(feature) {
   return String(feature?._add2eHudLabel ?? feature?.name ?? feature?.label ?? feature?.title ?? feature?.nom ?? "Capacité").trim();
@@ -164,14 +166,49 @@ function installThiefDialogStyle() {
   styleThiefDialogs();
 }
 
-function removeSneakAttackCard(sheetRoot) {
-  for (const card of sheetRoot?.querySelectorAll?.('.a2e-thief-skill-card.is-static') ?? []) {
-    const text = `${card.textContent ?? ""} ${card.title ?? ""}`
+function add2eThiefClassPresent(actor) {
+  return Array.from(actor?.items ?? []).some(item => {
+    if (String(item?.type ?? "").toLowerCase() !== "classe") return false;
+    const text = `${item?.name ?? ""} ${item?.system?.slug ?? ""} ${item?.system?.label ?? ""} ${item?.system?.nom ?? ""}`
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
       .toLowerCase();
-    if (text.includes("attaque dans le dos") || text.includes("frappe dans le dos") || text.includes("attaque sournoise") || text.includes("backstab")) card.remove();
-  }
+    return text.includes("voleur") || text.includes("assassin");
+  });
+}
+
+function add2eSheetDexterity(actor) {
+  const system = actor?.system ?? {};
+  const base = Number(system.dexterite_base ?? system.dexterite ?? 0);
+  const bonusCaracs = system.bonus_caracteristiques ?? {};
+  const racialBonus = Number(bonusCaracs?.dexterite ?? 0);
+  const legacyRace = Number(system.dexterite_race ?? 0);
+  const total = base + (racialBonus || legacyRace || 0);
+  return Number.isFinite(total) && total > 0 ? Math.floor(total) : null;
+}
+
+function synchronizeThiefDexterity(sheetRoot) {
+  if (!sheetRoot || globalThis[ADD2E_THIEF_DEX_SYNC_FLAG] === false) return;
+  const actorId = String(sheetRoot.dataset?.actorId ?? "").trim();
+  const actor = actorId ? game.actors?.get?.(actorId) : null;
+  if (!actor || actor.type !== "personnage" || !add2eThiefClassPresent(actor)) return;
+
+  const expected = add2eSheetDexterity(actor);
+  const current = Number(actor.system?.dex_aff);
+  if (!Number.isFinite(expected) || expected < 1 || current === expected) return;
+
+  const key = String(actor.uuid ?? actor.id ?? actorId);
+  if (!key || add2eThiefDexteritySyncs.has(key)) return;
+  const sync = actor.update({ "system.dex_aff": expected }, {
+    add2eInternal: true,
+    add2eThiefDexteritySync: true,
+    add2eReason: "thief-skill-dexterity-sync"
+  }).catch(error => {
+    console.warn("[ADD2E][VOLEUR][DEX_SYNC]", { actor: actor?.name, error });
+  }).finally(() => {
+    add2eThiefDexteritySyncs.delete(key);
+  });
+  add2eThiefDexteritySyncs.set(key, sync);
 }
 
 function injectGlobalCapabilityStyles() {
@@ -181,26 +218,32 @@ function injectGlobalCapabilityStyles() {
   const style = document.createElement("style");
   style.id = ADD2E_CAPABILITIES_STYLE_ID;
   style.textContent = `
-    /* Feuille ApplicationV2 : style chargé dans document.head après les CSS système. */
+    /* Feuille personnage : sept compétences Voleur sur une seule ligne. */
     .add2e-character-v2-app .add2e-character-v3 .add2e-capacites-modern-root,
     .add2e-character-v3 .add2e-capacites-modern-root { display:grid; gap:10px; }
     .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skills-inline,
-    .add2e-character-v3 .a2e-thief-skills-inline { display:grid !important; grid-template-columns:repeat(auto-fit,minmax(145px,1fr)) !important; gap:7px !important; align-items:stretch !important; }
+    .add2e-character-v3 .a2e-thief-skills-inline {
+      display:grid !important;
+      grid-template-columns:repeat(7, minmax(0, 1fr)) !important;
+      gap:7px !important;
+      align-items:stretch !important;
+    }
     .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skill-card,
     .add2e-character-v2-app .add2e-character-v3 button.a2e-thief-skill-card,
     .add2e-character-v3 .a2e-thief-skill-card,
     .add2e-character-v3 button.a2e-thief-skill-card {
       display:grid !important;
-      grid-template-columns:minmax(0,1fr) 30px !important;
-      grid-template-rows:auto auto auto !important;
-      gap:2px 6px !important;
+      grid-template-columns:28px minmax(0, 1fr) !important;
+      grid-template-rows:24px 20px 22px !important;
+      column-gap:6px !important;
+      row-gap:2px !important;
       align-items:center !important;
       min-width:0 !important;
-      min-height:74px !important;
+      min-height:88px !important;
       width:100% !important;
       box-sizing:border-box !important;
       margin:0 !important;
-      padding:8px 9px !important;
+      padding:9px 8px !important;
       border:1px solid #d6b05a !important;
       border-radius:9px !important;
       background:#fffdf6 !important;
@@ -217,22 +260,62 @@ function injectGlobalCapabilityStyles() {
     .add2e-character-v3 button.a2e-thief-skill-card { cursor:pointer !important; }
     .add2e-character-v2-app .add2e-character-v3 button.a2e-thief-skill-card:hover,
     .add2e-character-v3 button.a2e-thief-skill-card:hover { border-color:#8f6515 !important; background:#fff8e3 !important; transform:translateY(-1px); }
+    .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skill-action,
+    .add2e-character-v3 .a2e-thief-skill-action {
+      grid-column:1 !important;
+      grid-row:1 / span 3 !important;
+      display:flex !important;
+      align-items:center !important;
+      justify-content:center !important;
+      font-size:1.08em !important;
+    }
     .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skill-name,
-    .add2e-character-v3 .a2e-thief-skill-name { grid-column:1 !important; grid-row:1 !important; display:block !important; min-width:0 !important; color:#3d2b0a !important; font-size:.92em !important; font-weight:950 !important; line-height:1.12 !important; white-space:normal !important; overflow:hidden !important; text-overflow:ellipsis !important; }
+    .add2e-character-v3 .a2e-thief-skill-name {
+      grid-column:2 !important;
+      grid-row:1 !important;
+      display:block !important;
+      min-width:0 !important;
+      color:#3d2b0a !important;
+      font-size:.82em !important;
+      font-weight:950 !important;
+      line-height:1.1 !important;
+      white-space:nowrap !important;
+      overflow:hidden !important;
+      text-overflow:ellipsis !important;
+    }
     .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skill-total,
-    .add2e-character-v3 .a2e-thief-skill-total { grid-column:1 !important; grid-row:2 !important; display:block !important; color:#184a82 !important; font-size:1.14em !important; font-weight:950 !important; line-height:1 !important; }
+    .add2e-character-v3 .a2e-thief-skill-total {
+      grid-column:2 !important;
+      grid-row:2 !important;
+      display:block !important;
+      color:#184a82 !important;
+      font-size:1.08em !important;
+      font-weight:950 !important;
+      line-height:1 !important;
+    }
     .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skill-detail,
-    .add2e-character-v3 .a2e-thief-skill-detail { grid-column:1 !important; grid-row:3 !important; display:flex !important; gap:5px !important; flex-wrap:wrap !important; align-items:center !important; color:#7f704d !important; font-size:.78em !important; font-weight:850 !important; line-height:1.1 !important; }
+    .add2e-character-v3 .a2e-thief-skill-detail {
+      grid-column:2 !important;
+      grid-row:3 !important;
+      display:flex !important;
+      gap:4px !important;
+      flex-wrap:nowrap !important;
+      align-items:center !important;
+      min-width:0 !important;
+      color:#7f704d !important;
+      font-size:.70em !important;
+      font-weight:850 !important;
+      line-height:1 !important;
+      white-space:nowrap !important;
+    }
     .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skill-bonus,
-    .add2e-character-v3 .a2e-thief-skill-bonus { border-radius:999px !important; padding:1px 5px !important; border:1px solid #dac276 !important; background:#fff7dc !important; font-weight:950 !important; }
+    .add2e-character-v3 .a2e-thief-skill-bonus { border-radius:999px !important; padding:1px 4px !important; border:1px solid #dac276 !important; background:#fff7dc !important; font-weight:950 !important; }
     .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skill-bonus.positive,
     .add2e-character-v3 .a2e-thief-skill-bonus.positive { color:#1f7c4d !important; }
     .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skill-bonus.negative,
     .add2e-character-v3 .a2e-thief-skill-bonus.negative { color:#a1261b !important; }
     .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skill-bonus.neutral,
     .add2e-character-v3 .a2e-thief-skill-bonus.neutral { color:#7f704d !important; }
-    .add2e-character-v2-app .add2e-character-v3 .a2e-thief-skill-action,
-    .add2e-character-v3 .a2e-thief-skill-action { grid-column:2 !important; grid-row:1 / span 3 !important; display:flex !important; align-items:center !important; justify-content:center !important; font-size:1.08em !important; }
     .add2e-character-v3 .a2e-thief-skill-card[data-skill-tone="lock"] .a2e-thief-skill-action { color:#168a4a !important; }
     .add2e-character-v3 .a2e-thief-skill-card[data-skill-tone="trap"] .a2e-thief-skill-action { color:#d88916 !important; }
     .add2e-character-v3 .a2e-thief-skill-card[data-skill-tone="move"] .a2e-thief-skill-action { color:#2b82c8 !important; }
@@ -284,5 +367,5 @@ if (game?.ready) {
 export function injectCharacterUiStyles(sheetRoot) {
   if (!sheetRoot) return;
   injectGlobalCapabilityStyles();
-  removeSneakAttackCard(sheetRoot);
+  synchronizeThiefDexterity(sheetRoot);
 }
