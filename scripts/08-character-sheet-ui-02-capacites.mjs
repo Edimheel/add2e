@@ -4,7 +4,7 @@
 // ============================================================
 import { escapeHtml, slug, expose, globalFn } from "./08-character-sheet-ui-00-utils.mjs";
 
-const ADD2E_CAPABILITIES_SHEET_VERSION = "2026-07-04-thief-activity-sheet-source-v13";
+const ADD2E_CAPABILITIES_SHEET_VERSION = "2026-07-04-thief-activity-sheet-source-v14";
 
 function readNumber(value, fallback = 0) {
   const number = Number(value);
@@ -237,6 +237,8 @@ function thiefTile(actor, skill, feature = null, featureIndex = null, activity =
 }
 
 function buildThiefTiles(actor, activity = null) {
+  if (thiefActivityBlocked(activity)) return thiefActivityWarning(activity);
+
   const skills = getThiefSkills(actor).filter(skill => !isHiddenThiefSkill(skill?.key ?? skill?.label ?? ""));
   if (!skills.length) return "";
 
@@ -259,7 +261,7 @@ function buildThiefTiles(actor, activity = null) {
   const tiles = [...featureTiles, ...remaining];
   if (!tiles.length) return "";
 
-  return `<div class="a2e-panel add2e-thief-skills-panel"><h2>${escapeHtml(thiefPanelTitle(actor))}</h2><div class="a2e-panel-body">${thiefActivityWarning(activity)}<div class="a2e-thief-skills-inline">${tiles.join("")}</div></div></div>`;
+  return `<div class="a2e-panel add2e-thief-skills-panel"><h2>${escapeHtml(thiefPanelTitle(actor))}</h2><div class="a2e-panel-body"><div class="a2e-thief-skills-inline">${tiles.join("")}</div></div></div>`;
 }
 
 function iconControl({ className, icon, title, data = "" }) {
