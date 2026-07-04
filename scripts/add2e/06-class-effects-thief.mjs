@@ -582,21 +582,39 @@ function add2eGetActorThiefSkills(actor, progressionRow = null) {
   return rows;
 }
 
-async function add2ePromptThiefSkillModifiers(actor, skill) {
-  const DialogV2 = foundry.applications?.api?.DialogV2;
-  const isPickpocket = skill.key === "pickpocket";
-  const content = `<form class="add2e-thief-roll-dialog"><div style="margin-bottom:.6em;"><b>${skill.label}</b><br><span>Score actuel : ${skill.display}</span></div><div style="margin-bottom:.6em;"><label>Modificateur situationnel</label><input type="number" name="mod" value="0" step="1" style="width:5em;"></div>${isPickpocket ? `<div style="margin-bottom:.6em;"><label>Niveau de la cible</label><input type="number" name="targetLevel" value="" min="0" step="1" style="width:5em;"><p style="margin:.3em 0 0;color:#666;font-size:.9em;">Pickpocket : –5 % par niveau de la cible au-dessus du niveau 3.</p></div>` : ""}</form>`;
+function add2eNormalizeThiefModifier(value) {
+  const compact = String(value ?? "").trim().replace(/\s+/g, "").slice(0, 3);
+  return /^[+-]?\d{0,2}$/.test(compact) ? (Number.parseInt(compact, 10) || 0) : 0;
+}
+
+async function add2ePromptThiefSkillModifiers(_actor, skill) {
+  const DialogV2 = foundry?.applications?.api?.DialogV2;
+  if (!DialogV2?.wait) return null;
+
+  const content = `<form class="add2e-dialog add2e-thief-roll-dialog" style="display:grid;gap:.7em;"><div><strong>${skill.label}</strong><br><span class="a2e-muted">Score actuel : ${skill.display}</span></div><div style="display:flex;align-items:center;gap:.6em;"><label for="add2e-thief-skill-modifier">Modificateur</label><input id="add2e-thief-skill-modifier" name="mod" type="text" inputmode="numeric" autocomplete="off" maxlength="3" value="0" style="width:3ch;min-width:3ch;text-align:center;"></div></form>`;
+
   return DialogV2.wait({
     window: { title: `Jet de ${skill.label}` },
     content,
     buttons: [
-      { action: "roll", label: "Lancer", default: true, callback: (_event, button) => {
-        const form = button.form;
-        return { mod: Number(form?.elements?.mod?.value ?? 0) || 0, targetLevel: Number(form?.elements?.targetLevel?.value ?? 0) || 0 };
-      } },
+      {
+        action: "roll",
+        label: "Lancer",
+        default: true,
+        callback: (_event, button) => ({ mod: add2eNormalizeThiefModifier(button.form?.elements?.mod?.value) })
+      },
       { action: "cancel", label: "Annuler", callback: () => null }
     ],
-    rejectClose: false
+    rejectClose: false,
+    render: (_event, dialog) => {
+      const input = dialog.element?.querySelector?.("input[name='mod']");
+      if (!input) return;
+      input.addEventListener("input", () => {
+        input.value = String(input.value ?? "").replace(/[^0-9+-]/g, "").replace(/(?!^)[+-]/g, "").slice(0, 3);
+      });
+      input.focus();
+      input.select();
+    }
   });
 }
 
@@ -616,15 +634,13 @@ async function add2eRollThiefSkill(actor, key) {
   if (!options) return;
   const isAssassination = skill.key === "assassinat";
   const situational = Number(options.mod || 0) || 0;
-  const targetLevel = Number(options.targetLevel || 0) || 0;
-  const targetPenalty = skill.key === "pickpocket" && targetLevel > 3 ? -5 * (targetLevel - 3) : 0;
-  const finalValue = Math.max(0, Number(skill.value || 0) + situational + targetPenalty);
+  const finalValue = Math.max(0, Number(skill.value || 0) + situational);
   const roll = await new Roll("1d100").evaluate({ async: true });
   if (game.dice3d) await game.dice3d.showForRoll(roll);
   const success = roll.total <= finalValue;
   const noticed = skill.key === "pickpocket" && roll.total >= finalValue + 21;
   const color = success ? "#1f8f4d" : "#b3261e";
-  const allDetails = [{ label: "Base", value: skill.base }, ...skill.bonuses, ...(situational !== 0 ? [{ label: "Situation", value: situational }] : []), ...(targetPenalty !== 0 ? [{ label: `Cible niveau ${targetLevel}`, value: targetPenalty }] : [])];
+  const allDetails = [{ label: "Base", value: skill.base }, ...skill.bonuses, ...(situational !== 0 ? [{ label: "Situation", value: situational }] : [])];
   await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: `<div class="add2e-card-test" style="border-radius:12px;border:1px solid ${color};background:#fffdf6;padding:.75em 1em;font-family:var(--font-primary);"><div style="display:flex;align-items:center;gap:.6em;margin-bottom:.4em;"><i class="fas fa-mask" style="color:${color};font-size:1.5em;"></i><b style="color:${color};font-size:1.12em;">${skill.label}</b><span style="margin-left:auto;color:#666;">${isAssassination ? "Compétence d’assassin" : "Compétence de voleur"}</span></div><div>Score final : <b>${finalValue}%</b> — Jet : <b>${roll.total}</b></div><div style="font-size:.9em;color:#555;margin-top:.35em;">${allDetails.map(d => `${d.label} ${add2eFormatSigned(d.value)}%`).join(" ; ")}</div><div style="margin-top:.35em;font-weight:800;color:${color};">${success ? "Réussite" : "Échec"}</div>${isAssassination && success ? `<div style="margin-top:.25em;color:#1f8f4d;font-weight:700;">Assassinat réussi : effet létal à appliquer selon les conditions de scène et l’arbitrage du MJ.</div>` : ""}${isAssassination && !success ? `<div style="margin-top:.25em;color:#b3261e;font-weight:700;">Assassinat manqué.</div>` : ""}${noticed ? `<div style="margin-top:.25em;color:#b3261e;font-weight:700;">La victime remarque la tentative de pickpocket.</div>` : ""}</div>` });
 }
 
