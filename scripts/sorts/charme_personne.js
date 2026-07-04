@@ -1,5 +1,5 @@
 // Charme-Personne.js — ADD2E corrigé
-// Version : 2026-07-04-periodic-charm-save-v4
+// Version : 2026-07-04-periodic-charm-save-v5
 // Compatible : Sorts, Objets (Bâton, Anneau...)
 // Retour attendu : true = consommé, false = non consommé.
 
@@ -347,7 +347,7 @@ return await (async () => {
           <div style="color:#c0392b;font-weight:bold;">💖 CHARMÉ !</div>
           <div style="font-size:0.9em;">Jet total : <b>${save.total}</b> ${saveDetails} vs <b>${save.threshold}</b></div>
           <div style="font-size:0.85em;font-style:italic;margin-top:3px;">La cible considère le lanceur comme son ami.</div>
-          <div style="font-size:0.82em;margin-top:5px;color:#6c3483;">Nouveau jet de sauvegarde dans <b>${htmlEscape(periodicSave.intervalLabel)}</b> (Intelligence ${periodicSave.intelligence}).</div>
+          <div style="font-size:0.82em;margin-top:5px;color:#6c3483;"><b>Durée :</b> spéciale. Nouveau jet de sauvegarde dans <b>${htmlEscape(periodicSave.intervalLabel)}</b> (Intelligence ${periodicSave.intelligence}).</div>
         </div>`;
 
       await removeExistingCharm(targetActor);
