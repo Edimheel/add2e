@@ -306,18 +306,14 @@ function add2eInstallThiefTwoLineLabels() {
   document.head.appendChild(style);
 }
 
-function add2eRefreshThiefSheetBridge() {
-  add2eInstallThiefSheetBridge();
-  add2eInstallThiefTwoLineLabels();
-}
-
 function add2eBootThiefSheetBridge() {
   if (globalThis[ADD2E_THIEF_SHEET_BRIDGE_FLAG]) return;
   globalThis[ADD2E_THIEF_SHEET_BRIDGE_FLAG] = true;
   globalThis.ADD2E_DEBUG_THIEF_RACIAL ??= true;
 
-  add2eRefreshThiefSheetBridge();
-  for (const delay of [50, 180]) window.setTimeout(add2eRefreshThiefSheetBridge, delay);
+  add2eInstallThiefSheetBridge();
+  add2eInstallThiefTwoLineLabels();
+  for (const delay of [50, 180]) window.setTimeout(add2eInstallThiefTwoLineLabels, delay);
   Hooks.on("renderActorSheet", () => {
     for (const delay of [0, 60, 180]) window.setTimeout(add2eInstallThiefTwoLineLabels, delay);
   });
