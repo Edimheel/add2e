@@ -239,12 +239,64 @@ function add2ePushThiefBonus(out, label, map, key) {
   if (value !== 0) out.push({ label, value });
 }
 
+const ADD2E_THIEF_RACIAL_ADJUSTMENTS = {
+  demi_elfe: { pickpocket: 10, dissimulation: 5 },
+  demi_orque: { pickpocket: -5, crochetage_serrures: 5, detection_pieges: 5, ecoute: 5, escalade: 5, lecture_langues: -10 },
+  elfe: { pickpocket: 5, crochetage_serrures: -5, deplacement_silencieux: 5, dissimulation: 10, ecoute: 5 },
+  gnome: { crochetage_serrures: 5, detection_pieges: 10, deplacement_silencieux: 5, dissimulation: 5, ecoute: 10, escalade: -15 },
+  nain: { crochetage_serrures: 10, detection_pieges: 15, escalade: -10, lecture_langues: -5 },
+  petite_gens: { pickpocket: 5, crochetage_serrures: 5, detection_pieges: 5, deplacement_silencieux: 10, dissimulation: 15, ecoute: 5, escalade: -15, lecture_langues: -5 }
+};
+
+const ADD2E_THIEF_RACIAL_SLUG_ALIASES = {
+  demi_elf: "demi_elfe", half_elf: "demi_elfe", halfelf: "demi_elfe",
+  demi_orc: "demi_orque", demi_orque: "demi_orque", half_orc: "demi_orque", halforc: "demi_orque",
+  elf: "elfe",
+  dwarf: "nain",
+  halfling: "petite_gens", petite_gens: "petite_gens", petit_gens: "petite_gens", petite_gen: "petite_gens"
+};
+
+function add2eGetActorRaceItem(actor) {
+  return actor?.items?.find?.(item => String(item?.type ?? "").toLowerCase() === "race") ?? null;
+}
+
 function add2eGetActorRaceSystem(actor) {
   const details = add2eDeepClone(actor?.system?.details_race ?? {}) || {};
-  const raceItem = actor?.items?.find?.(i => String(i?.type || "").toLowerCase() === "race") ?? null;
+  const raceItem = add2eGetActorRaceItem(actor);
   const itemSystem = add2eDeepClone(raceItem?.system ?? {}) || {};
   if (foundry?.utils?.mergeObject) return foundry.utils.mergeObject(details, itemSystem, { inplace: false, recursive: true });
   return { ...details, ...itemSystem };
+}
+
+function add2eGetActorRaceSlug(actor, race = null) {
+  const item = add2eGetActorRaceItem(actor);
+  const source = race ?? add2eGetActorRaceSystem(actor);
+  const raw = source?.slug ?? source?.label ?? source?.nom ?? source?.name ?? item?.system?.slug ?? item?.name ?? actor?.system?.race ?? "";
+  const normalized = add2eNormalizeEquipTag(raw);
+  return ADD2E_THIEF_RACIAL_SLUG_ALIASES[normalized] ?? normalized;
+}
+
+function add2eHasThiefBonusEntries(value) {
+  if (Array.isArray(value)) return value.length > 0;
+  if (typeof value === "string") return value.trim() !== "";
+  return Boolean(value && typeof value === "object" && Object.keys(value).length > 0);
+}
+
+function add2eGetExplicitRaceThiefBonusMaps(race) {
+  return [
+    race?.thief_adjustments,
+    race?.thief_bonuses,
+    race?.thiefSkillAdjustments,
+    race?.thiefSkillBonuses,
+    race?.voleurSkillAdjustments,
+    race?.voleurSkillBonuses,
+    race?.bonus_competences_voleur,
+    race?.bonus_competence_voleur,
+    race?.bonus_voleur,
+    race?.malus_competences_voleur,
+    race?.skillBonuses?.voleur,
+    race?.skillAdjustments?.voleur
+  ].filter(add2eHasThiefBonusEntries);
 }
 
 function add2eIsThiefClassSystem(system) {
@@ -259,23 +311,57 @@ function add2eIsThiefClassSystem(system) {
     ...(Array.isArray(system?.tags) ? system.tags : []),
     ...(Array.isArray(system?.effectTags) ? system.effectTags : [])
   ].map(add2eNormalizeEquipTag).filter(Boolean);
-  return values.some(value => value === "voleur" || value.includes("voleur"));
+  return values.some(value => value === "voleur" || value.includes("voleur") || value === "assassin" || value.includes("assassin"));
+}
+
+function add2eGetThiefClassItem(actor) {
+  return actor?.items?.find?.(item => {
+    if (String(item?.type ?? "").toLowerCase() !== "classe") return false;
+    return add2eIsThiefClassSystem({ ...(item?.system ?? {}), _add2eClassName: item?.name, _add2eClassItemId: item?.id });
+  }) ?? null;
+}
+
+function add2eThiefClassItemLevel(actor, item) {
+  const direct = Number(item?.system?.niveau ?? item?.system?.level);
+  if (Number.isFinite(direct) && direct >= 1) return Math.floor(direct);
+
+  try {
+    const canonical = globalThis.add2eCanonicalClassLevel?.(actor, item, NaN);
+    if (Number.isFinite(canonical) && canonical >= 1) return Math.floor(canonical);
+  } catch (_error) {}
+
+  return null;
 }
 
 function add2eGetThiefClassSystem(actor) {
+  const directItem = add2eGetThiefClassItem(actor);
   const classSystems = globalThis.add2eGetActorClassSystems?.(actor);
   if (Array.isArray(classSystems)) {
-    const thiefSystem = classSystems.find(add2eIsThiefClassSystem);
+    const thiefSystem = classSystems.find(system => {
+      if (!add2eIsThiefClassSystem(system)) return false;
+      return !directItem || !system?._add2eClassItemId || system._add2eClassItemId === directItem.id;
+    });
     if (thiefSystem) return thiefSystem;
+  }
+
+  if (directItem) {
+    const level = add2eThiefClassItemLevel(actor, directItem);
+    return {
+      ...(directItem.system ?? {}),
+      _add2eClassSlug: add2eNormalizeEquipTag(directItem.system?.slug ?? directItem.system?.label ?? directItem.name),
+      _add2eClassName: directItem.name,
+      _add2eClassItemId: directItem.id,
+      ...(level ? { _add2eClassLevel: level } : {})
+    };
   }
 
   try {
     const merged = add2eGetActorClassSystem(actor);
-    if (merged && typeof merged === "object") return merged;
+    if (merged && typeof merged === "object" && add2eIsThiefClassSystem(merged)) return merged;
   } catch (err) {
-    console.warn("[ADD2E][VOLEUR][CLASSE] Fallback details_classe.", err);
+    console.warn("[ADD2E][VOLEUR][CLASSE] Lecture de la classe fusionnée impossible.", err);
   }
-  return actor?.system?.details_classe ?? {};
+  return {};
 }
 
 function add2eGetEquippedThiefBonusMaps(actor) {
@@ -295,10 +381,24 @@ function add2eGetEquippedThiefBonusMaps(actor) {
   return maps;
 }
 
+function add2eGetActorFinalDexterity(actor) {
+  const system = actor?.system ?? {};
+  const base = Number(system.dexterite_base ?? system.dexterite ?? system.dex_aff ?? 0);
+  const racial = Number(system.bonus_caracteristiques?.dexterite ?? system.dexterite_race ?? 0);
+  const divers = Number(system.bonus_divers_caracteristiques?.dexterite ?? 0);
+  const total = base + racial + divers;
+  return Number.isFinite(total) && total > 0 ? Math.floor(total) : 0;
+}
+
 function add2eGetThiefDexBonus(actor, key) {
   const details = add2eGetThiefClassSystem(actor);
-  const dex = Number(actor?.system?.dex_aff ?? actor?.system?.dexterite ?? actor?.system?.dexterite_base ?? 0) || 0;
-  const sources = [details.thiefSkillDexAdjustments, details.thiefDexAdjustments, actor?.system?.thiefSkillDexAdjustments, actor?.system?.thiefDexAdjustments];
+  const dex = add2eGetActorFinalDexterity(actor);
+  const sources = [
+    details?.thiefSkillDexAdjustments,
+    details?.thiefDexAdjustments,
+    actor?.system?.thiefSkillDexAdjustments,
+    actor?.system?.thiefDexAdjustments
+  ];
   for (const table of sources) {
     if (!table || typeof table !== "object") continue;
     const row = table[String(dex)] ?? table[dex];
@@ -363,7 +463,16 @@ function add2eGetThiefSkillBonuses(actor, key) {
   const race = add2eGetActorRaceSystem(actor);
   for (const map of [actor?.system?.thiefSkillAdjustments, actor?.system?.thiefSkillBonuses, actor?.system?.voleurSkillAdjustments, actor?.system?.voleurSkillBonuses, actor?.system?.bonus_competences_voleur, actor?.system?.bonusCompetencesVoleur]) add2ePushThiefBonus(out, "Acteur", map, key);
   for (const map of [details.thiefSkillAdjustments, details.thiefSkillBonuses, details.thief_adjustments, details.thief_bonuses, details.voleurSkillAdjustments, details.voleurSkillBonuses, details.bonus_competences_voleur, details.bonus_competence_voleur, details.bonus_voleur, details.malus_competences_voleur, details.skillBonuses?.voleur, details.skillAdjustments?.voleur]) add2ePushThiefBonus(out, "Classe", map, key);
-  for (const map of [race.thief_adjustments, race.thief_bonuses, race.thiefSkillAdjustments, race.thiefSkillBonuses, race.voleurSkillAdjustments, race.voleurSkillBonuses, race.bonus_competences_voleur, race.bonus_competence_voleur, race.bonus_voleur, race.malus_competences_voleur, race.skillBonuses?.voleur, race.skillAdjustments?.voleur]) add2ePushThiefBonus(out, "Race", map, key);
+
+  const explicitRaceMaps = add2eGetExplicitRaceThiefBonusMaps(race);
+  if (explicitRaceMaps.length) {
+    for (const map of explicitRaceMaps) add2ePushThiefBonus(out, "Race", map, key);
+  } else {
+    const raceSlug = add2eGetActorRaceSlug(actor, race);
+    const canonicalMap = ADD2E_THIEF_RACIAL_ADJUSTMENTS[raceSlug] ?? null;
+    add2ePushThiefBonus(out, raceSlug ? `Race — ${raceSlug.replace(/_/g, " ")}` : "Race", canonicalMap, key);
+  }
+
   const dexBonus = add2eGetThiefDexBonus(actor, key);
   if (dexBonus.value !== 0) out.push(dexBonus);
   for (const src of add2eGetEquippedThiefBonusMaps(actor)) add2ePushThiefBonus(out, src.label, src.map, key);
@@ -681,8 +790,10 @@ try { globalThis.add2eReadThiefBonusValue = add2eReadThiefBonusValue; } catch (_
 try { globalThis.add2eGetThiefBonusFromMap = add2eGetThiefBonusFromMap; } catch (_e) {}
 try { globalThis.add2ePushThiefBonus = add2ePushThiefBonus; } catch (_e) {}
 try { globalThis.add2eGetActorRaceSystem = add2eGetActorRaceSystem; } catch (_e) {}
+try { globalThis.add2eGetActorRaceSlug = add2eGetActorRaceSlug; } catch (_e) {}
 try { globalThis.add2eGetThiefClassSystem = add2eGetThiefClassSystem; } catch (_e) {}
 try { globalThis.add2eGetEquippedThiefBonusMaps = add2eGetEquippedThiefBonusMaps; } catch (_e) {}
+try { globalThis.add2eGetActorFinalDexterity = add2eGetActorFinalDexterity; } catch (_e) {}
 try { globalThis.add2eGetThiefDexBonus = add2eGetThiefDexBonus; } catch (_e) {}
 try { globalThis.add2eParseThiefBonusTag = add2eParseThiefBonusTag; } catch (_e) {}
 try { globalThis.add2eGetActiveTagThiefBonuses = add2eGetActiveTagThiefBonuses; } catch (_e) {}
