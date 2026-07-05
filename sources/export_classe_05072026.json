@@ -1,10 +1,10 @@
 {
-  "exportVersion": "2026-05-27-classes-phb-normalized-v1",
-  "exportedAt": "2026-05-27T16:20:50.128Z",
+  "exportVersion": "2026-05-26-export-item-folder-v2-direct-download",
+  "exportedAt": "2026-07-05T07:00:06.155Z",
   "world": "test-clerc",
   "system": "add2e",
   "rootFolder": {
-    "id": "KTmHlDLzU55o6x5M",
+    "id": "mximavUWpqctSadj",
     "name": "Classes"
   },
   "recursive": true,
@@ -12,23 +12,23 @@
     {
       "name": "Classes",
       "type": "Item",
-      "color": "#9295d3",
-      "_id": "KTmHlDLzU55o6x5M",
+      "color": null,
+      "_id": "mximavUWpqctSadj",
       "description": "",
       "folder": null,
       "sorting": "a",
-      "sort": 600000,
+      "sort": 0,
       "flags": {},
       "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.20",
+        "createdTime": 1783234781949,
+        "modifiedTime": 1783234781949,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
         "compendiumSource": null,
         "duplicateSource": null,
-        "exportSource": null,
-        "coreVersion": "13.351",
-        "systemId": "add2e",
-        "systemVersion": "0.1.15",
-        "createdTime": 1779702198828,
-        "modifiedTime": 1779822215859,
-        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+        "exportSource": null
       }
     }
   ],
@@ -60,18 +60,19 @@
           "Chaotique Neutre",
           "Chaotique Mauvais"
         ],
-        "armes_autorisees": [],
+        "armes_autorisees": [
+          "arme"
+        ],
         "weaponRestriction": {
           "mode": "allow-tags",
           "allowedTags": [
             "arme"
           ],
           "forbiddenTags": [],
-          "notes": "Assassin : toutes les armes sont autorisées."
+          "notes": "Assassin : restriction d'armes harmonisée par tags simples."
         },
         "armorAllowed": [
           "type_armure:cuir",
-          "armure:cuir",
           "bouclier"
         ],
         "shieldAllowed": true,
@@ -1226,11 +1227,10 @@
           "mode": "allow-tags",
           "allowedTags": [
             "type_armure:cuir",
-            "armure:cuir",
             "bouclier"
           ],
           "forbiddenTags": [],
-          "notes": "Assassin : armure de cuir et tous les boucliers."
+          "notes": "Assassin : restriction d'armures harmonisée par tags simples."
         },
         "armorForbidden": [],
         "weaponForbidden": [],
@@ -1907,27 +1907,47 @@
         "maxHitDice": 15,
         "spellAccessRequirements": [],
         "hpAfter9": 0,
-        "activeFeatureSystem": {}
+        "activeFeatureSystem": {},
+        "armures_autorisees": [
+          "type_armure:cuir",
+          "bouclier"
+        ],
+        "equipmentRestrictionSchema": {
+          "version": "2026-06-15-harmonized-equipment-tags-v1",
+          "tagLevels": [
+            "kind",
+            "type",
+            "slug"
+          ],
+          "multiclassRule": "Pour équiper arme/armure/bouclier, union des restrictions des classes. Les activités de voleur/assassin restent limitées à l'équipement permis au voleur/assassin.",
+          "source": "AD&D 2e Manuel des joueurs, Tableau II et règle multi-classés."
+        }
       },
       "effects": [],
-      "folder": "KTmHlDLzU55o6x5M",
-      "flags": {},
-      "_stats": {
-        "compendiumSource": "Compendium.add2e.classes.Item.PSpjeRxrAcxqpjpD",
-        "duplicateSource": null,
-        "exportSource": null,
-        "coreVersion": "13.351",
-        "systemId": "add2e",
-        "systemVersion": "0.1.15",
-        "createdTime": 1779702199053,
-        "modifiedTime": 1779702199053,
-        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      "folder": "mximavUWpqctSadj",
+      "flags": {
+        "add2e": {
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-06-15T16:31:13.343Z"
+        }
       },
       "ownership": {
         "default": 0,
         "3qitoEt1cN3Qhvig": 3
       },
-      "_id": "HImEiH9noLaRPUze",
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.20",
+        "createdTime": 1783234782240,
+        "modifiedTime": 1783234782240,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": "Compendium.add2e.classes.Item.eidFvchVGZ5394Zp",
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_id": "2RD5M08EaYtYnlWg",
       "sort": 0
     },
     {
@@ -2908,22 +2928,13 @@
           "mode": "allow-tags",
           "allowedTags": [
             "type_arme:baton",
-            "arme:baton",
             "type_arme:fleau",
-            "arme:fleau",
-            "type_arme:fleau_d_armes",
-            "arme:fleau_d_armes",
             "type_arme:marteau",
-            "arme:marteau",
-            "type_arme:marteau_de_guerre",
-            "arme:marteau_de_guerre",
-            "type_arme:masse_d_armes",
-            "arme:masse_d_armes",
-            "type_arme:massue",
-            "arme:massue"
+            "type_arme:masse",
+            "type_arme:massue"
           ],
           "forbiddenTags": [],
-          "notes": "Clerc : bâton, fléau, marteau, masse d'armes et massue. Armes tranchantes ou pointues interdites."
+          "notes": "Clerc : restriction d'armes harmonisée par tags simples."
         },
         "armorRestriction": {
           "mode": "allow-tags",
@@ -2932,7 +2943,7 @@
             "bouclier"
           ],
           "forbiddenTags": [],
-          "notes": "Clerc : toutes les armures et tous les boucliers sont autorisés."
+          "notes": "Clerc : restriction d'armures harmonisée par tags simples."
         },
         "tags": [
           "classe:clerc",
@@ -3095,19 +3106,10 @@
         ],
         "weaponsAllowed": [
           "type_arme:baton",
-          "arme:baton",
           "type_arme:fleau",
-          "arme:fleau",
-          "type_arme:fleau_d_armes",
-          "arme:fleau_d_armes",
           "type_arme:marteau",
-          "arme:marteau",
-          "type_arme:marteau_de_guerre",
-          "arme:marteau_de_guerre",
-          "type_arme:masse_d_armes",
-          "arme:masse_d_armes",
-          "type_arme:massue",
-          "arme:massue"
+          "type_arme:masse",
+          "type_arme:massue"
         ],
         "primaryAbility": "Sagesse",
         "effectTags": [],
@@ -3234,34 +3236,58 @@
           "Chaotique Bon",
           "Chaotique Neutre",
           "Chaotique Mauvais"
-        ]
+        ],
+        "armes_autorisees": [
+          "type_arme:baton",
+          "type_arme:fleau",
+          "type_arme:marteau",
+          "type_arme:masse",
+          "type_arme:massue"
+        ],
+        "armures_autorisees": [
+          "armure",
+          "bouclier"
+        ],
+        "equipmentRestrictionSchema": {
+          "version": "2026-06-15-harmonized-equipment-tags-v1",
+          "tagLevels": [
+            "kind",
+            "type",
+            "slug"
+          ],
+          "multiclassRule": "Pour équiper arme/armure/bouclier, union des restrictions des classes. Les activités de voleur/assassin restent limitées à l'équipement permis au voleur/assassin.",
+          "source": "AD&D 2e Manuel des joueurs, Tableau II et règle multi-classés."
+        }
       },
       "effects": [],
-      "folder": "KTmHlDLzU55o6x5M",
+      "folder": "mximavUWpqctSadj",
       "flags": {
         "core": {
           "sheetClass": ""
         },
         "add2e": {
-          "activeSheetTab": ""
+          "activeSheetTab": "",
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-06-15T16:31:13.418Z"
         }
-      },
-      "_stats": {
-        "compendiumSource": "Compendium.add2e.classes.Item.Os15Oek3jP3IGQov",
-        "duplicateSource": null,
-        "exportSource": null,
-        "coreVersion": "13.351",
-        "systemId": "add2e",
-        "systemVersion": "0.1.15",
-        "createdTime": 1779702199053,
-        "modifiedTime": 1779702199053,
-        "lastModifiedBy": "3qitoEt1cN3Qhvig"
       },
       "ownership": {
         "default": 0,
         "3qitoEt1cN3Qhvig": 3
       },
-      "_id": "GJB5hoSklteaWc9j",
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.20",
+        "createdTime": 1783234782244,
+        "modifiedTime": 1783234782244,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": "Compendium.add2e.classes.Item.lV3xWCSubzzHN7my",
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_id": "p1U7LkU2nKPWliSr",
       "sort": 0
     },
     {
@@ -3301,45 +3327,28 @@
           "mode": "allow-tags",
           "allowedTags": [
             "type_arme:baton",
-            "arme:baton",
             "type_arme:cimeterre",
-            "arme:cimeterre",
             "type_arme:dague",
-            "arme:dague",
             "type_arme:flechette",
-            "arme:flechette",
             "type_arme:fronde",
-            "arme:fronde",
             "type_arme:lance",
-            "arme:lance",
-            "type_arme:lance_de_fantassin",
-            "arme:lance_de_fantassin",
             "type_arme:marteau",
-            "arme:marteau",
-            "type_arme:marteau_de_guerre",
-            "arme:marteau_de_guerre",
-            "type_arme:massue",
-            "arme:massue"
+            "type_arme:massue"
           ],
           "forbiddenTags": [],
-          "notes": "Druide : bâton, cimeterre, dague, fléchette, fronde, lance de fantassin, marteau, massue."
+          "notes": "Druide : restriction d'armes harmonisée par tags simples."
         },
         "armorRestriction": {
           "mode": "allow-tags",
           "allowedTags": [
             "type_armure:cuir",
-            "armure:cuir",
-            "bouclier",
-            "type_bouclier:bois",
-            "matiere:bois"
+            "type_bouclier:bois"
           ],
           "forbiddenTags": [
-            "matiere:metal",
-            "armure:metal",
-            "armure:moyenne",
-            "armure:lourde"
+            "armure",
+            "bouclier"
           ],
-          "notes": "Druide : armure de cuir et bouclier de bois uniquement ; métal interdit."
+          "notes": "Druide : restriction d'armures harmonisée par tags simples."
         },
         "tags": [
           "classe:druide",
@@ -3982,32 +3991,17 @@
         "shieldAllowed": true,
         "armorAllowed": [
           "type_armure:cuir",
-          "armure:cuir",
-          "bouclier",
-          "type_bouclier:bois",
-          "matiere:bois"
+          "type_bouclier:bois"
         ],
         "weaponsAllowed": [
           "type_arme:baton",
-          "arme:baton",
           "type_arme:cimeterre",
-          "arme:cimeterre",
           "type_arme:dague",
-          "arme:dague",
           "type_arme:flechette",
-          "arme:flechette",
           "type_arme:fronde",
-          "arme:fronde",
           "type_arme:lance",
-          "arme:lance",
-          "type_arme:lance_de_fantassin",
-          "arme:lance_de_fantassin",
           "type_arme:marteau",
-          "arme:marteau",
-          "type_arme:marteau_de_guerre",
-          "arme:marteau_de_guerre",
-          "type_arme:massue",
-          "arme:massue"
+          "type_arme:massue"
         ],
         "primaryAbility": "Sagesse, Charisme",
         "effectTags": [
@@ -4053,10 +4047,8 @@
         "cha_react": "",
         "notes": "",
         "armorForbidden": [
-          "matiere:metal",
-          "armure:metal",
-          "armure:moyenne",
-          "armure:lourde"
+          "armure",
+          "bouclier"
         ],
         "weaponForbidden": [],
         "requirementTags": [],
@@ -4122,34 +4114,61 @@
           "sagesse": 12,
           "charisme": 15
         },
-        "hpAfter9": 0
+        "hpAfter9": 0,
+        "armes_autorisees": [
+          "type_arme:baton",
+          "type_arme:cimeterre",
+          "type_arme:dague",
+          "type_arme:flechette",
+          "type_arme:fronde",
+          "type_arme:lance",
+          "type_arme:marteau",
+          "type_arme:massue"
+        ],
+        "armures_autorisees": [
+          "type_armure:cuir",
+          "type_bouclier:bois"
+        ],
+        "equipmentRestrictionSchema": {
+          "version": "2026-06-15-harmonized-equipment-tags-v1",
+          "tagLevels": [
+            "kind",
+            "type",
+            "slug"
+          ],
+          "multiclassRule": "Pour équiper arme/armure/bouclier, union des restrictions des classes. Les activités de voleur/assassin restent limitées à l'équipement permis au voleur/assassin.",
+          "source": "AD&D 2e Manuel des joueurs, Tableau II et règle multi-classés."
+        }
       },
       "effects": [],
-      "folder": "KTmHlDLzU55o6x5M",
+      "folder": "mximavUWpqctSadj",
       "flags": {
         "core": {
           "sheetClass": "add2e.Add2eClassSheet"
         },
         "add2e": {
-          "activeSheetTab": ""
+          "activeSheetTab": "",
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-06-15T16:31:13.502Z"
         }
-      },
-      "_stats": {
-        "compendiumSource": "Compendium.add2e.classes.Item.GnLonhOh0wtq01v6",
-        "duplicateSource": null,
-        "exportSource": null,
-        "coreVersion": "13.351",
-        "systemId": "add2e",
-        "systemVersion": "0.1.15",
-        "createdTime": 1779702199053,
-        "modifiedTime": 1779702199053,
-        "lastModifiedBy": "3qitoEt1cN3Qhvig"
       },
       "ownership": {
         "default": 0,
         "3qitoEt1cN3Qhvig": 3
       },
-      "_id": "YitoSqk2t7cXJwXC",
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.20",
+        "createdTime": 1783234782224,
+        "modifiedTime": 1783234782224,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": "Compendium.add2e.classes.Item.LQMF7JJeq7WYIDkU",
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_id": "6DBtzruq5iIQp4Fv",
       "sort": 0
     },
     {
@@ -5016,7 +5035,7 @@
             "arme"
           ],
           "forbiddenTags": [],
-          "notes": "Guerrier : toutes les armes sont autorisées."
+          "notes": "Guerrier : restriction d'armes harmonisée par tags simples."
         },
         "armorRestriction": {
           "mode": "allow-tags",
@@ -5025,7 +5044,7 @@
             "bouclier"
           ],
           "forbiddenTags": [],
-          "notes": "Guerrier : toutes les armures et tous les boucliers sont autorisés."
+          "notes": "Guerrier : restriction d'armures harmonisée par tags simples."
         },
         "tags": [
           "classe:guerrier",
@@ -5236,34 +5255,54 @@
         "caracs_min": {
           "force": 9,
           "constitution": 7
+        },
+        "armes_autorisees": [
+          "arme"
+        ],
+        "armures_autorisees": [
+          "armure",
+          "bouclier"
+        ],
+        "equipmentRestrictionSchema": {
+          "version": "2026-06-15-harmonized-equipment-tags-v1",
+          "tagLevels": [
+            "kind",
+            "type",
+            "slug"
+          ],
+          "multiclassRule": "Pour équiper arme/armure/bouclier, union des restrictions des classes. Les activités de voleur/assassin restent limitées à l'équipement permis au voleur/assassin.",
+          "source": "AD&D 2e Manuel des joueurs, Tableau II et règle multi-classés."
         }
       },
       "effects": [],
-      "folder": "KTmHlDLzU55o6x5M",
+      "folder": "mximavUWpqctSadj",
       "flags": {
         "core": {
           "sheetClass": "add2e.Add2eClassSheet"
         },
         "add2e": {
-          "activeSheetTab": ""
+          "activeSheetTab": "",
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-06-15T16:31:13.575Z"
         }
-      },
-      "_stats": {
-        "compendiumSource": "Compendium.add2e.classes.Item.Nm2mq9eQ9PrQ4FqW",
-        "duplicateSource": null,
-        "exportSource": null,
-        "coreVersion": "13.351",
-        "systemId": "add2e",
-        "systemVersion": "0.1.15",
-        "createdTime": 1779702199053,
-        "modifiedTime": 1779702199053,
-        "lastModifiedBy": "3qitoEt1cN3Qhvig"
       },
       "ownership": {
         "default": 0,
         "3qitoEt1cN3Qhvig": 3
       },
-      "_id": "1QEj0Rpx4j5t0UJA",
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.20",
+        "createdTime": 1783234782232,
+        "modifiedTime": 1783234782232,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": "Compendium.add2e.classes.Item.WtcBl7mH9kXNv55g",
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_id": "Ap2gZuN0xUKkVLlD",
       "sort": 0
     },
     {
@@ -5299,14 +5338,11 @@
           "mode": "allow-tags",
           "allowedTags": [
             "type_arme:baton",
-            "arme:baton",
             "type_arme:dague",
-            "arme:dague",
-            "type_arme:flechette",
-            "arme:flechette"
+            "type_arme:flechette"
           ],
           "forbiddenTags": [],
-          "notes": "Illusionniste : bâton, dague, fléchette."
+          "notes": "Illusionniste : restriction d'armes harmonisée par tags simples."
         },
         "armorAllowed": [],
         "shieldAllowed": false,
@@ -5887,11 +5923,8 @@
         "hpFormula": "1d4 + constitution.mod",
         "weaponsAllowed": [
           "type_arme:baton",
-          "arme:baton",
           "type_arme:dague",
-          "arme:dague",
-          "type_arme:flechette",
-          "arme:flechette"
+          "type_arme:flechette"
         ],
         "savingThrows": [
           "sauvegarde_paralysie",
@@ -6152,7 +6185,7 @@
             "armure",
             "bouclier"
           ],
-          "notes": "Illusionniste : aucune armure, aucun bouclier."
+          "notes": "Illusionniste : restriction d'armures harmonisée par tags simples."
         },
         "weaponForbidden": [],
         "armorForbidden": [
@@ -6218,34 +6251,53 @@
         },
         "hpAfter10": 1,
         "maxHitDice": 10,
-        "hpAfter9": 0
+        "hpAfter9": 0,
+        "armes_autorisees": [
+          "type_arme:baton",
+          "type_arme:dague",
+          "type_arme:flechette"
+        ],
+        "armures_autorisees": [],
+        "equipmentRestrictionSchema": {
+          "version": "2026-06-15-harmonized-equipment-tags-v1",
+          "tagLevels": [
+            "kind",
+            "type",
+            "slug"
+          ],
+          "multiclassRule": "Pour équiper arme/armure/bouclier, union des restrictions des classes. Les activités de voleur/assassin restent limitées à l'équipement permis au voleur/assassin.",
+          "source": "AD&D 2e Manuel des joueurs, Tableau II et règle multi-classés."
+        }
       },
       "effects": [],
-      "folder": "KTmHlDLzU55o6x5M",
+      "folder": "mximavUWpqctSadj",
       "flags": {
         "core": {
           "sheetClass": ""
         },
         "add2e": {
-          "activeSheetTab": ""
+          "activeSheetTab": "",
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-06-15T16:31:13.649Z"
         }
-      },
-      "_stats": {
-        "compendiumSource": "Compendium.add2e.classes.Item.ewKedXDVrIsLgZ6Y",
-        "duplicateSource": null,
-        "exportSource": null,
-        "coreVersion": "13.351",
-        "systemId": "add2e",
-        "systemVersion": "0.1.15",
-        "createdTime": 1779702199053,
-        "modifiedTime": 1779702199053,
-        "lastModifiedBy": "3qitoEt1cN3Qhvig"
       },
       "ownership": {
         "default": 0,
         "3qitoEt1cN3Qhvig": 3
       },
-      "_id": "BSAi0ByhmrBWVfh8",
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.20",
+        "createdTime": 1783234782215,
+        "modifiedTime": 1783234782215,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": "Compendium.add2e.classes.Item.19VHrYN2lUa8oWiD",
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_id": "R5py84m7ToCB2mlU",
       "sort": 0
     },
     {
@@ -6282,11 +6334,8 @@
         "shieldAllowed": false,
         "weaponsAllowed": [
           "type_arme:baton",
-          "arme:baton",
           "type_arme:dague",
-          "arme:dague",
-          "type_arme:flechette",
-          "arme:flechette"
+          "type_arme:flechette"
         ],
         "specialAbilities": [
           "Lancer de sorts profanes",
@@ -7388,14 +7437,11 @@
           "mode": "allow-tags",
           "allowedTags": [
             "type_arme:baton",
-            "arme:baton",
             "type_arme:dague",
-            "arme:dague",
-            "type_arme:flechette",
-            "arme:flechette"
+            "type_arme:flechette"
           ],
           "forbiddenTags": [],
-          "notes": "Magicien : bâton, dague, fléchette."
+          "notes": "Magicien : restriction d'armes harmonisée par tags simples."
         },
         "armorRestriction": {
           "mode": "allow-tags",
@@ -7404,7 +7450,7 @@
             "armure",
             "bouclier"
           ],
-          "notes": "Magicien : aucune armure, aucun bouclier."
+          "notes": "Magicien : restriction d'armures harmonisée par tags simples."
         },
         "armorForbidden": [
           "armure",
@@ -7561,34 +7607,53 @@
           "intelligence": 9,
           "dexterite": 6
         },
-        "hpAfter9": 0
+        "hpAfter9": 0,
+        "armes_autorisees": [
+          "type_arme:baton",
+          "type_arme:dague",
+          "type_arme:flechette"
+        ],
+        "armures_autorisees": [],
+        "equipmentRestrictionSchema": {
+          "version": "2026-06-15-harmonized-equipment-tags-v1",
+          "tagLevels": [
+            "kind",
+            "type",
+            "slug"
+          ],
+          "multiclassRule": "Pour équiper arme/armure/bouclier, union des restrictions des classes. Les activités de voleur/assassin restent limitées à l'équipement permis au voleur/assassin.",
+          "source": "AD&D 2e Manuel des joueurs, Tableau II et règle multi-classés."
+        }
       },
       "effects": [],
-      "folder": "KTmHlDLzU55o6x5M",
+      "folder": "mximavUWpqctSadj",
       "flags": {
         "core": {
           "sheetClass": ""
         },
         "add2e": {
-          "activeSheetTab": ""
+          "activeSheetTab": "",
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-06-15T16:31:13.720Z"
         }
-      },
-      "_stats": {
-        "compendiumSource": "Compendium.add2e.classes.Item.k2HxaVp2r3D9KOju",
-        "duplicateSource": null,
-        "exportSource": null,
-        "coreVersion": "13.351",
-        "systemId": "add2e",
-        "systemVersion": "0.1.15",
-        "createdTime": 1779702199053,
-        "modifiedTime": 1779702199053,
-        "lastModifiedBy": "3qitoEt1cN3Qhvig"
       },
       "ownership": {
         "default": 0,
         "3qitoEt1cN3Qhvig": 3
       },
-      "_id": "ovNRrds4s3tyLk6D",
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.20",
+        "createdTime": 1783234782221,
+        "modifiedTime": 1783234782221,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": "Compendium.add2e.classes.Item.EPvRuEaTZEIvHVF9",
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_id": "4DUvQ9MsCLjxaZ70",
       "sort": 0
     },
     {
@@ -7622,35 +7687,18 @@
           "mode": "allow-tags",
           "allowedTags": [
             "type_arme:arbalete",
-            "arme:arbalete",
-            "type_arme:arbalete_legere",
-            "arme:arbalete_legere",
-            "type_arme:arbalete_lourde",
-            "arme:arbalete_lourde",
-            "type_arme:arme_d_hast",
-            "arme:arme_d_hast",
+            "type_arme:arme_hast",
             "type_arme:baton",
-            "arme:baton",
-            "type_arme:canne_d_escrime",
-            "arme:canne_d_escrime",
-            "type_arme:baton_d_escrime",
-            "arme:baton_d_escrime",
+            "type_arme:canne_escrime",
+            "type_arme:baton_escrime",
             "type_arme:dague",
-            "arme:dague",
             "type_arme:hachette",
-            "arme:hachette",
             "type_arme:javelot",
-            "arme:javelot",
             "type_arme:lance",
-            "arme:lance",
-            "type_arme:lance_de_fantassin",
-            "arme:lance_de_fantassin",
-            "type_arme:massue",
-            "arme:massue",
-            "famille_arme:arme_d_hast"
+            "type_arme:massue"
           ],
           "forbiddenTags": [],
-          "notes": "Moine : arbalète, armes d'hast, bâton, canne/bâton d'escrime, dague, hachette, javelot, lance de fantassin, massue."
+          "notes": "Moine : restriction d'armes harmonisée par tags simples."
         },
         "magicAllowed": "Objets magiques autorisés : armes magiques autorisées aux moines, anneaux, et objets magiques divers autorisés aux voleurs. Trésors et objets fortement limités.",
         "hdPerLevel": "1d4",
@@ -8753,32 +8801,15 @@
         "hpFormula": "2d4 + constitution.mod",
         "weaponsAllowed": [
           "type_arme:arbalete",
-          "arme:arbalete",
-          "type_arme:arbalete_legere",
-          "arme:arbalete_legere",
-          "type_arme:arbalete_lourde",
-          "arme:arbalete_lourde",
-          "type_arme:arme_d_hast",
-          "arme:arme_d_hast",
+          "type_arme:arme_hast",
           "type_arme:baton",
-          "arme:baton",
-          "type_arme:canne_d_escrime",
-          "arme:canne_d_escrime",
-          "type_arme:baton_d_escrime",
-          "arme:baton_d_escrime",
+          "type_arme:canne_escrime",
+          "type_arme:baton_escrime",
           "type_arme:dague",
-          "arme:dague",
           "type_arme:hachette",
-          "arme:hachette",
           "type_arme:javelot",
-          "arme:javelot",
           "type_arme:lance",
-          "arme:lance",
-          "type_arme:lance_de_fantassin",
-          "arme:lance_de_fantassin",
-          "type_arme:massue",
-          "arme:massue",
-          "famille_arme:arme_d_hast"
+          "type_arme:massue"
         ],
         "savingThrows": [
           "sauvegarde_paralysie",
@@ -8853,7 +8884,7 @@
             "armure",
             "bouclier"
           ],
-          "notes": "Moine : aucune armure, aucun bouclier."
+          "notes": "Moine : restriction d'armures harmonisée par tags simples."
         },
         "monkProgression": [
           {
@@ -10512,32 +10543,58 @@
         "sag_echec": "",
         "cha_compagnons": "",
         "cha_loy": "",
-        "cha_react": ""
+        "cha_react": "",
+        "armes_autorisees": [
+          "type_arme:arbalete",
+          "type_arme:arme_hast",
+          "type_arme:baton",
+          "type_arme:canne_escrime",
+          "type_arme:baton_escrime",
+          "type_arme:dague",
+          "type_arme:hachette",
+          "type_arme:javelot",
+          "type_arme:lance",
+          "type_arme:massue"
+        ],
+        "armures_autorisees": [],
+        "equipmentRestrictionSchema": {
+          "version": "2026-06-15-harmonized-equipment-tags-v1",
+          "tagLevels": [
+            "kind",
+            "type",
+            "slug"
+          ],
+          "multiclassRule": "Pour équiper arme/armure/bouclier, union des restrictions des classes. Les activités de voleur/assassin restent limitées à l'équipement permis au voleur/assassin.",
+          "source": "AD&D 2e Manuel des joueurs, Tableau II et règle multi-classés."
+        }
       },
       "effects": [],
-      "folder": "KTmHlDLzU55o6x5M",
+      "folder": "mximavUWpqctSadj",
       "flags": {
         "core": {},
         "add2e": {
-          "activeSheetTab": ""
+          "activeSheetTab": "",
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-06-15T16:31:13.788Z"
         }
-      },
-      "_stats": {
-        "compendiumSource": "Compendium.add2e.classes.Item.hlLHWyOS0s1kTpbX",
-        "duplicateSource": null,
-        "exportSource": null,
-        "coreVersion": "13.351",
-        "systemId": "add2e",
-        "systemVersion": "0.1.15",
-        "createdTime": 1779702199053,
-        "modifiedTime": 1779702199053,
-        "lastModifiedBy": "3qitoEt1cN3Qhvig"
       },
       "ownership": {
         "default": 0,
         "3qitoEt1cN3Qhvig": 3
       },
-      "_id": "ik0V5AvLHkjVBnTr",
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.20",
+        "createdTime": 1783234782228,
+        "modifiedTime": 1783234782228,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": "Compendium.add2e.classes.Item.OFQiVXzM1dpj7Ob1",
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_id": "NnHu6neF9G2pzkb0",
       "sort": 0
     },
     {
@@ -10574,7 +10631,7 @@
             "arme"
           ],
           "forbiddenTags": [],
-          "notes": "Paladin : toutes les armes sont autorisées."
+          "notes": "Paladin : restriction d'armes harmonisée par tags simples."
         },
         "magicAllowed": "Objets magiques de guerrier, avec limite stricte de possessions : 10 objets maximum dont 1 armure, 1 bouclier, 4 armes et 4 autres objets.",
         "hdPerLevel": "1d10",
@@ -11283,7 +11340,7 @@
             "bouclier"
           ],
           "forbiddenTags": [],
-          "notes": "Paladin : toutes les armures et tous les boucliers sont autorisés."
+          "notes": "Paladin : restriction d'armures harmonisée par tags simples."
         },
         "armorForbidden": [],
         "weaponForbidden": [],
@@ -11596,34 +11653,54 @@
         "cha_loy": "",
         "cha_react": "",
         "hpAfter9": 3,
-        "maxHitDice": 9
+        "maxHitDice": 9,
+        "armes_autorisees": [
+          "arme"
+        ],
+        "armures_autorisees": [
+          "armure",
+          "bouclier"
+        ],
+        "equipmentRestrictionSchema": {
+          "version": "2026-06-15-harmonized-equipment-tags-v1",
+          "tagLevels": [
+            "kind",
+            "type",
+            "slug"
+          ],
+          "multiclassRule": "Pour équiper arme/armure/bouclier, union des restrictions des classes. Les activités de voleur/assassin restent limitées à l'équipement permis au voleur/assassin.",
+          "source": "AD&D 2e Manuel des joueurs, Tableau II et règle multi-classés."
+        }
       },
       "effects": [],
-      "folder": "KTmHlDLzU55o6x5M",
+      "folder": "mximavUWpqctSadj",
       "flags": {
         "core": {
           "sheetClass": "add2e.Add2eClassSheet"
         },
         "add2e": {
-          "activeSheetTab": ""
+          "activeSheetTab": "",
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-06-15T16:31:13.860Z"
         }
-      },
-      "_stats": {
-        "compendiumSource": "Compendium.add2e.classes.Item.eFdFTa14XD37Db00",
-        "duplicateSource": null,
-        "exportSource": null,
-        "coreVersion": "13.351",
-        "systemId": "add2e",
-        "systemVersion": "0.1.15",
-        "createdTime": 1779702199053,
-        "modifiedTime": 1779702199053,
-        "lastModifiedBy": "3qitoEt1cN3Qhvig"
       },
       "ownership": {
         "default": 0,
         "3qitoEt1cN3Qhvig": 3
       },
-      "_id": "Jm3ogbYMSh4yMZSx",
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.20",
+        "createdTime": 1783234782218,
+        "modifiedTime": 1783234782218,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": "Compendium.add2e.classes.Item.89H8DGcG1ZOI1SNt",
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_id": "JEWXMRhEcR8JIXly",
       "sort": 0
     },
     {
@@ -12816,7 +12893,7 @@
             "arme"
           ],
           "forbiddenTags": [],
-          "notes": "Ranger : toutes les armes sont autorisées."
+          "notes": "Ranger : restriction d'armes harmonisée par tags simples."
         },
         "armorRestriction": {
           "mode": "allow-tags",
@@ -12825,7 +12902,7 @@
             "bouclier"
           ],
           "forbiddenTags": [],
-          "notes": "Ranger : toutes les armures et tous les boucliers sont autorisés."
+          "notes": "Ranger : restriction d'armures harmonisée par tags simples."
         },
         "spellLists": [
           "Druide",
@@ -13270,27 +13347,50 @@
         "cha_loy": "",
         "cha_react": "",
         "notes": "",
-        "activeFeatureSystem": {}
+        "activeFeatureSystem": {},
+        "armes_autorisees": [
+          "arme"
+        ],
+        "armures_autorisees": [
+          "armure",
+          "bouclier"
+        ],
+        "equipmentRestrictionSchema": {
+          "version": "2026-06-15-harmonized-equipment-tags-v1",
+          "tagLevels": [
+            "kind",
+            "type",
+            "slug"
+          ],
+          "multiclassRule": "Pour équiper arme/armure/bouclier, union des restrictions des classes. Les activités de voleur/assassin restent limitées à l'équipement permis au voleur/assassin.",
+          "source": "AD&D 2e Manuel des joueurs, Tableau II et règle multi-classés."
+        }
       },
       "effects": [],
-      "folder": "KTmHlDLzU55o6x5M",
-      "flags": {},
-      "_stats": {
-        "compendiumSource": "Compendium.add2e.classes.Item.L5vuWwEkj4gW5qe3",
-        "duplicateSource": null,
-        "exportSource": null,
-        "coreVersion": "13.351",
-        "systemId": "add2e",
-        "systemVersion": "0.1.15",
-        "createdTime": 1779702199053,
-        "modifiedTime": 1779702199053,
-        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      "folder": "mximavUWpqctSadj",
+      "flags": {
+        "add2e": {
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-06-15T16:31:13.931Z"
+        }
       },
       "ownership": {
         "default": 0,
         "3qitoEt1cN3Qhvig": 3
       },
-      "_id": "nMCxho6nJ2V8ZLB6",
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.20",
+        "createdTime": 1783234782236,
+        "modifiedTime": 1783234782236,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": "Compendium.add2e.classes.Item.ZIdhoxPFsyVUpHzc",
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_id": "ZoZtJtDzqdfuyaxl",
       "sort": 0
     },
     {
@@ -13325,23 +13425,13 @@
           "mode": "allow-tags",
           "allowedTags": [
             "type_arme:dague",
-            "arme:dague",
-            "type_arme:epee_courte",
-            "arme:epee_courte",
-            "type_arme:epee_longue",
-            "arme:epee_longue",
-            "type_arme:epee_large",
-            "arme:epee_large",
+            "type_arme:epee",
             "type_arme:flechette",
-            "arme:flechette",
             "type_arme:fronde",
-            "arme:fronde",
-            "type_arme:massue",
-            "arme:massue",
-            "famille_arme:epee"
+            "type_arme:massue"
           ],
           "forbiddenTags": [],
-          "notes": "Voleur : dague, épée courte/longue/large, fléchette, fronde, massue."
+          "notes": "Voleur : restriction d'armes harmonisée par tags simples."
         },
         "magicAllowed": "À partir du niveau 10, peut lire les parchemins magiques de toutes sortes sauf cléricaux, avec 25 % de risque de mauvaise compréhension.",
         "hdPerLevel": "1d6",
@@ -14250,20 +14340,15 @@
         "armorRestriction": {
           "mode": "allow-tags",
           "allowedTags": [
-            "type_armure:cuir",
-            "armure:cuir"
+            "type_armure:cuir"
           ],
           "forbiddenTags": [
-            "bouclier",
-            "armure:moyenne",
-            "armure:lourde"
+            "bouclier"
           ],
-          "notes": "Voleur : armure de cuir seulement, aucun bouclier."
+          "notes": "Voleur : restriction d'armures harmonisée par tags simples."
         },
         "armorForbidden": [
-          "bouclier",
-          "armure:moyenne",
-          "armure:lourde"
+          "bouclier"
         ],
         "weaponForbidden": [],
         "spellcasting": {
@@ -14893,106 +14978,64 @@
         "maxHitDice": 10,
         "weaponsAllowed": [
           "type_arme:dague",
-          "arme:dague",
-          "type_arme:epee_courte",
-          "arme:epee_courte",
-          "type_arme:epee_longue",
-          "arme:epee_longue",
-          "type_arme:epee_large",
-          "arme:epee_large",
+          "type_arme:epee",
           "type_arme:flechette",
-          "arme:flechette",
           "type_arme:fronde",
-          "arme:fronde",
-          "type_arme:massue",
-          "arme:massue",
-          "famille_arme:epee"
+          "type_arme:massue"
         ],
         "armorAllowed": [
-          "type_armure:cuir",
-          "armure:cuir"
+          "type_armure:cuir"
         ],
         "spellAccessRequirements": [],
         "hpAfter9": 0,
-        "activeFeatureSystem": {}
+        "activeFeatureSystem": {},
+        "armes_autorisees": [
+          "type_arme:dague",
+          "type_arme:epee",
+          "type_arme:flechette",
+          "type_arme:fronde",
+          "type_arme:massue"
+        ],
+        "armures_autorisees": [
+          "type_armure:cuir"
+        ],
+        "equipmentRestrictionSchema": {
+          "version": "2026-06-15-harmonized-equipment-tags-v1",
+          "tagLevels": [
+            "kind",
+            "type",
+            "slug"
+          ],
+          "multiclassRule": "Pour équiper arme/armure/bouclier, union des restrictions des classes. Les activités de voleur/assassin restent limitées à l'équipement permis au voleur/assassin.",
+          "source": "AD&D 2e Manuel des joueurs, Tableau II et règle multi-classés."
+        }
       },
       "effects": [],
-      "folder": "KTmHlDLzU55o6x5M",
-      "flags": {},
-      "_stats": {
-        "compendiumSource": "Compendium.add2e.classes.Item.gOmYpaPHrmG45fOx",
-        "duplicateSource": null,
-        "exportSource": null,
-        "coreVersion": "13.351",
-        "systemId": "add2e",
-        "systemVersion": "0.1.15",
-        "createdTime": 1779702199053,
-        "modifiedTime": 1779702199053,
-        "lastModifiedBy": "3qitoEt1cN3Qhvig"
+      "folder": "mximavUWpqctSadj",
+      "flags": {
+        "add2e": {
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-06-15T16:31:14.005Z"
+        }
       },
       "ownership": {
         "default": 0,
         "3qitoEt1cN3Qhvig": 3
       },
-      "_id": "12IUiJ8m6vlItKMR",
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.20",
+        "createdTime": 1783234782248,
+        "modifiedTime": 1783234782248,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": "Compendium.add2e.classes.Item.z42vDZG4rRA8YuGc",
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_id": "TQZ3sNIyb5a18NMc",
       "sort": 0
     }
-  ],
-  "correctionNotes": {
-    "source": "Manuel des joueurs restauré mars 2024, tableaux classes I et II",
-    "referenceModel": "Clerc",
-    "normalisation": "Toutes les classes disposent des champs structurants du Clerc : hitDie, hpFormula, attacksPerRound, titlesByLevel, spellcasting, restrictions, armorAllowed/weaponsAllowed/shieldAllowed et progression normalisée.",
-    "coinNote": "Sans rapport avec la monnaie.",
-    "prerequisCaracteristiques": {
-      "version": "2026-05-27-prerequis-caracteristiques-manuel-joueur-v1",
-      "description": "Mise à jour systématique des prérequis de caractéristiques des classes selon la grille validée du Manuel des joueurs.",
-      "classes": {
-        "Clerc": {
-          "sagesse": 9
-        },
-        "Druide": {
-          "sagesse": 12,
-          "charisme": 15
-        },
-        "Guerrier": {
-          "force": 9,
-          "constitution": 7
-        },
-        "Paladin": {
-          "force": 12,
-          "intelligence": 9,
-          "sagesse": 13,
-          "charisme": 17
-        },
-        "Ranger": {
-          "force": 13,
-          "intelligence": 13,
-          "sagesse": 15,
-          "constitution": 14
-        },
-        "Magicien": {
-          "intelligence": 9,
-          "dexterite": 6
-        },
-        "Illusionniste": {
-          "intelligence": 15,
-          "dexterite": 16
-        },
-        "Voleur": {
-          "dexterite": 9
-        },
-        "Assassin": {
-          "force": 12,
-          "intelligence": 11,
-          "dexterite": 12
-        },
-        "Moine": {
-          "force": 15,
-          "sagesse": 16,
-          "dexterite": 15,
-          "constitution": 11
-        }
-      }
-    }
-  }
+  ]
 }
