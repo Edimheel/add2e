@@ -4,7 +4,7 @@
 // Compatible Foundry V13 / V14 / V15.
 // ============================================================
 
-const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-07-04-thief-hud-canonical-resolver-v11";
+const ADD2E_CLASS_ACTIVE_ABILITIES_VERSION = "2026-07-05-hud-generic-feature-bridge-v12";
 const ADD2E_THIEF_DEFAULT_ORDER = [
   "pickpocket",
   "crochetage_serrures",
@@ -411,43 +411,28 @@ function add2eHudActorFromCurrentState() {
   return token?.actor ?? game.actors?.get?.(actorId) ?? null;
 }
 
-function add2eHudThiefSkillKeyFromButton(actor, button) {
-  const row = button?.closest?.(".row");
-  const displayed = String(row?.querySelector?.(".title")?.textContent ?? "")
-    .split("—")[0]
-    .trim();
-  if (!displayed) return null;
-
-  const displayedKey = add2eFeatureKey({ name: displayed });
-  const skills = globalThis.add2eGetActorThiefSkills?.(actor) ?? [];
-  const match = skills.find(skill => {
-    const candidates = [skill?.label, skill?.shortLabel, skill?.key]
-      .map(value => add2eFeatureKey({ name: value }))
-      .filter(Boolean);
-    return candidates.includes(displayedKey);
-  });
-  return match ? add2eNormalizeThiefSkillKeyLocal(match.key) : null;
-}
-
-function add2eInstallHudThiefSkillBridge() {
-  if (globalThis.__ADD2E_HUD_THIEF_SKILL_BRIDGE_V1) return;
-  globalThis.__ADD2E_HUD_THIEF_SKILL_BRIDGE_V1 = true;
+function add2eInstallHudClassFeatureBridge() {
+  if (globalThis.__ADD2E_HUD_CLASS_FEATURE_BRIDGE_V2) return;
+  globalThis.__ADD2E_HUD_CLASS_FEATURE_BRIDGE_V2 = true;
 
   document.addEventListener("click", event => {
     const button = event.target?.closest?.("#add2e-action-hud button[data-action='use-feature']");
     if (!button) return;
 
     const actor = add2eHudActorFromCurrentState();
-    const skillKey = actor ? add2eHudThiefSkillKeyFromButton(actor, button) : null;
-    if (!actor || !skillKey) return;
+    if (!actor) return;
+    const index = Number(button.dataset.featureIndex);
+    const activeFeatures = add2eGetActorActivableClassFeatures(actor, { includeLocked: false });
+    const feature = Number.isInteger(index) ? activeFeatures[index] : add2eFindClassFeatureFromElement(actor, button);
+    if (!feature) {
+      ui.notifications.warn("Capacité de classe introuvable dans le HUD.");
+      return;
+    }
 
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation?.();
-
-    const relay = document.createElement("button");
-    relay.dataset.skillKey = skillKey;
-    void add2eUseClassFeatureFromElement(actor, relay, null);
+    void add2eExecuteClassFeatureOnUse(actor, feature, null);
   }, true);
 }
 
@@ -524,7 +509,7 @@ Hooks.once("init", () => {
 
 Hooks.once("ready", () => {
   add2eRestoreHudCapabilityPresentation();
-  add2eInstallHudThiefSkillBridge();
+  add2eInstallHudClassFeatureBridge();
   Hooks.on("renderActorSheet", () => setTimeout(add2eRestoreHudCapabilityPresentation, 0));
 });
 
