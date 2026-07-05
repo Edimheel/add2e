@@ -4,7 +4,7 @@
 // La visée utilise un cône PIXI, sans Warpgate, sur le modèle de Mains brûlantes.
 
 const __add2eVadeRetroResult = await (async () => {
-  const VERSION = "2026-07-05-vade-retro-rewrite-v1";
+  const VERSION = "2026-07-05-vade-retro-rewrite-v2";
   const ICON = "icons/magic/holy/barrier-shield-winged-cross.webp";
   const CONE = Object.freeze({ angle: 90, cells: 3 });
   const TABLE = Object.freeze({
@@ -28,6 +28,13 @@ const __add2eVadeRetroResult = await (async () => {
     ame_en_peine: "Âme en peine", momie: "Momie", spectre: "Spectre", vampire: "Vampire", fantome: "Fantôme", liche: "Liche",
     special: "Créature mauvaise des plans inférieurs"
   });
+  const UNDEAD_TAGS = Object.freeze(new Set([
+    "mort_vivant",
+    "creature_mort_vivant",
+    "monstre_mort_vivant",
+    "creature_label_mort_vivant",
+    "type_monstre_mort_vivant"
+  ]));
   const ORDER_INDEX = new Map(ORDER.map((key, index) => [key, index]));
 
   const esc = value => String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
@@ -223,11 +230,18 @@ const __add2eVadeRetroResult = await (async () => {
     });
   }
 
-  function actorText(targetActor) {
+  function actorTags(targetActor) {
     const system = targetActor?.system ?? {};
     const flags = targetActor?.flags?.add2e ?? {};
-    const values = flatten([targetActor?.name, system.type, system.type_monstre, system.type_creature, system.race, system.tags, system.effectTags, flags.tags, flags.effectTags]);
-    for (const embedded of targetActor?.items ?? []) flatten([embedded?.name, embedded?.system?.label, embedded?.system?.tags, embedded?.system?.effectTags], values);
+    return new Set(flatten([system.tags, system.effectTags, flags.tags, flags.effectTags]).map(norm).filter(Boolean));
+  }
+  function hasUndeadTag(targetActor) {
+    return [...actorTags(targetActor)].some(tag => UNDEAD_TAGS.has(tag));
+  }
+  function actorText(targetActor) {
+    const system = targetActor?.system ?? {};
+    const values = flatten([targetActor?.name, system.type, system.type_monstre, system.type_creature, system.race]);
+    for (const embedded of targetActor?.items ?? []) flatten([embedded?.name, embedded?.system?.label], values);
     return values.map(norm).filter(Boolean).join(" ");
   }
   function targetHitDice(targetActor) {
@@ -267,8 +281,11 @@ const __add2eVadeRetroResult = await (async () => {
       ["zombie", ["zombie"]], ["goule", ["goule", "ghoul"]], ["ombre", ["ombre", "shadow"]], ["ghast", ["ghast"]],
       ["momie", ["momie", "mummy"]], ["spectre", ["spectre", "specter"]], ["vampire", ["vampire"]], ["fantome", ["fantome", "ghost"]], ["liche", ["liche", "lich"]]
     ];
-    const found = aliases.find(([, words]) => words.some(word => text.includes(word)));
-    if (found) return { category: found[0], label: LABELS[found[0]], kind: "mort-vivant", lowerPlane: false };
+    if (hasUndeadTag(targetActor)) {
+      const found = aliases.find(([, words]) => words.some(word => text.includes(word)));
+      if (found) return { category: found[0], label: LABELS[found[0]], kind: "mort-vivant", lowerPlane: false };
+      return null;
+    }
     const lowerPlane = ["demon", "diable", "devil", "daemon", "mezzodaemon", "sorciere_des_tenebres", "plan_inferieur", "plans_inferieurs"].some(word => text.includes(word));
     if (lowerPlane && specialEligible(targetActor)) return { category: "special", label: LABELS.special, kind: "plan inférieur", lowerPlane: true };
     return null;
