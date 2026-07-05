@@ -12,6 +12,12 @@
 
 globalThis.ADD2E_ATTACK_VERSION = "2026-05-05-attack-v25-scene-token-computed-ca";
 
+// Certaines versions de modules historiques appellent encore mergeObject comme
+// utilitaire global. Foundry l’expose désormais sous foundry.utils.
+if (typeof globalThis.mergeObject !== "function" && typeof foundry?.utils?.mergeObject === "function") {
+  globalThis.mergeObject = foundry.utils.mergeObject;
+}
+
 // --- TABLE 39 : THAC0 MONSTRES ---
 const MONSTER_THACO_TABLE = [
   { min: 0,    max: 0.99, thaco: 20 },
