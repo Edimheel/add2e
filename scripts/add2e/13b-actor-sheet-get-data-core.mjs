@@ -6,9 +6,21 @@ import { add2ePopulateActorSheetSpellData } from "./13b-actor-sheet-get-data-spe
 
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant getData.");
 
+function add2eExceptionalStrengthValues() {
+  return Array.from({ length: 100 }, (_unused, index) => {
+    const value = index + 1;
+    return {
+      value,
+      label: value === 100 ? "00" : String(value).padStart(2, "0")
+    };
+  });
+}
+
 globalThis.Add2eActorSheet.prototype.getData = async function getData() {
   const data = this._add2eNativeGetData();
   const state = add2ePrepareActorSheetBaseData({ sheet: this, data });
+
+  data.forceExValues = data.canExceptionalStrength ? add2eExceptionalStrengthValues() : [];
 
   add2ePrepareActorSheetCombatData({
     actor: state.actor,
