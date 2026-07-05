@@ -9,7 +9,7 @@ import { installEffectsEngineDamage } from "./effects-engine/30-resistance-damag
 import { installEffectsEngineMonk } from "./effects-engine/40-monk.mjs";
 import { installEffectsEngineAnalysis } from "./effects-engine/50-analysis.mjs";
 
-globalThis.ADD2E_EFFECTS_ENGINE_VERSION = "2026-07-05-racial-profile-engine-v3";
+globalThis.ADD2E_EFFECTS_ENGINE_VERSION = "2026-07-02-racial-profile-engine-v2";
 
 class Add2eEffectsEngine {}
 
@@ -196,154 +196,8 @@ function installGateOnUseOutcomeContract(Engine) {
   });
 }
 
-function add2eRacialChatEscape(value) {
-  try { return foundry.utils.escapeHTML(String(value ?? "")); } catch {}
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-function add2eRacialActorCandidates() {
-  const candidates = [
-    ...(canvas?.tokens?.placeables ?? []).map(token => token?.actor),
-    ...Array.from(game?.actors ?? []),
-    game?.user?.character ?? null
-  ].filter(Boolean);
-  return [...new Map(candidates.map(actor => [actor.uuid ?? actor.id, actor])).values()];
-}
-
-function add2eRacialActorFromHud() {
-  const actorId = String(globalThis.add2eHudCheck?.()?.actorId ?? "").trim();
-  if (actorId) {
-    const tokenActor = (canvas?.tokens?.controlled ?? []).find(token => token?.actor?.id === actorId)?.actor
-      ?? (canvas?.tokens?.placeables ?? []).find(token => token?.actor?.id === actorId)?.actor
-      ?? null;
-    return tokenActor ?? game?.actors?.get?.(actorId) ?? null;
-  }
-  return (canvas?.tokens?.controlled ?? []).length === 1
-    ? canvas.tokens.controlled[0]?.actor ?? null
-    : game?.user?.character ?? null;
-}
-
-function add2eRacialActorFromControl(control) {
-  if (control?.matches?.("[data-add2e-hud-racial-action][data-racial-capability-id]")) {
-    const hudActor = add2eRacialActorFromHud();
-    if (hudActor) return hudActor;
-  }
-
-  for (const actor of add2eRacialActorCandidates()) {
-    for (const app of Object.values(actor?.apps ?? {})) {
-      const root = app?.element?.jquery ? app.element[0] : app?.element;
-      if (root && (root === control || root.contains?.(control))) return actor;
-    }
-  }
-  return null;
-}
-
-function add2eCanUseRacialCapability(actor) {
-  return game?.user?.isGM === true
-    || actor?.isOwner === true
-    || actor?.testUserPermission?.(game?.user, "OWNER") === true;
-}
-
-async function add2eCreateRacialVisionChat(actor, capability, enabled) {
-  const color = enabled ? "#176a70" : "#6c5350";
-  const background = enabled ? "#eefafa" : "#f7f1ef";
-  const state = enabled ? "Activée" : "Désactivée";
-  const content = `<div class="add2e-card-racial" style="border:2px solid ${color};border-radius:12px;padding:10px;background:${background};color:#24180f;font-family:var(--font-primary);">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><i class="fas ${add2eRacialChatEscape(capability?.iconClass || "fa-eye")}" style="font-size:1.55em;color:${color};"></i><strong style="font-size:1.08em;color:${color};">${add2eRacialChatEscape(capability?.label || "Capacité raciale")}</strong><span style="margin-left:auto;font-weight:900;">Capacité raciale</span></div>
-    <div>État : <strong style="color:${color};">${state}</strong></div>
-    ${capability?.description ? `<div style="margin-top:6px;font-size:.9em;line-height:1.35;">${add2eRacialChatEscape(capability.description)}</div>` : ""}
-  </div>`;
-  return ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor }),
-    content,
-    flags: {
-      add2e: {
-        racialCapability: {
-          actorId: actor?.id ?? "",
-          raceSourceId: capability?.sourceId ?? "",
-          capabilityId: capability?.id ?? "infravision",
-          action: "vision-toggle",
-          enabled: enabled === true
-        }
-      }
-    }
-  });
-}
-
-async function add2eUseUniformRacialCapability(actor, capabilityId, sheet = null) {
-  const Engine = globalThis.Add2eEffectsEngine;
-  const id = String(capabilityId ?? "").trim();
-  if (!actor || !Engine || !id) return false;
-  if (!add2eCanUseRacialCapability(actor)) {
-    ui.notifications?.warn?.("Vous ne pouvez pas utiliser les capacités de cet acteur.");
-    return false;
-  }
-
-  const capability = Engine.getRacialAction?.(actor, id);
-  if (!capability) {
-    ui.notifications?.warn?.("Capacité raciale introuvable.");
-    return false;
-  }
-
-  if (capability.actionType === "vision-toggle") {
-    const enabled = capability.enabled !== true;
-    const outcome = await Engine.setRacialVision?.(actor, enabled, { reason: "racial-capability-uniform-chat" });
-    if (!outcome || outcome.reason === "missing-actor") {
-      ui.notifications?.error?.("Impossible de modifier l’infravision raciale.");
-      return false;
-    }
-    await add2eCreateRacialVisionChat(actor, capability, enabled);
-    await sheet?.render?.(false);
-    await globalThis.add2eRefreshActionHud?.();
-    return true;
-  }
-
-  const rollCapability = globalThis.add2eRollRacialCapability;
-  if (typeof rollCapability !== "function") {
-    ui.notifications?.error?.("Le moteur des capacités raciales n’est pas chargé.");
-    return false;
-  }
-
-  const result = await rollCapability(actor, capability.id);
-  if (!result?.ok) {
-    ui.notifications?.error?.("Le jet de capacité raciale n’a pas pu être résolu.");
-    return false;
-  }
-  return true;
-}
-
-function installRacialCapabilityChatBridge() {
-  if (globalThis.__ADD2E_RACIAL_CAPABILITY_CHAT_BRIDGE_V1) return;
-  globalThis.__ADD2E_RACIAL_CAPABILITY_CHAT_BRIDGE_V1 = true;
-
-  globalThis.add2eUseRacialCapabilityFromElement = async (actor, element, sheet = null) => {
-    const capabilityId = String(element?.dataset?.racialCapabilityId ?? "").trim();
-    return add2eUseUniformRacialCapability(actor, capabilityId, sheet);
-  };
-
-  document.addEventListener("click", event => {
-    const target = event.target instanceof Element ? event.target : null;
-    const control = target?.closest?.(".add2e-racial-capability-use[data-racial-capability-id], [data-add2e-hud-racial-action='use'][data-racial-capability-id]");
-    if (!control) return;
-
-    const actor = add2eRacialActorFromControl(control);
-    if (!actor) return;
-
-    event.preventDefault();
-    event.stopPropagation();
-    event.stopImmediatePropagation?.();
-    void add2eUseUniformRacialCapability(actor, control.dataset.racialCapabilityId, null);
-  }, true);
-}
-
 installGenericSaveExtensions(Add2eEffectsEngine);
 installSingleReadActionRules(Add2eEffectsEngine);
 installGateOnUseOutcomeContract(Add2eEffectsEngine);
 
 globalThis.Add2eEffectsEngine = Add2eEffectsEngine;
-Hooks.once("ready", installRacialCapabilityChatBridge);
