@@ -64,11 +64,41 @@ globalThis.Add2eActorSheet.prototype.activateListeners = function activateListen
 
   html.find("select[name='system.force_ex']").off('change.add2e').on('change.add2e', async ev => {
     ev.preventDefault();
+    ev.stopPropagation();
     this._add2eRememberActiveTab(html);
+
     const selected = Math.trunc(Number(ev.currentTarget.value));
     const forceEx = Number.isFinite(selected) && selected >= 0 && selected <= 100 ? selected : 0;
-    await this.actor.update({ "system.force_ex": forceEx });
+    console.info("[ADD2E][FORCE_EX][SELECT]", {
+      actor: this.actor.name,
+      selected: ev.currentTarget.value,
+      normalized: forceEx,
+      before: this.actor.system?.force_ex ?? 0
+    });
+
+    await this.actor.update(
+      { "system.force_ex": forceEx },
+      { add2eInternal: true, add2eReason: "force-ex-selection", render: false }
+    );
+
+    console.info("[ADD2E][FORCE_EX][PERSISTED]", {
+      actor: this.actor.name,
+      expected: forceEx,
+      stored: this.actor.system?.force_ex ?? 0
+    });
+
     if (typeof this.autoSetCaracAjustements === "function") await this.autoSetCaracAjustements();
+
+    console.info("[ADD2E][FORCE_EX][ADJUSTMENTS]", {
+      actor: this.actor.name,
+      forceEx: this.actor.system?.force_ex ?? 0,
+      toucher: this.actor.system?.force_bonus_toucher,
+      degats: this.actor.system?.force_bonus_degats,
+      poids: this.actor.system?.force_poids,
+      ouvrir: this.actor.system?.force_ouvrir,
+      tordre: this.actor.system?.force_tordre
+    });
+
     await this.render(false);
   });
 
