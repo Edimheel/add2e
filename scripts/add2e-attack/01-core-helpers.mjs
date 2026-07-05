@@ -18,6 +18,50 @@ if (typeof globalThis.mergeObject !== "function" && typeof foundry?.utils?.merge
   globalThis.mergeObject = foundry.utils.mergeObject;
 }
 
+// Warpgate historique attend encore canvas.grid.getSnappedPosition(x, y, interval).
+// Foundry récent expose getSnappedPoint({x, y}, options). L’adaptateur est ajouté
+// uniquement lorsque la méthode historique est absente et à chaque nouveau canvas.
+function add2eInstallLegacyGridSnapAdapter() {
+  const grid = globalThis.canvas?.grid;
+  if (!grid || typeof grid.getSnappedPosition === "function" || typeof grid.getSnappedPoint !== "function") return;
+
+  const legacyGetSnappedPosition = function(x, y, interval = 1) {
+    const pointInput = x && typeof x === "object";
+    const point = pointInput
+      ? { x: Number(x.x), y: Number(x.y) }
+      : { x: Number(x), y: Number(y) };
+    const snapInterval = Number(pointInput ? (y ?? interval) : interval);
+    if (!Number.isFinite(point.x) || !Number.isFinite(point.y)) return point;
+
+    // La valeur -1 utilisée par Warpgate signifie absence de magnétisme.
+    if (!Number.isFinite(snapInterval) || snapInterval <= 0) return point;
+
+    try {
+      const options = {};
+      const centerMode = globalThis.CONST?.GRID_SNAPPING_MODES?.CENTER;
+      if (centerMode !== undefined) options.mode = centerMode;
+      if (snapInterval > 1) options.resolution = snapInterval;
+      const snapped = this.getSnappedPoint(point, options);
+      if (Number.isFinite(Number(snapped?.x)) && Number.isFinite(Number(snapped?.y))) {
+        return { x: snapped.x, y: snapped.y };
+      }
+    } catch (_error) {}
+    return point;
+  };
+
+  try {
+    Object.defineProperty(grid, "getSnappedPosition", {
+      value: legacyGetSnappedPosition,
+      configurable: true
+    });
+  } catch (_error) {
+    try { grid.getSnappedPosition = legacyGetSnappedPosition; } catch (_ignored) {}
+  }
+}
+
+add2eInstallLegacyGridSnapAdapter();
+Hooks?.on?.("canvasReady", add2eInstallLegacyGridSnapAdapter);
+
 // --- TABLE 39 : THAC0 MONSTRES ---
 const MONSTER_THACO_TABLE = [
   { min: 0,    max: 0.99, thaco: 20 },
