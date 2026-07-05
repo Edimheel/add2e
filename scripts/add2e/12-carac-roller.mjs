@@ -1,7 +1,7 @@
 // ============================================================
 // ADD2E — Tirage et affectation des caractéristiques — Dialog V2
 // ============================================================
-const ADD2E_CARAC_ROLLER_VERSION = "2026-07-05-carac-roller-independent-classes-v9";
+const ADD2E_CARAC_ROLLER_VERSION = "2026-07-05-carac-roller-force-ex-cancel-v10";
 const ADD2E_CARAC_DIALOG_WIDTH = 600;
 const ADD2E_CARACS = ["force", "dexterite", "constitution", "intelligence", "sagesse", "charisme"];
 const ADD2E_CARAC_SHORT = {
@@ -64,6 +64,10 @@ function add2eCaracBaseValue(actor, carac) {
   return Number(actor?.system?.[`${carac}_base`] ?? actor?.system?.[carac] ?? 10) || 10;
 }
 
+function add2eCaracExceptionalStrength(actor) {
+  return Math.max(0, Math.min(100, Math.trunc(Number(actor?.system?.force_ex) || 0)));
+}
+
 function add2eClassColorIndex(name) {
   let hash = 0;
   for (const character of String(name ?? "")) hash = ((hash << 5) - hash + character.charCodeAt(0)) | 0;
@@ -91,6 +95,7 @@ class Add2eCaracRoller {
     this._sheetTargetHandler = this._onSheetTargetClick.bind(this);
     this._dialogClickHandler = this._onDialogClick.bind(this);
     this._oldValues = Object.fromEntries(ADD2E_CARACS.map(carac => [carac, add2eCaracBaseValue(this.actor, carac)]));
+    this._oldForceEx = add2eCaracExceptionalStrength(this.actor);
     this.render();
   }
 
@@ -553,8 +558,10 @@ class Add2eCaracRoller {
     this._updateCaracDisplay();
     this._updateAssignLabels();
     const updates = Object.fromEntries(ADD2E_CARACS.map(carac => [`system.${carac}_base`, this._oldValues[carac]]));
-    await this.actor.update(updates);
+    updates["system.force_ex"] = this._oldForceEx;
+    await this.actor.update(updates, { add2eInternal: true, add2eReason: "carac-roller-cancel", render: false });
     if (typeof this.sheet?.autoSetCaracAjustements === "function") await this.sheet.autoSetCaracAjustements();
+    await this.sheet?.render?.(false);
   }
 
   _closeDialogOnly() {
