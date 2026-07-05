@@ -4,7 +4,7 @@
 // La visée utilise un cône PIXI, sans Warpgate, sur le modèle de Mains brûlantes.
 
 const __add2eVadeRetroResult = await (async () => {
-  const VERSION = "2026-07-05-vade-retro-rewrite-v2";
+  const VERSION = "2026-07-05-vade-retro-rewrite-v3";
   const ICON = "icons/magic/holy/barrier-shield-winged-cross.webp";
   const CONE = Object.freeze({ angle: 90, cells: 3 });
   const TABLE = Object.freeze({
@@ -28,13 +28,7 @@ const __add2eVadeRetroResult = await (async () => {
     ame_en_peine: "Âme en peine", momie: "Momie", spectre: "Spectre", vampire: "Vampire", fantome: "Fantôme", liche: "Liche",
     special: "Créature mauvaise des plans inférieurs"
   });
-  const UNDEAD_TAGS = Object.freeze(new Set([
-    "mort_vivant",
-    "creature_mort_vivant",
-    "monstre_mort_vivant",
-    "creature_label_mort_vivant",
-    "type_monstre_mort_vivant"
-  ]));
+  const UNDEAD_TAG = "creature_label:mort-vivant";
   const ORDER_INDEX = new Map(ORDER.map((key, index) => [key, index]));
 
   const esc = value => String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
@@ -236,7 +230,7 @@ const __add2eVadeRetroResult = await (async () => {
     return new Set(flatten([system.tags, system.effectTags, flags.tags, flags.effectTags]).map(norm).filter(Boolean));
   }
   function hasUndeadTag(targetActor) {
-    return [...actorTags(targetActor)].some(tag => UNDEAD_TAGS.has(tag));
+    return actorTags(targetActor).has(norm(UNDEAD_TAG));
   }
   function actorText(targetActor) {
     const system = targetActor?.system ?? {};
