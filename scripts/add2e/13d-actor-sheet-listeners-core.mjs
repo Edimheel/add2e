@@ -62,7 +62,7 @@ globalThis.Add2eActorSheet.prototype.activateListeners = function activateListen
     await this.render(false);
   });
 
-  html.find("select[name='system.force_ex']").off('change.add2e').on('change.add2e', async ev => {
+  html.find("select[data-add2e-force-ex]").off('change.add2e').on('change.add2e', async ev => {
     ev.preventDefault();
     ev.stopPropagation();
     this._add2eRememberActiveTab(html);
