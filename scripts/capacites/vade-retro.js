@@ -2,7 +2,7 @@
 // Compatible Foundry V13 / V14 / V15 - DialogV2 uniquement.
 // Une tentative par combat. La sélection se fait dans un cône temporaire ancré sur le prêtre.
 
-const ADD2E_VADE_RETRO_VERSION = "2026-07-05-anchored-cone-targeting-v4";
+const ADD2E_VADE_RETRO_VERSION = "2026-07-05-stage-cone-rotation-v6";
 
 return await (async () => {
   const caster =
@@ -10,7 +10,6 @@ return await (async () => {
     (typeof item !== "undefined" && item?.parent) ||
     canvas.tokens?.controlled?.[0]?.actor ||
     game.user?.character;
-
   if (!caster) {
     ui.notifications.warn("Vade-rétro : aucun clerc ou paladin sélectionné.");
     return false;
@@ -19,51 +18,26 @@ return await (async () => {
   const casterToken = canvas.tokens?.controlled?.find(token => token?.actor?.id === caster.id)
     ?? caster.getActiveTokens?.()[0]
     ?? null;
-  if (!casterToken?.center || !canvas?.scene) {
+  if (!casterToken?.center || !canvas?.scene || !canvas?.stage?.on) {
     ui.notifications.warn("Vade-rétro : le clerc ou paladin doit avoir un token sur la scène.");
     return false;
   }
 
   const normalize = value => String(value ?? "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/[’']/g, "")
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/_+/g, "_")
-    .replace(/^_|_$/g, "");
-  const esc = value => String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+    .trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "").replace(/[^a-z0-9]+/g, "_").replace(/_+/g, "_").replace(/^_|_$/g, "");
+  const esc = value => String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   const asNumber = value => {
     const match = String(value ?? "").match(/\d+(?:[.,]\d+)?/);
     return match ? Number(match[0].replace(",", ".")) : NaN;
   };
 
   const sourceFeature = typeof feature !== "undefined" && feature ? feature : item;
-  const sourceClass = normalize(
-    sourceFeature?._add2eClassSlug ??
-    sourceFeature?.sourceClassSlug ??
-    sourceFeature?.classSlug ??
-    sourceFeature?._add2eClassName ??
-    sourceFeature?.sourceClassName ??
-    ""
-  );
+  const sourceClass = normalize(sourceFeature?._add2eClassSlug ?? sourceFeature?.sourceClassSlug ?? sourceFeature?.classSlug ?? sourceFeature?._add2eClassName ?? sourceFeature?.sourceClassName ?? "");
   const isPaladin = sourceClass
     ? sourceClass.includes("paladin")
-    : Array.from(caster.items ?? []).some(entry =>
-      String(entry?.type ?? "").toLowerCase() === "classe" &&
-      normalize(entry?.system?.label ?? entry?.name ?? entry?.system?.slug).includes("paladin")
-    );
-  const nativeLevel = Math.max(1, Number(
-    sourceFeature?._add2eClassLevel ??
-    caster.system?.niveau ??
-    caster.system?.level ??
-    1
-  ) || 1);
+    : Array.from(caster.items ?? []).some(entry => String(entry?.type ?? "").toLowerCase() === "classe" && normalize(entry?.system?.label ?? entry?.name ?? entry?.system?.slug).includes("paladin"));
+  const nativeLevel = Math.max(1, Number(sourceFeature?._add2eClassLevel ?? caster.system?.niveau ?? caster.system?.level ?? 1) || 1);
   const level = isPaladin ? nativeLevel - 2 : nativeLevel;
   if (level < 1) {
     ui.notifications.warn("Vade-rétro : le paladin ne l’obtient qu’au niveau 3.");
@@ -72,8 +46,7 @@ return await (async () => {
 
   const combatId = String(game.combat?.id ?? "").trim();
   const usageFlagKey = combatId ? `vadeRetro.combat.${combatId}` : "";
-  const previousUse = usageFlagKey ? caster.getFlag("add2e", usageFlagKey) : null;
-  if (previousUse?.used) {
+  if (usageFlagKey && caster.getFlag("add2e", usageFlagKey)?.used) {
     ui.notifications.warn("Vade-rétro a déjà été utilisé pendant ce combat.");
     return false;
   }
@@ -94,14 +67,10 @@ return await (async () => {
     special:      [null, null, null, null, null, null, null, "20", "19", "13"]
   };
   const LABELS = {
-    squelette: "Squelette", zombie: "Zombie", goule: "Goule", ombre: "Ombre",
-    necrophage: "Nécrophage", ghast: "Ghast", ame_en_peine: "Âme en peine",
-    momie: "Momie", spectre: "Spectre", vampire: "Vampire", fantome: "Fantôme",
-    liche: "Liche", special: "Démon / diable inférieur"
+    squelette: "Squelette", zombie: "Zombie", goule: "Goule", ombre: "Ombre", necrophage: "Nécrophage", ghast: "Ghast", ame_en_peine: "Âme en peine", momie: "Momie", spectre: "Spectre", vampire: "Vampire", fantome: "Fantôme", liche: "Liche", special: "Démon / diable inférieur"
   };
   const ORDER = Object.keys(TABLE);
   const ORDER_INDEX = new Map(ORDER.map((key, index) => [key, index]));
-
   const readHitDice = targetActor => {
     const system = targetActor?.system ?? {};
     for (const value of [system.dv, system.hitDice, system.hd, system.des_de_vie, system.niveau, system.level]) {
@@ -112,22 +81,12 @@ return await (async () => {
   };
   const typeText = targetActor => {
     const system = targetActor?.system ?? {};
-    return [
-      targetActor?.name, system.type, system.type_creature, system.creatureType,
-      system.categorie, system.famille, system.race, system.type_mort_vivant,
-      system.typeMortVivant, system.undeadType, system.tags, system.effectTags
-    ].flat().map(normalize).join(" ");
+    return [targetActor?.name, system.type, system.type_creature, system.creatureType, system.categorie, system.famille, system.race, system.type_mort_vivant, system.typeMortVivant, system.undeadType, system.tags, system.effectTags].flat().map(normalize).join(" ");
   };
   const detectCategory = targetToken => {
     const text = typeText(targetToken?.actor);
     const entries = [
-      ["ame_en_peine", ["ame_en_peine", "wight"]], ["necrophage", ["necrophage"]],
-      ["squelette", ["squelette", "skeleton"]], ["zombie", ["zombie"]],
-      ["goule", ["goule", "ghoul"]], ["ombre", ["ombre", "shadow"]],
-      ["ghast", ["ghast"]], ["momie", ["momie", "mummy"]],
-      ["spectre", ["spectre", "specter"]], ["vampire", ["vampire"]],
-      ["fantome", ["fantome", "ghost"]], ["liche", ["liche", "lich"]],
-      ["special", ["diable", "demon", "devil", "daemon", "plan_inferieur", "plans_inferieurs"]]
+      ["ame_en_peine", ["ame_en_peine", "wight"]], ["necrophage", ["necrophage"]], ["squelette", ["squelette", "skeleton"]], ["zombie", ["zombie"]], ["goule", ["goule", "ghoul"]], ["ombre", ["ombre", "shadow"]], ["ghast", ["ghast"]], ["momie", ["momie", "mummy"]], ["spectre", ["spectre", "specter"]], ["vampire", ["vampire"]], ["fantome", ["fantome", "ghost"]], ["liche", ["liche", "lich"]], ["special", ["diable", "demon", "devil", "daemon", "plan_inferieur", "plans_inferieurs"]]
     ];
     for (const [category, keys] of entries) if (keys.some(key => text.includes(key))) return category;
     return null;
@@ -149,148 +108,109 @@ return await (async () => {
   const gridDistance = Number(canvas.scene?.grid?.distance ?? canvas.grid?.distance ?? 1) || 1;
   const gridSize = Number(canvas.grid?.size ?? canvas.scene?.grid?.size ?? 100) || 100;
   const origin = { x: casterToken.center.x, y: casterToken.center.y };
-  const defaultDistance = Math.max(gridDistance, gridDistance * 3);
-  const minDistance = gridDistance;
-  const maxDistance = gridDistance * 30;
+  const DialogV2 = foundry?.applications?.api?.DialogV2;
+  if (!DialogV2?.wait || !DialogV2?.confirm) {
+    ui.notifications.error("Vade-rétro : DialogV2 est indisponible.");
+    return false;
+  }
 
-  const previewData = {
-    t: "cone",
-    user: game.user.id,
-    distance: defaultDistance,
-    angle: 90,
-    direction: 0,
-    x: origin.x,
-    y: origin.y,
-    fillColor: game.user?.color ?? "#d6b05a",
-    borderColor: game.user?.color ?? "#d6b05a",
-    flags: { add2e: { transient: true, source: "vade-retro", casterUuid: caster.uuid } }
-  };
+  const coneOptions = await DialogV2.wait({
+    window: { title: "Vade-rétro : régler le cône" },
+    content: `<form class="add2e-dialog" style="display:grid;gap:.7em;"><p>Le cône sera ancré au centre de <b>${esc(caster.name)}</b>. Oriente-le ensuite avec la souris sur le canevas.</p><div class="form-group"><label>Longueur (${esc(canvas.scene?.grid?.units || "m")})</label><input name="distance" type="number" min="${gridDistance}" max="${gridDistance * 30}" step="${gridDistance}" value="${gridDistance * 3}"></div><div class="form-group"><label>Ouverture (degrés)</label><input name="angle" type="number" min="30" max="180" step="15" value="90"></div></form>`,
+    buttons: [
+      { action: "place", label: "Placer le cône", default: true, callback: (_event, button) => ({ distance: Number(button.form?.elements?.distance?.value), angle: Number(button.form?.elements?.angle?.value) }) },
+      { action: "cancel", label: "Annuler", callback: () => null }
+    ],
+    rejectClose: false
+  });
+  if (!coneOptions) return false;
 
+  const coneDistance = Math.max(gridDistance, Math.min(gridDistance * 30, Number(coneOptions.distance) || gridDistance * 3));
+  const coneAngle = Math.max(30, Math.min(180, Number(coneOptions.angle) || 90));
   let preview = null;
   try {
-    [preview] = await canvas.scene.createEmbeddedDocuments("MeasuredTemplate", [previewData]);
+    [preview] = await canvas.scene.createEmbeddedDocuments("MeasuredTemplate", [{
+      t: "cone", user: game.user.id, distance: coneDistance, angle: coneAngle, direction: 0,
+      x: origin.x, y: origin.y, fillColor: game.user?.color ?? "#d6b05a", borderColor: game.user?.color ?? "#d6b05a",
+      flags: { add2e: { transient: true, source: "vade-retro", casterUuid: caster.uuid } }
+    }]);
   } catch (error) {
     console.error("[ADD2E][VADE-RETRO][CONE]", error);
     ui.notifications.error("Vade-rétro : impossible de créer le cône de sélection.");
     return false;
   }
-  if (!preview) {
-    ui.notifications.error("Vade-rétro : le cône de sélection n’a pas été créé.");
-    return false;
-  }
+  if (!preview) return false;
 
   const deletePreview = async () => {
-    try {
-      if (canvas.scene?.templates?.get?.(preview.id)) await canvas.scene.deleteEmbeddedDocuments("MeasuredTemplate", [preview.id]);
-    } catch (_error) {}
+    try { if (canvas.scene?.templates?.get?.(preview.id)) await canvas.scene.deleteEmbeddedDocuments("MeasuredTemplate", [preview.id]); } catch (_error) {}
   };
+  const stagePoint = event => {
+    const global = event?.global ?? event?.data?.global ?? null;
+    if (!global) return null;
+    try {
+      const point = canvas.stage.toLocal(global);
+      return Number.isFinite(point?.x) && Number.isFinite(point?.y) ? point : null;
+    } catch (_error) { return null; }
+  };
+  const directionFromPoint = point => (Math.atan2(point.y - origin.y, point.x - origin.x) * 180 / Math.PI + 360) % 360;
 
-  const view = canvas?.app?.view ?? canvas?.app?.renderer?.view ?? null;
-  const stage = canvas?.stage ?? canvas?.app?.stage ?? null;
-  const canvasPointFromEvent = event => {
-    if (!view || !stage?.toLocal || !event) return null;
-    const target = event.target;
-    if (target !== view && !view.contains?.(target)) return null;
-    const rect = view.getBoundingClientRect?.();
-    const renderer = canvas?.app?.renderer ?? null;
-    if (!rect || !renderer?.width || !renderer?.height) return null;
-    const point = {
-      x: (event.clientX - rect.left) * (renderer.width / rect.width),
-      y: (event.clientY - rect.top) * (renderer.height / rect.height)
+  ui.notifications.info("Vade-rétro : déplace la souris sur le canevas pour pivoter le cône. Clic gauche : valider ; clic droit : annuler.");
+  const cone = await new Promise(resolve => {
+    let direction = 0;
+    let timer = null;
+    let pending = Promise.resolve();
+    let done = false;
+    const oldEventMode = canvas.stage.eventMode;
+    if (canvas.stage.eventMode === "none") canvas.stage.eventMode = "static";
+    const update = () => {
+      const payload = { _id: preview.id, x: origin.x, y: origin.y, distance: coneDistance, angle: coneAngle, direction };
+      pending = pending.then(async () => {
+        const docs = await canvas.scene.updateEmbeddedDocuments("MeasuredTemplate", [payload]);
+        preview = docs?.[0] ?? preview;
+      }).catch(error => console.warn("[ADD2E][VADE-RETRO][CONE_UPDATE]", error));
+      return pending;
     };
-    try {
-      const local = stage.toLocal(point);
-      return Number.isFinite(local?.x) && Number.isFinite(local?.y) ? local : null;
-    } catch (_error) {
-      return null;
-    }
-  };
-  const directionFromPoint = point => {
-    const radians = Math.atan2(point.y - origin.y, point.x - origin.x);
-    return (radians * 180 / Math.PI + 360) % 360;
-  };
-
-  ui.notifications.info("Vade-rétro : oriente le cône avec la souris. Molette : longueur ; Maj + molette : ouverture. Clic gauche : valider ; Échap : annuler.");
-
-  let cone = null;
-  try {
-    cone = await new Promise(resolve => {
-      let distance = defaultDistance;
-      let angle = 90;
-      let direction = 0;
-      let pending = Promise.resolve();
-      let timer = null;
-      let resolved = false;
-
-      const updatePreview = () => {
-        const data = { x: origin.x, y: origin.y, distance, angle, direction };
-        pending = pending.then(() => preview.update(data, { diff: false })).catch(() => {});
-        return pending;
-      };
-      const scheduleUpdate = () => {
-        if (timer) return;
-        timer = setTimeout(() => {
-          timer = null;
-          void updatePreview();
-        }, 35);
-      };
-      const cleanup = () => {
-        if (timer) clearTimeout(timer);
-        document.removeEventListener("mousemove", onMove, true);
-        document.removeEventListener("wheel", onWheel, true);
-        document.removeEventListener("click", onClick, true);
-        document.removeEventListener("keydown", onKeyDown, true);
-      };
-      const finish = async value => {
-        if (resolved) return;
-        resolved = true;
-        cleanup();
-        if (value) await updatePreview();
-        resolve(value ? { distance, angle, direction } : null);
-      };
-      const onMove = event => {
-        const point = canvasPointFromEvent(event);
-        if (!point) return;
-        direction = directionFromPoint(point);
-        scheduleUpdate();
-      };
-      const onWheel = event => {
-        const point = canvasPointFromEvent(event);
-        if (!point) return;
-        event.preventDefault();
-        event.stopPropagation();
-        direction = directionFromPoint(point);
-        const delta = event.deltaY > 0 ? -1 : 1;
-        if (event.shiftKey) angle = Math.max(30, Math.min(180, angle + delta * 15));
-        else distance = Math.max(minDistance, Math.min(maxDistance, distance + delta * gridDistance));
-        scheduleUpdate();
-      };
-      const onClick = event => {
-        if (event.button !== 0) return;
-        const point = canvasPointFromEvent(event);
-        if (!point) return;
-        event.preventDefault();
-        event.stopPropagation();
-        event.stopImmediatePropagation?.();
-        direction = directionFromPoint(point);
-        void finish(true);
-      };
-      const onKeyDown = event => {
-        if (event.key !== "Escape") return;
-        event.preventDefault();
-        event.stopPropagation();
+    const schedule = () => {
+      if (timer) return;
+      timer = setTimeout(() => { timer = null; void update(); }, 24);
+    };
+    const cleanup = () => {
+      if (timer) clearTimeout(timer);
+      canvas.stage.off?.("pointermove", onMove);
+      canvas.stage.off?.("pointerdown", onDown);
+      if (canvas.stage.eventMode === "static" && oldEventMode === "none") canvas.stage.eventMode = oldEventMode;
+    };
+    const finish = async accepted => {
+      if (done) return;
+      done = true;
+      cleanup();
+      if (accepted) await update();
+      resolve(accepted ? { distance: coneDistance, angle: coneAngle, direction } : null);
+    };
+    const onMove = event => {
+      const point = stagePoint(event);
+      if (!point) return;
+      direction = directionFromPoint(point);
+      schedule();
+    };
+    const onDown = event => {
+      const button = Number(event?.button ?? event?.data?.button ?? 0);
+      const point = stagePoint(event);
+      if (!point) return;
+      if (button === 2) {
+        event?.stopPropagation?.();
         void finish(false);
-      };
-
-      document.addEventListener("mousemove", onMove, true);
-      document.addEventListener("wheel", onWheel, { capture: true, passive: false });
-      document.addEventListener("click", onClick, true);
-      document.addEventListener("keydown", onKeyDown, true);
-      void updatePreview();
-    });
-  } catch (_error) {
-    cone = null;
-  }
+        return;
+      }
+      if (button !== 0) return;
+      direction = directionFromPoint(point);
+      event?.stopPropagation?.();
+      void finish(true);
+    };
+    canvas.stage.on("pointermove", onMove);
+    canvas.stage.on("pointerdown", onDown);
+    void update();
+  });
 
   if (!cone) {
     await deletePreview();
@@ -312,13 +232,8 @@ return await (async () => {
     return delta <= cone.angle / 2;
   };
   const tokenTouchesCone = token => {
-    const points = [
-      token.center,
-      { x: token.x, y: token.y }, { x: token.x + token.w, y: token.y },
-      { x: token.x, y: token.y + token.h }, { x: token.x + token.w, y: token.y + token.h },
-      { x: token.x + token.w / 2, y: token.y }, { x: token.x + token.w / 2, y: token.y + token.h },
-      { x: token.x, y: token.y + token.h / 2 }, { x: token.x + token.w, y: token.y + token.h / 2 }
-    ].filter(point => Number.isFinite(point?.x) && Number.isFinite(point?.y));
+    const points = [token.center, { x: token.x, y: token.y }, { x: token.x + token.w, y: token.y }, { x: token.x, y: token.y + token.h }, { x: token.x + token.w, y: token.y + token.h }, { x: token.x + token.w / 2, y: token.y }, { x: token.x + token.w / 2, y: token.y + token.h }, { x: token.x, y: token.y + token.h / 2 }, { x: token.x + token.w, y: token.y + token.h / 2 }]
+      .filter(point => Number.isFinite(point?.x) && Number.isFinite(point?.y));
     return points.some(point => shape?.contains?.(point.x - templateX, point.y - templateY) || withinConeFallback(point));
   };
 
@@ -327,23 +242,15 @@ return await (async () => {
     .filter(tokenTouchesCone)
     .map(token => ({ token, actor: token.actor, category: detectCategory(token), hd: readHitDice(token.actor) }))
     .filter(candidate => candidate.category && TABLE[candidate.category])
-    .sort((left, right) => left.hd - right.hd
-      || (ORDER_INDEX.get(left.category) ?? 999) - (ORDER_INDEX.get(right.category) ?? 999)
-      || String(left.actor.name).localeCompare(String(right.actor.name)));
+    .sort((left, right) => left.hd - right.hd || (ORDER_INDEX.get(left.category) ?? 999) - (ORDER_INDEX.get(right.category) ?? 999) || String(left.actor.name).localeCompare(String(right.actor.name)));
 
-  const candidateHtml = candidates.length
-    ? candidates.map(candidate => `<li><b>${esc(candidate.actor.name)}</b> — ${esc(LABELS[candidate.category])}, ${candidate.hd} DV</li>`).join("")
-    : "<li>Aucun mort-vivant ou démon/diable inférieur dans le cône.</li>";
-  const DialogV2 = foundry?.applications?.api?.DialogV2;
-  const confirmed = DialogV2?.confirm
-    ? await DialogV2.confirm({
-      window: { title: "Vade-rétro : confirmer le cône" },
-      content: `<div class="add2e-dialog"><p><b>Cône sélectionné :</b> ${Math.round(cone.distance * 10) / 10} ${esc(canvas.scene?.grid?.units || "m")}, ${cone.angle}°.</p><p>Les cibles seront prises du plus faible au plus puissant. Le tableau détermine le succès ; le dé indique ensuite combien de créatures sont affectées.</p><ul style="max-height:180px;overflow:auto;margin:0;padding-left:1.2em;">${candidateHtml}</ul></div>`,
-      yes: { label: "Effectuer le vade-rétro", icon: "fas fa-hand-sparkles" },
-      no: { label: "Annuler" }
-    })
-    : window.confirm("Effectuer le vade-rétro sur les créatures dans le cône ?");
-
+  const candidateHtml = candidates.length ? candidates.map(candidate => `<li><b>${esc(candidate.actor.name)}</b> — ${esc(LABELS[candidate.category])}, ${candidate.hd} DV</li>`).join("") : "<li>Aucun mort-vivant ou démon/diable inférieur dans le cône.</li>";
+  const confirmed = await DialogV2.confirm({
+    window: { title: "Vade-rétro : confirmer le cône" },
+    content: `<div class="add2e-dialog"><p><b>Cône sélectionné :</b> ${Math.round(cone.distance * 10) / 10} ${esc(canvas.scene?.grid?.units || "m")}, ${cone.angle}°.</p><p>Les cibles seront prises du plus faible au plus puissant. Le tableau détermine le succès ; le dé indique ensuite combien de créatures sont affectées.</p><ul style="max-height:180px;overflow:auto;margin:0;padding-left:1.2em;">${candidateHtml}</ul></div>`,
+    yes: { label: "Effectuer le vade-rétro", icon: "fas fa-hand-sparkles" },
+    no: { label: "Annuler" }
+  });
   await deletePreview();
   if (!confirmed) return false;
   if (!candidates.length) {
@@ -371,7 +278,6 @@ return await (async () => {
   let attempted = false;
   let failed = false;
   const rows = [];
-
   for (const [category, group] of orderedGroups) {
     const entry = TABLE[category]?.[col] ?? null;
     if (!entry) {
@@ -386,15 +292,13 @@ return await (async () => {
     attempted = true;
     let success = false;
     let tableText = "Automatique";
-    if (String(entry).startsWith("T") || String(entry).startsWith("D")) {
-      success = true;
-    } else {
+    if (String(entry).startsWith("T") || String(entry).startsWith("D")) success = true;
+    else {
       const roll = await rollFormula("1d20");
       const threshold = Number(entry);
       tableText = `${roll.total} / ${threshold}`;
       success = roll.total >= threshold;
     }
-
     if (!success) {
       rows.push(...group.map(candidate => ({ target: candidate.actor.name, result: "Échec", detail: `${LABELS[category]} — table ${entry} — jet ${tableText}.` })));
       failed = true;
@@ -414,12 +318,10 @@ return await (async () => {
         rows.push({ target: candidate.actor.name, result: "Non affectable", detail: "Démon ou diable trop puissant pour la ligne spéciale." });
         continue;
       }
-
       let resultLabel = "Repoussé";
       let effectName = "Repoussé par vade-rétro";
       let tags = [`vade_retro:${category}`, "etat:repousse_vade_retro"];
-      const alignment = normalize(caster.system?.alignement ?? caster.system?.alignment ?? "");
-      const evilCleric = alignment.includes("mauvais") || alignment.includes("evil");
+      const evilCleric = normalize(caster.system?.alignement ?? caster.system?.alignment ?? "").includes("mauvais") || normalize(caster.system?.alignement ?? caster.system?.alignment ?? "").includes("evil");
       if (String(entry).startsWith("D")) {
         if (evilCleric) {
           resultLabel = "Dominé";
@@ -444,26 +346,9 @@ return await (async () => {
         disabled: false,
         duration: {},
         changes: [],
-        flags: {
-          add2e: {
-            tags,
-            vadeRetro: {
-              casterUuid: caster.uuid,
-              casterName: caster.name,
-              category,
-              entry,
-              effectiveClericLevel: level,
-              sourceClass: isPaladin ? "paladin" : "clerc",
-              targetHitDice: candidate.hd,
-              cone: { distance: cone.distance, angle: cone.angle, direction: cone.direction },
-              maximum,
-              remaining
-            }
-          }
-        },
+        flags: { add2e: { tags, vadeRetro: { casterUuid: caster.uuid, casterName: caster.name, category, entry, effectiveClericLevel: level, sourceClass: isPaladin ? "paladin" : "clerc", targetHitDice: candidate.hd, cone: { distance: cone.distance, angle: cone.angle, direction: cone.direction }, maximum, remaining } } },
         description: `${effectName} — ${LABELS[category]} — sélectionné dans le cône de vade-rétro.`
       };
-
       if (game.user?.isGM || candidate.actor.isOwner) {
         try { await candidate.actor.createEmbeddedDocuments("ActiveEffect", [effectData]); } catch (error) { console.warn("[ADD2E][VADE-RETRO] ActiveEffect non appliqué.", error); }
       } else if (game.socket) {
@@ -471,21 +356,11 @@ return await (async () => {
       }
       rows.push({ target: candidate.actor.name, result: resultLabel, detail: `${LABELS[category]} — table ${entry} — ${tableText} — ${candidate.hd} DV — ${remaining} créature(s) restante(s) sur ${maximum}.` });
     }
-
     if (remaining <= 0) break;
   }
 
   if (attempted && usageFlagKey) {
-    await caster.setFlag("add2e", usageFlagKey, {
-      used: true,
-      combatId,
-      effectiveClericLevel: level,
-      sourceClass: isPaladin ? "paladin" : "clerc",
-      failed,
-      cone: { distance: cone.distance, angle: cone.angle, direction: cone.direction },
-      affectedActorUuids: rows.filter(row => ["Repoussé", "Détruit / damné", "Influencé", "Dominé"].includes(row.result)).map(row => row.target),
-      at: Date.now()
-    });
+    await caster.setFlag("add2e", usageFlagKey, { used: true, combatId, effectiveClericLevel: level, sourceClass: isPaladin ? "paladin" : "clerc", failed, cone: { distance: cone.distance, angle: cone.angle, direction: cone.direction }, affectedTargets: rows.filter(row => ["Repoussé", "Détruit / damné", "Influencé", "Dominé"].includes(row.result)).map(row => row.target), at: Date.now() });
   }
 
   const countLabel = countRoll ? `${countFormula} = ${countRoll.total}` : "—";
@@ -493,6 +368,5 @@ return await (async () => {
     speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken }),
     content: `<div class="add2e-chat-card" style="border:1.5px solid #c79b38;border-radius:12px;overflow:hidden;background:#fffaf0;box-shadow:0 3px 8px #0002;"><div style="background:linear-gradient(90deg,#8a5a13,#d4a83a);color:white;padding:8px 10px;display:flex;align-items:center;gap:8px;"><img src="${esc(caster.img)}" style="width:36px;height:36px;border-radius:50%;border:2px solid #fff;object-fit:cover;"><div style="flex:1;"><div style="font-weight:800;">${esc(caster.name)}</div><div style="font-size:.9em;">Vade-rétro — niveau effectif de clerc ${level}${isPaladin ? ` (Paladin niveau ${nativeLevel})` : ""}</div></div></div><div style="padding:8px;"><div style="margin-bottom:7px;padding:6px 8px;border:1px solid #e7d8a0;border-radius:6px;background:#fffdf7;"><b>Cône :</b> ${Math.round(cone.distance * 10) / 10} ${esc(canvas.scene?.grid?.units || "m")}, ${cone.angle}°. <b>Nombre affecté :</b> ${esc(countLabel)}.</div>${rows.map(row => `<div style="border-bottom:1px solid #e7d8a0;padding:5px 0;"><b>${esc(row.target)}</b> — <b>${esc(row.result)}</b><br><span style="font-size:.9em;color:#5b4b26;">${esc(row.detail)}</span></div>`).join("") || "<div>Aucune créature n’a pu être affectée.</div>"}<div style="margin-top:7px;font-size:.82em;color:#5b4b26;">Vade-rétro : une utilisation par combat.</div></div></div>`
   });
-
   return attempted && !failed;
 })();
