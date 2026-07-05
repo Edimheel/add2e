@@ -62,6 +62,16 @@ globalThis.Add2eActorSheet.prototype.activateListeners = function activateListen
     await this.render(false);
   });
 
+  html.find("select[name='system.force_ex']").off('change.add2e').on('change.add2e', async ev => {
+    ev.preventDefault();
+    this._add2eRememberActiveTab(html);
+    const selected = Math.trunc(Number(ev.currentTarget.value));
+    const forceEx = Number.isFinite(selected) && selected >= 0 && selected <= 100 ? selected : 0;
+    await this.actor.update({ "system.force_ex": forceEx });
+    if (typeof this.autoSetCaracAjustements === "function") await this.autoSetCaracAjustements();
+    await this.render(false);
+  });
+
   html.find('.roll-stat').off('click.add2e').on('click.add2e', async ev => {
     ev.preventDefault();
     await add2eRollCharacteristicCard(this.actor, ev.currentTarget.dataset.stat);
