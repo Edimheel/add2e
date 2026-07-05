@@ -379,15 +379,23 @@ async function useRacialCapabilityFromElement(actor, element, sheet = null) {
     const enabled = capability.enabled !== true;
     const result = await engine.setRacialVision?.(actor, enabled, { reason: "racial-capability-sheet" });
     if (!result || result.reason === "missing-actor") return ui.notifications?.error?.("Impossible de modifier l’infravision raciale."), false;
-    await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: `<div class="add2e-card-test"><b>${escapeHtml(capability.label)}</b> : ${enabled ? "activée" : "désactivée"}.</div>` });
+
+    const color = enabled ? "#176a70" : "#6c5350";
+    const background = enabled ? "#eefafa" : "#f7f1ef";
+    const state = enabled ? "Activée" : "Désactivée";
+    await ChatMessage.create({
+      speaker: ChatMessage.getSpeaker({ actor }),
+      content: `<div class="add2e-card-racial" style="border:2px solid ${color};border-radius:12px;padding:10px;background:${background};color:#24180f;font-family:var(--font-primary);"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><i class="fas ${escapeHtml(capability.iconClass || "fa-eye")}" style="font-size:1.55em;color:${color};"></i><strong style="font-size:1.08em;color:${color};">${escapeHtml(capability.label)}</strong><span style="margin-left:auto;font-weight:900;">Capacité raciale</span></div><div>État : <strong style="color:${color};">${state}</strong></div>${capability.description ? `<div style="margin-top:6px;font-size:.9em;line-height:1.35;">${escapeHtml(capability.description)}</div>` : ""}</div>`
+    });
     sheet?.render?.(false);
     await globalThis.add2eRefreshActionHud?.();
     return true;
   }
 
-  const result = await engine.rollRacialCapability?.(actor, capability.id);
+  const roll = globalThis.add2eRollRacialCapability;
+  if (typeof roll !== "function") return ui.notifications?.error?.("Le moteur des capacités raciales n’est pas chargé."), false;
+  const result = await roll(actor, capability.id);
   if (!result?.ok) return ui.notifications?.error?.("Le jet de capacité raciale n’a pas pu être résolu."), false;
-  await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: `<div class="add2e-card-test"><b>${escapeHtml(capability.label)}</b> — Jet ${escapeHtml(result.formula)} : <b>${escapeHtml(result.total)}</b> / ${escapeHtml(result.successAt)} — <b>${result.success ? "Réussite" : "Échec"}</b></div>` });
   return true;
 }
 
