@@ -3,7 +3,7 @@
 // Fichier externalisé depuis add2e.mjs.
 // ============================================================
 
-const ADD2E_CARAC_ROLLER_VERSION = "2026-07-05-carac-roller-class-source-v4";
+const ADD2E_CARAC_ROLLER_VERSION = "2026-07-05-carac-roller-add2e-classes-only-v5";
 const ADD2E_CARAC_DIALOG_WIDTH = 600;
 
 const ADD2E_CARACS = ["force", "dexterite", "constitution", "intelligence", "sagesse", "charisme"];
@@ -75,40 +75,6 @@ function add2eClassColorIndex(name) {
   return Math.abs(hash) % ADD2E_CLASS_TAG_COLORS.length;
 }
 
-function add2eCaracIsClassDocument(document) {
-  const type = String(document?.type ?? document?.documentType ?? "").trim().toLowerCase();
-  return type === "classe" || type === "class";
-}
-
-function add2eCaracClassSourceKey(source) {
-  return add2eCaracSlug(`${source?.collection ?? ""} ${source?.metadata?.name ?? ""} ${source?.metadata?.label ?? ""}`);
-}
-
-function add2eCaracSystemItemPacks() {
-  const packs = Array.from(game?.packs?.values?.() ?? game?.packs ?? []);
-  return packs
-    .filter(pack => {
-      const metadata = pack?.metadata ?? {};
-      const collection = String(pack?.collection ?? "").trim().toLowerCase();
-      const packageName = String(metadata?.packageName ?? metadata?.package ?? "").trim().toLowerCase();
-      const documentName = String(pack?.documentName ?? metadata?.type ?? "").trim().toLowerCase();
-      return documentName === "item" && (packageName === "add2e" || collection.startsWith("add2e."));
-    })
-    .sort((left, right) => {
-      const rank = pack => {
-        const key = add2eCaracClassSourceKey(pack);
-        if (key.includes("export")) return 0;
-        if (key.includes("classe") || key.includes("class")) return 1;
-        return 2;
-      };
-      return rank(left) - rank(right) || String(left?.collection ?? "").localeCompare(String(right?.collection ?? ""), "fr");
-    });
-}
-
-function add2eCaracClassIdentity(document) {
-  return add2eCaracSlug(document?.system?.slug ?? document?.system?.label ?? document?.name ?? document?.id ?? "");
-}
-
 class Add2eCaracRoller {
   constructor(sheet) {
     this.sheet = sheet;
@@ -127,7 +93,7 @@ class Add2eCaracRoller {
     this._sheetTargetHandler = this._onSheetTargetClick.bind(this);
     this._oldValues = {};
 
-    for (const c of ADD2E_CARACS) this._oldValues[c] = add2eCaracBaseValue(this.actor, c);
+    for (const carac of ADD2E_CARACS) this._oldValues[carac] = add2eCaracBaseValue(this.actor, carac);
     this.render();
   }
 
@@ -187,10 +153,10 @@ class Add2eCaracRoller {
   }
 
   _valueCardsHtml() {
-    return this.values.map((v, i) => `
-      <button type="button" class="add2e-carac-value" data-idx="${i}" title="Cliquer pour sélectionner. Si la valeur est affectée, cliquer pour la libérer."
+    return this.values.map((value, index) => `
+      <button type="button" class="add2e-carac-value" data-idx="${index}" title="Cliquer pour sélectionner. Si la valeur est affectée, cliquer pour la libérer."
         style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-width:46px;height:48px;padding:4px 7px;border:1px solid #7a4d21;border-radius:8px;background:linear-gradient(180deg,#fff1c8 0%,#d7a95e 100%);box-shadow:0 2px 5px rgba(50,25,8,.38), inset 0 1px 0 rgba(255,255,255,.7);color:#2b1b0d;cursor:pointer;font-weight:800;line-height:1;">
-        <span class="add2e-carac-score" style="font-size:1.12rem;line-height:1;">${v}</span>
+        <span class="add2e-carac-score" style="font-size:1.12rem;line-height:1;">${value}</span>
         <span class="assigned-label" style="font-size:.62rem;min-height:.72rem;color:#5b3514;font-weight:900;letter-spacing:.04em;">—</span>
       </button>`).join("");
   }
@@ -204,20 +170,17 @@ class Add2eCaracRoller {
         .add2e-carac-popup .add2e-carac-value.used .assigned-label { color: #ffe19b !important; }
         .add2e-carac-popup .add2e-class-tags { display:grid !important; grid-template-columns:repeat(5,minmax(0,1fr)) !important; gap:7px !important; align-items:stretch !important; width:100% !important; }
         .add2e-carac-popup .add2e-class-suggestion:hover { filter: brightness(1.13); transform: translateY(-1px); }
-        .add2e-carac-popup .carac-ok { color: #d8ffd4; font-weight: 900; }
-        .add2e-carac-popup .carac-locked { color: #ffe19b; font-weight: 900; }
-        .add2e-carac-popup .class-no-requis { color: rgba(255,255,255,.82); font-style: italic; font-weight: 700; }
-        .add2e-carac-popup .add2e-carac-action { min-width:110px; padding:6px 12px; border-radius:7px; font-weight:900; cursor:pointer; box-shadow:0 2px 5px rgba(0,0,0,.25); }
-        .add2e-carac-popup .add2e-carac-action.reroll { border:1px solid #775122; background:linear-gradient(180deg,#f6dfad,#d19b4c); color:#2d1c0b; }
-        .add2e-carac-popup .add2e-carac-action.validate { border:1px solid #6e1414; background:linear-gradient(180deg,#a7372d,#6e1714); color:#fff1d5; }
-        .add2e-carac-popup .add2e-carac-action.cancel { border:1px solid #6a5640; background:linear-gradient(180deg,#7b6c5c,#4f463b); color:#fff1d5; }
+        .add2e-carac-popup .carac-ok { color: #d8ffd4; font-weight:900; }
+        .add2e-carac-popup .class-no-requis { color:rgba(255,255,255,.82);font-style:italic;font-weight:700; }
+        .add2e-carac-popup .add2e-carac-action { min-width:110px;padding:6px 12px;border-radius:7px;font-weight:900;cursor:pointer;box-shadow:0 2px 5px rgba(0,0,0,.25); }
+        .add2e-carac-popup .add2e-carac-action.reroll { border:1px solid #775122;background:linear-gradient(180deg,#f6dfad,#d19b4c);color:#2d1c0b; }
+        .add2e-carac-popup .add2e-carac-action.validate { border:1px solid #6e1414;background:linear-gradient(180deg,#a7372d,#6e1714);color:#fff1d5; }
+        .add2e-carac-popup .add2e-carac-action.cancel { border:1px solid #6a5640;background:linear-gradient(180deg,#7b6c5c,#4f463b);color:#fff1d5; }
       </style>
       <div class="add2e-carac-popup" data-add2e-carac-roller="${this._uid}" style="box-sizing:border-box;width:100%;min-width:100%;max-width:100%;padding:10px;color:#2a1b0d;background:linear-gradient(180deg,#efe0bc 0%,#d8bd82 100%);border:2px solid #5a3418;border-radius:8px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35);">
         <div style="border:1px solid #8a6330;border-radius:8px;background:rgba(255,247,218,.62);padding:8px 10px;margin-bottom:9px;box-shadow:inset 0 0 10px rgba(90,52,24,.15);">
           <div style="font-size:.96rem;font-weight:900;color:#5b1e16;margin-bottom:3px;">Affectation des caractéristiques</div>
-          <div style="font-size:.78rem;line-height:1.25;color:#3b2a19;">
-            Cliquez sur une valeur puis une caractéristique. Cliquez une valeur déjà affectée pour la libérer. Cliquez une classe pour ses prérequis.
-          </div>
+          <div style="font-size:.78rem;line-height:1.25;color:#3b2a19;">Cliquez sur une valeur puis une caractéristique. Cliquez une valeur déjà affectée pour la libérer. Cliquez une classe pour ses prérequis.</div>
         </div>
         <div class="add2e-carac-values" style="display:flex;flex-wrap:wrap;gap:7px;justify-content:center;align-items:center;margin:0 0 9px 0;">${this._valueCardsHtml()}</div>
         <div id="classes-suggestions" style="margin:0 0 9px 0;padding:8px 10px;border:1px solid #8a6330;border-radius:8px;background:rgba(43,28,13,.10);max-height:250px;overflow:auto;"></div>
@@ -275,40 +238,40 @@ class Add2eCaracRoller {
   }
 
   _bindDialogEvents() {
-    this._dlgRoot.querySelectorAll(".add2e-carac-value").forEach(el => {
-      el.addEventListener("click", ev => {
-        ev.preventDefault();
+    this._dlgRoot.querySelectorAll(".add2e-carac-value").forEach(element => {
+      element.addEventListener("click", event => {
+        event.preventDefault();
         this._keepDialogOnTop();
-        const idx = Number(el.dataset.idx);
-        if (this.used[idx]) return this.unassignCarac(this.used[idx]);
-        this.selectedIdx = idx;
+        const index = Number(element.dataset.idx);
+        if (this.used[index]) return this.unassignCarac(this.used[index]);
+        this.selectedIdx = index;
         this._updateAssignLabels();
       });
     });
 
-    this._dlgRoot.querySelector(".apply-caracs-btn")?.addEventListener("click", ev => {
-      ev.preventDefault();
+    this._dlgRoot.querySelector(".apply-caracs-btn")?.addEventListener("click", event => {
+      event.preventDefault();
       this._keepDialogOnTop();
       this.apply();
     });
-    this._dlgRoot.querySelector(".reroll-caracs-btn")?.addEventListener("click", ev => {
-      ev.preventDefault();
+    this._dlgRoot.querySelector(".reroll-caracs-btn")?.addEventListener("click", event => {
+      event.preventDefault();
       this.reroll();
     });
-    this._dlgRoot.querySelector(".cancel-caracs-btn")?.addEventListener("click", ev => {
-      ev.preventDefault();
+    this._dlgRoot.querySelector(".cancel-caracs-btn")?.addEventListener("click", event => {
+      event.preventDefault();
       this.cancel();
     });
   }
 
   _bindClassSuggestionEvents() {
     if (!this._dlgRoot) return;
-    this._dlgRoot.querySelectorAll(".add2e-class-suggestion[data-plan-key]").forEach(btn => {
-      btn.addEventListener("click", ev => {
-        ev.preventDefault();
-        ev.stopPropagation();
+    this._dlgRoot.querySelectorAll(".add2e-class-suggestion[data-plan-key]").forEach(button => {
+      button.addEventListener("click", event => {
+        event.preventDefault();
+        event.stopPropagation();
         this._keepDialogOnTop();
-        const plan = this._suggestionPlans.get(btn.dataset.planKey);
+        const plan = this._suggestionPlans.get(button.dataset.planKey);
         if (plan) this.applyClassSuggestion(plan);
       });
     });
@@ -332,46 +295,45 @@ class Add2eCaracRoller {
   }
 
   _bindSheetTargets() {
-    for (const el of this._sheetTargets()) {
-      el.onclick = null;
-      el.classList.add("clickable");
-      el.dataset.add2eCaracRoller = this._uid;
-      el.removeEventListener("click", this._sheetTargetHandler);
-      el.addEventListener("click", this._sheetTargetHandler);
+    for (const element of this._sheetTargets()) {
+      element.onclick = null;
+      element.classList.add("clickable");
+      element.dataset.add2eCaracRoller = this._uid;
+      element.removeEventListener("click", this._sheetTargetHandler);
+      element.addEventListener("click", this._sheetTargetHandler);
     }
     this._updatePendingSheetBorders();
   }
 
   _unbindSheetTargets() {
-    for (const el of this._sheetTargets()) {
-      if (el.dataset.add2eCaracRoller === this._uid) {
-        el.removeEventListener("click", this._sheetTargetHandler);
-        el.classList.remove("clickable", "assignable", "carac-assigned", "add2e-carac-pending");
-        el.style.outline = "";
-        el.style.outlineOffset = "";
-        el.style.boxShadow = "";
-        delete el.dataset.add2eCaracRoller;
-      }
+    for (const element of this._sheetTargets()) {
+      if (element.dataset.add2eCaracRoller !== this._uid) continue;
+      element.removeEventListener("click", this._sheetTargetHandler);
+      element.classList.remove("clickable", "assignable", "carac-assigned", "add2e-carac-pending");
+      element.style.outline = "";
+      element.style.outlineOffset = "";
+      element.style.boxShadow = "";
+      delete element.dataset.add2eCaracRoller;
     }
   }
 
   _updatePendingSheetBorders() {
-    for (const el of this._sheetTargets()) {
-      const carac = el.dataset?.carac;
+    for (const element of this._sheetTargets()) {
+      const carac = element.dataset?.carac;
       if (!ADD2E_CARACS.includes(carac)) continue;
       const pending = this.assigned[carac] === undefined;
-      el.classList.toggle("add2e-carac-pending", pending);
-      el.style.outline = pending ? "2px solid #c01818" : "";
-      el.style.outlineOffset = pending ? "2px" : "";
-      el.style.boxShadow = pending ? "0 0 0 2px rgba(192,24,24,.22), 0 0 10px rgba(192,24,24,.45)" : "";
+      element.classList.toggle("add2e-carac-pending", pending);
+      element.style.outline = pending ? "2px solid #c01818" : "";
+      element.style.outlineOffset = pending ? "2px" : "";
+      element.style.boxShadow = pending ? "0 0 0 2px rgba(192,24,24,.22), 0 0 10px rgba(192,24,24,.45)" : "";
     }
   }
 
-  _onSheetTargetClick(ev) {
-    ev.preventDefault();
-    ev.stopPropagation();
+  _onSheetTargetClick(event) {
+    event.preventDefault();
+    event.stopPropagation();
     this._keepDialogOnTop();
-    const carac = ev.currentTarget?.dataset?.carac;
+    const carac = event.currentTarget?.dataset?.carac;
     if (!ADD2E_CARACS.includes(carac)) return;
     if (this.assigned[carac] !== undefined) this.unassignCarac(carac);
     else this.assignToCarac(carac);
@@ -379,42 +341,39 @@ class Add2eCaracRoller {
 
   assignToCarac(caracName) {
     if (this.selectedIdx === null) return;
-    const idx = this.selectedIdx;
-    const previousCarac = Object.keys(this.assigned).find(c => Number(this.assigned[c]) === idx);
+    const index = this.selectedIdx;
+    const previousCarac = Object.keys(this.assigned).find(carac => Number(this.assigned[carac]) === index);
     if (previousCarac) this.unassignCarac(previousCarac);
     if (this.assigned[caracName] !== undefined) delete this.used[this.assigned[caracName]];
-    this.assigned[caracName] = idx;
-    this.used[idx] = caracName;
+    this.assigned[caracName] = index;
+    this.used[index] = caracName;
     this.selectedIdx = null;
     this._refreshUi();
   }
 
   applyClassSuggestion(plan) {
     if (!plan?.assignments) return;
-
-    for (const [carac, idx] of Object.entries(plan.assignments)) {
-      const numericIdx = Number(idx);
-      if (!ADD2E_CARACS.includes(carac) || !Number.isFinite(numericIdx)) continue;
-      const previousCaracUsingValue = Object.keys(this.assigned).find(c => c !== carac && Number(this.assigned[c]) === numericIdx);
+    for (const [carac, rawIndex] of Object.entries(plan.assignments)) {
+      const index = Number(rawIndex);
+      if (!ADD2E_CARACS.includes(carac) || !Number.isFinite(index)) continue;
+      const previousCaracUsingValue = Object.keys(this.assigned).find(key => key !== carac && Number(this.assigned[key]) === index);
       if (previousCaracUsingValue) delete this.assigned[previousCaracUsingValue];
-      if (this.assigned[carac] !== undefined && Number(this.assigned[carac]) !== numericIdx) delete this.used[this.assigned[carac]];
-      this.assigned[carac] = numericIdx;
-      this.used[numericIdx] = carac;
+      if (this.assigned[carac] !== undefined && Number(this.assigned[carac]) !== index) delete this.used[this.assigned[carac]];
+      this.assigned[carac] = index;
+      this.used[index] = carac;
     }
-
-    for (const [idx, carac] of Object.entries({ ...this.used })) {
-      if (this.assigned[carac] === undefined || Number(this.assigned[carac]) !== Number(idx)) delete this.used[idx];
+    for (const [index, carac] of Object.entries({ ...this.used })) {
+      if (this.assigned[carac] === undefined || Number(this.assigned[carac]) !== Number(index)) delete this.used[index];
     }
-
     this.selectedIdx = null;
     this._refreshUi();
   }
 
   unassignCarac(caracName) {
     if (this.assigned[caracName] === undefined) return;
-    const idx = this.assigned[caracName];
+    const index = this.assigned[caracName];
     delete this.assigned[caracName];
-    delete this.used[idx];
+    delete this.used[index];
     this.selectedIdx = null;
     this._refreshUi();
   }
@@ -430,30 +389,30 @@ class Add2eCaracRoller {
 
   _updateAssignLabels() {
     if (!this._dlgRoot) return;
-    this._dlgRoot.querySelectorAll(".add2e-carac-value").forEach(el => {
-      const idx = Number(el.dataset.idx);
-      const carac = Object.keys(this.assigned).find(c => Number(this.assigned[c]) === idx) ?? null;
-      el.classList.toggle("used", Boolean(carac));
-      el.classList.toggle("selected", this.selectedIdx === idx);
-      const label = el.querySelector(".assigned-label");
+    this._dlgRoot.querySelectorAll(".add2e-carac-value").forEach(element => {
+      const index = Number(element.dataset.idx);
+      const carac = Object.keys(this.assigned).find(key => Number(this.assigned[key]) === index) ?? null;
+      element.classList.toggle("used", Boolean(carac));
+      element.classList.toggle("selected", this.selectedIdx === index);
+      const label = element.querySelector(".assigned-label");
       if (label) label.textContent = carac ? ADD2E_CARAC_SHORT[carac] : "—";
     });
-    this._sheetTargets().forEach(el => el.classList.toggle("assignable", this.selectedIdx !== null));
+    this._sheetTargets().forEach(element => element.classList.toggle("assignable", this.selectedIdx !== null));
     this._updatePendingSheetBorders();
   }
 
   _updateCaracDisplay() {
-    for (const c of ADD2E_CARACS) {
-      const el = this._sheetTargets().find(target => target.dataset.carac === c);
-      if (!el) continue;
-      const bonusRacial = add2eCaracRaceBonus(this.actor, c);
-      const base = this.assigned[c] !== undefined ? this.values[this.assigned[c]] : this._oldValues[c];
+    for (const carac of ADD2E_CARACS) {
+      const element = this._sheetTargets().find(target => target.dataset.carac === carac);
+      if (!element) continue;
+      const bonusRacial = add2eCaracRaceBonus(this.actor, carac);
+      const base = this.assigned[carac] !== undefined ? this.values[this.assigned[carac]] : this._oldValues[carac];
       const total = base + bonusRacial;
-      el.classList.toggle("carac-assigned", this.assigned[c] !== undefined);
-      el.innerHTML = `<span style="font-size:1.22em;font-weight:bold;">${total}</span>
+      element.classList.toggle("carac-assigned", this.assigned[carac] !== undefined);
+      element.innerHTML = `<span style="font-size:1.22em;font-weight:bold;">${total}</span>
         <div style="font-size:0.40em;line-height:1.2em;color:#777;margin-top:1px;">
           <span style="color:#555;">base : </span>${base}<br>
-          <span style="color:#555;">bonus : </span><span style="color:${bonusRacial > 0 ? '#1abc9c' : bonusRacial < 0 ? '#e74c3c' : '#777'};">${bonusRacial > 0 ? '+' : ''}${bonusRacial}</span>
+          <span style="color:#555;">bonus : </span><span style="color:${bonusRacial > 0 ? "#1abc9c" : bonusRacial < 0 ? "#e74c3c" : "#777"};">${bonusRacial > 0 ? "+" : ""}${bonusRacial}</span>
         </div>`;
     }
     this._updatePendingSheetBorders();
@@ -462,21 +421,21 @@ class Add2eCaracRoller {
   _classSuggestionPlan(cls) {
     const requis = Object.entries(cls.system?.caracs_min || {})
       .map(([carac, minRaw]) => ({ carac, min: Number(minRaw) || 0 }))
-      .filter(r => ADD2E_CARACS.includes(r.carac) && r.min > 0)
-      .sort((a, b) => b.min - a.min);
+      .filter(requirement => ADD2E_CARACS.includes(requirement.carac) && requirement.min > 0)
+      .sort((left, right) => right.min - left.min);
 
-    const pool = this.values.map((value, idx) => ({ value, idx })).sort((a, b) => b.value - a.value);
+    const pool = this.values.map((value, index) => ({ value, index })).sort((left, right) => right.value - left.value);
     const placements = [];
     const assignments = {};
 
-    for (const req of requis) {
-      const bonus = add2eCaracRaceBonus(this.actor, req.carac);
-      const idx = pool.findIndex(entry => entry.value + bonus >= req.min);
-      if (idx === -1) return null;
-      const picked = pool[idx];
-      assignments[req.carac] = picked.idx;
-      placements.push(`<span style="display:inline-flex;gap:1px;align-items:center;"><b>${ADD2E_CARAC_SHORT[req.carac] || add2eCaracEscapeHtml(req.carac)}</b><span class="carac-ok">${picked.value}</span></span>`);
-      pool.splice(idx, 1);
+    for (const requirement of requis) {
+      const bonus = add2eCaracRaceBonus(this.actor, requirement.carac);
+      const poolIndex = pool.findIndex(entry => entry.value + bonus >= requirement.min);
+      if (poolIndex === -1) return null;
+      const picked = pool[poolIndex];
+      assignments[requirement.carac] = picked.index;
+      placements.push(`<span style="display:inline-flex;gap:1px;align-items:center;"><b>${ADD2E_CARAC_SHORT[requirement.carac] || add2eCaracEscapeHtml(requirement.carac)}</b><span class="carac-ok">${picked.value}</span></span>`);
+      pool.splice(poolIndex, 1);
     }
 
     return { className: cls.name, placements, assignments };
@@ -510,47 +469,25 @@ class Add2eCaracRoller {
   }
 
   async _loadClassSuggestions() {
-    const classes = [];
-    const seen = new Set();
-    const push = document => {
-      if (!add2eCaracIsClassDocument(document)) return;
-      const key = add2eCaracClassIdentity(document);
-      if (!key || seen.has(key)) return;
-      seen.add(key);
-      classes.push(document);
-    };
+    const pack = game?.packs?.get?.("add2e.classes");
+    if (!pack) return [];
 
-    for (const pack of add2eCaracSystemItemPacks()) {
-      let index = null;
-      try {
-        index = await pack.getIndex({ fields: ["name", "type", "system.slug", "system.label", "system.caracs_min"] });
-      } catch (_error) {
-        continue;
-      }
-
-      const entries = Array.from(index ?? []).filter(add2eCaracIsClassDocument);
-      for (const entry of entries) {
-        const id = String(entry?._id ?? entry?.id ?? "").trim();
-        if (!id) continue;
-        try {
-          push(await pack.getDocument(id));
-        } catch (_error) {}
-      }
+    try {
+      const documents = await pack.getDocuments();
+      return Array.from(documents ?? [])
+        .filter(document => String(document?.type ?? "").toLowerCase() === "classe")
+        .sort((left, right) => String(left?.name ?? "").localeCompare(String(right?.name ?? ""), "fr"));
+    } catch (error) {
+      console.error("[ADD2E][CARAC_ROLLER][CLASSES_COMPENDIUM]", error);
+      return [];
     }
-
-    if (!classes.length) {
-      for (const item of game?.items ?? []) push(item);
-    }
-
-    return classes.sort((left, right) => String(left?.name ?? "").localeCompare(String(right?.name ?? ""), "fr"));
   }
 
   async classesSynthese() {
     const classes = await this._loadClassSuggestions();
-    if (!classes.length) return "<em>Aucune classe ADD2E trouvée dans les sources actives.</em>";
+    if (!classes.length) return "<em>Le compendium ADD2E des classes est introuvable ou vide.</em>";
 
     this._suggestionPlans.clear();
-
     let html = '<div style="margin:0 0 6px 0;font-size:.82rem;color:#5b1e16;font-weight:900;">Classes possibles :</div>';
     html += '<div class="add2e-class-tags" style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;align-items:stretch;width:100%;">';
 
@@ -560,10 +497,10 @@ class Add2eCaracRoller {
       if (!plan) continue;
       const key = `plan-${count}`;
       this._suggestionPlans.set(key, plan);
-      count++;
+      count += 1;
       const detail = plan.placements.length
         ? `<span class="class-requis" style="display:flex!important;flex-wrap:wrap!important;justify-content:center!important;gap:3px!important;width:100%!important;font-size:.68rem!important;line-height:1.05!important;margin-top:2px!important;text-align:center!important;">${plan.placements.join(" ")}</span>`
-        : `<span class="class-requis class-no-requis" style="display:block!important;width:100%!important;font-size:.56rem!important;line-height:1.05!important;margin-top:2px!important;text-align:center!important;">Aucun prérequis</span>`;
+        : '<span class="class-requis class-no-requis" style="display:block!important;width:100%!important;font-size:.56rem!important;line-height:1.05!important;margin-top:2px!important;text-align:center!important;">Aucun prérequis</span>';
       html += `<button type="button" class="add2e-class-suggestion" data-plan-key="${key}" title="Auto-affecter les prérequis" style="${this._classTagStyle(cls.name)}"><b class="class-name" style="display:block!important;width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;text-align:center!important;font-weight:900!important;color:inherit!important;">${add2eCaracEscapeHtml(cls.name)}</b>${detail}</button>`;
     }
 
@@ -575,20 +512,20 @@ class Add2eCaracRoller {
     try {
       this._setClassesHtml(await this.classesSynthese());
     } catch (_error) {
-      this._setClassesHtml("<em>Impossible de charger les classes pour ce tirage.</em>");
+      this._setClassesHtml("<em>Impossible de charger le compendium ADD2E des classes.</em>");
     }
   }
 
   _setClassesHtml(html) {
-    const el = this._dlgRoot?.querySelector("#classes-suggestions");
-    if (el) el.innerHTML = html;
+    const element = this._dlgRoot?.querySelector("#classes-suggestions");
+    if (element) element.innerHTML = html;
     this._bindClassSuggestionEvents();
     this._keepDialogOnTop();
   }
 
   async _confirmOverflows(overflows) {
     const DialogV2 = add2eCaracDialogV2();
-    const caracsTxt = overflows.map(o => `<li><b>${ADD2E_CARAC_SHORT[o.carac]}</b> : base ${o.base} + bonus racial ${o.bonusRacial} = <span style="color:#e74c3c;font-weight:bold;">${o.total}</span> <b>→ 18</b></li>`).join("");
+    const caracsTxt = overflows.map(entry => `<li><b>${ADD2E_CARAC_SHORT[entry.carac]}</b> : base ${entry.base} + bonus racial ${entry.bonusRacial} = <span style="color:#e74c3c;font-weight:bold;">${entry.total}</span> <b>→ 18</b></li>`).join("");
     return DialogV2.confirm({
       window: { title: "Caractéristique supérieure à 18" },
       content: `<p>Une ou plusieurs caractéristiques dépassent 18 après bonus racial.</p><ul>${caracsTxt}</ul><p>Elles seront ramenées à 18. Confirmez-vous l’affectation ?</p>`,
@@ -599,7 +536,7 @@ class Add2eCaracRoller {
   }
 
   async apply() {
-    if (!ADD2E_CARACS.every(c => this.assigned[c] !== undefined)) {
+    if (!ADD2E_CARACS.every(carac => this.assigned[carac] !== undefined)) {
       ui.notifications.warn("Toutes les caractéristiques doivent être affectées.");
       return;
     }
@@ -620,10 +557,10 @@ class Add2eCaracRoller {
     if (overflows.length) {
       const confirmed = await this._confirmOverflows(overflows);
       if (!confirmed) return;
-      for (const o of overflows) {
-        const cappedBase = Math.max(3, 18 - o.bonusRacial);
-        updates[`system.${o.carac}_base`] = cappedBase;
-        baseCaracs[o.carac] = cappedBase;
+      for (const overflow of overflows) {
+        const cappedBase = Math.max(3, 18 - overflow.bonusRacial);
+        updates[`system.${overflow.carac}_base`] = cappedBase;
+        baseCaracs[overflow.carac] = cappedBase;
       }
     }
 
@@ -651,7 +588,7 @@ class Add2eCaracRoller {
     this._updateCaracDisplay();
     this._updateAssignLabels();
     const updates = {};
-    for (const c of ADD2E_CARACS) updates[`system.${c}_base`] = this._oldValues[c];
+    for (const carac of ADD2E_CARACS) updates[`system.${carac}_base`] = this._oldValues[carac];
     await this.actor.update(updates);
     if (typeof this.sheet?.autoSetCaracAjustements === "function") await this.sheet.autoSetCaracAjustements();
   }
