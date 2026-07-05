@@ -3,7 +3,7 @@
 // Fichier externalisé depuis add2e.mjs.
 // ============================================================
 
-const ADD2E_CARAC_ROLLER_VERSION = "2026-05-27-carac-roller-dialog-v2-prerequis-layout-v3";
+const ADD2E_CARAC_ROLLER_VERSION = "2026-07-05-carac-roller-class-source-v4";
 const ADD2E_CARAC_DIALOG_WIDTH = 600;
 
 const ADD2E_CARACS = ["force", "dexterite", "constitution", "intelligence", "sagesse", "charisme"];
@@ -75,6 +75,40 @@ function add2eClassColorIndex(name) {
   return Math.abs(hash) % ADD2E_CLASS_TAG_COLORS.length;
 }
 
+function add2eCaracIsClassDocument(document) {
+  const type = String(document?.type ?? document?.documentType ?? "").trim().toLowerCase();
+  return type === "classe" || type === "class";
+}
+
+function add2eCaracClassSourceKey(source) {
+  return add2eCaracSlug(`${source?.collection ?? ""} ${source?.metadata?.name ?? ""} ${source?.metadata?.label ?? ""}`);
+}
+
+function add2eCaracSystemItemPacks() {
+  const packs = Array.from(game?.packs?.values?.() ?? game?.packs ?? []);
+  return packs
+    .filter(pack => {
+      const metadata = pack?.metadata ?? {};
+      const collection = String(pack?.collection ?? "").trim().toLowerCase();
+      const packageName = String(metadata?.packageName ?? metadata?.package ?? "").trim().toLowerCase();
+      const documentName = String(pack?.documentName ?? metadata?.type ?? "").trim().toLowerCase();
+      return documentName === "item" && (packageName === "add2e" || collection.startsWith("add2e."));
+    })
+    .sort((left, right) => {
+      const rank = pack => {
+        const key = add2eCaracClassSourceKey(pack);
+        if (key.includes("export")) return 0;
+        if (key.includes("classe") || key.includes("class")) return 1;
+        return 2;
+      };
+      return rank(left) - rank(right) || String(left?.collection ?? "").localeCompare(String(right?.collection ?? ""), "fr");
+    });
+}
+
+function add2eCaracClassIdentity(document) {
+  return add2eCaracSlug(document?.system?.slug ?? document?.system?.label ?? document?.name ?? document?.id ?? "");
+}
+
 class Add2eCaracRoller {
   constructor(sheet) {
     this.sheet = sheet;
@@ -142,7 +176,7 @@ class Add2eCaracRoller {
       this._updateAssignLabels();
       this._keepDialogOnTop();
       this._startKeepOnTop();
-      this.classesSynthese().then(html => this._setClassesHtml(html));
+      this._refreshClassSuggestions();
     }, 0);
 
     console.log("[ADD2E][CARAC_ROLLER][OPEN]", {
@@ -289,7 +323,7 @@ class Add2eCaracRoller {
     this._updateAssignLabels();
     this._keepDialogOnTop();
     this._setClassesHtml("<em>Actualisation...</em>");
-    this.classesSynthese().then(html => this._setClassesHtml(html));
+    this._refreshClassSuggestions();
   }
 
   _sheetTargets() {
@@ -391,7 +425,7 @@ class Add2eCaracRoller {
     this._updatePendingSheetBorders();
     this._keepDialogOnTop();
     this._setClassesHtml("<em>Actualisation...</em>");
-    this.classesSynthese().then(html => this._setClassesHtml(html));
+    this._refreshClassSuggestions();
   }
 
   _updateAssignLabels() {
@@ -475,14 +509,45 @@ class Add2eCaracRoller {
     ].join(";");
   }
 
-  async classesSynthese() {
-    let classes = game.items?.filter?.(i => i.type === "classe") ?? [];
-    if (!classes.length) {
-      const pack = game.packs.get("add2e.classes");
-      if (!pack) return "<em>Compendium des classes introuvable.</em>";
-      classes = (await pack.getDocuments()).filter(i => i.type === "classe");
+  async _loadClassSuggestions() {
+    const classes = [];
+    const seen = new Set();
+    const push = document => {
+      if (!add2eCaracIsClassDocument(document)) return;
+      const key = add2eCaracClassIdentity(document);
+      if (!key || seen.has(key)) return;
+      seen.add(key);
+      classes.push(document);
+    };
+
+    for (const pack of add2eCaracSystemItemPacks()) {
+      let index = null;
+      try {
+        index = await pack.getIndex({ fields: ["name", "type", "system.slug", "system.label", "system.caracs_min"] });
+      } catch (_error) {
+        continue;
+      }
+
+      const entries = Array.from(index ?? []).filter(add2eCaracIsClassDocument);
+      for (const entry of entries) {
+        const id = String(entry?._id ?? entry?.id ?? "").trim();
+        if (!id) continue;
+        try {
+          push(await pack.getDocument(id));
+        } catch (_error) {}
+      }
     }
-    if (!classes.length) return "<em>Aucune classe trouvée</em>";
+
+    if (!classes.length) {
+      for (const item of game?.items ?? []) push(item);
+    }
+
+    return classes.sort((left, right) => String(left?.name ?? "").localeCompare(String(right?.name ?? ""), "fr"));
+  }
+
+  async classesSynthese() {
+    const classes = await this._loadClassSuggestions();
+    if (!classes.length) return "<em>Aucune classe ADD2E trouvée dans les sources actives.</em>";
 
     this._suggestionPlans.clear();
 
@@ -497,13 +562,21 @@ class Add2eCaracRoller {
       this._suggestionPlans.set(key, plan);
       count++;
       const detail = plan.placements.length
-        ? `<span class="class-requis" style="display:flex!important;flex-wrap:wrap!important;justify-content:center!important;gap:3px!important;width:100%!important;font-size:.68rem!important;line-height:1.05!important;margin-top:2px!important;text-align:center!important;">${plan.placements.join(' ')}</span>`
+        ? `<span class="class-requis" style="display:flex!important;flex-wrap:wrap!important;justify-content:center!important;gap:3px!important;width:100%!important;font-size:.68rem!important;line-height:1.05!important;margin-top:2px!important;text-align:center!important;">${plan.placements.join(" ")}</span>`
         : `<span class="class-requis class-no-requis" style="display:block!important;width:100%!important;font-size:.56rem!important;line-height:1.05!important;margin-top:2px!important;text-align:center!important;">Aucun prérequis</span>`;
       html += `<button type="button" class="add2e-class-suggestion" data-plan-key="${key}" title="Auto-affecter les prérequis" style="${this._classTagStyle(cls.name)}"><b class="class-name" style="display:block!important;width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;text-align:center!important;font-weight:900!important;color:inherit!important;">${add2eCaracEscapeHtml(cls.name)}</b>${detail}</button>`;
     }
 
-    html += count ? "</div>" : '<em>Aucune classe ne correspond à ce tirage.</em></div>';
+    html += count ? "</div>" : "<em>Aucune classe ne correspond à ce tirage.</em></div>";
     return html;
+  }
+
+  async _refreshClassSuggestions() {
+    try {
+      this._setClassesHtml(await this.classesSynthese());
+    } catch (_error) {
+      this._setClassesHtml("<em>Impossible de charger les classes pour ce tirage.</em>");
+    }
   }
 
   _setClassesHtml(html) {
