@@ -171,8 +171,13 @@ export function add2ePrepareActorSheetBaseData({ sheet, data }) {
     sys[c] = base + race;
   }
 
-  const classeNorm = String(sys.classe || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f’']/g, "");
-  data.canExceptionalStrength = (Number(sys.force) === 18) && (classeNorm.includes("guerrier") || classeNorm.includes("paladin") || classeNorm.includes("rodeur") || classeNorm.includes("ranger"));
+  const exceptionalStrengthClasses = Array.from(actor?.items ?? [])
+    .filter(item => String(item?.type ?? "").toLowerCase() === "classe")
+    .map(item => [item?.name, item?.system?.slug, item?.system?.label, item?.system?.nom, item?.system?.name]
+      .map(value => String(value ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f’']/g, ""))
+      .join(" "));
+  data.canExceptionalStrength = Number(sys.force) === 18
+    && exceptionalStrengthClasses.some(value => value.includes("guerrier") || value.includes("paladin") || value.includes("ranger"));
   if (data.canExceptionalStrength && (sys.force_ex === undefined || sys.force_ex === null)) sys.force_ex = 0;
 
   let niveau = Number(sys.niveau);
