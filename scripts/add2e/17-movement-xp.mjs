@@ -2,7 +2,7 @@
 // Les Items classe sont la seule source de progression multiclasses.
 // Compatible Foundry V13/V14/V15.
 
-const VERSION = "2026-07-01-token-turn-movement-v5";
+const VERSION = "2026-07-05-movement-derived-force-weight-v6";
 const TAG = "[ADD2E][MOVE_XP]";
 const INTERNAL = "add2eMoveXpInternal";
 const ITEM_RECALC_DELAY_MS = 140;
@@ -210,26 +210,7 @@ function baseMove(actor) {
 }
 
 function strengthWeightAdjustment(actor) {
-  const direct = num(actor?.system?.force_poids, NaN);
-  if (Number.isFinite(direct)) return direct;
-  const force = num(actor?.system?.force, 10);
-  const exceptional = num(actor?.system?.force_ex ?? actor?.system?.force_exceptionnelle, NaN);
-  if (force < 4) return -350;
-  if (force <= 5) return -250;
-  if (force <= 7) return -150;
-  if (force <= 11) return 0;
-  if (force <= 13) return 100;
-  if (force <= 15) return 200;
-  if (force === 16) return 350;
-  if (force === 17) return 500;
-  if (force === 18) {
-    if (!Number.isFinite(exceptional)) return 750;
-    if (exceptional <= 50) return 1000;
-    if (exceptional <= 75) return 1250;
-    if (exceptional <= 90) return 1500;
-    if (exceptional <= 99) return 2000;
-  }
-  return 3000;
+  return num(actor?.system?.force_poids, 0);
 }
 
 function itemWeight(item) {
@@ -749,7 +730,7 @@ function installMovementDragPreview() {
       return result?.then ? result.then(complete) : complete(result);
     };
     wrappedDestination.__add2eMovementDestinationPreview = VERSION;
-    wrappedDestination.__add2eMovementDestinationPreviewOriginal = destinationMethod;
+    wrappedDestination.__add2eMovementPreviewOriginal = destinationMethod;
     proto._updateDragDestination = wrappedDestination;
   }
 
@@ -906,10 +887,7 @@ Hooks.on("preUpdateActor", (actor, changes, options) => {
   const levelChanged = changedPath(actor, changes, "system.niveau");
   const xpChanged = changedPath(actor, changes, "system.xp");
   const movementChanged = [
-    "system.force",
     "system.force_poids",
-    "system.force_ex",
-    "system.force_exceptionnelle",
     "system.mouvement.base",
     "system.vitesse_deplacement"
   ].some(path => changedPath(actor, changes, path));
