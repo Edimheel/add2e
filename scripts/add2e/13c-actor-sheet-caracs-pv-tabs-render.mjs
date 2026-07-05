@@ -4,7 +4,7 @@
 
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant 13c.");
 
-const ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION = "2026-06-25-force-ex-class-items-v3";
+const ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION = "2026-07-05-force-ex-centralized-v4";
 const ADD2E_HP_MODIFIERS_VERSION = "2026-06-28-generic-hp-modifiers-v1";
 globalThis.ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION = ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION;
 globalThis.ADD2E_HP_MODIFIERS_VERSION = ADD2E_HP_MODIFIERS_VERSION;
@@ -25,7 +25,7 @@ function add2eV2Jq(source) {
 function add2eSyncForceExSelects(root, actor) {
   if (!root || !actor?.system) return;
   const value = String(Math.max(0, Math.min(100, Number(actor.system.force_ex) || 0)));
-  root.querySelectorAll?.("select[name='system.force_ex']")?.forEach(select => {
+  root.querySelectorAll?.("select[data-add2e-force-ex]")?.forEach(select => {
     select.value = value;
     select.dataset.currentForceEx = value;
   });
@@ -48,10 +48,63 @@ function add2eActorCanUseExceptionalStrength(actor) {
       classItem?.system?.name,
       classItem?.system?.label
     ].map(add2eNormalizeClassForExceptionalStrength).join(" ");
-    return text.includes("guerrier") || text.includes("paladin") || text.includes("rodeur") || text.includes("ranger");
+    return text.includes("guerrier") || text.includes("paladin") || text.includes("ranger");
   });
 }
 globalThis.add2eActorCanUseExceptionalStrength = add2eActorCanUseExceptionalStrength;
+
+function add2eExceptionalStrengthTotal(actor) {
+  const system = actor?.system ?? {};
+  const base = Number(system.force_base ?? system.force ?? 10) || 10;
+  const legacyRace = Number(system.force_race ?? 0) || 0;
+  const racialBonus = Number(system.bonus_caracteristiques?.force ?? 0) || 0;
+  return base + (racialBonus || legacyRace);
+}
+
+async function add2eSetExceptionalStrength(actor, rawValue, { reason = "force-ex-selection" } = {}) {
+  if (!actor?.system) return false;
+
+  const selected = Math.trunc(Number(rawValue));
+  const forceEx = Number.isFinite(selected) && selected >= 0 && selected <= 100 ? selected : 0;
+  const totalForce = add2eExceptionalStrengthTotal(actor);
+  const allowed = totalForce === 18 && add2eActorCanUseExceptionalStrength(actor);
+  const stored = allowed ? forceEx : 0;
+
+  console.info("[ADD2E][FORCE_EX][SET]", {
+    version: ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION,
+    actor: actor.name,
+    selected: rawValue,
+    normalized: forceEx,
+    totalForce,
+    allowed,
+    before: actor.system?.force_ex ?? 0
+  });
+
+  if (Number(actor.system?.force_ex ?? 0) !== stored) {
+    await actor.update({ "system.force_ex": stored }, {
+      add2eInternal: true,
+      add2eReason: reason,
+      render: false
+    });
+  }
+
+  const sheet = actor.sheet;
+  if (typeof sheet?.autoSetCaracAjustements === "function") await sheet.autoSetCaracAjustements();
+
+  console.info("[ADD2E][FORCE_EX][PERSISTED]", {
+    actor: actor.name,
+    expected: stored,
+    stored: actor.system?.force_ex ?? 0,
+    toucher: actor.system?.force_bonus_toucher,
+    degats: actor.system?.force_bonus_degats,
+    poids: actor.system?.force_poids,
+    ouvrir: actor.system?.force_ouvrir,
+    tordre: actor.system?.force_tordre
+  });
+
+  return true;
+}
+globalThis.add2eSetExceptionalStrength = add2eSetExceptionalStrength;
 
 function add2eClone(value) {
   if (typeof foundry?.utils?.deepClone === "function") return foundry.utils.deepClone(value);
@@ -516,63 +569,4 @@ globalThis.Add2eActorSheet.prototype._add2eActivateTab = function _add2eActivate
   });
 
   add2eSyncForceExSelects(root, this.actor);
-};
-
-globalThis.Add2eActorSheet.prototype._add2eBindPersistentTabs = function _add2eBindPersistentTabs(html) {
-  const root = this._add2eSheetRoot(html);
-  if (!root) return;
-
-  const initial = this._add2eActiveTab || this._add2eReadStoredTab() || "resume";
-  this._add2eActivateTab(initial, root);
-  add2eSyncForceExSelects(root, this.actor);
-
-  if (root.dataset.add2eTabsCaptureBound !== "1") {
-    root.dataset.add2eTabsCaptureBound = "1";
-    root.addEventListener("pointerdown", event => {
-      const tabLink = event.target.closest?.(".sheet-tabs .item[data-tab], .a2e-tabs .item[data-tab]");
-      if (tabLink && root.contains(tabLink)) {
-        this._add2eRememberActiveTab(root, tabLink.dataset.tab || "resume");
-        return;
-      }
-      this._add2eRememberActiveTab(root);
-    }, true);
-
-    root.addEventListener("change", async event => {
-      this._add2eRememberActiveTab(root);
-      const field = event.target?.closest?.("[name='system.force_ex']");
-      if (!field) return;
-      const value = Math.max(0, Math.min(100, Number(field.value) || 0));
-      field.value = String(value);
-      field.dataset.currentForceEx = String(value);
-      await this.actor.update({ "system.force_ex": value });
-      if (typeof this.autoSetCaracAjustements === "function") await this.autoSetCaracAjustements();
-      add2eSyncForceExSelects(root, this.actor);
-      if (this.rendered) this.render(false);
-    }, true);
-  }
-
-  add2eV2Jq(root).find(".sheet-tabs .item[data-tab], .a2e-tabs .item[data-tab]")
-    .off("click.add2e-tabs")
-    .on("click.add2e-tabs", event => {
-      event.preventDefault();
-      const tab = event.currentTarget.dataset.tab || "resume";
-      this._add2eActivateTab(tab, root);
-    });
-};
-
-globalThis.Add2eActorSheet.prototype.render = function render(force = false, options = {}) {
-  try { if (this.rendered) this._add2eRememberActiveTab(this.element); } catch (_error) {}
-
-  const renderOptions = (typeof force === "object" && force !== null)
-    ? force
-    : { ...(options ?? {}), force: !!force };
-
-  const result = this._add2eNativeRender(renderOptions);
-  const refreshUi = () => {
-    this._add2eActivateTab(this._add2eActiveTab || this._add2eReadStoredTab() || "resume");
-    add2eSyncForceExSelects(this._add2eSheetRoot(this.element), this.actor);
-    try { add2eEnhanceCharacterSheetUi(this, this.element); } catch (_error) {}
-  };
-  for (const delay of [0, 80, 220]) setTimeout(refreshUi, delay);
-  return result;
 };
