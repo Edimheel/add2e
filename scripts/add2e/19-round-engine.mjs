@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — Moteur générique de rounds de combat.
-// Version : 2026-07-06-round-engine-vade-player-continuation-v9
+// Version : 2026-07-06-round-engine-vade-player-continuation-v10
 // Compatible Foundry V13 / V14 / V15.
 // ============================================================================
 
@@ -21,7 +21,7 @@ import {
   add2eTimeNormalizeActorEffects
 } from "./19a-time-engine.mjs";
 
-export const ADD2E_ROUND_ENGINE_VERSION = "2026-07-06-round-engine-vade-player-continuation-v9";
+export const ADD2E_ROUND_ENGINE_VERSION = "2026-07-06-round-engine-vade-player-continuation-v10";
 
 const TAG = "[ADD2E][ROUND_ENGINE]";
 const FLAG_SCOPE = "add2e";
@@ -62,7 +62,7 @@ const VADE_LABELS = Object.freeze({
 function log(label, data = {}) { console.log(`${TAG}${label}`, data); }
 function warn(label, data = {}) { console.warn(`${TAG}${label}`, data); }
 function error(label, data = {}) { console.error(`${TAG}${label}`, data); }
-function esc(value) { return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
+function esc(value) { return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#039;"); }
 function norm(value) { return String(value ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "").replace(/[^a-z0-9]+/g, "_").replace(/_+/g, "_").replace(/^_+|_+$/g, ""); }
 function numberFrom(value, fallback = NaN) {
   if (typeof value === "number") return Number.isFinite(value) ? value : fallback;
@@ -82,6 +82,11 @@ function toArray(value) {
   if (typeof value.values === "function") return [...value.values()];
   if (typeof value[Symbol.iterator] === "function" && typeof value !== "string") return [...value];
   return [value];
+}
+function clonePlain(value) {
+  if (typeof foundry?.utils?.deepClone === "function") return foundry.utils.deepClone(value);
+  if (typeof foundry?.utils?.duplicate === "function") return foundry.utils.duplicate(value);
+  return value === undefined ? undefined : JSON.parse(JSON.stringify(value ?? null));
 }
 function nowIso() { try { return new Date().toISOString(); } catch (_err) { return String(Date.now()); } }
 function isResponsibleGM() {
@@ -271,7 +276,7 @@ function fleeDestination(sourceToken, targetToken, maxMeters) {
   x = Math.round(x / grid) * grid;
   y = Math.round(y / grid) * grid;
   const sceneWidth = Number(scene?.dimensions?.sceneWidth ?? scene?.width ?? canvas?.dimensions?.width ?? x);
-  const sceneHeight = Number(scene?.dimensions?.sceneHeight ?? scene?.height ?? canvas?.dimensions?.height ?? y);
+  const sceneHeight = Number(scene?.dimensions?.sceneHeight ?? scene?.height ?? y);
   const maxX = Math.max(0, sceneWidth - width);
   const maxY = Math.max(0, sceneHeight - height);
   x = Math.max(0, Math.min(maxX, x));
@@ -280,15 +285,7 @@ function fleeDestination(sourceToken, targetToken, maxMeters) {
   return { x, y, maxMeters: Math.round(Number(maxMeters) * 100) / 100, movedMeters: Math.round(movedMeters * 100) / 100, from: { x: Number(targetDoc.x ?? 0), y: Number(targetDoc.y ?? 0) } };
 }
 
-export async function add2eForceFleeToken({
-  sourceToken = null,
-  targetToken = null,
-  actor = null,
-  reason = "forced-flee",
-  flagKey = "forcedFlee",
-  allowGridFallback = false,
-  currentRound = null
-} = {}) {
+export async function add2eForceFleeToken({ sourceToken = null, targetToken = null, actor = null, reason = "forced-flee", flagKey = "forcedFlee", allowGridFallback = false, currentRound = null } = {}) {
   const sourceDoc = tokenDocument(sourceToken);
   const targetDoc = tokenDocument(targetToken);
   const targetActor = actor ?? targetDoc?.actor ?? null;
@@ -300,99 +297,38 @@ export async function add2eForceFleeToken({
   const destination = fleeDestination(sourceDoc, targetDoc, move.value);
   if (!destination || !Number.isFinite(destination.x) || !Number.isFinite(destination.y)) return { moved: false, requested: false, fatal: true, reason: "Destination de fuite invalide.", maxMeters: move.value, movedMeters: 0 };
   if (Math.abs(destination.x - Number(targetDoc.x ?? 0)) < 1 && Math.abs(destination.y - Number(targetDoc.y ?? 0)) < 1) return { moved: false, requested: false, fatal: false, reason: "La cible ne peut pas être éloignée davantage dans cette direction.", ...destination };
-  const flagData = {
-    sourceTokenId: sourceDoc.id ?? null,
-    sourceTokenName: sourceDoc.name ?? null,
-    movedAt: Date.now(),
-    movementSource: move.source,
-    maxMeters: destination.maxMeters,
-    movedMeters: destination.movedMeters,
-    from: destination.from,
-    to: { x: destination.x, y: destination.y },
-    reason,
-    combatRound: currentRound
-  };
-  const updateData = {
-    x: destination.x,
-    y: destination.y,
-    flags: { add2e: { [flagKey]: flagData, forcedFlee: flagData, lastAllowedPosition: { x: destination.x, y: destination.y } } }
-  };
+  const flagData = { sourceTokenId: sourceDoc.id ?? null, sourceTokenName: sourceDoc.name ?? null, movedAt: Date.now(), movementSource: move.source, maxMeters: destination.maxMeters, movedMeters: destination.movedMeters, from: destination.from, to: { x: destination.x, y: destination.y }, reason, combatRound: currentRound };
+  const updateData = { x: destination.x, y: destination.y, flags: { add2e: { [flagKey]: flagData, forcedFlee: flagData, lastAllowedPosition: { x: destination.x, y: destination.y } } } };
   const options = { add2eIgnoreMovement: true, add2eForcedMovement: true, add2eForcedFlee: true, add2eRoundEngine: true, add2eRoundEngineReason: reason, showRuler: false };
   try {
-    if (game.user?.isGM) {
-      await targetDoc.update(updateData, options);
-      return { moved: true, requested: false, fatal: false, reason: "Déplacement appliqué.", ...destination, movementSource: move.source, tokenId: targetDoc.id };
-    }
+    if (game.user?.isGM) { await targetDoc.update(updateData, options); return { moved: true, requested: false, fatal: false, reason: "Déplacement appliqué.", ...destination, movementSource: move.source, tokenId: targetDoc.id }; }
     if (!game.socket || !scene.id || !targetDoc.id) return { moved: false, requested: false, fatal: true, reason: "Socket indisponible pour le relais MJ.", ...destination };
     game.socket.emit(ADD2E_SOCKET, { type: "ADD2E_GM_OPERATION", operation: "updateToken", payload: { sceneId: scene.id, tokenId: targetDoc.id, updateData, options, fromUserId: game.user?.id, sentAt: Date.now() } });
     return { moved: false, requested: true, fatal: false, reason: "Déplacement demandé au MJ.", ...destination, movementSource: move.source, tokenId: targetDoc.id };
-  } catch (err) {
-    error("[FORCED_FLEE_ERROR]", { reason, target: targetActor.name, targetTokenId: targetDoc.id, err });
-    return { moved: false, requested: false, fatal: true, reason: err?.message || "Erreur pendant la mise à jour du token.", ...destination, movementSource: move.source, tokenId: targetDoc.id };
-  }
+  } catch (err) { error("[FORCED_FLEE_ERROR]", { reason, target: targetActor.name, targetTokenId: targetDoc.id, err }); return { moved: false, requested: false, fatal: true, reason: err?.message || "Erreur pendant la mise à jour du token.", ...destination, movementSource: move.source, tokenId: targetDoc.id }; }
 }
 
-async function fleeingSource(effect) {
-  const flags = effect?.flags?.add2e ?? {};
-  const sourceUuid = flags.vadeRetro?.casterUuid ?? flags.casterUuid ?? effect?.origin ?? null;
-  if (!sourceUuid || typeof fromUuid !== "function") return null;
-  try {
-    const document = await fromUuid(sourceUuid);
-    return document?.actor ?? document?.parent ?? document ?? null;
-  } catch (_err) { return null; }
-}
-
+async function fleeingSource(effect) { const flags = effect?.flags?.add2e ?? {}; const sourceUuid = flags.vadeRetro?.casterUuid ?? flags.casterUuid ?? effect?.origin ?? null; if (!sourceUuid || typeof fromUuid !== "function") return null; try { const document = await fromUuid(sourceUuid); return document?.actor ?? document?.parent ?? document ?? null; } catch (_err) { return null; } }
 async function processForcedFlee(actor, combatant, currentRound, combat, { perRound = false } = {}) {
   if (!perRound || actorIsDefeated(actor)) return { moved: false, reason: "not-applicable" };
-  const effect = Array.from(actor.effects ?? []).find(entry => {
-    if (entry?.disabled) return false;
-    const tags = effectTags(entry);
-    return tags.has("fuite") || tags.has("mouvement_eloignement_obligatoire") || tags.has("etat_peur") || tags.has("peur");
-  });
+  const effect = Array.from(actor.effects ?? []).find(entry => { if (entry?.disabled) return false; const tags = effectTags(entry); return tags.has("fuite") || tags.has("mouvement_eloignement_obligatoire") || tags.has("etat_peur") || tags.has("peur"); });
   if (!effect) return { moved: false, reason: "no-flee-effect" };
   const targetToken = combatantToken(combatant, combat) ?? actorToken(actor, combat);
   const sourceActor = await fleeingSource(effect);
   const sourceToken = actorToken(sourceActor, combat);
   if (!targetToken || !sourceActor || !sourceToken) return { moved: false, reason: "missing-token-or-source" };
-  const result = await add2eForceFleeToken({
-    sourceToken,
-    targetToken,
-    actor,
-    reason: "round-engine-forced-flee",
-    flagKey: "roundEngineForcedMove",
-    allowGridFallback: true,
-    currentRound
-  });
+  const result = await add2eForceFleeToken({ sourceToken, targetToken, actor, reason: "round-engine-forced-flee", flagKey: "roundEngineForcedMove", allowGridFallback: true, currentRound });
   return { ...result, round: currentRound, source: sourceActor.name, tokenId: targetToken.id };
 }
 
-function vadeState(actor, combat) {
-  const all = actor?.getFlag?.(FLAG_SCOPE, VADE_RETRO_FLAG) ?? actor?.flags?.[FLAG_SCOPE]?.[VADE_RETRO_FLAG] ?? {};
-  return all?.[combat?.id] ?? null;
-}
-async function saveVadeState(actor, combat, state) {
-  const all = actor?.getFlag?.(FLAG_SCOPE, VADE_RETRO_FLAG) ?? actor?.flags?.[FLAG_SCOPE]?.[VADE_RETRO_FLAG] ?? {};
-  await actor.setFlag(FLAG_SCOPE, VADE_RETRO_FLAG, { ...all, [combat.id]: state });
-}
-function vadeEntry(category, effectiveLevel) {
-  const level = Math.max(1, Math.floor(numberFrom(effectiveLevel, 1)));
-  const column = level <= 8 ? level - 1 : level <= 13 ? 8 : 9;
-  return VADE_TABLE[category]?.[column] ?? null;
-}
+function vadeState(actor, combat) { const all = actor?.getFlag?.(FLAG_SCOPE, VADE_RETRO_FLAG) ?? actor?.flags?.[FLAG_SCOPE]?.[VADE_RETRO_FLAG] ?? {}; return all?.[combat?.id] ?? null; }
+async function saveVadeState(actor, combat, state) { const all = actor?.getFlag?.(FLAG_SCOPE, VADE_RETRO_FLAG) ?? actor?.flags?.[FLAG_SCOPE]?.[VADE_RETRO_FLAG] ?? {}; await actor.setFlag(FLAG_SCOPE, VADE_RETRO_FLAG, { ...all, [combat.id]: state }); }
+function vadeStateSnapshot(state) { if (!state || typeof state !== "object") return null; return clonePlain({ status: state.status, pending: Array.isArray(state.pending) ? state.pending : [], lastRound: state.lastRound, direction: state.direction, effectiveClericLevel: state.effectiveClericLevel, initiatorUserId: state.initiatorUserId, featureKey: state.featureKey, featureOnUse: state.featureOnUse, combatId: state.combatId, casterUuid: state.casterUuid, sourceClass: state.sourceClass, cone: state.cone ?? null, version: state.version ?? null }); }
+function vadeEntry(category, effectiveLevel) { const level = Math.max(1, Math.floor(numberFrom(effectiveLevel, 1))); const column = level <= 8 ? level - 1 : level <= 13 ? 8 : 9; return VADE_TABLE[category]?.[column] ?? null; }
 async function vadeRoll(formula) { const result = await new Roll(formula).evaluate({ async: true }); try { await game.dice3d?.showForRoll?.(result); } catch (_err) {} return result; }
-function vadeGroupTokens(combat, group) {
-  const seen = new Set();
-  return (Array.isArray(group?.ids) ? group.ids : []).map(id => tokenById(combat, id)).filter(token => token?.actor && !actorIsDefeated(token.actor) && !seen.has(token.id) && seen.add(token.id));
-}
+function vadeGroupTokens(combat, group) { const seen = new Set(); return (Array.isArray(group?.ids) ? group.ids : []).map(id => tokenById(combat, id)).filter(token => token?.actor && !actorIsDefeated(token.actor) && !seen.has(token.id) && seen.add(token.id)); }
 function vadeQueue(combat, pending) { return (Array.isArray(pending) ? pending : []).map(group => ({ ...group, ids: vadeGroupTokens(combat, group).map(token => token.id) })).filter(group => group.ids.length); }
-function vadeDuration(rounds) {
-  const time = game.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
-  const endMessage = "L’effet de Vade-rétro sur {actor} prend fin.";
-  return {
-    duration: time?.durationData?.(rounds) ?? { rounds, startRound: game.combat?.round ?? null, startTurn: game.combat?.turn ?? null, startTime: game.time?.worldTime ?? null, combat: game.combat?.id ?? null },
-    flags: time?.flags?.({ source: "vade-retro.js", rounds, unit: "round", endMessage }) ?? { timeEngine: { managed: true, unit: "round", totalRounds: rounds }, roundEngine: { managed: true, unit: "round", totalRounds: rounds, endMessage }, endMessage }
-  };
-}
+function vadeDuration(rounds) { const time = game.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null; const endMessage = "L’effet de Vade-rétro sur {actor} prend fin."; return { duration: time?.durationData?.(rounds) ?? { rounds, startRound: game.combat?.round ?? null, startTurn: game.combat?.turn ?? null, startTime: game.time?.worldTime ?? null, combat: game.combat?.id ?? null }, flags: time?.flags?.({ source: "vade-retro.js", rounds, unit: "round", endMessage }) ?? { timeEngine: { managed: true, unit: "round", totalRounds: rounds }, roundEngine: { managed: true, unit: "round", totalRounds: rounds, endMessage }, endMessage } }; }
 function vadeIsEvil(actor) { const alignment = norm(actor?.system?.alignement ?? actor?.system?.alignment ?? ""); return alignment.includes("mauvais") || alignment.includes("evil"); }
 async function postVadeClassCard(actor, { title = "Vade-rétro", lead = "", details = [], rows = [], footer = "" } = {}) {
   const actorName = esc(actor?.name ?? "Clerc");
@@ -403,46 +339,12 @@ async function postVadeClassCard(actor, { title = "Vade-rétro", lead = "", deta
   await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content, ...chatStyleData() });
 }
 
-function vadeInitiatingPlayer(state) {
-  const id = String(state?.initiatorUserId ?? "").trim();
-  const user = id ? game.users?.get?.(id) ?? null : null;
-  return user?.active && !user.isGM ? user : null;
-}
-
-function vadeContinuationKey(payload = {}) {
-  return [payload?.requestId, payload?.actorUuid ?? payload?.actorId, payload?.combatId, payload?.round].filter(value => value !== null && value !== undefined && value !== "").join("|");
-}
-
-function vadeFeatureKey(feature) {
-  return norm(feature?.id ?? feature?._id ?? feature?.key ?? feature?.slug ?? feature?.name ?? feature?.label ?? "");
-}
-
-function vadeFeatureOnUse(feature) {
-  return String(feature?.on_use ?? feature?.onUse ?? feature?.script ?? feature?.macro ?? "").trim();
-}
-
-function vadeContinuationFeature(actor, state) {
-  const features = globalThis.add2eGetActorActivableClassFeatures?.(actor, { includeLocked: false }) ?? [];
-  const expectedKey = norm(state?.featureKey ?? "");
-  const expectedOnUse = String(state?.featureOnUse ?? "").trim();
-  return features.find(feature => {
-    const onUse = vadeFeatureOnUse(feature);
-    if (!/vade-retro\.js(?:$|[?#])/i.test(onUse)) return false;
-    if (expectedOnUse && onUse !== expectedOnUse) return false;
-    return !expectedKey || vadeFeatureKey(feature) === expectedKey;
-  }) ?? null;
-}
-
-async function actorFromVadeContinuationPayload(payload = {}) {
-  if (payload.actorUuid && typeof fromUuid === "function") {
-    try {
-      const document = await fromUuid(payload.actorUuid);
-      const actor = document?.actor ?? document?.parent ?? document ?? null;
-      if (actor?.documentName === "Actor") return actor;
-    } catch (_err) {}
-  }
-  return payload.actorId ? game.actors?.get?.(payload.actorId) ?? null : null;
-}
+function vadeInitiatingPlayer(state) { const id = String(state?.initiatorUserId ?? "").trim(); const user = id ? game.users?.get?.(id) ?? null : null; return user?.active && !user.isGM ? user : null; }
+function vadeContinuationKey(payload = {}) { return [payload?.requestId, payload?.actorUuid ?? payload?.actorId, payload?.combatId, payload?.round].filter(value => value !== null && value !== undefined && value !== "").join("|"); }
+function vadeFeatureKey(feature) { return norm(feature?.id ?? feature?._id ?? feature?.key ?? feature?.slug ?? feature?.name ?? feature?.label ?? ""); }
+function vadeFeatureOnUse(feature) { return String(feature?.on_use ?? feature?.onUse ?? feature?.script ?? feature?.macro ?? "").trim(); }
+function vadeContinuationFeature(actor, state) { const features = globalThis.add2eGetActorActivableClassFeatures?.(actor, { includeLocked: false }) ?? []; const expectedKey = norm(state?.featureKey ?? ""); const expectedOnUse = String(state?.featureOnUse ?? "").trim(); return features.find(feature => { const onUse = vadeFeatureOnUse(feature); if (!/vade-retro\.js(?:$|[?#])/i.test(onUse)) return false; if (expectedOnUse && onUse !== expectedOnUse) return false; return !expectedKey || vadeFeatureKey(feature) === expectedKey; }) ?? null; }
+async function actorFromVadeContinuationPayload(payload = {}) { if (payload.actorUuid && typeof fromUuid === "function") { try { const document = await fromUuid(payload.actorUuid); const actor = document?.actor ?? document?.parent ?? document ?? null; if (actor?.documentName === "Actor") return actor; } catch (_err) {} } return payload.actorId ? game.actors?.get?.(payload.actorId) ?? null : null; }
 
 async function runPlayerVadeRetroContinuation(payload = {}) {
   const targetUserId = String(payload?.targetUserId ?? "").trim();
@@ -451,6 +353,7 @@ async function runPlayerVadeRetroContinuation(payload = {}) {
   const requestId = String(payload?.requestId ?? "").trim() || requestKey;
   const expectedCombatId = String(payload?.combatId ?? "").trim();
   const expectedRound = Number(payload?.round);
+  const payloadVadeState = payload?.vadeState && typeof payload.vadeState === "object" ? clonePlain(payload.vadeState) : null;
   if (!requestKey || !expectedCombatId || !Number.isFinite(expectedRound) || LOCAL_VADE_CONTINUATIONS.has(requestKey)) return false;
 
   LOCAL_VADE_CONTINUATIONS.add(requestKey);
@@ -459,105 +362,51 @@ async function runPlayerVadeRetroContinuation(payload = {}) {
   try {
     const actor = await actorFromVadeContinuationPayload(payload);
     if (!actor || actor.isOwner === false) return false;
-
     const attempts = Math.max(1, Math.ceil(VADE_RETRO_SYNC_RETRY_TIMEOUT_MS / VADE_RETRO_SYNC_RETRY_DELAY_MS));
     let combat = null;
     let state = null;
+    let usedPayloadVadeState = false;
     for (let attempt = 0; attempt < attempts; attempt += 1) {
       const candidateCombat = game.combat;
-      const combatReady = candidateCombat
-        && String(candidateCombat.id ?? "") === expectedCombatId
-        && Number(candidateCombat.round) === expectedRound;
+      const combatReady = candidateCombat && String(candidateCombat.id ?? "") === expectedCombatId && Number(candidateCombat.round) === expectedRound;
       const candidateState = combatReady ? vadeState(actor, candidateCombat) : null;
-      const stateReady = candidateState?.status === "pending"
-        && String(candidateState.initiatorUserId ?? "") === targetUserId
-        && Number(candidateState.lastRound ?? expectedRound) < expectedRound;
-
-      if (combatReady && stateReady) {
-        combat = candidateCombat;
-        state = candidateState;
-        break;
-      }
-      if (attempt + 1 < attempts) {
-        await new Promise(resolve => setTimeout(resolve, VADE_RETRO_SYNC_RETRY_DELAY_MS));
-      }
+      const stateReady = candidateState?.status === "pending" && String(candidateState.initiatorUserId ?? "") === targetUserId && Number(candidateState.lastRound ?? expectedRound) < expectedRound;
+      const payloadReady = payloadVadeState?.status === "pending" && String(payloadVadeState.initiatorUserId ?? "") === targetUserId && Number(payloadVadeState.lastRound ?? expectedRound) < expectedRound;
+      if (combatReady && (stateReady || payloadReady)) { combat = candidateCombat; state = stateReady ? candidateState : payloadVadeState; usedPayloadVadeState = !stateReady; break; }
+      if (attempt + 1 < attempts) await new Promise(resolve => setTimeout(resolve, VADE_RETRO_SYNC_RETRY_DELAY_MS));
     }
-
     if (!combat || !state) return false;
+    if (usedPayloadVadeState) await saveVadeState(actor, combat, state);
     const feature = vadeContinuationFeature(actor, state);
     const execute = globalThis.add2eExecuteClassFeatureOnUse;
-    if (!feature || typeof execute !== "function") {
-      warn("[VADE_RETRO_PLAYER_CONTINUATION_UNAVAILABLE]", { actor: actor.name, combat: combat.id, feature: !!feature, execute: typeof execute });
-      return false;
-    }
-
+    if (!feature || typeof execute !== "function") { warn("[VADE_RETRO_PLAYER_CONTINUATION_UNAVAILABLE]", { actor: actor.name, combat: combat.id, feature: !!feature, execute: typeof execute }); return false; }
     globalThis[VADE_RETRO_CONTINUATION_CONTEXTS] ??= new Map();
     contexts = globalThis[VADE_RETRO_CONTINUATION_CONTEXTS];
     contextKey = `${actor.id}:${combat.id}`;
-    contexts.set(contextKey, {
-      kind: "vade-retro-continuation",
-      requestId,
-      actorId: actor.id,
-      actorUuid: actor.uuid ?? null,
-      combatId: combat.id,
-      round: Number(combat.round),
-      initiatorUserId: targetUserId
-    });
-
-    try {
-      return (await execute(actor, feature, null)) !== false;
-    } catch (err) {
-      error("[VADE_RETRO_PLAYER_CONTINUATION_ERROR]", { actor: actor.name, combat: combat.id, round: combat.round, err });
-      return false;
-    }
+    contexts.set(contextKey, { kind: "vade-retro-continuation", requestId, actorId: actor.id, actorUuid: actor.uuid ?? null, combatId: combat.id, round: Number(combat.round), initiatorUserId: targetUserId });
+    try { return (await execute(actor, feature, null)) !== false; }
+    catch (err) { error("[VADE_RETRO_PLAYER_CONTINUATION_ERROR]", { actor: actor.name, combat: combat.id, round: combat.round, err }); return false; }
   } finally {
     if (contexts && contextKey) contexts.delete(contextKey);
     setTimeout(() => LOCAL_VADE_CONTINUATIONS.delete(requestKey), VADE_RETRO_SYNC_RETRY_TIMEOUT_MS + VADE_RETRO_SYNC_RETRY_DELAY_MS);
   }
 }
 
-function requestPlayerVadeRetroContinuation(actor, combat, currentRound, state) {
-  const user = vadeInitiatingPlayer(state);
-  if (!user || !game.socket || !actor?.id || !combat?.id) return false;
-  const requestId = `${combat.id}:${currentRound}:${actor.uuid ?? actor.id}:${Date.now()}`;
-  game.socket.emit(ADD2E_SOCKET, {
-    type: VADE_RETRO_PLAYER_CONTINUATION,
-    payload: {
-      requestId,
-      targetUserId: user.id,
-      actorId: actor.id,
-      actorUuid: actor.uuid ?? null,
-      combatId: combat.id,
-      round: currentRound
-    }
-  });
-  log("[VADE_RETRO_DELEGATED_TO_PLAYER]", { actor: actor.name, combat: combat.id, round: currentRound, userId: user.id });
-  return true;
-}
+function requestPlayerVadeRetroContinuation(actor, combat, currentRound, state) { const user = vadeInitiatingPlayer(state); if (!user || !game.socket || !actor?.id || !combat?.id) return false; const requestId = `${combat.id}:${currentRound}:${actor.uuid ?? actor.id}:${Date.now()}`; game.socket.emit(ADD2E_SOCKET, { type: VADE_RETRO_PLAYER_CONTINUATION, payload: { requestId, targetUserId: user.id, actorId: actor.id, actorUuid: actor.uuid ?? null, combatId: combat.id, round: currentRound, vadeState: vadeStateSnapshot(state) } }); log("[VADE_RETRO_DELEGATED_TO_PLAYER]", { actor: actor.name, combat: combat.id, round: currentRound, userId: user.id }); return true; }
 
 async function continueVadeRetro(actor, combat, currentRound) {
   const state = vadeState(actor, combat);
   if (!state || state.status !== "pending" || Number(state.lastRound ?? currentRound) >= currentRound) return false;
   const queue = vadeQueue(combat, state.pending);
-  if (!queue.length) {
-    await saveVadeState(actor, combat, { ...state, status: "complete", pending: [], lastRound: currentRound, completedAt: Date.now() });
-    return true;
-  }
+  if (!queue.length) { await saveVadeState(actor, combat, { ...state, status: "complete", pending: [], lastRound: currentRound, completedAt: Date.now() }); return true; }
   const group = queue[0];
   const entry = vadeEntry(group.category, state.effectiveClericLevel);
   const targets = vadeGroupTokens(combat, group);
-  if (!entry || !targets.length) {
-    await saveVadeState(actor, combat, { ...state, status: targets.length ? "complete" : "pending", pending: targets.length ? [] : queue.slice(1), lastRound: currentRound });
-    return true;
-  }
+  if (!entry || !targets.length) { await saveVadeState(actor, combat, { ...state, status: targets.length ? "complete" : "pending", pending: targets.length ? [] : queue.slice(1), lastRound: currentRound }); return true; }
   await postVadeClassCard(actor, { lead: `<b>${esc(actor.name)}</b> poursuit son Vade-rétro.`, details: [`<b>Round ${currentRound} :</b> prochaine ligne, ${esc(group.label ?? VADE_LABELS[group.category] ?? group.category)}.`] });
   const automatic = /^[TD]/.test(String(entry));
   const d20 = automatic ? null : await vadeRoll("1d20");
-  if (!automatic && Number(d20.total) < Number(entry)) {
-    await saveVadeState(actor, combat, { ...state, status: "closed", pending: [], lastRound: currentRound, completedAt: Date.now(), attempted: { category: group.category, entry, roll: d20.total, result: "Échec", targets: targets.map(token => token.id) } });
-    await postVadeClassCard(actor, { lead: `<b>${esc(actor.name)}</b> présente son symbole sacré.`, details: [`<b>Échec :</b> ${esc(group.label ?? VADE_LABELS[group.category] ?? group.category)} — d20 = <b>${d20.total}</b>, score requis <b>${esc(entry)}</b>.`], footer: "La poursuite cesse." });
-    return true;
-  }
+  if (!automatic && Number(d20.total) < Number(entry)) { await saveVadeState(actor, combat, { ...state, status: "closed", pending: [], lastRound: currentRound, completedAt: Date.now(), attempted: { category: group.category, entry, roll: d20.total, result: "Échec", targets: targets.map(token => token.id) } }); await postVadeClassCard(actor, { lead: `<b>${esc(actor.name)}</b> présente son symbole sacré.`, details: [`<b>Échec :</b> ${esc(group.label ?? VADE_LABELS[group.category] ?? group.category)} — d20 = <b>${d20.total}</b>, score requis <b>${esc(entry)}</b>.`], footer: "La poursuite cesse." }); return true; }
   const countFormula = group.lowerPlane ? "1d2" : String(entry).endsWith("*") ? "1d6+6" : "1d12";
   const count = Math.max(1, Number((await vadeRoll(countFormula)).total) || 1);
   const affected = targets.slice(0, count);
@@ -567,163 +416,27 @@ async function continueVadeRetro(actor, combat, currentRound) {
   const destroy = String(entry).startsWith("D") && !evil;
   const dominate = String(entry).startsWith("D") && evil;
   let outcome = "", duration = {}, durationLabel = "", tags = [], timeFlags = {};
-  if (destroy) {
-    outcome = "Détruit / damné";
-    tags = ["vade_retro", "etat:detruit_vade_retro", `vade_retro:${group.category}`];
-  } else if (dominate) {
-    outcome = "Dominé";
-    duration = { startTime: game.time?.worldTime ?? null, seconds: 518400 };
-    durationLabel = "6 jours (renouvellement requis)";
-    tags = ["vade_retro", "etat:domine_vade_retro", "controle:clerc", `vade_retro:${group.category}`];
-  } else if (evil) {
-    const reaction = await vadeRoll("1d100");
-    const adjustment = Number(actor.system?.cha_react ?? 0) || 0;
-    const attitude = Number(reaction.total) + adjustment >= 56 ? "Amical" : "Neutre";
-    const hours = String(entry).startsWith("T") ? 24 : Math.max(1, 24 - Number(entry));
-    outcome = `Influencé — ${attitude.toLowerCase()}`;
-    duration = { startTime: game.time?.worldTime ?? null, seconds: hours * 3600 };
-    durationLabel = `${hours} heure${hours > 1 ? "s" : ""}`;
-    tags = ["vade_retro", "etat:influence_vade_retro", "controle:clerc", `attitude:${norm(attitude)}`, `vade_retro:${group.category}`];
-  } else {
-    const rounds = Math.max(3, Number((await vadeRoll("3d4")).total) || 3);
-    const timed = vadeDuration(rounds);
-    outcome = "Repoussé";
-    duration = timed.duration;
-    durationLabel = `${rounds} rounds`;
-    timeFlags = timed.flags;
-    tags = ["vade_retro", "etat:repousse_vade_retro", "interdiction:attaque", "interdiction:sort", "mouvement:eloignement_obligatoire", "fuite", `vade_retro:${group.category}`];
-  }
+  if (destroy) { outcome = "Détruit / damné"; tags = ["vade_retro", "etat:detruit_vade_retro", `vade_retro:${group.category}`]; }
+  else if (dominate) { outcome = "Dominé"; duration = { startTime: game.time?.worldTime ?? null, seconds: 518400 }; durationLabel = "6 jours (renouvellement requis)"; tags = ["vade_retro", "etat:domine_vade_retro", "controle:clerc", `vade_retro:${group.category}`]; }
+  else if (evil) { const reaction = await vadeRoll("1d100"); const adjustment = Number(actor.system?.cha_react ?? 0) || 0; const attitude = Number(reaction.total) + adjustment >= 56 ? "Amical" : "Neutre"; const hours = String(entry).startsWith("T") ? 24 : Math.max(1, 24 - Number(entry)); outcome = `Influencé — ${attitude.toLowerCase()}`; duration = { startTime: game.time?.worldTime ?? null, seconds: hours * 3600 }; durationLabel = `${hours} heure${hours > 1 ? "s" : ""}`; tags = ["vade_retro", "etat:influence_vade_retro", "controle:clerc", `attitude:${norm(attitude)}`, `vade_retro:${group.category}`]; }
+  else { const rounds = Math.max(3, Number((await vadeRoll("3d4")).total) || 3); const timed = vadeDuration(rounds); outcome = "Repoussé"; duration = timed.duration; durationLabel = `${rounds} rounds`; timeFlags = timed.flags; tags = ["vade_retro", "etat:repousse_vade_retro", "interdiction:attaque", "interdiction:sort", "mouvement:eloignement_obligatoire", "fuite", `vade_retro:${group.category}`]; }
   const sourceToken = actorToken(actor, combat);
   const rows = [];
   for (const token of affected) {
     const target = token.actor;
-    await target.createEmbeddedDocuments("ActiveEffect", [{
-      name: destroy ? "Détruit par Vade-rétro" : dominate ? "Dominé par Vade-rétro" : outcome.startsWith("Influencé") ? "Influencé par Vade-rétro" : "Repoussé par Vade-rétro",
-      img: "icons/magic/holy/barrier-shield-winged-cross.webp", origin: actor.uuid, disabled: false, transfer: false, duration, changes: [],
-      description: `${outcome} par ${actor.name}.${durationLabel ? ` Durée : ${durationLabel}.` : ""}`,
-      flags: { add2e: { ...timeFlags, tags, vadeRetro: { casterId: actor.id, casterUuid: actor.uuid, casterName: actor.name, category: group.category, entry, outcome, combatId: combat.id, countFormula, count, classification: group.extrapolated ? "extrapole" : "canonique" } } }
-    }]);
-    if (destroy) {
-      await target.update({ [hpUpdatePath(target)]: 0 }, { add2eRoundEngine: true, add2eRoundEngineReason: "vade-retro-destruction", add2eCombatId: combat.id, add2eCombatRound: currentRound });
-      await add2eSyncActorVitalStatus(target, { reason: "vade-retro-destruction" });
-    } else if (outcome === "Repoussé" && sourceToken) {
-      await add2eForceFleeToken({ sourceToken, targetToken: token, actor: target, reason: "vade-retro-continuation-flee", flagKey: "vadeRetroForcedMove", allowGridFallback: true, currentRound });
-    }
+    await target.createEmbeddedDocuments("ActiveEffect", [{ name: destroy ? "Détruit par Vade-rétro" : dominate ? "Dominé par Vade-rétro" : outcome.startsWith("Influencé") ? "Influencé par Vade-rétro" : "Repoussé par Vade-rétro", img: "icons/magic/holy/barrier-shield-winged-cross.webp", origin: actor.uuid, disabled: false, transfer: false, duration, changes: [], description: `${outcome} par ${actor.name}.${durationLabel ? ` Durée : ${durationLabel}.` : ""}`, flags: { add2e: { ...timeFlags, tags, vadeRetro: { casterId: actor.id, casterUuid: actor.uuid, casterName: actor.name, category: group.category, entry, outcome, combatId: combat.id, countFormula, count, classification: group.extrapolated ? "extrapole" : "canonique" } } } }]);
+    if (destroy) { await target.update({ [hpUpdatePath(target)]: 0 }, { add2eRoundEngine: true, add2eRoundEngineReason: "vade-retro-destruction", add2eCombatId: combat.id, add2eCombatRound: currentRound }); await add2eSyncActorVitalStatus(target, { reason: "vade-retro-destruction" }); }
+    else if (outcome === "Repoussé" && sourceToken) await add2eForceFleeToken({ sourceToken, targetToken: token, actor: target, reason: "vade-retro-continuation-flee", flagKey: "vadeRetroForcedMove", allowGridFallback: true, currentRound });
     rows.push({ name: token.name ?? target.name, result: outcome });
   }
   const status = pending.length ? "pending" : "complete";
   await saveVadeState(actor, combat, { ...state, status, pending, lastRound: currentRound, updatedAt: Date.now(), attempted: { category: group.category, entry, countFormula, count, result: outcome, targets: affected.map(token => token.id) } });
-  await postVadeClassCard(actor, {
-    lead: `<b>${esc(actor.name)}</b> poursuit son Vade-rétro.`,
-    details: [`<b>${esc(group.label ?? VADE_LABELS[group.category] ?? group.category)} :</b> ${automatic ? "résultat automatique" : `d20 ${d20.total} / ${esc(entry)}`} — <b>${esc(outcome)}</b>.`, `<b>Nombre affecté :</b> ${esc(countFormula)} = <b>${count}</b>.`, durationLabel ? `<b>Durée :</b> ${esc(durationLabel)}.` : ""],
-    rows,
-    footer: status === "pending" ? "Vade-rétro continuera automatiquement au round suivant." : "La séquence de Vade-rétro est terminée."
-  });
+  await postVadeClassCard(actor, { lead: `<b>${esc(actor.name)}</b> poursuit son Vade-rétro.`, details: [`<b>${esc(group.label ?? VADE_LABELS[group.category] ?? group.category)} :</b> ${automatic ? "résultat automatique" : `d20 ${d20.total} / ${esc(entry)}`} — <b>${esc(outcome)}</b>.`, `<b>Nombre affecté :</b> ${esc(countFormula)} = <b>${count}</b>.`, durationLabel ? `<b>Durée :</b> ${esc(durationLabel)}.` : ""], rows, footer: status === "pending" ? "Vade-rétro continuera automatiquement au round suivant." : "La séquence de Vade-rétro est terminée." });
   return true;
 }
 
-async function continuePendingVadeRetro(combat, currentRound) {
-  for (const { actor } of uniqueCombatActors(combat)) {
-    try {
-      const state = vadeState(actor, combat);
-      if (!state || state.status !== "pending" || Number(state.lastRound ?? currentRound) >= currentRound) continue;
-      if (requestPlayerVadeRetroContinuation(actor, combat, currentRound, state)) continue;
-      await continueVadeRetro(actor, combat, currentRound);
-    } catch (err) {
-      error("[VADE_RETRO_CONTINUATION_ERROR]", { actor: actor?.name, combat: combat?.id, round: currentRound, err });
-    }
-  }
-}
-
-async function processActorForRound(actor, combatant, currentRound, combat, { perRound = false, source = "unknown" } = {}) {
-  const duration = await add2eTimeNormalizeActorEffects(actor, currentRound);
-  const expired = await add2eExpireTemporaryEffectsForActor(actor, currentRound);
-  const negativeHp = perRound ? await applyNegativeHpRoundLoss(actor, currentRound, combat) : { applied: false, reason: "scan-only" };
-  const flee = await processForcedFlee(actor, combatant, currentRound, combat, { perRound });
-  const vital = await add2eSyncActorVitalStatus(actor, { reason: `round-engine:${source}` });
-  return { actor: actor.name, actorId: actor.id, actorUuid: actor.uuid ?? null, combatantId: combatant?.id ?? null, duration, expired, negativeHp, flee, vital };
-}
-
-async function processCombat(combat, { source = "unknown", perRound = false } = {}) {
-  if (!combat) return { processed: false, reason: "no-combat" };
-  if (!isResponsibleGM()) return { processed: false, reason: "not-responsible-gm" };
-  const currentRound = roundNumber(combat);
-  if (currentRound <= 0) return { processed: false, reason: "round-zero", round: currentRound };
-  add2eRegisterTimeEngineApi();
-  add2eVitalRegisterStatusEffects();
-  if (perRound) await add2eTimeAdvanceTick(1, { reason: `combat-round:${combat.id}:${currentRound}` });
-  const actors = [];
-  for (const { actor, combatant } of uniqueCombatActors(combat)) {
-    try { actors.push(await processActorForRound(actor, combatant, currentRound, combat, { perRound, source })); }
-    catch (err) {
-      error("[ACTOR_PROCESS_ERROR]", { actor: actor?.name, actorId: actor?.id, round: currentRound, source, err });
-      actors.push({ actor: actor?.name ?? "Acteur", actorId: actor?.id ?? null, error: String(err?.message || err) });
-    }
-  }
-  if (perRound) await continuePendingVadeRetro(combat, currentRound);
-  const result = { processed: true, version: ADD2E_ROUND_ENGINE_VERSION, timeEngineVersion: ADD2E_TIME_ENGINE_VERSION, combat: combat.id, round: currentRound, source, perRound, actorCount: actors.length, actors };
-  log(perRound ? "[ROUND_PROCESSED]" : "[COMBAT_SCAN]", result);
-  return result;
-}
-
-export async function add2eRoundEngineOnCombatProgress(combat, changed = {}, { source = "updateCombat", forceRound = false, scanOnly = false } = {}) {
-  if (!combat || !isResponsibleGM()) return false;
-  const hasRound = forceRound || Object.prototype.hasOwnProperty.call(changed ?? {}, "round");
-  const hasTurn = Object.prototype.hasOwnProperty.call(changed ?? {}, "turn");
-  if (!hasRound && !hasTurn && !scanOnly) return false;
-  const currentRound = roundNumber(combat, changed?.round);
-  if (hasRound && !scanOnly) {
-    const already = await wasRoundAlreadyProcessed(combat, currentRound, source);
-    if (already) {
-      log("[ROUND_DUPLICATE_SKIP]", { combat: combat.id, round: currentRound, source });
-      return false;
-    }
-    await processCombat(combat, { source, perRound: true });
-    return true;
-  }
-  await processCombat(combat, { source, perRound: false });
-  return true;
-}
-
-function registerVadeRetroPlayerContinuationSocket() {
-  if (globalThis.__ADD2E_VADE_RETRO_PLAYER_CONTINUATION_SOCKET_REGISTERED) return;
-  globalThis.__ADD2E_VADE_RETRO_PLAYER_CONTINUATION_SOCKET_REGISTERED = true;
-  game.socket.on(ADD2E_SOCKET, data => {
-    if (data?.type !== VADE_RETRO_PLAYER_CONTINUATION) return;
-    runPlayerVadeRetroContinuation(data.payload ?? {})
-      .catch(err => error("[VADE_RETRO_PLAYER_SOCKET_ERROR]", { err, payload: data?.payload ?? {} }));
-  });
-}
-
-export function add2eRegisterRoundEngineHooks() {
-  if (globalThis.__ADD2E_ROUND_ENGINE_REGISTERED) return false;
-  globalThis.__ADD2E_ROUND_ENGINE_REGISTERED = true;
-  add2eRegisterTimeEngineApi();
-  registerVadeRetroPlayerContinuationSocket();
-  Hooks.on("combatRound", (combat, round, options, userId) => {
-    add2eRoundEngineOnCombatProgress(combat, { round: round ?? combat?.round }, { source: "combatRound", forceRound: true })
-      .catch(err => error("[HOOK_COMBAT_ROUND_ERROR]", { err, combat: combat?.id, round, options, userId }));
-  });
-  Hooks.on("combatTurnChange", (combat, prior, current, options, userId) => {
-    add2eRoundEngineOnCombatProgress(combat, { turn: combat?.turn }, { source: "combatTurnChange", scanOnly: true })
-      .catch(err => error("[HOOK_COMBAT_TURN_CHANGE_ERROR]", { err, combat: combat?.id, prior, current, options, userId }));
-  });
-  Hooks.on("combatTurn", (combat, turn, options, userId) => {
-    add2eRoundEngineOnCombatProgress(combat, { turn: turn ?? combat?.turn }, { source: "combatTurn", scanOnly: true })
-      .catch(err => error("[HOOK_COMBAT_TURN_ERROR]", { err, combat: combat?.id, turn, options, userId }));
-  });
-  Hooks.on("updateCombat", (combat, changed, options, userId) => {
-    add2eRoundEngineOnCombatProgress(combat, changed ?? {}, { source: "updateCombat" })
-      .catch(err => error("[HOOK_UPDATE_COMBAT_ERROR]", { err, combat: combat?.id, changed, options, userId }));
-  });
-  game.add2e = game.add2e ?? {};
-  game.add2e.roundEngineVersion = ADD2E_ROUND_ENGINE_VERSION;
-  game.add2e.postVadeRetroCard = postVadeClassCard;
-  game.add2e.forceFleeToken = add2eForceFleeToken;
-  globalThis.ADD2E_ROUND_ENGINE_VERSION = ADD2E_ROUND_ENGINE_VERSION;
-  globalThis.add2eRoundEngineOnCombatProgress = add2eRoundEngineOnCombatProgress;
-  globalThis.add2ePostVadeRetroCard = postVadeClassCard;
-  globalThis.add2eForceFleeToken = add2eForceFleeToken;
-  log("[REGISTERED]", { version: ADD2E_ROUND_ENGINE_VERSION, timeEngineVersion: ADD2E_TIME_ENGINE_VERSION, hooks: ["combatRound", "combatTurnChange", "combatTurn", "updateCombat"], mode: "combat-tracker+world-time" });
-  return true;
-}
+async function continuePendingVadeRetro(combat, currentRound) { for (const { actor } of uniqueCombatActors(combat)) { try { const state = vadeState(actor, combat); if (!state || state.status !== "pending" || Number(state.lastRound ?? currentRound) >= currentRound) continue; if (requestPlayerVadeRetroContinuation(actor, combat, currentRound, state)) continue; await continueVadeRetro(actor, combat, currentRound); } catch (err) { error("[VADE_RETRO_CONTINUATION_ERROR]", { actor: actor?.name, combat: combat?.id, round: currentRound, err }); } } }
+async function processActorForRound(actor, combatant, currentRound, combat, { perRound = false, source = "unknown" } = {}) { const duration = await add2eTimeNormalizeActorEffects(actor, currentRound); const expired = await add2eExpireTemporaryEffectsForActor(actor, currentRound); const negativeHp = perRound ? await applyNegativeHpRoundLoss(actor, currentRound, combat) : { applied: false, reason: "scan-only" }; const flee = await processForcedFlee(actor, combatant, currentRound, combat, { perRound }); const vital = await add2eSyncActorVitalStatus(actor, { reason: `round-engine:${source}` }); return { actor: actor.name, actorId: actor.id, actorUuid: actor.uuid ?? null, combatantId: combatant?.id ?? null, duration, expired, negativeHp, flee, vital }; }
+async function processCombat(combat, { source = "unknown", perRound = false } = {}) { if (!combat) return { processed: false, reason: "no-combat" }; if (!isResponsibleGM()) return { processed: false, reason: "not-responsible-gm" }; const currentRound = roundNumber(combat); if (currentRound <= 0) return { processed: false, reason: "round-zero", round: currentRound }; add2eRegisterTimeEngineApi(); add2eVitalRegisterStatusEffects(); if (perRound) await add2eTimeAdvanceTick(1, { reason: `combat-round:${combat.id}:${currentRound}` }); const actors = []; for (const { actor, combatant } of uniqueCombatActors(combat)) { try { actors.push(await processActorForRound(actor, combatant, currentRound, combat, { perRound, source })); } catch (err) { error("[ACTOR_PROCESS_ERROR]", { actor: actor?.name, actorId: actor?.id, round: currentRound, source, err }); actors.push({ actor: actor?.name ?? "Acteur", actorId: actor?.id ?? null, error: String(err?.message || err) }); } } if (perRound) await continuePendingVadeRetro(combat, currentRound); const result = { processed: true, version: ADD2E_ROUND_ENGINE_VERSION, timeEngineVersion: ADD2E_TIME_ENGINE_VERSION, combat: combat.id, round: currentRound, source, perRound, actorCount: actors.length, actors }; log(perRound ? "[ROUND_PROCESSED]" : "[COMBAT_SCAN]", result); return result; }
+export async function add2eRoundEngineOnCombatProgress(combat, changed = {}, { source = "updateCombat", forceRound = false, scanOnly = false } = {}) { if (!combat || !isResponsibleGM()) return false; const hasRound = forceRound || Object.prototype.hasOwnProperty.call(changed ?? {}, "round"); const hasTurn = Object.prototype.hasOwnProperty.call(changed ?? {}, "turn"); if (!hasRound && !hasTurn && !scanOnly) return false; const currentRound = roundNumber(combat, changed?.round); if (hasRound && !scanOnly) { const already = await wasRoundAlreadyProcessed(combat, currentRound, source); if (already) { log("[ROUND_DUPLICATE_SKIP]", { combat: combat.id, round: currentRound, source }); return false; } await processCombat(combat, { source, perRound: true }); return true; } await processCombat(combat, { source, perRound: false }); return true; }
+export function add2eRegisterRoundEngineHooks() { if (globalThis.__ADD2E_ROUND_ENGINE_REGISTERED) return false; globalThis.__ADD2E_ROUND_ENGINE_REGISTERED = true; add2eRegisterTimeEngineApi(); Hooks.on("combatRound", (combat, round, options, userId) => { add2eRoundEngineOnCombatProgress(combat, { round: round ?? combat?.round }, { source: "combatRound", forceRound: true }).catch(err => error("[HOOK_COMBAT_ROUND_ERROR]", { err, combat: combat?.id, round, options, userId })); }); Hooks.on("combatTurnChange", (combat, prior, current, options, userId) => { add2eRoundEngineOnCombatProgress(combat, { turn: combat?.turn }, { source: "combatTurnChange", scanOnly: true }).catch(err => error("[HOOK_COMBAT_TURN_CHANGE_ERROR]", { err, combat: combat?.id, prior, current, options, userId })); }); Hooks.on("combatTurn", (combat, turn, options, userId) => { add2eRoundEngineOnCombatProgress(combat, { turn: turn ?? combat?.turn }, { source: "combatTurn", scanOnly: true }).catch(err => error("[HOOK_COMBAT_TURN_ERROR]", { err, combat: combat?.id, turn, options, userId })); }); Hooks.on("updateCombat", (combat, changed, options, userId) => { add2eRoundEngineOnCombatProgress(combat, changed ?? {}, { source: "updateCombat" }).catch(err => error("[HOOK_UPDATE_COMBAT_ERROR]", { err, combat: combat?.id, changed, options, userId })); }); game.add2e = game.add2e ?? {}; game.add2e.roundEngineVersion = ADD2E_ROUND_ENGINE_VERSION; game.add2e.postVadeRetroCard = postVadeClassCard; game.add2e.forceFleeToken = add2eForceFleeToken; game.add2e.runPlayerVadeRetroContinuation = runPlayerVadeRetroContinuation; globalThis.ADD2E_ROUND_ENGINE_VERSION = ADD2E_ROUND_ENGINE_VERSION; globalThis.add2eRoundEngineOnCombatProgress = add2eRoundEngineOnCombatProgress; globalThis.add2ePostVadeRetroCard = postVadeClassCard; globalThis.add2eForceFleeToken = add2eForceFleeToken; globalThis.add2eRunPlayerVadeRetroContinuation = runPlayerVadeRetroContinuation; log("[REGISTERED]", { version: ADD2E_ROUND_ENGINE_VERSION, timeEngineVersion: ADD2E_TIME_ENGINE_VERSION, hooks: ["combatRound", "combatTurnChange", "combatTurn", "updateCombat"], mode: "combat-tracker+world-time" }); return true; }
