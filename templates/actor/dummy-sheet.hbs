@@ -7,7 +7,10 @@
       display: flex !important;
       flex-direction: column !important;
       gap: 16px !important;
-      min-height: 100% !important;
+      height: 100% !important;
+      min-height: 0 !important;
+      max-height: 100% !important;
+      overflow: hidden !important;
       padding: 16px !important;
       background:
         radial-gradient(circle at top right, rgba(106, 177, 204, .18), transparent 34%),
@@ -20,6 +23,7 @@
       grid-template-columns: 176px minmax(0, 1fr) !important;
       gap: 16px !important;
       align-items: center !important;
+      flex: 0 0 auto !important;
       min-height: 176px !important;
       padding: 12px !important;
       border: 1px solid #5f99ad !important;
@@ -90,10 +94,11 @@
 
     .add2e-dummy-sheet .dummy-notes {
       display: grid !important;
-      grid-template-rows: auto minmax(440px, 1fr) !important;
+      grid-template-rows: auto minmax(0, 1fr) !important;
       gap: 9px !important;
-      flex: 1 1 auto !important;
+      flex: 1 1 0 !important;
       min-height: 0 !important;
+      overflow: hidden !important;
       padding: 14px !important;
       border: 1px solid #5f99ad !important;
       border-radius: 12px !important;
@@ -119,11 +124,13 @@
       display: block !important;
       width: 100% !important;
       min-width: 0 !important;
-      min-height: 440px !important;
-      height: min(58vh, 580px) !important;
+      min-height: 0 !important;
+      height: 100% !important;
+      max-height: 100% !important;
       margin: 0 !important;
       padding: 12px 14px !important;
-      resize: vertical !important;
+      resize: none !important;
+      overflow: auto !important;
       border: 1px solid #8fbecd !important;
       border-radius: 9px !important;
       background: #f5fbfd !important;
@@ -142,10 +149,6 @@
       .add2e-dummy-sheet .dummy-header {
         grid-template-columns: 1fr !important;
         text-align: center !important;
-      }
-      .add2e-dummy-sheet .dummy-notes textarea {
-        min-height: 320px !important;
-        height: 52vh !important;
       }
     }
   </style>
