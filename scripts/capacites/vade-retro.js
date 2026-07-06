@@ -4,7 +4,7 @@
 // La visée utilise un cône PIXI, sans Warpgate, sur le modèle de Mains brûlantes.
 
 const __add2eVadeRetroResult = await (async () => {
-  const VERSION = "2026-07-06-vade-retro-canonical-undead-v4";
+  const VERSION = "2026-07-06-vade-retro-undead-profile-v5";
   const ICON = "icons/magic/holy/barrier-shield-winged-cross.webp";
   const CONE = Object.freeze({ angle: 90, cells: 3 });
   const TABLE = Object.freeze({
@@ -52,6 +52,7 @@ const __add2eVadeRetroResult = await (async () => {
     momie: "momie",
     spectre: "spectre",
     vampire: "vampire",
+    banshee: "fantome",
     fantome: "fantome",
     liche: "liche"
   });
@@ -253,20 +254,13 @@ const __add2eVadeRetroResult = await (async () => {
   }
 
   function actorTags(targetActor) {
-    // Classification volontairement limitée aux tags canoniques de l'acteur.
     return new Set(flatten(targetActor?.system?.tags).map(norm).filter(Boolean));
+  }
+  function actorEffectTags(targetActor) {
+    return new Set(flatten(targetActor?.system?.effectTags).map(norm).filter(Boolean));
   }
   function hasUndeadTag(targetActor) {
     return actorTags(targetActor).has(norm(UNDEAD_FAMILY_TAG));
-  }
-  function undeadCategory(targetActor) {
-    return UNDEAD_ROWS[norm(targetActor?.system?.type_monstre)] ?? null;
-  }
-  function actorText(targetActor) {
-    const system = targetActor?.system ?? {};
-    const values = flatten([targetActor?.name, system.type, system.type_monstre, system.type_creature, system.race]);
-    for (const embedded of targetActor?.items ?? []) flatten([embedded?.name, embedded?.system?.label], values);
-    return values.map(norm).filter(Boolean).join(" ");
   }
   function targetHitDice(targetActor) {
     for (const value of [targetActor?.system?.dv, targetActor?.system?.hitDice, targetActor?.system?.hd, targetActor?.system?.des_de_vie, targetActor?.system?.niveau, targetActor?.system?.level]) {
@@ -275,11 +269,83 @@ const __add2eVadeRetroResult = await (async () => {
     }
     return 0;
   }
-  function specialEligible(targetActor) {
+  function effectiveHitDice(targetActor) {
+    const raw = String(targetActor?.system?.dv ?? targetActor?.system?.hitDice ?? targetActor?.system?.hd ?? "");
+    const match = raw.match(/(\d+)\s*\+\s*(\d+)/);
+    if (match) return Number(match[1]) + Math.floor(Number(match[2]) / 3);
+    return targetHitDice(targetActor);
+  }
+  function targetArmorClass(targetActor) {
     const system = targetActor?.system ?? {};
-    const armorClass = numberFrom(system.ca_total ?? system.ca ?? system.ac ?? system.armorClass);
+    const values = [system.armorClass, system.ca_naturel, system.ca, system.ac, system.ca_total]
+      .map(numberFrom)
+      .filter(Number.isFinite);
+    return values.length ? Math.min(...values) : NaN;
+  }
+  function targetMagicResistance(targetActor) {
+    const system = targetActor?.system ?? {};
+    return numberFrom(system.resistance_magie ?? system.resistanceMagie ?? system.magicResistance ?? system.rm ?? system.mr);
+  }
+  function undeadProfile(targetActor) {
+    const effectTags = actorEffectTags(targetActor);
+    const energyDrain = effectTags.has("attaque_drain_energie");
+    const drain = energyDrain || effectTags.has("attaque_drain");
+    return {
+      hitDice: effectiveHitDice(targetActor),
+      armorClass: targetArmorClass(targetActor),
+      magicResistance: targetMagicResistance(targetActor),
+      drain,
+      energyDrain
+    };
+  }
+  function extrapolateUndeadCategory(targetActor) {
+    const profile = undeadProfile(targetActor);
+    const hd = Number(profile.hitDice) || 0;
+
+    // Les profils très protégés sont rapprochés de la liche : c'est la ligne
+    // officielle la plus résistante sans utiliser la ligne Spécial, réservée
+    // aux créatures mauvaises des plans inférieurs.
+    if ((Number.isFinite(profile.magicResistance) && profile.magicResistance >= 66)
+      || (Number.isFinite(profile.armorClass) && profile.armorClass <= -5)
+      || hd >= 11) {
+      return { category: "liche", mode: "extrapole", profile };
+    }
+
+    // Un drain d'énergie rapproche la créature des morts-vivants incorporels
+    // de haut niveau. Les DV départagent ensuite la ligne de la matrice.
+    if (profile.energyDrain || profile.drain) {
+      if (hd >= 10) return { category: "vampire", mode: "extrapole", profile };
+      if (hd >= 7) return { category: "spectre", mode: "extrapole", profile };
+      if (hd >= 5) return { category: "necrophage", mode: "extrapole", profile };
+      return { category: "ame_en_peine", mode: "extrapole", profile };
+    }
+
+    // Échelle prudente par DV pour les morts-vivants sans drain connu.
+    if (hd >= 9) return { category: "vampire", mode: "extrapole", profile };
+    if (hd >= 7) return { category: "fantome", mode: "extrapole", profile };
+    if (hd >= 6) return { category: "momie", mode: "extrapole", profile };
+    if (hd >= 5) return { category: "spectre", mode: "extrapole", profile };
+    if (hd >= 4) return { category: "ame_en_peine", mode: "extrapole", profile };
+    if (hd >= 3) return { category: "ghast", mode: "extrapole", profile };
+    if (hd >= 2) return { category: "goule", mode: "extrapole", profile };
+    return { category: "zombie", mode: "extrapole", profile };
+  }
+  function undeadCategoryInfo(targetActor) {
+    const category = UNDEAD_ROWS[norm(targetActor?.system?.type_monstre)];
+    return category
+      ? { category, mode: "canonique", profile: null }
+      : extrapolateUndeadCategory(targetActor);
+  }
+  function actorText(targetActor) {
+    const system = targetActor?.system ?? {};
+    const values = flatten([targetActor?.name, system.type, system.type_monstre, system.type_creature, system.race]);
+    for (const embedded of targetActor?.items ?? []) flatten([embedded?.name, embedded?.system?.label], values);
+    return values.map(norm).filter(Boolean).join(" ");
+  }
+  function specialEligible(targetActor) {
+    const armorClass = targetArmorClass(targetActor);
     const hitDice = targetHitDice(targetActor);
-    const magicResistance = numberFrom(system.resistance_magie ?? system.resistanceMagie ?? system.magicResistance ?? system.rm ?? system.mr);
+    const magicResistance = targetMagicResistance(targetActor);
     return !(Number.isFinite(armorClass) && armorClass <= -5) && !(Number.isFinite(hitDice) && hitDice >= 11) && !(Number.isFinite(magicResistance) && magicResistance >= 66);
   }
   function paladinRow(targetActor) {
@@ -298,14 +364,14 @@ const __add2eVadeRetroResult = await (async () => {
     if (evilCleric && norm(targetActor.type) === "personnage" && text.includes("paladin")) {
       const category = paladinRow(targetActor);
       const level = Math.max(1, Math.floor(numberFrom(targetActor.system?.niveau ?? targetActor.system?.level) || 1));
-      return { category, label: `Paladin niveau ${level}`, kind: "paladin", lowerPlane: false };
+      return { category, label: `Paladin niveau ${level}`, kind: "paladin", lowerPlane: false, classification: { mode: "paladin" } };
     }
     if (hasUndeadTag(targetActor)) {
-      const category = undeadCategory(targetActor);
-      return category ? { category, label: LABELS[category], kind: "mort-vivant", lowerPlane: false } : null;
+      const resolved = undeadCategoryInfo(targetActor);
+      return { category: resolved.category, label: LABELS[resolved.category], kind: "mort-vivant", lowerPlane: false, classification: resolved };
     }
     const lowerPlane = ["demon", "diable", "devil", "daemon", "mezzodaemon", "sorciere_des_tenebres", "plan_inferieur", "plans_inferieurs"].some(word => text.includes(word));
-    return lowerPlane && specialEligible(targetActor) ? { category: "special", label: LABELS.special, kind: "plan inférieur", lowerPlane: true } : null;
+    return lowerPlane && specialEligible(targetActor) ? { category: "special", label: LABELS.special, kind: "plan inférieur", lowerPlane: true, classification: { mode: "plan_inferieur" } } : null;
   }
   function tableEntry(group) { return TABLE[group?.category]?.[column] ?? null; }
   function resolveToken(id) {
@@ -317,8 +383,12 @@ const __add2eVadeRetroResult = await (async () => {
       const info = categoryFor(target);
       if (!info || !tableEntry(info)) continue;
       const key = `${info.kind}|${info.category}`;
-      const group = map.get(key) ?? { key, category: info.category, kind: info.kind, label: info.label, lowerPlane: info.lowerPlane, ids: [] };
+      const group = map.get(key) ?? { key, category: info.category, kind: info.kind, label: info.label, lowerPlane: info.lowerPlane, ids: [], extrapolated: false, profiles: [] };
       group.ids.push(target.id);
+      if (info.classification?.mode === "extrapole") {
+        group.extrapolated = true;
+        group.profiles.push({ name: target.name ?? target.actor?.name ?? "", typeMonstre: target.actor?.system?.type_monstre ?? "", ...info.classification.profile });
+      }
       map.set(key, group);
     }
     return [...map.values()].sort((left, right) => (ORDER_INDEX.get(left.category) ?? 999) - (ORDER_INDEX.get(right.category) ?? 999));
@@ -359,13 +429,7 @@ const __add2eVadeRetroResult = await (async () => {
   const group = queue[0] ?? null;
 
   if (!group) {
-    const unknown = targetsInCone
-      .filter(target => hasUndeadTag(target.actor) && !undeadCategory(target.actor))
-      .map(target => target.name ?? target.actor?.name)
-      .filter(Boolean);
-    ui.notifications.warn(unknown.length
-      ? `Vade-rétro : aucune ligne officielle de la matrice pour ${unknown.join(", ")}.`
-      : "Vade-rétro : aucun mort-vivant ou adversaire des plans inférieurs affectable dans le cône.");
+    ui.notifications.warn("Vade-rétro : aucun mort-vivant ou adversaire des plans inférieurs affectable dans le cône.");
     return false;
   }
 
@@ -516,6 +580,8 @@ const __add2eVadeRetroResult = await (async () => {
             sourceClass: isPaladin ? "paladin" : "clerc",
             effectiveClericLevel: clericLevel,
             category: group.category,
+            classification: group.extrapolated ? "extrapole" : "canonique",
+            profiles: group.extrapolated ? group.profiles : [],
             entry,
             outcome,
             direction: placement.direction,
@@ -542,11 +608,23 @@ const __add2eVadeRetroResult = await (async () => {
     ...stateBase,
     status,
     pending,
-    attempted: { category: group.category, entry, countFormula, count, result: outcome, targets: affected.map(target => target.id) }
+    attempted: {
+      category: group.category,
+      classification: group.extrapolated ? "extrapole" : "canonique",
+      profiles: group.extrapolated ? group.profiles : [],
+      entry,
+      countFormula,
+      count,
+      result: outcome,
+      targets: affected.map(target => target.id)
+    }
   });
 
   const reactionText = reaction?.rolled
     ? `<div><b>Réaction :</b> d100 ${reaction.rolled}${reaction.adjustment ? ` ${reaction.adjustment >= 0 ? "+" : ""}${reaction.adjustment}` : ""} = <b>${reaction.adjusted}</b> — ${esc(reaction.attitude)}.</div>`
+    : "";
+  const classificationText = group.extrapolated
+    ? `<br><span style="font-size:.84em;color:#665121;">Classement extrapolé depuis les DV et propriétés mécaniques.</span>`
     : "";
   const nextText = game.combat
     ? status === "pending" ? "Une tentative réussie peut être poursuivie au round suivant contre le type restant le plus faible." : "Aucune autre tentative n’est disponible dans ce combat."
@@ -554,7 +632,7 @@ const __add2eVadeRetroResult = await (async () => {
 
   await ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken }),
-    content: `<div class="add2e-chat-card" style="border:1.5px solid #c79b38;border-radius:12px;overflow:hidden;background:#fffaf0;box-shadow:0 3px 8px #0002;"><div style="background:linear-gradient(90deg,#765014,#c79b38);color:#fff;padding:8px 10px;display:flex;align-items:center;gap:8px;"><img src="${esc(caster.img || ICON)}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid #fff;"><div style="flex:1;"><div style="font-weight:800;">${esc(caster.name)}</div><div style="font-size:.88em;">Vade-rétro — niveau effectif ${clericLevel}${isPaladin ? ` (paladin niveau ${nativeLevel})` : ""}</div></div><img src="${ICON}" style="width:32px;height:32px;border-radius:4px;background:#fff;"></div><div style="padding:9px 10px;"><div style="padding:7px 8px;border:1px solid #e6cf86;border-radius:7px;background:#fffdf7;margin-bottom:7px;"><b>Cône :</b> ${CONE.angle}°, ${coneDistanceMeters()} ${esc(canvas.scene?.grid?.units || "m")}.<br><b>${esc(group.label)} :</b> ${automatic ? "résultat automatique" : `d20 ${d20.total} / ${esc(entry)}`} — <b>${esc(outcome)}</b>.<br><b>Nombre affecté :</b> ${countFormula} = <b>${count}</b>.${durationLabel ? `<br><b>Durée :</b> ${esc(durationLabel)}.` : ""}${reactionText}</div>${rows.map(row => `<div style="padding:5px 0;border-bottom:1px solid #ecd99c;"><b>${esc(row.target)}</b> — ${esc(row.result)}</div>`).join("")}<div style="margin-top:7px;font-size:.84em;color:#665121;">${nextText}</div></div></div>`
+    content: `<div class="add2e-chat-card" style="border:1.5px solid #c79b38;border-radius:12px;overflow:hidden;background:#fffaf0;box-shadow:0 3px 8px #0002;"><div style="background:linear-gradient(90deg,#765014,#c79b38);color:#fff;padding:8px 10px;display:flex;align-items:center;gap:8px;"><img src="${esc(caster.img || ICON)}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid #fff;"><div style="flex:1;"><div style="font-weight:800;">${esc(caster.name)}</div><div style="font-size:.88em;">Vade-rétro — niveau effectif ${clericLevel}${isPaladin ? ` (paladin niveau ${nativeLevel})` : ""}</div></div><img src="${ICON}" style="width:32px;height:32px;border-radius:4px;background:#fff;"></div><div style="padding:9px 10px;"><div style="padding:7px 8px;border:1px solid #e6cf86;border-radius:7px;background:#fffdf7;margin-bottom:7px;"><b>Cône :</b> ${CONE.angle}°, ${coneDistanceMeters()} ${esc(canvas.scene?.grid?.units || "m")}.<br><b>${esc(group.label)} :</b> ${automatic ? "résultat automatique" : `d20 ${d20.total} / ${esc(entry)}`} — <b>${esc(outcome)}</b>.<br><b>Nombre affecté :</b> ${countFormula} = <b>${count}</b>.${durationLabel ? `<br><b>Durée :</b> ${esc(durationLabel)}.` : ""}${reactionText}${classificationText}</div>${rows.map(row => `<div style="padding:5px 0;border-bottom:1px solid #ecd99c;"><b>${esc(row.target)}</b> — ${esc(row.result)}</div>`).join("")}<div style="margin-top:7px;font-size:.84em;color:#665121;">${nextText}</div></div></div>`
   });
 
   return true;
