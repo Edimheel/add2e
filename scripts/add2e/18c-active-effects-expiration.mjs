@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — Expiration des effets temporaires.
-// Version : 2026-07-01-active-effects-expiration-world-time-priority-v3
+// Version : 2026-07-06-active-effects-repulsed-vade-replace-v4
 // ============================================================================
 
 import { add2eVitalEffectKind } from "./18a-vital-status-core.mjs";
@@ -11,11 +11,12 @@ import {
   add2eTimeRemainingRounds
 } from "./19a-time-engine.mjs";
 
-export const ADD2E_ACTIVE_EFFECTS_EXPIRATION_VERSION = "2026-07-01-active-effects-expiration-world-time-priority-v3";
+export const ADD2E_ACTIVE_EFFECTS_EXPIRATION_VERSION = "2026-07-06-active-effects-repulsed-vade-replace-v4";
 
 const LINKED_EFFECT_GROUP_FLAG = "linkedEffectGroup";
 const LINKED_EFFECT_GROUP_HOOKS_FLAG = "ADD2E_LINKED_EFFECT_GROUP_HOOKS_REGISTERED";
 const linkedEffectGroupCleanups = new Set();
+const VADE_REPULSED_REPLACE_QUEUES = new Map();
 
 function numeric(value, fallback = NaN) {
   const n = Number(value);
@@ -84,6 +85,69 @@ function effectTags(effect) {
   if (Array.isArray(raw)) return raw.map(x => String(x ?? "")).filter(Boolean);
   if (typeof raw === "string") return raw.split(/[,;|\n]+/).map(x => x.trim()).filter(Boolean);
   return [];
+}
+
+function normalizeEffectKey(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function repulsedVadeActor(effect) {
+  const parent = effect?.parent ?? null;
+  if (parent?.documentName === "Actor") return parent;
+  return parent?.actor ?? null;
+}
+
+function isRepulsedVadeEffect(effect) {
+  if (!effect) return false;
+  const tags = new Set(effectTags(effect).map(normalizeEffectKey));
+  const name = normalizeEffectKey(effect.name ?? effect.label ?? "");
+  return tags.has("etat_repousse_vade_retro") || name === "repousse_par_vade_retro";
+}
+
+async function replaceExistingRepulsedVadeEffects(createdEffect) {
+  const actor = repulsedVadeActor(createdEffect);
+  if (!actor || !actor.effects?.get?.(createdEffect?.id) || !isRepulsedVadeEffect(createdEffect)) return;
+  const key = actor.uuid ?? actor.id;
+  if (!key) return;
+
+  const previous = VADE_REPULSED_REPLACE_QUEUES.get(key) ?? Promise.resolve();
+  let task = null;
+  task = previous
+    .catch(() => undefined)
+    .then(async () => {
+      const current = actor.effects?.get?.(createdEffect.id) ?? null;
+      if (!current || !isRepulsedVadeEffect(current)) return;
+      const duplicates = Array.from(actor.effects ?? [])
+        .filter(effect => effect.id !== current.id && isRepulsedVadeEffect(effect))
+        .map(effect => effect.id)
+        .filter(Boolean);
+      if (!duplicates.length) return;
+      await actor.deleteEmbeddedDocuments("ActiveEffect", duplicates, {
+        add2eVadeRetroEffectReplacement: true,
+        add2eReason: "vade-retro-repulsed-replaced"
+      });
+    })
+    .finally(() => {
+      if (VADE_REPULSED_REPLACE_QUEUES.get(key) === task) VADE_REPULSED_REPLACE_QUEUES.delete(key);
+    });
+
+  VADE_REPULSED_REPLACE_QUEUES.set(key, task);
+  await task;
+}
+
+function scheduleRepulsedVadeReplacement(effect) {
+  if (!isResponsibleGM() || !isRepulsedVadeEffect(effect)) return;
+  setTimeout(() => {
+    replaceExistingRepulsedVadeEffects(effect)
+      .catch(error => console.error("[ADD2E][VADE_RETRO][REPLACE_REPOUSSE_FAILED]", { effectId: effect?.id, actor: repulsedVadeActor(effect)?.name, error }));
+  }, 0);
 }
 
 function effectSourceLabel(effect) {
@@ -447,6 +511,7 @@ function registerLinkedEffectGroupHooks() {
   if (globalThis[LINKED_EFFECT_GROUP_HOOKS_FLAG]) return;
   globalThis[LINKED_EFFECT_GROUP_HOOKS_FLAG] = true;
 
+  Hooks.on("createActiveEffect", effect => scheduleRepulsedVadeReplacement(effect));
   Hooks.on("deleteActiveEffect", effect => scheduleLinkedGroupCleanup(effect, "effect-deleted"));
   Hooks.on("updateActiveEffect", effect => {
     if (effect?.disabled) scheduleLinkedGroupCleanup(effect, "effect-disabled");
