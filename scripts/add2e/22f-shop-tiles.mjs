@@ -232,8 +232,9 @@ export function registerShopTileControls() {
   });
 }
 
+registerShopTileControls();
+
 Hooks.once("ready", () => {
-  registerShopTileControls();
   bindAllShopTiles();
   Hooks.on("canvasReady", bindAllShopTiles);
   Hooks.on("createTile", () => setTimeout(bindAllShopTiles, 100));
