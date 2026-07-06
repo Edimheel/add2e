@@ -3,9 +3,10 @@
 // Contrat onUse : true = capacité utilisée ; false = annulée / non utilisée.
 
 const __add2eVadeRetroResult = await (async () => {
-  const VERSION = "2026-07-06-vade-retro-shared-forced-flee-v10";
+  const VERSION = "2026-07-06-vade-retro-player-continuation-v11";
   const ICON = "icons/magic/holy/barrier-shield-winged-cross.webp";
   const CONE = Object.freeze({ angle: 90, cells: 3 });
+  const CONTEXTS_FLAG = "__ADD2E_VADE_RETRO_CONTINUATION_CONTEXTS";
   const TABLE = Object.freeze({
     squelette: ["10", "7", "4", "T", "T", "D", "D", "D*", "D*", "D*"],
     zombie: ["13", "10", "7", "T", "T", "D", "D", "D", "D*", "D*"],
@@ -89,6 +90,8 @@ const __add2eVadeRetroResult = await (async () => {
   }
   const column = clericLevel <= 8 ? clericLevel - 1 : clericLevel <= 13 ? 8 : 9;
   const evilCleric = norm(caster.system?.alignement ?? caster.system?.alignment ?? "").includes("mauvais");
+  const featureKey = norm(source?.id ?? source?._id ?? source?.key ?? source?.slug ?? source?.name ?? source?.label ?? "vade_retro");
+  const featureOnUse = String(source?.on_use ?? source?.onUse ?? source?.script ?? source?.macro ?? "").trim();
 
   async function postClassCard({ title = "Vade-rétro", lead = "", details = [], rows = [], footer = "" } = {}) {
     const shared = game.add2e?.postVadeRetroCard ?? globalThis.add2ePostVadeRetroCard;
@@ -384,22 +387,34 @@ const __add2eVadeRetroResult = await (async () => {
 
   const prior = combatState();
   const currentRound = Number(game.combat?.round ?? 0) || 0;
+  const continuationContexts = globalThis[CONTEXTS_FLAG];
+  const continuationContext = continuationContexts?.get?.(`${caster.id}:${game.combat?.id ?? ""}`) ?? null;
+  const isPlayerContinuation = continuationContext?.kind === "vade-retro-continuation"
+    && String(continuationContext.actorId ?? "") === String(caster.id)
+    && String(continuationContext.combatId ?? "") === String(game.combat?.id ?? "")
+    && Number(continuationContext.round ?? NaN) === currentRound
+    && String(continuationContext.initiatorUserId ?? "") === String(game.user?.id ?? "");
   if (prior?.status === "closed" || prior?.status === "complete") {
     ui.notifications.warn("Vade-rétro a déjà été résolu pour ce combat.");
     return false;
   }
-  if (prior?.status === "pending" && Number(prior.lastRound ?? -1) === currentRound) {
+  if (isPlayerContinuation && (!prior || prior.status !== "pending" || Number(prior.lastRound ?? currentRound) >= currentRound)) return false;
+  if (prior?.status === "pending" && !isPlayerContinuation) {
     ui.notifications.warn("Vade-rétro : la tentative suivante est automatique au round suivant.");
     return false;
   }
-  const placement = await placeCone();
+  const placement = isPlayerContinuation
+    ? { direction: Number(prior?.direction ?? casterToken.document?.rotation ?? 0) || 0 }
+    : await placeCone();
   if (!placement) {
     ui.notifications.info("Vade-rétro : tentative annulée.");
     return false;
   }
-  const targetsInCone = Array.from(canvas.tokens?.placeables ?? [])
-    .filter(target => target?.visible !== false && target?.actor && target.id !== casterToken.id && target.actor.id !== caster.id)
-    .filter(target => tokenInCone(target, placement.direction));
+  const targetsInCone = isPlayerContinuation
+    ? []
+    : Array.from(canvas.tokens?.placeables ?? [])
+      .filter(target => target?.visible !== false && target?.actor && target.id !== casterToken.id && target.actor.id !== caster.id)
+      .filter(target => tokenInCone(target, placement.direction));
   const queue = Array.isArray(prior?.pending) ? prior.pending : groupsFrom(targetsInCone);
   const group = queue[0] ?? null;
   if (!group) {
@@ -414,7 +429,7 @@ const __add2eVadeRetroResult = await (async () => {
     return false;
   }
   const groupTargets = group.ids.map(resolveToken)
-    .filter(target => target?.actor && tokenInCone(target, placement.direction))
+    .filter(target => target?.actor && (isPlayerContinuation || tokenInCone(target, placement.direction)))
     .sort((left, right) => String(left.name ?? left.actor?.name).localeCompare(String(right.name ?? right.actor?.name), "fr"));
   if (!groupTargets.length) {
     ui.notifications.warn(`Vade-rétro : aucun ${group.label.toLowerCase()} de la tentative en cours n’est dans le cône.`);
@@ -424,7 +439,21 @@ const __add2eVadeRetroResult = await (async () => {
   const automatic = /^[TD]/.test(String(entry));
   const d20 = automatic ? null : await roll("1d20");
   const success = automatic || Number(d20.total) >= Number(entry);
-  const stateBase = { version: VERSION, status: "", combatId: game.combat?.id ?? null, casterUuid: caster.uuid, sourceClass: isPaladin ? "paladin" : "clerc", effectiveClericLevel: clericLevel, lastRound: currentRound, direction: placement.direction, cone: { angle: CONE.angle, distance: coneDistanceMeters(), units: canvas.scene?.grid?.units ?? "m" }, updatedAt: Date.now() };
+  const stateBase = {
+    version: VERSION,
+    status: "",
+    combatId: game.combat?.id ?? null,
+    casterUuid: caster.uuid,
+    sourceClass: isPaladin ? "paladin" : "clerc",
+    effectiveClericLevel: clericLevel,
+    initiatorUserId: prior?.initiatorUserId ?? game.user?.id ?? null,
+    featureKey: prior?.featureKey ?? featureKey,
+    featureOnUse: prior?.featureOnUse ?? featureOnUse,
+    lastRound: currentRound,
+    direction: placement.direction,
+    cone: { angle: CONE.angle, distance: coneDistanceMeters(), units: canvas.scene?.grid?.units ?? "m" },
+    updatedAt: Date.now()
+  };
   if (!success) {
     await saveCombatState({ ...stateBase, status: "closed", reason: "failed", pending: [] });
     await postClassCard({ lead: `<b>${esc(caster.name)}</b> présente son symbole sacré.`, details: [`<b>Échec :</b> ${esc(group.label)} — d20 = <b>${d20.total}</b>, score requis <b>${esc(entry)}</b>.`], footer: "Aucune autre tentative n’est possible dans ce combat." });
