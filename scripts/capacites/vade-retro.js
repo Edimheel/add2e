@@ -3,7 +3,7 @@
 // Contrat onUse : true = capacité utilisée ; false = annulée / non utilisée.
 
 const __add2eVadeRetroResult = await (async () => {
-  const VERSION = "2026-07-06-vade-retro-class-chat-flee-v7";
+  const VERSION = "2026-07-06-vade-retro-undead-tags-flee-v8";
   const ICON = "icons/magic/holy/barrier-shield-winged-cross.webp";
   const CONE = Object.freeze({ angle: 90, cells: 3 });
   const TABLE = Object.freeze({
@@ -27,7 +27,7 @@ const __add2eVadeRetroResult = await (async () => {
     ame_en_peine: "Âme en peine", momie: "Momie", spectre: "Spectre", vampire: "Vampire", fantome: "Fantôme", liche: "Liche",
     special: "Créature mauvaise des plans inférieurs"
   });
-  const UNDEAD_FAMILY_TAG = "type:mort_vivant";
+  const UNDEAD_TAGS = new Set(["type_mort_vivant", "type_monstre_mort_vivant", "creature_mort_vivant", "monstre_mort_vivant"]);
   const UNDEAD_ROWS = Object.freeze({
     squelette: "squelette", combattant_squelette: "squelette", squelette_animal: "squelette", squelette_geant: "squelette",
     zombie: "zombie", zombie_animal: "zombie", zombie_jaune: "zombie", zombie_juju: "zombie", zombie_monstre: "zombie",
@@ -35,6 +35,7 @@ const __add2eVadeRetroResult = await (async () => {
     ame_en_peine: "ame_en_peine", momie: "momie", spectre: "spectre", vampire: "vampire", banshee: "fantome", fantome: "fantome", liche: "liche"
   });
   const ORDER_INDEX = new Map(ORDER.map((key, index) => [key, index]));
+  const UNDEAD_ALIASES = Object.keys(UNDEAD_ROWS).sort((left, right) => right.length - left.length);
 
   const esc = value => String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   const norm = value => String(value ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "").replace(/[^a-z0-9]+/g, "_").replace(/_+/g, "_").replace(/^_+|_+$/g, "");
@@ -90,11 +91,19 @@ const __add2eVadeRetroResult = await (async () => {
   const evilCleric = norm(caster.system?.alignement ?? caster.system?.alignment ?? "").includes("mauvais");
 
   async function postClassCard({ title = "Vade-rétro", lead = "", details = [], rows = [], footer = "" } = {}) {
+    const shared = game.add2e?.postVadeRetroCard ?? globalThis.add2ePostVadeRetroCard;
+    if (typeof shared === "function") {
+      await shared(caster, { title, lead, details, rows: rows.map(row => ({ name: row.target ?? row.name, result: row.result })), footer });
+      return;
+    }
     const detailsHtml = details.filter(Boolean).map(detail => `<p>${detail}</p>`).join("");
     const rowsHtml = rows.length ? `<ul>${rows.map(row => `<li><b>${esc(row.target ?? row.name)}</b> : ${esc(row.result)}</li>`).join("")}</ul>` : "";
+    const styles = globalThis.CONST?.CHAT_MESSAGE_STYLES;
+    const messageStyle = styles?.OTHER !== undefined ? { style: styles.OTHER } : { type: globalThis.CONST?.CHAT_MESSAGE_TYPES?.OTHER ?? 0 };
     await ChatMessage.create({
       speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken }),
-      content: `<div class="add2e-chat-card"><h3>${esc(title)}</h3>${lead ? `<p>${lead}</p>` : ""}${detailsHtml}${rowsHtml}${footer ? `<p>${footer}</p>` : ""}</div>`
+      content: `<div class="add2e-chat-card add2e-class-ability"><h3>${esc(title)}</h3>${lead ? `<p>${lead}</p>` : ""}${detailsHtml}${rowsHtml}${footer ? `<p>${footer}</p>` : ""}</div>`,
+      ...messageStyle
     });
   }
 
@@ -220,7 +229,21 @@ const __add2eVadeRetroResult = await (async () => {
 
   function actorTags(targetActor) { return new Set(flatten(targetActor?.system?.tags).map(norm).filter(Boolean)); }
   function actorEffectTags(targetActor) { return new Set(flatten(targetActor?.system?.effectTags).map(norm).filter(Boolean)); }
-  function hasUndeadTag(targetActor) { return actorTags(targetActor).has(UNDEAD_FAMILY_TAG); }
+  function allActorTags(targetActor) { return new Set([...actorTags(targetActor), ...actorEffectTags(targetActor)]); }
+  function actorText(targetActor) {
+    const system = targetActor?.system ?? {};
+    const values = flatten([targetActor?.name, system.type, system.type_monstre, system.type_creature, system.creatureType, system.sous_type, system.sousType, system.race]);
+    for (const item of targetActor?.items ?? []) flatten([item?.name, item?.system?.label], values);
+    return values.map(norm).filter(Boolean).join(" ");
+  }
+  function hasUndeadTag(targetActor) {
+    const tags = allActorTags(targetActor);
+    if ([...UNDEAD_TAGS].some(tag => tags.has(tag))) return true;
+    const system = targetActor?.system ?? {};
+    return [system.type, system.type_monstre, system.type_creature, system.creatureType, system.sous_type, system.sousType]
+      .map(norm)
+      .some(value => value === "mort_vivant" || value.endsWith("_mort_vivant"));
+  }
   function targetHitDice(targetActor) {
     for (const value of [targetActor?.system?.dv, targetActor?.system?.hitDice, targetActor?.system?.hd, targetActor?.system?.des_de_vie, targetActor?.system?.niveau, targetActor?.system?.level]) {
       const parsed = numberFrom(value);
@@ -243,7 +266,7 @@ const __add2eVadeRetroResult = await (async () => {
     return numberFrom(system.resistance_magie ?? system.resistanceMagie ?? system.magicResistance ?? system.rm ?? system.mr);
   }
   function undeadProfile(targetActor) {
-    const tags = actorEffectTags(targetActor);
+    const tags = allActorTags(targetActor);
     const energyDrain = tags.has("attaque_drain_energie");
     return { hitDice: effectiveHitDice(targetActor), armorClass: targetArmorClass(targetActor), magicResistance: targetMagicResistance(targetActor), drain: energyDrain || tags.has("attaque_drain"), energyDrain };
   }
@@ -267,14 +290,15 @@ const __add2eVadeRetroResult = await (async () => {
     return { category: "zombie", mode: "extrapole", profile };
   }
   function undeadCategoryInfo(targetActor) {
-    const category = UNDEAD_ROWS[norm(targetActor?.system?.type_monstre)];
-    return category ? { category, mode: "canonique", profile: null } : extrapolateUndeadCategory(targetActor);
-  }
-  function actorText(targetActor) {
     const system = targetActor?.system ?? {};
-    const values = flatten([targetActor?.name, system.type, system.type_monstre, system.type_creature, system.race]);
-    for (const item of targetActor?.items ?? []) flatten([item?.name, item?.system?.label], values);
-    return values.map(norm).filter(Boolean).join(" ");
+    const direct = [system.vadeRetroCategory, system.type_monstre, system.sous_type, system.sousType, system.type_creature, system.creatureType]
+      .map(norm)
+      .find(key => UNDEAD_ROWS[key]);
+    if (direct) return { category: UNDEAD_ROWS[direct], mode: "canonique", profile: null };
+    const text = actorText(targetActor);
+    const matched = UNDEAD_ALIASES.find(alias => text.includes(alias));
+    if (matched) return { category: UNDEAD_ROWS[matched], mode: "canonique", profile: null };
+    return extrapolateUndeadCategory(targetActor);
   }
   function specialEligible(targetActor) {
     const armorClass = targetArmorClass(targetActor);
@@ -358,28 +382,6 @@ const __add2eVadeRetroResult = await (async () => {
     if (system.points_de_coup !== undefined) return "system.points_de_coup";
     return "system.pdv";
   }
-  function moveAway(target) {
-    const document = target?.document ?? target;
-    const scene = document?.parent ?? canvas.scene;
-    const gridSize = Number(scene?.grid?.size ?? canvas.grid?.size ?? 100) || 100;
-    const gridDistance = Math.max(.001, Number(scene?.grid?.distance ?? canvas.grid?.distance ?? 1) || 1);
-    const movement = [target?.actor?.system?.mouvement?.actuel, target?.actor?.system?.mouvement?.max, target?.actor?.system?.mouvement?.base, target?.actor?.system?.movement_base, target?.actor?.system?.movement_max].map(numberFrom).find(value => Number.isFinite(value) && value > 0) ?? gridDistance;
-    const source = casterToken.center;
-    const targetCenter = target?.center ?? { x: Number(document?.x ?? 0) + Number(document?.width ?? 1) * gridSize / 2, y: Number(document?.y ?? 0) + Number(document?.height ?? 1) * gridSize / 2 };
-    let dx = targetCenter.x - source.x;
-    let dy = targetCenter.y - source.y;
-    let length = Math.hypot(dx, dy);
-    if (length < 1) { dx = 1; dy = 0; length = 1; }
-    const width = Number(document?.width ?? 1) * gridSize;
-    const height = Number(document?.height ?? 1) * gridSize;
-    const rawX = targetCenter.x + dx / length * (movement / gridDistance * gridSize) - width / 2;
-    const rawY = targetCenter.y + dy / length * (movement / gridDistance * gridSize) - height / 2;
-    const sceneWidth = Number(scene?.dimensions?.sceneWidth ?? scene?.width ?? 0);
-    const sceneHeight = Number(scene?.dimensions?.sceneHeight ?? scene?.height ?? 0);
-    const x = sceneWidth > 0 ? Math.max(0, Math.min(sceneWidth - width, rawX)) : rawX;
-    const y = sceneHeight > 0 ? Math.max(0, Math.min(sceneHeight - height, rawY)) : rawY;
-    return document?.update?.({ x, y }, { add2eVadeRetro: true, add2eForcedFlee: true, add2eIgnoreMovement: true, showRuler: false });
-  }
 
   const prior = combatState();
   const currentRound = Number(game.combat?.round ?? 0) || 0;
@@ -410,7 +412,7 @@ const __add2eVadeRetroResult = await (async () => {
       if (rows.length) {
         console.table(rows);
         ui.notifications.warn(`Vade-rétro : ${rows.length} cible(s) reconnue(s) dans le cône. ${diagnosticText(rows)}.`);
-      } else ui.notifications.warn(`Vade-rétro : ${targetsInCone.length} token(s) dans le cône, mais aucun mort-vivant canonique (type:mort_vivant) ni adversaire des plans inférieurs affectable.`);
+      } else ui.notifications.warn(`Vade-rétro : ${targetsInCone.length} token(s) dans le cône, mais aucun mort-vivant ni adversaire des plans inférieurs affectable.`);
     }
     return false;
   }
@@ -522,12 +524,11 @@ const __add2eVadeRetroResult = await (async () => {
       duration: effectDuration,
       changes: [],
       description: `${outcome} par ${caster.name}.${durationLabel ? ` Durée : ${durationLabel}.` : ""}`,
-      flags: { add2e: { ...extraFlags, tags: effectTags, vadeRetro: { version: VERSION, casterId: caster.id, casterUuid: caster.uuid, casterName: caster.name, sourceClass: isPaladin ? "paladin" : "clerc", effectiveClericLevel: clericLevel, category: group.category, classification: group.extrapolated ? "extrapole" : "canonique", profiles: group.extrapolated ? group.profiles : [], entry, outcome, direction: placement.direction, combatId: game.combat?.id ?? null, countFormula, count, reaction } } }
+      flags: { add2e: { ...extraFlags, tags: effectTags, vadeRetro: { version: VERSION, casterId: caster.id, casterUuid: caster.uuid, casterName: caster.name, effectiveClericLevel: clericLevel, category: group.category, classification: group.extrapolated ? "extrapole" : "canonique", profiles: group.extrapolated ? group.profiles : [], entry, outcome, direction: placement.direction, combatId: game.combat?.id ?? null, countFormula, count, reaction } } }
     };
     try {
       await createEffect(targetActor, effectData);
       if (destroy) await destroyTarget(targetActor);
-      if (outcome === "Repoussé") await moveAway(target);
       rows.push({ target: target.name ?? targetActor.name, result: outcome });
     } catch (error) {
       console.error("[ADD2E][VADE-RETRO][EFFECT]", { target: targetActor.name, error });
@@ -555,5 +556,4 @@ if (__add2eVadeRetroResult !== true && __add2eVadeRetroResult !== false) {
   ui.notifications?.error?.("Vade-rétro : le script onUse n'a pas retourné true/false.");
   return false;
 }
-
 return __add2eVadeRetroResult;
