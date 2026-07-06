@@ -1,9 +1,10 @@
 // ADD2E — Capacité de classe : Vade-rétro
 // Compatible Foundry V13 / V14 / V15.
 // Contrat onUse : true = capacité utilisée ; false = annulée / non utilisée.
+// La visée utilise un cône PIXI, sans Warpgate, sur le modèle de Mains brûlantes.
 
 const __add2eVadeRetroResult = await (async () => {
-  const VERSION = "2026-07-06-vade-retro-class-chat-flee-v7";
+  const VERSION = "2026-07-06-vade-retro-undead-profile-v6";
   const ICON = "icons/magic/holy/barrier-shield-winged-cross.webp";
   const CONE = Object.freeze({ angle: 90, cells: 3 });
   const TABLE = Object.freeze({
@@ -27,6 +28,7 @@ const __add2eVadeRetroResult = await (async () => {
     ame_en_peine: "Âme en peine", momie: "Momie", spectre: "Spectre", vampire: "Vampire", fantome: "Fantôme", liche: "Liche",
     special: "Créature mauvaise des plans inférieurs"
   });
+
   const UNDEAD_FAMILY_TAG = "type:mort_vivant";
   const UNDEAD_ROWS = Object.freeze({
     squelette: "squelette", combattant_squelette: "squelette", squelette_animal: "squelette", squelette_geant: "squelette",
@@ -87,16 +89,8 @@ const __add2eVadeRetroResult = await (async () => {
     return false;
   }
   const column = clericLevel <= 8 ? clericLevel - 1 : clericLevel <= 13 ? 8 : 9;
-  const evilCleric = norm(caster.system?.alignement ?? caster.system?.alignment ?? "").includes("mauvais");
-
-  async function postClassCard({ title = "Vade-rétro", lead = "", details = [], rows = [], footer = "" } = {}) {
-    const detailsHtml = details.filter(Boolean).map(detail => `<p>${detail}</p>`).join("");
-    const rowsHtml = rows.length ? `<ul>${rows.map(row => `<li><b>${esc(row.target ?? row.name)}</b> : ${esc(row.result)}</li>`).join("")}</ul>` : "";
-    await ChatMessage.create({
-      speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken }),
-      content: `<div class="add2e-chat-card"><h3>${esc(title)}</h3>${lead ? `<p>${lead}</p>` : ""}${detailsHtml}${rowsHtml}${footer ? `<p>${footer}</p>` : ""}</div>`
-    });
-  }
+  const alignment = norm(caster.system?.alignement ?? caster.system?.alignment ?? "");
+  const evilCleric = alignment.includes("mauvais") || alignment.includes("evil");
 
   function metersPerGridCell() {
     const grid = canvas.scene?.grid ?? canvas.grid;
@@ -119,7 +113,10 @@ const __add2eVadeRetroResult = await (async () => {
     const y = Number(target.document?.y ?? target.y ?? 0);
     const width = Number(target.w ?? gridSizePx());
     const height = Number(target.h ?? gridSizePx());
-    return [target.center, { x, y }, { x: x + width, y }, { x, y: y + height }, { x: x + width, y: y + height }, { x: x + width / 2, y }, { x: x + width / 2, y: y + height }, { x, y: y + height / 2 }, { x: x + width, y: y + height / 2 }].filter(Boolean);
+    return [
+      target.center, { x, y }, { x: x + width, y }, { x, y: y + height }, { x: x + width, y: y + height },
+      { x: x + width / 2, y }, { x: x + width / 2, y: y + height }, { x, y: y + height / 2 }, { x: x + width, y: y + height / 2 }
+    ].filter(Boolean);
   }
   function tokenInCone(target, direction) {
     const origin = casterToken.center;
@@ -135,20 +132,21 @@ const __add2eVadeRetroResult = await (async () => {
     const renderer = canvas.app?.renderer;
     if (!view || !renderer || typeof PIXI === "undefined") return null;
     const rect = view.getBoundingClientRect();
-    const sx = renderer.screen?.width ? renderer.screen.width / rect.width : 1;
-    const sy = renderer.screen?.height ? renderer.screen.height / rect.height : 1;
-    const point = new PIXI.Point((event.clientX - rect.left) * sx, (event.clientY - rect.top) * sy);
-    return canvas.stage?.worldTransform?.applyInverse(point) ?? null;
+    const scaleX = renderer.screen?.width ? renderer.screen.width / rect.width : 1;
+    const scaleY = renderer.screen?.height ? renderer.screen.height / rect.height : 1;
+    const global = new PIXI.Point((event.clientX - rect.left) * scaleX, (event.clientY - rect.top) * scaleY);
+    return canvas.stage?.worldTransform?.applyInverse(global) ?? null;
   }
   const foundryToCanvasRadians = rotation => (Number(rotation ?? 0) - 90) * Math.PI / 180;
   const canvasToFoundryRotation = radians => (radians * 180 / Math.PI + 90 + 360) % 360;
   function drawCone(overlay, direction) {
+    if (!overlay) return;
     const radius = coneDistanceMeters() / metersPerGridCell() * gridSizePx();
     const center = casterToken.center;
-    const middle = foundryToCanvasRadians(direction);
-    const half = CONE.angle * Math.PI / 360;
-    const start = middle - half;
-    const end = middle + half;
+    const centerRadians = foundryToCanvasRadians(direction);
+    const halfRadians = (CONE.angle / 2) * Math.PI / 180;
+    const start = centerRadians - halfRadians;
+    const end = centerRadians + halfRadians;
     overlay.clear();
     overlay.lineStyle(3, 0xc79b38, 0.95);
     overlay.beginFill(0xffe0a3, 0.30);
@@ -162,65 +160,88 @@ const __add2eVadeRetroResult = await (async () => {
     overlay.moveTo(center.x, center.y);
     overlay.lineTo(center.x + Math.cos(end) * radius, center.y + Math.sin(end) * radius);
   }
-  async function placeCone() {
-    const view = canvas.app?.view;
+  function createConeOverlay() {
     const parent = canvas.interface ?? canvas.controls ?? canvas.stage;
-    if (!view || !parent || typeof PIXI === "undefined") return { direction: Number(casterToken.document?.rotation ?? 0) || 0 };
-    clearRulerArtifacts();
-    parent.getChildByName?.("add2e-vade-retro-cone-overlay")?.destroy({ children: true });
+    if (!parent || typeof PIXI === "undefined") return null;
+    const previous = parent.getChildByName?.("add2e-vade-retro-cone-overlay");
+    if (previous) previous.destroy({ children: true });
     const overlay = new PIXI.Graphics();
     overlay.name = "add2e-vade-retro-cone-overlay";
     overlay.zIndex = 100000;
     overlay.eventMode = "none";
+    overlay.interactive = false;
     parent.sortableChildren = true;
     parent.addChild(overlay);
+    return overlay;
+  }
+  async function placeCone() {
+    clearRulerArtifacts();
+    const view = canvas.app?.view;
+    const overlay = createConeOverlay();
+    if (!view || !overlay) return { direction: Number(casterToken.document?.rotation ?? 0) || 0, manual: false };
     ui.notifications.info("Vade-rétro : déplace la souris pour orienter le cône, clic gauche pour valider, clic droit ou Échap pour annuler.");
     const oldCursor = view.style.cursor;
     view.style.cursor = "crosshair";
     let direction = Number(casterToken.document?.rotation ?? 0) || 0;
     drawCone(overlay, direction);
     return new Promise(resolve => {
-      let done = false;
-      const finish = (value, keep = false) => {
-        if (done) return;
-        done = true;
+      let finished = false;
+      const cleanup = (result, keepOverlay = false) => {
+        if (finished) return;
+        finished = true;
         view.removeEventListener("mousemove", onMove, true);
         view.removeEventListener("mousedown", onDown, true);
-        view.removeEventListener("contextmenu", onContext, true);
-        window.removeEventListener("keydown", onKey, true);
+        view.removeEventListener("contextmenu", onContextMenu, true);
+        window.removeEventListener("keydown", onKeyDown, true);
         view.style.cursor = oldCursor;
         clearRulerArtifacts();
-        if (keep) window.setTimeout(() => { if (!overlay.destroyed) overlay.destroy({ children: true }); }, 2400);
-        else if (!overlay.destroyed) overlay.destroy({ children: true });
-        resolve(value);
+        if (keepOverlay) {
+          window.setTimeout(() => {
+            if (!overlay.destroyed) overlay.destroy({ children: true });
+            clearRulerArtifacts();
+          }, 2400);
+        } else if (!overlay.destroyed) overlay.destroy({ children: true });
+        resolve(result);
       };
-      const setDirection = event => {
+      const updateDirection = event => {
         const point = browserEventToCanvasPoint(event);
         if (!point) return;
-        direction = canvasToFoundryRotation(Math.atan2(point.y - casterToken.center.y, point.x - casterToken.center.x));
+        const center = casterToken.center;
+        direction = canvasToFoundryRotation(Math.atan2(point.y - center.y, point.x - center.x));
         drawCone(overlay, direction);
       };
-      const onMove = event => setDirection(event);
-      const onDown = event => {
+      function onMove(event) { updateDirection(event); }
+      function onDown(event) {
         event.preventDefault();
         event.stopPropagation();
-        if (event.button === 2) return finish(null);
+        if (event.button === 2) return cleanup(null, false);
         if (event.button !== 0) return;
-        setDirection(event);
-        finish({ direction }, true);
-      };
-      const onContext = event => { event.preventDefault(); event.stopPropagation(); finish(null); };
-      const onKey = event => { if (event.key === "Escape") { event.preventDefault(); finish(null); } };
+        updateDirection(event);
+        cleanup({ direction, manual: true }, true);
+      }
+      function onContextMenu(event) { event.preventDefault(); event.stopPropagation(); cleanup(null, false); }
+      function onKeyDown(event) {
+        if (event.key !== "Escape") return;
+        event.preventDefault();
+        event.stopPropagation();
+        cleanup(null, false);
+      }
       view.addEventListener("mousemove", onMove, true);
       view.addEventListener("mousedown", onDown, true);
-      view.addEventListener("contextmenu", onContext, true);
-      window.addEventListener("keydown", onKey, true);
+      view.addEventListener("contextmenu", onContextMenu, true);
+      window.addEventListener("keydown", onKeyDown, true);
     });
   }
 
-  function actorTags(targetActor) { return new Set(flatten(targetActor?.system?.tags).map(norm).filter(Boolean)); }
-  function actorEffectTags(targetActor) { return new Set(flatten(targetActor?.system?.effectTags).map(norm).filter(Boolean)); }
-  function hasUndeadTag(targetActor) { return actorTags(targetActor).has(UNDEAD_FAMILY_TAG); }
+  function actorTags(targetActor) {
+    return new Set(flatten(targetActor?.system?.tags).map(norm).filter(Boolean));
+  }
+  function actorEffectTags(targetActor) {
+    return new Set(flatten(targetActor?.system?.effectTags).map(norm).filter(Boolean));
+  }
+  function hasUndeadTag(targetActor) {
+    return actorTags(targetActor).has(norm(UNDEAD_FAMILY_TAG));
+  }
   function targetHitDice(targetActor) {
     for (const value of [targetActor?.system?.dv, targetActor?.system?.hitDice, targetActor?.system?.hd, targetActor?.system?.des_de_vie, targetActor?.system?.niveau, targetActor?.system?.level]) {
       const parsed = numberFrom(value);
@@ -230,12 +251,15 @@ const __add2eVadeRetroResult = await (async () => {
   }
   function effectiveHitDice(targetActor) {
     const raw = String(targetActor?.system?.dv ?? targetActor?.system?.hitDice ?? targetActor?.system?.hd ?? "");
-    const plus = raw.match(/(\d+)\s*\+\s*(\d+)/);
-    return plus ? Number(plus[1]) + Math.floor(Number(plus[2]) / 3) : targetHitDice(targetActor);
+    const match = raw.match(/(\d+)\s*\+\s*(\d+)/);
+    if (match) return Number(match[1]) + Math.floor(Number(match[2]) / 3);
+    return targetHitDice(targetActor);
   }
   function targetArmorClass(targetActor) {
     const system = targetActor?.system ?? {};
-    const values = [system.armorClass, system.ca_naturel, system.ca, system.ac, system.ca_total].map(numberFrom).filter(Number.isFinite);
+    const values = [system.armorClass, system.ca_naturel, system.ca, system.ac, system.ca_total]
+      .map(numberFrom)
+      .filter(Number.isFinite);
     return values.length ? Math.min(...values) : NaN;
   }
   function targetMagicResistance(targetActor) {
@@ -243,14 +267,23 @@ const __add2eVadeRetroResult = await (async () => {
     return numberFrom(system.resistance_magie ?? system.resistanceMagie ?? system.magicResistance ?? system.rm ?? system.mr);
   }
   function undeadProfile(targetActor) {
-    const tags = actorEffectTags(targetActor);
-    const energyDrain = tags.has("attaque_drain_energie");
-    return { hitDice: effectiveHitDice(targetActor), armorClass: targetArmorClass(targetActor), magicResistance: targetMagicResistance(targetActor), drain: energyDrain || tags.has("attaque_drain"), energyDrain };
+    const effectTags = actorEffectTags(targetActor);
+    const energyDrain = effectTags.has("attaque_drain_energie");
+    const drain = energyDrain || effectTags.has("attaque_drain");
+    return {
+      hitDice: effectiveHitDice(targetActor),
+      armorClass: targetArmorClass(targetActor),
+      magicResistance: targetMagicResistance(targetActor),
+      drain,
+      energyDrain
+    };
   }
   function extrapolateUndeadCategory(targetActor) {
     const profile = undeadProfile(targetActor);
     const hd = Number(profile.hitDice) || 0;
-    if ((Number.isFinite(profile.magicResistance) && profile.magicResistance >= 66) || (Number.isFinite(profile.armorClass) && profile.armorClass <= -5) || hd >= 11) return { category: "liche", mode: "extrapole", profile };
+    if ((Number.isFinite(profile.magicResistance) && profile.magicResistance >= 66)
+      || (Number.isFinite(profile.armorClass) && profile.armorClass <= -5)
+      || hd >= 11) return { category: "liche", mode: "extrapole", profile };
     if (profile.energyDrain || profile.drain) {
       if (hd >= 10) return { category: "vampire", mode: "extrapole", profile };
       if (hd >= 7) return { category: "spectre", mode: "extrapole", profile };
@@ -273,18 +306,23 @@ const __add2eVadeRetroResult = await (async () => {
   function actorText(targetActor) {
     const system = targetActor?.system ?? {};
     const values = flatten([targetActor?.name, system.type, system.type_monstre, system.type_creature, system.race]);
-    for (const item of targetActor?.items ?? []) flatten([item?.name, item?.system?.label], values);
+    for (const embedded of targetActor?.items ?? []) flatten([embedded?.name, embedded?.system?.label], values);
     return values.map(norm).filter(Boolean).join(" ");
   }
   function specialEligible(targetActor) {
     const armorClass = targetArmorClass(targetActor);
     const hitDice = targetHitDice(targetActor);
-    const resistance = targetMagicResistance(targetActor);
-    return !(Number.isFinite(armorClass) && armorClass <= -5) && !(Number.isFinite(hitDice) && hitDice >= 11) && !(Number.isFinite(resistance) && resistance >= 66);
+    const magicResistance = targetMagicResistance(targetActor);
+    return !(Number.isFinite(armorClass) && armorClass <= -5) && !(Number.isFinite(hitDice) && hitDice >= 11) && !(Number.isFinite(magicResistance) && magicResistance >= 66);
   }
   function paladinRow(targetActor) {
     const level = Math.max(1, Math.floor(numberFrom(targetActor?.system?.niveau ?? targetActor?.system?.level) || 1));
-    return level <= 2 ? "momie" : level <= 4 ? "spectre" : level <= 6 ? "vampire" : level <= 8 ? "fantome" : level <= 10 ? "liche" : "special";
+    if (level <= 2) return "momie";
+    if (level <= 4) return "spectre";
+    if (level <= 6) return "vampire";
+    if (level <= 8) return "fantome";
+    if (level <= 10) return "liche";
+    return "special";
   }
   function categoryFor(target) {
     const targetActor = target?.actor;
@@ -292,7 +330,8 @@ const __add2eVadeRetroResult = await (async () => {
     const text = actorText(targetActor);
     if (evilCleric && norm(targetActor.type) === "personnage" && text.includes("paladin")) {
       const category = paladinRow(targetActor);
-      return { category, label: `Paladin niveau ${Math.max(1, Math.floor(numberFrom(targetActor.system?.niveau ?? targetActor.system?.level) || 1))}`, kind: "paladin", lowerPlane: false, classification: { mode: "paladin" } };
+      const level = Math.max(1, Math.floor(numberFrom(targetActor.system?.niveau ?? targetActor.system?.level) || 1));
+      return { category, label: `Paladin niveau ${level}`, kind: "paladin", lowerPlane: false, classification: { mode: "paladin" } };
     }
     if (hasUndeadTag(targetActor)) {
       const resolved = undeadCategoryInfo(targetActor);
@@ -305,40 +344,62 @@ const __add2eVadeRetroResult = await (async () => {
   function minimumEffectiveLevel(category) {
     const row = TABLE[category] ?? [];
     const first = row.findIndex(value => value !== null && value !== undefined);
-    return first < 0 ? null : first <= 7 ? first + 1 : first === 8 ? 9 : 14;
+    if (first < 0) return null;
+    if (first <= 7) return first + 1;
+    if (first === 8) return 9;
+    return 14;
   }
-  function diagnostics(tokens) {
+  function coneDiagnostics(tokens) {
     return tokens.map(target => {
       const info = categoryFor(target);
       if (!info) return null;
-      const profile = info.classification?.profile ?? null;
       const entry = TABLE[info.category]?.[column] ?? null;
-      return { token: target.name ?? target.actor?.name ?? "—", typeMonstre: target.actor?.system?.type_monstre ?? "—", ligne: LABELS[info.category] ?? info.category, classification: info.classification?.mode ?? "—", dv: profile?.hitDice ?? targetHitDice(target.actor), ca: profile?.armorClass ?? targetArmorClass(target.actor), rm: profile?.magicResistance ?? targetMagicResistance(target.actor), drain: profile?.drain ?? false, entree_table: entry ?? "—", niveau_effectif_minimum: entry === null ? minimumEffectiveLevel(info.category) : null };
+      const profile = info.classification?.profile ?? null;
+      return {
+        token: target.name ?? target.actor?.name ?? "—",
+        typeMonstre: target.actor?.system?.type_monstre ?? "—",
+        ligne: LABELS[info.category] ?? info.category,
+        classification: info.classification?.mode ?? "—",
+        dv: profile?.hitDice ?? targetHitDice(target.actor),
+        ca: profile?.armorClass ?? targetArmorClass(target.actor),
+        rm: profile?.magicResistance ?? targetMagicResistance(target.actor),
+        drain: profile?.drain ?? false,
+        entree_table: entry ?? "—",
+        niveau_effectif_minimum: entry === null ? minimumEffectiveLevel(info.category) : null
+      };
     }).filter(Boolean);
   }
   function diagnosticText(rows) {
-    return rows.slice(0, 4).map(row => {
-      const extra = row.classification === "extrapole" ? " extrapolée" : "";
-      if (row.entree_table === "—") return `${row.token} — ligne ${row.ligne}${extra} : non affectable avant niveau effectif ${row.niveau_effectif_minimum ?? "—"}`;
-      return /^[TD]/.test(String(row.entree_table)) ? `${row.token} — ligne ${row.ligne}${extra} : résultat automatique` : `${row.token} — ligne ${row.ligne}${extra} : score requis ${row.entree_table}`;
-    }).join(" • ");
+    const shown = rows.slice(0, 4).map(row => {
+      const qualifier = row.classification === "extrapole" ? " extrapolée" : "";
+      if (row.entree_table === "—") {
+        return `${row.token} — ligne ${row.ligne}${qualifier} : non affectable avant niveau effectif ${row.niveau_effectif_minimum ?? "—"}`;
+      }
+      if (/^[TD]/.test(String(row.entree_table))) {
+        return `${row.token} — ligne ${row.ligne}${qualifier} : résultat automatique`;
+      }
+      return `${row.token} — ligne ${row.ligne}${qualifier} : score requis ${row.entree_table}`;
+    });
+    return `${shown.join(" • ")}${rows.length > shown.length ? " • détails complets dans F12" : ""}`;
   }
-  function resolveToken(id) { return canvas.tokens?.get?.(id) ?? canvas.tokens?.placeables?.find(target => target?.id === id || target?.document?.id === id) ?? null; }
+  function resolveToken(id) {
+    return canvas.tokens?.get?.(id) ?? canvas.tokens?.placeables?.find(entry => entry?.id === id || entry?.document?.id === id) ?? null;
+  }
   function groupsFrom(tokens) {
-    const groups = new Map();
+    const map = new Map();
     for (const target of tokens) {
       const info = categoryFor(target);
       if (!info || !tableEntry(info)) continue;
       const key = `${info.kind}|${info.category}`;
-      const group = groups.get(key) ?? { key, category: info.category, kind: info.kind, label: info.label, lowerPlane: info.lowerPlane, ids: [], extrapolated: false, profiles: [] };
+      const group = map.get(key) ?? { key, category: info.category, kind: info.kind, label: info.label, lowerPlane: info.lowerPlane, ids: [], extrapolated: false, profiles: [] };
       group.ids.push(target.id);
       if (info.classification?.mode === "extrapole") {
         group.extrapolated = true;
         group.profiles.push({ name: target.name ?? target.actor?.name ?? "", typeMonstre: target.actor?.system?.type_monstre ?? "", ...info.classification.profile });
       }
-      groups.set(key, group);
+      map.set(key, group);
     }
-    return [...groups.values()].sort((left, right) => (ORDER_INDEX.get(left.category) ?? 999) - (ORDER_INDEX.get(right.category) ?? 999));
+    return [...map.values()].sort((left, right) => (ORDER_INDEX.get(left.category) ?? 999) - (ORDER_INDEX.get(right.category) ?? 999));
   }
   function combatState() {
     if (!game.combat?.id) return null;
@@ -350,36 +411,6 @@ const __add2eVadeRetroResult = await (async () => {
     const all = caster.getFlag("add2e", "vadeRetro") ?? caster.flags?.add2e?.vadeRetro ?? {};
     await caster.setFlag("add2e", "vadeRetro", { ...all, [game.combat.id]: state });
   }
-  function hpPath(targetActor) {
-    const system = targetActor?.system ?? {};
-    if (system.pdv !== undefined) return "system.pdv";
-    if (system.pv?.value !== undefined) return "system.pv.value";
-    if (system.hp?.value !== undefined) return "system.hp.value";
-    if (system.points_de_coup !== undefined) return "system.points_de_coup";
-    return "system.pdv";
-  }
-  function moveAway(target) {
-    const document = target?.document ?? target;
-    const scene = document?.parent ?? canvas.scene;
-    const gridSize = Number(scene?.grid?.size ?? canvas.grid?.size ?? 100) || 100;
-    const gridDistance = Math.max(.001, Number(scene?.grid?.distance ?? canvas.grid?.distance ?? 1) || 1);
-    const movement = [target?.actor?.system?.mouvement?.actuel, target?.actor?.system?.mouvement?.max, target?.actor?.system?.mouvement?.base, target?.actor?.system?.movement_base, target?.actor?.system?.movement_max].map(numberFrom).find(value => Number.isFinite(value) && value > 0) ?? gridDistance;
-    const source = casterToken.center;
-    const targetCenter = target?.center ?? { x: Number(document?.x ?? 0) + Number(document?.width ?? 1) * gridSize / 2, y: Number(document?.y ?? 0) + Number(document?.height ?? 1) * gridSize / 2 };
-    let dx = targetCenter.x - source.x;
-    let dy = targetCenter.y - source.y;
-    let length = Math.hypot(dx, dy);
-    if (length < 1) { dx = 1; dy = 0; length = 1; }
-    const width = Number(document?.width ?? 1) * gridSize;
-    const height = Number(document?.height ?? 1) * gridSize;
-    const rawX = targetCenter.x + dx / length * (movement / gridDistance * gridSize) - width / 2;
-    const rawY = targetCenter.y + dy / length * (movement / gridDistance * gridSize) - height / 2;
-    const sceneWidth = Number(scene?.dimensions?.sceneWidth ?? scene?.width ?? 0);
-    const sceneHeight = Number(scene?.dimensions?.sceneHeight ?? scene?.height ?? 0);
-    const x = sceneWidth > 0 ? Math.max(0, Math.min(sceneWidth - width, rawX)) : rawX;
-    const y = sceneHeight > 0 ? Math.max(0, Math.min(sceneHeight - height, rawY)) : rawY;
-    return document?.update?.({ x, y }, { add2eVadeRetro: true, add2eForcedFlee: true, add2eIgnoreMovement: true, showRuler: false });
-  }
 
   const prior = combatState();
   const currentRound = Number(game.combat?.round ?? 0) || 0;
@@ -388,7 +419,7 @@ const __add2eVadeRetroResult = await (async () => {
     return false;
   }
   if (prior?.status === "pending" && Number(prior.lastRound ?? -1) === currentRound) {
-    ui.notifications.warn("Vade-rétro : la tentative suivante est automatique au round suivant.");
+    ui.notifications.warn("Vade-rétro : la tentative suivante contre un autre type se fait au round suivant.");
     return false;
   }
 
@@ -401,17 +432,22 @@ const __add2eVadeRetroResult = await (async () => {
   const targetsInCone = Array.from(canvas.tokens?.placeables ?? [])
     .filter(target => target?.visible !== false && target?.actor && target.id !== casterToken.id && target.actor.id !== caster.id)
     .filter(target => tokenInCone(target, placement.direction));
+
   const queue = Array.isArray(prior?.pending) ? prior.pending : groupsFrom(targetsInCone);
   const group = queue[0] ?? null;
+
   if (!group) {
-    if (!targetsInCone.length) ui.notifications.warn("Vade-rétro : aucun token adverse n’est dans le cône validé.");
-    else {
-      const rows = diagnostics(targetsInCone);
-      if (rows.length) {
-        console.table(rows);
-        ui.notifications.warn(`Vade-rétro : ${rows.length} cible(s) reconnue(s) dans le cône. ${diagnosticText(rows)}.`);
-      } else ui.notifications.warn(`Vade-rétro : ${targetsInCone.length} token(s) dans le cône, mais aucun mort-vivant canonique (type:mort_vivant) ni adversaire des plans inférieurs affectable.`);
+    if (!targetsInCone.length) {
+      ui.notifications.warn("Vade-rétro : aucun token adverse n’est dans le cône validé.");
+      return false;
     }
+    const diagnostics = coneDiagnostics(targetsInCone);
+    if (diagnostics.length) {
+      console.table(diagnostics);
+      ui.notifications.warn(`Vade-rétro : ${diagnostics.length} cible(s) reconnue(s) dans le cône. ${diagnosticText(diagnostics)}.`);
+      return false;
+    }
+    ui.notifications.warn(`Vade-rétro : ${targetsInCone.length} token(s) dans le cône, mais aucun mort-vivant canonique (type:mort_vivant) ni adversaire des plans inférieurs affectable.`);
     return false;
   }
 
@@ -424,48 +460,75 @@ const __add2eVadeRetroResult = await (async () => {
   }
 
   const entry = tableEntry(group);
-  const automatic = /^[TD]/.test(String(entry));
+  const automatic = String(entry).startsWith("T") || String(entry).startsWith("D");
   const d20 = automatic ? null : await roll("1d20");
   const success = automatic || Number(d20.total) >= Number(entry);
-  const stateBase = { version: VERSION, status: "", combatId: game.combat?.id ?? null, casterUuid: caster.uuid, sourceClass: isPaladin ? "paladin" : "clerc", effectiveClericLevel: clericLevel, lastRound: currentRound, direction: placement.direction, cone: { angle: CONE.angle, distance: coneDistanceMeters(), units: canvas.scene?.grid?.units ?? "m" }, updatedAt: Date.now() };
+  const stateBase = {
+    version: VERSION,
+    status: "",
+    combatId: game.combat?.id ?? null,
+    casterUuid: caster.uuid,
+    sourceClass: isPaladin ? "paladin" : "clerc",
+    effectiveClericLevel: clericLevel,
+    lastRound: currentRound,
+    direction: placement.direction,
+    cone: { angle: CONE.angle, distance: coneDistanceMeters(), units: canvas.scene?.grid?.units ?? "m" },
+    updatedAt: Date.now()
+  };
 
   if (!success) {
     await saveCombatState({ ...stateBase, status: "closed", reason: "failed", pending: [] });
-    await postClassCard({
-      lead: `<b>${esc(caster.name)}</b> présente son symbole sacré.`,
-      details: [`<b>Échec :</b> ${esc(group.label)} — d20 = <b>${d20.total}</b>, score requis <b>${esc(entry)}</b>.`],
-      footer: "Aucune autre tentative n’est possible dans ce combat."
+    await ChatMessage.create({
+      speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken }),
+      content: `<div class="add2e-chat-card" style="border:1.5px solid #aa473a;border-radius:10px;overflow:hidden;background:#fff8f5;"><div style="padding:8px 10px;background:#8c3428;color:#fff;display:flex;gap:8px;align-items:center;"><img src="${esc(caster.img || ICON)}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:1px solid #fff;"><div><b>${esc(caster.name)}</b><div style="font-size:.88em;">Vade-rétro</div></div></div><div style="padding:9px 10px;"><b>ÉCHEC</b> — ${esc(group.label)} : d20 = <b>${d20.total}</b>, score requis <b>${esc(entry)}</b>.<div style="margin-top:5px;font-size:.9em;">Aucune autre tentative n’est possible dans ce combat.</div></div></div>`
     });
     return true;
   }
 
   const countFormula = group.lowerPlane ? "1d2" : String(entry).endsWith("*") ? "1d6+6" : "1d12";
-  const count = Math.max(1, Number((await roll(countFormula)).total) || 1);
+  const countRoll = await roll(countFormula);
+  const count = Math.max(1, Number(countRoll.total) || 1);
   const affected = groupTargets.slice(0, count);
   const remainder = groupTargets.slice(count).map(target => target.id);
   const pending = [...(remainder.length ? [{ ...group, ids: remainder }] : []), ...queue.slice(1)];
+
   const time = game.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
   const createEffect = async (targetActor, effectData) => {
     if (game.user?.isGM || targetActor?.isOwner) {
       await targetActor.createEmbeddedDocuments("ActiveEffect", [effectData]);
       return true;
     }
-    game.socket?.emit("system.add2e", { type: "ADD2E_GM_OPERATION", operation: "createActiveEffect", payload: { actorUuid: targetActor.uuid, actorId: targetActor.id, effectData, fromUserId: game.user?.id, sentAt: Date.now() } });
-    return !!game.socket;
+    if (!game.socket) return false;
+    game.socket.emit("system.add2e", {
+      type: "ADD2E_GM_OPERATION",
+      operation: "createActiveEffect",
+      payload: { actorUuid: targetActor.uuid, actorId: targetActor.id, effectData, fromUserId: game.user?.id, sentAt: Date.now() }
+    });
+    return true;
   };
   const destroyTarget = async targetActor => {
+    const current = [targetActor?.system?.pdv, targetActor?.system?.pv, targetActor?.system?.hp?.value, targetActor?.system?.attributes?.hp?.value]
+      .map(numberFrom).find(Number.isFinite) ?? 1;
     if (game.user?.isGM || targetActor?.isOwner) {
-      await targetActor.update({ [hpPath(targetActor)]: 0 }, { add2eReason: "vade-retro-destruction" });
+      await targetActor.update({ "system.pdv": 0 }, { add2eReason: "vade-retro-destruction" });
       return true;
     }
-    const current = [targetActor?.system?.pdv, targetActor?.system?.pv?.value, targetActor?.system?.hp?.value].map(numberFrom).find(Number.isFinite) ?? 1;
-    game.socket?.emit("system.add2e", { type: "ADD2E_GM_OPERATION", operation: "applyDamage", payload: { actorUuid: targetActor.uuid, actorId: targetActor.id, montant: Math.max(1, current), type: "vade-retro", details: "Vade-rétro — destruction / damnation" } });
-    return !!game.socket;
+    if (!game.socket) return false;
+    game.socket.emit("system.add2e", {
+      type: "ADD2E_GM_OPERATION",
+      operation: "applyDamage",
+      payload: { actorUuid: targetActor.uuid, actorId: targetActor.id, montant: Math.max(1, current), type: "vade-retro", details: "Vade-rétro — destruction / damnation" }
+    });
+    return true;
   };
-  const timedRounds = rounds => {
+  const roundEffect = rounds => {
     const extra = { source: "vade-retro.js", rounds, unit: "round", endMessage: "L’effet de Vade-rétro sur {actor} prend fin." };
-    return { duration: time?.durationData?.(rounds) ?? { rounds, startRound: game.combat?.round ?? null, startTurn: game.combat?.turn ?? null, startTime: game.time?.worldTime ?? null, combat: game.combat?.id ?? null }, flags: time?.flags?.(extra) ?? { timeEngine: { managed: true, unit: "round", totalRounds: rounds }, roundEngine: { managed: true, unit: "round", totalRounds: rounds, endMessage: extra.endMessage }, endMessage: extra.endMessage } };
+    return {
+      duration: time?.durationData?.(rounds) ?? { rounds, startRound: game.combat?.round ?? null, startTurn: game.combat?.turn ?? null, startTime: game.time?.worldTime ?? null, combat: game.combat?.id ?? null },
+      flags: time?.flags?.(extra) ?? { timeEngine: { managed: true, unit: "round", totalRounds: rounds }, roundEngine: { managed: true, unit: "round", totalRounds: rounds, endMessage: extra.endMessage }, endMessage: extra.endMessage }
+    };
   };
+  const hoursEffect = hours => ({ startTime: game.time?.worldTime ?? null, seconds: Math.max(1, hours) * 3600 });
 
   const destroy = String(entry).startsWith("D") && !evilCleric;
   const dominate = String(entry).startsWith("D") && evilCleric;
@@ -474,8 +537,8 @@ const __add2eVadeRetroResult = await (async () => {
   let effectDuration = {};
   let durationLabel = "";
   let effectTags = [];
-  let extraFlags = {};
   let reaction = null;
+
   if (destroy) {
     outcome = "Détruit / damné";
     effectName = "Détruit par Vade-rétro";
@@ -483,31 +546,32 @@ const __add2eVadeRetroResult = await (async () => {
   } else if (dominate) {
     outcome = "Dominé";
     effectName = "Dominé par Vade-rétro";
-    effectDuration = { startTime: game.time?.worldTime ?? null, seconds: 518400 };
+    effectDuration = hoursEffect(24 * 6);
     durationLabel = "6 jours (renouvellement requis)";
     effectTags = ["vade_retro", "etat:domine_vade_retro", "controle:clerc", `vade_retro:${group.category}`];
   } else if (evilCleric) {
     const threshold = String(entry).startsWith("T") ? null : Number(entry);
     const reactionRoll = await roll("1d100");
-    const adjustment = Number(caster.system?.cha_react ?? 0) || 0;
-    const total = Number(reactionRoll.total) + adjustment;
-    const attitude = total >= 56 ? "Amical" : "Neutre";
+    const charismaAdjustment = Number(caster.system?.cha_react ?? 0) || 0;
+    const adjusted = Number(reactionRoll.total) + charismaAdjustment;
+    const attitude = adjusted >= 56 ? "Amical" : "Neutre";
     const hours = String(entry).startsWith("T") ? 24 : Math.max(1, 24 - threshold);
     outcome = `Influencé — ${attitude.toLowerCase()}`;
     effectName = `Influencé par Vade-rétro — ${attitude}`;
-    effectDuration = { startTime: game.time?.worldTime ?? null, seconds: hours * 3600 };
+    effectDuration = hoursEffect(hours);
     durationLabel = `${hours} heure${hours > 1 ? "s" : ""}`;
     effectTags = ["vade_retro", "etat:influence_vade_retro", "controle:clerc", `attitude:${norm(attitude)}`, `vade_retro:${group.category}`];
-    reaction = { rolled: reactionRoll.total, adjustment, adjusted: total, attitude };
+    reaction = { rolled: reactionRoll.total, adjustment: charismaAdjustment, adjusted, attitude };
   } else {
-    const rounds = Math.max(3, Number((await roll("3d4")).total) || 3);
-    const timed = timedRounds(rounds);
+    const durationRoll = await roll("3d4");
+    const rounds = Math.max(3, Number(durationRoll.total) || 3);
+    const timing = roundEffect(rounds);
     outcome = "Repoussé";
     effectName = "Repoussé par Vade-rétro";
-    effectDuration = timed.duration;
-    durationLabel = `${rounds} rounds`;
-    extraFlags = timed.flags;
-    effectTags = ["vade_retro", "etat:repousse_vade_retro", "interdiction:attaque", "interdiction:sort", "mouvement:eloignement_obligatoire", "fuite", `vade_retro:${group.category}`];
+    effectDuration = timing.duration;
+    durationLabel = `${rounds} rounds (3d4 = ${rounds})`;
+    effectTags = ["vade_retro", "etat:repousse_vade_retro", "interdiction:attaque", "interdiction:sort", "mouvement:eloignement_obligatoire", `vade_retro:${group.category}`];
+    reaction = { timingFlags: timing.flags };
   }
 
   const rows = [];
@@ -522,12 +586,34 @@ const __add2eVadeRetroResult = await (async () => {
       duration: effectDuration,
       changes: [],
       description: `${outcome} par ${caster.name}.${durationLabel ? ` Durée : ${durationLabel}.` : ""}`,
-      flags: { add2e: { ...extraFlags, tags: effectTags, vadeRetro: { version: VERSION, casterId: caster.id, casterUuid: caster.uuid, casterName: caster.name, sourceClass: isPaladin ? "paladin" : "clerc", effectiveClericLevel: clericLevel, category: group.category, classification: group.extrapolated ? "extrapole" : "canonique", profiles: group.extrapolated ? group.profiles : [], entry, outcome, direction: placement.direction, combatId: game.combat?.id ?? null, countFormula, count, reaction } } }
+      flags: {
+        add2e: {
+          ...(reaction?.timingFlags ?? {}),
+          tags: effectTags,
+          vadeRetro: {
+            version: VERSION,
+            casterId: caster.id,
+            casterUuid: caster.uuid,
+            casterName: caster.name,
+            sourceClass: isPaladin ? "paladin" : "clerc",
+            effectiveClericLevel: clericLevel,
+            category: group.category,
+            classification: group.extrapolated ? "extrapole" : "canonique",
+            profiles: group.extrapolated ? group.profiles : [],
+            entry,
+            outcome,
+            direction: placement.direction,
+            combatId: game.combat?.id ?? null,
+            countFormula,
+            count,
+            reaction
+          }
+        }
+      }
     };
     try {
       await createEffect(targetActor, effectData);
       if (destroy) await destroyTarget(targetActor);
-      if (outcome === "Repoussé") await moveAway(target);
       rows.push({ target: target.name ?? targetActor.name, result: outcome });
     } catch (error) {
       console.error("[ADD2E][VADE-RETRO][EFFECT]", { target: targetActor.name, error });
@@ -536,18 +622,37 @@ const __add2eVadeRetroResult = await (async () => {
   }
 
   const status = pending.length ? "pending" : "complete";
-  await saveCombatState({ ...stateBase, status, pending, attempted: { category: group.category, classification: group.extrapolated ? "extrapole" : "canonique", profiles: group.extrapolated ? group.profiles : [], entry, countFormula, count, result: outcome, targets: affected.map(target => target.id) } });
-  const resultText = automatic ? "résultat automatique" : `d20 ${d20.total} / ${entry}`;
-  const continuation = game.combat ? (status === "pending" ? "Vade-rétro continuera automatiquement au round suivant contre le type restant le plus faible." : "La séquence de Vade-rétro est terminée.") : "Hors combat, le MD arbitre la poursuite éventuelle.";
-  const details = [
-    `<b>Cône :</b> ${CONE.angle}°, ${coneDistanceMeters()} ${esc(canvas.scene?.grid?.units || "m")}.`,
-    `<b>${esc(group.label)} :</b> ${esc(resultText)} — <b>${esc(outcome)}</b>.`,
-    `<b>Nombre affecté :</b> ${esc(countFormula)} = <b>${count}</b>.`,
-    durationLabel ? `<b>Durée :</b> ${esc(durationLabel)}.` : "",
-    reaction?.rolled ? `<b>Réaction :</b> d100 ${reaction.rolled}${reaction.adjustment ? ` ${reaction.adjustment >= 0 ? "+" : ""}${reaction.adjustment}` : ""} = <b>${reaction.adjusted}</b> — ${esc(reaction.attitude)}.` : "",
-    group.extrapolated ? "Classement extrapolé depuis les DV et les propriétés mécaniques." : ""
-  ];
-  await postClassCard({ lead: `<b>${esc(caster.name)}</b> présente son symbole sacré.`, details, rows, footer: continuation });
+  await saveCombatState({
+    ...stateBase,
+    status,
+    pending,
+    attempted: {
+      category: group.category,
+      classification: group.extrapolated ? "extrapole" : "canonique",
+      profiles: group.extrapolated ? group.profiles : [],
+      entry,
+      countFormula,
+      count,
+      result: outcome,
+      targets: affected.map(target => target.id)
+    }
+  });
+
+  const reactionText = reaction?.rolled
+    ? `<div><b>Réaction :</b> d100 ${reaction.rolled}${reaction.adjustment ? ` ${reaction.adjustment >= 0 ? "+" : ""}${reaction.adjustment}` : ""} = <b>${reaction.adjusted}</b> — ${esc(reaction.attitude)}.</div>`
+    : "";
+  const classificationText = group.extrapolated
+    ? `<br><span style="font-size:.84em;color:#665121;">Classement extrapolé depuis les DV et propriétés mécaniques.</span>`
+    : "";
+  const nextText = game.combat
+    ? status === "pending" ? "Une tentative réussie peut être poursuivie au round suivant contre le type restant le plus faible." : "Aucune autre tentative n’est disponible dans ce combat."
+    : "Hors combat, la durée et les suites de l’effet restent sous l’arbitrage du MJ.";
+
+  await ChatMessage.create({
+    speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken }),
+    content: `<div class="add2e-chat-card" style="border:1.5px solid #c79b38;border-radius:12px;overflow:hidden;background:#fffaf0;box-shadow:0 3px 8px #0002;"><div style="background:linear-gradient(90deg,#765014,#c79b38);color:#fff;padding:8px 10px;display:flex;align-items:center;gap:8px;"><img src="${esc(caster.img || ICON)}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid #fff;"><div style="flex:1;"><div style="font-weight:800;">${esc(caster.name)}</div><div style="font-size:.88em;">Vade-rétro — niveau effectif ${clericLevel}${isPaladin ? ` (paladin niveau ${nativeLevel})` : ""}</div></div><img src="${ICON}" style="width:32px;height:32px;border-radius:4px;background:#fff;"></div><div style="padding:9px 10px;"><div style="padding:7px 8px;border:1px solid #e6cf86;border-radius:7px;background:#fffdf7;margin-bottom:7px;"><b>Cône :</b> ${CONE.angle}°, ${coneDistanceMeters()} ${esc(canvas.scene?.grid?.units || "m")}.<br><b>${esc(group.label)} :</b> ${automatic ? "résultat automatique" : `d20 ${d20.total} / ${esc(entry)}`} — <b>${esc(outcome)}</b>.<br><b>Nombre affecté :</b> ${countFormula} = <b>${count}</b>.${durationLabel ? `<br><b>Durée :</b> ${esc(durationLabel)}.` : ""}${reactionText}${classificationText}</div>${rows.map(row => `<div style="padding:5px 0;border-bottom:1px solid #ecd99c;"><b>${esc(row.target)}</b> — ${esc(row.result)}</div>`).join("")}<div style="margin-top:7px;font-size:.84em;color:#665121;">${nextText}</div></div></div>`
+  });
+
   return true;
 })();
 
