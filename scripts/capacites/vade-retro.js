@@ -4,7 +4,7 @@
 // La visée utilise un cône PIXI, sans Warpgate, sur le modèle de Mains brûlantes.
 
 const __add2eVadeRetroResult = await (async () => {
-  const VERSION = "2026-07-06-vade-retro-undead-profile-v5";
+  const VERSION = "2026-07-06-vade-retro-undead-profile-v6";
   const ICON = "icons/magic/holy/barrier-shield-winged-cross.webp";
   const CONE = Object.freeze({ angle: 90, cells: 3 });
   const TABLE = Object.freeze({
@@ -29,32 +29,12 @@ const __add2eVadeRetroResult = await (async () => {
     special: "Créature mauvaise des plans inférieurs"
   });
 
-  // type:mort_vivant est la seule clé canonique de famille.
-  // system.type_monstre conserve l’identité précise du monstre.
   const UNDEAD_FAMILY_TAG = "type:mort_vivant";
   const UNDEAD_ROWS = Object.freeze({
-    squelette: "squelette",
-    combattant_squelette: "squelette",
-    squelette_animal: "squelette",
-    squelette_geant: "squelette",
-    zombie: "zombie",
-    zombie_animal: "zombie",
-    zombie_jaune: "zombie",
-    zombie_juju: "zombie",
-    zombie_monstre: "zombie",
-    goule: "goule",
-    goule_lacedon: "goule",
-    ombre: "ombre",
-    necrophage: "necrophage",
-    ghast: "ghast",
-    bleme: "ghast",
-    ame_en_peine: "ame_en_peine",
-    momie: "momie",
-    spectre: "spectre",
-    vampire: "vampire",
-    banshee: "fantome",
-    fantome: "fantome",
-    liche: "liche"
+    squelette: "squelette", combattant_squelette: "squelette", squelette_animal: "squelette", squelette_geant: "squelette",
+    zombie: "zombie", zombie_animal: "zombie", zombie_jaune: "zombie", zombie_juju: "zombie", zombie_monstre: "zombie",
+    goule: "goule", goule_lacedon: "goule", ombre: "ombre", necrophage: "necrophage", ghast: "ghast", bleme: "ghast",
+    ame_en_peine: "ame_en_peine", momie: "momie", spectre: "spectre", vampire: "vampire", banshee: "fantome", fantome: "fantome", liche: "liche"
   });
   const ORDER_INDEX = new Map(ORDER.map((key, index) => [key, index]));
 
@@ -301,26 +281,15 @@ const __add2eVadeRetroResult = await (async () => {
   function extrapolateUndeadCategory(targetActor) {
     const profile = undeadProfile(targetActor);
     const hd = Number(profile.hitDice) || 0;
-
-    // Les profils très protégés sont rapprochés de la liche : c'est la ligne
-    // officielle la plus résistante sans utiliser la ligne Spécial, réservée
-    // aux créatures mauvaises des plans inférieurs.
     if ((Number.isFinite(profile.magicResistance) && profile.magicResistance >= 66)
       || (Number.isFinite(profile.armorClass) && profile.armorClass <= -5)
-      || hd >= 11) {
-      return { category: "liche", mode: "extrapole", profile };
-    }
-
-    // Un drain d'énergie rapproche la créature des morts-vivants incorporels
-    // de haut niveau. Les DV départagent ensuite la ligne de la matrice.
+      || hd >= 11) return { category: "liche", mode: "extrapole", profile };
     if (profile.energyDrain || profile.drain) {
       if (hd >= 10) return { category: "vampire", mode: "extrapole", profile };
       if (hd >= 7) return { category: "spectre", mode: "extrapole", profile };
       if (hd >= 5) return { category: "necrophage", mode: "extrapole", profile };
       return { category: "ame_en_peine", mode: "extrapole", profile };
     }
-
-    // Échelle prudente par DV pour les morts-vivants sans drain connu.
     if (hd >= 9) return { category: "vampire", mode: "extrapole", profile };
     if (hd >= 7) return { category: "fantome", mode: "extrapole", profile };
     if (hd >= 6) return { category: "momie", mode: "extrapole", profile };
@@ -332,9 +301,7 @@ const __add2eVadeRetroResult = await (async () => {
   }
   function undeadCategoryInfo(targetActor) {
     const category = UNDEAD_ROWS[norm(targetActor?.system?.type_monstre)];
-    return category
-      ? { category, mode: "canonique", profile: null }
-      : extrapolateUndeadCategory(targetActor);
+    return category ? { category, mode: "canonique", profile: null } : extrapolateUndeadCategory(targetActor);
   }
   function actorText(targetActor) {
     const system = targetActor?.system ?? {};
@@ -374,6 +341,47 @@ const __add2eVadeRetroResult = await (async () => {
     return lowerPlane && specialEligible(targetActor) ? { category: "special", label: LABELS.special, kind: "plan inférieur", lowerPlane: true, classification: { mode: "plan_inferieur" } } : null;
   }
   function tableEntry(group) { return TABLE[group?.category]?.[column] ?? null; }
+  function minimumEffectiveLevel(category) {
+    const row = TABLE[category] ?? [];
+    const first = row.findIndex(value => value !== null && value !== undefined);
+    if (first < 0) return null;
+    if (first <= 7) return first + 1;
+    if (first === 8) return 9;
+    return 14;
+  }
+  function coneDiagnostics(tokens) {
+    return tokens.map(target => {
+      const info = categoryFor(target);
+      if (!info) return null;
+      const entry = TABLE[info.category]?.[column] ?? null;
+      const profile = info.classification?.profile ?? null;
+      return {
+        token: target.name ?? target.actor?.name ?? "—",
+        typeMonstre: target.actor?.system?.type_monstre ?? "—",
+        ligne: LABELS[info.category] ?? info.category,
+        classification: info.classification?.mode ?? "—",
+        dv: profile?.hitDice ?? targetHitDice(target.actor),
+        ca: profile?.armorClass ?? targetArmorClass(target.actor),
+        rm: profile?.magicResistance ?? targetMagicResistance(target.actor),
+        drain: profile?.drain ?? false,
+        entree_table: entry ?? "—",
+        niveau_effectif_minimum: entry === null ? minimumEffectiveLevel(info.category) : null
+      };
+    }).filter(Boolean);
+  }
+  function diagnosticText(rows) {
+    const shown = rows.slice(0, 4).map(row => {
+      const qualifier = row.classification === "extrapole" ? " extrapolée" : "";
+      if (row.entree_table === "—") {
+        return `${row.token} — ligne ${row.ligne}${qualifier} : non affectable avant niveau effectif ${row.niveau_effectif_minimum ?? "—"}`;
+      }
+      if (/^[TD]/.test(String(row.entree_table))) {
+        return `${row.token} — ligne ${row.ligne}${qualifier} : résultat automatique`;
+      }
+      return `${row.token} — ligne ${row.ligne}${qualifier} : score requis ${row.entree_table}`;
+    });
+    return `${shown.join(" • ")}${rows.length > shown.length ? " • détails complets dans F12" : ""}`;
+  }
   function resolveToken(id) {
     return canvas.tokens?.get?.(id) ?? canvas.tokens?.placeables?.find(entry => entry?.id === id || entry?.document?.id === id) ?? null;
   }
@@ -429,7 +437,17 @@ const __add2eVadeRetroResult = await (async () => {
   const group = queue[0] ?? null;
 
   if (!group) {
-    ui.notifications.warn("Vade-rétro : aucun mort-vivant ou adversaire des plans inférieurs affectable dans le cône.");
+    if (!targetsInCone.length) {
+      ui.notifications.warn("Vade-rétro : aucun token adverse n’est dans le cône validé.");
+      return false;
+    }
+    const diagnostics = coneDiagnostics(targetsInCone);
+    if (diagnostics.length) {
+      console.table(diagnostics);
+      ui.notifications.warn(`Vade-rétro : ${diagnostics.length} cible(s) reconnue(s) dans le cône. ${diagnosticText(diagnostics)}.`);
+      return false;
+    }
+    ui.notifications.warn(`Vade-rétro : ${targetsInCone.length} token(s) dans le cône, mais aucun mort-vivant canonique (type:mort_vivant) ni adversaire des plans inférieurs affectable.`);
     return false;
   }
 
