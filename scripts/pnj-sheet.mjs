@@ -7,7 +7,7 @@ import { add2eBindActorSheetSpellListeners } from "./add2e/13d-actor-sheet-liste
 import { add2eRollCharacteristicCard, add2eRollSaveCard } from "./add2e/13d-actor-sheet-listeners-rolls.mjs";
 import { getMoney, formatMoney, isAmmunition, isComponent } from "./add2e/22a-vendor-core.mjs";
 
-const PNJ_SHEET_VERSION = "2026-07-06-pnj-character-sheet-reuse-v7";
+const PNJ_SHEET_VERSION = "2026-07-06-pnj-class-composition-v8";
 const PNJ_TYPE = "pnj";
 const DialogV2 = foundry?.applications?.api?.DialogV2;
 const ActorsCollection = foundry.documents.collections.Actors;
@@ -36,6 +36,30 @@ function clone(value) {
 function same(left, right) {
   if (typeof foundry?.utils?.deepEqual === "function") return foundry.utils.deepEqual(left, right);
   return JSON.stringify(left) === JSON.stringify(right);
+}
+
+function pnjArray(value) {
+  if (Array.isArray(value)) return value.flatMap(pnjArray);
+  if (value === null || value === undefined || value === "") return [];
+  if (typeof value === "string") return value.split(/[,;|\n]+/).map(entry => entry.trim()).filter(Boolean);
+  if (typeof value === "object") {
+    for (const key of ["lists", "listes", "values", "items", "entries"]) {
+      if (value[key] !== undefined) return pnjArray(value[key]);
+    }
+  }
+  return [value];
+}
+
+function escapeHtml(value) {
+  try { return foundry.utils.escapeHTML(String(value ?? "")); }
+  catch (_error) {
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
 }
 
 function classRow(item, level) {
@@ -81,35 +105,81 @@ function pnjBestSaves(entries) {
   });
 }
 
+function pnjSpellcasting(entries) {
+  const lists = new Set();
+  for (const entry of entries) {
+    const system = entry?.item?.system ?? {};
+    const spellcasting = system.spellcasting ?? {};
+    for (const source of [system.spellLists, system.lists, system.listes, system.spellList, system.liste, spellcasting.lists, spellcasting.spellLists]) {
+      for (const list of pnjArray(source)) {
+        const value = String(list ?? "").trim();
+        if (value) lists.add(value);
+      }
+    }
+  }
+  if (!lists.size) return {};
+
+  const base = entries.length === 1 ? clone(entries[0]?.item?.system?.spellcasting ?? {}) : {};
+  return {
+    ...base,
+    enabled: true,
+    mode: entries.length > 1 ? "multiclass" : (base.mode ?? "prepared"),
+    type: base.type ?? "prepared",
+    lists: [...lists],
+    usesSlots: base.usesSlots ?? true,
+    usesPreparation: base.usesPreparation ?? true,
+    preparationSource: "class-items"
+  };
+}
+
 function pnjClassState(actor) {
   const entries = pnjClassEntries(actor);
   const names = entries.map(entry => entry.name);
-  const titles = entries.map(entry => `${entry.name} ${entry.level}${entry.title ? ` (${entry.title})` : ""}`);
+  const labels = entries.map(entry => `${entry.name} ${entry.level}${entry.title ? ` (${entry.title})` : ""}`);
   const thac0 = entries.length ? Math.min(...entries.map(entry => entry.thac0)) : 20;
   const saves = pnjBestSaves(entries);
-  const source = entries.find(entry => entry.thac0 === thac0) ?? entries[0] ?? null;
+  const primary = entries[0] ?? null;
+  const multiclass = entries.length > 1;
+  const label = names.join(" / ");
+  const detailsClasse = multiclass
+    ? { label, name: label, multiclass: true, source: "pnj-class-items" }
+    : (primary ? {
+      ...clone(primary.item?.system ?? {}),
+      name: primary.name,
+      label: primary.item?.system?.label ?? primary.name,
+      slug: primary.slug,
+      sourceItemId: primary.id,
+      sourceItemUuid: primary.item?.uuid
+    } : {});
 
   return {
     entries,
     update: {
-      "system.classe": names.join(" / "),
+      "system.classe": label,
+      "system.details_classe": detailsClasse,
+      "system.classe_img": multiclass ? "" : (primary?.img ?? ""),
+      "system.spellcasting": pnjSpellcasting(entries),
       "system.niveau": entries.length ? Math.max(...entries.map(entry => entry.level)) : 1,
       "system.xp": 0,
-      "system.titre": titles.join(" / "),
+      "system.titre": labels.join(" / "),
+      "system.progression_xp": "",
+      "system.xp_next": 0,
+      "system.xp_to_next": 0,
+      "system.xp_percent": 0,
       "system.thaco": thac0,
       "system.thac0": thac0,
       "system.sauvegardes": saves,
-      "system.multiclasse": { enabled: entries.length > 1, mode: "manuel", label: names.join(" / ") }
+      "system.multiclasse": { schema: 3, enabled: multiclass, mode: multiclass ? "manuel" : "mono", xpSplit: "none", label }
     },
     progression: {
-      ...(clone(source?.row ?? {})),
-      title: source?.title ?? "",
+      ...(clone(primary?.row ?? {})),
+      title: labels.join(" / "),
       thac0,
       savingThrows: saves
     },
     classProgression: {
       enabled: entries.length > 0,
-      isMulticlass: entries.length > 1,
+      isMulticlass: multiclass,
       classes: entries.map(entry => ({
         itemId: entry.id,
         name: entry.name,
@@ -126,6 +196,67 @@ function pnjClassState(actor) {
 function pnjRaceName(actor) {
   const race = actor?.items?.find?.(item => String(item?.type ?? "").toLowerCase() === "race") ?? null;
   return String(race?.name ?? actor?.system?.race ?? actor?.system?.details_race?.label ?? "").trim();
+}
+
+async function pnjChooseClassComposition(actor, data, entries, matchingEntry = null) {
+  if (!entries.length) return "add";
+
+  const incoming = String(data?.name ?? "Classe").trim() || "Classe";
+  const current = entries.map(entry => entry.name).join(" / ") || "Aucune";
+  const canAdd = !matchingEntry && entries.length < 3;
+  const title = "Composition des classes du PNJ";
+  const content = `<section class="add2e-pnj-class-composition"><p><b>${escapeHtml(actor?.name ?? "PNJ")}</b> possède actuellement : <b>${escapeHtml(current)}</b>.</p><p>Classe déposée : <b>${escapeHtml(incoming)}</b>.</p><p>${matchingEntry ? "La classe déposée est déjà présente. Tu peux conserver uniquement cette classe." : "Choisis la nouvelle composition du PNJ."}</p></section>`;
+
+  if (typeof DialogV2?.wait === "function") {
+    const buttons = [];
+    if (canAdd) {
+      buttons.push({
+        action: "add",
+        label: entries.length === 1 ? `Ajouter ${incoming} en biclasse` : `Ajouter ${incoming} en triclassage`,
+        icon: "fas fa-plus",
+        callback: () => "add"
+      });
+    }
+    buttons.push({
+      action: "replace",
+      label: `Passer en monoclasse ${incoming}`,
+      icon: "fas fa-user-shield",
+      callback: () => "replace"
+    });
+    buttons.push({ action: "cancel", label: "Annuler", icon: "fas fa-times", callback: () => null });
+
+    const result = await DialogV2.wait({
+      window: { title },
+      content,
+      buttons,
+      modal: true,
+      rejectClose: false
+    });
+    return typeof result === "string" ? result : (result?.action ?? result?.button?.action ?? null);
+  }
+
+  if (DialogV2?.confirm) {
+    if (canAdd) {
+      const add = await DialogV2.confirm({
+        window: { title },
+        content: `${content}<p>Ajouter <b>${escapeHtml(incoming)}</b> à la composition actuelle ?</p>`,
+        yes: { label: "Ajouter", icon: "fas fa-plus" },
+        no: { label: "Choisir monoclasse" },
+        modal: true
+      });
+      if (add) return "add";
+    }
+    const replace = await DialogV2.confirm({
+      window: { title },
+      content: `${content}<p>Remplacer la composition actuelle par <b>${escapeHtml(incoming)}</b> seul ?</p>`,
+      yes: { label: "Passer en monoclasse", icon: "fas fa-user-shield" },
+      no: { label: "Annuler" },
+      modal: true
+    });
+    return replace ? "replace" : null;
+  }
+
+  return null;
 }
 
 function pnjActorView(actor, system) {
@@ -341,9 +472,11 @@ export class Add2ePnjSheet extends CharacterSheetBase {
     const state = await this._syncClassState(`${reason}:classes`);
     if (typeof this.autoSetCaracAjustements === "function") await this.autoSetCaracAjustements();
 
+    let hpSynchronized = false;
     if (state.entries.length > 1 && typeof globalThis.add2eSyncMulticlassHp === "function") {
-      await globalThis.add2eSyncMulticlassHp(this.actor, { syncCurrent: syncCurrentHp, reason: `${reason}:multiclass-hp` });
-    } else if (typeof this.autoSetPointsDeCoup === "function") {
+      hpSynchronized = await globalThis.add2eSyncMulticlassHp(this.actor, { syncCurrent: syncCurrentHp, reason: `${reason}:multiclass-hp` }) === true;
+    }
+    if (!hpSynchronized && typeof this.autoSetPointsDeCoup === "function") {
       await this.autoSetPointsDeCoup({ syncCurrent: syncCurrentHp, reason: `${reason}:hp` });
     }
   }
@@ -355,20 +488,8 @@ export class Add2ePnjSheet extends CharacterSheetBase {
     return true;
   }
 
-  async _addClass(data) {
+  async _createClass(data, { synchronize = true, syncCurrentHp = true, reason = "pnj-add-class" } = {}) {
     const actor = this.actor;
-    const existing = pnjClassEntries(actor);
-    const slug = classSlug(data);
-    if (existing.some(entry => entry.slug === slug)) {
-      ui.notifications.warn(`${data.name} est déjà attribuée à ce PNJ.`);
-      return false;
-    }
-    if (existing.length >= 3) {
-      if (DialogV2?.alert) await DialogV2.alert({ window: { title: "Maximum atteint" }, content: "<p>Un PNJ ne peut pas avoir plus de trois classes.</p>", ok: { label: "Compris" }, modal: true });
-      else ui.notifications.warn("Un PNJ ne peut pas avoir plus de trois classes.");
-      return false;
-    }
-
     const itemData = cloneItemData(data) ?? clone(data);
     itemData.type = "classe";
     itemData.system ??= {};
@@ -378,8 +499,8 @@ export class Add2ePnjSheet extends CharacterSheetBase {
     itemData.flags.add2e ??= {};
     itemData.flags.add2e.pnjClass = true;
 
-    const [classItem] = await actor.createEmbeddedDocuments("Item", [itemData], { add2eInternal: true, add2eReason: "pnj-add-class" });
-    if (!classItem) return false;
+    const [classItem] = await actor.createEmbeddedDocuments("Item", [itemData], { add2eInternal: true, add2eReason: reason });
+    if (!classItem) return null;
 
     const effects = (classItem.effects?.contents ?? []).map(effect => {
       const effectData = effect.toObject();
@@ -396,16 +517,56 @@ export class Add2ePnjSheet extends CharacterSheetBase {
       };
       return effectData;
     });
-    if (effects.length) await actor.createEmbeddedDocuments("ActiveEffect", effects, { add2eInternal: true, add2eReason: "pnj-add-class-effects" });
+    if (effects.length) await actor.createEmbeddedDocuments("ActiveEffect", effects, { add2eInternal: true, add2eReason: `${reason}-effects` });
 
     try { await globalThis.add2eSyncActorSpellsFromClass?.(actor, classItem, { mode: "append", showWait: true }); }
     catch (error) { console.warn("[ADD2E][PNJ][SPELL_SYNC]", error); }
 
-    await this._syncDerived({ syncCurrentHp: true, reason: "pnj-add-class" });
+    if (synchronize) await this._syncDerived({ syncCurrentHp, reason });
+    return classItem;
+  }
+
+  async _replaceClassComposition(data, entries = pnjClassEntries(this.actor)) {
+    const requestedSlug = classSlug(data);
+    const retained = entries.find(entry => entry.slug === requestedSlug) ?? null;
+
+    for (const entry of entries) {
+      if (retained?.id === entry.id) continue;
+      await this._removeClass(entry.item, { synchronize: false, reason: "pnj-class-composition-remove" });
+    }
+
+    const classItem = retained?.item ?? await this._createClass(data, {
+      synchronize: false,
+      syncCurrentHp: false,
+      reason: "pnj-class-composition-create"
+    });
+    if (!classItem) return false;
+
+    await this._syncDerived({ syncCurrentHp: true, reason: "pnj-class-composition-monoclass" });
     return true;
   }
 
-  async _removeClass(item) {
+  async _addClass(data) {
+    const actor = this.actor;
+    const entries = pnjClassEntries(actor);
+    const requestedSlug = classSlug(data);
+    const matchingEntry = entries.find(entry => entry.slug === requestedSlug) ?? null;
+
+    if (matchingEntry && entries.length === 1) {
+      ui.notifications.info(`${matchingEntry.name} est déjà la classe unique de ce PNJ.`);
+      return false;
+    }
+
+    const choice = await pnjChooseClassComposition(actor, data, entries, matchingEntry);
+    if (choice === "add") {
+      const classItem = await this._createClass(data, { synchronize: true, syncCurrentHp: true, reason: "pnj-class-composition-add" });
+      return !!classItem;
+    }
+    if (choice === "replace") return this._replaceClassComposition(data, entries);
+    return false;
+  }
+
+  async _removeClass(item, { synchronize = true, syncCurrentHp = false, reason = "pnj-remove-class" } = {}) {
     if (!item) return false;
     const effectIds = this.actor.effects
       .filter(effect => String(effect.origin ?? "") === String(item.uuid ?? "") || pnjItemBelongsToClass(effect, item))
@@ -413,10 +574,10 @@ export class Add2ePnjSheet extends CharacterSheetBase {
     const spellIds = this.actor.items
       .filter(candidate => String(candidate.type ?? "").toLowerCase() === "sort" && pnjItemBelongsToClass(candidate, item))
       .map(candidate => candidate.id);
-    if (effectIds.length) await this.actor.deleteEmbeddedDocuments("ActiveEffect", effectIds, { add2eInternal: true, add2eReason: "pnj-remove-class-effects" });
-    if (spellIds.length) await this.actor.deleteEmbeddedDocuments("Item", spellIds, { add2eInternal: true, add2eReason: "pnj-remove-class-spells" });
-    await this.actor.deleteEmbeddedDocuments("Item", [item.id], { add2eInternal: true, add2eReason: "pnj-remove-class" });
-    await this._syncDerived({ reason: "pnj-remove-class" });
+    if (effectIds.length) await this.actor.deleteEmbeddedDocuments("ActiveEffect", effectIds, { add2eInternal: true, add2eReason: `${reason}-effects` });
+    if (spellIds.length) await this.actor.deleteEmbeddedDocuments("Item", spellIds, { add2eInternal: true, add2eReason: `${reason}-spells` });
+    await this.actor.deleteEmbeddedDocuments("Item", [item.id], { add2eInternal: true, add2eReason: reason });
+    if (synchronize) await this._syncDerived({ syncCurrentHp, reason });
     return true;
   }
 
@@ -529,6 +690,7 @@ export class Add2ePnjSheet extends CharacterSheetBase {
 
       if (action === "equip" && item) return this._equip(item).then(() => this.render(false));
       if (action === "edit" && item) return item.sheet.render(true);
+      if (action === "delete" && item && String(item.type ?? "").toLowerCase() === "classe") return this._removeClass(item).then(() => this.render(false));
       if (action === "delete" && item) return this.actor.deleteEmbeddedDocuments("Item", [item.id], { add2eReason: "pnj-delete-item" }).then(() => this.render(false));
     }, true);
   }
