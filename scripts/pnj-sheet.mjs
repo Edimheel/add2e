@@ -7,7 +7,7 @@ import { add2eBindActorSheetSpellListeners } from "./add2e/13d-actor-sheet-liste
 import { add2eRollCharacteristicCard, add2eRollSaveCard } from "./add2e/13d-actor-sheet-listeners-rolls.mjs";
 import { getMoney, formatMoney, isAmmunition, isComponent } from "./add2e/22a-vendor-core.mjs";
 
-const PNJ_SHEET_VERSION = "2026-07-06-pnj-character-sheet-reuse-v6";
+const PNJ_SHEET_VERSION = "2026-07-06-pnj-character-sheet-reuse-v7";
 const PNJ_TYPE = "pnj";
 const DialogV2 = foundry?.applications?.api?.DialogV2;
 const ActorsCollection = foundry.documents.collections.Actors;
@@ -123,6 +123,11 @@ function pnjClassState(actor) {
   };
 }
 
+function pnjRaceName(actor) {
+  const race = actor?.items?.find?.(item => String(item?.type ?? "").toLowerCase() === "race") ?? null;
+  return String(race?.name ?? actor?.system?.race ?? actor?.system?.details_race?.label ?? "").trim();
+}
+
 function pnjActorView(actor, system) {
   return {
     id: actor.id,
@@ -207,19 +212,36 @@ export class Add2ePnjSheet extends CharacterSheetBase {
   static PARTS = { main: { template: "systems/add2e/templates/actor/pnj-sheet.hbs" } };
 
   static async _onSubmitForm(_event, _form, formData) {
-    const actor = this?.actor ?? this?.document;
+    const app = this;
+    const actor = app?.actor ?? app?.document;
     if (!actor?.update) return;
+
     const values = formData?.object ?? {};
     const expanded = foundry.utils.expandObject(values);
+    const submittedProgression = foundry.utils.getProperty(expanded, "add2e.classProgression") ?? {};
+    let classLevelChanged = false;
+
+    for (const [itemId, state] of Object.entries(submittedProgression)) {
+      if (!state || state.level === undefined) continue;
+      const item = actor.items?.get?.(itemId);
+      if (!item || String(item.type ?? "").toLowerCase() !== "classe") continue;
+      const nextLevel = Math.max(1, Math.floor(number(state.level, 1)));
+      const currentLevel = Math.max(1, Math.floor(number(item.system?.niveau, 1)));
+      if (nextLevel === currentLevel) continue;
+      await app._setClassLevel(item, nextLevel, { synchronize: false });
+      classLevelChanged = true;
+    }
+
+    if (expanded.system?.race !== undefined) delete expanded.system.race;
     const update = {};
     if (expanded.system) update.system = expanded.system;
     if (expanded.flags) update.flags = expanded.flags;
     if (typeof expanded.name === "string" && expanded.name.trim()) update.name = expanded.name.trim();
-    if (!Object.keys(update).length) return;
+    if (Object.keys(update).length) await actor.update(update, { add2eReason: "pnj-sheet-form" });
 
-    await actor.update(update, { add2eReason: "pnj-sheet-form" });
     const changedCarac = Object.keys(values).some(key => /^system\.(force|dexterite|constitution|intelligence|sagesse|charisme)(?:_|$)/.test(key));
-    if (changedCarac && typeof this?._syncDerived === "function") await this._syncDerived({ reason: "pnj-sheet-caracteristics" });
+    if (classLevelChanged) await app._syncDerived({ reason: "pnj-class-level-form" });
+    else if (changedCarac && typeof app?._syncDerived === "function") await app._syncDerived({ reason: "pnj-sheet-caracteristics" });
   }
 
   async getData() {
@@ -228,11 +250,13 @@ export class Add2ePnjSheet extends CharacterSheetBase {
     const data = { actor: pnjActorView(actor, system) };
     const state = add2ePrepareActorSheetBaseData({ sheet: this, data });
     const classState = pnjClassState(actor);
+    const raceName = pnjRaceName(actor);
 
     for (const [path, value] of Object.entries(classState.update)) {
       const key = path.replace(/^system\./, "");
       state.sys[key] = clone(value);
     }
+    state.sys.race = raceName;
 
     data.actor.system = state.sys;
     data.system = state.sys;
@@ -267,6 +291,12 @@ export class Add2ePnjSheet extends CharacterSheetBase {
   async _onRender(context, options = {}) {
     await super._onRender?.(context, options);
     const root = this.element?.jquery ? this.element[0] : this.element;
+    const raceInput = root?.querySelector?.('input[name="system.race"]');
+    if (raceInput) {
+      raceInput.value = pnjRaceName(this.actor);
+      raceInput.readOnly = true;
+      raceInput.title = "Race définie par l’Item Race déposé sur le PNJ.";
+    }
     this.activateListeners(root);
   }
 
@@ -390,13 +420,13 @@ export class Add2ePnjSheet extends CharacterSheetBase {
     return true;
   }
 
-  async _setClassLevel(item, value) {
+  async _setClassLevel(item, value, { synchronize = true } = {}) {
     if (!item) return false;
     const level = Math.max(1, Math.floor(number(value, 1)));
     await item.update({ "system.niveau": level, "system.xp": 0 }, { add2eInternal: true, add2eReason: "pnj-class-level" });
     try { await globalThis.add2eSyncActorSpellsFromClass?.(this.actor, item, { mode: "append", showWait: true }); }
     catch (error) { console.warn("[ADD2E][PNJ][SPELL_LEVEL_SYNC]", error); }
-    await this._syncDerived({ reason: "pnj-class-level" });
+    if (synchronize) await this._syncDerived({ reason: "pnj-class-level" });
     return true;
   }
 
@@ -437,17 +467,6 @@ export class Add2ePnjSheet extends CharacterSheetBase {
 
     this._add2eBindPersistentTabs?.(html);
     add2eBindActorSheetSpellListeners(this, html);
-
-    sheetRoot.addEventListener("change", event => {
-      const input = event.target?.closest?.('[data-class-progression-field="level"]');
-      if (!input || !sheetRoot.contains(input)) return;
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation?.();
-      this._setClassLevel(this.actor.items.get(input.dataset.classId), input.value)
-        .then(() => this.render(false))
-        .catch(error => console.error("[ADD2E][PNJ][CLASS_LEVEL]", error));
-    }, true);
 
     sheetRoot.addEventListener("click", event => {
       const image = event.target?.closest?.('[data-edit="img"]');
