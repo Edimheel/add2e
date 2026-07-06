@@ -48,10 +48,14 @@ import {
   registerSockets as registerConsumablesSockets
 } from "./22e-consumables-core.mjs";
 
-const ADD2E_SHOP_ORCHESTRATION_VERSION = "2026-06-25-armorer-source-rules-sync-v3";
+const ADD2E_SHOP_ORCHESTRATION_VERSION = "2026-07-06-shop-tiles-v2";
 const ADD2E_SHOP_HP_VERSION = "2026-06-15-shop-hp-one-multiclass-v1";
 const ADD2E_SHOP_HP = 1;
 const SPELL_COMPONENTS_SETTING = "gestionComposantsSorts";
+const ADD2E_SHOP_TILE_VERSION = "2026-07-06-shop-tiles-v2";
+const ADD2E_SHOP_TILE_FLAG_SCOPE = "add2e";
+const ADD2E_SHOP_TILE_FLAG_KEY = "shopType";
+const ADD2E_SHOP_TILE_TYPES = new Set(["vendor", "armorer"]);
 
 // Seuls ces champs sont répliqués depuis le compendium vers le stock déjà
 // existant de l'armurier. Prix, quantité et paramètres de stock sont conservés.
@@ -297,6 +301,147 @@ function hideShopActorsFromPlayers() {
   });
 }
 
+function tileDocument(tile) {
+  return tile?.document ?? tile ?? null;
+}
+
+function shopTileType(tile) {
+  const document = tileDocument(tile);
+  const raw = document?.getFlag?.(ADD2E_SHOP_TILE_FLAG_SCOPE, ADD2E_SHOP_TILE_FLAG_KEY)
+    ?? document?.flags?.[ADD2E_SHOP_TILE_FLAG_SCOPE]?.[ADD2E_SHOP_TILE_FLAG_KEY]
+    ?? "";
+  const type = String(raw).trim().toLowerCase();
+  return ADD2E_SHOP_TILE_TYPES.has(type) ? type : "";
+}
+
+function shopTileKey(tile) {
+  const document = tileDocument(tile);
+  return document?.uuid ?? document?.id ?? tile?.id ?? null;
+}
+
+function shopTileOpenLock(tile) {
+  const key = `${game.user?.id ?? "unknown"}:${shopTileKey(tile) ?? "unknown"}`;
+  const now = Date.now();
+  const locks = globalThis.__ADD2E_SHOP_TILE_OPEN_LOCK ??= {};
+  if (locks[key] && now - locks[key] < 750) return false;
+  locks[key] = now;
+  return true;
+}
+
+async function openShopFromTile(tile) {
+  const type = shopTileType(tile);
+  if (!type || game.user?.isGM || !shopTileOpenLock(tile)) return false;
+  const openShop = type === "armorer" ? game.add2e?.openArmorer : game.add2e?.openVendor;
+  if (typeof openShop !== "function") return false;
+  await openShop();
+  return true;
+}
+
+function removeShopTileBinding(tile) {
+  const handler = tile?.__add2eShopTileTapHandler;
+  if (handler) tile.off?.("pointertap", handler);
+  delete tile?.__add2eShopTileTapHandler;
+  delete tile?.__add2eShopTileBound;
+  if (tile?.cursor === "pointer") tile.cursor = null;
+}
+
+function bindAllShopTiles() {
+  for (const tile of canvas?.tiles?.placeables ?? []) {
+    if (!shopTileType(tile)) {
+      removeShopTileBinding(tile);
+      continue;
+    }
+    if (tile.__add2eShopTileBound) continue;
+
+    const handler = event => {
+      if (game.user?.isGM) return;
+      event?.stopPropagation?.();
+      void openShopFromTile(tile);
+    };
+
+    try {
+      tile.cursor = "pointer";
+      tile.eventMode = "static";
+      tile.interactive = true;
+      tile.on?.("pointertap", handler);
+      tile.__add2eShopTileTapHandler = handler;
+      tile.__add2eShopTileBound = true;
+    } catch (_error) {
+      removeShopTileBinding(tile);
+    }
+  }
+}
+
+function appElement(html) {
+  return html?.jquery ? html[0] : html;
+}
+
+function configTileDocument(app) {
+  const candidate = app?.document ?? app?.object ?? app?.options?.document ?? app?.options?.object ?? null;
+  const document = tileDocument(candidate);
+  return document?.documentName === "Tile" ? document : null;
+}
+
+function injectShopTileConfigField(app, html) {
+  if (!game.user?.isGM) return;
+  const tile = configTileDocument(app);
+  if (!tile) return;
+  const root = appElement(html);
+  const form = root?.matches?.("form") ? root : root?.querySelector?.("form");
+  if (!form || form.querySelector(".add2e-shop-tile-field")) return;
+
+  const type = shopTileType(tile);
+  const group = globalThis.document.createElement("div");
+  group.className = "form-group add2e-shop-tile-field";
+  group.innerHTML = `
+    <label for="add2e-shop-tile-type">Boutique ADD2E</label>
+    <div class="form-fields">
+      <select id="add2e-shop-tile-type" name="flags.add2e.shopType">
+        <option value="" ${type === "" ? "selected" : ""}>Aucune</option>
+        <option value="vendor" ${type === "vendor" ? "selected" : ""}>Marchand</option>
+        <option value="armorer" ${type === "armorer" ? "selected" : ""}>Armurier</option>
+      </select>
+    </div>
+    <p class="hint">Les joueurs ouvrent cette boutique par clic simple sur la tuile.</p>`;
+
+  const footer = form.querySelector("footer.form-footer, .form-footer, .sheet-footer");
+  if (footer?.parentElement) footer.before(group);
+  else form.append(group);
+}
+
+function injectShopTileHudButton(hud, html) {
+  if (!game.user?.isGM) return;
+  const tile = tileDocument(hud?.object ?? hud?.document ?? null);
+  if (!tile || tile.documentName !== "Tile") return;
+
+  const root = appElement(html);
+  if (!root?.querySelector || root.querySelector(".add2e-shop-tile-hud")) return;
+  const configButton = root.querySelector(".control-icon.config");
+  if (!configButton) return;
+
+  const button = globalThis.document.createElement("div");
+  button.className = "control-icon add2e-shop-tile-hud";
+  button.title = "Configurer la boutique ADD2E";
+  button.setAttribute("aria-label", "Configurer la boutique ADD2E");
+  button.innerHTML = '<i class="fas fa-store"></i>';
+  button.addEventListener("click", event => {
+    event.preventDefault();
+    event.stopPropagation();
+    configButton.click();
+  });
+  configButton.parentElement?.append(button);
+}
+
+function registerShopTileHooks() {
+  if (globalThis.__ADD2E_SHOP_TILE_HOOKS_V2) return;
+  globalThis.__ADD2E_SHOP_TILE_HOOKS_V2 = true;
+  Hooks.on("renderTileConfig", injectShopTileConfigField);
+  Hooks.on("renderTileHUD", injectShopTileHudButton);
+  Hooks.on("canvasReady", bindAllShopTiles);
+  Hooks.on("createTile", () => setTimeout(bindAllShopTiles, 100));
+  Hooks.on("updateTile", () => setTimeout(bindAllShopTiles, 100));
+}
+
 Hooks.once("init", () => {
   game.settings.register("add2e", VENDOR_SETTING, {
     name: "ADD2E — Création du vendeur système",
@@ -328,6 +473,7 @@ Hooks.once("init", () => {
   registerVendorDirectoryButton();
   registerArmorerDirectoryButton();
   hideShopActorsFromPlayers();
+  registerShopTileHooks();
 });
 
 Hooks.once("ready", async () => {
@@ -350,12 +496,17 @@ Hooks.once("ready", async () => {
 
   window.setTimeout(bindAllVendorTokens, 500);
   window.setTimeout(bindAllArmorerTokens, 500);
+  window.setTimeout(bindAllShopTiles, 500);
+
+  game.add2e = game.add2e ?? {};
+  game.add2e.shopTileVersion = ADD2E_SHOP_TILE_VERSION;
 
   console.log("[ADD2E][SHOP][READY]", {
     vendor: ADD2E_VENDOR_VERSION,
     armorer: ADD2E_ARMORER_VERSION,
     consumables: ADD2E_CONSUMABLES_VERSION,
     orchestration: ADD2E_SHOP_ORCHESTRATION_VERSION,
-    hp: ADD2E_SHOP_HP_VERSION
+    hp: ADD2E_SHOP_HP_VERSION,
+    tiles: ADD2E_SHOP_TILE_VERSION
   });
 });
