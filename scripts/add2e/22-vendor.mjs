@@ -274,7 +274,7 @@ async function enforceShopTokenPresentation() {
       const update = { _id: tokenDoc.id };
       let changed = false;
       if (tokenDoc.displayName !== displayName) { update.displayName = displayName; changed = true; }
-      if (tokenDoc.lockRotation !== true) { update.lockRotation = true; }
+      if (tokenDoc.lockRotation !== true) { update.lockRotation = true; changed = true; }
       if (changed) updates.push(update);
     }
     if (updates.length) await scene.updateEmbeddedDocuments("Token", updates, { add2eReason: "shop-token-presentation" });
