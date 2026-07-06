@@ -4,23 +4,23 @@
 // La visée utilise un cône PIXI, sans Warpgate, sur le modèle de Mains brûlantes.
 
 const __add2eVadeRetroResult = await (async () => {
-  const VERSION = "2026-07-05-vade-retro-rewrite-v3";
+  const VERSION = "2026-07-06-vade-retro-canonical-undead-v4";
   const ICON = "icons/magic/holy/barrier-shield-winged-cross.webp";
   const CONE = Object.freeze({ angle: 90, cells: 3 });
   const TABLE = Object.freeze({
-    squelette:     ["10", "7",  "4",  "T",  "T",  "D",  "D",  "D*", "D*", "D*"],
-    zombie:        ["13", "10", "7",  "T",  "T",  "D",  "D",  "D",  "D*", "D*"],
-    goule:         ["16", "13", "10", "4",  "T",  "T",  "D",  "D",  "D",  "D*"],
-    ombre:         ["19", "16", "13", "7",  "4",  "T",  "T",  "D",  "D",  "D*"],
-    necrophage:    ["20", "19", "16", "10", "7",  "4",  "T",  "T",  "D",  "D"],
-    ghast:         [null, "20", "19", "13", "10", "7",  "4",  "T",  "T",  "D"],
-    ame_en_peine:  [null, null, "20", "16", "13", "10", "7",  "4",  "T",  "D"],
-    momie:         [null, null, null, "20", "16", "13", "10", "7",  "4",  "T"],
-    spectre:       [null, null, null, null, "20", "16", "13", "10", "7",  "T"],
-    vampire:       [null, null, null, null, null, "20", "16", "13", "10", "4"],
-    fantome:       [null, null, null, null, null, null, "20", "16", "13", "7"],
-    liche:         [null, null, null, null, null, null, null, "19", "16", "10"],
-    special:       [null, null, null, null, null, null, null, "20", "19", "13"]
+    squelette: ["10", "7", "4", "T", "T", "D", "D", "D*", "D*", "D*"],
+    zombie: ["13", "10", "7", "T", "T", "D", "D", "D", "D*", "D*"],
+    goule: ["16", "13", "10", "4", "T", "T", "D", "D", "D", "D*"],
+    ombre: ["19", "16", "13", "7", "4", "T", "T", "D", "D", "D*"],
+    necrophage: ["20", "19", "16", "10", "7", "4", "T", "T", "D", "D"],
+    ghast: [null, "20", "19", "13", "10", "7", "4", "T", "T", "D"],
+    ame_en_peine: [null, null, "20", "16", "13", "10", "7", "4", "T", "D"],
+    momie: [null, null, null, "20", "16", "13", "10", "7", "4", "T"],
+    spectre: [null, null, null, null, "20", "16", "13", "10", "7", "T"],
+    vampire: [null, null, null, null, null, "20", "16", "13", "10", "4"],
+    fantome: [null, null, null, null, null, null, "20", "16", "13", "7"],
+    liche: [null, null, null, null, null, null, null, "19", "16", "10"],
+    special: [null, null, null, null, null, null, null, "20", "19", "13"]
   });
   const ORDER = Object.freeze(["squelette", "zombie", "goule", "ombre", "necrophage", "ghast", "ame_en_peine", "momie", "spectre", "vampire", "fantome", "liche", "special"]);
   const LABELS = Object.freeze({
@@ -28,7 +28,33 @@ const __add2eVadeRetroResult = await (async () => {
     ame_en_peine: "Âme en peine", momie: "Momie", spectre: "Spectre", vampire: "Vampire", fantome: "Fantôme", liche: "Liche",
     special: "Créature mauvaise des plans inférieurs"
   });
-  const UNDEAD_TAG = "creature_label:mort-vivant";
+
+  // type:mort_vivant est la seule clé canonique de famille.
+  // system.type_monstre conserve l’identité précise du monstre.
+  const UNDEAD_FAMILY_TAG = "type:mort_vivant";
+  const UNDEAD_ROWS = Object.freeze({
+    squelette: "squelette",
+    combattant_squelette: "squelette",
+    squelette_animal: "squelette",
+    squelette_geant: "squelette",
+    zombie: "zombie",
+    zombie_animal: "zombie",
+    zombie_jaune: "zombie",
+    zombie_juju: "zombie",
+    zombie_monstre: "zombie",
+    goule: "goule",
+    goule_lacedon: "goule",
+    ombre: "ombre",
+    necrophage: "necrophage",
+    ghast: "ghast",
+    bleme: "ghast",
+    ame_en_peine: "ame_en_peine",
+    momie: "momie",
+    spectre: "spectre",
+    vampire: "vampire",
+    fantome: "fantome",
+    liche: "liche"
+  });
   const ORDER_INDEX = new Map(ORDER.map((key, index) => [key, index]));
 
   const esc = value => String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
@@ -215,7 +241,9 @@ const __add2eVadeRetroResult = await (async () => {
       function onContextMenu(event) { event.preventDefault(); event.stopPropagation(); cleanup(null, false); }
       function onKeyDown(event) {
         if (event.key !== "Escape") return;
-        event.preventDefault(); event.stopPropagation(); cleanup(null, false);
+        event.preventDefault();
+        event.stopPropagation();
+        cleanup(null, false);
       }
       view.addEventListener("mousemove", onMove, true);
       view.addEventListener("mousedown", onDown, true);
@@ -225,12 +253,14 @@ const __add2eVadeRetroResult = await (async () => {
   }
 
   function actorTags(targetActor) {
-    const system = targetActor?.system ?? {};
-    const flags = targetActor?.flags?.add2e ?? {};
-    return new Set(flatten([system.tags, system.effectTags, flags.tags, flags.effectTags]).map(norm).filter(Boolean));
+    // Classification volontairement limitée aux tags canoniques de l'acteur.
+    return new Set(flatten(targetActor?.system?.tags).map(norm).filter(Boolean));
   }
   function hasUndeadTag(targetActor) {
-    return actorTags(targetActor).has(norm(UNDEAD_TAG));
+    return actorTags(targetActor).has(norm(UNDEAD_FAMILY_TAG));
+  }
+  function undeadCategory(targetActor) {
+    return UNDEAD_ROWS[norm(targetActor?.system?.type_monstre)] ?? null;
   }
   function actorText(targetActor) {
     const system = targetActor?.system ?? {};
@@ -266,23 +296,16 @@ const __add2eVadeRetroResult = await (async () => {
     if (!targetActor) return null;
     const text = actorText(targetActor);
     if (evilCleric && norm(targetActor.type) === "personnage" && text.includes("paladin")) {
-      const row = paladinRow(targetActor);
+      const category = paladinRow(targetActor);
       const level = Math.max(1, Math.floor(numberFrom(targetActor.system?.niveau ?? targetActor.system?.level) || 1));
-      return { category: row, label: `Paladin niveau ${level}`, kind: "paladin", lowerPlane: false };
+      return { category, label: `Paladin niveau ${level}`, kind: "paladin", lowerPlane: false };
     }
-    const aliases = [
-      ["ame_en_peine", ["ame_en_peine", "wight"]], ["necrophage", ["necrophage", "wraith"]], ["squelette", ["squelette", "skeleton"]],
-      ["zombie", ["zombie"]], ["goule", ["goule", "ghoul"]], ["ombre", ["ombre", "shadow"]], ["ghast", ["ghast"]],
-      ["momie", ["momie", "mummy"]], ["spectre", ["spectre", "specter"]], ["vampire", ["vampire"]], ["fantome", ["fantome", "ghost"]], ["liche", ["liche", "lich"]]
-    ];
     if (hasUndeadTag(targetActor)) {
-      const found = aliases.find(([, words]) => words.some(word => text.includes(word)));
-      if (found) return { category: found[0], label: LABELS[found[0]], kind: "mort-vivant", lowerPlane: false };
-      return null;
+      const category = undeadCategory(targetActor);
+      return category ? { category, label: LABELS[category], kind: "mort-vivant", lowerPlane: false } : null;
     }
     const lowerPlane = ["demon", "diable", "devil", "daemon", "mezzodaemon", "sorciere_des_tenebres", "plan_inferieur", "plans_inferieurs"].some(word => text.includes(word));
-    if (lowerPlane && specialEligible(targetActor)) return { category: "special", label: LABELS.special, kind: "plan inférieur", lowerPlane: true };
-    return null;
+    return lowerPlane && specialEligible(targetActor) ? { category: "special", label: LABELS.special, kind: "plan inférieur", lowerPlane: true } : null;
   }
   function tableEntry(group) { return TABLE[group?.category]?.[column] ?? null; }
   function resolveToken(id) {
@@ -327,16 +350,27 @@ const __add2eVadeRetroResult = await (async () => {
     ui.notifications.info("Vade-rétro : tentative annulée.");
     return false;
   }
+
   const targetsInCone = Array.from(canvas.tokens?.placeables ?? [])
     .filter(target => target?.visible !== false && target?.actor && target.id !== casterToken.id && target.actor.id !== caster.id)
     .filter(target => tokenInCone(target, placement.direction));
+
   const queue = Array.isArray(prior?.pending) ? prior.pending : groupsFrom(targetsInCone);
   const group = queue[0] ?? null;
+
   if (!group) {
-    ui.notifications.warn("Vade-rétro : aucun mort-vivant ou adversaire des plans inférieurs affectable dans le cône.");
+    const unknown = targetsInCone
+      .filter(target => hasUndeadTag(target.actor) && !undeadCategory(target.actor))
+      .map(target => target.name ?? target.actor?.name)
+      .filter(Boolean);
+    ui.notifications.warn(unknown.length
+      ? `Vade-rétro : aucune ligne officielle de la matrice pour ${unknown.join(", ")}.`
+      : "Vade-rétro : aucun mort-vivant ou adversaire des plans inférieurs affectable dans le cône.");
     return false;
   }
-  const groupTargets = group.ids.map(resolveToken).filter(target => target?.actor && tokenInCone(target, placement.direction))
+
+  const groupTargets = group.ids.map(resolveToken)
+    .filter(target => target?.actor && tokenInCone(target, placement.direction))
     .sort((left, right) => String(left.name ?? left.actor?.name).localeCompare(String(right.name ?? right.actor?.name), "fr"));
   if (!groupTargets.length) {
     ui.notifications.warn(`Vade-rétro : aucun ${group.label.toLowerCase()} de la tentative en cours n’est dans le cône.`);
@@ -348,11 +382,18 @@ const __add2eVadeRetroResult = await (async () => {
   const d20 = automatic ? null : await roll("1d20");
   const success = automatic || Number(d20.total) >= Number(entry);
   const stateBase = {
-    version: VERSION, status: "", combatId: game.combat?.id ?? null, casterUuid: caster.uuid,
-    sourceClass: isPaladin ? "paladin" : "clerc", effectiveClericLevel: clericLevel,
-    lastRound: currentRound, direction: placement.direction,
-    cone: { angle: CONE.angle, distance: coneDistanceMeters(), units: canvas.scene?.grid?.units ?? "m" }, updatedAt: Date.now()
+    version: VERSION,
+    status: "",
+    combatId: game.combat?.id ?? null,
+    casterUuid: caster.uuid,
+    sourceClass: isPaladin ? "paladin" : "clerc",
+    effectiveClericLevel: clericLevel,
+    lastRound: currentRound,
+    direction: placement.direction,
+    cone: { angle: CONE.angle, distance: coneDistanceMeters(), units: canvas.scene?.grid?.units ?? "m" },
+    updatedAt: Date.now()
   };
+
   if (!success) {
     await saveCombatState({ ...stateBase, status: "closed", reason: "failed", pending: [] });
     await ChatMessage.create({
@@ -377,7 +418,8 @@ const __add2eVadeRetroResult = await (async () => {
     }
     if (!game.socket) return false;
     game.socket.emit("system.add2e", {
-      type: "ADD2E_GM_OPERATION", operation: "createActiveEffect",
+      type: "ADD2E_GM_OPERATION",
+      operation: "createActiveEffect",
       payload: { actorUuid: targetActor.uuid, actorId: targetActor.id, effectData, fromUserId: game.user?.id, sentAt: Date.now() }
     });
     return true;
@@ -391,7 +433,8 @@ const __add2eVadeRetroResult = await (async () => {
     }
     if (!game.socket) return false;
     game.socket.emit("system.add2e", {
-      type: "ADD2E_GM_OPERATION", operation: "applyDamage",
+      type: "ADD2E_GM_OPERATION",
+      operation: "applyDamage",
       payload: { actorUuid: targetActor.uuid, actorId: targetActor.id, montant: Math.max(1, current), type: "vade-retro", details: "Vade-rétro — destruction / damnation" }
     });
     return true;
@@ -411,18 +454,19 @@ const __add2eVadeRetroResult = await (async () => {
   let effectName = "";
   let effectDuration = {};
   let durationLabel = "";
-  let tags = [];
+  let effectTags = [];
   let reaction = null;
+
   if (destroy) {
     outcome = "Détruit / damné";
     effectName = "Détruit par Vade-rétro";
-    tags = ["vade_retro", "etat:detruit_vade_retro", `vade_retro:${group.category}`];
+    effectTags = ["vade_retro", "etat:detruit_vade_retro", `vade_retro:${group.category}`];
   } else if (dominate) {
     outcome = "Dominé";
     effectName = "Dominé par Vade-rétro";
     effectDuration = hoursEffect(24 * 6);
     durationLabel = "6 jours (renouvellement requis)";
-    tags = ["vade_retro", "etat:domine_vade_retro", "controle:clerc", `vade_retro:${group.category}`];
+    effectTags = ["vade_retro", "etat:domine_vade_retro", "controle:clerc", `vade_retro:${group.category}`];
   } else if (evilCleric) {
     const threshold = String(entry).startsWith("T") ? null : Number(entry);
     const reactionRoll = await roll("1d100");
@@ -434,7 +478,7 @@ const __add2eVadeRetroResult = await (async () => {
     effectName = `Influencé par Vade-rétro — ${attitude}`;
     effectDuration = hoursEffect(hours);
     durationLabel = `${hours} heure${hours > 1 ? "s" : ""}`;
-    tags = ["vade_retro", "etat:influence_vade_retro", "controle:clerc", `attitude:${norm(attitude)}`, `vade_retro:${group.category}`];
+    effectTags = ["vade_retro", "etat:influence_vade_retro", "controle:clerc", `attitude:${norm(attitude)}`, `vade_retro:${group.category}`];
     reaction = { rolled: reactionRoll.total, adjustment: charismaAdjustment, adjusted, attitude };
   } else {
     const durationRoll = await roll("3d4");
@@ -444,7 +488,7 @@ const __add2eVadeRetroResult = await (async () => {
     effectName = "Repoussé par Vade-rétro";
     effectDuration = timing.duration;
     durationLabel = `${rounds} rounds (3d4 = ${rounds})`;
-    tags = ["vade_retro", "etat:repousse_vade_retro", "interdiction:attaque", "interdiction:sort", "mouvement:eloignement_obligatoire", `vade_retro:${group.category}`];
+    effectTags = ["vade_retro", "etat:repousse_vade_retro", "interdiction:attaque", "interdiction:sort", "mouvement:eloignement_obligatoire", `vade_retro:${group.category}`];
     reaction = { timingFlags: timing.flags };
   }
 
@@ -463,12 +507,22 @@ const __add2eVadeRetroResult = await (async () => {
       flags: {
         add2e: {
           ...(reaction?.timingFlags ?? {}),
-          tags,
+          tags: effectTags,
           vadeRetro: {
-            version: VERSION, casterId: caster.id, casterUuid: caster.uuid, casterName: caster.name,
-            sourceClass: isPaladin ? "paladin" : "clerc", effectiveClericLevel: clericLevel,
-            category: group.category, entry, outcome, direction: placement.direction,
-            combatId: game.combat?.id ?? null, countFormula, count, reaction
+            version: VERSION,
+            casterId: caster.id,
+            casterUuid: caster.uuid,
+            casterName: caster.name,
+            sourceClass: isPaladin ? "paladin" : "clerc",
+            effectiveClericLevel: clericLevel,
+            category: group.category,
+            entry,
+            outcome,
+            direction: placement.direction,
+            combatId: game.combat?.id ?? null,
+            countFormula,
+            count,
+            reaction
           }
         }
       }
@@ -484,17 +538,25 @@ const __add2eVadeRetroResult = await (async () => {
   }
 
   const status = pending.length ? "pending" : "complete";
-  await saveCombatState({ ...stateBase, status, pending, attempted: { category: group.category, entry, countFormula, count, result: outcome, targets: affected.map(target => target.id) } });
+  await saveCombatState({
+    ...stateBase,
+    status,
+    pending,
+    attempted: { category: group.category, entry, countFormula, count, result: outcome, targets: affected.map(target => target.id) }
+  });
+
   const reactionText = reaction?.rolled
     ? `<div><b>Réaction :</b> d100 ${reaction.rolled}${reaction.adjustment ? ` ${reaction.adjustment >= 0 ? "+" : ""}${reaction.adjustment}` : ""} = <b>${reaction.adjusted}</b> — ${esc(reaction.attitude)}.</div>`
     : "";
   const nextText = game.combat
     ? status === "pending" ? "Une tentative réussie peut être poursuivie au round suivant contre le type restant le plus faible." : "Aucune autre tentative n’est disponible dans ce combat."
     : "Hors combat, la durée et les suites de l’effet restent sous l’arbitrage du MJ.";
+
   await ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken }),
     content: `<div class="add2e-chat-card" style="border:1.5px solid #c79b38;border-radius:12px;overflow:hidden;background:#fffaf0;box-shadow:0 3px 8px #0002;"><div style="background:linear-gradient(90deg,#765014,#c79b38);color:#fff;padding:8px 10px;display:flex;align-items:center;gap:8px;"><img src="${esc(caster.img || ICON)}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid #fff;"><div style="flex:1;"><div style="font-weight:800;">${esc(caster.name)}</div><div style="font-size:.88em;">Vade-rétro — niveau effectif ${clericLevel}${isPaladin ? ` (paladin niveau ${nativeLevel})` : ""}</div></div><img src="${ICON}" style="width:32px;height:32px;border-radius:4px;background:#fff;"></div><div style="padding:9px 10px;"><div style="padding:7px 8px;border:1px solid #e6cf86;border-radius:7px;background:#fffdf7;margin-bottom:7px;"><b>Cône :</b> ${CONE.angle}°, ${coneDistanceMeters()} ${esc(canvas.scene?.grid?.units || "m")}.<br><b>${esc(group.label)} :</b> ${automatic ? "résultat automatique" : `d20 ${d20.total} / ${esc(entry)}`} — <b>${esc(outcome)}</b>.<br><b>Nombre affecté :</b> ${countFormula} = <b>${count}</b>.${durationLabel ? `<br><b>Durée :</b> ${esc(durationLabel)}.` : ""}${reactionText}</div>${rows.map(row => `<div style="padding:5px 0;border-bottom:1px solid #ecd99c;"><b>${esc(row.target)}</b> — ${esc(row.result)}</div>`).join("")}<div style="margin-top:7px;font-size:.84em;color:#665121;">${nextText}</div></div></div>`
   });
+
   return true;
 })();
 
@@ -502,4 +564,5 @@ if (__add2eVadeRetroResult !== true && __add2eVadeRetroResult !== false) {
   ui.notifications?.error?.("Vade-rétro : le script onUse n'a pas retourné true/false.");
   return false;
 }
+
 return __add2eVadeRetroResult;
