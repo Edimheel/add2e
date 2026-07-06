@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — Moteur générique de rounds de combat.
-// Version : 2026-07-06-round-engine-vade-retro-flee-v3
+// Version : 2026-07-06-round-engine-vade-retro-flee-v4
 // Compatible Foundry V13 / V14 / V15.
 // ============================================================================
 
@@ -21,7 +21,7 @@ import {
   add2eTimeNormalizeActorEffects
 } from "./19a-time-engine.mjs";
 
-export const ADD2E_ROUND_ENGINE_VERSION = "2026-07-06-round-engine-vade-retro-flee-v3";
+export const ADD2E_ROUND_ENGINE_VERSION = "2026-07-06-round-engine-vade-retro-flee-v4";
 
 const TAG = "[ADD2E][ROUND_ENGINE]";
 const FLAG_SCOPE = "add2e";
@@ -48,18 +48,8 @@ const VADE_TABLE = Object.freeze({
 });
 
 const VADE_LABELS = Object.freeze({
-  squelette: "Squelette",
-  zombie: "Zombie",
-  goule: "Goule",
-  ombre: "Ombre",
-  necrophage: "Nécrophage",
-  ghast: "Ghast",
-  ame_en_peine: "Âme en peine",
-  momie: "Momie",
-  spectre: "Spectre",
-  vampire: "Vampire",
-  fantome: "Fantôme",
-  liche: "Liche",
+  squelette: "Squelette", zombie: "Zombie", goule: "Goule", ombre: "Ombre", necrophage: "Nécrophage", ghast: "Ghast",
+  ame_en_peine: "Âme en peine", momie: "Momie", spectre: "Spectre", vampire: "Vampire", fantome: "Fantôme", liche: "Liche",
   special: "Créature mauvaise des plans inférieurs"
 });
 
@@ -68,8 +58,7 @@ function warn(label, data = {}) { console.warn(`${TAG}${label}`, data); }
 function error(label, data = {}) { console.error(`${TAG}${label}`, data); }
 function esc(value) { return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
 function norm(value) { return String(value ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "").replace(/[^a-z0-9]+/g, "_").replace(/_+/g, "_").replace(/^_+|_+$/g, ""); }
-function numberFrom(value, fallback = NaN) { const match = String(value ?? "").match(/-?\d+(?:[.,]\d+)?/); const parsed = match ? Number(match[0].replace(",", ".")) : NaN; return Number.isFinite(parsed) ? parsed : fallback; }
-
+function numberFrom(value, fallback = NaN) { const m = String(value ?? "").match(/-?\d+(?:[.,]\d+)?/); const n = m ? Number(m[0].replace(",", ".")) : NaN; return Number.isFinite(n) ? n : fallback; }
 function toArray(value) {
   if (!value) return [];
   if (Array.isArray(value)) return value;
@@ -78,7 +67,6 @@ function toArray(value) {
   if (typeof value[Symbol.iterator] === "function" && typeof value !== "string") return [...value];
   return [value];
 }
-
 function nowIso() { try { return new Date().toISOString(); } catch (_err) { return String(Date.now()); } }
 function isResponsibleGM() {
   if (!game.user?.isGM) return false;
@@ -152,10 +140,7 @@ function actorHp(actor) {
 function actorIsDefeated(actor) {
   const hp = actorHp(actor);
   if (Number.isFinite(hp) && hp <= 0) return true;
-  return Array.from(actor?.effects ?? []).some(effect => {
-    if (effect?.disabled) return false;
-    return toArray(effect?.statuses ?? effect?.getFlag?.("core", "statusId") ?? []).map(norm).some(status => ["dead", "mort", "defeated", "vaincu"].includes(status));
-  });
+  return Array.from(actor?.effects ?? []).some(effect => !effect?.disabled && toArray(effect?.statuses ?? effect?.getFlag?.("core", "statusId") ?? []).map(norm).some(status => ["dead", "mort", "defeated", "vaincu"].includes(status)));
 }
 
 async function applyNegativeHpRoundLoss(actor, currentRound, combat) {
@@ -190,9 +175,7 @@ function tokenById(combat, tokenId) {
 function actorToken(actor, combat = null) {
   if (!actor) return null;
   const combatant = toArray(combat?.combatants).find(entry => entry?.actor?.id === actor.id);
-  return combatantToken(combatant, combat)
-    ?? Array.from(combatScene(combat)?.tokens ?? []).find(token => token?.actor?.id === actor.id || token?.actorId === actor.id)
-    ?? null;
+  return combatantToken(combatant, combat) ?? Array.from(combatScene(combat)?.tokens ?? []).find(token => token?.actor?.id === actor.id || token?.actorId === actor.id) ?? null;
 }
 function tokenCenter(token) {
   if (!token) return null;
@@ -232,7 +215,6 @@ async function processForcedFlee(actor, combatant, currentRound, combat, { perRo
   const target = tokenCenter(targetToken);
   const source = tokenCenter(sourceToken);
   if (!scene || !targetToken || !sourceActor || !target || !source) return { moved: false, reason: "missing-token-or-source" };
-
   const gridSize = Number(scene.grid?.size ?? canvas?.grid?.size ?? 100) || 100;
   const gridDistance = Math.max(0.001, Number(scene.grid?.distance ?? canvas?.grid?.distance ?? 1) || 1);
   const distance = actorMovement(actor, scene) / gridDistance * gridSize;
@@ -254,8 +236,12 @@ async function processForcedFlee(actor, combatant, currentRound, combat, { perRo
 
 async function processImmediateFleeEffect(effect) {
   if (!isResponsibleGM()) return false;
+  const flags = effect?.flags?.add2e ?? {};
   const tags = effectTags(effect);
-  if (!effect?.flags?.add2e?.vadeRetro || !(tags.has("fuite") || tags.has("mouvement_eloignement_obligatoire"))) return false;
+  if (!flags.vadeRetro || !(tags.has("fuite") || tags.has("mouvement_eloignement_obligatoire"))) return false;
+  // La capacité initiale déplace déjà le token elle-même ; seul le moteur
+  // reprend immédiatement les effets créés par la poursuite automatique.
+  if (flags.vadeRetro.sourceClass) return false;
   const actor = effect?.parent ?? null;
   if (!actor || actorIsDefeated(actor)) return false;
   const combat = game.combat ?? null;
@@ -283,18 +269,12 @@ function vadeEntry(category, effectiveLevel) {
   const column = level <= 8 ? level - 1 : level <= 13 ? 8 : 9;
   return VADE_TABLE[category]?.[column] ?? null;
 }
-async function vadeRoll(formula) {
-  const result = await new Roll(formula).evaluate({ async: true });
-  try { await game.dice3d?.showForRoll?.(result); } catch (_err) {}
-  return result;
-}
+async function vadeRoll(formula) { const result = await new Roll(formula).evaluate({ async: true }); try { await game.dice3d?.showForRoll?.(result); } catch (_err) {} return result; }
 function vadeGroupTokens(combat, group) {
   const seen = new Set();
   return (Array.isArray(group?.ids) ? group.ids : []).map(id => tokenById(combat, id)).filter(token => token?.actor && !actorIsDefeated(token.actor) && !seen.has(token.id) && seen.add(token.id));
 }
-function vadeQueue(combat, pending) {
-  return (Array.isArray(pending) ? pending : []).map(group => ({ ...group, ids: vadeGroupTokens(combat, group).map(token => token.id) })).filter(group => group.ids.length);
-}
+function vadeQueue(combat, pending) { return (Array.isArray(pending) ? pending : []).map(group => ({ ...group, ids: vadeGroupTokens(combat, group).map(token => token.id) })).filter(group => group.ids.length); }
 function vadeDuration(rounds) {
   const time = game.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
   const endMessage = "L’effet de Vade-rétro sur {actor} prend fin.";
@@ -304,14 +284,10 @@ function vadeDuration(rounds) {
   };
 }
 function vadeIsEvil(actor) { const alignment = norm(actor?.system?.alignement ?? actor?.system?.alignment ?? ""); return alignment.includes("mauvais") || alignment.includes("evil"); }
-
 async function postVadeClassCard(actor, { lead = "", details = [], rows = [], footer = "" } = {}) {
   const detailsHtml = details.filter(Boolean).map(detail => `<p>${detail}</p>`).join("");
   const rowsHtml = rows.length ? `<ul>${rows.map(row => `<li><b>${esc(row.name)}</b> : ${esc(row.result)}</li>`).join("")}</ul>` : "";
-  await ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor }),
-    content: `<div class="add2e-chat-card"><h3>Vade-rétro</h3>${lead ? `<p>${lead}</p>` : ""}${detailsHtml}${rowsHtml}${footer ? `<p>${footer}</p>` : ""}</div>`
-  });
+  await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: `<div class="add2e-chat-card"><h3>Vade-rétro</h3>${lead ? `<p>${lead}</p>` : ""}${detailsHtml}${rowsHtml}${footer ? `<p>${footer}</p>` : ""}</div>` });
 }
 
 async function continueVadeRetro(actor, combat, currentRound) {
@@ -329,7 +305,6 @@ async function continueVadeRetro(actor, combat, currentRound) {
     await saveVadeState(actor, combat, { ...state, status: targets.length ? "complete" : "pending", pending: targets.length ? [] : queue.slice(1), lastRound: currentRound });
     return true;
   }
-
   await postVadeClassCard(actor, { lead: `<b>${esc(actor.name)}</b> poursuit son Vade-rétro.`, details: [`<b>Round ${currentRound} :</b> prochaine ligne, ${esc(group.label ?? VADE_LABELS[group.category] ?? group.category)}.`] });
   const automatic = /^[TD]/.test(String(entry));
   const d20 = automatic ? null : await vadeRoll("1d20");
@@ -338,7 +313,6 @@ async function continueVadeRetro(actor, combat, currentRound) {
     await postVadeClassCard(actor, { lead: `<b>${esc(actor.name)}</b> présente son symbole sacré.`, details: [`<b>Échec :</b> ${esc(group.label ?? VADE_LABELS[group.category] ?? group.category)} — d20 = <b>${d20.total}</b>, score requis <b>${esc(entry)}</b>.`], footer: "La poursuite cesse." });
     return true;
   }
-
   const countFormula = group.lowerPlane ? "1d2" : String(entry).endsWith("*") ? "1d6+6" : "1d12";
   const count = Math.max(1, Number((await vadeRoll(countFormula)).total) || 1);
   const affected = targets.slice(0, count);
@@ -347,12 +321,7 @@ async function continueVadeRetro(actor, combat, currentRound) {
   const evil = vadeIsEvil(actor);
   const destroy = String(entry).startsWith("D") && !evil;
   const dominate = String(entry).startsWith("D") && evil;
-  let outcome = "";
-  let duration = {};
-  let durationLabel = "";
-  let tags = [];
-  let timeFlags = {};
-
+  let outcome = "", duration = {}, durationLabel = "", tags = [], timeFlags = {};
   if (destroy) {
     outcome = "Détruit / damné";
     tags = ["vade_retro", "etat:detruit_vade_retro", `vade_retro:${group.category}`];
@@ -379,18 +348,12 @@ async function continueVadeRetro(actor, combat, currentRound) {
     timeFlags = timed.flags;
     tags = ["vade_retro", "etat:repousse_vade_retro", "interdiction:attaque", "interdiction:sort", "mouvement:eloignement_obligatoire", "fuite", `vade_retro:${group.category}`];
   }
-
   const rows = [];
   for (const token of affected) {
     const target = token.actor;
     await target.createEmbeddedDocuments("ActiveEffect", [{
       name: destroy ? "Détruit par Vade-rétro" : dominate ? "Dominé par Vade-rétro" : outcome.startsWith("Influencé") ? "Influencé par Vade-rétro" : "Repoussé par Vade-rétro",
-      img: "icons/magic/holy/barrier-shield-winged-cross.webp",
-      origin: actor.uuid,
-      disabled: false,
-      transfer: false,
-      duration,
-      changes: [],
+      img: "icons/magic/holy/barrier-shield-winged-cross.webp", origin: actor.uuid, disabled: false, transfer: false, duration, changes: [],
       description: `${outcome} par ${actor.name}.${durationLabel ? ` Durée : ${durationLabel}.` : ""}`,
       flags: { add2e: { ...timeFlags, tags, vadeRetro: { casterId: actor.id, casterUuid: actor.uuid, casterName: actor.name, category: group.category, entry, outcome, combatId: combat.id, countFormula, count, classification: group.extrapolated ? "extrapole" : "canonique" } } }
     }]);
@@ -400,7 +363,6 @@ async function continueVadeRetro(actor, combat, currentRound) {
     }
     rows.push({ name: token.name ?? target.name, result: outcome });
   }
-
   const status = pending.length ? "pending" : "complete";
   await saveVadeState(actor, combat, { ...state, status, pending, lastRound: currentRound, updatedAt: Date.now(), attempted: { category: group.category, entry, countFormula, count, result: outcome, targets: affected.map(token => token.id) } });
   await postVadeClassCard(actor, {
@@ -436,7 +398,6 @@ async function processCombat(combat, { source = "unknown", perRound = false } = 
   add2eRegisterTimeEngineApi();
   add2eVitalRegisterStatusEffects();
   if (perRound) await add2eTimeAdvanceTick(1, { reason: `combat-round:${combat.id}:${currentRound}` });
-
   const actors = [];
   for (const { actor, combatant } of uniqueCombatActors(combat)) {
     try { actors.push(await processActorForRound(actor, combatant, currentRound, combat, { perRound, source })); }
@@ -474,7 +435,6 @@ export function add2eRegisterRoundEngineHooks() {
   if (globalThis.__ADD2E_ROUND_ENGINE_REGISTERED) return false;
   globalThis.__ADD2E_ROUND_ENGINE_REGISTERED = true;
   add2eRegisterTimeEngineApi();
-
   Hooks.on("combatRound", (combat, round, options, userId) => {
     add2eRoundEngineOnCombatProgress(combat, { round: round ?? combat?.round }, { source: "combatRound", forceRound: true })
       .catch(err => error("[HOOK_COMBAT_ROUND_ERROR]", { err, combat: combat?.id, round, options, userId }));
@@ -495,7 +455,6 @@ export function add2eRegisterRoundEngineHooks() {
     Promise.resolve(processImmediateFleeEffect(effect))
       .catch(err => error("[HOOK_CREATE_ACTIVE_EFFECT_FLEE_ERROR]", { effect: effect?.name, effectId: effect?.id, options, userId, err }));
   });
-
   game.add2e = game.add2e ?? {};
   game.add2e.roundEngineVersion = ADD2E_ROUND_ENGINE_VERSION;
   globalThis.ADD2E_ROUND_ENGINE_VERSION = ADD2E_ROUND_ENGINE_VERSION;
