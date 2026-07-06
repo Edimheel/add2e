@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — Moteur générique de rounds de combat.
-// Version : 2026-07-06-round-engine-vade-retro-flee-v5
+// Version : 2026-07-06-round-engine-forced-flee-v6
 // Compatible Foundry V13 / V14 / V15.
 // ============================================================================
 
@@ -21,7 +21,7 @@ import {
   add2eTimeNormalizeActorEffects
 } from "./19a-time-engine.mjs";
 
-export const ADD2E_ROUND_ENGINE_VERSION = "2026-07-06-round-engine-vade-retro-flee-v5";
+export const ADD2E_ROUND_ENGINE_VERSION = "2026-07-06-round-engine-forced-flee-v6";
 
 const TAG = "[ADD2E][ROUND_ENGINE]";
 const FLAG_SCOPE = "add2e";
@@ -58,7 +58,17 @@ function warn(label, data = {}) { console.warn(`${TAG}${label}`, data); }
 function error(label, data = {}) { console.error(`${TAG}${label}`, data); }
 function esc(value) { return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
 function norm(value) { return String(value ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "").replace(/[^a-z0-9]+/g, "_").replace(/_+/g, "_").replace(/^_+|_+$/g, ""); }
-function numberFrom(value, fallback = NaN) { const m = String(value ?? "").match(/-?\d+(?:[.,]\d+)?/); const n = m ? Number(m[0].replace(",", ".")) : NaN; return Number.isFinite(n) ? n : fallback; }
+function numberFrom(value, fallback = NaN) {
+  if (typeof value === "number") return Number.isFinite(value) ? value : fallback;
+  if (value && typeof value === "object") {
+    for (const key of ["actuel", "max", "value", "valeur", "current", "base", "total", "vitesse", "movement", "move", "metresTour", "movement_max", "movement_base"]) {
+      if (value[key] !== undefined && value[key] !== null && typeof value[key] !== "object") return numberFrom(value[key], fallback);
+    }
+  }
+  const match = String(value ?? "").match(/-?\d+(?:[.,]\d+)?/);
+  const parsed = match ? Number(match[0].replace(",", ".")) : NaN;
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
 function toArray(value) {
   if (!value) return [];
   if (Array.isArray(value)) return value;
@@ -75,8 +85,7 @@ function isResponsibleGM() {
 }
 function chatStyleData() {
   const styles = globalThis.CONST?.CHAT_MESSAGE_STYLES;
-  if (styles?.OTHER !== undefined) return { style: styles.OTHER };
-  return { type: globalThis.CONST?.CHAT_MESSAGE_TYPES?.OTHER ?? 0 };
+  return styles?.OTHER !== undefined ? { style: styles.OTHER } : { type: globalThis.CONST?.CHAT_MESSAGE_TYPES?.OTHER ?? 0 };
 }
 function combatId(combat) { return combat?.uuid ?? combat?.id ?? "combat"; }
 function roundNumber(combat, fallback = 0) { const n = Number(combat?.round ?? fallback ?? 0); return Number.isFinite(n) ? n : 0; }
@@ -182,19 +191,141 @@ function actorToken(actor, combat = null) {
   const combatant = toArray(combat?.combatants).find(entry => entry?.actor?.id === actor.id);
   return combatantToken(combatant, combat) ?? Array.from(combatScene(combat)?.tokens ?? []).find(token => token?.actor?.id === actor.id || token?.actorId === actor.id) ?? null;
 }
-function tokenCenter(token) {
+function tokenDocument(token) {
   if (!token) return null;
-  const gridSize = Number(token.parent?.grid?.size ?? canvas?.grid?.size ?? 100) || 100;
-  return { x: Number(token.x ?? 0) + Number(token.width ?? 1) * gridSize / 2, y: Number(token.y ?? 0) + Number(token.height ?? 1) * gridSize / 2 };
+  if (token.documentName === "Token") return token;
+  if (token.document?.documentName === "Token") return token.document;
+  return null;
 }
-function actorMovement(actor, scene) {
-  const system = actor?.system ?? {};
-  for (const value of [system.mouvement?.actuel, system.mouvement?.max, system.mouvement?.base, system.mouvement?.modes?.marche?.value, system.movement_base, system.movement_max, system.movement_modes?.marche?.value]) {
-    const distance = numberFrom(value, NaN);
-    if (Number.isFinite(distance) && distance > 0) return distance;
+function tokenCenter(token) {
+  const document = tokenDocument(token) ?? token;
+  if (!document) return null;
+  const gridSize = Number(document.parent?.grid?.size ?? canvas?.grid?.size ?? 100) || 100;
+  return { x: Number(document.x ?? 0) + Number(document.width ?? 1) * gridSize / 2, y: Number(document.y ?? 0) + Number(document.height ?? 1) * gridSize / 2 };
+}
+function unitToMeters(distance, unit) {
+  const normalized = String(unit ?? "").trim().toLowerCase();
+  if (["ft", "feet", "foot", "pied", "pieds", "pi"].includes(normalized)) return Number(distance) * .3048;
+  if (["km", "kilometre", "kilomètre", "kilometres", "kilomètres"].includes(normalized)) return Number(distance) * 1000;
+  return Number(distance);
+}
+function readMovementMeters(actor, scene, { allowGridFallback = false } = {}) {
+  const sys = actor?.system ?? {};
+  const candidates = [
+    ["system.mouvement.actuel", sys.mouvement?.actuel],
+    ["system.mouvement.max", sys.mouvement?.max],
+    ["system.mouvement.metresTour", sys.mouvement?.metresTour],
+    ["system.mouvement.vitesse", sys.mouvement?.vitesse],
+    ["system.mouvement.base", sys.mouvement?.base],
+    ["system.mouvement.modes.marche.value", sys.mouvement?.modes?.marche?.value],
+    ["system.movement_max", sys.movement_max],
+    ["system.movement_base", sys.movement_base],
+    ["system.movement_modes.vol.value", sys.movement_modes?.vol?.value],
+    ["system.movement_modes.nage.value", sys.movement_modes?.nage?.value],
+    ["system.movement_modes.creuser.value", sys.movement_modes?.creuser?.value],
+    ["system.movement_modes.marche.value", sys.movement_modes?.marche?.value],
+    ["system.movement.value", sys.movement?.value],
+    ["system.movement", sys.movement],
+    ["system.vitesse_deplacement", sys.vitesse_deplacement],
+    ["system.vitesse", sys.vitesse],
+    ["system.deplacement", sys.deplacement],
+    ["system.déplacement", sys["déplacement"]]
+  ];
+  for (const [source, raw] of candidates) {
+    const value = numberFrom(raw, NaN);
+    if (Number.isFinite(value)) return { ok: true, source, value, raw };
   }
-  return Math.max(1, Number(scene?.grid?.distance ?? canvas?.grid?.distance ?? 1) || 1);
+  if (allowGridFallback) {
+    const gridDistance = Number(scene?.grid?.distance ?? canvas?.scene?.grid?.distance ?? 1) || 1;
+    const gridUnits = scene?.grid?.units ?? canvas?.scene?.grid?.units ?? "m";
+    return { ok: true, source: "scene-grid-distance", value: unitToMeters(gridDistance, gridUnits), raw: gridDistance };
+  }
+  return { ok: false, source: null, value: NaN, raw: null };
 }
+function fleeDestination(sourceToken, targetToken, maxMeters) {
+  const sourceDoc = tokenDocument(sourceToken) ?? sourceToken;
+  const targetDoc = tokenDocument(targetToken) ?? targetToken;
+  const scene = targetDoc?.parent ?? canvas?.scene;
+  const grid = Number(scene?.grid?.size ?? canvas?.grid?.size ?? 100) || 100;
+  const gridDistance = Number(scene?.grid?.distance ?? canvas?.scene?.grid?.distance ?? 1) || 1;
+  const gridUnits = scene?.grid?.units ?? canvas?.scene?.grid?.units ?? "m";
+  const metersPerGrid = Math.max(.01, unitToMeters(gridDistance, gridUnits));
+  const maxPixels = Math.max(0, Number(maxMeters) || 0) / metersPerGrid * grid;
+  const sourceCenter = tokenCenter(sourceDoc);
+  const targetCenter = tokenCenter(targetDoc);
+  if (!sourceCenter || !targetCenter) return null;
+  let dx = targetCenter.x - sourceCenter.x;
+  let dy = targetCenter.y - sourceCenter.y;
+  let length = Math.hypot(dx, dy);
+  if (!Number.isFinite(length) || length < 1) { dx = 1; dy = 0; length = 1; }
+  const width = Number(targetDoc.width ?? 1) * grid;
+  const height = Number(targetDoc.height ?? 1) * grid;
+  let x = targetCenter.x + dx / length * maxPixels - width / 2;
+  let y = targetCenter.y + dy / length * maxPixels - height / 2;
+  x = Math.round(x / grid) * grid;
+  y = Math.round(y / grid) * grid;
+  const sceneWidth = Number(scene?.dimensions?.sceneWidth ?? scene?.width ?? canvas?.dimensions?.width ?? x);
+  const sceneHeight = Number(scene?.dimensions?.sceneHeight ?? scene?.height ?? canvas?.dimensions?.height ?? y);
+  const maxX = Math.max(0, sceneWidth - width);
+  const maxY = Math.max(0, sceneHeight - height);
+  x = Math.max(0, Math.min(maxX, x));
+  y = Math.max(0, Math.min(maxY, y));
+  const movedMeters = unitToMeters((Math.hypot(x - Number(targetDoc.x ?? 0), y - Number(targetDoc.y ?? 0)) / grid) * gridDistance, gridUnits);
+  return { x, y, maxMeters: Math.round(Number(maxMeters) * 100) / 100, movedMeters: Math.round(movedMeters * 100) / 100, from: { x: Number(targetDoc.x ?? 0), y: Number(targetDoc.y ?? 0) } };
+}
+
+export async function add2eForceFleeToken({
+  sourceToken = null,
+  targetToken = null,
+  actor = null,
+  reason = "forced-flee",
+  flagKey = "forcedFlee",
+  allowGridFallback = false,
+  currentRound = null
+} = {}) {
+  const sourceDoc = tokenDocument(sourceToken);
+  const targetDoc = tokenDocument(targetToken);
+  const targetActor = actor ?? targetDoc?.actor ?? null;
+  const scene = targetDoc?.parent ?? canvas?.scene;
+  if (!sourceDoc || !targetDoc || !targetActor || !scene) return { moved: false, requested: false, fatal: true, reason: "Token source ou cible introuvable.", maxMeters: 0, movedMeters: 0 };
+  const move = readMovementMeters(targetActor, scene, { allowGridFallback });
+  if (!move.ok) return { moved: false, requested: false, fatal: true, reason: "Mouvement absent ou invalide dans le JSON de la cible.", maxMeters: 0, movedMeters: 0 };
+  if (move.value <= 0) return { moved: false, requested: false, fatal: false, reason: "La cible a un mouvement de 0 : aucune fuite possible.", maxMeters: 0, movedMeters: 0 };
+  const destination = fleeDestination(sourceDoc, targetDoc, move.value);
+  if (!destination || !Number.isFinite(destination.x) || !Number.isFinite(destination.y)) return { moved: false, requested: false, fatal: true, reason: "Destination de fuite invalide.", maxMeters: move.value, movedMeters: 0 };
+  if (Math.abs(destination.x - Number(targetDoc.x ?? 0)) < 1 && Math.abs(destination.y - Number(targetDoc.y ?? 0)) < 1) return { moved: false, requested: false, fatal: false, reason: "La cible ne peut pas être éloignée davantage dans cette direction.", ...destination };
+  const flagData = {
+    sourceTokenId: sourceDoc.id ?? null,
+    sourceTokenName: sourceDoc.name ?? null,
+    movedAt: Date.now(),
+    movementSource: move.source,
+    maxMeters: destination.maxMeters,
+    movedMeters: destination.movedMeters,
+    from: destination.from,
+    to: { x: destination.x, y: destination.y },
+    reason,
+    combatRound: currentRound
+  };
+  const updateData = {
+    x: destination.x,
+    y: destination.y,
+    flags: { add2e: { [flagKey]: flagData, forcedFlee: flagData, lastAllowedPosition: { x: destination.x, y: destination.y } } }
+  };
+  const options = { add2eIgnoreMovement: true, add2eForcedMovement: true, add2eForcedFlee: true, add2eRoundEngine: true, add2eRoundEngineReason: reason, showRuler: false };
+  try {
+    if (game.user?.isGM) {
+      await targetDoc.update(updateData, options);
+      return { moved: true, requested: false, fatal: false, reason: "Déplacement appliqué.", ...destination, movementSource: move.source, tokenId: targetDoc.id };
+    }
+    if (!game.socket || !scene.id || !targetDoc.id) return { moved: false, requested: false, fatal: true, reason: "Socket indisponible pour le relais MJ.", ...destination };
+    game.socket.emit("system.add2e", { type: "ADD2E_GM_OPERATION", operation: "updateToken", payload: { sceneId: scene.id, tokenId: targetDoc.id, updateData, options, fromUserId: game.user?.id, sentAt: Date.now() } });
+    return { moved: false, requested: true, fatal: false, reason: "Déplacement demandé au MJ.", ...destination, movementSource: move.source, tokenId: targetDoc.id };
+  } catch (err) {
+    error("[FORCED_FLEE_ERROR]", { reason, target: targetActor.name, targetTokenId: targetDoc.id, err });
+    return { moved: false, requested: false, fatal: true, reason: err?.message || "Erreur pendant la mise à jour du token.", ...destination, movementSource: move.source, tokenId: targetDoc.id };
+  }
+}
+
 async function fleeingSource(effect) {
   const flags = effect?.flags?.add2e ?? {};
   const sourceUuid = flags.vadeRetro?.casterUuid ?? flags.casterUuid ?? effect?.origin ?? null;
@@ -213,49 +344,20 @@ async function processForcedFlee(actor, combatant, currentRound, combat, { perRo
     return tags.has("fuite") || tags.has("mouvement_eloignement_obligatoire") || tags.has("etat_peur") || tags.has("peur");
   });
   if (!effect) return { moved: false, reason: "no-flee-effect" };
-  const scene = combatScene(combat);
   const targetToken = combatantToken(combatant, combat) ?? actorToken(actor, combat);
   const sourceActor = await fleeingSource(effect);
   const sourceToken = actorToken(sourceActor, combat);
-  const target = tokenCenter(targetToken);
-  const source = tokenCenter(sourceToken);
-  if (!scene || !targetToken || !sourceActor || !target || !source) return { moved: false, reason: "missing-token-or-source" };
-  const gridSize = Number(scene.grid?.size ?? canvas?.grid?.size ?? 100) || 100;
-  const gridDistance = Math.max(0.001, Number(scene.grid?.distance ?? canvas?.grid?.distance ?? 1) || 1);
-  const distance = actorMovement(actor, scene) / gridDistance * gridSize;
-  let dx = target.x - source.x;
-  let dy = target.y - source.y;
-  let length = Math.hypot(dx, dy);
-  if (length < 1) { dx = 1; dy = 0; length = 1; }
-  const width = Number(targetToken.width ?? 1) * gridSize;
-  const height = Number(targetToken.height ?? 1) * gridSize;
-  const rawX = target.x + dx / length * distance - width / 2;
-  const rawY = target.y + dy / length * distance - height / 2;
-  const sceneWidth = Number(scene.dimensions?.sceneWidth ?? scene.width ?? 0);
-  const sceneHeight = Number(scene.dimensions?.sceneHeight ?? scene.height ?? 0);
-  const x = sceneWidth > 0 ? Math.max(0, Math.min(sceneWidth - width, rawX)) : rawX;
-  const y = sceneHeight > 0 ? Math.max(0, Math.min(sceneHeight - height, rawY)) : rawY;
-  await targetToken.update({ x, y }, { add2eRoundEngine: true, add2eRoundEngineReason: "forced-flee", add2eForcedFlee: true, add2eIgnoreMovement: true, showRuler: false });
-  return { moved: true, round: currentRound, source: sourceActor.name, tokenId: targetToken.id };
-}
-
-async function processImmediateFleeEffect(effect) {
-  if (!isResponsibleGM()) return false;
-  const flags = effect?.flags?.add2e ?? {};
-  const tags = effectTags(effect);
-  if (!flags.vadeRetro || !(tags.has("fuite") || tags.has("mouvement_eloignement_obligatoire"))) return false;
-  const actor = effect?.parent ?? null;
-  if (!actor || actorIsDefeated(actor)) return false;
-  const combat = game.combat ?? null;
-  const combatant = toArray(combat?.combatants).find(entry => combatantActor(entry)?.id === actor.id) ?? null;
-  try {
-    const result = await processForcedFlee(actor, combatant, roundNumber(combat), combat, { perRound: true });
-    if (result.moved) log("[FORCED_FLEE_IMMEDIATE]", { actor: actor.name, tokenId: result.tokenId, source: result.source });
-    return result.moved;
-  } catch (err) {
-    error("[FORCED_FLEE_IMMEDIATE_ERROR]", { actor: actor.name, err });
-    return false;
-  }
+  if (!targetToken || !sourceActor || !sourceToken) return { moved: false, reason: "missing-token-or-source" };
+  const result = await add2eForceFleeToken({
+    sourceToken,
+    targetToken,
+    actor,
+    reason: "round-engine-forced-flee",
+    flagKey: "roundEngineForcedMove",
+    allowGridFallback: true,
+    currentRound
+  });
+  return { ...result, round: currentRound, source: sourceActor.name, tokenId: targetToken.id };
 }
 
 function vadeState(actor, combat) {
@@ -290,16 +392,8 @@ async function postVadeClassCard(actor, { title = "Vade-rétro", lead = "", deta
   const actorName = esc(actor?.name ?? "Clerc");
   const img = esc(actor?.getActiveTokens?.()[0]?.document?.texture?.src ?? actor?.img ?? "icons/magic/holy/barrier-shield-winged-cross.webp");
   const detailsHtml = details.filter(Boolean).map(detail => `<p style="margin:.35em 0;">${detail}</p>`).join("");
-  const rowsHtml = rows.length
-    ? `<ul style="margin:.45em 0 0;padding-left:1.2em;">${rows.map(row => `<li><b>${esc(row.name ?? row.target)}</b> : ${esc(row.result)}</li>`).join("")}</ul>`
-    : "";
-  const content = `<div class="add2e-chat-card add2e-class-ability add2e-vade-retro-card" style="border:1px solid #a77b28;border-radius:8px;overflow:hidden;background:#fff8e7;color:#2f210d;font-family:var(--font-primary);font-size:13px;line-height:1.35;">
-    <div style="display:flex;align-items:center;gap:8px;background:#6f4a10;color:#fff;padding:7px 9px;">
-      <img src="${img}" style="width:34px;height:34px;object-fit:cover;border-radius:4px;border:1px solid #f4d487;background:#fff;" />
-      <div style="flex:1;min-width:0;"><div style="font-weight:900;font-size:14px;line-height:1.1;">${esc(title)}</div><div style="font-size:11px;opacity:.9;line-height:1.15;">Capacité de classe — ${actorName}</div></div>
-    </div>
-    <div style="padding:8px 10px;background:#fff8e7;"><div style="background:#fff;border:1px solid #d6b66e;border-radius:6px;padding:7px 8px;">${lead ? `<div>${lead}</div>` : ""}${detailsHtml}${rowsHtml}${footer ? `<p style="margin:.55em 0 0;font-size:12px;color:#6b4a1a;">${footer}</p>` : ""}</div></div>
-  </div>`;
+  const rowsHtml = rows.length ? `<ul style="margin:.45em 0 0;padding-left:1.2em;">${rows.map(row => `<li><b>${esc(row.name ?? row.target)}</b> : ${esc(row.result)}</li>`).join("")}</ul>` : "";
+  const content = `<div class="add2e-chat-card add2e-class-ability add2e-vade-retro-card" style="border:1px solid #a77b28;border-radius:8px;overflow:hidden;background:#fff8e7;color:#2f210d;font-family:var(--font-primary);font-size:13px;line-height:1.35;"><div style="display:flex;align-items:center;gap:8px;background:#6f4a10;color:#fff;padding:7px 9px;"><img src="${img}" style="width:34px;height:34px;object-fit:cover;border-radius:4px;border:1px solid #f4d487;background:#fff;" /><div style="flex:1;min-width:0;"><div style="font-weight:900;font-size:14px;line-height:1.1;">${esc(title)}</div><div style="font-size:11px;opacity:.9;line-height:1.15;">Capacité de classe — ${actorName}</div></div></div><div style="padding:8px 10px;background:#fff8e7;"><div style="background:#fff;border:1px solid #d6b66e;border-radius:6px;padding:7px 8px;">${lead ? `<div>${lead}</div>` : ""}${detailsHtml}${rowsHtml}${footer ? `<p style="margin:.55em 0 0;font-size:12px;color:#6b4a1a;">${footer}</p>` : ""}</div></div></div>`;
   await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content, ...chatStyleData() });
 }
 
@@ -361,6 +455,7 @@ async function continueVadeRetro(actor, combat, currentRound) {
     timeFlags = timed.flags;
     tags = ["vade_retro", "etat:repousse_vade_retro", "interdiction:attaque", "interdiction:sort", "mouvement:eloignement_obligatoire", "fuite", `vade_retro:${group.category}`];
   }
+  const sourceToken = actorToken(actor, combat);
   const rows = [];
   for (const token of affected) {
     const target = token.actor;
@@ -373,6 +468,8 @@ async function continueVadeRetro(actor, combat, currentRound) {
     if (destroy) {
       await target.update({ [hpUpdatePath(target)]: 0 }, { add2eRoundEngine: true, add2eRoundEngineReason: "vade-retro-destruction", add2eCombatId: combat.id, add2eCombatRound: currentRound });
       await add2eSyncActorVitalStatus(target, { reason: "vade-retro-destruction" });
+    } else if (outcome === "Repoussé" && sourceToken) {
+      await add2eForceFleeToken({ sourceToken, targetToken: token, actor: target, reason: "vade-retro-continuation-flee", flagKey: "vadeRetroForcedMove", allowGridFallback: true, currentRound });
     }
     rows.push({ name: token.name ?? target.name, result: outcome });
   }
@@ -464,16 +561,14 @@ export function add2eRegisterRoundEngineHooks() {
     add2eRoundEngineOnCombatProgress(combat, changed ?? {}, { source: "updateCombat" })
       .catch(err => error("[HOOK_UPDATE_COMBAT_ERROR]", { err, combat: combat?.id, changed, options, userId }));
   });
-  Hooks.on("createActiveEffect", (effect, options, userId) => {
-    Promise.resolve(processImmediateFleeEffect(effect))
-      .catch(err => error("[HOOK_CREATE_ACTIVE_EFFECT_FLEE_ERROR]", { effect: effect?.name, effectId: effect?.id, options, userId, err }));
-  });
   game.add2e = game.add2e ?? {};
   game.add2e.roundEngineVersion = ADD2E_ROUND_ENGINE_VERSION;
   game.add2e.postVadeRetroCard = postVadeClassCard;
+  game.add2e.forceFleeToken = add2eForceFleeToken;
   globalThis.ADD2E_ROUND_ENGINE_VERSION = ADD2E_ROUND_ENGINE_VERSION;
   globalThis.add2eRoundEngineOnCombatProgress = add2eRoundEngineOnCombatProgress;
   globalThis.add2ePostVadeRetroCard = postVadeClassCard;
-  log("[REGISTERED]", { version: ADD2E_ROUND_ENGINE_VERSION, timeEngineVersion: ADD2E_TIME_ENGINE_VERSION, hooks: ["combatRound", "combatTurnChange", "combatTurn", "updateCombat", "createActiveEffect"], mode: "combat-tracker+world-time" });
+  globalThis.add2eForceFleeToken = add2eForceFleeToken;
+  log("[REGISTERED]", { version: ADD2E_ROUND_ENGINE_VERSION, timeEngineVersion: ADD2E_TIME_ENGINE_VERSION, hooks: ["combatRound", "combatTurnChange", "combatTurn", "updateCombat"], mode: "combat-tracker+world-time" });
   return true;
 }
