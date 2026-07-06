@@ -48,14 +48,16 @@ import {
   registerSockets as registerConsumablesSockets
 } from "./22e-consumables-core.mjs";
 
-const ADD2E_SHOP_ORCHESTRATION_VERSION = "2026-07-06-shop-tiles-v3";
+const ADD2E_SHOP_ORCHESTRATION_VERSION = "2026-07-06-shop-tiles-v4";
 const ADD2E_SHOP_HP_VERSION = "2026-06-15-shop-hp-one-multiclass-v1";
 const ADD2E_SHOP_HP = 1;
 const SPELL_COMPONENTS_SETTING = "gestionComposantsSorts";
-const ADD2E_SHOP_TILE_VERSION = "2026-07-06-shop-tiles-v3";
+const ADD2E_SHOP_TILE_VERSION = "2026-07-06-shop-tiles-v4";
 const ADD2E_SHOP_TILE_FLAG_SCOPE = "add2e";
 const ADD2E_SHOP_TILE_FLAG_KEY = "shopType";
 const ADD2E_SHOP_TILE_TYPES = new Set(["vendor", "armorer"]);
+const ADD2E_SHOP_TILE_CLICK_DISTANCE = 8;
+const ADD2E_SHOP_TILE_CLICK_DURATION = 1200;
 
 // Seuls ces champs sont répliqués depuis le compendium vers le stock déjà
 // existant de l'armurier. Prix, quantité et paramètres de stock sont conservés.
@@ -337,22 +339,110 @@ async function openShopFromTile(tile) {
   return true;
 }
 
-function patchShopTileClick() {
-  if (globalThis.__ADD2E_SHOP_TILE_CLICK_V3) return;
-  globalThis.__ADD2E_SHOP_TILE_CLICK_V3 = true;
+function shopTilePointerId(event) {
+  return event?.pointerId ?? event?.data?.pointerId ?? "mouse";
+}
 
-  const TileClass = foundry?.canvas?.placeables?.Tile ?? CONFIG?.Tile?.objectClass ?? globalThis.Tile;
-  const prototype = TileClass?.prototype;
-  if (!prototype || typeof prototype._onClickLeft !== "function") return;
+function shopTileIsPrimaryPointer(event) {
+  const button = event?.button ?? event?.data?.button ?? event?.nativeEvent?.button ?? event?.data?.originalEvent?.button;
+  return button == null || button === 0;
+}
 
-  const original = prototype._onClickLeft;
-  prototype._onClickLeft = function(event) {
-    const result = original.call(this, event);
-    if (!game.user?.isGM && shopTileType(this)) {
-      window.setTimeout(() => { void openShopFromTile(this); }, 0);
-    }
-    return result;
+function shopTilePointerPosition(event) {
+  const global = event?.global ?? event?.data?.global ?? null;
+  if (global && Number.isFinite(global.x) && Number.isFinite(global.y)) {
+    try {
+      const point = canvas?.stage?.toLocal?.(global);
+      if (point && Number.isFinite(point.x) && Number.isFinite(point.y)) return { x: point.x, y: point.y };
+    } catch (_error) {}
+  }
+
+  const getLocalPosition = event?.getLocalPosition ?? event?.data?.getLocalPosition;
+  if (typeof getLocalPosition === "function") {
+    try {
+      const point = getLocalPosition.call(event?.data ?? event, canvas?.stage);
+      if (point && Number.isFinite(point.x) && Number.isFinite(point.y)) return { x: point.x, y: point.y };
+    } catch (_error) {}
+  }
+
+  return null;
+}
+
+function shopTileContainsPoint(tile, point) {
+  const document = tileDocument(tile);
+  const x = Number(document?.x);
+  const y = Number(document?.y);
+  const width = Number(document?.width);
+  const height = Number(document?.height);
+  if (![x, y, width, height, point?.x, point?.y].every(Number.isFinite) || width <= 0 || height <= 0) return false;
+
+  let px = point.x;
+  let py = point.y;
+  const rotation = Number(document?.rotation ?? 0);
+  if (Number.isFinite(rotation) && rotation !== 0) {
+    const centerX = x + (width / 2);
+    const centerY = y + (height / 2);
+    const radians = (-rotation * Math.PI) / 180;
+    const dx = px - centerX;
+    const dy = py - centerY;
+    px = centerX + (dx * Math.cos(radians)) - (dy * Math.sin(radians));
+    py = centerY + (dx * Math.sin(radians)) + (dy * Math.cos(radians));
+  }
+
+  return px >= x && px <= x + width && py >= y && py <= y + height;
+}
+
+function shopTileAtPoint(point) {
+  const tiles = Array.from(canvas?.tiles?.placeables ?? [])
+    .filter(tile => shopTileType(tile) && tile?.isVisible !== false)
+    .sort((left, right) => {
+      const leftZ = Number(left?.zIndex ?? left?.document?.sort ?? 0);
+      const rightZ = Number(right?.zIndex ?? right?.document?.sort ?? 0);
+      return rightZ - leftZ;
+    });
+  return tiles.find(tile => shopTileContainsPoint(tile, point)) ?? null;
+}
+
+function bindShopTileCanvasClick() {
+  const state = globalThis.__ADD2E_SHOP_TILE_CANVAS_CLICK_V4 ??= {};
+  const stage = canvas?.stage;
+  if (!stage?.on || state.stage === stage) return;
+
+  if (state.stage?.off) {
+    state.stage.off("pointerdown", state.onDown);
+    state.stage.off("pointerup", state.onUp);
+    state.stage.off("pointerupoutside", state.onCancel);
+    state.stage.off("pointercancel", state.onCancel);
+  }
+
+  state.stage = stage;
+  state.down = null;
+  state.onDown = event => {
+    if (game.user?.isGM || !shopTileIsPrimaryPointer(event)) return;
+    const point = shopTilePointerPosition(event);
+    if (!point) return;
+    state.down = { pointerId: shopTilePointerId(event), point, time: Date.now() };
   };
+  state.onCancel = () => { state.down = null; };
+  state.onUp = event => {
+    if (game.user?.isGM || !shopTileIsPrimaryPointer(event)) return;
+    const down = state.down;
+    state.down = null;
+    if (!down || down.pointerId !== shopTilePointerId(event)) return;
+
+    const point = shopTilePointerPosition(event);
+    if (!point || Date.now() - down.time > ADD2E_SHOP_TILE_CLICK_DURATION) return;
+    const distance = Math.hypot(point.x - down.point.x, point.y - down.point.y);
+    if (distance > ADD2E_SHOP_TILE_CLICK_DISTANCE) return;
+
+    const tile = shopTileAtPoint(point);
+    if (tile) window.setTimeout(() => { void openShopFromTile(tile); }, 0);
+  };
+
+  stage.on("pointerdown", state.onDown);
+  stage.on("pointerup", state.onUp);
+  stage.on("pointerupoutside", state.onCancel);
+  stage.on("pointercancel", state.onCancel);
 }
 
 function appElement(html) {
@@ -393,9 +483,10 @@ function injectShopTileConfigField(app, html) {
 }
 
 function registerShopTileHooks() {
-  if (globalThis.__ADD2E_SHOP_TILE_HOOKS_V3) return;
-  globalThis.__ADD2E_SHOP_TILE_HOOKS_V3 = true;
+  if (globalThis.__ADD2E_SHOP_TILE_HOOKS_V4) return;
+  globalThis.__ADD2E_SHOP_TILE_HOOKS_V4 = true;
   Hooks.on("renderTileConfig", injectShopTileConfigField);
+  Hooks.on("canvasReady", bindShopTileCanvasClick);
 }
 
 Hooks.once("init", () => {
@@ -449,7 +540,7 @@ Hooks.once("ready", async () => {
   patchActorSheetMoney();
   patchVendorTokenClick();
   patchArmorerTokenClick();
-  patchShopTileClick();
+  bindShopTileCanvasClick();
 
   window.setTimeout(bindAllVendorTokens, 500);
   window.setTimeout(bindAllArmorerTokens, 500);
