@@ -117,7 +117,7 @@ function isMonsterActor(actor) { return actorType(actor) === "monster"; }
 function usesProjectileInventory(actor) { return actorType(actor) === "personnage"; }
 function relevant(actor) {
   const type = actorType(actor);
-  if (type === "personnage") return canUse(actor);
+  if (type === "personnage" || type === "pnj") return canUse(actor);
   if (type === "monster") return game.user?.isGM === true;
   return false;
 }
@@ -798,7 +798,10 @@ function spellRows(actor) {
   if (!selectedSpellGroup || !groups.has(selectedSpellGroup)) selectedSpellGroup = list[0].key;
   const active = groups.get(selectedSpellGroup) ?? list[0];
   const buttons = list.map(group => `<button type="button" class="spell-level ${group.key === active.key ? "active" : ""}" data-action="select-spell-group" data-spell-group="${esc(group.key)}">${esc(group.label)} niv. ${esc(group.level || "—")} <span>${group.items.length}</span></button>`).join("");
-  const spellsHtml = active.items.map(spell => `<div class="row"><button type="button" class="img-act" data-action="cast-spell" data-item-id="${esc(spell.id)}" title="Lancer ${esc(spell.name)}"><img src="${esc(spell.img || "icons/svg/book.svg")}" alt=""></button><div><div class="title">${esc(spell.name)}</div><div class="meta"><span>Mémorisé ${preparedCount(spell)}</span>${spellComponentBadges(actor, spell)}</div></div></div>`).join("");
+  const spellsHtml = active.items.map(spell => {
+    const componentBadges = actorType(actor) === "pnj" ? "" : spellComponentBadges(actor, spell);
+    return `<div class="row"><button type="button" class="img-act" data-action="cast-spell" data-item-id="${esc(spell.id)}" title="Lancer ${esc(spell.name)}"><img src="${esc(spell.img || "icons/svg/book.svg")}" alt=""></button><div><div class="title">${esc(spell.name)}</div><div class="meta"><span>Mémorisé ${preparedCount(spell)}</span>${componentBadges}</div></div></div>`;
+  }).join("");
   return `<div class="spell-layout"><div class="spell-levels">${buttons}</div><div class="spell-list"><div class="spell-list-title">${esc(active.label)} niveau ${esc(active.level || "—")}</div>${spellsHtml}</div></div>`;
 }
 function featureRows(actor) {
