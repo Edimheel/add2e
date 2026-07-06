@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — Moteur générique de rounds de combat.
-// Version : 2026-07-06-round-engine-vade-retro-flee-v4
+// Version : 2026-07-06-round-engine-vade-retro-flee-v5
 // Compatible Foundry V13 / V14 / V15.
 // ============================================================================
 
@@ -21,7 +21,7 @@ import {
   add2eTimeNormalizeActorEffects
 } from "./19a-time-engine.mjs";
 
-export const ADD2E_ROUND_ENGINE_VERSION = "2026-07-06-round-engine-vade-retro-flee-v4";
+export const ADD2E_ROUND_ENGINE_VERSION = "2026-07-06-round-engine-vade-retro-flee-v5";
 
 const TAG = "[ADD2E][ROUND_ENGINE]";
 const FLAG_SCOPE = "add2e";
@@ -72,6 +72,11 @@ function isResponsibleGM() {
   if (!game.user?.isGM) return false;
   if (typeof game.user.isActiveGM === "boolean") return game.user.isActiveGM;
   return game.users?.activeGM?.id === game.user.id || !game.users?.activeGM;
+}
+function chatStyleData() {
+  const styles = globalThis.CONST?.CHAT_MESSAGE_STYLES;
+  if (styles?.OTHER !== undefined) return { style: styles.OTHER };
+  return { type: globalThis.CONST?.CHAT_MESSAGE_TYPES?.OTHER ?? 0 };
 }
 function combatId(combat) { return combat?.uuid ?? combat?.id ?? "combat"; }
 function roundNumber(combat, fallback = 0) { const n = Number(combat?.round ?? fallback ?? 0); return Number.isFinite(n) ? n : 0; }
@@ -239,9 +244,6 @@ async function processImmediateFleeEffect(effect) {
   const flags = effect?.flags?.add2e ?? {};
   const tags = effectTags(effect);
   if (!flags.vadeRetro || !(tags.has("fuite") || tags.has("mouvement_eloignement_obligatoire"))) return false;
-  // La capacité initiale déplace déjà le token elle-même ; seul le moteur
-  // reprend immédiatement les effets créés par la poursuite automatique.
-  if (flags.vadeRetro.sourceClass) return false;
   const actor = effect?.parent ?? null;
   if (!actor || actorIsDefeated(actor)) return false;
   const combat = game.combat ?? null;
@@ -284,10 +286,21 @@ function vadeDuration(rounds) {
   };
 }
 function vadeIsEvil(actor) { const alignment = norm(actor?.system?.alignement ?? actor?.system?.alignment ?? ""); return alignment.includes("mauvais") || alignment.includes("evil"); }
-async function postVadeClassCard(actor, { lead = "", details = [], rows = [], footer = "" } = {}) {
-  const detailsHtml = details.filter(Boolean).map(detail => `<p>${detail}</p>`).join("");
-  const rowsHtml = rows.length ? `<ul>${rows.map(row => `<li><b>${esc(row.name)}</b> : ${esc(row.result)}</li>`).join("")}</ul>` : "";
-  await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: `<div class="add2e-chat-card"><h3>Vade-rétro</h3>${lead ? `<p>${lead}</p>` : ""}${detailsHtml}${rowsHtml}${footer ? `<p>${footer}</p>` : ""}</div>` });
+async function postVadeClassCard(actor, { title = "Vade-rétro", lead = "", details = [], rows = [], footer = "" } = {}) {
+  const actorName = esc(actor?.name ?? "Clerc");
+  const img = esc(actor?.getActiveTokens?.()[0]?.document?.texture?.src ?? actor?.img ?? "icons/magic/holy/barrier-shield-winged-cross.webp");
+  const detailsHtml = details.filter(Boolean).map(detail => `<p style="margin:.35em 0;">${detail}</p>`).join("");
+  const rowsHtml = rows.length
+    ? `<ul style="margin:.45em 0 0;padding-left:1.2em;">${rows.map(row => `<li><b>${esc(row.name ?? row.target)}</b> : ${esc(row.result)}</li>`).join("")}</ul>`
+    : "";
+  const content = `<div class="add2e-chat-card add2e-class-ability add2e-vade-retro-card" style="border:1px solid #a77b28;border-radius:8px;overflow:hidden;background:#fff8e7;color:#2f210d;font-family:var(--font-primary);font-size:13px;line-height:1.35;">
+    <div style="display:flex;align-items:center;gap:8px;background:#6f4a10;color:#fff;padding:7px 9px;">
+      <img src="${img}" style="width:34px;height:34px;object-fit:cover;border-radius:4px;border:1px solid #f4d487;background:#fff;" />
+      <div style="flex:1;min-width:0;"><div style="font-weight:900;font-size:14px;line-height:1.1;">${esc(title)}</div><div style="font-size:11px;opacity:.9;line-height:1.15;">Capacité de classe — ${actorName}</div></div>
+    </div>
+    <div style="padding:8px 10px;background:#fff8e7;"><div style="background:#fff;border:1px solid #d6b66e;border-radius:6px;padding:7px 8px;">${lead ? `<div>${lead}</div>` : ""}${detailsHtml}${rowsHtml}${footer ? `<p style="margin:.55em 0 0;font-size:12px;color:#6b4a1a;">${footer}</p>` : ""}</div></div>
+  </div>`;
+  await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content, ...chatStyleData() });
 }
 
 async function continueVadeRetro(actor, combat, currentRound) {
@@ -457,8 +470,10 @@ export function add2eRegisterRoundEngineHooks() {
   });
   game.add2e = game.add2e ?? {};
   game.add2e.roundEngineVersion = ADD2E_ROUND_ENGINE_VERSION;
+  game.add2e.postVadeRetroCard = postVadeClassCard;
   globalThis.ADD2E_ROUND_ENGINE_VERSION = ADD2E_ROUND_ENGINE_VERSION;
   globalThis.add2eRoundEngineOnCombatProgress = add2eRoundEngineOnCombatProgress;
+  globalThis.add2ePostVadeRetroCard = postVadeClassCard;
   log("[REGISTERED]", { version: ADD2E_ROUND_ENGINE_VERSION, timeEngineVersion: ADD2E_TIME_ENGINE_VERSION, hooks: ["combatRound", "combatTurnChange", "combatTurn", "updateCombat", "createActiveEffect"], mode: "combat-tracker+world-time" });
   return true;
 }
