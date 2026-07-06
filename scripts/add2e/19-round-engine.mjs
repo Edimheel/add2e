@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — Moteur générique de rounds de combat.
-// Version : 2026-07-06-round-engine-forced-flee-v6
+// Version : 2026-07-06-round-engine-vade-player-continuation-v7
 // Compatible Foundry V13 / V14 / V15.
 // ============================================================================
 
@@ -21,13 +21,17 @@ import {
   add2eTimeNormalizeActorEffects
 } from "./19a-time-engine.mjs";
 
-export const ADD2E_ROUND_ENGINE_VERSION = "2026-07-06-round-engine-forced-flee-v6";
+export const ADD2E_ROUND_ENGINE_VERSION = "2026-07-06-round-engine-vade-player-continuation-v7";
 
 const TAG = "[ADD2E][ROUND_ENGINE]";
 const FLAG_SCOPE = "add2e";
 const FLAG_PROCESSED = "roundEngineProcessed";
 const VADE_RETRO_FLAG = "vadeRetro";
+const ADD2E_SOCKET = "system.add2e";
+const VADE_RETRO_PLAYER_CONTINUATION = "ADD2E_VADE_RETRO_PLAYER_CONTINUATION";
+const VADE_RETRO_CONTINUATION_CONTEXTS = "__ADD2E_VADE_RETRO_CONTINUATION_CONTEXTS";
 const LOCAL_PROCESSED = new Set();
+const LOCAL_VADE_CONTINUATIONS = new Set();
 const LOCAL_LIMIT = 200;
 let FALLBACK_ACTOR_KEY = 0;
 
@@ -318,7 +322,7 @@ export async function add2eForceFleeToken({
       return { moved: true, requested: false, fatal: false, reason: "Déplacement appliqué.", ...destination, movementSource: move.source, tokenId: targetDoc.id };
     }
     if (!game.socket || !scene.id || !targetDoc.id) return { moved: false, requested: false, fatal: true, reason: "Socket indisponible pour le relais MJ.", ...destination };
-    game.socket.emit("system.add2e", { type: "ADD2E_GM_OPERATION", operation: "updateToken", payload: { sceneId: scene.id, tokenId: targetDoc.id, updateData, options, fromUserId: game.user?.id, sentAt: Date.now() } });
+    game.socket.emit(ADD2E_SOCKET, { type: "ADD2E_GM_OPERATION", operation: "updateToken", payload: { sceneId: scene.id, tokenId: targetDoc.id, updateData, options, fromUserId: game.user?.id, sentAt: Date.now() } });
     return { moved: false, requested: true, fatal: false, reason: "Déplacement demandé au MJ.", ...destination, movementSource: move.source, tokenId: targetDoc.id };
   } catch (err) {
     error("[FORCED_FLEE_ERROR]", { reason, target: targetActor.name, targetTokenId: targetDoc.id, err });
@@ -395,6 +399,106 @@ async function postVadeClassCard(actor, { title = "Vade-rétro", lead = "", deta
   const rowsHtml = rows.length ? `<ul style="margin:.45em 0 0;padding-left:1.2em;">${rows.map(row => `<li><b>${esc(row.name ?? row.target)}</b> : ${esc(row.result)}</li>`).join("")}</ul>` : "";
   const content = `<div class="add2e-chat-card add2e-class-ability add2e-vade-retro-card" style="border:1px solid #a77b28;border-radius:8px;overflow:hidden;background:#fff8e7;color:#2f210d;font-family:var(--font-primary);font-size:13px;line-height:1.35;"><div style="display:flex;align-items:center;gap:8px;background:#6f4a10;color:#fff;padding:7px 9px;"><img src="${img}" style="width:34px;height:34px;object-fit:cover;border-radius:4px;border:1px solid #f4d487;background:#fff;" /><div style="flex:1;min-width:0;"><div style="font-weight:900;font-size:14px;line-height:1.1;">${esc(title)}</div><div style="font-size:11px;opacity:.9;line-height:1.15;">Capacité de classe — ${actorName}</div></div></div><div style="padding:8px 10px;background:#fff8e7;"><div style="background:#fff;border:1px solid #d6b66e;border-radius:6px;padding:7px 8px;">${lead ? `<div>${lead}</div>` : ""}${detailsHtml}${rowsHtml}${footer ? `<p style="margin:.55em 0 0;font-size:12px;color:#6b4a1a;">${footer}</p>` : ""}</div></div></div>`;
   await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content, ...chatStyleData() });
+}
+
+function vadeInitiatingPlayer(state) {
+  const id = String(state?.initiatorUserId ?? "").trim();
+  const user = id ? game.users?.get?.(id) ?? null : null;
+  return user?.active && !user.isGM ? user : null;
+}
+
+function vadeContinuationKey(payload = {}) {
+  return [payload?.requestId, payload?.actorUuid ?? payload?.actorId, payload?.combatId, payload?.round].filter(value => value !== null && value !== undefined && value !== "").join("|");
+}
+
+function vadeFeatureKey(feature) {
+  return norm(feature?.id ?? feature?._id ?? feature?.key ?? feature?.slug ?? feature?.name ?? feature?.label ?? "");
+}
+
+function vadeFeatureOnUse(feature) {
+  return String(feature?.on_use ?? feature?.onUse ?? feature?.script ?? feature?.macro ?? "").trim();
+}
+
+function vadeContinuationFeature(actor, state) {
+  const features = globalThis.add2eGetActorActivableClassFeatures?.(actor, { includeLocked: false }) ?? [];
+  const expectedKey = norm(state?.featureKey ?? "");
+  const expectedOnUse = String(state?.featureOnUse ?? "").trim();
+  return features.find(feature => {
+    const onUse = vadeFeatureOnUse(feature);
+    if (!/vade-retro\.js(?:$|[?#])/i.test(onUse)) return false;
+    if (expectedOnUse && onUse !== expectedOnUse) return false;
+    return !expectedKey || vadeFeatureKey(feature) === expectedKey;
+  }) ?? null;
+}
+
+async function actorFromVadeContinuationPayload(payload = {}) {
+  if (payload.actorUuid && typeof fromUuid === "function") {
+    try {
+      const document = await fromUuid(payload.actorUuid);
+      const actor = document?.actor ?? document?.parent ?? document ?? null;
+      if (actor?.documentName === "Actor") return actor;
+    } catch (_err) {}
+  }
+  return payload.actorId ? game.actors?.get?.(payload.actorId) ?? null : null;
+}
+
+async function runPlayerVadeRetroContinuation(payload = {}) {
+  const targetUserId = String(payload?.targetUserId ?? "").trim();
+  if (!targetUserId || targetUserId !== game.user?.id || game.user?.isGM) return false;
+  const requestKey = vadeContinuationKey(payload);
+  if (!requestKey || LOCAL_VADE_CONTINUATIONS.has(requestKey)) return false;
+  const actor = await actorFromVadeContinuationPayload(payload);
+  const combat = game.combat;
+  if (!actor || !combat || String(combat.id) !== String(payload.combatId) || Number(combat.round) !== Number(payload.round) || actor.isOwner === false) return false;
+  const state = vadeState(actor, combat);
+  if (!state || state.status !== "pending" || String(state.initiatorUserId ?? "") !== targetUserId || Number(state.lastRound ?? Number(combat.round)) >= Number(combat.round)) return false;
+  const feature = vadeContinuationFeature(actor, state);
+  const execute = globalThis.add2eExecuteClassFeatureOnUse;
+  if (!feature || typeof execute !== "function") {
+    warn("[VADE_RETRO_PLAYER_CONTINUATION_UNAVAILABLE]", { actor: actor.name, combat: combat.id, feature: !!feature, execute: typeof execute });
+    return false;
+  }
+  globalThis[VADE_RETRO_CONTINUATION_CONTEXTS] ??= new Map();
+  const contexts = globalThis[VADE_RETRO_CONTINUATION_CONTEXTS];
+  const contextKey = `${actor.id}:${combat.id}`;
+  LOCAL_VADE_CONTINUATIONS.add(requestKey);
+  contexts.set(contextKey, {
+    kind: "vade-retro-continuation",
+    requestId,
+    actorId: actor.id,
+    actorUuid: actor.uuid ?? null,
+    combatId: combat.id,
+    round: Number(combat.round),
+    initiatorUserId: targetUserId
+  });
+  try {
+    return (await execute(actor, feature, null)) !== false;
+  } catch (err) {
+    error("[VADE_RETRO_PLAYER_CONTINUATION_ERROR]", { actor: actor.name, combat: combat.id, round: combat.round, err });
+    return false;
+  } finally {
+    contexts.delete(contextKey);
+    setTimeout(() => LOCAL_VADE_CONTINUATIONS.delete(requestKey), 1000);
+  }
+}
+
+function requestPlayerVadeRetroContinuation(actor, combat, currentRound, state) {
+  const user = vadeInitiatingPlayer(state);
+  if (!user || !game.socket || !actor?.id || !combat?.id) return false;
+  const requestId = `${combat.id}:${currentRound}:${actor.uuid ?? actor.id}:${Date.now()}`;
+  game.socket.emit(ADD2E_SOCKET, {
+    type: VADE_RETRO_PLAYER_CONTINUATION,
+    payload: {
+      requestId,
+      targetUserId: user.id,
+      actorId: actor.id,
+      actorUuid: actor.uuid ?? null,
+      combatId: combat.id,
+      round: currentRound
+    }
+  });
+  log("[VADE_RETRO_DELEGATED_TO_PLAYER]", { actor: actor.name, combat: combat.id, round: currentRound, userId: user.id });
+  return true;
 }
 
 async function continueVadeRetro(actor, combat, currentRound) {
@@ -486,8 +590,14 @@ async function continueVadeRetro(actor, combat, currentRound) {
 
 async function continuePendingVadeRetro(combat, currentRound) {
   for (const { actor } of uniqueCombatActors(combat)) {
-    try { await continueVadeRetro(actor, combat, currentRound); }
-    catch (err) { error("[VADE_RETRO_CONTINUATION_ERROR]", { actor: actor?.name, combat: combat?.id, round: currentRound, err }); }
+    try {
+      const state = vadeState(actor, combat);
+      if (!state || state.status !== "pending" || Number(state.lastRound ?? currentRound) >= currentRound) continue;
+      if (requestPlayerVadeRetroContinuation(actor, combat, currentRound, state)) continue;
+      await continueVadeRetro(actor, combat, currentRound);
+    } catch (err) {
+      error("[VADE_RETRO_CONTINUATION_ERROR]", { actor: actor?.name, combat: combat?.id, round: currentRound, err });
+    }
   }
 }
 
@@ -541,10 +651,21 @@ export async function add2eRoundEngineOnCombatProgress(combat, changed = {}, { s
   return true;
 }
 
+function registerVadeRetroPlayerContinuationSocket() {
+  if (globalThis.__ADD2E_VADE_RETRO_PLAYER_CONTINUATION_SOCKET_REGISTERED) return;
+  globalThis.__ADD2E_VADE_RETRO_PLAYER_CONTINUATION_SOCKET_REGISTERED = true;
+  game.socket.on(ADD2E_SOCKET, data => {
+    if (data?.type !== VADE_RETRO_PLAYER_CONTINUATION) return;
+    runPlayerVadeRetroContinuation(data.payload ?? {})
+      .catch(err => error("[VADE_RETRO_PLAYER_SOCKET_ERROR]", { err, payload: data?.payload ?? {} }));
+  });
+}
+
 export function add2eRegisterRoundEngineHooks() {
   if (globalThis.__ADD2E_ROUND_ENGINE_REGISTERED) return false;
   globalThis.__ADD2E_ROUND_ENGINE_REGISTERED = true;
   add2eRegisterTimeEngineApi();
+  registerVadeRetroPlayerContinuationSocket();
   Hooks.on("combatRound", (combat, round, options, userId) => {
     add2eRoundEngineOnCombatProgress(combat, { round: round ?? combat?.round }, { source: "combatRound", forceRound: true })
       .catch(err => error("[HOOK_COMBAT_ROUND_ERROR]", { err, combat: combat?.id, round, options, userId }));
