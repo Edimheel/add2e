@@ -1,159 +1,90 @@
 <div class="sheet actor add2e personnage add2e-character-v3 add2e-pnj-sheet" data-actor-id="{{actor._id}}">
   <style>
-    .add2e-pnj-sheet .a2e-pnj-class-stack{display:grid;gap:5px}.add2e-pnj-sheet .a2e-pnj-class-line{display:grid;grid-template-columns:minmax(130px,1fr) 74px minmax(120px,1fr) 34px;align-items:center;gap:6px;padding:5px 7px;border:1px solid #c9a86a;border-radius:6px;background:#fffaf0}.add2e-pnj-sheet .a2e-pnj-class-line img{width:24px;height:24px;object-fit:cover;border-radius:4px;vertical-align:middle;margin-right:5px}.add2e-pnj-sheet .a2e-pnj-class-line input{width:64px;text-align:center}.add2e-pnj-sheet .a2e-pnj-drop-zone{margin-top:8px;padding:8px 10px;border:1px dashed #9b762e;border-radius:7px;background:#fff6db;color:#69430c;font-size:.9rem}.add2e-pnj-sheet .a2e-pnj-carac-base{width:46px!important;text-align:center}.add2e-pnj-sheet .a2e-pnj-carac-race,.add2e-pnj-sheet .a2e-pnj-carac-total{display:inline-flex;align-items:center;justify-content:center;min-width:38px;height:25px;margin-left:4px;border-radius:4px;font-weight:800}.add2e-pnj-sheet .a2e-pnj-carac-race{background:#f2e5bd;color:#6a4a0f}.add2e-pnj-sheet .a2e-pnj-carac-total{background:#e0efd4;color:#23552e}.add2e-pnj-sheet .a2e-pnj-saves{padding:6px 0}.add2e-pnj-sheet .a2e-save-square{cursor:pointer}.add2e-pnj-sheet .a2e-save-square i{cursor:pointer}.add2e-pnj-sheet .a2e-pnj-empty{padding:8px 0;color:#756747;font-style:italic}.add2e-pnj-sheet .a2e-pnj-spell-level{margin:9px 0 4px;padding:5px 8px;border-radius:5px;background:linear-gradient(90deg,#65408e,#9678bd);color:#fff;font-weight:800}.add2e-pnj-sheet .a2e-pnj-memory{display:flex;align-items:center;gap:5px;justify-content:center}.add2e-pnj-sheet .a2e-pnj-note{min-height:250px;width:100%;resize:vertical}.add2e-pnj-sheet .a2e-pnj-race-readonly{font-weight:800;color:#51370b;padding:4px 0}.add2e-pnj-sheet .a2e-pnj-item-name{display:flex;align-items:center;gap:7px}.add2e-pnj-sheet .a2e-pnj-item-name img{width:30px;height:30px;object-fit:cover;border-radius:5px}.add2e-pnj-sheet .a2e-pnj-hint{font-size:.82rem;color:#78633a;margin:6px 0 0}.add2e-pnj-sheet .a2e-actions{white-space:nowrap}.add2e-pnj-sheet .a2e-action-icon{cursor:pointer}@media(max-width:760px){.add2e-pnj-sheet .a2e-pnj-class-line{grid-template-columns:1fr 64px 32px}.add2e-pnj-sheet .a2e-pnj-class-title{display:none}}
+    /* Le PNJ emploie les mêmes composants visuels que le PJ. */
+    .add2e-pnj-sheet .a2e-summary-kicker{font-size:0}.add2e-pnj-sheet .a2e-summary-kicker::after{content:"PNJ";font-size:var(--font-size-12,12px)}
+    .add2e-pnj-sheet .a2e-summary-player label{font-size:0}.add2e-pnj-sheet .a2e-summary-player label::after{content:"Race";font-size:var(--font-size-12,12px)}
+    .add2e-pnj-sheet .a2e-progression-overview-race,.add2e-pnj-sheet .a2e-progression-row:nth-child(2),.add2e-pnj-sheet .a2e-tabs .item[data-tab="capacites"],.add2e-pnj-sheet .a2e-tabs .item[data-tab="effets"],.add2e-pnj-sheet .roll-caracs-btn{display:none!important}
+    .add2e-pnj-sheet input[name="system.nom_joueur"],.add2e-pnj-sheet input[name="system.race"]{pointer-events:none;background:transparent!important;border-color:transparent!important;color:inherit!important;font-weight:700}
+    .add2e-pnj-sheet .a2e-pnj-class-actions{display:flex;align-items:center;gap:7px}.add2e-pnj-sheet .a2e-pnj-class-row{display:grid;grid-template-columns:32px minmax(0,1fr) 62px minmax(100px,1fr) 30px;gap:7px;align-items:center}.add2e-pnj-sheet .a2e-pnj-class-row img{width:28px;height:28px;object-fit:cover;border-radius:4px}.add2e-pnj-sheet .a2e-pnj-class-row input{width:58px;text-align:center}.add2e-pnj-sheet .a2e-pnj-memory{display:inline-flex;align-items:center;gap:7px}.add2e-pnj-sheet .a2e-pnj-spell-level{margin:10px 0 4px;padding:5px 8px;border-radius:5px;background:linear-gradient(90deg,#67418f,#9678ba);color:#fff;font-weight:900}.add2e-pnj-sheet .a2e-pnj-note{width:100%;min-height:260px;resize:vertical}.add2e-pnj-sheet .a2e-pnj-item-name{display:flex;align-items:center;gap:7px}.add2e-pnj-sheet .a2e-pnj-item-name img{width:30px;height:30px;object-fit:cover;border-radius:5px}.add2e-pnj-sheet .a2e-pnj-muted{color:#766643;font-style:italic}.add2e-pnj-sheet .a2e-actions{white-space:nowrap}.add2e-pnj-sheet .a2e-action-icon{cursor:pointer}
+    @media(max-width:760px){.add2e-pnj-sheet .a2e-pnj-class-row{grid-template-columns:30px minmax(0,1fr) 56px 28px}.add2e-pnj-sheet .a2e-pnj-class-title{display:none}}
   </style>
 
   <input type="hidden" class="a2e-active-tab-input" value="{{activeTab}}">
   <div class="a2e-shell">
-    <header class="a2e-header a2e-summary-header">
-      <div class="a2e-summary-portrait">
-        <img class="a2e-portrait" src="{{actor.img}}" alt="Portrait du PNJ" data-action="edit-image">
-      </div>
-
-      <div class="a2e-summary-main">
-        <div class="a2e-summary-identity">
-          <div class="a2e-summary-name-wrap">
-            <span class="a2e-summary-kicker">PNJ</span>
-            <input class="a2e-name" type="text" name="name" value="{{actor.name}}" aria-label="Nom du PNJ">
-          </div>
-          <div class="a2e-summary-player">
-            <label>Race</label>
-            <div class="a2e-pnj-race-readonly">{{raceName}}</div>
-          </div>
-        </div>
-
-        <section class="a2e-progression-card" aria-label="Classes et niveaux">
-          <div class="a2e-progression-card-heading">
-            <span>Classes et niveaux</span>
-            {{#if isMulticlass}}<span class="a2e-progression-status">Multiclassé</span>{{/if}}
-          </div>
-          <div class="a2e-pnj-class-stack">
-            {{#each classes}}
-              <div class="a2e-pnj-class-line" data-item-id="{{id}}">
-                <span><img src="{{img}}">{{name}}</span>
-                <input type="number" min="1" step="1" value="{{level}}" data-action="class-level" data-item-id="{{id}}" title="Niveau de {{name}}">
-                <span class="a2e-pnj-class-title">{{#if title}}{{title}}{{else}}—{{/if}}</span>
-                <a class="a2e-action-icon a2e-action-delete" data-action="delete-class" data-item-id="{{id}}" title="Retirer {{name}}"><i class="fas fa-trash"></i></a>
-              </div>
-            {{else}}
-              <div class="a2e-pnj-empty">Aucune classe.</div>
-            {{/each}}
-          </div>
-          <div class="a2e-pnj-drop-zone">Déposer ici une race ou jusqu’à trois classes. Les restrictions race/classe, prérequis et plafonds raciaux sont ignorés pour un PNJ.</div>
-        </section>
-
-        <section class="a2e-combat-strip" aria-label="Statistiques rapides">
-          <div class="a2e-combat-stat a2e-combat-pv-current"><label>PV courant</label><input type="number" name="system.pdv" value="{{system.pdv}}"></div>
-          <div class="a2e-combat-stat a2e-combat-pv-max"><label>PV max</label><input type="text" value="{{system.points_de_coup}}" readonly></div>
-          <div class="a2e-combat-stat a2e-combat-ca"><label>CA</label><input type="text" value="{{system.ca_total}}" readonly></div>
-          <div class="a2e-combat-stat a2e-combat-thaco"><label>THAC0</label><input type="text" value="{{system.thac0}}" readonly></div>
-          <div class="a2e-combat-stat a2e-combat-movement"><label>Mouvement</label><input type="number" name="system.movement" value="{{system.movement}}"></div>
-          <div class="a2e-combat-stat a2e-combat-alignment"><label>Alignement</label><input type="text" name="system.alignement" value="{{system.alignement}}"></div>
-        </section>
-      </div>
-    </header>
-
-    <div class="a2e-character-saves-layout a2e-pnj-saves">
-      <section class="a2e-panel a2e-characteristics-always">
-        <h2>Caractéristiques</h2>
-        <div class="a2e-panel-body">
-          <table class="a2e-carac-table a2e-carac-table-clean"><tbody>
-            {{#each attributes}}
-              <tr>
-                <td class="carac-label-td"><div class="carac-flex"><i class="fas fa-dice-d20 roll-stat" data-action="roll-stat" data-stat="{{key}}" title="Test de {{label}}"></i><span class="carac-short">{{short}}</span></div></td>
-                <td>
-                  <div class="carac-control-group">
-                    <button type="button" class="carac-btn moins" data-action="adjust-carac" data-carac="{{key}}" data-delta="-1">−</button>
-                    <input class="a2e-pnj-carac-base" type="number" min="3" max="25" name="system.{{key}}_base" value="{{base}}" title="Valeur de base">
-                    <button type="button" class="carac-btn plus" data-action="adjust-carac" data-carac="{{key}}" data-delta="1">+</button>
-                    <span class="a2e-pnj-carac-race" title="Bonus racial">{{racialSigned}}</span>
-                    <span class="a2e-pnj-carac-total" title="Valeur totale">{{total}}</span>
-                  </div>
-                </td>
-                <td><div class="carac-adjustments-line">{{adjustment}}</div></td>
-              </tr>
-            {{/each}}
-          </tbody></table>
-          {{#if canExceptionalStrength}}
-            <div class="a2e-pnj-hint">Force exceptionnelle :
-              <select data-action="force-ex" name="system.force_ex">{{#each forceExValues}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select>
-            </div>
-          {{/if}}
-        </div>
-      </section>
-
-      <aside class="a2e-saves-square-strip a2e-saves-square-side" aria-label="Jets de sauvegarde">
-        <div class="a2e-saves-square-title"><i class="fas fa-dice-d20"></i><span>Sauv.</span></div>
-        <div class="a2e-save-square-grid">
-          {{#each saves}}
-            <div class="a2e-save-square a2e-save-square-{{index}}" data-action="roll-save" data-save-index="{{index}}" title="Lancer : {{label}}">
-              <i class="fas fa-dice-d20 roll-save"></i>
-              <div class="a2e-save-square-label">{{label}}</div>
-              <div class="a2e-save-square-value">{{value}}</div>
-            </div>
-          {{/each}}
-        </div>
-      </aside>
-    </div>
-
-    <nav class="a2e-tabs sheet-tabs tabs" data-group="primary">
-      <a class="item {{#if tabResume}}active{{/if}}" data-action="switch-tab" data-tab="resume"><i class="fas fa-id-card"></i> Résumé</a>
-      <a class="item {{#if tabCombat}}active{{/if}}" data-action="switch-tab" data-tab="combat"><i class="fas fa-shield-alt"></i> Combat</a>
-      <a class="item {{#if tabSorts}}active{{/if}}" data-action="switch-tab" data-tab="sorts"><i class="fas fa-magic"></i> Sorts</a>
-      <a class="item {{#if tabEquipement}}active{{/if}}" data-action="switch-tab" data-tab="equipement"><i class="fas fa-suitcase"></i> Équipement</a>
-      <a class="item {{#if tabNotes}}active{{/if}}" data-action="switch-tab" data-tab="notes"><i class="fas fa-feather-alt"></i> Notes</a>
-    </nav>
+    {{> "systems/add2e/templates/actor/parts/character-header.hbs"}}
+    {{> "systems/add2e/templates/actor/parts/character-caracs-saves.hbs"}}
+    {{> "systems/add2e/templates/actor/parts/character-tabs.hbs"}}
 
     <main class="sheet-body">
-      <section class="a2e-tab-content tab tab-resume {{#if tabResume}}active{{/if}}" data-tab="resume">
+      <section class="a2e-tab-content tab tab-resume {{#if (eq activeTab "resume")}}active{{/if}}" data-group="primary" data-tab="resume">
         <div class="a2e-grid-2">
-          <div class="a2e-panel"><h2>Identité</h2><div class="a2e-panel-body"><table class="a2e-table"><tbody>
-            <tr><th>Race</th><td>{{raceName}}</td></tr><tr><th>Classe(s)</th><td>{{classLabel}}</td></tr><tr><th>Langues</th><td><input type="text" name="system.langues" value="{{system.langues}}"></td></tr><tr><th>Vision</th><td><input type="text" name="system.vision" value="{{system.vision}}"></td></tr>
-          </tbody></table></div></div>
-          <div class="a2e-panel"><h2>Combat</h2><div class="a2e-panel-body"><table class="a2e-table"><tbody>
-            <tr><th>PV</th><td>{{system.pdv}} / {{system.points_de_coup}}</td></tr><tr><th>CA</th><td>{{system.ca_total}}</td></tr><tr><th>THAC0</th><td>{{system.thac0}}</td></tr><tr><th>Titre(s)</th><td>{{system.titre}}</td></tr>
-          </tbody></table></div></div>
+          <div class="a2e-panel">
+            <h2>Identité</h2>
+            <div class="a2e-panel-body">
+              <table class="a2e-table"><tbody>
+                <tr><th>Race</th><td>{{raceName}}</td></tr>
+                <tr><th>Langues</th><td><input type="text" name="system.langues" value="{{system.langues}}"></td></tr>
+                <tr><th>Vision</th><td><input type="text" name="system.vision" value="{{system.vision}}"></td></tr>
+                <tr><th>Alignement</th><td>{{system.alignement}}</td></tr>
+              </tbody></table>
+            </div>
+          </div>
+          <div class="a2e-panel">
+            <h2>Classes</h2>
+            <div class="a2e-panel-body">
+              {{#if classes.length}}
+                <table class="a2e-table"><thead><tr><th></th><th>Classe</th><th>Niveau</th><th>Titre</th><th></th></tr></thead><tbody>
+                  {{#each classes}}
+                    <tr data-item-id="{{id}}"><td><img src="{{img}}" style="width:28px;height:28px;border-radius:4px;object-fit:cover"></td><td><b>{{name}}</b></td><td>{{level}}</td><td>{{#if title}}{{title}}{{else}}—{{/if}}</td><td><a class="a2e-action-icon a2e-action-delete" data-action="delete-class" data-item-id="{{id}}" title="Retirer cette classe"><i class="fas fa-trash"></i></a></td></tr>
+                  {{/each}}
+                </tbody></table>
+              {{else}}<p class="a2e-pnj-muted">Dépose une classe sur la feuille.</p>{{/if}}
+              <p class="a2e-small">Race et classes sont libres : aucune vérification de compatibilité, de prérequis ou de niveau racial n’est appliquée au PNJ.</p>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section class="a2e-tab-content tab tab-combat {{#if tabCombat}}active{{/if}}" data-tab="combat">
+      <section class="a2e-tab-content tab tab-combat {{#if (eq activeTab "combat")}}active{{/if}}" data-group="primary" data-tab="combat">
         <div class="a2e-grid-2">
           <div class="a2e-panel"><h2>Défense</h2><div class="a2e-panel-body"><table class="a2e-table"><tbody>
-            <tr><th>CA naturelle / physique</th><td>{{combatDefense.natural}}</td></tr><tr><th>CA totale</th><td><b>{{combatDefense.total}}</b></td></tr><tr><th>Mod. DEX défense</th><td>{{combatDefense.dexDefense}}</td></tr>
+            <tr><th>CA naturelle / physique</th><td>{{combatDefense.natural}}</td></tr>
+            <tr><th>CA totale</th><td><b>{{combatDefense.total}}</b></td></tr>
+            <tr><th>Mod. DEX défense</th><td>{{combatDefense.dexDefense}}</td></tr>
           </tbody></table></div></div>
-          <div class="a2e-panel"><h2>Règles PNJ</h2><div class="a2e-panel-body"><p class="a2e-muted">Les armes à distance ne consomment ni projectiles ni munitions. Les sorts ne demandent pas de composants matériels.</p></div></div>
+          <div class="a2e-panel"><h2>Règles PNJ</h2><div class="a2e-panel-body"><p class="a2e-muted">Les armes à distance du PNJ ne consomment pas de projectiles. Ses sorts ne demandent pas de composants matériels.</p></div></div>
         </div>
 
         <div class="a2e-panel"><h2>Armes</h2><div class="a2e-panel-body">
           {{#if weapons.length}}<table class="a2e-table arme-table"><thead><tr><th></th><th>Arme</th><th>Équipée</th><th>Actions</th></tr></thead><tbody>
-            {{#each weapons}}<tr class="item" data-item-id="{{id}}"><td><img class="arme-img-attack" data-action="attack" data-item-id="{{id}}" src="{{img}}" title="Attaquer avec {{name}}"></td><td><b>{{name}}</b></td><td>{{#if equipped}}<i class="fas fa-check-circle equip-green"></i>{{else}}<i class="fas fa-times-circle equip-red"></i>{{/if}}</td><td><div class="a2e-actions"><a class="a2e-action-icon a2e-equip-state-icon {{#if equipped}}equip-green{{else}}equip-red{{/if}}" data-action="equip-item" data-item-id="{{id}}" title="Équiper"><i class="fas fa-swords"></i></a><a class="a2e-action-icon a2e-action-edit" data-action="open-item" data-item-id="{{id}}"><i class="fas fa-edit"></i></a><a class="a2e-action-icon a2e-action-delete" data-action="delete-item" data-item-id="{{id}}"><i class="fas fa-trash"></i></a></div></td></tr>{{/each}}
-          </tbody></table>{{else}}<p class="a2e-pnj-empty">Déposer une arme.</p>{{/if}}
+            {{#each weapons}}<tr class="item" data-item-id="{{id}}"><td><img class="arme-img-attack" data-action="attack" data-item-id="{{id}}" src="{{img}}" title="Attaquer avec {{name}}"></td><td><b>{{name}}</b></td><td>{{#if equipped}}<i class="fas fa-check-circle equip-green"></i>{{else}}<i class="fas fa-times-circle equip-red"></i>{{/if}}</td><td><div class="a2e-actions"><a class="a2e-action-icon a2e-equip-state-icon {{#if equipped}}equip-green{{else}}equip-red{{/if}}" data-action="equip-item" data-item-id="{{id}}" title="Équiper"><i class="fas fa-swords"></i></a><a class="a2e-action-icon a2e-action-edit" data-action="open-item" data-item-id="{{id}}" title="Éditer"><i class="fas fa-edit"></i></a><a class="a2e-action-icon a2e-action-delete" data-action="delete-item" data-item-id="{{id}}" title="Supprimer"><i class="fas fa-trash"></i></a></div></td></tr>{{/each}}
+          </tbody></table>{{else}}<p class="a2e-pnj-muted">Aucune arme.</p>{{/if}}
         </div></div>
 
         <div class="a2e-panel"><h2>Armures, boucliers et heaumes</h2><div class="a2e-panel-body">
           {{#if armors.length}}<table class="a2e-table"><thead><tr><th>Nom</th><th>CA</th><th>Équipée</th><th>Actions</th></tr></thead><tbody>
             {{#each armors}}<tr class="item" data-item-id="{{id}}"><td><div class="a2e-pnj-item-name"><img src="{{img}}"><b>{{name}}</b></div></td><td>{{ac}}</td><td>{{#if equipped}}<i class="fas fa-check-circle equip-green"></i>{{else}}<i class="fas fa-times-circle equip-red"></i>{{/if}}</td><td><div class="a2e-actions"><a class="a2e-action-icon a2e-equip-state-icon {{#if equipped}}equip-green{{else}}equip-red{{/if}}" data-action="equip-item" data-item-id="{{id}}"><i class="fas fa-shield-alt"></i></a><a class="a2e-action-icon a2e-action-edit" data-action="open-item" data-item-id="{{id}}"><i class="fas fa-edit"></i></a><a class="a2e-action-icon a2e-action-delete" data-action="delete-item" data-item-id="{{id}}"><i class="fas fa-trash"></i></a></div></td></tr>{{/each}}
-          </tbody></table>{{else}}<p class="a2e-pnj-empty">Déposer une armure ou un bouclier.</p>{{/if}}
+          </tbody></table>{{else}}<p class="a2e-pnj-muted">Aucune armure.</p>{{/if}}
         </div></div>
       </section>
 
-      <section class="a2e-tab-content tab tab-sorts {{#if tabSorts}}active{{/if}}" data-tab="sorts">
-        <div class="a2e-panel"><h2>Sorts</h2><div class="a2e-panel-body"><p class="a2e-pnj-hint">Les sorts du PNJ n’utilisent ni sacoche, ni composants matériels.</p>
+      <section class="a2e-tab-content tab tab-sorts {{#if (eq activeTab "sorts")}}active{{/if}}" data-group="primary" data-tab="sorts">
+        <div class="a2e-panel"><h2>Sorts</h2><div class="a2e-panel-body"><p class="a2e-small">Les sorts du PNJ n’utilisent ni sacoche ni composants matériels.</p>
           {{#each spellLevels}}<div class="a2e-pnj-spell-level">Niveau {{level}}</div><table class="a2e-table"><thead><tr><th>Sort</th><th>Mémorisé</th><th>Actions</th></tr></thead><tbody>
-            {{#each spells}}<tr class="item" data-item-id="{{id}}"><td><div class="a2e-pnj-item-name"><img src="{{img}}"><b>{{name}}</b></div></td><td><div class="a2e-pnj-memory"><a class="a2e-action-icon" data-action="spell-memory" data-delta="-1" data-item-id="{{id}}"><i class="fas fa-minus"></i></a><b>{{memorized}}</b><a class="a2e-action-icon" data-action="spell-memory" data-delta="1" data-item-id="{{id}}"><i class="fas fa-plus"></i></a></div></td><td><div class="a2e-actions"><a class="a2e-action-icon" data-action="cast-spell" data-item-id="{{id}}" title="Lancer"><i class="fas fa-wand-magic-sparkles"></i></a><a class="a2e-action-icon a2e-action-edit" data-action="open-item" data-item-id="{{id}}"><i class="fas fa-edit"></i></a><a class="a2e-action-icon a2e-action-delete" data-action="delete-item" data-item-id="{{id}}"><i class="fas fa-trash"></i></a></div></td></tr>{{/each}}
-          </tbody></table>{{else}}<p class="a2e-pnj-empty">Déposer un sort ou une classe lanceuse de sorts.</p>{{/each}}
+            {{#each spells}}<tr class="item" data-item-id="{{id}}"><td><div class="a2e-pnj-item-name"><img src="{{img}}"><b>{{name}}</b></div></td><td><span class="a2e-pnj-memory"><a class="a2e-action-icon" data-action="spell-memory" data-delta="-1" data-item-id="{{id}}"><i class="fas fa-minus"></i></a><b>{{memorized}}</b><a class="a2e-action-icon" data-action="spell-memory" data-delta="1" data-item-id="{{id}}"><i class="fas fa-plus"></i></a></span></td><td><div class="a2e-actions"><a class="a2e-action-icon" data-action="cast-spell" data-item-id="{{id}}" title="Lancer"><i class="fas fa-wand-magic-sparkles"></i></a><a class="a2e-action-icon a2e-action-edit" data-action="open-item" data-item-id="{{id}}"><i class="fas fa-edit"></i></a><a class="a2e-action-icon a2e-action-delete" data-action="delete-item" data-item-id="{{id}}"><i class="fas fa-trash"></i></a></div></td></tr>{{/each}}
+          </tbody></table>{{else}}<p class="a2e-pnj-muted">Aucun sort.</p>{{/each}}
         </div></div>
       </section>
 
-      <section class="a2e-tab-content tab tab-equipement {{#if tabEquipement}}active{{/if}}" data-tab="equipement">
+      <section class="a2e-tab-content tab tab-equipement {{#if (eq activeTab "equipement")}}active{{/if}}" data-group="primary" data-tab="equipement">
         <div class="a2e-panel"><h2>Équipement et objets</h2><div class="a2e-panel-body">
           {{#if gear.length}}<table class="a2e-table"><thead><tr><th>Objet</th><th>Quantité</th><th>Équipé</th><th>Actions</th></tr></thead><tbody>
             {{#each gear}}<tr class="item" data-item-id="{{id}}"><td><div class="a2e-pnj-item-name"><img src="{{img}}"><b>{{name}}</b></div></td><td>{{quantity}}</td><td>{{#if equipped}}<i class="fas fa-check-circle equip-green"></i>{{else}}<i class="fas fa-times-circle equip-red"></i>{{/if}}</td><td><div class="a2e-actions"><a class="a2e-action-icon a2e-equip-state-icon {{#if equipped}}equip-green{{else}}equip-red{{/if}}" data-action="equip-item" data-item-id="{{id}}"><i class="fas fa-shield-alt"></i></a><a class="a2e-action-icon a2e-action-edit" data-action="open-item" data-item-id="{{id}}"><i class="fas fa-edit"></i></a><a class="a2e-action-icon a2e-action-delete" data-action="delete-item" data-item-id="{{id}}"><i class="fas fa-trash"></i></a></div></td></tr>{{/each}}
-          </tbody></table>{{else}}<p class="a2e-pnj-empty">Déposer l’équipement utile au PNJ.</p>{{/if}}
+          </tbody></table>{{else}}<p class="a2e-pnj-muted">Aucun équipement.</p>{{/if}}
         </div></div>
       </section>
 
-      <section class="a2e-tab-content tab tab-notes {{#if tabNotes}}active{{/if}}" data-tab="notes">
+      <section class="a2e-tab-content tab tab-notes {{#if (eq activeTab "notes")}}active{{/if}}" data-group="primary" data-tab="notes">
         <div class="a2e-panel"><h2>Notes</h2><div class="a2e-panel-body"><textarea class="a2e-pnj-note" name="system.notes">{{system.notes}}</textarea></div></div>
       </section>
     </main>
