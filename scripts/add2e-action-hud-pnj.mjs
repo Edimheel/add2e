@@ -1,7 +1,7 @@
 // scripts/add2e-action-hud-pnj.mjs
 // ADD2E — Pont PNJ vers le HUD d'action déjà utilisé par les PJ et monstres.
 
-const VERSION = "2026-07-06-pnj-hud-bridge-v1";
+const VERSION = "2026-07-06-pnj-hud-bridge-v2";
 const PNJ_TYPE = "pnj";
 const HUD_ID = "add2e-action-hud";
 const INTERCEPTED_ACTIONS = new Set(["attack", "cast-spell", "roll-save", "roll-ability"]);
@@ -60,6 +60,11 @@ function tokenFor(actor, preferred = null) {
     ?? null;
 }
 
+function clearPnjHudMarker(root = document.getElementById(HUD_ID)) {
+  root?.removeAttribute?.("data-add2e-hud-pnj-actor-id");
+  root?.removeAttribute?.("data-add2e-hud-pnj-token-id");
+}
+
 function activePnjActor() {
   const id = document.getElementById(HUD_ID)?.dataset?.add2eHudPnjActorId;
   return id ? game.actors?.get?.(id) ?? null : null;
@@ -70,11 +75,15 @@ function renderPnjHud(actor, token = null, { reason = "pnj" } = {}) {
   const render = globalThis.add2eRenderActionHud;
   if (typeof render !== "function") return false;
 
-  const result = render(pnjHudView(actor), tokenFor(actor, token), { reason: `pnj:${reason}` });
+  const resolvedToken = tokenFor(actor, token);
+  const result = render(pnjHudView(actor), resolvedToken, { reason: `pnj:${reason}` });
   const root = document.getElementById(HUD_ID);
   if (root) {
     root.dataset.add2eHudPnjActorId = String(actor.id);
-    root.dataset.add2eHudPnjTokenId = String(tokenFor(actor, token)?.id ?? "");
+    root.dataset.add2eHudPnjTokenId = String(resolvedToken?.id ?? "");
+    // Les PNJ n'ont pas de sacoche : les badges ne doivent pas suggérer
+    // qu'un composant matériel est requis dans leur HUD.
+    root.querySelectorAll?.(".component-title, .component-ok, .component-bad").forEach(element => element.remove());
   }
   return result;
 }
@@ -108,6 +117,7 @@ function combatantTarget(combat = game.combat) {
 function refreshForCombat(combat) {
   const { actor, token } = combatantTarget(combat);
   if (isPnj(actor)) schedulePnjHud(actor, token, "combat", 120);
+  else window.setTimeout(() => clearPnjHudMarker(), 140);
 }
 
 async function runPnjHudAction(event, button, actor) {
@@ -159,9 +169,11 @@ function wrapHudApi() {
   const api = game.add2e ?? (game.add2e = {});
   if (!openWrapped && typeof api.openActionHud === "function") {
     const open = api.openActionHud;
-    api.openActionHud = actor => isPnj(actor)
-      ? renderPnjHud(actor, tokenFor(actor), { reason: "api-open" })
-      : open(actor);
+    api.openActionHud = actor => {
+      if (isPnj(actor)) return renderPnjHud(actor, tokenFor(actor), { reason: "api-open" });
+      clearPnjHudMarker();
+      return open(actor);
+    };
     api.openActionHud.__add2ePnjHudBridge = VERSION;
     openWrapped = true;
   }
@@ -182,7 +194,9 @@ function installPnjHudBridge() {
   bindPnjHudActionRelay();
 
   Hooks.on("controlToken", (token, controlled) => {
-    if (controlled && isPnj(token?.actor)) schedulePnjHud(token.actor, token, "control-token", 100);
+    if (!controlled) return;
+    if (isPnj(token?.actor)) schedulePnjHud(token.actor, token, "control-token", 100);
+    else window.setTimeout(() => clearPnjHudMarker(), 120);
   });
   Hooks.on("canvasReady", () => {
     const selected = (canvas?.tokens?.controlled ?? []).filter(token => isPnj(token?.actor));
