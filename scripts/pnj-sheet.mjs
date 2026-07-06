@@ -7,7 +7,7 @@ import { add2eBindActorSheetSpellListeners } from "./add2e/13d-actor-sheet-liste
 import { add2eRollCharacteristicCard, add2eRollSaveCard } from "./add2e/13d-actor-sheet-listeners-rolls.mjs";
 import { getMoney, formatMoney, isAmmunition, isComponent } from "./add2e/22a-vendor-core.mjs";
 
-const PNJ_SHEET_VERSION = "2026-07-06-pnj-character-sheet-reuse-v5";
+const PNJ_SHEET_VERSION = "2026-07-06-pnj-character-sheet-reuse-v6";
 const PNJ_TYPE = "pnj";
 const DialogV2 = foundry?.applications?.api?.DialogV2;
 const ActorsCollection = foundry.documents.collections.Actors;
@@ -147,11 +147,23 @@ function pnjItemBelongsToClass(item, classItem) {
   return sourceId === String(classItem?.id ?? "") || (sourceSlug && sourceSlug === String(classItem?.system?.slug ?? classItem?.name ?? "").trim().toLowerCase());
 }
 
-async function pnjDroppedItemData(event) {
-  let raw = null;
-  try { raw = JSON.parse(event?.dataTransfer?.getData("text/plain") || "{}"); }
-  catch (_error) { return null; }
+async function pnjDroppedItemData(event, rawData = null) {
+  let raw = rawData;
+  if (!raw) {
+    try { raw = JSON.parse(event?.dataTransfer?.getData("text/plain") || "{}"); }
+    catch (_error) { return null; }
+  }
   if (raw?.type !== "Item") return null;
+
+  if (typeof globalThis.add2eResolveDropItemDataCompendiumFirst === "function") {
+    const resolved = await globalThis.add2eResolveDropItemDataCompendiumFirst(raw).catch(() => null);
+    if (resolved) {
+      const copy = clone(resolved);
+      delete copy._id;
+      delete copy._stats;
+      return copy;
+    }
+  }
 
   let data = raw.data ?? null;
   if (!data && raw.uuid) {
@@ -217,7 +229,11 @@ export class Add2ePnjSheet extends CharacterSheetBase {
     const state = add2ePrepareActorSheetBaseData({ sheet: this, data });
     const classState = pnjClassState(actor);
 
-    for (const [path, value] of Object.entries(classState.update)) foundry.utils.setProperty(data, path, clone(value));
+    for (const [path, value] of Object.entries(classState.update)) {
+      const key = path.replace(/^system\./, "");
+      state.sys[key] = clone(value);
+    }
+
     data.actor.system = state.sys;
     data.system = state.sys;
     data.classProgression = classState.classProgression;
@@ -254,10 +270,31 @@ export class Add2ePnjSheet extends CharacterSheetBase {
     this.activateListeners(root);
   }
 
-  async _onDrop(event) {
+  async _onDrop(event, rawData = null) {
+    if (event?.__add2ePnjDropHandled) return false;
+    if (event) event.__add2ePnjDropHandled = true;
     event?.preventDefault?.();
     event?.stopPropagation?.();
-    return false;
+
+    let raw = rawData;
+    if (!raw) {
+      try { raw = JSON.parse(event?.dataTransfer?.getData("text/plain") || "{}"); }
+      catch (_error) { return false; }
+    }
+    if (raw?.type !== "Item") return false;
+
+    const itemData = await pnjDroppedItemData(event, raw);
+    if (!itemData) return false;
+    if (isAmmunition(itemData) || isComponent(itemData)) {
+      ui.notifications.info("Les PNJ n’utilisent ni projectiles ni composants de sorts.");
+      return false;
+    }
+
+    const type = String(itemData.type ?? "").toLowerCase();
+    if (type === "race") return this._applyRace(itemData);
+    if (type === "classe") return this._addClass(itemData);
+
+    return super._onDrop(event, raw);
   }
 
   async _syncClassState(reason = "pnj-class-state") {
@@ -285,6 +322,7 @@ export class Add2ePnjSheet extends CharacterSheetBase {
     if (typeof globalThis.add2eApplyRaceItemDataToActor !== "function") throw new Error("Le gestionnaire de race ADD2E est indisponible.");
     await globalThis.add2eApplyRaceItemDataToActor(this.actor, data, this, { notify: true, reason: "pnj-race-drop" });
     await this._syncDerived({ reason: "pnj-race-drop" });
+    return true;
   }
 
   async _addClass(data) {
@@ -368,9 +406,9 @@ export class Add2ePnjSheet extends CharacterSheetBase {
     const equip = item.system?.equipee !== true;
     if (item.type === "armure" && equip) {
       const name = String(item.name ?? "").toLowerCase();
-      const isShield = name.includes("bouclier");
-      const isHelmet = name.includes("heaume") || name.includes("casque");
-      if (!isShield && !isHelmet) {
+      const shield = name.includes("bouclier");
+      const helmet = name.includes("heaume") || name.includes("casque");
+      if (!shield && !helmet) {
         const updates = actor.items
           .filter(candidate => candidate.type === "armure" && candidate.id !== item.id && candidate.system?.equipee === true && !String(candidate.name ?? "").toLowerCase().includes("bouclier") && !/heaume|casque/.test(String(candidate.name ?? "").toLowerCase()))
           .map(candidate => ({ _id: candidate.id, "system.equipee": false }));
@@ -390,27 +428,6 @@ export class Add2ePnjSheet extends CharacterSheetBase {
     return true;
   }
 
-  async _dropItem(event) {
-    if (this._pnjDropLock) return false;
-    this._pnjDropLock = true;
-    try {
-      const data = await pnjDroppedItemData(event);
-      if (!data) return false;
-      if (isAmmunition(data) || isComponent(data)) {
-        ui.notifications.info("Les PNJ n’utilisent ni projectiles ni composants de sorts.");
-        return false;
-      }
-
-      const type = String(data.type ?? "").toLowerCase();
-      if (type === "race") await this._applyRace(data);
-      else if (type === "classe") await this._addClass(data);
-      else await this.actor.createEmbeddedDocuments("Item", [data], { add2eInternal: true, add2eReason: "pnj-item-drop" });
-      return true;
-    } finally {
-      window.setTimeout(() => { this._pnjDropLock = false; }, 0);
-    }
-  }
-
   activateListeners(content) {
     const root = content?.jquery ? content[0] : content;
     const sheetRoot = root?.querySelector?.(".add2e-pnj-sheet") ?? root;
@@ -420,16 +437,6 @@ export class Add2ePnjSheet extends CharacterSheetBase {
 
     this._add2eBindPersistentTabs?.(html);
     add2eBindActorSheetSpellListeners(this, html);
-
-    sheetRoot.addEventListener("dragover", event => event.preventDefault(), true);
-    sheetRoot.addEventListener("drop", event => {
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation?.();
-      this._dropItem(event).then(changed => {
-        if (changed) this.render(false);
-      }).catch(error => console.error("[ADD2E][PNJ][DROP]", error));
-    }, true);
 
     sheetRoot.addEventListener("change", event => {
       const input = event.target?.closest?.('[data-class-progression-field="level"]');
