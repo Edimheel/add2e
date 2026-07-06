@@ -1,10 +1,171 @@
 <section class="add2e-dummy-sheet" data-actor-id="{{actor._id}}">
-  <button type="button" class="dummy-portrait" data-action="select-image" title="Choisir l'image">
-    <img src="{{actor.img}}" alt="{{actor.name}}">
-  </button>
+  <style>
+    .add2e-dummy-sheet,
+    .add2e-dummy-sheet * { box-sizing: border-box; }
 
-  <div class="dummy-notes">
-    <label for="add2e-dummy-notes-{{actor._id}}">Notes</label>
+    .add2e-dummy-sheet {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 16px !important;
+      min-height: 100% !important;
+      padding: 16px !important;
+      background:
+        radial-gradient(circle at top right, rgba(106, 177, 204, .18), transparent 34%),
+        linear-gradient(145deg, #213745, #162832) !important;
+      color: #eaf5f8 !important;
+    }
+
+    .add2e-dummy-sheet .dummy-header {
+      display: grid !important;
+      grid-template-columns: 176px minmax(0, 1fr) !important;
+      gap: 16px !important;
+      align-items: center !important;
+      min-height: 176px !important;
+      padding: 12px !important;
+      border: 1px solid #5f99ad !important;
+      border-radius: 12px !important;
+      background: rgba(8, 21, 28, .7) !important;
+      box-shadow: inset 0 1px 0 rgba(230, 250, 255, .12) !important;
+    }
+
+    .add2e-dummy-sheet .dummy-portrait {
+      display: block !important;
+      width: 152px !important;
+      min-width: 152px !important;
+      height: 152px !important;
+      min-height: 152px !important;
+      margin: 0 auto !important;
+      padding: 0 !important;
+      overflow: hidden !important;
+      border: 2px solid #9ed0df !important;
+      border-radius: 10px !important;
+      background: #071015 !important;
+      cursor: pointer !important;
+      box-shadow: 0 5px 14px rgba(0, 0, 0, .38) !important;
+    }
+
+    .add2e-dummy-sheet .dummy-portrait:hover {
+      border-color: #e1f8ff !important;
+      filter: brightness(1.1) !important;
+    }
+
+    .add2e-dummy-sheet .dummy-portrait img {
+      display: block !important;
+      width: 100% !important;
+      max-width: none !important;
+      height: 100% !important;
+      max-height: none !important;
+      object-fit: cover !important;
+      background: #071015 !important;
+    }
+
+    .add2e-dummy-sheet .dummy-summary {
+      min-width: 0 !important;
+    }
+
+    .add2e-dummy-sheet .dummy-type {
+      margin-bottom: 5px !important;
+      color: #a8dce9 !important;
+      font-size: .74rem !important;
+      font-weight: 900 !important;
+      letter-spacing: .12em !important;
+      text-transform: uppercase !important;
+    }
+
+    .add2e-dummy-sheet .dummy-name {
+      margin: 0 !important;
+      color: #f3fbfd !important;
+      font-size: 1.55rem !important;
+      font-weight: 900 !important;
+      line-height: 1.15 !important;
+      overflow-wrap: anywhere !important;
+    }
+
+    .add2e-dummy-sheet .dummy-hint {
+      margin: 10px 0 0 !important;
+      color: #c1d6dc !important;
+      font-size: .9rem !important;
+      line-height: 1.35 !important;
+    }
+
+    .add2e-dummy-sheet .dummy-notes {
+      display: grid !important;
+      grid-template-rows: auto minmax(440px, 1fr) !important;
+      gap: 9px !important;
+      flex: 1 1 auto !important;
+      min-height: 0 !important;
+      padding: 14px !important;
+      border: 1px solid #5f99ad !important;
+      border-radius: 12px !important;
+      background: rgba(7, 18, 25, .54) !important;
+    }
+
+    .add2e-dummy-sheet .dummy-notes-heading {
+      display: flex !important;
+      align-items: baseline !important;
+      justify-content: space-between !important;
+      gap: 12px !important;
+      color: #eaf8fc !important;
+      font-weight: 900 !important;
+    }
+
+    .add2e-dummy-sheet .dummy-notes-heading small {
+      color: #9ac7d5 !important;
+      font-size: .75rem !important;
+      font-weight: 700 !important;
+    }
+
+    .add2e-dummy-sheet .dummy-notes textarea {
+      display: block !important;
+      width: 100% !important;
+      min-width: 0 !important;
+      min-height: 440px !important;
+      height: min(58vh, 580px) !important;
+      margin: 0 !important;
+      padding: 12px 14px !important;
+      resize: vertical !important;
+      border: 1px solid #8fbecd !important;
+      border-radius: 9px !important;
+      background: #f5fbfd !important;
+      color: #172b34 !important;
+      font: inherit !important;
+      line-height: 1.48 !important;
+    }
+
+    .add2e-dummy-sheet .dummy-notes textarea:focus {
+      outline: 2px solid #b8e7f4 !important;
+      outline-offset: 1px !important;
+      border-color: #5aafca !important;
+    }
+
+    @media (max-width: 620px) {
+      .add2e-dummy-sheet .dummy-header {
+        grid-template-columns: 1fr !important;
+        text-align: center !important;
+      }
+      .add2e-dummy-sheet .dummy-notes textarea {
+        min-height: 320px !important;
+        height: 52vh !important;
+      }
+    }
+  </style>
+
+  <header class="dummy-header">
+    <button type="button" class="dummy-portrait" data-action="select-image" title="Choisir l'image">
+      <img src="{{actor.img}}" alt="{{actor.name}}">
+    </button>
+    <div class="dummy-summary">
+      <div class="dummy-type">Acteur Dummy</div>
+      <h1 class="dummy-name">{{actor.name}}</h1>
+      <p class="dummy-hint">Clique sur l'image pour la modifier. Les notes sont enregistrées automatiquement.</p>
+    </div>
+  </header>
+
+  <section class="dummy-notes">
+    <div class="dummy-notes-heading">
+      <label for="add2e-dummy-notes-{{actor._id}}">Notes</label>
+      <small>Zone libre</small>
+    </div>
     <textarea id="add2e-dummy-notes-{{actor._id}}" name="system.notes" placeholder="Notes">{{system.notes}}</textarea>
-  </div>
+  </section>
 </section>
