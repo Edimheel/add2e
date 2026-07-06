@@ -1,9 +1,9 @@
 // ============================================================================
 // ADD2E — États vitaux : constantes, lecture PV et règles métier.
-// Version : 2026-06-01-vital-status-split-core-v2-explicit-rule-order
+// Version : 2026-07-06-vital-status-pnj-character-thresholds-v1
 // ============================================================================
 
-export const ADD2E_VITAL_STATUS_CORE_VERSION = "2026-06-01-vital-status-split-core-v2-explicit-rule-order";
+export const ADD2E_VITAL_STATUS_CORE_VERSION = "2026-07-06-vital-status-pnj-character-thresholds-v1";
 
 export const ADD2E_VITAL_STATUS = {
   unconscious: { key: "unconscious", name: "Inconscient", icon: "icons/svg/daze.svg" },
@@ -76,7 +76,7 @@ export function add2eVitalDesiredStatus(actor) {
   const hp = add2eVitalReadHP(actor);
   const type = add2eVitalActorType(actor);
 
-  if (type === "personnage") {
+  if (type === "personnage" || type === "pnj") {
     if (hp <= -11) return "dead";
     if (hp <= 0) return "unconscious";
   } else if (type === "monster" || type === "monstre" || add2eVitalIsMonster(actor)) {
