@@ -298,7 +298,7 @@ async function chooseImage(actor) {
 export class Add2ePnjSheet extends PnjSheetBase {
   static DEFAULT_OPTIONS = {
     id: "add2e-pnj-{id}",
-    classes: ["add2e", "sheet", "actor", "pnj", "add2e-pnj-v2"],
+    classes: ["add2e", "sheet", "actor", "pnj", "add2e-pnj-v2", "add2e-character-v2-app"],
     tag: "form",
     position: { width: 1050, height: 900 },
     window: { title: "ADD2e — PNJ", resizable: true },
