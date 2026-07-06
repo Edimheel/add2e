@@ -3,7 +3,7 @@
 // Contrat onUse : true = capacité utilisée ; false = annulée / non utilisée.
 
 const __add2eVadeRetroResult = await (async () => {
-  const VERSION = "2026-07-06-vade-retro-gm-relay-flee-v9";
+  const VERSION = "2026-07-06-vade-retro-shared-forced-flee-v10";
   const ICON = "icons/magic/holy/barrier-shield-winged-cross.webp";
   const CONE = Object.freeze({ angle: 90, cells: 3 });
   const TABLE = Object.freeze({
@@ -111,7 +111,7 @@ const __add2eVadeRetroResult = await (async () => {
     const distance = Number(grid?.distance ?? 0);
     const units = String(grid?.units ?? "").trim().toLowerCase();
     if (distance > 0 && /^(m|meter|meters|metre|metres|mètre|mètres)$/.test(units)) return distance;
-    if (distance > 0 && /^(ft|feet|foot|pied|pieds)$/.test(units)) return distance * 0.3048;
+    if (distance > 0 && /^(ft|feet|foot|pied|pieds)$/.test(units)) return distance * .3048;
     return distance > 1 ? distance : 3;
   }
   function gridSizePx() { return Number(canvas.grid?.size ?? canvas.dimensions?.size ?? 100) || 100; }
@@ -158,13 +158,13 @@ const __add2eVadeRetroResult = await (async () => {
     const start = middle - half;
     const end = middle + half;
     overlay.clear();
-    overlay.lineStyle(3, 0xc79b38, 0.95);
-    overlay.beginFill(0xffe0a3, 0.30);
+    overlay.lineStyle(3, 0xc79b38, .95);
+    overlay.beginFill(0xffe0a3, .30);
     overlay.moveTo(center.x, center.y);
     overlay.arc(center.x, center.y, radius, start, end);
     overlay.lineTo(center.x, center.y);
     overlay.endFill();
-    overlay.lineStyle(2, 0xfff2c9, 0.95);
+    overlay.lineStyle(2, 0xfff2c9, .95);
     overlay.moveTo(center.x, center.y);
     overlay.lineTo(center.x + Math.cos(start) * radius, center.y + Math.sin(start) * radius);
     overlay.moveTo(center.x, center.y);
@@ -239,9 +239,7 @@ const __add2eVadeRetroResult = await (async () => {
     const tags = allActorTags(targetActor);
     if ([...UNDEAD_TAGS].some(tag => tags.has(tag))) return true;
     const system = targetActor?.system ?? {};
-    return [system.type, system.type_monstre, system.type_creature, system.creatureType, system.sous_type, system.sousType]
-      .map(norm)
-      .some(value => value === "mort_vivant" || value.endsWith("_mort_vivant"));
+    return [system.type, system.type_monstre, system.type_creature, system.creatureType, system.sous_type, system.sousType].map(norm).some(value => value === "mort_vivant" || value.endsWith("_mort_vivant"));
   }
   function targetHitDice(targetActor) {
     for (const value of [targetActor?.system?.dv, targetActor?.system?.hitDice, targetActor?.system?.hd, targetActor?.system?.des_de_vie, targetActor?.system?.niveau, targetActor?.system?.level]) {
@@ -290,12 +288,9 @@ const __add2eVadeRetroResult = await (async () => {
   }
   function undeadCategoryInfo(targetActor) {
     const system = targetActor?.system ?? {};
-    const direct = [system.vadeRetroCategory, system.type_monstre, system.sous_type, system.sousType, system.type_creature, system.creatureType]
-      .map(norm)
-      .find(key => UNDEAD_ROWS[key]);
+    const direct = [system.vadeRetroCategory, system.type_monstre, system.sous_type, system.sousType, system.type_creature, system.creatureType].map(norm).find(key => UNDEAD_ROWS[key]);
     if (direct) return { category: UNDEAD_ROWS[direct], mode: "canonique", profile: null };
-    const text = actorText(targetActor);
-    const matched = UNDEAD_ALIASES.find(alias => text.includes(alias));
+    const matched = UNDEAD_ALIASES.find(alias => actorText(targetActor).includes(alias));
     if (matched) return { category: UNDEAD_ROWS[matched], mode: "canonique", profile: null };
     return extrapolateUndeadCategory(targetActor);
   }
@@ -382,36 +377,9 @@ const __add2eVadeRetroResult = await (async () => {
     return "system.pdv";
   }
   async function moveAwayThroughGm(target) {
-    const document = target?.document ?? target;
-    const scene = document?.parent ?? canvas.scene;
-    if (!document || !scene || !casterToken?.center) return false;
-    const gridSize = Number(scene.grid?.size ?? canvas.grid?.size ?? 100) || 100;
-    const gridDistance = Math.max(.001, Number(scene.grid?.distance ?? canvas.grid?.distance ?? 1) || 1);
-    const movement = [target?.actor?.system?.mouvement?.actuel, target?.actor?.system?.mouvement?.max, target?.actor?.system?.mouvement?.base, target?.actor?.system?.movement_base, target?.actor?.system?.movement_max].map(numberFrom).find(value => Number.isFinite(value) && value > 0) ?? gridDistance;
-    const sourceCenter = casterToken.center;
-    const targetCenter = target?.center ?? { x: Number(document.x ?? 0) + Number(document.width ?? 1) * gridSize / 2, y: Number(document.y ?? 0) + Number(document.height ?? 1) * gridSize / 2 };
-    let dx = targetCenter.x - sourceCenter.x;
-    let dy = targetCenter.y - sourceCenter.y;
-    let length = Math.hypot(dx, dy);
-    if (length < 1) { dx = 1; dy = 0; length = 1; }
-    const width = Number(document.width ?? 1) * gridSize;
-    const height = Number(document.height ?? 1) * gridSize;
-    const rawX = targetCenter.x + dx / length * (movement / gridDistance * gridSize) - width / 2;
-    const rawY = targetCenter.y + dy / length * (movement / gridDistance * gridSize) - height / 2;
-    const sceneWidth = Number(scene.dimensions?.sceneWidth ?? scene.width ?? 0);
-    const sceneHeight = Number(scene.dimensions?.sceneHeight ?? scene.height ?? 0);
-    const updateData = {
-      x: sceneWidth > 0 ? Math.max(0, Math.min(sceneWidth - width, rawX)) : rawX,
-      y: sceneHeight > 0 ? Math.max(0, Math.min(sceneHeight - height, rawY)) : rawY
-    };
-    const options = { add2eVadeRetro: true, add2eForcedFlee: true, add2eIgnoreMovement: true, showRuler: false };
-    if (game.user?.isGM) {
-      await document.update(updateData, options);
-      return true;
-    }
-    if (!game.socket || !document.id || !scene.id) return false;
-    game.socket.emit("system.add2e", { type: "ADD2E_GM_OPERATION", operation: "updateToken", payload: { sceneId: scene.id, tokenId: document.id, updateData } });
-    return true;
+    const forceFlee = game.add2e?.forceFleeToken ?? globalThis.add2eForceFleeToken;
+    if (typeof forceFlee !== "function") return { moved: false, requested: false, fatal: true, reason: "Moteur de fuite ADD2E indisponible." };
+    return forceFlee({ sourceToken: casterToken, targetToken: target, actor: target?.actor, reason: "vade-retro-initial-flee", flagKey: "vadeRetroForcedMove", allowGridFallback: true, currentRound: Number(game.combat?.round ?? 0) || null });
   }
 
   const prior = combatState();
@@ -424,13 +392,11 @@ const __add2eVadeRetroResult = await (async () => {
     ui.notifications.warn("Vade-rétro : la tentative suivante est automatique au round suivant.");
     return false;
   }
-
   const placement = await placeCone();
   if (!placement) {
     ui.notifications.info("Vade-rétro : tentative annulée.");
     return false;
   }
-
   const targetsInCone = Array.from(canvas.tokens?.placeables ?? [])
     .filter(target => target?.visible !== false && target?.actor && target.id !== casterToken.id && target.actor.id !== caster.id)
     .filter(target => tokenInCone(target, placement.direction));
@@ -447,7 +413,6 @@ const __add2eVadeRetroResult = await (async () => {
     }
     return false;
   }
-
   const groupTargets = group.ids.map(resolveToken)
     .filter(target => target?.actor && tokenInCone(target, placement.direction))
     .sort((left, right) => String(left.name ?? left.actor?.name).localeCompare(String(right.name ?? right.actor?.name), "fr"));
@@ -455,23 +420,16 @@ const __add2eVadeRetroResult = await (async () => {
     ui.notifications.warn(`Vade-rétro : aucun ${group.label.toLowerCase()} de la tentative en cours n’est dans le cône.`);
     return false;
   }
-
   const entry = tableEntry(group);
   const automatic = /^[TD]/.test(String(entry));
   const d20 = automatic ? null : await roll("1d20");
   const success = automatic || Number(d20.total) >= Number(entry);
   const stateBase = { version: VERSION, status: "", combatId: game.combat?.id ?? null, casterUuid: caster.uuid, sourceClass: isPaladin ? "paladin" : "clerc", effectiveClericLevel: clericLevel, lastRound: currentRound, direction: placement.direction, cone: { angle: CONE.angle, distance: coneDistanceMeters(), units: canvas.scene?.grid?.units ?? "m" }, updatedAt: Date.now() };
-
   if (!success) {
     await saveCombatState({ ...stateBase, status: "closed", reason: "failed", pending: [] });
-    await postClassCard({
-      lead: `<b>${esc(caster.name)}</b> présente son symbole sacré.`,
-      details: [`<b>Échec :</b> ${esc(group.label)} — d20 = <b>${d20.total}</b>, score requis <b>${esc(entry)}</b>.`],
-      footer: "Aucune autre tentative n’est possible dans ce combat."
-    });
+    await postClassCard({ lead: `<b>${esc(caster.name)}</b> présente son symbole sacré.`, details: [`<b>Échec :</b> ${esc(group.label)} — d20 = <b>${d20.total}</b>, score requis <b>${esc(entry)}</b>.`], footer: "Aucune autre tentative n’est possible dans ce combat." });
     return true;
   }
-
   const countFormula = group.lowerPlane ? "1d2" : String(entry).endsWith("*") ? "1d6+6" : "1d12";
   const count = Math.max(1, Number((await roll(countFormula)).total) || 1);
   const affected = groupTargets.slice(0, count);
@@ -499,7 +457,6 @@ const __add2eVadeRetroResult = await (async () => {
     const extra = { source: "vade-retro.js", rounds, unit: "round", endMessage: "L’effet de Vade-rétro sur {actor} prend fin." };
     return { duration: time?.durationData?.(rounds) ?? { rounds, startRound: game.combat?.round ?? null, startTurn: game.combat?.turn ?? null, startTime: game.time?.worldTime ?? null, combat: game.combat?.id ?? null }, flags: time?.flags?.(extra) ?? { timeEngine: { managed: true, unit: "round", totalRounds: rounds }, roundEngine: { managed: true, unit: "round", totalRounds: rounds, endMessage: extra.endMessage }, endMessage: extra.endMessage } };
   };
-
   const destroy = String(entry).startsWith("D") && !evilCleric;
   const dominate = String(entry).startsWith("D") && evilCleric;
   let outcome = "";
@@ -542,7 +499,6 @@ const __add2eVadeRetroResult = await (async () => {
     extraFlags = timed.flags;
     effectTags = ["vade_retro", "etat:repousse_vade_retro", "interdiction:attaque", "interdiction:sort", "mouvement:eloignement_obligatoire", "fuite", `vade_retro:${group.category}`];
   }
-
   const rows = [];
   for (const target of affected) {
     const targetActor = target.actor;
@@ -560,14 +516,16 @@ const __add2eVadeRetroResult = await (async () => {
     try {
       await createEffect(targetActor, effectData);
       if (destroy) await destroyTarget(targetActor);
-      if (outcome === "Repoussé") await moveAwayThroughGm(target);
+      if (outcome === "Repoussé") {
+        const flee = await moveAwayThroughGm(target);
+        if (flee?.fatal) console.warn("[ADD2E][VADE-RETRO][FLEE]", { target: targetActor.name, reason: flee.reason });
+      }
       rows.push({ target: target.name ?? targetActor.name, result: outcome });
     } catch (error) {
       console.error("[ADD2E][VADE-RETRO][EFFECT]", { target: targetActor.name, error });
       rows.push({ target: target.name ?? targetActor.name, result: "Erreur d’application" });
     }
   }
-
   const status = pending.length ? "pending" : "complete";
   await saveCombatState({ ...stateBase, status, pending, attempted: { category: group.category, classification: group.extrapolated ? "extrapole" : "canonique", profiles: group.extrapolated ? group.profiles : [], entry, countFormula, count, result: outcome, targets: affected.map(target => target.id) } });
   const resultText = automatic ? "résultat automatique" : `d20 ${d20.total} / ${entry}`;
