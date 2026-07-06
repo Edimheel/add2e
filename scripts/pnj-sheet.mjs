@@ -1,7 +1,7 @@
 import { classItems, classProgression, classSlug, cloneItemData } from "./add2e/17b-multiclass-core.mjs";
 import { add2eRollCharacteristicCard, add2eRollSaveCard } from "./add2e/13d-actor-sheet-listeners-rolls.mjs";
 
-const PNJ_SHEET_VERSION = "2026-07-06-pnj-character-layout-v3";
+const PNJ_SHEET_VERSION = "2026-07-06-pnj-reuses-character-partials-v4";
 const PNJ_TYPE = "pnj";
 const APP_API = foundry?.applications?.api ?? {};
 const SHEETS_API = foundry?.applications?.sheets ?? {};
@@ -16,16 +16,10 @@ if (!HandlebarsApplicationMixin || !ActorSheetV2) {
 
 const PnjSheetBase = HandlebarsApplicationMixin(ActorSheetV2);
 const TABS = new Set(["resume", "combat", "sorts", "equipement", "notes"]);
-const CARACS = [
-  ["force", "FOR", "Force"],
-  ["dexterite", "DEX", "Dextérité"],
-  ["constitution", "CON", "Constitution"],
-  ["intelligence", "INT", "Intelligence"],
-  ["sagesse", "SAG", "Sagesse"],
-  ["charisme", "CHA", "Charisme"]
-];
-const SAVE_LABELS = [
-  "Paralysie / poison / mort",
+const CARACS = ["force", "dexterite", "constitution", "intelligence", "sagesse", "charisme"];
+const SAVE_SHORT_LABELS = ["PAR", "PET", "BAG", "SOU", "SOR"];
+const SAVE_TITLES = [
+  "Paralysie / poison / mort magique",
   "Pétrification / polymorphose",
   "Baguettes et badines",
   "Souffles",
@@ -33,6 +27,11 @@ const SAVE_LABELS = [
 ];
 const MARTIAL_CLASSES = new Set(["guerrier", "paladin", "rodeur", "ranger"]);
 const GEAR_TYPES = new Set(["objet", "equipement", "consommable", "loot", "conteneur"]);
+const ALIGNMENTS = [
+  "Loyal bon", "Neutre bon", "Chaotique bon",
+  "Loyal neutre", "Neutre strict", "Chaotique neutre",
+  "Loyal mauvais", "Neutre mauvais", "Chaotique mauvais"
+];
 
 globalThis.ADD2E_PNJ_SHEET_VERSION = PNJ_SHEET_VERSION;
 
@@ -52,6 +51,12 @@ function isEqual(left, right) {
   return JSON.stringify(left) === JSON.stringify(right);
 }
 
+function normalize(value) {
+  return String(value ?? "").trim().toLowerCase().normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+}
+
 function asArray(value) {
   if (Array.isArray(value)) return value.flatMap(asArray);
   if (value === null || value === undefined || value === "") return [];
@@ -62,11 +67,6 @@ function asArray(value) {
     }
   }
   return [value];
-}
-
-function signed(value) {
-  const result = number(value, 0);
-  return result > 0 ? `+${result}` : String(result);
 }
 
 function equipped(item) {
@@ -93,8 +93,8 @@ function classTitle(item, level, row) {
   const direct = String(row?.title ?? row?.titre ?? "").trim();
   if (direct) return direct;
   const titles = Array.isArray(item?.system?.titlesByLevel) ? item.system.titlesByLevel : [];
-  const found = titles.find(entry => level >= number(entry?.minLevel ?? entry?.niveauMin, 0) && level <= number(entry?.maxLevel ?? entry?.niveauMax, 999));
-  return String(found?.title ?? found?.titre ?? "").trim();
+  const matched = titles.find(entry => level >= number(entry?.minLevel ?? entry?.niveauMin, 0) && level <= number(entry?.maxLevel ?? entry?.niveauMax, 999));
+  return String(matched?.title ?? matched?.titre ?? "").trim();
 }
 
 function classEntries(actor) {
@@ -102,9 +102,6 @@ function classEntries(actor) {
     const state = classProgression(item, { level: 1, xp: 0 });
     const level = Math.max(1, state.level);
     const row = classRow(item, level);
-    const saves = Array.isArray(row?.savingThrows)
-      ? row.savingThrows
-      : (Array.isArray(row?.sauvegardes) ? row.sauvegardes : []);
     return {
       id: item.id,
       item,
@@ -112,10 +109,13 @@ function classEntries(actor) {
       img: item.img || "icons/svg/book.svg",
       slug: classSlug(item),
       level,
+      xp: state.xp,
       row,
       title: classTitle(item, level, row),
       thac0: number(row?.thac0 ?? row?.thaco, 20),
-      saves
+      saves: Array.isArray(row?.savingThrows)
+        ? row.savingThrows
+        : (Array.isArray(row?.sauvegardes) ? row.sauvegardes : [])
     };
   });
 }
@@ -124,17 +124,16 @@ function bestSaves(entries) {
   const rows = entries.map(entry => entry.saves).filter(row => Array.isArray(row) && row.length >= 5);
   if (!rows.length) return [20, 20, 20, 20, 20];
   return Array.from({ length: 5 }, (_unused, index) => {
-    const candidates = rows.map(row => number(row[index], NaN)).filter(Number.isFinite);
-    return candidates.length ? Math.min(...candidates) : 20;
+    const values = rows.map(row => number(row[index], NaN)).filter(Number.isFinite);
+    return values.length ? Math.min(...values) : 20;
   });
 }
 
 function classSummary(actor) {
   const entries = classEntries(actor);
   const names = entries.map(entry => entry.name);
-  const titles = entries.map(entry => `${entry.name} ${entry.level}${entry.title ? ` (${entry.title})` : ""}`);
+  const title = entries.map(entry => `${entry.name} ${entry.level}${entry.title ? ` (${entry.title})` : ""}`).join(" / ");
   const thacos = entries.map(entry => entry.thac0).filter(Number.isFinite);
-  const multi = entries.length > 1;
   const primary = entries[0]?.item ?? null;
   const primarySystem = primary?.system ?? {};
   const spellLists = new Set();
@@ -147,6 +146,7 @@ function classSummary(actor) {
   }
 
   const thac0 = thacos.length ? Math.min(...thacos) : 20;
+  const multi = entries.length > 1;
   return {
     entries,
     values: {
@@ -157,7 +157,7 @@ function classSummary(actor) {
       spellcasting: spellLists.size ? { enabled: true, mode: multi ? "multiclass" : "prepared", lists: [...spellLists] } : {},
       niveau: entries.length ? Math.max(...entries.map(entry => entry.level)) : 1,
       xp: 0,
-      titre: titles.join(" / "),
+      titre: title,
       thaco: thac0,
       thac0,
       sauvegardes: bestSaves(entries),
@@ -171,45 +171,15 @@ function racialBonus(actor, key) {
   return number(bonuses?.[key] ?? actor?.system?.[`${key}_race`], 0);
 }
 
-function abilityAdjustment(actor, key) {
-  const system = actor?.system ?? {};
-  const labels = {
-    force: `${signed(system.force_bonus_toucher)} toucher · ${signed(system.force_bonus_degats)} dégâts`,
-    dexterite: `${signed(system.dex_att)} toucher · ${signed(system.dex_def)} CA`,
-    constitution: `${signed(system.con_pv)} PV`,
-    intelligence: `${signed(system.int_langues)} langues`,
-    sagesse: `${signed(system.sag_magie)} résistance magie`,
-    charisme: `${signed(system.cha_react)} réaction`
-  };
-  return labels[key] ?? "—";
-}
-
-function attributes(actor) {
-  return CARACS.map(([key, short, label]) => {
-    const base = number(actor.system?.[`${key}_base`] ?? actor.system?.[key], 10);
-    const racial = racialBonus(actor, key);
-    return {
-      key,
-      short,
-      label,
-      base,
-      racial,
-      racialSigned: signed(racial),
-      total: base + racial,
-      adjustment: abilityAdjustment(actor, key)
-    };
-  });
-}
-
 function canUseExceptionalStrength(actor) {
-  const strength = number(actor.system?.force_base ?? actor.system?.force, 10) + racialBonus(actor, "force");
+  const strength = number(actor?.system?.force_base ?? actor?.system?.force, 10) + racialBonus(actor, "force");
   return strength === 18 && classEntries(actor).some(entry => MARTIAL_CLASSES.has(entry.slug));
 }
 
 function forceExValues(selected) {
   return Array.from({ length: 101 }, (_unused, value) => ({
     value,
-    label: value === 0 ? "—" : String(value).padStart(2, "0"),
+    label: value === 0 ? "--" : String(value).padStart(2, "0"),
     selected: number(selected, 0) === value
   }));
 }
@@ -219,14 +189,14 @@ function spellsByLevel(actor) {
   for (const item of actor.items ?? []) {
     if (String(item?.type ?? "").toLowerCase() !== "sort") continue;
     const level = Math.max(1, number(item.system?.niveau ?? item.system?.level, 1));
-    const rows = levels.get(level) ?? [];
-    rows.push({
+    const spells = levels.get(level) ?? [];
+    spells.push({
       id: item.id,
       name: item.name,
       img: item.img || "icons/svg/book.svg",
       memorized: Math.max(0, number(item.getFlag?.("add2e", "memorizedCount") ?? item.flags?.add2e?.memorizedCount, 0))
     });
-    levels.set(level, rows);
+    levels.set(level, spells);
   }
   return [...levels.entries()]
     .sort(([left], [right]) => left - right)
@@ -246,15 +216,15 @@ function defense(actor) {
   const body = armors.filter(item => !isShield(item) && !isHelmet(item));
   const shields = armors.filter(isShield);
   const helmets = armors.filter(isHelmet);
-  const bodyValues = body.map(item => number(item.system?.ac ?? item.system?.ca, 10)).filter(Number.isFinite);
-  const armor = bodyValues.length ? Math.min(...bodyValues) : 10;
+  const armorValues = body.map(item => number(item.system?.ac ?? item.system?.ca, 10)).filter(Number.isFinite);
+  const armor = armorValues.length ? Math.min(...armorValues) : 10;
   const shield = shields.reduce((sum, item) => sum + Math.max(0, number(item.system?.ac ?? item.system?.ca, 1)), 0);
   const helmet = helmets.reduce((sum, item) => sum + Math.max(0, number(item.system?.ac ?? item.system?.ca, 0)), 0);
   const dexDefense = number(actor?.system?.dex_def, 0);
   const natural = armor + dexDefense - shield - helmet;
-  const magic = equippedItems.filter(item => GEAR_TYPES.has(String(item.type ?? "").toLowerCase()))
+  const magicBonus = equippedItems.filter(item => GEAR_TYPES.has(String(item.type ?? "").toLowerCase()))
     .reduce((sum, item) => sum + Math.max(0, number(item.system?.bonus_ca ?? item.system?.bonus_ac ?? item.system?.ca_bonus, 0)), 0);
-  return { natural, total: natural - magic, dexDefense };
+  return { natural, total: natural - magicBonus, dexDefense };
 }
 
 function actorView(actor, system) {
@@ -282,13 +252,13 @@ async function droppedItemData(event) {
 
   let data = raw.data ?? null;
   if (!data && raw.uuid) {
-    const doc = await globalThis.fromUuid?.(raw.uuid);
-    if (doc?.documentName === "Item") data = doc.toObject();
+    const document = await globalThis.fromUuid?.(raw.uuid);
+    if (document?.documentName === "Item") data = document.toObject();
   }
   if (!data && raw.pack && (raw.id || raw._id)) {
     const pack = game.packs.get(raw.pack);
-    const doc = pack ? await pack.getDocument(raw.id ?? raw._id) : null;
-    if (doc?.documentName === "Item") data = doc.toObject();
+    const document = pack ? await pack.getDocument(raw.id ?? raw._id) : null;
+    if (document?.documentName === "Item") data = document.toObject();
   }
   if (!data || typeof data !== "object") return null;
 
@@ -301,10 +271,12 @@ async function droppedItemData(event) {
 function isIgnoredSupply(data) {
   const api = globalThis.ADD2E_CONSUMABLES ?? game?.add2e?.consumables;
   try {
-    return api?.add2eIsAmmunition?.(data) === true || api?.add2eIsSpellComponent?.(data) === true;
-  } catch (_error) {
-    return false;
-  }
+    if (api?.add2eIsAmmunition?.(data) === true || api?.add2eIsSpellComponent?.(data) === true) return true;
+  } catch (_error) {}
+
+  const text = [data?.type, data?.name, data?.system?.categorie, data?.system?.category, data?.system?.sousType, ...asArray(data?.system?.tags)]
+    .map(normalize).join("|");
+  return /munition|projectile|composant|component/.test(text);
 }
 
 function sourceClassId(item) {
@@ -357,11 +329,11 @@ export class Add2ePnjSheet extends PnjSheetBase {
   _tabStorageKey() { return `add2e.pnj.${this.document?.id ?? "unknown"}.activeTab`; }
 
   _activeTab() {
-    const selected = this._pnjActiveTab ?? (() => {
+    const candidate = this._pnjActiveTab ?? (() => {
       try { return sessionStorage.getItem(this._tabStorageKey()); }
       catch (_error) { return null; }
     })();
-    return TABS.has(selected) ? selected : "resume";
+    return TABS.has(candidate) ? candidate : "resume";
   }
 
   _setActiveTab(tab, root = null) {
@@ -395,8 +367,14 @@ export class Add2ePnjSheet extends PnjSheetBase {
     const system = clone(actor.system ?? {});
     for (const [key, value] of Object.entries(summary.values)) system[key] = clone(value);
 
-    const activeTab = this._activeTab();
     const race = actor.items.find(item => String(item?.type ?? "").toLowerCase() === "race") ?? null;
+    const raceName = race?.name ?? system.race ?? "Aucune";
+    system.race = raceName === "Aucune" ? "" : raceName;
+    system.nom_joueur = raceName;
+    system.bonus_caracteristiques ??= {};
+    for (const carac of CARACS) system.bonus_caracteristiques[carac] = number(system.bonus_caracteristiques[carac], number(system[`${carac}_race`], 0));
+
+    const activeTab = this._activeTab();
     const itemRow = item => ({
       id: item.id,
       name: item.name,
@@ -405,37 +383,55 @@ export class Add2ePnjSheet extends PnjSheetBase {
       ac: number(item.system?.ac ?? item.system?.ca, "—"),
       quantity: number(item.system?.quantite ?? item.system?.quantity, 1)
     });
-    const saves = (summary.values.sauvegardes ?? [20, 20, 20, 20, 20])
-      .map((value, index) => ({ index, label: SAVE_LABELS[index], value }));
-    const combatDefense = defense(actor);
+    const defenseValues = defense(actor);
+    const classProgression = {
+      enabled: summary.entries.length > 0,
+      isMulticlass: summary.entries.length > 1,
+      classes: summary.entries.map(entry => ({
+        itemId: entry.id,
+        name: entry.name,
+        slug: entry.slug,
+        level: entry.level,
+        xp: entry.xp,
+        nextXp: "",
+        title: entry.title
+      }))
+    };
+    const progressionCourante = {
+      title: summary.entries[0]?.title ?? "",
+      thac0: system.thac0,
+      savingThrows: clone(system.sauvegardes ?? [20, 20, 20, 20, 20])
+    };
+    const combatDefense = { ...defenseValues, thaco: system.thac0 };
 
     return {
       system,
       activeTab,
-      tabResume: activeTab === "resume",
-      tabCombat: activeTab === "combat",
-      tabSorts: activeTab === "sorts",
-      tabEquipement: activeTab === "equipement",
-      tabNotes: activeTab === "notes",
-      raceName: race?.name ?? system.race ?? "Aucune",
-      classLabel: summary.values.classe || "Aucune",
+      raceName,
       classes: summary.entries,
-      isMulticlass: summary.entries.length > 1,
-      attributes: attributes(actor),
-      saves,
+      classLabel: summary.values.classe || "Aucune",
+      classProgression,
+      progressionCourante,
       combatDefense,
+      alignementsDisponibles: ALIGNMENTS,
+      saveShortLabels: SAVE_SHORT_LABELS,
+      saveTitles: SAVE_TITLES,
+      canExceptionalStrength: canUseExceptionalStrength(actor),
+      forceExCurrent: number(system.force_ex, 0),
+      forceExNoneSelected: number(system.force_ex, 0) === 0,
+      forceExValues: forceExValues(system.force_ex),
       weapons: actor.items.filter(item => String(item?.type ?? "").toLowerCase() === "arme").map(itemRow),
       armors: actor.items.filter(item => String(item?.type ?? "").toLowerCase() === "armure").map(itemRow),
       gear: actor.items.filter(item => GEAR_TYPES.has(String(item?.type ?? "").toLowerCase())).map(itemRow),
-      spellLevels: spellsByLevel(actor),
-      canExceptionalStrength: canUseExceptionalStrength(actor),
-      forceExValues: forceExValues(actor.system?.force_ex)
+      spellLevels: spellsByLevel(actor)
     };
   }
 
   async _onRender(context, options = {}) {
     await super._onRender?.(context, options);
     const root = this.element?.jquery ? this.element[0] : this.element;
+    root?.querySelector?.('input[name="system.nom_joueur"]')?.setAttribute("readonly", "readonly");
+    root?.querySelector?.('input[name="system.race"]')?.setAttribute("readonly", "readonly");
     this.activateListeners(root);
     this._setActiveTab(this._activeTab(), root);
   }
@@ -463,7 +459,7 @@ export class Add2ePnjSheet extends PnjSheetBase {
 
     const conBonus = number(actor.system?.con_pv, 0);
     const update = {};
-    let max = 0;
+    let maximum = 0;
 
     if (entries.length === 1) {
       const entry = entries[0];
@@ -471,10 +467,10 @@ export class Add2ePnjSheet extends PnjSheetBase {
       const rolls = Array.isArray(actor.system?.hpRolls) && !force ? clone(actor.system.hpRolls) : [];
       if (!Number.isFinite(number(rolls[0], NaN))) rolls[0] = die;
       for (let index = 1; index < entry.level; index += 1) {
-        const current = number(rolls[index], NaN);
-        if (!Number.isFinite(current) || current < 1 || current > die) rolls[index] = 1 + Math.floor(Math.random() * die);
+        const roll = number(rolls[index], NaN);
+        if (!Number.isFinite(roll) || roll < 1 || roll > die) rolls[index] = 1 + Math.floor(Math.random() * die);
       }
-      for (let index = 0; index < entry.level; index += 1) max += (index === 0 ? die : number(rolls[index], 1)) + conBonus;
+      for (let index = 0; index < entry.level; index += 1) maximum += (index === 0 ? die : number(rolls[index], 1)) + conBonus;
       update["system.hpRolls"] = rolls;
     } else {
       const rolls = Array.isArray(actor.system?.hpRollsMulticlass) && !force ? clone(actor.system.hpRollsMulticlass) : [];
@@ -487,20 +483,20 @@ export class Add2ePnjSheet extends PnjSheetBase {
           const die = Math.max(1, number(entry.item.system?.hitDie ?? entry.item.system?.dv, 1));
           const key = entry.slug || entry.id;
           rolls[index] ??= {};
-          let result = number(rolls[index][key], NaN);
-          if (!Number.isFinite(result) || result < 1 || result > die || (force && index > 0)) {
-            result = index === 0 ? die : 1 + Math.floor(Math.random() * die);
-            rolls[index][key] = result;
+          let roll = number(rolls[index][key], NaN);
+          if (!Number.isFinite(roll) || roll < 1 || roll > die || (force && index > 0)) {
+            roll = index === 0 ? die : 1 + Math.floor(Math.random() * die);
+            rolls[index][key] = roll;
           }
-          total += result;
+          total += roll;
           count += 1;
         }
-        if (count) max += Math.max(1, Math.ceil(total / count)) + conBonus;
+        if (count) maximum += Math.max(1, Math.ceil(total / count)) + conBonus;
       }
       update["system.hpRollsMulticlass"] = rolls;
     }
 
-    update["system.points_de_coup"] = Math.max(1, Math.floor(max));
+    update["system.points_de_coup"] = Math.max(1, Math.floor(maximum));
     if (syncCurrent) update["system.pdv"] = update["system.points_de_coup"];
     await actor.update(update, { add2eInternal: true, add2eReason: reason, render: false });
     return true;
@@ -515,7 +511,7 @@ export class Add2ePnjSheet extends PnjSheetBase {
     }
 
     const totals = {};
-    for (const [key] of CARACS) totals[`system.${key}`] = number(actor.system?.[`${key}_base`] ?? actor.system?.[key], 10) + racialBonus(actor, key);
+    for (const carac of CARACS) totals[`system.${carac}`] = number(actor.system?.[`${carac}_base`] ?? actor.system?.[carac], 10) + racialBonus(actor, carac);
     await actor.update(totals, { add2eInternal: true, add2eReason: "pnj-ability-totals", render: false });
     return true;
   }
@@ -563,27 +559,27 @@ export class Add2ePnjSheet extends PnjSheetBase {
     itemData.flags.add2e ??= {};
     itemData.flags.add2e.pnjClass = true;
 
-    const [classDoc] = await actor.createEmbeddedDocuments("Item", [itemData], { add2eInternal: true, add2eReason: "pnj-add-class" });
-    if (!classDoc) return false;
+    const [classDocument] = await actor.createEmbeddedDocuments("Item", [itemData], { add2eInternal: true, add2eReason: "pnj-add-class" });
+    if (!classDocument) return false;
 
-    const effects = (classDoc.effects?.contents ?? []).map(effect => {
-      const dataEffect = effect.toObject();
-      delete dataEffect._id;
-      dataEffect.origin = classDoc.uuid;
-      dataEffect.transfer = false;
-      dataEffect.flags ??= {};
-      dataEffect.flags.add2e = {
-        ...(dataEffect.flags.add2e ?? {}),
+    const effects = (classDocument.effects?.contents ?? []).map(effect => {
+      const effectData = effect.toObject();
+      delete effectData._id;
+      effectData.origin = classDocument.uuid;
+      effectData.transfer = false;
+      effectData.flags ??= {};
+      effectData.flags.add2e = {
+        ...(effectData.flags.add2e ?? {}),
         sourceType: "classe",
-        sourceItemId: classDoc.id,
-        sourceItemUuid: classDoc.uuid,
-        sourceClasse: classDoc.name
+        sourceItemId: classDocument.id,
+        sourceItemUuid: classDocument.uuid,
+        sourceClasse: classDocument.name
       };
-      return dataEffect;
+      return effectData;
     });
     if (effects.length) await actor.createEmbeddedDocuments("ActiveEffect", effects, { add2eInternal: true, add2eReason: "pnj-add-class-effects" });
 
-    try { await globalThis.add2eSyncActorSpellsFromClass?.(actor, classDoc, { mode: "append", showWait: true }); }
+    try { await globalThis.add2eSyncActorSpellsFromClass?.(actor, classDocument, { mode: "append", showWait: true }); }
     catch (error) { console.warn("[ADD2E][PNJ][SPELL_SYNC]", error); }
 
     await this.recalculateAll({ syncCurrentHp: true, reason: "pnj-add-class" });
@@ -631,12 +627,12 @@ export class Add2ePnjSheet extends PnjSheetBase {
     return true;
   }
 
-  async _adjustCarac(key, delta) {
-    if (!CARACS.some(([entry]) => entry === key)) return false;
+  async _adjustCarac(carac, delta) {
+    if (!CARACS.includes(carac)) return false;
     const actor = this.document;
-    const current = number(actor.system?.[`${key}_base`] ?? actor.system?.[key], 10);
+    const current = number(actor.system?.[`${carac}_base`] ?? actor.system?.[carac], 10);
     const next = Math.max(3, Math.min(25, current + number(delta, 0)));
-    await actor.update({ [`system.${key}_base`]: next }, { add2eReason: "pnj-adjust-carac" });
+    await actor.update({ [`system.${carac}_base`]: next }, { add2eReason: "pnj-adjust-carac" });
     await this.recalculateAll({ reason: "pnj-adjust-carac" });
     return true;
   }
@@ -678,6 +674,11 @@ export class Add2ePnjSheet extends PnjSheetBase {
     if (!(sheetRoot instanceof HTMLElement) || sheetRoot.dataset.add2ePnjListeners === PNJ_SHEET_VERSION) return;
     sheetRoot.dataset.add2ePnjListeners = PNJ_SHEET_VERSION;
 
+    sheetRoot.addEventListener("pointerdown", event => {
+      const tab = event.target?.closest?.(".a2e-tabs .item[data-tab]");
+      if (tab && sheetRoot.contains(tab)) this._setActiveTab(tab.dataset.tab, sheetRoot);
+    }, true);
+
     sheetRoot.addEventListener("dragover", event => event.preventDefault(), true);
     sheetRoot.addEventListener("drop", event => {
       event.preventDefault();
@@ -690,17 +691,19 @@ export class Add2ePnjSheet extends PnjSheetBase {
 
     sheetRoot.addEventListener("change", event => {
       const target = event.target;
-      const classLevel = target?.closest?.('[data-action="class-level"]');
+      const classLevel = target?.closest?.('[data-class-progression-field="level"], [data-action="class-level"]');
       if (classLevel) {
         event.preventDefault();
         event.stopPropagation();
         event.stopImmediatePropagation?.();
-        this._setClassLevel(this.document.items.get(classLevel.dataset.itemId), classLevel.value)
+        const itemId = classLevel.dataset.classId ?? classLevel.dataset.itemId;
+        this._setClassLevel(this.document.items.get(itemId), classLevel.value)
           .then(() => this.render({ force: false }))
           .catch(error => console.error("[ADD2E][PNJ][CLASS_LEVEL]", error));
         return;
       }
-      const forceEx = target?.closest?.('[data-action="force-ex"]');
+
+      const forceEx = target?.closest?.('[data-add2e-force-ex], [data-action="force-ex"]');
       if (forceEx) {
         event.preventDefault();
         event.stopPropagation();
@@ -712,18 +715,43 @@ export class Add2ePnjSheet extends PnjSheetBase {
     }, true);
 
     sheetRoot.addEventListener("click", event => {
+      const image = event.target?.closest?.('[data-edit="img"], [data-action="edit-image"]');
+      if (image && sheetRoot.contains(image)) {
+        event.preventDefault();
+        event.stopImmediatePropagation?.();
+        return chooseImage(this.document);
+      }
+
+      const ability = event.target?.closest?.(".roll-stat[data-stat]");
+      if (ability && sheetRoot.contains(ability)) {
+        event.preventDefault();
+        event.stopImmediatePropagation?.();
+        return add2eRollCharacteristicCard(this.document, ability.dataset.stat);
+      }
+
+      const save = event.target?.closest?.(".roll-save[data-save]");
+      if (save && sheetRoot.contains(save)) {
+        event.preventDefault();
+        event.stopImmediatePropagation?.();
+        return add2eRollSaveCard(this.document, number(save.dataset.save, 0));
+      }
+
+      const caracButton = event.target?.closest?.('.carac-btn[data-carac], [data-action="adjust-carac"]');
+      if (caracButton && sheetRoot.contains(caracButton)) {
+        event.preventDefault();
+        event.stopImmediatePropagation?.();
+        const delta = caracButton.dataset.delta ?? (caracButton.classList.contains("plus") ? 1 : -1);
+        return this._adjustCarac(caracButton.dataset.carac, delta).then(() => this.render({ force: false }));
+      }
+
       const control = event.target?.closest?.("[data-action]");
       if (!control || !sheetRoot.contains(control)) return;
       const action = control.dataset.action;
       const item = this.document.items.get(control.dataset.itemId);
       const rerender = () => this.render({ force: false });
       event.preventDefault();
+      event.stopImmediatePropagation?.();
 
-      if (action === "switch-tab") return this._setActiveTab(control.dataset.tab, sheetRoot);
-      if (action === "edit-image") return chooseImage(this.document);
-      if (action === "roll-stat") return add2eRollCharacteristicCard(this.document, control.dataset.stat);
-      if (action === "roll-save") return add2eRollSaveCard(this.document, number(control.dataset.saveIndex, 0));
-      if (action === "adjust-carac") return this._adjustCarac(control.dataset.carac, control.dataset.delta).then(rerender);
       if (action === "delete-class" && item) return this._removeClass(item).then(rerender);
       if (action === "equip-item" && item) return this._equip(item).then(rerender);
       if (action === "attack" && item) {
