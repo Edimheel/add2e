@@ -48,11 +48,11 @@ import {
   registerSockets as registerConsumablesSockets
 } from "./22e-consumables-core.mjs";
 
-const ADD2E_SHOP_ORCHESTRATION_VERSION = "2026-07-06-shop-tiles-v2";
+const ADD2E_SHOP_ORCHESTRATION_VERSION = "2026-07-06-shop-tiles-v3";
 const ADD2E_SHOP_HP_VERSION = "2026-06-15-shop-hp-one-multiclass-v1";
 const ADD2E_SHOP_HP = 1;
 const SPELL_COMPONENTS_SETTING = "gestionComposantsSorts";
-const ADD2E_SHOP_TILE_VERSION = "2026-07-06-shop-tiles-v2";
+const ADD2E_SHOP_TILE_VERSION = "2026-07-06-shop-tiles-v3";
 const ADD2E_SHOP_TILE_FLAG_SCOPE = "add2e";
 const ADD2E_SHOP_TILE_FLAG_KEY = "shopType";
 const ADD2E_SHOP_TILE_TYPES = new Set(["vendor", "armorer"]);
@@ -274,7 +274,7 @@ async function enforceShopTokenPresentation() {
       const update = { _id: tokenDoc.id };
       let changed = false;
       if (tokenDoc.displayName !== displayName) { update.displayName = displayName; changed = true; }
-      if (tokenDoc.lockRotation !== true) { update.lockRotation = true; changed = true; }
+      if (tokenDoc.lockRotation !== true) { update.lockRotation = true; }
       if (changed) updates.push(update);
     }
     if (updates.length) await scene.updateEmbeddedDocuments("Token", updates, { add2eReason: "shop-token-presentation" });
@@ -310,7 +310,7 @@ function shopTileType(tile) {
   const raw = document?.getFlag?.(ADD2E_SHOP_TILE_FLAG_SCOPE, ADD2E_SHOP_TILE_FLAG_KEY)
     ?? document?.flags?.[ADD2E_SHOP_TILE_FLAG_SCOPE]?.[ADD2E_SHOP_TILE_FLAG_KEY]
     ?? "";
-  const type = String(raw).trim().toLowerCase();
+  const type = String(raw ?? "").trim().toLowerCase();
   return ADD2E_SHOP_TILE_TYPES.has(type) ? type : "";
 }
 
@@ -337,39 +337,22 @@ async function openShopFromTile(tile) {
   return true;
 }
 
-function removeShopTileBinding(tile) {
-  const handler = tile?.__add2eShopTileTapHandler;
-  if (handler) tile.off?.("pointertap", handler);
-  delete tile?.__add2eShopTileTapHandler;
-  delete tile?.__add2eShopTileBound;
-  if (tile?.cursor === "pointer") tile.cursor = null;
-}
+function patchShopTileClick() {
+  if (globalThis.__ADD2E_SHOP_TILE_CLICK_V3) return;
+  globalThis.__ADD2E_SHOP_TILE_CLICK_V3 = true;
 
-function bindAllShopTiles() {
-  for (const tile of canvas?.tiles?.placeables ?? []) {
-    if (!shopTileType(tile)) {
-      removeShopTileBinding(tile);
-      continue;
+  const TileClass = foundry?.canvas?.placeables?.Tile ?? CONFIG?.Tile?.objectClass ?? globalThis.Tile;
+  const prototype = TileClass?.prototype;
+  if (!prototype || typeof prototype._onClickLeft !== "function") return;
+
+  const original = prototype._onClickLeft;
+  prototype._onClickLeft = function(event) {
+    const result = original.call(this, event);
+    if (!game.user?.isGM && shopTileType(this)) {
+      window.setTimeout(() => { void openShopFromTile(this); }, 0);
     }
-    if (tile.__add2eShopTileBound) continue;
-
-    const handler = event => {
-      if (game.user?.isGM) return;
-      event?.stopPropagation?.();
-      void openShopFromTile(tile);
-    };
-
-    try {
-      tile.cursor = "pointer";
-      tile.eventMode = "static";
-      tile.interactive = true;
-      tile.on?.("pointertap", handler);
-      tile.__add2eShopTileTapHandler = handler;
-      tile.__add2eShopTileBound = true;
-    } catch (_error) {
-      removeShopTileBinding(tile);
-    }
-  }
+    return result;
+  };
 }
 
 function appElement(html) {
@@ -409,37 +392,10 @@ function injectShopTileConfigField(app, html) {
   else form.append(group);
 }
 
-function injectShopTileHudButton(hud, html) {
-  if (!game.user?.isGM) return;
-  const tile = tileDocument(hud?.object ?? hud?.document ?? null);
-  if (!tile || tile.documentName !== "Tile") return;
-
-  const root = appElement(html);
-  if (!root?.querySelector || root.querySelector(".add2e-shop-tile-hud")) return;
-  const configButton = root.querySelector(".control-icon.config");
-  if (!configButton) return;
-
-  const button = globalThis.document.createElement("div");
-  button.className = "control-icon add2e-shop-tile-hud";
-  button.title = "Configurer la boutique ADD2E";
-  button.setAttribute("aria-label", "Configurer la boutique ADD2E");
-  button.innerHTML = '<i class="fas fa-store"></i>';
-  button.addEventListener("click", event => {
-    event.preventDefault();
-    event.stopPropagation();
-    configButton.click();
-  });
-  configButton.parentElement?.append(button);
-}
-
 function registerShopTileHooks() {
-  if (globalThis.__ADD2E_SHOP_TILE_HOOKS_V2) return;
-  globalThis.__ADD2E_SHOP_TILE_HOOKS_V2 = true;
+  if (globalThis.__ADD2E_SHOP_TILE_HOOKS_V3) return;
+  globalThis.__ADD2E_SHOP_TILE_HOOKS_V3 = true;
   Hooks.on("renderTileConfig", injectShopTileConfigField);
-  Hooks.on("renderTileHUD", injectShopTileHudButton);
-  Hooks.on("canvasReady", bindAllShopTiles);
-  Hooks.on("createTile", () => setTimeout(bindAllShopTiles, 100));
-  Hooks.on("updateTile", () => setTimeout(bindAllShopTiles, 100));
 }
 
 Hooks.once("init", () => {
@@ -493,10 +449,10 @@ Hooks.once("ready", async () => {
   patchActorSheetMoney();
   patchVendorTokenClick();
   patchArmorerTokenClick();
+  patchShopTileClick();
 
   window.setTimeout(bindAllVendorTokens, 500);
   window.setTimeout(bindAllArmorerTokens, 500);
-  window.setTimeout(bindAllShopTiles, 500);
 
   game.add2e = game.add2e ?? {};
   game.add2e.shopTileVersion = ADD2E_SHOP_TILE_VERSION;
