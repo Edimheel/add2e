@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — Moteur générique de rounds de combat.
-// Version : 2026-07-06-round-engine-vade-player-continuation-v8
+// Version : 2026-07-06-round-engine-vade-player-continuation-v9
 // Compatible Foundry V13 / V14 / V15.
 // ============================================================================
 
@@ -21,7 +21,7 @@ import {
   add2eTimeNormalizeActorEffects
 } from "./19a-time-engine.mjs";
 
-export const ADD2E_ROUND_ENGINE_VERSION = "2026-07-06-round-engine-vade-player-continuation-v8";
+export const ADD2E_ROUND_ENGINE_VERSION = "2026-07-06-round-engine-vade-player-continuation-v9";
 
 const TAG = "[ADD2E][ROUND_ENGINE]";
 const FLAG_SCOPE = "add2e";
@@ -30,6 +30,8 @@ const VADE_RETRO_FLAG = "vadeRetro";
 const ADD2E_SOCKET = "system.add2e";
 const VADE_RETRO_PLAYER_CONTINUATION = "ADD2E_VADE_RETRO_PLAYER_CONTINUATION";
 const VADE_RETRO_CONTINUATION_CONTEXTS = "__ADD2E_VADE_RETRO_CONTINUATION_CONTEXTS";
+const VADE_RETRO_SYNC_RETRY_DELAY_MS = 50;
+const VADE_RETRO_SYNC_RETRY_TIMEOUT_MS = 1500;
 const LOCAL_PROCESSED = new Set();
 const LOCAL_VADE_CONTINUATIONS = new Set();
 const LOCAL_LIMIT = 200;
@@ -447,39 +449,70 @@ async function runPlayerVadeRetroContinuation(payload = {}) {
   if (!targetUserId || targetUserId !== game.user?.id || game.user?.isGM) return false;
   const requestKey = vadeContinuationKey(payload);
   const requestId = String(payload?.requestId ?? "").trim() || requestKey;
-  if (!requestKey || LOCAL_VADE_CONTINUATIONS.has(requestKey)) return false;
-  const actor = await actorFromVadeContinuationPayload(payload);
-  const combat = game.combat;
-  if (!actor || !combat || String(combat.id) !== String(payload.combatId) || Number(combat.round) !== Number(payload.round) || actor.isOwner === false) return false;
-  const state = vadeState(actor, combat);
-  if (!state || state.status !== "pending" || String(state.initiatorUserId ?? "") !== targetUserId || Number(state.lastRound ?? Number(combat.round)) >= Number(combat.round)) return false;
-  const feature = vadeContinuationFeature(actor, state);
-  const execute = globalThis.add2eExecuteClassFeatureOnUse;
-  if (!feature || typeof execute !== "function") {
-    warn("[VADE_RETRO_PLAYER_CONTINUATION_UNAVAILABLE]", { actor: actor.name, combat: combat.id, feature: !!feature, execute: typeof execute });
-    return false;
-  }
-  globalThis[VADE_RETRO_CONTINUATION_CONTEXTS] ??= new Map();
-  const contexts = globalThis[VADE_RETRO_CONTINUATION_CONTEXTS];
-  const contextKey = `${actor.id}:${combat.id}`;
+  const expectedCombatId = String(payload?.combatId ?? "").trim();
+  const expectedRound = Number(payload?.round);
+  if (!requestKey || !expectedCombatId || !Number.isFinite(expectedRound) || LOCAL_VADE_CONTINUATIONS.has(requestKey)) return false;
+
   LOCAL_VADE_CONTINUATIONS.add(requestKey);
-  contexts.set(contextKey, {
-    kind: "vade-retro-continuation",
-    requestId,
-    actorId: actor.id,
-    actorUuid: actor.uuid ?? null,
-    combatId: combat.id,
-    round: Number(combat.round),
-    initiatorUserId: targetUserId
-  });
+  let contexts = null;
+  let contextKey = "";
   try {
-    return (await execute(actor, feature, null)) !== false;
-  } catch (err) {
-    error("[VADE_RETRO_PLAYER_CONTINUATION_ERROR]", { actor: actor.name, combat: combat.id, round: combat.round, err });
-    return false;
+    const actor = await actorFromVadeContinuationPayload(payload);
+    if (!actor || actor.isOwner === false) return false;
+
+    const attempts = Math.max(1, Math.ceil(VADE_RETRO_SYNC_RETRY_TIMEOUT_MS / VADE_RETRO_SYNC_RETRY_DELAY_MS));
+    let combat = null;
+    let state = null;
+    for (let attempt = 0; attempt < attempts; attempt += 1) {
+      const candidateCombat = game.combat;
+      const combatReady = candidateCombat
+        && String(candidateCombat.id ?? "") === expectedCombatId
+        && Number(candidateCombat.round) === expectedRound;
+      const candidateState = combatReady ? vadeState(actor, candidateCombat) : null;
+      const stateReady = candidateState?.status === "pending"
+        && String(candidateState.initiatorUserId ?? "") === targetUserId
+        && Number(candidateState.lastRound ?? expectedRound) < expectedRound;
+
+      if (combatReady && stateReady) {
+        combat = candidateCombat;
+        state = candidateState;
+        break;
+      }
+      if (attempt + 1 < attempts) {
+        await new Promise(resolve => setTimeout(resolve, VADE_RETRO_SYNC_RETRY_DELAY_MS));
+      }
+    }
+
+    if (!combat || !state) return false;
+    const feature = vadeContinuationFeature(actor, state);
+    const execute = globalThis.add2eExecuteClassFeatureOnUse;
+    if (!feature || typeof execute !== "function") {
+      warn("[VADE_RETRO_PLAYER_CONTINUATION_UNAVAILABLE]", { actor: actor.name, combat: combat.id, feature: !!feature, execute: typeof execute });
+      return false;
+    }
+
+    globalThis[VADE_RETRO_CONTINUATION_CONTEXTS] ??= new Map();
+    contexts = globalThis[VADE_RETRO_CONTINUATION_CONTEXTS];
+    contextKey = `${actor.id}:${combat.id}`;
+    contexts.set(contextKey, {
+      kind: "vade-retro-continuation",
+      requestId,
+      actorId: actor.id,
+      actorUuid: actor.uuid ?? null,
+      combatId: combat.id,
+      round: Number(combat.round),
+      initiatorUserId: targetUserId
+    });
+
+    try {
+      return (await execute(actor, feature, null)) !== false;
+    } catch (err) {
+      error("[VADE_RETRO_PLAYER_CONTINUATION_ERROR]", { actor: actor.name, combat: combat.id, round: combat.round, err });
+      return false;
+    }
   } finally {
-    contexts.delete(contextKey);
-    setTimeout(() => LOCAL_VADE_CONTINUATIONS.delete(requestKey), 1000);
+    if (contexts && contextKey) contexts.delete(contextKey);
+    setTimeout(() => LOCAL_VADE_CONTINUATIONS.delete(requestKey), VADE_RETRO_SYNC_RETRY_TIMEOUT_MS + VADE_RETRO_SYNC_RETRY_DELAY_MS);
   }
 }
 
