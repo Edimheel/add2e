@@ -4,7 +4,7 @@
 
 import { MULTICLASS_VERSION, classItems as coreClassItems, classProgression, classProgressionUpdate, classSlug } from "./17b-multiclass-core.mjs";
 
-const VERSION = "2026-07-04-class-item-progression-unified-v2";
+const VERSION = "2026-07-06-class-item-progression-pnj-hp-v3";
 const TAG = "[ADD2E][CLASSE][CANONIQUE]";
 const timers = new Map();
 
@@ -17,6 +17,7 @@ const n = (value, fallback = 0) => {
 const classes = actor => coreClassItems(actor);
 const hasClasses = actor => actor?.type === "personnage" && classes(actor).length > 0;
 const isMulti = actor => hasClasses(actor) && classes(actor).length > 1;
+const isMultiHpActor = actor => isMulti(actor) || (actor?.type === "pnj" && classes(actor).length > 1);
 const keyFor = entry => classSlug(entry?.item) || String(entry?.itemId ?? "");
 
 function same(left, right) {
@@ -62,8 +63,9 @@ function nextXpFor(entry) {
   return next ? parseXpMinimum(next?.xp ?? next?.experience ?? next?.xpRange ?? next?.niveau_xp) : 0;
 }
 
-function entriesFor(actor) {
-  if (!hasClasses(actor)) return [];
+function entriesFor(actor, { includePnj = false } = {}) {
+  const eligible = hasClasses(actor) || (includePnj && actor?.type === "pnj" && classes(actor).length > 0);
+  if (!eligible) return [];
   return classes(actor).flatMap(item => {
     const state = classProgression(item);
     if (!state?.hasLevel || !state?.hasXp) return [];
@@ -283,8 +285,8 @@ async function syncClassProgressionSummary(actor, { reason = "class-item-progres
 }
 
 async function syncHp(actor, { syncCurrent = false, force = false, reason = "multiclass-item-progression" } = {}) {
-  if (!isMulti(actor)) return false;
-  const entries = entriesFor(actor);
+  if (!isMultiHpActor(actor)) return false;
+  const entries = entriesFor(actor, { includePnj: actor?.type === "pnj" });
   if (!entries.length) return false;
   const rolls = Array.isArray(actor.system?.hpRollsMulticlass) && !force ? foundry.utils.deepClone(actor.system.hpRollsMulticlass) : [];
   const conBonus = n(actor.system?.con_pv);
@@ -359,7 +361,7 @@ function installSheetPatch() {
     proto.__add2eOriginalAutoSetPointsDeCoup = proto.autoSetPointsDeCoup;
     proto.autoSetPointsDeCoup = async function add2eClassItemHp(options = {}) {
       const actor = this.document ?? this.actor;
-      return isMulti(actor) ? syncHp(actor, options) : this.__add2eOriginalAutoSetPointsDeCoup(options);
+      return isMultiHpActor(actor) ? syncHp(actor, options) : this.__add2eOriginalAutoSetPointsDeCoup(options);
     };
   }
 
