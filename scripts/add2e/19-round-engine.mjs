@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — Moteur générique de rounds de combat.
-// Version : 2026-07-06-round-engine-vade-player-continuation-v7
+// Version : 2026-07-06-round-engine-vade-player-continuation-v8
 // Compatible Foundry V13 / V14 / V15.
 // ============================================================================
 
@@ -21,7 +21,7 @@ import {
   add2eTimeNormalizeActorEffects
 } from "./19a-time-engine.mjs";
 
-export const ADD2E_ROUND_ENGINE_VERSION = "2026-07-06-round-engine-vade-player-continuation-v7";
+export const ADD2E_ROUND_ENGINE_VERSION = "2026-07-06-round-engine-vade-player-continuation-v8";
 
 const TAG = "[ADD2E][ROUND_ENGINE]";
 const FLAG_SCOPE = "add2e";
@@ -446,6 +446,7 @@ async function runPlayerVadeRetroContinuation(payload = {}) {
   const targetUserId = String(payload?.targetUserId ?? "").trim();
   if (!targetUserId || targetUserId !== game.user?.id || game.user?.isGM) return false;
   const requestKey = vadeContinuationKey(payload);
+  const requestId = String(payload?.requestId ?? "").trim() || requestKey;
   if (!requestKey || LOCAL_VADE_CONTINUATIONS.has(requestKey)) return false;
   const actor = await actorFromVadeContinuationPayload(payload);
   const combat = game.combat;
