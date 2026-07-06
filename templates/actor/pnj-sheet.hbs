@@ -1,0 +1,72 @@
+<form class="add2e-pnj-sheet" autocomplete="off">
+  <style>
+    .add2e-pnj-sheet{--a2e-gold:#c8a75a;--a2e-ink:#2b1b0b;--a2e-red:#7e2b25;--a2e-paper:#f8efd9;--a2e-panel:#fffaf0;color:var(--a2e-ink);height:100%;display:flex;flex-direction:column;overflow:hidden;background:linear-gradient(135deg,#f7eed4,#ead8a8);font-family:var(--font-primary)}
+    .add2e-pnj-sheet *{box-sizing:border-box}.a2e-pnj-header{display:grid;grid-template-columns:112px 1fr;gap:12px;padding:10px;border-bottom:1px solid var(--a2e-gold);background:rgba(255,250,237,.68)}.a2e-pnj-portrait{width:104px;height:104px;object-fit:cover;border:1px solid #775d27;border-radius:7px;background:#222;cursor:pointer}.a2e-pnj-name{width:100%;font-family:var(--font-primary);font-weight:900;font-size:1.75rem;border:1px solid var(--a2e-gold);border-radius:5px;background:#fffdf7;padding:3px 8px;color:#251504}.a2e-pnj-meta{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-top:7px}.a2e-pnj-field,.a2e-pnj-stat,.a2e-pnj-panel{border:1px solid var(--a2e-gold);border-radius:7px;background:var(--a2e-panel)}.a2e-pnj-field{padding:5px}.a2e-pnj-field label,.a2e-pnj-stat label{display:block;color:#6b4910;font-size:.74rem;font-weight:900;text-transform:uppercase;margin-bottom:2px}.a2e-pnj-field input,.a2e-pnj-field select,.a2e-pnj-stat input,.a2e-pnj-textarea{width:100%;border:1px solid #c5aa69;border-radius:4px;background:#fffdf8;color:#2b1b0b;padding:4px 5px}.a2e-pnj-summary{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px;margin-top:7px}.a2e-pnj-summary .a2e-pnj-field input{text-align:center;font-weight:900}.a2e-pnj-saves{display:flex;justify-content:center;gap:7px;padding:7px;border-bottom:1px solid var(--a2e-gold);background:rgba(255,250,237,.7)}.a2e-pnj-save{min-width:104px;padding:5px 7px;border:1px solid #735b28;border-radius:6px;background:linear-gradient(180deg,#8e4437,#67251f);color:#fff;cursor:pointer;text-align:center;text-shadow:0 1px 1px #000}.a2e-pnj-save strong{display:block;font-size:1.2rem}.a2e-pnj-tabs{display:flex;gap:3px;padding:7px 9px 0;border-bottom:1px solid var(--a2e-gold);background:rgba(255,250,237,.76)}.a2e-pnj-tab{border:1px solid var(--a2e-gold);border-bottom:0;border-radius:7px 7px 0 0;padding:7px 11px;background:#fffaf0;color:#67450f;font-weight:900;cursor:pointer}.a2e-pnj-tab.active{background:linear-gradient(180deg,#8e4437,#67251f);color:#fff;border-color:#67251f}.a2e-pnj-body{flex:1;min-height:0;overflow:auto;padding:10px}.a2e-pnj-content:not(.active){display:none}.a2e-pnj-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.a2e-pnj-stat{padding:6px;display:grid;grid-template-columns:1fr 44px 38px 44px;gap:4px;align-items:end}.a2e-pnj-stat label{grid-column:1/-1}.a2e-pnj-stat input{text-align:center}.a2e-pnj-stat .a2e-pnj-race-bonus{background:#f3e6c0;font-weight:800}.a2e-pnj-stat .a2e-pnj-total{background:#e8f1dd;font-weight:900}.a2e-pnj-panel{margin-bottom:10px;overflow:hidden}.a2e-pnj-panel h2{margin:0;padding:7px 9px;font-size:1rem;background:rgba(232,210,148,.65);border-bottom:1px solid var(--a2e-gold);color:#67450f}.a2e-pnj-panel-body{padding:8px}.a2e-pnj-table{width:100%;border-collapse:collapse;background:#fffdf8}.a2e-pnj-table th,.a2e-pnj-table td{padding:5px;border:1px solid #ddc98f;vertical-align:middle}.a2e-pnj-table th{background:#eddaa0;color:#5b3b0b;text-align:left}.a2e-pnj-item{display:flex;align-items:center;gap:7px;font-weight:800}.a2e-pnj-item img{width:28px;height:28px;object-fit:cover;border:1px solid #857040;border-radius:4px}.a2e-pnj-actions{white-space:nowrap;text-align:right}.a2e-pnj-action{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:25px;margin-left:3px;border:1px solid #9a7a37;border-radius:4px;background:#fff8df;color:#61470f;cursor:pointer}.a2e-pnj-action.danger{color:#9b2820;border-color:#b55a51}.a2e-pnj-action.active{background:#5c7d42;color:#fff;border-color:#496332}.a2e-pnj-class-level{width:54px;text-align:center}.a2e-pnj-drop{border:1px dashed #9e7b32;border-radius:6px;background:#fff7dc;padding:7px;margin-top:7px;color:#67450f;font-size:.9rem}.a2e-pnj-spell-level{margin:9px 0 4px;padding:5px 8px;border-radius:5px;background:linear-gradient(90deg,#5f3b8b,#9d80bc);color:#fff;font-weight:900}.a2e-pnj-textarea{min-height:190px;resize:vertical}.a2e-pnj-muted{color:#6e6043;font-style:italic}.a2e-pnj-hidden{display:none!important}@media(max-width:780px){.a2e-pnj-meta,.a2e-pnj-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.a2e-pnj-grid{grid-template-columns:1fr}.a2e-pnj-saves{flex-wrap:wrap}}
+  </style>
+
+  <header class="a2e-pnj-header">
+    <img class="a2e-pnj-portrait" src="{{actor.img}}" data-action="edit-image" title="Changer l'image"/>
+    <div>
+      <input class="a2e-pnj-name" type="text" name="name" value="{{actor.name}}" placeholder="Nom du PNJ"/>
+      <div class="a2e-pnj-meta">
+        <div class="a2e-pnj-field"><label>Race</label><input value="{{raceName}}" readonly/><small class="a2e-pnj-muted">Déposer une race pour remplacer.</small></div>
+        <div class="a2e-pnj-field"><label>Alignement</label><input type="text" name="system.alignement" value="{{system.alignement}}"/></div>
+        <div class="a2e-pnj-field"><label>Langues</label><input type="text" name="system.langues" value="{{system.langues}}"/></div>
+        <div class="a2e-pnj-field"><label>Mouvement</label><input type="number" name="system.movement" value="{{system.movement}}"/></div>
+      </div>
+      <div class="a2e-pnj-summary">
+        <div class="a2e-pnj-field"><label>PV courants</label><input type="number" name="system.pdv" value="{{system.pdv}}"/></div>
+        <div class="a2e-pnj-field"><label>PV maximum</label><input value="{{system.points_de_coup}}" readonly/></div>
+        <div class="a2e-pnj-field"><label>CA</label><input value="{{system.ca_total}}" readonly/></div>
+        <div class="a2e-pnj-field"><label>THAC0</label><input value="{{system.thac0}}" readonly/></div>
+        <div class="a2e-pnj-field"><label>Classe(s)</label><input value="{{classLabel}}" readonly/></div>
+        <div class="a2e-pnj-field"><label>Titre(s)</label><input value="{{system.titre}}" readonly/></div>
+      </div>
+    </div>
+  </header>
+
+  <section class="a2e-pnj-saves">
+    {{#each saves}}
+      <button type="button" class="a2e-pnj-save" data-action="roll-save" data-save-index="{{index}}" data-save-value="{{value}}"><span>{{label}}</span><strong>{{value}}</strong></button>
+    {{/each}}
+  </section>
+
+  <nav class="a2e-pnj-tabs">
+    <button type="button" class="a2e-pnj-tab active" data-action="tab" data-tab="identite">Identité</button>
+    <button type="button" class="a2e-pnj-tab" data-action="tab" data-tab="combat">Combat</button>
+    <button type="button" class="a2e-pnj-tab" data-action="tab" data-tab="sorts">Sorts</button>
+    <button type="button" class="a2e-pnj-tab" data-action="tab" data-tab="equipement">Équipement</button>
+    <button type="button" class="a2e-pnj-tab" data-action="tab" data-tab="notes">Notes</button>
+  </nav>
+
+  <main class="a2e-pnj-body">
+    <section class="a2e-pnj-content active" data-tab="identite">
+      <section class="a2e-pnj-panel"><h2>Caractéristiques</h2><div class="a2e-pnj-panel-body"><div class="a2e-pnj-grid">
+        {{#each attributes}}
+          <div class="a2e-pnj-stat"><label>{{label}}</label><input type="number" min="3" max="25" name="system.{{key}}_base" value="{{base}}" title="Base"/><input class="a2e-pnj-race-bonus" value="{{racial}}" readonly title="Bonus racial"/><input class="a2e-pnj-total" value="{{total}}" readonly title="Total"/></div>
+        {{/each}}
+      </div>
+      {{#if canExceptionalStrength}}<div class="a2e-pnj-field" style="margin-top:8px;max-width:200px"><label>Force exceptionnelle</label><select name="system.force_ex">{{#each forceExValues}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select></div>{{/if}}
+      </div></section>
+      <section class="a2e-pnj-panel"><h2>Classes et niveaux</h2><div class="a2e-pnj-panel-body"><table class="a2e-pnj-table"><thead><tr><th>Classe</th><th>Niveau</th><th>Titre</th><th>THAC0</th><th></th></tr></thead><tbody>
+        {{#each classes}}<tr data-item-id="{{id}}"><td><div class="a2e-pnj-item"><img src="{{img}}"/>{{name}}</div></td><td><input class="a2e-pnj-class-level" type="number" min="1" value="{{level}}" data-action="class-level" data-item-id="{{id}}"/></td><td>{{title}}</td><td>{{thac0}}</td><td class="a2e-pnj-actions"><button type="button" class="a2e-pnj-action" data-action="edit-item" data-item-id="{{id}}" title="Ouvrir"><i class="fas fa-pen"></i></button><button type="button" class="a2e-pnj-action danger" data-action="delete-class" data-item-id="{{id}}" title="Retirer"><i class="fas fa-trash"></i></button></td></tr>{{else}}<tr><td colspan="5" class="a2e-pnj-muted">Dépose une ou plusieurs classes. Trois classes au maximum.</td></tr>{{/each}}
+      </tbody></table><div class="a2e-pnj-drop">Déposer ici une race ou une classe. Aucune contrainte de compatibilité, de prérequis ou de niveau racial n’est appliquée.</div></div></section>
+    </section>
+
+    <section class="a2e-pnj-content" data-tab="combat">
+      <section class="a2e-pnj-panel"><h2>Armes</h2><div class="a2e-pnj-panel-body"><table class="a2e-pnj-table"><thead><tr><th>Arme</th><th>Équipée</th><th></th></tr></thead><tbody>{{#each weapons}}<tr data-item-id="{{id}}"><td><div class="a2e-pnj-item"><img src="{{img}}"/>{{name}}</div></td><td>{{#if equipped}}Oui{{else}}Non{{/if}}</td><td class="a2e-pnj-actions"><button type="button" class="a2e-pnj-action {{#if equipped}}active{{/if}}" data-action="equip-item" data-item-id="{{id}}" title="Équiper"><i class="fas fa-shield-alt"></i></button><button type="button" class="a2e-pnj-action" data-action="attack" data-item-id="{{id}}" title="Attaquer"><i class="fas fa-dice-d20"></i></button><button type="button" class="a2e-pnj-action" data-action="edit-item" data-item-id="{{id}}"><i class="fas fa-pen"></i></button><button type="button" class="a2e-pnj-action danger" data-action="delete-item" data-item-id="{{id}}"><i class="fas fa-trash"></i></button></td></tr>{{else}}<tr><td colspan="3" class="a2e-pnj-muted">Déposer une arme.</td></tr>{{/each}}</tbody></table></div></section>
+      <section class="a2e-pnj-panel"><h2>Armures et protections</h2><div class="a2e-pnj-panel-body"><table class="a2e-pnj-table"><thead><tr><th>Armure</th><th>CA</th><th>Équipée</th><th></th></tr></thead><tbody>{{#each armors}}<tr data-item-id="{{id}}"><td><div class="a2e-pnj-item"><img src="{{img}}"/>{{name}}</div></td><td>{{ac}}</td><td>{{#if equipped}}Oui{{else}}Non{{/if}}</td><td class="a2e-pnj-actions"><button type="button" class="a2e-pnj-action {{#if equipped}}active{{/if}}" data-action="equip-item" data-item-id="{{id}}"><i class="fas fa-shield-alt"></i></button><button type="button" class="a2e-pnj-action" data-action="edit-item" data-item-id="{{id}}"><i class="fas fa-pen"></i></button><button type="button" class="a2e-pnj-action danger" data-action="delete-item" data-item-id="{{id}}"><i class="fas fa-trash"></i></button></td></tr>{{else}}<tr><td colspan="4" class="a2e-pnj-muted">Déposer une armure ou un bouclier.</td></tr>{{/each}}</tbody></table></div></section>
+    </section>
+
+    <section class="a2e-pnj-content" data-tab="sorts">
+      <div class="a2e-pnj-drop">Les sorts d’un PNJ n’exigent ni composants matériels ni sacoche. Leur mémorisation se règle directement ici.</div>
+      {{#each spellLevels}}<div class="a2e-pnj-spell-level">Sorts de niveau {{level}}</div><table class="a2e-pnj-table"><thead><tr><th>Sort</th><th>Mémorisé</th><th></th></tr></thead><tbody>{{#each spells}}<tr data-item-id="{{id}}"><td><div class="a2e-pnj-item"><img src="{{img}}"/>{{name}}</div></td><td><button type="button" class="a2e-pnj-action" data-action="spell-memory" data-delta="-1" data-item-id="{{id}}"><i class="fas fa-minus"></i></button> <strong>{{memorized}}</strong> <button type="button" class="a2e-pnj-action" data-action="spell-memory" data-delta="1" data-item-id="{{id}}"><i class="fas fa-plus"></i></button></td><td class="a2e-pnj-actions"><button type="button" class="a2e-pnj-action" data-action="cast-spell" data-item-id="{{id}}" title="Lancer"><i class="fas fa-wand-magic-sparkles"></i></button><button type="button" class="a2e-pnj-action" data-action="edit-item" data-item-id="{{id}}"><i class="fas fa-pen"></i></button><button type="button" class="a2e-pnj-action danger" data-action="delete-item" data-item-id="{{id}}"><i class="fas fa-trash"></i></button></td></tr>{{/each}}</tbody></table>{{else}}<p class="a2e-pnj-muted">Déposer un sort ou ajouter une classe lanceuse de sorts.</p>{{/each}}
+    </section>
+
+    <section class="a2e-pnj-content" data-tab="equipement">
+      <section class="a2e-pnj-panel"><h2>Équipement et objets</h2><div class="a2e-pnj-panel-body"><table class="a2e-pnj-table"><thead><tr><th>Objet</th><th>Quantité</th><th>Équipé</th><th></th></tr></thead><tbody>{{#each gear}}<tr data-item-id="{{id}}"><td><div class="a2e-pnj-item"><img src="{{img}}"/>{{name}}</div></td><td>{{quantity}}</td><td>{{#if equipped}}Oui{{else}}Non{{/if}}</td><td class="a2e-pnj-actions"><button type="button" class="a2e-pnj-action {{#if equipped}}active{{/if}}" data-action="equip-item" data-item-id="{{id}}"><i class="fas fa-shield-alt"></i></button><button type="button" class="a2e-pnj-action" data-action="edit-item" data-item-id="{{id}}"><i class="fas fa-pen"></i></button><button type="button" class="a2e-pnj-action danger" data-action="delete-item" data-item-id="{{id}}"><i class="fas fa-trash"></i></button></td></tr>{{else}}<tr><td colspan="4" class="a2e-pnj-muted">Déposer tout équipement ou objet utile.</td></tr>{{/each}}</tbody></table></div></section>
+    </section>
+
+    <section class="a2e-pnj-content" data-tab="notes"><section class="a2e-pnj-panel"><h2>Notes du PNJ</h2><div class="a2e-pnj-panel-body"><textarea class="a2e-pnj-textarea" name="system.notes">{{system.notes}}</textarea></div></section></section>
+  </main>
+</form>
