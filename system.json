@@ -23,7 +23,8 @@
     "scripts/08-character-sheet-ui.mjs",
     "scripts/resolveActiveEffectsOnTarget.mjs",
     "scripts/monster-sheet.mjs",
-    "scripts/pnj-sheet.mjs"
+    "scripts/pnj-sheet.mjs",
+    "scripts/add2e-action-hud-pnj.mjs"
   ],
   "styles": [
     "styles/add2e.css",
