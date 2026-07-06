@@ -3,7 +3,7 @@
 // Contrat onUse : true = capacité utilisée ; false = annulée / non utilisée.
 
 const __add2eVadeRetroResult = await (async () => {
-  const VERSION = "2026-07-06-vade-retro-undead-tags-flee-v8";
+  const VERSION = "2026-07-06-vade-retro-gm-relay-flee-v9";
   const ICON = "icons/magic/holy/barrier-shield-winged-cross.webp";
   const CONE = Object.freeze({ angle: 90, cells: 3 });
   const TABLE = Object.freeze({
@@ -99,11 +99,10 @@ const __add2eVadeRetroResult = await (async () => {
     const detailsHtml = details.filter(Boolean).map(detail => `<p>${detail}</p>`).join("");
     const rowsHtml = rows.length ? `<ul>${rows.map(row => `<li><b>${esc(row.target ?? row.name)}</b> : ${esc(row.result)}</li>`).join("")}</ul>` : "";
     const styles = globalThis.CONST?.CHAT_MESSAGE_STYLES;
-    const messageStyle = styles?.OTHER !== undefined ? { style: styles.OTHER } : { type: globalThis.CONST?.CHAT_MESSAGE_TYPES?.OTHER ?? 0 };
     await ChatMessage.create({
       speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken }),
       content: `<div class="add2e-chat-card add2e-class-ability"><h3>${esc(title)}</h3>${lead ? `<p>${lead}</p>` : ""}${detailsHtml}${rowsHtml}${footer ? `<p>${footer}</p>` : ""}</div>`,
-      ...messageStyle
+      ...(styles?.OTHER !== undefined ? { style: styles.OTHER } : { type: globalThis.CONST?.CHAT_MESSAGE_TYPES?.OTHER ?? 0 })
     });
   }
 
@@ -382,6 +381,38 @@ const __add2eVadeRetroResult = await (async () => {
     if (system.points_de_coup !== undefined) return "system.points_de_coup";
     return "system.pdv";
   }
+  async function moveAwayThroughGm(target) {
+    const document = target?.document ?? target;
+    const scene = document?.parent ?? canvas.scene;
+    if (!document || !scene || !casterToken?.center) return false;
+    const gridSize = Number(scene.grid?.size ?? canvas.grid?.size ?? 100) || 100;
+    const gridDistance = Math.max(.001, Number(scene.grid?.distance ?? canvas.grid?.distance ?? 1) || 1);
+    const movement = [target?.actor?.system?.mouvement?.actuel, target?.actor?.system?.mouvement?.max, target?.actor?.system?.mouvement?.base, target?.actor?.system?.movement_base, target?.actor?.system?.movement_max].map(numberFrom).find(value => Number.isFinite(value) && value > 0) ?? gridDistance;
+    const sourceCenter = casterToken.center;
+    const targetCenter = target?.center ?? { x: Number(document.x ?? 0) + Number(document.width ?? 1) * gridSize / 2, y: Number(document.y ?? 0) + Number(document.height ?? 1) * gridSize / 2 };
+    let dx = targetCenter.x - sourceCenter.x;
+    let dy = targetCenter.y - sourceCenter.y;
+    let length = Math.hypot(dx, dy);
+    if (length < 1) { dx = 1; dy = 0; length = 1; }
+    const width = Number(document.width ?? 1) * gridSize;
+    const height = Number(document.height ?? 1) * gridSize;
+    const rawX = targetCenter.x + dx / length * (movement / gridDistance * gridSize) - width / 2;
+    const rawY = targetCenter.y + dy / length * (movement / gridDistance * gridSize) - height / 2;
+    const sceneWidth = Number(scene.dimensions?.sceneWidth ?? scene.width ?? 0);
+    const sceneHeight = Number(scene.dimensions?.sceneHeight ?? scene.height ?? 0);
+    const updateData = {
+      x: sceneWidth > 0 ? Math.max(0, Math.min(sceneWidth - width, rawX)) : rawX,
+      y: sceneHeight > 0 ? Math.max(0, Math.min(sceneHeight - height, rawY)) : rawY
+    };
+    const options = { add2eVadeRetro: true, add2eForcedFlee: true, add2eIgnoreMovement: true, showRuler: false };
+    if (game.user?.isGM) {
+      await document.update(updateData, options);
+      return true;
+    }
+    if (!game.socket || !document.id || !scene.id) return false;
+    game.socket.emit("system.add2e", { type: "ADD2E_GM_OPERATION", operation: "updateToken", payload: { sceneId: scene.id, tokenId: document.id, updateData } });
+    return true;
+  }
 
   const prior = combatState();
   const currentRound = Number(game.combat?.round ?? 0) || 0;
@@ -529,6 +560,7 @@ const __add2eVadeRetroResult = await (async () => {
     try {
       await createEffect(targetActor, effectData);
       if (destroy) await destroyTarget(targetActor);
+      if (outcome === "Repoussé") await moveAwayThroughGm(target);
       rows.push({ target: target.name ?? targetActor.name, result: outcome });
     } catch (error) {
       console.error("[ADD2E][VADE-RETRO][EFFECT]", { target: targetActor.name, error });
