@@ -1,6 +1,11 @@
 <div class="sheet actor add2e personnage add2e-character-v3 add2e-pnj-sheet" data-actor-id="{{actor._id}}">
   <style>
-    /* Structure et composants visuels identiques à la feuille PJ. */
+    /* Structure et composants visuels identiques à la feuille PJ ; palette réservée aux PNJ. */
+    .add2e-pnj-sheet{--a2e-bg:#dbe8f3;--a2e-panel:rgba(246,250,255,.97);--a2e-panel-soft:rgba(231,241,250,.96);--a2e-border:#8eacc5;--a2e-gold:#4c7899;--a2e-gold-dark:#294e6c;--a2e-text:#1d3448;--a2e-muted:#5c7286}
+    .add2e-pnj-sheet .a2e-shell{background:radial-gradient(circle at top left,rgba(255,255,255,.72),transparent 28%),linear-gradient(135deg,#dceaf5 0%,#b8cee1 100%)!important;border:1px solid #7197b7!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.65),0 3px 10px rgba(32,61,84,.20)!important}
+    .add2e-pnj-sheet .a2e-summary-header{background:radial-gradient(circle at 0 0,rgba(255,255,255,.72),transparent 28%),linear-gradient(135deg,rgba(232,242,251,.98),rgba(193,215,232,.94))!important;border-color:#7197b7!important;box-shadow:0 3px 10px rgba(32,61,84,.18)!important}
+    .add2e-pnj-sheet .a2e-panel{background:rgba(246,250,255,.97)!important;border-color:#9bb7cd!important}
+    .add2e-pnj-sheet .a2e-tabs .item.active{background:#d5e6f4!important;border-color:#6f98ba!important;color:#214d70!important}
     .add2e-pnj-sheet .a2e-summary-kicker{font-size:0}.add2e-pnj-sheet .a2e-summary-kicker::after{content:"PNJ";font-size:var(--font-size-12,12px)}
     .add2e-pnj-sheet .a2e-summary-player{display:none!important}
     .add2e-pnj-sheet .a2e-progression-row:nth-child(2),.add2e-pnj-sheet .a2e-tabs .item[data-tab="capacites"],.add2e-pnj-sheet .roll-caracs-btn{display:none!important}
