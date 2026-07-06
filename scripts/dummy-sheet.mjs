@@ -1,7 +1,7 @@
 // ADD2E — Feuille Dummy minimale.
 // Compatible Foundry V13/V14/V15, ApplicationV2 uniquement.
 
-const DUMMY_SHEET_VERSION = "2026-07-06-dummy-actor-v1";
+const DUMMY_SHEET_VERSION = "2026-07-06-dummy-actor-layout-v2";
 const DUMMY_TYPE = "dummy";
 const ActorsCollection = foundry?.documents?.collections?.Actors;
 const AppApi = foundry?.applications?.api ?? {};
@@ -58,8 +58,8 @@ export class Add2eDummySheet extends DummySheetBase {
     id: "add2e-dummy-{id}",
     classes: ["add2e", "sheet", "actor", "dummy", "add2e-dummy-v2-app"],
     tag: "form",
-    position: { width: 560, height: 460 },
-    window: { title: "ADD2e — Dummy", resizable: true },
+    position: { width: 820, height: 640 },
+    window: { title: "Dummy", resizable: true },
     form: {
       submitOnChange: true,
       closeOnSubmit: false,
@@ -70,6 +70,12 @@ export class Add2eDummySheet extends DummySheetBase {
   static PARTS = {
     main: { template: "systems/add2e/templates/actor/dummy-sheet.hbs" }
   };
+
+  get title() {
+    const actor = this.document ?? this.actor;
+    const name = String(actor?.name ?? "").trim();
+    return name ? `Dummy : ${name}` : "Dummy";
+  }
 
   static async _onSubmitForm(_event, _form, formData) {
     const app = this;
