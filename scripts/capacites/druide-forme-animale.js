@@ -3,7 +3,7 @@
  * Script exécuté via on_use d'une classFeature.
  * Utilisation : 3 formes par jour, une fois par catégorie : reptile, oiseau, mammifère.
  */
-const ADD2E_DRUIDE_FORME_ANIMALE_VERSION = "2026-05-03-v1-active-feature";
+const ADD2E_DRUIDE_FORME_ANIMALE_VERSION = "2026-07-07-class-level";
 globalThis.ADD2E_DRUIDE_FORME_ANIMALE_VERSION = ADD2E_DRUIDE_FORME_ANIMALE_VERSION;
 
 function a2eDruideNorm(v) {
@@ -13,6 +13,14 @@ function a2eDruideNorm(v) {
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/[’']/g, "")
     .replace(/[\s-]+/g, "_");
+}
+
+function a2eDruideFeatureLevel(currentActor, currentFeature) {
+  const level = Number(
+    globalThis.add2eFeatureActorLevel?.(currentActor, currentFeature)
+    ?? currentFeature?._add2eClassLevel
+  );
+  return Number.isFinite(level) && level >= 1 ? Math.floor(level) : null;
 }
 
 function a2eDruideDayKey() {
@@ -58,7 +66,12 @@ if (!actor) {
   return false;
 }
 
-const level = Number(actor.system?.niveau ?? 1) || 1;
+const level = a2eDruideFeatureLevel(actor, feature);
+if (level === null) {
+  ui.notifications.error("Forme animale : niveau de Druide introuvable.");
+  return false;
+}
+
 if (level < 7) {
   ui.notifications.warn("Forme animale indisponible avant le niveau 7.");
   return false;
