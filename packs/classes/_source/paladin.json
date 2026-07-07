@@ -5,7 +5,6 @@
   "img": "icons/svg/shield.svg",
   "system": {
     "label": "Paladin",
-    "maxLevel": 20,
     "hitDie": 10,
     "hpFormula": "1d10 + constitution.mod",
     "attacksPerRound": [
