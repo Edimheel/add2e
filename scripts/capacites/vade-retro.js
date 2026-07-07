@@ -3,10 +3,11 @@
 // Contrat onUse : true = capacité utilisée ; false = annulée / non utilisée.
 
 const __add2eVadeRetroResult = await (async () => {
-  const VERSION = "2026-07-06-vade-retro-player-continuation-v11";
+  const VERSION = "2026-07-07-vade-retro-trace-v12";
   const ICON = "icons/magic/holy/barrier-shield-winged-cross.webp";
   const CONE = Object.freeze({ angle: 90, cells: 3 });
   const CONTEXTS_FLAG = "__ADD2E_VADE_RETRO_CONTINUATION_CONTEXTS";
+  const TRACE_TAG = "[ADD2E][VADE-RETRO][TRACE]";
   const TABLE = Object.freeze({
     squelette: ["10", "7", "4", "T", "T", "D", "D", "D*", "D*", "D*"],
     zombie: ["13", "10", "7", "T", "T", "D", "D", "D", "D*", "D*"],
@@ -38,6 +39,21 @@ const __add2eVadeRetroResult = await (async () => {
   const ORDER_INDEX = new Map(ORDER.map((key, index) => [key, index]));
   const UNDEAD_ALIASES = Object.keys(UNDEAD_ROWS).sort((left, right) => right.length - left.length);
 
+  const traceEnabled = () => globalThis.ADD2E_DEBUG_VADE_RETRO === true;
+  const trace = (step, data = {}) => {
+    if (traceEnabled()) console.log(`${TRACE_TAG}[${step}]`, data);
+  };
+  const traceStop = (reason, data = {}) => trace(`STOP:${reason}`, data);
+  const traceState = state => ({
+    status: state?.status ?? null,
+    lastRound: state?.lastRound ?? null,
+    initiatorUserId: state?.initiatorUserId ?? null,
+    pendingGroups: Array.isArray(state?.pending) ? state.pending.length : 0,
+    pendingTargets: Array.isArray(state?.pending) ? state.pending.reduce((total, group) => total + (Array.isArray(group?.ids) ? group.ids.length : 0), 0) : 0,
+    direction: state?.direction ?? null,
+    featureKey: state?.featureKey ?? null
+  });
+
   const esc = value => String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   const norm = value => String(value ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "").replace(/[^a-z0-9]+/g, "_").replace(/_+/g, "_").replace(/^_+|_+$/g, "");
   const numberFrom = value => {
@@ -58,8 +74,10 @@ const __add2eVadeRetroResult = await (async () => {
     return out;
   };
   const roll = async formula => {
+    trace("ROLL_START", { formula, userId: game.user?.id ?? null, combatId: game.combat?.id ?? null, round: game.combat?.round ?? null });
     const result = await new Roll(formula).evaluate({ async: true });
     try { await game.dice3d?.showForRoll?.(result); } catch (_error) {}
+    trace("ROLL_RESULT", { formula, total: result?.total ?? null });
     return result;
   };
 
@@ -70,10 +88,12 @@ const __add2eVadeRetroResult = await (async () => {
     ?? caster?.getActiveTokens?.()[0]
     ?? null;
   if (!caster) {
+    traceStop("CASTER_MISSING", { userId: game.user?.id ?? null, source: source?.name ?? null });
     ui.notifications.error("Vade-rétro : clerc ou paladin introuvable.");
     return false;
   }
   if (!casterToken?.center || !canvas?.scene) {
+    traceStop("CASTER_TOKEN_OR_SCENE_MISSING", { caster: caster.name, casterToken: !!casterToken, scene: !!canvas?.scene });
     ui.notifications.warn("Vade-rétro : le clerc ou paladin doit avoir un token sur la scène.");
     return false;
   }
@@ -85,6 +105,7 @@ const __add2eVadeRetroResult = await (async () => {
   const nativeLevel = Math.max(1, Math.floor(Number(source?._add2eClassLevel ?? caster.system?.niveau ?? caster.system?.level ?? 1) || 1));
   const clericLevel = isPaladin ? nativeLevel - 2 : nativeLevel;
   if (clericLevel < 1) {
+    traceStop("PALADIN_LEVEL_TOO_LOW", { caster: caster.name, nativeLevel, clericLevel });
     ui.notifications.warn("Vade-rétro : le paladin obtient ce pouvoir au niveau 3.");
     return false;
   }
@@ -369,6 +390,7 @@ const __add2eVadeRetroResult = await (async () => {
   async function saveCombatState(state) {
     if (!game.combat?.id) return;
     const all = caster.getFlag("add2e", "vadeRetro") ?? caster.flags?.add2e?.vadeRetro ?? {};
+    trace("STATE_WRITE", { combatId: game.combat.id, state: traceState(state) });
     await caster.setFlag("add2e", "vadeRetro", { ...all, [game.combat.id]: state });
   }
   function hpPath(targetActor) {
@@ -394,12 +416,35 @@ const __add2eVadeRetroResult = await (async () => {
     && String(continuationContext.combatId ?? "") === String(game.combat?.id ?? "")
     && Number(continuationContext.round ?? NaN) === currentRound
     && String(continuationContext.initiatorUserId ?? "") === String(game.user?.id ?? "");
+  trace("ENTER", {
+    caster: caster.name,
+    casterId: caster.id,
+    userId: game.user?.id ?? null,
+    isGM: game.user?.isGM ?? false,
+    combatId: game.combat?.id ?? null,
+    currentRound,
+    prior: traceState(prior),
+    context: continuationContext ? {
+      kind: continuationContext.kind ?? null,
+      actorId: continuationContext.actorId ?? null,
+      combatId: continuationContext.combatId ?? null,
+      round: continuationContext.round ?? null,
+      initiatorUserId: continuationContext.initiatorUserId ?? null,
+      state: traceState(continuationContext.vadeState)
+    } : null,
+    isPlayerContinuation
+  });
   if (prior?.status === "closed" || prior?.status === "complete") {
+    traceStop("STATE_ALREADY_CLOSED_OR_COMPLETE", { prior: traceState(prior), isPlayerContinuation });
     ui.notifications.warn("Vade-rétro a déjà été résolu pour ce combat.");
     return false;
   }
-  if (isPlayerContinuation && (!prior || prior.status !== "pending" || Number(prior.lastRound ?? currentRound) >= currentRound)) return false;
+  if (isPlayerContinuation && (!prior || prior.status !== "pending" || Number(prior.lastRound ?? currentRound) >= currentRound)) {
+    traceStop("PLAYER_CONTINUATION_STATE_REJECTED", { prior: traceState(prior), currentRound });
+    return false;
+  }
   if (prior?.status === "pending" && !isPlayerContinuation) {
+    traceStop("MANUAL_USE_WHILE_PENDING", { prior: traceState(prior), currentRound });
     ui.notifications.warn("Vade-rétro : la tentative suivante est automatique au round suivant.");
     return false;
   }
@@ -407,6 +452,7 @@ const __add2eVadeRetroResult = await (async () => {
     ? { direction: Number(prior?.direction ?? casterToken.document?.rotation ?? 0) || 0 }
     : await placeCone();
   if (!placement) {
+    traceStop("CONE_CANCELLED", { isPlayerContinuation });
     ui.notifications.info("Vade-rétro : tentative annulée.");
     return false;
   }
@@ -417,7 +463,15 @@ const __add2eVadeRetroResult = await (async () => {
       .filter(target => tokenInCone(target, placement.direction));
   const queue = Array.isArray(prior?.pending) ? prior.pending : groupsFrom(targetsInCone);
   const group = queue[0] ?? null;
+  trace("QUEUE_RESOLVED", {
+    isPlayerContinuation,
+    direction: placement.direction,
+    targetsInCone: targetsInCone.map(target => ({ id: target.id, name: target.name ?? target.actor?.name ?? null })),
+    queue: queue.map(entry => ({ category: entry.category, label: entry.label, ids: Array.isArray(entry.ids) ? [...entry.ids] : [] })),
+    selected: group ? { category: group.category, label: group.label, ids: group.ids } : null
+  });
   if (!group) {
+    traceStop("NO_GROUP", { isPlayerContinuation, targetsInCone: targetsInCone.length, prior: traceState(prior) });
     if (!targetsInCone.length) ui.notifications.warn("Vade-rétro : aucun token adverse n’est dans le cône validé.");
     else {
       const rows = diagnostics(targetsInCone);
@@ -432,6 +486,7 @@ const __add2eVadeRetroResult = await (async () => {
     .filter(target => target?.actor && (isPlayerContinuation || tokenInCone(target, placement.direction)))
     .sort((left, right) => String(left.name ?? left.actor?.name).localeCompare(String(right.name ?? right.actor?.name), "fr"));
   if (!groupTargets.length) {
+    traceStop("GROUP_TARGETS_EMPTY", { group: { category: group.category, label: group.label, ids: group.ids }, isPlayerContinuation, direction: placement.direction });
     ui.notifications.warn(`Vade-rétro : aucun ${group.label.toLowerCase()} de la tentative en cours n’est dans le cône.`);
     return false;
   }
@@ -439,6 +494,7 @@ const __add2eVadeRetroResult = await (async () => {
   const automatic = /^[TD]/.test(String(entry));
   const d20 = automatic ? null : await roll("1d20");
   const success = automatic || Number(d20.total) >= Number(entry);
+  trace("TABLE_RESULT", { group: group.category, entry, automatic, d20: d20?.total ?? null, success, targetCount: groupTargets.length });
   const stateBase = {
     version: VERSION,
     status: "",
@@ -457,6 +513,7 @@ const __add2eVadeRetroResult = await (async () => {
   if (!success) {
     await saveCombatState({ ...stateBase, status: "closed", reason: "failed", pending: [] });
     await postClassCard({ lead: `<b>${esc(caster.name)}</b> présente son symbole sacré.`, details: [`<b>Échec :</b> ${esc(group.label)} — d20 = <b>${d20.total}</b>, score requis <b>${esc(entry)}</b>.`], footer: "Aucune autre tentative n’est possible dans ce combat." });
+    trace("RETURN_SUCCESS_FAILURE_RESOLVED", { state: "closed" });
     return true;
   }
   const countFormula = group.lowerPlane ? "1d2" : String(entry).endsWith("*") ? "1d6+6" : "1d12";
@@ -467,18 +524,22 @@ const __add2eVadeRetroResult = await (async () => {
   const time = game.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
   const createEffect = async (targetActor, effectData) => {
     if (game.user?.isGM || targetActor?.isOwner) {
+      trace("CREATE_EFFECT_LOCAL", { target: targetActor.name, targetId: targetActor.id });
       await targetActor.createEmbeddedDocuments("ActiveEffect", [effectData]);
       return true;
     }
+    trace("CREATE_EFFECT_GM_RELAY", { target: targetActor.name, targetId: targetActor.id });
     game.socket?.emit("system.add2e", { type: "ADD2E_GM_OPERATION", operation: "createActiveEffect", payload: { actorUuid: targetActor.uuid, actorId: targetActor.id, effectData, fromUserId: game.user?.id, sentAt: Date.now() } });
     return !!game.socket;
   };
   const destroyTarget = async targetActor => {
     if (game.user?.isGM || targetActor?.isOwner) {
+      trace("DESTROY_LOCAL", { target: targetActor.name, targetId: targetActor.id });
       await targetActor.update({ [hpPath(targetActor)]: 0 }, { add2eReason: "vade-retro-destruction" });
       return true;
     }
     const current = [targetActor?.system?.pdv, targetActor?.system?.pv?.value, targetActor?.system?.hp?.value].map(numberFrom).find(Number.isFinite) ?? 1;
+    trace("DESTROY_GM_RELAY", { target: targetActor.name, targetId: targetActor.id, amount: Math.max(1, current) });
     game.socket?.emit("system.add2e", { type: "ADD2E_GM_OPERATION", operation: "applyDamage", payload: { actorUuid: targetActor.uuid, actorId: targetActor.id, montant: Math.max(1, current), type: "vade-retro", details: "Vade-rétro — destruction / damnation" } });
     return !!game.socket;
   };
@@ -528,6 +589,7 @@ const __add2eVadeRetroResult = await (async () => {
     extraFlags = timed.flags;
     effectTags = ["vade_retro", "etat:repousse_vade_retro", "interdiction:attaque", "interdiction:sort", "mouvement:eloignement_obligatoire", "fuite", `vade_retro:${group.category}`];
   }
+  trace("OUTCOME", { outcome, countFormula, count, affected: affected.map(target => ({ id: target.id, name: target.name ?? target.actor?.name ?? null })), pendingGroups: pending.length });
   const rows = [];
   for (const target of affected) {
     const targetActor = target.actor;
@@ -547,11 +609,13 @@ const __add2eVadeRetroResult = await (async () => {
       if (destroy) await destroyTarget(targetActor);
       if (outcome === "Repoussé") {
         const flee = await moveAwayThroughGm(target);
+        trace("FLEE_RESULT", { target: targetActor.name, result: flee });
         if (flee?.fatal) console.warn("[ADD2E][VADE-RETRO][FLEE]", { target: targetActor.name, reason: flee.reason });
       }
       rows.push({ target: target.name ?? targetActor.name, result: outcome });
     } catch (error) {
       console.error("[ADD2E][VADE-RETRO][EFFECT]", { target: targetActor.name, error });
+      traceStop("EFFECT_APPLICATION_ERROR", { target: targetActor.name, error });
       rows.push({ target: target.name ?? targetActor.name, result: "Erreur d’application" });
     }
   }
@@ -568,6 +632,7 @@ const __add2eVadeRetroResult = await (async () => {
     group.extrapolated ? "Classement extrapolé depuis les DV et les propriétés mécaniques." : ""
   ];
   await postClassCard({ lead: `<b>${esc(caster.name)}</b> présente son symbole sacré.`, details, rows, footer: continuation });
+  trace("RETURN_TRUE", { status, pendingGroups: pending.length, currentRound, isPlayerContinuation });
   return true;
 })();
 
