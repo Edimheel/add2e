@@ -206,7 +206,7 @@ function styleThiefSkillChat(message, html) {
 function registerThiefSkillChatTheme() {
   if (globalThis.__ADD2E_THIEF_SKILL_CHAT_THEME_V1) return;
   globalThis.__ADD2E_THIEF_SKILL_CHAT_THEME_V1 = true;
-  Hooks.on("renderChatMessage", styleThiefSkillChat);
+  Hooks.on("renderChatMessageHTML", styleThiefSkillChat);
 }
 
 globalThis.ADD2E_SPELL_DIALOG_UI = { version: VERSION, themes: THEMES, shell, primaryButtonClass, ensureStyles, guessTheme, guessIcon, wrapDialogOptions, esc };
