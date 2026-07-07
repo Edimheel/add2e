@@ -30,7 +30,7 @@ const ADD2E_SPELL_SYNC_RUNNING = globalThis.ADD2E_SPELL_SYNC_RUNNING instanceof 
   : new Set();
 globalThis.ADD2E_SPELL_SYNC_RUNNING = ADD2E_SPELL_SYNC_RUNNING;
 
-const ADD2E_SPELL_SYNC_AUTO_CLASS_SLUGS = new Set(["clerc", "druide", "ranger"]);
+const ADD2E_SPELL_SYNC_AUTO_CLASS_SLUGS = new Set(["clerc", "druide", "ranger", "paladin"]);
 
 function add2eSpellSyncClone(value) {
   if (value === undefined || value === null) return value;
@@ -461,7 +461,7 @@ function add2eSpellSyncMaxSpellLevel(classItem, actorLevel) {
 }
 
 function add2eSpellSyncClassLevel(actor, classItem = null) {
-  if (typeof globalThis.add2eSpellClassLevel === "function") return globalThis.add2eSpellClassLevel(actor, add2eSpellSyncClassSlug(classItem));
+  if (typeof globalThis.add2eSpellClassLevel === "function") return globalThis.add2eSpellClassLevel(actor, classItem);
   return Math.max(1, Number(classItem?.system?.niveau ?? classItem?.system?.level ?? actor?.system?.niveau ?? actor?.system?.level ?? 1) || 1);
 }
 
@@ -922,7 +922,7 @@ async function add2eResyncSelectedActorSpells(options = {}) {
   let deleted = 0;
   const classes = add2eSpellSyncClassItems(actor).filter(classItem => add2eSpellSyncClassLists(classItem).length);
   if (!classes.length) {
-    ui.notifications.info("Aucune classe à auto-synchroniser. Seuls Clerc, Druide et les sorts druidiques du Ranger sont alimentés automatiquement.");
+    ui.notifications.info("Aucune classe à auto-synchroniser. Clerc, Druide, Paladin (sorts de Clerc) et les sorts druidiques du Ranger sont alimentés automatiquement.");
     return { handled: true, imported, updated, deleted, skippedAutoSync: true };
   }
   for (const classItem of classes) {
