@@ -1,10 +1,18 @@
 /* ADD2E — Paladin : Imposition des mains */
-const ADD2E_PALADIN_IMPOSITION_MAINS_VERSION = "2026-05-03-v1";
+const ADD2E_PALADIN_IMPOSITION_MAINS_VERSION = "2026-07-07-class-level";
 globalThis.ADD2E_PALADIN_IMPOSITION_MAINS_VERSION = ADD2E_PALADIN_IMPOSITION_MAINS_VERSION;
 
 function a2ePalNum(v, fallback = 0) {
   const n = Number(v);
   return Number.isFinite(n) ? n : fallback;
+}
+
+function a2ePalFeatureLevel(currentActor, currentFeature) {
+  const level = Number(
+    globalThis.add2eFeatureActorLevel?.(currentActor, currentFeature)
+    ?? currentFeature?._add2eClassLevel
+  );
+  return Number.isFinite(level) && level >= 1 ? Math.floor(level) : null;
 }
 
 function a2ePalDayKey() {
@@ -18,6 +26,12 @@ if (!actor) {
   return false;
 }
 
+const level = a2ePalFeatureLevel(actor, feature);
+if (level === null) {
+  ui.notifications.error("Imposition des mains : niveau de Paladin introuvable.");
+  return false;
+}
+
 const dayKey = a2ePalDayKey();
 const flagKey = `paladin.impositionMains.${dayKey}`;
 if (actor.getFlag("add2e", flagKey)?.used) {
@@ -27,7 +41,6 @@ if (actor.getFlag("add2e", flagKey)?.used) {
 
 const targetToken = Array.from(game.user.targets ?? [])[0];
 const target = targetToken?.actor ?? actor;
-const level = Math.max(1, a2ePalNum(actor.system?.niveau, 1));
 const healAmount = level * 2;
 const current = a2ePalNum(target.system?.pdv, 0);
 const max = a2ePalNum(target.system?.points_de_coup, current);
