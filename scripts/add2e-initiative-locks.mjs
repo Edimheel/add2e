@@ -6,6 +6,7 @@ import { currentCombatant, tokenFromCombatant } from "./add2e-initiative-order.m
 
 const ACTION_GLOBALS = ["add2eAttackRoll", "add2eCastSpell", "cast_spell", "add2eExecuteClassFeatureOnUse"];
 const TOKEN_DRAG_METHODS = ["_onDragLeftStart", "_onDragLeftMove", "_onDragLeftDrop", "_onDragLeftCancel"];
+const VADE_RETRO_CONTINUATION_CONTEXTS = "__ADD2E_VADE_RETRO_CONTINUATION_CONTEXTS";
 
 function actorFromActionArgs(args) {
   const first = args?.[0] ?? null;
@@ -24,8 +25,34 @@ function notifyWrongTurn(actor, combatant) {
 }
 
 export function canActorActNow(actor, { notify = false } = {}) {
-  const combatant = currentCombatant(game.combat);
-  if (!game.combat?.started || !combatant || game.user?.isGM) return true;
+  const combat = game.combat;
+  if (!combat?.started || game.user?.isGM) return true;
+
+  const currentRound = Number(combat.round ?? 0) || 0;
+  const continuation = globalThis[VADE_RETRO_CONTINUATION_CONTEXTS]?.get?.(`${actor?.id ?? ""}:${combat.id ?? ""}`) ?? null;
+  const vadeStates = actor?.getFlag?.("add2e", "vadeRetro") ?? actor?.flags?.add2e?.vadeRetro ?? {};
+  const vadeState = vadeStates?.[combat.id] ?? null;
+  const automaticVadeContinuation = continuation?.kind === "vade-retro-continuation"
+    && String(continuation.actorId ?? "") === String(actor?.id ?? "")
+    && String(continuation.combatId ?? "") === String(combat.id ?? "")
+    && Number(continuation.round ?? NaN) === currentRound
+    && String(continuation.initiatorUserId ?? "") === String(game.user?.id ?? "")
+    && actor?.isOwner !== false
+    && vadeState?.status === "pending"
+    && Number(vadeState.lastRound ?? currentRound) < currentRound;
+  if (automaticVadeContinuation) {
+    console.log("[ADD2E][INIT][VADE_RETRO][AUTO_CONTINUATION_ALLOW]", {
+      actor: actor?.name ?? null,
+      actorId: actor?.id ?? null,
+      combat: combat.id,
+      round: currentRound,
+      currentCombatant: currentCombatant(combat)?.name ?? null
+    });
+    return true;
+  }
+
+  const combatant = currentCombatant(combat);
+  if (!combatant) return true;
   if (combatant.actor?.id === actor?.id || combatant.actorId === actor?.id) return true;
   if (notify) notifyWrongTurn(actor, combatant);
   return false;
