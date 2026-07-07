@@ -1,6 +1,13 @@
 // ADD2E — Actor sheet getData : CA, équipement et synthèse de combat.
 
 export function add2ePrepareActorSheetCombatData({ actor, data, sys, progressionCourante, isMonk }) {
+  const transformation = globalThis.add2eGetCapabilityTransformationCombatProfile?.(actor) ?? null;
+  const transformationCA = Number(transformation?.armorClass);
+  const transformationTHAC0 = Number(transformation?.thac0);
+  const hasTransformationCA = Number.isFinite(transformationCA);
+  const hasTransformationTHAC0 = Number.isFinite(transformationTHAC0);
+  const transformationMovement = String(transformation?.movement ?? "").trim();
+
   const armure = data.listeArmures.find(i => i.system.equipee && !(i.name.toLowerCase().includes('bouclier') || i.name.toLowerCase().includes('heaume') || i.name.toLowerCase().includes('casque')));
   const bouclier = data.listeArmures.find(i => i.system.equipee && i.name.toLowerCase().includes('bouclier'));
   const heaume = data.listeArmures.find(i => i.system.equipee && (i.name.toLowerCase().includes('heaume') || i.name.toLowerCase().includes('casque')));
@@ -16,9 +23,12 @@ export function add2ePrepareActorSheetCombatData({ actor, data, sys, progression
   sys.armure_equipee = armure || null;
   sys.bouclier_equipe = bouclier || null;
   sys.heaume_equipe = heaume || null;
+  if (transformationMovement) sys.vitesse_deplacement = transformationMovement;
 
   let caPhysique = 10;
-  if (isMonk && progressionCourante && typeof progressionCourante.monkAC !== "undefined") {
+  if (hasTransformationCA) {
+    caPhysique = transformationCA;
+  } else if (isMonk && progressionCourante && typeof progressionCourante.monkAC !== "undefined") {
     caPhysique = progressionCourante.monkAC;
   } else {
     const baseDepart = armure ? acArmure : 10;
@@ -28,7 +38,20 @@ export function add2ePrepareActorSheetCombatData({ actor, data, sys, progression
   }
 
   let magicDefense = null;
-  if (typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getMagicPassiveDefense === "function") {
+  if (hasTransformationCA) {
+    magicDefense = {
+      caNaturel: caPhysique,
+      caTotal: caPhysique,
+      source: "capability-transformation",
+      transformation: {
+        sourceKey: transformation.sourceKey,
+        formKey: transformation.formKey,
+        label: transformation.label
+      }
+    };
+    sys.ca_naturel = caPhysique;
+    sys.ca_total = caPhysique;
+  } else if (typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getMagicPassiveDefense === "function") {
     magicDefense = Add2eEffectsEngine.getMagicPassiveDefense(actor, { physicalCA: caPhysique, armure, bouclier, heaume, source: "actor-sheet" });
     sys.ca_naturel = magicDefense.caNaturel;
     sys.ca_total = magicDefense.caTotal;
@@ -55,7 +78,7 @@ export function add2ePrepareActorSheetCombatData({ actor, data, sys, progression
   const arme = data.listeArmes.find(i => i.system.equipee) || null;
   sys.arme_equipee = arme;
 
-  const thaco = data.progressionCourante?.thac0 || sys.thaco || 20;
+  const thaco = hasTransformationTHAC0 ? transformationTHAC0 : (data.progressionCourante?.thac0 || sys.thaco || 20);
   const typeDegats = arme?.system.type_degats || "";
   const armeBonusToucher = arme ? (
     typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getMagicWeaponBonus === "function"
@@ -99,7 +122,15 @@ export function add2ePrepareActorSheetCombatData({ actor, data, sys, progression
     degats: degatsAffiche,
     type_degats: typeDegats,
     bonus_toucher: bonusToucher,
-    bonus_degats: bonusDegats
+    bonus_degats: bonusDegats,
+    transformation: transformation ? {
+      label: transformation.label,
+      sourceKey: transformation.sourceKey,
+      formKey: transformation.formKey,
+      armorClass: transformation.armorClass,
+      thac0: transformation.thac0,
+      movement: transformation.movement
+    } : null
   };
 
   data.saveTitles = [
