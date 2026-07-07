@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — Moteur générique de rounds de combat.
-// Version : 2026-07-07-round-engine-vade-player-local-v11
+// Version : 2026-07-07-round-engine-vade-player-local-v12
 // Compatible Foundry V13 / V14 / V15.
 // ============================================================================
 
@@ -21,7 +21,7 @@ import {
   add2eTimeNormalizeActorEffects
 } from "./19a-time-engine.mjs";
 
-export const ADD2E_ROUND_ENGINE_VERSION = "2026-07-07-round-engine-vade-player-local-v11";
+export const ADD2E_ROUND_ENGINE_VERSION = "2026-07-07-round-engine-vade-player-local-v12";
 
 const TAG = "[ADD2E][ROUND_ENGINE]";
 const FLAG_SCOPE = "add2e";
@@ -427,15 +427,41 @@ function vadeContinuationKey(payload = {}) { return [payload?.requestId, payload
 function vadeFeatureKey(feature) { return norm(feature?.id ?? feature?._id ?? feature?.key ?? feature?.slug ?? feature?.name ?? feature?.label ?? ""); }
 function vadeFeatureOnUse(feature) { return String(feature?.on_use ?? feature?.onUse ?? feature?.script ?? feature?.macro ?? "").trim(); }
 function vadeContinuationFeature(actor, state) {
-  const features = globalThis.add2eGetActorActivableClassFeatures?.(actor, { includeLocked: false }) ?? [];
+  const relatedActors = [actor];
+  for (const candidate of uniqueCombatActors(game.combat).map(entry => entry.actor)) {
+    if (!candidate || relatedActors.includes(candidate)) continue;
+    if (String(candidate.id ?? "") === String(actor?.id ?? "")) relatedActors.push(candidate);
+  }
   const expectedKey = norm(state?.featureKey ?? "");
   const expectedOnUse = String(state?.featureOnUse ?? "").trim();
-  return features.find(feature => {
+  const expectedOnUsePath = expectedOnUse.replace(/^\/+/, "").replace(/^systems\/add2e\//i, "");
+  const seen = new Set();
+  const features = relatedActors.flatMap(sourceActor => [
+    ...(globalThis.add2eGetActorActivableClassFeatures?.(sourceActor, { includeLocked: false }) ?? []),
+    ...(globalThis.add2eGetActorClassFeatures?.(sourceActor) ?? [])
+  ]).filter(feature => {
     const onUse = vadeFeatureOnUse(feature);
-    if (!/vade-retro\.js(?:$|[?#])/i.test(onUse)) return false;
-    if (expectedOnUse && onUse !== expectedOnUse) return false;
-    return !expectedKey || vadeFeatureKey(feature) === expectedKey;
-  }) ?? null;
+    const key = `${vadeFeatureKey(feature)}|${onUse}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return /vade-retro\.js(?:$|[?#])/i.test(onUse);
+  });
+  const sameOnUse = feature => vadeFeatureOnUse(feature).replace(/^\/+/, "").replace(/^systems\/add2e\//i, "") === expectedOnUsePath;
+  const feature = features.find(candidate => sameOnUse(candidate) && vadeFeatureKey(candidate) === expectedKey)
+    ?? features.find(candidate => expectedOnUse && sameOnUse(candidate))
+    ?? features.find(candidate => expectedKey && vadeFeatureKey(candidate) === expectedKey)
+    ?? features[0]
+    ?? null;
+  log("[VADE_RETRO_PLAYER_FEATURE_RESOLUTION]", {
+    actor: actor?.name ?? null,
+    actorUuid: actor?.uuid ?? null,
+    expectedKey,
+    expectedOnUse,
+    inspectedActors: relatedActors.map(candidate => ({ name: candidate?.name ?? null, uuid: candidate?.uuid ?? null })),
+    vadeCandidates: features.map(candidate => ({ name: candidate?.name ?? candidate?.label ?? null, key: vadeFeatureKey(candidate), onUse: vadeFeatureOnUse(candidate) })),
+    resolved: feature ? { name: feature?.name ?? feature?.label ?? null, key: vadeFeatureKey(feature), onUse: vadeFeatureOnUse(feature) } : null
+  });
+  return feature;
 }
 async function actorFromVadeContinuationPayload(payload = {}) {
   if (payload.actorUuid && typeof fromUuid === "function") {
