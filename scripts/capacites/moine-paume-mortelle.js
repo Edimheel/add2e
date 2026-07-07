@@ -71,7 +71,6 @@ function a2ePaumeProfile(level) {
         "type_monstre_mort_vivant",
         "immunise_aux_attaques_non_magiques",
         "immunise_aux_armes_non_magiques",
-        "immunise_aux_արծmes_non_magiques",
         "immunite_aux_attaques_non_magiques",
         "immunite_aux_armes_non_magiques",
         "touche_uniquement_par_des_armes_magiques",
