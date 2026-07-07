@@ -9,7 +9,7 @@ import { installEffectsEngineDamage } from "./effects-engine/30-resistance-damag
 import { installEffectsEngineMonk } from "./effects-engine/40-monk.mjs";
 import { installEffectsEngineAnalysis } from "./effects-engine/50-analysis.mjs";
 
-globalThis.ADD2E_EFFECTS_ENGINE_VERSION = "2026-07-02-racial-profile-engine-v2";
+globalThis.ADD2E_EFFECTS_ENGINE_VERSION = "2026-07-07-capability-transformations-v3";
 
 class Add2eEffectsEngine {}
 
@@ -196,8 +196,250 @@ function installGateOnUseOutcomeContract(Engine) {
   });
 }
 
+function add2eTransformationArray(value) {
+  if (Array.isArray(value)) return value;
+  if (value?.contents) return Array.from(value.contents);
+  if (typeof value?.values === "function") return Array.from(value.values());
+  return value ? Array.from(value) : [];
+}
+
+function add2eTransformationClone(value) {
+  if (value === undefined || value === null) return value;
+  if (foundry?.utils?.deepClone) return foundry.utils.deepClone(value);
+  if (foundry?.utils?.duplicate) return foundry.utils.duplicate(value);
+  return JSON.parse(JSON.stringify(value));
+}
+
+function add2eTransformationNumber(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function add2eTransformationGetProperty(object, path) {
+  if (foundry?.utils?.getProperty) return foundry.utils.getProperty(object, path);
+  return String(path).split(".").reduce((current, key) => current?.[key], object);
+}
+
+function add2eTransformationMeta(document) {
+  const meta = document?.flags?.add2e?.capabilityTransformation;
+  return meta && typeof meta === "object" ? meta : null;
+}
+
+function add2eTransformationActiveEffects(actor, sourceKey = null) {
+  const requested = sourceKey === null || sourceKey === undefined ? "" : String(sourceKey).trim();
+  return add2eTransformationArray(actor?.effects)
+    .filter(effect => effect?.disabled !== true)
+    .filter(effect => {
+      const meta = add2eTransformationMeta(effect);
+      return meta?.kind === "form" && String(meta.sourceKey ?? "").trim() && (!requested || meta.sourceKey === requested);
+    })
+    .sort((left, right) => {
+      const leftTick = add2eTransformationNumber(add2eTransformationMeta(left)?.activatedAtTick) ?? -1;
+      const rightTick = add2eTransformationNumber(add2eTransformationMeta(right)?.activatedAtTick) ?? -1;
+      return rightTick - leftTick || String(right?.id ?? "").localeCompare(String(left?.id ?? ""));
+    });
+}
+
+function add2eGetActiveCapabilityTransformation(actor, options = {}) {
+  return add2eTransformationActiveEffects(actor, options?.sourceKey)[0] ?? null;
+}
+
+function add2eGetCapabilityTransformationCombatProfile(actor, options = {}) {
+  const effect = add2eGetActiveCapabilityTransformation(actor, options);
+  if (!effect) return null;
+  const meta = add2eTransformationMeta(effect) ?? {};
+  const combat = meta.combat && typeof meta.combat === "object" ? meta.combat : {};
+  return {
+    effect,
+    effectId: effect.id ?? null,
+    sourceKey: String(meta.sourceKey ?? ""),
+    formKey: String(meta.formKey ?? ""),
+    category: String(meta.category ?? ""),
+    label: String(meta.label ?? effect.name ?? "Transformation"),
+    armorClass: add2eTransformationNumber(combat.armorClass ?? combat.ca ?? combat.ac ?? meta.armorClass ?? meta.ca ?? meta.ac),
+    thac0: add2eTransformationNumber(combat.thac0 ?? combat.thaco ?? meta.thac0 ?? meta.thaco),
+    movement: String(combat.movement ?? meta.movement ?? "").trim(),
+    raw: meta
+  };
+}
+
+function add2eTransformationClassItems(actor) {
+  return add2eTransformationArray(actor?.items).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
+}
+
+function add2eTransformationClassLevel(actor, classItem) {
+  const system = classItem?.system ?? {};
+  const key = String(system.slug ?? system.label ?? system.nom ?? system.name ?? classItem?.name ?? "")
+    .trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "").replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+  const level = Number(actor?.system?.niveaux_par_classe?.[key] ?? system.niveau ?? system.level ?? actor?.system?.niveau ?? 1);
+  return Math.max(1, Math.floor(Number.isFinite(level) ? level : 1));
+}
+
+function add2eTransformationTagList(value) {
+  if (Array.isArray(value)) return value.map(entry => String(entry ?? "").trim()).filter(Boolean);
+  if (typeof value === "string") return value.split(/[,;|\n]+/g).map(entry => entry.trim()).filter(Boolean);
+  return [];
+}
+
+function add2eTransformationMergeTags(existing, additions) {
+  const result = [...add2eTransformationTagList(existing)];
+  for (const raw of additions) {
+    const tag = String(raw ?? "").trim();
+    if (tag && !result.some(value => value.toLowerCase() === tag.toLowerCase())) result.push(tag);
+  }
+  return result;
+}
+
+function add2eCaptureCapabilityTransformationCombatState(actor) {
+  const actorSystem = {};
+  for (const path of ["system.ca", "system.ca_optimale", "system.ca_naturel", "system.ca_total", "system.dex_def", "system.thac0", "system.vitesse_deplacement"]) {
+    actorSystem[path] = add2eTransformationClone(add2eTransformationGetProperty(actor, path));
+  }
+  const classes = add2eTransformationClassItems(actor).map(item => ({
+    id: item.id,
+    progression: add2eTransformationClone(item?.system?.progression),
+    thac0: add2eTransformationClone(item?.system?.thac0)
+  })).filter(entry => entry.id);
+  return { actorSystem, classes };
+}
+
+async function add2eApplyCapabilityTransformationCombatProfile(actor, profile = {}) {
+  if (!actor?.update) return false;
+  const armorClass = add2eTransformationNumber(profile.armorClass ?? profile.ca ?? profile.ac);
+  const thac0 = add2eTransformationNumber(profile.thac0 ?? profile.thaco);
+  const movement = String(profile.movement ?? "").trim();
+  const actorUpdate = {};
+  if (armorClass !== null) {
+    actorUpdate["system.ca"] = armorClass;
+    actorUpdate["system.ca_optimale"] = armorClass;
+    actorUpdate["system.ca_naturel"] = armorClass;
+    actorUpdate["system.ca_total"] = armorClass;
+    actorUpdate["system.dex_def"] = armorClass - 10;
+  }
+  if (thac0 !== null) actorUpdate["system.thac0"] = thac0;
+  if (movement) actorUpdate["system.vitesse_deplacement"] = movement;
+  if (Object.keys(actorUpdate).length) await actor.update(actorUpdate, { add2eInternal: true, add2eReason: "capability-transformation-combat-profile" });
+
+  if (thac0 === null || !actor.updateEmbeddedDocuments) return true;
+  const updates = [];
+  for (const classItem of add2eTransformationClassItems(actor)) {
+    const progression = Array.isArray(classItem?.system?.progression) ? add2eTransformationClone(classItem.system.progression) : [];
+    const level = add2eTransformationClassLevel(actor, classItem);
+    const index = progression.findIndex(row => Number(row?.niveau ?? row?.level) === level);
+    const rowIndex = index >= 0 ? index : (level - 1 < progression.length ? level - 1 : -1);
+    if (rowIndex < 0 || !progression[rowIndex] || typeof progression[rowIndex] !== "object") continue;
+    progression[rowIndex] = { ...progression[rowIndex], thac0 };
+    updates.push({ _id: classItem.id, "system.progression": progression, "system.thac0": thac0 });
+  }
+  if (updates.length) await actor.updateEmbeddedDocuments("Item", updates, { add2eInternal: true, add2eReason: "capability-transformation-combat-profile" });
+  return true;
+}
+
+async function add2eRestoreCapabilityTransformationCombatState(actor, snapshot = {}) {
+  if (!actor?.update) return false;
+  const actorUpdate = snapshot?.actorSystem && typeof snapshot.actorSystem === "object" ? snapshot.actorSystem : {};
+  if (Object.keys(actorUpdate).length) await actor.update(actorUpdate, { add2eInternal: true, add2eReason: "capability-transformation-combat-restore" });
+  const updates = (Array.isArray(snapshot?.classes) ? snapshot.classes : []).filter(entry => entry?.id).map(entry => ({
+    _id: entry.id,
+    "system.progression": add2eTransformationClone(entry.progression),
+    "system.thac0": add2eTransformationClone(entry.thac0)
+  }));
+  if (updates.length && actor.updateEmbeddedDocuments) await actor.updateEmbeddedDocuments("Item", updates, { add2eInternal: true, add2eReason: "capability-transformation-combat-restore" });
+  return true;
+}
+
+function add2eCaptureCapabilityTransformationWeaponAllowance(actor) {
+  return add2eTransformationClassItems(actor).map(item => {
+    const system = item?.system ?? {};
+    return {
+      id: item.id,
+      hasArmesAutorisees: Object.prototype.hasOwnProperty.call(system, "armes_autorisees"),
+      hasWeaponsAllowed: Object.prototype.hasOwnProperty.call(system, "weaponsAllowed"),
+      hasWeaponRestriction: Object.prototype.hasOwnProperty.call(system, "weaponRestriction"),
+      armesAutorisees: add2eTransformationClone(system.armes_autorisees),
+      weaponsAllowed: add2eTransformationClone(system.weaponsAllowed),
+      weaponRestriction: add2eTransformationClone(system.weaponRestriction)
+    };
+  }).filter(entry => entry.id);
+}
+
+async function add2eGrantCapabilityTransformationWeaponAllowance(actor, tags = []) {
+  if (!actor?.updateEmbeddedDocuments) return false;
+  const additions = add2eTransformationArray(tags).map(value => String(value ?? "").trim()).filter(Boolean);
+  const allowed = add2eTransformationMergeTags([], [...additions, ...additions.map(tag => tag.includes(":") ? tag : `type_arme:${tag}`)]);
+  if (!allowed.length) return true;
+
+  const updates = [];
+  for (const classItem of add2eTransformationClassItems(actor)) {
+    const system = classItem.system ?? {};
+    const update = {
+      _id: classItem.id,
+      "system.armes_autorisees": add2eTransformationMergeTags(system.armes_autorisees, allowed),
+      "system.weaponsAllowed": add2eTransformationMergeTags(system.weaponsAllowed, allowed)
+    };
+    const restriction = system.weaponRestriction && typeof system.weaponRestriction === "object" ? add2eTransformationClone(system.weaponRestriction) : null;
+    const tagMode = restriction && (
+      add2eTransformationTagList(restriction.allowedTags).length > 0 ||
+      add2eTransformationTagList(restriction.forbiddenTags).length > 0 ||
+      String(restriction.mode ?? "").toLowerCase().includes("tag")
+    );
+    if (tagMode) {
+      restriction.alwaysAllowedTags = add2eTransformationMergeTags(restriction.alwaysAllowedTags, allowed);
+      update["system.weaponRestriction"] = restriction;
+    }
+    updates.push(update);
+  }
+  if (updates.length) await actor.updateEmbeddedDocuments("Item", updates, { add2eInternal: true, add2eReason: "capability-transformation-weapon-allowance" });
+  return true;
+}
+
+async function add2eRestoreCapabilityTransformationWeaponAllowance(actor, snapshot = []) {
+  if (!actor?.updateEmbeddedDocuments) return false;
+  const updates = [];
+  for (const entry of Array.isArray(snapshot) ? snapshot : []) {
+    if (!entry?.id) continue;
+    const update = { _id: entry.id };
+    if (entry.hasArmesAutorisees === false) update["system.-=armes_autorisees"] = null;
+    else update["system.armes_autorisees"] = add2eTransformationClone(entry.armesAutorisees);
+    if (entry.hasWeaponsAllowed === false) update["system.-=weaponsAllowed"] = null;
+    else update["system.weaponsAllowed"] = add2eTransformationClone(entry.weaponsAllowed);
+    if (entry.hasWeaponRestriction === false) update["system.-=weaponRestriction"] = null;
+    else if (Object.prototype.hasOwnProperty.call(entry, "weaponRestriction")) update["system.weaponRestriction"] = add2eTransformationClone(entry.weaponRestriction);
+    updates.push(update);
+  }
+  if (updates.length) await actor.updateEmbeddedDocuments("Item", updates, { add2eInternal: true, add2eReason: "capability-transformation-weapon-allowance-restore" });
+  return true;
+}
+
+function add2eIsCapabilityTransformationNaturalAttack(item) {
+  const meta = add2eTransformationMeta(item);
+  return !!(meta?.kind === "natural-attack" && String(meta?.sourceKey ?? "").trim());
+}
+
+function add2eIsCapabilityTransformationNaturalAttackActive(actor, item) {
+  if (!add2eIsCapabilityTransformationNaturalAttack(item)) return false;
+  const attack = add2eTransformationMeta(item) ?? {};
+  const effect = add2eGetActiveCapabilityTransformation(actor, { sourceKey: attack.sourceKey });
+  if (!effect) return false;
+  const formKey = String(add2eTransformationMeta(effect)?.formKey ?? "").trim();
+  const attackFormKey = String(attack.formKey ?? "").trim();
+  return !formKey || !attackFormKey || formKey === attackFormKey;
+}
+
 installGenericSaveExtensions(Add2eEffectsEngine);
 installSingleReadActionRules(Add2eEffectsEngine);
 installGateOnUseOutcomeContract(Add2eEffectsEngine);
 
 globalThis.Add2eEffectsEngine = Add2eEffectsEngine;
+globalThis.ADD2E_CAPABILITY_TRANSFORMATIONS_VERSION = "2026-07-07-capability-transformations-v3";
+globalThis.add2eGetActiveCapabilityTransformation = add2eGetActiveCapabilityTransformation;
+globalThis.add2eGetCapabilityTransformationCombatProfile = add2eGetCapabilityTransformationCombatProfile;
+globalThis.add2eCaptureCapabilityTransformationCombatState = add2eCaptureCapabilityTransformationCombatState;
+globalThis.add2eApplyCapabilityTransformationCombatProfile = add2eApplyCapabilityTransformationCombatProfile;
+globalThis.add2eRestoreCapabilityTransformationCombatState = add2eRestoreCapabilityTransformationCombatState;
+globalThis.add2eCaptureCapabilityTransformationWeaponAllowance = add2eCaptureCapabilityTransformationWeaponAllowance;
+globalThis.add2eGrantCapabilityTransformationWeaponAllowance = add2eGrantCapabilityTransformationWeaponAllowance;
+globalThis.add2eRestoreCapabilityTransformationWeaponAllowance = add2eRestoreCapabilityTransformationWeaponAllowance;
+globalThis.add2eIsCapabilityTransformationNaturalAttack = add2eIsCapabilityTransformationNaturalAttack;
+globalThis.add2eIsCapabilityTransformationNaturalAttackActive = add2eIsCapabilityTransformationNaturalAttackActive;
