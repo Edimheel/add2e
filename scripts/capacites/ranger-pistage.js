@@ -1,9 +1,35 @@
 // systems/add2e/scripts/capacites/ranger-pistage.js
 // ADD2E — Ranger : Pistage
 
-const niveau = Number(actor?.system?.niveau ?? 1) || 1;
-const classe = actor?.items?.find(i => i.type === "classe" && String(i.name).toLowerCase().includes("ranger"));
-const progression = Array.isArray(classe?.system?.progression) ? classe.system.progression : [];
+function a2eRangerFeatureLevel(currentActor, currentFeature) {
+  const level = Number(
+    globalThis.add2eFeatureActorLevel?.(currentActor, currentFeature)
+    ?? currentFeature?._add2eClassLevel
+  );
+  return Number.isFinite(level) && level >= 1 ? Math.floor(level) : null;
+}
+
+function a2eRangerClassItem(currentActor, currentFeature) {
+  const itemId = String(currentFeature?._add2eClassItemId ?? "").trim();
+  if (!itemId) return null;
+  return currentActor?.items?.get?.(itemId)
+    ?? Array.from(currentActor?.items ?? []).find(item => String(item?.id ?? "") === itemId)
+    ?? null;
+}
+
+if (!actor) {
+  ui.notifications.error("Pistage : acteur introuvable.");
+  return false;
+}
+
+const niveau = a2eRangerFeatureLevel(actor, feature);
+const classe = a2eRangerClassItem(actor, feature);
+if (niveau === null || !classe) {
+  ui.notifications.error("Pistage : niveau ou classe Ranger introuvable.");
+  return false;
+}
+
+const progression = Array.isArray(classe.system?.progression) ? classe.system.progression : [];
 const ligne = progression.find(p => Number(p.niveau ?? p.level) === niveau) ?? progression[Math.max(0, niveau - 1)] ?? {};
 
 let exterieur = ligne?.tracking?.exterieur;
