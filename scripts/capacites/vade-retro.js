@@ -75,7 +75,7 @@ const __add2eVadeRetroResult = await (async () => {
   };
   const roll = async formula => {
     trace("ROLL_START", { formula, userId: game.user?.id ?? null, combatId: game.combat?.id ?? null, round: game.combat?.round ?? null });
-    const result = await new Roll(formula).evaluate({ async: true });
+    const result = await new Roll(formula).evaluate();
     try { await game.dice3d?.showForRoll?.(result); } catch (_error) {}
     trace("ROLL_RESULT", { formula, total: result?.total ?? null });
     return result;
