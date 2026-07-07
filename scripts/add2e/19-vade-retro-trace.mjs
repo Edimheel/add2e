@@ -24,6 +24,8 @@ function traceError(event, error, data = {}) {
   console.error(`${TAG}[${event}]`, { ...data, error });
 }
 
+console.log(`${TAG}[MODULE_LOADED]`, { ready: game?.ready ?? false, userId: game?.user?.id ?? null, isGM: game?.user?.isGM ?? false });
+
 function stateFor(actor, combat) {
   const all = actor?.getFlag?.(FLAG_SCOPE, FLAG_KEY) ?? actor?.flags?.[FLAG_SCOPE]?.[FLAG_KEY] ?? {};
   return combat?.id ? all?.[combat.id] ?? null : null;
@@ -205,4 +207,5 @@ function registerTraceHooks() {
   });
 }
 
-Hooks.once("ready", registerTraceHooks);
+if (game?.ready) registerTraceHooks();
+else Hooks.once("ready", registerTraceHooks);
