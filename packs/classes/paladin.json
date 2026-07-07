@@ -4,7 +4,6 @@
   "img": "systems/add2e/assets/paladin.png",
   "system": {
     "label": "Paladin",
-    "maxLevel": 20,
     "description": "Chevalier sacré, champion de la justice et de la foi...",
     "caracs_min": {
       "force": 12,
