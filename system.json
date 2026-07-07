@@ -1,7 +1,7 @@
 {
   "id": "add2e",
   "title": "AD&D 2e (Descartes)",
-  "version": "0.1.22",
+  "version": "0.1.21",
   "socket": true,
   "compatibility": {
     "minimum": "13",
@@ -18,7 +18,6 @@
     "scripts/add2e-attack.mjs",
     "scripts/add2e-action-hud.mjs",
     "scripts/add2e.mjs",
-    "scripts/add2e/19-vade-retro-trace.mjs",
     "scripts/add2e/03b-equipment-actions.mjs",
     "scripts/add2e/22-vendor.mjs",
     "scripts/08-character-sheet-ui.mjs",
