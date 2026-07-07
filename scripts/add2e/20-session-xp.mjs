@@ -1,13 +1,14 @@
 // ADD2E — XP de session — ApplicationV2
 // La progression est écrite exclusivement sur les Items classe.
 
-const VERSION = "2026-06-25-session-xp-item-progression-v6";
+const VERSION = "2026-07-07-session-xp-toolbar-v7";
 const TAG = "[ADD2E][SESSION_XP]";
 const FLAG_SCOPE = "add2e";
 const FLAG_LEDGER = "sessionXpLedger";
 const FLAG_RECORDED = "sessionXpRecorded";
 const FLAG_RECORDED_KEY = "sessionXpRecordedKey";
 const INTERNAL = "add2eSessionXpInternal";
+const XP_TOOL_NAME = "add2e-session-xp";
 const ApplicationV2 = foundry.applications.api.ApplicationV2;
 
 globalThis.ADD2E_SESSION_XP_VERSION = VERSION;
@@ -385,9 +386,65 @@ function openSessionXpApplication() {
   return existing ? existing.render({ force: true }) : new Add2eSessionXpApp().render(true);
 }
 
+function sessionXpToolDefinition() {
+  const open = () => openSessionXpApplication();
+  return {
+    name: XP_TOOL_NAME,
+    title: "ADD2E — Bilan XP de session",
+    icon: "fas fa-coins",
+    button: true,
+    visible: game.user?.isGM === true,
+    onClick: open,
+    onChange: value => {
+      if (value === false) return;
+      return open();
+    }
+  };
+}
+
+function upsertSessionXpTool(control, tool) {
+  if (!control) return false;
+  const tools = control.tools;
+  if (Array.isArray(tools)) {
+    const index = tools.findIndex(entry => entry?.name === tool.name || entry?.id === tool.name);
+    if (index >= 0) tools[index] = tool;
+    else tools.push(tool);
+    return true;
+  }
+  if (tools instanceof Map) {
+    tools.set(tool.name, tool);
+    return true;
+  }
+  if (tools && typeof tools === "object") {
+    tools[tool.name] = tool;
+    return true;
+  }
+  return false;
+}
+
+function registerSessionXpSceneControl(controls) {
+  if (game.user?.isGM !== true) return;
+  const tool = sessionXpToolDefinition();
+
+  if (Array.isArray(controls)) {
+    const tokenControl = controls.find(control => control?.name === "token" || control?.name === "tokens") ?? controls[0];
+    return upsertSessionXpTool(tokenControl, tool);
+  }
+
+  if (controls && typeof controls === "object") {
+    const tokenControl = controls.token
+      ?? controls.tokens
+      ?? Object.values(controls).find(control => control?.name === "token" || control?.name === "tokens");
+    return upsertSessionXpTool(tokenControl, tool);
+  }
+
+  return false;
+}
+
 Hooks.once("init", () => {
   game.settings.register("add2e", FLAG_LEDGER, { name: "ADD2E — Registre XP de session", scope: "world", config: false, type: Array, default: [] });
 });
+Hooks.on("getSceneControlButtons", registerSessionXpSceneControl);
 Hooks.on("updateActor", (actor, changes) => {
   if (!game.user?.isGM || actor?.type !== "monster") return;
   const before = hpValue(actor);
