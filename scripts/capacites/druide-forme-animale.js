@@ -26,7 +26,7 @@ const ADD2E_DRUIDE_ANIMAL_FORMS = Object.freeze([
     key: "grenouille",
     category: "reptile",
     label: "Grenouille",
-    img: "icons/creatures/amphibians/frog-green.webp",
+    img: "systems/add2e/assets/token/grenouille.webp",
     form: {
       "system.ca": 9,
       "system.ca_optimale": 9,
@@ -44,7 +44,7 @@ const ADD2E_DRUIDE_ANIMAL_FORMS = Object.freeze([
     key: "grand_serpent",
     category: "reptile",
     label: "Grand serpent",
-    img: "icons/creatures/reptiles/snake-poised-green.webp",
+    img: "systems/add2e/assets/token/grand-serpent.webp",
     form: {
       "system.ca": 5,
       "system.ca_optimale": 5,
@@ -65,7 +65,7 @@ const ADD2E_DRUIDE_ANIMAL_FORMS = Object.freeze([
     key: "geai",
     category: "oiseau",
     label: "Geai",
-    img: "icons/creatures/birds/bird-blue.webp",
+    img: "systems/add2e/assets/token/geai.webp",
     form: {
       "system.ca": 7,
       "system.ca_optimale": 7,
@@ -83,7 +83,7 @@ const ADD2E_DRUIDE_ANIMAL_FORMS = Object.freeze([
     key: "aigle",
     category: "oiseau",
     label: "Aigle",
-    img: "icons/creatures/birds/bird-eagle-brown.webp",
+    img: "systems/add2e/assets/token/aigle.webp",
     form: {
       "system.ca": 7,
       "system.ca_optimale": 7,
@@ -104,7 +104,7 @@ const ADD2E_DRUIDE_ANIMAL_FORMS = Object.freeze([
     key: "chauve_souris",
     category: "mammifere",
     label: "Chauve-souris",
-    img: "icons/creatures/mammals/bat-moon.webp",
+    img: "systems/add2e/assets/token/chauve-souris.webp",
     form: {
       "system.ca": 8,
       "system.ca_optimale": 8,
@@ -122,7 +122,7 @@ const ADD2E_DRUIDE_ANIMAL_FORMS = Object.freeze([
     key: "ours_noir",
     category: "mammifere",
     label: "Ours noir",
-    img: "icons/creatures/mammals/bear-brown.webp",
+    img: "systems/add2e/assets/token/ours-noir.webp",
     form: {
       "system.ca": 7,
       "system.ca_optimale": 7,
