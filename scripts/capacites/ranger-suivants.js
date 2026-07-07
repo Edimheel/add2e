@@ -1,7 +1,25 @@
 // systems/add2e/scripts/capacites/ranger-suivants.js
 // ADD2E — Ranger : Appel des suivants
 
-const niveau = Number(actor?.system?.niveau ?? 1) || 1;
+function a2eRangerFeatureLevel(currentActor, currentFeature) {
+  const level = Number(
+    globalThis.add2eFeatureActorLevel?.(currentActor, currentFeature)
+    ?? currentFeature?._add2eClassLevel
+  );
+  return Number.isFinite(level) && level >= 1 ? Math.floor(level) : null;
+}
+
+if (!actor) {
+  ui.notifications.error("Appel des suivants : acteur introuvable.");
+  return false;
+}
+
+const niveau = a2eRangerFeatureLevel(actor, feature);
+if (niveau === null) {
+  ui.notifications.error("Appel des suivants : niveau de Ranger introuvable.");
+  return false;
+}
+
 if (niveau < 10) {
   ui.notifications.warn("Le ranger doit être niveau 10 pour attirer ses suivants.");
   return false;
