@@ -13,7 +13,7 @@ import { add2eAttackComputeActiveAttackModifiers } from "../add2e-attack/04e-att
 import { add2eAttackComputeCharacterDisplayedCA } from "../add2e-attack/04d-attack-roll-defense.mjs";
 import { add2eAttackMeasureContactAndDistance, add2eAttackValidateRange } from "../add2e-attack/04g-attack-roll-range.mjs";
 
-export const ADD2E_CAPABILITY_SPECIAL_ATTACK_VERSION = "2026-07-07-capability-special-attack-v1";
+export const ADD2E_CAPABILITY_SPECIAL_ATTACK_VERSION = "2026-07-07-capability-special-attack-v2";
 
 const SYSTEM_ID = "add2e";
 const GM_OPERATION = "ADD2E_GM_OPERATION";
@@ -43,9 +43,9 @@ function esc(value) {
 
 function clone(value) {
   try { return foundry.utils.deepClone(value); }
-  catch (_err) {
+  catch (_error) {
     try { return JSON.parse(JSON.stringify(value)); }
-    catch (_error) { return value; }
+    catch (_jsonError) { return value; }
   }
 }
 
@@ -54,37 +54,51 @@ function chatStyleData() {
   return { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 };
 }
 
-function gmIds() {
-  const recipients = ChatMessage.getWhisperRecipients?.("GM") ?? [];
-  const ids = recipients.map(user => user?.id).filter(Boolean);
-  return ids.length ? ids : Array.from(game.users ?? []).filter(user => user?.isGM).map(user => user.id).filter(Boolean);
-}
-
 function currentTick() {
   const engine = game?.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
-  const value = typeof engine?.currentTick === "function" ? Number(engine.currentTick()) : NaN;
-  return Number.isFinite(value) ? Math.max(0, Math.floor(value)) : null;
+  const tick = typeof engine?.currentTick === "function" ? Number(engine.currentTick()) : NaN;
+  return Number.isFinite(tick) ? Math.max(0, Math.floor(tick)) : null;
 }
 
 function number(...values) {
   for (const value of values) {
-    const result = Number(value);
-    if (Number.isFinite(result)) return result;
+    const numeric = Number(value);
+    if (Number.isFinite(numeric)) return numeric;
   }
   return null;
 }
 
 function actorHp(actor) {
   const system = actor?.system ?? {};
-  return {
-    current: number(system.pdv, system.pv, system.hp?.value, system.attributes?.hp?.value),
-    maximum: number(system.points_de_coup, system.pv_max, system.points_de_vie, system.hp?.max, system.attributes?.hp?.max)
-  };
+  const current = number(system.pdv, system.pv, system.hp?.value, system.attributes?.hp?.value);
+  const maximum = number(
+    system.points_de_coup,
+    system.pv_max,
+    system.points_de_vie,
+    system.hp?.max,
+    system.attributes?.hp?.max,
+    // Les acteurs monstre historiques n'ont souvent que system.pdv.
+    system.pdv,
+    system.pv,
+    system.hp?.value,
+    system.attributes?.hp?.value
+  );
+  return { current: Number.isFinite(current) ? current : maximum, maximum };
 }
 
 function actorHitDice(actor) {
   const system = actor?.system ?? {};
-  for (const candidate of [system.dv, system.hitDice, system.hit_dice, system.des_de_vie, system.niveau, system.level, system.details?.niveau, system.details?.level]) {
+  const candidates = [
+    system.dv,
+    system.hitDice,
+    system.hit_dice,
+    system.des_de_vie,
+    system.niveau,
+    system.level,
+    system.details?.niveau,
+    system.details?.level
+  ];
+  for (const candidate of candidates) {
     if (typeof candidate === "number" && Number.isFinite(candidate)) return candidate;
     const match = String(candidate ?? "").match(/\d+(?:[.,]\d+)?/);
     if (match) return Number(match[0].replace(",", "."));
@@ -93,18 +107,21 @@ function actorHitDice(actor) {
 }
 
 function actorTags(actor) {
-  const out = [];
+  const values = [];
   const visit = value => {
     if (value === null || value === undefined || value === "") return;
     if (Array.isArray(value)) return value.forEach(visit);
-    if (typeof value === "object") return Object.entries(value).forEach(([key, entry]) => {
-      if (entry === true) out.push(key);
-      else visit(entry);
-    });
-    String(value).split(/[,;|\n]+/g).forEach(entry => {
+    if (typeof value === "object") {
+      for (const [key, entry] of Object.entries(value)) {
+        if (entry === true) values.push(key);
+        else visit(entry);
+      }
+      return;
+    }
+    for (const entry of String(value).split(/[,;|\n]+/g)) {
       const key = norm(entry);
-      if (key) out.push(key);
-    });
+      if (key) values.push(key);
+    }
   };
 
   const system = actor?.system ?? {};
@@ -125,8 +142,10 @@ function actorTags(actor) {
     flags.effectTags,
     flags.monsterCapabilities
   ]);
-  for (const item of actor?.items ?? []) visit([item?.system?.tags, item?.system?.effectTags, item?.flags?.[SYSTEM_ID]?.tags]);
-  return new Set(out);
+  for (const item of actor?.items ?? []) {
+    visit([item?.system?.tags, item?.system?.effectTags, item?.flags?.[SYSTEM_ID]?.tags]);
+  }
+  return new Set(values);
 }
 
 function profileFor(item) {
@@ -150,11 +169,11 @@ function formatTicks(rounds) {
   const days = Math.floor(value / 1440);
   const hours = Math.floor((value % 1440) / 60);
   const rest = value % 60;
-  const chunks = [];
-  if (days) chunks.push(`${days} jour(s)`);
-  if (hours) chunks.push(`${hours} heure(s)`);
-  if (rest || !chunks.length) chunks.push(`${rest} round(s)`);
-  return chunks.join(" et ");
+  const parts = [];
+  if (days) parts.push(`${days} jour(s)`);
+  if (hours) parts.push(`${hours} heure(s)`);
+  if (rest || !parts.length) parts.push(`${rest} round(s)`);
+  return parts.join(" et ");
 }
 
 function sourceToken(actor) {
@@ -167,14 +186,18 @@ function sourceToken(actor) {
 }
 
 function targetActor(token) {
-  return token?.actor ?? token?.document?.actor ?? token?.document?.actorId ? (token?.actor ?? token?.document?.actor ?? game.actors?.get?.(token?.document?.actorId)) : null;
+  return token?.actor
+    ?? token?.document?.actor
+    ?? (token?.document?.actorId ? game.actors?.get?.(token.document.actorId) : null)
+    ?? null;
 }
 
 function resolveThac0(actor, level) {
   const direct = number(actor?.system?.thac0);
   if (Number.isFinite(direct)) return direct;
-  const classItems = Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
-  for (const classItem of classItems) {
+
+  const classes = Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
+  for (const classItem of classes) {
     const rows = Array.isArray(classItem?.system?.progression) ? classItem.system.progression : [];
     const row = rows.find(entry => Number(entry?.niveau ?? entry?.level) === level)
       ?? rows.slice().reverse().find(entry => Number(entry?.niveau ?? entry?.level ?? 0) <= level);
@@ -189,27 +212,45 @@ function resolveArmorClass(actor) {
   if (actor?.type === "personnage") {
     try {
       if (typeof globalThis.Add2eEffectsEngine?.getMagicPassiveDefense === "function") {
-        const result = globalThis.Add2eEffectsEngine.getMagicPassiveDefense(actor, { source: "capability-special-attack" });
-        const value = number(result?.caTotal);
+        const passive = globalThis.Add2eEffectsEngine.getMagicPassiveDefense(actor, { source: "capability-special-attack" });
+        const value = number(passive?.caTotal);
         if (Number.isFinite(value)) return value;
       }
-      const result = add2eAttackComputeCharacterDisplayedCA(actor);
-      const value = number(result?.caTotal);
+      const displayed = add2eAttackComputeCharacterDisplayedCA(actor);
+      const value = number(displayed?.caTotal);
       if (Number.isFinite(value)) return value;
     } catch (error) {
       console.warn(`${TAG}[ARMOR_CLASS]`, { actor: actor?.name, error });
     }
   }
-  return number(system.armorClass, system.ca_total, system.ca, system.ac, system.ca_naturel, system.defense?.armorClass, system.defense?.ca, system.combat?.armorClass, system.combat?.ca);
+  return number(
+    system.armorClass,
+    system.ca_total,
+    system.ca,
+    system.ac,
+    system.ca_naturel,
+    system.defense?.armorClass,
+    system.defense?.ca,
+    system.combat?.armorClass,
+    system.combat?.ca
+  );
 }
 
 function validateTarget(profile, sourceActor, target) {
   const restrictions = profile?.targetRestrictions ?? {};
   const targetName = target?.name ?? "la cible";
   const tags = actorTags(target);
-  const excludedTags = Array.isArray(restrictions.excludedTags) ? restrictions.excludedTags.map(norm).filter(Boolean) : [];
+  const excludedTags = Array.isArray(restrictions.excludedTags)
+    ? restrictions.excludedTags.map(norm).filter(Boolean)
+    : [];
   const blocked = excludedTags.find(tag => tags.has(tag));
-  if (blocked) return { ok: false, reason: `La cible ${targetName} possède une immunité incompatible (${blocked.replace(/_/g, " ")}).`, code: "excluded-tag" };
+  if (blocked) {
+    return {
+      ok: false,
+      code: "excluded-tag",
+      reason: `La cible ${targetName} possède une immunité incompatible (${blocked.replace(/_/g, " ")}).`
+    };
+  }
 
   const level = sourceLevel(sourceActor, null, profile);
   const hitDiceRule = restrictions.maxHitDice ?? null;
@@ -217,28 +258,38 @@ function validateTarget(profile, sourceActor, target) {
     const multiplier = Math.max(0, Number(hitDiceRule.multiplier ?? 1) || 0);
     const maximum = Number.isFinite(Number(hitDiceRule.maximum)) ? Number(hitDiceRule.maximum) : level * multiplier;
     const targetDice = actorHitDice(target);
-    if (!Number.isFinite(targetDice)) return { ok: false, reason: `Les dés de vie de ${targetName} sont absents ; validation du MJ requise.`, code: "missing-hit-dice" };
-    if (targetDice > maximum) return { ok: false, reason: `${targetName} possède ${targetDice} DV, au-delà de la limite de ${maximum} DV.`, code: "hit-dice" };
+    if (!Number.isFinite(targetDice)) {
+      return { ok: false, code: "missing-hit-dice", reason: `Les dés de vie de ${targetName} sont absents ; validation du MJ requise.` };
+    }
+    if (targetDice > maximum) {
+      return { ok: false, code: "hit-dice", reason: `${targetName} possède ${targetDice} DV, au-delà de la limite de ${maximum} DV.` };
+    }
   }
 
   const hpRule = restrictions.maxHitPoints ?? null;
   if (hpRule) {
     const multiplier = Math.max(0, Number(hpRule.multiplier ?? 1) || 0);
     const sourceMaximum = actorHp(sourceActor).maximum;
-    const maximum = Number.isFinite(Number(hpRule.maximum)) ? Number(hpRule.maximum) : Number(sourceMaximum) * multiplier;
     const targetMaximum = actorHp(target).maximum;
-    if (!Number.isFinite(sourceMaximum) || !Number.isFinite(targetMaximum)) return { ok: false, reason: `Les PV maximum nécessaires à la restriction sont absents ; validation du MJ requise.`, code: "missing-hit-points" };
-    if (targetMaximum > maximum) return { ok: false, reason: `${targetName} possède ${targetMaximum} PV maximum, au-delà de la limite de ${maximum}.`, code: "hit-points" };
+    const maximum = Number.isFinite(Number(hpRule.maximum))
+      ? Number(hpRule.maximum)
+      : Number(sourceMaximum) * multiplier;
+    if (!Number.isFinite(sourceMaximum) || !Number.isFinite(targetMaximum)) {
+      return { ok: false, code: "missing-hit-points", reason: `Les PV maximum nécessaires à la restriction sont absents ; validation du MJ requise.` };
+    }
+    if (targetMaximum > maximum) {
+      return { ok: false, code: "hit-points", reason: `${targetName} possède ${targetMaximum} PV maximum, au-delà de la limite de ${maximum}.` };
+    }
   }
 
   return { ok: true, code: "ok" };
 }
 
-function buildEffectData({ sourceActor, target, item, profile, tick }) {
+function buildDeferredEffect({ sourceActor, target, item, profile, tick }) {
   const deferred = profile?.deferredEffect ?? {};
   const level = sourceLevel(sourceActor, item, profile);
-  const perLevel = Math.max(1, Number(deferred?.duration?.roundsPerSourceLevel ?? 1) || 1);
-  const rounds = Math.max(1, Math.floor(level * perLevel));
+  const roundsPerLevel = Math.max(1, Number(deferred?.duration?.roundsPerSourceLevel ?? 1) || 1);
+  const rounds = Math.max(1, Math.floor(level * roundsPerLevel));
   const expiresAtTick = tick + rounds;
   const deferredAction = {
     version: ADD2E_CAPABILITY_SPECIAL_ATTACK_VERSION,
@@ -286,7 +337,13 @@ function buildEffectData({ sourceActor, target, item, profile, tick }) {
     disabled: false,
     transfer: false,
     changes: [],
-    duration: { rounds, startRound: game.combat?.round ?? null, startTurn: game.combat?.turn ?? null, startTime: game.time?.worldTime ?? null, combat: game.combat?.id ?? null },
+    duration: {
+      rounds,
+      startRound: game.combat?.round ?? null,
+      startTurn: game.combat?.turn ?? null,
+      startTime: game.time?.worldTime ?? null,
+      combat: game.combat?.id ?? null
+    },
     flags: {
       [SYSTEM_ID]: {
         tags: ["capability:deferred-action", `capability-profile:${norm(profile.id)}`, ...tags],
@@ -302,7 +359,7 @@ function buildEffectData({ sourceActor, target, item, profile, tick }) {
 
 async function emitGmOperation(operation, payload) {
   if (game.user?.isGM) {
-    const actor = payload?.actorUuid ? await fromUuid(payload.actorUuid).catch(() => null) : null;
+    const actor = payload?.actorUuid ? await fromUuid(payload.actorUuid).catch(() => null) : game.actors?.get?.(payload?.actorId) ?? null;
     if (operation === "createActiveEffect" && actor && payload.effectData) {
       return actor.createEmbeddedDocuments("ActiveEffect", [clone(payload.effectData)], { add2eInternal: true, add2eReason: "capability-special-attack" });
     }
@@ -313,7 +370,9 @@ async function emitGmOperation(operation, payload) {
       const current = actorHp(actor).current;
       const amount = Math.abs(Number(payload.montant) || 0);
       if (!Number.isFinite(current) || !amount) return false;
-      return actor.update({ "system.pdv": current - amount }, { add2eInternal: true, add2eReason: "capability-deferred-command" });
+      await actor.update({ "system.pdv": current - amount }, { add2eInternal: true, add2eReason: "capability-deferred-command" });
+      await globalThis.add2eSyncActorVitalStatus?.(actor, { reason: "capability-deferred-command" });
+      return true;
     }
   }
 
@@ -323,19 +382,20 @@ async function emitGmOperation(operation, payload) {
 
 async function createChat({ sourceActor, target, profile, state, detail = "", d20 = null, total = null, threshold = null }) {
   const label = String(profile?.label ?? "Attaque spéciale");
-  const success = state === "applied" || state === "triggered";
-  const color = success ? "#2f7a45" : state === "miss" ? "#9d3c2f" : "#8a631e";
-  const publicText = ({
+  const color = (state === "applied" || state === "triggered") ? "#2f7a45" : state === "miss" ? "#9d3c2f" : "#8a631e";
+  const text = ({
     applied: `Le contact de ${esc(sourceActor?.name)} réussit : <b>${esc(label)}</b> est appliqué à ${esc(target?.name)}.`,
     triggered: `${esc(sourceActor?.name)} prononce le mot de commande : l’effet <b>${esc(label)}</b> se déclenche sur ${esc(target?.name)}.`,
     miss: `${esc(sourceActor?.name)} ne parvient pas à établir le contact requis pour <b>${esc(label)}</b>.`,
     invalid: `Le contact ne peut pas produire l’effet <b>${esc(label)}</b> sur ${esc(target?.name)}.`
   })[state] ?? `${esc(label)} est résolu.`;
-  const rollLine = Number.isFinite(Number(d20)) ? `<div style="margin-top:5px;"><b>Jet de contact :</b> d20 ${esc(d20)}${Number.isFinite(Number(total)) ? ` = ${esc(total)}` : ""}${Number.isFinite(Number(threshold)) ? ` (seuil ${esc(threshold)})` : ""}</div>` : "";
+  const rollLine = Number.isFinite(Number(d20))
+    ? `<div style="margin-top:5px;"><b>Jet de contact :</b> d20 ${esc(d20)}${Number.isFinite(Number(total)) ? ` = ${esc(total)}` : ""}${Number.isFinite(Number(threshold)) ? ` (seuil ${esc(threshold)})` : ""}</div>`
+    : "";
 
   await ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor: sourceActor }),
-    content: `<div class="add2e-chat-card add2e-capability-special-attack" style="border:1px solid ${color};border-radius:9px;overflow:hidden;background:#fffaf0;color:#2d2416;font-family:var(--font-primary);"><div style="display:flex;align-items:center;gap:8px;background:${color};color:#fff;padding:7px 9px;"><img src="${esc(profile?.img ?? "icons/svg/aura.svg")}" style="width:32px;height:32px;object-fit:cover;border-radius:5px;background:#fff;border:1px solid rgba(255,255,255,.55);"><div><div style="font-weight:900;">${esc(label)}</div><div style="font-size:.84em;opacity:.92;">Capacité spéciale</div></div></div><div style="padding:9px 10px;line-height:1.4;">${publicText}${rollLine}${detail ? `<div style="margin-top:6px;font-size:.9em;color:#624f2b;">${esc(detail)}</div>` : ""}</div></div>`,
+    content: `<div class="add2e-chat-card add2e-capability-special-attack" style="border:1px solid ${color};border-radius:9px;overflow:hidden;background:#fffaf0;color:#2d2416;font-family:var(--font-primary);"><div style="display:flex;align-items:center;gap:8px;background:${color};color:#fff;padding:7px 9px;"><img src="${esc(profile?.img ?? "icons/svg/aura.svg")}" style="width:32px;height:32px;object-fit:cover;border-radius:5px;background:#fff;border:1px solid rgba(255,255,255,.55);"><div><div style="font-weight:900;">${esc(label)}</div><div style="font-size:.84em;opacity:.92;">Capacité spéciale</div></div></div><div style="padding:9px 10px;line-height:1.4;">${text}${rollLine}${detail ? `<div style="margin-top:6px;font-size:.9em;color:#624f2b;">${esc(detail)}</div>` : ""}</div></div>`,
     flags: { [SYSTEM_ID]: { capabilitySpecialAttack: true, profileId: profile?.id ?? null, state, sourceActorId: sourceActor?.id ?? null, targetActorId: target?.id ?? null } },
     ...chatStyleData()
   });
@@ -369,6 +429,7 @@ async function prepareWindow({ actor, item, profile, rounds }) {
       expiresAtTick: tick + totalRounds
     }
   };
+
   const data = typeof engine?.effectData === "function"
     ? engine.effectData({
       name: String(profile.window?.name ?? `${profile.label} — préparation`),
@@ -391,8 +452,21 @@ async function prepareWindow({ actor, item, profile, rounds }) {
       disabled: false,
       transfer: false,
       changes: [],
-      duration: { rounds: totalRounds, startRound: game.combat?.round ?? null, startTurn: game.combat?.turn ?? null, startTime: game.time?.worldTime ?? null, combat: game.combat?.id ?? null },
-      flags: { [SYSTEM_ID]: { tags: ["capability:special-attack-window", `capability-profile:${norm(profile.id)}`], timeEngine: { managed: true, totalRounds, startTick: tick }, roundEngine: { managed: true, totalRounds, startTick: tick }, ...extraFlags } }
+      duration: {
+        rounds: totalRounds,
+        startRound: game.combat?.round ?? null,
+        startTurn: game.combat?.turn ?? null,
+        startTime: game.time?.worldTime ?? null,
+        combat: game.combat?.id ?? null
+      },
+      flags: {
+        [SYSTEM_ID]: {
+          tags: ["capability:special-attack-window", `capability-profile:${norm(profile.id)}`],
+          timeEngine: { managed: true, totalRounds, startTick: tick },
+          roundEngine: { managed: true, totalRounds, startTick: tick },
+          ...extraFlags
+        }
+      }
     };
   const created = await actor.createEmbeddedDocuments("ActiveEffect", [data], { add2eInternal: true, add2eReason: "capability-special-attack-window" });
   return created?.[0] ?? null;
@@ -482,10 +556,11 @@ async function resolveSpecialAttack({ actor, arme, actorId, itemId }) {
     return { ok: true, hit: true, applied: false, consumed: false, eligibility };
   }
 
-  const effectData = buildEffectData({ sourceActor, target, item, profile, tick });
+  const effectData = buildDeferredEffect({ sourceActor, target, item, profile, tick });
   await emitGmOperation("createActiveEffect", { actorUuid: target.uuid ?? null, actorId: target.id ?? null, effectData });
   await removeWindowAndItem(sourceActor, item.id);
-  await createChat({ sourceActor, target, profile, state: "applied", d20, total, threshold, detail: `Effet différé actif pendant ${formatTicks(Number(effectData?.flags?.[SYSTEM_ID]?.[DEFERRED_FLAG]?.expiresAtTick ?? tick) - tick)}.` });
+  const effectTick = Number(effectData?.flags?.[SYSTEM_ID]?.[DEFERRED_FLAG]?.expiresAtTick ?? tick);
+  await createChat({ sourceActor, target, profile, state: "applied", d20, total, threshold, detail: `Effet différé actif pendant ${formatTicks(Math.max(0, effectTick - tick))}.` });
   return { ok: true, hit: true, applied: true, consumed: true };
 }
 
@@ -494,7 +569,7 @@ function findDeferredActions({ sourceActor, profileId = null }) {
   const sourceUuid = sourceActor?.uuid ?? null;
   const sourceId = sourceActor?.id ?? null;
   const wanted = norm(profileId);
-  const found = [];
+  const result = [];
   for (const target of game.actors?.contents ?? []) {
     for (const effect of target?.effects ?? []) {
       const data = effect?.flags?.[SYSTEM_ID]?.[DEFERRED_FLAG] ?? null;
@@ -502,15 +577,15 @@ function findDeferredActions({ sourceActor, profileId = null }) {
       if (sourceUuid ? data.sourceActorUuid !== sourceUuid : data.sourceActorId !== sourceId) continue;
       if (wanted && norm(data.profileId) !== wanted) continue;
       if (tick !== null && Number(data.expiresAtTick ?? 0) > 0 && tick >= Number(data.expiresAtTick)) continue;
-      found.push({ actor: target, effect, data });
+      result.push({ actor: target, effect, data });
     }
   }
-  return found;
+  return result;
 }
 
-async function triggerDeferredAction({ sourceActor, targetActor: deferredTarget, effect }) {
-  const data = effect?.flags?.[SYSTEM_ID]?.[DEFERRED_FLAG ?? ""] ?? effect?.flags?.[SYSTEM_ID]?.[DEFERRED_FLAG] ?? null;
-  const target = deferredTarget ?? effect?.parent ?? null;
+async function triggerDeferredAction({ sourceActor, targetActor: targetFromCall, effect }) {
+  const data = effect?.flags?.[SYSTEM_ID]?.[DEFERRED_FLAG] ?? null;
+  const target = targetFromCall ?? effect?.parent ?? null;
   const tick = currentTick();
   if (!sourceActor || !target || !effect || !data || tick === null) return false;
   if (Number(data.expiresAtTick ?? 0) > 0 && tick >= Number(data.expiresAtTick)) {
@@ -532,8 +607,19 @@ async function triggerDeferredAction({ sourceActor, targetActor: deferredTarget,
     return false;
   }
   const amount = Math.max(0, hp - targetValue);
-  if (amount > 0) await emitGmOperation("applyDamage", { actorUuid: target.uuid ?? null, actorId: target.id ?? null, montant: amount, details: { capabilityDeferredAction: data.profileId, sourceActorUuid: sourceActor.uuid ?? null } });
-  await emitGmOperation("deleteActiveEffects", { actorUuid: target.uuid ?? null, actorId: target.id ?? null, effectIds: [effect.id] });
+  if (amount > 0) {
+    await emitGmOperation("applyDamage", {
+      actorUuid: target.uuid ?? null,
+      actorId: target.id ?? null,
+      montant: amount,
+      details: { capabilityDeferredAction: data.profileId, sourceActorUuid: sourceActor.uuid ?? null }
+    });
+  }
+  await emitGmOperation("deleteActiveEffects", {
+    actorUuid: target.uuid ?? null,
+    actorId: target.id ?? null,
+    effectIds: [effect.id]
+  });
 
   await createChat({
     sourceActor,
@@ -549,6 +635,7 @@ function patchAttackRoll() {
   const original = globalThis.add2eAttackRoll;
   if (typeof original !== "function") return false;
   if (original.__add2eCapabilitySpecialAttackWrapper) return true;
+
   const wrapped = async function add2eCapabilityAwareAttackRoll(args = {}) {
     const actor = args.actor ?? (args.actorId ? game.actors?.get?.(args.actorId) : null);
     const item = args.arme ?? (args.itemId && actor ? actor.items?.get?.(args.itemId) : null);
