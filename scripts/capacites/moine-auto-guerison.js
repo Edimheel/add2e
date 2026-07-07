@@ -3,11 +3,27 @@
  * Script exécuté via on_use d'une classFeature.
  * Compatible Foundry V13 / V14 / V15.
  */
-const ADD2E_MOINE_AUTO_GUERISON_VERSION = "2026-07-05-daily-limit";
+const ADD2E_MOINE_AUTO_GUERISON_VERSION = "2026-07-07-class-level";
 
 function a2eNum(value, fallback = 0) {
   const number = Number(value);
   return Number.isFinite(number) ? number : fallback;
+}
+
+function a2eMonkFeatureLevel(currentActor, currentFeature) {
+  const level = Number(
+    globalThis.add2eFeatureActorLevel?.(currentActor, currentFeature)
+    ?? currentFeature?._add2eClassLevel
+  );
+  return Number.isFinite(level) && level >= 1 ? Math.floor(level) : null;
+}
+
+function a2eMonkClassItem(currentActor, currentFeature) {
+  const itemId = String(currentFeature?._add2eClassItemId ?? "").trim();
+  if (!itemId) return null;
+  return currentActor?.items?.get?.(itemId)
+    ?? Array.from(currentActor?.items ?? []).find(item => String(item?.id ?? "") === itemId)
+    ?? null;
 }
 
 function a2eMonkDayKey() {
@@ -16,9 +32,8 @@ function a2eMonkDayKey() {
   return new Date().toISOString().slice(0, 10);
 }
 
-function a2eGetMonkRow(subject) {
-  const level = Math.max(1, a2eNum(subject?.system?.niveau ?? subject?.system?.level, 1));
-  const rows = subject?.system?.details_classe?.monkProgression ?? subject?.system?.details_classe?.progression ?? subject?.system?.monkProgression ?? [];
+function a2eGetMonkRow(classItem, level) {
+  const rows = classItem?.system?.monkProgression ?? classItem?.system?.progression ?? [];
   if (!Array.isArray(rows)) return null;
   return rows.find(row => Number(row?.niveau ?? row?.level) === level)
     ?? rows.slice().reverse().find(row => Number(row?.niveau ?? row?.level ?? 0) <= level)
@@ -30,8 +45,15 @@ if (!actor) {
   return false;
 }
 
-const row = a2eGetMonkRow(actor);
-const healAmount = a2eNum(actor.system?.moine?.autoSoinParJour, 0) || a2eNum(row?.selfHealPerDay, 0);
+const level = a2eMonkFeatureLevel(actor, feature);
+const monkClass = a2eMonkClassItem(actor, feature);
+if (level === null || !monkClass) {
+  ui.notifications.error("Auto-guérison du moine : niveau ou classe Moine introuvable.");
+  return false;
+}
+
+const row = a2eGetMonkRow(monkClass, level);
+const healAmount = a2eNum(row?.selfHealPerDay, 0);
 if (healAmount <= 0) {
   ui.notifications.warn("Auto-guérison indisponible à ce niveau.");
   return false;
