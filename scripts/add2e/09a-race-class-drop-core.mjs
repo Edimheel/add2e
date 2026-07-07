@@ -3,7 +3,7 @@
 // Compatible Foundry V13/V14/V15.
 // ============================================================
 
-export const ADD2E_RACE_CLASS_DROP_VERSION = "2026-06-25-race-class-drop-safe-v2";
+export const ADD2E_RACE_CLASS_DROP_VERSION = "2026-07-07-class-level-cap-v1";
 globalThis.ADD2E_RACE_CLASS_DROP_VERSION = ADD2E_RACE_CLASS_DROP_VERSION;
 
 export const CARACS = ["force", "dexterite", "constitution", "intelligence", "sagesse", "charisme"];
@@ -224,7 +224,11 @@ export async function add2eApplyClassItemDataToActor(actor, classData, sheet = n
   const data = add2eItemDataCloneForDrop(classData);
   data.type = "classe";
   data.system = data.system ?? {};
-  data.system.niveau = Math.max(1, Number(actor.system?.niveau) || 1);
+  const inheritedLevel = Math.max(1, Number(actor.system?.niveau) || 1);
+  const declaredMaxLevel = Number(data.system.maxLevel ?? data.system.maximumLevel ?? data.system.niveauMax ?? data.system.levelMax ?? 0);
+  data.system.niveau = Number.isFinite(declaredMaxLevel) && declaredMaxLevel > 0
+    ? Math.min(inheritedLevel, Math.floor(declaredMaxLevel))
+    : inheritedLevel;
   data.system.xp = Math.max(0, Number(actor.system?.xp) || 0);
   const alignmentCandidate = options.alignmentCandidate ?? actor?.system?.alignement ?? "";
   const [classDoc] = await actor.createEmbeddedDocuments("Item", [data], { add2eInternal: true });
