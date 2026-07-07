@@ -158,9 +158,7 @@ const __add2eVadeRetroResult = await (async () => {
     return tokenPoints(target).some(point => pixelsToMeters(Math.hypot(point.x - origin.x, point.y - origin.y)) <= coneDistanceMeters() && angleDifference(direction, pointBearing(point)) <= CONE.angle / 2);
   }
   function clearRulerArtifacts() {
-    try { canvas.controls?.ruler?.clear?.(); } catch (_error) {}
-    try { canvas.controls?.ruler?.destroyChildren?.(); } catch (_error) {}
-    try { canvas.controls?.ruler?.render?.(true); } catch (_error) {}
+    try { canvas.controls?.ruler?.reset?.(); } catch (_error) {}
   }
   function browserEventToCanvasPoint(event) {
     const view = canvas.app?.view;
