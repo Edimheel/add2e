@@ -11,12 +11,12 @@ const register = (Engine, methods) => Object.defineProperties(
 
 export function installEffectsEngineTagsAndFeatures(Engine) {
   register(Engine, {
-    addClassFeatureTagsInto(dst, raw, level = 1) {
+    addClassFeatureTagsInto(dst, raw, level = null) {
+      const classLevel = Number(level);
+      if (!Number.isFinite(classLevel) || classLevel < 1) return;
       const entries = Array.isArray(raw) ? raw : (raw && typeof raw === "object" ? Object.values(raw) : []);
       for (const feature of entries) {
-        if (!feature || typeof feature !== "object") continue;
-        const minimum = Number(feature.minLevel ?? feature.minimumLevel ?? feature.level ?? feature.niveau ?? 1) || 1;
-        if (level < minimum) continue;
+        if (!this.isClassFeatureUnlocked(feature, classLevel)) continue;
         for (const value of [
           feature.tags, feature.tag, feature.effectTags, feature.effets,
           feature.effects, feature.flags?.add2e?.tags
@@ -43,13 +43,23 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
       return level >= min && (max === null || level <= max);
     },
 
-    normalizeClassFeature(feature) {
+    getEmbeddedClassItems(actor) {
+      return Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
+    },
+
+    getEmbeddedClassLevel(item) {
+      const level = Number(item?.system?.niveau ?? item?.system?.level);
+      return Number.isFinite(level) && level >= 1 ? Math.floor(level) : null;
+    },
+
+    normalizeClassFeature(feature, source = {}) {
       return {
         ...foundry.utils.deepClone(feature),
         minLevel: this.classFeatureMinLevel(feature),
         maxLevel: this.classFeatureMaxLevel(feature),
         available: true,
-        activable: feature?.activable === true
+        activable: feature?.activable === true,
+        ...source
       };
     },
 
@@ -59,21 +69,41 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
 
     getUnlockedClassFeatures(actor) {
       if (!actor) return [];
-      const level = this.getActorLevel(actor);
       const out = [];
-      const push = raw => {
+      const classItems = this.getEmbeddedClassItems(actor);
+      const push = (raw, level, source = {}) => {
+        const classLevel = Number(level);
+        if (!Number.isFinite(classLevel) || classLevel < 1) return;
         const entries = Array.isArray(raw) ? raw : (raw && typeof raw === "object" ? Object.values(raw) : []);
-        for (const feature of entries) if (this.isClassFeatureUnlocked(feature, level)) out.push(this.normalizeClassFeature(feature));
+        for (const feature of entries) {
+          if (!this.isClassFeatureUnlocked(feature, classLevel)) continue;
+          out.push(this.normalizeClassFeature(feature, source));
+        }
       };
-      push(actor.system?.classFeatures);
-      push(actor.system?.details_classe?.classFeaturesDebloquees);
-      push(actor.system?.details_classe?.classFeatures);
-      for (const item of actor.items ?? []) {
-        if (String(item.type || "").toLowerCase() === "classe") push(item.system?.classFeatures);
+
+      if (classItems.length) {
+        for (const item of classItems) {
+          const level = this.getEmbeddedClassLevel(item);
+          if (level === null) continue;
+          push(item.system?.classFeatures, level, {
+            _add2eClassItemId: item.id ?? null,
+            _add2eClassItemUuid: item.uuid ?? null,
+            _add2eClassName: item.name ?? item.system?.label ?? "Classe",
+            _add2eClassLevel: level
+          });
+        }
+      } else {
+        // Compatibilité des anciens acteurs sans Item de classe embarqué.
+        const level = this.getActorLevel(actor);
+        push(actor.system?.classFeatures, level);
+        push(actor.system?.details_classe?.classFeaturesDebloquees, level);
+        push(actor.system?.details_classe?.classFeatures, level);
       }
+
       const seen = new Set();
       return out.filter(feature => {
-        const key = `${feature.minLevel}|${feature.name ?? feature.label ?? feature.title ?? feature.nom ?? JSON.stringify(feature.tags ?? [])}`;
+        const source = feature._add2eClassItemId ?? "legacy";
+        const key = `${source}|${feature.minLevel}|${feature.name ?? feature.label ?? feature.title ?? feature.nom ?? JSON.stringify(feature.tags ?? [])}`;
         if (seen.has(key)) return false;
         seen.add(key);
         return true;
@@ -123,7 +153,8 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
     getActiveTags(actor) {
       if (!actor) return [];
       const tags = [];
-      const level = this.getActorLevel(actor);
+      const classItems = this.getEmbeddedClassItems(actor);
+      const legacyLevel = this.getActorLevel(actor);
 
       this.addTagsInto(tags, this.getRacialTagsForRace(this.getRaceSlug(actor)));
       this.addTagsInto(tags, actor.flags?.add2e?.racialTags);
@@ -133,11 +164,19 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
         try { this.addTagsInto(tags, actor.getFlag("add2e", "classTags")); } catch {}
       }
 
-      this.addClassFeatureTagsInto(tags, actor.system?.classFeatures, level);
-      this.addClassFeatureTagsInto(tags, actor.system?.details_classe?.classFeatures, level);
+      // Les données d'acteur historiques ne sont une source qu'en l'absence
+      // d'Items classe. Dès qu'ils existent, chacun porte son niveau propre.
+      if (!classItems.length) {
+        this.addClassFeatureTagsInto(tags, actor.system?.classFeatures, legacyLevel);
+        this.addClassFeatureTagsInto(tags, actor.system?.details_classe?.classFeatures, legacyLevel);
+      }
 
       for (const effect of actor.effects ?? []) {
         if (effect.disabled) continue;
+        // Cet effet est un ancien cache des tags de classe. Les Items classe
+        // sont désormais relus directement ci-dessous afin de ne jamais
+        // conserver un déblocage calculé avec actor.system.niveau global.
+        if (effect.flags?.add2e?.autoClassPassiveEffect === true) continue;
         if (effect.origin) {
           try {
             const source = fromUuidSync(effect.origin);
@@ -149,7 +188,8 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
 
       for (const item of actor.items ?? []) {
         const type = String(item.type || "").toLowerCase();
-        const always = type === "race" || type === "classe";
+        const isClass = type === "classe";
+        const always = type === "race" || isClass;
         const equippedTypes = ["arme", "armure", "objet", "weapon", "armor", "equipment", "object", "magic", "objet_magique"];
 
         if (!always && !equippedTypes.includes(type)) continue;
@@ -162,7 +202,7 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
         ]) this.addTagsInto(tags, value);
 
         this.addEmbeddedItemEffectTagsInto(tags, item);
-        if (always) this.addClassFeatureTagsInto(tags, item.system?.classFeatures, level);
+        if (isClass) this.addClassFeatureTagsInto(tags, item.system?.classFeatures, this.getEmbeddedClassLevel(item));
 
         if (item.getFlag) {
           try { this.addTagsInto(tags, item.getFlag("add2e", "tags")); } catch {}
@@ -170,16 +210,16 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
         }
       }
 
-      const monk = [...(actor.items ?? [])].find(item => String(item.type || "").toLowerCase() === "classe"
-        && (this.normalizeKey(item.system?.label || item.name || "").includes("moine")
-          || this.toArray(item.system?.tags).map(tag => this.normalizeTag(tag)).includes("classe:moine")));
+      const monk = classItems.find(item => this.normalizeKey(item.system?.label || item.name || "").includes("moine")
+        || this.toArray(item.system?.tags).map(tag => this.normalizeTag(tag)).includes("classe:moine"));
 
-      if (monk) {
+      const monkLevel = this.getEmbeddedClassLevel(monk);
+      if (monk && monkLevel !== null) {
         const progression = Array.isArray(monk.system?.monkProgression) && monk.system.monkProgression.length
           ? monk.system.monkProgression
           : (Array.isArray(monk.system?.progression) ? monk.system.progression : []);
-        const row = progression.find(entry => Number(entry?.niveau ?? entry?.level) === level)
-          ?? progression[Math.max(0, Math.min(progression.length - 1, level - 1))]
+        const row = progression.find(entry => Number(entry?.niveau ?? entry?.level) === monkLevel)
+          ?? progression[Math.max(0, Math.min(progression.length - 1, monkLevel - 1))]
           ?? null;
         this.addTagsInto(tags, row?.tags);
       }
