@@ -71,23 +71,46 @@ function vadeActors(combat = game.combat) {
   return actors;
 }
 
+function stopReasons(state, localUserId, isGM) {
+  const reasons = [];
+  if (isGM) reasons.push("local-user-is-gm");
+  if (state.status !== "pending") reasons.push(`status-${state.status ?? "absent"}`);
+  if (Number(state.lastRound ?? state.combatRound) >= Number(state.combatRound)) reasons.push("round-already-handled");
+  if (String(state.initiatorUserId ?? "") !== String(localUserId ?? "")) reasons.push("initiator-is-another-user");
+  if (!state.owner) reasons.push("actor-not-owned-locally");
+  if (!state.pendingGroups || !state.pendingTargets) reasons.push("pending-queue-empty");
+  return reasons;
+}
+
 function traceRound(combat, changed, source) {
   const currentRound = Number(combat?.round ?? changed?.round ?? 0) || 0;
+  const states = vadeActors(combat);
+  const localUserId = game.user?.id ?? null;
+  const isGM = game.user?.isGM ?? false;
   trace("ROUND_UPDATE", {
     source,
-    localUserId: game.user?.id ?? null,
-    isGM: game.user?.isGM ?? false,
+    localUserId,
+    isGM,
     changedRound: changed?.round ?? null,
     combatId: combat?.id ?? null,
     currentRound,
-    vadeActors: vadeActors(combat)
+    vadeActors: states
   });
+  if (isGM || !states.length) {
+    trace("STOP_NO_LOCAL_PENDING", { source, reason: isGM ? "local-user-is-gm" : "no-vade-state-on-combatants", combatId: combat?.id ?? null, currentRound });
+    return;
+  }
+  for (const state of states) {
+    const reasons = stopReasons(state, localUserId, isGM);
+    if (reasons.length) trace("STOP_STATE_FILTER", { source, reasons, state });
+    else trace("PLAYER_CANDIDATE", { source, state });
+  }
 }
 
 function wrapClassExecutor() {
   const original = globalThis.add2eExecuteClassFeatureOnUse;
   if (typeof original !== "function") {
-    trace("EXECUTOR_UNAVAILABLE", { type: typeof original });
+    trace("STOP_EXECUTOR_UNAVAILABLE", { type: typeof original });
     return false;
   }
   if (original[WRAPPED_KEY]) return true;
@@ -114,10 +137,12 @@ function wrapClassExecutor() {
     });
     try {
       const result = await original.call(this, actor, feature, token, ...rest);
-      trace("EXECUTOR_RESULT", { result, after: stateSummary(actor, combat), contextStillPresent: !!continuationContext(actor, combat) });
+      const after = stateSummary(actor, combat);
+      trace("EXECUTOR_RESULT", { result, after, contextStillPresent: !!continuationContext(actor, combat) });
+      if (result === false) trace("STOP_ONUSE_RETURNED_FALSE", { before, after, contextStillPresent: !!continuationContext(actor, combat) });
       return result;
     } catch (error) {
-      traceError("EXECUTOR_THROW", error, { after: stateSummary(actor, combat) });
+      traceError("STOP_ONUSE_THROW", error, { after: stateSummary(actor, combat) });
       throw error;
     }
   };
