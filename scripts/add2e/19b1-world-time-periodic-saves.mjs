@@ -183,7 +183,7 @@ function periodicSaveAbilityBonus(actor, config) {
   const flat = numberOr(bonus.flat, 0);
   if (String(bonus.mode ?? "none") !== "score-minus" || !bonus.ability) return flat;
 
-  const score = actorAbilityScore(actor, config.ability);
+  const score = actorAbilityScore(actor, bonus.ability);
   const minimum = numberOr(bonus.minimum, Infinity);
   if (!Number.isFinite(score) || score < minimum) return flat;
   return flat + score - numberOr(bonus.subtract, 0);
