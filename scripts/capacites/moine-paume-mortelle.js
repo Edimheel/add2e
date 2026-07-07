@@ -2,9 +2,9 @@
  * ADD2E — Moine : Paume mortelle
  * Crée / met à jour une arme temporaire visible dans l'onglet Combat.
  * Script exécuté via on_use d'une classFeature.
- * Paramètres attendus par le lanceur : actor, item, sort.
+ * Paramètres attendus par le lanceur : actor, feature, item, sort.
  */
-const ADD2E_MOINE_PAUME_MORTELLE_VERSION = "2026-06-15-v6-compact-chat-card";
+const ADD2E_MOINE_PAUME_MORTELLE_VERSION = "2026-07-07-class-level";
 const ADD2E_MOINE_PAUME_MORTELLE_DAY_ROUNDS = 24 * 60;
 
 globalThis.ADD2E_MOINE_PAUME_MORTELLE_VERSION = ADD2E_MOINE_PAUME_MORTELLE_VERSION;
@@ -21,6 +21,22 @@ function a2eNorm(v) {
 function a2eNum(v, fallback = 0) {
   const n = Number(v);
   return Number.isFinite(n) ? n : fallback;
+}
+
+function a2eMonkFeatureLevel(currentActor, currentFeature) {
+  const level = Number(
+    globalThis.add2eFeatureActorLevel?.(currentActor, currentFeature)
+    ?? currentFeature?._add2eClassLevel
+  );
+  return Number.isFinite(level) && level >= 1 ? Math.floor(level) : null;
+}
+
+function a2eMonkClassItem(currentActor, currentFeature) {
+  const itemId = String(currentFeature?._add2eClassItemId ?? "").trim();
+  if (!itemId) return null;
+  return currentActor?.items?.get?.(itemId)
+    ?? Array.from(currentActor?.items ?? []).find(item => String(item?.id ?? "") === itemId)
+    ?? null;
 }
 
 function a2eEsc(value) {
@@ -69,13 +85,10 @@ function a2eFormatRounds(rounds) {
   return `${value} round(s)`;
 }
 
-function a2eGetMonkRow(actor) {
-  const level = Math.max(1, a2eNum(actor?.system?.niveau, 1));
-
+function a2eGetMonkRow(classItem, level) {
   const rows =
-    actor?.system?.details_classe?.monkProgression ??
-    actor?.system?.details_classe?.progression ??
-    actor?.system?.monkProgression ??
+    classItem?.system?.monkProgression ??
+    classItem?.system?.progression ??
     [];
 
   if (!Array.isArray(rows)) return null;
@@ -142,14 +155,19 @@ if (!actor) {
   return false;
 }
 
+const level = a2eMonkFeatureLevel(actor, feature);
+const monkClass = a2eMonkClassItem(actor, feature);
+if (level === null || !monkClass) {
+  ui.notifications.error("Paume mortelle : niveau ou classe Moine introuvable.");
+  return false;
+}
+
 if (!game.combat) {
   ui.notifications.warn("Paume mortelle ne peut être préparée que pendant un combat actif.");
   return false;
 }
 
-const row = a2eGetMonkRow(actor);
-const level = Math.max(1, a2eNum(actor.system?.niveau, 1));
-
+const row = a2eGetMonkRow(monkClass, level);
 if (!row?.quiveringPalm) {
   ui.notifications.warn("Paume mortelle indisponible à ce niveau.");
   return false;
@@ -181,7 +199,6 @@ if (alreadyPrepared?.prepared === true) {
 }
 
 const damage = a2eDamageParts(
-  actor.system?.moine?.main_nue ??
   row?.unarmedDamage ??
   row?.main_nue ??
   row?.damage ??
