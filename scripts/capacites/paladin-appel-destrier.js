@@ -1,13 +1,26 @@
 /* ADD2E — Paladin : Appel du destrier */
-const ADD2E_PALADIN_APPEL_DESTRIER_VERSION = "2026-05-03-v1";
+const ADD2E_PALADIN_APPEL_DESTRIER_VERSION = "2026-07-07-class-level";
 globalThis.ADD2E_PALADIN_APPEL_DESTRIER_VERSION = ADD2E_PALADIN_APPEL_DESTRIER_VERSION;
+
+function a2ePalFeatureLevel(currentActor, currentFeature) {
+  const level = Number(
+    globalThis.add2eFeatureActorLevel?.(currentActor, currentFeature)
+    ?? currentFeature?._add2eClassLevel
+  );
+  return Number.isFinite(level) && level >= 1 ? Math.floor(level) : null;
+}
 
 if (!actor) {
   ui.notifications.error("Appel du destrier : acteur introuvable.");
   return false;
 }
 
-const level = Number(actor.system?.niveau ?? 1) || 1;
+const level = a2ePalFeatureLevel(actor, feature);
+if (level === null) {
+  ui.notifications.error("Appel du destrier : niveau de Paladin introuvable.");
+  return false;
+}
+
 if (level < 4) {
   ui.notifications.warn("Le paladin ne peut appeler son destrier qu’à partir du niveau 4.");
   return false;
