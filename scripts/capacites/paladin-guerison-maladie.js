@@ -1,10 +1,18 @@
 /* ADD2E — Paladin : Guérison des maladies */
-const ADD2E_PALADIN_GUERISON_MALADIE_VERSION = "2026-05-03-v1";
+const ADD2E_PALADIN_GUERISON_MALADIE_VERSION = "2026-07-07-class-level";
 globalThis.ADD2E_PALADIN_GUERISON_MALADIE_VERSION = ADD2E_PALADIN_GUERISON_MALADIE_VERSION;
 
 function a2ePalNum(v, fallback = 0) {
   const n = Number(v);
   return Number.isFinite(n) ? n : fallback;
+}
+
+function a2ePalFeatureLevel(currentActor, currentFeature) {
+  const level = Number(
+    globalThis.add2eFeatureActorLevel?.(currentActor, currentFeature)
+    ?? currentFeature?._add2eClassLevel
+  );
+  return Number.isFinite(level) && level >= 1 ? Math.floor(level) : null;
 }
 
 function a2ePalWeekKey() {
@@ -21,7 +29,12 @@ if (!actor) {
   return false;
 }
 
-const level = Math.max(1, a2ePalNum(actor.system?.niveau, 1));
+const level = a2ePalFeatureLevel(actor, feature);
+if (level === null) {
+  ui.notifications.error("Guérison des maladies : niveau de Paladin introuvable.");
+  return false;
+}
+
 const maxUses = Math.floor((level - 1) / 5) + 1;
 const weekKey = a2ePalWeekKey();
 const flagKey = `paladin.guerisonMaladie.${weekKey}`;
