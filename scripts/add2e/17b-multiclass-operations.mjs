@@ -658,8 +658,9 @@ export async function applyClassAsMonoclass(actor, optionOrItemData, sheet = nul
     const data = cloneItemData(itemData);
     data.type = "classe";
     data.system = data.system ?? {};
-    data.system.niveau = Math.max(1, Math.floor(num(actor.system?.niveau, 1)));
-    data.system.xp = Math.max(0, Math.floor(num(actor.system?.xp, 0)));
+    const inheritedXp = Math.max(0, Math.floor(num(actor.system?.xp, 0)));
+    data.system.xp = inheritedXp;
+    data.system.niveau = levelForClassXp(data.system, inheritedXp);
     const [created] = await actor.createEmbeddedDocuments("Item", [data], {
       [INTERNAL]: true,
       add2eInternal: true,
