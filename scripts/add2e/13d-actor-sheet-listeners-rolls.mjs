@@ -1,11 +1,76 @@
 // ADD2E — Actor sheet listeners : jets de caractéristiques, sauvegardes et HUD.
 
-export const ADD2E_SHEET_ROLL_DELEGATION_VERSION = "2026-05-25-sheet-roll-cards-global-v2";
+export const ADD2E_SHEET_ROLL_DELEGATION_VERSION = "2026-07-08-class-progression-save-rolls-v1";
 
 export async function add2eEvaluateRollSafe(formula) {
   const roll = new Roll(formula);
   await roll.evaluate();
   return roll;
+}
+
+function add2eSheetRollNumber(value, fallback = null) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
+}
+
+function add2eSheetRollEmbeddedClassItems(actor) {
+  return Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
+}
+
+function add2eSheetRollClassLevel(actor, item) {
+  const direct = add2eSheetRollNumber(item?.system?.niveau ?? item?.system?.level, null);
+  if (direct !== null && direct >= 1) return Math.floor(direct);
+
+  try {
+    const canonical = globalThis.add2eCanonicalClassLevel?.(actor, item, NaN);
+    if (Number.isFinite(canonical) && canonical >= 1) return Math.floor(canonical);
+  } catch (_error) {}
+
+  const classItems = add2eSheetRollEmbeddedClassItems(actor);
+  if (classItems.length === 1) {
+    const actorLevel = add2eSheetRollNumber(actor?.system?.niveau ?? actor?.system?.level, null);
+    if (actorLevel !== null && actorLevel >= 1) return Math.floor(actorLevel);
+  }
+
+  return null;
+}
+
+function add2eSheetRollProgressionArray(system) {
+  if (Array.isArray(system?.progression)) return system.progression;
+  if (Array.isArray(system?.details_classe?.progression)) return system.details_classe.progression;
+  return [];
+}
+
+function add2eSheetRollClassProgressionRow(actor) {
+  const classItems = add2eSheetRollEmbeddedClassItems(actor);
+  for (const item of classItems) {
+    const level = add2eSheetRollClassLevel(actor, item);
+    if (!Number.isInteger(level) || level < 1) continue;
+    const progression = add2eSheetRollProgressionArray(item?.system ?? {});
+    const row = progression.find(entry => Number(entry?.niveau ?? entry?.level) === level)
+      ?? progression[Math.max(0, Math.min(progression.length - 1, level - 1))]
+      ?? null;
+    if (row) return { row, level, classItem: item, source: "embedded-class" };
+  }
+
+  const actorLevel = Math.max(1, Math.floor(add2eSheetRollNumber(actor?.system?.niveau ?? actor?.system?.level, 1) || 1));
+  const legacyProgression = add2eSheetRollProgressionArray(actor?.system ?? {});
+  const row = legacyProgression.find(entry => Number(entry?.niveau ?? entry?.level) === actorLevel)
+    ?? legacyProgression[Math.max(0, Math.min(legacyProgression.length - 1, actorLevel - 1))]
+    ?? null;
+
+  return row ? { row, level: actorLevel, classItem: null, source: "actor-system" } : null;
+}
+
+function add2eSheetRollSavingThrows(actor) {
+  const progression = add2eSheetRollClassProgressionRow(actor);
+  const fromProgression = progression?.row?.savingThrows ?? progression?.row?.sauvegardes;
+  if (Array.isArray(fromProgression) && fromProgression.length) return { saves: fromProgression, progression };
+
+  const legacy = actor?.system?.sauvegardes ?? actor?.system?.savingThrows;
+  if (Array.isArray(legacy) && legacy.length) return { saves: legacy, progression: null };
+
+  return { saves: [], progression: null };
 }
 
 export async function add2eRollCharacteristicCard(actor, carac) {
@@ -29,7 +94,7 @@ export async function add2eRollCharacteristicCard(actor, carac) {
 export async function add2eRollSaveCard(actor, idx) {
   if (!actor) return ui.notifications.warn("Aucun acteur pour ce jet.");
   idx = Number(idx);
-  const saves = actor.system?.details_classe?.progression?.[actor.system.niveau - 1]?.savingThrows || actor.system?.sauvegardes || [];
+  const { saves, progression } = add2eSheetRollSavingThrows(actor);
   const noms = ["Paralysie", "Pétrification", "Baguettes", "Souffles", "Sorts"];
   const nom = noms[idx] || "Jet";
   const valeur = Number(saves[idx]);
@@ -52,7 +117,8 @@ export async function add2eRollSaveCard(actor, idx) {
   const result = success ? "✔️ Réussite" : "❌ Échec";
   const resultColor = success ? "#1cb360" : "#c34040";
   const details = bonusSave ? `&nbsp;&nbsp;|&nbsp;&nbsp;Effets&nbsp;: <b>${bonusSave >= 0 ? "+" : ""}${bonusSave}</b> → <b>${totalJet}</b>` : "";
-  const content = `<div class="add2e-card-test" style="border-radius:13px;box-shadow:0 2px 10px #cfdfff88;background:linear-gradient(100deg,#f9fafd 90%,#e6e8fb 100%);border:1.4px solid ${color};max-width:420px;padding:.85em 1.1em .8em;font-family:var(--font-primary);"><div style="display:flex;align-items:center;gap:.7em;margin-bottom:.5em;"><i class="fas ${icon}" style="font-size:2em;color:${color};"></i><span style="font-size:1.12em;font-weight:bold;color:${color};">${nom}</span><span style="margin-left:auto;font-size:1em;font-weight:500;color:#666;">Jet de sauvegarde</span></div><div style="font-size:1.09em;margin-bottom:.25em;">Seuil&nbsp;: <b>${valeur}</b>&nbsp;&nbsp;|&nbsp;&nbsp;Résultat&nbsp;: <b>${roll.total}</b>${details}</div><div style="margin:.2em 0 .1em;font-size:1.1em;"><span style="font-weight:600;color:${resultColor};">${result}</span></div></div>`;
+  const sourceLabel = progression?.classItem?.name ? ` — ${progression.classItem.name} niv. ${progression.level}` : "";
+  const content = `<div class="add2e-card-test" style="border-radius:13px;box-shadow:0 2px 10px #cfdfff88;background:linear-gradient(100deg,#f9fafd 90%,#e6e8fb 100%);border:1.4px solid ${color};max-width:420px;padding:.85em 1.1em .8em;font-family:var(--font-primary);"><div style="display:flex;align-items:center;gap:.7em;margin-bottom:.5em;"><i class="fas ${icon}" style="font-size:2em;color:${color};"></i><span style="font-size:1.12em;font-weight:bold;color:${color};">${nom}</span><span style="margin-left:auto;font-size:1em;font-weight:500;color:#666;">Jet de sauvegarde${sourceLabel}</span></div><div style="font-size:1.09em;margin-bottom:.25em;">Seuil&nbsp;: <b>${valeur}</b>&nbsp;&nbsp;|&nbsp;&nbsp;Résultat&nbsp;: <b>${roll.total}</b>${details}</div><div style="margin:.2em 0 .1em;font-size:1.1em;"><span style="font-weight:600;color:${resultColor};">${result}</span></div></div>`;
   return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content });
 }
 
