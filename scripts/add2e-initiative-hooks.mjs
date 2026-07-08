@@ -2,7 +2,14 @@
 // ADD2E — hooks d'initiative.
 
 import { ADD2E_INITIATIVE_VERSION, hasProperty, initiativeState } from "./add2e-initiative-constants.mjs";
-import { currentCombatant, scheduleInitiativeSort, scheduleLocalSync, sortedCombatants } from "./add2e-initiative-order.mjs";
+import {
+  currentCombatant,
+  scheduleInitiativeSort,
+  scheduleLocalSync,
+  sortedCombatants,
+  add2eNotifyExtraAttackTurnLocal,
+  add2ePatchMultipleAttackTracker
+} from "./add2e-initiative-order.mjs";
 import { installInitiativeChatCard } from "./add2e-initiative-chat.mjs";
 import { patchInitiativeIcons } from "./add2e-initiative-icons.mjs";
 import { canTokenInteractNow, clearFoundryMovementTrailAggressive } from "./add2e-initiative-locks.mjs";
@@ -18,7 +25,17 @@ function combatFor(combatant) {
 }
 
 function patchTrackerIcons(app, html) {
-  if (app?.options?.id === "combat" || app?.tabName === "combat" || app?.id === "combat") patchInitiativeIcons(html);
+  if (app?.options?.id === "combat" || app?.tabName === "combat" || app?.id === "combat") {
+    patchInitiativeIcons(html);
+    add2ePatchMultipleAttackTracker(html, game.combat);
+  }
+}
+
+function scheduleExtraAttackLocalNotice(combat) {
+  window.setTimeout(() => {
+    add2eNotifyExtraAttackTurnLocal(combat);
+    add2ePatchMultipleAttackTracker(ui?.combat?.element ?? document, combat);
+  }, 60);
 }
 
 export function add2eInitiativeDebug(label = "debug", combat = game.combat) {
@@ -30,6 +47,7 @@ export function add2eInitiativeDebug(label = "debug", combat = game.combat) {
     round: combat?.round ?? null,
     turn: combat?.turn ?? null,
     current: combat?.current ?? null,
+    multipleAttackPhase: combat?.getFlag?.("add2e", "multipleAttackPhase") ?? combat?.flags?.add2e?.multipleAttackPhase ?? null,
     active: currentCombatant(combat)?.name ?? null,
     turns: turns.map((c, index) => ({ index, id: c.id, name: c.name, initiative: c.initiative, sort: c.sort, tokenId: c.tokenId }))
   };
@@ -53,19 +71,41 @@ export function installHooks() {
   Hooks.on("deleteCombatant", (combatant, options) => { if (!options?.add2eInitiativeSort) scheduleInitiativeSort(combatFor(combatant)); });
 
   Hooks.on("updateCombat", (combat, changes, options) => {
-    if (options?.add2eInitiativeSort || options?.add2eInitiativeNavigation) return;
-    if (hasProperty(changes ?? {}, "started") && combat?.started) return scheduleLocalSync(combat, { delay: 80, selectToken: true, reason: "combat-start" });
-    if (hasAnyProperty(changes, ["turn", "round"])) scheduleLocalSync(combat, { delay: 40, selectToken: true, reason: "combat-update" });
+    if (options?.add2eInitiativeSort || options?.add2eInitiativeNavigation) {
+      scheduleExtraAttackLocalNotice(combat);
+      return;
+    }
+    if (hasProperty(changes ?? {}, "started") && combat?.started) {
+      scheduleLocalSync(combat, { delay: 80, selectToken: true, reason: "combat-start" });
+      scheduleExtraAttackLocalNotice(combat);
+      return;
+    }
+    if (hasAnyProperty(changes, ["turn", "round"])) {
+      scheduleLocalSync(combat, { delay: 40, selectToken: true, reason: "combat-update" });
+      scheduleExtraAttackLocalNotice(combat);
+    }
   });
 
-  Hooks.on("combatTurn", combat => scheduleLocalSync(combat, { delay: 30, selectToken: true, reason: "combat-turn" }));
-  Hooks.on("combatRound", combat => scheduleLocalSync(combat, { delay: 30, selectToken: true, reason: "combat-round" }));
+  Hooks.on("combatTurn", combat => {
+    scheduleLocalSync(combat, { delay: 30, selectToken: true, reason: "combat-turn" });
+    scheduleExtraAttackLocalNotice(combat);
+  });
+  Hooks.on("combatRound", combat => {
+    scheduleLocalSync(combat, { delay: 30, selectToken: true, reason: "combat-round" });
+    scheduleExtraAttackLocalNotice(combat);
+  });
   Hooks.on("canvasReady", () => scheduleLocalSync(game.combat, { delay: 180, selectToken: false, reason: "refresh" }));
   Hooks.on("hoverToken", clearFoundryMovementTrailAggressive);
   Hooks.on("refreshToken", clearFoundryMovementTrailAggressive);
 
-  Hooks.on("renderCombatTracker", (_app, html) => patchInitiativeIcons(html));
-  Hooks.on("renderCombatantConfig", () => setTimeout(() => patchInitiativeIcons(document), 50));
+  Hooks.on("renderCombatTracker", (_app, html) => {
+    patchInitiativeIcons(html);
+    add2ePatchMultipleAttackTracker(html, game.combat);
+  });
+  Hooks.on("renderCombatantConfig", () => setTimeout(() => {
+    patchInitiativeIcons(document);
+    add2ePatchMultipleAttackTracker(document, game.combat);
+  }, 50));
   Hooks.on("renderSidebarTab", patchTrackerIcons);
 
   installInitiativeChatCard();
