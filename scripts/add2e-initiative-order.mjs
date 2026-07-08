@@ -3,12 +3,17 @@
 // Règle : 1d6, le plus petit score agit en premier.
 // Le fichier lit les états inactifs, mais ne les modifie jamais.
 
-import { ADD2E_INITIATIVE_VERSION, TAG, initiativeState } from "./add2e-initiative-constants.mjs";
+import { ADD2E_INITIATIVE_VERSION, TAG, initiativeState, escapeHtml } from "./add2e-initiative-constants.mjs";
 
 const INACTIVE_STATUS_IDS = new Set(["dead", "defeated", "unconscious", "incapacitated", "inactive", "inactif", "mort", "inconscient", "hors-combat", "hors-jeu"]);
 const TRUE_VALUES = new Set(["true", "1", "yes", "oui", "dead", "defeated", "inactive", "inactif", "mort", "inconscient", "hors-combat", "hors-jeu"]);
 const HP_PATHS = ["system.pv.value", "system.pv.actuel", "system.pv.current", "system.hp.value", "system.hp.current", "system.points_de_vie.actuel", "system.pointsVie.actuel", "system.pdv_actuel", "system.pdv"];
 const FLAG_PATHS = ["defeated", "isDefeated", "flags.core.defeated", "flags.add2e.defeated", "flags.add2e.inactif", "flags.add2e.inactive", "flags.add2e.horsJeu", "flags.add2e.horsCombat", "system.defeated", "system.inactif", "system.inactive", "system.horsJeu", "system.horsCombat", "system.etat.mort", "system.etat.inconscient"];
+const ADD2E_MULTIPLE_ATTACK_ACTOR_FLAG = "multipleAttacks";
+const ADD2E_MULTIPLE_ATTACK_PHASE_FLAG = "multipleAttackPhase";
+const ADD2E_MULTIPLE_ATTACK_CHAT_KEYS = "__ADD2E_MULTIPLE_ATTACK_CHAT_KEYS__";
+const ADD2E_MULTIPLE_ATTACK_LOCAL_KEYS = "__ADD2E_MULTIPLE_ATTACK_LOCAL_KEYS__";
+const MARTIAL_ATTACK_CLASSES = new Set(["guerrier", "fighter", "paladin", "ranger", "rodeur"]);
 
 function isCombatStarted(combat = game.combat) {
   return Boolean(combat?.started && Number(combat?.round ?? 0) > 0);
@@ -95,6 +100,235 @@ function actorHp(actor) {
     if (Number.isFinite(value)) return { path, value };
   }
   return { path: null, value: null };
+}
+
+function clone(value) {
+  try { return foundry.utils.deepClone(value ?? {}); }
+  catch (_err) { return JSON.parse(JSON.stringify(value ?? {})); }
+}
+
+function normalizeSlug(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function classSlug(item) {
+  const system = item?.system ?? {};
+  return normalizeSlug(system.slug ?? system.label ?? system.nom ?? system.name ?? item?.name ?? "");
+}
+
+function classLevel(actor, item) {
+  const values = [item?.system?.niveau, item?.system?.level, item?.system?.niveau_classe, actor?.system?.niveau];
+  for (const value of values) {
+    const numeric = Number(value);
+    if (Number.isFinite(numeric) && numeric > 0) return Math.floor(numeric);
+  }
+  return 1;
+}
+
+function actorClassItems(actor) {
+  return Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
+}
+
+function multipleAttackStates(actor) {
+  const raw = actor?.getFlag?.("add2e", ADD2E_MULTIPLE_ATTACK_ACTOR_FLAG) ?? actor?.flags?.add2e?.[ADD2E_MULTIPLE_ATTACK_ACTOR_FLAG] ?? {};
+  return raw && typeof raw === "object" && !Array.isArray(raw) ? clone(raw) : {};
+}
+
+function combatKey(combat = game.combat) {
+  return String(combat?.id ?? "active-combat");
+}
+
+function multipleAttackPhase(combat = game.combat) {
+  const phase = combat?.getFlag?.("add2e", ADD2E_MULTIPLE_ATTACK_PHASE_FLAG) ?? combat?.flags?.add2e?.[ADD2E_MULTIPLE_ATTACK_PHASE_FLAG] ?? {};
+  return phase && typeof phase === "object" ? phase : {};
+}
+
+async function setMultipleAttackPhase(combat, data = {}) {
+  if (!combat?.setFlag) return false;
+  try {
+    await combat.setFlag("add2e", ADD2E_MULTIPLE_ATTACK_PHASE_FLAG, data);
+    return true;
+  } catch (err) {
+    console.warn(`${TAG}[MULTI_ATTACK][PHASE_SET_ERROR]`, err);
+    return false;
+  }
+}
+
+function phaseIsExtra(combat = game.combat, round = combatRound(combat)) {
+  const phase = multipleAttackPhase(combat);
+  return phase?.phase === "extra" && Number(phase.round) === Number(round);
+}
+
+function readActorMultipleAttackState(actor, combat = game.combat) {
+  const key = combatKey(combat);
+  const round = combatRound(combat);
+  const states = multipleAttackStates(actor);
+  const stored = states[key] && typeof states[key] === "object" ? states[key] : {};
+  const sequenceStartRound = Math.max(1, Math.floor(Number(stored.sequenceStartRound ?? round) || round));
+  const state = Number(stored.round) === round
+    ? { ...stored, sequenceStartRound }
+    : { sequenceStartRound, round, used: 0, pending: 0, total: 1, pendingNotice: false };
+  return { key, states, state, round };
+}
+
+async function writeActorMultipleAttackState(actor, combat, state) {
+  if (!actor?.setFlag) return false;
+  const key = combatKey(combat);
+  const states = multipleAttackStates(actor);
+  states[key] = { ...state, updatedAt: Date.now() };
+  try {
+    await actor.setFlag("add2e", ADD2E_MULTIPLE_ATTACK_ACTOR_FLAG, states);
+    return true;
+  } catch (err) {
+    console.warn(`${TAG}[MULTI_ATTACK][ACTOR_STATE_SET_ERROR]`, { actor: actor?.name, err });
+    return false;
+  }
+}
+
+function martialClassAttackProfile(actor, combat = game.combat, state = null) {
+  if (actor?.type !== "personnage") return { total: 1, ratio: "1/1", eligible: false, label: "1/1", source: null };
+  const round = combatRound(combat);
+  const start = Math.max(1, Math.floor(Number(state?.sequenceStartRound ?? round) || round));
+  const twoOnThisRound = ((round - start) % 2) === 1;
+  const candidates = [];
+
+  for (const item of actorClassItems(actor)) {
+    const slug = classSlug(item);
+    if (!MARTIAL_ATTACK_CLASSES.has(slug)) continue;
+    const level = classLevel(actor, item);
+    let profile = { total: 1, ratio: "1/1", eligible: true, label: "1/1", source: item.name ?? slug, slug, level };
+
+    if (slug === "ranger" || slug === "rodeur") {
+      if (level >= 15) profile = { ...profile, total: 2, ratio: "2/1", label: "2/1" };
+      else if (level >= 8) profile = { ...profile, total: twoOnThisRound ? 2 : 1, ratio: "3/2", label: twoOnThisRound ? "3/2 — round à 2 attaques" : "3/2 — round à 1 attaque" };
+    } else {
+      if (level >= 13) profile = { ...profile, total: 2, ratio: "2/1", label: "2/1" };
+      else if (level >= 7) profile = { ...profile, total: twoOnThisRound ? 2 : 1, ratio: "3/2", label: twoOnThisRound ? "3/2 — round à 2 attaques" : "3/2 — round à 1 attaque" };
+    }
+
+    candidates.push(profile);
+  }
+
+  return candidates.sort((a, b) => b.total - a.total || b.level - a.level)[0]
+    ?? { total: 1, ratio: "1/1", eligible: false, label: "1/1", source: null };
+}
+
+function actorMatchesCombatant(actor, combatant) {
+  return Boolean(actor && combatant && (String(combatant.actor?.id ?? combatant.actorId ?? "") === String(actor.id ?? "")));
+}
+
+function ownerAndGmUserIds(actor) {
+  const ids = [];
+  for (const user of game.users ?? []) {
+    if (!user?.active) continue;
+    if (user.isGM) { ids.push(user.id); continue; }
+    try {
+      if (actor?.testUserPermission?.(user, "OWNER")) ids.push(user.id);
+    } catch (_err) {
+      const level = Number(actor?.ownership?.[user.id] ?? actor?.ownership?.default ?? 0);
+      if (level >= 3) ids.push(user.id);
+    }
+  }
+  return [...new Set(ids.filter(Boolean))];
+}
+
+function multipleAttackChatKeys() {
+  globalThis[ADD2E_MULTIPLE_ATTACK_CHAT_KEYS] ??= new Set();
+  return globalThis[ADD2E_MULTIPLE_ATTACK_CHAT_KEYS];
+}
+
+function multipleAttackLocalKeys() {
+  globalThis[ADD2E_MULTIPLE_ATTACK_LOCAL_KEYS] ??= new Set();
+  return globalThis[ADD2E_MULTIPLE_ATTACK_LOCAL_KEYS];
+}
+
+async function createMultipleAttackChat(actor, combat, content, keySuffix) {
+  const key = `${combat?.id ?? "combat"}:${combatRound(combat)}:${actor?.id ?? "actor"}:${keySuffix}`;
+  const seen = multipleAttackChatKeys();
+  if (seen.has(key)) return false;
+  seen.add(key);
+  const whisper = ownerAndGmUserIds(actor);
+  await ChatMessage.create({
+    speaker: ChatMessage.getSpeaker({ actor }),
+    content,
+    whisper: whisper.length ? whisper : undefined,
+    flags: { add2e: { multipleAttackNotice: true, combatId: combat?.id ?? null, round: combatRound(combat), actorId: actor?.id ?? null } }
+  });
+  return true;
+}
+
+async function announcePendingExtraAttack(actor, combat, pending) {
+  const safeName = escapeHtml(actor?.name ?? "Acteur");
+  await createMultipleAttackChat(
+    actor,
+    combat,
+    `<div class="add2e-card-test"><b>Attaque supplémentaire en attente</b><br>${safeName} aura ${pending} attaque supplémentaire en fin de round.</div>`,
+    "pending"
+  );
+  if (actor?.isOwner) ui.notifications?.info?.(`${actor.name} : ${pending} attaque supplémentaire en fin de round.`);
+}
+
+async function announceExtraAttackTurn(combat, combatant) {
+  const actor = combatant?.actor ?? null;
+  if (!actor || !game.user?.isGM) return false;
+  const pending = getPendingExtraAttackCount(actor, combat);
+  if (pending <= 0) return false;
+  const safeName = escapeHtml(actor.name);
+  await createMultipleAttackChat(
+    actor,
+    combat,
+    `<div class="add2e-card-test"><b>Round ${combatRound(combat)} — Attaque supplémentaire</b><br>C’est à ${safeName} : ${pending} attaque supplémentaire disponible.</div>`,
+    `turn-${combatant.id}`
+  );
+  return true;
+}
+
+export function add2eNotifyExtraAttackTurnLocal(combat = game.combat) {
+  if (!combat || !phaseIsExtra(combat)) return false;
+  const combatant = currentCombatant(combat);
+  const actor = combatant?.actor ?? null;
+  if (!actor?.isOwner) return false;
+  const pending = getPendingExtraAttackCount(actor, combat);
+  if (pending <= 0) return false;
+  const key = `${combat.id}:${combatRound(combat)}:${combatant.id}:local`;
+  const seen = multipleAttackLocalKeys();
+  if (seen.has(key)) return false;
+  seen.add(key);
+  ui.notifications?.info?.(`${actor.name} : attaque supplémentaire disponible.`);
+  return true;
+}
+
+function getPendingExtraAttackCount(actor, combat = game.combat) {
+  const { state } = readActorMultipleAttackState(actor, combat);
+  return Math.max(0, Math.floor(Number(state.pending ?? 0) || 0));
+}
+
+function pendingExtraCombatantIndexes(turns, combat, { afterIndex = -1 } = {}) {
+  const indexes = [];
+  for (let index = Math.max(0, afterIndex + 1); index < turns.length; index += 1) {
+    const combatant = turns[index];
+    const actor = combatant?.actor ?? null;
+    if (!actor || isInactiveCombatant(combatant)) continue;
+    if (getPendingExtraAttackCount(actor, combat) > 0) indexes.push(index);
+  }
+  return indexes;
+}
+
+async function enterExtraAttackPhase(combat, turns, index) {
+  const combatant = turns[index] ?? null;
+  await setMultipleAttackPhase(combat, { phase: "extra", round: combatRound(combat), combatantId: combatant?.id ?? null, startedAt: Date.now() });
+  return updateTurn(combat, index, combatRound(combat), { extraAttackPhase: true });
+}
+
+async function leaveExtraAttackPhase(combat, nextRound) {
+  await setMultipleAttackPhase(combat, { phase: "normal", round: nextRound, updatedAt: Date.now() });
 }
 
 export function isInactiveCombatant(combatant) {
@@ -244,26 +478,128 @@ export function selectCurrentToken(combat = game.combat) {
   }
 }
 
+export function add2eCanActorWeaponAttackNow(actor, { combat = game.combat, notify = false } = {}) {
+  if (!combat?.started || actor?.type !== "personnage") return true;
+  const combatant = currentCombatant(combat);
+  if (!actorMatchesCombatant(actor, combatant)) return true;
+
+  const { state } = readActorMultipleAttackState(actor, combat);
+  const profile = martialClassAttackProfile(actor, combat, state);
+  const used = Math.max(0, Math.floor(Number(state.used ?? 0) || 0));
+  const pending = Math.max(0, Math.floor(Number(state.pending ?? Math.max(0, profile.total - used)) || 0));
+
+  if (phaseIsExtra(combat)) {
+    if (pending > 0) return true;
+    if (notify) ui.notifications?.warn?.(`${actor.name} n’a plus d’attaque supplémentaire ce round.`);
+    return false;
+  }
+
+  if (used <= 0) return true;
+  if (notify) ui.notifications?.warn?.(`${actor.name} a déjà utilisé son attaque normale. L’attaque supplémentaire se fera en fin de round.`);
+  return false;
+}
+
+export async function add2eRecordWeaponAttack(actor, { combat = game.combat } = {}) {
+  if (!combat?.started || actor?.type !== "personnage") return null;
+  const { state, round } = readActorMultipleAttackState(actor, combat);
+  const profile = martialClassAttackProfile(actor, combat, state);
+  const used = Math.max(0, Math.floor(Number(state.used ?? 0) || 0)) + 1;
+  const pending = Math.max(0, Math.floor(Number(profile.total ?? 1) - used));
+  const nextState = {
+    ...state,
+    round,
+    total: Math.max(1, Math.floor(Number(profile.total ?? 1) || 1)),
+    ratio: profile.ratio,
+    label: profile.label,
+    source: profile.source,
+    used,
+    pending,
+    phase: phaseIsExtra(combat) ? "extra" : "normal"
+  };
+
+  const shouldAnnouncePending = !phaseIsExtra(combat) && pending > 0 && nextState.pendingNotice !== true;
+  if (shouldAnnouncePending) nextState.pendingNotice = true;
+  await writeActorMultipleAttackState(actor, combat, nextState);
+
+  if (shouldAnnouncePending) await announcePendingExtraAttack(actor, combat, pending);
+  if (typeof globalThis.add2eSyncActionHudToCombatant === "function") globalThis.add2eSyncActionHudToCombatant(combat, { reason: "multiple-attack" });
+  return nextState;
+}
+
+export function add2eMultipleAttackHudStatus(actor, combat = game.combat) {
+  if (!combat?.started || actor?.type !== "personnage") return null;
+  const combatant = currentCombatant(combat);
+  if (!actorMatchesCombatant(actor, combatant)) return null;
+  const { state } = readActorMultipleAttackState(actor, combat);
+  const profile = martialClassAttackProfile(actor, combat, state);
+  const used = Math.max(0, Math.floor(Number(state.used ?? 0) || 0));
+  const pending = Math.max(0, Math.floor(Number(state.pending ?? 0) || 0));
+
+  if (phaseIsExtra(combat) && pending > 0) {
+    return { phase: "extra", label: "Attaque supplémentaire", detail: `${pending} attaque restante ce round`, ratio: profile.label, css: "extra" };
+  }
+  if (!phaseIsExtra(combat) && pending > 0) {
+    return { phase: "pending", label: "Attaque supplémentaire en attente", detail: "Disponible en fin de round", ratio: profile.label, css: "pending" };
+  }
+  if (!phaseIsExtra(combat) && used > 0 && profile.total <= 1) {
+    return { phase: "used", label: "Attaque utilisée", detail: "Aucune attaque restante ce round", ratio: profile.label, css: "used" };
+  }
+  return null;
+}
+
+export function add2ePatchMultipleAttackTracker(html, combat = game.combat) {
+  const root = html?.jquery ? html[0] : html instanceof HTMLElement ? html : html?.[0] ?? document;
+  if (!root?.querySelectorAll) return false;
+
+  const styleId = "add2e-multiple-attack-tracker-style";
+  if (!document.getElementById(styleId)) {
+    const style = document.createElement("style");
+    style.id = styleId;
+    style.textContent = `
+      #combat-tracker .add2e-extra-attack-badge,.combat-tracker .add2e-extra-attack-badge{display:inline-flex;align-items:center;gap:3px;margin-left:6px;padding:1px 6px;border-radius:999px;border:1px solid #d9bf73;background:#6f201a;color:#fff2bd;font-size:.72em;font-weight:900;white-space:nowrap}
+      #combat-tracker [data-add2e-extra-attack="1"],.combat-tracker [data-add2e-extra-attack="1"]{box-shadow:inset 3px 0 0 #d9bf73}
+    `;
+    document.head.appendChild(style);
+  }
+
+  for (const badge of root.querySelectorAll(".add2e-extra-attack-badge")) badge.remove();
+  for (const row of root.querySelectorAll('[data-add2e-extra-attack="1"]')) delete row.dataset.add2eExtraAttack;
+
+  if (!phaseIsExtra(combat)) return true;
+  const combatant = currentCombatant(combat);
+  if (!combatant) return true;
+  const row = root.querySelector(`[data-combatant-id="${combatant.id}"]`) ?? root.querySelector(`[data-combatant-id='${combatant.id}']`);
+  if (!row) return false;
+  row.dataset.add2eExtraAttack = "1";
+  const target = row.querySelector(".token-name") ?? row.querySelector(".combatant-name") ?? row.querySelector("h4") ?? row;
+  target.insertAdjacentHTML("beforeend", `<span class="add2e-extra-attack-badge"><i class="fas fa-crosshairs"></i> Attaque +</span>`);
+  return true;
+}
+
 export function scheduleLocalSync(combat = game.combat, { delay = 120, selectToken = false, reason = "sync" } = {}) {
   if (!combat) return;
   clearTimeout(initiativeState.localSyncTimer);
   initiativeState.localSyncTimer = setTimeout(() => {
     applyLocalOrder(combat, { reason });
     if (selectToken) selectCurrentToken(combat);
+    add2eNotifyExtraAttackTurnLocal(combat);
   }, delay);
 }
 
-async function updateTurn(combat, index, round = combatRound(combat)) {
+async function updateTurn(combat, index, round = combatRound(combat), { extraAttackPhase = false } = {}) {
   const turns = sortedCombatants(combat);
   if (!turns.length || !isCombatStarted(combat)) return combat;
   const safeIndex = Math.max(0, Math.min(turns.length - 1, Number(index) || 0));
   const safeRound = Math.max(1, Math.floor(Number(round) || 1));
   const target = turns[safeIndex];
-  console.log(`${TAG}[INACTIVE][UPDATE_TURN]`, { round: safeRound, turn: safeIndex, target: target?.name ?? target?.id ?? null, targetInactive: isInactiveCombatant(target) });
+  console.log(`${TAG}[INACTIVE][UPDATE_TURN]`, { round: safeRound, turn: safeIndex, target: target?.name ?? target?.id ?? null, targetInactive: isInactiveCombatant(target), extraAttackPhase });
   await combat.update({ round: safeRound, turn: safeIndex }, { add2eInitiativeNavigation: true });
   setLocalTurn(combat, turns, safeIndex);
   selectCurrentToken(combat);
-  if (typeof globalThis.add2eSyncActionHudToCombatant === "function") globalThis.add2eSyncActionHudToCombatant(combat, { reason: "turn" });
+  if (extraAttackPhase) await announceExtraAttackTurn(combat, target);
+  add2eNotifyExtraAttackTurnLocal(combat);
+  add2ePatchMultipleAttackTracker(ui?.combat?.element ?? document, combat);
+  if (typeof globalThis.add2eSyncActionHudToCombatant === "function") globalThis.add2eSyncActionHudToCombatant(combat, { reason: extraAttackPhase ? "extra-attack" : "turn" });
   return combat;
 }
 
@@ -271,6 +607,7 @@ export async function forceFirstSortedTurn(combat = game.combat) {
   if (!combat || !isCombatStarted(combat)) return combat;
   const turns = sortedCombatants(combat);
   if (!turns.length) return combat;
+  await leaveExtraAttackPhase(combat, combatRound(combat));
   setLocalTurn(combat, turns, firstEligibleIndex(turns));
   selectCurrentToken(combat);
   return combat;
@@ -285,13 +622,40 @@ export async function advanceSortedTurn(combat = game.combat, step = 1) {
   let next = current + direction;
   let round = combatRound(combat);
   const skipInactive = skipInactiveRotationEnabled();
-  console.log(`${TAG}[INACTIVE][ADVANCE]`, { round, currentIndex: current, current: turns[current]?.name ?? turns[current]?.id ?? null, direction, skipInactive, currentInactive: isInactiveCombatant(turns[current]) });
+  const phase = multipleAttackPhase(combat);
+  console.log(`${TAG}[INACTIVE][ADVANCE]`, { round, currentIndex: current, current: turns[current]?.name ?? turns[current]?.id ?? null, direction, skipInactive, currentInactive: isInactiveCombatant(turns[current]), multipleAttackPhase: phase });
+
+  if (direction > 0 && phaseIsExtra(combat, round)) {
+    const pendingAfter = pendingExtraCombatantIndexes(turns, combat, { afterIndex: current });
+    if (pendingAfter.length) return enterExtraAttackPhase(combat, turns, pendingAfter[0]);
+    round += 1;
+    await leaveExtraAttackPhase(combat, round);
+    return updateTurn(combat, firstEligibleIndex(turns), round);
+  }
+
+  if (direction > 0) {
+    let wrapped = false;
+    if (skipInactive) {
+      const resolved = resolveNextActiveTurn(turns, current, direction);
+      next = resolved.index;
+      wrapped = resolved.roundDelta > 0;
+      round = Math.max(1, round + resolved.roundDelta);
+    } else if (next >= turns.length) { next = 0; round += 1; wrapped = true; }
+
+    if (wrapped) {
+      const pending = pendingExtraCombatantIndexes(turns, combat, { afterIndex: -1 });
+      if (pending.length) return enterExtraAttackPhase(combat, turns, pending[0]);
+      await leaveExtraAttackPhase(combat, round);
+    }
+    return updateTurn(combat, next, round);
+  }
+
+  await leaveExtraAttackPhase(combat, round);
   if (skipInactive) {
     const resolved = resolveNextActiveTurn(turns, current, direction);
     next = resolved.index;
     round = Math.max(1, round + resolved.roundDelta);
-  } else if (next >= turns.length) { next = 0; round += 1; }
-  else if (next < 0) { next = turns.length - 1; round = Math.max(1, round - 1); }
+  } else if (next < 0) { next = turns.length - 1; round = Math.max(1, round - 1); }
   return updateTurn(combat, next, round);
 }
 
@@ -383,3 +747,9 @@ export function installCombatPatch() {
   initiativeState.patched = true;
   return true;
 }
+
+globalThis.add2eCanActorWeaponAttackNow = add2eCanActorWeaponAttackNow;
+globalThis.add2eRecordWeaponAttack = add2eRecordWeaponAttack;
+globalThis.add2eMultipleAttackHudStatus = add2eMultipleAttackHudStatus;
+globalThis.add2ePatchMultipleAttackTracker = add2ePatchMultipleAttackTracker;
+globalThis.add2eNotifyExtraAttackTurnLocal = add2eNotifyExtraAttackTurnLocal;
