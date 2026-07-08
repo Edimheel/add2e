@@ -183,12 +183,12 @@ export function installEffectsEngineMonk(Engine) {
 
     getPassiveCombatModifiers(actor, context = {}) {
       const actionType = this.normalizeKey(context?.type ?? context?.actionType ?? "attaque");
-      const actionTags = new Set(this.ruleTags([
-        context?.actionTags,
-        context?.combatTags,
-        context?.combatProfile?.tags,
-        context?.combatProfile?.tagSet ? Array.from(context.combatProfile.tagSet) : []
-      ]));
+      const actionTags = new Set([
+        ...this.ruleTags(context?.actionTags),
+        ...this.ruleTags(context?.combatTags),
+        ...this.ruleTags(context?.combatProfile?.tags),
+        ...this.ruleTags(context?.combatProfile?.tagSet ? Array.from(context.combatProfile.tagSet) : [])
+      ]);
       const subjectTags = new Set(this.ruleTags(context?.subjectTags ?? this.getActiveTags(actor)));
       const out = { toucher: 0, degats: 0, ca: 0, details: [], rules: [] };
       const rules = [
@@ -196,7 +196,8 @@ export function installEffectsEngineMonk(Engine) {
         ...this.getClassFeaturePassiveRules(actor)
       ];
 
-      for (const rule of rules) {
+      for (const rawRule of rules) {
+        const rule = rawRule?.scope || rawRule?.ruleScope ? rawRule : { ...rawRule, scope: "owner" };
         const kind = this.normalizeKey(rule?.kind ?? rule?.type ?? "");
         if (!["attack_modifier", "combat_modifier", "attaque_modifier", "modificateur_combat"].includes(kind)) continue;
         if (!this.actionRuleScopeMatches(rule, { ...context, ruleScope: context?.ruleScope ?? "owner" })) continue;
