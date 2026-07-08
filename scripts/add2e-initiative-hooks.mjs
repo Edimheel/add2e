@@ -38,6 +38,11 @@ function scheduleExtraAttackLocalNotice(combat) {
   }, 60);
 }
 
+function scheduleNavigationClientSync(combat, reason = "initiative-navigation") {
+  scheduleLocalSync(combat, { delay: 40, selectToken: true, reason });
+  scheduleExtraAttackLocalNotice(combat);
+}
+
 export function add2eInitiativeDebug(label = "debug", combat = game.combat) {
   const turns = sortedCombatants(combat);
   return {
@@ -71,10 +76,13 @@ export function installHooks() {
   Hooks.on("deleteCombatant", (combatant, options) => { if (!options?.add2eInitiativeSort) scheduleInitiativeSort(combatFor(combatant)); });
 
   Hooks.on("updateCombat", (combat, changes, options) => {
-    if (options?.add2eInitiativeSort || options?.add2eInitiativeNavigation) {
-      scheduleExtraAttackLocalNotice(combat);
+    if (options?.add2eInitiativeSort) return;
+
+    if (options?.add2eInitiativeNavigation) {
+      scheduleNavigationClientSync(combat, "initiative-navigation");
       return;
     }
+
     if (hasProperty(changes ?? {}, "started") && combat?.started) {
       scheduleLocalSync(combat, { delay: 80, selectToken: true, reason: "combat-start" });
       scheduleExtraAttackLocalNotice(combat);
