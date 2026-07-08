@@ -1,6 +1,6 @@
 // scripts/add2e-attack/04h-attack-roll-conditional-ac.mjs
 // ADD2E — CA conditionnelle pour les attaques.
-// Version : 2026-05-29-shield-only-conditional-ac-v1
+// Version : 2026-07-08-transformation-ac-v2
 
 function add2eAttackNormalizeConditionalACText(value) {
   return String(value ?? "")
@@ -21,6 +21,15 @@ function add2eAttackArray(value) {
   return [value];
 }
 
+function add2eAttackReadNumber(...values) {
+  for (const value of values) {
+    if (value === undefined || value === null || String(value).trim?.() === "") continue;
+    const number = Number(value);
+    if (Number.isFinite(number)) return number;
+  }
+  return null;
+}
+
 function add2eAttackEffectOriginItem(actor, effect) {
   const flags = effect?.flags?.add2e ?? {};
   const directId = flags.sourceItemId ?? flags.itemId ?? flags.originItemId ?? flags.sourceSpellId ?? flags.spellId ?? null;
@@ -29,6 +38,14 @@ function add2eAttackEffectOriginItem(actor, effect) {
   const origin = String(effect?.origin ?? "");
   const itemId = origin.match(/\.Item\.([A-Za-z0-9]{16})/)?.[1] ?? origin.match(/Item\.([A-Za-z0-9]{16})/)?.[1] ?? null;
   return itemId && actor?.items?.get?.(itemId) ? actor.items.get(itemId) : null;
+}
+
+function add2eAttackEffectList(actor) {
+  return [
+    ...add2eAttackArray(actor?.effects),
+    ...add2eAttackArray(actor?.appliedEffects),
+    ...add2eAttackArray(actor?.temporaryEffects)
+  ].filter(effect => effect && effect.disabled !== true);
 }
 
 function add2eAttackCollectEffectTags(effect) {
@@ -66,13 +83,7 @@ function add2eAttackIsShieldSpellText(value) {
 function add2eAttackTargetHasActiveShieldSpell(actor) {
   if (!actor) return false;
 
-  const activeEffects = [
-    ...add2eAttackArray(actor.effects),
-    ...add2eAttackArray(actor.appliedEffects),
-    ...add2eAttackArray(actor.temporaryEffects)
-  ].filter(e => e && e.disabled !== true);
-
-  for (const effect of activeEffects) {
+  for (const effect of add2eAttackEffectList(actor)) {
     const originItem = add2eAttackEffectOriginItem(actor, effect);
     const originType = String(originItem?.type ?? "").toLowerCase();
     const originName = originItem?.name ?? originItem?.system?.nom ?? "";
@@ -84,6 +95,38 @@ function add2eAttackTargetHasActiveShieldSpell(actor) {
   }
 
   return false;
+}
+
+function add2eAttackTransformationMeta(effect) {
+  const meta = effect?.flags?.add2e?.capabilityTransformation;
+  return meta && typeof meta === "object" ? meta : null;
+}
+
+function add2eAttackActiveTransformationAC(actor) {
+  const candidates = add2eAttackEffectList(actor)
+    .map(effect => ({ effect, meta: add2eAttackTransformationMeta(effect) }))
+    .filter(entry => entry.meta?.kind === "form" && String(entry.meta?.sourceKey ?? "").trim())
+    .map(entry => {
+      const combat = entry.meta.combat && typeof entry.meta.combat === "object" ? entry.meta.combat : {};
+      const armorClass = add2eAttackReadNumber(combat.armorClass, combat.ca, combat.ac, entry.meta.armorClass, entry.meta.ca, entry.meta.ac);
+      const thac0 = add2eAttackReadNumber(combat.thac0, combat.thaco, entry.meta.thac0, entry.meta.thaco);
+      return {
+        effectId: entry.effect?.id ?? null,
+        effectName: entry.effect?.name ?? "",
+        sourceKey: String(entry.meta.sourceKey ?? ""),
+        formKey: String(entry.meta.formKey ?? ""),
+        category: String(entry.meta.category ?? ""),
+        label: String(entry.meta.label ?? entry.effect?.name ?? "Transformation"),
+        armorClass,
+        thac0,
+        movement: String(combat.movement ?? entry.meta.movement ?? ""),
+        activatedAtTick: add2eAttackReadNumber(entry.meta.activatedAtTick) ?? -1
+      };
+    })
+    .filter(entry => Number.isFinite(entry.armorClass))
+    .sort((left, right) => right.activatedAtTick - left.activatedAtTick || String(right.effectId ?? "").localeCompare(String(left.effectId ?? "")));
+
+  return candidates[0] ?? null;
 }
 
 export function add2eAttackConditionalACSubtype({ arme, combatProfile, isDistance, hasTag }) {
@@ -135,6 +178,26 @@ export function add2eAttackResolveConditionalFixedAC({ cible, arme, combatProfil
     arme: arme?.name ?? "",
     source: "attack-roll"
   };
+
+  const transformation = add2eAttackActiveTransformationAC(cible);
+  if (transformation) {
+    const transformationCA = Number(transformation.armorClass);
+    return {
+      applied: transformationCA !== normalCA,
+      ca: transformationCA,
+      normalCA,
+      fixedCA: null,
+      attackSubtype,
+      context: { ...context, transformation: true },
+      details: {
+        source: "capability-transformation:active-effect",
+        transformation
+      },
+      detail: transformationCA !== normalCA
+        ? `CA ${normalCA} → ${transformationCA} (${transformation.label})`
+        : `CA de transformation ${transformationCA} (${transformation.label})`
+    };
+  }
 
   if (!add2eAttackTargetHasActiveShieldSpell(cible)) {
     return {
