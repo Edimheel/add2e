@@ -70,10 +70,81 @@ function add2eDefenseActiveTransformationProfile(actor) {
   return candidates[0] ?? null;
 }
 
+function add2eDefenseDiagnosticEffect(effect) {
+  const meta = add2eDefenseTransformationMeta(effect);
+  return {
+    id: effect?.id ?? null,
+    name: effect?.name ?? effect?.label ?? "",
+    disabled: effect?.disabled ?? null,
+    transfer: effect?.transfer ?? null,
+    origin: effect?.origin ?? "",
+    parentDocumentName: effect?.parent?.documentName ?? "",
+    parentName: effect?.parent?.name ?? "",
+    flagsAdd2eKeys: Object.keys(effect?.flags?.add2e ?? {}),
+    capabilityTransformation: meta ? {
+      kind: meta.kind ?? null,
+      sourceKey: meta.sourceKey ?? null,
+      formKey: meta.formKey ?? null,
+      category: meta.category ?? null,
+      label: meta.label ?? null,
+      armorClass: meta.combat?.armorClass ?? meta.combat?.ca ?? meta.combat?.ac ?? meta.armorClass ?? meta.ca ?? meta.ac ?? null,
+      thac0: meta.combat?.thac0 ?? meta.combat?.thaco ?? meta.thac0 ?? meta.thaco ?? null,
+      combat: meta.combat ?? null
+    } : null
+  };
+}
+
+function add2eDefenseLogTransformationDiag(actor, context, transformation) {
+  if (context?.source !== "attack-roll" && context?.source !== "diag-forme-animale") return;
+  const effects = add2eDefenseCollectionValues(actor?.effects);
+  const temporaryEffects = add2eDefenseCollectionValues(actor?.temporaryEffects);
+  const appliedEffects = add2eDefenseCollectionValues(actor?.appliedEffects);
+  console.warn("[ADD2E][DEFENSE][TRANSFORMATION_DIAG]", {
+    actor: actor?.name ?? null,
+    actorId: actor?.id ?? null,
+    actorUuid: actor?.uuid ?? null,
+    actorType: actor?.type ?? null,
+    isTokenActor: actor?.isToken ?? null,
+    parentDocumentName: actor?.parent?.documentName ?? null,
+    token: {
+      id: actor?.token?.id ?? null,
+      name: actor?.token?.name ?? null,
+      uuid: actor?.token?.uuid ?? null,
+      actorId: actor?.token?.actorId ?? null
+    },
+    systemCA: {
+      ca: actor?.system?.ca,
+      ca_total: actor?.system?.ca_total,
+      ca_naturel: actor?.system?.ca_naturel,
+      armorClass: actor?.system?.armorClass,
+      dex_def: actor?.system?.dex_def
+    },
+    effectsCount: effects.length,
+    temporaryEffectsCount: temporaryEffects.length,
+    appliedEffectsCount: appliedEffects.length,
+    effects: effects.map(add2eDefenseDiagnosticEffect),
+    temporaryEffects: temporaryEffects.map(add2eDefenseDiagnosticEffect),
+    appliedEffects: appliedEffects.map(add2eDefenseDiagnosticEffect),
+    detectedTransformation: transformation ? {
+      effectId: transformation.effectId,
+      sourceKey: transformation.sourceKey,
+      formKey: transformation.formKey,
+      category: transformation.category,
+      label: transformation.label,
+      armorClass: transformation.armorClass,
+      thac0: transformation.thac0,
+      movement: transformation.movement
+    } : null,
+    context,
+    version: globalThis.ADD2E_EFFECTS_ENGINE_VERSION
+  });
+}
+
 export function installEffectsEngineDefense(Engine) {
   register(Engine, {
     getMagicPassiveDefense(actor, context = {}) {
       const transformation = add2eDefenseActiveTransformationProfile(actor);
+      add2eDefenseLogTransformationDiag(actor, context, transformation);
       const transformationCA = Number(transformation?.armorClass);
       if (Number.isFinite(transformationCA)) {
         return {
