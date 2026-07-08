@@ -13,7 +13,37 @@ const ADD2E_MULTIPLE_ATTACK_ACTOR_FLAG = "multipleAttacks";
 const ADD2E_MULTIPLE_ATTACK_PHASE_FLAG = "multipleAttackPhase";
 const ADD2E_MULTIPLE_ATTACK_CHAT_KEYS = "__ADD2E_MULTIPLE_ATTACK_CHAT_KEYS__";
 const ADD2E_MULTIPLE_ATTACK_LOCAL_KEYS = "__ADD2E_MULTIPLE_ATTACK_LOCAL_KEYS__";
-const MARTIAL_ATTACK_CLASSES = new Set(["guerrier", "fighter", "paladin", "ranger", "rodeur"]);
+const MARTIAL_WEAPON_CLASSES = new Set(["guerrier", "fighter", "paladin", "ranger", "rodeur"]);
+const MONK_CLASS_SLUGS = new Set(["moine", "monk"]);
+const ATTACK_RATE_PATHS = [
+  "attacksPerRound",
+  "attacks_per_round",
+  "attaquesParRound",
+  "attaques_par_round",
+  "attaquesRound",
+  "attaques_round",
+  "attaqueParRound",
+  "attaque_par_round",
+  "nombreAttaques",
+  "nombre_attaques",
+  "nbAttaques",
+  "nb_attaques",
+  "combat.attacksPerRound",
+  "combat.attacks_per_round",
+  "combat.attaquesParRound",
+  "combat.attaques_par_round"
+];
+const UNARMED_ATTACK_RATE_PATHS = [
+  "unarmedAttacksPerRound",
+  "unarmed_attacks_per_round",
+  "mainsNuesAttacksPerRound",
+  "mains_nues_attacks_per_round",
+  "attaquesMainsNuesParRound",
+  "attaques_mains_nues_par_round",
+  "combat.unarmedAttacksPerRound",
+  "combat.mainsNuesAttacksPerRound",
+  "combat.attaquesMainsNuesParRound"
+];
 
 function isCombatStarted(combat = game.combat) {
   return Boolean(combat?.started && Number(combat?.round ?? 0) > 0);
@@ -136,6 +166,191 @@ function actorClassItems(actor) {
   return Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
 }
 
+function progressionRows(item) {
+  return Array.isArray(item?.system?.progression) ? item.system.progression : [];
+}
+
+function progressionRowFor(item, level) {
+  const rows = progressionRows(item);
+  return rows.find(row => Number(row?.niveau ?? row?.level) === level)
+    ?? rows[Math.max(0, level - 1)]
+    ?? {};
+}
+
+function valueAtAnyPath(source, paths) {
+  for (const path of paths) {
+    const direct = source?.[path];
+    const nested = direct === undefined ? getProperty(source, path) : direct;
+    if (nested !== undefined && nested !== null && nested !== "") return nested;
+  }
+  return null;
+}
+
+function parseAttackRate(value) {
+  if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+    return { numerator: Math.max(1, Math.floor(value)), denominator: 1, text: `${Math.max(1, Math.floor(value))}/1` };
+  }
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    const direct = value.ratio ?? value.value ?? value.valeur ?? value.rate ?? value.attacksPerRound ?? value.attaquesParRound;
+    if (direct !== undefined && direct !== null && direct !== value) return parseAttackRate(direct);
+    const numerator = Number(value.numerator ?? value.num ?? value.attaques ?? value.attacks);
+    const denominator = Number(value.denominator ?? value.den ?? value.rounds ?? value.roundsPerCycle);
+    if (Number.isFinite(numerator) && numerator > 0 && Number.isFinite(denominator) && denominator > 0) {
+      return { numerator: Math.floor(numerator), denominator: Math.floor(denominator), text: `${Math.floor(numerator)}/${Math.floor(denominator)}` };
+    }
+  }
+
+  const raw = String(value ?? "").trim();
+  if (!raw) return null;
+  const fraction = raw.match(/(\d+)\s*\/\s*(\d+)/);
+  if (fraction) {
+    const numerator = Number(fraction[1]);
+    const denominator = Number(fraction[2]);
+    if (numerator > 0 && denominator > 0) return { numerator, denominator, text: `${numerator}/${denominator}` };
+  }
+  const numeric = raw.match(/\d+/);
+  if (numeric) {
+    const value = Number(numeric[0]);
+    if (value > 0) return { numerator: value, denominator: 1, text: `${value}/1` };
+  }
+  return null;
+}
+
+function attacksThisRound(rate, round, sequenceStartRound) {
+  const parsed = parseAttackRate(rate);
+  if (!parsed) return 1;
+  const numerator = Math.max(1, Math.floor(parsed.numerator));
+  const denominator = Math.max(1, Math.floor(parsed.denominator));
+  const base = Math.floor(numerator / denominator);
+  const remainder = numerator % denominator;
+  if (denominator <= 1 || remainder <= 0) return Math.max(1, base);
+  const cyclePosition = ((Math.max(1, round) - Math.max(1, sequenceStartRound)) % denominator + denominator) % denominator + 1;
+  const hasExtra = cyclePosition > denominator - remainder;
+  return Math.max(1, base + (hasExtra ? 1 : 0));
+}
+
+function rateAverage(rate) {
+  const parsed = parseAttackRate(rate);
+  return parsed ? parsed.numerator / parsed.denominator : 1;
+}
+
+function weaponTokens(weapon) {
+  const system = weapon?.system ?? {};
+  const flags = weapon?.flags?.add2e ?? {};
+  return [
+    weapon?.name,
+    system.type,
+    system.type_arme,
+    system.weaponType,
+    system.categorie,
+    system.category,
+    system.type_degats,
+    system.typeDegats,
+    system.damageType,
+    system.usage,
+    flags.usage,
+    flags.weaponType,
+    ...(Array.isArray(system.tags) ? system.tags : []),
+    ...(Array.isArray(system.effectTags) ? system.effectTags : []),
+    ...(Array.isArray(flags.tags) ? flags.tags : [])
+  ].map(normalizeSlug).filter(Boolean);
+}
+
+function isUnarmedWeapon(weapon) {
+  const tokens = weaponTokens(weapon);
+  if (weapon?.system?.unarmed === true || weapon?.system?.mainsNues === true || weapon?.flags?.add2e?.unarmed === true) return true;
+  return tokens.some(token => /main(s)?_nue(s)?|poing|pugilat|martial|unarmed|sans_arme|coup_de_poing/.test(token));
+}
+
+function isMartialMeleeWeapon(weapon) {
+  if (!weapon) return true;
+  const tokens = weaponTokens(weapon);
+  const hasMissile = tokens.some(token => /distance|projectile|munition|arc|arbalete|fronde|javelot|fleche|carreau/.test(token));
+  if (hasMissile) return false;
+  const damageType = tokens.some(token => /tranch|contond|slash|bludge|taille|ecras|contusion/.test(token));
+  return damageType || tokens.some(token => /melee|melee|contact|corps_a_corps|arme/.test(token));
+}
+
+function readAttackRateFromClassData(item, level, weapon) {
+  const row = progressionRowFor(item, level);
+  const system = item?.system ?? {};
+  const sources = [row, system];
+  const unarmed = isUnarmedWeapon(weapon);
+
+  for (const source of sources) {
+    const specific = unarmed ? valueAtAnyPath(source, UNARMED_ATTACK_RATE_PATHS) : null;
+    const rate = parseAttackRate(specific);
+    if (rate) return { ...rate, source: "class-data", restriction: unarmed ? "unarmed" : "weapon" };
+  }
+  for (const source of sources) {
+    const generic = valueAtAnyPath(source, ATTACK_RATE_PATHS);
+    const rate = parseAttackRate(generic);
+    if (rate) return { ...rate, source: "class-data", restriction: "any" };
+  }
+  return null;
+}
+
+function canonicalWarriorRate(slug, level, weapon) {
+  if (!MARTIAL_WEAPON_CLASSES.has(slug) || !isMartialMeleeWeapon(weapon)) return null;
+  if (slug === "ranger" || slug === "rodeur") {
+    if (level >= 15) return parseAttackRate("2/1");
+    if (level >= 8) return parseAttackRate("3/2");
+    return parseAttackRate("1/1");
+  }
+  if (level >= 13) return parseAttackRate("2/1");
+  if (level >= 7) return parseAttackRate("3/2");
+  return parseAttackRate("1/1");
+}
+
+function canonicalMonkRate(slug, level, weapon) {
+  if (!MONK_CLASS_SLUGS.has(slug) || !isUnarmedWeapon(weapon)) return null;
+  if (level >= 16) return parseAttackRate("4/1");
+  if (level >= 14) return parseAttackRate("3/1");
+  if (level >= 11) return parseAttackRate("5/2");
+  if (level >= 9) return parseAttackRate("2/1");
+  if (level >= 6) return parseAttackRate("3/2");
+  if (level >= 4) return parseAttackRate("5/4");
+  return parseAttackRate("1/1");
+}
+
+function classAttackCandidates(actor, weapon, combat = game.combat, state = null) {
+  const round = combatRound(combat);
+  const start = Math.max(1, Math.floor(Number(state?.sequenceStartRound ?? round) || round));
+  const candidates = [];
+
+  for (const item of actorClassItems(actor)) {
+    const slug = classSlug(item);
+    const level = classLevel(actor, item);
+    const dataRate = readAttackRateFromClassData(item, level, weapon);
+    const canonicalRate = dataRate ?? canonicalMonkRate(slug, level, weapon) ?? canonicalWarriorRate(slug, level, weapon);
+    if (!canonicalRate) continue;
+
+    const total = attacksThisRound(canonicalRate, round, start);
+    candidates.push({
+      total,
+      average: rateAverage(canonicalRate),
+      ratio: canonicalRate.text,
+      eligible: true,
+      label: canonicalRate.denominator > 1
+        ? `${canonicalRate.text} — ${total} attaque${total > 1 ? "s" : ""} ce round`
+        : `${total}/1`,
+      source: item.name ?? slug,
+      slug,
+      level,
+      restriction: canonicalRate.restriction ?? (dataRate ? "class-data" : MONK_CLASS_SLUGS.has(slug) ? "unarmed" : "weapon")
+    });
+  }
+
+  return candidates;
+}
+
+function actorAttackProfile(actor, weapon, combat = game.combat, state = null) {
+  if (actor?.type !== "personnage") return { total: 1, ratio: "1/1", eligible: false, label: "1/1", source: null };
+  const candidates = classAttackCandidates(actor, weapon, combat, state);
+  return candidates.sort((a, b) => b.total - a.total || b.average - a.average || b.level - a.level)[0]
+    ?? { total: 1, ratio: "1/1", eligible: false, label: "1/1", source: null };
+}
+
 function multipleAttackStates(actor) {
   const raw = actor?.getFlag?.("add2e", ADD2E_MULTIPLE_ATTACK_ACTOR_FLAG) ?? actor?.flags?.add2e?.[ADD2E_MULTIPLE_ATTACK_ACTOR_FLAG] ?? {};
   return raw && typeof raw === "object" && !Array.isArray(raw) ? clone(raw) : {};
@@ -192,34 +407,6 @@ async function writeActorMultipleAttackState(actor, combat, state) {
   }
 }
 
-function martialClassAttackProfile(actor, combat = game.combat, state = null) {
-  if (actor?.type !== "personnage") return { total: 1, ratio: "1/1", eligible: false, label: "1/1", source: null };
-  const round = combatRound(combat);
-  const start = Math.max(1, Math.floor(Number(state?.sequenceStartRound ?? round) || round));
-  const twoOnThisRound = ((round - start) % 2) === 1;
-  const candidates = [];
-
-  for (const item of actorClassItems(actor)) {
-    const slug = classSlug(item);
-    if (!MARTIAL_ATTACK_CLASSES.has(slug)) continue;
-    const level = classLevel(actor, item);
-    let profile = { total: 1, ratio: "1/1", eligible: true, label: "1/1", source: item.name ?? slug, slug, level };
-
-    if (slug === "ranger" || slug === "rodeur") {
-      if (level >= 15) profile = { ...profile, total: 2, ratio: "2/1", label: "2/1" };
-      else if (level >= 8) profile = { ...profile, total: twoOnThisRound ? 2 : 1, ratio: "3/2", label: twoOnThisRound ? "3/2 — round à 2 attaques" : "3/2 — round à 1 attaque" };
-    } else {
-      if (level >= 13) profile = { ...profile, total: 2, ratio: "2/1", label: "2/1" };
-      else if (level >= 7) profile = { ...profile, total: twoOnThisRound ? 2 : 1, ratio: "3/2", label: twoOnThisRound ? "3/2 — round à 2 attaques" : "3/2 — round à 1 attaque" };
-    }
-
-    candidates.push(profile);
-  }
-
-  return candidates.sort((a, b) => b.total - a.total || b.level - a.level)[0]
-    ?? { total: 1, ratio: "1/1", eligible: false, label: "1/1", source: null };
-}
-
 function actorMatchesCombatant(actor, combatant) {
   return Boolean(actor && combatant && (String(combatant.actor?.id ?? combatant.actorId ?? "") === String(actor.id ?? "")));
 }
@@ -269,10 +456,10 @@ async function announcePendingExtraAttack(actor, combat, pending) {
   await createMultipleAttackChat(
     actor,
     combat,
-    `<div class="add2e-card-test"><b>Attaque supplémentaire en attente</b><br>${safeName} aura ${pending} attaque supplémentaire en fin de round.</div>`,
+    `<div class="add2e-card-test"><b>Attaque supplémentaire en attente</b><br>${safeName} aura ${pending} attaque${pending > 1 ? "s" : ""} supplémentaire${pending > 1 ? "s" : ""} en fin de round.</div>`,
     "pending"
   );
-  if (actor?.isOwner) ui.notifications?.info?.(`${actor.name} : ${pending} attaque supplémentaire en fin de round.`);
+  if (actor?.isOwner) ui.notifications?.info?.(`${actor.name} : ${pending} attaque${pending > 1 ? "s" : ""} supplémentaire${pending > 1 ? "s" : ""} en fin de round.`);
 }
 
 async function announceExtraAttackTurn(combat, combatant) {
@@ -284,8 +471,8 @@ async function announceExtraAttackTurn(combat, combatant) {
   await createMultipleAttackChat(
     actor,
     combat,
-    `<div class="add2e-card-test"><b>Round ${combatRound(combat)} — Attaque supplémentaire</b><br>C’est à ${safeName} : ${pending} attaque supplémentaire disponible.</div>`,
-    `turn-${combatant.id}`
+    `<div class="add2e-card-test"><b>Round ${combatRound(combat)} — Attaque supplémentaire</b><br>C’est à ${safeName} : ${pending} attaque${pending > 1 ? "s" : ""} supplémentaire${pending > 1 ? "s" : ""} disponible${pending > 1 ? "s" : ""}.</div>`,
+    `turn-${combatant.id}-${pending}`
   );
   return true;
 }
@@ -297,7 +484,7 @@ export function add2eNotifyExtraAttackTurnLocal(combat = game.combat) {
   if (!actor?.isOwner) return false;
   const pending = getPendingExtraAttackCount(actor, combat);
   if (pending <= 0) return false;
-  const key = `${combat.id}:${combatRound(combat)}:${combatant.id}:local`;
+  const key = `${combat.id}:${combatRound(combat)}:${combatant.id}:local:${pending}`;
   const seen = multipleAttackLocalKeys();
   if (seen.has(key)) return false;
   seen.add(key);
@@ -478,13 +665,13 @@ export function selectCurrentToken(combat = game.combat) {
   }
 }
 
-export function add2eCanActorWeaponAttackNow(actor, { combat = game.combat, notify = false } = {}) {
+export function add2eCanActorWeaponAttackNow(actor, { weapon = null, combat = game.combat, notify = false } = {}) {
   if (!combat?.started || actor?.type !== "personnage") return true;
   const combatant = currentCombatant(combat);
   if (!actorMatchesCombatant(actor, combatant)) return true;
 
   const { state } = readActorMultipleAttackState(actor, combat);
-  const profile = martialClassAttackProfile(actor, combat, state);
+  const profile = actorAttackProfile(actor, weapon, combat, state);
   const used = Math.max(0, Math.floor(Number(state.used ?? 0) || 0));
   const pending = Math.max(0, Math.floor(Number(state.pending ?? Math.max(0, profile.total - used)) || 0));
 
@@ -499,10 +686,10 @@ export function add2eCanActorWeaponAttackNow(actor, { combat = game.combat, noti
   return false;
 }
 
-export async function add2eRecordWeaponAttack(actor, { combat = game.combat } = {}) {
+export async function add2eRecordWeaponAttack(actor, { weapon = null, combat = game.combat } = {}) {
   if (!combat?.started || actor?.type !== "personnage") return null;
   const { state, round } = readActorMultipleAttackState(actor, combat);
-  const profile = martialClassAttackProfile(actor, combat, state);
+  const profile = actorAttackProfile(actor, weapon, combat, state);
   const used = Math.max(0, Math.floor(Number(state.used ?? 0) || 0)) + 1;
   const pending = Math.max(0, Math.floor(Number(profile.total ?? 1) - used));
   const nextState = {
@@ -512,6 +699,7 @@ export async function add2eRecordWeaponAttack(actor, { combat = game.combat } = 
     ratio: profile.ratio,
     label: profile.label,
     source: profile.source,
+    restriction: profile.restriction,
     used,
     pending,
     phase: phaseIsExtra(combat) ? "extra" : "normal"
@@ -531,18 +719,18 @@ export function add2eMultipleAttackHudStatus(actor, combat = game.combat) {
   const combatant = currentCombatant(combat);
   if (!actorMatchesCombatant(actor, combatant)) return null;
   const { state } = readActorMultipleAttackState(actor, combat);
-  const profile = martialClassAttackProfile(actor, combat, state);
   const used = Math.max(0, Math.floor(Number(state.used ?? 0) || 0));
   const pending = Math.max(0, Math.floor(Number(state.pending ?? 0) || 0));
+  const ratio = String(state.label || state.ratio || "1/1");
 
   if (phaseIsExtra(combat) && pending > 0) {
-    return { phase: "extra", label: "Attaque supplémentaire", detail: `${pending} attaque restante ce round`, ratio: profile.label, css: "extra" };
+    return { phase: "extra", label: "Attaque supplémentaire", detail: `${pending} attaque${pending > 1 ? "s" : ""} restante${pending > 1 ? "s" : ""} ce round`, ratio, css: "extra" };
   }
   if (!phaseIsExtra(combat) && pending > 0) {
-    return { phase: "pending", label: "Attaque supplémentaire en attente", detail: "Disponible en fin de round", ratio: profile.label, css: "pending" };
+    return { phase: "pending", label: "Attaque supplémentaire en attente", detail: "Disponible en fin de round", ratio, css: "pending" };
   }
-  if (!phaseIsExtra(combat) && used > 0 && profile.total <= 1) {
-    return { phase: "used", label: "Attaque utilisée", detail: "Aucune attaque restante ce round", ratio: profile.label, css: "used" };
+  if (!phaseIsExtra(combat) && used > 0) {
+    return { phase: "used", label: "Attaque utilisée", detail: "Aucune attaque immédiate restante", ratio, css: "used" };
   }
   return null;
 }
@@ -571,8 +759,9 @@ export function add2ePatchMultipleAttackTracker(html, combat = game.combat) {
   const row = root.querySelector(`[data-combatant-id="${combatant.id}"]`) ?? root.querySelector(`[data-combatant-id='${combatant.id}']`);
   if (!row) return false;
   row.dataset.add2eExtraAttack = "1";
+  const pending = getPendingExtraAttackCount(combatant.actor, combat);
   const target = row.querySelector(".token-name") ?? row.querySelector(".combatant-name") ?? row.querySelector("h4") ?? row;
-  target.insertAdjacentHTML("beforeend", `<span class="add2e-extra-attack-badge"><i class="fas fa-crosshairs"></i> Attaque +</span>`);
+  target.insertAdjacentHTML("beforeend", `<span class="add2e-extra-attack-badge"><i class="fas fa-crosshairs"></i> Attaque +${pending > 1 ? ` ×${pending}` : ""}</span>`);
   return true;
 }
 
@@ -626,6 +815,8 @@ export async function advanceSortedTurn(combat = game.combat, step = 1) {
   console.log(`${TAG}[INACTIVE][ADVANCE]`, { round, currentIndex: current, current: turns[current]?.name ?? turns[current]?.id ?? null, direction, skipInactive, currentInactive: isInactiveCombatant(turns[current]), multipleAttackPhase: phase });
 
   if (direction > 0 && phaseIsExtra(combat, round)) {
+    const currentActor = turns[current]?.actor ?? null;
+    if (currentActor && getPendingExtraAttackCount(currentActor, combat) > 0) return enterExtraAttackPhase(combat, turns, current);
     const pendingAfter = pendingExtraCombatantIndexes(turns, combat, { afterIndex: current });
     if (pendingAfter.length) return enterExtraAttackPhase(combat, turns, pendingAfter[0]);
     round += 1;
