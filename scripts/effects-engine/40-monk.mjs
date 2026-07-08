@@ -181,6 +181,31 @@ export function installEffectsEngineMonk(Engine) {
       return true;
     },
 
+    getPassiveArmorClassBase(actor, context = {}) {
+      const rules = [
+        ...(typeof this.getActiveRules === "function" ? this.getActiveRules(actor) : []),
+        ...this.getClassFeaturePassiveRules(actor)
+      ];
+      const candidates = [];
+      for (const rawRule of rules) {
+        const rule = rawRule?.scope || rawRule?.ruleScope ? rawRule : { ...rawRule, scope: "owner" };
+        const kind = this.normalizeKey(rule?.kind ?? rule?.type ?? "");
+        if (!["armor_class_base", "classe_armure_base", "defense_base", "ca_base"].includes(kind)) continue;
+        if (!this.actionRuleScopeMatches(rule, { ...context, ruleScope: context?.ruleScope ?? "owner" })) continue;
+        const value = this.getPassiveRuleNumber(rule, { ...context, actor, actorLevel: this.getActorLevel(actor) });
+        if (!Number.isFinite(value)) continue;
+        candidates.push({
+          value,
+          ignoreDex: rule?.ignoreDex === true || rule?.ignore_dex === true || this.normalizeKey(rule?.dex ?? "") === "ignore",
+          label: rule?.label ?? rule?.name ?? rule?.source?.featureName ?? "CA passive",
+          rule
+        });
+      }
+      if (!candidates.length) return { applied: false, value: null, ignoreDex: false, candidates: [] };
+      const best = candidates.sort((left, right) => left.value - right.value)[0];
+      return { applied: true, ...best, candidates };
+    },
+
     getPassiveCombatModifiers(actor, context = {}) {
       const actionType = this.normalizeKey(context?.type ?? context?.actionType ?? "attaque");
       const actionTags = new Set([
