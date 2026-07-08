@@ -1,110 +1,5 @@
 // ADD2E — Actor sheet getData : CA, équipement et synthèse de combat.
 
-function add2eCombatNormalizeTag(value) {
-  return String(value ?? "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/[’']/g, "")
-    .replace(/[\s-]+/g, "_")
-    .replace(/_+/g, "_")
-    .replace(/^_+|_+$/g, "")
-    .replace(/^arme_/, "arme:")
-    .replace(/^type_arme_/, "type_arme:")
-    .replace(/^famille_arme_/, "famille_arme:")
-    .replace(/^usage_/, "usage:")
-    .replace(/^combat_/, "combat:")
-    .replace(/^mod_carac_/, "mod_carac:")
-    .replace(/^bonus_degats_/, "bonus_degats:");
-}
-
-function add2eCombatArray(value) {
-  if (!value) return [];
-  if (Array.isArray(value)) return value.flatMap(add2eCombatArray).filter(Boolean);
-  if (typeof value === "string") return value.split(/[,;|\n]+/g).map(part => part.trim()).filter(Boolean);
-  if (typeof value === "object") {
-    for (const key of ["tags", "effectTags", "effecttags", "list", "items", "value"]) {
-      if (value[key] !== undefined) return add2eCombatArray(value[key]);
-    }
-  }
-  return [];
-}
-
-function add2eCombatItemTags(item) {
-  const system = item?.system ?? {};
-  const tags = new Set();
-  const push = value => {
-    for (const raw of add2eCombatArray(value)) {
-      const tag = add2eCombatNormalizeTag(raw);
-      if (!tag) continue;
-      tags.add(tag);
-      if (tag.startsWith("arme:")) tags.add(`type_arme:${tag.slice(5)}`);
-      if (tag.startsWith("famille_arme:")) tags.add(`type_arme:${tag.slice(13)}`);
-    }
-  };
-
-  push(item?.name);
-  push(system.nom);
-  push(system.tags);
-  push(system.tag);
-  push(system.effectTags);
-  push(system.effecttags);
-  push(system.effets);
-  push(system.effects);
-  push(item?.flags?.add2e?.tags);
-  push(item?.flags?.add2e?.effectTags);
-  push(system.type_arme);
-  push(system.famille_arme);
-  push(system.categorie);
-  return tags;
-}
-
-function add2eCombatActorTags(actor) {
-  if (typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getActiveTags === "function") {
-    return new Set((Add2eEffectsEngine.getActiveTags(actor) ?? []).map(add2eCombatNormalizeTag).filter(Boolean));
-  }
-  const tags = new Set();
-  for (const item of actor?.items ?? []) {
-    if (String(item?.type ?? "").toLowerCase() !== "classe") continue;
-    for (const tag of add2eCombatArray(item?.system?.tags)) tags.add(add2eCombatNormalizeTag(tag));
-    for (const feature of add2eCombatArray(item?.system?.classFeatures)) {
-      for (const tag of add2eCombatArray(feature?.tags)) tags.add(add2eCombatNormalizeTag(tag));
-    }
-  }
-  return tags;
-}
-
-function add2eCombatHas(tags, ...values) {
-  return values.some(value => tags?.has?.(add2eCombatNormalizeTag(value)));
-}
-
-function add2eCombatNoCaracBonus(arme, usage) {
-  const tags = add2eCombatItemTags(arme);
-  return add2eCombatHas(tags, `mod_carac:${usage}:none`, `mod_carac:${usage}:aucun`);
-}
-
-function add2eCombatIgnoreForceBonus(actor, usage) {
-  const tags = add2eCombatActorTags(actor);
-  return add2eCombatHas(tags, `force_bonus:${usage}:ignore`, `force_bonus:${usage}:ignorer`);
-}
-
-function add2eCombatIsMonkUnarmed(arme) {
-  const tags = add2eCombatItemTags(arme);
-  return add2eCombatHas(tags, "main_nue", "arme:main_nue", "type_arme:main_nue", "famille_arme:main_nue", "combat:mains_nues");
-}
-
-function add2eCombatMonkWeaponDamageBonus(actor, arme) {
-  if (!actor || !arme || add2eCombatIsMonkUnarmed(arme)) return 0;
-  const tags = add2eCombatActorTags(actor);
-  if (!add2eCombatHas(tags, "bonus_degats:moine:demi_niveau")) return 0;
-  const engineBonus = typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getMonkWeaponDamageBonus === "function"
-    ? Number(Add2eEffectsEngine.getMonkWeaponDamageBonus(actor))
-    : NaN;
-  if (Number.isFinite(engineBonus)) return engineBonus;
-  const fallback = Number(actor?.system?.moine?.passifs?.weaponDamageBonus);
-  return Number.isFinite(fallback) ? fallback : 0;
-}
-
 export function add2ePrepareActorSheetCombatData({ actor, data, sys, progressionCourante, isMonk }) {
   const transformation = globalThis.add2eGetCapabilityTransformationCombatProfile?.(actor) ?? null;
   const transformationCA = Number(transformation?.armorClass);
@@ -197,31 +92,22 @@ export function add2ePrepareActorSheetCombatData({ actor, data, sys, progression
   ) : 0;
   let bonusToucher = 0;
   let bonusDegats = 0;
-  let bonusMartialMoine = 0;
 
   if (arme) {
-    const noToucherCarac = add2eCombatNoCaracBonus(arme, "toucher");
-    const noDegatsCarac = add2eCombatNoCaracBonus(arme, "degats");
-    const ignoreForceToucher = add2eCombatIgnoreForceBonus(actor, "toucher");
-    const ignoreForceDegats = add2eCombatIgnoreForceBonus(actor, "degats");
-    let caracToucher = 0;
-    let caracDegats = 0;
-
     if ((typeDegats || "").includes("tranchant") || (typeDegats || "").includes("contondant")) {
-      if (!noToucherCarac && !ignoreForceToucher) caracToucher = Number(sys.force_bonus_toucher) || 0;
-      if (!noDegatsCarac && !ignoreForceDegats) caracDegats = Number(sys.force_bonus_degats) || 0;
+      bonusToucher = (Number(sys.force_bonus_toucher) || 0) + armeBonusToucher + bonusArmureToucher;
+      bonusDegats = (Number(sys.force_bonus_degats) || 0) + armeBonusDegats + bonusArmureDegats;
     } else if ((typeDegats || "").includes("perforant")) {
-      if (!noToucherCarac) caracToucher = Number(sys.dex_att) || 0;
-      if (!noDegatsCarac) caracDegats = Number(sys.dex_att) || 0;
+      bonusToucher = (Number(sys.dex_att) || 0) + armeBonusToucher + bonusArmureToucher;
+      bonusDegats = (Number(sys.dex_att) || 0) + armeBonusDegats + bonusArmureDegats;
+    } else {
+      bonusToucher = armeBonusToucher + bonusArmureToucher;
+      bonusDegats = armeBonusDegats + bonusArmureDegats;
     }
-
-    bonusMartialMoine = add2eCombatMonkWeaponDamageBonus(actor, arme);
-    bonusToucher = caracToucher + armeBonusToucher + bonusArmureToucher;
-    bonusDegats = caracDegats + armeBonusDegats + bonusArmureDegats + bonusMartialMoine;
   }
 
-  const degatsMoyen = arme?.system?.["dégâts"]?.contre_moyen || "-";
-  const degatsGrand = arme?.system?.["dégâts"]?.contre_grand || "-";
+  const degatsMoyen = arme?.system.dégâts?.contre_moyen || "-";
+  const degatsGrand = arme?.system.dégâts?.contre_grand || "-";
   const degatsAffiche = degatsMoyen + " / " + degatsGrand;
 
   data.combatDefense = {
@@ -237,7 +123,6 @@ export function add2ePrepareActorSheetCombatData({ actor, data, sys, progression
     type_degats: typeDegats,
     bonus_toucher: bonusToucher,
     bonus_degats: bonusDegats,
-    bonus_martial_moine: bonusMartialMoine,
     transformation: transformation ? {
       label: transformation.label,
       sourceKey: transformation.sourceKey,
