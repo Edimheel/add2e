@@ -3,7 +3,7 @@
 
 import { add2eNormalizeAttackTag, add2eTagSetMatches } from "./03-attack-rules.mjs";
 
-export const ADD2E_ATTACK_MODIFIERS_VERSION = "2026-07-02-effects-engine-racial-tags-v12";
+export const ADD2E_ATTACK_MODIFIERS_VERSION = "2026-07-08-monk-passive-weapon-damage-v1";
 
 function add2eAttackPushNormalizedTag(set, value) {
   if (!set || value === undefined || value === null || value === "") return;
@@ -101,6 +101,28 @@ function add2eAttackApplySignedFlatTags({ tag, touch, damage }) {
   return false;
 }
 
+function add2eAttackIsMonkUnarmedProfile(combatProfile) {
+  const tags = combatProfile?.tagSet ?? combatProfile?.tags ?? [];
+  return add2eTagSetMatches(tags, "main_nue")
+    || add2eTagSetMatches(tags, "arme:main_nue")
+    || add2eTagSetMatches(tags, "type_arme:main_nue")
+    || add2eTagSetMatches(tags, "combat:mains_nues");
+}
+
+function add2eAttackApplyMonkPassiveDamage({ tag, actor, combatProfile, damage }) {
+  if (tag !== "bonus_degats:moine:demi_niveau") return false;
+  if (add2eAttackIsMonkUnarmedProfile(combatProfile)) return true;
+  const engineBonus = typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getMonkWeaponDamageBonus === "function"
+    ? Add2eEffectsEngine.getMonkWeaponDamageBonus(actor)
+    : null;
+  const fallbackBonus = Number(actor?.system?.moine?.passifs?.weaponDamageBonus);
+  const bonus = Number.isFinite(Number(engineBonus)) ? Number(engineBonus) : (Number.isFinite(fallbackBonus) ? fallbackBonus : 0);
+  if (!bonus) return true;
+  damage.value += bonus;
+  damage.details.push(`Bonus martial du moine : +${bonus}`);
+  return true;
+}
+
 export async function add2eAttackResolveTargetAttackGate({ actor, cible, actionTags = [], contact = false, source = "attack-roll" } = {}) {
   if (!actor || !cible) return { allowed: true, reason: "missing-actor-or-target", gateResults: [] };
   const engine = globalThis.Add2eEffectsEngine;
@@ -161,6 +183,7 @@ export function add2eAttackComputeActiveAttackModifiers({ actor, cible, combatPr
       const tag = add2eNormalizeAttackTag(rawTag);
       if (!tag) continue;
 
+      if (add2eAttackApplyMonkPassiveDamage({ tag, actor, combatProfile, damage })) continue;
       if (add2eAttackApplySignedFlatTags({ tag, touch, damage })) continue;
 
       if (tag.startsWith("bonus_touche:")) {
