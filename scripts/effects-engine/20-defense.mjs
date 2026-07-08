@@ -23,6 +23,42 @@ const ADD2E_COMBAT_IDENTITY_PREFIXES = [
 export function installEffectsEngineDefense(Engine) {
   register(Engine, {
     getMagicPassiveDefense(actor, context = {}) {
+      const transformation = globalThis.add2eGetCapabilityTransformationCombatProfile?.(actor) ?? null;
+      const transformationCA = Number(transformation?.armorClass);
+      if (Number.isFinite(transformationCA)) {
+        return {
+          armorBase: transformationCA,
+          armorName: transformation.label || "Transformation",
+          armorMagicBonus: 0,
+          ignoredArmorMagicBonus: 0,
+          fixedCA: null,
+          fixedSource: "",
+          fixedCAActive: false,
+          baseAfterFixed: transformationCA,
+          armorLayerCA: transformationCA,
+          dex: 0,
+          shieldBonus: 0,
+          shieldSources: [],
+          helmetBonus: 0,
+          objectProtectionBonus: 0,
+          objectSources: [],
+          caNaturel: transformationCA,
+          caTotal: transformationCA,
+          syntheticArmorAC: transformationCA,
+          transformation: {
+            sourceKey: transformation.sourceKey,
+            formKey: transformation.formKey,
+            label: transformation.label,
+            armorClass: transformation.armorClass,
+            thac0: transformation.thac0,
+            movement: transformation.movement,
+            effectId: transformation.effectId
+          },
+          context,
+          version: globalThis.ADD2E_EFFECTS_ENGINE_VERSION
+        };
+      }
+
       const items = this.equippedItems(actor);
       const armors = items.filter(item => ["armure", "armor"].includes(String(item.type ?? "").toLowerCase()));
       const objects = items.filter(item => !["armure", "armor"].includes(String(item.type ?? "").toLowerCase()));
