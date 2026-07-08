@@ -90,7 +90,7 @@ export function installEffectsEngineMonk(Engine) {
     getMonkWeaponDamageBonus(actor) {
       const progression = this.getMonkProgression(actor);
       const value = Number(progression?.monkWeaponDamageBonus ?? progression?.bonusDegatsArme ?? progression?.bonus_degats_arme);
-      return Number.isFinite(value) ? value : (this.isMonk(actor) ? Math.floor(this.getActorLevel(actor) / 2) : 0);
+      return Number.isFinite(value) ? value : (this.isMonk(actor) ? this.getActorLevel(actor) / 2 : 0);
     },
 
     hasMonkDiseaseImmunity(actor) {
