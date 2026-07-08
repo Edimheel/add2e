@@ -3,7 +3,9 @@
  * Script exécuté via on_use d'une classFeature.
  * Compatible Foundry V13 / V14 / V15.
  */
-const ADD2E_MOINE_AUTO_GUERISON_VERSION = "2026-07-07-class-level";
+const ADD2E_MOINE_AUTO_GUERISON_VERSION = "2026-07-08-self-heal-formula-v2";
+
+globalThis.ADD2E_MOINE_AUTO_GUERISON_VERSION = ADD2E_MOINE_AUTO_GUERISON_VERSION;
 
 function a2eNum(value, fallback = 0) {
   const number = Number(value);
@@ -20,10 +22,28 @@ function a2eMonkFeatureLevel(currentActor, currentFeature) {
 
 function a2eMonkClassItem(currentActor, currentFeature) {
   const itemId = String(currentFeature?._add2eClassItemId ?? "").trim();
-  if (!itemId) return null;
-  return currentActor?.items?.get?.(itemId)
-    ?? Array.from(currentActor?.items ?? []).find(item => String(item?.id ?? "") === itemId)
-    ?? null;
+  if (itemId) {
+    const byId = currentActor?.items?.get?.(itemId)
+      ?? Array.from(currentActor?.items ?? []).find(item => String(item?.id ?? "") === itemId)
+      ?? null;
+    if (byId) return byId;
+  }
+
+  const normalize = value => String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+
+  return Array.from(currentActor?.items ?? []).find(item => {
+    if (String(item?.type ?? "").toLowerCase() !== "classe") return false;
+    const system = item.system ?? {};
+    const label = normalize(item.name || system.slug || system.label || system.nom || system.name || "");
+    const tags = Array.isArray(system.tags) ? system.tags.map(normalize) : [];
+    return label === "moine" || tags.includes("classe_moine") || tags.includes("classe:moine");
+  }) ?? null;
 }
 
 function a2eMonkDayKey() {
@@ -40,6 +60,27 @@ function a2eGetMonkRow(classItem, level) {
     ?? null;
 }
 
+function a2eMonkSelfHealFormula(row, level) {
+  const raw = row?.selfHealFormula ?? row?.selfHeal ?? row?.autoHealFormula ?? row?.autoGuerisonFormula ?? "";
+  const formula = String(raw ?? "").trim();
+  if (formula) return formula;
+  return level >= 7 ? `1d4+${Math.max(1, level - 6)}` : "";
+}
+
+async function a2eRollMonkHealFormula(formula) {
+  const clean = String(formula ?? "").trim();
+  if (!clean) return { total: 0, roll: null };
+  if (/^[0-9]+$/.test(clean)) return { total: Math.max(0, Number(clean) || 0), roll: null };
+
+  const roll = new Roll(clean);
+  try {
+    await roll.evaluate({ async: true });
+  } catch (_error) {
+    await roll.evaluate();
+  }
+  return { total: Math.max(0, Math.floor(a2eNum(roll.total, 0))), roll };
+}
+
 if (!actor) {
   ui.notifications.error("Auto-guérison du moine : acteur introuvable.");
   return false;
@@ -53,8 +94,8 @@ if (level === null || !monkClass) {
 }
 
 const row = a2eGetMonkRow(monkClass, level);
-const healAmount = a2eNum(row?.selfHealPerDay, 0);
-if (healAmount <= 0) {
+const healFormula = a2eMonkSelfHealFormula(row, level);
+if (!healFormula) {
   ui.notifications.warn("Auto-guérison indisponible à ce niveau.");
   return false;
 }
@@ -68,6 +109,13 @@ if (actor.getFlag("add2e", usageFlagKey)?.used) {
 
 const current = a2eNum(actor.system?.pdv, 0);
 const max = a2eNum(actor.system?.points_de_coup, current);
+const healRoll = await a2eRollMonkHealFormula(healFormula);
+const healAmount = healRoll.total;
+if (healAmount <= 0) {
+  ui.notifications.warn("Auto-guérison : la formule de soin n’a produit aucun PV.");
+  return false;
+}
+
 const healed = Math.min(max, current + healAmount);
 const gained = Math.max(0, healed - current);
 if (gained <= 0) {
@@ -76,10 +124,10 @@ if (gained <= 0) {
 }
 
 await actor.update({ "system.pdv": healed });
-await actor.setFlag("add2e", usageFlagKey, { used: true, amount: gained, at: Date.now() });
+await actor.setFlag("add2e", usageFlagKey, { used: true, amount: gained, formula: healFormula, rollTotal: healAmount, at: Date.now() });
 
 await ChatMessage.create({
   speaker: ChatMessage.getSpeaker({ actor }),
-  content: `<div class="add2e-chat-card"><h3>Auto-guérison du moine</h3><p><b>${actor.name}</b> récupère <b>${gained} PV</b>.</p><p>PV : ${current} → ${healed} / ${max}</p><p>Utilisation : <b>1 / jour</b>.</p></div>`
+  content: `<div class="add2e-chat-card"><h3>Auto-guérison du moine</h3><p><b>${actor.name}</b> récupère <b>${gained} PV</b>.</p><p>Formule : <b>${healFormula}</b> → ${healAmount}</p><p>PV : ${current} → ${healed} / ${max}</p><p>Utilisation : <b>1 / jour</b>.</p></div>`
 });
 return true;
