@@ -70,7 +70,7 @@ const form=FORMS.find(entry=>entry.key===norm(choice.formKey));
 if(!form||!available.includes(form.category)){ui.notifications.warn("Cette forme animale est indisponible aujourd’hui.");return false;}
 const life=hp(actor);
 const lost=Number.isFinite(life.maximum)&&Number.isFinite(life.current)?Math.max(0,life.maximum-life.current):0;
-const roll=await new Roll("1d6").evaluate({async:true});
+const roll=await new Roll("1d6").evaluate();
 if(game.dice3d)await game.dice3d.showForRoll(roll);
 const die=Math.max(1,Math.min(6,Number(roll.total)||1));
 const percent=die*10;
