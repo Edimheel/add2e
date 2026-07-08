@@ -1,9 +1,13 @@
 // scripts/add2e-attack/04e-attack-roll-modifiers.mjs
 // ADD2E — Modificateurs d'attaque génériques.
 
-import { add2eNormalizeAttackTag, add2eTagSetMatches } from "./03-attack-rules.mjs";
+import {
+  add2eNormalizeAttackTag,
+  add2eTagSetMatches,
+  add2eGetAttackAbilityModifier
+} from "./03-attack-rules.mjs";
 
-export const ADD2E_ATTACK_MODIFIERS_VERSION = "2026-07-02-effects-engine-racial-tags-v12";
+export const ADD2E_ATTACK_MODIFIERS_VERSION = "2026-07-08-generic-passive-combat-modifiers-v1";
 
 function add2eAttackPushNormalizedTag(set, value) {
   if (!set || value === undefined || value === null || value === "") return;
@@ -101,6 +105,21 @@ function add2eAttackApplySignedFlatTags({ tag, touch, damage }) {
   return false;
 }
 
+function add2eAttackAbilityModifierContext(actor, combatProfile) {
+  const toucherCarac = combatProfile?.toucherCarac ?? null;
+  const degatsCarac = combatProfile?.degatsCarac ?? null;
+  return {
+    toucher: {
+      ability: toucherCarac,
+      value: toucherCarac ? add2eGetAttackAbilityModifier(actor, toucherCarac, "toucher") : 0
+    },
+    degats: {
+      ability: degatsCarac,
+      value: degatsCarac ? add2eGetAttackAbilityModifier(actor, degatsCarac, "degats") : 0
+    }
+  };
+}
+
 export async function add2eAttackResolveTargetAttackGate({ actor, cible, actionTags = [], contact = false, source = "attack-roll" } = {}) {
   if (!actor || !cible) return { allowed: true, reason: "missing-actor-or-target", gateResults: [] };
   const engine = globalThis.Add2eEffectsEngine;
@@ -178,6 +197,20 @@ export function add2eAttackComputeActiveAttackModifiers({ actor, cible, combatPr
           bonusDegatsEffets += valeurRaw === "niveau" ? (Number(actor?.system?.niveau) || 1) : (Number(valeurRaw) || 0);
         }
       }
+    }
+
+    if (typeof Add2eEffectsEngine.getPassiveCombatModifiers === "function") {
+      const passive = Add2eEffectsEngine.getPassiveCombatModifiers(actor, {
+        type: "attaque",
+        ruleScope: "owner",
+        actor,
+        target: cible,
+        combatProfile,
+        actionTags: combatProfile?.tags ?? [],
+        abilityModifiers: add2eAttackAbilityModifierContext(actor, combatProfile)
+      });
+      touch.value += Number(passive?.toucher) || 0;
+      damage.value += Number(passive?.degats) || 0;
     }
 
     if (touch.value) bonusToucheEffets += touch.value;
