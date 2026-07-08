@@ -1,6 +1,10 @@
 // ADD2E — Moine : mécanique liée à l'Item classe Moine.
 // Compatible Foundry V13/V14/V15.
 
+const ADD2E_MONK_RULES_VERSION = "2026-07-08-auto-sync-item-hooks-v1";
+const ADD2E_MONK_UNARMED_SYNC_LOCK = new Set();
+globalThis.ADD2E_MONK_RULES_VERSION = ADD2E_MONK_RULES_VERSION;
+
 function add2eMonkNorm(value) {
   if (typeof globalThis.add2eNormalizeEquipTag === "function") return globalThis.add2eNormalizeEquipTag(value);
   return String(value ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "").replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
@@ -14,7 +18,7 @@ function add2eMonkClassItem(actor) {
     const system = item.system ?? {};
     const label = add2eMonkNorm(item.name || system.slug || system.label || system.nom || system.name || "");
     const tags = (Array.isArray(system.tags) ? system.tags : []).map(add2eMonkNorm);
-    return label === "moine" || label.includes("moine") || tags.includes("classe:moine");
+    return label === "moine" || label.includes("moine") || tags.includes("classe:moine") || tags.includes("classe_moine");
   }) ?? null;
 }
 function add2eMonkClassLevel(item) {
@@ -132,6 +136,70 @@ async function add2eClampActorLevelToClassMax(actor, classItemOrSystem = null, o
   return clamp;
 }
 
+function add2eMonkActorFromEmbeddedItem(item) {
+  const parent = item?.parent ?? item?.actor ?? null;
+  return parent?.documentName === "Actor" ? parent : null;
+}
+
+function add2eMonkIsClassItem(item) {
+  return String(item?.type ?? "").toLowerCase() === "classe";
+}
+
+function add2eMonkClassUpdateRelevant(changes = {}) {
+  if (!changes || typeof changes !== "object") return true;
+  return foundry.utils.hasProperty(changes, "name")
+    || foundry.utils.hasProperty(changes, "system.niveau")
+    || foundry.utils.hasProperty(changes, "system.level")
+    || foundry.utils.hasProperty(changes, "system.progression")
+    || foundry.utils.hasProperty(changes, "system.monkProgression")
+    || foundry.utils.hasProperty(changes, "system.tags")
+    || foundry.utils.hasProperty(changes, "system.slug")
+    || foundry.utils.hasProperty(changes, "system.label")
+    || foundry.utils.hasProperty(changes, "system.nom")
+    || foundry.utils.hasProperty(changes, "system.name");
+}
+
+function add2eQueueMonkUnarmedSync(actor, reason = "item-class-change") {
+  if (!actor || actor.type !== "personnage") return false;
+  if (!actor.isOwner && !game.user?.isGM) return false;
+  const key = String(actor.uuid ?? actor.id ?? actor.name ?? "unknown");
+  if (ADD2E_MONK_UNARMED_SYNC_LOCK.has(key)) return false;
+  ADD2E_MONK_UNARMED_SYNC_LOCK.add(key);
+  setTimeout(async () => {
+    try {
+      await add2eSyncMonkUnarmedWeapon(actor);
+    } catch (error) {
+      console.error("[ADD2E][MOINE][MAIN_NUE][SYNC_ERROR]", { actor: actor?.name, reason, error });
+    } finally {
+      ADD2E_MONK_UNARMED_SYNC_LOCK.delete(key);
+    }
+  }, 0);
+  return true;
+}
+
+function add2eRegisterMonkItemHooks() {
+  if (globalThis.ADD2E_MONK_ITEM_HOOKS_REGISTERED === ADD2E_MONK_RULES_VERSION) return;
+  globalThis.ADD2E_MONK_ITEM_HOOKS_REGISTERED = ADD2E_MONK_RULES_VERSION;
+
+  Hooks.on("createItem", (item, _options = {}, userId = null) => {
+    if (userId && game.user?.id !== userId) return;
+    if (!add2eMonkIsClassItem(item)) return;
+    add2eQueueMonkUnarmedSync(add2eMonkActorFromEmbeddedItem(item), "create-class-item");
+  });
+
+  Hooks.on("updateItem", (item, changes = {}, _options = {}, userId = null) => {
+    if (userId && game.user?.id !== userId) return;
+    if (!add2eMonkIsClassItem(item) || !add2eMonkClassUpdateRelevant(changes)) return;
+    add2eQueueMonkUnarmedSync(add2eMonkActorFromEmbeddedItem(item), "update-class-item");
+  });
+
+  Hooks.on("deleteItem", (item, _options = {}, userId = null) => {
+    if (userId && game.user?.id !== userId) return;
+    if (!add2eMonkIsClassItem(item)) return;
+    add2eQueueMonkUnarmedSync(add2eMonkActorFromEmbeddedItem(item), "delete-class-item");
+  });
+}
+
 globalThis.add2eGetMonkClassItem = add2eMonkClassItem;
 globalThis.add2eGetMonkClassSystem = add2eGetMonkClassSystem;
 globalThis.add2eGetMonkProgressionRow = add2eGetMonkProgressionRow;
@@ -142,3 +210,6 @@ globalThis.add2eGetRaceTagsForLevelCap = add2eGetRaceTagsForLevelCap;
 globalThis.add2eGetClassMaxLevelForActor = add2eGetClassMaxLevelForActor;
 globalThis.add2eClampLevelToClassMax = add2eClampLevelToClassMax;
 globalThis.add2eClampActorLevelToClassMax = add2eClampActorLevelToClassMax;
+globalThis.add2eQueueMonkUnarmedSync = add2eQueueMonkUnarmedSync;
+
+add2eRegisterMonkItemHooks();
