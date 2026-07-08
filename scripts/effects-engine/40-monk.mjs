@@ -146,12 +146,31 @@ export function installEffectsEngineMonk(Engine) {
       return rules;
     },
 
+    getPassiveRuleProgressionValue(rule, context = {}) {
+      const actor = context?.actor ?? rule?.source?.actor ?? null;
+      if (!actor) return null;
+      const field = String(rule?.field ?? rule?.path ?? rule?.progressionField ?? "").trim();
+      if (!field) return null;
+      const source = String(rule?.progressionSource ?? rule?.progression ?? "monkProgression").trim() || "progression";
+      const row = this.getClassProgressionEntry(actor, source) ?? this.getClassProgressionEntry(actor, "progression");
+      if (!row) return null;
+      let value = row;
+      for (const part of field.split(".").map(p => p.trim()).filter(Boolean)) value = value?.[part];
+      const number = this.readNumber(value);
+      return Number.isFinite(number) ? number : null;
+    },
+
     getPassiveRuleNumber(rule, context = {}) {
+      const sourceKey = this.normalizeKey(rule?.valueSource ?? rule?.sourceValue ?? "");
+      if (["progressionfield", "progression_field", "progressionchamp", "champ_progression"].includes(sourceKey)) {
+        const progressionValue = this.getPassiveRuleProgressionValue(rule, context);
+        if (Number.isFinite(progressionValue)) return progressionValue;
+      }
+
       const raw = rule?.value ?? rule?.amount ?? rule?.bonus ?? rule?.modifier;
       const direct = this.readNumber(raw);
       if (Number.isFinite(direct)) return direct;
 
-      const sourceKey = this.normalizeKey(rule?.valueSource ?? rule?.sourceValue ?? "");
       const classLevel = Number(rule?.source?.classLevel ?? context?.classLevel ?? context?.actorLevel ?? this.getActorLevel(context?.actor));
       const multiplier = Number(rule?.multiplier ?? rule?.factor ?? 1);
       const offset = Number(rule?.offset ?? 0) || 0;
