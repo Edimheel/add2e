@@ -1,8 +1,9 @@
 // ADD2E — Moine : mécanique liée à l'Item classe Moine.
 // Compatible Foundry V13/V14/V15.
 
-const ADD2E_MONK_RULES_VERSION = "2026-07-08-auto-sync-item-hooks-v1";
+const ADD2E_MONK_RULES_VERSION = "2026-07-08-auto-sync-item-hooks-v2";
 const ADD2E_MONK_UNARMED_SYNC_LOCK = new Set();
+const ADD2E_MONK_UNARMED_IMG = "assets/icones/armes/main-nue.svg";
 globalThis.ADD2E_MONK_RULES_VERSION = ADD2E_MONK_RULES_VERSION;
 
 function add2eMonkNorm(value) {
@@ -11,6 +12,29 @@ function add2eMonkNorm(value) {
 }
 function add2eMonkClone(value) {
   try { return foundry.utils.deepClone(value ?? {}); } catch (_error) { return { ...(value ?? {}) }; }
+}
+function add2eMonkToArray(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.flatMap(add2eMonkToArray).filter(v => String(v ?? "").trim() !== "");
+  if (typeof value === "string") return value.split(/[,;|\n]+/g).map(v => v.trim()).filter(Boolean);
+  if (typeof value === "object") {
+    for (const key of ["value", "list", "lists", "items", "tags", "allowedTags", "weaponsAllowed", "armes_autorisees"]) {
+      if (value[key] !== undefined) return add2eMonkToArray(value[key]);
+    }
+  }
+  return [value];
+}
+function add2eMonkUniqueList(...values) {
+  const out = [];
+  const seen = new Set();
+  for (const value of values.flatMap(add2eMonkToArray)) {
+    const raw = String(value ?? "").trim();
+    const key = add2eMonkNorm(raw);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(raw);
+  }
+  return out;
 }
 function add2eMonkClassItem(actor) {
   return Array.from(actor?.items ?? []).find(item => {
@@ -56,6 +80,43 @@ function add2eIsMonkAutoUnarmed(item) {
     || (system.add2eAutoCreated === true && add2eMonkNorm(system.sourceClasse) === "moine")
     || add2eMonkNorm(system.sourceCapacite) === "main_nue_moine";
 }
+function add2eMonkUnarmedImgFor(item = null) {
+  const current = String(item?.img ?? "").trim();
+  if (current && !["icons/svg/fist.svg", "icons/svg/mystery-man.svg", "icons/svg/item-bag.svg"].includes(current)) return current;
+  return ADD2E_MONK_UNARMED_IMG;
+}
+async function add2eEnsureMonkUnarmedAllowed(monk) {
+  if (!monk?.id || String(monk.type ?? "").toLowerCase() !== "classe") return false;
+  const system = monk.system ?? {};
+  const allowedTags = [
+    "main_nue",
+    "arme:main_nue",
+    "type_arme:main_nue",
+    "famille_arme:main_nue",
+    "combat:mains_nues",
+    "classe:moine"
+  ];
+
+  const updates = {};
+  const currentAllowed = add2eMonkToArray(system.armes_autorisees ?? system.weaponsAllowed ?? []);
+  const nextAllowed = add2eMonkUniqueList(currentAllowed, "main_nue");
+  if (nextAllowed.length !== currentAllowed.length || !currentAllowed.map(add2eMonkNorm).includes("main_nue")) {
+    updates["system.armes_autorisees"] = nextAllowed;
+    if (system.weaponsAllowed !== undefined) updates["system.weaponsAllowed"] = nextAllowed;
+  }
+
+  if (system.weaponRestriction && typeof system.weaponRestriction === "object") {
+    const currentRestrictionAllowed = add2eMonkToArray(system.weaponRestriction.allowedTags);
+    const nextRestrictionAllowed = add2eMonkUniqueList(currentRestrictionAllowed, allowedTags);
+    if (nextRestrictionAllowed.length !== currentRestrictionAllowed.length) {
+      updates["system.weaponRestriction.allowedTags"] = nextRestrictionAllowed;
+    }
+  }
+
+  if (!Object.keys(updates).length) return false;
+  await monk.update(updates, { add2eInternal: true, add2eReason: "monk-unarmed-equipment-allowance" });
+  return true;
+}
 async function add2eSyncMonkUnarmedWeapon(actor) {
   if (!actor || actor.type !== "personnage") return false;
   const monk = add2eMonkClassItem(actor);
@@ -64,6 +125,7 @@ async function add2eSyncMonkUnarmedWeapon(actor) {
     if (existing.length) await actor.deleteEmbeddedDocuments("Item", existing.map(item => item.id), { add2eInternal: true });
     return false;
   }
+  await add2eEnsureMonkUnarmedAllowed(monk);
   const row = add2eGetMonkProgressionRow(actor);
   if (!row) {
     console.warn("[ADD2E][MOINE][PROGRESSION_MISSING]", { actor: actor.name, classItemId: monk.id });
@@ -75,7 +137,7 @@ async function add2eSyncMonkUnarmedWeapon(actor) {
     degats: damage.raw, "dégâts": { contre_moyen: damage.moyen, contre_grand: damage.grand }, bonus_hit: 0, bonus_dom: 0,
     facteur_rapidité: 1, portee_courte: 0, portee_moyenne: 0, portee_longue: 0,
     tags: ["arme", "arme:main_nue", "type_arme:main_nue", "famille_arme:main_nue", "usage:corps_a_corps", "degat:contondant", "combat:mains_nues", "classe:moine"],
-    effectTags: ["arme", "arme:main_nue", "type_arme:main_nue", "usage:corps_a_corps", "degat:contondant", "classe:moine"],
+    effectTags: ["arme", "arme:main_nue", "type_arme:main_nue", "famille_arme:main_nue", "usage:corps_a_corps", "degat:contondant", "combat:mains_nues", "classe:moine"],
     add2eAutoCreated: true, sourceClasse: "moine", sourceClassId: monk.id, sourceCapacite: "main_nue_moine"
   };
   await actor.update({
@@ -85,10 +147,10 @@ async function add2eSyncMonkUnarmedWeapon(actor) {
   }, { add2eInternal: true });
   if (existing.length) {
     const [first, ...duplicates] = existing;
-    await actor.updateEmbeddedDocuments("Item", [{ _id: first.id, name: "Main nue", img: first.img || "icons/svg/fist.svg", system }], { add2eInternal: true });
+    await actor.updateEmbeddedDocuments("Item", [{ _id: first.id, name: "Main nue", img: add2eMonkUnarmedImgFor(first), system }], { add2eInternal: true });
     if (duplicates.length) await actor.deleteEmbeddedDocuments("Item", duplicates.map(item => item.id), { add2eInternal: true });
   } else {
-    await actor.createEmbeddedDocuments("Item", [{ type: "arme", name: "Main nue", img: "icons/svg/fist.svg", system, flags: { add2e: { autoCreated: true, sourceClasse: "moine", sourceClassId: monk.id, sourceCapacite: "main_nue_moine" } } }], { add2eInternal: true });
+    await actor.createEmbeddedDocuments("Item", [{ type: "arme", name: "Main nue", img: ADD2E_MONK_UNARMED_IMG, system, flags: { add2e: { autoCreated: true, sourceClasse: "moine", sourceClassId: monk.id, sourceCapacite: "main_nue_moine" } } }], { add2eInternal: true });
   }
   return true;
 }
@@ -206,6 +268,7 @@ globalThis.add2eGetMonkProgressionRow = add2eGetMonkProgressionRow;
 globalThis.add2eMonkDamageParts = add2eMonkDamageParts;
 globalThis.add2eIsMonkAutoUnarmed = add2eIsMonkAutoUnarmed;
 globalThis.add2eSyncMonkUnarmedWeapon = add2eSyncMonkUnarmedWeapon;
+globalThis.add2eEnsureMonkUnarmedAllowed = add2eEnsureMonkUnarmedAllowed;
 globalThis.add2eGetRaceTagsForLevelCap = add2eGetRaceTagsForLevelCap;
 globalThis.add2eGetClassMaxLevelForActor = add2eGetClassMaxLevelForActor;
 globalThis.add2eClampLevelToClassMax = add2eClampLevelToClassMax;
