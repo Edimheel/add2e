@@ -128,8 +128,35 @@ export function add2eAttackComputeCharacterDisplayedCA(targetActor) {
   const armor = add2eAttackGetArmorBaseCA(targetActor);
   const dex = add2eAttackGetDexDefenseMod(targetActor);
   const shield = add2eAttackGetShieldAdjustment(targetActor);
+  const transformation = globalThis.add2eGetCapabilityTransformationCombatProfile?.(targetActor) ?? null;
 
   const total = armor.value + dex.value + shield.value;
+
+  console.warn("[ADD2E][ATTAQUE][CA][DIAG_04D]", {
+    actor: targetActor?.name,
+    actorId: targetActor?.id,
+    actorType: targetActor?.type,
+    transformation: transformation ? {
+      label: transformation.label,
+      sourceKey: transformation.sourceKey,
+      formKey: transformation.formKey,
+      armorClass: transformation.armorClass,
+      thac0: transformation.thac0,
+      movement: transformation.movement,
+      effectId: transformation.effectId
+    } : null,
+    armor,
+    dex,
+    shield,
+    total,
+    stored: {
+      ca: s.ca,
+      armorClass: s.armorClass,
+      ca_total: s.ca_total,
+      ca_naturel: s.ca_naturel
+    },
+    note: "Log de diagnostic uniquement. Si ce log n'apparait pas pendant un jet, le calcul passe par Add2eEffectsEngine.getMagicPassiveDefense dans 04-attack-roll.mjs."
+  });
 
   return {
     caTotal: total,
