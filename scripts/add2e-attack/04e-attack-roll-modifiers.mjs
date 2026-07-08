@@ -3,7 +3,7 @@
 
 import { add2eNormalizeAttackTag, add2eTagSetMatches } from "./03-attack-rules.mjs";
 
-export const ADD2E_ATTACK_MODIFIERS_VERSION = "2026-07-08-monk-passive-weapon-damage-v1";
+export const ADD2E_ATTACK_MODIFIERS_VERSION = "2026-07-08-monk-passive-force-cancel-v2";
 
 function add2eAttackPushNormalizedTag(set, value) {
   if (!set || value === undefined || value === null || value === "") return;
@@ -123,6 +123,33 @@ function add2eAttackApplyMonkPassiveDamage({ tag, actor, combatProfile, damage }
   return true;
 }
 
+function add2eAttackApplyMonkForceCancellation({ tag, actor, combatProfile, touch, damage, state }) {
+  const hitCancel = tag === "force_bonus:toucher:ignore" && add2eNormalizeAttackTag(combatProfile?.toucherCarac) === "force";
+  const damageCancel = tag === "force_bonus:degats:ignore" && add2eNormalizeAttackTag(combatProfile?.degatsCarac) === "force";
+
+  if (hitCancel && !state.forceHitCancelled) {
+    const amount = Number(actor?.system?.force_bonus_toucher) || 0;
+    if (amount) {
+      touch.value -= amount;
+      touch.details.push(`Force ignorée par le moine : ${amount > 0 ? "-" : "+"}${Math.abs(amount)} au toucher`);
+    }
+    state.forceHitCancelled = true;
+    return true;
+  }
+
+  if (damageCancel && !state.forceDamageCancelled) {
+    const amount = Number(actor?.system?.force_bonus_degats) || 0;
+    if (amount) {
+      damage.value -= amount;
+      damage.details.push(`Force ignorée par le moine : ${amount > 0 ? "-" : "+"}${Math.abs(amount)} aux dégâts`);
+    }
+    state.forceDamageCancelled = true;
+    return true;
+  }
+
+  return false;
+}
+
 export async function add2eAttackResolveTargetAttackGate({ actor, cible, actionTags = [], contact = false, source = "attack-roll" } = {}) {
   if (!actor || !cible) return { allowed: true, reason: "missing-actor-or-target", gateResults: [] };
   const engine = globalThis.Add2eEffectsEngine;
@@ -178,11 +205,13 @@ export function add2eAttackComputeActiveAttackModifiers({ actor, cible, combatPr
     const activeTags = Add2eEffectsEngine.getActiveTags(actor) ?? [];
     const touch = { value: 0, details: [] };
     const damage = { value: 0, details: [] };
+    const state = { forceHitCancelled: false, forceDamageCancelled: false };
 
     for (const rawTag of activeTags) {
       const tag = add2eNormalizeAttackTag(rawTag);
       if (!tag) continue;
 
+      if (add2eAttackApplyMonkForceCancellation({ tag, actor, combatProfile, touch, damage, state })) continue;
       if (add2eAttackApplyMonkPassiveDamage({ tag, actor, combatProfile, damage })) continue;
       if (add2eAttackApplySignedFlatTags({ tag, touch, damage })) continue;
 
