@@ -1,5 +1,86 @@
 // ADD2E — Actor sheet getData : CA, équipement et synthèse de combat.
 
+function add2eSheetCombatNormalizeTag(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[\s-]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .replace(/^arme_/, "arme:")
+    .replace(/^type_arme_/, "type_arme:")
+    .replace(/^famille_arme_/, "famille_arme:")
+    .replace(/^usage_/, "usage:")
+    .replace(/^combat_/, "combat:")
+    .replace(/^mod_carac_/, "mod_carac:")
+    .replace(/^bonus_degats_/, "bonus_degats:");
+}
+
+function add2eSheetCombatArray(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.flatMap(add2eSheetCombatArray).filter(Boolean);
+  if (value instanceof Set) return [...value].flatMap(add2eSheetCombatArray).filter(Boolean);
+  if (typeof value === "string") return value.split(/[,;|\n]+/g).map(part => part.trim()).filter(Boolean);
+  if (typeof value === "object") {
+    for (const key of ["tags", "effectTags", "effecttags", "list", "items", "value"]) {
+      if (value[key] !== undefined) return add2eSheetCombatArray(value[key]);
+    }
+  }
+  return [];
+}
+
+function add2eSheetCombatActionTags(item) {
+  const system = item?.system ?? {};
+  const tags = new Set();
+  const push = value => {
+    for (const raw of add2eSheetCombatArray(value)) {
+      const tag = add2eSheetCombatNormalizeTag(raw);
+      if (!tag) continue;
+      tags.add(tag);
+      if (tag.startsWith("arme:")) tags.add(`type_arme:${tag.slice(5)}`);
+      if (tag.startsWith("famille_arme:")) tags.add(`type_arme:${tag.slice(13)}`);
+    }
+  };
+
+  push(item?.name);
+  push(system.nom);
+  push(system.tags);
+  push(system.tag);
+  push(system.effectTags);
+  push(system.effecttags);
+  push(system.effets);
+  push(system.effects);
+  push(item?.flags?.add2e?.tags);
+  push(item?.flags?.add2e?.effectTags);
+  push(system.type_arme);
+  push(system.famille_arme);
+  push(system.categorie);
+  return [...tags];
+}
+
+function add2eSheetApplyPassiveCombatModifiers({ actor, arme, bonusToucher, bonusDegats, toucherCarac, toucherValue, degatsCarac, degatsValue }) {
+  if (!actor || !arme || typeof Add2eEffectsEngine === "undefined" || typeof Add2eEffectsEngine.getPassiveCombatModifiers !== "function") {
+    return { bonusToucher, bonusDegats, passive: null };
+  }
+  const passive = Add2eEffectsEngine.getPassiveCombatModifiers(actor, {
+    type: "attaque",
+    ruleScope: "owner",
+    actor,
+    actionTags: add2eSheetCombatActionTags(arme),
+    abilityModifiers: {
+      toucher: { ability: toucherCarac, value: Number(toucherValue) || 0 },
+      degats: { ability: degatsCarac, value: Number(degatsValue) || 0 }
+    }
+  });
+  return {
+    bonusToucher: bonusToucher + (Number(passive?.toucher) || 0),
+    bonusDegats: bonusDegats + (Number(passive?.degats) || 0),
+    passive
+  };
+}
+
 export function add2ePrepareActorSheetCombatData({ actor, data, sys, progressionCourante, isMonk }) {
   const transformation = globalThis.add2eGetCapabilityTransformationCombatProfile?.(actor) ?? null;
   const transformationCA = Number(transformation?.armorClass);
@@ -92,18 +173,42 @@ export function add2ePrepareActorSheetCombatData({ actor, data, sys, progression
   ) : 0;
   let bonusToucher = 0;
   let bonusDegats = 0;
+  let passiveCombat = null;
 
   if (arme) {
+    let toucherCarac = null;
+    let degatsCarac = null;
+    let toucherValue = 0;
+    let degatsValue = 0;
+
     if ((typeDegats || "").includes("tranchant") || (typeDegats || "").includes("contondant")) {
-      bonusToucher = (Number(sys.force_bonus_toucher) || 0) + armeBonusToucher + bonusArmureToucher;
-      bonusDegats = (Number(sys.force_bonus_degats) || 0) + armeBonusDegats + bonusArmureDegats;
+      toucherCarac = "force";
+      degatsCarac = "force";
+      toucherValue = Number(sys.force_bonus_toucher) || 0;
+      degatsValue = Number(sys.force_bonus_degats) || 0;
     } else if ((typeDegats || "").includes("perforant")) {
-      bonusToucher = (Number(sys.dex_att) || 0) + armeBonusToucher + bonusArmureToucher;
-      bonusDegats = (Number(sys.dex_att) || 0) + armeBonusDegats + bonusArmureDegats;
-    } else {
-      bonusToucher = armeBonusToucher + bonusArmureToucher;
-      bonusDegats = armeBonusDegats + bonusArmureDegats;
+      toucherCarac = "dexterite";
+      degatsCarac = "dexterite";
+      toucherValue = Number(sys.dex_att) || 0;
+      degatsValue = Number(sys.dex_att) || 0;
     }
+
+    bonusToucher = toucherValue + armeBonusToucher + bonusArmureToucher;
+    bonusDegats = degatsValue + armeBonusDegats + bonusArmureDegats;
+
+    const passiveResult = add2eSheetApplyPassiveCombatModifiers({
+      actor,
+      arme,
+      bonusToucher,
+      bonusDegats,
+      toucherCarac,
+      toucherValue,
+      degatsCarac,
+      degatsValue
+    });
+    bonusToucher = passiveResult.bonusToucher;
+    bonusDegats = passiveResult.bonusDegats;
+    passiveCombat = passiveResult.passive;
   }
 
   const degatsMoyen = arme?.system.dégâts?.contre_moyen || "-";
@@ -123,6 +228,7 @@ export function add2ePrepareActorSheetCombatData({ actor, data, sys, progression
     type_degats: typeDegats,
     bonus_toucher: bonusToucher,
     bonus_degats: bonusDegats,
+    passive_combat: passiveCombat,
     transformation: transformation ? {
       label: transformation.label,
       sourceKey: transformation.sourceKey,
