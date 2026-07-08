@@ -23,6 +23,15 @@ function actorFromActionArgs(args) {
   return canvas?.tokens?.controlled?.[0]?.actor ?? game.user?.character ?? null;
 }
 
+function weaponFromActionArgs(actor, args) {
+  const first = args?.[0] ?? null;
+  if (first?.arme) return first.arme;
+  if (first?.weapon) return first.weapon;
+  if (first?.item) return first.item;
+  const itemId = first?.itemId ?? first?.armeId ?? first?.weaponId;
+  return itemId && actor?.items?.get ? actor.items.get(itemId) : null;
+}
+
 function notifyWrongTurn(actor, combatant) {
   const now = Date.now();
   if (now - initiativeState.warningAt <= 900) return;
@@ -87,13 +96,14 @@ export function installTokenMoveLock() {
 
 async function executeLockedAction(name, original, context, args) {
   const actor = actorFromActionArgs(args);
+  const weapon = name === "add2eAttackRoll" ? weaponFromActionArgs(actor, args) : null;
   if (!canActorActNow(actor, { notify: true })) return false;
 
-  if (name === "add2eAttackRoll" && !add2eCanActorWeaponAttackNow(actor, { notify: true })) return false;
+  if (name === "add2eAttackRoll" && !add2eCanActorWeaponAttackNow(actor, { weapon, notify: true })) return false;
 
   const result = await original.apply(context, args);
   if (name === "add2eAttackRoll" && result === true) {
-    await add2eRecordWeaponAttack(actor, { combat: game.combat });
+    await add2eRecordWeaponAttack(actor, { weapon, combat: game.combat });
   }
   return result;
 }
