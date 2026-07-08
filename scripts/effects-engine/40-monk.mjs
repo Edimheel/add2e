@@ -201,7 +201,13 @@ export function installEffectsEngineMonk(Engine) {
           rule
         });
       }
-      if (!candidates.length) return { applied: false, value: null, ignoreDex: false, candidates: [] };
+      if (!candidates.length) {
+        const classArmorClass = Number(this.getMonkArmorClass?.(actor));
+        if (Number.isFinite(classArmorClass)) {
+          return { applied: true, value: classArmorClass, ignoreDex: true, label: "CA passive de classe", rule: null, candidates: [] };
+        }
+        return { applied: false, value: null, ignoreDex: false, candidates: [] };
+      }
       const best = candidates.sort((left, right) => left.value - right.value)[0];
       return { applied: true, ...best, candidates };
     },
