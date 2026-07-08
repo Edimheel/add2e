@@ -98,7 +98,7 @@ async function executeLockedAction(name, original, context, args) {
   return result;
 }
 
-export function installActionLocks() {
+function installActionLocksOnce() {
   for (const name of ACTION_GLOBALS) {
     const current = globalThis[name];
     if (typeof current !== "function" || current.__add2eLock === ADD2E_INITIATIVE_VERSION) continue;
@@ -110,6 +110,13 @@ export function installActionLocks() {
     wrapped.__add2eOriginal = current;
     globalThis[name] = wrapped;
   }
+}
+
+export function installActionLocks() {
+  installActionLocksOnce();
+  if (installActionLocks.__add2eScheduled === ADD2E_INITIATIVE_VERSION) return;
+  installActionLocks.__add2eScheduled = ADD2E_INITIATIVE_VERSION;
+  for (const delay of [100, 250, 750, 1500, 3000]) window.setTimeout(installActionLocksOnce, delay);
 }
 
 function resetRuler(ruler) {
