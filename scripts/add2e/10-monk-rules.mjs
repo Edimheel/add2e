@@ -1,52 +1,22 @@
 // ADD2E — Moine : mécanique liée à l'Item classe Moine.
 // Compatible Foundry V13/V14/V15.
 
-const ADD2E_MONK_RULES_VERSION = "2026-07-08-generic-passive-rules-v2";
+const ADD2E_MONK_RULES_VERSION = "2026-07-08-source-driven-passives-v1";
 const ADD2E_MONK_UNARMED_SYNC_LOCK = new Set();
 const ADD2E_MONK_UNARMED_IMG = "systems/add2e/assets/icones/armes/main-nue.webp";
 const ADD2E_MONK_GENERATED_FEATURE_SOURCE = "10-monk-rules";
 globalThis.ADD2E_MONK_RULES_VERSION = ADD2E_MONK_RULES_VERSION;
 
-const ADD2E_MONK_FEATURE_KEY_ALIASES = new Map([
-  ["ascese_monastique", "ascese_monastique"],
-  ["discipline_loyale", "ascese_monastique"],
-  ["restrictions_ascetiques", "ascese_monastique"],
-  ["progression_martiale_du_moine", "progression_martiale_du_moine"],
-  ["combat_a_mains_nues", "combat_a_mains_nues"],
-  ["bonus_de_degats_martial", "bonus_de_degats_martial"],
-  ["bonus_degats_martial", "bonus_de_degats_martial"],
-  ["ajustements_physiques_particuliers", "ajustements_physiques_particuliers"],
-  ["sauvegardes_speciales", "sauvegardes_speciales"],
-  ["parade_des_projectiles", "parade_des_projectiles"],
-  ["parade_de_projectiles", "parade_des_projectiles"],
-  ["demi_degats_sur_sauvegarde_ratee", "demi_degats_sur_sauvegarde_ratee"],
-  ["langage_animal", "langage_animal"],
-  ["chute_ralentie", "chute_ralentie"],
-  ["masquer_son_esprit", "masquer_son_esprit"],
-  ["immunite_aux_maladies_rapidite_et_lenteur", "immunite_aux_maladies_rapidite_et_lenteur"],
-  ["immunite_maladie_rapidite_et_lenteur", "immunite_aux_maladies_rapidite_et_lenteur"],
-  ["immunites_maladie_rapidite_lenteur", "immunite_aux_maladies_rapidite_et_lenteur"],
-  ["catalepsie", "catalepsie"],
-  ["langage_des_plantes", "langage_des_plantes"],
-  ["resistance_aux_charmes_et_suggestions", "resistance_aux_charmes_et_suggestions"],
-  ["resistance_charme_suggestion", "resistance_aux_charmes_et_suggestions"],
-  ["defense_mentale", "defense_mentale"],
-  ["immunite_aux_poisons", "immunite_aux_poisons"],
-  ["immunite_poison", "immunite_aux_poisons"],
-  ["immunite_au_poison", "immunite_aux_poisons"],
-  ["immunite_aux_quetes", "immunite_aux_quetes"],
-  ["immunite_quete_geas", "immunite_aux_quetes"],
-  ["immunite_quete_et_geas", "immunite_aux_quetes"],
-  ["immunite_aux_quetes_et_geas", "immunite_aux_quetes"]
-]);
-
 function add2eMonkNorm(value) {
   if (typeof globalThis.add2eNormalizeEquipTag === "function") return globalThis.add2eNormalizeEquipTag(value);
   return String(value ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "").replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
 }
+
 function add2eMonkClone(value) {
-  try { return foundry.utils.deepClone(value ?? {}); } catch (_error) { return { ...(value ?? {}) }; }
+  try { return foundry.utils.deepClone(value ?? {}); }
+  catch (_error) { return { ...(value ?? {}) }; }
 }
+
 function add2eMonkToArray(value) {
   if (!value) return [];
   if (Array.isArray(value)) return value.flatMap(add2eMonkToArray).filter(v => String(v ?? "").trim() !== "");
@@ -58,12 +28,7 @@ function add2eMonkToArray(value) {
   }
   return [value];
 }
-function add2eMonkFeatureArray(value) {
-  if (!value) return [];
-  if (Array.isArray(value)) return value.filter(entry => entry && typeof entry === "object").map(add2eMonkClone);
-  if (typeof value === "object") return Object.values(value).filter(entry => entry && typeof entry === "object").map(add2eMonkClone);
-  return [];
-}
+
 function add2eMonkUniqueList(...values) {
   const out = [];
   const seen = new Set();
@@ -76,54 +41,7 @@ function add2eMonkUniqueList(...values) {
   }
   return out;
 }
-function add2eMonkNumber(...values) {
-  for (const value of values) {
-    if (value === undefined || value === null || value === "") continue;
-    const number = Number(String(value).replace(",", "."));
-    if (Number.isFinite(number)) return number;
-  }
-  return null;
-}
-function add2eMonkFeatureKey(feature) {
-  const rawKey = String(feature?.flags?.add2e?.key ?? feature?.key ?? "").replace(/^moine_passif:/i, "");
-  const key = add2eMonkNorm(rawKey);
-  if (ADD2E_MONK_FEATURE_KEY_ALIASES.has(key)) return ADD2E_MONK_FEATURE_KEY_ALIASES.get(key);
-  const name = add2eMonkNorm(feature?.name ?? feature?.label ?? feature?.title ?? feature?.nom ?? "");
-  return ADD2E_MONK_FEATURE_KEY_ALIASES.get(name) ?? name ?? key;
-}
-function add2eMonkUniqueRules(...values) {
-  const out = [];
-  const seen = new Set();
-  for (const rule of values.flatMap(add2eMonkFeatureArray)) {
-    const key = JSON.stringify(rule);
-    if (seen.has(key)) continue;
-    seen.add(key);
-    out.push(rule);
-  }
-  return out;
-}
-function add2eMonkMergeFeature(base, generated) {
-  if (!base) return add2eMonkClone(generated);
-  const merged = add2eMonkClone(base);
-  merged.minLevel = Number(base.minLevel ?? base.minimumLevel ?? base.niveauMin ?? generated.minLevel ?? 1) || 1;
-  if (generated.maxLevel !== undefined && merged.maxLevel === undefined) merged.maxLevel = generated.maxLevel;
-  merged.passive = generated.passive === true || merged.passive === true;
-  merged.activable = merged.activable === true && generated.activable !== false;
-  merged.tags = add2eMonkUniqueList(base.tags, base.tag, base.effectTags, base.effets, base.effects, generated.tags, generated.tag, generated.effectTags, generated.effets, generated.effects);
-  merged.rules = add2eMonkUniqueRules(base.rules, base.flags?.add2e?.rules, generated.rules, generated.flags?.add2e?.rules);
-  merged.flags = {
-    ...(merged.flags ?? {}),
-    add2e: {
-      ...(merged.flags?.add2e ?? {}),
-      ...(generated.flags?.add2e ?? {}),
-      generatedBy: ADD2E_MONK_GENERATED_FEATURE_SOURCE,
-      monkPassive: true,
-      key: add2eMonkFeatureKey(generated)
-    }
-  };
-  if (!String(merged.description ?? "").trim() && String(generated.description ?? "").trim()) merged.description = generated.description;
-  return merged;
-}
+
 function add2eMonkClassItem(actor) {
   return Array.from(actor?.items ?? []).find(item => {
     if (String(item?.type ?? "").toLowerCase() !== "classe") return false;
@@ -133,14 +51,17 @@ function add2eMonkClassItem(actor) {
     return label === "moine" || label.includes("moine") || tags.includes("classe:moine") || tags.includes("classe_moine");
   }) ?? null;
 }
+
 function add2eMonkClassLevel(item) {
   const level = Number(item?.system?.niveau);
   return Number.isFinite(level) && level >= 1 ? Math.floor(level) : null;
 }
+
 function add2eGetMonkClassSystem(actor) {
   const item = add2eMonkClassItem(actor);
   return item ? add2eMonkClone(item.system ?? {}) : null;
 }
+
 function add2eGetMonkProgressionRow(actor) {
   const item = add2eMonkClassItem(actor);
   const level = add2eMonkClassLevel(item);
@@ -153,6 +74,7 @@ function add2eGetMonkProgressionRow(actor) {
     ?? progression[Math.max(0, Math.min(progression.length - 1, level - 1))]
     ?? null;
 }
+
 function add2eMonkDamageParts(raw) {
   if (raw && typeof raw === "object") raw = raw.raw ?? raw.value ?? raw.contre_moyen ?? raw.medium ?? raw.moyen;
   const parts = String(raw ?? "1d6/1d3").split(/[\/|]/).map(part => part.trim()).filter(Boolean);
@@ -160,6 +82,7 @@ function add2eMonkDamageParts(raw) {
   const grand = parts[1] || moyen;
   return { raw: `${moyen} / ${grand}`, moyen, grand };
 }
+
 function add2eIsMonkAutoUnarmed(item) {
   if (!item || String(item.type ?? "").toLowerCase() !== "arme") return false;
   const system = item.system ?? {};
@@ -168,120 +91,69 @@ function add2eIsMonkAutoUnarmed(item) {
     || (system.add2eAutoCreated === true && add2eMonkNorm(system.sourceClasse) === "moine")
     || add2eMonkNorm(system.sourceCapacite) === "main_nue_moine";
 }
+
 function add2eMonkUnarmedImgFor(item = null) {
   const current = String(item?.img ?? "").trim();
   if (current && !["icons/svg/fist.svg", "icons/svg/mystery-man.svg", "icons/svg/item-bag.svg", "assets/icones/armes/main-nue.svg"].includes(current)) return current;
   return ADD2E_MONK_UNARMED_IMG;
 }
-function add2eMonkFeature(key, minLevel, name, description, tags = [], rules = []) {
-  return {
-    key: `moine_passif:${key}`,
-    minLevel,
-    name,
-    description,
-    tags: add2eMonkUniqueList("classe:moine", "moine:passif", `moine:passif:${key}`, tags),
-    rules: add2eMonkFeatureArray(rules),
-    activable: false,
-    passive: true,
-    flags: { add2e: { generatedBy: ADD2E_MONK_GENERATED_FEATURE_SOURCE, monkPassive: true, key } }
-  };
+
+function add2eMonkFeatureKey(feature) {
+  const rawKey = String(feature?.flags?.add2e?.key ?? feature?.key ?? "").replace(/^moine_passif:/i, "");
+  const key = add2eMonkNorm(rawKey);
+  const name = add2eMonkNorm(feature?.name ?? feature?.label ?? feature?.title ?? feature?.nom ?? "");
+  return key || name;
 }
-function add2eBuildMonkPassiveFeatures(actor, monk, row) {
-  const level = add2eMonkClassLevel(monk) ?? 1;
-  const ca = add2eMonkNumber(row?.monkAC, row?.caMoine, row?.ca_moine);
-  const move = add2eMonkNumber(row?.move, row?.movement, row?.mouvement);
-  const attacks = String(row?.attacksPerRound ?? row?.attaquesParRound ?? "").trim();
-  const damage = String(row?.unarmedDamage ?? row?.main_nue ?? row?.damage ?? "").trim();
-  const slowFall = add2eMonkNumber(row?.slowFall, row?.chute_ralentie);
-  const resistESP = add2eMonkNumber(row?.resistESP, row?.resistance_esp);
-  const resistCharm = add2eMonkNumber(row?.resistCharmSuggestion, row?.resistance_charme_suggestion);
 
-  const armorClassRule = Number.isFinite(ca) ? {
-    kind: "armor_class_base",
-    value: ca,
-    ignoreDex: true,
-    label: "CA naturelle de classe"
-  } : null;
-  const weaponDamageRule = {
-    kind: "attack_modifier",
-    actions: ["attaque"],
-    selector: "degats",
-    mode: "add",
-    valueSource: "classLevel",
-    multiplier: 0.5,
-    actionNotAnyTags: ["main_nue", "arme:main_nue", "type_arme:main_nue", "famille_arme:main_nue", "combat:mains_nues"],
-    label: "Bonus martial"
-  };
-  const cancelForceHitRule = {
-    kind: "attack_modifier",
-    actions: ["attaque"],
-    selector: "toucher",
-    mode: "cancel_ability_bonus",
-    ability: "force",
-    label: "Bonus de Force ignoré"
-  };
-  const cancelForceDamageRule = {
-    kind: "attack_modifier",
-    actions: ["attaque"],
-    selector: "degats",
-    mode: "cancel_ability_bonus",
-    ability: "force",
-    label: "Bonus de Force ignoré"
-  };
-
-  const features = [
-    add2eMonkFeature("ascese_monastique", 1, "Ascèse monastique", "Le moine doit rester loyal, ne peut porter ni armure ni bouclier, ne lance pas de sorts et n’utilise pas d’huile enflammée.", ["alignement:loyal", "discipline:monastique", "perte_pouvoirs_si:non_loyal", "interdit:armure", "interdit:bouclier", "interdit:sorts", "interdit:huile_enflammee", "armure:interdite", "bouclier:interdit", "sorts:interdits", "huile_enflammee:interdite"]),
-    add2eMonkFeature("progression_martiale_du_moine", 1, "Progression martiale du moine", `CA naturelle ${Number.isFinite(ca) ? ca : "—"}, mouvement ${Number.isFinite(move) ? move : "—"}, attaques ${attacks || "—"}, dégâts à mains nues ${damage || "—"}.`, ["moine:progression_speciale", "moine:ca_naturelle", "moine:mouvement", "moine:degats_main_nue"], armorClassRule ? [armorClassRule] : []),
-    add2eMonkFeature("combat_a_mains_nues", 1, "Combat à mains nues", "Le moine reçoit une arme virtuelle Main nue. Ses dégâts sont synchronisés avec sa progression de niveau.", ["combat:mains_nues", "arme:main_nue", "type_arme:main_nue"]),
-    add2eMonkFeature("bonus_de_degats_martial", 1, "Bonus de dégâts martial", "Avec les armes autorisées autres que Main nue, le moine ajoute +1/2 par niveau aux dégâts.", ["bonus_degats:moine:demi_niveau", "bonus_degats:classe:demi_niveau"], [weaponDamageRule]),
-    add2eMonkFeature("ajustements_physiques_particuliers", 1, "Ajustements physiques particuliers", "La Dextérité ne donne pas d’ajustement à la CA du moine et les bonus de Force habituels au toucher ou aux dégâts sont ignorés.", ["dex_ca:ignore", "force_bonus:toucher:ignore", "force_bonus:degats:ignore"], [cancelForceHitRule, cancelForceDamageRule]),
-    add2eMonkFeature("sauvegardes_speciales", 1, "Sauvegardes spéciales", "Le moine utilise les jets de protection de voleur. Une sauvegarde réussie contre une attaque de dégâts annule les dégâts.", ["moine:jp_voleur", "moine:save_no_damage_on_success"]),
-    add2eMonkFeature("parade_des_projectiles", 1, "Parade des projectiles", "Le moine peut éviter ou détourner les projectiles non magiques qui devraient le toucher avec un jet de sauvegarde contre la pétrification.", ["moine:parade_projectiles", "projectile_non_magique:save_petrification"])
-  ];
-
-  if (level >= 9) features.push(add2eMonkFeature("demi_degats_sur_sauvegarde_ratee", 9, "Demi-dégâts sur sauvegarde ratée", "À partir du niveau 9, si le moine rate une sauvegarde contre une attaque de dégâts, il ne subit que la moitié des dégâts potentiels.", ["moine:save_half_damage_on_failure"]));
-  if (level >= 3) features.push(add2eMonkFeature("langage_animal", 3, "Langage animal", "Le moine peut parler aux animaux comme les druides.", ["langage:animaux", "moine:langage_animal"]));
-  if (level >= 4 || (Number.isFinite(slowFall) && slowFall > 0)) features.push(add2eMonkFeature("chute_ralentie", 4, "Chute ralentie", `Le moine peut ralentir une chute en restant au contact d’un mur ou d’une surface équivalente${Number.isFinite(slowFall) && slowFall > 0 ? ` — valeur actuelle : ${slowFall} m` : ""}.`, ["moine:chute_ralentie", Number.isFinite(slowFall) ? `moine:chute_ralentie:${slowFall}` : ""]));
-  if (level >= 4) features.push(add2eMonkFeature("masquer_son_esprit", 4, "Masquer son esprit", `L’ESP n’a qu’une chance réduite d’atteindre le moine${Number.isFinite(resistESP) ? ` — résistance actuelle : ${resistESP} %` : ""}.`, ["moine:esprit_masque", Number.isFinite(resistESP) ? `resistance:esp:${resistESP}` : ""]));
-  if (level >= 5 || row?.immuneDisease === true || row?.immuneHasteSlow === true) features.push(add2eMonkFeature("immunite_aux_maladies_rapidite_et_lenteur", 5, "Immunité aux maladies, rapidité et lenteur", "Le moine est immunisé aux maladies et insensible aux effets de rapidité et lenteur.", ["immunite:maladie", "immunite:rapidite", "immunite:lenteur"]));
-  if (level >= 6 || Number.isFinite(add2eMonkNumber(row?.catalepsyTurnsPerLevel))) features.push(add2eMonkFeature("catalepsie", 6, "Catalepsie", "Le moine peut se mettre en catalepsie et maintenir cet état pendant 2 tours par niveau.", ["moine:catalepsie", "catalepsie:2_tours_par_niveau"]));
-  if (level >= 8) features.push(add2eMonkFeature("langage_des_plantes", 8, "Langage des plantes", "Le moine peut parler aux plantes comme les druides.", ["langage:plantes", "moine:parler_aux_plantes"]));
-  if (level >= 9) features.push(add2eMonkFeature("resistance_aux_charmes_et_suggestions", 9, "Résistance aux charmes et suggestions", `Les charmes, suggestions, hypnotismes et séductions n’ont que peu de chance d’affecter le moine${Number.isFinite(resistCharm) ? ` — résistance actuelle : ${resistCharm} %` : ""}.`, ["moine:resistance_charme_suggestion", Number.isFinite(resistCharm) ? `resistance:charme_suggestion:${resistCharm}` : ""]));
-  if (level >= 10) features.push(add2eMonkFeature("defense_mentale", 10, "Défense mentale", "Contre les attaques télépathiques ou les chocs mentaux, le moine est traité comme ayant 18 en Intelligence.", ["moine:defense_mentale", "defense_mentale:intelligence_18"]));
-  if (level >= 11 || row?.immunePoison === true) features.push(add2eMonkFeature("immunite_aux_poisons", 11, "Immunité aux poisons", "Le moine est immunisé contre les poisons de tout type.", ["immunite:poison"]));
-  if (level >= 12 || row?.immuneQuestGeas === true) features.push(add2eMonkFeature("immunite_aux_quetes", 12, "Immunité aux quêtes", "Le moine est immunisé contre quête et geas.", ["immunite:quete", "immunite:quest", "immunite:geas"]));
-
-  return features.filter(Boolean);
+function add2eIsGeneratedMonkFeature(feature) {
+  return feature?.flags?.add2e?.generatedBy === ADD2E_MONK_GENERATED_FEATURE_SOURCE
+    || String(feature?.key ?? "").startsWith("moine_passif:");
 }
-async function add2eEnsureMonkPassiveClassFeatures(actor, monk, row) {
-  if (!monk?.id || !row) return false;
-  const generated = add2eBuildMonkPassiveFeatures(actor, monk, row);
-  const generatedByKey = new Map(generated.map(feature => [add2eMonkFeatureKey(feature), feature]));
-  const current = add2eMonkFeatureArray(monk.system?.classFeatures);
+
+function add2eStripGeneratedMarker(feature) {
+  const cleaned = add2eMonkClone(feature);
+  if (cleaned.flags?.add2e) {
+    delete cleaned.flags.add2e.generatedBy;
+    delete cleaned.flags.add2e.monkPassive;
+    delete cleaned.flags.add2e.key;
+    if (!Object.keys(cleaned.flags.add2e).length) delete cleaned.flags.add2e;
+    if (cleaned.flags && !Object.keys(cleaned.flags).length) delete cleaned.flags;
+  }
+  if (String(cleaned.key ?? "").startsWith("moine_passif:")) delete cleaned.key;
+  return cleaned;
+}
+
+async function add2eCleanGeneratedMonkClassFeatures(monk) {
+  if (!monk?.id || String(monk.type ?? "").toLowerCase() !== "classe") return false;
+  const current = Array.isArray(monk.system?.classFeatures) ? monk.system.classFeatures.map(add2eMonkClone) : [];
+  if (!current.length) return false;
+
+  const naturalKeys = new Set(current.filter(feature => !add2eIsGeneratedMonkFeature(feature)).map(add2eMonkFeatureKey).filter(Boolean));
+  let changed = false;
   const next = [];
-  const used = new Set();
 
   for (const feature of current) {
-    const wasGenerated = feature?.flags?.add2e?.generatedBy === ADD2E_MONK_GENERATED_FEATURE_SOURCE;
-    const key = add2eMonkFeatureKey(feature);
-    const generatedFeature = generatedByKey.get(key);
-    if (wasGenerated) continue;
-    if (generatedFeature) {
-      next.push(add2eMonkMergeFeature(feature, generatedFeature));
-      used.add(key);
-    } else {
+    if (!add2eIsGeneratedMonkFeature(feature)) {
       next.push(feature);
+      continue;
     }
+
+    const key = add2eMonkFeatureKey(feature);
+    if (key && naturalKeys.has(key)) {
+      changed = true;
+      continue;
+    }
+
+    const cleaned = add2eStripGeneratedMarker(feature);
+    if (JSON.stringify(cleaned) !== JSON.stringify(feature)) changed = true;
+    next.push(cleaned);
   }
 
-  for (const [key, feature] of generatedByKey.entries()) {
-    if (!used.has(key)) next.push(feature);
-  }
-
-  if (JSON.stringify(current) === JSON.stringify(next)) return false;
-  await monk.update({ "system.classFeatures": next }, { add2eInternal: true, add2eReason: "monk-passive-feature-rules-sync" });
+  if (!changed || JSON.stringify(current) === JSON.stringify(next)) return false;
+  await monk.update({ "system.classFeatures": next }, { add2eInternal: true, add2eReason: "monk-generated-passive-cleanup" });
   return true;
 }
+
 async function add2eEnsureMonkUnarmedAllowed(monk) {
   if (!monk?.id || String(monk.type ?? "").toLowerCase() !== "classe") return false;
   const system = monk.system ?? {};
@@ -314,6 +186,7 @@ async function add2eEnsureMonkUnarmedAllowed(monk) {
   await monk.update(updates, { add2eInternal: true, add2eReason: "monk-unarmed-equipment-allowance" });
   return true;
 }
+
 async function add2eSyncMonkUnarmedWeapon(actor) {
   if (!actor || actor.type !== "personnage") return false;
   const monk = add2eMonkClassItem(actor);
@@ -322,45 +195,75 @@ async function add2eSyncMonkUnarmedWeapon(actor) {
     if (existing.length) await actor.deleteEmbeddedDocuments("Item", existing.map(item => item.id), { add2eInternal: true });
     return false;
   }
+
+  await add2eCleanGeneratedMonkClassFeatures(monk);
   await add2eEnsureMonkUnarmedAllowed(monk);
+
   const row = add2eGetMonkProgressionRow(actor);
   if (!row) {
     console.warn("[ADD2E][MOINE][PROGRESSION_MISSING]", { actor: actor.name, classItemId: monk.id });
     return false;
   }
-  await add2eEnsureMonkPassiveClassFeatures(actor, monk, row);
+
   const damage = add2eMonkDamageParts(row.unarmedDamage ?? row.main_nue ?? row.damage ?? actor.system?.moine?.main_nue);
   const system = {
-    nom: "Main nue", equipee: true, categorie: "melee", type_degats: "contondant", type_arme: "main_nue", famille_arme: "main_nue",
-    degats: damage.raw, "dégâts": { contre_moyen: damage.moyen, contre_grand: damage.grand }, bonus_hit: 0, bonus_dom: 0,
-    facteur_rapidité: 1, portee_courte: 0, portee_moyenne: 0, portee_longue: 0,
+    nom: "Main nue",
+    equipee: true,
+    categorie: "melee",
+    type_degats: "contondant",
+    type_arme: "main_nue",
+    famille_arme: "main_nue",
+    degats: damage.raw,
+    "dégâts": { contre_moyen: damage.moyen, contre_grand: damage.grand },
+    bonus_hit: 0,
+    bonus_dom: 0,
+    facteur_rapidité: 1,
+    portee_courte: 0,
+    portee_moyenne: 0,
+    portee_longue: 0,
     tags: ["arme", "arme:main_nue", "type_arme:main_nue", "famille_arme:main_nue", "usage:corps_a_corps", "degat:contondant", "combat:mains_nues", "classe:moine", "mod_carac:toucher:none", "mod_carac:degats:none"],
     effectTags: ["arme", "arme:main_nue", "type_arme:main_nue", "famille_arme:main_nue", "usage:corps_a_corps", "degat:contondant", "combat:mains_nues", "classe:moine", "mod_carac:toucher:none", "mod_carac:degats:none"],
-    add2eAutoCreated: true, sourceClasse: "moine", sourceClassId: monk.id, sourceCapacite: "main_nue_moine"
+    add2eAutoCreated: true,
+    sourceClasse: "moine",
+    sourceClassId: monk.id,
+    sourceCapacite: "main_nue_moine"
   };
+
   await actor.update({
     "system.moine.main_nue": damage.raw,
     "system.moine.main_nue_contre_moyen": damage.moyen,
     "system.moine.main_nue_contre_grand": damage.grand
   }, { add2eInternal: true });
+
   if (existing.length) {
     const [first, ...duplicates] = existing;
     await actor.updateEmbeddedDocuments("Item", [{ _id: first.id, name: "Main nue", img: add2eMonkUnarmedImgFor(first), system }], { add2eInternal: true });
     if (duplicates.length) await actor.deleteEmbeddedDocuments("Item", duplicates.map(item => item.id), { add2eInternal: true });
   } else {
-    await actor.createEmbeddedDocuments("Item", [{ type: "arme", name: "Main nue", img: ADD2E_MONK_UNARMED_IMG, system, flags: { add2e: { autoCreated: true, sourceClasse: "moine", sourceClassId: monk.id, sourceCapacite: "main_nue_moine" } } }], { add2eInternal: true });
+    await actor.createEmbeddedDocuments("Item", [{
+      type: "arme",
+      name: "Main nue",
+      img: ADD2E_MONK_UNARMED_IMG,
+      system,
+      flags: { add2e: { autoCreated: true, sourceClasse: "moine", sourceClassId: monk.id, sourceCapacite: "main_nue_moine" } }
+    }], { add2eInternal: true });
   }
+
   return true;
 }
+
 function add2eGetRaceTagsForLevelCap(actor) {
   const tags = new Set();
   const push = value => { const tag = add2eMonkNorm(value); if (tag) tags.add(tag); };
   const pushAll = value => { if (Array.isArray(value)) value.forEach(pushAll); else if (value && typeof value === "object") Object.values(value).forEach(pushAll); else push(value); };
   for (const race of Array.from(actor?.items ?? []).filter(item => String(item.type ?? "").toLowerCase() === "race")) {
-    push(`race:${race.system?.slug || race.name}`); pushAll(race.system?.tags); pushAll(race.system?.identityTags);
+    push(`race:${race.system?.slug || race.name}`);
+    pushAll(race.system?.tags);
+    pushAll(race.system?.identityTags);
   }
   return tags;
 }
+
 function add2eGetClassMaxLevelForActor(actor, classItemOrSystem = null) {
   const classItem = classItemOrSystem?.type === "classe" ? classItemOrSystem : null;
   const system = classItem?.system ?? classItemOrSystem ?? (Array.from(actor?.items ?? []).filter(item => String(item.type ?? "").toLowerCase() === "classe").length === 1 ? Array.from(actor.items).find(item => String(item.type ?? "").toLowerCase() === "classe")?.system : null);
@@ -378,6 +281,7 @@ function add2eGetClassMaxLevelForActor(actor, classItemOrSystem = null) {
   }
   return Number.isFinite(maxLevel) && maxLevel > 0 ? Math.floor(maxLevel) : null;
 }
+
 function add2eClampLevelToClassMax(actor, desiredLevel, classItemOrSystem = null, { notify = false } = {}) {
   const requested = Math.max(1, Number.parseInt(desiredLevel, 10) || 1);
   const maximum = add2eGetClassMaxLevelForActor(actor, classItemOrSystem);
@@ -385,6 +289,7 @@ function add2eClampLevelToClassMax(actor, desiredLevel, classItemOrSystem = null
   if (notify && level !== requested) ui.notifications.warn(`${classItemOrSystem?.name ?? classItemOrSystem?.label ?? "Cette classe"} est limitée au niveau ${maximum}. Niveau ramené à ${maximum}.`);
   return { level, maxLevel: maximum, changed: level !== requested, original: requested };
 }
+
 async function add2eClampActorLevelToClassMax(actor, classItemOrSystem = null, options = {}) {
   if (!actor || actor.type !== "personnage") return null;
   const item = classItemOrSystem?.type === "classe" ? classItemOrSystem : (Array.from(actor.items ?? []).filter(entry => String(entry.type ?? "").toLowerCase() === "classe").length === 1 ? Array.from(actor.items).find(entry => String(entry.type ?? "").toLowerCase() === "classe") : null);
@@ -427,13 +332,9 @@ function add2eQueueMonkUnarmedSync(actor, reason = "item-class-change") {
   if (ADD2E_MONK_UNARMED_SYNC_LOCK.has(key)) return false;
   ADD2E_MONK_UNARMED_SYNC_LOCK.add(key);
   setTimeout(async () => {
-    try {
-      await add2eSyncMonkUnarmedWeapon(actor);
-    } catch (error) {
-      console.error("[ADD2E][MOINE][MAIN_NUE][SYNC_ERROR]", { actor: actor?.name, reason, error });
-    } finally {
-      ADD2E_MONK_UNARMED_SYNC_LOCK.delete(key);
-    }
+    try { await add2eSyncMonkUnarmedWeapon(actor); }
+    catch (error) { console.error("[ADD2E][MOINE][MAIN_NUE][SYNC_ERROR]", { actor: actor?.name, reason, error }); }
+    finally { ADD2E_MONK_UNARMED_SYNC_LOCK.delete(key); }
   }, 0);
   return true;
 }
@@ -483,7 +384,7 @@ globalThis.add2eMonkDamageParts = add2eMonkDamageParts;
 globalThis.add2eIsMonkAutoUnarmed = add2eIsMonkAutoUnarmed;
 globalThis.add2eSyncMonkUnarmedWeapon = add2eSyncMonkUnarmedWeapon;
 globalThis.add2eEnsureMonkUnarmedAllowed = add2eEnsureMonkUnarmedAllowed;
-globalThis.add2eBuildMonkPassiveFeatures = add2eBuildMonkPassiveFeatures;
+globalThis.add2eCleanGeneratedMonkClassFeatures = add2eCleanGeneratedMonkClassFeatures;
 globalThis.add2eGetRaceTagsForLevelCap = add2eGetRaceTagsForLevelCap;
 globalThis.add2eGetClassMaxLevelForActor = add2eGetClassMaxLevelForActor;
 globalThis.add2eClampLevelToClassMax = add2eClampLevelToClassMax;
