@@ -3,7 +3,7 @@
 
 const ADD2E_MONK_RULES_VERSION = "2026-07-08-auto-sync-item-hooks-v4";
 const ADD2E_MONK_UNARMED_SYNC_LOCK = new Set();
-const ADD2E_MONK_UNARMED_IMG = "assets/icones/armes/main-nue.webp";
+const ADD2E_MONK_UNARMED_IMG = "systems/add2e/assets/icones/armes/main-nue.webp";
 globalThis.ADD2E_MONK_RULES_VERSION = ADD2E_MONK_RULES_VERSION;
 
 function add2eMonkNorm(value) {
