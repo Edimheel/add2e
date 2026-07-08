@@ -1,9 +1,10 @@
 // ADD2E — Moine : mécanique liée à l'Item classe Moine.
 // Compatible Foundry V13/V14/V15.
 
-const ADD2E_MONK_RULES_VERSION = "2026-07-08-auto-sync-item-hooks-v4";
+const ADD2E_MONK_RULES_VERSION = "2026-07-08-generic-passive-rules-v1";
 const ADD2E_MONK_UNARMED_SYNC_LOCK = new Set();
 const ADD2E_MONK_UNARMED_IMG = "systems/add2e/assets/icones/armes/main-nue.webp";
+const ADD2E_MONK_GENERATED_FEATURE_SOURCE = "10-monk-rules";
 globalThis.ADD2E_MONK_RULES_VERSION = ADD2E_MONK_RULES_VERSION;
 
 function add2eMonkNorm(value) {
@@ -24,6 +25,12 @@ function add2eMonkToArray(value) {
   }
   return [value];
 }
+function add2eMonkFeatureArray(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.filter(entry => entry && typeof entry === "object").map(add2eMonkClone);
+  if (typeof value === "object") return Object.values(value).filter(entry => entry && typeof entry === "object").map(add2eMonkClone);
+  return [];
+}
 function add2eMonkUniqueList(...values) {
   const out = [];
   const seen = new Set();
@@ -35,6 +42,14 @@ function add2eMonkUniqueList(...values) {
     out.push(raw);
   }
   return out;
+}
+function add2eMonkNumber(...values) {
+  for (const value of values) {
+    if (value === undefined || value === null || value === "") continue;
+    const number = Number(String(value).replace(",", "."));
+    if (Number.isFinite(number)) return number;
+  }
+  return null;
 }
 function add2eMonkClassItem(actor) {
   return Array.from(actor?.items ?? []).find(item => {
@@ -85,6 +100,91 @@ function add2eMonkUnarmedImgFor(item = null) {
   if (current && !["icons/svg/fist.svg", "icons/svg/mystery-man.svg", "icons/svg/item-bag.svg", "assets/icones/armes/main-nue.svg"].includes(current)) return current;
   return ADD2E_MONK_UNARMED_IMG;
 }
+function add2eMonkFeature(key, minLevel, name, description, tags = [], rules = []) {
+  return {
+    key: `moine_passif:${key}`,
+    minLevel,
+    name,
+    description,
+    tags: add2eMonkUniqueList("classe:moine", "moine:passif", `moine:passif:${key}`, tags),
+    rules: add2eMonkFeatureArray(rules),
+    activable: false,
+    passive: true,
+    flags: { add2e: { generatedBy: ADD2E_MONK_GENERATED_FEATURE_SOURCE, monkPassive: true, key } }
+  };
+}
+function add2eBuildMonkPassiveFeatures(actor, monk, row) {
+  const level = add2eMonkClassLevel(monk) ?? 1;
+  const ca = add2eMonkNumber(row?.monkAC, row?.caMoine, row?.ca_moine);
+  const move = add2eMonkNumber(row?.move, row?.movement, row?.mouvement);
+  const attacks = String(row?.attacksPerRound ?? row?.attaquesParRound ?? "").trim();
+  const damage = String(row?.unarmedDamage ?? row?.main_nue ?? row?.damage ?? "").trim();
+  const slowFall = add2eMonkNumber(row?.slowFall, row?.chute_ralentie);
+  const resistESP = add2eMonkNumber(row?.resistESP, row?.resistance_esp);
+  const resistCharm = add2eMonkNumber(row?.resistCharmSuggestion, row?.resistance_charme_suggestion);
+
+  const weaponDamageRule = {
+    kind: "attack_modifier",
+    actions: ["attaque"],
+    selector: "degats",
+    mode: "add",
+    valueSource: "classLevel",
+    multiplier: 0.5,
+    actionNotAnyTags: ["main_nue", "arme:main_nue", "type_arme:main_nue", "famille_arme:main_nue", "combat:mains_nues"],
+    label: "Bonus martial"
+  };
+  const cancelForceHitRule = {
+    kind: "attack_modifier",
+    actions: ["attaque"],
+    selector: "toucher",
+    mode: "cancel_ability_bonus",
+    ability: "force",
+    label: "Bonus de Force ignoré"
+  };
+  const cancelForceDamageRule = {
+    kind: "attack_modifier",
+    actions: ["attaque"],
+    selector: "degats",
+    mode: "cancel_ability_bonus",
+    ability: "force",
+    label: "Bonus de Force ignoré"
+  };
+
+  const features = [
+    add2eMonkFeature("discipline_loyale", 1, "Discipline loyale", "Le moine doit rester d’alignement loyal. En cas de perte de la discipline loyale, ses capacités de moine sont perdues.", ["alignement:loyal", "discipline:monastique", "perte_pouvoirs_si:non_loyal"]),
+    add2eMonkFeature("restrictions_ascetiques", 1, "Restrictions ascétiques", "Le moine ne peut porter ni armure ni bouclier, ne lance pas de sorts et n’utilise pas d’huile enflammée.", ["armure:interdite", "bouclier:interdit", "sorts:interdits", "huile_enflammee:interdite"]),
+    add2eMonkFeature("progression_martiale", 1, "Progression martiale du moine", `CA naturelle ${Number.isFinite(ca) ? ca : "—"}, mouvement ${Number.isFinite(move) ? move : "—"}, attaques ${attacks || "—"}, dégâts à mains nues ${damage || "—"}.`, ["moine:progression_speciale", "moine:ca_naturelle", "moine:mouvement", "moine:degats_main_nue"]),
+    add2eMonkFeature("combat_main_nue", 1, "Combat à mains nues", "Le moine reçoit une arme virtuelle Main nue. Ses dégâts sont synchronisés avec sa progression de niveau.", ["combat:mains_nues", "arme:main_nue", "type_arme:main_nue"]),
+    add2eMonkFeature("bonus_degats_martial", 1, "Bonus de dégâts martial", "Avec les armes autorisées autres que Main nue, le moine ajoute +1/2 par niveau aux dégâts.", ["bonus_degats:classe:demi_niveau"], [weaponDamageRule]),
+    add2eMonkFeature("ajustements_physiques", 1, "Ajustements physiques particuliers", "La Dextérité ne donne pas d’ajustement à la CA du moine et les bonus de Force habituels au toucher ou aux dégâts sont ignorés.", ["dex_ca:ignore", "force_bonus:toucher:ignore", "force_bonus:degats:ignore"], [cancelForceHitRule, cancelForceDamageRule]),
+    add2eMonkFeature("sauvegardes_speciales", 1, "Sauvegardes spéciales", "Le moine utilise les jets de protection de voleur. Une sauvegarde réussie contre une attaque de dégâts annule les dégâts.", ["moine:jp_voleur", "moine:save_no_damage_on_success"]),
+    add2eMonkFeature("parade_projectiles", 1, "Parade de projectiles", "Le moine peut éviter ou détourner les projectiles non magiques qui devraient le toucher avec un jet de sauvegarde contre la pétrification.", ["moine:parade_projectiles", "projectile_non_magique:save_petrification"])
+  ];
+
+  if (level >= 9) features.push(add2eMonkFeature("sauvegarde_demi_degats", 9, "Demi-dégâts sur sauvegarde ratée", "À partir du niveau 9, si le moine rate une sauvegarde contre une attaque de dégâts, il ne subit que la moitié des dégâts potentiels.", ["moine:save_half_damage_on_failure"]));
+  if (level >= 3) features.push(add2eMonkFeature("langage_animal", 3, "Langage animal", "Le moine peut parler aux animaux comme les druides.", ["langage:animaux", "moine:langage_animal"]));
+  if (level >= 4 || (Number.isFinite(slowFall) && slowFall > 0)) features.push(add2eMonkFeature("chute_ralentie", 4, "Chute ralentie", `Le moine peut ralentir une chute en restant au contact d’un mur ou d’une surface équivalente${Number.isFinite(slowFall) && slowFall > 0 ? ` — valeur actuelle : ${slowFall} m` : ""}.`, ["moine:chute_ralentie", Number.isFinite(slowFall) ? `moine:chute_ralentie:${slowFall}` : ""]));
+  if (level >= 4) features.push(add2eMonkFeature("esprit_masque", 4, "Masquer son esprit", `L’ESP n’a qu’une chance réduite d’atteindre le moine${Number.isFinite(resistESP) ? ` — résistance actuelle : ${resistESP} %` : ""}.`, ["moine:esprit_masque", Number.isFinite(resistESP) ? `resistance:esp:${resistESP}` : ""]));
+  if (level >= 5 || row?.immuneDisease === true || row?.immuneHasteSlow === true) features.push(add2eMonkFeature("immunites_maladie_rapidite_lenteur", 5, "Immunité maladie, rapidité et lenteur", "Le moine est immunisé aux maladies et insensible aux effets de rapidité et lenteur.", ["immunite:maladie", "immunite:rapidite", "immunite:lenteur"]));
+  if (level >= 6 || Number.isFinite(add2eMonkNumber(row?.catalepsyTurnsPerLevel))) features.push(add2eMonkFeature("catalepsie", 6, "Catalepsie", "Le moine peut se mettre en catalepsie et maintenir cet état pendant 2 tours par niveau.", ["moine:catalepsie", "catalepsie:2_tours_par_niveau"]));
+  if (level >= 8) features.push(add2eMonkFeature("langage_plantes", 8, "Langage des plantes", "Le moine peut parler aux plantes comme les druides.", ["langage:plantes", "moine:parler_aux_plantes"]));
+  if (level >= 9) features.push(add2eMonkFeature("resistance_charme_suggestion", 9, "Résistance aux charmes et suggestions", `Les charmes, suggestions, hypnotismes et séductions n’ont que peu de chance d’affecter le moine${Number.isFinite(resistCharm) ? ` — résistance actuelle : ${resistCharm} %` : ""}.`, ["moine:resistance_charme_suggestion", Number.isFinite(resistCharm) ? `resistance:charme_suggestion:${resistCharm}` : ""]));
+  if (level >= 10) features.push(add2eMonkFeature("defense_mentale", 10, "Défense mentale", "Contre les attaques télépathiques ou les chocs mentaux, le moine est traité comme ayant 18 en Intelligence.", ["moine:defense_mentale", "defense_mentale:intelligence_18"]));
+  if (level >= 11 || row?.immunePoison === true) features.push(add2eMonkFeature("immunite_poison", 11, "Immunité au poison", "Le moine est immunisé contre les poisons de tout type.", ["immunite:poison"]));
+  if (level >= 12 || row?.immuneQuestGeas === true) features.push(add2eMonkFeature("immunite_quete_geas", 12, "Immunité quête et geas", "Le moine est immunisé contre quête et geas.", ["immunite:quete", "immunite:quest", "immunite:geas"]));
+
+  return features.filter(Boolean);
+}
+async function add2eEnsureMonkPassiveClassFeatures(actor, monk, row) {
+  if (!monk?.id || !row) return false;
+  const generated = add2eBuildMonkPassiveFeatures(actor, monk, row);
+  const current = add2eMonkFeatureArray(monk.system?.classFeatures);
+  const preserved = current.filter(feature => feature?.flags?.add2e?.generatedBy !== ADD2E_MONK_GENERATED_FEATURE_SOURCE);
+  const next = [...preserved, ...generated];
+  if (JSON.stringify(current) === JSON.stringify(next)) return false;
+  await monk.update({ "system.classFeatures": next }, { add2eInternal: true, add2eReason: "monk-passive-feature-rules-sync" });
+  return true;
+}
 async function add2eEnsureMonkUnarmedAllowed(monk) {
   if (!monk?.id || String(monk.type ?? "").toLowerCase() !== "classe") return false;
   const system = monk.system ?? {};
@@ -131,13 +231,14 @@ async function add2eSyncMonkUnarmedWeapon(actor) {
     console.warn("[ADD2E][MOINE][PROGRESSION_MISSING]", { actor: actor.name, classItemId: monk.id });
     return false;
   }
+  await add2eEnsureMonkPassiveClassFeatures(actor, monk, row);
   const damage = add2eMonkDamageParts(row.unarmedDamage ?? row.main_nue ?? row.damage ?? actor.system?.moine?.main_nue);
   const system = {
     nom: "Main nue", equipee: true, categorie: "melee", type_degats: "contondant", type_arme: "main_nue", famille_arme: "main_nue",
     degats: damage.raw, "dégâts": { contre_moyen: damage.moyen, contre_grand: damage.grand }, bonus_hit: 0, bonus_dom: 0,
     facteur_rapidité: 1, portee_courte: 0, portee_moyenne: 0, portee_longue: 0,
-    tags: ["arme", "arme:main_nue", "type_arme:main_nue", "famille_arme:main_nue", "usage:corps_a_corps", "degat:contondant", "combat:mains_nues", "classe:moine"],
-    effectTags: ["arme", "arme:main_nue", "type_arme:main_nue", "famille_arme:main_nue", "usage:corps_a_corps", "degat:contondant", "combat:mains_nues", "classe:moine"],
+    tags: ["arme", "arme:main_nue", "type_arme:main_nue", "famille_arme:main_nue", "usage:corps_a_corps", "degat:contondant", "combat:mains_nues", "classe:moine", "mod_carac:toucher:none", "mod_carac:degats:none"],
+    effectTags: ["arme", "arme:main_nue", "type_arme:main_nue", "famille_arme:main_nue", "usage:corps_a_corps", "degat:contondant", "combat:mains_nues", "classe:moine", "mod_carac:toucher:none", "mod_carac:degats:none"],
     add2eAutoCreated: true, sourceClasse: "moine", sourceClassId: monk.id, sourceCapacite: "main_nue_moine"
   };
   await actor.update({
@@ -218,7 +319,8 @@ function add2eMonkClassUpdateRelevant(changes = {}) {
     || foundry.utils.hasProperty(changes, "system.slug")
     || foundry.utils.hasProperty(changes, "system.label")
     || foundry.utils.hasProperty(changes, "system.nom")
-    || foundry.utils.hasProperty(changes, "system.name");
+    || foundry.utils.hasProperty(changes, "system.name")
+    || foundry.utils.hasProperty(changes, "system.classFeatures");
 }
 
 function add2eQueueMonkUnarmedSync(actor, reason = "item-class-change") {
@@ -284,6 +386,7 @@ globalThis.add2eMonkDamageParts = add2eMonkDamageParts;
 globalThis.add2eIsMonkAutoUnarmed = add2eIsMonkAutoUnarmed;
 globalThis.add2eSyncMonkUnarmedWeapon = add2eSyncMonkUnarmedWeapon;
 globalThis.add2eEnsureMonkUnarmedAllowed = add2eEnsureMonkUnarmedAllowed;
+globalThis.add2eBuildMonkPassiveFeatures = add2eBuildMonkPassiveFeatures;
 globalThis.add2eGetRaceTagsForLevelCap = add2eGetRaceTagsForLevelCap;
 globalThis.add2eGetClassMaxLevelForActor = add2eGetClassMaxLevelForActor;
 globalThis.add2eClampLevelToClassMax = add2eClampLevelToClassMax;
