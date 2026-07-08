@@ -1,7 +1,7 @@
 // ADD2E — Moine : mécanique liée à l'Item classe Moine.
 // Compatible Foundry V13/V14/V15.
 
-const ADD2E_MONK_RULES_VERSION = "2026-07-08-auto-sync-item-hooks-v2";
+const ADD2E_MONK_RULES_VERSION = "2026-07-08-auto-sync-item-hooks-v3";
 const ADD2E_MONK_UNARMED_SYNC_LOCK = new Set();
 const ADD2E_MONK_UNARMED_IMG = "assets/icones/armes/main-nue.svg";
 globalThis.ADD2E_MONK_RULES_VERSION = ADD2E_MONK_RULES_VERSION;
@@ -239,6 +239,18 @@ function add2eQueueMonkUnarmedSync(actor, reason = "item-class-change") {
   return true;
 }
 
+function add2eQueueExistingMonksSync() {
+  if (!game.user?.isGM) return;
+  setTimeout(() => {
+    for (const actor of game.actors?.contents ?? []) {
+      if (actor?.type !== "personnage") continue;
+      const hasMonk = !!add2eMonkClassItem(actor);
+      const hasAutoUnarmed = Array.from(actor.items ?? []).some(add2eIsMonkAutoUnarmed);
+      if (hasMonk || hasAutoUnarmed) add2eQueueMonkUnarmedSync(actor, "ready-existing-monk-sync");
+    }
+  }, 250);
+}
+
 function add2eRegisterMonkItemHooks() {
   if (globalThis.ADD2E_MONK_ITEM_HOOKS_REGISTERED === ADD2E_MONK_RULES_VERSION) return;
   globalThis.ADD2E_MONK_ITEM_HOOKS_REGISTERED = ADD2E_MONK_RULES_VERSION;
@@ -260,6 +272,9 @@ function add2eRegisterMonkItemHooks() {
     if (!add2eMonkIsClassItem(item)) return;
     add2eQueueMonkUnarmedSync(add2eMonkActorFromEmbeddedItem(item), "delete-class-item");
   });
+
+  if (game?.ready) add2eQueueExistingMonksSync();
+  else Hooks.once("ready", add2eQueueExistingMonksSync);
 }
 
 globalThis.add2eGetMonkClassItem = add2eMonkClassItem;
