@@ -6,7 +6,7 @@
  * consommé par ADD2E_CAPABILITY_SPECIAL_ATTACK.
  * Compatible Foundry V13/V14/V15 — DialogV2 uniquement.
  */
-const ADD2E_MOINE_PAUME_MORTELLE_VERSION = "2026-07-07-deferred-contact-profile-v2";
+const ADD2E_MOINE_PAUME_MORTELLE_VERSION = "2026-07-08-deferred-contact-profile-v3";
 const ADD2E_PAUME_PROFILE_ID = "monk-quivering-palm";
 const ADD2E_PAUME_MIN_LEVEL = 13;
 const ADD2E_PAUME_TOUCH_WINDOW_ROUNDS = 3;
@@ -276,7 +276,7 @@ const confirmation = await DialogV2.wait({
         <div style="font-size:.9em;line-height:1.35;margin-top:3px;">Une utilisation par semaine ADD2E. Le moine doit toucher une cible valide dans les <b>${ADD2E_PAUME_TOUCH_WINDOW_ROUNDS} rounds</b> ; sinon la tentative hebdomadaire est perdue.</div>
       </div>
       <div style="border:1px solid #d4b777;border-radius:7px;background:#fffdf3;padding:7px;font-size:.9em;line-height:1.35;">
-        Le contact ne cause <b>aucun dégât ordinaire</b>. Les morts-vivants, les créatures touchables uniquement par des armes magiques, les cibles de plus de ${level} DV ou ayant plus de ${level * 2} × les PV maximum du moine sont exclus. Après un contact valide, le mot de commande doit être prononcé dans <b>${level} jour(s) ADD2E</b>.
+        Le contact ne cause <b>aucun dégât ordinaire</b>. Les morts-vivants, les créatures touchables uniquement par des armes magiques, les cibles de plus de ${level} DV ou ayant plus de <b>2 × les PV maximum du moine</b> sont exclus. Après un contact valide, le mot de commande doit être prononcé dans <b>${level} jour(s) ADD2E</b>.
       </div>
     </form>`,
   buttons: [
