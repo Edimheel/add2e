@@ -20,10 +20,60 @@ const ADD2E_COMBAT_IDENTITY_PREFIXES = [
   "alignment:"
 ];
 
+function add2eDefenseCollectionValues(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value;
+  if (value.contents) return Array.from(value.contents);
+  if (typeof value.values === "function") return Array.from(value.values());
+  if (typeof value[Symbol.iterator] === "function" && typeof value !== "string") return Array.from(value);
+  return [];
+}
+
+function add2eDefenseReadNumber(...values) {
+  for (const value of values) {
+    const number = Number(value);
+    if (Number.isFinite(number)) return number;
+  }
+  return null;
+}
+
+function add2eDefenseTransformationMeta(effect) {
+  const meta = effect?.flags?.add2e?.capabilityTransformation;
+  return meta && typeof meta === "object" ? meta : null;
+}
+
+function add2eDefenseActiveTransformationProfile(actor) {
+  const candidates = add2eDefenseCollectionValues(actor?.effects)
+    .filter(effect => effect && effect.disabled !== true)
+    .map(effect => ({ effect, meta: add2eDefenseTransformationMeta(effect) }))
+    .filter(entry => entry.meta?.kind === "form" && String(entry.meta?.sourceKey ?? "").trim())
+    .map(entry => {
+      const combat = entry.meta.combat && typeof entry.meta.combat === "object" ? entry.meta.combat : {};
+      const armorClass = add2eDefenseReadNumber(combat.armorClass, combat.ca, combat.ac, entry.meta.armorClass, entry.meta.ca, entry.meta.ac);
+      const thac0 = add2eDefenseReadNumber(combat.thac0, combat.thaco, entry.meta.thac0, entry.meta.thaco);
+      return {
+        effect: entry.effect,
+        effectId: entry.effect.id ?? null,
+        activatedAtTick: add2eDefenseReadNumber(entry.meta.activatedAtTick) ?? -1,
+        sourceKey: String(entry.meta.sourceKey ?? ""),
+        formKey: String(entry.meta.formKey ?? ""),
+        category: String(entry.meta.category ?? ""),
+        label: String(entry.meta.label ?? entry.effect.name ?? "Transformation"),
+        armorClass,
+        thac0,
+        movement: String(combat.movement ?? entry.meta.movement ?? ""),
+        raw: entry.meta
+      };
+    })
+    .filter(entry => Number.isFinite(entry.armorClass))
+    .sort((a, b) => b.activatedAtTick - a.activatedAtTick || String(b.effectId ?? "").localeCompare(String(a.effectId ?? "")));
+  return candidates[0] ?? null;
+}
+
 export function installEffectsEngineDefense(Engine) {
   register(Engine, {
     getMagicPassiveDefense(actor, context = {}) {
-      const transformation = globalThis.add2eGetCapabilityTransformationCombatProfile?.(actor) ?? null;
+      const transformation = add2eDefenseActiveTransformationProfile(actor);
       const transformationCA = Number(transformation?.armorClass);
       if (Number.isFinite(transformationCA)) {
         return {
