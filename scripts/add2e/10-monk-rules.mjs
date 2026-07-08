@@ -1,9 +1,9 @@
 // ADD2E — Moine : mécanique liée à l'Item classe Moine.
 // Compatible Foundry V13/V14/V15.
 
-const ADD2E_MONK_RULES_VERSION = "2026-07-08-auto-sync-item-hooks-v3";
+const ADD2E_MONK_RULES_VERSION = "2026-07-08-auto-sync-item-hooks-v4";
 const ADD2E_MONK_UNARMED_SYNC_LOCK = new Set();
-const ADD2E_MONK_UNARMED_IMG = "assets/icones/armes/main-nue.svg";
+const ADD2E_MONK_UNARMED_IMG = "assets/icones/armes/main-nue.webp";
 globalThis.ADD2E_MONK_RULES_VERSION = ADD2E_MONK_RULES_VERSION;
 
 function add2eMonkNorm(value) {
@@ -82,7 +82,7 @@ function add2eIsMonkAutoUnarmed(item) {
 }
 function add2eMonkUnarmedImgFor(item = null) {
   const current = String(item?.img ?? "").trim();
-  if (current && !["icons/svg/fist.svg", "icons/svg/mystery-man.svg", "icons/svg/item-bag.svg"].includes(current)) return current;
+  if (current && !["icons/svg/fist.svg", "icons/svg/mystery-man.svg", "icons/svg/item-bag.svg", "assets/icones/armes/main-nue.svg"].includes(current)) return current;
   return ADD2E_MONK_UNARMED_IMG;
 }
 async function add2eEnsureMonkUnarmedAllowed(monk) {
