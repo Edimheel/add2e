@@ -20,166 +20,9 @@ const ADD2E_COMBAT_IDENTITY_PREFIXES = [
   "alignment:"
 ];
 
-function add2eDefenseCollectionValues(value) {
-  if (!value) return [];
-  if (Array.isArray(value)) return value;
-  if (value.contents) return Array.from(value.contents);
-  if (typeof value.values === "function") return Array.from(value.values());
-  if (typeof value[Symbol.iterator] === "function" && typeof value !== "string") return Array.from(value);
-  return [];
-}
-
-function add2eDefenseReadNumber(...values) {
-  for (const value of values) {
-    const number = Number(value);
-    if (Number.isFinite(number)) return number;
-  }
-  return null;
-}
-
-function add2eDefenseTransformationMeta(effect) {
-  const meta = effect?.flags?.add2e?.capabilityTransformation;
-  return meta && typeof meta === "object" ? meta : null;
-}
-
-function add2eDefenseActiveTransformationProfile(actor) {
-  const candidates = add2eDefenseCollectionValues(actor?.effects)
-    .filter(effect => effect && effect.disabled !== true)
-    .map(effect => ({ effect, meta: add2eDefenseTransformationMeta(effect) }))
-    .filter(entry => entry.meta?.kind === "form" && String(entry.meta?.sourceKey ?? "").trim())
-    .map(entry => {
-      const combat = entry.meta.combat && typeof entry.meta.combat === "object" ? entry.meta.combat : {};
-      const armorClass = add2eDefenseReadNumber(combat.armorClass, combat.ca, combat.ac, entry.meta.armorClass, entry.meta.ca, entry.meta.ac);
-      const thac0 = add2eDefenseReadNumber(combat.thac0, combat.thaco, entry.meta.thac0, entry.meta.thaco);
-      return {
-        effect: entry.effect,
-        effectId: entry.effect.id ?? null,
-        activatedAtTick: add2eDefenseReadNumber(entry.meta.activatedAtTick) ?? -1,
-        sourceKey: String(entry.meta.sourceKey ?? ""),
-        formKey: String(entry.meta.formKey ?? ""),
-        category: String(entry.meta.category ?? ""),
-        label: String(entry.meta.label ?? entry.effect.name ?? "Transformation"),
-        armorClass,
-        thac0,
-        movement: String(combat.movement ?? entry.meta.movement ?? ""),
-        raw: entry.meta
-      };
-    })
-    .filter(entry => Number.isFinite(entry.armorClass))
-    .sort((a, b) => b.activatedAtTick - a.activatedAtTick || String(b.effectId ?? "").localeCompare(String(a.effectId ?? "")));
-  return candidates[0] ?? null;
-}
-
-function add2eDefenseDiagnosticEffect(effect) {
-  const meta = add2eDefenseTransformationMeta(effect);
-  return {
-    id: effect?.id ?? null,
-    name: effect?.name ?? effect?.label ?? "",
-    disabled: effect?.disabled ?? null,
-    transfer: effect?.transfer ?? null,
-    origin: effect?.origin ?? "",
-    parentDocumentName: effect?.parent?.documentName ?? "",
-    parentName: effect?.parent?.name ?? "",
-    flagsAdd2eKeys: Object.keys(effect?.flags?.add2e ?? {}),
-    capabilityTransformation: meta ? {
-      kind: meta.kind ?? null,
-      sourceKey: meta.sourceKey ?? null,
-      formKey: meta.formKey ?? null,
-      category: meta.category ?? null,
-      label: meta.label ?? null,
-      armorClass: meta.combat?.armorClass ?? meta.combat?.ca ?? meta.combat?.ac ?? meta.armorClass ?? meta.ca ?? meta.ac ?? null,
-      thac0: meta.combat?.thac0 ?? meta.combat?.thaco ?? meta.thac0 ?? meta.thaco ?? null,
-      combat: meta.combat ?? null
-    } : null
-  };
-}
-
-function add2eDefenseLogTransformationDiag(actor, context, transformation) {
-  if (context?.source !== "attack-roll" && context?.source !== "diag-forme-animale") return;
-  const effects = add2eDefenseCollectionValues(actor?.effects);
-  const temporaryEffects = add2eDefenseCollectionValues(actor?.temporaryEffects);
-  const appliedEffects = add2eDefenseCollectionValues(actor?.appliedEffects);
-  console.warn("[ADD2E][DEFENSE][TRANSFORMATION_DIAG]", {
-    actor: actor?.name ?? null,
-    actorId: actor?.id ?? null,
-    actorUuid: actor?.uuid ?? null,
-    actorType: actor?.type ?? null,
-    isTokenActor: actor?.isToken ?? null,
-    parentDocumentName: actor?.parent?.documentName ?? null,
-    token: {
-      id: actor?.token?.id ?? null,
-      name: actor?.token?.name ?? null,
-      uuid: actor?.token?.uuid ?? null,
-      actorId: actor?.token?.actorId ?? null
-    },
-    systemCA: {
-      ca: actor?.system?.ca,
-      ca_total: actor?.system?.ca_total,
-      ca_naturel: actor?.system?.ca_naturel,
-      armorClass: actor?.system?.armorClass,
-      dex_def: actor?.system?.dex_def
-    },
-    effectsCount: effects.length,
-    temporaryEffectsCount: temporaryEffects.length,
-    appliedEffectsCount: appliedEffects.length,
-    effects: effects.map(add2eDefenseDiagnosticEffect),
-    temporaryEffects: temporaryEffects.map(add2eDefenseDiagnosticEffect),
-    appliedEffects: appliedEffects.map(add2eDefenseDiagnosticEffect),
-    detectedTransformation: transformation ? {
-      effectId: transformation.effectId,
-      sourceKey: transformation.sourceKey,
-      formKey: transformation.formKey,
-      category: transformation.category,
-      label: transformation.label,
-      armorClass: transformation.armorClass,
-      thac0: transformation.thac0,
-      movement: transformation.movement
-    } : null,
-    context,
-    version: globalThis.ADD2E_EFFECTS_ENGINE_VERSION
-  });
-}
-
 export function installEffectsEngineDefense(Engine) {
   register(Engine, {
     getMagicPassiveDefense(actor, context = {}) {
-      const transformation = add2eDefenseActiveTransformationProfile(actor);
-      add2eDefenseLogTransformationDiag(actor, context, transformation);
-      const transformationCA = Number(transformation?.armorClass);
-      if (Number.isFinite(transformationCA)) {
-        return {
-          armorBase: transformationCA,
-          armorName: transformation.label || "Transformation",
-          armorMagicBonus: 0,
-          ignoredArmorMagicBonus: 0,
-          fixedCA: null,
-          fixedSource: "",
-          fixedCAActive: false,
-          baseAfterFixed: transformationCA,
-          armorLayerCA: transformationCA,
-          dex: 0,
-          shieldBonus: 0,
-          shieldSources: [],
-          helmetBonus: 0,
-          objectProtectionBonus: 0,
-          objectSources: [],
-          caNaturel: transformationCA,
-          caTotal: transformationCA,
-          syntheticArmorAC: transformationCA,
-          transformation: {
-            sourceKey: transformation.sourceKey,
-            formKey: transformation.formKey,
-            label: transformation.label,
-            armorClass: transformation.armorClass,
-            thac0: transformation.thac0,
-            movement: transformation.movement,
-            effectId: transformation.effectId
-          },
-          context,
-          version: globalThis.ADD2E_EFFECTS_ENGINE_VERSION
-        };
-      }
-
       const items = this.equippedItems(actor);
       const armors = items.filter(item => ["armure", "armor"].includes(String(item.type ?? "").toLowerCase()));
       const objects = items.filter(item => !["armure", "armor"].includes(String(item.type ?? "").toLowerCase()));
@@ -461,7 +304,6 @@ export function installEffectsEngineDefense(Engine) {
         }
       };
 
-      // Champs d’identité : l’espèce system.type_monstre est prioritaire pour les monstres.
       addField(subject?.type);
       addField(system.race);
       addField(system.type_monstre);
@@ -471,7 +313,6 @@ export function installEffectsEngineDefense(Engine) {
       addField(system.alignment);
       addField(system.details?.alignment);
 
-      // Tags structurés uniquement. Les chaînes dégradées et les tags non identitaires sont ignorés.
       for (const raw of [
         system.tags,
         system.effectTags,
