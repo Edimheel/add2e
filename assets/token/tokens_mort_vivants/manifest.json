@@ -1,0 +1,82 @@
+[
+  {
+    "name": "Âme-en-peine",
+    "file": "ame-en-peine.webp",
+    "source_png": "portrait_d_une_esprit_spectrale_gothique.png",
+    "size": "1254x1254",
+    "format": "webp",
+    "background": "transparent outside circular token"
+  },
+  {
+    "name": "Apparition majeure",
+    "file": "apparition-majeure.webp",
+    "source_png": "le_roi_spectral_et_son_aura_magique.png",
+    "size": "1254x1254",
+    "format": "webp",
+    "background": "transparent outside circular token"
+  },
+  {
+    "name": "Apparition mineure",
+    "file": "apparition-mineure.webp",
+    "source_png": "esprit_spectral_dans_un_médaillon_mystique.png",
+    "size": "1254x1254",
+    "format": "webp",
+    "background": "transparent outside circular token"
+  },
+  {
+    "name": "Chevalier de la mort",
+    "file": "chevalier-de-la-mort.webp",
+    "source_png": "chevalier_maudit_dans_un_médaillon.png",
+    "size": "1254x1254",
+    "format": "webp",
+    "background": "transparent outside circular token"
+  },
+  {
+    "name": "Chose des cryptes",
+    "file": "chose-des-cryptes.webp",
+    "source_png": "le_roi_lich_dans_la_crypte.png",
+    "size": "1254x1254",
+    "format": "webp",
+    "background": "transparent outside circular token"
+  },
+  {
+    "name": "Demi-liche",
+    "file": "demi-liche.webp",
+    "source_png": "médaillon_mystique_avec_crâne_et_joyaux.png",
+    "size": "1254x1254",
+    "format": "webp",
+    "background": "transparent outside circular token"
+  },
+  {
+    "name": "Fantôme",
+    "file": "fantome.webp",
+    "source_png": "médaillon_spectral_aux_yeux_lumineux.png",
+    "size": "1254x1254",
+    "format": "webp",
+    "background": "transparent outside circular token"
+  },
+  {
+    "name": "Ghast",
+    "file": "ghast.webp",
+    "source_png": "médaille_hantée_de_créature_décomposée.png",
+    "size": "1254x1254",
+    "format": "webp",
+    "background": "transparent outside circular token"
+  },
+  {
+    "name": "Momie",
+    "file": "momie.webp",
+    "source_png": "portrait_du_pharaon_maudit.png",
+    "size": "1254x1254",
+    "format": "webp",
+    "background": "transparent outside circular token"
+  },
+  {
+    "name": "Momie majeure",
+    "file": "momie-majeure.webp",
+    "source_png": "pharaon_maudit_dans_un_médaillon_mystique.png",
+    "size": "1254x1254",
+    "format": "webp",
+    "background": "transparent outside circular token"
+  }
+]
