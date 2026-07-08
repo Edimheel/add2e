@@ -88,6 +88,9 @@ export function add2ePrepareActorSheetCombatData({ actor, data, sys, progression
   const hasTransformationCA = Number.isFinite(transformationCA);
   const hasTransformationTHAC0 = Number.isFinite(transformationTHAC0);
   const transformationMovement = String(transformation?.movement ?? "").trim();
+  const passiveArmorClass = typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getPassiveArmorClassBase === "function"
+    ? Add2eEffectsEngine.getPassiveArmorClassBase(actor, { ruleScope: "owner", source: "actor-sheet" })
+    : null;
 
   const armure = data.listeArmures.find(i => i.system.equipee && !(i.name.toLowerCase().includes('bouclier') || i.name.toLowerCase().includes('heaume') || i.name.toLowerCase().includes('casque')));
   const bouclier = data.listeArmures.find(i => i.system.equipee && i.name.toLowerCase().includes('bouclier'));
@@ -99,7 +102,7 @@ export function add2ePrepareActorSheetCombatData({ actor, data, sys, progression
   const bonusAcArmure = armure ? (Number(armure.system.bonus_ac) || 0) : 0;
   const bonusAcBouclier = bouclier ? (Number(bouclier.system.bonus_ac) || 0) : 0;
   const bonusAcHeaume = heaume ? (Number(heaume.system.bonus_ac) || 0) : 0;
-  const bonusDex = typeof sys.dex_def === "number" ? sys.dex_def : 0;
+  const bonusDex = passiveArmorClass?.ignoreDex === true ? 0 : (typeof sys.dex_def === "number" ? sys.dex_def : 0);
 
   sys.armure_equipee = armure || null;
   sys.bouclier_equipe = bouclier || null;
@@ -109,8 +112,8 @@ export function add2ePrepareActorSheetCombatData({ actor, data, sys, progression
   let caPhysique = 10;
   if (hasTransformationCA) {
     caPhysique = transformationCA;
-  } else if (isMonk && progressionCourante && typeof progressionCourante.monkAC !== "undefined") {
-    caPhysique = progressionCourante.monkAC;
+  } else if (passiveArmorClass?.applied && Number.isFinite(Number(passiveArmorClass.value))) {
+    caPhysique = Number(passiveArmorClass.value);
   } else {
     const baseDepart = armure ? acArmure : 10;
     caPhysique = baseDepart + bonusDex + bonusAcArmure;
@@ -133,9 +136,24 @@ export function add2ePrepareActorSheetCombatData({ actor, data, sys, progression
     sys.ca_naturel = caPhysique;
     sys.ca_total = caPhysique;
   } else if (typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getMagicPassiveDefense === "function") {
-    magicDefense = Add2eEffectsEngine.getMagicPassiveDefense(actor, { physicalCA: caPhysique, armure, bouclier, heaume, source: "actor-sheet" });
-    sys.ca_naturel = magicDefense.caNaturel;
-    sys.ca_total = magicDefense.caTotal;
+    magicDefense = Add2eEffectsEngine.getMagicPassiveDefense(actor, { physicalCA: caPhysique, armure, bouclier, heaume, source: "actor-sheet", passiveArmorClass });
+    if (passiveArmorClass?.applied) {
+      const objectProtectionBonus = Number(magicDefense?.objectProtectionBonus) || 0;
+      sys.ca_naturel = caPhysique;
+      sys.ca_total = caPhysique - objectProtectionBonus;
+      magicDefense = {
+        ...magicDefense,
+        caNaturel: sys.ca_naturel,
+        caTotal: sys.ca_total,
+        armorBase: caPhysique,
+        baseAfterFixed: caPhysique,
+        dex: 0,
+        passiveArmorClass
+      };
+    } else {
+      sys.ca_naturel = magicDefense.caNaturel;
+      sys.ca_total = magicDefense.caTotal;
+    }
   } else {
     sys.ca_naturel = caPhysique;
     let caTotale = caPhysique;
