@@ -9,8 +9,6 @@ const INACTIVE_STATUS_IDS = new Set(["dead", "defeated", "unconscious", "incapac
 const TRUE_VALUES = new Set(["true", "1", "yes", "oui", "dead", "defeated", "inactive", "inactif", "mort", "inconscient", "hors-combat", "hors-jeu"]);
 const HP_PATHS = ["system.pv.value", "system.pv.actuel", "system.pv.current", "system.hp.value", "system.hp.current", "system.points_de_vie.actuel", "system.pointsVie.actuel", "system.pdv_actuel", "system.pdv"];
 const FLAG_PATHS = ["defeated", "isDefeated", "flags.core.defeated", "flags.add2e.defeated", "flags.add2e.inactif", "flags.add2e.inactive", "flags.add2e.horsJeu", "flags.add2e.horsCombat", "system.defeated", "system.inactif", "system.inactive", "system.horsJeu", "system.horsCombat", "system.etat.mort", "system.etat.inconscient"];
-const MULTIPLE_ATTACK_ACTOR_FLAG = "multipleAttacks";
-const MULTIPLE_ATTACK_PHASE_FLAG = "multipleAttackPhase";
 
 function isCombatStarted(combat = game.combat) {
   return Boolean(combat?.started && Number(combat?.round ?? 0) > 0);
@@ -22,11 +20,6 @@ function getProperty(obj, path) {
   } catch (_err) {
     return undefined;
   }
-}
-
-function duplicate(value) {
-  try { return foundry.utils.duplicate(value ?? {}); }
-  catch (_err) { return JSON.parse(JSON.stringify(value ?? {})); }
 }
 
 function safeSetting(namespace, key) {
@@ -237,309 +230,27 @@ export function tokenFromCombatant(combatant) {
   return combatant?.token?.object ?? (combatant?.tokenId ? canvas?.tokens?.get?.(combatant.tokenId) : null) ?? null;
 }
 
-function normalizeSlug(value) {
-  return String(value ?? "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[’']/g, "")
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/_+/g, "_")
-    .replace(/^_+|_+$/g, "");
-}
-
-function classItems(actor) {
-  return Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
-}
-
-function classSlug(item) {
-  const sys = item?.system ?? {};
-  return normalizeSlug(sys.slug || sys.label || sys.nom || sys.name || item?.name);
-}
-
-function classLevel(actor, item, classCount = classItems(actor).length) {
-  const paths = [
-    `system.classProgression.${item?.id}.level`,
-    `system.class_progression.${item?.id}.level`,
-    `system.classes.${item?.id}.level`,
-    "system.level",
-    "system.niveau",
-    "system.currentLevel",
-    "flags.add2e.level",
-    "flags.add2e.niveau"
-  ];
-  for (const path of paths) {
-    const value = getProperty(item, path);
-    const n = Number(value);
-    if (Number.isFinite(n) && n > 0) return Math.floor(n);
-  }
-  if (classCount <= 1) {
-    const n = Number(actor?.system?.niveau ?? actor?.system?.level ?? 1);
-    if (Number.isFinite(n) && n > 0) return Math.floor(n);
-  }
-  return 1;
-}
-
-function itemTextValues(item) {
-  const sys = item?.system ?? {};
-  return [
-    item?.name,
-    item?.type,
-    sys.slug,
-    sys.type,
-    sys.type_arme,
-    sys.categorie,
-    sys.category,
-    sys.groupe,
-    sys.weaponType,
-    sys.mode,
-    sys.usage,
-    ...(Array.isArray(sys.tags) ? sys.tags : []),
-    ...(Array.isArray(sys.effectTags) ? sys.effectTags : []),
-    ...(Array.isArray(item?.flags?.add2e?.tags) ? item.flags.add2e.tags : [])
-  ].map(normalizeSlug).filter(Boolean);
-}
-
-function weaponIsProjectileOrRanged(weapon) {
-  const sys = weapon?.system ?? {};
-  if (sys.isProjectilePropulse === true || sys.projectile === true || sys.distance === true) return true;
-  const values = itemTextValues(weapon).join(" ");
-  return /projectile|distance|arc|arbalete|fleche|carreau|fronde|javelot|lance_pierre/.test(values);
-}
-
-function weaponIsUnarmed(weapon) {
-  const values = itemTextValues(weapon).join(" ");
-  return /main_nue|mains_nues|poing|unarmed/.test(values);
-}
-
-function parseAttackRate(value) {
-  if (value && typeof value === "object") {
-    const numerator = Number(value.numerator ?? value.num ?? value.attacks ?? value.total ?? 1);
-    const denominator = Number(value.denominator ?? value.den ?? value.rounds ?? 1);
-    return { numerator: Math.max(1, Math.floor(numerator || 1)), denominator: Math.max(1, Math.floor(denominator || 1)), label: value.label ?? `${numerator || 1}/${denominator || 1}` };
-  }
-  const text = String(value ?? "1/1").trim();
-  const match = text.match(/^(\d+)\s*[\/:]\s*(\d+)$/);
-  if (match) return { numerator: Math.max(1, Number(match[1]) || 1), denominator: Math.max(1, Number(match[2]) || 1), label: `${match[1]}/${match[2]}` };
-  const numeric = Number(text.replace(",", "."));
-  if (Number.isFinite(numeric) && numeric > 0) return { numerator: Math.max(1, Math.floor(numeric)), denominator: 1, label: `${Math.max(1, Math.floor(numeric))}/1` };
-  return { numerator: 1, denominator: 1, label: "1/1" };
-}
-
-function attacksThisRound(rate, round, sequenceStartRound = 1) {
-  const parsed = parseAttackRate(rate);
-  if (parsed.denominator <= 1) return Math.max(1, parsed.numerator);
-  const base = Math.floor(parsed.numerator / parsed.denominator);
-  const extra = parsed.numerator % parsed.denominator;
-  const offset = ((Math.max(1, round) - Math.max(1, sequenceStartRound)) % parsed.denominator + parsed.denominator) % parsed.denominator;
-  return Math.max(1, base + (extra > 0 && offset >= parsed.denominator - extra ? 1 : 0));
-}
-
-function warriorRate(slug, level) {
-  if (slug.includes("ranger") || slug.includes("rodeur")) {
-    if (level >= 15) return "2/1";
-    if (level >= 8) return "3/2";
-    return "1/1";
-  }
-  if (slug.includes("guerrier") || slug.includes("fighter") || slug.includes("paladin")) {
-    if (level >= 13) return "2/1";
-    if (level >= 7) return "3/2";
-  }
-  return "1/1";
-}
-
-function monkRate(level) {
-  if (level >= 16) return "4/1";
-  if (level >= 14) return "3/1";
-  if (level >= 11) return "5/2";
-  if (level >= 9) return "2/1";
-  if (level >= 6) return "3/2";
-  if (level >= 4) return "5/4";
-  return "1/1";
-}
-
-function actorAttackProfile(actor, { weapon = null } = {}) {
-  if (!actor || actor.type !== "personnage") return null;
-  const classes = classItems(actor);
-  if (!classes.length) return null;
-  const classCount = classes.length;
-  const unarmed = weaponIsUnarmed(weapon);
-  const ranged = weaponIsProjectileOrRanged(weapon);
-  let best = null;
-
-  for (const item of classes) {
-    const slug = classSlug(item);
-    const level = classLevel(actor, item, classCount);
-    let rate = "1/1";
-    let source = null;
-
-    if (slug.includes("moine") || slug.includes("monk")) {
-      if (!unarmed) continue;
-      rate = monkRate(level);
-      source = "moine";
-    } else if (!ranged && (slug.includes("guerrier") || slug.includes("fighter") || slug.includes("paladin") || slug.includes("ranger") || slug.includes("rodeur"))) {
-      rate = warriorRate(slug, level);
-      source = slug.includes("ranger") || slug.includes("rodeur") ? "ranger" : "guerrier";
-    }
-
-    const parsed = parseAttackRate(rate);
-    if (parsed.numerator <= parsed.denominator) continue;
-    const score = parsed.numerator / parsed.denominator;
-    if (!best || score > best.score) best = { rate: parsed, ratio: parsed.label, classSlug: slug, level, source, score };
-  }
-
-  return best;
-}
-
-function combatKey(combat) {
-  return String(combat?.id ?? "active-combat");
-}
-
-function readMultipleAttackState(actor, combat = game.combat) {
-  const all = actor?.getFlag?.("add2e", MULTIPLE_ATTACK_ACTOR_FLAG) ?? actor?.flags?.add2e?.[MULTIPLE_ATTACK_ACTOR_FLAG] ?? {};
-  const state = all?.[combatKey(combat)] ?? null;
-  return state && typeof state === "object" ? state : null;
-}
-
-async function writeMultipleAttackState(actor, combat, state) {
-  if (!actor || !combat) return null;
-  const all = duplicate(actor.getFlag?.("add2e", MULTIPLE_ATTACK_ACTOR_FLAG) ?? actor.flags?.add2e?.[MULTIPLE_ATTACK_ACTOR_FLAG] ?? {});
-  all[combatKey(combat)] = state;
-  await actor.setFlag("add2e", MULTIPLE_ATTACK_ACTOR_FLAG, all);
-  return state;
-}
-
-function currentMultipleAttackPhase(combat = game.combat) {
-  const phase = combat?.getFlag?.("add2e", MULTIPLE_ATTACK_PHASE_FLAG) ?? combat?.flags?.add2e?.[MULTIPLE_ATTACK_PHASE_FLAG] ?? null;
-  return phase && typeof phase === "object" ? phase : null;
-}
-
-function stateForCurrentRound(actor, combat = game.combat, profile = null) {
-  const round = combatRound(combat);
-  const previous = readMultipleAttackState(actor, combat);
-  const sequenceStartRound = Math.max(1, Number(previous?.sequenceStartRound ?? round) || round);
-  const used = Number(previous?.round) === round ? Math.max(0, Math.floor(Number(previous?.used ?? 0) || 0)) : 0;
-  const rate = profile?.rate ?? parseAttackRate(previous?.ratio ?? "1/1");
-  const total = attacksThisRound(rate, round, sequenceStartRound);
-  return { previous, round, sequenceStartRound, used, total, pending: Math.max(0, total - used), rate };
-}
-
-function pendingExtraCount(actor, combat = game.combat) {
-  const state = readMultipleAttackState(actor, combat);
-  if (!state || Number(state.round) !== combatRound(combat)) return 0;
-  return Math.max(0, Math.floor(Number(state.pending ?? 0) || 0));
-}
-
-function pendingExtraIndexes(turns, combat = game.combat, { afterIndex = -1 } = {}) {
-  const indexes = [];
-  for (let index = Math.max(0, afterIndex + 1); index < turns.length; index += 1) {
-    const combatant = turns[index];
-    if (!combatant?.actor || isInactiveCombatant(combatant)) continue;
-    if (pendingExtraCount(combatant.actor, combat) > 0) indexes.push(index);
-  }
-  return indexes;
-}
-
-async function enterExtraAttackPhase(combat, turns, index, round = combatRound(combat)) {
-  const safeIndex = Math.max(0, Math.min(turns.length - 1, Number(index) || 0));
-  const safeRound = Math.max(1, Math.floor(Number(round) || 1));
-  const combatant = turns[safeIndex];
-  await combat.update({
-    round: safeRound,
-    turn: safeIndex,
-    "flags.add2e.multipleAttackPhase": {
-      phase: "extra",
-      round: safeRound,
-      combatantId: combatant?.id ?? null,
-      updatedAt: Date.now()
-    }
-  }, { add2eInitiativeNavigation: true });
-  setLocalTurn(combat, turns, safeIndex);
-  selectCurrentToken(combat);
-  ui.notifications?.info?.(`${combatant?.name ?? "Cet acteur"} dispose d’une attaque supplémentaire.`);
-  if (typeof globalThis.add2eSyncActionHudToCombatant === "function") globalThis.add2eSyncActionHudToCombatant(combat, { reason: "extra-attack" });
-  return combat;
-}
-
-async function leaveExtraAttackPhase(combat, round = combatRound(combat)) {
-  await combat.setFlag("add2e", MULTIPLE_ATTACK_PHASE_FLAG, { phase: "normal", round, updatedAt: Date.now() });
-}
-
-export function add2eCanActorWeaponAttackNow(actor, { weapon = null, combat = game.combat, notify = false } = {}) {
-  if (!actor || !combat?.started) return true;
-  const profile = actorAttackProfile(actor, { weapon });
-  if (!profile) return true;
-  const current = currentCombatant(combat);
-  if (current?.actor && current.actor.id !== actor.id) return true;
-
-  const phase = currentMultipleAttackPhase(combat);
-  const state = stateForCurrentRound(actor, combat, profile);
-  const isExtra = phase?.phase === "extra" && Number(phase.round) === Number(state.round);
-  if (isExtra) {
-    const pending = pendingExtraCount(actor, combat);
-    if (pending > 0) return true;
-    if (notify) ui.notifications?.warn?.(`${actor.name} n’a plus d’attaque supplémentaire disponible ce round.`);
+export function selectCurrentToken(combat = game.combat) {
+  if (!isCombatStarted(combat)) return false;
+  const combatant = currentCombatant(combat);
+  const token = tokenFromCombatant(combatant);
+  if (!token?.control) return false;
+  try {
+    token.control({ releaseOthers: true });
+    return true;
+  } catch (err) {
+    console.warn(`${TAG}[TOKEN_SELECT][ERROR]`, err);
     return false;
   }
-
-  if (state.used < state.total) return true;
-  if (notify) ui.notifications?.warn?.(`${actor.name} a déjà effectué son attaque de ce round. L’attaque supplémentaire se joue en fin de round.`);
-  return false;
 }
 
-export async function add2eRecordWeaponAttack(actor, { weapon = null, combat = game.combat } = {}) {
-  if (!actor || !combat?.started) return null;
-  const profile = actorAttackProfile(actor, { weapon });
-  if (!profile) return null;
-
-  const phase = currentMultipleAttackPhase(combat);
-  const base = stateForCurrentRound(actor, combat, profile);
-  const used = base.used + 1;
-  const pending = Math.max(0, base.total - used);
-  const state = {
-    round: base.round,
-    sequenceStartRound: base.sequenceStartRound,
-    total: base.total,
-    used,
-    pending,
-    ratio: profile.ratio,
-    label: profile.ratio,
-    phase: phase?.phase === "extra" ? "extra" : "normal",
-    source: profile.source,
-    classSlug: profile.classSlug,
-    classLevel: profile.level,
-    weaponId: weapon?.id ?? null,
-    weaponName: weapon?.name ?? null,
-    updatedAt: Date.now()
-  };
-
-  await writeMultipleAttackState(actor, combat, state);
-  console.log(`${TAG}[MULTI_ATTACK][RECORDED]`, { actor: actor.name, weapon: weapon?.name ?? null, round: state.round, ratio: state.ratio, total: state.total, used: state.used, pending: state.pending, phase: state.phase });
-  if (state.pending > 0 && state.phase !== "extra") ui.notifications?.info?.(`${actor.name} aura ${state.pending} attaque supplémentaire en fin de round.`);
-  return state;
-}
-
-export function add2eMultipleAttackHudStatus(actor, combat = game.combat) {
-  if (!actor || !combat?.started) return null;
-  const state = readMultipleAttackState(actor, combat);
-  if (!state || Number(state.round) !== combatRound(combat)) return null;
-  if (Number(state.total ?? 1) <= 1) return null;
-  return {
-    label: Number(state.pending ?? 0) > 0 ? "Attaque supplémentaire en attente" : "Attaque du round utilisée",
-    detail: `${Number(state.used ?? 0)}/${Number(state.total ?? 1)} attaque(s)` ,
-    ratio: String(state.ratio ?? "1/1"),
-    css: Number(state.pending ?? 0) > 0 ? "pending" : "used"
-  };
-}
-
-export async function forceFirstSortedTurn(combat = game.combat) {
-  if (!combat || !isCombatStarted(combat)) return combat;
-  const turns = sortedCombatants(combat);
-  if (!turns.length) return combat;
-  setLocalTurn(combat, turns, firstEligibleIndex(turns));
-  selectCurrentToken(combat);
-  return combat;
+export function scheduleLocalSync(combat = game.combat, { delay = 120, selectToken = false, reason = "sync" } = {}) {
+  if (!combat) return;
+  clearTimeout(initiativeState.localSyncTimer);
+  initiativeState.localSyncTimer = setTimeout(() => {
+    applyLocalOrder(combat, { reason });
+    if (selectToken) selectCurrentToken(combat);
+  }, delay);
 }
 
 async function updateTurn(combat, index, round = combatRound(combat)) {
@@ -556,6 +267,15 @@ async function updateTurn(combat, index, round = combatRound(combat)) {
   return combat;
 }
 
+export async function forceFirstSortedTurn(combat = game.combat) {
+  if (!combat || !isCombatStarted(combat)) return combat;
+  const turns = sortedCombatants(combat);
+  if (!turns.length) return combat;
+  setLocalTurn(combat, turns, firstEligibleIndex(turns));
+  selectCurrentToken(combat);
+  return combat;
+}
+
 export async function advanceSortedTurn(combat = game.combat, step = 1) {
   if (!combat || !isCombatStarted(combat)) return combat;
   const turns = sortedCombatants(combat);
@@ -565,36 +285,13 @@ export async function advanceSortedTurn(combat = game.combat, step = 1) {
   let next = current + direction;
   let round = combatRound(combat);
   const skipInactive = skipInactiveRotationEnabled();
-  const phase = currentMultipleAttackPhase(combat);
-  console.log(`${TAG}[INACTIVE][ADVANCE]`, { round, currentIndex: current, current: turns[current]?.name ?? turns[current]?.id ?? null, direction, skipInactive, currentInactive: isInactiveCombatant(turns[current]), multipleAttackPhase: phase?.phase ?? null });
-
-  if (direction > 0 && phase?.phase === "extra" && Number(phase.round) === Number(round)) {
-    const currentActor = turns[current]?.actor ?? null;
-    if (currentActor && pendingExtraCount(currentActor, combat) > 0) {
-      ui.notifications?.warn?.(`${currentActor.name} doit encore effectuer son attaque supplémentaire avant de passer au tour suivant.`);
-      return updateTurn(combat, current, round);
-    }
-    const remaining = pendingExtraIndexes(turns, combat, { afterIndex: current });
-    if (remaining.length) return enterExtraAttackPhase(combat, turns, remaining[0], round);
-    await leaveExtraAttackPhase(combat, round + 1);
-    return updateTurn(combat, firstEligibleIndex(turns), round + 1);
-  }
-
-  let wrappedForward = false;
+  console.log(`${TAG}[INACTIVE][ADVANCE]`, { round, currentIndex: current, current: turns[current]?.name ?? turns[current]?.id ?? null, direction, skipInactive, currentInactive: isInactiveCombatant(turns[current]) });
   if (skipInactive) {
     const resolved = resolveNextActiveTurn(turns, current, direction);
     next = resolved.index;
-    wrappedForward = direction > 0 && resolved.roundDelta > 0;
     round = Math.max(1, round + resolved.roundDelta);
-  } else if (next >= turns.length) { next = 0; wrappedForward = direction > 0; round += 1; }
+  } else if (next >= turns.length) { next = 0; round += 1; }
   else if (next < 0) { next = turns.length - 1; round = Math.max(1, round - 1); }
-
-  if (wrappedForward) {
-    const pending = pendingExtraIndexes(turns, combat, { afterIndex: -1 });
-    if (pending.length) return enterExtraAttackPhase(combat, turns, pending[0], combatRound(combat));
-    await leaveExtraAttackPhase(combat, round);
-  }
-
   return updateTurn(combat, next, round);
 }
 
