@@ -241,7 +241,7 @@ export function installEffectsEngineMonk(Engine) {
         margin,
         requiredMargin,
         durationFormula,
-        label: "Étourdisssement main nue",
+        label: "Étourdissement main nue",
         progression
       };
     },
@@ -274,24 +274,20 @@ export function installEffectsEngineMonk(Engine) {
         `duree_rounds:${rounds}`
       ];
       return {
-        name: "Étourdisssement main nue",
+        name: "Étourdissement main nue",
         img: weapon?.img || "systems/add2e/assets/icones/armes/main-nue.webp",
         icon: weapon?.img || "systems/add2e/assets/icones/armes/main-nue.webp",
         origin: weapon?.uuid ?? attacker?.uuid ?? null,
         disabled: false,
         transfer: false,
-        statuses: ["stunned"],
         duration,
         description: `${target?.name ?? "La cible"} est étourdi(e) pendant ${rounds} round(s) par une attaque à mains nues de ${attacker?.name ?? "moine"}.`,
         flags: {
-          core: {
-            statusId: "stunned",
-            overlay: false
-          },
           add2e: {
             ...flags,
             tags,
             source: "moine-main-nue",
+            customStatus: "etourdissement-main-nue",
             attackerId: attacker?.id ?? null,
             attackerUuid: attacker?.uuid ?? null,
             targetId: target?.id ?? null,
