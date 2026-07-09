@@ -13,6 +13,7 @@ import {
 const ACTION_GLOBALS = ["add2eAttackRoll", "add2eCastSpell", "cast_spell", "add2eExecuteClassFeatureOnUse"];
 const TOKEN_DRAG_METHODS = ["_onDragLeftStart", "_onDragLeftMove", "_onDragLeftDrop", "_onDragLeftCancel"];
 const VADE_RETRO_CONTINUATION_CONTEXTS = "__ADD2E_VADE_RETRO_CONTINUATION_CONTEXTS";
+const MULTIPLE_ATTACK_SOCKET_TYPE = "add2eMultipleAttackRecord";
 
 function actorFromActionArgs(args) {
   const first = args?.[0] ?? null;
@@ -30,6 +31,46 @@ function weaponFromActionArgs(actor, args) {
   if (first?.item) return first.item;
   const itemId = first?.itemId ?? first?.armeId ?? first?.weaponId;
   return itemId && actor?.items?.get ? actor.items.get(itemId) : null;
+}
+
+function combatantForActor(actor, combat = game.combat) {
+  if (!actor || !combat) return null;
+  return Array.from(combat.combatants ?? []).find(combatant => {
+    return String(combatant.actor?.id ?? combatant.actorId ?? "") === String(actor.id ?? "");
+  }) ?? currentCombatant(combat) ?? null;
+}
+
+function broadcastMultipleAttackState(actor, state, combat = game.combat) {
+  if (!actor || !state || !combat?.id) return false;
+  const combatant = combatantForActor(actor, combat);
+  const payload = {
+    type: MULTIPLE_ATTACK_SOCKET_TYPE,
+    combatId: combat.id,
+    combatantId: combatant?.id ?? null,
+    actorId: actor.id,
+    actorName: actor.name,
+    state: {
+      round: Number(state.round ?? combat.round ?? 0) || 0,
+      total: Math.max(1, Math.floor(Number(state.total ?? 1) || 1)),
+      used: Math.max(0, Math.floor(Number(state.used ?? 0) || 0)),
+      pending: Math.max(0, Math.floor(Number(state.pending ?? 0) || 0)),
+      ratio: String(state.ratio ?? "1/1"),
+      label: String(state.label ?? state.ratio ?? "1/1"),
+      phase: String(state.phase ?? "normal"),
+      source: state.source ?? null,
+      restriction: state.restriction ?? null,
+      pendingNotice: state.pendingNotice === true,
+      sequenceStartRound: Math.max(1, Math.floor(Number(state.sequenceStartRound ?? state.round ?? combat.round ?? 1) || 1))
+    }
+  };
+
+  try {
+    game.socket?.emit?.("system.add2e", payload);
+    return true;
+  } catch (err) {
+    console.warn(`${TAG}[MULTI_ATTACK][SOCKET_EMIT_ERROR]`, err);
+    return false;
+  }
 }
 
 function notifyWrongTurn(actor, combatant) {
@@ -103,7 +144,8 @@ async function executeLockedAction(name, original, context, args) {
 
   const result = await original.apply(context, args);
   if (name === "add2eAttackRoll" && result === true) {
-    await add2eRecordWeaponAttack(actor, { weapon, combat: game.combat });
+    const state = await add2eRecordWeaponAttack(actor, { weapon, combat: game.combat });
+    broadcastMultipleAttackState(actor, state, game.combat);
   }
   return result;
 }
