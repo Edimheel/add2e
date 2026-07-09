@@ -13,7 +13,7 @@ import { add2eAttackComputeActiveAttackModifiers } from "../add2e-attack/04e-att
 import { add2eAttackComputeCharacterDisplayedCA } from "../add2e-attack/04d-attack-roll-defense.mjs";
 import { add2eAttackMeasureContactAndDistance, add2eAttackValidateRange } from "../add2e-attack/04g-attack-roll-range.mjs";
 
-export const ADD2E_CAPABILITY_SPECIAL_ATTACK_VERSION = "2026-07-09-capability-deferred-contact-from-attack-v1";
+export const ADD2E_CAPABILITY_SPECIAL_ATTACK_VERSION = "2026-07-09-capability-deferred-contact-from-attack-v2";
 
 const SYSTEM_ID = "add2e";
 const GM_OPERATION = "ADD2E_GM_OPERATION";
@@ -85,7 +85,6 @@ function actorHp(actor) {
     system.points_de_vie,
     system.hp?.max,
     system.attributes?.hp?.max,
-    // Les acteurs monstre historiques n'ont souvent que system.pdv.
     system.pdv,
     system.pv,
     system.hp?.value,
@@ -96,16 +95,7 @@ function actorHp(actor) {
 
 function actorHitDice(actor) {
   const system = actor?.system ?? {};
-  const candidates = [
-    system.dv,
-    system.hitDice,
-    system.hit_dice,
-    system.des_de_vie,
-    system.niveau,
-    system.level,
-    system.details?.niveau,
-    system.details?.level
-  ];
+  const candidates = [system.dv, system.hitDice, system.hit_dice, system.des_de_vie, system.niveau, system.level, system.details?.niveau, system.details?.level];
   for (const candidate of candidates) {
     if (typeof candidate === "number" && Number.isFinite(candidate)) return candidate;
     const match = String(candidate ?? "").match(/\d+(?:[.,]\d+)?/);
@@ -150,9 +140,7 @@ function actorTags(actor) {
     flags.effectTags,
     flags.monsterCapabilities
   ]);
-  for (const item of actor?.items ?? []) {
-    visit([item?.system?.tags, item?.system?.effectTags, item?.flags?.[SYSTEM_ID]?.tags]);
-  }
+  for (const item of actor?.items ?? []) visit([item?.system?.tags, item?.system?.effectTags, item?.flags?.[SYSTEM_ID]?.tags]);
   return new Set(values);
 }
 
@@ -203,7 +191,6 @@ function targetActor(token) {
 function resolveThac0(actor, level) {
   const direct = number(actor?.system?.thac0);
   if (Number.isFinite(direct)) return direct;
-
   const classes = Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
   for (const classItem of classes) {
     const rows = Array.isArray(classItem?.system?.progression) ? classItem.system.progression : [];
@@ -231,34 +218,16 @@ function resolveArmorClass(actor) {
       console.warn(`${TAG}[ARMOR_CLASS]`, { actor: actor?.name, error });
     }
   }
-  return number(
-    system.armorClass,
-    system.ca_total,
-    system.ca,
-    system.ac,
-    system.ca_naturel,
-    system.defense?.armorClass,
-    system.defense?.ca,
-    system.combat?.armorClass,
-    system.combat?.ca
-  );
+  return number(system.armorClass, system.ca_total, system.ca, system.ac, system.ca_naturel, system.defense?.armorClass, system.defense?.ca, system.combat?.armorClass, system.combat?.ca);
 }
 
 function validateTarget(profile, sourceActor, target) {
   const restrictions = profile?.targetRestrictions ?? {};
   const targetName = target?.name ?? "la cible";
   const tags = actorTags(target);
-  const excludedTags = Array.isArray(restrictions.excludedTags)
-    ? restrictions.excludedTags.map(norm).filter(Boolean)
-    : [];
+  const excludedTags = Array.isArray(restrictions.excludedTags) ? restrictions.excludedTags.map(norm).filter(Boolean) : [];
   const blocked = excludedTags.find(tag => tags.has(tag));
-  if (blocked) {
-    return {
-      ok: false,
-      code: "excluded-tag",
-      reason: `La cible ${targetName} possède une immunité incompatible (${blocked.replace(/_/g, " ")}).`
-    };
-  }
+  if (blocked) return { ok: false, code: "excluded-tag", reason: `La cible ${targetName} possède une immunité incompatible (${blocked.replace(/_/g, " ")}).` };
 
   const level = sourceLevel(sourceActor, null, profile);
   const hitDiceRule = restrictions.maxHitDice ?? null;
@@ -266,12 +235,8 @@ function validateTarget(profile, sourceActor, target) {
     const multiplier = Math.max(0, Number(hitDiceRule.multiplier ?? 1) || 0);
     const maximum = Number.isFinite(Number(hitDiceRule.maximum)) ? Number(hitDiceRule.maximum) : level * multiplier;
     const targetDice = actorHitDice(target);
-    if (!Number.isFinite(targetDice)) {
-      return { ok: false, code: "missing-hit-dice", reason: `Les dés de vie de ${targetName} sont absents ; validation du MJ requise.` };
-    }
-    if (targetDice > maximum) {
-      return { ok: false, code: "hit-dice", reason: `${targetName} possède ${targetDice} DV, au-delà de la limite de ${maximum} DV.` };
-    }
+    if (!Number.isFinite(targetDice)) return { ok: false, code: "missing-hit-dice", reason: `Les dés de vie de ${targetName} sont absents ; validation du MJ requise.` };
+    if (targetDice > maximum) return { ok: false, code: "hit-dice", reason: `${targetName} possède ${targetDice} DV, au-delà de la limite de ${maximum} DV.` };
   }
 
   const hpRule = restrictions.maxHitPoints ?? null;
@@ -279,15 +244,9 @@ function validateTarget(profile, sourceActor, target) {
     const multiplier = Math.max(0, Number(hpRule.multiplier ?? 1) || 0);
     const sourceMaximum = actorHp(sourceActor).maximum;
     const targetMaximum = actorHp(target).maximum;
-    const maximum = Number.isFinite(Number(hpRule.maximum))
-      ? Number(hpRule.maximum)
-      : Number(sourceMaximum) * multiplier;
-    if (!Number.isFinite(sourceMaximum) || !Number.isFinite(targetMaximum)) {
-      return { ok: false, code: "missing-hit-points", reason: `Les PV maximum nécessaires à la restriction sont absents ; validation du MJ requise.` };
-    }
-    if (targetMaximum > maximum) {
-      return { ok: false, code: "hit-points", reason: `${targetName} possède ${targetMaximum} PV maximum, au-delà de la limite de ${maximum}.` };
-    }
+    const maximum = Number.isFinite(Number(hpRule.maximum)) ? Number(hpRule.maximum) : Number(sourceMaximum) * multiplier;
+    if (!Number.isFinite(sourceMaximum) || !Number.isFinite(targetMaximum)) return { ok: false, code: "missing-hit-points", reason: `Les PV maximum nécessaires à la restriction sont absents ; validation du MJ requise.` };
+    if (targetMaximum > maximum) return { ok: false, code: "hit-points", reason: `${targetName} possède ${targetMaximum} PV maximum, au-delà de la limite de ${maximum}.` };
   }
 
   return { ok: true, code: "ok" };
@@ -332,10 +291,7 @@ function buildDeferredEffect({ sourceActor, target, item, profile, tick }) {
       caster: sourceActor,
       sourceItem: item,
       endMessage,
-      extraFlags: {
-        [DEFERRED_FLAG]: deferredAction,
-        specialAttackProfileId: profile.id
-      }
+      extraFlags: { [DEFERRED_FLAG]: deferredAction, specialAttackProfileId: profile.id }
     });
   }
 
@@ -345,13 +301,7 @@ function buildDeferredEffect({ sourceActor, target, item, profile, tick }) {
     disabled: false,
     transfer: false,
     changes: [],
-    duration: {
-      rounds,
-      startRound: game.combat?.round ?? null,
-      startTurn: game.combat?.turn ?? null,
-      startTime: game.time?.worldTime ?? null,
-      combat: game.combat?.id ?? null
-    },
+    duration: { rounds, startRound: game.combat?.round ?? null, startTurn: game.combat?.turn ?? null, startTime: game.time?.worldTime ?? null, combat: game.combat?.id ?? null },
     flags: {
       [SYSTEM_ID]: {
         tags: ["capability:deferred-action", `capability-profile:${norm(profile.id)}`, ...tags],
@@ -368,12 +318,8 @@ function buildDeferredEffect({ sourceActor, target, item, profile, tick }) {
 async function emitGmOperation(operation, payload) {
   if (game.user?.isGM) {
     const actor = payload?.actorUuid ? await fromUuid(payload.actorUuid).catch(() => null) : game.actors?.get?.(payload?.actorId) ?? null;
-    if (operation === "createActiveEffect" && actor && payload.effectData) {
-      return actor.createEmbeddedDocuments("ActiveEffect", [clone(payload.effectData)], { add2eInternal: true, add2eReason: "capability-special-attack" });
-    }
-    if (operation === "deleteActiveEffects" && actor && Array.isArray(payload.effectIds)) {
-      return actor.deleteEmbeddedDocuments("ActiveEffect", payload.effectIds.filter(Boolean), { add2eInternal: true, add2eReason: "capability-deferred-command" });
-    }
+    if (operation === "createActiveEffect" && actor && payload.effectData) return actor.createEmbeddedDocuments("ActiveEffect", [clone(payload.effectData)], { add2eInternal: true, add2eReason: "capability-special-attack" });
+    if (operation === "deleteActiveEffects" && actor && Array.isArray(payload.effectIds)) return actor.deleteEmbeddedDocuments("ActiveEffect", payload.effectIds.filter(Boolean), { add2eInternal: true, add2eReason: "capability-deferred-command" });
     if (operation === "applyDamage" && actor) {
       const current = actorHp(actor).current;
       const amount = Math.abs(Number(payload.montant) || 0);
@@ -383,7 +329,6 @@ async function emitGmOperation(operation, payload) {
       return true;
     }
   }
-
   game.socket?.emit?.(`system.${SYSTEM_ID}`, { type: GM_OPERATION, operation, payload });
   return true;
 }
@@ -397,10 +342,7 @@ async function createChat({ sourceActor, target, profile, state, detail = "", d2
     miss: `${esc(sourceActor?.name)} ne parvient pas à établir le contact requis pour <b>${esc(label)}</b>.`,
     invalid: `Le contact ne peut pas produire l’effet <b>${esc(label)}</b> sur ${esc(target?.name)}.`
   })[state] ?? `${esc(label)} est résolu.`;
-  const rollLine = Number.isFinite(Number(d20))
-    ? `<div style="margin-top:5px;"><b>Jet de contact :</b> d20 ${esc(d20)}${Number.isFinite(Number(total)) ? ` = ${esc(total)}` : ""}${Number.isFinite(Number(threshold)) ? ` (seuil ${esc(threshold)})` : ""}</div>`
-    : "";
-
+  const rollLine = Number.isFinite(Number(d20)) ? `<div style="margin-top:5px;"><b>Jet de contact :</b> d20 ${esc(d20)}${Number.isFinite(Number(total)) ? ` = ${esc(total)}` : ""}${Number.isFinite(Number(threshold)) ? ` (seuil ${esc(threshold)})` : ""}</div>` : "";
   await ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor: sourceActor }),
     content: `<div class="add2e-chat-card add2e-capability-special-attack" style="border:1px solid ${color};border-radius:9px;overflow:hidden;background:#fffaf0;color:#2d2416;font-family:var(--font-primary);"><div style="display:flex;align-items:center;gap:8px;background:${color};color:#fff;padding:7px 9px;"><img src="${esc(profile?.img ?? "icons/svg/aura.svg")}" style="width:32px;height:32px;object-fit:cover;border-radius:5px;background:#fff;border:1px solid rgba(255,255,255,.55);"><div><div style="font-weight:900;">${esc(label)}</div><div style="font-size:.84em;opacity:.92;">Capacité spéciale</div></div></div><div style="padding:9px 10px;line-height:1.4;">${text}${rollLine}${detail ? `<div style="margin-top:6px;font-size:.9em;color:#624f2b;">${esc(detail)}</div>` : ""}</div></div>`,
@@ -418,14 +360,7 @@ function windowExpiresAt(effect) {
 }
 
 function profileTriggers(profile) {
-  const values = [
-    profile?.trigger,
-    profile?.triggers,
-    profile?.activation?.trigger,
-    profile?.activation?.triggers,
-    profile?.deferredEffect?.trigger,
-    profile?.deferredEffect?.triggers
-  ];
+  const values = [profile?.trigger, profile?.triggers, profile?.activation?.trigger, profile?.activation?.triggers, profile?.deferredEffect?.trigger, profile?.deferredEffect?.triggers];
   return new Set(array(values).map(norm).filter(Boolean));
 }
 
@@ -466,58 +401,11 @@ async function prepareWindow({ actor, item, profile, rounds }) {
   if (!actor || !item || !profile || tick === null) return null;
   const totalRounds = Math.max(1, Math.floor(Number(rounds) || 0));
   const engine = game?.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
-  const extraFlags = {
-    temporaryItemId: item.id,
-    [WINDOW_FLAG]: {
-      version: ADD2E_CAPABILITY_SPECIAL_ATTACK_VERSION,
-      profileId: profile.id,
-      itemId: item.id,
-      itemUuid: item.uuid ?? null,
-      sourceActorId: actor.id ?? null,
-      sourceActorUuid: actor.uuid ?? null,
-      startTick: tick,
-      expiresAtTick: tick + totalRounds
-    }
-  };
+  const extraFlags = { temporaryItemId: item.id, [WINDOW_FLAG]: { version: ADD2E_CAPABILITY_SPECIAL_ATTACK_VERSION, profileId: profile.id, itemId: item.id, itemUuid: item.uuid ?? null, sourceActorId: actor.id ?? null, sourceActorUuid: actor.uuid ?? null, startTick: tick, expiresAtTick: tick + totalRounds } };
 
   const data = typeof engine?.effectData === "function"
-    ? engine.effectData({
-      name: String(profile.window?.name ?? `${profile.label} — préparation`),
-      img: String(profile.img ?? item.img ?? "icons/svg/aura.svg"),
-      origin: item.uuid ?? null,
-      rounds: totalRounds,
-      unit: "round",
-      description: String(profile.window?.description ?? ""),
-      tags: ["capability:special-attack-window", `capability-profile:${norm(profile.id)}`],
-      changes: [],
-      source: "capability-special-attack-window",
-      caster: actor,
-      sourceItem: item,
-      endMessage: String(profile.window?.endMessage ?? "La fenêtre de contact spécial de {actor} expire sans effet."),
-      extraFlags
-    })
-    : {
-      name: String(profile.window?.name ?? `${profile.label} — préparation`),
-      img: String(profile.img ?? item.img ?? "icons/svg/aura.svg"),
-      disabled: false,
-      transfer: false,
-      changes: [],
-      duration: {
-        rounds: totalRounds,
-        startRound: game.combat?.round ?? null,
-        startTurn: game.combat?.turn ?? null,
-        startTime: game.time?.worldTime ?? null,
-        combat: game.combat?.id ?? null
-      },
-      flags: {
-        [SYSTEM_ID]: {
-          tags: ["capability:special-attack-window", `capability-profile:${norm(profile.id)}`],
-          timeEngine: { managed: true, totalRounds, startTick: tick },
-          roundEngine: { managed: true, totalRounds, startTick, endMessage: String(profile.window?.endMessage ?? "La fenêtre de contact spécial de {actor} expire sans effet.") },
-          ...extraFlags
-        }
-      }
-    };
+    ? engine.effectData({ name: String(profile.window?.name ?? `${profile.label} — préparation`), img: String(profile.img ?? item.img ?? "icons/svg/aura.svg"), origin: item.uuid ?? null, rounds: totalRounds, unit: "round", description: String(profile.window?.description ?? ""), tags: ["capability:special-attack-window", `capability-profile:${norm(profile.id)}`], changes: [], source: "capability-special-attack-window", caster: actor, sourceItem: item, endMessage: String(profile.window?.endMessage ?? "La fenêtre de contact spécial de {actor} expire sans effet."), extraFlags })
+    : { name: String(profile.window?.name ?? `${profile.label} — préparation`), img: String(profile.img ?? item.img ?? "icons/svg/aura.svg"), disabled: false, transfer: false, changes: [], duration: { rounds: totalRounds, startRound: game.combat?.round ?? null, startTurn: game.combat?.turn ?? null, startTime: game.time?.worldTime ?? null, combat: game.combat?.id ?? null }, flags: { [SYSTEM_ID]: { tags: ["capability:special-attack-window", `capability-profile:${norm(profile.id)}`], timeEngine: { managed: true, totalRounds, startTick: tick }, roundEngine: { managed: true, totalRounds, startTick: tick, endMessage: String(profile.window?.endMessage ?? "La fenêtre de contact spécial de {actor} expire sans effet.") }, ...extraFlags } } };
   const created = await actor.createEmbeddedDocuments("ActiveEffect", [data], { add2eInternal: true, add2eReason: "capability-special-attack-window" });
   return created?.[0] ?? null;
 }
@@ -526,42 +414,27 @@ async function resolveDeferredContactFromAttack({ sourceActor, targetActor: targ
   const profile = profileFromCall ?? profileFor(item);
   const tick = currentTick();
   if (!sourceActor || !target || !item || !profile || tick === null) return { ok: false, reason: "missing-context" };
-
   const window = capabilityWindow(sourceActor, item.id);
   const expiresAtTick = windowExpiresAt(window);
   if (!window || (expiresAtTick && tick >= expiresAtTick)) {
     await removeWindowAndItem(sourceActor, item.id);
     return { ok: false, reason: "expired-window" };
   }
-
   const eligibility = validateTarget(profile, sourceActor, target);
   const d20 = Number(attackContext.d20);
   const total = Number(attackContext.total ?? attackContext.totalAuToucher);
   const threshold = Number(attackContext.threshold ?? attackContext.seuilFinalD20);
-  const chatNumbers = {
-    d20: Number.isFinite(d20) ? d20 : null,
-    total: Number.isFinite(total) ? total : null,
-    threshold: Number.isFinite(threshold) ? threshold : null
-  };
-
+  const chatNumbers = { d20: Number.isFinite(d20) ? d20 : null, total: Number.isFinite(total) ? total : null, threshold: Number.isFinite(threshold) ? threshold : null };
   if (!eligibility.ok) {
     await createChat({ sourceActor, target, profile, state: "invalid", detail: eligibility.reason, ...chatNumbers });
     return { ok: true, applied: false, consumed: false, eligibility };
   }
-
   const effectData = buildDeferredEffect({ sourceActor, target, item, profile, tick });
   await emitGmOperation("createActiveEffect", { actorUuid: target.uuid ?? null, actorId: target.id ?? null, effectData });
   await removeWindowAndItem(sourceActor, item.id);
   const effectTick = Number(effectData?.flags?.[SYSTEM_ID]?.[DEFERRED_FLAG]?.expiresAtTick ?? tick);
   const detailPrefix = attackContext.detail ? `${String(attackContext.detail)} ` : "";
-  await createChat({
-    sourceActor,
-    target,
-    profile,
-    state: "applied",
-    ...chatNumbers,
-    detail: `${detailPrefix}Effet différé actif pendant ${formatTicks(Math.max(0, effectTick - tick))}.`
-  });
+  await createChat({ sourceActor, target, profile, state: "applied", ...chatNumbers, detail: `${detailPrefix}Effet différé actif pendant ${formatTicks(Math.max(0, effectTick - tick))}.` });
   return { ok: true, hit: true, applied: true, consumed: true, item, profile, target };
 }
 
@@ -569,13 +442,7 @@ async function consumePreparedContactFromAttack({ sourceActor, targetActor, prof
   const prepared = findPreparedContacts({ sourceActor, profileId, trigger });
   if (!prepared.length) return { ok: false, reason: "no-prepared-contact" };
   const entry = prepared[0];
-  return resolveDeferredContactFromAttack({
-    sourceActor,
-    targetActor,
-    item: entry.item,
-    profile: entry.profile,
-    attackContext
-  });
+  return resolveDeferredContactFromAttack({ sourceActor, targetActor, item: entry.item, profile: entry.profile, attackContext });
 }
 
 async function resolveSpecialAttack({ actor, arme, actorId, itemId }) {
@@ -583,7 +450,6 @@ async function resolveSpecialAttack({ actor, arme, actorId, itemId }) {
   const item = arme ?? (itemId && sourceActor ? sourceActor.items?.get?.(itemId) : null);
   const profile = profileFor(item);
   if (!sourceActor || !item || !profile) return false;
-
   const tick = currentTick();
   if (tick === null) return ui.notifications?.error?.("Attaque spéciale : le compteur de temps ADD2E est indisponible.");
   const window = capabilityWindow(sourceActor, item.id);
@@ -593,13 +459,11 @@ async function resolveSpecialAttack({ actor, arme, actorId, itemId }) {
     ui.notifications?.warn?.("Cette attaque spéciale n’est plus préparée.");
     return false;
   }
-
   const targetToken = Array.from(game.user?.targets ?? [])[0] ?? null;
   const target = targetActor(targetToken);
   if (!targetToken || !target) return ui.notifications?.warn?.("Sélectionne une cible pour l’attaque spéciale.");
   const source = sourceToken(sourceActor);
   if (!source) return ui.notifications?.warn?.("L’attaquant doit être présent sur la scène.");
-
   const distance = add2eAttackMeasureContactAndDistance({ srcToken: source, cibleToken: targetToken, measureDistance: add2eMeasureTokenGridDistance });
   const range = add2eAttackValidateRange({ arme: item, distanceCible: distance.distanceCible, auContact: distance.auContact });
   if (!range.ok || !distance.auContact) {
@@ -621,7 +485,6 @@ async function resolveSpecialAttack({ actor, arme, actorId, itemId }) {
     rejectClose: false
   });
   if (!selection) return false;
-
   const level = sourceLevel(sourceActor, item, profile);
   const thac0 = resolveThac0(sourceActor, level);
   const armorClass = resolveArmorClass(target);
@@ -629,17 +492,12 @@ async function resolveSpecialAttack({ actor, arme, actorId, itemId }) {
     ui.notifications?.error?.("Attaque spéciale : THAC0 ou CA de la cible introuvable.");
     return false;
   }
-
   const combatProfile = add2eGetCombatStatProfile(item);
   const attackOptions = profile.attack ?? {};
   let abilityModifier = 0;
-  if (attackOptions.abilityModifier !== false && combatProfile?.toucherCarac) {
-    abilityModifier = Number(add2eGetAttackAbilityModifier(sourceActor, combatProfile.toucherCarac, "toucher")) || 0;
-  }
+  if (attackOptions.abilityModifier !== false && combatProfile?.toucherCarac) abilityModifier = Number(add2eGetAttackAbilityModifier(sourceActor, combatProfile.toucherCarac, "toucher")) || 0;
   let magicalBonus = Number(item?.system?.bonus_hit ?? item?.system?.bonus_toucher ?? 0) || 0;
-  if (attackOptions.magicWeaponBonus !== false && typeof globalThis.Add2eEffectsEngine?.getMagicWeaponBonus === "function") {
-    magicalBonus = Number(globalThis.Add2eEffectsEngine.getMagicWeaponBonus(item, "hit")) || 0;
-  }
+  if (attackOptions.magicWeaponBonus !== false && typeof globalThis.Add2eEffectsEngine?.getMagicWeaponBonus === "function") magicalBonus = Number(globalThis.Add2eEffectsEngine.getMagicWeaponBonus(item, "hit")) || 0;
   const active = add2eAttackComputeActiveAttackModifiers({ actor: sourceActor, cible: target, combatProfile });
   const effectBonus = attackOptions.effectModifiers === false ? 0 : Number(active?.bonusToucheEffets) || 0;
   const racialBonus = attackOptions.racialVs === false ? 0 : Number(active?.bonusRacialVs) || 0;
@@ -650,19 +508,11 @@ async function resolveSpecialAttack({ actor, arme, actorId, itemId }) {
   const d20 = Number(roll.total) || 0;
   const total = d20 + totalBonus;
   const hit = d20 === 20 || (d20 !== 1 && d20 >= threshold);
-
   if (!hit) {
     await createChat({ sourceActor, target, profile, state: "miss", d20, total, threshold });
     return { ok: true, hit: false, consumed: false };
   }
-
-  return resolveDeferredContactFromAttack({
-    sourceActor,
-    targetActor: target,
-    item,
-    profile,
-    attackContext: { d20, total, threshold }
-  });
+  return resolveDeferredContactFromAttack({ sourceActor, targetActor: target, item, profile, attackContext: { d20, total, threshold } });
 }
 
 function findDeferredActions({ sourceActor, profileId = null }) {
@@ -693,42 +543,21 @@ async function triggerDeferredAction({ sourceActor, targetActor: targetFromCall,
     ui.notifications?.warn?.("Cet effet différé a expiré.");
     return false;
   }
-
   const command = data.command ?? {};
   if (norm(command?.action?.type) !== "set_hit_points") {
     ui.notifications?.error?.("Action différée inconnue ou non autorisée.");
     return false;
   }
-  const targetValue = target.type === "monster"
-    ? Number(command?.action?.monsterValue ?? 0)
-    : Number(command?.action?.characterValue ?? -11);
+  const targetValue = target.type === "monster" ? Number(command?.action?.monsterValue ?? 0) : Number(command?.action?.characterValue ?? -11);
   const hp = actorHp(target).current;
   if (!Number.isFinite(hp)) {
     ui.notifications?.error?.("Les PV de la cible sont introuvables.");
     return false;
   }
   const amount = Math.max(0, hp - targetValue);
-  if (amount > 0) {
-    await emitGmOperation("applyDamage", {
-      actorUuid: target.uuid ?? null,
-      actorId: target.id ?? null,
-      montant: amount,
-      details: { capabilityDeferredAction: data.profileId, sourceActorUuid: sourceActor.uuid ?? null }
-    });
-  }
-  await emitGmOperation("deleteActiveEffects", {
-    actorUuid: target.uuid ?? null,
-    actorId: target.id ?? null,
-    effectIds: [effect.id]
-  });
-
-  await createChat({
-    sourceActor,
-    target,
-    profile: { id: data.profileId, label: command.label ?? effect.name, img: effect.img ?? sourceActor.img },
-    state: "triggered",
-    detail: String(command?.message ?? "L’action différée est résolue.")
-  });
+  if (amount > 0) await emitGmOperation("applyDamage", { actorUuid: target.uuid ?? null, actorId: target.id ?? null, montant: amount, details: { capabilityDeferredAction: data.profileId, sourceActorUuid: sourceActor.uuid ?? null } });
+  await emitGmOperation("deleteActiveEffects", { actorUuid: target.uuid ?? null, actorId: target.id ?? null, effectIds: [effect.id] });
+  await createChat({ sourceActor, target, profile: { id: data.profileId, label: command.label ?? effect.name, img: effect.img ?? sourceActor.img }, state: "triggered", detail: String(command?.message ?? "L’action différée est résolue.") });
   return true;
 }
 
@@ -736,7 +565,6 @@ function patchAttackRoll() {
   const original = globalThis.add2eAttackRoll;
   if (typeof original !== "function") return false;
   if (original.__add2eCapabilitySpecialAttackWrapper) return true;
-
   const wrapped = async function add2eCapabilityAwareAttackRoll(args = {}) {
     const actor = args.actor ?? (args.actorId ? game.actors?.get?.(args.actorId) : null);
     const item = args.arme ?? (args.itemId && actor ? actor.items?.get?.(args.itemId) : null);
