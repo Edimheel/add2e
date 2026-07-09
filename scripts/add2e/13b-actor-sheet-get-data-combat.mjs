@@ -81,6 +81,11 @@ function add2eSheetApplyPassiveCombatModifiers({ actor, arme, bonusToucher, bonu
   };
 }
 
+function add2eSheetCombatMonkMartialProgression(actor) {
+  if (typeof Add2eEffectsEngine === "undefined" || typeof Add2eEffectsEngine.getMonkMartialProgression !== "function") return null;
+  return Add2eEffectsEngine.getMonkMartialProgression(actor) ?? null;
+}
+
 export function add2ePrepareActorSheetCombatData({ actor, data, sys, progressionCourante, isMonk }) {
   const transformation = globalThis.add2eGetCapabilityTransformationCombatProfile?.(actor) ?? null;
   const transformationCA = Number(transformation?.armorClass);
@@ -88,6 +93,7 @@ export function add2ePrepareActorSheetCombatData({ actor, data, sys, progression
   const hasTransformationCA = Number.isFinite(transformationCA);
   const hasTransformationTHAC0 = Number.isFinite(transformationTHAC0);
   const transformationMovement = String(transformation?.movement ?? "").trim();
+  const monkMartial = add2eSheetCombatMonkMartialProgression(actor);
   const passiveArmorClass = typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getPassiveArmorClassBase === "function"
     ? Add2eEffectsEngine.getPassiveArmorClassBase(actor, { ruleScope: "owner", source: "actor-sheet" })
     : null;
@@ -233,6 +239,7 @@ export function add2ePrepareActorSheetCombatData({ actor, data, sys, progression
   const degatsGrand = arme?.system.dégâts?.contre_grand || "-";
   const degatsAffiche = degatsMoyen + " / " + degatsGrand;
 
+  data.monkMartialProgression = monkMartial;
   data.combatDefense = {
     armure: armure ? armure.name : "<em>Aucune</em>",
     bouclier: bouclier ? bouclier.name : "<em>Aucun</em>",
@@ -247,6 +254,11 @@ export function add2ePrepareActorSheetCombatData({ actor, data, sys, progression
     bonus_toucher: bonusToucher,
     bonus_degats: bonusDegats,
     passive_combat: passiveCombat,
+    monk_martial: monkMartial,
+    attaques_par_round: monkMartial?.attacksPerRound ?? "",
+    degats_main_nue: monkMartial?.unarmedDamage ?? "",
+    mouvement_martial: monkMartial?.move ?? null,
+    chute_ralentie: monkMartial?.slowFallText ?? "",
     transformation: transformation ? {
       label: transformation.label,
       sourceKey: transformation.sourceKey,
