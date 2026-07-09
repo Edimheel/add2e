@@ -45,6 +45,23 @@
           </div>
         </div>
 
+        {{#if combatDefense.monk_martial}}
+          <div class="a2e-panel">
+            <h2>Progression martiale du moine</h2>
+            <div class="a2e-panel-body">
+              <table class="a2e-table">
+                <tbody>
+                  <tr><th>Niveau martial</th><td>{{combatDefense.monk_martial.level}}</td></tr>
+                  <tr><th>Mouvement</th><td>{{combatDefense.monk_martial.move}}</td></tr>
+                  <tr><th>Attaques / round</th><td>{{combatDefense.monk_martial.attacksPerRound}}</td></tr>
+                  <tr><th>Dégâts main nue</th><td>{{combatDefense.monk_martial.unarmedDamage}}</td></tr>
+                  <tr><th>Chute ralentie</th><td>{{combatDefense.monk_martial.slowFallText}}</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        {{/if}}
+
         <div class="a2e-panel">
           <h2>Armes</h2>
           <div class="a2e-panel-body">
