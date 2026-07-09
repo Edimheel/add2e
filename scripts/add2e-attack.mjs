@@ -203,4 +203,5 @@ Hooks.once("ready", () => add2eScheduleSpellComponentTransactionBridge());
   await add2eImportAttackModule("./add2e-attack/04d-attack-roll-defense.mjs", "04d-attack-roll-defense");
   await add2eImportAttackModule("./add2e-attack/04e-attack-roll-modifiers.mjs", "04e-attack-roll-modifiers");
   await add2eImportAttackModule("./add2e-attack/04b-attack-roll-core.mjs", "04b-attack-roll-core");
+  globalThis.add2eInstallInitiativeActionLocks?.();
 })();
