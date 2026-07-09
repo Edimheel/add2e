@@ -13,7 +13,7 @@ import { add2eAttackComputeActiveAttackModifiers } from "../add2e-attack/04e-att
 import { add2eAttackComputeCharacterDisplayedCA } from "../add2e-attack/04d-attack-roll-defense.mjs";
 import { add2eAttackMeasureContactAndDistance, add2eAttackValidateRange } from "../add2e-attack/04g-attack-roll-range.mjs";
 
-export const ADD2E_CAPABILITY_SPECIAL_ATTACK_VERSION = "2026-07-07-capability-special-attack-v2";
+export const ADD2E_CAPABILITY_SPECIAL_ATTACK_VERSION = "2026-07-09-capability-deferred-contact-from-attack-v1";
 
 const SYSTEM_ID = "add2e";
 const GM_OPERATION = "ADD2E_GM_OPERATION";
@@ -66,6 +66,14 @@ function number(...values) {
     if (Number.isFinite(numeric)) return numeric;
   }
   return null;
+}
+
+function array(value) {
+  if (value === undefined || value === null || value === "") return [];
+  if (Array.isArray(value)) return value.flatMap(array);
+  if (value instanceof Set) return [...value];
+  if (typeof value?.values === "function" && typeof value !== "string") return [...value.values()];
+  return [value];
 }
 
 function actorHp(actor) {
@@ -405,6 +413,48 @@ function capabilityWindow(actor, itemId) {
   return Array.from(actor?.effects ?? []).find(effect => effect?.flags?.[SYSTEM_ID]?.[WINDOW_FLAG]?.itemId === itemId) ?? null;
 }
 
+function windowExpiresAt(effect) {
+  return Number(effect?.flags?.[SYSTEM_ID]?.[WINDOW_FLAG]?.expiresAtTick ?? 0) || 0;
+}
+
+function profileTriggers(profile) {
+  const values = [
+    profile?.trigger,
+    profile?.triggers,
+    profile?.activation?.trigger,
+    profile?.activation?.triggers,
+    profile?.deferredEffect?.trigger,
+    profile?.deferredEffect?.triggers
+  ];
+  return new Set(array(values).map(norm).filter(Boolean));
+}
+
+function profileMatchesTrigger(profile, trigger = null) {
+  const wanted = norm(trigger);
+  if (!wanted) return true;
+  const triggers = profileTriggers(profile);
+  if (!triggers.size) return true;
+  return triggers.has(wanted) || triggers.has("contact") || triggers.has("contact_reussi") || triggers.has("after_contact_hit");
+}
+
+function findPreparedContacts({ sourceActor, profileId = null, trigger = null } = {}) {
+  if (!sourceActor) return [];
+  const tick = currentTick();
+  const wanted = norm(profileId);
+  const entries = [];
+  for (const item of sourceActor.items ?? []) {
+    const profile = profileFor(item);
+    if (!profile) continue;
+    if (wanted && norm(profile.id) !== wanted) continue;
+    if (!profileMatchesTrigger(profile, trigger)) continue;
+    const window = capabilityWindow(sourceActor, item.id);
+    const expiresAtTick = windowExpiresAt(window);
+    if (!window || (tick !== null && expiresAtTick && tick >= expiresAtTick)) continue;
+    entries.push({ sourceActor, item, profile, window, expiresAtTick });
+  }
+  return entries;
+}
+
 async function removeWindowAndItem(actor, itemId) {
   const effect = capabilityWindow(actor, itemId);
   if (effect?.id) await actor.deleteEmbeddedDocuments("ActiveEffect", [effect.id], { add2eInternal: true, add2eReason: "capability-special-attack-consumed" });
@@ -463,13 +513,69 @@ async function prepareWindow({ actor, item, profile, rounds }) {
         [SYSTEM_ID]: {
           tags: ["capability:special-attack-window", `capability-profile:${norm(profile.id)}`],
           timeEngine: { managed: true, totalRounds, startTick: tick },
-          roundEngine: { managed: true, totalRounds, startTick: tick },
+          roundEngine: { managed: true, totalRounds, startTick, endMessage: String(profile.window?.endMessage ?? "La fenêtre de contact spécial de {actor} expire sans effet.") },
           ...extraFlags
         }
       }
     };
   const created = await actor.createEmbeddedDocuments("ActiveEffect", [data], { add2eInternal: true, add2eReason: "capability-special-attack-window" });
   return created?.[0] ?? null;
+}
+
+async function resolveDeferredContactFromAttack({ sourceActor, targetActor: target, item, profile: profileFromCall = null, attackContext = {} } = {}) {
+  const profile = profileFromCall ?? profileFor(item);
+  const tick = currentTick();
+  if (!sourceActor || !target || !item || !profile || tick === null) return { ok: false, reason: "missing-context" };
+
+  const window = capabilityWindow(sourceActor, item.id);
+  const expiresAtTick = windowExpiresAt(window);
+  if (!window || (expiresAtTick && tick >= expiresAtTick)) {
+    await removeWindowAndItem(sourceActor, item.id);
+    return { ok: false, reason: "expired-window" };
+  }
+
+  const eligibility = validateTarget(profile, sourceActor, target);
+  const d20 = Number(attackContext.d20);
+  const total = Number(attackContext.total ?? attackContext.totalAuToucher);
+  const threshold = Number(attackContext.threshold ?? attackContext.seuilFinalD20);
+  const chatNumbers = {
+    d20: Number.isFinite(d20) ? d20 : null,
+    total: Number.isFinite(total) ? total : null,
+    threshold: Number.isFinite(threshold) ? threshold : null
+  };
+
+  if (!eligibility.ok) {
+    await createChat({ sourceActor, target, profile, state: "invalid", detail: eligibility.reason, ...chatNumbers });
+    return { ok: true, applied: false, consumed: false, eligibility };
+  }
+
+  const effectData = buildDeferredEffect({ sourceActor, target, item, profile, tick });
+  await emitGmOperation("createActiveEffect", { actorUuid: target.uuid ?? null, actorId: target.id ?? null, effectData });
+  await removeWindowAndItem(sourceActor, item.id);
+  const effectTick = Number(effectData?.flags?.[SYSTEM_ID]?.[DEFERRED_FLAG]?.expiresAtTick ?? tick);
+  const detailPrefix = attackContext.detail ? `${String(attackContext.detail)} ` : "";
+  await createChat({
+    sourceActor,
+    target,
+    profile,
+    state: "applied",
+    ...chatNumbers,
+    detail: `${detailPrefix}Effet différé actif pendant ${formatTicks(Math.max(0, effectTick - tick))}.`
+  });
+  return { ok: true, hit: true, applied: true, consumed: true, item, profile, target };
+}
+
+async function consumePreparedContactFromAttack({ sourceActor, targetActor, profileId = null, trigger = null, attackContext = {} } = {}) {
+  const prepared = findPreparedContacts({ sourceActor, profileId, trigger });
+  if (!prepared.length) return { ok: false, reason: "no-prepared-contact" };
+  const entry = prepared[0];
+  return resolveDeferredContactFromAttack({
+    sourceActor,
+    targetActor,
+    item: entry.item,
+    profile: entry.profile,
+    attackContext
+  });
 }
 
 async function resolveSpecialAttack({ actor, arme, actorId, itemId }) {
@@ -481,7 +587,7 @@ async function resolveSpecialAttack({ actor, arme, actorId, itemId }) {
   const tick = currentTick();
   if (tick === null) return ui.notifications?.error?.("Attaque spéciale : le compteur de temps ADD2E est indisponible.");
   const window = capabilityWindow(sourceActor, item.id);
-  const expiresAtTick = Number(window?.flags?.[SYSTEM_ID]?.[WINDOW_FLAG]?.expiresAtTick ?? 0) || 0;
+  const expiresAtTick = windowExpiresAt(window);
   if (!window || (expiresAtTick && tick >= expiresAtTick)) {
     await removeWindowAndItem(sourceActor, item.id);
     ui.notifications?.warn?.("Cette attaque spéciale n’est plus préparée.");
@@ -550,18 +656,13 @@ async function resolveSpecialAttack({ actor, arme, actorId, itemId }) {
     return { ok: true, hit: false, consumed: false };
   }
 
-  const eligibility = validateTarget(profile, sourceActor, target);
-  if (!eligibility.ok) {
-    await createChat({ sourceActor, target, profile, state: "invalid", detail: eligibility.reason, d20, total, threshold });
-    return { ok: true, hit: true, applied: false, consumed: false, eligibility };
-  }
-
-  const effectData = buildDeferredEffect({ sourceActor, target, item, profile, tick });
-  await emitGmOperation("createActiveEffect", { actorUuid: target.uuid ?? null, actorId: target.id ?? null, effectData });
-  await removeWindowAndItem(sourceActor, item.id);
-  const effectTick = Number(effectData?.flags?.[SYSTEM_ID]?.[DEFERRED_FLAG]?.expiresAtTick ?? tick);
-  await createChat({ sourceActor, target, profile, state: "applied", d20, total, threshold, detail: `Effet différé actif pendant ${formatTicks(Math.max(0, effectTick - tick))}.` });
-  return { ok: true, hit: true, applied: true, consumed: true };
+  return resolveDeferredContactFromAttack({
+    sourceActor,
+    targetActor: target,
+    item,
+    profile,
+    attackContext: { d20, total, threshold }
+  });
 }
 
 function findDeferredActions({ sourceActor, profileId = null }) {
@@ -662,6 +763,9 @@ globalThis.add2eCapabilitySpecialAttack = {
   formatTicks,
   prepareWindow,
   resolveSpecialAttack,
+  resolveDeferredContactFromAttack,
+  consumePreparedContactFromAttack,
+  findPreparedContacts,
   findDeferredActions,
   triggerDeferredAction,
   validateTarget
