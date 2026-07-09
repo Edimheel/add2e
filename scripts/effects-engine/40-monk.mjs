@@ -274,7 +274,7 @@ export function installEffectsEngineMonk(Engine) {
         startTime: game.time?.worldTime ?? null,
         combat: game.combat?.id ?? null
       };
-      source.flags = foundry.utils.mergeObject(source.flags ?? {}, { core: { statusId: "stunned", overlay: false } }, { inplace: false, insertKeys: true, overwrite: true });
+      source.flags = foundry.utils.mergeObject(source.flags ?? {}, { core: { statusId: "stunned", overlay: true } }, { inplace: false, insertKeys: true, overwrite: true });
       source.changes = foundry.utils.deepClone(source.changes ?? []);
       delete source._id;
       return source;
@@ -299,7 +299,7 @@ export function installEffectsEngineMonk(Engine) {
         img: status.icon,
         icon: status.icon,
         statuses: ["stunned"],
-        flags: foundry.utils.mergeObject(effect.flags ?? {}, { core: { statusId: "stunned", overlay: false } }, { inplace: false, insertKeys: true, overwrite: true }),
+        flags: foundry.utils.mergeObject(effect.flags ?? {}, { core: { statusId: "stunned", overlay: true } }, { inplace: false, insertKeys: true, overwrite: true }),
         duration: {
           ...(effect.duration?.toObject?.() ?? effect.duration ?? {}),
           rounds,
@@ -308,7 +308,7 @@ export function installEffectsEngineMonk(Engine) {
           startTime: game.time?.worldTime ?? null,
           combat: game.combat?.id ?? null
         }
-      }, { add2eInternal: true, add2eReason: "monk-foundry-stunned-duration-icon" });
+      }, { add2eInternal: true, add2eReason: "monk-foundry-stunned-duration-icon-overlay" });
       return true;
     },
 
@@ -337,7 +337,7 @@ export function installEffectsEngineMonk(Engine) {
 
       if (typeof target?.toggleStatusEffect === "function") {
         try {
-          const toggled = await target.toggleStatusEffect("stunned", { active: true, overlay: false });
+          const toggled = await target.toggleStatusEffect("stunned", { active: true, overlay: true });
           const effect = toggled?.documentName === "ActiveEffect"
             ? toggled
             : (toggled?.id ? target.effects?.get?.(toggled.id) ?? toggled : this.findActorStatusEffect(target, "stunned"));
