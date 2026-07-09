@@ -4,6 +4,7 @@
 import { ADD2E_INITIATIVE_VERSION, hasProperty, initiativeState } from "./add2e-initiative-constants.mjs";
 import {
   currentCombatant,
+  isInactiveCombatant,
   scheduleInitiativeSort,
   scheduleLocalSync,
   sortedCombatants,
@@ -15,6 +16,8 @@ import { patchInitiativeIcons } from "./add2e-initiative-icons.mjs";
 import { canTokenInteractNow, clearFoundryMovementTrailAggressive } from "./add2e-initiative-locks.mjs";
 
 const MOVEMENT_KEYS = ["x", "y", "elevation", "rotation"];
+const ADD2E_MULTIPLE_ATTACK_ACTOR_FLAG = "multipleAttacks";
+const ADD2E_MULTIPLE_ATTACK_PHASE_FLAG = "multipleAttackPhase";
 
 function hasAnyProperty(obj, keys) {
   return keys.some(key => hasProperty(obj ?? {}, key));
@@ -22,6 +25,63 @@ function hasAnyProperty(obj, keys) {
 
 function combatFor(combatant) {
   return combatant?.combat ?? game.combat;
+}
+
+function combatKey(combat) {
+  return String(combat?.id ?? "active-combat");
+}
+
+function readMultipleAttackActorState(actor, combat, round) {
+  const all = actor?.getFlag?.("add2e", ADD2E_MULTIPLE_ATTACK_ACTOR_FLAG) ?? actor?.flags?.add2e?.[ADD2E_MULTIPLE_ATTACK_ACTOR_FLAG] ?? {};
+  const state = all?.[combatKey(combat)] ?? null;
+  if (!state || typeof state !== "object") return null;
+  if (Number(state.round) !== Number(round)) return null;
+  const pending = Math.max(0, Math.floor(Number(state.pending ?? 0) || 0));
+  return pending > 0 ? { ...state, pending } : null;
+}
+
+function pendingExtraFromPreviousRound(combat) {
+  const round = Math.max(1, Math.floor(Number(combat?.round ?? 1) - 1));
+  if (round < 1 || Number(combat?.round ?? 1) <= 1) return null;
+
+  const turns = sortedCombatants(combat);
+  for (let index = 0; index < turns.length; index += 1) {
+    const combatant = turns[index];
+    if (!combatant?.actor || isInactiveCombatant(combatant)) continue;
+    const state = readMultipleAttackActorState(combatant.actor, combat, round);
+    if (state) return { round, index, combatant, state };
+  }
+  return null;
+}
+
+async function recoverSkippedExtraAttackPhase(combat, changes, options = {}) {
+  if (!game.user?.isGM || options?.add2eMultipleAttackRecovery) return false;
+  if (!combat?.started || !hasProperty(changes ?? {}, "round")) return false;
+
+  const currentPhase = combat?.getFlag?.("add2e", ADD2E_MULTIPLE_ATTACK_PHASE_FLAG) ?? combat?.flags?.add2e?.[ADD2E_MULTIPLE_ATTACK_PHASE_FLAG] ?? null;
+  if (currentPhase?.phase === "extra" && Number(currentPhase.round) === Number(combat.round)) return false;
+
+  const pending = pendingExtraFromPreviousRound(combat);
+  if (!pending) return false;
+
+  await combat.update({
+    round: pending.round,
+    turn: pending.index,
+    "flags.add2e.multipleAttackPhase": {
+      phase: "extra",
+      round: pending.round,
+      combatantId: pending.combatant.id,
+      recovered: true,
+      recoveredFromRound: Number(combat.round ?? 0),
+      recoveredAt: Date.now()
+    }
+  }, {
+    add2eInitiativeNavigation: true,
+    add2eMultipleAttackRecovery: true
+  });
+
+  ui.notifications?.warn?.(`${pending.combatant.name} a encore ${pending.state.pending} attaque supplémentaire au round ${pending.round}.`);
+  return true;
 }
 
 function patchTrackerIcons(app, html) {
@@ -75,11 +135,16 @@ export function installHooks() {
   Hooks.on("createCombatant", (combatant, options) => { if (!options?.add2eInitiativeSort) scheduleInitiativeSort(combatFor(combatant)); });
   Hooks.on("deleteCombatant", (combatant, options) => { if (!options?.add2eInitiativeSort) scheduleInitiativeSort(combatFor(combatant)); });
 
-  Hooks.on("updateCombat", (combat, changes, options) => {
+  Hooks.on("updateCombat", async (combat, changes, options) => {
     if (options?.add2eInitiativeSort) return;
 
-    if (options?.add2eInitiativeNavigation) {
-      scheduleNavigationClientSync(combat, "initiative-navigation");
+    if (await recoverSkippedExtraAttackPhase(combat, changes, options)) {
+      scheduleNavigationClientSync(combat, "extra-attack-recovery");
+      return;
+    }
+
+    if (options?.add2eInitiativeNavigation || options?.add2eMultipleAttackRecovery) {
+      scheduleNavigationClientSync(combat, options?.add2eMultipleAttackRecovery ? "extra-attack-recovery" : "initiative-navigation");
       return;
     }
 
