@@ -20,6 +20,7 @@ const ADD2E_MULTIPLE_ATTACK_ACTOR_FLAG = "multipleAttacks";
 const ADD2E_MULTIPLE_ATTACK_PHASE_FLAG = "multipleAttackPhase";
 const ADD2E_MULTIPLE_ATTACK_PENDING_FLAG = "multipleAttackPending";
 const MULTIPLE_ATTACK_SOCKET_TYPE = "add2eMultipleAttackRecord";
+let preStartSortTimer = null;
 
 function hasAnyProperty(obj, keys) {
   return keys.some(key => hasProperty(obj ?? {}, key));
@@ -36,6 +37,41 @@ function combatKey(combat) {
 function clone(value) {
   try { return foundry.utils.deepClone(value ?? {}); }
   catch (_err) { return JSON.parse(JSON.stringify(value ?? {})); }
+}
+
+async function sortInitiativeBeforeStart(combat) {
+  if (!combat) return false;
+  if (combat.started) {
+    scheduleInitiativeSort(combat);
+    return true;
+  }
+
+  const turns = sortedCombatants(combat);
+  if (!turns.length) return false;
+
+  const updates = turns
+    .map((combatant, index) => ({ _id: combatant.id, sort: index }))
+    .filter(update => {
+      const current = combat.combatants?.get?.(update._id) ?? Array.from(combat.combatants ?? []).find(c => c.id === update._id);
+      return current && Number(current.sort) !== Number(update.sort);
+    });
+
+  if (updates.length) await combat.updateEmbeddedDocuments("Combatant", updates, { add2eInitiativeSort: true });
+  combat.turns = turns;
+  ui.combat?.render?.(false);
+  return true;
+}
+
+function scheduleInitiativeOrder(combat) {
+  if (!combat) return;
+  if (combat.started) {
+    scheduleInitiativeSort(combat);
+    return;
+  }
+  clearTimeout(preStartSortTimer);
+  preStartSortTimer = setTimeout(() => {
+    sortInitiativeBeforeStart(combat).catch(err => console.warn("[ADD2E][INIT][PRESTART_SORT][ERROR]", err));
+  }, 60);
 }
 
 function combatantByPayload(combat, payload) {
@@ -226,11 +262,11 @@ export function installHooks() {
   });
 
   Hooks.on("updateCombatant", (combatant, changes, options) => {
-    if (!options?.add2eInitiativeSort && hasProperty(changes ?? {}, "initiative")) scheduleInitiativeSort(combatFor(combatant));
+    if (!options?.add2eInitiativeSort && hasProperty(changes ?? {}, "initiative")) scheduleInitiativeOrder(combatFor(combatant));
   });
 
-  Hooks.on("createCombatant", (combatant, options) => { if (!options?.add2eInitiativeSort) scheduleInitiativeSort(combatFor(combatant)); });
-  Hooks.on("deleteCombatant", (combatant, options) => { if (!options?.add2eInitiativeSort) scheduleInitiativeSort(combatFor(combatant)); });
+  Hooks.on("createCombatant", (combatant, options) => { if (!options?.add2eInitiativeSort) scheduleInitiativeOrder(combatFor(combatant)); });
+  Hooks.on("deleteCombatant", (combatant, options) => { if (!options?.add2eInitiativeSort) scheduleInitiativeOrder(combatFor(combatant)); });
 
   Hooks.on("updateCombat", async (combat, changes, options) => {
     if (options?.add2eInitiativeSort) return;
