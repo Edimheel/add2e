@@ -257,31 +257,75 @@ export function installEffectsEngineMonk(Engine) {
       return { status, label, icon };
     },
 
-    buildMonkUnarmedStunEffect({ rounds = 1 } = {}) {
+    buildFoundryStunnedEffect({ rounds = 1 } = {}) {
       const status = this.getFoundryStatusEffectData("stunned");
-      const duration = {
+      const source = foundry.utils.deepClone(status.status ?? {});
+      source.name = status.label;
+      source.label = status.label;
+      source.img = status.icon;
+      source.icon = status.icon;
+      source.disabled = false;
+      source.transfer = false;
+      source.statuses = ["stunned"];
+      source.duration = {
         rounds,
         startRound: game.combat?.round ?? null,
         startTurn: game.combat?.turn ?? null,
         startTime: game.time?.worldTime ?? null,
         combat: game.combat?.id ?? null
       };
-      return {
-        name: status.label,
-        img: status.icon,
-        icon: status.icon,
-        disabled: false,
-        transfer: false,
-        statuses: ["stunned"],
-        duration,
-        flags: {
-          core: {
-            statusId: "stunned",
-            overlay: false
-          }
-        },
-        changes: foundry.utils.deepClone(status.status?.changes ?? [])
-      };
+      source.flags = foundry.utils.mergeObject(source.flags ?? {}, { core: { statusId: "stunned", overlay: false } }, { inplace: false, insertKeys: true, overwrite: true });
+      source.changes = foundry.utils.deepClone(source.changes ?? []);
+      delete source._id;
+      return source;
+    },
+
+    findActorStatusEffect(actor, statusId = "stunned") {
+      const wanted = this.normalizeTag(statusId);
+      return Array.from(actor?.effects ?? []).find(effect => {
+        const statuses = effect.statuses instanceof Set ? [...effect.statuses] : this.toArray(effect.statuses);
+        const coreStatusId = effect.flags?.core?.statusId ?? effect.getFlag?.("core", "statusId");
+        return statuses.map(value => this.normalizeTag(value)).includes(wanted)
+          || this.normalizeTag(coreStatusId) === wanted;
+      }) ?? null;
+    },
+
+    async updateFoundryStunnedDuration(effect, rounds = 1) {
+      if (!effect?.update) return false;
+      await effect.update({
+        duration: {
+          ...(effect.duration?.toObject?.() ?? effect.duration ?? {}),
+          rounds,
+          startRound: game.combat?.round ?? null,
+          startTurn: game.combat?.turn ?? null,
+          startTime: game.time?.worldTime ?? null,
+          combat: game.combat?.id ?? null
+        }
+      }, { add2eInternal: true, add2eReason: "monk-foundry-stunned-duration" });
+      return true;
+    },
+
+    oldMonkCustomStunIds(actor) {
+      return Array.from(actor?.effects ?? [])
+        .filter(effect => this.toArray(effect.flags?.add2e?.tags ?? effect.getFlag?.("add2e", "tags") ?? []).map(tag => this.normalizeTag(tag)).includes("moine:etourdissement_main_nue"))
+        .map(effect => effect.id)
+        .filter(Boolean);
+    },
+
+    async applyNativeFoundryStunned(target, rounds = 1) {
+      const oldCustomIds = this.oldMonkCustomStunIds(target);
+      if (oldCustomIds.length) await target.deleteEmbeddedDocuments("ActiveEffect", oldCustomIds, { add2eInternal: true, add2eReason: "remove-old-monk-custom-stun" });
+
+      if (typeof target?.toggleStatusEffect === "function") {
+        const toggled = await target.toggleStatusEffect("stunned", { active: true, overlay: false });
+        const effect = toggled?.id ? toggled : this.findActorStatusEffect(target, "stunned");
+        await this.updateFoundryStunnedDuration(effect, rounds);
+        return effect ?? toggled ?? null;
+      }
+
+      const effectData = this.buildFoundryStunnedEffect({ rounds });
+      const created = await target.createEmbeddedDocuments("ActiveEffect", [effectData], { add2eInternal: true, add2eReason: "foundry-stunned" });
+      return created?.[0] ?? null;
     },
 
     async applyMonkUnarmedStun({ attacker, target, weapon, context = {} } = {}) {
@@ -292,32 +336,19 @@ export function installEffectsEngineMonk(Engine) {
       const roll = await new Roll(info.durationFormula).evaluate();
       if (game.dice3d) await game.dice3d.showForRoll(roll);
       const rounds = Math.max(1, Number(roll.total) || 1);
-      const effectData = this.buildMonkUnarmedStunEffect({ rounds });
-      const oldIds = Array.from(target.effects ?? [])
-        .filter(effect => {
-          const statuses = effect.statuses instanceof Set ? [...effect.statuses] : this.toArray(effect.statuses);
-          const coreStatusId = effect.flags?.core?.statusId ?? effect.getFlag?.("core", "statusId");
-          const oldCustomTags = this.toArray(effect.flags?.add2e?.tags ?? effect.getFlag?.("add2e", "tags") ?? []).map(tag => this.normalizeTag(tag));
-          return statuses.map(value => this.normalizeTag(value)).includes("stunned")
-            || this.normalizeTag(coreStatusId) === "stunned"
-            || oldCustomTags.includes("moine:etourdissement_main_nue");
-        })
-        .map(effect => effect.id)
-        .filter(Boolean);
 
       if (game.user?.isGM || target.isOwner) {
-        if (oldIds.length) await target.deleteEmbeddedDocuments("ActiveEffect", oldIds, { add2eInternal: true, add2eReason: "foundry-stunned-refresh" });
-        await target.createEmbeddedDocuments("ActiveEffect", [effectData], { add2eInternal: true, add2eReason: "foundry-stunned" });
+        await this.applyNativeFoundryStunned(target, rounds);
       } else {
         game.socket?.emit?.("system.add2e", {
           type: "ADD2E_GM_OPERATION",
           operation: "deleteActiveEffects",
-          payload: { actorId: target.id, actorUuid: target.uuid, statuses: ["stunned"], tags: ["moine:etourdissement_main_nue"] }
+          payload: { actorId: target.id, actorUuid: target.uuid, tags: ["moine:etourdissement_main_nue"], names: ["Étourdissement main nue"] }
         });
         game.socket?.emit?.("system.add2e", {
           type: "ADD2E_GM_OPERATION",
           operation: "createActiveEffect",
-          payload: { actorId: target.id, actorUuid: target.uuid, effectData }
+          payload: { actorId: target.id, actorUuid: target.uuid, effectData: this.buildFoundryStunnedEffect({ rounds }) }
         });
       }
 
