@@ -74,6 +74,7 @@ function add2eInstallHudDiagnostics() {
       cast_spell: typeof globalThis.cast_spell,
       attackVersion: globalThis.ADD2E_ATTACK_VERSION,
       attackRollSplitVersion: globalThis.ADD2E_ATTACK_ROLL_SPLIT_VERSION,
+      capabilitySpecialAttackVersion: globalThis.add2eCapabilitySpecialAttack?.version ?? null,
       controlled: controlled.map(t => ({ token: t.name, id: t.id, actor: t.actor?.name, actorType: t.actor?.type })),
       hudModules: add2eHudDiagnosticsModules(),
       tokenHudApp: ui?.token?.constructor?.name ?? null,
@@ -203,4 +204,5 @@ Hooks.once("ready", () => add2eScheduleSpellComponentTransactionBridge());
   await add2eImportAttackModule("./add2e-attack/04d-attack-roll-defense.mjs", "04d-attack-roll-defense");
   await add2eImportAttackModule("./add2e-attack/04e-attack-roll-modifiers.mjs", "04e-attack-roll-modifiers");
   await add2eImportAttackModule("./add2e-attack/04b-attack-roll-core.mjs", "04b-attack-roll-core");
+  await add2eImportAttackModule("./add2e/capability-special-attacks.mjs", "capability-special-attacks");
 })();
