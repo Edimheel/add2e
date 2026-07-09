@@ -452,6 +452,37 @@ function pendingExtraIndexes(turns, combat = game.combat, { afterIndex = -1 } = 
   return indexes;
 }
 
+function attackCountText(count) {
+  const n = Math.max(0, Math.floor(Number(count) || 0));
+  return `${n} attaque${n > 1 ? "s" : ""}`;
+}
+
+function usedText(used, total) {
+  const u = Math.max(0, Math.floor(Number(used) || 0));
+  const t = Math.max(1, Math.floor(Number(total) || 1));
+  return `${u}/${t} attaque${t > 1 ? "s" : ""} utilisée${u > 1 ? "s" : ""}`;
+}
+
+function multipleAttackMessage(actor, state, context = "status") {
+  const name = actor?.name ?? "Acteur";
+  const used = Math.max(0, Math.floor(Number(state?.used) || 0));
+  const total = Math.max(1, Math.floor(Number(state?.total) || 1));
+  const pending = Math.max(0, Math.floor(Number(state?.pending) || 0));
+  const ratio = String(state?.ratio ?? state?.label ?? "").trim();
+  const ratioText = ratio ? ` — rythme ${ratio}` : "";
+  const summary = `${name} : ${usedText(used, total)}, ${attackCountText(pending)} restante${pending > 1 ? "s" : ""} ce round${ratioText}.`;
+
+  if (context === "normal-pending") return `Attaque enregistrée — ${summary} Prochaine attaque en fin de round.`;
+  if (context === "normal-done") return `Attaque enregistrée — ${summary} Toutes les attaques du round sont utilisées.`;
+  if (context === "blocked-normal") return `Attaque normale déjà utilisée — ${summary} Attends la phase d’attaque supplémentaire en fin de round.`;
+  if (context === "extra-turn") return `Attaque supplémentaire — ${summary} C’est à ${name} de jouer maintenant.`;
+  if (context === "extra-recorded") return pending > 0
+    ? `Attaque supplémentaire enregistrée — ${summary}`
+    : `Attaque supplémentaire enregistrée — ${summary} Toutes les attaques du round sont utilisées.`;
+  if (context === "blocked-extra") return `Aucune attaque restante — ${summary}`;
+  return summary;
+}
+
 async function setMultipleAttackPhase(combat, data = {}) {
   if (!combat?.setFlag) return false;
   try {
@@ -467,7 +498,9 @@ async function enterExtraAttackPhase(combat, turns, index, round = combatRound(c
   const safeIndex = Math.max(0, Math.min(turns.length - 1, Number(index) || 0));
   const combatant = turns[safeIndex];
   await setMultipleAttackPhase(combat, { phase: "extra", round, combatantId: combatant?.id ?? null, updatedAt: Date.now() });
-  ui.notifications?.info?.(`${combatant?.name ?? "Cet acteur"} dispose d’une attaque supplémentaire.`);
+  const state = readMultipleAttackState(combatant?.actor, combat);
+  if (state) ui.notifications?.info?.(multipleAttackMessage(combatant?.actor, state, "extra-turn"));
+  else ui.notifications?.info?.(`${combatant?.name ?? "Cet acteur"} dispose d’une attaque supplémentaire.`);
   return updateTurn(combat, safeIndex, round);
 }
 
@@ -484,14 +517,15 @@ export function add2eCanActorWeaponAttackNow(actor, { weapon = null, combat = ga
   if (!profile) return true;
 
   const state = stateForRound(actor, combat, profile);
+  const messageState = { ...currentState, round: state.round, total: state.total, used: state.used, pending: state.pending, ratio: profile.ratio, label: profile.ratio };
   if (phaseIsExtra(combat, state.round)) {
     if (pendingExtraCount(actor, combat) > 0) return true;
-    if (notify) ui.notifications?.warn?.(`${actor.name} n’a plus d’attaque supplémentaire disponible ce round.`);
+    if (notify) ui.notifications?.warn?.(multipleAttackMessage(actor, messageState, "blocked-extra"));
     return false;
   }
 
   if (state.used <= 0) return true;
-  if (notify) ui.notifications?.warn?.(`${actor.name} a déjà effectué son attaque normale. L’attaque supplémentaire se jouera en fin de round.`);
+  if (notify) ui.notifications?.warn?.(multipleAttackMessage(actor, messageState, "blocked-normal"));
   return false;
 }
 
@@ -527,7 +561,10 @@ export async function add2eRecordWeaponAttack(actor, { weapon = null, combat = g
 
   await writeMultipleAttackState(actor, combat, state);
   console.log(`${TAG}[MULTI_ATTACK][RECORDED]`, { actor: actor.name, weapon: weapon?.name ?? null, round: state.round, ratio: state.ratio, total: state.total, used: state.used, pending: state.pending, phase: state.phase });
-  if (state.pending > 0 && state.phase !== "extra") ui.notifications?.info?.(`${actor.name} aura ${state.pending} attaque supplémentaire en fin de round.`);
+  if (state.total > 1) {
+    const context = state.phase === "extra" ? "extra-recorded" : (state.pending > 0 ? "normal-pending" : "normal-done");
+    ui.notifications?.info?.(multipleAttackMessage(actor, state, context));
+  }
   if (typeof globalThis.add2eSyncActionHudToCombatant === "function") globalThis.add2eSyncActionHudToCombatant(combat, { reason: "multiple-attack" });
   return state;
 }
@@ -536,12 +573,16 @@ export function add2eMultipleAttackHudStatus(actor, combat = game.combat) {
   if (!actor || !combat?.started) return null;
   const state = readMultipleAttackState(actor, combat);
   if (!state || Number(state.round) !== combatRound(combat)) return null;
-  if (Number(state.total ?? 1) <= 1) return null;
+  const total = Math.max(1, Math.floor(Number(state.total ?? 1) || 1));
+  if (total <= 1) return null;
+  const used = Math.max(0, Math.floor(Number(state.used ?? 0) || 0));
+  const pending = Math.max(0, Math.floor(Number(state.pending ?? 0) || 0));
+  const extra = phaseIsExtra(combat, combatRound(combat)) && pending > 0;
   return {
-    label: Number(state.pending ?? 0) > 0 ? "Attaque supplémentaire en attente" : "Attaque du round utilisée",
-    detail: `${Number(state.used ?? 0)}/${Number(state.total ?? 1)} attaque(s)`,
+    label: extra ? "Attaque supplémentaire à jouer" : (pending > 0 ? "Attaque supplémentaire en attente" : "Attaques du round terminées"),
+    detail: `${usedText(used, total)} — ${attackCountText(pending)} restante${pending > 1 ? "s" : ""}${extra ? " — joue maintenant" : (pending > 0 ? " — en fin de round" : "")}`,
     ratio: String(state.ratio ?? "1/1"),
-    css: Number(state.pending ?? 0) > 0 ? "pending" : "used"
+    css: extra ? "extra" : (pending > 0 ? "pending" : "used")
   };
 }
 
