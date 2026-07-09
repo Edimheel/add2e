@@ -114,6 +114,139 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
       return this.getUnlockedClassFeatures(actor).filter(feature => this.isClassFeatureActivable(feature));
     },
 
+    getAllAlignmentLabels() {
+      return [
+        "Loyal Bon",
+        "Loyal Neutre",
+        "Loyal Mauvais",
+        "Neutre Bon",
+        "Neutre Absolu",
+        "Neutre Mauvais",
+        "Chaotique Bon",
+        "Chaotique Neutre",
+        "Chaotique Mauvais"
+      ];
+    },
+
+    alignmentSlug(value) {
+      const raw = String(value ?? "")
+        .trim()
+        .toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[’']/g, "")
+        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/_+/g, "_")
+        .replace(/^_+|_+$/g, "");
+      const aliases = {
+        lb: "loyal_bon",
+        loyal_bon: "loyal_bon",
+        lawful_good: "loyal_bon",
+        ln: "loyal_neutre",
+        loyal_neutre: "loyal_neutre",
+        loyal_neutral: "loyal_neutre",
+        lawful_neutral: "loyal_neutre",
+        lm: "loyal_mauvais",
+        loyal_mauvais: "loyal_mauvais",
+        loyal_mal: "loyal_mauvais",
+        lawful_evil: "loyal_mauvais",
+        nb: "neutre_bon",
+        neutre_bon: "neutre_bon",
+        neutral_good: "neutre_bon",
+        n: "neutre_absolu",
+        neutre: "neutre_absolu",
+        neutre_absolu: "neutre_absolu",
+        neutral: "neutre_absolu",
+        true_neutral: "neutre_absolu",
+        nm: "neutre_mauvais",
+        neutre_mauvais: "neutre_mauvais",
+        neutre_mal: "neutre_mauvais",
+        neutral_evil: "neutre_mauvais",
+        cb: "chaotique_bon",
+        chaotique_bon: "chaotique_bon",
+        chaotic_good: "chaotique_bon",
+        cn: "chaotique_neutre",
+        chaotique_neutre: "chaotique_neutre",
+        chaotic_neutral: "chaotique_neutre",
+        cm: "chaotique_mauvais",
+        chaotique_mauvais: "chaotique_mauvais",
+        chaotique_mal: "chaotique_mauvais",
+        chaotic_evil: "chaotique_mauvais"
+      };
+      return aliases[raw] ?? raw;
+    },
+
+    alignmentLabelForSlug(slug) {
+      const normalized = this.alignmentSlug(slug);
+      const found = this.getAllAlignmentLabels().find(label => this.alignmentSlug(label) === normalized);
+      return found ?? String(slug ?? "").trim();
+    },
+
+    getClassAllowedAlignments(classData) {
+      const system = classData?.system ?? classData ?? {};
+      const raw = system.alignements_autorises
+        ?? system.alignementsAutorises
+        ?? system.allowedAlignments
+        ?? system.allowed_alignments
+        ?? system.alignmentsAllowed
+        ?? system.alignmentAllowed
+        ?? system.alignmentRestriction?.allowed
+        ?? system.alignementRestriction?.allowed
+        ?? system.restrictions?.alignements
+        ?? system.restrictions?.alignments
+        ?? [];
+      const values = this.toArray(raw).filter(value => value !== undefined && value !== null && String(value).trim() !== "");
+      const seen = new Set();
+      const out = [];
+      for (const value of values) {
+        const slug = this.alignmentSlug(value);
+        if (!slug || seen.has(slug)) continue;
+        seen.add(slug);
+        out.push(this.alignmentLabelForSlug(slug));
+      }
+      return out;
+    },
+
+    getActorAllowedAlignments(actor) {
+      const all = this.getAllAlignmentLabels();
+      const classItems = this.getEmbeddedClassItems(actor);
+      if (!classItems.length) return all;
+
+      let allowed = null;
+      for (const classItem of classItems) {
+        const classAllowed = this.getClassAllowedAlignments(classItem);
+        const slugs = new Set((classAllowed.length ? classAllowed : all).map(value => this.alignmentSlug(value)).filter(Boolean));
+        if (allowed === null) allowed = slugs;
+        else allowed = new Set([...allowed].filter(slug => slugs.has(slug)));
+      }
+
+      const result = all.filter(label => allowed?.has?.(this.alignmentSlug(label)));
+      return result.length ? result : all;
+    },
+
+    isAlignmentAllowedForClass(alignment, classData) {
+      const allowed = this.getClassAllowedAlignments(classData);
+      if (!allowed.length) return true;
+      const current = this.alignmentSlug(alignment);
+      return !!current && allowed.some(value => this.alignmentSlug(value) === current);
+    },
+
+    isActorAlignmentAllowedForClass(actor, classData) {
+      const system = actor?.system ?? {};
+      const current = system.alignement ?? system.alignment ?? system.details?.alignement ?? "";
+      return this.isAlignmentAllowedForClass(current, classData);
+    },
+
+    pickClassAlignment(actor, classData, fallback = "") {
+      const system = actor?.system ?? {};
+      const current = system.alignement ?? system.alignment ?? fallback ?? "";
+      const allowed = this.getClassAllowedAlignments(classData);
+      if (!allowed.length) return current || String(fallback ?? "");
+      const currentSlug = this.alignmentSlug(current);
+      const currentAllowed = allowed.find(value => this.alignmentSlug(value) === currentSlug);
+      if (currentAllowed) return currentAllowed;
+      return allowed[0] ?? String(fallback ?? "");
+    },
+
     getConstitutionTotal(actor) {
       const system = actor?.system ?? {};
       const direct = Number(system.constitution);
