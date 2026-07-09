@@ -73,6 +73,14 @@ function broadcastMultipleAttackState(actor, state, combat = game.combat) {
   }
 }
 
+function attackRollCompleted(result) {
+  if (result === false || result === null) return false;
+  if (result && typeof result === "object" && result.cancelled === true) return false;
+  if (result && typeof result === "object" && result.canceled === true) return false;
+  if (result && typeof result === "object" && result.cancel === true) return false;
+  return true;
+}
+
 function notifyWrongTurn(actor, combatant) {
   const now = Date.now();
   if (now - initiativeState.warningAt <= 900) return;
@@ -143,7 +151,7 @@ async function executeLockedAction(name, original, context, args) {
   if (name === "add2eAttackRoll" && !add2eCanActorWeaponAttackNow(actor, { weapon, notify: true })) return false;
 
   const result = await original.apply(context, args);
-  if (name === "add2eAttackRoll" && result === true) {
+  if (name === "add2eAttackRoll" && attackRollCompleted(result)) {
     const state = await add2eRecordWeaponAttack(actor, { weapon, combat: game.combat });
     broadcastMultipleAttackState(actor, state, game.combat);
   }
