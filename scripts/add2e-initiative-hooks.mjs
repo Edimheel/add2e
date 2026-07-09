@@ -207,6 +207,8 @@ export function add2eInitiativeDebug(label = "debug", combat = game.combat) {
   };
 }
 
+globalThis.add2eInitiativeDebug = add2eInitiativeDebug;
+
 export function installHooks() {
   if (initiativeState.hooksInstalled) return;
   initiativeState.hooksInstalled = true;
