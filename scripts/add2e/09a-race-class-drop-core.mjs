@@ -5,11 +5,24 @@
 
 import { levelForClassXp } from "./17b-multiclass-rules.mjs";
 
-export const ADD2E_RACE_CLASS_DROP_VERSION = "2026-07-07-class-level-from-xp-v1";
+export const ADD2E_RACE_CLASS_DROP_VERSION = "2026-07-09-class-alignment-effects-engine-v1";
 globalThis.ADD2E_RACE_CLASS_DROP_VERSION = ADD2E_RACE_CLASS_DROP_VERSION;
 
 export const CARACS = ["force", "dexterite", "constitution", "intelligence", "sagesse", "charisme"];
 export const CARAC_SHORT = { force: "FOR", dexterite: "DEX", constitution: "CON", intelligence: "INT", sagesse: "SAG", charisme: "CHA" };
+
+function add2eDropEffectsEngine() {
+  return globalThis.Add2eEffectsEngine ?? null;
+}
+
+function add2eDropPickClassAlignment(actor, classData, fallback = "") {
+  const engine = add2eDropEffectsEngine();
+  if (engine && typeof engine.pickClassAlignment === "function") {
+    const picked = engine.pickClassAlignment(actor, classData, fallback);
+    if (picked) return picked;
+  }
+  return fallback || actor?.system?.alignement || "";
+}
 
 export function add2eDropDebugRaceClass(...args) {
   if (globalThis.ADD2E_DEBUG_RACE_CLASSE === true) console.log("[ADD2E][DROP][RACE_CLASSE]", ...args);
@@ -50,7 +63,8 @@ export function add2eClassCandidateLabel(classData) {
 export function add2eNormalizeDropTag(value) {
   if (typeof globalThis.add2eNormalizeEquipTag === "function") return globalThis.add2eNormalizeEquipTag(value);
   return String(value ?? "").trim().toLowerCase().normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "").replace(/[_\s-]+/g, "_");
+    .replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "")
+    .replace(/[_\s-]+/g, "_");
 }
 
 export function add2eToDropArray(value) {
@@ -155,6 +169,10 @@ export function checkClassStatMin(actor, classItem, candidateRaceData = null, ca
     if (total < minimum) missing.push(`${carac} ${total} < ${minimum}`);
   }
 
+  if (candidateAlignment && add2eDropEffectsEngine()?.isAlignmentAllowedForClass?.(candidateAlignment, classItem) === false) {
+    missing.push(`alignement non autorisé (${candidateAlignment})`);
+  }
+
   if (missing.length) {
     if (!silent) {
       ui.notifications.warn(`Prérequis insuffisants pour la classe "${classItem?.name ?? "Classe"}" (${missing.join(", ")})`);
@@ -228,7 +246,7 @@ export async function add2eApplyClassItemDataToActor(actor, classData, sheet = n
   data.system = data.system ?? {};
   data.system.xp = Math.max(0, Number(actor.system?.xp) || 0);
   data.system.niveau = levelForClassXp(data.system, data.system.xp);
-  const alignmentCandidate = options.alignmentCandidate ?? actor?.system?.alignement ?? "";
+  const alignmentCandidate = add2eDropPickClassAlignment(actor, data, options.alignmentCandidate ?? actor?.system?.alignement ?? "");
   const [classDoc] = await actor.createEmbeddedDocuments("Item", [data], { add2eInternal: true });
   if (!classDoc) return null;
 
@@ -275,9 +293,9 @@ export async function add2eResolveDropCompatibilityWithPopup(actor, itemData, sh
 
   if (itemData.type === "classe") {
     if ((actor.items?.filter?.(item => String(item.type ?? "").toLowerCase() === "classe") ?? []).length) return { ok: true, handled: false };
-    const alignmentCandidate = actor.system?.alignement ?? "";
+    const alignmentCandidate = add2eDropPickClassAlignment(actor, itemData, actor.system?.alignement ?? "");
     if (!checkClassStatMin(actor, itemData, null, alignmentCandidate, { silent: true, ignoreLevelMax: true })) {
-      ui.notifications.warn(`Classe ${itemData.name} incompatible avec la race ou les caractéristiques actuelles.`);
+      ui.notifications.warn(`Classe ${itemData.name} incompatible avec la race, l’alignement ou les caractéristiques actuelles.`);
       return { ok: false, handled: true };
     }
   }
@@ -297,3 +315,4 @@ try { globalThis.CARACS = CARACS; } catch (_error) {}
 try { globalThis.CARAC_SHORT = CARAC_SHORT; } catch (_error) {}
 try { globalThis.add2eResolveDropCompatibilityWithPopup = add2eResolveDropCompatibilityWithPopup; } catch (_error) {}
 try { globalThis.add2eClampRaceBonusesForExistingBases = add2eClampRaceBonusesForExistingBases; } catch (_error) {}
+try { globalThis.add2ePickClassAlignment = (actor, classData, fallback = "") => add2eDropPickClassAlignment(actor, classData, fallback); } catch (_error) {}
