@@ -353,6 +353,30 @@ export function installEffectsEngineMonk(Engine) {
       return this.createFoundryStunnedEffect(target, rounds);
     },
 
+    async applyPreparedDeferredContactFromUnarmedStun({ attacker, target, weapon, info, context = {} } = {}) {
+      const service = globalThis.add2eCapabilitySpecialAttack;
+      if (!service?.consumePreparedContactFromAttack || !attacker || !target) return null;
+      try {
+        return await service.consumePreparedContactFromAttack({
+          sourceActor: attacker,
+          targetActor: target,
+          trigger: "after-unarmed-stun",
+          attackContext: {
+            d20: context.d20,
+            total: context.total ?? context.totalAuToucher,
+            threshold: context.threshold ?? context.seuilFinalD20,
+            weaponName: weapon?.name ?? "Main nue",
+            margin: info?.margin,
+            requiredMargin: info?.requiredMargin,
+            detail: `Contact main nue étourdissant validé (${info?.margin ?? "?"}/${info?.requiredMargin ?? "?"}).`
+          }
+        });
+      } catch (error) {
+        console.warn("[ADD2E][MOINE][CONTACT_DIFFERE][ERREUR]", { attacker: attacker?.name, target: target?.name, error });
+        return { ok: false, reason: "error", error };
+      }
+    },
+
     async applyMonkUnarmedStun({ attacker, target, weapon, context = {} } = {}) {
       if (!attacker || !target || !weapon) return { applied: false, reason: "missing-context" };
       const info = this.getMonkUnarmedStunInfo(attacker, { ...context, weapon });
@@ -383,7 +407,8 @@ export function installEffectsEngineMonk(Engine) {
         flags: { add2e: { monkUnarmedStun: true, rounds, margin: info.margin, requiredMargin: info.requiredMargin } }
       });
 
-      return { applied: true, rounds, roll, ...info };
+      const deferredContact = await this.applyPreparedDeferredContactFromUnarmedStun({ attacker, target, weapon, info, context });
+      return { applied: true, rounds, roll, deferredContact, ...info };
     },
 
     async handleMonkUnarmedAttackResolved(context = {}) {
