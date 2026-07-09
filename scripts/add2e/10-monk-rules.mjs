@@ -1,7 +1,7 @@
 // ADD2E — Moine : mécanique liée à l'Item classe Moine.
 // Compatible Foundry V13/V14/V15.
 
-const ADD2E_MONK_RULES_VERSION = "2026-07-08-source-driven-passives-v1";
+const ADD2E_MONK_RULES_VERSION = "2026-07-09-effects-engine-unarmed-sync-v2";
 const ADD2E_MONK_UNARMED_SYNC_LOCK = new Set();
 const ADD2E_MONK_UNARMED_IMG = "systems/add2e/assets/icones/armes/main-nue.webp";
 const ADD2E_MONK_GENERATED_FEATURE_SOURCE = "10-monk-rules";
@@ -81,6 +81,22 @@ function add2eMonkDamageParts(raw) {
   const moyen = parts[0] || "1d6";
   const grand = parts[1] || moyen;
   return { raw: `${moyen} / ${grand}`, moyen, grand };
+}
+
+function add2eMonkDamagePartsFromEffectsEngine(actor) {
+  const engine = globalThis.Add2eEffectsEngine ?? null;
+  if (!engine || typeof engine.getMonkUnarmedDamageParts !== "function") return null;
+  try {
+    const damage = engine.getMonkUnarmedDamageParts(actor);
+    if (!damage?.moyen && !damage?.grand) return null;
+    const moyen = String(damage.moyen ?? damage.medium ?? "").trim();
+    const grand = String(damage.grand ?? damage.large ?? moyen).trim();
+    if (!moyen || !grand) return null;
+    return { raw: String(damage.raw ?? `${moyen} / ${grand}`).trim(), moyen, grand };
+  } catch (error) {
+    console.warn("[ADD2E][MOINE][MAIN_NUE][ENGINE_DAMAGE_ERROR]", { actor: actor?.name, error });
+    return null;
+  }
 }
 
 function add2eIsMonkAutoUnarmed(item) {
@@ -200,12 +216,13 @@ async function add2eSyncMonkUnarmedWeapon(actor) {
   await add2eEnsureMonkUnarmedAllowed(monk);
 
   const row = add2eGetMonkProgressionRow(actor);
-  if (!row) {
+  if (!row && !add2eMonkDamagePartsFromEffectsEngine(actor)) {
     console.warn("[ADD2E][MOINE][PROGRESSION_MISSING]", { actor: actor.name, classItemId: monk.id });
     return false;
   }
 
-  const damage = add2eMonkDamageParts(row.unarmedDamage ?? row.main_nue ?? row.damage ?? actor.system?.moine?.main_nue);
+  const damage = add2eMonkDamagePartsFromEffectsEngine(actor)
+    ?? add2eMonkDamageParts(row?.unarmedDamage ?? row?.main_nue ?? row?.damage ?? actor.system?.moine?.main_nue);
   const system = {
     nom: "Main nue",
     equipee: true,
