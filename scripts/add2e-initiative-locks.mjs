@@ -4,7 +4,9 @@
 import { ADD2E_INITIATIVE_VERSION, TAG, initiativeState } from "./add2e-initiative-constants.mjs";
 import {
   currentCombatant,
-  tokenFromCombatant
+  tokenFromCombatant,
+  add2eCanActorWeaponAttackNow,
+  add2eRecordWeaponAttack
 } from "./add2e-initiative-order.mjs";
 
 const ACTION_GLOBALS = ["add2eAttackRoll", "add2eCastSpell", "cast_spell", "add2eExecuteClassFeatureOnUse"];
@@ -18,6 +20,15 @@ function actorFromActionArgs(args) {
   if (first?.token?.actor) return first.token.actor;
   if (first?.tokenId) return canvas?.tokens?.get?.(first.tokenId)?.actor ?? null;
   return canvas?.tokens?.controlled?.[0]?.actor ?? game.user?.character ?? null;
+}
+
+function weaponFromActionArgs(actor, args) {
+  const first = args?.[0] ?? null;
+  if (first?.arme) return first.arme;
+  if (first?.weapon) return first.weapon;
+  if (first?.item) return first.item;
+  const itemId = first?.itemId ?? first?.armeId ?? first?.weaponId;
+  return itemId && actor?.items?.get ? actor.items.get(itemId) : null;
 }
 
 function notifyWrongTurn(actor, combatant) {
@@ -84,8 +95,13 @@ export function installTokenMoveLock() {
 
 async function executeLockedAction(name, original, context, args) {
   const actor = actorFromActionArgs(args);
+  const weapon = name === "add2eAttackRoll" ? weaponFromActionArgs(actor, args) : null;
   if (!canActorActNow(actor, { notify: true })) return false;
-  return original.apply(context, args);
+  if (name === "add2eAttackRoll" && !add2eCanActorWeaponAttackNow(actor, { weapon, notify: true })) return false;
+
+  const result = await original.apply(context, args);
+  if (name === "add2eAttackRoll" && result === true) await add2eRecordWeaponAttack(actor, { weapon, combat: game.combat });
+  return result;
 }
 
 export function installActionLocks() {
