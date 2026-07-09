@@ -1,12 +1,13 @@
 // scripts/add2e-initiative-locks.mjs
 // ADD2E — verrouillage hors tour, trace de mouvement et synchronisation HUD.
 
-import { ADD2E_INITIATIVE_VERSION, TAG, initiativeState } from "./add2e-initiative-constants.mjs";
+import { ADD2E_INITIATIVE_VERSION, TAG, initiativeState, escapeHtml } from "./add2e-initiative-constants.mjs";
 import {
   currentCombatant,
   tokenFromCombatant,
   add2eCanActorWeaponAttackNow,
-  add2eRecordWeaponAttack
+  add2eRecordWeaponAttack,
+  add2eMultipleAttackHudStatus
 } from "./add2e-initiative-order.mjs";
 
 const ACTION_GLOBALS = ["add2eAttackRoll", "add2eCastSpell", "cast_spell", "add2eExecuteClassFeatureOnUse"];
@@ -136,6 +137,37 @@ export function clearFoundryMovementTrailAggressive(token = null) {
   return true;
 }
 
+function installMultipleAttackHudStyle() {
+  const styleId = "add2e-multiple-attack-hud-style";
+  if (document.getElementById(styleId)) return;
+  const style = document.createElement("style");
+  style.id = styleId;
+  style.textContent = `
+    #add2e-action-hud .add2e-multiple-attack-banner{display:flex;align-items:center;gap:8px;margin:6px 8px;padding:7px 9px;border:1px solid rgba(217,191,115,.9);border-radius:9px;background:linear-gradient(180deg,rgba(67,36,16,.96),rgba(36,23,14,.96));color:#fff2bd;font-weight:900;box-shadow:0 2px 5px rgba(0,0,0,.35)}
+    #add2e-action-hud .add2e-multiple-attack-banner .detail{font-size:.84em;font-weight:700;color:#f8df9d;line-height:1.25}
+    #add2e-action-hud .add2e-multiple-attack-banner.extra{border-color:#f2d46d;background:linear-gradient(180deg,rgba(111,32,26,.96),rgba(64,18,15,.96))}
+    #add2e-action-hud .add2e-multiple-attack-banner.used{opacity:.78;background:rgba(45,42,36,.88)}
+  `;
+  document.head.appendChild(style);
+}
+
+function renderMultipleAttackHudBanner(actor) {
+  const root = document.getElementById("add2e-action-hud");
+  if (!root) return false;
+  installMultipleAttackHudStyle();
+  root.querySelector(".add2e-multiple-attack-banner")?.remove?.();
+
+  const status = add2eMultipleAttackHudStatus(actor, game.combat);
+  if (!status) return false;
+
+  const banner = document.createElement("div");
+  banner.className = `add2e-multiple-attack-banner ${status.css ?? ""}`;
+  banner.innerHTML = `<i class="fas fa-crosshairs"></i><div><div>${escapeHtml(status.label)}</div><div class="detail">${escapeHtml(status.detail)} — rythme ${escapeHtml(status.ratio)}</div></div>`;
+  const target = root.querySelector(".hud-body") ?? root.querySelector(".content") ?? root.firstElementChild ?? root;
+  target.prepend(banner);
+  return true;
+}
+
 export function syncActionHudToCombatant(combat = game.combat, { reason = "combat" } = {}) {
   if (!combat?.started || !document.getElementById("add2e-action-hud")) return false;
   const combatant = currentCombatant(combat);
@@ -143,6 +175,8 @@ export function syncActionHudToCombatant(combat = game.combat, { reason = "comba
   if (!actor || typeof globalThis.add2eRenderActionHud !== "function") return false;
   try {
     globalThis.add2eRenderActionHud(actor, tokenFromCombatant(combatant), { reason: `initiative-${reason}` });
+    renderMultipleAttackHudBanner(actor);
+    setTimeout(() => renderMultipleAttackHudBanner(actor), 40);
     return true;
   } catch (err) {
     console.warn(`${TAG}[HUD_FOLLOW][ERROR]`, err);
