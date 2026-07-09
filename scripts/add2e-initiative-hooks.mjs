@@ -18,6 +18,8 @@ import { canTokenInteractNow, clearFoundryMovementTrailAggressive } from "./add2
 const MOVEMENT_KEYS = ["x", "y", "elevation", "rotation"];
 const ADD2E_MULTIPLE_ATTACK_ACTOR_FLAG = "multipleAttacks";
 const ADD2E_MULTIPLE_ATTACK_PHASE_FLAG = "multipleAttackPhase";
+const ADD2E_MULTIPLE_ATTACK_PENDING_FLAG = "multipleAttackPending";
+const MULTIPLE_ATTACK_SOCKET_TYPE = "add2eMultipleAttackRecord";
 
 function hasAnyProperty(obj, keys) {
   return keys.some(key => hasProperty(obj ?? {}, key));
@@ -31,6 +33,71 @@ function combatKey(combat) {
   return String(combat?.id ?? "active-combat");
 }
 
+function clone(value) {
+  try { return foundry.utils.deepClone(value ?? {}); }
+  catch (_err) { return JSON.parse(JSON.stringify(value ?? {})); }
+}
+
+function combatantByPayload(combat, payload) {
+  const turns = sortedCombatants(combat);
+  return turns.find(c => String(c.id) === String(payload?.combatantId ?? ""))
+    ?? turns.find(c => String(c.actor?.id ?? c.actorId ?? "") === String(payload?.actorId ?? ""))
+    ?? null;
+}
+
+async function persistMultipleAttackRecord(payload) {
+  if (!game.user?.isGM || payload?.type !== MULTIPLE_ATTACK_SOCKET_TYPE) return false;
+  const combat = game.combats?.get?.(payload.combatId) ?? game.combat;
+  if (!combat || String(combat.id) !== String(payload.combatId)) return false;
+
+  const combatant = combatantByPayload(combat, payload);
+  const actor = combatant?.actor ?? game.actors?.get?.(payload.actorId) ?? null;
+  if (!actor) return false;
+
+  const state = payload.state && typeof payload.state === "object" ? clone(payload.state) : {};
+  const pending = Math.max(0, Math.floor(Number(state.pending ?? 0) || 0));
+  const round = Math.max(1, Math.floor(Number(state.round ?? combat.round ?? 1) || 1));
+  const key = combatKey(combat);
+
+  const actorStates = clone(actor.getFlag?.("add2e", ADD2E_MULTIPLE_ATTACK_ACTOR_FLAG) ?? actor.flags?.add2e?.[ADD2E_MULTIPLE_ATTACK_ACTOR_FLAG] ?? {});
+  actorStates[key] = {
+    ...state,
+    round,
+    pending,
+    updatedByGM: true,
+    updatedAt: Date.now()
+  };
+  try {
+    await actor.setFlag("add2e", ADD2E_MULTIPLE_ATTACK_ACTOR_FLAG, actorStates);
+  } catch (err) {
+    console.warn("[ADD2E][INIT][MULTI_ATTACK][ACTOR_FLAG_SYNC_ERROR]", { actor: actor.name, err });
+  }
+
+  const pendingMap = clone(combat.getFlag?.("add2e", ADD2E_MULTIPLE_ATTACK_PENDING_FLAG) ?? combat.flags?.add2e?.[ADD2E_MULTIPLE_ATTACK_PENDING_FLAG] ?? {});
+  const recordKey = String(combatant?.id ?? payload.actorId);
+  if (pending > 0) {
+    pendingMap[recordKey] = {
+      actorId: actor.id,
+      actorName: actor.name,
+      combatantId: combatant?.id ?? null,
+      round,
+      pending,
+      state: actorStates[key],
+      updatedAt: Date.now()
+    };
+  } else {
+    delete pendingMap[recordKey];
+  }
+
+  try {
+    await combat.setFlag("add2e", ADD2E_MULTIPLE_ATTACK_PENDING_FLAG, pendingMap);
+    return true;
+  } catch (err) {
+    console.warn("[ADD2E][INIT][MULTI_ATTACK][COMBAT_FLAG_SYNC_ERROR]", err);
+    return false;
+  }
+}
+
 function readMultipleAttackActorState(actor, combat, round) {
   const all = actor?.getFlag?.("add2e", ADD2E_MULTIPLE_ATTACK_ACTOR_FLAG) ?? actor?.flags?.add2e?.[ADD2E_MULTIPLE_ATTACK_ACTOR_FLAG] ?? {};
   const state = all?.[combatKey(combat)] ?? null;
@@ -40,9 +107,30 @@ function readMultipleAttackActorState(actor, combat, round) {
   return pending > 0 ? { ...state, pending } : null;
 }
 
+function readMultipleAttackCombatRecord(combat, round) {
+  const pendingMap = combat?.getFlag?.("add2e", ADD2E_MULTIPLE_ATTACK_PENDING_FLAG) ?? combat?.flags?.add2e?.[ADD2E_MULTIPLE_ATTACK_PENDING_FLAG] ?? {};
+  if (!pendingMap || typeof pendingMap !== "object") return null;
+
+  const turns = sortedCombatants(combat);
+  for (let index = 0; index < turns.length; index += 1) {
+    const combatant = turns[index];
+    const records = [pendingMap[String(combatant.id)], pendingMap[String(combatant.actor?.id ?? combatant.actorId ?? "")]].filter(Boolean);
+    for (const record of records) {
+      const pending = Math.max(0, Math.floor(Number(record?.pending ?? record?.state?.pending ?? 0) || 0));
+      if (pending <= 0 || Number(record?.round ?? record?.state?.round) !== Number(round)) continue;
+      if (isInactiveCombatant(combatant)) continue;
+      return { round, index, combatant, state: { ...(record.state ?? {}), pending } };
+    }
+  }
+  return null;
+}
+
 function pendingExtraFromPreviousRound(combat) {
   const round = Math.max(1, Math.floor(Number(combat?.round ?? 1) - 1));
   if (round < 1 || Number(combat?.round ?? 1) <= 1) return null;
+
+  const combatRecord = readMultipleAttackCombatRecord(combat, round);
+  if (combatRecord) return combatRecord;
 
   const turns = sortedCombatants(combat);
   for (let index = 0; index < turns.length; index += 1) {
@@ -113,6 +201,7 @@ export function add2eInitiativeDebug(label = "debug", combat = game.combat) {
     turn: combat?.turn ?? null,
     current: combat?.current ?? null,
     multipleAttackPhase: combat?.getFlag?.("add2e", "multipleAttackPhase") ?? combat?.flags?.add2e?.multipleAttackPhase ?? null,
+    multipleAttackPending: combat?.getFlag?.("add2e", ADD2E_MULTIPLE_ATTACK_PENDING_FLAG) ?? combat?.flags?.add2e?.[ADD2E_MULTIPLE_ATTACK_PENDING_FLAG] ?? null,
     active: currentCombatant(combat)?.name ?? null,
     turns: turns.map((c, index) => ({ index, id: c.id, name: c.name, initiative: c.initiative, sort: c.sort, tokenId: c.tokenId }))
   };
@@ -121,6 +210,14 @@ export function add2eInitiativeDebug(label = "debug", combat = game.combat) {
 export function installHooks() {
   if (initiativeState.hooksInstalled) return;
   initiativeState.hooksInstalled = true;
+
+  try {
+    game.socket?.on?.("system.add2e", payload => {
+      persistMultipleAttackRecord(payload).catch(err => console.warn("[ADD2E][INIT][MULTI_ATTACK][SOCKET_ERROR]", err));
+    });
+  } catch (err) {
+    console.warn("[ADD2E][INIT][MULTI_ATTACK][SOCKET_BIND_ERROR]", err);
+  }
 
   Hooks.on("preUpdateToken", (tokenDoc, changes, options, userId) => {
     if (options?.add2eIgnoreTurnLock || !hasAnyProperty(changes, MOVEMENT_KEYS)) return;
