@@ -241,66 +241,46 @@ export function installEffectsEngineMonk(Engine) {
         margin,
         requiredMargin,
         durationFormula,
-        label: "Étourdissement main nue",
+        label: "Stunned",
         progression
       };
     },
 
-    buildMonkUnarmedStunEffect({ attacker, target, rounds = 1, weapon = null } = {}) {
-      const duration = game.add2e?.time?.durationData?.(rounds) ?? globalThis.ADD2E_TIME_ENGINE?.durationData?.(rounds) ?? {
+    getFoundryStatusEffectData(statusId = "stunned") {
+      const wanted = this.normalizeTag(statusId);
+      const effects = Array.from(CONFIG?.statusEffects ?? []);
+      const status = effects.find(effect => this.normalizeTag(effect?.id ?? effect?.statusId ?? effect?.name ?? effect?.label) === wanted)
+        ?? effects.find(effect => this.toArray(effect?.statuses).map(value => this.normalizeTag(value)).includes(wanted))
+        ?? null;
+      const label = String(status?.name ?? status?.label ?? status?.id ?? statusId);
+      const icon = String(status?.img ?? status?.icon ?? "icons/svg/daze.svg");
+      return { status, label, icon };
+    },
+
+    buildMonkUnarmedStunEffect({ rounds = 1 } = {}) {
+      const status = this.getFoundryStatusEffectData("stunned");
+      const duration = {
         rounds,
         startRound: game.combat?.round ?? null,
         startTurn: game.combat?.turn ?? null,
         startTime: game.time?.worldTime ?? null,
         combat: game.combat?.id ?? null
       };
-      const flags = game.add2e?.time?.flags?.({
-        source: "effects-engine/40-monk.mjs",
-        rounds,
-        unit: "round",
-        endMessage: "{actor} n’est plus étourdi par le coup à mains nues du moine.",
-        extra: {}
-      }) ?? {
-        timeEngine: { managed: true, unit: "round", totalRounds: rounds },
-        roundEngine: { managed: true, unit: "round", totalRounds: rounds, endMessage: "{actor} n’est plus étourdi par le coup à mains nues du moine." },
-        endMessage: "{actor} n’est plus étourdi par le coup à mains nues du moine."
-      };
-      const tags = [
-        "classe:moine",
-        "moine:etourdissement_main_nue",
-        "moine:coup_main_nue",
-        "etat:etourdi",
-        "controle:incapacite",
-        `duree_rounds:${rounds}`
-      ];
       return {
-        name: "Étourdissement main nue",
-        img: weapon?.img || "systems/add2e/assets/icones/armes/main-nue.webp",
-        icon: weapon?.img || "systems/add2e/assets/icones/armes/main-nue.webp",
-        origin: weapon?.uuid ?? attacker?.uuid ?? null,
+        name: status.label,
+        img: status.icon,
+        icon: status.icon,
         disabled: false,
         transfer: false,
         statuses: ["stunned"],
         duration,
-        description: `${target?.name ?? "La cible"} est étourdi(e) pendant ${rounds} round(s) par une attaque à mains nues de ${attacker?.name ?? "moine"}.`,
         flags: {
           core: {
             statusId: "stunned",
             overlay: false
-          },
-          add2e: {
-            ...flags,
-            tags,
-            source: "moine-main-nue",
-            customStatus: "etourdissement-main-nue",
-            attackerId: attacker?.id ?? null,
-            attackerUuid: attacker?.uuid ?? null,
-            targetId: target?.id ?? null,
-            targetUuid: target?.uuid ?? null,
-            durationRounds: rounds
           }
         },
-        changes: []
+        changes: foundry.utils.deepClone(status.status?.changes ?? [])
       };
     },
 
@@ -312,20 +292,27 @@ export function installEffectsEngineMonk(Engine) {
       const roll = await new Roll(info.durationFormula).evaluate();
       if (game.dice3d) await game.dice3d.showForRoll(roll);
       const rounds = Math.max(1, Number(roll.total) || 1);
-      const effectData = this.buildMonkUnarmedStunEffect({ attacker, target, weapon, rounds });
+      const effectData = this.buildMonkUnarmedStunEffect({ rounds });
       const oldIds = Array.from(target.effects ?? [])
-        .filter(effect => this.toArray(effect.flags?.add2e?.tags ?? effect.getFlag?.("add2e", "tags") ?? []).map(tag => this.normalizeTag(tag)).includes("moine:etourdissement_main_nue"))
+        .filter(effect => {
+          const statuses = effect.statuses instanceof Set ? [...effect.statuses] : this.toArray(effect.statuses);
+          const coreStatusId = effect.flags?.core?.statusId ?? effect.getFlag?.("core", "statusId");
+          const oldCustomTags = this.toArray(effect.flags?.add2e?.tags ?? effect.getFlag?.("add2e", "tags") ?? []).map(tag => this.normalizeTag(tag));
+          return statuses.map(value => this.normalizeTag(value)).includes("stunned")
+            || this.normalizeTag(coreStatusId) === "stunned"
+            || oldCustomTags.includes("moine:etourdissement_main_nue");
+        })
         .map(effect => effect.id)
         .filter(Boolean);
 
       if (game.user?.isGM || target.isOwner) {
-        if (oldIds.length) await target.deleteEmbeddedDocuments("ActiveEffect", oldIds, { add2eInternal: true, add2eReason: "monk-unarmed-stun-refresh" });
-        await target.createEmbeddedDocuments("ActiveEffect", [effectData], { add2eInternal: true, add2eReason: "monk-unarmed-stun" });
+        if (oldIds.length) await target.deleteEmbeddedDocuments("ActiveEffect", oldIds, { add2eInternal: true, add2eReason: "foundry-stunned-refresh" });
+        await target.createEmbeddedDocuments("ActiveEffect", [effectData], { add2eInternal: true, add2eReason: "foundry-stunned" });
       } else {
         game.socket?.emit?.("system.add2e", {
           type: "ADD2E_GM_OPERATION",
           operation: "deleteActiveEffects",
-          payload: { actorId: target.id, actorUuid: target.uuid, tags: ["moine:etourdissement_main_nue"] }
+          payload: { actorId: target.id, actorUuid: target.uuid, statuses: ["stunned"], tags: ["moine:etourdissement_main_nue"] }
         });
         game.socket?.emit?.("system.add2e", {
           type: "ADD2E_GM_OPERATION",
