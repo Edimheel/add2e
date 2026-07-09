@@ -292,7 +292,14 @@ export function installEffectsEngineMonk(Engine) {
 
     async updateFoundryStunnedDuration(effect, rounds = 1) {
       if (!effect?.update) return false;
+      const status = this.getFoundryStatusEffectData("stunned");
       await effect.update({
+        name: status.label,
+        label: status.label,
+        img: status.icon,
+        icon: status.icon,
+        statuses: ["stunned"],
+        flags: foundry.utils.mergeObject(effect.flags ?? {}, { core: { statusId: "stunned", overlay: false } }, { inplace: false, insertKeys: true, overwrite: true }),
         duration: {
           ...(effect.duration?.toObject?.() ?? effect.duration ?? {}),
           rounds,
@@ -301,7 +308,7 @@ export function installEffectsEngineMonk(Engine) {
           startTime: game.time?.worldTime ?? null,
           combat: game.combat?.id ?? null
         }
-      }, { add2eInternal: true, add2eReason: "monk-foundry-stunned-duration" });
+      }, { add2eInternal: true, add2eReason: "monk-foundry-stunned-duration-icon" });
       return true;
     },
 
