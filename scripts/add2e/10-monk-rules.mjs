@@ -1,7 +1,7 @@
 // ADD2E — Moine : mécanique liée à l'Item classe Moine.
 // Compatible Foundry V13/V14/V15.
 
-const ADD2E_MONK_RULES_VERSION = "2026-07-09-effects-engine-unarmed-sync-v2";
+const ADD2E_MONK_RULES_VERSION = "2026-07-09-effects-engine-movement-sync-v3";
 const ADD2E_MONK_UNARMED_SYNC_LOCK = new Set();
 const ADD2E_MONK_UNARMED_IMG = "systems/add2e/assets/icones/armes/main-nue.webp";
 const ADD2E_MONK_GENERATED_FEATURE_SOURCE = "10-monk-rules";
@@ -97,6 +97,24 @@ function add2eMonkDamagePartsFromEffectsEngine(actor) {
     console.warn("[ADD2E][MOINE][MAIN_NUE][ENGINE_DAMAGE_ERROR]", { actor: actor?.name, error });
     return null;
   }
+}
+
+function add2eMonkMoveFromEffectsEngine(actor) {
+  const engine = globalThis.Add2eEffectsEngine ?? null;
+  if (!engine) return 0;
+  try {
+    if (typeof engine.getMonkMove === "function") {
+      const move = Number(engine.getMonkMove(actor));
+      if (Number.isFinite(move) && move > 0) return Math.floor(move);
+    }
+    if (typeof engine.getMonkMartialProgression === "function") {
+      const move = Number(engine.getMonkMartialProgression(actor)?.move);
+      if (Number.isFinite(move) && move > 0) return Math.floor(move);
+    }
+  } catch (error) {
+    console.warn("[ADD2E][MOINE][MOUVEMENT][ENGINE_MOVE_ERROR]", { actor: actor?.name, error });
+  }
+  return 0;
 }
 
 function add2eIsMonkAutoUnarmed(item) {
@@ -223,6 +241,15 @@ async function add2eSyncMonkUnarmedWeapon(actor) {
 
   const damage = add2eMonkDamagePartsFromEffectsEngine(actor)
     ?? add2eMonkDamageParts(row?.unarmedDamage ?? row?.main_nue ?? row?.damage ?? actor.system?.moine?.main_nue);
+  const monkMove = add2eMonkMoveFromEffectsEngine(actor);
+  if (monkMove > 0) {
+    await monk.update({
+      "system.mouvement": monkMove,
+      "system.movement": monkMove,
+      "system.vitesse_deplacement": monkMove
+    }, { add2eInternal: true, add2eReason: "monk-movement-from-effects-engine" });
+  }
+
   const system = {
     nom: "Main nue",
     equipee: true,
@@ -246,11 +273,17 @@ async function add2eSyncMonkUnarmedWeapon(actor) {
     sourceCapacite: "main_nue_moine"
   };
 
-  await actor.update({
+  const actorUpdates = {
     "system.moine.main_nue": damage.raw,
     "system.moine.main_nue_contre_moyen": damage.moyen,
     "system.moine.main_nue_contre_grand": damage.grand
-  }, { add2eInternal: true });
+  };
+  if (monkMove > 0) {
+    actorUpdates["system.mouvement.base"] = monkMove;
+    actorUpdates["system.movement"] = monkMove;
+    actorUpdates["system.vitesse_deplacement"] = monkMove;
+  }
+  await actor.update(actorUpdates, { add2eInternal: true });
 
   if (existing.length) {
     const [first, ...duplicates] = existing;
