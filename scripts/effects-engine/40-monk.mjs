@@ -194,6 +194,165 @@ export function installEffectsEngineMonk(Engine) {
       };
     },
 
+    isMonkUnarmedWeapon(weapon) {
+      const system = weapon?.system ?? {};
+      const values = [
+        weapon?.name,
+        system.nom,
+        system.type_arme,
+        system.famille_arme,
+        system.categorie,
+        system.sourceCapacite,
+        system.tags,
+        system.effectTags,
+        weapon?.flags?.add2e?.tags,
+        weapon?.flags?.add2e?.sourceCapacite
+      ];
+      const tags = new Set();
+      for (const value of values) this.addTagsInto(tags, value);
+      const normalized = [...tags].map(tag => this.normalizeTag(tag));
+      return normalized.includes("main_nue")
+        || normalized.includes("arme:main_nue")
+        || normalized.includes("type_arme:main_nue")
+        || normalized.includes("famille_arme:main_nue")
+        || normalized.includes("combat:mains_nues")
+        || normalized.includes("main_nue_moine");
+    },
+
+    getMonkUnarmedStunInfo(actor, context = {}) {
+      if (!this.isMonk(actor) || !this.isMonkUnarmedWeapon(context.weapon ?? context.arme)) return { applies: false, reason: "not-monk-unarmed" };
+      if (context.finalResult !== true) return { applies: false, reason: "miss" };
+
+      const progression = this.getMonkProgression(actor);
+      const requiredMargin = Math.max(1, Number(progression?.unarmedStunMargin ?? progression?.stunMargin ?? 5) || 5);
+      const d20 = Number(context.d20);
+      const threshold = Number(context.threshold ?? context.seuilFinalD20);
+      const total = Number(context.total ?? context.totalAuToucher);
+      const requiredTotal = Number(context.requiredTotal ?? context.valeurPourToucher);
+      const margin = Number.isFinite(total) && Number.isFinite(requiredTotal)
+        ? total - requiredTotal
+        : (Number.isFinite(d20) && Number.isFinite(threshold) ? d20 - threshold : NaN);
+
+      const applies = Number.isFinite(margin) && margin >= requiredMargin;
+      const durationFormula = String(progression?.unarmedStunDuration ?? "1d6 rounds").match(/\d+d\d+(?:[+-]\d+)?/i)?.[0] ?? "1d6";
+      return {
+        applies,
+        reason: applies ? "margin" : "insufficient-margin",
+        margin,
+        requiredMargin,
+        durationFormula,
+        label: "Étourdisssement main nue",
+        progression
+      };
+    },
+
+    buildMonkUnarmedStunEffect({ attacker, target, rounds = 1, weapon = null } = {}) {
+      const duration = game.add2e?.time?.durationData?.(rounds) ?? globalThis.ADD2E_TIME_ENGINE?.durationData?.(rounds) ?? {
+        rounds,
+        startRound: game.combat?.round ?? null,
+        startTurn: game.combat?.turn ?? null,
+        startTime: game.time?.worldTime ?? null,
+        combat: game.combat?.id ?? null
+      };
+      const flags = game.add2e?.time?.flags?.({
+        source: "effects-engine/40-monk.mjs",
+        rounds,
+        unit: "round",
+        endMessage: "{actor} n’est plus étourdi par le coup à mains nues du moine.",
+        extra: {}
+      }) ?? {
+        timeEngine: { managed: true, unit: "round", totalRounds: rounds },
+        roundEngine: { managed: true, unit: "round", totalRounds: rounds, endMessage: "{actor} n’est plus étourdi par le coup à mains nues du moine." },
+        endMessage: "{actor} n’est plus étourdi par le coup à mains nues du moine."
+      };
+      const tags = [
+        "classe:moine",
+        "moine:etourdissement_main_nue",
+        "moine:coup_main_nue",
+        "etat:etourdi",
+        "etat:paralyse",
+        "controle:incapacite",
+        `duree_rounds:${rounds}`
+      ];
+      return {
+        name: "Étourdisssement main nue",
+        img: weapon?.img || "systems/add2e/assets/icones/armes/main-nue.webp",
+        icon: weapon?.img || "systems/add2e/assets/icones/armes/main-nue.webp",
+        origin: weapon?.uuid ?? attacker?.uuid ?? null,
+        disabled: false,
+        transfer: false,
+        duration,
+        description: `${target?.name ?? "La cible"} est étourdi(e) pendant ${rounds} round(s) par une attaque à mains nues de ${attacker?.name ?? "moine"}.`,
+        flags: {
+          add2e: {
+            ...flags,
+            tags,
+            source: "moine-main-nue",
+            attackerId: attacker?.id ?? null,
+            attackerUuid: attacker?.uuid ?? null,
+            targetId: target?.id ?? null,
+            targetUuid: target?.uuid ?? null,
+            durationRounds: rounds
+          }
+        },
+        changes: []
+      };
+    },
+
+    async applyMonkUnarmedStun({ attacker, target, weapon, context = {} } = {}) {
+      if (!attacker || !target || !weapon) return { applied: false, reason: "missing-context" };
+      const info = this.getMonkUnarmedStunInfo(attacker, { ...context, weapon });
+      if (!info.applies) return { applied: false, ...info };
+
+      const roll = await new Roll(info.durationFormula).evaluate();
+      if (game.dice3d) await game.dice3d.showForRoll(roll);
+      const rounds = Math.max(1, Number(roll.total) || 1);
+      const effectData = this.buildMonkUnarmedStunEffect({ attacker, target, weapon, rounds });
+      const oldIds = Array.from(target.effects ?? [])
+        .filter(effect => this.toArray(effect.flags?.add2e?.tags ?? effect.getFlag?.("add2e", "tags") ?? []).map(tag => this.normalizeTag(tag)).includes("moine:etourdissement_main_nue"))
+        .map(effect => effect.id)
+        .filter(Boolean);
+
+      if (game.user?.isGM || target.isOwner) {
+        if (oldIds.length) await target.deleteEmbeddedDocuments("ActiveEffect", oldIds, { add2eInternal: true, add2eReason: "monk-unarmed-stun-refresh" });
+        await target.createEmbeddedDocuments("ActiveEffect", [effectData], { add2eInternal: true, add2eReason: "monk-unarmed-stun" });
+      } else {
+        game.socket?.emit?.("system.add2e", {
+          type: "ADD2E_GM_OPERATION",
+          operation: "deleteActiveEffects",
+          payload: { actorId: target.id, actorUuid: target.uuid, tags: ["moine:etourdissement_main_nue"] }
+        });
+        game.socket?.emit?.("system.add2e", {
+          type: "ADD2E_GM_OPERATION",
+          operation: "createActiveEffect",
+          payload: { actorId: target.id, actorUuid: target.uuid, effectData }
+        });
+      }
+
+      await ChatMessage.create({
+        speaker: ChatMessage.getSpeaker({ actor: attacker }),
+        content: `<div class="add2e-chat-card" style="border:1px solid #8b5e20;border-radius:10px;background:#fff7df;padding:.65em .8em;"><h3 style="margin:0 0 .35em 0;">Combat à mains nues du moine</h3><div><b>${attacker?.name ?? "Le moine"}</b> étourdit <b>${target?.name ?? "la cible"}</b> pour <b>${rounds}</b> round(s).</div><div style="font-size:.9em;margin-top:.25em;">Marge : ${info.margin} / ${info.requiredMargin} requise.</div></div>`,
+        flags: { add2e: { monkUnarmedStun: true, rounds, margin: info.margin, requiredMargin: info.requiredMargin } }
+      });
+
+      return { applied: true, rounds, roll, ...info };
+    },
+
+    async handleMonkUnarmedAttackResolved(context = {}) {
+      return this.applyMonkUnarmedStun({
+        attacker: context.actor,
+        target: context.cible,
+        weapon: context.arme,
+        context: {
+          finalResult: context.finalResult,
+          d20: context.d20,
+          seuilFinalD20: context.seuilFinalD20,
+          totalAuToucher: context.totalAuToucher,
+          valeurPourToucher: context.valeurPourToucher
+        }
+      });
+    },
+
     getMonkSummary(actor) {
       const martial = this.getMonkMartialProgression(actor);
       if (!martial) return null;
