@@ -41,29 +41,47 @@ function combatantForActor(actor, combat = game.combat) {
   }) ?? currentCombatant(combat) ?? null;
 }
 
-function unwrapAdd2eActionLock(fn) {
+function unwrapAdd2eActionWrappers(fn) {
   let current = fn;
   let layers = 0;
+  let initiativeLayers = 0;
+  let weaponFxLayers = 0;
   const names = [];
-  while (typeof current === "function" && typeof current.__add2eOriginal === "function" && layers < 25) {
-    names.push(current.name || "anonymous");
-    current = current.__add2eOriginal;
-    layers += 1;
+
+  while (typeof current === "function" && layers < 50) {
+    if (current.__add2eLock && typeof current.__add2eOriginal === "function") {
+      names.push(current.name || "add2eActionLock");
+      current = current.__add2eOriginal;
+      initiativeLayers += 1;
+      layers += 1;
+      continue;
+    }
+    if (current.__add2eWeaponFxWrapped && typeof current.__add2eOriginalAttackRoll === "function") {
+      names.push(current.name || "add2eAttackRollWeaponFxWrapper");
+      current = current.__add2eOriginalAttackRoll;
+      weaponFxLayers += 1;
+      layers += 1;
+      continue;
+    }
+    break;
   }
-  return { fn: current, layers, names };
+
+  return { fn: current, layers, initiativeLayers, weaponFxLayers, names };
 }
 
 function actionLockSnapshot(name = "add2eAttackRoll") {
   const fn = globalThis[name];
-  const unwrapped = unwrapAdd2eActionLock(fn);
+  const unwrapped = unwrapAdd2eActionWrappers(fn);
   return {
     name,
     type: typeof fn,
     functionName: typeof fn === "function" ? fn.name : null,
-    wrapped: typeof fn === "function" && fn.__add2eLock === ADD2E_INITIATIVE_VERSION,
+    wrapped: unwrapped.initiativeLayers === 1,
     version: typeof fn === "function" ? fn.__add2eLock ?? null : null,
     originalName: typeof fn?.__add2eOriginal === "function" ? fn.__add2eOriginal.name : null,
     wrapperLayers: unwrapped.layers,
+    initiativeLayers: unwrapped.initiativeLayers,
+    weaponFxLayers: unwrapped.weaponFxLayers,
     baseName: typeof unwrapped.fn === "function" ? unwrapped.fn.name : null
   };
 }
@@ -232,8 +250,8 @@ function installActionLocksOnce() {
       continue;
     }
 
-    const unwrapped = unwrapAdd2eActionLock(current);
-    if (current.__add2eLock === ADD2E_INITIATIVE_VERSION && unwrapped.layers === 1) continue;
+    const unwrapped = unwrapAdd2eActionWrappers(current);
+    if (unwrapped.initiativeLayers === 1 && unwrapped.weaponFxLayers <= 1 && unwrapped.layers <= 2) continue;
 
     const base = typeof unwrapped.fn === "function" ? unwrapped.fn : current;
     const wrapped = async function add2eActionLock(...args) {
@@ -247,6 +265,8 @@ function installActionLocksOnce() {
       console.log(`${ACTION_LOCK_TAG}[INSTALL][WRAPPED]`, {
         name,
         removedWrapperLayers: unwrapped.layers,
+        removedInitiativeLayers: unwrapped.initiativeLayers,
+        removedWeaponFxLayers: unwrapped.weaponFxLayers,
         baseName: base.name ?? null,
         snapshot: actionLockSnapshot(name)
       });
