@@ -174,9 +174,11 @@ function installActionLocksOnce() {
 
 export function installActionLocks() {
   installActionLocksOnce();
-  if (installActionLocks.__add2eScheduled === ADD2E_INITIATIVE_VERSION) return;
-  installActionLocks.__add2eScheduled = ADD2E_INITIATIVE_VERSION;
-  for (const delay of [100, 250, 750, 1500, 3000]) window.setTimeout(installActionLocksOnce, delay);
+  if (installActionLocks.__add2eScheduled !== ADD2E_INITIATIVE_VERSION) {
+    installActionLocks.__add2eScheduled = ADD2E_INITIATIVE_VERSION;
+    for (const delay of [100, 250, 750, 1500, 3000]) window.setTimeout(installActionLocksOnce, delay);
+  }
+  return true;
 }
 
 function resetRuler(ruler) {
@@ -243,3 +245,4 @@ export function syncActionHudToCombatant(combat = game.combat, { reason = "comba
 }
 
 globalThis.add2eSyncActionHudToCombatant = syncActionHudToCombatant;
+globalThis.add2eInstallInitiativeActionLocks = installActionLocks;
