@@ -3,7 +3,7 @@
 // La carte narrative est publique ; la carte détaillée reste MJ uniquement.
 // Compatible Foundry V13/V14/V15.
 
-const VERSION = "2026-07-04-attack-chat-public-message-v22";
+const VERSION = "2026-07-09-attack-resolved-effects-engine-v23";
 const LOG = "[ADD2E][ATTACK_CHAT]";
 
 globalThis.ADD2E_ATTACK_CHAT_VISIBILITY_VERSION = VERSION;
@@ -222,6 +222,14 @@ async function sendPlayerRoleplayCard(ctx) {
   }
 }
 
+function scheduleEffectsEngineAttackResolved(ctx) {
+  setTimeout(() => {
+    const engine = globalThis.Add2eEffectsEngine;
+    if (typeof engine?.handleMonkUnarmedAttackResolved !== "function") return;
+    engine.handleMonkUnarmedAttackResolved(ctx).catch(error => console.error(`${LOG}[EFFECTS_ENGINE_ATTACK_RESOLVED]`, error));
+  }, 0);
+}
+
 function installVisibilityGuard() {
   if (globalThis.__ADD2E_ATTACK_CHAT_VISIBILITY_GUARD === VERSION) return;
   globalThis.__ADD2E_ATTACK_CHAT_VISIBILITY_GUARD = VERSION;
@@ -259,5 +267,6 @@ export function add2eBuildAttackPlayerChatCard(ctx) {
 
 export function add2eBuildAttackChatCard(ctx) {
   setTimeout(() => sendPlayerRoleplayCard(ctx), 0);
+  scheduleEffectsEngineAttackResolved(ctx);
   return buildGmCard(ctx);
 }
