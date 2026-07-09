@@ -41,15 +41,30 @@ function combatantForActor(actor, combat = game.combat) {
   }) ?? currentCombatant(combat) ?? null;
 }
 
+function unwrapAdd2eActionLock(fn) {
+  let current = fn;
+  let layers = 0;
+  const names = [];
+  while (typeof current === "function" && typeof current.__add2eOriginal === "function" && layers < 25) {
+    names.push(current.name || "anonymous");
+    current = current.__add2eOriginal;
+    layers += 1;
+  }
+  return { fn: current, layers, names };
+}
+
 function actionLockSnapshot(name = "add2eAttackRoll") {
   const fn = globalThis[name];
+  const unwrapped = unwrapAdd2eActionLock(fn);
   return {
     name,
     type: typeof fn,
     functionName: typeof fn === "function" ? fn.name : null,
     wrapped: typeof fn === "function" && fn.__add2eLock === ADD2E_INITIATIVE_VERSION,
     version: typeof fn === "function" ? fn.__add2eLock ?? null : null,
-    originalName: typeof fn?.__add2eOriginal === "function" ? fn.__add2eOriginal.name : null
+    originalName: typeof fn?.__add2eOriginal === "function" ? fn.__add2eOriginal.name : null,
+    wrapperLayers: unwrapped.layers,
+    baseName: typeof unwrapped.fn === "function" ? unwrapped.fn.name : null
   };
 }
 
@@ -216,19 +231,23 @@ function installActionLocksOnce() {
       console.warn(`${ACTION_LOCK_TAG}[INSTALL][MISSING]`, { name, type: typeof current });
       continue;
     }
-    if (current.__add2eLock === ADD2E_INITIATIVE_VERSION) continue;
 
+    const unwrapped = unwrapAdd2eActionLock(current);
+    if (current.__add2eLock === ADD2E_INITIATIVE_VERSION && unwrapped.layers === 1) continue;
+
+    const base = typeof unwrapped.fn === "function" ? unwrapped.fn : current;
     const wrapped = async function add2eActionLock(...args) {
-      return executeLockedAction(name, current, this, args);
+      return executeLockedAction(name, base, this, args);
     };
     wrapped.__add2eLock = ADD2E_INITIATIVE_VERSION;
-    wrapped.__add2eOriginal = current;
+    wrapped.__add2eOriginal = base;
     globalThis[name] = wrapped;
 
     if (name === "add2eAttackRoll") {
       console.log(`${ACTION_LOCK_TAG}[INSTALL][WRAPPED]`, {
         name,
-        originalName: current.name ?? null,
+        removedWrapperLayers: unwrapped.layers,
+        baseName: base.name ?? null,
         snapshot: actionLockSnapshot(name)
       });
     }
