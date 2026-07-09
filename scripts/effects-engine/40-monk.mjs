@@ -280,9 +280,14 @@ export function installEffectsEngineMonk(Engine) {
         origin: weapon?.uuid ?? attacker?.uuid ?? null,
         disabled: false,
         transfer: false,
+        statuses: ["stunned"],
         duration,
         description: `${target?.name ?? "La cible"} est étourdi(e) pendant ${rounds} round(s) par une attaque à mains nues de ${attacker?.name ?? "moine"}.`,
         flags: {
+          core: {
+            statusId: "stunned",
+            overlay: false
+          },
           add2e: {
             ...flags,
             tags,
