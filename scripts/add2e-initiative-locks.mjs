@@ -14,6 +14,7 @@ const ACTION_GLOBALS = ["add2eAttackRoll", "add2eCastSpell", "cast_spell", "add2
 const TOKEN_DRAG_METHODS = ["_onDragLeftStart", "_onDragLeftMove", "_onDragLeftDrop", "_onDragLeftCancel"];
 const VADE_RETRO_CONTINUATION_CONTEXTS = "__ADD2E_VADE_RETRO_CONTINUATION_CONTEXTS";
 const MULTIPLE_ATTACK_SOCKET_TYPE = "add2eMultipleAttackRecord";
+const ACTION_LOCK_TAG = "[ADD2E][INIT][ACTION_LOCK]";
 
 function actorFromActionArgs(args) {
   const first = args?.[0] ?? null;
@@ -40,8 +41,23 @@ function combatantForActor(actor, combat = game.combat) {
   }) ?? currentCombatant(combat) ?? null;
 }
 
+function actionLockSnapshot(name = "add2eAttackRoll") {
+  const fn = globalThis[name];
+  return {
+    name,
+    type: typeof fn,
+    functionName: typeof fn === "function" ? fn.name : null,
+    wrapped: typeof fn === "function" && fn.__add2eLock === ADD2E_INITIATIVE_VERSION,
+    version: typeof fn === "function" ? fn.__add2eLock ?? null : null,
+    originalName: typeof fn?.__add2eOriginal === "function" ? fn.__add2eOriginal.name : null
+  };
+}
+
 function broadcastMultipleAttackState(actor, state, combat = game.combat) {
-  if (!actor || !state || !combat?.id) return false;
+  if (!actor || !state || !combat?.id) {
+    console.warn(`${ACTION_LOCK_TAG}[SOCKET][SKIP]`, { actor: actor?.name ?? null, hasState: Boolean(state), combatId: combat?.id ?? null });
+    return false;
+  }
   const combatant = combatantForActor(actor, combat);
   const payload = {
     type: MULTIPLE_ATTACK_SOCKET_TYPE,
@@ -66,9 +82,19 @@ function broadcastMultipleAttackState(actor, state, combat = game.combat) {
 
   try {
     game.socket?.emit?.("system.add2e", payload);
+    console.log(`${ACTION_LOCK_TAG}[SOCKET][EMIT]`, {
+      combatId: payload.combatId,
+      combatantId: payload.combatantId,
+      actor: payload.actorName,
+      round: payload.state.round,
+      total: payload.state.total,
+      used: payload.state.used,
+      pending: payload.state.pending,
+      ratio: payload.state.ratio
+    });
     return true;
   } catch (err) {
-    console.warn(`${TAG}[MULTI_ATTACK][SOCKET_EMIT_ERROR]`, err);
+    console.warn(`${ACTION_LOCK_TAG}[SOCKET][ERROR]`, err);
     return false;
   }
 }
@@ -104,16 +130,7 @@ export function canActorActNow(actor, { notify = false } = {}) {
     && actor?.isOwner !== false
     && vadeState?.status === "pending"
     && Number(vadeState.lastRound ?? currentRound) < currentRound;
-  if (automaticVadeContinuation) {
-    console.log("[ADD2E][INIT][VADE_RETRO][AUTO_CONTINUATION_ALLOW]", {
-      actor: actor?.name ?? null,
-      actorId: actor?.id ?? null,
-      combat: combat.id,
-      round: currentRound,
-      currentCombatant: currentCombatant(combat)?.name ?? null
-    });
-    return true;
-  }
+  if (automaticVadeContinuation) return true;
 
   const combatant = currentCombatant(combat);
   if (!combatant) return true;
@@ -146,14 +163,48 @@ export function installTokenMoveLock() {
 async function executeLockedAction(name, original, context, args) {
   const actor = actorFromActionArgs(args);
   const weapon = name === "add2eAttackRoll" ? weaponFromActionArgs(actor, args) : null;
-  if (!canActorActNow(actor, { notify: true })) return false;
 
-  if (name === "add2eAttackRoll" && !add2eCanActorWeaponAttackNow(actor, { weapon, notify: true })) return false;
+  if (name === "add2eAttackRoll") {
+    console.log(`${ACTION_LOCK_TAG}[ATTACK][ENTER]`, {
+      actor: actor?.name ?? null,
+      actorId: actor?.id ?? null,
+      weapon: weapon?.name ?? null,
+      weaponId: weapon?.id ?? null,
+      combatId: game.combat?.id ?? null,
+      round: game.combat?.round ?? null,
+      turn: game.combat?.turn ?? null,
+      current: currentCombatant(game.combat)?.name ?? null
+    });
+  }
+
+  if (!canActorActNow(actor, { notify: true })) {
+    if (name === "add2eAttackRoll") console.warn(`${ACTION_LOCK_TAG}[ATTACK][BLOCKED_TURN]`, { actor: actor?.name ?? null, current: currentCombatant(game.combat)?.name ?? null });
+    return false;
+  }
+
+  if (name === "add2eAttackRoll" && !add2eCanActorWeaponAttackNow(actor, { weapon, notify: true })) {
+    console.warn(`${ACTION_LOCK_TAG}[ATTACK][BLOCKED_BUDGET]`, { actor: actor?.name ?? null, weapon: weapon?.name ?? null });
+    return false;
+  }
 
   const result = await original.apply(context, args);
-  if (name === "add2eAttackRoll" && attackRollCompleted(result)) {
-    const state = await add2eRecordWeaponAttack(actor, { weapon, combat: game.combat });
-    broadcastMultipleAttackState(actor, state, game.combat);
+  if (name === "add2eAttackRoll") {
+    const completed = attackRollCompleted(result);
+    console.log(`${ACTION_LOCK_TAG}[ATTACK][RESULT]`, { actor: actor?.name ?? null, completed, resultType: typeof result, result });
+    if (completed) {
+      const state = await add2eRecordWeaponAttack(actor, { weapon, combat: game.combat });
+      console.log(`${ACTION_LOCK_TAG}[ATTACK][RECORDED]`, {
+        actor: actor?.name ?? null,
+        weapon: weapon?.name ?? null,
+        round: state?.round ?? null,
+        total: state?.total ?? null,
+        used: state?.used ?? null,
+        pending: state?.pending ?? null,
+        ratio: state?.ratio ?? null,
+        phase: state?.phase ?? null
+      });
+      broadcastMultipleAttackState(actor, state, game.combat);
+    }
   }
   return result;
 }
@@ -161,7 +212,11 @@ async function executeLockedAction(name, original, context, args) {
 function installActionLocksOnce() {
   for (const name of ACTION_GLOBALS) {
     const current = globalThis[name];
-    if (typeof current !== "function" || current.__add2eLock === ADD2E_INITIATIVE_VERSION) continue;
+    if (typeof current !== "function") {
+      console.warn(`${ACTION_LOCK_TAG}[INSTALL][MISSING]`, { name, type: typeof current });
+      continue;
+    }
+    if (current.__add2eLock === ADD2E_INITIATIVE_VERSION) continue;
 
     const wrapped = async function add2eActionLock(...args) {
       return executeLockedAction(name, current, this, args);
@@ -169,6 +224,14 @@ function installActionLocksOnce() {
     wrapped.__add2eLock = ADD2E_INITIATIVE_VERSION;
     wrapped.__add2eOriginal = current;
     globalThis[name] = wrapped;
+
+    if (name === "add2eAttackRoll") {
+      console.log(`${ACTION_LOCK_TAG}[INSTALL][WRAPPED]`, {
+        name,
+        originalName: current.name ?? null,
+        snapshot: actionLockSnapshot(name)
+      });
+    }
   }
 }
 
@@ -246,3 +309,4 @@ export function syncActionHudToCombatant(combat = game.combat, { reason = "comba
 
 globalThis.add2eSyncActionHudToCombatant = syncActionHudToCombatant;
 globalThis.add2eInstallInitiativeActionLocks = installActionLocks;
+globalThis.add2eInitiativeActionLockDebug = () => Object.fromEntries(ACTION_GLOBALS.map(name => [name, actionLockSnapshot(name)]));
