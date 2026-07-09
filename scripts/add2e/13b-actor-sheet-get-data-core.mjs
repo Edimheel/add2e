@@ -68,6 +68,18 @@ function add2eLogExceptionalStrengthState(actor, data) {
   });
 }
 
+function add2eSheetAllowedAlignments(actor, sys) {
+  if (typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getActorAllowedAlignments === "function") {
+    const fromEngine = Add2eEffectsEngine.getActorAllowedAlignments(actor);
+    if (Array.isArray(fromEngine) && fromEngine.length) return fromEngine;
+  }
+  const fromActor = sys.alignements_autorises;
+  if (Array.isArray(fromActor) && fromActor.length) return fromActor;
+  const fromClass = sys.details_classe?.alignements_autorises;
+  if (Array.isArray(fromClass) && fromClass.length) return fromClass;
+  return [];
+}
+
 export function add2ePopulateActorSheetActiveEffectsData(actor, data) {
   data.activeEffectsList = actor.effects.map(eff => {
     let desc = eff.getFlag("core", "description") || eff.flags?.add2e?.desc || eff.description || "";
@@ -109,7 +121,7 @@ globalThis.Add2eActorSheet.prototype.getData = async function getData() {
   add2ePopulateActorSheetSpellData({ actor: state.actor, data, items: state.items });
   add2ePopulateActorSheetActiveEffectsData(this.actor, data);
 
-  data.alignementsDisponibles = (state.sys.alignements_autorises && Array.isArray(state.sys.alignements_autorises)) ? state.sys.alignements_autorises : [];
+  data.alignementsDisponibles = add2eSheetAllowedAlignments(state.actor, state.sys);
   data.activeTab = this._add2eGetNativeActiveTab?.() || this._add2eActiveTab || this._add2eReadStoredTab?.() || "resume";
   this._add2ePreparedData = data;
   return data;
