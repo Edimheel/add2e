@@ -1,6 +1,6 @@
 // scripts/add2e-initiative-order.mjs
 // ADD2E — ordre, tri et navigation d'initiative.
-// Règle : 1d6, le plus petit score agit en premier.
+// Règle : 1d6, le plus grand score agit en premier.
 // Le fichier lit les états inactifs, mais ne les modifie jamais.
 
 import { ADD2E_INITIATIVE_VERSION, TAG, initiativeState } from "./add2e-initiative-constants.mjs";
@@ -130,7 +130,7 @@ export function compareCombatantsAscending(a, b) {
   if (ai === null && bi === null) return String(a?.id ?? "").localeCompare(String(b?.id ?? ""));
   if (ai === null) return 1;
   if (bi === null) return -1;
-  if (ai !== bi) return ai - bi;
+  if (ai !== bi) return bi - ai;
   return String(a?.id ?? "").localeCompare(String(b?.id ?? ""));
 }
 
