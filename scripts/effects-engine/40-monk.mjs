@@ -312,20 +312,38 @@ export function installEffectsEngineMonk(Engine) {
         .filter(Boolean);
     },
 
+    async createFoundryStunnedEffect(target, rounds = 1) {
+      const effectData = this.buildFoundryStunnedEffect({ rounds });
+      const created = await target.createEmbeddedDocuments("ActiveEffect", [effectData], { add2eInternal: true, add2eReason: "foundry-stunned-fallback" });
+      return created?.[0] ?? null;
+    },
+
     async applyNativeFoundryStunned(target, rounds = 1) {
       const oldCustomIds = this.oldMonkCustomStunIds(target);
       if (oldCustomIds.length) await target.deleteEmbeddedDocuments("ActiveEffect", oldCustomIds, { add2eInternal: true, add2eReason: "remove-old-monk-custom-stun" });
 
-      if (typeof target?.toggleStatusEffect === "function") {
-        const toggled = await target.toggleStatusEffect("stunned", { active: true, overlay: false });
-        const effect = toggled?.id ? toggled : this.findActorStatusEffect(target, "stunned");
-        await this.updateFoundryStunnedDuration(effect, rounds);
-        return effect ?? toggled ?? null;
+      const existing = this.findActorStatusEffect(target, "stunned");
+      if (existing) {
+        await this.updateFoundryStunnedDuration(existing, rounds);
+        return existing;
       }
 
-      const effectData = this.buildFoundryStunnedEffect({ rounds });
-      const created = await target.createEmbeddedDocuments("ActiveEffect", [effectData], { add2eInternal: true, add2eReason: "foundry-stunned" });
-      return created?.[0] ?? null;
+      if (typeof target?.toggleStatusEffect === "function") {
+        try {
+          const toggled = await target.toggleStatusEffect("stunned", { active: true, overlay: false });
+          const effect = toggled?.documentName === "ActiveEffect"
+            ? toggled
+            : (toggled?.id ? target.effects?.get?.(toggled.id) ?? toggled : this.findActorStatusEffect(target, "stunned"));
+          if (effect) {
+            await this.updateFoundryStunnedDuration(effect, rounds);
+            return effect;
+          }
+        } catch (error) {
+          console.warn("[ADD2E][MOINE][STUNNED][TOGGLE_FAILED]", { target: target?.name, error });
+        }
+      }
+
+      return this.createFoundryStunnedEffect(target, rounds);
     },
 
     async applyMonkUnarmedStun({ attacker, target, weapon, context = {} } = {}) {
