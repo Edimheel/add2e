@@ -143,7 +143,7 @@ function installMultipleAttackHudStyle() {
   const style = document.createElement("style");
   style.id = styleId;
   style.textContent = `
-    #add2e-action-hud .add2e-multiple-attack-banner{display:flex;align-items:center;gap:8px;margin:6px 8px;padding:7px 9px;border:1px solid rgba(217,191,115,.9);border-radius:9px;background:linear-gradient(180deg,rgba(67,36,16,.96),rgba(36,23,14,.96));color:#fff2bd;font-weight:900;box-shadow:0 2px 5px rgba(0,0,0,.35)}
+    #add2e-action-hud .add2e-multiple-attack-banner{display:flex;align-items:center;gap:8px;margin:0 0 7px 0;padding:7px 9px;border:1px solid rgba(217,191,115,.9);border-radius:9px;background:linear-gradient(180deg,rgba(67,36,16,.96),rgba(36,23,14,.96));color:#fff2bd;font-weight:900;box-shadow:0 2px 5px rgba(0,0,0,.35)}
     #add2e-action-hud .add2e-multiple-attack-banner .detail{font-size:.84em;font-weight:700;color:#f8df9d;line-height:1.25}
     #add2e-action-hud .add2e-multiple-attack-banner.extra{border-color:#f2d46d;background:linear-gradient(180deg,rgba(111,32,26,.96),rgba(64,18,15,.96))}
     #add2e-action-hud .add2e-multiple-attack-banner.used{opacity:.78;background:rgba(45,42,36,.88)}
@@ -160,10 +160,12 @@ function renderMultipleAttackHudBanner(actor) {
   const status = add2eMultipleAttackHudStatus(actor, game.combat);
   if (!status) return false;
 
+  const panel = root.querySelector(".a2e-hud-panel");
+  const activeSection = panel?.querySelector?.("section.active") ?? null;
+  const target = panel ?? activeSection ?? root.firstElementChild ?? root;
   const banner = document.createElement("div");
   banner.className = `add2e-multiple-attack-banner ${status.css ?? ""}`;
   banner.innerHTML = `<i class="fas fa-crosshairs"></i><div><div>${escapeHtml(status.label)}</div><div class="detail">${escapeHtml(status.detail)} — rythme ${escapeHtml(status.ratio)}</div></div>`;
-  const target = root.querySelector(".hud-body") ?? root.querySelector(".content") ?? root.firstElementChild ?? root;
   target.prepend(banner);
   return true;
 }
@@ -177,6 +179,7 @@ export function syncActionHudToCombatant(combat = game.combat, { reason = "comba
     globalThis.add2eRenderActionHud(actor, tokenFromCombatant(combatant), { reason: `initiative-${reason}` });
     renderMultipleAttackHudBanner(actor);
     setTimeout(() => renderMultipleAttackHudBanner(actor), 40);
+    setTimeout(() => renderMultipleAttackHudBanner(actor), 120);
     return true;
   } catch (err) {
     console.warn(`${TAG}[HUD_FOLLOW][ERROR]`, err);
