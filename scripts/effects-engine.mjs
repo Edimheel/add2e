@@ -55,7 +55,7 @@ function installPassiveClassFeatureContract(Engine) {
           ?? feature?.title
           ?? feature?.nom
           ?? `feature-${index + 1}`;
-        return this.normalizeTag(raw) || `feature_${index + 1}`;
+        return this.normalizeTag(raw).replace(/-/g, "_").replace(/_+/g, "_") || `feature_${index + 1}`;
       }
     },
 
