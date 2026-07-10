@@ -1,5 +1,5 @@
 // ADD2E — onUse Magicien : Boule de feu
-// Version : 2026-05-28-magicien-attaque-n3-boule-feu-v1
+// Version : 2026-07-10-monk-save-damage-v2
 // Contrat : return true = sort consommé ; return false = sort non consommé.
 
 return await (async () => {
@@ -35,17 +35,51 @@ return await (async () => {
 
   function emitGmOperation(operation, payload) { game.socket?.emit?.("system.add2e", { type: "ADD2E_GM_OPERATION", operation, payload }); }
 
-  async function applyDamage(targetToken, amount) {
-    if (!targetToken?.actor || amount <= 0) return false;
-    const payload = { actorUuid: targetToken.actor.uuid, actorId: targetToken.actor.id, sceneId: canvas.scene?.id, tokenId: targetToken.document?.id ?? targetToken.id, montant: amount, type: SPELL.damageType, details: `${SPELL.name} — ${amount} dégât${amount > 1 ? "s" : ""} de feu`, casterId: caster?.id ?? null, casterUuid: caster?.uuid ?? null, sourceItemId: sourceItem?.id ?? null, sourceItemUuid: sourceItem?.uuid ?? null };
-    if (typeof globalThis.add2eApplyDamage === "function") { await globalThis.add2eApplyDamage({ cible: targetToken, montant: amount, type: SPELL.damageType, details: payload.details }); return true; }
+  async function applyDamage(targetToken, originalAmount, saved) {
+    if (!targetToken?.actor || originalAmount <= 0) return 0;
+    const defaultDamage = saved ? Math.floor(originalAmount / 2) : originalAmount;
+    const details = `${SPELL.name} — ${originalAmount} dégât${originalAmount > 1 ? "s" : ""} potentiels de feu`;
+
+    if (typeof globalThis.add2eApplyDamage === "function") {
+      const resolution = await globalThis.add2eApplyDamage({
+        cible: targetToken,
+        montant: originalAmount,
+        type: SPELL.damageType,
+        details,
+        source: sourceItem?.name ?? SPELL.name,
+        sourceItem,
+        lanceur: caster,
+        save: {
+          success: saved,
+          type: "sorts",
+          succeededMultiplier: 0.5,
+          failedMultiplier: 1,
+          source: SPELL.slug
+        }
+      });
+      return Math.max(0, n(resolution?.amount, defaultDamage));
+    }
+
+    const payload = {
+      actorUuid: targetToken.actor.uuid,
+      actorId: targetToken.actor.id,
+      sceneId: canvas.scene?.id,
+      tokenId: targetToken.document?.id ?? targetToken.id,
+      montant: defaultDamage,
+      type: SPELL.damageType,
+      details,
+      casterId: caster?.id ?? null,
+      casterUuid: caster?.uuid ?? null,
+      sourceItemId: sourceItem?.id ?? null,
+      sourceItemUuid: sourceItem?.uuid ?? null
+    };
     if (game.user.isGM || targetToken.actor.isOwner) {
       const sys = targetToken.actor.system ?? {};
       const current = [sys.pdv, sys.pv, sys.hp?.value, sys.attributes?.hp?.value].map(Number).find(Number.isFinite);
-      if (current !== undefined) { await targetToken.actor.update({ "system.pdv": current - amount }, { add2eReason: "boule-de-feu" }); return true; }
+      if (current !== undefined) { await targetToken.actor.update({ "system.pdv": current - defaultDamage }, { add2eReason: "boule-de-feu" }); return defaultDamage; }
     }
     emitGmOperation("applyDamage", payload);
-    return true;
+    return defaultDamage;
   }
 
   async function askSaveResults(targets, roll) {
@@ -80,7 +114,11 @@ return await (async () => {
   const results = await askSaveResults(targets, roll);
   if (!results) return false;
   const rows = [];
-  for (const t of targets) { const saved = results[t.id] === "saved"; const damage = saved ? Math.floor(roll.total / 2) : roll.total; await applyDamage(t, damage); rows.push({ name: t.name, saved, damage }); }
+  for (const t of targets) {
+    const saved = results[t.id] === "saved";
+    const damage = await applyDamage(t, roll.total, saved);
+    rows.push({ name: t.name, saved, damage });
+  }
   await chat(targets, results, roll, rows);
   console.log(`${TAG}[DONE]`, { caster: caster.name, level, formula, total: roll.total, rows });
   return true;
