@@ -4,7 +4,7 @@
 // ============================================================
 import { escapeHtml, expose } from "./08-character-sheet-ui-00-utils.mjs";
 
-globalThis.ADD2E_CHARACTER_EFFECTS_UI_VERSION = "2026-07-10-show-active-and-passive-effects-v1";
+globalThis.ADD2E_CHARACTER_EFFECTS_UI_VERSION = "2026-07-10-show-only-applied-effects-v1";
 
 function familiarAction(effect) {
   const data = effect?.flags?.add2e?.familiar ?? effect?.getFlag?.("add2e", "familiar") ?? null;
@@ -38,9 +38,20 @@ function hasFiniteDuration(effect) {
   return false;
 }
 
-function effectKind(effect) {
+function hasFoundryStatus(effect) {
+  const statuses = effect?.statuses;
+  if (statuses instanceof Set) return statuses.size > 0;
+  if (Array.isArray(statuses)) return statuses.length > 0;
+  return false;
+}
+
+function hasMeaningfulChanges(effect) {
+  return Array.isArray(effect?.changes) && effect.changes.some(change => String(change?.key ?? "").trim());
+}
+
+function markerText(effect) {
   const add2e = effect?.flags?.add2e ?? {};
-  const text = [
+  return [
     effect?.name,
     effect?.label,
     add2e.type,
@@ -54,9 +65,13 @@ function effectKind(effect) {
     add2e.sourceClasse,
     add2e.sourceRace,
     add2e.className,
-    add2e.raceName
+    add2e.raceName,
+    add2e.reason
   ].map(norm).filter(Boolean).join(" ");
+}
 
+function effectKind(effect) {
+  const text = markerText(effect);
   if (/(^|_)effets?_de_classe($|_)|(^|_)effets?_classe($|_)|class_effects?|class_feature_effects?|classe|class/.test(text)) return "class";
   if (/(^|_)effets?_de_race($|_)|(^|_)effets?_raciaux($|_)|racial_effects?|race_effects?|racial|race/.test(text)) return "race";
   if (/sort|spell/.test(text)) return "spell";
@@ -73,13 +88,23 @@ function looksLikeTechnicalTagList(value) {
   return technical.length >= Math.max(5, Math.floor(chunks.length * 0.6));
 }
 
+function isTechnicalContainer(effect) {
+  const name = norm(`${effect?.name ?? ""} ${effect?.label ?? ""}`);
+  if (/(^|_)effets?_de_classe($|_)|(^|_)effets?_classe($|_)|class_effects?|class_feature_effects?/.test(name)) return true;
+  if (/(^|_)effets?_de_race($|_)|(^|_)effets?_raciaux($|_)|racial_effects?|race_effects?/.test(name)) return true;
+  const raw = effect?.getFlag?.("core", "description") || effect?.flags?.add2e?.desc || effect?.description || "";
+  const markers = markerText(effect);
+  const looksClassOrRace = /(classe|class|race|racial)/.test(markers);
+  return looksClassOrRace && !hasFiniteDuration(effect) && !hasFoundryStatus(effect) && looksLikeTechnicalTagList(raw);
+}
+
 function fallbackDescription(effect) {
   const kind = effectKind(effect);
-  if (kind === "class") return "Effet passif de classe.";
-  if (kind === "race") return "Effet passif racial.";
-  if (kind === "spell") return hasFiniteDuration(effect) ? "Effet de sort actif." : "Effet de sort.";
-  if (kind === "capacity") return hasFiniteDuration(effect) ? "Effet de capacité actif." : "Effet de capacité passif.";
-  return hasFiniteDuration(effect) ? "Effet actif." : "Effet passif permanent.";
+  if (kind === "class") return "Effet de classe appliqué.";
+  if (kind === "race") return "Effet racial appliqué.";
+  if (kind === "spell") return hasFiniteDuration(effect) ? "Effet de sort actif." : "Effet de sort appliqué.";
+  if (kind === "capacity") return hasFiniteDuration(effect) ? "Effet de capacité actif." : "Effet de capacité appliqué.";
+  return hasFiniteDuration(effect) ? "Effet actif." : "Effet appliqué.";
 }
 
 function effectDescription(effect) {
@@ -105,8 +130,22 @@ function effectDuration(effect) {
   return "Permanent";
 }
 
+function hasExplicitAppliedMarker(effect) {
+  const add2e = effect?.flags?.add2e ?? {};
+  if (add2e.applied === true || add2e.active === true || add2e.visibleEffect === true) return true;
+  const text = markerText(effect);
+  return /temporaire|temporary|applique|applied|actif|active|condition|etat|blessure|fuite|fear|stun|paraly|poison|sort|spell|capacity|capacite|capability_special_attack_window|timeengine|roundengine/.test(text);
+}
+
 function shouldShowEffect(effect) {
-  return !!effect && effect.disabled !== true;
+  if (!effect || effect.disabled === true) return false;
+  if (isTechnicalContainer(effect)) return false;
+  if (hasFiniteDuration(effect)) return true;
+  if (hasFoundryStatus(effect)) return true;
+  if (familiarAction(effect)) return true;
+  if (hasExplicitAppliedMarker(effect)) return true;
+  if (hasMeaningfulChanges(effect)) return true;
+  return false;
 }
 
 export function buildEffectsTab(sheet) {
@@ -127,10 +166,10 @@ export function buildEffectsTab(sheet) {
         <a class="add2e-effect-delete a2e-action-icon a2e-action-delete" data-effect-id="${escapeHtml(eff.id)}" title="Supprimer l’effet"><i class="fas fa-trash"></i></a>
       </td>
     </tr>`;
-  }).join("") : `<tr><td colspan="6" class="a2e-muted" style="text-align:center;padding:0.8em;">Aucun effet actif ou passif.</td></tr>`;
+  }).join("") : `<tr><td colspan="6" class="a2e-muted" style="text-align:center;padding:0.8em;">Aucun effet appliqué.</td></tr>`;
 
   return `<section class="a2e-panel add2e-effects-panel">
-    <h2><i class="fas fa-sparkles"></i> Effets actifs et passifs</h2>
+    <h2><i class="fas fa-sparkles"></i> Effets appliqués</h2>
     <div class="a2e-panel-body"><table class="a2e-table add2e-effects-table">
       <thead><tr><th></th><th>Effet</th><th>Source</th><th>Durée</th><th>Description</th><th>Actions</th></tr></thead>
       <tbody>${rows}</tbody>
