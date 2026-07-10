@@ -9,7 +9,7 @@ import { installEffectsEngineDamage } from "./effects-engine/30-resistance-damag
 import { installEffectsEngineMonk } from "./effects-engine/40-monk.mjs";
 import { installEffectsEngineAnalysis } from "./effects-engine/50-analysis.mjs";
 
-globalThis.ADD2E_EFFECTS_ENGINE_VERSION = "2026-07-07-capability-transformations-v3";
+globalThis.ADD2E_EFFECTS_ENGINE_VERSION = "2026-07-10-passive-class-effects-v4";
 
 class Add2eEffectsEngine {}
 
@@ -19,6 +19,133 @@ installEffectsEngineDefense(Add2eEffectsEngine);
 installEffectsEngineDamage(Add2eEffectsEngine);
 installEffectsEngineMonk(Add2eEffectsEngine);
 installEffectsEngineAnalysis(Add2eEffectsEngine);
+
+function installPassiveClassFeatureContract(Engine) {
+  const baseNormalizeClassFeature = Engine.normalizeClassFeature?.bind(Engine);
+
+  Object.defineProperties(Engine, {
+    isClassFeaturePassive: {
+      configurable: true,
+      writable: true,
+      value(feature) {
+        if (!feature || typeof feature !== "object") return false;
+        const type = this.normalizeKey(feature.type ?? feature.kind ?? feature.category ?? "");
+        const hasOnUse = Boolean(String(feature.on_use ?? feature.onUse ?? feature.onUseScript ?? feature.script ?? "").trim());
+        if (feature.activable === true || feature.active === true || hasOnUse) return false;
+        if (["active", "activable", "action", "capacite_active"].includes(type)) return false;
+        if (feature.passive === false) return false;
+        if (feature.passive === true) return true;
+        if (["passive", "rule", "regle", "always_on", "permanent"].includes(type)) return true;
+        return true;
+      }
+    },
+
+    classFeatureStableId: {
+      configurable: true,
+      writable: true,
+      value(feature, index = 0) {
+        const raw = feature?.id
+          ?? feature?._id
+          ?? feature?.key
+          ?? feature?.slug
+          ?? feature?.flags?.add2e?.id
+          ?? feature?.flags?.add2e?.key
+          ?? feature?.name
+          ?? feature?.label
+          ?? feature?.title
+          ?? feature?.nom
+          ?? `feature-${index + 1}`;
+        return this.normalizeTag(raw) || `feature_${index + 1}`;
+      }
+    },
+
+    addClassFeatureTagsInto: {
+      configurable: true,
+      writable: true,
+      value(dst, raw, level = null) {
+        const classLevel = Number(level);
+        if (!Number.isFinite(classLevel) || classLevel < 1) return;
+        const entries = Array.isArray(raw) ? raw : (raw && typeof raw === "object" ? Object.values(raw) : []);
+        for (const feature of entries) {
+          if (!this.isClassFeaturePassive(feature) || !this.isClassFeatureUnlocked(feature, classLevel)) continue;
+          for (const value of [
+            feature.tags, feature.tag, feature.effectTags, feature.effets,
+            feature.effects, feature.flags?.add2e?.tags, feature.flags?.add2e?.effectTags
+          ]) this.addTagsInto(dst, value);
+        }
+      }
+    },
+
+    normalizeClassFeature: {
+      configurable: true,
+      writable: true,
+      value(feature, source = {}) {
+        const normalized = baseNormalizeClassFeature
+          ? baseNormalizeClassFeature(feature, source)
+          : {
+              ...foundry.utils.deepClone(feature),
+              minLevel: this.classFeatureMinLevel(feature),
+              maxLevel: this.classFeatureMaxLevel(feature),
+              available: true,
+              activable: feature?.activable === true,
+              ...source
+            };
+        return {
+          ...normalized,
+          passive: this.isClassFeaturePassive(feature)
+        };
+      }
+    },
+
+    getClassFeaturePassiveRules: {
+      configurable: true,
+      writable: true,
+      value(actor) {
+        const rules = [];
+        const represented = new Set();
+        const effects = actor?.effects?.contents ?? actor?.effects ?? [];
+        for (const effect of effects) {
+          if (!effect || effect.disabled || effect.flags?.add2e?.autoClassPassiveEffect !== true) continue;
+          const passiveKey = String(effect.flags?.add2e?.passiveKey ?? "").trim();
+          const sourceItemId = String(effect.flags?.add2e?.sourceItemId ?? "").trim();
+          const featureId = String(effect.flags?.add2e?.classFeatureId ?? "").trim();
+          const key = passiveKey || (sourceItemId && featureId ? `${sourceItemId}|${featureId}` : "");
+          if (key) represented.add(key);
+        }
+
+        const features = this.getUnlockedClassFeatures(actor);
+        features.forEach((feature, index) => {
+          if (!this.isClassFeaturePassive(feature)) return;
+          const featureId = this.classFeatureStableId(feature, index);
+          const sourceItemId = feature?._add2eClassItemId ?? null;
+          const passiveKey = sourceItemId ? `${sourceItemId}|${featureId}` : "";
+          if (passiveKey && represented.has(passiveKey)) return;
+
+          const raws = [feature?.rules, feature?.flags?.add2e?.rules];
+          for (const raw of raws) {
+            for (const rule of this.toRules(raw)) {
+              rules.push({
+                ...rule,
+                source: {
+                  ...(rule?.source && typeof rule.source === "object" ? rule.source : {}),
+                  feature,
+                  featureId,
+                  featureName: feature?.name ?? feature?.label ?? feature?.title ?? "Capacité de classe",
+                  classItemId: sourceItemId,
+                  classItemUuid: feature?._add2eClassItemUuid ?? null,
+                  className: feature?._add2eClassName ?? null,
+                  classLevel: Number(feature?._add2eClassLevel) || Number(feature?.minLevel) || null,
+                  actor
+                }
+              });
+            }
+          }
+        });
+        return rules;
+      }
+    }
+  });
+}
 
 function installGenericSaveExtensions(Engine) {
   const baseGetResistanceInfo = Engine.getResistanceInfo?.bind(Engine);
@@ -146,6 +273,7 @@ function installSingleReadActionRules(Engine) {
           rules.push({
             ...rule,
             source: {
+              ...(rule?.source && typeof rule.source === "object" ? rule.source : {}),
               effectId: effect.id ?? null,
               effectName: effect.name ?? "",
               effect,
@@ -427,6 +555,7 @@ function add2eIsCapabilityTransformationNaturalAttackActive(actor, item) {
   return !formKey || !attackFormKey || formKey === attackFormKey;
 }
 
+installPassiveClassFeatureContract(Add2eEffectsEngine);
 installGenericSaveExtensions(Add2eEffectsEngine);
 installSingleReadActionRules(Add2eEffectsEngine);
 installGateOnUseOutcomeContract(Add2eEffectsEngine);
