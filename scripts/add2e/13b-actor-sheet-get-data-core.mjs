@@ -7,7 +7,7 @@ import { add2ePopulateActorSheetSpellData } from "./13b-actor-sheet-get-data-spe
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant getData.");
 
 const ADD2E_FORCE_EX_DIAGNOSTICS_VERSION = "2026-07-05-force-ex-selection-diagnostics-v2";
-const ADD2E_ACTIVE_EFFECTS_DATA_VERSION = "2026-07-10-filter-technical-class-effects-v1";
+const ADD2E_ACTIVE_EFFECTS_DATA_VERSION = "2026-07-10-filter-only-explicit-technical-effects-v1";
 
 function add2eExceptionalStrengthValue(rawValue) {
   const value = Math.trunc(Number(rawValue));
@@ -96,32 +96,6 @@ function add2eFamiliarEffectAction(effect) {
   return String(data?.action ?? "").trim();
 }
 
-function add2eCollectEffectTags(effect) {
-  const add2e = effect?.flags?.add2e ?? {};
-  const values = [];
-  const visit = value => {
-    if (value === undefined || value === null || value === "") return;
-    if (Array.isArray(value)) return value.forEach(visit);
-    if (value instanceof Set) return [...value].forEach(visit);
-    if (typeof value === "object") {
-      for (const [key, entry] of Object.entries(value)) {
-        if (entry === true) values.push(key);
-        else visit(entry);
-      }
-      return;
-    }
-    for (const part of String(value).split(/[,;|\n]+/g)) {
-      const tag = add2eNormEffectValue(part);
-      if (tag) values.push(tag);
-    }
-  };
-  visit(add2e.tags);
-  visit(add2e.effectTags);
-  visit(add2e.systemTags);
-  visit(effect?.statuses);
-  return new Set(values);
-}
-
 function add2eEffectHasFiniteDuration(effect) {
   const duration = effect?.duration ?? {};
   for (const key of ["remaining", "rounds", "seconds", "turns"]) {
@@ -131,14 +105,9 @@ function add2eEffectHasFiniteDuration(effect) {
   return false;
 }
 
-function add2eIsTechnicalClassOrRaceEffect(effect) {
-  if (!effect || add2eFamiliarEffectAction(effect)) return false;
-  const name = add2eNormEffectValue(`${effect?.name ?? ""} ${effect?.label ?? ""}`);
-  if (/effets?_de_classe|effets?_classe|class_effects?|class_feature_effects?/.test(name)) return true;
-  if (/effets?_de_race|effets?_raciaux|racial_effects?|race_effects?/.test(name)) return true;
-
+function add2eEffectMarkerText(effect) {
   const add2e = effect?.flags?.add2e ?? {};
-  const markers = [
+  return [
     add2e.type,
     add2e.kind,
     add2e.source,
@@ -151,29 +120,25 @@ function add2eIsTechnicalClassOrRaceEffect(effect) {
     add2e.sourceRace,
     add2e.className,
     add2e.raceName
-  ].map(add2eNormEffectValue).filter(Boolean);
-  if (markers.some(value => /(classe|class|race|racial)/.test(value) && /(permanent|passif|passive|system|import|sync|effects?)/.test(value))) return true;
+  ].map(add2eNormEffectValue).filter(Boolean).join(" ");
+}
 
-  const tags = add2eCollectEffectTags(effect);
-  const hasClassOrRaceTag = [...tags].some(tag =>
-    tag.startsWith("classe_")
-    || tag.startsWith("classe:")
-    || tag.startsWith("race_")
-    || tag.startsWith("race:")
-    || tag.startsWith("racial_")
-    || tag.startsWith("moine_")
-    || tag.startsWith("clerc_")
-    || tag.startsWith("druide_")
-    || tag.startsWith("guerrier_")
-    || tag.startsWith("paladin_")
-    || tag.startsWith("ranger_")
-    || tag.startsWith("voleur_")
-    || tag.startsWith("assassin_")
-    || tag.startsWith("magicien_")
-    || tag.startsWith("illusionniste_")
-  );
-  const hasTemporaryTag = [...tags].some(tag => /temporaire|temporary|sort|spell|condition|etat|blessure|capability_special_attack_window|timeengine|roundengine/.test(tag));
-  return hasClassOrRaceTag && !hasTemporaryTag && !add2eEffectHasFiniteDuration(effect);
+function add2eIsTechnicalClassOrRaceEffect(effect) {
+  if (!effect || add2eFamiliarEffectAction(effect)) return false;
+
+  // Un effet avec une durée réelle doit rester visible, même s'il vient d'une classe,
+  // d'une race, d'un sort ou d'une capacité.
+  if (add2eEffectHasFiniteDuration(effect)) return false;
+
+  const name = add2eNormEffectValue(`${effect?.name ?? ""} ${effect?.label ?? ""}`);
+  if (/(^|_)effets?_de_classe($|_)|(^|_)effets?_classe($|_)|class_effects?|class_feature_effects?/.test(name)) return true;
+  if (/(^|_)effets?_de_race($|_)|(^|_)effets?_raciaux($|_)|racial_effects?|race_effects?/.test(name)) return true;
+
+  const markers = add2eEffectMarkerText(effect);
+  if (!markers) return false;
+
+  return /(classe|class|race|racial)/.test(markers)
+    && /(permanent|passif|passive|system|import|sync|effects?)/.test(markers);
 }
 
 function add2eEffectDescription(effect) {
