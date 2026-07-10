@@ -7,7 +7,7 @@ import { add2ePopulateActorSheetSpellData } from "./13b-actor-sheet-get-data-spe
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant getData.");
 
 const ADD2E_FORCE_EX_DIAGNOSTICS_VERSION = "2026-07-05-force-ex-selection-diagnostics-v2";
-const ADD2E_ACTIVE_EFFECTS_DATA_VERSION = "2026-07-10-filter-only-explicit-technical-effects-v1";
+const ADD2E_ACTIVE_EFFECTS_DATA_VERSION = "2026-07-10-show-active-and-passive-effects-v1";
 
 function add2eExceptionalStrengthValue(rawValue) {
   const value = Math.trunc(Number(rawValue));
@@ -91,11 +91,6 @@ function add2eNormEffectValue(value) {
     .replace(/^_+|_+$/g, "");
 }
 
-function add2eFamiliarEffectAction(effect) {
-  const data = effect?.flags?.add2e?.familiar ?? effect?.getFlag?.("add2e", "familiar") ?? null;
-  return String(data?.action ?? "").trim();
-}
-
 function add2eEffectHasFiniteDuration(effect) {
   const duration = effect?.duration ?? {};
   for (const key of ["remaining", "rounds", "seconds", "turns"]) {
@@ -105,9 +100,11 @@ function add2eEffectHasFiniteDuration(effect) {
   return false;
 }
 
-function add2eEffectMarkerText(effect) {
+function add2eEffectKind(effect) {
   const add2e = effect?.flags?.add2e ?? {};
-  return [
+  const text = [
+    effect?.name,
+    effect?.label,
     add2e.type,
     add2e.kind,
     add2e.source,
@@ -121,48 +118,67 @@ function add2eEffectMarkerText(effect) {
     add2e.className,
     add2e.raceName
   ].map(add2eNormEffectValue).filter(Boolean).join(" ");
+
+  if (/(^|_)effets?_de_classe($|_)|(^|_)effets?_classe($|_)|class_effects?|class_feature_effects?|classe|class/.test(text)) return "class";
+  if (/(^|_)effets?_de_race($|_)|(^|_)effets?_raciaux($|_)|racial_effects?|race_effects?|racial|race/.test(text)) return "race";
+  if (/sort|spell/.test(text)) return "spell";
+  if (/capacite|capacity|ability|feature/.test(text)) return "capacity";
+  return "effect";
 }
 
-function add2eIsTechnicalClassOrRaceEffect(effect) {
-  if (!effect || add2eFamiliarEffectAction(effect)) return false;
+function add2eLooksLikeTechnicalTagList(value) {
+  const text = String(value ?? "").replace(/<[^>]*>/g, " ").trim();
+  if (!text) return false;
+  const chunks = text.split(/[,;\n]+/g).map(part => part.trim()).filter(Boolean);
+  if (chunks.length < 5) return false;
+  const technical = chunks.filter(part => /[a-z0-9_]+[:][a-z0-9_:+\-]+/i.test(part) || /[_]/.test(part));
+  return technical.length >= Math.max(5, Math.floor(chunks.length * 0.6));
+}
 
-  // Un effet avec une durée réelle doit rester visible, même s'il vient d'une classe,
-  // d'une race, d'un sort ou d'une capacité.
-  if (add2eEffectHasFiniteDuration(effect)) return false;
-
-  const name = add2eNormEffectValue(`${effect?.name ?? ""} ${effect?.label ?? ""}`);
-  if (/(^|_)effets?_de_classe($|_)|(^|_)effets?_classe($|_)|class_effects?|class_feature_effects?/.test(name)) return true;
-  if (/(^|_)effets?_de_race($|_)|(^|_)effets?_raciaux($|_)|racial_effects?|race_effects?/.test(name)) return true;
-
-  const markers = add2eEffectMarkerText(effect);
-  if (!markers) return false;
-
-  return /(classe|class|race|racial)/.test(markers)
-    && /(permanent|passif|passive|system|import|sync|effects?)/.test(markers);
+function add2eFallbackEffectDescription(effect) {
+  const kind = add2eEffectKind(effect);
+  if (kind === "class") return "Effet passif de classe.";
+  if (kind === "race") return "Effet passif racial.";
+  if (kind === "spell") return add2eEffectHasFiniteDuration(effect) ? "Effet de sort actif." : "Effet de sort.";
+  if (kind === "capacity") return add2eEffectHasFiniteDuration(effect) ? "Effet de capacité actif." : "Effet de capacité passif.";
+  return add2eEffectHasFiniteDuration(effect) ? "Effet actif." : "Effet passif permanent.";
 }
 
 function add2eEffectDescription(effect) {
-  return effect?.getFlag?.("core", "description") || effect?.flags?.add2e?.desc || effect?.description || "";
+  const raw = effect?.getFlag?.("core", "description") || effect?.flags?.add2e?.desc || effect?.description || "";
+  if (!String(raw).trim()) return add2eFallbackEffectDescription(effect);
+  if (add2eLooksLikeTechnicalTagList(raw)) return add2eFallbackEffectDescription(effect);
+  return raw;
+}
+
+function add2eEffectDuration(effect) {
+  const duration = effect?.duration ?? {};
+  const remaining = Number(duration.remaining);
+  if (Number.isFinite(remaining) && remaining > 0) return `${remaining} rounds`;
+  const rounds = Number(duration.rounds);
+  if (Number.isFinite(rounds) && rounds > 0) return `${rounds} rounds`;
+  const turns = Number(duration.turns);
+  if (Number.isFinite(turns) && turns > 0) return `${turns} tours`;
+  const seconds = Number(duration.seconds);
+  if (Number.isFinite(seconds) && seconds > 0) return `${seconds} sec`;
+  return "Permanent";
+}
+
+function add2eShouldShowEffect(effect) {
+  return !!effect && effect.disabled !== true;
 }
 
 export function add2ePopulateActorSheetActiveEffectsData(actor, data) {
-  data.activeEffectsList = actor.effects
-    .filter(eff => !add2eIsTechnicalClassOrRaceEffect(eff))
-    .map(eff => {
-      const desc = add2eEffectDescription(eff);
-      let durationStr = "";
-      if (typeof eff.duration?.remaining !== "undefined") durationStr = `${eff.duration.remaining} rounds`;
-      else if (typeof eff.duration?.rounds !== "undefined") durationStr = `${eff.duration.rounds} rounds`;
-      else if (typeof eff.duration?.seconds !== "undefined") durationStr = `${eff.duration.seconds} sec`;
-      return {
-        id: eff.id,
-        name: eff.name || "",
-        img: eff.img || "icons/svg/aura.svg",
-        description: desc,
-        duration: durationStr,
-        sourceName: eff.parent?.name || eff.origin || ""
-      };
-    });
+  data.activeEffectsList = Array.from(actor?.effects ?? [])
+    .filter(add2eShouldShowEffect)
+    .map(eff => ({
+      id: eff.id,
+      name: eff.name || "",
+      img: eff.img || "icons/svg/aura.svg",
+      description: add2eEffectDescription(eff),
+      duration: add2eEffectDuration(eff),
+      sourceName: eff.parent?.name || eff.origin || ""
+    }));
   return data.activeEffectsList;
 }
 
