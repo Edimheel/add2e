@@ -1,7 +1,7 @@
 // ============================================================================
 // ADD2E — Mécaniques réutilisables d'attaques de capacité.
-// Profils : contact spécial sans dégâts ordinaires, fenêtre temporaire,
-// résolution immédiate ou effet différé. Compatible Foundry V13/V14/V15.
+// Profils : contact sans dégâts ordinaires, fenêtre temporaire,
+// résolution immédiate ou effet latent. Compatible Foundry V13/V14/V15.
 // ============================================================================
 
 import {
@@ -13,7 +13,7 @@ import { add2eAttackComputeActiveAttackModifiers } from "../add2e-attack/04e-att
 import { add2eAttackComputeCharacterDisplayedCA } from "../add2e-attack/04d-attack-roll-defense.mjs";
 import { add2eAttackMeasureContactAndDistance, add2eAttackValidateRange } from "../add2e-attack/04g-attack-roll-range.mjs";
 
-export const ADD2E_CAPABILITY_SPECIAL_ATTACK_VERSION = "2026-07-10-capability-contact-immediate-v1";
+export const ADD2E_CAPABILITY_SPECIAL_ATTACK_VERSION = "2026-07-10-capability-style-v1";
 
 const SYSTEM_ID = "add2e";
 const GM_OPERATION = "ADD2E_GM_OPERATION";
@@ -229,11 +229,10 @@ function resolveArmorClass(actor) {
 
 function validateTarget(profile, sourceActor, target) {
   const restrictions = profile?.targetRestrictions ?? {};
-  const targetName = target?.name ?? "la cible";
   const tags = actorTags(target);
   const excludedTags = Array.isArray(restrictions.excludedTags) ? restrictions.excludedTags.map(norm).filter(Boolean) : [];
   const blocked = excludedTags.find(tag => tags.has(tag));
-  if (blocked) return { ok: false, code: "excluded-tag", reason: `La cible ${targetName} possède une immunité incompatible (${blocked.replace(/_/g, " ")}).` };
+  if (blocked) return { ok: false, code: "excluded-tag", reason: "Cette cible ne peut pas être affectée par cette capacité.", detail: blocked };
 
   const level = sourceLevel(sourceActor, null, profile);
   const hitDiceRule = restrictions.maxHitDice ?? null;
@@ -241,8 +240,8 @@ function validateTarget(profile, sourceActor, target) {
     const multiplier = Math.max(0, Number(hitDiceRule.multiplier ?? 1) || 0);
     const maximum = Number.isFinite(Number(hitDiceRule.maximum)) ? Number(hitDiceRule.maximum) : level * multiplier;
     const targetDice = actorHitDice(target);
-    if (!Number.isFinite(targetDice)) return { ok: false, code: "missing-hit-dice", reason: `Les dés de vie de ${targetName} sont absents ; validation du MJ requise.` };
-    if (targetDice > maximum) return { ok: false, code: "hit-dice", reason: `${targetName} possède ${targetDice} DV, au-delà de la limite de ${maximum} DV.` };
+    if (!Number.isFinite(targetDice)) return { ok: false, code: "missing-hit-dice", reason: "La cible doit être validée par le MJ.", maximum };
+    if (targetDice > maximum) return { ok: false, code: "hit-dice", reason: "Cette cible dépasse les limites de la capacité.", targetDice, maximum };
   }
 
   const hpRule = restrictions.maxHitPoints ?? null;
@@ -251,8 +250,8 @@ function validateTarget(profile, sourceActor, target) {
     const sourceMaximum = actorHp(sourceActor).maximum;
     const targetMaximum = actorHp(target).maximum;
     const maximum = Number.isFinite(Number(hpRule.maximum)) ? Number(hpRule.maximum) : Number(sourceMaximum) * multiplier;
-    if (!Number.isFinite(sourceMaximum) || !Number.isFinite(targetMaximum)) return { ok: false, code: "missing-hit-points", reason: `Les PV maximum nécessaires à la restriction sont absents ; validation du MJ requise.` };
-    if (targetMaximum > maximum) return { ok: false, code: "hit-points", reason: `${targetName} possède ${targetMaximum} PV maximum, au-delà de la limite de ${maximum}.` };
+    if (!Number.isFinite(sourceMaximum) || !Number.isFinite(targetMaximum)) return { ok: false, code: "missing-hit-points", reason: "La cible doit être validée par le MJ.", maximum };
+    if (targetMaximum > maximum) return { ok: false, code: "hit-points", reason: "Cette cible dépasse les limites de la capacité.", targetMaximum, maximum };
   }
 
   return { ok: true, code: "ok" };
@@ -337,10 +336,10 @@ function buildDeferredEffect({ sourceActor, target, item, profile, tick }) {
     expiresAtTick,
     command: clone(deferred.command ?? {})
   };
-  const name = String(deferred.name ?? profile.label ?? "Effet différé");
+  const name = String(deferred.name ?? profile.label ?? "Effet latent");
   const img = String(deferred.img ?? item.img ?? "icons/svg/aura.svg");
   const tags = Array.isArray(deferred.tags) ? deferred.tags.map(norm).filter(Boolean) : [];
-  const endMessage = String(deferred.endMessage ?? "L’effet différé sur {actor} prend fin sans être déclenché.");
+  const endMessage = String(deferred.endMessage ?? "L’effet latent sur {actor} s’éteint sans se déclencher.");
   const engine = game?.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
 
   if (typeof engine?.effectData === "function") {
@@ -381,21 +380,26 @@ function buildDeferredEffect({ sourceActor, target, item, profile, tick }) {
   };
 }
 
-async function createChat({ sourceActor, target, profile, state, detail = "", d20 = null, total = null, threshold = null }) {
-  const label = String(profile?.label ?? "Attaque spéciale");
+function capabilityCardHtml({ label, img, state, text, rollText = "", detail = "" } = {}) {
   const color = ["applied", "triggered", "immediate"].includes(state) ? "#2f7a45" : state === "miss" ? "#9d3c2f" : "#8a631e";
+  return `<div class="add2e-chat-card add2e-card-capacite add2e-capability-special-attack" style="border:2px solid ${color};border-radius:12px;overflow:hidden;background:#fffaf0;color:#2d2416;font-family:var(--font-primary);box-shadow:0 0 0 1px rgba(60,38,10,.16);"><div style="display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,${color},#704c1f);color:#fff;padding:9px 10px;"><img src="${esc(img ?? "icons/svg/aura.svg")}" style="width:42px;height:42px;object-fit:cover;border-radius:8px;background:#fff;border:1px solid rgba(255,255,255,.72);"><div><div style="font-weight:900;font-size:1.08em;">${esc(label)}</div><div style="font-size:.82em;opacity:.94;">Capacité de classe</div></div></div><div style="padding:10px 11px;line-height:1.42;display:grid;gap:6px;">${text}${rollText}${detail ? `<div style="margin-top:2px;font-size:.92em;color:#594726;">${detail}</div>` : ""}</div></div>`;
+}
+
+async function createChat({ sourceActor, target, profile, state, detail = "", d20 = null, total = null, threshold = null }) {
+  const label = String(profile?.label ?? "Capacité");
   const text = ({
-    applied: `Le contact de ${esc(sourceActor?.name)} réussit : <b>${esc(label)}</b> est appliqué à ${esc(target?.name)}.`,
-    immediate: `Le contact de ${esc(sourceActor?.name)} réussit : <b>${esc(label)}</b> se déclenche immédiatement sur ${esc(target?.name)}.`,
-    triggered: `${esc(sourceActor?.name)} déclenche l’effet <b>${esc(label)}</b> sur ${esc(target?.name)}.`,
-    miss: `${esc(sourceActor?.name)} ne parvient pas à établir le contact requis pour <b>${esc(label)}</b>.`,
-    invalid: `Le contact ne peut pas produire l’effet <b>${esc(label)}</b> sur ${esc(target?.name)}.`
-  })[state] ?? `${esc(label)} est résolu.`;
-  const rollLine = Number.isFinite(Number(d20)) ? `<div style="margin-top:5px;"><b>Jet de contact :</b> d20 ${esc(d20)}${Number.isFinite(Number(total)) ? ` = ${esc(total)}` : ""}${Number.isFinite(Number(threshold)) ? ` (seuil ${esc(threshold)})` : ""}</div>` : "";
+    applied: `Le contact de <b>${esc(sourceActor?.name)}</b> réussit : <b>${esc(label)}</b> marque ${esc(target?.name)}.`,
+    immediate: `Le contact de <b>${esc(sourceActor?.name)}</b> réussit : <b>${esc(label)}</b> prend effet sur ${esc(target?.name)}.`,
+    triggered: `<b>${esc(sourceActor?.name)}</b> déclenche <b>${esc(label)}</b> sur ${esc(target?.name)}.`,
+    miss: `<b>${esc(sourceActor?.name)}</b> ne parvient pas à établir le contact requis pour <b>${esc(label)}</b>.`,
+    invalid: `${esc(target?.name)} ne peut pas être affecté par <b>${esc(label)}</b>.`
+  })[state] ?? `<b>${esc(label)}</b> est résolue.`;
+  const rollText = Number.isFinite(Number(d20)) ? `<div><b>Jet :</b> d20 ${esc(d20)}</div>` : "";
+  const publicDetail = state === "invalid" ? "" : String(detail ?? "").trim();
   await ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor: sourceActor }),
-    content: `<div class="add2e-chat-card add2e-capability-special-attack" style="border:1px solid ${color};border-radius:9px;overflow:hidden;background:#fffaf0;color:#2d2416;font-family:var(--font-primary);"><div style="display:flex;align-items:center;gap:8px;background:${color};color:#fff;padding:7px 9px;"><img src="${esc(profile?.img ?? "icons/svg/aura.svg")}" style="width:32px;height:32px;object-fit:cover;border-radius:5px;background:#fff;border:1px solid rgba(255,255,255,.55);"><div><div style="font-weight:900;">${esc(label)}</div><div style="font-size:.84em;opacity:.92;">Capacité spéciale</div></div></div><div style="padding:9px 10px;line-height:1.4;">${text}${rollLine}${detail ? `<div style="margin-top:6px;font-size:.9em;color:#624f2b;">${esc(detail)}</div>` : ""}</div></div>`,
-    flags: { [SYSTEM_ID]: { capabilitySpecialAttack: true, profileId: profile?.id ?? null, state, sourceActorId: sourceActor?.id ?? null, targetActorId: target?.id ?? null } },
+    content: capabilityCardHtml({ label, img: profile?.img ?? "icons/svg/aura.svg", state, text, rollText, detail: publicDetail ? esc(publicDetail) : "" }),
+    flags: { [SYSTEM_ID]: { capabilitySpecialAttack: true, profileId: profile?.id ?? null, state, sourceActorId: sourceActor?.id ?? null, targetActorId: target?.id ?? null, roll: { d20, total, threshold } } },
     ...chatStyleData()
   });
 }
@@ -472,8 +476,8 @@ async function prepareWindow({ actor, item, profile, rounds }) {
   const extraFlags = { temporaryItemId: item.id, [WINDOW_FLAG]: { version: ADD2E_CAPABILITY_SPECIAL_ATTACK_VERSION, profileId: profile.id, itemId: item.id, itemUuid: item.uuid ?? null, sourceActorId: actor.id ?? null, sourceActorUuid: actor.uuid ?? null, startTick: tick, expiresAtTick: tick + totalRounds } };
 
   const data = typeof engine?.effectData === "function"
-    ? engine.effectData({ name: String(profile.window?.name ?? `${profile.label} — préparation`), img: String(profile.img ?? item.img ?? "icons/svg/aura.svg"), origin: item.uuid ?? null, rounds: totalRounds, unit: "round", description: String(profile.window?.description ?? ""), tags: ["capability:special-attack-window", `capability-profile:${norm(profile.id)}`], changes: [], source: "capability-special-attack-window", caster: actor, sourceItem: item, endMessage: String(profile.window?.endMessage ?? "La fenêtre de contact spécial de {actor} expire sans effet."), extraFlags })
-    : { name: String(profile.window?.name ?? `${profile.label} — préparation`), img: String(profile.img ?? item.img ?? "icons/svg/aura.svg"), disabled: false, transfer: false, changes: [], duration: { rounds: totalRounds, startRound: game.combat?.round ?? null, startTurn: game.combat?.turn ?? null, startTime: game.time?.worldTime ?? null, combat: game.combat?.id ?? null }, flags: { [SYSTEM_ID]: { tags: ["capability:special-attack-window", `capability-profile:${norm(profile.id)}`], timeEngine: { managed: true, totalRounds, startTick: tick }, roundEngine: { managed: true, totalRounds, startTick: tick, endMessage: String(profile.window?.endMessage ?? "La fenêtre de contact spécial de {actor} expire sans effet.") }, ...extraFlags } } };
+    ? engine.effectData({ name: String(profile.window?.name ?? `${profile.label} — préparation`), img: String(profile.img ?? item.img ?? "icons/svg/aura.svg"), origin: item.uuid ?? null, rounds: totalRounds, unit: "round", description: String(profile.window?.description ?? ""), tags: ["capability:special-attack-window", `capability-profile:${norm(profile.id)}`], changes: [], source: "capability-special-attack-window", caster: actor, sourceItem: item, endMessage: String(profile.window?.endMessage ?? "La préparation de {actor} expire sans effet."), extraFlags })
+    : { name: String(profile.window?.name ?? `${profile.label} — préparation`), img: String(profile.img ?? item.img ?? "icons/svg/aura.svg"), disabled: false, transfer: false, changes: [], duration: { rounds: totalRounds, startRound: game.combat?.round ?? null, startTurn: game.combat?.turn ?? null, startTime: game.time?.worldTime ?? null, combat: game.combat?.id ?? null }, flags: { [SYSTEM_ID]: { tags: ["capability:special-attack-window", `capability-profile:${norm(profile.id)}`], timeEngine: { managed: true, totalRounds, startTick: tick }, roundEngine: { managed: true, totalRounds, startTick: tick, endMessage: String(profile.window?.endMessage ?? "La préparation de {actor} expire sans effet.") }, ...extraFlags } } };
   const created = await actor.createEmbeddedDocuments("ActiveEffect", [data], { add2eInternal: true, add2eReason: "capability-special-attack-window" });
   const window = created?.[0] ?? null;
   diag("PREPARE_WINDOW_DONE", { actor: actor?.name, item: item?.name, itemId: item?.id, profileId: profile?.id, window: window?.name, windowId: window?.id, rounds: totalRounds, expiresAtTick: tick + totalRounds });
@@ -498,7 +502,7 @@ async function resolveDeferredContactFromAttack({ sourceActor, targetActor: targ
   const threshold = Number(attackContext.threshold ?? attackContext.seuilFinalD20);
   const chatNumbers = { d20: Number.isFinite(d20) ? d20 : null, total: Number.isFinite(total) ? total : null, threshold: Number.isFinite(threshold) ? threshold : null };
   if (!eligibility.ok) {
-    await createChat({ sourceActor, target, profile, state: "invalid", detail: eligibility.reason, ...chatNumbers });
+    await createChat({ sourceActor, target, profile, state: "invalid", ...chatNumbers });
     diag("RESOLVE_FROM_ATTACK_INVALID_TARGET", { source: sourceActor?.name, target: target?.name, eligibility });
     return { ok: true, applied: false, consumed: false, eligibility };
   }
@@ -507,14 +511,12 @@ async function resolveDeferredContactFromAttack({ sourceActor, targetActor: targ
     const action = actionForProfile(profile);
     const applied = await applyHitPointAction({ sourceActor, target, profile, action, detailSource: "capability-contact-immediate" });
     if (!applied.ok) {
-      ui.notifications?.error?.("Attaque spéciale : action immédiate inconnue ou PV de la cible introuvables.");
+      ui.notifications?.error?.("Capacité : la résolution est impossible. Préviens le MJ.");
       diag("RESOLVE_FROM_ATTACK_IMMEDIATE_FAILED", { source: sourceActor?.name, target: target?.name, action, applied });
       return { ok: false, reason: applied.reason ?? "immediate-failed" };
     }
     await removeWindowAndItem(sourceActor, item.id);
-    const detailPrefix = attackContext.detail ? `${String(attackContext.detail)} ` : "";
-    const detail = `${detailPrefix}Résolution immédiate : PV ${applied.hp} → ${applied.targetValue}.`;
-    await createChat({ sourceActor, target, profile, state: "immediate", ...chatNumbers, detail });
+    await createChat({ sourceActor, target, profile, state: "immediate", ...chatNumbers, detail: String(action?.message ?? "La capacité prend effet.") });
     diag("RESOLVE_FROM_ATTACK_IMMEDIATE_APPLIED", { source: sourceActor?.name, target: target?.name, itemId: item?.id, profileId: profile?.id, ...applied });
     return { ok: true, hit: true, applied: true, immediate: true, consumed: true, item, profile, target };
   }
@@ -523,8 +525,7 @@ async function resolveDeferredContactFromAttack({ sourceActor, targetActor: targ
   await emitGmOperation("createActiveEffect", { actorUuid: target.uuid ?? null, actorId: target.id ?? null, effectData });
   await removeWindowAndItem(sourceActor, item.id);
   const effectTick = Number(effectData?.flags?.[SYSTEM_ID]?.[DEFERRED_FLAG]?.expiresAtTick ?? tick);
-  const detailPrefix = attackContext.detail ? `${String(attackContext.detail)} ` : "";
-  await createChat({ sourceActor, target, profile, state: "applied", ...chatNumbers, detail: `${detailPrefix}Effet différé actif pendant ${formatTicks(Math.max(0, effectTick - tick))}.` });
+  await createChat({ sourceActor, target, profile, state: "applied", ...chatNumbers, detail: `L’effet reste latent pendant ${formatTicks(Math.max(0, effectTick - tick))}.` });
   diag("RESOLVE_FROM_ATTACK_APPLIED", { source: sourceActor?.name, target: target?.name, itemId: item?.id, profileId: profile?.id, expiresAtTick: effectTick });
   return { ok: true, hit: true, applied: true, consumed: true, item, profile, target };
 }
@@ -540,39 +541,45 @@ async function consumePreparedContactFromAttack({ sourceActor, targetActor, prof
   return resolveDeferredContactFromAttack({ sourceActor, targetActor, item: entry.item, profile: entry.profile, attackContext });
 }
 
+function contactDialogHtml({ sourceActor, target, profile } = {}) {
+  const label = String(profile?.label ?? "Capacité");
+  const img = String(profile?.img ?? "icons/svg/aura.svg");
+  return `<form style="font-family:var(--font-primary);color:#2d2416;"><div class="add2e-card-capacite add2e-capability-dialog-card" style="border:2px solid #8a631e;border-radius:12px;overflow:hidden;background:#fffaf0;color:#2d2416;box-shadow:0 0 0 1px rgba(60,38,10,.16);"><div style="display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,#8a631e,#5f3813);color:#fff;padding:9px 10px;"><img src="${esc(img)}" style="width:42px;height:42px;object-fit:cover;border-radius:8px;background:#fff;border:1px solid rgba(255,255,255,.72);"><div><div style="font-weight:900;font-size:1.08em;">${esc(label)}</div><div style="font-size:.82em;opacity:.94;">Capacité de classe</div></div></div><div style="padding:10px 11px;display:grid;gap:8px;line-height:1.4;"><div><b>${esc(sourceActor?.name)}</b> tente de porter ${esc(label)} sur <b>${esc(target?.name)}</b>.</div><div style="border:1px solid #c9a86a;border-radius:8px;background:#fff7e8;padding:8px;font-size:.92em;">Cette capacité exige un contact et ne lance aucun dégât ordinaire.</div><div class="form-group" style="display:flex;align-items:center;gap:8px;margin:0;"><label style="font-weight:800;min-width:110px;">Modificateur</label><input type="number" name="modifier" value="0" step="1" style="width:72px;text-align:center;"></div></div></div></form>`;
+}
+
 async function resolveSpecialAttack({ actor, arme, actorId, itemId }) {
   const sourceActor = actor ?? (actorId ? game.actors?.get?.(actorId) : null);
   const item = arme ?? (itemId && sourceActor ? sourceActor.items?.get?.(itemId) : null);
   const profile = profileFor(item);
   if (!sourceActor || !item || !profile) return false;
   const tick = currentTick();
-  if (tick === null) return ui.notifications?.error?.("Attaque spéciale : le compteur de temps ADD2E est indisponible.");
+  if (tick === null) return ui.notifications?.error?.("Capacité : le suivi des rounds n’est pas disponible.");
   const window = capabilityWindow(sourceActor, item.id);
   const expiresAtTick = windowExpiresAt(window);
   if (!window || (expiresAtTick && tick >= expiresAtTick)) {
     await removeWindowAndItem(sourceActor, item.id);
-    ui.notifications?.warn?.("Cette attaque spéciale n’est plus préparée.");
+    ui.notifications?.warn?.("Cette capacité n’est plus préparée.");
     return false;
   }
   const targetToken = Array.from(game.user?.targets ?? [])[0] ?? null;
   const target = targetActor(targetToken);
-  if (!targetToken || !target) return ui.notifications?.warn?.("Sélectionne une cible pour l’attaque spéciale.");
+  if (!targetToken || !target) return ui.notifications?.warn?.("Sélectionne une cible pour cette capacité.");
   const source = sourceToken(sourceActor);
-  if (!source) return ui.notifications?.warn?.("L’attaquant doit être présent sur la scène.");
+  if (!source) return ui.notifications?.warn?.("L’acteur doit être présent sur la scène.");
   const distance = add2eAttackMeasureContactAndDistance({ srcToken: source, cibleToken: targetToken, measureDistance: add2eMeasureTokenGridDistance });
   const range = add2eAttackValidateRange({ arme: item, distanceCible: distance.distanceCible, auContact: distance.auContact });
   if (!range.ok || !distance.auContact) {
-    ui.notifications?.warn?.("Cette attaque spéciale exige le contact avec la cible.");
+    ui.notifications?.warn?.("La cible doit être au contact.");
     return false;
   }
 
   const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (!DialogV2?.wait) return ui.notifications?.error?.("Attaque spéciale : DialogV2 est indisponible.");
+  if (!DialogV2?.wait) return ui.notifications?.error?.("Capacité : DialogV2 est indisponible.");
   const selection = await DialogV2.wait({
-    window: { title: String(profile.dialogTitle ?? profile.label ?? "Attaque spéciale") },
-    position: { width: 390 },
+    window: { title: String(profile.dialogTitle ?? profile.label ?? "Capacité") },
+    position: { width: 430 },
     classes: ["add2e", "add2e-capability-dialog", "add2e-special-attack-dialog"],
-    content: `<form style="font-family:var(--font-primary);display:grid;gap:8px;"><div style="border:1px solid #b77a32;border-radius:8px;background:#fff7e8;padding:8px;"><b>${esc(profile.label ?? "Attaque spéciale")}</b><br><small>Contact requis. Cette résolution ne lance aucun dégât ordinaire.</small></div><div class="form-group"><label>Modificateur circonstanciel</label><input type="number" name="modifier" value="0" step="1" style="width:72px;text-align:center;"></div></form>`,
+    content: contactDialogHtml({ sourceActor, target, profile }),
     buttons: [
       { action: "roll", label: "Tenter le contact", icon: "fa-solid fa-hand", default: true, callback: (_event, button) => ({ modifier: Number(button.form?.elements?.modifier?.value ?? 0) || 0 }) },
       { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => null }
@@ -584,7 +591,7 @@ async function resolveSpecialAttack({ actor, arme, actorId, itemId }) {
   const thac0 = resolveThac0(sourceActor, level);
   const armorClass = resolveArmorClass(target);
   if (!Number.isFinite(thac0) || !Number.isFinite(armorClass)) {
-    ui.notifications?.error?.("Attaque spéciale : THAC0 ou CA de la cible introuvable.");
+    ui.notifications?.error?.("Capacité : les données de combat nécessaires sont introuvables.");
     return false;
   }
   const combatProfile = add2eGetCombatStatProfile(item);
@@ -637,19 +644,19 @@ async function triggerDeferredAction({ sourceActor, targetActor: targetFromCall,
   diag("TRIGGER_ENTER", { source: sourceActor?.name, target: target?.name, effect: effect?.name, effectId: effect?.id, profileId: data?.profileId, tick });
   if (!sourceActor || !target || !effect || !data || tick === null) return false;
   if (Number(data.expiresAtTick ?? 0) > 0 && tick >= Number(data.expiresAtTick)) {
-    ui.notifications?.warn?.("Cet effet différé a expiré.");
+    ui.notifications?.warn?.("Cet effet a expiré.");
     diag("TRIGGER_EXPIRED", { source: sourceActor?.name, target: target?.name, effectId: effect?.id, expiresAtTick: data.expiresAtTick, tick });
     return false;
   }
   const command = data.command ?? {};
   const applied = await applyHitPointAction({ sourceActor, target, profile: { id: data.profileId }, action: command.action, detailSource: "capability-deferred-command" });
   if (!applied.ok) {
-    ui.notifications?.error?.("Action différée inconnue ou PV de la cible introuvables.");
+    ui.notifications?.error?.("Capacité : la résolution est impossible. Préviens le MJ.");
     diag("TRIGGER_FAILED", { source: sourceActor?.name, target: target?.name, effectId: effect?.id, applied });
     return false;
   }
   await emitGmOperation("deleteActiveEffects", { actorUuid: target.uuid ?? null, actorId: target.id ?? null, effectIds: [effect.id] });
-  await createChat({ sourceActor, target, profile: { id: data.profileId, label: command.label ?? effect.name, img: effect.img ?? sourceActor.img }, state: "triggered", detail: String(command?.message ?? "L’action différée est résolue.") });
+  await createChat({ sourceActor, target, profile: { id: data.profileId, label: command.label ?? effect.name, img: effect.img ?? sourceActor.img }, state: "triggered", detail: String(command?.message ?? "La capacité prend effet.") });
   diag("TRIGGER_DONE", { source: sourceActor?.name, target: target?.name, effectId: effect?.id, ...applied });
   return true;
 }
