@@ -1,7 +1,7 @@
 // ============================================================================
 // ADD2E — Mécaniques réutilisables d'attaques de capacité.
 // Profils : contact spécial sans dégâts ordinaires, fenêtre temporaire,
-// effet différé et action ultérieure. Compatible Foundry V13/V14/V15.
+// résolution immédiate ou effet différé. Compatible Foundry V13/V14/V15.
 // ============================================================================
 
 import {
@@ -13,7 +13,7 @@ import { add2eAttackComputeActiveAttackModifiers } from "../add2e-attack/04e-att
 import { add2eAttackComputeCharacterDisplayedCA } from "../add2e-attack/04d-attack-roll-defense.mjs";
 import { add2eAttackMeasureContactAndDistance, add2eAttackValidateRange } from "../add2e-attack/04g-attack-roll-range.mjs";
 
-export const ADD2E_CAPABILITY_SPECIAL_ATTACK_VERSION = "2026-07-10-capability-command-debug-v1";
+export const ADD2E_CAPABILITY_SPECIAL_ATTACK_VERSION = "2026-07-10-capability-contact-immediate-v1";
 
 const SYSTEM_ID = "add2e";
 const GM_OPERATION = "ADD2E_GM_OPERATION";
@@ -152,7 +152,8 @@ function actorTags(actor) {
 function profileFor(item) {
   const profile = item?.flags?.[SYSTEM_ID]?.[SPECIAL_ATTACK_FLAG] ?? item?.system?.[SPECIAL_ATTACK_FLAG] ?? null;
   if (!profile || typeof profile !== "object") return null;
-  if (norm(profile.kind) !== "contact_deferred") return null;
+  const kind = norm(profile.kind);
+  if (!["contact_deferred", "contact_immediate", "contact_special"].includes(kind)) return null;
   if (!String(profile.id ?? "").trim()) return null;
   return clone(profile);
 }
@@ -257,6 +258,66 @@ function validateTarget(profile, sourceActor, target) {
   return { ok: true, code: "ok" };
 }
 
+function actionForProfile(profile) {
+  return profile?.immediateAction
+    ?? profile?.action
+    ?? profile?.resolution?.action
+    ?? profile?.deferredEffect?.command?.action
+    ?? null;
+}
+
+function profileResolvesImmediately(profile) {
+  const values = [profile?.kind, profile?.mode, profile?.resolution?.mode, profile?.resolutionMode];
+  return values.map(norm).some(value => ["contact_immediate", "immediate", "immediat", "apply_immediate", "resolution_immediate"].includes(value));
+}
+
+function targetIsMonster(actor) {
+  const type = norm(actor?.type ?? actor?.system?.type ?? actor?.system?.type_monstre ?? "");
+  return type.includes("monster") || type.includes("monstre") || type.includes("pnj") || type.includes("npc");
+}
+
+async function emitGmOperation(operation, payload) {
+  if (game.user?.isGM) {
+    const actor = payload?.actorUuid ? await fromUuid(payload.actorUuid).catch(() => null) : game.actors?.get?.(payload?.actorId) ?? null;
+    if (operation === "createActiveEffect" && actor && payload.effectData) return actor.createEmbeddedDocuments("ActiveEffect", [clone(payload.effectData)], { add2eInternal: true, add2eReason: "capability-special-attack" });
+    if (operation === "deleteActiveEffects" && actor && Array.isArray(payload.effectIds)) return actor.deleteEmbeddedDocuments("ActiveEffect", payload.effectIds.filter(Boolean), { add2eInternal: true, add2eReason: "capability-deferred-command" });
+    if (operation === "applyDamage" && actor) {
+      const current = actorHp(actor).current;
+      const amount = Math.abs(Number(payload.montant) || 0);
+      if (!Number.isFinite(current) || !amount) return false;
+      await actor.update({ "system.pdv": current - amount }, { add2eInternal: true, add2eReason: "capability-special-attack", add2eDetails: payload.details });
+      await globalThis.add2eSyncActorVitalStatus?.(actor, { reason: "capability-special-attack" });
+      return true;
+    }
+  }
+  game.socket?.emit?.(`system.${SYSTEM_ID}`, { type: GM_OPERATION, operation, payload });
+  return true;
+}
+
+async function applyHitPointAction({ sourceActor, target, profile, action, detailSource = "capability-special-attack" } = {}) {
+  if (norm(action?.type) !== "set_hit_points") return { ok: false, reason: "unsupported-action" };
+  const targetValue = targetIsMonster(target)
+    ? Number(action?.monsterValue ?? 0)
+    : Number(action?.characterValue ?? -11);
+  const hp = actorHp(target).current;
+  if (!Number.isFinite(hp)) return { ok: false, reason: "missing-hit-points" };
+  const amount = Math.max(0, hp - targetValue);
+  if (amount > 0) {
+    await emitGmOperation("applyDamage", {
+      actorUuid: target.uuid ?? null,
+      actorId: target.id ?? null,
+      montant: amount,
+      details: {
+        capabilitySpecialAttack: profile?.id ?? null,
+        sourceActorUuid: sourceActor?.uuid ?? null,
+        source: detailSource,
+        targetValue
+      }
+    });
+  }
+  return { ok: true, hp, targetValue, amount };
+}
+
 function buildDeferredEffect({ sourceActor, target, item, profile, tick }) {
   const deferred = profile?.deferredEffect ?? {};
   const level = sourceLevel(sourceActor, item, profile);
@@ -320,39 +381,21 @@ function buildDeferredEffect({ sourceActor, target, item, profile, tick }) {
   };
 }
 
-async function emitGmOperation(operation, payload) {
-  if (game.user?.isGM) {
-    const actor = payload?.actorUuid ? await fromUuid(payload.actorUuid).catch(() => null) : game.actors?.get?.(payload?.actorId) ?? null;
-    if (operation === "createActiveEffect" && actor && payload.effectData) return actor.createEmbeddedDocuments("ActiveEffect", [clone(payload.effectData)], { add2eInternal: true, add2eReason: "capability-special-attack" });
-    if (operation === "deleteActiveEffects" && actor && Array.isArray(payload.effectIds)) return actor.deleteEmbeddedDocuments("ActiveEffect", payload.effectIds.filter(Boolean), { add2eInternal: true, add2eReason: "capability-deferred-command" });
-    if (operation === "applyDamage" && actor) {
-      const current = actorHp(actor).current;
-      const amount = Math.abs(Number(payload.montant) || 0);
-      if (!Number.isFinite(current) || !amount) return false;
-      await actor.update({ "system.pdv": current - amount }, { add2eInternal: true, add2eReason: "capability-deferred-command" });
-      await globalThis.add2eSyncActorVitalStatus?.(actor, { reason: "capability-deferred-command" });
-      return true;
-    }
-  }
-  game.socket?.emit?.(`system.${SYSTEM_ID}`, { type: GM_OPERATION, operation, payload });
-  return true;
-}
-
-async function createChat({ sourceActor, target, profile, state, detail = "", d20 = null, total = null, threshold = null, commandWord = "" }) {
+async function createChat({ sourceActor, target, profile, state, detail = "", d20 = null, total = null, threshold = null }) {
   const label = String(profile?.label ?? "Attaque spéciale");
-  const color = (state === "applied" || state === "triggered") ? "#2f7a45" : state === "miss" ? "#9d3c2f" : "#8a631e";
-  const commandLine = commandWord ? `<div style="margin-top:5px;"><b>Mot prononcé :</b> ${esc(commandWord)}</div>` : "";
+  const color = ["applied", "triggered", "immediate"].includes(state) ? "#2f7a45" : state === "miss" ? "#9d3c2f" : "#8a631e";
   const text = ({
     applied: `Le contact de ${esc(sourceActor?.name)} réussit : <b>${esc(label)}</b> est appliqué à ${esc(target?.name)}.`,
-    triggered: `${esc(sourceActor?.name)} prononce le mot de commande : l’effet <b>${esc(label)}</b> se déclenche sur ${esc(target?.name)}.`,
+    immediate: `Le contact de ${esc(sourceActor?.name)} réussit : <b>${esc(label)}</b> se déclenche immédiatement sur ${esc(target?.name)}.`,
+    triggered: `${esc(sourceActor?.name)} déclenche l’effet <b>${esc(label)}</b> sur ${esc(target?.name)}.`,
     miss: `${esc(sourceActor?.name)} ne parvient pas à établir le contact requis pour <b>${esc(label)}</b>.`,
     invalid: `Le contact ne peut pas produire l’effet <b>${esc(label)}</b> sur ${esc(target?.name)}.`
   })[state] ?? `${esc(label)} est résolu.`;
   const rollLine = Number.isFinite(Number(d20)) ? `<div style="margin-top:5px;"><b>Jet de contact :</b> d20 ${esc(d20)}${Number.isFinite(Number(total)) ? ` = ${esc(total)}` : ""}${Number.isFinite(Number(threshold)) ? ` (seuil ${esc(threshold)})` : ""}</div>` : "";
   await ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor: sourceActor }),
-    content: `<div class="add2e-chat-card add2e-capability-special-attack" style="border:1px solid ${color};border-radius:9px;overflow:hidden;background:#fffaf0;color:#2d2416;font-family:var(--font-primary);"><div style="display:flex;align-items:center;gap:8px;background:${color};color:#fff;padding:7px 9px;"><img src="${esc(profile?.img ?? "icons/svg/aura.svg")}" style="width:32px;height:32px;object-fit:cover;border-radius:5px;background:#fff;border:1px solid rgba(255,255,255,.55);"><div><div style="font-weight:900;">${esc(label)}</div><div style="font-size:.84em;opacity:.92;">Capacité spéciale</div></div></div><div style="padding:9px 10px;line-height:1.4;">${text}${rollLine}${commandLine}${detail ? `<div style="margin-top:6px;font-size:.9em;color:#624f2b;">${esc(detail)}</div>` : ""}</div></div>`,
-    flags: { [SYSTEM_ID]: { capabilitySpecialAttack: true, profileId: profile?.id ?? null, state, sourceActorId: sourceActor?.id ?? null, targetActorId: target?.id ?? null, commandWord: commandWord || null } },
+    content: `<div class="add2e-chat-card add2e-capability-special-attack" style="border:1px solid ${color};border-radius:9px;overflow:hidden;background:#fffaf0;color:#2d2416;font-family:var(--font-primary);"><div style="display:flex;align-items:center;gap:8px;background:${color};color:#fff;padding:7px 9px;"><img src="${esc(profile?.img ?? "icons/svg/aura.svg")}" style="width:32px;height:32px;object-fit:cover;border-radius:5px;background:#fff;border:1px solid rgba(255,255,255,.55);"><div><div style="font-weight:900;">${esc(label)}</div><div style="font-size:.84em;opacity:.92;">Capacité spéciale</div></div></div><div style="padding:9px 10px;line-height:1.4;">${text}${rollLine}${detail ? `<div style="margin-top:6px;font-size:.9em;color:#624f2b;">${esc(detail)}</div>` : ""}</div></div>`,
+    flags: { [SYSTEM_ID]: { capabilitySpecialAttack: true, profileId: profile?.id ?? null, state, sourceActorId: sourceActor?.id ?? null, targetActorId: target?.id ?? null } },
     ...chatStyleData()
   });
 }
@@ -459,6 +502,23 @@ async function resolveDeferredContactFromAttack({ sourceActor, targetActor: targ
     diag("RESOLVE_FROM_ATTACK_INVALID_TARGET", { source: sourceActor?.name, target: target?.name, eligibility });
     return { ok: true, applied: false, consumed: false, eligibility };
   }
+
+  if (profileResolvesImmediately(profile)) {
+    const action = actionForProfile(profile);
+    const applied = await applyHitPointAction({ sourceActor, target, profile, action, detailSource: "capability-contact-immediate" });
+    if (!applied.ok) {
+      ui.notifications?.error?.("Attaque spéciale : action immédiate inconnue ou PV de la cible introuvables.");
+      diag("RESOLVE_FROM_ATTACK_IMMEDIATE_FAILED", { source: sourceActor?.name, target: target?.name, action, applied });
+      return { ok: false, reason: applied.reason ?? "immediate-failed" };
+    }
+    await removeWindowAndItem(sourceActor, item.id);
+    const detailPrefix = attackContext.detail ? `${String(attackContext.detail)} ` : "";
+    const detail = `${detailPrefix}Résolution immédiate : PV ${applied.hp} → ${applied.targetValue}.`;
+    await createChat({ sourceActor, target, profile, state: "immediate", ...chatNumbers, detail });
+    diag("RESOLVE_FROM_ATTACK_IMMEDIATE_APPLIED", { source: sourceActor?.name, target: target?.name, itemId: item?.id, profileId: profile?.id, ...applied });
+    return { ok: true, hit: true, applied: true, immediate: true, consumed: true, item, profile, target };
+  }
+
   const effectData = buildDeferredEffect({ sourceActor, target, item, profile, tick });
   await emitGmOperation("createActiveEffect", { actorUuid: target.uuid ?? null, actorId: target.id ?? null, effectData });
   await removeWindowAndItem(sourceActor, item.id);
@@ -570,11 +630,11 @@ function findDeferredActions({ sourceActor, profileId = null }) {
   return result;
 }
 
-async function triggerDeferredAction({ sourceActor, targetActor: targetFromCall, effect, commandWord = "" }) {
+async function triggerDeferredAction({ sourceActor, targetActor: targetFromCall, effect }) {
   const data = effect?.flags?.[SYSTEM_ID]?.[DEFERRED_FLAG] ?? null;
   const target = targetFromCall ?? effect?.parent ?? null;
   const tick = currentTick();
-  diag("TRIGGER_ENTER", { source: sourceActor?.name, target: target?.name, effect: effect?.name, effectId: effect?.id, profileId: data?.profileId, commandWord, tick });
+  diag("TRIGGER_ENTER", { source: sourceActor?.name, target: target?.name, effect: effect?.name, effectId: effect?.id, profileId: data?.profileId, tick });
   if (!sourceActor || !target || !effect || !data || tick === null) return false;
   if (Number(data.expiresAtTick ?? 0) > 0 && tick >= Number(data.expiresAtTick)) {
     ui.notifications?.warn?.("Cet effet différé a expiré.");
@@ -582,24 +642,15 @@ async function triggerDeferredAction({ sourceActor, targetActor: targetFromCall,
     return false;
   }
   const command = data.command ?? {};
-  if (norm(command?.action?.type) !== "set_hit_points") {
-    ui.notifications?.error?.("Action différée inconnue ou non autorisée.");
-    diag("TRIGGER_UNKNOWN_ACTION", { profileId: data.profileId, action: command?.action?.type });
+  const applied = await applyHitPointAction({ sourceActor, target, profile: { id: data.profileId }, action: command.action, detailSource: "capability-deferred-command" });
+  if (!applied.ok) {
+    ui.notifications?.error?.("Action différée inconnue ou PV de la cible introuvables.");
+    diag("TRIGGER_FAILED", { source: sourceActor?.name, target: target?.name, effectId: effect?.id, applied });
     return false;
   }
-  const targetValue = target.type === "monster" ? Number(command?.action?.monsterValue ?? 0) : Number(command?.action?.characterValue ?? -11);
-  const hp = actorHp(target).current;
-  if (!Number.isFinite(hp)) {
-    ui.notifications?.error?.("Les PV de la cible sont introuvables.");
-    diag("TRIGGER_NO_HP", { target: target?.name, effectId: effect?.id });
-    return false;
-  }
-  const amount = Math.max(0, hp - targetValue);
-  diag("TRIGGER_APPLY", { source: sourceActor?.name, target: target?.name, hp, targetValue, amount, commandWord });
-  if (amount > 0) await emitGmOperation("applyDamage", { actorUuid: target.uuid ?? null, actorId: target.id ?? null, montant: amount, details: { capabilityDeferredAction: data.profileId, sourceActorUuid: sourceActor.uuid ?? null, commandWord } });
   await emitGmOperation("deleteActiveEffects", { actorUuid: target.uuid ?? null, actorId: target.id ?? null, effectIds: [effect.id] });
-  await createChat({ sourceActor, target, profile: { id: data.profileId, label: command.label ?? effect.name, img: effect.img ?? sourceActor.img }, state: "triggered", commandWord, detail: String(command?.message ?? "L’action différée est résolue.") });
-  diag("TRIGGER_DONE", { source: sourceActor?.name, target: target?.name, effectId: effect?.id, commandWord });
+  await createChat({ sourceActor, target, profile: { id: data.profileId, label: command.label ?? effect.name, img: effect.img ?? sourceActor.img }, state: "triggered", detail: String(command?.message ?? "L’action différée est résolue.") });
+  diag("TRIGGER_DONE", { source: sourceActor?.name, target: target?.name, effectId: effect?.id, ...applied });
   return true;
 }
 
