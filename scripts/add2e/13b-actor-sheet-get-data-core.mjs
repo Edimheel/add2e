@@ -7,6 +7,7 @@ import { add2ePopulateActorSheetSpellData } from "./13b-actor-sheet-get-data-spe
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant getData.");
 
 const ADD2E_FORCE_EX_DIAGNOSTICS_VERSION = "2026-07-05-force-ex-selection-diagnostics-v2";
+const ADD2E_ACTIVE_EFFECTS_DATA_VERSION = "2026-07-10-filter-technical-class-effects-v1";
 
 function add2eExceptionalStrengthValue(rawValue) {
   const value = Math.trunc(Number(rawValue));
@@ -80,23 +81,123 @@ function add2eSheetAllowedAlignments(actor, sys) {
   return [];
 }
 
+function add2eNormEffectValue(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function add2eFamiliarEffectAction(effect) {
+  const data = effect?.flags?.add2e?.familiar ?? effect?.getFlag?.("add2e", "familiar") ?? null;
+  return String(data?.action ?? "").trim();
+}
+
+function add2eCollectEffectTags(effect) {
+  const add2e = effect?.flags?.add2e ?? {};
+  const values = [];
+  const visit = value => {
+    if (value === undefined || value === null || value === "") return;
+    if (Array.isArray(value)) return value.forEach(visit);
+    if (value instanceof Set) return [...value].forEach(visit);
+    if (typeof value === "object") {
+      for (const [key, entry] of Object.entries(value)) {
+        if (entry === true) values.push(key);
+        else visit(entry);
+      }
+      return;
+    }
+    for (const part of String(value).split(/[,;|\n]+/g)) {
+      const tag = add2eNormEffectValue(part);
+      if (tag) values.push(tag);
+    }
+  };
+  visit(add2e.tags);
+  visit(add2e.effectTags);
+  visit(add2e.systemTags);
+  visit(effect?.statuses);
+  return new Set(values);
+}
+
+function add2eEffectHasFiniteDuration(effect) {
+  const duration = effect?.duration ?? {};
+  for (const key of ["remaining", "rounds", "seconds", "turns"]) {
+    const value = Number(duration?.[key]);
+    if (Number.isFinite(value) && value > 0) return true;
+  }
+  return false;
+}
+
+function add2eIsTechnicalClassOrRaceEffect(effect) {
+  if (!effect || add2eFamiliarEffectAction(effect)) return false;
+  const name = add2eNormEffectValue(`${effect?.name ?? ""} ${effect?.label ?? ""}`);
+  if (/effets?_de_classe|effets?_classe|class_effects?|class_feature_effects?/.test(name)) return true;
+  if (/effets?_de_race|effets?_raciaux|racial_effects?|race_effects?/.test(name)) return true;
+
+  const add2e = effect?.flags?.add2e ?? {};
+  const markers = [
+    add2e.type,
+    add2e.kind,
+    add2e.source,
+    add2e.sourceType,
+    add2e.originType,
+    add2e.category,
+    add2e.effectType,
+    add2e.generatedBy,
+    add2e.sourceClasse,
+    add2e.sourceRace,
+    add2e.className,
+    add2e.raceName
+  ].map(add2eNormEffectValue).filter(Boolean);
+  if (markers.some(value => /(classe|class|race|racial)/.test(value) && /(permanent|passif|passive|system|import|sync|effects?)/.test(value))) return true;
+
+  const tags = add2eCollectEffectTags(effect);
+  const hasClassOrRaceTag = [...tags].some(tag =>
+    tag.startsWith("classe_")
+    || tag.startsWith("classe:")
+    || tag.startsWith("race_")
+    || tag.startsWith("race:")
+    || tag.startsWith("racial_")
+    || tag.startsWith("moine_")
+    || tag.startsWith("clerc_")
+    || tag.startsWith("druide_")
+    || tag.startsWith("guerrier_")
+    || tag.startsWith("paladin_")
+    || tag.startsWith("ranger_")
+    || tag.startsWith("voleur_")
+    || tag.startsWith("assassin_")
+    || tag.startsWith("magicien_")
+    || tag.startsWith("illusionniste_")
+  );
+  const hasTemporaryTag = [...tags].some(tag => /temporaire|temporary|sort|spell|condition|etat|blessure|capability_special_attack_window|timeengine|roundengine/.test(tag));
+  return hasClassOrRaceTag && !hasTemporaryTag && !add2eEffectHasFiniteDuration(effect);
+}
+
+function add2eEffectDescription(effect) {
+  return effect?.getFlag?.("core", "description") || effect?.flags?.add2e?.desc || effect?.description || "";
+}
+
 export function add2ePopulateActorSheetActiveEffectsData(actor, data) {
-  data.activeEffectsList = actor.effects.map(eff => {
-    let desc = eff.getFlag("core", "description") || eff.flags?.add2e?.desc || eff.description || "";
-    if (!desc && eff.flags?.add2e?.tags) desc = "<small>" + eff.flags.add2e.tags.join(", ") + "</small>";
-    let durationStr = "";
-    if (typeof eff.duration?.remaining !== "undefined") durationStr = `${eff.duration.remaining} rounds`;
-    else if (typeof eff.duration?.rounds !== "undefined") durationStr = `${eff.duration.rounds} rounds`;
-    else if (typeof eff.duration?.seconds !== "undefined") durationStr = `${eff.duration.seconds} sec`;
-    return {
-      id: eff.id,
-      name: eff.name || "",
-      img: eff.img || "icons/svg/aura.svg",
-      description: desc,
-      duration: durationStr,
-      sourceName: eff.parent?.name || eff.origin || ""
-    };
-  });
+  data.activeEffectsList = actor.effects
+    .filter(eff => !add2eIsTechnicalClassOrRaceEffect(eff))
+    .map(eff => {
+      const desc = add2eEffectDescription(eff);
+      let durationStr = "";
+      if (typeof eff.duration?.remaining !== "undefined") durationStr = `${eff.duration.remaining} rounds`;
+      else if (typeof eff.duration?.rounds !== "undefined") durationStr = `${eff.duration.rounds} rounds`;
+      else if (typeof eff.duration?.seconds !== "undefined") durationStr = `${eff.duration.seconds} sec`;
+      return {
+        id: eff.id,
+        name: eff.name || "",
+        img: eff.img || "icons/svg/aura.svg",
+        description: desc,
+        duration: durationStr,
+        sourceName: eff.parent?.name || eff.origin || ""
+      };
+    });
   return data.activeEffectsList;
 }
 
@@ -126,3 +227,5 @@ globalThis.Add2eActorSheet.prototype.getData = async function getData() {
   this._add2ePreparedData = data;
   return data;
 };
+
+globalThis.ADD2E_ACTIVE_EFFECTS_DATA_VERSION = ADD2E_ACTIVE_EFFECTS_DATA_VERSION;
