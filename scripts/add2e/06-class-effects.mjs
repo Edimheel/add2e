@@ -1,5 +1,4 @@
 // ============================================================
-<<<<<<< HEAD
 // ADD2E — Nettoyage effets de classe + compétences de voleur
 // ============================================================
 function add2eClassEffectKey(value) {
@@ -778,6 +777,7 @@ async function handleItemAction({ actor, action, itemId, itemType, sheet }) {
 
 function showAdd2eDiceRollerDialog() {
   const DialogV2 = foundry.applications?.api?.DialogV2;
+  if (!DialogV2?.wait) return ui.notifications.warn("DialogV2 indisponible.");
   const content = `<form style="display:grid;gap:.7em;"><div style="display:flex;align-items:center;gap:1em;justify-content:center;"><label for="add2e-nb-dice" style="min-width:5.5em;">Nombre :</label><input id="add2e-nb-dice" type="number" min="1" max="100" value="1" style="width:3.5em;"></div><div style="display:flex;flex-wrap:wrap;gap:.4em;justify-content:center;margin-top:.5em;">${[4, 6, 8, 10, 12, 20, 100].map(f => `<button type="button" data-faces="${f}" style="padding:.45em 1em;font-size:1.13em;font-weight:600;background:#efe9f6;border-radius:7px;border:1.5px solid #9d8bd2;color:#674197;box-shadow:0 2px 5px #0001;">d${f}</button>`).join("")}</div></form>`;
   DialogV2.wait({
     window: { title: "Lancer de dés (AD&D2e)" },
@@ -852,13 +852,3 @@ try { globalThis.handleItemAction = handleItemAction; } catch (_e) {}
 try { globalThis.showAdd2eDiceRollerDialog = showAdd2eDiceRollerDialog; } catch (_e) {}
 try { globalThis.add2e_updateFinalCaracs = add2e_updateFinalCaracs; } catch (_e) {}
 try { globalThis.formatSortChamp = formatSortChamp; } catch (_e) {}
-=======
-// ADD2E — Effets de classe
-// Compatible Foundry V13/V14/V15.
-//
-// Ce module remplace le nom historique 06-class-effects-thief.mjs.
-// La logique métier reste inchangée et reste portée par l’ancien module
-// pendant cette étape de renommage sans refonte.
-// ============================================================
-import "./06-class-effects-thief.mjs";
->>>>>>> 12283bde8f9ed4cb5c7f73c820a036496850894d
