@@ -16,7 +16,7 @@ import "./add2e/02c-spell-family-expansion.mjs";
 import "./add2e/02b-spell-sync-dedupe.mjs";
 import "./add2e/03-equipment-rules.mjs";
 import "./add2e/04-class-active-abilities.mjs";
-import "./add2e/06-class-effects-thief.mjs";
+import "./add2e/06-class-effects.mjs";
 import "./add2e/07-spellcasting-rules.mjs";
 import "./add2e/09-race-class-drop.mjs";
 import "./add2e/10-monk-rules.mjs";
