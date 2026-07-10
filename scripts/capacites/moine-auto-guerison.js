@@ -3,7 +3,8 @@
  * Script exécuté via on_use d'une classFeature.
  * Compatible Foundry V13 / V14 / V15.
  */
-const ADD2E_MOINE_AUTO_GUERISON_VERSION = "2026-07-10-canonical-progression-v3";
+const ADD2E_MOINE_AUTO_GUERISON_VERSION = "2026-07-10-add2e-time-cooldown-v4";
+const ADD2E_MOINE_AUTO_GUERISON_DAY_ROUNDS = 1440;
 
 globalThis.ADD2E_MOINE_AUTO_GUERISON_VERSION = ADD2E_MOINE_AUTO_GUERISON_VERSION;
 
@@ -46,10 +47,55 @@ function a2eMonkClassItem(currentActor, currentFeature) {
   }) ?? null;
 }
 
-function a2eMonkDayKey() {
+function a2eMonkCurrentTick() {
+  const engine = game?.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
+  try {
+    const tick = Number(engine?.currentTick?.());
+    if (Number.isFinite(tick)) return Math.max(0, Math.floor(tick));
+  } catch (_error) {}
+
+  try {
+    const tick = Number(game.settings?.get?.("add2e", "worldTimeTick"));
+    if (Number.isFinite(tick)) return Math.max(0, Math.floor(tick));
+  } catch (_error) {}
+
   const worldTime = Number(game.time?.worldTime);
-  if (Number.isFinite(worldTime) && worldTime > 0) return `worldday-${Math.floor(worldTime / 86400)}`;
-  return new Date().toISOString().slice(0, 10);
+  return Number.isFinite(worldTime) ? Math.max(0, Math.floor(worldTime / 60)) : 0;
+}
+
+function a2eMonkCooldownState(currentActor, currentTick) {
+  const raw = currentActor.getFlag("add2e", "moine.autoGuerison");
+  const data = raw && typeof raw === "object" ? raw : {};
+  const lastUseTick = Number(data.lastUseTick ?? data.usedAtTick);
+  const storedAvailableAtTick = Number(data.availableAtTick);
+  const availableAtTick = Number.isFinite(storedAvailableAtTick)
+    ? Math.max(0, Math.floor(storedAvailableAtTick))
+    : (Number.isFinite(lastUseTick)
+      ? Math.max(0, Math.floor(lastUseTick)) + ADD2E_MOINE_AUTO_GUERISON_DAY_ROUNDS
+      : null);
+  const remainingRounds = availableAtTick === null
+    ? 0
+    : Math.max(0, availableAtTick - currentTick);
+
+  return {
+    data,
+    lastUseTick: Number.isFinite(lastUseTick) ? Math.max(0, Math.floor(lastUseTick)) : null,
+    availableAtTick,
+    remainingRounds
+  };
+}
+
+function a2eMonkFormatRounds(rounds) {
+  let remaining = Math.max(0, Math.ceil(Number(rounds) || 0));
+  const days = Math.floor(remaining / 1440);
+  remaining %= 1440;
+  const hours = Math.floor(remaining / 60);
+  const rest = remaining % 60;
+  const parts = [];
+  if (days) parts.push(`${days} jour(s)`);
+  if (hours) parts.push(`${hours} heure(s)`);
+  if (rest || !parts.length) parts.push(`${rest} round(s)`);
+  return parts.join(" et ");
 }
 
 function a2eGetMonkRow(classItem, level) {
@@ -97,10 +143,10 @@ if (!healFormula) {
   return false;
 }
 
-const dayKey = a2eMonkDayKey();
-const usageFlagKey = `moine.autoGuerison.${dayKey}`;
-if (actor.getFlag("add2e", usageFlagKey)?.used) {
-  ui.notifications.warn("Auto-guérison déjà utilisée aujourd’hui.");
+const currentTick = a2eMonkCurrentTick();
+const cooldown = a2eMonkCooldownState(actor, currentTick);
+if (cooldown.remainingRounds > 0) {
+  ui.notifications.warn(`Auto-guérison déjà utilisée : disponible dans ${a2eMonkFormatRounds(cooldown.remainingRounds)}.`);
   return false;
 }
 
@@ -120,8 +166,19 @@ if (gained <= 0) {
   return false;
 }
 
+const availableAtTick = currentTick + ADD2E_MOINE_AUTO_GUERISON_DAY_ROUNDS;
 await actor.update({ "system.pdv": healed });
-await actor.setFlag("add2e", usageFlagKey, { used: true, amount: gained, formula: healFormula, rollTotal: healAmount, at: Date.now() });
+await actor.setFlag("add2e", "moine.autoGuerison", {
+  used: true,
+  lastUseTick: currentTick,
+  availableAtTick,
+  cooldownRounds: ADD2E_MOINE_AUTO_GUERISON_DAY_ROUNDS,
+  amount: gained,
+  formula: healFormula,
+  rollTotal: healAmount,
+  timeEngineVersion: globalThis.ADD2E_TIME_ENGINE_VERSION ?? game?.add2e?.time?.version ?? null,
+  at: Date.now()
+});
 
 await ChatMessage.create({
   speaker: ChatMessage.getSpeaker({ actor }),
