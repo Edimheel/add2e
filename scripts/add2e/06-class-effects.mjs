@@ -1,4 +1,5 @@
 // ============================================================
+<<<<<<< HEAD
 // ADD2E — Nettoyage effets de classe + compétences de voleur
 // ============================================================
 function add2eClassEffectKey(value) {
@@ -851,3 +852,13 @@ try { globalThis.handleItemAction = handleItemAction; } catch (_e) {}
 try { globalThis.showAdd2eDiceRollerDialog = showAdd2eDiceRollerDialog; } catch (_e) {}
 try { globalThis.add2e_updateFinalCaracs = add2e_updateFinalCaracs; } catch (_e) {}
 try { globalThis.formatSortChamp = formatSortChamp; } catch (_e) {}
+=======
+// ADD2E — Effets de classe
+// Compatible Foundry V13/V14/V15.
+//
+// Ce module remplace le nom historique 06-class-effects-thief.mjs.
+// La logique métier reste inchangée et reste portée par l’ancien module
+// pendant cette étape de renommage sans refonte.
+// ============================================================
+import "./06-class-effects-thief.mjs";
+>>>>>>> 12283bde8f9ed4cb5c7f73c820a036496850894d
