@@ -4,7 +4,7 @@
 // ============================================================
 import { escapeHtml, formatDuration, expose } from "./08-character-sheet-ui-00-utils.mjs";
 
-globalThis.ADD2E_CHARACTER_EFFECTS_UI_VERSION = "2026-06-27-familiar-effect-actions-v1";
+globalThis.ADD2E_CHARACTER_EFFECTS_UI_VERSION = "2026-07-10-filter-technical-class-effects-v1";
 
 function familiarAction(effect) {
   const data = effect?.flags?.add2e?.familiar ?? effect?.getFlag?.("add2e", "familiar") ?? null;
@@ -19,11 +19,108 @@ function familiarUseButton(effect) {
   return `<a class="add2e-familiar-effect-use a2e-action-icon" data-effect-id="${escapeHtml(effect.id)}" title="${label}"><i class="fas ${icon}"></i></a>`;
 }
 
+function norm(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function collectEffectTags(effect) {
+  const add2e = effect?.flags?.add2e ?? {};
+  const values = [];
+  const visit = value => {
+    if (value === undefined || value === null || value === "") return;
+    if (Array.isArray(value)) return value.forEach(visit);
+    if (value instanceof Set) return [...value].forEach(visit);
+    if (typeof value === "object") {
+      for (const [key, entry] of Object.entries(value)) {
+        if (entry === true) values.push(key);
+        else visit(entry);
+      }
+      return;
+    }
+    for (const part of String(value).split(/[,;|\n]+/g)) {
+      const tag = norm(part);
+      if (tag) values.push(tag);
+    }
+  };
+  visit(add2e.tags);
+  visit(add2e.effectTags);
+  visit(add2e.systemTags);
+  visit(effect?.statuses);
+  return new Set(values);
+}
+
+function hasFiniteDuration(effect) {
+  const duration = effect?.duration ?? {};
+  for (const key of ["remaining", "rounds", "seconds", "turns"]) {
+    const value = Number(duration?.[key]);
+    if (Number.isFinite(value) && value > 0) return true;
+  }
+  return false;
+}
+
+function isTechnicalClassOrRaceEffect(effect) {
+  if (!effect || familiarAction(effect)) return false;
+  const name = norm(`${effect?.name ?? ""} ${effect?.label ?? ""}`);
+  if (/effets?_de_classe|effets?_classe|class_effects?|class_feature_effects?/.test(name)) return true;
+  if (/effets?_de_race|effets?_raciaux|racial_effects?|race_effects?/.test(name)) return true;
+
+  const add2e = effect?.flags?.add2e ?? {};
+  const markers = [
+    add2e.type,
+    add2e.kind,
+    add2e.source,
+    add2e.sourceType,
+    add2e.originType,
+    add2e.category,
+    add2e.effectType,
+    add2e.generatedBy,
+    add2e.sourceClasse,
+    add2e.sourceRace,
+    add2e.className,
+    add2e.raceName
+  ].map(norm).filter(Boolean);
+  if (markers.some(value => /(classe|class|race|racial)/.test(value) && /(permanent|passif|passive|system|import|sync|effects?)/.test(value))) return true;
+
+  const tags = collectEffectTags(effect);
+  const hasClassOrRaceTag = [...tags].some(tag =>
+    tag.startsWith("classe_")
+    || tag.startsWith("classe:")
+    || tag.startsWith("race_")
+    || tag.startsWith("race:")
+    || tag.startsWith("racial_")
+    || tag.startsWith("moine_")
+    || tag.startsWith("clerc_")
+    || tag.startsWith("druide_")
+    || tag.startsWith("guerrier_")
+    || tag.startsWith("paladin_")
+    || tag.startsWith("ranger_")
+    || tag.startsWith("voleur_")
+    || tag.startsWith("assassin_")
+    || tag.startsWith("magicien_")
+    || tag.startsWith("illusionniste_")
+  );
+  const hasTemporaryTag = [...tags].some(tag => /temporaire|temporary|sort|spell|condition|etat|blessure|capability_special_attack_window|timeengine|roundengine/.test(tag));
+  return hasClassOrRaceTag && !hasTemporaryTag && !hasFiniteDuration(effect);
+}
+
+function effectDescription(effect) {
+  return effect?.getFlag?.("core", "description")
+    || effect?.flags?.add2e?.desc
+    || effect?.description
+    || "";
+}
+
 export function buildEffectsTab(sheet) {
   const actor = sheet?.actor ?? sheet?.document;
-  const effects = Array.from(actor?.effects ?? []);
+  const effects = Array.from(actor?.effects ?? []).filter(effect => !isTechnicalClassOrRaceEffect(effect));
   const rows = effects.length ? effects.map(eff => {
-    const desc = eff.getFlag?.("core", "description") || eff.flags?.add2e?.desc || eff.description || (Array.isArray(eff.flags?.add2e?.tags) ? `<small>${escapeHtml(eff.flags.add2e.tags.join(", "))}</small>` : "");
+    const desc = effectDescription(eff);
     const sourceName = eff.parent?.name || eff.origin || "—";
     return `<tr>
       <td style="width:42px;text-align:center;"><img src="${escapeHtml(eff.img || "icons/svg/aura.svg")}" alt="" style="width:28px;height:28px;border:0;object-fit:cover;"></td>
@@ -143,3 +240,4 @@ export function injectEffectsTab(sheet, sheetRoot) {
 }
 
 expose("add2eUiBuildEffectsTab", buildEffectsTab);
+expose("add2eUiShouldShowEffect", effect => !isTechnicalClassOrRaceEffect(effect));
