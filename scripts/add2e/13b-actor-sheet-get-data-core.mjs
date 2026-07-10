@@ -7,7 +7,7 @@ import { add2ePopulateActorSheetSpellData } from "./13b-actor-sheet-get-data-spe
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant getData.");
 
 const ADD2E_FORCE_EX_DIAGNOSTICS_VERSION = "2026-07-05-force-ex-selection-diagnostics-v2";
-const ADD2E_ACTIVE_EFFECTS_DATA_VERSION = "2026-07-10-show-active-and-passive-effects-v1";
+const ADD2E_ACTIVE_EFFECTS_DATA_VERSION = "2026-07-10-show-only-applied-effects-v1";
 
 function add2eExceptionalStrengthValue(rawValue) {
   const value = Math.trunc(Number(rawValue));
@@ -100,9 +100,20 @@ function add2eEffectHasFiniteDuration(effect) {
   return false;
 }
 
-function add2eEffectKind(effect) {
+function add2eEffectHasFoundryStatus(effect) {
+  const statuses = effect?.statuses;
+  if (statuses instanceof Set) return statuses.size > 0;
+  if (Array.isArray(statuses)) return statuses.length > 0;
+  return false;
+}
+
+function add2eEffectHasMeaningfulChanges(effect) {
+  return Array.isArray(effect?.changes) && effect.changes.some(change => String(change?.key ?? "").trim());
+}
+
+function add2eEffectMarkerText(effect) {
   const add2e = effect?.flags?.add2e ?? {};
-  const text = [
+  return [
     effect?.name,
     effect?.label,
     add2e.type,
@@ -116,9 +127,13 @@ function add2eEffectKind(effect) {
     add2e.sourceClasse,
     add2e.sourceRace,
     add2e.className,
-    add2e.raceName
+    add2e.raceName,
+    add2e.reason
   ].map(add2eNormEffectValue).filter(Boolean).join(" ");
+}
 
+function add2eEffectKind(effect) {
+  const text = add2eEffectMarkerText(effect);
   if (/(^|_)effets?_de_classe($|_)|(^|_)effets?_classe($|_)|class_effects?|class_feature_effects?|classe|class/.test(text)) return "class";
   if (/(^|_)effets?_de_race($|_)|(^|_)effets?_raciaux($|_)|racial_effects?|race_effects?|racial|race/.test(text)) return "race";
   if (/sort|spell/.test(text)) return "spell";
@@ -135,13 +150,23 @@ function add2eLooksLikeTechnicalTagList(value) {
   return technical.length >= Math.max(5, Math.floor(chunks.length * 0.6));
 }
 
+function add2eIsTechnicalEffectContainer(effect) {
+  const name = add2eNormEffectValue(`${effect?.name ?? ""} ${effect?.label ?? ""}`);
+  if (/(^|_)effets?_de_classe($|_)|(^|_)effets?_classe($|_)|class_effects?|class_feature_effects?/.test(name)) return true;
+  if (/(^|_)effets?_de_race($|_)|(^|_)effets?_raciaux($|_)|racial_effects?|race_effects?/.test(name)) return true;
+  const raw = effect?.getFlag?.("core", "description") || effect?.flags?.add2e?.desc || effect?.description || "";
+  const markers = add2eEffectMarkerText(effect);
+  const looksClassOrRace = /(classe|class|race|racial)/.test(markers);
+  return looksClassOrRace && !add2eEffectHasFiniteDuration(effect) && !add2eEffectHasFoundryStatus(effect) && add2eLooksLikeTechnicalTagList(raw);
+}
+
 function add2eFallbackEffectDescription(effect) {
   const kind = add2eEffectKind(effect);
-  if (kind === "class") return "Effet passif de classe.";
-  if (kind === "race") return "Effet passif racial.";
-  if (kind === "spell") return add2eEffectHasFiniteDuration(effect) ? "Effet de sort actif." : "Effet de sort.";
-  if (kind === "capacity") return add2eEffectHasFiniteDuration(effect) ? "Effet de capacité actif." : "Effet de capacité passif.";
-  return add2eEffectHasFiniteDuration(effect) ? "Effet actif." : "Effet passif permanent.";
+  if (kind === "class") return "Effet de classe appliqué.";
+  if (kind === "race") return "Effet racial appliqué.";
+  if (kind === "spell") return add2eEffectHasFiniteDuration(effect) ? "Effet de sort actif." : "Effet de sort appliqué.";
+  if (kind === "capacity") return add2eEffectHasFiniteDuration(effect) ? "Effet de capacité actif." : "Effet de capacité appliqué.";
+  return add2eEffectHasFiniteDuration(effect) ? "Effet actif." : "Effet appliqué.";
 }
 
 function add2eEffectDescription(effect) {
@@ -164,8 +189,21 @@ function add2eEffectDuration(effect) {
   return "Permanent";
 }
 
+function add2eEffectHasExplicitAppliedMarker(effect) {
+  const add2e = effect?.flags?.add2e ?? {};
+  if (add2e.applied === true || add2e.active === true || add2e.visibleEffect === true) return true;
+  const text = add2eEffectMarkerText(effect);
+  return /temporaire|temporary|applique|applied|actif|active|condition|etat|blessure|fuite|fear|stun|paraly|poison|sort|spell|capacity|capacite|capability_special_attack_window|timeengine|roundengine/.test(text);
+}
+
 function add2eShouldShowEffect(effect) {
-  return !!effect && effect.disabled !== true;
+  if (!effect || effect.disabled === true) return false;
+  if (add2eIsTechnicalEffectContainer(effect)) return false;
+  if (add2eEffectHasFiniteDuration(effect)) return true;
+  if (add2eEffectHasFoundryStatus(effect)) return true;
+  if (add2eEffectHasExplicitAppliedMarker(effect)) return true;
+  if (add2eEffectHasMeaningfulChanges(effect)) return true;
+  return false;
 }
 
 export function add2ePopulateActorSheetActiveEffectsData(actor, data) {
