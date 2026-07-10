@@ -1,5 +1,5 @@
 // ADD2E — Effects Engine / progression et capacités du moine.
-// Extraction fonctionnelle sans changement de règle.
+// Source canonique : Item classe Moine, system.progression[].monk.
 
 const register = (Engine, methods) => Object.defineProperties(
   Engine,
@@ -54,7 +54,7 @@ export function installEffectsEngineMonk(Engine) {
       if (monk) {
         const level = this.getEmbeddedClassLevel(monk);
         const rule = {
-          progression: Array.isArray(monk.system?.monkProgression) && monk.system.monkProgression.length ? "monkProgression" : "progression",
+          progression: "progression",
           source: {
             actor,
             classItemId: monk.id,
@@ -65,30 +65,31 @@ export function installEffectsEngineMonk(Engine) {
         };
         return this.getClassProgressionEntryForPassiveRule(rule, { actor }) ?? null;
       }
-      return this.getClassProgressionEntry(actor, "monkProgression") ?? this.getClassProgressionEntry(actor, "progression");
+      return this.getClassProgressionEntry(actor, "progression");
+    },
+
+    getMonkProgressionData(actor) {
+      const row = this.getMonkProgression(actor);
+      return row?.monk && typeof row.monk === "object" ? row.monk : null;
     },
 
     getMonkArmorClass(actor) {
-      const progression = this.getMonkProgression(actor);
-      const value = Number(progression?.monkAC ?? progression?.caMoine ?? progression?.ca_moine);
+      const value = Number(this.getMonkProgressionData(actor)?.armorClass);
       return Number.isFinite(value) ? value : null;
     },
 
     getMonkMove(actor) {
-      const progression = this.getMonkProgression(actor);
-      const value = Number(progression?.move ?? progression?.movement ?? progression?.mouvement ?? progression?.monkMove ?? progression?.monkMovement);
+      const value = Number(this.getMonkProgressionData(actor)?.movement);
       return Number.isFinite(value) ? value : null;
     },
 
     getMonkOpenDoors(actor) {
-      const progression = this.getMonkProgression(actor);
-      const value = Number(progression?.openDoors ?? progression?.ouvrir_portes);
+      const value = Number(this.getMonkProgressionData(actor)?.openDoors);
       return Number.isFinite(value) ? value : null;
     },
 
     getMonkUnarmedDamage(actor) {
-      const progression = this.getMonkProgression(actor);
-      return String(progression?.unarmedDamage ?? progression?.main_nue ?? progression?.degatsMainNue ?? progression?.damage ?? "").trim();
+      return String(this.getMonkProgressionData(actor)?.unarmedDamage ?? "").trim();
     },
 
     getMonkUnarmedDamageParts(actor) {
@@ -101,68 +102,61 @@ export function installEffectsEngineMonk(Engine) {
     },
 
     getMonkAttacksPerRound(actor) {
-      const progression = this.getMonkProgression(actor);
-      return String(progression?.attacksPerRound ?? progression?.attaquesParRound ?? progression?.attaques_par_round ?? "").trim();
+      return String(this.getMonkProgression(actor)?.attacksPerRound ?? "").trim();
     },
 
     getMonkStunParalyze(actor) {
-      const progression = this.getMonkProgression(actor);
-      const value = Number(progression?.unarmedStunMargin ?? progression?.stunMargin ?? progression?.stunParalyze ?? progression?.etourdissement ?? progression?.paralysie);
+      const value = Number(this.getMonkProgressionData(actor)?.unarmedStunMargin);
       return Number.isFinite(value) ? value : 0;
     },
 
     getMonkSlowFall(actor) {
-      const progression = this.getMonkProgression(actor);
-      const value = Number(progression?.slowFall ?? progression?.chute_ralentie);
+      const value = Number(this.getMonkProgressionData(actor)?.slowFallDistance);
       return Number.isFinite(value) ? value : 0;
     },
 
     getMonkSlowFallText(actor) {
-      const progression = this.getMonkProgression(actor);
-      const text = String(progression?.slowFallText ?? progression?.chuteRalentieTexte ?? progression?.chute_ralentie_texte ?? "").trim();
+      const text = String(this.getMonkProgressionData(actor)?.slowFallText ?? "").trim();
       if (text) return text;
       const value = this.getMonkSlowFall(actor);
       return value > 0 ? `${value} m si à proximité d’un mur` : "—";
     },
 
     getMonkSelfHealPerDay(actor) {
-      const progression = this.getMonkProgression(actor);
-      const value = Number(progression?.selfHealPerDay ?? progression?.auto_soin);
-      return Number.isFinite(value) ? value : 0;
+      const formula = String(this.getMonkProgressionData(actor)?.selfHealFormula ?? "").trim();
+      return formula ? 1 : 0;
     },
 
     getMonkWeaponDamageBonus(actor) {
-      const progression = this.getMonkProgression(actor);
-      const value = Number(progression?.monkWeaponDamageBonus ?? progression?.bonusDegatsArme ?? progression?.bonus_degats_arme);
-      return Number.isFinite(value) ? value : (this.isMonk(actor) ? Math.floor((this.getEmbeddedClassLevel(this.getMonkClassItem(actor)) ?? this.getActorLevel(actor)) / 2) : 0);
+      const value = Number(this.getMonkProgressionData(actor)?.weaponDamageBonus);
+      return Number.isFinite(value) ? value : 0;
     },
 
     hasMonkDiseaseImmunity(actor) {
       return this.hasImmunity(actor, "maladie");
     },
 
-    getMonkProgressionTags(actor) {
-      const progression = this.getMonkProgression(actor);
-      return progression ? this.toArray(progression.tags).map(tag => this.normalizeTag(tag)).filter(Boolean) : [];
+    getMonkProgressionTags(_actor) {
+      return [];
     },
 
     getMonkResistCharmSuggestion(actor) {
-      const progression = this.getMonkProgression(actor);
-      const value = Number(progression?.resistCharmSuggestion ?? progression?.resistance_charme_suggestion);
+      const value = Number(this.getMonkProgressionData(actor)?.resistCharmSuggestion);
       return Number.isFinite(value) ? value : 0;
     },
 
     getMonkResistESP(actor) {
-      const progression = this.getMonkProgression(actor);
-      const value = Number(progression?.resistESP ?? progression?.resistance_esp);
+      const value = Number(this.getMonkProgressionData(actor)?.resistESP);
       return Number.isFinite(value) ? value : 0;
     },
 
     hasMonkQuiveringPalm(actor) {
-      const progression = this.getMonkProgression(actor);
-      return !!progression?.quiveringPalm
-        || this.hasTag(actor, "moine:paume_palpitante")
-        || this.hasTag(actor, "paume_palpitante");
+      return this.getActiveClassFeatures(actor).some(feature => {
+        const id = this.normalizeTag(feature?.id ?? feature?.key ?? feature?.slug ?? "");
+        const name = this.normalizeTag(feature?.name ?? feature?.label ?? feature?.title ?? feature?.nom ?? "");
+        return id.includes("paume_mortelle") || id.includes("paume-palpitante")
+          || name.includes("paume_mortelle") || name.includes("paume_palpitante");
+      });
     },
 
     getMonkMartialProgression(actor) {
@@ -224,7 +218,7 @@ export function installEffectsEngineMonk(Engine) {
       if (context.finalResult !== true) return { applies: false, reason: "miss" };
 
       const progression = this.getMonkProgression(actor);
-      const requiredMargin = Math.max(1, Number(progression?.unarmedStunMargin ?? progression?.stunMargin ?? 5) || 5);
+      const requiredMargin = Math.max(1, Number(this.getMonkProgressionData(actor)?.unarmedStunMargin ?? 5) || 5);
       const d20 = Number(context.d20);
       const threshold = Number(context.threshold ?? context.seuilFinalD20);
       const total = Number(context.total ?? context.totalAuToucher);
@@ -234,7 +228,7 @@ export function installEffectsEngineMonk(Engine) {
         : (Number.isFinite(d20) && Number.isFinite(threshold) ? d20 - threshold : NaN);
 
       const applies = Number.isFinite(margin) && margin >= requiredMargin;
-      const durationFormula = String(progression?.unarmedStunDuration ?? "1d6 rounds").match(/\d+d\d+(?:[+-]\d+)?/i)?.[0] ?? "1d6";
+      const durationFormula = String(this.getMonkProgressionData(actor)?.unarmedStunDuration ?? "1d6 rounds").match(/\d+d\d+(?:[+-]\d+)?/i)?.[0] ?? "1d6";
       return {
         applies,
         reason: applies ? "margin" : "insufficient-margin",
