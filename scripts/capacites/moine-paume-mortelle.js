@@ -6,7 +6,7 @@
  * consommé par ADD2E_CAPABILITY_SPECIAL_ATTACK.
  * Compatible Foundry V13/V14/V15 — DialogV2 uniquement.
  */
-const ADD2E_MOINE_PAUME_MORTELLE_VERSION = "2026-07-08-deferred-contact-profile-v3";
+const ADD2E_MOINE_PAUME_MORTELLE_VERSION = "2026-07-09-deferred-contact-profile-lazy-engine-v1";
 const ADD2E_PAUME_PROFILE_ID = "monk-quivering-palm";
 const ADD2E_PAUME_MIN_LEVEL = 13;
 const ADD2E_PAUME_TOUCH_WINDOW_ROUNDS = 3;
@@ -37,6 +37,33 @@ function a2ePaumeEsc(value) {
 function a2ePaumeChatStyleData() {
   if (CONST.CHAT_MESSAGE_STYLES) return { style: CONST.CHAT_MESSAGE_STYLES.OTHER };
   return { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 };
+}
+
+function a2ePaumeServiceReady(service = globalThis.add2eCapabilitySpecialAttack) {
+  return !!(service?.prepareWindow && service?.findDeferredActions && service?.triggerDeferredAction && service?.currentTick);
+}
+
+async function a2ePaumeCapabilityService() {
+  if (a2ePaumeServiceReady()) return globalThis.add2eCapabilitySpecialAttack;
+
+  const systemId = String(game?.system?.id ?? "add2e");
+  const prefix = String(globalThis.ROUTE_PREFIX ?? "").replace(/\/$/, "");
+  const paths = [
+    `${prefix}/systems/${systemId}/scripts/add2e/capability-special-attacks.mjs`,
+    `/systems/${systemId}/scripts/add2e/capability-special-attacks.mjs`,
+    `systems/${systemId}/scripts/add2e/capability-special-attacks.mjs`
+  ].filter((value, index, list) => value && list.indexOf(value) === index);
+
+  for (const path of paths) {
+    try {
+      await import(path);
+      if (a2ePaumeServiceReady()) return globalThis.add2eCapabilitySpecialAttack;
+    } catch (error) {
+      console.warn("[ADD2E][MOINE][PAUME_MORTELLE][ENGINE_IMPORT_FAILED]", { path, error });
+    }
+  }
+
+  return globalThis.add2eCapabilitySpecialAttack ?? null;
 }
 
 function a2ePaumeFeatureLevel(currentActor, currentFeature) {
@@ -210,9 +237,9 @@ if (level < ADD2E_PAUME_MIN_LEVEL) {
   return false;
 }
 
-const service = globalThis.add2eCapabilitySpecialAttack;
-if (!service?.prepareWindow || !service?.findDeferredActions || !service?.triggerDeferredAction || !service?.currentTick) {
-  ui.notifications.error("Paume mortelle : le moteur des attaques spéciales de capacité n’est pas chargé. Recharge Foundry.");
+const service = await a2ePaumeCapabilityService();
+if (!a2ePaumeServiceReady(service)) {
+  ui.notifications.error("Paume mortelle : le moteur générique des contacts différés n’est pas disponible. Voir la console pour l’erreur d’import.");
   return false;
 }
 
