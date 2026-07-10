@@ -1,6 +1,6 @@
 // scripts/add2e-attack/04-attack-roll.mjs
 // ADD2E — Résolution des attaques.
-// Version : 2026-05-30-attack-roll-chat-duplicate-diagnostics-v9
+// Version : 2026-07-10-attack-chat-resolved-damage-v1
 
 import { plageToRollFormula } from "./01-core-helpers.mjs";
 import { add2eApplyDamage } from "./02-damage.mjs";
@@ -716,7 +716,18 @@ export async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
         degats = backstabMultiplier > 1 ? Math.max(1, degatsAvantMultiplicateur * backstabMultiplier) : degatsAvantMultiplicateur;
         detailsDegats = backstabMultiplier > 1 ? `${rDmg.result} × ${backstabMultiplier}` : rDmg.result;
         if (useAssassination) assassinatResult = await add2eRollAssassinationForAttack({ actor, score: assassinationInfo.score, situational: assassinatMod });
-        if (cible) await add2eApplyDamage({ cible, montant: degats, source: arme.name, lanceur: actor, silent: true });
+        if (cible) {
+          const damageResolution = await add2eApplyDamage({
+            cible,
+            montant: degats,
+            source: arme.name,
+            sourceItem: arme,
+            lanceur: actor,
+            silent: true
+          });
+          const appliedDamage = Number(damageResolution?.amount);
+          if (Number.isFinite(appliedDamage) && appliedDamage >= 0) degats = appliedDamage;
+        }
       }
 
       const conditionalACLine = conditionalFixedAC?.detail
