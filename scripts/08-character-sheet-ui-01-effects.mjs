@@ -2,9 +2,9 @@
 // ADD2E — 08 Character Sheet UI — 01 effets
 // Compatible Foundry V13/V14/V15.
 // ============================================================
-import { escapeHtml, formatDuration, expose } from "./08-character-sheet-ui-00-utils.mjs";
+import { escapeHtml, expose } from "./08-character-sheet-ui-00-utils.mjs";
 
-globalThis.ADD2E_CHARACTER_EFFECTS_UI_VERSION = "2026-07-10-filter-only-explicit-technical-effects-v1";
+globalThis.ADD2E_CHARACTER_EFFECTS_UI_VERSION = "2026-07-10-show-active-and-passive-effects-v1";
 
 function familiarAction(effect) {
   const data = effect?.flags?.add2e?.familiar ?? effect?.getFlag?.("add2e", "familiar") ?? null;
@@ -38,9 +38,11 @@ function hasFiniteDuration(effect) {
   return false;
 }
 
-function markerText(effect) {
+function effectKind(effect) {
   const add2e = effect?.flags?.add2e ?? {};
-  return [
+  const text = [
+    effect?.name,
+    effect?.label,
     add2e.type,
     add2e.kind,
     add2e.source,
@@ -54,36 +56,62 @@ function markerText(effect) {
     add2e.className,
     add2e.raceName
   ].map(norm).filter(Boolean).join(" ");
+
+  if (/(^|_)effets?_de_classe($|_)|(^|_)effets?_classe($|_)|class_effects?|class_feature_effects?|classe|class/.test(text)) return "class";
+  if (/(^|_)effets?_de_race($|_)|(^|_)effets?_raciaux($|_)|racial_effects?|race_effects?|racial|race/.test(text)) return "race";
+  if (/sort|spell/.test(text)) return "spell";
+  if (/capacite|capacity|ability|feature/.test(text)) return "capacity";
+  return "effect";
 }
 
-function isTechnicalClassOrRaceEffect(effect) {
-  if (!effect || familiarAction(effect)) return false;
+function looksLikeTechnicalTagList(value) {
+  const text = String(value ?? "").replace(/<[^>]*>/g, " ").trim();
+  if (!text) return false;
+  const chunks = text.split(/[,;\n]+/g).map(part => part.trim()).filter(Boolean);
+  if (chunks.length < 5) return false;
+  const technical = chunks.filter(part => /[a-z0-9_]+[:][a-z0-9_:+\-]+/i.test(part) || /[_]/.test(part));
+  return technical.length >= Math.max(5, Math.floor(chunks.length * 0.6));
+}
 
-  // Un effet avec une durée réelle doit rester visible, même s'il vient d'une classe,
-  // d'une race, d'un sort ou d'une capacité.
-  if (hasFiniteDuration(effect)) return false;
-
-  const name = norm(`${effect?.name ?? ""} ${effect?.label ?? ""}`);
-  if (/(^|_)effets?_de_classe($|_)|(^|_)effets?_classe($|_)|class_effects?|class_feature_effects?/.test(name)) return true;
-  if (/(^|_)effets?_de_race($|_)|(^|_)effets?_raciaux($|_)|racial_effects?|race_effects?/.test(name)) return true;
-
-  const markers = markerText(effect);
-  if (!markers) return false;
-
-  return /(classe|class|race|racial)/.test(markers)
-    && /(permanent|passif|passive|system|import|sync|effects?)/.test(markers);
+function fallbackDescription(effect) {
+  const kind = effectKind(effect);
+  if (kind === "class") return "Effet passif de classe.";
+  if (kind === "race") return "Effet passif racial.";
+  if (kind === "spell") return hasFiniteDuration(effect) ? "Effet de sort actif." : "Effet de sort.";
+  if (kind === "capacity") return hasFiniteDuration(effect) ? "Effet de capacité actif." : "Effet de capacité passif.";
+  return hasFiniteDuration(effect) ? "Effet actif." : "Effet passif permanent.";
 }
 
 function effectDescription(effect) {
-  return effect?.getFlag?.("core", "description")
+  const raw = effect?.getFlag?.("core", "description")
     || effect?.flags?.add2e?.desc
     || effect?.description
     || "";
+  if (!String(raw).trim()) return escapeHtml(fallbackDescription(effect));
+  if (looksLikeTechnicalTagList(raw)) return escapeHtml(fallbackDescription(effect));
+  return raw;
+}
+
+function effectDuration(effect) {
+  const duration = effect?.duration ?? {};
+  const remaining = Number(duration.remaining);
+  if (Number.isFinite(remaining) && remaining > 0) return `${remaining} rounds`;
+  const rounds = Number(duration.rounds);
+  if (Number.isFinite(rounds) && rounds > 0) return `${rounds} rounds`;
+  const turns = Number(duration.turns);
+  if (Number.isFinite(turns) && turns > 0) return `${turns} tours`;
+  const seconds = Number(duration.seconds);
+  if (Number.isFinite(seconds) && seconds > 0) return `${seconds} sec`;
+  return "Permanent";
+}
+
+function shouldShowEffect(effect) {
+  return !!effect && effect.disabled !== true;
 }
 
 export function buildEffectsTab(sheet) {
   const actor = sheet?.actor ?? sheet?.document;
-  const effects = Array.from(actor?.effects ?? []).filter(effect => !isTechnicalClassOrRaceEffect(effect));
+  const effects = Array.from(actor?.effects ?? []).filter(shouldShowEffect);
   const rows = effects.length ? effects.map(eff => {
     const desc = effectDescription(eff);
     const sourceName = eff.parent?.name || eff.origin || "—";
@@ -91,7 +119,7 @@ export function buildEffectsTab(sheet) {
       <td style="width:42px;text-align:center;"><img src="${escapeHtml(eff.img || "icons/svg/aura.svg")}" alt="" style="width:28px;height:28px;border:0;object-fit:cover;"></td>
       <td><strong>${escapeHtml(eff.name || eff.label || "Effet")}</strong></td>
       <td>${escapeHtml(sourceName)}</td>
-      <td>${escapeHtml(formatDuration(eff))}</td>
+      <td>${escapeHtml(effectDuration(eff))}</td>
       <td class="a2e-small">${desc}</td>
       <td style="white-space:nowrap;text-align:center;">
         ${familiarUseButton(eff)}
@@ -99,10 +127,10 @@ export function buildEffectsTab(sheet) {
         <a class="add2e-effect-delete a2e-action-icon a2e-action-delete" data-effect-id="${escapeHtml(eff.id)}" title="Supprimer l’effet"><i class="fas fa-trash"></i></a>
       </td>
     </tr>`;
-  }).join("") : `<tr><td colspan="6" class="a2e-muted" style="text-align:center;padding:0.8em;">Aucun effet actif.</td></tr>`;
+  }).join("") : `<tr><td colspan="6" class="a2e-muted" style="text-align:center;padding:0.8em;">Aucun effet actif ou passif.</td></tr>`;
 
   return `<section class="a2e-panel add2e-effects-panel">
-    <h2><i class="fas fa-sparkles"></i> Effets actifs</h2>
+    <h2><i class="fas fa-sparkles"></i> Effets actifs et passifs</h2>
     <div class="a2e-panel-body"><table class="a2e-table add2e-effects-table">
       <thead><tr><th></th><th>Effet</th><th>Source</th><th>Durée</th><th>Description</th><th>Actions</th></tr></thead>
       <tbody>${rows}</tbody>
@@ -205,4 +233,4 @@ export function injectEffectsTab(sheet, sheetRoot) {
 }
 
 expose("add2eUiBuildEffectsTab", buildEffectsTab);
-expose("add2eUiShouldShowEffect", effect => !isTechnicalClassOrRaceEffect(effect));
+expose("add2eUiShouldShowEffect", shouldShowEffect);
