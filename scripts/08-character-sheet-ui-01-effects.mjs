@@ -4,7 +4,7 @@
 // ============================================================
 import { escapeHtml, formatDuration, expose } from "./08-character-sheet-ui-00-utils.mjs";
 
-globalThis.ADD2E_CHARACTER_EFFECTS_UI_VERSION = "2026-07-10-filter-technical-class-effects-v1";
+globalThis.ADD2E_CHARACTER_EFFECTS_UI_VERSION = "2026-07-10-filter-only-explicit-technical-effects-v1";
 
 function familiarAction(effect) {
   const data = effect?.flags?.add2e?.familiar ?? effect?.getFlag?.("add2e", "familiar") ?? null;
@@ -29,32 +29,6 @@ function norm(value) {
     .replace(/^_+|_+$/g, "");
 }
 
-function collectEffectTags(effect) {
-  const add2e = effect?.flags?.add2e ?? {};
-  const values = [];
-  const visit = value => {
-    if (value === undefined || value === null || value === "") return;
-    if (Array.isArray(value)) return value.forEach(visit);
-    if (value instanceof Set) return [...value].forEach(visit);
-    if (typeof value === "object") {
-      for (const [key, entry] of Object.entries(value)) {
-        if (entry === true) values.push(key);
-        else visit(entry);
-      }
-      return;
-    }
-    for (const part of String(value).split(/[,;|\n]+/g)) {
-      const tag = norm(part);
-      if (tag) values.push(tag);
-    }
-  };
-  visit(add2e.tags);
-  visit(add2e.effectTags);
-  visit(add2e.systemTags);
-  visit(effect?.statuses);
-  return new Set(values);
-}
-
 function hasFiniteDuration(effect) {
   const duration = effect?.duration ?? {};
   for (const key of ["remaining", "rounds", "seconds", "turns"]) {
@@ -64,14 +38,9 @@ function hasFiniteDuration(effect) {
   return false;
 }
 
-function isTechnicalClassOrRaceEffect(effect) {
-  if (!effect || familiarAction(effect)) return false;
-  const name = norm(`${effect?.name ?? ""} ${effect?.label ?? ""}`);
-  if (/effets?_de_classe|effets?_classe|class_effects?|class_feature_effects?/.test(name)) return true;
-  if (/effets?_de_race|effets?_raciaux|racial_effects?|race_effects?/.test(name)) return true;
-
+function markerText(effect) {
   const add2e = effect?.flags?.add2e ?? {};
-  const markers = [
+  return [
     add2e.type,
     add2e.kind,
     add2e.source,
@@ -84,29 +53,25 @@ function isTechnicalClassOrRaceEffect(effect) {
     add2e.sourceRace,
     add2e.className,
     add2e.raceName
-  ].map(norm).filter(Boolean);
-  if (markers.some(value => /(classe|class|race|racial)/.test(value) && /(permanent|passif|passive|system|import|sync|effects?)/.test(value))) return true;
+  ].map(norm).filter(Boolean).join(" ");
+}
 
-  const tags = collectEffectTags(effect);
-  const hasClassOrRaceTag = [...tags].some(tag =>
-    tag.startsWith("classe_")
-    || tag.startsWith("classe:")
-    || tag.startsWith("race_")
-    || tag.startsWith("race:")
-    || tag.startsWith("racial_")
-    || tag.startsWith("moine_")
-    || tag.startsWith("clerc_")
-    || tag.startsWith("druide_")
-    || tag.startsWith("guerrier_")
-    || tag.startsWith("paladin_")
-    || tag.startsWith("ranger_")
-    || tag.startsWith("voleur_")
-    || tag.startsWith("assassin_")
-    || tag.startsWith("magicien_")
-    || tag.startsWith("illusionniste_")
-  );
-  const hasTemporaryTag = [...tags].some(tag => /temporaire|temporary|sort|spell|condition|etat|blessure|capability_special_attack_window|timeengine|roundengine/.test(tag));
-  return hasClassOrRaceTag && !hasTemporaryTag && !hasFiniteDuration(effect);
+function isTechnicalClassOrRaceEffect(effect) {
+  if (!effect || familiarAction(effect)) return false;
+
+  // Un effet avec une durée réelle doit rester visible, même s'il vient d'une classe,
+  // d'une race, d'un sort ou d'une capacité.
+  if (hasFiniteDuration(effect)) return false;
+
+  const name = norm(`${effect?.name ?? ""} ${effect?.label ?? ""}`);
+  if (/(^|_)effets?_de_classe($|_)|(^|_)effets?_classe($|_)|class_effects?|class_feature_effects?/.test(name)) return true;
+  if (/(^|_)effets?_de_race($|_)|(^|_)effets?_raciaux($|_)|racial_effects?|race_effects?/.test(name)) return true;
+
+  const markers = markerText(effect);
+  if (!markers) return false;
+
+  return /(classe|class|race|racial)/.test(markers)
+    && /(permanent|passif|passive|system|import|sync|effects?)/.test(markers);
 }
 
 function effectDescription(effect) {
