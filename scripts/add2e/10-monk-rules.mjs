@@ -1,7 +1,7 @@
 // ADD2E — Moine : mécanique liée à l'Item classe Moine.
 // Compatible Foundry V13/V14/V15.
 
-const ADD2E_MONK_RULES_VERSION = "2026-07-09-effects-engine-movement-sync-v3";
+const ADD2E_MONK_RULES_VERSION = "2026-07-10-canonical-progression-v4";
 const ADD2E_MONK_UNARMED_SYNC_LOCK = new Set();
 const ADD2E_MONK_UNARMED_IMG = "systems/add2e/assets/icones/armes/main-nue.webp";
 const ADD2E_MONK_GENERATED_FEATURE_SOURCE = "10-monk-rules";
@@ -66,10 +66,7 @@ function add2eGetMonkProgressionRow(actor) {
   const item = add2eMonkClassItem(actor);
   const level = add2eMonkClassLevel(item);
   if (!item || level === null) return null;
-  const system = item.system ?? {};
-  const progression = Array.isArray(system.monkProgression) && system.monkProgression.length
-    ? system.monkProgression
-    : (Array.isArray(system.progression) ? system.progression : []);
+  const progression = Array.isArray(item.system?.progression) ? item.system.progression : [];
   return progression.find(row => Number(row?.level ?? row?.niveau) === level)
     ?? progression[Math.max(0, Math.min(progression.length - 1, level - 1))]
     ?? null;
@@ -240,7 +237,7 @@ async function add2eSyncMonkUnarmedWeapon(actor) {
   }
 
   const damage = add2eMonkDamagePartsFromEffectsEngine(actor)
-    ?? add2eMonkDamageParts(row?.unarmedDamage ?? row?.main_nue ?? row?.damage ?? actor.system?.moine?.main_nue);
+    ?? add2eMonkDamageParts(row?.monk?.unarmedDamage ?? actor.system?.moine?.main_nue);
   const monkMove = add2eMonkMoveFromEffectsEngine(actor);
   if (monkMove > 0) {
     await monk.update({
@@ -366,7 +363,6 @@ function add2eMonkClassUpdateRelevant(changes = {}) {
     || foundry.utils.hasProperty(changes, "system.niveau")
     || foundry.utils.hasProperty(changes, "system.level")
     || foundry.utils.hasProperty(changes, "system.progression")
-    || foundry.utils.hasProperty(changes, "system.monkProgression")
     || foundry.utils.hasProperty(changes, "system.tags")
     || foundry.utils.hasProperty(changes, "system.slug")
     || foundry.utils.hasProperty(changes, "system.label")
