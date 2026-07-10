@@ -11,7 +11,7 @@
  * Retour : { annulé, résiste, details, pct, jet, bonus }
  */
 
-const ADD2E_INCOMING_EFFECT_RESOLUTION_VERSION = "2026-07-10-generic-incoming-active-effects-v1";
+const ADD2E_INCOMING_EFFECT_RESOLUTION_VERSION = "2026-07-10-generic-incoming-active-effects-v2";
 
 function add2eResolveEffectKey(value) {
   return String(value ?? "")
@@ -164,6 +164,236 @@ function add2eResolveRuleContextMatches(rule, context) {
   return true;
 }
 
+const ADD2E_EFFECTIVE_ABILITY_RULE_KINDS = new Set([
+  "effective_ability_floor",
+  "contextual_ability_floor",
+  "ability_floor"
+]);
+
+function add2eResolveAbilityKey(value) {
+  const key = add2eResolveEffectKey(value);
+  const aliases = {
+    for: "force",
+    str: "force",
+    strength: "force",
+    dex: "dexterite",
+    dexterity: "dexterite",
+    con: "constitution",
+    int: "intelligence",
+    intel: "intelligence",
+    wis: "sagesse",
+    wisdom: "sagesse",
+    sag: "sagesse",
+    cha: "charisme",
+    charisma: "charisme"
+  };
+  return aliases[key] ?? key;
+}
+
+function add2eResolveGetProperty(object, path) {
+  if (!object || !path) return undefined;
+  try {
+    if (typeof foundry?.utils?.getProperty === "function") return foundry.utils.getProperty(object, path);
+  } catch (_error) {}
+  return String(path).split(".").reduce((current, part) => current?.[part], object);
+}
+
+function add2eResolveStrictNumber(value) {
+  if (value === undefined || value === null || value === "") return null;
+  if (typeof value === "object") {
+    for (const key of ["value", "current", "total", "base", "actuel"]) {
+      const nested = add2eResolveStrictNumber(value?.[key]);
+      if (Number.isFinite(nested)) return nested;
+    }
+    return null;
+  }
+  const number = Number(String(value).replace(",", "."));
+  return Number.isFinite(number) ? number : null;
+}
+
+function add2eResolveActorAbilityValue(actor, ability) {
+  const key = add2eResolveAbilityKey(ability);
+  if (!actor || !key) return null;
+  const system = actor.system ?? {};
+  const short = {
+    force: "for",
+    dexterite: "dex",
+    constitution: "con",
+    intelligence: "int",
+    sagesse: "sag",
+    charisme: "cha"
+  }[key] ?? "";
+
+  const directPaths = [
+    key,
+    `${key}.value`,
+    `abilities.${key}.value`,
+    `attributes.${key}.value`,
+    short,
+    short ? `${short}.value` : "",
+    short ? `abilities.${short}.value` : "",
+    short ? `attributes.${short}.value` : ""
+  ].filter(Boolean);
+
+  for (const path of directPaths) {
+    const value = add2eResolveStrictNumber(add2eResolveGetProperty(system, path));
+    if (Number.isFinite(value)) return value;
+  }
+
+  const componentPaths = [
+    `${key}_base`,
+    `${key}_race`,
+    `${key}_bonus`,
+    `bonus_caracteristiques.${key}`,
+    `bonus_divers_caracteristiques.${key}`
+  ];
+  let found = false;
+  let total = 0;
+  for (const path of componentPaths) {
+    const value = add2eResolveStrictNumber(add2eResolveGetProperty(system, path));
+    if (!Number.isFinite(value)) continue;
+    found = true;
+    total += value;
+  }
+  return found ? total : null;
+}
+
+function add2eResolveAbilityContext(context = {}) {
+  if (context?.keys instanceof Set && context?.tags instanceof Set) return context;
+  const effectTypes = [
+    context?.effectType,
+    context?.effectTypes,
+    context?.type,
+    context?.kind,
+    context?.attackType
+  ];
+  return add2eResolveIncomingContext(null, {
+    name: context?.name ?? context?.label ?? "Contexte",
+    flags: {
+      add2e: {
+        tags: context?.tags ?? context?.actionTags ?? [],
+        effectTypes
+      }
+    }
+  });
+}
+
+function add2eResolveRuleAbility(rule) {
+  return add2eResolveAbilityKey(rule?.ability ?? rule?.characteristic ?? rule?.caracteristique ?? rule?.stat ?? "");
+}
+
+function add2eResolveEffectiveAbility(actor, ability, context = {}) {
+  const key = add2eResolveAbilityKey(ability);
+  const normalizedContext = add2eResolveAbilityContext(context);
+  const base = add2eResolveActorAbilityValue(actor, key);
+  const engine = globalThis.Add2eEffectsEngine;
+  const candidates = [];
+
+  for (const rule of add2eResolveRuleList(actor)) {
+    if (!ADD2E_EFFECTIVE_ABILITY_RULE_KINDS.has(add2eResolveRuleKind(rule))) continue;
+    if (add2eResolveRuleAbility(rule) !== key) continue;
+    if (!add2eResolveRuleContextMatches(rule, normalizedContext)) continue;
+    const rawValue = typeof engine?.getPassiveRuleNumber === "function"
+      ? engine.getPassiveRuleNumber(rule, {
+          actor,
+          actorLevel: engine.getActorLevel?.(actor),
+          classLevel: Number(rule?.source?.classLevel) || null
+        })
+      : Number(rule?.value ?? rule?.floor ?? rule?.minimum);
+    const value = Number(rawValue);
+    if (!Number.isFinite(value)) continue;
+    candidates.push({
+      value,
+      rule,
+      label: String(rule?.label ?? rule?.source?.featureName ?? rule?.source?.effectName ?? "Valeur effective")
+    });
+  }
+
+  const selected = candidates.sort((left, right) => right.value - left.value)[0] ?? null;
+  const effective = selected
+    ? (Number.isFinite(base) ? Math.max(base, selected.value) : selected.value)
+    : base;
+  return {
+    ability: key,
+    base,
+    effective,
+    applied: !!selected && Number.isFinite(effective) && (!Number.isFinite(base) || effective > base),
+    rule: selected?.rule ?? null,
+    label: selected?.label ?? "",
+    context: normalizedContext
+  };
+}
+
+function add2eResolveContextualEffectiveAbilities(actor, context = {}) {
+  const normalizedContext = add2eResolveAbilityContext(context);
+  const abilities = new Set();
+  for (const rule of add2eResolveRuleList(actor)) {
+    if (!ADD2E_EFFECTIVE_ABILITY_RULE_KINDS.has(add2eResolveRuleKind(rule))) continue;
+    if (!add2eResolveRuleContextMatches(rule, normalizedContext)) continue;
+    const ability = add2eResolveRuleAbility(rule);
+    if (ability) abilities.add(ability);
+  }
+  return Object.fromEntries(
+    [...abilities].map(ability => [ability, add2eResolveEffectiveAbility(actor, ability, normalizedContext)])
+  );
+}
+
+function add2eSerializeEffectiveAbilities(results = {}) {
+  return Object.fromEntries(Object.entries(results).map(([ability, result]) => [ability, {
+    ability,
+    base: Number.isFinite(result?.base) ? result.base : null,
+    effective: Number.isFinite(result?.effective) ? result.effective : null,
+    applied: result?.applied === true,
+    label: String(result?.label ?? "")
+  }]));
+}
+
+function add2eResolvePostEffectiveAbilities(actor, context, results = {}) {
+  const applied = Object.values(results).filter(result => result?.applied === true && Number.isFinite(result?.effective));
+  if (!actor || !applied.length) return;
+  const details = applied.map(result => {
+    const label = result.ability.charAt(0).toUpperCase() + result.ability.slice(1);
+    return `${label} effective : ${result.effective}${Number.isFinite(result.base) ? ` (valeur réelle ${result.base})` : ""}`;
+  }).join(" — ");
+  Promise.resolve().then(() => ChatMessage.create({
+    speaker: ChatMessage.getSpeaker({ actor }),
+    content: `<div class="add2e-chat-card" style="border:1px solid #4c5f9e;border-radius:8px;padding:8px;">
+      <div style="font-weight:900;color:#4c5f9e;">${add2eResolveEscapeHtml(applied[0]?.label || "Défense contextuelle")}</div>
+      <div><b>${add2eResolveEscapeHtml(actor.name)}</b> — ${add2eResolveEscapeHtml(context?.name ?? "Effet")}</div>
+      <div>${add2eResolveEscapeHtml(details)}</div>
+    </div>`,
+    flags: {
+      add2e: {
+        effectiveAbilityResolution: true,
+        version: ADD2E_INCOMING_EFFECT_RESOLUTION_VERSION,
+        abilities: add2eSerializeEffectiveAbilities(results)
+      }
+    }
+  })).catch(error => console.warn("[ADD2E][EFFECTIVE_ABILITY][CHAT_ERROR]", error));
+}
+
+function add2eInstallEffectiveAbilityContract() {
+  const engine = globalThis.Add2eEffectsEngine;
+  if (!engine) return false;
+  Object.defineProperties(engine, {
+    getEffectiveAbility: {
+      configurable: true,
+      writable: true,
+      value(actor, ability, context = {}) {
+        return add2eResolveEffectiveAbility(actor, ability, context);
+      }
+    },
+    getContextualEffectiveAbilities: {
+      configurable: true,
+      writable: true,
+      value(actor, context = {}) {
+        return add2eResolveContextualEffectiveAbilities(actor, context);
+      }
+    }
+  });
+  return true;
+}
+
 function add2eResolveLegacyImmunity(actor, context) {
   const engine = globalThis.Add2eEffectsEngine;
   if (!actor || !engine) return null;
@@ -218,10 +448,11 @@ function add2eResolveD100() {
 
 function add2eResolveIncomingActiveEffect(actor, context) {
   if (!actor || !context) {
-    return { blocked: false, kind: "none", pct: 0, roll: 0, rule: null, context };
+    return { blocked: false, kind: "none", pct: 0, roll: 0, rule: null, effectiveAbilities: {}, context };
   }
 
   const rules = add2eResolveRuleList(actor);
+  const effectiveAbilities = add2eResolveContextualEffectiveAbilities(actor, context);
 
   for (const rule of rules) {
     if (add2eResolveRuleKind(rule) !== "incoming_effect_immunity") continue;
@@ -233,12 +464,13 @@ function add2eResolveIncomingActiveEffect(actor, context) {
       roll: 0,
       rule,
       label: String(rule?.label ?? rule?.source?.featureName ?? rule?.source?.effectName ?? "Immunité"),
+      effectiveAbilities,
       context
     };
   }
 
   const legacy = add2eResolveLegacyImmunity(actor, context);
-  if (legacy) return { ...legacy, context };
+  if (legacy) return { ...legacy, effectiveAbilities, context };
 
   const candidates = [];
   for (const rule of rules) {
@@ -250,7 +482,7 @@ function add2eResolveIncomingActiveEffect(actor, context) {
   }
 
   if (!candidates.length) {
-    return { blocked: false, kind: "none", pct: 0, roll: 0, rule: null, context };
+    return { blocked: false, kind: "none", pct: 0, roll: 0, rule: null, effectiveAbilities, context };
   }
 
   const selected = candidates.sort((left, right) => right.pct - left.pct)[0];
@@ -263,6 +495,7 @@ function add2eResolveIncomingActiveEffect(actor, context) {
     roll,
     rule: selected.rule,
     label: String(selected.rule?.label ?? selected.rule?.source?.featureName ?? selected.rule?.source?.effectName ?? "Résistance"),
+    effectiveAbilities,
     context
   };
 }
@@ -336,6 +569,7 @@ async function resolveActiveEffectsOnTarget(actor, effectType) {
     name: type
   };
   const incoming = add2eResolveIncomingActiveEffect(actor, context);
+  const effectiveAbilities = incoming.effectiveAbilities ?? {};
   if (incoming.kind !== "none") {
     add2eResolvePostIncomingResult(actor, incoming);
     return {
@@ -346,7 +580,8 @@ async function resolveActiveEffectsOnTarget(actor, effectType) {
         : incoming.label,
       pct: incoming.pct,
       jet: incoming.roll,
-      bonus: 0
+      bonus: 0,
+      effectiveAbilities
     };
   }
 
@@ -358,7 +593,8 @@ async function resolveActiveEffectsOnTarget(actor, effectType) {
       details: `Immunité ou protection contre ${type}`,
       pct: 100,
       jet: 0,
-      bonus: 0
+      bonus: 0,
+      effectiveAbilities
     };
     globalThis.add2eLastResistanceRoll = {
       found: true,
@@ -383,7 +619,8 @@ async function resolveActiveEffectsOnTarget(actor, effectType) {
       details: resistance.details,
       pct: 100,
       jet: 0,
-      bonus: 0
+      bonus: 0,
+      effectiveAbilities
     };
   }
   if (resistance.found) {
@@ -393,7 +630,8 @@ async function resolveActiveEffectsOnTarget(actor, effectType) {
       details: resistance.details,
       pct: Number(resistance.pct) || 0,
       jet: Number(resistance.jet) || 0,
-      bonus: 0
+      bonus: 0,
+      effectiveAbilities
     };
     if (typeof ChatMessage !== "undefined") {
       const color = result.résiste ? "#2f8f46" : "#b33a2e";
@@ -416,11 +654,16 @@ async function resolveActiveEffectsOnTarget(actor, effectType) {
   )) || 0;
   const category = engine.getSaveCategory?.(type) ?? key;
   const manual = engine.getResistanceInfo?.(actor, type)?.manual === true;
-  const details = manual
+  const baseDetails = manual
     ? `Résistance à ${type} à appliquer selon la règle de campagne. ${bonus ? `Bonus de sauvegarde ${bonus >= 0 ? "+" : ""}${bonus}` : ""}`.trim()
     : (bonus
       ? `Bonus de sauvegarde (${category}) ${bonus >= 0 ? "+" : ""}${bonus}`
       : `Aucune immunité ni résistance active contre ${type}`);
+  const abilityDetails = Object.values(effectiveAbilities)
+    .filter(result => result?.applied === true && Number.isFinite(result?.effective))
+    .map(result => `${result.ability} effective ${result.effective}`)
+    .join(", ");
+  const details = abilityDetails ? `${baseDetails}. ${abilityDetails}.` : baseDetails;
 
   return {
     annulé: false,
@@ -428,9 +671,12 @@ async function resolveActiveEffectsOnTarget(actor, effectType) {
     details,
     pct: 0,
     jet: 0,
-    bonus
+    bonus,
+    effectiveAbilities
   };
 }
+
+add2eInstallEffectiveAbilityContract();
 
 if (!globalThis.ADD2E_INCOMING_EFFECT_HOOK_REGISTERED) {
   globalThis.ADD2E_INCOMING_EFFECT_HOOK_REGISTERED = true;
@@ -445,6 +691,16 @@ if (!globalThis.ADD2E_INCOMING_EFFECT_HOOK_REGISTERED) {
     if (!context.keys.size) return true;
 
     const result = add2eResolveIncomingActiveEffect(actor, context);
+    const effectiveAbilities = result.effectiveAbilities ?? {};
+    const serializedAbilities = add2eSerializeEffectiveAbilities(effectiveAbilities);
+    if (Object.keys(serializedAbilities).length) {
+      try {
+        effect.updateSource?.({ "flags.add2e.effectiveAbilities": serializedAbilities });
+      } catch (error) {
+        console.warn("[ADD2E][EFFECTIVE_ABILITY][UPDATE_SOURCE_ERROR]", error);
+      }
+      add2eResolvePostEffectiveAbilities(actor, context, effectiveAbilities);
+    }
     if (result.kind === "none") return true;
 
     add2eResolvePostIncomingResult(actor, result);
@@ -455,4 +711,6 @@ if (!globalThis.ADD2E_INCOMING_EFFECT_HOOK_REGISTERED) {
 window.resolveActiveEffectsOnTarget = resolveActiveEffectsOnTarget;
 globalThis.resolveActiveEffectsOnTarget = resolveActiveEffectsOnTarget;
 globalThis.add2eResolveIncomingActiveEffect = add2eResolveIncomingActiveEffect;
+globalThis.add2eResolveEffectiveAbility = add2eResolveEffectiveAbility;
+globalThis.add2eResolveContextualEffectiveAbilities = add2eResolveContextualEffectiveAbilities;
 globalThis.ADD2E_INCOMING_EFFECT_RESOLUTION_VERSION = ADD2E_INCOMING_EFFECT_RESOLUTION_VERSION;
