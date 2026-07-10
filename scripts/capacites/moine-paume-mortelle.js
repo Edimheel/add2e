@@ -6,12 +6,12 @@
  * consommé par ADD2E_CAPABILITY_SPECIAL_ATTACK.
  * Compatible Foundry V13/V14/V15 — DialogV2 uniquement.
  */
-const ADD2E_MOINE_PAUME_MORTELLE_VERSION = "2026-07-09-deferred-contact-profile-lazy-engine-v1";
+const ADD2E_MOINE_PAUME_MORTELLE_VERSION = "2026-07-10-deferred-contact-system-icon-v1";
 const ADD2E_PAUME_PROFILE_ID = "monk-quivering-palm";
 const ADD2E_PAUME_MIN_LEVEL = 13;
 const ADD2E_PAUME_TOUCH_WINDOW_ROUNDS = 3;
 const ADD2E_PAUME_WEEK_ROUNDS = 7 * 24 * 60;
-const ADD2E_PAUME_IMG = "icons/skills/melee/strike-palm-light-orange.webp";
+const ADD2E_PAUME_IMG = "systems/add2e/asset/icones/capacites/paume-mortelle.webp";
 
 globalThis.ADD2E_MOINE_PAUME_MORTELLE_VERSION = ADD2E_MOINE_PAUME_MORTELLE_VERSION;
 
@@ -162,6 +162,19 @@ function a2ePaumeWindow(currentActor, itemId) {
   ) ?? null;
 }
 
+async function a2ePaumeDeleteItemIfPresent(currentActor, itemId, reason) {
+  if (!currentActor || !itemId || !currentActor.items?.get?.(itemId)) return false;
+  try {
+    await currentActor.deleteEmbeddedDocuments("Item", [itemId], { add2eInternal: true, add2eReason: reason });
+    return true;
+  } catch (error) {
+    const message = String(error?.message ?? error ?? "");
+    if (/does not exist|introuvable/i.test(message)) return false;
+    console.warn("[ADD2E][MOINE][PAUME_MORTELLE][DELETE_TEMP_ITEM_FAILED]", { actor: currentActor?.name, itemId, reason, error });
+    return false;
+  }
+}
+
 async function a2ePaumeChat(actorDocument, profile, title, body, color = "#5d2e15") {
   return ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor: actorDocument }),
@@ -283,7 +296,7 @@ if (oldItem) {
     ui.notifications.warn(`Paume mortelle déjà préparée. Contact à établir dans ${remaining}.`);
     return false;
   }
-  await actor.deleteEmbeddedDocuments("Item", [oldItem.id], { add2eInternal: true, add2eReason: "capability-special-attack-stale-item" });
+  await a2ePaumeDeleteItemIfPresent(actor, oldItem.id, "capability-special-attack-stale-item");
 }
 
 const DialogV2 = foundry?.applications?.api?.DialogV2;
@@ -339,13 +352,11 @@ const itemSystem = {
     "attaque:contact",
     "type_arme:main_nue",
     "classe:moine",
-    "combat:arme_temporaire",
     "capability:special-attack"
   ],
-  effectTags: ["classe:moine", "combat:arme_temporaire", "capability:special-attack"],
+  effectTags: ["classe:moine", "capability:special-attack"],
   add2eAutoCreated: true,
   sourceClasse: "moine",
-  sourceCapacite: "paume_mortelle",
   niveauMoine: level,
   description: "Tentative de contact créée par la Paume mortelle. Le moteur d’attaque spécial ne lance aucun dégât ordinaire ; il pose un effet différé lorsque le contact et les restrictions canoniques sont validés."
 };
@@ -357,12 +368,11 @@ const created = await actor.createEmbeddedDocuments("Item", [{
   system: itemSystem,
   flags: {
     add2e: {
-      tags: ["classe:moine", "combat:arme_temporaire", "capability:special-attack"],
+      tags: ["classe:moine", "capability:special-attack"],
       sourceClasse: "moine",
-      sourceCapacite: "paume_mortelle",
       sourceLevel: level,
       capabilitySpecialAttack: profile,
-      temporary: true,
+      capabilityTemporary: true,
       createdAtTick: currentTick
     }
   }
@@ -381,7 +391,7 @@ const window = await service.prepareWindow({
   rounds: ADD2E_PAUME_TOUCH_WINDOW_ROUNDS
 });
 if (!window) {
-  await actor.deleteEmbeddedDocuments("Item", [contactItem.id], { add2eInternal: true, add2eReason: "capability-special-attack-window-failed" });
+  await a2ePaumeDeleteItemIfPresent(actor, contactItem.id, "capability-special-attack-window-failed");
   ui.notifications.error("Paume mortelle : création de la fenêtre de contact impossible.");
   return false;
 }
