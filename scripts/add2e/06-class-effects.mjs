@@ -1,6 +1,9 @@
 // ============================================================
 // ADD2E — Nettoyage effets de classe + compétences de voleur
 // ============================================================
+const ADD2E_CLASS_PASSIVE_EFFECTS_VERSION = "2026-07-10-individual-passive-effects-v1";
+const ADD2E_CLASS_PASSIVE_EFFECT_SYNC_LOCK = new Set();
+
 function add2eClassEffectKey(value) {
   return add2eNormalizeEquipTag(value);
 }
@@ -53,106 +56,327 @@ function add2eShouldDeleteEffectForClassPurge(effect, itemsToDelete = []) {
   return false;
 }
 
-function add2eCollectUnlockedClassEffectTags(actor, classItem = null) {
-  const tags = new Set();
-  const level = Math.max(1, Number(actor?.system?.niveau) || 1);
-  const cls = classItem ?? actor?.items?.find?.(i => String(i.type || "").toLowerCase() === "classe") ?? null;
-  const systems = [actor?.system?.details_classe, cls?.system].filter(Boolean);
+function add2eClassEffectClone(value) {
+  if (value === undefined || value === null) return value;
+  try { return foundry.utils.deepClone(value); }
+  catch (_error) {
+    try { return JSON.parse(JSON.stringify(value)); }
+    catch (_cloneError) { return value; }
+  }
+}
 
-  const push = value => {
+function add2eClassItemLevel(actor, classItem) {
+  const direct = Number(classItem?.system?.niveau ?? classItem?.system?.level);
+  if (Number.isFinite(direct) && direct >= 1) return Math.floor(direct);
+
+  try {
+    const canonical = Number(globalThis.add2eCanonicalClassLevel?.(actor, classItem, NaN));
+    if (Number.isFinite(canonical) && canonical >= 1) return Math.floor(canonical);
+  } catch (_error) {}
+
+  const classItems = Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
+  if (classItems.length === 1) {
+    const legacy = Number(actor?.system?.niveau);
+    if (Number.isFinite(legacy) && legacy >= 1) return Math.floor(legacy);
+  }
+  return null;
+}
+
+function add2eClassFeatureLevelRange(feature) {
+  const min = Number(feature?.minLevel ?? feature?.minimumLevel ?? feature?.niveauMin ?? feature?.level ?? feature?.niveau ?? 1);
+  const maxRaw = feature?.maxLevel ?? feature?.maximumLevel ?? feature?.niveauMax ?? feature?.max;
+  const max = maxRaw === undefined || maxRaw === null || maxRaw === "" ? null : Number(maxRaw);
+  return {
+    min: Number.isFinite(min) && min >= 1 ? Math.floor(min) : 1,
+    max: Number.isFinite(max) && max >= 1 ? Math.floor(max) : null
+  };
+}
+
+function add2eClassFeatureUnlocked(feature, level) {
+  const classLevel = Number(level);
+  if (!Number.isFinite(classLevel) || classLevel < 1) return false;
+  const range = add2eClassFeatureLevelRange(feature);
+  return classLevel >= range.min && (range.max === null || classLevel <= range.max);
+}
+
+function add2eIsPassiveClassFeature(feature) {
+  if (!feature || typeof feature !== "object") return false;
+  const type = add2eClassEffectKey(feature.type ?? feature.kind ?? feature.category ?? "");
+  const hasOnUse = Boolean(String(feature.on_use ?? feature.onUse ?? feature.onUseScript ?? feature.script ?? "").trim());
+  if (feature.activable === true || feature.active === true || hasOnUse) return false;
+  if (["active", "activable", "action", "capacite_active"].includes(type)) return false;
+  if (feature.passive === false) return false;
+  if (feature.passive === true) return true;
+  if (["passive", "rule", "regle", "always_on", "permanent"].includes(type)) return true;
+  return true;
+}
+
+function add2eClassFeatureStableId(feature, index = 0) {
+  const raw = feature?.id
+    ?? feature?._id
+    ?? feature?.key
+    ?? feature?.slug
+    ?? feature?.flags?.add2e?.id
+    ?? feature?.flags?.add2e?.key
+    ?? feature?.name
+    ?? feature?.label
+    ?? feature?.title
+    ?? feature?.nom
+    ?? `feature-${index + 1}`;
+  return add2eClassEffectKey(raw) || `feature_${index + 1}`;
+}
+
+function add2eClassFeatureEntries(system = {}) {
+  const values = [];
+  for (const raw of [system.classFeatures, system.classFeaturesDebloquees]) {
+    const list = Array.isArray(raw) ? raw : (raw && typeof raw === "object" ? Object.values(raw) : []);
+    values.push(...list);
+  }
+  const seen = new Set();
+  return values.filter((feature, index) => {
+    if (!feature || typeof feature !== "object") return false;
+    const key = add2eClassFeatureStableId(feature, index);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function add2eClassFeatureTags(feature) {
+  const tags = new Set();
+  for (const value of [
+    feature?.tags,
+    feature?.tag,
+    feature?.effectTags,
+    feature?.effets,
+    feature?.effects,
+    feature?.flags?.add2e?.tags,
+    feature?.flags?.add2e?.effectTags
+  ]) {
     for (const raw of add2eToEquipArray(value)) {
       const tag = add2eNormalizeEquipTag(raw);
       if (tag) tags.add(tag);
     }
-  };
+  }
+  return [...tags];
+}
 
-  const pushFeatures = features => {
-    const list = Array.isArray(features)
-      ? features
-      : (features && typeof features === "object" ? Object.values(features) : []);
-    for (const feature of list) {
-      if (!feature || typeof feature !== "object") continue;
-      const min = Number(feature.minLevel ?? feature.minimumLevel ?? feature.level ?? feature.niveau ?? 1) || 1;
-      const maxRaw = feature.maxLevel ?? feature.maximumLevel ?? feature.maxNiveau;
-      const max = maxRaw === undefined || maxRaw === null || maxRaw === "" ? 999 : Number(maxRaw) || 999;
-      if (level < min || level > max) continue;
-      push(feature.tags);
-      push(feature.tag);
-      push(feature.effectTags);
-      push(feature.effets);
-      push(feature.effects);
-      push(feature.flags?.add2e?.tags);
-      push(feature.flags?.add2e?.effectTags);
+function add2eClassFeatureRules(feature) {
+  const rules = [];
+  for (const raw of [feature?.rules, feature?.flags?.add2e?.rules]) {
+    const list = Array.isArray(raw) ? raw : (raw && typeof raw === "object" ? [raw] : []);
+    for (const rule of list) if (rule && typeof rule === "object") rules.push(add2eClassEffectClone(rule));
+  }
+  return rules;
+}
+
+function add2eCollectUnlockedClassEffectTags(actor, classItem = null) {
+  const tags = new Set();
+  const classItems = classItem
+    ? [classItem]
+    : Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
+
+  for (const item of classItems) {
+    const level = add2eClassItemLevel(actor, item);
+    if (level === null) continue;
+    for (const feature of add2eClassFeatureEntries(item.system ?? {})) {
+      if (!add2eIsPassiveClassFeature(feature) || !add2eClassFeatureUnlocked(feature, level)) continue;
+      for (const tag of add2eClassFeatureTags(feature)) tags.add(tag);
     }
-  };
-
-  for (const sys of systems) {
-    push(sys.tags);
-    push(sys.tag);
-    push(sys.effectTags);
-    push(sys.effets);
-    push(sys.effects);
-    push(sys.flags?.add2e?.tags);
-    pushFeatures(sys.classFeatures);
-    pushFeatures(sys.classFeaturesDebloquees);
   }
 
-  return [...tags].filter(Boolean);
+  return [...tags];
+}
+
+function add2eBuildClassPassiveEffectData(actor, classItem, feature, featureIndex, level) {
+  const featureId = add2eClassFeatureStableId(feature, featureIndex);
+  const passiveKey = `${classItem.id}|${featureId}`;
+  const range = add2eClassFeatureLevelRange(feature);
+  const label = String(feature.name ?? feature.label ?? feature.title ?? feature.nom ?? "Capacité passive").trim() || "Capacité passive";
+  const description = String(feature.description ?? feature.system?.description ?? feature.flags?.add2e?.description ?? "").trim();
+  const image = String(feature.img ?? feature.icon ?? classItem.img ?? "icons/svg/aura.svg").trim() || "icons/svg/aura.svg";
+  const tags = add2eClassFeatureTags(feature);
+  const rules = add2eClassFeatureRules(feature).map(rule => ({
+    ...rule,
+    source: {
+      ...(rule?.source && typeof rule.source === "object" ? rule.source : {}),
+      actor,
+      classItemId: classItem.id,
+      classItemUuid: classItem.uuid,
+      className: classItem.name,
+      classLevel: level,
+      featureId,
+      featureName: label
+    }
+  }));
+
+  return {
+    passiveKey,
+    data: {
+      name: label,
+      label,
+      img: image,
+      icon: image,
+      description,
+      origin: classItem.uuid,
+      disabled: false,
+      transfer: false,
+      changes: [],
+      flags: {
+        add2e: {
+          autoClassPassiveEffect: true,
+          classPassiveFeatureEffect: true,
+          passiveKey,
+          sourceType: "class_feature",
+          sourceClasse: classItem.name,
+          sourceItemId: classItem.id,
+          sourceItemUuid: classItem.uuid,
+          classFeatureId: featureId,
+          classFeatureName: label,
+          classFeatureMinLevel: range.min,
+          classFeatureMaxLevel: range.max,
+          classLevel: level,
+          passive: true,
+          description,
+          tags,
+          effectTags: tags,
+          rules
+        }
+      }
+    }
+  };
 }
 
 async function add2eSyncClassPassiveEffect(actor) {
   if (!actor) return null;
 
-  const classItem = actor.items?.find?.(i => String(i.type || "").toLowerCase() === "classe") ?? null;
-  const existing = actor.effects?.filter?.(eff => eff.flags?.add2e?.autoClassPassiveEffect === true) ?? [];
+  const classItems = Array.from(actor.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
+  const existing = Array.from(actor.effects ?? []).filter(effect => effect?.flags?.add2e?.autoClassPassiveEffect === true);
+  const desired = new Map();
 
-  if (!classItem) {
-    const ids = existing.map(e => e.id).filter(Boolean);
-    if (ids.length) await actor.deleteEmbeddedDocuments("ActiveEffect", ids);
-    return null;
+  for (const classItem of classItems) {
+    const level = add2eClassItemLevel(actor, classItem);
+    if (level === null) continue;
+    const features = add2eClassFeatureEntries(classItem.system ?? {});
+    features.forEach((feature, featureIndex) => {
+      if (!add2eIsPassiveClassFeature(feature) || !add2eClassFeatureUnlocked(feature, level)) return;
+      const entry = add2eBuildClassPassiveEffectData(actor, classItem, feature, featureIndex, level);
+      desired.set(entry.passiveKey, entry.data);
+    });
   }
 
-  const tags = add2eCollectUnlockedClassEffectTags(actor, classItem);
-  const label = `${classItem.name} — effets de classe`;
-  if (!tags.length) {
-    const ids = existing.map(e => e.id).filter(Boolean);
-    if (ids.length) await actor.deleteEmbeddedDocuments("ActiveEffect", ids);
-    return null;
-  }
-
-  const data = {
-    name: label,
-    label,
-    icon: classItem.img || "icons/svg/aura.svg",
-    origin: classItem.uuid,
-    disabled: false,
-    transfer: false,
-    changes: [],
-    flags: {
-      add2e: {
-        autoClassPassiveEffect: true,
-        sourceType: "classe",
-        sourceClasse: classItem.name,
-        sourceItemId: classItem.id,
-        sourceItemUuid: classItem.uuid,
-        tags,
-        effectTags: tags
-      }
+  const existingByKey = new Map();
+  const staleIds = [];
+  for (const effect of existing) {
+    const passiveKey = String(effect.flags?.add2e?.passiveKey ?? "").trim();
+    const featureId = String(effect.flags?.add2e?.classFeatureId ?? "").trim();
+    const sourceItemId = String(effect.flags?.add2e?.sourceItemId ?? "").trim();
+    const key = passiveKey || (featureId && sourceItemId ? `${sourceItemId}|${featureId}` : "");
+    if (!key) {
+      staleIds.push(effect.id);
+      continue;
     }
-  };
-
-  const current = existing[0] ?? null;
-  const oldIds = existing.slice(1).map(e => e.id).filter(Boolean);
-  if (oldIds.length) await actor.deleteEmbeddedDocuments("ActiveEffect", oldIds);
-  if (current) {
-    await current.update(data, { render: false });
-    return current;
+    const list = existingByKey.get(key) ?? [];
+    list.push(effect);
+    existingByKey.set(key, list);
   }
-  const [created] = await actor.createEmbeddedDocuments("ActiveEffect", [data]);
-  return created ?? null;
+
+  const updates = [];
+  const creates = [];
+  const synchronized = [];
+
+  for (const [passiveKey, data] of desired.entries()) {
+    const matches = existingByKey.get(passiveKey) ?? [];
+    const current = matches.shift() ?? null;
+    staleIds.push(...matches.map(effect => effect.id).filter(Boolean));
+    existingByKey.delete(passiveKey);
+    if (current) {
+      updates.push({ _id: current.id, ...data });
+      synchronized.push(current);
+    } else {
+      creates.push(data);
+    }
+  }
+
+  for (const effects of existingByKey.values()) staleIds.push(...effects.map(effect => effect.id).filter(Boolean));
+
+  if (updates.length) await actor.updateEmbeddedDocuments("ActiveEffect", updates, { render: false, add2eInternal: true });
+  const created = creates.length
+    ? await actor.createEmbeddedDocuments("ActiveEffect", creates, { render: false, add2eInternal: true })
+    : [];
+  if (staleIds.length) await actor.deleteEmbeddedDocuments("ActiveEffect", [...new Set(staleIds)], { render: false, add2eInternal: true });
+
+  return synchronized[0] ?? created[0] ?? null;
+}
+
+function add2eQueueClassPassiveEffectSync(actor, reason = "class-change") {
+  if (!actor || actor.type !== "personnage") return false;
+  if (!actor.isOwner && !game.user?.isGM) return false;
+  const key = String(actor.uuid ?? actor.id ?? actor.name ?? "unknown");
+  if (ADD2E_CLASS_PASSIVE_EFFECT_SYNC_LOCK.has(key)) return false;
+  ADD2E_CLASS_PASSIVE_EFFECT_SYNC_LOCK.add(key);
+  setTimeout(async () => {
+    try { await add2eSyncClassPassiveEffect(actor); }
+    catch (error) { console.error("[ADD2E][CLASS_PASSIVE_EFFECTS][SYNC_ERROR]", { actor: actor?.name, reason, error }); }
+    finally { ADD2E_CLASS_PASSIVE_EFFECT_SYNC_LOCK.delete(key); }
+  }, 0);
+  return true;
+}
+
+function add2eRegisterClassPassiveEffectHooks() {
+  if (globalThis.ADD2E_CLASS_PASSIVE_EFFECT_HOOKS_REGISTERED === ADD2E_CLASS_PASSIVE_EFFECTS_VERSION) return;
+  globalThis.ADD2E_CLASS_PASSIVE_EFFECT_HOOKS_REGISTERED = ADD2E_CLASS_PASSIVE_EFFECTS_VERSION;
+
+  const actorFromItem = item => {
+    const parent = item?.parent ?? item?.actor ?? null;
+    return parent?.documentName === "Actor" ? parent : null;
+  };
+  const isClassItem = item => String(item?.type ?? "").toLowerCase() === "classe";
+
+  Hooks.on("createItem", (item, _options = {}, userId = null) => {
+    if (userId && game.user?.id !== userId) return;
+    if (!isClassItem(item)) return;
+    add2eQueueClassPassiveEffectSync(actorFromItem(item), "create-class-item");
+  });
+
+  Hooks.on("updateItem", (item, changes = {}, _options = {}, userId = null) => {
+    if (userId && game.user?.id !== userId) return;
+    if (!isClassItem(item)) return;
+    const relevant = !changes || typeof changes !== "object"
+      || foundry.utils.hasProperty(changes, "name")
+      || foundry.utils.hasProperty(changes, "system.niveau")
+      || foundry.utils.hasProperty(changes, "system.level")
+      || foundry.utils.hasProperty(changes, "system.classFeatures")
+      || foundry.utils.hasProperty(changes, "system.classFeaturesDebloquees");
+    if (relevant) add2eQueueClassPassiveEffectSync(actorFromItem(item), "update-class-item");
+  });
+
+  Hooks.on("deleteItem", (item, _options = {}, userId = null) => {
+    if (userId && game.user?.id !== userId) return;
+    if (!isClassItem(item)) return;
+    add2eQueueClassPassiveEffectSync(actorFromItem(item), "delete-class-item");
+  });
+
+  Hooks.on("updateActor", (actor, changes = {}, _options = {}, userId = null) => {
+    if (userId && game.user?.id !== userId) return;
+    if (actor?.type !== "personnage") return;
+    const relevant = foundry.utils.hasProperty(changes, "system.niveau")
+      || foundry.utils.hasProperty(changes, "system.niveaux_par_classe")
+      || foundry.utils.hasProperty(changes, "system.details_classe");
+    if (relevant) add2eQueueClassPassiveEffectSync(actor, "update-actor-class-level");
+  });
+
+  Hooks.once("ready", () => {
+    if (!game.user?.isGM) return;
+    for (const actor of game.actors?.contents ?? []) {
+      if (actor?.type === "personnage") add2eQueueClassPassiveEffectSync(actor, "ready-existing-actors");
+    }
+  });
 }
 
 globalThis.add2eSyncClassPassiveEffect = add2eSyncClassPassiveEffect;
+globalThis.add2eQueueClassPassiveEffectSync = add2eQueueClassPassiveEffectSync;
+add2eRegisterClassPassiveEffectHooks();
 
 function add2eNormalizeThiefSkillKey(value) {
   const key = add2eNormalizeEquipTag(value)
