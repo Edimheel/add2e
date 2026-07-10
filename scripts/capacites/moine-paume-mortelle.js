@@ -6,14 +6,23 @@
  * consommé par ADD2E_CAPABILITY_SPECIAL_ATTACK.
  * Compatible Foundry V13/V14/V15 — DialogV2 uniquement.
  */
-const ADD2E_MOINE_PAUME_MORTELLE_VERSION = "2026-07-10-deferred-contact-system-icon-v1";
+const ADD2E_MOINE_PAUME_MORTELLE_VERSION = "2026-07-10-command-debug-assets-v1";
 const ADD2E_PAUME_PROFILE_ID = "monk-quivering-palm";
 const ADD2E_PAUME_MIN_LEVEL = 13;
 const ADD2E_PAUME_TOUCH_WINDOW_ROUNDS = 3;
 const ADD2E_PAUME_WEEK_ROUNDS = 7 * 24 * 60;
-const ADD2E_PAUME_IMG = "systems/add2e/asset/icones/capacites/paume-mortelle.webp";
+const ADD2E_PAUME_IMG = "systems/add2e/assets/icones/capacites/paume-mortelle.webp";
 
 globalThis.ADD2E_MOINE_PAUME_MORTELLE_VERSION = ADD2E_MOINE_PAUME_MORTELLE_VERSION;
+
+function a2ePaumeLog(step, data = {}) {
+  try {
+    console.info(`[ADD2E][MOINE][PAUME_MORTELLE][${step}]`, {
+      version: ADD2E_MOINE_PAUME_MORTELLE_VERSION,
+      ...data
+    });
+  } catch (_error) {}
+}
 
 function a2ePaumeNorm(value) {
   return String(value ?? "")
@@ -44,7 +53,10 @@ function a2ePaumeServiceReady(service = globalThis.add2eCapabilitySpecialAttack)
 }
 
 async function a2ePaumeCapabilityService() {
-  if (a2ePaumeServiceReady()) return globalThis.add2eCapabilitySpecialAttack;
+  if (a2ePaumeServiceReady()) {
+    a2ePaumeLog("ENGINE_READY", { source: "global", engineVersion: globalThis.add2eCapabilitySpecialAttack?.version ?? null });
+    return globalThis.add2eCapabilitySpecialAttack;
+  }
 
   const systemId = String(game?.system?.id ?? "add2e");
   const prefix = String(globalThis.ROUTE_PREFIX ?? "").replace(/\/$/, "");
@@ -56,13 +68,18 @@ async function a2ePaumeCapabilityService() {
 
   for (const path of paths) {
     try {
+      a2ePaumeLog("ENGINE_IMPORT_TRY", { path });
       await import(path);
-      if (a2ePaumeServiceReady()) return globalThis.add2eCapabilitySpecialAttack;
+      if (a2ePaumeServiceReady()) {
+        a2ePaumeLog("ENGINE_READY", { source: path, engineVersion: globalThis.add2eCapabilitySpecialAttack?.version ?? null });
+        return globalThis.add2eCapabilitySpecialAttack;
+      }
     } catch (error) {
       console.warn("[ADD2E][MOINE][PAUME_MORTELLE][ENGINE_IMPORT_FAILED]", { path, error });
     }
   }
 
+  a2ePaumeLog("ENGINE_MISSING", { hasGlobal: !!globalThis.add2eCapabilitySpecialAttack });
   return globalThis.add2eCapabilitySpecialAttack ?? null;
 }
 
@@ -240,48 +257,74 @@ if (!actor) {
   return false;
 }
 
+a2ePaumeLog("ENTER", { actor: actor.name, actorId: actor.id, feature: feature?.name, featureId: feature?.id });
+
 const level = a2ePaumeFeatureLevel(actor, feature);
 if (level === null) {
   ui.notifications.error("Paume mortelle : niveau de Moine introuvable.");
+  a2ePaumeLog("NO_LEVEL", { actor: actor.name, feature: feature?.name });
   return false;
 }
 if (level < ADD2E_PAUME_MIN_LEVEL) {
   ui.notifications.warn(`Paume mortelle indisponible avant le niveau ${ADD2E_PAUME_MIN_LEVEL} de Moine.`);
+  a2ePaumeLog("LEVEL_TOO_LOW", { actor: actor.name, level });
   return false;
 }
 
 const service = await a2ePaumeCapabilityService();
 if (!a2ePaumeServiceReady(service)) {
   ui.notifications.error("Paume mortelle : le moteur générique des contacts différés n’est pas disponible. Voir la console pour l’erreur d’import.");
+  a2ePaumeLog("ENGINE_UNAVAILABLE", { actor: actor.name });
   return false;
 }
 
 const profile = a2ePaumeProfile(level);
 const pending = service.findDeferredActions({ sourceActor: actor, profileId: profile.id });
+a2ePaumeLog("PENDING", {
+  actor: actor.name,
+  profileId: profile.id,
+  count: pending.length,
+  pending: pending.map(entry => ({
+    target: entry.actor?.name,
+    targetId: entry.actor?.id,
+    effect: entry.effect?.name,
+    effectId: entry.effect?.id,
+    expiresAtTick: entry.data?.expiresAtTick
+  }))
+});
 if (pending.length) {
   const command = await a2ePaumeChooseDeferredCommand({ pending, service });
-  if (!command) return false;
+  if (!command) {
+    a2ePaumeLog("COMMAND_CANCELLED", { actor: actor.name });
+    return false;
+  }
   if (!command.commandWord) {
     ui.notifications.warn("Paume mortelle : le mot de commande est obligatoire.");
+    a2ePaumeLog("COMMAND_EMPTY", { actor: actor.name });
     return false;
   }
   const selected = pending[command.targetIndex];
   if (!selected) {
     ui.notifications.warn("Paume mortelle : cible des vibrations introuvable.");
+    a2ePaumeLog("COMMAND_TARGET_MISSING", { actor: actor.name, targetIndex: command.targetIndex, pendingCount: pending.length });
     return false;
   }
-  const resolved = await service.triggerDeferredAction({ sourceActor: actor, targetActor: selected.actor, effect: selected.effect });
+  a2ePaumeLog("COMMAND_TRIGGER", { actor: actor.name, target: selected.actor?.name, effect: selected.effect?.name, effectId: selected.effect?.id, commandWord: command.commandWord });
+  const resolved = await service.triggerDeferredAction({ sourceActor: actor, targetActor: selected.actor, effect: selected.effect, commandWord: command.commandWord });
+  a2ePaumeLog("COMMAND_RESULT", { actor: actor.name, target: selected.actor?.name, resolved });
   return resolved !== false;
 }
 
 const currentTick = service.currentTick();
 if (currentTick === null) {
   ui.notifications.error("Paume mortelle : le compteur de temps ADD2E est indisponible.");
+  a2ePaumeLog("NO_TIME_ENGINE", { actor: actor.name });
   return false;
 }
 
 const cooldown = a2ePaumeCooldownState(actor);
 const nextAvailableTick = Number(cooldown.entry?.nextAvailableTick ?? 0) || 0;
+a2ePaumeLog("COOLDOWN", { actor: actor.name, currentTick, nextAvailableTick, remaining: Math.max(0, nextAvailableTick - currentTick) });
 if (nextAvailableTick > currentTick) {
   ui.notifications.warn(`Paume mortelle déjà utilisée. Prochaine utilisation dans ${service.formatTicks(nextAvailableTick - currentTick)}.`);
   return false;
@@ -290,6 +333,7 @@ if (nextAvailableTick > currentTick) {
 const oldItem = a2ePaumeTemporaryItem(actor);
 if (oldItem) {
   const window = a2ePaumeWindow(actor, oldItem.id);
+  a2ePaumeLog("OLD_TEMP_ITEM", { actor: actor.name, item: oldItem.name, itemId: oldItem.id, hasWindow: !!window });
   if (window) {
     const expiry = Number(window.flags?.add2e?.capabilitySpecialAttackWindow?.expiresAtTick ?? 0) || 0;
     const remaining = expiry > currentTick ? service.formatTicks(expiry - currentTick) : "moins d’un round";
@@ -325,7 +369,10 @@ const confirmation = await DialogV2.wait({
   ],
   rejectClose: false
 });
-if (confirmation !== true) return false;
+if (confirmation !== true) {
+  a2ePaumeLog("PREPARE_CANCELLED", { actor: actor.name });
+  return false;
+}
 
 const itemSystem = {
   nom: "Paume mortelle",
@@ -361,6 +408,7 @@ const itemSystem = {
   description: "Tentative de contact créée par la Paume mortelle. Le moteur d’attaque spécial ne lance aucun dégât ordinaire ; il pose un effet différé lorsque le contact et les restrictions canoniques sont validés."
 };
 
+a2ePaumeLog("CREATE_TEMP_ITEM_START", { actor: actor.name, level, img: ADD2E_PAUME_IMG });
 const created = await actor.createEmbeddedDocuments("Item", [{
   type: "arme",
   name: "Paume mortelle",
@@ -381,8 +429,10 @@ const created = await actor.createEmbeddedDocuments("Item", [{
 const contactItem = created?.[0] ?? null;
 if (!contactItem) {
   ui.notifications.error("Paume mortelle : création de la tentative de contact impossible.");
+  a2ePaumeLog("CREATE_TEMP_ITEM_FAILED", { actor: actor.name });
   return false;
 }
+a2ePaumeLog("CREATE_TEMP_ITEM_DONE", { actor: actor.name, item: contactItem.name, itemId: contactItem.id, itemUuid: contactItem.uuid });
 
 const window = await service.prepareWindow({
   actor,
@@ -393,8 +443,10 @@ const window = await service.prepareWindow({
 if (!window) {
   await a2ePaumeDeleteItemIfPresent(actor, contactItem.id, "capability-special-attack-window-failed");
   ui.notifications.error("Paume mortelle : création de la fenêtre de contact impossible.");
+  a2ePaumeLog("WINDOW_FAILED", { actor: actor.name, itemId: contactItem.id });
   return false;
 }
+a2ePaumeLog("WINDOW_DONE", { actor: actor.name, itemId: contactItem.id, window: window.name, windowId: window.id });
 
 const nextTick = currentTick + ADD2E_PAUME_WEEK_ROUNDS;
 await actor.setFlag("add2e", "capabilityCooldowns", {
@@ -407,6 +459,7 @@ await actor.setFlag("add2e", "capabilityCooldowns", {
     reset: { type: "add2e-rounds", rounds: ADD2E_PAUME_WEEK_ROUNDS }
   }
 });
+a2ePaumeLog("COOLDOWN_SET", { actor: actor.name, currentTick, nextTick });
 
 await a2ePaumeChat(
   actor,
