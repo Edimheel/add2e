@@ -2,16 +2,21 @@
  * ADD2E — Moine : Paume mortelle / paume palpitante.
  * Script on_use d'une capacité de classe.
  *
- * La capacité prépare une arme temporaire de contact. L'utilisation de cette
- * arme depuis la feuille ou le HUD résout immédiatement la Paume mortelle.
+ * La capacité prépare une frappe de Paume mortelle. Son utilisation depuis la
+ * feuille ou le HUD résout immédiatement la capacité.
  * Compatible Foundry V13/V14/V15 — DialogV2 uniquement.
  */
-const ADD2E_MOINE_PAUME_MORTELLE_VERSION = "2026-07-10-prepared-contact-immediate-v1";
+const ADD2E_MOINE_PAUME_MORTELLE_VERSION = "2026-07-10-capacity-style-v1";
 const ADD2E_PAUME_PROFILE_ID = "monk-quivering-palm";
 const ADD2E_PAUME_MIN_LEVEL = 13;
 const ADD2E_PAUME_TOUCH_WINDOW_ROUNDS = 3;
 const ADD2E_PAUME_WEEK_ROUNDS = 7 * 24 * 60;
 const ADD2E_PAUME_IMG = "systems/add2e/assets/icones/capacites/paume-mortelle.webp";
+
+const ADD2E_PAUME_COLOR = "#5d2e15";
+const ADD2E_PAUME_GOLD = "#b7863b";
+const ADD2E_PAUME_BG = "#fff8e7";
+const ADD2E_PAUME_SOFT = "#fff1cf";
 
 globalThis.ADD2E_MOINE_PAUME_MORTELLE_VERSION = ADD2E_MOINE_PAUME_MORTELLE_VERSION;
 
@@ -108,7 +113,7 @@ function a2ePaumeProfile(level) {
     label: "Paume mortelle",
     img: ADD2E_PAUME_IMG,
     sourceLevel: level,
-    dialogTitle: "Paume mortelle — contact",
+    dialogTitle: "Paume mortelle",
     resolution: { mode: "immediate" },
     attack: {
       abilityModifier: false,
@@ -141,16 +146,16 @@ function a2ePaumeProfile(level) {
       maxHitPoints: { multiplier: 2 }
     },
     window: {
-      name: "Paume mortelle — fenêtre d’utilisation",
-      description: "Le moine doit utiliser l’arme temporaire Paume mortelle avant l’expiration de cette fenêtre.",
-      endMessage: "La fenêtre d’utilisation de la Paume mortelle de {actor} expire. La tentative hebdomadaire est perdue."
+      name: "Paume mortelle — préparée",
+      description: "Le moine doit porter sa Paume mortelle avant l’expiration de cette préparation.",
+      endMessage: "La Paume mortelle préparée par {actor} se dissipe. La tentative hebdomadaire est perdue."
     },
     immediateAction: {
       type: "set_hit_points",
       characterValue: -11,
       monsterValue: 0,
       label: "Paume mortelle",
-      message: "La Paume mortelle est résolue immédiatement après le contact."
+      message: "La cible s’effondre sous l’effet de la Paume mortelle."
     }
   };
 }
@@ -225,17 +230,25 @@ async function a2ePaumeEnsureClassFeatureImage(currentActor, currentFeature = nu
   }
 }
 
-async function a2ePaumeChat(actorDocument, profile, title, body, color = "#5d2e15") {
+function a2ePaumeCardHtml({ title, subtitle = "Capacité de classe", body = "", footer = "", img = ADD2E_PAUME_IMG } = {}) {
+  return `
+    <div class="add2e-chat-card add2e-card-capacite add2e-paume-mortelle-card" style="border:2px solid ${ADD2E_PAUME_COLOR};border-radius:12px;overflow:hidden;background:${ADD2E_PAUME_BG};color:#2f210d;font-family:var(--font-primary);box-shadow:0 0 0 1px rgba(80,45,20,.18);">
+      <div style="display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,${ADD2E_PAUME_COLOR},#8a4d1d);color:#fff;padding:9px 10px;">
+        <img src="${a2ePaumeEsc(img)}" style="width:42px;height:42px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,.72);background:#fff;">
+        <div style="min-width:0;">
+          <div style="font-weight:900;font-size:1.08em;letter-spacing:.01em;">${a2ePaumeEsc(title)}</div>
+          <div style="font-size:.82em;opacity:.94;">${a2ePaumeEsc(subtitle)}</div>
+        </div>
+      </div>
+      <div style="padding:10px 11px;line-height:1.42;display:grid;gap:8px;">${body}</div>
+      ${footer ? `<div style="padding:7px 11px;border-top:1px solid rgba(93,46,21,.25);background:${ADD2E_PAUME_SOFT};font-size:.88em;line-height:1.35;">${footer}</div>` : ""}
+    </div>`;
+}
+
+async function a2ePaumeChat(actorDocument, profile, title, body, color = ADD2E_PAUME_COLOR) {
   return ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor: actorDocument }),
-    content: `
-      <div class="add2e-chat-card add2e-paume-mortelle-card" style="border:1px solid ${color};border-radius:9px;overflow:hidden;background:#fff8e7;color:#2f210d;font-family:var(--font-primary);">
-        <div style="display:flex;align-items:center;gap:8px;background:${color};color:#fff;padding:7px 9px;">
-          <img src="${a2ePaumeEsc(profile.img)}" style="width:34px;height:34px;object-fit:cover;border-radius:5px;border:1px solid rgba(255,255,255,.7);background:#fff;">
-          <div><div style="font-weight:900;">${a2ePaumeEsc(title)}</div><div style="font-size:.82em;opacity:.92;">Capacité de moine</div></div>
-        </div>
-        <div style="padding:9px 10px;line-height:1.4;">${body}</div>
-      </div>`,
+    content: a2ePaumeCardHtml({ title, subtitle: "Capacité de moine", body, img: profile?.img ?? ADD2E_PAUME_IMG }),
     flags: { add2e: { sourceCapacite: "paume_mortelle", capabilityProfile: ADD2E_PAUME_PROFILE_ID, version: ADD2E_MOINE_PAUME_MORTELLE_VERSION } },
     ...a2ePaumeChatStyleData()
   });
@@ -263,7 +276,7 @@ if (level < ADD2E_PAUME_MIN_LEVEL) {
 
 const service = await a2ePaumeCapabilityService();
 if (!a2ePaumeServiceReady(service)) {
-  ui.notifications.error("Paume mortelle : le moteur générique des contacts préparés n’est pas disponible. Voir la console pour l’erreur d’import.");
+  ui.notifications.error("Paume mortelle : la préparation n’est pas disponible. Préviens le MJ.");
   a2ePaumeLog("ENGINE_UNAVAILABLE", { actor: actor.name });
   return false;
 }
@@ -271,7 +284,7 @@ if (!a2ePaumeServiceReady(service)) {
 const profile = a2ePaumeProfile(level);
 const currentTick = service.currentTick();
 if (currentTick === null) {
-  ui.notifications.error("Paume mortelle : le compteur de temps ADD2E est indisponible.");
+  ui.notifications.error("Paume mortelle : le suivi des rounds n’est pas disponible.");
   a2ePaumeLog("NO_TIME_ENGINE", { actor: actor.name });
   return false;
 }
@@ -280,7 +293,7 @@ const cooldown = a2ePaumeCooldownState(actor);
 const nextAvailableTick = Number(cooldown.entry?.nextAvailableTick ?? 0) || 0;
 a2ePaumeLog("COOLDOWN", { actor: actor.name, currentTick, nextAvailableTick, remaining: Math.max(0, nextAvailableTick - currentTick) });
 if (nextAvailableTick > currentTick) {
-  ui.notifications.warn(`Paume mortelle déjà utilisée. Prochaine utilisation dans ${service.formatTicks(nextAvailableTick - currentTick)}.`);
+  ui.notifications.warn(`Paume mortelle déjà utilisée. Prochaine tentative dans ${service.formatTicks(nextAvailableTick - currentTick)}.`);
   return false;
 }
 
@@ -291,7 +304,7 @@ if (oldItem) {
   if (window) {
     const expiry = Number(window.flags?.add2e?.capabilitySpecialAttackWindow?.expiresAtTick ?? 0) || 0;
     const remaining = expiry > currentTick ? service.formatTicks(expiry - currentTick) : "moins d’un round";
-    ui.notifications.warn(`Paume mortelle déjà préparée. Utilise l’arme temporaire dans ${remaining}.`);
+    ui.notifications.warn(`Paume mortelle déjà préparée. Porte la frappe dans ${remaining}.`);
     return false;
   }
   await a2ePaumeDeleteItemIfPresent(actor, oldItem.id, "capability-special-attack-stale-item");
@@ -305,17 +318,25 @@ if (!DialogV2?.wait) {
 
 const confirmation = await DialogV2.wait({
   window: { title: "Préparer la Paume mortelle" },
-  position: { width: 495 },
+  position: { width: 500 },
   classes: ["add2e", "add2e-capability-dialog", "add2e-paume-prepare-dialog"],
   content: `
-    <form style="font-family:var(--font-primary);display:grid;gap:8px;color:#322210;">
-      <div style="border:1px solid #a46b2c;border-radius:8px;background:#fff5df;padding:8px;">
-        <div style="font-weight:900;color:#6a3c13;">Paume mortelle</div>
-        <div style="font-size:.9em;line-height:1.35;margin-top:3px;">Une utilisation par semaine ADD2E. Le moine prépare une arme temporaire <b>Paume mortelle</b>, à utiliser dans les <b>${ADD2E_PAUME_TOUCH_WINDOW_ROUNDS} rounds</b>.</div>
-      </div>
-      <div style="border:1px solid #d4b777;border-radius:7px;background:#fffdf3;padding:7px;font-size:.9em;line-height:1.35;">
-        L’arme temporaire ne cause <b>aucun dégât ordinaire</b>. Son utilisation depuis la feuille ou le HUD résout la Paume mortelle : sur contact réussi contre une cible valide, l’effet final est appliqué immédiatement.
-      </div>
+    <form style="font-family:var(--font-primary);color:#322210;">
+      ${a2ePaumeCardHtml({
+        title: "Paume mortelle",
+        subtitle: "Capacité de moine",
+        body: `
+          <div style="border:1px solid ${ADD2E_PAUME_GOLD};border-radius:8px;background:#fffdf3;padding:8px;">
+            <b>${a2ePaumeEsc(actor.name)}</b> concentre son énergie dans une paume capable d’abattre une cible vivante.
+          </div>
+          <div style="display:grid;gap:5px;font-size:.94em;">
+            <div><b>Délai :</b> la frappe doit être portée dans les <b>${ADD2E_PAUME_TOUCH_WINDOW_ROUNDS} rounds</b>.</div>
+            <div><b>Usage :</b> une tentative par semaine.</div>
+            <div><b>Résolution :</b> si le contact réussit contre une cible valable, la Paume mortelle prend effet immédiatement.</div>
+          </div>`,
+        footer: "Aucun dégât ordinaire n’est lancé pour cette capacité.",
+        img: ADD2E_PAUME_IMG
+      })}
     </form>`,
   buttons: [
     { action: "prepare", label: "Préparer", icon: "fa-solid fa-hand", default: true, callback: () => true },
@@ -335,7 +356,7 @@ const itemSystem = {
   type_degats: "sans_dégât_ordinaires",
   type_arme: "main_nue",
   famille_arme: "main_nue",
-  proprietes: "Corps à corps, contact spécial, Moine, temporaire",
+  proprietes: "Corps à corps, Moine, capacité préparée",
   equipee: true,
   equipped: true,
   bonus_toucher: 0,
@@ -360,7 +381,7 @@ const itemSystem = {
   sourceCapacite: "paume_mortelle",
   sourceClasse: "moine",
   niveauMoine: level,
-  description: "Arme temporaire créée par la Paume mortelle. L’utilisation de cette arme depuis la feuille ou le HUD correspond à la résolution finale : aucun dégât ordinaire, contact spécial, effet immédiat si la cible est valide."
+  description: "Frappe préparée par la Paume mortelle. Elle ne cause aucun dégât ordinaire ; si le contact réussit contre une cible valable, la capacité prend effet immédiatement."
 };
 
 a2ePaumeLog("CREATE_TEMP_ITEM_START", { actor: actor.name, level, img: ADD2E_PAUME_IMG });
@@ -384,7 +405,7 @@ const created = await actor.createEmbeddedDocuments("Item", [{
 
 const contactItem = created?.[0] ?? null;
 if (!contactItem) {
-  ui.notifications.error("Paume mortelle : création de l’arme temporaire impossible.");
+  ui.notifications.error("Paume mortelle : préparation impossible.");
   a2ePaumeLog("CREATE_TEMP_ITEM_FAILED", { actor: actor.name });
   return false;
 }
@@ -398,7 +419,7 @@ const window = await service.prepareWindow({
 });
 if (!window) {
   await a2ePaumeDeleteItemIfPresent(actor, contactItem.id, "capability-special-attack-window-failed");
-  ui.notifications.error("Paume mortelle : création de la fenêtre d’utilisation impossible.");
+  ui.notifications.error("Paume mortelle : préparation impossible.");
   a2ePaumeLog("WINDOW_FAILED", { actor: actor.name, itemId: contactItem.id });
   return false;
 }
@@ -421,11 +442,11 @@ await a2ePaumeChat(
   actor,
   profile,
   "Paume mortelle préparée",
-  `<b>${a2ePaumeEsc(actor.name)}</b> prépare une arme temporaire <b>Paume mortelle</b>.<br>
-   <b>Fenêtre d’utilisation :</b> ${ADD2E_PAUME_TOUCH_WINDOW_ROUNDS} rounds ADD2E. Utilise cette arme depuis la feuille ou le HUD.<br>
-   <b>Contact réussi :</b> l’effet final est appliqué immédiatement, sans dégâts ordinaires.<br>
-   <b>Prochaine préparation :</b> dans ${a2ePaumeEsc(service.formatTicks(ADD2E_PAUME_WEEK_ROUNDS))}.`
+  `<div><b>${a2ePaumeEsc(actor.name)}</b> concentre son énergie dans une Paume mortelle.</div>
+   <div><b>Délai :</b> la frappe doit être portée dans les <b>${ADD2E_PAUME_TOUCH_WINDOW_ROUNDS} rounds</b>.</div>
+   <div><b>Effet :</b> si le contact réussit contre une cible valable, la capacité prend effet immédiatement.</div>
+   <div><b>Nouvelle tentative :</b> dans ${a2ePaumeEsc(service.formatTicks(ADD2E_PAUME_WEEK_ROUNDS))}.</div>`
 );
 
-ui.notifications.info(`Paume mortelle prête : utilise l’arme temporaire dans ${ADD2E_PAUME_TOUCH_WINDOW_ROUNDS} rounds ADD2E.`);
+ui.notifications.info(`Paume mortelle prête : porte la frappe dans les ${ADD2E_PAUME_TOUCH_WINDOW_ROUNDS} rounds.`);
 return true;
