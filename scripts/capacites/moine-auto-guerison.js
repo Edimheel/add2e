@@ -3,7 +3,7 @@
  * Script exécuté via on_use d'une classFeature.
  * Compatible Foundry V13 / V14 / V15.
  */
-const ADD2E_MOINE_AUTO_GUERISON_VERSION = "2026-07-08-self-heal-formula-v2";
+const ADD2E_MOINE_AUTO_GUERISON_VERSION = "2026-07-10-canonical-progression-v3";
 
 globalThis.ADD2E_MOINE_AUTO_GUERISON_VERSION = ADD2E_MOINE_AUTO_GUERISON_VERSION;
 
@@ -53,18 +53,15 @@ function a2eMonkDayKey() {
 }
 
 function a2eGetMonkRow(classItem, level) {
-  const rows = classItem?.system?.monkProgression ?? classItem?.system?.progression ?? [];
+  const rows = classItem?.system?.progression;
   if (!Array.isArray(rows)) return null;
   return rows.find(row => Number(row?.niveau ?? row?.level) === level)
     ?? rows.slice().reverse().find(row => Number(row?.niveau ?? row?.level ?? 0) <= level)
     ?? null;
 }
 
-function a2eMonkSelfHealFormula(row, level) {
-  const raw = row?.selfHealFormula ?? row?.selfHeal ?? row?.autoHealFormula ?? row?.autoGuerisonFormula ?? "";
-  const formula = String(raw ?? "").trim();
-  if (formula) return formula;
-  return level >= 7 ? `1d4+${Math.max(1, level - 6)}` : "";
+function a2eMonkSelfHealFormula(row) {
+  return String(row?.monk?.selfHealFormula ?? "").trim();
 }
 
 async function a2eRollMonkHealFormula(formula) {
@@ -94,7 +91,7 @@ if (level === null || !monkClass) {
 }
 
 const row = a2eGetMonkRow(monkClass, level);
-const healFormula = a2eMonkSelfHealFormula(row, level);
+const healFormula = a2eMonkSelfHealFormula(row);
 if (!healFormula) {
   ui.notifications.warn("Auto-guérison indisponible à ce niveau.");
   return false;
