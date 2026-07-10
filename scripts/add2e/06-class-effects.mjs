@@ -200,7 +200,6 @@ function add2eBuildClassPassiveEffectData(actor, classItem, feature, featureInde
     ...rule,
     source: {
       ...(rule?.source && typeof rule.source === "object" ? rule.source : {}),
-      actor,
       classItemId: classItem.id,
       classItemUuid: classItem.uuid,
       className: classItem.name,
