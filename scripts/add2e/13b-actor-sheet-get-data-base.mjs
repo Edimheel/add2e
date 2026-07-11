@@ -97,6 +97,49 @@ export function add2ePrepareThiefActivityData(actor) {
 // l’état préparé par la feuille personnage.
 globalThis.add2eGetThiefActivityEquipmentStatus = add2ePrepareThiefActivityData;
 
+function add2eSummaryClassFeatureKey(feature) {
+  const raw = feature?.id
+    ?? feature?._id
+    ?? feature?.key
+    ?? feature?.slug
+    ?? feature?.name
+    ?? feature?.label
+    ?? feature?.title
+    ?? feature?.nom
+    ?? "";
+  return add2eThiefActivityNormalize(raw);
+}
+
+function add2eBuildSummaryClassFeatures(features = []) {
+  const classKeys = new Set(features.map(feature => add2eThiefActivityNormalize(
+    feature?._add2eClassItemId ?? feature?._add2eClassSlug ?? feature?._add2eClassName ?? ""
+  )).filter(Boolean));
+  const showClassName = classKeys.size > 1;
+  const seen = new Set();
+  const result = [];
+
+  for (const feature of features) {
+    const name = String(feature?.name ?? feature?.label ?? feature?.title ?? feature?.nom ?? "").trim();
+    const featureKey = add2eSummaryClassFeatureKey(feature);
+    const classKey = add2eThiefActivityNormalize(
+      feature?._add2eClassItemId ?? feature?._add2eClassSlug ?? feature?._add2eClassName ?? "classe"
+    );
+    const uniqueKey = `${classKey}|${featureKey}`;
+    if (!name || !featureKey || seen.has(uniqueKey)) continue;
+    seen.add(uniqueKey);
+
+    result.push({
+      name,
+      description: String(feature?.description ?? feature?.desc ?? ""),
+      className: String(feature?._add2eClassName ?? "").trim(),
+      classLevel: Number(feature?._add2eClassLevel) || null,
+      showClassName
+    });
+  }
+
+  return result;
+}
+
 export function add2ePrepareActorSheetBaseData({ sheet, data }) {
   const actor = sheet.actor;
   const sys = data.actor.system;
@@ -207,6 +250,7 @@ export function add2ePrepareActorSheetBaseData({ sheet, data }) {
     });
   data.activeClassFeatures = classFeaturesForDisplay.filter(feature => typeof add2eIsFeatureActivable === "function" ? add2eIsFeatureActivable(feature) : feature.activable === true);
   data.passiveClassFeatures = classFeaturesForDisplay.filter(feature => !(typeof add2eIsFeatureActivable === "function" ? add2eIsFeatureActivable(feature) : feature.activable === true));
+  data.summaryClassFeatures = add2eBuildSummaryClassFeatures(classFeaturesForDisplay);
   data.thiefSkillRows = typeof add2eGetActorThiefSkillTable === "function" ? add2eGetActorThiefSkillTable(actor) : [];
   data.thiefActivity = add2ePrepareThiefActivityData(actor);
 
