@@ -6,7 +6,7 @@
  * - Nettoyage visuel automatique
  */
 
-const ADD2E_MONSTER_SHEET_VERSION = "2026-07-11-monster-compendium-token-config-v7";
+const ADD2E_MONSTER_SHEET_VERSION = "2026-07-11-monster-single-actorsheet-token-config-v8";
 globalThis.ADD2E_MONSTER_SHEET_VERSION = ADD2E_MONSTER_SHEET_VERSION;
 
 const ADD2E_MONSTER_ACTOR_SHEET_V2 = foundry?.applications?.sheets?.ActorSheetV2;
@@ -373,38 +373,9 @@ function add2eGetTokenConfigClass() {
     ?? null;
 }
 
-function add2eGetCompendiumEntryId(event, entryElement) {
-  const candidates = [
-    entryElement?.[0],
-    entryElement,
-    event?.currentTarget,
-    event?.target
-  ];
-
-  for (const candidate of candidates) {
-    const element = candidate instanceof Element ? candidate : null;
-    if (!element) continue;
-    const entry = element.closest?.("[data-entry-id], [data-document-id], [data-id]") ?? element;
-    const id = entry?.dataset?.entryId ?? entry?.dataset?.documentId ?? entry?.dataset?.id ?? null;
-    if (id) return id;
-  }
-
-  return null;
-}
-
-function add2eIsConfigureTokenContextOption(option) {
-  const handlerName = String(option?.onClick?.name ?? "").replace(/[^a-z]/gi, "").toLowerCase();
-  const labelKey = String(option?.label ?? "");
-  const label = String(game.i18n?.localize?.(labelKey) ?? labelKey);
-  return handlerName.includes("configuretoken")
-    || labelKey === "TOKEN.Configure"
-    || /configur.*(?:token|jeton)/i.test(label);
-}
-
-async function add2eOpenMonsterPrototypeTokenConfig(actor) {
-  const prototypeToken = actor?.prototypeToken ?? null;
-  if (!prototypeToken) {
-    ui.notifications.warn("Prototype de token introuvable pour ce monstre.");
+function add2eOpenMonsterTokenConfig(tokenDocument, { prototype = false } = {}) {
+  if (!tokenDocument) {
+    ui.notifications.warn("Document de token introuvable pour ce monstre.");
     return;
   }
 
@@ -416,59 +387,37 @@ async function add2eOpenMonsterPrototypeTokenConfig(actor) {
 
   let application;
   try {
-    application = new TokenConfigClass({ document: prototypeToken });
-  } catch (_modernError) {
-    application = new TokenConfigClass(prototypeToken, { document: prototypeToken });
+    application = new TokenConfigClass({ document: tokenDocument });
+  } catch (modernError) {
+    try {
+      application = new TokenConfigClass(tokenDocument, { document: tokenDocument });
+    } catch (legacyError) {
+      console.error("[ADD2E][MONSTER_SHEET][TOKEN_CONFIG] Impossible d’ouvrir TokenConfig", {
+        actor: tokenDocument?.actor?.name ?? tokenDocument?.parent?.name ?? null,
+        modernError,
+        legacyError
+      });
+      ui.notifications.error("Configuration du token impossible.");
+      return;
+    }
   }
 
-  try { application.isPrototype = true; } catch (_error) {}
+  if (prototype) {
+    try { application.isPrototype = true; } catch (_error) {}
+  }
   return application.render(true);
 }
 
-function add2eInstallMonsterCompendiumTokenContextPatch() {
-  const CompendiumClass = foundry?.applications?.sidebar?.apps?.Compendium ?? globalThis.Compendium ?? null;
-  const prototype = CompendiumClass?.prototype ?? null;
-  const original = prototype?._getEntryContextOptions;
-  if (!prototype || typeof original !== "function") return false;
-  if (prototype.__add2eMonsterTokenContextPatched === true) return true;
+function add2eConfigureMonsterToken(event) {
+  event?.preventDefault?.();
+  const tokenDocument = this.token ?? this.actor?.prototypeToken ?? this.document?.prototypeToken ?? null;
+  return add2eOpenMonsterTokenConfig(tokenDocument, { prototype: !this.token });
+}
 
-  Object.defineProperty(prototype, "__add2eMonsterTokenContextPatched", {
-    value: true,
-    configurable: false,
-    enumerable: false,
-    writable: false
-  });
-
-  prototype._getEntryContextOptions = function(...args) {
-    const options = original.apply(this, args);
-    if (this.collection?.collection !== "add2e.monstres" || !Array.isArray(options)) return options;
-
-    return options.map(option => {
-      if (!add2eIsConfigureTokenContextOption(option)) return option;
-
-      return {
-        ...option,
-        onClick: async (event, entryElement) => {
-          event?.preventDefault?.();
-          const entryId = add2eGetCompendiumEntryId(event, entryElement);
-          if (!entryId) {
-            ui.notifications.warn("Impossible d’identifier le monstre dans le compendium.");
-            return;
-          }
-
-          const actor = await this.collection.getDocument(entryId);
-          if (!actor || actor.type !== "monster") {
-            ui.notifications.warn("Le document sélectionné n’est pas un monstre ADD2E.");
-            return;
-          }
-
-          return add2eOpenMonsterPrototypeTokenConfig(actor);
-        }
-      };
-    });
-  };
-
-  return true;
+function add2eConfigureMonsterPrototypeToken(event) {
+  event?.preventDefault?.();
+  const prototypeToken = this.actor?.prototypeToken ?? this.document?.prototypeToken ?? null;
+  return add2eOpenMonsterTokenConfig(prototypeToken, { prototype: true });
 }
 
 export class Add2eMonsterSheet extends ADD2E_MONSTER_ACTOR_SHEET_V2 {
@@ -477,7 +426,11 @@ export class Add2eMonsterSheet extends ADD2E_MONSTER_ACTOR_SHEET_V2 {
     classes: ["add2e", "sheet", "actor", "monster"],
     tag: "section",
     window: { title: "ADD2e Descartes (FR) - Monstre", resizable: true },
-    position: { width: 720, height: 850 }
+    position: { width: 720, height: 850 },
+    actions: {
+      configureToken: add2eConfigureMonsterToken,
+      configurePrototypeToken: add2eConfigureMonsterPrototypeToken
+    }
   };
 
   _add2ePendingView = null;
@@ -488,6 +441,19 @@ export class Add2eMonsterSheet extends ADD2E_MONSTER_ACTOR_SHEET_V2 {
 
   get editable() {
     return this.actor?.isOwner === true || game.user?.isGM === true;
+  }
+
+  _getHeaderControls() {
+    const controls = super._getHeaderControls?.() ?? [];
+    if (this.token) return controls;
+
+    return controls.map(control => {
+      if (control?.action !== "configureToken") return control;
+      return {
+        ...control,
+        action: "configurePrototypeToken"
+      };
+    });
   }
 
   render(options = {}) {
@@ -885,10 +851,6 @@ ActorsCollection.registerSheet("add2e", Add2eMonsterSheet, {
   makeDefault: true,
   label: "ADD2e Descartes (FR) - Monstre"
 });
-
-add2eInstallMonsterCompendiumTokenContextPatch();
-Hooks.once("init", add2eInstallMonsterCompendiumTokenContextPatch);
-Hooks.once("ready", add2eInstallMonsterCompendiumTokenContextPatch);
 
 Hooks.on("deleteActiveEffect", async effect => {
   const enlargeData = effect.flags?.add2e?.enlargeData;
