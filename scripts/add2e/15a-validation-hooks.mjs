@@ -243,6 +243,11 @@ function add2eEffectExplicitlyLinkedToItem(effect, item) {
     || (itemUuid && sourceUuid === itemUuid);
 }
 
+function add2eIsManagedClassPassiveEffect(effect) {
+  const flags = effect?.flags?.add2e ?? {};
+  return flags.autoClassPassiveEffect === true || flags.classPassiveFeatureEffect === true;
+}
+
 Hooks.on("deleteItem", async (item, options = {}, userId) => {
   if (options?.add2eInternal || options?.add2eMulticlassInternal || options?.add2eClassPurge) return;
   if (game.user.id !== userId) return;
@@ -250,7 +255,7 @@ Hooks.on("deleteItem", async (item, options = {}, userId) => {
 
   const actor = item.parent;
   const effectsToDelete = Array.from(actor.effects ?? [])
-    .filter(effect => add2eEffectExplicitlyLinkedToItem(effect, item))
+    .filter(effect => !add2eIsManagedClassPassiveEffect(effect) && add2eEffectExplicitlyLinkedToItem(effect, item))
     .map(effect => effect.id)
     .filter(id => actor.effects?.has?.(id));
 
