@@ -1,6 +1,6 @@
 {
-  "exportVersion": "2026-05-26-export-item-folder-v2-direct-download",
-  "exportedAt": "2026-07-05T07:00:06.155Z",
+  "exportVersion": "2026-07-11-export-classe-moine-capacites-final-v1",
+  "exportedAt": "2026-07-11T00:00:00.000Z",
   "world": "test-clerc",
   "system": "add2e",
   "rootFolder": {
@@ -7662,21 +7662,26 @@
       "img": "systems/add2e/assets/moine.png",
       "system": {
         "label": "Moine",
-        "description": "Artiste martial et ascète, le moine maîtrise le combat à mains nues, la rapidité et la discipline du corps et de l'esprit. Il porte rarement d'armure et développe des capacités surnaturelles au fil des niveaux.",
+        "description": "Ascète et artiste martial loyal, le moine maîtrise le combat à mains nues, la discipline mentale et les capacités progressives décrites par le Manuel des joueurs.",
         "caracs_min": {
           "force": 15,
-          "sagesse": 16,
+          "sagesse": 15,
           "dexterite": 15,
           "constitution": 11
         },
         "primaryAbility": "Force, Sagesse, Dextérité",
         "prerequis": {
-          "caracteristique": "Force 15 minimum ; Sagesse 16 minimum ; Dextérité 15 minimum ; Constitution 11 minimum",
+          "caracteristique": "Force 15 minimum ; Sagesse 15 minimum ; Dextérité 15 minimum ; Constitution 11 minimum",
           "alignement": "Loyal uniquement : Loyal Bon, Loyal Neutre ou Loyal Mauvais",
           "race": "Humain uniquement",
-          "autre": "Ascète monastique ; ne porte ni armure ni bouclier ; ne lance pas de sorts ; capacités spéciales lues par niveau."
+          "autre": "Ascète monastique ; ne porte ni armure ni bouclier ; ne lance pas de sorts ; ne reçoit pas de bonus d’expérience."
         },
         "alignment": [
+          "Loyal Bon",
+          "Loyal Neutre",
+          "Loyal Mauvais"
+        ],
+        "alignements_autorises": [
           "Loyal Bon",
           "Loyal Neutre",
           "Loyal Mauvais"
@@ -7700,1116 +7705,704 @@
           "forbiddenTags": [],
           "notes": "Moine : restriction d'armes harmonisée par tags simples."
         },
+        "armorRestriction": {
+          "mode": "allow-tags",
+          "allowedTags": [],
+          "forbiddenTags": [
+            "armure",
+            "bouclier"
+          ],
+          "notes": "Moine : aucune armure ni bouclier."
+        },
         "magicAllowed": "Objets magiques autorisés : armes magiques autorisées aux moines, anneaux, et objets magiques divers autorisés aux voleurs. Trésors et objets fortement limités.",
+        "magicRestriction": {
+          "mode": "notes",
+          "forbiddenTags": [
+            "interdit:parchemins",
+            "interdit:armures_magiques",
+            "interdit:huile_enflammee"
+          ],
+          "notes": "Restrictions d’objets magiques spécifiques au moine ; à traiter par tags au fur et à mesure des objets magiques."
+        },
         "hdPerLevel": "1d4",
         "hitDie": 4,
+        "hpFormula": "2d4 + constitution.mod",
+        "hpAfter17": 0,
+        "maxHitDice": 18,
+        "maxLevel": 17,
         "progression": [
           {
-            "niveau": 1,
             "level": 1,
             "xp": 0,
+            "xpRange": "0 – 2.250",
             "hitDice": "2d4",
-            "hd": "2d4",
             "title": "Novice",
             "thac0": 20,
             "savingThrows": [
-              10,
-              14,
               13,
+              14,
+              12,
               16,
               15
             ],
-            "spellsPerLevel": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
             "attacksPerRound": "1",
-            "spells": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "monkAC": 10,
-            "move": 12,
-            "openDoors": 1,
-            "damage": "1d6/1d3",
-            "stunParalyze": 15,
-            "slowFall": 0,
-            "immuneDisease": false,
-            "selfHealPerDay": 0,
-            "resistCharmSuggestion": 0,
-            "resistESP": 0,
-            "quiveringPalm": false,
-            "unarmedDamage": "1d6/1d3",
-            "main_nue": "1d6/1d3",
-            "monkWeaponDamageBonus": 0.5,
-            "tags": [
-              "moine:ca:10",
-              "moine:degats_main_nue:1d6_1d3",
-              "moine:niveau:1",
-              "moine:progression",
-              "moine:etourdissement:15",
-              "moine:mouvement:12"
-            ],
-            "degatsMainNue": "1d6/1d3"
+            "monk": {
+              "armorClass": 10,
+              "movement": 15,
+              "openDoors": 1,
+              "unarmedDamage": "1d3/1d3",
+              "damageRange": "1-3",
+              "weaponDamageBonus": 0.5,
+              "surpriseChancePercent": 33,
+              "slowFallDistance": 0,
+              "slowFallText": "—",
+              "selfHealFormula": "",
+              "resistCharmSuggestion": 0,
+              "resistESP": 0,
+              "mentalDefenseIntelligence": null,
+              "unarmedKillLevelBonus": 0,
+              "abilityLetter": ""
+            }
           },
           {
-            "niveau": 2,
             "level": 2,
-            "xp": 1500,
+            "xp": 2251,
+            "xpRange": "2.251 – 4.750",
             "hitDice": "3d4",
-            "hd": "3d4",
-            "title": "Aspirant",
+            "title": "Initié",
             "thac0": 20,
             "savingThrows": [
-              10,
-              14,
               13,
+              14,
+              12,
               16,
               15
-            ],
-            "spellsPerLevel": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
             ],
             "attacksPerRound": "1",
-            "spells": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "monkAC": 9,
-            "move": 12,
-            "openDoors": 1,
-            "damage": "1d6/1d3",
-            "stunParalyze": 20,
-            "slowFall": 0,
-            "immuneDisease": false,
-            "selfHealPerDay": 0,
-            "resistCharmSuggestion": 0,
-            "resistESP": 0,
-            "quiveringPalm": false,
-            "unarmedDamage": "1d6/1d3",
-            "main_nue": "1d6/1d3",
-            "monkWeaponDamageBonus": 1,
-            "tags": [
-              "moine:niveau:2",
-              "moine:degats_main_nue:1d6_1d3",
-              "moine:progression",
-              "moine:etourdissement:20",
-              "moine:ca:9",
-              "moine:mouvement:12"
-            ],
-            "degatsMainNue": "1d6/1d3"
+            "monk": {
+              "armorClass": 9,
+              "movement": 16,
+              "openDoors": 1,
+              "unarmedDamage": "1d4/1d4",
+              "damageRange": "1-4",
+              "weaponDamageBonus": 1.0,
+              "surpriseChancePercent": 32,
+              "slowFallDistance": 0,
+              "slowFallText": "—",
+              "selfHealFormula": "",
+              "resistCharmSuggestion": 0,
+              "resistESP": 0,
+              "mentalDefenseIntelligence": null,
+              "unarmedKillLevelBonus": 0,
+              "abilityLetter": ""
+            }
           },
           {
-            "niveau": 3,
             "level": 3,
-            "xp": 3000,
+            "xp": 4751,
+            "xpRange": "4.751 – 10.000",
             "hitDice": "4d4",
-            "hd": "4d4",
-            "title": "Disciple",
-            "thac0": 19,
+            "title": "Frère",
+            "thac0": 20,
             "savingThrows": [
-              10,
-              14,
               13,
+              14,
+              12,
               16,
               15
             ],
-            "spellsPerLevel": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "attacksPerRound": "3/2",
-            "spells": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "monkAC": 8,
-            "move": 15,
-            "openDoors": 2,
-            "damage": "1d6/1d3",
-            "stunParalyze": 25,
-            "slowFall": 6,
-            "immuneDisease": false,
-            "selfHealPerDay": 0,
-            "resistCharmSuggestion": 0,
-            "resistESP": 0,
-            "quiveringPalm": false,
-            "unarmedDamage": "1d6/1d3",
-            "main_nue": "1d6/1d3",
-            "monkWeaponDamageBonus": 1.5,
-            "tags": [
-              "moine:niveau:3",
-              "moine:degats_main_nue:1d6_1d3",
-              "moine:etourdissement:25",
-              "moine:mouvement:15",
-              "moine:progression",
-              "moine:ca:8",
-              "moine:chute_ralentie:6"
-            ],
-            "degatsMainNue": "1d6/1d3"
+            "attacksPerRound": "1",
+            "monk": {
+              "armorClass": 8,
+              "movement": 17,
+              "openDoors": 2,
+              "unarmedDamage": "1d6/1d6",
+              "damageRange": "1-6",
+              "weaponDamageBonus": 1.5,
+              "surpriseChancePercent": 30,
+              "slowFallDistance": 0,
+              "slowFallText": "—",
+              "selfHealFormula": "",
+              "resistCharmSuggestion": 0,
+              "resistESP": 0,
+              "mentalDefenseIntelligence": null,
+              "unarmedKillLevelBonus": 0,
+              "abilityLetter": "A"
+            }
           },
           {
-            "niveau": 4,
             "level": 4,
-            "xp": 6000,
+            "xp": 10001,
+            "xpRange": "10.001 – 22.500",
             "hitDice": "5d4",
-            "hd": "5d4",
-            "title": "Initié",
+            "title": "Disciple",
             "thac0": 18,
             "savingThrows": [
-              9,
               13,
+              14,
               12,
-              15,
-              14
+              16,
+              15
             ],
-            "spellsPerLevel": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "attacksPerRound": "3/2",
-            "spells": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "monkAC": 7,
-            "move": 15,
-            "openDoors": 2,
-            "damage": "1d6/1d3",
-            "stunParalyze": 30,
-            "slowFall": 6,
-            "immuneDisease": false,
-            "selfHealPerDay": 0,
-            "resistCharmSuggestion": 0,
-            "resistESP": 0,
-            "quiveringPalm": false,
-            "unarmedDamage": "1d6/1d3",
-            "main_nue": "1d6/1d3",
-            "monkWeaponDamageBonus": 2,
-            "tags": [
-              "moine:etourdissement:30",
-              "moine:degats_main_nue:1d6_1d3",
-              "moine:niveau:4",
-              "moine:progression",
-              "moine:mouvement:15",
-              "moine:chute_ralentie:6",
-              "moine:ca:7"
-            ],
-            "degatsMainNue": "1d6/1d3"
+            "attacksPerRound": "5/4",
+            "monk": {
+              "armorClass": 7,
+              "movement": 18,
+              "openDoors": 2,
+              "unarmedDamage": "1d6/1d6",
+              "damageRange": "1-6",
+              "weaponDamageBonus": 2.0,
+              "surpriseChancePercent": 28,
+              "slowFallDistance": 6,
+              "slowFallText": "6 m si à moins de 30 cm du mur",
+              "selfHealFormula": "",
+              "resistCharmSuggestion": 0,
+              "resistESP": 70,
+              "mentalDefenseIntelligence": null,
+              "unarmedKillLevelBonus": 0,
+              "abilityLetter": "B"
+            }
           },
           {
-            "niveau": 5,
             "level": 5,
-            "xp": 13000,
+            "xp": 22501,
+            "xpRange": "22.501 – 47.500",
             "hitDice": "6d4",
-            "hd": "6d4",
+            "title": "Immaculé",
+            "thac0": 18,
+            "savingThrows": [
+              12,
+              12,
+              11,
+              15,
+              13
+            ],
+            "attacksPerRound": "5/4",
+            "monk": {
+              "armorClass": 7,
+              "movement": 19,
+              "openDoors": 2,
+              "unarmedDamage": "1d6+1/1d6+1",
+              "damageRange": "2-7",
+              "weaponDamageBonus": 2.5,
+              "surpriseChancePercent": 26,
+              "slowFallDistance": 6,
+              "slowFallText": "6 m si à moins de 30 cm du mur",
+              "selfHealFormula": "",
+              "resistCharmSuggestion": 0,
+              "resistESP": 72,
+              "mentalDefenseIntelligence": null,
+              "unarmedKillLevelBonus": 0,
+              "abilityLetter": "C"
+            }
+          },
+          {
+            "level": 6,
+            "xp": 47501,
+            "xpRange": "47.501 – 98.000",
+            "hitDice": "7d4",
             "title": "Maître",
             "thac0": 18,
             "savingThrows": [
-              9,
-              13,
               12,
+              12,
+              11,
               15,
-              14
-            ],
-            "spellsPerLevel": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
+              13
             ],
             "attacksPerRound": "3/2",
-            "spells": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "monkAC": 6,
-            "move": 18,
-            "openDoors": 2,
-            "damage": "1d8/1d4",
-            "stunParalyze": 35,
-            "slowFall": 6,
-            "immuneDisease": false,
-            "selfHealPerDay": 0,
-            "resistCharmSuggestion": 0,
-            "resistESP": 0,
-            "quiveringPalm": false,
-            "unarmedDamage": "1d8/1d4",
-            "main_nue": "1d8/1d4",
-            "monkWeaponDamageBonus": 2.5,
-            "tags": [
-              "moine:mouvement:18",
-              "moine:progression",
-              "moine:etourdissement:35",
-              "moine:ca:6",
-              "moine:degats_main_nue:1d8_1d4",
-              "moine:niveau:5",
-              "moine:chute_ralentie:6"
-            ],
-            "degatsMainNue": "1d8/1d4"
+            "monk": {
+              "armorClass": 6,
+              "movement": 20,
+              "openDoors": 3,
+              "unarmedDamage": "2d4/2d4",
+              "damageRange": "2-8",
+              "weaponDamageBonus": 3.0,
+              "surpriseChancePercent": 24,
+              "slowFallDistance": 9,
+              "slowFallText": "9 m si à moins de 1,20 m du mur",
+              "selfHealFormula": "",
+              "resistCharmSuggestion": 0,
+              "resistESP": 74,
+              "mentalDefenseIntelligence": null,
+              "unarmedKillLevelBonus": 0,
+              "abilityLetter": "D"
+            }
           },
           {
-            "niveau": 6,
-            "level": 6,
-            "xp": 27500,
-            "hitDice": "7d4",
-            "hd": "7d4",
-            "title": "Maître supérieur",
-            "thac0": 17,
-            "savingThrows": [
-              9,
-              13,
-              12,
-              15,
-              14
-            ],
-            "spellsPerLevel": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "attacksPerRound": "2",
-            "spells": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "monkAC": 5,
-            "move": 18,
-            "openDoors": 3,
-            "damage": "1d8/1d4",
-            "stunParalyze": 40,
-            "slowFall": 9,
-            "immuneDisease": true,
-            "selfHealPerDay": 0,
-            "resistCharmSuggestion": 5,
-            "resistESP": 0,
-            "quiveringPalm": false,
-            "unarmedDamage": "1d8/1d4",
-            "main_nue": "1d8/1d4",
-            "monkWeaponDamageBonus": 3,
-            "tags": [
-              "resistance:charme_suggestion:5",
-              "moine:ca:5",
-              "immunite:maladie",
-              "moine:mouvement:18",
-              "moine:progression",
-              "moine:niveau:6",
-              "moine:etourdissement:40",
-              "moine:chute_ralentie:9",
-              "moine:degats_main_nue:1d8_1d4"
-            ],
-            "degatsMainNue": "1d8/1d4"
-          },
-          {
-            "niveau": 7,
             "level": 7,
-            "xp": 55000,
+            "xp": 98001,
+            "xpRange": "98.001 – 200.000",
             "hitDice": "8d4",
-            "hd": "8d4",
-            "title": "Grand maître",
+            "title": "Maître supérieur",
             "thac0": 16,
             "savingThrows": [
-              7,
+              12,
+              12,
               11,
-              10,
-              13,
-              12
+              15,
+              13
             ],
-            "spellsPerLevel": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "attacksPerRound": "2",
-            "spells": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "monkAC": 4,
-            "move": 21,
-            "openDoors": 3,
-            "damage": "1d8/1d4",
-            "stunParalyze": 45,
-            "slowFall": 9,
-            "immuneDisease": true,
-            "selfHealPerDay": 2,
-            "resistCharmSuggestion": 10,
-            "resistESP": 0,
-            "quiveringPalm": false,
-            "unarmedDamage": "1d8/1d4",
-            "main_nue": "1d8/1d4",
-            "monkWeaponDamageBonus": 3.5,
-            "tags": [
-              "moine:etourdissement:45",
-              "moine:auto_soin:2",
-              "immunite:maladie",
-              "resistance:charme_suggestion:10",
-              "moine:progression",
-              "moine:ca:4",
-              "moine:niveau:7",
-              "moine:chute_ralentie:9",
-              "moine:degats_main_nue:1d8_1d4",
-              "moine:mouvement:21"
-            ],
-            "degatsMainNue": "1d8/1d4"
+            "attacksPerRound": "3/2",
+            "monk": {
+              "armorClass": 5,
+              "movement": 21,
+              "openDoors": 3,
+              "unarmedDamage": "2d4+1/2d4+1",
+              "damageRange": "3-9",
+              "weaponDamageBonus": 3.5,
+              "surpriseChancePercent": 22,
+              "slowFallDistance": 9,
+              "slowFallText": "9 m si à moins de 1,20 m du mur",
+              "selfHealFormula": "1d4+1",
+              "resistCharmSuggestion": 0,
+              "resistESP": 76,
+              "mentalDefenseIntelligence": null,
+              "unarmedKillLevelBonus": 0,
+              "abilityLetter": "E"
+            }
           },
           {
-            "niveau": 8,
             "level": 8,
-            "xp": 110000,
+            "xp": 200001,
+            "xpRange": "200.001 – 350.000",
             "hitDice": "9d4",
-            "hd": "9d4",
-            "title": "Patriarche",
-            "thac0": 15,
+            "title": "Maître des dragons",
+            "thac0": 16,
             "savingThrows": [
-              7,
+              12,
+              12,
               11,
-              10,
-              13,
-              12
+              15,
+              13
             ],
-            "spellsPerLevel": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "attacksPerRound": "2",
-            "spells": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "monkAC": 3,
-            "move": 24,
-            "openDoors": 3,
-            "damage": "1d10/1d6",
-            "stunParalyze": 50,
-            "slowFall": 12,
-            "immuneDisease": true,
-            "selfHealPerDay": 2,
-            "resistCharmSuggestion": 15,
-            "resistESP": 5,
-            "quiveringPalm": false,
-            "unarmedDamage": "1d10/1d6",
-            "main_nue": "1d10/1d6",
-            "monkWeaponDamageBonus": 4,
-            "tags": [
-              "moine:mouvement:24",
-              "moine:auto_soin:2",
-              "resistance:charme_suggestion:15",
-              "moine:chute_ralentie:12",
-              "immunite:maladie",
-              "moine:etourdissement:50",
-              "moine:parler_aux_plantes",
-              "moine:progression",
-              "moine:ca:3",
-              "moine:niveau:8",
-              "moine:degats_main_nue:1d10_1d6",
-              "resistance:esp:5"
-            ],
-            "degatsMainNue": "1d10/1d6"
+            "attacksPerRound": "3/2",
+            "monk": {
+              "armorClass": 4,
+              "movement": 22,
+              "openDoors": 3,
+              "unarmedDamage": "2d6/2d6",
+              "damageRange": "2-12",
+              "weaponDamageBonus": 4.0,
+              "surpriseChancePercent": 20,
+              "slowFallDistance": 9,
+              "slowFallText": "9 m si à moins de 1,20 m du mur",
+              "selfHealFormula": "1d4+2",
+              "resistCharmSuggestion": 0,
+              "resistESP": 78,
+              "mentalDefenseIntelligence": null,
+              "unarmedKillLevelBonus": 1,
+              "abilityLetter": "F"
+            }
           },
           {
-            "niveau": 9,
             "level": 9,
-            "xp": 225000,
+            "xp": 350001,
+            "xpRange": "350.001 – 500.000",
             "hitDice": "10d4",
-            "hd": "10d4",
-            "title": "Patriarche supérieur",
+            "title": "Maître du vent du nord",
+            "thac0": 16,
+            "savingThrows": [
+              11,
+              10,
+              10,
+              14,
+              11
+            ],
+            "attacksPerRound": "2",
+            "monk": {
+              "armorClass": 3,
+              "movement": 23,
+              "openDoors": 4,
+              "unarmedDamage": "3d4/3d4",
+              "damageRange": "3-12",
+              "weaponDamageBonus": 4.5,
+              "surpriseChancePercent": 18,
+              "slowFallDistance": 9,
+              "slowFallText": "9 m si à moins de 1,20 m du mur",
+              "selfHealFormula": "1d4+3",
+              "resistCharmSuggestion": 50,
+              "resistESP": 80,
+              "mentalDefenseIntelligence": null,
+              "unarmedKillLevelBonus": 2,
+              "abilityLetter": "G"
+            }
+          },
+          {
+            "level": 10,
+            "xp": 500001,
+            "xpRange": "500.001 – 700.000",
+            "hitDice": "11d4",
+            "title": "Maître du vent d’ouest",
             "thac0": 14,
             "savingThrows": [
-              7,
               11,
               10,
-              13,
-              12
-            ],
-            "spellsPerLevel": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "attacksPerRound": "5/2",
-            "spells": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "monkAC": 2,
-            "move": 27,
-            "openDoors": 4,
-            "damage": "1d10/1d6",
-            "stunParalyze": 55,
-            "slowFall": 12,
-            "immuneDisease": true,
-            "selfHealPerDay": 2,
-            "resistCharmSuggestion": 20,
-            "resistESP": 10,
-            "quiveringPalm": true,
-            "unarmedDamage": "1d10/1d6",
-            "main_nue": "1d10/1d6",
-            "monkWeaponDamageBonus": 4.5,
-            "tags": [
-              "moine:mouvement:27",
-              "moine:auto_soin:2",
-              "moine:etourdissement:55",
-              "moine:chute_ralentie:12",
-              "immunite:maladie",
-              "resistance:charme_suggestion:20",
-              "moine:progression",
-              "moine:paume_palpitante",
-              "moine:parler_aux_plantes",
-              "moine:ca:2",
-              "moine:degats_main_nue:1d10_1d6",
-              "resistance:esp:10",
-              "moine:niveau:9"
-            ],
-            "degatsMainNue": "1d10/1d6"
-          },
-          {
-            "niveau": 10,
-            "level": 10,
-            "xp": 450000,
-            "hitDice": "11d4",
-            "hd": "11d4",
-            "title": "Patriarche suprême",
-            "thac0": 13,
-            "savingThrows": [
-              6,
               10,
-              9,
-              12,
+              14,
               11
             ],
-            "spellsPerLevel": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "attacksPerRound": "5/2",
-            "spells": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "monkAC": 1,
-            "move": 30,
-            "openDoors": 4,
-            "damage": "2d6/2d6",
-            "stunParalyze": 60,
-            "slowFall": 15,
-            "immuneDisease": true,
-            "selfHealPerDay": 2,
-            "resistCharmSuggestion": 25,
-            "resistESP": 15,
-            "quiveringPalm": true,
-            "unarmedDamage": "2d6/2d6",
-            "main_nue": "2d6/2d6",
-            "monkWeaponDamageBonus": 5,
-            "tags": [
-              "moine:degats_main_nue:2d6_2d6",
-              "resistance:esp:15",
-              "moine:chute_ralentie:15",
-              "moine:auto_soin:2",
-              "immunite:maladie",
-              "moine:paume_palpitante",
-              "moine:parler_aux_plantes",
-              "moine:progression",
-              "moine:niveau:10",
-              "moine:ca:1",
-              "resistance:charme_suggestion:25",
-              "moine:etourdissement:60",
-              "moine:mouvement:30"
-            ],
-            "degatsMainNue": "2d6/2d6"
+            "attacksPerRound": "2",
+            "monk": {
+              "armorClass": 3,
+              "movement": 24,
+              "openDoors": 4,
+              "unarmedDamage": "2d6+1/2d6+1",
+              "damageRange": "3-13",
+              "weaponDamageBonus": 5.0,
+              "surpriseChancePercent": 16,
+              "slowFallDistance": 9,
+              "slowFallText": "9 m si à moins de 1,20 m du mur",
+              "selfHealFormula": "1d4+4",
+              "resistCharmSuggestion": 55,
+              "resistESP": 82,
+              "mentalDefenseIntelligence": 18,
+              "unarmedKillLevelBonus": 3,
+              "abilityLetter": "H"
+            }
           },
           {
-            "niveau": 11,
             "level": 11,
-            "xp": 675000,
+            "xp": 700001,
+            "xpRange": "700.001 – 950.000",
             "hitDice": "12d4",
-            "hd": "12d4",
-            "title": "Grand instructeur",
+            "title": "Maître du vent du sud",
+            "thac0": 14,
+            "savingThrows": [
+              11,
+              10,
+              10,
+              14,
+              11
+            ],
+            "attacksPerRound": "5/2",
+            "monk": {
+              "armorClass": 2,
+              "movement": 25,
+              "openDoors": 4,
+              "unarmedDamage": "3d4+1/3d4+1",
+              "damageRange": "4-13",
+              "weaponDamageBonus": 5.5,
+              "surpriseChancePercent": 14,
+              "slowFallDistance": 9,
+              "slowFallText": "9 m si à moins de 1,20 m du mur",
+              "selfHealFormula": "1d4+5",
+              "resistCharmSuggestion": 60,
+              "resistESP": 84,
+              "mentalDefenseIntelligence": 18,
+              "unarmedKillLevelBonus": 4,
+              "abilityLetter": "I"
+            }
+          },
+          {
+            "level": 12,
+            "xp": 950001,
+            "xpRange": "950.001 – 1.250.000",
+            "hitDice": "13d4",
+            "title": "Maître du vent d’est",
+            "thac0": 14,
+            "savingThrows": [
+              11,
+              10,
+              10,
+              14,
+              11
+            ],
+            "attacksPerRound": "5/2",
+            "monk": {
+              "armorClass": 1,
+              "movement": 26,
+              "openDoors": 5,
+              "unarmedDamage": "4d4/4d4",
+              "damageRange": "4-16",
+              "weaponDamageBonus": 6.0,
+              "surpriseChancePercent": 12,
+              "slowFallDistance": 9,
+              "slowFallText": "9 m si à moins de 1,20 m du mur",
+              "selfHealFormula": "1d4+6",
+              "resistCharmSuggestion": 65,
+              "resistESP": 86,
+              "mentalDefenseIntelligence": 18,
+              "unarmedKillLevelBonus": 5,
+              "abilityLetter": "J"
+            }
+          },
+          {
+            "level": 13,
+            "xp": 1250001,
+            "xpRange": "1.250.001 – 1.750.000",
+            "hitDice": "14d4",
+            "title": "Maître de l’hiver",
             "thac0": 12,
             "savingThrows": [
-              6,
               10,
+              8,
               9,
-              12,
-              11
-            ],
-            "spellsPerLevel": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
+              13,
+              9
             ],
             "attacksPerRound": "5/2",
-            "spells": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "monkAC": 0,
-            "move": 33,
-            "openDoors": 4,
-            "damage": "2d6/2d6",
-            "stunParalyze": 65,
-            "slowFall": 15,
-            "immuneDisease": true,
-            "selfHealPerDay": 4,
-            "resistCharmSuggestion": 30,
-            "resistESP": 20,
-            "quiveringPalm": true,
-            "unarmedDamage": "2d6/2d6",
-            "main_nue": "2d6/2d6",
-            "monkWeaponDamageBonus": 5.5,
-            "tags": [
-              "moine:degats_main_nue:2d6_2d6",
-              "moine:chute_ralentie:15",
-              "moine:niveau:11",
-              "immunite:maladie",
-              "moine:paume_palpitante",
-              "moine:ca:0",
-              "moine:parler_aux_plantes",
-              "moine:progression",
-              "moine:etourdissement:65",
-              "moine:mouvement:33",
-              "immunite:poison",
-              "moine:auto_soin:4",
-              "resistance:esp:20",
-              "resistance:charme_suggestion:30"
-            ],
-            "degatsMainNue": "2d6/2d6"
+            "monk": {
+              "armorClass": 0,
+              "movement": 27,
+              "openDoors": 5,
+              "unarmedDamage": "4d4+1/4d4+1",
+              "damageRange": "5-17",
+              "weaponDamageBonus": 6.5,
+              "surpriseChancePercent": 10,
+              "slowFallDistance": 999,
+              "slowFallText": "n’importe quelle hauteur si à moins de 2,40 m du mur",
+              "selfHealFormula": "1d4+7",
+              "resistCharmSuggestion": 70,
+              "resistESP": 88,
+              "mentalDefenseIntelligence": 18,
+              "unarmedKillLevelBonus": 6,
+              "abilityLetter": "K"
+            }
           },
           {
-            "niveau": 12,
-            "level": 12,
-            "xp": 900000,
-            "hitDice": "13d4",
-            "hd": "13d4",
-            "title": "Sage du temple",
-            "thac0": 11,
+            "level": 14,
+            "xp": 1750001,
+            "xpRange": "1.750.001 – 2.250.000",
+            "hitDice": "15d4",
+            "title": "Maître de l’automne",
+            "thac0": 12,
             "savingThrows": [
-              6,
               10,
+              8,
               9,
-              12,
-              11
+              13,
+              9
             ],
-            "spellsPerLevel": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "attacksPerRound": "5/2",
-            "spells": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "monkAC": -1,
-            "move": 36,
-            "openDoors": 5,
-            "damage": "2d8/2d6",
-            "stunParalyze": 70,
-            "slowFall": 18,
-            "immuneDisease": true,
-            "selfHealPerDay": 4,
-            "resistCharmSuggestion": 35,
-            "resistESP": 25,
-            "quiveringPalm": true,
-            "unarmedDamage": "2d8/2d6",
-            "main_nue": "2d8/2d6",
-            "monkWeaponDamageBonus": 6,
-            "tags": [
-              "moine:degats_main_nue:2d8_2d6",
-              "resistance:charme_suggestion:35",
-              "resistance:esp:25",
-              "immunite:maladie",
-              "moine:niveau:12",
-              "moine:paume_palpitante",
-              "moine:chute_ralentie:18",
-              "moine:mouvement:36",
-              "moine:progression",
-              "moine:parler_aux_plantes",
-              "moine:ca:-1",
-              "immunite:poison",
-              "moine:auto_soin:4",
-              "moine:etourdissement:70"
-            ],
-            "degatsMainNue": "2d8/2d6"
+            "attacksPerRound": "3",
+            "monk": {
+              "armorClass": -1,
+              "movement": 28,
+              "openDoors": 5,
+              "unarmedDamage": "5d4/5d4",
+              "damageRange": "5-20",
+              "weaponDamageBonus": 7.0,
+              "surpriseChancePercent": 8,
+              "slowFallDistance": 999,
+              "slowFallText": "n’importe quelle hauteur si à moins de 2,40 m du mur",
+              "selfHealFormula": "1d4+8",
+              "resistCharmSuggestion": 75,
+              "resistESP": 90,
+              "mentalDefenseIntelligence": 18,
+              "unarmedKillLevelBonus": 7,
+              "abilityLetter": ""
+            }
           },
           {
-            "niveau": 13,
-            "level": 13,
-            "xp": 1125000,
-            "hitDice": "14d4",
-            "hd": "14d4",
-            "title": "Maître éveillé",
+            "level": 15,
+            "xp": 2250001,
+            "xpRange": "2.250.001 – 2.750.000",
+            "hitDice": "16d4",
+            "title": "Maître de l’été",
+            "thac0": 12,
+            "savingThrows": [
+              10,
+              8,
+              9,
+              13,
+              9
+            ],
+            "attacksPerRound": "3",
+            "monk": {
+              "armorClass": -1,
+              "movement": 29,
+              "openDoors": 6,
+              "unarmedDamage": "6d4/6d4",
+              "damageRange": "6-24",
+              "weaponDamageBonus": 7.5,
+              "surpriseChancePercent": 6,
+              "slowFallDistance": 999,
+              "slowFallText": "n’importe quelle hauteur si à moins de 2,40 m du mur",
+              "selfHealFormula": "1d4+9",
+              "resistCharmSuggestion": 80,
+              "resistESP": 92,
+              "mentalDefenseIntelligence": 18,
+              "unarmedKillLevelBonus": 8,
+              "abilityLetter": ""
+            }
+          },
+          {
+            "level": 16,
+            "xp": 2750001,
+            "xpRange": "2.750.001 – 3.250.000",
+            "hitDice": "17d4",
+            "title": "Maître du printemps",
             "thac0": 10,
             "savingThrows": [
-              5,
-              9,
-              8,
-              11,
-              10
-            ],
-            "spellsPerLevel": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "attacksPerRound": "5/2",
-            "spells": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "monkAC": -2,
-            "move": 39,
-            "openDoors": 5,
-            "damage": "2d8/2d6",
-            "stunParalyze": 75,
-            "slowFall": 21,
-            "immuneDisease": true,
-            "selfHealPerDay": 4,
-            "resistCharmSuggestion": 40,
-            "resistESP": 30,
-            "quiveringPalm": true,
-            "unarmedDamage": "2d8/2d6",
-            "main_nue": "2d8/2d6",
-            "monkWeaponDamageBonus": 6.5,
-            "tags": [
-              "moine:niveau:13",
-              "moine:degats_main_nue:2d8_2d6",
-              "resistance:esp:30",
-              "moine:mouvement:39",
-              "immunite:maladie",
-              "moine:paume_palpitante",
-              "moine:parler_aux_plantes",
-              "moine:progression",
-              "resistance:charme_suggestion:40",
-              "moine:ca:-2",
-              "moine:etourdissement:75",
-              "immunite:poison",
-              "moine:auto_soin:4",
-              "moine:chute_ralentie:21"
-            ],
-            "degatsMainNue": "2d8/2d6"
-          },
-          {
-            "niveau": 14,
-            "level": 14,
-            "xp": 1350000,
-            "hitDice": "15d4",
-            "hd": "15d4",
-            "title": "Élu du Nirvana",
-            "thac0": 9,
-            "savingThrows": [
-              5,
-              9,
-              8,
-              11,
-              10
-            ],
-            "spellsPerLevel": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "attacksPerRound": "5/2",
-            "spells": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "monkAC": -3,
-            "move": 42,
-            "openDoors": 5,
-            "damage": "2d10/2d8",
-            "stunParalyze": 80,
-            "slowFall": 24,
-            "immuneDisease": true,
-            "selfHealPerDay": 4,
-            "resistCharmSuggestion": 45,
-            "resistESP": 35,
-            "quiveringPalm": true,
-            "unarmedDamage": "2d10/2d8",
-            "main_nue": "2d10/2d8",
-            "monkWeaponDamageBonus": 7,
-            "tags": [
-              "moine:degats_main_nue:2d10_2d8",
-              "resistance:charme_suggestion:45",
-              "moine:niveau:14",
-              "immunite:maladie",
-              "moine:paume_palpitante",
-              "moine:mouvement:42",
-              "moine:parler_aux_plantes",
-              "moine:progression",
-              "moine:chute_ralentie:24",
-              "moine:etourdissement:80",
-              "immunite:poison",
-              "moine:ca:-3",
-              "resistance:esp:35",
-              "moine:auto_soin:4"
-            ],
-            "degatsMainNue": "2d10/2d8"
-          },
-          {
-            "niveau": 15,
-            "level": 15,
-            "xp": 1575000,
-            "hitDice": "16d4",
-            "hd": "16d4",
-            "title": "Avatar",
-            "thac0": 8,
-            "savingThrows": [
-              5,
-              9,
-              8,
-              11,
-              10
-            ],
-            "spellsPerLevel": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "attacksPerRound": "5/2",
-            "spells": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "monkAC": -4,
-            "move": 45,
-            "openDoors": 6,
-            "damage": "2d10/2d8",
-            "stunParalyze": 85,
-            "slowFall": 27,
-            "immuneDisease": true,
-            "selfHealPerDay": 4,
-            "resistCharmSuggestion": 50,
-            "resistESP": 40,
-            "quiveringPalm": true,
-            "unarmedDamage": "2d10/2d8",
-            "main_nue": "2d10/2d8",
-            "monkWeaponDamageBonus": 7.5,
-            "tags": [
-              "moine:degats_main_nue:2d10_2d8",
-              "moine:chute_ralentie:27",
-              "moine:niveau:15",
-              "moine:mouvement:45",
-              "immunite:maladie",
-              "moine:paume_palpitante",
-              "moine:etourdissement:85",
-              "resistance:charme_suggestion:50",
-              "moine:progression",
-              "moine:parler_aux_plantes",
-              "moine:ca:-4",
-              "immunite:poison",
-              "moine:auto_soin:4",
-              "resistance:esp:40"
-            ],
-            "degatsMainNue": "2d10/2d8"
-          },
-          {
-            "niveau": 16,
-            "level": 16,
-            "xp": 1800000,
-            "hitDice": "17d4",
-            "hd": "17d4",
-            "title": "Esprit Parfait",
-            "thac0": 7,
-            "savingThrows": [
-              4,
-              8,
-              7,
               10,
+              8,
+              9,
+              13,
               9
             ],
-            "spellsPerLevel": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "attacksPerRound": "5/2",
-            "spells": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "monkAC": -5,
-            "move": 48,
-            "openDoors": 6,
-            "damage": "2d12/2d10",
-            "stunParalyze": 90,
-            "slowFall": 30,
-            "immuneDisease": true,
-            "selfHealPerDay": 4,
-            "resistCharmSuggestion": 55,
-            "resistESP": 45,
-            "quiveringPalm": true,
-            "unarmedDamage": "2d12/2d10",
-            "main_nue": "2d12/2d10",
-            "monkWeaponDamageBonus": 8,
-            "tags": [
-              "moine:chute_ralentie:30",
-              "resistance:charme_suggestion:55",
-              "moine:mouvement:48",
-              "immunite:maladie",
-              "moine:paume_palpitante",
-              "moine:parler_aux_plantes",
-              "moine:progression",
-              "moine:ca:-5",
-              "moine:etourdissement:90",
-              "resistance:esp:45",
-              "moine:niveau:16",
-              "immunite:poison",
-              "moine:auto_soin:4",
-              "moine:degats_main_nue:2d12_2d10"
-            ],
-            "degatsMainNue": "2d12/2d10"
+            "attacksPerRound": "4",
+            "monk": {
+              "armorClass": -2,
+              "movement": 30,
+              "openDoors": 6,
+              "unarmedDamage": "5d6/5d6",
+              "damageRange": "5-30",
+              "weaponDamageBonus": 8.0,
+              "surpriseChancePercent": 4,
+              "slowFallDistance": 999,
+              "slowFallText": "n’importe quelle hauteur si à moins de 2,40 m du mur",
+              "selfHealFormula": "1d4+10",
+              "resistCharmSuggestion": 85,
+              "resistESP": 94,
+              "mentalDefenseIntelligence": 18,
+              "unarmedKillLevelBonus": 9,
+              "abilityLetter": ""
+            }
           },
           {
-            "niveau": 17,
             "level": 17,
-            "xp": 2025000,
+            "xp": 3250001,
+            "xpRange": "3.250.001 et plus",
             "hitDice": "18d4",
-            "hd": "18d4",
-            "title": "Esprit Éveillé",
-            "thac0": 6,
+            "title": "Grand maître des fleurs",
+            "thac0": 10,
             "savingThrows": [
-              4,
+              9,
+              6,
               8,
-              7,
-              10,
-              9
+              12,
+              7
             ],
-            "spellsPerLevel": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "attacksPerRound": "5/2",
-            "spells": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "monkAC": -6,
-            "move": 51,
-            "openDoors": 6,
-            "damage": "2d12/2d10",
-            "stunParalyze": 95,
-            "slowFall": 33,
-            "immuneDisease": true,
-            "selfHealPerDay": 4,
-            "resistCharmSuggestion": 60,
-            "resistESP": 50,
-            "quiveringPalm": true,
-            "unarmedDamage": "2d12/2d10",
-            "main_nue": "2d12/2d10",
-            "monkWeaponDamageBonus": 8.5,
-            "tags": [
-              "resistance:esp:50",
-              "moine:ca:-6",
-              "moine:mouvement:51",
-              "moine:chute_ralentie:33",
-              "immunite:maladie",
-              "moine:paume_palpitante",
-              "moine:parler_aux_plantes",
-              "moine:progression",
-              "moine:niveau:17",
-              "immunite:poison",
-              "moine:etourdissement:95",
-              "resistance:charme_suggestion:60",
-              "moine:auto_soin:4",
-              "moine:degats_main_nue:2d12_2d10"
-            ],
-            "degatsMainNue": "2d12/2d10"
+            "attacksPerRound": "4",
+            "monk": {
+              "armorClass": -3,
+              "movement": 32,
+              "openDoors": 6,
+              "unarmedDamage": "8d4/8d4",
+              "damageRange": "8-32",
+              "weaponDamageBonus": 8.5,
+              "surpriseChancePercent": 2,
+              "slowFallDistance": 999,
+              "slowFallText": "n’importe quelle hauteur si à moins de 2,40 m du mur",
+              "selfHealFormula": "1d4+11",
+              "resistCharmSuggestion": 90,
+              "resistESP": 96,
+              "mentalDefenseIntelligence": 18,
+              "unarmedKillLevelBonus": 10,
+              "abilityLetter": ""
+            }
+          }
+        ],
+        "titlesByLevel": [
+          {
+            "minLevel": 1,
+            "maxLevel": 1,
+            "title": "Novice"
+          },
+          {
+            "minLevel": 2,
+            "maxLevel": 2,
+            "title": "Initié"
+          },
+          {
+            "minLevel": 3,
+            "maxLevel": 3,
+            "title": "Frère"
+          },
+          {
+            "minLevel": 4,
+            "maxLevel": 4,
+            "title": "Disciple"
+          },
+          {
+            "minLevel": 5,
+            "maxLevel": 5,
+            "title": "Immaculé"
+          },
+          {
+            "minLevel": 6,
+            "maxLevel": 6,
+            "title": "Maître"
+          },
+          {
+            "minLevel": 7,
+            "maxLevel": 7,
+            "title": "Maître supérieur"
+          },
+          {
+            "minLevel": 8,
+            "maxLevel": 8,
+            "title": "Maître des dragons"
+          },
+          {
+            "minLevel": 9,
+            "maxLevel": 9,
+            "title": "Maître du vent du nord"
+          },
+          {
+            "minLevel": 10,
+            "maxLevel": 10,
+            "title": "Maître du vent d’ouest"
+          },
+          {
+            "minLevel": 11,
+            "maxLevel": 11,
+            "title": "Maître du vent du sud"
+          },
+          {
+            "minLevel": 12,
+            "maxLevel": 12,
+            "title": "Maître du vent d’est"
+          },
+          {
+            "minLevel": 13,
+            "maxLevel": 13,
+            "title": "Maître de l’hiver"
+          },
+          {
+            "minLevel": 14,
+            "maxLevel": 14,
+            "title": "Maître de l’automne"
+          },
+          {
+            "minLevel": 15,
+            "maxLevel": 15,
+            "title": "Maître de l’été"
+          },
+          {
+            "minLevel": 16,
+            "maxLevel": 16,
+            "title": "Maître du printemps"
+          },
+          {
+            "minLevel": 17,
+            "maxLevel": 17,
+            "title": "Grand maître des fleurs"
           }
         ],
         "specialAbilities": [
           "Combat à mains nues structuré par la progression du moine",
           "Classe d’armure naturelle de moine lue dans progression[].monkAC",
           "Dégâts à mains nues lus dans progression[].damage",
-          "Étourdissant/paralysie à mains nues lus dans progression[].stunParalyze",
           "Déplacement amélioré lu dans progression[].move",
-          "Ouverture de portes lue dans progression[].openDoors",
-          "Chute ralentie lue dans progression[].slowFall",
-          "Habilités de voleur au niveau équivalent",
-          "Détournement des projectiles non-magiques par jet de sauvegarde contre la pétrification",
-          "Évasion : aucun dégât sur jet de protection réussi ; demi-dégâts au 9e niveau et plus en cas d’échec",
-          "Auto-guérison selon progression[].selfHealPerDay",
-          "Résistance aux charmes/suggestions selon progression[].resistCharmSuggestion",
-          "Résistance aux attaques ESP/mentales selon progression[].resistESP",
-          "Immunité aux maladies selon progression[].immuneDisease",
-          "Immunité aux poisons selon capacité de haut niveau",
-          "Langage des plantes à haut niveau",
-          "Paume palpitante selon progression[].quiveringPalm",
+          "Habilités de voleur équivalentes au niveau de moine : crochetage, détection/désamorçage des pièges, déplacement silencieux, dissimulation dans l’ombre, acuité auditive, escalade",
+          "Chute ralentie : niveau 4 = 6 m, niveau 6 = 9 m, niveau 13 = n’importe quelle hauteur, selon la distance au mur",
+          "Parade des projectiles non-magiques avec jet de protection contre la pétrification",
+          "Surprise réduite : 33 % au niveau 1, 32 % au niveau 2, puis -2 % par niveau à partir du niveau 3",
+          "Étourdissement à mains nues pendant 1d6 rounds si le jet d’attaque dépasse de 5 ou plus le score requis",
+          "Coup mortel à mains nues après coup réussi et étourdissement, selon la CA de la cible modifiée par les niveaux au-dessus du 7e",
+          "Langage animal au niveau 3",
+          "Masquer son esprit contre ESP au niveau 4",
+          "Immunité aux maladies, rapidité et lenteur au niveau 5",
+          "Catalepsie au niveau 6",
+          "Auto-guérison au niveau 7",
+          "Langage des plantes au niveau 8",
+          "Résistance aux charmes, suggestions, hypnose et séduction au niveau 9",
+          "Défense mentale comme Intelligence 18 au niveau 10",
+          "Immunité aux poisons au niveau 11",
+          "Immunité aux quêtes religieuses et magiques au niveau 12",
+          "Paume mortelle au niveau 13",
           "Restrictions monastiques : loyauté, pas d’armure, pas de bouclier, trésors limités"
-        ],
-        "notes": "Moine converti tag-only + progression spéciale conservée. Les capacités de niveau sont exposées au moteur par classFeatures et system.monkProgression.",
-        "hpFormula": "2d4 + constitution.mod",
-        "weaponsAllowed": [
-          "type_arme:arbalete",
-          "type_arme:arme_hast",
-          "type_arme:baton",
-          "type_arme:canne_escrime",
-          "type_arme:baton_escrime",
-          "type_arme:dague",
-          "type_arme:hachette",
-          "type_arme:javelot",
-          "type_arme:lance",
-          "type_arme:massue"
         ],
         "savingThrows": [
           "sauvegarde_paralysie",
@@ -8821,18 +8414,43 @@
         "attacksPerRound": [
           {
             "minLevel": 1,
+            "maxLevel": 3,
+            "attacks": "1"
+          },
+          {
+            "minLevel": 4,
+            "maxLevel": 5,
+            "attacks": "5/4"
+          },
+          {
+            "minLevel": 6,
+            "maxLevel": 8,
+            "attacks": "3/2"
+          },
+          {
+            "minLevel": 9,
+            "maxLevel": 10,
+            "attacks": "2"
+          },
+          {
+            "minLevel": 11,
+            "maxLevel": 13,
+            "attacks": "5/2"
+          },
+          {
+            "minLevel": 14,
+            "maxLevel": 15,
+            "attacks": "3"
+          },
+          {
+            "minLevel": 16,
             "maxLevel": 17,
-            "attacks": 1
+            "attacks": "4"
           }
         ],
         "strengthAdjustments": "",
         "requirementTags": [],
         "requirementTagNotes": "Tags exploités par add2e.mjs au drop de classe. Les alignements multiples ne sont pas dupliqués ici : ils sont gérés par system.alignment / system.alignements_autorises.",
-        "alignements_autorises": [
-          "Loyal Bon",
-          "Loyal Neutre",
-          "Loyal Mauvais"
-        ],
         "raceRestriction": {
           "mode": "allow-tags",
           "source": "AD&D - Manuel des joueurs, classe Moine",
@@ -8845,1406 +8463,38 @@
             },
             "race:demi_elfe": {
               "allowed": false,
-              "note": "demi-elfe non autorisé comme moine."
+              "note": "Demi-elfe non autorisé comme moine."
             },
             "race:demi_orque": {
               "allowed": false,
-              "note": "demi-orque non autorisé comme moine."
+              "note": "Demi-orque non autorisé comme moine."
             },
             "race:elfe": {
               "allowed": false,
-              "note": "elfe non autorisé comme moine."
+              "note": "Elfe non autorisé comme moine."
             },
             "race:gnome": {
               "allowed": false,
-              "note": "gnome non autorisé comme moine."
+              "note": "Gnome non autorisé comme moine."
             },
             "race:nain": {
               "allowed": false,
-              "note": "nain non autorisé comme moine."
+              "note": "Nain non autorisé comme moine."
             },
             "race:petite_gens": {
               "allowed": false,
-              "note": "petite-gens non autorisé comme moine."
+              "note": "Petite-gens non autorisé comme moine."
             },
             "race:petite_gen": {
               "allowed": false,
-              "note": "petite-gen non autorisé comme moine."
+              "note": "Petite-gen non autorisé comme moine."
             },
             "race:kender": {
               "allowed": false,
-              "note": "kender non autorisé comme moine."
+              "note": "Kender non autorisé comme moine."
             }
           }
         },
-        "armorRestriction": {
-          "mode": "allow-tags",
-          "allowedTags": [],
-          "forbiddenTags": [
-            "armure",
-            "bouclier"
-          ],
-          "notes": "Moine : restriction d'armures harmonisée par tags simples."
-        },
-        "monkProgression": [
-          {
-            "level": 1,
-            "xp": 0,
-            "hd": "1d8",
-            "title": "Novice",
-            "thac0": 20,
-            "savingThrows": [
-              10,
-              14,
-              13,
-              16,
-              15
-            ],
-            "spells": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "attacksPerRound": "1",
-            "monkAC": 10,
-            "move": 12,
-            "openDoors": 1,
-            "damage": "1d6/1d3",
-            "stunParalyze": 15,
-            "slowFall": 0,
-            "immuneDisease": false,
-            "selfHealPerDay": 0,
-            "resistCharmSuggestion": 0,
-            "resistESP": 0,
-            "quiveringPalm": false,
-            "niveau": 1,
-            "hitDice": "1d8",
-            "spellsPerLevel": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "unarmedDamage": "1d6/1d3",
-            "main_nue": "1d6/1d3",
-            "monkWeaponDamageBonus": 0.5,
-            "tags": [
-              "moine:ca:10",
-              "moine:degats_main_nue:1d6_1d3",
-              "moine:niveau:1",
-              "moine:progression",
-              "moine:etourdissement:15",
-              "moine:mouvement:12"
-            ],
-            "degatsMainNue": "1d6/1d3"
-          },
-          {
-            "level": 2,
-            "xp": 1500,
-            "hd": "2d8",
-            "title": "Aspirant",
-            "thac0": 20,
-            "savingThrows": [
-              10,
-              14,
-              13,
-              16,
-              15
-            ],
-            "spells": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "attacksPerRound": "1",
-            "monkAC": 9,
-            "move": 12,
-            "openDoors": 1,
-            "damage": "1d6/1d3",
-            "stunParalyze": 20,
-            "slowFall": 0,
-            "immuneDisease": false,
-            "selfHealPerDay": 0,
-            "resistCharmSuggestion": 0,
-            "resistESP": 0,
-            "quiveringPalm": false,
-            "niveau": 2,
-            "hitDice": "2d8",
-            "spellsPerLevel": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "unarmedDamage": "1d6/1d3",
-            "main_nue": "1d6/1d3",
-            "monkWeaponDamageBonus": 1,
-            "tags": [
-              "moine:niveau:2",
-              "moine:degats_main_nue:1d6_1d3",
-              "moine:progression",
-              "moine:etourdissement:20",
-              "moine:ca:9",
-              "moine:mouvement:12"
-            ],
-            "degatsMainNue": "1d6/1d3"
-          },
-          {
-            "level": 3,
-            "xp": 3000,
-            "hd": "3d8",
-            "title": "Disciple",
-            "thac0": 19,
-            "savingThrows": [
-              10,
-              14,
-              13,
-              16,
-              15
-            ],
-            "spells": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "attacksPerRound": "3/2",
-            "monkAC": 8,
-            "move": 15,
-            "openDoors": 2,
-            "damage": "1d6/1d3",
-            "stunParalyze": 25,
-            "slowFall": 6,
-            "immuneDisease": false,
-            "selfHealPerDay": 0,
-            "resistCharmSuggestion": 0,
-            "resistESP": 0,
-            "quiveringPalm": false,
-            "niveau": 3,
-            "hitDice": "3d8",
-            "spellsPerLevel": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "unarmedDamage": "1d6/1d3",
-            "main_nue": "1d6/1d3",
-            "monkWeaponDamageBonus": 1.5,
-            "tags": [
-              "moine:niveau:3",
-              "moine:degats_main_nue:1d6_1d3",
-              "moine:etourdissement:25",
-              "moine:mouvement:15",
-              "moine:progression",
-              "moine:ca:8",
-              "moine:chute_ralentie:6"
-            ],
-            "degatsMainNue": "1d6/1d3"
-          },
-          {
-            "level": 4,
-            "xp": 6000,
-            "hd": "4d8",
-            "title": "Initié",
-            "thac0": 18,
-            "savingThrows": [
-              9,
-              13,
-              12,
-              15,
-              14
-            ],
-            "spells": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "attacksPerRound": "3/2",
-            "monkAC": 7,
-            "move": 15,
-            "openDoors": 2,
-            "damage": "1d6/1d3",
-            "stunParalyze": 30,
-            "slowFall": 6,
-            "immuneDisease": false,
-            "selfHealPerDay": 0,
-            "resistCharmSuggestion": 0,
-            "resistESP": 0,
-            "quiveringPalm": false,
-            "niveau": 4,
-            "hitDice": "4d8",
-            "spellsPerLevel": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "unarmedDamage": "1d6/1d3",
-            "main_nue": "1d6/1d3",
-            "monkWeaponDamageBonus": 2,
-            "tags": [
-              "moine:etourdissement:30",
-              "moine:degats_main_nue:1d6_1d3",
-              "moine:niveau:4",
-              "moine:progression",
-              "moine:mouvement:15",
-              "moine:chute_ralentie:6",
-              "moine:ca:7"
-            ],
-            "degatsMainNue": "1d6/1d3"
-          },
-          {
-            "level": 5,
-            "xp": 13000,
-            "hd": "5d8",
-            "title": "Maître",
-            "thac0": 18,
-            "savingThrows": [
-              9,
-              13,
-              12,
-              15,
-              14
-            ],
-            "spells": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "attacksPerRound": "3/2",
-            "monkAC": 6,
-            "move": 18,
-            "openDoors": 2,
-            "damage": "1d8/1d4",
-            "stunParalyze": 35,
-            "slowFall": 6,
-            "immuneDisease": false,
-            "selfHealPerDay": 0,
-            "resistCharmSuggestion": 0,
-            "resistESP": 0,
-            "quiveringPalm": false,
-            "niveau": 5,
-            "hitDice": "5d8",
-            "spellsPerLevel": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "unarmedDamage": "1d8/1d4",
-            "main_nue": "1d8/1d4",
-            "monkWeaponDamageBonus": 2.5,
-            "tags": [
-              "moine:mouvement:18",
-              "moine:progression",
-              "moine:etourdissement:35",
-              "moine:ca:6",
-              "moine:degats_main_nue:1d8_1d4",
-              "moine:niveau:5",
-              "moine:chute_ralentie:6"
-            ],
-            "degatsMainNue": "1d8/1d4"
-          },
-          {
-            "level": 6,
-            "xp": 27500,
-            "hd": "6d8",
-            "title": "Maître supérieur",
-            "thac0": 17,
-            "savingThrows": [
-              9,
-              13,
-              12,
-              15,
-              14
-            ],
-            "spells": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "attacksPerRound": "2",
-            "monkAC": 5,
-            "move": 18,
-            "openDoors": 3,
-            "damage": "1d8/1d4",
-            "stunParalyze": 40,
-            "slowFall": 9,
-            "immuneDisease": true,
-            "selfHealPerDay": 0,
-            "resistCharmSuggestion": 5,
-            "resistESP": 0,
-            "quiveringPalm": false,
-            "niveau": 6,
-            "hitDice": "6d8",
-            "spellsPerLevel": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "unarmedDamage": "1d8/1d4",
-            "main_nue": "1d8/1d4",
-            "monkWeaponDamageBonus": 3,
-            "tags": [
-              "resistance:charme_suggestion:5",
-              "moine:ca:5",
-              "immunite:maladie",
-              "moine:mouvement:18",
-              "moine:progression",
-              "moine:niveau:6",
-              "moine:etourdissement:40",
-              "moine:chute_ralentie:9",
-              "moine:degats_main_nue:1d8_1d4"
-            ],
-            "degatsMainNue": "1d8/1d4"
-          },
-          {
-            "level": 7,
-            "xp": 55000,
-            "hd": "7d8",
-            "title": "Grand maître",
-            "thac0": 16,
-            "savingThrows": [
-              7,
-              11,
-              10,
-              13,
-              12
-            ],
-            "spells": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "attacksPerRound": "2",
-            "monkAC": 4,
-            "move": 21,
-            "openDoors": 3,
-            "damage": "1d8/1d4",
-            "stunParalyze": 45,
-            "slowFall": 9,
-            "immuneDisease": true,
-            "selfHealPerDay": 2,
-            "resistCharmSuggestion": 10,
-            "resistESP": 0,
-            "quiveringPalm": false,
-            "niveau": 7,
-            "hitDice": "7d8",
-            "spellsPerLevel": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "unarmedDamage": "1d8/1d4",
-            "main_nue": "1d8/1d4",
-            "monkWeaponDamageBonus": 3.5,
-            "tags": [
-              "moine:etourdissement:45",
-              "moine:auto_soin:2",
-              "immunite:maladie",
-              "resistance:charme_suggestion:10",
-              "moine:progression",
-              "moine:ca:4",
-              "moine:niveau:7",
-              "moine:chute_ralentie:9",
-              "moine:degats_main_nue:1d8_1d4",
-              "moine:mouvement:21"
-            ],
-            "degatsMainNue": "1d8/1d4"
-          },
-          {
-            "level": 8,
-            "xp": 110000,
-            "hd": "8d8",
-            "title": "Patriarche",
-            "thac0": 15,
-            "savingThrows": [
-              7,
-              11,
-              10,
-              13,
-              12
-            ],
-            "spells": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "attacksPerRound": "2",
-            "monkAC": 3,
-            "move": 24,
-            "openDoors": 3,
-            "damage": "1d10/1d6",
-            "stunParalyze": 50,
-            "slowFall": 12,
-            "immuneDisease": true,
-            "selfHealPerDay": 2,
-            "resistCharmSuggestion": 15,
-            "resistESP": 5,
-            "quiveringPalm": false,
-            "niveau": 8,
-            "hitDice": "8d8",
-            "spellsPerLevel": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "unarmedDamage": "1d10/1d6",
-            "main_nue": "1d10/1d6",
-            "monkWeaponDamageBonus": 4,
-            "tags": [
-              "moine:mouvement:24",
-              "moine:auto_soin:2",
-              "resistance:charme_suggestion:15",
-              "moine:chute_ralentie:12",
-              "immunite:maladie",
-              "moine:etourdissement:50",
-              "moine:parler_aux_plantes",
-              "moine:progression",
-              "moine:ca:3",
-              "moine:niveau:8",
-              "moine:degats_main_nue:1d10_1d6",
-              "resistance:esp:5"
-            ],
-            "degatsMainNue": "1d10/1d6"
-          },
-          {
-            "level": 9,
-            "xp": 225000,
-            "hd": "9d8",
-            "title": "Patriarche supérieur",
-            "thac0": 14,
-            "savingThrows": [
-              7,
-              11,
-              10,
-              13,
-              12
-            ],
-            "spells": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "attacksPerRound": "5/2",
-            "monkAC": 2,
-            "move": 27,
-            "openDoors": 4,
-            "damage": "1d10/1d6",
-            "stunParalyze": 55,
-            "slowFall": 12,
-            "immuneDisease": true,
-            "selfHealPerDay": 2,
-            "resistCharmSuggestion": 20,
-            "resistESP": 10,
-            "quiveringPalm": true,
-            "niveau": 9,
-            "hitDice": "9d8",
-            "spellsPerLevel": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "unarmedDamage": "1d10/1d6",
-            "main_nue": "1d10/1d6",
-            "monkWeaponDamageBonus": 4.5,
-            "tags": [
-              "moine:mouvement:27",
-              "moine:auto_soin:2",
-              "moine:etourdissement:55",
-              "moine:chute_ralentie:12",
-              "immunite:maladie",
-              "resistance:charme_suggestion:20",
-              "moine:progression",
-              "moine:paume_palpitante",
-              "moine:parler_aux_plantes",
-              "moine:ca:2",
-              "moine:degats_main_nue:1d10_1d6",
-              "resistance:esp:10",
-              "moine:niveau:9"
-            ],
-            "degatsMainNue": "1d10/1d6"
-          },
-          {
-            "level": 10,
-            "xp": 450000,
-            "hd": "9d8+2",
-            "title": "Patriarche suprême",
-            "thac0": 13,
-            "savingThrows": [
-              6,
-              10,
-              9,
-              12,
-              11
-            ],
-            "spells": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "attacksPerRound": "5/2",
-            "monkAC": 1,
-            "move": 30,
-            "openDoors": 4,
-            "damage": "2d6/2d6",
-            "stunParalyze": 60,
-            "slowFall": 15,
-            "immuneDisease": true,
-            "selfHealPerDay": 2,
-            "resistCharmSuggestion": 25,
-            "resistESP": 15,
-            "quiveringPalm": true,
-            "niveau": 10,
-            "hitDice": "9d8+2",
-            "spellsPerLevel": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "unarmedDamage": "2d6/2d6",
-            "main_nue": "2d6/2d6",
-            "monkWeaponDamageBonus": 5,
-            "tags": [
-              "moine:degats_main_nue:2d6_2d6",
-              "resistance:esp:15",
-              "moine:chute_ralentie:15",
-              "moine:auto_soin:2",
-              "immunite:maladie",
-              "moine:paume_palpitante",
-              "moine:parler_aux_plantes",
-              "moine:progression",
-              "moine:niveau:10",
-              "moine:ca:1",
-              "resistance:charme_suggestion:25",
-              "moine:etourdissement:60",
-              "moine:mouvement:30"
-            ],
-            "degatsMainNue": "2d6/2d6"
-          },
-          {
-            "level": 11,
-            "xp": 675000,
-            "hd": "9d8+4",
-            "title": "Grand instructeur",
-            "thac0": 12,
-            "savingThrows": [
-              6,
-              10,
-              9,
-              12,
-              11
-            ],
-            "spells": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "attacksPerRound": "5/2",
-            "monkAC": 0,
-            "move": 33,
-            "openDoors": 4,
-            "damage": "2d6/2d6",
-            "stunParalyze": 65,
-            "slowFall": 15,
-            "immuneDisease": true,
-            "selfHealPerDay": 4,
-            "resistCharmSuggestion": 30,
-            "resistESP": 20,
-            "quiveringPalm": true,
-            "niveau": 11,
-            "hitDice": "9d8+4",
-            "spellsPerLevel": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "unarmedDamage": "2d6/2d6",
-            "main_nue": "2d6/2d6",
-            "monkWeaponDamageBonus": 5.5,
-            "tags": [
-              "moine:degats_main_nue:2d6_2d6",
-              "moine:chute_ralentie:15",
-              "moine:niveau:11",
-              "immunite:maladie",
-              "moine:paume_palpitante",
-              "moine:ca:0",
-              "moine:parler_aux_plantes",
-              "moine:progression",
-              "moine:etourdissement:65",
-              "moine:mouvement:33",
-              "immunite:poison",
-              "moine:auto_soin:4",
-              "resistance:esp:20",
-              "resistance:charme_suggestion:30"
-            ],
-            "degatsMainNue": "2d6/2d6"
-          },
-          {
-            "level": 12,
-            "xp": 900000,
-            "hd": "9d8+6",
-            "title": "Sage du temple",
-            "thac0": 11,
-            "savingThrows": [
-              6,
-              10,
-              9,
-              12,
-              11
-            ],
-            "spells": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "attacksPerRound": "5/2",
-            "monkAC": -1,
-            "move": 36,
-            "openDoors": 5,
-            "damage": "2d8/2d6",
-            "stunParalyze": 70,
-            "slowFall": 18,
-            "immuneDisease": true,
-            "selfHealPerDay": 4,
-            "resistCharmSuggestion": 35,
-            "resistESP": 25,
-            "quiveringPalm": true,
-            "niveau": 12,
-            "hitDice": "9d8+6",
-            "spellsPerLevel": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "unarmedDamage": "2d8/2d6",
-            "main_nue": "2d8/2d6",
-            "monkWeaponDamageBonus": 6,
-            "tags": [
-              "moine:degats_main_nue:2d8_2d6",
-              "resistance:charme_suggestion:35",
-              "resistance:esp:25",
-              "immunite:maladie",
-              "moine:niveau:12",
-              "moine:paume_palpitante",
-              "moine:chute_ralentie:18",
-              "moine:mouvement:36",
-              "moine:progression",
-              "moine:parler_aux_plantes",
-              "moine:ca:-1",
-              "immunite:poison",
-              "moine:auto_soin:4",
-              "moine:etourdissement:70"
-            ],
-            "degatsMainNue": "2d8/2d6"
-          },
-          {
-            "level": 13,
-            "xp": 1125000,
-            "hd": "9d8+8",
-            "title": "Maître éveillé",
-            "thac0": 10,
-            "savingThrows": [
-              5,
-              9,
-              8,
-              11,
-              10
-            ],
-            "spells": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "attacksPerRound": "5/2",
-            "monkAC": -2,
-            "move": 39,
-            "openDoors": 5,
-            "damage": "2d8/2d6",
-            "stunParalyze": 75,
-            "slowFall": 21,
-            "immuneDisease": true,
-            "selfHealPerDay": 4,
-            "resistCharmSuggestion": 40,
-            "resistESP": 30,
-            "quiveringPalm": true,
-            "niveau": 13,
-            "hitDice": "9d8+8",
-            "spellsPerLevel": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "unarmedDamage": "2d8/2d6",
-            "main_nue": "2d8/2d6",
-            "monkWeaponDamageBonus": 6.5,
-            "tags": [
-              "moine:niveau:13",
-              "moine:degats_main_nue:2d8_2d6",
-              "resistance:esp:30",
-              "moine:mouvement:39",
-              "immunite:maladie",
-              "moine:paume_palpitante",
-              "moine:parler_aux_plantes",
-              "moine:progression",
-              "resistance:charme_suggestion:40",
-              "moine:ca:-2",
-              "moine:etourdissement:75",
-              "immunite:poison",
-              "moine:auto_soin:4",
-              "moine:chute_ralentie:21"
-            ],
-            "degatsMainNue": "2d8/2d6"
-          },
-          {
-            "level": 14,
-            "xp": 1350000,
-            "hd": "9d8+10",
-            "title": "Élu du Nirvana",
-            "thac0": 9,
-            "savingThrows": [
-              5,
-              9,
-              8,
-              11,
-              10
-            ],
-            "spells": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "attacksPerRound": "5/2",
-            "monkAC": -3,
-            "move": 42,
-            "openDoors": 5,
-            "damage": "2d10/2d8",
-            "stunParalyze": 80,
-            "slowFall": 24,
-            "immuneDisease": true,
-            "selfHealPerDay": 4,
-            "resistCharmSuggestion": 45,
-            "resistESP": 35,
-            "quiveringPalm": true,
-            "niveau": 14,
-            "hitDice": "9d8+10",
-            "spellsPerLevel": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "unarmedDamage": "2d10/2d8",
-            "main_nue": "2d10/2d8",
-            "monkWeaponDamageBonus": 7,
-            "tags": [
-              "moine:degats_main_nue:2d10_2d8",
-              "resistance:charme_suggestion:45",
-              "moine:niveau:14",
-              "immunite:maladie",
-              "moine:paume_palpitante",
-              "moine:mouvement:42",
-              "moine:parler_aux_plantes",
-              "moine:progression",
-              "moine:chute_ralentie:24",
-              "moine:etourdissement:80",
-              "immunite:poison",
-              "moine:ca:-3",
-              "resistance:esp:35",
-              "moine:auto_soin:4"
-            ],
-            "degatsMainNue": "2d10/2d8"
-          },
-          {
-            "level": 15,
-            "xp": 1575000,
-            "hd": "9d8+12",
-            "title": "Avatar",
-            "thac0": 8,
-            "savingThrows": [
-              5,
-              9,
-              8,
-              11,
-              10
-            ],
-            "spells": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "attacksPerRound": "5/2",
-            "monkAC": -4,
-            "move": 45,
-            "openDoors": 6,
-            "damage": "2d10/2d8",
-            "stunParalyze": 85,
-            "slowFall": 27,
-            "immuneDisease": true,
-            "selfHealPerDay": 4,
-            "resistCharmSuggestion": 50,
-            "resistESP": 40,
-            "quiveringPalm": true,
-            "niveau": 15,
-            "hitDice": "9d8+12",
-            "spellsPerLevel": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "unarmedDamage": "2d10/2d8",
-            "main_nue": "2d10/2d8",
-            "monkWeaponDamageBonus": 7.5,
-            "tags": [
-              "moine:degats_main_nue:2d10_2d8",
-              "moine:chute_ralentie:27",
-              "moine:niveau:15",
-              "moine:mouvement:45",
-              "immunite:maladie",
-              "moine:paume_palpitante",
-              "moine:etourdissement:85",
-              "resistance:charme_suggestion:50",
-              "moine:progression",
-              "moine:parler_aux_plantes",
-              "moine:ca:-4",
-              "immunite:poison",
-              "moine:auto_soin:4",
-              "resistance:esp:40"
-            ],
-            "degatsMainNue": "2d10/2d8"
-          },
-          {
-            "level": 16,
-            "xp": 1800000,
-            "hd": "9d8+14",
-            "title": "Esprit Parfait",
-            "thac0": 7,
-            "savingThrows": [
-              4,
-              8,
-              7,
-              10,
-              9
-            ],
-            "spells": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "attacksPerRound": "5/2",
-            "monkAC": -5,
-            "move": 48,
-            "openDoors": 6,
-            "damage": "2d12/2d10",
-            "stunParalyze": 90,
-            "slowFall": 30,
-            "immuneDisease": true,
-            "selfHealPerDay": 4,
-            "resistCharmSuggestion": 55,
-            "resistESP": 45,
-            "quiveringPalm": true,
-            "niveau": 16,
-            "hitDice": "9d8+14",
-            "spellsPerLevel": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "unarmedDamage": "2d12/2d10",
-            "main_nue": "2d12/2d10",
-            "monkWeaponDamageBonus": 8,
-            "tags": [
-              "moine:chute_ralentie:30",
-              "resistance:charme_suggestion:55",
-              "moine:mouvement:48",
-              "immunite:maladie",
-              "moine:paume_palpitante",
-              "moine:parler_aux_plantes",
-              "moine:progression",
-              "moine:ca:-5",
-              "moine:etourdissement:90",
-              "resistance:esp:45",
-              "moine:niveau:16",
-              "immunite:poison",
-              "moine:auto_soin:4",
-              "moine:degats_main_nue:2d12_2d10"
-            ],
-            "degatsMainNue": "2d12/2d10"
-          },
-          {
-            "level": 17,
-            "xp": 2025000,
-            "hd": "9d8+16",
-            "title": "Esprit Éveillé",
-            "thac0": 6,
-            "savingThrows": [
-              4,
-              8,
-              7,
-              10,
-              9
-            ],
-            "spells": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "attacksPerRound": "5/2",
-            "monkAC": -6,
-            "move": 51,
-            "openDoors": 6,
-            "damage": "2d12/2d10",
-            "stunParalyze": 95,
-            "slowFall": 33,
-            "immuneDisease": true,
-            "selfHealPerDay": 4,
-            "resistCharmSuggestion": 60,
-            "resistESP": 50,
-            "quiveringPalm": true,
-            "niveau": 17,
-            "hitDice": "9d8+16",
-            "spellsPerLevel": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "unarmedDamage": "2d12/2d10",
-            "main_nue": "2d12/2d10",
-            "monkWeaponDamageBonus": 8.5,
-            "tags": [
-              "resistance:esp:50",
-              "moine:ca:-6",
-              "moine:mouvement:51",
-              "moine:chute_ralentie:33",
-              "immunite:maladie",
-              "moine:paume_palpitante",
-              "moine:parler_aux_plantes",
-              "moine:progression",
-              "moine:niveau:17",
-              "immunite:poison",
-              "moine:etourdissement:95",
-              "resistance:charme_suggestion:60",
-              "moine:auto_soin:4",
-              "moine:degats_main_nue:2d12_2d10"
-            ],
-            "degatsMainNue": "2d12/2d10"
-          },
-          {
-            "level": 18,
-            "xp": 2250000,
-            "hd": "9d8+18",
-            "title": "Immortel",
-            "thac0": 5,
-            "savingThrows": [
-              4,
-              8,
-              7,
-              10,
-              9
-            ],
-            "spells": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "attacksPerRound": "5/2",
-            "monkAC": -7,
-            "move": 54,
-            "openDoors": 6,
-            "damage": "3d10/3d8",
-            "stunParalyze": 100,
-            "slowFall": 36,
-            "immuneDisease": true,
-            "selfHealPerDay": 4,
-            "resistCharmSuggestion": 65,
-            "resistESP": 55,
-            "quiveringPalm": true,
-            "niveau": 18,
-            "hitDice": "9d8+18",
-            "spellsPerLevel": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "unarmedDamage": "3d10/3d8",
-            "main_nue": "3d10/3d8",
-            "monkWeaponDamageBonus": 9,
-            "tags": [
-              "resistance:charme_suggestion:65",
-              "resistance:esp:55",
-              "immunite:maladie",
-              "moine:paume_palpitante",
-              "moine:parler_aux_plantes",
-              "moine:niveau:18",
-              "moine:progression",
-              "moine:mouvement:54",
-              "moine:degats_main_nue:3d10_3d8",
-              "moine:chute_ralentie:36",
-              "immunite:poison",
-              "moine:ca:-7",
-              "moine:auto_soin:4",
-              "moine:etourdissement:100"
-            ],
-            "degatsMainNue": "3d10/3d8"
-          },
-          {
-            "level": 19,
-            "xp": 2475000,
-            "hd": "9d8+20",
-            "title": "Demi-dieu",
-            "thac0": 4,
-            "savingThrows": [
-              2,
-              6,
-              5,
-              8,
-              7
-            ],
-            "spells": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "attacksPerRound": "5/2",
-            "monkAC": -8,
-            "move": 57,
-            "openDoors": 6,
-            "damage": "3d10/3d8",
-            "stunParalyze": 100,
-            "slowFall": 39,
-            "immuneDisease": true,
-            "selfHealPerDay": 4,
-            "resistCharmSuggestion": 70,
-            "resistESP": 60,
-            "quiveringPalm": true,
-            "niveau": 19,
-            "hitDice": "9d8+20",
-            "spellsPerLevel": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "unarmedDamage": "3d10/3d8",
-            "main_nue": "3d10/3d8",
-            "monkWeaponDamageBonus": 9.5,
-            "tags": [
-              "moine:niveau:19",
-              "resistance:charme_suggestion:70",
-              "moine:mouvement:57",
-              "immunite:maladie",
-              "moine:paume_palpitante",
-              "moine:ca:-8",
-              "moine:progression",
-              "moine:chute_ralentie:39",
-              "moine:parler_aux_plantes",
-              "moine:degats_main_nue:3d10_3d8",
-              "resistance:esp:60",
-              "immunite:poison",
-              "moine:auto_soin:4",
-              "moine:etourdissement:100"
-            ],
-            "degatsMainNue": "3d10/3d8"
-          },
-          {
-            "level": 20,
-            "xp": 2700000,
-            "hd": "9d8+22",
-            "title": "Maître Universel",
-            "thac0": 3,
-            "savingThrows": [
-              2,
-              6,
-              5,
-              8,
-              7
-            ],
-            "spells": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "attacksPerRound": "5/2",
-            "monkAC": -9,
-            "move": 60,
-            "openDoors": 6,
-            "damage": "3d12/3d10",
-            "stunParalyze": 100,
-            "slowFall": 42,
-            "immuneDisease": true,
-            "selfHealPerDay": 4,
-            "resistCharmSuggestion": 75,
-            "resistESP": 65,
-            "quiveringPalm": true,
-            "niveau": 20,
-            "hitDice": "9d8+22",
-            "spellsPerLevel": [
-              0,
-              0,
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            "unarmedDamage": "3d12/3d10",
-            "main_nue": "3d12/3d10",
-            "monkWeaponDamageBonus": 10,
-            "tags": [
-              "moine:niveau:20",
-              "immunite:maladie",
-              "resistance:esp:65",
-              "moine:paume_palpitante",
-              "moine:parler_aux_plantes",
-              "moine:progression",
-              "moine:ca:-9",
-              "resistance:charme_suggestion:75",
-              "moine:degats_main_nue:3d12_3d10",
-              "immunite:poison",
-              "moine:chute_ralentie:42",
-              "moine:auto_soin:4",
-              "moine:etourdissement:100",
-              "moine:mouvement:60"
-            ],
-            "degatsMainNue": "3d12/3d10"
-          }
-        ],
-        "titlesByLevel": [
-          {
-            "minLevel": 1,
-            "maxLevel": 1,
-            "title": "Novice"
-          },
-          {
-            "minLevel": 2,
-            "maxLevel": 2,
-            "title": "Aspirant"
-          },
-          {
-            "minLevel": 3,
-            "maxLevel": 3,
-            "title": "Disciple"
-          },
-          {
-            "minLevel": 4,
-            "maxLevel": 4,
-            "title": "Initié"
-          },
-          {
-            "minLevel": 5,
-            "maxLevel": 5,
-            "title": "Maître"
-          },
-          {
-            "minLevel": 6,
-            "maxLevel": 6,
-            "title": "Maître supérieur"
-          },
-          {
-            "minLevel": 7,
-            "maxLevel": 7,
-            "title": "Grand maître"
-          },
-          {
-            "minLevel": 8,
-            "maxLevel": 8,
-            "title": "Patriarche"
-          },
-          {
-            "minLevel": 9,
-            "maxLevel": 9,
-            "title": "Patriarche supérieur"
-          },
-          {
-            "minLevel": 10,
-            "maxLevel": 10,
-            "title": "Patriarche suprême"
-          },
-          {
-            "minLevel": 11,
-            "maxLevel": 11,
-            "title": "Grand instructeur"
-          },
-          {
-            "minLevel": 12,
-            "maxLevel": 12,
-            "title": "Sage du temple"
-          },
-          {
-            "minLevel": 13,
-            "maxLevel": 13,
-            "title": "Maître éveillé"
-          },
-          {
-            "minLevel": 14,
-            "maxLevel": 14,
-            "title": "Élu du Nirvana"
-          },
-          {
-            "minLevel": 15,
-            "maxLevel": 15,
-            "title": "Avatar"
-          },
-          {
-            "minLevel": 16,
-            "maxLevel": 16,
-            "title": "Esprit Parfait"
-          },
-          {
-            "minLevel": 17,
-            "maxLevel": 17,
-            "title": "Esprit Éveillé"
-          }
-        ],
         "classFeatures": [
           {
             "minLevel": 1,
@@ -10256,90 +8506,464 @@
               "perte_pouvoirs_si:non_loyal"
             ],
             "activable": false,
-            "passive": true
+            "passive": true,
+            "id": "monk-ascese-monastique",
+            "type": "passive",
+            "rules": [],
+            "flags": {
+              "add2e": {
+                "implementation": {
+                  "type": "campaign",
+                  "status": "complete",
+                  "note": "Gestion manuelle de campagne : alignement loyal, discipline et conséquences de changement d’alignement."
+                }
+              }
+            }
           },
           {
             "minLevel": 1,
             "name": "Progression martiale du moine",
-            "description": "CA naturelle, mouvement, attaques, dégâts à mains nues, étourdissement/paralysie et autres valeurs sont lus dans system.monkProgression par Add2eEffectsEngine.",
+            "description": "La CA naturelle, le mouvement, les attaques, les dégâts à mains nues et les autres valeurs variables sont lus dans la ligne du niveau courant de system.progression[].monk.",
             "tags": [
               "moine:progression_speciale",
               "moine:ca_naturelle",
               "moine:mouvement",
-              "moine:degats_main_nue",
-              "moine:etourdissement"
+              "moine:degats_main_nue"
             ],
             "activable": false,
-            "passive": true
+            "passive": true,
+            "rules": [
+              {
+                "kind": "armor_class_base",
+                "scope": "owner",
+                "valueSource": "progressionField",
+                "progression": "progression",
+                "field": "monk.armorClass",
+                "ignoreDex": true,
+                "label": "CA naturelle de classe"
+              }
+            ],
+            "id": "monk-progression-martiale-du-moine",
+            "type": "passive",
+            "flags": {
+              "add2e": {
+                "implementation": {
+                  "type": "automatic_rule",
+                  "status": "implemented",
+                  "note": "CA naturelle et progression lues par les moteurs génériques et le lecteur de progression du Moine."
+                }
+              }
+            }
           },
           {
             "minLevel": 1,
             "name": "Combat à mains nues",
-            "description": "Le moine reçoit une arme virtuelle Main nue au drop de classe. Ses dégâts sont synchronisés avec la progression de niveau.",
+            "description": "Le moine reçoit une arme virtuelle Main nue. Ses dégâts sont synchronisés avec la progression ; il peut étourdir 1d6 rounds si son jet dépasse de 5 ou plus le score requis, puis tenter le coup mortel selon la règle de CA modifiée.",
             "tags": [
               "combat:mains_nues",
               "arme:main_nue",
-              "type_arme:main_nue"
+              "type_arme:main_nue",
+              "moine:etourdissement_main_nue",
+              "moine:coup_mortel_main_nue"
             ],
             "activable": false,
-            "passive": true
+            "passive": true,
+            "id": "monk-combat-a-mains-nues",
+            "type": "passive",
+            "rules": [],
+            "flags": {
+              "add2e": {
+                "implementation": {
+                  "type": "scripted_action",
+                  "status": "implemented",
+                  "note": "Arme virtuelle, dégâts et étourdissement gérés par les scripts existants du combat à mains nues."
+                }
+              }
+            }
           },
           {
             "minLevel": 1,
             "name": "Bonus de dégâts martial",
-            "description": "Le moine ajoute 1/2 point de dégâts par niveau avec les armes.",
+            "description": "Avec les armes autorisées, le moine ajoute un bonus de dégâts égal à +1/2 par niveau.",
             "tags": [
               "bonus_degats:moine:demi_niveau"
             ],
             "activable": false,
-            "passive": true
+            "passive": true,
+            "rules": [
+              {
+                "kind": "attack_modifier",
+                "scope": "owner",
+                "actions": [
+                  "attaque"
+                ],
+                "selector": "degats",
+                "mode": "add",
+                "valueSource": "classLevel",
+                "multiplier": 0.5,
+                "actionNotAnyTags": [
+                  "main_nue",
+                  "arme:main_nue",
+                  "type_arme:main_nue",
+                  "famille_arme:main_nue",
+                  "combat:mains_nues"
+                ],
+                "label": "Bonus martial"
+              }
+            ],
+            "id": "monk-bonus-de-degats-martial",
+            "type": "passive",
+            "flags": {
+              "add2e": {
+                "implementation": {
+                  "type": "automatic_rule",
+                  "status": "implemented",
+                  "note": "Bonus martial calculé par règle générique attack_modifier."
+                }
+              }
+            }
           },
           {
             "minLevel": 1,
             "name": "Ajustements physiques particuliers",
-            "description": "Le moine ne reçoit pas l’ajustement de Dextérité à la CA et n’utilise pas les bonus de Force habituels au toucher/dégâts.",
+            "description": "Le moine ne reçoit pas l’ajustement de Dextérité à la CA et n’utilise pas les bonus de Force habituels au toucher ou aux dégâts.",
             "tags": [
               "dex_ca:ignore",
               "force_bonus:toucher:ignore",
               "force_bonus:degats:ignore"
             ],
             "activable": false,
-            "passive": true
+            "passive": true,
+            "rules": [
+              {
+                "kind": "attack_modifier",
+                "scope": "owner",
+                "actions": [
+                  "attaque"
+                ],
+                "selector": "toucher",
+                "mode": "cancel_ability_bonus",
+                "ability": "force",
+                "label": "Bonus de Force ignoré"
+              },
+              {
+                "kind": "attack_modifier",
+                "scope": "owner",
+                "actions": [
+                  "attaque"
+                ],
+                "selector": "degats",
+                "mode": "cancel_ability_bonus",
+                "ability": "force",
+                "label": "Bonus de Force ignoré"
+              }
+            ],
+            "id": "monk-ajustements-physiques-particuliers",
+            "type": "passive",
+            "flags": {
+              "add2e": {
+                "implementation": {
+                  "type": "automatic_rule",
+                  "status": "implemented",
+                  "note": "Annulation des bonus habituels de Force et exclusion de la Dextérité à la CA."
+                }
+              }
+            }
+          },
+          {
+            "minLevel": 1,
+            "name": "Habilités de voleur du moine",
+            "description": "Le moine utilise certaines habilités de voleur à un niveau équivalent à son niveau de moine : crochetage, détection/désamorçage des pièges, déplacement silencieux, dissimulation dans l’ombre, acuité auditive et escalade.",
+            "tags": [
+              "competences:voleur",
+              "moine:habilites_voleur",
+              "voleur:crochetage",
+              "voleur:detection_pieges",
+              "voleur:desamorcage_pieges",
+              "voleur:deplacement_silencieux",
+              "voleur:dissimulation",
+              "voleur:ecoute",
+              "voleur:escalade"
+            ],
+            "activable": false,
+            "passive": true,
+            "id": "monk-habilites-de-voleur-du-moine",
+            "type": "passive",
+            "rules": [],
+            "flags": {
+              "add2e": {
+                "implementation": {
+                  "type": "scripted_action",
+                  "status": "implemented",
+                  "note": "Accès aux compétences de voleur porté par le système de compétences existant."
+                }
+              }
+            }
+          },
+          {
+            "minLevel": 1,
+            "name": "Jets de protection renforcés",
+            "description": "Le moine utilise les jets de protection des voleurs. Sur sauvegarde réussie contre une attaque infligeant des dégâts, il ne subit aucun dégât ; à partir du niveau 9, une sauvegarde ratée ne lui inflige que la moitié des dégâts.",
+            "tags": [
+              "sauvegardes:voleur",
+              "moine:sauvegarde_aucun_degats",
+              "moine:sauvegarde_demi_degats_niveau_9"
+            ],
+            "activable": false,
+            "passive": true,
+            "id": "monk-jets-de-protection-renforces",
+            "type": "passive",
+            "rules": [
+              {
+                "kind": "save_damage_override",
+                "scope": "owner",
+                "outcome": "success",
+                "multiplier": 0,
+                "mode": "minimum",
+                "label": "Aucun dégât sur sauvegarde réussie"
+              },
+              {
+                "kind": "save_damage_override",
+                "scope": "owner",
+                "outcome": "failure",
+                "multiplier": 0.5,
+                "minSourceLevel": 9,
+                "mode": "minimum",
+                "label": "Demi-dégâts sur sauvegarde ratée"
+              }
+            ],
+            "flags": {
+              "add2e": {
+                "implementation": {
+                  "type": "automatic_rule",
+                  "status": "implemented",
+                  "note": "Remplacement générique des multiplicateurs de dégâts selon le résultat de sauvegarde."
+                }
+              }
+            }
+          },
+          {
+            "minLevel": 1,
+            "name": "Surprise réduite",
+            "description": "Le moine a 33 % de chances d’être surpris au niveau 1, 32 % au niveau 2, puis ce pourcentage baisse de 2 % par niveau à partir du niveau 3.",
+            "tags": [
+              "moine:surprise_reduite"
+            ],
+            "activable": false,
+            "passive": true,
+            "id": "monk-surprise-reduite",
+            "type": "passive",
+            "rules": [],
+            "flags": {
+              "add2e": {
+                "implementation": {
+                  "type": "automatic_rule",
+                  "status": "pending",
+                  "note": "Le pourcentage est présent dans progression[].monk.surpriseChancePercent ; le moteur de surprise doit encore le consulter."
+                }
+              }
+            }
           },
           {
             "minLevel": 3,
-            "name": "Chute ralentie",
-            "description": "Valeur exacte lue dans system.monkProgression[].slowFall.",
+            "name": "Langage animal",
+            "description": "Le moine peut parler aux animaux comme les druides.",
             "tags": [
-              "moine:chute_ralentie"
+              "langage:animaux",
+              "moine:langage_animal"
             ],
             "activable": false,
-            "passive": true
+            "passive": true,
+            "id": "monk-langage-animal",
+            "type": "passive",
+            "rules": [],
+            "flags": {
+              "add2e": {
+                "implementation": {
+                  "type": "narrative",
+                  "status": "complete",
+                  "note": "Capacité narrative sans automatisation de combat."
+                }
+              }
+            }
+          },
+          {
+            "minLevel": 4,
+            "name": "Chute ralentie",
+            "description": "À partir du niveau 4 : 6 m si le moine est à moins de 30 cm du mur ; au niveau 6 : 9 m s’il est à moins de 1,20 m ; au niveau 13 : n’importe quelle hauteur s’il est à moins de 2,40 m.",
+            "tags": [
+              "moine:chute_ralentie",
+              "moine:chute_ralentie:6m",
+              "moine:chute_ralentie:9m",
+              "moine:chute_ralentie:illimitee"
+            ],
+            "activable": false,
+            "passive": true,
+            "id": "monk-chute-ralentie",
+            "type": "passive",
+            "rules": [],
+            "flags": {
+              "add2e": {
+                "implementation": {
+                  "type": "automatic_rule",
+                  "status": "pending",
+                  "note": "La distance et le texte sont présents dans progression[].monk ; le calcul des dégâts de chute doit encore les consulter."
+                }
+              }
+            }
+          },
+          {
+            "minLevel": 4,
+            "name": "Masquer son esprit",
+            "description": "Le moine masque son esprit contre ESP : l’ESP réussit à 30 %, puis subit -2 % par niveau de moine.",
+            "tags": [
+              "moine:esprit_masque",
+              "resistance:esp:progression"
+            ],
+            "activable": false,
+            "passive": true,
+            "id": "monk-masquer-son-esprit",
+            "type": "passive",
+            "rules": [
+              {
+                "kind": "incoming_effect_resistance",
+                "scope": "owner",
+                "effectPatterns": [
+                  "esp",
+                  "*esp*",
+                  "telepathie",
+                  "*telepath*",
+                  "detection_des_pensees",
+                  "lecture_des_pensees",
+                  "*pensee*"
+                ],
+                "valueSource": "progressionField",
+                "progression": "progression",
+                "field": "monk.resistESP",
+                "mode": "block_on_success",
+                "label": "Masquage de l’esprit"
+              }
+            ],
+            "flags": {
+              "add2e": {
+                "implementation": {
+                  "type": "automatic_rule",
+                  "status": "implemented",
+                  "note": "Résistance progressive générique aux effets ESP et télépathiques."
+                }
+              }
+            }
           },
           {
             "minLevel": 5,
+            "name": "Immunité aux maladies, rapidité et lenteur",
+            "description": "Le moine devient immunisé aux maladies et aux effets de rapidité et de lenteur.",
+            "tags": [
+              "immunite:maladie",
+              "immunite:rapidite",
+              "immunite:lenteur",
+              "immunite:ralentissement",
+              "immunite:contagion"
+            ],
+            "activable": false,
+            "passive": true,
+            "id": "monk-immunite-aux-maladies-rapidite-et-lenteur",
+            "type": "passive",
+            "rules": [
+              {
+                "kind": "incoming_effect_immunity",
+                "scope": "owner",
+                "effectPatterns": [
+                  "maladie",
+                  "contagion",
+                  "rapidite",
+                  "ralentissement"
+                ],
+                "label": "Immunité aux maladies, à la rapidité et à la lenteur",
+                "excludePatterns": [
+                  "guerison_*",
+                  "soins_*",
+                  "protection_*"
+                ]
+              }
+            ],
+            "flags": {
+              "add2e": {
+                "implementation": {
+                  "type": "automatic_rule",
+                  "status": "implemented",
+                  "note": "Blocage générique des ActiveEffects correspondants."
+                }
+              }
+            }
+          },
+          {
+            "minLevel": 1,
             "name": "Parade des projectiles",
-            "description": "Réduction/défense spéciale contre les projectiles normaux selon la classe.",
+            "description": "Le moine peut éviter ou détourner les projectiles non-magiques qui devraient le toucher en réussissant un jet de protection contre la pétrification pour chaque projectile.",
             "tags": [
               "moine:parade_projectiles"
             ],
             "activable": false,
-            "passive": true
+            "passive": true,
+            "id": "monk-parade-des-projectiles",
+            "type": "passive",
+            "rules": [
+              {
+                "kind": "incoming_damage_save",
+                "scope": "owner",
+                "actionAnyTags": [
+                  "attack:projectile"
+                ],
+                "actionNotAnyTags": [
+                  "attack:magical"
+                ],
+                "saveType": "petrification",
+                "saveBonus": 0,
+                "successMultiplier": 0,
+                "failureMultiplier": 1,
+                "mode": "minimum",
+                "label": "Parade des projectiles",
+                "successMessage": "{target} détourne {source} et ne subit aucun dégât."
+              }
+            ],
+            "flags": {
+              "add2e": {
+                "implementation": {
+                  "type": "automatic_rule",
+                  "status": "implemented",
+                  "note": "Jet générique de sauvegarde sur projectile non magique et annulation des dégâts en cas de réussite."
+                }
+              }
+            }
           },
           {
             "minLevel": 6,
-            "name": "Immunité aux maladies",
-            "description": "Le moine devient immunisé aux maladies.",
+            "name": "Catalepsie",
+            "description": "Le moine peut entrer en catalepsie pendant 2 tours par niveau.",
             "tags": [
-              "immunite:maladie"
+              "moine:catalepsie",
+              "catalepsie:2_tours_par_niveau"
             ],
             "activable": false,
-            "passive": true
+            "passive": true,
+            "id": "monk-catalepsie",
+            "type": "passive",
+            "rules": [],
+            "flags": {
+              "add2e": {
+                "implementation": {
+                  "type": "scripted_action",
+                  "status": "pending",
+                  "note": "La durée est définie par la règle ; l’action DialogV2 et l’état temporaire restent à développer."
+                }
+              }
+            }
           },
           {
             "minLevel": 7,
             "name": "Auto-guérison",
-            "description": "À partir du niveau 7, le moine peut récupérer des points de vie par discipline corporelle. Aux niveaux 7 à 10, il récupère 2 PV par jour. À partir du niveau 11, il récupère 4 PV par jour. Le bouton Utiliser soigne immédiatement l’acteur, sans dépasser ses PV maximum.",
+            "description": "À partir du niveau 7, le moine peut récupérer 1d4+1 PV une fois par jour, puis +1 PV supplémentaire par niveau de moine.",
             "tags": [
               "moine:auto_soin",
               "moine:capacite_activable",
@@ -10350,14 +8974,26 @@
             "usageType": "classFeature",
             "on_use": "systems/add2e/scripts/capacites/moine-auto-guerison.js",
             "uses": {
-              "maxFrom": "monkProgression.selfHealPerDay",
+              "max": 1,
               "per": "day",
               "consumeOnSuccess": true,
-              "label": "2 PV/jour puis 4 PV/jour"
+              "label": "1 fois par jour"
             },
-            "notes": "Le script lit system.moine.autoSoinParJour ou la ligne active de monkProgression pour déterminer le nombre exact de PV rendus.",
-            "rulesText": "Niv. 7–10 : +2 PV/jour ; niv. 11+ : +4 PV/jour.",
-            "img": "icons/magic/life/heart-cross-strong-flame-green.webp"
+            "rulesText": "Niv. 7 : 1d4+1 PV ; +1 PV par niveau supplémentaire.",
+            "img": "icons/magic/life/heart-cross-strong-flame-green.webp",
+            "id": "monk-auto-guerison",
+            "type": "active",
+            "rules": [],
+            "flags": {
+              "add2e": {
+                "implementation": {
+                  "type": "scripted_action",
+                  "status": "implemented",
+                  "note": "Action pilotée par systems/add2e/scripts/capacites/moine-auto-guerison.js.",
+                  "handler": "systems/add2e/scripts/capacites/moine-auto-guerison.js"
+                }
+              }
+            }
           },
           {
             "minLevel": 8,
@@ -10368,7 +9004,19 @@
               "moine:parler_aux_plantes"
             ],
             "activable": false,
-            "passive": true
+            "passive": true,
+            "id": "monk-langage-des-plantes",
+            "type": "passive",
+            "rules": [],
+            "flags": {
+              "add2e": {
+                "implementation": {
+                  "type": "narrative",
+                  "status": "complete",
+                  "note": "Capacité narrative sans automatisation de combat."
+                }
+              }
+            }
           },
           {
             "minLevel": 8,
@@ -10380,7 +9028,19 @@
               "limite:moines_haut_niveau"
             ],
             "activable": false,
-            "passive": true
+            "passive": true,
+            "id": "monk-hierarchie-monastique",
+            "type": "passive",
+            "rules": [],
+            "flags": {
+              "add2e": {
+                "implementation": {
+                  "type": "campaign",
+                  "status": "complete",
+                  "note": "Duel de rang et limites de hauts niveaux gérés par le MJ au niveau campagne."
+                }
+              }
+            }
           },
           {
             "minLevel": 8,
@@ -10391,22 +9051,183 @@
               "condition:monastere"
             ],
             "activable": false,
-            "passive": true
+            "passive": true,
+            "id": "monk-suivants-monastiques",
+            "type": "passive",
+            "rules": [],
+            "flags": {
+              "add2e": {
+                "implementation": {
+                  "type": "campaign",
+                  "status": "complete",
+                  "note": "Monastère et suivants gérés par le MJ au niveau campagne."
+                }
+              }
+            }
           },
           {
             "minLevel": 9,
             "name": "Résistance aux charmes et suggestions",
-            "description": "Pourcentage lu dans system.monkProgression[].resistCharmSuggestion.",
+            "description": "Résistance de 50 % au niveau 9, puis +5 % par niveau.",
             "tags": [
-              "moine:resistance_charme_suggestion"
+              "moine:resistance_charme_suggestion",
+              "resistance:charme_suggestion:progression"
             ],
             "activable": false,
-            "passive": true
+            "passive": true,
+            "id": "monk-resistance-aux-charmes-et-suggestions",
+            "type": "passive",
+            "rules": [
+              {
+                "kind": "incoming_effect_resistance",
+                "scope": "owner",
+                "effectPatterns": [
+                  "charme",
+                  "charme_*",
+                  "*charme*",
+                  "suggestion",
+                  "*suggestion*"
+                ],
+                "valueSource": "progressionField",
+                "progression": "progression",
+                "field": "monk.resistCharmSuggestion",
+                "mode": "block_on_success",
+                "label": "Résistance aux charmes et suggestions"
+              }
+            ],
+            "flags": {
+              "add2e": {
+                "implementation": {
+                  "type": "automatic_rule",
+                  "status": "implemented",
+                  "note": "Résistance progressive générique lue dans progression[].monk.resistCharmSuggestion."
+                }
+              }
+            }
           },
           {
-            "minLevel": 9,
+            "minLevel": 10,
+            "name": "Défense mentale",
+            "description": "Contre les attaques télépathiques et chocs mentaux, le moine est considéré comme ayant une Intelligence de 18.",
+            "tags": [
+              "moine:defense_mentale",
+              "defense_mentale:intelligence_18"
+            ],
+            "activable": false,
+            "passive": true,
+            "id": "monk-defense-mentale",
+            "type": "passive",
+            "rules": [
+              {
+                "kind": "effective_ability_floor",
+                "ability": "intelligence",
+                "valueSource": "progressionField",
+                "progression": "progression",
+                "field": "monk.mentalDefenseIntelligence",
+                "effectPatterns": [
+                  "telepathie",
+                  "attaque_telepathique",
+                  "projection_telepathique",
+                  "choc_mental",
+                  "mental_blast",
+                  "explosion_psi",
+                  "attaque_psi",
+                  "combat_mental",
+                  "pression_mentale",
+                  "cinglement_ego",
+                  "insinuation_spirituelle",
+                  "suffocation_psychique"
+                ],
+                "label": "Défense mentale"
+              }
+            ],
+            "flags": {
+              "add2e": {
+                "implementation": {
+                  "type": "automatic_rule",
+                  "status": "implemented",
+                  "note": "Intelligence effective contextuelle lue dans progression[].monk.mentalDefenseIntelligence."
+                }
+              }
+            }
+          },
+          {
+            "minLevel": 11,
+            "name": "Immunité aux poisons",
+            "description": "Le moine devient insensible aux poisons de tout type.",
+            "tags": [
+              "immunite:poison"
+            ],
+            "activable": false,
+            "passive": true,
+            "id": "monk-immunite-aux-poisons",
+            "type": "passive",
+            "rules": [
+              {
+                "kind": "incoming_effect_immunity",
+                "scope": "owner",
+                "effectPatterns": [
+                  "poison",
+                  "*poison*"
+                ],
+                "label": "Immunité aux poisons",
+                "excludePatterns": [
+                  "protection_*",
+                  "resistance_*",
+                  "ralentissement_du_poison"
+                ]
+              }
+            ],
+            "flags": {
+              "add2e": {
+                "implementation": {
+                  "type": "automatic_rule",
+                  "status": "implemented",
+                  "note": "Blocage générique des effets de poison."
+                }
+              }
+            }
+          },
+          {
+            "minLevel": 12,
+            "name": "Immunité aux quêtes",
+            "description": "Le moine devient immunisé aux sorts de quête religieuse et magique.",
+            "tags": [
+              "immunite:quete",
+              "immunite:quest",
+              "immunite:geas"
+            ],
+            "activable": false,
+            "passive": true,
+            "id": "monk-immunite-aux-quetes",
+            "type": "passive",
+            "rules": [
+              {
+                "kind": "incoming_effect_immunity",
+                "scope": "owner",
+                "effectPatterns": [
+                  "quete",
+                  "quest",
+                  "geas",
+                  "*geas*"
+                ],
+                "label": "Immunité aux quêtes et geas"
+              }
+            ],
+            "flags": {
+              "add2e": {
+                "implementation": {
+                  "type": "automatic_rule",
+                  "status": "implemented",
+                  "note": "Blocage générique des effets de quête, quest et geas."
+                }
+              }
+            }
+          },
+          {
+            "minLevel": 13,
             "name": "Paume mortelle",
-            "description": "À partir du niveau 9, le moine peut préparer une frappe mortelle extrêmement rare. Le bouton Utiliser crée dans l’onglet Combat une arme temporaire nommée Paume mortelle, basée sur les dégâts actuels de Main nue du moine. Cette arme représente une seule tentative spéciale pendant le combat ; après la tentative, elle doit être considérée comme consommée.",
+            "description": "À partir du niveau 13, le moine peut préparer une paume palpitante/mortelle. Il doit toucher une cible valide dans les 3 rounds ; après contact, le mot de commande doit être prononcé dans un délai de 1 jour par niveau.",
             "tags": [
               "paume_palpitante",
               "moine:paume_palpitante",
@@ -10421,26 +9242,34 @@
             "on_use": "systems/add2e/scripts/capacites/moine-paume-mortelle.js",
             "uses": {
               "max": 1,
-              "per": "day",
+              "per": "week",
               "consumeOnSuccess": true,
-              "label": "1 tentative par jour"
+              "label": "1 fois par semaine"
             },
-            "notes": "La capacité crée une arme temporaire pour rendre la tentative visible et utilisable dans l’onglet Combat.",
-            "rulesText": "Niv. 9+ : 1 tentative spéciale par jour. Crée une arme temporaire Paume mortelle dans Combat.",
-            "img": "icons/skills/melee/strike-palm-light-orange.webp"
-          },
-          {
-            "minLevel": 11,
-            "name": "Immunité aux poisons",
-            "description": "Le moine devient insensible aux poisons de tout type.",
-            "tags": [
-              "immunite:poison"
-            ],
-            "activable": false,
-            "passive": true
+            "rulesText": "Niv. 13+ : 1 tentative spéciale par semaine. Contact dans 3 rounds, puis mot de commande avant 1 jour par niveau.",
+            "img": "icons/skills/melee/strike-palm-light-orange.webp",
+            "id": "monk-paume-mortelle",
+            "type": "active",
+            "rules": [],
+            "flags": {
+              "add2e": {
+                "implementation": {
+                  "type": "scripted_action",
+                  "status": "implemented",
+                  "note": "Action pilotée par systems/add2e/scripts/capacites/moine-paume-mortelle.js.",
+                  "handler": "systems/add2e/scripts/capacites/moine-paume-mortelle.js"
+                }
+              }
+            }
           }
         ],
-        "classFeatureNote": "classFeatures contient toutes les capacités structurées. Seules les entrées avec activable:true sont affichées dans l’onglet Capacités. Les entrées passive:true restent disponibles pour les tags, effets, résumé et calculs.",
+        "classFeatureNote": "classFeatures contient les 23 capacités structurées. Chaque capacité possède flags.add2e.implementation.type et status. Les capacités automatiques utilisent rules ; les actions scriptées utilisent on_use lorsqu’un script existe ; les capacités narratives et de campagne restent explicitement manuelles.",
+        "classFeatureDisplayMode": "activable-only",
+        "activeFeatureSystem": {
+          "enabled": true,
+          "displayRule": "activable:true uniquement dans l’onglet Capacités",
+          "passiveRule": "passive:true ou activable:false = pas de bouton, mais disponible pour le moteur"
+        },
         "tags": [
           "classe:moine",
           "alignement:loyal",
@@ -10455,7 +9284,7 @@
           "combat:mains_nues",
           "defense:moine",
           "table_combat:clerc",
-          "sauvegardes:clerc",
+          "sauvegardes:voleur",
           "competences:voleur",
           "moine:progression_speciale",
           "bonus_degats:moine:demi_niveau",
@@ -10485,31 +9314,18 @@
         "casterType": "none",
         "casterAbility": "",
         "spellcastingNote": "",
-        "magicRestriction": {
-          "mode": "notes",
-          "forbiddenTags": [
-            "interdit:parchemins",
-            "interdit:armures_magiques",
-            "interdit:huile_enflammee"
-          ],
-          "notes": "Restrictions d’objets magiques spécifiques au moine ; à traiter par tags au fur et à mesure des objets magiques."
-        },
         "ruleNotes": [
-          "Classe spéciale : les capacités de niveau du moine restent structurées dans system.monkProgression.",
-          "La CA naturelle du moine est lue par add2e.mjs depuis monkAC, comme avant.",
-          "La main nue est créée/synchronisée au drop et au changement de niveau par add2e.mjs.",
-          "Les tags de classFeatures exposent les capacités au moteur d’effets sans supprimer la progression spéciale existante.",
-          "Le moine ne porte ni armure ni bouclier et ne lance pas de sorts."
+          "Le moine utilise la table d’attaque des clercs.",
+          "Le moine utilise les jets de sauvegarde des voleurs.",
+          "La Dextérité ne modifie pas la CA du moine.",
+          "Le moine ne reçoit pas de bonus de Force au toucher ou aux dégâts.",
+          "Le moine ne gagne jamais de bonus d’expérience.",
+          "La progression est limitée au niveau 17.",
+          "Les seuils d’expérience suivent le MOINE — TABLEAU I du Manuel des joueurs.",
+          "La chute ralentie suit les seuils niveau 4, niveau 6 et niveau 13 du Manuel des joueurs.",
+          "Les attaques à mains nues peuvent étourdir 1d6 rounds sur marge de 5 ou plus, puis permettre un coup mortel selon la CA modifiée."
         ],
-        "systemNotes": "Classe Moine taguée : restrictions par tags, progression spéciale lue par add2eSyncMonkLevelFeatures et Add2eEffectsEngine. Les capacités de niveau sont synchronisées en ActiveEffect acteur et en arme virtuelle Main nue.\nV18 : classFeatures contient passifs + activables ; seul activable:true doit apparaître dans l’onglet Capacités.\nV8 : descriptions des capacités activables du moine réécrites en texte joueur, sans références techniques aux chemins system.*. V9 : descriptions activables explicites et scripts auto-guérison / paume mortelle.",
-        "classFeatureDisplayMode": "activable-only",
-        "activeFeatureSystem": {
-          "enabled": true,
-          "displayRule": "activable:true uniquement dans l’onglet Capacités",
-          "passiveRule": "passive:true ou activable:false = pas de bouton, mais disponible pour le moteur"
-        },
-        "hpAfter17": 1,
-        "maxHitDice": 18,
+        "systemNotes": "Classe Moine corrigée selon le Manuel des joueurs. Progression limitée à 17 niveaux ; XP du tableau I ; CA, mouvement, attaques et dégâts du tableau II ; TAC0 de clerc, sauvegardes de voleur ; progression et progression[].monk restent alignées.",
         "weaponForbidden": [],
         "armorForbidden": [
           "armure",
@@ -10517,6 +9333,29 @@
         ],
         "spellAccessRequirements": [],
         "hpAfter9": 0,
+        "armes_autorisees": [
+          "type_arme:arbalete",
+          "type_arme:arme_hast",
+          "type_arme:baton",
+          "type_arme:canne_escrime",
+          "type_arme:baton_escrime",
+          "type_arme:dague",
+          "type_arme:hachette",
+          "type_arme:javelot",
+          "type_arme:lance",
+          "type_arme:massue"
+        ],
+        "armures_autorisees": [],
+        "equipmentRestrictionSchema": {
+          "version": "2026-06-15-harmonized-equipment-tags-v1",
+          "tagLevels": [
+            "kind",
+            "type",
+            "slug"
+          ],
+          "multiclassRule": "Pour équiper arme/armure/bouclier, union des restrictions des classes. Les activités de voleur/assassin restent limitées à l'équipement permis au voleur/assassin.",
+          "source": "AD&D 2e Manuel des joueurs, Tableau II et règle multi-classés."
+        },
         "nom_joueur": "",
         "classe": "",
         "race": "",
@@ -10544,29 +9383,11 @@
         "cha_compagnons": "",
         "cha_loy": "",
         "cha_react": "",
-        "armes_autorisees": [
-          "type_arme:arbalete",
-          "type_arme:arme_hast",
-          "type_arme:baton",
-          "type_arme:canne_escrime",
-          "type_arme:baton_escrime",
-          "type_arme:dague",
-          "type_arme:hachette",
-          "type_arme:javelot",
-          "type_arme:lance",
-          "type_arme:massue"
-        ],
-        "armures_autorisees": [],
-        "equipmentRestrictionSchema": {
-          "version": "2026-06-15-harmonized-equipment-tags-v1",
-          "tagLevels": [
-            "kind",
-            "type",
-            "slug"
-          ],
-          "multiclassRule": "Pour équiper arme/armure/bouclier, union des restrictions des classes. Les activités de voleur/assassin restent limitées à l'équipement permis au voleur/assassin.",
-          "source": "AD&D 2e Manuel des joueurs, Tableau II et règle multi-classés."
-        }
+        "combatTable": "clerc",
+        "savingProfile": "voleur",
+        "experienceBonusAllowed": false,
+        "dexterityACBonusAllowed": false,
+        "strengthCombatBonusAllowed": false
       },
       "effects": [],
       "folder": "mximavUWpqctSadj",
@@ -10575,24 +9396,33 @@
         "add2e": {
           "activeSheetTab": "",
           "importedBy": "ADD2E import universel",
-          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
-          "importedAt": "2026-06-15T16:31:13.788Z"
+          "importerVersion": "2026-07-08-moine-manuel-joueur-v2-rules",
+          "importedAt": "2026-07-08T16:15:00.000Z",
+          "classFeatureImplementationSummary": {
+            "version": "2026-07-11-monk-capabilities-final-v1",
+            "total": 23,
+            "types": {
+              "campaign": 3,
+              "automatic_rule": 13,
+              "scripted_action": 5,
+              "narrative": 2
+            },
+            "statuses": {
+              "complete": 5,
+              "implemented": 15,
+              "pending": 3
+            },
+            "pendingFeatureIds": [
+              "monk-surprise-reduite",
+              "monk-chute-ralentie",
+              "monk-catalepsie"
+            ]
+          }
         }
       },
       "ownership": {
         "default": 0,
         "3qitoEt1cN3Qhvig": 3
-      },
-      "_stats": {
-        "coreVersion": "14.363",
-        "systemId": "add2e",
-        "systemVersion": "0.1.20",
-        "createdTime": 1783234782228,
-        "modifiedTime": 1783234782228,
-        "lastModifiedBy": "3qitoEt1cN3Qhvig",
-        "compendiumSource": "Compendium.add2e.classes.Item.OFQiVXzM1dpj7Ob1",
-        "duplicateSource": null,
-        "exportSource": null
       },
       "_id": "NnHu6neF9G2pzkb0",
       "sort": 0
