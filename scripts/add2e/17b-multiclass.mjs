@@ -195,134 +195,6 @@ async function ensureMonoclassItemProgression(actor, { fromActorSummary = false,
   return true;
 }
 
-function classEffectTags(classDoc) {
-  const progression = classProgression(classDoc);
-  if (!progression.hasLevel) return [];
-  const level = progression.level;
-  const tags = new Set();
-  const push = value => {
-    for (const raw of globalThis.add2eToEquipArray?.(value) ?? []) {
-      const tag = globalThis.add2eNormalizeEquipTag?.(raw);
-      if (tag) tags.add(tag);
-    }
-  };
-  const pushFeatures = value => {
-    const features = Array.isArray(value) ? value : (value && typeof value === "object" ? Object.values(value) : []);
-    for (const feature of features) {
-      if (!feature || typeof feature !== "object") continue;
-      if (level < featureMinLevel(feature) || level > featureMaxLevel(feature)) continue;
-      push(feature.tags);
-      push(feature.tag);
-      push(feature.effectTags);
-      push(feature.effets);
-      push(feature.effects);
-      push(feature.flags?.add2e?.tags);
-      push(feature.flags?.add2e?.effectTags);
-    }
-  };
-
-  const system = classDoc.system ?? {};
-  push(system.tags);
-  push(system.tag);
-  push(system.effectTags);
-  push(system.effets);
-  push(system.effects);
-  push(system.flags?.add2e?.tags);
-  for (const field of [
-    "classFeatures", "classFeaturesDebloquees", "activeClassFeatures", "activableClassFeatures",
-    "classFeaturesActives", "capacitesClasse", "capacitesActives", "capacitesActivables",
-    "passiveClassFeatures", "passiveFeatures", "capacitesPassives"
-  ]) pushFeatures(system[field]);
-  const row = classRow(classDoc);
-  push(row?.tags);
-  push(row?.effectTags);
-  return [...tags];
-}
-
-function classPassiveEffectData(classDoc, tags) {
-  return {
-    name: `${classDoc.name} — effets de classe`,
-    label: `${classDoc.name} — effets de classe`,
-    icon: classDoc.img || "icons/svg/aura.svg",
-    origin: classDoc.uuid,
-    disabled: false,
-    transfer: false,
-    changes: [],
-    flags: {
-      add2e: {
-        autoClassPassiveEffect: true,
-        sourceType: "classe",
-        sourceClasse: classDoc.name,
-        sourceItemId: classDoc.id,
-        sourceItemUuid: classDoc.uuid,
-        tags,
-        effectTags: tags
-      }
-    }
-  };
-}
-
-async function syncClassPassiveEffectsFromItems(actor, { reason = "class-item-passive-effects" } = {}) {
-  if (!actor || actor.type !== "personnage") return [];
-  const classes = classItems(actor);
-  const expected = new Map();
-  for (const classDoc of classes) {
-    const tags = classEffectTags(classDoc);
-    if (tags.length) expected.set(String(classDoc.id), { classDoc, tags });
-  }
-
-  const managed = Array.from(actor.effects ?? []).filter(effect => effect.flags?.add2e?.autoClassPassiveEffect === true);
-  const byClassId = new Map();
-  for (const effect of managed) {
-    const classId = String(effect.flags?.add2e?.sourceItemId ?? "");
-    if (!byClassId.has(classId)) byClassId.set(classId, []);
-    byClassId.get(classId).push(effect);
-  }
-
-  const removeIds = [];
-  const updates = [];
-  const creates = [];
-  for (const [classId, effects] of byClassId) {
-    const wanted = expected.get(classId);
-    if (!wanted) {
-      removeIds.push(...effects.map(effect => effect.id));
-      continue;
-    }
-    const [current, ...duplicates] = effects;
-    updates.push({ _id: current.id, ...classPassiveEffectData(wanted.classDoc, wanted.tags) });
-    removeIds.push(...duplicates.map(effect => effect.id));
-    expected.delete(classId);
-  }
-  for (const { classDoc, tags } of expected.values()) creates.push(classPassiveEffectData(classDoc, tags));
-
-  if (removeIds.length) await actor.deleteEmbeddedDocuments("ActiveEffect", removeIds, {
-    add2eInternal: true,
-    add2eMulticlassInternal: true,
-    add2eReason: reason,
-    render: false
-  });
-  if (updates.length) await actor.updateEmbeddedDocuments("ActiveEffect", updates, {
-    add2eInternal: true,
-    add2eMulticlassInternal: true,
-    add2eReason: reason,
-    render: false
-  });
-  if (creates.length) await actor.createEmbeddedDocuments("ActiveEffect", creates, {
-    add2eInternal: true,
-    add2eMulticlassInternal: true,
-    add2eReason: reason,
-    render: false
-  });
-  return creates;
-}
-
-function queueClassPassiveEffects(actor, reason) {
-  setTimeout(() => {
-    syncClassPassiveEffectsFromItems(actor, { reason })
-      .catch(error => warn("[CLASS_PASSIVE_EFFECT_SYNC_ERROR]", { actor: actor?.name, error }));
-  }, 0);
-}
-
 async function syncMulticlassCombatSummary(actor, { reason = "multiclass-combat-summary" } = {}) {
   if (!multiclassEnabled(actor)) return false;
   const rows = classItems(actor).map(item => ({ item, row: classRow(item) })).filter(entry => entry.row);
@@ -494,7 +366,6 @@ async function migrateAndRecalculate(actor) {
   if (!actor || actor.type !== "personnage") return null;
   if (classItems(actor).length === 1) {
     await ensureMonoclassItemProgression(actor, { reason: "monoclass-item-progression-migration" });
-    await syncClassPassiveEffectsFromItems(actor, { reason: "monoclass-item-passive-effects" });
     return true;
   }
   if (classItems(actor).length <= 1) return null;
@@ -502,13 +373,11 @@ async function migrateAndRecalculate(actor) {
   if (migration?.ok === false) return null;
   const result = await recalcActor(actor);
   await syncMulticlassCombatSummary(actor, { reason: "multiclass-migration-summary" });
-  await syncClassPassiveEffectsFromItems(actor, { reason: "multiclass-item-passive-effects" });
   return result;
 }
 
 installClassFeatureGlobals();
 installGetDataPatch();
-globalThis.add2eSyncClassPassiveEffect = syncClassPassiveEffectsFromItems;
 
 Hooks.once("ready", () => {
   installClassFeatureGlobals();
@@ -565,7 +434,6 @@ Hooks.on("updateActor", (actor, changes, options = {}) => {
   const flat = foundry.utils.flattenObject(changes ?? {});
   if (!(Object.prototype.hasOwnProperty.call(flat, "system.niveau") || Object.prototype.hasOwnProperty.call(flat, "system.xp"))) return;
   ensureMonoclassItemProgression(actor, { fromActorSummary: true, reason: "monoclass-actor-summary-sync" })
-    .then(() => syncClassPassiveEffectsFromItems(actor, { reason: "monoclass-actor-summary-effects" }))
     .catch(error => warn("[MONO_SYNC_ERROR]", { actor: actor.name, error }));
 });
 
@@ -580,7 +448,6 @@ Hooks.on("updateItem", (item, _changes, _options = {}) => {
   const actor = item?.parent;
   if (actor?.type !== "personnage" || String(item?.type ?? "").toLowerCase() !== "classe") return;
   queueMulticlassCombatSummary(actor, "class-item-update-summary");
-  queueClassPassiveEffects(actor, "class-item-update-effects");
 });
 
 Hooks.on("deleteItem", item => {
@@ -590,10 +457,7 @@ Hooks.on("deleteItem", item => {
     const remaining = classItems(actor);
     if (remaining.length > 1) migrateAndRecalculate(actor).catch(error => warn("[DELETE_CLASS_RECALC_ERROR]", error));
     else if (remaining.length === 1) cleanupAfterMonoclassReplace(actor, remaining[0], null, actor.sheet)
-      .then(() => syncClassPassiveEffectsFromItems(actor, { reason: "delete-class-monoclass-effects" }))
       .catch(error => warn("[DELETE_CLASS_MONO_ERROR]", error));
-    else syncClassPassiveEffectsFromItems(actor, { reason: "delete-last-class-effects" })
-      .catch(error => warn("[DELETE_CLASS_EFFECTS_ERROR]", error));
   }, 0);
 });
 
@@ -613,6 +477,5 @@ globalThis.add2eReplaceClassInMulticlass = replaceClassInMulticlass;
 globalThis.add2eMigrateLegacyMulticlassActor = migrateLegacyMulticlassActor;
 globalThis.add2eEnsureMonoclassItemProgression = ensureMonoclassItemProgression;
 globalThis.add2eSyncMulticlassCombatSummary = syncMulticlassCombatSummary;
-globalThis.add2eSyncClassPassiveEffectsFromItems = syncClassPassiveEffectsFromItems;
 
 console.log("[ADD2E][MULTICLASSE][ITEM_PROGRESSION_READY]", MULTICLASS_VERSION);
