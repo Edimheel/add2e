@@ -121,15 +121,20 @@
                   </ul>
                 {{/if}}
 
-                {{#if actor.system.details_classe.specialAbilities.length}}
-                  <h3>Classe</h3>
+                {{#if summaryClassFeatures.length}}
+                  <h3>Capacités de classe</h3>
                   <ul class="a2e-summary-simple-list">
-                    {{#each actor.system.details_classe.specialAbilities}}
-                      <li>{{this}}</li>
+                    {{#each summaryClassFeatures as |feature|}}
+                      <li>
+                        <b>{{feature.name}}</b>
+                        {{#if feature.showClassName}}
+                          <small class="a2e-muted"> — {{feature.className}}{{#if feature.classLevel}} niv. {{feature.classLevel}}{{/if}}</small>
+                        {{/if}}
+                      </li>
                     {{/each}}
                   </ul>
                 {{else}}
-                  <p class="a2e-muted">Aucune capacité spéciale renseignée.</p>
+                  <p class="a2e-muted">Aucune capacité de classe disponible à ce niveau.</p>
                 {{/if}}
               </div>
             </div>
