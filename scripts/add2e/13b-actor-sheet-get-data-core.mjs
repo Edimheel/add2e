@@ -7,7 +7,8 @@ import { add2ePopulateActorSheetSpellData } from "./13b-actor-sheet-get-data-spe
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant getData.");
 
 const ADD2E_FORCE_EX_DIAGNOSTICS_VERSION = "2026-07-05-force-ex-selection-diagnostics-v2";
-const ADD2E_ACTIVE_EFFECTS_DATA_VERSION = "2026-07-11-show-class-passive-effects-v2";
+const ADD2E_ACTIVE_EFFECTS_DATA_VERSION = "2026-07-11-hide-technical-class-rules-v3";
+const ADD2E_HIDDEN_TECHNICAL_CLASS_RULE_KINDS = new Set(["armor_class_base", "attack_modifier"]);
 
 function add2eExceptionalStrengthValue(rawValue) {
   const value = Math.trunc(Number(rawValue));
@@ -116,6 +117,26 @@ function add2eEffectIsSynchronizedClassPassive(effect) {
   return add2e.autoClassPassiveEffect === true || add2e.classPassiveFeatureEffect === true;
 }
 
+function add2eEffectRules(effect) {
+  let raw = effect?.flags?.add2e?.rules;
+  if ((raw === undefined || raw === null) && typeof effect?.getFlag === "function") {
+    try { raw = effect.getFlag("add2e", "rules"); }
+    catch (_error) { raw = null; }
+  }
+  if (Array.isArray(raw)) return raw.filter(rule => rule && typeof rule === "object");
+  if (raw && typeof raw === "object") return [raw];
+  return [];
+}
+
+function add2eEffectIsTechnicalClassPassive(effect) {
+  if (!add2eEffectIsSynchronizedClassPassive(effect)) return false;
+  const rules = add2eEffectRules(effect);
+  if (!rules.length) return false;
+  return rules.every(rule => ADD2E_HIDDEN_TECHNICAL_CLASS_RULE_KINDS.has(
+    add2eNormEffectValue(rule?.kind ?? rule?.type ?? rule?.ruleType ?? "")
+  ));
+}
+
 function add2eEffectMarkerText(effect) {
   const add2e = effect?.flags?.add2e ?? {};
   return [
@@ -203,7 +224,7 @@ function add2eEffectHasExplicitAppliedMarker(effect) {
 
 function add2eShouldShowEffect(effect) {
   if (!effect || effect.disabled === true) return false;
-  if (add2eEffectIsSynchronizedClassPassive(effect)) return true;
+  if (add2eEffectIsSynchronizedClassPassive(effect)) return !add2eEffectIsTechnicalClassPassive(effect);
   if (add2eIsTechnicalEffectContainer(effect)) return false;
   if (add2eEffectHasFiniteDuration(effect)) return true;
   if (add2eEffectHasFoundryStatus(effect)) return true;
