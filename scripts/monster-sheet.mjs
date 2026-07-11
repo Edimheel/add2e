@@ -6,10 +6,11 @@
  * - Nettoyage visuel automatique
  */
 
-const ADD2E_MONSTER_SHEET_VERSION = "2026-07-01-monster-equipment-state-scroll-v4";
+const ADD2E_MONSTER_SHEET_VERSION = "2026-07-11-monster-actor-sheet-v2-token-config-v5";
 globalThis.ADD2E_MONSTER_SHEET_VERSION = ADD2E_MONSTER_SHEET_VERSION;
 
-const { ApplicationV2 } = foundry.applications.api;
+const ADD2E_MONSTER_ACTOR_SHEET_V2 = foundry?.applications?.sheets?.ActorSheetV2;
+if (!ADD2E_MONSTER_ACTOR_SHEET_V2) throw new Error("[ADD2E] ActorSheetV2 introuvable pour la feuille de monstre.");
 const ActorsCollection = foundry.documents.collections.Actors;
 const ItemDocument = foundry.documents.Item;
 const ChatMessageDocument = foundry.documents.ChatMessage;
@@ -365,22 +366,16 @@ function add2eGetFilePickerClass() {
   return foundry.applications.apps.FilePicker ?? globalThis.FilePicker ?? null;
 }
 
-export class Add2eMonsterSheet extends ApplicationV2 {
+export class Add2eMonsterSheet extends ADD2E_MONSTER_ACTOR_SHEET_V2 {
   static DEFAULT_OPTIONS = {
-    id: "add2e-monster-sheet",
+    id: "add2e-monster-sheet-{id}",
     classes: ["add2e", "sheet", "actor", "monster"],
     tag: "section",
     window: { title: "ADD2e Descartes (FR) - Monstre", resizable: true },
     position: { width: 720, height: 850 }
   };
 
-  constructor(document, options = {}) {
-    super({ id: `add2e-monster-sheet-${document?.id ?? foundry.utils.randomID()}`, ...options });
-    this.actor = document;
-    this.object = document;
-    this.document = document;
-    this._add2ePendingView = null;
-  }
+  _add2ePendingView = null;
 
   get title() {
     return this.actor?.name ?? super.title;
