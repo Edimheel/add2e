@@ -6,7 +6,7 @@
  * - Nettoyage visuel automatique
  */
 
-const ADD2E_MONSTER_SHEET_VERSION = "2026-07-11-monster-actor-sheet-v2-token-config-v5";
+const ADD2E_MONSTER_SHEET_VERSION = "2026-07-11-monster-actor-sheet-v2-token-config-v6";
 globalThis.ADD2E_MONSTER_SHEET_VERSION = ADD2E_MONSTER_SHEET_VERSION;
 
 const ADD2E_MONSTER_ACTOR_SHEET_V2 = foundry?.applications?.sheets?.ActorSheetV2;
@@ -366,13 +366,38 @@ function add2eGetFilePickerClass() {
   return foundry.applications.apps.FilePicker ?? globalThis.FilePicker ?? null;
 }
 
+function add2eRenderMonsterTokenSheet(tokenDocument) {
+  const sheet = tokenDocument?.sheet ?? null;
+  if (!sheet?.render) {
+    ui.notifications.warn("Configuration du token indisponible pour ce monstre.");
+    return;
+  }
+  return sheet.render(true);
+}
+
+function add2eConfigureMonsterToken(event) {
+  event?.preventDefault?.();
+  const tokenDocument = this.token ?? this.actor?.prototypeToken ?? this.document?.prototypeToken ?? null;
+  return add2eRenderMonsterTokenSheet(tokenDocument);
+}
+
+function add2eConfigureMonsterPrototypeToken(event) {
+  event?.preventDefault?.();
+  const prototypeToken = this.actor?.prototypeToken ?? this.document?.prototypeToken ?? null;
+  return add2eRenderMonsterTokenSheet(prototypeToken);
+}
+
 export class Add2eMonsterSheet extends ADD2E_MONSTER_ACTOR_SHEET_V2 {
   static DEFAULT_OPTIONS = {
     id: "add2e-monster-sheet-{id}",
     classes: ["add2e", "sheet", "actor", "monster"],
     tag: "section",
     window: { title: "ADD2e Descartes (FR) - Monstre", resizable: true },
-    position: { width: 720, height: 850 }
+    position: { width: 720, height: 850 },
+    actions: {
+      configureToken: add2eConfigureMonsterToken,
+      configurePrototypeToken: add2eConfigureMonsterPrototypeToken
+    }
   };
 
   _add2ePendingView = null;
