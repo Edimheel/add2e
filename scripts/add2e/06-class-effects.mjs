@@ -1,8 +1,8 @@
 // ============================================================
 // ADD2E — Nettoyage effets de classe + compétences de voleur
 // ============================================================
-const ADD2E_CLASS_PASSIVE_EFFECTS_VERSION = "2026-07-10-individual-passive-effects-v1";
-const ADD2E_CLASS_PASSIVE_EFFECT_SYNC_LOCK = new Set();
+const ADD2E_CLASS_PASSIVE_EFFECTS_VERSION = "2026-07-11-single-owner-mechanical-passive-effects-v2";
+const ADD2E_CLASS_PASSIVE_EFFECT_SYNC_TIMERS = new Map();
 
 function add2eClassEffectKey(value) {
   return add2eNormalizeEquipTag(value);
@@ -66,7 +66,7 @@ function add2eClassEffectClone(value) {
 }
 
 function add2eClassItemLevel(actor, classItem) {
-  const direct = Number(classItem?.system?.niveau ?? classItem?.system?.level);
+  const direct = Number(classItem?.system?.niveau);
   if (Number.isFinite(direct) && direct >= 1) return Math.floor(direct);
 
   try {
@@ -170,6 +170,57 @@ function add2eClassFeatureRules(feature) {
   return rules;
 }
 
+function add2eClassFeatureActiveEffectData(feature) {
+  for (const candidate of [
+    feature?.activeEffect,
+    feature?.active_effect,
+    feature?.foundryEffect,
+    feature?.foundry_effect,
+    feature?.flags?.add2e?.activeEffect
+  ]) {
+    if (candidate && typeof candidate === "object" && !Array.isArray(candidate)) return candidate;
+  }
+  return {};
+}
+
+function add2eClassFeatureChanges(feature) {
+  const activeEffect = add2eClassFeatureActiveEffectData(feature);
+  const raw = activeEffect.changes ?? feature?.changes ?? feature?.flags?.add2e?.changes;
+  return Array.isArray(raw)
+    ? raw.filter(change => change && typeof change === "object").map(add2eClassEffectClone)
+    : [];
+}
+
+function add2eClassFeatureStatuses(feature) {
+  const activeEffect = add2eClassFeatureActiveEffectData(feature);
+  const raw = activeEffect.statuses ?? feature?.statuses ?? feature?.flags?.add2e?.statuses;
+  if (raw instanceof Set) return [...raw].map(String).filter(Boolean);
+  if (Array.isArray(raw)) return raw.map(String).filter(Boolean);
+  if (typeof raw === "string" && raw.trim()) return [raw.trim()];
+  return [];
+}
+
+function add2eClassFeatureHasFoundryMechanic(feature) {
+  if (!feature || typeof feature !== "object") return false;
+  const implementation = feature?.flags?.add2e?.implementation ?? feature?.implementation ?? {};
+  const implementationType = add2eClassEffectKey(implementation?.type ?? "");
+  const implementationStatus = add2eClassEffectKey(implementation?.status ?? "");
+  if (implementationStatus === "pending") return false;
+  if (["narrative", "campaign"].includes(implementationType)) return false;
+
+  const rules = add2eClassFeatureRules(feature);
+  const changes = add2eClassFeatureChanges(feature);
+  const statuses = add2eClassFeatureStatuses(feature);
+  const activeEffect = add2eClassFeatureActiveEffectData(feature);
+  const explicitlyDeclared = feature.activeEffect === true
+    || feature.foundryEffect === true
+    || activeEffect.enabled === true
+    || activeEffect.active === true
+    || activeEffect.type === "ActiveEffect";
+
+  return rules.length > 0 || changes.length > 0 || statuses.length > 0 || explicitlyDeclared;
+}
+
 function add2eCollectUnlockedClassEffectTags(actor, classItem = null) {
   const tags = new Set();
   const classItems = classItem
@@ -196,6 +247,8 @@ function add2eBuildClassPassiveEffectData(actor, classItem, feature, featureInde
   const description = String(feature.description ?? feature.system?.description ?? feature.flags?.add2e?.description ?? "").trim();
   const image = String(feature.img ?? feature.icon ?? classItem.img ?? "icons/svg/aura.svg").trim() || "icons/svg/aura.svg";
   const tags = add2eClassFeatureTags(feature);
+  const changes = add2eClassFeatureChanges(feature);
+  const statuses = add2eClassFeatureStatuses(feature);
   const rules = add2eClassFeatureRules(feature).map(rule => ({
     ...rule,
     source: {
@@ -220,7 +273,8 @@ function add2eBuildClassPassiveEffectData(actor, classItem, feature, featureInde
       origin: classItem.uuid,
       disabled: false,
       transfer: false,
-      changes: [],
+      changes,
+      ...(statuses.length ? { statuses } : {}),
       flags: {
         add2e: {
           autoClassPassiveEffect: true,
@@ -247,10 +301,13 @@ function add2eBuildClassPassiveEffectData(actor, classItem, feature, featureInde
 }
 
 async function add2eSyncClassPassiveEffect(actor) {
-  if (!actor) return null;
+  if (!actor || actor.type !== "personnage") return null;
 
   const classItems = Array.from(actor.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
-  const existing = Array.from(actor.effects ?? []).filter(effect => effect?.flags?.add2e?.autoClassPassiveEffect === true);
+  const existing = Array.from(actor.effects ?? []).filter(effect => {
+    const flags = effect?.flags?.add2e ?? {};
+    return flags.autoClassPassiveEffect === true || flags.classPassiveFeatureEffect === true;
+  });
   const desired = new Map();
 
   for (const classItem of classItems) {
@@ -258,7 +315,9 @@ async function add2eSyncClassPassiveEffect(actor) {
     if (level === null) continue;
     const features = add2eClassFeatureEntries(classItem.system ?? {});
     features.forEach((feature, featureIndex) => {
-      if (!add2eIsPassiveClassFeature(feature) || !add2eClassFeatureUnlocked(feature, level)) return;
+      if (!add2eIsPassiveClassFeature(feature)) return;
+      if (!add2eClassFeatureUnlocked(feature, level)) return;
+      if (!add2eClassFeatureHasFoundryMechanic(feature)) return;
       const entry = add2eBuildClassPassiveEffectData(actor, classItem, feature, featureIndex, level);
       desired.set(entry.passiveKey, entry.data);
     });
@@ -299,11 +358,31 @@ async function add2eSyncClassPassiveEffect(actor) {
 
   for (const effects of existingByKey.values()) staleIds.push(...effects.map(effect => effect.id).filter(Boolean));
 
-  if (updates.length) await actor.updateEmbeddedDocuments("ActiveEffect", updates, { render: false, add2eInternal: true });
+  const liveStaleIds = [...new Set(staleIds)].filter(id => actor.effects?.has?.(id));
+  if (liveStaleIds.length) {
+    await actor.deleteEmbeddedDocuments("ActiveEffect", liveStaleIds, {
+      render: false,
+      add2eInternal: true,
+      add2eClassPassiveEffectSync: true
+    });
+  }
+
+  const liveUpdates = updates.filter(update => actor.effects?.has?.(update._id));
+  if (liveUpdates.length) {
+    await actor.updateEmbeddedDocuments("ActiveEffect", liveUpdates, {
+      render: false,
+      add2eInternal: true,
+      add2eClassPassiveEffectSync: true
+    });
+  }
+
   const created = creates.length
-    ? await actor.createEmbeddedDocuments("ActiveEffect", creates, { render: false, add2eInternal: true })
+    ? await actor.createEmbeddedDocuments("ActiveEffect", creates, {
+      render: false,
+      add2eInternal: true,
+      add2eClassPassiveEffectSync: true
+    })
     : [];
-  if (staleIds.length) await actor.deleteEmbeddedDocuments("ActiveEffect", [...new Set(staleIds)], { render: false, add2eInternal: true });
 
   return synchronized[0] ?? created[0] ?? null;
 }
@@ -311,14 +390,17 @@ async function add2eSyncClassPassiveEffect(actor) {
 function add2eQueueClassPassiveEffectSync(actor, reason = "class-change") {
   if (!actor || actor.type !== "personnage") return false;
   if (!actor.isOwner && !game.user?.isGM) return false;
+
   const key = String(actor.uuid ?? actor.id ?? actor.name ?? "unknown");
-  if (ADD2E_CLASS_PASSIVE_EFFECT_SYNC_LOCK.has(key)) return false;
-  ADD2E_CLASS_PASSIVE_EFFECT_SYNC_LOCK.add(key);
-  setTimeout(async () => {
-    try { await add2eSyncClassPassiveEffect(actor); }
-    catch (error) { console.error("[ADD2E][CLASS_PASSIVE_EFFECTS][SYNC_ERROR]", { actor: actor?.name, reason, error }); }
-    finally { ADD2E_CLASS_PASSIVE_EFFECT_SYNC_LOCK.delete(key); }
-  }, 0);
+  clearTimeout(ADD2E_CLASS_PASSIVE_EFFECT_SYNC_TIMERS.get(key));
+  ADD2E_CLASS_PASSIVE_EFFECT_SYNC_TIMERS.set(key, setTimeout(async () => {
+    ADD2E_CLASS_PASSIVE_EFFECT_SYNC_TIMERS.delete(key);
+    try {
+      await add2eSyncClassPassiveEffect(actor);
+    } catch (error) {
+      console.error("[ADD2E][CLASS_PASSIVE_EFFECTS][SYNC_ERROR]", { actor: actor?.name, reason, error });
+    }
+  }, 0));
   return true;
 }
 
@@ -344,7 +426,6 @@ function add2eRegisterClassPassiveEffectHooks() {
     const relevant = !changes || typeof changes !== "object"
       || foundry.utils.hasProperty(changes, "name")
       || foundry.utils.hasProperty(changes, "system.niveau")
-      || foundry.utils.hasProperty(changes, "system.level")
       || foundry.utils.hasProperty(changes, "system.classFeatures")
       || foundry.utils.hasProperty(changes, "system.classFeaturesDebloquees");
     if (relevant) add2eQueueClassPassiveEffectSync(actorFromItem(item), "update-class-item");
@@ -354,15 +435,6 @@ function add2eRegisterClassPassiveEffectHooks() {
     if (userId && game.user?.id !== userId) return;
     if (!isClassItem(item)) return;
     add2eQueueClassPassiveEffectSync(actorFromItem(item), "delete-class-item");
-  });
-
-  Hooks.on("updateActor", (actor, changes = {}, _options = {}, userId = null) => {
-    if (userId && game.user?.id !== userId) return;
-    if (actor?.type !== "personnage") return;
-    const relevant = foundry.utils.hasProperty(changes, "system.niveau")
-      || foundry.utils.hasProperty(changes, "system.niveaux_par_classe")
-      || foundry.utils.hasProperty(changes, "system.details_classe");
-    if (relevant) add2eQueueClassPassiveEffectSync(actor, "update-actor-class-level");
   });
 
   Hooks.once("ready", () => {
