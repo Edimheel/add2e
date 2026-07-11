@@ -143,6 +143,11 @@ function effectBelongsToRemovedClass(effect, keys) {
     || classTaggedLabel;
 }
 
+function isManagedClassPassiveEffect(effect) {
+  const flags = effect?.flags?.add2e ?? {};
+  return flags.autoClassPassiveEffect === true || flags.classPassiveFeatureEffect === true;
+}
+
 function isMissingEmbeddedDocumentError(error) {
   return /ActiveEffect .* does not exist|Item .* does not exist|undefined id .* does not exist|does not exist in the EmbeddedCollection/i.test(String(error?.message ?? error ?? ""));
 }
@@ -283,7 +288,8 @@ function isLearnedArcaneSpellRemovedWithClass(item, purgeLists, retainedLists) {
  * Supprime les effets source-liés à la classe retirée, puis les sorts réguliers
  * Magicien/Illusionniste que le personnage ne peut plus utiliser. Les pouvoirs
  * d'objets, capacités et sorts encore disponibles depuis une classe conservée
- * restent intacts.
+ * restent intacts. Les effets passifs automatiques sont la propriété exclusive
+ * de 06-class-effects.mjs et sont resynchronisés après la transaction de classe.
  */
 async function purgeClassBoundContent(actor, classDocs, reason) {
   if (!actor || !classDocs?.length) return { spells: 0, effects: 0, arcaneLists: [] };
@@ -300,7 +306,7 @@ async function purgeClassBoundContent(actor, classDocs, reason) {
     .map(item => item.id)
     .filter(Boolean);
   const effectIds = actor.effects
-    .filter(effect => effectBelongsToRemovedClass(effect, keys))
+    .filter(effect => !isManagedClassPassiveEffect(effect) && effectBelongsToRemovedClass(effect, keys))
     .map(effect => effect.id)
     .filter(Boolean);
 
