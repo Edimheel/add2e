@@ -1,9 +1,9 @@
 // ADD2E — Affichage détaillé des monstres
-// Version : 2026-07-01-v5-monster-ranged-projectile-bridge
+// Version : 2026-07-11-v6-single-monster-sheet
 // But : séparer les capacités informatives MJ des effets système activables.
-// Foundry V13/V14/V15 : en V14, les feuilles d'acteur ApplicationV2 doivent être raccordées via ActorSheetV2/DocumentSheetV2.
+// Foundry V13/V14/V15 : la feuille de monstre unique est enregistrée dans scripts/monster-sheet.mjs.
 
-const ADD2E_MONSTER_CAPABILITIES_VERSION = "2026-07-01-v5-monster-ranged-projectile-bridge";
+const ADD2E_MONSTER_CAPABILITIES_VERSION = "2026-07-11-v6-single-monster-sheet";
 globalThis.ADD2E_MONSTER_CAPABILITIES_VERSION = ADD2E_MONSTER_CAPABILITIES_VERSION;
 
 function esc(value) {
@@ -209,91 +209,6 @@ function installMonsterRangedProjectileBridge() {
   return true;
 }
 
-function installMonsterActorSheetFallback(actor) {
-  if (!actor || actor.type !== "monster") return false;
-  if (actor.__add2eMonsterSheetFallback === ADD2E_MONSTER_CAPABILITIES_VERSION) return false;
-
-  try {
-    if (actor.sheet?.render) return false;
-  } catch (_err) {}
-
-  let cachedSheet = null;
-  Object.defineProperty(actor, "sheet", {
-    configurable: true,
-    get() {
-      if (cachedSheet?.render) return cachedSheet;
-      if (typeof globalThis.Add2eMonsterActorSheetV2 === "function") cachedSheet = new globalThis.Add2eMonsterActorSheetV2({ document: actor });
-      else if (typeof globalThis.Add2eMonsterSheet === "function") cachedSheet = new globalThis.Add2eMonsterSheet(actor);
-      return cachedSheet ?? null;
-    }
-  });
-
-  actor.__add2eMonsterSheetFallback = ADD2E_MONSTER_CAPABILITIES_VERSION;
-  return true;
-}
-
-function installMonsterActorSheetFallbacks() {
-  let patched = 0;
-  for (const actor of game.actors ?? []) if (installMonsterActorSheetFallback(actor)) patched++;
-  console.log("[ADD2E][MONSTER_SHEET][ACTOR_SHEET_FALLBACK]", { version: ADD2E_MONSTER_CAPABILITIES_VERSION, patched });
-  return true;
-}
-
-function registerMonsterActorSheetV2Wrapper() {
-  if (globalThis.Add2eMonsterActorSheetV2 || typeof globalThis.Add2eMonsterSheet !== "function") return !!globalThis.Add2eMonsterActorSheetV2;
-
-  const ActorSheetV2 = foundry?.applications?.sheets?.ActorSheetV2;
-  const ActorsCollection = foundry?.documents?.collections?.Actors;
-  if (typeof ActorSheetV2 !== "function" || !ActorsCollection?.registerSheet) return false;
-
-  class Add2eMonsterActorSheetV2 extends ActorSheetV2 {
-    static DEFAULT_OPTIONS = foundry.utils.mergeObject(super.DEFAULT_OPTIONS ?? {}, {
-      id: "add2e-monster-actorsheet-v2",
-      classes: ["add2e", "sheet", "actor", "monster"],
-      tag: "section",
-      window: { title: "ADD2e Descartes (FR) - Monstre", resizable: true },
-      position: { width: 720, height: 850 }
-    }, { inplace: false });
-
-    constructor(options = {}, ...args) {
-      if (options?.documentName === "Actor" || options?.type === "monster") options = { document: options };
-      super(options, ...args);
-    }
-
-    get title() { return this.actor?.name ?? super.title; }
-    get editable() { return this.isEditable; }
-
-    async getData() { return globalThis.Add2eMonsterSheet.prototype.getData.call(this); }
-    async _renderHTML(context, options) { return globalThis.Add2eMonsterSheet.prototype._renderHTML.call(this, context, options); }
-    _replaceHTML(result, content, options) { return globalThis.Add2eMonsterSheet.prototype._replaceHTML.call(this, result, content, options); }
-    async _updateObject(event, formData) { return globalThis.Add2eMonsterSheet.prototype._updateObject.call(this, event, formData); }
-    _captureViewBeforeRender(root) { return globalThis.Add2eMonsterSheet.prototype._captureViewBeforeRender.call(this, root); }
-    _renderPreservingView(root) { return globalThis.Add2eMonsterSheet.prototype._renderPreservingView.call(this, root); }
-    _restoreViewAfterRender(content) { return globalThis.Add2eMonsterSheet.prototype._restoreViewAfterRender.call(this, content); }
-    _activateAutoSubmit(root) { return globalThis.Add2eMonsterSheet.prototype._activateAutoSubmit.call(this, root); }
-    activateListeners(content) { return globalThis.Add2eMonsterSheet.prototype.activateListeners.call(this, content); }
-    _injectLayoutFix() { return globalThis.Add2eMonsterSheet.prototype._injectLayoutFix.call(this); }
-    async _setMonsterItemEquipped(item, equipped, reason) { return globalThis.Add2eMonsterSheet.prototype._setMonsterItemEquipped.call(this, item, equipped, reason); }
-    async _onEquipItem(item) { return globalThis.Add2eMonsterSheet.prototype._onEquipItem.call(this, item); }
-    async _recalculerCA() { return globalThis.Add2eMonsterSheet.prototype._recalculerCA.call(this); }
-  }
-
-  globalThis.Add2eMonsterActorSheetV2 = Add2eMonsterActorSheetV2;
-
-  try {
-    if (typeof ActorsCollection.unregisterSheet === "function") ActorsCollection.unregisterSheet("add2e", globalThis.Add2eMonsterSheet, { types: ["monster"] });
-  } catch (_err) {}
-
-  ActorsCollection.registerSheet("add2e", Add2eMonsterActorSheetV2, {
-    types: ["monster"],
-    makeDefault: true,
-    label: "ADD2e Descartes (FR) - Monstre"
-  });
-
-  console.log("[ADD2E][MONSTER_SHEET][ACTORSHEETV2_REGISTERED]", ADD2E_MONSTER_CAPABILITIES_VERSION);
-  return true;
-}
-
 Hooks.on("renderAdd2eMonsterSheet", (app, html, data) => {
   try {
     installStyles();
@@ -328,7 +243,7 @@ Hooks.on("renderAdd2eMonsterSheet", (app, html, data) => {
       $html.find(".sheet-tabs .item").removeClass("active");
       $(ev.currentTarget).addClass("active");
       $html.find(".sheet-body .tab").removeClass("active");
-      $html.find(`.sheet-body .tab[data-tab=\"${tab}\"]`).addClass("active");
+      $html.find(`.sheet-body .tab[data-tab="${tab}"]`).addClass("active");
     });
   } catch (err) {
     console.error("[ADD2E][MONSTER_SHEET][CAPABILITIES] Erreur d'affichage", err);
@@ -337,19 +252,7 @@ Hooks.on("renderAdd2eMonsterSheet", (app, html, data) => {
 
 Hooks.once("ready", () => {
   installMonsterRangedProjectileBridge();
-  registerMonsterActorSheetV2Wrapper();
-  installMonsterActorSheetFallbacks();
-  setTimeout(() => {
-    installMonsterRangedProjectileBridge();
-    registerMonsterActorSheetV2Wrapper();
-    installMonsterActorSheetFallbacks();
-  }, 500);
-  if (!globalThis.__ADD2E_MONSTER_SHEET_CREATE_HOOK) {
-    globalThis.__ADD2E_MONSTER_SHEET_CREATE_HOOK = true;
-    Hooks.on("createActor", actor => {
-      if (actor?.type === "monster") setTimeout(() => installMonsterActorSheetFallback(actor), 0);
-    });
-  }
+  setTimeout(installMonsterRangedProjectileBridge, 500);
 });
 
 console.log("[ADD2E][MONSTER_SHEET][CAPABILITIES] Module chargé", ADD2E_MONSTER_CAPABILITIES_VERSION);
