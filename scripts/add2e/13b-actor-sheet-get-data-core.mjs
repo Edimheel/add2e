@@ -7,7 +7,7 @@ import { add2ePopulateActorSheetSpellData } from "./13b-actor-sheet-get-data-spe
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant getData.");
 
 const ADD2E_FORCE_EX_DIAGNOSTICS_VERSION = "2026-07-05-force-ex-selection-diagnostics-v2";
-const ADD2E_ACTIVE_EFFECTS_DATA_VERSION = "2026-07-10-show-only-applied-effects-v1";
+const ADD2E_ACTIVE_EFFECTS_DATA_VERSION = "2026-07-11-show-class-passive-effects-v2";
 
 function add2eExceptionalStrengthValue(rawValue) {
   const value = Math.trunc(Number(rawValue));
@@ -111,6 +111,11 @@ function add2eEffectHasMeaningfulChanges(effect) {
   return Array.isArray(effect?.changes) && effect.changes.some(change => String(change?.key ?? "").trim());
 }
 
+function add2eEffectIsSynchronizedClassPassive(effect) {
+  const add2e = effect?.flags?.add2e ?? {};
+  return add2e.autoClassPassiveEffect === true || add2e.classPassiveFeatureEffect === true;
+}
+
 function add2eEffectMarkerText(effect) {
   const add2e = effect?.flags?.add2e ?? {};
   return [
@@ -198,12 +203,25 @@ function add2eEffectHasExplicitAppliedMarker(effect) {
 
 function add2eShouldShowEffect(effect) {
   if (!effect || effect.disabled === true) return false;
+  if (add2eEffectIsSynchronizedClassPassive(effect)) return true;
   if (add2eIsTechnicalEffectContainer(effect)) return false;
   if (add2eEffectHasFiniteDuration(effect)) return true;
   if (add2eEffectHasFoundryStatus(effect)) return true;
   if (add2eEffectHasExplicitAppliedMarker(effect)) return true;
   if (add2eEffectHasMeaningfulChanges(effect)) return true;
   return false;
+}
+
+function add2eEffectSourceName(effect) {
+  const add2e = effect?.flags?.add2e ?? {};
+  return String(
+    add2e.sourceClasse
+    ?? add2e.sourceClass
+    ?? add2e.className
+    ?? effect?.parent?.name
+    ?? effect?.origin
+    ?? ""
+  );
 }
 
 export function add2ePopulateActorSheetActiveEffectsData(actor, data) {
@@ -215,7 +233,7 @@ export function add2ePopulateActorSheetActiveEffectsData(actor, data) {
       img: eff.img || "icons/svg/aura.svg",
       description: add2eEffectDescription(eff),
       duration: add2eEffectDuration(eff),
-      sourceName: eff.parent?.name || eff.origin || ""
+      sourceName: add2eEffectSourceName(eff)
     }));
   return data.activeEffectsList;
 }
