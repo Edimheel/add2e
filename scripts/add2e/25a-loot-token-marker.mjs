@@ -13,11 +13,12 @@ import {
   add2eTradeItemQuantity
 } from "./24-player-trades.mjs";
 
-export const ADD2E_LOOT_TOKEN_MARKER_VERSION = "2026-07-12-loot-token-chest-marker-v2";
+export const ADD2E_LOOT_TOKEN_MARKER_VERSION = "2026-07-12-loot-token-overlay-suppression-v3";
 
 const ADD2E_LOOT_TOKEN_CHEST_IMG = "icons/containers/chest/chest-reinforced-steel-pink.webp";
 const ADD2E_LOOT_TOKEN_OLD_CHEST_IMG = "icons/containers/chest/chest-reinforced-brown.webp";
 const ADD2E_LOOT_TOKEN_MARKER_FLAG = "lootTokenMarker";
+const ADD2E_LOOT_OVERLAY_SUPPRESSION_FLAG = "lootOverlaySuppression";
 const ADD2E_LOOT_TOKEN_MARKER_TEXTURES = new Set([
   ADD2E_LOOT_TOKEN_CHEST_IMG,
   ADD2E_LOOT_TOKEN_OLD_CHEST_IMG
@@ -98,6 +99,104 @@ function add2eLootTokenOriginalTexture(tokenDocument, actor, marker = {}) {
   );
 }
 
+function add2eLootTokenNorm(value) {
+  return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+}
+
+function add2eLootTokenActorEffects(actor) {
+  return Array.from(actor?.effects?.contents ?? actor?.effects ?? []);
+}
+
+function add2eLootTokenIsDeadEffect(effect) {
+  if (!effect) return false;
+  const statuses = Array.from(effect.statuses ?? effect.system?.statuses ?? []).map(add2eLootTokenNorm);
+  return statuses.includes("dead")
+    || add2eLootTokenNorm(effect.flags?.core?.statusId) === "dead"
+    || add2eLootTokenNorm(effect.flags?.add2e?.vitalStatus) === "dead"
+    || add2eLootTokenNorm(effect.name) === "mort";
+}
+
+function add2eLootTokenDeadEffect(actor) {
+  return add2eLootTokenActorEffects(actor).find(add2eLootTokenIsDeadEffect) ?? null;
+}
+
+function add2eLootTokenOverlaySuppression(effect) {
+  return effect?.flags?.add2e?.[ADD2E_LOOT_OVERLAY_SUPPRESSION_FLAG] ?? {};
+}
+
+function add2eLootTokenSuppressedEffect(actor) {
+  return add2eLootTokenActorEffects(actor).find(effect => {
+    return add2eLootTokenOverlaySuppression(effect)?.active === true;
+  }) ?? null;
+}
+
+function add2eLootTokenHasOtherActiveMarker(actor, currentTokenDocument) {
+  const currentKey = add2eLootTokenKey(currentTokenDocument);
+  return add2eLootTokenDocumentsForActor(actor).some(tokenDocument => {
+    if (add2eLootTokenKey(tokenDocument) === currentKey) return false;
+    const marker = add2eLootTokenFlag(tokenDocument);
+    const texture = add2eLootTokenCurrentTexture(tokenDocument);
+    return marker?.active === true && add2eLootTokenIsMarkerTexture(texture, marker);
+  });
+}
+
+async function add2eLootTokenSuppressDeadOverlay(actor) {
+  const effect = add2eLootTokenDeadEffect(actor);
+  if (!effect?.update) return false;
+
+  const suppression = add2eLootTokenOverlaySuppression(effect);
+  if (suppression?.active === true) {
+    if (effect.flags?.core?.overlay === false) return false;
+    await effect.update({
+      "flags.core.overlay": false
+    }, { add2eLootTokenMarkerOverlay: true });
+    return true;
+  }
+
+  if (effect.flags?.core?.overlay !== true) return false;
+
+  await effect.update({
+    "flags.core.overlay": false,
+    [`flags.add2e.${ADD2E_LOOT_OVERLAY_SUPPRESSION_FLAG}`]: {
+      active: true,
+      previousOverlay: true,
+      version: ADD2E_LOOT_TOKEN_MARKER_VERSION,
+      hiddenAt: Date.now()
+    }
+  }, { add2eLootTokenMarkerOverlay: true });
+  return true;
+}
+
+async function add2eLootTokenRestoreDeadOverlay(actor, tokenDocument) {
+  if (!actor || add2eLootTokenHasOtherActiveMarker(actor, tokenDocument)) return false;
+
+  const effect = add2eLootTokenSuppressedEffect(actor);
+  if (!effect?.update) return false;
+
+  const suppression = add2eLootTokenOverlaySuppression(effect);
+  if (suppression?.active !== true) return false;
+
+  const update = {
+    [`flags.add2e.${ADD2E_LOOT_OVERLAY_SUPPRESSION_FLAG}`]: {
+      ...suppression,
+      active: false,
+      version: ADD2E_LOOT_TOKEN_MARKER_VERSION,
+      restoredAt: Date.now()
+    }
+  };
+
+  if (suppression.previousOverlay === true && add2eLootTokenIsDeadEffect(effect) && add2eIsDeadLootMonster(actor)) {
+    update["flags.core.overlay"] = true;
+  }
+
+  await effect.update(update, { add2eLootTokenMarkerOverlay: true });
+  return true;
+}
+
 async function add2eLootSyncTokenMarker(tokenDocument) {
   if (!add2eLootTokenResponsibleGM() || !tokenDocument?.update) return false;
 
@@ -116,29 +215,39 @@ async function add2eLootSyncTokenMarker(tokenDocument) {
     );
 
     if (shouldDisplayChest) {
-      if (marker?.active === true && currentTexture === ADD2E_LOOT_TOKEN_CHEST_IMG) return false;
+      const overlayChanged = await add2eLootTokenSuppressDeadOverlay(actor);
+      const overlaySuppressed = add2eLootTokenOverlaySuppression(add2eLootTokenDeadEffect(actor))?.active === true;
+      const markerCurrent = marker?.active === true
+        && currentTexture === ADD2E_LOOT_TOKEN_CHEST_IMG
+        && marker?.deadOverlaySuppressed === overlaySuppressed
+        && marker?.version === ADD2E_LOOT_TOKEN_MARKER_VERSION;
+      if (markerCurrent) return overlayChanged;
 
       const originalTexture = add2eLootTokenOriginalTexture(tokenDocument, actor, marker);
       await tokenDocument.update({
         "texture.src": ADD2E_LOOT_TOKEN_CHEST_IMG,
         [`flags.add2e.${ADD2E_LOOT_TOKEN_MARKER_FLAG}`]: {
+          ...marker,
           active: true,
           originalTexture,
           markerTexture: ADD2E_LOOT_TOKEN_CHEST_IMG,
+          deadOverlaySuppressed: overlaySuppressed,
           version: ADD2E_LOOT_TOKEN_MARKER_VERSION,
-          markedAt: Date.now()
+          markedAt: marker?.active === true ? marker?.markedAt ?? Date.now() : Date.now()
         }
       }, { add2eLootTokenMarker: true });
       return true;
     }
 
-    if (marker?.active !== true) return false;
+    const overlayChanged = await add2eLootTokenRestoreDeadOverlay(actor, tokenDocument);
+    if (marker?.active !== true) return overlayChanged;
 
     const update = {
       [`flags.add2e.${ADD2E_LOOT_TOKEN_MARKER_FLAG}`]: {
         ...marker,
         active: false,
         markerTexture: ADD2E_LOOT_TOKEN_CHEST_IMG,
+        deadOverlaySuppressed: false,
         version: ADD2E_LOOT_TOKEN_MARKER_VERSION,
         clearedAt: Date.now()
       }
