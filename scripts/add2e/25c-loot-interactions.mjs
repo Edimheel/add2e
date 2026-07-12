@@ -7,7 +7,8 @@
 // - il réutilise le transfert de monnaie partagé de 24-player-trades.mjs ;
 // - il donne aux joueurs un accès OBSERVER aux monstres morts ;
 // - il rend la feuille du monstre au clic dès que le butin est vide ;
-// - il uniformise l'image des coffres et du marqueur de butin.
+// - il uniformise l'image des coffres et du marqueur de butin ;
+// - il ne modifie jamais globalement ApplicationV2.prototype.
 // ============================================================================
 
 import {
@@ -25,7 +26,7 @@ import {
 } from "./25-loot.mjs";
 import { esc } from "./22a-vendor-core.mjs";
 
-export const ADD2E_LOOT_INTERACTIONS_VERSION = "2026-07-12-loot-interactions-v2";
+export const ADD2E_LOOT_INTERACTIONS_VERSION = "2026-07-12-loot-interactions-v3";
 
 const ADD2E_LOOT_SOCKET = "system.add2e";
 const ADD2E_LOOT_PARTIAL_REQUEST = "ADD2E_LOOT_PARTIAL_MONEY_REQUEST";
@@ -371,6 +372,8 @@ function add2eLootInteractionEnhanceShell(shell) {
   const looter = app?.looter ?? null;
   if (!source || !looter) return;
 
+  // La fermeture d'un butin vide reste locale à l'application de butin.
+  // Aucune surcharge globale d'ApplicationV2 n'est nécessaire.
   if (add2eIsDeadLootMonster(source) && !add2eLootInteractionHasContent(source)) {
     void app.close?.();
     void add2eLootInteractionSyncMarker(app?.token?.document ?? app?.token ?? source?.token ?? null);
@@ -502,25 +505,6 @@ function add2eLootInteractionPatchTokenClicks() {
   add2eLootInteractionPatchTokenMethod(prototype, "_onClickLeft2");
 }
 
-function add2eLootInteractionPatchEmptyRender() {
-  const ApplicationV2 = foundry?.applications?.api?.ApplicationV2;
-  const prototype = ApplicationV2?.prototype;
-  if (!prototype || typeof prototype.render !== "function" || prototype.__add2eLootEmptyRenderGuard) return;
-  prototype.__add2eLootEmptyRenderGuard = true;
-
-  const original = prototype.render;
-  prototype.render = function(options = {}) {
-    const classes = this.options?.classes ?? this.constructor?.DEFAULT_OPTIONS?.classes ?? [];
-    const isLootApp = this.constructor?.name === "Add2eLootApp" || Array.from(classes ?? []).includes("add2e-loot-app");
-    if (isLootApp && add2eIsDeadLootMonster(this.source) && !add2eLootInteractionHasContent(this.source)) {
-      void add2eLootInteractionSyncMarker(this.token?.document ?? this.token ?? this.source?.token ?? null);
-      if (this.rendered) void this.close?.();
-      return this;
-    }
-    return original.call(this, options);
-  };
-}
-
 async function add2eLootInteractionEnsureChestImage(actor) {
   if (!actor || !add2eIsLootChest(actor)) return actor;
   const updates = {};
@@ -548,6 +532,7 @@ function add2eLootInteractionWrapChestCreation() {
 }
 
 function add2eLootInteractionInstallObserver() {
+  globalThis.__ADD2E_LOOT_INTERACTION_OBSERVER?.disconnect?.();
   const observer = new MutationObserver(records => {
     for (const record of records) {
       for (const node of record.addedNodes ?? []) {
@@ -563,7 +548,6 @@ function add2eLootInteractionInstallObserver() {
 Hooks.once("ready", () => {
   add2eLootInteractionEnsureStyles();
   add2eLootInteractionPatchTokenClicks();
-  add2eLootInteractionPatchEmptyRender();
   add2eLootInteractionWrapChestCreation();
   add2eLootInteractionInstallObserver();
 
