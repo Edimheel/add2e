@@ -1,0 +1,257 @@
+// ============================================================================
+// ADD2E — Marqueur visuel de butin sur les tokens de monstres morts
+// Compatible Foundry V13/V14/V15.
+//
+// Ce module ne transfère rien : il réutilise exclusivement la détection de mort
+// du moteur de butin et les fonctions partagées de monnaie/quantité.
+// ============================================================================
+
+import { add2eIsDeadLootMonster } from "./25-loot.mjs";
+import {
+  add2eTradeGetMoney,
+  add2eTradeHasMoney,
+  add2eTradeItemQuantity
+} from "./24-player-trades.mjs";
+
+export const ADD2E_LOOT_TOKEN_MARKER_VERSION = "2026-07-12-loot-token-chest-marker-v1";
+
+const ADD2E_LOOT_TOKEN_CHEST_IMG = "icons/containers/chest/chest-reinforced-brown.webp";
+const ADD2E_LOOT_TOKEN_MARKER_FLAG = "lootTokenMarker";
+const ADD2E_LOOT_TOKEN_ITEM_TYPES = new Set([
+  "arme", "weapon", "armure", "armor", "objet", "item",
+  "equipement", "equipment", "consommable", "consumable",
+  "loot", "conteneur", "container"
+]);
+
+const add2eLootTokenPending = new Map();
+const add2eLootTokenRunning = new Set();
+
+function add2eLootTokenResponsibleGM() {
+  if (!game.user?.isGM) return false;
+  if (typeof game.user.isActiveGM === "boolean") return game.user.isActiveGM;
+  const activeGM = game.users?.activeGM
+    ?? Array.from(game.users ?? []).find(user => user.active && user.isGM)
+    ?? null;
+  return !activeGM || activeGM.id === game.user.id;
+}
+
+function add2eLootTokenFlag(tokenDocument) {
+  try {
+    return tokenDocument?.getFlag?.("add2e", ADD2E_LOOT_TOKEN_MARKER_FLAG)
+      ?? tokenDocument?.flags?.add2e?.[ADD2E_LOOT_TOKEN_MARKER_FLAG]
+      ?? {};
+  } catch (_error) {
+    return tokenDocument?.flags?.add2e?.[ADD2E_LOOT_TOKEN_MARKER_FLAG] ?? {};
+  }
+}
+
+function add2eLootTokenIsRecoverableItem(item) {
+  if (!item || !ADD2E_LOOT_TOKEN_ITEM_TYPES.has(String(item.type ?? "").toLowerCase())) return false;
+
+  const system = item.system ?? {};
+  const flags = item.flags?.add2e ?? {};
+  if (flags.naturalAttack === true || flags.isNaturalAttack === true) return false;
+  if (system.naturalAttack === true || system.isNaturalAttack === true || system.naturelle === true) return false;
+
+  return add2eTradeItemQuantity(item) > 0;
+}
+
+export function add2eLootTokenHasContent(actor) {
+  if (!actor) return false;
+  if (Array.from(actor.items ?? []).some(add2eLootTokenIsRecoverableItem)) return true;
+  return add2eTradeHasMoney(add2eTradeGetMoney(actor));
+}
+
+function add2eLootTokenKey(tokenDocument) {
+  return tokenDocument?.uuid
+    ?? `${tokenDocument?.parent?.id ?? "scene"}:${tokenDocument?.id ?? "token"}`;
+}
+
+function add2eLootTokenCurrentTexture(tokenDocument) {
+  return String(tokenDocument?.texture?.src ?? tokenDocument?.object?.document?.texture?.src ?? "");
+}
+
+function add2eLootTokenOriginalTexture(tokenDocument, actor, marker = {}) {
+  const stored = String(marker?.originalTexture ?? "").trim();
+  if (stored) return stored;
+
+  const current = add2eLootTokenCurrentTexture(tokenDocument);
+  if (current && current !== ADD2E_LOOT_TOKEN_CHEST_IMG) return current;
+
+  return String(
+    actor?.prototypeToken?.texture?.src
+      ?? actor?.img
+      ?? current
+      ?? "icons/svg/mystery-man.svg"
+  );
+}
+
+async function add2eLootSyncTokenMarker(tokenDocument) {
+  if (!add2eLootTokenResponsibleGM() || !tokenDocument?.update) return false;
+
+  const key = add2eLootTokenKey(tokenDocument);
+  if (add2eLootTokenRunning.has(key)) return false;
+  add2eLootTokenRunning.add(key);
+
+  try {
+    const actor = tokenDocument.actor ?? tokenDocument.object?.actor ?? null;
+    const marker = add2eLootTokenFlag(tokenDocument);
+    const currentTexture = add2eLootTokenCurrentTexture(tokenDocument);
+    const shouldDisplayChest = Boolean(
+      actor
+      && add2eIsDeadLootMonster(actor)
+      && add2eLootTokenHasContent(actor)
+    );
+
+    if (shouldDisplayChest) {
+      if (marker?.active === true && currentTexture === ADD2E_LOOT_TOKEN_CHEST_IMG) return false;
+
+      const originalTexture = add2eLootTokenOriginalTexture(tokenDocument, actor, marker);
+      await tokenDocument.update({
+        "texture.src": ADD2E_LOOT_TOKEN_CHEST_IMG,
+        [`flags.add2e.${ADD2E_LOOT_TOKEN_MARKER_FLAG}`]: {
+          active: true,
+          originalTexture,
+          markerTexture: ADD2E_LOOT_TOKEN_CHEST_IMG,
+          version: ADD2E_LOOT_TOKEN_MARKER_VERSION,
+          markedAt: Date.now()
+        }
+      }, { add2eLootTokenMarker: true });
+      return true;
+    }
+
+    if (marker?.active !== true) return false;
+
+    const update = {
+      [`flags.add2e.${ADD2E_LOOT_TOKEN_MARKER_FLAG}`]: {
+        ...marker,
+        active: false,
+        version: ADD2E_LOOT_TOKEN_MARKER_VERSION,
+        clearedAt: Date.now()
+      }
+    };
+
+    // Ne remplace pas une image modifiée manuellement pendant que le marqueur
+    // était actif. L'image d'origine n'est restaurée que si le coffre ADD2E est
+    // toujours effectivement affiché.
+    if (currentTexture === ADD2E_LOOT_TOKEN_CHEST_IMG) {
+      update["texture.src"] = add2eLootTokenOriginalTexture(tokenDocument, actor, marker);
+    }
+
+    await tokenDocument.update(update, { add2eLootTokenMarker: true });
+    return true;
+  } catch (error) {
+    console.error("[ADD2E][LOOT_TOKEN_MARKER] Synchronisation impossible", {
+      token: tokenDocument?.name ?? tokenDocument?.id ?? null,
+      error
+    });
+    return false;
+  } finally {
+    add2eLootTokenRunning.delete(key);
+  }
+}
+
+function add2eLootScheduleTokenMarker(tokenDocument, delay = 40) {
+  if (!add2eLootTokenResponsibleGM() || !tokenDocument) return;
+
+  const key = add2eLootTokenKey(tokenDocument);
+  const previous = add2eLootTokenPending.get(key);
+  if (previous) clearTimeout(previous);
+
+  const timer = setTimeout(async () => {
+    add2eLootTokenPending.delete(key);
+    await add2eLootSyncTokenMarker(tokenDocument);
+  }, Math.max(0, Number(delay) || 0));
+
+  add2eLootTokenPending.set(key, timer);
+}
+
+function add2eLootTokenDocumentsForActor(actor) {
+  const documents = new Map();
+  if (!actor) return [];
+
+  const ownToken = actor.token?.document ?? actor.token ?? null;
+  if (ownToken?.id) documents.set(add2eLootTokenKey(ownToken), ownToken);
+
+  const actorUuid = String(actor.uuid ?? "");
+  for (const tokenDocument of canvas?.scene?.tokens?.contents ?? []) {
+    const tokenActor = tokenDocument?.actor ?? null;
+    if (!tokenActor) continue;
+
+    const sameActor = tokenActor === actor
+      || (actorUuid && String(tokenActor.uuid ?? "") === actorUuid)
+      || (!actorUuid && tokenDocument.actorId === actor.id);
+
+    if (sameActor) documents.set(add2eLootTokenKey(tokenDocument), tokenDocument);
+  }
+
+  return [...documents.values()];
+}
+
+function add2eLootScheduleActorMarkers(actor, delay = 40) {
+  for (const tokenDocument of add2eLootTokenDocumentsForActor(actor)) {
+    add2eLootScheduleTokenMarker(tokenDocument, delay);
+  }
+}
+
+function add2eLootSyncCanvasMarkers() {
+  if (!add2eLootTokenResponsibleGM()) return;
+  for (const tokenDocument of canvas?.scene?.tokens?.contents ?? []) {
+    add2eLootScheduleTokenMarker(tokenDocument, 0);
+  }
+}
+
+function add2eLootParentActor(document) {
+  const parent = document?.parent ?? document?.actor ?? null;
+  if (parent?.documentName === "Actor" || parent?.constructor?.metadata?.name === "Actor") return parent;
+  return null;
+}
+
+function add2eLootInstallTokenMarkerHooks() {
+  Hooks.on("canvasReady", add2eLootSyncCanvasMarkers);
+
+  Hooks.on("createToken", tokenDocument => {
+    add2eLootScheduleTokenMarker(tokenDocument, 80);
+  });
+
+  Hooks.on("updateToken", (tokenDocument, _changes, options = {}) => {
+    if (options?.add2eLootTokenMarker === true) return;
+    add2eLootScheduleTokenMarker(tokenDocument, 60);
+  });
+
+  Hooks.on("updateActor", actor => {
+    add2eLootScheduleActorMarkers(actor, 60);
+  });
+
+  for (const hook of ["createItem", "updateItem", "deleteItem"]) {
+    Hooks.on(hook, item => {
+      const actor = add2eLootParentActor(item);
+      if (actor) add2eLootScheduleActorMarkers(actor, 60);
+    });
+  }
+
+  for (const hook of ["createActiveEffect", "updateActiveEffect", "deleteActiveEffect"]) {
+    Hooks.on(hook, effect => {
+      const actor = add2eLootParentActor(effect);
+      if (actor) add2eLootScheduleActorMarkers(actor, 60);
+    });
+  }
+
+  setTimeout(add2eLootSyncCanvasMarkers, 500);
+}
+
+Hooks.once("ready", () => {
+  add2eLootInstallTokenMarkerHooks();
+
+  game.add2e ??= {};
+  game.add2e.lootTokenMarker = {
+    version: ADD2E_LOOT_TOKEN_MARKER_VERSION,
+    chestImage: ADD2E_LOOT_TOKEN_CHEST_IMG,
+    hasContent: add2eLootTokenHasContent,
+    syncToken: add2eLootSyncTokenMarker,
+    syncActor: add2eLootScheduleActorMarkers,
+    syncCanvas: add2eLootSyncCanvasMarkers
+  };
+
+  globalThis.ADD2E_LOOT_TOKEN_MARKER_VERSION = ADD2E_LOOT_TOKEN_MARKER_VERSION;
+});
