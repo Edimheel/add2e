@@ -13,10 +13,15 @@ import {
   add2eTradeItemQuantity
 } from "./24-player-trades.mjs";
 
-export const ADD2E_LOOT_TOKEN_MARKER_VERSION = "2026-07-12-loot-token-chest-marker-v1";
+export const ADD2E_LOOT_TOKEN_MARKER_VERSION = "2026-07-12-loot-token-chest-marker-v2";
 
-const ADD2E_LOOT_TOKEN_CHEST_IMG = "icons/containers/chest/chest-reinforced-brown.webp";
+const ADD2E_LOOT_TOKEN_CHEST_IMG = "icons/containers/chest/chest-reinforced-steel-pink.webp";
+const ADD2E_LOOT_TOKEN_OLD_CHEST_IMG = "icons/containers/chest/chest-reinforced-brown.webp";
 const ADD2E_LOOT_TOKEN_MARKER_FLAG = "lootTokenMarker";
+const ADD2E_LOOT_TOKEN_MARKER_TEXTURES = new Set([
+  ADD2E_LOOT_TOKEN_CHEST_IMG,
+  ADD2E_LOOT_TOKEN_OLD_CHEST_IMG
+]);
 const ADD2E_LOOT_TOKEN_ITEM_TYPES = new Set([
   "arme", "weapon", "armure", "armor", "objet", "item",
   "equipement", "equipment", "consommable", "consumable",
@@ -71,12 +76,19 @@ function add2eLootTokenCurrentTexture(tokenDocument) {
   return String(tokenDocument?.texture?.src ?? tokenDocument?.object?.document?.texture?.src ?? "");
 }
 
+function add2eLootTokenIsMarkerTexture(texture, marker = {}) {
+  const current = String(texture ?? "").trim();
+  if (!current) return false;
+  if (ADD2E_LOOT_TOKEN_MARKER_TEXTURES.has(current)) return true;
+  return current === String(marker?.markerTexture ?? "").trim();
+}
+
 function add2eLootTokenOriginalTexture(tokenDocument, actor, marker = {}) {
   const stored = String(marker?.originalTexture ?? "").trim();
   if (stored) return stored;
 
   const current = add2eLootTokenCurrentTexture(tokenDocument);
-  if (current && current !== ADD2E_LOOT_TOKEN_CHEST_IMG) return current;
+  if (current && !add2eLootTokenIsMarkerTexture(current, marker)) return current;
 
   return String(
     actor?.prototypeToken?.texture?.src
@@ -126,15 +138,15 @@ async function add2eLootSyncTokenMarker(tokenDocument) {
       [`flags.add2e.${ADD2E_LOOT_TOKEN_MARKER_FLAG}`]: {
         ...marker,
         active: false,
+        markerTexture: ADD2E_LOOT_TOKEN_CHEST_IMG,
         version: ADD2E_LOOT_TOKEN_MARKER_VERSION,
         clearedAt: Date.now()
       }
     };
 
     // Ne remplace pas une image modifiée manuellement pendant que le marqueur
-    // était actif. L'image d'origine n'est restaurée que si le coffre ADD2E est
-    // toujours effectivement affiché.
-    if (currentTexture === ADD2E_LOOT_TOKEN_CHEST_IMG) {
+    // était actif. Les textures de coffre ADD2E v1 et v2 sont reconnues.
+    if (add2eLootTokenIsMarkerTexture(currentTexture, marker)) {
       update["texture.src"] = add2eLootTokenOriginalTexture(tokenDocument, actor, marker);
     }
 
@@ -174,13 +186,15 @@ function add2eLootTokenDocumentsForActor(actor) {
   if (ownToken?.id) documents.set(add2eLootTokenKey(ownToken), ownToken);
 
   const actorUuid = String(actor.uuid ?? "");
+  const actorId = String(actor.id ?? "");
   for (const tokenDocument of canvas?.scene?.tokens?.contents ?? []) {
     const tokenActor = tokenDocument?.actor ?? null;
     if (!tokenActor) continue;
 
     const sameActor = tokenActor === actor
       || (actorUuid && String(tokenActor.uuid ?? "") === actorUuid)
-      || (!actorUuid && tokenDocument.actorId === actor.id);
+      || (actorId && String(tokenActor.id ?? "") === actorId)
+      || (actorId && String(tokenDocument.actorId ?? "") === actorId);
 
     if (sameActor) documents.set(add2eLootTokenKey(tokenDocument), tokenDocument);
   }
@@ -189,9 +203,12 @@ function add2eLootTokenDocumentsForActor(actor) {
 }
 
 function add2eLootScheduleActorMarkers(actor, delay = 40) {
-  for (const tokenDocument of add2eLootTokenDocumentsForActor(actor)) {
-    add2eLootScheduleTokenMarker(tokenDocument, delay);
-  }
+  const documents = add2eLootTokenDocumentsForActor(actor);
+  for (const tokenDocument of documents) add2eLootScheduleTokenMarker(tokenDocument, delay);
+
+  // Les acteurs synthétiques et non liés peuvent ne pas partager l'identifiant
+  // du document source. Un balayage différé garantit alors la restauration.
+  if (!documents.length) setTimeout(add2eLootSyncCanvasMarkers, Math.max(0, Number(delay) || 0));
 }
 
 function add2eLootSyncCanvasMarkers() {
@@ -220,20 +237,23 @@ function add2eLootInstallTokenMarkerHooks() {
   });
 
   Hooks.on("updateActor", actor => {
-    add2eLootScheduleActorMarkers(actor, 60);
+    add2eLootScheduleActorMarkers(actor, 40);
+    setTimeout(add2eLootSyncCanvasMarkers, 120);
   });
 
   for (const hook of ["createItem", "updateItem", "deleteItem"]) {
     Hooks.on(hook, item => {
       const actor = add2eLootParentActor(item);
-      if (actor) add2eLootScheduleActorMarkers(actor, 60);
+      if (actor) add2eLootScheduleActorMarkers(actor, 40);
+      setTimeout(add2eLootSyncCanvasMarkers, 120);
     });
   }
 
   for (const hook of ["createActiveEffect", "updateActiveEffect", "deleteActiveEffect"]) {
     Hooks.on(hook, effect => {
       const actor = add2eLootParentActor(effect);
-      if (actor) add2eLootScheduleActorMarkers(actor, 60);
+      if (actor) add2eLootScheduleActorMarkers(actor, 40);
+      setTimeout(add2eLootSyncCanvasMarkers, 120);
     });
   }
 
