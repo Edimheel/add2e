@@ -191,7 +191,11 @@ export function installEffectsEngineCore(Engine) {
     },
 
     getDexDefense(actor) {
-      if (typeof this.isMonk === "function" && this.isMonk(actor)) return 0;
+      const passiveArmorClass = typeof this.getPassiveArmorClassBase === "function"
+        ? this.getPassiveArmorClassBase(actor, { ruleScope: "owner", source: "dex-defense" })
+        : null;
+      if (passiveArmorClass?.ignoreDex === true) return 0;
+
       const system = actor?.system ?? {};
       const direct = this.readNumber(system.dex_def, system.dexDefense, system.dex_defense, system.mod_dex_defense);
       if (Number.isFinite(direct)) return direct;
