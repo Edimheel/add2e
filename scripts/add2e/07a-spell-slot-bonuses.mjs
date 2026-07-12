@@ -1,7 +1,7 @@
 // ADD2E — Bonus génériques d'emplacements de sorts.
 // Complète le quota de progression sans modifier les données de classe.
 
-const ADD2E_SPELL_SLOT_BONUS_VERSION = "2026-07-12-generic-spell-slot-bonus-v1";
+const ADD2E_SPELL_SLOT_BONUS_VERSION = "2026-07-12-generic-spell-slot-bonus-v2";
 globalThis.ADD2E_SPELL_SLOT_BONUS_VERSION = ADD2E_SPELL_SLOT_BONUS_VERSION;
 
 const WISDOM_BONUS_SPELLS = Object.freeze({
@@ -41,14 +41,6 @@ function number(value, fallback = 0) {
   return Number.isFinite(candidate) ? candidate : fallback;
 }
 
-function values(value) {
-  if (value === undefined || value === null || value === "") return [];
-  if (Array.isArray(value)) return value.flatMap(values);
-  if (value instanceof Set) return [...value].flatMap(values);
-  if (typeof value === "string") return value.split(/[,;|\n]+/g).map(entry => entry.trim()).filter(Boolean);
-  return [value];
-}
-
 function classItems(actor) {
   return Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
 }
@@ -71,10 +63,13 @@ function actorAbility(actor, ability) {
   for (const alias of aliases) {
     for (const field of [alias, `${alias}_total`, `${alias}Total`, `${alias}_base`]) {
       const score = number(system[field], NaN);
-      if (Number.isFinite(score)) {
-        if (field.endsWith("_base")) return score + number(system[`${alias}_race`], 0) + number(system.bonus_caracteristiques?.[alias], 0);
-        return score;
+      if (!Number.isFinite(score)) continue;
+      if (field.endsWith("_base")) {
+        return score
+          + number(system[`${alias}_race`], 0)
+          + number(system.bonus_caracteristiques?.[alias], 0);
       }
+      return score;
     }
   }
   return 0;
@@ -168,18 +163,49 @@ function spellSlotBonusDetails(actor, entry, spellLevel) {
   };
 }
 
-function install() {
-  const original = globalThis.add2eGetSlotsForEntryLevel;
-  if (typeof original !== "function") return false;
-  if (original.__add2eGenericSpellSlotBonus === true) return true;
+function addBonusesToPools(actor, pools) {
+  if (!pools || typeof pools !== "object") return pools;
+  for (const pool of Object.values(pools)) {
+    if (!pool || typeof pool !== "object") continue;
+    const levels = pool.slotsByLevel ?? {};
+    const maxSpellLevel = Math.max(0, Number(pool.maxSpellLevel) || Object.keys(levels).length || 0);
+    pool.baseSlotsByLevel = {};
+    pool.bonusSlotsByLevel = {};
+    for (let spellLevel = 1; spellLevel <= maxSpellLevel; spellLevel += 1) {
+      const base = Math.max(0, number(levels[spellLevel] ?? levels[String(spellLevel)], 0));
+      const details = spellSlotBonusDetails(actor, pool, spellLevel);
+      pool.baseSlotsByLevel[spellLevel] = base;
+      pool.bonusSlotsByLevel[spellLevel] = details;
+      levels[spellLevel] = base + details.total;
+    }
+  }
+  return pools;
+}
 
-  const wrapped = function add2eGetSlotsForEntryLevelWithBonuses(actor, entry, spellLevel) {
-    const base = Math.max(0, number(original(actor, entry, spellLevel), 0));
-    return base + spellSlotBonusDetails(actor, entry, spellLevel).total;
-  };
-  wrapped.__add2eGenericSpellSlotBonus = true;
-  wrapped.__add2eBaseFunction = original;
-  globalThis.add2eGetSlotsForEntryLevel = wrapped;
+function install() {
+  const originalSlots = globalThis.add2eGetSlotsForEntryLevel;
+  const originalPools = globalThis.add2eGetSpellSlotPoolsByLevel;
+  if (typeof originalSlots !== "function" || typeof originalPools !== "function") return false;
+
+  if (originalSlots.__add2eGenericSpellSlotBonus !== true) {
+    const wrappedSlots = function add2eGetSlotsForEntryLevelWithBonuses(actor, entry, spellLevel) {
+      const base = Math.max(0, number(originalSlots(actor, entry, spellLevel), 0));
+      return base + spellSlotBonusDetails(actor, entry, spellLevel).total;
+    };
+    wrappedSlots.__add2eGenericSpellSlotBonus = true;
+    wrappedSlots.__add2eBaseFunction = originalSlots;
+    globalThis.add2eGetSlotsForEntryLevel = wrappedSlots;
+  }
+
+  if (originalPools.__add2eGenericSpellSlotBonus !== true) {
+    const wrappedPools = function add2eGetSpellSlotPoolsByLevelWithBonuses(actor) {
+      return addBonusesToPools(actor, originalPools(actor));
+    };
+    wrappedPools.__add2eGenericSpellSlotBonus = true;
+    wrappedPools.__add2eBaseFunction = originalPools;
+    globalThis.add2eGetSpellSlotPoolsByLevel = wrappedPools;
+  }
+
   return true;
 }
 
@@ -195,7 +221,6 @@ Hooks.once("ready", () => {
   Hooks.on("updateActor", rerenderForAbility);
 });
 
-// Les modules système sont chargés dans l'ordre ; installation immédiate si le moteur est déjà prêt.
 install();
 
 globalThis.add2eInstallGenericSpellSlotBonuses = install;
