@@ -24,7 +24,7 @@ import {
   add2eVitalIsMonster
 } from "./18a-vital-status-core.mjs";
 
-export const ADD2E_LOOT_VERSION = "2026-07-12-loot-shared-trade-api-v2";
+export const ADD2E_LOOT_VERSION = "2026-07-12-loot-request-lock-v3";
 
 const ADD2E_LOOT_SOCKET = "system.add2e";
 const ADD2E_LOOT_REQUEST = "ADD2E_LOOT_REQUEST";
@@ -32,6 +32,7 @@ const ADD2E_LOOT_RESULT = "ADD2E_LOOT_RESULT";
 const ADD2E_LOOT_FOLDER = "ADD2E — Coffres";
 const ADD2E_LOOT_CHEST_IMG = "icons/containers/chest/chest-reinforced-brown.webp";
 const ADD2E_LOOT_STYLE_ID = "add2e-loot-style";
+const ADD2E_LOOT_REQUEST_TIMEOUT = 15000;
 const ADD2E_LOOT_ITEM_TYPES = new Set([
   "arme", "weapon", "armure", "armor", "objet", "item",
   "equipement", "equipment", "consommable", "consumable", "loot", "conteneur", "container"
@@ -92,6 +93,13 @@ function add2eLootItemQuantity(item) {
   return add2eTradeItemQuantity(item);
 }
 
+function add2eLootEmbeddedItem(actor, itemId) {
+  const wantedId = String(itemId ?? "");
+  if (!wantedId) return null;
+  const collection = actor?.items?.contents ?? actor?.items ?? [];
+  return Array.from(collection).find(item => String(item?.id ?? item?._id ?? "") === wantedId) ?? null;
+}
+
 function add2eLootIsPhysicalItem(item) {
   if (!item || !ADD2E_LOOT_ITEM_TYPES.has(String(item.type ?? "").toLowerCase())) return false;
   const system = item.system ?? {};
@@ -135,8 +143,8 @@ function add2eLootReadMoney(root) {
 }
 
 async function add2eLootTransferItemLocal({ source, target, itemId, amount }) {
-  const item = source?.items?.get?.(itemId) ?? null;
-  if (!item || !add2eLootIsPhysicalItem(item)) throw new Error("Objet de butin introuvable ou non récupérable.");
+  const item = add2eLootEmbeddedItem(source, itemId);
+  if (!item || !add2eLootIsPhysicalItem(item)) throw new Error("Objet de butin introuvable ou déjà récupéré.");
   const available = add2eLootItemQuantity(item);
   const quantity = add2eLootInt(amount, 1);
   if (quantity < 1 || quantity > available) throw new Error(`${item.name} : quantité disponible ${available}.`);
@@ -306,9 +314,21 @@ async function add2eLootExecuteRequest(payload = {}) {
   }
 }
 
+function add2eLootRegistry() {
+  return globalThis.__ADD2E_LOOT_APPS ??= new Map();
+}
+
+function add2eLootReleasePendingRequest(requestId = "") {
+  if (!requestId) return;
+  for (const app of add2eLootRegistry().values()) {
+    if (app?.pendingRequestId === requestId) app.clearPendingRequest(requestId);
+  }
+}
+
 function add2eLootHandleResult(payload) {
   if (payload?.type !== ADD2E_LOOT_RESULT) return;
   const resultKey = String(payload.requestId ?? "");
+  add2eLootReleasePendingRequest(resultKey);
   if (resultKey && add2eLootHandledResults.has(resultKey)) return;
   if (resultKey) {
     if (add2eLootHandledResults.size > 500) add2eLootHandledResults.clear();
@@ -350,10 +370,6 @@ async function add2eLootHandleRequest(payload) {
       sourceKey: payload.sourceTokenUuid ?? payload.sourceActorUuid ?? payload.sourceActorId ?? ""
     });
   }
-}
-
-function add2eLootRegistry() {
-  return globalThis.__ADD2E_LOOT_APPS ??= new Map();
 }
 
 function add2eLootRefreshApps(sourceKey = "") {
@@ -417,6 +433,7 @@ function add2eLootStyles() {
     .add2e-loot-toolbar select{min-width:190px;max-width:280px}.add2e-loot-toolbar .spacer{flex:1}
     .add2e-loot-button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:30px;padding:5px 10px;border:1px solid #245447;border-radius:7px;background:linear-gradient(180deg,#3d806e,#255649);color:#fff6d8;font-weight:900;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 2px 5px rgba(24,57,48,.24)}
     .add2e-loot-button:hover{filter:brightness(1.08)}.add2e-loot-button.gold{border-color:#795b16;background:linear-gradient(180deg,#c89e36,#8d6618);color:#fff8dd}.add2e-loot-button.danger{border-color:#6e2923;background:linear-gradient(180deg,#a94d3f,#713127)}
+    .add2e-loot-button:disabled,.add2e-loot-shell[data-pending="true"] [data-add2e-take-partial-money]{cursor:wait!important;filter:grayscale(.45);opacity:.58;pointer-events:none}
     .add2e-loot-panel{margin-bottom:10px;border:1px solid #557b70;border-radius:10px;background:rgba(250,255,242,.78);overflow:hidden;box-shadow:0 2px 7px rgba(28,69,58,.16)}
     .add2e-loot-panel-title{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 11px;background:linear-gradient(180deg,#315f52,#24493f);color:#f5e9b5;font-weight:900}
     .add2e-loot-list{max-height:330px;overflow-y:auto;padding:8px}
@@ -462,6 +479,8 @@ class Add2eLootApp extends Add2eApplicationV2 {
     this.looter = looter ?? add2eLootDefaultLooter();
     this.sourceKey = add2eLootSourceKey(source, token?.document ?? token ?? null);
     this.registryKey = `${game.user?.id}:${this.sourceKey}`;
+    this.pendingRequestId = null;
+    this.pendingRequestTimer = null;
   }
 
   get title() {
@@ -563,16 +582,57 @@ class Add2eLootApp extends Add2eApplicationV2 {
     content.replaceChildren(result);
   }
 
+  _applyPendingState() {
+    const root = this.element;
+    if (!root?.querySelectorAll) return;
+    const pending = Boolean(this.pendingRequestId);
+    const shell = root.querySelector(".add2e-loot-shell");
+    if (shell) shell.dataset.pending = pending ? "true" : "false";
+    const selector = [
+      '[data-action="take-item"]',
+      '[data-action="take-money"]',
+      '[data-action="take-all"]',
+      '[data-add2e-take-partial-money]',
+      '[data-loot-quantity]',
+      '[data-add2e-partial-coin]'
+    ].join(",");
+    for (const control of root.querySelectorAll(selector)) control.disabled = pending;
+  }
+
+  setPendingRequest(requestId) {
+    if (!requestId || this.pendingRequestId) return false;
+    this.pendingRequestId = requestId;
+    clearTimeout(this.pendingRequestTimer);
+    this.pendingRequestTimer = setTimeout(() => {
+      if (this.pendingRequestId !== requestId) return;
+      this.clearPendingRequest(requestId);
+      ui.notifications?.warn?.("La récupération du butin n'a pas reçu de réponse du MJ.");
+    }, ADD2E_LOOT_REQUEST_TIMEOUT);
+    this._applyPendingState();
+    return true;
+  }
+
+  clearPendingRequest(requestId = "") {
+    if (requestId && this.pendingRequestId !== requestId) return false;
+    clearTimeout(this.pendingRequestTimer);
+    this.pendingRequestTimer = null;
+    this.pendingRequestId = null;
+    this._applyPendingState();
+    return true;
+  }
+
   async _onRender(context, options) {
     await super._onRender?.(context, options);
     const root = this.element;
     if (!root?.querySelector) return;
 
     root.querySelector("[data-looter-select]")?.addEventListener("change", event => {
+      if (this.pendingRequestId) return;
       this.looter = game.actors?.get?.(event.currentTarget.value) ?? null;
       this.render({ force: true });
     });
     root.querySelectorAll("[data-action]").forEach(button => button.addEventListener("click", event => this._onAction(event)));
+    this._applyPendingState();
 
     if (context.isGM && context.isChest) {
       root.addEventListener("dragover", event => {
@@ -585,9 +645,13 @@ class Add2eLootApp extends Add2eApplicationV2 {
 
   async _request(action, extra = {}) {
     if (!this.looter) return alertBox("Aucun receveur", "Sélectionne un personnage présent sur la scène.");
+    if (this.pendingRequestId) return ui.notifications?.warn?.("Une récupération est déjà en cours.");
+
+    const requestId = add2eLootRandomId("loot-request");
+    if (!this.setPendingRequest(requestId)) return false;
     const payload = {
       type: ADD2E_LOOT_REQUEST,
-      requestId: add2eLootRandomId("loot-request"),
+      requestId,
       userId: game.user.id,
       action,
       sourceActorId: this.source?.id ?? null,
@@ -598,15 +662,24 @@ class Add2eLootApp extends Add2eApplicationV2 {
       ...extra
     };
 
-    if (game.user?.isGM) return add2eLootHandleRequest(payload);
+    if (game.user?.isGM) {
+      await add2eLootHandleRequest(payload);
+      return true;
+    }
     game.socket?.emit?.(ADD2E_LOOT_SOCKET, payload);
     return true;
   }
 
   async _onAction(event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    event?.stopImmediatePropagation?.();
     const button = event.currentTarget;
     const action = button?.dataset?.action;
     if (!action) return;
+
+    const isRecovery = action === "take-item" || action === "take-money" || action === "take-all";
+    if (isRecovery && this.pendingRequestId) return ui.notifications?.warn?.("Une récupération est déjà en cours.");
 
     if (action === "toggle-lock" && game.user?.isGM && add2eIsLootChest(this.source)) {
       await this.source.setFlag("add2e", "lootLocked", !add2eLootIsLocked(this.source));
@@ -620,8 +693,8 @@ class Add2eLootApp extends Add2eApplicationV2 {
     }
 
     if (action === "remove-item" && game.user?.isGM && add2eIsLootChest(this.source)) {
-      const item = this.source.items?.get?.(button.dataset.itemId);
-      if (!item) return;
+      const item = add2eLootEmbeddedItem(this.source, button.dataset.itemId);
+      if (!item) return ui.notifications?.warn?.("Cet objet n'existe plus dans le coffre.");
       const confirmed = await dialog({
         title: "Retirer du coffre",
         content: `<p>Retirer <b>${esc(item.name)}</b> du coffre ?</p>`,
@@ -654,7 +727,7 @@ class Add2eLootApp extends Add2eApplicationV2 {
   async _onDropItem(event) {
     event.preventDefault();
     event.stopPropagation();
-    if (!game.user?.isGM || !add2eIsLootChest(this.source)) return;
+    if (!game.user?.isGM || !add2eIsLootChest(this.source) || this.pendingRequestId) return;
 
     let data = {};
     try { data = TextEditor.getDragEventData(event) ?? {}; } catch (_error) {}
@@ -673,6 +746,7 @@ class Add2eLootApp extends Add2eApplicationV2 {
   }
 
   async close(options = {}) {
+    clearTimeout(this.pendingRequestTimer);
     add2eLootRegistry().delete(this.registryKey);
     return super.close(options);
   }
