@@ -24,13 +24,14 @@ import {
   add2eVitalIsMonster
 } from "./18a-vital-status-core.mjs";
 
-export const ADD2E_LOOT_VERSION = "2026-07-12-loot-empty-corpse-routing-v5";
+export const ADD2E_LOOT_VERSION = "2026-07-12-loot-drop-idempotent-v6";
 
 const ADD2E_LOOT_SOCKET = "system.add2e";
 const ADD2E_LOOT_REQUEST = "ADD2E_LOOT_REQUEST";
 const ADD2E_LOOT_RESULT = "ADD2E_LOOT_RESULT";
 const ADD2E_LOOT_FOLDER = "ADD2E — Coffres";
 const ADD2E_LOOT_CHEST_IMG = "icons/containers/chest/chest-reinforced-brown.webp";
+const ADD2E_LOOT_MARKER_IMG = "icons/containers/chest/chest-reinforced-steel-pink.webp";
 const ADD2E_LOOT_STYLE_ID = "add2e-loot-style";
 const ADD2E_LOOT_REQUEST_TIMEOUT = 15000;
 const ADD2E_LOOT_APP_ACTIONS = new Set([
@@ -454,9 +455,13 @@ function add2eLootStyles() {
     .add2e-loot-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border:1px solid #8b6b22;border-radius:999px;background:linear-gradient(180deg,#f2d374,#c39a36);color:#3e300c;font-weight:900}.add2e-loot-chip i{color:#6c5110}
     .add2e-loot-coins-edit{display:grid;grid-template-columns:repeat(5,minmax(58px,1fr));gap:5px;width:100%}.add2e-loot-coin-field{display:flex;flex-direction:column;gap:3px;padding:5px;border:1px solid #81986a;border-radius:7px;background:#eff4dd}.add2e-loot-coin-field span{text-align:center;font-size:.72rem;font-weight:900}.add2e-loot-coin-field input{width:100%;text-align:center}
     .add2e-loot-drop{margin:0 0 10px;padding:14px;border:2px dashed #46786a;border-radius:10px;background:rgba(231,247,228,.72);text-align:center;color:#315e52;font-weight:900}
+    .add2e-loot-drop[data-drop-busy="true"]{cursor:wait;opacity:.62;pointer-events:none}
     .add2e-loot-locked{padding:22px;border:2px solid #704028;border-radius:10px;background:#ead2b7;color:#5b281d;text-align:center;font-weight:900}.add2e-loot-footer{display:flex;justify-content:flex-end;gap:8px;padding-top:2px}
     .add2e-loot-card{border:2px solid #276354!important;background:linear-gradient(180deg,#e5f2e8,#bfd9ca)!important;color:#18352c!important}.add2e-loot-chat-title{margin:-4px -4px 8px;padding:7px 9px;border-radius:6px;background:linear-gradient(180deg,#3a7c6b,#245348);color:#fff2c9;font-weight:900}.add2e-loot-chat-title i{color:#f0ca58}.add2e-loot-chat-items{list-style:none;margin:6px 0;padding:0}.add2e-loot-chat-items li{display:flex;align-items:center;gap:6px;padding:3px 0}.add2e-loot-chat-items img{border:1px solid #4f776b;border-radius:4px}.add2e-loot-chat-money{margin-top:6px;padding:6px 8px;border:1px solid #927020;border-radius:7px;background:#efd57f;color:#45330b;font-weight:900}
     .add2e-loot-create{padding:10px;border:2px solid #28594d;border-radius:10px;background:linear-gradient(180deg,#e1efe1,#bdd7c8);color:#19352d}.add2e-loot-create label{display:grid;gap:4px;margin-bottom:9px;font-weight:900}.add2e-loot-create-actions{display:flex;justify-content:flex-end;gap:7px}
+    .actors-sidebar .directory-footer,.actors-directory .directory-footer,[data-tab="actors"] .directory-footer{position:sticky;bottom:0;z-index:20;background:var(--sidebar-background,rgba(20,20,20,.96));padding-top:4px}
+    .add2e-create-loot-chest{display:flex!important;align-items:center;justify-content:center;gap:7px;width:100%;min-height:34px;position:relative;z-index:21}
+    .add2e-create-loot-chest img{width:26px;height:26px;object-fit:cover;border:1px solid rgba(255,255,255,.42);border-radius:5px;flex:0 0 26px}
     @media(max-width:720px){.add2e-loot-row{grid-template-columns:40px minmax(110px,1fr) 50px 94px}.add2e-loot-type{display:none}.add2e-loot-summary{grid-template-columns:1fr}.add2e-loot-arrow{transform:rotate(90deg)}.add2e-loot-coins-edit{grid-template-columns:repeat(3,1fr)}}
   `;
 }
@@ -490,6 +495,7 @@ class Add2eLootApp extends Add2eApplicationV2 {
     this.registryKey = `${game.user?.id}:${this.sourceKey}`;
     this.pendingRequestId = null;
     this.pendingRequestTimer = null;
+    this.dropInProgress = false;
   }
 
   get title() {
@@ -552,7 +558,7 @@ class Add2eLootApp extends Add2eApplicationV2 {
       : "";
 
     const gmDrop = context.isGM && context.isChest
-      ? `<div class="add2e-loot-drop"><i class="fas fa-box-open"></i> Glisse ici des armes, armures ou objets depuis un compendium ou le répertoire des objets.</div>`
+      ? `<div class="add2e-loot-drop" data-add2e-loot-drop><i class="fas fa-box-open"></i> Glisse ici des armes, armures ou objets depuis un compendium ou le répertoire des objets.</div>`
       : "";
 
     const moneyContent = context.isGM && context.isChest
@@ -648,12 +654,17 @@ class Add2eLootApp extends Add2eApplicationV2 {
     }
     this._applyPendingState();
 
-    if (context.isGM && context.isChest) {
-      root.addEventListener("dragover", event => {
+    const dropZone = context.isGM && context.isChest
+      ? shell?.querySelector?.("[data-add2e-loot-drop]") ?? null
+      : null;
+    if (dropZone && dropZone.dataset.add2eLootDropBound !== "1") {
+      dropZone.dataset.add2eLootDropBound = "1";
+      dropZone.addEventListener("dragover", event => {
         event.preventDefault();
+        event.stopPropagation();
         if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
       });
-      root.addEventListener("drop", event => this._onDropItem(event));
+      dropZone.addEventListener("drop", event => this._onDropItem(event));
     }
   }
 
@@ -740,24 +751,40 @@ class Add2eLootApp extends Add2eApplicationV2 {
   }
 
   async _onDropItem(event) {
-    event.preventDefault();
-    event.stopPropagation();
-    if (!game.user?.isGM || !add2eIsLootChest(this.source) || this.pendingRequestId) return;
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    event?.stopImmediatePropagation?.();
+    if (event?.__add2eLootDropHandled === true) return false;
+    if (event) event.__add2eLootDropHandled = true;
+    if (!game.user?.isGM || !add2eIsLootChest(this.source) || this.pendingRequestId || this.dropInProgress) return false;
 
-    let data = {};
-    try { data = TextEditor.getDragEventData(event) ?? {}; } catch (_error) {}
-    let item = await add2eLootFromUuid(data.uuid ?? data.documentUuid);
-    if (!item && data.pack && data.id) item = await game.packs?.get?.(data.pack)?.getDocument?.(data.id);
-    if (!item && data.type === "Item" && data.id) item = game.items?.get?.(data.id) ?? null;
-    if (item?.documentName !== "Item" && item?.constructor?.metadata?.name !== "Item") {
-      return alertBox("Dépôt impossible", "Glisse une arme, une armure ou un objet ADD2E.");
+    this.dropInProgress = true;
+    const dropZone = event?.currentTarget instanceof HTMLElement ? event.currentTarget : null;
+    if (dropZone) dropZone.dataset.dropBusy = "true";
+
+    try {
+      let data = {};
+      try { data = TextEditor.getDragEventData(event) ?? {}; } catch (_error) {}
+      let item = await add2eLootFromUuid(data.uuid ?? data.documentUuid);
+      if (!item && data.pack && data.id) item = await game.packs?.get?.(data.pack)?.getDocument?.(data.id);
+      if (!item && data.type === "Item" && data.id) item = game.items?.get?.(data.id) ?? null;
+      if (item?.documentName !== "Item" && item?.constructor?.metadata?.name !== "Item") {
+        await alertBox("Dépôt impossible", "Glisse une arme, une armure ou un objet ADD2E.");
+        return false;
+      }
+      if (!add2eLootIsPhysicalItem(item)) {
+        await alertBox("Objet incompatible", `${item.name ?? "Cet élément"} ne peut pas être placé dans un coffre de butin.`);
+        return false;
+      }
+
+      const itemData = item.toObject ? item.toObject() : foundry.utils.deepClone(item);
+      await add2eTradeAddItem(this.source, itemData, Math.max(1, add2eLootItemQuantity(item)));
+      ui.notifications?.info?.(`${item.name} ajouté au coffre.`);
+      return true;
+    } finally {
+      this.dropInProgress = false;
+      if (dropZone) dropZone.dataset.dropBusy = "false";
     }
-    if (!add2eLootIsPhysicalItem(item)) return alertBox("Objet incompatible", `${item.name ?? "Cet élément"} ne peut pas être placé dans un coffre de butin.`);
-
-    const itemData = item.toObject ? item.toObject() : foundry.utils.deepClone(item);
-    await add2eTradeAddItem(this.source, itemData, Math.max(1, add2eLootItemQuantity(item)));
-    ui.notifications?.info?.(`${item.name} ajouté au coffre.`);
-    this.render({ force: true });
   }
 
   async close(options = {}) {
@@ -872,18 +899,26 @@ function add2eOpenCreateChestDialog() {
   }, 0);
 }
 
+function add2eLootMarkerImage() {
+  return String(game.add2e?.lootTokenMarker?.chestImage ?? ADD2E_LOOT_MARKER_IMG);
+}
+
 function add2eLootDirectoryButton() {
   Hooks.on("renderActorDirectory", (_app, html) => {
     if (!game.user?.isGM) return;
     const root = html?.jquery ? html[0] : html;
-    if (!root?.querySelector || root.querySelector(".add2e-create-loot-chest")) return;
+    if (!root?.querySelector) return;
     const footer = root.querySelector(".directory-footer");
     if (!footer) return;
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "add2e-create-loot-chest";
-    button.innerHTML = '<i class="fas fa-box"></i> Créer un coffre';
-    button.addEventListener("click", add2eOpenCreateChestDialog);
+
+    let button = footer.querySelector(".add2e-create-loot-chest");
+    if (!button) {
+      button = document.createElement("button");
+      button.type = "button";
+      button.className = "add2e-create-loot-chest";
+      button.addEventListener("click", add2eOpenCreateChestDialog);
+    }
+    button.innerHTML = `<img src="${esc(add2eLootMarkerImage())}" alt=""><span>Créer un coffre</span>`;
     footer.prepend(button);
   });
   setTimeout(() => ui.actors?.render?.({ force: true }), 100);
