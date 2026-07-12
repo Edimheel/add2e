@@ -24,7 +24,7 @@ import {
   add2eVitalIsMonster
 } from "./18a-vital-status-core.mjs";
 
-export const ADD2E_LOOT_VERSION = "2026-07-12-loot-close-action-scope-v4";
+export const ADD2E_LOOT_VERSION = "2026-07-12-loot-empty-corpse-routing-v5";
 
 const ADD2E_LOOT_SOCKET = "system.add2e";
 const ADD2E_LOOT_REQUEST = "ADD2E_LOOT_REQUEST";
@@ -117,6 +117,11 @@ function add2eLootItems(actor) {
   return Array.from(actor?.items ?? [])
     .filter(add2eLootIsPhysicalItem)
     .sort((left, right) => String(left.name ?? "").localeCompare(String(right.name ?? ""), "fr"));
+}
+
+export function add2eLootHasContent(actor) {
+  if (!actor) return false;
+  return add2eLootItems(actor).length > 0 || add2eTradeHasMoney(add2eTradeGetMoney(actor));
 }
 
 function add2eLootMoneyLabel(money = {}) {
@@ -802,12 +807,18 @@ export async function add2eOpenLoot({ source = null, token = null, looter = null
   if (!source || !add2eIsLootSource(source)) return alertBox("Butin indisponible", "Cette source ne peut pas être fouillée.");
   if (!game.user?.isGM && add2eLootIsLocked(source)) return alertBox("Coffre verrouillé", "Ce coffre est verrouillé.");
 
-  looter = looter ?? add2eLootDefaultLooter();
-  if (!looter && !game.user?.isGM) return alertBox("Aucun personnage", "Assigne un personnage à ton utilisateur ou sélectionne son token.");
-
   const sourceKey = add2eLootSourceKey(source, token?.document ?? token ?? null);
   const registryKey = `${game.user?.id}:${sourceKey}`;
   const current = add2eLootRegistry().get(registryKey);
+
+  if (add2eIsDeadLootMonster(source) && !add2eLootHasContent(source)) {
+    if (current?.rendered) await current.close();
+    return false;
+  }
+
+  looter = looter ?? add2eLootDefaultLooter();
+  if (!looter && !game.user?.isGM) return alertBox("Aucun personnage", "Assigne un personnage à ton utilisateur ou sélectionne son token.");
+
   if (current?.rendered) {
     current.source = source;
     current.token = token;
@@ -889,14 +900,19 @@ function add2eLootOpenLock(actor) {
 }
 
 async function add2eLootOpenFromToken(token) {
-  if (!add2eIsLootSource(token?.actor) || !add2eLootOpenLock(token.actor)) return false;
-  await add2eOpenLoot({ source: token.actor, token, looter: add2eLootDefaultLooter() });
+  const actor = token?.actor ?? null;
+  if (!add2eIsLootSource(actor)) return false;
+  if (add2eIsDeadLootMonster(actor) && !add2eLootHasContent(actor)) return false;
+  if (!add2eLootOpenLock(actor)) return false;
+  await add2eOpenLoot({ source: actor, token, looter: add2eLootDefaultLooter() });
   return true;
 }
 
 function add2eLootBindTokens() {
   for (const token of canvas?.tokens?.placeables ?? []) {
-    if (!add2eIsLootSource(token?.actor) || token.__add2eLootTapV2) continue;
+    const actor = token?.actor ?? null;
+    const canOpenLoot = add2eIsLootChest(actor) || (add2eIsDeadLootMonster(actor) && add2eLootHasContent(actor));
+    if (!canOpenLoot || token.__add2eLootTapV2) continue;
     token.__add2eLootTapV2 = true;
     try {
       token.cursor = "pointer";
@@ -955,7 +971,8 @@ Hooks.once("ready", () => {
     createChest: add2eCreateLootChest,
     open: add2eOpenLoot,
     isChest: add2eIsLootChest,
-    isSource: add2eIsLootSource
+    isSource: add2eIsLootSource,
+    hasContent: add2eLootHasContent
   };
   globalThis.ADD2E_LOOT_VERSION = ADD2E_LOOT_VERSION;
 });
