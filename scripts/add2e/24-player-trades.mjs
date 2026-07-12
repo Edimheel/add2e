@@ -1,12 +1,12 @@
 // ADD2E — Échanges entre personnages joueurs — DialogV2 / Foundry V13-V15
-// Version : 2026-06-15-player-trades-ui-v6-money-delta
+// Version : 2026-07-12-player-trades-shared-transfer-api-v7
 
-const ADD2E_PLAYER_TRADES_VERSION = "2026-06-15-player-trades-ui-v6-money-delta";
+const ADD2E_PLAYER_TRADES_VERSION = "2026-07-12-player-trades-shared-transfer-api-v7";
 const ADD2E_PLAYER_TRADES_SOCKET = "system.add2e";
 const ADD2E_TRADE_STYLE_ID = "add2e-player-trades-style";
 const ADD2E_TRADE_DIALOG_WIDTH = 220;
-const ADD2E_TRADE_COINS = ["pp", "po", "pe", "pa", "pc"];
-const ADD2E_TRADE_COIN_LABELS = { pp: "PP", po: "PO", pe: "PE", pa: "PA", pc: "PC" };
+export const ADD2E_TRADE_COINS = ["pp", "po", "pe", "pa", "pc"];
+export const ADD2E_TRADE_COIN_LABELS = { pp: "PP", po: "PO", pe: "PE", pa: "PA", pc: "PC" };
 const add2eTradePending = new Map();
 const add2eTradeCommitted = new Set();
 
@@ -217,20 +217,20 @@ function add2eTradeStyles() {
   return "";
 }
 
-function add2eTradeGetMoney(actor) {
+export function add2eTradeGetMoney(actor) {
   const raw = actor?.getFlag?.("add2e", "monnaie") ?? actor?.flags?.add2e?.monnaie ?? {};
   const out = {};
   for (const coin of ADD2E_TRADE_COINS) out[coin] = add2eTradeInt(raw?.[coin], 0);
   return out;
 }
 
-async function add2eTradeSetMoney(actor, money) {
+export async function add2eTradeSetMoney(actor, money) {
   const normalized = {};
   for (const coin of ADD2E_TRADE_COINS) normalized[coin] = add2eTradeInt(money?.[coin], 0);
   await actor.setFlag("add2e", "monnaie", normalized);
 }
 
-function add2eTradeMoneyLabel(money) {
+export function add2eTradeMoneyLabel(money) {
   const parts = [];
   for (const coin of ADD2E_TRADE_COINS) {
     const n = add2eTradeInt(money?.[coin], 0);
@@ -255,7 +255,7 @@ function add2eTradeReadMoney(root, prefix = "money") {
   return out;
 }
 
-function add2eTradeHasMoney(money) {
+export function add2eTradeHasMoney(money) {
   return ADD2E_TRADE_COINS.some(coin => add2eTradeInt(money?.[coin], 0) > 0);
 }
 
@@ -302,7 +302,7 @@ function add2eTradeSceneActors(sourceActor) {
   return rows.sort((a, b) => a.name.localeCompare(b.name));
 }
 
-function add2eTradeItemQuantity(item) {
+export function add2eTradeItemQuantity(item) {
   const q = add2eTradeInt(item?.system?.quantite ?? item?.system?.quantity, 1);
   return Math.max(1, q);
 }
@@ -525,7 +525,7 @@ function add2eTradeOpenReceiver(proposal) {
   if (dialog) dialog._add2eTradeId = uid;
 }
 
-function add2eTradeFindStack(actor, itemData) {
+export function add2eTradeFindStack(actor, itemData) {
   const qty = Number(itemData?.system?.quantite ?? itemData?.system?.quantity);
   if (!Number.isFinite(qty)) return null;
   const name = String(itemData?.name ?? "");
@@ -533,7 +533,7 @@ function add2eTradeFindStack(actor, itemData) {
   return actor.items.find(i => i.type === type && i.name === name && Number.isFinite(Number(i.system?.quantite ?? i.system?.quantity)));
 }
 
-async function add2eTradeAddItem(actor, itemData, quantity) {
+export async function add2eTradeAddItem(actor, itemData, quantity) {
   const data = foundry.utils.deepClone(itemData);
   delete data._id;
   data.system = data.system ?? {};
@@ -548,10 +548,41 @@ async function add2eTradeAddItem(actor, itemData, quantity) {
   }
 }
 
-async function add2eTradeRemoveItem(actor, item, quantity) {
+export async function add2eTradeRemoveItem(actor, item, quantity) {
   const current = add2eTradeItemQuantity(item);
   if (quantity >= current) await actor.deleteEmbeddedDocuments("Item", [item.id]);
   else await item.update({ "system.quantite": current - quantity });
+}
+
+export async function add2eTradeTransferItem({ sourceActor, targetActor, item, quantity }) {
+  if (!sourceActor || !targetActor || !item) throw new Error("acteur ou objet introuvable");
+  const qty = add2eTradeInt(quantity, 0);
+  if (qty < 1) throw new Error("quantité invalide");
+  const currentItem = sourceActor.items?.get?.(item.id) ?? item;
+  if (!currentItem || add2eTradeItemQuantity(currentItem) < qty) throw new Error("quantité proposée insuffisante");
+  const itemData = currentItem.toObject();
+  await add2eTradeRemoveItem(sourceActor, currentItem, qty);
+  await add2eTradeAddItem(targetActor, itemData, qty);
+  return { name: currentItem.name, quantity: qty, img: currentItem.img ?? "", itemType: currentItem.type };
+}
+
+export async function add2eTradeTransferMoney({ sourceActor, targetActor, money }) {
+  if (!sourceActor || !targetActor) throw new Error("acteur introuvable");
+  const requested = {};
+  const sourceMoney = add2eTradeGetMoney(sourceActor);
+  const targetMoney = add2eTradeGetMoney(targetActor);
+  for (const coin of ADD2E_TRADE_COINS) {
+    const amount = add2eTradeInt(money?.[coin], 0);
+    requested[coin] = amount;
+    if (sourceMoney[coin] < amount) throw new Error(`monnaie insuffisante : ${ADD2E_TRADE_COIN_LABELS[coin]}`);
+  }
+  for (const coin of ADD2E_TRADE_COINS) {
+    sourceMoney[coin] -= requested[coin];
+    targetMoney[coin] += requested[coin];
+  }
+  await add2eTradeSetMoney(sourceActor, sourceMoney);
+  await add2eTradeSetMoney(targetActor, targetMoney);
+  return requested;
 }
 
 function add2eTradeActorPresentOnScene(actorId) {
@@ -576,28 +607,17 @@ async function add2eTradeCommit(proposal) {
     if (proposal.offer?.kind === "money") {
       const coin = proposal.offer.coin;
       const qty = add2eTradeInt(proposal.offer.quantity, 0);
-      const sourceMoney = add2eTradeGetMoney(sourceActor);
-      if (!ADD2E_TRADE_COINS.includes(coin) || sourceMoney[coin] < qty) throw new Error("monnaie proposée insuffisante côté donneur");
-      sourceMoney[coin] -= qty;
-      const targetMoney = add2eTradeGetMoney(targetActor);
-      targetMoney[coin] += qty;
-      await add2eTradeSetMoney(sourceActor, sourceMoney);
-      await add2eTradeSetMoney(targetActor, targetMoney);
+      if (!ADD2E_TRADE_COINS.includes(coin)) throw new Error("monnaie proposée inconnue");
+      await add2eTradeTransferMoney({ sourceActor, targetActor, money: { [coin]: qty } });
     } else {
       const item = sourceActor.items.get(proposal.offer?.itemId);
       const qty = add2eTradeInt(proposal.offer?.quantity, 0);
       if (!item || qty < 1) throw new Error("objet proposé introuvable");
-      if (add2eTradeItemQuantity(item) < qty) throw new Error("quantité proposée insuffisante");
-      const itemData = item.toObject();
-      await add2eTradeRemoveItem(sourceActor, item, qty);
-      await add2eTradeAddItem(targetActor, itemData, qty);
+      await add2eTradeTransferItem({ sourceActor, targetActor, item, quantity: qty });
     }
 
     if (add2eTradeHasMoney(proposal.requestMoney)) {
-      const sourceMoney = add2eTradeGetMoney(sourceActor);
-      const targetMoney = add2eTradeGetMoney(targetActor);
-      await add2eTradeSetMoney(targetActor, add2eTradeApplyMoneyDelta(targetMoney, add2eTradeNegateMoney(proposal.requestMoney)));
-      await add2eTradeSetMoney(sourceActor, add2eTradeApplyMoneyDelta(sourceMoney, proposal.requestMoney));
+      await add2eTradeTransferMoney({ sourceActor: targetActor, targetActor: sourceActor, money: proposal.requestMoney });
     }
 
     const message = `${proposal.sourceActorName} échange ${add2eTradeOfferLabel(proposal)} avec ${proposal.targetActorName}${add2eTradeHasMoney(proposal.requestMoney) ? ` contre ${add2eTradeMoneyLabel(proposal.requestMoney)}` : ""}.`;
@@ -643,4 +663,18 @@ Hooks.once("ready", () => {
   game.socket.on(ADD2E_PLAYER_TRADES_SOCKET, add2eTradeHandleSocket);
   document.addEventListener("click", add2eTradeHandleClick, true);
   globalThis.ADD2E_PLAYER_TRADES_VERSION = ADD2E_PLAYER_TRADES_VERSION;
+  globalThis.ADD2E_PLAYER_TRADE_API = {
+    version: ADD2E_PLAYER_TRADES_VERSION,
+    coins: ADD2E_TRADE_COINS,
+    coinLabels: ADD2E_TRADE_COIN_LABELS,
+    getMoney: add2eTradeGetMoney,
+    setMoney: add2eTradeSetMoney,
+    moneyLabel: add2eTradeMoneyLabel,
+    hasMoney: add2eTradeHasMoney,
+    itemQuantity: add2eTradeItemQuantity,
+    addItem: add2eTradeAddItem,
+    removeItem: add2eTradeRemoveItem,
+    transferItem: add2eTradeTransferItem,
+    transferMoney: add2eTradeTransferMoney
+  };
 });
