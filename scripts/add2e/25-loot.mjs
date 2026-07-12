@@ -24,7 +24,7 @@ import {
   add2eVitalIsMonster
 } from "./18a-vital-status-core.mjs";
 
-export const ADD2E_LOOT_VERSION = "2026-07-12-loot-chest-token-image-v7";
+export const ADD2E_LOOT_VERSION = "2026-07-12-loot-empty-chest-cleanup-v8";
 
 const ADD2E_LOOT_SOCKET = "system.add2e";
 const ADD2E_LOOT_REQUEST = "ADD2E_LOOT_REQUEST";
@@ -49,6 +49,7 @@ if (!Add2eApplicationV2) throw new Error("[ADD2E][LOOT] ApplicationV2 introuvabl
 const add2eLootProcessedRequests = new Set();
 const add2eLootHandledResults = new Set();
 const add2eLootSourceLocks = new Set();
+const add2eLootDeletionLocks = new Set();
 
 function add2eLootDialogV2() {
   return foundry?.applications?.api?.DialogV2 ?? null;
@@ -318,7 +319,22 @@ async function add2eLootExecuteRequest(payload = {}) {
 
     const message = add2eLootResultMessage(source, target, result);
     await add2eLootCreateChatMessage({ source, target, result });
-    return { ok: true, message, result, sourceKey, targetActorId: target.id };
+    const sourceActorId = String(source?.id ?? source?._id ?? "");
+    const sourceActorUuid = String(source?.uuid ?? "");
+    const sourceDeleted = await add2eLootFinalizeEmptyChest(source, {
+      sourceKey,
+      reason: `loot-chest-empty-after-${payload.action}`
+    });
+    return {
+      ok: true,
+      message,
+      result,
+      sourceKey,
+      sourceActorId,
+      sourceActorUuid,
+      sourceDeleted,
+      targetActorId: target.id
+    };
   } finally {
     add2eLootSourceLocks.delete(sourceKey);
   }
@@ -326,6 +342,82 @@ async function add2eLootExecuteRequest(payload = {}) {
 
 function add2eLootRegistry() {
   return globalThis.__ADD2E_LOOT_APPS ??= new Map();
+}
+
+async function add2eLootCloseAppsForSource({ actorId = "", actorUuid = "", sourceKey = "" } = {}) {
+  const wantedActorId = String(actorId ?? "");
+  const wantedActorUuid = String(actorUuid ?? "");
+  const wantedSourceKey = String(sourceKey ?? "");
+  const apps = [...add2eLootRegistry().values()];
+
+  for (const app of apps) {
+    const appActorId = String(app?.source?.id ?? app?.source?._id ?? "");
+    const appActorUuid = String(app?.source?.uuid ?? "");
+    const appSourceKey = String(app?.sourceKey ?? "");
+    const matches = Boolean(
+      (wantedActorId && appActorId === wantedActorId)
+      || (wantedActorUuid && appActorUuid === wantedActorUuid)
+      || (wantedSourceKey && appSourceKey === wantedSourceKey)
+    );
+    if (!matches) continue;
+
+    try {
+      if (app?.rendered && typeof app.close === "function") await app.close();
+      else if (app?.registryKey) add2eLootRegistry().delete(app.registryKey);
+    } catch (error) {
+      console.warn("[ADD2E][LOOT] Fermeture de la fenêtre du coffre impossible", error);
+    }
+  }
+}
+
+async function add2eLootDeletePlacedChestTokens(actor, reason) {
+  const actorId = String(actor?.id ?? actor?._id ?? "");
+  if (!actorId) return 0;
+
+  let deleted = 0;
+  for (const scene of game.scenes?.contents ?? game.scenes ?? []) {
+    if (typeof scene?.deleteEmbeddedDocuments !== "function") continue;
+    const tokenIds = Array.from(scene.tokens?.contents ?? scene.tokens ?? [])
+      .filter(token => String(token?.actorId ?? token?.actor?.id ?? "") === actorId)
+      .map(token => token?.id ?? token?._id)
+      .filter(Boolean);
+    if (!tokenIds.length) continue;
+
+    await scene.deleteEmbeddedDocuments("Token", tokenIds, {
+      add2eReason: reason,
+      add2eLootEmptyChestCleanup: true
+    });
+    deleted += tokenIds.length;
+  }
+  return deleted;
+}
+
+async function add2eLootFinalizeEmptyChest(actor, { sourceKey = "", reason = "loot-chest-empty" } = {}) {
+  if (!add2eLootResponsibleGM() || !add2eIsLootChest(actor) || add2eLootHasContent(actor)) return false;
+
+  const actorId = String(actor?.id ?? actor?._id ?? "");
+  if (!actorId || add2eLootDeletionLocks.has(actorId)) return false;
+  add2eLootDeletionLocks.add(actorId);
+
+  try {
+    const actorUuid = String(actor?.uuid ?? "");
+    await add2eLootCloseAppsForSource({ actorId, actorUuid, sourceKey });
+    await add2eLootDeletePlacedChestTokens(actor, reason);
+
+    const liveActor = game.actors?.get?.(actorId) ?? actor;
+    if (!liveActor || !add2eIsLootChest(liveActor) || add2eLootHasContent(liveActor)) return false;
+
+    if (typeof liveActor.delete === "function") {
+      await liveActor.delete({ add2eReason: reason, add2eLootEmptyChestCleanup: true });
+    } else if (typeof globalThis.Actor?.deleteDocuments === "function") {
+      await globalThis.Actor.deleteDocuments([actorId], { add2eReason: reason, add2eLootEmptyChestCleanup: true });
+    } else {
+      throw new Error("API de suppression d'acteur introuvable.");
+    }
+    return true;
+  } finally {
+    add2eLootDeletionLocks.delete(actorId);
+  }
 }
 
 function add2eLootReleasePendingRequest(requestId = "") {
@@ -350,6 +442,15 @@ function add2eLootHandleResult(payload) {
     else ui.notifications?.error?.(payload.message);
   } else if (game.user?.isGM && !payload.ok) {
     ui.notifications?.warn?.(payload.message);
+  }
+
+  if (payload.sourceDeleted === true) {
+    add2eLootCloseAppsForSource({
+      actorId: payload.sourceActorId,
+      actorUuid: payload.sourceActorUuid,
+      sourceKey: payload.sourceKey
+    }).catch(error => console.warn("[ADD2E][LOOT] Fermeture distante du coffre impossible", error));
+    return;
   }
   add2eLootRefreshApps(payload.sourceKey ?? "");
 }
@@ -714,6 +815,13 @@ class Add2eLootApp extends Add2eApplicationV2 {
 
     if (action === "save-money" && game.user?.isGM && add2eIsLootChest(this.source)) {
       await add2eTradeSetMoney(this.source, add2eLootReadMoney(this.element));
+      if (await add2eLootFinalizeEmptyChest(this.source, {
+        sourceKey: this.sourceKey,
+        reason: "loot-chest-empty-after-save-money"
+      })) {
+        ui.notifications?.info?.("Coffre vide supprimé.");
+        return true;
+      }
       ui.notifications?.info?.("Monnaie du coffre enregistrée.");
       return this.render({ force: true });
     }
@@ -729,6 +837,13 @@ class Add2eLootApp extends Add2eApplicationV2 {
       });
       if (!confirmed) return;
       await this.source.deleteEmbeddedDocuments("Item", [item.id], { add2eReason: "loot-chest-remove-item" });
+      if (await add2eLootFinalizeEmptyChest(this.source, {
+        sourceKey: this.sourceKey,
+        reason: "loot-chest-empty-after-remove-item"
+      })) {
+        ui.notifications?.info?.("Coffre vide supprimé.");
+        return true;
+      }
       return this.render({ force: true });
     }
 
@@ -1035,6 +1150,12 @@ function add2eLootRefreshHooks() {
   Hooks.on("createItem", item => refreshActor(item?.parent ?? item?.actor));
   Hooks.on("updateItem", item => refreshActor(item?.parent ?? item?.actor));
   Hooks.on("deleteItem", item => refreshActor(item?.parent ?? item?.actor));
+  Hooks.on("deleteActor", actor => {
+    add2eLootCloseAppsForSource({
+      actorId: actor?.id ?? actor?._id,
+      actorUuid: actor?.uuid
+    }).catch(error => console.warn("[ADD2E][LOOT] Fermeture après suppression d'acteur impossible", error));
+  });
 }
 
 Hooks.once("ready", () => {
@@ -1052,6 +1173,7 @@ Hooks.once("ready", () => {
     isChest: add2eIsLootChest,
     isSource: add2eIsLootSource,
     hasContent: add2eLootHasContent,
+    deleteEmptyChest: add2eLootFinalizeEmptyChest,
     migrateChestImages: add2eLootMigrateLegacyChestImages
   };
   globalThis.ADD2E_LOOT_VERSION = ADD2E_LOOT_VERSION;
