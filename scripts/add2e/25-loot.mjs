@@ -24,7 +24,7 @@ import {
   add2eVitalIsMonster
 } from "./18a-vital-status-core.mjs";
 
-export const ADD2E_LOOT_VERSION = "2026-07-12-loot-request-lock-v3";
+export const ADD2E_LOOT_VERSION = "2026-07-12-loot-close-action-scope-v4";
 
 const ADD2E_LOOT_SOCKET = "system.add2e";
 const ADD2E_LOOT_REQUEST = "ADD2E_LOOT_REQUEST";
@@ -33,6 +33,10 @@ const ADD2E_LOOT_FOLDER = "ADD2E — Coffres";
 const ADD2E_LOOT_CHEST_IMG = "icons/containers/chest/chest-reinforced-brown.webp";
 const ADD2E_LOOT_STYLE_ID = "add2e-loot-style";
 const ADD2E_LOOT_REQUEST_TIMEOUT = 15000;
+const ADD2E_LOOT_APP_ACTIONS = new Set([
+  "toggle-lock", "save-money", "remove-item",
+  "take-item", "take-money", "take-all"
+]);
 const ADD2E_LOOT_ITEM_TYPES = new Set([
   "arme", "weapon", "armure", "armor", "objet", "item",
   "equipement", "equipment", "consommable", "consumable", "loot", "conteneur", "container"
@@ -631,7 +635,12 @@ class Add2eLootApp extends Add2eApplicationV2 {
       this.looter = game.actors?.get?.(event.currentTarget.value) ?? null;
       this.render({ force: true });
     });
-    root.querySelectorAll("[data-action]").forEach(button => button.addEventListener("click", event => this._onAction(event)));
+    const shell = root.querySelector(".add2e-loot-shell");
+    for (const button of shell?.querySelectorAll?.("[data-action]") ?? []) {
+      const action = String(button.dataset?.action ?? "");
+      if (!ADD2E_LOOT_APP_ACTIONS.has(action)) continue;
+      button.addEventListener("click", event => this._onAction(event));
+    }
     this._applyPendingState();
 
     if (context.isGM && context.isChest) {
@@ -671,12 +680,13 @@ class Add2eLootApp extends Add2eApplicationV2 {
   }
 
   async _onAction(event) {
+    const button = event.currentTarget;
+    const action = String(button?.dataset?.action ?? "");
+    if (!ADD2E_LOOT_APP_ACTIONS.has(action)) return;
+
     event?.preventDefault?.();
     event?.stopPropagation?.();
     event?.stopImmediatePropagation?.();
-    const button = event.currentTarget;
-    const action = button?.dataset?.action;
-    if (!action) return;
 
     const isRecovery = action === "take-item" || action === "take-money" || action === "take-all";
     if (isRecovery && this.pendingRequestId) return ui.notifications?.warn?.("Une récupération est déjà en cours.");
