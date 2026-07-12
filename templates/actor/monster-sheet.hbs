@@ -110,6 +110,14 @@
     .description-rendered p { margin: .35rem 0; }
     .description-editor { margin-top: 10px; border: 1px solid #dcc782; border-radius: 8px; background: #fff8df; padding: 8px; }
     .description-editor summary { cursor: pointer; font-weight: 900; color: #6f4b12; }
+    .monster-money-block { margin-bottom: 10px; border: 1px solid #27705f; border-radius: 9px; overflow: hidden; background: linear-gradient(180deg, rgba(229, 246, 233, .96), rgba(195, 224, 207, .96)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .6); }
+    .monster-money-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 7px 9px; background: linear-gradient(180deg, #397c6a, #245447); color: #fff5ce; font-weight: 900; }
+    .monster-money-title i { color: #f1c85d; margin-right: 5px; }
+    .monster-money-title small { color: #d7efdf; font-size: .68rem; text-align: right; }
+    .monster-money-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; padding: 8px; }
+    .monster-money-field { min-width: 0; padding: 5px; border: 1px solid #5b8b7e; border-radius: 7px; background: rgba(250, 255, 242, .82); text-align: center; }
+    .monster-money-field span { display: block; margin-bottom: 3px; color: #245447; font-size: .72rem; font-weight: 900; }
+    .monster-money-field input { min-width: 0; text-align: center; font-weight: 900; color: #173b31; border-color: #6d9b8e; background: #fbfff7; }
   </style>
 
   <header class="monster-header">
@@ -187,7 +195,19 @@
 
       <div class="two-col">
         <section class="panel"><h2>Armure & protection</h2><div class="panel-body"><table class="add2e-table"><thead><tr><th>Protection</th><th>CA</th><th>Équipée</th><th></th></tr></thead><tbody>{{#each listeArmures as |item|}}<tr><td><div class="item-name-img"><img src="{{item.img}}" width="28" height="28"/>{{item.name}}</div></td><td>{{item.system.ac}}</td><td style="text-align:center"><a class="item-equip" data-item-id="{{item._id}}"><i class="fas fa-tshirt" style="{{#if item.system.equipee}}color:#27ae60;{{else}}color:#bbb;{{/if}}"></i></a></td><td class="action-icons" style="text-align:right"><a class="armure-edit" data-item-id="{{item._id}}"><i class="fas fa-edit"></i></a><a class="armure-delete" data-item-id="{{item._id}}"><i class="fas fa-trash"></i></a></td></tr>{{/each}}</tbody></table></div></section>
-        <section class="panel"><h2>Inventaire / trésor</h2><div class="panel-body"><table class="add2e-table"><thead><tr><th>Objet</th><th>Équipé</th><th></th></tr></thead><tbody>{{#each listeObjets as |item|}}<tr><td><div class="item-name-img"><img src="{{item.img}}" width="28" height="28"/>{{item.name}}</div></td><td style="text-align:center"><a class="item-equip" data-item-id="{{item._id}}"><i class="fas fa-circle" style="{{#if item.system.equipee}}color:#27ae60;{{else}}color:#bbb;{{/if}}"></i></a></td><td class="action-icons" style="text-align:right"><a class="objet-edit" data-item-id="{{item._id}}"><i class="fas fa-edit"></i></a><a class="objet-delete" data-item-id="{{item._id}}"><i class="fas fa-trash"></i></a></td></tr>{{/each}}</tbody></table></div></section>
+        <section class="panel"><h2>Inventaire / trésor</h2><div class="panel-body">
+          <div class="monster-money-block">
+            <div class="monster-money-title"><span><i class="fas fa-coins"></i> Monnaie récupérable</span><small>Transférée automatiquement lors de la récupération du butin</small></div>
+            <div class="monster-money-grid">
+              <label class="monster-money-field"><span>PP</span><input type="number" min="0" step="1" name="flags.add2e.monnaie.pp" value="{{actor.flags.add2e.monnaie.pp}}" placeholder="0"/></label>
+              <label class="monster-money-field"><span>PO</span><input type="number" min="0" step="1" name="flags.add2e.monnaie.po" value="{{actor.flags.add2e.monnaie.po}}" placeholder="0"/></label>
+              <label class="monster-money-field"><span>PE</span><input type="number" min="0" step="1" name="flags.add2e.monnaie.pe" value="{{actor.flags.add2e.monnaie.pe}}" placeholder="0"/></label>
+              <label class="monster-money-field"><span>PA</span><input type="number" min="0" step="1" name="flags.add2e.monnaie.pa" value="{{actor.flags.add2e.monnaie.pa}}" placeholder="0"/></label>
+              <label class="monster-money-field"><span>PC</span><input type="number" min="0" step="1" name="flags.add2e.monnaie.pc" value="{{actor.flags.add2e.monnaie.pc}}" placeholder="0"/></label>
+            </div>
+          </div>
+          <table class="add2e-table"><thead><tr><th>Objet</th><th>Équipé</th><th></th></tr></thead><tbody>{{#each listeObjets as |item|}}<tr><td><div class="item-name-img"><img src="{{item.img}}" width="28" height="28"/>{{item.name}}</div></td><td style="text-align:center"><a class="item-equip" data-item-id="{{item._id}}"><i class="fas fa-circle" style="{{#if item.system.equipee}}color:#27ae60;{{else}}color:#bbb;{{/if}}"></i></a></td><td class="action-icons" style="text-align:right"><a class="objet-edit" data-item-id="{{item._id}}"><i class="fas fa-edit"></i></a><a class="objet-delete" data-item-id="{{item._id}}"><i class="fas fa-trash"></i></a></td></tr>{{/each}}</tbody></table>
+        </div></section>
       </div>
     </div>
 
