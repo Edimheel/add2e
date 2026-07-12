@@ -1,28 +1,30 @@
 // ============================================================================
 // ADD2E — Coffres et récupération de butin
 // ApplicationV2 / DialogV2 — Compatible Foundry V13/V14/V15.
-// Réutilise le cœur vendeur pour la monnaie, les quantités et les dialogues,
-// ainsi que le moteur d'états vitaux pour déterminer les monstres morts.
+// Les transferts d'objets et de monnaie utilisent exclusivement l'API métier
+// partagée du système d'échange entre personnages.
 // ============================================================================
 
 import {
-  COINS,
-  alertBox,
-  dialog,
-  esc,
-  getMoney,
-  quantity,
-  quantityUpdate,
-  setMoney,
-  slug
-} from "./22a-vendor-core.mjs";
+  ADD2E_TRADE_COINS,
+  ADD2E_TRADE_COIN_LABELS,
+  add2eTradeAddItem,
+  add2eTradeGetMoney,
+  add2eTradeHasMoney,
+  add2eTradeItemQuantity,
+  add2eTradeMoneyLabel,
+  add2eTradeSetMoney,
+  add2eTradeTransferItem,
+  add2eTradeTransferMoney
+} from "./24-player-trades.mjs";
+import { alertBox, dialog, esc } from "./22a-vendor-core.mjs";
 import {
   add2eVitalDesiredStatus,
   add2eVitalEffectKind,
   add2eVitalIsMonster
 } from "./18a-vital-status-core.mjs";
 
-export const ADD2E_LOOT_VERSION = "2026-07-12-loot-v1";
+export const ADD2E_LOOT_VERSION = "2026-07-12-loot-shared-trade-api-v2";
 
 const ADD2E_LOOT_SOCKET = "system.add2e";
 const ADD2E_LOOT_REQUEST = "ADD2E_LOOT_REQUEST";
@@ -35,13 +37,12 @@ const ADD2E_LOOT_ITEM_TYPES = new Set([
   "equipement", "equipment", "consommable", "consumable", "loot", "conteneur", "container"
 ]);
 
+const Add2eApplicationV2 = foundry?.applications?.api?.ApplicationV2;
+if (!Add2eApplicationV2) throw new Error("[ADD2E][LOOT] ApplicationV2 introuvable.");
+
 const add2eLootProcessedRequests = new Set();
 const add2eLootHandledResults = new Set();
 const add2eLootSourceLocks = new Set();
-
-function add2eLootApplicationV2() {
-  return foundry?.applications?.api?.ApplicationV2 ?? null;
-}
 
 function add2eLootDialogV2() {
   return foundry?.applications?.api?.DialogV2 ?? null;
@@ -88,9 +89,7 @@ function add2eLootIsLocked(actor) {
 }
 
 function add2eLootItemQuantity(item) {
-  const raw = item?.system?.quantite ?? item?.system?.quantity;
-  if (raw === undefined || raw === null || raw === "") return 1;
-  return Math.max(0, quantity(item));
+  return add2eTradeItemQuantity(item);
 }
 
 function add2eLootIsPhysicalItem(item) {
@@ -109,132 +108,83 @@ function add2eLootItems(actor) {
 }
 
 function add2eLootMoneyLabel(money = {}) {
-  const parts = COINS
-    .map(coin => {
-      const amount = add2eLootInt(money?.[coin.key], 0);
-      return amount > 0 ? `${amount} ${coin.label}` : "";
-    })
-    .filter(Boolean);
-  return parts.length ? parts.join(", ") : "Aucune monnaie";
+  const normalized = {};
+  for (const coin of ADD2E_TRADE_COINS) normalized[coin] = add2eLootInt(money?.[coin], 0);
+  const label = add2eTradeMoneyLabel(normalized);
+  return label === "aucune monnaie" ? "Aucune monnaie" : label;
 }
 
 function add2eLootHasMoney(money = {}) {
-  return COINS.some(coin => add2eLootInt(money?.[coin.key], 0) > 0);
+  return add2eTradeHasMoney(money);
 }
 
 function add2eLootMoneyInputs(money = {}) {
-  return COINS.map(coin => `
+  return ADD2E_TRADE_COINS.map(coin => `
     <label class="add2e-loot-coin-field">
-      <span>${coin.label}</span>
-      <input type="number" min="0" step="1" name="loot-${coin.key}" value="${add2eLootInt(money?.[coin.key], 0)}">
+      <span>${ADD2E_TRADE_COIN_LABELS[coin]}</span>
+      <input type="number" min="0" step="1" name="loot-${coin}" value="${add2eLootInt(money?.[coin], 0)}">
     </label>`).join("");
 }
 
 function add2eLootReadMoney(root) {
   const money = {};
-  for (const coin of COINS) {
-    money[coin.key] = add2eLootInt(root?.querySelector?.(`[name="loot-${coin.key}"]`)?.value, 0);
+  for (const coin of ADD2E_TRADE_COINS) {
+    money[coin] = add2eLootInt(root?.querySelector?.(`[name="loot-${coin}"]`)?.value, 0);
   }
   return money;
-}
-
-function add2eLootFindStack(actor, itemData) {
-  const itemQuantity = Number(itemData?.system?.quantite ?? itemData?.system?.quantity);
-  if (!Number.isFinite(itemQuantity)) return null;
-  const wantedName = slug(itemData?.name);
-  const wantedType = String(itemData?.type ?? "").toLowerCase();
-  return Array.from(actor?.items ?? []).find(item => {
-    const current = Number(item?.system?.quantite ?? item?.system?.quantity);
-    if (!Number.isFinite(current)) return false;
-    return String(item.type ?? "").toLowerCase() === wantedType && slug(item.name) === wantedName;
-  }) ?? null;
-}
-
-async function add2eLootAddItem(actor, sourceItem, amount) {
-  amount = add2eLootInt(amount, 1);
-  const data = sourceItem?.toObject
-    ? sourceItem.toObject()
-    : foundry.utils.deepClone(sourceItem ?? {});
-  delete data._id;
-  data.system ??= {};
-  data.system.quantite = amount;
-  data.system.equipee = false;
-  data.flags ??= {};
-  data.flags.add2e ??= {};
-  data.flags.add2e.recoveredAsLoot = true;
-
-  const stack = add2eLootFindStack(actor, data);
-  if (stack) {
-    await stack.update(quantityUpdate(add2eLootItemQuantity(stack) + amount), { add2eReason: "loot-receive-merge" });
-    return stack;
-  }
-
-  const created = await actor.createEmbeddedDocuments("Item", [data], { add2eReason: "loot-receive-create" });
-  return created?.[0] ?? null;
-}
-
-async function add2eLootRemoveItem(actor, item, amount) {
-  amount = add2eLootInt(amount, 1);
-  const current = add2eLootItemQuantity(item);
-  if (amount >= current) {
-    await actor.deleteEmbeddedDocuments("Item", [item.id], { add2eReason: "loot-source-delete" });
-  } else {
-    await item.update(quantityUpdate(current - amount), { add2eReason: "loot-source-decrease" });
-  }
 }
 
 async function add2eLootTransferItemLocal({ source, target, itemId, amount }) {
   const item = source?.items?.get?.(itemId) ?? null;
   if (!item || !add2eLootIsPhysicalItem(item)) throw new Error("Objet de butin introuvable ou non récupérable.");
-  amount = add2eLootInt(amount, 1);
   const available = add2eLootItemQuantity(item);
-  if (amount < 1 || amount > available) throw new Error(`${item.name} : quantité disponible ${available}.`);
+  const quantity = add2eLootInt(amount, 1);
+  if (quantity < 1 || quantity > available) throw new Error(`${item.name} : quantité disponible ${available}.`);
 
-  const itemData = item.toObject();
-  await add2eLootRemoveItem(source, item, amount);
-  await add2eLootAddItem(target, itemData, amount);
-  return { items: [{ name: item.name, quantity: amount, img: item.img ?? "" }], money: {} };
+  const transferred = await add2eTradeTransferItem({
+    sourceActor: source,
+    targetActor: target,
+    item,
+    quantity
+  });
+  return { items: [transferred], money: {} };
 }
 
 async function add2eLootTransferMoneyLocal({ source, target }) {
-  const sourceMoney = getMoney(source);
-  if (!add2eLootHasMoney(sourceMoney)) throw new Error("Aucune monnaie à récupérer.");
-
-  const targetMoney = getMoney(target);
-  const transferred = {};
-  for (const coin of COINS) {
-    const amount = add2eLootInt(sourceMoney[coin.key], 0);
-    transferred[coin.key] = amount;
-    sourceMoney[coin.key] = 0;
-    targetMoney[coin.key] = add2eLootInt(targetMoney[coin.key], 0) + amount;
-  }
-
-  await setMoney(source, sourceMoney);
-  await setMoney(target, targetMoney);
+  const wallet = add2eTradeGetMoney(source);
+  if (!add2eLootHasMoney(wallet)) throw new Error("Aucune monnaie à récupérer.");
+  const transferred = await add2eTradeTransferMoney({
+    sourceActor: source,
+    targetActor: target,
+    money: wallet
+  });
   return { items: [], money: transferred };
 }
 
 async function add2eLootTransferAllLocal({ source, target }) {
   const transferredItems = [];
   for (const item of [...add2eLootItems(source)]) {
-    const amount = add2eLootItemQuantity(item);
-    if (amount < 1) continue;
-    const itemData = item.toObject();
-    await add2eLootRemoveItem(source, item, amount);
-    await add2eLootAddItem(target, itemData, amount);
-    transferredItems.push({ name: item.name, quantity: amount, img: item.img ?? "" });
+    const quantity = add2eLootItemQuantity(item);
+    if (quantity < 1) continue;
+    transferredItems.push(await add2eTradeTransferItem({
+      sourceActor: source,
+      targetActor: target,
+      item,
+      quantity
+    }));
   }
 
-  const sourceMoney = getMoney(source);
   let transferredMoney = {};
-  if (add2eLootHasMoney(sourceMoney)) {
-    const moneyResult = await add2eLootTransferMoneyLocal({ source, target });
-    transferredMoney = moneyResult.money;
+  const wallet = add2eTradeGetMoney(source);
+  if (add2eLootHasMoney(wallet)) {
+    transferredMoney = await add2eTradeTransferMoney({
+      sourceActor: source,
+      targetActor: target,
+      money: wallet
+    });
   }
 
-  if (!transferredItems.length && !add2eLootHasMoney(transferredMoney)) {
-    throw new Error("Ce butin est vide.");
-  }
+  if (!transferredItems.length && !add2eLootHasMoney(transferredMoney)) throw new Error("Ce butin est vide.");
   return { items: transferredItems, money: transferredMoney };
 }
 
@@ -496,9 +446,7 @@ function add2eLootEnsureStyles() {
   style.textContent = add2eLootStyles();
 }
 
-const ADD2E_LOOT_APPLICATION_V2 = add2eLootApplicationV2();
-
-class Add2eLootApp extends ADD2E_LOOT_APPLICATION_V2 {
+class Add2eLootApp extends Add2eApplicationV2 {
   static DEFAULT_OPTIONS = {
     id: "add2e-loot-{id}",
     classes: ["add2e", "add2e-loot-app"],
@@ -526,7 +474,7 @@ class Add2eLootApp extends ADD2E_LOOT_APPLICATION_V2 {
       source: this.source,
       sourceKey: this.sourceKey,
       items: add2eLootItems(this.source),
-      money: getMoney(this.source),
+      money: add2eTradeGetMoney(this.source),
       isChest: add2eIsLootChest(this.source),
       isGM: game.user?.isGM === true,
       locked: add2eLootIsLocked(this.source),
@@ -560,9 +508,9 @@ class Add2eLootApp extends ADD2E_LOOT_APPLICATION_V2 {
       </div>`;
     }).join("");
 
-    const moneyChips = COINS.map(coin => {
-      const amount = add2eLootInt(context.money?.[coin.key], 0);
-      return amount > 0 ? `<span class="add2e-loot-chip"><i class="fas fa-coins"></i>${amount} ${coin.label}</span>` : "";
+    const moneyChips = ADD2E_TRADE_COINS.map(coin => {
+      const amount = add2eLootInt(context.money?.[coin], 0);
+      return amount > 0 ? `<span class="add2e-loot-chip"><i class="fas fa-coins"></i>${amount} ${ADD2E_TRADE_COIN_LABELS[coin]}</span>` : "";
     }).filter(Boolean).join("") || `<span class="add2e-loot-empty" style="padding:0">Aucune monnaie</span>`;
 
     const toolbar = context.isGM ? `<div class="add2e-loot-toolbar">
@@ -587,6 +535,17 @@ class Add2eLootApp extends ADD2E_LOOT_APPLICATION_V2 {
       ? `<div class="add2e-loot-footer"><button type="button" class="add2e-loot-button gold" data-action="take-all"><i class="fas fa-box-open"></i> Tout récupérer</button></div>`
       : "";
 
+    const inventory = locked ? "" : `
+      <div class="add2e-loot-panel">
+        <div class="add2e-loot-panel-title"><span><i class="fas fa-gem"></i> Objets</span><span>${context.items.length}</span></div>
+        <div class="add2e-loot-list">${rows || `<div class="add2e-loot-empty">Aucun objet récupérable.</div>`}</div>
+      </div>
+      <div class="add2e-loot-panel">
+        <div class="add2e-loot-panel-title"><span><i class="fas fa-coins"></i> Monnaie</span><span>${esc(add2eLootMoneyLabel(context.money))}</span></div>
+        ${moneyContent}
+      </div>
+      ${footer}`;
+
     const root = document.createElement("section");
     root.innerHTML = `<div class="add2e-loot-shell" data-source-key="${esc(context.sourceKey)}">
       <div class="add2e-loot-header"><h2><i class="${headerIcon}"></i> ${esc(this.title)}</h2><small>Récupération ADD2E</small></div>
@@ -595,9 +554,7 @@ class Add2eLootApp extends ADD2E_LOOT_APPLICATION_V2 {
         <div class="add2e-loot-arrow"><i class="fas fa-arrow-right"></i></div>
         <div class="add2e-loot-actor"><img src="${esc(looterImage)}" alt=""><span>${esc(context.looter?.name ?? "Aucun personnage receveur")}</span></div>
       </div>
-      ${toolbar}${locked}${gmDrop}
-      ${locked ? "" : `<div class="add2e-loot-panel"><div class="add2e-loot-panel-title"><span><i class="fas fa-gem"></i> Objets</span><span>${context.items.length}</span></div><div class="add2e-loot-list">${rows || `<div class="add2e-loot-empty">Aucun objet récupérable.</div>`}</div></div>
-      <div class="add2e-loot-panel"><div class="add2e-loot-panel-title"><span><i class="fas fa-coins"></i> Monnaie</span><span>${esc(add2eLootMoneyLabel(context.money))}</span></div>${moneyContent}</div>${footer}`}
+      ${toolbar}${locked}${gmDrop}${inventory}
     </div>`;
     return root;
   }
@@ -657,7 +614,7 @@ class Add2eLootApp extends ADD2E_LOOT_APPLICATION_V2 {
     }
 
     if (action === "save-money" && game.user?.isGM && add2eIsLootChest(this.source)) {
-      await setMoney(this.source, add2eLootReadMoney(this.element));
+      await add2eTradeSetMoney(this.source, add2eLootReadMoney(this.element));
       ui.notifications?.info?.("Monnaie du coffre enregistrée.");
       return this.render({ force: true });
     }
@@ -709,7 +666,8 @@ class Add2eLootApp extends ADD2E_LOOT_APPLICATION_V2 {
     }
     if (!add2eLootIsPhysicalItem(item)) return alertBox("Objet incompatible", `${item.name ?? "Cet élément"} ne peut pas être placé dans un coffre de butin.`);
 
-    await add2eLootAddItem(this.source, item, Math.max(1, add2eLootItemQuantity(item)));
+    const itemData = item.toObject ? item.toObject() : foundry.utils.deepClone(item);
+    await add2eTradeAddItem(this.source, itemData, Math.max(1, add2eLootItemQuantity(item)));
     ui.notifications?.info?.(`${item.name} ajouté au coffre.`);
     this.render({ force: true });
   }
@@ -833,6 +791,7 @@ function add2eLootDirectoryButton() {
     button.addEventListener("click", add2eOpenCreateChestDialog);
     footer.prepend(button);
   });
+  setTimeout(() => ui.actors?.render?.({ force: true }), 100);
 }
 
 function add2eLootOpenLock(actor) {
@@ -853,8 +812,8 @@ async function add2eLootOpenFromToken(token) {
 
 function add2eLootBindTokens() {
   for (const token of canvas?.tokens?.placeables ?? []) {
-    if (!add2eIsLootSource(token?.actor) || token.__add2eLootTapV1) continue;
-    token.__add2eLootTapV1 = true;
+    if (!add2eIsLootSource(token?.actor) || token.__add2eLootTapV2) continue;
+    token.__add2eLootTapV2 = true;
     try {
       token.cursor = "pointer";
       token.eventMode = "static";
@@ -868,8 +827,8 @@ function add2eLootBindTokens() {
 }
 
 function add2eLootPatchTokenClick() {
-  if (globalThis.__ADD2E_LOOT_TOKEN_CLICK_V1) return;
-  globalThis.__ADD2E_LOOT_TOKEN_CLICK_V1 = true;
+  if (globalThis.__ADD2E_LOOT_TOKEN_CLICK_V2) return;
+  globalThis.__ADD2E_LOOT_TOKEN_CLICK_V2 = true;
   const TokenClass = foundry?.canvas?.placeables?.Token ?? CONFIG?.Token?.objectClass ?? globalThis.Token;
   const prototype = TokenClass?.prototype;
   if (prototype && typeof prototype._onClickLeft === "function") {
@@ -900,10 +859,6 @@ function add2eLootRefreshHooks() {
 }
 
 Hooks.once("ready", () => {
-  if (!ADD2E_LOOT_APPLICATION_V2) {
-    ui.notifications?.error?.("ApplicationV2 est introuvable : système de butin désactivé.");
-    return;
-  }
   add2eLootEnsureStyles();
   game.socket?.on?.(ADD2E_LOOT_SOCKET, add2eLootHandleSocket);
   add2eLootDirectoryButton();
