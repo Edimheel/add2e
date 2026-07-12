@@ -5,7 +5,8 @@
 // Ce module ne remplace pas le moteur de butin :
 // - il réutilise son ApplicationV2 publique ;
 // - il réutilise le transfert de monnaie partagé de 24-player-trades.mjs ;
-// - il bloque l'ouverture de la feuille d'un monstre mort côté joueur ;
+// - il donne aux joueurs un accès OBSERVER aux monstres morts ;
+// - il rend la feuille du monstre au clic dès que le butin est vide ;
 // - il uniformise l'image des coffres et du marqueur de butin.
 // ============================================================================
 
@@ -24,17 +25,20 @@ import {
 } from "./25-loot.mjs";
 import { esc } from "./22a-vendor-core.mjs";
 
-export const ADD2E_LOOT_INTERACTIONS_VERSION = "2026-07-12-loot-interactions-v1";
+export const ADD2E_LOOT_INTERACTIONS_VERSION = "2026-07-12-loot-interactions-v2";
 
 const ADD2E_LOOT_SOCKET = "system.add2e";
 const ADD2E_LOOT_PARTIAL_REQUEST = "ADD2E_LOOT_PARTIAL_MONEY_REQUEST";
 const ADD2E_LOOT_PARTIAL_RESULT = "ADD2E_LOOT_PARTIAL_MONEY_RESULT";
 const ADD2E_LOOT_CHEST_IMG = "icons/containers/chest/chest-reinforced-steel-pink.webp";
+const ADD2E_LOOT_OLD_CHEST_IMG = "icons/containers/chest/chest-reinforced-brown.webp";
 const ADD2E_LOOT_STYLE_ID = "add2e-loot-interactions-style";
+const ADD2E_LOOT_ACCESS_FLAG = "lootTemporaryObserverAccess";
+const ADD2E_LOOT_MARKER_TEXTURES = new Set([ADD2E_LOOT_CHEST_IMG, ADD2E_LOOT_OLD_CHEST_IMG]);
 
 const add2eLootPartialProcessed = new Set();
 const add2eLootPartialHandled = new Set();
-const add2eLootEmptyNotices = new Map();
+const add2eLootAccessRunning = new Set();
 
 function add2eLootInteractionInt(value, minimum = 0) {
   const number = Math.floor(Number(value));
@@ -43,6 +47,12 @@ function add2eLootInteractionInt(value, minimum = 0) {
 
 function add2eLootInteractionId(prefix = "loot-partial") {
   return `${prefix}-${Date.now()}-${foundry?.utils?.randomID?.() ?? Math.random().toString(36).slice(2)}`;
+}
+
+function add2eLootInteractionClone(value) {
+  if (foundry?.utils?.deepClone) return foundry.utils.deepClone(value ?? {});
+  if (foundry?.utils?.duplicate) return foundry.utils.duplicate(value ?? {});
+  return JSON.parse(JSON.stringify(value ?? {}));
 }
 
 function add2eLootInteractionResponsibleGM() {
@@ -73,6 +83,31 @@ function add2eLootInteractionHasContent(actor) {
   const markerApi = game.add2e?.lootTokenMarker;
   if (typeof markerApi?.hasContent === "function") return markerApi.hasContent(actor) === true;
   return add2eTradeHasMoney(add2eTradeGetMoney(actor));
+}
+
+function add2eLootInteractionTokenDocument(token) {
+  return token?.document ?? token ?? null;
+}
+
+function add2eLootInteractionMarkerState(token) {
+  const tokenDocument = add2eLootInteractionTokenDocument(token);
+  if (!tokenDocument) return {};
+  try {
+    return tokenDocument.getFlag?.("add2e", "lootTokenMarker")
+      ?? tokenDocument.flags?.add2e?.lootTokenMarker
+      ?? {};
+  } catch (_error) {
+    return tokenDocument.flags?.add2e?.lootTokenMarker ?? {};
+  }
+}
+
+function add2eLootInteractionIsMarkedToken(token) {
+  const tokenDocument = add2eLootInteractionTokenDocument(token);
+  const marker = add2eLootInteractionMarkerState(tokenDocument);
+  const texture = String(tokenDocument?.texture?.src ?? "");
+  return marker?.active === true
+    || ADD2E_LOOT_MARKER_TEXTURES.has(texture)
+    || texture === String(marker?.markerTexture ?? "");
 }
 
 function add2eLootInteractionUserCanReceive(user, actor) {
@@ -119,6 +154,83 @@ async function add2eLootInteractionSyncMarker(tokenDocument = null) {
   setTimeout(() => markerApi?.syncCanvas?.(), 80);
 }
 
+function add2eLootInteractionAccessState(actor) {
+  try {
+    return actor?.getFlag?.("add2e", ADD2E_LOOT_ACCESS_FLAG)
+      ?? actor?.flags?.add2e?.[ADD2E_LOOT_ACCESS_FLAG]
+      ?? {};
+  } catch (_error) {
+    return actor?.flags?.add2e?.[ADD2E_LOOT_ACCESS_FLAG] ?? {};
+  }
+}
+
+async function add2eLootInteractionSyncObserverAccess(actor) {
+  if (!add2eLootInteractionResponsibleGM() || !actor?.update || add2eIsLootChest(actor)) return false;
+
+  const key = actor.uuid ?? actor.id ?? actor.name;
+  if (!key || add2eLootAccessRunning.has(key)) return false;
+  add2eLootAccessRunning.add(key);
+
+  try {
+    const state = add2eLootInteractionAccessState(actor);
+    const currentOwnership = add2eLootInteractionClone(actor.ownership ?? actor._source?.ownership ?? {});
+    const observer = Number(CONST?.DOCUMENT_OWNERSHIP_LEVELS?.OBSERVER ?? 2);
+    const currentDefault = Number(currentOwnership.default ?? 0);
+    const isDeadMonster = add2eIsDeadLootMonster(actor);
+
+    if (isDeadMonster) {
+      if (state?.active === true && currentDefault >= observer) return false;
+
+      const originalOwnership = state?.active === true && state?.originalOwnership
+        ? add2eLootInteractionClone(state.originalOwnership)
+        : add2eLootInteractionClone(currentOwnership);
+      const ownership = add2eLootInteractionClone(currentOwnership);
+      ownership.default = Math.max(currentDefault, observer);
+
+      await actor.update({
+        ownership,
+        [`flags.add2e.${ADD2E_LOOT_ACCESS_FLAG}`]: {
+          active: true,
+          originalOwnership,
+          version: ADD2E_LOOT_INTERACTIONS_VERSION,
+          grantedAt: Date.now()
+        }
+      }, { add2eLootObserverAccess: true });
+      return true;
+    }
+
+    if (state?.active !== true) return false;
+    const originalOwnership = add2eLootInteractionClone(state.originalOwnership ?? currentOwnership);
+    await actor.update({
+      ownership: originalOwnership,
+      [`flags.add2e.${ADD2E_LOOT_ACCESS_FLAG}`]: {
+        ...state,
+        active: false,
+        version: ADD2E_LOOT_INTERACTIONS_VERSION,
+        restoredAt: Date.now()
+      }
+    }, { add2eLootObserverAccess: true });
+    return true;
+  } catch (error) {
+    console.error("[ADD2E][LOOT_ACCESS] Synchronisation des permissions impossible", {
+      actor: actor?.name ?? actor?.id ?? null,
+      error
+    });
+    return false;
+  } finally {
+    add2eLootAccessRunning.delete(key);
+  }
+}
+
+function add2eLootInteractionSyncSceneAccess() {
+  if (!add2eLootInteractionResponsibleGM()) return;
+  const actors = new Set();
+  for (const token of canvas?.scene?.tokens?.contents ?? []) {
+    if (token?.actor) actors.add(token.actor);
+  }
+  for (const actor of actors) void add2eLootInteractionSyncObserverAccess(actor);
+}
+
 async function add2eLootInteractionChat({ source, target, money }) {
   const parts = ADD2E_TRADE_COINS
     .map(coin => money[coin] > 0 ? `${money[coin]} ${ADD2E_TRADE_COIN_LABELS[coin]}` : "")
@@ -153,12 +265,7 @@ async function add2eLootInteractionExecutePartial(payload = {}) {
   if (!user?.isGM && add2eLootInteractionLocked(source)) throw new Error("Ce coffre est verrouillé.");
   if (!add2eTradeHasMoney(requested)) throw new Error("Indique au moins une quantité de pièces à récupérer.");
 
-  const transferred = await add2eTradeTransferMoney({
-    sourceActor: source,
-    targetActor: target,
-    money: requested
-  });
-
+  const transferred = await add2eTradeTransferMoney({ sourceActor: source, targetActor: target, money: requested });
   await add2eLootInteractionChat({ source, target, money: transferred });
   await add2eLootInteractionSyncMarker(tokenDocument);
 
@@ -182,7 +289,6 @@ function add2eLootInteractionHandleResult(payload = {}) {
     if (payload.ok) ui.notifications?.info?.(payload.message);
     else ui.notifications?.error?.(payload.message);
   }
-
   setTimeout(() => game.add2e?.lootTokenMarker?.syncCanvas?.(), 80);
 }
 
@@ -268,7 +374,6 @@ function add2eLootInteractionEnhanceShell(shell) {
   if (add2eIsDeadLootMonster(source) && !add2eLootInteractionHasContent(source)) {
     void app.close?.();
     void add2eLootInteractionSyncMarker(app?.token?.document ?? app?.token ?? source?.token ?? null);
-    add2eLootInteractionNotifyEmpty(source);
     return;
   }
 
@@ -331,21 +436,14 @@ function add2eLootInteractionHandlePartialClick(event) {
   if (!app?.source || !app?.looter) return ui.notifications?.warn?.("Sélectionne un personnage receveur.");
 
   const money = {};
+  const wallet = add2eTradeGetMoney(app.source);
   for (const coin of ADD2E_TRADE_COINS) {
     const input = shell.querySelector(`[data-add2e-partial-coin="${coin}"]`);
-    const available = add2eLootInteractionInt(add2eTradeGetMoney(app.source)[coin], 0);
+    const available = add2eLootInteractionInt(wallet[coin], 0);
     money[coin] = Math.min(available, add2eLootInteractionInt(input?.value, 0));
   }
   if (!add2eTradeHasMoney(money)) return ui.notifications?.warn?.("Indique au moins une quantité de pièces.");
   void add2eLootInteractionRequestPartial(app, money);
-}
-
-function add2eLootInteractionNotifyEmpty(actor) {
-  const key = actor?.uuid ?? actor?.id ?? "empty-loot";
-  const now = Date.now();
-  if (now - Number(add2eLootEmptyNotices.get(key) ?? 0) < 1200) return;
-  add2eLootEmptyNotices.set(key, now);
-  ui.notifications?.info?.(`${actor?.name ?? "Ce monstre"} ne contient plus aucun butin.`);
 }
 
 function add2eLootInteractionStopEvent(event) {
@@ -354,6 +452,16 @@ function add2eLootInteractionStopEvent(event) {
   event?.stopImmediatePropagation?.();
   event?.data?.originalEvent?.preventDefault?.();
   event?.data?.originalEvent?.stopPropagation?.();
+}
+
+async function add2eLootInteractionOpenMonsterSheet(actor) {
+  const sheet = actor?.sheet;
+  if (!sheet?.render) return ui.notifications?.warn?.("La feuille de ce monstre n'est pas disponible.");
+  try {
+    return await sheet.render({ force: true });
+  } catch (_error) {
+    return sheet.render(true);
+  }
 }
 
 function add2eLootInteractionPatchTokenMethod(prototype, method) {
@@ -366,17 +474,19 @@ function add2eLootInteractionPatchTokenMethod(prototype, method) {
     const actor = this.actor ?? this.document?.actor ?? null;
     const isChest = add2eIsLootChest(actor);
     const isDeadMonster = add2eIsDeadLootMonster(actor);
-    if (!isChest && !isDeadMonster) return original.call(this, event);
+    const isMarkedToken = add2eLootInteractionIsMarkedToken(this);
+    const hasContent = add2eLootInteractionHasContent(actor);
 
+    if (!isChest && !isDeadMonster && !isMarkedToken) return original.call(this, event);
     if (game.user?.isGM && (event?.shiftKey === true || event?.data?.originalEvent?.shiftKey === true)) {
       return original.call(this, event);
     }
 
     add2eLootInteractionStopEvent(event);
 
-    if (isDeadMonster && !add2eLootInteractionHasContent(actor)) {
+    if (!isChest && !hasContent) {
       void add2eLootInteractionSyncMarker(this.document ?? actor?.token ?? null);
-      add2eLootInteractionNotifyEmpty(actor);
+      void add2eLootInteractionOpenMonsterSheet(actor);
       return false;
     }
 
@@ -404,7 +514,6 @@ function add2eLootInteractionPatchEmptyRender() {
     const isLootApp = this.constructor?.name === "Add2eLootApp" || Array.from(classes ?? []).includes("add2e-loot-app");
     if (isLootApp && add2eIsDeadLootMonster(this.source) && !add2eLootInteractionHasContent(this.source)) {
       void add2eLootInteractionSyncMarker(this.token?.document ?? this.token ?? this.source?.token ?? null);
-      add2eLootInteractionNotifyEmpty(this.source);
       if (this.rendered) void this.close?.();
       return this;
     }
@@ -463,21 +572,43 @@ Hooks.once("ready", () => {
 
   Hooks.on("canvasReady", () => {
     add2eLootInteractionPatchTokenClicks();
+    add2eLootInteractionSyncSceneAccess();
     setTimeout(() => game.add2e?.lootTokenMarker?.syncCanvas?.(), 80);
   });
-  Hooks.on("createActor", actor => void add2eLootInteractionEnsureChestImage(actor));
-  Hooks.on("updateActor", () => setTimeout(() => game.add2e?.lootTokenMarker?.syncCanvas?.(), 80));
-  Hooks.on("createItem", () => setTimeout(() => game.add2e?.lootTokenMarker?.syncCanvas?.(), 80));
-  Hooks.on("updateItem", () => setTimeout(() => game.add2e?.lootTokenMarker?.syncCanvas?.(), 80));
-  Hooks.on("deleteItem", () => setTimeout(() => game.add2e?.lootTokenMarker?.syncCanvas?.(), 80));
+  Hooks.on("createToken", tokenDocument => void add2eLootInteractionSyncObserverAccess(tokenDocument?.actor));
+  Hooks.on("updateActor", (actor, _changes, options = {}) => {
+    if (options?.add2eLootObserverAccess !== true) void add2eLootInteractionSyncObserverAccess(actor);
+    setTimeout(() => game.add2e?.lootTokenMarker?.syncCanvas?.(), 80);
+  });
+  Hooks.on("createActor", actor => {
+    void add2eLootInteractionEnsureChestImage(actor);
+    void add2eLootInteractionSyncObserverAccess(actor);
+  });
+  Hooks.on("createItem", item => {
+    void add2eLootInteractionSyncObserverAccess(item?.parent ?? item?.actor);
+    setTimeout(() => game.add2e?.lootTokenMarker?.syncCanvas?.(), 80);
+  });
+  Hooks.on("updateItem", item => {
+    void add2eLootInteractionSyncObserverAccess(item?.parent ?? item?.actor);
+    setTimeout(() => game.add2e?.lootTokenMarker?.syncCanvas?.(), 80);
+  });
+  Hooks.on("deleteItem", item => {
+    void add2eLootInteractionSyncObserverAccess(item?.parent ?? item?.actor);
+    setTimeout(() => game.add2e?.lootTokenMarker?.syncCanvas?.(), 80);
+  });
 
-  for (const actor of game.actors ?? []) void add2eLootInteractionEnsureChestImage(actor);
+  for (const actor of game.actors ?? []) {
+    void add2eLootInteractionEnsureChestImage(actor);
+    void add2eLootInteractionSyncObserverAccess(actor);
+  }
+  add2eLootInteractionSyncSceneAccess();
 
   game.add2e ??= {};
   game.add2e.lootInteractions = {
     version: ADD2E_LOOT_INTERACTIONS_VERSION,
     chestImage: ADD2E_LOOT_CHEST_IMG,
     ensureChestImage: add2eLootInteractionEnsureChestImage,
+    syncObserverAccess: add2eLootInteractionSyncObserverAccess,
     requestPartialMoney: add2eLootInteractionRequestPartial
   };
   globalThis.ADD2E_LOOT_INTERACTIONS_VERSION = ADD2E_LOOT_INTERACTIONS_VERSION;
