@@ -6,7 +6,7 @@
  * - Nettoyage visuel automatique
  */
 
-const ADD2E_MONSTER_SHEET_VERSION = "2026-07-11-monster-single-actorsheet-token-config-v8";
+const ADD2E_MONSTER_SHEET_VERSION = "2026-07-12-monster-render-signature-v9";
 globalThis.ADD2E_MONSTER_SHEET_VERSION = ADD2E_MONSTER_SHEET_VERSION;
 
 const ADD2E_MONSTER_ACTOR_SHEET_V2 = foundry?.applications?.sheets?.ActorSheetV2;
@@ -456,9 +456,9 @@ export class Add2eMonsterSheet extends ADD2E_MONSTER_ACTOR_SHEET_V2 {
     });
   }
 
-  render(options = {}) {
-    if (typeof options === "boolean") return super.render({ force: options });
-    return super.render(options);
+  render(options = {}, legacyOptions = {}) {
+    if (typeof options === "boolean") return super.render({ force: options }, legacyOptions);
+    return super.render(options, legacyOptions);
   }
 
   async getData() {
