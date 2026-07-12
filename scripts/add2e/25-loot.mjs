@@ -24,7 +24,7 @@ import {
   add2eVitalIsMonster
 } from "./18a-vital-status-core.mjs";
 
-export const ADD2E_LOOT_VERSION = "2026-07-12-loot-drop-idempotent-v6";
+export const ADD2E_LOOT_VERSION = "2026-07-12-loot-chest-token-image-v7";
 
 const ADD2E_LOOT_SOCKET = "system.add2e";
 const ADD2E_LOOT_REQUEST = "ADD2E_LOOT_REQUEST";
@@ -521,7 +521,7 @@ class Add2eLootApp extends Add2eApplicationV2 {
     add2eLootEnsureStyles();
     const canTake = Boolean(context.looter) && (context.isGM || !context.locked);
     const headerIcon = context.isChest ? "fas fa-box" : "fas fa-skull-crossbones";
-    const sourceImage = context.source?.img || ADD2E_LOOT_CHEST_IMG;
+    const sourceImage = context.source?.img || add2eLootMarkerImage();
     const looterImage = context.looter?.img || "icons/svg/mystery-man.svg";
     const looterOptions = context.looters.map(actor => `<option value="${esc(actor.id)}" ${actor.id === context.looter?.id ? "selected" : ""}>${esc(actor.name)}</option>`).join("");
 
@@ -805,16 +805,17 @@ export async function add2eCreateLootChest({ name = "Coffre", locked = false } =
   const folder = await add2eLootEnsureFolder();
   const observer = CONST?.DOCUMENT_OWNERSHIP_LEVELS?.OBSERVER ?? 2;
   const chestName = String(name ?? "Coffre").trim() || "Coffre";
+  const chestImage = add2eLootMarkerImage();
   return Actor.create({
     name: chestName,
     type: "dummy",
     folder: folder?.id ?? null,
-    img: ADD2E_LOOT_CHEST_IMG,
+    img: chestImage,
     ownership: { default: observer },
     prototypeToken: {
       name: chestName,
       actorLink: true,
-      texture: { src: ADD2E_LOOT_CHEST_IMG },
+      texture: { src: chestImage },
       disposition: CONST?.TOKEN_DISPOSITIONS?.NEUTRAL ?? 0,
       displayName: CONST?.TOKEN_DISPLAY_MODES?.HOVER ?? 20
     },
@@ -901,6 +902,49 @@ function add2eOpenCreateChestDialog() {
 
 function add2eLootMarkerImage() {
   return String(game.add2e?.lootTokenMarker?.chestImage ?? ADD2E_LOOT_MARKER_IMG);
+}
+
+async function add2eLootMigrateLegacyChestImages() {
+  if (!add2eLootResponsibleGM()) return { actors: 0, tokens: 0 };
+
+  const chestImage = add2eLootMarkerImage();
+  if (!chestImage || chestImage === ADD2E_LOOT_CHEST_IMG) return { actors: 0, tokens: 0 };
+
+  let actors = 0;
+  let tokens = 0;
+
+  for (const actor of game.actors?.contents ?? game.actors ?? []) {
+    if (!add2eIsLootChest(actor) || typeof actor.update !== "function") continue;
+
+    const update = {};
+    if (String(actor.img ?? "") === ADD2E_LOOT_CHEST_IMG) update.img = chestImage;
+    if (String(actor.prototypeToken?.texture?.src ?? "") === ADD2E_LOOT_CHEST_IMG) {
+      update["prototypeToken.texture.src"] = chestImage;
+    }
+    if (!Object.keys(update).length) continue;
+
+    update["flags.add2e.lootVersion"] = ADD2E_LOOT_VERSION;
+    await actor.update(update, { add2eReason: "loot-chest-image-migration" });
+    actors += 1;
+  }
+
+  for (const scene of game.scenes?.contents ?? game.scenes ?? []) {
+    if (typeof scene?.updateEmbeddedDocuments !== "function") continue;
+    const updates = [];
+
+    for (const tokenDocument of scene.tokens?.contents ?? scene.tokens ?? []) {
+      const actor = tokenDocument?.actor ?? game.actors?.get?.(tokenDocument?.actorId) ?? null;
+      if (!add2eIsLootChest(actor)) continue;
+      if (String(tokenDocument?.texture?.src ?? "") !== ADD2E_LOOT_CHEST_IMG) continue;
+      updates.push({ _id: tokenDocument.id, "texture.src": chestImage });
+    }
+
+    if (!updates.length) continue;
+    await scene.updateEmbeddedDocuments("Token", updates, { add2eReason: "loot-chest-token-image-migration" });
+    tokens += updates.length;
+  }
+
+  return { actors, tokens };
 }
 
 function add2eLootDirectoryButton() {
@@ -1007,7 +1051,12 @@ Hooks.once("ready", () => {
     open: add2eOpenLoot,
     isChest: add2eIsLootChest,
     isSource: add2eIsLootSource,
-    hasContent: add2eLootHasContent
+    hasContent: add2eLootHasContent,
+    migrateChestImages: add2eLootMigrateLegacyChestImages
   };
   globalThis.ADD2E_LOOT_VERSION = ADD2E_LOOT_VERSION;
+
+  setTimeout(() => add2eLootMigrateLegacyChestImages().catch(error => {
+    console.error("[ADD2E][LOOT] Migration des images de coffre impossible", error);
+  }), 250);
 });
