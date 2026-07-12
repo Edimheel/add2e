@@ -94,6 +94,8 @@ export function add2ePrepareActorSheetCombatData({ actor, data, sys, progression
   const hasTransformationTHAC0 = Number.isFinite(transformationTHAC0);
   const transformationMovement = String(transformation?.movement ?? "").trim();
   const monkMartial = add2eSheetCombatMonkMartialProgression(actor);
+  const monkArmorClass = Number(monkMartial?.armorClass);
+  const hasMonkArmorClass = isMonk === true && Number.isFinite(monkArmorClass);
   const passiveArmorClass = typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getPassiveArmorClassBase === "function"
     ? Add2eEffectsEngine.getPassiveArmorClassBase(actor, { ruleScope: "owner", source: "actor-sheet" })
     : null;
@@ -108,7 +110,7 @@ export function add2ePrepareActorSheetCombatData({ actor, data, sys, progression
   const bonusAcArmure = armure ? (Number(armure.system.bonus_ac) || 0) : 0;
   const bonusAcBouclier = bouclier ? (Number(bouclier.system.bonus_ac) || 0) : 0;
   const bonusAcHeaume = heaume ? (Number(heaume.system.bonus_ac) || 0) : 0;
-  const bonusDex = passiveArmorClass?.ignoreDex === true ? 0 : (typeof sys.dex_def === "number" ? sys.dex_def : 0);
+  const bonusDex = (hasMonkArmorClass || passiveArmorClass?.ignoreDex === true) ? 0 : (typeof sys.dex_def === "number" ? sys.dex_def : 0);
 
   sys.armure_equipee = armure || null;
   sys.bouclier_equipe = bouclier || null;
@@ -118,6 +120,8 @@ export function add2ePrepareActorSheetCombatData({ actor, data, sys, progression
   let caPhysique = 10;
   if (hasTransformationCA) {
     caPhysique = transformationCA;
+  } else if (hasMonkArmorClass) {
+    caPhysique = monkArmorClass;
   } else if (passiveArmorClass?.applied && Number.isFinite(Number(passiveArmorClass.value))) {
     caPhysique = Number(passiveArmorClass.value);
   } else {
@@ -143,7 +147,7 @@ export function add2ePrepareActorSheetCombatData({ actor, data, sys, progression
     sys.ca_total = caPhysique;
   } else if (typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getMagicPassiveDefense === "function") {
     magicDefense = Add2eEffectsEngine.getMagicPassiveDefense(actor, { physicalCA: caPhysique, armure, bouclier, heaume, source: "actor-sheet", passiveArmorClass });
-    if (passiveArmorClass?.applied) {
+    if (hasMonkArmorClass || passiveArmorClass?.applied) {
       const objectProtectionBonus = Number(magicDefense?.objectProtectionBonus) || 0;
       sys.ca_naturel = caPhysique;
       sys.ca_total = caPhysique - objectProtectionBonus;
