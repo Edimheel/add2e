@@ -153,6 +153,70 @@
               {{/if}}
             {{/if}}
 
+            {{#if add2eArcaneScrollRows.length}}
+              <div class="a2e-panel add2e-scroll-ready-panel" style="box-shadow:none;margin-bottom:8px;">
+                <h3>
+                  Parchemins prêts
+                  <span class="sort-memorize-badge" style="float:right;">Prêts : {{add2eArcaneScrollQuantity}}</span>
+                </h3>
+                <div class="a2e-panel-body">
+                  <table class="sort-table add2e-scroll-ready-table">
+                    <thead>
+                      <tr>
+                        <th style="width:100px;">Préparé</th>
+                        <th style="width:42px;"></th>
+                        <th>Sort</th>
+                        <th style="width:80px;">Niveau</th>
+                        <th style="width:140px;">Liste</th>
+                        <th style="width:190px;">Composants</th>
+                        <th style="width:115px;">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {{#each add2eArcaneScrollRows as |scroll|}}
+                        <tr class="sort-row add2e-scroll-ready-row" data-item-id="{{scroll.itemId}}" data-spell-key="{{scroll.spellKey}}">
+                          <td><span class="sort-memorize-badge">Prêt ×{{scroll.quantity}}</span></td>
+                          <td class="sort-drag">
+                            {{#if scroll.canCast}}
+                              <a class="add2e-scroll-entry-cast" data-item-id="{{scroll.itemId}}" data-spell-key="{{scroll.spellKey}}" title="Lancer {{scroll.name}} depuis le parchemin">
+                                <img src="{{scroll.img}}" alt="{{scroll.name}}" draggable="false" style="width:34px;height:34px;border-radius:5px;object-fit:cover;cursor:pointer;">
+                              </a>
+                            {{else}}
+                              <img src="{{scroll.img}}" alt="{{scroll.name}}" title="Liste de sort incompatible" draggable="false" style="width:34px;height:34px;border-radius:5px;object-fit:cover;opacity:.45;cursor:not-allowed;">
+                            {{/if}}
+                          </td>
+                          <td>
+                            <b>{{scroll.name}}</b>
+                            <div class="a2e-muted a2e-small">{{scroll.scrollName}}</div>
+                          </td>
+                          <td>{{scroll.level}}</td>
+                          <td>{{scroll.listLabel}}</td>
+                          <td><span style="font-weight:700;color:#1f7a1f;">Aucune — parchemin</span></td>
+                          <td>
+                            <div class="a2e-actions">
+                              {{#if scroll.canWrite}}
+                                {{#if scroll.writeBlockedCombat}}
+                                  <span class="a2e-action-icon a2e-muted" title="Écriture indisponible pendant un combat" style="opacity:.45;cursor:not-allowed;"><i class="fas fa-pen-nib"></i></span>
+                                {{else}}
+                                  <a class="a2e-action-icon a2e-action-add add2e-scroll-entry-write" data-item-id="{{scroll.itemId}}" data-spell-key="{{scroll.spellKey}}" title="Écrire ce sort dans le livre personnel — hors combat"><i class="fas fa-pen-nib"></i></a>
+                                {{/if}}
+                              {{else}}
+                                {{#if scroll.alreadyKnown}}
+                                  <span class="a2e-action-icon a2e-muted" title="Sort déjà connu"><i class="fas fa-check"></i></span>
+                                {{else}}
+                                  <span class="a2e-action-icon a2e-muted" title="Liste de sort incompatible"><i class="fas fa-ban"></i></span>
+                                {{/if}}
+                              {{/if}}
+                            </div>
+                          </td>
+                        </tr>
+                      {{/each}}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            {{/if}}
+
             {{#if add2eSpellLevels.length}}
               {{#each add2eSpellLevels as |level|}}
                 <div class="a2e-panel" style="box-shadow:none;">
