@@ -1,9 +1,9 @@
 // ============================================================================
 // ADD2E — États vitaux : constantes, lecture PV et règles métier.
-// Version : 2026-07-06-vital-status-pnj-character-thresholds-v1
+// Version : 2026-07-13-vital-status-hostile-loot-corpse-v2
 // ============================================================================
 
-export const ADD2E_VITAL_STATUS_CORE_VERSION = "2026-07-06-vital-status-pnj-character-thresholds-v1";
+export const ADD2E_VITAL_STATUS_CORE_VERSION = "2026-07-13-vital-status-hostile-loot-corpse-v2";
 
 export const ADD2E_VITAL_STATUS = {
   unconscious: { key: "unconscious", name: "Inconscient", icon: "icons/svg/daze.svg" },
@@ -51,7 +51,17 @@ export function add2eVitalActorType(actor) {
   return add2eVitalNorm(actor?.type);
 }
 
+function add2eVitalIsMarkedLootCorpse(actor) {
+  try {
+    return actor?.getFlag?.("add2e", "isLootCorpse") === true;
+  } catch (_error) {
+    return actor?.flags?.add2e?.isLootCorpse === true;
+  }
+}
+
 export function add2eVitalIsMonster(actor) {
+  if (add2eVitalIsMarkedLootCorpse(actor)) return true;
+
   const values = [
     actor?.type,
     actor?.system?.type,
