@@ -138,27 +138,6 @@
                 {{/if}}
               </div>
             </div>
-
-            <div class="a2e-panel">
-              <h2><i class="fas fa-sparkles"></i> Effets actifs</h2>
-              <div class="a2e-panel-body">
-                {{#if activeEffectsList.length}}
-                  <div class="a2e-summary-effects">
-                    {{#each activeEffectsList as |eff|}}
-                      <div class="a2e-summary-effect">
-                        <img src="{{eff.img}}" alt="{{eff.name}}">
-                        <div>
-                          <strong>{{eff.name}}</strong><br>
-                          <small>{{#if eff.duration}}{{eff.duration}}{{else}}Durée permanente ou non renseignée{{/if}}</small>
-                        </div>
-                      </div>
-                    {{/each}}
-                  </div>
-                {{else}}
-                  <p class="a2e-muted">Aucun effet actif.</p>
-                {{/if}}
-              </div>
-            </div>
           </div>
         </div>
       </section>
