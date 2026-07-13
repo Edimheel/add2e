@@ -1,7 +1,7 @@
 // ADD2E — Livres de sorts et parchemins.
 // Compatible Foundry V13/V14/V15. DialogV2 uniquement.
 
-const VERSION = "2026-07-13-arcane-documents-v1";
+const VERSION = "2026-07-13-arcane-documents-v2";
 const ARCANE_LISTS = new Set(["magicien", "illusionniste"]);
 const BOOK_NAMES = {
   magicien: "Livre de sorts — Magicien",
@@ -924,7 +924,7 @@ async function copySpellbook(actor, book) {
 
 async function viewSpellbook(book) {
   const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (!DialogV2 || !book) return false;
+  if (!DialogV2?.wait || !book) return false;
 
   const entries = documentEntries(book);
   const rows = entries.length
@@ -938,9 +938,10 @@ async function viewSpellbook(book) {
       `).join("")
     : '<tr><td colspan="4"><em>Aucun sort inscrit.</em></td></tr>';
 
-  await DialogV2.alert({
+  await DialogV2.wait({
     window: { title: book.name },
     modal: true,
+    rejectClose: false,
     content: `
       <div style="min-width:620px;max-height:650px;overflow:auto;padding:8px;">
         <table style="width:100%;border-collapse:collapse;">
@@ -949,10 +950,14 @@ async function viewSpellbook(book) {
         </table>
       </div>
     `,
-    ok: {
-      label: "Fermer",
-      icon: "fa-solid fa-check"
-    }
+    buttons: [
+      {
+        action: "close",
+        label: "Fermer",
+        icon: "fa-solid fa-check",
+        default: true
+      }
+    ]
   });
 
   return true;
