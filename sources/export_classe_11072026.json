@@ -5321,7 +5321,7 @@
           "caracteristique": "Intelligence 15 minimum ; Dextérité 16 minimum",
           "alignement": "Tous les alignements sont autorisés",
           "race": "PJ : Humain sans limite ; Gnome niveau 7 maximum. Autres races non autorisées.",
-          "autre": "Aucune armure ni bouclier ; armes restreintes ; accès à la liste Illusionniste."
+          "autre": "Aucune armure ni bouclier ; armes limitées au bâton, à la dague et à la fléchette ; accès à la liste Illusionniste."
         },
         "alignements_autorises": [
           "Loyal Bon",
@@ -5342,7 +5342,7 @@
             "type_arme:flechette"
           ],
           "forbiddenTags": [],
-          "notes": "Illusionniste : restriction d'armes harmonisée par tags simples."
+          "notes": "Illusionniste : bâton, dague et fléchette uniquement."
         },
         "armorAllowed": [],
         "shieldAllowed": false,
@@ -5368,8 +5368,6 @@
             ],
             "spellsPerLevel": [
               1,
-              0,
-              0,
               0,
               0,
               0,
@@ -5401,8 +5399,6 @@
               0,
               0,
               0,
-              0,
-              0,
               0
             ],
             "attacksPerRound": 1
@@ -5425,8 +5421,6 @@
             "spellsPerLevel": [
               2,
               1,
-              0,
-              0,
               0,
               0,
               0,
@@ -5457,8 +5451,6 @@
               0,
               0,
               0,
-              0,
-              0,
               0
             ],
             "attacksPerRound": 1
@@ -5482,8 +5474,6 @@
               4,
               2,
               1,
-              0,
-              0,
               0,
               0,
               0,
@@ -5513,8 +5503,6 @@
               0,
               0,
               0,
-              0,
-              0,
               0
             ],
             "attacksPerRound": 1
@@ -5538,8 +5526,6 @@
               4,
               3,
               2,
-              0,
-              0,
               0,
               0,
               0,
@@ -5569,8 +5555,6 @@
               1,
               0,
               0,
-              0,
-              0,
               0
             ],
             "attacksPerRound": 1
@@ -5595,8 +5579,6 @@
               3,
               3,
               2,
-              0,
-              0,
               0,
               0,
               0
@@ -5625,8 +5607,6 @@
               2,
               1,
               0,
-              0,
-              0,
               0
             ],
             "attacksPerRound": 1
@@ -5652,8 +5632,6 @@
               3,
               3,
               2,
-              0,
-              0,
               0,
               0
             ],
@@ -5681,8 +5659,6 @@
               3,
               2,
               1,
-              0,
-              0,
               0
             ],
             "attacksPerRound": 1
@@ -5709,8 +5685,6 @@
               3,
               2,
               2,
-              0,
-              0,
               0
             ],
             "attacksPerRound": 1
@@ -5737,9 +5711,7 @@
               3,
               2,
               2,
-              1,
-              0,
-              0
+              1
             ],
             "attacksPerRound": 1
           },
@@ -5765,9 +5737,7 @@
               4,
               2,
               2,
-              2,
-              0,
-              0
+              2
             ],
             "attacksPerRound": 1
           },
@@ -5793,9 +5763,7 @@
               4,
               3,
               2,
-              2,
-              1,
-              0
+              2
             ],
             "attacksPerRound": 1
           },
@@ -5821,9 +5789,7 @@
               4,
               3,
               2,
-              2,
-              1,
-              1
+              2
             ],
             "attacksPerRound": 1
           },
@@ -5849,9 +5815,7 @@
               5,
               3,
               3,
-              2,
-              2,
-              1
+              2
             ],
             "attacksPerRound": 1
           },
@@ -5877,9 +5841,7 @@
               5,
               4,
               3,
-              2,
-              2,
-              1
+              2
             ],
             "attacksPerRound": 1
           },
@@ -5905,9 +5867,7 @@
               5,
               4,
               3,
-              3,
-              2,
-              2
+              3
             ],
             "attacksPerRound": 1
           }
@@ -5916,7 +5876,7 @@
           "Lancer de sorts d’illusion",
           "Mémorisation des sorts depuis un grimoire",
           "Aucune armure ni bouclier",
-          "Armes restreintes : dague, bâton, arbalète légère"
+          "Armes restreintes : bâton, dague et fléchette"
         ],
         "notes": "Un illusionniste doit posséder un score d’INT ≥ 15 et DEX ≥ 16. Il ne peut utiliser d’armure ni de bouclier. Gnome et Humain uniquement. Voir Manuel du Joueur, tableau de progression et sorts dédiés.",
         "hitDie": 4,
@@ -6029,12 +5989,12 @@
           {
             "minLevel": 1,
             "name": "Restrictions d’armes",
-            "description": "L’illusionniste ne peut utiliser que les armes explicitement autorisées : dague, bâton et arbalète légère.",
+            "description": "L’illusionniste ne peut utiliser que le bâton, la dague et la fléchette.",
             "tags": [
               "armes:restreintes",
-              "arme:dague",
               "arme:baton",
-              "arme:arbalete_legere"
+              "arme:dague",
+              "arme:flechette"
             ],
             "activable": false,
             "passive": true
@@ -6053,7 +6013,7 @@
             "passive": true
           }
         ],
-        "classFeatureNote": "classFeatures contient toutes les capacités structurées. Seules les entrées avec activable:true sont affichées dans l’onglet Capacités. Les entrées passive:true restent disponibles pour les tags, effets, résumé et calculs.",
+        "classFeatureNote": "classFeatures décrit les règles de classe structurées. Seules les entrées activable:true sont affichées dans l’onglet Capacités ; les autres restent disponibles pour les moteurs et le résumé de classe.",
         "titlesByLevel": [
           {
             "minLevel": 1,
@@ -6176,7 +6136,7 @@
         ],
         "casterType": "arcane",
         "casterAbility": "intelligence",
-        "spellcastingNote": "L’illusionniste utilise la liste de sorts Illusionniste. Ses sorts préparables par niveau sont lus dans progression[].spellsPerLevel.",
+        "spellcastingNote": "L’illusionniste prépare depuis son grimoire les sorts de la liste Illusionniste. Ses emplacements, limités aux niveaux de sort 1 à 7, sont lus dans progression[].spellsPerLevel.",
         "spellAccessRequirements": [],
         "armorRestriction": {
           "mode": "allow-tags",
@@ -6185,7 +6145,7 @@
             "armure",
             "bouclier"
           ],
-          "notes": "Illusionniste : restriction d'armures harmonisée par tags simples."
+          "notes": "Illusionniste : aucune armure ni aucun bouclier."
         },
         "weaponForbidden": [],
         "armorForbidden": [
@@ -6214,7 +6174,7 @@
           "L’illusionniste est un spécialiste des sorts d’illusion.",
           "Il doit avoir Intelligence 15 minimum et Dextérité 16 minimum.",
           "Il ne peut porter aucune armure et ne peut utiliser aucun bouclier.",
-          "Ses armes autorisées sont la dague, le bâton et l’arbalète légère.",
+          "Ses armes autorisées sont le bâton, la dague et la fléchette.",
           "Les restrictions race/classe sont portées par raceRestriction, jamais par les objets race."
         ],
         "nom_joueur": "",
@@ -6247,7 +6207,7 @@
         "activeFeatureSystem": {
           "enabled": true,
           "displayRule": "activable:true uniquement dans l’onglet Capacités",
-          "passiveRule": "passive:true ou activable:false = pas de bouton, mais disponible pour le moteur"
+          "passiveRule": "passive:true ou activable:false = règle de classe non affichée comme capacité ou effet actif"
         },
         "hpAfter10": 1,
         "maxHitDice": 10,
@@ -6267,7 +6227,8 @@
           ],
           "multiclassRule": "Pour équiper arme/armure/bouclier, union des restrictions des classes. Les activités de voleur/assassin restent limitées à l'équipement permis au voleur/assassin.",
           "source": "AD&D 2e Manuel des joueurs, Tableau II et règle multi-classés."
-        }
+        },
+        "maxLevel": 20
       },
       "effects": [],
       "folder": "mximavUWpqctSadj",
