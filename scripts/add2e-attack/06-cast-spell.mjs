@@ -1,9 +1,10 @@
 // scripts/add2e-attack/06-cast-spell.mjs
-// ADD2E — Lancement de sorts, onUse, mémorisation, pouvoirs et composants.
-// Version : 2026-06-18-cast-spell-single-consumables-setting-source-v1
+// ADD2E — Lancement de sorts, onUse, mémorisation, pouvoirs, parchemins et composants.
+// Version : 2026-07-13-cast-spell-scroll-mode-v1
 
 import { formatSortChamp, add2eGetSortField, add2eGetSortOnUsePath, add2eGetSortComponentsText } from "./01-core-helpers.mjs";
 import "./05-jb2a-vfx.mjs";
+import "../add2e/07b-arcane-documents.mjs";
 
 const style = () => CONST.CHAT_MESSAGE_STYLES ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER } : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 };
 const norm = value => String(value ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "").replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
@@ -170,21 +171,46 @@ async function fallbackChat(actorDoc, sortDoc, chargeLabel = "") {
   await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor: actorDoc }), content: `<div class="add2e-spell-card"><h3>${sortDoc.name} ${chargeLabel}</h3><table>${rows}</table><div>${description || ""}</div></div>`, ...style() });
 }
 
-export async function add2eCastSpell({ actor, sort } = {}) {
+export async function add2eCastSpell({ actor, sort, mode = "memorized", sourceItem = null, sourceSpellKey = "" } = {}) {
   if (!actor || !sort) { ui.notifications.warn("Lanceur ou sort introuvable."); return false; }
+
+  const castMode = norm(mode || "memorized");
+  const scrollCast = castMode === "scroll";
   const inputSort = sort;
-  sort = resolveActorSpell(actor, sort);
+
+  if (!scrollCast) sort = resolveActorSpell(actor, sort);
   if (!sort) { ui.notifications.warn("Sort introuvable sur l'acteur."); return false; }
+
+  if (scrollCast && (!sourceItem || sourceItem.parent?.id !== actor.id)) {
+    ui.notifications.warn("Le parchemin source est introuvable sur l'acteur.");
+    return false;
+  }
 
   const tags = globalThis.Add2eEffectsEngine?.getActiveTags?.(actor) ?? [];
   const components = add2eGetSortComponentsText(sort);
   const requiresVerbal = /(^|[,;\s])V([,;\s]|$)/i.test(components);
   const silenced = tags.some(tag => ["etat:silence", "silence:verbal", "anti_sort:verbal"].includes(String(tag)));
-  if (requiresVerbal && silenced) { ui.notifications.warn(`${sort.name} exige une composante verbale et le lanceur est sous Silence.`); return false; }
 
-  console.log("[ADD2E][CAST_SPELL][ENTER]", { actor: actor.name, inputSort: inputSort.name, inputSortId: inputSort.id, sort: sort.name, sortId: sort.id, resolvedOnActor: sort.parent?.id === actor.id, onUsePath: add2eGetSortOnUsePath(sort) });
+  // Le parchemin fournit l'incantation complète : aucune composante n'est requise.
+  if (!scrollCast && requiresVerbal && silenced) {
+    ui.notifications.warn(`${sort.name} exige une composante verbale et le lanceur est sous Silence.`);
+    return false;
+  }
+
+  console.log("[ADD2E][CAST_SPELL][ENTER]", {
+    actor: actor.name,
+    inputSort: inputSort.name,
+    inputSortId: inputSort.id,
+    sort: sort.name,
+    sortId: sort.id,
+    castMode,
+    sourceItemId: sourceItem?.id ?? null,
+    resolvedOnActor: sort.parent?.id === actor.id,
+    onUsePath: add2eGetSortOnUsePath(sort)
+  });
 
   let spellToUse = sort, reservedCost = null, componentReservation = null, labelCharge = "";
+
   async function refundComponents(reason = "") {
     if (!componentReservation) return false;
     const refunded = await globalThis.ADD2E_CONSUMABLES?.add2eRefundSpellComponents?.(componentReservation);
@@ -192,35 +218,46 @@ export async function add2eCastSpell({ actor, sort } = {}) {
     componentReservation = null;
     return !!refunded;
   }
+
   async function refundCost(reason = "") {
     await refundComponents(reason);
     if (!reservedCost) return false;
+
     if (reservedCost.kind === "memorized") {
       const now = Number(await reservedCost.sort.getFlag("add2e", "memorizedCount")) || 0;
       if (now !== reservedCost.after) { await refreshActorSpellSheets(actor, reservedCost.sort, now); return false; }
       await setMemorizedCount(actor, reservedCost.sort, reservedCost.before, `refund:${reason}`);
       return true;
     }
+
     if (reservedCost.kind === "power") {
       const now = Number(await reservedCost.weapon.getFlag("add2e", reservedCost.flagKey)) || 0;
       if (now !== reservedCost.after) return false;
       await reservedCost.weapon.setFlag("add2e", reservedCost.flagKey, reservedCost.before);
       return true;
     }
+
     return false;
   }
+
   async function reserveComponents() {
-    if (sort.system?.isPower) return true;
+    if (scrollCast || sort.system?.isPower) return true;
     const api = globalThis.ADD2E_CONSUMABLES;
     if (!api?.add2eReserveSpellComponents) return true;
     const scriptPath = add2eGetSortOnUsePath(spellToUse);
     if (onUseManagesSpellComponents(scriptPath, spellToUse)) return true;
     componentReservation = await api.add2eReserveSpellComponents(actor, spellToUse);
-    if (componentReservation?.blocked) { await refundCost("composants manquants"); ui.notifications.warn(componentReservation.message || "Composant matériel manquant."); return false; }
+    if (componentReservation?.blocked) {
+      await refundCost("composants manquants");
+      ui.notifications.warn(componentReservation.message || "Composant matériel manquant.");
+      return false;
+    }
     return true;
   }
 
-  if (sort.system?.isPower) {
+  if (scrollCast) {
+    labelCharge = `<span style="color:#7b4b20;">Parchemin</span>`;
+  } else if (sort.system?.isPower) {
     const weapon = actor.items.get(sort.system.sourceWeaponId);
     if (!weapon) { ui.notifications.error("Objet source introuvable."); return false; }
     const maxGlobal = Number(weapon.system?.max_charges || 0), isGlobal = maxGlobal > 0;
@@ -239,7 +276,11 @@ export async function add2eCastSpell({ actor, sort } = {}) {
     if (realSpell) spellToUse = realSpell;
   } else {
     const mem = Number(await sort.getFlag("add2e", "memorizedCount")) || 0;
-    if (mem <= 0) { ui.notifications.warn(`Le sort "${sort.name}" n'est plus mémorisé !`); await refreshActorSpellSheets(actor, sort, 0); return false; }
+    if (mem <= 0) {
+      ui.notifications.warn(`Le sort "${sort.name}" n'est plus mémorisé !`);
+      await refreshActorSpellSheets(actor, sort, 0);
+      return false;
+    }
     const after = Math.max(0, mem - 1);
     await setMemorizedCount(actor, sort, after, "reserve before onUse");
     reservedCost = { kind: "memorized", sort, before: mem, after };
@@ -247,37 +288,103 @@ export async function add2eCastSpell({ actor, sort } = {}) {
   }
 
   if (!await reserveComponents()) return false;
+
   const scriptPath = add2eGetSortOnUsePath(spellToUse);
   let launched = true, scriptExecuted = false;
+
   if (scriptPath) {
     scriptExecuted = true;
     try {
       const response = await fetch(scriptPath, { cache: "no-store" });
-      if (!response.ok) { await refundCost("script introuvable"); ui.notifications.error(`${spellToUse.name} : script onUse introuvable.`); return false; }
+      if (!response.ok) {
+        await refundCost("script introuvable");
+        ui.notifications.error(`${spellToUse.name} : script onUse introuvable.`);
+        return false;
+      }
+
       const code = await response.text();
       const Fn = Object.getPrototypeOf(async function(){}).constructor;
       const casterToken = getCasterToken(actor);
+      const actualSourceItem = sourceItem ?? spellToUse;
+      const args = [{
+        actor,
+        item: spellToUse,
+        sort,
+        token: casterToken,
+        sourceItem: actualSourceItem,
+        castMode
+      }];
       const fn = new Fn("actor", "item", "sort", "token", "args", "sourceItem", code);
-      const result = await fn.call(spellToUse, actor, spellToUse, sort, casterToken, [{ actor, item: spellToUse, sort, token: casterToken, sourceItem: spellToUse }], spellToUse);
+      const result = await fn.call(spellToUse, actor, spellToUse, sort, casterToken, args, actualSourceItem);
+
       if (result === true) launched = true;
       else if (result === false) launched = false;
-      else { launched = false; ui.notifications.error(`${spellToUse.name} : le script onUse doit retourner true ou false.`); }
-      console.log("[ADD2E][CAST_SPELL][ONUSE_RESULT]", { sort: spellToUse.name, result, consumed: launched });
+      else {
+        launched = false;
+        ui.notifications.error(`${spellToUse.name} : le script onUse doit retourner true ou false.`);
+      }
+
+      console.log("[ADD2E][CAST_SPELL][ONUSE_RESULT]", {
+        sort: spellToUse.name,
+        result,
+        consumed: launched,
+        castMode
+      });
     } catch (e) {
       await refundCost("erreur script");
-      console.error("[ADD2E][CAST_SPELL][ONUSE][ERROR]", { sort: spellToUse.name, scriptPath, error: e });
+      console.error("[ADD2E][CAST_SPELL][ONUSE][ERROR]", { sort: spellToUse.name, scriptPath, castMode, error: e });
       ui.notifications.error(`${spellToUse.name} : erreur dans le script onUse.`);
       return false;
     }
   }
-  if (!launched) { await refundCost("onUse false"); return false; }
+
+  if (!launched) {
+    await refundCost("onUse false");
+    return false;
+  }
+
   componentReservation = null;
+
+  if (scrollCast) {
+    const consumed = await globalThis.ADD2E_ARCANE_DOCUMENTS?.consumeScrollSpell?.(
+      actor,
+      sourceItem,
+      sourceSpellKey || sort.flags?.add2e?.scrollSpellKey
+    );
+
+    if (!consumed) {
+      console.error("[ADD2E][CAST_SPELL][SCROLL_CONSUME_ERROR]", {
+        actor: actor.name,
+        scroll: sourceItem?.name,
+        scrollId: sourceItem?.id,
+        sourceSpellKey
+      });
+      ui.notifications.error("Le sort a été lancé, mais le parchemin n'a pas pu être consommé.");
+    } else {
+      labelCharge = `<span style="color:#7b4b20;">Parchemin consommé</span>`;
+    }
+  }
+
   if (!scriptExecuted) {
     await globalThis.ADD2E_PLAY_SPELL_FX?.("default", { casterToken: getCasterToken(actor) });
     await fallbackChat(actor, spellToUse, labelCharge);
   }
-  await refreshActorSpellSheets(actor, sort, reservedCost?.kind === "memorized" ? reservedCost.after : undefined);
-  console.log("[ADD2E][CAST_SPELL][CONSUMED]", { actor: actor.name, sort: spellToUse.name, sortId: sort.id, reservedCost });
+
+  await refreshActorSpellSheets(
+    actor,
+    scrollCast ? sourceItem : sort,
+    reservedCost?.kind === "memorized" ? reservedCost.after : undefined
+  );
+
+  console.log("[ADD2E][CAST_SPELL][CONSUMED]", {
+    actor: actor.name,
+    sort: spellToUse.name,
+    sortId: sort.id,
+    castMode,
+    sourceItemId: sourceItem?.id ?? null,
+    reservedCost
+  });
+
   return true;
 }
 
