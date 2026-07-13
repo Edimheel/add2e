@@ -368,18 +368,32 @@ async function add2eWriteScrollEntry(actor, scroll, spellKey) {
   }
   const chance = add2eScrollLearningChance(actor);
   const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (!DialogV2?.confirm) {
+  if (!DialogV2?.wait) {
     ui.notifications.error("DialogV2 est introuvable.");
     return false;
   }
-  const confirmed = await DialogV2.confirm({
+  const confirmed = await DialogV2.wait({
     window: { title: `Écrire ${entry.name}` },
     modal: true,
+    rejectClose: false,
     content: `<div class="add2e-dialog" style="min-width:500px;padding:8px;"><p><b>${add2eScrollEsc(actor.name)}</b> tente de copier <b>${add2eScrollEsc(entry.name)}</b> dans son livre personnel.</p><p>Intelligence : <b>${add2eScrollIntelligence(actor)}</b> — chance de compréhension : <b>${chance}%</b>.</p><p><b>L'inscription sera effacée du parchemin après la tentative, que le jet réussisse ou échoue.</b></p></div>`,
-    yes: { label: "Tenter la copie", icon: "fa-solid fa-pen-nib" },
-    no: { label: "Annuler", icon: "fa-solid fa-xmark" }
+    buttons: [
+      {
+        action: "copy",
+        label: "Tenter la copie",
+        icon: "fa-solid fa-pen-nib",
+        default: true,
+        callback: () => true
+      },
+      {
+        action: "cancel",
+        label: "Annuler",
+        icon: "fa-solid fa-xmark",
+        callback: () => false
+      }
+    ]
   });
-  if (!confirmed) return false;
+  if (confirmed !== true) return false;
   if (add2eScrollCombatStarted()) {
     ui.notifications.warn("Le combat a commencé : la copie est annulée et le parchemin est conservé.");
     return false;
@@ -387,6 +401,20 @@ async function add2eWriteScrollEntry(actor, scroll, spellKey) {
   const roll = await new Roll("1d100").evaluate();
   const total = Number(roll.total) || 100;
   const success = total <= chance;
+  try {
+    await roll.toMessage({
+      speaker: ChatMessage.getSpeaker({ actor }),
+      flavor: `Compréhension de ${add2eScrollEsc(entry.name)} — chance ${chance}% — ${success ? "réussite" : "échec"}`
+    });
+  } catch (error) {
+    console.warn("[ADD2E][ARCANE_DOCUMENTS][SCROLL_COPY_ROLL_MESSAGE_FAILED]", {
+      actor: actor.name,
+      spell: entry.name,
+      total,
+      chance,
+      error
+    });
+  }
   let learned = null;
   if (success) {
     learned = await add2eLearnSpellFromScroll(actor, scroll, entry, sourceDocument, unknown, total, chance);
