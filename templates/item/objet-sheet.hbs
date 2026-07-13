@@ -3,6 +3,10 @@
     .add2e-objet-description-preview,.add2e-objet-rich-editor{min-height:110px;padding:8px 10px;border:1px solid #d0b16b;border-radius:8px;background:#fffdf7;color:#2f241c;line-height:1.35;}
     .add2e-objet-description-preview p,.add2e-objet-rich-editor p{margin:0 0 .55em;}.add2e-objet-description-preview p:last-child,.add2e-objet-rich-editor p:last-child{margin-bottom:0;}
     .add2e-objet-rich-editor .editor{min-height:140px;}.add2e-objet-rich-editor .editor-content{min-height:120px;}
+    .add2e-arcane-drop-zone{display:grid;place-items:center;min-height:96px;margin-top:10px;padding:14px;border:2px dashed #9b7434;border-radius:8px;background:#fff8e7;text-align:center;cursor:copy;transition:background .12s ease,border-color .12s ease;}
+    .add2e-arcane-drop-zone.is-dragover{border-color:#4d7e31;background:#eef7e7;}
+    .add2e-arcane-entry-list{display:grid;gap:7px;margin:0;padding:0;list-style:none;}
+    .add2e-arcane-entry{display:grid;grid-template-columns:38px minmax(0,1fr) 75px 150px 42px;gap:8px;align-items:center;padding:7px;border:1px solid #d0b16b;border-radius:7px;background:#fffaf0;}
   </style>
   <header class="sheet-header" style="display:flex;gap:12px;align-items:flex-start;margin-bottom:10px;">
     <img class="profile-img" src="{{img}}" data-edit="img" title="{{item.name}}" width="96" height="96" style="object-fit:cover;border:1px solid #7a5a28;border-radius:6px;cursor:pointer;"/>
@@ -24,6 +28,7 @@
 
   <nav class="tabs sheet-tabs" data-group="primary" style="display:flex;gap:6px;margin:8px 0;border-bottom:1px solid #b89b5e;">
     <a class="item active" data-tab="resume">Résumé</a>
+    {{#if isArcaneDocument}}<a class="item" data-tab="arcane">{{#if isSpellScrollDocument}}Sorts inscrits{{else}}Contenu du livre{{/if}}</a>{{/if}}
     <a class="item" data-tab="pouvoirs">Pouvoirs</a>
     <a class="item" data-tab="effets">Effets</a>
     <a class="item" data-tab="description">Description</a>
@@ -52,6 +57,44 @@
         </div>
       </fieldset>
     </div>
+
+    {{#if isArcaneDocument}}
+      <div class="content hidden" data-tab="arcane">
+        <fieldset style="border:1px solid #d0b16b;border-radius:7px;padding:10px;">
+          <legend>{{#if isSpellScrollDocument}}Parchemin de sort{{else}}Livre de sorts{{/if}}</legend>
+          <p style="margin-top:0;"><b>Liste :</b> {{arcaneSpellListLabel}}</p>
+          {{#if arcaneEntries.length}}
+            <ol class="add2e-arcane-entry-list">
+              {{#each arcaneEntries as |entry|}}
+                <li class="add2e-arcane-entry" data-spell-key="{{entry.key}}">
+                  <img src="{{entry.img}}" alt="{{entry.name}}" width="34" height="34" style="object-fit:cover;border-radius:5px;">
+                  <div><b>{{entry.name}}</b></div>
+                  <div>Niv. {{entry.level}}</div>
+                  <div>{{entry.listLabel}}</div>
+                  <div>
+                    {{#if ../canManageArcaneEntries}}
+                      <button type="button" class="add2e-arcane-remove-entry" data-spell-key="{{entry.key}}" title="Retirer cette inscription" style="width:34px;height:30px;"><i class="fas fa-trash"></i></button>
+                    {{/if}}
+                  </div>
+                </li>
+              {{/each}}
+            </ol>
+          {{else}}
+            <p><em>Aucun sort inscrit.</em></p>
+          {{/if}}
+
+          {{#if canManageArcaneEntries}}
+            <div class="add2e-arcane-drop-zone" tabindex="0">
+              <div>
+                <i class="fas fa-scroll" style="font-size:1.5rem;"></i>
+                <p style="margin:6px 0 0;"><b>Déposez ici un sort</b></p>
+                <p style="margin:3px 0 0;">Depuis le compendium des sorts ou depuis la liste des sorts connus d'un acteur.</p>
+              </div>
+            </div>
+          {{/if}}
+        </fieldset>
+      </div>
+    {{/if}}
 
     <div class="content hidden" data-tab="pouvoirs">
       {{#if pouvoirs.length}}
