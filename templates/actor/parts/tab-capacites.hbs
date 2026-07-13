@@ -47,7 +47,7 @@
                 {{#if (gt feature.minLevel feature._add2eClassLevel)}}
                   <span class="a2e-muted" style="float:right;">Niveau {{feature.minLevel}}</span>
                 {{else}}
-                  <span style="float:right;">{{#if feature.uses.label}}{{feature.uses.label}}{{else}}Actif{{/if}}</span>
+                  <span style="float:right;">{{#if feature.uses.label}}{{feature.uses.label}}{{else}}Disponible{{/if}}</span>
                 {{/if}}
               </h3>
               <div class="a2e-panel-body a2e-small">
@@ -66,41 +66,13 @@
             </div>
           {{/each}}
         {{else}}
-          <p class="a2e-muted">Aucune capacité de classe renseignée.</p>
+          <p class="a2e-muted">Aucune capacité activable disponible à ce niveau.</p>
         {{/if}}
       </div>
     </div>
 
     <div class="a2e-panel">
-      <h2>Capacités passives</h2>
-      <div class="a2e-panel-body">
-        {{#if passiveClassFeatures.length}}
-          {{#each passiveClassFeatures as |feature|}}
-            <div class="a2e-panel" style="box-shadow:none;">
-              <h3>
-                {{feature.name}}
-                {{#if feature._add2eClassName}}
-                  <small class="a2e-muted"> — {{feature._add2eClassName}}</small>
-                {{/if}}
-                {{#if (gt feature.minLevel feature._add2eClassLevel)}}
-                  <span class="a2e-muted" style="float:right;">Niveau {{feature.minLevel}}</span>
-                {{else}}
-                  <span style="float:right;">Actif</span>
-                {{/if}}
-              </h3>
-              <div class="a2e-panel-body a2e-small">
-                {{{feature.description}}}
-              </div>
-            </div>
-          {{/each}}
-        {{else}}
-          <p class="a2e-muted">Aucune capacité passive.</p>
-        {{/if}}
-      </div>
-    </div>
-
-    <div class="a2e-panel">
-      <h2>Capacités raciales</h2>
+      <h2>Capacités raciales activables</h2>
       <div class="a2e-panel-body">
         {{#if activeRacialCapabilities.length}}
           {{#each activeRacialCapabilities as |capability|}}
@@ -129,7 +101,7 @@
             </div>
           {{/each}}
         {{else}}
-          <p class="a2e-muted">Aucune capacité raciale active pour cette race.</p>
+          <p class="a2e-muted">Aucune capacité raciale activable pour cette race.</p>
         {{/if}}
       </div>
     </div>
