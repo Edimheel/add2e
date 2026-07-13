@@ -40,41 +40,7 @@
                 </tbody>
               </table>
             {{else}}
-              <p class="a2e-muted">Aucun effet temporaire actif.</p>
-            {{/if}}
-          </div>
-        </div>
-
-        <div class="a2e-panel">
-          <h2>Effets passifs de classe</h2>
-          <div class="a2e-panel-body">
-            {{#if passiveClassFeatures.length}}
-              <table class="a2e-table a2e-effects-table">
-                <thead>
-                  <tr>
-                    <th style="width:42px;"></th>
-                    <th>Effet</th>
-                    <th>Source</th>
-                    <th>Durée</th>
-                    <th>Description</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {{#each passiveClassFeatures as |feature|}}
-                    <tr>
-                      <td><img src="{{#if feature.img}}{{feature.img}}{{else}}{{feature._add2eClassImg}}{{/if}}" alt="{{feature.name}}" style="width:30px;height:30px;border-radius:5px;object-fit:cover;"></td>
-                      <td><b>{{feature.name}}</b></td>
-                      <td>{{feature._add2eClassName}}</td>
-                      <td>Permanent</td>
-                      <td class="effect-description a2e-small">{{feature.description}}</td>
-                      <td><span class="a2e-muted" title="Capacité passive calculée depuis la classe et le niveau">—</span></td>
-                    </tr>
-                  {{/each}}
-                </tbody>
-              </table>
-            {{else}}
-              <p class="a2e-muted">Aucun effet passif de classe actif à ce niveau.</p>
+              <p class="a2e-muted">Aucun effet actif.</p>
             {{/if}}
           </div>
         </div>
