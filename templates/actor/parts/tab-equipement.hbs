@@ -18,11 +18,57 @@
                   <tbody>
                     {{#each listeObjetsDivers as |objet|}}
                       <tr class="item" data-item-id="{{objet._id}}" data-itemId="{{objet._id}}">
-                        <td><b>{{objet.name}}</b></td>
+                        <td>
+                          <b>{{objet.name}}</b>
+
+                          {{#if (eq objet.system.arcaneDocument.kind "spellbook")}}
+                            <div class="a2e-small a2e-muted">
+                              Livre de sorts{{#if objet.system.arcaneDocument.ownerList}} — {{objet.system.arcaneDocument.ownerList}}{{/if}}
+                              {{#if objet.system.arcaneDocument.spells.length}} — {{objet.system.arcaneDocument.spells.length}} sort(s){{/if}}
+                            </div>
+                          {{/if}}
+
+                          {{#if (eq objet.system.arcaneDocument.kind "spell-scroll")}}
+                            <div class="a2e-small a2e-muted">
+                              Parchemin de sort — utilisation unique
+                              {{#if objet.system.arcaneDocument.spells.length}} — {{objet.system.arcaneDocument.spells.length}} sort(s) inscrit(s){{/if}}
+                            </div>
+                          {{/if}}
+                        </td>
                         <td>{{objet.system.quantite}}</td>
                         <td>{{objet.system.poids}}</td>
                         <td>
                           <div class="a2e-actions">
+                            {{#if (eq objet.system.arcaneDocument.kind "spellbook")}}
+                              <a
+                                class="item-control a2e-action-icon"
+                                data-add2e-arcane-action="view-book"
+                                data-item-id="{{objet._id}}"
+                                data-actor-id="{{../actor._id}}"
+                                title="Consulter le livre de sorts"
+                              ><i class="fas fa-book-open"></i></a>
+
+                              {{#unless objet.system.arcaneDocument.personal}}
+                                <a
+                                  class="item-control a2e-action-icon a2e-action-add"
+                                  data-add2e-arcane-action="copy-book"
+                                  data-item-id="{{objet._id}}"
+                                  data-actor-id="{{../actor._id}}"
+                                  title="Copier les sorts compatibles dans le livre personnel"
+                                ><i class="fas fa-copy"></i></a>
+                              {{/unless}}
+                            {{/if}}
+
+                            {{#if (eq objet.system.arcaneDocument.kind "spell-scroll")}}
+                              <a
+                                class="item-control a2e-action-icon a2e-action-add"
+                                data-add2e-arcane-action="cast-scroll"
+                                data-item-id="{{objet._id}}"
+                                data-actor-id="{{../actor._id}}"
+                                title="Lancer le sort depuis le parchemin"
+                              ><i class="fas fa-scroll"></i></a>
+                            {{/if}}
+
                             <a class="item-control item-equip a2e-action-icon a2e-equip-state-icon {{#if objet.system.equipee}}equip-green{{else}}equip-red{{/if}}" data-action="equip" data-item-id="{{objet._id}}" title="{{#if objet.system.equipee}}Équipé — cliquer pour retirer{{else}}Non équipé — cliquer pour équiper{{/if}}">
                               <i class="fas fa-gem"></i>
                             </a>
