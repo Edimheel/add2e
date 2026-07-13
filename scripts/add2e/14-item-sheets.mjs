@@ -1,4 +1,4 @@
-const ADD2E_ITEM_SHEETS_VERSION = "2026-07-13-item-sheet-arcane-scroll-editor-v1";
+const ADD2E_ITEM_SHEETS_VERSION = "2026-07-13-item-sheet-arcane-documents-v2";
 globalThis.ADD2E_ITEM_SHEETS_VERSION = ADD2E_ITEM_SHEETS_VERSION;
 
 const { ApplicationV2 } = foundry.applications.api;
@@ -159,8 +159,8 @@ function add2eBuildSortSheetSystem(system) {
   return sheet;
 }
 
-const ADD2E_ARCANE_ITEM_SHEET_VERSION = "2026-07-13-arcane-item-sheet-v1";
-const ADD2E_ARCANE_ITEM_LISTS = new Set(["magicien", "illusionniste"]);
+const ADD2E_ARCANE_ITEM_SHEET_VERSION = "2026-07-13-arcane-item-sheet-v2";
+const ADD2E_ARCANE_ITEM_LISTS = new Set(["magicien", "illusionniste", "clerc", "druide"]);
 
 globalThis.ADD2E_ARCANE_ITEM_SHEET_VERSION = ADD2E_ARCANE_ITEM_SHEET_VERSION;
 
@@ -196,7 +196,26 @@ function add2eArcaneListKey(value) {
     if (typeof globalThis.add2eNormalizeSpellKey === "function") return globalThis.add2eNormalizeSpellKey(value);
   } catch (_error) {}
   const key = add2eArcaneNorm(value);
-  return ({ wizard: "magicien", mage: "magicien", magician: "magicien", magic_user: "magicien", illusionist: "illusionniste" })[key] ?? key;
+  return ({
+    wizard: "magicien",
+    mage: "magicien",
+    magician: "magicien",
+    magic_user: "magicien",
+    illusionist: "illusionniste",
+    cleric: "clerc",
+    priest: "clerc",
+    druid: "druide"
+  })[key] ?? key;
+}
+
+function add2eArcaneListLabel(value) {
+  const key = add2eArcaneListKey(value);
+  return ({
+    magicien: "Magicien",
+    illusionniste: "Illusionniste",
+    clerc: "Clerc",
+    druide: "Druide"
+  })[key] ?? String(value ?? "Liste inconnue");
 }
 
 function add2eArcaneData(item) {
@@ -213,8 +232,7 @@ function add2eArcaneObjectIsScroll(item) {
   if (add2eArcaneKind(item) === "spell-scroll") return true;
   const name = add2eArcaneNorm(item?.name);
   const subtype = add2eArcaneNorm(item?.system?.sousType ?? item?.system?.sous_type);
-  return subtype.includes("parchemin_de_sort")
-    || (name.startsWith("parchemin") && (name.includes("magicien") || name.includes("illusionniste") || name.includes("sort")));
+  return subtype.includes("parchemin_de_sort") || name.startsWith("parchemin");
 }
 
 function add2eArcaneObjectIsBook(item) {
@@ -227,14 +245,22 @@ function add2eArcaneObjectIsBook(item) {
 
 function add2eArcaneContainerList(item) {
   const data = add2eArcaneData(item);
-  for (const value of [data.ownerList, data.spellList, item?.flags?.add2e?.ownerSpellList]) {
+  for (const value of [data.ownerList, data.spellList, item?.flags?.add2e?.ownerSpellList, item?.flags?.add2e?.arcaneSpellList]) {
     const key = add2eArcaneListKey(value);
     if (ADD2E_ARCANE_ITEM_LISTS.has(key)) return key;
   }
   const text = add2eArcaneNorm(`${item?.name ?? ""} ${item?.system?.sousType ?? ""}`);
   if (text.includes("illusionniste")) return "illusionniste";
   if (text.includes("magicien")) return "magicien";
+  if (text.includes("clerc")) return "clerc";
+  if (text.includes("druide")) return "druide";
   return "";
+}
+
+function add2eArcaneIsPersonalBook(item) {
+  if (!add2eArcaneObjectIsBook(item)) return false;
+  const data = add2eArcaneData(item);
+  return data.personal === true || item?.flags?.add2e?.personalSpellbook === true;
 }
 
 function add2eArcaneSpellLists(item) {
@@ -309,7 +335,7 @@ function add2eArcaneDocumentEntries(item) {
     seen.add(unique);
     entries.push({
       ...entry,
-      listLabel: entry.lists.map(list => list === "illusionniste" ? "Illusionniste" : list === "magicien" ? "Magicien" : list).join(" / ") || "Liste inconnue"
+      listLabel: entry.lists.map(add2eArcaneListLabel).join(" / ") || "Liste inconnue"
     });
   }
   return entries.sort((left, right) => left.level - right.level || left.name.localeCompare(right.name, "fr"));
@@ -318,15 +344,17 @@ function add2eArcaneDocumentEntries(item) {
 function add2eArcaneEntryFromSpell(container, spell) {
   if (String(spell?.type ?? "").toLowerCase() !== "sort") return { ok: false, message: "Déposez un Item de type sort." };
   if (spell.system?.isPower === true || spell.system?.isObjectPower === true || spell.system?.isCapacity === true || spell.flags?.add2e?.spellFamily?.generated === true) {
-    return { ok: false, message: "Les pouvoirs, capacités et variantes générées ne peuvent pas être inscrits sur ce parchemin." };
+    return { ok: false, message: "Les pouvoirs, capacités et variantes générées ne peuvent pas être inscrits sur ce document." };
   }
   const preferredList = add2eArcaneContainerList(container);
   const arcaneLists = add2eArcaneSpellLists(spell).filter(list => ADD2E_ARCANE_ITEM_LISTS.has(list));
   if (preferredList && !arcaneLists.includes(preferredList)) {
-    return { ok: false, message: `${spell.name} n'appartient pas à la liste ${preferredList === "illusionniste" ? "Illusionniste" : "Magicien"}.` };
+    return { ok: false, message: `${spell.name} n'appartient pas à la liste ${add2eArcaneListLabel(preferredList)}.` };
   }
   const lists = preferredList ? [preferredList] : arcaneLists;
-  if (!lists.length) return { ok: false, message: `${spell.name} n'est ni un sort de Magicien ni un sort d'Illusionniste.` };
+  if (!lists.length) {
+    return { ok: false, message: `${spell.name} n'appartient à aucune liste de parchemin prise en charge (Magicien, Illusionniste, Clerc ou Druide).` };
+  }
   const level = add2eArcaneSpellLevel(spell);
   return {
     ok: true,
@@ -388,11 +416,16 @@ async function add2eArcaneResolveDrop(event) {
 
 async function add2eArcaneStoreEntries(item, entries) {
   const current = add2eArcaneData(item);
+  const isBook = add2eArcaneObjectIsBook(item);
+  const isPersonalBook = add2eArcaneIsPersonalBook(item);
+  if (isPersonalBook) throw new Error("Le livre personnel est synchronisé avec les sorts connus et ne peut pas être modifié manuellement.");
+
   const spellList = add2eArcaneContainerList(item);
+  const kind = isBook ? "spellbook" : "spell-scroll";
   const next = {
     ...foundry.utils.deepClone(current),
     schema: 1,
-    kind: "spell-scroll",
+    kind,
     personal: false,
     spells: entries.map(entry => ({
       key: entry.key,
@@ -404,19 +437,34 @@ async function add2eArcaneStoreEntries(item, entries) {
     }))
   };
   delete next.spell;
-  if (spellList) next.spellList = spellList;
+  if (spellList) {
+    next.ownerList = spellList;
+    next.spellList = spellList;
+  }
+
   const update = {
     "system.arcaneDocument": next,
     "system.magique": true,
-    "system.consommable": true,
-    "flags.add2e.arcaneDocumentKind": "spell-scroll",
+    "system.consommable": !isBook,
+    "flags.add2e.arcaneDocumentKind": kind,
+    "flags.add2e.personalSpellbook": false,
     "flags.add2e.arcaneItemSheetVersion": ADD2E_ARCANE_ITEM_SHEET_VERSION
   };
-  if (!String(item?.system?.sousType ?? "").trim()) update["system.sousType"] = "parchemin_de_sort";
+  if (spellList) {
+    update["flags.add2e.ownerSpellList"] = spellList;
+    if (!isBook) update["flags.add2e.arcaneSpellList"] = spellList;
+  }
+  if (!String(item?.system?.sousType ?? "").trim()) {
+    update["system.sousType"] = isBook ? "livre_de_sorts" : "parchemin_de_sort";
+  }
   await item.update(update, { add2eInternal: true, add2eArcaneItemSheet: true, render: false });
 }
 
 async function add2eArcaneAddDroppedSpell(container, spell) {
+  if (add2eArcaneIsPersonalBook(container)) {
+    ui.notifications.warn("Le livre personnel est synchronisé automatiquement et ne peut pas recevoir de dépôt manuel.");
+    return false;
+  }
   const built = add2eArcaneEntryFromSpell(container, spell);
   if (!built.ok) {
     ui.notifications.warn(built.message);
@@ -438,12 +486,17 @@ async function add2eArcaneAddDroppedSpell(container, spell) {
 }
 
 async function add2eArcaneRemoveEntry(container, spellKey) {
+  if (add2eArcaneIsPersonalBook(container)) {
+    ui.notifications.warn("Le livre personnel est synchronisé automatiquement et ne peut pas être modifié manuellement.");
+    return false;
+  }
   const entries = add2eArcaneDocumentEntries(container);
   const entry = entries.find(candidate => String(candidate.key) === String(spellKey));
   if (!entry) return false;
+  const documentLabel = add2eArcaneObjectIsBook(container) ? "livre" : "parchemin";
   const confirmed = await add2eArcaneDialogConfirm({
     title: `Retirer ${entry.name}`,
-    content: `<div class="add2e-dialog" style="min-width:460px;padding:8px;"><p>Retirer <b>${entry.name}</b> de <b>${container.name}</b> ?</p><p>Le parchemin restera disponible et pourra recevoir un autre sort.</p></div>`,
+    content: `<div class="add2e-dialog" style="min-width:460px;padding:8px;"><p>Retirer <b>${entry.name}</b> de <b>${container.name}</b> ?</p><p>Le ${documentLabel} restera disponible et pourra recevoir un autre sort.</p></div>`,
     yesLabel: "Retirer l'inscription"
   });
   if (!confirmed) return false;
@@ -710,8 +763,10 @@ class Add2eObjetSheet extends Add2eItemSheetV2 {
     data.isSpellScrollDocument = isScroll;
     data.isSpellbookDocument = isBook;
     data.arcaneEntries = data.isArcaneDocument ? add2eArcaneDocumentEntries(this.item) : [];
-    data.arcaneSpellListLabel = list === "illusionniste" ? "Illusionniste" : list === "magicien" ? "Magicien" : "Magicien / Illusionniste";
-    data.canManageArcaneEntries = this.editable && isScroll;
+    const isPersonalBook = add2eArcaneIsPersonalBook(this.item);
+    data.isPersonalSpellbookDocument = isPersonalBook;
+    data.arcaneSpellListLabel = list ? add2eArcaneListLabel(list) : "Liste non définie";
+    data.canManageArcaneEntries = this.editable && (isScroll || (isBook && !isPersonalBook));
     return data;
   }
 
@@ -721,7 +776,11 @@ class Add2eObjetSheet extends Add2eItemSheetV2 {
     if (!root) return;
 
     const dropZone = root.querySelector(".add2e-arcane-drop-zone");
-    if (dropZone && this.editable) {
+    const canManageArcaneEntries = this.editable && (
+      add2eArcaneObjectIsScroll(this.item)
+      || (add2eArcaneObjectIsBook(this.item) && !add2eArcaneIsPersonalBook(this.item))
+    );
+    if (dropZone && canManageArcaneEntries) {
       const clearDrag = () => dropZone.classList.remove("is-dragover");
       dropZone.addEventListener("dragenter", event => {
         event.preventDefault();
