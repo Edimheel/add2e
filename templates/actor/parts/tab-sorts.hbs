@@ -196,9 +196,9 @@
                             <div class="a2e-actions">
                               {{#if scroll.canWrite}}
                                 {{#if scroll.writeBlockedCombat}}
-                                  <span class="a2e-action-icon a2e-muted" title="Écriture indisponible pendant un combat" style="opacity:.45;cursor:not-allowed;"><i class="fas fa-pen-nib"></i></span>
+                                  <span class="a2e-action-icon a2e-muted" title="Copie dans le livre indisponible pendant un combat" style="opacity:.45;cursor:not-allowed;"><i class="fas fa-book-open"></i></span>
                                 {{else}}
-                                  <a class="a2e-action-icon a2e-action-add add2e-scroll-entry-write" data-item-id="{{scroll.itemId}}" data-spell-key="{{scroll.spellKey}}" title="Écrire ce sort dans le livre personnel — hors combat"><i class="fas fa-pen-nib"></i></a>
+                                  <a class="a2e-action-icon a2e-action-add add2e-scroll-entry-write" data-item-id="{{scroll.itemId}}" data-spell-key="{{scroll.spellKey}}" title="Copier ce sort dans le livre personnel — hors combat"><i class="fas fa-book-open"></i></a>
                                 {{/if}}
                               {{else}}
                                 {{#if scroll.alreadyKnown}}
@@ -241,7 +241,7 @@
                                   <th style="width:140px;">École</th>
                                   <th style="width:70px;">Type</th>
                                   <th style="width:260px;">Composants</th>
-                                  <th style="width:90px;">Actions</th>
+                                  <th style="width:125px;">Actions</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -284,6 +284,15 @@
                                     </td>
                                     <td>
                                       <div class="a2e-actions">
+                                        {{#if sort.canWriteScroll}}
+                                          {{#if (eq sort.scrollWritingGroupKey group.key)}}
+                                            {{#if sort.writeScrollBlockedCombat}}
+                                              <span class="a2e-action-icon a2e-muted" title="Écriture d'un parchemin indisponible pendant un combat" style="opacity:.45;cursor:not-allowed;"><i class="fas fa-pen-nib"></i></span>
+                                            {{else}}
+                                              <a class="a2e-action-icon a2e-action-add add2e-create-scroll-from-spell" data-sort-id="{{sort.id}}" title="Écrire un parchemin de {{sort.name}} — hors combat"><i class="fas fa-pen-nib"></i></a>
+                                            {{/if}}
+                                          {{/if}}
+                                        {{/if}}
                                         <a class="a2e-action-icon a2e-action-edit sort-edit" data-sort-id="{{sort.id}}" title="Éditer"><i class="fas fa-edit"></i></a>
                                         <a class="a2e-action-icon a2e-action-delete sort-delete" data-sort-id="{{sort.id}}" title="Supprimer"><i class="fas fa-trash"></i></a>
                                       </div>
