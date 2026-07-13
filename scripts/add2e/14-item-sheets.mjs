@@ -1,4 +1,4 @@
-const ADD2E_ITEM_SHEETS_VERSION = "2026-06-29-item-sheet-contextmenu-permissions-v2";
+const ADD2E_ITEM_SHEETS_VERSION = "2026-07-13-item-sheet-arcane-scroll-editor-v1";
 globalThis.ADD2E_ITEM_SHEETS_VERSION = ADD2E_ITEM_SHEETS_VERSION;
 
 const { ApplicationV2 } = foundry.applications.api;
@@ -157,6 +157,298 @@ function add2eBuildSortSheetSystem(system) {
   sheet.onUse = add2eFirstSheetField(source, ["onUse", "onuse", "on_use"], sheet.onUse ?? "");
   sheet.description = add2eFirstSheetField(source, ["description", "description_reelle", "description_texte", "description_html"], sheet.description ?? "");
   return sheet;
+}
+
+const ADD2E_ARCANE_ITEM_SHEET_VERSION = "2026-07-13-arcane-item-sheet-v1";
+const ADD2E_ARCANE_ITEM_LISTS = new Set(["magicien", "illusionniste"]);
+
+globalThis.ADD2E_ARCANE_ITEM_SHEET_VERSION = ADD2E_ARCANE_ITEM_SHEET_VERSION;
+
+function add2eArcaneNorm(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/œ/g, "oe")
+    .replace(/æ/g, "ae")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function add2eArcaneArray(value) {
+  if (value === undefined || value === null || value === "") return [];
+  if (Array.isArray(value)) return value.flatMap(add2eArcaneArray);
+  if (value instanceof Set) return [...value].flatMap(add2eArcaneArray);
+  if (typeof value === "string") return value.split(/[,;|\n]+/g).map(entry => entry.trim()).filter(Boolean);
+  if (typeof value === "object") {
+    for (const key of ["lists", "spellLists", "classes", "classe", "class", "items", "value", "values"]) {
+      if (value[key] !== undefined) return add2eArcaneArray(value[key]);
+    }
+  }
+  return [value];
+}
+
+function add2eArcaneListKey(value) {
+  try {
+    if (typeof globalThis.add2eNormalizeSpellKey === "function") return globalThis.add2eNormalizeSpellKey(value);
+  } catch (_error) {}
+  const key = add2eArcaneNorm(value);
+  return ({ wizard: "magicien", mage: "magicien", magician: "magicien", magic_user: "magicien", illusionist: "illusionniste" })[key] ?? key;
+}
+
+function add2eArcaneData(item) {
+  const value = item?.system?.arcaneDocument;
+  return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+}
+
+function add2eArcaneKind(item) {
+  return String(add2eArcaneData(item).kind ?? item?.flags?.add2e?.arcaneDocumentKind ?? "").trim().toLowerCase();
+}
+
+function add2eArcaneObjectIsScroll(item) {
+  if (String(item?.type ?? "").toLowerCase() !== "objet") return false;
+  if (add2eArcaneKind(item) === "spell-scroll") return true;
+  const name = add2eArcaneNorm(item?.name);
+  const subtype = add2eArcaneNorm(item?.system?.sousType ?? item?.system?.sous_type);
+  return subtype.includes("parchemin_de_sort")
+    || (name.startsWith("parchemin") && (name.includes("magicien") || name.includes("illusionniste") || name.includes("sort")));
+}
+
+function add2eArcaneObjectIsBook(item) {
+  if (String(item?.type ?? "").toLowerCase() !== "objet") return false;
+  if (add2eArcaneKind(item) === "spellbook") return true;
+  const name = add2eArcaneNorm(item?.name);
+  const subtype = add2eArcaneNorm(item?.system?.sousType ?? item?.system?.sous_type);
+  return subtype.includes("livre_de_sorts") || name.startsWith("livre_de_sorts");
+}
+
+function add2eArcaneContainerList(item) {
+  const data = add2eArcaneData(item);
+  for (const value of [data.ownerList, data.spellList, item?.flags?.add2e?.ownerSpellList]) {
+    const key = add2eArcaneListKey(value);
+    if (ADD2E_ARCANE_ITEM_LISTS.has(key)) return key;
+  }
+  const text = add2eArcaneNorm(`${item?.name ?? ""} ${item?.system?.sousType ?? ""}`);
+  if (text.includes("illusionniste")) return "illusionniste";
+  if (text.includes("magicien")) return "magicien";
+  return "";
+}
+
+function add2eArcaneSpellLists(item) {
+  try {
+    if (typeof globalThis.add2eGetSpellListsFromItem === "function") {
+      return [...new Set(globalThis.add2eGetSpellListsFromItem(item).map(add2eArcaneListKey).filter(Boolean))];
+    }
+  } catch (_error) {}
+  const system = item?.system ?? {};
+  const flags = item?.flags?.add2e ?? {};
+  return [...new Set([
+    flags.knownSpellLists,
+    flags.learnedSpellLists,
+    flags.grantedSpellLists,
+    system.spellLists,
+    system.lists,
+    system.liste,
+    system.liste_sort,
+    system.listeSort,
+    system.classe,
+    system.class
+  ].flatMap(add2eArcaneArray).map(add2eArcaneListKey).filter(Boolean))];
+}
+
+function add2eArcaneSpellLevel(item) {
+  return Math.max(1, Number(item?.system?.niveau ?? item?.system?.level ?? item?.system?.niveau_sort ?? item?.system?.spellLevel ?? 1) || 1);
+}
+
+function add2eArcaneSourceUuid(item) {
+  return String(item?.flags?.core?.sourceId ?? item?._stats?.compendiumSource ?? item?.flags?.add2e?.sourceUuid ?? item?.uuid ?? "").trim();
+}
+
+function add2eArcaneNormalizeEntry(entry, fallbackList = "") {
+  if (!entry) return null;
+  const name = String(entry.name ?? entry.nom ?? entry.label ?? "").trim();
+  if (!name) return null;
+  const level = Math.max(1, Number(entry.level ?? entry.niveau ?? entry.spellLevel ?? 1) || 1);
+  const lists = [...new Set([
+    entry.lists,
+    entry.spellLists,
+    entry.classes,
+    entry.classe,
+    entry.class,
+    fallbackList
+  ].flatMap(add2eArcaneArray).map(add2eArcaneListKey).filter(Boolean))];
+  return {
+    key: String(entry.key ?? entry.stableKey ?? entry.spellKey ?? "").trim() || `${lists[0] ?? "sort"}|${level}|${add2eArcaneNorm(name)}`,
+    name,
+    level,
+    lists,
+    sourceUuid: String(entry.sourceUuid ?? entry.uuid ?? entry.sourceId ?? "").trim(),
+    img: String(entry.img ?? entry.image ?? "icons/svg/book.svg")
+  };
+}
+
+function add2eArcaneDocumentEntries(item) {
+  let source = null;
+  try {
+    const apiEntries = globalThis.ADD2E_ARCANE_DOCUMENTS?.documentEntries?.(item);
+    if (Array.isArray(apiEntries)) source = apiEntries;
+  } catch (_error) {}
+  const data = add2eArcaneData(item);
+  if (!source) source = Array.isArray(data.spells) ? data.spells : data.spell ? [data.spell] : Array.isArray(item?.system?.sorts) ? item.system.sorts : [];
+  const fallbackList = add2eArcaneContainerList(item);
+  const seen = new Set();
+  const entries = [];
+  for (const raw of source) {
+    const entry = add2eArcaneNormalizeEntry(raw, fallbackList);
+    if (!entry) continue;
+    const unique = `${entry.key}|${entry.lists.join(",")}`;
+    if (seen.has(unique)) continue;
+    seen.add(unique);
+    entries.push({
+      ...entry,
+      listLabel: entry.lists.map(list => list === "illusionniste" ? "Illusionniste" : list === "magicien" ? "Magicien" : list).join(" / ") || "Liste inconnue"
+    });
+  }
+  return entries.sort((left, right) => left.level - right.level || left.name.localeCompare(right.name, "fr"));
+}
+
+function add2eArcaneEntryFromSpell(container, spell) {
+  if (String(spell?.type ?? "").toLowerCase() !== "sort") return { ok: false, message: "Déposez un Item de type sort." };
+  if (spell.system?.isPower === true || spell.system?.isObjectPower === true || spell.system?.isCapacity === true || spell.flags?.add2e?.spellFamily?.generated === true) {
+    return { ok: false, message: "Les pouvoirs, capacités et variantes générées ne peuvent pas être inscrits sur ce parchemin." };
+  }
+  const preferredList = add2eArcaneContainerList(container);
+  const arcaneLists = add2eArcaneSpellLists(spell).filter(list => ADD2E_ARCANE_ITEM_LISTS.has(list));
+  if (preferredList && !arcaneLists.includes(preferredList)) {
+    return { ok: false, message: `${spell.name} n'appartient pas à la liste ${preferredList === "illusionniste" ? "Illusionniste" : "Magicien"}.` };
+  }
+  const lists = preferredList ? [preferredList] : arcaneLists;
+  if (!lists.length) return { ok: false, message: `${spell.name} n'est ni un sort de Magicien ni un sort d'Illusionniste.` };
+  const level = add2eArcaneSpellLevel(spell);
+  return {
+    ok: true,
+    entry: {
+      key: `${lists[0]}|${level}|${add2eArcaneNorm(spell.name)}`,
+      name: spell.name,
+      level,
+      lists,
+      sourceUuid: add2eArcaneSourceUuid(spell),
+      img: spell.img || "icons/svg/book.svg"
+    }
+  };
+}
+
+async function add2eArcaneDialogConfirm({ title, content, yesLabel = "Confirmer" }) {
+  const DialogV2 = foundry?.applications?.api?.DialogV2;
+  if (!DialogV2?.wait) {
+    ui.notifications.error("DialogV2 est introuvable.");
+    return false;
+  }
+  return await DialogV2.wait({
+    window: { title },
+    modal: true,
+    rejectClose: false,
+    content,
+    buttons: [
+      { action: "yes", label: yesLabel, icon: "fa-solid fa-check", default: true, callback: () => true },
+      { action: "no", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => false }
+    ]
+  }) === true;
+}
+
+async function add2eArcaneResolveDrop(event) {
+  let data = null;
+  const editor = foundry?.applications?.ux?.TextEditor?.implementation ?? globalThis.TextEditor ?? null;
+  try { data = editor?.getDragEventData?.(event) ?? null; } catch (_error) {}
+  if (!data) {
+    try { data = JSON.parse(event?.dataTransfer?.getData?.("text/plain") || "null"); } catch (_error) { data = null; }
+  }
+  if (!data || (data.type && data.type !== "Item")) return null;
+  if (data.uuid && typeof fromUuid === "function") {
+    try {
+      const document = await fromUuid(data.uuid);
+      if (document?.documentName === "Item") return document;
+    } catch (_error) {}
+  }
+  const documentClass = CONFIG?.Item?.documentClass;
+  if (typeof documentClass?.fromDropData === "function") {
+    try {
+      const document = await documentClass.fromDropData(data);
+      if (document?.documentName === "Item") return document;
+    } catch (_error) {}
+  }
+  if (data.pack && data.id) {
+    try { return await game.packs?.get?.(data.pack)?.getDocument?.(data.id) ?? null; } catch (_error) {}
+  }
+  return null;
+}
+
+async function add2eArcaneStoreEntries(item, entries) {
+  const current = add2eArcaneData(item);
+  const spellList = add2eArcaneContainerList(item);
+  const next = {
+    ...foundry.utils.deepClone(current),
+    schema: 1,
+    kind: "spell-scroll",
+    personal: false,
+    spells: entries.map(entry => ({
+      key: entry.key,
+      name: entry.name,
+      level: entry.level,
+      lists: entry.lists,
+      sourceUuid: entry.sourceUuid,
+      img: entry.img
+    }))
+  };
+  delete next.spell;
+  if (spellList) next.spellList = spellList;
+  const update = {
+    "system.arcaneDocument": next,
+    "system.magique": true,
+    "system.consommable": true,
+    "flags.add2e.arcaneDocumentKind": "spell-scroll",
+    "flags.add2e.arcaneItemSheetVersion": ADD2E_ARCANE_ITEM_SHEET_VERSION
+  };
+  if (!String(item?.system?.sousType ?? "").trim()) update["system.sousType"] = "parchemin_de_sort";
+  await item.update(update, { add2eInternal: true, add2eArcaneItemSheet: true, render: false });
+}
+
+async function add2eArcaneAddDroppedSpell(container, spell) {
+  const built = add2eArcaneEntryFromSpell(container, spell);
+  if (!built.ok) {
+    ui.notifications.warn(built.message);
+    return false;
+  }
+  const entries = add2eArcaneDocumentEntries(container);
+  const duplicate = entries.some(entry => entry.key === built.entry.key || (
+    add2eArcaneNorm(entry.name) === add2eArcaneNorm(built.entry.name)
+    && Number(entry.level) === Number(built.entry.level)
+    && entry.lists.some(list => built.entry.lists.includes(list))
+  ));
+  if (duplicate) {
+    ui.notifications.info(`${built.entry.name} est déjà inscrit sur ${container.name}.`);
+    return false;
+  }
+  await add2eArcaneStoreEntries(container, [...entries, built.entry]);
+  ui.notifications.info(`${built.entry.name} a été inscrit sur ${container.name}.`);
+  return true;
+}
+
+async function add2eArcaneRemoveEntry(container, spellKey) {
+  const entries = add2eArcaneDocumentEntries(container);
+  const entry = entries.find(candidate => String(candidate.key) === String(spellKey));
+  if (!entry) return false;
+  const confirmed = await add2eArcaneDialogConfirm({
+    title: `Retirer ${entry.name}`,
+    content: `<div class="add2e-dialog" style="min-width:460px;padding:8px;"><p>Retirer <b>${entry.name}</b> de <b>${container.name}</b> ?</p><p>Le parchemin restera disponible et pourra recevoir un autre sort.</p></div>`,
+    yesLabel: "Retirer l'inscription"
+  });
+  if (!confirmed) return false;
+  await add2eArcaneStoreEntries(container, entries.filter(candidate => String(candidate.key) !== String(spellKey)));
+  return true;
 }
 
 function add2eRootFromContent(content) {
@@ -410,7 +702,69 @@ class Add2eObjetSheet extends Add2eItemSheetV2 {
       max: Number(system.charges?.max ?? system.max_charges ?? system.maxCharges ?? system.charges_max ?? 0) || 0
     };
     data.isMagicItem = system.magique === true || system.magic === true || String(system.categorie ?? "").toLowerCase().includes("magique");
+
+    const isScroll = add2eArcaneObjectIsScroll(this.item);
+    const isBook = add2eArcaneObjectIsBook(this.item);
+    const list = add2eArcaneContainerList(this.item);
+    data.isArcaneDocument = isScroll || isBook;
+    data.isSpellScrollDocument = isScroll;
+    data.isSpellbookDocument = isBook;
+    data.arcaneEntries = data.isArcaneDocument ? add2eArcaneDocumentEntries(this.item) : [];
+    data.arcaneSpellListLabel = list === "illusionniste" ? "Illusionniste" : list === "magicien" ? "Magicien" : "Magicien / Illusionniste";
+    data.canManageArcaneEntries = this.editable && isScroll;
     return data;
+  }
+
+  activateListeners(content) {
+    super.activateListeners(content);
+    const root = add2eRootFromContent(content);
+    if (!root) return;
+
+    const dropZone = root.querySelector(".add2e-arcane-drop-zone");
+    if (dropZone && this.editable) {
+      const clearDrag = () => dropZone.classList.remove("is-dragover");
+      dropZone.addEventListener("dragenter", event => {
+        event.preventDefault();
+        event.stopPropagation();
+        dropZone.classList.add("is-dragover");
+      });
+      dropZone.addEventListener("dragover", event => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
+        dropZone.classList.add("is-dragover");
+      });
+      dropZone.addEventListener("dragleave", clearDrag);
+      dropZone.addEventListener("drop", async event => {
+        event.preventDefault();
+        event.stopPropagation();
+        clearDrag();
+        try {
+          const spell = await add2eArcaneResolveDrop(event);
+          if (!spell) {
+            ui.notifications.warn("Le sort déposé est introuvable.");
+            return;
+          }
+          if (await add2eArcaneAddDroppedSpell(this.item, spell)) this.render({ force: true });
+        } catch (error) {
+          console.error("[ADD2E][ARCANE_ITEM_SHEET][DROP_ERROR]", { item: this.item?.name, error });
+          ui.notifications.error(error?.message || "Erreur pendant l'inscription du sort.");
+        }
+      });
+    }
+
+    for (const button of root.querySelectorAll(".add2e-arcane-remove-entry")) {
+      button.addEventListener("click", async event => {
+        event.preventDefault();
+        event.stopPropagation();
+        try {
+          if (await add2eArcaneRemoveEntry(this.item, button.dataset.spellKey ?? "")) this.render({ force: true });
+        } catch (error) {
+          console.error("[ADD2E][ARCANE_ITEM_SHEET][REMOVE_ERROR]", { item: this.item?.name, error });
+          ui.notifications.error(error?.message || "Erreur pendant le retrait du sort.");
+        }
+      });
+    }
   }
 }
 
