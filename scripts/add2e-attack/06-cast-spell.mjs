@@ -1,6 +1,6 @@
 // scripts/add2e-attack/06-cast-spell.mjs
 // ADD2E — Lancement de sorts, onUse, mémorisation, pouvoirs, parchemins et composants.
-// Version : 2026-07-13-cast-spell-scroll-mode-v1
+// Version : 2026-07-13-cast-spell-scroll-mode-v2
 
 import { formatSortChamp, add2eGetSortField, add2eGetSortOnUsePath, add2eGetSortComponentsText } from "./01-core-helpers.mjs";
 import "./05-jb2a-vfx.mjs";
@@ -305,13 +305,18 @@ export async function add2eCastSpell({ actor, sort, mode = "memorized", sourceIt
       const code = await response.text();
       const Fn = Object.getPrototypeOf(async function(){}).constructor;
       const casterToken = getCasterToken(actor);
-      const actualSourceItem = sourceItem ?? spellToUse;
+
+      // Contrat historique : sourceItem reste le sort canonique. Le parchemin
+      // est exposé séparément afin que les scripts existants ne changent pas
+      // l'origine de leurs dégâts, effets ou messages.
+      const actualSourceItem = spellToUse;
       const args = [{
         actor,
         item: spellToUse,
         sort,
         token: casterToken,
         sourceItem: actualSourceItem,
+        scrollItem: scrollCast ? sourceItem : null,
         castMode
       }];
       const fn = new Fn("actor", "item", "sort", "token", "args", "sourceItem", code);
