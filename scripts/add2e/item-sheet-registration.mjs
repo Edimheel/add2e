@@ -13,6 +13,26 @@ function add2eItemDocumentClass() {
   return foundry?.documents?.Item ?? globalThis.Item;
 }
 
+function add2eDefaultActorTokenLink(actor, data = {}) {
+  const type = String(actor?.type ?? data?.type ?? "").trim().toLowerCase();
+  if (type === "personnage") return true;
+  if (type === "monstre" || type === "monster") return false;
+  return null;
+}
+
+// Foundry fournit actorLink, mais ne choisit pas sa valeur selon les types ADD2E.
+// La valeur est donc fixée sur le prototype au moment de la création de l'acteur.
+Hooks.on("preCreateActor", (actor, data = {}) => {
+  const actorLink = add2eDefaultActorTokenLink(actor, data);
+  if (actorLink === null) return;
+
+  actor.updateSource({
+    prototypeToken: {
+      actorLink
+    }
+  });
+});
+
 // 2. INITIALISATION (enregistrement strict des fiches)
 export function add2eRegisterClassItemSheet() {
   const options = {
