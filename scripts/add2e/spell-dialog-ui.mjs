@@ -1,10 +1,10 @@
-// ADD2E — UI commune des popups ADD2E
-// Version : 2026-07-04-v7-thief-dialog-theme
-const VERSION = "2026-07-04-v7-thief-dialog-theme";
+// ADD2E — UI commune des fenêtres et messages liés aux sorts.
+// Compatible Foundry V13/V14/V15 — DialogV2 / ApplicationV2 uniquement.
+const VERSION = "2026-07-14-v8-arcane-dialogs-chat-refresh";
 globalThis.ADD2E_SPELL_DIALOG_UI_VERSION = VERSION;
 
-function esc(v) {
-  return String(v ?? "")
+function esc(value) {
+  return String(value ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
@@ -12,8 +12,8 @@ function esc(v) {
     .replace(/'/g, "&#039;");
 }
 
-function norm(v) {
-  return String(v ?? "")
+function norm(value) {
+  return String(value ?? "")
     .trim()
     .toLowerCase()
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -31,26 +31,6 @@ const THEMES = {
   thief: { label: "Voleur", bg: "#eff9fa", accent: "#cce9ed", dark: "#164a58", main: "#2a8293", border: "#3b9daf", text: "#14333b", labelColor: "#1b6372" }
 };
 
-const SPELL_THEME_HINTS = new Map([
-  ["apaisement", "cleric"],
-  ["epouvante", "cleric"],
-  ["aquagenese", "cleric"],
-  ["destruction_eau", "cleric"],
-  ["benediction", "cleric"],
-  ["malediction", "cleric"],
-  ["detection_de_la_magie", "cleric"]
-]);
-
-const SPELL_ICON_HINTS = new Map([
-  ["benediction", "systems/add2e/assets/icones/sorts/benediction.webp"],
-  ["malediction", "systems/add2e/assets/icones/sorts/benediction.webp"],
-  ["apaisement", "systems/add2e/assets/icones/sorts/apaisement.webp"],
-  ["epouvante", "systems/add2e/assets/icones/sorts/apaisement.webp"],
-  ["aquagenese", "systems/add2e/assets/icones/sorts/aquagenese.webp"],
-  ["destruction_eau", "systems/add2e/assets/icones/sorts/aquagenese.webp"],
-  ["detection_de_la_magie", "systems/add2e/assets/icones/sorts/detection-magie-violet.webp"]
-]);
-
 function themeData(theme) {
   return THEMES[theme] ?? THEMES.cleric;
 }
@@ -60,157 +40,155 @@ function guessTheme({ title = "", content = "", theme = null } = {}) {
   const text = norm(`${title} ${content}`);
   if (text.includes("voleur") || text.includes("assassin") || text.includes("thief")) return "thief";
   if (text.includes("illusionniste") || text.includes("illusionist")) return "illusionist";
-  if (text.includes("magicien") || text.includes("wizard")) return "wizard";
+  if (text.includes("magicien") || text.includes("wizard") || text.includes("livre_de_sorts") || text.includes("parchemin") || text.includes("connaissance")) return "wizard";
   if (text.includes("druide") || text.includes("druid")) return "druid";
-  if (text.includes("clerc") || text.includes("divin") || text.includes("divine")) return "cleric";
-  for (const [hint, value] of SPELL_THEME_HINTS) if (text.includes(hint)) return value;
   return "cleric";
 }
 
 function guessIcon({ title = "", content = "", img = null } = {}) {
   if (img) return img;
   const text = norm(`${title} ${content}`);
-  if (text.includes("voleur") || text.includes("assassin") || text.includes("thief")) return "icons/svg/eye.svg";
-  for (const [hint, icon] of SPELL_ICON_HINTS) if (text.includes(hint)) return icon;
+  if (text.includes("voleur") || text.includes("assassin")) return "icons/svg/eye.svg";
   return "icons/svg/book.svg";
 }
 
-function themeVariables(theme) {
-  const t = themeData(theme);
-  return {
-    "--a2e-bg": t.bg,
-    "--a2e-accent": t.accent,
-    "--a2e-dark": t.dark,
-    "--a2e-main": t.main,
-    "--a2e-border": t.border,
-    "--a2e-text": t.text,
-    "--a2e-label": t.labelColor
-  };
-}
-
-function setThemeVariables(el, theme) {
-  if (!el) return;
-  for (const [key, value] of Object.entries(themeVariables(theme))) el.style.setProperty(key, value);
-}
-
 function ensureStyles() {
-  const old = document.getElementById("add2e-spell-dialog-ui-style");
+  const id = "add2e-spell-dialog-ui-style";
+  const old = document.getElementById(id);
   if (old?.dataset?.version === VERSION) return;
   old?.remove();
 
-  const el = document.createElement("style");
-  el.id = "add2e-spell-dialog-ui-style";
-  el.dataset.version = VERSION;
-  el.textContent = `
-.application.add2e-spell-dialog-window.add2e-theme-cleric,.window-app.add2e-spell-dialog-window.add2e-theme-cleric,.app.add2e-spell-dialog-window.add2e-theme-cleric,.dialog.add2e-spell-dialog-window.add2e-theme-cleric,.application:has(.add2e-spell-dialog-theme-cleric),.window-app:has(.add2e-spell-dialog-theme-cleric),.app:has(.add2e-spell-dialog-theme-cleric),.dialog:has(.add2e-spell-dialog-theme-cleric){--a2e-bg:#fffaf0;--a2e-accent:#f3e6c8;--a2e-dark:#6f4b12;--a2e-main:#b88924;--a2e-border:#c99a36;--a2e-text:#2d2011;--a2e-label:#6f4b12;}
-.application.add2e-spell-dialog-window.add2e-theme-druid,.window-app.add2e-spell-dialog-window.add2e-theme-druid,.app.add2e-spell-dialog-window.add2e-theme-druid,.dialog.add2e-spell-dialog-window.add2e-theme-druid,.application:has(.add2e-spell-dialog-theme-druid),.window-app:has(.add2e-spell-dialog-theme-druid),.app:has(.add2e-spell-dialog-theme-druid),.dialog:has(.add2e-spell-dialog-theme-druid){--a2e-bg:#f4faef;--a2e-accent:#dfeccd;--a2e-dark:#264a23;--a2e-main:#719c4a;--a2e-border:#7fa45d;--a2e-text:#202d1a;--a2e-label:#355428;}
-.application.add2e-spell-dialog-window.add2e-theme-wizard,.window-app.add2e-spell-dialog-window.add2e-theme-wizard,.app.add2e-spell-dialog-window.add2e-theme-wizard,.dialog.add2e-spell-dialog-window.add2e-theme-wizard,.application:has(.add2e-spell-dialog-theme-wizard),.window-app:has(.add2e-spell-dialog-theme-wizard),.app:has(.add2e-spell-dialog-theme-wizard),.dialog:has(.add2e-spell-dialog-theme-wizard){--a2e-bg:#f8f3ff;--a2e-accent:#e8ddfb;--a2e-dark:#2e1c5a;--a2e-main:#6b49b8;--a2e-border:#8060cc;--a2e-text:#211735;--a2e-label:#4b3684;}
-.application.add2e-spell-dialog-window.add2e-theme-illusionist,.window-app.add2e-spell-dialog-window.add2e-theme-illusionist,.app.add2e-spell-dialog-window.add2e-theme-illusionist,.dialog.add2e-spell-dialog-window.add2e-theme-illusionist,.application:has(.add2e-spell-dialog-theme-illusionist),.window-app:has(.add2e-spell-dialog-theme-illusionist),.app:has(.add2e-spell-dialog-theme-illusionist),.dialog:has(.add2e-spell-dialog-theme-illusionist){--a2e-bg:#f9f7ff;--a2e-accent:#dff2ff;--a2e-dark:#275a8a;--a2e-main:#925ac6;--a2e-border:#70a9d6;--a2e-text:#1e3043;--a2e-label:#315d83;}
-.application.add2e-spell-dialog-window.add2e-theme-thief,.window-app.add2e-spell-dialog-window.add2e-theme-thief,.app.add2e-spell-dialog-window.add2e-theme-thief,.dialog.add2e-spell-dialog-window.add2e-theme-thief,.application:has(.add2e-spell-dialog-theme-thief),.window-app:has(.add2e-spell-dialog-theme-thief),.app:has(.add2e-spell-dialog-theme-thief),.dialog:has(.add2e-spell-dialog-theme-thief){--a2e-bg:#eff9fa;--a2e-accent:#cce9ed;--a2e-dark:#164a58;--a2e-main:#2a8293;--a2e-border:#3b9daf;--a2e-text:#14333b;--a2e-label:#1b6372;}
-.application.add2e-spell-dialog-window,.window-app.add2e-spell-dialog-window,.app.add2e-spell-dialog-window,.dialog.add2e-spell-dialog-window,.application:has(.add2e-spell-dialog-shell),.window-app:has(.add2e-spell-dialog-shell),.app:has(.add2e-spell-dialog-shell),.dialog:has(.add2e-spell-dialog-shell){border:2px solid var(--a2e-border) !important;border-radius:16px !important;overflow:hidden !important;box-shadow:0 10px 26px rgba(0,0,0,.22) !important;background:linear-gradient(180deg,var(--a2e-bg),var(--a2e-accent)) !important;background-color:var(--a2e-bg) !important;}
-.application.add2e-spell-dialog-window .window-header,.window-app.add2e-spell-dialog-window .window-header,.app.add2e-spell-dialog-window .window-header,.dialog.add2e-spell-dialog-window .window-header,.application:has(.add2e-spell-dialog-shell) .window-header,.window-app:has(.add2e-spell-dialog-shell) .window-header,.app:has(.add2e-spell-dialog-shell) .window-header,.dialog:has(.add2e-spell-dialog-shell) .window-header{background:linear-gradient(90deg,var(--a2e-dark),var(--a2e-main)) !important;color:white !important;border-bottom:2px solid var(--a2e-border) !important;}
-.application.add2e-spell-dialog-window .window-content,.window-app.add2e-spell-dialog-window .window-content,.app.add2e-spell-dialog-window .window-content,.dialog.add2e-spell-dialog-window .window-content,.application:has(.add2e-spell-dialog-shell) .window-content,.window-app:has(.add2e-spell-dialog-shell) .window-content,.app:has(.add2e-spell-dialog-shell) .window-content,.dialog:has(.add2e-spell-dialog-shell) .window-content{background:linear-gradient(180deg,var(--a2e-bg),var(--a2e-accent)) !important;color:var(--a2e-text) !important;padding:10px !important;}
-.application.add2e-spell-dialog-window .dialog-buttons,.window-app.add2e-spell-dialog-window .dialog-buttons,.app.add2e-spell-dialog-window .dialog-buttons,.dialog.add2e-spell-dialog-window .dialog-buttons,.application:has(.add2e-spell-dialog-shell) .dialog-buttons,.window-app:has(.add2e-spell-dialog-shell) .dialog-buttons,.app:has(.add2e-spell-dialog-shell) .dialog-buttons,.dialog:has(.add2e-spell-dialog-shell) .dialog-buttons{background:transparent !important;padding:10px 0 0 0 !important;gap:8px !important;}
-.application.add2e-spell-dialog-window .dialog-buttons button.default,.application.add2e-spell-dialog-window .dialog-buttons button[data-action="cast"],.application.add2e-spell-dialog-window .dialog-buttons button[data-action="roll"],.window-app.add2e-spell-dialog-window .dialog-buttons button.default,.window-app.add2e-spell-dialog-window .dialog-buttons button[data-action="cast"],.window-app.add2e-spell-dialog-window .dialog-buttons button[data-action="roll"],.app.add2e-spell-dialog-window .dialog-buttons button.default,.app.add2e-spell-dialog-window .dialog-buttons button[data-action="cast"],.app.add2e-spell-dialog-window .dialog-buttons button[data-action="roll"],.dialog.add2e-spell-dialog-window .dialog-buttons button.default,.dialog.add2e-spell-dialog-window .dialog-buttons button[data-action="cast"],.dialog.add2e-spell-dialog-window .dialog-buttons button[data-action="roll"],.application:has(.add2e-spell-dialog-shell) .dialog-buttons button.default,.application:has(.add2e-spell-dialog-shell) .dialog-buttons button[data-action="cast"],.application:has(.add2e-spell-dialog-shell) .dialog-buttons button[data-action="roll"],.window-app:has(.add2e-spell-dialog-shell) .dialog-buttons button.default,.window-app:has(.add2e-spell-dialog-shell) .dialog-buttons button[data-action="cast"],.window-app:has(.add2e-spell-dialog-shell) .dialog-buttons button[data-action="roll"],.app:has(.add2e-spell-dialog-shell) .dialog-buttons button.default,.app:has(.add2e-spell-dialog-shell) .dialog-buttons button[data-action="cast"],.app:has(.add2e-spell-dialog-shell) .dialog-buttons button[data-action="roll"],.dialog:has(.add2e-spell-dialog-shell) .dialog-buttons button.default,.dialog:has(.add2e-spell-dialog-shell) .dialog-buttons button[data-action="cast"],.dialog:has(.add2e-spell-dialog-shell) .dialog-buttons button[data-action="roll"]{background:linear-gradient(180deg,var(--a2e-main),var(--a2e-dark)) !important;color:white !important;border:1px solid var(--a2e-border) !important;border-radius:9px !important;font-weight:800 !important;box-shadow:0 2px 6px rgba(0,0,0,.18) !important;}
-.application.add2e-spell-dialog-window .dialog-buttons button:not(.default):not([data-action="cast"]):not([data-action="roll"]),.window-app.add2e-spell-dialog-window .dialog-buttons button:not(.default):not([data-action="cast"]):not([data-action="roll"]),.app.add2e-spell-dialog-window .dialog-buttons button:not(.default):not([data-action="cast"]):not([data-action="roll"]),.dialog.add2e-spell-dialog-window .dialog-buttons button:not(.default):not([data-action="cast"]):not([data-action="roll"]),.application:has(.add2e-spell-dialog-shell) .dialog-buttons button:not(.default):not([data-action="cast"]):not([data-action="roll"]),.window-app:has(.add2e-spell-dialog-shell) .dialog-buttons button:not(.default):not([data-action="cast"]):not([data-action="roll"]),.app:has(.add2e-spell-dialog-shell) .dialog-buttons button:not(.default):not([data-action="cast"]):not([data-action="roll"]),.dialog:has(.add2e-spell-dialog-shell) .dialog-buttons button:not(.default):not([data-action="cast"]):not([data-action="roll"]){border-radius:9px !important;font-weight:700 !important;}
-.add2e-spell-dialog-shell{border-radius:14px;overflow:hidden;border:2px solid var(--a2e-border);background:linear-gradient(180deg,var(--a2e-bg),var(--a2e-accent));color:var(--a2e-text);font-family:var(--font-primary);}
-.add2e-spell-dialog-header{display:flex;align-items:center;gap:10px;padding:10px 12px;background:linear-gradient(90deg,var(--a2e-dark),var(--a2e-main));color:white;border-bottom:2px solid var(--a2e-border);}
-.add2e-spell-dialog-header img{width:42px;height:42px;border-radius:8px;background:rgba(255,255,255,.95);object-fit:cover;border:2px solid rgba(255,255,255,.9);flex:0 0 auto;}
-.add2e-spell-dialog-title{font-size:1.08rem;font-weight:800;line-height:1.15;}
-.add2e-spell-dialog-subtitle{font-size:.84rem;opacity:.95;line-height:1.2;margin-top:2px;}
-.add2e-spell-dialog-body{padding:12px;display:flex;flex-direction:column;gap:10px;}
-.add2e-spell-dialog-shell form,.add2e-spell-dialog-shell .add2e-dialog-panel{background:rgba(255,255,255,.72);border:1px solid var(--a2e-border);border-radius:9px;padding:10px;margin:0;}
-.add2e-spell-dialog-shell label{color:var(--a2e-label);font-weight:700;}
-.add2e-spell-dialog-shell select,.add2e-spell-dialog-shell input[type="number"],.add2e-spell-dialog-shell input[type="text"],.add2e-spell-dialog-shell textarea{width:100%;border:1px solid var(--a2e-border);border-radius:7px;background:rgba(255,255,255,.96);color:var(--a2e-text);padding:6px 8px;}
+  const style = document.createElement("style");
+  style.id = id;
+  style.dataset.version = VERSION;
+  style.textContent = `
+.application.add2e-spell-dialog-window{border:2px solid var(--a2e-border)!important;border-radius:16px!important;overflow:hidden!important;box-shadow:0 10px 26px rgba(0,0,0,.22)!important;background:linear-gradient(180deg,var(--a2e-bg),var(--a2e-accent))!important;color:var(--a2e-text)!important}
+.application.add2e-spell-dialog-window .window-header{background:linear-gradient(90deg,var(--a2e-dark),var(--a2e-main))!important;color:#fff!important;border:0!important;border-bottom:2px solid var(--a2e-border)!important}
+.application.add2e-spell-dialog-window .window-content{background:linear-gradient(180deg,var(--a2e-bg),var(--a2e-accent))!important;color:var(--a2e-text)!important;border:0!important;padding:12px!important}
+.application.add2e-spell-dialog-window .dialog-content,.application.add2e-spell-dialog-window .add2e-dialog,.application.add2e-spell-dialog-window form{background:transparent!important;color:var(--a2e-text)!important;border:0!important;box-shadow:none!important}
+.application.add2e-spell-dialog-window table{background:rgba(255,255,255,.48)!important;border:1px solid var(--a2e-border)!important}
+.application.add2e-spell-dialog-window th{background:rgba(255,255,255,.58)!important;color:var(--a2e-dark)!important;border-color:var(--a2e-border)!important}
+.application.add2e-spell-dialog-window td{border-color:rgba(128,96,204,.28)!important}
+.application.add2e-spell-dialog-window tbody tr:nth-child(even){background:rgba(128,96,204,.08)!important}
+.application.add2e-spell-dialog-window .dialog-buttons{background:transparent!important;border:0!important;padding-top:10px!important;gap:8px!important}
+.application.add2e-spell-dialog-window .dialog-buttons button{border:1px solid var(--a2e-border)!important;border-radius:9px!important;background:#fff!important;color:var(--a2e-dark)!important;font-weight:800!important;box-shadow:none!important}
+.application.add2e-spell-dialog-window .dialog-buttons button.default,.application.add2e-spell-dialog-window .dialog-buttons button[data-action="yes"],.application.add2e-spell-dialog-window .dialog-buttons button[data-action="roll"],.application.add2e-spell-dialog-window .dialog-buttons button[data-action="cast"]{background:linear-gradient(180deg,var(--a2e-main),var(--a2e-dark))!important;color:#fff!important}
+.add2e-spell-dialog-shell{border:2px solid var(--a2e-border);border-radius:14px;overflow:hidden;background:linear-gradient(180deg,var(--a2e-bg),var(--a2e-accent));color:var(--a2e-text)}
+.add2e-spell-dialog-header{display:flex;align-items:center;gap:10px;padding:10px 12px;background:linear-gradient(90deg,var(--a2e-dark),var(--a2e-main));color:#fff;border-bottom:2px solid var(--a2e-border)}
+.add2e-spell-dialog-header img{width:42px;height:42px;border-radius:8px;background:#fff;object-fit:cover;border:2px solid rgba(255,255,255,.9)}
+.add2e-spell-dialog-title{font-size:1.08rem;font-weight:800}.add2e-spell-dialog-subtitle{font-size:.84rem;opacity:.95}.add2e-spell-dialog-body{padding:12px}
+.chat-message .add2e-arcane-chat-card{border:2px solid #8060cc!important;border-radius:10px!important;background:linear-gradient(180deg,#f8f3ff,#e8ddfb)!important;color:#211735!important;box-shadow:0 3px 10px rgba(46,28,90,.16)!important;overflow:hidden!important}
+.chat-message .add2e-arcane-chat-card>header,.chat-message .add2e-arcane-chat-card>.card-header{background:linear-gradient(90deg,#2e1c5a,#6b49b8)!important;color:#fff!important;border:0!important}
 `;
-  document.head.appendChild(el);
+  document.head.append(style);
 }
 
 function shell({ theme = "cleric", title = "Sort", subtitle = "", img = "icons/svg/book.svg", body = "" } = {}) {
   ensureStyles();
   const t = themeData(theme);
-  return `<div class="add2e-spell-dialog-shell add2e-spell-dialog-theme-${esc(theme)}" data-add2e-spell-theme="${esc(theme)}" style="--a2e-bg:${t.bg};--a2e-accent:${t.accent};--a2e-dark:${t.dark};--a2e-main:${t.main};--a2e-border:${t.border};--a2e-text:${t.text};--a2e-label:${t.labelColor};"><div class="add2e-spell-dialog-header"><img src="${esc(img)}" alt="" onerror="this.src='icons/svg/book.svg';"><div><div class="add2e-spell-dialog-title">${esc(title)}</div><div class="add2e-spell-dialog-subtitle">${esc(subtitle || t.label)}</div></div></div><div class="add2e-spell-dialog-body">${body}</div></div>`;
+  return `<div class="add2e-spell-dialog-shell add2e-spell-dialog-theme-${esc(theme)}" style="--a2e-bg:${t.bg};--a2e-accent:${t.accent};--a2e-dark:${t.dark};--a2e-main:${t.main};--a2e-border:${t.border};--a2e-text:${t.text};--a2e-label:${t.labelColor};"><div class="add2e-spell-dialog-header"><img src="${esc(img)}" alt=""><div><div class="add2e-spell-dialog-title">${esc(title)}</div><div class="add2e-spell-dialog-subtitle">${esc(subtitle || t.label)}</div></div></div><div class="add2e-spell-dialog-body">${body}</div></div>`;
 }
 
-function primaryButtonClass(buttons) {
-  return buttons;
+function primaryButtonClass(buttons) { return buttons; }
+
+function isManagedDialog(title, content) {
+  const text = norm(`${title} ${content}`);
+  return text.startsWith("lancement_")
+    || text.includes("add2e_thief_roll_dialog")
+    || text.includes("livre_de_sorts")
+    || text.includes("grimoire")
+    || text.includes("parchemin")
+    || text.includes("copie_du_sort")
+    || text.includes("copier_un_sort")
+    || text.includes("jet_de_connaissance")
+    || text.includes("test_de_connaissance");
 }
 
 function wrapDialogOptions(options = {}) {
-  const windowTitle = String(options?.window?.title ?? options?.title ?? "");
+  const title = String(options?.window?.title ?? options?.title ?? "");
   const content = String(options?.content ?? "");
-  const isSpellDialog = windowTitle.toLowerCase().startsWith("lancement");
-  const isThiefDialog = content.includes("add2e-thief-roll-dialog");
-  if (!isSpellDialog && !isThiefDialog) return options;
-  if (content.includes("add2e-spell-dialog-shell")) return options;
+  if (!isManagedDialog(title, content) || content.includes("add2e-spell-dialog-shell")) return options;
 
-  const rawTitle = isSpellDialog
-    ? (windowTitle.replace(/^Lancement\s*:\s*/i, "").trim() || "Sort")
-    : (windowTitle.trim() || "Compétence de voleur");
-  const theme = isThiefDialog ? "thief" : guessTheme({ title: windowTitle, content, theme: options?.add2eTheme });
+  const theme = guessTheme({ title, content, theme: options?.add2eTheme });
   const t = themeData(theme);
-  const img = guessIcon({ title: rawTitle, content, img: options?.add2eImg });
-  const classes = Array.isArray(options?.window?.classes) ? [...options.window.classes] : [];
-  classes.push("add2e-spell-dialog-window", `add2e-theme-${theme}`);
-
+  const rawTitle = title.replace(/^Lancement\s*:\s*/i, "").trim() || "ADD2E";
+  const classes = [...(Array.isArray(options?.window?.classes) ? options.window.classes : []), "add2e-spell-dialog-window"];
   return {
     ...options,
     window: { ...(options.window ?? {}), classes: [...new Set(classes)] },
-    classes: [...new Set([...(Array.isArray(options.classes) ? options.classes : []), "add2e-spell-dialog-window", `add2e-theme-${theme}`])],
-    content: shell({ theme, title: rawTitle, subtitle: isThiefDialog ? "Compétence de voleur" : `Sort — ${t.label}`, img, body: content })
+    classes: [...new Set([...(Array.isArray(options.classes) ? options.classes : []), "add2e-spell-dialog-window"])],
+    content: shell({ theme, title: rawTitle, subtitle: t.label, img: guessIcon({ title, content, img: options?.add2eImg }), body: content })
   };
 }
 
 function patchDialogV2() {
   const DialogV2 = foundry.applications?.api?.DialogV2;
   if (!DialogV2 || DialogV2.__add2eSpellDialogPatched) return;
-  const originalWait = DialogV2.wait.bind(DialogV2);
-  DialogV2.wait = function add2eSpellDialogWait(options = {}, ...rest) {
-    return originalWait(wrapDialogOptions(options), ...rest);
-  };
+  for (const method of ["wait", "confirm", "prompt", "alert"]) {
+    if (typeof DialogV2[method] !== "function") continue;
+    const original = DialogV2[method].bind(DialogV2);
+    DialogV2[method] = (options = {}, ...rest) => original(wrapDialogOptions(options), ...rest);
+  }
   DialogV2.__add2eSpellDialogPatched = true;
-  console.log("[ADD2E][SPELL_DIALOG_UI][PATCH_DIALOGV2] actif");
 }
 
-function asHtmlElement(html) {
+function rootElement(html, app = null) {
   if (html instanceof HTMLElement) return html;
   if (html?.[0] instanceof HTMLElement) return html[0];
+  if (app?.element instanceof HTMLElement) return app.element;
+  if (app?.element?.[0] instanceof HTMLElement) return app.element[0];
   return null;
 }
 
-function styleThiefSkillChat(message, html) {
-  const root = asHtmlElement(html);
+function styleRenderedDialog(app, html) {
+  const root = rootElement(html, app);
   if (!root) return;
-  const content = String(message?.content ?? "");
-  if (!/Compétence de voleur|Compétence d’assassin/i.test(content)) return;
-
-  for (const card of root.querySelectorAll(".add2e-card-test")) {
-    if (card.dataset.add2eThiefTheme === VERSION) continue;
-    card.dataset.add2eThiefTheme = VERSION;
-    card.style.setProperty("border", "2px solid #3b9daf", "important");
-    card.style.setProperty("background", "linear-gradient(180deg, #f4fcfd, #cce9ed)", "important");
-    card.style.setProperty("color", "#14333b", "important");
-    card.style.setProperty("box-shadow", "0 3px 10px rgba(22, 74, 88, .16)", "important");
-
-    const header = card.firstElementChild;
-    if (header instanceof HTMLElement) {
-      header.style.setProperty("margin", "-.75em -1em .65em", "important");
-      header.style.setProperty("padding", ".55em .7em", "important");
-      header.style.setProperty("background", "linear-gradient(90deg, #164a58, #2a8293)", "important");
-      header.style.setProperty("color", "#ffffff", "important");
-      for (const element of header.querySelectorAll("i, b, span")) element.style.setProperty("color", "#ffffff", "important");
-    }
-  }
+  const title = String(app?.title ?? root.querySelector(".window-title")?.textContent ?? "");
+  const content = String(root.querySelector(".window-content")?.textContent ?? root.textContent ?? "");
+  if (!isManagedDialog(title, content)) return;
+  const theme = guessTheme({ title, content });
+  const t = themeData(theme);
+  root.classList.add("add2e-spell-dialog-window");
+  for (const [key, value] of Object.entries({ "--a2e-bg": t.bg, "--a2e-accent": t.accent, "--a2e-dark": t.dark, "--a2e-main": t.main, "--a2e-border": t.border, "--a2e-text": t.text, "--a2e-label": t.labelColor })) root.style.setProperty(key, value);
 }
 
-function registerThiefSkillChatTheme() {
-  if (globalThis.__ADD2E_THIEF_SKILL_CHAT_THEME_V1) return;
-  globalThis.__ADD2E_THIEF_SKILL_CHAT_THEME_V1 = true;
-  Hooks.on("renderChatMessageHTML", styleThiefSkillChat);
+function styleChatMessage(message, html) {
+  const root = rootElement(html);
+  if (!root) return;
+  const content = String(message?.content ?? root.textContent ?? "");
+  const text = norm(content);
+  if (!text.includes("connaissance") && !text.includes("copie_du_sort") && !text.includes("livre_de_sorts") && !text.includes("parchemin")) return;
+  const card = root.querySelector(".add2e-card-test,.chat-card,.message-content>div") ?? root.querySelector(".message-content");
+  card?.classList?.add("add2e-arcane-chat-card");
+}
+
+const refreshTimers = new Map();
+function refreshActorSheetForSpell(item) {
+  const actor = item?.parent;
+  if (!actor || actor.documentName !== "Actor" || actor.type !== "personnage" || !["sort", "spell"].includes(String(item.type).toLowerCase())) return;
+  const key = actor.uuid ?? actor.id;
+  clearTimeout(refreshTimers.get(key));
+  refreshTimers.set(key, setTimeout(() => {
+    refreshTimers.delete(key);
+    const apps = new Set([...Object.values(actor.apps ?? {}), ...Object.values(ui.windows ?? {}).filter(app => (app?.actor ?? app?.document ?? app?.object)?.id === actor.id)]);
+    for (const app of apps) {
+      try {
+        app._add2eRememberActiveTab?.(app.element, app._add2eActiveTab || app._add2eReadStoredTab?.() || "sorts");
+        app.render?.({ force: true });
+      } catch (_error) {
+        try { app.render?.(true); } catch (error) { console.warn("[ADD2E][SPELL_DIALOG_UI][REFRESH_ERROR]", error); }
+      }
+    }
+  }, 50));
 }
 
 globalThis.ADD2E_SPELL_DIALOG_UI = { version: VERSION, themes: THEMES, shell, primaryButtonClass, ensureStyles, guessTheme, guessIcon, wrapDialogOptions, esc };
 Hooks.once("ready", () => { ensureStyles(); patchDialogV2(); });
-registerThiefSkillChatTheme();
+Hooks.on("renderDialogV2", styleRenderedDialog);
+Hooks.on("renderApplicationV2", styleRenderedDialog);
+Hooks.on("renderChatMessageHTML", styleChatMessage);
+Hooks.on("createItem", refreshActorSheetForSpell);
+Hooks.on("updateItem", refreshActorSheetForSpell);
+Hooks.on("deleteItem", refreshActorSheetForSpell);
 ensureStyles();
 console.log("[ADD2E][SPELL_DIALOG_UI][VERSION]", VERSION);
