@@ -1,7 +1,7 @@
 // ADD2E — Livres de sorts et parchemins.
 // Compatible Foundry V13/V14/V15. ApplicationV2 / DialogV2 uniquement.
 
-const VERSION = "2026-07-13-arcane-documents-v3";
+const VERSION = "2026-07-14-arcane-documents-v4";
 const ARCANE_LISTS = new Set(["magicien", "illusionniste"]);
 const SCROLL_LISTS = new Set(["magicien", "illusionniste", "clerc", "druide"]);
 const BOOK_NAMES = {
@@ -651,7 +651,7 @@ async function selectBookSpells(actor, book, candidates, chance) {
   if (!DialogV2?.wait) return null;
   const rows = candidates.map((candidate, index) => `
     <label style="display:grid;grid-template-columns:28px 1fr 75px 150px;gap:8px;align-items:center;padding:5px 6px;border-bottom:1px solid #d5c7a6;">
-      <input type="checkbox" value="${index}" checked>
+      <input type="checkbox" value="${index}">
       <span><b>${esc(candidate.entry.name)}</b></span>
       <span>Niv. ${candidate.entry.level}</span>
       <span>${esc(candidate.lists.map(listLabel).join(" / "))}</span>
@@ -683,7 +683,7 @@ async function selectBookSpells(actor, book, candidates, chance) {
   });
 }
 
-async function copySpellbook(actor, book) {
+async function copySpellbook(actor, book, requestedSpellKey = "") {
   if (!actor || !book || !isSpellbook(book)) return false;
   await syncActorSpellbooks(actor, { reason: "before-copy" });
   const compatibleActorLists = actorArcaneLists(actor);
@@ -702,7 +702,21 @@ async function copySpellbook(actor, book) {
     return false;
   }
   const chance = learningChance(actor);
-  const selected = await selectBookSpells(actor, book, candidates, chance);
+  const requestedKey = String(requestedSpellKey ?? "").trim();
+  const individualCopy = Boolean(requestedKey);
+  let selected;
+
+  if (individualCopy) {
+    const candidateIndex = candidates.findIndex(candidate => String(candidate.entry.key) === requestedKey);
+    if (candidateIndex < 0) {
+      ui.notifications.info("Ce sort est déjà connu ou n'est pas compatible avec ce personnage.");
+      return false;
+    }
+    selected = [candidateIndex];
+  } else {
+    selected = await selectBookSpells(actor, book, candidates, chance);
+  }
+
   if (!selected?.length) return false;
   const copied = [];
   const failed = [];
@@ -751,9 +765,13 @@ async function copySpellbook(actor, book) {
   const errorRows = errors.length ? errors.map(result => `${esc(result.entry.name)} — ${esc(result.message)}`) : [];
   await createArcaneChatMessage({
     actor,
-    title: "Copie d'un livre de sorts",
+    title: individualCopy ? "Copie d'un sort depuis un livre" : "Copie d'un livre de sorts",
     source: book.name,
-    result: copied.length ? `${copied.length} sort(s) ajouté(s) au livre personnel et à la liste des sorts.` : "Aucun sort n'a été ajouté.",
+    result: copied.length
+      ? individualCopy
+        ? `${copied[0].entry.name} a été ajouté au livre personnel et à la liste des sorts.`
+        : `${copied.length} sort(s) ajouté(s) au livre personnel et à la liste des sorts.`
+      : "Aucun sort n'a été ajouté.",
     details: [
       `<b>Réussites (${copied.length})</b> : ${copiedRows.join(" ; ")}`,
       `<b>Échecs (${failed.length})</b> : ${failedRows.join(" ; ")}`,
@@ -767,19 +785,61 @@ async function copySpellbook(actor, book) {
   return copied.length > 0;
 }
 
-async function viewSpellbook(book) {
+async function viewSpellbook(book, actor = null) {
   const DialogV2 = foundry?.applications?.api?.DialogV2;
   if (!DialogV2?.wait || !book) return false;
+
   const entries = documentEntries(book);
-  const rows = entries.length ? entries.map(entry => `<tr>
-    <td><img src="${esc(entry.img)}" width="28" height="28" style="object-fit:cover;border-radius:4px;"></td>
-    <td><b>${esc(entry.name)}</b></td><td>${entry.level}</td><td>${esc(entry.lists.map(listLabel).join(" / "))}</td>
-  </tr>`).join("") : '<tr><td colspan="4"><em>Aucun sort inscrit.</em></td></tr>';
+  const actorLists = actor ? actorArcaneLists(actor) : [];
+  const showCopyActions = Boolean(actor && arcaneData(book).personal !== true);
+  const actionHeader = showCopyActions ? "<th style=\"width:90px;\">Action</th>" : "";
+  const emptyColspan = showCopyActions ? 5 : 4;
+
+  const rows = entries.length ? entries.map(entry => {
+    let actionCell = "";
+    if (showCopyActions) {
+      const compatibleLists = entry.lists.filter(list => actorLists.includes(list));
+      const unknownLists = compatibleLists.filter(list => !actorKnows(actor, entry, list));
+
+      if (!compatibleLists.length) {
+        actionCell = '<td style="text-align:center;"><span title="Liste de sort incompatible" style="opacity:.55;"><i class="fas fa-ban"></i></span></td>';
+      } else if (!unknownLists.length) {
+        actionCell = '<td style="text-align:center;"><span title="Sort déjà connu"><i class="fas fa-check"></i></span></td>';
+      } else {
+        actionCell = `<td style="text-align:center;">
+          <button
+            type="button"
+            data-add2e-arcane-action="copy-book-entry"
+            data-item-id="${esc(book.id)}"
+            data-actor-id="${esc(actor.id)}"
+            data-spell-key="${esc(entry.key)}"
+            title="Copier uniquement ${esc(entry.name)} dans le livre personnel"
+            style="width:34px;height:30px;cursor:pointer;"
+          ><i class="fas fa-copy"></i></button>
+        </td>`;
+      }
+    }
+
+    return `<tr>
+      <td><img src="${esc(entry.img)}" width="28" height="28" style="object-fit:cover;border-radius:4px;"></td>
+      <td><b>${esc(entry.name)}</b></td>
+      <td>${entry.level}</td>
+      <td>${esc(entry.lists.map(listLabel).join(" / "))}</td>
+      ${actionCell}
+    </tr>`;
+  }).join("") : `<tr><td colspan="${emptyColspan}"><em>Aucun sort inscrit.</em></td></tr>`;
+
   await DialogV2.wait({
     window: { title: book.name },
     modal: true,
     rejectClose: false,
-    content: `<div style="min-width:620px;max-height:650px;overflow:auto;padding:8px;"><table style="width:100%;border-collapse:collapse;"><thead><tr><th></th><th>Sort</th><th>Niveau</th><th>Liste</th></tr></thead><tbody>${rows}</tbody></table></div>`,
+    content: `<div style="min-width:680px;max-height:650px;overflow:auto;padding:8px;">
+      ${showCopyActions ? `<p>Chaque bouton <i class="fas fa-copy"></i> tente uniquement la copie du sort correspondant.</p>` : ""}
+      <table style="width:100%;border-collapse:collapse;">
+        <thead><tr><th></th><th>Sort</th><th>Niveau</th><th>Liste</th>${actionHeader}</tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`,
     buttons: [{ action: "close", label: "Fermer", icon: "fa-solid fa-check", default: true }]
   });
   return true;
@@ -907,8 +967,9 @@ async function handleAction(element) {
     return false;
   }
   application?._add2eRememberActiveTab?.();
-  if (action === "view-book") return viewSpellbook(item);
+  if (action === "view-book") return viewSpellbook(item, actor);
   if (action === "copy-book") return copySpellbook(actor, item);
+  if (action === "copy-book-entry") return copySpellbook(actor, item, element?.dataset?.spellKey ?? "");
   if (action === "cast-scroll") return castScroll(actor, item);
   return false;
 }
