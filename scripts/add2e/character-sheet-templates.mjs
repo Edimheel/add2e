@@ -20,7 +20,7 @@ const ADD2E_CHARACTER_SHEET_PARTIALS = [
   "systems/add2e/templates/actor/parts/tab-notes.hbs"
 ];
 
-const ADD2E_BOOK_LEARNING_CHAT_VERSION = "2026-07-14-v19-dom-safe-single-card";
+const ADD2E_BOOK_LEARNING_CHAT_VERSION = "2026-07-14-v20-precreate-single-card-nonmodal-reader";
 globalThis.ADD2E_BOOK_LEARNING_CHAT_VERSION = ADD2E_BOOK_LEARNING_CHAT_VERSION;
 
 const ADD2E_PENDING_BOOK_LEARNING_ROLLS = new Map();
@@ -45,21 +45,27 @@ function add2eBookLearningPlainText(value) {
   try {
     const template = document.createElement("template");
     template.innerHTML = source;
-    return String(template.content.textContent ?? "")
-      .replace(/\s+/g, " ")
-      .trim();
+    return String(template.content.textContent ?? "").replace(/\s+/g, " ").trim();
   } catch (_error) {
     return source.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
   }
 }
 
-function add2eBookLearningActorKey(message) {
-  return String(message?.speaker?.actor ?? message?.speaker?.token ?? message?.user?.id ?? game.user?.id ?? "global");
+function add2eBookLearningActorKey(message, data = {}) {
+  return String(
+    data?.speaker?.actor
+    ?? message?.speaker?.actor
+    ?? data?.speaker?.token
+    ?? message?.speaker?.token
+    ?? game.user?.id
+    ?? "global"
+  );
 }
 
-function add2eBookLearningRollTotal(message) {
-  const rolls = Array.isArray(message?.rolls) ? message.rolls : [];
-  const total = Number(rolls[0]?.total ?? rolls[0]?._total);
+function add2eBookLearningRollTotal(message, data = {}) {
+  const rolls = message?.rolls ?? data?.rolls ?? [];
+  const first = Array.isArray(rolls) ? rolls[0] : null;
+  const total = Number(first?.total ?? first?._total);
   return Number.isFinite(total) ? total : null;
 }
 
@@ -68,46 +74,42 @@ function add2eBookLearningImage(content) {
     ?? "icons/sundries/books/book-embossed-gold-red.webp";
 }
 
-function add2eBookLearningCleanLabel(value) {
-  return add2eBookLearningPlainText(value)
-    .replace(/^(?:sort|source|livre)\s*:?\s*/i, "")
-    .replace(/\s+/g, " ")
-    .trim();
+function add2eBookLearningSpellFromFinalText(text) {
+  const success = text.match(/(.{1,120}?)\s+a\s+[ée]t[ée]\s+ajout[ée]\s+au\s+livre\s+personnel/i);
+  if (success?.[1]) return success[1].replace(/^.*?(?:réussite|sort)\s*:?\s*/i, "").trim();
+  const failure = text.match(/(.{1,120}?)\s+n['’]\s*a\s+pas\s+[ée]t[ée]\s+appris/i);
+  if (failure?.[1]) return failure[1].replace(/^.*?(?:échec|sort)\s*:?\s*/i, "").trim();
+  return "";
 }
 
-function add2eParseBookLearningRoll(message) {
-  const flavorText = add2eBookLearningPlainText(message?.flavor);
-  const contentText = add2eBookLearningPlainText(message?.content);
-  const text = `${flavorText} ${contentText}`.trim();
-  const normalized = add2eBookLearningNormalize(text);
-  const total = add2eBookLearningRollTotal(message);
-  if (total === null || !normalized.includes("test_de_comprehension") || !normalized.includes("livre_de_sorts")) return null;
+function add2eParseBookLearningRoll(message, data = {}) {
+  const flavor = String(data?.flavor ?? message?.flavor ?? "");
+  const content = String(data?.content ?? message?.content ?? "");
+  const plain = add2eBookLearningPlainText(`${flavor} ${content}`);
+  const normalized = add2eBookLearningNormalize(plain);
+  const total = add2eBookLearningRollTotal(message, data);
 
-  const chanceMatch = text.match(/chance\s*:?\s*(\d+)\s*%/i);
-  const cleanedFlavor = flavorText
-    .replace(/^\s*test\s+de\s+compr[ée]hension\s*[-—–:]?\s*/i, "")
-    .replace(/\s+/g, " ")
-    .trim();
-  const parts = cleanedFlavor.split(/\s+[—–-]\s+/).map(add2eBookLearningCleanLabel).filter(Boolean);
-  const spellName = parts[0] && !/^livre de sorts/i.test(parts[0]) ? parts[0] : "Sort";
-  const sourceName = parts.find(part => /^livre de sorts/i.test(part))
-    ?? parts[parts.length - 1]
-    ?? "Livre de sorts";
+  if (total === null || !normalized.includes("test_de_comprehension") || !normalized.includes("livre_de_sorts")) {
+    return null;
+  }
+
+  const chanceMatch = plain.match(/chance\s*:?\s*(\d+)\s*%/i);
+  const sourceMatch = plain.match(/(livre\s+de\s+sorts(?:\s+de\s+[a-zà-ÿ'’ -]+)?)/i);
+  const spellMatch = plain.match(/test\s+de\s+compr[ée]hension\s*(?:[-—:]\s*)?(.+?)\s*[-—]\s*livre\s+de\s+sorts/i);
 
   return {
     createdAt: Date.now(),
-    messageId: message.id,
     total,
     chance: chanceMatch ? Number(chanceMatch[1]) : null,
-    spellName,
-    sourceName,
-    img: add2eBookLearningImage(message?.content)
+    spellName: String(spellMatch?.[1] ?? "").trim(),
+    sourceName: String(sourceMatch?.[1] ?? "Livre de sorts").trim(),
+    img: add2eBookLearningImage(content)
   };
 }
 
-function add2eIsFinalBookLearningMessage(message) {
-  const text = `${add2eBookLearningPlainText(message?.flavor)} ${add2eBookLearningPlainText(message?.content)}`;
-  const normalized = add2eBookLearningNormalize(text);
+function add2eIsFinalBookLearningMessage(message, data = {}) {
+  const plain = add2eBookLearningPlainText(`${data?.flavor ?? message?.flavor ?? ""} ${data?.content ?? message?.content ?? ""}`);
+  const normalized = add2eBookLearningNormalize(plain);
   return normalized.includes("copie_d_un_sort_depuis_un_livre")
     || normalized.includes("copie_dun_sort_depuis_un_livre")
     || normalized.includes("ajoute_au_livre_personnel_et_a_la_liste_des_sorts")
@@ -115,22 +117,27 @@ function add2eIsFinalBookLearningMessage(message) {
 }
 
 function add2eBuildBookLearningCard(result, originalContent) {
-  const original = add2eBookLearningNormalize(add2eBookLearningPlainText(originalContent));
-  const explicitFailure = original.includes("echec")
-    || original.includes("nest_pas_compris")
-    || original.includes("n_est_pas_compris")
-    || original.includes("na_pas_ete_appris");
-  const explicitSuccess = original.includes("a_ete_ajoute")
-    || original.includes("ajoute_au_livre")
-    || original.includes("reussite");
+  const plain = add2eBookLearningPlainText(originalContent);
+  const normalized = add2eBookLearningNormalize(plain);
+  const explicitFailure = normalized.includes("echec")
+    || normalized.includes("nest_pas_compris")
+    || normalized.includes("n_est_pas_compris")
+    || normalized.includes("na_pas_ete_appris");
+  const explicitSuccess = normalized.includes("a_ete_ajoute")
+    || normalized.includes("ajoute_au_livre")
+    || normalized.includes("reussite");
   const success = explicitSuccess || (!explicitFailure
     && Number.isFinite(result.total)
     && Number.isFinite(result.chance)
     && result.total <= result.chance);
+
+  const spellName = add2eBookLearningSpellFromFinalText(plain)
+    || result.spellName
+    || "Sort";
   const status = success ? "Réussite" : "Échec";
   const detail = success
-    ? `${result.spellName} a été ajouté au livre personnel et à la liste des sorts.`
-    : `${result.spellName} n’a pas été appris et n’a pas été ajouté au livre personnel.`;
+    ? `${spellName} a été ajouté au livre personnel et à la liste des sorts.`
+    : `${spellName} n’a pas été appris et n’a pas été ajouté au livre personnel.`;
 
   return `<div class="add2e-card add2e-arcane-card add2e-book-learning-card ${success ? "is-success" : "is-failure"}">
     <header class="add2e-card-header">
@@ -142,7 +149,7 @@ function add2eBuildBookLearningCard(result, originalContent) {
     </header>
     <div class="add2e-card-body">
       <div class="add2e-book-learning-grid">
-        <b>Sort</b><span>${add2eBookLearningEscape(result.spellName)}</span>
+        <b>Sort</b><span>${add2eBookLearningEscape(spellName)}</span>
         <b>Résultat</b><span>${result.total}</span>
         <b>Chance</b><span>${Number.isFinite(result.chance) ? `${result.chance}%` : "—"}</span>
       </div>
@@ -157,6 +164,7 @@ function add2eInstallBookLearningCardStyles() {
   const old = document.getElementById(id);
   if (old?.dataset?.version === ADD2E_BOOK_LEARNING_CHAT_VERSION) return;
   old?.remove();
+
   const style = document.createElement("style");
   style.id = id;
   style.dataset.version = ADD2E_BOOK_LEARNING_CHAT_VERSION;
@@ -175,39 +183,66 @@ function add2eInstallBookLearningCardStyles() {
   document.head.append(style);
 }
 
-async function add2eConsolidateBookLearningMessage(message, _options, userId) {
-  if (String(userId ?? "") !== String(game.user?.id ?? "")) return;
+function add2ePrepareSingleBookLearningMessage(message, data = {}, _options = {}, userId = null) {
+  if (userId && String(userId) !== String(game.user?.id ?? "")) return;
 
-  const roll = add2eParseBookLearningRoll(message);
+  const roll = add2eParseBookLearningRoll(message, data);
   if (roll) {
-    const key = add2eBookLearningActorKey(message);
+    const key = add2eBookLearningActorKey(message, data);
     ADD2E_PENDING_BOOK_LEARNING_ROLLS.set(key, roll);
     window.setTimeout(() => {
-      if (ADD2E_PENDING_BOOK_LEARNING_ROLLS.get(key) === roll) ADD2E_PENDING_BOOK_LEARNING_ROLLS.delete(key);
+      if (ADD2E_PENDING_BOOK_LEARNING_ROLLS.get(key) === roll) {
+        ADD2E_PENDING_BOOK_LEARNING_ROLLS.delete(key);
+      }
     }, 15000);
-    return;
+
+    // Le message de jet n'est jamais créé : aucune notification éphémère parasite.
+    return false;
   }
 
-  if (!add2eIsFinalBookLearningMessage(message)) return;
-  const key = add2eBookLearningActorKey(message);
+  if (!add2eIsFinalBookLearningMessage(message, data)) return;
+
+  const key = add2eBookLearningActorKey(message, data);
   const result = ADD2E_PENDING_BOOK_LEARNING_ROLLS.get(key);
   if (!result || Date.now() - result.createdAt > 15000) return;
   ADD2E_PENDING_BOOK_LEARNING_ROLLS.delete(key);
 
-  const rollMessage = game.messages?.get?.(result.messageId);
-  if (rollMessage && rollMessage.id !== message.id) {
-    await rollMessage.delete({ add2eBookLearningMerge: true });
-  }
-
-  await message.update({
-    content: add2eBuildBookLearningCard(result, message.content),
+  const originalContent = String(data?.content ?? message?.content ?? "");
+  message.updateSource({
+    content: add2eBuildBookLearningCard(result, originalContent),
     flavor: null,
     rolls: []
-  }, { add2eBookLearningMerge: true });
+  });
+}
+
+function add2eInstallNonModalSpellbookWait() {
+  const DialogV2 = foundry?.applications?.api?.DialogV2;
+  if (!DialogV2 || DialogV2.__add2eNonModalSpellbookWaitV20) return false;
+  if (typeof DialogV2.wait !== "function") return false;
+
+  const originalWait = DialogV2.wait.bind(DialogV2);
+  DialogV2.wait = function add2eNonModalSpellbookWait(options = {}, ...rest) {
+    const content = String(options?.content ?? "");
+    const isSpellbookReader = content.includes("add2e-spellbook-reader");
+
+    if (!isSpellbookReader) return originalWait(options, ...rest);
+
+    const application = new DialogV2({
+      ...options,
+      modal: false,
+      rejectClose: false
+    });
+    application.render({ force: true });
+    return Promise.resolve(application);
+  };
+
+  DialogV2.__add2eNonModalSpellbookWaitV20 = true;
+  return true;
 }
 
 function add2eOpenGmSpellbookAsSheet(event) {
   if (!game.user?.isGM) return;
+
   const button = event.target instanceof Element
     ? event.target.closest('[data-add2e-arcane-action="view-book"][data-item-id]')
     : null;
@@ -224,17 +259,16 @@ function add2eOpenGmSpellbookAsSheet(event) {
   book.sheet?.render?.({ force: true });
 }
 
+add2eInstallNonModalSpellbookWait();
+
 Hooks.once("init", async () => {
   await foundry.applications.handlebars.loadTemplates(ADD2E_CHARACTER_SHEET_PARTIALS);
 });
 
 Hooks.once("ready", () => {
   add2eInstallBookLearningCardStyles();
+  add2eInstallNonModalSpellbookWait();
   document.addEventListener("click", add2eOpenGmSpellbookAsSheet, true);
 });
 
-Hooks.on("createChatMessage", (message, options, userId) => {
-  void add2eConsolidateBookLearningMessage(message, options, userId).catch(error => {
-    console.error("[ADD2E][BOOK_LEARNING_CHAT][ERROR]", error);
-  });
-});
+Hooks.on("preCreateChatMessage", add2ePrepareSingleBookLearningMessage);
