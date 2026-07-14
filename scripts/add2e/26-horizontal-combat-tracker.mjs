@@ -11,7 +11,7 @@ import {
   sortedCombatants
 } from "../add2e-initiative-order.mjs";
 
-export const ADD2E_HORIZONTAL_TRACKER_VERSION = "2026-07-14-horizontal-combat-tracker-v4";
+export const ADD2E_HORIZONTAL_TRACKER_VERSION = "2026-07-14-horizontal-combat-tracker-v5";
 
 const ApplicationV2 = foundry?.applications?.api?.ApplicationV2;
 const DialogV2 = foundry?.applications?.api?.DialogV2;
@@ -549,10 +549,7 @@ class Add2eHorizontalCombatTracker extends ApplicationV2 {
       return ids.length ? rollCombatants(combat, ids) : ui.notifications?.info?.("Toutes les initiatives sont déjà renseignées.");
     }
     if (action === "focus-token" && combatant) return this._focusCombatant(combatant);
-    if (action === "end-combat" && game.user?.isGM && combat.started) {
-      const confirmed = await confirmAction({ title: "Terminer le combat", content: "<p>Terminer le combat en cours ?</p>", yes: "Terminer" });
-      if (confirmed) return combat.endCombat();
-    }
+    if (action === "end-combat" && game.user?.isGM && combat.started) return combat.endCombat();
   }
 
   _focusCombatant(combatant) {
