@@ -20,7 +20,7 @@ const ADD2E_CHARACTER_SHEET_PARTIALS = [
   "systems/add2e/templates/actor/parts/tab-notes.hbs"
 ];
 
-const ADD2E_BOOK_LEARNING_CHAT_VERSION = "2026-07-14-v20-precreate-single-card-nonmodal-reader";
+const ADD2E_BOOK_LEARNING_CHAT_VERSION = "2026-07-14-v21-dsn-true-nonmodal";
 globalThis.ADD2E_BOOK_LEARNING_CHAT_VERSION = ADD2E_BOOK_LEARNING_CHAT_VERSION;
 
 const ADD2E_PENDING_BOOK_LEARNING_ROLLS = new Map();
@@ -62,9 +62,13 @@ function add2eBookLearningActorKey(message, data = {}) {
   );
 }
 
-function add2eBookLearningRollTotal(message, data = {}) {
+function add2eBookLearningRolls(message, data = {}) {
   const rolls = message?.rolls ?? data?.rolls ?? [];
-  const first = Array.isArray(rolls) ? rolls[0] : null;
+  return Array.isArray(rolls) ? rolls : [];
+}
+
+function add2eBookLearningRollTotal(message, data = {}) {
+  const first = add2eBookLearningRolls(message, data)[0] ?? null;
   const total = Number(first?.total ?? first?._total);
   return Number.isFinite(total) ? total : null;
 }
@@ -183,6 +187,20 @@ function add2eInstallBookLearningCardStyles() {
   document.head.append(style);
 }
 
+async function add2eShowBookLearningDice(message, data = {}) {
+  const dice3d = game?.dice3d;
+  if (!dice3d?.showForRoll) return false;
+  const roll = add2eBookLearningRolls(message, data)[0] ?? null;
+  if (!roll) return false;
+  try {
+    await dice3d.showForRoll(roll, game.user, true, null, false);
+    return true;
+  } catch (error) {
+    console.warn("[ADD2E][BOOK_LEARNING_CHAT][DICE_SO_NICE] Animation impossible.", error);
+    return false;
+  }
+}
+
 function add2ePrepareSingleBookLearningMessage(message, data = {}, _options = {}, userId = null) {
   if (userId && String(userId) !== String(game.user?.id ?? "")) return;
 
@@ -196,7 +214,7 @@ function add2ePrepareSingleBookLearningMessage(message, data = {}, _options = {}
       }
     }, 15000);
 
-    // Le message de jet n'est jamais créé : aucune notification éphémère parasite.
+    void add2eShowBookLearningDice(message, data);
     return false;
   }
 
@@ -215,9 +233,25 @@ function add2ePrepareSingleBookLearningMessage(message, data = {}, _options = {}
   });
 }
 
+function add2eMakeDialogElementNonModal(application) {
+  window.setTimeout(() => {
+    const root = application?.element?.jquery ? application.element[0] : application?.element;
+    if (!(root instanceof HTMLDialogElement)) return;
+    try {
+      if (root.open) root.close();
+      root.show();
+      root.removeAttribute("aria-modal");
+      root.removeAttribute("data-modal");
+      root.classList.remove("modal");
+    } catch (error) {
+      console.warn("[ADD2E][SPELLBOOK_READER][NON_MODAL] Conversion impossible.", error);
+    }
+  }, 0);
+}
+
 function add2eInstallNonModalSpellbookWait() {
   const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (!DialogV2 || DialogV2.__add2eNonModalSpellbookWaitV20) return false;
+  if (!DialogV2 || DialogV2.__add2eNonModalSpellbookWaitV21) return false;
   if (typeof DialogV2.wait !== "function") return false;
 
   const originalWait = DialogV2.wait.bind(DialogV2);
@@ -233,10 +267,11 @@ function add2eInstallNonModalSpellbookWait() {
       rejectClose: false
     });
     application.render({ force: true });
+    add2eMakeDialogElementNonModal(application);
     return Promise.resolve(application);
   };
 
-  DialogV2.__add2eNonModalSpellbookWaitV20 = true;
+  DialogV2.__add2eNonModalSpellbookWaitV21 = true;
   return true;
 }
 
