@@ -9,9 +9,16 @@
     .add2e-arcane-entry{display:grid;grid-template-columns:38px minmax(0,1fr) 75px 150px 42px;gap:8px;align-items:center;padding:7px;border:1px solid #d0b16b;border-radius:7px;background:#fffaf0;}
   </style>
   <header class="sheet-header" style="display:flex;gap:12px;align-items:flex-start;margin-bottom:10px;">
-    <img class="profile-img" src="{{img}}" data-edit="img" title="{{item.name}}" width="96" height="96" style="object-fit:cover;border:1px solid #7a5a28;border-radius:6px;cursor:pointer;"/>
+    <img class="profile-img" src="{{img}}" data-edit="img" title="{{#if system.identifie}}{{item.name}}{{else}}{{system.nom_non_identifie}}{{/if}}" width="96" height="96" style="object-fit:cover;border:1px solid #7a5a28;border-radius:6px;cursor:pointer;"/>
     <div class="header-fields" style="flex:1;display:grid;gap:6px;">
-      <h1 style="margin:0;"><input name="name" type="text" value="{{item.name}}" placeholder="Nom" style="width:100%;font-size:1.25rem;font-weight:700;"/></h1>
+      <h1 style="margin:0;">
+        {{#if system.identifie}}
+          <input name="name" type="text" value="{{item.name}}" placeholder="Nom" style="width:100%;font-size:1.25rem;font-weight:700;"/>
+        {{else}}
+          <input type="text" value="{{#if system.nom_non_identifie}}{{system.nom_non_identifie}}{{else}}Objet magique{{/if}}" readonly aria-label="Nom non identifié" style="width:100%;font-size:1.25rem;font-weight:700;"/>
+          <input name="name" type="hidden" value="{{item.name}}"/>
+        {{/if}}
+      </h1>
       <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;">
         <label><span>Catégorie</span><input name="system.categorie" type="text" value="{{system.categorie}}"/></label>
         <label><span>Sous-type</span><input name="system.sousType" type="text" value="{{system.sousType}}"/></label>
