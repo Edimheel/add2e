@@ -1,5 +1,5 @@
 // ADD2E — Actor sheet drop — chargeur court
-// Version : 2026-07-14-magic-item-identification-name-sync-v1
+// Version : 2026-07-14-magic-item-identification-name-sync-v2
 //
 // Le contenu de la mécanique de drop est dans 13e-actor-sheet-drop-legacy-full.mjs.
 // Ce chargeur synchronise également le nom visible des objets magiques identifiés/non identifiés.
@@ -38,6 +38,13 @@ function add2eIdentificationMagicItem(item, source = null) {
     || tags.some(tag => tag.includes("objet_magique") || tag.includes("magique"));
 }
 
+function add2eIdentificationIsIdentified(item, source = null) {
+  const system = source?.system ?? item?.system ?? {};
+  return system.identifie === true
+    || system.identified === true
+    || item?.getFlag?.("add2e", "identified") === true;
+}
+
 function add2eIdentificationGenericName(item, source = null) {
   const system = source?.system ?? item?.system ?? {};
   return String(
@@ -61,11 +68,69 @@ function add2eIdentificationTrueName(item, source = null) {
   ).trim() || "Objet magique";
 }
 
+function add2eIdentificationFindActorItem(itemId, root = null) {
+  const actorId = root?.dataset?.actorId
+    ?? root?.closest?.("[data-actor-id]")?.dataset?.actorId
+    ?? "";
+  if (actorId) {
+    const actor = game.actors?.get?.(actorId);
+    const item = actor?.items?.get?.(itemId);
+    if (item) return item;
+  }
+
+  for (const actor of game.actors ?? []) {
+    const item = actor?.items?.get?.(itemId);
+    if (item) return item;
+  }
+  return null;
+}
+
+function add2eInstallUnidentifiedItemOpenGuard() {
+  if (globalThis.__add2eUnidentifiedItemOpenGuardV1) return;
+  globalThis.__add2eUnidentifiedItemOpenGuardV1 = true;
+
+  document.addEventListener("click", event => {
+    const trigger = event.target?.closest?.(".objet-edit");
+    if (!trigger || game.user?.isGM) return;
+
+    const row = trigger.closest?.(".item");
+    const itemId = String(
+      trigger.dataset?.itemId
+      ?? row?.dataset?.itemId
+      ?? row?.dataset?.itemid
+      ?? ""
+    ).trim();
+    if (!itemId) return;
+
+    const item = add2eIdentificationFindActorItem(itemId, trigger);
+    if (!item || !add2eIdentificationMagicItem(item) || add2eIdentificationIsIdentified(item)) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+
+    console.log("[ADD2E][IDENTIFICATION][OPEN_BLOCKED]", {
+      actor: item.parent?.name,
+      actorId: item.parent?.id,
+      itemId: item.id,
+      visibleName: item.name,
+      genericName: add2eIdentificationGenericName(item),
+      identified: false,
+      user: game.user?.name,
+      userId: game.user?.id
+    });
+
+    ui.notifications.warn("Cet objet doit être identifié avant de pouvoir être examiné.");
+  }, true);
+}
+
+add2eInstallUnidentifiedItemOpenGuard();
+
 Hooks.on("preCreateItem", (item, data, options, userId) => {
   if (item?.parent?.documentName !== "Actor") return;
   if (!add2eIdentificationMagicItem(item, data)) return;
 
-  const identified = data?.system?.identifie === true || data?.system?.identified === true;
+  const identified = add2eIdentificationIsIdentified(item, data);
   const genericName = add2eIdentificationGenericName(item, data);
   const trueName = add2eIdentificationTrueName(item, data);
   const update = {
@@ -99,7 +164,7 @@ Hooks.on("preUpdateItem", (item, changed, options, userId) => {
   const identified = identificationChanged
     ? (add2eIdentificationGetProperty(changed, "system.identifie") === true
       || add2eIdentificationGetProperty(changed, "system.identified") === true)
-    : (item.system?.identifie === true || item.system?.identified === true);
+    : add2eIdentificationIsIdentified(item);
 
   const genericName = add2eIdentificationGenericName(item);
   let trueName = String(item.system?.nom ?? item.system?.nom_reel ?? item.system?.trueName ?? "").trim();
@@ -143,7 +208,7 @@ Hooks.on("createItem", (item, options, userId) => {
     name: item.name,
     trueName: item.system?.nom,
     genericName: add2eIdentificationGenericName(item),
-    identified: item.system?.identifie === true || item.system?.identified === true,
+    identified: add2eIdentificationIsIdentified(item),
     userId,
     options
   });
@@ -161,7 +226,7 @@ Hooks.on("updateItem", (item, changed, options, userId) => {
     name: item.name,
     trueName: item.system?.nom,
     genericName: add2eIdentificationGenericName(item),
-    identified: item.system?.identifie === true || item.system?.identified === true,
+    identified: add2eIdentificationIsIdentified(item),
     changed,
     userId,
     options
