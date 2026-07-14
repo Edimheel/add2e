@@ -1,3 +1,42 @@
+<style>
+  .application.add2e-spellbook-reader-window .window-content {
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .application.add2e-spellbook-reader-window .add2e-spellbook-reader-application-content {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    flex-direction: column !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    overflow: hidden !important;
+  }
+
+  .application.add2e-spellbook-reader-window .add2e-spellbook-reader {
+    display: flex !important;
+    flex: 1 1 auto !important;
+    flex-direction: column !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .application.add2e-spellbook-reader-window .add2e-spellbook-pages {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: scroll !important;
+    overflow-x: hidden !important;
+    scrollbar-gutter: stable;
+    overscroll-behavior: contain;
+  }
+
+  .application.add2e-spellbook-reader-window .add2e-spellbook-reader-footer {
+    flex: 0 0 auto !important;
+  }
+</style>
+
 <section class='a2e-tab-content tab tab-equipement {{#if (eq activeTab "equipement")}}active{{/if}}' data-group="primary" data-tab="equipement">
   <div style="display:grid;grid-template-columns:minmax(520px, 1fr) 190px;gap:14px;align-items:start;">
     <div class="a2e-panel" style="min-width:0;">
