@@ -1,6 +1,6 @@
 // ADD2E — UI commune des fenêtres et messages liés aux sorts.
 // Compatible Foundry V13/V14/V15 — DialogV2 / ApplicationV2 uniquement.
-const VERSION = "2026-07-14-v12-player-spellbook-reader-binding";
+const VERSION = "2026-07-14-v13-linked-player-spellbook-only";
 globalThis.ADD2E_SPELL_DIALOG_UI_VERSION = VERSION;
 
 function esc(value) {
@@ -175,7 +175,7 @@ function actorKnowsBookEntry(actor, entry) {
   const level = spellLevel(entry);
   const lists = spellLists(entry);
   return !!name && Array.from(actor?.items ?? []).some(item => {
-    if (!['sort','spell'].includes(String(item?.type ?? '').toLowerCase())) return false;
+    if (!["sort", "spell"].includes(String(item?.type ?? "").toLowerCase())) return false;
     if (item?.flags?.add2e?.spellFamily?.generated === true) return false;
     if (norm(item?.name ?? item?.system?.nom) !== name || spellLevel(item) !== level) return false;
     const knownLists = spellLists(item);
@@ -185,21 +185,21 @@ function actorKnowsBookEntry(actor, entry) {
 
 function externalBookAllSpellsKnown(actor, book) {
   const document = book?.system?.arcaneDocument ?? {};
-  if (String(document.kind ?? '').toLowerCase() !== 'spellbook' || document.personal === true) return false;
+  if (String(document.kind ?? "").toLowerCase() !== "spellbook" || document.personal === true) return false;
   const entries = Array.isArray(document.spells) ? document.spells : document.spell ? [document.spell] : [];
   return entries.length > 0 && entries.every(entry => actorKnowsBookEntry(actor, entry));
 }
 
 function styleEquipmentSpellbooks(app, html) {
-  const actor = app?.actor ?? (app?.document?.documentName === 'Actor' ? app.document : null);
-  if (!actor || actor.type !== 'personnage') return;
+  const actor = app?.actor ?? (app?.document?.documentName === "Actor" ? app.document : null);
+  if (!actor || actor.type !== "personnage") return;
   const root = rootElement(html, app);
   for (const button of root?.querySelectorAll?.('[data-add2e-arcane-action="copy-book"][data-item-id]') ?? []) {
     const book = actor.items?.get?.(button.dataset.itemId);
     const complete = externalBookAllSpellsKnown(actor, book);
-    button.classList.toggle('add2e-book-copy-complete', complete);
-    button.classList.toggle('a2e-action-add', !complete);
-    button.title = complete ? 'Tous les sorts de ce livre sont déjà connus' : 'Copier les sorts compatibles dans le livre personnel';
+    button.classList.toggle("add2e-book-copy-complete", complete);
+    button.classList.toggle("a2e-action-add", !complete);
+    button.title = complete ? "Tous les sorts de ce livre sont déjà connus" : "Copier les sorts compatibles dans le livre personnel";
   }
 }
 
@@ -213,22 +213,22 @@ function bookEntries(book) {
 }
 
 function formatSpellField(value) {
-  if (value === undefined || value === null || value === '') return '—';
-  if (Array.isArray(value)) return value.map(formatSpellField).filter(v => v !== '—').join(', ') || '—';
-  if (typeof value === 'object') {
+  if (value === undefined || value === null || value === "") return "—";
+  if (Array.isArray(value)) return value.map(formatSpellField).filter(v => v !== "—").join(", ") || "—";
+  if (typeof value === "object") {
     const direct = value.raw ?? value.texte ?? value.text ?? value.label ?? value.nom ?? value.name;
     if (direct !== undefined) return formatSpellField(direct);
     const amount = value.valeur ?? value.value ?? value.nombre ?? value.number;
     const unit = value.unite ?? value.unit;
-    if (amount !== undefined) return `${amount}${unit ? ` ${unit}` : ''}`;
-    return Object.values(value).map(formatSpellField).filter(v => v !== '—').join(', ') || '—';
+    if (amount !== undefined) return `${amount}${unit ? ` ${unit}` : ""}`;
+    return Object.values(value).map(formatSpellField).filter(v => v !== "—").join(", ") || "—";
   }
-  return String(value).trim() || '—';
+  return String(value).trim() || "—";
 }
 
 async function enrichSpellDescription(spell) {
-  const raw = String(spell?.system?.description ?? spell?.system?.description_reelle ?? '').trim();
-  if (!raw) return '<em>Aucune description.</em>';
+  const raw = String(spell?.system?.description ?? spell?.system?.description_reelle ?? "").trim();
+  if (!raw) return "<em>Aucune description.</em>";
   const editor = foundry?.applications?.ux?.TextEditor?.implementation ?? globalThis.TextEditor;
   try { return editor?.enrichHTML ? await editor.enrichHTML(raw, { async: true, relativeTo: spell }) : esc(raw); }
   catch (_error) { return esc(raw); }
@@ -238,8 +238,8 @@ async function resolveBookSpell(actor, entry) {
   const name = norm(entry?.name ?? entry?.nom ?? entry?.label);
   const level = spellLevel(entry);
   const lists = spellLists(entry);
-  let spell = Array.from(actor?.items ?? []).find(item => String(item?.type ?? '').toLowerCase() === 'sort' && item?.flags?.add2e?.spellFamily?.generated !== true && norm(item?.name ?? item?.system?.nom) === name && spellLevel(item) === level && (!lists.length || spellLists(item).some(list => lists.includes(list)))) ?? null;
-  if (!spell && entry?.sourceUuid && typeof fromUuid === 'function') {
+  let spell = Array.from(actor?.items ?? []).find(item => String(item?.type ?? "").toLowerCase() === "sort" && item?.flags?.add2e?.spellFamily?.generated !== true && norm(item?.name ?? item?.system?.nom) === name && spellLevel(item) === level && (!lists.length || spellLists(item).some(list => lists.includes(list)))) ?? null;
+  if (!spell && entry?.sourceUuid && typeof fromUuid === "function") {
     try { spell = await fromUuid(entry.sourceUuid); } catch (_error) {}
   }
   return spell;
@@ -247,54 +247,54 @@ async function resolveBookSpell(actor, entry) {
 
 async function openPlayerSpellbook(actor, book) {
   const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (!DialogV2?.wait) return ui.notifications.error('DialogV2 est introuvable.');
+  if (!DialogV2?.wait) return ui.notifications.error("DialogV2 est introuvable.");
   const entries = bookEntries(book);
   if (!entries.length) return ui.notifications.info(`${book.name} ne contient aucun sort.`);
   const detailed = [];
   for (const entry of entries) detailed.push({ entry, spell: await resolveBookSpell(actor, entry), level: spellLevel(entry) });
-  const levels = [...new Set(detailed.map(row => row.level))].sort((a,b) => a-b);
-  const tabs = levels.map(level => `<button type="button" class="add2e-spellbook-tab" data-level="${level}">Niveau ${level}</button>`).join('');
+  const levels = [...new Set(detailed.map(row => row.level))].sort((a, b) => a - b);
+  const tabs = levels.map(level => `<button type="button" class="add2e-spellbook-tab" data-level="${level}">Niveau ${level}</button>`).join("");
   const panels = [];
   for (const level of levels) {
     const cards = [];
     for (const row of detailed.filter(row => row.level === level)) {
       const spell = row.spell;
       const system = spell?.system ?? row.entry?.system ?? row.entry ?? {};
-      const description = spell ? await enrichSpellDescription(spell) : `<em>Description complète indisponible pour ${esc(row.entry?.name ?? 'ce sort')}.</em>`;
-      const listLabel = row.entry?.listLabel || spellLists(row.entry).map(list => list === 'magicien' ? 'Magicien' : list === 'illusionniste' ? 'Illusionniste' : list).join(' / ') || 'Liste inconnue';
+      const description = spell ? await enrichSpellDescription(spell) : `<em>Description complète indisponible pour ${esc(row.entry?.name ?? "ce sort")}.</em>`;
+      const listLabel = row.entry?.listLabel || spellLists(row.entry).map(list => list === "magicien" ? "Magicien" : list === "illusionniste" ? "Illusionniste" : list).join(" / ") || "Liste inconnue";
       const fields = [
-        ['École', system.ecole ?? system['école'] ?? system.school],
-        ['Portée', system.portee ?? system['portée'] ?? system.range],
-        ['Durée', system.duree ?? system['durée'] ?? system.duration],
-        ['Temps d’incantation', system.temps_incantation ?? system.tempsIncantation ?? system.castingTime],
-        ['Composantes', system.composantes ?? system.components],
-        ['Composants matériels', system.composants_materiels ?? system.materialComponents],
-        ['Zone d’effet', system.zone_effet ?? system.zoneEffet ?? system.areaOfEffect],
-        ['Cible', system.cible ?? system.target],
-        ['Jet de sauvegarde', system.jet_sauvegarde ?? system.jetSauvegarde ?? system.savingThrow]
-      ].map(([label,value]) => `<div class="add2e-spellbook-field"><b>${label}</b><span>${esc(formatSpellField(value))}</span></div>`).join('');
-      cards.push(`<article class="add2e-spellbook-entry"><div class="add2e-spellbook-entry-head"><img src="${esc(spell?.img ?? row.entry?.img ?? book.img ?? 'icons/svg/book.svg')}" alt=""><h3>${esc(spell?.name ?? row.entry?.name ?? 'Sort')}</h3><span class="add2e-spellbook-entry-list">${esc(listLabel)}</span></div><div class="add2e-spellbook-fields">${fields}</div><div class="add2e-spellbook-description"><strong>Description</strong>${description}</div></article>`);
+        ["École", system.ecole ?? system["école"] ?? system.school],
+        ["Portée", system.portee ?? system["portée"] ?? system.range],
+        ["Durée", system.duree ?? system["durée"] ?? system.duration],
+        ["Temps d’incantation", system.temps_incantation ?? system.tempsIncantation ?? system.castingTime],
+        ["Composantes", system.composantes ?? system.components],
+        ["Composants matériels", system.composants_materiels ?? system.materialComponents],
+        ["Zone d’effet", system.zone_effet ?? system.zoneEffet ?? system.areaOfEffect],
+        ["Cible", system.cible ?? system.target],
+        ["Jet de sauvegarde", system.jet_sauvegarde ?? system.jetSauvegarde ?? system.savingThrow]
+      ].map(([label, value]) => `<div class="add2e-spellbook-field"><b>${label}</b><span>${esc(formatSpellField(value))}</span></div>`).join("");
+      cards.push(`<article class="add2e-spellbook-entry"><div class="add2e-spellbook-entry-head"><img src="${esc(spell?.img ?? row.entry?.img ?? book.img ?? "icons/svg/book.svg")}" alt=""><h3>${esc(spell?.name ?? row.entry?.name ?? "Sort")}</h3><span class="add2e-spellbook-entry-list">${esc(listLabel)}</span></div><div class="add2e-spellbook-fields">${fields}</div><div class="add2e-spellbook-description"><strong>Description</strong>${description}</div></article>`);
     }
-    panels.push(`<section class="add2e-spellbook-panel" data-level="${level}"><h2 class="add2e-spellbook-level-title">Sorts de niveau ${level}</h2>${cards.join('')}</section>`);
+    panels.push(`<section class="add2e-spellbook-panel" data-level="${level}"><h2 class="add2e-spellbook-level-title">Sorts de niveau ${level}</h2>${cards.join("")}</section>`);
   }
-  return DialogV2.wait({ window: { title: `${book.name} — ${actor.name}`, classes: ['add2e-spellbook-reader-window'], resizable: true }, position: { width: 1040, height: 820 }, modal: false, rejectClose: false, content: `<div class="add2e-spellbook-reader"><nav class="add2e-spellbook-tabs">${tabs}</nav><div class="add2e-spellbook-pages">${panels.join('')}</div></div>`, buttons: [{ action: 'close', label: 'Fermer', icon: 'fa-solid fa-book', default: true, callback: () => true }] });
+  return DialogV2.wait({ window: { title: `${book.name} — ${actor.name}`, classes: ["add2e-spellbook-reader-window"], resizable: true }, position: { width: 1040, height: 820 }, modal: false, rejectClose: false, content: `<div class="add2e-spellbook-reader"><nav class="add2e-spellbook-tabs">${tabs}</nav><div class="add2e-spellbook-pages">${panels.join("")}</div></div>`, buttons: [{ action: "close", label: "Fermer", icon: "fa-solid fa-book", default: true, callback: () => true }] });
 }
 
 function actorFromSpellbookButton(button) {
-  const actorId = String(button?.dataset?.actorId ?? '').trim();
+  const actorId = String(button?.dataset?.actorId ?? "").trim();
   if (actorId) {
     const worldActor = game.actors?.get?.(actorId) ?? null;
     if (worldActor) return worldActor;
   }
-  const actorUuid = String(button?.dataset?.actorUuid ?? '').trim();
-  if (actorUuid && typeof fromUuidSync === 'function') {
-    try { const actor = fromUuidSync(actorUuid); if (actor?.documentName === 'Actor') return actor; } catch (_error) {}
+  const actorUuid = String(button?.dataset?.actorUuid ?? "").trim();
+  if (actorUuid && typeof fromUuidSync === "function") {
+    try { const actor = fromUuidSync(actorUuid); if (actor?.documentName === "Actor") return actor; } catch (_error) {}
   }
-  const owner = button?.closest?.('.application, .window-app');
+  const owner = button?.closest?.(".application, .window-app");
   for (const app of Object.values(ui.windows ?? {})) {
     const root = app?.element?.jquery ? app.element[0] : app?.element;
     if (root === owner || root?.contains?.(button)) {
-      const actor = app?.actor ?? (app?.document?.documentName === 'Actor' ? app.document : null);
+      const actor = app?.actor ?? (app?.document?.documentName === "Actor" ? app.document : null);
       if (actor) return actor;
     }
   }
@@ -302,25 +302,34 @@ function actorFromSpellbookButton(button) {
 }
 
 function bindPlayerSpellbookOpen() {
-  if (globalThis.__ADD2E_PLAYER_SPELLBOOK_READER_BOUND_V12__) return;
-  globalThis.__ADD2E_PLAYER_SPELLBOOK_READER_BOUND_V12__ = true;
-  document.addEventListener('click', event => {
+  if (globalThis.__ADD2E_PLAYER_SPELLBOOK_READER_BOUND_V13__) return;
+  globalThis.__ADD2E_PLAYER_SPELLBOOK_READER_BOUND_V13__ = true;
+  document.addEventListener("click", event => {
     const target = event.target instanceof Element ? event.target : null;
     const button = target?.closest?.('[data-add2e-arcane-action="view-book"][data-item-id]');
     if (!button) return;
+
     const actor = actorFromSpellbookButton(button);
-    const book = actor?.items?.get?.(String(button.dataset.itemId ?? '')) ?? null;
+    const book = actor?.items?.get?.(String(button.dataset.itemId ?? "")) ?? null;
+    const document = book?.system?.arcaneDocument ?? {};
+    const linkedPersonalBook = String(document.kind ?? "").toLowerCase() === "spellbook" && document.personal === true;
+
+    // Le MJ conserve strictement la fenêtre historique. Les livres non liés aussi.
+    if (game.user?.isGM || !linkedPersonalBook) return;
+
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
+
     if (!actor || !book) {
-      console.error('[ADD2E][SPELLBOOK_READER][MISSING_CONTEXT]', { actorId: button.dataset.actorId, itemId: button.dataset.itemId, actor, book });
-      ui.notifications.error('Impossible de retrouver le personnage ou son livre de sorts.');
+      console.error("[ADD2E][SPELLBOOK_READER][MISSING_CONTEXT]", { actorId: button.dataset.actorId, itemId: button.dataset.itemId, actor, book });
+      ui.notifications.error("Impossible de retrouver le personnage ou son livre de sorts.");
       return;
     }
+
     void openPlayerSpellbook(actor, book).catch(error => {
-      console.error('[ADD2E][SPELLBOOK_READER][ERROR]', { actor: actor.name, book: book.name, error });
-      ui.notifications.error(error?.message || 'Impossible d’ouvrir le livre de sorts.');
+      console.error("[ADD2E][SPELLBOOK_READER][ERROR]", { actor: actor.name, book: book.name, error });
+      ui.notifications.error(error?.message || "Impossible d’ouvrir le livre de sorts.");
     });
   }, true);
 }
@@ -328,26 +337,26 @@ function bindPlayerSpellbookOpen() {
 function styleChatMessage(message, html) {
   const root = rootElement(html);
   if (!root) return;
-  const text = norm(String(message?.content ?? root.textContent ?? ''));
-  if (!text.includes('connaissance') && !text.includes('comprehension') && !text.includes('copie_du_sort') && !text.includes('livre_de_sorts') && !text.includes('parchemin')) return;
-  const card = root.querySelector('.add2e-card-test,.chat-card,.message-content>div') ?? root.querySelector('.message-content');
+  const text = norm(String(message?.content ?? root.textContent ?? ""));
+  if (!text.includes("connaissance") && !text.includes("comprehension") && !text.includes("copie_du_sort") && !text.includes("livre_de_sorts") && !text.includes("parchemin")) return;
+  const card = root.querySelector(".add2e-card-test,.chat-card,.message-content>div") ?? root.querySelector(".message-content");
   if (!(card instanceof HTMLElement)) return;
-  card.classList.add('add2e-arcane-chat-card');
-  let header = card.querySelector(':scope > .add2e-arcane-chat-header');
+  card.classList.add("add2e-arcane-chat-card");
+  let header = card.querySelector(":scope > .add2e-arcane-chat-header");
   if (!header) {
-    const title = card.querySelector(':scope > h1,:scope > h2,:scope > h3') ?? card.querySelector('h1,h2,h3');
-    const image = card.querySelector(':scope > img') ?? card.querySelector('img');
+    const title = card.querySelector(":scope > h1,:scope > h2,:scope > h3") ?? card.querySelector("h1,h2,h3");
+    const image = card.querySelector(":scope > img") ?? card.querySelector("img");
     if (title || image) {
-      header = document.createElement('div');
-      header.className = 'add2e-arcane-chat-header';
+      header = document.createElement("div");
+      header.className = "add2e-arcane-chat-header";
       card.insertBefore(header, card.firstChild);
       if (image) header.append(image);
       if (title) header.append(title);
     }
   }
-  if (!card.querySelector(':scope > .add2e-arcane-chat-body')) {
-    const body = document.createElement('div');
-    body.className = 'add2e-arcane-chat-body';
+  if (!card.querySelector(":scope > .add2e-arcane-chat-body")) {
+    const body = document.createElement("div");
+    body.className = "add2e-arcane-chat-body";
     for (const child of [...card.children]) if (child !== header) body.append(child);
     card.append(body);
   }
@@ -356,26 +365,26 @@ function styleChatMessage(message, html) {
 const refreshTimers = new Map();
 function refreshActorSheetForSpell(item) {
   const actor = item?.parent;
-  if (!actor || actor.documentName !== 'Actor' || actor.type !== 'personnage' || !['sort','spell'].includes(String(item.type).toLowerCase())) return;
+  if (!actor || actor.documentName !== "Actor" || actor.type !== "personnage" || !["sort", "spell"].includes(String(item.type).toLowerCase())) return;
   const key = actor.uuid ?? actor.id;
   clearTimeout(refreshTimers.get(key));
   refreshTimers.set(key, setTimeout(() => {
     refreshTimers.delete(key);
     const apps = new Set([...Object.values(actor.apps ?? {}), ...Object.values(ui.windows ?? {}).filter(app => (app?.actor ?? app?.document ?? app?.object)?.id === actor.id)]);
     for (const app of apps) {
-      try { app._add2eRememberActiveTab?.(app.element, app._add2eActiveTab || app._add2eReadStoredTab?.() || 'sorts'); app.render?.({ force: true }); }
-      catch (_error) { try { app.render?.(true); } catch (error) { console.warn('[ADD2E][SPELL_DIALOG_UI][REFRESH_ERROR]', error); } }
+      try { app._add2eRememberActiveTab?.(app.element, app._add2eActiveTab || app._add2eReadStoredTab?.() || "sorts"); app.render?.({ force: true }); }
+      catch (_error) { try { app.render?.(true); } catch (error) { console.warn("[ADD2E][SPELL_DIALOG_UI][REFRESH_ERROR]", error); } }
     }
   }, 50));
 }
 
 globalThis.ADD2E_SPELL_DIALOG_UI = { version: VERSION, themes: THEMES, shell, primaryButtonClass, ensureStyles, guessTheme, guessIcon, wrapDialogOptions, esc, openPlayerSpellbook };
-Hooks.once('ready', () => { ensureStyles(); patchDialogV2(); bindPlayerSpellbookOpen(); });
-Hooks.on('renderDialogV2', styleRenderedDialog);
-Hooks.on('renderApplicationV2', (app, html) => { styleRenderedDialog(app, html); styleEquipmentSpellbooks(app, html); });
-Hooks.on('renderChatMessageHTML', styleChatMessage);
-Hooks.on('createItem', refreshActorSheetForSpell);
-Hooks.on('updateItem', refreshActorSheetForSpell);
-Hooks.on('deleteItem', refreshActorSheetForSpell);
+Hooks.once("ready", () => { ensureStyles(); patchDialogV2(); bindPlayerSpellbookOpen(); });
+Hooks.on("renderDialogV2", styleRenderedDialog);
+Hooks.on("renderApplicationV2", (app, html) => { styleRenderedDialog(app, html); styleEquipmentSpellbooks(app, html); });
+Hooks.on("renderChatMessageHTML", styleChatMessage);
+Hooks.on("createItem", refreshActorSheetForSpell);
+Hooks.on("updateItem", refreshActorSheetForSpell);
+Hooks.on("deleteItem", refreshActorSheetForSpell);
 ensureStyles();
-console.log('[ADD2E][SPELL_DIALOG_UI][VERSION]', VERSION);
+console.log("[ADD2E][SPELL_DIALOG_UI][VERSION]", VERSION);
