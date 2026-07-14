@@ -45,6 +45,7 @@
                                 data-add2e-arcane-action="view-book"
                                 data-item-id="{{objet._id}}"
                                 data-actor-id="{{../actor._id}}"
+                                onclick="event.preventDefault();event.stopImmediatePropagation();const actor=game.actors.get(this.dataset.actorId);const book=actor?.items?.get(this.dataset.itemId);if(actor&&book)globalThis.ADD2E_SPELL_DIALOG_UI?.openPlayerSpellbook?.(actor,book);return false;"
                                 title="Consulter le livre de sorts"
                               ><i class="fas fa-book-open"></i></a>
 
