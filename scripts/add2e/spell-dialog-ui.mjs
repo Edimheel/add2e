@@ -1,6 +1,6 @@
 // ADD2E — UI commune des fenêtres et messages liés aux sorts.
 // Compatible Foundry V13/V14/V15 — DialogV2 / ApplicationV2 uniquement.
-const VERSION = "2026-07-14-v15-canonical-player-spellbook";
+const VERSION = "2026-07-14-v16-single-spellbook-learning-card";
 globalThis.ADD2E_SPELL_DIALOG_UI_VERSION = VERSION;
 
 function esc(value) {
@@ -78,6 +78,13 @@ function ensureStyles() {
 .add2e-spellbook-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 18px;font-size:.9rem}
 .add2e-spellbook-field{display:grid;grid-template-columns:minmax(112px,auto) 1fr;gap:7px}.add2e-spellbook-field b{color:#58371a}
 .add2e-spellbook-description{margin-top:11px;padding-top:10px;border-top:1px dashed rgba(112,77,39,.44);line-height:1.48}
+.chat-message .add2e-spellbook-copy-result{overflow:hidden;border:2px solid #8060cc;border-radius:10px;background:linear-gradient(180deg,#f8f3ff,#e8ddfb);color:#211735}
+.chat-message .add2e-spellbook-copy-result-header{display:flex;align-items:center;gap:8px;padding:7px 9px;background:linear-gradient(90deg,#2e1c5a,#6b49b8);color:#fff}
+.chat-message .add2e-spellbook-copy-result-header img{width:38px!important;height:38px!important;min-width:38px!important;max-width:38px!important;object-fit:cover;border:1px solid rgba(255,255,255,.85);border-radius:6px;background:#fff}
+.chat-message .add2e-spellbook-copy-result-header h3{margin:0!important;border:0!important;color:#fff!important;font-size:1rem!important;line-height:1.15}
+.chat-message .add2e-spellbook-copy-result-body{padding:9px 10px}
+.chat-message .add2e-spellbook-copy-result-grid{display:grid;grid-template-columns:auto 1fr;gap:3px 8px;margin:7px 0}
+.chat-message .add2e-spellbook-copy-result-status{margin:7px 0 0;font-weight:800}
 @media(max-width:720px){.application.add2e-spellbook-reader-window{width:98vw!important;height:94vh!important}.add2e-spellbook-pages{padding:18px 17px 28px}.add2e-spellbook-fields{grid-template-columns:1fr}}
 `;
   document.head.append(style);
@@ -316,8 +323,8 @@ function actorFromSpellbookButton(button) {
 }
 
 function bindPlayerSpellbookOpen() {
-  if (globalThis.__ADD2E_PLAYER_SPELLBOOK_READER_BOUND_V15__) return;
-  globalThis.__ADD2E_PLAYER_SPELLBOOK_READER_BOUND_V15__ = true;
+  if (globalThis.__ADD2E_PLAYER_SPELLBOOK_READER_BOUND_V16__) return;
+  globalThis.__ADD2E_PLAYER_SPELLBOOK_READER_BOUND_V16__ = true;
   document.addEventListener("click", event => {
     const button = event.target instanceof Element ? event.target.closest('[data-add2e-arcane-action="view-book"][data-item-id]') : null;
     if (!button) return;
@@ -337,11 +344,93 @@ function bindPlayerSpellbookOpen() {
   },true);
 }
 
+const pendingBookLearningRolls = new Map();
+
+function chatActorKey(document, data = {}) {
+  return String(data?.speaker?.actor ?? document?.speaker?.actor ?? data?.speaker?.token ?? document?.speaker?.token ?? game.user?.id ?? "global");
+}
+
+function chatRollTotal(document, data = {}) {
+  const rolls = document?.rolls ?? data?.rolls ?? [];
+  const first = Array.isArray(rolls) ? rolls[0] : null;
+  const total = Number(first?.total ?? first?._total);
+  return Number.isFinite(total) ? total : null;
+}
+
+function firstImageSource(content) {
+  const match = String(content ?? "").match(/<img[^>]+src=["']([^"']+)["']/i);
+  return match?.[1] ?? "icons/sundries/books/book-red-exclamation.webp";
+}
+
+function parseBookLearningRoll(document, data = {}) {
+  const flavor = String(data?.flavor ?? document?.flavor ?? "");
+  const content = String(data?.content ?? document?.content ?? "");
+  const text = `${flavor} ${content}`;
+  const normalized = norm(text);
+  const isBookLearningRoll = normalized.includes("test_de_comprehension")
+    && normalized.includes("livre_de_sorts")
+    && chatRollTotal(document, data) !== null;
+  if (!isBookLearningRoll) return null;
+
+  const chanceMatch = text.match(/chance\s*:?\s*(\d+)\s*%/i);
+  const chance = chanceMatch ? Number(chanceMatch[1]) : null;
+  const cleanedFlavor = flavor.replace(/^\s*test\s+de\s+compr[ée]hension\s*[-—:]?\s*/i, "").trim();
+  const parts = cleanedFlavor.split(/\s+[—–-]\s+/);
+  const spellName = String(parts[0] ?? "Sort").trim() || "Sort";
+  const sourceName = String(parts.slice(1).join(" — ") || "Livre de sorts").trim();
+  return {
+    createdAt: Date.now(),
+    total: chatRollTotal(document, data),
+    chance,
+    spellName,
+    sourceName,
+    img: firstImageSource(content)
+  };
+}
+
+function buildBookLearningCard(result, originalContent) {
+  const original = norm(originalContent);
+  const successFromText = original.includes("a_ete_ajoute") || original.includes("ajoute_au_livre") || original.includes("reussite");
+  const failureFromText = original.includes("echec") || original.includes("nest_pas_compris") || original.includes("n_est_pas_compris");
+  const success = successFromText || (!failureFromText && Number.isFinite(result.total) && Number.isFinite(result.chance) && result.total <= result.chance);
+  const status = success ? "Réussite" : "Échec";
+  const detail = success
+    ? `${result.spellName} a été ajouté au livre personnel et à la liste des sorts.`
+    : `${result.spellName} n’a pas été appris et n’a pas été ajouté au livre personnel.`;
+  return `<div class="add2e-spellbook-copy-result add2e-arcane-chat-card"><div class="add2e-spellbook-copy-result-header"><img src="${esc(result.img)}" alt=""><h3>Copie d’un sort depuis un livre</h3></div><div class="add2e-spellbook-copy-result-body"><div>${esc(result.sourceName)}</div><div class="add2e-spellbook-copy-result-grid"><b>Sort</b><span>${esc(result.spellName)}</span><b>Résultat</b><span>${result.total ?? "—"}</span><b>Chance</b><span>${Number.isFinite(result.chance) ? `${result.chance}%` : "—"}</span></div><div class="add2e-spellbook-copy-result-status">${status}</div><p>${esc(detail)}</p></div></div>`;
+}
+
+function consolidateBookLearningChatMessage(document, data = {}, _options = {}, userId = null) {
+  if (userId && String(userId) !== String(game.user?.id ?? "")) return;
+  const rollResult = parseBookLearningRoll(document, data);
+  if (rollResult) {
+    pendingBookLearningRolls.set(chatActorKey(document, data), rollResult);
+    window.setTimeout(() => {
+      const current = pendingBookLearningRolls.get(chatActorKey(document, data));
+      if (current === rollResult) pendingBookLearningRolls.delete(chatActorKey(document, data));
+    }, 15000);
+    return false;
+  }
+
+  const content = String(data?.content ?? document?.content ?? "");
+  const normalized = norm(content);
+  const isFinalBookCard = normalized.includes("copie_d_un_sort_depuis_un_livre")
+    || normalized.includes("copie_dun_sort_depuis_un_livre")
+    || normalized.includes("ajoute_au_livre_personnel_et_a_la_liste_des_sorts");
+  if (!isFinalBookCard) return;
+
+  const key = chatActorKey(document, data);
+  const result = pendingBookLearningRolls.get(key);
+  if (!result || Date.now() - result.createdAt > 15000) return;
+  pendingBookLearningRolls.delete(key);
+  document.updateSource({ content: buildBookLearningCard(result, content), flavor: null, rolls: [] });
+}
+
 function styleChatMessage(message, html) {
   const root = rootElement(html);
   if (!root) return;
   const text = norm(String(message?.content ?? root.textContent ?? ""));
-  if (!text.includes("connaissance") && !text.includes("comprehension") && !text.includes("copie_du_sort") && !text.includes("livre_de_sorts") && !text.includes("parchemin")) return;
+  if (!text.includes("connaissance") && !text.includes("comprehension") && !text.includes("copie_du_sort") && !text.includes("livre_de_sorts") && !text.includes("parchemin") && !text.includes("copie_d_un_sort")) return;
   const card = root.querySelector(".add2e-card-test,.chat-card,.message-content>div") ?? root.querySelector(".message-content");
   if (card instanceof HTMLElement) card.classList.add("add2e-arcane-chat-card");
 }
@@ -362,6 +451,7 @@ function refreshActorSheetForSpell(item) {
 
 globalThis.ADD2E_SPELL_DIALOG_UI = {version:VERSION,themes:THEMES,shell,primaryButtonClass,ensureStyles,guessTheme,guessIcon,wrapDialogOptions,esc,openPlayerSpellbook};
 Hooks.once("ready",()=>{ensureStyles();patchDialogV2();bindPlayerSpellbookOpen();});
+Hooks.on("preCreateChatMessage",consolidateBookLearningChatMessage);
 Hooks.on("renderDialogV2",styleRenderedDialog);
 Hooks.on("renderApplicationV2",(app,html)=>{styleRenderedDialog(app,html);styleEquipmentSpellbooks(app,html);});
 Hooks.on("renderChatMessageHTML",styleChatMessage);
