@@ -1,6 +1,6 @@
 // ADD2E — UI commune des fenêtres et messages liés aux sorts.
 // Compatible Foundry V13/V14/V15 — DialogV2 / ApplicationV2 uniquement.
-const VERSION = "2026-07-14-v10-complete-external-spellbook-color";
+const VERSION = "2026-07-14-v11-player-spellbook-reader";
 globalThis.ADD2E_SPELL_DIALOG_UI_VERSION = VERSION;
 
 function esc(value) {
@@ -87,6 +87,25 @@ function ensureStyles() {
 .chat-message .add2e-arcane-chat-card .dice-formula{background:#f4efff!important;border:1px solid #8060cc!important;color:#2e1c5a!important}
 .chat-message .add2e-arcane-chat-card .dice-total{background:#fff!important;border:1px solid #8060cc!important;color:#2e1c5a!important;font-weight:900!important}
 .add2e-book-copy-complete{color:#6b7280!important;background:#e5e7eb!important;border-color:#9ca3af!important;box-shadow:none!important}
+.application.add2e-spellbook-reader-window{width:min(1040px,94vw)!important;height:min(820px,90vh)!important}
+.application.add2e-spellbook-reader-window .window-content{padding:10px!important;overflow:hidden!important;background:#3b2415!important}
+.add2e-spellbook-reader{height:100%;display:flex;flex-direction:column;min-height:0;color:#3d2b19}
+.add2e-spellbook-tabs{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;padding:4px 10px 0}
+.add2e-spellbook-tab{border:1px solid #73522d;border-bottom:0;border-radius:8px 8px 0 0;padding:7px 13px;background:#c5a36c;color:#332111;font-weight:800;cursor:pointer}
+.add2e-spellbook-tab.is-active{background:#f2e4c2;color:#4a2f12;transform:translateY(1px)}
+.add2e-spellbook-pages{flex:1;min-height:0;overflow:auto;padding:22px 30px;background:linear-gradient(90deg,#d7be8c 0%,#f5e8c9 5%,#fbf2da 47%,#c7aa76 49.5%,#927044 50%,#c7aa76 50.5%,#fbf2da 53%,#f5e8c9 95%,#d7be8c 100%);border:3px solid #73522d;border-radius:13px;box-shadow:inset 0 0 28px rgba(73,43,16,.25)}
+.add2e-spellbook-panel{display:none}.add2e-spellbook-panel.is-active{display:block}
+.add2e-spellbook-level-title{text-align:center;margin:0 0 16px;color:#573719;font-family:serif;font-size:1.45rem;border-bottom:1px solid rgba(90,55,25,.35);padding-bottom:7px}
+.add2e-spellbook-entry{margin:0 0 17px;padding:13px 15px;background:rgba(255,250,235,.68);border:1px solid rgba(112,77,39,.42);border-radius:9px;break-inside:avoid}
+.add2e-spellbook-entry-head{display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(112,77,39,.3);padding-bottom:7px;margin-bottom:9px}
+.add2e-spellbook-entry-head img{width:42px;height:42px;object-fit:cover;border:1px solid #73522d;border-radius:6px}
+.add2e-spellbook-entry-head h3{margin:0;color:#4a2f12;font-family:serif;font-size:1.22rem}
+.add2e-spellbook-entry-list{margin-left:auto;font-size:.84rem;font-weight:700;color:#75552b}
+.add2e-spellbook-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 16px;font-size:.9rem}
+.add2e-spellbook-field{display:grid;grid-template-columns:minmax(105px,auto) 1fr;gap:7px}.add2e-spellbook-field b{color:#5c3b1e}
+.add2e-spellbook-description{margin-top:10px;padding-top:9px;border-top:1px dashed rgba(112,77,39,.4);line-height:1.45}
+.add2e-spellbook-description>strong{display:block;margin-bottom:5px;color:#5c3b1e}
+@media(max-width:720px){.add2e-spellbook-pages{padding:16px}.add2e-spellbook-fields{grid-template-columns:1fr}}
 `;
   document.head.append(style);
 }
@@ -116,8 +135,7 @@ function isManagedDialog(title, content) {
 function wrapDialogOptions(options = {}) {
   const title = String(options?.window?.title ?? options?.title ?? "");
   const content = String(options?.content ?? "");
-  if (!isManagedDialog(title, content) || content.includes("add2e-spell-dialog-shell")) return options;
-
+  if (!isManagedDialog(title, content) || content.includes("add2e-spell-dialog-shell") || content.includes("add2e-spellbook-reader")) return options;
   const theme = guessTheme({ title, content, theme: options?.add2eTheme });
   const t = themeData(theme);
   const rawTitle = title.replace(/^Lancement\s*:\s*/i, "").trim() || "ADD2E";
@@ -149,9 +167,29 @@ function rootElement(html, app = null) {
   return null;
 }
 
+function bindSpellbookTabs(root) {
+  const reader = root?.querySelector?.(".add2e-spellbook-reader");
+  if (!reader || reader.dataset.bound === "1") return;
+  reader.dataset.bound = "1";
+  const activate = level => {
+    reader.querySelectorAll(".add2e-spellbook-tab").forEach(tab => tab.classList.toggle("is-active", tab.dataset.level === level));
+    reader.querySelectorAll(".add2e-spellbook-panel").forEach(panel => panel.classList.toggle("is-active", panel.dataset.level === level));
+  };
+  reader.querySelectorAll(".add2e-spellbook-tab").forEach(tab => tab.addEventListener("click", event => {
+    event.preventDefault();
+    activate(tab.dataset.level);
+  }));
+  activate(reader.querySelector(".add2e-spellbook-tab")?.dataset?.level ?? "1");
+}
+
 function styleRenderedDialog(app, html) {
   const root = rootElement(html, app);
   if (!root) return;
+  bindSpellbookTabs(root);
+  if (root.querySelector(".add2e-spellbook-reader")) {
+    root.classList.add("add2e-spellbook-reader-window");
+    return;
+  }
   const title = String(app?.title ?? root.querySelector(".window-title")?.textContent ?? "");
   const content = String(root.querySelector(".window-content")?.textContent ?? root.textContent ?? "");
   if (!isManagedDialog(title, content)) return;
@@ -176,7 +214,6 @@ function actorKnowsBookEntry(actor, entry) {
   const level = spellLevel(entry);
   const lists = spellLists(entry);
   if (!name) return false;
-
   return Array.from(actor?.items ?? []).some(item => {
     if (!["sort", "spell"].includes(String(item?.type ?? "").toLowerCase())) return false;
     if (item?.flags?.add2e?.spellFamily?.generated === true) return false;
@@ -200,16 +237,128 @@ function styleEquipmentSpellbooks(app, html) {
   if (!actor || actor.type !== "personnage") return;
   const root = rootElement(html, app);
   if (!root?.querySelector) return;
-
   for (const button of root.querySelectorAll('[data-add2e-arcane-action="copy-book"][data-item-id]')) {
     const book = actor.items?.get?.(button.dataset.itemId) ?? Array.from(actor.items ?? []).find(item => item.id === button.dataset.itemId);
     const complete = externalBookAllSpellsKnown(actor, book);
     button.classList.toggle("add2e-book-copy-complete", complete);
     button.classList.toggle("a2e-action-add", !complete);
-    button.title = complete
-      ? "Tous les sorts de ce livre sont déjà connus"
-      : "Copier les sorts compatibles dans le livre personnel";
+    button.title = complete ? "Tous les sorts de ce livre sont déjà connus" : "Copier les sorts compatibles dans le livre personnel";
   }
+}
+
+function bookEntries(book) {
+  try {
+    const entries = globalThis.ADD2E_ARCANE_DOCUMENTS?.documentEntries?.(book);
+    if (Array.isArray(entries)) return entries;
+  } catch (_error) {}
+  const document = book?.system?.arcaneDocument ?? {};
+  return Array.isArray(document.spells) ? document.spells : document.spell ? [document.spell] : [];
+}
+
+function formatSpellField(value) {
+  if (value === undefined || value === null || value === "") return "—";
+  if (Array.isArray(value)) return value.map(formatSpellField).filter(value => value !== "—").join(", ") || "—";
+  if (typeof value === "object") {
+    const direct = value.raw ?? value.texte ?? value.text ?? value.label ?? value.nom ?? value.name;
+    if (direct !== undefined) return formatSpellField(direct);
+    const amount = value.valeur ?? value.value ?? value.nombre ?? value.number;
+    const unit = value.unite ?? value.unit;
+    if (amount !== undefined) return `${amount}${unit ? ` ${unit}` : ""}`;
+    return Object.values(value).map(formatSpellField).filter(entry => entry !== "—").join(", ") || "—";
+  }
+  return String(value).trim() || "—";
+}
+
+async function enrichSpellDescription(spell) {
+  const raw = String(spell?.system?.description ?? spell?.system?.description_reelle ?? "").trim();
+  if (!raw) return "<em>Aucune description.</em>";
+  const editor = foundry?.applications?.ux?.TextEditor?.implementation ?? globalThis.TextEditor;
+  try { return editor?.enrichHTML ? await editor.enrichHTML(raw, { async: true, relativeTo: spell }) : esc(raw); }
+  catch (_error) { return esc(raw); }
+}
+
+async function openPlayerSpellbook(actor, book) {
+  const DialogV2 = foundry?.applications?.api?.DialogV2;
+  if (!DialogV2?.wait) return ui.notifications.error("DialogV2 est introuvable.");
+  const entries = bookEntries(book);
+  if (!entries.length) return ui.notifications.info(`${book.name} ne contient aucun sort.`);
+
+  const detailed = [];
+  for (const entry of entries) {
+    const name = norm(entry?.name ?? entry?.nom ?? entry?.label);
+    const level = spellLevel(entry);
+    const wantedLists = spellLists(entry);
+    let spell = Array.from(actor?.items ?? []).find(item =>
+      String(item?.type ?? "").toLowerCase() === "sort"
+      && item?.flags?.add2e?.spellFamily?.generated !== true
+      && norm(item?.name ?? item?.system?.nom) === name
+      && spellLevel(item) === level
+      && (!wantedLists.length || spellLists(item).some(list => wantedLists.includes(list)))
+    ) ?? null;
+    if (!spell && entry?.sourceUuid && typeof fromUuid === "function") {
+      try { spell = await fromUuid(entry.sourceUuid); } catch (_error) {}
+    }
+    detailed.push({ entry, spell, level });
+  }
+
+  const levels = [...new Set(detailed.map(row => row.level))].sort((a, b) => a - b);
+  const tabs = levels.map(level => `<button type="button" class="add2e-spellbook-tab" data-level="${level}">Niveau ${level}</button>`).join("");
+  const panels = [];
+  for (const level of levels) {
+    const cards = [];
+    for (const row of detailed.filter(row => row.level === level)) {
+      const spell = row.spell;
+      const system = spell?.system ?? row.entry?.system ?? row.entry ?? {};
+      const description = spell ? await enrichSpellDescription(spell) : `<em>Description complète indisponible pour ${esc(row.entry?.name ?? "ce sort")}.</em>`;
+      const listLabel = (row.entry?.listLabel || spellLists(row.entry).map(list => list === "magicien" ? "Magicien" : list === "illusionniste" ? "Illusionniste" : list).join(" / ") || "Liste inconnue");
+      const fields = [
+        ["École", system.ecole ?? system["école"] ?? system.school],
+        ["Portée", system.portee ?? system["portée"] ?? system.range],
+        ["Durée", system.duree ?? system["durée"] ?? system.duration],
+        ["Temps d’incantation", system.temps_incantation ?? system.tempsIncantation ?? system.castingTime],
+        ["Composantes", system.composantes ?? system.components],
+        ["Composants matériels", system.composants_materiels ?? system.materialComponents],
+        ["Zone d’effet", system.zone_effet ?? system.zoneEffet ?? system.areaOfEffect],
+        ["Cible", system.cible ?? system.target],
+        ["Jet de sauvegarde", system.jet_sauvegarde ?? system.jetSauvegarde ?? system.savingThrow]
+      ].map(([label, value]) => `<div class="add2e-spellbook-field"><b>${label}</b><span>${esc(formatSpellField(value))}</span></div>`).join("");
+      cards.push(`<article class="add2e-spellbook-entry"><div class="add2e-spellbook-entry-head"><img src="${esc(spell?.img ?? row.entry?.img ?? book.img ?? "icons/svg/book.svg")}" alt=""><h3>${esc(spell?.name ?? row.entry?.name ?? "Sort")}</h3><span class="add2e-spellbook-entry-list">${esc(listLabel)}</span></div><div class="add2e-spellbook-fields">${fields}</div><div class="add2e-spellbook-description"><strong>Description</strong>${description}</div></article>`);
+    }
+    panels.push(`<section class="add2e-spellbook-panel" data-level="${level}"><h2 class="add2e-spellbook-level-title">Sorts de niveau ${level}</h2>${cards.join("")}</section>`);
+  }
+
+  await DialogV2.wait({
+    window: { title: `${book.name} — ${actor.name}`, classes: ["add2e-spellbook-reader-window"], resizable: true },
+    position: { width: 1040, height: 820 },
+    modal: false,
+    rejectClose: false,
+    content: `<div class="add2e-spellbook-reader"><nav class="add2e-spellbook-tabs">${tabs}</nav><div class="add2e-spellbook-pages">${panels.join("")}</div></div>`,
+    buttons: [{ action: "close", label: "Fermer", icon: "fa-solid fa-book", default: true, callback: () => true }]
+  });
+}
+
+function bindPlayerSpellbookOpen() {
+  if (globalThis.__ADD2E_PLAYER_SPELLBOOK_READER_BOUND__) return;
+  globalThis.__ADD2E_PLAYER_SPELLBOOK_READER_BOUND__ = true;
+  document.addEventListener("click", event => {
+    const button = event.target instanceof Element ? event.target.closest('[data-add2e-arcane-action="view-book"][data-item-id]') : null;
+    if (!button) return;
+    const actorRoot = button.closest(".application, .window-app");
+    const app = Object.values(ui.windows ?? {}).find(candidate => {
+      const root = candidate?.element?.jquery ? candidate.element[0] : candidate?.element;
+      return root === actorRoot || root?.contains?.(button);
+    });
+    const actor = app?.actor ?? app?.document ?? null;
+    if (!actor || actor.documentName !== "Actor" || actor.type !== "personnage") return;
+    const book = actor.items?.get?.(button.dataset.itemId) ?? null;
+    if (!book) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    void openPlayerSpellbook(actor, book).catch(error => {
+      console.error("[ADD2E][SPELLBOOK_READER][ERROR]", { actor: actor.name, book: book.name, error });
+      ui.notifications.error(error?.message || "Impossible d’ouvrir le livre de sorts.");
+    });
+  }, true);
 }
 
 function styleChatMessage(message, html) {
@@ -218,11 +367,9 @@ function styleChatMessage(message, html) {
   const content = String(message?.content ?? root.textContent ?? "");
   const text = norm(content);
   if (!text.includes("connaissance") && !text.includes("comprehension") && !text.includes("copie_du_sort") && !text.includes("livre_de_sorts") && !text.includes("parchemin")) return;
-
   const card = root.querySelector(".add2e-card-test,.chat-card,.message-content>div") ?? root.querySelector(".message-content");
   if (!(card instanceof HTMLElement)) return;
   card.classList.add("add2e-arcane-chat-card");
-
   let header = card.querySelector(":scope > .add2e-arcane-chat-header");
   if (!header) {
     const title = card.querySelector(":scope > h1,:scope > h2,:scope > h3") ?? card.querySelector("h1,h2,h3");
@@ -235,7 +382,6 @@ function styleChatMessage(message, html) {
       if (title) header.append(title);
     }
   }
-
   let body = card.querySelector(":scope > .add2e-arcane-chat-body");
   if (!body) {
     body = document.createElement("div");
@@ -268,8 +414,8 @@ function refreshActorSheetForSpell(item) {
   }, 50));
 }
 
-globalThis.ADD2E_SPELL_DIALOG_UI = { version: VERSION, themes: THEMES, shell, primaryButtonClass, ensureStyles, guessTheme, guessIcon, wrapDialogOptions, esc };
-Hooks.once("ready", () => { ensureStyles(); patchDialogV2(); });
+globalThis.ADD2E_SPELL_DIALOG_UI = { version: VERSION, themes: THEMES, shell, primaryButtonClass, ensureStyles, guessTheme, guessIcon, wrapDialogOptions, esc, openPlayerSpellbook };
+Hooks.once("ready", () => { ensureStyles(); patchDialogV2(); bindPlayerSpellbookOpen(); });
 Hooks.on("renderDialogV2", styleRenderedDialog);
 Hooks.on("renderApplicationV2", (app, html) => {
   styleRenderedDialog(app, html);
