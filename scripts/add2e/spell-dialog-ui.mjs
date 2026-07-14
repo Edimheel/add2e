@@ -1,6 +1,6 @@
 // ADD2E — UI commune des fenêtres et messages liés aux sorts.
 // Compatible Foundry V13/V14/V15 — DialogV2 / ApplicationV2 uniquement.
-const VERSION = "2026-07-14-v17-player-external-book-learning";
+const VERSION = "2026-07-14-v18-canonical-spell-descriptions";
 globalThis.ADD2E_SPELL_DIALOG_UI_VERSION = VERSION;
 
 function esc(value) {
@@ -74,6 +74,7 @@ function ensureStyles() {
 .add2e-spellbook-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 18px;font-size:.9rem}
 .add2e-spellbook-field{display:grid;grid-template-columns:minmax(112px,auto) 1fr;gap:7px}.add2e-spellbook-field b{color:#58371a}
 .add2e-spellbook-description{margin-top:11px;padding-top:10px;border-top:1px dashed rgba(112,77,39,.44);line-height:1.48}
+.add2e-spellbook-description>strong{display:block;margin-bottom:6px;color:#58371a}
 .add2e-spellbook-learn{margin-left:auto;white-space:nowrap;padding:6px 10px;border:1px solid #68451f;border-radius:6px;background:#f0d59d;color:#3d260f;font-weight:800;cursor:pointer}
 .add2e-spellbook-learn:disabled{cursor:not-allowed;opacity:.55;background:#d8d0c2}
 .add2e-spellbook-entry-state{margin-top:8px;font-weight:700;color:#6d4a24}
@@ -205,37 +206,68 @@ function styleEquipmentSpellbooks(app, html) {
   }
 }
 
-let canonicalIndexPromise = null;
-async function canonicalIndex() {
-  canonicalIndexPromise ??= (async () => {
-    const rows = [];
-    for (const id of ["add2e.sorts","world.sorts"]) {
-      const pack = game.packs?.get?.(id);
-      if (pack?.documentName !== "Item") continue;
-      let index;
-      try { index = await pack.getIndex({fields:["name","type","system.niveau","system.level","system.spellLists","system.liste","system.classe"]}); }
-      catch (_error) { index = await pack.getIndex(); }
-      const entries = Array.isArray(index?.contents) ? index.contents : typeof index?.values === "function" ? [...index.values()] : [...(index ?? [])];
-      for (const entry of entries) {
-        if (!["sort","spell"].includes(String(entry?.type ?? "").toLowerCase())) continue;
-        rows.push({pack,id:entry._id,name:norm(entry.name),level:spellLevel(entry),lists:spellLists(entry)});
-      }
-    }
-    return rows;
+let canonicalDocumentsPromise = null;
+async function canonicalDocuments() {
+  canonicalDocumentsPromise ??= (async () => {
+    const pack = game.packs?.get?.("add2e.sorts");
+    if (!pack || pack.documentName !== "Item") throw new Error("Compendium canonique introuvable : add2e.sorts");
+    const documents = await pack.getDocuments();
+    return documents.filter(document => String(document?.type ?? "").toLowerCase() === "sort");
   })();
-  return canonicalIndexPromise;
+  return canonicalDocumentsPromise;
+}
+function canonicalStableKey(value) {
+  const name = String(value?.name ?? value?.nom ?? value?.label ?? "").trim();
+  const system = value?.system ?? {
+    niveau: spellLevel(value),
+    spellLists: spellLists(value),
+    classe: spellLists(value)
+  };
+  if (typeof globalThis.add2eSpellSyncStableKey === "function") {
+    try { return globalThis.add2eSpellSyncStableKey(name, system); } catch (_error) {}
+  }
+  return `${spellLists(value).sort().join("+")}|${spellLevel(value)}|${norm(name)}`;
 }
 async function resolveCanonicalSpell(spell) {
-  const sourceUuid = String(spell?.sourceUuid ?? spell?.uuid ?? spell?.flags?.core?.sourceId ?? spell?._stats?.compendiumSource ?? spell?.flags?.add2e?.sourceUuid ?? "").trim();
-  if (sourceUuid && typeof fromUuid === "function") {
-    try { const document = await fromUuid(sourceUuid); if (document?.documentName === "Item") return document; } catch (_error) {}
+  const sourceUuid = String(
+    spell?.sourceUuid
+    ?? spell?.flags?.core?.sourceId
+    ?? spell?._stats?.compendiumSource
+    ?? spell?.flags?.add2e?.sourceUuid
+    ?? ""
+  ).trim();
+  if (sourceUuid.startsWith("Compendium.add2e.sorts.") && typeof fromUuid === "function") {
+    try {
+      const document = await fromUuid(sourceUuid);
+      if (document?.documentName === "Item" && String(document.type).toLowerCase() === "sort") return document;
+    } catch (_error) {}
   }
-  const name = norm(spell?.name ?? spell?.nom ?? spell?.label);
-  const level = spellLevel(spell);
-  const lists = spellLists(spell);
-  const matches = (await canonicalIndex()).filter(row => row.name === name && row.level === level);
-  const selected = matches.find(row => !lists.length || row.lists.some(list => lists.includes(list))) ?? matches[0] ?? null;
-  return selected ? selected.pack.getDocument(selected.id) : spell;
+
+  const documents = await canonicalDocuments();
+  const wantedKey = canonicalStableKey(spell);
+  const exact = documents.find(document => canonicalStableKey(document) === wantedKey) ?? null;
+  if (exact) return exact;
+
+  const wantedName = norm(spell?.name ?? spell?.nom ?? spell?.label);
+  const wantedLevel = spellLevel(spell);
+  const wantedLists = spellLists(spell);
+  const strictMatches = documents.filter(document => norm(document.name) === wantedName && spellLevel(document) === wantedLevel);
+  const listMatch = strictMatches.find(document => {
+    const lists = spellLists(document);
+    return wantedLists.length > 0 && wantedLists.every(list => lists.includes(list));
+  }) ?? null;
+  if (listMatch) return listMatch;
+  if (strictMatches.length === 1) return strictMatches[0];
+
+  console.warn("[ADD2E][SPELLBOOK_READER][CANONICAL_NOT_FOUND]", {
+    name: spell?.name ?? spell?.nom ?? spell?.label,
+    level: wantedLevel,
+    lists: wantedLists,
+    sourceUuid,
+    stableKey: wantedKey,
+    candidates: strictMatches.map(document => ({ name: document.name, level: spellLevel(document), lists: spellLists(document), uuid: document.uuid }))
+  });
+  return null;
 }
 function formatSpellField(value) {
   if (value === undefined || value === null || value === "") return "—";
@@ -251,8 +283,8 @@ function formatSpellField(value) {
   return String(value).trim() || "—";
 }
 async function enrichSpellDescription(spell) {
-  const raw = String(spell?.system?.description_reelle ?? spell?.system?.description ?? spell?.system?.texte ?? spell?.system?.text ?? "").trim();
-  if (!raw) return "<em>Aucune description dans la source canonique.</em>";
+  const raw = String(spell?.system?.description ?? "").trim();
+  if (!raw) return "<em>Description canonique absente dans add2e.sorts.</em>";
   const editor = foundry?.applications?.ux?.TextEditor?.implementation ?? globalThis.TextEditor;
   try { return editor?.enrichHTML ? await editor.enrichHTML(raw,{async:true,relativeTo:spell}) : esc(raw); }
   catch (_error) { return esc(raw); }
@@ -287,7 +319,7 @@ async function learnSpellFromExternalBook(actor, book, entry) {
   if (!compatible.length) return ui.notifications.warn(`${actor.name} ne possède aucune classe compatible avec ${entry.name}.`);
   if (actorKnowsBookEntry(actor, entry)) return ui.notifications.info(`${actor.name} connaît déjà ${entry.name}.`);
   const sourceDocument = await resolveCanonicalSpell(entry);
-  if (!sourceDocument?.toObject) return ui.notifications.error(`${entry.name} est introuvable dans les sources de sorts.`);
+  if (!sourceDocument?.toObject) return ui.notifications.error(`${entry.name} est introuvable dans le compendium canonique add2e.sorts.`);
   const chance = learningChance(actor);
   const roll = await new Roll("1d100").evaluate();
   const total = Number(roll.total) || 100;
@@ -324,7 +356,7 @@ async function openPlayerSpellbook(actor, book) {
   const detailed = [];
   for (const embedded of sourceRows) {
     const canonical = await resolveCanonicalSpell(embedded);
-    detailed.push({embedded,spell:canonical ?? embedded,level:spellLevel(canonical ?? embedded)});
+    detailed.push({embedded,spell:canonical,level:spellLevel(canonical ?? embedded)});
   }
   const levels = [...new Set(detailed.map(row => row.level))].sort((a,b) => a-b);
   const tabs = levels.map(level => `<button type="button" class="add2e-spellbook-tab" data-level="${level}">Niveau ${level}</button>`).join("");
@@ -334,12 +366,14 @@ async function openPlayerSpellbook(actor, book) {
     for (const row of detailed.filter(row => row.level === level)) {
       const spell = row.spell;
       const system = spell?.system ?? {};
-      const description = await enrichSpellDescription(spell);
-      const lists = spellLists(row.embedded);
+      const description = spell
+        ? await enrichSpellDescription(spell)
+        : `<em>Le document canonique de ${esc(row.embedded?.name ?? "ce sort")} est introuvable dans add2e.sorts.</em>`;
+      const lists = spell ? spellLists(spell) : spellLists(row.embedded);
       const listLabel = lists.map(list => list === "magicien" ? "Magicien" : list === "illusionniste" ? "Illusionniste" : list).join(" / ") || "Liste inconnue";
       const known = actorKnowsBookEntry(actor,row.embedded);
       const compatible = lists.some(list => actorSpellLists(actor).includes(list));
-      const learnButton = personal ? "" : `<button type="button" class="add2e-spellbook-learn" data-spell-key="${esc(row.embedded.key ?? `${lists[0] ?? "sort"}|${row.level}|${norm(row.embedded.name)}`)}" ${known || !compatible ? "disabled" : ""}>${known ? "Déjà connu" : compatible ? "Apprendre" : "Incompatible"}</button>`;
+      const learnButton = personal ? "" : `<button type="button" class="add2e-spellbook-learn" data-spell-key="${esc(row.embedded.key ?? `${lists[0] ?? "sort"}|${row.level}|${norm(row.embedded.name)}`)}" ${known || !compatible || !spell ? "disabled" : ""}>${known ? "Déjà connu" : !spell ? "Source introuvable" : compatible ? "Apprendre" : "Incompatible"}</button>`;
       const fields = [
         ["École",system.ecole ?? system["école"] ?? system.school],
         ["Portée",system.portee ?? system["portée"] ?? system.range],
@@ -403,8 +437,8 @@ function actorFromSpellbookButton(button) {
   return null;
 }
 function bindPlayerSpellbookOpen() {
-  if (globalThis.__ADD2E_PLAYER_SPELLBOOK_READER_BOUND_V17__) return;
-  globalThis.__ADD2E_PLAYER_SPELLBOOK_READER_BOUND_V17__ = true;
+  if (globalThis.__ADD2E_PLAYER_SPELLBOOK_READER_BOUND_V18__) return;
+  globalThis.__ADD2E_PLAYER_SPELLBOOK_READER_BOUND_V18__ = true;
   document.addEventListener("click", event => {
     const button = event.target instanceof Element ? event.target.closest('[data-add2e-arcane-action="view-book"][data-item-id]') : null;
     if (!button || game.user?.isGM) return;
