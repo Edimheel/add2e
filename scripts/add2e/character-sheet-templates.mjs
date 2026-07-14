@@ -20,7 +20,7 @@ const ADD2E_CHARACTER_SHEET_PARTIALS = [
   "systems/add2e/templates/actor/parts/tab-notes.hbs"
 ];
 
-const ADD2E_BOOK_LEARNING_CHAT_VERSION = "2026-07-14-v18-single-card-source-fix";
+const ADD2E_BOOK_LEARNING_CHAT_VERSION = "2026-07-14-v19-dom-safe-single-card";
 globalThis.ADD2E_BOOK_LEARNING_CHAT_VERSION = ADD2E_BOOK_LEARNING_CHAT_VERSION;
 
 const ADD2E_PENDING_BOOK_LEARNING_ROLLS = new Map();
@@ -39,6 +39,20 @@ function add2eBookLearningEscape(value) {
     .replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
 
+function add2eBookLearningPlainText(value) {
+  const source = String(value ?? "");
+  if (!source) return "";
+  try {
+    const template = document.createElement("template");
+    template.innerHTML = source;
+    return String(template.content.textContent ?? "")
+      .replace(/\s+/g, " ")
+      .trim();
+  } catch (_error) {
+    return source.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  }
+}
+
 function add2eBookLearningActorKey(message) {
   return String(message?.speaker?.actor ?? message?.speaker?.token ?? message?.user?.id ?? game.user?.id ?? "global");
 }
@@ -54,30 +68,46 @@ function add2eBookLearningImage(content) {
     ?? "icons/sundries/books/book-embossed-gold-red.webp";
 }
 
+function add2eBookLearningCleanLabel(value) {
+  return add2eBookLearningPlainText(value)
+    .replace(/^(?:sort|source|livre)\s*:?\s*/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function add2eParseBookLearningRoll(message) {
-  const flavor = String(message?.flavor ?? "");
-  const content = String(message?.content ?? "");
-  const text = `${flavor} ${content}`;
+  const flavorText = add2eBookLearningPlainText(message?.flavor);
+  const contentText = add2eBookLearningPlainText(message?.content);
+  const text = `${flavorText} ${contentText}`.trim();
   const normalized = add2eBookLearningNormalize(text);
   const total = add2eBookLearningRollTotal(message);
   if (total === null || !normalized.includes("test_de_comprehension") || !normalized.includes("livre_de_sorts")) return null;
 
   const chanceMatch = text.match(/chance\s*:?\s*(\d+)\s*%/i);
-  const cleanedFlavor = flavor.replace(/^\s*test\s+de\s+compr[ée]hension\s*[-—:]?\s*/i, "").trim();
-  const parts = cleanedFlavor.split(/\s+[—–-]\s+/);
+  const cleanedFlavor = flavorText
+    .replace(/^\s*test\s+de\s+compr[ée]hension\s*[-—–:]?\s*/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  const parts = cleanedFlavor.split(/\s+[—–-]\s+/).map(add2eBookLearningCleanLabel).filter(Boolean);
+  const spellName = parts[0] && !/^livre de sorts/i.test(parts[0]) ? parts[0] : "Sort";
+  const sourceName = parts.find(part => /^livre de sorts/i.test(part))
+    ?? parts[parts.length - 1]
+    ?? "Livre de sorts";
+
   return {
     createdAt: Date.now(),
     messageId: message.id,
     total,
     chance: chanceMatch ? Number(chanceMatch[1]) : null,
-    spellName: String(parts[0] ?? "Sort").trim() || "Sort",
-    sourceName: String(parts.slice(1).join(" — ") || "Livre de sorts").trim(),
-    img: add2eBookLearningImage(content)
+    spellName,
+    sourceName,
+    img: add2eBookLearningImage(message?.content)
   };
 }
 
 function add2eIsFinalBookLearningMessage(message) {
-  const normalized = add2eBookLearningNormalize(`${message?.flavor ?? ""} ${message?.content ?? ""}`);
+  const text = `${add2eBookLearningPlainText(message?.flavor)} ${add2eBookLearningPlainText(message?.content)}`;
+  const normalized = add2eBookLearningNormalize(text);
   return normalized.includes("copie_d_un_sort_depuis_un_livre")
     || normalized.includes("copie_dun_sort_depuis_un_livre")
     || normalized.includes("ajoute_au_livre_personnel_et_a_la_liste_des_sorts")
@@ -85,7 +115,7 @@ function add2eIsFinalBookLearningMessage(message) {
 }
 
 function add2eBuildBookLearningCard(result, originalContent) {
-  const original = add2eBookLearningNormalize(originalContent);
+  const original = add2eBookLearningNormalize(add2eBookLearningPlainText(originalContent));
   const explicitFailure = original.includes("echec")
     || original.includes("nest_pas_compris")
     || original.includes("n_est_pas_compris")
@@ -164,16 +194,16 @@ async function add2eConsolidateBookLearningMessage(message, _options, userId) {
   if (!result || Date.now() - result.createdAt > 15000) return;
   ADD2E_PENDING_BOOK_LEARNING_ROLLS.delete(key);
 
+  const rollMessage = game.messages?.get?.(result.messageId);
+  if (rollMessage && rollMessage.id !== message.id) {
+    await rollMessage.delete({ add2eBookLearningMerge: true });
+  }
+
   await message.update({
     content: add2eBuildBookLearningCard(result, message.content),
     flavor: null,
     rolls: []
   }, { add2eBookLearningMerge: true });
-
-  const rollMessage = game.messages?.get?.(result.messageId);
-  if (rollMessage && rollMessage.id !== message.id) {
-    await rollMessage.delete({ add2eBookLearningMerge: true });
-  }
 }
 
 function add2eOpenGmSpellbookAsSheet(event) {
