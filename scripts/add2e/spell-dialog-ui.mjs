@@ -1,6 +1,6 @@
 // ADD2E — UI commune des fenêtres et messages liés aux sorts.
 // Compatible Foundry V13/V14/V15 — DialogV2 / ApplicationV2 uniquement.
-const VERSION = "2026-07-14-v8-arcane-dialogs-chat-refresh";
+const VERSION = "2026-07-14-v9-arcane-chat-card";
 globalThis.ADD2E_SPELL_DIALOG_UI_VERSION = VERSION;
 
 function esc(value) {
@@ -40,7 +40,7 @@ function guessTheme({ title = "", content = "", theme = null } = {}) {
   const text = norm(`${title} ${content}`);
   if (text.includes("voleur") || text.includes("assassin") || text.includes("thief")) return "thief";
   if (text.includes("illusionniste") || text.includes("illusionist")) return "illusionist";
-  if (text.includes("magicien") || text.includes("wizard") || text.includes("livre_de_sorts") || text.includes("parchemin") || text.includes("connaissance")) return "wizard";
+  if (text.includes("magicien") || text.includes("wizard") || text.includes("livre_de_sorts") || text.includes("parchemin") || text.includes("connaissance") || text.includes("comprehension")) return "wizard";
   if (text.includes("druide") || text.includes("druid")) return "druid";
   return "cleric";
 }
@@ -77,8 +77,15 @@ function ensureStyles() {
 .add2e-spell-dialog-header{display:flex;align-items:center;gap:10px;padding:10px 12px;background:linear-gradient(90deg,var(--a2e-dark),var(--a2e-main));color:#fff;border-bottom:2px solid var(--a2e-border)}
 .add2e-spell-dialog-header img{width:42px;height:42px;border-radius:8px;background:#fff;object-fit:cover;border:2px solid rgba(255,255,255,.9)}
 .add2e-spell-dialog-title{font-size:1.08rem;font-weight:800}.add2e-spell-dialog-subtitle{font-size:.84rem;opacity:.95}.add2e-spell-dialog-body{padding:12px}
-.chat-message .add2e-arcane-chat-card{border:2px solid #8060cc!important;border-radius:10px!important;background:linear-gradient(180deg,#f8f3ff,#e8ddfb)!important;color:#211735!important;box-shadow:0 3px 10px rgba(46,28,90,.16)!important;overflow:hidden!important}
-.chat-message .add2e-arcane-chat-card>header,.chat-message .add2e-arcane-chat-card>.card-header{background:linear-gradient(90deg,#2e1c5a,#6b49b8)!important;color:#fff!important;border:0!important}
+.chat-message .add2e-arcane-chat-card{padding:0!important;border:2px solid #8060cc!important;border-radius:10px!important;background:linear-gradient(180deg,#f8f3ff,#e8ddfb)!important;color:#211735!important;box-shadow:0 3px 10px rgba(46,28,90,.16)!important;overflow:hidden!important}
+.chat-message .add2e-arcane-chat-header{display:flex!important;align-items:center!important;gap:9px!important;margin:0!important;padding:8px 10px!important;background:linear-gradient(90deg,#2e1c5a,#6b49b8)!important;color:#fff!important;border:0!important}
+.chat-message .add2e-arcane-chat-header img{display:block!important;width:44px!important;height:44px!important;min-width:44px!important;max-width:44px!important;min-height:44px!important;max-height:44px!important;margin:0!important;border:1px solid rgba(255,255,255,.85)!important;border-radius:7px!important;object-fit:cover!important;background:#fff!important}
+.chat-message .add2e-arcane-chat-header h1,.chat-message .add2e-arcane-chat-header h2,.chat-message .add2e-arcane-chat-header h3{margin:0!important;padding:0!important;border:0!important;color:#fff!important;font-size:1.05rem!important;line-height:1.15!important}
+.chat-message .add2e-arcane-chat-body{padding:10px 11px!important}
+.chat-message .add2e-arcane-chat-body>img,.chat-message .add2e-arcane-chat-card>img{width:44px!important;height:44px!important;max-width:44px!important;max-height:44px!important;object-fit:cover!important}
+.chat-message .add2e-arcane-chat-card .dice-roll,.chat-message .add2e-arcane-chat-card .dice-result{margin-top:8px!important}
+.chat-message .add2e-arcane-chat-card .dice-formula{background:#f4efff!important;border:1px solid #8060cc!important;color:#2e1c5a!important}
+.chat-message .add2e-arcane-chat-card .dice-total{background:#fff!important;border:1px solid #8060cc!important;color:#2e1c5a!important;font-weight:900!important}
 `;
   document.head.append(style);
 }
@@ -101,7 +108,8 @@ function isManagedDialog(title, content) {
     || text.includes("copie_du_sort")
     || text.includes("copier_un_sort")
     || text.includes("jet_de_connaissance")
-    || text.includes("test_de_connaissance");
+    || text.includes("test_de_connaissance")
+    || text.includes("test_de_comprehension");
 }
 
 function wrapDialogOptions(options = {}) {
@@ -157,9 +165,35 @@ function styleChatMessage(message, html) {
   if (!root) return;
   const content = String(message?.content ?? root.textContent ?? "");
   const text = norm(content);
-  if (!text.includes("connaissance") && !text.includes("copie_du_sort") && !text.includes("livre_de_sorts") && !text.includes("parchemin")) return;
+  if (!text.includes("connaissance") && !text.includes("comprehension") && !text.includes("copie_du_sort") && !text.includes("livre_de_sorts") && !text.includes("parchemin")) return;
+
   const card = root.querySelector(".add2e-card-test,.chat-card,.message-content>div") ?? root.querySelector(".message-content");
-  card?.classList?.add("add2e-arcane-chat-card");
+  if (!(card instanceof HTMLElement)) return;
+  card.classList.add("add2e-arcane-chat-card");
+
+  let header = card.querySelector(":scope > .add2e-arcane-chat-header");
+  if (!header) {
+    const title = card.querySelector(":scope > h1,:scope > h2,:scope > h3") ?? card.querySelector("h1,h2,h3");
+    const image = card.querySelector(":scope > img") ?? card.querySelector("img");
+    if (title || image) {
+      header = document.createElement("div");
+      header.className = "add2e-arcane-chat-header";
+      card.insertBefore(header, card.firstChild);
+      if (image) header.append(image);
+      if (title) header.append(title);
+    }
+  }
+
+  let body = card.querySelector(":scope > .add2e-arcane-chat-body");
+  if (!body) {
+    body = document.createElement("div");
+    body.className = "add2e-arcane-chat-body";
+    for (const child of [...card.children]) {
+      if (child === header || child === body) continue;
+      body.append(child);
+    }
+    card.append(body);
+  }
 }
 
 const refreshTimers = new Map();
