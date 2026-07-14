@@ -11,11 +11,11 @@ import {
   sortedCombatants
 } from "../add2e-initiative-order.mjs";
 
-export const ADD2E_HORIZONTAL_TRACKER_VERSION = "2026-07-14-horizontal-combat-tracker-v3";
+export const ADD2E_HORIZONTAL_TRACKER_VERSION = "2026-07-14-horizontal-combat-tracker-v4";
 
-const Add2eApplicationV2 = foundry?.applications?.api?.ApplicationV2;
-const Add2eDialogV2 = foundry?.applications?.api?.DialogV2;
-if (!Add2eApplicationV2) throw new Error("[ADD2E][HORIZONTAL_TRACKER] ApplicationV2 introuvable.");
+const ApplicationV2 = foundry?.applications?.api?.ApplicationV2;
+const DialogV2 = foundry?.applications?.api?.DialogV2;
+if (!ApplicationV2) throw new Error("[ADD2E][HORIZONTAL_TRACKER] ApplicationV2 introuvable.");
 
 const STYLE_ID = "add2e-horizontal-combat-tracker-style";
 const SKIP_STATUS_IDS = new Set([
@@ -30,7 +30,9 @@ const SKIP_STATUS_IDS = new Set([
 
 let trackerApp = null;
 let refreshTimer = null;
+let layoutTimer = null;
 let navigationRunning = false;
+let sidebarObserver = null;
 
 function esc(value) {
   if (foundry?.utils?.escapeHTML) return foundry.utils.escapeHTML(String(value ?? ""));
@@ -69,8 +71,7 @@ function combatantSkipReason(combatant) {
   if (!combatant) return "Combattant introuvable";
   if (isInactiveCombatant(combatant)) return "Incapable d’agir";
 
-  const documents = [combatant, combatant.token, combatant.actor].filter(Boolean);
-  for (const document of documents) {
+  for (const document of [combatant, combatant.token, combatant.actor].filter(Boolean)) {
     if (document?.flags?.add2e?.skipCombatTurn === true) return "Tour neutralisé";
     for (const effect of document?.effects ?? []) {
       if (effect?.disabled || effect?.isSuppressed) continue;
@@ -105,6 +106,58 @@ function userCanManage(combatant) {
   return game.user?.isGM === true || combatant?.actor?.isOwner === true;
 }
 
+function visibleSidebarRect() {
+  const selectors = [
+    "#sidebar",
+    "#ui-right-column",
+    "#interface #sidebar",
+    ".sidebar-popout"
+  ];
+
+  for (const selector of selectors) {
+    const element = document.querySelector(selector);
+    if (!element) continue;
+    const style = getComputedStyle(element);
+    if (style.display === "none" || style.visibility === "hidden") continue;
+    const rect = element.getBoundingClientRect();
+    if (rect.width > 20 && rect.right > window.innerWidth - 20) return rect;
+  }
+  return null;
+}
+
+function applyTrackerLayout() {
+  const element = document.getElementById("add2e-horizontal-combat-tracker");
+  if (!element) return;
+
+  const leftMargin = window.innerWidth <= 800 ? 6 : 74;
+  const sidebar = visibleSidebarRect();
+  const rightEdge = sidebar ? Math.max(leftMargin + 320, sidebar.left - 10) : window.innerWidth - 10;
+  const width = Math.max(320, rightEdge - leftMargin);
+
+  element.style.setProperty("left", `${leftMargin}px`, "important");
+  element.style.setProperty("right", "auto", "important");
+  element.style.setProperty("width", `${width}px`, "important");
+  element.style.setProperty("max-width", `${width}px`, "important");
+  element.style.setProperty("transform", "none", "important");
+}
+
+function scheduleTrackerLayout(delay = 0) {
+  clearTimeout(layoutTimer);
+  layoutTimer = setTimeout(applyTrackerLayout, Math.max(0, Number(delay) || 0));
+}
+
+function ensureLayoutObserver() {
+  if (sidebarObserver || !document.body) return;
+  sidebarObserver = new MutationObserver(() => scheduleTrackerLayout(20));
+  sidebarObserver.observe(document.body, {
+    attributes: true,
+    childList: true,
+    subtree: true,
+    attributeFilter: ["class", "style", "data-tab"]
+  });
+  window.addEventListener("resize", () => scheduleTrackerLayout(20), { passive: true });
+}
+
 function ensureStyles() {
   if (!document?.head) return;
   document.getElementById(STYLE_ID)?.remove();
@@ -115,39 +168,37 @@ function ensureStyles() {
     #add2e-horizontal-combat-tracker {
       position: fixed !important;
       top: 10px !important;
-      left: 50% !important;
-      transform: translateX(-50%) !important;
-      width: min(97vw, 1700px) !important;
       height: auto !important;
       z-index: 110 !important;
       background: transparent !important;
       border: 0 !important;
       box-shadow: none !important;
-      pointer-events: none;
+      pointer-events: none !important;
     }
-
     #add2e-horizontal-combat-tracker .window-header { display: none !important; }
     #add2e-horizontal-combat-tracker .window-content {
       padding: 0 !important;
       overflow: visible !important;
       background: transparent !important;
-      pointer-events: none;
+      pointer-events: none !important;
     }
-
     .add2e-horizontal-tracker-shell {
-      display: grid;
-      grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+      display: flex;
       align-items: center;
       gap: 10px;
-      padding: 2px 4px;
-      border: 0;
-      border-radius: 0;
+      width: 100%;
+      padding: 2px 0;
       background: transparent;
-      box-shadow: none;
-      pointer-events: auto;
+      pointer-events: none;
       color: #f1e7c6;
     }
-
+    .add2e-horizontal-controls {
+      display: flex;
+      flex: 0 0 auto;
+      align-items: center;
+      gap: 7px;
+      pointer-events: auto;
+    }
     .add2e-horizontal-round {
       min-width: 98px;
       padding: 8px 10px;
@@ -161,14 +212,12 @@ function ensureStyles() {
       color: #f0cf72;
       backdrop-filter: blur(3px);
     }
-
     .add2e-horizontal-round small {
       display: block;
       margin-bottom: 2px;
       font-size: .7rem;
       color: #d8cfb5;
     }
-
     .add2e-horizontal-control {
       display: inline-grid;
       place-items: center;
@@ -184,23 +233,22 @@ function ensureStyles() {
       cursor: pointer;
       backdrop-filter: blur(3px);
     }
-
     .add2e-horizontal-control:hover { filter: brightness(1.2); }
     .add2e-horizontal-control:disabled { opacity: .42; cursor: not-allowed; }
     .add2e-horizontal-control.start { width: auto; min-width: 112px; padding: 0 12px; }
-
     .add2e-horizontal-list {
       display: flex;
+      flex: 1 1 auto;
       align-items: flex-end;
       gap: 10px;
       min-width: 0;
       overflow-x: auto;
       overflow-y: visible;
       padding: 10px 8px 12px;
+      pointer-events: auto;
       scrollbar-width: thin;
       scrollbar-color: #8b7134 transparent;
     }
-
     .add2e-horizontal-card {
       position: relative;
       flex: 0 0 110px;
@@ -214,17 +262,14 @@ function ensureStyles() {
       box-shadow: 0 4px 11px rgba(0,0,0,.52);
       transition: transform .14s ease, filter .14s ease, border-color .14s ease;
     }
-
     .add2e-horizontal-card.active {
       transform: translateY(-5px) scale(1.07);
       border: 4px solid #d94335;
       box-shadow: 0 0 0 2px rgba(255,210,76,.72), 0 7px 16px rgba(0,0,0,.58);
       z-index: 4;
     }
-
     .add2e-horizontal-card.inactive { filter: grayscale(.9) brightness(.55); }
     .add2e-horizontal-card.hidden-combatant { filter: saturate(.3); }
-
     .add2e-horizontal-card img {
       position: absolute;
       inset: 0;
@@ -238,7 +283,6 @@ function ensureStyles() {
       object-position: center;
       cursor: pointer;
     }
-
     .add2e-horizontal-card::after {
       content: "";
       position: absolute;
@@ -247,7 +291,6 @@ function ensureStyles() {
       pointer-events: none;
       background: linear-gradient(transparent, rgba(0,0,0,.82));
     }
-
     .add2e-horizontal-init {
       position: absolute;
       top: 5px;
@@ -266,7 +309,6 @@ function ensureStyles() {
       z-index: 6;
       cursor: pointer;
     }
-
     .add2e-horizontal-name {
       position: absolute;
       left: 5px;
@@ -282,7 +324,6 @@ function ensureStyles() {
       color: #fff8df;
       text-shadow: 0 1px 3px #000, 0 0 4px #000;
     }
-
     .add2e-horizontal-state {
       position: absolute;
       left: 6px;
@@ -297,7 +338,6 @@ function ensureStyles() {
       color: #fff;
       z-index: 6;
     }
-
     .add2e-horizontal-attacks {
       position: absolute;
       left: 5px;
@@ -312,9 +352,6 @@ function ensureStyles() {
       text-align: center;
       color: #fff2b4;
     }
-
-    .add2e-horizontal-actions { display: flex; gap: 7px; align-items: center; }
-
     .add2e-horizontal-menu {
       position: fixed;
       z-index: 300;
@@ -326,7 +363,6 @@ function ensureStyles() {
       background: #202328;
       box-shadow: 0 8px 24px rgba(0,0,0,.72);
     }
-
     .add2e-horizontal-menu button {
       display: flex;
       align-items: center;
@@ -338,16 +374,15 @@ function ensureStyles() {
       text-align: left;
       cursor: pointer;
     }
-
     .add2e-horizontal-menu button:hover { background: #4b4029; }
     .add2e-horizontal-menu button.danger { color: #ffaaa2; }
-
     @media (max-width: 800px) {
-      #add2e-horizontal-combat-tracker { top: 4px !important; width: 99vw !important; }
-      .add2e-horizontal-tracker-shell { grid-template-columns: auto minmax(0,1fr) auto; gap: 6px; }
-      .add2e-horizontal-round { min-width: 78px; padding: 6px; font-size: .86rem; }
-      .add2e-horizontal-actions { grid-column: 3; }
-      .add2e-horizontal-control.previous { display: none; }
+      #add2e-horizontal-combat-tracker { top: 4px !important; }
+      .add2e-horizontal-tracker-shell { gap: 6px; }
+      .add2e-horizontal-controls { gap: 4px; }
+      .add2e-horizontal-round { min-width: 76px; padding: 6px; font-size: .84rem; }
+      .add2e-horizontal-control { width: 36px; height: 36px; }
+      .add2e-horizontal-control.start { min-width: 92px; padding: 0 8px; }
       .add2e-horizontal-card { flex-basis: 92px; width: 92px; height: 118px; }
     }
   `;
@@ -355,8 +390,8 @@ function ensureStyles() {
 }
 
 async function confirmAction({ title, content, yes = "Confirmer" }) {
-  if (!Add2eDialogV2?.confirm) return window.confirm(String(content).replace(/<[^>]+>/g, " "));
-  return Add2eDialogV2.confirm({
+  if (!DialogV2?.confirm) return window.confirm(String(content).replace(/<[^>]+>/g, " "));
+  return DialogV2.confirm({
     window: { title },
     content,
     yes: { label: yes, icon: "fas fa-check" },
@@ -396,13 +431,13 @@ async function advanceAndSkip(combat, direction = 1) {
   }
 }
 
-class Add2eHorizontalCombatTracker extends Add2eApplicationV2 {
+class Add2eHorizontalCombatTracker extends ApplicationV2 {
   static DEFAULT_OPTIONS = {
     id: "add2e-horizontal-combat-tracker",
     classes: ["add2e", "add2e-horizontal-combat-tracker"],
     tag: "section",
     window: { frame: false, positioned: true, minimizable: false, resizable: false },
-    position: { width: 1400, height: "auto", top: 8 }
+    position: { width: 1200, height: "auto", top: 8, left: 74 }
   };
 
   async _prepareContext() {
@@ -416,7 +451,6 @@ class Add2eHorizontalCombatTracker extends Add2eApplicationV2 {
       .map(combatant => {
         const hiddenForPlayer = combatant.hidden === true && !game.user?.isGM;
         const skipReason = combatantSkipReason(combatant);
-        const attackStatus = started ? add2eMultipleAttackHudStatus(combatant.actor, combat) : null;
         return {
           id: combatant.id,
           name: hiddenForPlayer ? "Combattant masqué" : combatant.name,
@@ -428,7 +462,7 @@ class Add2eHorizontalCombatTracker extends Add2eApplicationV2 {
           skipReason,
           hidden: combatant.hidden === true,
           canManage: userCanManage(combatant),
-          attackStatus
+          attackStatus: started ? add2eMultipleAttackHudStatus(combatant.actor, combat) : null
         };
       });
 
@@ -460,15 +494,15 @@ class Add2eHorizontalCombatTracker extends Add2eApplicationV2 {
 
     root.innerHTML = `
       <div class="add2e-horizontal-tracker-shell">
-        <div class="add2e-horizontal-round"><small>${context.started ? "COMBAT" : "PRÉPARATION"}</small>${context.started ? `Round ${context.round}` : "Initiative"}</div>
-        <button type="button" class="add2e-horizontal-control previous" data-action="previous-turn" title="Tour précédent" ${context.started ? "" : "disabled"}><i class="fas fa-chevron-left"></i></button>
-        <div class="add2e-horizontal-list">${cards}</div>
-        <button type="button" class="add2e-horizontal-control" data-action="next-turn" title="Tour suivant" ${context.started ? "" : "disabled"}><i class="fas fa-chevron-right"></i></button>
-        <div class="add2e-horizontal-actions">
+        <div class="add2e-horizontal-controls">
+          <div class="add2e-horizontal-round"><small>${context.started ? "COMBAT" : "PRÉPARATION"}</small>${context.started ? `Round ${context.round}` : "Initiative"}</div>
+          <button type="button" class="add2e-horizontal-control" data-action="previous-turn" title="Tour précédent" ${context.started ? "" : "disabled"}><i class="fas fa-chevron-left"></i></button>
+          <button type="button" class="add2e-horizontal-control" data-action="next-turn" title="Tour suivant" ${context.started ? "" : "disabled"}><i class="fas fa-chevron-right"></i></button>
           <button type="button" class="add2e-horizontal-control" data-action="roll-missing" title="Lancer les initiatives manquantes"><i class="fas fa-dice-d6"></i></button>
           ${context.isGM && !context.started ? '<button type="button" class="add2e-horizontal-control start" data-action="start-combat" title="Démarrer le combat"><i class="fas fa-play"></i>&nbsp;Démarrer</button>' : ""}
           ${context.isGM && context.started ? '<button type="button" class="add2e-horizontal-control" data-action="end-combat" title="Terminer le combat"><i class="fas fa-flag-checkered"></i></button>' : ""}
         </div>
+        <div class="add2e-horizontal-list">${cards}</div>
       </div>`;
     return root;
   }
@@ -486,6 +520,7 @@ class Add2eHorizontalCombatTracker extends Add2eApplicationV2 {
       card.addEventListener("dblclick", event => void this._openSheet(event));
       card.addEventListener("contextmenu", event => void this._openContextMenu(event));
     }
+    scheduleTrackerLayout(0);
     root.querySelector(".add2e-horizontal-card.active")?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
   }
 
@@ -597,6 +632,7 @@ function refreshTracker({ delay = 40 } = {}) {
     if (combat) {
       ensureStyles();
       await app.render({ force: true });
+      scheduleTrackerLayout(0);
     } else if (app.rendered) {
       await app.close();
     }
@@ -607,16 +643,18 @@ const REFRESH_HOOKS = [
   "createCombat", "updateCombat", "deleteCombat",
   "createCombatant", "updateCombatant", "deleteCombatant",
   "createActiveEffect", "updateActiveEffect", "deleteActiveEffect",
-  "updateActor", "updateToken", "canvasReady"
+  "updateActor", "updateToken", "canvasReady", "collapseSidebar"
 ];
 
 Hooks.once("ready", () => {
   ensureStyles();
+  ensureLayoutObserver();
   refreshTracker({ delay: 0 });
   game.add2e ??= {};
   game.add2e.horizontalCombatTracker = {
     version: ADD2E_HORIZONTAL_TRACKER_VERSION,
     refresh: refreshTracker,
+    layout: applyTrackerLayout,
     app: () => getTrackerApp(),
     skipReason: combatantSkipReason
   };
