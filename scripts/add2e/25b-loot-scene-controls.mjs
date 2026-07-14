@@ -4,10 +4,46 @@
 // Réutilise exclusivement l'API publique du moteur de butin 25-loot.mjs.
 // ============================================================================
 
-export const ADD2E_LOOT_SCENE_CONTROL_VERSION = "2026-07-12-loot-scene-control-v1";
+export const ADD2E_LOOT_SCENE_CONTROL_VERSION = "2026-07-14-loot-scene-control-v2";
 
 const CONTROL_NAME = "add2e-loot-chest";
 const TOOL_NAME = "add2e-create-loot-chest";
+const LOOT_VIEWPORT_STYLE_ID = "add2e-loot-viewport-fix";
+
+function add2eEnsureLootViewportStyles() {
+  if (!document?.head || document.getElementById(LOOT_VIEWPORT_STYLE_ID)) return;
+
+  const style = document.createElement("style");
+  style.id = LOOT_VIEWPORT_STYLE_ID;
+  style.textContent = `
+    .add2e-loot-app {
+      max-height: calc(100vh - 32px) !important;
+    }
+
+    .add2e-loot-app .window-content {
+      min-height: 0 !important;
+      overflow-x: hidden !important;
+      overflow-y: auto !important;
+      overscroll-behavior: contain;
+    }
+
+    .add2e-loot-app .add2e-loot-shell {
+      min-height: 0 !important;
+      height: auto !important;
+    }
+
+    @media (max-height: 760px) {
+      .add2e-loot-app {
+        max-height: calc(100vh - 16px) !important;
+      }
+
+      .add2e-loot-app .add2e-loot-list {
+        max-height: min(330px, 38vh) !important;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
 
 function add2eLootSceneCanUse() {
   return game.user?.isGM === true && canvas?.scene != null;
@@ -143,9 +179,11 @@ function add2eAppendSceneControl(controls) {
   }
 }
 
+Hooks.once("init", add2eEnsureLootViewportStyles);
 Hooks.on("getSceneControlButtons", add2eAppendSceneControl);
 
 Hooks.once("ready", () => {
+  add2eEnsureLootViewportStyles();
   game.add2e ??= {};
   game.add2e.lootSceneControls = {
     version: ADD2E_LOOT_SCENE_CONTROL_VERSION,
