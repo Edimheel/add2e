@@ -20,17 +20,32 @@ function add2eDefaultActorTokenLink(actor, data = {}) {
   return null;
 }
 
-// Foundry fournit actorLink, mais ne choisit pas sa valeur selon les types ADD2E.
-// La valeur est donc fixée sur le prototype au moment de la création de l'acteur.
+function add2eDefaultCharacterSightRange() {
+  const gridDistance = Number(
+    canvas?.scene?.grid?.distance
+      ?? game?.scenes?.active?.grid?.distance
+      ?? 1
+  );
+  return Number.isFinite(gridDistance) && gridDistance > 0 ? gridDistance * 5 : 5;
+}
+
+// Foundry fournit actorLink et la vision du prototype, mais ne choisit pas
+// leurs valeurs selon les types ADD2E. Elles sont donc fixées à la création.
 Hooks.on("preCreateActor", (actor, data = {}) => {
+  const type = String(actor?.type ?? data?.type ?? "").trim().toLowerCase();
   const actorLink = add2eDefaultActorTokenLink(actor, data);
   if (actorLink === null) return;
 
-  actor.updateSource({
-    prototypeToken: {
-      actorLink
-    }
-  });
+  const prototypeToken = { actorLink };
+  if (type === "personnage") {
+    prototypeToken.sight = {
+      enabled: true,
+      angle: 270,
+      range: add2eDefaultCharacterSightRange()
+    };
+  }
+
+  actor.updateSource({ prototypeToken });
 });
 
 // 2. INITIALISATION (enregistrement strict des fiches)
