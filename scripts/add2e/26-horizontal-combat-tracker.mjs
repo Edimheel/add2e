@@ -11,7 +11,7 @@ import {
   sortedCombatants
 } from "../add2e-initiative-order.mjs";
 
-export const ADD2E_HORIZONTAL_TRACKER_VERSION = "2026-07-14-horizontal-combat-tracker-v2";
+export const ADD2E_HORIZONTAL_TRACKER_VERSION = "2026-07-14-horizontal-combat-tracker-v3";
 
 const Add2eApplicationV2 = foundry?.applications?.api?.ApplicationV2;
 const Add2eDialogV2 = foundry?.applications?.api?.DialogV2;
@@ -95,9 +95,9 @@ function activeCombatantId(combat) {
 
 function combatantImage(combatant, hiddenForPlayer = false) {
   if (hiddenForPlayer) return "icons/svg/mystery-man.svg";
-  return combatant?.token?.texture?.src
+  return combatant?.actor?.img
+    ?? combatant?.token?.texture?.src
     ?? combatant?.actor?.prototypeToken?.texture?.src
-    ?? combatant?.actor?.img
     ?? "icons/svg/mystery-man.svg";
 }
 
@@ -106,30 +106,250 @@ function userCanManage(combatant) {
 }
 
 function ensureStyles() {
-  if (!document?.head || document.getElementById(STYLE_ID)) return;
+  if (!document?.head) return;
+  document.getElementById(STYLE_ID)?.remove();
+
   const style = document.createElement("style");
   style.id = STYLE_ID;
   style.textContent = `
-    #add2e-horizontal-combat-tracker{position:fixed!important;top:8px!important;left:50%!important;transform:translateX(-50%)!important;width:min(96vw,1500px)!important;height:auto!important;z-index:110!important;background:transparent!important;border:0!important;box-shadow:none!important;pointer-events:none}
-    #add2e-horizontal-combat-tracker .window-header{display:none!important}
-    #add2e-horizontal-combat-tracker .window-content{padding:0!important;overflow:visible!important;background:transparent!important;pointer-events:none}
-    .add2e-horizontal-tracker-shell{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto auto;align-items:center;gap:7px;padding:7px 9px;border:1px solid rgba(205,170,82,.72);border-radius:12px;background:linear-gradient(180deg,rgba(28,31,36,.96),rgba(13,15,18,.94));box-shadow:0 5px 18px rgba(0,0,0,.62);pointer-events:auto;color:#f1e7c6}
-    .add2e-horizontal-round{min-width:82px;text-align:center;font-weight:900;color:#f0cf72}.add2e-horizontal-round small{display:block;font-size:.67rem;color:#bbb29b}
-    .add2e-horizontal-control{display:inline-grid;place-items:center;width:34px;height:34px;padding:0;border:1px solid #876d31;border-radius:8px;background:linear-gradient(180deg,#57451f,#2e2514);color:#f8e9b1;cursor:pointer}
-    .add2e-horizontal-control:hover{filter:brightness(1.2)}.add2e-horizontal-control:disabled{opacity:.42;cursor:not-allowed}
-    .add2e-horizontal-control.start{width:auto;min-width:96px;padding:0 10px}
-    .add2e-horizontal-list{display:flex;align-items:flex-end;gap:7px;min-width:0;overflow-x:auto;overflow-y:hidden;padding:4px 3px 6px;scrollbar-width:thin;scrollbar-color:#8b7134 transparent}
-    .add2e-horizontal-card{position:relative;display:grid;grid-template-rows:auto 66px auto;flex:0 0 76px;gap:2px;padding:4px;border:1px solid #6f6858;border-radius:9px;background:linear-gradient(180deg,#393b40,#202227);box-shadow:0 2px 6px rgba(0,0,0,.45);transition:transform .14s ease,filter .14s ease,border-color .14s ease}
-    .add2e-horizontal-card.active{transform:translateY(-3px) scale(1.06);border:3px solid #d94335;background:linear-gradient(180deg,#5b302d,#271b1b);box-shadow:0 0 0 2px rgba(255,210,76,.55),0 5px 13px rgba(0,0,0,.65);z-index:4}
-    .add2e-horizontal-card.inactive{filter:grayscale(.9) brightness(.55)}.add2e-horizontal-card.hidden-combatant{filter:saturate(.3)}
-    .add2e-horizontal-init{position:absolute;top:-7px;right:-7px;display:grid;place-items:center;min-width:26px;height:26px;padding:0 5px;border:2px solid #d5b855;border-radius:999px;background:#17191d;color:#fff1b2;font-weight:900;z-index:5;cursor:pointer}
-    .add2e-horizontal-card img{width:100%;height:66px;object-fit:cover;border:1px solid #17191d;border-radius:6px;cursor:pointer}
-    .add2e-horizontal-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center;font-size:.69rem;font-weight:900;color:#f4ecd4}
-    .add2e-horizontal-state{position:absolute;left:5px;top:29px;display:grid;place-items:center;width:23px;height:23px;border-radius:999px;background:#7b1f1f;color:#fff;border:1px solid #efaaaa}
-    .add2e-horizontal-attacks{position:absolute;left:3px;right:3px;bottom:20px;padding:2px 3px;border-radius:4px;background:rgba(0,0,0,.78);font-size:.58rem;line-height:1.05;text-align:center;color:#fff2b4}
-    .add2e-horizontal-actions{display:flex;gap:5px;align-items:center}.add2e-horizontal-menu{position:fixed;z-index:300;display:grid;min-width:205px;padding:6px;border:1px solid #947a3d;border-radius:8px;background:#202328;box-shadow:0 8px 24px rgba(0,0,0,.72)}
-    .add2e-horizontal-menu button{display:flex;align-items:center;gap:8px;padding:7px 9px;border:0;background:transparent;color:#eee6cf;text-align:left;cursor:pointer}.add2e-horizontal-menu button:hover{background:#4b4029}.add2e-horizontal-menu button.danger{color:#ffaaa2}
-    @media(max-width:800px){#add2e-horizontal-combat-tracker{top:4px!important;width:98vw!important}.add2e-horizontal-tracker-shell{grid-template-columns:auto minmax(0,1fr) auto}.add2e-horizontal-round{grid-column:1}.add2e-horizontal-actions{grid-column:3}.add2e-horizontal-control.previous{display:none}.add2e-horizontal-card{flex-basis:68px;grid-template-rows:auto 58px auto}.add2e-horizontal-card img{height:58px}}
+    #add2e-horizontal-combat-tracker {
+      position: fixed !important;
+      top: 10px !important;
+      left: 50% !important;
+      transform: translateX(-50%) !important;
+      width: min(97vw, 1700px) !important;
+      height: auto !important;
+      z-index: 110 !important;
+      background: transparent !important;
+      border: 0 !important;
+      box-shadow: none !important;
+      pointer-events: none;
+    }
+
+    #add2e-horizontal-combat-tracker .window-header { display: none !important; }
+    #add2e-horizontal-combat-tracker .window-content {
+      padding: 0 !important;
+      overflow: visible !important;
+      background: transparent !important;
+      pointer-events: none;
+    }
+
+    .add2e-horizontal-tracker-shell {
+      display: grid;
+      grid-template-columns: auto auto minmax(0, 1fr) auto auto;
+      align-items: center;
+      gap: 10px;
+      padding: 2px 4px;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+      pointer-events: auto;
+      color: #f1e7c6;
+    }
+
+    .add2e-horizontal-round {
+      min-width: 98px;
+      padding: 8px 10px;
+      border: 1px solid rgba(205,170,82,.8);
+      border-radius: 9px;
+      background: rgba(54,43,23,.82);
+      box-shadow: 0 3px 10px rgba(0,0,0,.35);
+      text-align: center;
+      font-size: 1rem;
+      font-weight: 900;
+      color: #f0cf72;
+      backdrop-filter: blur(3px);
+    }
+
+    .add2e-horizontal-round small {
+      display: block;
+      margin-bottom: 2px;
+      font-size: .7rem;
+      color: #d8cfb5;
+    }
+
+    .add2e-horizontal-control {
+      display: inline-grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      padding: 0;
+      border: 1px solid #9d8038;
+      border-radius: 9px;
+      background: rgba(67,52,25,.88);
+      box-shadow: 0 3px 10px rgba(0,0,0,.35);
+      color: #f8e9b1;
+      font-size: 1rem;
+      cursor: pointer;
+      backdrop-filter: blur(3px);
+    }
+
+    .add2e-horizontal-control:hover { filter: brightness(1.2); }
+    .add2e-horizontal-control:disabled { opacity: .42; cursor: not-allowed; }
+    .add2e-horizontal-control.start { width: auto; min-width: 112px; padding: 0 12px; }
+
+    .add2e-horizontal-list {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      min-width: 0;
+      overflow-x: auto;
+      overflow-y: visible;
+      padding: 10px 8px 12px;
+      scrollbar-width: thin;
+      scrollbar-color: #8b7134 transparent;
+    }
+
+    .add2e-horizontal-card {
+      position: relative;
+      flex: 0 0 110px;
+      width: 110px;
+      height: 140px;
+      overflow: hidden;
+      padding: 0;
+      border: 2px solid rgba(111,104,88,.95);
+      border-radius: 10px;
+      background: transparent;
+      box-shadow: 0 4px 11px rgba(0,0,0,.52);
+      transition: transform .14s ease, filter .14s ease, border-color .14s ease;
+    }
+
+    .add2e-horizontal-card.active {
+      transform: translateY(-5px) scale(1.07);
+      border: 4px solid #d94335;
+      box-shadow: 0 0 0 2px rgba(255,210,76,.72), 0 7px 16px rgba(0,0,0,.58);
+      z-index: 4;
+    }
+
+    .add2e-horizontal-card.inactive { filter: grayscale(.9) brightness(.55); }
+    .add2e-horizontal-card.hidden-combatant { filter: saturate(.3); }
+
+    .add2e-horizontal-card img {
+      position: absolute;
+      inset: 0;
+      display: block;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      border: 0;
+      border-radius: 0;
+      object-fit: cover;
+      object-position: center;
+      cursor: pointer;
+    }
+
+    .add2e-horizontal-card::after {
+      content: "";
+      position: absolute;
+      inset: auto 0 0;
+      height: 45%;
+      pointer-events: none;
+      background: linear-gradient(transparent, rgba(0,0,0,.82));
+    }
+
+    .add2e-horizontal-init {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      display: grid;
+      place-items: center;
+      min-width: 32px;
+      height: 32px;
+      padding: 0 7px;
+      border: 2px solid #e0c45e;
+      border-radius: 999px;
+      background: rgba(24,26,30,.9);
+      color: #fff1b2;
+      font-size: .92rem;
+      font-weight: 900;
+      z-index: 6;
+      cursor: pointer;
+    }
+
+    .add2e-horizontal-name {
+      position: absolute;
+      left: 5px;
+      right: 5px;
+      bottom: 5px;
+      z-index: 5;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      text-align: center;
+      font-size: .78rem;
+      font-weight: 900;
+      color: #fff8df;
+      text-shadow: 0 1px 3px #000, 0 0 4px #000;
+    }
+
+    .add2e-horizontal-state {
+      position: absolute;
+      left: 6px;
+      top: 6px;
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      border: 1px solid #efaaaa;
+      border-radius: 999px;
+      background: rgba(123,31,31,.94);
+      color: #fff;
+      z-index: 6;
+    }
+
+    .add2e-horizontal-attacks {
+      position: absolute;
+      left: 5px;
+      right: 5px;
+      bottom: 25px;
+      z-index: 5;
+      padding: 3px 4px;
+      border-radius: 4px;
+      background: rgba(0,0,0,.72);
+      font-size: .64rem;
+      line-height: 1.08;
+      text-align: center;
+      color: #fff2b4;
+    }
+
+    .add2e-horizontal-actions { display: flex; gap: 7px; align-items: center; }
+
+    .add2e-horizontal-menu {
+      position: fixed;
+      z-index: 300;
+      display: grid;
+      min-width: 205px;
+      padding: 6px;
+      border: 1px solid #947a3d;
+      border-radius: 8px;
+      background: #202328;
+      box-shadow: 0 8px 24px rgba(0,0,0,.72);
+    }
+
+    .add2e-horizontal-menu button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 9px;
+      border: 0;
+      background: transparent;
+      color: #eee6cf;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .add2e-horizontal-menu button:hover { background: #4b4029; }
+    .add2e-horizontal-menu button.danger { color: #ffaaa2; }
+
+    @media (max-width: 800px) {
+      #add2e-horizontal-combat-tracker { top: 4px !important; width: 99vw !important; }
+      .add2e-horizontal-tracker-shell { grid-template-columns: auto minmax(0,1fr) auto; gap: 6px; }
+      .add2e-horizontal-round { min-width: 78px; padding: 6px; font-size: .86rem; }
+      .add2e-horizontal-actions { grid-column: 3; }
+      .add2e-horizontal-control.previous { display: none; }
+      .add2e-horizontal-card { flex-basis: 92px; width: 92px; height: 118px; }
+    }
   `;
   document.head.appendChild(style);
 }
@@ -182,7 +402,7 @@ class Add2eHorizontalCombatTracker extends Add2eApplicationV2 {
     classes: ["add2e", "add2e-horizontal-combat-tracker"],
     tag: "section",
     window: { frame: false, positioned: true, minimizable: false, resizable: false },
-    position: { width: 1200, height: "auto", top: 8 }
+    position: { width: 1400, height: "auto", top: 8 }
   };
 
   async _prepareContext() {
@@ -228,11 +448,11 @@ class Add2eHorizontalCombatTracker extends Add2eApplicationV2 {
     const cards = context.combatants.map(combatant => `
       <article class="add2e-horizontal-card${combatant.active ? " active" : ""}${combatant.inactive ? " inactive" : ""}${combatant.hidden ? " hidden-combatant" : ""}"
         data-combatant-id="${esc(combatant.id)}" title="${esc(combatant.name)}${combatant.skipReason ? ` — ${esc(combatant.skipReason)}` : ""}">
+        <img src="${esc(combatant.image)}" alt="${esc(combatant.name)}" data-action="focus-token">
         <button type="button" class="add2e-horizontal-init" data-action="roll-one" ${combatant.canManage ? "" : "disabled"}
           title="${combatant.hasInitiative ? "Relancer l’initiative" : "Lancer l’initiative au d6"}">
           ${combatant.hasInitiative ? esc(combatant.initiative) : '<i class="fas fa-dice-d6"></i>'}
         </button>
-        <img src="${esc(combatant.image)}" alt="${esc(combatant.name)}" data-action="focus-token">
         ${combatant.inactive ? `<span class="add2e-horizontal-state" title="${esc(combatant.skipReason)}"><i class="fas fa-ban"></i></span>` : ""}
         ${combatant.attackStatus ? `<div class="add2e-horizontal-attacks ${esc(combatant.attackStatus.css)}">${esc(combatant.attackStatus.detail)}</div>` : ""}
         <div class="add2e-horizontal-name">${esc(combatant.name)}</div>
