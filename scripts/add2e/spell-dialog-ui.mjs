@@ -1,6 +1,6 @@
 // ADD2E — UI commune des fenêtres et messages liés aux sorts.
 // Compatible Foundry V13/V14/V15 — DialogV2 / ApplicationV2 uniquement.
-const VERSION = "2026-07-14-v13-linked-player-spellbook-only";
+const VERSION = "2026-07-14-v14-spellbook-scroll-parchment";
 globalThis.ADD2E_SPELL_DIALOG_UI_VERSION = VERSION;
 
 function esc(value) {
@@ -74,24 +74,30 @@ function ensureStyles() {
 .chat-message .add2e-arcane-chat-header h1,.chat-message .add2e-arcane-chat-header h2,.chat-message .add2e-arcane-chat-header h3{margin:0!important;color:#fff!important;font-size:1.05rem!important;border:0!important}
 .chat-message .add2e-arcane-chat-body{padding:10px 11px!important}
 .add2e-book-copy-complete{color:#6b7280!important;background:#e5e7eb!important;border-color:#9ca3af!important;box-shadow:none!important}
-.application.add2e-spellbook-reader-window{width:min(1040px,94vw)!important;height:min(820px,90vh)!important}
-.application.add2e-spellbook-reader-window .window-content{padding:10px!important;overflow:hidden!important;background:#3b2415!important}
-.add2e-spellbook-reader{height:100%;display:flex;flex-direction:column;min-height:0;color:#3d2b19}
-.add2e-spellbook-tabs{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;padding:4px 10px 0}
-.add2e-spellbook-tab{border:1px solid #73522d;border-bottom:0;border-radius:8px 8px 0 0;padding:7px 13px;background:#c5a36c;color:#332111;font-weight:800;cursor:pointer}
-.add2e-spellbook-tab.is-active{background:#f2e4c2;color:#4a2f12;transform:translateY(1px)}
-.add2e-spellbook-pages{flex:1;min-height:0;overflow:auto;padding:22px 30px;background:linear-gradient(90deg,#d7be8c 0%,#f5e8c9 5%,#fbf2da 47%,#c7aa76 49.5%,#927044 50%,#c7aa76 50.5%,#fbf2da 53%,#f5e8c9 95%,#d7be8c 100%);border:3px solid #73522d;border-radius:13px;box-shadow:inset 0 0 28px rgba(73,43,16,.25)}
-.add2e-spellbook-panel{display:none}.add2e-spellbook-panel.is-active{display:block}
-.add2e-spellbook-level-title{text-align:center;margin:0 0 16px;color:#573719;font-family:serif;font-size:1.45rem;border-bottom:1px solid rgba(90,55,25,.35);padding-bottom:7px}
-.add2e-spellbook-entry{margin:0 0 17px;padding:13px 15px;background:rgba(255,250,235,.68);border:1px solid rgba(112,77,39,.42);border-radius:9px}
-.add2e-spellbook-entry-head{display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(112,77,39,.3);padding-bottom:7px;margin-bottom:9px}
-.add2e-spellbook-entry-head img{width:42px;height:42px;object-fit:cover;border:1px solid #73522d;border-radius:6px}
-.add2e-spellbook-entry-head h3{margin:0;color:#4a2f12;font-family:serif;font-size:1.22rem}
+.application.add2e-spellbook-reader-window{width:min(1120px,96vw)!important;height:min(880px,94vh)!important;min-height:560px!important;background:#382316!important;border:2px solid #7a512f!important;box-shadow:0 18px 46px rgba(0,0,0,.45)!important}
+.application.add2e-spellbook-reader-window .window-header{flex:0 0 auto;background:linear-gradient(180deg,#704725,#3d2415)!important;color:#f7e8c6!important;border-bottom:1px solid #9e7548!important}
+.application.add2e-spellbook-reader-window .window-content{display:flex!important;flex-direction:column!important;min-height:0!important;height:100%!important;padding:10px!important;overflow:hidden!important;background:radial-gradient(ellipse at center,#6b472c 0%,#3b2417 72%,#24140d 100%)!important}
+.application.add2e-spellbook-reader-window form,.application.add2e-spellbook-reader-window .dialog-content{display:flex!important;flex:1 1 auto!important;flex-direction:column!important;min-height:0!important;height:100%!important;overflow:hidden!important;background:transparent!important;padding:0!important}
+.application.add2e-spellbook-reader-window .dialog-buttons{flex:0 0 auto!important;margin:8px 0 0!important;padding:0!important;background:transparent!important}
+.application.add2e-spellbook-reader-window .dialog-buttons button{background:linear-gradient(180deg,#8b5c32,#4b2d1a)!important;border:1px solid #b58a59!important;color:#fff3d2!important}
+.add2e-spellbook-reader{display:flex;flex:1 1 auto;flex-direction:column;min-height:0;height:100%;overflow:hidden;color:#352414}
+.add2e-spellbook-tabs{display:flex;flex:0 0 auto;flex-wrap:wrap;justify-content:center;gap:5px;padding:4px 14px 0}
+.add2e-spellbook-tab{border:1px solid #78532d;border-bottom:0;border-radius:9px 9px 0 0;padding:7px 14px;background:linear-gradient(180deg,#d1ad74,#9f7542);color:#321f10;font-weight:800;cursor:pointer;box-shadow:inset 0 1px rgba(255,255,255,.45)}
+.add2e-spellbook-tab:hover{background:linear-gradient(180deg,#e1c492,#ad814b)}
+.add2e-spellbook-tab.is-active{background:linear-gradient(180deg,#fff2d2,#e6c991);color:#4a2d14;transform:translateY(1px)}
+.add2e-spellbook-pages{position:relative;display:block;flex:1 1 auto;min-height:0;overflow-x:hidden;overflow-y:auto;scrollbar-gutter:stable;padding:28px 42px 40px;background-color:#ead5a7;background-image:radial-gradient(circle at 14% 18%,rgba(126,82,36,.12) 0 1px,transparent 2px),radial-gradient(circle at 78% 62%,rgba(108,68,27,.10) 0 1px,transparent 2px),radial-gradient(ellipse at 23% 10%,rgba(255,255,255,.48),transparent 42%),radial-gradient(ellipse at 77% 14%,rgba(255,255,255,.38),transparent 40%),linear-gradient(90deg,#b98c50 0,#dfc18a 2.2%,#f5e4ba 6%,#f9edce 46.5%,#c5a069 49.2%,#76502f 50%,#c5a069 50.8%,#f9edce 53.5%,#f5e4ba 94%,#dfc18a 97.8%,#b98c50 100%);background-size:46px 46px,59px 59px,100% 100%,100% 100%,100% 100%;border:3px solid #7c552f;border-radius:15px 15px 10px 10px;box-shadow:inset 16px 0 20px rgba(78,45,18,.16),inset -16px 0 20px rgba(78,45,18,.16),inset 0 0 35px rgba(92,58,22,.22),0 9px 18px rgba(0,0,0,.35)}
+.add2e-spellbook-pages:before{content:"";position:sticky;display:block;top:0;left:50%;width:12px;height:100%;margin:0 auto -100%;pointer-events:none;background:linear-gradient(90deg,transparent,rgba(65,36,16,.26),rgba(255,239,197,.35),rgba(65,36,16,.26),transparent);filter:blur(1px);z-index:0}
+.add2e-spellbook-panel{position:relative;z-index:1;display:none;min-height:min-content;padding-bottom:18px}.add2e-spellbook-panel.is-active{display:block}
+.add2e-spellbook-level-title{text-align:center;margin:0 0 18px;color:#573719;font-family:Georgia,"Times New Roman",serif;font-size:1.5rem;text-shadow:0 1px rgba(255,255,255,.55);border-bottom:1px solid rgba(90,55,25,.38);padding-bottom:8px}
+.add2e-spellbook-entry{margin:0 0 18px;padding:14px 16px;background:linear-gradient(135deg,rgba(255,251,234,.82),rgba(241,219,174,.66));border:1px solid rgba(112,77,39,.48);border-radius:10px;box-shadow:0 2px 5px rgba(80,48,20,.12),inset 0 1px rgba(255,255,255,.55)}
+.add2e-spellbook-entry-head{display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(112,77,39,.32);padding-bottom:8px;margin-bottom:10px}
+.add2e-spellbook-entry-head img{width:44px;height:44px;object-fit:cover;border:1px solid #73522d;border-radius:6px;box-shadow:0 2px 4px rgba(0,0,0,.18)}
+.add2e-spellbook-entry-head h3{margin:0;color:#472b12;font-family:Georgia,"Times New Roman",serif;font-size:1.24rem}
 .add2e-spellbook-entry-list{margin-left:auto;font-size:.84rem;font-weight:700;color:#75552b}
-.add2e-spellbook-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 16px;font-size:.9rem}
-.add2e-spellbook-field{display:grid;grid-template-columns:minmax(105px,auto) 1fr;gap:7px}.add2e-spellbook-field b{color:#5c3b1e}
-.add2e-spellbook-description{margin-top:10px;padding-top:9px;border-top:1px dashed rgba(112,77,39,.4);line-height:1.45}
-@media(max-width:720px){.add2e-spellbook-pages{padding:16px}.add2e-spellbook-fields{grid-template-columns:1fr}}
+.add2e-spellbook-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 18px;font-size:.9rem}
+.add2e-spellbook-field{display:grid;grid-template-columns:minmax(112px,auto) 1fr;gap:7px}.add2e-spellbook-field b{color:#58371a}
+.add2e-spellbook-description{margin-top:11px;padding-top:10px;border-top:1px dashed rgba(112,77,39,.44);line-height:1.48}
+@media(max-width:720px){.application.add2e-spellbook-reader-window{width:98vw!important;height:94vh!important}.add2e-spellbook-pages{padding:18px 17px 28px}.add2e-spellbook-fields{grid-template-columns:1fr}.add2e-spellbook-pages:before{display:none}}
 `;
   document.head.append(style);
 }
@@ -144,6 +150,8 @@ function bindSpellbookTabs(root) {
   const activate = level => {
     reader.querySelectorAll(".add2e-spellbook-tab").forEach(tab => tab.classList.toggle("is-active", tab.dataset.level === level));
     reader.querySelectorAll(".add2e-spellbook-panel").forEach(panel => panel.classList.toggle("is-active", panel.dataset.level === level));
+    const pages = reader.querySelector(".add2e-spellbook-pages");
+    if (pages) pages.scrollTop = 0;
   };
   reader.querySelectorAll(".add2e-spellbook-tab").forEach(tab => tab.addEventListener("click", event => { event.preventDefault(); activate(tab.dataset.level); }));
   activate(reader.querySelector(".add2e-spellbook-tab")?.dataset?.level ?? "1");
@@ -277,7 +285,7 @@ async function openPlayerSpellbook(actor, book) {
     }
     panels.push(`<section class="add2e-spellbook-panel" data-level="${level}"><h2 class="add2e-spellbook-level-title">Sorts de niveau ${level}</h2>${cards.join("")}</section>`);
   }
-  return DialogV2.wait({ window: { title: `${book.name} — ${actor.name}`, classes: ["add2e-spellbook-reader-window"], resizable: true }, position: { width: 1040, height: 820 }, modal: false, rejectClose: false, content: `<div class="add2e-spellbook-reader"><nav class="add2e-spellbook-tabs">${tabs}</nav><div class="add2e-spellbook-pages">${panels.join("")}</div></div>`, buttons: [{ action: "close", label: "Fermer", icon: "fa-solid fa-book", default: true, callback: () => true }] });
+  return DialogV2.wait({ window: { title: `${book.name} — ${actor.name}`, classes: ["add2e-spellbook-reader-window"], resizable: true }, position: { width: 1120, height: 880 }, modal: false, rejectClose: false, content: `<div class="add2e-spellbook-reader"><nav class="add2e-spellbook-tabs">${tabs}</nav><div class="add2e-spellbook-pages">${panels.join("")}</div></div>`, buttons: [{ action: "close", label: "Fermer", icon: "fa-solid fa-book", default: true, callback: () => true }] });
 }
 
 function actorFromSpellbookButton(button) {
@@ -302,8 +310,8 @@ function actorFromSpellbookButton(button) {
 }
 
 function bindPlayerSpellbookOpen() {
-  if (globalThis.__ADD2E_PLAYER_SPELLBOOK_READER_BOUND_V13__) return;
-  globalThis.__ADD2E_PLAYER_SPELLBOOK_READER_BOUND_V13__ = true;
+  if (globalThis.__ADD2E_PLAYER_SPELLBOOK_READER_BOUND_V14__) return;
+  globalThis.__ADD2E_PLAYER_SPELLBOOK_READER_BOUND_V14__ = true;
   document.addEventListener("click", event => {
     const target = event.target instanceof Element ? event.target : null;
     const button = target?.closest?.('[data-add2e-arcane-action="view-book"][data-item-id]');
