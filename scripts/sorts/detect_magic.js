@@ -1,10 +1,12 @@
 // ADD2E — Détection de la magie — Clerc niveau 1
-// Version : 2026-07-14-detection-objets-magiques-v2
+// Version : 2026-07-14-detection-sac-dialog-v3
 // Retour attendu : true = sort consommé, false = sort non consommé.
 
-console.log("%c[ADD2E][DETECTION_MAGIE][CLERC] 2026-07-14-detection-objets-magiques-v2", "color:#b88924;font-weight:bold;");
+console.log("%c[ADD2E][DETECTION_MAGIE][CLERC] 2026-07-14-detection-sac-dialog-v3", "color:#b88924;font-weight:bold;");
 
 const __add2eOnUseResult = await (async () => {
+  const DialogV2 = foundry?.applications?.api?.DialogV2 ?? globalThis.DialogV2;
+
   const esc = value => String(value ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -22,26 +24,29 @@ const __add2eOnUseResult = await (async () => {
     ?? ((typeof this !== "undefined" && this?.documentName === "Item") ? this : null)
     ?? ((typeof args !== "undefined" && args?.[0]?.item) ? args[0].item : null);
 
-  if (!sourceItem) {
-    ui.notifications.error("Détection de la magie : sort introuvable.");
-    return false;
-  }
-
   const caster =
     ((typeof actor !== "undefined" && actor) ? actor : null)
-    ?? sourceItem.parent
+    ?? sourceItem?.parent
     ?? null;
 
-  if (!caster) {
-    ui.notifications.error("Détection de la magie : lanceur introuvable.");
+  if (!sourceItem || !caster) {
+    ui.notifications.error("Détection de la magie : lanceur ou sort introuvable.");
     return false;
   }
 
-  const casterToken =
-    canvas.tokens?.controlled?.find?.(controlled => controlled.actor?.id === caster.id)
-    ?? ((typeof token !== "undefined" && token) ? token : null)
-    ?? caster.getActiveTokens?.()[0]
-    ?? null;
+  if (!DialogV2?.wait) {
+    ui.notifications.error("Détection de la magie : DialogV2 est indisponible.");
+    return false;
+  }
+
+  const inventory = (caster.items?.contents ?? Array.from(caster.items ?? []))
+    .filter(candidate => ["arme", "armure", "objet"].includes(String(candidate?.type ?? "").toLowerCase()))
+    .sort((a, b) => String(a.name ?? "").localeCompare(String(b.name ?? ""), "fr"));
+
+  if (!inventory.length) {
+    ui.notifications.warn(`${caster.name} ne possède aucun objet à examiner dans son sac.`);
+    return false;
+  }
 
   const isMagicItem = candidate => {
     const sys = candidate?.system ?? {};
@@ -62,14 +67,19 @@ const __add2eOnUseResult = await (async () => {
     || candidate?.system?.identified === true
     || candidate?.getFlag?.("add2e", "identified") === true;
 
-  const detectedName = candidate => {
-    if (isIdentified(candidate)) return String(candidate?.system?.nom ?? candidate?.name ?? "Objet magique");
+  const visibleName = candidate => {
+    if (isIdentified(candidate)) {
+      return String(candidate?.system?.nom ?? candidate?.name ?? "Objet").trim() || "Objet";
+    }
+
     return String(
       candidate?.system?.nom_non_identifie
       ?? candidate?.system?.unidentifiedName
       ?? candidate?.system?.sousType
-      ?? "Objet magique"
-    );
+      ?? candidate?.system?.sous_type
+      ?? candidate?.name
+      ?? "Objet"
+    ).trim() || "Objet";
   };
 
   const detectionStrength = candidate => {
@@ -82,27 +92,96 @@ const __add2eOnUseResult = await (async () => {
     return "faible";
   };
 
-  const actorsToInspect = new Map([[caster.id, caster]]);
-  for (const targetedToken of Array.from(game.user.targets ?? [])) {
-    if (targetedToken?.actor?.id) actorsToInspect.set(targetedToken.actor.id, targetedToken.actor);
+  const objectOptions = inventory.map(candidate => `
+    <option value="${esc(candidate.id)}">${esc(visibleName(candidate))}</option>
+  `).join("");
+
+  const selection = await DialogV2.wait({
+    window: {
+      title: "ADD2E — Détection de la magie",
+      icon: "fa-solid fa-wand-magic-sparkles"
+    },
+    position: { width: 560 },
+    content: `
+      <form class="add2e-detection-magie-form">
+        <div class="form-group">
+          <label>Zone à examiner</label>
+          <div class="form-fields">
+            <select name="mode" required>
+              <option value="bag">Tout le sac de ${esc(caster.name)}</option>
+              <option value="item">Un objet précis</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group add2e-detection-item-choice" style="display:none;">
+          <label>Objet à examiner</label>
+          <div class="form-fields">
+            <select name="itemId">${objectOptions}</select>
+          </div>
+        </div>
+
+        <p class="hint">
+          La détection révèle uniquement si une aura magique est présente et son intensité. Elle n’identifie pas l’objet.
+        </p>
+      </form>
+    `,
+    buttons: [
+      {
+        action: "cancel",
+        label: "Annuler",
+        icon: "fa-solid fa-xmark"
+      },
+      {
+        action: "detect",
+        label: "Détecter",
+        icon: "fa-solid fa-magnifying-glass",
+        default: true,
+        callback: (_event, button) => {
+          const form = button.form;
+          const mode = form?.elements?.mode?.value ?? "bag";
+          const itemId = form?.elements?.itemId?.value ?? "";
+          return { mode, itemId };
+        }
+      }
+    ],
+    render: (_event, dialog) => {
+      const root = dialog?.element ?? dialog;
+      const modeField = root?.querySelector?.('select[name="mode"]');
+      const itemGroup = root?.querySelector?.(".add2e-detection-item-choice");
+      const refresh = () => {
+        if (itemGroup) itemGroup.style.display = modeField?.value === "item" ? "" : "none";
+      };
+      modeField?.addEventListener?.("change", refresh);
+      refresh();
+    },
+    close: () => null
+  });
+
+  if (!selection) return false;
+
+  const inspectedItems = selection.mode === "item"
+    ? inventory.filter(candidate => candidate.id === selection.itemId)
+    : inventory;
+
+  if (!inspectedItems.length) {
+    ui.notifications.warn("Détection de la magie : aucun objet valide n’a été sélectionné.");
+    return false;
   }
 
-  const detections = [];
-  for (const inspectedActor of actorsToInspect.values()) {
-    const magicItems = (inspectedActor.items?.contents ?? Array.from(inspectedActor.items ?? []))
-      .filter(isMagicItem)
-      .map(candidate => ({
-        id: candidate.id,
-        owner: inspectedActor.name,
-        ownerId: inspectedActor.id,
-        name: detectedName(candidate),
-        identified: isIdentified(candidate),
-        strength: detectionStrength(candidate),
-        img: candidate.img || "icons/svg/item-bag.svg"
-      }));
+  const results = inspectedItems.map(candidate => ({
+    id: candidate.id,
+    name: visibleName(candidate),
+    img: candidate.img || "icons/svg/item-bag.svg",
+    magical: isMagicItem(candidate),
+    strength: isMagicItem(candidate) ? detectionStrength(candidate) : "aucune"
+  }));
 
-    detections.push(...magicItems);
-  }
+  const casterToken =
+    ((typeof token !== "undefined" && token) ? token : null)
+    ?? canvas.tokens?.controlled?.find?.(controlled => controlled.actor?.id === caster.id)
+    ?? caster.getActiveTokens?.()[0]
+    ?? null;
 
   const time = game.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
   const durationRounds = time?.toRounds?.(1, "tour") ?? 10;
@@ -133,7 +212,7 @@ const __add2eOnUseResult = await (async () => {
     disabled: false,
     transfer: false,
     duration: durationData,
-    description: "Détection de la magie cléricale : le clerc perçoit les émanations magiques faibles ou fortes sans identifier les objets.",
+    description: "Le lanceur perçoit les émanations magiques sans identifier les objets.",
     flags: {
       add2e: {
         ...timeFlags,
@@ -151,8 +230,10 @@ const __add2eOnUseResult = await (async () => {
         rotationPerRound: "60°",
         detectionDetail: "faible_ou_forte_uniquement",
         blockedBy: { stoneCm: 30, metalCm: 3, woodCm: 90 },
-        detectedMagicItemIds: detections.map(entry => entry.id),
-        tags: ["sort:clerc", "niveau:1", "divination", "detection:magie", "detection:faible_ou_forte", "zone:1x3", "rotation:60_par_round"]
+        inspectedInventoryMode: selection.mode,
+        inspectedItemIds: inspectedItems.map(candidate => candidate.id),
+        detectedMagicItemIds: results.filter(entry => entry.magical).map(entry => entry.id),
+        tags: ["sort:clerc", "niveau:1", "divination", "detection:magie", "detection:faible_ou_forte"]
       }
     },
     changes: []
@@ -166,15 +247,18 @@ const __add2eOnUseResult = await (async () => {
   if (existing) await existing.update(effectData);
   else await caster.createEmbeddedDocuments("ActiveEffect", [effectData]);
 
-  const detectionRows = detections.length
-    ? detections.map(entry => `
-      <tr>
-        <td style="padding:4px 6px;width:36px;"><img src="${esc(entry.img)}" style="width:28px;height:28px;object-fit:cover;border-radius:4px;"></td>
-        <td style="padding:4px 6px;"><b>${esc(entry.name)}</b><br><small>Porté par ${esc(entry.owner)}</small></td>
-        <td style="padding:4px 6px;text-align:right;"><b>${esc(entry.strength)}</b></td>
-      </tr>
-    `).join("")
-    : `<tr><td colspan="3" style="padding:8px;text-align:center;">Aucune aura magique détectée parmi les objets examinés.</td></tr>`;
+  const resultRows = results.map(entry => `
+    <tr>
+      <td style="padding:4px 6px;width:36px;">
+        <img src="${esc(entry.img)}" style="width:28px;height:28px;object-fit:cover;border-radius:4px;">
+      </td>
+      <td style="padding:4px 6px;"><b>${esc(entry.name)}</b></td>
+      <td style="padding:4px 6px;text-align:center;">
+        ${entry.magical ? '<b style="color:#6c31b5;">Aura magique</b>' : '<span style="color:#666;">Aucune aura</span>'}
+      </td>
+      <td style="padding:4px 6px;text-align:right;"><b>${esc(entry.strength)}</b></td>
+    </tr>
+  `).join("");
 
   const chatContent = `
     <div class="add2e-spell-card add2e-spell-card-clerc" style="border-radius:12px;box-shadow:0 4px 10px #0002;background:linear-gradient(135deg,#fffaf0 0%,#fff7df 100%);border:1.5px solid #e2bc63;margin:0.3em 0;padding:0;font-family:var(--font-primary);overflow:hidden;">
@@ -189,25 +273,36 @@ const __add2eOnUseResult = await (async () => {
       <div style="padding:10px;">
         <div style="background:#fffdf4;border:1px solid #e2bc63;border-radius:6px;padding:7px;text-align:center;margin-bottom:8px;color:#6f4b12;">
           <div style="font-weight:bold;color:#2f8f46;">DÉTECTION ACTIVE</div>
-          <div>Les objets magiques sont repérés sans révéler leur identité ni leurs pouvoirs.</div>
+          <div>${selection.mode === "bag" ? `Le contenu du sac de ${esc(caster.name)} est examiné.` : "Un objet du sac est examiné."}</div>
+          <div>La véritable identité et les pouvoirs des objets ne sont pas révélés.</div>
         </div>
         <table style="width:100%;border-collapse:collapse;background:#fff;border:1px solid #e2bc63;border-radius:6px;overflow:hidden;">
-          <thead><tr style="background:#fff7df;"><th></th><th style="text-align:left;padding:5px;">Aura détectée</th><th style="text-align:right;padding:5px;">Intensité</th></tr></thead>
-          <tbody>${detectionRows}</tbody>
+          <thead>
+            <tr style="background:#fff7df;">
+              <th></th>
+              <th style="text-align:left;padding:5px;">Objet examiné</th>
+              <th style="text-align:center;padding:5px;">Résultat</th>
+              <th style="text-align:right;padding:5px;">Intensité</th>
+            </tr>
+          </thead>
+          <tbody>${resultRows}</tbody>
         </table>
-        <details style="margin-top:8px;background:#fff;border:1px solid #e2bc63;border-radius:6px;">
-          <summary style="cursor:pointer;color:#6f4b12;font-weight:600;padding:6px 10px;background:#fff7df;">Règle appliquée</summary>
-          <div style="padding:8px;font-size:0.9em;line-height:1.4;">
-            La détection indique la présence et l’intensité de la magie. Un objet non identifié conserve son nom générique. Les murs de pierre de 30 cm ou plus, 3 cm ou plus de métal, ou 90 cm ou plus de bois bloquent la détection.
-          </div>
-        </details>
       </div>
     </div>`;
 
   await globalThis.ADD2E_PLAY_SPELL_FX?.("detection_magie", { casterToken });
-  await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor: caster }), content: chatContent, ...chatStyleData() });
+  await ChatMessage.create({
+    speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken }),
+    content: chatContent,
+    ...chatStyleData()
+  });
 
-  console.log("[ADD2E][DETECTION_MAGIE][RESULT]", { caster: caster.name, detections });
+  console.log("[ADD2E][DETECTION_MAGIE][RESULT]", {
+    caster: caster.name,
+    mode: selection.mode,
+    inspected: results.map(entry => ({ id: entry.id, name: entry.name, magical: entry.magical, strength: entry.strength }))
+  });
+
   return true;
 })();
 
