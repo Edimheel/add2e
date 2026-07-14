@@ -1,5 +1,5 @@
 // ADD2E — Actor sheet drop — chargeur court
-// Version : 2026-07-14-magic-item-identification-name-sync-v2
+// Version : 2026-07-14-magic-item-identification-name-sync-v3
 //
 // Le contenu de la mécanique de drop est dans 13e-actor-sheet-drop-legacy-full.mjs.
 // Ce chargeur synchronise également le nom visible des objets magiques identifiés/non identifiés.
@@ -85,15 +85,39 @@ function add2eIdentificationFindActorItem(itemId, root = null) {
   return null;
 }
 
+function add2eIdentificationBlockOpen(item, source = "unknown") {
+  if (game.user?.isGM) return false;
+  if (!item || !add2eIdentificationMagicItem(item) || add2eIdentificationIsIdentified(item)) return false;
+
+  console.warn("[ADD2E][IDENTIFICATION][OPEN_BLOCKED]", {
+    source,
+    actor: item.parent?.name,
+    actorId: item.parent?.id,
+    itemId: item.id,
+    visibleName: item.name,
+    genericName: add2eIdentificationGenericName(item),
+    identified: false,
+    user: game.user?.name,
+    userId: game.user?.id
+  });
+
+  ui.notifications.warn("Cet objet doit être identifié avant de pouvoir être examiné.");
+  return true;
+}
+
 function add2eInstallUnidentifiedItemOpenGuard() {
-  if (globalThis.__add2eUnidentifiedItemOpenGuardV1) return;
-  globalThis.__add2eUnidentifiedItemOpenGuardV1 = true;
+  if (globalThis.__add2eUnidentifiedItemOpenGuardV2) return;
+  globalThis.__add2eUnidentifiedItemOpenGuardV2 = true;
 
   document.addEventListener("click", event => {
-    const trigger = event.target?.closest?.(".objet-edit");
-    if (!trigger || game.user?.isGM) return;
+    if (game.user?.isGM) return;
 
-    const row = trigger.closest?.(".item");
+    const trigger = event.target?.closest?.(
+      ".objet-edit, .armure-edit, .arme-edit, [data-action='edit'], [data-action='open'], [data-action='item-edit'], [data-action='item-open']"
+    );
+    if (!trigger) return;
+
+    const row = trigger.closest?.(".item, [data-item-id]");
     const itemId = String(
       trigger.dataset?.itemId
       ?? row?.dataset?.itemId
@@ -103,28 +127,59 @@ function add2eInstallUnidentifiedItemOpenGuard() {
     if (!itemId) return;
 
     const item = add2eIdentificationFindActorItem(itemId, trigger);
-    if (!item || !add2eIdentificationMagicItem(item) || add2eIdentificationIsIdentified(item)) return;
+    if (!add2eIdentificationBlockOpen(item, "dom-click")) return;
 
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
-
-    console.log("[ADD2E][IDENTIFICATION][OPEN_BLOCKED]", {
-      actor: item.parent?.name,
-      actorId: item.parent?.id,
-      itemId: item.id,
-      visibleName: item.name,
-      genericName: add2eIdentificationGenericName(item),
-      identified: false,
-      user: game.user?.name,
-      userId: game.user?.id
-    });
-
-    ui.notifications.warn("Cet objet doit être identifié avant de pouvoir être examiné.");
   }, true);
 }
 
+function add2eInstallItemSheetRenderGuard() {
+  if (globalThis.__add2eUnidentifiedItemSheetRenderGuardV1) return;
+
+  const classes = [
+    globalThis.Add2eObjetSheet,
+    globalThis.Add2eArmeSheet,
+    globalThis.Add2eArmureSheet
+  ].filter(Boolean);
+
+  if (!classes.length) {
+    console.warn("[ADD2E][IDENTIFICATION][RENDER_GUARD_WAIT] Feuilles Item ApplicationV2 indisponibles.");
+    return;
+  }
+
+  let patched = 0;
+  for (const SheetClass of classes) {
+    const proto = SheetClass?.prototype;
+    if (!proto || proto.__add2eUnidentifiedRenderGuardV1) continue;
+
+    const originalRender = proto.render;
+    if (typeof originalRender !== "function") continue;
+
+    proto.__add2eUnidentifiedRenderGuardV1 = true;
+    proto.__add2eOriginalRenderBeforeIdentificationGuard = originalRender;
+
+    proto.render = function add2eRenderWithIdentificationGuard(options = {}) {
+      const item = this.item ?? this.document ?? this.object ?? null;
+      if (add2eIdentificationBlockOpen(item, "sheet-render")) return this;
+      return originalRender.call(this, options);
+    };
+
+    patched += 1;
+  }
+
+  if (patched > 0) {
+    globalThis.__add2eUnidentifiedItemSheetRenderGuardV1 = true;
+    console.log("[ADD2E][IDENTIFICATION][RENDER_GUARD_READY]", {
+      patched,
+      classes: classes.map(cls => cls.name)
+    });
+  }
+}
+
 add2eInstallUnidentifiedItemOpenGuard();
+Hooks.once("ready", add2eInstallItemSheetRenderGuard);
 
 Hooks.on("preCreateItem", (item, data, options, userId) => {
   if (item?.parent?.documentName !== "Actor") return;
