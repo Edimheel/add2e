@@ -1,6 +1,6 @@
 // ADD2E — UI commune des fenêtres et messages liés aux sorts.
 // Compatible Foundry V13/V14/V15 — DialogV2 / ApplicationV2 uniquement.
-const VERSION = "2026-07-14-v11-player-spellbook-reader";
+const VERSION = "2026-07-14-v12-player-spellbook-reader-binding";
 globalThis.ADD2E_SPELL_DIALOG_UI_VERSION = VERSION;
 
 function esc(value) {
@@ -31,9 +31,7 @@ const THEMES = {
   thief: { label: "Voleur", bg: "#eff9fa", accent: "#cce9ed", dark: "#164a58", main: "#2a8293", border: "#3b9daf", text: "#14333b", labelColor: "#1b6372" }
 };
 
-function themeData(theme) {
-  return THEMES[theme] ?? THEMES.cleric;
-}
+function themeData(theme) { return THEMES[theme] ?? THEMES.cleric; }
 
 function guessTheme({ title = "", content = "", theme = null } = {}) {
   if (theme && THEMES[theme]) return theme;
@@ -48,8 +46,7 @@ function guessTheme({ title = "", content = "", theme = null } = {}) {
 function guessIcon({ title = "", content = "", img = null } = {}) {
   if (img) return img;
   const text = norm(`${title} ${content}`);
-  if (text.includes("voleur") || text.includes("assassin")) return "icons/svg/eye.svg";
-  return "icons/svg/book.svg";
+  return text.includes("voleur") || text.includes("assassin") ? "icons/svg/eye.svg" : "icons/svg/book.svg";
 }
 
 function ensureStyles() {
@@ -57,7 +54,6 @@ function ensureStyles() {
   const old = document.getElementById(id);
   if (old?.dataset?.version === VERSION) return;
   old?.remove();
-
   const style = document.createElement("style");
   style.id = id;
   style.dataset.version = VERSION;
@@ -66,26 +62,17 @@ function ensureStyles() {
 .application.add2e-spell-dialog-window .window-header{background:linear-gradient(90deg,var(--a2e-dark),var(--a2e-main))!important;color:#fff!important;border:0!important;border-bottom:2px solid var(--a2e-border)!important}
 .application.add2e-spell-dialog-window .window-content{background:linear-gradient(180deg,var(--a2e-bg),var(--a2e-accent))!important;color:var(--a2e-text)!important;border:0!important;padding:12px!important}
 .application.add2e-spell-dialog-window .dialog-content,.application.add2e-spell-dialog-window .add2e-dialog,.application.add2e-spell-dialog-window form{background:transparent!important;color:var(--a2e-text)!important;border:0!important;box-shadow:none!important}
-.application.add2e-spell-dialog-window table{background:rgba(255,255,255,.48)!important;border:1px solid var(--a2e-border)!important}
-.application.add2e-spell-dialog-window th{background:rgba(255,255,255,.58)!important;color:var(--a2e-dark)!important;border-color:var(--a2e-border)!important}
-.application.add2e-spell-dialog-window td{border-color:rgba(128,96,204,.28)!important}
-.application.add2e-spell-dialog-window tbody tr:nth-child(even){background:rgba(128,96,204,.08)!important}
 .application.add2e-spell-dialog-window .dialog-buttons{background:transparent!important;border:0!important;padding-top:10px!important;gap:8px!important}
 .application.add2e-spell-dialog-window .dialog-buttons button{border:1px solid var(--a2e-border)!important;border-radius:9px!important;background:#fff!important;color:var(--a2e-dark)!important;font-weight:800!important;box-shadow:none!important}
-.application.add2e-spell-dialog-window .dialog-buttons button.default,.application.add2e-spell-dialog-window .dialog-buttons button[data-action="yes"],.application.add2e-spell-dialog-window .dialog-buttons button[data-action="roll"],.application.add2e-spell-dialog-window .dialog-buttons button[data-action="cast"]{background:linear-gradient(180deg,var(--a2e-main),var(--a2e-dark))!important;color:#fff!important}
 .add2e-spell-dialog-shell{border:2px solid var(--a2e-border);border-radius:14px;overflow:hidden;background:linear-gradient(180deg,var(--a2e-bg),var(--a2e-accent));color:var(--a2e-text)}
 .add2e-spell-dialog-header{display:flex;align-items:center;gap:10px;padding:10px 12px;background:linear-gradient(90deg,var(--a2e-dark),var(--a2e-main));color:#fff;border-bottom:2px solid var(--a2e-border)}
 .add2e-spell-dialog-header img{width:42px;height:42px;border-radius:8px;background:#fff;object-fit:cover;border:2px solid rgba(255,255,255,.9)}
 .add2e-spell-dialog-title{font-size:1.08rem;font-weight:800}.add2e-spell-dialog-subtitle{font-size:.84rem;opacity:.95}.add2e-spell-dialog-body{padding:12px}
-.chat-message .add2e-arcane-chat-card{padding:0!important;border:2px solid #8060cc!important;border-radius:10px!important;background:linear-gradient(180deg,#f8f3ff,#e8ddfb)!important;color:#211735!important;box-shadow:0 3px 10px rgba(46,28,90,.16)!important;overflow:hidden!important}
-.chat-message .add2e-arcane-chat-header{display:flex!important;align-items:center!important;gap:9px!important;margin:0!important;padding:8px 10px!important;background:linear-gradient(90deg,#2e1c5a,#6b49b8)!important;color:#fff!important;border:0!important}
-.chat-message .add2e-arcane-chat-header img{display:block!important;width:44px!important;height:44px!important;min-width:44px!important;max-width:44px!important;min-height:44px!important;max-height:44px!important;margin:0!important;border:1px solid rgba(255,255,255,.85)!important;border-radius:7px!important;object-fit:cover!important;background:#fff!important}
-.chat-message .add2e-arcane-chat-header h1,.chat-message .add2e-arcane-chat-header h2,.chat-message .add2e-arcane-chat-header h3{margin:0!important;padding:0!important;border:0!important;color:#fff!important;font-size:1.05rem!important;line-height:1.15!important}
+.chat-message .add2e-arcane-chat-card{padding:0!important;border:2px solid #8060cc!important;border-radius:10px!important;background:linear-gradient(180deg,#f8f3ff,#e8ddfb)!important;color:#211735!important;overflow:hidden!important}
+.chat-message .add2e-arcane-chat-header{display:flex!important;align-items:center!important;gap:9px!important;padding:8px 10px!important;background:linear-gradient(90deg,#2e1c5a,#6b49b8)!important;color:#fff!important}
+.chat-message .add2e-arcane-chat-header img{width:44px!important;height:44px!important;min-width:44px!important;max-width:44px!important;object-fit:cover!important;border:1px solid rgba(255,255,255,.85)!important;border-radius:7px!important;background:#fff!important}
+.chat-message .add2e-arcane-chat-header h1,.chat-message .add2e-arcane-chat-header h2,.chat-message .add2e-arcane-chat-header h3{margin:0!important;color:#fff!important;font-size:1.05rem!important;border:0!important}
 .chat-message .add2e-arcane-chat-body{padding:10px 11px!important}
-.chat-message .add2e-arcane-chat-body>img,.chat-message .add2e-arcane-chat-card>img{width:44px!important;height:44px!important;max-width:44px!important;max-height:44px!important;object-fit:cover!important}
-.chat-message .add2e-arcane-chat-card .dice-roll,.chat-message .add2e-arcane-chat-card .dice-result{margin-top:8px!important}
-.chat-message .add2e-arcane-chat-card .dice-formula{background:#f4efff!important;border:1px solid #8060cc!important;color:#2e1c5a!important}
-.chat-message .add2e-arcane-chat-card .dice-total{background:#fff!important;border:1px solid #8060cc!important;color:#2e1c5a!important;font-weight:900!important}
 .add2e-book-copy-complete{color:#6b7280!important;background:#e5e7eb!important;border-color:#9ca3af!important;box-shadow:none!important}
 .application.add2e-spellbook-reader-window{width:min(1040px,94vw)!important;height:min(820px,90vh)!important}
 .application.add2e-spellbook-reader-window .window-content{padding:10px!important;overflow:hidden!important;background:#3b2415!important}
@@ -96,7 +83,7 @@ function ensureStyles() {
 .add2e-spellbook-pages{flex:1;min-height:0;overflow:auto;padding:22px 30px;background:linear-gradient(90deg,#d7be8c 0%,#f5e8c9 5%,#fbf2da 47%,#c7aa76 49.5%,#927044 50%,#c7aa76 50.5%,#fbf2da 53%,#f5e8c9 95%,#d7be8c 100%);border:3px solid #73522d;border-radius:13px;box-shadow:inset 0 0 28px rgba(73,43,16,.25)}
 .add2e-spellbook-panel{display:none}.add2e-spellbook-panel.is-active{display:block}
 .add2e-spellbook-level-title{text-align:center;margin:0 0 16px;color:#573719;font-family:serif;font-size:1.45rem;border-bottom:1px solid rgba(90,55,25,.35);padding-bottom:7px}
-.add2e-spellbook-entry{margin:0 0 17px;padding:13px 15px;background:rgba(255,250,235,.68);border:1px solid rgba(112,77,39,.42);border-radius:9px;break-inside:avoid}
+.add2e-spellbook-entry{margin:0 0 17px;padding:13px 15px;background:rgba(255,250,235,.68);border:1px solid rgba(112,77,39,.42);border-radius:9px}
 .add2e-spellbook-entry-head{display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(112,77,39,.3);padding-bottom:7px;margin-bottom:9px}
 .add2e-spellbook-entry-head img{width:42px;height:42px;object-fit:cover;border:1px solid #73522d;border-radius:6px}
 .add2e-spellbook-entry-head h3{margin:0;color:#4a2f12;font-family:serif;font-size:1.22rem}
@@ -104,7 +91,6 @@ function ensureStyles() {
 .add2e-spellbook-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 16px;font-size:.9rem}
 .add2e-spellbook-field{display:grid;grid-template-columns:minmax(105px,auto) 1fr;gap:7px}.add2e-spellbook-field b{color:#5c3b1e}
 .add2e-spellbook-description{margin-top:10px;padding-top:9px;border-top:1px dashed rgba(112,77,39,.4);line-height:1.45}
-.add2e-spellbook-description>strong{display:block;margin-bottom:5px;color:#5c3b1e}
 @media(max-width:720px){.add2e-spellbook-pages{padding:16px}.add2e-spellbook-fields{grid-template-columns:1fr}}
 `;
   document.head.append(style);
@@ -113,23 +99,14 @@ function ensureStyles() {
 function shell({ theme = "cleric", title = "Sort", subtitle = "", img = "icons/svg/book.svg", body = "" } = {}) {
   ensureStyles();
   const t = themeData(theme);
-  return `<div class="add2e-spell-dialog-shell add2e-spell-dialog-theme-${esc(theme)}" style="--a2e-bg:${t.bg};--a2e-accent:${t.accent};--a2e-dark:${t.dark};--a2e-main:${t.main};--a2e-border:${t.border};--a2e-text:${t.text};--a2e-label:${t.labelColor};"><div class="add2e-spell-dialog-header"><img src="${esc(img)}" alt=""><div><div class="add2e-spell-dialog-title">${esc(title)}</div><div class="add2e-spell-dialog-subtitle">${esc(subtitle || t.label)}</div></div></div><div class="add2e-spell-dialog-body">${body}</div></div>`;
+  return `<div class="add2e-spell-dialog-shell" style="--a2e-bg:${t.bg};--a2e-accent:${t.accent};--a2e-dark:${t.dark};--a2e-main:${t.main};--a2e-border:${t.border};--a2e-text:${t.text};"><div class="add2e-spell-dialog-header"><img src="${esc(img)}" alt=""><div><div class="add2e-spell-dialog-title">${esc(title)}</div><div class="add2e-spell-dialog-subtitle">${esc(subtitle || t.label)}</div></div></div><div class="add2e-spell-dialog-body">${body}</div></div>`;
 }
 
 function primaryButtonClass(buttons) { return buttons; }
 
 function isManagedDialog(title, content) {
   const text = norm(`${title} ${content}`);
-  return text.startsWith("lancement_")
-    || text.includes("add2e_thief_roll_dialog")
-    || text.includes("livre_de_sorts")
-    || text.includes("grimoire")
-    || text.includes("parchemin")
-    || text.includes("copie_du_sort")
-    || text.includes("copier_un_sort")
-    || text.includes("jet_de_connaissance")
-    || text.includes("test_de_connaissance")
-    || text.includes("test_de_comprehension");
+  return text.startsWith("lancement_") || text.includes("livre_de_sorts") || text.includes("grimoire") || text.includes("parchemin") || text.includes("copie_du_sort") || text.includes("connaissance") || text.includes("comprehension");
 }
 
 function wrapDialogOptions(options = {}) {
@@ -137,15 +114,8 @@ function wrapDialogOptions(options = {}) {
   const content = String(options?.content ?? "");
   if (!isManagedDialog(title, content) || content.includes("add2e-spell-dialog-shell") || content.includes("add2e-spellbook-reader")) return options;
   const theme = guessTheme({ title, content, theme: options?.add2eTheme });
-  const t = themeData(theme);
-  const rawTitle = title.replace(/^Lancement\s*:\s*/i, "").trim() || "ADD2E";
   const classes = [...(Array.isArray(options?.window?.classes) ? options.window.classes : []), "add2e-spell-dialog-window"];
-  return {
-    ...options,
-    window: { ...(options.window ?? {}), classes: [...new Set(classes)] },
-    classes: [...new Set([...(Array.isArray(options.classes) ? options.classes : []), "add2e-spell-dialog-window"])],
-    content: shell({ theme, title: rawTitle, subtitle: t.label, img: guessIcon({ title, content, img: options?.add2eImg }), body: content })
-  };
+  return { ...options, window: { ...(options.window ?? {}), classes: [...new Set(classes)] }, content: shell({ theme, title: title || "ADD2E", subtitle: themeData(theme).label, img: guessIcon({ title, content, img: options?.add2eImg }), body: content }) };
 }
 
 function patchDialogV2() {
@@ -175,10 +145,7 @@ function bindSpellbookTabs(root) {
     reader.querySelectorAll(".add2e-spellbook-tab").forEach(tab => tab.classList.toggle("is-active", tab.dataset.level === level));
     reader.querySelectorAll(".add2e-spellbook-panel").forEach(panel => panel.classList.toggle("is-active", panel.dataset.level === level));
   };
-  reader.querySelectorAll(".add2e-spellbook-tab").forEach(tab => tab.addEventListener("click", event => {
-    event.preventDefault();
-    activate(tab.dataset.level);
-  }));
+  reader.querySelectorAll(".add2e-spellbook-tab").forEach(tab => tab.addEventListener("click", event => { event.preventDefault(); activate(tab.dataset.level); }));
   activate(reader.querySelector(".add2e-spellbook-tab")?.dataset?.level ?? "1");
 }
 
@@ -186,17 +153,13 @@ function styleRenderedDialog(app, html) {
   const root = rootElement(html, app);
   if (!root) return;
   bindSpellbookTabs(root);
-  if (root.querySelector(".add2e-spellbook-reader")) {
-    root.classList.add("add2e-spellbook-reader-window");
-    return;
-  }
+  if (root.querySelector(".add2e-spellbook-reader")) { root.classList.add("add2e-spellbook-reader-window"); return; }
   const title = String(app?.title ?? root.querySelector(".window-title")?.textContent ?? "");
   const content = String(root.querySelector(".window-content")?.textContent ?? root.textContent ?? "");
   if (!isManagedDialog(title, content)) return;
-  const theme = guessTheme({ title, content });
-  const t = themeData(theme);
+  const t = themeData(guessTheme({ title, content }));
   root.classList.add("add2e-spell-dialog-window");
-  for (const [key, value] of Object.entries({ "--a2e-bg": t.bg, "--a2e-accent": t.accent, "--a2e-dark": t.dark, "--a2e-main": t.main, "--a2e-border": t.border, "--a2e-text": t.text, "--a2e-label": t.labelColor })) root.style.setProperty(key, value);
+  for (const [key, value] of Object.entries({ "--a2e-bg": t.bg, "--a2e-accent": t.accent, "--a2e-dark": t.dark, "--a2e-main": t.main, "--a2e-border": t.border, "--a2e-text": t.text })) root.style.setProperty(key, value);
 }
 
 function spellLists(value) {
@@ -205,44 +168,38 @@ function spellLists(value) {
   return [...new Set(values.map(norm).filter(Boolean))];
 }
 
-function spellLevel(value) {
-  return Math.max(1, Number(value?.level ?? value?.niveau ?? value?.spellLevel ?? value?.system?.niveau ?? value?.system?.level ?? value?.system?.niveau_sort ?? 1) || 1);
-}
+function spellLevel(value) { return Math.max(1, Number(value?.level ?? value?.niveau ?? value?.spellLevel ?? value?.system?.niveau ?? value?.system?.level ?? value?.system?.niveau_sort ?? 1) || 1); }
 
 function actorKnowsBookEntry(actor, entry) {
   const name = norm(entry?.name ?? entry?.nom ?? entry?.label);
   const level = spellLevel(entry);
   const lists = spellLists(entry);
-  if (!name) return false;
-  return Array.from(actor?.items ?? []).some(item => {
-    if (!["sort", "spell"].includes(String(item?.type ?? "").toLowerCase())) return false;
+  return !!name && Array.from(actor?.items ?? []).some(item => {
+    if (!['sort','spell'].includes(String(item?.type ?? '').toLowerCase())) return false;
     if (item?.flags?.add2e?.spellFamily?.generated === true) return false;
-    if (norm(item?.name ?? item?.system?.nom) !== name) return false;
-    if (spellLevel(item) !== level) return false;
-    if (!lists.length) return true;
+    if (norm(item?.name ?? item?.system?.nom) !== name || spellLevel(item) !== level) return false;
     const knownLists = spellLists(item);
-    return !knownLists.length || knownLists.some(list => lists.includes(list));
+    return !lists.length || !knownLists.length || knownLists.some(list => lists.includes(list));
   });
 }
 
 function externalBookAllSpellsKnown(actor, book) {
   const document = book?.system?.arcaneDocument ?? {};
-  if (String(document.kind ?? "").toLowerCase() !== "spellbook" || document.personal === true) return false;
+  if (String(document.kind ?? '').toLowerCase() !== 'spellbook' || document.personal === true) return false;
   const entries = Array.isArray(document.spells) ? document.spells : document.spell ? [document.spell] : [];
   return entries.length > 0 && entries.every(entry => actorKnowsBookEntry(actor, entry));
 }
 
 function styleEquipmentSpellbooks(app, html) {
-  const actor = app?.actor ?? (app?.document?.documentName === "Actor" ? app.document : null);
-  if (!actor || actor.type !== "personnage") return;
+  const actor = app?.actor ?? (app?.document?.documentName === 'Actor' ? app.document : null);
+  if (!actor || actor.type !== 'personnage') return;
   const root = rootElement(html, app);
-  if (!root?.querySelector) return;
-  for (const button of root.querySelectorAll('[data-add2e-arcane-action="copy-book"][data-item-id]')) {
-    const book = actor.items?.get?.(button.dataset.itemId) ?? Array.from(actor.items ?? []).find(item => item.id === button.dataset.itemId);
+  for (const button of root?.querySelectorAll?.('[data-add2e-arcane-action="copy-book"][data-item-id]') ?? []) {
+    const book = actor.items?.get?.(button.dataset.itemId);
     const complete = externalBookAllSpellsKnown(actor, book);
-    button.classList.toggle("add2e-book-copy-complete", complete);
-    button.classList.toggle("a2e-action-add", !complete);
-    button.title = complete ? "Tous les sorts de ce livre sont déjà connus" : "Copier les sorts compatibles dans le livre personnel";
+    button.classList.toggle('add2e-book-copy-complete', complete);
+    button.classList.toggle('a2e-action-add', !complete);
+    button.title = complete ? 'Tous les sorts de ce livre sont déjà connus' : 'Copier les sorts compatibles dans le livre personnel';
   }
 }
 
@@ -256,107 +213,114 @@ function bookEntries(book) {
 }
 
 function formatSpellField(value) {
-  if (value === undefined || value === null || value === "") return "—";
-  if (Array.isArray(value)) return value.map(formatSpellField).filter(value => value !== "—").join(", ") || "—";
-  if (typeof value === "object") {
+  if (value === undefined || value === null || value === '') return '—';
+  if (Array.isArray(value)) return value.map(formatSpellField).filter(v => v !== '—').join(', ') || '—';
+  if (typeof value === 'object') {
     const direct = value.raw ?? value.texte ?? value.text ?? value.label ?? value.nom ?? value.name;
     if (direct !== undefined) return formatSpellField(direct);
     const amount = value.valeur ?? value.value ?? value.nombre ?? value.number;
     const unit = value.unite ?? value.unit;
-    if (amount !== undefined) return `${amount}${unit ? ` ${unit}` : ""}`;
-    return Object.values(value).map(formatSpellField).filter(entry => entry !== "—").join(", ") || "—";
+    if (amount !== undefined) return `${amount}${unit ? ` ${unit}` : ''}`;
+    return Object.values(value).map(formatSpellField).filter(v => v !== '—').join(', ') || '—';
   }
-  return String(value).trim() || "—";
+  return String(value).trim() || '—';
 }
 
 async function enrichSpellDescription(spell) {
-  const raw = String(spell?.system?.description ?? spell?.system?.description_reelle ?? "").trim();
-  if (!raw) return "<em>Aucune description.</em>";
+  const raw = String(spell?.system?.description ?? spell?.system?.description_reelle ?? '').trim();
+  if (!raw) return '<em>Aucune description.</em>';
   const editor = foundry?.applications?.ux?.TextEditor?.implementation ?? globalThis.TextEditor;
   try { return editor?.enrichHTML ? await editor.enrichHTML(raw, { async: true, relativeTo: spell }) : esc(raw); }
   catch (_error) { return esc(raw); }
 }
 
+async function resolveBookSpell(actor, entry) {
+  const name = norm(entry?.name ?? entry?.nom ?? entry?.label);
+  const level = spellLevel(entry);
+  const lists = spellLists(entry);
+  let spell = Array.from(actor?.items ?? []).find(item => String(item?.type ?? '').toLowerCase() === 'sort' && item?.flags?.add2e?.spellFamily?.generated !== true && norm(item?.name ?? item?.system?.nom) === name && spellLevel(item) === level && (!lists.length || spellLists(item).some(list => lists.includes(list)))) ?? null;
+  if (!spell && entry?.sourceUuid && typeof fromUuid === 'function') {
+    try { spell = await fromUuid(entry.sourceUuid); } catch (_error) {}
+  }
+  return spell;
+}
+
 async function openPlayerSpellbook(actor, book) {
   const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (!DialogV2?.wait) return ui.notifications.error("DialogV2 est introuvable.");
+  if (!DialogV2?.wait) return ui.notifications.error('DialogV2 est introuvable.');
   const entries = bookEntries(book);
   if (!entries.length) return ui.notifications.info(`${book.name} ne contient aucun sort.`);
-
   const detailed = [];
-  for (const entry of entries) {
-    const name = norm(entry?.name ?? entry?.nom ?? entry?.label);
-    const level = spellLevel(entry);
-    const wantedLists = spellLists(entry);
-    let spell = Array.from(actor?.items ?? []).find(item =>
-      String(item?.type ?? "").toLowerCase() === "sort"
-      && item?.flags?.add2e?.spellFamily?.generated !== true
-      && norm(item?.name ?? item?.system?.nom) === name
-      && spellLevel(item) === level
-      && (!wantedLists.length || spellLists(item).some(list => wantedLists.includes(list)))
-    ) ?? null;
-    if (!spell && entry?.sourceUuid && typeof fromUuid === "function") {
-      try { spell = await fromUuid(entry.sourceUuid); } catch (_error) {}
-    }
-    detailed.push({ entry, spell, level });
-  }
-
-  const levels = [...new Set(detailed.map(row => row.level))].sort((a, b) => a - b);
-  const tabs = levels.map(level => `<button type="button" class="add2e-spellbook-tab" data-level="${level}">Niveau ${level}</button>`).join("");
+  for (const entry of entries) detailed.push({ entry, spell: await resolveBookSpell(actor, entry), level: spellLevel(entry) });
+  const levels = [...new Set(detailed.map(row => row.level))].sort((a,b) => a-b);
+  const tabs = levels.map(level => `<button type="button" class="add2e-spellbook-tab" data-level="${level}">Niveau ${level}</button>`).join('');
   const panels = [];
   for (const level of levels) {
     const cards = [];
     for (const row of detailed.filter(row => row.level === level)) {
       const spell = row.spell;
       const system = spell?.system ?? row.entry?.system ?? row.entry ?? {};
-      const description = spell ? await enrichSpellDescription(spell) : `<em>Description complète indisponible pour ${esc(row.entry?.name ?? "ce sort")}.</em>`;
-      const listLabel = (row.entry?.listLabel || spellLists(row.entry).map(list => list === "magicien" ? "Magicien" : list === "illusionniste" ? "Illusionniste" : list).join(" / ") || "Liste inconnue");
+      const description = spell ? await enrichSpellDescription(spell) : `<em>Description complète indisponible pour ${esc(row.entry?.name ?? 'ce sort')}.</em>`;
+      const listLabel = row.entry?.listLabel || spellLists(row.entry).map(list => list === 'magicien' ? 'Magicien' : list === 'illusionniste' ? 'Illusionniste' : list).join(' / ') || 'Liste inconnue';
       const fields = [
-        ["École", system.ecole ?? system["école"] ?? system.school],
-        ["Portée", system.portee ?? system["portée"] ?? system.range],
-        ["Durée", system.duree ?? system["durée"] ?? system.duration],
-        ["Temps d’incantation", system.temps_incantation ?? system.tempsIncantation ?? system.castingTime],
-        ["Composantes", system.composantes ?? system.components],
-        ["Composants matériels", system.composants_materiels ?? system.materialComponents],
-        ["Zone d’effet", system.zone_effet ?? system.zoneEffet ?? system.areaOfEffect],
-        ["Cible", system.cible ?? system.target],
-        ["Jet de sauvegarde", system.jet_sauvegarde ?? system.jetSauvegarde ?? system.savingThrow]
-      ].map(([label, value]) => `<div class="add2e-spellbook-field"><b>${label}</b><span>${esc(formatSpellField(value))}</span></div>`).join("");
-      cards.push(`<article class="add2e-spellbook-entry"><div class="add2e-spellbook-entry-head"><img src="${esc(spell?.img ?? row.entry?.img ?? book.img ?? "icons/svg/book.svg")}" alt=""><h3>${esc(spell?.name ?? row.entry?.name ?? "Sort")}</h3><span class="add2e-spellbook-entry-list">${esc(listLabel)}</span></div><div class="add2e-spellbook-fields">${fields}</div><div class="add2e-spellbook-description"><strong>Description</strong>${description}</div></article>`);
+        ['École', system.ecole ?? system['école'] ?? system.school],
+        ['Portée', system.portee ?? system['portée'] ?? system.range],
+        ['Durée', system.duree ?? system['durée'] ?? system.duration],
+        ['Temps d’incantation', system.temps_incantation ?? system.tempsIncantation ?? system.castingTime],
+        ['Composantes', system.composantes ?? system.components],
+        ['Composants matériels', system.composants_materiels ?? system.materialComponents],
+        ['Zone d’effet', system.zone_effet ?? system.zoneEffet ?? system.areaOfEffect],
+        ['Cible', system.cible ?? system.target],
+        ['Jet de sauvegarde', system.jet_sauvegarde ?? system.jetSauvegarde ?? system.savingThrow]
+      ].map(([label,value]) => `<div class="add2e-spellbook-field"><b>${label}</b><span>${esc(formatSpellField(value))}</span></div>`).join('');
+      cards.push(`<article class="add2e-spellbook-entry"><div class="add2e-spellbook-entry-head"><img src="${esc(spell?.img ?? row.entry?.img ?? book.img ?? 'icons/svg/book.svg')}" alt=""><h3>${esc(spell?.name ?? row.entry?.name ?? 'Sort')}</h3><span class="add2e-spellbook-entry-list">${esc(listLabel)}</span></div><div class="add2e-spellbook-fields">${fields}</div><div class="add2e-spellbook-description"><strong>Description</strong>${description}</div></article>`);
     }
-    panels.push(`<section class="add2e-spellbook-panel" data-level="${level}"><h2 class="add2e-spellbook-level-title">Sorts de niveau ${level}</h2>${cards.join("")}</section>`);
+    panels.push(`<section class="add2e-spellbook-panel" data-level="${level}"><h2 class="add2e-spellbook-level-title">Sorts de niveau ${level}</h2>${cards.join('')}</section>`);
   }
+  return DialogV2.wait({ window: { title: `${book.name} — ${actor.name}`, classes: ['add2e-spellbook-reader-window'], resizable: true }, position: { width: 1040, height: 820 }, modal: false, rejectClose: false, content: `<div class="add2e-spellbook-reader"><nav class="add2e-spellbook-tabs">${tabs}</nav><div class="add2e-spellbook-pages">${panels.join('')}</div></div>`, buttons: [{ action: 'close', label: 'Fermer', icon: 'fa-solid fa-book', default: true, callback: () => true }] });
+}
 
-  await DialogV2.wait({
-    window: { title: `${book.name} — ${actor.name}`, classes: ["add2e-spellbook-reader-window"], resizable: true },
-    position: { width: 1040, height: 820 },
-    modal: false,
-    rejectClose: false,
-    content: `<div class="add2e-spellbook-reader"><nav class="add2e-spellbook-tabs">${tabs}</nav><div class="add2e-spellbook-pages">${panels.join("")}</div></div>`,
-    buttons: [{ action: "close", label: "Fermer", icon: "fa-solid fa-book", default: true, callback: () => true }]
-  });
+function actorFromSpellbookButton(button) {
+  const actorId = String(button?.dataset?.actorId ?? '').trim();
+  if (actorId) {
+    const worldActor = game.actors?.get?.(actorId) ?? null;
+    if (worldActor) return worldActor;
+  }
+  const actorUuid = String(button?.dataset?.actorUuid ?? '').trim();
+  if (actorUuid && typeof fromUuidSync === 'function') {
+    try { const actor = fromUuidSync(actorUuid); if (actor?.documentName === 'Actor') return actor; } catch (_error) {}
+  }
+  const owner = button?.closest?.('.application, .window-app');
+  for (const app of Object.values(ui.windows ?? {})) {
+    const root = app?.element?.jquery ? app.element[0] : app?.element;
+    if (root === owner || root?.contains?.(button)) {
+      const actor = app?.actor ?? (app?.document?.documentName === 'Actor' ? app.document : null);
+      if (actor) return actor;
+    }
+  }
+  return null;
 }
 
 function bindPlayerSpellbookOpen() {
-  if (globalThis.__ADD2E_PLAYER_SPELLBOOK_READER_BOUND__) return;
-  globalThis.__ADD2E_PLAYER_SPELLBOOK_READER_BOUND__ = true;
-  document.addEventListener("click", event => {
-    const button = event.target instanceof Element ? event.target.closest('[data-add2e-arcane-action="view-book"][data-item-id]') : null;
+  if (globalThis.__ADD2E_PLAYER_SPELLBOOK_READER_BOUND_V12__) return;
+  globalThis.__ADD2E_PLAYER_SPELLBOOK_READER_BOUND_V12__ = true;
+  document.addEventListener('click', event => {
+    const target = event.target instanceof Element ? event.target : null;
+    const button = target?.closest?.('[data-add2e-arcane-action="view-book"][data-item-id]');
     if (!button) return;
-    const actorRoot = button.closest(".application, .window-app");
-    const app = Object.values(ui.windows ?? {}).find(candidate => {
-      const root = candidate?.element?.jquery ? candidate.element[0] : candidate?.element;
-      return root === actorRoot || root?.contains?.(button);
-    });
-    const actor = app?.actor ?? app?.document ?? null;
-    if (!actor || actor.documentName !== "Actor" || actor.type !== "personnage") return;
-    const book = actor.items?.get?.(button.dataset.itemId) ?? null;
-    if (!book) return;
+    const actor = actorFromSpellbookButton(button);
+    const book = actor?.items?.get?.(String(button.dataset.itemId ?? '')) ?? null;
     event.preventDefault();
+    event.stopPropagation();
     event.stopImmediatePropagation();
+    if (!actor || !book) {
+      console.error('[ADD2E][SPELLBOOK_READER][MISSING_CONTEXT]', { actorId: button.dataset.actorId, itemId: button.dataset.itemId, actor, book });
+      ui.notifications.error('Impossible de retrouver le personnage ou son livre de sorts.');
+      return;
+    }
     void openPlayerSpellbook(actor, book).catch(error => {
-      console.error("[ADD2E][SPELLBOOK_READER][ERROR]", { actor: actor.name, book: book.name, error });
-      ui.notifications.error(error?.message || "Impossible d’ouvrir le livre de sorts.");
+      console.error('[ADD2E][SPELLBOOK_READER][ERROR]', { actor: actor.name, book: book.name, error });
+      ui.notifications.error(error?.message || 'Impossible d’ouvrir le livre de sorts.');
     });
   }, true);
 }
@@ -364,32 +328,27 @@ function bindPlayerSpellbookOpen() {
 function styleChatMessage(message, html) {
   const root = rootElement(html);
   if (!root) return;
-  const content = String(message?.content ?? root.textContent ?? "");
-  const text = norm(content);
-  if (!text.includes("connaissance") && !text.includes("comprehension") && !text.includes("copie_du_sort") && !text.includes("livre_de_sorts") && !text.includes("parchemin")) return;
-  const card = root.querySelector(".add2e-card-test,.chat-card,.message-content>div") ?? root.querySelector(".message-content");
+  const text = norm(String(message?.content ?? root.textContent ?? ''));
+  if (!text.includes('connaissance') && !text.includes('comprehension') && !text.includes('copie_du_sort') && !text.includes('livre_de_sorts') && !text.includes('parchemin')) return;
+  const card = root.querySelector('.add2e-card-test,.chat-card,.message-content>div') ?? root.querySelector('.message-content');
   if (!(card instanceof HTMLElement)) return;
-  card.classList.add("add2e-arcane-chat-card");
-  let header = card.querySelector(":scope > .add2e-arcane-chat-header");
+  card.classList.add('add2e-arcane-chat-card');
+  let header = card.querySelector(':scope > .add2e-arcane-chat-header');
   if (!header) {
-    const title = card.querySelector(":scope > h1,:scope > h2,:scope > h3") ?? card.querySelector("h1,h2,h3");
-    const image = card.querySelector(":scope > img") ?? card.querySelector("img");
+    const title = card.querySelector(':scope > h1,:scope > h2,:scope > h3') ?? card.querySelector('h1,h2,h3');
+    const image = card.querySelector(':scope > img') ?? card.querySelector('img');
     if (title || image) {
-      header = document.createElement("div");
-      header.className = "add2e-arcane-chat-header";
+      header = document.createElement('div');
+      header.className = 'add2e-arcane-chat-header';
       card.insertBefore(header, card.firstChild);
       if (image) header.append(image);
       if (title) header.append(title);
     }
   }
-  let body = card.querySelector(":scope > .add2e-arcane-chat-body");
-  if (!body) {
-    body = document.createElement("div");
-    body.className = "add2e-arcane-chat-body";
-    for (const child of [...card.children]) {
-      if (child === header || child === body) continue;
-      body.append(child);
-    }
+  if (!card.querySelector(':scope > .add2e-arcane-chat-body')) {
+    const body = document.createElement('div');
+    body.className = 'add2e-arcane-chat-body';
+    for (const child of [...card.children]) if (child !== header) body.append(child);
     card.append(body);
   }
 }
@@ -397,33 +356,26 @@ function styleChatMessage(message, html) {
 const refreshTimers = new Map();
 function refreshActorSheetForSpell(item) {
   const actor = item?.parent;
-  if (!actor || actor.documentName !== "Actor" || actor.type !== "personnage" || !["sort", "spell"].includes(String(item.type).toLowerCase())) return;
+  if (!actor || actor.documentName !== 'Actor' || actor.type !== 'personnage' || !['sort','spell'].includes(String(item.type).toLowerCase())) return;
   const key = actor.uuid ?? actor.id;
   clearTimeout(refreshTimers.get(key));
   refreshTimers.set(key, setTimeout(() => {
     refreshTimers.delete(key);
     const apps = new Set([...Object.values(actor.apps ?? {}), ...Object.values(ui.windows ?? {}).filter(app => (app?.actor ?? app?.document ?? app?.object)?.id === actor.id)]);
     for (const app of apps) {
-      try {
-        app._add2eRememberActiveTab?.(app.element, app._add2eActiveTab || app._add2eReadStoredTab?.() || "sorts");
-        app.render?.({ force: true });
-      } catch (_error) {
-        try { app.render?.(true); } catch (error) { console.warn("[ADD2E][SPELL_DIALOG_UI][REFRESH_ERROR]", error); }
-      }
+      try { app._add2eRememberActiveTab?.(app.element, app._add2eActiveTab || app._add2eReadStoredTab?.() || 'sorts'); app.render?.({ force: true }); }
+      catch (_error) { try { app.render?.(true); } catch (error) { console.warn('[ADD2E][SPELL_DIALOG_UI][REFRESH_ERROR]', error); } }
     }
   }, 50));
 }
 
 globalThis.ADD2E_SPELL_DIALOG_UI = { version: VERSION, themes: THEMES, shell, primaryButtonClass, ensureStyles, guessTheme, guessIcon, wrapDialogOptions, esc, openPlayerSpellbook };
-Hooks.once("ready", () => { ensureStyles(); patchDialogV2(); bindPlayerSpellbookOpen(); });
-Hooks.on("renderDialogV2", styleRenderedDialog);
-Hooks.on("renderApplicationV2", (app, html) => {
-  styleRenderedDialog(app, html);
-  styleEquipmentSpellbooks(app, html);
-});
-Hooks.on("renderChatMessageHTML", styleChatMessage);
-Hooks.on("createItem", refreshActorSheetForSpell);
-Hooks.on("updateItem", refreshActorSheetForSpell);
-Hooks.on("deleteItem", refreshActorSheetForSpell);
+Hooks.once('ready', () => { ensureStyles(); patchDialogV2(); bindPlayerSpellbookOpen(); });
+Hooks.on('renderDialogV2', styleRenderedDialog);
+Hooks.on('renderApplicationV2', (app, html) => { styleRenderedDialog(app, html); styleEquipmentSpellbooks(app, html); });
+Hooks.on('renderChatMessageHTML', styleChatMessage);
+Hooks.on('createItem', refreshActorSheetForSpell);
+Hooks.on('updateItem', refreshActorSheetForSpell);
+Hooks.on('deleteItem', refreshActorSheetForSpell);
 ensureStyles();
-console.log("[ADD2E][SPELL_DIALOG_UI][VERSION]", VERSION);
+console.log('[ADD2E][SPELL_DIALOG_UI][VERSION]', VERSION);
