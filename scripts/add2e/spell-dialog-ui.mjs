@@ -1,6 +1,6 @@
 // ADD2E — UI commune des fenêtres et messages liés aux sorts.
 // Compatible Foundry V13/V14/V15 — DialogV2 / ApplicationV2 uniquement.
-const VERSION = "2026-07-14-v9-arcane-chat-card";
+const VERSION = "2026-07-14-v10-complete-external-spellbook-color";
 globalThis.ADD2E_SPELL_DIALOG_UI_VERSION = VERSION;
 
 function esc(value) {
@@ -86,6 +86,7 @@ function ensureStyles() {
 .chat-message .add2e-arcane-chat-card .dice-roll,.chat-message .add2e-arcane-chat-card .dice-result{margin-top:8px!important}
 .chat-message .add2e-arcane-chat-card .dice-formula{background:#f4efff!important;border:1px solid #8060cc!important;color:#2e1c5a!important}
 .chat-message .add2e-arcane-chat-card .dice-total{background:#fff!important;border:1px solid #8060cc!important;color:#2e1c5a!important;font-weight:900!important}
+.add2e-book-copy-complete{color:#6b7280!important;background:#e5e7eb!important;border-color:#9ca3af!important;box-shadow:none!important}
 `;
   document.head.append(style);
 }
@@ -160,6 +161,57 @@ function styleRenderedDialog(app, html) {
   for (const [key, value] of Object.entries({ "--a2e-bg": t.bg, "--a2e-accent": t.accent, "--a2e-dark": t.dark, "--a2e-main": t.main, "--a2e-border": t.border, "--a2e-text": t.text, "--a2e-label": t.labelColor })) root.style.setProperty(key, value);
 }
 
+function spellLists(value) {
+  const raw = value?.lists ?? value?.spellLists ?? value?.classes ?? value?.classe ?? value?.class ?? value?.system?.spellLists ?? value?.system?.lists ?? value?.system?.liste ?? value?.system?.classe ?? value?.system?.class ?? [];
+  const values = Array.isArray(raw) ? raw : typeof raw === "string" ? raw.split(/[,;|\n]+/g) : raw && typeof raw === "object" ? Object.values(raw) : [];
+  return [...new Set(values.map(norm).filter(Boolean))];
+}
+
+function spellLevel(value) {
+  return Math.max(1, Number(value?.level ?? value?.niveau ?? value?.spellLevel ?? value?.system?.niveau ?? value?.system?.level ?? value?.system?.niveau_sort ?? 1) || 1);
+}
+
+function actorKnowsBookEntry(actor, entry) {
+  const name = norm(entry?.name ?? entry?.nom ?? entry?.label);
+  const level = spellLevel(entry);
+  const lists = spellLists(entry);
+  if (!name) return false;
+
+  return Array.from(actor?.items ?? []).some(item => {
+    if (!["sort", "spell"].includes(String(item?.type ?? "").toLowerCase())) return false;
+    if (item?.flags?.add2e?.spellFamily?.generated === true) return false;
+    if (norm(item?.name ?? item?.system?.nom) !== name) return false;
+    if (spellLevel(item) !== level) return false;
+    if (!lists.length) return true;
+    const knownLists = spellLists(item);
+    return !knownLists.length || knownLists.some(list => lists.includes(list));
+  });
+}
+
+function externalBookAllSpellsKnown(actor, book) {
+  const document = book?.system?.arcaneDocument ?? {};
+  if (String(document.kind ?? "").toLowerCase() !== "spellbook" || document.personal === true) return false;
+  const entries = Array.isArray(document.spells) ? document.spells : document.spell ? [document.spell] : [];
+  return entries.length > 0 && entries.every(entry => actorKnowsBookEntry(actor, entry));
+}
+
+function styleEquipmentSpellbooks(app, html) {
+  const actor = app?.actor ?? (app?.document?.documentName === "Actor" ? app.document : null);
+  if (!actor || actor.type !== "personnage") return;
+  const root = rootElement(html, app);
+  if (!root?.querySelector) return;
+
+  for (const button of root.querySelectorAll('[data-add2e-arcane-action="copy-book"][data-item-id]')) {
+    const book = actor.items?.get?.(button.dataset.itemId) ?? Array.from(actor.items ?? []).find(item => item.id === button.dataset.itemId);
+    const complete = externalBookAllSpellsKnown(actor, book);
+    button.classList.toggle("add2e-book-copy-complete", complete);
+    button.classList.toggle("a2e-action-add", !complete);
+    button.title = complete
+      ? "Tous les sorts de ce livre sont déjà connus"
+      : "Copier les sorts compatibles dans le livre personnel";
+  }
+}
+
 function styleChatMessage(message, html) {
   const root = rootElement(html);
   if (!root) return;
@@ -219,7 +271,10 @@ function refreshActorSheetForSpell(item) {
 globalThis.ADD2E_SPELL_DIALOG_UI = { version: VERSION, themes: THEMES, shell, primaryButtonClass, ensureStyles, guessTheme, guessIcon, wrapDialogOptions, esc };
 Hooks.once("ready", () => { ensureStyles(); patchDialogV2(); });
 Hooks.on("renderDialogV2", styleRenderedDialog);
-Hooks.on("renderApplicationV2", styleRenderedDialog);
+Hooks.on("renderApplicationV2", (app, html) => {
+  styleRenderedDialog(app, html);
+  styleEquipmentSpellbooks(app, html);
+});
 Hooks.on("renderChatMessageHTML", styleChatMessage);
 Hooks.on("createItem", refreshActorSheetForSpell);
 Hooks.on("updateItem", refreshActorSheetForSpell);
