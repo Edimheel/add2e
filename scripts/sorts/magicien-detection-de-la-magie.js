@@ -1,5 +1,5 @@
 // ADD2E — Détection de la magie — Foundry V13/V14/V15, DialogV2.
-// Version : 2026-07-14-inventory-detection-v2
+// Version : 2026-07-14-inventory-detection-v3
 // Retour attendu : true = sort consommé, false = sort non consommé.
 
 const __add2eDetectionMagieResult = await (async () => {
@@ -105,7 +105,6 @@ const __add2eDetectionMagieResult = await (async () => {
       const itemUuid = String(magicAura.itemUuid ?? spell.itemUuid ?? "");
       const matches = itemId === candidate.id || (itemUuid && itemUuid === candidate.uuid);
       if (!matches) continue;
-
       if (magicAura.detectedAsMagical === true) return true;
       if (norm(spell.slug) === "aura_magique_de_nystul") return true;
     }
@@ -151,7 +150,7 @@ const __add2eDetectionMagieResult = await (async () => {
         </div>
 
         <p class="hint">
-          Le sort révèle uniquement la présence et l’intensité d’une aura magique. Il n’identifie pas l’objet.
+          Le sort révèle uniquement les objets qui émettent une aura magique. Il n’identifie pas l’objet.
         </p>
       </form>
     `,
@@ -196,31 +195,44 @@ const __add2eDetectionMagieResult = await (async () => {
     return false;
   }
 
-  const results = inspected.map(candidate => {
+  const results = inspected.flatMap(candidate => {
     const falseAura = falseAuraFor(candidate);
     const magical = isMagicItem(candidate) || falseAura;
-    return {
+    if (!magical) return [];
+
+    return [{
       id: candidate.id,
       name: visibleName(candidate),
       img: candidate.img || "icons/svg/item-bag.svg",
-      magical,
       falseAura,
-      intensity: magical ? magicIntensity(candidate) : "aucune"
-    };
+      intensity: magicIntensity(candidate)
+    }];
   });
 
-  const rows = results.map(result => `
-    <tr>
-      <td style="padding:4px 6px;width:36px;">
-        <img src="${esc(result.img)}" style="width:28px;height:28px;object-fit:cover;border-radius:4px;">
-      </td>
-      <td style="padding:4px 6px;"><b>${esc(result.name)}</b></td>
-      <td style="padding:4px 6px;text-align:center;">
-        ${result.magical ? "Aura magique" : "Aucune aura"}
-      </td>
-      <td style="padding:4px 6px;text-align:right;"><b>${esc(result.intensity)}</b></td>
-    </tr>
-  `).join("");
+  const resultContent = results.length
+    ? `
+      <table style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr>
+            <th></th>
+            <th style="text-align:left;">Aura détectée</th>
+            <th style="text-align:right;">Intensité</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${results.map(result => `
+            <tr>
+              <td style="padding:4px 6px;width:36px;">
+                <img src="${esc(result.img)}" style="width:28px;height:28px;object-fit:cover;border-radius:4px;">
+              </td>
+              <td style="padding:4px 6px;"><b>${esc(result.name)}</b></td>
+              <td style="padding:4px 6px;text-align:right;"><b>${esc(result.intensity)}</b></td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `
+    : `<p style="margin:0;text-align:center;"><b>Aucune aura magique détectée.</b></p>`;
 
   await ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken }),
@@ -238,20 +250,10 @@ const __add2eDetectionMagieResult = await (async () => {
         <div style="padding:10px;">
           <div style="border:1px solid #8e63c7;border-radius:6px;background:#fffaff;padding:8px;">
             <div style="color:#6c31b5;font-weight:900;text-align:center;margin-bottom:7px;">PERCEPTION MAGIQUE</div>
-            <table style="width:100%;border-collapse:collapse;">
-              <thead>
-                <tr>
-                  <th></th>
-                  <th style="text-align:left;">Objet examiné</th>
-                  <th>Aura</th>
-                  <th style="text-align:right;">Intensité</th>
-                </tr>
-              </thead>
-              <tbody>${rows}</tbody>
-            </table>
+            ${resultContent}
           </div>
           <p style="margin:7px 0 0;font-size:12px;">
-            Un objet non identifié conserve son nom générique. La détection ne révèle ni son vrai nom ni ses pouvoirs.
+            Les objets sans aura ne sont pas révélés. Un objet non identifié conserve son nom générique.
           </p>
         </div>
       </div>
@@ -264,7 +266,8 @@ const __add2eDetectionMagieResult = await (async () => {
   console.log("[ADD2E][DETECTION_MAGIE][INVENTORY_RESULT]", {
     caster: caster.name,
     mode: selection.mode,
-    inspected: results
+    inspectedCount: inspected.length,
+    detected: results
   });
 
   return true;
