@@ -1,7 +1,7 @@
 // ADD2E — Échanges entre personnages joueurs — DialogV2 / Foundry V13-V15
-// Version : 2026-07-12-player-trades-shared-transfer-api-v7
+// Version : 2026-07-14-player-trades-arcane-items-v8
 
-const ADD2E_PLAYER_TRADES_VERSION = "2026-07-12-player-trades-shared-transfer-api-v7";
+const ADD2E_PLAYER_TRADES_VERSION = "2026-07-14-player-trades-arcane-items-v8";
 const ADD2E_PLAYER_TRADES_SOCKET = "system.add2e";
 const ADD2E_TRADE_STYLE_ID = "add2e-player-trades-style";
 const ADD2E_TRADE_DIALOG_WIDTH = 220;
@@ -307,6 +307,115 @@ export function add2eTradeItemQuantity(item) {
   return Math.max(1, q);
 }
 
+function add2eTradeNorm(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/œ/g, "oe")
+    .replace(/æ/g, "ae")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function add2eTradeArcaneData(item) {
+  const value = item?.system?.arcaneDocument;
+  return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+}
+
+function add2eTradeArcaneKind(item) {
+  const explicit = add2eTradeArcaneData(item).kind ?? item?.flags?.add2e?.arcaneDocumentKind ?? "";
+  const kind = String(explicit).trim().toLowerCase();
+  if (kind) return kind;
+  const name = add2eTradeNorm(item?.name);
+  const subtype = add2eTradeNorm(item?.system?.sousType ?? item?.system?.sous_type);
+  if (subtype.includes("livre_de_sorts") || name.startsWith("livre_de_sorts")) return "spellbook";
+  if (subtype.includes("parchemin_de_sort") || name.startsWith("parchemin")) return "spell-scroll";
+  return "";
+}
+
+function add2eTradeIsSpellbook(item) {
+  return String(item?.type ?? "").toLowerCase() === "objet" && add2eTradeArcaneKind(item) === "spellbook";
+}
+
+function add2eTradeIsSpellScroll(item) {
+  return String(item?.type ?? "").toLowerCase() === "objet" && add2eTradeArcaneKind(item) === "spell-scroll";
+}
+
+function add2eTradeArcaneArray(value) {
+  if (value === undefined || value === null || value === "") return [];
+  if (Array.isArray(value)) return value.flatMap(add2eTradeArcaneArray);
+  if (value instanceof Set) return [...value].flatMap(add2eTradeArcaneArray);
+  if (typeof value === "string") return value.split(/[,;|\n]+/g).map(entry => entry.trim()).filter(Boolean);
+  return [value];
+}
+
+function add2eTradeArcaneSignature(item) {
+  const document = add2eTradeArcaneData(item);
+  const source = Array.isArray(document.spells) ? document.spells : document.spell ? [document.spell] : [];
+  const spells = source.map(entry => ({
+    key: String(entry?.key ?? entry?.stableKey ?? entry?.spellKey ?? "").trim(),
+    name: add2eTradeNorm(entry?.name ?? entry?.nom ?? entry?.label),
+    level: Math.max(1, Number(entry?.level ?? entry?.niveau ?? entry?.spellLevel ?? 1) || 1),
+    lists: [...new Set(add2eTradeArcaneArray(entry?.lists ?? entry?.spellLists ?? entry?.classes ?? entry?.classe ?? entry?.class).map(add2eTradeNorm).filter(Boolean))].sort(),
+    sourceUuid: String(entry?.sourceUuid ?? entry?.uuid ?? entry?.sourceId ?? "").trim()
+  })).sort((left, right) => JSON.stringify(left).localeCompare(JSON.stringify(right)));
+
+  return JSON.stringify({
+    kind: add2eTradeArcaneKind(item),
+    list: add2eTradeNorm(document.ownerList ?? document.spellList ?? item?.flags?.add2e?.arcaneSpellList ?? item?.flags?.add2e?.ownerSpellList),
+    spells
+  });
+}
+
+function add2eTradePrepareTransferredItem(itemData, quantity) {
+  const data = foundry.utils.deepClone(itemData);
+  delete data._id;
+  data.system = data.system ?? {};
+  data.flags = data.flags ?? {};
+  data.flags.add2e = data.flags.add2e ?? {};
+  data.system.quantite = quantity;
+  data.system.equipee = false;
+
+  const kind = add2eTradeArcaneKind(data);
+  if (kind === "spellbook") {
+    const document = add2eTradeArcaneData(data);
+    data.system.arcaneDocument = {
+      ...foundry.utils.deepClone(document),
+      schema: 1,
+      kind: "spellbook",
+      personal: false,
+      ownerActorUuid: "",
+      spells: Array.isArray(document.spells) ? foundry.utils.deepClone(document.spells) : document.spell ? [foundry.utils.deepClone(document.spell)] : []
+    };
+    delete data.system.arcaneDocument.spell;
+    data.system.consommable = false;
+    data.flags.add2e.arcaneDocumentKind = "spellbook";
+    data.flags.add2e.personalSpellbook = false;
+    data.flags.add2e.ownerActorUuid = "";
+  } else if (kind === "spell-scroll") {
+    const document = add2eTradeArcaneData(data);
+    data.system.arcaneDocument = {
+      ...foundry.utils.deepClone(document),
+      schema: 1,
+      kind: "spell-scroll",
+      personal: false,
+      ownerActorUuid: "",
+      spells: Array.isArray(document.spells) ? foundry.utils.deepClone(document.spells) : document.spell ? [foundry.utils.deepClone(document.spell)] : []
+    };
+    delete data.system.arcaneDocument.spell;
+    data.system.consommable = true;
+    data.flags.add2e.arcaneDocumentKind = "spell-scroll";
+    data.flags.add2e.personalSpellbook = false;
+    data.flags.add2e.ownerActorUuid = "";
+  }
+
+  return data;
+}
+
 function add2eTradeOfferLabel(proposal) {
   if (proposal?.offer?.kind === "money") return `${proposal.offer.quantity} ${ADD2E_TRADE_COIN_LABELS[proposal.offer.coin] ?? proposal.offer.coin}`;
   return `${proposal?.offer?.quantity ?? 1} × ${proposal?.offer?.name ?? "Objet"}`;
@@ -528,24 +637,31 @@ function add2eTradeOpenReceiver(proposal) {
 export function add2eTradeFindStack(actor, itemData) {
   const qty = Number(itemData?.system?.quantite ?? itemData?.system?.quantity);
   if (!Number.isFinite(qty)) return null;
+  if (add2eTradeIsSpellbook(itemData)) return null;
+
   const name = String(itemData?.name ?? "");
   const type = String(itemData?.type ?? "");
-  return actor.items.find(i => i.type === type && i.name === name && Number.isFinite(Number(i.system?.quantite ?? i.system?.quantity)));
+  const scroll = add2eTradeIsSpellScroll(itemData);
+  const signature = scroll ? add2eTradeArcaneSignature(itemData) : "";
+
+  return actor.items.find(candidate => {
+    if (candidate.type !== type || candidate.name !== name) return false;
+    if (!Number.isFinite(Number(candidate.system?.quantite ?? candidate.system?.quantity))) return false;
+    if (!scroll) return !add2eTradeIsSpellbook(candidate) && !add2eTradeIsSpellScroll(candidate);
+    return add2eTradeIsSpellScroll(candidate) && add2eTradeArcaneSignature(candidate) === signature;
+  }) ?? null;
 }
 
 export async function add2eTradeAddItem(actor, itemData, quantity) {
-  const data = foundry.utils.deepClone(itemData);
-  delete data._id;
-  data.system = data.system ?? {};
-  data.system.quantite = quantity;
-  data.system.equipee = false;
+  const data = add2eTradePrepareTransferredItem(itemData, quantity);
   const stack = add2eTradeFindStack(actor, data);
   if (stack) {
     const current = add2eTradeItemQuantity(stack);
     await stack.update({ "system.quantite": current + quantity });
-  } else {
-    await actor.createEmbeddedDocuments("Item", [data]);
+    return stack;
   }
+  const [created] = await actor.createEmbeddedDocuments("Item", [data]);
+  return created ?? null;
 }
 
 export async function add2eTradeRemoveItem(actor, item, quantity) {
