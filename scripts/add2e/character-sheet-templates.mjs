@@ -20,7 +20,7 @@ const ADD2E_CHARACTER_SHEET_PARTIALS = [
   "systems/add2e/templates/actor/parts/tab-notes.hbs"
 ];
 
-const ADD2E_BOOK_LEARNING_CHAT_VERSION = "2026-07-14-v21-dsn-true-nonmodal";
+const ADD2E_BOOK_LEARNING_CHAT_VERSION = "2026-07-14-v22-applicationv2-reader";
 globalThis.ADD2E_BOOK_LEARNING_CHAT_VERSION = ADD2E_BOOK_LEARNING_CHAT_VERSION;
 
 const ADD2E_PENDING_BOOK_LEARNING_ROLLS = new Map();
@@ -233,45 +233,105 @@ function add2ePrepareSingleBookLearningMessage(message, data = {}, _options = {}
   });
 }
 
-function add2eMakeDialogElementNonModal(application) {
-  window.setTimeout(() => {
-    const root = application?.element?.jquery ? application.element[0] : application?.element;
-    if (!(root instanceof HTMLDialogElement)) return;
-    try {
-      if (root.open) root.close();
-      root.show();
-      root.removeAttribute("aria-modal");
-      root.removeAttribute("data-modal");
-      root.classList.remove("modal");
-    } catch (error) {
-      console.warn("[ADD2E][SPELLBOOK_READER][NON_MODAL] Conversion impossible.", error);
+const ADD2E_APPLICATION_V2 = foundry?.applications?.api?.ApplicationV2;
+
+class Add2eSpellbookReaderApplication extends ADD2E_APPLICATION_V2 {
+  static DEFAULT_OPTIONS = {
+    id: "add2e-spellbook-reader-{id}",
+    classes: ["add2e-spellbook-reader-window"],
+    tag: "section",
+    window: {
+      frame: true,
+      positioned: true,
+      resizable: true,
+      title: "Livre de sorts"
+    },
+    position: {
+      width: 1120,
+      height: 880
     }
-  }, 0);
+  };
+
+  constructor(options = {}) {
+    const { content = "", ...applicationOptions } = options;
+    super(applicationOptions);
+    this._add2eContent = String(content ?? "");
+  }
+
+  async _renderHTML() {
+    return `<div class="add2e-spellbook-reader-application-content">${this._add2eContent}</div>
+      <footer class="add2e-spellbook-reader-footer">
+        <button type="button" data-action="close"><i class="fa-solid fa-book"></i> Fermer</button>
+      </footer>`;
+  }
+
+  _replaceHTML(result, content) {
+    content.innerHTML = result;
+  }
+
+  async _onRender(context, options) {
+    await super._onRender?.(context, options);
+    const root = this.element?.jquery ? this.element[0] : this.element;
+    if (!(root instanceof HTMLElement)) return;
+
+    const reader = root.querySelector(".add2e-spellbook-reader");
+    if (reader && reader.dataset.bound !== "1") {
+      reader.dataset.bound = "1";
+      const activate = level => {
+        reader.querySelectorAll(".add2e-spellbook-tab").forEach(tab => {
+          tab.classList.toggle("is-active", tab.dataset.level === level);
+        });
+        reader.querySelectorAll(".add2e-spellbook-panel").forEach(panel => {
+          panel.classList.toggle("is-active", panel.dataset.level === level);
+        });
+        const pages = reader.querySelector(".add2e-spellbook-pages");
+        if (pages) pages.scrollTop = 0;
+      };
+      for (const tab of reader.querySelectorAll(".add2e-spellbook-tab")) {
+        tab.addEventListener("click", event => {
+          event.preventDefault();
+          activate(tab.dataset.level);
+        });
+      }
+      activate(reader.querySelector(".add2e-spellbook-tab")?.dataset?.level ?? "1");
+    }
+
+    root.querySelector('[data-action="close"]')?.addEventListener("click", event => {
+      event.preventDefault();
+      void this.close();
+    });
+  }
 }
+
+globalThis.Add2eSpellbookReaderApplication = Add2eSpellbookReaderApplication;
 
 function add2eInstallNonModalSpellbookWait() {
   const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (!DialogV2 || DialogV2.__add2eNonModalSpellbookWaitV21) return false;
+  if (!DialogV2 || DialogV2.__add2eNonModalSpellbookWaitV22) return false;
   if (typeof DialogV2.wait !== "function") return false;
 
   const originalWait = DialogV2.wait.bind(DialogV2);
   DialogV2.wait = function add2eNonModalSpellbookWait(options = {}, ...rest) {
     const content = String(options?.content ?? "");
-    const isSpellbookReader = content.includes("add2e-spellbook-reader");
+    if (!content.includes("add2e-spellbook-reader")) return originalWait(options, ...rest);
 
-    if (!isSpellbookReader) return originalWait(options, ...rest);
-
-    const application = new DialogV2({
-      ...options,
-      modal: false,
-      rejectClose: false
+    const application = new Add2eSpellbookReaderApplication({
+      content,
+      window: {
+        ...(options.window ?? {}),
+        title: String(options?.window?.title ?? "Livre de sorts"),
+        resizable: true
+      },
+      position: {
+        width: Number(options?.position?.width) || 1120,
+        height: Number(options?.position?.height) || 880
+      }
     });
     application.render({ force: true });
-    add2eMakeDialogElementNonModal(application);
     return Promise.resolve(application);
   };
 
-  DialogV2.__add2eNonModalSpellbookWaitV21 = true;
+  DialogV2.__add2eNonModalSpellbookWaitV22 = true;
   return true;
 }
 
