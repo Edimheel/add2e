@@ -1,9 +1,9 @@
-const { runPotion } = await import(`/systems/add2e/scripts/objets_magiques/_potion-runtime.mjs?cb=${Date.now()}`);
-return runPotion({ actor, item, sort, args }, {
+return Add2eEffectsEngine.applyConfiguredEffect({ actor, item, sourceItem, sort, args }, {
   name: "Potion de super-héroïsme",
   slug: "super_heroisme",
   kind: "heroism",
   maxLevelExclusive: 13,
+  durationFormula: "5d4",
   levelTable: [
     { min: 0, max: 0, bonus: 6, hpDice: "5d10" },
     { min: 1, max: 3, bonus: 5, hpDice: "4d10+1" },
