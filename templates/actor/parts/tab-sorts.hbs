@@ -55,6 +55,48 @@
               </div>
             </div>
 
+            {{#if add2ePotionRows.length}}
+              <div class="a2e-panel add2e-potion-ready-panel" style="box-shadow:none;margin-bottom:8px;">
+                <h3>
+                  Potions prêtes
+                  <span class="sort-memorize-badge" style="float:right;">Doses : {{add2ePotionQuantity}}</span>
+                </h3>
+                <div class="a2e-panel-body">
+                  <table class="sort-table add2e-potion-ready-table">
+                    <thead>
+                      <tr>
+                        <th style="width:100px;">Disponible</th>
+                        <th style="width:42px;"></th>
+                        <th>Potion</th>
+                        <th>Effet</th>
+                        <th style="width:110px;">Doses</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {{#each add2ePotionRows as |potion|}}
+                        <tr class="sort-row add2e-potion-ready-row" data-item-id="{{potion.itemId}}" data-sort-id="{{potion.id}}">
+                          <td><span class="sort-memorize-badge">Prête</span></td>
+                          <td class="sort-drag">
+                            <img class="sort-cast-img" data-sort-id="{{potion.id}}" src="{{potion.potionImg}}" alt="{{potion.potionName}}" title="Boire {{potion.potionName}}" draggable="false" style="width:34px;height:34px;border-radius:5px;object-fit:cover;cursor:pointer;">
+                          </td>
+                          <td><b>{{potion.potionName}}</b></td>
+                          <td>
+                            <a class="sort-name-link toggle-sort-desc-chat" data-sort-id="{{potion.id}}" title="Afficher / masquer la description">{{potion.name}}</a>
+                          </td>
+                          <td>{{#if potion.doseMax}}{{potion.doses}} / {{potion.doseMax}}{{else}}{{potion.doses}}{{/if}}</td>
+                        </tr>
+                        <tr id="desc-chat-{{potion.id}}" class="sort-description">
+                          <td colspan="5" class="sort-description-fullcell">
+                            <div class="a2e-small sort-description-content">{{{potion.description}}}</div>
+                          </td>
+                        </tr>
+                      {{/each}}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            {{/if}}
+
             {{#if add2eObjectMagicItems.length}}
               <div class="a2e-panel add2e-object-magic-panel" style="box-shadow:none;">
                 <h3>Objets magiques</h3>
