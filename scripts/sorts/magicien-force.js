@@ -1,6 +1,21 @@
 // ADD2E — onUse Magicien : Force
-// Version : 2026-05-05-magicien-n1-9-v2
+// Version : 2026-07-15-giant-strength-potion-routing-v1
 // Retour attendu : true = sort consommé, false = sort non consommé.
+
+const add2eForceObjectSource = actor?.items?.get?.(
+  sort?.system?.sourceItemId ?? sort?.system?.sourceWeaponId ?? ""
+) ?? args?.[0]?.item ?? null;
+const add2eForceObjectText = [
+  add2eForceObjectSource?.name,
+  add2eForceObjectSource?.system?.nom,
+  add2eForceObjectSource?.system?.sousType,
+  add2eForceObjectSource?.flags?.add2e?.slug
+].map(value => String(value ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")).join(" ");
+
+if (sort?.system?.isObjectPower === true && add2eForceObjectText.includes("potion") && add2eForceObjectText.includes("force") && add2eForceObjectText.includes("geant")) {
+  const { runGiantStrengthPotion } = await import(`/systems/add2e/scripts/objets_magiques/_potion-runtime.mjs?cb=${Date.now()}`);
+  return runGiantStrengthPotion({ actor, item: add2eForceObjectSource, sourceItem: add2eForceObjectSource, sort, args });
+}
 
 const ADD2E_SORT_CONFIG = {
   "name": "Force",
@@ -117,21 +132,21 @@ async function add2eApplyEffect(targetActor, name, tags, rounds = 0) {
 async function add2eAskNote(config) {
   const needsNote = ["note","summon","summon_note","movement","terrain","utility","detection"].includes(config.kind) || (config.modes?.length > 1);
   if (!needsNote) return { mode: "normal", note: "" };
-  return await new Promise(resolve => {
-    let done = false;
-    const finish = v => { if (!done) { done = true; resolve(v); } };
-    const buttons = {};
-    for (const m of config.modes ?? [{id:"normal",label:config.name}]) {
-      buttons[m.id] = { label: m.label, callback: html => finish({ mode:m.id, note: html.find("[name='note']").val() ?? "" }) };
-    }
-    buttons.cancel = { label: "Annuler", callback: () => finish(null) };
-    new Dialog({
-      title: config.name,
-      content: `<form><p><b>${add2eHtmlEscape(config.name)}</b></p><div class="form-group"><label>Note / paramètres</label><textarea name="note" rows="3"></textarea></div></form>`,
-      buttons,
-      default: Object.keys(buttons)[0],
-      close: () => finish(null)
-    }).render(true);
+  const DialogV2 = foundry?.applications?.api?.DialogV2;
+  if (!DialogV2?.wait) return null;
+  return await DialogV2.wait({
+    window: { title: config.name },
+    modal: true,
+    rejectClose: false,
+    content: `<div class="add2e-dialog"><p><b>${add2eHtmlEscape(config.name)}</b></p><div class="form-group"><label>Note / paramètres</label><textarea name="note" rows="3"></textarea></div></div>`,
+    buttons: [
+      ...(config.modes ?? [{ id: "normal", label: config.name }]).map(mode => ({
+        action: mode.id,
+        label: mode.label,
+        callback: (_event, button, dialog) => ({ mode: mode.id, note: dialog.element.querySelector("[name='note']")?.value ?? "" })
+      })),
+      { action: "cancel", label: "Annuler", callback: () => null }
+    ]
   });
 }
 
