@@ -76,8 +76,14 @@ export function add2eObjectPowerCost(power) {
 
 export function add2eObjectPowerMaxCharges(itemSource, power, idx) {
   const sys = itemSource?.system ?? {};
-  const globalMax = Number(sys?.charges?.max ?? sys?.max_charges ?? sys?.maxCharges ?? sys?.chargesMax ?? 0) || 0;
-  if (globalMax > 0) return globalMax;
+  const globalMax = add2eMagicReadNumber(
+    sys?.charges?.max,
+    sys?.charges?.maximum,
+    sys?.max_charges,
+    sys?.maxCharges,
+    sys?.chargesMax
+  );
+  if (Number.isFinite(globalMax) && globalMax > 0) return globalMax;
   return Number(power?.max ?? power?.chargesMax ?? power?.maxCharges ?? power?.charges?.max ?? power?.charges ?? 1) || 1;
 }
 
@@ -85,12 +91,39 @@ export function add2eObjectPowerCurrentCharges(itemSource, power, idx) {
   const sys = itemSource?.system ?? {};
   const cost = add2eObjectPowerCost(power);
   if (cost <= 0) return 1;
-  const globalMax = Number(sys?.charges?.max ?? sys?.max_charges ?? sys?.maxCharges ?? sys?.chargesMax ?? 0) || 0;
-  if (globalMax > 0) {
-    const flag = itemSource.getFlag?.("add2e", "global_charges");
-    if (flag !== undefined && flag !== null && flag !== "") return Number(flag) || 0;
-    return Number(sys?.charges?.value ?? sys?.chargesValeur ?? sys?.charges_value ?? globalMax) || 0;
+
+  const globalMax = add2eMagicReadNumber(
+    sys?.charges?.max,
+    sys?.charges?.maximum,
+    sys?.max_charges,
+    sys?.maxCharges,
+    sys?.chargesMax
+  );
+
+  if (Number.isFinite(globalMax) && globalMax > 0) {
+    const canonical = add2eMagicReadNumber(
+      sys?.charges?.value,
+      sys?.charges?.current,
+      sys?.charges?.actuel,
+      sys?.charges?.remaining,
+      sys?.chargesValeur,
+      sys?.charges_value,
+      sys?.current_charges,
+      sys?.currentCharges,
+      sys?.charges_actuelles,
+      sys?.chargesRestantes,
+      sys?.remainingCharges
+    );
+    if (Number.isFinite(canonical)) return Math.max(0, Math.min(canonical, globalMax));
+
+    const legacyFlag = add2eMagicReadNumber(
+      itemSource.getFlag?.("add2e", "global_charges"),
+      itemSource.getFlag?.("add2e", "charges")
+    );
+    if (Number.isFinite(legacyFlag)) return Math.max(0, Math.min(legacyFlag, globalMax));
+    return globalMax;
   }
+
   const flag = itemSource.getFlag?.("add2e", `charges_${idx}`);
   if (flag !== undefined && flag !== null && flag !== "") return Number(flag) || 0;
   return Number(power?.charges?.value ?? power?.charges ?? power?.value ?? power?.max ?? 1) || 0;
@@ -98,13 +131,23 @@ export function add2eObjectPowerCurrentCharges(itemSource, power, idx) {
 
 export async function add2eObjectPowerSetCharges(itemSource, power, idx, value) {
   const sys = itemSource?.system ?? {};
-  const globalMax = Number(sys?.charges?.max ?? sys?.max_charges ?? sys?.maxCharges ?? sys?.chargesMax ?? 0) || 0;
+  const globalMax = add2eMagicReadNumber(
+    sys?.charges?.max,
+    sys?.charges?.maximum,
+    sys?.max_charges,
+    sys?.maxCharges,
+    sys?.chargesMax
+  );
   const next = Math.max(0, Number(value) || 0);
-  if (globalMax > 0) {
-    await itemSource.setFlag?.("add2e", "global_charges", next);
-    if (sys?.charges && typeof sys.charges === "object") await itemSource.update({ "system.charges.value": next });
+
+  if (Number.isFinite(globalMax) && globalMax > 0) {
+    if (sys?.charges && typeof sys.charges === "object") {
+      await itemSource.update({ "system.charges.value": Math.min(next, globalMax) });
+    }
+    await itemSource.setFlag?.("add2e", "global_charges", Math.min(next, globalMax));
     return;
   }
+
   await itemSource.setFlag?.("add2e", `charges_${idx}`, next);
 }
 
@@ -240,10 +283,32 @@ export function add2eMagicReadNumber(...values) {
 export function add2eMagicObjectChargeInfo(item, powers = null) {
   const sys = item?.system ?? {};
   const list = powers ?? add2eMagicObjectPowerArray(item);
-  const maxCandidates = [sys.max_charges, sys.maxCharges, sys.charges_max, sys.chargesMax, sys.max, sys.charges?.max, sys.charges?.maximum, ...list.map(p => p.max ?? p.maxCharges ?? p.chargesMax ?? p.charges_max)];
+  const maxCandidates = [
+    sys.charges?.max,
+    sys.charges?.maximum,
+    sys.max_charges,
+    sys.maxCharges,
+    sys.charges_max,
+    sys.chargesMax,
+    sys.max,
+    ...list.map(p => p.max ?? p.maxCharges ?? p.chargesMax ?? p.charges_max)
+  ];
   let max = add2eMagicReadNumber(...maxCandidates);
   if (!Number.isFinite(max) || max < 0) max = 0;
-  const currentCandidates = [item?.getFlag?.("add2e", "global_charges"), item?.getFlag?.("add2e", "charges"), sys.charges, sys.current_charges, sys.currentCharges, sys.charges_actuelles, sys.chargesRestantes, sys.remainingCharges, sys.charges?.value, sys.charges?.current, sys.charges?.actuel, sys.charges?.remaining];
+
+  const currentCandidates = [
+    sys.charges?.value,
+    sys.charges?.current,
+    sys.charges?.actuel,
+    sys.charges?.remaining,
+    sys.current_charges,
+    sys.currentCharges,
+    sys.charges_actuelles,
+    sys.chargesRestantes,
+    sys.remainingCharges,
+    item?.getFlag?.("add2e", "global_charges"),
+    item?.getFlag?.("add2e", "charges")
+  ];
   let current = add2eMagicReadNumber(...currentCandidates);
   if (!Number.isFinite(current)) current = max;
   if (max > 0) current = Math.max(0, Math.min(current, max));
