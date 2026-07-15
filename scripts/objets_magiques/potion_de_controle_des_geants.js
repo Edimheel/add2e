@@ -1,5 +1,4 @@
-const { runPotion } = await import(`/systems/add2e/scripts/objets_magiques/_potion-runtime.mjs?cb=${Date.now()}`);
-return runPotion({ actor, item, sort, args }, {
+return Add2eEffectsEngine.applyConfiguredEffect({ actor, item, sourceItem, sort, args }, {
   name: "Potion de contrôle des géants",
   slug: "controle_geants",
   kind: "effect",
