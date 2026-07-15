@@ -22,6 +22,7 @@ import "./add2e/09-race-class-drop.mjs";
 import "./add2e/10-monk-rules.mjs";
 import "./add2e/11-character-data-prep.mjs";
 import "./add2e/12-carac-roller.mjs";
+import "./add2e/object-magic-powers.mjs";
 import "./add2e/13-actor-sheet-legacy.mjs";
 import "./add2e/14-item-sheets.mjs";
 import "./add2e/15-validation-sockets.mjs";
