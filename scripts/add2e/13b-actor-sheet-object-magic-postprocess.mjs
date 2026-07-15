@@ -61,11 +61,13 @@ if (globalThis.Add2eActorSheet.prototype.__add2eObjectMagicGetDataV2Restored) {
         power?.onUse ?? power?.onuse ?? power?.on_use ?? power?.script ?? power?.macro ?? power?.objetMagicOnUse ?? power?.fallbackOnUse ?? power?.onUseSortPath ?? ""
       ).trim() !== "";
 
-      const itemEquipped = item => item?.system?.equipee === true || item?.system?.equipped === true;
+      const itemUsable = item => typeof globalThis.add2eMagicItemEquippedOrUsable === "function"
+        ? globalThis.add2eMagicItemEquippedOrUsable(item)
+        : isPotion(item) || item?.system?.equipee === true || item?.system?.equipped === true;
 
       const itemsAvecPouvoirs = items.filter(item => {
         if (!magicItemTypes.includes(String(item.type || "").toLowerCase())) return false;
-        if (!itemEquipped(item)) return false;
+        if (!itemUsable(item)) return false;
         const entries = typeof add2eMagicObjectActivePowerEntries === "function"
           ? add2eMagicObjectActivePowerEntries(item)
           : (typeof add2eMagicObjectPowerArray === "function" ? add2eMagicObjectPowerArray(item).map((power, index) => ({ power, index })).filter(entry => hasPowerOnUse(entry.power)) : []);
