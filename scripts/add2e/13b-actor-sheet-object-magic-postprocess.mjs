@@ -1,5 +1,5 @@
 // ADD2E — Postprocess getData objets magiques — full ApplicationV2
-// Restaure les données HBS V1 add2eObjectMagicPowers/add2eObjectMagicItems sans ActorSheet.prototype.getData.
+// Diagnostic ciblé des potions et pouvoirs d'objets magiques.
 
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant le postprocess objets magiques.");
 if (globalThis.Add2eActorSheet.prototype.__add2eObjectMagicGetDataV2Restored) {
@@ -37,10 +37,9 @@ if (globalThis.Add2eActorSheet.prototype.__add2eObjectMagicGetDataV2Restored) {
         return [value];
       };
 
-      const isPotion = item => {
-        if (String(item?.type ?? "").toLowerCase() !== "objet") return false;
+      const potionMarkers = item => {
         const system = item?.system ?? {};
-        const markers = [
+        return [
           system.sous_type,
           system.sousType,
           system.type_objet,
@@ -54,7 +53,11 @@ if (globalThis.Add2eActorSheet.prototype.__add2eObjectMagicGetDataV2Restored) {
           item?.flags?.add2e?.kind,
           item?.flags?.add2e?.category
         ].map(normalize).filter(Boolean);
-        return markers.some(marker => marker === "potion" || marker.startsWith("potion_") || marker.endsWith("_potion") || marker.includes("consommable_potion"));
+      };
+
+      const isPotion = item => {
+        if (String(item?.type ?? "").toLowerCase() !== "objet") return false;
+        return potionMarkers(item).some(marker => marker === "potion" || marker.startsWith("potion_") || marker.endsWith("_potion") || marker.includes("consommable_potion"));
       };
 
       const hasPowerOnUse = power => String(
@@ -65,20 +68,80 @@ if (globalThis.Add2eActorSheet.prototype.__add2eObjectMagicGetDataV2Restored) {
         ? globalThis.add2eMagicItemEquippedOrUsable(item)
         : isPotion(item) || item?.system?.equipee === true || item?.system?.equipped === true;
 
+      console.groupCollapsed("[ADD2E][POTION_DIAG][GETDATA]", this.actor?.name ?? data.actor?.name ?? "Acteur");
+      console.log("items-total", items.length);
+
       const itemsAvecPouvoirs = items.filter(item => {
-        if (!magicItemTypes.includes(String(item.type || "").toLowerCase())) return false;
-        if (!itemUsable(item)) return false;
+        const type = String(item.type || "").toLowerCase();
+        const typeAccepted = magicItemTypes.includes(type);
+        const potion = isPotion(item);
+        const usable = itemUsable(item);
+        const rawPowers = item?.system?.pouvoirs
+          ?? item?.system?.powers
+          ?? item?.system?.pouvoirsMagiques
+          ?? item?.system?.magicalPowers
+          ?? item?.system?.sorts
+          ?? item?.system?.spells
+          ?? [];
+        const rawPowerArray = Array.isArray(rawPowers)
+          ? rawPowers
+          : rawPowers && typeof rawPowers === "object"
+            ? Object.values(rawPowers)
+            : [];
         const entries = typeof add2eMagicObjectActivePowerEntries === "function"
           ? add2eMagicObjectActivePowerEntries(item)
           : (typeof add2eMagicObjectPowerArray === "function" ? add2eMagicObjectPowerArray(item).map((power, index) => ({ power, index })).filter(entry => hasPowerOnUse(entry.power)) : []);
+
+        if (type === "objet" || potion || rawPowerArray.length > 0) {
+          console.log("item", {
+            id: item.id,
+            name: item.name,
+            type,
+            typeAccepted,
+            sousType: item.system?.sousType,
+            sous_type: item.system?.sous_type,
+            consommable: item.system?.consommable,
+            equipee: item.system?.equipee,
+            equipped: item.system?.equipped,
+            markers: potionMarkers(item),
+            isPotion: potion,
+            usable,
+            rawPowersCount: rawPowerArray.length,
+            rawPowers: rawPowerArray.map((power, index) => ({
+              index,
+              name: power?.name ?? power?.nom,
+              onUse: power?.onUse ?? power?.onuse ?? power?.on_use ?? power?.script ?? power?.macro ?? power?.objetMagicOnUse ?? power?.fallbackOnUse ?? power?.onUseSortPath ?? "",
+              cost: power?.cout ?? power?.cost ?? power?.chargeCost,
+              charges: power?.charges,
+              max: power?.max ?? power?.maxCharges ?? power?.chargesMax
+            })),
+            activeEntriesCount: entries.length
+          });
+        }
+
+        if (!typeAccepted) return false;
+        if (!usable) return false;
         return entries.length > 0;
       });
+
+      console.log("items-avec-pouvoirs", itemsAvecPouvoirs.map(item => ({ id: item.id, name: item.name, potion: isPotion(item) })));
 
       for (const itemSource of itemsAvecPouvoirs) {
         const potion = isPotion(itemSource);
         const powerEntries = typeof add2eMagicObjectActivePowerEntries === "function"
           ? add2eMagicObjectActivePowerEntries(itemSource)
           : add2eMagicObjectPowerArray(itemSource).map((power, index) => ({ power, index })).filter(entry => hasPowerOnUse(entry.power));
+
+        console.log("construction-item", {
+          id: itemSource.id,
+          name: itemSource.name,
+          potion,
+          powerEntries: powerEntries.map(({ power, index }) => ({
+            index,
+            name: power?.name ?? power?.nom,
+            onUse: power?.onUse ?? power?.onuse ?? power?.on_use ?? power?.script ?? power?.macro ?? power?.objetMagicOnUse ?? power?.fallbackOnUse ?? power?.onUseSortPath ?? ""
+          }))
+        });
 
         if (!powerEntries.length) continue;
 
@@ -168,14 +231,16 @@ if (globalThis.Add2eActorSheet.prototype.__add2eObjectMagicGetDataV2Restored) {
           };
 
           if (potion) {
-            add2ePotionRowsForHbs.push({
+            const potionRow = {
               ...powerForHbs,
               itemId: itemSource.id,
               potionName: itemSource.name,
               potionImg: itemSource.img || powerForHbs.img,
               doses: powerForHbs.charges,
               doseMax: powerForHbs.max
-            });
+            };
+            add2ePotionRowsForHbs.push(potionRow);
+            console.log("potion-row-added", potionRow);
           } else {
             add2eObjectMagicPowersForHbs.push(virtualSpell);
             itemPowers.push(powerForHbs);
@@ -215,8 +280,17 @@ if (globalThis.Add2eActorSheet.prototype.__add2eObjectMagicGetDataV2Restored) {
         on_use: power.system?.on_use || power.system?.onUse || power.system?.onuse || ""
       }));
       data.add2eObjectMagicItems = add2eObjectMagicItemsForHbs;
+
+      console.log("result", {
+        potionRows: data.add2ePotionRows,
+        potionQuantity: data.add2ePotionQuantity,
+        objectMagicItems: data.add2eObjectMagicItems.length,
+        objectMagicPowers: data.add2eObjectMagicPowers.length
+      });
+      console.groupEnd();
     } catch (err) {
-      console.warn("[ADD2E][OBJETS_MAGIQUES][GETDATA][V2] restauration échouée", err);
+      console.error("[ADD2E][POTION_DIAG][GETDATA][ERROR]", err);
+      try { console.groupEnd(); } catch (_error) {}
       data.add2ePotionRows ??= [];
       data.add2ePotionQuantity ??= 0;
       data.add2eObjectMagicPowers ??= [];
@@ -225,5 +299,5 @@ if (globalThis.Add2eActorSheet.prototype.__add2eObjectMagicGetDataV2Restored) {
     return data;
   };
 
-  console.log("[ADD2E][OBJETS_MAGIQUES][GETDATA][V2] restauré");
+  console.log("[ADD2E][OBJETS_MAGIQUES][GETDATA][V2] restauré avec diagnostic potions");
 }
