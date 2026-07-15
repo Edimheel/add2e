@@ -14,7 +14,48 @@ if (globalThis.Add2eActorSheet.prototype.__add2eObjectMagicGetDataV2Restored) {
       const items = data.actor?.items ?? this.actor?.items ?? [];
       const add2eObjectMagicPowersForHbs = [];
       const add2eObjectMagicItemsForHbs = [];
+      const add2ePotionRowsForHbs = [];
       const magicItemTypes = ["arme", "armure", "objet", "object", "magic", "objet_magique"];
+
+      const normalize = value => String(value ?? "")
+        .trim()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[’']/g, "")
+        .replace(/[^a-z0-9]+/g, "_")
+        .replace(/^_+|_+$/g, "");
+
+      const values = value => {
+        if (value === undefined || value === null || value === "") return [];
+        if (Array.isArray(value)) return value.flatMap(values);
+        if (typeof value === "object") {
+          for (const key of ["value", "values", "items", "list", "tags", "effectTags"]) {
+            if (value[key] !== undefined) return values(value[key]);
+          }
+        }
+        return [value];
+      };
+
+      const isPotion = item => {
+        if (String(item?.type ?? "").toLowerCase() !== "objet") return false;
+        const system = item?.system ?? {};
+        const markers = [
+          system.sous_type,
+          system.sousType,
+          system.type_objet,
+          system.typeObjet,
+          system.categorie,
+          system.category,
+          system.forme,
+          system.kind,
+          ...values(system.tags),
+          ...values(system.effectTags),
+          item?.flags?.add2e?.kind,
+          item?.flags?.add2e?.category
+        ].map(normalize).filter(Boolean);
+        return markers.some(marker => marker === "potion" || marker.startsWith("potion_") || marker.endsWith("_potion") || marker.includes("consommable_potion"));
+      };
 
       const hasPowerOnUse = power => String(
         power?.onUse ?? power?.onuse ?? power?.on_use ?? power?.script ?? power?.macro ?? power?.objetMagicOnUse ?? power?.fallbackOnUse ?? power?.onUseSortPath ?? ""
@@ -32,6 +73,7 @@ if (globalThis.Add2eActorSheet.prototype.__add2eObjectMagicGetDataV2Restored) {
       });
 
       for (const itemSource of itemsAvecPouvoirs) {
+        const potion = isPotion(itemSource);
         const powerEntries = typeof add2eMagicObjectActivePowerEntries === "function"
           ? add2eMagicObjectActivePowerEntries(itemSource)
           : add2eMagicObjectPowerArray(itemSource).map((power, index) => ({ power, index })).filter(entry => hasPowerOnUse(entry.power));
@@ -123,11 +165,22 @@ if (globalThis.Add2eActorSheet.prototype.__add2eObjectMagicGetDataV2Restored) {
             on_use: onUse
           };
 
-          add2eObjectMagicPowersForHbs.push(virtualSpell);
-          itemPowers.push(powerForHbs);
+          if (potion) {
+            add2ePotionRowsForHbs.push({
+              ...powerForHbs,
+              itemId: itemSource.id,
+              potionName: itemSource.name,
+              potionImg: itemSource.img || powerForHbs.img,
+              doses: powerForHbs.charges,
+              doseMax: powerForHbs.max
+            });
+          } else {
+            add2eObjectMagicPowersForHbs.push(virtualSpell);
+            itemPowers.push(powerForHbs);
+          }
         }
 
-        if (itemPowers.length) {
+        if (!potion && itemPowers.length) {
           add2eObjectMagicItemsForHbs.push({
             id: itemSource.id,
             name: itemSource.name,
@@ -140,6 +193,8 @@ if (globalThis.Add2eActorSheet.prototype.__add2eObjectMagicGetDataV2Restored) {
         }
       }
 
+      data.add2ePotionRows = add2ePotionRowsForHbs.sort((left, right) => String(left.potionName).localeCompare(String(right.potionName), "fr"));
+      data.add2ePotionQuantity = data.add2ePotionRows.reduce((total, row) => total + Math.max(0, Number(row.doses) || 0), 0);
       data.add2eObjectMagicPowers = add2eObjectMagicPowersForHbs.map(power => ({
         id: power.id || power._id,
         name: power.name || "Pouvoir",
@@ -160,6 +215,8 @@ if (globalThis.Add2eActorSheet.prototype.__add2eObjectMagicGetDataV2Restored) {
       data.add2eObjectMagicItems = add2eObjectMagicItemsForHbs;
     } catch (err) {
       console.warn("[ADD2E][OBJETS_MAGIQUES][GETDATA][V2] restauration échouée", err);
+      data.add2ePotionRows ??= [];
+      data.add2ePotionQuantity ??= 0;
       data.add2eObjectMagicPowers ??= [];
       data.add2eObjectMagicItems ??= [];
     }
