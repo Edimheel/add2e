@@ -1,5 +1,5 @@
 // ADD2E — Actor sheet drop — chargeur court
-// Version : 2026-07-14-magic-item-identification-name-sync-v3
+// Version : 2026-07-15-magic-item-identification-type-scope-v4
 //
 // Le contenu de la mécanique de drop est dans 13e-actor-sheet-drop-legacy-full.mjs.
 // Ce chargeur synchronise également le nom visible des objets magiques identifiés/non identifiés.
@@ -25,6 +25,9 @@ function add2eIdentificationHasProperty(source, path) {
 }
 
 function add2eIdentificationMagicItem(item, source = null) {
+  const itemType = String(source?.type ?? item?.type ?? "").trim().toLowerCase();
+  if (!["arme", "armure", "objet"].includes(itemType)) return false;
+
   const system = source?.system ?? item?.system ?? {};
   const flags = source?.flags?.add2e ?? item?.flags?.add2e ?? {};
   const tags = [system.tags, system.effectTags]
