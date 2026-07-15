@@ -1,6 +1,6 @@
 // scripts/add2e-attack/06-cast-spell.mjs
 // ADD2E — Lancement de sorts, onUse, mémorisation, pouvoirs, parchemins et composants.
-// Version : 2026-07-13-cast-spell-scroll-mode-v2
+// Version : 2026-07-15-potion-canonical-charges-v3
 
 import { formatSortChamp, add2eGetSortField, add2eGetSortOnUsePath, add2eGetSortComponentsText } from "./01-core-helpers.mjs";
 import "./05-jb2a-vfx.mjs";
@@ -171,6 +171,69 @@ async function fallbackChat(actorDoc, sortDoc, chargeLabel = "") {
   await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor: actorDoc }), content: `<div class="add2e-spell-card"><h3>${sortDoc.name} ${chargeLabel}</h3><table>${rows}</table><div>${description || ""}</div></div>`, ...style() });
 }
 
+function add2ePowerIsPotion(item) {
+  if (String(item?.type ?? "").toLowerCase() !== "objet") return false;
+  const system = item?.system ?? {};
+  const values = [
+    system.sousType,
+    system.sous_type,
+    system.typeObjet,
+    system.type_objet,
+    system.categorie,
+    system.category,
+    ...(Array.isArray(system.tags) ? system.tags : [system.tags]),
+    ...(Array.isArray(system.effectTags) ? system.effectTags : [system.effectTags]),
+    item?.flags?.add2e?.itemFamily,
+    item?.flags?.add2e?.kind
+  ].map(norm).filter(Boolean);
+  return values.some(value => value === "potion" || value.startsWith("potion_") || value.endsWith("_potion") || value.includes("sous_type_potion"));
+}
+
+function add2ePowerGlobalMax(item, sort) {
+  const values = [
+    item?.system?.charges?.max,
+    item?.system?.charges?.maximum,
+    item?.system?.max_charges,
+    item?.system?.maxCharges,
+    item?.system?.chargesMax,
+    sort?.system?.max
+  ];
+  for (const value of values) {
+    if (value === undefined || value === null || value === "") continue;
+    const number = Number(value);
+    if (Number.isFinite(number) && number > 0) return number;
+  }
+  return 0;
+}
+
+async function add2ePowerReadCurrent(item, flagKey, max, isGlobal) {
+  if (isGlobal) {
+    const canonical = item?.system?.charges?.value
+      ?? item?.system?.charges?.current
+      ?? item?.system?.charges?.actuel
+      ?? item?.system?.charges?.remaining;
+    if (canonical !== undefined && canonical !== null && canonical !== "") {
+      const number = Number(canonical);
+      if (Number.isFinite(number)) return Math.max(0, Math.min(number, max));
+    }
+  }
+  const flag = await item.getFlag("add2e", flagKey);
+  if (flag !== undefined && flag !== null && flag !== "") {
+    const number = Number(flag);
+    if (Number.isFinite(number)) return Math.max(0, isGlobal ? Math.min(number, max) : number);
+  }
+  return max;
+}
+
+async function add2ePowerWriteCurrent(item, flagKey, value, max, isGlobal) {
+  const next = Math.max(0, isGlobal ? Math.min(Number(value) || 0, max) : Number(value) || 0);
+  if (isGlobal && item?.system?.charges && typeof item.system.charges === "object") {
+    await item.update({ "system.charges.value": next }, { add2eInternal: true, add2eReason: "object-power-charge", render: false });
+  }
+  await item.setFlag("add2e", flagKey, next);
+  return next;
+}
+
 export async function add2eCastSpell({ actor, sort, mode = "memorized", sourceItem = null, sourceSpellKey = "" } = {}) {
   if (!actor || !sort) { ui.notifications.warn("Lanceur ou sort introuvable."); return false; }
 
@@ -231,9 +294,9 @@ export async function add2eCastSpell({ actor, sort, mode = "memorized", sourceIt
     }
 
     if (reservedCost.kind === "power") {
-      const now = Number(await reservedCost.weapon.getFlag("add2e", reservedCost.flagKey)) || 0;
+      const now = await add2ePowerReadCurrent(reservedCost.weapon, reservedCost.flagKey, reservedCost.max, reservedCost.isGlobal);
       if (now !== reservedCost.after) return false;
-      await reservedCost.weapon.setFlag("add2e", reservedCost.flagKey, reservedCost.before);
+      await add2ePowerWriteCurrent(reservedCost.weapon, reservedCost.flagKey, reservedCost.before, reservedCost.max, reservedCost.isGlobal);
       return true;
     }
 
@@ -258,18 +321,18 @@ export async function add2eCastSpell({ actor, sort, mode = "memorized", sourceIt
   if (scrollCast) {
     labelCharge = `<span style="color:#7b4b20;">Parchemin</span>`;
   } else if (sort.system?.isPower) {
-    const weapon = actor.items.get(sort.system.sourceWeaponId);
+    const weapon = actor.items.get(sort.system.sourceWeaponId ?? sort.system.sourceItemId);
     if (!weapon) { ui.notifications.error("Objet source introuvable."); return false; }
-    const maxGlobal = Number(weapon.system?.max_charges || 0), isGlobal = maxGlobal > 0;
+    const maxGlobal = add2ePowerGlobalMax(weapon, sort);
+    const isGlobal = maxGlobal > 0;
     const flagKey = isGlobal ? "global_charges" : `charges_${sort.system.powerIndex}`;
     const max = isGlobal ? maxGlobal : Number(sort.system.max || 1);
-    const currentFlag = await weapon.getFlag("add2e", flagKey);
-    const current = currentFlag !== undefined && currentFlag !== null ? Number(currentFlag) : max;
-    const cost = Number(sort.system.cost || 1);
+    const current = await add2ePowerReadCurrent(weapon, flagKey, max, isGlobal);
+    const cost = Math.max(1, Number(sort.system.cost ?? sort.system.cout ?? 1) || 1);
     if (current < cost) { ui.notifications.warn(`L'objet ${weapon.name} n'a plus assez de charges (${current}/${cost} req).`); return false; }
-    const after = current - cost;
-    await weapon.setFlag("add2e", flagKey, after);
-    reservedCost = { kind: "power", weapon, flagKey, before: current, after, max, cost };
+    const after = Math.max(0, current - cost);
+    await add2ePowerWriteCurrent(weapon, flagKey, after, max, isGlobal);
+    reservedCost = { kind: "power", weapon, flagKey, before: current, after, max, cost, isGlobal, potion: add2ePowerIsPotion(weapon) };
     labelCharge = `<span style="color:#d35400;">Charges : ${after}/${max}</span>`;
     const baseName = sort.name.replace(/\s\(.*?\)$/, "").trim();
     const realSpell = game.items.find(i => i.type === "sort" && i.name.toLowerCase() === baseName.toLowerCase());
@@ -368,6 +431,18 @@ export async function add2eCastSpell({ actor, sort, mode = "memorized", sourceIt
     } else {
       labelCharge = `<span style="color:#7b4b20;">Parchemin consommé</span>`;
     }
+  }
+
+  if (reservedCost?.kind === "power" && reservedCost.potion && reservedCost.after <= 0) {
+    const potionId = reservedCost.weapon.id;
+    const potionName = reservedCost.weapon.name;
+    await actor.deleteEmbeddedDocuments("Item", [potionId], {
+      add2eInternal: true,
+      add2eReason: "potion-empty",
+      render: false
+    });
+    reservedCost.deleted = true;
+    ui.notifications.info(`${potionName} est vide et a été retirée de l'inventaire.`);
   }
 
   if (!scriptExecuted) {
