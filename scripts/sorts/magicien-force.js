@@ -1,5 +1,5 @@
 // ADD2E — onUse Magicien : Force
-// Version : 2026-07-15-giant-strength-potion-routing-v1
+// Version : 2026-07-15-force-restored-dedicated-potion-route-v2
 // Retour attendu : true = sort consommé, false = sort non consommé.
 
 const add2eForceObjectSource = actor?.items?.get?.(
@@ -13,8 +13,14 @@ const add2eForceObjectText = [
 ].map(value => String(value ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")).join(" ");
 
 if (sort?.system?.isObjectPower === true && add2eForceObjectText.includes("potion") && add2eForceObjectText.includes("force") && add2eForceObjectText.includes("geant")) {
-  const { runGiantStrengthPotion } = await import(`/systems/add2e/scripts/objets_magiques/_potion-runtime.mjs?cb=${Date.now()}`);
-  return runGiantStrengthPotion({ actor, item: add2eForceObjectSource, sourceItem: add2eForceObjectSource, sort, args });
+  const path = `/systems/add2e/scripts/objets_magiques/potion_de_force_de_geant.js?cb=${Date.now()}`;
+  const response = await fetch(path);
+  if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+  const code = await response.text();
+  const AsyncFunction = Object.getPrototypeOf(async function(){}).constructor;
+  const scope = { actor, item: add2eForceObjectSource, sourceItem: add2eForceObjectSource, sort, args, isObjectPower: true };
+  const runner = new AsyncFunction("actor", "item", "sourceItem", "sort", "power", "pouvoir", "powerIndex", "scope", "args", "game", "ui", "ChatMessage", "Roll", "foundry", "canvas", code);
+  return runner(actor, add2eForceObjectSource, add2eForceObjectSource, sort, args?.[0]?.power ?? null, args?.[0]?.pouvoir ?? null, args?.[0]?.powerIndex ?? 0, scope, args, game, ui, ChatMessage, Roll, foundry, canvas);
 }
 
 const ADD2E_SORT_CONFIG = {
@@ -133,20 +139,19 @@ async function add2eAskNote(config) {
   const needsNote = ["note","summon","summon_note","movement","terrain","utility","detection"].includes(config.kind) || (config.modes?.length > 1);
   if (!needsNote) return { mode: "normal", note: "" };
   const DialogV2 = foundry?.applications?.api?.DialogV2;
-  if (!DialogV2?.wait) return null;
-  return await DialogV2.wait({
+  if (!DialogV2?.wait) throw new Error("DialogV2 est indisponible.");
+  return DialogV2.wait({
     window: { title: config.name },
-    modal: true,
-    rejectClose: false,
-    content: `<div class="add2e-dialog"><p><b>${add2eHtmlEscape(config.name)}</b></p><div class="form-group"><label>Note / paramètres</label><textarea name="note" rows="3"></textarea></div></div>`,
+    content: `<form><p><b>${add2eHtmlEscape(config.name)}</b></p><div class="form-group"><label>Note / paramètres</label><textarea name="note" rows="3"></textarea></div></form>`,
     buttons: [
-      ...(config.modes ?? [{ id: "normal", label: config.name }]).map(mode => ({
+      ...(config.modes ?? [{id:"normal",label:config.name}]).map(mode => ({
         action: mode.id,
         label: mode.label,
         callback: (_event, button, dialog) => ({ mode: mode.id, note: dialog.element.querySelector("[name='note']")?.value ?? "" })
       })),
       { action: "cancel", label: "Annuler", callback: () => null }
-    ]
+    ],
+    close: () => null
   });
 }
 
