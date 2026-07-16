@@ -15,8 +15,6 @@
   "esmodules": [
     "scripts/add2e-active-effects-expire.js",
     "scripts/effects-engine.mjs",
-    "scripts/effects-engine/60-generic-effects.mjs",
-    "scripts/effects-engine/61-characteristic-profiles.mjs",
     "scripts/add2e-attack.mjs",
     "scripts/add2e-action-hud.mjs",
     "scripts/add2e.mjs",
