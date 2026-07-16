@@ -1,9 +1,9 @@
 // ADD2E — Actor sheet drop — chargeur court
-// Version : 2026-07-16-magic-identification-cursed-items-v6
+// Version : 2026-07-16-magic-identification-cursed-items-v7
 // Compatible Foundry V13/V14/V15.
 // Le contenu principal du drop reste dans 13e-actor-sheet-drop-legacy-full.mjs.
 
-const ADD2E_CURSED_ITEM_VERSION = "2026-07-16-cursed-items-v6";
+const ADD2E_CURSED_ITEM_VERSION = "2026-07-16-cursed-items-v7";
 const ADD2E_CURSED_ITEM_LOG = "[ADD2E][OBJET_MAUDIT]";
 globalThis.ADD2E_CURSED_ITEM_VERSION = ADD2E_CURSED_ITEM_VERSION;
 
@@ -259,7 +259,23 @@ async function add2eSyncCursedItemEffect(item, context = {}) {
     changes: [],
     duration: { startTime: game.time?.worldTime ?? null },
     description: "Malédiction permanente tant que l’objet est possédé. Seul un désenvoûtement peut la retirer.",
-    flags: { add2e: { cursedItemEffect: true, cursedItemId: item.id, sourceItemId: item.id, tags, effectTags: tags, rules: [] } }
+    flags: {
+      add2e: {
+        cursedItemEffect: true,
+        cursedItemId: item.id,
+        sourceItemId: item.id,
+        applied: true,
+        active: true,
+        visibleEffect: true,
+        source: "objet_maudit",
+        sourceType: "objet_magique",
+        category: "malediction",
+        effectType: "malediction",
+        tags,
+        effectTags: tags,
+        rules: []
+      }
+    }
   };
   add2eCurseLog("SYNC_START", {
     actor: actor.name, actorId: actor.id, item: item.name, itemId: item.id,
