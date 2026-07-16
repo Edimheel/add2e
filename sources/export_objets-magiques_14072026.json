@@ -204,7 +204,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Amulette"
     },
     "effects": [],
     "flags": {
@@ -428,7 +429,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Amulette"
     },
     "effects": [],
     "flags": {
@@ -610,7 +612,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Amulette"
     },
     "effects": [],
     "flags": {
@@ -870,7 +873,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Anneau"
     },
     "effects": [],
     "flags": {
@@ -1092,7 +1096,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Anneau"
     },
     "effects": [],
     "flags": {
@@ -1346,7 +1351,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Anneau"
     },
     "effects": [],
     "flags": {
@@ -1571,7 +1577,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Anneau"
     },
     "effects": [],
     "flags": {
@@ -1753,7 +1760,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Anneau"
     },
     "effects": [],
     "flags": {
@@ -1941,7 +1949,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Anneau"
     },
     "effects": [],
     "flags": {
@@ -2158,7 +2167,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Anneau"
     },
     "effects": [],
     "flags": {
@@ -2352,7 +2362,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Anneau"
     },
     "effects": [],
     "flags": {
@@ -2540,7 +2551,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Anneau"
     },
     "effects": [],
     "flags": {
@@ -2772,7 +2784,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Anneau"
     },
     "effects": [],
     "flags": {
@@ -2957,7 +2970,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Anneau"
     },
     "effects": [],
     "flags": {
@@ -3144,7 +3158,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Anneau"
     },
     "effects": [],
     "flags": {
@@ -3389,7 +3404,8 @@
       "fixedCA": null,
       "ac_fixe": null,
       "fixed_ac": null,
-      "bonus_sauvegarde": 1
+      "bonus_sauvegarde": 1,
+      "nom_non_identifie": "Anneau"
     },
     "effects": [],
     "flags": {
@@ -3637,7 +3653,8 @@
       "fixedCA": null,
       "ac_fixe": null,
       "fixed_ac": null,
-      "bonus_sauvegarde": 2
+      "bonus_sauvegarde": 2,
+      "nom_non_identifie": "Anneau"
     },
     "effects": [],
     "flags": {
@@ -3885,7 +3902,8 @@
       "fixedCA": null,
       "ac_fixe": null,
       "fixed_ac": null,
-      "bonus_sauvegarde": 3
+      "bonus_sauvegarde": 3,
+      "nom_non_identifie": "Anneau"
     },
     "effects": [],
     "flags": {
@@ -4075,7 +4093,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Anneau"
     },
     "effects": [],
     "flags": {
@@ -4331,7 +4350,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Anneau"
     },
     "effects": [],
     "flags": {
@@ -4549,7 +4569,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Anneau"
     },
     "effects": [],
     "flags": {
@@ -4731,7 +4752,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Anneau"
     },
     "effects": [],
     "flags": {
@@ -4948,7 +4970,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Anneau"
     },
     "effects": [],
     "flags": {
@@ -5165,7 +5188,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Anneau"
     },
     "effects": [],
     "flags": {
@@ -5347,7 +5371,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Anneau"
     },
     "effects": [],
     "flags": {
@@ -5535,7 +5560,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Anneau"
     },
     "effects": [],
     "flags": {
@@ -5717,7 +5743,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Objet"
     },
     "effects": [],
     "flags": {
@@ -5908,7 +5935,8 @@
       "degats_note": "Dégâts de base arbalète légère ; les dégâts du carreau équipé peuvent être appliqués par le carquois.",
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Arbalète"
     },
     "effects": [],
     "flags": {
@@ -6095,7 +6123,8 @@
       "portee_note": "Arbalète de précision +3 : les portées restent renseignées, mais le moteur peut traiter toutes les portées comme courtes.",
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Arbalète"
     },
     "effects": [],
     "flags": {
@@ -6263,7 +6292,8 @@
       "bonus_force_degats": false,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Arbalète"
     },
     "effects": [],
     "flags": {
@@ -6427,7 +6457,8 @@
       "bonus_force_degats": false,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Arc"
     },
     "effects": [],
     "flags": {
@@ -6549,7 +6580,8 @@
       "enchantement": "+1",
       "bonus_hit": 0,
       "bonus_dom": 0,
-      "definition_note_ca": "bonus_ca/bonus_ac numériques sont la source mécanique; les tags bonus_ac ont été retirés pour éviter le cumul direct + tags + effectTags."
+      "definition_note_ca": "bonus_ca/bonus_ac numériques sont la source mécanique; les tags bonus_ac ont été retirés pour éviter le cumul direct + tags + effectTags.",
+      "nom_non_identifie": "Armure"
     },
     "effects": [
       {
@@ -6724,7 +6756,8 @@
       "enchantement": "+1",
       "bonus_hit": 0,
       "bonus_dom": 0,
-      "definition_note_ca": "bonus_ca/bonus_ac numériques sont la source mécanique; les tags bonus_ac ont été retirés pour éviter le cumul direct + tags + effectTags."
+      "definition_note_ca": "bonus_ca/bonus_ac numériques sont la source mécanique; les tags bonus_ac ont été retirés pour éviter le cumul direct + tags + effectTags.",
+      "nom_non_identifie": "Armure"
     },
     "effects": [
       {
@@ -6894,7 +6927,8 @@
       "definition_note_ca": "bonus_ca/bonus_ac numériques sont la source mécanique; les tags bonus_ac ont été retirés pour éviter le cumul direct + tags + effectTags.",
       "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille.",
       "effet": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille.",
-      "ac_base": 3
+      "ac_base": 3,
+      "nom_non_identifie": "Armure"
     },
     "effects": [],
     "flags": {
@@ -7022,7 +7056,8 @@
       "bonus_hit": 0,
       "bonus_dom": 0,
       "definition_note_ca": "bonus_ca/bonus_ac numériques sont la source mécanique; les tags bonus_ac ont été retirés pour éviter le cumul direct + tags + effectTags.",
-      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille."
+      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille.",
+      "nom_non_identifie": "Armure"
     },
     "effects": [],
     "flags": {
@@ -7148,7 +7183,8 @@
       "bonus_hit": 0,
       "bonus_dom": 0,
       "definition_note_ca": "bonus_ca/bonus_ac numériques sont la source mécanique; les tags bonus_ac ont été retirés pour éviter le cumul direct + tags + effectTags.",
-      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille."
+      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille.",
+      "nom_non_identifie": "Armure"
     },
     "effects": [],
     "flags": {
@@ -7274,7 +7310,8 @@
       "bonus_hit": 0,
       "bonus_dom": 0,
       "definition_note_ca": "bonus_ca/bonus_ac numériques sont la source mécanique; les tags bonus_ac ont été retirés pour éviter le cumul direct + tags + effectTags.",
-      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille."
+      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille.",
+      "nom_non_identifie": "Armure"
     },
     "effects": [],
     "flags": {
@@ -7400,7 +7437,8 @@
       "bonus_hit": 0,
       "bonus_dom": 0,
       "definition_note_ca": "bonus_ca/bonus_ac numériques sont la source mécanique; les tags bonus_ac ont été retirés pour éviter le cumul direct + tags + effectTags.",
-      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille. L’armure de plates de vulnérabilité ressemble, quels que soient les essais, à une armure +1, +2 ou +3. C’est en réalité une armure de plates maudite –2, –3 ou –4. Sa vulnérabilité ne se manifeste que lorsqu’un ennemi enragé place un coup avec l’intention ferme de tuer le possesseur. L’armure tombe en morceaux chaque fois qu’un adversaire obtient un 20 naturel au toucher."
+      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille. L’armure de plates de vulnérabilité ressemble, quels que soient les essais, à une armure +1, +2 ou +3. C’est en réalité une armure de plates maudite –2, –3 ou –4. Sa vulnérabilité ne se manifeste que lorsqu’un ennemi enragé place un coup avec l’intention ferme de tuer le possesseur. L’armure tombe en morceaux chaque fois qu’un adversaire obtient un 20 naturel au toucher.",
+      "nom_non_identifie": "Armure"
     },
     "effects": [],
     "flags": {
@@ -7526,7 +7564,8 @@
       "bonus_hit": 0,
       "bonus_dom": 0,
       "definition_note_ca": "bonus_ca/bonus_ac numériques sont la source mécanique; les tags bonus_ac ont été retirés pour éviter le cumul direct + tags + effectTags.",
-      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille. L’armure de plates éthérée ressemble à une armure +5 classique, mais, sur prononciation d’un mot de commande, elle permet à son porteur et à tous les objets non-vivants qu’il porte de devenir éthérés, comme avec de l’huile éthérée. Il est alors incapable d’attaquer des créatures matérielles. Une porte de phase annule la stase éthérée et empêche l’armure de fonctionner durant une journée. Elle possède 20 charges non rechargeables ; sa classe diminue de 1 après 5 utilisations, devient +4, puis +2 après 10, +1 après 15, et seulement +1 une fois les 20 charges épuisées."
+      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille. L’armure de plates éthérée ressemble à une armure +5 classique, mais, sur prononciation d’un mot de commande, elle permet à son porteur et à tous les objets non-vivants qu’il porte de devenir éthérés, comme avec de l’huile éthérée. Il est alors incapable d’attaquer des créatures matérielles. Une porte de phase annule la stase éthérée et empêche l’armure de fonctionner durant une journée. Elle possède 20 charges non rechargeables ; sa classe diminue de 1 après 5 utilisations, devient +4, puis +2 après 10, +1 après 15, et seulement +1 une fois les 20 charges épuisées.",
+      "nom_non_identifie": "Armure"
     },
     "effects": [],
     "flags": {
@@ -7744,7 +7783,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Baguette"
     },
     "effects": [],
     "flags": {
@@ -7999,7 +8039,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Baguette"
     },
     "effects": [],
     "flags": {
@@ -8219,7 +8260,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Baguette"
     },
     "effects": [],
     "flags": {
@@ -8401,7 +8443,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Baguette"
     },
     "effects": [],
     "flags": {
@@ -8583,7 +8626,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Baguette"
     },
     "effects": [],
     "flags": {
@@ -8800,7 +8844,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Baguette"
     },
     "effects": [],
     "flags": {
@@ -9299,7 +9344,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Baguette"
     },
     "effects": [],
     "flags": {
@@ -9535,7 +9581,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Baguette"
     },
     "effects": [],
     "flags": {
@@ -9816,7 +9863,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Baguette"
     },
     "effects": [],
     "flags": {
@@ -10033,7 +10081,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Baguette"
     },
     "effects": [],
     "flags": {
@@ -10250,7 +10299,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Baguette"
     },
     "effects": [],
     "flags": {
@@ -10469,7 +10519,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Baguette"
     },
     "effects": [],
     "flags": {
@@ -10688,7 +10739,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Baguette"
     },
     "effects": [],
     "flags": {
@@ -10907,7 +10959,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Baguette"
     },
     "effects": [],
     "flags": {
@@ -11126,7 +11179,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Baguette"
     },
     "effects": [],
     "flags": {
@@ -11343,7 +11397,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Baguette"
     },
     "effects": [],
     "flags": {
@@ -11560,7 +11615,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Objet"
     },
     "effects": [],
     "flags": {
@@ -11742,7 +11798,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Objet"
     },
     "effects": [],
     "flags": {
@@ -11924,7 +11981,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Bâtonnet"
     },
     "effects": [],
     "flags": {
@@ -12106,7 +12164,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Bâtonnet"
     },
     "effects": [],
     "flags": {
@@ -12288,7 +12347,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Bâtonnet"
     },
     "effects": [],
     "flags": {
@@ -12470,7 +12530,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Bâtonnet"
     },
     "effects": [],
     "flags": {
@@ -12687,7 +12748,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Gemme"
     },
     "effects": [],
     "flags": {
@@ -12904,7 +12966,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Bottes"
     },
     "effects": [],
     "flags": {
@@ -13128,7 +13191,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Bottes"
     },
     "effects": [],
     "flags": {
@@ -13353,7 +13417,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Bottes"
     },
     "effects": [],
     "flags": {
@@ -13527,7 +13592,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Bottes"
     },
     "effects": [],
     "flags": {
@@ -13649,7 +13715,8 @@
       "bonus_dom": 0,
       "bonus_bouclier": 1,
       "definition_note_ca": "bonus_ca/bonus_ac numériques sont la source mécanique; les tags bonus_ac ont été retirés pour éviter le cumul direct + tags + effectTags.",
-      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille. Le bouclier –1, attracteur de projectiles rend son porteur équivalent à un combattant sans bouclier et attire les projectiles de toutes sortes. Selon la taille du groupe, la probabilité qu’il soit pris pour cible doit être multipliée par deux ou trois. Il est impossible de le distinguer d’un autre bouclier magique efficace."
+      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille. Le bouclier –1, attracteur de projectiles rend son porteur équivalent à un combattant sans bouclier et attire les projectiles de toutes sortes. Selon la taille du groupe, la probabilité qu’il soit pris pour cible doit être multipliée par deux ou trois. Il est impossible de le distinguer d’un autre bouclier magique efficace.",
+      "nom_non_identifie": "Bouclier"
     },
     "effects": [],
     "flags": {
@@ -13768,7 +13835,8 @@
       "bonus_dom": 0,
       "bonus_bouclier": 1,
       "definition_note_ca": "bonus_ca/bonus_ac numériques sont la source mécanique; les tags bonus_ac ont été retirés pour éviter le cumul direct + tags + effectTags.",
-      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille."
+      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille.",
+      "nom_non_identifie": "Bouclier"
     },
     "effects": [],
     "flags": {
@@ -13887,7 +13955,8 @@
       "bonus_dom": 0,
       "bonus_bouclier": 1,
       "definition_note_ca": "bonus_ca/bonus_ac numériques sont la source mécanique; les tags bonus_ac ont été retirés pour éviter le cumul direct + tags + effectTags.",
-      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille."
+      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille.",
+      "nom_non_identifie": "Bouclier"
     },
     "effects": [],
     "flags": {
@@ -14006,7 +14075,8 @@
       "bonus_dom": 0,
       "bonus_bouclier": 1,
       "definition_note_ca": "bonus_ca/bonus_ac numériques sont la source mécanique; les tags bonus_ac ont été retirés pour éviter le cumul direct + tags + effectTags.",
-      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille."
+      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille.",
+      "nom_non_identifie": "Bouclier"
     },
     "effects": [],
     "flags": {
@@ -14125,7 +14195,8 @@
       "bonus_dom": 0,
       "bonus_bouclier": 1,
       "definition_note_ca": "bonus_ca/bonus_ac numériques sont la source mécanique; les tags bonus_ac ont été retirés pour éviter le cumul direct + tags + effectTags.",
-      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille."
+      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille.",
+      "nom_non_identifie": "Bouclier"
     },
     "effects": [],
     "flags": {
@@ -14244,7 +14315,8 @@
       "bonus_dom": 0,
       "bonus_bouclier": 1,
       "definition_note_ca": "bonus_ca/bonus_ac numériques sont la source mécanique; les tags bonus_ac ont été retirés pour éviter le cumul direct + tags + effectTags.",
-      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille."
+      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille.",
+      "nom_non_identifie": "Bouclier"
     },
     "effects": [],
     "flags": {
@@ -14369,7 +14441,8 @@
       "bonus_dom": 0,
       "bonus_bouclier": 1,
       "definition_note_ca": "bonus_ca/bonus_ac numériques sont la source mécanique; les tags bonus_ac ont été retirés pour éviter le cumul direct + tags + effectTags.",
-      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille. Le grand bouclier +1, +4 contre les projectiles est un grand bouclier ordinaire, mais quatre fois plus efficace contre les projectiles de toutes sortes, lancés à la main ou par des engins de siège. Il possède en outre 20 % de chances d’annuler les projectiles magiques à partir d’une position frontale."
+      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille. Le grand bouclier +1, +4 contre les projectiles est un grand bouclier ordinaire, mais quatre fois plus efficace contre les projectiles de toutes sortes, lancés à la main ou par des engins de siège. Il possède en outre 20 % de chances d’annuler les projectiles magiques à partir d’une position frontale.",
+      "nom_non_identifie": "Bouclier"
     },
     "effects": [],
     "flags": {
@@ -14550,7 +14623,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Gemme"
     },
     "effects": [],
     "flags": {
@@ -14773,7 +14847,8 @@
       "caFixe": 2,
       "fixedCA": 2,
       "ac_fixe": 2,
-      "fixed_ac": 2
+      "fixed_ac": 2,
+      "nom_non_identifie": "Objet"
     },
     "effects": [],
     "flags": {
@@ -14999,7 +15074,8 @@
       "caFixe": 4,
       "fixedCA": 4,
       "ac_fixe": 4,
-      "fixed_ac": 4
+      "fixed_ac": 4,
+      "nom_non_identifie": "Objet"
     },
     "effects": [],
     "flags": {
@@ -15225,7 +15301,8 @@
       "caFixe": 6,
       "fixedCA": 6,
       "ac_fixe": 6,
-      "fixed_ac": 6
+      "fixed_ac": 6,
+      "nom_non_identifie": "Objet"
     },
     "effects": [],
     "flags": {
@@ -15451,7 +15528,8 @@
       "caFixe": 8,
       "fixedCA": 8,
       "ac_fixe": 8,
-      "fixed_ac": 8
+      "fixed_ac": 8,
+      "nom_non_identifie": "Objet"
     },
     "effects": [],
     "flags": {
@@ -15676,7 +15754,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Amulette"
     },
     "effects": [],
     "flags": {
@@ -15791,7 +15870,8 @@
       "bonus_hit": 0,
       "bonus_dom": 0,
       "definition_note_ca": "bonus_ca/bonus_ac numériques sont la source mécanique; les tags bonus_ac ont été retirés pour éviter le cumul direct + tags + effectTags.",
-      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille."
+      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille.",
+      "nom_non_identifie": "Armure"
     },
     "effects": [],
     "flags": {
@@ -16046,7 +16126,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Vêtement"
     },
     "effects": [],
     "flags": {
@@ -16266,7 +16347,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Vêtement"
     },
     "effects": [],
     "flags": {
@@ -16511,7 +16593,8 @@
       "fixedCA": null,
       "ac_fixe": null,
       "fixed_ac": null,
-      "bonus_sauvegarde": 1
+      "bonus_sauvegarde": 1,
+      "nom_non_identifie": "Vêtement"
     },
     "effects": [],
     "flags": {
@@ -16759,7 +16842,8 @@
       "fixedCA": null,
       "ac_fixe": null,
       "fixed_ac": null,
-      "bonus_sauvegarde": 2
+      "bonus_sauvegarde": 2,
+      "nom_non_identifie": "Vêtement"
     },
     "effects": [],
     "flags": {
@@ -17007,7 +17091,8 @@
       "fixedCA": null,
       "ac_fixe": null,
       "fixed_ac": null,
-      "bonus_sauvegarde": 3
+      "bonus_sauvegarde": 3,
+      "nom_non_identifie": "Vêtement"
     },
     "effects": [],
     "flags": {
@@ -17197,7 +17282,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Vêtement"
     },
     "effects": [],
     "flags": {
@@ -17412,7 +17498,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Objet"
     },
     "effects": [],
     "flags": {
@@ -17580,7 +17667,8 @@
       "facteur_vitesse": "—",
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Carreau"
     },
     "effects": [],
     "flags": {
@@ -17759,7 +17847,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Objet"
     },
     "effects": [],
     "flags": {
@@ -17987,7 +18076,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Vêtement"
     },
     "effects": [],
     "flags": {
@@ -18169,7 +18259,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Vêtement"
     },
     "effects": [],
     "flags": {
@@ -18343,7 +18434,8 @@
       "fixed_ac": null,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Cimeterre"
     },
     "effects": [],
     "flags": {
@@ -18522,7 +18614,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Corde"
     },
     "effects": [],
     "flags": {
@@ -18739,7 +18832,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Corde"
     },
     "effects": [],
     "flags": {
@@ -18858,7 +18952,8 @@
       "bonus_hit": 0,
       "bonus_dom": 0,
       "definition_note_ca": "bonus_ca/bonus_ac numériques sont la source mécanique; les tags bonus_ac ont été retirés pour éviter le cumul direct + tags + effectTags.",
-      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille."
+      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille.",
+      "nom_non_identifie": "Armure"
     },
     "effects": [],
     "flags": {
@@ -18976,7 +19071,8 @@
       "bonus_hit": 0,
       "bonus_dom": 0,
       "definition_note_ca": "bonus_ca/bonus_ac numériques sont la source mécanique; les tags bonus_ac ont été retirés pour éviter le cumul direct + tags + effectTags.",
-      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille."
+      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille.",
+      "nom_non_identifie": "Armure"
     },
     "effects": [],
     "flags": {
@@ -19094,7 +19190,8 @@
       "bonus_hit": 0,
       "bonus_dom": 0,
       "definition_note_ca": "bonus_ca/bonus_ac numériques sont la source mécanique; les tags bonus_ac ont été retirés pour éviter le cumul direct + tags + effectTags.",
-      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille."
+      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille.",
+      "nom_non_identifie": "Armure"
     },
     "effects": [],
     "flags": {
@@ -19316,7 +19413,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Objet"
     },
     "effects": [],
     "flags": {
@@ -19498,7 +19596,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Objet"
     },
     "effects": [],
     "flags": {
@@ -19617,7 +19716,8 @@
       "bonus_hit": 0,
       "bonus_dom": 0,
       "definition_note_ca": "bonus_ca/bonus_ac numériques sont la source mécanique; les tags bonus_ac ont été retirés pour éviter le cumul direct + tags + effectTags.",
-      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille."
+      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille.",
+      "nom_non_identifie": "Armure"
     },
     "effects": [],
     "flags": {
@@ -19777,7 +19877,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Dague"
     },
     "effects": [],
     "flags": {
@@ -19933,7 +20034,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Dague"
     },
     "effects": [],
     "flags": {
@@ -20089,7 +20191,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Dague"
     },
     "effects": [],
     "flags": {
@@ -20309,7 +20412,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Potion"
     },
     "effects": [],
     "flags": {
@@ -20497,7 +20601,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Potion"
     },
     "effects": [],
     "flags": {
@@ -20720,7 +20825,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Potion"
     },
     "effects": [],
     "flags": {
@@ -20908,7 +21014,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Objet"
     },
     "effects": [],
     "flags": {
@@ -21125,7 +21232,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Objet"
     },
     "effects": [],
     "flags": {
@@ -21284,7 +21392,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Épée longue"
     },
     "effects": [],
     "flags": {
@@ -21434,7 +21543,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Épée longue"
     },
     "effects": [],
     "flags": {
@@ -21584,7 +21694,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Épée longue"
     },
     "effects": [],
     "flags": {
@@ -21734,7 +21845,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Épée longue"
     },
     "effects": [],
     "flags": {
@@ -21884,7 +21996,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Épée longue"
     },
     "effects": [],
     "flags": {
@@ -22034,7 +22147,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Épée longue"
     },
     "effects": [],
     "flags": {
@@ -22184,7 +22298,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Épée longue"
     },
     "effects": [],
     "flags": {
@@ -22334,7 +22449,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Épée longue"
     },
     "effects": [],
     "flags": {
@@ -22484,7 +22600,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Épée longue"
     },
     "effects": [],
     "flags": {
@@ -22634,7 +22751,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Épée longue"
     },
     "effects": [],
     "flags": {
@@ -22784,7 +22902,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Épée longue"
     },
     "effects": [],
     "flags": {
@@ -22934,7 +23053,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Épée longue"
     },
     "effects": [],
     "flags": {
@@ -23084,7 +23204,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Épée longue"
     },
     "effects": [],
     "flags": {
@@ -23234,7 +23355,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Épée longue"
     },
     "effects": [],
     "flags": {
@@ -23384,7 +23506,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Épée longue"
     },
     "effects": [],
     "flags": {
@@ -23534,7 +23657,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Épée longue"
     },
     "effects": [],
     "flags": {
@@ -23698,7 +23822,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Épée longue"
     },
     "effects": [],
     "flags": {
@@ -23848,7 +23973,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Épée longue"
     },
     "effects": [],
     "flags": {
@@ -24010,7 +24136,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Épée longue"
     },
     "effects": [],
     "flags": {
@@ -24162,7 +24289,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Épée longue"
     },
     "effects": [],
     "flags": {
@@ -24312,7 +24440,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Épée longue"
     },
     "effects": [],
     "flags": {
@@ -24462,7 +24591,8 @@
       "degat_profil": "1d6/1d8",
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Arme"
     },
     "effects": [
       {
@@ -24650,7 +24780,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Épieu"
     },
     "effects": [],
     "flags": {
@@ -24798,7 +24929,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Morgenstern"
     },
     "effects": [],
     "flags": {
@@ -25010,7 +25142,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Objet"
     },
     "effects": [],
     "flags": {
@@ -25232,7 +25365,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Objet"
     },
     "effects": [],
     "flags": {
@@ -25454,7 +25588,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Objet"
     },
     "effects": [],
     "flags": {
@@ -25636,7 +25771,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Objet"
     },
     "effects": [],
     "flags": {
@@ -25853,7 +25989,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Objet"
     },
     "effects": [],
     "flags": {
@@ -26024,7 +26161,8 @@
       "facteur_vitesse": "—",
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Flèche"
     },
     "effects": [],
     "flags": {
@@ -26188,7 +26326,8 @@
       "facteur_vitesse": "—",
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Flèche"
     },
     "effects": [],
     "flags": {
@@ -26352,7 +26491,8 @@
       "facteur_vitesse": "—",
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Flèche"
     },
     "effects": [],
     "flags": {
@@ -26516,7 +26656,8 @@
       "facteur_vitesse": "—",
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Flèche"
     },
     "effects": [],
     "flags": {
@@ -26695,7 +26836,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Objet"
     },
     "effects": [],
     "flags": {
@@ -26864,7 +27006,8 @@
       "bonus_force_degats": false,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Fronde"
     },
     "effects": [],
     "flags": {
@@ -27145,7 +27288,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Gants"
     },
     "effects": [],
     "flags": {
@@ -27388,7 +27532,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Gants"
     },
     "effects": [],
     "flags": {
@@ -27608,7 +27753,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Gemme"
     },
     "effects": [],
     "flags": {
@@ -27825,7 +27971,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Gemme"
     },
     "effects": [],
     "flags": {
@@ -28042,7 +28189,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Gemme"
     },
     "effects": [],
     "flags": {
@@ -28230,7 +28378,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Objet"
     },
     "effects": [],
     "flags": {
@@ -28379,7 +28528,8 @@
       "degat_profil": "1d8/1d8",
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Arme"
     },
     "effects": [
       {
@@ -28569,7 +28719,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Hache d’armes"
     },
     "effects": [],
     "flags": {
@@ -28727,7 +28878,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Hachette"
     },
     "effects": [],
     "flags": {
@@ -28912,7 +29064,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Vêtement"
     },
     "effects": [],
     "flags": {
@@ -29131,7 +29284,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Vêtement"
     },
     "effects": [],
     "flags": {
@@ -29348,7 +29502,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Vêtement"
     },
     "effects": [],
     "flags": {
@@ -29567,7 +29722,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Vêtement"
     },
     "effects": [],
     "flags": {
@@ -29789,7 +29945,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Vêtement"
     },
     "effects": [],
     "flags": {
@@ -29977,7 +30134,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Huile"
     },
     "effects": [],
     "flags": {
@@ -30200,7 +30358,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Huile"
     },
     "effects": [],
     "flags": {
@@ -30388,7 +30547,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Huile"
     },
     "effects": [],
     "flags": {
@@ -30576,7 +30736,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Huile"
     },
     "effects": [],
     "flags": {
@@ -30758,7 +30919,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Objet"
     },
     "effects": [],
     "flags": {
@@ -30915,7 +31077,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Javelot"
     },
     "effects": [],
     "flags": {
@@ -31100,7 +31263,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Gemme"
     },
     "effects": [],
     "flags": {
@@ -31253,7 +31417,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Épée longue"
     },
     "effects": [],
     "flags": {
@@ -31403,7 +31568,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Épée longue"
     },
     "effects": [],
     "flags": {
@@ -31553,7 +31719,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Épée longue"
     },
     "effects": [],
     "flags": {
@@ -31703,7 +31870,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Épée longue"
     },
     "effects": [],
     "flags": {
@@ -31853,7 +32021,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Épée longue"
     },
     "effects": [],
     "flags": {
@@ -32001,7 +32170,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Lance"
     },
     "effects": [],
     "flags": {
@@ -32149,7 +32319,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Lance"
     },
     "effects": [],
     "flags": {
@@ -32297,7 +32468,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Lance"
     },
     "effects": [],
     "flags": {
@@ -32457,7 +32629,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Lance"
     },
     "effects": [],
     "flags": {
@@ -32671,7 +32844,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Lunettes"
     },
     "effects": [],
     "flags": {
@@ -32858,7 +33032,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Lunettes"
     },
     "effects": [],
     "flags": {
@@ -32898,7 +33073,8 @@
         "ownerList": "illusionniste",
         "ownerActorUuid": "",
         "spells": []
-      }
+      },
+      "nom_non_identifie": "Livre de sorts"
     },
     "effects": [],
     "flags": {
@@ -32934,7 +33110,8 @@
         "ownerList": "magicien",
         "ownerActorUuid": "",
         "spells": []
-      }
+      },
+      "nom_non_identifie": "Livre de sorts"
     },
     "effects": [],
     "flags": {
@@ -33045,7 +33222,8 @@
       "bonus_hit": 0,
       "bonus_dom": 0,
       "definition_note_ca": "bonus_ca/bonus_ac numériques sont la source mécanique; les tags bonus_ac ont été retirés pour éviter le cumul direct + tags + effectTags.",
-      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille."
+      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille.",
+      "nom_non_identifie": "Armure"
     },
     "effects": [],
     "flags": {
@@ -33159,7 +33337,8 @@
       "bonus_hit": 0,
       "bonus_dom": 0,
       "definition_note_ca": "bonus_ca/bonus_ac numériques sont la source mécanique; les tags bonus_ac ont été retirés pour éviter le cumul direct + tags + effectTags.",
-      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille."
+      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille.",
+      "nom_non_identifie": "Armure"
     },
     "effects": [],
     "flags": {
@@ -33345,7 +33524,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Lunettes"
     },
     "effects": [],
     "flags": {
@@ -33532,7 +33712,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Lunettes"
     },
     "effects": [],
     "flags": {
@@ -33714,7 +33895,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Instrument"
     },
     "effects": [],
     "flags": {
@@ -33901,7 +34083,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Vêtement"
     },
     "effects": [],
     "flags": {
@@ -34124,7 +34307,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Vêtement"
     },
     "effects": [],
     "flags": {
@@ -34353,7 +34537,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Livre"
     },
     "effects": [],
     "flags": {
@@ -34538,7 +34723,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Livre"
     },
     "effects": [],
     "flags": {
@@ -34767,7 +34953,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Livre"
     },
     "effects": [],
     "flags": {
@@ -34999,7 +35186,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Livre"
     },
     "effects": [],
     "flags": {
@@ -35161,7 +35349,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Marteau"
     },
     "effects": [],
     "flags": {
@@ -35338,7 +35527,8 @@
       "fixed_ac": null,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Marteau"
     },
     "effects": [],
     "flags": {
@@ -35494,7 +35684,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Marteau"
     },
     "effects": [],
     "flags": {
@@ -35650,7 +35841,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Marteau"
     },
     "effects": [],
     "flags": {
@@ -35798,7 +35990,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Masse"
     },
     "effects": [],
     "flags": {
@@ -35977,7 +36170,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Amulette"
     },
     "effects": [],
     "flags": {
@@ -36194,7 +36388,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Amulette"
     },
     "effects": [],
     "flags": {
@@ -36376,7 +36571,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Objet"
     },
     "effects": [],
     "flags": {
@@ -36564,7 +36760,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Objet"
     },
     "effects": [],
     "flags": {
@@ -36828,7 +37025,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Objet"
     },
     "effects": [],
     "flags": {
@@ -37095,7 +37293,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Objet"
     },
     "effects": [],
     "flags": {
@@ -37286,7 +37485,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Objet"
     },
     "effects": [],
     "flags": {
@@ -37468,7 +37668,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Objet"
     },
     "effects": [],
     "flags": {
@@ -37691,7 +37892,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Parchemin"
     },
     "effects": [],
     "flags": {
@@ -37879,7 +38081,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Parchemin"
     },
     "effects": [],
     "flags": {
@@ -38102,7 +38305,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Parchemin"
     },
     "effects": [],
     "flags": {
@@ -38290,7 +38494,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Parchemin"
     },
     "effects": [],
     "flags": {
@@ -38478,7 +38683,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Parchemin"
     },
     "effects": [],
     "flags": {
@@ -38666,7 +38872,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Parchemin"
     },
     "effects": [],
     "flags": {
@@ -38854,7 +39061,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Parchemin"
     },
     "effects": [],
     "flags": {
@@ -39042,7 +39250,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Parchemin"
     },
     "effects": [],
     "flags": {
@@ -39238,7 +39447,8 @@
         "ownerList": "illusionniste",
         "spellList": "illusionniste",
         "spells": []
-      }
+      },
+      "nom_non_identifie": "Parchemin"
     },
     "effects": [],
     "flags": {
@@ -39439,7 +39649,8 @@
         "ownerList": "clerc",
         "spellList": "clerc",
         "spells": []
-      }
+      },
+      "nom_non_identifie": "Parchemin"
     },
     "effects": [],
     "flags": {
@@ -39640,7 +39851,8 @@
         "ownerList": "druide",
         "spellList": "druide",
         "spells": []
-      }
+      },
+      "nom_non_identifie": "Parchemin"
     },
     "effects": [],
     "flags": {
@@ -39841,7 +40053,8 @@
         "ownerList": "magicien",
         "spellList": "magicien",
         "spells": []
-      }
+      },
+      "nom_non_identifie": "Parchemin"
     },
     "effects": [],
     "flags": {
@@ -40040,7 +40253,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Parchemin"
     },
     "effects": [],
     "flags": {
@@ -40222,7 +40436,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Gemme"
     },
     "effects": [],
     "flags": {
@@ -40409,7 +40624,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Gemme"
     },
     "effects": [],
     "flags": {
@@ -40632,7 +40848,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Philtre"
     },
     "effects": [],
     "flags": {
@@ -40855,7 +41072,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Philtre"
     },
     "effects": [],
     "flags": {
@@ -41134,7 +41352,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Gemme"
     },
     "effects": [],
     "flags": {
@@ -41319,7 +41538,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Gemme"
     },
     "effects": [],
     "flags": {
@@ -41506,7 +41726,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Gemme"
     },
     "effects": [],
     "flags": {
@@ -41726,7 +41947,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Gemme"
     },
     "effects": [],
     "flags": {
@@ -41916,7 +42138,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Gemme"
     },
     "effects": [],
     "flags": {
@@ -42098,7 +42321,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Instrument"
     },
     "effects": [],
     "flags": {
@@ -42213,7 +42437,8 @@
       "bonus_hit": 0,
       "bonus_dom": 0,
       "definition_note_ca": "bonus_ca/bonus_ac numériques sont la source mécanique; les tags bonus_ac ont été retirés pour éviter le cumul direct + tags + effectTags.",
-      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille."
+      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille.",
+      "nom_non_identifie": "Armure"
     },
     "effects": [],
     "flags": {
@@ -42327,7 +42552,8 @@
       "bonus_hit": 0,
       "bonus_dom": 0,
       "definition_note_ca": "bonus_ca/bonus_ac numériques sont la source mécanique; les tags bonus_ac ont été retirés pour éviter le cumul direct + tags + effectTags.",
-      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille."
+      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille.",
+      "nom_non_identifie": "Armure"
     },
     "effects": [],
     "flags": {
@@ -42441,7 +42667,8 @@
       "bonus_hit": 0,
       "bonus_dom": 0,
       "definition_note_ca": "bonus_ca/bonus_ac numériques sont la source mécanique; les tags bonus_ac ont été retirés pour éviter le cumul direct + tags + effectTags.",
-      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille."
+      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille.",
+      "nom_non_identifie": "Armure"
     },
     "effects": [],
     "flags": {
@@ -42555,7 +42782,8 @@
       "bonus_hit": 0,
       "bonus_dom": 0,
       "definition_note_ca": "bonus_ca/bonus_ac numériques sont la source mécanique; les tags bonus_ac ont été retirés pour éviter le cumul direct + tags + effectTags.",
-      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille."
+      "description_reelle": "À moins que sa nature ne soit indiquée différemment, l’armure ou le bouclier ajoute son bonus magique à la protection normale : le porteur accroît sa CA. Ainsi, une cotte de mailles +1 améliore la cotte de mailles d’une catégorie, tandis qu’un bouclier +1 équivaut à une amélioration de deux catégories sans armure : +1 pour le bouclier et +1 pour le bonus magique. Pour les besoins du jeu, toutes les armures magiques ne pèsent quasiment rien, comme des vêtements courants, et donnent une vitesse de déplacement de base égale à celle d’un homme sans armure ; les boucliers magiques conservent le poids d’un bouclier normal de même taille.",
+      "nom_non_identifie": "Armure"
     },
     "effects": [],
     "flags": {
@@ -42777,7 +43005,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Potion"
     },
     "effects": [],
     "flags": {
@@ -43000,7 +43229,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Potion"
     },
     "effects": [],
     "flags": {
@@ -43188,7 +43418,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Potion"
     },
     "effects": [],
     "flags": {
@@ -43376,7 +43607,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Potion"
     },
     "effects": [],
     "flags": {
@@ -43564,7 +43796,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Potion"
     },
     "effects": [],
     "flags": {
@@ -43752,7 +43985,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Potion"
     },
     "effects": [],
     "flags": {
@@ -43940,7 +44174,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Potion"
     },
     "effects": [],
     "flags": {
@@ -44128,7 +44363,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Potion"
     },
     "effects": [],
     "flags": {
@@ -44316,7 +44552,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Potion"
     },
     "effects": [],
     "flags": {
@@ -44545,7 +44782,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Potion"
     },
     "effects": [],
     "flags": {
@@ -44733,7 +44971,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Potion"
     },
     "effects": [],
     "flags": {
@@ -44921,7 +45160,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Potion"
     },
     "effects": [],
     "flags": {
@@ -45144,7 +45384,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Potion"
     },
     "effects": [],
     "flags": {
@@ -45367,7 +45608,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Potion"
     },
     "effects": [],
     "flags": {
@@ -45555,7 +45797,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Potion"
     },
     "effects": [],
     "flags": {
@@ -45778,7 +46021,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Potion"
     },
     "effects": [],
     "flags": {
@@ -46039,7 +46283,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Potion"
     },
     "effects": [],
     "flags": {
@@ -46265,7 +46510,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Potion"
     },
     "effects": [],
     "flags": {
@@ -46453,7 +46699,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Potion"
     },
     "effects": [],
     "flags": {
@@ -46676,7 +46923,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Potion"
     },
     "effects": [],
     "flags": {
@@ -46899,7 +47147,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Potion"
     },
     "effects": [],
     "flags": {
@@ -47192,7 +47441,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Potion"
     },
     "effects": [],
     "flags": {
@@ -47418,7 +47668,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Potion"
     },
     "effects": [],
     "flags": {
@@ -47606,7 +47857,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Potion"
     },
     "effects": [],
     "flags": {
@@ -47794,7 +48046,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Potion"
     },
     "effects": [],
     "flags": {
@@ -48017,7 +48270,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Potion"
     },
     "effects": [],
     "flags": {
@@ -48240,7 +48494,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Objet"
     },
     "effects": [],
     "flags": {
@@ -48434,7 +48689,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Objet"
     },
     "effects": [],
     "flags": {
@@ -48657,7 +48913,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Objet"
     },
     "effects": [],
     "flags": {
@@ -48839,7 +49096,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Objet"
     },
     "effects": [],
     "flags": {
@@ -49021,7 +49279,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Vêtement"
     },
     "effects": [],
     "flags": {
@@ -49238,7 +49497,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Vêtement"
     },
     "effects": [],
     "flags": {
@@ -49519,7 +49779,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Vêtement"
     },
     "effects": [],
     "flags": {
@@ -49710,7 +49971,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Vêtement"
     },
     "effects": [],
     "flags": {
@@ -49898,7 +50160,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Sac"
     },
     "effects": [],
     "flags": {
@@ -50115,7 +50378,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Sac"
     },
     "effects": [],
     "flags": {
@@ -50302,7 +50566,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Amulette"
     },
     "effects": [],
     "flags": {
@@ -50484,7 +50749,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Objet"
     },
     "effects": [],
     "flags": {
@@ -50666,7 +50932,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Amulette"
     },
     "effects": [],
     "flags": {
@@ -50848,7 +51115,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Amulette"
     },
     "effects": [],
     "flags": {
@@ -51065,7 +51333,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Objet"
     },
     "effects": [],
     "flags": {
@@ -51293,7 +51562,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Livre"
     },
     "effects": [],
     "flags": {
@@ -51524,7 +51794,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Livre"
     },
     "effects": [],
     "flags": {
@@ -51755,7 +52026,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Livre"
     },
     "effects": [],
     "flags": {
@@ -51909,7 +52181,8 @@
       "bonus_force_degats": true,
       "correction_notes": [
         "2026-05-26-armes-magiques-carquois-v1"
-      ]
+      ],
+      "nom_non_identifie": "Trident"
     },
     "effects": [],
     "flags": {
@@ -52123,7 +52396,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Objet"
     },
     "effects": [],
     "flags": {
@@ -52340,7 +52614,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Lunettes"
     },
     "effects": [],
     "flags": {
@@ -52528,7 +52803,8 @@
       "caFixe": null,
       "fixedCA": null,
       "ac_fixe": null,
-      "fixed_ac": null
+      "fixed_ac": null,
+      "nom_non_identifie": "Lunettes"
     },
     "effects": [],
     "flags": {
