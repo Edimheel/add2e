@@ -2,6 +2,31 @@
 // ADD2E — Opérations sur items et effets embarqués.
 // Compatible Foundry V13/V14/V15.
 
+const ADD2E_CURSED_ITEM_VERSION = "2026-07-16-cursed-item-guard-diagnostics-v3";
+const ADD2E_CURSED_ITEM_LOG = "[ADD2E][OBJET_MAUDIT]";
+
+globalThis.ADD2E_CURSED_ITEM_VERSION = ADD2E_CURSED_ITEM_VERSION;
+
+function add2eCurseLog(event, data = {}) {
+  console.log(`${ADD2E_CURSED_ITEM_LOG}[${event}]`, {
+    version: ADD2E_CURSED_ITEM_VERSION,
+    user: game.user?.name ?? null,
+    userId: game.user?.id ?? null,
+    isGM: game.user?.isGM === true,
+    ...data
+  });
+}
+
+function add2eCurseWarn(event, data = {}) {
+  console.warn(`${ADD2E_CURSED_ITEM_LOG}[${event}]`, {
+    version: ADD2E_CURSED_ITEM_VERSION,
+    user: game.user?.name ?? null,
+    userId: game.user?.id ?? null,
+    isGM: game.user?.isGM === true,
+    ...data
+  });
+}
+
 function add2eNormalizeCurseTag(value) {
   return String(value ?? "")
     .trim()
@@ -47,7 +72,7 @@ export function add2eIsCursedItem(item) {
   if (!item) return false;
   const system = item.system ?? {};
   const flags = item.flags?.add2e ?? {};
-  if (system.maudit === true || system.cursed === true || flags.cursed === true || flags.maudit === true) return true;
+  const direct = system.maudit === true || system.cursed === true || flags.cursed === true || flags.maudit === true;
 
   const tags = [
     system.tags,
@@ -57,13 +82,34 @@ export function add2eIsCursedItem(item) {
     flags.effectTags
   ].flatMap(add2eCurseValues).map(add2eNormalizeCurseTag);
 
-  return tags.some(tag => ["maudit", "cursed", "objet:maudit", "objet_maudit", "malediction", "objet:malediction"].includes(tag));
+  const tagged = tags.some(tag => ["maudit", "cursed", "objet:maudit", "objet_maudit", "malediction", "objet:malediction"].includes(tag));
+  const result = direct || tagged;
+
+  if (result) {
+    add2eCurseLog("DETECT", {
+      item: item.name,
+      itemId: item.id,
+      actor: item.parent?.name ?? null,
+      actorId: item.parent?.id ?? null,
+      identified: item.system?.identifie !== false,
+      direct,
+      tagged,
+      systemMaudit: system.maudit,
+      flagsCursed: flags.cursed,
+      tags
+    });
+  }
+
+  return result;
 }
 
 export async function add2eSyncCursedItemEffect(item) {
   if (!item || !add2eIsCursedItem(item)) return null;
   const actor = item.parent;
-  if (!actor || actor.documentName !== "Actor") return null;
+  if (!actor || actor.documentName !== "Actor") {
+    add2eCurseWarn("SYNC_SKIP_PARENT", { item: item?.name, itemId: item?.id, parentType: actor?.documentName ?? null });
+    return null;
+  }
 
   const existing = Array.from(actor.effects ?? []).filter(effect =>
     effect.flags?.add2e?.cursedItemId === item.id
@@ -95,6 +141,17 @@ export async function add2eSyncCursedItemEffect(item) {
     }
   };
 
+  add2eCurseLog("SYNC_START", {
+    actor: actor.name,
+    actorId: actor.id,
+    item: item.name,
+    itemId: item.id,
+    identified: item.system?.identifie !== false,
+    equipped: item.system?.equipee === true,
+    existingEffects: existing.map(effect => ({ id: effect.id, name: effect.name, disabled: effect.disabled })),
+    generatedTags: tags
+  });
+
   if (existing.length) {
     const [primary, ...duplicates] = existing;
     await primary.update(data, { add2eInternal: true, add2eReason: "sync-cursed-item-effect" });
@@ -104,12 +161,26 @@ export async function add2eSyncCursedItemEffect(item) {
         add2eReason: "dedupe-cursed-item-effect"
       });
     }
+    add2eCurseLog("SYNC_UPDATED", {
+      actor: actor.name,
+      item: item.name,
+      effectId: primary.id,
+      duplicatesRemoved: duplicates.map(effect => effect.id),
+      tags
+    });
     return primary;
   }
 
   const [created] = await actor.createEmbeddedDocuments("ActiveEffect", [data], {
     add2eInternal: true,
     add2eReason: "create-cursed-item-effect"
+  });
+  add2eCurseLog("SYNC_CREATED", {
+    actor: actor.name,
+    item: item.name,
+    effectId: created?.id ?? null,
+    effectName: created?.name ?? null,
+    tags
   });
   return created ?? null;
 }
@@ -127,6 +198,15 @@ export async function add2eDeleteCursedItemByDisenchantment(item, options = {}) 
       || effect.origin === item.uuid;
   }).map(effect => effect.id).filter(Boolean);
 
+  add2eCurseLog("DISENCHANT_START", {
+    actor: actor.name,
+    actorId: actor.id,
+    item: item.name,
+    itemId: item.id,
+    linkedEffects,
+    options
+  });
+
   if (linkedEffects.length) {
     await actor.deleteEmbeddedDocuments("ActiveEffect", linkedEffects, {
       add2eDisenchantment: true,
@@ -139,6 +219,7 @@ export async function add2eDeleteCursedItemByDisenchantment(item, options = {}) 
     add2eDisenchantment: true,
     add2eReason: options.add2eReason ?? "remove-curse"
   });
+  add2eCurseLog("DISENCHANT_DONE", { actor: actor.name, item: item.name, itemId: item.id });
   return true;
 }
 
@@ -191,38 +272,108 @@ if (!globalThis.ADD2E_CURSED_ITEM_GUARD_INSTALLED) {
   globalThis.add2eSyncCursedItemEffect = add2eSyncCursedItemEffect;
   globalThis.add2eDeleteCursedItemByDisenchantment = add2eDeleteCursedItemByDisenchantment;
 
+  add2eCurseLog("INSTALL", {
+    hookPreDeleteItem: true,
+    hookCreateItem: true,
+    hookUpdateItem: true,
+    hookReady: true
+  });
+
   Hooks.on("preDeleteItem", (item, options = {}, userId = null) => {
-    if (!item?.parent || item.parent.documentName !== "Actor") return true;
-    if (!add2eIsCursedItem(item)) return true;
-    if (options.add2eDisenchantment === true) return true;
-
+    const owned = item?.parent?.documentName === "Actor";
+    const cursed = owned ? add2eIsCursedItem(item) : false;
     const requestingUser = userId ? game.users?.get(userId) : game.user;
-    if (requestingUser?.isGM === true) return true;
+    const allowedByDisenchantment = options.add2eDisenchantment === true;
+    const allowedByGM = requestingUser?.isGM === true;
 
-    ui.notifications?.warn?.(`${item.system?.identifie === false ? (item.system?.nom_non_identifie || "Cet objet") : item.name} est lié à son propriétaire et ne peut être retiré que par un désenvoûtement.`);
+    add2eCurseLog("PRE_DELETE", {
+      item: item?.name ?? null,
+      itemId: item?.id ?? null,
+      actor: item?.parent?.name ?? null,
+      actorId: item?.parent?.id ?? null,
+      owned,
+      cursed,
+      hookUserId: userId,
+      requestingUser: requestingUser?.name ?? null,
+      requestingUserId: requestingUser?.id ?? null,
+      requestingUserIsGM: allowedByGM,
+      allowedByDisenchantment,
+      options
+    });
+
+    if (!owned || !cursed) return true;
+    if (allowedByDisenchantment || allowedByGM) {
+      add2eCurseLog("DELETE_ALLOWED", {
+        item: item.name,
+        reason: allowedByDisenchantment ? "disenchantment" : "gm"
+      });
+      return true;
+    }
+
+    const displayName = item.system?.identifie === false ? (item.system?.nom_non_identifie || "Cet objet") : item.name;
+    add2eCurseWarn("DELETE_BLOCKED", {
+      item: item.name,
+      displayName,
+      itemId: item.id,
+      actor: item.parent?.name ?? null,
+      requestingUser: requestingUser?.name ?? null
+    });
+    ui.notifications?.warn?.(`${displayName} est lié à son propriétaire et ne peut être retiré que par un désenvoûtement.`);
     return false;
   });
 
-  Hooks.on("createItem", async item => {
-    if (item?.parent?.documentName === "Actor" && add2eIsCursedItem(item)) await add2eSyncCursedItemEffect(item);
+  Hooks.on("createItem", async (item, options = {}, userId = null) => {
+    if (item?.parent?.documentName !== "Actor") return;
+    const cursed = add2eIsCursedItem(item);
+    add2eCurseLog("CREATE_ITEM", {
+      item: item.name,
+      itemId: item.id,
+      actor: item.parent.name,
+      cursed,
+      hookUserId: userId,
+      options
+    });
+    if (cursed) await add2eSyncCursedItemEffect(item);
   });
 
-  Hooks.on("updateItem", async (item, changes) => {
+  Hooks.on("updateItem", async (item, changes = {}, options = {}, userId = null) => {
     if (item?.parent?.documentName !== "Actor") return;
-    if (add2eIsCursedItem(item)) await add2eSyncCursedItemEffect(item);
+    const cursed = add2eIsCursedItem(item);
+    add2eCurseLog("UPDATE_ITEM", {
+      item: item.name,
+      itemId: item.id,
+      actor: item.parent.name,
+      cursed,
+      changes,
+      options,
+      hookUserId: userId
+    });
+    if (cursed) await add2eSyncCursedItemEffect(item);
     else if (changes?.system?.maudit === false || changes?.system?.cursed === false) {
       const ids = Array.from(item.parent.effects ?? [])
         .filter(effect => effect.flags?.add2e?.cursedItemId === item.id || effect.flags?.add2e?.sourceItemId === item.id)
         .map(effect => effect.id);
       if (ids.length) await item.parent.deleteEmbeddedDocuments("ActiveEffect", ids, { add2eInternal: true });
+      add2eCurseLog("CURSE_REMOVED_BY_UPDATE", { item: item.name, actor: item.parent.name, removedEffectIds: ids });
     }
   });
 
   Hooks.once("ready", async () => {
+    let actorCount = 0;
+    let cursedCount = 0;
+    let syncedCount = 0;
+    add2eCurseLog("READY_SCAN_START", { actorTotal: game.actors?.size ?? Array.from(game.actors ?? []).length });
     for (const actor of game.actors ?? []) {
+      actorCount += 1;
       for (const ownedItem of actor.items ?? []) {
-        if (add2eIsCursedItem(ownedItem)) await add2eSyncCursedItemEffect(ownedItem);
+        if (!add2eIsCursedItem(ownedItem)) continue;
+        cursedCount += 1;
+        const effect = await add2eSyncCursedItemEffect(ownedItem);
+        if (effect) syncedCount += 1;
       }
     }
+    add2eCurseLog("READY_SCAN_DONE", { actorCount, cursedCount, syncedCount });
   });
+} else {
+  add2eCurseWarn("INSTALL_SKIPPED", { reason: "already-installed" });
 }
