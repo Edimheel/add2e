@@ -7,7 +7,7 @@ import {
   add2eGetAttackAbilityModifier
 } from "./03-attack-rules.mjs";
 
-export const ADD2E_ATTACK_MODIFIERS_VERSION = "2026-07-08-generic-passive-combat-modifiers-v1";
+export const ADD2E_ATTACK_MODIFIERS_VERSION = "2026-07-16-signed-active-effect-modifiers-v2";
 
 function add2eAttackPushNormalizedTag(set, value) {
   if (!set || value === undefined || value === null || value === "") return;
@@ -70,8 +70,16 @@ export function add2eAttackBuildActorTagSet(actor) {
 }
 
 function add2eAttackParseSignedValue(rawValue, defaultValue = 0) {
-  const n = Number(String(rawValue ?? "").trim());
+  const n = Number(String(rawValue ?? "").trim().replace(",", "."));
   return Number.isFinite(n) ? n : defaultValue;
+}
+
+function add2eAttackNormalizeModifierTag(rawTag) {
+  const raw = String(rawTag ?? "").trim();
+  const signed = raw.match(/^(.*:)([+-]\d+(?:[.,]\d+)?)$/);
+  if (!signed) return add2eNormalizeAttackTag(raw);
+  const prefix = add2eNormalizeAttackTag(signed[1]);
+  return prefix ? `${prefix}${signed[2].replace(",", ".")}` : "";
 }
 
 function add2eAttackGetActiveTargetEffectTags(cible) {
@@ -177,7 +185,7 @@ export function add2eAttackComputeActiveAttackModifiers({ actor, cible, combatPr
     const damage = { value: 0, details: [] };
 
     for (const rawTag of activeTags) {
-      const tag = add2eNormalizeAttackTag(rawTag);
+      const tag = add2eAttackNormalizeModifierTag(rawTag);
       if (!tag) continue;
 
       if (add2eAttackApplySignedFlatTags({ tag, touch, damage })) continue;
