@@ -3,10 +3,12 @@
     .add2e-objet-description-preview,.add2e-objet-rich-editor{min-height:110px;padding:8px 10px;border:1px solid #d0b16b;border-radius:8px;background:#fffdf7;color:#2f241c;line-height:1.35;}
     .add2e-objet-description-preview p,.add2e-objet-rich-editor p{margin:0 0 .55em;}.add2e-objet-description-preview p:last-child,.add2e-objet-rich-editor p:last-child{margin-bottom:0;}
     .add2e-objet-rich-editor .editor{min-height:140px;}.add2e-objet-rich-editor .editor-content{min-height:120px;}
-    .add2e-arcane-drop-zone{display:grid;place-items:center;min-height:96px;margin-top:10px;padding:14px;border:2px dashed #9b7434;border-radius:8px;background:#fff8e7;text-align:center;cursor:copy;transition:background .12s ease,border-color .12s ease;}
-    .add2e-arcane-drop-zone.is-dragover{border-color:#4d7e31;background:#eef7e7;}
+    .add2e-arcane-drop-zone,.add2e-potion-spell-drop-zone{display:grid;place-items:center;min-height:96px;margin-top:10px;padding:14px;border:2px dashed #9b7434;border-radius:8px;background:#fff8e7;text-align:center;cursor:copy;transition:background .12s ease,border-color .12s ease;}
+    .add2e-arcane-drop-zone.is-dragover,.add2e-potion-spell-drop-zone.is-dragover{border-color:#4d7e31;background:#eef7e7;}
     .add2e-arcane-entry-list{display:grid;gap:7px;margin:0;padding:0;list-style:none;}
     .add2e-arcane-entry{display:grid;grid-template-columns:38px minmax(0,1fr) 75px 150px 42px;gap:8px;align-items:center;padding:7px;border:1px solid #d0b16b;border-radius:7px;background:#fffaf0;}
+    .add2e-potion-power-actions{margin-left:auto;display:flex;gap:6px;}
+    .add2e-potion-power-remove{width:34px;height:30px;display:none;align-items:center;justify-content:center;}
   </style>
   <header class="sheet-header" style="display:flex;gap:12px;align-items:flex-start;margin-bottom:10px;">
     <img class="profile-img" src="{{img}}" data-edit="img" title="{{#if system.identifie}}{{item.name}}{{else}}{{system.nom_non_identifie}}{{/if}}" width="96" height="96" style="object-fit:cover;border:1px solid #7a5a28;border-radius:6px;cursor:pointer;"/>
@@ -107,14 +109,39 @@
       {{#if pouvoirs.length}}
         <ol class="items-list" style="list-style:none;margin:0;padding:0;display:grid;gap:8px;">
           {{#each pouvoirs as |p idx|}}
-            <li style="border:1px solid #d0b16b;border-radius:6px;padding:8px;background:#fffaf0;">
-              <div style="display:flex;gap:8px;align-items:center;"><img src="{{p.img}}" width="32" height="32" style="border:1px solid #8b6d2a;border-radius:4px;"/><strong>{{#if p.name}}{{p.name}}{{else}}{{p.nom}}{{/if}}</strong><span style="margin-left:auto;">Coût : {{#if p.cout}}{{p.cout}}{{else}}{{p.cost}}{{/if}}</span></div>
+            <li data-potion-power-index="{{idx}}" style="border:1px solid #d0b16b;border-radius:6px;padding:8px;background:#fffaf0;">
+              <div style="display:flex;gap:8px;align-items:center;">
+                <img src="{{p.img}}" width="32" height="32" style="border:1px solid #8b6d2a;border-radius:4px;"/>
+                <strong>{{#if p.name}}{{p.name}}{{else}}{{p.nom}}{{/if}}</strong>
+                <span style="margin-left:auto;">Coût : {{#if p.cout}}{{p.cout}}{{else}}{{p.cost}}{{/if}}</span>
+                <span class="add2e-potion-power-actions">
+                  <button type="button" class="add2e-potion-power-remove" data-power-index="{{idx}}" title="Retirer ce pouvoir de la potion"><i class="fas fa-trash"></i></button>
+                </span>
+              </div>
               {{#if p.description}}<div style="margin-top:6px;">{{{p.description}}}</div>{{/if}}
               {{#if p.onUse}}<div style="margin-top:4px;font-size:.85em;color:#555;"><strong>onUse :</strong> {{p.onUse}}</div>{{/if}}
             </li>
           {{/each}}
         </ol>
       {{else}}<p>Aucun pouvoir défini.</p>{{/if}}
+
+      {{#if (eq (lowercase system.sousType) "potion")}}
+        <fieldset class="add2e-potion-spell-manager" data-item-uuid="{{item.uuid}}" style="margin-top:12px;border:1px solid #d0b16b;border-radius:7px;padding:10px;">
+          <legend>Contenu de la potion</legend>
+          <div class="add2e-potion-spell-drop-zone" tabindex="0"
+               ondragenter="event.preventDefault();this.classList.add('is-dragover');"
+               ondragover="event.preventDefault();event.stopPropagation();if(event.dataTransfer)event.dataTransfer.dropEffect='copy';this.classList.add('is-dragover');"
+               ondragleave="this.classList.remove('is-dragover');"
+               ondrop="event.preventDefault();event.stopPropagation();this.classList.remove('is-dragover');(async()=>{if(!game.user?.isGM){ui.notifications.warn('Seul le MJ peut modifier le contenu d’une potion.');return;}const item=await fromUuid(this.closest('[data-item-uuid]').dataset.itemUuid).catch(()=>null);if(!item){ui.notifications.error('Potion introuvable.');return;}let data=null;const editor=foundry?.applications?.ux?.TextEditor?.implementation??globalThis.TextEditor;try{data=editor?.getDragEventData?.(event)??null;}catch(_e){}if(!data){try{data=JSON.parse(event.dataTransfer?.getData('text/plain')||'null');}catch(_e){}}let spell=null;if(data?.uuid)spell=await fromUuid(data.uuid).catch(()=>null);if(!spell&&CONFIG?.Item?.documentClass?.fromDropData)spell=await CONFIG.Item.documentClass.fromDropData(data).catch(()=>null);if(spell?.documentName!=='Item'||String(spell.type).toLowerCase()!=='sort'){ui.notifications.warn('Déposez un Item de type sort.');return;}if(spell.system?.isPower===true||spell.system?.isObjectPower===true||spell.system?.isCapacity===true||spell.flags?.add2e?.spellFamily?.generated===true){ui.notifications.warn('Les pouvoirs, capacités et variantes générées ne peuvent pas être placés dans une potion.');return;}const onUse=String(spell.system?.onUse??spell.system?.onuse??spell.system?.on_use??'').trim();if(!onUse){ui.notifications.warn(`${spell.name} ne possède pas de script onUse utilisable.`);return;}const current=Array.isArray(item.system?.pouvoirs)?item.system.pouvoirs:(item.system?.pouvoirs&&typeof item.system.pouvoirs==='object'?Object.values(item.system.pouvoirs):[]);if(current.length){const ok=await foundry.applications.api.DialogV2.wait({window:{title:'Remplacer le contenu de la potion'},modal:true,rejectClose:false,content:`<div class='add2e-dialog' style='min-width:460px;padding:8px;'><p>Remplacer le pouvoir actuel de <b>${item.name}</b> par <b>${spell.name}</b> ?</p></div>`,buttons:[{action:'yes',label:'Remplacer',icon:'fa-solid fa-flask',default:true,callback:()=>true},{action:'no',label:'Annuler',icon:'fa-solid fa-xmark',callback:()=>false}]});if(ok!==true)return;}const system=foundry.utils.deepClone(spell.system??{});const power={name:spell.name,nom:spell.name,niveau:Number(system.niveau??system.level??system.niveau_sort??1)||1,img:spell.img||'icons/svg/aura.svg',description:String(system.description??''),onUse,onuse:onUse,on_use:onUse,cout:1,cost:1,max:1,linkedSpell:{name:spell.name,sourceUuid:String(spell.flags?.core?.sourceId??spell._stats?.compendiumSource??spell.uuid??''),img:spell.img||'icons/svg/aura.svg',onUse,system}};await item.update({'system.pouvoirs':[power],'system.magique':true,'system.consommable':true,'system.charges.value':1,'system.charges.max':1},{add2eInternal:true,add2ePotionSpellContent:true,render:false});ui.notifications.info(`${spell.name} a été placé dans ${item.name}.`);item.sheet?.render?.({force:true});})().catch(error=>{console.error('[ADD2E][POTION_SPELL][DROP_ERROR]',error);ui.notifications.error(error?.message||'Erreur pendant l’ajout du sort.');});">
+            <div>
+              <i class="fas fa-flask" style="font-size:1.5rem;"></i>
+              <p style="margin:6px 0 0;"><b>Déposez ici le sort à placer dans la potion</b></p>
+              <p style="margin:3px 0 0;">Le sort remplacera le contenu actuel après confirmation du MJ.</p>
+            </div>
+          </div>
+          <img src="icons/svg/eye.svg" alt="" style="display:none" onload="const root=this.closest('.add2e-potion-spell-manager');if(game.user?.isGM){root.querySelectorAll('.add2e-potion-power-remove').forEach(button=>button.style.display='inline-flex');}root.querySelectorAll('.add2e-potion-power-remove').forEach(button=>{if(button.dataset.bound==='1')return;button.dataset.bound='1';button.addEventListener('click',async event=>{event.preventDefault();event.stopPropagation();if(!game.user?.isGM){ui.notifications.warn('Seul le MJ peut modifier le contenu d’une potion.');return;}const item=await fromUuid(root.dataset.itemUuid).catch(()=>null);if(!item)return;const index=Number(button.dataset.powerIndex);const powers=Array.isArray(item.system?.pouvoirs)?foundry.utils.deepClone(item.system.pouvoirs):(item.system?.pouvoirs&&typeof item.system.pouvoirs==='object'?foundry.utils.deepClone(Object.values(item.system.pouvoirs)):[]);const power=powers[index];if(!power)return;const name=String(power.name??power.nom??'ce pouvoir');const ok=await foundry.applications.api.DialogV2.wait({window:{title:`Retirer ${name}`},modal:true,rejectClose:false,content:`<div class='add2e-dialog' style='min-width:460px;padding:8px;'><p>Retirer <b>${name}</b> de <b>${item.name}</b> ?</p><p>Cette action est possible même pour un effet natif de la potion.</p></div>`,buttons:[{action:'yes',label:'Retirer',icon:'fa-solid fa-trash',default:true,callback:()=>true},{action:'no',label:'Annuler',icon:'fa-solid fa-xmark',callback:()=>false}]});if(ok!==true)return;powers.splice(index,1);const update={'system.pouvoirs':powers};if(!powers.length){update['system.charges.value']=0;update['system.charges.max']=1;}await item.update(update,{add2eInternal:true,add2ePotionSpellContent:true,render:false});ui.notifications.info(`${name} a été retiré de ${item.name}.`);item.sheet?.render?.({force:true});});});"/>
+        </fieldset>
+      {{/if}}
     </div>
 
     <div class="content hidden" data-tab="effets">
