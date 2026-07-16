@@ -30,12 +30,12 @@ const foundryGeneration = Number(game.release?.generation ?? String(game.version
 const overrideMode = foundryGeneration >= 14 ? "OVERRIDE" : 5;
 
 const giantTable = [
-  { giant: "Géant des collines", weight: 4500, damage: 7, rockRange: 8, rockDamage: "1d6", doors: "50 %" },
-  { giant: "Géant des pierres", weight: 5000, damage: 8, rockRange: 16, rockDamage: "1d12", doors: "60 %" },
-  { giant: "Géant du froid", weight: 6000, damage: 9, rockRange: 10, rockDamage: "1d8", doors: "70 %" },
-  { giant: "Géant du feu", weight: 7500, damage: 10, rockRange: 12, rockDamage: "1d8", doors: "80 %" },
-  { giant: "Géant des nuages", weight: 9000, damage: 11, rockRange: 14, rockDamage: "1d10", doors: "90 %" },
-  { giant: "Géant des tempêtes", weight: 12000, damage: 12, rockRange: 16, rockDamage: "1d12", doors: "100 %" }
+  { giant: "Géant des collines", strength: 19, weight: 4500, damage: 7, rockRange: 8, rockDamage: "1d6", doors: "50 %" },
+  { giant: "Géant des pierres", strength: 20, weight: 5000, damage: 8, rockRange: 16, rockDamage: "1d12", doors: "60 %" },
+  { giant: "Géant du froid", strength: 21, weight: 6000, damage: 9, rockRange: 10, rockDamage: "1d8", doors: "70 %" },
+  { giant: "Géant du feu", strength: 22, weight: 7500, damage: 10, rockRange: 12, rockDamage: "1d8", doors: "80 %" },
+  { giant: "Géant des nuages", strength: 23, weight: 9000, damage: 11, rockRange: 14, rockDamage: "1d10", doors: "90 %" },
+  { giant: "Géant des tempêtes", strength: 24, weight: 12000, damage: 12, rockRange: 16, rockDamage: "1d12", doors: "100 %" }
 ];
 
 const typeRoll = await new Roll("1d6").evaluate();
@@ -64,7 +64,7 @@ for (const effect of obsoleteEffects) {
 
 const priority = 100;
 const changes = [
-  { key: "system.for_aff", mode: overrideMode, value: giant.giant, priority },
+  { key: "system.for_aff", mode: overrideMode, value: giant.strength, priority },
   { key: "system.force_bonus_degats", mode: overrideMode, value: giant.damage, priority },
   { key: "system.force_poids", mode: overrideMode, value: giant.weight, priority },
   { key: "system.charge_max", mode: overrideMode, value: giant.weight, priority },
@@ -87,6 +87,7 @@ const effect = await effectsEngine.createTimedEffect({
     "potion",
     "potion:force_de_geant",
     `force_equivalente:${giantSlug}`,
+    `force_effective:${giant.strength}`,
     "lancer_rochers",
     `rocher_portee:${giant.rockRange}`,
     `rocher_degats:${giant.rockDamage}`,
@@ -95,7 +96,7 @@ const effect = await effectsEngine.createTimedEffect({
   rules: [{
     kind: "characteristic_override",
     characteristic: "force",
-    value: giantSlug,
+    value: giant.strength,
     displayValue: giant.giant,
     profile: {
       degats: giant.damage,
@@ -109,6 +110,7 @@ const effect = await effectsEngine.createTimedEffect({
     potion: true,
     potionSlug: "force_de_geant",
     giantType: giant.giant,
+    giantStrength: giant.strength,
     giantDamageAdjustment: giant.damage,
     giantWeightAllowance: giant.weight,
     rockRange: giant.rockRange,
@@ -124,6 +126,7 @@ if (effect && String(effect.img ?? effect.icon ?? "") !== effectIcon) {
 await effectsEngine.postGenericEffectChat(actor, "Potion de force de géant", `
   <p style="font-size:1.1em;"><b>Type de géant tiré : ${giant.giant}</b></p>
   <p>Résultat du d6 : <b>${typeRoll.total}</b>.</p>
+  <p>Force effective : <b>${giant.strength}</b>.</p>
   <p>Ajustement aux dégâts : <b>+${giant.damage}</b>.</p>
   <p>Poids permis : <b>+${giant.weight}</b>.</p>
   <p>Durée : <b>${durationRoll.total} tours</b> (${rounds} rounds).</p>
