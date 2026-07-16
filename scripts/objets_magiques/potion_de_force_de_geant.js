@@ -8,23 +8,20 @@ const normalize = value => String(value ?? "")
   .toLowerCase()
   .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-async function ensureGenericEffectsEngine() {
+async function ensureEffectsEngineCore() {
   const engine = globalThis.Add2eEffectsEngine;
-  if (typeof engine?.createTimedCharacteristicEffect === "function" && typeof engine?.postGenericEffectChat === "function") {
-    return engine;
+  if (!engine) throw new Error("Add2eEffectsEngine est indisponible.");
+  if (typeof engine.createTimedCharacteristicEffect !== "function" || typeof engine.postGenericEffectChat !== "function") {
+    const module = await import(`/systems/add2e/scripts/effects-engine/00-core.mjs?cb=${Date.now()}`);
+    module.installEffectsEngineCore(engine);
   }
-
-  await import(`/systems/add2e/scripts/effects-engine/60-generic-effects.mjs?cb=${Date.now()}`);
-  await import(`/systems/add2e/scripts/effects-engine/61-characteristic-profiles.mjs?cb=${Date.now()}`);
-
-  const loaded = globalThis.Add2eEffectsEngine;
-  if (typeof loaded?.createTimedCharacteristicEffect !== "function" || typeof loaded?.postGenericEffectChat !== "function") {
-    throw new Error("Les effets génériques ADD2E ne sont pas disponibles.");
+  if (typeof engine.createTimedCharacteristicEffect !== "function" || typeof engine.postGenericEffectChat !== "function") {
+    throw new Error("Les effets génériques du moteur ADD2E ne sont pas disponibles.");
   }
-  return loaded;
+  return engine;
 }
 
-const effectsEngine = await ensureGenericEffectsEngine();
+const effectsEngine = await ensureEffectsEngineCore();
 const effectIcon = "icons/svg/aura.svg";
 
 const giantTable = [
@@ -43,7 +40,7 @@ const rounds = Math.max(1, Number(durationRoll.total) * 10);
 
 await typeRoll.toMessage({
   speaker: ChatMessage.getSpeaker({ actor }),
-  flavor: `Potion de force de géant — ${giant.giant}`
+  flavor: `Potion de force de géant — type tiré : ${giant.giant}`
 });
 await durationRoll.toMessage({
   speaker: ChatMessage.getSpeaker({ actor }),
