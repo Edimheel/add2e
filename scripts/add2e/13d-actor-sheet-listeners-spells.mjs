@@ -398,44 +398,74 @@ async function add2eWriteScrollEntry(actor, scroll, spellKey) {
     ui.notifications.warn("Le combat a commencé : la copie est annulée et le parchemin est conservé.");
     return false;
   }
+
   const roll = await new Roll("1d100").evaluate();
   const total = Number(roll.total) || 100;
   const success = total <= chance;
+  let learned = null;
+  let consumed = false;
+  let resolutionError = null;
+
   try {
-    await roll.toMessage({
-      speaker: ChatMessage.getSpeaker({ actor }),
-      flavor: `Compréhension de ${add2eScrollEsc(entry.name)} — chance ${chance}% — ${success ? "réussite" : "échec"}`
-    });
+    try {
+      await roll.toMessage({
+        speaker: ChatMessage.getSpeaker({ actor }),
+        flavor: `Compréhension de ${add2eScrollEsc(entry.name)} — chance ${chance}% — ${success ? "réussite" : "échec"}`
+      });
+    } catch (error) {
+      console.warn("[ADD2E][ARCANE_DOCUMENTS][SCROLL_COPY_ROLL_MESSAGE_FAILED]", {
+        actor: actor.name,
+        spell: entry.name,
+        total,
+        chance,
+        error
+      });
+    }
+
+    if (success) {
+      learned = await add2eLearnSpellFromScroll(actor, scroll, entry, sourceDocument, unknown, total, chance);
+      if (!learned) throw new Error("La création du sort appris a échoué.");
+
+      try { await globalThis.add2eExpandActorSpellFamilies?.(actor); } catch (_error) {}
+      try { await globalThis.add2eRemoveDuplicateActorSpells?.(actor, "scroll-writing"); } catch (_error) {}
+      await api.syncActorSpellbooks(actor, { reason: "scroll-writing" });
+    }
   } catch (error) {
-    console.warn("[ADD2E][ARCANE_DOCUMENTS][SCROLL_COPY_ROLL_MESSAGE_FAILED]", {
+    resolutionError = error;
+    console.error("[ADD2E][ARCANE_DOCUMENTS][SCROLL_COPY_RESOLUTION_FAILED]", {
       actor: actor.name,
+      scroll: scroll.name,
       spell: entry.name,
+      success,
       total,
       chance,
       error
     });
-  }
-  let learned = null;
-  if (success) {
-    learned = await add2eLearnSpellFromScroll(actor, scroll, entry, sourceDocument, unknown, total, chance);
-    if (!learned) {
-      ui.notifications.error("La création du sort a échoué. Le parchemin n'a pas été consommé.");
-      return false;
+  } finally {
+    try {
+      consumed = await api.consumeScrollSpell(actor, scroll, entry.key);
+    } catch (error) {
+      console.error("[ADD2E][ARCANE_DOCUMENTS][SCROLL_COPY_CONSUME_FAILED]", {
+        actor: actor.name,
+        scroll: scroll.name,
+        spell: entry.name,
+        error
+      });
+      consumed = false;
     }
+    if (!consumed) ui.notifications.error("La tentative a été résolue, mais l'inscription du parchemin n'a pas pu être effacée.");
   }
-  const consumed = await api.consumeScrollSpell(actor, scroll, entry.key);
-  if (!consumed) ui.notifications.error("La tentative a été résolue, mais l'inscription du parchemin n'a pas pu être effacée.");
-  if (success) {
-    try { await globalThis.add2eExpandActorSpellFamilies?.(actor); } catch (_error) {}
-    try { await globalThis.add2eRemoveDuplicateActorSpells?.(actor, "scroll-writing"); } catch (_error) {}
-    await api.syncActorSpellbooks(actor, { reason: "scroll-writing" });
+
+  if (resolutionError) {
+    ui.notifications.error(`${resolutionError.message} L'inscription du parchemin a tout de même été effacée après la tentative.`);
   }
+
   await ChatMessage.create({
     speaker: ChatMessage.getSpeaker({ actor }),
-    content: `<div class="add2e-chat-card" style="border:1px solid #75552b;border-radius:8px;background:#fff8e7;padding:8px;"><h3 style="margin:0 0 6px;">Copie depuis un parchemin</h3><p><b>${add2eScrollEsc(entry.name)}</b> — jet ${total}/${chance}</p><p>${success ? "Le sort est copié dans le livre personnel." : "Le sort n'est pas compris et l'inscription disparaît du parchemin."}</p></div>`
+    content: `<div class="add2e-chat-card" style="border:1px solid #75552b;border-radius:8px;background:#fff8e7;padding:8px;"><h3 style="margin:0 0 6px;">Copie depuis un parchemin</h3><p><b>${add2eScrollEsc(entry.name)}</b> — jet ${total}/${chance}</p><p>${success && learned ? "Le sort est copié dans le livre personnel." : "Le sort n'est pas compris ou n'a pas pu être copié, et l'inscription disparaît du parchemin."}</p></div>`
   });
   globalThis.add2eRerenderActorSheet?.(actor, true);
-  return success;
+  return success && !!learned && !resolutionError;
 }
 
 function add2eBindArcaneScrollControls(sheet, html) {
