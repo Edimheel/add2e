@@ -20,10 +20,11 @@ const ADD2E_CHARACTER_SHEET_PARTIALS = [
   "systems/add2e/templates/actor/parts/tab-notes.hbs"
 ];
 
-const ADD2E_BOOK_LEARNING_CHAT_VERSION = "2026-07-14-v22-applicationv2-reader";
+const ADD2E_BOOK_LEARNING_CHAT_VERSION = "2026-07-16-v23-scroll-learning-card-consumption";
 globalThis.ADD2E_BOOK_LEARNING_CHAT_VERSION = ADD2E_BOOK_LEARNING_CHAT_VERSION;
 
 const ADD2E_PENDING_BOOK_LEARNING_ROLLS = new Map();
+const ADD2E_PENDING_SCROLL_LEARNING_ROLLS = new Map();
 
 function add2eBookLearningNormalize(value) {
   return String(value ?? "").trim().toLowerCase()
@@ -111,6 +112,29 @@ function add2eParseBookLearningRoll(message, data = {}) {
   };
 }
 
+function add2eParseScrollLearningRoll(message, data = {}) {
+  const flavor = String(data?.flavor ?? message?.flavor ?? "");
+  const content = String(data?.content ?? message?.content ?? "");
+  const plain = add2eBookLearningPlainText(`${flavor} ${content}`);
+  const normalized = add2eBookLearningNormalize(plain);
+  const total = add2eBookLearningRollTotal(message, data);
+
+  if (total === null || !normalized.includes("comprehension_de") || normalized.includes("livre_de_sorts")) return null;
+  if (!normalized.includes("chance") || (!normalized.includes("reussite") && !normalized.includes("echec"))) return null;
+
+  const chanceMatch = plain.match(/chance\s*:?\s*(\d+)\s*%/i);
+  const spellMatch = plain.match(/compr[ée]hension\s+de\s+(.+?)\s*[-—]\s*chance/i);
+
+  return {
+    createdAt: Date.now(),
+    total,
+    chance: chanceMatch ? Number(chanceMatch[1]) : null,
+    spellName: String(spellMatch?.[1] ?? "Sort").trim(),
+    sourceName: "Parchemin de sort",
+    img: "icons/sundries/scrolls/scroll-runed-brown.webp"
+  };
+}
+
 function add2eIsFinalBookLearningMessage(message, data = {}) {
   const plain = add2eBookLearningPlainText(`${data?.flavor ?? message?.flavor ?? ""} ${data?.content ?? message?.content ?? ""}`);
   const normalized = add2eBookLearningNormalize(plain);
@@ -118,6 +142,15 @@ function add2eIsFinalBookLearningMessage(message, data = {}) {
     || normalized.includes("copie_dun_sort_depuis_un_livre")
     || normalized.includes("ajoute_au_livre_personnel_et_a_la_liste_des_sorts")
     || normalized.includes("na_pas_ete_appris");
+}
+
+function add2eIsFinalScrollLearningMessage(message, data = {}) {
+  const plain = add2eBookLearningPlainText(`${data?.flavor ?? message?.flavor ?? ""} ${data?.content ?? message?.content ?? ""}`);
+  const normalized = add2eBookLearningNormalize(plain);
+  return normalized.includes("copie_depuis_un_parchemin")
+    || normalized.includes("copie_d_un_parchemin")
+    || normalized.includes("inscription_disparait_du_parchemin")
+    || normalized.includes("inscription_du_parchemin");
 }
 
 function add2eBuildBookLearningCard(result, originalContent) {
@@ -163,6 +196,45 @@ function add2eBuildBookLearningCard(result, originalContent) {
   </div>`;
 }
 
+function add2eBuildScrollLearningCard(result, originalContent) {
+  const plain = add2eBookLearningPlainText(originalContent);
+  const normalized = add2eBookLearningNormalize(plain);
+  const success = normalized.includes("sort_est_copie")
+    || normalized.includes("copie_dans_le_livre_personnel")
+    || (Number.isFinite(result.total) && Number.isFinite(result.chance) && result.total <= result.chance);
+  const consumed = normalized.includes("disparait_du_parchemin")
+    || normalized.includes("effacee_apres_la_tentative")
+    || !normalized.includes("na_pas_pu_etre_effacee");
+  const spellName = result.spellName || "Sort";
+  const status = success ? "Apprentissage réussi" : "Apprentissage échoué";
+  const detail = success
+    ? `${spellName} est copié dans le livre personnel.`
+    : `${spellName} n’a pas été compris et n’est pas ajouté au livre personnel.`;
+  const consumption = consumed
+    ? "L’inscription a été effacée du parchemin après la tentative."
+    : "L’inscription n’a pas pu être effacée du parchemin.";
+
+  return `<div class="add2e-card add2e-arcane-card add2e-scroll-learning-card ${success ? "is-success" : "is-failure"}">
+    <header class="add2e-card-header">
+      <img src="${add2eBookLearningEscape(result.img)}" alt="">
+      <div>
+        <h3><i class="fas fa-scroll"></i> Apprentissage depuis un parchemin</h3>
+        <div class="add2e-card-source">${add2eBookLearningEscape(result.sourceName)}</div>
+      </div>
+    </header>
+    <div class="add2e-card-body">
+      <div class="add2e-book-learning-grid">
+        <b>Sort</b><span>${add2eBookLearningEscape(spellName)}</span>
+        <b>Jet</b><span>${result.total}</span>
+        <b>Chance</b><span>${Number.isFinite(result.chance) ? `${result.chance}%` : "—"}</span>
+      </div>
+      <div class="add2e-book-learning-status">${status}</div>
+      <p>${add2eBookLearningEscape(detail)}</p>
+      <p class="add2e-scroll-consumption"><i class="fas fa-fire"></i> ${add2eBookLearningEscape(consumption)}</p>
+    </div>
+  </div>`;
+}
+
 function add2eInstallBookLearningCardStyles() {
   const id = "add2e-book-learning-card-style";
   const old = document.getElementById(id);
@@ -173,16 +245,19 @@ function add2eInstallBookLearningCardStyles() {
   style.id = id;
   style.dataset.version = ADD2E_BOOK_LEARNING_CHAT_VERSION;
   style.textContent = `
-.chat-message .add2e-book-learning-card{overflow:hidden;border:2px solid #8060cc;border-radius:10px;background:linear-gradient(180deg,#f8f3ff,#e8ddfb);color:#211735}
-.chat-message .add2e-book-learning-card .add2e-card-header{display:flex;align-items:center;gap:8px;padding:7px 9px;background:linear-gradient(90deg,#2e1c5a,#6b49b8);color:#fff}
-.chat-message .add2e-book-learning-card .add2e-card-header img{width:38px!important;height:38px!important;min-width:38px!important;max-width:38px!important;object-fit:cover;border:1px solid rgba(255,255,255,.85);border-radius:6px;background:#fff}
-.chat-message .add2e-book-learning-card .add2e-card-header h3{margin:0!important;border:0!important;color:#fff!important;font-size:1rem!important;line-height:1.15}
-.chat-message .add2e-book-learning-card .add2e-card-source{font-size:.82rem;opacity:.92}
-.chat-message .add2e-book-learning-card .add2e-card-body{padding:9px 10px}
+.chat-message .add2e-book-learning-card,.chat-message .add2e-scroll-learning-card{overflow:hidden;border:2px solid #8060cc;border-radius:10px;background:linear-gradient(180deg,#f8f3ff,#e8ddfb);color:#211735}
+.chat-message .add2e-book-learning-card .add2e-card-header,.chat-message .add2e-scroll-learning-card .add2e-card-header{display:flex;align-items:center;gap:8px;padding:7px 9px;background:linear-gradient(90deg,#2e1c5a,#6b49b8);color:#fff}
+.chat-message .add2e-scroll-learning-card{border-color:#9a6a20;background:linear-gradient(180deg,#fff9e9,#efe0b7);color:#38270d}
+.chat-message .add2e-scroll-learning-card .add2e-card-header{background:linear-gradient(90deg,#56370e,#a27025)}
+.chat-message .add2e-book-learning-card .add2e-card-header img,.chat-message .add2e-scroll-learning-card .add2e-card-header img{width:38px!important;height:38px!important;min-width:38px!important;max-width:38px!important;object-fit:cover;border:1px solid rgba(255,255,255,.85);border-radius:6px;background:#fff}
+.chat-message .add2e-book-learning-card .add2e-card-header h3,.chat-message .add2e-scroll-learning-card .add2e-card-header h3{margin:0!important;border:0!important;color:#fff!important;font-size:1rem!important;line-height:1.15}
+.chat-message .add2e-book-learning-card .add2e-card-source,.chat-message .add2e-scroll-learning-card .add2e-card-source{font-size:.82rem;opacity:.92}
+.chat-message .add2e-book-learning-card .add2e-card-body,.chat-message .add2e-scroll-learning-card .add2e-card-body{padding:9px 10px}
 .chat-message .add2e-book-learning-grid{display:grid;grid-template-columns:auto 1fr;gap:3px 8px;margin:0 0 7px}
 .chat-message .add2e-book-learning-status{font-weight:900;margin:5px 0}
-.chat-message .add2e-book-learning-card.is-success .add2e-book-learning-status{color:#17652d}
-.chat-message .add2e-book-learning-card.is-failure .add2e-book-learning-status{color:#8b1e1e}
+.chat-message .add2e-book-learning-card.is-success .add2e-book-learning-status,.chat-message .add2e-scroll-learning-card.is-success .add2e-book-learning-status{color:#17652d}
+.chat-message .add2e-book-learning-card.is-failure .add2e-book-learning-status,.chat-message .add2e-scroll-learning-card.is-failure .add2e-book-learning-status{color:#8b1e1e}
+.chat-message .add2e-scroll-learning-card .add2e-scroll-consumption{margin:7px 0 0;padding-top:7px;border-top:1px solid rgba(92,57,10,.35);font-size:.88rem}
 `;
   document.head.append(style);
 }
@@ -201,26 +276,49 @@ async function add2eShowBookLearningDice(message, data = {}) {
   }
 }
 
+function add2eRememberLearningRoll(map, key, roll) {
+  map.set(key, roll);
+  window.setTimeout(() => {
+    if (map.get(key) === roll) map.delete(key);
+  }, 15000);
+}
+
 function add2ePrepareSingleBookLearningMessage(message, data = {}, _options = {}, userId = null) {
   if (userId && String(userId) !== String(game.user?.id ?? "")) return;
 
-  const roll = add2eParseBookLearningRoll(message, data);
-  if (roll) {
+  const bookRoll = add2eParseBookLearningRoll(message, data);
+  if (bookRoll) {
     const key = add2eBookLearningActorKey(message, data);
-    ADD2E_PENDING_BOOK_LEARNING_ROLLS.set(key, roll);
-    window.setTimeout(() => {
-      if (ADD2E_PENDING_BOOK_LEARNING_ROLLS.get(key) === roll) {
-        ADD2E_PENDING_BOOK_LEARNING_ROLLS.delete(key);
-      }
-    }, 15000);
-
+    add2eRememberLearningRoll(ADD2E_PENDING_BOOK_LEARNING_ROLLS, key, bookRoll);
     void add2eShowBookLearningDice(message, data);
     return false;
   }
 
-  if (!add2eIsFinalBookLearningMessage(message, data)) return;
+  const scrollRoll = add2eParseScrollLearningRoll(message, data);
+  if (scrollRoll) {
+    const key = add2eBookLearningActorKey(message, data);
+    add2eRememberLearningRoll(ADD2E_PENDING_SCROLL_LEARNING_ROLLS, key, scrollRoll);
+    void add2eShowBookLearningDice(message, data);
+    return false;
+  }
 
   const key = add2eBookLearningActorKey(message, data);
+
+  if (add2eIsFinalScrollLearningMessage(message, data)) {
+    const result = ADD2E_PENDING_SCROLL_LEARNING_ROLLS.get(key);
+    if (!result || Date.now() - result.createdAt > 15000) return;
+    ADD2E_PENDING_SCROLL_LEARNING_ROLLS.delete(key);
+    const originalContent = String(data?.content ?? message?.content ?? "");
+    message.updateSource({
+      content: add2eBuildScrollLearningCard(result, originalContent),
+      flavor: null,
+      rolls: []
+    });
+    return;
+  }
+
+  if (!add2eIsFinalBookLearningMessage(message, data)) return;
+
   const result = ADD2E_PENDING_BOOK_LEARNING_ROLLS.get(key);
   if (!result || Date.now() - result.createdAt > 15000) return;
   ADD2E_PENDING_BOOK_LEARNING_ROLLS.delete(key);
@@ -231,6 +329,88 @@ function add2ePrepareSingleBookLearningMessage(message, data = {}, _options = {}
     flavor: null,
     rolls: []
   });
+}
+
+function add2eArcaneRawScrollEntries(scroll) {
+  const document = scroll?.system?.arcaneDocument;
+  if (!document || typeof document !== "object" || Array.isArray(document)) return [];
+  if (Array.isArray(document.spells)) return foundry.utils.deepClone(document.spells);
+  if (document.spell && typeof document.spell === "object") return [foundry.utils.deepClone(document.spell)];
+  return [];
+}
+
+function add2eArcaneScrollEntryKey(entry) {
+  return String(entry?.key ?? entry?.stableKey ?? entry?.spellKey ?? "").trim();
+}
+
+async function add2eConsumeScrollSpellReliable(actor, scroll, spellKey) {
+  if (!actor || !scroll || String(scroll?.type ?? "").toLowerCase() !== "objet") return false;
+  const liveScroll = actor.items?.get?.(scroll.id) ?? scroll;
+  if (!liveScroll || liveScroll.parent?.id !== actor.id) return false;
+
+  const kind = String(liveScroll.system?.arcaneDocument?.kind ?? liveScroll.flags?.add2e?.arcaneDocumentKind ?? "").toLowerCase();
+  if (kind !== "spell-scroll") return false;
+
+  const entries = add2eArcaneRawScrollEntries(liveScroll);
+  const wanted = String(spellKey ?? "").trim();
+  const wantedNormalized = add2eBookLearningNormalize(wanted);
+  const index = entries.findIndex(entry => {
+    const key = add2eArcaneScrollEntryKey(entry);
+    return key === wanted || (wantedNormalized && add2eBookLearningNormalize(key) === wantedNormalized);
+  });
+  if (index < 0) return false;
+
+  const quantityField = liveScroll.system?.quantite !== undefined ? "system.quantite" : "system.quantity";
+  const quantity = Math.max(1, Math.floor(Number(liveScroll.system?.quantite ?? liveScroll.system?.quantity ?? 1) || 1));
+
+  if (entries.length === 1 && quantity > 1) {
+    await liveScroll.update({ [quantityField]: quantity - 1 }, {
+      add2eInternal: true,
+      add2eArcaneScroll: true,
+      add2eArcaneConsume: true,
+      render: false
+    });
+    return Number(liveScroll.system?.quantite ?? liveScroll.system?.quantity ?? 0) === quantity - 1;
+  }
+
+  entries.splice(index, 1);
+  if (!entries.length) {
+    await actor.deleteEmbeddedDocuments("Item", [liveScroll.id], {
+      add2eInternal: true,
+      add2eArcaneScroll: true,
+      add2eArcaneConsume: true,
+      render: false
+    });
+    return !actor.items?.has?.(liveScroll.id);
+  }
+
+  const nextDocument = foundry.utils.deepClone(liveScroll.system?.arcaneDocument ?? {});
+  nextDocument.schema = Number(nextDocument.schema) || 1;
+  nextDocument.kind = "spell-scroll";
+  nextDocument.personal = false;
+  nextDocument.spells = entries;
+  delete nextDocument.spell;
+
+  await liveScroll.update({ "system.arcaneDocument": nextDocument }, {
+    add2eInternal: true,
+    add2eArcaneScroll: true,
+    add2eArcaneConsume: true,
+    render: false
+  });
+
+  return !add2eArcaneRawScrollEntries(liveScroll)
+    .some(entry => add2eArcaneScrollEntryKey(entry) === wanted);
+}
+
+function add2eInstallReliableScrollConsumption() {
+  const api = globalThis.ADD2E_ARCANE_DOCUMENTS;
+  if (!api || typeof api !== "object") return false;
+  if (api.__add2eReliableScrollConsumptionV23 === true) return true;
+
+  api.consumeScrollSpell = add2eConsumeScrollSpellReliable;
+  api.__add2eReliableScrollConsumptionV23 = true;
+  globalThis.add2eConsumeScrollSpellReliable = add2eConsumeScrollSpellReliable;
+  return true;
 }
 
 const ADD2E_APPLICATION_V2 = foundry?.applications?.api?.ApplicationV2;
@@ -363,6 +543,7 @@ Hooks.once("init", async () => {
 Hooks.once("ready", () => {
   add2eInstallBookLearningCardStyles();
   add2eInstallNonModalSpellbookWait();
+  add2eInstallReliableScrollConsumption();
   document.addEventListener("click", add2eOpenGmSpellbookAsSheet, true);
 });
 
