@@ -62,9 +62,20 @@ for (const effect of obsoleteEffects) {
   await effect.update({ img: effectIcon }, { add2eInternal: true, add2eReason: "repair-invalid-force-effect-icon" });
 }
 
+// Nettoyage des anciennes versions qui ajoutaient la Force temporaire à system.for_aff.
+const legacyGiantEffects = Array.from(actor.effects ?? []).filter(effect =>
+  effect?.flags?.add2e?.potionSlug === "force_de_geant"
+);
+for (const effect of legacyGiantEffects) {
+  const filteredChanges = Array.from(effect.changes ?? []).filter(change => change?.key !== "system.for_aff");
+  if (filteredChanges.length !== Number(effect.changes?.length ?? 0)) {
+    await effect.update({ changes: filteredChanges }, { add2eInternal: true, add2eReason: "repair-giant-strength-display" });
+  }
+}
+
 const priority = 100;
 const changes = [
-  { key: "system.for_aff", mode: overrideMode, value: giant.strength, priority },
+  { key: "flags.add2e.forceEffectiveDisplay", mode: overrideMode, value: giant.strength, priority },
   { key: "system.force_bonus_degats", mode: overrideMode, value: giant.damage, priority },
   { key: "system.force_poids", mode: overrideMode, value: giant.weight, priority },
   { key: "system.charge_max", mode: overrideMode, value: giant.weight, priority },
@@ -124,14 +135,10 @@ if (effect && String(effect.img ?? effect.icon ?? "") !== effectIcon) {
 }
 
 await effectsEngine.postGenericEffectChat(actor, "Potion de force de géant", `
-  <p style="font-size:1.1em;"><b>Type de géant tiré : ${giant.giant}</b></p>
-  <p>Résultat du d6 : <b>${typeRoll.total}</b>.</p>
-  <p>Force effective : <b>${giant.strength}</b>.</p>
-  <p>Ajustement aux dégâts : <b>+${giant.damage}</b>.</p>
-  <p>Poids permis : <b>+${giant.weight}</b>.</p>
-  <p>Durée : <b>${durationRoll.total} tours</b> (${rounds} rounds).</p>
-  <p>Lancer de rochers : portée <b>${giant.rockRange}\"</b>, dégâts <b>${giant.rockDamage}</b>.</p>
-  <p>Portes : <b>${giant.doors}</b>.</p>
+  <p>Jet de dé : <b>${typeRoll.total}</b>.</p>
+  <p>Type de géant : <b>${giant.giant}</b>.</p>
+  <p>Durée : <b>${durationRoll.total} tours</b>.</p>
+  <p>Force affectée : <b>${giant.strength}</b>.</p>
 `, { img: effectIcon });
 
 return true;
