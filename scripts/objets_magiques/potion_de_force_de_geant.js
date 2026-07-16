@@ -30,12 +30,12 @@ const foundryGeneration = Number(game.release?.generation ?? String(game.version
 const overrideMode = foundryGeneration >= 14 ? "OVERRIDE" : 5;
 
 const giantTable = [
-  { giant: "Géant des collines", strength: 19, weight: 4500, damage: 7, rockRange: 8, rockDamage: "1d6", doors: "50 %" },
-  { giant: "Géant des pierres", strength: 20, weight: 5000, damage: 8, rockRange: 16, rockDamage: "1d12", doors: "60 %" },
-  { giant: "Géant du froid", strength: 21, weight: 6000, damage: 9, rockRange: 10, rockDamage: "1d8", doors: "70 %" },
-  { giant: "Géant du feu", strength: 22, weight: 7500, damage: 10, rockRange: 12, rockDamage: "1d8", doors: "80 %" },
-  { giant: "Géant des nuages", strength: 23, weight: 9000, damage: 11, rockRange: 14, rockDamage: "1d10", doors: "90 %" },
-  { giant: "Géant des tempêtes", strength: 24, weight: 12000, damage: 12, rockRange: 16, rockDamage: "1d12", doors: "100 %" }
+  { giant: "Géant des collines", strength: 19, rockRange: 8, rockDamage: "1d6" },
+  { giant: "Géant des pierres", strength: 20, rockRange: 16, rockDamage: "1d12" },
+  { giant: "Géant du froid", strength: 21, rockRange: 10, rockDamage: "1d8" },
+  { giant: "Géant du feu", strength: 22, rockRange: 12, rockDamage: "1d8" },
+  { giant: "Géant des nuages", strength: 23, rockRange: 14, rockDamage: "1d10" },
+  { giant: "Géant des tempêtes", strength: 24, rockRange: 16, rockDamage: "1d12" }
 ];
 
 const typeRoll = await new Roll("1d6").evaluate();
@@ -53,36 +53,19 @@ await durationRoll.toMessage({
   flavor: "Potion de force de géant — durée en tours"
 });
 
-const obsoleteImage = "systems/add2e/assets/icones/sorts/magicien-force.webp";
-const obsoleteEffects = Array.from(actor.effects ?? []).filter(effect =>
-  String(effect?.img ?? effect?.icon ?? "") === obsoleteImage
-  && normalize(effect?.name).includes("force")
-);
-for (const effect of obsoleteEffects) {
-  await effect.update({ img: effectIcon }, { add2eInternal: true, add2eReason: "repair-invalid-force-effect-icon" });
+const previousGiantEffects = Array.from(actor.effects ?? [])
+  .filter(effect => effect?.flags?.add2e?.potionSlug === "force_de_geant")
+  .map(effect => effect.id)
+  .filter(Boolean);
+if (previousGiantEffects.length) {
+  await actor.deleteEmbeddedDocuments("ActiveEffect", previousGiantEffects, {
+    add2eReason: "replace-giant-strength-potion"
+  });
 }
 
-// Nettoyage des anciennes versions qui ajoutaient la Force temporaire à system.for_aff.
-const legacyGiantEffects = Array.from(actor.effects ?? []).filter(effect =>
-  effect?.flags?.add2e?.potionSlug === "force_de_geant"
-);
-for (const effect of legacyGiantEffects) {
-  const filteredChanges = Array.from(effect.changes ?? []).filter(change => change?.key !== "system.for_aff");
-  if (filteredChanges.length !== Number(effect.changes?.length ?? 0)) {
-    await effect.update({ changes: filteredChanges }, { add2eInternal: true, add2eReason: "repair-giant-strength-display" });
-  }
-}
-
+const racialBonus = Number(actor.system?.bonus_caracteristiques?.force ?? actor.system?.force_race ?? 0) || 0;
+const temporaryBaseStrength = giant.strength - racialBonus;
 const priority = 100;
-const changes = [
-  { key: "flags.add2e.forceEffectiveDisplay", mode: overrideMode, value: giant.strength, priority },
-  { key: "system.force_bonus_degats", mode: overrideMode, value: giant.damage, priority },
-  { key: "system.force_poids", mode: overrideMode, value: giant.weight, priority },
-  { key: "system.charge_max", mode: overrideMode, value: giant.weight, priority },
-  { key: "system.charge_max_bench", mode: overrideMode, value: giant.weight, priority },
-  { key: "system.force_ouvrir", mode: overrideMode, value: giant.doors, priority },
-  { key: "system.force_bonus_porte", mode: overrideMode, value: giant.doors, priority }
-];
 
 const effect = await effectsEngine.createTimedEffect({
   actor,
@@ -91,8 +74,13 @@ const effect = await effectsEngine.createTimedEffect({
   sourceItem: source,
   rounds,
   unit: "round",
-  description: `Le consommateur possède une force équivalente à celle d’un ${giant.giant.toLowerCase()} pendant ${durationRoll.total} tours.`,
-  changes,
+  description: `Le consommateur possède une Force de ${giant.strength}, équivalente à celle d’un ${giant.giant.toLowerCase()}, pendant ${durationRoll.total} tours.`,
+  changes: [{
+    key: "system.force_base",
+    mode: overrideMode,
+    value: temporaryBaseStrength,
+    priority
+  }],
   tags: [
     "objet_magique",
     "potion",
@@ -101,19 +89,13 @@ const effect = await effectsEngine.createTimedEffect({
     `force_effective:${giant.strength}`,
     "lancer_rochers",
     `rocher_portee:${giant.rockRange}`,
-    `rocher_degats:${giant.rockDamage}`,
-    `portes:${giant.doors.replace(/\s+/g, "")}`
+    `rocher_degats:${giant.rockDamage}`
   ],
   rules: [{
     kind: "characteristic_override",
     characteristic: "force",
     value: giant.strength,
     displayValue: giant.giant,
-    profile: {
-      degats: giant.damage,
-      poids: giant.weight,
-      ouvrir: giant.doors
-    },
     priority
   }],
   endMessage: `La force équivalente à celle d’un ${giant.giant.toLowerCase()} prend fin sur {actor}.`,
@@ -122,17 +104,25 @@ const effect = await effectsEngine.createTimedEffect({
     potionSlug: "force_de_geant",
     giantType: giant.giant,
     giantStrength: giant.strength,
-    giantDamageAdjustment: giant.damage,
-    giantWeightAllowance: giant.weight,
+    originalBaseStrength: Number(actor.system?.force_base ?? actor.system?.force ?? 10) || 10,
+    temporaryBaseStrength,
     rockRange: giant.rockRange,
-    rockDamage: giant.rockDamage,
-    doors: giant.doors
+    rockDamage: giant.rockDamage
   }
 });
 
-if (effect && String(effect.img ?? effect.icon ?? "") !== effectIcon) {
+if (!effect) return false;
+
+if (String(effect.img ?? effect.icon ?? "") !== effectIcon) {
   await effect.update({ img: effectIcon }, { add2eInternal: true, add2eReason: "force-giant-potion-icon" });
 }
+
+if (typeof actor.sheet?.autoSetCaracAjustements === "function") {
+  await actor.sheet.autoSetCaracAjustements();
+} else if (typeof actor.autoSetCaracAjustements === "function") {
+  await actor.autoSetCaracAjustements();
+}
+if (actor.sheet?.rendered) actor.sheet.render(false);
 
 await effectsEngine.postGenericEffectChat(actor, "Potion de force de géant", `
   <p>Jet de dé : <b>${typeRoll.total}</b>.</p>
