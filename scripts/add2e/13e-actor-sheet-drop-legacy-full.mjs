@@ -4,7 +4,7 @@
 
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant _onDrop.");
 
-const ADD2E_ACTOR_SHEET_DROP_VERSION = "2026-06-26-actor-drop-family-final-render-v3";
+const ADD2E_ACTOR_SHEET_DROP_VERSION = "2026-07-16-actor-drop-preserve-current-item-name-v4";
 const ADD2E_SPELL_DROP_PENDING = globalThis.ADD2E_SPELL_DROP_PENDING instanceof Set
   ? globalThis.ADD2E_SPELL_DROP_PENDING
   : new Set();
@@ -51,18 +51,20 @@ function spellDropKey(actor, itemData, entry) {
 }
 
 async function resolveDropItemData(raw) {
-  if (typeof globalThis.add2eResolveDropItemDataCompendiumFirst === "function") {
-    const resolved = await globalThis.add2eResolveDropItemDataCompendiumFirst(raw).catch(() => null);
-    if (resolved) return clone(resolved);
+  // Un Item déjà présent dans le monde ou sur un acteur peut avoir été renommé.
+  // Son UUID exact doit alors être la source de vérité, avant son sourceId de compendium.
+  if (raw?.uuid) {
+    const document = await fromUuid(raw.uuid).catch(() => null);
+    if (document instanceof Item) return document.toObject();
   }
   if (raw?.pack && (raw.id || raw._id)) {
     const pack = game.packs?.get(raw.pack);
     const document = pack ? await pack.getDocument(raw.id ?? raw._id).catch(() => null) : null;
     if (document instanceof Item) return document.toObject();
   }
-  if (raw?.uuid) {
-    const document = await fromUuid(raw.uuid).catch(() => null);
-    if (document instanceof Item) return document.toObject();
+  if (typeof globalThis.add2eResolveDropItemDataCompendiumFirst === "function") {
+    const resolved = await globalThis.add2eResolveDropItemDataCompendiumFirst(raw).catch(() => null);
+    if (resolved) return clone(resolved);
   }
   return raw?.data ? clone(raw.data) : null;
 }
