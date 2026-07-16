@@ -393,22 +393,54 @@ const ADD2E_MAGIC_ITEM_PROFILES = Object.freeze({
 async function add2eMagicItemCreatorDialog(directory = null) {
   const DialogV2 = foundry?.applications?.api?.DialogV2;
   if (!DialogV2?.wait) return ui.notifications.error("DialogV2 est introuvable.");
-  const result = await DialogV2.wait({
+
+  let submittedData = null;
+  const dialogResult = await DialogV2.wait({
     window: { title: "Créer un objet magique" }, modal: true, rejectClose: false,
     content: `<form class="add2e-dialog add2e-magic-item-create-form" style="min-width:500px;padding:8px;"><div class="form-group"><label>Type</label><select name="profile">${Object.entries(ADD2E_MAGIC_ITEM_PROFILES).map(([key, profile]) => `<option value="${key}">${profile.label}</option>`).join("")}</select></div><div class="form-group"><label>Nom</label><input name="name" type="text" value="Objet magique"></div><div class="form-group"><label>Charges actuelles</label><input name="chargesValue" type="number" min="0" step="1" value="10"></div><div class="form-group"><label>Charges maximales</label><input name="chargesMax" type="number" min="0" step="1" value="10"></div><p style="font-size:.85em;opacity:.8;">Potion : un seul sort. Baguette, bâtonnet et anneau : plusieurs pouvoirs ou sorts. Parchemin : plusieurs sorts via son document magique.</p></form>`,
-    buttons: [{ action: "create", label: "Créer l'objet magique", icon: "fa-solid fa-wand-magic-sparkles", default: true, callback: (_event, _button, dialog) => { const form = dialog?.element?.querySelector?.("form.add2e-magic-item-create-form"); if (!form) return null; const data = Object.fromEntries(new FormData(form).entries()); return { profile: String(data.profile ?? "").trim(), name: String(data.name ?? "").trim(), chargesValue: Math.max(0, Math.trunc(Number(data.chargesValue) || 0)), chargesMax: Math.max(0, Math.trunc(Number(data.chargesMax) || 0)) }; } }, { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => null }]
+    buttons: [{
+      action: "create",
+      label: "Créer l'objet magique",
+      icon: "fa-solid fa-wand-magic-sparkles",
+      default: true,
+      callback: (_event, button, dialog) => {
+        const form = button?.form
+          ?? button?.element?.closest?.("form")
+          ?? dialog?.element?.querySelector?.("form.add2e-magic-item-create-form");
+        if (!form) return null;
+        const data = Object.fromEntries(new FormData(form).entries());
+        submittedData = {
+          profile: String(data.profile ?? "").trim(),
+          name: String(data.name ?? "").trim(),
+          chargesValue: Math.max(0, Math.trunc(Number(data.chargesValue) || 0)),
+          chargesMax: Math.max(0, Math.trunc(Number(data.chargesMax) || 0))
+        };
+        return submittedData;
+      }
+    }, {
+      action: "cancel",
+      label: "Annuler",
+      icon: "fa-solid fa-xmark",
+      callback: () => null
+    }]
   });
+
+  const result = dialogResult && typeof dialogResult === "object" ? dialogResult : submittedData;
   if (!result) return null;
-  const profile = ADD2E_MAGIC_ITEM_PROFILES[result.profile];
-  if (!profile) return ui.notifications.error("Type d'objet magique inconnu.");
+  const profileKey = String(result.profile ?? "").trim();
+  const profile = ADD2E_MAGIC_ITEM_PROFILES[profileKey];
+  if (!profile) {
+    console.error("[ADD2E][OBJET_MAGIQUE][CREATE][INVALID_PROFILE]", { dialogResult, submittedData, profileKey });
+    return ui.notifications.error("Le type d'objet magique sélectionné n'a pas pu être lu.");
+  }
   const name = result.name || profile.label;
   const max = profile.charges ? Math.max(result.chargesMax, result.chargesValue) : 0;
   const current = profile.charges ? Math.min(result.chargesValue, max) : 0;
   const system = { nom: name, type: "objet", categorie: "objet_magique", sousType: profile.sousType, sous_type: profile.sousType, quantite: 1, poids: 0, magique: true, equipee: false, consommable: profile.consumable, description: "", tags: [...profile.tags], effectTags: [...profile.tags], pouvoirs: [] };
   if (profile.charges) system.charges = { value: current, max };
-  if (result.profile === "parchemin") system.arcaneDocument = { schema: 1, kind: "spell-scroll", personal: false, spells: [] };
+  if (profileKey === "parchemin") system.arcaneDocument = { schema: 1, kind: "spell-scroll", personal: false, spells: [] };
   const folder = directory?.currentFolder?.id ?? directory?.folder?.id ?? null;
-  const itemData = { name, type: "objet", img: profile.img, system, flags: { add2e: { magicItemProfile: result.profile, magicItemBuilderVersion: ADD2E_MAGIC_ITEM_BUILDER_VERSION, kind: profile.sousType, category: "objet_magique", ...(result.profile === "parchemin" ? { arcaneDocumentKind: "spell-scroll" } : {}) } } };
+  const itemData = { name, type: "objet", img: profile.img, system, flags: { add2e: { magicItemProfile: profileKey, magicItemBuilderVersion: ADD2E_MAGIC_ITEM_BUILDER_VERSION, kind: profile.sousType, category: "objet_magique", ...(profileKey === "parchemin" ? { arcaneDocumentKind: "spell-scroll" } : {}) } } };
   if (folder) itemData.folder = folder;
   const ItemClass = CONFIG?.Item?.documentClass ?? globalThis.Item;
   const created = await ItemClass.create(itemData, { renderSheet: true });
