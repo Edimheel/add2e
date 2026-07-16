@@ -11,7 +11,7 @@ import {
   sortedCombatants
 } from "../add2e-initiative-order.mjs";
 
-export const ADD2E_HORIZONTAL_TRACKER_VERSION = "2026-07-14-horizontal-combat-tracker-v5";
+export const ADD2E_HORIZONTAL_TRACKER_VERSION = "2026-07-16-horizontal-combat-tracker-v6-window-layer";
 
 const ApplicationV2 = foundry?.applications?.api?.ApplicationV2;
 const DialogV2 = foundry?.applications?.api?.DialogV2;
@@ -169,7 +169,7 @@ function ensureStyles() {
       position: fixed !important;
       top: 10px !important;
       height: auto !important;
-      z-index: 110 !important;
+      z-index: 90 !important;
       background: transparent !important;
       border: 0 !important;
       box-shadow: none !important;
@@ -245,7 +245,7 @@ function ensureStyles() {
       overflow-x: auto;
       overflow-y: visible;
       padding: 10px 8px 12px;
-      pointer-events: auto;
+      pointer-events: none;
       scrollbar-width: thin;
       scrollbar-color: #8b7134 transparent;
     }
@@ -261,6 +261,7 @@ function ensureStyles() {
       background: transparent;
       box-shadow: 0 4px 11px rgba(0,0,0,.52);
       transition: transform .14s ease, filter .14s ease, border-color .14s ease;
+      pointer-events: auto;
     }
     .add2e-horizontal-card.active {
       transform: translateY(-5px) scale(1.07);
