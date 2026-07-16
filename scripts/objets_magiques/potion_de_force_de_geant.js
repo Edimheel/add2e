@@ -27,7 +27,9 @@ async function ensureEffectsEngine() {
 const effectsEngine = await ensureEffectsEngine();
 const effectIcon = "icons/svg/aura.svg";
 const foundryGeneration = Number(game.release?.generation ?? String(game.version ?? "13").split(".")[0]) || 13;
-const overrideMode = foundryGeneration >= 14 ? "OVERRIDE" : 5;
+const overrideMode = foundryGeneration >= 14
+  ? (CONST.ACTIVE_EFFECT_CHANGE_TYPES?.OVERRIDE ?? "override")
+  : 5;
 
 const giantTable = [
   { giant: "Géant des collines", strength: 19, rockRange: 8, rockDamage: "1d6" },
@@ -43,15 +45,6 @@ const giant = giantTable[Math.max(0, Math.min(5, Number(typeRoll.total) - 1))];
 const durationRoll = await new Roll("2d4").evaluate();
 const rounds = Math.max(1, Number(durationRoll.total) * 10);
 const giantSlug = normalize(giant.giant).replace(/[^a-z0-9]+/g, "_");
-
-await typeRoll.toMessage({
-  speaker: ChatMessage.getSpeaker({ actor }),
-  flavor: `Potion de force de géant — ${giant.giant}`
-});
-await durationRoll.toMessage({
-  speaker: ChatMessage.getSpeaker({ actor }),
-  flavor: "Potion de force de géant — durée en tours"
-});
 
 const previousGiantEffects = Array.from(actor.effects ?? [])
   .filter(effect => effect?.flags?.add2e?.potionSlug === "force_de_geant")
