@@ -7,16 +7,6 @@ if (!actor) {
 const normalize = value => String(value ?? "")
   .toLowerCase()
   .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-const isFighter = Array.from(actor.items ?? []).some(entry => {
-  if (String(entry?.type ?? "").toLowerCase() !== "classe") return false;
-  return [entry.name, entry.system?.nom, entry.system?.name, entry.system?.label, entry.system?.slug]
-    .map(normalize)
-    .some(value => value.includes("guerrier"));
-});
-if (!isFighter) {
-  ui.notifications.warn("La potion de force de géant ne peut être utilisée que par un guerrier.");
-  return false;
-}
 
 const giantTable = [
   { giant: "Géant des collines", weight: 4500, damage: 7, rockRange: 8, rockDamage: "1d6", doors: "50 %" },
