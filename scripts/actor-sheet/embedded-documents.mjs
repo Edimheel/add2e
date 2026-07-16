@@ -24,6 +24,25 @@ function add2eCurseValues(value) {
   return [value];
 }
 
+function add2eCursedItemEffectTags(item) {
+  const system = item?.system ?? {};
+  const flags = item?.flags?.add2e ?? {};
+  const raw = [
+    system.tags,
+    system.tag,
+    system.effectTags,
+    flags.tags,
+    flags.effectTags
+  ].flatMap(add2eCurseValues).map(add2eNormalizeCurseTag).filter(Boolean);
+
+  const tags = new Set(["objet:maudit", "etat:malediction", ...raw]);
+  for (const tag of raw) {
+    if (tag.startsWith("malus_save:")) tags.add(`bonus_save:${tag.slice("malus_save:".length)}`);
+    if (tag.startsWith("malus_sauvegarde:")) tags.add(`bonus_save:${tag.slice("malus_sauvegarde:".length)}`);
+  }
+  return [...tags];
+}
+
 export function add2eIsCursedItem(item) {
   if (!item) return false;
   const system = item.system ?? {};
@@ -39,6 +58,60 @@ export function add2eIsCursedItem(item) {
   ].flatMap(add2eCurseValues).map(add2eNormalizeCurseTag);
 
   return tags.some(tag => ["maudit", "cursed", "objet:maudit", "objet_maudit", "malediction", "objet:malediction"].includes(tag));
+}
+
+export async function add2eSyncCursedItemEffect(item) {
+  if (!item || !add2eIsCursedItem(item)) return null;
+  const actor = item.parent;
+  if (!actor || actor.documentName !== "Actor") return null;
+
+  const existing = Array.from(actor.effects ?? []).filter(effect =>
+    effect.flags?.add2e?.cursedItemId === item.id
+    || effect.flags?.add2e?.sourceItemId === item.id
+    || effect.origin === item.uuid
+  );
+
+  const tags = add2eCursedItemEffectTags(item);
+  const data = {
+    name: item.system?.identifie === false ? (item.system?.nom_non_identifie || "Objet maudit") : `${item.name} — Malédiction`,
+    img: item.img || "icons/svg/skull.svg",
+    origin: item.uuid,
+    disabled: false,
+    transfer: false,
+    type: "base",
+    system: {},
+    changes: [],
+    duration: { startTime: game.time?.worldTime ?? null },
+    description: "Malédiction permanente tant que l’objet est possédé. Seul un désenvoûtement peut la retirer.",
+    flags: {
+      add2e: {
+        cursedItemEffect: true,
+        cursedItemId: item.id,
+        sourceItemId: item.id,
+        tags,
+        effectTags: tags,
+        rules: []
+      }
+    }
+  };
+
+  if (existing.length) {
+    const [primary, ...duplicates] = existing;
+    await primary.update(data, { add2eInternal: true, add2eReason: "sync-cursed-item-effect" });
+    if (duplicates.length) {
+      await actor.deleteEmbeddedDocuments("ActiveEffect", duplicates.map(effect => effect.id), {
+        add2eInternal: true,
+        add2eReason: "dedupe-cursed-item-effect"
+      });
+    }
+    return primary;
+  }
+
+  const [created] = await actor.createEmbeddedDocuments("ActiveEffect", [data], {
+    add2eInternal: true,
+    add2eReason: "create-cursed-item-effect"
+  });
+  return created ?? null;
 }
 
 export async function add2eDeleteCursedItemByDisenchantment(item, options = {}) {
@@ -115,6 +188,7 @@ export async function add2eDeleteActorEffectsBySourceType(actor, sourceType) {
 if (!globalThis.ADD2E_CURSED_ITEM_GUARD_INSTALLED) {
   globalThis.ADD2E_CURSED_ITEM_GUARD_INSTALLED = true;
   globalThis.add2eIsCursedItem = add2eIsCursedItem;
+  globalThis.add2eSyncCursedItemEffect = add2eSyncCursedItemEffect;
   globalThis.add2eDeleteCursedItemByDisenchantment = add2eDeleteCursedItemByDisenchantment;
 
   Hooks.on("preDeleteItem", (item, options = {}, userId = null) => {
@@ -122,10 +196,33 @@ if (!globalThis.ADD2E_CURSED_ITEM_GUARD_INSTALLED) {
     if (!add2eIsCursedItem(item)) return true;
     if (options.add2eDisenchantment === true) return true;
 
-    const requestingUser = game.users?.get(userId) ?? game.user;
+    const requestingUser = userId ? game.users?.get(userId) : game.user;
     if (requestingUser?.isGM === true) return true;
 
-    ui.notifications?.warn?.(`${item.name} est maudit et ne peut être retiré que par un désenvoûtement.`);
+    ui.notifications?.warn?.(`${item.system?.identifie === false ? (item.system?.nom_non_identifie || "Cet objet") : item.name} est lié à son propriétaire et ne peut être retiré que par un désenvoûtement.`);
     return false;
+  });
+
+  Hooks.on("createItem", async item => {
+    if (item?.parent?.documentName === "Actor" && add2eIsCursedItem(item)) await add2eSyncCursedItemEffect(item);
+  });
+
+  Hooks.on("updateItem", async (item, changes) => {
+    if (item?.parent?.documentName !== "Actor") return;
+    if (add2eIsCursedItem(item)) await add2eSyncCursedItemEffect(item);
+    else if (changes?.system?.maudit === false || changes?.system?.cursed === false) {
+      const ids = Array.from(item.parent.effects ?? [])
+        .filter(effect => effect.flags?.add2e?.cursedItemId === item.id || effect.flags?.add2e?.sourceItemId === item.id)
+        .map(effect => effect.id);
+      if (ids.length) await item.parent.deleteEmbeddedDocuments("ActiveEffect", ids, { add2eInternal: true });
+    }
+  });
+
+  Hooks.once("ready", async () => {
+    for (const actor of game.actors ?? []) {
+      for (const ownedItem of actor.items ?? []) {
+        if (add2eIsCursedItem(ownedItem)) await add2eSyncCursedItemEffect(ownedItem);
+      }
+    }
   });
 }
