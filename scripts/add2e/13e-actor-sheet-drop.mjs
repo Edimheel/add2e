@@ -1,9 +1,9 @@
 // ADD2E — Actor sheet drop — chargeur court
-// Version : 2026-07-16-magic-identification-cursed-items-v5
+// Version : 2026-07-16-magic-identification-cursed-items-v6
 // Compatible Foundry V13/V14/V15.
 // Le contenu principal du drop reste dans 13e-actor-sheet-drop-legacy-full.mjs.
 
-const ADD2E_CURSED_ITEM_VERSION = "2026-07-16-cursed-items-v5";
+const ADD2E_CURSED_ITEM_VERSION = "2026-07-16-cursed-items-v6";
 const ADD2E_CURSED_ITEM_LOG = "[ADD2E][OBJET_MAUDIT]";
 globalThis.ADD2E_CURSED_ITEM_VERSION = ADD2E_CURSED_ITEM_VERSION;
 
@@ -179,14 +179,74 @@ function add2eCursedItemTags(item) {
   return [...tags];
 }
 
+function add2eIsStorageActor(actor) {
+  if (!actor || actor.documentName !== "Actor") return false;
+  const flags = actor.flags?.add2e ?? {};
+  const system = actor.system ?? {};
+  const role = add2eIdentificationNormalize(flags.role ?? flags.actorRole ?? system.role ?? system.actorRole ?? "");
+  const name = add2eIdentificationNormalize(actor.name ?? "");
+  return flags.isVendor === true
+    || flags.isArmorer === true
+    || flags.isLoot === true
+    || flags.isContainer === true
+    || flags.vendor === true
+    || flags.armorer === true
+    || flags.loot === true
+    || flags.container === true
+    || system.isVendor === true
+    || system.isArmorer === true
+    || system.isLoot === true
+    || system.isContainer === true
+    || ["vendor", "vendeur", "marchand", "armorer", "armurier", "loot", "butin", "container", "conteneur", "coffre"].includes(role)
+    || name === "armurier"
+    || name.startsWith("marchand_")
+    || name.startsWith("coffre_");
+}
+
+function add2eCursedEffectsForItem(actor, item) {
+  return Array.from(actor?.effects ?? []).filter(effect =>
+    effect.flags?.add2e?.cursedItemId === item?.id
+    || effect.flags?.add2e?.sourceItemId === item?.id
+    || effect.origin === item?.uuid
+  );
+}
+
+async function add2eRemoveStorageCursedEffects(actor, context = {}) {
+  if (!add2eIsStorageActor(actor)) return 0;
+  const ids = Array.from(actor.effects ?? [])
+    .filter(effect => effect.flags?.add2e?.cursedItemEffect === true)
+    .map(effect => effect.id)
+    .filter(Boolean);
+  if (!ids.length) return 0;
+  await actor.deleteEmbeddedDocuments("ActiveEffect", ids, {
+    add2eInternal: true,
+    add2eReason: "cleanup-storage-cursed-effects"
+  });
+  add2eCurseLog("STORAGE_EFFECTS_CLEANED", { actor: actor.name, actorId: actor.id, effectIds: ids, context });
+  return ids.length;
+}
+
 async function add2eSyncCursedItemEffect(item, context = {}) {
   if (!item || !add2eIsCursedItem(item)) return null;
   const actor = item.parent;
   if (!actor || actor.documentName !== "Actor") return null;
+  if (add2eIsStorageActor(actor)) {
+    const existing = add2eCursedEffectsForItem(actor, item).map(effect => effect.id).filter(Boolean);
+    if (existing.length) {
+      await actor.deleteEmbeddedDocuments("ActiveEffect", existing, {
+        add2eInternal: true,
+        add2eReason: "cleanup-storage-cursed-item-effect"
+      });
+    }
+    add2eCurseLog("SYNC_SKIPPED_STORAGE", {
+      actor: actor.name, actorId: actor.id, item: item.name, itemId: item.id,
+      removedEffectIds: existing, context
+    });
+    return null;
+  }
+
   const tags = add2eCursedItemTags(item);
-  const existing = Array.from(actor.effects ?? []).filter(effect =>
-    effect.flags?.add2e?.cursedItemId === item.id || effect.flags?.add2e?.sourceItemId === item.id || effect.origin === item.uuid
-  );
+  const existing = add2eCursedEffectsForItem(actor, item);
   const identified = add2eIdentificationIsIdentified(item);
   const data = {
     name: identified ? `${add2eIdentificationTrueName(item)} — Malédiction` : `${add2eIdentificationGenericName(item)} — Effet`,
@@ -221,9 +281,7 @@ async function add2eDeleteCursedItemByDisenchantment(item, options = {}) {
   if (!item || !add2eIsCursedItem(item)) return false;
   const actor = item.parent;
   if (!actor || actor.documentName !== "Actor") return false;
-  const effectIds = Array.from(actor.effects ?? []).filter(effect =>
-    effect.flags?.add2e?.cursedItemId === item.id || effect.flags?.add2e?.sourceItemId === item.id || effect.origin === item.uuid
-  ).map(effect => effect.id).filter(Boolean);
+  const effectIds = add2eCursedEffectsForItem(actor, item).map(effect => effect.id).filter(Boolean);
   add2eCurseLog("DISENCHANT_START", { actor: actor.name, item: item.name, itemId: item.id, effectIds, options });
   if (effectIds.length) await actor.deleteEmbeddedDocuments("ActiveEffect", effectIds, { add2eDisenchantment: true, add2eReason: "remove-cursed-item-effects" });
   await item.delete({ ...options, add2eDisenchantment: true, add2eReason: options.add2eReason ?? "remove-curse" });
@@ -237,10 +295,12 @@ function add2eInstallCursedItemHooks() {
   globalThis.add2eIsCursedItem = add2eIsCursedItem;
   globalThis.add2eSyncCursedItemEffect = add2eSyncCursedItemEffect;
   globalThis.add2eDeleteCursedItemByDisenchantment = add2eDeleteCursedItemByDisenchantment;
+  globalThis.add2eIsCursedItemStorageActor = add2eIsStorageActor;
   add2eCurseLog("INSTALL", { source: "13e-actor-sheet-drop.mjs" });
 
   Hooks.on("preDeleteItem", (item, options = {}, userId = null) => {
     if (item?.parent?.documentName !== "Actor" || !add2eIsCursedItem(item)) return true;
+    if (add2eIsStorageActor(item.parent)) return true;
     const requestingUser = game.users?.get?.(userId) ?? game.user;
     const allowed = options.add2eDisenchantment === true || requestingUser?.isGM === true;
     add2eCurseLog("PRE_DELETE", {
@@ -257,6 +317,7 @@ function add2eInstallCursedItemHooks() {
 
   Hooks.on("preDeleteActiveEffect", (effect, options = {}, userId = null) => {
     if (effect?.flags?.add2e?.cursedItemEffect !== true) return true;
+    if (add2eIsStorageActor(effect.parent)) return true;
     const requestingUser = game.users?.get?.(userId) ?? game.user;
     if (options.add2eDisenchantment === true || options.add2eInternal === true || requestingUser?.isGM === true) return true;
     add2eCurseLog("EFFECT_DELETE_BLOCKED", { actor: effect.parent?.name, effect: effect.name, effectId: effect.id, hookUserId: userId }, true);
@@ -265,30 +326,41 @@ function add2eInstallCursedItemHooks() {
   });
 
   Hooks.on("createItem", async (item, options = {}, userId = null) => {
-    if (item?.parent?.documentName !== "Actor") return;
-    const cursed = add2eIsCursedItem(item);
-    add2eCurseLog("CREATE_ITEM", { actor: item.parent.name, item: item.name, itemId: item.id, cursed, hookUserId: userId, options });
-    if (cursed && String(userId ?? game.user?.id) === String(game.user?.id)) await add2eSyncCursedItemEffect(item, { hook: "createItem" });
+    if (item?.parent?.documentName !== "Actor" || !add2eIsCursedItem(item)) return;
+    add2eCurseLog("CREATE_ITEM", { actor: item.parent.name, item: item.name, itemId: item.id, storageActor: add2eIsStorageActor(item.parent), hookUserId: userId, options });
+    if (String(userId ?? game.user?.id) === String(game.user?.id)) await add2eSyncCursedItemEffect(item, { hook: "createItem" });
   });
 
   Hooks.on("updateItem", async (item, changes = {}, options = {}, userId = null) => {
     if (item?.parent?.documentName !== "Actor" || !add2eIsCursedItem(item)) return;
-    add2eCurseLog("UPDATE_ITEM", { actor: item.parent.name, item: item.name, itemId: item.id, hookUserId: userId, changes, options });
+    add2eCurseLog("UPDATE_ITEM", { actor: item.parent.name, item: item.name, itemId: item.id, storageActor: add2eIsStorageActor(item.parent), hookUserId: userId, changes, options });
     if (String(userId ?? game.user?.id) === String(game.user?.id)) await add2eSyncCursedItemEffect(item, { hook: "updateItem" });
   });
 
   Hooks.once("ready", async () => {
     if (!game.user?.isGM) return;
-    let found = 0;
+    let cursedItems = 0;
+    let storageActors = 0;
+    let cleanedEffects = 0;
     add2eCurseLog("READY_SCAN_START", { actors: game.actors?.size ?? 0 });
     for (const actor of game.actors ?? []) {
+      if (add2eIsStorageActor(actor)) {
+        storageActors += 1;
+        cleanedEffects += await add2eRemoveStorageCursedEffects(actor, { hook: "ready" });
+        for (const ownedItem of actor.items ?? []) {
+          if (!add2eIsCursedItem(ownedItem)) continue;
+          cursedItems += 1;
+          add2eCurseLog("SYNC_SKIPPED_STORAGE", { actor: actor.name, actorId: actor.id, item: ownedItem.name, itemId: ownedItem.id, context: { hook: "ready" } });
+        }
+        continue;
+      }
       for (const ownedItem of actor.items ?? []) {
         if (!add2eIsCursedItem(ownedItem)) continue;
-        found += 1;
+        cursedItems += 1;
         await add2eSyncCursedItemEffect(ownedItem, { hook: "ready" });
       }
     }
-    add2eCurseLog("READY_SCAN_DONE", { cursedItems: found });
+    add2eCurseLog("READY_SCAN_DONE", { cursedItems, storageActors, cleanedEffects });
   });
 }
 
