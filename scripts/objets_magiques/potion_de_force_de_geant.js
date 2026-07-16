@@ -8,6 +8,25 @@ const normalize = value => String(value ?? "")
   .toLowerCase()
   .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
+async function ensureGenericEffectsEngine() {
+  const engine = globalThis.Add2eEffectsEngine;
+  if (typeof engine?.createTimedCharacteristicEffect === "function" && typeof engine?.postGenericEffectChat === "function") {
+    return engine;
+  }
+
+  await import(`/systems/add2e/scripts/effects-engine/60-generic-effects.mjs?cb=${Date.now()}`);
+  await import(`/systems/add2e/scripts/effects-engine/61-characteristic-profiles.mjs?cb=${Date.now()}`);
+
+  const loaded = globalThis.Add2eEffectsEngine;
+  if (typeof loaded?.createTimedCharacteristicEffect !== "function" || typeof loaded?.postGenericEffectChat !== "function") {
+    throw new Error("Les effets génériques ADD2E ne sont pas disponibles.");
+  }
+  return loaded;
+}
+
+const effectsEngine = await ensureGenericEffectsEngine();
+const effectIcon = "icons/svg/aura.svg";
+
 const giantTable = [
   { giant: "Géant des collines", weight: 4500, damage: 7, rockRange: 8, rockDamage: "1d6", doors: "50 %" },
   { giant: "Géant des pierres", weight: 5000, damage: 8, rockRange: 16, rockDamage: "1d12", doors: "60 %" },
@@ -24,14 +43,14 @@ const rounds = Math.max(1, Number(durationRoll.total) * 10);
 
 await typeRoll.toMessage({
   speaker: ChatMessage.getSpeaker({ actor }),
-  flavor: "Potion de force de géant — type de géant"
+  flavor: `Potion de force de géant — ${giant.giant}`
 });
 await durationRoll.toMessage({
   speaker: ChatMessage.getSpeaker({ actor }),
   flavor: "Potion de force de géant — durée en tours"
 });
 
-await Add2eEffectsEngine.createTimedCharacteristicEffect({
+await effectsEngine.createTimedCharacteristicEffect({
   actor,
   characteristic: "force",
   value: normalize(giant.giant).replace(/[^a-z0-9]+/g, "_"),
@@ -42,8 +61,8 @@ await Add2eEffectsEngine.createTimedCharacteristicEffect({
     ouvrir: giant.doors
   },
   priority: 100,
-  name: "Potion de force de géant",
-  img: source?.img,
+  name: `Potion de force de géant — ${giant.giant}`,
+  img: effectIcon,
   sourceItem: source,
   rounds,
   unit: "round",
@@ -58,7 +77,7 @@ await Add2eEffectsEngine.createTimedCharacteristicEffect({
     `rocher_degats:${giant.rockDamage}`,
     `portes:${giant.doors.replace(/\s+/g, "")}`
   ],
-  endMessage: "La force de géant prend fin sur {actor}.",
+  endMessage: `La force équivalente à celle d’un ${giant.giant.toLowerCase()} prend fin sur {actor}.`,
   extraFlags: {
     potion: true,
     potionSlug: "force_de_geant",
@@ -71,13 +90,14 @@ await Add2eEffectsEngine.createTimedCharacteristicEffect({
   }
 });
 
-await Add2eEffectsEngine.postGenericEffectChat(actor, "Potion de force de géant", `
-  <p>Force équivalente : <b>${giant.giant}</b>.</p>
+await effectsEngine.postGenericEffectChat(actor, "Potion de force de géant", `
+  <p style="font-size:1.1em;"><b>Type de géant tiré : ${giant.giant}</b></p>
+  <p>Résultat du d6 : <b>${typeRoll.total}</b>.</p>
   <p>Ajustement aux dégâts : <b>+${giant.damage}</b>.</p>
   <p>Poids permis : <b>+${giant.weight}</b>.</p>
   <p>Durée : <b>${durationRoll.total} tours</b> (${rounds} rounds).</p>
   <p>Lancer de rochers : portée <b>${giant.rockRange}\"</b>, dégâts <b>${giant.rockDamage}</b>.</p>
   <p>Portes : <b>${giant.doors}</b>.</p>
-`, source);
+`, { img: effectIcon });
 
 return true;
