@@ -26,10 +26,9 @@ async function ensureEffectsEngine() {
 
 const effectsEngine = await ensureEffectsEngine();
 const effectIcon = "icons/svg/aura.svg";
-const foundryGeneration = Number(game.release?.generation ?? String(game.version ?? "13").split(".")[0]) || 13;
-const overrideMode = foundryGeneration >= 14
-  ? (CONST.ACTIVE_EFFECT_CHANGE_TYPES?.OVERRIDE ?? "override")
-  : 5;
+// Le système ADD2E utilise déjà le mode numérique 5 pour les overrides
+// d'ActiveEffect sous Foundry V13/V14/V15. Ne pas convertir en chaîne.
+const overrideMode = 5;
 
 const giantTable = [
   { giant: "Géant des collines", strength: 19, rockRange: 8, rockDamage: "1d6" },
