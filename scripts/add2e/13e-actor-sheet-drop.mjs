@@ -1,9 +1,9 @@
 // ADD2E — Actor sheet drop — chargeur court
-// Version : 2026-07-16-magic-identification-cursed-items-v7
+// Version : 2026-07-16-magic-identification-cursed-items-v8
 // Compatible Foundry V13/V14/V15.
 // Le contenu principal du drop reste dans 13e-actor-sheet-drop-legacy-full.mjs.
 
-const ADD2E_CURSED_ITEM_VERSION = "2026-07-16-cursed-items-v7";
+const ADD2E_CURSED_ITEM_VERSION = "2026-07-16-cursed-items-v8";
 const ADD2E_CURSED_ITEM_LOG = "[ADD2E][OBJET_MAUDIT]";
 globalThis.ADD2E_CURSED_ITEM_VERSION = ADD2E_CURSED_ITEM_VERSION;
 
@@ -203,6 +203,45 @@ function add2eIsStorageActor(actor) {
     || name.startsWith("coffre_");
 }
 
+function add2eEffectRules(effectOrData) {
+  const raw = effectOrData?.flags?.add2e?.rules ?? effectOrData?.rules ?? [];
+  if (Array.isArray(raw)) return raw.filter(rule => rule && typeof rule === "object");
+  return raw && typeof raw === "object" ? [raw] : [];
+}
+
+async function add2eApplyGenericItemStateRules(item, effectOrData, context = {}) {
+  if (!item?.update || item.parent?.documentName !== "Actor") return false;
+  const applyWhen = add2eIdentificationNormalize(effectOrData?.flags?.add2e?.applyWhen ?? effectOrData?.applyWhen ?? "");
+  if (applyWhen && applyWhen !== "owned" && applyWhen !== "possede") return false;
+
+  const update = {};
+  for (const rule of add2eEffectRules(effectOrData)) {
+    const kind = add2eIdentificationNormalize(rule.kind ?? rule.type ?? "");
+    if (kind !== "item_state" && kind !== "etat_objet") continue;
+    const ruleWhen = add2eIdentificationNormalize(rule.applyWhen ?? applyWhen ?? "owned");
+    if (ruleWhen && ruleWhen !== "owned" && ruleWhen !== "possede") continue;
+    const state = add2eIdentificationNormalize(rule.state ?? rule.field ?? rule.path ?? "");
+    if (!["equipped", "equipee", "equipe"].includes(state)) continue;
+    const wanted = rule.value !== false;
+    if (item.system?.equipee !== wanted) update["system.equipee"] = wanted;
+  }
+
+  if (!Object.keys(update).length) return false;
+  await item.update(update, {
+    add2eInternal: true,
+    add2eGenericItemState: true,
+    add2eReason: "generic-item-state-rule"
+  });
+  console.log("[ADD2E][EFFECTS_ENGINE][ITEM_STATE_APPLIED]", {
+    actor: item.parent?.name,
+    item: item.name,
+    itemId: item.id,
+    update,
+    context
+  });
+  return true;
+}
+
 function add2eCursedEffectsForItem(actor, item) {
   return Array.from(actor?.effects ?? []).filter(effect =>
     effect.flags?.add2e?.cursedItemId === item?.id
@@ -248,6 +287,7 @@ async function add2eSyncCursedItemEffect(item, context = {}) {
   const tags = add2eCursedItemTags(item);
   const existing = add2eCursedEffectsForItem(actor, item);
   const identified = add2eIdentificationIsIdentified(item);
+  const rules = [{ kind: "item_state", state: "equipped", value: true, applyWhen: "owned" }];
   const data = {
     name: identified ? `${add2eIdentificationTrueName(item)} — Malédiction` : `${add2eIdentificationGenericName(item)} — Effet`,
     img: item.img || "icons/svg/skull.svg",
@@ -258,7 +298,7 @@ async function add2eSyncCursedItemEffect(item, context = {}) {
     system: {},
     changes: [],
     duration: { startTime: game.time?.worldTime ?? null },
-    description: "Malédiction permanente tant que l’objet est possédé. Seul un désenvoûtement peut la retirer.",
+    description: "Effet permanent tant que l’objet est possédé.",
     flags: {
       add2e: {
         cursedItemEffect: true,
@@ -267,19 +307,23 @@ async function add2eSyncCursedItemEffect(item, context = {}) {
         applied: true,
         active: true,
         visibleEffect: true,
-        source: "objet_maudit",
+        applyWhen: "owned",
+        activeIfOwned: true,
+        source: "objet_magique",
         sourceType: "objet_magique",
-        category: "malediction",
-        effectType: "malediction",
+        category: "item_effect",
+        effectType: "item_effect",
         tags,
         effectTags: tags,
-        rules: []
+        rules
       }
     }
   };
+
+  await add2eApplyGenericItemStateRules(item, data, { ...context, phase: "before-effect-sync" });
   add2eCurseLog("SYNC_START", {
     actor: actor.name, actorId: actor.id, item: item.name, itemId: item.id,
-    identified, equipped: item.system?.equipee === true, existingEffectIds: existing.map(effect => effect.id), tags, context
+    identified, equipped: item.system?.equipee === true, existingEffectIds: existing.map(effect => effect.id), tags, rules, context
   });
   if (existing.length) {
     const [primary, ...duplicates] = existing;
@@ -312,6 +356,7 @@ function add2eInstallCursedItemHooks() {
   globalThis.add2eSyncCursedItemEffect = add2eSyncCursedItemEffect;
   globalThis.add2eDeleteCursedItemByDisenchantment = add2eDeleteCursedItemByDisenchantment;
   globalThis.add2eIsCursedItemStorageActor = add2eIsStorageActor;
+  globalThis.add2eApplyGenericItemStateRules = add2eApplyGenericItemStateRules;
   add2eCurseLog("INSTALL", { source: "13e-actor-sheet-drop.mjs" });
 
   Hooks.on("preDeleteItem", (item, options = {}, userId = null) => {
@@ -337,8 +382,32 @@ function add2eInstallCursedItemHooks() {
     const requestingUser = game.users?.get?.(userId) ?? game.user;
     if (options.add2eDisenchantment === true || options.add2eInternal === true || requestingUser?.isGM === true) return true;
     add2eCurseLog("EFFECT_DELETE_BLOCKED", { actor: effect.parent?.name, effect: effect.name, effectId: effect.id, hookUserId: userId }, true);
-    ui.notifications?.warn?.("Cet effet provient d’un objet maudit et ne peut pas être retiré manuellement.");
+    ui.notifications?.warn?.("Cet effet provient d’un objet lié et ne peut pas être retiré manuellement.");
     return false;
+  });
+
+  const applyEffectItemState = async (effect, context = {}) => {
+    const actor = effect?.parent;
+    if (actor?.documentName !== "Actor") return;
+    const sourceItemId = String(effect.flags?.add2e?.sourceItemId ?? "").trim();
+    let item = sourceItemId ? actor.items?.get?.(sourceItemId) : null;
+    if (!item && effect.origin) {
+      try {
+        const source = fromUuidSync(effect.origin);
+        if (source?.parent === actor) item = source;
+      } catch (_error) {}
+    }
+    if (item) await add2eApplyGenericItemStateRules(item, effect, context);
+  };
+
+  Hooks.on("createActiveEffect", async (effect, options = {}, userId = null) => {
+    if (String(userId ?? game.user?.id) !== String(game.user?.id)) return;
+    await applyEffectItemState(effect, { hook: "createActiveEffect", options });
+  });
+
+  Hooks.on("updateActiveEffect", async (effect, changes = {}, options = {}, userId = null) => {
+    if (String(userId ?? game.user?.id) !== String(game.user?.id)) return;
+    await applyEffectItemState(effect, { hook: "updateActiveEffect", changes, options });
   });
 
   Hooks.on("createItem", async (item, options = {}, userId = null) => {
@@ -348,6 +417,7 @@ function add2eInstallCursedItemHooks() {
   });
 
   Hooks.on("updateItem", async (item, changes = {}, options = {}, userId = null) => {
+    if (options.add2eGenericItemState === true) return;
     if (item?.parent?.documentName !== "Actor" || !add2eIsCursedItem(item)) return;
     add2eCurseLog("UPDATE_ITEM", { actor: item.parent.name, item: item.name, itemId: item.id, storageActor: add2eIsStorageActor(item.parent), hookUserId: userId, changes, options });
     if (String(userId ?? game.user?.id) === String(game.user?.id)) await add2eSyncCursedItemEffect(item, { hook: "updateItem" });
