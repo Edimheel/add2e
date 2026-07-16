@@ -4,7 +4,7 @@
 
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant _onDrop.");
 
-const ADD2E_ACTOR_SHEET_DROP_VERSION = "2026-07-16-actor-drop-preserve-current-item-name-v4";
+const ADD2E_ACTOR_SHEET_DROP_VERSION = "2026-07-16-actor-drop-current-name-v4";
 const ADD2E_SPELL_DROP_PENDING = globalThis.ADD2E_SPELL_DROP_PENDING instanceof Set
   ? globalThis.ADD2E_SPELL_DROP_PENDING
   : new Set();
@@ -50,23 +50,35 @@ function spellDropKey(actor, itemData, entry) {
   return `${actorKey}|${spellListKey(entry)}|${spellLevel(itemData)}|${norm(itemData?.name)}`;
 }
 
+function markCurrentDropName(itemData, currentName = "") {
+  if (!itemData) return itemData;
+  const data = clone(itemData);
+  const name = String(currentName || data.name || "").trim();
+  data.flags ??= {};
+  data.flags.add2e ??= {};
+  if (name) data.flags.add2e.dropCurrentName = name;
+  return data;
+}
+
 async function resolveDropItemData(raw) {
-  // Un Item déjà présent dans le monde ou sur un acteur peut avoir été renommé.
-  // Son UUID exact doit alors être la source de vérité, avant son sourceId de compendium.
+  if (raw?.data) {
+    const current = markCurrentDropName(raw.data, raw.data?.name ?? raw.name);
+    if (current) return current;
+  }
   if (raw?.uuid) {
     const document = await fromUuid(raw.uuid).catch(() => null);
-    if (document instanceof Item) return document.toObject();
+    if (document instanceof Item) return markCurrentDropName(document.toObject(), document.name);
   }
   if (raw?.pack && (raw.id || raw._id)) {
     const pack = game.packs?.get(raw.pack);
     const document = pack ? await pack.getDocument(raw.id ?? raw._id).catch(() => null) : null;
-    if (document instanceof Item) return document.toObject();
+    if (document instanceof Item) return markCurrentDropName(document.toObject(), document.name);
   }
   if (typeof globalThis.add2eResolveDropItemDataCompendiumFirst === "function") {
     const resolved = await globalThis.add2eResolveDropItemDataCompendiumFirst(raw).catch(() => null);
-    if (resolved) return clone(resolved);
+    if (resolved) return markCurrentDropName(resolved, raw?.name ?? resolved?.name);
   }
-  return raw?.data ? clone(raw.data) : null;
+  return null;
 }
 
 function rawTags(itemData) {
@@ -273,8 +285,8 @@ function isItemDrag(event) {
 
 function bindDropAnywhere(sheet) {
   const root = rootFor(sheet);
-  if (!root || root.dataset.add2eDropAnywhereBound === "safe-v3") return;
-  root.dataset.add2eDropAnywhereBound = "safe-v3";
+  if (!root || root.dataset.add2eDropAnywhereBound === "safe-v4") return;
+  root.dataset.add2eDropAnywhereBound = "safe-v4";
   root.addEventListener("dragover", event => {
     if (!isItemDrag(event)) return;
     event.preventDefault();
@@ -364,7 +376,7 @@ globalThis.Add2eActorSheet.prototype._onDrop = async function add2eSafeOnDrop(ev
       return false;
     }
 
-    const [created] = await this.actor.createEmbeddedDocuments("Item", [clone(itemData)], { add2eInternal: true });
+    const [created] = await this.actor.createEmbeddedDocuments("Item", [clone(itemData)], { add2eInternal: true, add2eCurrentDropName: true });
     if (!created) return false;
     await applyItemEffects(this.actor, created);
     this._add2eRememberActiveTab?.();
@@ -376,8 +388,8 @@ globalThis.Add2eActorSheet.prototype._onDrop = async function add2eSafeOnDrop(ev
   }
 };
 
-if (!globalThis.Add2eActorSheet.prototype.__add2eDropAnywhereBoundSafeV3) {
-  globalThis.Add2eActorSheet.prototype.__add2eDropAnywhereBoundSafeV3 = true;
+if (!globalThis.Add2eActorSheet.prototype.__add2eDropAnywhereBoundSafeV4) {
+  globalThis.Add2eActorSheet.prototype.__add2eDropAnywhereBoundSafeV4 = true;
   const previousOnRender = globalThis.Add2eActorSheet.prototype._onRender;
   globalThis.Add2eActorSheet.prototype._onRender = async function add2eSafeDropOnRender(context, options = {}) {
     const result = await previousOnRender.call(this, context, options);
@@ -385,6 +397,85 @@ if (!globalThis.Add2eActorSheet.prototype.__add2eDropAnywhereBoundSafeV3) {
     return result;
   };
 }
+
+function isStorageActor(actor) {
+  if (!actor || actor.documentName !== "Actor") return false;
+  const flags = actor.flags?.add2e ?? {};
+  const role = norm(flags.role ?? flags.actorRole ?? actor.system?.role ?? actor.system?.actorRole ?? "");
+  const name = norm(actor.name);
+  return flags.isVendor === true || flags.isArmorer === true || flags.isLoot === true || flags.isContainer === true
+    || flags.vendor === true || flags.armorer === true || flags.loot === true || flags.container === true
+    || ["vendor", "vendeur", "marchand", "armorer", "armurier", "loot", "butin", "container", "conteneur", "coffre"].includes(role)
+    || name === "armurier" || name.startsWith("marchand_") || name.startsWith("coffre_");
+}
+
+function isMagicItem(item) {
+  if (!item || !["arme", "armure", "objet"].includes(itemType(item))) return false;
+  const system = item.system ?? {};
+  const flags = item.flags?.add2e ?? {};
+  return system.magique === true || system.magic === true || flags.isMagicItem === true
+    || String(system.categorie ?? "").toLowerCase().includes("magique")
+    || rawTags(item).some(tag => tag.includes("magique"));
+}
+
+function renderActorApplications(actor) {
+  if (!actor?.id) return;
+  for (const app of Object.values(ui.windows ?? {})) {
+    const document = app?.actor ?? app?.document ?? app?.object ?? null;
+    if (document?.documentName !== "Actor" || String(document.id) !== String(actor.id)) continue;
+    try { app.render?.({ force: true }); continue; } catch (_error) {}
+    try { app.render?.(true); } catch (_error) {}
+  }
+}
+
+Hooks.on("createItem", async (item, options = {}, userId = null) => {
+  const actor = item?.parent;
+  if (actor?.documentName !== "Actor" || String(userId ?? game.user?.id) !== String(game.user?.id)) return;
+
+  const droppedName = String(item.flags?.add2e?.dropCurrentName ?? "").trim();
+  const storage = isStorageActor(actor);
+  const magic = isMagicItem(item);
+  const currentTrueName = String(item.system?.nom ?? item.system?.nom_reel ?? item.system?.trueName ?? "").trim();
+  const wantedName = droppedName || (storage ? currentTrueName : "");
+  const update = {};
+
+  if (wantedName && String(item.name ?? "").trim() !== wantedName) update.name = wantedName;
+  if (wantedName && currentTrueName !== wantedName) update["system.nom"] = wantedName;
+  if (storage && magic) {
+    if (item.system?.identifie !== true) update["system.identifie"] = true;
+    if (item.system?.identified !== true) update["system.identified"] = true;
+    if (item.flags?.add2e?.identified !== true) update["flags.add2e.identified"] = true;
+  }
+  if (item.flags?.add2e?.dropCurrentName !== undefined) update["flags.add2e.-=dropCurrentName"] = null;
+
+  if (Object.keys(update).length) {
+    await item.update(update, {
+      add2eInternal: true,
+      add2eReason: storage ? "storage-item-identification" : "restore-current-drop-name",
+      render: false
+    });
+    renderActorApplications(actor);
+  }
+});
+
+Hooks.on("deleteItem", (item, options = {}, userId = null) => {
+  const actor = item?.parent;
+  if (actor?.documentName !== "Actor" || String(userId ?? game.user?.id) !== String(game.user?.id)) return;
+  const arcaneKind = String(item.system?.arcaneDocument?.kind ?? item.flags?.add2e?.arcaneDocumentKind ?? "").toLowerCase();
+  const consumedScroll = options?.add2eArcaneScroll === true || arcaneKind === "spell-scroll";
+  if (!consumedScroll) return;
+
+  try {
+    const escapedId = globalThis.CSS?.escape ? CSS.escape(String(item.id)) : String(item.id).replace(/(["'\\])/g, "\\$1");
+    document.querySelectorAll(`[data-item-id="${escapedId}"], [data-itemid="${escapedId}"], [data-id="${escapedId}"]`).forEach(element => {
+      const row = element.closest?.(".item, tr, li, .add2e-scroll-row") ?? element;
+      row.remove?.();
+    });
+  } catch (_error) {}
+
+  queueMicrotask(() => renderActorApplications(actor));
+  setTimeout(() => renderActorApplications(actor), 100);
+});
 
 try { globalThis.add2eDropPurgeClassContent = add2eDropPurgeClassContent; } catch (_error) {}
 try { globalThis.add2eDropBulkDelete = add2eDropBulkDelete; } catch (_error) {}
