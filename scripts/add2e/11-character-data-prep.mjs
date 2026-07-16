@@ -202,6 +202,36 @@ Hooks.on("updateActor", async (actor, changes = {}, options = {}, _userId) => {
   } catch (_e) {}
 });
 
+function add2eEffectChangesCharacteristic(effect) {
+  const changes = Array.from(effect?.changes ?? []);
+  if (changes.some(change => /^system\.(force|dexterite|constitution|intelligence|sagesse|charisme)_base$/.test(String(change?.key ?? "")))) return true;
+
+  const rules = effect?.flags?.add2e?.rules;
+  const list = Array.isArray(rules) ? rules : (rules && typeof rules === "object" ? Object.values(rules) : []);
+  return list.some(rule => String(rule?.kind ?? rule?.type ?? "") === "characteristic_override");
+}
+
+const ADD2E_EFFECT_CARAC_RECALC_LOCK = new Set();
+async function add2eRecalculateCharacteristicsAfterEffect(effect) {
+  if (!add2eEffectChangesCharacteristic(effect)) return;
+  const actor = effect?.parent?.documentName === "Actor" ? effect.parent : effect?.parent?.actor;
+  if (!actor?.system || ADD2E_EFFECT_CARAC_RECALC_LOCK.has(actor.id)) return;
+
+  ADD2E_EFFECT_CARAC_RECALC_LOCK.add(actor.id);
+  try {
+    await new Promise(resolve => setTimeout(resolve, 0));
+    if (typeof actor.sheet?.autoSetCaracAjustements === "function") await actor.sheet.autoSetCaracAjustements();
+    else if (typeof actor.autoSetCaracAjustements === "function") await actor.autoSetCaracAjustements();
+    if (actor.sheet?.rendered) actor.sheet.render(false);
+  } finally {
+    ADD2E_EFFECT_CARAC_RECALC_LOCK.delete(actor.id);
+  }
+}
+
+Hooks.on("createActiveEffect", effect => add2eRecalculateCharacteristicsAfterEffect(effect));
+Hooks.on("updateActiveEffect", effect => add2eRecalculateCharacteristicsAfterEffect(effect));
+Hooks.on("deleteActiveEffect", effect => add2eRecalculateCharacteristicsAfterEffect(effect));
+
 // ===============================
 // TABLES AJUSTEMENTS CARACTÉRISTIQUES
 // ===============================
@@ -226,7 +256,13 @@ const FORCE_TABLE = {
   "18/51-75": { toucher: 2, degats: 3, poids: 1250, ouvrir: "1-4", tordre: "25%" },
   "18/76-90": { toucher: 2, degats: 4, poids: 1500, ouvrir: "1-4", tordre: "30%" },
   "18/91-99": { toucher: 2, degats: 5, poids: 2000, ouvrir: "1-4 (1)", tordre: "35%" },
-  "18/00":    { toucher: 3, degats: 6, poids: 3000, ouvrir: "1-5 (2)", tordre: "40%" }
+  "18/00":    { toucher: 3, degats: 6, poids: 3000, ouvrir: "1-5 (2)", tordre: "40%" },
+  19: { toucher: 3, degats: 7, poids: 4500, ouvrir: "50 %", tordre: "50 %" },
+  20: { toucher: 3, degats: 8, poids: 5000, ouvrir: "60 %", tordre: "60 %" },
+  21: { toucher: 4, degats: 9, poids: 6000, ouvrir: "70 %", tordre: "70 %" },
+  22: { toucher: 4, degats: 10, poids: 7500, ouvrir: "80 %", tordre: "80 %" },
+  23: { toucher: 5, degats: 11, poids: 9000, ouvrir: "90 %", tordre: "90 %" },
+  24: { toucher: 6, degats: 12, poids: 12000, ouvrir: "100 %", tordre: "100 %" }
 };
 const INTELLIGENCE_TABLE = {3:{langues:0,chance_sort:0,min_sort:0,max_sort:0},4:{langues:0,chance_sort:0,min_sort:0,max_sort:0},5:{langues:0,chance_sort:0,min_sort:0,max_sort:0},6:{langues:0,chance_sort:0,min_sort:0,max_sort:0},7:{langues:0,chance_sort:0,min_sort:0,max_sort:0},8:{langues:1,chance_sort:0,min_sort:0,max_sort:0},9:{langues:1,chance_sort:35,min_sort:4,max_sort:6},10:{langues:2,chance_sort:45,min_sort:5,max_sort:7},11:{langues:2,chance_sort:45,min_sort:5,max_sort:7},12:{langues:3,chance_sort:45,min_sort:5,max_sort:7},13:{langues:3,chance_sort:55,min_sort:6,max_sort:9},14:{langues:4,chance_sort:55,min_sort:6,max_sort:9},15:{langues:4,chance_sort:65,min_sort:7,max_sort:11},16:{langues:5,chance_sort:65,min_sort:7,max_sort:11},17:{langues:6,chance_sort:75,min_sort:8,max_sort:14},18:{langues:7,chance_sort:85,min_sort:9,max_sort:18}};
 const SAGESSE_TABLE = {3:{magie:-3,sort_suppl:0,echec:80},4:{magie:-2,sort_suppl:0,echec:75},5:{magie:-1,sort_suppl:0,echec:70},6:{magie:-1,sort_suppl:0,echec:65},7:{magie:-1,sort_suppl:0,echec:60},8:{magie:0,sort_suppl:0,echec:55},9:{magie:0,sort_suppl:0,echec:20},10:{magie:0,sort_suppl:0,echec:15},11:{magie:0,sort_suppl:0,echec:10},12:{magie:0,sort_suppl:0,echec:5},13:{magie:0,sort_suppl:1,echec:0},14:{magie:0,sort_suppl:2,echec:0},15:{magie:0,sort_suppl:2,echec:0},16:{magie:0,sort_suppl:2,echec:0},17:{magie:0,sort_suppl:3,echec:0},18:{magie:0,sort_suppl:4,echec:0}};
