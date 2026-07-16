@@ -1,5 +1,15 @@
 // ADD2E — Postprocess getData objets magiques — full ApplicationV2
 
+function add2eMagicPowerDescription(power) {
+  return String(
+    power?.description
+    ?? power?.desc
+    ?? power?.linkedSpell?.system?.description
+    ?? power?.linkedSpell?.description
+    ?? ""
+  ).trim();
+}
+
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant le postprocess objets magiques.");
 if (globalThis.Add2eActorSheet.prototype.__add2eObjectMagicGetDataV2Restored) {
   console.warn("[ADD2E][OBJETS_MAGIQUES][GETDATA] Postprocess déjà installé.");
@@ -111,6 +121,7 @@ if (globalThis.Add2eActorSheet.prototype.__add2eObjectMagicGetDataV2Restored) {
             ? currentGlobal
             : (Number(itemSource.getFlag?.("add2e", `charges_${idx}`) ?? p.charges ?? p.uses ?? powerMax) || 0);
           const cost = Number(p.cout ?? p.cost ?? p.chargeCost ?? 0) || 0;
+          const powerDescription = add2eMagicPowerDescription(p);
 
           const fakeSpellData = {
             _id: generatedId,
@@ -120,7 +131,7 @@ if (globalThis.Add2eActorSheet.prototype.__add2eObjectMagicGetDataV2Restored) {
             system: {
               niveau: p.niveau || p.level || 1,
               école: p.ecole || p["école"] || "Magique",
-              description: p.description || p.desc || "",
+              description: powerDescription,
               composantes: "Objet",
               temps_incantation: "1",
               isPower: true,
@@ -160,7 +171,7 @@ if (globalThis.Add2eActorSheet.prototype.__add2eObjectMagicGetDataV2Restored) {
             name: virtualSpell.name || "Pouvoir",
             img: virtualSpell.img || "icons/svg/aura.svg",
             niveau: Number(virtualSpell.system?.niveau ?? 1) || 1,
-            description: virtualSpell.system?.description || "",
+            description: powerDescription,
             sourceItemId: itemSource.id,
             sourceItemName: itemSource.name,
             sourceItemDescription: itemSource.system?.description || "",
@@ -233,7 +244,7 @@ if (globalThis.Add2eActorSheet.prototype.__add2eObjectMagicGetDataV2Restored) {
   };
 }
 
-const ADD2E_MAGIC_ITEM_BUILDER_VERSION = "2026-07-16-magic-item-builder-v2";
+const ADD2E_MAGIC_ITEM_BUILDER_VERSION = "2026-07-16-magic-item-builder-v3-descriptions";
 globalThis.ADD2E_MAGIC_ITEM_BUILDER_VERSION = ADD2E_MAGIC_ITEM_BUILDER_VERSION;
 
 function add2eMagicBuilderNormalize(value) {
@@ -360,7 +371,14 @@ function add2eInstallMagicItemSheetManager() {
     const powers = add2eMagicBuilderPowers(item);
     const chargeInfo = typeof globalThis.add2eMagicObjectChargeInfo === "function" ? globalThis.add2eMagicObjectChargeInfo(item, powers) : { current: Number(item.system?.charges?.value ?? 0) || 0, max: Number(item.system?.charges?.max ?? 0) || 0, label: "—" };
     const canAdd = profile !== "potion" || powers.length === 0;
-    const rows = powers.length ? powers.map((power, index) => { const embedded = power?.add2eEmbeddedSpell === true || power?.sourceKind === "embedded-spell"; const name = add2eMagicBuilderEsc(power?.name ?? power?.nom ?? `Pouvoir ${index + 1}`); const cost = Math.max(0, Number(power?.cost ?? power?.cout ?? power?.chargeCost ?? 0) || 0); return `<tr><td><img src="${add2eMagicBuilderEsc(power?.img || item.img || "icons/svg/aura.svg")}" alt="" style="width:30px;height:30px;border-radius:5px;object-fit:cover;"></td><td><b>${name}</b><div style="font-size:.78em;opacity:.75;">${embedded ? "Sort embarqué" : "Pouvoir natif"}</div></td><td style="text-align:center;">${cost}</td><td style="text-align:right;">${this.editable ? `<button type="button" class="add2e-magic-power-remove" data-power-index="${index}" title="Retirer ${name}"><i class="fas fa-trash"></i></button>` : ""}</td></tr>`; }).join("") : `<tr><td colspan="4" style="text-align:center;opacity:.7;">Aucun pouvoir ni sort configuré.</td></tr>`;
+    const rows = powers.length ? powers.map((power, index) => {
+      const embedded = power?.add2eEmbeddedSpell === true || power?.sourceKind === "embedded-spell";
+      const name = add2eMagicBuilderEsc(power?.name ?? power?.nom ?? `Pouvoir ${index + 1}`);
+      const cost = Math.max(0, Number(power?.cost ?? power?.cout ?? power?.chargeCost ?? 0) || 0);
+      const description = add2eMagicPowerDescription(power);
+      const descriptionId = `add2e-magic-power-description-${index}`;
+      return `<tr><td><img src="${add2eMagicBuilderEsc(power?.img || item.img || "icons/svg/aura.svg")}" alt="" style="width:30px;height:30px;border-radius:5px;object-fit:cover;"></td><td><button type="button" class="add2e-magic-power-description-toggle" data-description-id="${descriptionId}" style="border:0;background:none;padding:0;color:inherit;font:inherit;font-weight:700;text-align:left;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;">${name}</button><div style="font-size:.78em;opacity:.75;">${embedded ? "Sort embarqué" : "Pouvoir natif"}</div></td><td style="text-align:center;">${cost}</td><td style="text-align:right;">${this.editable ? `<button type="button" class="add2e-magic-power-remove" data-power-index="${index}" title="Retirer ${name}"><i class="fas fa-trash"></i></button>` : ""}</td></tr><tr id="${descriptionId}" class="add2e-magic-power-description-row" style="display:none;"><td colspan="4" style="padding:8px 12px;background:rgba(255,255,255,.55);border-top:1px solid rgba(120,80,20,.22);">${description || "<em>Aucune description disponible.</em>"}</td></tr>`;
+    }).join("") : `<tr><td colspan="4" style="text-align:center;opacity:.7;">Aucun pouvoir ni sort configuré.</td></tr>`;
     const panel = document.createElement("section");
     panel.className = "add2e-magic-item-builder-panel";
     panel.style.cssText = "margin:10px;border:1px solid #b88924;border-radius:9px;background:#fffaf0;padding:10px;";
@@ -376,6 +394,7 @@ function add2eInstallMagicItemSheetManager() {
       dropZone.addEventListener("dragleave", clear);
       dropZone.addEventListener("drop", async event => { event.preventDefault(); event.stopPropagation(); clear(); try { const spell = await add2eMagicBuilderResolveDrop(event); if (!spell) return ui.notifications.warn("Le sort déposé est introuvable."); if (await add2eMagicBuilderStoreSpell(item, spell)) this.render({ force: true }); } catch (error) { console.error("[ADD2E][OBJET_MAGIQUE][BUILDER][DROP_ERROR]", { item: item.name, error }); ui.notifications.error(error?.message || "Erreur pendant l'ajout du sort."); } });
     }
+    for (const button of panel.querySelectorAll(".add2e-magic-power-description-toggle")) button.addEventListener("click", event => { event.preventDefault(); event.stopPropagation(); const row = panel.querySelector(`#${CSS.escape(String(button.dataset.descriptionId ?? ""))}`); if (row) row.style.display = row.style.display === "none" ? "table-row" : "none"; });
     for (const button of panel.querySelectorAll(".add2e-magic-power-remove")) button.addEventListener("click", async event => { event.preventDefault(); event.stopPropagation(); const index = Number(button.dataset.powerIndex); try { if (await add2eMagicBuilderRemovePower(item, index)) this.render({ force: true }); } catch (error) { console.error("[ADD2E][OBJET_MAGIQUE][BUILDER][REMOVE_ERROR]", { item: item.name, index, error }); ui.notifications.error(error?.message || "Erreur pendant le retrait du pouvoir."); } });
     return result;
   };
@@ -462,11 +481,75 @@ function add2eInstallMagicItemDirectoryButton(app, html) {
   header.appendChild(button);
 }
 
+function add2eScrollChatPlainText(value) {
+  const source = String(value ?? "");
+  try {
+    const template = document.createElement("template");
+    template.innerHTML = source;
+    return String(template.content.textContent ?? "").replace(/\s+/g, " ").trim();
+  } catch (_error) {
+    return source.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  }
+}
+
+function add2eScrollChatCanonicalCard({ spellName = "Sort", total = null, chance = null, success = false, consumed = true } = {}) {
+  const status = success ? "Apprentissage réussi" : "Apprentissage échoué";
+  const detail = success
+    ? `${spellName} est copié dans le livre personnel.`
+    : `${spellName} n’a pas été compris et n’est pas ajouté au livre personnel.`;
+  const consumption = consumed
+    ? "L’inscription a été effacée du parchemin après la tentative."
+    : "L’inscription n’a pas pu être effacée du parchemin.";
+  return `<div class="add2e-card add2e-arcane-card add2e-scroll-learning-card ${success ? "is-success" : "is-failure"}"><header class="add2e-card-header"><img src="icons/sundries/scrolls/scroll-runed-brown.webp" alt=""><div><h3><i class="fas fa-scroll"></i> Apprentissage depuis un parchemin</h3><div class="add2e-card-source">Parchemin de sort</div></div></header><div class="add2e-card-body"><div class="add2e-book-learning-grid"><b>Sort</b><span>${add2eMagicBuilderEsc(spellName)}</span><b>Jet</b><span>${Number.isFinite(total) ? total : "—"}</span><b>Chance</b><span>${Number.isFinite(chance) ? `${chance}%` : "—"}</span></div><div class="add2e-book-learning-status">${status}</div><p>${add2eMagicBuilderEsc(detail)}</p><p class="add2e-scroll-consumption"><i class="fas fa-fire"></i> ${add2eMagicBuilderEsc(consumption)}</p></div></div>`;
+}
+
+function add2eNormalizeScrollChatRender(message, html) {
+  const root = html instanceof HTMLElement ? html : html?.[0] instanceof HTMLElement ? html[0] : null;
+  if (!root) return;
+  const messageContent = root.querySelector?.(".message-content") ?? root;
+  const currentHtml = String(message?.content ?? messageContent?.innerHTML ?? "");
+  const flavor = String(message?.flavor ?? "");
+  const plain = add2eScrollChatPlainText(`${flavor} ${currentHtml}`);
+  const normalized = add2eMagicBuilderNormalize(plain);
+
+  if (normalized.includes("comprehension_de") && normalized.includes("chance") && (normalized.includes("reussite") || normalized.includes("echec")) && !normalized.includes("apprentissage_depuis_un_parchemin")) {
+    root.style.display = "none";
+    return;
+  }
+
+  if (messageContent.querySelector?.(".add2e-scroll-learning-card")) return;
+  if (!normalized.includes("copie_depuis_un_parchemin") && !normalized.includes("inscription_disparait_du_parchemin")) return;
+
+  const spellMatch = plain.match(/copie\s+depuis\s+un\s+parchemin\s+(.+?)\s+[—-]\s+jet/i)
+    ?? plain.match(/parchemin\s+(.+?)\s+[—-]\s+jet/i);
+  const rollMatch = plain.match(/jet\s+(\d+)\s*\/\s*(\d+)/i);
+  const spellName = String(spellMatch?.[1] ?? "Sort").trim();
+  const total = rollMatch ? Number(rollMatch[1]) : null;
+  const chance = rollMatch ? Number(rollMatch[2]) : null;
+  const success = normalized.includes("sort_est_copie") || normalized.includes("copie_dans_le_livre_personnel") || (Number.isFinite(total) && Number.isFinite(chance) && total <= chance);
+  const consumed = !normalized.includes("na_pas_pu_etre_effacee");
+  messageContent.innerHTML = add2eScrollChatCanonicalCard({ spellName, total, chance, success, consumed });
+}
+
+function add2eInstallUnifiedScrollChatStyles() {
+  const id = "add2e-unified-scroll-chat-style";
+  if (document.getElementById(id)) return;
+  const style = document.createElement("style");
+  style.id = id;
+  style.textContent = `.chat-message .add2e-scroll-learning-card{overflow:hidden;border:2px solid #9a6a20;border-radius:10px;background:linear-gradient(180deg,#fff9e9,#efe0b7);color:#38270d}.chat-message .add2e-scroll-learning-card .add2e-card-header{display:flex;align-items:center;gap:8px;padding:7px 9px;background:linear-gradient(90deg,#56370e,#a27025);color:#fff}.chat-message .add2e-scroll-learning-card .add2e-card-header img{width:38px!important;height:38px!important;min-width:38px!important;max-width:38px!important;object-fit:cover;border:1px solid rgba(255,255,255,.85);border-radius:6px;background:#fff}.chat-message .add2e-scroll-learning-card .add2e-card-header h3{margin:0!important;border:0!important;color:#fff!important;font-size:1rem!important;line-height:1.15}.chat-message .add2e-scroll-learning-card .add2e-card-source{font-size:.82rem;opacity:.92}.chat-message .add2e-scroll-learning-card .add2e-card-body{padding:9px 10px}.chat-message .add2e-scroll-learning-card .add2e-book-learning-grid{display:grid;grid-template-columns:auto 1fr;gap:3px 8px;margin:0 0 7px}.chat-message .add2e-scroll-learning-card .add2e-book-learning-status{font-weight:900;margin:5px 0}.chat-message .add2e-scroll-learning-card.is-success .add2e-book-learning-status{color:#17652d}.chat-message .add2e-scroll-learning-card.is-failure .add2e-book-learning-status{color:#8b1e1e}.chat-message .add2e-scroll-learning-card .add2e-scroll-consumption{margin:7px 0 0;padding-top:7px;border-top:1px solid rgba(92,57,10,.35);font-size:.88rem}`;
+  document.head.append(style);
+}
+
 Hooks.on("renderItemDirectory", add2eInstallMagicItemDirectoryButton);
 Hooks.on("renderSidebarTab", (app, html) => { const id = String(app?.options?.id ?? app?.id ?? app?.constructor?.name ?? "").toLowerCase(); if (id.includes("item")) add2eInstallMagicItemDirectoryButton(app, html); });
+Hooks.on("renderChatMessage", add2eNormalizeScrollChatRender);
 
 globalThis.add2eMagicBuilderProfile = add2eMagicBuilderProfile;
 globalThis.add2eStoreSpellInMagicItem = add2eMagicBuilderStoreSpell;
 globalThis.add2eRemoveMagicItemPower = add2eMagicBuilderRemovePower;
 globalThis.add2eCreateMagicItem = add2eMagicItemCreatorDialog;
-Hooks.once("ready", () => { if (!add2eInstallMagicItemSheetManager()) window.setTimeout(add2eInstallMagicItemSheetManager, 250); });
+globalThis.add2eMagicPowerDescription = add2eMagicPowerDescription;
+Hooks.once("ready", () => {
+  add2eInstallUnifiedScrollChatStyles();
+  if (!add2eInstallMagicItemSheetManager()) window.setTimeout(add2eInstallMagicItemSheetManager, 250);
+});
