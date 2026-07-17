@@ -1,6 +1,11 @@
 // ADD2E — Feuille personnage découpée
 // Ancien fichier monolithique remplacé par les imports 13a à 13f.
+//
+// Le moteur des livres et parchemins est une dépendance fonctionnelle de la
+// feuille : getData et les listeners utilisent son API globale. Il doit donc
+// être initialisé une seule fois, avant les modules de feuille.
 
+import "./07b-arcane-documents.mjs";
 import "./13a-actor-sheet-class.mjs";
 import "./13b-actor-sheet-get-data.mjs";
 import "./13b-actor-sheet-object-magic-postprocess.mjs";
@@ -110,85 +115,21 @@ function add2eLegacyFilterMoveXpRecalc(actor, changes, options) {
     if (!Object.prototype.hasOwnProperty.call(system, key)) continue;
     if (!add2eLegacySameValue(system[key], actor?.system?.[key])) filtered[key] = system[key];
   }
-
-  if (Object.keys(filtered).length) {
-    changes.system = filtered;
-    return true;
-  }
-
-  delete changes.system;
-  return false;
+  changes.system = filtered;
+  return Object.keys(filtered).length > 0;
 }
 
-if (!globalThis.ADD2E_SHEET_LEVEL_PIPELINE_GUARD_INSTALLED) {
-  globalThis.ADD2E_SHEET_LEVEL_PIPELINE_GUARD_INSTALLED = true;
+function add2eLegacyInstallActorUpdateGuards() {
+  if (globalThis.__ADD2E_LEGACY_ACTOR_UPDATE_GUARDS__) return;
+  globalThis.__ADD2E_LEGACY_ACTOR_UPDATE_GUARDS__ = true;
 
-  Hooks.on("preUpdateActor", (actor, changes, options) => {
-    if (actor?.type !== "personnage") return true;
+  Hooks.on("preUpdateActor", (actor, changes = {}, options = {}) => {
+    if (actor?.type !== "personnage") return;
+
     add2eLegacyPruneUnchangedFormXp(actor, changes);
-    return add2eLegacyFilterMoveXpRecalc(actor, changes, options) !== false;
-  });
-
-  Hooks.once("ready", () => {
-    Hooks.on("preUpdateActor", (actor, changes, options) => {
-      if (actor?.type !== "personnage") return true;
-      return add2eLegacyFilterMoveXpRecalc(actor, changes, options) !== false;
-    });
-  });
-
-  Hooks.on("updateActor", async (actor, changes, options) => {
-    if (actor?.type !== "personnage" || options?.add2eInternal) return;
-    if (!Object.prototype.hasOwnProperty.call(changes?.system ?? {}, "niveau")) return;
-    try { await globalThis.add2eSyncClassPassiveEffect?.(actor); }
-    catch (err) { console.warn("[ADD2E][CLASSE][EFFETS][LEVEL_SYNC_ERROR]", err); }
+    const hasMoveChange = add2eLegacyFilterMoveXpRecalc(actor, changes, options);
+    if (hasMoveChange === false) return false;
   });
 }
 
-if (globalThis.Add2eActorSheet?.prototype && !globalThis.Add2eActorSheet.prototype.__add2eOpenItemsFromNamesV2) {
-  globalThis.Add2eActorSheet.prototype.__add2eOpenItemsFromNamesV2 = true;
-  const originalActivateListeners = globalThis.Add2eActorSheet.prototype.activateListeners;
-  globalThis.Add2eActorSheet.prototype.activateListeners = function add2eOpenItemNamesActivateListeners(html) {
-    originalActivateListeners.call(this, html);
-    const sheet = this;
-    const root = add2eLegacyRoot(html);
-    if (!root?.querySelectorAll) return;
-    $(root).find('input[name="system.niveau"]').off("change.add2e");
-    const selector = "tr.item[data-item-id] > td:first-child b, tr.item[data-item-id] > td:nth-child(2) b, .a2e-summary-weapon-name";
-    for (const el of root.querySelectorAll(selector)) {
-      el.style.cursor = "pointer";
-      el.style.textDecoration = "underline";
-      el.style.textUnderlineOffset = "2px";
-      el.title = "Cliquer pour ouvrir la fiche. Maj+clic pour afficher la description.";
-    }
-    if (root.dataset.add2eOpenItemNamesV2 === "1") return;
-    root.dataset.add2eOpenItemNamesV2 = "1";
-    root.addEventListener("click", async ev => {
-      const target = ev.target?.closest?.(selector);
-      if (!target || !root.contains(target)) return;
-      ev.preventDefault();
-      ev.stopPropagation();
-      const row = target.closest(".item[data-item-id]");
-      const itemId = row?.dataset?.itemId;
-      const item = sheet.actor?.items?.get(String(itemId));
-      if (!item) return ui.notifications.warn("Objet introuvable sur l'acteur.");
-      if (ev.shiftKey) {
-        const description = await add2eItemDescriptionHTML(item);
-        const DialogV2 = foundry?.applications?.api?.DialogV2;
-        if (DialogV2?.wait) {
-          return DialogV2.wait({
-            window: { title: item.name },
-            content: `<div class="add2e-item-description-dialog" style="max-height:520px;overflow:auto;line-height:1.35;">${description}</div>`,
-            buttons: [
-              { action: "open", label: "Ouvrir la fiche", callback: () => { item.sheet.render(true); return true; } },
-              { action: "close", label: "Fermer", default: true, callback: () => true }
-            ],
-            modal: true,
-            rejectClose: false
-          });
-        }
-        return item.sheet.render(true);
-      }
-      return item.sheet.render(true);
-    }, true);
-  };
-}
+add2eLegacyInstallActorUpdateGuards();
