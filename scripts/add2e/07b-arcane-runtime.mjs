@@ -43,6 +43,17 @@ function actorForAction(element, application = null) {
   return null;
 }
 
+function viewArcaneDocument(item) {
+  const sheet = item?.sheet;
+  if (!sheet) {
+    ui.notifications.warn("La feuille du document arcanique est introuvable.");
+    return false;
+  }
+  sheet._add2eActiveTab = "arcane";
+  sheet.render(true);
+  return true;
+}
+
 async function handleAction(element) {
   const action = String(element?.dataset?.add2eArcaneAction ?? "");
   const itemId = String(element?.dataset?.itemId ?? "");
@@ -55,6 +66,7 @@ async function handleAction(element) {
     return false;
   }
 
+  if (action === "view-document") return viewArcaneDocument(item);
   if (action === "view-book") return viewSpellbook(item, actor);
   if (action === "copy-book") return copySpellbook(actor, item);
   if (action === "copy-book-entry") {
