@@ -244,7 +244,7 @@ if (globalThis.Add2eActorSheet.prototype.__add2eObjectMagicGetDataV2Restored) {
   };
 }
 
-const ADD2E_MAGIC_ITEM_BUILDER_VERSION = "2026-07-16-magic-item-builder-v3-descriptions";
+const ADD2E_MAGIC_ITEM_BUILDER_VERSION = "2026-07-17-magic-item-builder-v4-spellbooks";
 globalThis.ADD2E_MAGIC_ITEM_BUILDER_VERSION = ADD2E_MAGIC_ITEM_BUILDER_VERSION;
 
 function add2eMagicBuilderNormalize(value) {
@@ -406,8 +406,50 @@ const ADD2E_MAGIC_ITEM_PROFILES = Object.freeze({
   parchemin: Object.freeze({ label: "Parchemin", sousType: "parchemin_de_sort", img: "icons/sundries/scrolls/scroll-runed-brown.webp", consumable: true, charges: false, tags: ["objet_magique", "parchemin", "parchemin_de_sort", "consommable"] }),
   baguette: Object.freeze({ label: "Baguette", sousType: "baguette", img: "icons/weapons/wands/wand-gem-blue.webp", consumable: false, charges: true, tags: ["objet_magique", "sous_type:baguette", "baguette", "charges", "actif_si_equipe"] }),
   batonnet: Object.freeze({ label: "Bâtonnet", sousType: "batonnet", img: "icons/weapons/staves/staff-engraved-brown.webp", consumable: false, charges: true, tags: ["objet_magique", "sous_type:batonnet", "batonnet", "charges", "actif_si_equipe"] }),
-  potion: Object.freeze({ label: "Potion", sousType: "potion", img: "icons/consumables/potions/potion-bottle-corked-blue.webp", consumable: true, charges: true, tags: ["objet_magique", "potion", "consommable_potion", "consommable"] })
+  potion: Object.freeze({ label: "Potion", sousType: "potion", img: "icons/consumables/potions/potion-bottle-corked-blue.webp", consumable: true, charges: true, tags: ["objet_magique", "potion", "consommable_potion", "consommable"] }),
+  livre_illusionniste: Object.freeze({ label: "Livre de sorts d’illusionniste", sousType: "livre_de_sorts", img: "icons/sundries/books/book-embossed-gold-blue.webp", spellbookOwnerList: "illusionniste" }),
+  livre_magicien: Object.freeze({ label: "Livre de sorts de magicien", sousType: "livre_de_sorts", img: "icons/sundries/books/book-embossed-gold-red.webp", spellbookOwnerList: "magicien" })
 });
+
+function add2eMagicItemSpellbookData(profile, name) {
+  const ownerList = String(profile?.spellbookOwnerList ?? "");
+  return {
+    name,
+    type: "objet",
+    img: profile.img,
+    system: {
+      nom: name,
+      type: "objet",
+      categorie: "objet_magique",
+      sousType: "livre_de_sorts",
+      quantite: 1,
+      poids: 5,
+      equipee: false,
+      magique: true,
+      consommable: false,
+      description: "Livre de sorts indépendant. Il peut être placé dans un coffre, ramassé et consulté par un personnage compatible.",
+      arcaneDocument: {
+        schema: 1,
+        kind: "spellbook",
+        personal: false,
+        ownerList,
+        ownerActorUuid: "",
+        spells: []
+      },
+      nom_non_identifie: "Livre de sorts"
+    },
+    effects: [],
+    flags: {
+      add2e: {
+        arcaneDocumentKind: "spellbook",
+        personalSpellbook: false,
+        ownerActorUuid: "",
+        ownerSpellList: ownerList,
+        generatedBy: "migration-livres-parchemins-v1"
+      }
+    }
+  };
+}
 
 async function add2eMagicItemCreatorDialog(directory = null) {
   const DialogV2 = foundry?.applications?.api?.DialogV2;
@@ -416,7 +458,7 @@ async function add2eMagicItemCreatorDialog(directory = null) {
   let submittedData = null;
   const dialogResult = await DialogV2.wait({
     window: { title: "Créer un objet magique" }, modal: true, rejectClose: false,
-    content: `<form class="add2e-dialog add2e-magic-item-create-form" style="min-width:500px;padding:8px;"><div class="form-group"><label>Type</label><select name="profile">${Object.entries(ADD2E_MAGIC_ITEM_PROFILES).map(([key, profile]) => `<option value="${key}">${profile.label}</option>`).join("")}</select></div><div class="form-group"><label>Nom</label><input name="name" type="text" value="Objet magique"></div><div class="form-group"><label>Charges actuelles</label><input name="chargesValue" type="number" min="0" step="1" value="10"></div><div class="form-group"><label>Charges maximales</label><input name="chargesMax" type="number" min="0" step="1" value="10"></div><p style="font-size:.85em;opacity:.8;">Potion : un seul sort. Baguette, bâtonnet et anneau : plusieurs pouvoirs ou sorts. Parchemin : plusieurs sorts via son document magique.</p></form>`,
+    content: `<form class="add2e-dialog add2e-magic-item-create-form" style="min-width:500px;padding:8px;"><div class="form-group"><label>Type</label><select name="profile">${Object.entries(ADD2E_MAGIC_ITEM_PROFILES).map(([key, profile]) => `<option value="${key}">${profile.label}</option>`).join("")}</select></div><div class="form-group"><label>Nom</label><input name="name" type="text" value="Objet magique"></div><div class="form-group"><label>Charges actuelles</label><input name="chargesValue" type="number" min="0" step="1" value="10"></div><div class="form-group"><label>Charges maximales</label><input name="chargesMax" type="number" min="0" step="1" value="10"></div><p style="font-size:.85em;opacity:.8;">Potion : un seul sort. Baguette, bâtonnet et anneau : plusieurs pouvoirs ou sorts. Parchemin : plusieurs sorts via son document magique. Les livres de sorts utilisent le modèle exact du compendium.</p></form>`,
     buttons: [{
       action: "create",
       label: "Créer l'objet magique",
@@ -452,14 +494,22 @@ async function add2eMagicItemCreatorDialog(directory = null) {
     console.error("[ADD2E][OBJET_MAGIQUE][CREATE][INVALID_PROFILE]", { dialogResult, submittedData, profileKey });
     return ui.notifications.error("Le type d'objet magique sélectionné n'a pas pu être lu.");
   }
-  const name = result.name || profile.label;
-  const max = profile.charges ? Math.max(result.chargesMax, result.chargesValue) : 0;
-  const current = profile.charges ? Math.min(result.chargesValue, max) : 0;
-  const system = { nom: name, type: "objet", categorie: "objet_magique", sousType: profile.sousType, sous_type: profile.sousType, quantite: 1, poids: 0, magique: true, equipee: false, consommable: profile.consumable, description: "", tags: [...profile.tags], effectTags: [...profile.tags], pouvoirs: [] };
-  if (profile.charges) system.charges = { value: current, max };
-  if (profileKey === "parchemin") system.arcaneDocument = { schema: 1, kind: "spell-scroll", personal: false, spells: [] };
+  const requestedName = String(result.name ?? "").trim();
+  const name = (!requestedName || requestedName === "Objet magique") ? profile.label : requestedName;
   const folder = directory?.currentFolder?.id ?? directory?.folder?.id ?? null;
-  const itemData = { name, type: "objet", img: profile.img, system, flags: { add2e: { magicItemProfile: profileKey, magicItemBuilderVersion: ADD2E_MAGIC_ITEM_BUILDER_VERSION, kind: profile.sousType, category: "objet_magique", ...(profileKey === "parchemin" ? { arcaneDocumentKind: "spell-scroll" } : {}) } } };
+
+  let itemData;
+  if (profile.spellbookOwnerList) {
+    itemData = add2eMagicItemSpellbookData(profile, name);
+  } else {
+    const max = profile.charges ? Math.max(result.chargesMax, result.chargesValue) : 0;
+    const current = profile.charges ? Math.min(result.chargesValue, max) : 0;
+    const system = { nom: name, type: "objet", categorie: "objet_magique", sousType: profile.sousType, sous_type: profile.sousType, quantite: 1, poids: 0, magique: true, equipee: false, consommable: profile.consumable, description: "", tags: [...profile.tags], effectTags: [...profile.tags], pouvoirs: [] };
+    if (profile.charges) system.charges = { value: current, max };
+    if (profileKey === "parchemin") system.arcaneDocument = { schema: 1, kind: "spell-scroll", personal: false, spells: [] };
+    itemData = { name, type: "objet", img: profile.img, system, flags: { add2e: { magicItemProfile: profileKey, magicItemBuilderVersion: ADD2E_MAGIC_ITEM_BUILDER_VERSION, kind: profile.sousType, category: "objet_magique", ...(profileKey === "parchemin" ? { arcaneDocumentKind: "spell-scroll" } : {}) } } };
+  }
+
   if (folder) itemData.folder = folder;
   const ItemClass = CONFIG?.Item?.documentClass ?? globalThis.Item;
   const created = await ItemClass.create(itemData, { renderSheet: true });
