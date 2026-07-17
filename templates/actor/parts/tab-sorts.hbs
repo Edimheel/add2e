@@ -65,7 +65,6 @@
                   <table class="sort-table add2e-potion-ready-table">
                     <thead>
                       <tr>
-                        <th style="width:100px;">Disponible</th>
                         <th style="width:42px;"></th>
                         <th>Potion</th>
                         <th>Effet</th>
@@ -75,7 +74,6 @@
                     <tbody>
                       {{#each add2ePotionRows as |potion|}}
                         <tr class="sort-row add2e-potion-ready-row" data-item-id="{{potion.itemId}}" data-sort-id="{{potion.id}}">
-                          <td><span class="sort-memorize-badge">Prête</span></td>
                           <td class="sort-drag">
                             <img class="sort-cast-img" data-sort-id="{{potion.id}}" src="{{potion.potionImg}}" alt="{{potion.potionName}}" title="Boire {{potion.potionName}}" draggable="false" style="width:34px;height:34px;border-radius:5px;object-fit:cover;cursor:pointer;">
                           </td>
@@ -86,7 +84,7 @@
                           <td>{{#if potion.doseMax}}{{potion.doses}} / {{potion.doseMax}}{{else}}{{potion.doses}}{{/if}}</td>
                         </tr>
                         <tr id="desc-chat-{{potion.id}}" class="sort-description">
-                          <td colspan="5" class="sort-description-fullcell">
+                          <td colspan="4" class="sort-description-fullcell">
                             <div class="a2e-small sort-description-content">{{{potion.description}}}</div>
                           </td>
                         </tr>
@@ -205,7 +203,6 @@
                   <table class="sort-table add2e-scroll-ready-table">
                     <thead>
                       <tr>
-                        <th style="width:100px;">Préparé</th>
                         <th style="width:42px;"></th>
                         <th>Sort</th>
                         <th style="width:80px;">Niveau</th>
@@ -217,7 +214,6 @@
                     <tbody>
                       {{#each add2eArcaneScrollRows as |scroll|}}
                         <tr class="sort-row add2e-scroll-ready-row" data-item-id="{{scroll.itemId}}" data-spell-key="{{scroll.spellKey}}">
-                          <td><span class="sort-memorize-badge">Prêt ×{{scroll.quantity}}</span></td>
                           <td class="sort-drag">
                             {{#if scroll.canCast}}
                               <a class="add2e-scroll-entry-cast" data-item-id="{{scroll.itemId}}" data-spell-key="{{scroll.spellKey}}" title="Lancer {{scroll.name}} depuis le parchemin">
@@ -229,7 +225,15 @@
                           </td>
                           <td>
                             <b>{{scroll.name}}</b>
-                            <div class="a2e-muted a2e-small">{{scroll.scrollName}}</div>
+                            <div class="a2e-small">
+                              <a
+                                class="sort-name-link"
+                                data-add2e-arcane-action="view-document"
+                                data-item-id="{{scroll.itemId}}"
+                                data-actor-id="{{../actor._id}}"
+                                title="Afficher le contenu du parchemin"
+                              >{{scroll.scrollName}}</a>
+                            </div>
                           </td>
                           <td>{{scroll.level}}</td>
                           <td>{{scroll.listLabel}}</td>
