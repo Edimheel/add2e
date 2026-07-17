@@ -21,8 +21,6 @@ import {
 } from "./07b-arcane-spellbooks.mjs";
 import { castScroll } from "./07b-arcane-scrolls.mjs";
 
-const ARCANE_RUNTIME_VERSION = "2026-07-17-arcane-runtime-single-handler-v2";
-
 function applicationForElement(element) {
   const root = element?.closest?.(".application");
   if (!root) return null;
@@ -68,31 +66,25 @@ async function handleAction(element) {
   return false;
 }
 
-function arcaneActionHandler(event) {
-  const element = event.target instanceof Element
-    ? event.target.closest("[data-add2e-arcane-action]")
-    : null;
-  if (!element) return;
-
-  event.preventDefault();
-  event.stopPropagation();
-  event.stopImmediatePropagation();
-
-  void handleAction(element).catch(error => {
-    console.error("[ADD2E][ARCANE_DOCUMENTS][ACTION_ERROR]", error);
-    ui.notifications.error(error?.message || "Erreur pendant l’action arcanique.");
-  });
-}
-
 function installActionListener() {
-  const previous = globalThis.__ADD2E_ARCANE_DOCUMENT_ACTION_HANDLER__;
-  if (typeof previous === "function") {
-    document.removeEventListener("click", previous, true);
-  }
+  if (globalThis.__ADD2E_ARCANE_DOCUMENT_ACTION_LISTENER__) return;
+  globalThis.__ADD2E_ARCANE_DOCUMENT_ACTION_LISTENER__ = true;
 
-  document.addEventListener("click", arcaneActionHandler, true);
-  globalThis.__ADD2E_ARCANE_DOCUMENT_ACTION_HANDLER__ = arcaneActionHandler;
-  globalThis.__ADD2E_ARCANE_DOCUMENT_ACTION_LISTENER__ = ARCANE_RUNTIME_VERSION;
+  document.addEventListener("click", event => {
+    const element = event.target instanceof Element
+      ? event.target.closest("[data-add2e-arcane-action]")
+      : null;
+    if (!element) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+
+    void handleAction(element).catch(error => {
+      console.error("[ADD2E][ARCANE_DOCUMENTS][ACTION_ERROR]", error);
+      ui.notifications.error(error?.message || "Erreur pendant l’action arcanique.");
+    });
+  }, true);
 }
 
 function relevantItem(item) {
@@ -114,11 +106,6 @@ async function handleActorMortality(actor, options = {}) {
 }
 
 export function installArcaneDocumentRuntime() {
-  installActionListener();
-
-  if (globalThis.__ADD2E_ARCANE_DOCUMENT_RUNTIME__ === ARCANE_RUNTIME_VERSION) return;
-  globalThis.__ADD2E_ARCANE_DOCUMENT_RUNTIME__ = ARCANE_RUNTIME_VERSION;
-
   Hooks.on("createItem", (item, _options, userId) => {
     if (String(userId ?? "") !== String(game.user?.id ?? "")) return;
     const actor = item?.parent;
@@ -162,6 +149,7 @@ export function installArcaneDocumentRuntime() {
   }
 
   Hooks.once("ready", async () => {
+    installActionListener();
     if (!responsibleGM()) return;
 
     for (const actor of game.actors?.contents ?? []) {
