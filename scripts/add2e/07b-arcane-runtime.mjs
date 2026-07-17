@@ -5,7 +5,9 @@ import {
   norm,
   itemType,
   isSpellbook,
-  isScroll
+  isScroll,
+  documentEntries,
+  listLabel
 } from "./07b-arcane-documents-core.mjs";
 import {
   responsibleGM,
@@ -43,14 +45,86 @@ function actorForAction(element, application = null) {
   return null;
 }
 
-function viewArcaneDocument(item) {
-  const sheet = item?.sheet;
-  if (!sheet) {
-    ui.notifications.warn("La feuille du document arcanique est introuvable.");
-    return false;
+function arcaneEntryRow(entry) {
+  const row = document.createElement("div");
+  row.className = "add2e-arcane-inline-entry";
+  row.style.display = "grid";
+  row.style.gridTemplateColumns = "34px minmax(180px,1fr) 80px 150px";
+  row.style.gap = "8px";
+  row.style.alignItems = "center";
+  row.style.padding = "5px 6px";
+  row.style.borderBottom = "1px solid rgba(117,85,43,.25)";
+
+  const image = document.createElement("img");
+  image.src = String(entry?.img ?? "").trim() || "icons/svg/book.svg";
+  image.alt = String(entry?.name ?? "Sort");
+  image.style.width = "30px";
+  image.style.height = "30px";
+  image.style.objectFit = "cover";
+  image.style.borderRadius = "4px";
+
+  const name = document.createElement("b");
+  name.textContent = String(entry?.name ?? "Sort inconnu");
+
+  const level = document.createElement("span");
+  level.textContent = `Niveau ${Number(entry?.level) || 1}`;
+
+  const lists = document.createElement("span");
+  lists.textContent = Array.from(entry?.lists ?? []).map(listLabel).join(" / ") || "Liste inconnue";
+
+  row.append(image, name, level, lists);
+  return row;
+}
+
+function toggleArcaneDocument(element, item) {
+  const sourceRow = element?.closest?.("tr");
+  if (!sourceRow?.parentElement) return false;
+
+  const detailId = `add2e-arcane-inline-${item.id}`;
+  const nextRow = sourceRow.nextElementSibling;
+  if (nextRow?.dataset?.add2eArcaneInlineId === detailId) {
+    nextRow.remove();
+    return true;
   }
-  sheet._add2eActiveTab = "arcane";
-  sheet.render(true);
+
+  sourceRow.parentElement
+    .querySelectorAll?.(`[data-add2e-arcane-inline-id="${detailId}"]`)
+    .forEach(row => row.remove());
+
+  const detailRow = document.createElement("tr");
+  detailRow.dataset.add2eArcaneInlineId = detailId;
+  detailRow.className = "add2e-arcane-inline-row";
+
+  const cell = document.createElement("td");
+  cell.colSpan = Math.max(1, sourceRow.cells?.length ?? 1);
+  cell.style.padding = "8px 12px";
+
+  const panel = document.createElement("div");
+  panel.className = "a2e-panel add2e-arcane-inline-panel";
+  panel.style.boxShadow = "none";
+  panel.style.margin = "0";
+
+  const title = document.createElement("h3");
+  title.textContent = isSpellbook(item) ? "Sorts inscrits dans le livre" : "Contenu du parchemin";
+  panel.append(title);
+
+  const body = document.createElement("div");
+  body.className = "a2e-panel-body";
+  const entries = documentEntries(item);
+
+  if (entries.length) {
+    for (const entry of entries) body.append(arcaneEntryRow(entry));
+  } else {
+    const empty = document.createElement("p");
+    empty.className = "a2e-muted";
+    empty.textContent = isSpellbook(item) ? "Aucun sort inscrit dans ce livre." : "Aucun sort inscrit sur ce parchemin.";
+    body.append(empty);
+  }
+
+  panel.append(body);
+  cell.append(panel);
+  detailRow.append(cell);
+  sourceRow.after(detailRow);
   return true;
 }
 
@@ -66,7 +140,7 @@ async function handleAction(element) {
     return false;
   }
 
-  if (action === "view-document") return viewArcaneDocument(item);
+  if (action === "view-document") return toggleArcaneDocument(element, item);
   if (action === "view-book") return viewSpellbook(item, actor);
   if (action === "copy-book") return copySpellbook(actor, item);
   if (action === "copy-book-entry") {
