@@ -1,4 +1,4 @@
-const ADD2E_ITEM_SHEETS_VERSION = "2026-07-13-item-sheet-arcane-documents-v2";
+const ADD2E_ITEM_SHEETS_VERSION = "2026-07-17-item-sheet-persistent-tabs-v3";
 globalThis.ADD2E_ITEM_SHEETS_VERSION = ADD2E_ITEM_SHEETS_VERSION;
 
 const { ApplicationV2 } = foundry.applications.api;
@@ -533,19 +533,26 @@ function add2eActivateSheetTab(root, tab) {
   });
 }
 
-function add2eInstallSheetTabs(root) {
+function add2eInstallSheetTabs(root, sheet = null) {
   if (!root?.querySelector) return;
   const links = [...root.querySelectorAll(".sheet-tabs [data-tab], .tabs [data-tab]")];
   if (!links.length) return;
 
-  const initial = add2eCurrentActiveTab(root);
+  const availableTabs = new Set(links.map(link => String(link.dataset.tab ?? "")).filter(Boolean));
+  const stored = String(sheet?._add2eActiveTab ?? "");
+  const current = add2eCurrentActiveTab(root);
+  const initial = availableTabs.has(stored) ? stored : current;
+  if (sheet) sheet._add2eActiveTab = initial;
   add2eActivateSheetTab(root, initial);
 
   for (const link of links) {
     link.addEventListener("click", ev => {
       ev.preventDefault();
       ev.stopPropagation();
-      add2eActivateSheetTab(root, ev.currentTarget.dataset.tab);
+      const tab = String(ev.currentTarget.dataset.tab ?? "");
+      if (!tab) return;
+      if (sheet) sheet._add2eActiveTab = tab;
+      add2eActivateSheetTab(root, tab);
     });
   }
 }
@@ -613,6 +620,7 @@ class Add2eItemSheetV2 extends ApplicationV2 {
     this.object = document;
     this.document = document;
     this.item = document;
+    this._add2eActiveTab = "";
   }
 
   get title() {
@@ -680,7 +688,7 @@ class Add2eItemSheetV2 extends ApplicationV2 {
     const root = add2eRootFromContent(content);
     if (!root) return;
     add2eApplyV2SheetLayout(root, this);
-    add2eInstallSheetTabs(root);
+    add2eInstallSheetTabs(root, this);
     add2eRegisterImgPicker(root, this);
     this._activateAutoSubmit(root);
   }
