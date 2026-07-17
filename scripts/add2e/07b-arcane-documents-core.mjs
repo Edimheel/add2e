@@ -1,7 +1,7 @@
 // ADD2E — Documents arcaniques : noyau commun.
 // Compatible Foundry V13/V14/V15. ApplicationV2 / DialogV2 uniquement.
 
-export const VERSION = "2026-07-17-arcane-documents-v5";
+export const VERSION = "2026-07-17-arcane-documents-v6";
 export const ARCANE_LISTS = new Set(["magicien", "illusionniste"]);
 export const SCROLL_LISTS = new Set(["magicien", "illusionniste", "clerc", "druide"]);
 export const BOOK_NAMES = {
@@ -353,31 +353,9 @@ function spellLearningChatCard({ actor = null, source = "", details = [], status
   </div>`;
 }
 
-function spellbookSummaryChatCard({ actor = null, title = "", source = "", result = "", details = [], status = "", image = "" } = {}) {
-  const portrait = image || actor?.img || "icons/svg/book.svg";
-  const detailRows = array(details).filter(Boolean).map(detail => `<li>${detail}</li>`).join("");
-  const statusClass = status === "success" ? "is-success" : "is-failure";
-  return `<div class="add2e-card add2e-arcane-card add2e-book-summary-card ${statusClass}">
-    <header class="add2e-card-header">
-      <img src="${esc(portrait)}" alt="" style="width:42px;height:42px;min-width:42px;max-width:42px;min-height:42px;max-height:42px;object-fit:cover;border-radius:6px;">
-      <div>
-        <h3><i class="fas fa-book-open"></i> ${esc(title)}</h3>
-        ${source ? `<div class="add2e-card-source">${esc(source)}</div>` : ""}
-      </div>
-    </header>
-    <div class="add2e-card-body">
-      ${result ? `<p><b>${result}</b></p>` : ""}
-      ${detailRows ? `<ul>${detailRows}</ul>` : ""}
-    </div>
-  </div>`;
-}
-
 export function arcaneChatCard({ actor = null, title = "Document arcanique", source = "", result = "", details = [], status = "", icon = "fa-book", image = "" } = {}) {
   if (title === "Test de compréhension") {
     return spellLearningChatCard({ actor, source, details, status, image });
-  }
-  if (title === "Copie d'un livre de sorts" || title === "Copie d'un sort depuis un livre") {
-    return spellbookSummaryChatCard({ actor, title, source, result, details, status, image });
   }
 
   const portrait = image || actor?.img || "icons/svg/book.svg";
@@ -399,5 +377,6 @@ export function arcaneChatCard({ actor = null, title = "Document arcanique", sou
 }
 
 export async function createArcaneChatMessage({ actor = null, ...card } = {}) {
+  if (card.title === "Copie d'un livre de sorts" || card.title === "Copie d'un sort depuis un livre") return null;
   return ChatMessage.create({ speaker: actor ? ChatMessage.getSpeaker({ actor }) : {}, content: arcaneChatCard({ actor, ...card }) });
 }
