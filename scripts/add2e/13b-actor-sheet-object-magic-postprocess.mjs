@@ -244,7 +244,7 @@ if (globalThis.Add2eActorSheet.prototype.__add2eObjectMagicGetDataV2Restored) {
   };
 }
 
-const ADD2E_MAGIC_ITEM_BUILDER_VERSION = "2026-07-17-magic-item-builder-v4-spellbooks";
+const ADD2E_MAGIC_ITEM_BUILDER_VERSION = "2026-07-17-magic-item-builder-v5-recharge-defaults";
 globalThis.ADD2E_MAGIC_ITEM_BUILDER_VERSION = ADD2E_MAGIC_ITEM_BUILDER_VERSION;
 
 function add2eMagicBuilderNormalize(value) {
@@ -404,8 +404,8 @@ function add2eInstallMagicItemSheetManager() {
 const ADD2E_MAGIC_ITEM_PROFILES = Object.freeze({
   anneau: Object.freeze({ label: "Anneau", sousType: "anneau", img: "icons/equipment/finger/ring-band-engraved-gold.webp", consumable: false, charges: false, tags: ["objet_magique", "sous_type:anneau", "anneau", "actif_si_equipe"] }),
   parchemin: Object.freeze({ label: "Parchemin", sousType: "parchemin_de_sort", img: "icons/sundries/scrolls/scroll-runed-brown.webp", consumable: true, charges: false, tags: ["objet_magique", "parchemin", "parchemin_de_sort", "consommable"] }),
-  baguette: Object.freeze({ label: "Baguette", sousType: "baguette", img: "icons/weapons/wands/wand-gem-blue.webp", consumable: false, charges: true, tags: ["objet_magique", "sous_type:baguette", "baguette", "charges", "actif_si_equipe"] }),
-  batonnet: Object.freeze({ label: "Bâtonnet", sousType: "batonnet", img: "icons/weapons/staves/staff-engraved-brown.webp", consumable: false, charges: true, tags: ["objet_magique", "sous_type:batonnet", "batonnet", "charges", "actif_si_equipe"] }),
+  baguette: Object.freeze({ label: "Baguette", sousType: "baguette", img: "icons/weapons/wands/wand-gem-blue.webp", consumable: false, charges: true, rechargeable: true, rechargeFormula: "1d6", tags: ["objet_magique", "sous_type:baguette", "baguette", "charges", "actif_si_equipe"] }),
+  batonnet: Object.freeze({ label: "Bâtonnet", sousType: "batonnet", img: "icons/weapons/staves/staff-engraved-brown.webp", consumable: false, charges: true, rechargeable: true, rechargeFormula: "1d6", tags: ["objet_magique", "sous_type:batonnet", "batonnet", "charges", "actif_si_equipe"] }),
   potion: Object.freeze({ label: "Potion", sousType: "potion", img: "icons/consumables/potions/potion-bottle-corked-blue.webp", consumable: true, charges: true, tags: ["objet_magique", "potion", "consommable_potion", "consommable"] }),
   livre_illusionniste: Object.freeze({ label: "Livre de sorts d’illusionniste", sousType: "livre_de_sorts", img: "icons/sundries/books/book-embossed-gold-blue.webp", spellbookOwnerList: "illusionniste" }),
   livre_magicien: Object.freeze({ label: "Livre de sorts de magicien", sousType: "livre_de_sorts", img: "icons/sundries/books/book-embossed-gold-red.webp", spellbookOwnerList: "magicien" })
@@ -505,7 +505,11 @@ async function add2eMagicItemCreatorDialog(directory = null) {
     const max = profile.charges ? Math.max(result.chargesMax, result.chargesValue) : 0;
     const current = profile.charges ? Math.min(result.chargesValue, max) : 0;
     const system = { nom: name, type: "objet", categorie: "objet_magique", sousType: profile.sousType, sous_type: profile.sousType, quantite: 1, poids: 0, magique: true, equipee: false, consommable: profile.consumable, description: "", tags: [...profile.tags], effectTags: [...profile.tags], pouvoirs: [] };
-    if (profile.charges) system.charges = { value: current, max };
+    if (profile.charges) {
+      system.charges = profile.rechargeable === true
+        ? { value: current, max, mode: "charges", recharge: "rechargeable", rechargeable: true, rechargeFormula: String(profile.rechargeFormula || "1d6") }
+        : { value: current, max };
+    }
     if (profileKey === "parchemin") system.arcaneDocument = { schema: 1, kind: "spell-scroll", personal: false, spells: [] };
     itemData = { name, type: "objet", img: profile.img, system, flags: { add2e: { magicItemProfile: profileKey, magicItemBuilderVersion: ADD2E_MAGIC_ITEM_BUILDER_VERSION, kind: profile.sousType, category: "objet_magique", ...(profileKey === "parchemin" ? { arcaneDocumentKind: "spell-scroll" } : {}) } } };
   }
