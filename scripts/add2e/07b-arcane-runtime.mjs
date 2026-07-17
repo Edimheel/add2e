@@ -21,6 +21,8 @@ import {
 } from "./07b-arcane-spellbooks.mjs";
 import { castScroll } from "./07b-arcane-scrolls.mjs";
 
+const ARCANE_CHAT_DIAG_VERSION = "2026-07-17-arcane-chat-diag-v1";
+
 function applicationForElement(element) {
   const root = element?.closest?.(".application");
   if (!root) return null;
@@ -87,6 +89,65 @@ function installActionListener() {
   }, true);
 }
 
+function isArcaneChatContent(value) {
+  const content = String(value ?? "");
+  return content.includes("add2e-arcane-card")
+    || content.includes("add2e-book-learning-card")
+    || content.includes("Copie d’un sort depuis un livre")
+    || content.includes("Copie d'un sort depuis un livre");
+}
+
+function logArcaneChatDiagnostic(stage, payload) {
+  console.groupCollapsed(`[ADD2E][ARCANE_CHAT_DIAG][${stage}]`);
+  console.log("version", ARCANE_CHAT_DIAG_VERSION);
+  console.log(payload);
+  console.trace("pile d’appel");
+  console.groupEnd();
+}
+
+function installArcaneChatDiagnostics() {
+  if (globalThis.__ADD2E_ARCANE_CHAT_DIAGNOSTICS__ === ARCANE_CHAT_DIAG_VERSION) return;
+  globalThis.__ADD2E_ARCANE_CHAT_DIAGNOSTICS__ = ARCANE_CHAT_DIAG_VERSION;
+
+  Hooks.on("createChatMessage", (message, options, userId) => {
+    if (!isArcaneChatContent(message?.content)) return;
+    logArcaneChatDiagnostic("CREATE", {
+      id: message?.id,
+      userId,
+      authorId: message?.author?.id,
+      content: message?.content,
+      flavor: message?.flavor,
+      flags: message?.flags,
+      rolls: Array.from(message?.rolls ?? []).map(roll => ({ formula: roll?.formula, total: roll?.total })),
+      options
+    });
+  });
+
+  Hooks.on("preUpdateChatMessage", (message, changes, options, userId) => {
+    if (!isArcaneChatContent(message?.content) && !isArcaneChatContent(changes?.content)) return;
+    logArcaneChatDiagnostic("PRE_UPDATE", {
+      id: message?.id,
+      userId,
+      beforeContent: message?.content,
+      changes,
+      options
+    });
+  });
+
+  Hooks.on("updateChatMessage", (message, changes, options, userId) => {
+    if (!isArcaneChatContent(message?.content) && !isArcaneChatContent(changes?.content)) return;
+    logArcaneChatDiagnostic("UPDATE", {
+      id: message?.id,
+      userId,
+      afterContent: message?.content,
+      changes,
+      flags: message?.flags,
+      rolls: Array.from(message?.rolls ?? []).map(roll => ({ formula: roll?.formula, total: roll?.total })),
+      options
+    });
+  });
+}
+
 function relevantItem(item) {
   return ["sort", "classe"].includes(itemType(item))
     || isSpellbook(item)
@@ -106,6 +167,8 @@ async function handleActorMortality(actor, options = {}) {
 }
 
 export function installArcaneDocumentRuntime() {
+  installArcaneChatDiagnostics();
+
   Hooks.on("createItem", (item, _options, userId) => {
     if (String(userId ?? "") !== String(game.user?.id ?? "")) return;
     const actor = item?.parent;
