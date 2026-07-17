@@ -58,7 +58,27 @@
               {{#each listeObjetsDivers as |objet|}}
                 <tr class="item" data-item-id="{{objet._id}}" data-itemId="{{objet._id}}">
                   <td>
-                    <b>{{objet.name}}</b>
+                    {{#if (eq objet.system.arcaneDocument.kind "spellbook")}}
+                      <a
+                        class="sort-name-link"
+                        data-add2e-arcane-action="view-document"
+                        data-item-id="{{objet._id}}"
+                        data-actor-id="{{../actor._id}}"
+                        title="Afficher le contenu du livre de sorts"
+                      ><b>{{objet.name}}</b></a>
+                    {{else}}
+                      {{#if (eq objet.system.arcaneDocument.kind "spell-scroll")}}
+                        <a
+                          class="sort-name-link"
+                          data-add2e-arcane-action="view-document"
+                          data-item-id="{{objet._id}}"
+                          data-actor-id="{{../actor._id}}"
+                          title="Afficher le contenu du parchemin"
+                        ><b>{{objet.name}}</b></a>
+                      {{else}}
+                        <b>{{objet.name}}</b>
+                      {{/if}}
+                    {{/if}}
 
                     {{#if (eq objet.system.arcaneDocument.kind "spellbook")}}
                       <div class="a2e-small a2e-muted">
