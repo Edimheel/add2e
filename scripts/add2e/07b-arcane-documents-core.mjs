@@ -318,7 +318,46 @@ export async function resolveSpellByName(name) {
   return resolveSpell({ name, level: 1, lists: [] });
 }
 
+function spellLearningChatCard({ actor = null, source = "", result = "", details = [], status = "", image = "" } = {}) {
+  const portrait = image || actor?.img || "icons/svg/book.svg";
+  const [spellNameRaw, bookNameRaw] = String(source ?? "").split(/\s+—\s+/, 2);
+  const spellName = spellNameRaw?.trim() || "Sort inconnu";
+  const bookName = bookNameRaw?.trim() || "Livre de sorts";
+  const rows = array(details).filter(Boolean);
+  const total = String(rows[0] ?? "").replace(/^Résultat\s*:\s*/i, "").replace(/<\/?b>/g, "").trim() || "—";
+  const chance = String(rows[1] ?? "").replace(/^Chance\s*:\s*/i, "").replace(/<\/?b>/g, "").trim() || "—";
+  const success = status === "success";
+  const statusLabel = success ? "Réussite" : "Échec";
+  const statusClass = success ? "is-success" : "is-failure";
+  const sentence = success
+    ? `${esc(spellName)} a été ajouté au livre personnel et à la liste des sorts.`
+    : `${esc(spellName)} n’a pas été ajouté : le test de compréhension a échoué.`;
+
+  return `<div class="add2e-card add2e-arcane-card add2e-book-learning-card ${statusClass}">
+    <header class="add2e-card-header">
+      <img src="${esc(portrait)}" alt="">
+      <div>
+        <h3><i class="fas fa-dice-d20"></i> Copie d’un sort depuis un livre</h3>
+        <div class="add2e-card-source">${esc(bookName)}</div>
+      </div>
+    </header>
+    <div class="add2e-card-body">
+      <div class="add2e-book-learning-grid">
+        <b>Sort</b><span>${esc(spellName)}</span>
+        <b>Résultat</b><span>${esc(total)}</span>
+        <b>Chance</b><span>${esc(chance)}</span>
+      </div>
+      <div class="add2e-book-learning-status">${statusLabel}</div>
+      <p>${sentence}</p>
+    </div>
+  </div>`;
+}
+
 export function arcaneChatCard({ actor = null, title = "Document arcanique", source = "", result = "", details = [], status = "", icon = "fa-book", image = "" } = {}) {
+  if (title === "Test de compréhension") {
+    return spellLearningChatCard({ actor, source, result, details, status, image });
+  }
+
   const portrait = image || actor?.img || "icons/svg/book.svg";
   const detailRows = array(details).filter(Boolean).map(detail => `<li>${detail}</li>`).join("");
   const statusClass = status ? ` is-${esc(status)}` : "";
