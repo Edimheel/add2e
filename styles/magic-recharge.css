@@ -1,0 +1,141 @@
+/* ADD2E — Recharge des objets magiques : placement du bouton et carte de chat compacte. */
+
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage)
+.add2e-character-v3 .add2e-object-magic-item {
+  position: relative;
+}
+
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage)
+.add2e-character-v3 .add2e-object-magic-item > h3 {
+  position: relative;
+  min-height: 40px;
+  padding-right: 245px;
+}
+
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage)
+.add2e-character-v3 .add2e-object-magic-item > h3 .sort-memorize-badge {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  float: none !important;
+  margin: 0;
+}
+
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage)
+.add2e-character-v3 .add2e-magic-recharge-diagnostic {
+  position: absolute;
+  top: 6px;
+  right: 125px;
+  z-index: 3;
+  display: block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  pointer-events: none;
+}
+
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage)
+.add2e-character-v3 .add2e-magic-recharge-status {
+  display: none !important;
+}
+
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage)
+.add2e-character-v3 .add2e-magic-recharge-button {
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: auto;
+  min-width: 105px;
+  height: 28px;
+  margin: 0 !important;
+  padding: 3px 9px;
+  border: 1px solid #7a591e;
+  border-radius: 999px;
+  background: #fff3c4;
+  color: #4d3510;
+  font-weight: 800;
+  line-height: 1;
+  pointer-events: auto;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .16);
+}
+
+:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage)
+.add2e-character-v3 .add2e-magic-recharge-button:hover {
+  filter: brightness(1.06);
+}
+
+.chat-message .add2e-magic-recharge-card {
+  overflow: hidden;
+  border: 1px solid #b88924;
+  border-radius: 8px;
+  background: #fffaf0;
+  box-shadow: 0 1px 4px rgba(80, 58, 10, .16);
+}
+
+.chat-message .add2e-magic-recharge-card .add2e-card-header {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  padding: 7px 9px;
+  border-bottom: 1px solid #d9bf73;
+  background: linear-gradient(180deg, #f2dfaa, #ead090);
+}
+
+.chat-message .add2e-magic-recharge-card .add2e-card-header img {
+  width: 36px;
+  height: 36px;
+  border: 1px solid #8a611d;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.chat-message .add2e-magic-recharge-card .add2e-card-header h3 {
+  margin: 0;
+  color: #55390d;
+  font-size: 1rem;
+  line-height: 1.1;
+}
+
+.chat-message .add2e-magic-recharge-card .add2e-card-source {
+  margin-top: 2px;
+  color: #6f4b12;
+  font-size: .82rem;
+  font-weight: 700;
+}
+
+.chat-message .add2e-magic-recharge-card .add2e-card-body {
+  padding: 7px 9px;
+}
+
+.chat-message .add2e-magic-recharge-card .add2e-book-learning-grid {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 3px 10px;
+  align-items: center;
+}
+
+.chat-message .add2e-magic-recharge-card .add2e-book-learning-grid b {
+  color: #6f4b12;
+}
+
+@media (max-width: 720px) {
+  :is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage)
+  .add2e-character-v3 .add2e-object-magic-item > h3 {
+    padding-right: 215px;
+  }
+
+  :is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage)
+  .add2e-character-v3 .add2e-magic-recharge-diagnostic {
+    right: 112px;
+  }
+
+  :is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage)
+  .add2e-character-v3 .add2e-magic-recharge-button {
+    min-width: 92px;
+    padding-inline: 7px;
+  }
+}
