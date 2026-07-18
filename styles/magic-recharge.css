@@ -1,19 +1,16 @@
-/* ADD2E — Recharge des objets magiques : placement du bouton et carte de chat compacte. */
+/* ADD2E — Recharge des objets magiques : bouton dans l’en-tête et carte de chat compacte. */
 
-:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage)
-.add2e-character-v3 .add2e-object-magic-item {
+.add2e-object-magic-item {
   position: relative;
 }
 
-:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage)
-.add2e-character-v3 .add2e-object-magic-item > h3 {
+.add2e-object-magic-item > h3 {
   position: relative;
   min-height: 40px;
-  padding-right: 245px;
+  padding-right: 245px !important;
 }
 
-:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage)
-.add2e-character-v3 .add2e-object-magic-item > h3 .sort-memorize-badge {
+.add2e-object-magic-item > h3 .sort-memorize-badge {
   position: absolute;
   top: 50%;
   right: 8px;
@@ -22,13 +19,14 @@
   margin: 0;
 }
 
-:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage)
-.add2e-character-v3 .add2e-magic-recharge-diagnostic {
-  position: absolute;
-  top: 6px;
-  right: 125px;
+.add2e-magic-recharge-diagnostic {
+  position: absolute !important;
+  top: 6px !important;
+  right: 125px !important;
   z-index: 3;
-  display: block !important;
+  width: auto !important;
+  height: 28px !important;
+  min-height: 0 !important;
   margin: 0 !important;
   padding: 0 !important;
   border: 0 !important;
@@ -37,13 +35,11 @@
   pointer-events: none;
 }
 
-:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage)
-.add2e-character-v3 .add2e-magic-recharge-status {
+.add2e-magic-recharge-status {
   display: none !important;
 }
 
-:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage)
-.add2e-character-v3 .add2e-magic-recharge-button {
+.add2e-magic-recharge-button {
   align-items: center;
   justify-content: center;
   gap: 5px;
@@ -62,8 +58,7 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, .16);
 }
 
-:is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage)
-.add2e-character-v3 .add2e-magic-recharge-button:hover {
+.add2e-magic-recharge-button:hover {
   filter: brightness(1.06);
 }
 
@@ -123,18 +118,15 @@
 }
 
 @media (max-width: 720px) {
-  :is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage)
-  .add2e-character-v3 .add2e-object-magic-item > h3 {
-    padding-right: 215px;
+  .add2e-object-magic-item > h3 {
+    padding-right: 215px !important;
   }
 
-  :is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage)
-  .add2e-character-v3 .add2e-magic-recharge-diagnostic {
-    right: 112px;
+  .add2e-magic-recharge-diagnostic {
+    right: 112px !important;
   }
 
-  :is(.application.add2e-character-v2-app, .application.add2e.sheet.actor.personnage)
-  .add2e-character-v3 .add2e-magic-recharge-button {
+  .add2e-magic-recharge-button {
     min-width: 92px;
     padding-inline: 7px;
   }
