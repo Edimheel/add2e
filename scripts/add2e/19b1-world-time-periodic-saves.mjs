@@ -8,7 +8,7 @@ import {
   add2eWorldTimeIsResponsibleGM
 } from "./19b0-world-time-actors.mjs";
 
-export const ADD2E_WORLD_TIME_PERIODIC_SAVE_VERSION = "2026-07-04-periodic-save-generic-v1";
+export const ADD2E_WORLD_TIME_PERIODIC_SAVE_VERSION = "2026-07-18-periodic-save-shared-chat-card-v2";
 
 const TAG = "[ADD2E][WORLD_TIME]";
 const PERIODIC_SAVE_FLAG = "periodicSave";
@@ -25,7 +25,6 @@ let PERIODIC_SAVE_HOOK_REGISTERED = false;
 let PERIODIC_SAVE_SCHEDULED = false;
 
 function warn(label, data = {}) { console.warn(`${TAG}${label}`, data); }
-function esc(value) { return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
 function chatStyleData() { return CONST.CHAT_MESSAGE_STYLES ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER } : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 }; }
 function numberOr(value, fallback = NaN) { const number = Number(value); return Number.isFinite(number) ? number : fallback; }
 
@@ -367,24 +366,58 @@ async function notifyPeriodicSave(actor, effect, state, attempts, { success = fa
     ? "{actor} réussit sa sauvegarde périodique."
     : "{actor} échoue à sa sauvegarde périodique. Prochain jet dans {interval}.";
   const outcome = periodicTemplate(success ? (chat.successText ?? defaultText) : (chat.failureText ?? defaultText), context);
-  const countText = attempts.length === 1
-    ? `Jet : <b>${last.total}</b>${esc(periodicSaveBonusLabel(last, state))} contre <b>${last.threshold}</b>.`
-    : `${attempts.length} jets périodiques étaient dus ; dernier jet : <b>${last.total}</b>${esc(periodicSaveBonusLabel(last, state))} contre <b>${last.threshold}</b>.`;
-  const next = !success && Number.isFinite(numberOr(nextSaveTick, NaN))
-    ? `<div style="margin-top:5px;font-size:11px;color:#5d4037;">Prochain contrôle au tick ADD2E <b>${Math.floor(Number(nextSaveTick))}</b>.</div>`
-    : "";
-  const details = periodicChatDetails(state)
-    .map(row => `<span>${esc(row.label)} : <b>${esc(row.value)}</b></span>`)
-    .join("&nbsp;&nbsp;•&nbsp;&nbsp;");
-  const detailLine = details ? `<div style="margin-top:6px;font-size:11px;color:#6c3483;text-align:center;">${details}</div>` : "";
+  const bonusLabel = periodicSaveBonusLabel(last, state);
+  const rows = [
+    { label: "Sauvegarde", value: state.save.label },
+    { label: "Jet", value: `${last.total}${bonusLabel}` },
+    { label: "Seuil", value: last.threshold },
+    { label: "Tentatives", value: attempts.length },
+    !success && Number.isFinite(numberOr(nextSaveTick, NaN))
+      ? { label: "Prochain contrôle", value: `Tick ADD2E ${Math.floor(Number(nextSaveTick))}` }
+      : null,
+    ...periodicChatDetails(state)
+  ].filter(Boolean);
 
   try {
-    await ChatMessage.create({
-      speaker: ChatMessage.getSpeaker({ actor }),
-      whisper,
-      content: `<div class="add2e-chat-card add2e-periodic-save" style="border:1px solid #8e44ad;border-radius:8px;overflow:hidden;background:#fff7fd;color:#3c1c46;font-family:var(--font-primary);"><div style="display:flex;align-items:center;gap:8px;background:#7d3c98;color:#fff;padding:7px 9px;"><img src="${esc(image)}" style="width:36px;height:36px;object-fit:cover;border-radius:4px;border:1px solid #e8daef;background:#fff;"><div style="flex:1;line-height:1.15;"><div style="font-weight:900;font-size:13px;">${esc(chat.title ?? "Sauvegarde périodique")}</div><div style="font-size:12px;opacity:.95;">${esc(sourceName)}</div></div></div><div style="padding:8px 10px;background:#fff7fd;"><div style="font-size:13px;margin-bottom:5px;"><b>Cible :</b> ${esc(actorName)}</div><div style="border:1px solid ${success ? "#2e8b57" : "#b9770e"};border-radius:6px;background:#fff;padding:8px;text-align:center;font-size:13px;line-height:1.35;"><div style="font-weight:900;color:${success ? "#1e8449" : "#af601a"};">${esc(heading)}</div><div style="margin-top:4px;">${esc(outcome)}</div><div style="margin-top:4px;">${countText}</div></div>${next}${detailLine}</div></div>`,
-      flags: { add2e: { periodicSaveMessage: true, actorId: actor?.id ?? null, actorUuid: actor?.uuid ?? null, effectId: effect?.id ?? null, success, attempts: attempts.length, tick: add2eTimeCurrentTick(), version: ADD2E_WORLD_TIME_PERIODIC_SAVE_VERSION } },
-      ...chatStyleData()
+    const createCard = globalThis.add2eCreateChatCard;
+    if (typeof createCard !== "function") throw new Error("Constructeur de carte ADD2E indisponible.");
+
+    await createCard({
+      actor,
+      title: String(chat.title ?? "Sauvegarde périodique"),
+      icon: "fas fa-clock-rotate-left",
+      variant: "time",
+      source: {
+        name: sourceName,
+        img: image,
+        type: "Effet temporaire",
+        meta: state.intervalLabel
+      },
+      target: {
+        name: actorName,
+        img: actor?.img,
+        type: "Acteur",
+        meta: state.save.label
+      },
+      rows,
+      message: `${heading} — ${outcome}`,
+      chatData: {
+        speaker: ChatMessage.getSpeaker({ actor }),
+        whisper,
+        flags: {
+          add2e: {
+            periodicSaveMessage: true,
+            actorId: actor?.id ?? null,
+            actorUuid: actor?.uuid ?? null,
+            effectId: effect?.id ?? null,
+            success,
+            attempts: attempts.length,
+            tick: add2eTimeCurrentTick(),
+            version: ADD2E_WORLD_TIME_PERIODIC_SAVE_VERSION
+          }
+        },
+        ...chatStyleData()
+      }
     });
     return true;
   } catch (error) {
