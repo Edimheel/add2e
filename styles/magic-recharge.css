@@ -1,56 +1,71 @@
 /* ADD2E — Carte de chat de recharge des objets magiques. */
 
-.chat-message .add2e-magic-recharge-card {
+.chat-message .add2e-card.add2e-magic-recharge-card {
   overflow: hidden;
-  border: 1px solid #b88924;
-  border-radius: 8px;
-  background: #fffaf0;
-  box-shadow: 0 1px 4px rgba(80, 58, 10, .16);
+  border: 2px solid #9a6a20;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #fff9e9, #efe0b7);
+  box-shadow: 0 2px 6px rgba(80, 58, 10, .18);
+  color: #38270d;
 }
 
 .chat-message .add2e-magic-recharge-card .add2e-card-header {
-  display: grid;
-  grid-template-columns: 38px minmax(0, 1fr);
-  gap: 8px;
+  display: flex;
   align-items: center;
+  gap: 8px;
   padding: 7px 9px;
   border-bottom: 1px solid #d9bf73;
-  background: linear-gradient(180deg, #f2dfaa, #ead090);
+  background: linear-gradient(90deg, #56370e, #a27025);
+  color: #fff;
 }
 
 .chat-message .add2e-magic-recharge-card .add2e-card-header img {
-  width: 36px;
-  height: 36px;
-  border: 1px solid #8a611d;
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  max-width: 38px !important;
+  border: 1px solid rgba(255, 255, 255, .85);
   border-radius: 6px;
+  background: #fff;
   object-fit: cover;
 }
 
 .chat-message .add2e-magic-recharge-card .add2e-card-header h3 {
-  margin: 0;
-  color: #55390d;
-  font-size: 1rem;
-  line-height: 1.1;
+  margin: 0 !important;
+  border: 0 !important;
+  color: #fff !important;
+  font-size: 1rem !important;
+  line-height: 1.15;
 }
 
 .chat-message .add2e-magic-recharge-card .add2e-card-source {
   margin-top: 2px;
-  color: #6f4b12;
+  color: #fff4d0;
   font-size: .82rem;
   font-weight: 700;
+  opacity: .96;
 }
 
 .chat-message .add2e-magic-recharge-card .add2e-card-body {
-  padding: 7px 9px;
+  padding: 9px 10px;
+  background: transparent;
 }
 
 .chat-message .add2e-magic-recharge-card .add2e-book-learning-grid {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  gap: 3px 10px;
+  gap: 4px 10px;
   align-items: center;
+  margin: 0;
 }
 
 .chat-message .add2e-magic-recharge-card .add2e-book-learning-grid b {
   color: #6f4b12;
+  font-weight: 900;
+}
+
+.chat-message .add2e-magic-recharge-card .add2e-book-learning-grid span {
+  min-width: 0;
+  color: #38270d;
+  overflow-wrap: anywhere;
 }
