@@ -11,7 +11,8 @@ const ADD2E_CHAT_CARD_VARIANTS = new Set([
   "ability",
   "healing",
   "success",
-  "failure"
+  "failure",
+  "time"
 ]);
 
 function add2eChatCardEscape(value) {
