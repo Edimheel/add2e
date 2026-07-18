@@ -19,13 +19,12 @@ import {
 } from "./19b0-world-time-actors.mjs";
 import { add2eWorldTimeProcessPeriodicSaves } from "./19b1-world-time-periodic-saves.mjs";
 
-export const ADD2E_WORLD_TIME_CORE_VERSION = "2026-07-07-world-time-day-week-core-v1";
+export const ADD2E_WORLD_TIME_CORE_VERSION = "2026-07-18-world-time-shared-chat-card-v2";
 
 const TAG = "[ADD2E][WORLD_TIME]";
 
 function log(label, data = {}) { console.log(`${TAG}${label}`, data); }
 function warn(label, data = {}) { console.warn(`${TAG}${label}`, data); }
-function esc(value) { return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
 function chatStyleData() { return CONST.CHAT_MESSAGE_STYLES ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER } : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 }; }
 
 export function add2eWorldTimeNormalizeUnit(value) {
@@ -85,14 +84,52 @@ async function normalizeWorldActorEffects(actorRows, currentRound) {
 
 async function notifyAdvance({ before, after, delta, label, reason, expired }) {
   try {
+    const createCard = globalThis.add2eCreateChatCard;
+    if (typeof createCard !== "function") throw new Error("Constructeur de carte ADD2E indisponible.");
+
     const gmIds = ChatMessage.getWhisperRecipients?.("GM")?.map(user => user.id).filter(Boolean) ?? [];
-    await ChatMessage.create({
-      whisper: gmIds.length ? gmIds : undefined,
-      content: `<div class="add2e-chat-card add2e-world-time" style="border:1px solid #7b5e57;border-radius:8px;overflow:hidden;background:#fffaf4;color:#3b2a22;font-family:var(--font-primary);"><div style="background:#6d4c41;color:white;padding:7px 9px;font-weight:900;">Temps ADD2E avancé</div><div style="padding:8px 10px;line-height:1.35;font-size:13px;"><div><b>Avance :</b> ${esc(label)} — ${delta} round(s) moteur.</div><div><b>Tick :</b> ${before} → ${after}</div>${reason ? `<div><b>Raison :</b> ${esc(reason)}</div>` : ""}<div><b>Acteurs scannés :</b> ${Number(expired?.actors ?? 0)}</div><div><b>Effets expirés :</b> ${Number(expired?.deleted ?? 0)}</div></div></div>`,
-      flags: { add2e: { worldTimeAdvanceMessage: true, before, after, delta, label, reason, expired, version: ADD2E_WORLD_TIME_CORE_VERSION, timeEngineVersion: ADD2E_TIME_ENGINE_VERSION } },
-      ...chatStyleData()
+    const rows = [
+      { label: "Avance", value: label },
+      { label: "Conversion", value: `${delta} round(s) moteur` },
+      { label: "Tick global", value: `${before} → ${after}` },
+      reason ? { label: "Raison", value: reason } : null,
+      { label: "Acteurs scannés", value: Number(expired?.actors ?? 0) },
+      { label: "Effets expirés", value: Number(expired?.deleted ?? 0) }
+    ].filter(Boolean);
+
+    await createCard({
+      title: "Temps ADD2E avancé",
+      icon: "fas fa-hourglass-half",
+      variant: "time",
+      source: {
+        name: "Gestion du temps",
+        img: "icons/svg/clockwork.svg",
+        type: "ADD2E",
+        meta: "Hors combat"
+      },
+      rows,
+      chatData: {
+        speaker: ChatMessage.getSpeaker(),
+        whisper: gmIds.length ? gmIds : undefined,
+        flags: {
+          add2e: {
+            worldTimeAdvanceMessage: true,
+            before,
+            after,
+            delta,
+            label,
+            reason,
+            expired,
+            version: ADD2E_WORLD_TIME_CORE_VERSION,
+            timeEngineVersion: ADD2E_TIME_ENGINE_VERSION
+          }
+        },
+        ...chatStyleData()
+      }
     });
-  } catch (err) { warn("[CHAT_NOTIFY_FAILED]", { err }); }
+  } catch (err) {
+    warn("[CHAT_NOTIFY_FAILED]", { err });
+  }
 }
 
 export async function add2eWorldTimeExpireAllActors({ reason = "world-time", currentRound = null, normalize = true } = {}) {
