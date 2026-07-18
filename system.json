@@ -36,7 +36,8 @@
   "styles": [
     "styles/add2e.css",
     "styles/character-sheet.css",
-    "styles/application-v2-character-sheet.css"
+    "styles/application-v2-character-sheet.css",
+    "styles/magic-recharge.css"
   ],
   "documentTypes": {
     "Actor": {
