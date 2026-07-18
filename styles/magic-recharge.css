@@ -19,27 +19,21 @@
   margin: 0;
 }
 
+/* Le conteneur de diagnostic n’a plus de boîte, de ligne ou d’espace propre. */
 .add2e-magic-recharge-diagnostic {
-  position: absolute !important;
-  top: 6px !important;
-  right: 125px !important;
-  z-index: 3;
-  width: auto !important;
-  height: 28px !important;
-  min-height: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  pointer-events: none;
+  display: contents !important;
 }
 
 .add2e-magic-recharge-status {
   display: none !important;
 }
 
+/* Le script conserve display:none tant que la recharge n’est pas disponible. */
 .add2e-magic-recharge-button {
+  position: absolute !important;
+  top: 6px !important;
+  right: 125px !important;
+  z-index: 3;
   align-items: center;
   justify-content: center;
   gap: 5px;
@@ -54,7 +48,6 @@
   color: #4d3510;
   font-weight: 800;
   line-height: 1;
-  pointer-events: auto;
   box-shadow: 0 1px 3px rgba(0, 0, 0, .16);
 }
 
@@ -122,11 +115,8 @@
     padding-right: 215px !important;
   }
 
-  .add2e-magic-recharge-diagnostic {
-    right: 112px !important;
-  }
-
   .add2e-magic-recharge-button {
+    right: 112px !important;
     min-width: 92px;
     padding-inline: 7px;
   }
