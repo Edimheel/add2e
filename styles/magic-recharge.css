@@ -1,59 +1,4 @@
-/* ADD2E — Recharge des objets magiques : bouton dans l’en-tête et carte de chat compacte. */
-
-.add2e-object-magic-item {
-  position: relative;
-}
-
-.add2e-object-magic-item > h3 {
-  position: relative;
-  min-height: 40px;
-  padding-right: 245px !important;
-}
-
-.add2e-object-magic-item > h3 .sort-memorize-badge {
-  position: absolute;
-  top: 50%;
-  right: 8px;
-  transform: translateY(-50%);
-  float: none !important;
-  margin: 0;
-}
-
-/* Le conteneur de diagnostic n’a plus de boîte, de ligne ou d’espace propre. */
-.add2e-magic-recharge-diagnostic {
-  display: contents !important;
-}
-
-.add2e-magic-recharge-status {
-  display: none !important;
-}
-
-/* Le script conserve display:none tant que la recharge n’est pas disponible. */
-.add2e-magic-recharge-button {
-  position: absolute !important;
-  top: 6px !important;
-  right: 125px !important;
-  z-index: 3;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  width: auto;
-  min-width: 105px;
-  height: 28px;
-  margin: 0 !important;
-  padding: 3px 9px;
-  border: 1px solid #7a591e;
-  border-radius: 999px;
-  background: #fff3c4;
-  color: #4d3510;
-  font-weight: 800;
-  line-height: 1;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, .16);
-}
-
-.add2e-magic-recharge-button:hover {
-  filter: brightness(1.06);
-}
+/* ADD2E — Carte de chat de recharge des objets magiques. */
 
 .chat-message .add2e-magic-recharge-card {
   overflow: hidden;
@@ -108,16 +53,4 @@
 
 .chat-message .add2e-magic-recharge-card .add2e-book-learning-grid b {
   color: #6f4b12;
-}
-
-@media (max-width: 720px) {
-  .add2e-object-magic-item > h3 {
-    padding-right: 215px !important;
-  }
-
-  .add2e-magic-recharge-button {
-    right: 112px !important;
-    min-width: 92px;
-    padding-inline: 7px;
-  }
 }
