@@ -1,7 +1,7 @@
 // ADD2E — Constructeur commun d'armes, armures et objets magiques.
 // Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2.
 
-const ADD2E_MAGIC_ITEM_BUILDER_VERSION = "2026-07-20-magic-item-builder-v1";
+const ADD2E_MAGIC_ITEM_BUILDER_VERSION = "2026-07-20-magic-item-builder-v2";
 const ADD2E_MAGIC_ITEM_TYPES = new Set(["arme", "armure", "objet"]);
 
 function add2eMagicBuilderClone(value) {
@@ -96,10 +96,23 @@ function add2eMagicBuilderDefaultApplication(itemOrType) {
 
 function add2eMagicBuilderEnchantment(item, systemOverride = null) {
   const system = systemOverride ?? item?.system ?? {};
-  const raw = system.enchantement && typeof system.enchantement === "object" && !Array.isArray(system.enchantement)
-    ? system.enchantement
-    : {};
+  const hasRawEnchantement = Boolean(
+    system.enchantement
+    && typeof system.enchantement === "object"
+    && !Array.isArray(system.enchantement)
+  );
+  const raw = hasRawEnchantement ? system.enchantement : {};
   const baseStats = raw.baseStats && typeof raw.baseStats === "object" ? raw.baseStats : {};
+  const type = add2eMagicBuilderType(item);
+  const legacyToucher = type === "arme"
+    ? system.bonus_hit ?? system.bonus_toucher ?? system.hit_bonus ?? system.attack_bonus
+    : system.bonus_toucher ?? system.bonus_hit ?? system.attack_bonus;
+  const legacyDegats = type === "arme"
+    ? system.bonus_dom ?? system.bonus_degats ?? system.damage_bonus ?? system.degats_bonus
+    : system.bonus_degats ?? system.bonus_dom ?? system.damage_bonus;
+  const legacyBonusCA = system.bonus_ac ?? system.bonus_ca ?? system.ac_bonus ?? system.ca_bonus;
+  const legacyCAFixe = system.ca_fixe ?? system.caFixe ?? system.fixedCA ?? system.fixed_ac;
+
   return {
     schema: 1,
     baseUuid: String(raw.baseUuid ?? item?.flags?.add2e?.baseItemUuid ?? "").trim(),
@@ -108,10 +121,21 @@ function add2eMagicBuilderEnchantment(item, systemOverride = null) {
     application: ["source", "porteur"].includes(String(raw.application ?? "").trim())
       ? String(raw.application).trim()
       : add2eMagicBuilderDefaultApplication(item),
-    bonusToucher: add2eMagicBuilderNumber(raw.bonusToucher ?? raw.bonus_toucher, 0),
-    bonusDegats: add2eMagicBuilderNumber(raw.bonusDegats ?? raw.bonus_degats, 0),
-    bonusCA: add2eMagicBuilderNumber(raw.bonusCA ?? raw.bonus_ca, 0),
-    caFixe: add2eMagicBuilderOptionalNumber(raw.caFixe ?? raw.ca_fixe),
+    bonusToucher: add2eMagicBuilderNumber(
+      raw.bonusToucher ?? raw.bonus_toucher ?? (hasRawEnchantement ? 0 : legacyToucher),
+      0
+    ),
+    bonusDegats: add2eMagicBuilderNumber(
+      raw.bonusDegats ?? raw.bonus_degats ?? (hasRawEnchantement ? 0 : legacyDegats),
+      0
+    ),
+    bonusCA: add2eMagicBuilderNumber(
+      raw.bonusCA ?? raw.bonus_ca ?? (hasRawEnchantement ? 0 : legacyBonusCA),
+      0
+    ),
+    caFixe: add2eMagicBuilderOptionalNumber(
+      raw.caFixe ?? raw.ca_fixe ?? (hasRawEnchantement ? null : legacyCAFixe)
+    ),
     baseStats: {
       bonusToucher: add2eMagicBuilderNumber(baseStats.bonusToucher, 0),
       bonusDegats: add2eMagicBuilderNumber(baseStats.bonusDegats, 0),
@@ -144,6 +168,21 @@ function add2eMagicBuilderReadBaseStats(item) {
 
 function add2eMagicBuilderNormalizeTag(value) {
   return String(value ?? "").trim();
+}
+
+function add2eMagicBuilderMergeUniqueValues(...values) {
+  const seen = new Set();
+  const result = [];
+  for (const raw of values) {
+    for (const value of add2eMagicBuilderArray(raw)) {
+      const text = String(value ?? "").trim();
+      const key = text.toLowerCase();
+      if (!text || seen.has(key)) continue;
+      seen.add(key);
+      result.push(text);
+    }
+  }
+  return result;
 }
 
 function add2eMagicBuilderSyncUpdate(item, change) {
@@ -311,8 +350,22 @@ async function add2eMagicBuilderApplyBase(targetItem, baseItem) {
     return false;
   }
 
+  const currentTags = add2eMagicBuilderArray(targetItem.system?.tags);
+  const currentEffectTags = add2eMagicBuilderArray(
+    targetItem.system?.effectTags ?? targetItem.system?.effets ?? targetItem.system?.effects
+  );
   const update = {};
   add2eMagicBuilderCopyPaths(baseItem.system ?? {}, update, add2eMagicBuilderBasePaths(targetType));
+  add2eMagicBuilderSetProperty(
+    update,
+    "system.tags",
+    add2eMagicBuilderMergeUniqueValues(add2eMagicBuilderGetProperty(update, "system.tags"), currentTags)
+  );
+  add2eMagicBuilderSetProperty(
+    update,
+    "system.effectTags",
+    add2eMagicBuilderMergeUniqueValues(add2eMagicBuilderGetProperty(update, "system.effectTags"), currentEffectTags)
+  );
 
   const currentEnchantement = add2eMagicBuilderEnchantment(targetItem);
   const nextEnchantement = {
@@ -392,7 +445,7 @@ async function add2eMagicBuilderChooseBase(itemUuid) {
     window: { title: `Choisir la base de ${item.name}` },
     modal: true,
     rejectClose: false,
-    content: `<form class="add2e-dialog" style="min-width:520px;padding:10px"><p>La base fournit les caractéristiques ordinaires. Les pouvoirs, charges et bonus magiques actuels sont conservés.</p><label style="display:grid;gap:5px"><b>Objet de base</b><select name="baseUuid" style="width:100%">${options}</select></label></form>`,
+    content: `<div class="add2e-dialog" style="min-width:520px;padding:10px"><p>La base fournit les caractéristiques ordinaires. Les pouvoirs, charges et bonus magiques actuels sont conservés.</p><label style="display:grid;gap:5px"><b>Objet de base</b><select name="baseUuid" style="width:100%">${options}</select></label></div>`,
     buttons: [
       {
         action: "apply",
