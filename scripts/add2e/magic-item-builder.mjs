@@ -1,7 +1,7 @@
 // ADD2E — Constructeur commun d'armes, armures et objets magiques.
 // Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2.
 
-const ADD2E_MAGIC_ITEM_BUILDER_VERSION = "2026-07-20-magic-item-builder-v3-generator";
+const ADD2E_MAGIC_ITEM_BUILDER_VERSION = "2026-07-20-magic-item-builder-v4-base-select";
 const ADD2E_MAGIC_ITEM_TYPES = new Set(["arme", "armure", "objet"]);
 
 function add2eMagicBuilderClone(value) {
@@ -754,6 +754,62 @@ function add2eMagicBuilderToggleCreatorType(form) {
 
 globalThis.add2eMagicBuilderToggleCreatorType = add2eMagicBuilderToggleCreatorType;
 
+function add2eMagicBuilderCreatorForm(dialogOrElement) {
+  const element = dialogOrElement?.element ?? dialogOrElement ?? null;
+  return element?.querySelector?.("form.add2e-magic-item-create-form")
+    ?? element?.closest?.("dialog")?.querySelector?.("form.add2e-magic-item-create-form")
+    ?? null;
+}
+
+function add2eMagicBuilderCreateDialogV2Class(DialogV2) {
+  return class Add2eMagicItemCreatorDialogV2 extends DialogV2 {
+    _onRender(context, options) {
+      super._onRender?.(context, options);
+      this.add2eBindCreatorTypeSelect();
+    }
+
+    add2eBindCreatorTypeSelect() {
+      const form = add2eMagicBuilderCreatorForm(this);
+      const select = form?.elements?.profile ?? form?.querySelector?.('select[name="profile"]');
+      if (!form || !select) return false;
+
+      if (select.dataset.add2eCreatorTypeBound !== "1") {
+        select.dataset.add2eCreatorTypeBound = "1";
+        const refresh = () => add2eMagicBuilderToggleCreatorType(form);
+        select.addEventListener("change", refresh);
+        select.addEventListener("input", refresh);
+      }
+
+      add2eMagicBuilderToggleCreatorType(form);
+      return true;
+    }
+  };
+}
+
+async function add2eMagicBuilderWaitCreatorDialog(DialogV2, config) {
+  const CreatorDialogV2 = add2eMagicBuilderCreateDialogV2Class(DialogV2);
+
+  return new Promise(resolve => {
+    let settled = false;
+    const finish = value => {
+      if (!settled) {
+        settled = true;
+        resolve(value);
+      }
+      return value;
+    };
+
+    const buttons = (config.buttons ?? []).map(button => ({
+      ...button,
+      callback: async (...args) => finish(await button.callback?.(...args))
+    }));
+
+    const dialog = new CreatorDialogV2({ ...config, buttons });
+    dialog.addEventListener?.("close", () => finish(null), { once: true });
+    Promise.resolve(dialog.render({ force: true })).then(() => dialog.add2eBindCreatorTypeSelect?.());
+  });
+}
+
 function add2eMagicBuilderCreatorSpellbookData(profile, name) {
   const ownerList = String(profile.spellbookOwnerList ?? "");
   return {
@@ -949,12 +1005,12 @@ async function add2eMagicBuilderCreateMagicItem(directory = null) {
     .map(([key, profile]) => `<option value="${key}">${add2eMagicBuilderEscape(profile.label)}</option>`)
     .join("");
 
-  const result = await DialogV2.wait({
+  const result = await add2eMagicBuilderWaitCreatorDialog(DialogV2, {
     window: { title: "Créer un objet magique" },
     modal: true,
     rejectClose: false,
     content: `<form class="add2e-dialog add2e-magic-item-create-form" style="min-width:560px;padding:8px;display:grid;gap:8px;">
-      <div class="form-group"><label>Type</label><select name="profile" onchange="globalThis.add2eMagicBuilderToggleCreatorType(this.form)">${profileOptions}</select></div>
+      <div class="form-group"><label>Type</label><select name="profile">${profileOptions}</select></div>
       <div class="form-group" data-add2e-base-group="arme" hidden><label>Arme de base</label><select name="weaponBaseUuid"><option value="">— Choisir une arme —</option>${weaponOptions}</select></div>
       <div class="form-group" data-add2e-base-group="armure" hidden><label>Armure de base</label><select name="armorBaseUuid"><option value="">— Choisir une armure —</option>${armorOptions}</select></div>
       <div class="form-group"><label>Nom</label><input name="name" type="text" value="Objet magique"></div>
