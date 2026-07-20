@@ -1,4 +1,4 @@
-<form class="sheet item arme-sheet add2e-pretty-item" autocomplete="off">
+<form class="sheet item arme-sheet add2e-pretty-item" autocomplete="off" data-item-uuid="{{item.uuid}}">
   <style>
     .add2e-pretty-item { --bg:#f8f1df; --card:#fffaf0; --border:#8b5e34; --soft:rgba(91,52,25,.22); --title:#3b2414; --accent:#7c2d12; --blue:#2563eb; color:#2f241c; }
     .add2e-pretty-item input,.add2e-pretty-item textarea,.add2e-pretty-item select { width:100%; background:rgba(255,255,255,.85); border:1px solid var(--soft); border-radius:6px; padding:4px 6px; color:#1f1a16; }
@@ -17,10 +17,17 @@
     .add2e-checks input,.add2e-magic-checks input { width:auto; }
     .add2e-note { font-size:.86em; color:#6f6258; margin-top:4px; }
     .add2e-rich-editor { min-height:90px; padding:8px 10px; border:1px solid var(--soft); border-radius:8px; background:#fffdf7; color:#2f241c; line-height:1.35; }
-    .add2e-rich-editor p { margin:0 0 .55em; }
-    .add2e-rich-editor p:last-child { margin-bottom:0; }
     .add2e-rich-editor .editor { min-height:110px; }
     .add2e-rich-editor .editor-content { min-height:90px; }
+    .add2e-base-zone,.add2e-power-drop-zone { display:grid; place-items:center; min-height:76px; padding:10px; border:2px dashed #9b7434; border-radius:8px; background:#fff8e7; text-align:center; }
+    .add2e-base-zone.is-dragover,.add2e-power-drop-zone.is-dragover { border-color:#4d7e31; background:#eef7e7; }
+    .add2e-base-actions { display:flex; flex-wrap:wrap; justify-content:center; gap:7px; margin-top:7px; }
+    .add2e-base-actions button { width:auto; }
+    .add2e-power-list { display:grid; gap:7px; margin:0 0 9px; padding:0; list-style:none; }
+    .add2e-power-row { display:grid; grid-template-columns:36px minmax(0,1fr) auto 34px; gap:8px; align-items:center; padding:7px; border:1px solid var(--soft); border-radius:7px; background:#fffdf7; }
+    .add2e-power-row img { width:32px; height:32px; object-fit:cover; border:1px solid var(--border); border-radius:5px; }
+    .add2e-power-row button { width:32px; height:30px; padding:0; }
+    @media(max-width:650px){.add2e-grid-4,.add2e-grid-3,.add2e-magic-checks,.add2e-checks{grid-template-columns:repeat(2,minmax(0,1fr));}.add2e-hero{grid-template-columns:88px minmax(0,1fr)}.add2e-hero img{width:88px;height:88px}}
   </style>
 
   <header class="add2e-hero">
@@ -36,35 +43,44 @@
   </header>
 
   <section class="add2e-card">
-    <h3><i class="fas fa-wand-magic-sparkles"></i> Identification magique</h3>
+    <h3><i class="fas fa-link"></i> Arme de base</h3>
+    <div class="add2e-base-zone" ondragenter="event.preventDefault();this.classList.add('is-dragover');" ondragover="event.preventDefault();event.stopPropagation();this.classList.add('is-dragover');" ondragleave="this.classList.remove('is-dragover');" ondrop="this.classList.remove('is-dragover');globalThis.add2eMagicBuilderDropBase?.(event,this.closest('form').dataset.itemUuid);">
+      <div><b>{{#if item.system.enchantement.baseName}}{{item.system.enchantement.baseName}}{{else}}Aucune base sélectionnée{{/if}}</b><div class="add2e-note">Déposez ici une arme ou choisissez-la dans le monde et les compendiums.</div></div>
+      <div class="add2e-base-actions">
+        <button type="button" onclick="globalThis.add2eMagicBuilderChooseBase?.(this.closest('form').dataset.itemUuid);"><i class="fas fa-list"></i> Choisir une base</button>
+        {{#if item.system.enchantement.baseName}}<button type="button" onclick="globalThis.add2eMagicBuilderClearBase?.(this.closest('form').dataset.itemUuid);"><i class="fas fa-unlink"></i> Dissocier</button>{{/if}}
+      </div>
+    </div>
+  </section>
+
+  <section class="add2e-card">
+    <h3><i class="fas fa-wand-magic-sparkles"></i> Enchantement</h3>
     <div class="add2e-magic-checks">
       <label><input type="checkbox" name="system.magique" {{#if item.system.magique}}checked{{/if}}> Arme magique</label>
       <label><input type="checkbox" name="system.identifie" {{#if item.system.identifie}}checked{{/if}}> Identifiée</label>
     </div>
     <div class="add2e-grid-2">
-      <div class="add2e-field">
-        <label>Nom non identifié</label>
-        <input type="text" name="system.nom_non_identifie" value="{{item.system.nom_non_identifie}}" placeholder="Sabre">
-      </div>
-      <div class="add2e-field">
-        <label>Nom interne</label>
-        <input type="text" name="system.nom" value="{{item.system.nom}}" placeholder="Sabre +1">
-      </div>
+      <div class="add2e-field"><label>Nom non identifié</label><input type="text" name="system.nom_non_identifie" value="{{item.system.nom_non_identifie}}" placeholder="Épée ancienne"></div>
+      <div class="add2e-field"><label>Application des bonus</label><select name="system.enchantement.application"><option value="source" {{#unless item.system.enchantement.application}}selected{{/unless}}{{#if (eq item.system.enchantement.application "source")}}selected{{/if}}>Cette arme uniquement</option><option value="porteur" {{#if (eq item.system.enchantement.application "porteur")}}selected{{/if}}>Toutes les attaques du porteur</option></select></div>
     </div>
-    <div class="add2e-note">Le nom non identifié est présenté aux joueurs tant que l’arme magique n’est pas identifiée.</div>
+    <div class="add2e-grid-4">
+      <div class="add2e-stat"><label>Bonus toucher</label><input type="number" name="system.enchantement.bonusToucher" value="{{#if item.system.enchantement.bonusToucher}}{{item.system.enchantement.bonusToucher}}{{else}}{{item.system.bonus_hit}}{{/if}}"></div>
+      <div class="add2e-stat"><label>Bonus dégâts</label><input type="number" name="system.enchantement.bonusDegats" value="{{#if item.system.enchantement.bonusDegats}}{{item.system.enchantement.bonusDegats}}{{else}}{{item.system.bonus_dom}}{{/if}}"></div>
+      <div class="add2e-stat"><label>Bonus CA du porteur</label><input type="number" name="system.enchantement.bonusCA" value="{{item.system.enchantement.bonusCA}}"></div>
+      <div class="add2e-stat"><label>CA fixe du porteur</label><input type="number" name="system.enchantement.caFixe" value="{{item.system.enchantement.caFixe}}" placeholder="—"></div>
+    </div>
+    <div class="add2e-note">Les bonus « cette arme » alimentent les champs de toucher et de dégâts existants. Les bonus « porteur » deviennent des modificateurs de toutes ses attaques.</div>
   </section>
 
-  <section class="add2e-card"><h3><i class="fas fa-sword"></i> Combat</h3>
-    <div class="add2e-grid-4">
-      <div class="add2e-stat"><label>Bonus toucher</label><input type="number" name="system.bonus_hit" value="{{item.system.bonus_hit}}"></div>
-      <div class="add2e-stat"><label>Bonus dégâts</label><input type="number" name="system.bonus_dom" value="{{item.system.bonus_dom}}"></div>
+  <section class="add2e-card"><h3><i class="fas fa-sword"></i> Combat de base</h3>
+    <div class="add2e-grid-3">
       <div class="add2e-stat"><label>Facteur rapidité</label><input type="number" name="system.facteur_rapidité" value="{{item.system.facteur_rapidité}}"></div>
       <div class="add2e-stat"><label>Type dégâts</label><input type="text" name="system.type_degats" value="{{item.system.type_degats}}" placeholder="tranchant, contondant..."></div>
+      <div class="add2e-stat"><label>Ajustement CA</label><input type="text" name="system.ajustement_ca" value="{{item.system.ajustement_ca}}" placeholder="0,0,0,0,0,0,0,0,0"></div>
     </div>
-    <div class="add2e-grid-3" style="margin-top:8px;">
+    <div class="add2e-grid-2">
       <div class="add2e-stat"><label>Dégâts taille M</label><input type="text" name="system.degats.contre_moyen" value="{{item.system.degats.contre_moyen}}" placeholder="1d8"></div>
       <div class="add2e-stat"><label>Dégâts taille G</label><input type="text" name="system.degats.contre_grand" value="{{item.system.degats.contre_grand}}" placeholder="1d12"></div>
-      <div class="add2e-stat"><label>Ajustement CA</label><input type="text" name="system.ajustement_ca" value="{{item.system.ajustement_ca}}" placeholder="0,0,0,0,0,0,0,0,0"></div>
     </div>
   </section>
 
@@ -83,8 +99,26 @@
     </div>
   </section>
 
+  <section class="add2e-card">
+    <h3><i class="fas fa-battery-three-quarters"></i> Charges et pouvoirs</h3>
+    <div class="add2e-grid-4">
+      <div class="add2e-stat"><label>Charges actuelles</label><input type="number" name="system.charges.value" value="{{item.system.charges.value}}"></div>
+      <div class="add2e-stat"><label>Charges maximum</label><input type="number" name="system.charges.max" value="{{item.system.charges.max}}"></div>
+      <div class="add2e-stat"><label>Rechargeable</label><input type="checkbox" name="system.charges.rechargeable" {{#if item.system.charges.rechargeable}}checked{{/if}}></div>
+      <div class="add2e-stat"><label>Formule de recharge</label><input type="text" name="system.charges.rechargeFormula" value="{{item.system.charges.rechargeFormula}}" placeholder="1d6"></div>
+    </div>
+    {{#if item.system.pouvoirs.length}}
+      <ol class="add2e-power-list" style="margin-top:9px;">
+        {{#each item.system.pouvoirs as |p idx|}}
+          <li class="add2e-power-row"><img src="{{#if p.img}}{{p.img}}{{else}}icons/svg/aura.svg{{/if}}" alt=""><div><b>{{#if p.name}}{{p.name}}{{else}}{{p.nom}}{{/if}}</b><div class="add2e-note">{{#if p.description}}{{p.description}}{{else}}Pouvoir magique{{/if}}</div></div><span>Coût {{#if p.cout}}{{p.cout}}{{else}}{{p.cost}}{{/if}}</span><button type="button" title="Retirer" onclick="globalThis.add2eMagicBuilderRemovePower?.(this.closest('form').dataset.itemUuid,{{idx}});"><i class="fas fa-trash"></i></button></li>
+        {{/each}}
+      </ol>
+    {{/if}}
+    <div class="add2e-power-drop-zone" ondragenter="event.preventDefault();this.classList.add('is-dragover');" ondragover="event.preventDefault();event.stopPropagation();this.classList.add('is-dragover');" ondragleave="this.classList.remove('is-dragover');" ondrop="this.classList.remove('is-dragover');globalThis.add2eMagicBuilderDropPower?.(event,this.closest('form').dataset.itemUuid);"><div><i class="fas fa-wand-magic-sparkles fa-2x"></i><p><b>Déposez ici un sort à transformer en pouvoir</b></p></div></div>
+  </section>
+
   <section class="add2e-card"><h3><i class="fas fa-tags"></i> Tags d’effets</h3>
-    <div class="add2e-field"><label>Tags</label><input type="text" name="system.effectTags" value="{{item.system.effectTags}}" placeholder="arc, epee_longue, hache, baton..."><div class="add2e-note">Ces tags permettent aux effets raciaux de reconnaître l’arme.</div></div>
+    <div class="add2e-field"><label>Tags</label><input type="text" name="system.effectTags" value="{{item.system.effectTags}}" placeholder="arc, epee_longue, hache, baton..."><div class="add2e-note">Les tags générés par l’enchantement sont conservés automatiquement.</div></div>
   </section>
 
   <section class="add2e-card"><h3><i class="fas fa-scroll"></i> Description</h3>
