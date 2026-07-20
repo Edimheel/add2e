@@ -1,7 +1,7 @@
 // ADD2E — Constructeur commun d'armes, armures et objets magiques.
 // Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2.
 
-const ADD2E_MAGIC_ITEM_BUILDER_VERSION = "2026-07-20-magic-item-builder-v2";
+const ADD2E_MAGIC_ITEM_BUILDER_VERSION = "2026-07-20-magic-item-builder-v3-generator";
 const ADD2E_MAGIC_ITEM_TYPES = new Set(["arme", "armure", "objet"]);
 
 function add2eMagicBuilderClone(value) {
@@ -557,3 +557,536 @@ globalThis.add2eMagicBuilderClearBase = add2eMagicBuilderClearBase;
 globalThis.add2eMagicBuilderDropPower = add2eMagicBuilderDropPower;
 globalThis.add2eMagicBuilderRemovePower = add2eMagicBuilderRemovePower;
 globalThis.add2eMagicBuilderApplyBase = add2eMagicBuilderApplyBase;
+
+// ---------------------------------------------------------------------------
+// Générateur unifié : conserve le bouton historique et crée directement
+// un Item objet, arme ou armure. Les bases d'armes et d'armures proviennent
+// exclusivement des compendiums d'Items correspondants.
+// ---------------------------------------------------------------------------
+
+const ADD2E_MAGIC_CREATOR_PROFILES = Object.freeze({
+  objet: Object.freeze({
+    label: "Objet",
+    itemType: "objet",
+    sousType: "objet_magique",
+    img: "icons/svg/item-bag.svg",
+    tags: ["objet_magique", "actif_si_equipe"],
+    enchantable: true,
+    charges: true,
+    defaultCharges: 0,
+    defaultMax: 0
+  }),
+  arme: Object.freeze({
+    label: "Arme",
+    itemType: "arme",
+    baseType: "arme",
+    img: "icons/weapons/swords/sword-guard-gold.webp",
+    tags: ["objet_magique", "arme_magique"],
+    enchantable: true,
+    charges: true,
+    defaultCharges: 0,
+    defaultMax: 0
+  }),
+  armure: Object.freeze({
+    label: "Armure",
+    itemType: "armure",
+    baseType: "armure",
+    img: "icons/equipment/chest/breastplate-layered-steel.webp",
+    tags: ["objet_magique", "armure_magique", "actif_si_equipe"],
+    enchantable: true,
+    charges: true,
+    defaultCharges: 0,
+    defaultMax: 0
+  }),
+  anneau: Object.freeze({
+    label: "Anneau",
+    itemType: "objet",
+    sousType: "anneau",
+    img: "icons/equipment/finger/ring-band-engraved-gold.webp",
+    tags: ["objet_magique", "sous_type:anneau", "anneau", "actif_si_equipe"],
+    enchantable: true,
+    charges: false
+  }),
+  parchemin: Object.freeze({
+    label: "Parchemin",
+    itemType: "objet",
+    sousType: "parchemin_de_sort",
+    img: "icons/sundries/scrolls/scroll-runed-brown.webp",
+    tags: ["objet_magique", "parchemin", "parchemin_de_sort", "consommable"],
+    consumable: true,
+    enchantable: false,
+    charges: false
+  }),
+  baguette: Object.freeze({
+    label: "Baguette",
+    itemType: "objet",
+    sousType: "baguette",
+    img: "icons/weapons/wands/wand-gem-blue.webp",
+    tags: ["objet_magique", "sous_type:baguette", "baguette", "charges", "actif_si_equipe"],
+    enchantable: true,
+    charges: true,
+    rechargeable: true,
+    rechargeFormula: "1d6",
+    defaultCharges: 10,
+    defaultMax: 10
+  }),
+  batonnet: Object.freeze({
+    label: "Bâtonnet",
+    itemType: "objet",
+    sousType: "batonnet",
+    img: "icons/weapons/staves/staff-engraved-brown.webp",
+    tags: ["objet_magique", "sous_type:batonnet", "batonnet", "charges", "actif_si_equipe"],
+    enchantable: true,
+    charges: true,
+    rechargeable: true,
+    rechargeFormula: "1d6",
+    defaultCharges: 10,
+    defaultMax: 10
+  }),
+  potion: Object.freeze({
+    label: "Potion",
+    itemType: "objet",
+    sousType: "potion",
+    img: "icons/consumables/potions/potion-bottle-corked-blue.webp",
+    tags: ["objet_magique", "potion", "consommable_potion", "consommable"],
+    consumable: true,
+    enchantable: true,
+    charges: true,
+    defaultCharges: 10,
+    defaultMax: 10
+  }),
+  livre_illusionniste: Object.freeze({
+    label: "Livre de sorts d’illusionniste",
+    itemType: "objet",
+    sousType: "livre_de_sorts",
+    img: "icons/sundries/books/book-embossed-gold-blue.webp",
+    spellbookOwnerList: "illusionniste",
+    enchantable: false,
+    charges: false
+  }),
+  livre_magicien: Object.freeze({
+    label: "Livre de sorts de magicien",
+    itemType: "objet",
+    sousType: "livre_de_sorts",
+    img: "icons/sundries/books/book-embossed-gold-red.webp",
+    spellbookOwnerList: "magicien",
+    enchantable: false,
+    charges: false
+  })
+});
+
+async function add2eMagicBuilderCollectCreatorBases() {
+  const result = { arme: [], armure: [] };
+
+  for (const pack of game.packs ?? []) {
+    if (String(pack.documentName ?? pack.metadata?.type ?? "") !== "Item") continue;
+
+    let index;
+    try {
+      index = await pack.getIndex({ fields: ["name", "type", "img"] });
+    } catch (error) {
+      console.warn("[ADD2E][OBJET_MAGIQUE][BASE_INDEX_ERROR]", {
+        pack: pack.collection,
+        error
+      });
+      continue;
+    }
+
+    const source = String(pack.title ?? pack.metadata?.label ?? pack.collection);
+    for (const entry of index ?? []) {
+      const type = String(entry.type ?? "").trim().toLowerCase();
+      if (type !== "arme" && type !== "armure") continue;
+      result[type].push({
+        uuid: String(entry.uuid ?? `Compendium.${pack.collection}.${entry._id}`),
+        name: String(entry.name ?? "Base"),
+        source
+      });
+    }
+  }
+
+  for (const type of ["arme", "armure"]) {
+    result[type].sort((left, right) =>
+      left.source.localeCompare(right.source, "fr")
+      || left.name.localeCompare(right.name, "fr")
+    );
+  }
+  return result;
+}
+
+function add2eMagicBuilderCreatorBaseOptions(entries) {
+  const groups = new Map();
+  for (const entry of entries ?? []) {
+    if (!groups.has(entry.source)) groups.set(entry.source, []);
+    groups.get(entry.source).push(entry);
+  }
+
+  return [...groups.entries()].map(([source, rows]) => {
+    const options = rows.map(entry =>
+      `<option value="${add2eMagicBuilderEscape(entry.uuid)}">${add2eMagicBuilderEscape(entry.name)}</option>`
+    ).join("");
+    return `<optgroup label="${add2eMagicBuilderEscape(source)}">${options}</optgroup>`;
+  }).join("");
+}
+
+function add2eMagicBuilderToggleCreatorType(form) {
+  const root = form?.closest?.(".window-content") ?? form;
+  const profile = String(form?.elements?.profile?.value ?? "objet");
+  const weaponGroup = root?.querySelector?.('[data-add2e-base-group="arme"]');
+  const armorGroup = root?.querySelector?.('[data-add2e-base-group="armure"]');
+  const applicationGroup = root?.querySelector?.('[data-add2e-application-group]');
+
+  if (weaponGroup) weaponGroup.hidden = profile !== "arme";
+  if (armorGroup) armorGroup.hidden = profile !== "armure";
+  if (applicationGroup) applicationGroup.hidden = !["objet", "arme", "armure", "anneau", "baguette", "batonnet", "potion"].includes(profile);
+
+  const defaults = ADD2E_MAGIC_CREATOR_PROFILES[profile];
+  const current = form?.elements?.chargesValue;
+  const maximum = form?.elements?.chargesMax;
+  if (current && current.dataset.profile !== profile) {
+    current.value = String(defaults?.defaultCharges ?? 0);
+    current.dataset.profile = profile;
+  }
+  if (maximum && maximum.dataset.profile !== profile) {
+    maximum.value = String(defaults?.defaultMax ?? 0);
+    maximum.dataset.profile = profile;
+  }
+}
+
+globalThis.add2eMagicBuilderToggleCreatorType = add2eMagicBuilderToggleCreatorType;
+
+function add2eMagicBuilderCreatorSpellbookData(profile, name) {
+  const ownerList = String(profile.spellbookOwnerList ?? "");
+  return {
+    name,
+    type: "objet",
+    img: profile.img,
+    system: {
+      nom: name,
+      type: "objet",
+      categorie: "objet_magique",
+      sousType: "livre_de_sorts",
+      quantite: 1,
+      poids: 5,
+      equipee: false,
+      magique: true,
+      consommable: false,
+      description: "Livre de sorts indépendant. Il peut être placé dans un coffre, ramassé et consulté par un personnage compatible.",
+      arcaneDocument: {
+        schema: 1,
+        kind: "spellbook",
+        personal: false,
+        ownerList,
+        ownerActorUuid: "",
+        spells: []
+      },
+      nom_non_identifie: "Livre de sorts"
+    },
+    effects: [],
+    flags: {
+      add2e: {
+        arcaneDocumentKind: "spellbook",
+        personalSpellbook: false,
+        ownerActorUuid: "",
+        ownerSpellList: ownerList,
+        generatedBy: "migration-livres-parchemins-v1"
+      }
+    }
+  };
+}
+
+function add2eMagicBuilderCreatorReadForm(button, dialog) {
+  const form = button?.form
+    ?? button?.element?.closest?.("form")
+    ?? dialog?.element?.querySelector?.("form.add2e-magic-item-create-form");
+  if (!form) return null;
+
+  const data = Object.fromEntries(new FormData(form).entries());
+  const profile = String(data.profile ?? "objet").trim();
+  const baseUuid = profile === "arme"
+    ? String(data.weaponBaseUuid ?? "").trim()
+    : profile === "armure"
+      ? String(data.armorBaseUuid ?? "").trim()
+      : "";
+
+  return {
+    profile,
+    baseUuid,
+    name: String(data.name ?? "").trim(),
+    unidentifiedName: String(data.unidentifiedName ?? "").trim(),
+    identified: data.identified === "on",
+    cursed: data.cursed === "on",
+    application: String(data.application ?? "").trim(),
+    bonusToucher: add2eMagicBuilderNumber(data.bonusToucher, 0),
+    bonusDegats: add2eMagicBuilderNumber(data.bonusDegats, 0),
+    bonusCA: add2eMagicBuilderNumber(data.bonusCA, 0),
+    caFixe: add2eMagicBuilderOptionalNumber(data.caFixe),
+    chargesValue: Math.max(0, Math.trunc(add2eMagicBuilderNumber(data.chargesValue, 0))),
+    chargesMax: Math.max(0, Math.trunc(add2eMagicBuilderNumber(data.chargesMax, 0))),
+    rechargeable: data.rechargeable === "on",
+    rechargeFormula: String(data.rechargeFormula ?? "").trim()
+  };
+}
+
+function add2eMagicBuilderCreatorSanitizeBase(baseItem, profile, name) {
+  const source = add2eMagicBuilderClone(baseItem.toObject?.() ?? {});
+  delete source._id;
+  delete source.folder;
+  delete source.sort;
+  delete source.ownership;
+  delete source._stats;
+
+  source.name = name;
+  source.type = profile.itemType;
+  source.img = baseItem.img || profile.img;
+  source.system = add2eMagicBuilderClone(baseItem.system ?? {});
+  source.effects = Array.isArray(source.effects) ? source.effects : [];
+  source.flags = add2eMagicBuilderClone(baseItem.flags ?? {});
+  source.flags.add2e ??= {};
+  return source;
+}
+
+function add2eMagicBuilderCreatorEnchantSystem(itemData, profileKey, profile, result, baseItem = null) {
+  const system = itemData.system ??= {};
+  const type = profile.itemType;
+  const baseStats = baseItem ? add2eMagicBuilderReadBaseStats(baseItem) : {
+    bonusToucher: 0,
+    bonusDegats: 0,
+    bonusCA: 0,
+    caFixe: null
+  };
+  const application = ["source", "porteur"].includes(result.application)
+    ? result.application
+    : add2eMagicBuilderDefaultApplication(type);
+
+  system.nom = itemData.name;
+  system.type = type;
+  system.magique = true;
+  system.identifie = result.identified;
+  system.maudit = result.cursed;
+  system.nom_non_identifie = result.unidentifiedName || (type === "arme" ? "Arme inconnue" : type === "armure" ? "Armure inconnue" : "Objet inconnu");
+  system.equipee ??= false;
+  system.pouvoirs = [];
+  system.tags = add2eMagicBuilderMergeUniqueValues(system.tags, profile.tags);
+  system.effectTags = add2eMagicBuilderMergeUniqueValues(system.effectTags, profile.tags);
+
+  const enchantement = {
+    schema: 1,
+    baseUuid: String(baseItem?.uuid ?? ""),
+    baseName: String(baseItem?.name ?? ""),
+    baseType: String(baseItem?.type ?? ""),
+    application,
+    bonusToucher: result.bonusToucher,
+    bonusDegats: result.bonusDegats,
+    bonusCA: result.bonusCA,
+    caFixe: result.caFixe,
+    baseStats
+  };
+  system.enchantement = enchantement;
+
+  if (type === "arme") {
+    const sourceMode = application === "source";
+    system.bonus_hit = baseStats.bonusToucher + (sourceMode ? result.bonusToucher : 0);
+    system.bonus_dom = baseStats.bonusDegats + (sourceMode ? result.bonusDegats : 0);
+  } else {
+    system.bonus_toucher = result.bonusToucher;
+    system.bonus_degats = result.bonusDegats;
+  }
+  system.bonus_ac = baseStats.bonusCA + result.bonusCA;
+  system.ca_fixe = result.caFixe ?? baseStats.caFixe ?? null;
+
+  if (application === "porteur") {
+    if (result.bonusToucher) system.effectTags = add2eMagicBuilderMergeUniqueValues(system.effectTags, `bonus_attaque:${add2eMagicBuilderSigned(result.bonusToucher)}`);
+    if (result.bonusDegats) system.effectTags = add2eMagicBuilderMergeUniqueValues(system.effectTags, `bonus_degats:${add2eMagicBuilderSigned(result.bonusDegats)}`);
+  }
+
+  const max = profile.charges ? Math.max(result.chargesMax, result.chargesValue) : 0;
+  const current = profile.charges ? Math.min(result.chargesValue, max) : 0;
+  if (profile.charges || max > 0) {
+    system.charges = {
+      value: current,
+      max,
+      ...(result.rechargeable || profile.rechargeable ? {
+        mode: "charges",
+        recharge: "rechargeable",
+        rechargeable: true,
+        rechargeFormula: result.rechargeFormula || profile.rechargeFormula || "1d6"
+      } : {})
+    };
+  }
+
+  itemData.flags ??= {};
+  itemData.flags.add2e ??= {};
+  Object.assign(itemData.flags.add2e, {
+    magicItemProfile: profileKey,
+    magicItemBuilderVersion: ADD2E_MAGIC_ITEM_BUILDER_VERSION,
+    kind: profile.sousType ?? profileKey,
+    category: "objet_magique",
+    ...(baseItem ? {
+      baseItemUuid: baseItem.uuid,
+      baseItemName: baseItem.name,
+      baseItemType: baseItem.type
+    } : {})
+  });
+  itemData.flags.add2e.magicItemBuilder = {
+    version: ADD2E_MAGIC_ITEM_BUILDER_VERSION,
+    generatedTags: application === "porteur"
+      ? [
+          result.bonusToucher ? `bonus_attaque:${add2eMagicBuilderSigned(result.bonusToucher)}` : "",
+          result.bonusDegats ? `bonus_degats:${add2eMagicBuilderSigned(result.bonusDegats)}` : ""
+        ].filter(Boolean)
+      : []
+  };
+}
+
+async function add2eMagicBuilderCreateMagicItem(directory = null) {
+  const DialogV2 = foundry?.applications?.api?.DialogV2;
+  if (!DialogV2?.wait) return ui.notifications.error("DialogV2 est introuvable.");
+
+  const bases = await add2eMagicBuilderCollectCreatorBases();
+  const weaponOptions = add2eMagicBuilderCreatorBaseOptions(bases.arme);
+  const armorOptions = add2eMagicBuilderCreatorBaseOptions(bases.armure);
+  const profileOptions = Object.entries(ADD2E_MAGIC_CREATOR_PROFILES)
+    .map(([key, profile]) => `<option value="${key}">${add2eMagicBuilderEscape(profile.label)}</option>`)
+    .join("");
+
+  const result = await DialogV2.wait({
+    window: { title: "Créer un objet magique" },
+    modal: true,
+    rejectClose: false,
+    content: `<form class="add2e-dialog add2e-magic-item-create-form" style="min-width:560px;padding:8px;display:grid;gap:8px;">
+      <div class="form-group"><label>Type</label><select name="profile" onchange="globalThis.add2eMagicBuilderToggleCreatorType(this.form)">${profileOptions}</select></div>
+      <div class="form-group" data-add2e-base-group="arme" hidden><label>Arme de base</label><select name="weaponBaseUuid"><option value="">— Choisir une arme —</option>${weaponOptions}</select></div>
+      <div class="form-group" data-add2e-base-group="armure" hidden><label>Armure de base</label><select name="armorBaseUuid"><option value="">— Choisir une armure —</option>${armorOptions}</select></div>
+      <div class="form-group"><label>Nom</label><input name="name" type="text" value="Objet magique"></div>
+      <div class="form-group"><label>Nom non identifié</label><input name="unidentifiedName" type="text" value="Objet inconnu"></div>
+      <div class="form-group" style="display:flex;gap:18px;"><label><input name="identified" type="checkbox"> Identifié</label><label><input name="cursed" type="checkbox"> Maudit</label></div>
+      <div data-add2e-application-group>
+        <div class="form-group"><label>Application des bonus de toucher/dégâts</label><select name="application"><option value="source">Cette arme uniquement</option><option value="porteur">Toutes les attaques du porteur</option></select></div>
+        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;">
+          <div class="form-group"><label>Bonus au toucher</label><input name="bonusToucher" type="number" step="1" value="0"></div>
+          <div class="form-group"><label>Bonus aux dégâts</label><input name="bonusDegats" type="number" step="1" value="0"></div>
+          <div class="form-group"><label>Bonus de CA</label><input name="bonusCA" type="number" step="1" value="0"></div>
+          <div class="form-group"><label>CA fixe</label><input name="caFixe" type="number" step="1" value=""></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;">
+        <div class="form-group"><label>Charges actuelles</label><input name="chargesValue" data-profile="objet" type="number" min="0" step="1" value="0"></div>
+        <div class="form-group"><label>Charges maximales</label><input name="chargesMax" data-profile="objet" type="number" min="0" step="1" value="0"></div>
+      </div>
+      <div class="form-group" style="display:flex;align-items:center;gap:12px;"><label><input name="rechargeable" type="checkbox"> Rechargeable</label><label style="flex:1;">Formule <input name="rechargeFormula" type="text" value="1d6"></label></div>
+      <p style="margin:0;font-size:.85em;opacity:.8;">Arme et Armure exigent une base issue d'un compendium. Objet crée un objet magique générique. Les autres types conservent leur fonctionnement spécialisé.</p>
+    </form>`,
+    buttons: [
+      {
+        action: "create",
+        label: "Créer l'objet magique",
+        icon: "fa-solid fa-wand-magic-sparkles",
+        default: true,
+        callback: (_event, button, dialog) => add2eMagicBuilderCreatorReadForm(button, dialog)
+      },
+      { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => null }
+    ]
+  });
+
+  if (!result || typeof result !== "object") return null;
+  const profileKey = String(result.profile ?? "").trim();
+  const profile = ADD2E_MAGIC_CREATOR_PROFILES[profileKey];
+  if (!profile) return ui.notifications.error("Le type d'objet magique sélectionné est invalide.");
+
+  let baseItem = null;
+  if (profile.baseType) {
+    if (!result.baseUuid) {
+      ui.notifications.warn(`Choisissez une ${profile.baseType} de base dans la liste.`);
+      return null;
+    }
+    baseItem = await add2eMagicBuilderResolveItem(result.baseUuid);
+    if (!baseItem || add2eMagicBuilderType(baseItem) !== profile.baseType || !String(baseItem.uuid ?? "").startsWith("Compendium.")) {
+      ui.notifications.error(`La base sélectionnée doit être une ${profile.baseType} provenant d'un compendium.`);
+      return null;
+    }
+  }
+
+  const requestedName = String(result.name ?? "").trim();
+  const name = (!requestedName || requestedName === "Objet magique")
+    ? (baseItem ? `${baseItem.name} magique` : profile.label)
+    : requestedName;
+  const folder = directory?.currentFolder?.id ?? directory?.folder?.id ?? null;
+
+  let itemData;
+  if (profile.spellbookOwnerList) {
+    itemData = add2eMagicBuilderCreatorSpellbookData(profile, name);
+  } else if (baseItem) {
+    itemData = add2eMagicBuilderCreatorSanitizeBase(baseItem, profile, name);
+    add2eMagicBuilderCreatorEnchantSystem(itemData, profileKey, profile, result, baseItem);
+  } else {
+    itemData = {
+      name,
+      type: profile.itemType,
+      img: profile.img,
+      system: {
+        nom: name,
+        type: profile.itemType,
+        categorie: "objet_magique",
+        sousType: profile.sousType ?? "objet_magique",
+        sous_type: profile.sousType ?? "objet_magique",
+        quantite: 1,
+        poids: 0,
+        equipee: false,
+        magique: true,
+        consommable: profile.consumable === true,
+        description: "",
+        tags: [...(profile.tags ?? [])],
+        effectTags: [...(profile.tags ?? [])],
+        pouvoirs: []
+      },
+      effects: [],
+      flags: { add2e: {} }
+    };
+    add2eMagicBuilderCreatorEnchantSystem(itemData, profileKey, profile, result, null);
+    if (profileKey === "parchemin") {
+      itemData.system.arcaneDocument = { schema: 1, kind: "spell-scroll", personal: false, spells: [] };
+      itemData.flags.add2e.arcaneDocumentKind = "spell-scroll";
+    }
+  }
+
+  if (folder) itemData.folder = folder;
+  const ItemClass = CONFIG?.Item?.documentClass ?? globalThis.Item;
+  const created = await ItemClass.create(itemData, { renderSheet: true });
+  ui.notifications.info(`${created?.name ?? name} a été créé.`);
+  return created;
+}
+
+function add2eMagicBuilderInstallDirectoryCreator(app, html) {
+  queueMicrotask(() => {
+    const root = html instanceof HTMLElement
+      ? html
+      : html?.[0] instanceof HTMLElement
+        ? html[0]
+        : app?.element;
+    const current = root?.querySelector?.(".add2e-create-magic-item");
+    if (!current || current.dataset.add2eUnifiedCreator === "true") return;
+
+    const button = current.cloneNode(true);
+    button.dataset.add2eUnifiedCreator = "true";
+    button.title = "Créer un objet, une arme ou une armure magique";
+    button.addEventListener("click", event => {
+      event.preventDefault();
+      event.stopPropagation();
+      add2eMagicBuilderCreateMagicItem(app).catch(error => {
+        console.error("[ADD2E][OBJET_MAGIQUE][CREATE_ERROR]", error);
+        ui.notifications.error(error?.message || "Erreur pendant la création de l'objet magique.");
+      });
+    });
+    current.replaceWith(button);
+  });
+}
+
+Hooks.on("renderItemDirectory", add2eMagicBuilderInstallDirectoryCreator);
+Hooks.on("renderSidebarTab", (app, html) => {
+  const id = String(app?.options?.id ?? app?.id ?? app?.constructor?.name ?? "").toLowerCase();
+  if (id.includes("item")) add2eMagicBuilderInstallDirectoryCreator(app, html);
+});
+
+Hooks.once("ready", () => {
+  globalThis.add2eCreateMagicItem = add2eMagicBuilderCreateMagicItem;
+});
