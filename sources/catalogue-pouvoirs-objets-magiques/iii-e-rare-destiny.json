@@ -1,0 +1,850 @@
+{
+  "schema": 2,
+  "catalogueId": "add2e-gdm-magic-powers",
+  "extends": "../catalogue-pouvoirs-objets-magiques.json",
+  "source": {
+    "book": "Guide du Maître AD&D restauré V2",
+    "sections": [
+      "III.E.1",
+      "III.E.2",
+      "III.E.3",
+      "III.E.4",
+      "III.E.5"
+    ],
+    "pages": "132-160"
+  },
+  "principles": {
+    "notObjectTemplates": true,
+    "powersAreReusable": true,
+    "objectSpecificCombinationsAreAuditOnly": true,
+    "rareMechanicsRequireExplicitGMReview": true,
+    "irreversibleEffectsMustBeFlagged": true,
+    "artifactTablesExcludedFromThisFragment": true,
+    "generatorMayOnlyOfferCompatiblePowers": true
+  },
+  "version": "2026-07-21-gdm-iii-e-rare-destiny-v1",
+  "status": "second-pass-section-iii-e-destiny-and-persistent-outcomes",
+  "powers": [
+    {
+      "id": "rare_declared_draw_contract",
+      "label": "Engagement préalable de tirages",
+      "category": "random",
+      "compatibility": {
+        "itemTypes": [
+          "arme",
+          "armure",
+          "objet"
+        ]
+      },
+      "activation": {
+        "type": "action",
+        "trigger": "declare-before-first-draw"
+      },
+      "automation": "automatic",
+      "parameters": {
+        "minDraws": {
+          "type": "integer",
+          "default": 1
+        },
+        "maxDraws": {
+          "type": "integer",
+          "default": 4
+        },
+        "mustCompleteDeclaredDraws": {
+          "type": "boolean",
+          "default": true
+        },
+        "completionDeadline": {
+          "type": "duration",
+          "required": false
+        }
+      },
+      "effects": [
+        {
+          "type": "declared_draw_contract",
+          "minDraws": "@minDraws",
+          "maxDraws": "@maxDraws",
+          "mustComplete": "@mustCompleteDeclaredDraws",
+          "deadline": "@completionDeadline"
+        }
+      ],
+      "source": {
+        "section": "III.E.1-5",
+        "pageRange": "132-160"
+      }
+    },
+    {
+      "id": "rare_deck_card_retention",
+      "label": "Retrait ou remise en jeu après tirage",
+      "category": "random",
+      "compatibility": {
+        "itemTypes": [
+          "arme",
+          "armure",
+          "objet"
+        ]
+      },
+      "activation": {
+        "type": "automatic",
+        "trigger": "after-draw"
+      },
+      "automation": "automatic",
+      "parameters": {
+        "defaultReturn": {
+          "type": "boolean",
+          "default": true
+        },
+        "removedResults": {
+          "type": "string-list",
+          "required": false
+        }
+      },
+      "effects": [
+        {
+          "type": "deck_card_retention",
+          "defaultReturn": "@defaultReturn",
+          "removedResults": "@removedResults"
+        }
+      ],
+      "source": {
+        "section": "III.E.1-5",
+        "pageRange": "132-160"
+      }
+    },
+    {
+      "id": "rare_bonus_draws",
+      "label": "Tirages supplémentaires",
+      "category": "random",
+      "compatibility": {
+        "itemTypes": [
+          "arme",
+          "armure",
+          "objet"
+        ]
+      },
+      "activation": {
+        "type": "automatic",
+        "trigger": "configured-result"
+      },
+      "automation": "automatic",
+      "parameters": {
+        "count": {
+          "type": "integer",
+          "required": true
+        },
+        "optional": {
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "effects": [
+        {
+          "type": "grant_additional_draws",
+          "count": "@count",
+          "optional": "@optional"
+        }
+      ],
+      "source": {
+        "section": "III.E.1-5",
+        "pageRange": "132-160"
+      }
+    },
+    {
+      "id": "rare_magic_reward_and_xp",
+      "label": "Gain d’un objet magique et d’expérience",
+      "category": "reward",
+      "compatibility": {
+        "itemTypes": [
+          "arme",
+          "armure",
+          "objet"
+        ]
+      },
+      "activation": {
+        "type": "automatic",
+        "trigger": "configured-result"
+      },
+      "automation": "assisted",
+      "parameters": {
+        "itemTable": {
+          "type": "table-reference",
+          "required": true
+        },
+        "excludeTags": {
+          "type": "tag-list",
+          "required": false
+        },
+        "xp": {
+          "type": "integer-or-formula",
+          "required": false
+        }
+      },
+      "effects": [
+        {
+          "type": "grant_random_magic_item",
+          "table": "@itemTable",
+          "excludeTags": "@excludeTags"
+        },
+        {
+          "type": "grant_xp",
+          "value": "@xp"
+        }
+      ],
+      "source": {
+        "section": "III.E.1-5",
+        "pageRange": "132-160"
+      }
+    },
+    {
+      "id": "rare_major_wishes_with_deadline",
+      "label": "Souhaits majeurs à utiliser dans un délai",
+      "category": "wish",
+      "compatibility": {
+        "itemTypes": [
+          "arme",
+          "armure",
+          "objet"
+        ]
+      },
+      "activation": {
+        "type": "automatic",
+        "trigger": "configured-result"
+      },
+      "automation": "assisted",
+      "parameters": {
+        "count": {
+          "type": "formula-or-integer",
+          "required": true
+        },
+        "deadlinePerWish": {
+          "type": "duration",
+          "required": false
+        },
+        "spellName": {
+          "type": "fixed",
+          "value": "Souhait majeur"
+        }
+      },
+      "effects": [
+        {
+          "type": "grant_wishes",
+          "count": "@count",
+          "spellName": "@spellName",
+          "deadlinePerWish": "@deadlinePerWish"
+        }
+      ],
+      "source": {
+        "section": "III.E.1-5",
+        "pageRange": "132-160"
+      }
+    },
+    {
+      "id": "rare_primary_ability_gain",
+      "label": "Augmentation de caractéristique avec report",
+      "category": "attribute",
+      "compatibility": {
+        "itemTypes": [
+          "arme",
+          "armure",
+          "objet"
+        ]
+      },
+      "activation": {
+        "type": "automatic",
+        "trigger": "configured-result"
+      },
+      "automation": "assisted",
+      "parameters": {
+        "points": {
+          "type": "integer",
+          "required": true
+        },
+        "primaryAbility": {
+          "type": "ability-or-rule",
+          "required": true
+        },
+        "maximum": {
+          "type": "integer",
+          "required": false
+        },
+        "overflowOrder": {
+          "type": "ability-list",
+          "required": false
+        }
+      },
+      "effects": [
+        {
+          "type": "ability_gain_with_overflow",
+          "points": "@points",
+          "primaryAbility": "@primaryAbility",
+          "maximum": "@maximum",
+          "overflowOrder": "@overflowOrder"
+        }
+      ],
+      "source": {
+        "section": "III.E.1-5",
+        "pageRange": "132-160"
+      }
+    },
+    {
+      "id": "rare_conditional_level_reward",
+      "label": "Gain de niveau sous condition future",
+      "category": "progression",
+      "compatibility": {
+        "itemTypes": [
+          "arme",
+          "armure",
+          "objet"
+        ]
+      },
+      "activation": {
+        "type": "condition-watch",
+        "trigger": "next-eligible-encounter"
+      },
+      "automation": "assisted",
+      "parameters": {
+        "condition": {
+          "type": "rule",
+          "required": true
+        },
+        "mustActAlone": {
+          "type": "boolean",
+          "default": false
+        },
+        "reward": {
+          "type": "choice",
+          "values": [
+            "one_level",
+            "midpoint_next_level"
+          ]
+        },
+        "expiresOnFailure": {
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "effects": [
+        {
+          "type": "conditional_progression_reward",
+          "condition": "@condition",
+          "mustActAlone": "@mustActAlone",
+          "reward": "@reward",
+          "expiresOnFailure": "@expiresOnFailure"
+        }
+      ],
+      "source": {
+        "section": "III.E.1-5",
+        "pageRange": "132-160"
+      }
+    },
+    {
+      "id": "rare_grant_stronghold_or_property",
+      "label": "Attribution d’une propriété ou forteresse",
+      "category": "reward",
+      "compatibility": {
+        "itemTypes": [
+          "arme",
+          "armure",
+          "objet"
+        ]
+      },
+      "activation": {
+        "type": "automatic",
+        "trigger": "configured-result"
+      },
+      "automation": "assisted",
+      "parameters": {
+        "propertyType": {
+          "type": "choice",
+          "values": [
+            "stronghold",
+            "land",
+            "building",
+            "other"
+          ]
+        },
+        "locationRule": {
+          "type": "string",
+          "required": false
+        },
+        "statusEffects": {
+          "type": "effect-list",
+          "required": false
+        }
+      },
+      "effects": [
+        {
+          "type": "grant_property",
+          "propertyType": "@propertyType",
+          "locationRule": "@locationRule",
+          "statusEffects": "@statusEffects"
+        }
+      ],
+      "source": {
+        "section": "III.E.1-5",
+        "pageRange": "132-160"
+      }
+    },
+    {
+      "id": "rare_grant_loyal_follower",
+      "label": "Attribution d’un compagnon loyal",
+      "category": "reward",
+      "compatibility": {
+        "itemTypes": [
+          "arme",
+          "armure",
+          "objet"
+        ]
+      },
+      "activation": {
+        "type": "automatic",
+        "trigger": "configured-result"
+      },
+      "automation": "assisted",
+      "parameters": {
+        "actorUuid": {
+          "type": "uuid",
+          "documentType": "Actor",
+          "required": false
+        },
+        "actorProfile": {
+          "type": "object",
+          "required": false
+        },
+        "loyalUntil": {
+          "type": "string",
+          "required": false
+        }
+      },
+      "effects": [
+        {
+          "type": "grant_follower",
+          "actorUuid": "@actorUuid",
+          "actorProfile": "@actorProfile",
+          "loyalUntil": "@loyalUntil"
+        }
+      ],
+      "source": {
+        "section": "III.E.1-5",
+        "pageRange": "132-160"
+      }
+    },
+    {
+      "id": "rare_soul_imprisonment",
+      "label": "Emprisonnement de l’âme ou de la psyché",
+      "category": "curse",
+      "compatibility": {
+        "itemTypes": [
+          "arme",
+          "armure",
+          "objet"
+        ]
+      },
+      "activation": {
+        "type": "automatic",
+        "trigger": "configured-result"
+      },
+      "automation": "assisted",
+      "parameters": {
+        "bodyContinues": {
+          "type": "boolean",
+          "default": true
+        },
+        "prisonLocation": {
+          "type": "rule",
+          "required": true
+        },
+        "recoveryMethods": {
+          "type": "string-list",
+          "required": true
+        },
+        "locationCanBeRevealed": {
+          "type": "boolean",
+          "default": true
+        }
+      },
+      "effects": [
+        {
+          "type": "soul_imprisonment",
+          "bodyContinues": "@bodyContinues",
+          "prisonLocation": "@prisonLocation",
+          "recoveryMethods": "@recoveryMethods",
+          "locationCanBeRevealed": "@locationCanBeRevealed"
+        }
+      ],
+      "source": {
+        "section": "III.E.1-5",
+        "pageRange": "132-160"
+      },
+      "risk": {
+        "irreversible": true,
+        "requiresGMConfirmation": true
+      }
+    },
+    {
+      "id": "rare_extraplanar_nemesis",
+      "label": "Inimitié d’une puissance extraplanaire",
+      "category": "curse",
+      "compatibility": {
+        "itemTypes": [
+          "arme",
+          "armure",
+          "objet"
+        ]
+      },
+      "activation": {
+        "type": "automatic",
+        "trigger": "configured-result"
+      },
+      "automation": "assisted",
+      "parameters": {
+        "enemyType": {
+          "type": "tag-or-table",
+          "required": true
+        },
+        "resolutionMethods": {
+          "type": "string-list",
+          "required": false
+        }
+      },
+      "effects": [
+        {
+          "type": "create_extraplanar_nemesis",
+          "enemyType": "@enemyType",
+          "resolutionMethods": "@resolutionMethods"
+        }
+      ],
+      "source": {
+        "section": "III.E.1-5",
+        "pageRange": "132-160"
+      }
+    },
+    {
+      "id": "rare_forced_solo_avatar_duel",
+      "label": "Duel forcé contre un avatar",
+      "category": "curse",
+      "compatibility": {
+        "itemTypes": [
+          "arme",
+          "armure",
+          "objet"
+        ]
+      },
+      "activation": {
+        "type": "automatic",
+        "trigger": "configured-result"
+      },
+      "automation": "assisted",
+      "parameters": {
+        "avatarProfile": {
+          "type": "object",
+          "required": true
+        },
+        "mustFightAlone": {
+          "type": "boolean",
+          "default": true
+        },
+        "duplicateForHelpers": {
+          "type": "boolean",
+          "default": true
+        },
+        "defeatConsequence": {
+          "type": "effect-list",
+          "required": true
+        }
+      },
+      "effects": [
+        {
+          "type": "forced_solo_duel",
+          "avatarProfile": "@avatarProfile",
+          "mustFightAlone": "@mustFightAlone",
+          "duplicateForHelpers": "@duplicateForHelpers",
+          "defeatConsequence": "@defeatConsequence"
+        }
+      ],
+      "source": {
+        "section": "III.E.1-5",
+        "pageRange": "132-160"
+      },
+      "risk": {
+        "irreversible": true,
+        "requiresGMConfirmation": true
+      }
+    },
+    {
+      "id": "rare_magic_inventory_forfeiture",
+      "label": "Perte irrévocable des objets magiques",
+      "category": "curse",
+      "compatibility": {
+        "itemTypes": [
+          "arme",
+          "armure",
+          "objet"
+        ]
+      },
+      "activation": {
+        "type": "automatic",
+        "trigger": "configured-result"
+      },
+      "automation": "assisted",
+      "parameters": {
+        "scope": {
+          "type": "choice",
+          "values": [
+            "all_owned",
+            "all_carried",
+            "selected"
+          ]
+        },
+        "exceptions": {
+          "type": "tag-list",
+          "required": false
+        }
+      },
+      "effects": [
+        {
+          "type": "forfeit_magic_items",
+          "scope": "@scope",
+          "exceptions": "@exceptions"
+        }
+      ],
+      "source": {
+        "section": "III.E.1-5",
+        "pageRange": "132-160"
+      },
+      "risk": {
+        "irreversible": true,
+        "requiresGMConfirmation": true
+      }
+    },
+    {
+      "id": "rare_wealth_property_forfeiture",
+      "label": "Perte irrévocable de richesse et propriétés",
+      "category": "curse",
+      "compatibility": {
+        "itemTypes": [
+          "arme",
+          "armure",
+          "objet"
+        ]
+      },
+      "activation": {
+        "type": "automatic",
+        "trigger": "configured-result"
+      },
+      "automation": "assisted",
+      "parameters": {
+        "loseCurrency": {
+          "type": "boolean",
+          "default": true
+        },
+        "loseValuables": {
+          "type": "boolean",
+          "default": true
+        },
+        "loseRealProperty": {
+          "type": "boolean",
+          "default": true
+        },
+        "exceptions": {
+          "type": "tag-list",
+          "required": false
+        }
+      },
+      "effects": [
+        {
+          "type": "forfeit_wealth_and_property",
+          "loseCurrency": "@loseCurrency",
+          "loseValuables": "@loseValuables",
+          "loseRealProperty": "@loseRealProperty",
+          "exceptions": "@exceptions"
+        }
+      ],
+      "source": {
+        "section": "III.E.1-5",
+        "pageRange": "132-160"
+      },
+      "risk": {
+        "irreversible": true,
+        "requiresGMConfirmation": true
+      }
+    },
+    {
+      "id": "rare_permanent_save_penalty",
+      "label": "Malédiction permanente sur une sauvegarde",
+      "category": "curse",
+      "compatibility": {
+        "itemTypes": [
+          "arme",
+          "armure",
+          "objet"
+        ]
+      },
+      "activation": {
+        "type": "automatic",
+        "trigger": "configured-result"
+      },
+      "automation": "automatic",
+      "parameters": {
+        "saveType": {
+          "type": "save-type",
+          "required": true
+        },
+        "penalty": {
+          "type": "integer",
+          "required": true
+        },
+        "removalMethods": {
+          "type": "string-list",
+          "required": true
+        }
+      },
+      "effects": [
+        {
+          "type": "permanent_save_modifier",
+          "saveType": "@saveType",
+          "value": "@penalty",
+          "removalMethods": "@removalMethods"
+        }
+      ],
+      "source": {
+        "section": "III.E.1-5",
+        "pageRange": "132-160"
+      },
+      "risk": {
+        "irreversible": true,
+        "requiresGMConfirmation": true
+      }
+    },
+    {
+      "id": "rare_follower_betrayal",
+      "label": "Trahison d’un compagnon",
+      "category": "curse",
+      "compatibility": {
+        "itemTypes": [
+          "arme",
+          "armure",
+          "objet"
+        ]
+      },
+      "activation": {
+        "type": "automatic",
+        "trigger": "configured-result"
+      },
+      "automation": "assisted",
+      "parameters": {
+        "selection": {
+          "type": "choice",
+          "values": [
+            "random_follower",
+            "strongest_follower",
+            "gm_choice"
+          ]
+        },
+        "hostility": {
+          "type": "fixed",
+          "value": "permanent"
+        },
+        "fallbackIfNone": {
+          "type": "effect-list",
+          "required": false
+        }
+      },
+      "effects": [
+        {
+          "type": "follower_betrayal",
+          "selection": "@selection",
+          "hostility": "@hostility",
+          "fallbackIfNone": "@fallbackIfNone"
+        }
+      ],
+      "source": {
+        "section": "III.E.1-5",
+        "pageRange": "132-160"
+      }
+    }
+  ],
+  "auditReferences": [
+    {
+      "name": "Cartes merveilleuses",
+      "selectableAsTemplate": false,
+      "powers": [
+        {
+          "id": "misc_fate_card_draw"
+        },
+        {
+          "id": "rare_declared_draw_contract"
+        },
+        {
+          "id": "rare_deck_card_retention"
+        },
+        {
+          "id": "rare_bonus_draws"
+        },
+        {
+          "id": "rare_magic_reward_and_xp"
+        },
+        {
+          "id": "rare_major_wishes_with_deadline"
+        },
+        {
+          "id": "rare_primary_ability_gain"
+        },
+        {
+          "id": "rare_conditional_level_reward"
+        },
+        {
+          "id": "rare_grant_stronghold_or_property"
+        },
+        {
+          "id": "rare_grant_loyal_follower"
+        },
+        {
+          "id": "rare_soul_imprisonment"
+        },
+        {
+          "id": "rare_extraplanar_nemesis"
+        },
+        {
+          "id": "rare_forced_solo_avatar_duel"
+        },
+        {
+          "id": "rare_magic_inventory_forfeiture"
+        },
+        {
+          "id": "rare_wealth_property_forfeiture"
+        },
+        {
+          "id": "rare_permanent_save_penalty"
+        },
+        {
+          "id": "rare_follower_betrayal"
+        },
+        {
+          "id": "misc_alignment_reversal_curse"
+        }
+      ],
+      "source": {
+        "section": "III.E. objets divers - Cartes merveilleuses",
+        "pageRange": "132-160"
+      }
+    }
+  ],
+  "coverage": {
+    "analysedSections": [
+      "III.E.1",
+      "III.E.2",
+      "III.E.3",
+      "III.E.4",
+      "III.E.5"
+    ],
+    "coverageMode": "rare-mechanics-second-pass",
+    "fragment": 1,
+    "fragmentCount": 3,
+    "remainingWork": [
+      "artifact and relic power tables"
+    ],
+    "generatorIntegration": false,
+    "powerCount": 16
+  }
+}
