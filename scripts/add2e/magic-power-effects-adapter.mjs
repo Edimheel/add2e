@@ -2,7 +2,7 @@
 // ADD2E — Adaptateur et exécuteur universel des pouvoirs d'objets magiques.
 // Étape 5, lot 4 — Foundry V13/V14/V15, ApplicationV2 / DialogV2.
 
-const ADD2E_MAGIC_POWER_EFFECTS_ADAPTER_VERSION = "2026-07-21-magic-power-effects-adapter-v4-linked-spells-compendium-only";
+const ADD2E_MAGIC_POWER_EFFECTS_ADAPTER_VERSION = "2026-07-21-magic-power-effects-adapter-v4-linked-spells-no-technical-fallback";
 const SPELL_PACK_ID = "add2e.sorts";
 const EFFECT_FLAG = "magicItemCatalogueEffect";
 const TIME_SETTING = "add2e.worldTimeTick";
@@ -1132,6 +1132,7 @@ async function executePower(actor, item, power, index = 0, sheet = null) {
         else if (["invisibility", "flight", "flying", "ethereal_state", "haste", "slow", "protection", "movement_mode", "transformation", "polymorph", "status", "condition", "ability_bonus", "characteristic_bonus", "stat_bonus", "armor_bonus", "attack_bonus", "damage_bonus"].includes(type)) result = await temporaryEffect(actor, item, clean, effect);
       }
       if (result?.handled === "linked-spell-cancelled") return false;
+      if (linked && !result?.ok) return false;
       if (!result?.ok) result = await assisted(actor, item, clean);
     }
     if (result?.ok && cost > 0 && result.chargesManaged !== true) {
