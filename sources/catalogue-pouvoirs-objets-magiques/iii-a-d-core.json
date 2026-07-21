@@ -1,9 +1,9 @@
 {
   "schema": 2,
   "catalogueId": "add2e-gdm-magic-powers",
-  "version": "2026-07-21-gdm-iii-a-d-core-v1",
+  "version": "2026-07-21-gdm-iii-a-d-core-v2",
   "extends": "../catalogue-pouvoirs-objets-magiques.json",
-  "status": "core-powers-sections-iii-a-to-iii-d",
+  "status": "core-powers-sections-iii-a-to-iii-d-complete",
   "source": {
     "book": "Guide du Maître AD&D restauré V2",
     "sections": [
@@ -903,8 +903,8 @@
   ],
   "coverage": {
     "analysedSections": ["III.A", "III.B", "III.C", "III.D"],
-    "nextSections": ["III.E objets divers", "III.E spécial artefacts et reliques"],
+    "nextSections": [],
     "generatorIntegration": false,
-    "powerCount": 41
+    "powerCount": 51
   }
 }
