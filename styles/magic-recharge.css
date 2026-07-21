@@ -419,3 +419,118 @@
 .add2e-magic-power-parameter-form .form-group:has([name="multiplier"]) {
   --add2e-parameter-help: "Multiplicateur numérique. Exemple : 2 pour doubler les dégâts concernés.";
 }
+
+/* ADD2E — DialogV2 des pouvoirs d'objets magiques, aligné sur les cartes de chat. */
+.application:has(.add2e-dialog[style*="min-width:480px"]) {
+  --add2e-card-accent: #3f285f;
+  --add2e-card-accent-2: #7651a0;
+  --add2e-card-border: #6c4893;
+  --add2e-card-paper: #fff9e9;
+  --add2e-card-paper-2: #efe0b7;
+  --add2e-card-text: #38270d;
+  border: 2px solid var(--add2e-card-border) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 16px 38px rgba(24, 13, 37, .48), 0 0 0 1px rgba(255, 255, 255, .22) inset !important;
+  overflow: hidden !important;
+}
+
+.application:has(.add2e-dialog[style*="min-width:480px"]) .window-header {
+  min-height: 42px !important;
+  border-bottom: 1px solid rgba(255, 238, 188, .55) !important;
+  background: linear-gradient(90deg, var(--add2e-card-accent), var(--add2e-card-accent-2)) !important;
+  color: #fff !important;
+}
+
+.application:has(.add2e-dialog[style*="min-width:480px"]) .window-title,
+.application:has(.add2e-dialog[style*="min-width:480px"]) .window-header button,
+.application:has(.add2e-dialog[style*="min-width:480px"]) .window-header a {
+  color: #fff !important;
+  font-weight: 900 !important;
+}
+
+.application:has(.add2e-dialog[style*="min-width:480px"]) .window-content {
+  padding: 0 !important;
+  background: linear-gradient(180deg, var(--add2e-card-paper), var(--add2e-card-paper-2)) !important;
+  color: var(--add2e-card-text) !important;
+}
+
+.application:has(.add2e-dialog[style*="min-width:480px"]) .dialog-content {
+  padding: 12px 14px 10px !important;
+  background: transparent !important;
+}
+
+.application:has(.add2e-dialog[style*="min-width:480px"]) .add2e-dialog {
+  box-sizing: border-box !important;
+  min-width: 480px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  border: 2px solid var(--add2e-card-border) !important;
+  border-radius: 10px !important;
+  background: linear-gradient(180deg, var(--add2e-card-paper), var(--add2e-card-paper-2)) !important;
+  box-shadow: 0 2px 6px rgba(80, 58, 10, .18) !important;
+  color: var(--add2e-card-text) !important;
+}
+
+.application:has(.add2e-dialog[style*="min-width:480px"]) .add2e-dialog p {
+  margin: 0 !important;
+  border: 0 !important;
+  line-height: 1.35 !important;
+}
+
+.application:has(.add2e-dialog[style*="min-width:480px"]) .add2e-dialog p:first-child {
+  padding: 12px 14px !important;
+  border-bottom: 1px solid rgba(255, 238, 188, .55) !important;
+  background: linear-gradient(90deg, var(--add2e-card-accent), var(--add2e-card-accent-2)) !important;
+  color: #fff !important;
+  font-size: 1rem !important;
+  font-weight: 800 !important;
+}
+
+.application:has(.add2e-dialog[style*="min-width:480px"]) .add2e-dialog p:first-child b {
+  color: #fff !important;
+  font-weight: 950 !important;
+}
+
+.application:has(.add2e-dialog[style*="min-width:480px"]) .add2e-dialog p + p {
+  padding: 12px 14px 13px !important;
+  background: rgba(255, 249, 233, .78) !important;
+  color: var(--add2e-card-text) !important;
+  font-weight: 700 !important;
+}
+
+.application:has(.add2e-dialog[style*="min-width:480px"]) .add2e-dialog p + p b {
+  color: var(--add2e-card-accent) !important;
+  font-weight: 950 !important;
+}
+
+.application:has(.add2e-dialog[style*="min-width:480px"]) .dialog-buttons,
+.application:has(.add2e-dialog[style*="min-width:480px"]) .form-footer {
+  gap: 10px !important;
+  padding: 10px 14px 14px !important;
+  border-top: 1px solid rgba(108, 72, 147, .28) !important;
+  background: linear-gradient(180deg, rgba(239, 224, 183, .35), #e4cf9b) !important;
+}
+
+.application:has(.add2e-dialog[style*="min-width:480px"]) .dialog-buttons button,
+.application:has(.add2e-dialog[style*="min-width:480px"]) .form-footer button {
+  min-height: 36px !important;
+  border: 1px solid var(--add2e-card-border) !important;
+  border-radius: 9px !important;
+  background: linear-gradient(180deg, var(--add2e-card-accent-2), var(--add2e-card-accent)) !important;
+  box-shadow: 0 2px 4px rgba(35, 20, 50, .22) !important;
+  color: #fff !important;
+  font-weight: 900 !important;
+}
+
+.application:has(.add2e-dialog[style*="min-width:480px"]) .dialog-buttons button:hover,
+.application:has(.add2e-dialog[style*="min-width:480px"]) .form-footer button:hover {
+  filter: brightness(1.1) !important;
+  transform: translateY(-1px) !important;
+}
+
+.application:has(.add2e-dialog[style*="min-width:480px"]) .dialog-buttons button:focus-visible,
+.application:has(.add2e-dialog[style*="min-width:480px"]) .form-footer button:focus-visible {
+  outline: 2px solid #fff3c7 !important;
+  outline-offset: 2px !important;
+}
