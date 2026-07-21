@@ -1,7 +1,8 @@
 {
   "schema": 1,
-  "version": "2026-07-21-gdm-reusable-magic-powers-v1",
-  "status": "phase-1-weapons-armors",
+  "catalogueId": "add2e-gdm-magic-powers",
+  "version": "2026-07-21-gdm-reusable-magic-powers-v2",
+  "status": "weapons-armors-core-complete",
   "title": "Catalogue de pouvoirs réutilisables des objets magiques",
   "source": {
     "book": "Guide du Maître AD&D restauré V2",
@@ -481,7 +482,8 @@
   ],
   "coverage": {
     "analysedSections": ["III.F", "III.G", "III.H"],
-    "nextSections": ["III.A", "III.B", "III.C", "III.D", "III.E", "III.E spécial"],
-    "generatorIntegration": false
+    "nextSections": [],
+    "generatorIntegration": false,
+    "powerCount": 29
   }
 }
