@@ -19,6 +19,7 @@
     "scripts/add2e-action-hud.mjs",
     "scripts/add2e/chat-card.mjs",
     "scripts/add2e.mjs",
+    "scripts/add2e/magic-power-catalogue-ui.mjs",
     "scripts/add2e/capability-special-attacks.mjs",
     "scripts/add2e/03b-equipment-actions.mjs",
     "scripts/add2e/22-vendor.mjs",
@@ -115,4 +116,3 @@
     }
   ]
 }
-
