@@ -186,6 +186,50 @@ function add2ePostprocessReversibleSpellRows(data) {
   return data;
 }
 
+function add2eObjectMagicPowerArray(item) {
+  const raw = item?.system?.pouvoirs
+    ?? item?.system?.powers
+    ?? item?.system?.pouvoirsMagiques
+    ?? item?.system?.magicalPowers
+    ?? [];
+  if (Array.isArray(raw)) return raw;
+  if (raw && typeof raw === "object") return Object.values(raw);
+  return [];
+}
+
+function add2eLinkedSpellDisplayName(power) {
+  if (!power || typeof power !== "object") return "";
+  const linkedEffect = (Array.isArray(power.effects) ? power.effects : [])
+    .find(effect => add2eReversibleNormalize(effect?.type ?? effect?.kind) === "linked_spell");
+  return String(
+    power.parameters?.spellName
+    ?? linkedEffect?.spellName
+    ?? power.linkedSpell?.name
+    ?? power.linkedSpell?.nom
+    ?? ""
+  ).trim();
+}
+
+function add2ePostprocessObjectMagicLinkedSpellNames(data, actor) {
+  const items = new Map(Array.from(actor?.items ?? []).map(item => [String(item.id), item]));
+  const rename = row => {
+    const itemId = String(row?.sourceItemId ?? row?.itemId ?? "");
+    const powerIndex = Number(row?.powerIndex);
+    if (!itemId || !Number.isInteger(powerIndex)) return;
+    const sourceItem = items.get(itemId);
+    const power = add2eObjectMagicPowerArray(sourceItem)[powerIndex];
+    const spellName = add2eLinkedSpellDisplayName(power);
+    if (spellName) row.name = spellName;
+  };
+
+  for (const row of data?.add2eObjectMagicPowers ?? []) rename(row);
+  for (const item of data?.add2eObjectMagicItems ?? []) {
+    for (const row of item?.powers ?? []) rename(row);
+  }
+  for (const row of data?.add2ePotionRows ?? []) rename(row);
+  return data;
+}
+
 function add2ePatchReversibleComponentSheetRows() {
   const proto = globalThis.Add2eActorSheet?.prototype;
   if (!proto || proto.__add2eReversibleComponentSheetRowsV1 || typeof proto.getData !== "function") return false;
@@ -194,7 +238,8 @@ function add2ePatchReversibleComponentSheetRows() {
   const originalGetData = proto.getData;
   proto.getData = async function add2eReversibleComponentGetData(...args) {
     const data = await originalGetData.apply(this, args);
-    return add2ePostprocessReversibleSpellRows(data);
+    add2ePostprocessReversibleSpellRows(data);
+    return add2ePostprocessObjectMagicLinkedSpellNames(data, this.actor ?? data?.actor);
   };
   return true;
 }
