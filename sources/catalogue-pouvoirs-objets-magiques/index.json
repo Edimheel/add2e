@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "catalogueId": "add2e-gdm-magic-powers",
-  "version": "2026-07-21-catalogue-manifest-v2",
+  "version": "2026-07-21-catalogue-manifest-v3",
   "mergeStrategy": "append-powers-and-merge-vocabularies",
   "fragments": [
     {
@@ -14,9 +14,7 @@
       "sections": ["III.A", "III.B", "III.C", "III.D"],
       "status": "potions-scrolls-rings-rods-staves-wands-core",
       "verifiedPowerCount": 51,
-      "metadataOverrides": {
-        "coverage.powerCount": 51
-      }
+      "metadataOverrides": {"coverage.powerCount": 51}
     },
     {
       "path": "iii-e-core-1.json",
@@ -53,20 +51,41 @@
       "sections": ["III.E.1", "III.E.2", "III.E.3", "III.E.4", "III.E.5"],
       "status": "miscellaneous-magic-core-pass-1",
       "verifiedPowerCount": 12
+    },
+    {
+      "path": "iii-e-rare-destiny.json",
+      "sections": ["III.E.1", "III.E.2", "III.E.3", "III.E.4", "III.E.5"],
+      "status": "miscellaneous-magic-second-pass-destiny",
+      "verifiedPowerCount": 16
+    },
+    {
+      "path": "iii-e-rare-containment.json",
+      "sections": ["III.E.1", "III.E.2", "III.E.3", "III.E.4", "III.E.5"],
+      "status": "miscellaneous-magic-second-pass-containment",
+      "verifiedPowerCount": 14
+    },
+    {
+      "path": "iii-e-rare-lifecycle.json",
+      "sections": ["III.E.1", "III.E.2", "III.E.3", "III.E.4", "III.E.5"],
+      "status": "miscellaneous-magic-second-pass-lifecycle",
+      "verifiedPowerCount": 16
     }
   ],
   "coverage": {
     "analysedSections": ["III.A", "III.B", "III.C", "III.D", "III.E", "III.F", "III.G", "III.H"],
-    "partialSections": ["III.E objets divers"],
-    "nextSections": ["III.E objets divers - seconde passe", "III.E spécial artefacts et reliques"],
+    "partialSections": [],
+    "nextSections": ["III.E spécial artefacts et reliques"],
     "generatorIntegration": false,
-    "verifiedMiscellaneousPowerCount": 77
+    "verifiedMiscellaneousCorePowerCount": 77,
+    "verifiedMiscellaneousSecondPassPowerCount": 46,
+    "verifiedMiscellaneousPowerCount": 123
   },
   "rules": {
     "objectReferencesAreAuditOnly": true,
     "objectsAreNeverSelectableTemplates": true,
     "powersMustBeFilteredByCompatibility": true,
     "existingSpellItemsMustBeReusedWhenAvailable": true,
-    "artifactPowerTablesMustRemainSeparate": true
+    "artifactPowerTablesMustRemainSeparate": true,
+    "irreversiblePowersRequireGMConfirmation": true
   }
 }
