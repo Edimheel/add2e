@@ -2,7 +2,8 @@
 // ADD2E — Adaptateur et exécuteur universel des pouvoirs d'objets magiques.
 // Étape 5, lot 4 — Foundry V13/V14/V15, ApplicationV2 / DialogV2.
 
-const ADD2E_MAGIC_POWER_EFFECTS_ADAPTER_VERSION = "2026-07-21-magic-power-effects-adapter-v4-linked-spells";
+const ADD2E_MAGIC_POWER_EFFECTS_ADAPTER_VERSION = "2026-07-21-magic-power-effects-adapter-v4-linked-spells-compendium-only";
+const SPELL_PACK_ID = "add2e.sorts";
 const EFFECT_FLAG = "magicItemCatalogueEffect";
 const TIME_SETTING = "add2e.worldTimeTick";
 const INTERNAL_ON_USE = "add2e://magic-catalogue";
@@ -820,40 +821,24 @@ async function spellIndex({ force = false } = {}) {
   if (force) spellIndexPromise = null;
   if (spellIndexPromise) return spellIndexPromise;
   spellIndexPromise = (async () => {
-    const map = new Map();
-    const add = entry => {
-      const uuid = String(entry?.uuid ?? "").trim();
-      if (!uuid || map.has(uuid)) return;
-      map.set(uuid, entry);
-    };
-    for (const spell of game.items ?? []) {
-      if (String(spell?.type ?? "").toLowerCase() !== "sort") continue;
-      add({ uuid: spell.uuid, name: spell.name, img: spell.img, level: spellLevel(spell), source: "Monde" });
+    const pack = game.packs?.get?.(SPELL_PACK_ID);
+    if (!pack || String(pack.documentName ?? pack.metadata?.type ?? "") !== "Item") return [];
+    let index;
+    try {
+      index = await pack.getIndex({ fields: ["name", "type", "img", "system.niveau", "system.level"] });
+    } catch (_error) {
+      try { index = await pack.getIndex(); } catch (_indexError) { return []; }
     }
-    for (const pack of game.packs ?? []) {
-      if (String(pack.documentName ?? pack.metadata?.type ?? "") !== "Item") continue;
-      let index;
-      try {
-        index = await pack.getIndex({ fields: ["name", "type", "img", "system.niveau", "system.level"] });
-      } catch (_error) {
-        try { index = await pack.getIndex(); } catch (_indexError) { continue; }
-      }
-      for (const entry of packIndexEntries(index)) {
-        if (String(entry?.type ?? "").toLowerCase() !== "sort") continue;
-        add({
-          uuid: String(entry.uuid ?? `Compendium.${pack.collection}.${entry._id}`),
-          name: String(entry.name ?? "Sort"),
-          img: entry.img ?? "icons/svg/book.svg",
-          level: spellLevel(entry),
-          source: String(pack.title ?? pack.metadata?.label ?? pack.collection ?? "Compendium")
-        });
-      }
-    }
-    return [...map.values()].sort((left, right) =>
-      left.source.localeCompare(right.source, "fr")
-      || Number(left.level) - Number(right.level)
-      || left.name.localeCompare(right.name, "fr")
-    );
+    return packIndexEntries(index)
+      .filter(entry => String(entry?.type ?? "").toLowerCase() === "sort")
+      .map(entry => ({
+        uuid: `Compendium.${SPELL_PACK_ID}.${entry._id}`,
+        name: String(entry.name ?? "Sort"),
+        img: entry.img ?? "icons/svg/book.svg",
+        level: spellLevel(entry),
+        source: String(pack.title ?? pack.metadata?.label ?? SPELL_PACK_ID)
+      }))
+      .sort((left, right) => Number(left.level) - Number(right.level) || left.name.localeCompare(right.name, "fr"));
   })();
   return spellIndexPromise;
 }
@@ -861,7 +846,6 @@ async function spellIndex({ force = false } = {}) {
 function spellOptions(entries, selectedUuid = "", selectedName = "") {
   const selectedUuidText = String(selectedUuid ?? "").trim();
   const wantedName = norm(selectedName);
-  let matched = false;
   const groups = new Map();
   for (const entry of entries) {
     if (!groups.has(entry.source)) groups.set(entry.source, []);
@@ -870,15 +854,11 @@ function spellOptions(entries, selectedUuid = "", selectedName = "") {
   const html = [...groups.entries()].map(([source, spells]) => {
     const options = spells.map(entry => {
       const selected = entry.uuid === selectedUuidText || (!selectedUuidText && wantedName && norm(entry.name) === wantedName);
-      if (selected) matched = true;
       return `<option value="${esc(entry.uuid)}" data-spell-name="${esc(entry.name)}"${selected ? " selected" : ""}>Niv. ${Number(entry.level) || 1} — ${esc(entry.name)}</option>`;
     }).join("");
     return `<optgroup label="${esc(source)}">${options}</optgroup>`;
   }).join("");
-  const legacy = selectedUuidText && !matched
-    ? `<option value="${esc(selectedUuidText)}" data-spell-name="${esc(selectedName)}" selected>Référence actuelle — ${esc(selectedName || selectedUuidText)}</option>`
-    : "";
-  return `<option value="">— Choisir un sort —</option>${legacy}${html}`;
+  return `<option value="">— Choisir un sort du compendium —</option>${html}`;
 }
 
 async function chooseSpell(currentUuid = "", currentName = "") {
@@ -886,14 +866,14 @@ async function chooseSpell(currentUuid = "", currentName = "") {
   if (!DialogV2?.wait) throw new Error("DialogV2 est indisponible.");
   const entries = await spellIndex();
   if (!entries.length) {
-    ui.notifications.warn("Aucun Item de type sort n'est disponible.");
+    ui.notifications.warn(`Le compendium ${SPELL_PACK_ID} ne contient aucun Item de type sort disponible.`);
     return null;
   }
   return DialogV2.wait({
     window: { title: "Choisir le sort équivalent" },
     modal: true,
     rejectClose: false,
-    content: `<div class="add2e-dialog" style="min-width:620px;padding:10px;display:grid;gap:8px;"><p style="margin:0;">Choisissez le sort que l'objet pourra lancer.</p><select name="spellUuid" size="14" style="width:100%;">${spellOptions(entries, currentUuid, currentName)}</select></div>`,
+    content: `<div class="add2e-dialog" style="min-width:620px;padding:10px;display:grid;gap:8px;"><p style="margin:0;">Choisissez dans le compendium ADD2E le sort que l'objet pourra lancer.</p><select name="spellUuid" size="14" style="width:100%;">${spellOptions(entries, currentUuid, currentName)}</select></div>`,
     buttons: [
       {
         action: "select",
@@ -915,16 +895,16 @@ async function chooseSpell(currentUuid = "", currentName = "") {
 
 async function resolveSpell(reference = {}) {
   const uuid = String(reference.spellUuid ?? reference.uuid ?? reference.sourceUuid ?? reference.sourceId ?? "").trim();
-  if (uuid && typeof fromUuid === "function") {
+  const allowedPrefix = `Compendium.${SPELL_PACK_ID}.`;
+  if (uuid) {
+    if (!uuid.startsWith(allowedPrefix) || typeof fromUuid !== "function") return null;
     try {
       const document = await fromUuid(uuid);
-      if (document?.documentName === "Item" && String(document.type ?? "").toLowerCase() === "sort") return document;
-    } catch (_error) {}
+      return document?.documentName === "Item" && String(document.type ?? "").toLowerCase() === "sort" ? document : null;
+    } catch (_error) { return null; }
   }
   const name = norm(reference.spellName ?? reference.name ?? reference.nom ?? "");
   if (!name) return null;
-  const world = Array.from(game.items ?? []).find(candidate => String(candidate.type ?? "").toLowerCase() === "sort" && norm(candidate.name) === name);
-  if (world) return world;
   const entry = (await spellIndex()).find(candidate => norm(candidate.name) === name);
   if (!entry || typeof fromUuid !== "function") return null;
   try {
