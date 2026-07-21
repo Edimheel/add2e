@@ -1,13 +1,15 @@
 // scripts/add2e/magic-power-effects-adapter.mjs
 // ADD2E — Adaptateur et exécuteur universel des pouvoirs d'objets magiques.
-// Étape 5, lot 4 — Foundry V13/V14/V15, ApplicationV2 / DialogV2.
+// Étape 5, lot 5A — contrat générique d'exécution.
+// Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2.
 
-const ADD2E_MAGIC_POWER_EFFECTS_ADAPTER_VERSION = "2026-07-21-magic-power-effects-adapter-v4-linked-spells-no-technical-fallback";
+const ADD2E_MAGIC_POWER_EFFECTS_ADAPTER_VERSION = "2026-07-21-magic-power-effects-adapter-v5-execution-contract";
 const SPELL_PACK_ID = "add2e.sorts";
 const EFFECT_FLAG = "magicItemCatalogueEffect";
 const TIME_SETTING = "add2e.worldTimeTick";
 const INTERNAL_ON_USE = "add2e://magic-catalogue";
 const UNSET = Symbol("add2e-magic-power-unset");
+const EFFECT_HANDLERS = new Map();
 let periodicQueue = Promise.resolve();
 let spellIndexPromise = null;
 
@@ -68,7 +70,8 @@ function number(...values) {
 }
 
 const signed = value => `${Number(value) >= 0 ? "+" : ""}${Number(value) || 0}`;
-const hasValue = value => value != null && value !== "" && (!Array.isArray(value) || value.length > 0) && (typeof value !== "object" || Array.isArray(value) || Object.keys(value).length > 0);
+const hasValue = value => value != null && value !== "" && (!Array.isArray(value) || value.length > 0)
+  && (typeof value !== "object" || Array.isArray(value) || Object.keys(value).length > 0);
 
 function resolveTemplate(value, parameters = {}) {
   if (Array.isArray(value)) return value.map(v => resolveTemplate(v, parameters)).filter(v => v !== UNSET);
@@ -82,10 +85,10 @@ function resolveTemplate(value, parameters = {}) {
   }
   if (typeof value !== "string") return clone(value);
   const exact = value.match(/^@([A-Za-z0-9_]+)$/);
-  if (exact) return Object.hasOwn(parameters, exact[1]) ? clone(parameters[exact[1]]) : UNSET;
+  if (exact) return Object.prototype.hasOwnProperty.call(parameters, exact[1]) ? clone(parameters[exact[1]]) : UNSET;
   let missing = false;
   const replaced = value.replace(/@([A-Za-z0-9_]+)/g, (_match, key) => {
-    if (!Object.hasOwn(parameters, key)) { missing = true; return ""; }
+    if (!Object.prototype.hasOwnProperty.call(parameters, key)) { missing = true; return ""; }
     return typeof parameters[key] === "object" ? JSON.stringify(parameters[key]) : String(parameters[key]);
   });
   return missing ? UNSET : replaced;
@@ -94,7 +97,9 @@ function resolveTemplate(value, parameters = {}) {
 function cleanPower(power) {
   if (!power || typeof power !== "object" || power.kind !== "catalogue") return clone(power);
   const clean = clone(power);
-  const parameters = clean.parameters && typeof clean.parameters === "object" && !Array.isArray(clean.parameters) ? clean.parameters : {};
+  const parameters = clean.parameters && typeof clean.parameters === "object" && !Array.isArray(clean.parameters)
+    ? clean.parameters
+    : {};
   const templates = Array.isArray(clean.effectTemplates) && clean.effectTemplates.length
     ? clean.effectTemplates
     : Array.isArray(clean.effects) ? clean.effects : [];
@@ -104,20 +109,26 @@ function cleanPower(power) {
 
 function cleanPowers(value) {
   if (Array.isArray(value)) return value.map(cleanPower);
-  if (value && typeof value === "object") return Object.fromEntries(Object.entries(value).map(([key, power]) => [key, cleanPower(power)]));
+  if (value && typeof value === "object") {
+    return Object.fromEntries(Object.entries(value).map(([key, power]) => [key, cleanPower(power)]));
+  }
   return value;
 }
 
 function powerArray(item) {
-  const raw = item?.system?.pouvoirs ?? item?.system?.powers ?? item?.system?.pouvoirsMagiques ?? item?.system?.magicalPowers ?? [];
-  return (Array.isArray(raw) ? raw : raw && typeof raw === "object" ? Object.values(raw) : []).filter(power => power && typeof power === "object");
+  const raw = item?.system?.pouvoirs ?? item?.system?.powers ?? item?.system?.pouvoirsMagiques
+    ?? item?.system?.magicalPowers ?? [];
+  return (Array.isArray(raw) ? raw : raw && typeof raw === "object" ? Object.values(raw) : [])
+    .filter(power => power && typeof power === "object");
 }
 
 const cataloguePowers = item => powerArray(item).filter(power => power.kind === "catalogue");
 
 function itemUsable(item) {
   try {
-    if (typeof globalThis.add2eMagicItemEquippedOrUsable === "function") return globalThis.add2eMagicItemEquippedOrUsable(item);
+    if (typeof globalThis.add2eMagicItemEquippedOrUsable === "function") {
+      return globalThis.add2eMagicItemEquippedOrUsable(item);
+    }
   } catch (_error) {}
   const system = item?.system ?? {};
   return system.equipee === true || system.equipped === true || system.portee === true || system.worn === true;
@@ -128,7 +139,8 @@ function passivePower(power) {
   const type = norm(power?.activation?.type);
   const trigger = norm(power?.activation?.trigger);
   if (["passive", "automatic", "always_on", "permanent"].includes(type)) return true;
-  return ["equipped", "equip", "worn", "carried", "porte", "portee", "time", "attack", "damage", "hit", "round", "projectile", "target", "drawn"].some(token => trigger.includes(token));
+  return ["equipped", "equip", "worn", "carried", "porte", "portee", "time", "attack", "damage", "hit", "round", "projectile", "target", "drawn"]
+    .some(token => trigger.includes(token));
 }
 
 function durationParts(value) {
@@ -136,7 +148,9 @@ function durationParts(value) {
   if (typeof value === "number") return { value, unit: "round" };
   if (typeof value === "object") {
     const amount = number(value.value, value.amount, value.nombre, value.rounds, value.duration);
-    return Number.isFinite(amount) && amount > 0 ? { value: amount, unit: value.unit ?? value.units ?? value.unite ?? value.type ?? "round" } : null;
+    return Number.isFinite(amount) && amount > 0
+      ? { value: amount, unit: value.unit ?? value.units ?? value.unite ?? value.type ?? "round" }
+      : null;
   }
   const match = String(value).trim().match(/^([0-9]+(?:[.,][0-9]+)?)\s*(.*)$/);
   if (!match) return null;
@@ -165,15 +179,279 @@ function currentTick() {
   catch (_error) { return 0; }
 }
 
+function parameterValue(power, effect, keys, fallback = undefined) {
+  const wanted = Array.isArray(keys) ? keys : [keys];
+  const sources = [effect, power?.parameters, power, power?.activation];
+  for (const source of sources) {
+    if (!source || typeof source !== "object") continue;
+    for (const key of wanted) {
+      if (Object.prototype.hasOwnProperty.call(source, key) && source[key] !== undefined) return clone(source[key]);
+    }
+  }
+  return clone(fallback);
+}
+
+function resolveExecutionParameters(power, effect = {}) {
+  const merged = merge(power?.parameters ?? {}, effect ?? {});
+  const target = parameterValue(power, effect, ["target", "targetMode", "targetType", "scope", "cible"]);
+  const range = parameterValue(power, effect, ["range", "portee", "distance", "maxDistance"]);
+  const area = parameterValue(power, effect, ["area", "zone"]);
+  const radius = parameterValue(power, effect, ["radius", "rayon"]);
+  const shape = parameterValue(power, effect, ["shape", "areaShape", "zoneShape", "forme"]);
+  const duration = parameterValue(power, effect, ["duration", "duree"]);
+  const save = parameterValue(power, effect, ["save", "savingThrow", "saving_throw", "jetSauvegarde", "jet_protection"]);
+  const chargeCost = number(parameterValue(power, effect, ["chargeCost", "cost", "cout"]));
+  const frequency = parameterValue(power, effect, ["frequency", "frequence", "usesPerPeriod", "frequencyPerTarget"]);
+  const formulaValue = parameterValue(power, effect, ["formula", "dice", "roll", "damageFormula", "amount", "points", "value"]);
+  return {
+    ...merged,
+    target,
+    range,
+    area,
+    radius,
+    shape,
+    duration,
+    save,
+    chargeCost: Number.isFinite(chargeCost) ? Math.max(0, Math.floor(chargeCost)) : null,
+    frequency,
+    formula: formulaValue == null || formulaValue === "" ? null : String(formulaValue)
+  };
+}
+
+function executionResult(status, data = {}) {
+  const normalized = norm(status || data.status || "failed");
+  const ok = data.ok ?? normalized === "success";
+  return {
+    complete: data.complete !== false,
+    chargesManaged: data.chargesManaged === true,
+    consumeCharges: data.consumeCharges !== false,
+    targets: Array.isArray(data.targets) ? data.targets : [],
+    rows: Array.isArray(data.rows) ? data.rows : [],
+    details: Array.isArray(data.details) ? data.details : [],
+    unresolvedTypes: Array.isArray(data.unresolvedTypes) ? data.unresolvedTypes : [],
+    reason: data.reason ?? "",
+    error: data.error ?? null,
+    ...data,
+    ok: ok === true,
+    status: normalized || (ok ? "success" : "failed")
+  };
+}
+
+function normalizeExecutionResult(value, defaults = {}) {
+  if (value == null) return executionResult("skipped", { ...defaults, ok: false, complete: false });
+  if (value === true) return executionResult("success", { ...defaults, ok: true });
+  if (value === false) return executionResult("failed", { ...defaults, ok: false });
+  if (typeof value !== "object") return executionResult("failed", { ...defaults, ok: false, reason: "invalid-handler-result" });
+  const status = value.status ?? (value.ok === true ? "success" : value.handled?.includes?.("cancel") ? "cancelled" : "failed");
+  return executionResult(status, { ...defaults, ...value });
+}
+
+function registerEffectHandler(types, handler) {
+  if (typeof handler !== "function") throw new TypeError("Le gestionnaire d'effet doit être une fonction.");
+  for (const raw of Array.isArray(types) ? types : [types]) {
+    const type = norm(raw);
+    if (type) EFFECT_HANDLERS.set(type, handler);
+  }
+  return handler;
+}
+
+function effectHandler(type) {
+  return EFFECT_HANDLERS.get(norm(type)) ?? null;
+}
+
+function actorToken(actor) {
+  const controlled = canvas?.tokens?.controlled ?? [];
+  return controlled.find(token => token?.actor?.id === actor?.id)
+    ?? actor?.getActiveTokens?.()?.[0]
+    ?? actor?.token?.object
+    ?? actor?.token
+    ?? null;
+}
+
+function selectedTokens() {
+  return Array.from(game.user?.targets ?? []).filter(token => token?.actor);
+}
+
+function tokenForActor(actor) {
+  if (!actor) return null;
+  return canvas?.tokens?.placeables?.find?.(token => token?.actor?.id === actor.id)
+    ?? actor?.getActiveTokens?.()?.[0]
+    ?? actor?.token?.object
+    ?? actor?.token
+    ?? null;
+}
+
+function normalizedTargetMode(parameters = {}, power = {}) {
+  const explicit = norm(parameters.target ?? parameters.targetMode ?? parameters.targetType ?? parameters.scope ?? "");
+  if (explicit) return explicit;
+  const trigger = norm(power?.activation?.trigger);
+  if (trigger.includes("self") || trigger.includes("wearer") || trigger.includes("porteur")) return "self";
+  if (trigger.includes("touch")) return "touch";
+  return "selected_or_self";
+}
+
+function resolveTargets(actor, power, effect, parameters = resolveExecutionParameters(power, effect)) {
+  const mode = normalizedTargetMode(parameters, power);
+  const selected = selectedTokens();
+  const selectedActors = selected.map(token => token.actor).filter(Boolean);
+  let actors = [];
+  let tokens = [];
+  let required = false;
+  if (["self", "owner", "wearer", "porteur", "caster", "user"].includes(mode)) {
+    actors = actor ? [actor] : [];
+    tokens = actors.map(tokenForActor).filter(Boolean);
+  } else if (["selected", "target", "creature", "single", "one", "cible"].includes(mode)) {
+    required = true;
+    actors = selectedActors.slice(0, 1);
+    tokens = selected.slice(0, 1);
+  } else if (["targets", "multiple", "creatures", "all_selected", "selected_targets"].includes(mode)) {
+    required = true;
+    actors = selectedActors;
+    tokens = selected;
+  } else if (["touch", "toucher"].includes(mode)) {
+    actors = selectedActors.length ? selectedActors.slice(0, 1) : actor ? [actor] : [];
+    tokens = selected.length ? selected.slice(0, 1) : actors.map(tokenForActor).filter(Boolean);
+  } else {
+    actors = selectedActors.length ? selectedActors : actor ? [actor] : [];
+    tokens = selected.length ? selected : actors.map(tokenForActor).filter(Boolean);
+  }
+  const unique = new Map();
+  actors.forEach((target, position) => {
+    if (!target) return;
+    unique.set(String(target.uuid ?? target.id), { actor: target, token: tokens[position] ?? tokenForActor(target) });
+  });
+  const entries = [...unique.values()];
+  return {
+    mode,
+    required,
+    ok: entries.length > 0 || required === false,
+    reason: entries.length || !required ? "" : "target-required",
+    actors: entries.map(entry => entry.actor),
+    tokens: entries.map(entry => entry.token).filter(Boolean),
+    entries
+  };
+}
+
+function distanceValue(value) {
+  if (value == null || value === "") return null;
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
+  if (typeof value === "object") return number(value.value, value.amount, value.distance, value.range, value.radius);
+  const match = String(value).match(/-?\d+(?:[.,]\d+)?/);
+  return match ? Number(match[0].replace(",", ".")) : null;
+}
+
+function measureDistance(sourceToken, targetToken) {
+  if (!sourceToken || !targetToken || sourceToken === targetToken) return 0;
+  try {
+    if (typeof globalThis.add2eMeasureTokenGridDistance === "function") {
+      const measured = Number(globalThis.add2eMeasureTokenGridDistance(sourceToken, targetToken));
+      if (Number.isFinite(measured)) return measured;
+    }
+  } catch (_error) {}
+  const source = sourceToken.center ?? { x: sourceToken.x ?? sourceToken.document?.x ?? 0, y: sourceToken.y ?? sourceToken.document?.y ?? 0 };
+  const target = targetToken.center ?? { x: targetToken.x ?? targetToken.document?.x ?? 0, y: targetToken.y ?? targetToken.document?.y ?? 0 };
+  try {
+    const measured = canvas?.grid?.measurePath?.([source, target])?.distance;
+    if (Number.isFinite(Number(measured))) return Number(measured);
+  } catch (_error) {}
+  const pixels = Math.hypot(Number(target.x) - Number(source.x), Number(target.y) - Number(source.y));
+  const gridSize = Number(canvas?.scene?.grid?.size ?? canvas?.grid?.size ?? 1) || 1;
+  const gridDistance = Number(canvas?.scene?.grid?.distance ?? 1) || 1;
+  return pixels / gridSize * gridDistance;
+}
+
+function normalizeZone(parameters = {}) {
+  const raw = parameters.area ?? parameters.zone;
+  const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+  const shape = norm(parameters.shape ?? source.shape ?? source.type ?? (parameters.radius != null ? "radius" : ""));
+  const radius = distanceValue(parameters.radius ?? source.radius ?? source.rayon);
+  const length = distanceValue(source.length ?? source.longueur ?? parameters.length);
+  const width = distanceValue(source.width ?? source.largeur ?? parameters.width);
+  const angle = number(source.angle, parameters.angle);
+  const active = hasValue(raw) || Number.isFinite(radius) || !!shape;
+  return { active, shape: shape || (Number.isFinite(radius) ? "radius" : ""), radius, length, width, angle, raw: clone(raw) };
+}
+
+function resolveRangeAndZone(actor, power, effect, targetResolution, parameters = resolveExecutionParameters(power, effect)) {
+  const sourceToken = actorToken(actor);
+  const maximum = distanceValue(parameters.range);
+  const zone = normalizeZone(parameters);
+  const entries = targetResolution?.entries ?? [];
+  const distances = entries.map(entry => ({
+    ...entry,
+    distance: sourceToken && entry.token ? measureDistance(sourceToken, entry.token) : null
+  }));
+  const outOfRange = Number.isFinite(maximum)
+    ? distances.filter(entry => Number.isFinite(entry.distance) && entry.distance > maximum)
+    : [];
+  const inRange = distances.filter(entry => !outOfRange.includes(entry));
+  return {
+    ok: outOfRange.length === 0,
+    reason: outOfRange.length ? "target-out-of-range" : "",
+    sourceToken,
+    maximum,
+    zone,
+    entries: distances,
+    inRange,
+    outOfRange,
+    verifiable: !!sourceToken && distances.every(entry => !entry.token || Number.isFinite(entry.distance))
+  };
+}
+
+function normalizeSaveRule(raw) {
+  if (!hasValue(raw)) return null;
+  if (typeof raw === "string") return { type: norm(raw) || "sorts", bonus: 0, onSuccess: "unspecified", raw };
+  if (typeof raw !== "object" || Array.isArray(raw)) return null;
+  const type = norm(raw.type ?? raw.saveType ?? raw.category ?? raw.jet ?? raw.value ?? "sorts") || "sorts";
+  const bonus = number(raw.bonus, raw.modifier, raw.saveModifier, raw.adjustment) ?? 0;
+  const successRaw = norm(raw.onSuccess ?? raw.success ?? raw.successEffect ?? raw.resultOnSuccess ?? raw.reussite ?? "");
+  const failureRaw = norm(raw.onFailure ?? raw.failure ?? raw.failureEffect ?? raw.resultOnFailure ?? raw.echec ?? "");
+  const onSuccess = raw.halfOnSuccess === true || raw.halfDamage === true || ["half", "moitie", "half_damage"].includes(successRaw)
+    ? "half"
+    : ["none", "negate", "annule", "no_effect", "zero"].includes(successRaw)
+      ? "negate"
+      : successRaw || "unspecified";
+  return { type, bonus, onSuccess, onFailure: failureRaw || "full", raw: clone(raw) };
+}
+
+async function resolveSaves(targetResolution, parameters = {}) {
+  const rule = normalizeSaveRule(parameters.save);
+  if (!rule) return { required: false, rule: null, results: [], complete: true };
+  const engine = globalThis.Add2eEffectsEngine;
+  const results = [];
+  for (const target of targetResolution?.actors ?? []) {
+    if (typeof engine?.rollActionSave !== "function") {
+      results.push({ actor: target, canRoll: false, success: false, reason: "effects-engine-unavailable" });
+      continue;
+    }
+    const save = await engine.rollActionSave(target, rule.type, Number(rule.bonus) || 0);
+    results.push({ actor: target, ...save });
+  }
+  return {
+    required: true,
+    rule,
+    results,
+    complete: results.length > 0 && results.every(result => result.canRoll !== false)
+  };
+}
+
+function powerContext(actor, item, power, index, effect, sheet = null) {
+  const parameters = resolveExecutionParameters(power, effect);
+  const targets = resolveTargets(actor, power, effect, parameters);
+  const rangeZone = resolveRangeAndZone(actor, power, effect, targets, parameters);
+  return { actor, item, power, index, effect, sheet, parameters, targets, rangeZone };
+}
+
 function compileDefinition(effect = {}) {
   const type = norm(effect.type ?? effect.kind ?? effect.category);
   const tags = new Set(list(effect.tags ?? effect.effectTags).map(String).filter(Boolean));
   const rules = [];
   const periodic = [];
   const types = keys => keys.flatMap(key => hasValue(effect[key]) ? list(effect[key]) : []);
-  const push = (prefix, values, suffix = null) => list(values).map(norm).filter(Boolean).forEach(value => tags.add(suffix == null ? `${prefix}:${value}` : `${prefix}:${value}:${suffix}`));
-
-  if (["damage_immunity", "attack_immunity", "condition_immunity", "immunity", "immunite"].includes(type) || type.endsWith("_immunity") || type.endsWith("_immunite")) {
+  const push = (prefix, values, suffix = null) => list(values).map(norm).filter(Boolean)
+    .forEach(value => tags.add(suffix == null ? `${prefix}:${value}` : `${prefix}:${value}:${suffix}`));
+  if (["damage_immunity", "attack_immunity", "condition_immunity", "immunity", "immunite"].includes(type)
+    || type.endsWith("_immunity") || type.endsWith("_immunite")) {
     const inferred = type.replace(/_(?:immunity|immunite)$/, "");
     const values = types(["attackAny", "damageAny", "damageTypes", "immunities", "types", "elements", "conditions", "targetAny"]);
     push("immunite", values.length ? values : [inferred]);
@@ -186,11 +464,15 @@ function compileDefinition(effect = {}) {
   if (["saving_throw_bonus", "save_bonus", "saving_bonus", "bonus_save", "saving_throw_modifier"].includes(type)) {
     const value = number(effect.bonus, effect.value, effect.amount, effect.modifier);
     const targets = types(["saveAny", "categories", "category", "against", "types", "targetAny"]);
-    if (Number.isFinite(value) && value !== 0) targets.length ? push("bonus_save_vs", targets, signed(value)) : tags.add(`bonus_save:${signed(value)}`);
+    if (Number.isFinite(value) && value !== 0) {
+      targets.length ? push("bonus_save_vs", targets, signed(value)) : tags.add(`bonus_save:${signed(value)}`);
+    }
   }
   if (["attack_bonus", "hit_bonus", "damage_bonus", "combat_bonus", "attack_damage_bonus", "weapon_magic_bonus"].includes(type)) {
-    const attack = number(effect.attackBonus, effect.hitBonus, effect.bonusToucher, effect.toucher, type !== "damage_bonus" ? effect.bonus ?? effect.value : null);
-    const damage = number(effect.damageBonus, effect.bonusDegats, effect.degats, type === "damage_bonus" ? effect.bonus ?? effect.value : null);
+    const attack = number(effect.attackBonus, effect.hitBonus, effect.bonusToucher, effect.toucher,
+      type !== "damage_bonus" ? effect.bonus ?? effect.value : null);
+    const damage = number(effect.damageBonus, effect.bonusDegats, effect.degats,
+      type === "damage_bonus" ? effect.bonus ?? effect.value : null);
     if (attack) tags.add(`bonus_attaque:${signed(attack)}`);
     if (damage) tags.add(`bonus_degats:${signed(damage)}`);
   }
@@ -205,7 +487,9 @@ function compileDefinition(effect = {}) {
   }
   if (["ability_bonus", "characteristic_bonus", "stat_bonus", "attribute_bonus"].includes(type)) {
     const value = number(effect.value, effect.bonus, effect.amount, effect.modifier);
-    if (Number.isFinite(value)) push("bonus_carac", effect.ability ?? effect.stat ?? effect.attribute ?? effect.characteristic ?? effect.targetAny, signed(value));
+    if (Number.isFinite(value)) {
+      push("bonus_carac", effect.ability ?? effect.stat ?? effect.attribute ?? effect.characteristic ?? effect.targetAny, signed(value));
+    }
   }
   if (type === "regeneration") {
     const points = Math.max(0, Math.floor(number(effect.points, effect.value, effect.amount) ?? 0));
@@ -323,7 +607,9 @@ function effectData(item, power, index, compiled) {
 }
 
 const actorForItem = item => (item?.parent ?? item?.actor)?.documentName === "Actor" ? (item.parent ?? item.actor) : null;
-const existingForItem = (actor, itemId) => Array.from(actor?.effects ?? []).filter(effect => effect.flags?.add2e?.[EFFECT_FLAG] === true && String(effect.flags.add2e.sourceItemId ?? "") === String(itemId ?? ""));
+const existingForItem = (actor, itemId) => Array.from(actor?.effects ?? [])
+  .filter(effect => effect.flags?.add2e?.[EFFECT_FLAG] === true
+    && String(effect.flags.add2e.sourceItemId ?? "") === String(itemId ?? ""));
 
 async function removeItemEffects(item, actorOverride = null) {
   const actor = actorOverride ?? actorForItem(item);
@@ -394,15 +680,20 @@ function hp(actor) {
   return null;
 }
 
-const periodicEntries = effect => Array.isArray(effect?.flags?.add2e?.periodic) ? effect.flags.add2e.periodic.filter(Boolean) : [];
-const periodicEffects = actor => Array.from(actor?.effects ?? []).filter(effect => !effect.disabled && effect.flags?.add2e?.[EFFECT_FLAG] === true && periodicEntries(effect).length);
+const periodicEntries = effect => Array.isArray(effect?.flags?.add2e?.periodic)
+  ? effect.flags.add2e.periodic.filter(Boolean)
+  : [];
+const periodicEffects = actor => Array.from(actor?.effects ?? [])
+  .filter(effect => !effect.disabled && effect.flags?.add2e?.[EFFECT_FLAG] === true && periodicEntries(effect).length);
 
 function allActors() {
   const map = new Map();
   const add = actor => actor && map.set(String(actor.uuid ?? actor.id), actor);
   for (const actor of game.actors ?? []) add(actor);
   for (const token of canvas?.tokens?.placeables ?? []) add(token.actor);
-  for (const combat of game.combats ?? []) for (const combatant of combat.combatants ?? []) add(combatant.actor ?? combatant.token?.actor);
+  for (const combat of game.combats ?? []) {
+    for (const combatant of combat.combatants ?? []) add(combatant.actor ?? combatant.token?.actor);
+  }
   return [...map.values()];
 }
 
@@ -456,7 +747,9 @@ async function applyRegeneration(actor, effect, tick) {
   if (!item || !itemUsable(item)) return { applied: false, reason: "source-item-not-equipped" };
   const entries = periodicEntries(effect).filter(entry => norm(entry.type) === "regeneration");
   const descriptor = hp(actor);
-  if (!entries.length || !descriptor) return { applied: false, reason: !entries.length ? "no-regeneration-entry" : "hp-schema-not-supported" };
+  if (!entries.length || !descriptor) {
+    return { applied: false, reason: !entries.length ? "no-regeneration-entry" : "hp-schema-not-supported" };
+  }
   const state = clone(effect.flags?.add2e?.periodicState ?? {});
   const last = Number(state.lastTick);
   if (!Number.isFinite(last) || tick < last) {
@@ -494,13 +787,16 @@ async function applyRegeneration(actor, effect, tick) {
     "flags.add2e.periodicState.healed": (Number(state.healed) || 0) + healed,
     "flags.add2e.periodicState.lastResult": { before, after, healed, requested, pulses, tick }
   }, { add2eMagicPowerEffectsAdapter: true });
-  if (healed) await regenCard(actor, item, effect, before, after, healed, pulses, Math.max(1, Number(entries[0].intervalRounds) || 1));
+  if (healed) {
+    await regenCard(actor, item, effect, before, after, healed, pulses, Math.max(1, Number(entries[0].intervalRounds) || 1));
+  }
   return { applied: healed > 0, actor: actor.name, effect: effect.name, before, after, healed, requested, pulses, tick };
 }
 
 async function applyProgressive(actor, effect, tick) {
   const combat = game.combat;
-  if (!combat?.started || !Array.from(combat.combatants ?? []).some(c => String(c.actorId ?? c.actor?.id) === String(actor.id))) {
+  if (!combat?.started || !Array.from(combat.combatants ?? [])
+    .some(combatant => String(combatant.actorId ?? combatant.actor?.id) === String(actor.id))) {
     return { applied: false, reason: "actor-not-in-active-combat" };
   }
   const entry = periodicEntries(effect).find(value => norm(value.type) === "progressive_weapon_bonus");
@@ -510,7 +806,8 @@ async function applyProgressive(actor, effect, tick) {
   if (!cycle.length || !Number.isFinite(last) || tick <= last) return { applied: false, reason: "no-new-round" };
   const step = Math.max(0, (Number(state.cycleIndex) || 0) + tick - last);
   const value = cycle[step % cycle.length];
-  const tags = list(effect.flags?.add2e?.tags).filter(tag => !String(tag).startsWith("bonus_attaque:") && !String(tag).startsWith("bonus_degats:"));
+  const tags = list(effect.flags?.add2e?.tags)
+    .filter(tag => !String(tag).startsWith("bonus_attaque:") && !String(tag).startsWith("bonus_degats:"));
   tags.push(`bonus_attaque:${signed(value)}`, `bonus_degats:${signed(value)}`);
   await effect.update({
     "flags.add2e.tags": tags,
@@ -546,9 +843,10 @@ async function processPeriodic(tick = currentTick()) {
   return { ok: true, tick, effects, healed, rows };
 }
 
-const powerName = (power, item) => String(power?.name ?? power?.nom ?? power?.label ?? power?.catalogueId ?? item?.name ?? "Pouvoir magique").trim();
-const effectTypes = power => [...new Set((power?.effects ?? []).map(effect => norm(effect?.type ?? effect?.kind ?? effect?.category)).filter(Boolean))];
-const targetActors = actor => game.user?.targets?.size ? [...game.user.targets].map(token => token.actor).filter(Boolean) : [actor];
+const powerName = (power, item) => String(power?.name ?? power?.nom ?? power?.label ?? power?.catalogueId
+  ?? item?.name ?? "Pouvoir magique").trim();
+const effectTypes = power => [...new Set((power?.effects ?? [])
+  .map(effect => norm(effect?.type ?? effect?.kind ?? effect?.category)).filter(Boolean))];
 
 async function createCard(actor, item, power, {
   title = powerName(power, item),
@@ -557,7 +855,9 @@ async function createCard(actor, item, power, {
   message = "",
   targets = []
 } = {}) {
-  if (typeof globalThis.add2eCreateChatCard !== "function") throw new Error("Le constructeur de carte ADD2E est indisponible.");
+  if (typeof globalThis.add2eCreateChatCard !== "function") {
+    throw new Error("Le constructeur de carte ADD2E est indisponible.");
+  }
   return globalThis.add2eCreateChatCard({
     actor,
     title,
@@ -592,7 +892,9 @@ function parameterRows(power) {
 }
 
 async function confirmPower(actor, item, power) {
-  if (norm(power.automation) === "automatic" && !["action", "command", "use"].includes(norm(power.activation?.type))) return true;
+  if (norm(power.automation) === "automatic" && !["action", "command", "use"].includes(norm(power.activation?.type))) {
+    return true;
+  }
   const DialogV2 = foundry?.applications?.api?.DialogV2;
   if (!DialogV2?.confirm) throw new Error("DialogV2 est indisponible.");
   return DialogV2.confirm({
@@ -604,56 +906,84 @@ async function confirmPower(actor, item, power) {
   });
 }
 
-const formula = effect => {
-  const value = effect.formula ?? effect.dice ?? effect.roll ?? effect.amount ?? effect.points ?? effect.value;
-  return value == null || value === "" ? null : String(value);
-};
 async function evaluate(formulaText) {
   const roll = await new Roll(formulaText).evaluate();
   if (game.dice3d) await game.dice3d.showForRoll(roll);
   return roll;
 }
 
-async function applyHealing(actor, item, power, effect) {
-  const formulaText = formula(effect);
-  if (!formulaText) return null;
-  const amount = Math.max(0, Math.floor(Number((await evaluate(formulaText)).total) || 0));
-  const targets = targetActors(actor);
-  const rows = [{ label: "Formule", value: formulaText }, { label: "Résultat", value: amount }];
-  for (const target of targets) {
+function saveResultFor(saveResolution, actor) {
+  return saveResolution?.results?.find(result => String(result.actor?.id) === String(actor?.id)) ?? null;
+}
+
+async function healingHandler(context) {
+  const { actor, item, power, parameters, targets, rangeZone } = context;
+  if (!parameters.formula) return executionResult("skipped", { handled: "healing", complete: false, reason: "formula-missing" });
+  if (!targets.ok) return executionResult("failed", { handled: "healing", reason: targets.reason });
+  if (!rangeZone.ok) {
+    ui.notifications.warn("Une cible du pouvoir est hors de portée.");
+    return executionResult("failed", { handled: "healing", reason: rangeZone.reason });
+  }
+  const amount = Math.max(0, Math.floor(Number((await evaluate(parameters.formula)).total) || 0));
+  const rows = [{ label: "Formule", value: parameters.formula }, { label: "Résultat", value: amount }];
+  for (const target of targets.actors) {
     const data = hp(target);
     if (!data || data.value <= 0) { rows.push({ label: target.name, value: "PV non modifiés" }); continue; }
     const after = Math.min(data.max, data.value + amount);
     if (after !== data.value) await target.update({ [data.path]: after }, { add2eMagicPowerExecution: true });
     rows.push({ label: target.name, value: `${data.value} → ${after} PV` });
   }
-  await createCard(actor, item, power, { title: "Guérison magique", variant: "healing", rows, targets });
-  return { ok: true, handled: "healing" };
+  await createCard(actor, item, power, { title: "Guérison magique", variant: "healing", rows, targets: targets.actors });
+  return executionResult("success", { handled: "healing", targets: targets.actors, rows });
 }
 
-async function applyDamage(actor, item, power, effect) {
-  const formulaText = formula(effect);
-  if (!formulaText || !game.user?.targets?.size) return null;
-  const amount = Math.max(0, Math.floor(Number((await evaluate(formulaText)).total) || 0));
-  const targets = targetActors(actor);
-  const rows = [{ label: "Formule", value: formulaText }, { label: "Dégâts", value: amount }];
-  for (const target of targets) {
+async function damageHandler(context) {
+  const { actor, item, power, parameters, targets, rangeZone } = context;
+  if (!parameters.formula) return executionResult("skipped", { handled: "damage", complete: false, reason: "formula-missing" });
+  if (!targets.ok || !targets.actors.length) return executionResult("failed", { handled: "damage", reason: targets.reason || "target-required" });
+  if (!rangeZone.ok) {
+    ui.notifications.warn("Une cible du pouvoir est hors de portée.");
+    return executionResult("failed", { handled: "damage", reason: rangeZone.reason });
+  }
+  const saveResolution = await resolveSaves(targets, parameters);
+  if (saveResolution.required && saveResolution.rule?.onSuccess === "unspecified") {
+    return executionResult("assisted", {
+      handled: "damage",
+      complete: false,
+      reason: "save-success-outcome-unspecified",
+      targets: targets.actors
+    });
+  }
+  const amount = Math.max(0, Math.floor(Number((await evaluate(parameters.formula)).total) || 0));
+  const rows = [{ label: "Formule", value: parameters.formula }, { label: "Dégâts", value: amount }];
+  for (const target of targets.actors) {
+    const save = saveResultFor(saveResolution, target);
+    let applied = amount;
+    if (save?.success) {
+      if (saveResolution.rule.onSuccess === "half") applied = Math.floor(amount / 2);
+      else if (saveResolution.rule.onSuccess === "negate") applied = 0;
+    }
     const data = hp(target);
     if (!data) { rows.push({ label: target.name, value: "PV non modifiés" }); continue; }
-    const after = Math.max(0, data.value - amount);
+    const after = Math.max(0, data.value - applied);
     if (after !== data.value) await target.update({ [data.path]: after }, { add2eMagicPowerExecution: true });
-    rows.push({ label: target.name, value: `${data.value} → ${after} PV` });
+    const saveText = saveResolution.required
+      ? save?.canRoll === false ? " — sauvegarde indisponible" : save?.success ? " — sauvegarde réussie" : " — sauvegarde échouée"
+      : "";
+    rows.push({ label: target.name, value: `${data.value} → ${after} PV${saveText}` });
   }
-  await createCard(actor, item, power, { title: "Dégâts magiques", variant: "damage", rows, targets });
-  return { ok: true, handled: "damage" };
+  await createCard(actor, item, power, { title: "Dégâts magiques", variant: "damage", rows, targets: targets.actors });
+  return executionResult("success", { handled: "damage", targets: targets.actors, rows, saveResolution });
 }
 
-async function removeCondition(actor, item, power, effect) {
+async function removeConditionHandler(context) {
+  const { actor, item, power, effect, targets, rangeZone } = context;
   const wanted = list(effect.conditions ?? effect.condition ?? effect.tags ?? effect.targetAny).map(norm).filter(Boolean);
-  if (!wanted.length) return null;
-  const targets = targetActors(actor);
+  if (!wanted.length) return executionResult("skipped", { handled: "remove-condition", complete: false, reason: "condition-missing" });
+  if (!targets.ok) return executionResult("failed", { handled: "remove-condition", reason: targets.reason });
+  if (!rangeZone.ok) return executionResult("failed", { handled: "remove-condition", reason: rangeZone.reason });
   const rows = [];
-  for (const target of targets) {
+  for (const target of targets.actors) {
     const ids = Array.from(target.effects ?? []).filter(active => {
       const values = [active.name, ...list(active.flags?.add2e?.tags), ...list(active.flags?.add2e?.effectTags)].map(norm);
       return wanted.some(condition => values.some(value => value === condition || value.includes(condition)));
@@ -661,15 +991,16 @@ async function removeCondition(actor, item, power, effect) {
     if (ids.length) await target.deleteEmbeddedDocuments("ActiveEffect", ids, { add2eMagicPowerExecution: true });
     rows.push({ label: target.name, value: `${ids.length} effet(s) supprimé(s)` });
   }
-  await createCard(actor, item, power, { title: "Dissipation d'état", variant: "success", rows, targets });
-  return { ok: true, handled: "remove-condition" };
+  await createCard(actor, item, power, { title: "Dissipation d'état", variant: "success", rows, targets: targets.actors });
+  return executionResult("success", { handled: "remove-condition", targets: targets.actors, rows });
 }
 
-async function toggleLight(actor, item, power, effect) {
-  const tokens = game.user?.targets?.size ? [...game.user.targets] : canvas?.tokens?.controlled ?? [];
-  if (!tokens.length) return null;
-  const radius = Math.max(0, Number(effect.radius ?? power.parameters?.radius ?? 6) || 6);
-  const bright = Math.max(0, Number(effect.bright ?? Math.floor(radius / 2)) || 0);
+async function lightHandler(context) {
+  const { actor, item, power, parameters } = context;
+  const tokens = selectedTokens().length ? selectedTokens() : canvas?.tokens?.controlled ?? [];
+  if (!tokens.length) return executionResult("failed", { handled: "light", reason: "token-required" });
+  const radius = Math.max(0, Number(parameters.radius ?? 6) || 6);
+  const bright = Math.max(0, Number(parameters.bright ?? Math.floor(radius / 2)) || 0);
   const rows = [];
   const powerId = String(power.catalogueId ?? power.id ?? "");
   for (const token of tokens) {
@@ -687,8 +1018,9 @@ async function toggleLight(actor, item, power, effect) {
       rows.push({ label: token.name, value: `Lumière ${bright}/${radius}` });
     }
   }
-  await createCard(actor, item, power, { title: "Lumière magique", rows, targets: tokens.map(token => token.actor).filter(Boolean) });
-  return { ok: true, handled: "light" };
+  const actorTargets = tokens.map(token => token.actor).filter(Boolean);
+  await createCard(actor, item, power, { title: "Lumière magique", rows, targets: actorTargets });
+  return executionResult("success", { handled: "light", targets: actorTargets, rows });
 }
 
 function powerDuration(power, effect) {
@@ -707,16 +1039,19 @@ function powerDuration(power, effect) {
   return null;
 }
 
-async function temporaryEffect(actor, item, power, effect) {
+async function temporaryEffectHandler(context) {
+  const { actor, item, power, effect, targets, rangeZone } = context;
   const duration = powerDuration(power, effect);
   const toggle = norm(power.activation?.trigger) === "toggle" || norm(effect.mode) === "toggle";
-  if (!duration && !toggle) return null;
-  const targets = targetActors(actor);
+  if (!duration && !toggle) return executionResult("skipped", { handled: "temporary-effect", complete: false, reason: "duration-missing" });
+  if (!targets.ok) return executionResult("failed", { handled: "temporary-effect", reason: targets.reason });
+  if (!rangeZone.ok) return executionResult("failed", { handled: "temporary-effect", reason: rangeZone.reason });
   const type = norm(effect.type);
   const key = `${item.id}:${power.catalogueId ?? power.id}:${type}`;
   const rows = [];
-  for (const target of targets) {
-    const existing = Array.from(target.effects ?? []).find(active => String(active.flags?.add2e?.magicPowerActivationKey ?? "") === key);
+  for (const target of targets.actors) {
+    const existing = Array.from(target.effects ?? [])
+      .find(active => String(active.flags?.add2e?.magicPowerActivationKey ?? "") === key);
     if (existing && toggle) {
       await target.deleteEmbeddedDocuments("ActiveEffect", [existing.id], { add2eMagicPowerExecution: true });
       rows.push({ label: target.name, value: "Effet désactivé" });
@@ -763,8 +1098,8 @@ async function temporaryEffect(actor, item, power, effect) {
     }
     rows.push({ label: target.name, value: duration ? `${duration.value} ${duration.unit}` : "Effet activé" });
   }
-  await createCard(actor, item, power, { title: "Effet magique", rows, targets });
-  return { ok: true, handled: "temporary-effect" };
+  await createCard(actor, item, power, { title: "Effet magique", rows, targets: targets.actors });
+  return executionResult("success", { handled: "temporary-effect", targets: targets.actors, rows });
 }
 
 function onUsePath(document) {
@@ -782,7 +1117,7 @@ async function executeScript(actor, item, power, index, path, linkedSpell = null
   const code = await response.text();
   const AsyncFunction = Object.getPrototypeOf(async function() {}).constructor;
   const source = linkedSpell ?? item;
-  const token = canvas?.tokens?.controlled?.[0] ?? actor.getActiveTokens?.()?.[0] ?? null;
+  const token = actorToken(actor);
   const scope = {
     actor,
     item: source,
@@ -802,8 +1137,9 @@ async function executeScript(actor, item, power, index, path, linkedSpell = null
     "game", "ui", "ChatMessage", "Roll", "foundry", "canvas",
     code
   );
-  const result = await runner(actor, source, item, item, linkedSpell, linkedSpell, token, power, power, index, scope, args, game, ui, ChatMessage, Roll, foundry, canvas);
-  return { ok: result !== false, handled: "linked-script", path };
+  const result = await runner(actor, source, item, item, linkedSpell, linkedSpell, token, power, power, index,
+    scope, args, game, ui, ChatMessage, Roll, foundry, canvas);
+  return executionResult(result === false ? "failed" : "success", { handled: "linked-script", path, ok: result !== false });
 }
 
 function spellLevel(spell) {
@@ -824,9 +1160,8 @@ async function spellIndex({ force = false } = {}) {
     const pack = game.packs?.get?.(SPELL_PACK_ID);
     if (!pack || String(pack.documentName ?? pack.metadata?.type ?? "") !== "Item") return [];
     let index;
-    try {
-      index = await pack.getIndex({ fields: ["name", "type", "img", "system.niveau", "system.level"] });
-    } catch (_error) {
+    try { index = await pack.getIndex({ fields: ["name", "type", "img", "system.niveau", "system.level"] }); }
+    catch (_error) {
       try { index = await pack.getIndex(); } catch (_indexError) { return []; }
     }
     return packIndexEntries(index)
@@ -934,13 +1269,7 @@ function cleanSpellSource(spell) {
 }
 
 function linkedSpellCost(power, effect) {
-  const value = number(
-    effect?.chargeCost,
-    power?.parameters?.chargeCost,
-    power?.chargeCost,
-    power?.cost,
-    power?.cout
-  );
+  const value = number(effect?.chargeCost, power?.parameters?.chargeCost, power?.chargeCost, power?.cost, power?.cout);
   return Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
 }
 
@@ -949,7 +1278,8 @@ function buildVirtualSpell(actor, item, power, index, effect, spell) {
   const overrides = effect?.overrides && typeof effect.overrides === "object" && !Array.isArray(effect.overrides)
     ? clone(effect.overrides)
     : {};
-  const topLevelOverride = ["system", "flags", "name", "img", "effects", "type"].some(key => Object.hasOwn(overrides, key));
+  const topLevelOverride = ["system", "flags", "name", "img", "effects", "type"]
+    .some(key => Object.prototype.hasOwnProperty.call(overrides, key));
   if (Object.keys(overrides).length) {
     data = topLevelOverride ? merge(data, overrides) : { ...data, system: merge(data.system ?? {}, overrides) };
   }
@@ -963,13 +1293,8 @@ function buildVirtualSpell(actor, item, power, index, effect, spell) {
   const casterLevel = number(effect?.casterLevel, power?.parameters?.casterLevel);
   const activationTime = effect?.activationTime ?? power?.parameters?.activationTime;
   const cost = linkedSpellCost(power, effect);
-  const max = Math.max(1, Number(
-    item.system?.charges?.max
-    ?? item.system?.max_charges
-    ?? item.system?.maxCharges
-    ?? item.system?.chargesMax
-    ?? 1
-  ) || 1);
+  const max = Math.max(1, Number(item.system?.charges?.max ?? item.system?.max_charges
+    ?? item.system?.maxCharges ?? item.system?.chargesMax ?? 1) || 1);
   Object.assign(data.system, {
     isPower: true,
     isObjectPower: true,
@@ -1021,7 +1346,8 @@ async function persistSpellChoice(item, index, selection) {
   return true;
 }
 
-async function castLinkedSpell(actor, item, power, index, effect) {
+async function linkedSpellHandler(context) {
+  const { actor, item, power, index, effect } = context;
   let reference = {
     spellUuid: effect?.spellUuid ?? power?.parameters?.spellUuid,
     spellName: effect?.spellName ?? power?.parameters?.spellName
@@ -1029,7 +1355,9 @@ async function castLinkedSpell(actor, item, power, index, effect) {
   let spell = await resolveSpell(reference);
   if (!spell) {
     const selection = await chooseSpell(reference.spellUuid, reference.spellName);
-    if (!selection) return { ok: false, handled: "linked-spell-cancelled", chargesManaged: true };
+    if (!selection) {
+      return executionResult("cancelled", { handled: "linked-spell", chargesManaged: true, consumeCharges: false });
+    }
     reference = { spellUuid: selection.uuid, spellName: selection.name };
     spell = await resolveSpell(reference);
     if (!spell) throw new Error(`Le sort « ${selection.name || selection.uuid} » est introuvable.`);
@@ -1042,24 +1370,20 @@ async function castLinkedSpell(actor, item, power, index, effect) {
   }
   if (typeof globalThis.add2eCastSpell !== "function") throw new Error("Le moteur add2eCastSpell est indisponible.");
   const virtualSpell = buildVirtualSpell(actor, item, power, index, effect, spell);
-  const launched = await globalThis.add2eCastSpell({
-    actor,
-    sort: virtualSpell,
-    mode: "power",
-    sourceItem: item
-  });
-  return {
+  const launched = await globalThis.add2eCastSpell({ actor, sort: virtualSpell, mode: "power", sourceItem: item });
+  return executionResult(launched === true ? "success" : "failed", {
     ok: launched === true,
     handled: "linked-spell",
     chargesManaged: true,
+    consumeCharges: false,
     spellUuid: spell.uuid,
     spellName: spell.name
-  };
+  });
 }
 
 async function linkedPower(actor, item, power, index) {
   const linkedEffect = linkedSpellEffect(power);
-  if (linkedEffect) return castLinkedSpell(actor, item, power, index, linkedEffect);
+  if (linkedEffect) return linkedSpellHandler(powerContext(actor, item, power, index, linkedEffect));
   const direct = onUsePath(power) || onUsePath(power.linkedSpell);
   if (direct) return executeScript(actor, item, power, index, direct);
   const linked = power.linkedSpell;
@@ -1069,27 +1393,81 @@ async function linkedPower(actor, item, power, index) {
   return path ? executeScript(actor, item, power, index, path, spell) : null;
 }
 
-async function assisted(actor, item, power) {
-  const targets = targetActors(actor);
+async function assisted(actor, item, power, unresolvedTypes = []) {
+  const targets = resolveTargets(actor, power, {}, resolveExecutionParameters(power, {})).actors;
   await createCard(actor, item, power, {
     variant: "ability",
     rows: parameterRows(power),
     message: "Résolution assistée : appliquez les choix, jets, sauvegardes ou conséquences indiqués par le pouvoir et sa source.",
     targets
   });
-  return { ok: true, handled: "assisted" };
+  return executionResult("assisted", {
+    ok: true,
+    handled: "assisted",
+    complete: false,
+    unresolvedTypes,
+    targets
+  });
 }
+
+function installDefaultHandlers() {
+  registerEffectHandler(["linked_spell"], linkedSpellHandler);
+  registerEffectHandler(["heal", "healing", "restore_hit_points", "cure_damage", "hit_point_healing"], healingHandler);
+  registerEffectHandler(["damage", "direct_damage", "magic_damage", "area_damage"], damageHandler);
+  registerEffectHandler(["remove_condition", "cure_condition", "remove_status", "dispel_condition"], removeConditionHandler);
+  registerEffectHandler(["light"], lightHandler);
+  registerEffectHandler([
+    "invisibility", "flight", "flying", "ethereal_state", "haste", "slow", "protection",
+    "movement_mode", "transformation", "state_transformation", "polymorph", "status", "condition",
+    "ability_bonus", "characteristic_bonus", "stat_bonus", "armor_bonus", "attack_bonus", "damage_bonus"
+  ], temporaryEffectHandler);
+}
+
+installDefaultHandlers();
 
 function powerCost(power) {
   const linked = linkedSpellEffect(power);
-  const value = number(
-    power?.cout,
-    power?.cost,
-    power?.chargeCost,
-    power?.parameters?.chargeCost,
-    linked?.chargeCost
-  );
+  const value = number(power?.cout, power?.cost, power?.chargeCost, power?.parameters?.chargeCost, linked?.chargeCost);
   return Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
+}
+
+async function executeRegisteredEffects(actor, item, power, index, sheet = null) {
+  const results = [];
+  const unresolvedTypes = [];
+  for (const effect of power.effects ?? []) {
+    const type = norm(effect?.type ?? effect?.kind ?? effect?.category);
+    const handler = effectHandler(type);
+    if (!handler) {
+      if (type) unresolvedTypes.push(type);
+      continue;
+    }
+    const result = normalizeExecutionResult(await handler(powerContext(actor, item, power, index, effect, sheet)), {
+      handled: type,
+      complete: true
+    });
+    results.push(result);
+    if (result.status === "cancelled" || (result.ok === false && result.status === "failed")) break;
+  }
+  const successes = results.filter(result => result.ok && result.status !== "assisted");
+  const cancelled = results.find(result => result.status === "cancelled");
+  const failed = results.find(result => result.status === "failed" && !result.ok);
+  if (cancelled) return executionResult("cancelled", { ...cancelled, results, unresolvedTypes, consumeCharges: false });
+  if (failed && !successes.length) return executionResult("failed", { ...failed, results, unresolvedTypes, consumeCharges: false });
+  if (successes.length) {
+    return executionResult("success", {
+      ok: true,
+      handled: successes.map(result => result.handled).filter(Boolean).join(","),
+      complete: unresolvedTypes.length === 0 && results.every(result => result.complete !== false),
+      chargesManaged: results.some(result => result.chargesManaged === true),
+      consumeCharges: results.every(result => result.consumeCharges !== false),
+      results,
+      unresolvedTypes
+    });
+  }
+  if (results.some(result => result.status === "assisted")) {
+    return executionResult("assisted", { ok: false, complete: false, results, unresolvedTypes });
+  }
+  return executionResult("skipped", { ok: false, complete: false, results, unresolvedTypes });
 }
 
 async function executePower(actor, item, power, index = 0, sheet = null) {
@@ -1111,7 +1489,7 @@ async function executePower(actor, item, power, index = 0, sheet = null) {
     return false;
   }
   try {
-    let result = null;
+    let result;
     if (passivePower(clean)) {
       await syncItem(item);
       await createCard(actor, item, clean, {
@@ -1119,26 +1497,18 @@ async function executePower(actor, item, power, index = 0, sheet = null) {
         rows: parameterRows(clean),
         message: "Ce pouvoir est appliqué automatiquement par l'ActiveEffect lié à l'objet."
       });
-      result = { ok: true, handled: "passive" };
+      result = executionResult("success", { handled: "passive" });
     } else {
-      result = await linkedPower(actor, item, clean, index);
-      for (const effect of clean.effects ?? []) {
-        if (result?.ok || result?.handled === "linked-spell-cancelled") break;
-        const type = norm(effect.type ?? effect.kind ?? effect.category);
-        if (["heal", "healing", "restore_hit_points", "cure_damage", "hit_point_healing"].includes(type)) result = await applyHealing(actor, item, clean, effect);
-        else if (["damage", "direct_damage", "magic_damage", "area_damage"].includes(type) && !hasValue(effect.save ?? effect.savingThrow ?? effect.attackRoll)) result = await applyDamage(actor, item, clean, effect);
-        else if (["remove_condition", "cure_condition", "remove_status", "dispel_condition"].includes(type)) result = await removeCondition(actor, item, clean, effect);
-        else if (type === "light") result = await toggleLight(actor, item, clean, effect);
-        else if (["invisibility", "flight", "flying", "ethereal_state", "haste", "slow", "protection", "movement_mode", "transformation", "polymorph", "status", "condition", "ability_bonus", "characteristic_bonus", "stat_bonus", "armor_bonus", "attack_bonus", "damage_bonus"].includes(type)) result = await temporaryEffect(actor, item, clean, effect);
-      }
-      if (result?.handled === "linked-spell-cancelled") return false;
-      if (linked && !result?.ok) return false;
-      if (!result?.ok) result = await assisted(actor, item, clean);
+      result = normalizeExecutionResult(await linkedPower(actor, item, clean, index));
+      if (result.status === "skipped") result = await executeRegisteredEffects(actor, item, clean, index, sheet);
+      if (result.status === "cancelled") return false;
+      if (linked && !result.ok) return false;
+      if (!result.ok) result = await assisted(actor, item, clean, result.unresolvedTypes ?? effectTypes(clean));
     }
-    if (result?.ok && cost > 0 && result.chargesManaged !== true) {
+    if (result.ok && cost > 0 && result.chargesManaged !== true && result.consumeCharges !== false) {
       await globalThis.add2eObjectPowerSetCharges?.(item, clean, index, current - cost);
     }
-    if (result?.ok) {
+    if (result.ok) {
       sheet?._add2eRememberActiveTab?.();
       sheet?.render?.(false);
       return true;
@@ -1158,7 +1528,8 @@ async function executePower(actor, item, power, index = 0, sheet = null) {
 
 function generatedId(item, index) {
   try {
-    return String(globalThis.add2eMagicPowerGeneratedId?.(item, index) ?? String(item.id).substring(0, 14) + String(index).padStart(2, "0"));
+    return String(globalThis.add2eMagicPowerGeneratedId?.(item, index)
+      ?? String(item.id).substring(0, 14) + String(index).padStart(2, "0"));
   } catch (_error) {
     return String(item.id).substring(0, 14) + String(index).padStart(2, "0");
   }
@@ -1169,7 +1540,9 @@ function findGenerated(actor, id) {
     if (!itemUsable(item)) continue;
     const powers = powerArray(item);
     for (let index = 0; index < powers.length; index += 1) {
-      if (generatedId(item, index) === String(id) && powers[index].kind === "catalogue") return { item, power: powers[index], index };
+      if (generatedId(item, index) === String(id) && powers[index].kind === "catalogue") {
+        return { item, power: powers[index], index };
+      }
     }
   }
   return null;
@@ -1252,18 +1625,21 @@ const equal = (left, right) => {
   try { return JSON.stringify(left) === JSON.stringify(right); }
   catch (_error) { return false; }
 };
+
 function cleanCreate(item) {
   const raw = item?.system?.pouvoirs;
   if (raw === undefined) return;
   const clean = cleanPowers(raw);
   if (!equal(raw, clean)) item.updateSource({ "system.pouvoirs": clean });
 }
+
 function cleanUpdate(change) {
   const raw = foundry.utils.getProperty(change, "system.pouvoirs");
   if (raw === undefined) return;
   const clean = cleanPowers(raw);
   if (!equal(raw, clean)) foundry.utils.setProperty(change, "system.pouvoirs", clean);
 }
+
 const localUser = userId => !userId || String(userId) === String(game.user?.id ?? "");
 
 async function migrate() {
@@ -1290,6 +1666,12 @@ globalThis.add2eProcessMagicItemRegeneration = processPeriodic;
 globalThis.add2eProcessMagicItemPeriodicEffects = processPeriodic;
 globalThis.add2eExecuteMagicCataloguePower = executePower;
 globalThis.add2eMagicPowerSpellIndex = spellIndex;
+globalThis.add2eResolveMagicPowerParameters = resolveExecutionParameters;
+globalThis.add2eResolveMagicPowerTargets = resolveTargets;
+globalThis.add2eResolveMagicPowerRangeAndZone = resolveRangeAndZone;
+globalThis.add2eResolveMagicPowerSaves = resolveSaves;
+globalThis.add2eRegisterMagicPowerEffectHandler = registerEffectHandler;
+globalThis.add2eNormalizeMagicPowerExecutionResult = normalizeExecutionResult;
 
 Hooks.on("preCreateItem", cleanCreate);
 Hooks.on("preUpdateItem", (_item, change, options = {}) => {
@@ -1299,7 +1681,9 @@ Hooks.on("createItem", (item, _options, userId) => {
   if (localUser(userId)) syncItem(item).catch(error => console.error("[ADD2E][MAGIC_POWER_EFFECTS][CREATE_ITEM]", error));
 });
 Hooks.on("updateItem", (item, _change, options = {}, userId) => {
-  if (!options.add2eMagicPowerEffectsAdapter && localUser(userId)) syncItem(item).catch(error => console.error("[ADD2E][MAGIC_POWER_EFFECTS][UPDATE_ITEM]", error));
+  if (!options.add2eMagicPowerEffectsAdapter && localUser(userId)) {
+    syncItem(item).catch(error => console.error("[ADD2E][MAGIC_POWER_EFFECTS][UPDATE_ITEM]", error));
+  }
 });
 Hooks.on("deleteItem", (item, _options, userId) => {
   if (localUser(userId)) removeItemEffects(item).catch(error => console.error("[ADD2E][MAGIC_POWER_EFFECTS][DELETE_ITEM]", error));
@@ -1313,7 +1697,8 @@ Hooks.on("updateSetting", (setting, change) => {
 Hooks.on("renderActorSheet", bindSheet);
 Hooks.on("renderApplicationV2", (app, html) => {
   bindSheet(app, html);
-  enhanceSpellParameterDialog(app, html).catch(error => console.error("[ADD2E][MAGIC_POWER_EFFECTS][SPELL_SELECTOR]", error));
+  enhanceSpellParameterDialog(app, html)
+    .catch(error => console.error("[ADD2E][MAGIC_POWER_EFFECTS][SPELL_SELECTOR]", error));
 });
 Hooks.once("ready", () => {
   installEntriesBridge();
@@ -1327,7 +1712,14 @@ Hooks.once("ready", () => {
     processRegeneration: processPeriodic,
     processPeriodic,
     executePower,
-    spellIndex
+    spellIndex,
+    resolveParameters: resolveExecutionParameters,
+    resolveTargets,
+    resolveRangeAndZone,
+    resolveSaves,
+    registerEffectHandler,
+    normalizeExecutionResult,
+    handlers: EFFECT_HANDLERS
   };
   migrate().catch(error => console.error("[ADD2E][MAGIC_POWER_EFFECTS][READY]", error));
 });
