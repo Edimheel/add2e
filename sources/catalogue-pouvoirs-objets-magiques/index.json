@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "catalogueId": "add2e-gdm-magic-powers",
-  "version": "2026-07-21-catalogue-manifest-v4",
+  "version": "2026-07-21-catalogue-manifest-v5",
   "mergeStrategy": "append-powers-and-merge-vocabularies",
   "fragments": [
     {
@@ -11,7 +11,8 @@
         "III.G",
         "III.H"
       ],
-      "status": "weapons-and-armors-core"
+      "status": "weapons-and-armors-core",
+      "verifiedPowerCount": 29
     },
     {
       "path": "iii-a-d-core.json",
@@ -22,10 +23,7 @@
         "III.D"
       ],
       "status": "potions-scrolls-rings-rods-staves-wands-core",
-      "verifiedPowerCount": 51,
-      "metadataOverrides": {
-        "coverage.powerCount": 51
-      }
+      "verifiedPowerCount": 51
     },
     {
       "path": "iii-e-core-1.json",
@@ -151,9 +149,12 @@
     "partialSections": [],
     "nextSections": [],
     "generatorIntegration": false,
+    "verifiedWeaponArmorPowerCount": 29,
+    "verifiedCorePowerCount": 51,
     "verifiedMiscellaneousCorePowerCount": 77,
     "verifiedMiscellaneousSecondPassPowerCount": 46,
     "verifiedMiscellaneousPowerCount": 123,
+    "verifiedStandardPowerCount": 203,
     "verifiedArtifactRelicPowerAndEffectCount": 215,
     "verifiedArtifactRelicDestructionMethodCount": 8
   },
