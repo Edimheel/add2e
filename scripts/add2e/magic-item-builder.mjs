@@ -1,7 +1,7 @@
 // ADD2E — Constructeur commun d'armes, armures et objets magiques.
 // Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2.
 
-const ADD2E_MAGIC_ITEM_BUILDER_VERSION = "2026-07-20-magic-item-builder-v4-base-select";
+const ADD2E_MAGIC_ITEM_BUILDER_VERSION = "2026-07-21-magic-item-builder-v5-creator-profiles";
 const ADD2E_MAGIC_ITEM_TYPES = new Set(["arme", "armure", "objet"]);
 
 function add2eMagicBuilderClone(value) {
@@ -731,17 +731,28 @@ function add2eMagicBuilderCreatorBaseOptions(entries) {
 function add2eMagicBuilderToggleCreatorType(form) {
   const root = form?.closest?.(".window-content") ?? form;
   const profile = String(form?.elements?.profile?.value ?? "objet");
+  const defaults = ADD2E_MAGIC_CREATOR_PROFILES[profile];
   const weaponGroup = root?.querySelector?.('[data-add2e-base-group="arme"]');
   const armorGroup = root?.querySelector?.('[data-add2e-base-group="armure"]');
   const applicationGroup = root?.querySelector?.('[data-add2e-application-group]');
+  const applicationModeGroup = root?.querySelector?.('[data-add2e-application-mode-group]');
+  const chargesGroup = root?.querySelector?.('[data-add2e-charges-group]');
+  const rechargeGroup = root?.querySelector?.('[data-add2e-recharge-group]');
 
   if (weaponGroup) weaponGroup.hidden = profile !== "arme";
   if (armorGroup) armorGroup.hidden = profile !== "armure";
   if (applicationGroup) applicationGroup.hidden = !["objet", "arme", "armure", "anneau", "baguette", "batonnet", "potion"].includes(profile);
+  if (applicationModeGroup) applicationModeGroup.hidden = profile !== "arme";
+  if (chargesGroup) chargesGroup.hidden = defaults?.charges !== true;
+  if (rechargeGroup) rechargeGroup.hidden = defaults?.charges !== true;
 
-  const defaults = ADD2E_MAGIC_CREATOR_PROFILES[profile];
+  const application = form?.elements?.application;
   const current = form?.elements?.chargesValue;
   const maximum = form?.elements?.chargesMax;
+  if (application && application.dataset.profile !== profile) {
+    application.value = add2eMagicBuilderDefaultApplication(defaults?.itemType ?? profile);
+    application.dataset.profile = profile;
+  }
   if (current && current.dataset.profile !== profile) {
     current.value = String(defaults?.defaultCharges ?? 0);
     current.dataset.profile = profile;
@@ -1017,7 +1028,7 @@ async function add2eMagicBuilderCreateMagicItem(directory = null) {
       <div class="form-group"><label>Nom non identifié</label><input name="unidentifiedName" type="text" value="Objet inconnu"></div>
       <div class="form-group" style="display:flex;gap:18px;"><label><input name="identified" type="checkbox"> Identifié</label><label><input name="cursed" type="checkbox"> Maudit</label></div>
       <div data-add2e-application-group>
-        <div class="form-group"><label>Application des bonus de toucher/dégâts</label><select name="application"><option value="source">Cette arme uniquement</option><option value="porteur">Toutes les attaques du porteur</option></select></div>
+        <div class="form-group" data-add2e-application-mode-group><label>Application des bonus de toucher/dégâts</label><select name="application"><option value="source">Cette arme uniquement</option><option value="porteur">Toutes les attaques du porteur</option></select></div>
         <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;">
           <div class="form-group"><label>Bonus au toucher</label><input name="bonusToucher" type="number" step="1" value="0"></div>
           <div class="form-group"><label>Bonus aux dégâts</label><input name="bonusDegats" type="number" step="1" value="0"></div>
@@ -1025,11 +1036,11 @@ async function add2eMagicBuilderCreateMagicItem(directory = null) {
           <div class="form-group"><label>CA fixe</label><input name="caFixe" type="number" step="1" value=""></div>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;">
+      <div data-add2e-charges-group style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;">
         <div class="form-group"><label>Charges actuelles</label><input name="chargesValue" data-profile="objet" type="number" min="0" step="1" value="0"></div>
         <div class="form-group"><label>Charges maximales</label><input name="chargesMax" data-profile="objet" type="number" min="0" step="1" value="0"></div>
       </div>
-      <div class="form-group" style="display:flex;align-items:center;gap:12px;"><label><input name="rechargeable" type="checkbox"> Rechargeable</label><label style="flex:1;">Formule <input name="rechargeFormula" type="text" value="1d6"></label></div>
+      <div class="form-group" data-add2e-recharge-group style="display:flex;align-items:center;gap:12px;"><label><input name="rechargeable" type="checkbox"> Rechargeable</label><label style="flex:1;">Formule <input name="rechargeFormula" type="text" value="1d6"></label></div>
       <p style="margin:0;font-size:.85em;opacity:.8;">Arme et Armure exigent une base issue d'un compendium. Objet crée un objet magique générique. Les autres types conservent leur fonctionnement spécialisé.</p>
     </form>`,
     buttons: [
