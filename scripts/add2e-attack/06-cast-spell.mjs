@@ -1,6 +1,6 @@
 // scripts/add2e-attack/06-cast-spell.mjs
 // ADD2E — Lancement de sorts, onUse, mémorisation, pouvoirs, parchemins et composants.
-// Version : 2026-07-15-potion-canonical-charges-v3
+// Version : 2026-07-21-object-power-zero-cost-v4
 
 import { formatSortChamp, add2eGetSortField, add2eGetSortOnUsePath, add2eGetSortComponentsText } from "./01-core-helpers.mjs";
 import "./05-jb2a-vfx.mjs";
@@ -323,17 +323,24 @@ export async function add2eCastSpell({ actor, sort, mode = "memorized", sourceIt
   } else if (sort.system?.isPower) {
     const weapon = actor.items.get(sort.system.sourceWeaponId ?? sort.system.sourceItemId);
     if (!weapon) { ui.notifications.error("Objet source introuvable."); return false; }
-    const maxGlobal = add2ePowerGlobalMax(weapon, sort);
-    const isGlobal = maxGlobal > 0;
-    const flagKey = isGlobal ? "global_charges" : `charges_${sort.system.powerIndex}`;
-    const max = isGlobal ? maxGlobal : Number(sort.system.max || 1);
-    const current = await add2ePowerReadCurrent(weapon, flagKey, max, isGlobal);
-    const cost = Math.max(1, Number(sort.system.cost ?? sort.system.cout ?? 1) || 1);
-    if (current < cost) { ui.notifications.warn(`L'objet ${weapon.name} n'a plus assez de charges (${current}/${cost} req).`); return false; }
-    const after = Math.max(0, current - cost);
-    await add2ePowerWriteCurrent(weapon, flagKey, after, max, isGlobal);
-    reservedCost = { kind: "power", weapon, flagKey, before: current, after, max, cost, isGlobal, potion: add2ePowerIsPotion(weapon) };
-    labelCharge = `<span style="color:#d35400;">Charges : ${after}/${max}</span>`;
+    const rawCost = sort.system.cost ?? sort.system.cout;
+    const cost = rawCost === undefined || rawCost === null || rawCost === ""
+      ? 1
+      : Math.max(0, Math.floor(Number(rawCost) || 0));
+    if (cost > 0) {
+      const maxGlobal = add2ePowerGlobalMax(weapon, sort);
+      const isGlobal = maxGlobal > 0;
+      const flagKey = isGlobal ? "global_charges" : `charges_${sort.system.powerIndex}`;
+      const max = isGlobal ? maxGlobal : Number(sort.system.max || 1);
+      const current = await add2ePowerReadCurrent(weapon, flagKey, max, isGlobal);
+      if (current < cost) { ui.notifications.warn(`L'objet ${weapon.name} n'a plus assez de charges (${current}/${cost} req).`); return false; }
+      const after = Math.max(0, current - cost);
+      await add2ePowerWriteCurrent(weapon, flagKey, after, max, isGlobal);
+      reservedCost = { kind: "power", weapon, flagKey, before: current, after, max, cost, isGlobal, potion: add2ePowerIsPotion(weapon) };
+      labelCharge = `<span style="color:#d35400;">Charges : ${after}/${max}</span>`;
+    } else {
+      labelCharge = `<span style="color:#6b4b8a;">Sans dépense de charge</span>`;
+    }
     const baseName = sort.name.replace(/\s\(.*?\)$/, "").trim();
     const realSpell = game.items.find(i => i.type === "sort" && i.name.toLowerCase() === baseName.toLowerCase());
     if (realSpell) spellToUse = realSpell;
