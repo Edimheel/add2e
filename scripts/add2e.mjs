@@ -403,3 +403,345 @@ Hooks.once("ready", () => {
     console.error("[ADD2E][VENDOR][COMPONENT_PRICE_SYNC_ERROR]", error);
   }), 1500);
 });
+
+const ADD2E_MAGIC_POWER_CATALOGUE_RUNTIME_VERSION = "2026-07-21-magic-power-catalogue-loader-v1";
+const ADD2E_MAGIC_POWER_CATALOGUE_MANIFEST_PATH = "sources/catalogue-pouvoirs-objets-magiques/index.json";
+const ADD2E_MAGIC_POWER_ALLOWED_ITEM_TYPES = new Set(["arme", "armure", "objet"]);
+const ADD2E_MAGIC_POWER_ALLOWED_AUTOMATION = new Set(["automatic", "assisted", "manual", "chat_card"]);
+const ADD2E_MAGIC_POWER_CATALOGUE_STATE = globalThis.__ADD2E_MAGIC_POWER_CATALOGUE_STATE__ ?? {
+  cache: null,
+  promise: null
+};
+globalThis.__ADD2E_MAGIC_POWER_CATALOGUE_STATE__ = ADD2E_MAGIC_POWER_CATALOGUE_STATE;
+globalThis.ADD2E_MAGIC_POWER_CATALOGUE_RUNTIME_VERSION = ADD2E_MAGIC_POWER_CATALOGUE_RUNTIME_VERSION;
+
+function add2eMagicCatalogueNormalizeToken(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function add2eMagicCatalogueNormalizePath(value) {
+  const segments = String(value ?? "").replace(/\\/g, "/").split("/");
+  const output = [];
+  for (const segment of segments) {
+    if (!segment || segment === ".") continue;
+    if (segment === "..") output.pop();
+    else output.push(segment);
+  }
+  return output.join("/");
+}
+
+function add2eMagicCatalogueResolvePath(basePath, relativePath) {
+  const relative = String(relativePath ?? "").trim();
+  if (!relative) throw new Error("Chemin de fragment vide.");
+  if (/^(?:https?:)?\/\//i.test(relative)) throw new Error(`Chemin externe interdit : ${relative}`);
+  if (relative.startsWith("systems/")) return add2eMagicCatalogueNormalizePath(relative.replace(/^systems\/[^/]+\//, ""));
+  if (relative.startsWith("sources/")) return add2eMagicCatalogueNormalizePath(relative);
+  const baseDirectory = String(basePath ?? "").split("/").slice(0, -1).join("/");
+  return add2eMagicCatalogueNormalizePath(`${baseDirectory}/${relative}`);
+}
+
+function add2eMagicCatalogueAssetRoute(relativePath) {
+  const systemId = String(globalThis.game?.system?.id ?? "add2e");
+  const systemPath = `systems/${systemId}/${add2eMagicCatalogueNormalizePath(relativePath)}`;
+  const getRoute = globalThis.foundry?.utils?.getRoute ?? globalThis.getRoute;
+  return typeof getRoute === "function" ? getRoute(systemPath) : systemPath;
+}
+
+function add2eMagicCatalogueClone(value) {
+  if (value === undefined) return undefined;
+  const deepClone = globalThis.foundry?.utils?.deepClone;
+  if (typeof deepClone === "function") return deepClone(value);
+  if (typeof globalThis.structuredClone === "function") return globalThis.structuredClone(value);
+  return JSON.parse(JSON.stringify(value));
+}
+
+async function add2eMagicCatalogueFetchJson(relativePath) {
+  const response = await fetch(add2eMagicCatalogueAssetRoute(relativePath), {
+    cache: "no-store",
+    credentials: "same-origin"
+  });
+  if (!response.ok) throw new Error(`${relativePath} : HTTP ${response.status} ${response.statusText}`);
+  const document = await response.json();
+  if (!document || typeof document !== "object" || Array.isArray(document)) {
+    throw new Error(`${relativePath} : racine JSON invalide.`);
+  }
+  return document;
+}
+
+function add2eMagicCatalogueMergeVocabulary(target, source) {
+  if (!source || typeof source !== "object" || Array.isArray(source)) return target;
+  for (const [key, value] of Object.entries(source)) {
+    if (Array.isArray(value)) {
+      const existing = Array.isArray(target[key]) ? target[key] : [];
+      const seen = new Set(existing.map(entry => JSON.stringify(entry)));
+      target[key] = [...existing];
+      for (const entry of value) {
+        const signature = JSON.stringify(entry);
+        if (seen.has(signature)) continue;
+        seen.add(signature);
+        target[key].push(add2eMagicCatalogueClone(entry));
+      }
+    } else if (value && typeof value === "object") {
+      target[key] = add2eMagicCatalogueMergeVocabulary(
+        target[key] && typeof target[key] === "object" && !Array.isArray(target[key]) ? target[key] : {},
+        value
+      );
+    } else if (target[key] === undefined) {
+      target[key] = value;
+    }
+  }
+  return target;
+}
+
+function add2eMagicCatalogueCollectParameterReferences(value, references) {
+  if (Array.isArray(value)) {
+    for (const entry of value) add2eMagicCatalogueCollectParameterReferences(entry, references);
+    return;
+  }
+  if (value && typeof value === "object") {
+    for (const entry of Object.values(value)) add2eMagicCatalogueCollectParameterReferences(entry, references);
+    return;
+  }
+  if (typeof value !== "string") return;
+  const match = value.match(/^@([A-Za-z0-9_]+)$/);
+  if (match) references.add(match[1]);
+}
+
+function add2eMagicCatalogueValidatePower(power, sourcePath, powerIds, errors) {
+  const id = String(power?.id ?? "").trim();
+  if (!id) {
+    errors.push(`${sourcePath} : pouvoir sans identifiant.`);
+    return;
+  }
+  if (powerIds.has(id)) errors.push(`${sourcePath} : identifiant de pouvoir dupliqué « ${id} ».`);
+  else powerIds.add(id);
+
+  if (!String(power?.label ?? "").trim()) errors.push(`${sourcePath}#${id} : libellé absent.`);
+  if (!String(power?.category ?? "").trim()) errors.push(`${sourcePath}#${id} : catégorie absente.`);
+
+  const itemTypes = power?.compatibility?.itemTypes;
+  if (!Array.isArray(itemTypes) || !itemTypes.length) {
+    errors.push(`${sourcePath}#${id} : compatibility.itemTypes absent.`);
+  } else {
+    for (const itemType of itemTypes) {
+      const normalized = add2eMagicCatalogueNormalizeToken(itemType);
+      if (!ADD2E_MAGIC_POWER_ALLOWED_ITEM_TYPES.has(normalized)) {
+        errors.push(`${sourcePath}#${id} : type d’objet incompatible « ${itemType} ».`);
+      }
+    }
+  }
+
+  const automation = add2eMagicCatalogueNormalizeToken(power?.automation);
+  if (!ADD2E_MAGIC_POWER_ALLOWED_AUTOMATION.has(automation)) {
+    errors.push(`${sourcePath}#${id} : automatisation invalide « ${power?.automation ?? ""} ».`);
+  }
+  if (!String(power?.activation?.type ?? "").trim()) errors.push(`${sourcePath}#${id} : activation.type absent.`);
+  if (!String(power?.activation?.trigger ?? "").trim()) errors.push(`${sourcePath}#${id} : activation.trigger absent.`);
+  if (!Array.isArray(power?.effects) || !power.effects.length) errors.push(`${sourcePath}#${id} : aucun effet déclaré.`);
+
+  const parameters = power?.parameters && typeof power.parameters === "object" && !Array.isArray(power.parameters)
+    ? power.parameters
+    : {};
+  const references = new Set();
+  add2eMagicCatalogueCollectParameterReferences(power?.effects, references);
+  for (const reference of references) {
+    if (!(reference in parameters)) errors.push(`${sourcePath}#${id} : paramètre référencé mais absent « ${reference} ».`);
+  }
+  for (const key of power?.validation?.requiresOneOf ?? []) {
+    if (!(key in parameters)) errors.push(`${sourcePath}#${id} : validation.requiresOneOf référence « ${key} » absent.`);
+  }
+}
+
+function add2eMagicCatalogueValidateAuditReferences(auditReferences, powerIds, errors) {
+  for (const reference of auditReferences) {
+    const sourcePath = reference.__sourcePath ?? "catalogue";
+    if (reference.selectableAsTemplate !== false) {
+      errors.push(`${sourcePath} : la référence d’audit « ${reference.name ?? "sans nom"} » doit rester non sélectionnable.`);
+    }
+    for (const entry of reference.powers ?? []) {
+      const id = String(entry?.id ?? entry ?? "").trim();
+      if (id && !powerIds.has(id)) errors.push(`${sourcePath} : référence de pouvoir inconnue « ${id} ».`);
+    }
+  }
+}
+
+function add2eMagicCataloguePowerCompatible(power, options = {}) {
+  const itemType = add2eMagicCatalogueNormalizeToken(options.itemType);
+  const profile = add2eMagicCatalogueNormalizeToken(options.profile);
+  const categories = new Set(
+    (Array.isArray(options.categories) ? options.categories : options.categories ? [options.categories] : [])
+      .map(add2eMagicCatalogueNormalizeToken)
+      .filter(Boolean)
+  );
+  const itemTypes = (power?.compatibility?.itemTypes ?? []).map(add2eMagicCatalogueNormalizeToken);
+  const profiles = (power?.compatibility?.profiles ?? []).map(add2eMagicCatalogueNormalizeToken);
+  const automation = add2eMagicCatalogueNormalizeToken(power?.automation);
+
+  if (itemType && !itemTypes.includes(itemType)) return false;
+  if (profile && profiles.length && !profiles.includes(profile)) return false;
+  if (categories.size && !categories.has(add2eMagicCatalogueNormalizeToken(power?.category))) return false;
+  if (options.includeAutomatic === false && automation === "automatic") return false;
+  if (options.includeAssisted === false && automation === "assisted") return false;
+  if (options.includeManual === false && automation === "manual") return false;
+  if (options.includeChatCard === false && automation === "chat_card") return false;
+  return true;
+}
+
+async function add2eLoadMagicPowerCatalogue({ force = false } = {}) {
+  if (force) {
+    ADD2E_MAGIC_POWER_CATALOGUE_STATE.cache = null;
+    ADD2E_MAGIC_POWER_CATALOGUE_STATE.promise = null;
+  }
+  if (ADD2E_MAGIC_POWER_CATALOGUE_STATE.cache) return ADD2E_MAGIC_POWER_CATALOGUE_STATE.cache;
+  if (ADD2E_MAGIC_POWER_CATALOGUE_STATE.promise) return ADD2E_MAGIC_POWER_CATALOGUE_STATE.promise;
+
+  ADD2E_MAGIC_POWER_CATALOGUE_STATE.promise = (async () => {
+    const manifest = await add2eMagicCatalogueFetchJson(ADD2E_MAGIC_POWER_CATALOGUE_MANIFEST_PATH);
+    if (!Array.isArray(manifest.fragments) || !manifest.fragments.length) {
+      throw new Error("Le manifeste du catalogue ne contient aucun fragment.");
+    }
+    if (manifest.artifactCatalogue?.mergeWithStandardPowers !== false) {
+      throw new Error("Le catalogue des artefacts doit rester séparé des pouvoirs standards.");
+    }
+
+    const fragmentEntries = await Promise.all(manifest.fragments.map(async fragment => {
+      const sourcePath = add2eMagicCatalogueResolvePath(ADD2E_MAGIC_POWER_CATALOGUE_MANIFEST_PATH, fragment.path);
+      if (sourcePath.includes("/artefacts-reliques/")) {
+        throw new Error(`Fragment d’artefact interdit dans le catalogue standard : ${sourcePath}`);
+      }
+      const document = await add2eMagicCatalogueFetchJson(sourcePath);
+      return { manifestEntry: fragment, sourcePath, document };
+    }));
+
+    const errors = [];
+    const powers = [];
+    const powerIds = new Set();
+    const vocabulary = {};
+    const auditReferences = [];
+    const fragments = [];
+
+    for (const { manifestEntry, sourcePath, document } of fragmentEntries) {
+      if (document.catalogueId && document.catalogueId !== manifest.catalogueId) {
+        errors.push(`${sourcePath} : catalogueId différent du manifeste.`);
+      }
+      const fragmentPowers = Array.isArray(document.powers) ? document.powers : [];
+      const expectedCount = Number(manifestEntry.verifiedPowerCount);
+      if (Number.isFinite(expectedCount) && fragmentPowers.length !== expectedCount) {
+        errors.push(`${sourcePath} : ${fragmentPowers.length} pouvoirs trouvés, ${expectedCount} attendus.`);
+      }
+      const declaredCount = Number(document.coverage?.powerCount);
+      if (Number.isFinite(declaredCount) && fragmentPowers.length !== declaredCount) {
+        errors.push(`${sourcePath} : compteur interne ${declaredCount}, contenu réel ${fragmentPowers.length}.`);
+      }
+
+      add2eMagicCatalogueMergeVocabulary(vocabulary, document.conditionVocabulary);
+      add2eMagicCatalogueMergeVocabulary(vocabulary, document.conditionVocabularyAdditions);
+
+      for (const power of fragmentPowers) {
+        add2eMagicCatalogueValidatePower(power, sourcePath, powerIds, errors);
+        powers.push(power);
+      }
+      for (const reference of document.auditReferences ?? []) {
+        auditReferences.push({ ...reference, __sourcePath: sourcePath });
+      }
+      fragments.push({
+        path: sourcePath,
+        version: document.version ?? "",
+        status: document.status ?? "",
+        powerCount: fragmentPowers.length
+      });
+    }
+
+    add2eMagicCatalogueValidateAuditReferences(auditReferences, powerIds, errors);
+
+    const expectedTotal = Number(manifest.coverage?.verifiedStandardPowerCount);
+    if (Number.isFinite(expectedTotal) && powers.length !== expectedTotal) {
+      errors.push(`Total standard : ${powers.length} pouvoirs trouvés, ${expectedTotal} attendus.`);
+    }
+    if (errors.length) throw new Error(`Catalogue de pouvoirs magiques invalide :\n- ${errors.join("\n- ")}`);
+
+    const powerById = new Map(powers.map(power => [power.id, power]));
+    const byItemType = new Map([...ADD2E_MAGIC_POWER_ALLOWED_ITEM_TYPES].map(itemType => [
+      itemType,
+      powers.filter(power => (power.compatibility?.itemTypes ?? [])
+        .map(add2eMagicCatalogueNormalizeToken)
+        .includes(itemType))
+    ]));
+
+    const catalogue = {
+      runtimeVersion: ADD2E_MAGIC_POWER_CATALOGUE_RUNTIME_VERSION,
+      manifestPath: ADD2E_MAGIC_POWER_CATALOGUE_MANIFEST_PATH,
+      manifest,
+      fragments,
+      powers: Object.freeze([...powers]),
+      powerById,
+      byItemType,
+      vocabulary,
+      auditReferences: auditReferences.map(({ __sourcePath, ...reference }) => reference),
+      counts: {
+        standardPowers: powers.length,
+        fragments: fragments.length,
+        artifactsExcluded: Number(manifest.coverage?.verifiedArtifactRelicPowerAndEffectCount ?? 0),
+        artifactDestructionMethodsExcluded: Number(manifest.coverage?.verifiedArtifactRelicDestructionMethodCount ?? 0)
+      },
+      loadedAt: Date.now()
+    };
+    ADD2E_MAGIC_POWER_CATALOGUE_STATE.cache = catalogue;
+    return catalogue;
+  })();
+
+  try {
+    return await ADD2E_MAGIC_POWER_CATALOGUE_STATE.promise;
+  } catch (error) {
+    ADD2E_MAGIC_POWER_CATALOGUE_STATE.promise = null;
+    throw error;
+  }
+}
+
+function add2eGetMagicPowerCatalogue() {
+  return ADD2E_MAGIC_POWER_CATALOGUE_STATE.cache;
+}
+
+function add2eGetMagicPowerById(powerId) {
+  return ADD2E_MAGIC_POWER_CATALOGUE_STATE.cache?.powerById?.get?.(String(powerId ?? "").trim()) ?? null;
+}
+
+async function add2eGetCompatibleMagicPowers(options = {}) {
+  const catalogue = await add2eLoadMagicPowerCatalogue();
+  return catalogue.powers.filter(power => add2eMagicCataloguePowerCompatible(power, options));
+}
+
+function add2eClearMagicPowerCatalogueCache() {
+  ADD2E_MAGIC_POWER_CATALOGUE_STATE.cache = null;
+  ADD2E_MAGIC_POWER_CATALOGUE_STATE.promise = null;
+}
+
+globalThis.add2eLoadMagicPowerCatalogue = add2eLoadMagicPowerCatalogue;
+globalThis.add2eGetMagicPowerCatalogue = add2eGetMagicPowerCatalogue;
+globalThis.add2eGetMagicPowerById = add2eGetMagicPowerById;
+globalThis.add2eGetCompatibleMagicPowers = add2eGetCompatibleMagicPowers;
+globalThis.add2eClearMagicPowerCatalogueCache = add2eClearMagicPowerCatalogueCache;
+
+Hooks.once("ready", async () => {
+  game.add2e ??= {};
+  game.add2e.magicPowerCatalogue = {
+    load: add2eLoadMagicPowerCatalogue,
+    get: add2eGetMagicPowerCatalogue,
+    getById: add2eGetMagicPowerById,
+    getCompatible: add2eGetCompatibleMagicPowers,
+    clearCache: add2eClearMagicPowerCatalogueCache
+  };
+  try {
+    await add2eLoadMagicPowerCatalogue();
+  } catch (error) {
+    console.error("[ADD2E][MAGIC_POWER_CATALOGUE][LOAD_ERROR]", error);
+    if (game.user?.isGM) ui.notifications.error(`Catalogue des objets magiques invalide : ${error.message}`);
+  }
+});
