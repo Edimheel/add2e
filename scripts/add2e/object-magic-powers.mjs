@@ -3,7 +3,7 @@ function e(e){return String(e??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").re
 // ADD2E — Constructeur commun d'armes, armures et objets magiques.
 // Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2.
 
-const ADD2E_MAGIC_ITEM_BUILDER_VERSION = "2026-07-21-magic-item-builder-v6-base-selector-render";
+const ADD2E_MAGIC_ITEM_BUILDER_VERSION = "2026-07-21-magic-item-builder-v7-dialog-container";
 const ADD2E_MAGIC_ITEM_TYPES = new Set(["arme", "armure", "objet"]);
 
 function add2eMagicBuilderClone(value) {
@@ -742,7 +742,8 @@ function add2eMagicBuilderCreatorBaseOptions(entries) {
 
 function add2eMagicBuilderToggleCreatorType(form) {
   const root = form?.closest?.(".window-content") ?? form;
-  const profile = String(form?.elements?.profile?.value ?? "objet");
+  const field = name => form?.elements?.[name] ?? form?.querySelector?.(`[name="${name}"]`) ?? null;
+  const profile = String(field("profile")?.value ?? "objet");
   const defaults = ADD2E_MAGIC_CREATOR_PROFILES[profile];
   const weaponGroup = root?.querySelector?.('[data-add2e-base-group="arme"]');
   const armorGroup = root?.querySelector?.('[data-add2e-base-group="armure"]');
@@ -762,9 +763,9 @@ function add2eMagicBuilderToggleCreatorType(form) {
   if (chargesGroup) chargesGroup.hidden = defaults?.charges !== true;
   if (rechargeGroup) rechargeGroup.hidden = defaults?.charges !== true;
 
-  const application = form?.elements?.application;
-  const current = form?.elements?.chargesValue;
-  const maximum = form?.elements?.chargesMax;
+  const application = field("application");
+  const current = field("chargesValue");
+  const maximum = field("chargesMax");
   if (application && application.dataset.profile !== profile) {
     application.value = add2eMagicBuilderDefaultApplication(defaults?.itemType ?? profile);
     application.dataset.profile = profile;
@@ -790,10 +791,10 @@ function add2eMagicBuilderCreatorForm(dialogOrElement) {
       : raw?.[0]?.querySelector
         ? raw[0]
         : null;
-  return element?.matches?.("form.add2e-magic-item-create-form")
+  return element?.matches?.(".add2e-magic-item-create-form")
     ? element
-    : element?.querySelector?.("form.add2e-magic-item-create-form")
-    ?? element?.closest?.("dialog")?.querySelector?.("form.add2e-magic-item-create-form")
+    : element?.querySelector?.(".add2e-magic-item-create-form")
+    ?? element?.closest?.("dialog")?.querySelector?.(".add2e-magic-item-create-form")
     ?? null;
 }
 
@@ -847,7 +848,11 @@ async function add2eMagicBuilderWaitCreatorDialog(DialogV2, config) {
 
     const dialog = new CreatorDialogV2({ ...config, buttons });
     dialog.addEventListener?.("close", () => finish(null), { once: true });
-    Promise.resolve(dialog.render({ force: true })).then(() => dialog.add2eBindCreatorTypeSelect?.());
+    const bind = () => dialog.add2eBindCreatorTypeSelect?.();
+    Promise.resolve(dialog.render({ force: true })).then(bind);
+    queueMicrotask(bind);
+    globalThis.setTimeout?.(bind, 50);
+    globalThis.setTimeout?.(bind, 150);
   });
 }
 
@@ -894,7 +899,8 @@ function add2eMagicBuilderCreatorSpellbookData(profile, name) {
 function add2eMagicBuilderCreatorReadForm(button, dialog) {
   const form = button?.form
     ?? button?.element?.closest?.("form")
-    ?? dialog?.element?.querySelector?.("form.add2e-magic-item-create-form");
+    ?? add2eMagicBuilderCreatorForm(dialog)?.closest?.("form")
+    ?? dialog?.element?.querySelector?.("form");
   if (!form) return null;
 
   const data = Object.fromEntries(new FormData(form).entries());
@@ -1050,7 +1056,7 @@ async function add2eMagicBuilderCreateMagicItem(directory = null) {
     window: { title: "Créer un objet magique" },
     modal: true,
     rejectClose: false,
-    content: `<form class="add2e-dialog add2e-magic-item-create-form" style="min-width:560px;padding:8px;display:grid;gap:8px;">
+    content: `<div class="add2e-dialog add2e-magic-item-create-form" style="min-width:560px;padding:8px;display:grid;gap:8px;">
       <div class="form-group"><label>Type</label><select name="profile">${profileOptions}</select></div>
       <div class="form-group" data-add2e-base-group="arme" hidden><label>Arme de base</label><select name="weaponBaseUuid"><option value="">— Choisir une arme —</option>${weaponOptions}</select></div>
       <div class="form-group" data-add2e-base-group="armure" hidden><label>Armure de base</label><select name="armorBaseUuid"><option value="">— Choisir une armure —</option>${armorOptions}</select></div>
@@ -1072,7 +1078,7 @@ async function add2eMagicBuilderCreateMagicItem(directory = null) {
       </div>
       <div class="form-group" data-add2e-recharge-group style="display:flex;align-items:center;gap:12px;"><label><input name="rechargeable" type="checkbox"> Rechargeable</label><label style="flex:1;">Formule <input name="rechargeFormula" type="text" value="1d6"></label></div>
       <p style="margin:0;font-size:.85em;opacity:.8;">Arme et Armure exigent une base issue d'un compendium. Objet crée un objet magique générique. Les autres types conservent leur fonctionnement spécialisé.</p>
-    </form>`,
+    </div>`,
     buttons: [
       {
         action: "create",
@@ -1195,8 +1201,8 @@ Hooks.once("ready", () => {
 
   const refreshCreatorType = event => {
     const select = event?.target;
-    if (!select?.matches?.('form.add2e-magic-item-create-form select[name="profile"]')) return;
-    const form = select.closest("form.add2e-magic-item-create-form");
+    if (!select?.matches?.('.add2e-magic-item-create-form select[name="profile"]')) return;
+    const form = select.closest(".add2e-magic-item-create-form");
     if (form) add2eMagicBuilderToggleCreatorType(form);
   };
   document.addEventListener("change", refreshCreatorType, true);
