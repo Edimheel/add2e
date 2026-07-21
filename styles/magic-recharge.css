@@ -234,3 +234,37 @@
 .chat-message .message-content .add2e-card--time .add2e-card-message {
   border-top-color: rgba(43, 111, 108, .3);
 }
+
+/* ADD2E — DialogV2 du générateur d'objets magiques. */
+.application:has(.add2e-magic-item-create-form) {
+  max-height: calc(100dvh - 24px) !important;
+  overflow: hidden !important;
+}
+
+.application:has(.add2e-magic-item-create-form) .window-content {
+  display: flex !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+.application:has(.add2e-magic-item-create-form) .dialog-content {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+.application:has(.add2e-magic-item-create-form) .add2e-magic-item-create-form {
+  box-sizing: border-box;
+  max-height: calc(100dvh - 150px);
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 12px !important;
+  scrollbar-gutter: stable;
+}
+
+.application:has(.add2e-magic-item-create-form) .form-footer,
+.application:has(.add2e-magic-item-create-form) .dialog-buttons {
+  flex: 0 0 auto !important;
+}
