@@ -1,0 +1,487 @@
+{
+  "schema": 1,
+  "version": "2026-07-21-gdm-reusable-magic-powers-v1",
+  "status": "phase-1-weapons-armors",
+  "title": "Catalogue de pouvoirs réutilisables des objets magiques",
+  "source": {
+    "book": "Guide du Maître AD&D restauré V2",
+    "sections": [
+      "III.F. Armures et boucliers",
+      "III.G. Épées",
+      "III.H. Armes diverses"
+    ],
+    "pages": "119-120, 161-165"
+  },
+  "principles": {
+    "notObjectTemplates": true,
+    "baseItemRequiredFor": ["arme", "armure"],
+    "powersAreReusable": true,
+    "conditionalWeaponBonusesUseHighest": true,
+    "generatorMayOnlyOfferCompatiblePowers": true,
+    "referencesAreAuditOnly": true
+  },
+  "conditionVocabulary": {
+    "targetTags": [
+      "spellcaster",
+      "enchanted",
+      "summoned",
+      "lycanthrope",
+      "shapechanger",
+      "regenerating",
+      "reptile",
+      "cold_attack",
+      "flammable",
+      "flying",
+      "undead",
+      "giant",
+      "true_giant",
+      "dragon",
+      "true_dragon",
+      "fire_creature",
+      "uses_fire",
+      "chaotic_evil",
+      "smaller_than_human",
+      "larger_than_human",
+      "lower_plane_evil"
+    ],
+    "actorTags": ["paladin", "dwarf_fighter", "evil"],
+    "materialTags": ["oil", "web", "paper", "parchment", "dry_wood"]
+  },
+  "powers": [
+    {
+      "id": "weapon_magic_bonus",
+      "label": "Bonus magique d’arme",
+      "category": "combat",
+      "compatibility": {"itemTypes": ["arme"]},
+      "activation": {"type": "passive", "trigger": "attack"},
+      "automation": "automatic",
+      "parameters": {"value": {"type": "integer", "min": -5, "max": 5, "required": true}},
+      "effects": [
+        {"type": "attack_bonus", "value": "@value"},
+        {"type": "damage_bonus", "value": "@value"}
+      ],
+      "source": {"section": "III.G-III.H", "page": "162, 164"}
+    },
+    {
+      "id": "armor_magic_bonus",
+      "label": "Bonus magique d’armure ou de bouclier",
+      "category": "defense",
+      "compatibility": {"itemTypes": ["armure"]},
+      "activation": {"type": "passive", "trigger": "equipped"},
+      "automation": "automatic",
+      "parameters": {"value": {"type": "integer", "min": -5, "max": 5, "required": true}},
+      "effects": [{"type": "armor_bonus", "value": "@value"}],
+      "source": {"section": "III.F", "page": "161"}
+    },
+    {
+      "id": "conditional_weapon_bonus",
+      "label": "Bonus magique conditionnel",
+      "category": "combat",
+      "compatibility": {"itemTypes": ["arme"]},
+      "activation": {"type": "passive", "trigger": "attack"},
+      "automation": "automatic",
+      "parameters": {
+        "value": {"type": "integer", "min": -5, "max": 10, "required": true},
+        "targetAny": {"type": "tag-list", "required": true},
+        "mode": {"type": "fixed", "value": "highest"}
+      },
+      "effects": [
+        {"type": "conditional_attack_bonus", "value": "@value", "targetAny": "@targetAny", "mode": "highest"},
+        {"type": "conditional_damage_bonus", "value": "@value", "targetAny": "@targetAny", "mode": "highest"}
+      ],
+      "source": {"section": "III.G", "page": "162"}
+    },
+    {
+      "id": "conditional_damage_multiplier",
+      "label": "Multiplicateur de dégâts conditionnel",
+      "category": "combat",
+      "compatibility": {"itemTypes": ["arme"]},
+      "activation": {"type": "passive", "trigger": "damage"},
+      "automation": "automatic",
+      "parameters": {
+        "multiplier": {"type": "integer", "min": 2, "max": 3, "required": true},
+        "targetAny": {"type": "tag-list", "required": true}
+      },
+      "effects": [{"type": "damage_multiplier", "value": "@multiplier", "targetAny": "@targetAny"}],
+      "source": {"section": "III.G-III.H", "page": "162, 165"}
+    },
+    {
+      "id": "save_bonus",
+      "label": "Bonus aux jets de protection",
+      "category": "defense",
+      "compatibility": {"itemTypes": ["arme", "armure", "objet"]},
+      "activation": {"type": "passive", "trigger": "carried-or-equipped"},
+      "automation": "automatic",
+      "parameters": {"value": {"type": "integer", "min": -5, "max": 5, "required": true}},
+      "effects": [{"type": "save_bonus", "value": "@value"}],
+      "source": {"section": "III.G", "page": "162"}
+    },
+    {
+      "id": "limited_power",
+      "label": "Pouvoir à utilisations limitées",
+      "category": "charges",
+      "compatibility": {"itemTypes": ["arme", "armure", "objet"]},
+      "activation": {"type": "action", "trigger": "use"},
+      "automation": "assisted",
+      "parameters": {
+        "power": {"type": "string", "required": true},
+        "charges": {"type": "formula-or-integer", "required": true},
+        "rechargeable": {"type": "boolean", "default": false}
+      },
+      "effects": [{"type": "limited_power", "power": "@power", "charges": "@charges", "rechargeable": "@rechargeable"}],
+      "source": {"section": "III.F-III.H", "page": "161-165"}
+    },
+    {
+      "id": "command_torch_light",
+      "label": "Lumière de torche sur mot de commande",
+      "category": "light",
+      "compatibility": {"itemTypes": ["arme", "armure", "objet"]},
+      "activation": {"type": "command", "trigger": "toggle"},
+      "automation": "assisted",
+      "parameters": {"commandWord": {"type": "string", "required": false}},
+      "effects": [{"type": "light", "mode": "toggle", "preset": "torch"}],
+      "source": {"section": "III.G", "page": "162"}
+    },
+    {
+      "id": "light_when_drawn",
+      "label": "Lumière quand l’arme est dégainée",
+      "category": "light",
+      "compatibility": {"itemTypes": ["arme"]},
+      "activation": {"type": "automatic", "trigger": "drawn"},
+      "automation": "assisted",
+      "parameters": {"radius": {"type": "distance", "required": false}},
+      "effects": [{"type": "light", "state": "drawn", "radius": "@radius"}],
+      "source": {"section": "III.G", "page": "162"}
+    },
+    {
+      "id": "ignite_combustibles",
+      "label": "Enflammer les matières combustibles",
+      "category": "environment",
+      "compatibility": {"itemTypes": ["arme", "objet"]},
+      "activation": {"type": "passive", "trigger": "contact-while-active"},
+      "automation": "assisted",
+      "parameters": {
+        "materials": {"type": "fixed-list", "value": ["oil", "web", "paper", "parchment", "dry_wood"]}
+      },
+      "effects": [{"type": "ignite_material", "materials": "@materials"}],
+      "source": {"section": "III.G", "page": "162"}
+    },
+    {
+      "id": "resistance",
+      "label": "Résistance élémentaire ou magique",
+      "category": "resistance",
+      "compatibility": {"itemTypes": ["arme", "armure", "objet"]},
+      "activation": {"type": "passive", "trigger": "carried-or-equipped"},
+      "automation": "automatic",
+      "parameters": {
+        "kind": {"type": "choice", "values": ["fire", "cold", "electricity", "magic"]},
+        "value": {"type": "number-or-rule", "required": true}
+      },
+      "effects": [{"type": "resistance", "kind": "@kind", "value": "@value"}],
+      "source": {"section": "III.G", "page": "162"}
+    },
+    {
+      "id": "extinguish_fire",
+      "label": "Éteindre les flammes",
+      "category": "environment",
+      "compatibility": {"itemTypes": ["arme", "objet"]},
+      "activation": {"type": "action", "trigger": "immersed-in-fire"},
+      "automation": "assisted",
+      "parameters": {
+        "chance": {"type": "percentage", "default": 50},
+        "radius": {"type": "distance", "default": 3},
+        "excluded": {"type": "fixed-list", "value": ["fireball", "meteor_swarm", "flame_strike"]}
+      },
+      "effects": [{"type": "extinguish_fire", "chance": "@chance", "radius": "@radius", "excluded": "@excluded"}],
+      "source": {"section": "III.G", "page": "162"}
+    },
+    {
+      "id": "allocate_weapon_bonus",
+      "label": "Répartir le bonus entre attaque et défense",
+      "category": "combat",
+      "compatibility": {"itemTypes": ["arme"]},
+      "activation": {"type": "round-choice", "trigger": "round-start"},
+      "automation": "assisted",
+      "parameters": {"pool": {"type": "integer", "min": 1, "max": 5, "required": true}},
+      "effects": [{"type": "allocate_weapon_bonus", "pool": "@pool", "defenseAgainst": "melee"}],
+      "source": {"section": "III.G", "page": "162"}
+    },
+    {
+      "id": "class_restricted_effects",
+      "label": "Pouvoirs réservés à une classe",
+      "category": "restriction",
+      "compatibility": {"itemTypes": ["arme", "armure", "objet"]},
+      "activation": {"type": "passive", "trigger": "carried-or-equipped"},
+      "automation": "automatic",
+      "parameters": {
+        "actorTag": {"type": "tag", "required": true},
+        "allowedEffects": {"type": "effect-list", "required": true},
+        "fallbackEffects": {"type": "effect-list", "required": false}
+      },
+      "effects": [{"type": "class_restricted_effects", "actorTag": "@actorTag", "allowed": "@allowedEffects", "fallback": "@fallbackEffects"}],
+      "source": {"section": "III.G-III.H", "page": "162, 165"}
+    },
+    {
+      "id": "progressive_round_bonus",
+      "label": "Bonus progressif par round",
+      "category": "combat",
+      "compatibility": {"itemTypes": ["arme"]},
+      "activation": {"type": "automatic", "trigger": "combat-round"},
+      "automation": "automatic",
+      "parameters": {"cycle": {"type": "integer-list", "required": true, "default": [1, 2, 3, 4]}},
+      "effects": [{"type": "progressive_weapon_bonus", "cycle": "@cycle"}],
+      "source": {"section": "III.G", "page": "162"}
+    },
+    {
+      "id": "independent_weapon_attack",
+      "label": "Arme combattant de façon autonome",
+      "category": "combat",
+      "compatibility": {"itemTypes": ["arme"]},
+      "activation": {"type": "action", "trigger": "release"},
+      "automation": "assisted",
+      "parameters": {
+        "rounds": {"type": "integer", "default": 4},
+        "maxDistance": {"type": "distance", "default": 3},
+        "usesOwnerCombatLevel": {"type": "boolean", "default": true},
+        "returns": {"type": "boolean", "default": true}
+      },
+      "effects": [{"type": "independent_weapon_attack", "rounds": "@rounds", "maxDistance": "@maxDistance", "usesOwnerCombatLevel": "@usesOwnerCombatLevel", "returns": "@returns"}],
+      "source": {"section": "III.G", "page": "162"}
+    },
+    {
+      "id": "persistent_wound",
+      "label": "Blessure persistante",
+      "category": "combat",
+      "compatibility": {"itemTypes": ["arme"]},
+      "activation": {"type": "passive", "trigger": "successful-hit"},
+      "automation": "automatic",
+      "parameters": {
+        "damagePerRound": {"type": "integer", "default": 1},
+        "maxRounds": {"type": "integer", "default": 10},
+        "stackPerHit": {"type": "boolean", "default": true},
+        "healingRule": {"type": "string", "required": true}
+      },
+      "effects": [{"type": "persistent_wound", "damagePerRound": "@damagePerRound", "maxRounds": "@maxRounds", "stackPerHit": "@stackPerHit", "healingRule": "@healingRule"}],
+      "source": {"section": "III.G", "page": "162"}
+    },
+    {
+      "id": "energy_drain",
+      "label": "Absorption d’énergie ou de force vitale",
+      "category": "combat",
+      "compatibility": {"itemTypes": ["arme"]},
+      "activation": {"type": "passive", "trigger": "configured-roll"},
+      "automation": "assisted",
+      "parameters": {
+        "naturalRoll": {"type": "integer", "default": 20},
+        "levels": {"type": "integer", "default": 1},
+        "charges": {"type": "integer-or-null", "required": false},
+        "healWielder": {"type": "boolean", "default": false}
+      },
+      "effects": [{"type": "energy_drain", "naturalRoll": "@naturalRoll", "levels": "@levels", "charges": "@charges", "healWielder": "@healWielder"}],
+      "source": {"section": "III.G", "page": "162"}
+    },
+    {
+      "id": "sever_or_decapitate",
+      "label": "Trancher un membre ou décapiter",
+      "category": "combat",
+      "compatibility": {"itemTypes": ["arme"]},
+      "activation": {"type": "passive", "trigger": "attack-threshold"},
+      "automation": "assisted",
+      "parameters": {
+        "mode": {"type": "choice", "values": ["sever", "decapitate"]},
+        "thresholds": {"type": "object", "required": true},
+        "requiresHead": {"type": "boolean", "default": false}
+      },
+      "effects": [{"type": "sever_or_decapitate", "mode": "@mode", "thresholds": "@thresholds", "requiresHead": "@requiresHead"}],
+      "source": {"section": "III.G", "page": "163"}
+    },
+    {
+      "id": "ethereal_state",
+      "label": "Passage éthéré à charges",
+      "category": "movement",
+      "compatibility": {"itemTypes": ["armure", "objet"]},
+      "activation": {"type": "command", "trigger": "toggle"},
+      "automation": "assisted",
+      "parameters": {
+        "charges": {"type": "integer", "default": 20},
+        "rechargeable": {"type": "boolean", "default": false},
+        "degradation": {"type": "object", "required": false}
+      },
+      "effects": [
+        {"type": "ethereal_state", "scope": "wearer_and_nonliving_carried"},
+        {"type": "charges", "value": "@charges", "rechargeable": "@rechargeable"},
+        {"type": "armor_bonus_degradation", "steps": "@degradation"}
+      ],
+      "source": {"section": "III.F", "page": "161"}
+    },
+    {
+      "id": "projectile_deflection",
+      "label": "Protection renforcée contre les projectiles",
+      "category": "defense",
+      "compatibility": {"itemTypes": ["armure"]},
+      "activation": {"type": "passive", "trigger": "projectile-attack"},
+      "automation": "automatic",
+      "parameters": {
+        "armorBonus": {"type": "integer", "default": 4},
+        "negateMagicChance": {"type": "percentage", "default": 20}
+      },
+      "effects": [
+        {"type": "conditional_armor_bonus", "condition": "projectile", "value": "@armorBonus"},
+        {"type": "negate_magic_projectile", "chance": "@negateMagicChance", "arc": "front"}
+      ],
+      "source": {"section": "III.F", "page": "161"}
+    },
+    {
+      "id": "projectile_attraction",
+      "label": "Attraction maudite des projectiles",
+      "category": "curse",
+      "compatibility": {"itemTypes": ["armure"]},
+      "activation": {"type": "passive", "trigger": "projectile-target-selection"},
+      "automation": "automatic",
+      "parameters": {"targetWeightMultiplier": {"type": "choice", "values": [2, 3]}},
+      "effects": [
+        {"type": "shield_bonus_override", "value": 0},
+        {"type": "projectile_target_weight", "multiplier": "@targetWeightMultiplier"}
+      ],
+      "source": {"section": "III.F", "page": "161"}
+    },
+    {
+      "id": "range_modifier",
+      "label": "Modification de portée",
+      "category": "ranged",
+      "compatibility": {"itemTypes": ["arme"]},
+      "activation": {"type": "passive", "trigger": "ranged-attack"},
+      "automation": "automatic",
+      "parameters": {
+        "mode": {"type": "choice", "values": ["multiply", "override", "all_short"]},
+        "value": {"type": "number-or-distance", "required": false}
+      },
+      "effects": [{"type": "range_modifier", "mode": "@mode", "value": "@value"}],
+      "source": {"section": "III.H", "page": "164"}
+    },
+    {
+      "id": "rate_of_fire_modifier",
+      "label": "Modification de cadence de tir",
+      "category": "ranged",
+      "compatibility": {"itemTypes": ["arme"]},
+      "activation": {"type": "passive", "trigger": "ranged-attack"},
+      "automation": "automatic",
+      "parameters": {
+        "multiplier": {"type": "number", "default": 2},
+        "autoReload": {"type": "boolean", "default": true},
+        "initiativeRule": {"type": "string", "required": false}
+      },
+      "effects": [{"type": "rate_of_fire_modifier", "multiplier": "@multiplier", "autoReload": "@autoReload", "initiativeRule": "@initiativeRule"}],
+      "source": {"section": "III.H", "page": "164"}
+    },
+    {
+      "id": "venom_reservoir",
+      "label": "Réservoir de poison",
+      "category": "poison",
+      "compatibility": {"itemTypes": ["arme"]},
+      "activation": {"type": "passive", "trigger": "configured-roll"},
+      "automation": "assisted",
+      "parameters": {
+        "capacity": {"type": "integer", "default": 6},
+        "naturalRoll": {"type": "integer", "default": 20},
+        "save": {"type": "fixed", "value": "poison"}
+      },
+      "effects": [
+        {"type": "charge_reservoir", "capacity": "@capacity", "rechargeable": true},
+        {"type": "inject_poison", "naturalRoll": "@naturalRoll", "save": "@save", "cost": 1}
+      ],
+      "source": {"section": "III.H", "page": "164"}
+    },
+    {
+      "id": "slaying_hit",
+      "label": "Mort instantanée contre une catégorie",
+      "category": "combat",
+      "compatibility": {"itemTypes": ["arme"]},
+      "activation": {"type": "passive", "trigger": "successful-hit"},
+      "automation": "assisted",
+      "parameters": {"targetAny": {"type": "tag-list", "required": true}},
+      "effects": [{"type": "instant_death_on_hit", "targetAny": "@targetAny"}],
+      "source": {"section": "III.H", "page": "164"}
+    },
+    {
+      "id": "return_to_wielder",
+      "label": "Retour vers le porteur",
+      "category": "ranged",
+      "compatibility": {"itemTypes": ["arme"]},
+      "activation": {"type": "passive", "trigger": "thrown-attack"},
+      "automation": "automatic",
+      "parameters": {"range": {"type": "distance", "required": false}},
+      "effects": [
+        {"type": "thrown_range_override", "value": "@range"},
+        {"type": "return_to_wielder", "value": true}
+      ],
+      "source": {"section": "III.H", "page": "165"}
+    },
+    {
+      "id": "area_stun_on_hit",
+      "label": "Étourdissement de zone lors d’un impact",
+      "category": "combat",
+      "compatibility": {"itemTypes": ["arme"]},
+      "activation": {"type": "passive", "trigger": "successful-hit"},
+      "automation": "assisted",
+      "parameters": {
+        "radius": {"type": "distance", "required": true},
+        "rounds": {"type": "integer", "default": 1}
+      },
+      "effects": [{"type": "area_stun_on_hit", "radius": "@radius", "rounds": "@rounds"}],
+      "source": {"section": "III.H", "page": "165"}
+    },
+    {
+      "id": "turn_or_destroy_on_hit",
+      "label": "Repousser ou détruire à l’impact",
+      "category": "holy",
+      "compatibility": {"itemTypes": ["arme"]},
+      "activation": {"type": "passive", "trigger": "successful-hit"},
+      "automation": "assisted",
+      "parameters": {
+        "clericLevel": {"type": "integer", "required": true},
+        "targetAny": {"type": "tag-list", "required": true},
+        "outcome": {"type": "choice", "values": ["turn", "destroy"]}
+      },
+      "effects": [{"type": "turn_or_destroy_on_hit", "clericLevel": "@clericLevel", "targetAny": "@targetAny", "outcome": "@outcome"}],
+      "source": {"section": "III.H", "page": "165"}
+    },
+    {
+      "id": "toggle_weapon_form",
+      "label": "Transformation entre plusieurs formes d’arme",
+      "category": "transformation",
+      "compatibility": {"itemTypes": ["arme"]},
+      "activation": {"type": "command", "trigger": "use"},
+      "automation": "assisted",
+      "parameters": {
+        "forms": {"type": "form-list", "required": true},
+        "durationRounds": {"type": "integer", "default": 1}
+      },
+      "effects": [{"type": "toggle_weapon_form", "forms": "@forms", "durationRounds": "@durationRounds"}],
+      "source": {"section": "III.H", "page": "165"}
+    }
+  ],
+  "auditReferences": [
+    {
+      "name": "Épée +1, langue de feu",
+      "selectableAsTemplate": false,
+      "baseType": "arme",
+      "powers": [
+        {"id": "weapon_magic_bonus", "parameters": {"value": 1}},
+        {"id": "conditional_weapon_bonus", "parameters": {"value": 2, "targetAny": ["regenerating"]}},
+        {"id": "conditional_weapon_bonus", "parameters": {"value": 3, "targetAny": ["cold_attack", "flammable", "flying"]}},
+        {"id": "conditional_weapon_bonus", "parameters": {"value": 4, "targetAny": ["undead"]}},
+        {"id": "command_torch_light"},
+        {"id": "ignite_combustibles"}
+      ],
+      "source": {"section": "III.G", "page": "120, 162"},
+      "xp": 900,
+      "valueGp": 4500
+    }
+  ],
+  "coverage": {
+    "analysedSections": ["III.F", "III.G", "III.H"],
+    "nextSections": ["III.A", "III.B", "III.C", "III.D", "III.E", "III.E spécial"],
+    "generatorIntegration": false
+  }
+}
