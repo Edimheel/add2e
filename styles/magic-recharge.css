@@ -268,3 +268,154 @@
 .application:has(.add2e-magic-item-create-form) .dialog-buttons {
   flex: 0 0 auto !important;
 }
+
+/* ADD2E — Aides contextuelles des paramètres de pouvoirs magiques. */
+.add2e-magic-power-parameter-form .form-group {
+  --add2e-parameter-help: "Saisissez la valeur demandée par le pouvoir.";
+  position: relative;
+  align-items: start;
+  padding-bottom: 1.35rem;
+}
+
+.add2e-magic-power-parameter-form .form-group::after {
+  content: var(--add2e-parameter-help);
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  color: var(--color-text-dark-secondary, #5b6470);
+  font-size: .76rem;
+  font-style: italic;
+  font-weight: 500;
+  line-height: 1.2;
+  pointer-events: none;
+}
+
+.add2e-magic-power-parameter-form .form-group:has([data-add2e-parameter-type="integer"]) {
+  --add2e-parameter-help: "Nombre entier. Respectez les limites indiquées par le champ.";
+}
+
+.add2e-magic-power-parameter-form .form-group:has([data-add2e-parameter-type="number"]) {
+  --add2e-parameter-help: "Nombre entier ou décimal.";
+}
+
+.add2e-magic-power-parameter-form .form-group:has([data-add2e-parameter-type="percentage"]),
+.add2e-magic-power-parameter-form .form-group:has([data-add2e-parameter-type="percentage_per_use"]) {
+  --add2e-parameter-help: "Pourcentage compris entre 0 et 100. Exemple : 25.";
+}
+
+.add2e-magic-power-parameter-form .form-group:has([data-add2e-parameter-type="duration"]) {
+  --add2e-parameter-help: "Indiquez la durée avec son unité. Exemples : 1 round, 1 tour, 10 minutes, permanent.";
+}
+
+.add2e-magic-power-parameter-form .form-group:has([data-add2e-parameter-type="distance"]),
+.add2e-magic-power-parameter-form .form-group:has([data-add2e-parameter-type="number_or_distance"]) {
+  --add2e-parameter-help: "Indiquez une distance avec son unité. Exemples : 3 m, 10 mètres, 30 pieds.";
+}
+
+.add2e-magic-power-parameter-form .form-group:has([data-add2e-parameter-type="formula"]),
+.add2e-magic-power-parameter-form .form-group:has([data-add2e-parameter-type="number_or_formula"]),
+.add2e-magic-power-parameter-form .form-group:has([data-add2e-parameter-type="formula_or_integer"]),
+.add2e-magic-power-parameter-form .form-group:has([data-add2e-parameter-type="formula_or_table"]) {
+  --add2e-parameter-help: "Saisissez un nombre ou une formule de dés. Exemples : 3, 1d6, 2d4+2.";
+}
+
+.add2e-magic-power-parameter-form .form-group:has([data-add2e-parameter-type="tag_list"]),
+.add2e-magic-power-parameter-form .form-group:has([data-add2e-parameter-type="string_list"]) {
+  --add2e-parameter-help: "Saisissez plusieurs valeurs séparées par des virgules. Exemple : feu, acide, froid.";
+}
+
+.add2e-magic-power-parameter-form .form-group:has([data-add2e-parameter-type="integer_list"]) {
+  --add2e-parameter-help: "Saisissez plusieurs nombres entiers séparés par des virgules. Exemple : 1, 3, 5.";
+}
+
+.add2e-magic-power-parameter-form .form-group:has([data-add2e-parameter-type="uuid"]) {
+  --add2e-parameter-help: "UUID Foundry du document lié. Exemple : Compendium.add2e.sorts.Item.xxxxxxxxxxxxxxxx.";
+}
+
+.add2e-magic-power-parameter-form .form-group:has([data-add2e-parameter-type="object"]),
+.add2e-magic-power-parameter-form .form-group:has([data-add2e-parameter-type="effect_list"]),
+.add2e-magic-power-parameter-form .form-group:has([data-add2e-parameter-type="effect_table"]),
+.add2e-magic-power-parameter-form .form-group:has([data-add2e-parameter-type="spell_list"]),
+.add2e-magic-power-parameter-form .form-group:has([data-add2e-parameter-type="form_list"]),
+.add2e-magic-power-parameter-form .form-group:has([data-add2e-parameter-type="save_rule"]),
+.add2e-magic-power-parameter-form .form-group:has([data-add2e-parameter-type="percentage_or_save"]),
+.add2e-magic-power-parameter-form .form-group:has([data-add2e-parameter-type="percentage_or_table"]),
+.add2e-magic-power-parameter-form .form-group:has([data-add2e-parameter-type="number_or_table"]),
+.add2e-magic-power-parameter-form .form-group:has([data-add2e-parameter-type="weight_or_table"]) {
+  --add2e-parameter-help: "Valeur structurée : une valeur simple suffit souvent ; utilisez du JSON uniquement pour une configuration détaillée.";
+}
+
+.add2e-magic-power-parameter-form .form-group:has([data-add2e-parameter-type="boolean"]) {
+  --add2e-parameter-help: "Cochez pour activer cette propriété ; laissez décoché pour la désactiver.";
+}
+
+.add2e-magic-power-parameter-form .form-group:has([name="points"]) {
+  --add2e-parameter-help: "Nombre de points de vie récupérés à chaque intervalle. La valeur par défaut du catalogue est utilisée si elle existe.";
+}
+
+.add2e-magic-power-parameter-form .form-group:has([name="interval"]) {
+  --add2e-parameter-help: "Fréquence d’application du pouvoir. Exemples : 1 round, 1 tour, 10 minutes.";
+}
+
+.add2e-magic-power-parameter-form .form-group:has([name="restoresLostParts"]) {
+  --add2e-parameter-help: "Cochez uniquement si le pouvoir régénère aussi les membres ou organes perdus.";
+}
+
+.add2e-magic-power-parameter-form .form-group:has([name="deathWindow"]) {
+  --add2e-parameter-help: "Délai après la mort pendant lequel la régénération peut encore agir. Laissez vide si le pouvoir ne le prévoit pas.";
+}
+
+.add2e-magic-power-parameter-form .form-group:has([name="exceptions"]) {
+  --add2e-parameter-help: "Conditions qui neutralisent le pouvoir, séparées par des virgules. Exemple : feu, acide.";
+}
+
+.add2e-magic-power-parameter-form .form-group:has([name="targetAny"]),
+.add2e-magic-power-parameter-form .form-group:has([name="attackAny"]),
+.add2e-magic-power-parameter-form .form-group:has([name="detectAny"]) {
+  --add2e-parameter-help: "Catégories concernées, séparées par des virgules. Utilisez les tags du catalogue, par exemple : undead, dragon, fire_creature.";
+}
+
+.add2e-magic-power-parameter-form .form-group:has([name="chargeCost"]) {
+  --add2e-parameter-help: "Nombre de charges dépensées à chaque utilisation. Saisissez 0 pour un pouvoir sans coût de charge.";
+}
+
+.add2e-magic-power-parameter-form .form-group:has([name="charges"]) {
+  --add2e-parameter-help: "Nombre d’utilisations ou réserve de charges. Un nombre ou une formule de dés peut être accepté selon le pouvoir.";
+}
+
+.add2e-magic-power-parameter-form .form-group:has([name="spellUuid"]) {
+  --add2e-parameter-help: "UUID du sort existant à réutiliser. Préférer cette valeur au nom lorsque le sort existe dans un compendium.";
+}
+
+.add2e-magic-power-parameter-form .form-group:has([name="spellName"]) {
+  --add2e-parameter-help: "Nom exact du sort lorsque son UUID n’est pas disponible. Un UUID ou un nom est obligatoire pour un pouvoir équivalent à un sort.";
+}
+
+.add2e-magic-power-parameter-form .form-group:has([name="casterLevel"]) {
+  --add2e-parameter-help: "Niveau auquel le pouvoir lance le sort. Laissez vide lorsque le catalogue ou le sort détermine déjà ce niveau.";
+}
+
+.add2e-magic-power-parameter-form .form-group:has([name="range"]) {
+  --add2e-parameter-help: "Portée maximale du pouvoir avec son unité. Exemple : 18 m.";
+}
+
+.add2e-magic-power-parameter-form .form-group:has([name="radius"]) {
+  --add2e-parameter-help: "Rayon de la zone avec son unité. Exemple : 6 m.";
+}
+
+.add2e-magic-power-parameter-form .form-group:has([name="commandWord"]) {
+  --add2e-parameter-help: "Mot ou courte formule prononcée pour activer le pouvoir. Laissez vide si aucun mot n’est requis.";
+}
+
+.add2e-magic-power-parameter-form .form-group:has([name="save"]) {
+  --add2e-parameter-help: "Règle de jet de sauvegarde. Une valeur simple peut être saisie ; utilisez du JSON seulement pour des modificateurs détaillés.";
+}
+
+.add2e-magic-power-parameter-form .form-group:has([name="value"]) {
+  --add2e-parameter-help: "Valeur appliquée par le pouvoir. Respectez la plage minimale et maximale affichée par le champ.";
+}
+
+.add2e-magic-power-parameter-form .form-group:has([name="multiplier"]) {
+  --add2e-parameter-help: "Multiplicateur numérique. Exemple : 2 pour doubler les dégâts concernés.";
+}
