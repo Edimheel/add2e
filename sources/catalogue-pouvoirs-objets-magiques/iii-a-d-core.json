@@ -1,0 +1,910 @@
+{
+  "schema": 2,
+  "catalogueId": "add2e-gdm-magic-powers",
+  "version": "2026-07-21-gdm-iii-a-d-core-v1",
+  "extends": "../catalogue-pouvoirs-objets-magiques.json",
+  "status": "core-powers-sections-iii-a-to-iii-d",
+  "source": {
+    "book": "Guide du Maître AD&D restauré V2",
+    "sections": [
+      "III.A. Potions",
+      "III.B. Parchemins",
+      "III.C. Anneaux",
+      "III.D. Baguettes, bâtons et bâtonnets"
+    ],
+    "pages": "121-132"
+  },
+  "principles": {
+    "notObjectTemplates": true,
+    "powersAreReusable": true,
+    "objectSpecificCombinationsAreAuditOnly": true,
+    "spellEquivalentMustReuseExistingSpellItemWhenAvailable": true,
+    "generatorMayOnlyOfferCompatiblePowers": true
+  },
+  "conditionVocabularyAdditions": {
+    "targetTags": [
+      "animal",
+      "mammal",
+      "bird",
+      "reptile",
+      "amphibian",
+      "plant",
+      "fungus",
+      "humanoid",
+      "human",
+      "dwarf",
+      "elf",
+      "gnome",
+      "halfling",
+      "giant",
+      "dragon",
+      "undead",
+      "demon",
+      "devil",
+      "elemental",
+      "extraplanar",
+      "psionic",
+      "golem"
+    ],
+    "attackTags": [
+      "nonmagical_weapon",
+      "normal_fire",
+      "magical_fire",
+      "cold",
+      "electricity",
+      "poison",
+      "petrification",
+      "possession",
+      "energy_drain",
+      "charm",
+      "paralysis",
+      "spell"
+    ]
+  },
+  "powers": [
+    {
+      "id": "spell_equivalent",
+      "label": "Pouvoir équivalent à un sort",
+      "category": "spell",
+      "compatibility": {"itemTypes": ["arme", "armure", "objet"]},
+      "activation": {"type": "configured", "trigger": "use-or-passive"},
+      "automation": "assisted",
+      "parameters": {
+        "spellUuid": {"type": "uuid", "documentType": "Item", "required": false},
+        "spellName": {"type": "string", "required": false},
+        "casterLevel": {"type": "integer", "required": false},
+        "chargeCost": {"type": "integer", "default": 0},
+        "activationTime": {"type": "string", "required": false},
+        "overrides": {"type": "object", "required": false}
+      },
+      "validation": {"requiresOneOf": ["spellUuid", "spellName"]},
+      "effects": [{"type": "linked_spell", "spellUuid": "@spellUuid", "spellName": "@spellName", "casterLevel": "@casterLevel", "chargeCost": "@chargeCost", "activationTime": "@activationTime", "overrides": "@overrides"}],
+      "source": {"section": "III.A-III.D", "page": "121-132"}
+    },
+    {
+      "id": "consumable_doses",
+      "label": "Doses consommables et fractions de dose",
+      "category": "consumable",
+      "compatibility": {"itemTypes": ["objet"], "profiles": ["potion", "parchemin"]},
+      "activation": {"type": "consumption", "trigger": "use"},
+      "automation": "automatic",
+      "parameters": {
+        "doses": {"type": "integer", "min": 1, "required": true},
+        "fractionAllowed": {"type": "boolean", "default": false},
+        "fractionRule": {"type": "string", "required": false}
+      },
+      "effects": [{"type": "consumable_doses", "doses": "@doses", "fractionAllowed": "@fractionAllowed", "fractionRule": "@fractionRule"}],
+      "source": {"section": "III.A-III.B", "page": "121-125"}
+    },
+    {
+      "id": "control_creature_category",
+      "label": "Contrôle d’une catégorie de créatures",
+      "category": "control",
+      "compatibility": {"itemTypes": ["objet"]},
+      "activation": {"type": "action", "trigger": "activate"},
+      "automation": "assisted",
+      "parameters": {
+        "targetAny": {"type": "tag-list", "required": true},
+        "maxHitDice": {"type": "formula-or-integer", "required": false},
+        "maxTargets": {"type": "formula-or-integer", "required": false},
+        "range": {"type": "distance", "required": false},
+        "duration": {"type": "duration", "required": true},
+        "save": {"type": "save-rule", "required": false}
+      },
+      "effects": [{"type": "control_creature", "targetAny": "@targetAny", "maxHitDice": "@maxHitDice", "maxTargets": "@maxTargets", "range": "@range", "duration": "@duration", "save": "@save"}],
+      "source": {"section": "III.A, III.C, III.D", "page": "121-131"}
+    },
+    {
+      "id": "size_change",
+      "label": "Modification de taille",
+      "category": "transformation",
+      "compatibility": {"itemTypes": ["objet"]},
+      "activation": {"type": "action", "trigger": "consume-or-use"},
+      "automation": "assisted",
+      "parameters": {
+        "scale": {"type": "number-or-formula", "required": true},
+        "affectsCarried": {"type": "boolean", "default": true},
+        "duration": {"type": "duration", "required": true}
+      },
+      "effects": [{"type": "size_change", "scale": "@scale", "affectsCarried": "@affectsCarried", "duration": "@duration"}],
+      "source": {"section": "III.A", "page": "122"}
+    },
+    {
+      "id": "detect_category",
+      "label": "Détection d’une catégorie",
+      "category": "detection",
+      "compatibility": {"itemTypes": ["arme", "armure", "objet"]},
+      "activation": {"type": "action", "trigger": "activate"},
+      "automation": "assisted",
+      "parameters": {
+        "detectAny": {"type": "tag-list", "required": true},
+        "range": {"type": "distance", "required": true},
+        "duration": {"type": "duration", "required": false},
+        "directionOnly": {"type": "boolean", "default": false},
+        "penetration": {"type": "object", "required": false}
+      },
+      "effects": [{"type": "detect_category", "detectAny": "@detectAny", "range": "@range", "duration": "@duration", "directionOnly": "@directionOnly", "penetration": "@penetration"}],
+      "source": {"section": "III.A, III.D", "page": "122, 131-132"}
+    },
+    {
+      "id": "movement_mode",
+      "label": "Mode de déplacement magique",
+      "category": "movement",
+      "compatibility": {"itemTypes": ["arme", "armure", "objet"]},
+      "activation": {"type": "configured", "trigger": "activate-or-equipped"},
+      "automation": "automatic",
+      "parameters": {
+        "mode": {"type": "choice", "values": ["climb", "fly", "levitate", "swim", "water_walk", "air_walk", "burrow"]},
+        "speed": {"type": "number-or-formula", "required": false},
+        "capacity": {"type": "weight", "required": false},
+        "duration": {"type": "duration", "required": false}
+      },
+      "effects": [{"type": "movement_mode", "mode": "@mode", "speed": "@speed", "capacity": "@capacity", "duration": "@duration"}],
+      "source": {"section": "III.A, III.C", "page": "122-128"}
+    },
+    {
+      "id": "state_transformation",
+      "label": "Transformation d’état",
+      "category": "transformation",
+      "compatibility": {"itemTypes": ["arme", "armure", "objet"]},
+      "activation": {"type": "configured", "trigger": "activate-or-consume"},
+      "automation": "assisted",
+      "parameters": {
+        "state": {"type": "choice", "values": ["gaseous", "ethereal", "invisible", "polymorphed", "displaced"]},
+        "duration": {"type": "duration", "required": false},
+        "endsOn": {"type": "string-list", "required": false},
+        "affectsCarried": {"type": "boolean", "default": true}
+      },
+      "effects": [{"type": "state_transformation", "state": "@state", "duration": "@duration", "endsOn": "@endsOn", "affectsCarried": "@affectsCarried"}],
+      "source": {"section": "III.A, III.C", "page": "121-128"}
+    },
+    {
+      "id": "ability_override",
+      "label": "Valeur de caractéristique imposée",
+      "category": "attribute",
+      "compatibility": {"itemTypes": ["arme", "armure", "objet"]},
+      "activation": {"type": "configured", "trigger": "activate-or-equipped"},
+      "automation": "automatic",
+      "parameters": {
+        "ability": {"type": "ability", "required": true},
+        "value": {"type": "number-or-table", "required": true},
+        "duration": {"type": "duration", "required": false}
+      },
+      "effects": [{"type": "ability_override", "ability": "@ability", "value": "@value", "duration": "@duration"}],
+      "source": {"section": "III.A", "page": "122"}
+    },
+    {
+      "id": "temporary_levels",
+      "label": "Niveaux et dés de vie temporaires",
+      "category": "attribute",
+      "compatibility": {"itemTypes": ["objet"]},
+      "activation": {"type": "consumption", "trigger": "use"},
+      "automation": "assisted",
+      "parameters": {
+        "levels": {"type": "number-or-table", "required": true},
+        "hitDice": {"type": "formula-or-table", "required": false},
+        "maxBaseLevel": {"type": "integer", "required": false},
+        "duration": {"type": "duration", "required": true}
+      },
+      "effects": [{"type": "temporary_levels", "levels": "@levels", "hitDice": "@hitDice", "maxBaseLevel": "@maxBaseLevel", "duration": "@duration"}],
+      "source": {"section": "III.A", "page": "122-123"}
+    },
+    {
+      "id": "age_adjustment",
+      "label": "Modification d’âge",
+      "category": "attribute",
+      "compatibility": {"itemTypes": ["objet"]},
+      "activation": {"type": "action", "trigger": "use"},
+      "automation": "assisted",
+      "parameters": {
+        "years": {"type": "formula-or-integer", "required": true},
+        "cumulativeReversalChance": {"type": "percentage-per-use", "required": false},
+        "permanent": {"type": "boolean", "default": true}
+      },
+      "effects": [{"type": "age_adjustment", "years": "@years", "cumulativeReversalChance": "@cumulativeReversalChance", "permanent": "@permanent"}],
+      "source": {"section": "III.A", "page": "123"}
+    },
+    {
+      "id": "damage_immunity",
+      "label": "Immunité à une catégorie de dégâts ou d’attaques",
+      "category": "immunity",
+      "compatibility": {"itemTypes": ["arme", "armure", "objet"]},
+      "activation": {"type": "passive", "trigger": "carried-or-equipped-or-active"},
+      "automation": "automatic",
+      "parameters": {
+        "attackAny": {"type": "tag-list", "required": true},
+        "exceptions": {"type": "tag-list", "required": false},
+        "duration": {"type": "duration", "required": false}
+      },
+      "effects": [{"type": "damage_immunity", "attackAny": "@attackAny", "exceptions": "@exceptions", "duration": "@duration"}],
+      "source": {"section": "III.A-III.D", "page": "121-132"}
+    },
+    {
+      "id": "healing_pool",
+      "label": "Guérison chiffrée",
+      "category": "healing",
+      "compatibility": {"itemTypes": ["arme", "armure", "objet"]},
+      "activation": {"type": "action", "trigger": "use"},
+      "automation": "automatic",
+      "parameters": {
+        "formula": {"type": "formula", "required": true},
+        "target": {"type": "choice", "values": ["self", "creature", "touch"]},
+        "chargeCost": {"type": "integer", "default": 0},
+        "splitUses": {"type": "boolean", "default": false}
+      },
+      "effects": [{"type": "healing", "formula": "@formula", "target": "@target", "chargeCost": "@chargeCost", "splitUses": "@splitUses"}],
+      "source": {"section": "III.A, III.D", "page": "123, 130"}
+    },
+    {
+      "id": "reaction_and_suggestion",
+      "label": "Influence sociale et suggestion",
+      "category": "social",
+      "compatibility": {"itemTypes": ["objet"]},
+      "activation": {"type": "configured", "trigger": "consume-or-equipped"},
+      "automation": "assisted",
+      "parameters": {
+        "reactionBonus": {"type": "percentage", "required": false},
+        "suggestionFrequency": {"type": "duration", "required": false},
+        "range": {"type": "distance", "required": false},
+        "targetAny": {"type": "tag-list", "required": false}
+      },
+      "effects": [{"type": "reaction_bonus", "value": "@reactionBonus"}, {"type": "suggestion", "frequency": "@suggestionFrequency", "range": "@range", "targetAny": "@targetAny"}],
+      "source": {"section": "III.A, III.C", "page": "123, 126"}
+    },
+    {
+      "id": "poison_effect",
+      "label": "Poison par ingestion, contact ou blessure",
+      "category": "poison",
+      "compatibility": {"itemTypes": ["arme", "objet"]},
+      "activation": {"type": "configured", "trigger": "contact-ingestion-or-hit"},
+      "automation": "assisted",
+      "parameters": {
+        "delivery": {"type": "choice-list", "values": ["ingestion", "contact", "injury"]},
+        "saveModifier": {"type": "integer", "required": false},
+        "outcome": {"type": "choice", "values": ["death", "damage", "condition"]},
+        "neutralizeReduction": {"type": "percentage", "required": false}
+      },
+      "effects": [{"type": "poison", "delivery": "@delivery", "saveModifier": "@saveModifier", "outcome": "@outcome", "neutralizeReduction": "@neutralizeReduction"}],
+      "source": {"section": "III.A", "page": "123"}
+    },
+    {
+      "id": "haste_effect",
+      "label": "Rapidité magique",
+      "category": "movement",
+      "compatibility": {"itemTypes": ["objet"]},
+      "activation": {"type": "configured", "trigger": "consume-or-equipped"},
+      "automation": "automatic",
+      "parameters": {
+        "movementMultiplier": {"type": "number", "default": 2},
+        "attackMultiplier": {"type": "number", "default": 2},
+        "affectsCastingTime": {"type": "boolean", "default": false},
+        "ageCostYears": {"type": "integer", "default": 0},
+        "duration": {"type": "duration", "required": true}
+      },
+      "effects": [{"type": "haste", "movementMultiplier": "@movementMultiplier", "attackMultiplier": "@attackMultiplier", "affectsCastingTime": "@affectsCastingTime", "duration": "@duration"}, {"type": "age_cost", "years": "@ageCostYears"}],
+      "source": {"section": "III.A", "page": "123"}
+    },
+    {
+      "id": "environmental_adaptation",
+      "label": "Adaptation à un environnement",
+      "category": "survival",
+      "compatibility": {"itemTypes": ["arme", "armure", "objet"]},
+      "activation": {"type": "passive", "trigger": "carried-or-equipped-or-active"},
+      "automation": "automatic",
+      "parameters": {
+        "environmentAny": {"type": "tag-list", "required": true},
+        "breathing": {"type": "choice", "values": ["normal", "water", "smoke", "vacuum", "any"]},
+        "temperature": {"type": "object", "required": false},
+        "duration": {"type": "duration", "required": false}
+      },
+      "effects": [{"type": "environmental_adaptation", "environmentAny": "@environmentAny", "breathing": "@breathing", "temperature": "@temperature", "duration": "@duration"}],
+      "source": {"section": "III.A, III.C", "page": "123-128"}
+    },
+    {
+      "id": "false_effect",
+      "label": "Effet illusoire ou trompeur",
+      "category": "curse",
+      "compatibility": {"itemTypes": ["objet"]},
+      "activation": {"type": "action", "trigger": "use-or-identification"},
+      "automation": "assisted",
+      "parameters": {
+        "believedEffect": {"type": "string", "required": true},
+        "actualEffect": {"type": "effect-list", "required": false},
+        "discovery": {"type": "string", "required": false}
+      },
+      "effects": [{"type": "false_effect", "believedEffect": "@believedEffect", "actualEffect": "@actualEffect", "discovery": "@discovery"}],
+      "source": {"section": "III.A, III.C", "page": "123-128"}
+    },
+    {
+      "id": "scroll_spell_inscription",
+      "label": "Sort inscrit sur parchemin",
+      "category": "scroll",
+      "compatibility": {"itemTypes": ["objet"], "profiles": ["parchemin"]},
+      "activation": {"type": "reading", "trigger": "read"},
+      "automation": "assisted",
+      "parameters": {
+        "spellUuid": {"type": "uuid", "documentType": "Item", "required": true},
+        "spellClass": {"type": "choice", "values": ["clerc", "druide", "magicien", "illusionniste"]},
+        "spellLevel": {"type": "integer", "required": true},
+        "casterLevel": {"type": "integer", "required": true},
+        "consumed": {"type": "boolean", "default": true}
+      },
+      "effects": [{"type": "scroll_spell", "spellUuid": "@spellUuid", "spellClass": "@spellClass", "spellLevel": "@spellLevel", "casterLevel": "@casterLevel", "consumed": "@consumed"}],
+      "source": {"section": "III.B", "page": "123-125"}
+    },
+    {
+      "id": "scroll_reading_restriction",
+      "label": "Restriction et échec de lecture d’un parchemin",
+      "category": "scroll",
+      "compatibility": {"itemTypes": ["objet"], "profiles": ["parchemin"]},
+      "activation": {"type": "passive", "trigger": "read"},
+      "automation": "assisted",
+      "parameters": {
+        "allowedClasses": {"type": "string-list", "required": true},
+        "thiefException": {"type": "boolean", "default": true},
+        "failureRule": {"type": "object", "required": false},
+        "requiresReadMagicForIdentification": {"type": "boolean", "default": true}
+      },
+      "effects": [{"type": "scroll_reading_restriction", "allowedClasses": "@allowedClasses", "thiefException": "@thiefException", "failureRule": "@failureRule", "requiresReadMagicForIdentification": "@requiresReadMagicForIdentification"}],
+      "source": {"section": "III.B", "page": "123-125"}
+    },
+    {
+      "id": "protection_circle",
+      "label": "Cercle de protection mobile",
+      "category": "protection",
+      "compatibility": {"itemTypes": ["objet"]},
+      "activation": {"type": "reading", "trigger": "read"},
+      "automation": "assisted",
+      "parameters": {
+        "protectedAgainst": {"type": "tag-list", "required": true},
+        "radius": {"type": "distance", "required": true},
+        "duration": {"type": "duration", "required": true},
+        "entryBlocked": {"type": "boolean", "default": true},
+        "outgoingAttacksBreak": {"type": "boolean", "default": false}
+      },
+      "effects": [{"type": "protection_circle", "protectedAgainst": "@protectedAgainst", "radius": "@radius", "duration": "@duration", "entryBlocked": "@entryBlocked", "outgoingAttacksBreak": "@outgoingAttacksBreak"}],
+      "source": {"section": "III.B", "page": "124-125"}
+    },
+    {
+      "id": "anti_magic_field",
+      "label": "Champ anti-magie",
+      "category": "protection",
+      "compatibility": {"itemTypes": ["objet"]},
+      "activation": {"type": "reading-or-command", "trigger": "activate"},
+      "automation": "assisted",
+      "parameters": {
+        "radius": {"type": "distance", "required": true},
+        "duration": {"type": "duration", "required": true},
+        "movesWithUser": {"type": "boolean", "default": true},
+        "suppressesItems": {"type": "boolean", "default": true}
+      },
+      "effects": [{"type": "anti_magic_field", "radius": "@radius", "duration": "@duration", "movesWithUser": "@movesWithUser", "suppressesItems": "@suppressesItems"}],
+      "source": {"section": "III.B, III.D", "page": "124-132"}
+    },
+    {
+      "id": "spell_storage",
+      "label": "Accumulation de sorts",
+      "category": "spell",
+      "compatibility": {"itemTypes": ["objet"]},
+      "activation": {"type": "configured", "trigger": "cast-or-release"},
+      "automation": "assisted",
+      "parameters": {
+        "capacityLevels": {"type": "integer", "required": true},
+        "allowedClasses": {"type": "string-list", "required": false},
+        "storedSpells": {"type": "spell-list", "required": false},
+        "rechargeRule": {"type": "string", "required": false}
+      },
+      "effects": [{"type": "spell_storage", "capacityLevels": "@capacityLevels", "allowedClasses": "@allowedClasses", "storedSpells": "@storedSpells", "rechargeRule": "@rechargeRule"}],
+      "source": {"section": "III.C, III.D", "page": "125-132"}
+    },
+    {
+      "id": "elemental_control",
+      "label": "Contrôle et affinité élémentaire",
+      "category": "control",
+      "compatibility": {"itemTypes": ["objet"]},
+      "activation": {"type": "configured", "trigger": "equipped-or-command"},
+      "automation": "assisted",
+      "parameters": {
+        "element": {"type": "choice", "values": ["air", "earth", "fire", "water"]},
+        "control": {"type": "boolean", "default": true},
+        "communication": {"type": "boolean", "default": true},
+        "attackBonus": {"type": "integer", "required": false},
+        "saveModifiers": {"type": "object", "required": false}
+      },
+      "effects": [{"type": "elemental_control", "element": "@element", "control": "@control", "communication": "@communication", "attackBonus": "@attackBonus", "saveModifiers": "@saveModifiers"}],
+      "source": {"section": "III.C", "page": "125-126"}
+    },
+    {
+      "id": "feather_fall",
+      "label": "Chute de plume automatique",
+      "category": "movement",
+      "compatibility": {"itemTypes": ["objet"]},
+      "activation": {"type": "automatic", "trigger": "fall"},
+      "automation": "automatic",
+      "parameters": {"capacity": {"type": "weight", "required": false}},
+      "effects": [{"type": "feather_fall", "capacity": "@capacity"}],
+      "source": {"section": "III.C", "page": "125"}
+    },
+    {
+      "id": "summon_bound_creature",
+      "label": "Invocation d’une créature liée",
+      "category": "summoning",
+      "compatibility": {"itemTypes": ["arme", "armure", "objet"]},
+      "activation": {"type": "command", "trigger": "use"},
+      "automation": "assisted",
+      "parameters": {
+        "creatureUuid": {"type": "uuid", "documentType": "Actor", "required": false},
+        "creatureTag": {"type": "tag", "required": false},
+        "count": {"type": "formula-or-integer", "default": 1},
+        "duration": {"type": "duration", "required": false},
+        "frequency": {"type": "duration", "required": false},
+        "obedience": {"type": "string", "required": false}
+      },
+      "validation": {"requiresOneOf": ["creatureUuid", "creatureTag"]},
+      "effects": [{"type": "summon_bound_creature", "creatureUuid": "@creatureUuid", "creatureTag": "@creatureTag", "count": "@count", "duration": "@duration", "frequency": "@frequency", "obedience": "@obedience"}],
+      "source": {"section": "III.C-III.D", "page": "125-132"}
+    },
+    {
+      "id": "freedom_of_movement",
+      "label": "Libre action",
+      "category": "movement",
+      "compatibility": {"itemTypes": ["objet"]},
+      "activation": {"type": "passive", "trigger": "equipped"},
+      "automation": "automatic",
+      "parameters": {"prevents": {"type": "tag-list", "default": ["paralysis", "hold", "slow", "web", "movement_impairment"]}},
+      "effects": [{"type": "freedom_of_movement", "prevents": "@prevents"}],
+      "source": {"section": "III.C", "page": "126"}
+    },
+    {
+      "id": "fixed_armor_class",
+      "label": "Classe d’armure fixe",
+      "category": "defense",
+      "compatibility": {"itemTypes": ["armure", "objet"]},
+      "activation": {"type": "passive", "trigger": "equipped"},
+      "automation": "automatic",
+      "parameters": {
+        "armorClass": {"type": "integer", "required": true},
+        "allowsDexterity": {"type": "boolean", "default": true},
+        "stacking": {"type": "choice", "values": ["replace", "best", "add"]}
+      },
+      "effects": [{"type": "fixed_armor_class", "armorClass": "@armorClass", "allowsDexterity": "@allowsDexterity", "stacking": "@stacking"}],
+      "source": {"section": "III.C", "page": "126-127"}
+    },
+    {
+      "id": "xray_vision",
+      "label": "Vision aux rayons X",
+      "category": "detection",
+      "compatibility": {"itemTypes": ["objet"]},
+      "activation": {"type": "action", "trigger": "concentrate"},
+      "automation": "assisted",
+      "parameters": {
+        "penetrationByMaterial": {"type": "object", "required": true},
+        "area": {"type": "distance", "required": true},
+        "useDuration": {"type": "duration", "required": true},
+        "fatigueRule": {"type": "object", "required": false}
+      },
+      "effects": [{"type": "xray_vision", "penetrationByMaterial": "@penetrationByMaterial", "area": "@area", "useDuration": "@useDuration", "fatigueRule": "@fatigueRule"}],
+      "source": {"section": "III.C", "page": "127"}
+    },
+    {
+      "id": "regeneration",
+      "label": "Régénération",
+      "category": "healing",
+      "compatibility": {"itemTypes": ["arme", "armure", "objet"]},
+      "activation": {"type": "passive", "trigger": "time"},
+      "automation": "automatic",
+      "parameters": {
+        "points": {"type": "integer", "default": 1},
+        "interval": {"type": "duration", "required": true},
+        "restoresLostParts": {"type": "boolean", "default": false},
+        "deathWindow": {"type": "duration", "required": false},
+        "exceptions": {"type": "tag-list", "required": false}
+      },
+      "effects": [{"type": "regeneration", "points": "@points", "interval": "@interval", "restoresLostParts": "@restoresLostParts", "deathWindow": "@deathWindow", "exceptions": "@exceptions"}],
+      "source": {"section": "III.C", "page": "127"}
+    },
+    {
+      "id": "spell_turning",
+      "label": "Renvoi de sorts",
+      "category": "protection",
+      "compatibility": {"itemTypes": ["objet"]},
+      "activation": {"type": "passive", "trigger": "targeted-by-spell"},
+      "automation": "assisted",
+      "parameters": {
+        "percentage": {"type": "percentage-or-table", "required": true},
+        "exceptions": {"type": "tag-list", "required": false},
+        "partialReflection": {"type": "boolean", "default": true}
+      },
+      "effects": [{"type": "spell_turning", "percentage": "@percentage", "exceptions": "@exceptions", "partialReflection": "@partialReflection"}],
+      "source": {"section": "III.C", "page": "127"}
+    },
+    {
+      "id": "wish_charges",
+      "label": "Souhaits limités",
+      "category": "spell",
+      "compatibility": {"itemTypes": ["objet"]},
+      "activation": {"type": "action", "trigger": "use"},
+      "automation": "assisted",
+      "parameters": {
+        "wishType": {"type": "choice", "values": ["minor", "major"]},
+        "charges": {"type": "formula-or-integer", "required": true},
+        "consumedPerWish": {"type": "integer", "default": 1}
+      },
+      "effects": [{"type": "wish", "wishType": "@wishType", "charges": "@charges", "consumedPerWish": "@consumedPerWish"}],
+      "source": {"section": "III.C", "page": "128"}
+    },
+    {
+      "id": "spell_capacity_multiplier",
+      "label": "Multiplication des sorts mémorisables",
+      "category": "spell",
+      "compatibility": {"itemTypes": ["objet"]},
+      "activation": {"type": "passive", "trigger": "equipped"},
+      "automation": "automatic",
+      "parameters": {
+        "classTag": {"type": "tag", "default": "wizard"},
+        "levels": {"type": "integer-list", "required": true},
+        "multiplier": {"type": "integer", "required": true}
+      },
+      "effects": [{"type": "spell_capacity_multiplier", "classTag": "@classTag", "levels": "@levels", "multiplier": "@multiplier"}],
+      "source": {"section": "III.C", "page": "128"}
+    },
+    {
+      "id": "telekinesis",
+      "label": "Télékinésie",
+      "category": "movement",
+      "compatibility": {"itemTypes": ["objet"]},
+      "activation": {"type": "action", "trigger": "command"},
+      "automation": "assisted",
+      "parameters": {
+        "maxWeight": {"type": "weight-or-table", "required": true},
+        "range": {"type": "distance", "required": false},
+        "activationSegments": {"type": "integer", "required": false},
+        "charges": {"type": "integer-or-null", "required": false}
+      },
+      "effects": [{"type": "telekinesis", "maxWeight": "@maxWeight", "range": "@range", "activationSegments": "@activationSegments", "charges": "@charges"}],
+      "source": {"section": "III.C", "page": "128"}
+    },
+    {
+      "id": "spell_absorption",
+      "label": "Absorption de sorts en réserve",
+      "category": "protection",
+      "compatibility": {"itemTypes": ["objet"]},
+      "activation": {"type": "reaction", "trigger": "targeted-by-spell"},
+      "automation": "assisted",
+      "parameters": {
+        "capacityLevels": {"type": "integer", "required": true},
+        "absorbs": {"type": "tag-list", "default": ["spell"]},
+        "convertToSpellEnergy": {"type": "boolean", "default": true}
+      },
+      "effects": [{"type": "spell_absorption", "capacityLevels": "@capacityLevels", "absorbs": "@absorbs", "convertToSpellEnergy": "@convertToSpellEnergy"}],
+      "source": {"section": "III.D", "page": "128-129"}
+    },
+    {
+      "id": "magic_item_cancellation",
+      "label": "Annulation d’un objet magique",
+      "category": "negation",
+      "compatibility": {"itemTypes": ["objet"]},
+      "activation": {"type": "action", "trigger": "touch"},
+      "automation": "assisted",
+      "parameters": {
+        "successChance": {"type": "percentage", "required": true},
+        "consumesSource": {"type": "boolean", "default": true},
+        "targetBecomesNonmagical": {"type": "boolean", "default": true}
+      },
+      "effects": [{"type": "magic_item_cancellation", "successChance": "@successChance", "consumesSource": "@consumesSource", "targetBecomesNonmagical": "@targetBecomesNonmagical"}],
+      "source": {"section": "III.D", "page": "129"}
+    },
+    {
+      "id": "multi_power_charge_pool",
+      "label": "Réserve commune de charges pour plusieurs pouvoirs",
+      "category": "charges",
+      "compatibility": {"itemTypes": ["arme", "armure", "objet"]},
+      "activation": {"type": "passive", "trigger": "power-use"},
+      "automation": "automatic",
+      "parameters": {
+        "maxCharges": {"type": "integer", "required": true},
+        "currentCharges": {"type": "integer", "required": false},
+        "rechargeable": {"type": "boolean", "default": false},
+        "oncePerRound": {"type": "boolean", "default": false}
+      },
+      "effects": [{"type": "shared_charge_pool", "max": "@maxCharges", "current": "@currentCharges", "rechargeable": "@rechargeable", "oncePerRound": "@oncePerRound"}],
+      "source": {"section": "III.D", "page": "128-132"}
+    },
+    {
+      "id": "resurrection_power",
+      "label": "Résurrection par objet",
+      "category": "healing",
+      "compatibility": {"itemTypes": ["objet"]},
+      "activation": {"type": "action", "trigger": "use"},
+      "automation": "assisted",
+      "parameters": {
+        "mode": {"type": "choice", "values": ["raise_dead", "resurrection"]},
+        "chargeCostByTarget": {"type": "object", "required": false},
+        "classRestriction": {"type": "tag-list", "required": false}
+      },
+      "effects": [{"type": "resurrection", "mode": "@mode", "chargeCostByTarget": "@chargeCostByTarget", "classRestriction": "@classRestriction"}],
+      "source": {"section": "III.D", "page": "129"}
+    },
+    {
+      "id": "domination_aura",
+      "label": "Aura de séduction ou suzeraineté",
+      "category": "control",
+      "compatibility": {"itemTypes": ["objet"]},
+      "activation": {"type": "action", "trigger": "activate"},
+      "automation": "assisted",
+      "parameters": {
+        "targetAny": {"type": "tag-list", "required": true},
+        "range": {"type": "distance", "required": true},
+        "maxHitDice": {"type": "integer", "required": false},
+        "save": {"type": "save-rule", "required": false},
+        "duration": {"type": "duration", "required": false}
+      },
+      "effects": [{"type": "domination_aura", "targetAny": "@targetAny", "range": "@range", "maxHitDice": "@maxHitDice", "save": "@save", "duration": "@duration"}],
+      "source": {"section": "III.D", "page": "129"}
+    },
+    {
+      "id": "retributive_strike",
+      "label": "Coup vengeur lors de la destruction",
+      "category": "destruction",
+      "compatibility": {"itemTypes": ["arme", "objet"]},
+      "activation": {"type": "action", "trigger": "break-item"},
+      "automation": "assisted",
+      "parameters": {
+        "radius": {"type": "distance", "required": true},
+        "damageFormula": {"type": "formula", "required": true},
+        "save": {"type": "save-rule", "required": false},
+        "destroysItem": {"type": "boolean", "default": true}
+      },
+      "effects": [{"type": "retributive_strike", "radius": "@radius", "damageFormula": "@damageFormula", "save": "@save", "destroysItem": "@destroysItem"}],
+      "source": {"section": "III.D", "page": "130"}
+    },
+    {
+      "id": "aging_or_withering_hit",
+      "label": "Vieillissement ou flétrissement à l’impact",
+      "category": "combat",
+      "compatibility": {"itemTypes": ["arme", "objet"]},
+      "activation": {"type": "passive", "trigger": "successful-hit"},
+      "automation": "assisted",
+      "parameters": {
+        "years": {"type": "formula-or-integer", "required": false},
+        "abilityLoss": {"type": "object", "required": false},
+        "save": {"type": "save-rule", "required": false},
+        "chargeCost": {"type": "integer", "default": 1}
+      },
+      "effects": [{"type": "aging_or_withering_hit", "years": "@years", "abilityLoss": "@abilityLoss", "save": "@save", "chargeCost": "@chargeCost"}],
+      "source": {"section": "III.D", "page": "130"}
+    },
+    {
+      "id": "transform_item_into_creature",
+      "label": "Transformation de l’objet en créature",
+      "category": "transformation",
+      "compatibility": {"itemTypes": ["arme", "objet"]},
+      "activation": {"type": "command", "trigger": "use"},
+      "automation": "assisted",
+      "parameters": {
+        "creatureUuid": {"type": "uuid", "documentType": "Actor", "required": false},
+        "creatureTag": {"type": "tag", "required": false},
+        "duration": {"type": "duration", "required": true},
+        "returnsToItem": {"type": "boolean", "default": true},
+        "damageTransfers": {"type": "boolean", "default": true}
+      },
+      "validation": {"requiresOneOf": ["creatureUuid", "creatureTag"]},
+      "effects": [{"type": "transform_item_into_creature", "creatureUuid": "@creatureUuid", "creatureTag": "@creatureTag", "duration": "@duration", "returnsToItem": "@returnsToItem", "damageTransfers": "@damageTransfers"}],
+      "source": {"section": "III.D", "page": "130"}
+    },
+    {
+      "id": "cure_condition",
+      "label": "Guérison d’un état",
+      "category": "healing",
+      "compatibility": {"itemTypes": ["objet"]},
+      "activation": {"type": "action", "trigger": "touch-or-use"},
+      "automation": "assisted",
+      "parameters": {
+        "conditions": {"type": "tag-list", "required": true},
+        "chargeCost": {"type": "integer", "default": 1},
+        "frequencyPerTarget": {"type": "duration", "required": false}
+      },
+      "effects": [{"type": "cure_condition", "conditions": "@conditions", "chargeCost": "@chargeCost", "frequencyPerTarget": "@frequencyPerTarget"}],
+      "source": {"section": "III.D", "page": "130"}
+    },
+    {
+      "id": "fear_ray",
+      "label": "Rayon de peur",
+      "category": "control",
+      "compatibility": {"itemTypes": ["objet"]},
+      "activation": {"type": "action", "trigger": "use"},
+      "automation": "assisted",
+      "parameters": {
+        "range": {"type": "distance", "required": true},
+        "area": {"type": "area", "required": false},
+        "save": {"type": "save-rule", "required": true},
+        "duration": {"type": "duration", "required": true},
+        "chargeCost": {"type": "integer", "default": 1}
+      },
+      "effects": [{"type": "fear", "range": "@range", "area": "@area", "save": "@save", "duration": "@duration", "chargeCost": "@chargeCost"}],
+      "source": {"section": "III.D", "page": "131"}
+    },
+    {
+      "id": "illusion_projection",
+      "label": "Projection d’illusion",
+      "category": "illusion",
+      "compatibility": {"itemTypes": ["objet"]},
+      "activation": {"type": "action", "trigger": "use"},
+      "automation": "assisted",
+      "parameters": {
+        "senses": {"type": "choice-list", "values": ["visual", "auditory", "olfactory", "thermal"]},
+        "range": {"type": "distance", "required": false},
+        "duration": {"type": "duration", "required": false},
+        "concentration": {"type": "boolean", "default": true},
+        "chargeCost": {"type": "integer", "default": 1}
+      },
+      "effects": [{"type": "illusion_projection", "senses": "@senses", "range": "@range", "duration": "@duration", "concentration": "@concentration", "chargeCost": "@chargeCost"}],
+      "source": {"section": "III.D", "page": "131"}
+    },
+    {
+      "id": "random_effect_table",
+      "label": "Effet aléatoire configurable",
+      "category": "random",
+      "compatibility": {"itemTypes": ["arme", "armure", "objet"]},
+      "activation": {"type": "action", "trigger": "use"},
+      "automation": "assisted",
+      "parameters": {
+        "tableUuid": {"type": "uuid", "documentType": "RollTable", "required": false},
+        "entries": {"type": "effect-table", "required": false},
+        "chargeCost": {"type": "integer", "default": 1}
+      },
+      "validation": {"requiresOneOf": ["tableUuid", "entries"]},
+      "effects": [{"type": "random_effect_table", "tableUuid": "@tableUuid", "entries": "@entries", "chargeCost": "@chargeCost"}],
+      "source": {"section": "III.D", "page": "131"}
+    },
+    {
+      "id": "magic_negation",
+      "label": "Négation de magie",
+      "category": "negation",
+      "compatibility": {"itemTypes": ["objet"]},
+      "activation": {"type": "action", "trigger": "use"},
+      "automation": "assisted",
+      "parameters": {
+        "target": {"type": "choice", "values": ["spell", "effect", "item"]},
+        "successRule": {"type": "percentage-or-save", "required": false},
+        "chargeCost": {"type": "integer", "default": 1}
+      },
+      "effects": [{"type": "magic_negation", "target": "@target", "successRule": "@successRule", "chargeCost": "@chargeCost"}],
+      "source": {"section": "III.D", "page": "131-132"}
+    },
+    {
+      "id": "paralysis_ray",
+      "label": "Rayon de paralysie",
+      "category": "control",
+      "compatibility": {"itemTypes": ["objet"]},
+      "activation": {"type": "action", "trigger": "use"},
+      "automation": "assisted",
+      "parameters": {
+        "range": {"type": "distance", "required": true},
+        "save": {"type": "save-rule", "required": true},
+        "duration": {"type": "duration", "required": true},
+        "chargeCost": {"type": "integer", "default": 1}
+      },
+      "effects": [{"type": "paralysis", "range": "@range", "save": "@save", "duration": "@duration", "chargeCost": "@chargeCost"}],
+      "source": {"section": "III.D", "page": "132"}
+    },
+    {
+      "id": "spell_school_recognition",
+      "label": "Reconnaissance d’une école de magie",
+      "category": "detection",
+      "compatibility": {"itemTypes": ["objet"]},
+      "activation": {"type": "passive", "trigger": "held"},
+      "automation": "automatic",
+      "parameters": {
+        "schoolAny": {"type": "string-list", "required": true},
+        "detectWritten": {"type": "boolean", "default": true},
+        "detectCast": {"type": "boolean", "default": true}
+      },
+      "effects": [{"type": "spell_school_recognition", "schoolAny": "@schoolAny", "detectWritten": "@detectWritten", "detectCast": "@detectCast"}],
+      "source": {"section": "III.D", "page": "131"}
+    },
+    {
+      "id": "darkness_barrier",
+      "label": "Rideau d’obscurité absolue",
+      "category": "environment",
+      "compatibility": {"itemTypes": ["objet"]},
+      "activation": {"type": "action", "trigger": "use"},
+      "automation": "assisted",
+      "parameters": {
+        "area": {"type": "area", "required": true},
+        "mustSpanBoundaries": {"type": "boolean", "default": true},
+        "chargeCost": {"type": "integer", "default": 2}
+      },
+      "effects": [{"type": "darkness_barrier", "area": "@area", "mustSpanBoundaries": "@mustSpanBoundaries", "chargeCost": "@chargeCost"}],
+      "source": {"section": "III.D", "page": "131"}
+    },
+    {
+      "id": "prismatic_layer_builder",
+      "label": "Construction progressive d’une protection prismatique",
+      "category": "protection",
+      "compatibility": {"itemTypes": ["objet"]},
+      "activation": {"type": "action", "trigger": "use"},
+      "automation": "assisted",
+      "parameters": {
+        "colors": {"type": "fixed-list", "value": ["red", "orange", "yellow", "green", "blue", "indigo", "violet"]},
+        "chargePerColor": {"type": "integer", "default": 1},
+        "shape": {"type": "choice", "values": ["wall", "sphere"]}
+      },
+      "effects": [{"type": "prismatic_layer_builder", "colors": "@colors", "chargePerColor": "@chargePerColor", "shape": "@shape"}],
+      "source": {"section": "III.D", "page": "131"}
+    },
+    {
+      "id": "item_backfire_trap",
+      "label": "Piège ou contrecoup à l’utilisateur",
+      "category": "curse",
+      "compatibility": {"itemTypes": ["arme", "armure", "objet"]},
+      "activation": {"type": "automatic", "trigger": "first-or-configured-use"},
+      "automation": "assisted",
+      "parameters": {
+        "chance": {"type": "percentage", "required": true},
+        "effect": {"type": "effect-list", "required": true},
+        "revealsCurse": {"type": "boolean", "default": true}
+      },
+      "effects": [{"type": "item_backfire", "chance": "@chance", "effect": "@effect", "revealsCurse": "@revealsCurse"}],
+      "source": {"section": "III.D", "page": "128-132"}
+    }
+  ],
+  "auditReferences": [
+    {
+      "name": "Potion de rapidité",
+      "selectableAsTemplate": false,
+      "powers": [
+        {"id": "consumable_doses", "parameters": {"doses": 1}},
+        {"id": "haste_effect", "parameters": {"movementMultiplier": 2, "attackMultiplier": 2, "affectsCastingTime": false, "ageCostYears": 1, "duration": "5d4 rounds"}}
+      ],
+      "source": {"section": "III.A", "page": "123"}
+    },
+    {
+      "name": "Anneau d’invisibilité",
+      "selectableAsTemplate": false,
+      "powers": [
+        {"id": "state_transformation", "parameters": {"state": "invisible", "duration": "until-broken", "endsOn": ["attack"]}}
+      ],
+      "optionalPower": {"chance": 10, "description": "Inaudibilité tant que le porteur ne parle pas."},
+      "source": {"section": "III.C", "page": "126"}
+    },
+    {
+      "name": "Bâtonnet de feu",
+      "selectableAsTemplate": false,
+      "powers": [
+        {"id": "multi_power_charge_pool", "parameters": {"maxCharges": 50, "rechargeable": true, "oncePerRound": true}},
+        {"id": "spell_equivalent", "parameters": {"spellName": "Mains brûlantes", "chargeCost": 1}},
+        {"id": "spell_equivalent", "parameters": {"spellName": "Pyrotechnie", "chargeCost": 1}},
+        {"id": "spell_equivalent", "parameters": {"spellName": "Boule de feu", "chargeCost": 2, "overrides": {"damage": "6d6, minimum 2 par dé"}}},
+        {"id": "spell_equivalent", "parameters": {"spellName": "Mur de feu", "chargeCost": 2, "overrides": {"duration": "6 rounds"}}}
+      ],
+      "source": {"section": "III.D", "page": "131"}
+    }
+  ],
+  "coverage": {
+    "analysedSections": ["III.A", "III.B", "III.C", "III.D"],
+    "nextSections": ["III.E objets divers", "III.E spécial artefacts et reliques"],
+    "generatorIntegration": false,
+    "powerCount": 41
+  }
+}
