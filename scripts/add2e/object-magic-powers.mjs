@@ -3,7 +3,7 @@ function e(e){return String(e??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").re
 // ADD2E — Constructeur commun d'armes, armures et objets magiques.
 // Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2.
 
-const ADD2E_MAGIC_ITEM_BUILDER_VERSION = "2026-07-21-magic-item-builder-v5-creator-profiles";
+const ADD2E_MAGIC_ITEM_BUILDER_VERSION = "2026-07-21-magic-item-builder-v6-base-selector-render";
 const ADD2E_MAGIC_ITEM_TYPES = new Set(["arme", "armure", "objet"]);
 
 function add2eMagicBuilderClone(value) {
@@ -682,6 +682,15 @@ async function add2eMagicBuilderCollectCreatorBases() {
 
   for (const pack of game.packs ?? []) {
     if (String(pack.documentName ?? pack.metadata?.type ?? "") !== "Item") continue;
+    const packKeys = [
+      pack.collection,
+      pack.metadata?.name,
+      pack.metadata?.label,
+      pack.title
+    ].map(value => String(value ?? "").trim().toLowerCase());
+    const isWeaponPack = packKeys.some(value => value === "armes" || value.endsWith(".armes"));
+    const isArmorPack = packKeys.some(value => value === "armures" || value.endsWith(".armures"));
+    if (!isWeaponPack && !isArmorPack) continue;
 
     let index;
     try {
@@ -697,6 +706,7 @@ async function add2eMagicBuilderCollectCreatorBases() {
     const source = String(pack.title ?? pack.metadata?.label ?? pack.collection);
     for (const entry of index ?? []) {
       const type = String(entry.type ?? "").trim().toLowerCase();
+      if ((type === "arme" && !isWeaponPack) || (type === "armure" && !isArmorPack)) continue;
       if (type !== "arme" && type !== "armure") continue;
       result[type].push({
         uuid: String(entry.uuid ?? `Compendium.${pack.collection}.${entry._id}`),
@@ -737,14 +747,18 @@ function add2eMagicBuilderToggleCreatorType(form) {
   const weaponGroup = root?.querySelector?.('[data-add2e-base-group="arme"]');
   const armorGroup = root?.querySelector?.('[data-add2e-base-group="armure"]');
   const applicationGroup = root?.querySelector?.('[data-add2e-application-group]');
-  const applicationModeGroup = root?.querySelector?.('[data-add2e-application-mode-group]');
   const chargesGroup = root?.querySelector?.('[data-add2e-charges-group]');
   const rechargeGroup = root?.querySelector?.('[data-add2e-recharge-group]');
 
-  if (weaponGroup) weaponGroup.hidden = profile !== "arme";
-  if (armorGroup) armorGroup.hidden = profile !== "armure";
+  if (weaponGroup) {
+    weaponGroup.hidden = profile !== "arme";
+    weaponGroup.style?.setProperty?.("display", profile === "arme" ? "" : "none", profile === "arme" ? "" : "important");
+  }
+  if (armorGroup) {
+    armorGroup.hidden = profile !== "armure";
+    armorGroup.style?.setProperty?.("display", profile === "armure" ? "" : "none", profile === "armure" ? "" : "important");
+  }
   if (applicationGroup) applicationGroup.hidden = !["objet", "arme", "armure", "anneau", "baguette", "batonnet", "potion"].includes(profile);
-  if (applicationModeGroup) applicationModeGroup.hidden = profile !== "arme";
   if (chargesGroup) chargesGroup.hidden = defaults?.charges !== true;
   if (rechargeGroup) rechargeGroup.hidden = defaults?.charges !== true;
 
@@ -768,33 +782,47 @@ function add2eMagicBuilderToggleCreatorType(form) {
 globalThis.add2eMagicBuilderToggleCreatorType = add2eMagicBuilderToggleCreatorType;
 
 function add2eMagicBuilderCreatorForm(dialogOrElement) {
-  const element = dialogOrElement?.element ?? dialogOrElement ?? null;
-  return element?.querySelector?.("form.add2e-magic-item-create-form")
+  const raw = dialogOrElement?.element ?? dialogOrElement ?? null;
+  const element = raw?.jquery
+    ? raw[0]
+    : raw?.querySelector
+      ? raw
+      : raw?.[0]?.querySelector
+        ? raw[0]
+        : null;
+  return element?.matches?.("form.add2e-magic-item-create-form")
+    ? element
+    : element?.querySelector?.("form.add2e-magic-item-create-form")
     ?? element?.closest?.("dialog")?.querySelector?.("form.add2e-magic-item-create-form")
     ?? null;
+}
+
+function add2eMagicBuilderBindCreatorTypeSelect(dialogOrElement) {
+  const form = add2eMagicBuilderCreatorForm(dialogOrElement);
+  const select = form?.elements?.profile ?? form?.querySelector?.('select[name="profile"]');
+  if (!form || !select) return false;
+
+  if (select.dataset.add2eCreatorTypeBound !== "1") {
+    select.dataset.add2eCreatorTypeBound = "1";
+    const refresh = () => add2eMagicBuilderToggleCreatorType(form);
+    select.addEventListener("change", refresh);
+    select.addEventListener("input", refresh);
+  }
+
+  add2eMagicBuilderToggleCreatorType(form);
+  return true;
 }
 
 function add2eMagicBuilderCreateDialogV2Class(DialogV2) {
   return class Add2eMagicItemCreatorDialogV2 extends DialogV2 {
     _onRender(context, options) {
       super._onRender?.(context, options);
-      this.add2eBindCreatorTypeSelect();
+      queueMicrotask(() => this.add2eBindCreatorTypeSelect());
+      globalThis.requestAnimationFrame?.(() => this.add2eBindCreatorTypeSelect());
     }
 
     add2eBindCreatorTypeSelect() {
-      const form = add2eMagicBuilderCreatorForm(this);
-      const select = form?.elements?.profile ?? form?.querySelector?.('select[name="profile"]');
-      if (!form || !select) return false;
-
-      if (select.dataset.add2eCreatorTypeBound !== "1") {
-        select.dataset.add2eCreatorTypeBound = "1";
-        const refresh = () => add2eMagicBuilderToggleCreatorType(form);
-        select.addEventListener("change", refresh);
-        select.addEventListener("input", refresh);
-      }
-
-      add2eMagicBuilderToggleCreatorType(form);
-      return true;
+      return add2eMagicBuilderBindCreatorTypeSelect(this);
     }
   };
 }
@@ -1029,8 +1057,8 @@ async function add2eMagicBuilderCreateMagicItem(directory = null) {
       <div class="form-group"><label>Nom</label><input name="name" type="text" value="Objet magique"></div>
       <div class="form-group"><label>Nom non identifié</label><input name="unidentifiedName" type="text" value="Objet inconnu"></div>
       <div class="form-group" style="display:flex;gap:18px;"><label><input name="identified" type="checkbox"> Identifié</label><label><input name="cursed" type="checkbox"> Maudit</label></div>
+      <input name="application" type="hidden" value="porteur">
       <div data-add2e-application-group>
-        <div class="form-group" data-add2e-application-mode-group><label>Application des bonus de toucher/dégâts</label><select name="application"><option value="source">Cette arme uniquement</option><option value="porteur">Toutes les attaques du porteur</option></select></div>
         <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;">
           <div class="form-group"><label>Bonus au toucher</label><input name="bonusToucher" type="number" step="1" value="0"></div>
           <div class="form-group"><label>Bonus aux dégâts</label><input name="bonusDegats" type="number" step="1" value="0"></div>
@@ -1155,8 +1183,22 @@ Hooks.on("renderSidebarTab", (app, html) => {
   const id = String(app?.options?.id ?? app?.id ?? app?.constructor?.name ?? "").toLowerCase();
   if (id.includes("item")) add2eMagicBuilderInstallDirectoryCreator(app, html);
 });
+Hooks.on("renderApplicationV2", (app, html) => {
+  add2eMagicBuilderBindCreatorTypeSelect(html)
+    || add2eMagicBuilderBindCreatorTypeSelect(app);
+});
 
 Hooks.once("ready", () => {
   globalThis.add2eCreateMagicItem = add2eMagicBuilderCreateMagicItem;
-});
+  if (globalThis.__ADD2E_MAGIC_ITEM_CREATOR_DELEGATED_V1__) return;
+  globalThis.__ADD2E_MAGIC_ITEM_CREATOR_DELEGATED_V1__ = true;
 
+  const refreshCreatorType = event => {
+    const select = event?.target;
+    if (!select?.matches?.('form.add2e-magic-item-create-form select[name="profile"]')) return;
+    const form = select.closest("form.add2e-magic-item-create-form");
+    if (form) add2eMagicBuilderToggleCreatorType(form);
+  };
+  document.addEventListener("change", refreshCreatorType, true);
+  document.addEventListener("input", refreshCreatorType, true);
+});
