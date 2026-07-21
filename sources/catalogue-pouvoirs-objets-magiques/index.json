@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "catalogueId": "add2e-gdm-magic-powers",
-  "version": "2026-07-21-catalogue-manifest-v1",
+  "version": "2026-07-21-catalogue-manifest-v2",
   "mergeStrategy": "append-powers-and-merge-vocabularies",
   "fragments": [
     {
@@ -17,18 +17,56 @@
       "metadataOverrides": {
         "coverage.powerCount": 51
       }
+    },
+    {
+      "path": "iii-e-core-1.json",
+      "sections": ["III.E.1", "III.E.2", "III.E.3", "III.E.4", "III.E.5"],
+      "status": "miscellaneous-magic-core-pass-1",
+      "verifiedPowerCount": 13
+    },
+    {
+      "path": "iii-e-core-2.json",
+      "sections": ["III.E.1", "III.E.2", "III.E.3", "III.E.4", "III.E.5"],
+      "status": "miscellaneous-magic-core-pass-1",
+      "verifiedPowerCount": 13
+    },
+    {
+      "path": "iii-e-core-3.json",
+      "sections": ["III.E.1", "III.E.2", "III.E.3", "III.E.4", "III.E.5"],
+      "status": "miscellaneous-magic-core-pass-1",
+      "verifiedPowerCount": 13
+    },
+    {
+      "path": "iii-e-core-4.json",
+      "sections": ["III.E.1", "III.E.2", "III.E.3", "III.E.4", "III.E.5"],
+      "status": "miscellaneous-magic-core-pass-1",
+      "verifiedPowerCount": 13
+    },
+    {
+      "path": "iii-e-core-5.json",
+      "sections": ["III.E.1", "III.E.2", "III.E.3", "III.E.4", "III.E.5"],
+      "status": "miscellaneous-magic-core-pass-1",
+      "verifiedPowerCount": 13
+    },
+    {
+      "path": "iii-e-core-6.json",
+      "sections": ["III.E.1", "III.E.2", "III.E.3", "III.E.4", "III.E.5"],
+      "status": "miscellaneous-magic-core-pass-1",
+      "verifiedPowerCount": 12
     }
   ],
   "coverage": {
-    "analysedSections": ["III.A", "III.B", "III.C", "III.D", "III.F", "III.G", "III.H"],
-    "partialSections": [],
-    "nextSections": ["III.E objets divers", "III.E spécial artefacts et reliques"],
-    "generatorIntegration": false
+    "analysedSections": ["III.A", "III.B", "III.C", "III.D", "III.E", "III.F", "III.G", "III.H"],
+    "partialSections": ["III.E objets divers"],
+    "nextSections": ["III.E objets divers - seconde passe", "III.E spécial artefacts et reliques"],
+    "generatorIntegration": false,
+    "verifiedMiscellaneousPowerCount": 77
   },
   "rules": {
     "objectReferencesAreAuditOnly": true,
     "objectsAreNeverSelectableTemplates": true,
     "powersMustBeFilteredByCompatibility": true,
-    "existingSpellItemsMustBeReusedWhenAvailable": true
+    "existingSpellItemsMustBeReusedWhenAvailable": true,
+    "artifactPowerTablesMustRemainSeparate": true
   }
 }
