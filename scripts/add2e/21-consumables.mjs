@@ -7,7 +7,7 @@ import {
   add2eRefundSpellComponents as add2eCoreRefundSpellComponents
 } from "./22e-consumables-core.mjs";
 
-const ADD2E_CONSUMABLES_VERSION = "2026-06-24-consumables-no-legacy-weapon-dialog-v5";
+const ADD2E_CONSUMABLES_VERSION = "2026-07-22-returning-thrown-weapons-v6";
 globalThis.ADD2E_CONSUMABLES_VERSION = ADD2E_CONSUMABLES_VERSION;
 
 function add2eConsumablesLog(...args) {
@@ -250,12 +250,41 @@ export async function add2eRegisterProjectileSpentInCombat(actor, projectile, qu
   return vendorApi.recordProjectileSpent({ actor, projectile, quantity: Math.max(1, Math.floor(add2eNumber(quantity, 1))) });
 }
 
+function add2eConsumablesRules(raw) {
+  if (Array.isArray(raw)) return raw.filter(rule => rule && typeof rule === "object");
+  if (raw && typeof raw === "object") {
+    return Array.isArray(raw.rules)
+      ? raw.rules.filter(rule => rule && typeof rule === "object")
+      : [raw];
+  }
+  return [];
+}
+
+function add2eReturningThrownWeapon(actor, weapon) {
+  if (!actor || !weapon) return false;
+  for (const effect of actor.effects ?? []) {
+    if (!effect || effect.disabled || effect.flags?.add2e?.magicItemCatalogueEffect !== true) continue;
+    if (String(effect.flags.add2e.sourceItemId ?? "") !== String(weapon.id ?? "")) continue;
+    for (const rule of add2eConsumablesRules(effect.flags.add2e.rules)) {
+      if (add2eSlugify(rule?.type ?? rule?.kind ?? rule?.category) !== "return_to_wielder") continue;
+      const enabled = rule?.value ?? rule?.enabled ?? rule?.return ?? true;
+      if (enabled !== false && String(enabled).trim().toLowerCase() !== "false" && String(enabled).trim() !== "0") return true;
+    }
+  }
+  return false;
+}
+
 export async function add2eConsumeThrownWeapon(actor, weapon, quantity = 1) {
   if (!actor || !weapon) return { ok: false, reason: "missing" };
   if (!add2eActorUsesProjectileInventory(actor)) return { ok: true, ignored: true, spent: 0 };
 
-  const spent = Math.max(1, Math.floor(add2eNumber(quantity, 1)));
   const available = add2eWeaponStackQuantity(weapon);
+  if (add2eReturningThrownWeapon(actor, weapon)) {
+    add2eConsumablesLog("return-to-wielder", { actor: actor.name, weapon: weapon.name, available });
+    return { ok: true, spent: 0, remaining: available, returned: true, reason: "return-to-wielder" };
+  }
+
+  const spent = Math.max(1, Math.floor(add2eNumber(quantity, 1)));
   if (available < spent) {
     await add2eConsumablesAlert({
       title: "Arme de lancer indisponible",
