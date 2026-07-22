@@ -52,7 +52,7 @@ function pushTag(tags, prefix, rawValues, suffix = null) {
   });
 }
 
-function movementCompilation(effect, type, tags, rules, changes) {
+function movementCompilation(effect, type, tags, rules) {
   if (!["movement_mode", "movement_bonus", "movement_modifier", "movement_multiplier", "movement_override",
     "speed_bonus", "speed_modifier", "speed_multiplier", "speed_override", "base_movement", "fixed_movement"].includes(type)) return;
   const explicitMode = norm(effect.operation ?? effect.applyMode ?? effect.application ?? effect.mode);
@@ -62,6 +62,8 @@ function movementCompilation(effect, type, tags, rules, changes) {
   const override = type.includes("override") || type.includes("fixed") || type === "base_movement"
     || ["override", "set", "fixed", "replace", "impose", "imposed"].includes(explicitMode);
   const value = multiply ? multiplier ?? direct : direct ?? multiplier;
+  const operation = multiply ? "multiply" : override ? "override" : "add";
+  const priority = Math.max(1, Math.floor(number(effect.priority) ?? 100));
   const movementModes = values(effect, ["movementMode", "movementModes", "modeName", "travelMode", "movementType", "modes"])
     .map(norm).filter(entry => entry && !["add", "multiply", "override", "set", "fixed"].includes(entry));
   if (!movementModes.length && type === "movement_mode") {
@@ -72,14 +74,20 @@ function movementCompilation(effect, type, tags, rules, changes) {
     tags.add(`mouvement:${entry}`);
     tags.add(`movement_mode:${entry}`);
   });
-  if (!Number.isFinite(value)) return;
-  const priority = Math.max(1, Math.floor(number(effect.priority) ?? 100));
-  const activeMode = multiply ? mode("MULTIPLY") : override ? mode("OVERRIDE") : mode("ADD");
-  changes.push(
-    { key: "system.mouvement.base", mode: activeMode, value, priority },
-    { key: "system.vitesse_base", mode: activeMode, value, priority }
-  );
-  rules.push({ kind: "movement_modifier", type, value, operation: multiply ? "multiply" : override ? "override" : "add", modes: movementModes });
+  if (Number.isFinite(value)) {
+    const tagValue = operation === "multiply" ? String(value) : signed(value);
+    tags.add(`mouvement_${operation}:${tagValue}`);
+    tags.add(`movement_${operation}:${tagValue}`);
+  }
+  if (!movementModes.length && !Number.isFinite(value)) return;
+  rules.push({
+    kind: "movement_modifier",
+    type,
+    value: Number.isFinite(value) ? value : null,
+    operation: Number.isFinite(value) ? operation : "mode",
+    modes: movementModes,
+    priority
+  });
 }
 
 function characteristicCompilation(effect, type, tags, rules, changes) {
@@ -175,7 +183,7 @@ export function compileDefinition(effect = {}) {
   const periodic = [];
   const changes = [];
 
-  movementCompilation(effect, type, tags, rules, changes);
+  movementCompilation(effect, type, tags, rules);
   characteristicCompilation(effect, type, tags, rules, changes);
   fixedArmorClassCompilation(effect, type, tags, rules);
   defenseCompilation(effect, type, tags);
