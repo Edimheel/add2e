@@ -1,131 +1,97 @@
-// ADD2E — Constructeur commun des cartes de chat.
-// Structure unique compatible Foundry V13, V14 et V15.
+// ADD2E — Constructeur commun des cartes de chat et présentation globale des fenêtres.
+// Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2.
 
-const ADD2E_CHAT_CARD_IMAGE_FALLBACK = "icons/svg/item-bag.svg";
-const ADD2E_CHAT_CARD_VARIANTS = new Set([
-  "neutral",
-  "attack",
-  "damage",
-  "spell",
-  "magic",
-  "ability",
-  "healing",
-  "success",
-  "failure",
-  "time"
-]);
+const ADD2E_CHAT_CARD_IMAGE_FALLBACK="icons/svg/item-bag.svg";
+const ADD2E_CHAT_CARD_VARIANTS=new Set(["neutral","attack","damage","spell","magic","ability","healing","success","failure","time"]);
+const ADD2E_GLOBAL_UI_VERSION="2026-07-22-global-ui-v1-canonical-magic-powers";
 
-function add2eChatCardEscape(value) {
-  const text = String(value ?? "");
-  try {
-    if (typeof foundry?.utils?.escapeHTML === "function") return foundry.utils.escapeHTML(text);
-  } catch (_error) {}
-  return text
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+function add2eChatCardEscape(value){
+  const text=String(value??"");
+  try{if(typeof foundry?.utils?.escapeHTML==="function")return foundry.utils.escapeHTML(text);}catch(_error){}
+  return text.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+}
+function add2eChatCardVariant(value){const variant=String(value??"neutral").trim().toLowerCase();return ADD2E_CHAT_CARD_VARIANTS.has(variant)?variant:"neutral";}
+function add2eChatCardIcon(value){const icon=String(value??"").trim();return /^[a-z0-9 _-]+$/i.test(icon)?icon:"fas fa-dice-d20";}
+function add2eChatCardImage(value,fallback=ADD2E_CHAT_CARD_IMAGE_FALLBACK){return String(value??"").trim()||fallback;}
+function add2eChatCardColorVariables(colors={}){
+  const allowed={accent:"--add2e-card-accent",accent2:"--add2e-card-accent-2",border:"--add2e-card-border",paper:"--add2e-card-paper",paper2:"--add2e-card-paper-2",text:"--add2e-card-text"};
+  return Object.entries(allowed).flatMap(([key,cssVariable])=>{const color=String(colors?.[key]??"").trim();return /^#[0-9a-f]{3,8}$/i.test(color)?[`${cssVariable}:${color}`]:[];}).join(";");
+}
+function add2eChatCardIdentity(identity={},fallback={}){return{name:String(identity?.name??fallback?.name??"").trim(),img:add2eChatCardImage(identity?.img??fallback?.img),type:String(identity?.type??"").trim(),meta:String(identity?.meta??"").trim()};}
+function add2eChatCardIdentityMeta(identity){return[identity.type,identity.meta].filter(Boolean).join(" · ");}
+function add2eChatCardRows(rows=[]){return(Array.isArray(rows)?rows:[]).filter(row=>row&&(row.label!==undefined||row.value!==undefined)).map(row=>`<div class="add2e-card-label">${add2eChatCardEscape(row.label??"")}</div><div class="add2e-card-value">${add2eChatCardEscape(row.value??"—")}</div>`).join("");}
+
+export function add2eBuildChatCard({actor=null,title="Action",icon="fas fa-dice-d20",source=null,target=null,variant="neutral",rows=[],message="",colors={}}={}){
+  const resolvedVariant=add2eChatCardVariant(variant);
+  const resolvedSource=add2eChatCardIdentity(source,{name:actor?.name??"Source",img:actor?.img??ADD2E_CHAT_CARD_IMAGE_FALLBACK});
+  const resolvedTarget=target?add2eChatCardIdentity(target):null;
+  const sourceMeta=add2eChatCardIdentityMeta(resolvedSource);
+  const targetMeta=resolvedTarget?add2eChatCardIdentityMeta(resolvedTarget):"";
+  const style=add2eChatCardColorVariables(colors);
+  const targetHtml=resolvedTarget?.name?`<div class="add2e-card-target"><img class="add2e-card-target-image" src="${add2eChatCardEscape(resolvedTarget.img)}" alt=""><div><span class="add2e-card-target-label">Cible</span><strong>${add2eChatCardEscape(resolvedTarget.name)}</strong>${targetMeta?`<span>${add2eChatCardEscape(targetMeta)}</span>`:""}</div></div>`:"";
+  const rowHtml=add2eChatCardRows(rows);
+  const messageHtml=String(message??"").trim()?`<div class="add2e-card-message">${add2eChatCardEscape(message)}</div>`:"";
+  return `<div class="add2e-card add2e-card--${resolvedVariant}"${style?` style="${add2eChatCardEscape(style)}"`:""}><header class="add2e-card-header"><img class="add2e-card-image add2e-card-source-image" src="${add2eChatCardEscape(resolvedSource.img)}" alt=""><div class="add2e-card-heading"><h3><i class="${add2eChatCardEscape(add2eChatCardIcon(icon))}"></i><span>${add2eChatCardEscape(title)}</span></h3><div class="add2e-card-source"><strong>${add2eChatCardEscape(resolvedSource.name||"Source")}</strong>${sourceMeta?`<span>${add2eChatCardEscape(sourceMeta)}</span>`:""}</div></div></header>${targetHtml}<div class="add2e-card-body">${rowHtml?`<div class="add2e-card-grid">${rowHtml}</div>`:""}${messageHtml}</div></div>`;
+}
+export async function add2eCreateChatCard(options={}){
+  const actor=options?.actor??null;
+  const chatData=options?.chatData&&typeof options.chatData==="object"?{...options.chatData}:{};
+  return ChatMessage.create({speaker:chatData.speaker??ChatMessage.getSpeaker({actor}),...chatData,content:add2eBuildChatCard(options)});
 }
 
-function add2eChatCardVariant(value) {
-  const variant = String(value ?? "neutral").trim().toLowerCase();
-  return ADD2E_CHAT_CARD_VARIANTS.has(variant) ? variant : "neutral";
+const PARAMETER_LABELS=Object.freeze({
+  ability:"Caractéristique",characteristic:"Caractéristique",attribute:"Caractéristique",stat:"Caractéristique",score:"Valeur",value:"Valeur imposée",amount:"Valeur",bonus:"Bonus",penalty:"Malus",modifier:"Modificateur",
+  duration:"Durée",rounds:"Nombre de rounds",turns:"Nombre de tours",minutes:"Nombre de minutes",hours:"Nombre d’heures",days:"Nombre de jours",
+  range:"Portée",radius:"Rayon",distance:"Distance",area:"Zone d’effet",zone:"Zone d’effet",shape:"Forme de la zone",width:"Largeur",height:"Hauteur",length:"Longueur",
+  target:"Cible",targets:"Cibles",recipients:"Bénéficiaires",damage:"Dégâts",damageformula:"Formule de dégâts",damagetype:"Type de dégâts",type:"Type",condition:"État",effect:"Effet",effects:"Effets",element:"Élément",
+  resistance:"Résistance",resistancetype:"Type de résistance",immunity:"Immunité",immunitytype:"Type d’immunité",save:"Jet de sauvegarde",savetype:"Type de sauvegarde",savemodifier:"Modificateur de sauvegarde",
+  spelluuid:"Sort équivalent",spellname:"Nom du sort",school:"École de magie",casterlevel:"Niveau du lanceur",activation:"Activation",activationtime:"Temps d’activation",trigger:"Déclencheur",mode:"Mode de fonctionnement",
+  chargecost:"Coût en charges",charges:"Charges",uses:"Utilisations",frequency:"Fréquence",interval:"Intervalle",percentage:"Pourcentage",chance:"Chance",formula:"Formule",table:"Table",
+  movementtype:"Type de déplacement",speed:"Vitesse",multiplier:"Multiplicateur",armorclass:"Classe d’armure",operation:"Opération",priority:"Priorité",level:"Niveau",quantity:"Quantité",count:"Nombre",maximum:"Maximum",minimum:"Minimum",weight:"Poids",size:"Taille",
+  creaturetype:"Type de créature",alignment:"Alignement",category:"Catégorie",tags:"Mots-clés",description:"Description",notes:"Précisions",unit:"Unité",source:"Source"
+});
+const PARAMETER_HELP=Object.freeze({ability:"Choisissez la caractéristique concernée.",characteristic:"Choisissez la caractéristique concernée.",attribute:"Choisissez la caractéristique concernée.",stat:"Choisissez la caractéristique concernée.",value:"Indiquez la valeur appliquée par le pouvoir.",duration:"Indiquez la durée de l’effet.",range:"Indiquez la portée du pouvoir.",radius:"Indiquez le rayon de la zone d’effet.",distance:"Indiquez la distance concernée.",target:"Indiquez la cible du pouvoir.",targets:"Indiquez les cibles du pouvoir.",damage:"Indiquez les dégâts du pouvoir.",damageformula:"Indiquez la formule de dégâts.",damagetype:"Choisissez le type de dégâts.",save:"Indiquez le jet de sauvegarde applicable.",savetype:"Choisissez le type de sauvegarde.",spelluuid:"Choisissez le sort équivalent dans le compendium ADD2E.",spellname:"Nom du sort équivalent sélectionné.",casterlevel:"Indiquez le niveau de lanceur utilisé par le pouvoir.",chargecost:"Indiquez le nombre de charges dépensées à chaque utilisation.",chance:"Indiquez la chance de réussite en pourcentage.",percentage:"Indiquez le pourcentage appliqué.",formula:"Indiquez la formule utilisée par le pouvoir.",description:"Décrivez l’effet visible ou les précisions utiles."});
+const PARAMETER_VALUES=Object.freeze({force:"Force",strength:"Force",str:"Force",dexterite:"Dextérité",dexterity:"Dextérité",dex:"Dextérité",constitution:"Constitution",con:"Constitution",intelligence:"Intelligence",int:"Intelligence",sagesse:"Sagesse",wisdom:"Sagesse",wis:"Sagesse",charisme:"Charisme",charisma:"Charisme",cha:"Charisme",permanent:"Permanente",automatic:"Automatique",assisted:"Assisté par le MD",manual:"Manuel",chat_card:"Carte de chat",none:"Aucun",true:"Oui",false:"Non",yes:"Oui",no:"Non",self:"Porteur",wearer:"Porteur",equipped:"Équipé",carried:"Transporté",ally:"Allié",allies:"Alliés",enemy:"Ennemi",enemies:"Ennemis",all:"Tous",configured:"Configurée",passive:"Passive",always_on:"Toujours active",activate_or_equipped:"Activation ou équipement",add:"Ajouter",additive:"Ajouter",override:"Imposer",set:"Imposer",multiply:"Multiplier",round:"Round",rounds:"Rounds",turn:"Tour",turns:"Tours",minute:"Minute",minutes:"Minutes",hour:"Heure",hours:"Heures",day:"Jour",days:"Jours",fire:"Feu",cold:"Froid",electricity:"Électricité",lightning:"Foudre",acid:"Acide",poison:"Poison",magic:"Magie",physical:"Physique",sonic:"Son",necrotic:"Nécrotique",radiant:"Rayonnant",slashing:"Tranchant",piercing:"Perforant",bludgeoning:"Contondant",cone:"Cône",sphere:"Sphère",cylinder:"Cylindre",line:"Ligne",cube:"Cube",melee:"Corps à corps",ranged:"Distance",touch:"Contact"});
+const CHARACTERISTICS=Object.freeze([["force","Force"],["dexterite","Dextérité"],["constitution","Constitution"],["intelligence","Intelligence"],["sagesse","Sagesse"],["charisme","Charisme"]]);
+
+function normalizeUi(value){return String(value??"").trim().toLowerCase().replace(/œ/g,"oe").replace(/æ/g,"ae").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[’']/g,"").replace(/[^a-z0-9]+/g,"_").replace(/_+/g,"_").replace(/^_|_$/g,"");}
+function parameterKey(value){return normalizeUi(value).replace(/_/g,"");}
+function parameterLabel(name){return PARAMETER_LABELS[parameterKey(name)]??"Paramètre";}
+function parameterHelp(name){return PARAMETER_HELP[parameterKey(name)]??"Renseignez la valeur demandée par le pouvoir.";}
+function valueLabel(value,index=null){const raw=String(value??"").trim(),key=normalizeUi(raw);if(Object.hasOwn(PARAMETER_VALUES,key))return PARAMETER_VALUES[key];if(!raw||/^[-+]?\d+(?:[.,]\d+)?$/.test(raw)||/^\d+d\d+(?:[-+]\d+)?$/i.test(raw))return raw;if(/^[\[{]/.test(raw))return "Paramètres configurés";if(!/^[a-z0-9_-]+$/i.test(raw))return raw;return Number.isInteger(index)?`Option ${index+1}`:raw;}
+function rootElement(app,html){if(html instanceof HTMLElement)return html;if(html?.[0] instanceof HTMLElement)return html[0];if(app?.element instanceof HTMLElement)return app.element;if(app?.element?.[0] instanceof HTMLElement)return app.element[0];return null;}
+function characteristic(value){const key=normalizeUi(value);for(const [canonical,aliases] of [["force",["force","strength","str"]],["dexterite",["dexterite","dexterity","dex"]],["constitution",["constitution","con"]],["intelligence",["intelligence","int"]],["sagesse",["sagesse","wisdom","wis"]],["charisme",["charisme","charisma","cha"]]])if(aliases.includes(key))return canonical;return"";}
+
+function ensureGlobalStyles(){
+  if(!document?.head)return;
+  const id="add2e-global-ui-style",old=document.getElementById(id);if(old?.dataset?.version===ADD2E_GLOBAL_UI_VERSION)return;old?.remove();
+  const style=document.createElement("style");style.id=id;style.dataset.version=ADD2E_GLOBAL_UI_VERSION;style.textContent=`
+.application.add2e-system-window{--a2e-dark:#5a3511;--a2e-main:#8a5718;--a2e-border:#b98b2d;--a2e-paper:#fff8df;--a2e-paper2:#f3e2b5;--a2e-text:#2f250c;border:1px solid var(--a2e-border)!important;border-radius:14px!important;overflow:hidden!important;background:linear-gradient(180deg,var(--a2e-paper),var(--a2e-paper2))!important;color:var(--a2e-text)!important;box-shadow:0 14px 34px rgba(0,0,0,.45),inset 0 0 0 1px rgba(255,240,190,.35)!important}
+.application.add2e-system-window .window-header{background:linear-gradient(180deg,var(--a2e-dark),#2f1b08)!important;color:#ffe7a8!important;border-bottom:1px solid var(--a2e-border)!important}.application.add2e-system-window .window-title{color:#ffe7a8!important;font-weight:900!important}.application.add2e-system-window .window-content{background:radial-gradient(circle at 15% 10%,rgba(255,241,187,.95),transparent 34%),linear-gradient(180deg,var(--a2e-paper),var(--a2e-paper2))!important;color:var(--a2e-text)!important;padding:0!important}.application.add2e-system-window .dialog-content{padding:0!important}
+.application.add2e-system-window .add2e-magic-power-parameter-form{min-width:560px!important;padding:16px 18px!important;display:grid!important;gap:10px!important;background:linear-gradient(90deg,rgba(122,70,16,.08),transparent 42%),rgba(255,252,242,.82)!important;color:var(--a2e-text)!important}.application.add2e-system-window .add2e-magic-power-parameter-form>.form-group{display:grid!important;grid-template-columns:minmax(180px,220px) minmax(0,1fr)!important;align-items:center!important;gap:10px!important;padding:9px 10px!important;margin:0!important;border:1px solid #d9bf73!important;border-radius:10px!important;background:#fffdf4!important}.application.add2e-system-window .add2e-magic-power-parameter-form>.form-group>label,.application.add2e-system-window .add2e-magic-power-parameter-form>label.form-group>span{font-weight:900!important;color:#5d3d0d!important}.application.add2e-system-window .add2e-magic-power-parameter-form input:not([type=hidden]),.application.add2e-system-window .add2e-magic-power-parameter-form select,.application.add2e-system-window .add2e-magic-power-parameter-form textarea{width:100%!important;min-height:36px!important;border:1px solid #d9bf73!important;border-radius:8px!important;background:#fffaf0!important;color:var(--a2e-text)!important;padding:6px 8px!important;font-weight:700!important}.application.add2e-system-window .add2e-magic-power-parameter-form textarea{min-height:76px!important;resize:vertical!important}.application.add2e-system-window .add2e-parameter-help{grid-column:2!important;margin:-4px 0 0!important;color:#6b5a2a!important;font-size:.82rem!important;font-style:italic!important}.application.add2e-system-window .dialog-buttons{padding:0 18px 16px!important;background:linear-gradient(180deg,rgba(245,223,170,.2),#efd08a)!important;gap:10px!important}.application.add2e-system-window .dialog-buttons button{border:1px solid #8d641b!important;border-radius:10px!important;background:linear-gradient(180deg,#7b4b16,#4b2b0b)!important;color:#ffe7a8!important;font-weight:900!important}@media(max-width:760px){.application.add2e-system-window .add2e-magic-power-parameter-form{min-width:0!important}.application.add2e-system-window .add2e-magic-power-parameter-form>.form-group{grid-template-columns:1fr!important}.application.add2e-system-window .add2e-parameter-help{grid-column:1!important}}`;
+  document.head.append(style);
 }
+function groupOf(control){return control?.closest?.(".form-group")??control?.parentElement??null;}
+function labelOf(control){const group=groupOf(control);if(!group)return null;return group.matches?.("label.form-group")?group.querySelector(":scope > span"):group.querySelector(":scope > label")??group.querySelector("label");}
+function localizeLabel(control){if(!control||control.dataset.add2eFrenchLabel==="1")return;const label=labelOf(control);if(!label)return;const required=label.textContent?.includes("*")===true;label.textContent=parameterLabel(control.name);if(required){const star=document.createElement("span");star.textContent=" *";star.style.color="#a40000";label.append(star);}control.dataset.add2eFrenchLabel="1";}
+function addHelp(control){const group=groupOf(control);if(!group||[...group.querySelectorAll(".add2e-parameter-help")].some(node=>node.dataset.parameter===control.name))return;const help=document.createElement("p");help.className="add2e-parameter-help";help.dataset.parameter=control.name;help.textContent=parameterHelp(control.name);group.append(help);}
+function localizeOptions(select){if(!select||select.dataset.add2eFrenchOptions==="1")return;[...select.options].forEach((option,index)=>{if(!option.value)return;const key=normalizeUi(option.value);if(Object.hasOwn(PARAMETER_VALUES,key))option.textContent=PARAMETER_VALUES[key];else if(!String(option.textContent??"").trim()||String(option.textContent).trim()===String(option.value))option.textContent=valueLabel(option.value,index);});select.dataset.add2eFrenchOptions="1";}
+function replaceCharacteristic(form){const current=form.querySelector('[name="ability"],[name="characteristic"],[name="attribute"],[name="stat"]');if(!current)return null;if(current instanceof HTMLSelectElement&&current.dataset.add2eFrenchCharacteristic==="1")return current;const select=document.createElement("select");for(const attribute of current.attributes)if(!["name","type","value"].includes(attribute.name))select.setAttribute(attribute.name,attribute.value);select.name=current.name;select.dataset.add2eFrenchCharacteristic="1";select.innerHTML=`<option value="">— Choisir une caractéristique —</option>${CHARACTERISTICS.map(([value,label])=>`<option value="${value}">${label}</option>`).join("")}`;select.value=characteristic(current.value);current.replaceWith(select);localizeLabel(select);addHelp(select);return select;}
+function replaceCharacteristicValue(form){const characteristicControl=form.querySelector('[name="ability"],[name="characteristic"],[name="attribute"],[name="stat"]'),current=form.querySelector('[name="value"]');if(!characteristicControl||!current)return current;if(current instanceof HTMLInputElement&&current.type==="number"&&current.dataset.add2eFrenchAbilityValue==="1")return current;const input=document.createElement("input");for(const attribute of current.attributes)if(!["type","value","rows"].includes(attribute.name))input.setAttribute(attribute.name,attribute.value);input.type="number";input.step="1";input.name=current.name;input.dataset.add2eFrenchAbilityValue="1";input.value=Number.isFinite(Number(current.value))?String(Number(current.value)):"";current.replaceWith(input);localizeLabel(input);addHelp(input);return input;}
+function localizeDuration(form){const current=form.querySelector('[name="duration"]');if(!current||current.dataset.add2eFrenchDuration==="1")return;current.dataset.add2eFrenchDuration="1";const visible=document.createElement("input");visible.type="text";visible.value=normalizeUi(current.value)==="permanent"?"Permanente":String(current.value??"");visible.placeholder="Permanente, 1 tour, 10 minutes…";current.type="hidden";current.hidden=true;current.style.display="none";const sync=()=>{const value=String(visible.value??"").trim();current.value=normalizeUi(value)==="permanente"?"permanent":value;};visible.addEventListener("input",sync);current.insertAdjacentElement("afterend",visible);sync();localizeLabel(current);addHelp(current);}
+function localizeFixed(control){const type=normalizeUi(control?.dataset?.add2eParameterType);if(!["fixed","fixed_list"].includes(type)||control.dataset.add2eFrenchFixed==="1")return;const display=[...(groupOf(control)?.children??[])].find(element=>element!==control&&element.tagName!=="LABEL"&&!element.classList?.contains("add2e-parameter-help"));if(!display)return;const raw=String(control.value??"").trim();let values=[raw];try{const parsed=JSON.parse(raw);values=Array.isArray(parsed)?parsed:[parsed];}catch(_error){}display.textContent=raw?values.map((value,index)=>valueLabel(value,index)).join(", "):"Valeur définie par le pouvoir";control.dataset.add2eFrenchFixed="1";}
+function localizeForm(form){for(const control of form.querySelectorAll('[data-add2e-parameter-type][name]')){localizeLabel(control);if(control instanceof HTMLSelectElement)localizeOptions(control);localizeFixed(control);addHelp(control);}replaceCharacteristic(form);replaceCharacteristicValue(form);localizeDuration(form);const finalHelp=form.querySelector(":scope > p:last-child");if(finalHelp&&!finalHelp.classList.contains("add2e-parameter-help")&&finalHelp.dataset.add2eFrenchFinalHelp!=="1"){finalHelp.textContent="Les paramètres marqués d’un astérisque sont obligatoires. Les champs complexes acceptent une valeur simple ou une structure JSON.";finalHelp.dataset.add2eFrenchFinalHelp="1";}}
+function missingRequired(form){const missing=[];for(const control of form.querySelectorAll('[data-add2e-parameter-type][name]')){if(!labelOf(control)?.textContent?.includes("*"))continue;const value=control instanceof HTMLSelectElement&&control.multiple?[...control.selectedOptions].map(option=>option.value).filter(Boolean):control instanceof HTMLInputElement&&control.type==="checkbox"?control.checked:String(control.value??"").trim();if(value===false||value===""||Array.isArray(value)&&!value.length)missing.push(parameterLabel(control.name));}return[...new Set(missing)];}
+function bindValidation(root,form){if(root.dataset.add2eMagicFrenchValidation==="1")return;root.dataset.add2eMagicFrenchValidation="1";root.addEventListener("click",event=>{const button=event.target instanceof Element?event.target.closest('button[data-action="save"]'):null;if(!button)return;const missing=missingRequired(form);if(!missing.length)return;event.preventDefault();event.stopImmediatePropagation();ui.notifications.warn(`Paramètres obligatoires manquants : ${missing.join(", ")}.`);},true);}
+function localizeSummary(text){return String(text??"").split(" · ").map(entry=>{const separator=entry.indexOf(":");if(separator<0)return entry;return`${parameterLabel(entry.slice(0,separator).trim())} : ${valueLabel(entry.slice(separator+1).trim(),0)}`;}).join(" · ");}
+function localizeSummaries(form){for(const summary of form.querySelectorAll('[data-add2e-selected-powers] small')){if(summary.dataset.add2eFrenchSummary==="1")continue;summary.textContent=localizeSummary(summary.textContent);summary.dataset.add2eFrenchSummary="1";}}
+function observeCreator(form){localizeSummaries(form);const container=form.querySelector('[data-add2e-selected-powers]');if(!container||container.dataset.add2eFrenchObserver==="1")return;container.dataset.add2eFrenchObserver="1";new MutationObserver(()=>localizeSummaries(form)).observe(container,{childList:true,subtree:true,characterData:true});}
+function enhanceCanonicalPowerWindow(app,html){const root=rootElement(app,html);if(!root)return;const creator=root.matches?.(".add2e-magic-item-create-form")?root:root.querySelector?.(".add2e-magic-item-create-form");if(creator)observeCreator(creator);const form=root.matches?.(".add2e-magic-power-parameter-form")?root:root.querySelector?.(".add2e-magic-power-parameter-form");if(!form)return;const application=form.closest?.(".application")??(root.matches?.(".application")?root:null)??(app?.element instanceof HTMLElement?app.element:app?.element?.[0]);if(application instanceof HTMLElement){ensureGlobalStyles();application.classList.add("add2e-system-window","add2e-magic-power-window");}localizeForm(form);bindValidation(application??root,form);if(form.dataset.add2eCanonicalObserver!=="1"){form.dataset.add2eCanonicalObserver="1";new MutationObserver(()=>localizeForm(form)).observe(form,{childList:true,subtree:true});}}
+function installGlobalUiHooks(){if(globalThis.__ADD2E_GLOBAL_UI_HOOKS_V1__)return;globalThis.__ADD2E_GLOBAL_UI_HOOKS_V1__=true;Hooks.on("renderDialogV2",enhanceCanonicalPowerWindow);Hooks.on("renderApplicationV2",enhanceCanonicalPowerWindow);}
 
-function add2eChatCardIcon(value) {
-  const icon = String(value ?? "").trim();
-  return /^[a-z0-9 _-]+$/i.test(icon) ? icon : "fas fa-dice-d20";
-}
-
-function add2eChatCardImage(value, fallback = ADD2E_CHAT_CARD_IMAGE_FALLBACK) {
-  const image = String(value ?? "").trim();
-  return image || fallback;
-}
-
-function add2eChatCardColorVariables(colors = {}) {
-  const allowed = {
-    accent: "--add2e-card-accent",
-    accent2: "--add2e-card-accent-2",
-    border: "--add2e-card-border",
-    paper: "--add2e-card-paper",
-    paper2: "--add2e-card-paper-2",
-    text: "--add2e-card-text"
-  };
-  const variables = [];
-  for (const [key, cssVariable] of Object.entries(allowed)) {
-    const color = String(colors?.[key] ?? "").trim();
-    if (/^#[0-9a-f]{3,8}$/i.test(color)) variables.push(`${cssVariable}:${color}`);
-  }
-  return variables.join(";");
-}
-
-function add2eChatCardIdentity(identity = {}, fallback = {}) {
-  return {
-    name: String(identity?.name ?? fallback?.name ?? "").trim(),
-    img: add2eChatCardImage(identity?.img ?? fallback?.img),
-    type: String(identity?.type ?? "").trim(),
-    meta: String(identity?.meta ?? "").trim()
-  };
-}
-
-function add2eChatCardIdentityMeta(identity) {
-  return [identity.type, identity.meta].filter(Boolean).join(" · ");
-}
-
-function add2eChatCardRows(rows = []) {
-  return (Array.isArray(rows) ? rows : [])
-    .filter(row => row && (row.label !== undefined || row.value !== undefined))
-    .map(row => {
-      const label = add2eChatCardEscape(row.label ?? "");
-      const value = add2eChatCardEscape(row.value ?? "—");
-      return `<div class="add2e-card-label">${label}</div><div class="add2e-card-value">${value}</div>`;
-    })
-    .join("");
-}
-
-export function add2eBuildChatCard({
-  actor = null,
-  title = "Action",
-  icon = "fas fa-dice-d20",
-  source = null,
-  target = null,
-  variant = "neutral",
-  rows = [],
-  message = "",
-  colors = {}
-} = {}) {
-  const resolvedVariant = add2eChatCardVariant(variant);
-  const resolvedSource = add2eChatCardIdentity(source, {
-    name: actor?.name ?? "Source",
-    img: actor?.img ?? ADD2E_CHAT_CARD_IMAGE_FALLBACK
-  });
-  const resolvedTarget = target ? add2eChatCardIdentity(target) : null;
-  const sourceMeta = add2eChatCardIdentityMeta(resolvedSource);
-  const targetMeta = resolvedTarget ? add2eChatCardIdentityMeta(resolvedTarget) : "";
-  const style = add2eChatCardColorVariables(colors);
-  const styleAttribute = style ? ` style="${add2eChatCardEscape(style)}"` : "";
-  const rowHtml = add2eChatCardRows(rows);
-  const targetHtml = resolvedTarget?.name
-    ? `<div class="add2e-card-target"><img class="add2e-card-target-image" src="${add2eChatCardEscape(resolvedTarget.img)}" alt=""><div><span class="add2e-card-target-label">Cible</span><strong>${add2eChatCardEscape(resolvedTarget.name)}</strong>${targetMeta ? `<span>${add2eChatCardEscape(targetMeta)}</span>` : ""}</div></div>`
-    : "";
-  const messageHtml = String(message ?? "").trim()
-    ? `<div class="add2e-card-message">${add2eChatCardEscape(message)}</div>`
-    : "";
-
-  return `<div class="add2e-card add2e-card--${resolvedVariant}"${styleAttribute}><header class="add2e-card-header"><img class="add2e-card-image add2e-card-source-image" src="${add2eChatCardEscape(resolvedSource.img)}" alt=""><div class="add2e-card-heading"><h3><i class="${add2eChatCardEscape(add2eChatCardIcon(icon))}"></i><span>${add2eChatCardEscape(title)}</span></h3><div class="add2e-card-source"><strong>${add2eChatCardEscape(resolvedSource.name || "Source")}</strong>${sourceMeta ? `<span>${add2eChatCardEscape(sourceMeta)}</span>` : ""}</div></div></header>${targetHtml}<div class="add2e-card-body">${rowHtml ? `<div class="add2e-card-grid">${rowHtml}</div>` : ""}${messageHtml}</div></div>`;
-}
-
-export async function add2eCreateChatCard(options = {}) {
-  const actor = options?.actor ?? null;
-  const content = add2eBuildChatCard(options);
-  const chatData = options?.chatData && typeof options.chatData === "object" ? { ...options.chatData } : {};
-  return ChatMessage.create({
-    speaker: chatData.speaker ?? ChatMessage.getSpeaker({ actor }),
-    ...chatData,
-    content
-  });
-}
-
-globalThis.add2eBuildChatCard = add2eBuildChatCard;
-globalThis.add2eCreateChatCard = add2eCreateChatCard;
+globalThis.add2eBuildChatCard=add2eBuildChatCard;
+globalThis.add2eCreateChatCard=add2eCreateChatCard;
+globalThis.add2eEnhanceCanonicalMagicPowerWindow=enhanceCanonicalPowerWindow;
+globalThis.ADD2E_GLOBAL_UI_VERSION=ADD2E_GLOBAL_UI_VERSION;
+ensureGlobalStyles();
+installGlobalUiHooks();
