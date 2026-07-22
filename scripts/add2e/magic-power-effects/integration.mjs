@@ -131,7 +131,12 @@ function installCharacteristicBridge() {
   const original = Sheet.prototype.autoSetCaracAjustements;
 
   Sheet.prototype.autoSetCaracAjustements = async function add2eMagicCharacteristicRecalculation() {
-    if (this._autoSetCaracsInProgress || !this.actor?.system) return;
+    if (!this.actor?.system) return;
+    if (this.actor.type !== "personnage") {
+      if (typeof original === "function") return original.call(this);
+      return;
+    }
+    if (this._autoSetCaracsInProgress) return;
     this._autoSetCaracsInProgress = true;
     try {
       const source = sourceSystem(this.actor);
@@ -225,6 +230,7 @@ function installCharacteristicBridge() {
       if (typeof this.autoSetPointsDeCoup === "function") await this.autoSetPointsDeCoup();
     } catch (error) {
       console.error("[ADD2E][MAGIC_POWER_EFFECTS][CHARACTERISTICS]", error);
+      this._autoSetCaracsInProgress = false;
       if (typeof original === "function") {
         try { await original.call(this); } catch (_fallbackError) {}
       }
@@ -395,7 +401,7 @@ function actorForEffect(effect) {
 }
 
 async function refreshActor(actor) {
-  if (!actor) return;
+  if (!actor || actor.type !== "personnage") return;
   try { await actor.sheet?.autoSetCaracAjustements?.(); } catch (error) {
     console.warn("[ADD2E][MAGIC_POWER_EFFECTS][CARACTERISTICS_REFRESH]", error);
   }
