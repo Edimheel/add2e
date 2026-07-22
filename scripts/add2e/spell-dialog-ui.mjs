@@ -233,7 +233,7 @@ function magicParameterValueLabel(value, index = null) {
 function magicParameterGroup(control) { return control?.closest?.(".form-group") ?? control?.parentElement ?? null; }
 function localizeMagicControlLabel(control) {
   const group = magicParameterGroup(control);
-  const label = group?.querySelector?.("label");
+  const label = group?.matches?.("label") ? group : group?.querySelector?.("label");
   if (!label) return;
   const required = label.querySelector("span")?.outerHTML ?? (label.textContent?.includes("*") ? ' <span style="color:#a40000">*</span>' : "");
   label.innerHTML = `${esc(magicParameterLabel(control.name))}${required}`;
@@ -322,7 +322,8 @@ function localizeMagicParameterForm(form) {
 function missingMagicRequiredLabels(form) {
   const missing = [];
   for (const control of form.querySelectorAll('[data-add2e-parameter-type][name]')) {
-    const label = magicParameterGroup(control)?.querySelector?.("label");
+    const group = magicParameterGroup(control);
+    const label = group?.matches?.("label") ? group : group?.querySelector?.("label");
     if (!label?.textContent?.includes("*")) continue;
     const value = control instanceof HTMLSelectElement && control.multiple
       ? [...control.selectedOptions].map(option => option.value).filter(Boolean)
