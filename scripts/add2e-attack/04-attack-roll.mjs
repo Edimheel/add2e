@@ -653,7 +653,7 @@ export async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
       if (combatProfile.toucherCarac) modCaracToucher = add2eGetAttackAbilityModifier(actor, combatProfile.toucherCarac, "toucher");
       if (combatProfile.degatsCarac) modCaracDegats = add2eGetAttackAbilityModifier(actor, combatProfile.degatsCarac, "degats");
 
-      const { bonusToucheEffets, bonusDegatsEffets, bonusRacialVs, targetTags } = add2eAttackComputeActiveAttackModifiers({ actor, cible, combatProfile });
+      const { bonusToucheEffets, bonusDegatsEffets, bonusRacialVs, targetTags } = add2eAttackComputeActiveAttackModifiers({ actor, cible, arme, combatProfile });
       if (bonusDegatsEffets !== 0) console.log("[ADD2E][ATTAQUE][BONUS DEGATS VS CIBLE]", { diagId, acteur: actor.name, cible: cible?.name, targetTags: [...targetTags], bonusDegatsEffets });
 
       const bonusAttaqueSournoise = useBackstab ? 4 : 0;
