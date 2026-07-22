@@ -1,6 +1,6 @@
 // ADD2E — Pouvoirs d'objets magiques / compilation des règles et changements ActiveEffect.
 
-import { clone, hasValue, list, norm, number, signed, toRounds, uniqueBy } from "./runtime.mjs";
+import { clone, hasValue, list, norm, number, passivePower, signed, toRounds, uniqueBy } from "./runtime.mjs";
 
 const ABILITY_ALIASES = Object.freeze({
   force: "force", strength: "force", str: "force",
@@ -219,14 +219,7 @@ export function compileDefinition(effect = {}) {
 }
 
 export function compilePower(power, { requirePassive = true } = {}) {
-  if (requirePassive) {
-    const automation = norm(power?.automation);
-    const activationType = norm(power?.activation?.type);
-    const trigger = norm(power?.activation?.trigger);
-    const passive = automation === "automatic" && (["passive", "automatic", "always_on", "permanent"].includes(activationType)
-      || ["equipped", "equip", "worn", "carried", "porte", "portee", "time", "attack", "damage", "hit", "round", "projectile", "target", "drawn"].some(token => trigger.includes(token)));
-    if (!passive) return null;
-  }
+  if (requirePassive && !passivePower(power)) return null;
   const tags = new Set();
   const rules = [];
   const periodic = [];
