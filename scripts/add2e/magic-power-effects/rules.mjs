@@ -37,7 +37,6 @@ export function rulesOf(effect) {
   return [raw];
 }
 
-const mode = name => CONST.ACTIVE_EFFECT_MODES?.[name] ?? ({ MULTIPLY: 1, ADD: 2, OVERRIDE: 5 })[name];
 const changeKey = change => `${change.key}|${Number(change.mode)}|${String(change.value)}|${Number(change.priority ?? 0)}`;
 export const uniqueChanges = changes => uniqueBy(changes.filter(change => change?.key), changeKey);
 export const uniqueTags = tags => uniqueBy(tags.map(value => String(value ?? "").trim()).filter(Boolean), value => norm(value));
@@ -90,26 +89,30 @@ function movementCompilation(effect, type, tags, rules) {
   });
 }
 
-function characteristicCompilation(effect, type, tags, rules, changes) {
+function characteristicCompilation(effect, type, tags, rules) {
   const bonusTypes = ["ability_bonus", "characteristic_bonus", "stat_bonus", "attribute_bonus"];
   const overrideTypes = ["ability_override", "characteristic_override", "stat_override", "attribute_override"];
   if (![...bonusTypes, ...overrideTypes].includes(type)) return;
   const value = number(effect.value, effect.bonus, effect.amount, effect.modifier, effect.score);
   if (!Number.isFinite(value)) return;
-  const abilities = values(effect, ["ability", "abilities", "stat", "stats", "attribute", "attributes", "characteristic", "characteristics", "target", "targetAny"])
-    .map(canonicalAbility).filter(Boolean);
+  const abilities = [...new Set(values(effect, ["ability", "abilities", "stat", "stats", "attribute", "attributes", "characteristic", "characteristics", "target", "targetAny"])
+    .map(canonicalAbility).filter(Boolean))];
   const explicitMode = norm(effect.mode ?? effect.operation ?? effect.applyMode);
   const override = overrideTypes.includes(type) || ["override", "set", "fixed", "replace", "impose", "imposed"].includes(explicitMode);
   const priority = Math.max(1, Math.floor(number(effect.priority) ?? 100));
+  const operation = override ? "override" : "add";
+
   for (const ability of abilities) {
-    if (override) {
-      changes.push({ key: `system.${ability}_base`, mode: mode("OVERRIDE"), value, priority });
-      rules.push({ kind: "characteristic_override", characteristic: ability, value, priority });
-    } else {
-      changes.push({ key: `system.bonus_caracteristiques.${ability}`, mode: mode("ADD"), value, priority });
-      tags.add(`bonus_carac:${ability}:${signed(value)}`);
-      rules.push({ kind: "characteristic_bonus", characteristic: ability, value, priority });
-    }
+    if (override) tags.add(`carac_override:${ability}:${value}`);
+    else tags.add(`bonus_carac:${ability}:${signed(value)}`);
+    rules.push({
+      kind: override ? "characteristic_override" : "characteristic_bonus",
+      type,
+      characteristic: ability,
+      value,
+      operation,
+      priority
+    });
   }
 }
 
@@ -184,7 +187,7 @@ export function compileDefinition(effect = {}) {
   const changes = [];
 
   movementCompilation(effect, type, tags, rules);
-  characteristicCompilation(effect, type, tags, rules, changes);
+  characteristicCompilation(effect, type, tags, rules);
   fixedArmorClassCompilation(effect, type, tags, rules);
   defenseCompilation(effect, type, tags);
   combatCompilation(effect, type, tags);
