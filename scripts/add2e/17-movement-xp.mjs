@@ -2,7 +2,7 @@
 // Les Items classe sont la seule source de progression multiclasses.
 // Compatible Foundry V13/V14/V15.
 
-const VERSION = "2026-07-05-movement-derived-force-weight-v6";
+const VERSION = "2026-07-22-movement-magic-rules-v7";
 const TAG = "[ADD2E][MOVE_XP]";
 const INTERNAL = "add2eMoveXpInternal";
 const ITEM_RECALC_DELAY_MS = 140;
@@ -186,13 +186,55 @@ function currentProgressionRow(actor) {
   return progression.find(row => Number(row?.niveau ?? row?.level) === level) ?? progression[level - 1] ?? null;
 }
 
-function baseMove(actor) {
+function activeMovementEffects(actor) {
+  const seen = new Set();
+  const effects = [
+    ...(actor?.effects?.contents ?? actor?.effects ?? []),
+    ...(actor?.appliedEffects ?? [])
+  ];
+  return effects.filter(effect => {
+    const id = String(effect?.uuid ?? effect?.id ?? "");
+    if (!effect || !id || seen.has(id) || effect.disabled === true || effect.isSuppressed === true || effect.active === false) return false;
+    seen.add(id);
+    return true;
+  });
+}
+
+function magicMovementRules(actor) {
+  const entries = [];
+  let sequence = 0;
+  for (const effect of activeMovementEffects(actor)) {
+    const raw = effect?.flags?.add2e?.rules;
+    const rules = Array.isArray(raw) ? raw : Array.isArray(raw?.rules) ? raw.rules : raw && typeof raw === "object" ? [raw] : [];
+    for (const rule of rules) {
+      if (norm(rule?.kind) !== "movement_modifier") continue;
+      const operation = norm(rule?.operation);
+      const value = num(rule?.value, NaN);
+      const modes = (Array.isArray(rule?.modes) ? rule.modes : [rule?.modes])
+        .flatMap(entry => String(entry ?? "").split(/[,;|\n]+/g))
+        .map(norm).filter(Boolean);
+      entries.push({
+        effectId: effect.id ?? null,
+        effectName: effect.name ?? "Effet magique",
+        operation: ["add", "multiply", "override", "mode"].includes(operation) ? operation : "add",
+        value: Number.isFinite(value) ? value : null,
+        modes,
+        priority: Math.max(1, Math.floor(num(rule?.priority, 100))),
+        sequence: sequence++
+      });
+    }
+  }
+  return entries.sort((left, right) => left.priority - right.priority || left.sequence - right.sequence);
+}
+
+function naturalBaseMove(actor) {
   const item = classItem(actor);
   const row = currentProgressionRow(actor) ?? {};
   const cls = item?.system ?? {};
   const race = raceItem(actor)?.system ?? {};
-  const sys = actor?.system ?? {};
-  const storedMovement = sys.mouvement && typeof sys.mouvement === "object" ? sys.mouvement : {};
+  const preparedSys = actor?.system ?? {};
+  const sourceSys = actor?._source?.system ?? preparedSys;
+  const storedMovement = sourceSys.mouvement && typeof sourceSys.mouvement === "object" ? sourceSys.mouvement : {};
 
   const classMove = firstPositive(
     row.mouvement, row.movement, row.vitesse, row.vitesse_deplacement, row.deplacement, row["déplacement"], row.monkMove, row.monkMovement,
@@ -203,10 +245,44 @@ function baseMove(actor) {
   const raceMove = firstPositive(race.mouvement, race.movement, race.vitesse, race.vitesse_deplacement, race.deplacement, race["déplacement"], race.baseMovement);
   if (raceMove > 0) return raceMove;
 
-  const storedBase = firstPositive(storedMovement.base, storedMovement.vitesseBase, sys.vitesse_base, sys.vitesseBase, sys.vitesse_deplacement_base);
+  const storedBase = firstPositive(
+    storedMovement.naturalBase,
+    storedMovement.baseNaturelle,
+    storedMovement.base,
+    storedMovement.vitesseBase,
+    sourceSys.vitesse_base,
+    sourceSys.vitesseBase,
+    sourceSys.vitesse_deplacement_base
+  );
   if (storedBase > 0) return storedBase;
 
   return movementFromRaceName(actor);
+}
+
+function resolveMagicMovement(actor, naturalBase) {
+  const rules = magicMovementRules(actor);
+  const modes = new Set();
+  const applied = [];
+  let base = Math.max(0, num(naturalBase, 0));
+
+  for (const rule of rules) {
+    rule.modes.forEach(mode => modes.add(mode));
+    if (!Number.isFinite(rule.value) || rule.operation === "mode") continue;
+    const before = base;
+    if (rule.operation === "multiply") base *= rule.value;
+    else if (rule.operation === "override") base = rule.value;
+    else base += rule.value;
+    base = Math.max(0, base);
+    applied.push({ ...rule, before, after: base });
+  }
+
+  return {
+    active: rules.length > 0,
+    naturalBase: Math.round(Math.max(0, num(naturalBase, 0)) * 100) / 100,
+    base: Math.round(base * 100) / 100,
+    modes: [...modes],
+    rules: applied
+  };
 }
 
 function strengthWeightAdjustment(actor) {
@@ -227,7 +303,9 @@ function carriedWeight(actor) {
 }
 
 function computeMovement(actor) {
-  const base = baseMove(actor);
+  const naturalBase = naturalBaseMove(actor);
+  const magic = resolveMagicMovement(actor, naturalBase);
+  const base = magic.base;
   const weight = carriedWeight(actor);
   const forceAdjustment = strengthWeightAdjustment(actor);
   const normalLimit = Math.max(50, 500 + forceAdjustment);
@@ -243,6 +321,8 @@ function computeMovement(actor) {
 
   const actuel = Math.max(0, Math.floor(base * multiplier));
   return {
+    naturalBase: magic.naturalBase,
+    baseNaturelle: magic.naturalBase,
     base,
     actuel,
     vitesse: actuel,
@@ -255,6 +335,9 @@ function computeMovement(actor) {
     categorie: category,
     label,
     multiplier,
+    modes: magic.modes,
+    modesMagiques: magic.modes,
+    magic,
     metresTour: actuel,
     donjonRoundMetres: actuel,
     segmentMetres: Math.round(actuel / 10 * 100) / 100,
@@ -922,7 +1005,7 @@ Hooks.on("renderActorSheet", (sheet, html) => {
   if (!root || root.querySelector("input[name='system.xp']") || !levelField) return;
   const field = document.createElement("div");
   field.className = "a2e-field a2e-xp-field";
-  field.innerHTML = `<label>XP</label><div class="a2e-xp-inline" style="display:grid;grid-template-columns:minmax(0,1fr)31px;gap:5px;align-items:center;"><input type="number" name="system.xp" value="${Number(sheet.actor.system?.xp ?? 0)}" min="0" step="1" title="${String(sheet.actor.system?.progression_xp ?? "").replace(/"/g, "&quot;")}"><button type="button" class="a2e-icon-btn" data-add2e-mx="xp" title="Ajouter de l'XP" style="height:29px;min-width:31px;padding:0;">+</button></div>`;
+  field.innerHTML = `<label>XP</label><div class="a2e-xp-inline" style="display:grid;grid-template-columns:minmax(0,1fr) 31px;gap:5px;align-items:center;"><input type="number" name="system.xp" value="${Number(sheet.actor.system?.xp ?? 0)}" min="0" step="1" title="${String(sheet.actor.system?.progression_xp ?? "").replace(/"/g, "&quot;")}"><button type="button" class="a2e-icon-btn" data-add2e-mx="xp" title="Ajouter de l'XP" style="height:29px;min-width:31px;padding:0;">+</button></div>`;
   levelField.insertAdjacentElement("afterend", field);
   field.querySelector("[data-add2e-mx='xp']")?.addEventListener("click", event => {
     event.preventDefault();
@@ -998,6 +1081,7 @@ Hooks.on("deleteItem", (item, options = {}) => queueItemMovementRecalc(item, "de
 
 globalThis.add2eComputeXp = computeXp;
 globalThis.add2eComputeMovement = computeMovement;
+globalThis.add2eGetMagicMovementRules = magicMovementRules;
 globalThis.add2eRecalcMoveXp = recalc;
 globalThis.add2eAwardXp = awardXp;
 globalThis.add2ePromptXp = promptXp;
