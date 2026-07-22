@@ -145,8 +145,8 @@ function defenseCompilation(effect, type, tags) {
     const percentage = number(effect.percentage, effect.percent, effect.pct, effect.value, effect.amount, effect.reduction);
     for (const entry of targets) {
       for (const alias of damageAliases(entry)) {
-        tags.add(`resistance:${alias}`);
         if (Number.isFinite(percentage)) tags.add(`resistance:${alias}:${percentage}`);
+        else tags.add(`resistance:${alias}`);
       }
     }
   }
