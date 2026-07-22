@@ -293,10 +293,329 @@ function rootOf(app, html) {
         : app?.element?.[0] instanceof HTMLElement ? app.element[0] : null;
 }
 
+const MAGIC_PARAMETER_UI_VERSION = "2026-07-22-magic-parameter-ui-v1";
+
+function ensureMagicParameterStyles() {
+  globalThis.ADD2E_SPELL_DIALOG_UI?.ensureStyles?.();
+  const id = "add2e-magic-parameter-ui-style";
+  const previous = document.getElementById(id);
+  if (previous?.dataset?.version === MAGIC_PARAMETER_UI_VERSION) return;
+  previous?.remove();
+  const style = document.createElement("style");
+  style.id = id;
+  style.dataset.version = MAGIC_PARAMETER_UI_VERSION;
+  style.textContent = `
+.application.add2e-spell-dialog-window .add2e-magic-power-parameter-form{min-width:0!important;padding:0!important;display:grid!important;gap:10px!important}
+.application.add2e-spell-dialog-window .add2e-magic-power-parameter-form>.form-group{display:grid!important;grid-template-columns:minmax(170px,220px) minmax(0,1fr)!important;align-items:center!important;gap:10px!important;padding:8px 10px!important;margin:0!important;border:1px solid var(--a2e-border,#c99a36)!important;border-radius:9px!important;background:rgba(255,253,244,.86)!important}
+.application.add2e-spell-dialog-window .add2e-magic-power-parameter-form>.form-group label{font-weight:900!important;color:var(--a2e-dark,#6f4b12)!important}
+.application.add2e-spell-dialog-window .add2e-magic-power-parameter-form input:not([type="hidden"]),.application.add2e-spell-dialog-window .add2e-magic-power-parameter-form select,.application.add2e-spell-dialog-window .add2e-magic-power-parameter-form textarea{width:100%!important;min-height:36px!important;border:1px solid var(--a2e-border,#c99a36)!important;border-radius:8px!important;background:#fffaf0!important;color:var(--a2e-text,#2d2011)!important;padding:6px 8px!important}
+.application.add2e-spell-dialog-window .add2e-magic-power-parameter-form textarea{min-height:76px!important;resize:vertical!important}
+.application.add2e-spell-dialog-window .dialog-buttons button{border:1px solid var(--a2e-border,#c99a36)!important;border-radius:9px!important;background:#fffaf0!important;color:var(--a2e-text,#2d2011)!important;font-weight:850!important}
+.application.add2e-spell-dialog-window .dialog-buttons button.default,.application.add2e-spell-dialog-window .dialog-buttons button[data-action="save"]{background:linear-gradient(180deg,var(--a2e-main,#b88924),var(--a2e-dark,#6f4b12))!important;color:#fff!important}
+@media(max-width:760px){.application.add2e-spell-dialog-window .add2e-magic-power-parameter-form>.form-group{grid-template-columns:1fr!important}}
+`;
+  document.head.append(style);
+}
+
+function styleMagicParameterWindow(root, form) {
+  ensureMagicParameterStyles();
+  const windowRoot = form?.closest?.(".application") ?? root;
+  if (!(windowRoot instanceof HTMLElement)) return;
+  const theme = globalThis.ADD2E_SPELL_DIALOG_UI?.themes?.cleric ?? {
+    bg: "#fffaf0", accent: "#f3e6c8", dark: "#6f4b12", main: "#b88924", border: "#c99a36", text: "#2d2011"
+  };
+  windowRoot.classList.add("add2e-spell-dialog-window");
+  for (const [key, value] of Object.entries({
+    "--a2e-bg": theme.bg,
+    "--a2e-accent": theme.accent,
+    "--a2e-dark": theme.dark,
+    "--a2e-main": theme.main,
+    "--a2e-border": theme.border,
+    "--a2e-text": theme.text
+  })) windowRoot.style.setProperty(key, value);
+}
+
+const PARAMETER_LABELS = Object.freeze({
+  ability: "Caractéristique",
+  characteristic: "Caractéristique",
+  attribute: "Caractéristique",
+  stat: "Caractéristique",
+  score: "Valeur",
+  value: "Valeur imposée",
+  amount: "Valeur",
+  bonus: "Bonus",
+  penalty: "Malus",
+  modifier: "Modificateur",
+  duration: "Durée",
+  range: "Portée",
+  radius: "Rayon",
+  distance: "Distance",
+  area: "Zone d’effet",
+  shape: "Forme de la zone",
+  target: "Cible",
+  targets: "Cibles",
+  damage: "Dégâts",
+  damageformula: "Formule de dégâts",
+  damagetype: "Type de dégâts",
+  type: "Type",
+  condition: "État",
+  effect: "Effet",
+  effects: "Effets",
+  resistance: "Résistance",
+  resistancetype: "Type de résistance",
+  immunity: "Immunité",
+  immunitytype: "Type d’immunité",
+  save: "Jet de sauvegarde",
+  savetype: "Type de sauvegarde",
+  savemodifier: "Modificateur de sauvegarde",
+  spelluuid: "Sort équivalent",
+  spellname: "Nom du sort",
+  casterlevel: "Niveau du lanceur",
+  activationtime: "Temps d’activation",
+  chargecost: "Coût en charges",
+  charges: "Charges",
+  uses: "Utilisations",
+  frequency: "Fréquence",
+  interval: "Intervalle",
+  percentage: "Pourcentage",
+  chance: "Chance",
+  formula: "Formule",
+  table: "Table",
+  movementtype: "Type de déplacement",
+  speed: "Vitesse",
+  multiplier: "Multiplicateur",
+  armorclass: "Classe d’armure",
+  description: "Description",
+  notes: "Précisions",
+  unit: "Unité"
+});
+
+const PARAMETER_VALUES = Object.freeze({
+  force: "Force",
+  strength: "Force",
+  str: "Force",
+  dexterite: "Dextérité",
+  dexterity: "Dextérité",
+  dex: "Dextérité",
+  constitution: "Constitution",
+  con: "Constitution",
+  intelligence: "Intelligence",
+  int: "Intelligence",
+  sagesse: "Sagesse",
+  wisdom: "Sagesse",
+  wis: "Sagesse",
+  charisme: "Charisme",
+  charisma: "Charisme",
+  cha: "Charisme",
+  permanent: "Permanente",
+  automatic: "Automatique",
+  assisted: "Assisté par le MD",
+  manual: "Manuel",
+  none: "Aucun",
+  self: "Porteur",
+  wearer: "Porteur",
+  equipped: "Équipé",
+  fire: "Feu",
+  cold: "Froid",
+  electricity: "Électricité",
+  lightning: "Foudre",
+  acid: "Acide",
+  poison: "Poison",
+  magic: "Magie",
+  physical: "Physique"
+});
+
+const CHARACTERISTICS = Object.freeze([
+  ["force", "Force"],
+  ["dexterite", "Dextérité"],
+  ["constitution", "Constitution"],
+  ["intelligence", "Intelligence"],
+  ["sagesse", "Sagesse"],
+  ["charisme", "Charisme"]
+]);
+
+function parameterKey(value) {
+  return norm(value).replace(/_/g, "");
+}
+
+function parameterLabel(name) {
+  return PARAMETER_LABELS[parameterKey(name)] ?? "Paramètre";
+}
+
+function parameterValueLabel(value) {
+  const key = norm(value);
+  return PARAMETER_VALUES[key] ?? String(value ?? "");
+}
+
+function parameterGroup(control) {
+  return control?.closest?.(".form-group") ?? control?.parentElement ?? null;
+}
+
+function localizeControlLabel(control) {
+  const group = parameterGroup(control);
+  const label = group?.querySelector?.("label");
+  if (!label) return;
+  const required = label.querySelector("span")?.outerHTML ?? (label.textContent?.includes("*") ? ' <span style="color:#a40000">*</span>' : "");
+  label.innerHTML = `${esc(parameterLabel(control.name))}${required}`;
+}
+
+function localizeSelectOptions(select) {
+  for (const option of select?.options ?? []) {
+    if (!option.value) continue;
+    option.textContent = parameterValueLabel(option.value);
+  }
+}
+
+function canonicalCharacteristic(value) {
+  const key = norm(value);
+  if (["force", "strength", "str"].includes(key)) return "force";
+  if (["dexterite", "dexterity", "dex"].includes(key)) return "dexterite";
+  if (["constitution", "con"].includes(key)) return "constitution";
+  if (["intelligence", "int"].includes(key)) return "intelligence";
+  if (["sagesse", "wisdom", "wis"].includes(key)) return "sagesse";
+  if (["charisme", "charisma", "cha"].includes(key)) return "charisme";
+  return "";
+}
+
+function replaceCharacteristicControl(form) {
+  const current = form.querySelector('[name="ability"], [name="characteristic"], [name="attribute"], [name="stat"]');
+  if (!current || current.tagName === "SELECT" && current.dataset.add2eFrenchCharacteristic === "1") return current;
+  const select = document.createElement("select");
+  for (const attribute of current.attributes ?? []) {
+    if (["name", "type", "value"].includes(attribute.name)) continue;
+    select.setAttribute(attribute.name, attribute.value);
+  }
+  select.name = current.name;
+  select.dataset.add2eFrenchCharacteristic = "1";
+  select.style.width = "100%";
+  select.innerHTML = `<option value="">— Choisir une caractéristique —</option>${CHARACTERISTICS
+    .map(([value, label]) => `<option value="${value}">${label}</option>`).join("")}`;
+  select.value = canonicalCharacteristic(current.value);
+  current.replaceWith(select);
+  localizeControlLabel(select);
+  return select;
+}
+
+function replaceCharacteristicValueControl(form) {
+  const characteristic = form.querySelector('[name="ability"], [name="characteristic"], [name="attribute"], [name="stat"]');
+  const current = form.querySelector('[name="value"]');
+  if (!characteristic || !current || current.type === "number" && current.dataset.add2eFrenchAbilityValue === "1") return current;
+  const input = document.createElement("input");
+  for (const attribute of current.attributes ?? []) {
+    if (["type", "value", "rows"].includes(attribute.name)) continue;
+    input.setAttribute(attribute.name, attribute.value);
+  }
+  input.type = "number";
+  input.step = "1";
+  input.name = current.name;
+  input.dataset.add2eFrenchAbilityValue = "1";
+  input.style.width = "100%";
+  input.value = Number.isFinite(Number(current.value)) ? String(Number(current.value)) : "";
+  current.replaceWith(input);
+  localizeControlLabel(input);
+  return input;
+}
+
+function localizeDurationControl(form) {
+  const current = form.querySelector('[name="duration"]');
+  if (!current || current.dataset.add2eFrenchDuration === "1") return;
+  current.dataset.add2eFrenchDuration = "1";
+  const stored = String(current.value ?? "").trim();
+  const visible = document.createElement("input");
+  visible.type = "text";
+  visible.value = norm(stored) === "permanent" ? "Permanente" : stored;
+  visible.placeholder = "Permanente, 1 tour, 10 minutes…";
+  visible.style.width = "100%";
+  visible.dataset.add2eDurationDisplay = "1";
+  if ("type" in current) current.type = "hidden";
+  current.hidden = true;
+  current.style.display = "none";
+  const sync = () => {
+    const value = String(visible.value ?? "").trim();
+    current.value = norm(value) === "permanente" ? "permanent" : value;
+  };
+  visible.addEventListener("input", sync);
+  current.insertAdjacentElement("afterend", visible);
+  sync();
+  localizeControlLabel(current);
+}
+
+function localizeParameterForm(form) {
+  for (const control of form.querySelectorAll('[data-add2e-parameter-type][name]')) {
+    localizeControlLabel(control);
+    if (control.tagName === "SELECT") localizeSelectOptions(control);
+  }
+  replaceCharacteristicControl(form);
+  replaceCharacteristicValueControl(form);
+  localizeDurationControl(form);
+}
+
+function missingRequiredLabels(form) {
+  const missing = [];
+  for (const control of form.querySelectorAll('[data-add2e-parameter-type][name]')) {
+    const label = parameterGroup(control)?.querySelector?.("label");
+    if (!label?.textContent?.includes("*")) continue;
+    const value = control instanceof HTMLSelectElement && control.multiple
+      ? [...control.selectedOptions].map(option => option.value).filter(Boolean)
+      : control.type === "checkbox"
+        ? control.checked
+        : String(control.value ?? "").trim();
+    if (value === false || value === "" || Array.isArray(value) && !value.length) missing.push(parameterLabel(control.name));
+  }
+  return [...new Set(missing)];
+}
+
+function bindFrenchValidation(root, form) {
+  if (root.dataset.add2eFrenchPowerValidation === "1") return;
+  root.dataset.add2eFrenchPowerValidation = "1";
+  root.addEventListener("click", event => {
+    const button = event.target instanceof Element ? event.target.closest('button[data-action="save"]') : null;
+    if (!button) return;
+    const missing = missingRequiredLabels(form);
+    if (!missing.length) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    ui.notifications.warn(`Paramètres obligatoires manquants : ${missing.join(", ")}.`);
+  }, true);
+}
+
+function localizeParameterSummaryText(value) {
+  return String(value ?? "").split(" · ").map(entry => {
+    const separator = entry.indexOf(":");
+    if (separator < 0) return entry;
+    const key = entry.slice(0, separator).trim();
+    const raw = entry.slice(separator + 1).trim();
+    return `${parameterLabel(key)} : ${parameterValueLabel(raw)}`;
+  }).join(" · ");
+}
+
+function localizeCreatorSummaries(form) {
+  for (const summary of form.querySelectorAll('[data-add2e-selected-powers] small')) {
+    summary.textContent = localizeParameterSummaryText(summary.textContent);
+  }
+}
+
+function enhanceMagicItemCreator(root) {
+  const form = root?.matches?.(".add2e-magic-item-create-form") ? root : root?.querySelector?.(".add2e-magic-item-create-form");
+  if (!form) return;
+  localizeCreatorSummaries(form);
+  const container = form.querySelector('[data-add2e-selected-powers]');
+  if (!container || container.dataset.add2eFrenchObserver === "1") return;
+  container.dataset.add2eFrenchObserver = "1";
+  const observer = new MutationObserver(() => localizeCreatorSummaries(form));
+  observer.observe(container, { childList: true, subtree: true, characterData: true });
+}
+
 export async function enhanceSpellParameterDialog(app, html) {
   const root = rootOf(app, html);
-  const form = root?.matches?.(".add2e-magic-power-parameter-form") ? root : root?.querySelector?.(".add2e-magic-power-parameter-form");
-  if (!form || form.dataset.add2eSpellSelectorBound === "1") return;
+  if (!root) return;
+  enhanceMagicItemCreator(root);
+  const form = root.matches?.(".add2e-magic-power-parameter-form") ? root : root.querySelector?.(".add2e-magic-power-parameter-form");
+  if (!form) return;
+  styleMagicParameterWindow(root, form);
+  localizeParameterForm(form);
+  bindFrenchValidation(root, form);
+  if (form.dataset.add2eSpellSelectorBound === "1") return;
   const input = form.querySelector('input[name="spellUuid"]');
   if (!input) return;
   form.dataset.add2eSpellSelectorBound = "1";
@@ -308,6 +627,7 @@ export async function enhanceSpellParameterDialog(app, html) {
   select.style.width = "100%";
   select.innerHTML = spellOptions(entries, input.value, spellNameInput?.value ?? "");
   input.replaceWith(select);
+  localizeControlLabel(select);
   const syncName = () => {
     const name = String(select.selectedOptions?.[0]?.dataset?.spellName ?? "").trim();
     if (spellNameInput && name) spellNameInput.value = name;
