@@ -3,7 +3,7 @@
 
 import { add2eGetCombatStatProfile } from "./03-attack-rules.mjs";
 
-export const ADD2E_DAMAGE_VERSION = "2026-07-10-generic-incoming-damage-rules-v1";
+export const ADD2E_DAMAGE_VERSION = "2026-07-22-magic-immunity-context-v2";
 
 function add2eDamageTokenClass() {
   return foundry?.canvas?.placeables?.Token ?? CONFIG?.Token?.objectClass ?? null;
@@ -184,6 +184,34 @@ function add2eBuildIncomingDamageContext({ lanceur, sourceItem, type, actionTags
   return { tags, sourceItem, projectile, magical };
 }
 
+function add2eDamageContextDescriptors(context = {}) {
+  const descriptors = new Set();
+  const add = value => {
+    const normalized = add2eDamageNormalize(value);
+    if (!normalized) return;
+    descriptors.add(normalized);
+    const parts = normalized.split(":").filter(Boolean);
+    if (parts.length > 1) descriptors.add(parts.at(-1));
+  };
+
+  for (const tag of context?.tags ?? []) add(tag);
+  if (context?.sourceItem?.name) add(context.sourceItem.name);
+  if (context?.projectile?.name) add(context.projectile.name);
+
+  if (context?.magical === true) {
+    descriptors.add("magical");
+    descriptors.add("magic");
+    descriptors.add("magie");
+  } else if (context?.sourceItem) {
+    descriptors.add("nonmagical");
+    descriptors.add("nonmagique");
+    descriptors.add("non_magique");
+  }
+
+  if (descriptors.has("projectile_propulse") || descriptors.has("projectile_lance")) descriptors.add("projectile");
+  return [...descriptors];
+}
+
 function add2eDamageSaveSucceeded(save) {
   if (typeof save === "boolean") return save;
   if (typeof save?.success === "boolean") return save.success;
@@ -262,13 +290,23 @@ async function add2eResolveGenericIncomingDamage(actor, original, options = {}) 
   return { amount: Math.max(0, amount), original: initial, events, context };
 }
 
-async function add2eResolveDamage(actor, amount, type, details) {
+async function add2eResolveDamage(actor, amount, type, details, context = {}) {
   const engine = globalThis.Add2eEffectsEngine;
   if (typeof engine?.resolveIncomingDamage !== "function") {
     ui.notifications.error("Moteur d'effets ADD2E indisponible : dégâts non appliqués.");
     return null;
   }
-  return engine.resolveIncomingDamage(actor, { amount, type, details });
+  const descriptors = add2eDamageContextDescriptors(context);
+  const extendedDetails = [details, ...descriptors].map(value => String(value ?? "").trim()).filter(Boolean).join(" ");
+  return engine.resolveIncomingDamage(actor, {
+    amount,
+    type,
+    details: extendedDetails,
+    actionTags: [...(context?.tags ?? [])],
+    sourceItem: context?.sourceItem ?? null,
+    projectile: context?.projectile ?? null,
+    magical: context?.magical === true
+  });
 }
 
 export async function add2eApplyDamage({
@@ -309,6 +347,15 @@ export async function add2eApplyDamage({
     return { amount: 0, original: originalDamage, applied: true, genericResolution };
   }
 
+  const resolution = await add2eResolveDamage(actor, baseDamage, type, details, genericResolution.context);
+  if (!resolution) return null;
+  const damage = Math.max(0, Number(resolution.amount) || 0);
+
+  if (damage <= 0) {
+    ui.notifications.info(`${actor.name} ne subit aucun dégât.`);
+    return { ...resolution, amount: 0, original: originalDamage, applied: true, genericResolution };
+  }
+
   if (!game.user.isGM) {
     if (!game.socket) {
       ui.notifications.error("Socket Foundry indisponible (game.socket).");
@@ -320,7 +367,7 @@ export async function add2eApplyDamage({
       tokenId: add2eDamageTokenId(cible),
       actorId: cible.actor?.id || cible.id,
       flagData: {
-        montant: baseDamage,
+        montant: damage,
         type,
         details,
         source: "attack",
@@ -329,13 +376,9 @@ export async function add2eApplyDamage({
       }
     });
 
-    ui.notifications.info(`Dégâts (${baseDamage}) envoyés au MJ.`);
-    return { amount: baseDamage, original: originalDamage, applied: true, delegated: true, genericResolution };
+    ui.notifications.info(`Dégâts (${damage}) envoyés au MJ.`);
+    return { ...resolution, amount: damage, original: originalDamage, applied: true, delegated: true, genericResolution };
   }
-
-  const resolution = await add2eResolveDamage(actor, baseDamage, type, details);
-  if (!resolution) return null;
-  const damage = Math.max(0, Number(resolution.amount) || 0);
 
   const maxHP = Number(actor.system?.points_de_coup) || 0;
   let currentHP = actor.system?.pdv;
