@@ -317,6 +317,72 @@ function weaponIsUnarmed(weapon) {
   return /main_nue|mains_nues|poing|pugilat|unarmed|sans_arme/.test(values);
 }
 
+function effectRules(effect) {
+  const raw = effect?.flags?.add2e?.rules;
+  if (Array.isArray(raw)) return raw.filter(rule => rule && typeof rule === "object");
+  if (!raw || typeof raw !== "object") return [];
+  return Array.isArray(raw.rules)
+    ? raw.rules.filter(rule => rule && typeof rule === "object")
+    : [raw];
+}
+
+function weaponRateOfFireModifier(actor, weapon) {
+  if (!actor || !weapon || !weaponIsProjectileOrRanged(weapon)) return null;
+  const weaponId = String(weapon.id ?? "");
+  const weaponUuid = String(weapon.uuid ?? "");
+  const candidates = [];
+
+  for (const effect of actor?.effects?.contents ?? actor?.effects ?? []) {
+    if (!effect || effect.disabled) continue;
+    const flags = effect.flags?.add2e ?? {};
+    const sourceItemId = String(flags.sourceItemId ?? "");
+    const sourceItemUuid = String(flags.sourceItemUuid ?? "");
+    if (!(weaponId && sourceItemId === weaponId) && !(weaponUuid && sourceItemUuid === weaponUuid)) continue;
+
+    for (const rule of effectRules(effect)) {
+      const type = normalizeSlug(rule.type ?? rule.kind ?? rule.category ?? "");
+      if (type !== "rate_of_fire_modifier") continue;
+      const multiplier = Number(rule.multiplier ?? rule.value ?? 1);
+      if (!Number.isFinite(multiplier) || multiplier <= 1) continue;
+      candidates.push({
+        multiplier,
+        autoReload: rule.autoReload !== false,
+        initiativeRule: String(rule.initiativeRule ?? "").trim(),
+        effectId: effect.id ?? null,
+        effectName: effect.name ?? "",
+        sourceItemId,
+        sourceItemUuid,
+        rule
+      });
+    }
+  }
+
+  if (!candidates.length) return null;
+  return candidates.sort((left, right) => right.multiplier - left.multiplier)[0];
+}
+
+function greatestCommonDivisor(left, right) {
+  let a = Math.max(1, Math.abs(Math.trunc(Number(left) || 1)));
+  let b = Math.max(1, Math.abs(Math.trunc(Number(right) || 1)));
+  while (b) [a, b] = [b, a % b];
+  return a;
+}
+
+function multiplyAttackRate(rate, multiplier) {
+  const parsed = parseAttackRate(rate);
+  const factor = Number(multiplier);
+  if (!Number.isFinite(factor) || factor <= 0) return parsed;
+  const precision = Math.min(3, Math.max(0, String(factor).split(".")[1]?.length ?? 0));
+  const scale = 10 ** precision;
+  const factorNumerator = Math.max(1, Math.round(factor * scale));
+  const numerator = parsed.numerator * factorNumerator;
+  const denominator = parsed.denominator * scale;
+  const divisor = greatestCommonDivisor(numerator, denominator);
+  const reducedNumerator = Math.max(1, Math.floor(numerator / divisor));
+  const reducedDenominator = Math.max(1, Math.floor(denominator / divisor));
+  return { numerator: reducedNumerator, denominator: reducedDenominator, label: `${reducedNumerator}/${reducedDenominator}` };
+}
+
 function parseAttackRate(value) {
   if (value && typeof value === "object") {
     const direct = value.ratio ?? value.value ?? value.valeur ?? value.rate ?? value.attacksPerRound ?? value.attaquesParRound;
@@ -371,6 +437,7 @@ function actorAttackProfile(actor, { weapon = null, combat = game.combat, state 
   if (!classes.length) return null;
   const unarmed = weaponIsUnarmed(weapon);
   const ranged = weaponIsProjectileOrRanged(weapon);
+  const rateOfFire = weaponRateOfFireModifier(actor, weapon);
   let best = null;
 
   for (const item of classes) {
@@ -396,7 +463,23 @@ function actorAttackProfile(actor, { weapon = null, combat = game.combat, state 
     if (!best || score > best.score) best = { rate: parsed, ratio: parsed.label, total, classSlug: slug, level, source, score };
   }
 
-  return best;
+  if (!rateOfFire) return best;
+  const baseRate = best?.rate ?? parseAttackRate("1/1");
+  const modifiedRate = multiplyAttackRate(baseRate, rateOfFire.multiplier);
+  const sequenceStartRound = Math.max(1, Math.floor(Number(state?.sequenceStartRound ?? combatRound(combat)) || combatRound(combat)));
+  const total = attacksThisRound(modifiedRate, combatRound(combat), sequenceStartRound);
+  if (total <= 1) return best;
+
+  return {
+    rate: modifiedRate,
+    ratio: modifiedRate.label,
+    total,
+    classSlug: best?.classSlug ?? null,
+    level: best?.level ?? null,
+    source: best?.source ? `${best.source}+objet-magique` : "objet-magique",
+    score: modifiedRate.numerator / modifiedRate.denominator,
+    rateOfFire
+  };
 }
 
 function combatKey(combat) {
@@ -480,6 +563,7 @@ function multipleAttackMessage(actor, state, context = "status") {
     ? `Attaque supplémentaire enregistrée — ${summary}`
     : `Attaque supplémentaire enregistrée — ${summary} Toutes les attaques du round sont utilisées.`;
   if (context === "blocked-extra") return `Aucune attaque restante — ${summary}`;
+  if (context === "wrong-magic-weapon") return `Cadence magique liée à une autre arme — ${summary}`;
   return summary;
 }
 
@@ -508,11 +592,21 @@ async function leaveExtraAttackPhase(combat, round = combatRound(combat)) {
   return setMultipleAttackPhase(combat, { phase: "normal", round, updatedAt: Date.now() });
 }
 
+function magicRateWeaponMismatch(state, weapon) {
+  const requiredId = String(state?.rateSourceItemId ?? "");
+  if (!requiredId || Number(state?.rateOfFireMultiplier ?? 1) <= 1) return false;
+  return String(weapon?.id ?? "") !== requiredId;
+}
+
 export function add2eCanActorWeaponAttackNow(actor, { weapon = null, combat = game.combat, notify = false } = {}) {
   if (!actor || !combat?.started) return true;
   const current = currentCombatant(combat);
   if (!current?.actor || String(current.actor.id) !== String(actor.id)) return true;
   const currentState = readMultipleAttackState(actor, combat);
+  if (Number(currentState?.round) === combatRound(combat) && currentState?.used > 0 && magicRateWeaponMismatch(currentState, weapon)) {
+    if (notify) ui.notifications?.warn?.(multipleAttackMessage(actor, currentState, "wrong-magic-weapon"));
+    return false;
+  }
   const profile = actorAttackProfile(actor, { weapon, combat, state: currentState });
   if (!profile) return true;
 
@@ -534,6 +628,7 @@ export async function add2eRecordWeaponAttack(actor, { weapon = null, combat = g
   const current = currentCombatant(combat);
   if (!current?.actor || String(current.actor.id) !== String(actor.id)) return null;
   const previous = readMultipleAttackState(actor, combat);
+  if (Number(previous?.round) === combatRound(combat) && previous?.used > 0 && magicRateWeaponMismatch(previous, weapon)) return previous;
   const profile = actorAttackProfile(actor, { weapon, combat, state: previous });
   if (!profile) return null;
 
@@ -556,11 +651,16 @@ export async function add2eRecordWeaponAttack(actor, { weapon = null, combat = g
     classLevel: profile.level,
     weaponId: weapon?.id ?? null,
     weaponName: weapon?.name ?? null,
+    rateOfFireMultiplier: profile.rateOfFire?.multiplier ?? null,
+    rateAutoReload: profile.rateOfFire?.autoReload ?? null,
+    rateInitiativeRule: profile.rateOfFire?.initiativeRule ?? "",
+    rateSourceItemId: profile.rateOfFire?.sourceItemId ?? null,
+    rateSourceItemUuid: profile.rateOfFire?.sourceItemUuid ?? null,
     updatedAt: Date.now()
   };
 
   await writeMultipleAttackState(actor, combat, state);
-  console.log(`${TAG}[MULTI_ATTACK][RECORDED]`, { actor: actor.name, weapon: weapon?.name ?? null, round: state.round, ratio: state.ratio, total: state.total, used: state.used, pending: state.pending, phase: state.phase });
+  console.log(`${TAG}[MULTI_ATTACK][RECORDED]`, { actor: actor.name, weapon: weapon?.name ?? null, round: state.round, ratio: state.ratio, total: state.total, used: state.used, pending: state.pending, phase: state.phase, rateOfFireMultiplier: state.rateOfFireMultiplier, rateAutoReload: state.rateAutoReload, rateInitiativeRule: state.rateInitiativeRule });
   if (state.total > 1) {
     const context = state.phase === "extra" ? "extra-recorded" : (state.pending > 0 ? "normal-pending" : "normal-done");
     ui.notifications?.info?.(multipleAttackMessage(actor, state, context));
