@@ -1,9 +1,9 @@
 // scripts/add2e/magic-power-effects-adapter.mjs
 // ADD2E — Adaptateur et exécuteur universel des pouvoirs d'objets magiques.
-// Étape 5, lot 5A — contrat générique d'exécution.
+// Étape 5, lot 5B — gestionnaires génériques des états offensifs.
 // Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2.
 
-const ADD2E_MAGIC_POWER_EFFECTS_ADAPTER_VERSION = "2026-07-21-magic-power-effects-adapter-v5-execution-contract";
+const ADD2E_MAGIC_POWER_EFFECTS_ADAPTER_VERSION = "2026-07-22-magic-power-effects-adapter-v6-condition-handlers";
 const SPELL_PACK_ID = "add2e.sorts";
 const EFFECT_FLAG = "magicItemCatalogueEffect";
 const TIME_SETTING = "add2e.worldTimeTick";
@@ -51,7 +51,7 @@ function list(value) {
   if (value == null || value === "") return [];
   if (Array.isArray(value)) return value.flatMap(list);
   if (value instanceof Set) return [...value].flatMap(list);
-  if (typeof value === "string") return value.split(/[,;\n|]+/g).map(v => v.trim()).filter(Boolean);
+  if (typeof value === "string") return value.split(/[,;\n|]+/g).map(entry => entry.trim()).filter(Boolean);
   if (typeof value === "object") {
     for (const key of ["values", "items", "list", "lists", "tags", "effectTags", "types", "categories"]) {
       if (value[key] != null) return list(value[key]);
@@ -74,7 +74,7 @@ const hasValue = value => value != null && value !== "" && (!Array.isArray(value
   && (typeof value !== "object" || Array.isArray(value) || Object.keys(value).length > 0);
 
 function resolveTemplate(value, parameters = {}) {
-  if (Array.isArray(value)) return value.map(v => resolveTemplate(v, parameters)).filter(v => v !== UNSET);
+  if (Array.isArray(value)) return value.map(entry => resolveTemplate(entry, parameters)).filter(entry => entry !== UNSET);
   if (value && typeof value === "object") {
     const output = {};
     for (const [key, entry] of Object.entries(value)) {
@@ -284,6 +284,7 @@ function tokenForActor(actor) {
 function normalizedTargetMode(parameters = {}, power = {}) {
   const explicit = norm(parameters.target ?? parameters.targetMode ?? parameters.targetType ?? parameters.scope ?? "");
   if (explicit) return explicit;
+  if (normalizeZone(parameters).active) return "targets";
   const trigger = norm(power?.activation?.trigger);
   if (trigger.includes("self") || trigger.includes("wearer") || trigger.includes("porteur")) return "self";
   if (trigger.includes("touch")) return "touch";
@@ -304,7 +305,7 @@ function resolveTargets(actor, power, effect, parameters = resolveExecutionParam
     required = true;
     actors = selectedActors.slice(0, 1);
     tokens = selected.slice(0, 1);
-  } else if (["targets", "multiple", "creatures", "all_selected", "selected_targets"].includes(mode)) {
+  } else if (["targets", "multiple", "creatures", "all_selected", "selected_targets", "zone", "area"].includes(mode)) {
     required = true;
     actors = selectedActors;
     tokens = selected;
@@ -360,16 +361,25 @@ function measureDistance(sourceToken, targetToken) {
   return pixels / gridSize * gridDistance;
 }
 
+function canonicalZoneShape(value) {
+  const shape = norm(value);
+  if (["radius", "circle", "circular", "sphere", "spherical", "rayon", "cercle", "spherique"].includes(shape)) return "radius";
+  if (["cone", "conical", "cone_area"].includes(shape)) return "cone";
+  if (["line", "ligne", "ray", "beam", "corridor"].includes(shape)) return "line";
+  return shape;
+}
+
 function normalizeZone(parameters = {}) {
   const raw = parameters.area ?? parameters.zone;
   const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
-  const shape = norm(parameters.shape ?? source.shape ?? source.type ?? (parameters.radius != null ? "radius" : ""));
+  const shape = canonicalZoneShape(parameters.shape ?? source.shape ?? source.type ?? (parameters.radius != null ? "radius" : ""));
   const radius = distanceValue(parameters.radius ?? source.radius ?? source.rayon);
-  const length = distanceValue(source.length ?? source.longueur ?? parameters.length);
-  const width = distanceValue(source.width ?? source.largeur ?? parameters.width);
+  const length = distanceValue(source.length ?? source.longueur ?? parameters.length ?? parameters.longueur);
+  const width = distanceValue(source.width ?? source.largeur ?? parameters.width ?? parameters.largeur);
   const angle = number(source.angle, parameters.angle);
+  const direction = number(source.direction, source.orientation, source.rotation, parameters.direction, parameters.orientation, parameters.rotation);
   const active = hasValue(raw) || Number.isFinite(radius) || !!shape;
-  return { active, shape: shape || (Number.isFinite(radius) ? "radius" : ""), radius, length, width, angle, raw: clone(raw) };
+  return { active, shape: shape || (Number.isFinite(radius) ? "radius" : ""), radius, length, width, angle, direction, raw: clone(raw) };
 }
 
 function resolveRangeAndZone(actor, power, effect, targetResolution, parameters = resolveExecutionParameters(power, effect)) {
@@ -395,6 +405,93 @@ function resolveRangeAndZone(actor, power, effect, targetResolution, parameters 
     inRange,
     outOfRange,
     verifiable: !!sourceToken && distances.every(entry => !entry.token || Number.isFinite(entry.distance))
+  };
+}
+
+function tokenCenter(token) {
+  if (!token) return null;
+  return token.center ?? {
+    x: Number(token.x ?? token.document?.x ?? 0) + Number(token.w ?? 0) / 2,
+    y: Number(token.y ?? token.document?.y ?? 0) + Number(token.h ?? 0) / 2
+  };
+}
+
+function sceneUnitsToPixels(value) {
+  const amount = Number(value);
+  if (!Number.isFinite(amount)) return null;
+  const gridSize = Number(canvas?.scene?.grid?.size ?? canvas?.grid?.size ?? 1) || 1;
+  const gridDistance = Number(canvas?.scene?.grid?.distance ?? 1) || 1;
+  return amount / gridDistance * gridSize;
+}
+
+function angleDifference(left, right) {
+  return Math.abs(((Number(right) - Number(left) + 540) % 360) - 180);
+}
+
+function foundryBearing(source, target) {
+  return (Math.atan2(Number(target.y) - Number(source.y), Number(target.x) - Number(source.x)) * 180 / Math.PI + 90 + 360) % 360;
+}
+
+function pointInZone(source, target, zone, sourceToken) {
+  const shape = canonicalZoneShape(zone?.shape);
+  const direction = Number.isFinite(Number(zone?.direction))
+    ? Number(zone.direction)
+    : Number(sourceToken?.document?.rotation ?? sourceToken?.rotation ?? 0) || 0;
+  const dx = Number(target.x) - Number(source.x);
+  const dy = Number(target.y) - Number(source.y);
+  const distance = Math.hypot(dx, dy);
+  if (shape === "radius") {
+    const radius = sceneUnitsToPixels(zone.radius);
+    return Number.isFinite(radius) ? distance <= radius : null;
+  }
+  if (shape === "cone") {
+    const length = sceneUnitsToPixels(zone.length ?? zone.radius);
+    const angle = Number(zone.angle);
+    if (!Number.isFinite(length) || !Number.isFinite(angle) || angle <= 0) return null;
+    return distance <= length && angleDifference(direction, foundryBearing(source, target)) <= angle / 2;
+  }
+  if (shape === "line") {
+    const length = sceneUnitsToPixels(zone.length ?? zone.radius);
+    const width = sceneUnitsToPixels(zone.width);
+    if (!Number.isFinite(length) || !Number.isFinite(width) || width <= 0) return null;
+    const radians = (direction - 90) * Math.PI / 180;
+    const ux = Math.cos(radians);
+    const uy = Math.sin(radians);
+    const projection = dx * ux + dy * uy;
+    const perpendicular = Math.abs(dx * uy - dy * ux);
+    return projection >= 0 && projection <= length && perpendicular <= width / 2;
+  }
+  return null;
+}
+
+function resolveAffectedTargets(context) {
+  const { targets, rangeZone } = context;
+  if (!targets?.ok) return { ok: false, reason: targets?.reason || "target-required", actors: [], tokens: [], entries: [] };
+  if (!rangeZone?.ok) return { ok: false, reason: rangeZone?.reason || "target-out-of-range", actors: [], tokens: [], entries: [] };
+  const entries = [...(rangeZone?.inRange ?? targets.entries ?? [])];
+  const zone = rangeZone?.zone;
+  if (!zone?.active) {
+    return { ok: entries.length > 0 || targets.required === false, reason: entries.length || !targets.required ? "" : "target-required", entries,
+      actors: entries.map(entry => entry.actor).filter(Boolean), tokens: entries.map(entry => entry.token).filter(Boolean), zoneApplied: false };
+  }
+  const source = tokenCenter(rangeZone.sourceToken);
+  if (!source) return { ok: false, reason: "zone-source-token-required", actors: [], tokens: [], entries: [] };
+  const checked = [];
+  for (const entry of entries) {
+    const point = tokenCenter(entry.token);
+    if (!point) return { ok: false, reason: "zone-target-token-required", actors: [], tokens: [], entries: [] };
+    const inside = pointInZone(source, point, zone, rangeZone.sourceToken);
+    if (inside == null) return { ok: false, reason: "zone-definition-incomplete", actors: [], tokens: [], entries: [] };
+    if (inside) checked.push(entry);
+  }
+  return {
+    ok: checked.length > 0,
+    reason: checked.length ? "" : "no-target-in-zone",
+    entries: checked,
+    actors: checked.map(entry => entry.actor).filter(Boolean),
+    tokens: checked.map(entry => entry.token).filter(Boolean),
+    zoneApplied: true,
+    zone
   };
 }
 
@@ -538,6 +635,7 @@ function compilePower(power) {
 }
 
 const powerKey = (item, power, index) => `${item.id}:${index}:${String(power.catalogueId ?? power.id ?? "power")}`;
+
 function signature(value) {
   const text = JSON.stringify(value);
   let hash = 2166136261;
@@ -916,47 +1014,305 @@ function saveResultFor(saveResolution, actor) {
   return saveResolution?.results?.find(result => String(result.actor?.id) === String(actor?.id)) ?? null;
 }
 
-async function healingHandler(context) {
-  const { actor, item, power, parameters, targets, rangeZone } = context;
-  if (!parameters.formula) return executionResult("skipped", { handled: "healing", complete: false, reason: "formula-missing" });
-  if (!targets.ok) return executionResult("failed", { handled: "healing", reason: targets.reason });
-  if (!rangeZone.ok) {
-    ui.notifications.warn("Une cible du pouvoir est hors de portée.");
-    return executionResult("failed", { handled: "healing", reason: rangeZone.reason });
+function actorEffectTags(actor) {
+  const tags = new Set([
+    ...list(actor?.flags?.add2e?.tags),
+    ...list(actor?.flags?.add2e?.effectTags)
+  ].map(norm).filter(Boolean));
+  for (const effect of actor?.effects ?? []) {
+    if (effect.disabled) continue;
+    for (const value of [effect.name, ...list(effect.flags?.add2e?.tags), ...list(effect.flags?.add2e?.effectTags)]) {
+      const tag = norm(value);
+      if (tag) tags.add(tag);
+    }
   }
+  return tags;
+}
+
+const CONDITION_SPECS = {
+  fear: {
+    label: "Peur",
+    aliases: ["fear", "peur", "frightened", "frighten", "terror", "terreur"],
+    tags: ["etat:peur", "peur", "fuite"],
+    rules: [{ type: "state_condition", condition: "fear" }]
+  },
+  paralysis: {
+    label: "Paralysie",
+    aliases: ["paralysis", "paralysie", "paralyse", "paralyzed", "immobilization", "immobilisation"],
+    tags: ["etat:paralysie", "paralysie", "paralyse", "immobilise"],
+    rules: [{ type: "block_action", actions: ["move", "attack", "cast", "use-item"] }]
+  },
+  poison: {
+    label: "Poison",
+    aliases: ["poison", "poisoning", "poisoned", "empoisonnement", "empoisonne"],
+    tags: ["etat:poison", "poison", "empoisonne"],
+    rules: [{ type: "state_condition", condition: "poison" }]
+  },
+  slow: {
+    label: "Ralentissement",
+    aliases: ["slow", "slowing", "slowed", "ralentissement", "ralenti"],
+    tags: ["etat:ralentissement", "ralentissement", "ralenti"],
+    rules: [{ type: "state_condition", condition: "slow" }]
+  },
+  stun: {
+    label: "Étourdissement",
+    aliases: ["stun", "stunned", "area_stun_on_hit", "zone_stun", "etourdissement", "etourdi"],
+    tags: ["etat:etourdissement", "etourdissement", "etourdi"],
+    rules: [{ type: "block_action", actions: ["move", "attack", "cast", "use-item"] }]
+  },
+  control: {
+    label: "Contrôle",
+    aliases: ["control", "control_creature", "creature_control", "domination", "domination_aura", "suggestion", "charm_control"],
+    tags: ["etat:controle", "controle", "domination"],
+    rules: [{ type: "state_condition", condition: "controlled" }]
+  }
+};
+
+function canonicalConditionType(type) {
+  const wanted = norm(type);
+  for (const [canonical, spec] of Object.entries(CONDITION_SPECS)) {
+    if (canonical === wanted || spec.aliases.includes(wanted)) return canonical;
+  }
+  return wanted;
+}
+
+function conditionSpec(type) {
+  const canonical = canonicalConditionType(type);
+  return { canonical, ...(CONDITION_SPECS[canonical] ?? { label: type || "État", aliases: [canonical], tags: [`etat:${canonical}`], rules: [] }) };
+}
+
+function targetImmuneToCondition(target, spec) {
+  const tags = actorEffectTags(target);
+  const aliases = [...new Set([spec.canonical, ...spec.aliases].map(norm).filter(Boolean))];
+  return aliases.some(alias => tags.has(`immunite:${alias}`)
+    || tags.has(`immunity:${alias}`)
+    || tags.has(`immunite:condition:${alias}`)
+    || tags.has(`condition_immunity:${alias}`))
+    || tags.has("immunite:condition")
+    || tags.has("condition_immunity:any");
+}
+
+function conditionDuration(power, effect, parameters) {
+  return powerDuration(power, { ...effect, duration: parameters.duration ?? effect.duration });
+}
+
+function conditionRules(spec, effect, actor, parameters) {
+  const rules = [...spec.rules.map(clone)];
+  if (spec.canonical === "slow") {
+    const movement = number(parameters.movementMultiplier, parameters.speedMultiplier, effect.movementMultiplier, effect.speedMultiplier);
+    const attacks = number(parameters.attackMultiplier, parameters.attacksMultiplier, effect.attackMultiplier, effect.attacksMultiplier);
+    if (Number.isFinite(movement)) rules.push({ type: "movement_multiplier", value: movement });
+    if (Number.isFinite(attacks)) rules.push({ type: "attack_multiplier", value: attacks });
+  }
+  if (spec.canonical === "control") {
+    rules.push({
+      type: "controlled_by",
+      actorId: actor?.id ?? null,
+      actorUuid: actor?.uuid ?? null,
+      mode: norm(effect.type ?? "control")
+    });
+  }
+  return rules;
+}
+
+async function createConditionEffect(target, context, spec, duration) {
+  const { actor, item, power, effect, parameters } = context;
+  const conditionKey = `${item.id}:${power.catalogueId ?? power.id}:${spec.canonical}`;
+  const existingIds = Array.from(target.effects ?? [])
+    .filter(active => String(active.flags?.add2e?.magicPowerConditionKey ?? "") === conditionKey)
+    .map(active => active.id).filter(Boolean);
+  if (existingIds.length) {
+    await target.deleteEmbeddedDocuments("ActiveEffect", existingIds, { add2eMagicPowerExecution: true });
+  }
+  const tags = [...new Set([...spec.tags, ...list(effect.tags ?? effect.effectTags).map(String)])];
+  const rules = conditionRules(spec, effect, actor, parameters);
+  const extraFlags = {
+    magicPowerActivation: true,
+    magicPowerCondition: true,
+    magicPowerConditionKey: conditionKey,
+    sourceItemId: item.id,
+    sourceItemUuid: item.uuid ?? null,
+    sourceActorId: actor.id,
+    sourceActorUuid: actor.uuid ?? null,
+    magicPowerId: power.catalogueId ?? power.id,
+    conditionType: spec.canonical,
+    tags,
+    effectTags: tags,
+    rules
+  };
+  const description = String(effect.description ?? power.description ?? `Effet ${spec.label} appliqué par ${item.name}.`);
+  const data = typeof game?.add2e?.time?.effectData === "function"
+    ? game.add2e.time.effectData({
+        name: `${item.name} — ${spec.label}`,
+        img: power.img || item.img || "icons/svg/aura.svg",
+        origin: item.uuid,
+        rounds: duration.value,
+        unit: duration.unit,
+        description,
+        tags,
+        changes: [],
+        source: "magic-item",
+        sourceItem: item,
+        extraFlags
+      })
+    : {
+        name: `${item.name} — ${spec.label}`,
+        img: power.img || item.img || "icons/svg/aura.svg",
+        origin: item.uuid,
+        disabled: false,
+        transfer: false,
+        duration: {
+          rounds: toRounds(duration),
+          startRound: game.combat?.round ?? null,
+          startTime: game.time?.worldTime ?? null,
+          combat: game.combat?.id ?? null
+        },
+        description,
+        changes: [],
+        flags: { add2e: extraFlags }
+      };
+  if (typeof game?.add2e?.time?.createTimedActiveEffect === "function") {
+    await game.add2e.time.createTimedActiveEffect(target, data);
+  } else {
+    await target.createEmbeddedDocuments("ActiveEffect", [data], { add2eMagicPowerExecution: true });
+  }
+}
+
+async function applyDirectDamage(target, amount) {
+  const descriptor = hp(target);
+  if (!descriptor) return { applied: 0, before: null, after: null };
+  const applied = Math.max(0, Math.floor(Number(amount) || 0));
+  const before = descriptor.value;
+  const after = Math.max(0, before - applied);
+  if (after !== before) await target.update({ [descriptor.path]: after }, { add2eMagicPowerExecution: true });
+  return { applied, before, after };
+}
+
+async function conditionHandler(context) {
+  const { actor, item, power, effect, parameters } = context;
+  const type = norm(effect.type ?? effect.kind ?? effect.category);
+  const spec = conditionSpec(type);
+  const affected = resolveAffectedTargets(context);
+  if (!affected.ok) {
+    if (affected.reason === "target-out-of-range") ui.notifications.warn("Une cible du pouvoir est hors de portée.");
+    if (affected.reason === "zone-definition-incomplete") ui.notifications.warn("La zone du pouvoir est incomplète : rayon, longueur, largeur ou angle manquant.");
+    return executionResult("failed", { handled: spec.canonical, reason: affected.reason });
+  }
+  const saveResolution = await resolveSaves(affected, parameters);
+  if (saveResolution.required && !saveResolution.complete) {
+    return executionResult("assisted", {
+      handled: spec.canonical,
+      complete: false,
+      reason: "saving-throw-unavailable",
+      targets: affected.actors
+    });
+  }
+  if (saveResolution.required && saveResolution.rule?.onSuccess === "unspecified") {
+    return executionResult("assisted", {
+      handled: spec.canonical,
+      complete: false,
+      reason: "save-success-outcome-unspecified",
+      targets: affected.actors
+    });
+  }
+  const duration = conditionDuration(power, effect, parameters);
+  const formula = spec.canonical === "poison" ? parameters.formula : null;
+  if (!duration && !formula) {
+    return executionResult("assisted", {
+      handled: spec.canonical,
+      complete: false,
+      reason: "condition-duration-missing",
+      targets: affected.actors
+    });
+  }
+  const rolledDamage = formula ? Math.max(0, Math.floor(Number((await evaluate(formula)).total) || 0)) : 0;
+  const rows = [];
+  const appliedTargets = [];
+  for (const target of affected.actors) {
+    if (targetImmuneToCondition(target, spec)) {
+      rows.push({ label: target.name, value: `Immunisé à ${spec.label.toLowerCase()}` });
+      continue;
+    }
+    const save = saveResultFor(saveResolution, target);
+    const saved = saveResolution.required && save?.success === true;
+    if (saved && saveResolution.rule.onSuccess === "negate") {
+      rows.push({ label: target.name, value: "Jet de protection réussi — aucun effet" });
+      continue;
+    }
+    let damageText = "";
+    if (formula) {
+      const damage = saved && saveResolution.rule.onSuccess === "half" ? Math.floor(rolledDamage / 2) : rolledDamage;
+      const result = await applyDirectDamage(target, damage);
+      damageText = result.before == null ? " — dégâts non appliqués" : ` — ${result.before} → ${result.after} PV`;
+    }
+    if (!saved && duration) {
+      await createConditionEffect(target, context, spec, duration);
+      appliedTargets.push(target);
+      rows.push({ label: target.name, value: `${spec.label} — ${duration.value} ${duration.unit}${damageText}` });
+    } else if (saved) {
+      rows.push({ label: target.name, value: `Jet de protection réussi${damageText}` });
+    } else {
+      rows.push({ label: target.name, value: `${spec.label}${damageText}` });
+    }
+  }
+  await createCard(actor, item, power, {
+    title: spec.label,
+    variant: spec.canonical === "poison" ? "damage" : "ability",
+    rows,
+    targets: affected.actors,
+    message: affected.zoneApplied ? "Les cibles sélectionnées ont été filtrées selon la zone du pouvoir." : ""
+  });
+  return executionResult("success", {
+    handled: spec.canonical,
+    targets: affected.actors,
+    appliedTargets,
+    rows,
+    saveResolution,
+    zone: affected.zone ?? null
+  });
+}
+
+async function healingHandler(context) {
+  const { actor, item, power, parameters } = context;
+  if (!parameters.formula) return executionResult("skipped", { handled: "healing", complete: false, reason: "formula-missing" });
+  const affected = resolveAffectedTargets(context);
+  if (!affected.ok) return executionResult("failed", { handled: "healing", reason: affected.reason });
   const amount = Math.max(0, Math.floor(Number((await evaluate(parameters.formula)).total) || 0));
   const rows = [{ label: "Formule", value: parameters.formula }, { label: "Résultat", value: amount }];
-  for (const target of targets.actors) {
+  for (const target of affected.actors) {
     const data = hp(target);
     if (!data || data.value <= 0) { rows.push({ label: target.name, value: "PV non modifiés" }); continue; }
     const after = Math.min(data.max, data.value + amount);
     if (after !== data.value) await target.update({ [data.path]: after }, { add2eMagicPowerExecution: true });
     rows.push({ label: target.name, value: `${data.value} → ${after} PV` });
   }
-  await createCard(actor, item, power, { title: "Guérison magique", variant: "healing", rows, targets: targets.actors });
-  return executionResult("success", { handled: "healing", targets: targets.actors, rows });
+  await createCard(actor, item, power, { title: "Guérison magique", variant: "healing", rows, targets: affected.actors });
+  return executionResult("success", { handled: "healing", targets: affected.actors, rows });
 }
 
 async function damageHandler(context) {
-  const { actor, item, power, parameters, targets, rangeZone } = context;
+  const { actor, item, power, parameters } = context;
   if (!parameters.formula) return executionResult("skipped", { handled: "damage", complete: false, reason: "formula-missing" });
-  if (!targets.ok || !targets.actors.length) return executionResult("failed", { handled: "damage", reason: targets.reason || "target-required" });
-  if (!rangeZone.ok) {
-    ui.notifications.warn("Une cible du pouvoir est hors de portée.");
-    return executionResult("failed", { handled: "damage", reason: rangeZone.reason });
+  const affected = resolveAffectedTargets(context);
+  if (!affected.ok || !affected.actors.length) {
+    if (affected.reason === "target-out-of-range") ui.notifications.warn("Une cible du pouvoir est hors de portée.");
+    return executionResult("failed", { handled: "damage", reason: affected.reason || "target-required" });
   }
-  const saveResolution = await resolveSaves(targets, parameters);
+  const saveResolution = await resolveSaves(affected, parameters);
+  if (saveResolution.required && !saveResolution.complete) {
+    return executionResult("assisted", { handled: "damage", complete: false, reason: "saving-throw-unavailable", targets: affected.actors });
+  }
   if (saveResolution.required && saveResolution.rule?.onSuccess === "unspecified") {
     return executionResult("assisted", {
       handled: "damage",
       complete: false,
       reason: "save-success-outcome-unspecified",
-      targets: targets.actors
+      targets: affected.actors
     });
   }
   const amount = Math.max(0, Math.floor(Number((await evaluate(parameters.formula)).total) || 0));
   const rows = [{ label: "Formule", value: parameters.formula }, { label: "Dégâts", value: amount }];
-  for (const target of targets.actors) {
+  for (const target of affected.actors) {
     const save = saveResultFor(saveResolution, target);
     let applied = amount;
     if (save?.success) {
@@ -968,22 +1324,28 @@ async function damageHandler(context) {
     const after = Math.max(0, data.value - applied);
     if (after !== data.value) await target.update({ [data.path]: after }, { add2eMagicPowerExecution: true });
     const saveText = saveResolution.required
-      ? save?.canRoll === false ? " — sauvegarde indisponible" : save?.success ? " — sauvegarde réussie" : " — sauvegarde échouée"
+      ? save?.success ? " — sauvegarde réussie" : " — sauvegarde échouée"
       : "";
     rows.push({ label: target.name, value: `${data.value} → ${after} PV${saveText}` });
   }
-  await createCard(actor, item, power, { title: "Dégâts magiques", variant: "damage", rows, targets: targets.actors });
-  return executionResult("success", { handled: "damage", targets: targets.actors, rows, saveResolution });
+  await createCard(actor, item, power, {
+    title: "Dégâts magiques",
+    variant: "damage",
+    rows,
+    targets: affected.actors,
+    message: affected.zoneApplied ? "Les cibles sélectionnées ont été filtrées selon la zone du pouvoir." : ""
+  });
+  return executionResult("success", { handled: "damage", targets: affected.actors, rows, saveResolution, zone: affected.zone ?? null });
 }
 
 async function removeConditionHandler(context) {
-  const { actor, item, power, effect, targets, rangeZone } = context;
+  const { actor, item, power, effect } = context;
   const wanted = list(effect.conditions ?? effect.condition ?? effect.tags ?? effect.targetAny).map(norm).filter(Boolean);
   if (!wanted.length) return executionResult("skipped", { handled: "remove-condition", complete: false, reason: "condition-missing" });
-  if (!targets.ok) return executionResult("failed", { handled: "remove-condition", reason: targets.reason });
-  if (!rangeZone.ok) return executionResult("failed", { handled: "remove-condition", reason: rangeZone.reason });
+  const affected = resolveAffectedTargets(context);
+  if (!affected.ok) return executionResult("failed", { handled: "remove-condition", reason: affected.reason });
   const rows = [];
-  for (const target of targets.actors) {
+  for (const target of affected.actors) {
     const ids = Array.from(target.effects ?? []).filter(active => {
       const values = [active.name, ...list(active.flags?.add2e?.tags), ...list(active.flags?.add2e?.effectTags)].map(norm);
       return wanted.some(condition => values.some(value => value === condition || value.includes(condition)));
@@ -991,8 +1353,8 @@ async function removeConditionHandler(context) {
     if (ids.length) await target.deleteEmbeddedDocuments("ActiveEffect", ids, { add2eMagicPowerExecution: true });
     rows.push({ label: target.name, value: `${ids.length} effet(s) supprimé(s)` });
   }
-  await createCard(actor, item, power, { title: "Dissipation d'état", variant: "success", rows, targets: targets.actors });
-  return executionResult("success", { handled: "remove-condition", targets: targets.actors, rows });
+  await createCard(actor, item, power, { title: "Dissipation d'état", variant: "success", rows, targets: affected.actors });
+  return executionResult("success", { handled: "remove-condition", targets: affected.actors, rows });
 }
 
 async function lightHandler(context) {
@@ -1040,16 +1402,16 @@ function powerDuration(power, effect) {
 }
 
 async function temporaryEffectHandler(context) {
-  const { actor, item, power, effect, targets, rangeZone } = context;
+  const { actor, item, power, effect } = context;
   const duration = powerDuration(power, effect);
   const toggle = norm(power.activation?.trigger) === "toggle" || norm(effect.mode) === "toggle";
   if (!duration && !toggle) return executionResult("skipped", { handled: "temporary-effect", complete: false, reason: "duration-missing" });
-  if (!targets.ok) return executionResult("failed", { handled: "temporary-effect", reason: targets.reason });
-  if (!rangeZone.ok) return executionResult("failed", { handled: "temporary-effect", reason: rangeZone.reason });
+  const affected = resolveAffectedTargets(context);
+  if (!affected.ok) return executionResult("failed", { handled: "temporary-effect", reason: affected.reason });
   const type = norm(effect.type);
   const key = `${item.id}:${power.catalogueId ?? power.id}:${type}`;
   const rows = [];
-  for (const target of targets.actors) {
+  for (const target of affected.actors) {
     const existing = Array.from(target.effects ?? [])
       .find(active => String(active.flags?.add2e?.magicPowerActivationKey ?? "") === key);
     if (existing && toggle) {
@@ -1098,8 +1460,8 @@ async function temporaryEffectHandler(context) {
     }
     rows.push({ label: target.name, value: duration ? `${duration.value} ${duration.unit}` : "Effet activé" });
   }
-  await createCard(actor, item, power, { title: "Effet magique", rows, targets: targets.actors });
-  return executionResult("success", { handled: "temporary-effect", targets: targets.actors, rows });
+  await createCard(actor, item, power, { title: "Effet magique", rows, targets: affected.actors });
+  return executionResult("success", { handled: "temporary-effect", targets: affected.actors, rows });
 }
 
 function onUsePath(document) {
@@ -1417,10 +1779,18 @@ function installDefaultHandlers() {
   registerEffectHandler(["remove_condition", "cure_condition", "remove_status", "dispel_condition"], removeConditionHandler);
   registerEffectHandler(["light"], lightHandler);
   registerEffectHandler([
-    "invisibility", "flight", "flying", "ethereal_state", "haste", "slow", "protection",
+    "invisibility", "flight", "flying", "ethereal_state", "haste", "protection",
     "movement_mode", "transformation", "state_transformation", "polymorph", "status", "condition",
     "ability_bonus", "characteristic_bonus", "stat_bonus", "armor_bonus", "attack_bonus", "damage_bonus"
   ], temporaryEffectHandler);
+  registerEffectHandler([
+    "fear", "peur", "frightened", "frighten", "terror", "terreur",
+    "paralysis", "paralysie", "paralyse", "paralyzed", "immobilization", "immobilisation",
+    "poison", "poisoning", "poisoned", "empoisonnement", "empoisonne",
+    "slow", "slowing", "slowed", "ralentissement", "ralenti",
+    "stun", "stunned", "area_stun_on_hit", "zone_stun", "etourdissement", "etourdi",
+    "control", "control_creature", "creature_control", "domination", "domination_aura", "suggestion", "charm_control"
+  ], conditionHandler);
 }
 
 installDefaultHandlers();
@@ -1669,6 +2039,7 @@ globalThis.add2eMagicPowerSpellIndex = spellIndex;
 globalThis.add2eResolveMagicPowerParameters = resolveExecutionParameters;
 globalThis.add2eResolveMagicPowerTargets = resolveTargets;
 globalThis.add2eResolveMagicPowerRangeAndZone = resolveRangeAndZone;
+globalThis.add2eResolveMagicPowerAffectedTargets = resolveAffectedTargets;
 globalThis.add2eResolveMagicPowerSaves = resolveSaves;
 globalThis.add2eRegisterMagicPowerEffectHandler = registerEffectHandler;
 globalThis.add2eNormalizeMagicPowerExecutionResult = normalizeExecutionResult;
@@ -1716,6 +2087,7 @@ Hooks.once("ready", () => {
     resolveParameters: resolveExecutionParameters,
     resolveTargets,
     resolveRangeAndZone,
+    resolveAffectedTargets,
     resolveSaves,
     registerEffectHandler,
     normalizeExecutionResult,
