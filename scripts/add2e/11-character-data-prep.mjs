@@ -57,12 +57,40 @@ async function add2eSyncMulticlassHp(actor, { force = false, syncCurrent = false
   }
 }
 
+const ADD2E_CARAC_CHANGE_KEYS = Object.freeze([
+  "force", "force_base", "force_race", "force_ex",
+  "dexterite", "dexterite_base", "dexterite_race",
+  "constitution", "constitution_base", "constitution_race",
+  "intelligence", "intelligence_base", "intelligence_race",
+  "sagesse", "sagesse_base", "sagesse_race",
+  "charisme", "charisme_base", "charisme_race",
+  "bonus_caracteristiques", "bonus_divers_caracteristiques"
+]);
+
+const ADD2E_CARAC_RECALC_REASONS = new Set([
+  "magic-characteristics-initialize-base",
+  "magic-characteristics-recalculate"
+]);
+
+function add2eActorUpdateChangesCharacteristic(changes = {}) {
+  const system = changes?.system && typeof changes.system === "object" ? changes.system : {};
+  return ADD2E_CARAC_CHANGE_KEYS.some(key => {
+    const path = `system.${key}`;
+    return Object.prototype.hasOwnProperty.call(system, key)
+      || Object.prototype.hasOwnProperty.call(changes, path)
+      || foundry.utils.hasProperty(changes, path);
+  });
+}
+
 Hooks.on("updateActor", async (actor, changes = {}, options = {}, _userId) => {
   if (options?._fromSync) return;
 
   const changeKeys = Object.keys(changes ?? {});
   if (changeKeys.length === 1 && changeKeys[0] === "_id") return;
-  if (options?.add2eInternal) return;
+
+  const caracChanged = actor?.type === "personnage" && add2eActorUpdateChangesCharacteristic(changes);
+  const caracRecalculation = ADD2E_CARAC_RECALC_REASONS.has(String(options?.add2eReason ?? ""));
+  if (options?.add2eInternal && (!caracChanged || caracRecalculation)) return;
 
   // =====================================================
   // 0) Garde anti-boucle + gestion PV au changement de niveau
@@ -110,36 +138,17 @@ Hooks.on("updateActor", async (actor, changes = {}, options = {}, _userId) => {
   // 1) Auto-save & recalcul des bonus caracs
   // =====================================================
   try {
-    if (actor.type === "personnage" && changes.system) {
-      const CARAC_CHANGE_KEYS = [
-        "force", "force_base", "force_race", "force_ex",
-        "dexterite", "dexterite_base", "dexterite_race",
-        "constitution", "constitution_base", "constitution_race",
-        "intelligence", "intelligence_base", "intelligence_race",
-        "sagesse", "sagesse_base", "sagesse_race",
-        "charisme", "charisme_base", "charisme_race"
-      ];
-
-      let caracChanged = false;
-      for (const key of CARAC_CHANGE_KEYS) {
-        if (Object.prototype.hasOwnProperty.call(changes.system, key)) {
-          caracChanged = true;
-          break;
+    if (caracChanged && !ACTIVE_CARAC_AUTO.has(actor.id)) {
+      ACTIVE_CARAC_AUTO.add(actor.id);
+      try {
+        if (typeof actor.sheet?.autoSetCaracAjustements === "function") {
+          await actor.sheet.autoSetCaracAjustements();
+        } else if (typeof actor.autoSetCaracAjustements === "function") {
+          await actor.autoSetCaracAjustements();
         }
-      }
-
-      if (caracChanged && !ACTIVE_CARAC_AUTO.has(actor.id)) {
-        ACTIVE_CARAC_AUTO.add(actor.id);
-        try {
-          if (typeof actor.sheet?.autoSetCaracAjustements === "function") {
-            await actor.sheet.autoSetCaracAjustements();
-          } else if (typeof actor.autoSetCaracAjustements === "function") {
-            await actor.autoSetCaracAjustements();
-          }
-          if (actor.sheet?.rendered) actor.sheet.render(false);
-        } finally {
-          ACTIVE_CARAC_AUTO.delete(actor.id);
-        }
+        if (actor.sheet?.rendered) actor.sheet.render(false);
+      } finally {
+        ACTIVE_CARAC_AUTO.delete(actor.id);
       }
     }
   } catch (_e) {}
@@ -208,7 +217,7 @@ function add2eEffectChangesCharacteristic(effect) {
 
   const rules = effect?.flags?.add2e?.rules;
   const list = Array.isArray(rules) ? rules : (rules && typeof rules === "object" ? Object.values(rules) : []);
-  return list.some(rule => String(rule?.kind ?? rule?.type ?? "") === "characteristic_override");
+  return list.some(rule => ["characteristic_bonus", "characteristic_override"].includes(String(rule?.kind ?? rule?.type ?? "")));
 }
 
 const ADD2E_EFFECT_CARAC_RECALC_LOCK = new Set();
