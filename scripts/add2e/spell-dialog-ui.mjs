@@ -235,8 +235,10 @@ function localizeMagicControlLabel(control) {
   const group = magicParameterGroup(control);
   const label = group?.matches?.("label") ? group : group?.querySelector?.("label");
   if (!label) return;
-  const required = label.querySelector("span")?.outerHTML ?? (label.textContent?.includes("*") ? ' <span style="color:#a40000">*</span>' : "");
-  label.innerHTML = `${esc(magicParameterLabel(control.name))}${required}`;
+  const textTarget = label === group ? label.querySelector(":scope > span") : label;
+  if (!textTarget) return;
+  const required = textTarget.querySelector("span")?.outerHTML ?? (textTarget.textContent?.includes("*") ? ' <span style="color:#a40000">*</span>' : "");
+  textTarget.innerHTML = `${esc(magicParameterLabel(control.name))}${required}`;
 }
 function localizeMagicSelectOptions(select) {
   [...(select?.options ?? [])].forEach((option, index) => {
