@@ -7,7 +7,10 @@ import {
   add2eGetAttackAbilityModifier
 } from "./03-attack-rules.mjs";
 
-export const ADD2E_ATTACK_MODIFIERS_VERSION = "2026-07-16-signed-active-effect-modifiers-v2";
+export const ADD2E_ATTACK_MODIFIERS_VERSION = "2026-07-22-magic-weapon-scoped-modifiers-v3";
+
+const ADD2E_ATTACK_WEAPON_TYPES = new Set(["arme", "weapon"]);
+const ADD2E_ATTACK_MAGIC_ITEM_EFFECT_FLAG = "magicItemCatalogueEffect";
 
 function add2eAttackPushNormalizedTag(set, value) {
   if (!set || value === undefined || value === null || value === "") return;
@@ -90,6 +93,41 @@ function add2eAttackGetActiveTargetEffectTags(cible) {
   return tags;
 }
 
+function add2eAttackEffectTags(effect) {
+  const tags = new Set();
+  add2eAttackPushNormalizedTag(tags, effect?.flags?.add2e?.tags);
+  add2eAttackPushNormalizedTag(tags, effect?.flags?.add2e?.effectTags);
+  if (effect?.getFlag) {
+    try { add2eAttackPushNormalizedTag(tags, effect.getFlag("add2e", "tags")); } catch (_error) {}
+    try { add2eAttackPushNormalizedTag(tags, effect.getFlag("add2e", "effectTags")); } catch (_error) {}
+  }
+  return tags;
+}
+
+function add2eAttackMagicWeaponTagContext(actor, arme) {
+  const scopedTags = new Set();
+  const selectedTags = new Set();
+  const selectedEffects = [];
+  if (!actor || !arme?.id) return { scopedTags, selectedTags, selectedEffects };
+
+  for (const effect of actor.effects ?? []) {
+    if (effect?.disabled || effect?.flags?.add2e?.[ADD2E_ATTACK_MAGIC_ITEM_EFFECT_FLAG] !== true) continue;
+    const sourceItemId = String(effect.flags?.add2e?.sourceItemId ?? "");
+    const sourceItem = actor.items?.get?.(sourceItemId)
+      ?? Array.from(actor.items ?? []).find(item => String(item?.id ?? "") === sourceItemId)
+      ?? null;
+    if (!ADD2E_ATTACK_WEAPON_TYPES.has(String(sourceItem?.type ?? "").toLowerCase())) continue;
+
+    const effectTags = add2eAttackEffectTags(effect);
+    effectTags.forEach(tag => scopedTags.add(add2eAttackNormalizeModifierTag(tag)));
+    if (sourceItemId !== String(arme.id)) continue;
+    selectedEffects.push(effect);
+    effectTags.forEach(tag => selectedTags.add(add2eAttackNormalizeModifierTag(tag)));
+  }
+
+  return { scopedTags, selectedTags, selectedEffects };
+}
+
 function add2eAttackApplyFlatActiveTagModifier({ tag, prefix, label, accumulator }) {
   if (!tag.startsWith(prefix)) return false;
   const amount = add2eAttackParseSignedValue(tag.slice(prefix.length), 0);
@@ -111,6 +149,58 @@ function add2eAttackApplySignedFlatTags({ tag, touch, damage }) {
   if (add2eAttackApplyFlatActiveTagModifier({ tag, prefix: "malus_degats:", label: "Effet actif aux dégâts", accumulator: damage })) return true;
   if (add2eAttackApplyFlatActiveTagModifier({ tag, prefix: "malus:degats:", label: "Effet actif aux dégâts", accumulator: damage })) return true;
   return false;
+}
+
+function add2eAttackConditionalTag(tag, prefix, targetTags) {
+  if (!tag.startsWith(prefix)) return null;
+  const parts = tag.slice(prefix.length).split(":");
+  const value = add2eAttackParseSignedValue(parts.pop(), NaN);
+  const matcher = add2eNormalizeAttackTag(parts.join(":"));
+  if (!matcher || !Number.isFinite(value)) return null;
+  if (!targetTags.has(matcher) && !add2eTagSetMatches(targetTags, matcher)) return null;
+  return { matcher, value };
+}
+
+function add2eAttackBestConditional(current, candidate) {
+  if (!Number.isFinite(candidate)) return current;
+  if (!Number.isFinite(current)) return candidate;
+  return Math.max(current, candidate);
+}
+
+function add2eAttackApplyModifierTag({ tag, actor, combatProfile, targetTags, touch, damage, conditionals }) {
+  if (!tag) return;
+  if (add2eAttackApplySignedFlatTags({ tag, touch, damage })) return;
+
+  const conditionalAttack = add2eAttackConditionalTag(tag, "bonus_attaque_conditionnel:", targetTags);
+  if (conditionalAttack) {
+    conditionals.attack = add2eAttackBestConditional(conditionals.attack, conditionalAttack.value);
+    conditionals.attackDetails = conditionalAttack;
+    return;
+  }
+
+  const conditionalDamage = add2eAttackConditionalTag(tag, "bonus_degats_conditionnel:", targetTags);
+  if (conditionalDamage) {
+    conditionals.damage = add2eAttackBestConditional(conditionals.damage, conditionalDamage.value);
+    conditionals.damageDetails = conditionalDamage;
+    return;
+  }
+
+  if (tag.startsWith("bonus_touche:")) {
+    const parts = tag.split(":");
+    const matcher = parts[1];
+    const valeur = Number(parts[2]) || 0;
+    if (matcher && add2eTagSetMatches(combatProfile?.tagSet, matcher)) touch.value += valeur;
+    return;
+  }
+
+  if (tag.startsWith("bonus_degats_vs:")) {
+    const parts = tag.split(":");
+    const matcher = add2eNormalizeAttackTag(parts[1]);
+    const valeurRaw = String(parts[2] ?? "").trim().toLowerCase();
+    if (matcher && (targetTags.has(matcher) || add2eTagSetMatches(targetTags, matcher))) {
+      damage.value += valeurRaw === "niveau" ? (Number(actor?.system?.niveau) || 1) : (Number(valeurRaw) || 0);
+    }
+  }
 }
 
 function add2eAttackAbilityModifierContext(actor, combatProfile) {
@@ -164,7 +254,7 @@ export function add2eAttackComputeTargetDefensiveAttackModifiers({ actor, cible 
   };
 }
 
-export function add2eAttackComputeActiveAttackModifiers({ actor, cible, combatProfile }) {
+export function add2eAttackComputeActiveAttackModifiers({ actor, cible, arme = null, combatProfile }) {
   let bonusToucheEffets = 0;
   let bonusDegatsEffets = 0;
   let bonusRacialVs = 0;
@@ -183,28 +273,26 @@ export function add2eAttackComputeActiveAttackModifiers({ actor, cible, combatPr
     const activeTags = Add2eEffectsEngine.getActiveTags(actor) ?? [];
     const touch = { value: 0, details: [] };
     const damage = { value: 0, details: [] };
+    const conditionals = { attack: null, damage: null, attackDetails: null, damageDetails: null };
+    const weaponMagic = add2eAttackMagicWeaponTagContext(actor, arme);
 
     for (const rawTag of activeTags) {
       const tag = add2eAttackNormalizeModifierTag(rawTag);
-      if (!tag) continue;
+      if (!tag || weaponMagic.scopedTags.has(tag)) continue;
+      add2eAttackApplyModifierTag({ tag, actor, combatProfile, targetTags, touch, damage, conditionals });
+    }
 
-      if (add2eAttackApplySignedFlatTags({ tag, touch, damage })) continue;
+    for (const tag of weaponMagic.selectedTags) {
+      add2eAttackApplyModifierTag({ tag, actor, combatProfile, targetTags, touch, damage, conditionals });
+    }
 
-      if (tag.startsWith("bonus_touche:")) {
-        const parts = tag.split(":");
-        const matcher = parts[1];
-        const valeur = Number(parts[2]) || 0;
-        if (matcher && add2eTagSetMatches(combatProfile.tagSet, matcher)) bonusToucheEffets += valeur;
-        continue;
-      }
-      if (tag.startsWith("bonus_degats_vs:")) {
-        const parts = tag.split(":");
-        const matcher = add2eNormalizeAttackTag(parts[1]);
-        const valeurRaw = String(parts[2] ?? "").trim().toLowerCase();
-        if (matcher && targetTags.has(matcher)) {
-          bonusDegatsEffets += valeurRaw === "niveau" ? (Number(actor?.system?.niveau) || 1) : (Number(valeurRaw) || 0);
-        }
-      }
+    if (Number.isFinite(conditionals.attack)) {
+      touch.value += conditionals.attack;
+      touch.details.push(`Bonus conditionnel (${conditionals.attackDetails?.matcher ?? "cible"}) : ${conditionals.attack >= 0 ? "+" : ""}${conditionals.attack}`);
+    }
+    if (Number.isFinite(conditionals.damage)) {
+      damage.value += conditionals.damage;
+      damage.details.push(`Bonus conditionnel aux dégâts (${conditionals.damageDetails?.matcher ?? "cible"}) : ${conditionals.damage >= 0 ? "+" : ""}${conditionals.damage}`);
     }
 
     if (typeof Add2eEffectsEngine.getPassiveCombatModifiers === "function") {
@@ -213,6 +301,8 @@ export function add2eAttackComputeActiveAttackModifiers({ actor, cible, combatPr
         ruleScope: "owner",
         actor,
         target: cible,
+        sourceItem: arme,
+        sourceItemId: arme?.id ?? null,
         combatProfile,
         actionTags: combatProfile?.tags ?? [],
         abilityModifiers: add2eAttackAbilityModifierContext(actor, combatProfile)
