@@ -157,8 +157,9 @@ export function passivePower(power) {
   const type = norm(power?.activation?.type);
   const trigger = norm(power?.activation?.trigger);
   if (["passive", "automatic", "always_on", "permanent"].includes(type)) return true;
+  const activation = `${type} ${trigger}`;
   return ["equipped", "equip", "worn", "carried", "porte", "portee", "time", "attack", "damage", "hit", "round", "projectile", "target", "drawn"]
-    .some(token => trigger.includes(token));
+    .some(token => activation.includes(token));
 }
 
 export function durationParts(value) {
