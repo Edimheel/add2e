@@ -1,6 +1,6 @@
-// ADD2E — UI commune des fenêtres et messages liés aux sorts et pouvoirs canoniques.
+// ADD2E — UI commune des fenêtres et messages liés aux sorts.
 // Compatible Foundry V13/V14/V15 — DialogV2 / ApplicationV2 uniquement.
-const VERSION = "2026-07-22-v19-canonical-magic-power-dialogs";
+const VERSION = "2026-07-14-v18-canonical-spell-descriptions";
 globalThis.ADD2E_SPELL_DIALOG_UI_VERSION = VERSION;
 
 function esc(value) {
@@ -22,19 +22,13 @@ const THEMES = {
   druid: { label:"Druide", bg:"#f4faef", accent:"#dfeccd", dark:"#264a23", main:"#719c4a", border:"#7fa45d", text:"#202d1a" },
   wizard: { label:"Magicien", bg:"#f8f3ff", accent:"#e8ddfb", dark:"#2e1c5a", main:"#6b49b8", border:"#8060cc", text:"#211735" },
   illusionist: { label:"Illusionniste", bg:"#f9f7ff", accent:"#dff2ff", dark:"#275a8a", main:"#925ac6", border:"#70a9d6", text:"#1e3043" },
-  thief: { label:"Voleur", bg:"#eff9fa", accent:"#cce9ed", dark:"#164a58", main:"#2a8293", border:"#3b9daf", text:"#14333b" },
-  magic: { label:"Objet magique", bg:"#fffaf0", accent:"#f3e6c8", dark:"#5a3a0f", main:"#a87218", border:"#c99a36", text:"#2d2011" }
+  thief: { label:"Voleur", bg:"#eff9fa", accent:"#cce9ed", dark:"#164a58", main:"#2a8293", border:"#3b9daf", text:"#14333b" }
 };
 
 function themeData(theme) { return THEMES[theme] ?? THEMES.cleric; }
-function isMagicPowerContent(content = "") {
-  return String(content).includes("add2e-magic-power-parameter-form");
-}
 function guessTheme({ title = "", content = "", theme = null } = {}) {
   if (theme && THEMES[theme]) return theme;
-  if (isMagicPowerContent(content)) return "magic";
   const text = norm(`${title} ${content}`);
-  if (text.includes("objet_magique") || text.includes("pouvoir_canonique")) return "magic";
   if (text.includes("voleur") || text.includes("assassin")) return "thief";
   if (text.includes("illusionniste")) return "illusionist";
   if (text.includes("magicien") || text.includes("livre_de_sorts") || text.includes("parchemin") || text.includes("comprehension")) return "wizard";
@@ -43,7 +37,6 @@ function guessTheme({ title = "", content = "", theme = null } = {}) {
 }
 function guessIcon({ title = "", content = "", img = null } = {}) {
   if (img) return img;
-  if (isMagicPowerContent(content) || norm(`${title} ${content}`).includes("objet_magique")) return "icons/svg/aura.svg";
   return norm(`${title} ${content}`).includes("voleur") ? "icons/svg/eye.svg" : "icons/svg/book.svg";
 }
 
@@ -63,13 +56,6 @@ function ensureStyles() {
 .add2e-spell-dialog-header{display:flex;align-items:center;gap:10px;padding:10px 12px;background:linear-gradient(90deg,var(--a2e-dark),var(--a2e-main));color:#fff}
 .add2e-spell-dialog-header img{width:42px;height:42px;border-radius:8px;background:#fff;object-fit:cover}
 .add2e-spell-dialog-title{font-size:1.08rem;font-weight:800}.add2e-spell-dialog-body{padding:12px}
-.application.add2e-spell-dialog-window .add2e-magic-power-parameter-form{min-width:0!important;padding:0!important;display:grid!important;gap:10px!important}
-.application.add2e-spell-dialog-window .add2e-magic-power-parameter-form>.form-group{display:grid!important;grid-template-columns:minmax(170px,220px) minmax(0,1fr)!important;align-items:center!important;gap:10px!important;padding:8px 10px!important;margin:0!important;border:1px solid var(--a2e-border)!important;border-radius:9px!important;background:rgba(255,253,244,.86)!important}
-.application.add2e-spell-dialog-window .add2e-magic-power-parameter-form>.form-group label{font-weight:900!important;color:var(--a2e-dark)!important}
-.application.add2e-spell-dialog-window .add2e-magic-power-parameter-form input:not([type="hidden"]),.application.add2e-spell-dialog-window .add2e-magic-power-parameter-form select,.application.add2e-spell-dialog-window .add2e-magic-power-parameter-form textarea{width:100%!important;min-height:36px!important;border:1px solid var(--a2e-border)!important;border-radius:8px!important;background:var(--a2e-bg)!important;color:var(--a2e-text)!important;padding:6px 8px!important}
-.application.add2e-spell-dialog-window .add2e-magic-power-parameter-form textarea{min-height:76px!important;resize:vertical!important}
-.application.add2e-spell-dialog-window .dialog-buttons button{border:1px solid var(--a2e-border)!important;border-radius:9px!important;background:var(--a2e-bg)!important;color:var(--a2e-text)!important;font-weight:850!important}
-.application.add2e-spell-dialog-window .dialog-buttons button.default,.application.add2e-spell-dialog-window .dialog-buttons button[data-action="save"]{background:linear-gradient(180deg,var(--a2e-main),var(--a2e-dark))!important;color:#fff!important}
 .add2e-book-copy-complete{color:#6b7280!important;background:#e5e7eb!important;border-color:#9ca3af!important;box-shadow:none!important}
 .application.add2e-spellbook-reader-window{left:108px!important;top:52px!important;width:min(980px,calc(100vw - 520px))!important;height:min(820px,calc(100vh - 92px))!important;min-width:620px!important;min-height:520px!important;background:#382316!important;border:2px solid #7a512f!important}
 .application.add2e-spellbook-reader-window .window-content{display:flex!important;flex-direction:column!important;min-height:0!important;height:100%!important;padding:10px!important;overflow:hidden!important;background:radial-gradient(ellipse at center,#6b472c 0%,#3b2417 72%,#24140d 100%)!important}
@@ -93,7 +79,6 @@ function ensureStyles() {
 .add2e-spellbook-learn:disabled{cursor:not-allowed;opacity:.55;background:#d8d0c2}
 .add2e-spellbook-entry-state{margin-top:8px;font-weight:700;color:#6d4a24}
 @media(max-width:1100px){.application.add2e-spellbook-reader-window{left:96px!important;width:calc(100vw - 430px)!important;min-width:520px!important}.add2e-spellbook-pages{padding:20px 24px 30px}}
-@media(max-width:760px){.application.add2e-spell-dialog-window .add2e-magic-power-parameter-form>.form-group{grid-template-columns:1fr!important}}
 `;
   document.head.append(style);
 }
@@ -105,7 +90,6 @@ function shell({ theme = "cleric", title = "Sort", subtitle = "", img = "icons/s
 }
 function primaryButtonClass(buttons) { return buttons; }
 function isManagedDialog(title, content) {
-  if (isMagicPowerContent(content)) return true;
   const text = norm(`${title} ${content}`);
   return text.startsWith("lancement_") || text.includes("livre_de_sorts") || text.includes("grimoire") || text.includes("parchemin") || text.includes("copie_du_sort") || text.includes("connaissance") || text.includes("comprehension");
 }
@@ -113,20 +97,9 @@ function wrapDialogOptions(options = {}) {
   const title = String(options?.window?.title ?? options?.title ?? "");
   const content = String(options?.content ?? "");
   if (!isManagedDialog(title, content) || content.includes("add2e-spell-dialog-shell") || content.includes("add2e-spellbook-reader")) return options;
-  const magicPower = isMagicPowerContent(content);
-  const theme = guessTheme({ title, content, theme: magicPower ? "magic" : options?.add2eTheme });
+  const theme = guessTheme({ title, content, theme: options?.add2eTheme });
   const classes = [...(Array.isArray(options?.window?.classes) ? options.window.classes : []), "add2e-spell-dialog-window"];
-  return {
-    ...options,
-    window: { ...(options.window ?? {}), classes: [...new Set(classes)] },
-    content: shell({
-      theme,
-      title: title || "ADD2E",
-      subtitle: magicPower ? "Objet magique" : themeData(theme).label,
-      img: guessIcon({ title, content, img: options?.add2eImg }),
-      body: content
-    })
-  };
+  return { ...options, window:{...(options.window ?? {}), classes:[...new Set(classes)]}, content:shell({theme,title:title || "ADD2E",subtitle:themeData(theme).label,img:guessIcon({title,content,img:options?.add2eImg}),body:content}) };
 }
 function patchDialogV2() {
   const DialogV2 = foundry.applications?.api?.DialogV2;
@@ -158,226 +131,17 @@ function bindSpellbookTabs(root) {
   reader.querySelectorAll(".add2e-spellbook-tab").forEach(tab => tab.addEventListener("click", event => { event.preventDefault(); activate(tab.dataset.level); }));
   activate(reader.querySelector(".add2e-spellbook-tab")?.dataset?.level ?? "1");
 }
-function applyWindowTheme(root, themeName) {
-  const t = themeData(themeName);
-  root.classList.add("add2e-spell-dialog-window");
-  for (const [key,value] of Object.entries({"--a2e-bg":t.bg,"--a2e-accent":t.accent,"--a2e-dark":t.dark,"--a2e-main":t.main,"--a2e-border":t.border,"--a2e-text":t.text})) root.style.setProperty(key,value);
-}
 function styleRenderedDialog(app, html) {
   const root = rootElement(html, app);
   if (!root) return;
   bindSpellbookTabs(root);
   if (root.querySelector(".add2e-spellbook-reader")) { root.classList.add("add2e-spellbook-reader-window"); return; }
-  const magicPower = Boolean(root.querySelector(".add2e-magic-power-parameter-form"));
   const title = String(app?.title ?? root.querySelector(".window-title")?.textContent ?? "");
   const content = String(root.querySelector(".window-content")?.textContent ?? root.textContent ?? "");
-  if (!magicPower && !isManagedDialog(title, content)) return;
-  applyWindowTheme(root, magicPower ? "magic" : guessTheme({ title, content }));
-}
-
-const MAGIC_PARAMETER_LABELS = Object.freeze({
-  ability:"Caractéristique", characteristic:"Caractéristique", attribute:"Caractéristique", stat:"Caractéristique",
-  score:"Valeur", value:"Valeur imposée", amount:"Valeur", bonus:"Bonus", penalty:"Malus", modifier:"Modificateur",
-  duration:"Durée", rounds:"Nombre de rounds", turns:"Nombre de tours", minutes:"Nombre de minutes", hours:"Nombre d’heures", days:"Nombre de jours",
-  range:"Portée", radius:"Rayon", distance:"Distance", area:"Zone d’effet", zone:"Zone d’effet", shape:"Forme de la zone", width:"Largeur", height:"Hauteur", length:"Longueur",
-  target:"Cible", targets:"Cibles", recipients:"Bénéficiaires",
-  damage:"Dégâts", damageformula:"Formule de dégâts", damagetype:"Type de dégâts",
-  type:"Type", condition:"État", effect:"Effet", effects:"Effets", element:"Élément",
-  resistance:"Résistance", resistancetype:"Type de résistance", immunity:"Immunité", immunitytype:"Type d’immunité",
-  save:"Jet de sauvegarde", savetype:"Type de sauvegarde", savemodifier:"Modificateur de sauvegarde",
-  spelluuid:"Sort équivalent", spellname:"Nom du sort", school:"École de magie", casterlevel:"Niveau du lanceur",
-  activation:"Activation", activationtime:"Temps d’activation", trigger:"Déclencheur", mode:"Mode de fonctionnement",
-  chargecost:"Coût en charges", charges:"Charges", uses:"Utilisations", frequency:"Fréquence", interval:"Intervalle",
-  percentage:"Pourcentage", chance:"Chance", formula:"Formule", table:"Table",
-  movementtype:"Type de déplacement", speed:"Vitesse", multiplier:"Multiplicateur",
-  armorclass:"Classe d’armure", operation:"Opération", priority:"Priorité",
-  level:"Niveau", quantity:"Quantité", count:"Nombre", maximum:"Maximum", minimum:"Minimum", weight:"Poids", size:"Taille",
-  creaturetype:"Type de créature", alignment:"Alignement", category:"Catégorie", tags:"Mots-clés",
-  description:"Description", notes:"Précisions", unit:"Unité", source:"Source"
-});
-
-const MAGIC_PARAMETER_VALUES = Object.freeze({
-  force:"Force", strength:"Force", str:"Force",
-  dexterite:"Dextérité", dexterity:"Dextérité", dex:"Dextérité",
-  constitution:"Constitution", con:"Constitution",
-  intelligence:"Intelligence", int:"Intelligence",
-  sagesse:"Sagesse", wisdom:"Sagesse", wis:"Sagesse",
-  charisme:"Charisme", charisma:"Charisme", cha:"Charisme",
-  permanent:"Permanente", automatic:"Automatique", assisted:"Assisté par le MD", manual:"Manuel", chat_card:"Carte de chat",
-  none:"Aucun", true:"Oui", false:"Non", yes:"Oui", no:"Non",
-  self:"Porteur", wearer:"Porteur", equipped:"Équipé", carried:"Transporté", ally:"Allié", allies:"Alliés", enemy:"Ennemi", enemies:"Ennemis", all:"Tous",
-  configured:"Configurée", passive:"Passive", always_on:"Toujours active", activate_or_equipped:"Activation ou équipement",
-  add:"Ajouter", additive:"Ajouter", override:"Imposer", set:"Imposer", multiply:"Multiplier",
-  round:"Round", rounds:"Rounds", turn:"Tour", turns:"Tours", minute:"Minute", minutes:"Minutes", hour:"Heure", hours:"Heures", day:"Jour", days:"Jours",
-  fire:"Feu", cold:"Froid", electricity:"Électricité", lightning:"Foudre", acid:"Acide", poison:"Poison", magic:"Magie", physical:"Physique", sonic:"Son", necrotic:"Nécrotique", radiant:"Rayonnant",
-  slashing:"Tranchant", piercing:"Perforant", bludgeoning:"Contondant",
-  cone:"Cône", sphere:"Sphère", cylinder:"Cylindre", line:"Ligne", cube:"Cube",
-  melee:"Corps à corps", ranged:"Distance", touch:"Contact"
-});
-
-const CHARACTERISTICS = Object.freeze([
-  ["force", "Force"], ["dexterite", "Dextérité"], ["constitution", "Constitution"],
-  ["intelligence", "Intelligence"], ["sagesse", "Sagesse"], ["charisme", "Charisme"]
-]);
-
-function magicParameterKey(value) { return norm(value).replace(/_/g, ""); }
-function magicParameterLabel(name) { return MAGIC_PARAMETER_LABELS[magicParameterKey(name)] ?? "Paramètre"; }
-function magicParameterValueLabel(value, index = null) {
-  const raw = String(value ?? "").trim();
-  const key = norm(raw);
-  if (Object.prototype.hasOwnProperty.call(MAGIC_PARAMETER_VALUES, key)) return MAGIC_PARAMETER_VALUES[key];
-  if (!raw || /^[-+]?\d+(?:[.,]\d+)?$/.test(raw) || /^\d+d\d+(?:[-+]\d+)?$/i.test(raw)) return raw;
-  if (!/^[a-z0-9_-]+$/i.test(raw)) return raw;
-  return Number.isInteger(index) ? `Option ${index + 1}` : raw;
-}
-function magicParameterGroup(control) { return control?.closest?.(".form-group") ?? control?.parentElement ?? null; }
-function localizeMagicControlLabel(control) {
-  const group = magicParameterGroup(control);
-  const label = group?.matches?.("label") ? group : group?.querySelector?.("label");
-  if (!label) return;
-  const textTarget = label === group ? label.querySelector(":scope > span") : label;
-  if (!textTarget) return;
-  const required = textTarget.querySelector("span")?.outerHTML ?? (textTarget.textContent?.includes("*") ? ' <span style="color:#a40000">*</span>' : "");
-  textTarget.innerHTML = `${esc(magicParameterLabel(control.name))}${required}`;
-}
-function localizeMagicSelectOptions(select) {
-  [...(select?.options ?? [])].forEach((option, index) => {
-    if (!option.value) return;
-    option.textContent = magicParameterValueLabel(option.value, index);
-  });
-}
-function canonicalCharacteristic(value) {
-  const key = norm(value);
-  if (["force","strength","str"].includes(key)) return "force";
-  if (["dexterite","dexterity","dex"].includes(key)) return "dexterite";
-  if (["constitution","con"].includes(key)) return "constitution";
-  if (["intelligence","int"].includes(key)) return "intelligence";
-  if (["sagesse","wisdom","wis"].includes(key)) return "sagesse";
-  if (["charisme","charisma","cha"].includes(key)) return "charisme";
-  return "";
-}
-function replaceCharacteristicControl(form) {
-  const current = form.querySelector('[name="ability"], [name="characteristic"], [name="attribute"], [name="stat"]');
-  if (!current || current.tagName === "SELECT" && current.dataset.add2eFrenchCharacteristic === "1") return current;
-  const select = document.createElement("select");
-  for (const attribute of current.attributes ?? []) {
-    if (["name","type","value"].includes(attribute.name)) continue;
-    select.setAttribute(attribute.name, attribute.value);
-  }
-  select.name = current.name;
-  select.dataset.add2eFrenchCharacteristic = "1";
-  select.innerHTML = `<option value="">— Choisir une caractéristique —</option>${CHARACTERISTICS.map(([value,label]) => `<option value="${value}">${label}</option>`).join("")}`;
-  select.value = canonicalCharacteristic(current.value);
-  current.replaceWith(select);
-  localizeMagicControlLabel(select);
-  return select;
-}
-function replaceCharacteristicValueControl(form) {
-  const characteristic = form.querySelector('[name="ability"], [name="characteristic"], [name="attribute"], [name="stat"]');
-  const current = form.querySelector('[name="value"]');
-  if (!characteristic || !current || current.type === "number" && current.dataset.add2eFrenchAbilityValue === "1") return current;
-  const input = document.createElement("input");
-  for (const attribute of current.attributes ?? []) {
-    if (["type","value","rows"].includes(attribute.name)) continue;
-    input.setAttribute(attribute.name, attribute.value);
-  }
-  input.type = "number";
-  input.step = "1";
-  input.name = current.name;
-  input.dataset.add2eFrenchAbilityValue = "1";
-  input.value = Number.isFinite(Number(current.value)) ? String(Number(current.value)) : "";
-  current.replaceWith(input);
-  localizeMagicControlLabel(input);
-  return input;
-}
-function localizeDurationControl(form) {
-  const current = form.querySelector('[name="duration"]');
-  if (!current || current.dataset.add2eFrenchDuration === "1") return;
-  current.dataset.add2eFrenchDuration = "1";
-  const stored = String(current.value ?? "").trim();
-  const visible = document.createElement("input");
-  visible.type = "text";
-  visible.value = norm(stored) === "permanent" ? "Permanente" : stored;
-  visible.placeholder = "Permanente, 1 tour, 10 minutes…";
-  visible.dataset.add2eDurationDisplay = "1";
-  if ("type" in current) current.type = "hidden";
-  current.hidden = true;
-  current.style.display = "none";
-  const sync = () => {
-    const value = String(visible.value ?? "").trim();
-    current.value = norm(value) === "permanente" ? "permanent" : value;
-  };
-  visible.addEventListener("input", sync);
-  current.insertAdjacentElement("afterend", visible);
-  sync();
-  localizeMagicControlLabel(current);
-}
-function localizeMagicParameterForm(form) {
-  for (const control of form.querySelectorAll('[data-add2e-parameter-type][name]')) {
-    localizeMagicControlLabel(control);
-    if (control.tagName === "SELECT") localizeMagicSelectOptions(control);
-  }
-  replaceCharacteristicControl(form);
-  replaceCharacteristicValueControl(form);
-  localizeDurationControl(form);
-}
-function missingMagicRequiredLabels(form) {
-  const missing = [];
-  for (const control of form.querySelectorAll('[data-add2e-parameter-type][name]')) {
-    const group = magicParameterGroup(control);
-    const label = group?.matches?.("label") ? group : group?.querySelector?.("label");
-    if (!label?.textContent?.includes("*")) continue;
-    const value = control instanceof HTMLSelectElement && control.multiple
-      ? [...control.selectedOptions].map(option => option.value).filter(Boolean)
-      : control.type === "checkbox" ? control.checked : String(control.value ?? "").trim();
-    if (value === false || value === "" || Array.isArray(value) && !value.length) missing.push(magicParameterLabel(control.name));
-  }
-  return [...new Set(missing)];
-}
-function bindMagicFrenchValidation(root, form) {
-  if (root.dataset.add2eFrenchPowerValidation === "1") return;
-  root.dataset.add2eFrenchPowerValidation = "1";
-  root.addEventListener("click", event => {
-    const button = event.target instanceof Element ? event.target.closest('button[data-action="save"]') : null;
-    if (!button) return;
-    const missing = missingMagicRequiredLabels(form);
-    if (!missing.length) return;
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    ui.notifications.warn(`Paramètres obligatoires manquants : ${missing.join(", ")}.`);
-  }, true);
-}
-function localizeMagicParameterSummaryText(value) {
-  return String(value ?? "").split(" · ").map(entry => {
-    const separator = entry.indexOf(":");
-    if (separator < 0) return entry;
-    const key = entry.slice(0, separator).trim();
-    const raw = entry.slice(separator + 1).trim();
-    return `${magicParameterLabel(key)} : ${magicParameterValueLabel(raw)}`;
-  }).join(" · ");
-}
-function localizeMagicCreatorSummaries(form) {
-  for (const summary of form.querySelectorAll('[data-add2e-selected-powers] small')) summary.textContent = localizeMagicParameterSummaryText(summary.textContent);
-}
-function enhanceMagicItemCreator(root) {
-  const form = root?.matches?.(".add2e-magic-item-create-form") ? root : root?.querySelector?.(".add2e-magic-item-create-form");
-  if (!form) return;
-  localizeMagicCreatorSummaries(form);
-  const container = form.querySelector('[data-add2e-selected-powers]');
-  if (!container || container.dataset.add2eFrenchObserver === "1") return;
-  container.dataset.add2eFrenchObserver = "1";
-  const observer = new MutationObserver(() => localizeMagicCreatorSummaries(form));
-  observer.observe(container, { childList:true, subtree:true, characterData:true });
-}
-function enhanceCanonicalPowerUi(app, html) {
-  const root = rootElement(html, app);
-  if (!root) return;
-  enhanceMagicItemCreator(root);
-  const form = root.matches?.(".add2e-magic-power-parameter-form") ? root : root.querySelector?.(".add2e-magic-power-parameter-form");
-  if (!form) return;
-  applyWindowTheme(form.closest?.(".application") ?? root, "magic");
-  localizeMagicParameterForm(form);
-  bindMagicFrenchValidation(root, form);
+  if (!isManagedDialog(title, content)) return;
+  const t = themeData(guessTheme({ title, content }));
+  root.classList.add("add2e-spell-dialog-window");
+  for (const [key,value] of Object.entries({"--a2e-bg":t.bg,"--a2e-accent":t.accent,"--a2e-dark":t.dark,"--a2e-main":t.main,"--a2e-border":t.border,"--a2e-text":t.text})) root.style.setProperty(key,value);
 }
 
 function spellLists(value) {
@@ -712,24 +476,10 @@ function refreshActorSheetForSpell(item) {
   },50));
 }
 
-globalThis.ADD2E_SPELL_DIALOG_UI = {
-  version:VERSION,
-  themes:THEMES,
-  shell,
-  primaryButtonClass,
-  ensureStyles,
-  guessTheme,
-  guessIcon,
-  wrapDialogOptions,
-  esc,
-  openPlayerSpellbook,
-  enhanceCanonicalPowerUi,
-  magicParameterLabel,
-  magicParameterValueLabel
-};
+globalThis.ADD2E_SPELL_DIALOG_UI = {version:VERSION,themes:THEMES,shell,primaryButtonClass,ensureStyles,guessTheme,guessIcon,wrapDialogOptions,esc,openPlayerSpellbook};
 Hooks.once("ready",()=>{ensureStyles();patchDialogV2();bindPlayerSpellbookOpen();});
-Hooks.on("renderDialogV2",(app,html)=>{styleRenderedDialog(app,html);enhanceCanonicalPowerUi(app,html);});
-Hooks.on("renderApplicationV2",(app,html)=>{styleRenderedDialog(app,html);enhanceCanonicalPowerUi(app,html);styleEquipmentSpellbooks(app,html);bindBookLearningButtons(app,html);});
+Hooks.on("renderDialogV2",styleRenderedDialog);
+Hooks.on("renderApplicationV2",(app,html)=>{styleRenderedDialog(app,html);styleEquipmentSpellbooks(app,html);bindBookLearningButtons(app,html);});
 Hooks.on("renderChatMessageHTML",styleChatMessage);
 Hooks.on("createItem",refreshActorSheetForSpell);
 Hooks.on("updateItem",refreshActorSheetForSpell);
