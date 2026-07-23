@@ -1,5 +1,5 @@
 // ADD2E — onUse Magicien : Toile d’araignée
-// Version : 2026-07-23-canonical-save-chat-v4
+// Version : 2026-07-23-canonical-save-executor-v5
 // Contrat : return true = sort consommé ; return false = sort non consommé.
 
 return await (async () => {
@@ -18,17 +18,42 @@ return await (async () => {
     description: "Ce sort crée une masse de fils épais et collants semblables à une toile d’araignée. La toile doit s’accrocher à des points solides opposés, comme murs, arbres ou piliers, sinon elle s’effondre et disparaît. Les créatures prises dans la zone peuvent être immobilisées ou ralenties selon leur force et l’arbitrage du MD. Les fils sont inflammables et brûlent rapidement, ce qui peut blesser les créatures prises dedans."
   };
 
-  const num = (v, f = 0) => { const n = Number(v); return Number.isFinite(n) ? n : f; };
-  const sourceItem = (() => { if (typeof item !== "undefined" && item) return item; if (typeof sort !== "undefined" && sort) return sort; if (typeof spell !== "undefined" && spell) return spell; if (typeof args !== "undefined" && args?.[0]?.item) return args[0].item; return null; })();
+  const num = (value, fallback = 0) => {
+    const number = Number(value);
+    return Number.isFinite(number) ? number : fallback;
+  };
+  const sourceItem = (() => {
+    if (typeof item !== "undefined" && item) return item;
+    if (typeof sort !== "undefined" && sort) return sort;
+    if (typeof spell !== "undefined" && spell) return spell;
+    if (typeof args !== "undefined" && args?.[0]?.item) return args[0].item;
+    return null;
+  })();
   const caster = (typeof actor !== "undefined" && actor) ? actor : sourceItem?.parent;
-  const casterToken = (() => { if (typeof token !== "undefined" && token?.actor?.id === caster?.id) return token; return canvas.tokens?.controlled?.find(t => t.actor?.id === caster?.id) ?? caster?.getActiveTokens?.()[0] ?? canvas.tokens?.controlled?.[0] ?? null; })();
+  const casterToken = (() => {
+    if (typeof token !== "undefined" && token?.actor?.id === caster?.id) return token;
+    return canvas.tokens?.controlled?.find(entry => entry.actor?.id === caster?.id)
+      ?? caster?.getActiveTokens?.()[0]
+      ?? canvas.tokens?.controlled?.[0]
+      ?? null;
+  })();
 
   function casterLevel() {
-    const d = caster?.system?.details_classe ?? {};
-    const byClass = num(d.magicien?.niveau ?? d.mage?.niveau ?? d.illusionniste?.niveau, 0);
+    const details = caster?.system?.details_classe ?? {};
+    const byClass = num(details.magicien?.niveau ?? details.mage?.niveau ?? details.illusionniste?.niveau, 0);
     if (byClass > 0) return byClass;
-    const classItem = caster?.items?.find?.(i => String(i.type).toLowerCase() === "classe" && /magicien|mage|illusionniste/i.test(i.name ?? ""));
-    return Math.max(1, num(classItem?.system?.niveau ?? classItem?.system?.level ?? caster?.system?.niveau ?? caster?.system?.level ?? caster?.system?.details?.niveau, 1));
+    const classItem = caster?.items?.find?.(entry =>
+      String(entry.type).toLowerCase() === "classe"
+      && /magicien|mage|illusionniste/i.test(entry.name ?? "")
+    );
+    return Math.max(1, num(
+      classItem?.system?.niveau
+        ?? classItem?.system?.level
+        ?? caster?.system?.niveau
+        ?? caster?.system?.level
+        ?? caster?.system?.details?.niveau,
+      1
+    ));
   }
 
   function metersPerGridCell() {
@@ -40,89 +65,83 @@ return await (async () => {
     if (raw > 1) return raw;
     return 1.5;
   }
+
   const gridSizePx = () => canvas.grid?.size || canvas.dimensions?.size || 100;
-  const metersToPx = m => (m / metersPerGridCell()) * gridSizePx();
-  const pxDistanceMeters = (a, b) => Math.hypot((b.x ?? 0) - (a.x ?? 0), (b.y ?? 0) - (a.y ?? 0)) / gridSizePx() * metersPerGridCell();
-
-  function resolveSave(targetActor, level) {
-    if (typeof globalThis.add2eResolveSavingThrow !== "function") {
-      throw new Error("Le résolveur canonique ADD2E de sauvegardes est indisponible.");
-    }
-    const resolution = globalThis.add2eResolveSavingThrow(targetActor, 4, {
-      source: `spell:${SPELL.slug}`,
-      sourceItem,
-      caster,
-      casterLevel: level,
-      frontale: true
-    });
-    if (!Number.isFinite(Number(resolution?.target)) || Number(resolution.target) <= 0) {
-      throw new Error(`Aucune sauvegarde contre les sortilèges pour ${targetActor?.name ?? "la cible"}.`);
-    }
-    return resolution;
-  }
-
-  async function rollSave(resolution) {
-    const roll = await new Roll("1d20").evaluate();
-    if (game.dice3d) await game.dice3d.showForRoll(roll);
-    const d20 = Number(roll.total) || 0;
-    const bonus = Number(resolution.bonus) || 0;
-    const total = d20 + bonus;
-    return {
-      roll,
-      d20,
-      bonus,
-      total,
-      target: Number(resolution.target),
-      success: total >= Number(resolution.target),
-      resolution
-    };
-  }
+  const metersToPx = meters => (meters / metersPerGridCell()) * gridSizePx();
+  const pxDistanceMeters = (from, to) =>
+    Math.hypot((to.x ?? 0) - (from.x ?? 0), (to.y ?? 0) - (from.y ?? 0))
+    / gridSizePx()
+    * metersPerGridCell();
 
   function browserEventToCanvasPoint(event) {
-    const view = canvas.app?.view, renderer = canvas.app?.renderer;
+    const view = canvas.app?.view;
+    const renderer = canvas.app?.renderer;
     if (!view || !renderer || typeof PIXI === "undefined") return null;
     const rect = view.getBoundingClientRect();
-    const sx = renderer.screen?.width ? renderer.screen.width / rect.width : 1;
-    const sy = renderer.screen?.height ? renderer.screen.height / rect.height : 1;
-    return canvas.stage?.worldTransform?.applyInverse(new PIXI.Point((event.clientX - rect.left) * sx, (event.clientY - rect.top) * sy)) ?? null;
+    const scaleX = renderer.screen?.width ? renderer.screen.width / rect.width : 1;
+    const scaleY = renderer.screen?.height ? renderer.screen.height / rect.height : 1;
+    const point = new PIXI.Point(
+      (event.clientX - rect.left) * scaleX,
+      (event.clientY - rect.top) * scaleY
+    );
+    return canvas.stage?.worldTransform?.applyInverse(point) ?? null;
   }
-  function resetRuler() { try { canvas.controls?.ruler?.reset?.(); } catch (_e) {} }
-  function parentLayer() { return canvas.interface ?? canvas.controls ?? canvas.stage; }
 
-  function drawSquare(g, center, sideMeters, valid) {
-    const size = metersToPx(sideMeters), x = center.x - size / 2, y = center.y - size / 2;
-    g.clear();
-    g.lineStyle(3, valid ? 0xd8d8e8 : 0xb33a3a, 0.95);
-    g.beginFill(0xe8e8ff, 0.25);
-    g.drawRoundedRect(x, y, size, size, 8);
-    g.endFill();
-    g.lineStyle(1, 0xffffff, 0.85);
+  function resetRuler() {
+    try { canvas.controls?.ruler?.reset?.(); } catch (_error) {}
+  }
+
+  function parentLayer() {
+    return canvas.interface ?? canvas.controls ?? canvas.stage;
+  }
+
+  function drawSquare(graphics, center, sideMeters, valid) {
+    const size = metersToPx(sideMeters);
+    const x = center.x - size / 2;
+    const y = center.y - size / 2;
+    graphics.clear();
+    graphics.lineStyle(3, valid ? 0xd8d8e8 : 0xb33a3a, 0.95);
+    graphics.beginFill(0xe8e8ff, 0.25);
+    graphics.drawRoundedRect(x, y, size, size, 8);
+    graphics.endFill();
+    graphics.lineStyle(1, 0xffffff, 0.85);
     const step = Math.max(8, size / 6);
-    for (let i = 0; i <= size; i += step) {
-      g.moveTo(x + i, y); g.lineTo(x + size - i, y + size);
-      g.moveTo(x, y + i); g.lineTo(x + size, y + size - i);
+    for (let offset = 0; offset <= size; offset += step) {
+      graphics.moveTo(x + offset, y);
+      graphics.lineTo(x + size - offset, y + size);
+      graphics.moveTo(x, y + offset);
+      graphics.lineTo(x + size, y + size - offset);
     }
   }
 
   async function waitForPlacement(level) {
-    const view = canvas.app?.view, parent = parentLayer();
+    const view = canvas.app?.view;
+    const parent = parentLayer();
     if (!view || !parent || typeof PIXI === "undefined") return null;
+
     resetRuler();
     const previous = parent.getChildByName?.("add2e-toile-araignee-zone-preview");
     if (previous) previous.destroy({ children: true });
-    const g = new PIXI.Graphics();
-    g.name = "add2e-toile-araignee-zone-preview";
-    g.zIndex = 100000;
-    g.eventMode = "none";
+
+    const graphics = new PIXI.Graphics();
+    graphics.name = "add2e-toile-araignee-zone-preview";
+    graphics.zIndex = 100000;
+    graphics.eventMode = "none";
     parent.sortableChildren = true;
-    parent.addChild(g);
-    const origin = casterToken.center ?? { x: casterToken.document.x, y: casterToken.document.y };
+    parent.addChild(graphics);
+
+    const origin = casterToken.center ?? {
+      x: casterToken.document.x,
+      y: casterToken.document.y
+    };
     const rangeMeters = 5 * Math.max(1, level);
     const sideMeters = 3 * Math.max(1, level);
-    let current = { ...origin }, valid = true;
+    let current = { ...origin };
+    let valid = true;
     const oldCursor = view.style.cursor;
     view.style.cursor = "crosshair";
     ui.notifications.info(`${SPELL.name} : place le centre de la toile, clic gauche pour valider, clic droit ou Échap pour annuler.`);
+
     return await new Promise(resolve => {
       let done = false;
       const cleanup = result => {
@@ -134,21 +153,42 @@ return await (async () => {
         window.removeEventListener("keydown", onKey, true);
         view.style.cursor = oldCursor;
         resetRuler();
-        if (!g.destroyed) g.destroy({ children: true });
+        if (!graphics.destroyed) graphics.destroy({ children: true });
         resolve(result);
       };
       const update = event => {
-        const p = browserEventToCanvasPoint(event);
-        if (!p) return;
-        current = p;
+        const point = browserEventToCanvasPoint(event);
+        if (!point) return;
+        current = point;
         valid = pxDistanceMeters(origin, current) <= rangeMeters + 0.001;
-        drawSquare(g, current, sideMeters, valid);
+        drawSquare(graphics, current, sideMeters, valid);
       };
-      function onMove(e) { update(e); }
-      function onDown(e) { e.preventDefault(); e.stopPropagation(); if (e.button === 2) return cleanup(null); if (e.button !== 0) return; update(e); if (!valid) return ui.notifications.warn(`${SPELL.name} : point d’ancrage hors portée.`); cleanup({ point: current, sideMeters, rangeMeters }); }
-      function onContext(e) { e.preventDefault(); e.stopPropagation(); cleanup(null); }
-      function onKey(e) { if (e.key !== "Escape") return; e.preventDefault(); e.stopPropagation(); cleanup(null); }
-      drawSquare(g, current, sideMeters, valid);
+      function onMove(event) { update(event); }
+      function onDown(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (event.button === 2) return cleanup(null);
+        if (event.button !== 0) return;
+        update(event);
+        if (!valid) {
+          ui.notifications.warn(`${SPELL.name} : point d’ancrage hors portée.`);
+          return;
+        }
+        cleanup({ point: current, sideMeters, rangeMeters });
+      }
+      function onContext(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        cleanup(null);
+      }
+      function onKey(event) {
+        if (event.key !== "Escape") return;
+        event.preventDefault();
+        event.stopPropagation();
+        cleanup(null);
+      }
+
+      drawSquare(graphics, current, sideMeters, valid);
       view.addEventListener("mousemove", onMove, true);
       view.addEventListener("mousedown", onDown, true);
       view.addEventListener("contextmenu", onContext, true);
@@ -167,46 +207,130 @@ return await (async () => {
       distance: sideMeters,
       width: sideMeters,
       fillColor: "#d8d8e8",
-      flags: { add2e: { spell: SPELL.slug, spellName: SPELL.name, templateRequestId: requestId, durationRounds } }
+      flags: {
+        add2e: {
+          spell: SPELL.slug,
+          spellName: SPELL.name,
+          templateRequestId: requestId,
+          durationRounds
+        }
+      }
     };
-    if (game.user.isGM) await canvas.scene?.createEmbeddedDocuments?.("MeasuredTemplate", [templateData]);
-    else game.socket?.emit?.("system.add2e", { type: "ADD2E_GM_OPERATION", operation: "createMeasuredTemplate", payload: { sceneId: canvas.scene?.id, spell: SPELL.slug, spellName: SPELL.name, templateRequestId: requestId, templateData } });
+
+    if (game.user.isGM) {
+      await canvas.scene?.createEmbeddedDocuments?.("MeasuredTemplate", [templateData]);
+      return;
+    }
+    game.socket?.emit?.("system.add2e", {
+      type: "ADD2E_GM_OPERATION",
+      operation: "createMeasuredTemplate",
+      payload: {
+        sceneId: canvas.scene?.id,
+        spell: SPELL.slug,
+        spellName: SPELL.name,
+        templateRequestId: requestId,
+        templateData
+      }
+    });
   }
 
-  function tokenSamplePoints(t) {
-    const x = t.document.x, y = t.document.y, w = t.w ?? ((t.document.width || 1) * gridSizePx()), h = t.h ?? ((t.document.height || 1) * gridSizePx());
-    return [{x:x+w/2,y:y+h/2},{x,y},{x:x+w,y},{x,y:y+h},{x:x+w,y:y+h},{x:x+w/2,y},{x:x+w/2,y:y+h},{x,y:y+h/2},{x:x+w,y:y+h/2}];
+  function tokenSamplePoints(tokenPlaceable) {
+    const x = tokenPlaceable.document.x;
+    const y = tokenPlaceable.document.y;
+    const width = tokenPlaceable.w ?? ((tokenPlaceable.document.width || 1) * gridSizePx());
+    const height = tokenPlaceable.h ?? ((tokenPlaceable.document.height || 1) * gridSizePx());
+    return [
+      { x: x + width / 2, y: y + height / 2 },
+      { x, y },
+      { x: x + width, y },
+      { x, y: y + height },
+      { x: x + width, y: y + height },
+      { x: x + width / 2, y },
+      { x: x + width / 2, y: y + height },
+      { x, y: y + height / 2 },
+      { x: x + width, y: y + height / 2 }
+    ];
   }
+
   function tokensInSquare(center, sideMeters) {
-    const size = metersToPx(sideMeters), x1 = center.x - size / 2, y1 = center.y - size / 2, x2 = center.x + size / 2, y2 = center.y + size / 2;
-    return canvas.tokens.placeables.filter(t => t.visible && t.actor && t.id !== casterToken.id && t.actor.id !== caster?.id).filter(t => tokenSamplePoints(t).some(p => p.x >= x1 && p.x <= x2 && p.y >= y1 && p.y <= y2));
+    const size = metersToPx(sideMeters);
+    const left = center.x - size / 2;
+    const top = center.y - size / 2;
+    const right = center.x + size / 2;
+    const bottom = center.y + size / 2;
+    return canvas.tokens.placeables
+      .filter(entry => entry.visible && entry.actor && entry.id !== casterToken.id && entry.actor.id !== caster?.id)
+      .filter(entry => tokenSamplePoints(entry).some(point =>
+        point.x >= left && point.x <= right && point.y >= top && point.y <= bottom
+      ));
   }
 
   async function playVfx(point, sideMeters) {
-    if (typeof Sequence !== "undefined") {
-      try { await new Sequence().effect().file("jb2a.web.01.white").atLocation(point).scaleToObject?.(Math.max(1.5, sideMeters / 3)).duration(9000).play(); } catch (err) { console.warn(`${TAG}[VFX_SEQUENCE_FAILED]`, err); }
+    if (typeof Sequence === "undefined") return;
+    try {
+      await new Sequence()
+        .effect()
+        .file("jb2a.web.01.white")
+        .atLocation(point)
+        .scaleToObject?.(Math.max(1.5, sideMeters / 3))
+        .duration(9000)
+        .play();
+    } catch (error) {
+      console.warn(`${TAG}[VFX_SEQUENCE_FAILED]`, error);
     }
   }
 
   async function applyWebEffect(targetActor, state, durationRounds) {
     if (!targetActor || state === "free") return false;
-    const existing = targetActor.effects?.filter?.(e => e.flags?.add2e?.spell === SPELL.slug) ?? [];
-    for (const e of existing) await e.delete();
+    const existing = targetActor.effects?.filter?.(effect => effect.flags?.add2e?.spell === SPELL.slug) ?? [];
+    for (const effect of existing) await effect.delete();
     const label = state === "trapped" ? "pris dans la toile" : "ralenti par la toile";
-    await targetActor.createEmbeddedDocuments("ActiveEffect", [{ name: `${SPELL.name} — ${label}`, img: sourceItem?.img || SPELL.imgFallback, disabled: false, transfer: false, type: "base", system: {}, changes: [], duration: { rounds: durationRounds, startRound: game.combat?.round ?? null, startTime: game.time?.worldTime ?? null, combat: game.combat?.id ?? null }, description: SPELL.description, flags: { add2e: { spell: SPELL.slug, state, tags: ["classe:magicien","liste:magicien","niveau:2","sort:toile_d_araignee","type:terrain","etat:entrave","zone:toile"] } } }]);
+    await targetActor.createEmbeddedDocuments("ActiveEffect", [{
+      name: `${SPELL.name} — ${label}`,
+      img: sourceItem?.img || SPELL.imgFallback,
+      disabled: false,
+      transfer: false,
+      type: "base",
+      system: {},
+      changes: [],
+      duration: {
+        rounds: durationRounds,
+        startRound: game.combat?.round ?? null,
+        startTime: game.time?.worldTime ?? null,
+        combat: game.combat?.id ?? null
+      },
+      description: SPELL.description,
+      flags: {
+        add2e: {
+          spell: SPELL.slug,
+          state,
+          tags: [
+            "classe:magicien",
+            "liste:magicien",
+            "niveau:2",
+            "sort:toile_d_araignee",
+            "type:terrain",
+            "etat:entrave",
+            "zone:toile"
+          ]
+        }
+      }
+    }]);
     return true;
   }
 
   const stateFromSave = save => save.success ? "slowed" : "trapped";
   const stateLabel = state => state === "trapped" ? "Prise" : state === "slowed" ? "Ralentie" : "Libre";
 
-  async function chat(rows, durationTurns, level) {
+  async function createChat(rows, durationTurns, level) {
     if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
       throw new Error("Le constructeur commun des cartes de chat ADD2E est indisponible.");
     }
+
     const results = rows.length
       ? rows.map(row => `${row.name} : ${row.save.d20}${row.save.bonus ? ` ${row.save.bonus >= 0 ? "+" : ""}${row.save.bonus}` : ""} = ${row.save.total} / ${row.save.target} — ${stateLabel(row.state)}`).join(" ; ")
       : "Aucune créature détectée dans la toile.";
+
     const options = {
       actor: caster,
       title: SPELL.name,
@@ -227,6 +351,7 @@ return await (async () => {
       message: SPELL.description,
       chatData: {
         speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken }),
+        rolls: rows.map(row => row.save.roll).filter(Boolean),
         flags: {
           add2e: {
             spell: SPELL.slug,
@@ -246,41 +371,66 @@ return await (async () => {
         }
       }
     };
+
     const preview = globalThis.add2eBuildChatCard(options);
     if (!String(preview ?? "").trim()) throw new Error("Toile d’araignée : carte de chat vide.");
     return globalThis.add2eCreateChatCard(options);
   }
 
-  if (!sourceItem || !caster || !casterToken) { ui.notifications.warn(`${SPELL.name} : lanceur ou sort introuvable.`); return false; }
+  if (!sourceItem || !caster || !casterToken) {
+    ui.notifications.warn(`${SPELL.name} : lanceur ou sort introuvable.`);
+    return false;
+  }
+  if (typeof globalThis.add2eRollSavingThrow !== "function") {
+    ui.notifications.error(`${SPELL.name} : l’exécuteur canonique de sauvegardes est indisponible.`);
+    return false;
+  }
+
   const level = casterLevel();
   const durationRounds = Math.max(1, level * 10);
   const durationTurns = Math.max(1, level);
   const placement = await waitForPlacement(level);
-  if (!placement?.point) { ui.notifications.info(`${SPELL.name} : lancement annulé.`); return false; }
+  if (!placement?.point) {
+    ui.notifications.info(`${SPELL.name} : lancement annulé.`);
+    return false;
+  }
 
   const targets = tokensInSquare(placement.point, placement.sideMeters);
-  let prepared;
-  try {
-    prepared = targets.map(targetToken => ({
+  const prepared = [];
+  for (const targetToken of targets) {
+    const save = await globalThis.add2eRollSavingThrow(targetToken.actor, 4, {
+      source: `spell:${SPELL.slug}`,
+      sourceItem,
+      caster,
+      casterLevel: level,
       targetToken,
-      resolution: resolveSave(targetToken.actor, level)
-    }));
-  } catch (error) {
-    console.error(`${TAG}[SAVE_RESOLUTION]`, error);
-    ui.notifications.error(`${SPELL.name} : ${error.message}`);
-    return false;
+      frontale: true,
+      createChat: false,
+      showDice: true
+    });
+    if (!save?.ok) {
+      ui.notifications.error(`${SPELL.name} : aucune sauvegarde contre les sortilèges pour ${targetToken.actor?.name ?? "la cible"}.`);
+      return false;
+    }
+    prepared.push({ targetToken, save });
   }
 
   await createSceneTemplate(placement.point, placement.sideMeters, durationRounds);
   await playVfx(placement.point, placement.sideMeters);
+
   const rows = [];
-  for (const { targetToken, resolution } of prepared) {
-    const save = await rollSave(resolution);
+  for (const { targetToken, save } of prepared) {
     const state = stateFromSave(save);
     await applyWebEffect(targetToken.actor, state, durationRounds);
-    rows.push({ name: targetToken.name, actorUuid: targetToken.actor.uuid, save, state });
+    rows.push({
+      name: targetToken.name,
+      actorUuid: targetToken.actor.uuid,
+      save,
+      state
+    });
   }
-  await chat(rows, durationTurns, level);
+
+  await createChat(rows, durationTurns, level);
   console.log(`${TAG}[DONE]`, { caster: caster.name, level, durationRounds, targets: rows });
   return true;
 })();
