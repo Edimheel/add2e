@@ -5,7 +5,7 @@
 
 import { levelForClassXp } from "./17b-multiclass-rules.mjs";
 
-export const ADD2E_RACE_CLASS_DROP_VERSION = "2026-07-23-definitive-racial-abilities-v3-natural-scores";
+export const ADD2E_RACE_CLASS_DROP_VERSION = "2026-07-23-forced-deletion-force-ex-v4";
 globalThis.ADD2E_RACE_CLASS_DROP_VERSION = ADD2E_RACE_CLASS_DROP_VERSION;
 
 export const CARACS = ["force", "dexterite", "constitution", "intelligence", "sagesse", "charisme"];
@@ -136,9 +136,16 @@ function add2eLegacyRacialAdjustments(actor) {
   }));
 }
 
+function add2eForcedDeletionOperator() {
+  const ForcedDeletion = foundry?.data?.operators?.ForcedDeletion;
+  if (typeof ForcedDeletion === "function") return new ForcedDeletion();
+  if (globalThis._del !== undefined) return globalThis._del;
+  throw new Error("L’opérateur Foundry de suppression forcée est introuvable.");
+}
+
 function add2eRacialLegacyDeletionUpdate() {
-  const update = { "system.-=bonus_caracteristiques": null };
-  for (const carac of CARACS) update[`system.-=${carac}_race`] = null;
+  const update = { "system.bonus_caracteristiques": add2eForcedDeletionOperator() };
+  for (const carac of CARACS) update[`system.${carac}_race`] = add2eForcedDeletionOperator();
   return update;
 }
 
@@ -340,6 +347,7 @@ export async function add2eApplyRaceItemDataToActor(actor, raceData, sheet = nul
     ...add2eRacialLegacyDeletionUpdate(),
     "system.race": raceDoc.name,
     "system.details_race": { ...raceSystem, bonus_caracteristiques: rawBonuses, name: raceDoc.name, label: raceSystem.label || raceDoc.name, img: raceDoc.img || raceSystem.img || "" },
+    "system.force_ex": 0,
     "flags.add2e.base_caracs": naturalBases,
     "flags.add2e.racialAbilityAdjustments": rawBonuses,
     "flags.add2e.racialAbilitySource": { kind: "race", id: raceDoc.id, uuid: raceDoc.uuid, name: raceDoc.name }
