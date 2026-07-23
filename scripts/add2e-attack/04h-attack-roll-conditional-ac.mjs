@@ -1,6 +1,6 @@
 // scripts/add2e-attack/04h-attack-roll-conditional-ac.mjs
 // ADD2E — CA conditionnelle pour les attaques.
-// Version : 2026-07-08-transformation-ac-v2
+// Version : 2026-07-23-canonical-projectile-defense-v1
 
 function add2eAttackNormalizeConditionalACText(value) {
   return String(value ?? "")
@@ -8,7 +8,7 @@ function add2eAttackNormalizeConditionalACText(value) {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[’']/g, "")
-    .replace(/[^a-z0-9:_-]+/g, "_")
+    .replace(/[^a-z0-9:+_.-]+/g, "_")
     .replace(/^_|_$/g, "");
 }
 
@@ -24,7 +24,7 @@ function add2eAttackArray(value) {
 function add2eAttackReadNumber(...values) {
   for (const value of values) {
     if (value === undefined || value === null || String(value).trim?.() === "") continue;
-    const number = Number(value);
+    const number = Number(String(value).replace(",", "."));
     if (Number.isFinite(number)) return number;
   }
   return null;
@@ -41,11 +41,18 @@ function add2eAttackEffectOriginItem(actor, effect) {
 }
 
 function add2eAttackEffectList(actor) {
+  const seen = new Set();
   return [
     ...add2eAttackArray(actor?.effects),
     ...add2eAttackArray(actor?.appliedEffects),
     ...add2eAttackArray(actor?.temporaryEffects)
-  ].filter(effect => effect && effect.disabled !== true);
+  ].filter(effect => {
+    const key = String(effect?.uuid ?? effect?.id ?? "");
+    if (!effect || effect.disabled === true || effect.isSuppressed === true || effect.active === false) return false;
+    if (key && seen.has(key)) return false;
+    if (key) seen.add(key);
+    return true;
+  });
 }
 
 function add2eAttackCollectEffectTags(effect) {
@@ -73,6 +80,14 @@ function add2eAttackCollectEffectTags(effect) {
   }
 
   return raw.flatMap(add2eAttackArray).map(add2eAttackNormalizeConditionalACText).filter(Boolean);
+}
+
+function add2eAttackActiveEffectTags(actor) {
+  const tags = new Set();
+  for (const effect of add2eAttackEffectList(actor)) {
+    for (const tag of add2eAttackCollectEffectTags(effect)) tags.add(tag);
+  }
+  return tags;
 }
 
 function add2eAttackIsShieldSpellText(value) {
@@ -157,6 +172,30 @@ export function add2eAttackConditionalACSubtype({ arme, combatProfile, isDistanc
   return { sousType: "autres", label: "attaque de mêlée", conditional: true };
 }
 
+function add2eAttackIsProjectileSubtype(sousType) {
+  return ["projectile_propulse", "projectile_lance", "projectile"].includes(add2eAttackNormalizeConditionalACText(sousType));
+}
+
+function add2eAttackTaggedNumber(tag, prefix) {
+  if (!String(tag).startsWith(prefix)) return null;
+  return add2eAttackReadNumber(String(tag).slice(prefix.length));
+}
+
+function add2eAttackProjectileArmorBonus(actor, attackSubtype) {
+  if (!add2eAttackIsProjectileSubtype(attackSubtype?.sousType)) return { value: 0, sourceTags: [] };
+  let value = 0;
+  const sourceTags = [];
+  for (const tag of add2eAttackActiveEffectTags(actor)) {
+    const direct = add2eAttackTaggedNumber(tag, "bonus_ca_projectile:");
+    const conditional = add2eAttackTaggedNumber(tag, "bonus_ca_conditionnel:projectile:");
+    const amount = Number.isFinite(direct) ? direct : conditional;
+    if (!Number.isFinite(amount)) continue;
+    value += amount;
+    sourceTags.push(tag);
+  }
+  return { value, sourceTags };
+}
+
 function add2eAttackIsExplicitConditionalFixedAC(info, sousType) {
   const tag = String(info?.sourceTag ?? "").toLowerCase();
   if (!tag) return false;
@@ -166,6 +205,22 @@ function add2eAttackIsExplicitConditionalFixedAC(info, sousType) {
   if (sousType === "autres") return tag.startsWith("ca_fixe_autres:") || tag.startsWith("ca_fixe_conditionnelle:autres:");
 
   return tag.startsWith(`ca_fixe_conditionnelle:${sousType}:`);
+}
+
+function add2eAttackConditionalACDetail({ normalCA, projectileCA, projectileBonus, fixedCA, finalCA, attackSubtype, transformation }) {
+  const details = [];
+  if (transformation) {
+    details.push(normalCA !== Number(transformation.armorClass)
+      ? `CA ${normalCA} → ${Number(transformation.armorClass)} (${transformation.label})`
+      : `CA de transformation ${Number(transformation.armorClass)} (${transformation.label})`);
+  }
+  if (projectileBonus > 0) details.push(`CA ${transformation ? Number(transformation.armorClass) : normalCA} → ${projectileCA} contre ${attackSubtype.label} (bonus ${projectileBonus})`);
+  if (Number.isFinite(fixedCA)) {
+    details.push(finalCA === fixedCA
+      ? `CA ${projectileCA} → ${fixedCA} contre ${attackSubtype.label} (Bouclier)`
+      : `CA fixe ${fixedCA} non appliquée : la CA ${projectileCA} reste meilleure`);
+  }
+  return details.join(" — ");
 }
 
 export function add2eAttackResolveConditionalFixedAC({ cible, arme, combatProfile, isDistance, positionInfo, caBefore, hasTag }) {
@@ -180,82 +235,163 @@ export function add2eAttackResolveConditionalFixedAC({ cible, arme, combatProfil
   };
 
   const transformation = add2eAttackActiveTransformationAC(cible);
+  const baseCA = transformation ? Number(transformation.armorClass) : normalCA;
+  const projectile = add2eAttackProjectileArmorBonus(cible, attackSubtype);
+  const projectileBonus = Math.max(0, Number(projectile.value) || 0);
+  const projectileCA = Number.isFinite(baseCA) ? baseCA - projectileBonus : baseCA;
+
   if (transformation) {
-    const transformationCA = Number(transformation.armorClass);
+    const detail = add2eAttackConditionalACDetail({
+      normalCA,
+      projectileCA,
+      projectileBonus,
+      fixedCA: null,
+      finalCA: projectileCA,
+      attackSubtype,
+      transformation
+    });
     return {
-      applied: transformationCA !== normalCA,
-      ca: transformationCA,
+      applied: projectileCA !== normalCA,
+      ca: projectileCA,
       normalCA,
       fixedCA: null,
+      projectileBonus,
       attackSubtype,
       context: { ...context, transformation: true },
       details: {
         source: "capability-transformation:active-effect",
-        transformation
+        transformation,
+        projectile
       },
-      detail: transformationCA !== normalCA
-        ? `CA ${normalCA} → ${transformationCA} (${transformation.label})`
-        : `CA de transformation ${transformationCA} (${transformation.label})`
-    };
-  }
-
-  if (!add2eAttackTargetHasActiveShieldSpell(cible)) {
-    return {
-      applied: false,
-      ca: caBefore,
-      normalCA,
-      fixedCA: null,
-      attackSubtype,
-      context,
-      details: null,
-      detail: ""
+      detail
     };
   }
 
   let fixedInfo = null;
   let fixedCA = null;
-
-  try {
-    if (typeof Add2eEffectsEngine !== "undefined") {
-      if (typeof Add2eEffectsEngine.getConditionalFixedCA === "function") {
-        fixedInfo = Add2eEffectsEngine.getConditionalFixedCA(cible, context);
-        fixedCA = Number(fixedInfo?.ca);
-      } else if (typeof Add2eEffectsEngine.analyze === "function") {
-        const analyzed = Add2eEffectsEngine.analyze(cible, context);
-        fixedInfo = analyzed?.ca_fixe_details ?? analyzed ?? null;
-        fixedCA = Number(analyzed?.ca_fixe);
+  if (add2eAttackTargetHasActiveShieldSpell(cible)) {
+    try {
+      if (typeof Add2eEffectsEngine !== "undefined") {
+        if (typeof Add2eEffectsEngine.getConditionalFixedCA === "function") {
+          fixedInfo = Add2eEffectsEngine.getConditionalFixedCA(cible, context);
+          fixedCA = Number(fixedInfo?.ca);
+        } else if (typeof Add2eEffectsEngine.analyze === "function") {
+          const analyzed = Add2eEffectsEngine.analyze(cible, context);
+          fixedInfo = analyzed?.ca_fixe_details ?? analyzed ?? null;
+          fixedCA = Number(analyzed?.ca_fixe);
+        }
       }
+    } catch (err) {
+      console.warn("[ADD2E][ATTAQUE][CA_CONDITIONNELLE][ERROR]", err);
     }
-  } catch (err) {
-    console.warn("[ADD2E][ATTAQUE][CA_CONDITIONNELLE][ERROR]", err);
   }
 
-  if (!Number.isFinite(fixedCA) || !add2eAttackIsExplicitConditionalFixedAC(fixedInfo, attackSubtype.sousType)) {
-    return {
-      applied: false,
-      ca: caBefore,
-      normalCA,
-      fixedCA: Number.isFinite(fixedCA) ? fixedCA : null,
-      attackSubtype,
-      context,
-      details: fixedInfo,
-      detail: ""
-    };
-  }
-
-  const finalCA = Number.isFinite(normalCA) ? Math.min(normalCA, fixedCA) : fixedCA;
-  const applied = finalCA !== normalCA;
+  const explicitFixed = Number.isFinite(fixedCA) && add2eAttackIsExplicitConditionalFixedAC(fixedInfo, attackSubtype.sousType);
+  const finalCA = explicitFixed && Number.isFinite(projectileCA) ? Math.min(projectileCA, fixedCA) : projectileCA;
+  const detail = add2eAttackConditionalACDetail({
+    normalCA,
+    projectileCA,
+    projectileBonus,
+    fixedCA: explicitFixed ? fixedCA : null,
+    finalCA,
+    attackSubtype,
+    transformation: null
+  });
 
   return {
-    applied,
+    applied: finalCA !== normalCA,
     ca: finalCA,
     normalCA,
-    fixedCA,
+    fixedCA: Number.isFinite(fixedCA) ? fixedCA : null,
+    projectileBonus,
     attackSubtype,
     context,
-    details: fixedInfo,
-    detail: applied
-      ? `CA ${normalCA} → ${finalCA} contre ${attackSubtype.label} (Bouclier)`
-      : `CA fixe ${fixedCA} non appliquée : la CA normale ${normalCA} reste meilleure`
+    details: {
+      fixedInfo,
+      projectile,
+      explicitFixed
+    },
+    detail
+  };
+}
+
+function add2eAttackWeaponTagSet(arme, combatProfile) {
+  const tags = new Set();
+  for (const raw of [
+    combatProfile?.tags,
+    combatProfile?.tagSet,
+    arme?.system?.tags,
+    arme?.system?.effectTags,
+    arme?.flags?.add2e?.tags,
+    arme?.flags?.add2e?.effectTags
+  ]) {
+    for (const value of add2eAttackArray(raw)) {
+      const tag = add2eAttackNormalizeConditionalACText(value);
+      if (tag) tags.add(tag);
+    }
+  }
+  return tags;
+}
+
+function add2eAttackIsMagicalProjectileWeapon(arme, combatProfile) {
+  const system = arme?.system ?? {};
+  const flags = arme?.flags?.add2e ?? {};
+  const enchantment = system.enchantement && typeof system.enchantement === "object" ? system.enchantement : null;
+  const powers = system.pouvoirs ?? system.powers ?? [];
+  const hasPowers = Array.isArray(powers) ? powers.length > 0 : powers && typeof powers === "object" ? Object.keys(powers).length > 0 : false;
+  if (system.magique === true || system.magic === true || flags.magicItemBuilder || flags.magicPowerCatalogue || hasPowers) return true;
+  if (enchantment && (
+    String(enchantment.baseUuid ?? "").trim()
+    || Number(enchantment.bonusToucher ?? enchantment.bonus_toucher ?? 0) !== 0
+    || Number(enchantment.bonusDegats ?? enchantment.bonus_degats ?? 0) !== 0
+  )) return true;
+  const tags = add2eAttackWeaponTagSet(arme, combatProfile);
+  return ["magique", "magic", "arme_magique", "magic_weapon", "projectile_magique", "magic_projectile"]
+    .some(tag => tags.has(tag));
+}
+
+function add2eAttackMagicProjectileNegationCandidates(cible) {
+  const candidates = [];
+  for (const tag of add2eAttackActiveEffectTags(cible)) {
+    if (!tag.startsWith("negate_magic_projectile:")) continue;
+    const parts = tag.split(":");
+    const chance = Math.max(0, Math.min(100, add2eAttackReadNumber(parts.at(-1)) ?? 0));
+    const arc = parts.length > 2 ? add2eAttackNormalizeConditionalACText(parts[1]) || "any" : "any";
+    if (chance > 0) candidates.push({ tag, arc, chance });
+  }
+  return candidates.sort((left, right) => right.chance - left.chance);
+}
+
+export async function add2eAttackResolveMagicProjectileNegation({ cible, arme, combatProfile, isDistance, positionInfo, hasTag }) {
+  const attackSubtype = add2eAttackConditionalACSubtype({ arme, combatProfile, isDistance, hasTag });
+  if (!add2eAttackIsProjectileSubtype(attackSubtype.sousType)) {
+    return { eligible: false, negated: false, reason: "not-projectile", attackSubtype, detail: "" };
+  }
+  if (!add2eAttackIsMagicalProjectileWeapon(arme, combatProfile)) {
+    return { eligible: false, negated: false, reason: "not-magical-projectile", attackSubtype, detail: "" };
+  }
+  const candidates = add2eAttackMagicProjectileNegationCandidates(cible)
+    .filter(candidate => candidate.arc !== "front" || positionInfo?.isFront === true);
+  if (!candidates.length) {
+    return { eligible: false, negated: false, reason: "no-applicable-negation", attackSubtype, detail: "" };
+  }
+
+  const selected = candidates[0];
+  const roll = await new Roll("1d100").evaluate();
+  if (game.dice3d) await game.dice3d.showForRoll(roll);
+  const total = Number(roll.total) || 0;
+  const negated = total <= selected.chance;
+  return {
+    eligible: true,
+    negated,
+    reason: negated ? "negated" : "chance-failed",
+    chance: selected.chance,
+    roll: total,
+    arc: selected.arc,
+    sourceTag: selected.tag,
+    attackSubtype,
+    detail: negated
+      ? `Projectile magique annulé : ${total} ≤ ${selected.chance}%`
+      : `Négation du projectile magique échouée : ${total} > ${selected.chance}%`
   };
 }
