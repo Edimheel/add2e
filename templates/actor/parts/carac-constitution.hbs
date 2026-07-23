@@ -9,10 +9,10 @@
                 <div class="carac-control-group">
                   <button type="button" class="carac-btn moins" data-carac="constitution" tabindex="-1">−</button>
                   <div class="carac-value carac-drop-target" data-carac="constitution"
-                       title="Base : {{actor.system.constitution_base}}&#10;Bonus racial : {{actor.system.bonus_caracteristiques.constitution}}&#10;Total : {{add actor.system.constitution_base actor.system.bonus_caracteristiques.constitution}}">
-                    <span style="font-size:1.45em;font-weight:700;line-height:1;">{{add actor.system.constitution_base actor.system.bonus_caracteristiques.constitution}}</span>
-                    {{#if actor.system.bonus_caracteristiques.constitution}}
-                      <span class="carac-racial-bonus-inline">(race {{#if (gt actor.system.bonus_caracteristiques.constitution 0)}}+{{/if}}{{actor.system.bonus_caracteristiques.constitution}})</span>
+                       title="Tirage naturel : {{actor.flags.add2e.base_caracs.constitution}}&#10;Ajustement racial : {{subtract actor.system.constitution_base actor.flags.add2e.base_caracs.constitution}}&#10;Score définitif : {{actor.system.constitution_base}}&#10;Valeur effective : {{actor.system.con_aff}}">
+                    <span style="font-size:1.45em;font-weight:700;line-height:1;">{{actor.system.con_aff}}</span>
+                    {{#if (subtract actor.system.constitution_base actor.flags.add2e.base_caracs.constitution)}}
+                      <span class="carac-racial-bonus-inline">(race {{#if (gt (subtract actor.system.constitution_base actor.flags.add2e.base_caracs.constitution) 0)}}+{{/if}}{{subtract actor.system.constitution_base actor.flags.add2e.base_caracs.constitution}})</span>
                     {{/if}}
                   </div>
                   <button type="button" class="carac-btn plus" data-carac="constitution" tabindex="-1">+</button>
