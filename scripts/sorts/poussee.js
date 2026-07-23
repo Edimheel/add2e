@@ -3,7 +3,7 @@
  * Sauvegarde, carte de chat et compatibilité Foundry V13/V14/V15.
  */
 
-const ADD2E_PUSH_VERSION = "2026-07-23-canonical-save-v3";
+const ADD2E_PUSH_VERSION = "2026-07-23-canonical-save-executor-v4";
 console.log("[ADD2E][POUSSÉE][VERSION]", ADD2E_PUSH_VERSION);
 
 return await (async () => {
@@ -39,8 +39,8 @@ return await (async () => {
     return false;
   }
 
-  if (typeof globalThis.add2eResolveSavingThrow !== "function") {
-    await refund("Poussée : le résolveur canonique de sauvegardes est indisponible.");
+  if (typeof globalThis.add2eRollSavingThrow !== "function") {
+    await refund("Poussée : l’exécuteur canonique de sauvegardes est indisponible.");
     return false;
   }
   if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
@@ -55,30 +55,27 @@ return await (async () => {
   const forceValue = casterLevel;
   const iconImg = sourceItem.img || "systems/add2e/assets/icones/sorts/poussee.webp";
 
-  const preparedTargets = targets.map(targetToken => ({
-    targetToken,
-    targetActor: targetToken.actor,
-    save: globalThis.add2eResolveSavingThrow(targetToken.actor, 4, {
+  const preparedTargets = [];
+  for (const targetToken of targets) {
+    const save = await globalThis.add2eRollSavingThrow(targetToken.actor, 4, {
       source: "spell:poussee",
       sourceItem,
       caster,
       casterLevel,
       frontale: true,
-      targetToken
-    })
-  }));
-
-  const invalid = preparedTargets.find(entry => !Number.isFinite(entry.save?.target) || entry.save.target <= 0);
-  if (invalid) {
-    await refund(`Poussée : aucune sauvegarde contre les sorts pour ${invalid.targetActor.name}.`);
-    return false;
+      targetToken,
+      createChat: false,
+      showDice: true
+    });
+    if (!save?.ok) {
+      await refund(`Poussée : aucune sauvegarde contre les sortilèges pour ${targetToken.actor.name}.`);
+      return false;
+    }
+    preparedTargets.push({ targetToken, targetActor: targetToken.actor, save });
   }
 
   for (const { targetToken, targetActor, save } of preparedTargets) {
-    const roll = await new Roll("1d20").evaluate();
-    if (game.dice3d) await game.dice3d.showForRoll(roll);
-    const total = (Number(roll.total) || 0) + (Number(save.bonus) || 0);
-    const success = total >= save.target;
+    const success = save.success;
 
     if (typeof Sequence !== "undefined") {
       new Sequence()
@@ -120,7 +117,7 @@ return await (async () => {
       }
     }
 
-    const applied = save.bonusResolution?.applied ?? [];
+    const applied = save.resolution?.bonusResolution?.applied ?? [];
     const modifierDetail = applied.length
       ? applied.map(entry => {
           const modifier = entry?.modifier ?? entry;
@@ -144,13 +141,13 @@ return await (async () => {
       target: {
         name: targetActor.name,
         img: targetActor.img,
-        type: "Sauvegarde contre les sorts",
-        meta: save.targetResolution?.selected?.className ?? save.targetResolution?.source ?? ""
+        type: "Sauvegarde contre les sortilèges",
+        meta: save.resolution?.targetResolution?.selected?.className ?? save.resolution?.targetResolution?.source ?? ""
       },
       rows: [
-        { label: "D20", value: Number(roll.total) || 0 },
+        { label: "D20", value: save.d20 },
         { label: "Bonus de sauvegarde", value: `${save.bonus >= 0 ? "+" : ""}${save.bonus}` },
-        { label: "Total", value: total },
+        { label: "Total", value: save.total },
         { label: "Seuil", value: save.target },
         { label: "Modificateurs", value: modifierDetail }
       ],
@@ -159,14 +156,14 @@ return await (async () => {
         : "La cible est déséquilibrée et perd sa prochaine attaque.",
       chatData: {
         speaker: ChatMessage.getSpeaker({ actor: caster }),
-        rolls: [roll],
+        rolls: [save.roll],
         flags: {
           add2e: {
             spell: "poussee",
-            saveType: save.key,
+            saveType: save.resolution?.key,
             saveTarget: save.target,
             saveBonus: save.bonus,
-            saveTotal: total,
+            saveTotal: save.total,
             saveSuccess: success,
             saveResolverVersion: save.version,
             sourceItemUuid: sourceItem.uuid,
