@@ -1,6 +1,6 @@
 // scripts/add2e-attack/04-attack-roll.mjs
 // ADD2E — Résolution des attaques.
-// Version : 2026-07-10-attack-chat-resolved-damage-v1
+// Version : 2026-07-23-magic-projectile-negation-v1
 
 import { plageToRollFormula } from "./01-core-helpers.mjs";
 import { add2eApplyDamage } from "./02-damage.mjs";
@@ -39,7 +39,8 @@ import {
   add2eAttackResolveRangeBand
 } from "./04g-attack-roll-range.mjs";
 import {
-  add2eAttackResolveConditionalFixedAC
+  add2eAttackResolveConditionalFixedAC,
+  add2eAttackResolveMagicProjectileNegation
 } from "./04h-attack-roll-conditional-ac.mjs";
 import {
   add2eBuildAttackChatCard
@@ -694,7 +695,20 @@ export async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
       const d20 = roll.total;
       const totalAuToucher = d20 + totalBonusToucher;
       const seuilFinalD20 = valeurPourToucher - totalBonusToucher;
-      const finalResult = (d20 === 20) || (d20 !== 1 && d20 >= seuilFinalD20);
+      let finalResult = (d20 === 20) || (d20 !== 1 && d20 >= seuilFinalD20);
+      let magicProjectileNegation = { eligible: false, negated: false, reason: "attack-missed", detail: "" };
+
+      if (finalResult) {
+        magicProjectileNegation = await add2eAttackResolveMagicProjectileNegation({
+          cible,
+          arme,
+          combatProfile,
+          isDistance,
+          positionInfo: activePositionInfo,
+          hasTag: add2eTagSetHas
+        });
+        if (magicProjectileNegation.negated === true) finalResult = false;
+      }
 
       let degats = 0;
       let degatsAvantMultiplicateur = 0;
@@ -730,9 +744,14 @@ export async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
         }
       }
 
-      const conditionalACLine = conditionalFixedAC?.detail
-        ? `<div><b>CA conditionnelle :</b> ${add2eAttackHtmlEscape(conditionalFixedAC.detail)}</div>`
-        : "";
+      const conditionalACLine = [
+        conditionalFixedAC?.detail
+          ? `<div><b>CA conditionnelle :</b> ${add2eAttackHtmlEscape(conditionalFixedAC.detail)}</div>`
+          : "",
+        magicProjectileNegation?.eligible && magicProjectileNegation?.detail
+          ? `<div><b>Défense contre projectile magique :</b> ${add2eAttackHtmlEscape(magicProjectileNegation.detail)}</div>`
+          : ""
+      ].filter(Boolean).join("");
 
       const chatContent = add2eBuildAttackChatCard({
         actor,
@@ -785,6 +804,8 @@ export async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
         targetId: cible?.id,
         d20,
         totalAuToucher,
+        finalResult,
+        magicProjectileNegation,
         degats,
         chatContentHash: add2eAttackHash(chatContent),
         chatContentLength: String(chatContent ?? "").length,
@@ -804,7 +825,8 @@ export async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
         caAvantPosition,
         caAvantConditionnelle,
         caFinaleCible,
-        conditionalFixedAC
+        conditionalFixedAC,
+        magicProjectileNegation
       });
       return true;
     }
