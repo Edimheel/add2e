@@ -1,8 +1,8 @@
 // ADD2E — Actor sheet listeners : jets de caractéristiques, sauvegardes et HUD.
 // Compatible Foundry V13/V14/V15.
 
-export const ADD2E_SHEET_ROLL_DELEGATION_VERSION = "2026-07-23-canonical-save-resolver-v3";
-const ADD2E_SAVE_RESOLVER_VERSION = "2026-07-23-canonical-save-resolver-v1";
+export const ADD2E_SHEET_ROLL_DELEGATION_VERSION = "2026-07-23-canonical-save-executor-v4";
+const ADD2E_SAVE_RESOLVER_VERSION = "2026-07-23-canonical-save-resolver-v2";
 
 const ADD2E_SAVE_DEFINITIONS = Object.freeze([
   Object.freeze({
@@ -374,6 +374,83 @@ function add2eResolveSavingThrow(engine, actor, saveType, context = {}) {
   };
 }
 
+async function add2eRollSavingThrow(engine, actor, saveType, options = {}) {
+  const {
+    createChat = false,
+    showDice = true,
+    source = "canonical-save-executor",
+    ...context
+  } = options ?? {};
+
+  if (!actor) {
+    return {
+      ok: false,
+      canRoll: false,
+      reason: "missing-actor",
+      actor: null,
+      resolution: null,
+      roll: null,
+      d20: null,
+      bonus: 0,
+      total: null,
+      target: null,
+      threshold: null,
+      success: false,
+      chatMessage: null,
+      version: ADD2E_SAVE_RESOLVER_VERSION
+    };
+  }
+
+  const resolution = engine.resolveSavingThrow(actor, saveType, { ...context, source });
+  const target = Number(resolution?.target);
+  if (!Number.isFinite(target) || target <= 0) {
+    return {
+      ok: false,
+      canRoll: false,
+      reason: "missing-target",
+      actor,
+      resolution,
+      roll: null,
+      d20: null,
+      bonus: Number(resolution?.bonus) || 0,
+      total: null,
+      target: null,
+      threshold: null,
+      success: false,
+      chatMessage: null,
+      version: ADD2E_SAVE_RESOLVER_VERSION
+    };
+  }
+
+  const roll = await add2eEvaluateRollSafe("1d20");
+  if (showDice !== false && game.dice3d) await game.dice3d.showForRoll(roll);
+  const d20 = Number(roll.total) || 0;
+  const bonus = Number(resolution.bonus) || 0;
+  const total = d20 + bonus;
+  const success = total >= target;
+  const result = {
+    ok: true,
+    canRoll: true,
+    reason: "rolled",
+    actor,
+    resolution,
+    roll,
+    d20,
+    bonus,
+    total,
+    target,
+    threshold: target,
+    success,
+    chatMessage: null,
+    version: ADD2E_SAVE_RESOLVER_VERSION
+  };
+
+  if (createChat === true) {
+    result.chatMessage = await add2eCreateSavingThrowCard({ actor, roll, resolution, total, success });
+  }
+  return result;
+}
+
 function add2eInstallCanonicalSaveResolver(engine) {
   if (!engine || engine.__add2eCanonicalSaveResolverVersion === ADD2E_SAVE_RESOLVER_VERSION) return engine;
   Object.defineProperties(engine, {
@@ -382,6 +459,13 @@ function add2eInstallCanonicalSaveResolver(engine) {
       writable: true,
       value(actor, saveType, context = {}) {
         return add2eResolveSavingThrow(this, actor, saveType, context);
+      }
+    },
+    rollSavingThrow: {
+      configurable: true,
+      writable: true,
+      value(actor, saveType, options = {}) {
+        return add2eRollSavingThrow(this, actor, saveType, options);
       }
     },
     getSaveTarget: {
@@ -499,24 +583,22 @@ export async function add2eRollCharacteristicCard(actor, carac) {
 export async function add2eRollSaveCard(actor, saveType, context = {}) {
   if (!actor) return ui.notifications.warn("Aucun acteur pour ce jet.");
   const engine = add2eSheetRollEffectsEngine();
-  if (!engine?.resolveSavingThrow) {
-    throw new Error("Le résolveur canonique ADD2E de sauvegardes n’est pas disponible.");
+  if (!engine?.rollSavingThrow) {
+    throw new Error("L’exécuteur canonique ADD2E de sauvegardes n’est pas disponible.");
   }
 
-  const resolution = engine.resolveSavingThrow(actor, saveType, {
+  const result = await engine.rollSavingThrow(actor, saveType, {
     ...context,
     frontale: context.frontale !== false,
-    source: context.source ?? "actor-sheet-save-roll"
+    source: context.source ?? "actor-sheet-save-roll",
+    createChat: true,
+    showDice: true
   });
-  if (!Number.isFinite(resolution.target) || resolution.target <= 0) {
-    return ui.notifications.warn(`Aucune valeur pour le jet ${resolution.label}.`);
+  if (!result.ok) {
+    const label = result.resolution?.label ?? "sauvegarde";
+    return ui.notifications.warn(`Aucune valeur pour le jet ${label}.`);
   }
-
-  const roll = await add2eEvaluateRollSafe("1d20");
-  if (game.dice3d) await game.dice3d.showForRoll(roll);
-  const total = (Number(roll.total) || 0) + resolution.bonus;
-  const success = total >= resolution.target;
-  return add2eCreateSavingThrowCard({ actor, roll, resolution, total, success });
+  return result.chatMessage;
 }
 
 function add2eHudRollActorFallback() {
@@ -535,6 +617,13 @@ export function add2eInstallHudSheetRollBridge() {
       throw new Error("Le résolveur canonique ADD2E de sauvegardes n’est pas disponible.");
     }
     return current.resolveSavingThrow(actor, saveType, context);
+  };
+  globalThis.add2eRollSavingThrow = async (actor, saveType, options = {}) => {
+    const current = add2eSheetRollEffectsEngine();
+    if (!current?.rollSavingThrow) {
+      throw new Error("L’exécuteur canonique ADD2E de sauvegardes n’est pas disponible.");
+    }
+    return current.rollSavingThrow(actor, saveType, options);
   };
   globalThis.add2eGetSaveTarget = (actor, saveType) =>
     globalThis.add2eResolveSavingThrow(actor, saveType, { source: "global-get-save-target" }).target;
