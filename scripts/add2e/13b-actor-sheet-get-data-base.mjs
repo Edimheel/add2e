@@ -208,10 +208,13 @@ export function add2ePrepareActorSheetBaseData({ sheet, data }) {
     : (details_classe.specialAbilities ? Object.values(details_classe.specialAbilities) : []);
   sys.details_classe = details_classe;
 
-  for (const c of CARACS) {
-    const base = (typeof sys[`${c}_base`] === "number") ? sys[`${c}_base`] : 10;
-    const race = (typeof sys[`${c}_race`] === "number") ? sys[`${c}_race`] : 0;
-    sys[c] = base + race;
+  const abilityEngine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+  if (!abilityEngine || typeof abilityEngine.resolveAbility !== "function") {
+    throw new Error("Le résolveur canonique ADD2E des caractéristiques n’est pas disponible.");
+  }
+  for (const carac of CARACS) {
+    const resolution = abilityEngine.resolveAbility(actor, carac, { consumer: "actor-sheet-base-data" });
+    sys[carac] = Number(resolution?.total) || 0;
   }
 
   const exceptionalStrengthClasses = Array.from(actor?.items ?? [])
