@@ -8,7 +8,7 @@ import {
   add2eGetAttackAbilityModifier
 } from "./03-attack-rules.mjs";
 
-export const ADD2E_ATTACK_MODIFIERS_VERSION = "2026-07-23-canonical-attack-damage-resolution-v4";
+export const ADD2E_ATTACK_MODIFIERS_VERSION = "2026-07-23-canonical-persistent-combat-resolution-v5";
 
 const ADD2E_ATTACK_WEAPON_TYPES = new Set(["arme", "weapon"]);
 const ADD2E_ATTACK_MAGIC_ITEM_EFFECT_FLAG = "magicItemCatalogueEffect";
@@ -218,7 +218,7 @@ function add2eAttackTagModifiers({ engine, tag, actor, combatProfile, targetTags
       value: flat.value,
       source,
       label: flat.label,
-      metadata: { legacyTag: tag }
+      metadata: { sourceTag: tag }
     }));
     return modifiers;
   }
@@ -233,7 +233,7 @@ function add2eAttackTagModifiers({ engine, tag, actor, combatProfile, targetTags
       source,
       label: `Bonus conditionnel (${conditionalAttack.matcher})`,
       stacking: { mode: "highest", group: "attack:conditional-target" },
-      metadata: { matcher: conditionalAttack.matcher, legacyTag: tag }
+      metadata: { matcher: conditionalAttack.matcher, sourceTag: tag }
     }));
     return modifiers;
   }
@@ -248,7 +248,7 @@ function add2eAttackTagModifiers({ engine, tag, actor, combatProfile, targetTags
       source,
       label: `Bonus conditionnel aux dégâts (${conditionalDamage.matcher})`,
       stacking: { mode: "highest", group: "damage:conditional-target" },
-      metadata: { matcher: conditionalDamage.matcher, legacyTag: tag }
+      metadata: { matcher: conditionalDamage.matcher, sourceTag: tag }
     }));
     return modifiers;
   }
@@ -265,7 +265,7 @@ function add2eAttackTagModifiers({ engine, tag, actor, combatProfile, targetTags
         value,
         source,
         label: `Bonus au toucher avec ${matcher}`,
-        metadata: { matcher, legacyTag: tag }
+        metadata: { matcher, sourceTag: tag }
       }));
     }
     return modifiers;
@@ -284,7 +284,7 @@ function add2eAttackTagModifiers({ engine, tag, actor, combatProfile, targetTags
         value,
         source,
         label: `Bonus aux dégâts contre ${matcher}`,
-        metadata: { matcher, legacyTag: tag }
+        metadata: { matcher, sourceTag: tag }
       }));
     }
   }
@@ -305,6 +305,16 @@ function add2eAttackAbilityModifierContext(actor, combatProfile) {
       value: degatsCarac ? add2eGetAttackAbilityModifier(actor, degatsCarac, "degats") : 0
     }
   };
+}
+
+function add2eAttackWeaponBaseModifiers(engine, arme) {
+  const hit = typeof engine.getMagicWeaponBonus === "function"
+    ? Number(engine.getMagicWeaponBonus(arme, "hit")) || 0
+    : Number(arme?.system?.bonus_hit) || 0;
+  const damage = typeof engine.getMagicWeaponBonus === "function"
+    ? Number(engine.getMagicWeaponBonus(arme, "damage")) || 0
+    : Number(arme?.system?.bonus_dom) || 0;
+  return { hit, damage };
 }
 
 function add2eAttackCanonicalTarget(modifier) {
@@ -366,6 +376,8 @@ export function add2eAttackComputeTargetDefensiveAttackModifiers({ actor, cible 
 export function add2eAttackComputeActiveAttackModifiers({ actor, cible, arme = null, combatProfile }) {
   const engine = add2eAttackEffectsEngine();
   const targetTags = add2eAttackBuildTargetTagSet(cible);
+  const abilityModifiers = add2eAttackAbilityModifierContext(actor, combatProfile);
+  const weaponBase = add2eAttackWeaponBaseModifiers(engine, arme);
   const context = {
     type: "attaque",
     actionType: "attaque",
@@ -381,17 +393,17 @@ export function add2eAttackComputeActiveAttackModifiers({ actor, cible, arme = n
     targetTags: [...targetTags],
     combatProfile,
     actionTags: combatProfile?.tags ?? [],
-    abilityModifiers: add2eAttackAbilityModifierContext(actor, combatProfile)
+    abilityModifiers
   };
 
   const collected = (typeof engine.collect === "function" ? engine.collect(actor, context) : [])
     .map(add2eAttackCanonicalTarget)
     .filter(modifier => {
       const domain = add2eNormalizeAttackTag(modifier?.domain);
-      if (!['attack', 'damage'].includes(domain)) return false;
+      if (!["attack", "damage"].includes(domain)) return false;
       const sourceItem = modifier?._context?.sourceItem ?? null;
-      // Le bonus de base de l'arme sélectionnée est encore ajouté dans 04-attack-roll.mjs.
-      // Ses modificateurs canoniques seront raccordés dans l'étape suivante du lot 2A.
+      // Les champs de base de l'arme sont normalisés explicitement ci-dessous.
+      // Les effets conditionnels de cette arme restent produits depuis leur ActiveEffect.
       return !sourceItem || String(sourceItem.id ?? "") !== String(arme?.id ?? "");
     });
 
@@ -411,6 +423,46 @@ export function add2eAttackComputeActiveAttackModifiers({ actor, cible, arme = n
   for (const tag of weaponMagic.selectedTags) {
     produced.push(...add2eAttackTagModifiers({ engine, tag, actor, combatProfile, targetTags, source: weaponTagSource, sequence: sequence++ }));
   }
+
+  const abilitySource = add2eAttackSource("ability", actor?.id, actor?.name, actor?.uuid);
+  add2eAttackPushModifier(produced, add2eAttackCreateModifier(engine, {
+    id: `${actor?.id}:attack:ability:${abilityModifiers.toucher.ability ?? "none"}`,
+    domain: "attack",
+    target: "toucher",
+    value: abilityModifiers.toucher.value,
+    source: abilitySource,
+    label: `Caractéristique ${String(abilityModifiers.toucher.ability ?? "").toUpperCase() || "attaque"}`,
+    metadata: { ability: abilityModifiers.toucher.ability, producer: "ability-table" }
+  }));
+  add2eAttackPushModifier(produced, add2eAttackCreateModifier(engine, {
+    id: `${actor?.id}:damage:ability:${abilityModifiers.degats.ability ?? "none"}`,
+    domain: "damage",
+    target: "degats",
+    value: abilityModifiers.degats.value,
+    source: abilitySource,
+    label: `Caractéristique ${String(abilityModifiers.degats.ability ?? "").toUpperCase() || "dégâts"}`,
+    metadata: { ability: abilityModifiers.degats.ability, producer: "ability-table" }
+  }));
+
+  const weaponSource = add2eAttackSource("weapon", arme?.id, arme?.name, arme?.uuid);
+  add2eAttackPushModifier(produced, add2eAttackCreateModifier(engine, {
+    id: `${arme?.id}:attack:weapon-base`,
+    domain: "attack",
+    target: "toucher",
+    value: weaponBase.hit,
+    source: weaponSource,
+    label: `${arme?.name ?? "Arme"} — bonus au toucher`,
+    metadata: { producer: "weapon-base-field" }
+  }));
+  add2eAttackPushModifier(produced, add2eAttackCreateModifier(engine, {
+    id: `${arme?.id}:damage:weapon-base`,
+    domain: "damage",
+    target: "degats",
+    value: weaponBase.damage,
+    source: weaponSource,
+    label: `${arme?.name ?? "Arme"} — bonus aux dégâts`,
+    metadata: { producer: "weapon-base-field" }
+  }));
 
   const racialAttack = typeof engine.getAttackBonusAgainst === "function"
     ? engine.getAttackBonusAgainst(actor, cible)
@@ -476,9 +528,15 @@ export function add2eAttackComputeActiveAttackModifiers({ actor, cible, arme = n
     modifiers: allModifiers
   });
 
+  // 04-attack-roll.mjs ajoute encore séparément la caractéristique et les champs
+  // de l'arme pour ses lignes d'affichage. On retire exactement ces valeurs du
+  // complément renvoyé : le total utilisé reste celui du résolveur canonique.
+  const legacyDisplayedAttackParts = abilityModifiers.toucher.value + weaponBase.hit;
+  const legacyDisplayedDamageParts = abilityModifiers.degats.value + weaponBase.damage;
+
   return {
-    bonusToucheEffets: Number(attackResolution.total) || 0,
-    bonusDegatsEffets: Number(damageResolution.total) || 0,
+    bonusToucheEffets: (Number(attackResolution.total) || 0) - legacyDisplayedAttackParts,
+    bonusDegatsEffets: (Number(damageResolution.total) || 0) - legacyDisplayedDamageParts,
     bonusRacialVs: 0,
     bonusRacialVsReported: bonusRacialVs,
     bonusDefenseCible,
@@ -487,6 +545,8 @@ export function add2eAttackComputeActiveAttackModifiers({ actor, cible, arme = n
     racialTargetAttackDetails: racialAttack.details ?? [],
     attackResolution,
     damageResolution,
+    persistentAttackTotal: Number(attackResolution.total) || 0,
+    persistentDamageTotal: Number(damageResolution.total) || 0,
     attackModifierDetails: add2eAttackResolutionDetails(attackResolution),
     damageModifierDetails: add2eAttackResolutionDetails(damageResolution)
   };
