@@ -390,7 +390,8 @@ function add2eResolveFinalCombatModifiers({
   userBonus,
   rangeModifier,
   backstabBonus,
-  positionBonus
+  positionBonus,
+  armorAdjustment
 }) {
   const engine = add2eCombatEngine();
   const abilityModifiers = {
@@ -464,7 +465,8 @@ function add2eResolveFinalCombatModifiers({
     add2eCreateSituationModifier(engine, { id: `${actor.id}:attack:manual`, value: userBonus, label: "Bonus/malus saisi", actor }),
     add2eCreateSituationModifier(engine, { id: `${actor.id}:attack:range`, value: rangeModifier, label: "Portée", actor, metadata: { rangeBand: actionContext.rangeBand } }),
     add2eCreateSituationModifier(engine, { id: `${actor.id}:attack:backstab`, value: backstabBonus, label: "Attaque dans le dos", actor }),
-    add2eCreateSituationModifier(engine, { id: `${actor.id}:attack:position`, value: positionBonus, label: "Position", actor, metadata: { position: actionContext.position } })
+    add2eCreateSituationModifier(engine, { id: `${actor.id}:attack:position`, value: positionBonus, label: "Position", actor, metadata: { position: actionContext.position } }),
+    add2eCreateSituationModifier(engine, { id: `${actor.id}:attack:armor-adjustment`, value: armorAdjustment, label: "Ajustement arme/armure", actor, metadata: { armorClass: actionContext.armorClass } })
   ]) if (modifier) attackModifiers.push(modifier);
 
   const shared = { item: arme, targetActor: cible, context };
@@ -581,45 +583,6 @@ export async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
 
       const bonusAttaqueSournoise = useBackstab ? 4 : 0;
       const bonusPositionToucher = !useBackstab ? Number(activePositionAttackAdjustment.hitBonus) || 0 : 0;
-      const actionContext = {
-        type: "attaque",
-        actionType: "attaque",
-        ruleScope: "owner",
-        contact: auContact,
-        distance: distanceCible,
-        range: distanceCible,
-        rangeBand: typePortee,
-        position: activePositionInfo.zone,
-        frontale: activePositionInfo.isFront === true,
-        isDistance,
-        source: "attack-roll"
-      };
-      const finalModifiers = add2eResolveFinalCombatModifiers({
-        actor,
-        cible,
-        arme,
-        combatProfile,
-        persistentAttack: modifierState.attackResolution,
-        persistentDamage: modifierState.damageResolution,
-        actionContext,
-        userBonus,
-        rangeModifier: malusPortee,
-        backstabBonus: bonusAttaqueSournoise,
-        positionBonus: bonusPositionToucher
-      });
-
-      const totalBonusToucher = Number(finalModifiers.attackResolution.total) || 0;
-      const totalBonusDegats = Number(finalModifiers.damageResolution.total) || 0;
-      const bonusToucheEffets = totalBonusToucher
-        - modCaracToucher
-        - bonusHit
-        - malusPortee
-        - userBonus
-        - bonusAttaqueSournoise
-        - bonusPositionToucher;
-      const bonusDegatsEffets = totalBonusDegats - modCaracDegats - bonusDom;
-      const targetTags = modifierState.targetTags ?? new Set();
-
       const isTouchAttack = add2eTagSetHas(
         combatProfile.tags,
         "arme:toucher",
@@ -651,7 +614,49 @@ export async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
       caFinaleCible = conditionalFixedAC.ca;
 
       const ajustementCA = add2eResolveArmorAdjustment({ cible, arme, caBaseCible });
-      const valeurPourToucher = thaco - caFinaleCible - ajustementCA;
+      const actionContext = {
+        type: "attaque",
+        actionType: "attaque",
+        ruleScope: "owner",
+        contact: auContact,
+        distance: distanceCible,
+        range: distanceCible,
+        rangeBand: typePortee,
+        position: activePositionInfo.zone,
+        frontale: activePositionInfo.isFront === true,
+        isDistance,
+        armorClass: caBaseCible,
+        armorAdjustment: ajustementCA,
+        source: "attack-roll"
+      };
+      const finalModifiers = add2eResolveFinalCombatModifiers({
+        actor,
+        cible,
+        arme,
+        combatProfile,
+        persistentAttack: modifierState.attackResolution,
+        persistentDamage: modifierState.damageResolution,
+        actionContext,
+        userBonus,
+        rangeModifier: malusPortee,
+        backstabBonus: bonusAttaqueSournoise,
+        positionBonus: bonusPositionToucher,
+        armorAdjustment: ajustementCA
+      });
+
+      const totalBonusToucher = Number(finalModifiers.attackResolution.total) || 0;
+      const totalBonusDegats = Number(finalModifiers.damageResolution.total) || 0;
+      const bonusToucheEffets = totalBonusToucher
+        - modCaracToucher
+        - bonusHit
+        - malusPortee
+        - userBonus
+        - bonusAttaqueSournoise
+        - bonusPositionToucher
+        - ajustementCA;
+      const bonusDegatsEffets = totalBonusDegats - modCaracDegats - bonusDom;
+      const targetTags = modifierState.targetTags ?? new Set();
+      const valeurPourToucher = thaco - caFinaleCible;
       const roll = await new Roll("1d20").evaluate();
       if (game.dice3d) await game.dice3d.showForRoll(roll);
       await new Promise(resolve => setTimeout(resolve, 300));
