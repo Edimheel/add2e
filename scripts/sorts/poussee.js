@@ -1,152 +1,185 @@
 /**
- * Script : Poussée (Push)
- * - Correction : Utilisation du SOCKET pour appliquer l'effet sur l'ennemi.
+ * ADD2E — Sort Poussée.
+ * Sauvegarde, carte de chat et compatibilité Foundry V13/V14/V15.
  */
 
-console.log("%c[ADD2E][POUSSÉE] V2 - Socket Fix", "color: #8e44ad; font-weight:bold;");
+const ADD2E_PUSH_VERSION = "2026-07-23-canonical-save-v3";
+console.log("[ADD2E][POUSSÉE][VERSION]", ADD2E_PUSH_VERSION);
 
 return await (async () => {
+  let sourceItem = null;
+  if (typeof sort !== "undefined" && sort) sourceItem = sort;
+  else if (typeof item !== "undefined" && item) sourceItem = item;
+  else if (typeof this !== "undefined" && this?.documentName === "Item") sourceItem = this;
 
-    // INITIALISATION
-    let sourceItem = null;
-    if (typeof sort !== "undefined" && sort) sourceItem = sort;
-    else if (typeof item !== "undefined" && item) sourceItem = item;
-    if (!sourceItem && typeof this !== "undefined" && this.documentName === "Item") sourceItem = this;
-    const _item = sourceItem;
+  if (!sourceItem) {
+    ui.notifications.error("Poussée : source introuvable.");
+    return false;
+  }
 
-    if (!sourceItem) { ui.notifications.error("ERREUR : Source introuvable."); return false; }
-    const caster = (typeof actor !== "undefined" && actor) ? actor : sourceItem.parent;
-    if (!caster) { ui.notifications.error("ERREUR : Lanceur introuvable."); return false; }
+  const caster = (typeof actor !== "undefined" && actor) ? actor : sourceItem.parent;
+  if (!caster) {
+    ui.notifications.error("Poussée : lanceur introuvable.");
+    return false;
+  }
 
-    const refund = async (raison = "") => {
-        if (raison) ui.notifications.warn(raison);
-        if (sourceItem.type !== "sort") {
-            const currentGlobal = sourceItem.getFlag("add2e", "global_charges");
-            if (currentGlobal !== undefined) await sourceItem.setFlag("add2e", "global_charges", currentGlobal + 1);
+  const refund = async (reason = "") => {
+    if (reason) ui.notifications.warn(reason);
+    if (sourceItem.type !== "sort") {
+      const currentGlobal = sourceItem.getFlag("add2e", "global_charges");
+      if (currentGlobal !== undefined) {
+        await sourceItem.setFlag("add2e", "global_charges", Number(currentGlobal || 0) + 1);
+      }
+    }
+  };
+
+  const targets = Array.from(game.user?.targets ?? []).filter(target => target?.actor);
+  if (!targets.length) {
+    await refund("Poussée : cible au moins une créature.");
+    return false;
+  }
+
+  if (typeof globalThis.add2eResolveSavingThrow !== "function") {
+    await refund("Poussée : le résolveur canonique de sauvegardes est indisponible.");
+    return false;
+  }
+  if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
+    await refund("Poussée : le constructeur commun des cartes de chat est indisponible.");
+    return false;
+  }
+
+  const casterLevel = sourceItem.type === "sort"
+    ? Number(caster.system?.details_classe?.magicien?.niveau ?? caster.system?.niveau ?? 1) || 1
+    : Number(sourceItem.system?.niveau ?? 6) || 6;
+  const maxWeightKg = casterLevel * 25;
+  const forceValue = casterLevel;
+  const iconImg = sourceItem.img || "systems/add2e/assets/icones/sorts/poussee.webp";
+
+  const preparedTargets = targets.map(targetToken => ({
+    targetToken,
+    targetActor: targetToken.actor,
+    save: globalThis.add2eResolveSavingThrow(targetToken.actor, 4, {
+      source: "spell:poussee",
+      sourceItem,
+      caster,
+      casterLevel,
+      frontale: true,
+      targetToken
+    })
+  }));
+
+  const invalid = preparedTargets.find(entry => !Number.isFinite(entry.save?.target) || entry.save.target <= 0);
+  if (invalid) {
+    await refund(`Poussée : aucune sauvegarde contre les sorts pour ${invalid.targetActor.name}.`);
+    return false;
+  }
+
+  for (const { targetToken, targetActor, save } of preparedTargets) {
+    const roll = await new Roll("1d20").evaluate();
+    if (game.dice3d) await game.dice3d.showForRoll(roll);
+    const total = (Number(roll.total) || 0) + (Number(save.bonus) || 0);
+    const success = total >= save.target;
+
+    if (typeof Sequence !== "undefined") {
+      new Sequence()
+        .effect()
+        .file("jb2a.gust_of_wind.very_fast.grey")
+        .atLocation(caster)
+        .stretchTo(targetToken)
+        .missed(success)
+        .effect()
+        .file("jb2a.impact.004.blue")
+        .atLocation(targetToken)
+        .delay(200)
+        .scale(0.5)
+        .playIf(!success)
+        .play()
+        .catch(() => {});
+    }
+
+    if (!success) {
+      const effectData = {
+        name: "Déséquilibré (Poussée)",
+        icon: iconImg,
+        img: iconImg,
+        origin: sourceItem.uuid,
+        duration: { rounds: 1 },
+        disabled: false,
+        description: "La créature a perdu l'équilibre et ne peut pas attaquer ce round-ci.",
+        flags: { add2e: { tags: ["stun", "incapacitated", "perturbe_equilibre"] } }
+      };
+
+      if (game.socket) {
+        game.socket.emit("system.add2e", {
+          type: "applyActiveEffect",
+          actorId: targetActor.id,
+          effectData
+        });
+      } else {
+        await targetActor.createEmbeddedDocuments("ActiveEffect", [effectData]);
+      }
+    }
+
+    const applied = save.bonusResolution?.applied ?? [];
+    const modifierDetail = applied.length
+      ? applied.map(entry => {
+          const modifier = entry?.modifier ?? entry;
+          const value = Number(modifier?.value) || 0;
+          const label = modifier?.metadata?.label ?? modifier?.source?.name ?? "Modificateur";
+          return `${label} ${value >= 0 ? "+" : ""}${value}`;
+        }).join(" ; ")
+      : "Aucun";
+
+    const cardOptions = {
+      actor: caster,
+      title: sourceItem.name ?? "Poussée",
+      icon: "fas fa-wind",
+      variant: success ? "success" : "failure",
+      source: {
+        name: caster.name,
+        img: caster.img,
+        type: `Niveau ${casterLevel}`,
+        meta: `Force ${forceValue} · cible < ${maxWeightKg} kg`
+      },
+      target: {
+        name: targetActor.name,
+        img: targetActor.img,
+        type: "Sauvegarde contre les sorts",
+        meta: save.targetResolution?.selected?.className ?? save.targetResolution?.source ?? ""
+      },
+      rows: [
+        { label: "D20", value: Number(roll.total) || 0 },
+        { label: "Bonus de sauvegarde", value: `${save.bonus >= 0 ? "+" : ""}${save.bonus}` },
+        { label: "Total", value: total },
+        { label: "Seuil", value: save.target },
+        { label: "Modificateurs", value: modifierDetail }
+      ],
+      message: success
+        ? "La cible résiste et maintient son équilibre."
+        : "La cible est déséquilibrée et perd sa prochaine attaque.",
+      chatData: {
+        speaker: ChatMessage.getSpeaker({ actor: caster }),
+        rolls: [roll],
+        flags: {
+          add2e: {
+            spell: "poussee",
+            saveType: save.key,
+            saveTarget: save.target,
+            saveBonus: save.bonus,
+            saveTotal: total,
+            saveSuccess: success,
+            saveResolverVersion: save.version,
+            sourceItemUuid: sourceItem.uuid,
+            targetActorUuid: targetActor.uuid
+          }
         }
+      }
     };
 
-    // CIBLAGE
-    const targets = Array.from(game.user.targets);
-    if (targets.length === 0) { await refund("Veuillez cibler une créature."); return false; }
+    const preview = globalThis.add2eBuildChatCard(cardOptions);
+    if (!String(preview ?? "").trim()) throw new Error("Poussée : carte de chat vide.");
+    await globalThis.add2eCreateChatCard(cardOptions);
+  }
 
-    // PARAMÈTRES
-    let casterLevel = 1;
-    if (sourceItem.type === "sort") {
-        casterLevel = caster.system.details_classe?.magicien?.niveau || caster.system.niveau || 1;
-    } else {
-        casterLevel = sourceItem.system.niveau || 6; 
-    }
-    const maxWeightKg = casterLevel * 25;
-    const forceValue = casterLevel; 
-    const iconImg = sourceItem.img || "systems/add2e/assets/icones/sorts/poussee.webp";
-
-    // RÉSOLUTION
-    for (const token of targets) {
-        const targetActor = token.actor;
-        if (!targetActor) continue;
-
-        // Save
-        let saveValue = 15; 
-        if (targetActor.system.sauvegardes?.sorts) saveValue = Number(targetActor.system.sauvegardes.sorts);
-        else {
-            const cls = targetActor.items.find(i => i.type === "classe");
-            if (cls?.system?.progression?.[(targetActor.system.niveau||1)-1]?.savingThrows) {
-                saveValue = cls.system.progression[(targetActor.system.niveau||1)-1].savingThrows[4];
-            }
-        }
-
-        const roll = new Roll("1d20");
-        await roll.evaluate();
-        if (game.dice3d) await game.dice3d.showForRoll(roll);
-        const success = roll.total >= saveValue;
-
-        // VFX
-        if (typeof Sequence !== "undefined") {
-            new Sequence()
-                .effect().file("jb2a.gust_of_wind.very_fast.grey").atLocation(caster).stretchTo(token).missed(success)
-                .effect().file("jb2a.impact.004.blue").atLocation(token).delay(200).scale(0.5).playIf(!success)
-                .play().catch(e => {});
-        }
-
-        // Résultat
-        let resultHTML = "";
-        if (success) {
-            resultHTML = `
-            <div style="background:#eafaf1; border:1px solid #ccebd9; border-radius:6px; padding:6px; text-align:center; margin-bottom:8px;">
-                <span style="color:#27ae60; font-weight:bold; font-size:1.1em;">🛡️ RÉSISTE</span>
-                <div style="font-size:0.85em; color:#555; margin-top:2px;">La cible maintient son équilibre.</div>
-                <div style="font-size:0.8em; color:#777;">(${roll.total} vs ${saveValue})</div>
-            </div>`;
-        } else {
-            resultHTML = `
-            <div style="background:#fdedec; border:1px solid #e6b0aa; border-radius:6px; padding:6px; text-align:center; margin-bottom:8px;">
-                <span style="color:#c0392b; font-weight:bold; font-size:1.1em;">💫 DÉSÉQUILIBRÉ</span>
-                <div style="font-size:0.85em; color:#555; margin-top:2px;">Perd sa prochaine attaque.</div>
-                <div style="font-size:0.8em; color:#777;">(${roll.total} vs ${saveValue})</div>
-            </div>`;
-
-            const effectData = {
-                name: "Déséquilibré (Poussée)",
-                icon: iconImg,
-                origin: sourceItem.uuid,
-                duration: { rounds: 1 },
-                disabled: false,
-                description: "La créature a perdu l'équilibre et ne peut pas attaquer ce round-ci.",
-                flags: { add2e: { tags: ["stun", "incapacitated", "perturbe_equilibre"] } }
-            };
-            
-            // [CORRECTIF SOCKET]
-            if (game.socket) {
-                game.socket.emit("system.add2e", {
-                    type: "applyActiveEffect",
-                    actorId: targetActor.id,
-                    effectData: effectData
-                });
-            } else {
-                await targetActor.createEmbeddedDocuments("ActiveEffect", [effectData]);
-            }
-        }
-
-        // Chat
-        const detailsData = [
-            { label: "Niveau",   val: casterLevel },
-            { label: "Force",    val: `${forceValue} pied-livre` },
-            { label: "Max Cible",val: `< ${maxWeightKg} kg` },
-            { label: "Save",     val: `vs Sorts (${saveValue})` }
-        ];
-
-        const chatContent = `
-          <div class="add2e-spell-card" style="border-radius:12px; box-shadow:0 4px 10px #715aab44; background:linear-gradient(135deg, #fdfbfd 0%, #f4efff 100%); border:1.5px solid #9373c7; margin:0.3em 0; padding:0; font-family:var(--font-primary); overflow:hidden;">
-            <div style="background:linear-gradient(90deg, #6a3c99 0%, #8e44ad 100%); padding:8px 12px; display:flex; align-items:center; gap:10px; color:white; border-bottom:2px solid #5e35b1;">
-              <img src="${caster.img}" style="width:36px; height:36px; border-radius:50%; border:2px solid #fff; object-fit:cover;">
-              <div style="line-height:1.2;">
-                <div style="font-weight:bold; font-size:1.05em;">${caster.name}</div>
-                <div style="font-size:0.85em; opacity:0.9;">lance <span style="font-weight:bold; color:#f1c40f;">${_item.name}</span></div>
-              </div>
-              <img src="${iconImg}" style="width:32px; height:32px; margin-left:auto; border-radius:4px; background:#fff;">
-            </div>
-            <div style="padding:10px 10px 5px 10px;">
-              <div style="margin-bottom:8px; border-bottom:1px solid #eee; padding-bottom:4px; font-size:0.95em;"><b>Cible :</b> ${targetActor.name}</div>
-              ${resultHTML}
-              <details style="background:#fff; border:1px solid #e0d4fc; border-radius:6px;">
-                <summary style="cursor:pointer; color:#6a3c99; font-weight:600; font-size:0.9em; padding:6px 10px; background:#efe9f6; border-radius:6px; list-style:none;">📜 Voir détails</summary>
-                <div style="padding:8px;">
-                  <table style="width:100%; font-size:0.85em; border-spacing:0; margin-bottom:10px; color:#333; border-bottom:1px solid #eee;">
-                    ${detailsData.map((d, i) => `
-                      <tr style="${i % 2 === 0 ? 'background:#f8f6fa;' : ''}">
-                        <td style="color:#6a3c99; font-weight:600; padding:2px 5px; width:40%;">${d.label}</td>
-                        <td style="text-align:right; padding:2px 5px;">${d.val}</td>
-                      </tr>`).join("")}
-                  </table>
-                  <div style="color:#4a3b69; font-size:0.9em; line-height:1.4; text-align:justify;"><b>Description :</b><br>${sourceItem.system.description || "Une force invisible frappe la cible."}</div>
-                </div>
-              </details>
-            </div>
-          </div>
-        `;
-
-        ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor: caster }), content: chatContent, type: CONST.CHAT_MESSAGE_TYPES.OTHER });
-    }
-    return true;
+  return true;
 })();
