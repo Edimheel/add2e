@@ -9,10 +9,10 @@
                 <div class="carac-control-group">
                   <button type="button" class="carac-btn moins" data-carac="intelligence" tabindex="-1">−</button>
                   <div class="carac-value carac-drop-target" data-carac="intelligence"
-                       title="Base : {{actor.system.intelligence_base}}&#10;Bonus racial : {{actor.system.bonus_caracteristiques.intelligence}}&#10;Total : {{add actor.system.intelligence_base actor.system.bonus_caracteristiques.intelligence}}">
-                    <span style="font-size:1.45em;font-weight:700;line-height:1;">{{add actor.system.intelligence_base actor.system.bonus_caracteristiques.intelligence}}</span>
-                    {{#if actor.system.bonus_caracteristiques.intelligence}}
-                      <span class="carac-racial-bonus-inline">(race {{#if (gt actor.system.bonus_caracteristiques.intelligence 0)}}+{{/if}}{{actor.system.bonus_caracteristiques.intelligence}})</span>
+                       title="Tirage naturel : {{actor.flags.add2e.base_caracs.intelligence}}&#10;Ajustement racial : {{subtract actor.system.intelligence_base actor.flags.add2e.base_caracs.intelligence}}&#10;Score définitif : {{actor.system.intelligence_base}}&#10;Valeur effective : {{actor.system.int_aff}}">
+                    <span style="font-size:1.45em;font-weight:700;line-height:1;">{{actor.system.int_aff}}</span>
+                    {{#if (subtract actor.system.intelligence_base actor.flags.add2e.base_caracs.intelligence)}}
+                      <span class="carac-racial-bonus-inline">(race {{#if (gt (subtract actor.system.intelligence_base actor.flags.add2e.base_caracs.intelligence) 0)}}+{{/if}}{{subtract actor.system.intelligence_base actor.flags.add2e.base_caracs.intelligence}})</span>
                     {{/if}}
                   </div>
                   <button type="button" class="carac-btn plus" data-carac="intelligence" tabindex="-1">+</button>
