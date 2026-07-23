@@ -4,7 +4,7 @@
  */
 
 return await (async () => {
-  const VERSION = "2026-07-23-dialog-v2-canonical-save-chat-v14";
+  const VERSION = "2026-07-23-dialog-v2-canonical-save-executor-v15";
   const sourceItem = (typeof item !== "undefined" && item)
     || (typeof sort !== "undefined" && sort)
     || (typeof spell !== "undefined" && spell)
@@ -37,7 +37,10 @@ return await (async () => {
 
   const info = sourceItem.system ?? {};
   const casterLevel = Number(caster.system?.niveau) || 1;
-  const durationRounds = Math.max(1, Math.trunc(Number(sourceItem.system?.duree?.rounds ?? 10) || 10) + casterLevel);
+  const durationRounds = Math.max(
+    1,
+    Math.trunc(Number(sourceItem.system?.duree?.rounds ?? 10) || 10) + casterLevel
+  );
   const radiusMeters = 5;
   const spellLabel = "Ténèbres";
   const spellIcon = sourceItem.img || "icons/magic/unholy/projectile-smoke-black.webp";
@@ -77,15 +80,20 @@ return await (async () => {
           ?? null;
         if (targetToken && flagData.originalLight) {
           try {
-            await targetToken.document.update({ light: foundry.utils.deepClone(flagData.originalLight) });
+            await targetToken.document.update({
+              light: foundry.utils.deepClone(flagData.originalLight)
+            });
             ui.notifications.info(`Les ténèbres autour de ${targetToken.name} se dissipent.`);
           } catch (_error) {}
         }
         if (flagData.blindEffectId) {
-          const targetActor = targetToken?.actor ?? game.actors?.get?.(flagData.actorId) ?? null;
+          const targetActor = targetToken?.actor
+            ?? game.actors?.get?.(flagData.actorId)
+            ?? null;
           if (targetActor) {
-            try { await targetActor.deleteEmbeddedDocuments("ActiveEffect", [flagData.blindEffectId]); }
-            catch (_error) {}
+            try {
+              await targetActor.deleteEmbeddedDocuments("ActiveEffect", [flagData.blindEffectId]);
+            } catch (_error) {}
           }
         }
       }
@@ -118,9 +126,16 @@ return await (async () => {
         label: "Lancer",
         icon: "fa-solid fa-hand-sparkles",
         default: true,
-        callback: (_event, button) => ({ mode: String(button.form?.elements?.mode?.value ?? "offensif") })
+        callback: (_event, button) => ({
+          mode: String(button.form?.elements?.mode?.value ?? "offensif")
+        })
       },
-      { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => null }
+      {
+        action: "cancel",
+        label: "Annuler",
+        icon: "fa-solid fa-xmark",
+        callback: () => null
+      }
     ],
     rejectClose: false
   });
@@ -138,7 +153,11 @@ return await (async () => {
       return false;
     }
 
-    const crosshair = await warpgate.crosshairs.show({ size: 1, icon: spellIcon, label: spellLabel });
+    const crosshair = await warpgate.crosshairs.show({
+      size: 1,
+      icon: spellIcon,
+      label: spellLabel
+    });
     if (crosshair.cancelled) return false;
 
     const created = await canvas.scene.createEmbeddedDocuments("AmbientLight", [{
@@ -171,36 +190,36 @@ return await (async () => {
       ui.notifications.warn("Ténèbres : cible exactement une créature.");
       return false;
     }
-    if (typeof globalThis.add2eResolveSavingThrow !== "function") {
-      ui.notifications.error("Ténèbres : le résolveur canonique de sauvegardes est indisponible.");
+    if (typeof globalThis.add2eRollSavingThrow !== "function") {
+      ui.notifications.error("Ténèbres : l’exécuteur canonique de sauvegardes est indisponible.");
       return false;
     }
 
     const targetToken = targets[0];
     const targetActor = targetToken.actor;
-    const resolution = globalThis.add2eResolveSavingThrow(targetActor, 4, {
+    saveResult = await globalThis.add2eRollSavingThrow(targetActor, 4, {
       source: "spell:tenebres_5m",
       sourceItem,
       caster,
       casterLevel,
       targetToken,
-      frontale: true
+      frontale: true,
+      createChat: false,
+      showDice: true
     });
-    const saveTarget = Number(resolution?.target);
-    if (!Number.isFinite(saveTarget) || saveTarget <= 0) {
+    if (!saveResult?.ok) {
       ui.notifications.warn(`Ténèbres : aucune sauvegarde contre les sortilèges pour ${targetActor.name}.`);
       return false;
     }
 
-    const roll = await new Roll("1d20").evaluate();
-    if (game.dice3d) await game.dice3d.showForRoll(roll);
-    const d20 = Number(roll.total) || 0;
-    const bonus = Number(resolution.bonus) || 0;
-    const total = d20 + bonus;
-    const success = total >= saveTarget;
-    const blinded = !success;
+    const blinded = !saveResult.success;
+    saveResult.blinded = blinded;
 
-    const originalLight = foundry.utils.deepClone(targetToken.document.light?.toObject?.() ?? targetToken.document.light ?? {});
+    const originalLight = foundry.utils.deepClone(
+      targetToken.document.light?.toObject?.()
+        ?? targetToken.document.light
+        ?? {}
+    );
     await targetToken.document.update({ light: lightConfig });
 
     if (blinded) {
@@ -211,9 +230,19 @@ return await (async () => {
         disabled: false,
         transfer: false,
         duration: durationData,
-        changes: [{ key: "system.conditions.blinded", mode: CONST.ACTIVE_EFFECT_MODES.ADD, value: true, priority: 20 }],
+        changes: [{
+          key: "system.conditions.blinded",
+          mode: CONST.ACTIVE_EFFECT_MODES.ADD,
+          value: true,
+          priority: 20
+        }],
         statuses: ["blinded"],
-        flags: { add2e: { spell: "tenebres_5m", sourceItemUuid: sourceItem.uuid } }
+        flags: {
+          add2e: {
+            spell: "tenebres_5m",
+            sourceItemUuid: sourceItem.uuid
+          }
+        }
       }]);
       blindEffectId = createdBlind?.[0]?.id ?? null;
     }
@@ -239,12 +268,13 @@ return await (async () => {
       }
     }]);
 
-    saveResult = { roll, resolution, d20, bonus, total, target: saveTarget, success, blinded };
     cardTarget = {
       name: targetActor.name,
       img: targetActor.img,
       type: "Sauvegarde contre les sortilèges",
-      meta: resolution.targetResolution?.selected?.className ?? resolution.targetResolution?.source ?? ""
+      meta: saveResult.resolution?.targetResolution?.selected?.className
+        ?? saveResult.resolution?.targetResolution?.source
+        ?? ""
     };
     cardMessage = blinded
       ? `${targetActor.name} est enveloppé par les ténèbres et aveuglé.`
@@ -280,7 +310,7 @@ return await (async () => {
         saveBonus: saveResult?.bonus ?? null,
         saveTotal: saveResult?.total ?? null,
         saveSuccess: saveResult?.success ?? null,
-        saveResolverVersion: saveResult?.resolution?.version ?? null
+        saveResolverVersion: saveResult?.version ?? null
       }
     }
   };
