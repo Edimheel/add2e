@@ -7,7 +7,11 @@ import { add2ePopulateActorSheetSpellData } from "./13b-actor-sheet-get-data-spe
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant getData.");
 
 const ADD2E_ACTIVE_EFFECTS_DATA_VERSION = "2026-07-11-hide-technical-class-rules-v3";
+const ADD2E_FORCE_DIAGNOSTICS_VERSION = "2026-07-23-force-diagnostics-v1";
 const ADD2E_HIDDEN_TECHNICAL_CLASS_RULE_KINDS = new Set(["armor_class_base", "attack_modifier"]);
+let ADD2E_FORCE_DIAGNOSTIC_SEQUENCE = 0;
+
+if (globalThis.ADD2E_FORCE_DIAGNOSTICS === undefined) globalThis.ADD2E_FORCE_DIAGNOSTICS = true;
 
 function add2eExceptionalStrengthValue(rawValue) {
   const value = Math.trunc(Number(rawValue));
@@ -25,6 +29,237 @@ function add2eExceptionalStrengthValues(currentValue = 0) {
     };
   });
 }
+
+function add2eForceDiagnosticsEnabled() {
+  return globalThis.ADD2E_FORCE_DIAGNOSTICS !== false;
+}
+
+function add2eForceDiagnosticFlatten(value) {
+  try {
+    if (typeof foundry?.utils?.flattenObject === "function") return foundry.utils.flattenObject(value ?? {});
+  } catch (_error) {}
+  return value ?? {};
+}
+
+function add2eForceDiagnosticModifier(entry) {
+  const modifier = entry?.modifier ?? entry ?? {};
+  return {
+    reason: entry?.reason ?? entry?.rejectionReason ?? null,
+    id: modifier?.id ?? null,
+    domain: modifier?.domain ?? null,
+    target: modifier?.target ?? null,
+    operation: modifier?.operation ?? null,
+    value: modifier?.value ?? null,
+    priority: modifier?.priority ?? null,
+    stacking: modifier?.stacking ?? null,
+    conditions: modifier?.conditions ?? null,
+    source: modifier?.source ?? null,
+    duration: modifier?.duration ?? null,
+    metadata: modifier?.metadata ?? null
+  };
+}
+
+function add2eForceDiagnosticResolution(actor, consumer) {
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+  if (!engine || typeof engine.resolveAbility !== "function") {
+    return { error: "resolveAbility indisponible" };
+  }
+
+  try {
+    const resolution = engine.resolveAbility(actor, "force", { consumer });
+    return {
+      base: resolution?.base ?? null,
+      total: resolution?.total ?? null,
+      additions: resolution?.additions ?? null,
+      multiplier: resolution?.multiplier ?? null,
+      override: resolution?.override ? add2eForceDiagnosticModifier(resolution.override) : null,
+      bounds: resolution?.bounds ?? null,
+      stages: resolution?.stages ?? null,
+      applied: Array.isArray(resolution?.applied) ? resolution.applied.map(add2eForceDiagnosticModifier) : resolution?.applied ?? [],
+      rejected: Array.isArray(resolution?.rejected) ? resolution.rejected.map(add2eForceDiagnosticModifier) : resolution?.rejected ?? []
+    };
+  } catch (error) {
+    return { error: String(error?.stack ?? error?.message ?? error) };
+  }
+}
+
+function add2eForceDiagnosticEffect(effect) {
+  return {
+    id: effect?.id ?? null,
+    name: effect?.name ?? effect?.label ?? "",
+    disabled: effect?.disabled === true,
+    origin: effect?.origin ?? null,
+    changes: Array.isArray(effect?.changes) ? effect.changes : [],
+    modifiers: effect?.flags?.add2e?.modifiers ?? null,
+    rules: effect?.flags?.add2e?.rules ?? null,
+    sourceType: effect?.flags?.add2e?.sourceType ?? null,
+    sourceItemId: effect?.flags?.add2e?.sourceItemId ?? null
+  };
+}
+
+function add2eForceDiagnosticItem(item) {
+  return {
+    id: item?.id ?? null,
+    uuid: item?.uuid ?? null,
+    name: item?.name ?? "",
+    type: item?.type ?? "",
+    slug: item?.system?.slug ?? null,
+    equipped: item?.system?.equipped ?? item?.system?.equipee ?? item?.system?.portee ?? null,
+    bonusCaracteristiques: item?.system?.bonus_caracteristiques ?? null,
+    modifiers: item?.flags?.add2e?.modifiers ?? item?.system?.modifiers ?? null,
+    rules: item?.flags?.add2e?.rules ?? item?.system?.rules ?? null,
+    effects: Array.from(item?.effects ?? []).map(add2eForceDiagnosticEffect)
+  };
+}
+
+function add2eForceDiagnosticRelevantEmbedded(document, changes = null) {
+  const type = String(document?.type ?? "").toLowerCase();
+  if (["classe", "race"].includes(type)) return true;
+  const payload = {
+    name: document?.name,
+    type,
+    system: document?.system,
+    flags: document?.flags?.add2e,
+    changes
+  };
+  try {
+    return /force|ability|caracter|modifier|bonus_caracteristiques|racialability/i.test(JSON.stringify(payload));
+  } catch (_error) {
+    return false;
+  }
+}
+
+function add2eForceDiagnosticActorUpdateTouches(changes) {
+  const flat = add2eForceDiagnosticFlatten(changes);
+  const prefixes = [
+    "system.force",
+    "system.force_base",
+    "system.force_ex",
+    "system.for_aff",
+    "system.force_race",
+    "system.force_bonus_",
+    "system.bonus_caracteristiques",
+    "flags.add2e.base_caracs",
+    "flags.add2e.racialAbilityAdjustments",
+    "flags.add2e.racialAbilitySource",
+    "flags.add2e.modifiers"
+  ];
+  return Object.keys(flat ?? {}).some(path => prefixes.some(prefix => path === prefix || path.startsWith(prefix)));
+}
+
+function add2eForceDiagnosticSnapshot(actor, stage, extra = {}, { trace = false } = {}) {
+  if (!add2eForceDiagnosticsEnabled() || !actor || actor.type !== "personnage") return null;
+
+  const system = actor.system ?? {};
+  const add2eFlags = actor.flags?.add2e ?? {};
+  const classes = Array.from(actor.items ?? [])
+    .filter(item => String(item?.type ?? "").toLowerCase() === "classe")
+    .map(add2eForceDiagnosticItem);
+  const races = Array.from(actor.items ?? [])
+    .filter(item => String(item?.type ?? "").toLowerCase() === "race")
+    .map(add2eForceDiagnosticItem);
+  const activeEffects = Array.from(actor.effects ?? []).map(add2eForceDiagnosticEffect);
+  const forceRelatedItems = Array.from(actor.items ?? [])
+    .filter(item => !["classe", "race"].includes(String(item?.type ?? "").toLowerCase()))
+    .filter(item => add2eForceDiagnosticRelevantEmbedded(item))
+    .map(add2eForceDiagnosticItem);
+  const sequence = ++ADD2E_FORCE_DIAGNOSTIC_SEQUENCE;
+  const snapshot = {
+    version: ADD2E_FORCE_DIAGNOSTICS_VERSION,
+    sequence,
+    stage,
+    actor: { id: actor.id, uuid: actor.uuid, name: actor.name },
+    system: {
+      force: system.force,
+      forceBase: system.force_base,
+      forceEffectiveDisplay: system.for_aff,
+      forceExceptional: system.force_ex,
+      forceRaceLegacy: system.force_race,
+      bonusCaracteristiquesLegacy: system.bonus_caracteristiques,
+      toucher: system.force_bonus_toucher,
+      degats: system.force_bonus_degats,
+      poids: system.force_poids,
+      ouvrir: system.force_ouvrir,
+      tordre: system.force_tordre
+    },
+    flags: {
+      naturalForce: add2eFlags.base_caracs?.force,
+      racialForce: add2eFlags.racialAbilityAdjustments?.force,
+      racialSource: add2eFlags.racialAbilitySource ?? null,
+      actorModifiers: add2eFlags.modifiers ?? []
+    },
+    classes,
+    races,
+    forceRelatedItems,
+    activeEffects,
+    resolution: add2eForceDiagnosticResolution(actor, `force-diagnostic:${stage}`),
+    extra
+  };
+
+  console.groupCollapsed(`[ADD2E][FORCE_DIAG][${sequence}][${stage}] ${actor.name}`);
+  console.log(snapshot);
+  if (trace) console.trace(`[ADD2E][FORCE_DIAG][${sequence}][TRACE] ${stage}`);
+  console.groupEnd();
+  return snapshot;
+}
+
+function add2eForceDiagnosticActorFromEmbedded(document) {
+  const parent = document?.parent;
+  return parent?.documentName === "Actor" ? parent : null;
+}
+
+function add2eInstallForceDiagnostics() {
+  if (globalThis.__ADD2E_FORCE_DIAGNOSTICS_VERSION__ === ADD2E_FORCE_DIAGNOSTICS_VERSION) return;
+  globalThis.__ADD2E_FORCE_DIAGNOSTICS_VERSION__ = ADD2E_FORCE_DIAGNOSTICS_VERSION;
+
+  Hooks.on("preUpdateActor", (actor, changes, options, userId) => {
+    if (!add2eForceDiagnosticActorUpdateTouches(changes)) return;
+    add2eForceDiagnosticSnapshot(actor, "PRE_UPDATE_ACTOR", {
+      changes: add2eForceDiagnosticFlatten(changes),
+      options,
+      userId
+    }, { trace: true });
+  });
+
+  Hooks.on("updateActor", (actor, changes, options, userId) => {
+    if (!add2eForceDiagnosticActorUpdateTouches(changes)) return;
+    setTimeout(() => add2eForceDiagnosticSnapshot(actor, "POST_UPDATE_ACTOR", {
+      changes: add2eForceDiagnosticFlatten(changes),
+      options,
+      userId
+    }), 0);
+  });
+
+  const embeddedHooks = [
+    ["createItem", "CREATE_ITEM"],
+    ["updateItem", "UPDATE_ITEM"],
+    ["deleteItem", "DELETE_ITEM"],
+    ["createActiveEffect", "CREATE_ACTIVE_EFFECT"],
+    ["updateActiveEffect", "UPDATE_ACTIVE_EFFECT"],
+    ["deleteActiveEffect", "DELETE_ACTIVE_EFFECT"]
+  ];
+
+  for (const [hookName, stage] of embeddedHooks) {
+    Hooks.on(hookName, (document, changesOrOptions, optionsOrUserId, maybeUserId) => {
+      const changes = hookName.startsWith("update") ? changesOrOptions : null;
+      if (!add2eForceDiagnosticRelevantEmbedded(document, changes)) return;
+      const actor = add2eForceDiagnosticActorFromEmbedded(document);
+      if (!actor) return;
+      const options = hookName.startsWith("update") ? optionsOrUserId : changesOrOptions;
+      const userId = hookName.startsWith("update") ? maybeUserId : optionsOrUserId;
+      setTimeout(() => add2eForceDiagnosticSnapshot(actor, stage, {
+        document: add2eForceDiagnosticItem(document),
+        changes: changes ? add2eForceDiagnosticFlatten(changes) : null,
+        options,
+        userId
+      }), 0);
+    });
+  }
+
+  globalThis.add2eForceDiagnosticSnapshot = (actor, stage = "MANUAL") => add2eForceDiagnosticSnapshot(actor, stage, {}, { trace: true });
+}
+
+add2eInstallForceDiagnostics();
 
 function add2eSheetAllowedAlignments(actor, sys) {
   if (typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getActorAllowedAlignments === "function") {
@@ -224,6 +459,14 @@ globalThis.Add2eActorSheet.prototype.getData = async function getData() {
   data.forceExNoneSelected = forceEx === 0;
   data.forceExValues = data.canExceptionalStrength ? add2eExceptionalStrengthValues(forceEx) : [];
 
+  add2eForceDiagnosticSnapshot(this.actor, "GET_DATA_AFTER_BASE", {
+    preparedForce: state.sys?.force,
+    preparedForceDisplay: state.sys?.for_aff,
+    canExceptionalStrength: data.canExceptionalStrength === true,
+    forceExCurrent: forceEx,
+    forceExValuesCount: data.forceExValues.length
+  });
+
   add2ePrepareActorSheetCombatData({
     actor: state.actor,
     data,
@@ -242,3 +485,4 @@ globalThis.Add2eActorSheet.prototype.getData = async function getData() {
 };
 
 globalThis.ADD2E_ACTIVE_EFFECTS_DATA_VERSION = ADD2E_ACTIVE_EFFECTS_DATA_VERSION;
+globalThis.ADD2E_FORCE_DIAGNOSTICS_VERSION = ADD2E_FORCE_DIAGNOSTICS_VERSION;
