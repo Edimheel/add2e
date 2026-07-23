@@ -9,7 +9,7 @@ const register = (Engine, methods) => Object.defineProperties(
   ]))
 );
 
-const ADD2E_ARMOR_CLASS_RESOLVER_VERSION = "2026-07-23-canonical-armor-class-v1";
+const ADD2E_ARMOR_CLASS_RESOLVER_VERSION = "2026-07-23-canonical-armor-class-v2-stored-actors";
 
 const ADD2E_COMBAT_IDENTITY_PREFIXES = [
   "type_monstre:",
@@ -243,12 +243,33 @@ export function installEffectsEngineDefense(Engine) {
   register(Engine, {
     resolveArmorClass(actor, context = {}) {
       if (!actor) throw new Error("Acteur manquant pour la résolution de CA.");
+      const system = actor.system ?? {};
       const items = this.equippedItems(actor);
       const armors = items.filter(item => ["armure", "armor"].includes(String(item.type ?? "").toLowerCase()));
       const objects = items.filter(item => !["armure", "armor"].includes(String(item.type ?? "").toLowerCase()));
       const worn = armors.filter(item => !this.isShieldItem(item) && !this.isHelmetItem(item));
       const shields = armors.filter(item => this.isShieldItem(item));
       const helmets = armors.filter(item => this.isHelmetItem(item));
+      const defensiveObjects = objects.filter(item => this.itemFixedCA(item) !== null || this.itemDefenseBonus(item) !== 0);
+      const actorType = String(actor.type ?? "").toLowerCase();
+      const storedActorCA = actorType !== "personnage"
+        ? this.readNumber(
+          system.armorClass,
+          system.ca_total,
+          system.ca,
+          system.ac,
+          system.ca_naturel,
+          system.defense?.armorClass,
+          system.defense?.ca,
+          system.combat?.armorClass,
+          system.combat?.ca
+        )
+        : null;
+      const useStoredActorBase = Number.isFinite(storedActorCA)
+        && !worn.length
+        && !shields.length
+        && !helmets.length
+        && !defensiveObjects.length;
 
       const transformation = add2eArmorTransformation(actor);
       const monk = typeof this.getMonkMartialProgression === "function" ? this.getMonkMartialProgression(actor) : null;
@@ -283,27 +304,31 @@ export function installEffectsEngineDefense(Engine) {
       }
 
       const mode = transformation ? "transformation"
-        : Number.isFinite(monkArmorClass) ? "monk"
-          : passiveArmorClass?.applied && Number.isFinite(passiveBase) ? "passive"
-            : "equipment";
+        : useStoredActorBase ? "stored"
+          : Number.isFinite(monkArmorClass) ? "monk"
+            : passiveArmorClass?.applied && Number.isFinite(passiveBase) ? "passive"
+              : "equipment";
       const fixedCAActive = mode === "equipment" && Number.isFinite(fixedCA);
       const base = transformation ? transformation.armorClass
-        : mode === "monk" ? monkArmorClass
-          : mode === "passive" ? passiveBase
-            : fixedCAActive ? fixedCA
-              : armorBase;
+        : mode === "stored" ? storedActorCA
+          : mode === "monk" ? monkArmorClass
+            : mode === "passive" ? passiveBase
+              : fixedCAActive ? fixedCA
+                : armorBase;
 
-      const ignoreDex = !!transformation || mode === "monk" || passiveArmorClass?.ignoreDex === true || context.ignoreDex === true || context.ignoresDex === true;
-      const ignoreShield = !!transformation || mode === "monk" || mode === "passive" || context.ignoreShield === true || context.ignoresShield === true;
-      const ignoreEquipmentLayers = !!transformation || mode === "monk" || mode === "passive";
+      const ignoreDex = !!transformation || mode === "stored" || mode === "monk" || passiveArmorClass?.ignoreDex === true || context.ignoreDex === true || context.ignoresDex === true;
+      const ignoreShield = !!transformation || mode === "stored" || mode === "monk" || mode === "passive" || context.ignoreShield === true || context.ignoresShield === true;
+      const ignoreEquipmentLayers = !!transformation || mode === "stored" || mode === "monk" || mode === "passive";
       const naturalModifiers = [];
       const totalModifiers = [];
+      const selectedArmorMagicBonus = selectedArmor ? this.itemDefenseBonus(selectedArmor) : 0;
+      const armorMagicBonus = !ignoreEquipmentLayers && !fixedCAActive ? selectedArmorMagicBonus : 0;
+      const ignoredArmorMagicBonus = selectedArmorMagicBonus - armorMagicBonus;
 
-      if (!ignoreEquipmentLayers && !fixedCAActive && selectedArmor) {
-        const bonus = this.itemDefenseBonus(selectedArmor);
+      if (armorMagicBonus) {
         const modifier = add2eArmorLayerModifier(this, {
           id: `${selectedArmor.id}:armor-class:armor-magic`,
-          value: -Math.abs(bonus),
+          value: -Math.abs(armorMagicBonus),
           source: add2eArmorSource(selectedArmor, "armor"),
           label: `${selectedArmor.name} — bonus magique`
         });
@@ -355,7 +380,7 @@ export function installEffectsEngineDefense(Engine) {
 
       let objectProtectionBonus = 0;
       const objectSources = [];
-      if (!transformation) {
+      if (!transformation && mode !== "stored") {
         for (const object of objects) {
           if (object === fixedItem || this.itemFixedCA(object) !== null) continue;
           const bonus = this.itemDefenseBonus(object);
@@ -377,7 +402,7 @@ export function installEffectsEngineDefense(Engine) {
       const collected = (typeof this.collect === "function" ? this.collect(actor, contextForModifiers) : [])
         .map(modifier => add2eArmorCanonicalModifier(this, modifier))
         .filter(Boolean);
-      const changeModifiers = add2eArmorChangeModifiers(this, actor);
+      const changeModifiers = mode === "stored" ? [] : add2eArmorChangeModifiers(this, actor);
 
       if (!transformation) {
         naturalModifiers.push(...collected.filter(modifier => modifier.target === "naturel"));
@@ -398,7 +423,7 @@ export function installEffectsEngineDefense(Engine) {
       });
 
       const conditionalFixed = add2eArmorConditionalFixedCandidate(this, actor, context);
-      if (conditionalFixed) {
+      if (conditionalFixed && !transformation) {
         totalModifiers.push(this.createModifier({
           id: `${actor.id}:armor-class:conditional-fixed:${conditionalFixed.tag}`,
           domain: "armor-class",
@@ -419,20 +444,24 @@ export function installEffectsEngineDefense(Engine) {
         context: contextForModifiers,
         modifiers: add2eArmorDeduplicate(totalModifiers)
       });
+      const armorLayerCA = Number(base) - Math.abs(Number(armorMagicBonus) || 0);
 
       return {
         mode,
         armorBase,
         armorName,
         selectedArmor,
+        armorMagicBonus,
+        ignoredArmorMagicBonus,
         fixedCA,
         fixedSource,
         fixedCAActive,
+        storedActorCA: Number.isFinite(storedActorCA) ? storedActorCA : null,
         transformation,
         monk,
         passiveArmorClass,
         baseAfterFixed: base,
-        armorLayerCA: base,
+        armorLayerCA,
         dex,
         dexIgnored: ignoreDex,
         shieldBonus,
@@ -443,10 +472,10 @@ export function installEffectsEngineDefense(Engine) {
         objectSources,
         caNaturel: Number(naturalResolution.total),
         caTotal: Number(totalResolution.total),
-        syntheticArmorAC: Number(totalResolution.total),
+        syntheticArmorAC: armorLayerCA - objectProtectionBonus,
         naturalResolution,
         totalResolution,
-        conditionalFixed,
+        conditionalFixed: transformation ? null : conditionalFixed,
         context,
         version: ADD2E_ARMOR_CLASS_RESOLVER_VERSION
       };
