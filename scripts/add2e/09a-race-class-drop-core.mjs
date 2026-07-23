@@ -5,7 +5,7 @@
 
 import { levelForClassXp } from "./17b-multiclass-rules.mjs";
 
-export const ADD2E_RACE_CLASS_DROP_VERSION = "2026-07-23-definitive-racial-abilities-v2";
+export const ADD2E_RACE_CLASS_DROP_VERSION = "2026-07-23-definitive-racial-abilities-v3-natural-scores";
 globalThis.ADD2E_RACE_CLASS_DROP_VERSION = ADD2E_RACE_CLASS_DROP_VERSION;
 
 export const CARACS = ["force", "dexterite", "constitution", "intelligence", "sagesse", "charisme"];
@@ -104,10 +104,24 @@ export function add2eDropNumber(value, fallback = 0) {
   return Number.isFinite(number) ? number : fallback;
 }
 
+function add2eCaracRegistry(value) {
+  const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  return Object.fromEntries(CARACS.map(carac => [carac, add2eDropNumber(source[carac], 0)]));
+}
+
 function add2eCanonicalRacialAdjustments(actor) {
-  const raw = actor?.flags?.add2e?.racialAbilityAdjustments;
-  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
-  return Object.fromEntries(CARACS.map(carac => [carac, add2eDropNumber(raw[carac], 0)]));
+  return add2eCaracRegistry(actor?.flags?.add2e?.racialAbilityAdjustments);
+}
+
+function add2eStoredNaturalCaracs(actor) {
+  const raw = actor?.flags?.add2e?.base_caracs;
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  return Object.fromEntries(CARACS.map(carac => [carac, add2eDropNumber(raw[carac], 10)]));
+}
+
+function add2eRaceItemRawAdjustments(actor) {
+  const race = actor?.items?.find?.(item => String(item?.type ?? "").toLowerCase() === "race") ?? null;
+  return race ? add2eCaracRegistry(race.system?.bonus_caracteristiques) : null;
 }
 
 function add2eLegacyRacialAdjustments(actor) {
@@ -129,9 +143,11 @@ function add2eRacialLegacyDeletionUpdate() {
 }
 
 export function add2eActorBaseCaracForRaceDrop(actor, carac) {
+  const stored = add2eStoredNaturalCaracs(actor);
+  if (stored) return add2eDropNumber(stored[carac], 10);
   const definitive = add2eDropNumber(actor?.system?.[`${carac}_base`] ?? actor?.system?.[carac], 10);
-  const appliedRacial = add2eDropNumber(add2eCanonicalRacialAdjustments(actor)?.[carac], 0);
-  return definitive - appliedRacial;
+  const previousAdjustment = add2eDropNumber(add2eCanonicalRacialAdjustments(actor)[carac], 0);
+  return definitive - previousAdjustment;
 }
 
 export function add2eClampRaceBonusForBase(base, bonus) {
@@ -143,12 +159,12 @@ export function add2eClampRaceBonusForBase(base, bonus) {
 }
 
 export function add2eClampRaceBonusesForExistingBases(actor, rawBonuses = {}, context = {}) {
-  const source = rawBonuses && typeof rawBonuses === "object" ? rawBonuses : {};
+  const source = add2eCaracRegistry(rawBonuses);
   const output = {};
   const report = [];
   for (const carac of CARACS) {
     const base = add2eActorBaseCaracForRaceDrop(actor, carac);
-    const raw = add2eDropNumber(source?.[carac], 0);
+    const raw = source[carac];
     const applied = add2eClampRaceBonusForBase(base, raw);
     output[carac] = applied;
     if (raw || applied) report.push({ carac, base, rawBonus: raw, appliedBonus: applied, total: base + applied, changed: raw !== applied });
@@ -164,41 +180,62 @@ export function add2eRaceAdjustedCaracTotal(actor, carac, rawBonuses = {}) {
 
 async function add2eMigrateActorRacialAbilityAdjustments(actor) {
   if (!actor?.system || actor.type !== "personnage") return false;
-  const canonical = add2eCanonicalRacialAdjustments(actor);
-  const hasCanonical = CARACS.some(carac => Object.prototype.hasOwnProperty.call(actor.flags?.add2e?.racialAbilityAdjustments ?? {}, carac));
+
+  const existingFlag = actor?.flags?.add2e?.racialAbilityAdjustments;
+  const hasCanonical = existingFlag && typeof existingFlag === "object" && !Array.isArray(existingFlag);
+  const storedNatural = add2eStoredNaturalCaracs(actor);
+  const previousAdjustments = add2eCanonicalRacialAdjustments(actor);
+  const raceItemAdjustments = add2eRaceItemRawAdjustments(actor);
+  const hasLegacyFields = actor.system?.bonus_caracteristiques !== undefined
+    || CARACS.some(carac => actor.system?.[`${carac}_race`] !== undefined);
+
   if (hasCanonical) {
-    const hasLegacy = actor.system?.bonus_caracteristiques !== undefined
-      || CARACS.some(carac => actor.system?.[`${carac}_race`] !== undefined);
-    if (hasLegacy) {
-      await actor.update(add2eRacialLegacyDeletionUpdate(), {
-        add2eInternal: true,
-        add2eReason: "racial-ability-remove-legacy-fields"
-      });
+    const natural = storedNatural ?? Object.fromEntries(CARACS.map(carac => {
+      const definitive = add2eDropNumber(actor.system?.[`${carac}_base`] ?? actor.system?.[carac], 10);
+      return [carac, definitive - previousAdjustments[carac]];
+    }));
+    const rawAdjustments = raceItemAdjustments ?? previousAdjustments;
+    const update = {};
+    if (!storedNatural) update["flags.add2e.base_caracs"] = natural;
+    if (JSON.stringify(rawAdjustments) !== JSON.stringify(previousAdjustments)) {
+      update["flags.add2e.racialAbilityAdjustments"] = rawAdjustments;
+      for (const carac of CARACS) {
+        update[`system.${carac}_base`] = natural[carac] + add2eClampRaceBonusForBase(natural[carac], rawAdjustments[carac]);
+      }
     }
-    return false;
+    if (hasLegacyFields) Object.assign(update, add2eRacialLegacyDeletionUpdate());
+    if (!Object.keys(update).length) return false;
+    await actor.update(update, {
+      add2eInternal: true,
+      add2eReason: "racial-ability-canonical-migration"
+    });
+    if (typeof actor.sheet?.autoSetCaracAjustements === "function") await actor.sheet.autoSetCaracAjustements();
+    return true;
   }
 
   const legacy = add2eLegacyRacialAdjustments(actor);
-  const hasLegacyValue = CARACS.some(carac => add2eDropNumber(legacy[carac], 0) !== 0);
-  const hasLegacyField = actor.system?.bonus_caracteristiques !== undefined
-    || CARACS.some(carac => actor.system?.[`${carac}_race`] !== undefined);
-  if (!hasLegacyValue && !hasLegacyField) return false;
+  const rawAdjustments = raceItemAdjustments ?? legacy;
+  const hasAdjustment = CARACS.some(carac => add2eDropNumber(rawAdjustments[carac], 0) !== 0);
+  if (!hasAdjustment && !hasLegacyFields) return false;
 
-  const applied = {};
-  const update = add2eRacialLegacyDeletionUpdate();
-  for (const carac of CARACS) {
-    const base = add2eDropNumber(actor.system?.[`${carac}_base`] ?? actor.system?.[carac], 10);
-    const adjustment = add2eClampRaceBonusForBase(base, legacy[carac]);
-    applied[carac] = adjustment;
-    update[`system.${carac}_base`] = base + adjustment;
-  }
-  update["flags.add2e.racialAbilityAdjustments"] = applied;
-  update["flags.add2e.racialAbilitySource"] = {
-    kind: "race",
-    id: String(actor.items?.find?.(item => String(item.type ?? "").toLowerCase() === "race")?.id ?? "legacy-race"),
-    uuid: String(actor.items?.find?.(item => String(item.type ?? "").toLowerCase() === "race")?.uuid ?? ""),
-    name: String(actor.system?.race ?? actor.system?.details_race?.name ?? "Race")
+  const natural = Object.fromEntries(CARACS.map(carac => [
+    carac,
+    add2eDropNumber(actor.system?.[`${carac}_base`] ?? actor.system?.[carac], 10)
+  ]));
+  const update = {
+    ...add2eRacialLegacyDeletionUpdate(),
+    "flags.add2e.base_caracs": natural,
+    "flags.add2e.racialAbilityAdjustments": rawAdjustments,
+    "flags.add2e.racialAbilitySource": {
+      kind: "race",
+      id: String(actor.items?.find?.(item => String(item.type ?? "").toLowerCase() === "race")?.id ?? "legacy-race"),
+      uuid: String(actor.items?.find?.(item => String(item.type ?? "").toLowerCase() === "race")?.uuid ?? ""),
+      name: String(actor.system?.race ?? actor.system?.details_race?.name ?? "Race")
+    }
   };
+  for (const carac of CARACS) {
+    update[`system.${carac}_base`] = natural[carac] + add2eClampRaceBonusForBase(natural[carac], rawAdjustments[carac]);
+  }
   await actor.update(update, {
     add2eInternal: true,
     add2eReason: "racial-ability-definitive-migration"
@@ -288,12 +325,13 @@ export async function add2eApplyRaceItemDataToActor(actor, raceData, sheet = nul
   }
 
   const raceSystem = add2eDropClone(raceDoc.system ?? {}) ?? {};
-  const bonuses = {};
+  const rawBonuses = add2eCaracRegistry(raceSystem.bonus_caracteristiques);
+  const appliedBonuses = {};
   const report = [];
   for (const carac of CARACS) {
-    const raw = add2eDropNumber(raceSystem.bonus_caracteristiques?.[carac], 0);
+    const raw = rawBonuses[carac];
     const applied = add2eClampRaceBonusForBase(naturalBases[carac], raw);
-    bonuses[carac] = applied;
+    appliedBonuses[carac] = applied;
     if (raw || applied) report.push({ carac, base: naturalBases[carac], rawBonus: raw, appliedBonus: applied, total: naturalBases[carac] + applied, changed: raw !== applied });
   }
   add2eDropDebugRaceClass("RACIAL_BONUS_APPLY", { actor: actor.name, race: raceDoc.name, report });
@@ -301,11 +339,12 @@ export async function add2eApplyRaceItemDataToActor(actor, raceData, sheet = nul
   const update = {
     ...add2eRacialLegacyDeletionUpdate(),
     "system.race": raceDoc.name,
-    "system.details_race": { ...raceSystem, bonus_caracteristiques: bonuses, name: raceDoc.name, label: raceSystem.label || raceDoc.name, img: raceDoc.img || raceSystem.img || "" },
-    "flags.add2e.racialAbilityAdjustments": bonuses,
+    "system.details_race": { ...raceSystem, bonus_caracteristiques: rawBonuses, name: raceDoc.name, label: raceSystem.label || raceDoc.name, img: raceDoc.img || raceSystem.img || "" },
+    "flags.add2e.base_caracs": naturalBases,
+    "flags.add2e.racialAbilityAdjustments": rawBonuses,
     "flags.add2e.racialAbilitySource": { kind: "race", id: raceDoc.id, uuid: raceDoc.uuid, name: raceDoc.name }
   };
-  for (const carac of CARACS) update[`system.${carac}_base`] = naturalBases[carac] + bonuses[carac];
+  for (const carac of CARACS) update[`system.${carac}_base`] = naturalBases[carac] + appliedBonuses[carac];
   await actor.update(update, { add2eInternal: true, add2eReason: "racial-ability-definitive-apply" });
 
   if (typeof sheet?.autoSetCaracAjustements === "function") await sheet.autoSetCaracAjustements();
