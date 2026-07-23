@@ -4,22 +4,15 @@
           <span>Sauv.</span>
         </div>
       <div class="a2e-save-square-grid">
-        {{#each saveShortLabels as |saveLabel idx|}}
-          <div class="a2e-save-square a2e-save-square-{{idx}}">
-            {{#if (eq idx 0)}}<i class="fas fa-skull-crossbones roll-save" data-save="{{idx}}" title="{{lookup ../saveTitles idx}}"></i>{{/if}}
-            {{#if (eq idx 1)}}<i class="fas fa-gem roll-save" data-save="{{idx}}" title="{{lookup ../saveTitles idx}}"></i>{{/if}}
-            {{#if (eq idx 2)}}<i class="fas fa-magic roll-save" data-save="{{idx}}" title="{{lookup ../saveTitles idx}}"></i>{{/if}}
-            {{#if (eq idx 3)}}<i class="fas fa-fire roll-save" data-save="{{idx}}" title="{{lookup ../saveTitles idx}}"></i>{{/if}}
-            {{#if (eq idx 4)}}<i class="fas fa-scroll roll-save" data-save="{{idx}}" title="{{lookup ../saveTitles idx}}"></i>{{/if}}
+        {{#each saveRows as |save|}}
+          <div class="a2e-save-square a2e-save-square-{{save.index}}" data-save-key="{{save.key}}">
+            <i class="{{save.icon}} roll-save" data-save="{{save.index}}" title="{{save.title}}"></i>
             <div class="a2e-save-square-label">
-              {{#if (eq idx 0)}}Paralysie / poison / mort magique{{/if}}
-              {{#if (eq idx 1)}}Pétrification / polymorphose{{/if}}
-              {{#if (eq idx 2)}}Baguettes et badines{{/if}}
-              {{#if (eq idx 3)}}Souffles{{/if}}
-              {{#if (eq idx 4)}}Sortilèges{{/if}}
+              {{save.label}}
             </div>
-            <div class="a2e-save-square-value">
-              {{add2eBestSave ../actor idx ../progressionCourante}}
+            <div class="a2e-save-square-value" title="{{save.title}}">
+              <span>{{save.targetDisplay}}</span>
+              {{#if save.hasBonus}}<small>({{save.bonusDisplay}})</small>{{/if}}
             </div>
           </div>
         {{/each}}
