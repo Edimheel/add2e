@@ -1,171 +1,316 @@
 // scripts/add2e/item-sheet-registration.mjs
 // ADD2E — Enregistrement strict des fiches d'items spécialisées.
-// Version : 2026-07-23-magic-power-sheet-editor-v1
+// Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2.
+// Version : 2026-07-23-magic-item-data-normalizer-v2
 
 import { Add2eItemSheet } from "../add2e-item-sheet.mjs";
 globalThis.Add2eItemSheet = Add2eItemSheet;
 
 const POWER_FIELDS = ["pouvoirs", "powers", "pouvoirsMagiques", "magicalPowers"];
+const MAGIC_ITEM_TYPES = new Set(["arme", "armure", "objet"]);
 const EDITOR_VERSION = "2026-07-23-magic-power-sheet-editor-v1";
+const NORMALIZER_VERSION = "2026-07-23-magic-item-data-normalizer-v2";
 
 function add2eItemsCollection() { return foundry?.documents?.collections?.Items ?? globalThis.Items; }
 function add2eItemDocumentClass() { return foundry?.documents?.Item ?? globalThis.Item; }
 function clone(value) { try { return foundry.utils.deepClone(value); } catch (_e) { try { return structuredClone(value); } catch (_e2) { return JSON.parse(JSON.stringify(value)); } } }
-function esc(value) { return String(value ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;"); }
-function norm(value) { return String(value ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[’']/g,"").replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,""); }
-function list(value) { if (value == null || value === "") return []; if (Array.isArray(value)) return value.flatMap(list); if (value instanceof Set) return [...value].flatMap(list); if (typeof value === "string") return value.split(/[,;|\n]+/g).map(v=>v.trim()).filter(Boolean); if (typeof value === "object") return Object.values(value).flatMap(list); return [value]; }
-function format(value) { if (value == null || value === "") return "—"; if (typeof value !== "object") return String(value); try { return JSON.stringify(value,null,2); } catch (_e) { return String(value); } }
+function esc(value) { return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
+function norm(value) { return String(value ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "").replace(/[^a-z0-9:+*_.-]+/g, "_").replace(/_+/g, "_").replace(/^_+|_+$/g, ""); }
+function list(value) {
+  if (value == null || value === "") return [];
+  if (Array.isArray(value)) return value.flatMap(list);
+  if (value instanceof Set) return [...value].flatMap(list);
+  if (typeof value === "string") return value.split(/[,;|\n]+/g).map(entry => entry.trim()).filter(Boolean);
+  if (typeof value === "object") {
+    for (const key of ["value", "values", "list", "lists", "items", "entries", "tags", "effectTags", "targets", "types"]) {
+      if (value[key] !== undefined && value[key] !== null) return list(value[key]);
+    }
+    return Object.values(value).flatMap(list);
+  }
+  return [value];
+}
+function format(value) { if (value == null || value === "") return "—"; if (typeof value !== "object") return String(value); try { return JSON.stringify(value, null, 2); } catch (_e) { return String(value); } }
+function number(value, fallback = 0) { if (value == null || value === "") return fallback; const result = Number(String(value).replace(",", ".")); return Number.isFinite(result) ? result : fallback; }
+function optionalNumber(value) { if (value == null || value === "") return null; const result = Number(String(value).replace(",", ".")); return Number.isFinite(result) ? result : null; }
+function signed(value) { const result = number(value, 0); return `${result >= 0 ? "+" : ""}${result}`; }
+function getProperty(object, path) { try { return foundry.utils.getProperty(object, path); } catch (_e) { return String(path).split(".").reduce((current, key) => current?.[key], object); } }
+function setProperty(object, path, value) {
+  try { return foundry.utils.setProperty(object, path, clone(value)); }
+  catch (_e) {
+    const parts = String(path).split(".");
+    let current = object;
+    while (parts.length > 1) { const key = parts.shift(); current[key] ??= {}; current = current[key]; }
+    current[parts[0]] = clone(value);
+    return true;
+  }
+}
+function merge(base, update) { try { return foundry.utils.mergeObject(clone(base ?? {}), clone(update ?? {}), { inplace: false, insertKeys: true, overwrite: true, recursive: true }); } catch (_e) { return { ...(base ?? {}), ...(update ?? {}) }; } }
+function expand(value) {
+  try { return foundry.utils.expandObject(clone(value ?? {})); }
+  catch (_e) {
+    const result = {};
+    for (const [path, entry] of Object.entries(value ?? {})) path.includes(".") ? setProperty(result, path, entry) : (result[path] = clone(entry));
+    return result;
+  }
+}
+function flattenedPaths(value) { const result = new Set(Object.keys(value ?? {})); try { for (const path of Object.keys(foundry.utils.flattenObject(value ?? {}))) result.add(path); } catch (_e) {} return [...result]; }
+function mergeUnique(...values) {
+  const seen = new Set();
+  const result = [];
+  for (const raw of values) for (const value of list(raw)) {
+    const text = String(value ?? "").trim();
+    const key = text.toLowerCase();
+    if (!text || seen.has(key)) continue;
+    seen.add(key);
+    result.push(text);
+  }
+  return result;
+}
 
-function defaultActorTokenLink(actor, data={}) {
-  const type=String(actor?.type ?? data?.type ?? "").trim().toLowerCase();
+function defaultActorTokenLink(actor, data = {}) {
+  const type = String(actor?.type ?? data?.type ?? "").trim().toLowerCase();
   if (type === "personnage") return true;
-  if (["monstre","monster"].includes(type)) return false;
+  if (["monstre", "monster"].includes(type)) return false;
   return null;
 }
-function defaultCharacterSightRange() {
-  const distance=Number(canvas?.scene?.grid?.distance ?? game?.scenes?.active?.grid?.distance ?? 1);
-  return Number.isFinite(distance) && distance > 0 ? distance*5 : 5;
-}
+function defaultCharacterSightRange() { const distance = Number(canvas?.scene?.grid?.distance ?? game?.scenes?.active?.grid?.distance ?? 1); return Number.isFinite(distance) && distance > 0 ? distance * 5 : 5; }
 
 function powerStore(item) {
-  const system=item?.system ?? {};
-  let fallback=null;
+  const system = item?.system ?? {};
+  let fallback = null;
   for (const field of POWER_FIELDS) {
-    const raw=system[field];
-    let store=null;
-    if (Array.isArray(raw)) store={path:`system.${field}`,entries:raw,keys:raw.map((_v,i)=>i),object:false};
-    else if (raw && typeof raw === "object") { const keys=Object.keys(raw); store={path:`system.${field}`,entries:keys.map(k=>raw[k]),keys,object:true,raw}; }
+    const raw = system[field];
+    let store = null;
+    if (Array.isArray(raw)) store = { path: `system.${field}`, entries: raw, keys: raw.map((_value, index) => index), object: false };
+    else if (raw && typeof raw === "object") { const keys = Object.keys(raw); store = { path: `system.${field}`, entries: keys.map(key => raw[key]), keys, object: true, raw }; }
     if (!store) continue;
     if (store.entries.length) return store;
     fallback ??= store;
   }
-  return fallback ?? {path:"system.pouvoirs",entries:[],keys:[],object:false};
+  return fallback ?? { path: "system.pouvoirs", entries: [], keys: [], object: false };
+}
+function rawPowers(system = {}) {
+  for (const field of POWER_FIELDS) {
+    const raw = system[field];
+    if (Array.isArray(raw)) return raw.filter(entry => entry && typeof entry === "object");
+    if (raw && typeof raw === "object") return Object.values(raw).filter(entry => entry && typeof entry === "object");
+  }
+  return [];
 }
 
-const CATEGORY_LABELS={attribute:"Caractéristiques",charges:"Charges",combat:"Combat",consumable:"Consommable",control:"Contrôle",curse:"Malédiction",defense:"Défense",destruction:"Destruction",detection:"Détection",environment:"Environnement",healing:"Guérison",holy:"Sacré",illusion:"Illusion",immunity:"Immunité",light:"Lumière",movement:"Déplacement",negation:"Négation",poison:"Poison",protection:"Protection",random:"Aléatoire",ranged:"Distance",resistance:"Résistance",restriction:"Restriction",scroll:"Parchemin",social:"Social",spell:"Sort",summoning:"Invocation",survival:"Survie",transformation:"Transformation"};
+const CATEGORY_LABELS = { attribute: "Caractéristiques", charges: "Charges", combat: "Combat", consumable: "Consommable", control: "Contrôle", curse: "Malédiction", defense: "Défense", destruction: "Destruction", detection: "Détection", environment: "Environnement", healing: "Guérison", holy: "Sacré", illusion: "Illusion", immunity: "Immunité", light: "Lumière", movement: "Déplacement", negation: "Négation", poison: "Poison", protection: "Protection", random: "Aléatoire", ranged: "Distance", resistance: "Résistance", restriction: "Restriction", scroll: "Parchemin", social: "Social", spell: "Sort", summoning: "Invocation", survival: "Survie", transformation: "Transformation" };
 function categoryLabel(value) { return CATEGORY_LABELS[norm(value)] ?? String(value ?? "Autre"); }
-function automationLabel(value) { return ({automatic:"Automatique",assisted:"Assisté par le MD",manual:"Manuel",chat_card:"Carte de chat"})[norm(value)] ?? String(value ?? "—"); }
-function activationLabel(value) { if (!value) return "—"; if (typeof value === "string") return value; return [value.type,value.trigger].map(v=>String(v ?? "").trim()).filter(Boolean).join(" — ") || "—"; }
+function automationLabel(value) { return ({ automatic: "Automatique", assisted: "Assisté par le MD", manual: "Manuel", chat_card: "Carte de chat" })[norm(value)] ?? String(value ?? "—"); }
+function activationLabel(value) { if (!value) return "—"; if (typeof value === "string") return value; return [value.type, value.trigger].map(entry => String(entry ?? "").trim()).filter(Boolean).join(" — ") || "—"; }
 
 function sheetPowers(item) {
-  return powerStore(item).entries.map((power,index)=>({power,index})).filter(e=>e.power && typeof e.power === "object").map(({power,index})=>{
-    const parameters=power.parameters && typeof power.parameters === "object" ? power.parameters : {};
-    const effects=Array.isArray(power.effects) ? power.effects : power.effects && typeof power.effects === "object" ? Object.values(power.effects) : [];
-    const section=String(power.source?.section ?? "").trim();
-    const page=String(power.source?.page ?? "").trim();
-    return {...power,
-      _add2eIndex:index,
-      _add2eName:String(power.name ?? power.nom ?? power.label ?? `Pouvoir ${index+1}`).trim(),
-      _add2eCost:Math.max(0,Number(power.cout ?? power.cost ?? power.chargeCost ?? 0)||0),
-      _add2eKindLabel:power.catalogueId || power.kind === "catalogue" ? "Catalogue canonique" : "Sort lié",
-      _add2eCategoryLabel:categoryLabel(power.category),
-      _add2eAutomationLabel:automationLabel(power.automation),
-      _add2eActivationLabel:activationLabel(power.activation),
-      _add2eHasParameters:Object.keys(parameters).length>0,
-      _add2eParametersJson:format(parameters),
-      _add2eHasEffects:effects.length>0,
-      _add2eEffectsJson:format(effects),
-      _add2eSourceLabel:[section,page?`page ${page}`:""].filter(Boolean).join(", ")||"—"
-    };
+  return powerStore(item).entries.map((power, index) => ({ power, index })).filter(entry => entry.power && typeof entry.power === "object").map(({ power, index }) => {
+    const parameters = power.parameters && typeof power.parameters === "object" ? power.parameters : {};
+    const effects = Array.isArray(power.effects) ? power.effects : power.effects && typeof power.effects === "object" ? Object.values(power.effects) : [];
+    const section = String(power.source?.section ?? "").trim();
+    const page = String(power.source?.page ?? "").trim();
+    return { ...power, _add2eIndex: index, _add2eName: String(power.name ?? power.nom ?? power.label ?? `Pouvoir ${index + 1}`).trim(), _add2eCost: Math.max(0, Number(power.cout ?? power.cost ?? power.chargeCost ?? 0) || 0), _add2eKindLabel: power.catalogueId || power.kind === "catalogue" ? "Catalogue canonique" : "Sort lié", _add2eCategoryLabel: categoryLabel(power.category), _add2eAutomationLabel: automationLabel(power.automation), _add2eActivationLabel: activationLabel(power.activation), _add2eHasParameters: Object.keys(parameters).length > 0, _add2eParametersJson: format(parameters), _add2eHasEffects: effects.length > 0, _add2eEffectsJson: format(effects), _add2eSourceLabel: [section, page ? `page ${page}` : ""].filter(Boolean).join(", ") || "—" };
   });
 }
 
 async function resolveItem(uuid) {
-  const value=String(uuid ?? "").trim();
+  const value = String(uuid ?? "").trim();
   if (!value) return null;
-  try { const doc=await fromUuid?.(value); if (doc?.documentName === "Item") return doc; } catch (_e) {}
-  const id=value.split(".").at(-1);
-  return game.items?.get?.(id) ?? game.actors?.contents?.flatMap(a=>a.items?.contents ?? []).find(i=>i.id===id) ?? null;
+  try { const document = await fromUuid?.(value); if (document?.documentName === "Item") return document; } catch (_e) {}
+  const id = value.split(".").at(-1);
+  return game.items?.get?.(id) ?? game.actors?.contents?.flatMap(actor => actor.items?.contents ?? []).find(item => item.id === id) ?? null;
 }
-function initial(schema,current) { if (current !== undefined) return current; if (schema.default !== undefined) return clone(schema.default); if (schema.value !== undefined) return clone(schema.value); return undefined; }
-
-function control(name,schema={},current) {
-  const type=norm(schema.type), value=initial(schema,current), required=schema.required===true?' <span style="color:#a40000">*</span>':"", label=`${esc(name)}${required}`, common=`name="${esc(name)}" data-add2e-parameter-type="${esc(type)}"`;
-  if (type === "boolean") return `<label class="form-group" style="display:flex;align-items:center;gap:8px"><input ${common} type="checkbox" ${value===true?"checked":""}> <span>${label}</span></label>`;
-  if (["fixed","fixed_list"].includes(type)) { const fixed=schema.value!==undefined?schema.value:value; return `<div class="form-group"><label>${label}</label><input ${common} type="hidden" value="${esc(format(fixed))}"><div>${esc(format(fixed))}</div></div>`; }
-  if (type === "choice" && Array.isArray(schema.values)) return `<div class="form-group"><label>${label}</label><select ${common}>${schema.values.map(v=>`<option value="${esc(v)}"${String(v)===String(value)?" selected":""}>${esc(v)}</option>`).join("")}</select></div>`;
-  if (type === "choice_list" && Array.isArray(schema.values)) { const selected=new Set(list(value).map(String)); return `<div class="form-group"><label>${label}</label><select ${common} multiple size="${Math.min(7,Math.max(3,schema.values.length))}">${schema.values.map(v=>`<option value="${esc(v)}"${selected.has(String(v))?" selected":""}>${esc(v)}</option>`).join("")}</select></div>`; }
-  if (["integer","number","percentage","percentage_per_use"].includes(type)) return `<div class="form-group"><label>${label}</label><input ${common} type="number" step="${type==="integer"?"1":"any"}" value="${esc(value ?? "")}"></div>`;
-  if (["object","effect_list","effect_table","spell_list","form_list","save_rule","percentage_or_save","percentage_or_table","number_or_table","weight_or_table","formula_or_table"].includes(type)) return `<div class="form-group"><label>${label}</label><textarea ${common} rows="4">${esc(value===undefined?"":format(value))}</textarea></div>`;
-  if (["tag_list","string_list","integer_list"].includes(type)) return `<div class="form-group"><label>${label}</label><input ${common} type="text" value="${esc(list(value).join(", "))}"></div>`;
-  return `<div class="form-group"><label>${label}</label><input ${common} type="text" value="${esc(value===undefined?"":format(value))}"></div>`;
+function initial(schema, current) { if (current !== undefined) return current; if (schema.default !== undefined) return clone(schema.default); if (schema.value !== undefined) return clone(schema.value); return undefined; }
+function control(name, schema = {}, current) {
+  const type = norm(schema.type), value = initial(schema, current), required = schema.required === true ? ' <span style="color:#a40000">*</span>' : "", label = `${esc(name)}${required}`, common = `name="${esc(name)}" data-add2e-parameter-type="${esc(type)}"`;
+  if (type === "boolean") return `<label class="form-group" style="display:flex;align-items:center;gap:8px"><input ${common} type="checkbox" ${value === true ? "checked" : ""}> <span>${label}</span></label>`;
+  if (["fixed", "fixed_list"].includes(type)) { const fixed = schema.value !== undefined ? schema.value : value; return `<div class="form-group"><label>${label}</label><input ${common} type="hidden" value="${esc(format(fixed))}"><div>${esc(format(fixed))}</div></div>`; }
+  if (type === "choice" && Array.isArray(schema.values)) return `<div class="form-group"><label>${label}</label><select ${common}>${schema.values.map(entry => `<option value="${esc(entry)}"${String(entry) === String(value) ? " selected" : ""}>${esc(entry)}</option>`).join("")}</select></div>`;
+  if (type === "choice_list" && Array.isArray(schema.values)) { const selected = new Set(list(value).map(String)); return `<div class="form-group"><label>${label}</label><select ${common} multiple size="${Math.min(7, Math.max(3, schema.values.length))}">${schema.values.map(entry => `<option value="${esc(entry)}"${selected.has(String(entry)) ? " selected" : ""}>${esc(entry)}</option>`).join("")}</select></div>`; }
+  if (["integer", "number", "percentage", "percentage_per_use"].includes(type)) return `<div class="form-group"><label>${label}</label><input ${common} type="number" step="${type === "integer" ? "1" : "any"}" value="${esc(value ?? "")}"></div>`;
+  if (["object", "effect_list", "effect_table", "spell_list", "form_list", "save_rule", "percentage_or_save", "percentage_or_table", "number_or_table", "weight_or_table", "formula_or_table"].includes(type)) return `<div class="form-group"><label>${label}</label><textarea ${common} rows="4">${esc(value === undefined ? "" : format(value))}</textarea></div>`;
+  if (["tag_list", "string_list", "integer_list"].includes(type)) return `<div class="form-group"><label>${label}</label><input ${common} type="text" value="${esc(list(value).join(", "))}"></div>`;
+  return `<div class="form-group"><label>${label}</label><input ${common} type="text" value="${esc(value === undefined ? "" : format(value))}"></div>`;
 }
-
-function read(input,schema={}) {
-  const type=norm(schema.type);
-  if (type === "boolean") return input.checked===true;
-  if (type === "choice_list") return [...input.selectedOptions].map(o=>o.value);
-  if (["fixed","fixed_list"].includes(type)) return clone(schema.value);
-  const raw=String(input.value ?? "").trim(); if (!raw) return undefined;
-  if (["integer","number","percentage","percentage_per_use"].includes(type)) { const n=Number(raw.replace(",",".")); return Number.isFinite(n)?n:undefined; }
-  if (["tag_list","string_list"].includes(type)) return list(raw).map(String);
+function read(input, schema = {}) {
+  const type = norm(schema.type);
+  if (type === "boolean") return input.checked === true;
+  if (type === "choice_list") return [...input.selectedOptions].map(option => option.value);
+  if (["fixed", "fixed_list"].includes(type)) return clone(schema.value);
+  const raw = String(input.value ?? "").trim(); if (!raw) return undefined;
+  if (["integer", "number", "percentage", "percentage_per_use"].includes(type)) { const value = Number(raw.replace(",", ".")); return Number.isFinite(value) ? value : undefined; }
+  if (["tag_list", "string_list"].includes(type)) return list(raw).map(String);
   if (type === "integer_list") return list(raw).map(Number).filter(Number.isFinite);
-  if (["formula_or_integer","integer_or_null","number_or_formula","number_or_distance"].includes(type)) { const n=Number(raw.replace(",",".")); return Number.isFinite(n)?n:raw; }
-  if (["object","effect_list","effect_table","spell_list","form_list","save_rule","percentage_or_save","percentage_or_table","number_or_table","weight_or_table","formula_or_table"].includes(type)) { try { return JSON.parse(raw); } catch (_e) { return raw; } }
+  if (["formula_or_integer", "integer_or_null", "number_or_formula", "number_or_distance"].includes(type)) { const value = Number(raw.replace(",", ".")); return Number.isFinite(value) ? value : raw; }
+  if (["object", "effect_list", "effect_table", "spell_list", "form_list", "save_rule", "percentage_or_save", "percentage_or_table", "number_or_table", "weight_or_table", "formula_or_table"].includes(type)) { try { return JSON.parse(raw); } catch (_e) { return raw; } }
   return raw;
 }
-function missingParameters(definition,parameters) {
-  const missing=Object.entries(definition.parameters ?? {}).filter(([name,schema])=>schema?.required===true && (parameters[name]===undefined || parameters[name]===null || parameters[name]==="" || (Array.isArray(parameters[name])&&!parameters[name].length))).map(([name])=>name);
-  const alternatives=list(definition.validation?.requiresOneOf);
-  if (alternatives.length && !alternatives.some(name=>parameters[name]!==undefined && parameters[name]!==null && parameters[name]!=="" && (!Array.isArray(parameters[name])||parameters[name].length))) missing.push(`un des paramètres suivants : ${alternatives.join(", ")}`);
+function missingParameters(definition, parameters) {
+  const missing = Object.entries(definition.parameters ?? {}).filter(([name, schema]) => schema?.required === true && (parameters[name] === undefined || parameters[name] === null || parameters[name] === "" || (Array.isArray(parameters[name]) && !parameters[name].length))).map(([name]) => name);
+  const alternatives = list(definition.validation?.requiresOneOf);
+  if (alternatives.length && !alternatives.some(name => parameters[name] !== undefined && parameters[name] !== null && parameters[name] !== "" && (!Array.isArray(parameters[name]) || parameters[name].length))) missing.push(`un des paramètres suivants : ${alternatives.join(", ")}`);
   return missing;
 }
-function resolveTemplates(value,parameters) {
-  if (Array.isArray(value)) return value.map(v=>resolveTemplates(v,parameters));
-  if (value && typeof value === "object") return Object.fromEntries(Object.entries(value).map(([k,v])=>[k,resolveTemplates(v,parameters)]));
+function resolveTemplates(value, parameters) {
+  if (Array.isArray(value)) return value.map(entry => resolveTemplates(entry, parameters));
+  if (value && typeof value === "object") return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, resolveTemplates(entry, parameters)]));
   if (typeof value !== "string") return clone(value);
-  const exact=value.match(/^@([A-Za-z0-9_]+)$/); if (exact && Object.hasOwn(parameters,exact[1])) return clone(parameters[exact[1]]);
-  return value.replace(/@([A-Za-z0-9_]+)/g,(match,key)=>Object.hasOwn(parameters,key)?(typeof parameters[key]==="object"?JSON.stringify(parameters[key]):String(parameters[key])):match);
+  const exact = value.match(/^@([A-Za-z0-9_]+)$/); if (exact && Object.hasOwn(parameters, exact[1])) return clone(parameters[exact[1]]);
+  return value.replace(/@([A-Za-z0-9_]+)/g, (match, key) => Object.hasOwn(parameters, key) ? (typeof parameters[key] === "object" ? JSON.stringify(parameters[key]) : String(parameters[key])) : match);
 }
 
-async function editCanonical(definition,current={}) {
-  const DialogV2=foundry?.applications?.api?.DialogV2; if (!DialogV2?.wait) return ui.notifications.error("DialogV2 est introuvable."),null;
-  const entries=Object.entries(definition.parameters ?? {}), controls=entries.length?entries.map(([name,schema])=>control(name,schema,current[name])).join(""):'<p><em>Ce pouvoir ne possède aucun paramètre modifiable.</em></p>';
-  const result=await DialogV2.wait({window:{title:`Modifier — ${definition.label}`},modal:true,rejectClose:false,content:`<div class="add2e-dialog add2e-magic-power-parameter-form" style="min-width:560px;padding:10px;display:grid;gap:8px"><strong>${esc(definition.label)}</strong>${controls}</div>`,buttons:[{action:"save",label:"Enregistrer",icon:"fa-solid fa-check",default:true,callback:(_e,button,dialog)=>{const root=button?.form ?? dialog?.element,parameters={};for(const [name,schema] of entries){const input=root?.querySelector?.(`[name="${CSS.escape(name)}"]`);if(!input)continue;const value=read(input,schema);if(value!==undefined)parameters[name]=value;}const missing=missingParameters(definition,parameters);if(missing.length){ui.notifications.warn(`Paramètres obligatoires manquants : ${missing.join(", ")}.`);return false;}return parameters;}},{action:"cancel",label:"Annuler",icon:"fa-solid fa-xmark",callback:()=>null}]});
+async function editCanonical(definition, current = {}) {
+  const DialogV2 = foundry?.applications?.api?.DialogV2; if (!DialogV2?.wait) return ui.notifications.error("DialogV2 est introuvable."), null;
+  const entries = Object.entries(definition.parameters ?? {}), controls = entries.length ? entries.map(([name, schema]) => control(name, schema, current[name])).join("") : "<p><em>Ce pouvoir ne possède aucun paramètre modifiable.</em></p>";
+  const result = await DialogV2.wait({ window: { title: `Modifier — ${definition.label}` }, modal: true, rejectClose: false, content: `<div class="add2e-dialog add2e-magic-power-parameter-form" style="min-width:560px;padding:10px;display:grid;gap:8px"><strong>${esc(definition.label)}</strong>${controls}</div>`, buttons: [{ action: "save", label: "Enregistrer", icon: "fa-solid fa-check", default: true, callback: (_event, button, dialog) => { const root = button?.form ?? dialog?.element, parameters = {}; for (const [name, schema] of entries) { const input = root?.querySelector?.(`[name="${CSS.escape(name)}"]`); if (!input) continue; const value = read(input, schema); if (value !== undefined) parameters[name] = value; } const missing = missingParameters(definition, parameters); if (missing.length) { ui.notifications.warn(`Paramètres obligatoires manquants : ${missing.join(", ")}.`); return false; } return parameters; } }, { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => null }] });
   return result && typeof result === "object" ? result : null;
 }
 async function editLegacy(power) {
-  const DialogV2=foundry?.applications?.api?.DialogV2; if (!DialogV2?.wait) return ui.notifications.error("DialogV2 est introuvable."),null;
-  const name=String(power.name ?? power.nom ?? power.label ?? "Pouvoir").trim()||"Pouvoir",description=String(power.description ?? power.desc ?? ""),cost=Math.max(0,Number(power.cout ?? power.cost ?? power.chargeCost ?? 0)||0);
-  return DialogV2.wait({window:{title:`Modifier — ${name}`},modal:true,rejectClose:false,content:`<div class="add2e-dialog" style="min-width:520px;padding:10px;display:grid;gap:8px"><label>Nom affiché<input name="name" value="${esc(name)}"></label><label>Coût en charges<input name="cost" type="number" min="0" step="1" value="${cost}"></label><label>Description<textarea name="description" rows="6">${esc(description)}</textarea></label><p>Le sort lié et son script d’exécution sont conservés.</p></div>`,buttons:[{action:"save",label:"Enregistrer",icon:"fa-solid fa-check",default:true,callback:(_e,button,dialog)=>{const root=button?.form ?? dialog?.element,nextName=String(root?.querySelector('[name="name"]')?.value ?? "").trim();if(!nextName){ui.notifications.warn("Le nom du pouvoir est obligatoire.");return false;}return {name:nextName,cost:Math.max(0,Math.trunc(Number(root?.querySelector('[name="cost"]')?.value ?? 0)||0)),description:String(root?.querySelector('[name="description"]')?.value ?? "")};}},{action:"cancel",label:"Annuler",icon:"fa-solid fa-xmark",callback:()=>null}]});
+  const DialogV2 = foundry?.applications?.api?.DialogV2; if (!DialogV2?.wait) return ui.notifications.error("DialogV2 est introuvable."), null;
+  const name = String(power.name ?? power.nom ?? power.label ?? "Pouvoir").trim() || "Pouvoir", description = String(power.description ?? power.desc ?? ""), cost = Math.max(0, Number(power.cout ?? power.cost ?? power.chargeCost ?? 0) || 0);
+  return DialogV2.wait({ window: { title: `Modifier — ${name}` }, modal: true, rejectClose: false, content: `<div class="add2e-dialog" style="min-width:520px;padding:10px;display:grid;gap:8px"><label>Nom affiché<input name="name" value="${esc(name)}"></label><label>Coût en charges<input name="cost" type="number" min="0" step="1" value="${cost}"></label><label>Description<textarea name="description" rows="6">${esc(description)}</textarea></label><p>Le sort lié et son script d’exécution sont conservés.</p></div>`, buttons: [{ action: "save", label: "Enregistrer", icon: "fa-solid fa-check", default: true, callback: (_event, button, dialog) => { const root = button?.form ?? dialog?.element, nextName = String(root?.querySelector('[name="name"]')?.value ?? "").trim(); if (!nextName) { ui.notifications.warn("Le nom du pouvoir est obligatoire."); return false; } return { name: nextName, cost: Math.max(0, Math.trunc(Number(root?.querySelector('[name="cost"]')?.value ?? 0) || 0)), description: String(root?.querySelector('[name="description"]')?.value ?? "") }; } }, { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => null }] });
 }
-async function storePower(item,store,index,power) {
-  if (store.object) { const next=clone(store.raw),key=store.keys[index]; if(key===undefined)return false; next[key]=power; await item.update({[store.path]:next},{add2eMagicItemBuilder:true,add2eMagicPowerSheetEditor:true}); }
-  else { const next=store.entries.map(clone); if(!next[index])return false; next[index]=power; await item.update({[store.path]:next},{add2eMagicItemBuilder:true,add2eMagicPowerSheetEditor:true}); }
+async function storePower(item, store, index, power) {
+  if (store.object) { const next = clone(store.raw), key = store.keys[index]; if (key === undefined) return false; next[key] = power; await item.update({ [store.path]: next }, { add2eMagicItemBuilder: true, add2eMagicPowerSheetEditor: true }); }
+  else { const next = store.entries.map(clone); if (!next[index]) return false; next[index] = power; await item.update({ [store.path]: next }, { add2eMagicItemBuilder: true, add2eMagicPowerSheetEditor: true }); }
   return true;
 }
-
-async function editPower(itemUuid,powerIndex) {
-  const item=await resolveItem(itemUuid); if(!item)return ui.notifications.error("L’objet magique est introuvable."),false; if(item.isOwner===false)return ui.notifications.warn("Tu ne peux pas modifier cet objet."),false;
-  const store=powerStore(item),index=Number(powerIndex),power=Number.isInteger(index)?store.entries[index]:null; if(!power || typeof power!=="object")return ui.notifications.error("Le pouvoir sélectionné est introuvable."),false;
+async function editPower(itemUuid, powerIndex) {
+  const item = await resolveItem(itemUuid); if (!item) return ui.notifications.error("L’objet magique est introuvable."), false; if (item.isOwner === false) return ui.notifications.warn("Tu ne peux pas modifier cet objet."), false;
+  const store = powerStore(item), index = Number(powerIndex), power = Number.isInteger(index) ? store.entries[index] : null; if (!power || typeof power !== "object") return ui.notifications.error("Le pouvoir sélectionné est introuvable."), false;
   let next;
   if (power.catalogueId) {
-    if(typeof globalThis.add2eLoadMagicPowerCatalogue!=="function")return ui.notifications.error("Le catalogue de pouvoirs est indisponible."),false;
-    const catalogue=await globalThis.add2eLoadMagicPowerCatalogue(),definition=catalogue?.powerById?.get?.(String(power.catalogueId)); if(!definition)return ui.notifications.error(`Pouvoir inconnu : ${power.catalogueId}.`),false;
-    const parameters=await editCanonical(definition,power.parameters ?? {}); if(parameters===null)return false;
-    next={...clone(power),schema:Number(power.schema ?? 2)||2,kind:"catalogue",catalogueId:definition.id,name:definition.label,label:definition.label,category:definition.category,automation:definition.automation,activation:clone(definition.activation ?? {}),parameters:clone(parameters),effects:resolveTemplates(definition.effects ?? [],parameters),effectTemplates:clone(definition.effects ?? []),compatibility:clone(definition.compatibility ?? {}),validation:clone(definition.validation ?? {}),source:clone(definition.source ?? {}),catalogue:{...clone(power.catalogue ?? {}),id:catalogue?.manifest?.catalogueId ?? catalogue?.manifest?.id ?? "add2e-gdm-magic-powers",version:catalogue?.manifest?.version ?? "",runtimeVersion:catalogue?.runtimeVersion ?? ""}};
+    if (typeof globalThis.add2eLoadMagicPowerCatalogue !== "function") return ui.notifications.error("Le catalogue de pouvoirs est indisponible."), false;
+    const catalogue = await globalThis.add2eLoadMagicPowerCatalogue(), definition = catalogue?.powerById?.get?.(String(power.catalogueId)); if (!definition) return ui.notifications.error(`Pouvoir inconnu : ${power.catalogueId}.`), false;
+    const parameters = await editCanonical(definition, power.parameters ?? {}); if (parameters === null) return false;
+    next = { ...clone(power), schema: Number(power.schema ?? 2) || 2, kind: "catalogue", catalogueId: definition.id, name: definition.label, label: definition.label, category: definition.category, automation: definition.automation, activation: clone(definition.activation ?? {}), parameters: clone(parameters), effects: resolveTemplates(definition.effects ?? [], parameters), effectTemplates: clone(definition.effects ?? []), compatibility: clone(definition.compatibility ?? {}), validation: clone(definition.validation ?? {}), source: clone(definition.source ?? {}), catalogue: { ...clone(power.catalogue ?? {}), id: catalogue?.manifest?.catalogueId ?? catalogue?.manifest?.id ?? "add2e-gdm-magic-powers", version: catalogue?.manifest?.version ?? "", runtimeVersion: catalogue?.runtimeVersion ?? "" } };
   } else {
-    const edited=await editLegacy(power); if(!edited || typeof edited!=="object")return false;
-    next={...clone(power),name:edited.name,nom:edited.name,label:edited.name,description:edited.description,cout:edited.cost,cost:edited.cost};
+    const edited = await editLegacy(power); if (!edited || typeof edited !== "object") return false;
+    next = { ...clone(power), name: edited.name, nom: edited.name, label: edited.name, description: edited.description, cout: edited.cost, cost: edited.cost };
   }
-  if(!await storePower(item,store,index,next))return false;
-  ui.notifications.info(`${next.name ?? next.nom ?? "Pouvoir"} a été mis à jour.`); item.sheet?.render?.({force:true}); return true;
+  if (!await storePower(item, store, index, next)) return false;
+  ui.notifications.info(`${next.name ?? next.nom ?? "Pouvoir"} a été mis à jour.`); item.sheet?.render?.({ force: true }); return true;
 }
 
-Hooks.on("preCreateActor",(actor,data={})=>{const type=String(actor?.type ?? data?.type ?? "").trim().toLowerCase(),actorLink=defaultActorTokenLink(actor,data);if(actorLink===null)return;const prototypeToken={actorLink};if(type==="personnage")prototypeToken.sight={enabled:true,angle:270,range:defaultCharacterSightRange()};actor.updateSource({prototypeToken});});
+function magicItemType(source) { return String(source?.type ?? "").trim().toLowerCase(); }
+function itemHasMagicSignals(source) {
+  const system = source?.system ?? {}, enchantment = system.enchantement, charges = system.charges;
+  return MAGIC_ITEM_TYPES.has(magicItemType(source)) && Boolean(system.magique === true || system.magic === true || (enchantment && typeof enchantment === "object" && !Array.isArray(enchantment)) || rawPowers(system).length || number(charges?.max, 0) > 0 || number(charges?.value, 0) > 0 || source?.flags?.add2e?.magicItemProfile || source?.flags?.add2e?.magicPowerCatalogue || source?.flags?.add2e?.magicItemBuilder);
+}
+function firstOptional(...values) { for (const value of values) { const candidate = optionalNumber(value); if (candidate !== null) return candidate; } return null; }
+function enchantmentFromSource(source) {
+  const system = source?.system ?? {}, type = magicItemType(source), raw = system.enchantement && typeof system.enchantement === "object" && !Array.isArray(system.enchantement) ? clone(system.enchantement) : {};
+  const application = ["source", "porteur"].includes(String(raw.application ?? "").trim()) ? String(raw.application).trim() : type === "arme" ? "source" : "porteur";
+  const bonusToucher = number(raw.bonusToucher ?? raw.bonus_toucher, 0), bonusDegats = number(raw.bonusDegats ?? raw.bonus_degats, 0), bonusCA = number(raw.bonusCA ?? raw.bonus_ca, 0), caFixe = optionalNumber(raw.caFixe ?? raw.ca_fixe);
+  const currentHit = firstOptional(system.bonus_hit, system.bonus_toucher, system.hit_bonus, system.attack_bonus), currentDamage = firstOptional(system.bonus_dom, system.bonus_degats, system.damage_bonus, system.degats_bonus), currentCA = firstOptional(system.bonus_ac, system.bonus_ca, system.ac_bonus, system.ca_bonus);
+  const rawBase = raw.baseStats && typeof raw.baseStats === "object" ? raw.baseStats : {};
+  return { ...raw, schema: 1, baseUuid: String(raw.baseUuid ?? source?.flags?.add2e?.baseItemUuid ?? "").trim(), baseName: String(raw.baseName ?? source?.flags?.add2e?.baseItemName ?? "").trim(), baseType: String(raw.baseType ?? source?.flags?.add2e?.baseItemType ?? "").trim(), application, bonusToucher, bonusDegats, bonusCA, caFixe, baseStats: { bonusToucher: number(rawBase.bonusToucher, currentHit === null ? 0 : type === "arme" && application === "source" ? currentHit - bonusToucher : currentHit), bonusDegats: number(rawBase.bonusDegats, currentDamage === null ? 0 : type === "arme" && application === "source" ? currentDamage - bonusDegats : currentDamage), bonusCA: number(rawBase.bonusCA, currentCA === null ? 0 : currentCA - bonusCA), caFixe: optionalNumber(rawBase.caFixe) } };
+}
+function passivePower(power) {
+  const automation = norm(power?.automation); if (automation && automation !== "automatic") return false;
+  const type = norm(power?.activation?.type), trigger = norm(power?.activation?.trigger); if (["configured-result", "configured_result", "result-configured", "result_configured"].includes(trigger)) return false;
+  if (["passive", "automatic", "always_on", "permanent"].includes(type)) return true;
+  const activation = `${type} ${trigger}`; return ["equipped", "equip", "worn", "carried", "porte", "portee", "attack", "damage", "hit", "projectile", "target", "drawn"].some(token => activation.includes(token));
+}
+function targetMatchers(effect = {}, power = {}) {
+  const parameters = power?.parameters && typeof power.parameters === "object" ? power.parameters : {}, ignored = new Set(["self", "owner", "porteur", "source", "target", "cible", "all", "tout", "any"]);
+  const candidates = [effect.targetAny, effect.targets, effect.target, effect.against, effect.creature, effect.creatures, effect.creatureType, effect.creatureTypes, effect.race, effect.races, effect.enemy, effect.enemies, effect.targetType, effect.targetTypes, parameters.targetAny, parameters.targets, parameters.target, parameters.against, parameters.creature, parameters.creatures, parameters.creatureType, parameters.creatureTypes, parameters.race, parameters.races, parameters.enemy, parameters.enemies, parameters.targetType, parameters.targetTypes];
+  return [...new Set(candidates.flatMap(list).map(norm).filter(entry => entry && !ignored.has(entry)))];
+}
+function compatibilityTags(effect = {}, power = {}) {
+  const type = norm(effect.type ?? effect.kind ?? effect.category), targets = targetMatchers(effect, power);
+  if (!type || !targets.length) return [];
+  const alreadyCompiled = new Set(["attack_bonus", "hit_bonus", "damage_bonus", "combat_bonus", "attack_damage_bonus", "weapon_magic_bonus", "conditional_attack_bonus", "conditional_damage_bonus", "armor_class_bonus", "armor_bonus", "ac_bonus", "defense_bonus", "protection_bonus", "conditional_armor_bonus", "negate_magic_projectile"]);
+  if (alreadyCompiled.has(type)) return [];
+  const attackSpecific = (type.includes("attack") || type.includes("attaque") || type.includes("hit") || type.includes("touche")) && (type.includes("multiplier") || type.includes("against") || type.includes("creature") || type.includes("race") || type.endsWith("_vs"));
+  const damageSpecific = (type.includes("damage") || type.includes("degat")) && (type.includes("multiplier") || type.includes("against") || type.includes("creature") || type.includes("race") || type.endsWith("_vs"));
+  if (!attackSpecific && !damageSpecific) return [];
+  const value = firstOptional(effect.bonus, effect.value, effect.amount, effect.attackBonus, effect.hitBonus, effect.damageBonus, effect.bonusToucher, effect.bonusDegats, effect.multiplier, effect.factor, effect.coefficient, power?.parameters?.bonus, power?.parameters?.value, power?.parameters?.amount, power?.parameters?.multiplier, power?.parameters?.factor);
+  if (!Number.isFinite(value) || value === 0) return [];
+  return targets.flatMap(target => [attackSpecific ? `bonus_touche_vs:${target}:${value}` : "", damageSpecific ? `bonus_degats_vs:${target}:${value}` : ""]).filter(Boolean);
+}
+function normalizePowerCompatibility(power) {
+  if (!power || typeof power !== "object" || !passivePower(power)) return clone(power);
+  const effects = Array.isArray(power.effects) ? power.effects : power.effects && typeof power.effects === "object" ? Object.values(power.effects) : [];
+  if (!effects.length) return clone(power);
+  let changed = false;
+  const normalizedEffects = effects.map(effect => {
+    if (!effect || typeof effect !== "object") return effect;
+    const tags = compatibilityTags(effect, power); if (!tags.length) return clone(effect);
+    const merged = mergeUnique(effect.tags, effect.effectTags, tags); changed = true;
+    return { ...clone(effect), tags: merged, effectTags: merged };
+  });
+  return changed ? { ...clone(power), effects: normalizedEffects } : clone(power);
+}
+function normalizedCharges(system = {}) {
+  const raw = system.charges; if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  let value = Math.max(0, Math.trunc(number(raw.value ?? raw.current ?? raw.actuel, 0))), max = Math.max(0, Math.trunc(number(raw.max ?? raw.maximum, 0))); if (value > max) max = value; value = Math.min(value, max);
+  return { ...clone(raw), value, max, ...(raw.rechargeable === true || raw.recharge === "rechargeable" ? { rechargeable: true, recharge: "rechargeable", rechargeFormula: String(raw.rechargeFormula ?? raw.formula ?? "1d6").trim() || "1d6" } : {}) };
+}
+function magicItemNormalization(source) {
+  if (!itemHasMagicSignals(source)) return null;
+  const system = source.system ?? {}, enchantment = enchantmentFromSource(source), type = magicItemType(source), base = enchantment.baseStats, sourceMode = enchantment.application === "source";
+  const legacyHit = type === "arme" ? base.bonusToucher + (sourceMode ? enchantment.bonusToucher : 0) : enchantment.bonusToucher, legacyDamage = type === "arme" ? base.bonusDegats + (sourceMode ? enchantment.bonusDegats : 0) : enchantment.bonusDegats, legacyCA = base.bonusCA + enchantment.bonusCA, legacyFixedCA = enchantment.caFixe ?? base.caFixe ?? null;
+  const previousGenerated = new Set(list(source?.flags?.add2e?.magicItemBuilder?.generatedTags).map(value => String(value ?? "").trim().toLowerCase()).filter(Boolean));
+  const preservedEffectTags = list(system.effectTags ?? system.effets ?? system.effects).map(value => String(value ?? "").trim()).filter(Boolean).filter(tag => !previousGenerated.has(tag.toLowerCase()));
+  const generatedTags = [];
+  if (enchantment.application === "porteur") { if (enchantment.bonusToucher) generatedTags.push(`bonus_attaque:${signed(enchantment.bonusToucher)}`); if (enchantment.bonusDegats) generatedTags.push(`bonus_degats:${signed(enchantment.bonusDegats)}`); }
+  const patch = {};
+  setProperty(patch, "system.enchantement", enchantment);
+  if (type === "arme") { setProperty(patch, "system.bonus_hit", legacyHit); setProperty(patch, "system.bonus_dom", legacyDamage); }
+  else { setProperty(patch, "system.bonus_toucher", legacyHit); setProperty(patch, "system.bonus_degats", legacyDamage); }
+  setProperty(patch, "system.bonus_ac", legacyCA); setProperty(patch, "system.bonus_ca", legacyCA); setProperty(patch, "system.ca_fixe", legacyFixedCA); setProperty(patch, "system.caFixe", legacyFixedCA); setProperty(patch, "system.effectTags", mergeUnique(preservedEffectTags, generatedTags)); setProperty(patch, "system.magique", true);
+  const charges = normalizedCharges(system); if (charges) setProperty(patch, "system.charges", charges);
+  for (const field of POWER_FIELDS) {
+    const raw = system[field]; if (raw === undefined) continue;
+    if (Array.isArray(raw)) setProperty(patch, `system.${field}`, raw.map(normalizePowerCompatibility));
+    else if (raw && typeof raw === "object") setProperty(patch, `system.${field}`, Object.fromEntries(Object.entries(raw).map(([key, power]) => [key, normalizePowerCompatibility(power)])));
+    break;
+  }
+  const currentBuilder = source?.flags?.add2e?.magicItemBuilder && typeof source.flags.add2e.magicItemBuilder === "object" ? source.flags.add2e.magicItemBuilder : {};
+  setProperty(patch, "flags.add2e.magicItemBuilder", { ...clone(currentBuilder), version: NORMALIZER_VERSION, generatedTags: mergeUnique(generatedTags) }); setProperty(patch, "flags.add2e.magicItemBuilderVersion", NORMALIZER_VERSION);
+  return patch;
+}
+function shouldNormalizeUpdate(change = {}) {
+  const prefixes = ["system.enchantement", "system.bonus_hit", "system.bonus_dom", "system.bonus_toucher", "system.bonus_degats", "system.bonus_ac", "system.bonus_ca", "system.ca_fixe", "system.caFixe", "system.charges", "system.magique", "system.magic", ...POWER_FIELDS.map(field => `system.${field}`), "flags.add2e.magicItemBuilder", "flags.add2e.magicPowerCatalogue"];
+  return flattenedPaths(change).some(path => prefixes.some(prefix => path === prefix || path.startsWith(`${prefix}.`)));
+}
+function normalizeMagicItemCreate(item) {
+  const source = clone(item?.toObject?.() ?? item?._source ?? {}); if (!MAGIC_ITEM_TYPES.has(magicItemType(source))) return;
+  const patch = magicItemNormalization(source); if (patch && Object.keys(patch).length) item.updateSource(patch);
+}
+function normalizeMagicItemUpdate(item, change = {}, options = {}) {
+  if (options?.add2eMagicItemDataNormalizer === true || !MAGIC_ITEM_TYPES.has(String(item?.type ?? "").toLowerCase()) || !shouldNormalizeUpdate(change)) return;
+  const source = clone(item?.toObject?.() ?? item?._source ?? {}), merged = merge(source, expand(change)), patch = magicItemNormalization(merged); if (!patch) return;
+  for (const key of Object.keys(change)) if (["system.enchantement.", "system.bonus_hit", "system.bonus_dom", "system.bonus_toucher", "system.bonus_degats", "system.bonus_ac", "system.bonus_ca", "system.ca_fixe", "system.caFixe", "system.effectTags", "system.charges", "system.magique", "flags.add2e.magicItemBuilder", "flags.add2e.magicItemBuilderVersion"].some(prefix => key === prefix || key.startsWith(prefix))) delete change[key];
+  const normalized = merge(expand(change), patch); for (const key of Object.keys(change)) delete change[key]; Object.assign(change, normalized); options.add2eMagicItemDataNormalizer = true;
+}
 
 export function add2eRegisterClassItemSheet() {
-  const options={types:["classe"],makeDefault:true,canConfigure:true,canBeDefault:true,label:"ADD2E | Fiche Classe"},ItemsCollection=add2eItemsCollection();
-  if(ItemsCollection?.registerSheet)ItemsCollection.registerSheet("add2e",Add2eItemSheet,options);else console.warn("[ADD2E][SHEETS] Collection Items introuvable : fiche classe non enregistrée.");
-  const DSC=globalThis.DocumentSheetConfig ?? foundry?.applications?.apps?.DocumentSheetConfig,ItemDocument=add2eItemDocumentClass();
-  if(DSC?.registerSheet && ItemDocument){try{DSC.registerSheet(ItemDocument,"add2e",Add2eItemSheet,options);}catch(e){console.warn("[ADD2E][SHEETS] DocumentSheetConfig classe non appliqué, fallback Items.registerSheet conservé.",e);}}
-  console.log("[ADD2E][SHEETS] Fiche Item.classe enregistrée :",Add2eItemSheet?.name);
+  const options = { types: ["classe"], makeDefault: true, canConfigure: true, canBeDefault: true, label: "ADD2E | Fiche Classe" }, ItemsCollection = add2eItemsCollection();
+  if (ItemsCollection?.registerSheet) ItemsCollection.registerSheet("add2e", Add2eItemSheet, options); else console.warn("[ADD2E][SHEETS] Collection Items introuvable : fiche classe non enregistrée.");
+  const DSC = globalThis.DocumentSheetConfig ?? foundry?.applications?.apps?.DocumentSheetConfig, ItemDocument = add2eItemDocumentClass();
+  if (DSC?.registerSheet && ItemDocument) { try { DSC.registerSheet(ItemDocument, "add2e", Add2eItemSheet, options); } catch (error) { console.warn("[ADD2E][SHEETS] DocumentSheetConfig classe non appliqué, fallback Items.registerSheet conservé.", error); } }
+  console.log("[ADD2E][SHEETS] Fiche Item.classe enregistrée :", Add2eItemSheet?.name);
 }
-function registerHelper(){if(typeof Handlebars!=="undefined" && !Handlebars.helpers.add2eMagicSheetPowers)Handlebars.registerHelper("add2eMagicSheetPowers",item=>sheetPowers(item));}
+function registerHelper() { if (typeof Handlebars !== "undefined" && !Handlebars.helpers.add2eMagicSheetPowers) Handlebars.registerHelper("add2eMagicSheetPowers", item => sheetPowers(item)); }
 
-globalThis.add2eRegisterClassItemSheet=add2eRegisterClassItemSheet;
-globalThis.add2eMagicBuilderEditPower=editPower;
-globalThis.add2eMagicBuilderSheetPowers=sheetPowers;
-globalThis.ADD2E_MAGIC_POWER_SHEET_EDITOR_VERSION=EDITOR_VERSION;
+globalThis.add2eRegisterClassItemSheet = add2eRegisterClassItemSheet;
+globalThis.add2eMagicBuilderEditPower = editPower;
+globalThis.add2eMagicBuilderSheetPowers = sheetPowers;
+globalThis.add2eNormalizeMagicItemData = async itemOrUuid => {
+  const item = itemOrUuid?.documentName === "Item" ? itemOrUuid : await resolveItem(itemOrUuid); if (!item) return false;
+  const patch = magicItemNormalization(clone(item.toObject?.() ?? item._source ?? {})); if (!patch) return false;
+  await item.update(patch, { add2eMagicItemDataNormalizer: true, add2eMagicItemBuilder: true, add2eInternal: true }); return true;
+};
+globalThis.ADD2E_MAGIC_POWER_SHEET_EDITOR_VERSION = EDITOR_VERSION;
+globalThis.ADD2E_MAGIC_ITEM_DATA_NORMALIZER_VERSION = NORMALIZER_VERSION;
 registerHelper();
-Hooks.once("init",()=>{registerHelper();console.log("ADD2e | Initialisation du système...");add2eRegisterClassItemSheet();});
+
+Hooks.on("preCreateActor", (actor, data = {}) => {
+  const type = String(actor?.type ?? data?.type ?? "").trim().toLowerCase(), actorLink = defaultActorTokenLink(actor, data); if (actorLink === null) return;
+  const prototypeToken = { actorLink }; if (type === "personnage") prototypeToken.sight = { enabled: true, angle: 270, range: defaultCharacterSightRange() }; actor.updateSource({ prototypeToken });
+});
+Hooks.on("preCreateItem", item => normalizeMagicItemCreate(item));
+Hooks.on("preUpdateItem", (item, change, options = {}) => normalizeMagicItemUpdate(item, change, options));
+Hooks.once("init", () => { registerHelper(); console.log("ADD2e | Initialisation du système..."); add2eRegisterClassItemSheet(); });
