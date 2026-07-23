@@ -213,15 +213,32 @@ Hooks.on("updateActor", async (actor, changes = {}, options = {}, _userId) => {
   } catch (_e) {}
 });
 
-function add2eDocumentHasAbilityModifier(document) {
-  const raw = document?.flags?.add2e?.modifiers;
+function add2eModifierListHasAbility(raw) {
   const list = Array.isArray(raw) ? raw : (raw && typeof raw === "object" ? Object.values(raw) : []);
   return list.some(modifier => String(modifier?.domain ?? "").trim().toLowerCase() === "ability");
 }
 
+function add2eDocumentHasAbilityModifier(document) {
+  if (add2eModifierListHasAbility(document?.flags?.add2e?.modifiers)) return true;
+  const effects = Array.from(document?.effects?.contents ?? document?.effects ?? []);
+  return effects.some(effect => effect?.disabled !== true && add2eModifierListHasAbility(effect?.flags?.add2e?.modifiers));
+}
+
+function add2eChangesTouchModifiers(changes = {}) {
+  if (!changes || typeof changes !== "object") return false;
+  if (Object.prototype.hasOwnProperty.call(changes, "flags.add2e.modifiers")) return true;
+  if (Object.prototype.hasOwnProperty.call(changes, "flags.add2e.-=modifiers")) return true;
+  if (foundry.utils.hasProperty(changes, "flags.add2e.modifiers")) return true;
+  const nested = changes?.flags?.add2e;
+  return Boolean(nested && typeof nested === "object" && (
+    Object.prototype.hasOwnProperty.call(nested, "modifiers")
+    || Object.prototype.hasOwnProperty.call(nested, "-=modifiers")
+  ));
+}
+
 const ADD2E_EFFECT_CARAC_RECALC_LOCK = new Set();
-async function add2eRecalculateCharacteristicsAfterModifierDocument(document) {
-  if (!add2eDocumentHasAbilityModifier(document)) return;
+async function add2eRecalculateCharacteristicsAfterModifierDocument(document, changes = null) {
+  if (!add2eDocumentHasAbilityModifier(document) && !add2eChangesTouchModifiers(changes)) return;
   const parent = document?.parent ?? document?.actor ?? null;
   const actor = parent?.documentName === "Actor" ? parent : parent?.actor ?? null;
   if (!actor?.system || actor.type !== "personnage" || ADD2E_EFFECT_CARAC_RECALC_LOCK.has(actor.id)) return;
@@ -238,10 +255,10 @@ async function add2eRecalculateCharacteristicsAfterModifierDocument(document) {
 }
 
 Hooks.on("createActiveEffect", effect => add2eRecalculateCharacteristicsAfterModifierDocument(effect));
-Hooks.on("updateActiveEffect", effect => add2eRecalculateCharacteristicsAfterModifierDocument(effect));
+Hooks.on("updateActiveEffect", (effect, changes) => add2eRecalculateCharacteristicsAfterModifierDocument(effect, changes));
 Hooks.on("deleteActiveEffect", effect => add2eRecalculateCharacteristicsAfterModifierDocument(effect));
 Hooks.on("createItem", item => add2eRecalculateCharacteristicsAfterModifierDocument(item));
-Hooks.on("updateItem", item => add2eRecalculateCharacteristicsAfterModifierDocument(item));
+Hooks.on("updateItem", (item, changes) => add2eRecalculateCharacteristicsAfterModifierDocument(item, changes));
 Hooks.on("deleteItem", item => add2eRecalculateCharacteristicsAfterModifierDocument(item));
 
 // ===============================
