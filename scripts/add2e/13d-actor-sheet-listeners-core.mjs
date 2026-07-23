@@ -14,6 +14,30 @@ if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit Ã
 globalThis.ADD2E_SHEET_ROLL_DELEGATION_VERSION = ADD2E_SHEET_ROLL_DELEGATION_VERSION;
 add2eInstallHudSheetRollBridge();
 
+const ADD2E_LISTENER_CARACS = ["force", "dexterite", "constitution", "intelligence", "sagesse", "charisme"];
+
+function add2eListenerNumber(value, fallback = 0) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
+}
+
+function add2eListenerNaturalCarac(actor, carac) {
+  const stored = actor?.flags?.add2e?.base_caracs?.[carac];
+  if (Number.isFinite(Number(stored))) return add2eListenerNumber(stored, 10);
+
+  const definitive = add2eListenerNumber(actor?.system?.[`${carac}_base`] ?? actor?.system?.[carac], 10);
+  const rawRacial = add2eListenerNumber(actor?.flags?.add2e?.racialAbilityAdjustments?.[carac], 0);
+  return Math.max(3, Math.min(18, definitive - rawRacial));
+}
+
+function add2eListenerAppliedRacialAdjustment(actor, carac, naturalValue) {
+  const natural = add2eListenerNumber(naturalValue, 10);
+  const raw = add2eListenerNumber(actor?.flags?.add2e?.racialAbilityAdjustments?.[carac], 0);
+  if (raw > 0 && natural + raw > 18) return Math.max(0, 18 - natural);
+  if (raw < 0 && natural + raw < 3) return Math.min(0, 3 - natural);
+  return raw;
+}
+
 globalThis.Add2eActorSheet.prototype.activateListeners = function activateListeners(html) {
   html = html?.jquery ? html : $(html);
   const self = this;
@@ -42,25 +66,45 @@ globalThis.Add2eActorSheet.prototype.activateListeners = function activateListen
 
   html.find('.carac-btn').off('click.add2e').on('click.add2e', async ev => {
     ev.preventDefault();
+    ev.stopPropagation();
     this._add2eRememberActiveTab(html);
-    const carac = ev.currentTarget.dataset.carac;
-    const isPlus = ev.currentTarget.classList.contains('plus');
-    let baseVal = Number(this.actor.system[`${carac}_base`] || 10);
-    baseVal = Math.max(3, Math.min(18, baseVal + (isPlus ? 1 : -1)));
-    await this.actor.update({ [`system.${carac}_base`]: baseVal });
 
-    const CARACS = ["force", "dexterite", "constitution", "intelligence", "sagesse", "charisme"];
-    let baseCaracs = {};
-    for (const c of CARACS) {
-      baseCaracs[c] = typeof this.actor.system?.[`${c}_base`] === "number" ? this.actor.system[`${c}_base`] : 10;
-    }
-    await this.actor.setFlag("add2e", "base_caracs", baseCaracs);
+    const carac = String(ev.currentTarget.dataset.carac ?? "");
+    if (!ADD2E_LISTENER_CARACS.includes(carac)) return;
+
+    const isPlus = ev.currentTarget.classList.contains('plus');
+    const currentNatural = add2eListenerNaturalCarac(this.actor, carac);
+    const nextNatural = Math.max(3, Math.min(18, currentNatural + (isPlus ? 1 : -1)));
+    if (nextNatural === currentNatural) return;
+
+    const baseCaracs = {
+      ...(this.actor.flags?.add2e?.base_caracs && typeof this.actor.flags.add2e.base_caracs === "object"
+        ? foundry.utils.deepClone(this.actor.flags.add2e.base_caracs)
+        : {})
+    };
+    baseCaracs[carac] = nextNatural;
+
+    const appliedRacial = add2eListenerAppliedRacialAdjustment(this.actor, carac, nextNatural);
+    const definitive = nextNatural + appliedRacial;
+    const update = {
+      "flags.add2e.base_caracs": baseCaracs,
+      [`system.${carac}_base`]: definitive
+    };
+    if (carac === "force" && definitive !== 18) update["system.force_ex"] = 0;
+
+    await this.actor.update(update, {
+      add2eInternal: true,
+      add2eReason: "ability-natural-manual-adjust",
+      render: false
+    });
 
     if (typeof this.autoSetCaracAjustements === "function") await this.autoSetCaracAjustements();
-    const recalculatedBonuses = this.calcCaracBonuses ? this.calcCaracBonuses() : {};
-    if (recalculatedBonuses && Object.keys(recalculatedBonuses).length) await this.actor.update(recalculatedBonuses);
     await this.render(false);
   });
+
+  html.find("select[data-add2e-force-ex]")
+    .off('click.add2eForceEx')
+    .on('click.add2eForceEx', ev => ev.stopPropagation());
 
   html.find("select[data-add2e-force-ex]").off('change.add2e').on('change.add2e', async ev => {
     ev.preventDefault();
@@ -69,36 +113,11 @@ globalThis.Add2eActorSheet.prototype.activateListeners = function activateListen
 
     const selected = Math.trunc(Number(ev.currentTarget.value));
     const forceEx = Number.isFinite(selected) && selected >= 0 && selected <= 100 ? selected : 0;
-    console.info("[ADD2E][FORCE_EX][SELECT]", {
-      actor: this.actor.name,
-      selected: ev.currentTarget.value,
-      normalized: forceEx,
-      before: this.actor.system?.force_ex ?? 0
-    });
+    if (typeof globalThis.add2eSetExceptionalStrength !== "function") {
+      throw new Error("Le gestionnaire canonique de Force exceptionnelle nâ€™est pas disponible.");
+    }
 
-    await this.actor.update(
-      { "system.force_ex": forceEx },
-      { add2eInternal: true, add2eReason: "force-ex-selection", render: false }
-    );
-
-    console.info("[ADD2E][FORCE_EX][PERSISTED]", {
-      actor: this.actor.name,
-      expected: forceEx,
-      stored: this.actor.system?.force_ex ?? 0
-    });
-
-    if (typeof this.autoSetCaracAjustements === "function") await this.autoSetCaracAjustements();
-
-    console.info("[ADD2E][FORCE_EX][ADJUSTMENTS]", {
-      actor: this.actor.name,
-      forceEx: this.actor.system?.force_ex ?? 0,
-      toucher: this.actor.system?.force_bonus_toucher,
-      degats: this.actor.system?.force_bonus_degats,
-      poids: this.actor.system?.force_poids,
-      ouvrir: this.actor.system?.force_ouvrir,
-      tordre: this.actor.system?.force_tordre
-    });
-
+    await globalThis.add2eSetExceptionalStrength(this.actor, forceEx, { reason: "force-ex-selection" });
     await this.render(false);
   });
 
