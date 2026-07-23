@@ -4,7 +4,7 @@
 
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant 13c.");
 
-const ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION = "2026-07-23-force-ex-canonical-resolver-v5";
+const ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION = "2026-07-23-force-ex-eligibility-invariant-v6";
 const ADD2E_HP_MODIFIERS_VERSION = "2026-06-28-generic-hp-modifiers-v1";
 const ADD2E_ABILITY_CONSUMER_VERSION = "2026-07-23-bonus-bigbang-abilities-v1";
 globalThis.ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION = ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION;
@@ -76,16 +76,6 @@ async function add2eSetExceptionalStrength(actor, rawValue, { reason = "force-ex
   const allowed = totalForce === 18 && add2eActorCanUseExceptionalStrength(actor);
   const stored = allowed ? forceEx : 0;
 
-  console.info("[ADD2E][FORCE_EX][SET]", {
-    version: ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION,
-    actor: actor.name,
-    selected: rawValue,
-    normalized: forceEx,
-    totalForce,
-    allowed,
-    before: actor.system?.force_ex ?? 0
-  });
-
   if (Number(actor.system?.force_ex ?? 0) !== stored) {
     await actor.update({ "system.force_ex": stored }, {
       add2eInternal: true,
@@ -96,18 +86,6 @@ async function add2eSetExceptionalStrength(actor, rawValue, { reason = "force-ex
 
   const sheet = actor.sheet;
   if (typeof sheet?.autoSetCaracAjustements === "function") await sheet.autoSetCaracAjustements();
-
-  console.info("[ADD2E][FORCE_EX][PERSISTED]", {
-    actor: actor.name,
-    expected: stored,
-    stored: actor.system?.force_ex ?? 0,
-    toucher: actor.system?.force_bonus_toucher,
-    degats: actor.system?.force_bonus_degats,
-    poids: actor.system?.force_poids,
-    ouvrir: actor.system?.force_ouvrir,
-    tordre: actor.system?.force_tordre
-  });
-
   return true;
 }
 globalThis.add2eSetExceptionalStrength = add2eSetExceptionalStrength;
@@ -407,18 +385,22 @@ globalThis.Add2eActorSheet.prototype.autoSetCaracAjustements = async function au
       : {};
 
     const allowExceptional = add2eActorCanUseExceptionalStrength(this.actor);
+    const exceptionalStrengthEligible = !forceResolution.override && totalCaracs.force === 18 && allowExceptional;
+    const storedForceEx = exceptionalStrengthEligible
+      ? Math.max(0, Math.min(100, Math.trunc(Number(this.actor.system?.force_ex) || 0)))
+      : 0;
+
     let forceKey = totalCaracs.force;
     let forceDisplay = forceOverrideMetadata.displayValue ?? totalCaracs.force;
     const overrideDisplayKey = String(forceOverrideMetadata.displayValue ?? "").trim();
     if (forceResolution.override && typeof FORCE_TABLE !== "undefined" && FORCE_TABLE?.[overrideDisplayKey]) {
       forceKey = overrideDisplayKey;
-    } else if (!forceResolution.override && totalCaracs.force === 18 && allowExceptional) {
-      const forceEx = Number(this.actor.system?.force_ex || 0);
-      if (forceEx >= 1 && forceEx <= 50) forceKey = forceDisplay = "18/01-50";
-      else if (forceEx >= 51 && forceEx <= 75) forceKey = forceDisplay = "18/51-75";
-      else if (forceEx >= 76 && forceEx <= 90) forceKey = forceDisplay = "18/76-90";
-      else if (forceEx >= 91 && forceEx <= 99) forceKey = forceDisplay = "18/91-99";
-      else if (forceEx === 100) forceKey = forceDisplay = "18/00";
+    } else if (exceptionalStrengthEligible) {
+      if (storedForceEx >= 1 && storedForceEx <= 50) forceKey = forceDisplay = "18/01-50";
+      else if (storedForceEx >= 51 && storedForceEx <= 75) forceKey = forceDisplay = "18/51-75";
+      else if (storedForceEx >= 76 && storedForceEx <= 90) forceKey = forceDisplay = "18/76-90";
+      else if (storedForceEx >= 91 && storedForceEx <= 99) forceKey = forceDisplay = "18/91-99";
+      else if (storedForceEx === 100) forceKey = forceDisplay = "18/00";
     }
 
     const forceTableRow = (typeof FORCE_TABLE !== "undefined" && FORCE_TABLE?.[forceKey]) || { toucher: 0, degats: 0, poids: 0, ouvrir: "—", tordre: "—" };
@@ -430,6 +412,7 @@ globalThis.Add2eActorSheet.prototype.autoSetCaracAjustements = async function au
     const chaBonus = (typeof CHARISME_TABLE !== "undefined" && CHARISME_TABLE?.[totalCaracs.charisme]) || { compagnons: 0, loy: 0, react: 0 };
 
     const fullUpdate = {
+      "system.force_ex": storedForceEx,
       "system.for_aff": forceDisplay,
       "system.dex_aff": totalCaracs.dexterite,
       "system.con_aff": totalCaracs.constitution,
