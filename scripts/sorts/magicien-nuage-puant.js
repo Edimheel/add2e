@@ -1,5 +1,5 @@
 // ADD2E — onUse Magicien : Nuage puant
-// Version : 2026-05-29-magicien-attaque-n2-nuage-puant-loop-vfx-v7
+// Version : 2026-07-23-canonical-save-chat-v8
 // Contrat : return true = sort consommé ; return false = sort non consommé.
 
 return await (async () => {
@@ -22,8 +22,7 @@ return await (async () => {
     description: "Ce sort crée une masse de vapeurs nauséabondes qui rend les créatures présentes incapables d’agir normalement si elles ratent leur jet de protection contre le poison. Les créatures affectées chancellent, sont prises de nausées et ne peuvent pas attaquer tant qu’elles restent dans le nuage et pendant un court temps après en être sorties. Le nuage dérive selon le vent et peut être dissipé par un vent fort."
   };
 
-  const esc = v => String(v ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\"/g,"&quot;").replace(/'/g,"&#039;");
-  const num = (v,f=0) => { const n = Number(v); return Number.isFinite(n) ? n : f; };
+  const num = (v, f = 0) => { const n = Number(v); return Number.isFinite(n) ? n : f; };
   const sourceItem = (() => { if (typeof item !== "undefined" && item) return item; if (typeof sort !== "undefined" && sort) return sort; if (typeof spell !== "undefined" && spell) return spell; if (typeof args !== "undefined" && args?.[0]?.item) return args[0].item; return null; })();
   const caster = (typeof actor !== "undefined" && actor) ? actor : sourceItem?.parent;
   const casterToken = (() => { if (typeof token !== "undefined" && token?.actor?.id === caster?.id) return token; return canvas.tokens?.controlled?.find(t => t.actor?.id === caster?.id) ?? caster?.getActiveTokens?.()[0] ?? canvas.tokens?.controlled?.[0] ?? null; })();
@@ -55,23 +54,38 @@ return await (async () => {
   const metersToPx = m => (m / metersPerGridCell()) * gridSizePx();
   const pxDistanceMeters = (a, b) => Math.hypot((b.x ?? 0) - (a.x ?? 0), (b.y ?? 0) - (a.y ?? 0)) / gridSizePx() * metersPerGridCell();
 
-  function saveTarget(actor, kind = "poison") {
-    const sys = actor?.system ?? {};
-    const keys = kind === "poison"
-      ? ["sauvegardes.poison","sauvegardes.poisons","sauvegardes.paralysie_poison_mort","sauvegardes.paralysiePoisonMort","jets_sauvegarde.poison","jets_sauvegarde.poisons","jp.poison","jp.poisons","saves.poison","saves.poisons","save.poison","save.poisons","poison","poisons"]
-      : ["sauvegardes.sort","sauvegardes.sorts","jets_sauvegarde.sort","jets_sauvegarde.sorts","jp.sort","jp.sorts","saves.spell","saves.spells","saves.sort","saves.sorts","save.spell","save.spells","save.sort","save.sorts","sort","sorts"];
-    for (const k of keys) {
-      const value = foundry.utils.getProperty(sys, k);
-      const target = Number(value);
-      if (Number.isFinite(target) && target > 0) return target;
+  function resolveSave(targetActor, level) {
+    if (typeof globalThis.add2eResolveSavingThrow !== "function") {
+      throw new Error("Le résolveur canonique ADD2E de sauvegardes est indisponible.");
     }
-    return 20;
+    const resolution = globalThis.add2eResolveSavingThrow(targetActor, 0, {
+      source: `spell:${SPELL.slug}`,
+      sourceItem,
+      caster,
+      casterLevel: level,
+      frontale: true
+    });
+    if (!Number.isFinite(Number(resolution?.target)) || Number(resolution.target) <= 0) {
+      throw new Error(`Aucune sauvegarde contre le poison pour ${targetActor?.name ?? "la cible"}.`);
+    }
+    return resolution;
   }
 
-  async function rollSave(actor, kind = "poison") {
-    const target = saveTarget(actor, kind);
-    const roll = await new Roll("1d20").evaluate({ async: true });
-    return { total: Number(roll.total) || 0, target, success: Number(roll.total) >= target, formula: roll.formula };
+  async function rollSave(resolution) {
+    const roll = await new Roll("1d20").evaluate();
+    if (game.dice3d) await game.dice3d.showForRoll(roll);
+    const d20 = Number(roll.total) || 0;
+    const bonus = Number(resolution.bonus) || 0;
+    const total = d20 + bonus;
+    return {
+      roll,
+      d20,
+      bonus,
+      total,
+      target: Number(resolution.target),
+      success: total >= Number(resolution.target),
+      resolution
+    };
   }
 
   function browserEventToCanvasPoint(event) {
@@ -85,9 +99,8 @@ return await (async () => {
     return canvas.stage?.worldTransform?.applyInverse(global) ?? null;
   }
 
-  function clearRuler() {
-    try { canvas.controls?.ruler?.clear?.(); } catch (_e) {}
-    try { canvas.controls?.ruler?.destroyChildren?.(); } catch (_e) {}
+  function resetRuler() {
+    try { canvas.controls?.ruler?.reset?.(); } catch (_e) {}
   }
 
   function parentLayer() { return canvas.interface ?? canvas.controls ?? canvas.stage; }
@@ -122,7 +135,7 @@ return await (async () => {
     const view = canvas.app?.view;
     const parent = parentLayer();
     if (!view || !parent || typeof PIXI === "undefined") return null;
-    clearRuler();
+    resetRuler();
     const previous = parent.getChildByName?.("add2e-nuage-puant-placement-marker");
     if (previous) previous.destroy({ children: true });
     const g = new PIXI.Graphics();
@@ -147,7 +160,7 @@ return await (async () => {
         view.removeEventListener("contextmenu", onContext, true);
         window.removeEventListener("keydown", onKey, true);
         view.style.cursor = oldCursor;
-        clearRuler();
+        resetRuler();
         if (!g.destroyed) g.destroy({ children: true });
         resolve(result);
       };
@@ -324,19 +337,56 @@ return await (async () => {
     return true;
   }
 
-  async function chat(rows, durationRounds) {
-    const casterName = caster?.name ?? casterToken?.name ?? "Magicien";
-    const casterImg = casterToken?.document?.texture?.src ?? caster?.img ?? "icons/svg/mystery-man.svg";
-    const spellImg = sourceItem?.img || SPELL.imgFallback;
-    const htmlRows = rows.length
-      ? rows.map(r => `<tr><td style="padding:4px 6px;"><b>${esc(r.name)}</b></td><td style="padding:4px 6px;text-align:center;">${r.save.total}/${r.save.target}</td><td style="padding:4px 6px;text-align:center;">${r.save.success ? "Résiste" : "Nausée"}</td></tr>`).join("")
-      : `<tr><td colspan="3" style="padding:6px;text-align:center;"><i>Aucune créature détectée dans le nuage.</i></td></tr>`;
-    await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken }), content: `
-      <div class="add2e-chat-card add2e-magicien-sort add2e-sort-nuage-puant" style="border:1px solid #8e63c7;border-radius:8px;overflow:hidden;background:#f6f0ff;color:#2d2144;font-family:var(--font-primary);">
-        <div style="display:flex;align-items:center;gap:8px;background:#5b3f8c;color:#fff;padding:7px 9px;"><img src="${esc(casterImg)}" style="width:42px;height:42px;object-fit:cover;border-radius:50%;border:2px solid #d8c3ff;background:#fff;"><div style="flex:1;line-height:1.05;"><div style="font-weight:800;font-size:14px;">${esc(casterName)}</div><div style="font-size:12px;font-weight:700;">lance ${esc(SPELL.name)}</div></div><div style="font-weight:800;font-size:12px;text-align:center;white-space:nowrap;">Magicien niv. 2</div><img src="${esc(spellImg)}" style="width:34px;height:34px;object-fit:cover;border-radius:3px;border:1px solid #d8c3ff;background:#fff;"></div>
-        <div style="padding:9px 10px 10px;background:#f6f0ff;"><div style="border:1px solid #8e63c7;border-radius:6px;background:#fffaff;padding:8px;margin-bottom:7px;"><div style="color:#6c31b5;font-weight:900;font-size:14px;text-transform:uppercase;text-align:center;">Vapeurs nauséabondes</div><table style="width:100%;border-collapse:collapse;margin-top:6px;font-size:13px;"><thead><tr><th style="text-align:left;padding:4px 6px;">Créature</th><th>JP poison</th><th>Effet</th></tr></thead><tbody>${htmlRows}</tbody></table><p style="font-size:12px;text-align:center;margin:.5em 0 0;">Durée du nuage : ${durationRounds} round${durationRounds > 1 ? "s" : ""}.</p></div>
-        <details style="border:1px solid #8e63c7;border-radius:5px;background:#fffaff;padding:5px 7px;"><summary style="cursor:pointer;font-weight:800;color:#4a2e78;">Détails du sort</summary><div style="margin-top:5px;font-size:12px;line-height:1.35;"><p><b>École :</b> ${esc(SPELL.school)} — <b>Portée :</b> ${esc(SPELL.rangeText)} — <b>Zone :</b> ${esc(SPELL.areaText)}.</p><p><b>Composantes :</b> ${esc(SPELL.componentsText)} — <b>Incantation :</b> ${esc(SPELL.castingTimeText)} — <b>Jet de sauvegarde :</b> ${esc(SPELL.saveText)}.</p><p>${esc(SPELL.description)}</p></div></details></div>
-      </div>` });
+  async function chat(rows, durationRounds, level) {
+    if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
+      throw new Error("Le constructeur commun des cartes de chat ADD2E est indisponible.");
+    }
+    const results = rows.length
+      ? rows.map(row => `${row.name} : ${row.save.d20}${row.save.bonus ? ` ${row.save.bonus >= 0 ? "+" : ""}${row.save.bonus}` : ""} = ${row.save.total} / ${row.save.target} — ${row.save.success ? "Résiste" : "Nausée"}`).join(" ; ")
+      : "Aucune créature détectée dans le nuage.";
+    const options = {
+      actor: caster,
+      title: SPELL.name,
+      icon: "fas fa-smog",
+      variant: "spell",
+      source: {
+        name: caster?.name ?? casterToken?.name ?? "Magicien",
+        img: casterToken?.document?.texture?.src ?? caster?.img ?? "icons/svg/mystery-man.svg",
+        type: `Magicien niveau ${level}`,
+        meta: SPELL.school
+      },
+      rows: [
+        { label: "Portée", value: SPELL.rangeText },
+        { label: "Zone", value: SPELL.areaText },
+        { label: "Durée", value: `${durationRounds} round${durationRounds > 1 ? "s" : ""}` },
+        { label: "Sauvegarde", value: "Poison — réussite : effet annulé" },
+        { label: "Résultats", value: results }
+      ],
+      message: SPELL.description,
+      chatData: {
+        speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken }),
+        flags: {
+          add2e: {
+            spell: SPELL.slug,
+            sourceItemUuid: sourceItem?.uuid ?? null,
+            saveResolverVersion: globalThis.ADD2E_SAVE_RESOLVER_VERSION ?? null,
+            saveResults: rows.map(row => ({
+              actorUuid: row.actorUuid,
+              saveType: row.save.resolution?.key ?? "mort_paralysie",
+              d20: row.save.d20,
+              bonus: row.save.bonus,
+              total: row.save.total,
+              target: row.save.target,
+              success: row.save.success,
+              state: row.save.success ? "resiste" : "nausee"
+            }))
+          }
+        }
+      }
+    };
+    const preview = globalThis.add2eBuildChatCard(options);
+    if (!String(preview ?? "").trim()) throw new Error("Nuage puant : carte de chat vide.");
+    return globalThis.add2eCreateChatCard(options);
   }
 
   if (!sourceItem || !caster || !casterToken) { ui.notifications.warn(`${SPELL.name} : lanceur ou sort introuvable.`); return false; }
@@ -345,17 +395,30 @@ return await (async () => {
   const durationRounds = Math.max(1, level);
   const placement = await waitForPlacement();
   if (!placement?.point) { ui.notifications.info(`${SPELL.name} : lancement annulé.`); return false; }
+
+  const targets = tokensInCircle(placement.point);
+  let prepared;
+  try {
+    prepared = targets.map(targetToken => ({
+      targetToken,
+      resolution: resolveSave(targetToken.actor, level)
+    }));
+  } catch (error) {
+    console.error(`${TAG}[SAVE_RESOLUTION]`, error);
+    ui.notifications.error(`${SPELL.name} : ${error.message}`);
+    return false;
+  }
+
   await deleteOldTechnicalZones();
   const controller = await createZoneControllerEffect(placement.point, durationRounds);
   startLoopingCloudVfx(placement.point, controller);
-  const targets = tokensInCircle(placement.point);
   const rows = [];
-  for (const t of targets) {
-    const save = await rollSave(t.actor, "poison");
-    if (!save.success) await applyNausea(t.actor, durationRounds);
-    rows.push({ name: t.name, save });
+  for (const { targetToken, resolution } of prepared) {
+    const save = await rollSave(resolution);
+    if (!save.success) await applyNausea(targetToken.actor, durationRounds);
+    rows.push({ name: targetToken.name, actorUuid: targetToken.actor.uuid, save });
   }
-  await chat(rows, durationRounds);
+  await chat(rows, durationRounds, level);
   console.log(`${TAG}[DONE]`, { caster: caster.name, level, durationRounds, targets: rows });
   return true;
 })();
