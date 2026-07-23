@@ -178,6 +178,113 @@ async function createConditionEffect(target, context, spec, duration) {
   else await target.createEmbeddedDocuments("ActiveEffect", [data], { add2eMagicPowerExecution: true });
 }
 
+function permanentSaveLabel(saveType) {
+  return ({
+    mort_paralysie: "Mort ou paralysie",
+    baguettes: "Baguettes, bâtonnets et bâtons",
+    petrification: "Pétrification ou métamorphose",
+    souffle: "Souffles",
+    sorts: "Sorts",
+    poison: "Poison",
+    peur: "Peur"
+  })[norm(saveType)] ?? String(saveType || "Sauvegarde");
+}
+
+async function permanentSaveModifierHandler(context) {
+  const { actor, item, power, effect, parameters } = context;
+  const affected = resolveAffectedTargets(context);
+  if (!affected.ok || !affected.actors.length) {
+    return executionResult("failed", { handled: "permanent_save_modifier", reason: affected.reason || "target-required" });
+  }
+
+  const rawValue = number(effect.value, effect.penalty, parameters.penalty, parameters.value);
+  if (!Number.isFinite(rawValue) || rawValue === 0) {
+    return executionResult("skipped", { handled: "permanent_save_modifier", complete: false, reason: "modifier-missing" });
+  }
+  const value = rawValue > 0 ? -Math.abs(rawValue) : rawValue;
+  const rawSaveType = effect.saveType ?? parameters.saveType ?? effect.category ?? parameters.category;
+  const saveType = norm(globalThis.Add2eEffectsEngine?.getSaveCategory?.(rawSaveType) ?? rawSaveType);
+  if (!saveType) {
+    return executionResult("skipped", { handled: "permanent_save_modifier", complete: false, reason: "save-type-missing" });
+  }
+  const removalMethods = uniqueTags(list(effect.removalMethods ?? parameters.removalMethods).map(String));
+  const normalizedRule = {
+    source: "magic-item-catalogue",
+    type: "permanent_save_modifier",
+    kind: "permanent_save_modifier",
+    saveType,
+    value,
+    permanent: true,
+    removalMethods
+  };
+  const compiled = compileDefinition(normalizedRule);
+  const tags = uniqueTags(compiled.tags);
+  const powerId = String(power.catalogueId ?? power.id ?? "permanent_save_modifier");
+  const rows = [];
+
+  for (const target of affected.actors) {
+    const permanentKey = `${item.id}:${powerId}:${saveType}`;
+    const existingIds = Array.from(target.effects ?? [])
+      .filter(active => String(active.flags?.add2e?.magicPowerPermanentKey ?? "") === permanentKey)
+      .map(active => active.id).filter(Boolean);
+    if (existingIds.length) {
+      await target.deleteEmbeddedDocuments("ActiveEffect", existingIds, { add2eMagicPowerExecution: true });
+    }
+
+    const description = [
+      `${permanentSaveLabel(saveType)} : ${value >= 0 ? "+" : ""}${value}.`,
+      removalMethods.length ? `Retrait : ${removalMethods.join(", ")}.` : "Retrait selon la description du pouvoir."
+    ].join(" ");
+    const flags = {
+      magicPowerActivation: true,
+      magicPowerPermanent: true,
+      magicPowerPermanentKey: permanentKey,
+      sourceItemId: item.id,
+      sourceItemUuid: item.uuid ?? null,
+      sourceItemName: item.name,
+      sourceActorId: actor.id,
+      sourceActorUuid: actor.uuid ?? null,
+      magicPowerId: powerId,
+      permanentSaveModifier: { saveType, value, removalMethods },
+      tags,
+      effectTags: tags,
+      rules: compiled.rules
+    };
+    const data = {
+      name: `${item.name} — Malédiction (${permanentSaveLabel(saveType)})`,
+      img: power.img || item.img || "icons/svg/aura.svg",
+      origin: item.uuid ?? null,
+      disabled: false,
+      transfer: false,
+      duration: {},
+      description,
+      changes: uniqueChanges(compiled.changes),
+      flags: { add2e: flags }
+    };
+    await target.createEmbeddedDocuments("ActiveEffect", [data], { add2eMagicPowerExecution: true });
+    rows.push({
+      label: target.name,
+      value: `${permanentSaveLabel(saveType)} ${value >= 0 ? "+" : ""}${value}${removalMethods.length ? ` — retrait : ${removalMethods.join(", ")}` : ""}`
+    });
+  }
+
+  await createCard(actor, item, power, {
+    title: "Malédiction permanente",
+    variant: "ability",
+    rows,
+    targets: affected.actors,
+    message: "L’effet est indépendant de l’objet et reste actif jusqu’à son retrait par une méthode autorisée."
+  });
+  return executionResult("success", {
+    handled: "permanent_save_modifier",
+    targets: affected.actors,
+    rows,
+    saveType,
+    value,
+    removalMethods
+  });
+}
+
 async function applyDamage(target, amount, effect, parameters) {
   const descriptor = hp(target);
   if (!descriptor) return { before: null, after: null, applied: 0, resolution: null };
@@ -426,12 +533,13 @@ export function registerDefaultHandlers(linkedSpellHandler) {
   registerEffectHandler(["damage", "direct_damage", "magic_damage", "area_damage"], damageHandler);
   registerEffectHandler(["remove_condition", "cure_condition", "remove_status", "dispel_condition"], removeConditionHandler);
   registerEffectHandler(["light"], lightHandler);
+  registerEffectHandler(["permanent_save_modifier"], permanentSaveModifierHandler);
   registerEffectHandler([
     "invisibility", "flight", "flying", "ethereal_state", "haste", "protection",
     "movement_mode", "movement_bonus", "movement_modifier", "movement_multiplier", "movement_override",
-    "speed_bonus", "speed_modifier", "speed_multiplier", "speed_override", "base_movement", "fixed_movement",
+    "movement_speed_multiplier", "speed_bonus", "speed_modifier", "speed_multiplier", "speed_override", "base_movement", "fixed_movement",
     "transformation", "state_transformation", "polymorph", "status", "condition",
-    "ability_bonus", "characteristic_bonus", "stat_bonus", "attribute_bonus",
+    "ability_bonus", "characteristic_bonus", "stat_bonus", "attribute_bonus", "ability_modifier",
     "ability_override", "characteristic_override", "stat_override", "attribute_override",
     "armor_bonus", "armor_class_bonus", "attack_bonus", "damage_bonus",
     "fixed_armor_class", "armor_class_fixed", "armor_class_base", "fixed_ac", "ac_fixed", "ca_fixe", "ca_base"
