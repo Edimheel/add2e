@@ -4,10 +4,12 @@
 
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant 13c.");
 
-const ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION = "2026-07-05-force-ex-centralized-v4";
+const ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION = "2026-07-23-force-ex-canonical-resolver-v5";
 const ADD2E_HP_MODIFIERS_VERSION = "2026-06-28-generic-hp-modifiers-v1";
+const ADD2E_ABILITY_CONSUMER_VERSION = "2026-07-23-bonus-bigbang-abilities-v1";
 globalThis.ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION = ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION;
 globalThis.ADD2E_HP_MODIFIERS_VERSION = ADD2E_HP_MODIFIERS_VERSION;
+globalThis.ADD2E_ABILITY_CONSUMER_VERSION = ADD2E_ABILITY_CONSUMER_VERSION;
 
 function add2eV2Root(source) {
   if (!source) return null;
@@ -53,12 +55,16 @@ function add2eActorCanUseExceptionalStrength(actor) {
 }
 globalThis.add2eActorCanUseExceptionalStrength = add2eActorCanUseExceptionalStrength;
 
+function add2eAbilityResolution(actor, ability, context = {}) {
+  const engine = globalThis.ADD2E_EFFECTS;
+  if (!engine || typeof engine.resolveAbility !== "function") {
+    throw new Error("Le résolveur canonique ADD2E des caractéristiques n’est pas disponible.");
+  }
+  return engine.resolveAbility(actor, ability, context);
+}
+
 function add2eExceptionalStrengthTotal(actor) {
-  const system = actor?.system ?? {};
-  const base = Number(system.force_base ?? system.force ?? 10) || 10;
-  const legacyRace = Number(system.force_race ?? 0) || 0;
-  const racialBonus = Number(system.bonus_caracteristiques?.force ?? 0) || 0;
-  return base + (racialBonus || legacyRace);
+  return Number(add2eAbilityResolution(actor, "force", { consumer: "exceptional-strength" }).total) || 0;
 }
 
 async function add2eSetExceptionalStrength(actor, rawValue, { reason = "force-ex-selection" } = {}) {
@@ -385,30 +391,38 @@ globalThis.Add2eActorSheet.prototype.autoSetCaracAjustements = async function au
       }
     }
 
-    if (Object.keys(baseUpdates).length) await this.actor.update(baseUpdates, { add2eInternal: true });
-
-    const totalCaracs = {};
-    for (const carac of CARACS_LIST) {
-      const base = Number(this.actor.system?.[`${carac}_base`] ?? s[`${carac}_base`] ?? 10) || 10;
-      const legacyRace = Number(this.actor.system?.[`${carac}_race`] ?? s[`${carac}_race`] ?? 0) || 0;
-      const bonusCaracs = this.actor.system?.bonus_caracteristiques || s.bonus_caracteristiques || {};
-      const bonusRace = Number(bonusCaracs?.[carac] ?? 0) || 0;
-      totalCaracs[carac] = base + (bonusRace || legacyRace);
+    if (Object.keys(baseUpdates).length) {
+      await this.actor.update(baseUpdates, { add2eInternal: true, add2eReason: "ability-base-initialize" });
     }
+
+    const resolutions = Object.fromEntries(CARACS_LIST.map(carac => [
+      carac,
+      add2eAbilityResolution(this.actor, carac, { consumer: "actor-sheet-characteristics" })
+    ]));
+    const totalCaracs = Object.fromEntries(CARACS_LIST.map(carac => [carac, resolutions[carac].total]));
+    const forceResolution = resolutions.force;
+    const forceOverrideMetadata = forceResolution.override?.modifier?.metadata ?? {};
+    const forceOverrideProfile = forceOverrideMetadata.profile && typeof forceOverrideMetadata.profile === "object"
+      ? forceOverrideMetadata.profile
+      : {};
 
     const allowExceptional = add2eActorCanUseExceptionalStrength(this.actor);
-
     let forceKey = totalCaracs.force;
-    const forceEx = Number(s.force_ex || 0);
-    if (totalCaracs.force === 18 && allowExceptional) {
-      if (forceEx >= 1 && forceEx <= 50) forceKey = "18/01-50";
-      else if (forceEx >= 51 && forceEx <= 75) forceKey = "18/51-75";
-      else if (forceEx >= 76 && forceEx <= 90) forceKey = "18/76-90";
-      else if (forceEx >= 91 && forceEx <= 99) forceKey = "18/91-99";
-      else if (forceEx === 100) forceKey = "18/00";
+    let forceDisplay = forceOverrideMetadata.displayValue ?? totalCaracs.force;
+    const overrideDisplayKey = String(forceOverrideMetadata.displayValue ?? "").trim();
+    if (forceResolution.override && typeof FORCE_TABLE !== "undefined" && FORCE_TABLE?.[overrideDisplayKey]) {
+      forceKey = overrideDisplayKey;
+    } else if (!forceResolution.override && totalCaracs.force === 18 && allowExceptional) {
+      const forceEx = Number(this.actor.system?.force_ex || 0);
+      if (forceEx >= 1 && forceEx <= 50) forceKey = forceDisplay = "18/01-50";
+      else if (forceEx >= 51 && forceEx <= 75) forceKey = forceDisplay = "18/51-75";
+      else if (forceEx >= 76 && forceEx <= 90) forceKey = forceDisplay = "18/76-90";
+      else if (forceEx >= 91 && forceEx <= 99) forceKey = forceDisplay = "18/91-99";
+      else if (forceEx === 100) forceKey = forceDisplay = "18/00";
     }
 
-    const forceBonus = (typeof FORCE_TABLE !== "undefined" && FORCE_TABLE?.[forceKey]) || { toucher: 0, degats: 0, poids: 0, ouvrir: "—", tordre: "—" };
+    const forceTableRow = (typeof FORCE_TABLE !== "undefined" && FORCE_TABLE?.[forceKey]) || { toucher: 0, degats: 0, poids: 0, ouvrir: "—", tordre: "—" };
+    const forceBonus = { ...forceTableRow, ...forceOverrideProfile };
     const dexBonus = (typeof DEXTERITE_TABLE !== "undefined" && DEXTERITE_TABLE?.[totalCaracs.dexterite]) || { att: 0, def: 0 };
     const conBonus = (typeof CONSTITUTION_TABLE !== "undefined" && CONSTITUTION_TABLE?.[totalCaracs.constitution]) || { pv: 0, trauma: 0, resu: 0 };
     const intBonus = (typeof INTELLIGENCE_TABLE !== "undefined" && INTELLIGENCE_TABLE?.[totalCaracs.intelligence]) || { langues: 0, chance_sort: 0, min_sort: 0, max_sort: 0, sort_par_niveau: 0 };
@@ -416,7 +430,7 @@ globalThis.Add2eActorSheet.prototype.autoSetCaracAjustements = async function au
     const chaBonus = (typeof CHARISME_TABLE !== "undefined" && CHARISME_TABLE?.[totalCaracs.charisme]) || { compagnons: 0, loy: 0, react: 0 };
 
     const fullUpdate = {
-      "system.for_aff": totalCaracs.force,
+      "system.for_aff": forceDisplay,
       "system.dex_aff": totalCaracs.dexterite,
       "system.con_aff": totalCaracs.constitution,
       "system.int_aff": totalCaracs.intelligence,
@@ -453,7 +467,9 @@ globalThis.Add2eActorSheet.prototype.autoSetCaracAjustements = async function au
       if (foundry.utils.getProperty(this.actor, path) !== value) diff[path] = value;
     }
 
-    if (Object.keys(diff).length) await this.actor.update(diff, { add2eInternal: true });
+    if (Object.keys(diff).length) {
+      await this.actor.update(diff, { add2eInternal: true, add2eReason: "ability-derived-recalculate" });
+    }
     if (typeof this.autoSetPointsDeCoup === "function") await this.autoSetPointsDeCoup();
   } catch (error) {
     console.error("[ADD2E] Erreur dans autoSetCaracAjustements()", error);
