@@ -1,4 +1,5 @@
-// ADD2E — Actor sheet getData : CA, équipement et synthèse de combat.
+// ADD2E — Actor sheet getData : CA canonique, équipement et synthèse de combat.
+// Compatible Foundry V13/V14/V15.
 
 function add2eSheetCombatNormalizeTag(value) {
   return String(value ?? "")
@@ -61,10 +62,11 @@ function add2eSheetCombatActionTags(item) {
 }
 
 function add2eSheetApplyPassiveCombatModifiers({ actor, arme, bonusToucher, bonusDegats, toucherCarac, toucherValue, degatsCarac, degatsValue }) {
-  if (!actor || !arme || typeof Add2eEffectsEngine === "undefined" || typeof Add2eEffectsEngine.getPassiveCombatModifiers !== "function") {
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+  if (!actor || !arme || typeof engine?.getPassiveCombatModifiers !== "function") {
     return { bonusToucher, bonusDegats, passive: null };
   }
-  const passive = Add2eEffectsEngine.getPassiveCombatModifiers(actor, {
+  const passive = engine.getPassiveCombatModifiers(actor, {
     type: "attaque",
     ruleScope: "owner",
     actor,
@@ -81,101 +83,66 @@ function add2eSheetApplyPassiveCombatModifiers({ actor, arme, bonusToucher, bonu
   };
 }
 
-function add2eSheetCombatMonkMartialProgression(actor) {
-  if (typeof Add2eEffectsEngine === "undefined" || typeof Add2eEffectsEngine.getMonkMartialProgression !== "function") return null;
-  return Add2eEffectsEngine.getMonkMartialProgression(actor) ?? null;
+function add2eSheetArmorClassEngine() {
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  if (!engine || typeof engine.resolveArmorClass !== "function") {
+    throw new Error("Le résolveur canonique ADD2E de classe d’armure n’est pas disponible.");
+  }
+  return engine;
+}
+
+function add2eSheetArmorLabel(resolution, fallback) {
+  if (resolution?.mode === "transformation") return resolution.transformation?.label ?? "Transformation";
+  if (resolution?.mode === "monk") return "Défense martiale du moine";
+  if (resolution?.mode === "passive") return resolution.passiveArmorClass?.label ?? "Défense passive de classe";
+  if (resolution?.fixedCAActive) return `${resolution.fixedSource || "CA fixe"} <small style="color:#7f704d;">(CA fixe)</small>`;
+  return resolution?.armorName && resolution.armorName !== "Aucune" ? resolution.armorName : fallback;
+}
+
+function add2eSheetSyncArmorClass(actor, resolution) {
+  const caNaturel = Number(resolution?.caNaturel);
+  const caTotal = Number(resolution?.caTotal);
+  if (!Number.isFinite(caNaturel) || !Number.isFinite(caTotal)) {
+    throw new Error(`Résolution de CA invalide pour ${actor?.name ?? "acteur"}.`);
+  }
+  if (Number(actor.system?.ca_naturel) === caNaturel && Number(actor.system?.ca_total) === caTotal) return;
+  void actor.update({
+    "system.ca_naturel": caNaturel,
+    "system.ca_total": caTotal
+  }, {
+    render: false,
+    add2eInternal: true,
+    add2eReason: "canonical-armor-class-sync"
+  }).catch(error => console.error("[ADD2E][ARMOR_CLASS][SYNC_ERROR]", { actor: actor.name, error }));
 }
 
 export function add2ePrepareActorSheetCombatData({ actor, data, sys, progressionCourante, isMonk }) {
+  const engine = add2eSheetArmorClassEngine();
   const transformation = globalThis.add2eGetCapabilityTransformationCombatProfile?.(actor) ?? null;
-  const transformationCA = Number(transformation?.armorClass);
   const transformationTHAC0 = Number(transformation?.thac0);
-  const hasTransformationCA = Number.isFinite(transformationCA);
   const hasTransformationTHAC0 = Number.isFinite(transformationTHAC0);
   const transformationMovement = String(transformation?.movement ?? "").trim();
-  const monkMartial = add2eSheetCombatMonkMartialProgression(actor);
-  const monkArmorClass = Number(monkMartial?.armorClass);
-  const hasMonkArmorClass = isMonk === true && Number.isFinite(monkArmorClass);
-  const passiveArmorClass = typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getPassiveArmorClassBase === "function"
-    ? Add2eEffectsEngine.getPassiveArmorClassBase(actor, { ruleScope: "owner", source: "actor-sheet" })
-    : null;
 
-  const armure = data.listeArmures.find(i => i.system.equipee && !(i.name.toLowerCase().includes('bouclier') || i.name.toLowerCase().includes('heaume') || i.name.toLowerCase().includes('casque')));
-  const bouclier = data.listeArmures.find(i => i.system.equipee && i.name.toLowerCase().includes('bouclier'));
-  const heaume = data.listeArmures.find(i => i.system.equipee && (i.name.toLowerCase().includes('heaume') || i.name.toLowerCase().includes('casque')));
-
-  const acArmure = armure ? (Number(armure.system.ac) || 10) : 10;
-  const acBouclier = bouclier ? (Number(bouclier.system.ac) || 0) : 0;
-  const acHeaume = heaume ? (Number(heaume.system.ac) || 0) : 0;
-  const bonusAcArmure = armure ? (Number(armure.system.bonus_ac) || 0) : 0;
-  const bonusAcBouclier = bouclier ? (Number(bouclier.system.bonus_ac) || 0) : 0;
-  const bonusAcHeaume = heaume ? (Number(heaume.system.bonus_ac) || 0) : 0;
-  const bonusDex = (hasMonkArmorClass || passiveArmorClass?.ignoreDex === true) ? 0 : (typeof sys.dex_def === "number" ? sys.dex_def : 0);
+  const armure = data.listeArmures.find(item => item.system.equipee
+    && !(item.name.toLowerCase().includes("bouclier") || item.name.toLowerCase().includes("heaume") || item.name.toLowerCase().includes("casque")));
+  const bouclier = data.listeArmures.find(item => item.system.equipee && item.name.toLowerCase().includes("bouclier"));
+  const heaume = data.listeArmures.find(item => item.system.equipee
+    && (item.name.toLowerCase().includes("heaume") || item.name.toLowerCase().includes("casque")));
 
   sys.armure_equipee = armure || null;
   sys.bouclier_equipe = bouclier || null;
   sys.heaume_equipe = heaume || null;
   if (transformationMovement) sys.vitesse_deplacement = transformationMovement;
 
-  let caPhysique = 10;
-  if (hasTransformationCA) {
-    caPhysique = transformationCA;
-  } else if (hasMonkArmorClass) {
-    caPhysique = monkArmorClass;
-  } else if (passiveArmorClass?.applied && Number.isFinite(Number(passiveArmorClass.value))) {
-    caPhysique = Number(passiveArmorClass.value);
-  } else {
-    const baseDepart = armure ? acArmure : 10;
-    caPhysique = baseDepart + bonusDex + bonusAcArmure;
-    if (bouclier) caPhysique = caPhysique - acBouclier + bonusAcBouclier;
-    if (heaume) caPhysique = caPhysique - acHeaume + bonusAcHeaume;
-  }
-
-  let magicDefense = null;
-  if (hasTransformationCA) {
-    magicDefense = {
-      caNaturel: caPhysique,
-      caTotal: caPhysique,
-      source: "capability-transformation",
-      transformation: {
-        sourceKey: transformation.sourceKey,
-        formKey: transformation.formKey,
-        label: transformation.label
-      }
-    };
-    sys.ca_naturel = caPhysique;
-    sys.ca_total = caPhysique;
-  } else if (typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getMagicPassiveDefense === "function") {
-    magicDefense = Add2eEffectsEngine.getMagicPassiveDefense(actor, { physicalCA: caPhysique, armure, bouclier, heaume, source: "actor-sheet", passiveArmorClass });
-    if (hasMonkArmorClass || passiveArmorClass?.applied) {
-      const objectProtectionBonus = Number(magicDefense?.objectProtectionBonus) || 0;
-      sys.ca_naturel = caPhysique;
-      sys.ca_total = caPhysique - objectProtectionBonus;
-      magicDefense = {
-        ...magicDefense,
-        caNaturel: sys.ca_naturel,
-        caTotal: sys.ca_total,
-        armorBase: caPhysique,
-        baseAfterFixed: caPhysique,
-        dex: 0,
-        passiveArmorClass
-      };
-    } else {
-      sys.ca_naturel = magicDefense.caNaturel;
-      sys.ca_total = magicDefense.caTotal;
-    }
-  } else {
-    sys.ca_naturel = caPhysique;
-    let caTotale = caPhysique;
-    if (typeof Add2eEffectsEngine !== "undefined") {
-      const bonusMagique = Add2eEffectsEngine.getCABonus(actor);
-      if (bonusMagique !== 0) caTotale -= bonusMagique;
-    }
-    sys.ca_total = caTotale;
-  }
-  if (actor.system.ca_total !== sys.ca_total || actor.system.ca_naturel !== sys.ca_naturel) {
-    actor.update({ "system.ca_naturel": sys.ca_naturel, "system.ca_total": sys.ca_total });
-  }
+  const armorClass = engine.resolveArmorClass(actor, {
+    source: "actor-sheet",
+    consumer: "application-v2",
+    frontale: true,
+    position: "front"
+  });
+  sys.ca_naturel = Number(armorClass.caNaturel);
+  sys.ca_total = Number(armorClass.caTotal);
+  add2eSheetSyncArmorClass(actor, armorClass);
 
   let bonusArmureToucher = 0;
   let bonusArmureDegats = 0;
@@ -184,19 +151,19 @@ export function add2ePrepareActorSheetCombatData({ actor, data, sys, progression
     bonusArmureDegats += Number(piece.system.bonus_degats || 0);
   }
 
-  const arme = data.listeArmes.find(i => i.system.equipee) || null;
+  const arme = data.listeArmes.find(item => item.system.equipee) || null;
   sys.arme_equipee = arme;
 
   const thaco = hasTransformationTHAC0 ? transformationTHAC0 : (data.progressionCourante?.thac0 || sys.thaco || 20);
   const typeDegats = arme?.system.type_degats || "";
   const armeBonusToucher = arme ? (
-    typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getMagicWeaponBonus === "function"
-      ? Add2eEffectsEngine.getMagicWeaponBonus(arme, "hit")
+    typeof engine.getMagicWeaponBonus === "function"
+      ? engine.getMagicWeaponBonus(arme, "hit")
       : Number(arme.system.bonus_hit || 0)
   ) : 0;
   const armeBonusDegats = arme ? (
-    typeof Add2eEffectsEngine !== "undefined" && typeof Add2eEffectsEngine.getMagicWeaponBonus === "function"
-      ? Add2eEffectsEngine.getMagicWeaponBonus(arme, "damage")
+    typeof engine.getMagicWeaponBonus === "function"
+      ? engine.getMagicWeaponBonus(arme, "damage")
       : Number(arme.system.bonus_dom || 0)
   ) : 0;
   let bonusToucher = 0;
@@ -241,19 +208,20 @@ export function add2ePrepareActorSheetCombatData({ actor, data, sys, progression
 
   const degatsMoyen = arme?.system.dégâts?.contre_moyen || "-";
   const degatsGrand = arme?.system.dégâts?.contre_grand || "-";
-  const degatsAffiche = degatsMoyen + " / " + degatsGrand;
+  const monkMartial = armorClass.monk ?? null;
 
   data.monkMartialProgression = monkMartial;
   data.combatDefense = {
-    armure: armure ? armure.name : "<em>Aucune</em>",
-    bouclier: bouclier ? bouclier.name : "<em>Aucun</em>",
+    armure: add2eSheetArmorLabel(armorClass, armure ? armure.name : "<em>Aucune</em>"),
+    bouclier: armorClass.shieldIgnored ? "<em>Ignoré</em>" : (bouclier ? bouclier.name : "<em>Aucun</em>"),
     heaume: heaume ? heaume.name : "<em>Aucun</em>",
     ac_naturelle: sys.ca_naturel,
     ac_totale: sys.ca_total,
-    objets_magiques_defense: magicDefense,
+    objets_magiques_defense: armorClass,
+    armor_class_resolution: armorClass,
     arme: arme ? arme.name : "<em>Aucune</em>",
     thaco,
-    degats: degatsAffiche,
+    degats: `${degatsMoyen} / ${degatsGrand}`,
     type_degats: typeDegats,
     bonus_toucher: bonusToucher,
     bonus_degats: bonusDegats,
@@ -263,13 +231,13 @@ export function add2ePrepareActorSheetCombatData({ actor, data, sys, progression
     degats_main_nue: monkMartial?.unarmedDamage ?? "",
     mouvement_martial: monkMartial?.move ?? null,
     chute_ralentie: monkMartial?.slowFallText ?? "",
-    transformation: transformation ? {
-      label: transformation.label,
-      sourceKey: transformation.sourceKey,
-      formKey: transformation.formKey,
-      armorClass: transformation.armorClass,
-      thac0: transformation.thac0,
-      movement: transformation.movement
+    transformation: armorClass.transformation ? {
+      label: armorClass.transformation.label,
+      sourceKey: armorClass.transformation.sourceKey,
+      formKey: armorClass.transformation.formKey,
+      armorClass: armorClass.transformation.armorClass,
+      thac0: transformation?.thac0,
+      movement: transformation?.movement
     } : null
   };
 
@@ -282,5 +250,7 @@ export function add2ePrepareActorSheetCombatData({ actor, data, sys, progression
   ];
   data.saveShortLabels = ["Paralysie", "Pétrif.", "Baguettes", "Souffles", "Sorts"];
   data.forceExValues = [];
-  for (let i = 1; i <= 100; i++) data.forceExValues.push({ value: i, label: i === 100 ? "00" : i.toString().padStart(2, "0") });
+  for (let value = 1; value <= 100; value += 1) {
+    data.forceExValues.push({ value, label: value === 100 ? "00" : value.toString().padStart(2, "0") });
+  }
 }
