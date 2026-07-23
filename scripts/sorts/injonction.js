@@ -1,22 +1,28 @@
 /**
  * ADD2E — Injonction
  * Clerc niveau 1 — Enchantement/Charme
- * Version : 2026-07-03-injonction-racial-save-v4
- *
+ * Compatible Foundry V13/V14/V15 — DialogV2 et sauvegardes canoniques.
  * Contrat onUse : true = consommé ; false = non consommé.
  */
 
 const __add2eOnUseResult = await (async () => {
+  const VERSION = "2026-07-23-canonical-save-chat-v5";
   const DialogV2 = foundry.applications?.api?.DialogV2;
   if (!DialogV2?.wait) {
     ui.notifications.error("Injonction : DialogV2 indisponible.");
     return false;
   }
+  if (typeof globalThis.add2eResolveSavingThrow !== "function") {
+    ui.notifications.error("Injonction : le résolveur canonique de sauvegardes est indisponible.");
+    return false;
+  }
+  if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
+    ui.notifications.error("Injonction : le constructeur commun des cartes de chat est indisponible.");
+    return false;
+  }
 
-  const COLORS = { main: "#b88924", dark: "#6f4b12", pale: "#fff7df", pale2: "#fffaf0", border: "#e2bc63", success: "#2f8f46", fail: "#b33a2e", warn: "#b88924" };
   const esc = value => String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
   const norm = value => String(value ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "").replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
-  const style = () => CONST.CHAT_MESSAGE_STYLES ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER } : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 };
 
   const sourceItem = (typeof sort !== "undefined" && sort)
     || (typeof item !== "undefined" && item)
@@ -93,7 +99,7 @@ const __add2eOnUseResult = await (async () => {
     position: { width: 360 },
     add2eTheme: "cleric",
     add2eImg: sourceItem.img || "systems/add2e/assets/icones/sorts/injonction.webp",
-    content: `<form style="font-family:var(--font-primary);display:flex;flex-direction:column;gap:7px;"><div class="form-group"><label style="font-weight:bold;">Ordre :</label><select name="preset" style="width:100%;"><option value="Arrête">Arrête</option><option value="Fuis">Fuis</option><option value="Reviens">Reviens</option><option value="Donne">Donne</option><option value="Meurs">Meurs</option></select></div><div class="form-group"><label>Autre ordre <small>(facultatif, un mot)</small> :</label><input type="text" name="commandWord" maxlength="24" placeholder="Remplace la liste" style="width:100%;"></div><div style="font-size:.84em;color:${COLORS.dark};border-top:1px solid ${COLORS.border};padding-top:5px;">Les morts-vivants sont insensibles. INT 13+ ou au moins 6 DV/niveaux donne droit à un jet de protection.</div></form>`,
+    content: `<form style="font-family:var(--font-primary);display:flex;flex-direction:column;gap:7px;"><div class="form-group"><label style="font-weight:bold;">Ordre :</label><select name="preset" style="width:100%;"><option value="Arrête">Arrête</option><option value="Fuis">Fuis</option><option value="Reviens">Reviens</option><option value="Donne">Donne</option><option value="Meurs">Meurs</option></select></div><div class="form-group"><label>Autre ordre <small>(facultatif, un mot)</small> :</label><input type="text" name="commandWord" maxlength="24" placeholder="Remplace la liste" style="width:100%;"></div><div style="font-size:.84em;border-top:1px solid currentColor;padding-top:5px;">Les morts-vivants sont insensibles. INT 13+ ou au moins 6 DV/niveaux donne droit à un jet de protection.</div></form>`,
     buttons: [
       { action: "cast", label: "Lancer", icon: "fa-solid fa-gavel", default: true, callback: (_event, button) => {
         const form = button.form;
@@ -124,14 +130,14 @@ const __add2eOnUseResult = await (async () => {
     const values = String(value ?? "").match(/\d+(?:[.,]\d+)?/g)?.map(entry => Number(entry.replace(",", "."))).filter(Number.isFinite) ?? [];
     return values.length ? Math.max(...values) : NaN;
   };
-  const intelligence = (() => {
-    const sys = target.system ?? {};
-    const direct = [sys.intelligence, sys.intelligence_total, sys.caracteristiques?.intelligence, sys.abilities?.int?.value];
-    for (const candidate of direct) { const value = readNumber(candidate); if (Number.isFinite(value)) return value; }
-    const base = readNumber(sys.intelligence_base);
-    const bonus = readNumber(sys.bonus_caracteristiques?.intelligence);
-    return Number.isFinite(base) ? base + (Number.isFinite(bonus) ? bonus : 0) : NaN;
-  })();
+
+  const effectsEngine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  const resolvedIntelligence = typeof effectsEngine?.resolveAbility === "function"
+    ? Number(effectsEngine.resolveAbility(target, "intelligence", { type: "save", source: "spell:injonction" })?.total)
+    : NaN;
+  const intelligence = Number.isFinite(resolvedIntelligence)
+    ? resolvedIntelligence
+    : readNumber(target.system?.intelligence ?? target.system?.caracteristiques?.intelligence ?? target.system?.abilities?.int?.value);
   const hitDice = (() => {
     const sys = target.system ?? {};
     for (const candidate of [sys.dv, sys.hitDice, sys.hit_dice, sys.des_de_vie, sys.niveau, sys.level, sys.details?.niveau, sys.details?.level]) {
@@ -141,69 +147,46 @@ const __add2eOnUseResult = await (async () => {
     return NaN;
   })();
   const requiresSave = (Number.isFinite(intelligence) && intelligence >= 13) || (Number.isFinite(hitDice) && hitDice >= 6);
-  const saveTarget = (() => {
-    const sys = target.system ?? {};
-    for (const candidate of [sys.sauvegarde_sortileges, sys.sauvegardes?.sortileges, sys.sauvegardes?.sorts, sys.saves?.sorts, sys.calculatedSaves?.sorts, Array.isArray(sys.sauvegardes) ? sys.sauvegardes[4] : null]) {
-      const value = readNumber(candidate);
-      if (Number.isFinite(value) && value > 0) return value;
-    }
-    return NaN;
-  })();
 
-  const rollSpellSave = async (targetActor, fallbackThreshold) => {
-    const engine = globalThis.Add2eEffectsEngine;
-    if (typeof engine?.rollActionSave === "function") {
-      const result = await engine.rollActionSave(targetActor, "sorts");
-      if (result?.canRoll) {
-        return {
-          total: Number(result.total) || 0,
-          threshold: Number(result.threshold) || fallbackThreshold,
-          success: result.success === true,
-          racialBonus: Number(result.racialBonus) || 0,
-          usedEngine: true
-        };
-      }
-    }
-
-    if (!Number.isFinite(fallbackThreshold)) return null;
-    const racialBonus = Number(engine?.getSaveBonus?.(targetActor, "sorts")) || 0;
-    const formula = racialBonus ? `1d20${racialBonus >= 0 ? "+" : ""}${racialBonus}` : "1d20";
-    const roll = await new Roll(formula).evaluate({ async: true });
-    if (game.dice3d) await game.dice3d.showForRoll(roll);
-    const total = Number(roll.total) || 0;
-    return {
-      total,
-      threshold: fallbackThreshold,
-      success: total >= fallbackThreshold,
-      racialBonus,
-      usedEngine: false
-    };
+  let save = {
+    required: requiresSave,
+    roll: null,
+    resolution: null,
+    d20: null,
+    bonus: 0,
+    total: null,
+    target: null,
+    success: false
   };
-
-  let save = { required: requiresSave, rolled: null, target: saveTarget, success: false, manual: false, racialBonus: 0 };
   if (requiresSave && !isUndead && !specialNoEffect) {
-    const automaticSave = await rollSpellSave(target, saveTarget);
-    if (!automaticSave) {
-      if (!game.user.isGM) {
-        ui.notifications.warn("Injonction : sauvegarde de la cible introuvable. Le MJ doit arbitrer ce lancement.");
-        return false;
-      }
-      const decision = await DialogV2.wait({
-        window: { title: "Injonction — sauvegarde MJ" },
-        position: { width: 340 },
-        content: `<p>La sauvegarde contre les sorts de <b>${esc(target.name)}</b> est absente.</p><p>Le MJ décide du résultat.</p>`,
-        buttons: [
-          { action: "failed", label: "Jet raté - effet appliqué", default: true, callback: () => false },
-          { action: "success", label: "Jet réussi - effet résisté", callback: () => true },
-          { action: "cancel", label: "Annuler", callback: () => null }
-        ],
-        rejectClose: false
-      });
-      if (decision === null) return false;
-      save = { required: true, rolled: null, target: null, success: decision === true, manual: true, racialBonus: 0 };
-    } else {
-      save = { required: true, rolled: automaticSave.total, target: automaticSave.threshold, success: automaticSave.success, manual: false, racialBonus: automaticSave.racialBonus };
+    const resolution = globalThis.add2eResolveSavingThrow(target, 4, {
+      source: "spell:injonction",
+      sourceItem,
+      caster,
+      targetToken,
+      frontale: true
+    });
+    const saveTarget = Number(resolution?.target);
+    if (!Number.isFinite(saveTarget) || saveTarget <= 0) {
+      ui.notifications.warn(`Injonction : aucune sauvegarde contre les sortilèges pour ${target.name}.`);
+      return false;
     }
+
+    const roll = await new Roll("1d20").evaluate();
+    if (game.dice3d) await game.dice3d.showForRoll(roll);
+    const d20 = Number(roll.total) || 0;
+    const bonus = Number(resolution.bonus) || 0;
+    const total = d20 + bonus;
+    save = {
+      required: true,
+      roll,
+      resolution,
+      d20,
+      bonus,
+      total,
+      target: saveTarget,
+      success: total >= saveTarget
+    };
   }
 
   const commandType = ({ arrete: "halt", halte: "halt", meurs: "catalepsy", fuis: "flee", reviens: "return", donne: "give" })[commandKey] ?? "manual";
@@ -237,7 +220,8 @@ const __add2eOnUseResult = await (async () => {
     restrictions,
     tags: effectTags
   };
-  const timeFlags = time?.flags?.({ source: "injonction.js", rounds: 1, unit: "round", endMessage: `L’injonction « ${commandWord} » imposée à {actor} prend fin.`, extra }) ?? { timeEngine: { managed: true, unit: "round", totalRounds: 1 }, roundEngine: { managed: true, unit: "round", totalRounds: 1, endMessage: `L’injonction « ${commandWord} » imposée à {actor} prend fin.` }, endMessage: `L’injonction « ${commandWord} » imposée à {actor} prend fin.` };
+  const timeFlags = time?.flags?.({ source: "injonction.js", rounds: 1, unit: "round", endMessage: `L’injonction « ${commandWord} » imposée à {actor} prend fin.`, extra })
+    ?? { timeEngine: { managed: true, unit: "round", totalRounds: 1 }, roundEngine: { managed: true, unit: "round", totalRounds: 1, endMessage: `L’injonction « ${commandWord} » imposée à {actor} prend fin.` }, endMessage: `L’injonction « ${commandWord} » imposée à {actor} prend fin.` };
 
   if (outcome === "applied") {
     const effectData = {
@@ -256,7 +240,18 @@ const __add2eOnUseResult = await (async () => {
       if (previous.length) await target.deleteEmbeddedDocuments("ActiveEffect", previous);
       await target.createEmbeddedDocuments("ActiveEffect", [effectData]);
     } else if (game.socket) {
-      game.socket.emit("system.add2e", { type: "ADD2E_GM_OPERATION", operation: "createActiveEffect", payload: { actorUuid: target.uuid, actorId: target.id, effectData, removeEffectIds: previous, fromUserId: game.user.id, sentAt: Date.now() } });
+      game.socket.emit("system.add2e", {
+        type: "ADD2E_GM_OPERATION",
+        operation: "createActiveEffect",
+        payload: {
+          actorUuid: target.uuid,
+          actorId: target.id,
+          effectData,
+          removeEffectIds: previous,
+          fromUserId: game.user.id,
+          sentAt: Date.now()
+        }
+      });
     } else {
       ui.notifications.error("Injonction : impossible de contacter le MJ pour créer l’effet.");
       return false;
@@ -267,23 +262,79 @@ const __add2eOnUseResult = await (async () => {
     await globalThis.ADD2E_PLAY_SPELL_FX?.("injonction", { casterToken, targetToken, jb2aOptions: { maxFiles: 2, scaleToObject: 1.25, opacity: 0.9 } });
   } catch (_error) {}
 
-  const racialSaveDetail = Number(save.racialBonus) ? ` <span style="font-size:.84em;">(${save.racialBonus >= 0 ? "+" : ""}${save.racialBonus} racial)</span>` : "";
-  const saveHtml = !save.required ? "<div><b>Jet de protection :</b> non requis.</div>"
-    : save.manual ? `<div><b>Jet de protection :</b> arbitrage MJ - ${save.success ? "réussi" : "raté"}.</div>`
-    : `<div><b>Jet de protection :</b> ${save.rolled} / ${save.target}${racialSaveDetail} - <b style="color:${save.success ? COLORS.success : COLORS.fail};">${save.success ? "réussi" : "raté"}</b>.</div>`;
   const outcomeData = {
-    applied: { title: "INJONCTION APPLIQUÉE", color: COLORS.success, text: commandType === "catalepsy" ? "La cible tombe en catalepsie pour un round." : commandType === "halt" ? "La cible doit cesser toute action pendant un round." : commandType === "flee" ? "La cible doit s’éloigner du clerc pendant un round." : commandType === "return" ? "La cible doit revenir vers le clerc pendant un round." : commandType === "give" ? "La cible doit remettre un objet porté, si elle le peut." : "L’ordre est enregistré pour l’arbitrage du MJ." },
-    immune: { title: "CIBLE INSENSIBLE", color: COLORS.warn, text: "Les morts-vivants ne sont pas affectés par Injonction." },
-    ambiguous: { title: "ORDRE SANS EFFET", color: COLORS.warn, text: "L’ordre est ambigu et n’a aucun effet." },
-    resisted: { title: "INJONCTION RÉSISTÉE", color: COLORS.fail, text: "La cible résiste au jet de protection contre les sorts." }
+    applied: {
+      message: commandType === "catalepsy" ? "La cible tombe en catalepsie pour un round." : commandType === "halt" ? "La cible doit cesser toute action pendant un round." : commandType === "flee" ? "La cible doit s’éloigner du clerc pendant un round." : commandType === "return" ? "La cible doit revenir vers le clerc pendant un round." : commandType === "give" ? "La cible doit remettre un objet porté, si elle le peut." : "L’ordre est enregistré pour l’arbitrage du MJ.",
+      variant: "success"
+    },
+    immune: { message: "Les morts-vivants ne sont pas affectés par Injonction.", variant: "neutral" },
+    ambiguous: { message: "L’ordre est ambigu et n’a aucun effet.", variant: "neutral" },
+    resisted: { message: "La cible résiste au jet de protection contre les sortilèges.", variant: "failure" }
   }[outcome];
 
-  await ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor: caster }),
-    content: `<div class="add2e-spell-card add2e-spell-card-clerc" style="border-radius:12px;box-shadow:0 4px 10px #0002;background:linear-gradient(135deg,${COLORS.pale2} 0%,${COLORS.pale} 100%);border:1.5px solid ${COLORS.border};overflow:hidden;padding:0;font-family:var(--font-primary);"><div style="background:linear-gradient(90deg,${COLORS.dark} 0%,${COLORS.main} 100%);padding:8px 12px;color:white;display:flex;align-items:center;gap:10px;border-bottom:2px solid #8a611d;"><img src="${esc(caster.img || "icons/svg/mystery-man.svg")}" style="width:36px;height:36px;border-radius:50%;border:2px solid #fff;object-fit:cover;"><div style="line-height:1.2;flex:1;"><div style="font-weight:bold;font-size:1.05em;">${esc(caster.name)}</div><div style="font-size:.85em;opacity:.95;">lance <b>${esc(sourceItem.name)}</b></div></div><div style="text-align:right;font-size:.78em;opacity:.95;">Sort divin</div><img src="${esc(sourceItem.img || "systems/add2e/assets/icones/sorts/injonction.webp")}" style="width:32px;height:32px;border-radius:4px;background:#fff;"></div><div style="padding:10px;"><div style="margin-bottom:6px;font-size:.95em;color:${COLORS.dark};"><b>Cible :</b> ${esc(targetToken.name ?? target.name)}<br><b>Ordre :</b> ${esc(commandWord)}</div><div style="border:1px solid ${COLORS.border};background:#fffdf4;border-radius:6px;padding:8px;text-align:center;color:${COLORS.dark};"><div style="font-weight:bold;color:${outcomeData.color};">${outcomeData.title}</div><div style="margin-top:4px;">${esc(outcomeData.text)}</div>${saveHtml}${outcome === "applied" ? "<div>Durée : <b>1 round</b></div>" : ""}</div><details style="margin-top:8px;background:white;border:1px solid ${COLORS.border};border-radius:6px;"><summary style="cursor:pointer;color:${COLORS.dark};font-weight:600;padding:6px;">Règle appliquée</summary><div style="padding:8px;font-size:.85em;line-height:1.45;color:${COLORS.dark};"><div>Injonction exige un ordre clair d’un seul mot.</div><div>Les morts-vivants sont insensibles. INT 13+ ou au moins 6 DV/niveaux donne droit à un seul jet de protection contre les sorts.</div><div>« Meurs » impose une catalepsie d’un round ; un ordre ambigu n’a aucun effet.</div></div></details></div></div>`,
-    ...style()
-  });
+  const rows = [
+    { label: "Cible", value: targetToken.name ?? target.name },
+    { label: "Ordre", value: commandWord },
+    { label: "Condition de sauvegarde", value: requiresSave ? "INT 13+ ou 6 DV/niveaux" : "Non requise" }
+  ];
+  if (save.required) {
+    rows.push(
+      { label: "D20", value: save.d20 },
+      { label: "Bonus de sauvegarde", value: `${save.bonus >= 0 ? "+" : ""}${save.bonus}` },
+      { label: "Total", value: save.total },
+      { label: "Seuil", value: save.target }
+    );
+  }
+  if (outcome === "applied") rows.push({ label: "Durée", value: "1 round" });
 
+  const chatData = {
+    speaker: ChatMessage.getSpeaker({ actor: caster }),
+    flags: {
+      add2e: {
+        spell: "injonction",
+        version: VERSION,
+        sourceItemUuid: sourceItem.uuid,
+        targetActorUuid: target.uuid,
+        commandWord,
+        commandType,
+        outcome,
+        saveRequired: save.required,
+        saveType: save.resolution?.key ?? null,
+        saveTarget: save.target,
+        saveBonus: save.bonus,
+        saveTotal: save.total,
+        saveSuccess: save.success,
+        saveResolverVersion: save.resolution?.version ?? null
+      }
+    }
+  };
+  if (save.roll) chatData.rolls = [save.roll];
+
+  const options = {
+    actor: caster,
+    title: sourceItem.name || "Injonction",
+    icon: "fas fa-gavel",
+    variant: outcomeData.variant,
+    source: {
+      name: caster.name,
+      img: caster.img,
+      type: "Sort divin",
+      meta: "Clerc niveau 1"
+    },
+    target: {
+      name: target.name,
+      img: target.img,
+      type: isUndead ? "Mort-vivant" : "Créature",
+      meta: save.resolution?.targetResolution?.selected?.className ?? ""
+    },
+    rows,
+    message: outcomeData.message,
+    chatData
+  };
+
+  const preview = globalThis.add2eBuildChatCard(options);
+  if (!String(preview ?? "").trim()) throw new Error("Injonction : carte de chat vide.");
+  await globalThis.add2eCreateChatCard(options);
   return true;
 })();
 
