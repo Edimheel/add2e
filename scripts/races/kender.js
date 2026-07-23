@@ -62,8 +62,8 @@ window.kenderTaunt = async function(actor) {
   const targets = Array.from(game.user?.targets ?? []).filter(target => target?.actor);
   if (targets.length !== 1) return ui.notifications.warn("Insulte kender : cible exactement une créature.");
 
-  if (typeof globalThis.add2eResolveSavingThrow !== "function") {
-    return ui.notifications.error("Insulte kender : le résolveur canonique de sauvegardes est indisponible.");
+  if (typeof globalThis.add2eRollSavingThrow !== "function") {
+    return ui.notifications.error("Insulte kender : l’exécuteur canonique de sauvegardes est indisponible.");
   }
   if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
     return ui.notifications.error("Insulte kender : le constructeur commun des cartes de chat est indisponible.");
@@ -71,29 +71,21 @@ window.kenderTaunt = async function(actor) {
 
   const targetToken = targets[0];
   const targetActor = targetToken.actor;
-  const resolution = globalThis.add2eResolveSavingThrow(targetActor, 4, {
+  const save = await globalThis.add2eRollSavingThrow(targetActor, 4, {
     source: "race:kender-taunt",
     actor,
     caster: actor,
     targetToken,
-    frontale: true
+    frontale: true,
+    createChat: false,
+    showDice: true
   });
-
-  const target = Number(resolution?.target);
-  if (!Number.isFinite(target) || target <= 0) {
+  if (!save?.ok) {
     return ui.notifications.warn(`Insulte kender : aucune sauvegarde contre les sortilèges pour ${targetActor.name}.`);
   }
 
-  const roll = await new Roll("1d20").evaluate();
-  if (game.dice3d) await game.dice3d.showForRoll(roll);
-
-  const d20 = Number(roll.total) || 0;
-  const bonus = Number(resolution.bonus) || 0;
-  const total = d20 + bonus;
-  const success = total >= target;
   let durationRounds = 0;
-
-  if (!success) {
+  if (!save.success) {
     durationRounds = Number((await new Roll("1d10").evaluate()).total) || 1;
     await targetActor.createEmbeddedDocuments("ActiveEffect", [{
       name: "Enragé (Insulte Kender)",
@@ -125,7 +117,7 @@ window.kenderTaunt = async function(actor) {
     }]);
   }
 
-  const applied = resolution.bonusResolution?.applied ?? [];
+  const applied = save.resolution?.bonusResolution?.applied ?? [];
   const modifierDetail = applied.length
     ? applied.map(entry => {
         const modifier = entry?.modifier ?? entry;
@@ -139,7 +131,7 @@ window.kenderTaunt = async function(actor) {
     actor,
     title: "Insulte Kender",
     icon: "fas fa-face-grin-tongue",
-    variant: success ? "success" : "failure",
+    variant: save.success ? "success" : "failure",
     source: {
       name: actor.name,
       img: actor.img,
@@ -150,31 +142,31 @@ window.kenderTaunt = async function(actor) {
       name: targetActor.name,
       img: targetActor.img,
       type: "Sauvegarde contre les sortilèges",
-      meta: resolution.targetResolution?.selected?.className ?? resolution.targetResolution?.source ?? ""
+      meta: save.resolution?.targetResolution?.selected?.className ?? save.resolution?.targetResolution?.source ?? ""
     },
     rows: [
-      { label: "D20", value: d20 },
-      { label: "Bonus de sauvegarde", value: `${bonus >= 0 ? "+" : ""}${bonus}` },
-      { label: "Total", value: total },
-      { label: "Seuil", value: target },
+      { label: "D20", value: save.d20 },
+      { label: "Bonus de sauvegarde", value: `${save.bonus >= 0 ? "+" : ""}${save.bonus}` },
+      { label: "Total", value: save.total },
+      { label: "Seuil", value: save.target },
       { label: "Modificateurs", value: modifierDetail },
-      { label: "Durée", value: success ? "Aucun effet" : `${durationRounds} round${durationRounds > 1 ? "s" : ""}` }
+      { label: "Durée", value: save.success ? "Aucun effet" : `${durationRounds} round${durationRounds > 1 ? "s" : ""}` }
     ],
-    message: success
+    message: save.success
       ? `${targetActor.name} reste de marbre face aux moqueries.`
       : `${targetActor.name} devient fou de rage et doit attaquer le Kender.`,
     chatData: {
       speaker: ChatMessage.getSpeaker({ actor }),
-      rolls: [roll],
+      rolls: [save.roll],
       flags: {
         add2e: {
           ability: "kender-taunt",
-          saveType: resolution.key,
-          saveTarget: target,
-          saveBonus: bonus,
-          saveTotal: total,
-          saveSuccess: success,
-          saveResolverVersion: resolution.version,
+          saveType: save.resolution?.key,
+          saveTarget: save.target,
+          saveBonus: save.bonus,
+          saveTotal: save.total,
+          saveSuccess: save.success,
+          saveResolverVersion: save.version,
           durationRounds,
           sourceActorUuid: actor.uuid,
           targetActorUuid: targetActor.uuid
@@ -186,5 +178,5 @@ window.kenderTaunt = async function(actor) {
   const preview = globalThis.add2eBuildChatCard(options);
   if (!String(preview ?? "").trim()) throw new Error("Insulte kender : carte de chat vide.");
   await globalThis.add2eCreateChatCard(options);
-  return { success, roll, d20, bonus, total, target, durationRounds, resolution };
+  return { ...save, durationRounds };
 };
