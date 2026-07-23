@@ -9,7 +9,7 @@ const register = (Engine, methods) => Object.defineProperties(
   ]))
 );
 
-const ADD2E_ARMOR_CLASS_RESOLVER_VERSION = "2026-07-23-canonical-armor-class-v2-stored-actors";
+const ADD2E_ARMOR_CLASS_RESOLVER_VERSION = "2026-07-23-canonical-armor-class-v3-item-context";
 
 const ADD2E_COMBAT_IDENTITY_PREFIXES = [
   "type_monstre:",
@@ -21,6 +21,11 @@ const ADD2E_COMBAT_IDENTITY_PREFIXES = [
   "alignement:",
   "alignment:"
 ];
+
+const ADD2E_DEFENSIVE_EQUIPMENT_TYPES = new Set([
+  "arme", "weapon", "armure", "armor", "objet", "object",
+  "equipment", "magic", "objet_magique"
+]);
 
 function add2eArmorEffects(actor) {
   const seen = new Set();
@@ -59,7 +64,13 @@ function add2eArmorCanonicalModifier(engine, raw, targetFallback = "total") {
   if (!normalized || normalized.domain !== "armor-class") return null;
   const target = add2eArmorTarget(engine, normalized.target);
   if (!["naturel", "total", "all"].includes(target)) return null;
-  return { ...normalized, target };
+
+  const sourceContext = raw?._context ?? {};
+  const sourceItem = sourceContext.sourceItem ?? null;
+  const sourceType = String(sourceItem?.type ?? "").toLowerCase();
+  if (sourceItem && ADD2E_DEFENSIVE_EQUIPMENT_TYPES.has(sourceType) && !engine.itemEquipped(sourceItem)) return null;
+
+  return { ...normalized, target, _context: sourceContext };
 }
 
 function add2eArmorChangeModifier(engine, effect, change, index) {
