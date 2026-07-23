@@ -9,7 +9,7 @@ import { installEffectsEngineDamage } from "./effects-engine/30-resistance-damag
 import { installEffectsEngineMonk } from "./effects-engine/40-monk.mjs";
 import { installEffectsEngineAnalysis } from "./effects-engine/50-analysis.mjs";
 
-globalThis.ADD2E_EFFECTS_ENGINE_VERSION = "2026-07-10-passive-class-effects-v4";
+globalThis.ADD2E_EFFECTS_ENGINE_VERSION = "2026-07-23-canonical-modifiers-public-normalization-v5";
 
 class Add2eEffectsEngine {}
 
@@ -19,6 +19,16 @@ installEffectsEngineDefense(Add2eEffectsEngine);
 installEffectsEngineDamage(Add2eEffectsEngine);
 installEffectsEngineMonk(Add2eEffectsEngine);
 installEffectsEngineAnalysis(Add2eEffectsEngine);
+
+function installPublicNormalizationContract(Engine) {
+  Object.defineProperty(Engine, "normalizeKey", {
+    configurable: true,
+    writable: true,
+    value(value) {
+      return this.normalizeTag(value).replace(/s$/, "");
+    }
+  });
+}
 
 function installPassiveClassFeatureContract(Engine) {
   const baseNormalizeClassFeature = Engine.normalizeClassFeature?.bind(Engine);
@@ -555,6 +565,7 @@ function add2eIsCapabilityTransformationNaturalAttackActive(actor, item) {
   return !formKey || !attackFormKey || formKey === attackFormKey;
 }
 
+installPublicNormalizationContract(Add2eEffectsEngine);
 installPassiveClassFeatureContract(Add2eEffectsEngine);
 installGenericSaveExtensions(Add2eEffectsEngine);
 installSingleReadActionRules(Add2eEffectsEngine);
