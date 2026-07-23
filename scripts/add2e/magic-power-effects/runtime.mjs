@@ -156,6 +156,7 @@ export function passivePower(power) {
   if (norm(power?.automation) !== "automatic") return false;
   const type = norm(power?.activation?.type);
   const trigger = norm(power?.activation?.trigger);
+  if (["configured-result", "configured_result", "result-configured", "result_configured"].includes(trigger)) return false;
   if (["passive", "automatic", "always_on", "permanent"].includes(type)) return true;
   const activation = `${type} ${trigger}`;
   return ["equipped", "equip", "worn", "carried", "porte", "portee", "time", "attack", "damage", "hit", "round", "projectile", "target", "drawn"]
