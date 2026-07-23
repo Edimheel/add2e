@@ -2,7 +2,7 @@
 // ADD2E — Tirage et affectation des caractéristiques — DialogV2
 // Compatible Foundry V13/V14/V15.
 // ============================================================
-const ADD2E_CARAC_ROLLER_VERSION = "2026-07-23-carac-roller-canonical-racial-v11";
+const ADD2E_CARAC_ROLLER_VERSION = "2026-07-23-carac-roller-independent-class-plans-v12";
 const ADD2E_CARAC_DIALOG_WIDTH = 600;
 const ADD2E_CARACS = ["force", "dexterite", "constitution", "intelligence", "sagesse", "charisme"];
 const ADD2E_CARAC_SHORT = {
@@ -44,6 +44,31 @@ function add2eCaracSlug(value) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "");
+}
+
+function add2eCaracRequirementKey(value) {
+  const key = add2eCaracSlug(value);
+  return ({
+    for: "force",
+    str: "force",
+    strength: "force",
+    dex: "dexterite",
+    dexterity: "dexterite",
+    con: "constitution",
+    int: "intelligence",
+    sag: "sagesse",
+    wis: "sagesse",
+    wisdom: "sagesse",
+    cha: "charisme",
+    charisma: "charisme"
+  })[key] ?? key;
+}
+
+function add2eCaracRequirementMinimum(value) {
+  if (value && typeof value === "object") {
+    return add2eCaracNumber(value.min ?? value.minimum ?? value.value ?? value.score, 0);
+  }
+  return add2eCaracNumber(value, 0);
 }
 
 function add2eCaracDialogV2() {
@@ -421,10 +446,6 @@ class Add2eCaracRoller {
     return add2eCaracFinalValue(this.actor, carac, this._naturalValueForCarac(carac));
   }
 
-  _finalValueForIndex(index, carac) {
-    return add2eCaracFinalValue(this.actor, carac, this.values[index]);
-  }
-
   _updateCaracDisplay() {
     for (const carac of ADD2E_CARACS) {
       const element = this._sheetTargets().find(target => target.dataset.carac === carac);
@@ -439,19 +460,26 @@ class Add2eCaracRoller {
   }
 
   _classSuggestionPlan(cls) {
-    const requis = Object.entries(cls.system?.caracs_min || {})
-      .map(([carac, value]) => ({ carac, min: Number(value) || 0 }))
-      .filter(entry => ADD2E_CARACS.includes(entry.carac) && entry.min > 0)
+    const requirementsByAbility = new Map();
+    for (const [rawAbility, rawMinimum] of Object.entries(cls.system?.caracs_min || {})) {
+      const carac = add2eCaracRequirementKey(rawAbility);
+      const min = add2eCaracRequirementMinimum(rawMinimum);
+      if (!ADD2E_CARACS.includes(carac) || min <= 0) continue;
+      requirementsByAbility.set(carac, Math.max(min, requirementsByAbility.get(carac) ?? 0));
+    }
+
+    const requis = [...requirementsByAbility.entries()]
+      .map(([carac, min]) => ({ carac, min }))
       .sort((left, right) => right.min - left.min || left.carac.localeCompare(right.carac, "fr"));
 
     const searchPlan = (position, availableIndexes, assignments) => {
       if (position >= requis.length) return assignments;
       const requirement = requis[position];
       const options = availableIndexes
-        .filter(index => this._finalValueForIndex(index, requirement.carac) >= requirement.min)
+        .filter(index => add2eCaracNumber(this.values[index], 0) >= requirement.min)
         .sort((left, right) => {
-          const leftSlack = this._finalValueForIndex(left, requirement.carac) - requirement.min;
-          const rightSlack = this._finalValueForIndex(right, requirement.carac) - requirement.min;
+          const leftSlack = add2eCaracNumber(this.values[left], 0) - requirement.min;
+          const rightSlack = add2eCaracNumber(this.values[right], 0) - requirement.min;
           return leftSlack - rightSlack || left - right;
         });
 
@@ -471,7 +499,7 @@ class Add2eCaracRoller {
 
     const placements = requis.map(requirement => {
       const index = assignments[requirement.carac];
-      const total = this._finalValueForIndex(index, requirement.carac);
+      const total = add2eCaracNumber(this.values[index], 0);
       return `<span style="display:inline-flex!important;gap:1px!important;align-items:center!important;"><b>${ADD2E_CARAC_SHORT[requirement.carac]}</b><span class="carac-ok" style="color:#d8ffd4!important;font-weight:900!important;">${total}</span></span>`;
     });
     return { className: cls.name, placements, assignments };
