@@ -5,7 +5,7 @@
 
 import { levelForClassXp } from "./17b-multiclass-rules.mjs";
 
-export const ADD2E_RACE_CLASS_DROP_VERSION = "2026-07-09-class-alignment-effects-engine-v1";
+export const ADD2E_RACE_CLASS_DROP_VERSION = "2026-07-23-definitive-racial-abilities-v2";
 globalThis.ADD2E_RACE_CLASS_DROP_VERSION = ADD2E_RACE_CLASS_DROP_VERSION;
 
 export const CARACS = ["force", "dexterite", "constitution", "intelligence", "sagesse", "charisme"];
@@ -104,8 +104,34 @@ export function add2eDropNumber(value, fallback = 0) {
   return Number.isFinite(number) ? number : fallback;
 }
 
+function add2eCanonicalRacialAdjustments(actor) {
+  const raw = actor?.flags?.add2e?.racialAbilityAdjustments;
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+  return Object.fromEntries(CARACS.map(carac => [carac, add2eDropNumber(raw[carac], 0)]));
+}
+
+function add2eLegacyRacialAdjustments(actor) {
+  const system = actor?.system ?? {};
+  const registry = system.bonus_caracteristiques && typeof system.bonus_caracteristiques === "object"
+    ? system.bonus_caracteristiques
+    : {};
+  return Object.fromEntries(CARACS.map(carac => {
+    const registryValue = add2eDropNumber(registry?.[carac], 0);
+    const directValue = add2eDropNumber(system?.[`${carac}_race`], 0);
+    return [carac, registryValue || directValue];
+  }));
+}
+
+function add2eRacialLegacyDeletionUpdate() {
+  const update = { "system.-=bonus_caracteristiques": null };
+  for (const carac of CARACS) update[`system.-=${carac}_race`] = null;
+  return update;
+}
+
 export function add2eActorBaseCaracForRaceDrop(actor, carac) {
-  return add2eDropNumber(actor?.system?.[`${carac}_base`] ?? actor?.system?.[carac], 10);
+  const definitive = add2eDropNumber(actor?.system?.[`${carac}_base`] ?? actor?.system?.[carac], 10);
+  const appliedRacial = add2eDropNumber(add2eCanonicalRacialAdjustments(actor)?.[carac], 0);
+  return definitive - appliedRacial;
 }
 
 export function add2eClampRaceBonusForBase(base, bonus) {
@@ -118,15 +144,14 @@ export function add2eClampRaceBonusForBase(base, bonus) {
 
 export function add2eClampRaceBonusesForExistingBases(actor, rawBonuses = {}, context = {}) {
   const source = rawBonuses && typeof rawBonuses === "object" ? rawBonuses : {};
-  const output = add2eDropClone(source) ?? {};
+  const output = {};
   const report = [];
   for (const carac of CARACS) {
     const base = add2eActorBaseCaracForRaceDrop(actor, carac);
-    const raw = add2eDropNumber(output?.[carac], 0);
-    if (!raw) continue;
+    const raw = add2eDropNumber(source?.[carac], 0);
     const applied = add2eClampRaceBonusForBase(base, raw);
     output[carac] = applied;
-    report.push({ carac, base, rawBonus: raw, appliedBonus: applied, total: base + applied, changed: raw !== applied });
+    if (raw || applied) report.push({ carac, base, rawBonus: raw, appliedBonus: applied, total: base + applied, changed: raw !== applied });
   }
   add2eDropDebugRaceClass("RACIAL_BONUS_CAP", { actor: actor?.name, race: context?.raceName ?? null, report, adjustedBonuses: output });
   return output;
@@ -134,7 +159,52 @@ export function add2eClampRaceBonusesForExistingBases(actor, rawBonuses = {}, co
 
 export function add2eRaceAdjustedCaracTotal(actor, carac, rawBonuses = {}) {
   const base = add2eActorBaseCaracForRaceDrop(actor, carac);
-  return base + add2eClampRaceBonusForBase(base, rawBonuses?.[carac] ?? actor?.system?.[`${carac}_race`] ?? 0);
+  return base + add2eClampRaceBonusForBase(base, rawBonuses?.[carac] ?? 0);
+}
+
+async function add2eMigrateActorRacialAbilityAdjustments(actor) {
+  if (!actor?.system || actor.type !== "personnage") return false;
+  const canonical = add2eCanonicalRacialAdjustments(actor);
+  const hasCanonical = CARACS.some(carac => Object.prototype.hasOwnProperty.call(actor.flags?.add2e?.racialAbilityAdjustments ?? {}, carac));
+  if (hasCanonical) {
+    const hasLegacy = actor.system?.bonus_caracteristiques !== undefined
+      || CARACS.some(carac => actor.system?.[`${carac}_race`] !== undefined);
+    if (hasLegacy) {
+      await actor.update(add2eRacialLegacyDeletionUpdate(), {
+        add2eInternal: true,
+        add2eReason: "racial-ability-remove-legacy-fields"
+      });
+    }
+    return false;
+  }
+
+  const legacy = add2eLegacyRacialAdjustments(actor);
+  const hasLegacyValue = CARACS.some(carac => add2eDropNumber(legacy[carac], 0) !== 0);
+  const hasLegacyField = actor.system?.bonus_caracteristiques !== undefined
+    || CARACS.some(carac => actor.system?.[`${carac}_race`] !== undefined);
+  if (!hasLegacyValue && !hasLegacyField) return false;
+
+  const applied = {};
+  const update = add2eRacialLegacyDeletionUpdate();
+  for (const carac of CARACS) {
+    const base = add2eDropNumber(actor.system?.[`${carac}_base`] ?? actor.system?.[carac], 10);
+    const adjustment = add2eClampRaceBonusForBase(base, legacy[carac]);
+    applied[carac] = adjustment;
+    update[`system.${carac}_base`] = base + adjustment;
+  }
+  update["flags.add2e.racialAbilityAdjustments"] = applied;
+  update["flags.add2e.racialAbilitySource"] = {
+    kind: "race",
+    id: String(actor.items?.find?.(item => String(item.type ?? "").toLowerCase() === "race")?.id ?? "legacy-race"),
+    uuid: String(actor.items?.find?.(item => String(item.type ?? "").toLowerCase() === "race")?.uuid ?? ""),
+    name: String(actor.system?.race ?? actor.system?.details_race?.name ?? "Race")
+  };
+  await actor.update(update, {
+    add2eInternal: true,
+    add2eReason: "racial-ability-definitive-migration"
+  });
+  if (typeof actor.sheet?.autoSetCaracAjustements === "function") await actor.sheet.autoSetCaracAjustements();
+  return true;
 }
 
 export function checkClassStatMin(actor, classItem, candidateRaceData = null, candidateAlignment = null, options = {}) {
@@ -145,7 +215,7 @@ export function checkClassStatMin(actor, classItem, candidateRaceData = null, ca
   const raceData = candidateRaceData ?? actor?.items?.find?.(item => String(item.type ?? "").toLowerCase() === "race") ?? null;
   const raceTags = add2eRaceTagsFromDataSafe(raceData);
   const actorLevel = Number(actorSystem.niveau ?? 1) || 1;
-  const candidateBonus = candidateRaceData?.system?.bonus_caracteristiques ?? actorSystem.bonus_caracteristiques ?? {};
+  const candidateBonus = raceData?.system?.bonus_caracteristiques ?? {};
   const missing = [];
 
   const races = classSystem.raceRestriction?.races;
@@ -185,8 +255,11 @@ export function checkClassStatMin(actor, classItem, candidateRaceData = null, ca
 
 export async function add2eApplyRaceItemDataToActor(actor, raceData, sheet = null, options = {}) {
   if (!actor || !raceData || raceData.type !== "race") return null;
+  await add2eMigrateActorRacialAbilityAdjustments(actor);
+
   const data = add2eItemDataCloneForDrop(raceData);
   data.type = "race";
+  const naturalBases = Object.fromEntries(CARACS.map(carac => [carac, add2eActorBaseCaracForRaceDrop(actor, carac)]));
 
   const existingRaces = actor.items.filter(item => String(item.type ?? "").toLowerCase() === "race");
   for (const oldRace of existingRaces) {
@@ -198,7 +271,6 @@ export async function add2eApplyRaceItemDataToActor(actor, raceData, sheet = nul
   }
   if (existingRaces.length) await actor.deleteEmbeddedDocuments("Item", existingRaces.map(item => item.id), { add2eInternal: true, render: false });
 
-  await actor.update({ "system.bonus_caracteristiques": {} }, { add2eInternal: true });
   const [raceDoc] = await actor.createEmbeddedDocuments("Item", [data], { add2eInternal: true });
   if (!raceDoc) return null;
 
@@ -216,12 +288,25 @@ export async function add2eApplyRaceItemDataToActor(actor, raceData, sheet = nul
   }
 
   const raceSystem = add2eDropClone(raceDoc.system ?? {}) ?? {};
-  const bonuses = add2eClampRaceBonusesForExistingBases(actor, raceSystem.bonus_caracteristiques ?? {}, { raceName: raceDoc.name });
-  await actor.update({
+  const bonuses = {};
+  const report = [];
+  for (const carac of CARACS) {
+    const raw = add2eDropNumber(raceSystem.bonus_caracteristiques?.[carac], 0);
+    const applied = add2eClampRaceBonusForBase(naturalBases[carac], raw);
+    bonuses[carac] = applied;
+    if (raw || applied) report.push({ carac, base: naturalBases[carac], rawBonus: raw, appliedBonus: applied, total: naturalBases[carac] + applied, changed: raw !== applied });
+  }
+  add2eDropDebugRaceClass("RACIAL_BONUS_APPLY", { actor: actor.name, race: raceDoc.name, report });
+
+  const update = {
+    ...add2eRacialLegacyDeletionUpdate(),
     "system.race": raceDoc.name,
     "system.details_race": { ...raceSystem, bonus_caracteristiques: bonuses, name: raceDoc.name, label: raceSystem.label || raceDoc.name, img: raceDoc.img || raceSystem.img || "" },
-    "system.bonus_caracteristiques": bonuses
-  }, { add2eInternal: true });
+    "flags.add2e.racialAbilityAdjustments": bonuses,
+    "flags.add2e.racialAbilitySource": { kind: "race", id: raceDoc.id, uuid: raceDoc.uuid, name: raceDoc.name }
+  };
+  for (const carac of CARACS) update[`system.${carac}_base`] = naturalBases[carac] + bonuses[carac];
+  await actor.update(update, { add2eInternal: true, add2eReason: "racial-ability-definitive-apply" });
 
   if (typeof sheet?.autoSetCaracAjustements === "function") await sheet.autoSetCaracAjustements();
   if (options.notify !== false) ui.notifications.info(`Race ajustée automatiquement : ${raceDoc.name}.`);
@@ -302,6 +387,15 @@ export async function add2eResolveDropCompatibilityWithPopup(actor, itemData, sh
   return { ok: true, handled: false };
 }
 
+Hooks.once("ready", () => {
+  if (!game.user?.isGM || game.users?.activeGM?.id !== game.user.id) return;
+  setTimeout(() => {
+    for (const actor of game.actors?.contents ?? []) {
+      add2eMigrateActorRacialAbilityAdjustments(actor).catch(error => console.error("[ADD2E][RACE][ABILITY_MIGRATION]", { actor: actor?.name, error }));
+    }
+  }, 250);
+});
+
 try { globalThis.add2eDropDebugRaceClass = add2eDropDebugRaceClass; } catch (_error) {}
 try { globalThis.add2eItemDataCloneForDrop = add2eItemDataCloneForDrop; } catch (_error) {}
 try { globalThis.add2eWorldItemsByType = add2eWorldItemsByType; } catch (_error) {}
@@ -315,4 +409,5 @@ try { globalThis.CARACS = CARACS; } catch (_error) {}
 try { globalThis.CARAC_SHORT = CARAC_SHORT; } catch (_error) {}
 try { globalThis.add2eResolveDropCompatibilityWithPopup = add2eResolveDropCompatibilityWithPopup; } catch (_error) {}
 try { globalThis.add2eClampRaceBonusesForExistingBases = add2eClampRaceBonusesForExistingBases; } catch (_error) {}
+try { globalThis.add2eMigrateActorRacialAbilityAdjustments = add2eMigrateActorRacialAbilityAdjustments; } catch (_error) {}
 try { globalThis.add2ePickClassAlignment = (actor, classData, fallback = "") => add2eDropPickClassAlignment(actor, classData, fallback); } catch (_error) {}
