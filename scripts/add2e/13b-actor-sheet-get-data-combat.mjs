@@ -1,4 +1,4 @@
-// ADD2E — Actor sheet getData : CA canonique, équipement et synthèse de combat.
+// ADD2E — Actor sheet getData : CA canonique, sauvegardes, équipement et synthèse de combat.
 // Compatible Foundry V13/V14/V15.
 
 function add2eSheetCombatNormalizeTag(value) {
@@ -89,6 +89,68 @@ function add2eSheetArmorClassEngine() {
     throw new Error("Le résolveur canonique ADD2E de classe d’armure n’est pas disponible.");
   }
   return engine;
+}
+
+function add2eSheetSavingThrowEngine() {
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  if (!engine || typeof engine.resolveSavingThrow !== "function") {
+    throw new Error("Le résolveur canonique ADD2E de sauvegardes n’est pas disponible.");
+  }
+  return engine;
+}
+
+function add2eSheetSaveSigned(value) {
+  const number = Number(value) || 0;
+  return `${number >= 0 ? "+" : ""}${number}`;
+}
+
+function add2eSheetSaveSourceLabel(resolution) {
+  const selected = resolution?.targetResolution?.selected;
+  if (selected?.kind === "class") {
+    return [selected.className, selected.classLevel ? `niveau ${selected.classLevel}` : ""]
+      .filter(Boolean)
+      .join(" · ");
+  }
+  return selected?.name ?? "Valeur de l’acteur";
+}
+
+function add2eSheetSavingThrowRows(actor) {
+  const engine = add2eSheetSavingThrowEngine();
+  return Array.from({ length: 5 }, (_unused, index) => {
+    const resolution = engine.resolveSavingThrow(actor, index, {
+      source: "actor-sheet-get-data",
+      consumer: "application-v2",
+      frontale: true
+    });
+    const target = Number(resolution?.target);
+    const hasTarget = Number.isFinite(target) && target > 0;
+    const bonus = Number(resolution?.bonus) || 0;
+    const sourceLabel = add2eSheetSaveSourceLabel(resolution);
+    const targetDisplay = hasTarget ? String(target) : "—";
+    const bonusDisplay = add2eSheetSaveSigned(bonus);
+    const title = [
+      `Jet de ${resolution?.label ?? "sauvegarde"}`,
+      `Seuil : ${targetDisplay}`,
+      `Bonus : ${bonusDisplay}`,
+      `Source : ${sourceLabel}`
+    ].join(" · ");
+
+    return {
+      index,
+      key: resolution?.key ?? `save${index}`,
+      label: resolution?.label ?? "Sauvegarde",
+      shortLabel: resolution?.definition?.shortLabel ?? resolution?.label ?? "Sauvegarde",
+      icon: resolution?.definition?.icon ?? "fas fa-dice-d20",
+      target: hasTarget ? target : null,
+      targetDisplay,
+      bonus,
+      bonusDisplay,
+      hasBonus: bonus !== 0,
+      sourceLabel,
+      title,
+      resolution
+    };
+  });
 }
 
 function add2eSheetArmorLabel(resolution, fallback) {
@@ -241,14 +303,7 @@ export function add2ePrepareActorSheetCombatData({ actor, data, sys, progression
     } : null
   };
 
-  data.saveTitles = [
-    "Jet de Paralysie / Poison / Mort magique",
-    "Jet de Pétrification / Polymorphose",
-    "Jet de Baguettes",
-    "Jet de Souffles",
-    "Jet de Sortilèges"
-  ];
-  data.saveShortLabels = ["Paralysie", "Pétrif.", "Baguettes", "Souffles", "Sorts"];
+  data.saveRows = add2eSheetSavingThrowRows(actor);
   data.forceExValues = [];
   for (let value = 1; value <= 100; value += 1) {
     data.forceExValues.push({ value, label: value === 100 ? "00" : value.toString().padStart(2, "0") });
