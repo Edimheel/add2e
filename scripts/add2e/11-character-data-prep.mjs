@@ -58,28 +58,30 @@ async function add2eSyncMulticlassHp(actor, { force = false, syncCurrent = false
 }
 
 const ADD2E_CARAC_CHANGE_KEYS = Object.freeze([
-  "force", "force_base", "force_race", "force_ex",
-  "dexterite", "dexterite_base", "dexterite_race",
-  "constitution", "constitution_base", "constitution_race",
-  "intelligence", "intelligence_base", "intelligence_race",
-  "sagesse", "sagesse_base", "sagesse_race",
-  "charisme", "charisme_base", "charisme_race",
-  "bonus_caracteristiques", "bonus_divers_caracteristiques"
+  "force", "force_base", "force_ex",
+  "dexterite", "dexterite_base",
+  "constitution", "constitution_base",
+  "intelligence", "intelligence_base",
+  "sagesse", "sagesse_base",
+  "charisme", "charisme_base"
 ]);
 
 const ADD2E_CARAC_RECALC_REASONS = new Set([
-  "magic-characteristics-initialize-base",
-  "magic-characteristics-recalculate"
+  "ability-base-initialize",
+  "ability-derived-recalculate"
 ]);
 
 function add2eActorUpdateChangesCharacteristic(changes = {}) {
   const system = changes?.system && typeof changes.system === "object" ? changes.system : {};
-  return ADD2E_CARAC_CHANGE_KEYS.some(key => {
+  const systemChanged = ADD2E_CARAC_CHANGE_KEYS.some(key => {
     const path = `system.${key}`;
     return Object.prototype.hasOwnProperty.call(system, key)
       || Object.prototype.hasOwnProperty.call(changes, path)
       || foundry.utils.hasProperty(changes, path);
   });
+  return systemChanged
+    || Object.prototype.hasOwnProperty.call(changes, "flags.add2e.modifiers")
+    || foundry.utils.hasProperty(changes, "flags.add2e.modifiers");
 }
 
 Hooks.on("updateActor", async (actor, changes = {}, options = {}, _userId) => {
@@ -135,7 +137,7 @@ Hooks.on("updateActor", async (actor, changes = {}, options = {}, _userId) => {
   }
 
   // =====================================================
-  // 1) Auto-save & recalcul des bonus caracs
+  // 1) Recalcul des caractéristiques par le résolveur unique
   // =====================================================
   try {
     if (caracChanged && !ACTIVE_CARAC_AUTO.has(actor.id)) {
@@ -211,20 +213,18 @@ Hooks.on("updateActor", async (actor, changes = {}, options = {}, _userId) => {
   } catch (_e) {}
 });
 
-function add2eEffectChangesCharacteristic(effect) {
-  const changes = Array.from(effect?.changes ?? []);
-  if (changes.some(change => /^system\.(force|dexterite|constitution|intelligence|sagesse|charisme)_base$/.test(String(change?.key ?? "")))) return true;
-
-  const rules = effect?.flags?.add2e?.rules;
-  const list = Array.isArray(rules) ? rules : (rules && typeof rules === "object" ? Object.values(rules) : []);
-  return list.some(rule => ["characteristic_bonus", "characteristic_override"].includes(String(rule?.kind ?? rule?.type ?? "")));
+function add2eDocumentHasAbilityModifier(document) {
+  const raw = document?.flags?.add2e?.modifiers;
+  const list = Array.isArray(raw) ? raw : (raw && typeof raw === "object" ? Object.values(raw) : []);
+  return list.some(modifier => String(modifier?.domain ?? "").trim().toLowerCase() === "ability");
 }
 
 const ADD2E_EFFECT_CARAC_RECALC_LOCK = new Set();
-async function add2eRecalculateCharacteristicsAfterEffect(effect) {
-  if (!add2eEffectChangesCharacteristic(effect)) return;
-  const actor = effect?.parent?.documentName === "Actor" ? effect.parent : effect?.parent?.actor;
-  if (!actor?.system || ADD2E_EFFECT_CARAC_RECALC_LOCK.has(actor.id)) return;
+async function add2eRecalculateCharacteristicsAfterModifierDocument(document) {
+  if (!add2eDocumentHasAbilityModifier(document)) return;
+  const parent = document?.parent ?? document?.actor ?? null;
+  const actor = parent?.documentName === "Actor" ? parent : parent?.actor ?? null;
+  if (!actor?.system || actor.type !== "personnage" || ADD2E_EFFECT_CARAC_RECALC_LOCK.has(actor.id)) return;
 
   ADD2E_EFFECT_CARAC_RECALC_LOCK.add(actor.id);
   try {
@@ -237,9 +237,12 @@ async function add2eRecalculateCharacteristicsAfterEffect(effect) {
   }
 }
 
-Hooks.on("createActiveEffect", effect => add2eRecalculateCharacteristicsAfterEffect(effect));
-Hooks.on("updateActiveEffect", effect => add2eRecalculateCharacteristicsAfterEffect(effect));
-Hooks.on("deleteActiveEffect", effect => add2eRecalculateCharacteristicsAfterEffect(effect));
+Hooks.on("createActiveEffect", effect => add2eRecalculateCharacteristicsAfterModifierDocument(effect));
+Hooks.on("updateActiveEffect", effect => add2eRecalculateCharacteristicsAfterModifierDocument(effect));
+Hooks.on("deleteActiveEffect", effect => add2eRecalculateCharacteristicsAfterModifierDocument(effect));
+Hooks.on("createItem", item => add2eRecalculateCharacteristicsAfterModifierDocument(item));
+Hooks.on("updateItem", item => add2eRecalculateCharacteristicsAfterModifierDocument(item));
+Hooks.on("deleteItem", item => add2eRecalculateCharacteristicsAfterModifierDocument(item));
 
 // ===============================
 // TABLES AJUSTEMENTS CARACTÉRISTIQUES
