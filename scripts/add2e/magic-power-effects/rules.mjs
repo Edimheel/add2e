@@ -53,7 +53,8 @@ function pushTag(tags, prefix, rawValues, suffix = null) {
 
 function movementCompilation(effect, type, tags, rules) {
   if (!["movement_mode", "movement_bonus", "movement_modifier", "movement_multiplier", "movement_override",
-    "speed_bonus", "speed_modifier", "speed_multiplier", "speed_override", "base_movement", "fixed_movement"].includes(type)) return;
+    "movement_speed_multiplier", "speed_bonus", "speed_modifier", "speed_multiplier", "speed_override",
+    "base_movement", "fixed_movement"].includes(type)) return;
   const explicitMode = norm(effect.operation ?? effect.applyMode ?? effect.application ?? effect.mode);
   const multiplier = number(effect.multiplier, effect.factor, effect.coefficient);
   const direct = number(effect.value, effect.amount, effect.bonus, effect.modifier, effect.speed, effect.movement, effect.distance);
@@ -85,20 +86,24 @@ function movementCompilation(effect, type, tags, rules) {
     value: Number.isFinite(value) ? value : null,
     operation: Number.isFinite(value) ? operation : "mode",
     modes: movementModes,
-    priority
+    priority,
+    ...(hasValue(effect.fatigueRule) ? { fatigueRule: clone(effect.fatigueRule) } : {})
   });
 }
 
 function characteristicCompilation(effect, type, tags, rules) {
   const bonusTypes = ["ability_bonus", "characteristic_bonus", "stat_bonus", "attribute_bonus"];
   const overrideTypes = ["ability_override", "characteristic_override", "stat_override", "attribute_override"];
-  if (![...bonusTypes, ...overrideTypes].includes(type)) return;
-  const value = number(effect.value, effect.bonus, effect.amount, effect.modifier, effect.score);
-  if (!Number.isFinite(value)) return;
+  const modifierTypes = ["ability_modifier"];
+  if (![...bonusTypes, ...overrideTypes, ...modifierTypes].includes(type)) return;
+  const rawValue = number(effect.value, effect.bonus, effect.amount, effect.modifier, effect.score);
+  if (!Number.isFinite(rawValue)) return;
   const abilities = [...new Set(values(effect, ["ability", "abilities", "stat", "stats", "attribute", "attributes", "characteristic", "characteristics", "target", "targetAny"])
     .map(canonicalAbility).filter(Boolean))];
   const explicitMode = norm(effect.mode ?? effect.operation ?? effect.applyMode);
   const override = overrideTypes.includes(type) || ["override", "set", "fixed", "replace", "impose", "imposed"].includes(explicitMode);
+  const penalty = modifierTypes.includes(type) && ["penalty", "malus", "subtract", "subtraction", "soustraire"].includes(explicitMode);
+  const value = penalty ? -Math.abs(rawValue) : rawValue;
   const priority = Math.max(1, Math.floor(number(effect.priority) ?? 100));
   const operation = override ? "override" : "add";
 
@@ -150,16 +155,17 @@ function defenseCompilation(effect, type, tags) {
       }
     }
   }
-  if (["saving_throw_bonus", "save_bonus", "saving_bonus", "bonus_save", "saving_throw_modifier"].includes(type)) {
-    const value = number(effect.bonus, effect.value, effect.amount, effect.modifier);
-    const targets = values(effect, ["saveAny", "categories", "category", "against", "types", "targetAny"]);
+  if (["saving_throw_bonus", "save_bonus", "saving_bonus", "bonus_save", "saving_throw_modifier", "permanent_save_modifier"].includes(type)) {
+    let value = number(effect.bonus, effect.value, effect.amount, effect.modifier, effect.penalty);
+    if (type === "permanent_save_modifier" && Number.isFinite(value) && value > 0) value = -Math.abs(value);
+    const targets = values(effect, ["saveAny", "saveType", "saveTypes", "categories", "category", "against", "types", "targetAny"]);
     if (Number.isFinite(value) && value !== 0) {
       targets.length ? pushTag(tags, "bonus_save_vs", targets, signed(value)) : tags.add(`bonus_save:${signed(value)}`);
     }
   }
 }
 
-function combatCompilation(effect, type, tags) {
+function combatCompilation(effect, type, tags, rules) {
   if (["attack_bonus", "hit_bonus", "damage_bonus", "combat_bonus", "attack_damage_bonus", "weapon_magic_bonus"].includes(type)) {
     const attack = number(effect.attackBonus, effect.hitBonus, effect.bonusToucher, effect.toucher,
       type !== "damage_bonus" ? effect.bonus ?? effect.value : null);
@@ -177,6 +183,25 @@ function combatCompilation(effect, type, tags) {
     const prefix = type === "conditional_attack_bonus" ? "bonus_attaque_conditionnel" : "bonus_degats_conditionnel";
     if (Number.isFinite(value)) pushTag(tags, prefix, effect.targetAny ?? effect.targets ?? effect.against, signed(value));
   }
+  if (type === "conditional_armor_bonus") {
+    const value = number(effect.value, effect.bonus, effect.amount, effect.armorBonus, effect.acBonus);
+    const conditions = values(effect, ["condition", "conditions", "targetAny", "against"]).map(norm).filter(Boolean);
+    if (Number.isFinite(value)) {
+      for (const condition of conditions.length ? conditions : ["all"]) {
+        if (["projectile", "projectiles", "missile", "missiles", "ranged"].includes(condition)) tags.add(`bonus_ca_projectile:${signed(value)}`);
+        else tags.add(`bonus_ca_conditionnel:${condition}:${signed(value)}`);
+      }
+      rules.push({ kind: "conditional_armor_bonus", type, conditions: conditions.length ? conditions : ["all"], value });
+    }
+  }
+  if (type === "negate_magic_projectile") {
+    const chance = Math.max(0, Math.min(100, number(effect.chance, effect.percentage, effect.percent, effect.value) ?? 0));
+    const arc = norm(effect.arc ?? effect.direction ?? effect.zone ?? "any") || "any";
+    if (chance > 0) {
+      tags.add(`negate_magic_projectile:${arc}:${chance}`);
+      rules.push({ kind: "negate_magic_projectile", type, arc, chance });
+    }
+  }
 }
 
 export function compileDefinition(effect = {}) {
@@ -190,7 +215,7 @@ export function compileDefinition(effect = {}) {
   characteristicCompilation(effect, type, tags, rules);
   fixedArmorClassCompilation(effect, type, tags, rules);
   defenseCompilation(effect, type, tags);
-  combatCompilation(effect, type, tags);
+  combatCompilation(effect, type, tags, rules);
 
   if (type === "regeneration") {
     const points = Math.max(0, Math.floor(number(effect.points, effect.value, effect.amount) ?? 0));
@@ -251,7 +276,7 @@ export function compiledFromRules(rules = []) {
   return { tags: uniqueTags(tags), changes: uniqueChanges(changes), rules: normalizedRules };
 }
 
-export function fixedArmorClassRule(rule) {
+export function fixedArmorClassRule(rule = {}) {
   const type = ruleType(rule);
   if (!["fixed_armor_class", "armor_class_fixed", "armor_class_base", "fixed_ac", "ac_fixed",
     "classe_armure_fixe", "classe_armure_base", "ca_fixe", "ca_base", "defense_base"].includes(type)
