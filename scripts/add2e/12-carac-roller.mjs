@@ -1,7 +1,8 @@
 // ============================================================
-// ADD2E — Tirage et affectation des caractéristiques — Dialog V2
+// ADD2E — Tirage et affectation des caractéristiques — DialogV2
+// Compatible Foundry V13/V14/V15.
 // ============================================================
-const ADD2E_CARAC_ROLLER_VERSION = "2026-07-05-carac-roller-force-ex-cancel-v10";
+const ADD2E_CARAC_ROLLER_VERSION = "2026-07-23-carac-roller-canonical-racial-v11";
 const ADD2E_CARAC_DIALOG_WIDTH = 600;
 const ADD2E_CARACS = ["force", "dexterite", "constitution", "intelligence", "sagesse", "charisme"];
 const ADD2E_CARAC_SHORT = {
@@ -55,13 +56,38 @@ function add2eCaracSheetRoot(sheet) {
   return root?.querySelector?.(".add2e-character-v3") || root?.querySelector?.("form.sheet.actor.add2e") || root || null;
 }
 
-function add2eCaracRaceBonus(actor, carac) {
-  const system = actor?.system ?? {};
-  return Number(system.bonus_caracteristiques?.[carac] ?? system[`${carac}_race`] ?? 0) || 0;
+function add2eCaracNumber(value, fallback = 0) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
 }
 
-function add2eCaracBaseValue(actor, carac) {
-  return Number(actor?.system?.[`${carac}_base`] ?? actor?.system?.[carac] ?? 10) || 10;
+function add2eCaracRacialAdjustment(actor, carac) {
+  return add2eCaracNumber(actor?.flags?.add2e?.racialAbilityAdjustments?.[carac], 0);
+}
+
+function add2eCaracDefinitiveValue(actor, carac) {
+  return add2eCaracNumber(actor?.system?.[`${carac}_base`] ?? actor?.system?.[carac], 10);
+}
+
+function add2eCaracNaturalValue(actor, carac) {
+  const stored = actor?.flags?.add2e?.base_caracs;
+  if (stored && typeof stored === "object" && !Array.isArray(stored) && stored[carac] !== undefined) {
+    return add2eCaracNumber(stored[carac], 10);
+  }
+  return add2eCaracDefinitiveValue(actor, carac) - add2eCaracRacialAdjustment(actor, carac);
+}
+
+function add2eCaracAppliedRacialAdjustment(actor, carac, naturalValue) {
+  const natural = add2eCaracNumber(naturalValue, 10);
+  const raw = add2eCaracRacialAdjustment(actor, carac);
+  if (raw > 0 && natural + raw > 18) return Math.max(0, 18 - natural);
+  if (raw < 0 && natural + raw < 3) return Math.min(0, 3 - natural);
+  return raw;
+}
+
+function add2eCaracFinalValue(actor, carac, naturalValue) {
+  const natural = add2eCaracNumber(naturalValue, 10);
+  return natural + add2eCaracAppliedRacialAdjustment(actor, carac, natural);
 }
 
 function add2eCaracExceptionalStrength(actor) {
@@ -94,7 +120,8 @@ class Add2eCaracRoller {
     this._uid = `add2e-carac-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     this._sheetTargetHandler = this._onSheetTargetClick.bind(this);
     this._dialogClickHandler = this._onDialogClick.bind(this);
-    this._oldValues = Object.fromEntries(ADD2E_CARACS.map(carac => [carac, add2eCaracBaseValue(this.actor, carac)]));
+    this._oldValues = Object.fromEntries(ADD2E_CARACS.map(carac => [carac, add2eCaracDefinitiveValue(this.actor, carac)]));
+    this._oldNaturalValues = Object.fromEntries(ADD2E_CARACS.map(carac => [carac, add2eCaracNaturalValue(this.actor, carac)]));
     this._oldForceEx = add2eCaracExceptionalStrength(this.actor);
     this.render();
   }
@@ -116,7 +143,7 @@ class Add2eCaracRoller {
   render() {
     const DialogV2 = add2eCaracDialogV2();
     if (!DialogV2) {
-      ui.notifications.error("Dialog V2 est introuvable : tirage des caractéristiques impossible.");
+      ui.notifications.error("DialogV2 est introuvable : tirage des caractéristiques impossible.");
       return;
     }
 
@@ -384,14 +411,29 @@ class Add2eCaracRoller {
     this._updatePendingSheetBorders();
   }
 
+  _naturalValueForCarac(carac) {
+    return this.assigned[carac] !== undefined
+      ? add2eCaracNumber(this.values[this.assigned[carac]], 10)
+      : add2eCaracNumber(this._oldNaturalValues[carac], 10);
+  }
+
+  _finalValueForCarac(carac) {
+    return add2eCaracFinalValue(this.actor, carac, this._naturalValueForCarac(carac));
+  }
+
+  _finalValueForIndex(index, carac) {
+    return add2eCaracFinalValue(this.actor, carac, this.values[index]);
+  }
+
   _updateCaracDisplay() {
     for (const carac of ADD2E_CARACS) {
       const element = this._sheetTargets().find(target => target.dataset.carac === carac);
       if (!element) continue;
-      const bonus = add2eCaracRaceBonus(this.actor, carac);
-      const base = this.assigned[carac] !== undefined ? this.values[this.assigned[carac]] : this._oldValues[carac];
+      const natural = this._naturalValueForCarac(carac);
+      const appliedRacial = add2eCaracAppliedRacialAdjustment(this.actor, carac, natural);
+      const total = natural + appliedRacial;
       element.classList.toggle("carac-assigned", this.assigned[carac] !== undefined);
-      element.innerHTML = `<span style="font-size:1.22em;font-weight:bold;">${base + bonus}</span><div style="font-size:.40em;line-height:1.2em;color:#777;margin-top:1px;"><span style="color:#555;">base : </span>${base}<br><span style="color:#555;">bonus : </span><span style="color:${bonus > 0 ? "#1abc9c" : bonus < 0 ? "#e74c3c" : "#777"};">${bonus > 0 ? "+" : ""}${bonus}</span></div>`;
+      element.innerHTML = `<span style="font-size:1.22em;font-weight:bold;">${total}</span><div style="font-size:.40em;line-height:1.2em;color:#777;margin-top:1px;"><span style="color:#555;">tirage : </span>${natural}<br><span style="color:#555;">race : </span><span style="color:${appliedRacial > 0 ? "#1abc9c" : appliedRacial < 0 ? "#e74c3c" : "#777"};">${appliedRacial > 0 ? "+" : ""}${appliedRacial}</span></div>`;
     }
     this._updatePendingSheetBorders();
   }
@@ -402,16 +444,14 @@ class Add2eCaracRoller {
       .filter(entry => ADD2E_CARACS.includes(entry.carac) && entry.min > 0)
       .sort((left, right) => right.min - left.min || left.carac.localeCompare(right.carac, "fr"));
 
-    // Chaque classe est évaluée indépendamment sur l'intégralité du tirage.
-    // Aucune valeur n'est retirée pour les autres classes proposées.
     const searchPlan = (position, availableIndexes, assignments) => {
       if (position >= requis.length) return assignments;
       const requirement = requis[position];
       const options = availableIndexes
-        .filter(index => this.values[index] >= requirement.min)
+        .filter(index => this._finalValueForIndex(index, requirement.carac) >= requirement.min)
         .sort((left, right) => {
-          const leftSlack = this.values[left] - requirement.min;
-          const rightSlack = this.values[right] - requirement.min;
+          const leftSlack = this._finalValueForIndex(left, requirement.carac) - requirement.min;
+          const rightSlack = this._finalValueForIndex(right, requirement.carac) - requirement.min;
           return leftSlack - rightSlack || left - right;
         });
 
@@ -426,12 +466,13 @@ class Add2eCaracRoller {
       return null;
     };
 
-    const assignments = searchPlan(0, this.values.map((_, index) => index), {});
+    const assignments = searchPlan(0, this.values.map((_value, index) => index), {});
     if (!assignments) return null;
 
     const placements = requis.map(requirement => {
       const index = assignments[requirement.carac];
-      return `<span style="display:inline-flex!important;gap:1px!important;align-items:center!important;"><b>${ADD2E_CARAC_SHORT[requirement.carac]}</b><span class="carac-ok" style="color:#d8ffd4!important;font-weight:900!important;">${this.values[index]}</span></span>`;
+      const total = this._finalValueForIndex(index, requirement.carac);
+      return `<span style="display:inline-flex!important;gap:1px!important;align-items:center!important;"><b>${ADD2E_CARAC_SHORT[requirement.carac]}</b><span class="carac-ok" style="color:#d8ffd4!important;font-weight:900!important;">${total}</span></span>`;
     });
     return { className: cls.name, placements, assignments };
   }
@@ -499,44 +540,26 @@ class Add2eCaracRoller {
     this._keepDialogOnTop();
   }
 
-  async _confirmOverflows(overflows) {
-    const DialogV2 = add2eCaracDialogV2();
-    return DialogV2.confirm({
-      window: { title: "Caractéristique supérieure à 18" },
-      content: `<p>Une ou plusieurs caractéristiques dépassent 18 après bonus racial.</p><ul>${overflows.map(entry => `<li><b>${ADD2E_CARAC_SHORT[entry.carac]}</b> : base ${entry.base} + bonus racial ${entry.bonusRacial} = <span style="color:#e74c3c;font-weight:bold;">${entry.total}</span> <b>→ 18</b></li>`).join("")}</ul><p>Elles seront ramenées à 18. Confirmez-vous l’affectation ?</p>`,
-      yes: { label: "Confirmer" },
-      no: { label: "Revenir" },
-      rejectClose: false
-    });
-  }
-
   async apply() {
     if (!ADD2E_CARACS.every(carac => this.assigned[carac] !== undefined)) {
       ui.notifications.warn("Toutes les caractéristiques doivent être affectées.");
       return;
     }
 
+    const naturalCaracs = {};
     const updates = {};
-    const baseCaracs = {};
-    const overflows = [];
     for (const carac of ADD2E_CARACS) {
-      const base = Number(this.values[this.assigned[carac]]) || 10;
-      const bonusRacial = add2eCaracRaceBonus(this.actor, carac);
-      const total = base + bonusRacial;
-      if (total > 18) overflows.push({ carac, base, bonusRacial, total });
-      updates[`system.${carac}_base`] = base;
-      baseCaracs[carac] = base;
+      const natural = add2eCaracNumber(this.values[this.assigned[carac]], 10);
+      naturalCaracs[carac] = natural;
+      updates[`system.${carac}_base`] = add2eCaracFinalValue(this.actor, carac, natural);
     }
+    updates["flags.add2e.base_caracs"] = naturalCaracs;
 
-    if (overflows.length && !await this._confirmOverflows(overflows)) return;
-    for (const overflow of overflows) {
-      const cappedBase = Math.max(3, 18 - overflow.bonusRacial);
-      updates[`system.${overflow.carac}_base`] = cappedBase;
-      baseCaracs[overflow.carac] = cappedBase;
-    }
-
-    await this.actor.update(updates);
-    await this.actor.setFlag("add2e", "base_caracs", baseCaracs);
+    await this.actor.update(updates, {
+      add2eInternal: true,
+      add2eReason: "carac-roller-definitive-apply",
+      render: false
+    });
     if (typeof this.sheet?.autoSetCaracAjustements === "function") await this.sheet.autoSetCaracAjustements();
     this._applied = true;
     this._unbindSheetTargets();
@@ -559,6 +582,7 @@ class Add2eCaracRoller {
     this._updateAssignLabels();
     const updates = Object.fromEntries(ADD2E_CARACS.map(carac => [`system.${carac}_base`, this._oldValues[carac]]));
     updates["system.force_ex"] = this._oldForceEx;
+    updates["flags.add2e.base_caracs"] = this._oldNaturalValues;
     await this.actor.update(updates, { add2eInternal: true, add2eReason: "carac-roller-cancel", render: false });
     if (typeof this.sheet?.autoSetCaracAjustements === "function") await this.sheet.autoSetCaracAjustements();
     await this.sheet?.render?.(false);
