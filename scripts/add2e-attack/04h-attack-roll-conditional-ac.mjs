@@ -30,15 +30,6 @@ function add2eAttackReadNumber(...values) {
   return null;
 }
 
-function add2eAttackEffectOriginItem(actor, effect) {
-  const flags = effect?.flags?.add2e ?? {};
-  const directId = flags.sourceItemId ?? flags.itemId ?? flags.originItemId ?? flags.sourceSpellId ?? flags.spellId ?? null;
-  if (directId && actor?.items?.get?.(directId)) return actor.items.get(directId);
-  const origin = String(effect?.origin ?? "");
-  const itemId = origin.match(/\.Item\.([A-Za-z0-9]{16})/)?.[1] ?? origin.match(/Item\.([A-Za-z0-9]{16})/)?.[1] ?? null;
-  return itemId && actor?.items?.get?.(itemId) ? actor.items.get(itemId) : null;
-}
-
 function add2eAttackEffectList(actor) {
   const seen = new Set();
   return [
