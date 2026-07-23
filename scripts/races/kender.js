@@ -1,10 +1,8 @@
 /**
- * kender.js
- * Gestion des effets raciaux Kender (AD&D 2e)
- * Basé sur le modèle standard de nettoyage/application d'effets + Taunt.
+ * ADD2E — Effets raciaux Kender et Insulte.
+ * Compatible Foundry V13/V14/V15.
  */
 
-// 1. Fonction d'application des effets passifs (Modèle standard)
 window.applyKenderEffects = async function(actor, item) {
   const typeItem = item?.type || "race";
   const itemUuid = item.uuid || null;
@@ -15,160 +13,178 @@ window.applyKenderEffects = async function(actor, item) {
     return;
   }
 
-  // === LOG pour debug ===
-  console.log(`[ADD2e][ONUSE][KENDER] Effets actuellement sur l'acteur:`);
-  actor.effects.contents.forEach(eff => {
-    console.log(`- [${eff.id}] ${eff.name} | origin: ${eff.origin || "AUCUNE"}`);
+  console.log("[ADD2E][KENDER][EFFECTS_CURRENT]", {
+    actor: actor.name,
+    effects: actor.effects.contents.map(effect => ({ id: effect.id, name: effect.name, origin: effect.origin || null }))
   });
 
-  // === SUPPRESSION stricte de tous les effets "race" !== item actuel ===
   const toDelete = [];
-  for (let e of actor.effects.contents) {
-    // Critère de suppression :
-    // 1. Origin correspond à un item autre que la race courante ET commence par "Actor."
-    // 2. OU nom de l'effet existe dans le tableau d'effets de la nouvelle race
-    const origin = e.origin || "";
-    // On considère comme "effet racial" tout effet dont l'origin commence par "Actor." ET diffère de la race actuelle
+  for (const effect of actor.effects.contents) {
+    const origin = effect.origin || "";
     const isOtherRaceOrigin = origin.startsWith("Actor.") && origin !== itemUuid;
-    // Option complémentaire : suppression si nom d'effet collé à une race (pour éviter doublons)
-    const isDuplicateName = (item.system?.effects || []).some(ef => ef.name === e.name && origin !== itemUuid);
-    if (isOtherRaceOrigin || isDuplicateName) {
-      toDelete.push(e.id);
-      console.log(`[ADD2e][ONUSE][KENDER] Prépare suppression effet : ${e.name} (origin=${origin})`);
-    }
+    const isDuplicateName = (item.system?.effects || []).some(candidate => candidate.name === effect.name && origin !== itemUuid);
+    if (isOtherRaceOrigin || isDuplicateName) toDelete.push(effect.id);
   }
 
-  if (toDelete.length > 0) {
-    await actor.deleteEmbeddedDocuments("ActiveEffect", toDelete);
-    console.log(`[ADD2e][ONUSE][KENDER] Effets anciens supprimés :`, toDelete);
-  } else {
-    console.log(`[ADD2e][ONUSE][KENDER] Aucun effet racial à supprimer.`);
-  }
+  if (toDelete.length) await actor.deleteEmbeddedDocuments("ActiveEffect", toDelete);
 
-  // === APPLICATION DES NOUVEAUX EFFETS RACIAUX ===
-  const effets = item.system?.effects || [];
-  if (!Array.isArray(effets) || effets.length === 0) {
-    ui.notifications.warn(`Aucun effet trouvé sur l’item ${itemName} ! (Vérifiez le JSON de la race)`);
+  const effects = item.system?.effects || [];
+  if (!Array.isArray(effects) || !effects.length) {
+    ui.notifications.warn(`Aucun effet trouvé sur l’item ${itemName}. Vérifie le JSON de la race.`);
     return;
   }
 
   let count = 0;
-  for (let effet of effets) {
+  for (const effect of effects) {
     try {
-      let exists = actor.effects.contents.some(e => e.name === effet.name && e.origin === itemUuid);
-      if (exists) {
-        console.log(`[ADD2e][KENDER] Effet déjà présent: ${effet.name}`);
-      } else {
-        // Copie propre pour éviter de modifier l'objet original
-        let newEffectData = foundry.utils.duplicate(effet);
-        
-        newEffectData.img = newEffectData.img || newEffectData.icon || "icons/svg/aura.svg";
-        delete newEffectData.icon;
-        newEffectData.origin = itemUuid || null;
-        
-        let created = await actor.createEmbeddedDocuments("ActiveEffect", [newEffectData]);
-        if (created && created.length > 0) {
-          console.log(`[ADD2e][KENDER] Effet ajouté: ${newEffectData.name}`, created[0]);
-          count++;
-        } else {
-          console.warn(`[ADD2e][KENDER] Échec création pour: ${newEffectData.name}`, newEffectData);
-        }
-      }
-    } catch (err) {
-      console.error(`[ADD2e][KENDER] ERREUR pour "${effet.name}":`, err);
+      const exists = actor.effects.contents.some(current => current.name === effect.name && current.origin === itemUuid);
+      if (exists) continue;
+
+      const effectData = foundry.utils.deepClone(effect);
+      effectData.img = effectData.img || effectData.icon || "icons/svg/aura.svg";
+      delete effectData.icon;
+      effectData.origin = itemUuid || null;
+
+      const created = await actor.createEmbeddedDocuments("ActiveEffect", [effectData]);
+      if (created?.length) count += 1;
+    } catch (error) {
+      console.error("[ADD2E][KENDER][EFFECT_CREATE_ERROR]", { actor: actor.name, effect: effect?.name, error });
     }
   }
 
-  if (count > 0) {
-    ui.notifications.info(`Traits kenders appliqués à ${actor.name} !`);
-  } else {
-    ui.notifications.info(`Aucun nouvel effet kender appliqué (déjà présents ou erreur).`);
-  }
-  console.log(`[ADD2e][KENDER] Application terminée.`);
+  if (count > 0) ui.notifications.info(`Traits kenders appliqués à ${actor.name}.`);
+  else ui.notifications.info("Aucun nouveau trait kender à appliquer.");
 };
 
-// 2. Fonction Active : INSULTE (Taunt)
-// À appeler via Macro : window.kenderTaunt(actor)
 window.kenderTaunt = async function(actor) {
-  const targets = Array.from(game.user.targets);
-  if (targets.length !== 1) return ui.notifications.warn("Ciblez une créature à insulter !");
-  
-  const targetToken = targets[0];
-  const targetActor = targetToken.actor;
+  if (!actor) return ui.notifications.warn("Insulte kender : acteur introuvable.");
 
-  // Récupération de la sauvegarde vs Sorts (Index 4)
-  const saveIndex = 4; 
-  let saveValue = 14; // Valeur par défaut
-  
-  // Essai de récupération via la progression de classe
-  if (targetActor.system.sauvegardes) {
-     saveValue = Number(targetActor.system.sauvegardes[saveIndex]) || 14;
-  } else if (targetActor.system.details_classe?.progression) {
-     const lvl = targetActor.system.niveau || 1;
-     const prog = targetActor.system.details_classe.progression.find(p => p.niveau == lvl);
-     if (prog && prog.savingThrows) saveValue = prog.savingThrows[saveIndex];
-  } else if (typeof globalThis.add2eGetSaveTarget === "function") {
-     saveValue = globalThis.add2eGetSaveTarget(targetActor, saveIndex);
+  const targets = Array.from(game.user?.targets ?? []).filter(target => target?.actor);
+  if (targets.length !== 1) return ui.notifications.warn("Insulte kender : cible exactement une créature.");
+
+  if (typeof globalThis.add2eResolveSavingThrow !== "function") {
+    return ui.notifications.error("Insulte kender : le résolveur canonique de sauvegardes est indisponible.");
+  }
+  if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
+    return ui.notifications.error("Insulte kender : le constructeur commun des cartes de chat est indisponible.");
   }
 
-  // Jet de dés
-  const roll = new Roll("1d20");
-  await roll.evaluate();
-  if (game.dice3d) game.dice3d.showForRoll(roll);
+  const targetToken = targets[0];
+  const targetActor = targetToken.actor;
+  const resolution = globalThis.add2eResolveSavingThrow(targetActor, 4, {
+    source: "race:kender-taunt",
+    actor,
+    caster: actor,
+    targetToken,
+    frontale: true
+  });
 
-  // Contenu du message
-  const contentHeader = `
-    <div style="background:#e1f0c4; border:1px solid #6b8c42; padding:5px; border-radius:5px; color:#2c3e16; font-family: var(--font-primary);">
-      <h3 style="margin:0; border-bottom:1px solid #6b8c42;">😝 Insulte Kender</h3>
-      <div style="margin-top:5px;"><b>${actor.name}</b> provoque <b>${targetToken.name}</b> !</div>
-    </div>`;
+  const target = Number(resolution?.target);
+  if (!Number.isFinite(target) || target <= 0) {
+    return ui.notifications.warn(`Insulte kender : aucune sauvegarde contre les sortilèges pour ${targetActor.name}.`);
+  }
 
-  if (roll.total >= saveValue) {
-    // Réussite
-    ChatMessage.create({
-      speaker: ChatMessage.getSpeaker({ actor }),
-      content: `${contentHeader}
-        <div style="margin-top:5px; color:darkgreen; font-weight:bold; text-align:center;">
-          La cible résiste (JS ${roll.total} vs ${saveValue})
-        </div>
-        <div style="font-size:0.9em; font-style:italic; text-align:center; margin-top:5px;">
-          "${targetToken.name} reste de marbre face aux moqueries."
-        </div>`
-    });
-  } else {
-    // Échec -> Enragé
-    const duree = (await new Roll("1d10").evaluate()).total;
-    
-    // Application effet Enragé
+  const roll = await new Roll("1d20").evaluate();
+  if (game.dice3d) await game.dice3d.showForRoll(roll);
+
+  const d20 = Number(roll.total) || 0;
+  const bonus = Number(resolution.bonus) || 0;
+  const total = d20 + bonus;
+  const success = total >= target;
+  let durationRounds = 0;
+
+  if (!success) {
+    durationRounds = Number((await new Roll("1d10").evaluate()).total) || 1;
     await targetActor.createEmbeddedDocuments("ActiveEffect", [{
-      label: "Enragé (Insulte Kender)",
-      icon: "icons/svg/explosion.svg",
+      name: "Enragé (Insulte Kender)",
+      img: "icons/svg/explosion.svg",
       origin: actor.uuid,
-      duration: { rounds: duree },
+      disabled: false,
+      transfer: false,
+      duration: {
+        rounds: durationRounds,
+        startRound: game.combat?.round ?? null,
+        startTurn: game.combat?.turn ?? null,
+        startTime: game.time?.worldTime ?? null,
+        combat: game.combat?.id ?? null
+      },
+      description: "La cible doit attaquer le Kender, subit -2 au toucher et baisse sa garde.",
       changes: [
-        { key: "system.bonus_toucher", mode: 2, value: -2 }, // Malus toucher
-        { key: "system.ca_total", mode: 2, value: 2 }        // Malus CA (+2 en descendant = plus facile à toucher)
+        { key: "system.bonus_toucher", mode: CONST.ACTIVE_EFFECT_MODES.ADD, value: -2, priority: 20 },
+        { key: "system.ca_total", mode: CONST.ACTIVE_EFFECT_MODES.ADD, value: 2, priority: 20 }
       ],
       flags: {
-        add2e: { tags: ["etat:enrage", "target:kender"] },
+        add2e: {
+          tags: ["etat:enrage", "target:kender"],
+          source: "race:kender-taunt",
+          sourceActorUuid: actor.uuid,
+          targetActorUuid: targetActor.uuid
+        },
         core: { statusId: "enrage", overlay: true }
       }
     }]);
-
-    ChatMessage.create({
-      speaker: ChatMessage.getSpeaker({ actor }),
-      content: `${contentHeader}
-        <div style="margin-top:5px; color:darkred; font-weight:bold; text-align:center;">
-          ÉCHEC CRITIQUE DE NERFS ! <br>(JS ${roll.total} < ${saveValue})
-        </div>
-        <div style="background:#fff; padding:5px; margin-top:5px; border:1px solid #ccc; font-size:0.9em;">
-          <b>${targetToken.name}</b> devient fou de rage pendant <b>${duree} rounds</b> !
-          <ul style="margin-bottom:0;">
-            <li>Attaque sauvagement (-2 au toucher)</li>
-            <li>Baisse sa garde (Malus CA)</li>
-            <li>Doit attaquer le Kender</li>
-          </ul>
-        </div>`
-    });
   }
+
+  const applied = resolution.bonusResolution?.applied ?? [];
+  const modifierDetail = applied.length
+    ? applied.map(entry => {
+        const modifier = entry?.modifier ?? entry;
+        const value = Number(modifier?.value) || 0;
+        const label = modifier?.metadata?.label ?? modifier?.source?.name ?? "Modificateur";
+        return `${label} ${value >= 0 ? "+" : ""}${value}`;
+      }).join(" ; ")
+    : "Aucun";
+
+  const options = {
+    actor,
+    title: "Insulte Kender",
+    icon: "fas fa-face-grin-tongue",
+    variant: success ? "success" : "failure",
+    source: {
+      name: actor.name,
+      img: actor.img,
+      type: "Capacité raciale",
+      meta: "Kender"
+    },
+    target: {
+      name: targetActor.name,
+      img: targetActor.img,
+      type: "Sauvegarde contre les sortilèges",
+      meta: resolution.targetResolution?.selected?.className ?? resolution.targetResolution?.source ?? ""
+    },
+    rows: [
+      { label: "D20", value: d20 },
+      { label: "Bonus de sauvegarde", value: `${bonus >= 0 ? "+" : ""}${bonus}` },
+      { label: "Total", value: total },
+      { label: "Seuil", value: target },
+      { label: "Modificateurs", value: modifierDetail },
+      { label: "Durée", value: success ? "Aucun effet" : `${durationRounds} round${durationRounds > 1 ? "s" : ""}` }
+    ],
+    message: success
+      ? `${targetActor.name} reste de marbre face aux moqueries.`
+      : `${targetActor.name} devient fou de rage et doit attaquer le Kender.`,
+    chatData: {
+      speaker: ChatMessage.getSpeaker({ actor }),
+      rolls: [roll],
+      flags: {
+        add2e: {
+          ability: "kender-taunt",
+          saveType: resolution.key,
+          saveTarget: target,
+          saveBonus: bonus,
+          saveTotal: total,
+          saveSuccess: success,
+          saveResolverVersion: resolution.version,
+          durationRounds,
+          sourceActorUuid: actor.uuid,
+          targetActorUuid: targetActor.uuid
+        }
+      }
+    }
+  };
+
+  const preview = globalThis.add2eBuildChatCard(options);
+  if (!String(preview ?? "").trim()) throw new Error("Insulte kender : carte de chat vide.");
+  await globalThis.add2eCreateChatCard(options);
+  return { success, roll, d20, bonus, total, target, durationRounds, resolution };
 };
