@@ -3,9 +3,9 @@
 // Chaque joueur actif crée sa carte simplifiée privée ; un seul MJ crée la carte détaillée.
 // Compatible Foundry V13/V14/V15.
 
-const VERSION = "2026-07-24-attack-chat-player-broadcast-v28";
+const VERSION = "2026-07-24-attack-chat-readable-hit-details-v29";
 const SOCKET = "system.add2e";
-const ROUTE_TYPE = "ADD2E_ATTACK_CHAT_ROUTE_V28";
+const ROUTE_TYPE = "ADD2E_ATTACK_CHAT_ROUTE_V29";
 const LOG = "[ADD2E][ATTACK_CHAT]";
 
 globalThis.ADD2E_ATTACK_CHAT_VISIBILITY_VERSION = VERSION;
@@ -262,18 +262,84 @@ function gmDetailsHtml(ctx) {
   const snapshot = ctx.snapshot;
   const result = outcome(ctx);
   const threshold = snapshot?.threshold ?? {};
+  const range = snapshot?.range ?? {};
+  const rangeModifier = number(range.modifier);
+  const rangeLabel = String(range.description ?? range.band ?? "Contact");
+  const thac0 = number(threshold.thac0);
+  const armorClass = number(threshold.armorClass);
+  const baseThreshold = number(threshold.base);
+  const attackBonus = number(snapshot?.roll?.bonus);
+  const finalThreshold = number(threshold.final);
+  const d20 = number(snapshot?.roll?.d20);
+  const rollTotal = number(snapshot?.roll?.total, d20 + attackBonus);
+  const appliedModifiers = Array.isArray(snapshot?.attackResolution?.applied)
+    ? snapshot.attackResolution.applied
+    : [];
+
   const touchRows = [
-    { label: "Diagnostic", value: snapshot.diagId },
-    { label: "Jet", value: attackRollText(snapshot) },
-    { label: "Portée", value: rangeText(snapshot) },
-    { label: "Position", value: positionSummary(snapshot) },
-    { label: "THAC0 / CA", value: `${number(threshold.thac0)} - ${number(threshold.armorClass)} = ${number(threshold.base)}` },
-    { label: "Modificateurs", value: modifierSummary(snapshot.attackResolution) },
-    { label: "Bonus total", value: signed(snapshot?.roll?.bonus) },
-    { label: "Seuil final au d20", value: thresholdText(snapshot) }
+    {
+      label: "Situation — Portée",
+      value: `${rangeLabel} — ${rangeModifier === 0 ? "aucun ajustement" : `ajustement ${signed(rangeModifier)}`}`
+    },
+    {
+      label: "Situation — Position",
+      value: positionSummary(snapshot).replace(" · ", " — ")
+    }
   ];
+
   const conditional = Array.isArray(snapshot?.conditionalDetails) ? snapshot.conditionalDetails.filter(Boolean) : [];
-  if (conditional.length) touchRows.push({ label: "Défenses conditionnelles", value: conditional.join(" ; ") });
+  if (conditional.length) {
+    touchRows.push({
+      label: "Situation — Défenses conditionnelles",
+      value: conditional.join(" ; ")
+    });
+  }
+
+  touchRows.push(
+    { label: "Seuil de base — THAC0", value: String(thac0) },
+    { label: "Seuil de base — CA finale", value: String(armorClass) },
+    { label: "Seuil de base — Calcul", value: `${thac0} − ${armorClass} = ${baseThreshold}` }
+  );
+
+  if (appliedModifiers.length) {
+    for (const entry of appliedModifiers) {
+      const modifier = entry?.modifier ?? entry ?? {};
+      const label = String(
+        entry?.label
+        ?? entry?.metadata?.label
+        ?? modifier?.metadata?.label
+        ?? modifier?.label
+        ?? modifier?.source?.name
+        ?? entry?.source?.name
+        ?? modifier?.id
+        ?? entry?.id
+        ?? "Modificateur"
+      );
+      const rangeBand = String(entry?.metadata?.rangeBand ?? modifier?.metadata?.rangeBand ?? "").trim();
+      const contribution = number(entry?.contribution ?? modifier?.contribution ?? modifier?.value);
+      touchRows.push({
+        label: `Modificateur — ${label}${rangeBand ? ` (${rangeBand})` : ""}`,
+        value: signed(contribution)
+      });
+    }
+  } else {
+    touchRows.push({ label: "Modificateurs appliqués", value: "Aucun" });
+  }
+
+  const thresholdOperator = attackBonus >= 0 ? "−" : "+";
+  const rollOperator = attackBonus >= 0 ? "+" : "−";
+  touchRows.push(
+    { label: "Résolution — Bonus cumulé", value: signed(attackBonus) },
+    {
+      label: "Résolution — Seuil final au d20",
+      value: `${baseThreshold} ${thresholdOperator} ${Math.abs(attackBonus)} = ${finalThreshold}`
+    },
+    {
+      label: "Résolution — Jet obtenu",
+      value: `${d20} ${rollOperator} ${Math.abs(attackBonus)} = ${rollTotal}`
+    },
+    { label: "Résolution — Résultat", value: result.title }
+  );
 
   const damageRows = result.hit
     ? [
