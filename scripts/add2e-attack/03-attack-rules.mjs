@@ -396,8 +396,15 @@ export function add2eGetShieldIgnoredCAAdjustment(actor) {
 }
 
 export function add2eGetDexIgnoredCAAdjustment(actor) {
-  const raw = actor?.system?.dex_def;
-  const dexDef = Number(raw);
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  if (typeof engine?.resolveAbilityDerived !== "function") {
+    throw new Error("Le résolveur canonique ADD2E des ajustements de caractéristiques n’est pas disponible.");
+  }
+  const derived = engine.resolveAbilityDerived(actor, "dexterite", {
+    source: "attack-position-dex-defense",
+    consumer: "attack-rules"
+  });
+  const dexDef = Number(derived?.profile?.def);
   if (!Number.isFinite(dexDef) || dexDef === 0) return { value: 0, raw: 0 };
 
   // Dans la fiche, la DEX défensive est ajoutée à la CA.
@@ -525,30 +532,39 @@ export function add2eGetCombatStatProfile(arme) {
 }
 
 export function add2eGetAttackAbilityModifier(actor, key, usage) {
-  const sys = actor?.system ?? {};
   const normalized = add2eNormalizeAttackTag(key);
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  if (typeof engine?.resolveAbilityDerived !== "function") {
+    throw new Error("Le résolveur canonique ADD2E des ajustements de caractéristiques n’est pas disponible.");
+  }
+
+  const derived = engine.resolveAbilityDerived(actor, normalized, {
+    source: "attack-ability-modifier",
+    consumer: "attack-rules",
+    usage
+  });
+  const profile = derived?.profile ?? {};
 
   if (normalized === "force") {
     return usage === "degats"
-      ? Number(sys.force_bonus_degats) || 0
-      : Number(sys.force_bonus_toucher) || 0;
+      ? Number(profile.degats) || 0
+      : Number(profile.toucher) || 0;
   }
 
   if (normalized === "dexterite") {
     return usage === "degats"
-      ? Number(sys.dex_degats ?? sys.dex_damage ?? 0) || 0
-      : Number(sys.dex_att ?? sys.dex_bonus_toucher ?? 0) || 0;
+      ? Number(profile.degats ?? 0) || 0
+      : Number(profile.att ?? 0) || 0;
   }
 
-  // Extension générique pour de futures armes spéciales.
-  // Exemple tag : mod_carac:toucher:sagesse.
+  // Les armes spéciales doivent fournir leurs ajustements dérivés dans le profil canonique.
   const candidates = usage === "degats"
-    ? [`${normalized}_bonus_degats`, `${normalized}_degats`, `${normalized}_dom`]
-    : [`${normalized}_bonus_toucher`, `${normalized}_att`, `${normalized}_attaque`];
+    ? ["bonus_degats", "degats", "dom"]
+    : ["bonus_toucher", "att", "attaque"];
 
   for (const field of candidates) {
-    if (sys[field] !== undefined && sys[field] !== null && sys[field] !== "") {
-      return Number(sys[field]) || 0;
+    if (profile[field] !== undefined && profile[field] !== null && profile[field] !== "") {
+      return Number(profile[field]) || 0;
     }
   }
 
