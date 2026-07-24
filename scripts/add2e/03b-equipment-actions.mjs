@@ -4,7 +4,7 @@
 // Les restrictions de classe restent dans 03-equipment-rules.mjs.
 // ============================================================
 
-const ADD2E_EQUIPMENT_ACTIONS_VERSION = "2026-06-30-equipment-actions-action-gate-v7";
+const ADD2E_EQUIPMENT_ACTIONS_VERSION = "2026-07-24-thrown-availability-preflight-v8";
 const ADD2E_WEAPON_TYPES = new Set(["arme", "weapon"]);
 const ADD2E_ARMOR_TYPES = new Set(["armure", "armor"]);
 
@@ -450,6 +450,44 @@ function add2eStackQuantity(item) {
   return Math.max(0, Math.floor(Number(value) || 0));
 }
 
+async function add2eShowThrownWeaponUnavailable(weapon) {
+  const DialogV2 = foundry?.applications?.api?.DialogV2;
+  if (!DialogV2?.alert) {
+    console.error("[ADD2E][EQUIPMENT][THROWN_AVAILABILITY][DIALOGV2_MISSING]", { weapon: weapon?.name, weaponId: weapon?.id });
+    return false;
+  }
+  const weaponName = foundry.utils.escapeHTML(String(weapon?.name ?? "Cette arme"));
+  await DialogV2.alert({
+    window: { title: "Arme de lancer indisponible" },
+    content: `<p><strong>${weaponName}</strong> n'est plus disponible pour être lancée.</p>`,
+    ok: { label: "Compris" },
+    modal: true
+  });
+  return true;
+}
+
+async function add2eValidateWeaponAttackAvailability({ actor, weapon, actorId, weaponId, mode = "auto", notify = true } = {}) {
+  actor ??= actorId ? game.actors?.get?.(actorId) ?? null : null;
+  weapon ??= actor && weaponId ? actor.items?.get?.(weaponId) ?? null : null;
+  if (!actor || !weapon) return false;
+
+  const profile = add2eGetWeaponUsageProfile(weapon);
+  const normalizedMode = String(mode ?? "auto").toLowerCase();
+  const usesThrownWeapon = profile.isThrown && (!profile.isHybrid || normalizedMode === "throw");
+  if (!usesThrownWeapon) return true;
+
+  const consumables = globalThis.ADD2E_CONSUMABLES ?? game?.add2e?.consumables;
+  if (typeof consumables?.add2eActorUsesProjectileInventory !== "function") {
+    console.error("[ADD2E][EQUIPMENT][THROWN_AVAILABILITY][CONSUMABLE_API_MISSING]", { actor: actor.name, weapon: weapon.name });
+    return false;
+  }
+  if (!consumables.add2eActorUsesProjectileInventory(actor)) return true;
+  if (add2eStackQuantity(weapon) > 0) return true;
+
+  if (notify) await add2eShowThrownWeaponUnavailable(weapon);
+  return false;
+}
+
 function add2eFindEquippedProjectile(actor, weapon) {
   const compatible = globalThis.add2eGetEquippedProjectileForWeapon?.(actor, weapon) ?? null;
   if (compatible) return compatible;
@@ -628,10 +666,15 @@ function add2eInstallSingleAttackRoute() {
     const weapon = args.arme ?? (actor && args.itemId ? actor.items?.get?.(args.itemId) : null);
     if (!actor || !weapon) return add2eAttackCore.call(this, args);
 
+    const profile = add2eGetWeaponUsageProfile(weapon);
+    if (profile.isThrown && !profile.isHybrid) {
+      const available = await add2eValidateWeaponAttackAvailability({ actor, weapon, mode: "throw", notify: true });
+      if (!available) return false;
+    }
+
     const actionGate = await add2eResolveEquipmentAttackGate({ actor, weapon, args });
     if (actionGate.allowed === false) return false;
 
-    const profile = add2eGetWeaponUsageProfile(weapon);
     if (!profile.isThrown && !profile.isProjectilePropulse) return add2eAttackCore.call(this, args);
 
     const modeKey = add2eWeaponModeKey(actor.id, weapon.id);
@@ -663,10 +706,6 @@ function add2eInstallSingleAttackRoute() {
         : "throw";
       if (mode !== "throw") return result;
 
-      if (add2eStackQuantity(weapon) <= 0) {
-        ui.notifications?.warn?.(`${weapon.name} n'est plus disponible pour être lancée.`);
-        return false;
-      }
       const consumedWeapon = await add2eConsumeThrownWeaponAfterAttack(actor, weapon);
       return consumedWeapon?.ok === false ? false : result;
     } finally {
@@ -683,6 +722,7 @@ function add2eInstallSingleAttackRoute() {
 function add2eInstallEquipmentActions() {
   globalThis.add2eGetWeaponUsageProfile = add2eGetWeaponUsageProfile;
   globalThis.add2eSetTransientWeaponAttackMode = add2eSetTransientWeaponAttackMode;
+  globalThis.add2eValidateWeaponAttackAvailability = add2eValidateWeaponAttackAvailability;
   globalThis.add2eHandleItemAction = handleItemAction;
   globalThis.handleItemAction = handleItemAction;
   globalThis.ADD2E_EQUIPMENT_ACTIONS_VERSION = ADD2E_EQUIPMENT_ACTIONS_VERSION;
