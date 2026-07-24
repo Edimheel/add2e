@@ -1,11 +1,11 @@
 // scripts/add2e-attack/04i-attack-roll-chat-card.mjs
 // ADD2E — Cartes de chat d'attaque construites par l'API commune.
-// Une carte détaillée est créée par un client MJ ; une carte simplifiée par un client joueur.
+// Chaque joueur actif crée sa carte simplifiée privée ; un seul MJ crée la carte détaillée.
 // Compatible Foundry V13/V14/V15.
 
-const VERSION = "2026-07-24-attack-chat-gm-collapsible-details-v27";
+const VERSION = "2026-07-24-attack-chat-player-broadcast-v28";
 const SOCKET = "system.add2e";
-const ROUTE_TYPE = "ADD2E_ATTACK_CHAT_ROUTE_V27";
+const ROUTE_TYPE = "ADD2E_ATTACK_CHAT_ROUTE_V28";
 const LOG = "[ADD2E][ATTACK_CHAT]";
 
 globalThis.ADD2E_ATTACK_CHAT_VISIBILITY_VERSION = VERSION;
@@ -89,15 +89,16 @@ function playerUsers() {
   return users().filter(user => !user?.isGM && user?.id);
 }
 
+function activeUsers(list) {
+  return list.filter(user => user?.active === true && user?.id);
+}
+
 function userIds(list) {
   return list.map(user => String(user.id)).filter(Boolean);
 }
 
 function activeCreatorId(list) {
-  return list
-    .filter(user => user?.active === true && user?.id)
-    .map(user => String(user.id))
-    .sort((a, b) => a.localeCompare(b))[0] ?? null;
+  return userIds(activeUsers(list)).sort((a, b) => a.localeCompare(b))[0] ?? null;
 }
 
 function requireCommonChatApi() {
@@ -121,18 +122,16 @@ function modifierSummary(resolution) {
   return applied.map(entry => {
     const label = String(entry?.label ?? entry?.metadata?.label ?? entry?.source?.name ?? entry?.id ?? "Modificateur");
     const rangeBand = String(entry?.metadata?.rangeBand ?? "").trim();
-    const suffix = rangeBand ? ` (${rangeBand})` : "";
-    return `${label}${suffix} ${signed(entry?.contribution)}`;
+    return `${label}${rangeBand ? ` (${rangeBand})` : ""} ${signed(entry?.contribution)}`;
   }).join(" ; ");
 }
 
 function positionSummary(snapshot) {
   const position = snapshot?.position ?? {};
   const label = String(position.label ?? position.zone ?? "Face");
-  const before = number(position.caBefore, NaN);
-  const afterPosition = number(position.caAfterPosition, NaN);
-  const final = number(position.caFinal, NaN);
-  const values = [before, afterPosition, final].filter(Number.isFinite);
+  const values = [position.caBefore, position.caAfterPosition, position.caFinal]
+    .map(value => number(value, NaN))
+    .filter(Number.isFinite);
   const distinct = [...new Set(values)];
   return distinct.length > 1 ? `${label} · CA ${distinct.join(" → ")}` : label;
 }
@@ -140,14 +139,12 @@ function positionSummary(snapshot) {
 function attackRollText(snapshot) {
   const d20 = number(snapshot?.roll?.d20);
   const bonus = number(snapshot?.roll?.bonus);
-  const total = number(snapshot?.roll?.total, d20 + bonus);
-  return `${d20} ${signed(bonus)} = ${total}`;
+  return `${d20} ${signed(bonus)} = ${number(snapshot?.roll?.total, d20 + bonus)}`;
 }
 
 function rangeText(snapshot) {
   const range = snapshot?.range ?? {};
-  const label = String(range.description ?? range.band ?? "Contact");
-  return `${label} ${signed(range.modifier)}`;
+  return `${String(range.description ?? range.band ?? "Contact")} ${signed(range.modifier)}`;
 }
 
 function thresholdText(snapshot) {
@@ -192,12 +189,8 @@ function playerCardOptions(ctx) {
     { label: "Arme", value: ctx?.arme?.name ?? "Arme" },
     { label: "Résultat", value: result.title }
   ];
-  if (result.hit && number(snapshot?.damage?.amount) > 0) {
-    rows.push({ label: "Dégâts", value: String(number(snapshot.damage.amount)) });
-  }
-  if (snapshot?.assassination?.resolved) {
-    rows.push({ label: "Assassinat", value: snapshot.assassination.success ? "Réussi" : "Échoué" });
-  }
+  if (result.hit && number(snapshot?.damage?.amount) > 0) rows.push({ label: "Dégâts", value: String(number(snapshot.damage.amount)) });
+  if (snapshot?.assassination?.resolved) rows.push({ label: "Assassinat", value: snapshot.assassination.success ? "Réussi" : "Échoué" });
 
   return {
     title: `Attaque — ${result.title}`,
@@ -209,9 +202,9 @@ function playerCardOptions(ctx) {
     message: roleplay(ctx),
     chatData: {
       speaker: { alias: ctx?.actor?.name ?? "ADD2E" },
-      whisper: userIds(playerUsers()),
+      whisper: [],
       blind: false,
-      flags: baseFlags(ctx, "players-only", "player-summary")
+      flags: baseFlags(ctx, "player-self", "player-summary")
     }
   };
 }
@@ -310,25 +303,56 @@ function appendDetailsToCard(cardHtml, detailsHtml) {
   if (!card || !details) return card;
   const marker = "</div></div>";
   const index = card.lastIndexOf(marker);
-  if (index < 0) return `${card}${details}`;
-  return `${card.slice(0, index)}${details}${card.slice(index)}`;
+  return index < 0 ? `${card}${details}` : `${card.slice(0, index)}${details}${card.slice(index)}`;
+}
+
+function optionsForCurrentPlayer(options) {
+  const copy = cloneForSocket(options);
+  if (!copy) return null;
+  copy.chatData ??= {};
+  copy.chatData.whisper = [String(game.user.id)];
+  copy.chatData.blind = false;
+  copy.chatData.flags ??= {};
+  copy.chatData.flags.add2e ??= {};
+  copy.chatData.flags.add2e.attackChatVisibility = "player-self";
+  copy.chatData.flags.add2e.attackRouteCreatorId = String(game.user.id);
+  return copy;
 }
 
 async function createRoutedCard(payload = {}) {
   requireCommonChatApi();
   const messageId = String(payload.messageId ?? "");
   if (!messageId || globalThis.__ADD2E_ATTACK_CHAT_ROUTE_IDS.has(messageId)) return null;
-  if (String(payload.creatorId ?? "") !== String(game.user?.id ?? "")) return null;
 
-  const options = payload.options && typeof payload.options === "object" ? payload.options : null;
+  const kind = String(payload.kind ?? "");
+  const currentUserId = String(game.user?.id ?? "");
+  let options = payload.options && typeof payload.options === "object" ? payload.options : null;
   if (!options) return null;
+
+  if (kind === "player") {
+    if (game.user?.isGM) return null;
+    const targetUserIds = Array.isArray(payload.playerUserIds) ? payload.playerUserIds.map(String) : [];
+    if (targetUserIds.length && !targetUserIds.includes(currentUserId)) return null;
+    options = optionsForCurrentPlayer(options);
+    if (!options) return null;
+  } else if (kind === "gm") {
+    if (!game.user?.isGM || String(payload.creatorId ?? "") !== currentUserId) return null;
+  } else {
+    return null;
+  }
+
+  options.chatData ??= {};
+  options.chatData.flags ??= {};
+  options.chatData.flags.add2e ??= {};
+  options.chatData.flags.add2e.attackRouteId = messageId;
+
   const preview = String(globalThis.add2eBuildChatCard(options) ?? "").trim();
-  if (!preview) throw new Error(`La carte d’attaque ${payload.kind ?? "inconnue"} est vide.`);
+  if (!preview) throw new Error(`La carte d’attaque ${kind} est vide.`);
 
   globalThis.__ADD2E_ATTACK_CHAT_ROUTE_IDS.add(messageId);
   try {
     const message = await globalThis.add2eCreateChatCard(options);
-    const detailsHtml = String(payload.detailsHtml ?? "").trim();
+    const detailsHtml = kind === "gm" ? String(payload.detailsHtml ?? "").trim() : "";
     if (message && detailsHtml) {
       const enrichedContent = appendDetailsToCard(preview, detailsHtml);
       if (enrichedContent && enrichedContent !== preview) await message.update({ content: enrichedContent });
@@ -344,7 +368,6 @@ function onAttackChatSocket(data) {
   if (data?.type !== ROUTE_TYPE) return;
   const payload = data?.payload ?? {};
   if (payload.version !== VERSION) return;
-  if (String(payload.creatorId ?? "") !== String(game.user?.id ?? "")) return;
   void createRoutedCard(payload).catch(error => console.error(`${LOG}[ROUTED_CREATE_FAILED]`, { payload, error }));
 }
 
@@ -363,36 +386,66 @@ function installAttackChatSocket() {
   Hooks.once("ready", registerAttackChatSocket);
 }
 
-async function routeCard(kind, options, ctx) {
-  const recipients = kind === "gm" ? gmUsers() : playerUsers();
-  const creatorId = activeCreatorId(recipients);
-  if (!creatorId) {
-    console.warn(`${LOG}[NO_ACTIVE_CREATOR]`, { kind, recipients: userIds(recipients), diagId: ctx?.snapshot?.diagId });
-    return { status: "skipped", kind, creatorId: null, message: null };
+async function routePlayerCard(options, ctx) {
+  const recipients = activeUsers(playerUsers());
+  const playerUserIds = userIds(recipients);
+  if (!playerUserIds.length) {
+    console.warn(`${LOG}[NO_ACTIVE_PLAYERS]`, { diagId: ctx?.snapshot?.diagId });
+    return { status: "skipped", kind: "player", playerUserIds, message: null };
   }
 
-  const messageId = `attack-chat-${kind}-${ctx.snapshot.diagId}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  options.chatData.flags.add2e.attackRouteId = messageId;
-  options.chatData.flags.add2e.attackRouteCreatorId = creatorId;
+  const messageId = `attack-chat-player-${ctx.snapshot.diagId}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const payload = cloneForSocket({
+    version: VERSION,
+    messageId,
+    kind: "player",
+    playerUserIds,
+    options,
+    detailsHtml: ""
+  });
+  if (!payload) throw new Error("Impossible de sérialiser la carte d’attaque joueur.");
 
+  let localMessage = null;
+  if (!game.user?.isGM && playerUserIds.includes(String(game.user?.id ?? ""))) {
+    localMessage = await createRoutedCard(payload);
+  }
+
+  if (!game?.socket?.emit) {
+    if (!localMessage) throw new Error("Le socket ADD2E est indisponible pour router la carte d’attaque joueur.");
+    return { status: "created-local", kind: "player", playerUserIds, message: localMessage };
+  }
+
+  game.socket.emit(SOCKET, { type: ROUTE_TYPE, payload });
+  return { status: localMessage ? "created-and-broadcast" : "broadcast", kind: "player", playerUserIds, message: localMessage };
+}
+
+async function routeGmCard(options, ctx) {
+  const recipients = gmUsers();
+  const creatorId = activeCreatorId(recipients);
+  if (!creatorId) {
+    console.warn(`${LOG}[NO_ACTIVE_GM_CREATOR]`, { recipients: userIds(recipients), diagId: ctx?.snapshot?.diagId });
+    return { status: "skipped", kind: "gm", creatorId: null, message: null };
+  }
+
+  const messageId = `attack-chat-gm-${ctx.snapshot.diagId}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   const payload = cloneForSocket({
     version: VERSION,
     messageId,
     creatorId,
-    kind,
+    kind: "gm",
     options,
-    detailsHtml: kind === "gm" ? gmDetailsHtml(ctx) : ""
+    detailsHtml: gmDetailsHtml(ctx)
   });
-  if (!payload) throw new Error(`Impossible de sérialiser la carte d’attaque ${kind}.`);
+  if (!payload) throw new Error("Impossible de sérialiser la carte d’attaque MJ.");
 
   if (creatorId === String(game.user?.id ?? "")) {
     const message = await createRoutedCard(payload);
-    return { status: "created", kind, creatorId, message };
+    return { status: "created", kind: "gm", creatorId, message };
   }
 
-  if (!game?.socket?.emit) throw new Error("Le socket ADD2E est indisponible pour router la carte d’attaque.");
+  if (!game?.socket?.emit) throw new Error("Le socket ADD2E est indisponible pour router la carte d’attaque MJ.");
   game.socket.emit(SOCKET, { type: ROUTE_TYPE, payload });
-  return { status: "queued", kind, creatorId, message: null };
+  return { status: "queued", kind: "gm", creatorId, message: null };
 }
 
 function scheduleEffectsEngineAttackResolved(ctx) {
@@ -415,8 +468,8 @@ export async function add2eCreateAttackChatCards(ctx = {}) {
   if (!String(globalThis.add2eBuildChatCard(gmOptions) ?? "").trim()) throw new Error("La carte MJ d’attaque ADD2E est vide.");
 
   const [playerRoute, gmRoute] = await Promise.all([
-    routeCard("player", playerOptions, ctx),
-    routeCard("gm", gmOptions, ctx)
+    routePlayerCard(playerOptions, ctx),
+    routeGmCard(gmOptions, ctx)
   ]);
   scheduleEffectsEngineAttackResolved(ctx);
   return { playerRoute, gmRoute };
@@ -434,7 +487,7 @@ globalThis.add2eAttackChatDebug = function add2eAttackChatDebug() {
     userId: game.user?.id,
     isGM: game.user?.isGM,
     activeGmCreatorId: activeCreatorId(gmUsers()),
-    activePlayerCreatorId: activeCreatorId(playerUsers()),
+    activePlayerIds: userIds(activeUsers(playerUsers())),
     gmRecipients: userIds(gmUsers()),
     playerRecipients: userIds(playerUsers()),
     ready: game?.ready
