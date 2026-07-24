@@ -1,8 +1,8 @@
 // scripts/add2e-attack/05-jb2a-vfx.mjs
 // ADD2E — VFX JB2A Premium sécurisés pour sorts et attaques d'armes.
-// Version : 2026-07-24-single-weapon-wrapper-v4
+// Version : 2026-07-24-explicit-weapon-vfx-api-v5
 
-globalThis.ADD2E_JB2A_VFX_VERSION = "2026-07-24-single-weapon-wrapper-v4";
+globalThis.ADD2E_JB2A_VFX_VERSION = "2026-07-24-explicit-weapon-vfx-api-v5";
 
 const ADD2E_JB2A_VISIBLE_IMPACT = [
   "modules/JB2A_DnD5e/Library/2nd_Level/Divine_Smite/DivineSmite_01_Regular_BlueYellow_Target_400x400.webm",
@@ -503,69 +503,6 @@ async function add2ePlayWeaponAttackFx({ actor, weapon, sourceToken, targetToken
   }
 }
 
-function add2eAttackRollChainContainsWeaponFx(fn) {
-  const visited = new Set();
-  let current = fn;
-  while (typeof current === "function" && !visited.has(current)) {
-    if (current.__add2eWeaponFxWrapped === true) return true;
-    visited.add(current);
-    current = current.__add2eOriginalAttackRoll
-      ?? current.__add2eCapabilitySpecialAttackOriginal
-      ?? current.__add2eWeaponUsageAttackOriginal
-      ?? current.__add2eThrownWeaponAttackOriginal
-      ?? null;
-  }
-  return false;
-}
-
-function add2eWrapAttackRollForWeaponFx(fn) {
-  if (typeof fn !== "function") return fn;
-  if (fn.name === "add2eAttackRollPending") return fn;
-  if (add2eAttackRollChainContainsWeaponFx(fn)) return fn;
-  const original = fn;
-  const wrapped = async function add2eAttackRollWeaponFxWrapper(...args) {
-    const payload = args[0] ?? {};
-    const actor = payload.actor ?? (payload.actorId ? game.actors?.get?.(payload.actorId) : null) ?? null;
-    const weapon = payload.arme ?? payload.weapon ?? payload.item ?? (actor && payload.itemId ? actor.items?.get?.(payload.itemId) : null) ?? null;
-    const sourceToken = payload.token ?? payload.sourceToken ?? add2eGetActorToken(actor);
-    const targetTokenBeforeRoll = payload.targetToken ?? Array.from(game.user?.targets ?? [])[0] ?? null;
-    const result = await original.apply(this, args);
-    if (weapon && result !== false) await add2ePlayWeaponAttackFx({ actor, weapon, sourceToken, targetToken: payload.targetToken ?? targetTokenBeforeRoll ?? Array.from(game.user?.targets ?? [])[0] ?? null });
-    else if (!weapon) console.warn("[ADD2E][JB2A][WEAPON][SKIP_NO_WEAPON]", { actor: actor?.name, actorId: actor?.id, payloadKeys: Object.keys(payload ?? {}) });
-    return result;
-  };
-  wrapped.__add2eWeaponFxWrapped = true;
-  wrapped.__add2eOriginalAttackRoll = original;
-  return wrapped;
-}
-
-function add2eInstallWeaponAttackPatch() {
-  const current = globalThis.add2eAttackRoll;
-  if (typeof current !== "function" || current.name === "add2eAttackRollPending") return false;
-  if (add2eAttackRollChainContainsWeaponFx(current)) {
-    globalThis.__ADD2E_WEAPON_FX_ATTACK_PATCH_VERSION = globalThis.ADD2E_JB2A_VFX_VERSION;
-    return true;
-  }
-
-  const wrapped = add2eWrapAttackRollForWeaponFx(current);
-  if (wrapped === current) return false;
-  globalThis.add2eAttackRoll = wrapped;
-
-  const installed = add2eAttackRollChainContainsWeaponFx(globalThis.add2eAttackRoll);
-  if (installed) globalThis.__ADD2E_WEAPON_FX_ATTACK_PATCH_VERSION = globalThis.ADD2E_JB2A_VFX_VERSION;
-  return installed;
-}
-
-function add2eScheduleWeaponAttackPatch() {
-  let attempts = 0;
-  const tryPatch = () => {
-    attempts += 1;
-    if (add2eInstallWeaponAttackPatch()) return;
-    if (attempts < 60) setTimeout(tryPatch, 250);
-  };
-  tryPatch();
-}
-
 async function add2ePlayCentralSpellFx(spellKey = "divine", context = {}) {
   const key = add2eNormalizeFxKey(spellKey || "divine") || "divine";
   const preset = ADD2E_SPELL_KEY_TO_JB2A_PRESET[key] || key || "divine";
@@ -591,7 +528,6 @@ globalThis.ADD2E_END_PERSISTENT_GROUND_FX = add2eEndPersistentGroundFx;
 globalThis.ADD2E_JB2A_PRESET_CANDIDATES = ADD2E_JB2A_PRESET_CANDIDATES;
 globalThis.ADD2E_SPELL_KEY_TO_JB2A_PRESET = ADD2E_SPELL_KEY_TO_JB2A_PRESET;
 add2eInstallPersistentDarknessGroundHooks();
-add2eScheduleWeaponAttackPatch();
 
 Hooks.once("ready", () => {
   globalThis.ADD2E_PLAY_SPELL_FX = add2ePlayCentralSpellFx;
@@ -601,6 +537,5 @@ Hooks.once("ready", () => {
   globalThis.ADD2E_JB2A_PRESET_CANDIDATES = ADD2E_JB2A_PRESET_CANDIDATES;
   globalThis.ADD2E_SPELL_KEY_TO_JB2A_PRESET = ADD2E_SPELL_KEY_TO_JB2A_PRESET;
   add2eInstallPersistentDarknessGroundHooks();
-  add2eScheduleWeaponAttackPatch();
   console.log("[ADD2E][JB2A][VERSION]", globalThis.ADD2E_JB2A_VFX_VERSION);
 });
