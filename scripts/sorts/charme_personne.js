@@ -1,10 +1,10 @@
 // Charme-personne — ADD2E
-// Version : 2026-07-24-canonical-mental-save-executor-v8
+// Version : 2026-07-24-canonical-mental-save-executor-v9
 // Compatible Foundry V13/V14/V15.
 
 return await (async () => {
   const TAG = "[ADD2E][SORT_ONUSE][CHARME_PERSONNE]";
-  const PERIODIC_SAVE_VERSION = "2026-07-04-periodic-save-generic-v1";
+  const PERIODIC_SAVE_VERSION = "2026-07-24-periodic-save-canonical-executor-v3";
   const sourceItem = typeof sort !== "undefined" && sort
     ? sort
     : (typeof item !== "undefined" && item
@@ -129,9 +129,13 @@ return await (async () => {
       calendarAssumption: "1 mois = 30 jours de temps ADD2E",
       save: {
         category: "sorts",
-        label: "Sorts",
-        context: { mental: true, effectType: "charme", source: "spell:charme_personne:periodic" },
-        bonus: { mode: "score-minus", ability: "sagesse", minimum: 15, subtract: 14, label: "Sag" }
+        label: "Sortilèges",
+        context: {
+          mental: true,
+          effectType: "charme",
+          tags: ["mental", "charme"],
+          source: "spell:charme_personne:periodic"
+        }
       },
       resolution: { onSuccess: "delete-effect", onFailure: "keep-effect" },
       cleanup: { sequencerEffectNames: ["charme-effect-{tokenId}"] },
