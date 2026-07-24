@@ -1,8 +1,8 @@
 // ADD2E — Actor sheet listeners : jets de caractéristiques, sauvegardes et HUD.
 // Compatible Foundry V13/V14/V15.
 
-export const ADD2E_SHEET_ROLL_DELEGATION_VERSION = "2026-07-23-canonical-save-executor-v4";
-const ADD2E_SAVE_RESOLVER_VERSION = "2026-07-23-canonical-save-resolver-v2";
+export const ADD2E_SHEET_ROLL_DELEGATION_VERSION = "2026-07-24-canonical-save-executor-v5-mental-wisdom";
+const ADD2E_SAVE_RESOLVER_VERSION = "2026-07-24-canonical-save-resolver-v3-mental-wisdom";
 
 const ADD2E_SAVE_DEFINITIONS = Object.freeze([
   Object.freeze({
@@ -153,7 +153,8 @@ function add2eSaveClassSources(engine, actor, definition) {
         ?? null;
     }
 
-    const target = add2eSaveReadFromCollection(engine,
+    const target = add2eSaveReadFromCollection(
+      engine,
       progression?.savingThrows
         ?? progression?.saves
         ?? progression?.jets_sauvegarde
@@ -222,6 +223,80 @@ function add2eSaveConstitutionBonus(engine, actor) {
     : add2eSaveReadNumber(engine, actor?.system?.constitution_base, actor?.system?.constitution);
   if (!Number.isFinite(total)) return 0;
   return Math.max(0, Math.min(5, Math.floor(total / 3.5)));
+}
+
+function add2eSaveIsMentalContext(engine, context = {}) {
+  if (context.mental === true || context.mentalAttack === true || context.attackMental === true) return true;
+  const candidates = [
+    context.attackType,
+    context.effectType,
+    context.spellType,
+    context.saveContext,
+    context.category,
+    ...(Array.isArray(context.tags) ? context.tags : [])
+  ];
+  const mentalKeys = new Set([
+    "mental", "attaque_mentale", "mental_attack", "charme", "charm", "hypnose", "hypnosis",
+    "illusion", "peur", "effroi", "fear", "possession", "suggestion", "seduction", "telepathie", "telepathy"
+  ]);
+  return candidates.some(candidate => mentalKeys.has(add2eSaveNormalize(engine, candidate)));
+}
+
+function add2eSaveWisdomAdjustment(value) {
+  const wisdom = Number(value);
+  if (!Number.isFinite(wisdom)) return 0;
+  if (wisdom <= 3) return -3;
+  if (wisdom === 4) return -2;
+  if (wisdom <= 7) return -1;
+  if (wisdom <= 14) return 0;
+  if (wisdom === 15) return 1;
+  if (wisdom === 16) return 2;
+  if (wisdom === 17) return 3;
+  return 4;
+}
+
+function add2eSaveMentalWisdomModifier(engine, actor, definition, context = {}) {
+  if (!add2eSaveIsMentalContext(engine, context)) return null;
+  const wisdom = typeof engine.resolveAbility === "function"
+    ? Number(engine.resolveAbility(actor, "sagesse", {
+        ...context,
+        actor,
+        type: "save",
+        actionType: "save",
+        source: `${context.source ?? "saving-throw"}:mental-wisdom`
+      })?.total)
+    : add2eSaveReadNumber(
+        engine,
+        actor?.system?.sagesse_base,
+        actor?.system?.sagesse,
+        actor?.system?.sag_aff,
+        actor?.system?.abilities?.wis?.value
+      );
+  const value = add2eSaveWisdomAdjustment(wisdom);
+  if (!Number.isFinite(value) || value === 0) return null;
+
+  return engine.createModifier({
+    id: `${actor.id}:save:${definition.key}:mental-wisdom`,
+    domain: "save",
+    target: definition.key,
+    operation: "add",
+    value,
+    priority: 100,
+    stacking: { mode: "unique-source", group: "save:mental-wisdom" },
+    source: {
+      kind: "ability",
+      id: `${actor.id}:sagesse`,
+      uuid: actor.uuid ?? "",
+      name: "Sagesse"
+    },
+    metadata: {
+      label: "Ajustement de Sagesse contre les attaques mentales",
+      producer: "resolved-ability",
+      ability: "sagesse",
+      abilityValue: wisdom,
+      mental: true
+    }
+  });
 }
 
 function add2eSaveLegacyTagModifiers(engine, actor, definition, context = {}) {
@@ -349,15 +424,22 @@ function add2eResolveSavingThrow(engine, actor, saveType, context = {}) {
     source: context.source ?? "canonical-save-resolver"
   };
   const canonical = add2eSaveCanonicalModifiers(engine, actor, definition, saveContext);
-  const canonicalSourceTags = new Set(canonical.map(modifier => String(modifier?.metadata?.sourceTag ?? "")).filter(Boolean));
+  const canonicalSourceTags = new Set(
+    canonical.map(modifier => String(modifier?.metadata?.sourceTag ?? "")).filter(Boolean)
+  );
   const legacy = add2eSaveLegacyTagModifiers(engine, actor, definition, saveContext)
     .filter(modifier => !canonicalSourceTags.has(String(modifier?.metadata?.sourceTag ?? "")));
+  const mentalWisdom = add2eSaveMentalWisdomModifier(engine, actor, definition, saveContext);
   const bonusResolution = engine.resolve(actor, {
     domain: "save",
     target: definition.key,
     base: 0,
     context: saveContext,
-    modifiers: add2eSaveDeduplicate([...canonical, ...legacy])
+    modifiers: add2eSaveDeduplicate([
+      ...canonical,
+      ...legacy,
+      ...(mentalWisdom ? [mentalWisdom] : [])
+    ])
   });
 
   return {
@@ -551,6 +633,7 @@ async function add2eCreateSavingThrowCard({ actor, roll, resolution, total, succ
           saveBonus: resolution.bonus,
           saveTotal: total,
           saveSuccess: success,
+          saveMental: resolution.context?.mental === true,
           saveResolverVersion: ADD2E_SAVE_RESOLVER_VERSION
         }
       }
@@ -569,8 +652,22 @@ export async function add2eRollCharacteristicCard(actor, carac) {
   const roll = await add2eEvaluateRollSafe("1d20");
   if (game.dice3d) await game.dice3d.showForRoll(roll);
 
-  const icons = { force: "fa-dumbbell", dexterite: "fa-running", constitution: "fa-heartbeat", intelligence: "fa-brain", sagesse: "fa-eye", charisme: "fa-theater-masks" };
-  const colors = { force: "#4ab878", dexterite: "#f3aa3c", constitution: "#e74c3c", intelligence: "#2980b9", sagesse: "#9b59b6", charisme: "#e056fd" };
+  const icons = {
+    force: "fa-dumbbell",
+    dexterite: "fa-running",
+    constitution: "fa-heartbeat",
+    intelligence: "fa-brain",
+    sagesse: "fa-eye",
+    charisme: "fa-theater-masks"
+  };
+  const colors = {
+    force: "#4ab878",
+    dexterite: "#f3aa3c",
+    constitution: "#e74c3c",
+    intelligence: "#2980b9",
+    sagesse: "#9b59b6",
+    charisme: "#e056fd"
+  };
   const icon = icons[carac] || "fa-dice-d20";
   const color = colors[carac] || "#6c4e95";
   const success = roll.total <= val;
@@ -603,7 +700,10 @@ export async function add2eRollSaveCard(actor, saveType, context = {}) {
 
 function add2eHudRollActorFallback() {
   const hudState = globalThis.add2eHudFixDebug?.();
-  return canvas?.tokens?.controlled?.[0]?.actor ?? game.actors?.get?.(hudState?.actorId) ?? game.user?.character ?? null;
+  return canvas?.tokens?.controlled?.[0]?.actor
+    ?? game.actors?.get?.(hudState?.actorId)
+    ?? game.user?.character
+    ?? null;
 }
 
 export function add2eInstallHudSheetRollBridge() {
@@ -632,17 +732,24 @@ export function add2eInstallHudSheetRollBridge() {
 
   if (globalThis.__add2eHudSheetRollBridgeV1) return;
   globalThis.__add2eHudSheetRollBridgeV1 = true;
-  document.addEventListener("click", async ev => {
-    const btn = ev.target?.closest?.("#add2e-action-hud [data-action='roll-ability'], #add2e-action-hud [data-action='roll-save']");
-    if (!btn) return;
-    ev.preventDefault();
-    ev.stopPropagation();
-    ev.stopImmediatePropagation?.();
+  document.addEventListener("click", async event => {
+    const button = event.target?.closest?.(
+      "#add2e-action-hud [data-action='roll-ability'], #add2e-action-hud [data-action='roll-save']"
+    );
+    if (!button) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation?.();
+
     const actor = add2eHudRollActorFallback();
     if (!actor) return ui.notifications.warn("Aucun acteur sélectionné pour le jet.");
-    if (btn.dataset.action === "roll-ability") return add2eRollCharacteristicCard(actor, btn.dataset.ability);
-    if (btn.dataset.action === "roll-save") {
-      return add2eRollSaveCard(actor, Number(btn.dataset.saveIndex), { source: "action-hud-save-roll" });
+    if (button.dataset.action === "roll-ability") {
+      return add2eRollCharacteristicCard(actor, button.dataset.ability);
+    }
+    if (button.dataset.action === "roll-save") {
+      return add2eRollSaveCard(actor, Number(button.dataset.saveIndex), {
+        source: "action-hud-save-roll"
+      });
     }
   }, true);
 }
