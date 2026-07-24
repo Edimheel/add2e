@@ -3,9 +3,9 @@
 // Chaque joueur actif crée sa carte simplifiée privée ; un seul MJ crée la carte détaillée.
 // Compatible Foundry V13/V14/V15.
 
-const VERSION = "2026-07-24-attack-chat-visible-detail-values-v30";
+const VERSION = "2026-07-24-attack-chat-clean-v31";
 const SOCKET = "system.add2e";
-const ROUTE_TYPE = "ADD2E_ATTACK_CHAT_ROUTE_V30";
+const ROUTE_TYPE = "ADD2E_ATTACK_CHAT_ROUTE_V31";
 const LOG = "[ADD2E][ATTACK_CHAT]";
 
 globalThis.ADD2E_ATTACK_CHAT_VISIBILITY_VERSION = VERSION;
@@ -134,22 +134,6 @@ function positionSummary(snapshot) {
     .filter(Number.isFinite);
   const distinct = [...new Set(values)];
   return distinct.length > 1 ? `${label} · CA ${distinct.join(" → ")}` : label;
-}
-
-function attackRollText(snapshot) {
-  const d20 = number(snapshot?.roll?.d20);
-  const bonus = number(snapshot?.roll?.bonus);
-  return `${d20} ${signed(bonus)} = ${number(snapshot?.roll?.total, d20 + bonus)}`;
-}
-
-function rangeText(snapshot) {
-  const range = snapshot?.range ?? {};
-  return `${String(range.description ?? range.band ?? "Contact")} ${signed(range.modifier)}`;
-}
-
-function thresholdText(snapshot) {
-  const threshold = snapshot?.threshold ?? {};
-  return `${number(threshold.base)} - (${signed(snapshot?.roll?.bonus)}) = ${number(threshold.final)}`;
 }
 
 function sourceIdentity(ctx) {
