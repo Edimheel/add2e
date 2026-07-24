@@ -16,8 +16,7 @@ import {
   add2eTagSetHas,
   add2eRollAssassinationForAttack,
   add2eConsumeOneUseWeaponAfterAttack,
-  add2eGetAttackAbilityModifier,
-  add2eAttackAbilityLabel
+  add2eGetAttackAbilityModifier
 } from "./03-attack-rules.mjs";
 import {
   add2eAttackReadStrictNumber as add2eReadStrictNumber
@@ -43,40 +42,20 @@ import {
   add2eAttackResolveMagicProjectileNegation
 } from "./04h-attack-roll-conditional-ac.mjs";
 import {
-  add2eBuildAttackChatCard
+  add2eCreateAttackChatCards
 } from "./04i-attack-roll-chat-card.mjs";
 
-const ADD2E_ATTACK_VERSION = "2026-07-23-canonical-action-modifiers-v2";
-const ADD2E_ATTACK_GM_DETAIL_CHAT = "ADD2E_ATTACK_GM_DETAIL_CHAT";
-const ADD2E_ATTACK_GM_CHAT_VERSION = "2026-05-30-attack-roll-chat-duplicate-diagnostics-v9";
-const ADD2E_ATTACK_GM_DETAIL_DEDUPE_MS = 4000;
+const ADD2E_ATTACK_VERSION = "2026-07-24-canonical-action-snapshot-v3";
+const ADD2E_ATTACK_SNAPSHOT_VERSION = "2026-07-24-attack-resolution-snapshot-v1";
 const ADD2E_ATTACK_ROLL_INVOKE_DEDUPE_MS = 1500;
 
 globalThis.ADD2E_ATTACK_VERSION = ADD2E_ATTACK_VERSION;
-globalThis.__ADD2E_ATTACK_GM_DETAIL_HANDLED_IDS ??= new Map();
 globalThis.__ADD2E_ATTACK_ROLL_INVOKE_KEYS ??= new Map();
 globalThis.__ADD2E_ATTACK_DIAG_SEQ ??= 0;
-globalThis.__ADD2E_ATTACK_GM_DETAIL_REGISTER_COUNT ??= 0;
 
 function add2eAttackNextDiagId(prefix = "atk") {
   globalThis.__ADD2E_ATTACK_DIAG_SEQ = Number(globalThis.__ADD2E_ATTACK_DIAG_SEQ || 0) + 1;
   return `${prefix}-${Date.now()}-${globalThis.__ADD2E_ATTACK_DIAG_SEQ}`;
-}
-
-function add2eAttackHtmlEscape(value) {
-  const div = document.createElement("div");
-  div.innerText = String(value ?? "");
-  return div.innerHTML;
-}
-
-function add2eAttackHash(value) {
-  const text = String(value ?? "");
-  let hash = 2166136261;
-  for (let index = 0; index < text.length; index += 1) {
-    hash ^= text.charCodeAt(index);
-    hash = Math.imul(hash, 16777619);
-  }
-  return (hash >>> 0).toString(36);
 }
 
 function add2ePruneTimedMap(map, ttlMs, now = Date.now()) {
@@ -137,100 +116,6 @@ function add2eResolveAttackSourceToken(actor) {
     ?? actor?.token?.object
     ?? actor?.token
     ?? null;
-}
-
-function add2eGetGmWhisperIds() {
-  const recipients = ChatMessage.getWhisperRecipients?.("GM") ?? [];
-  const ids = recipients.map(user => user.id).filter(Boolean);
-  if (ids.length) return ids;
-  return Array.from(game.users ?? []).filter(user => user.isGM).map(user => user.id).filter(Boolean);
-}
-
-function add2eBuildGmDetailAttackMessageId({ actor, content, sourceUserId }) {
-  return `gm-detail-${add2eAttackHash([sourceUserId ?? game.user?.id ?? "", actor?.id ?? actor?.name ?? "", content ?? ""].join("|"))}`;
-}
-
-async function add2eCreateGmAttackChatMessage(payload = {}) {
-  if (!game.user?.isGM || !payload.content) return false;
-  const now = Date.now();
-  const handled = globalThis.__ADD2E_ATTACK_GM_DETAIL_HANDLED_IDS;
-  add2ePruneTimedMap(handled, ADD2E_ATTACK_GM_DETAIL_DEDUPE_MS, now);
-
-  const attackMessageId = payload.flags?.add2e?.attackMessageId
-    ?? add2eBuildGmDetailAttackMessageId({
-      actor: payload.speaker?.actor ? game.actors?.get?.(payload.speaker.actor) : null,
-      content: payload.content,
-      sourceUserId: payload.flags?.add2e?.attackSourceUserId
-    });
-  if (attackMessageId && handled?.has?.(attackMessageId)) return false;
-  if (attackMessageId) handled?.set?.(attackMessageId, now);
-
-  await ChatMessage.create({
-    speaker: payload.speaker ?? ChatMessage.getSpeaker(),
-    content: payload.content,
-    avatar: payload.avatar,
-    whisper: add2eGetGmWhisperIds(),
-    blind: false,
-    flags: {
-      ...(payload.flags ?? {}),
-      add2e: {
-        ...(payload.flags?.add2e ?? {}),
-        attackChatVisibility: "gm-only",
-        attackChatVisibilityVersion: globalThis.ADD2E_ATTACK_CHAT_VISIBILITY_VERSION ?? ADD2E_ATTACK_GM_CHAT_VERSION,
-        attackGmChatVersion: ADD2E_ATTACK_GM_CHAT_VERSION,
-        attackGmCreatedBy: game.user?.id ?? null,
-        attackMessageId
-      }
-    }
-  });
-  return true;
-}
-
-async function add2eRouteGmAttackChat({ actor, content, avatar, diagId = null }) {
-  if (!content) return false;
-  const attackMessageId = add2eBuildGmDetailAttackMessageId({ actor, content, sourceUserId: game.user?.id });
-  const payload = {
-    speaker: ChatMessage.getSpeaker({ actor }),
-    content,
-    avatar,
-    whisper: add2eGetGmWhisperIds(),
-    blind: false,
-    flags: {
-      add2e: {
-        attackChatVisibility: "gm-only",
-        attackChatVisibilityVersion: globalThis.ADD2E_ATTACK_CHAT_VISIBILITY_VERSION ?? ADD2E_ATTACK_GM_CHAT_VERSION,
-        attackGmChatVersion: ADD2E_ATTACK_GM_CHAT_VERSION,
-        attackMessageId,
-        attackSourceUserId: game.user?.id ?? null,
-        attackDiagId: diagId
-      }
-    }
-  };
-
-  if (game.user?.isGM) return add2eCreateGmAttackChatMessage(payload);
-  game.socket?.emit?.("system.add2e", { type: ADD2E_ATTACK_GM_DETAIL_CHAT, payload });
-  return true;
-}
-
-function add2eRegisterGmAttackChatRelay() {
-  const register = () => {
-    if (!game?.socket?.on) return false;
-    if (globalThis.__ADD2E_ATTACK_GM_DETAIL_SOCKET === ADD2E_ATTACK_GM_CHAT_VERSION) return true;
-    globalThis.__ADD2E_ATTACK_GM_DETAIL_SOCKET = ADD2E_ATTACK_GM_CHAT_VERSION;
-    globalThis.__ADD2E_ATTACK_GM_DETAIL_REGISTER_COUNT = Number(globalThis.__ADD2E_ATTACK_GM_DETAIL_REGISTER_COUNT || 0) + 1;
-
-    game.socket.on("system.add2e", async (data = {}) => {
-      if (data?.type !== ADD2E_ATTACK_GM_DETAIL_CHAT || !game.user?.isGM) return;
-      await add2eCreateGmAttackChatMessage(data.payload ?? {});
-    });
-    return true;
-  };
-
-  if (register()) return;
-  Hooks.once("ready", register);
-  setTimeout(register, 250);
-  setTimeout(register, 1000);
-  setTimeout(register, 2500);
 }
 
 function add2eResolveAttackThac0(actor) {
@@ -488,6 +373,120 @@ function add2eResolveFinalCombatModifiers({
   return { attackResolution, damageResolution };
 }
 
+function add2eSnapshotMetadata(metadata = {}) {
+  const result = {};
+  for (const key of ["label", "rangeBand", "ability", "producer", "position", "armorClass"]) {
+    const value = metadata?.[key];
+    if (["string", "number", "boolean"].includes(typeof value)) result[key] = value;
+  }
+  return Object.freeze(result);
+}
+
+function add2eSnapshotResolution(resolution) {
+  const applied = (resolution?.applied ?? []).map(entry => {
+    const modifier = entry?.modifier ?? {};
+    const source = modifier?.source ?? {};
+    const contribution = Number.isFinite(Number(entry?.contribution)) ? Number(entry.contribution) : Number(modifier?.value) || 0;
+    const metadata = add2eSnapshotMetadata(modifier?.metadata ?? {});
+    return Object.freeze({
+      id: String(modifier?.id ?? ""),
+      label: String(metadata.label ?? source.name ?? modifier?.id ?? "Modificateur"),
+      contribution,
+      operation: String(modifier?.operation ?? "add"),
+      source: Object.freeze({
+        kind: String(source.kind ?? ""),
+        id: String(source.id ?? ""),
+        name: String(source.name ?? "")
+      }),
+      metadata
+    });
+  });
+
+  return Object.freeze({
+    domain: String(resolution?.domain ?? ""),
+    target: String(resolution?.target ?? ""),
+    base: Number(resolution?.base) || 0,
+    total: Number(resolution?.total) || 0,
+    applied: Object.freeze(applied)
+  });
+}
+
+function add2eBuildAttackSnapshot({
+  diagId,
+  distanceCible,
+  descPortee,
+  typePortee,
+  malusPortee,
+  activePositionInfo,
+  caAvantPosition,
+  caAvantConditionnelle,
+  caFinaleCible,
+  thaco,
+  valeurPourToucher,
+  seuilFinalD20,
+  d20,
+  totalBonusToucher,
+  totalAuToucher,
+  finalResult,
+  degats,
+  formulaDegats,
+  detailsDegats,
+  totalBonusDegats,
+  attackResolution,
+  damageResolution,
+  conditionalDetails,
+  assassinatResult
+}) {
+  return Object.freeze({
+    version: ADD2E_ATTACK_SNAPSHOT_VERSION,
+    diagId: String(diagId),
+    range: Object.freeze({
+      distance: Number(distanceCible) || 0,
+      description: String(descPortee ?? "Contact"),
+      band: String(typePortee ?? "Contact"),
+      modifier: Number(malusPortee) || 0
+    }),
+    position: Object.freeze({
+      label: String(activePositionInfo?.label ?? "Face"),
+      zone: String(activePositionInfo?.zone ?? "front"),
+      caBefore: Number(caAvantPosition),
+      caAfterPosition: Number(caAvantConditionnelle),
+      caFinal: Number(caFinaleCible)
+    }),
+    threshold: Object.freeze({
+      thac0: Number(thaco) || 0,
+      armorClass: Number(caFinaleCible) || 0,
+      base: Number(valeurPourToucher) || 0,
+      final: Number(seuilFinalD20) || 0
+    }),
+    roll: Object.freeze({
+      d20: Number(d20) || 0,
+      bonus: Number(totalBonusToucher) || 0,
+      total: Number(totalAuToucher) || 0
+    }),
+    result: Object.freeze({
+      hit: finalResult === true,
+      natural20: Number(d20) === 20,
+      natural1: Number(d20) === 1
+    }),
+    damage: Object.freeze({
+      amount: Number(degats) || 0,
+      formula: String(formulaDegats ?? ""),
+      details: String(detailsDegats ?? ""),
+      bonus: Number(totalBonusDegats) || 0
+    }),
+    attackResolution: add2eSnapshotResolution(attackResolution),
+    damageResolution: add2eSnapshotResolution(damageResolution),
+    conditionalDetails: Object.freeze((conditionalDetails ?? []).map(value => String(value)).filter(Boolean)),
+    assassination: Object.freeze({
+      resolved: !!assassinatResult,
+      success: assassinatResult?.success === true,
+      roll: assassinatResult?.total ?? null,
+      score: assassinatResult?.finalScore ?? null
+    })
+  });
+}
+
 export async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
   const diagId = add2eAttackNextDiagId("attack-roll");
   if (!actor && actorId) actor = game.actors.get(actorId);
@@ -567,18 +566,7 @@ export async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
       const thaco = add2eResolveAttackThac0(actor);
       if (thaco === null) return false;
 
-      const engine = add2eCombatEngine();
-      const bonusHit = typeof engine.getMagicWeaponBonus === "function"
-        ? Number(engine.getMagicWeaponBonus(arme, "hit")) || 0
-        : Number(arme.system.bonus_hit) || 0;
-      const bonusDom = typeof engine.getMagicWeaponBonus === "function"
-        ? Number(engine.getMagicWeaponBonus(arme, "damage")) || 0
-        : Number(arme.system.bonus_dom) || 0;
-
       const combatProfile = add2eGetCombatStatProfile(arme);
-      const modCaracToucherLabel = add2eAttackAbilityLabel(combatProfile.toucherCarac);
-      const modCaracToucher = combatProfile.toucherCarac ? add2eGetAttackAbilityModifier(actor, combatProfile.toucherCarac, "toucher") : 0;
-      const modCaracDegats = combatProfile.degatsCarac ? add2eGetAttackAbilityModifier(actor, combatProfile.degatsCarac, "degats") : 0;
       const modifierState = add2eAttackComputeActiveAttackModifiers({ actor, cible, arme, combatProfile });
 
       const bonusAttaqueSournoise = useBackstab ? 4 : 0;
@@ -646,15 +634,6 @@ export async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
 
       const totalBonusToucher = Number(finalModifiers.attackResolution.total) || 0;
       const totalBonusDegats = Number(finalModifiers.damageResolution.total) || 0;
-      const bonusToucheEffets = totalBonusToucher
-        - modCaracToucher
-        - bonusHit
-        - malusPortee
-        - userBonus
-        - bonusAttaqueSournoise
-        - bonusPositionToucher
-        - ajustementCA;
-      const bonusDegatsEffets = totalBonusDegats - modCaracDegats - bonusDom;
       const targetTags = modifierState.targetTags ?? new Set();
       const valeurPourToucher = thaco - caFinaleCible;
       const roll = await new Roll("1d20").evaluate();
@@ -710,23 +689,60 @@ export async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
         if (Number.isFinite(appliedDamage) && appliedDamage >= 0) degats = appliedDamage;
       }
 
-      const conditionalACLine = [
-        conditionalFixedAC?.detail
-          ? `<div><b>CA conditionnelle :</b> ${add2eAttackHtmlEscape(conditionalFixedAC.detail)}</div>`
-          : "",
+      const conditionalDetails = [
+        conditionalFixedAC?.detail ? `CA conditionnelle : ${conditionalFixedAC.detail}` : "",
         magicProjectileNegation?.eligible && magicProjectileNegation?.detail
-          ? `<div><b>Défense contre projectile magique :</b> ${add2eAttackHtmlEscape(magicProjectileNegation.detail)}</div>`
+          ? `Défense contre projectile magique : ${magicProjectileNegation.detail}`
           : ""
-      ].filter(Boolean).join("");
+      ].filter(Boolean);
 
-      const chatContent = add2eBuildAttackChatCard({
+      const snapshot = add2eBuildAttackSnapshot({
+        diagId,
+        distanceCible,
+        descPortee,
+        typePortee,
+        malusPortee,
+        activePositionInfo,
+        caAvantPosition,
+        caAvantConditionnelle,
+        caFinaleCible,
+        thaco,
+        valeurPourToucher,
+        seuilFinalD20,
+        d20,
+        totalBonusToucher,
+        totalAuToucher,
+        finalResult,
+        degats,
+        formulaDegats,
+        detailsDegats,
+        totalBonusDegats,
+        attackResolution: finalModifiers.attackResolution,
+        damageResolution: finalModifiers.damageResolution,
+        conditionalDetails,
+        assassinatResult
+      });
+
+      console.log("[ADD2E][ATTAQUE][CANONICAL_RESOLUTION]", {
+        version: ADD2E_ATTACK_VERSION,
+        diagId,
+        actor: actor.name,
+        target: cible.name,
+        weapon: arme.name,
+        totalBonusToucher,
+        totalBonusDegats,
+        snapshot,
+        attackResolution: finalModifiers.attackResolution,
+        damageResolution: finalModifiers.damageResolution,
+        targetTags: [...targetTags]
+      });
+
+      await add2eCreateAttackChatCards({
         actor,
         arme,
         cible,
         nomCible,
         chatImg,
-        descPortee,
-        typePortee,
         d20,
         totalBonusToucher,
         totalAuToucher,
@@ -745,37 +761,17 @@ export async function add2eAttackRoll({ actor, arme, actorId, itemId }) {
         caFinaleCible,
         caAvantPosition,
         caAvantConditionnelle,
-        conditionalACLine,
         valeurPourToucher,
-        modCaracToucherLabel,
-        modCaracToucher,
-        bonusHit,
-        bonusToucheEffets,
         malusPortee,
         userBonus,
         useAssassination,
-        ajustementCA
+        ajustementCA,
+        snapshot
       });
-
-      console.log("[ADD2E][ATTAQUE][CANONICAL_RESOLUTION]", {
-        version: ADD2E_ATTACK_VERSION,
-        diagId,
-        actor: actor.name,
-        target: cible.name,
-        weapon: arme.name,
-        totalBonusToucher,
-        totalBonusDegats,
-        attackResolution: finalModifiers.attackResolution,
-        damageResolution: finalModifiers.damageResolution,
-        targetTags: [...targetTags]
-      });
-
-      await add2eRouteGmAttackChat({ actor, content: chatContent, avatar: chatImg, diagId });
       await add2eConsumeOneUseWeaponAfterAttack(actor, arme);
       return true;
     }
   });
 }
 
-add2eRegisterGmAttackChatRelay();
 globalThis.add2eAttackRoll = add2eAttackRoll;
