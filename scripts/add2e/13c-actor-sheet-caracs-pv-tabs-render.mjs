@@ -2,6 +2,15 @@
 // La progression de classe provient de l’Item classe exact.
 // Compatible Foundry V13/V14/V15.
 
+import {
+  FORCE_TABLE,
+  DEXTERITE_TABLE,
+  CONSTITUTION_TABLE,
+  INTELLIGENCE_TABLE,
+  SAGESSE_TABLE,
+  CHARISME_TABLE
+} from "./11-character-data-prep.mjs";
+
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant 13c.");
 
 const ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION = "2026-07-23-force-ex-eligibility-invariant-v6";
@@ -393,7 +402,7 @@ globalThis.Add2eActorSheet.prototype.autoSetCaracAjustements = async function au
     let forceKey = totalCaracs.force;
     let forceDisplay = forceOverrideMetadata.displayValue ?? totalCaracs.force;
     const overrideDisplayKey = String(forceOverrideMetadata.displayValue ?? "").trim();
-    if (forceResolution.override && typeof FORCE_TABLE !== "undefined" && FORCE_TABLE?.[overrideDisplayKey]) {
+    if (forceResolution.override && FORCE_TABLE?.[overrideDisplayKey]) {
       forceKey = overrideDisplayKey;
     } else if (exceptionalStrengthEligible) {
       if (storedForceEx >= 1 && storedForceEx <= 50) forceKey = forceDisplay = "18/01-50";
@@ -403,13 +412,13 @@ globalThis.Add2eActorSheet.prototype.autoSetCaracAjustements = async function au
       else if (storedForceEx === 100) forceKey = forceDisplay = "18/00";
     }
 
-    const forceTableRow = (typeof FORCE_TABLE !== "undefined" && FORCE_TABLE?.[forceKey]) || { toucher: 0, degats: 0, poids: 0, ouvrir: "—", tordre: "—" };
+    const forceTableRow = FORCE_TABLE?.[forceKey] ?? { toucher: 0, degats: 0, poids: 0, ouvrir: "—", tordre: "—" };
     const forceBonus = { ...forceTableRow, ...forceOverrideProfile };
-    const dexBonus = (typeof DEXTERITE_TABLE !== "undefined" && DEXTERITE_TABLE?.[totalCaracs.dexterite]) || { att: 0, def: 0 };
-    const conBonus = (typeof CONSTITUTION_TABLE !== "undefined" && CONSTITUTION_TABLE?.[totalCaracs.constitution]) || { pv: 0, trauma: 0, resu: 0 };
-    const intBonus = (typeof INTELLIGENCE_TABLE !== "undefined" && INTELLIGENCE_TABLE?.[totalCaracs.intelligence]) || { langues: 0, chance_sort: 0, min_sort: 0, max_sort: 0, sort_par_niveau: 0 };
-    const sagBonus = (typeof SAGESSE_TABLE !== "undefined" && SAGESSE_TABLE?.[totalCaracs.sagesse]) || { magie: 0, sort_suppl: 0, echec: 0 };
-    const chaBonus = (typeof CHARISME_TABLE !== "undefined" && CHARISME_TABLE?.[totalCaracs.charisme]) || { compagnons: 0, loy: 0, react: 0 };
+    const dexBonus = DEXTERITE_TABLE?.[totalCaracs.dexterite] ?? { att: 0, def: 0 };
+    const conBonus = CONSTITUTION_TABLE?.[totalCaracs.constitution] ?? { pv: 0, trauma: 0, resu: 0 };
+    const intBonus = INTELLIGENCE_TABLE?.[totalCaracs.intelligence] ?? { langues: 0, chance_sort: 0, min_sort: 0, max_sort: 0, sort_par_niveau: 0 };
+    const sagBonus = SAGESSE_TABLE?.[totalCaracs.sagesse] ?? { magie: 0, sort_suppl: 0, echec: 0 };
+    const chaBonus = CHARISME_TABLE?.[totalCaracs.charisme] ?? { compagnons: 0, loy: 0, react: 0 };
 
     const fullUpdate = {
       "system.force_ex": storedForceEx,
