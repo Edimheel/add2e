@@ -607,3 +607,36 @@
   color: #ffe7a8 !important;
   font-weight: 900 !important;
 }
+
+/* ADD2E — HUD : sauvegardes compactes. */
+#add2e-action-hud .save-card {
+  grid-template-columns: 42px minmax(0, 1fr) auto !important;
+  grid-template-areas: "icon name score" !important;
+  min-height: 52px !important;
+  padding: 6px 9px !important;
+  gap: 6px 9px !important;
+}
+
+#add2e-action-hud .save-roll-icon {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 12px !important;
+}
+
+#add2e-action-hud .save-hint,
+#add2e-action-hud .save-score small,
+#add2e-action-hud .save-mod {
+  display: none !important;
+}
+
+#add2e-action-hud .save-name {
+  align-self: center !important;
+}
+
+#add2e-action-hud .save-score {
+  align-self: center !important;
+}
+
+#add2e-action-hud .save-score strong {
+  font-size: 1.35rem !important;
+}
