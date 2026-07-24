@@ -596,7 +596,7 @@ function add2eInstallUnifiedScrollChatStyles() {
 
 Hooks.on("renderItemDirectory", add2eInstallMagicItemDirectoryButton);
 Hooks.on("renderSidebarTab", (app, html) => { const id = String(app?.options?.id ?? app?.id ?? app?.constructor?.name ?? "").toLowerCase(); if (id.includes("item")) add2eInstallMagicItemDirectoryButton(app, html); });
-Hooks.on("renderChatMessage", add2eNormalizeScrollChatRender);
+Hooks.on("renderChatMessageHTML", add2eNormalizeScrollChatRender);
 
 globalThis.add2eMagicBuilderProfile = add2eMagicBuilderProfile;
 globalThis.add2eStoreSpellInMagicItem = add2eMagicBuilderStoreSpell;
