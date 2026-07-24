@@ -1,11 +1,8 @@
 // scripts/add2e-attack/05-jb2a-vfx.mjs
 // ADD2E — VFX JB2A Premium sécurisés pour sorts et attaques d'armes.
-// Version : 2026-06-29-persistent-darkness-ground-v3
+// Version : 2026-07-24-single-weapon-wrapper-v4
 
-globalThis.ADD2E_JB2A_VFX_VERSION = "2026-06-29-persistent-darkness-ground-v3";
-
-const ADD2E_JB2A_WEAPON_FX_DEDUPE_MS = 1200;
-globalThis.__ADD2E_JB2A_WEAPON_FX_DEDUPE_KEYS ??= new Map();
+globalThis.ADD2E_JB2A_VFX_VERSION = "2026-07-24-single-weapon-wrapper-v4";
 
 const ADD2E_JB2A_VISIBLE_IMPACT = [
   "modules/JB2A_DnD5e/Library/2nd_Level/Divine_Smite/DivineSmite_01_Regular_BlueYellow_Target_400x400.webm",
@@ -467,38 +464,9 @@ function add2eInferWeaponJb2aPreset(weapon) {
   return { preset: "weapon_default", mode: "impact" };
 }
 
-function add2eBuildWeaponFxDedupeKey({ actor, weapon, sourceToken, targetToken } = {}) {
-  const src = add2eGetTokenLikeObject(sourceToken) ?? add2eGetActorToken(actor);
-  const target = add2eGetTokenLikeObject(targetToken) ?? Array.from(game.user?.targets ?? [])[0] ?? null;
-  return [
-    game.user?.id ?? "user",
-    actor?.id ?? actor?.name ?? "actor",
-    weapon?.id ?? weapon?.name ?? "weapon",
-    src?.id ?? src?.document?.id ?? "source",
-    target?.id ?? target?.document?.id ?? target?.name ?? "target"
-  ].join("|");
-}
-
-function add2eEnterWeaponFxDedupe(key) {
-  const now = Date.now();
-  const map = globalThis.__ADD2E_JB2A_WEAPON_FX_DEDUPE_KEYS;
-  if (!(map instanceof Map)) return true;
-  for (const [k, ts] of map.entries()) {
-    if ((now - Number(ts || 0)) > ADD2E_JB2A_WEAPON_FX_DEDUPE_MS) map.delete(k);
-  }
-  if (map.has(key)) return false;
-  map.set(key, now);
-  return true;
-}
-
 async function add2ePlayWeaponAttackFx({ actor, weapon, sourceToken, targetToken } = {}) {
   try {
     if (typeof Sequence === "undefined" || !weapon) return false;
-    const dedupeKey = add2eBuildWeaponFxDedupeKey({ actor, weapon, sourceToken, targetToken });
-    if (!add2eEnterWeaponFxDedupe(dedupeKey)) {
-      console.warn("[ADD2E][JB2A][WEAPON][SKIP_DUPLICATE]", { weapon: weapon?.name, weaponType: weapon?.type, dedupeKey });
-      return false;
-    }
     const explicit = add2eGetWeaponJb2aConfig(weapon);
     const inferred = add2eInferWeaponJb2aPreset(weapon);
     const preset = add2eNormalizeFxKey(explicit.preset || inferred.preset || "weapon_default") || "weapon_default";
@@ -535,10 +503,25 @@ async function add2ePlayWeaponAttackFx({ actor, weapon, sourceToken, targetToken
   }
 }
 
+function add2eAttackRollChainContainsWeaponFx(fn) {
+  const visited = new Set();
+  let current = fn;
+  while (typeof current === "function" && !visited.has(current)) {
+    if (current.__add2eWeaponFxWrapped === true) return true;
+    visited.add(current);
+    current = current.__add2eOriginalAttackRoll
+      ?? current.__add2eCapabilitySpecialAttackOriginal
+      ?? current.__add2eWeaponUsageAttackOriginal
+      ?? current.__add2eThrownWeaponAttackOriginal
+      ?? null;
+  }
+  return false;
+}
+
 function add2eWrapAttackRollForWeaponFx(fn) {
   if (typeof fn !== "function") return fn;
-  if (fn.__add2eWeaponFxWrapped) return fn;
   if (fn.name === "add2eAttackRollPending") return fn;
+  if (add2eAttackRollChainContainsWeaponFx(fn)) return fn;
   const original = fn;
   const wrapped = async function add2eAttackRollWeaponFxWrapper(...args) {
     const payload = args[0] ?? {};
@@ -557,33 +540,28 @@ function add2eWrapAttackRollForWeaponFx(fn) {
 }
 
 function add2eInstallWeaponAttackPatch() {
-  if (globalThis.__ADD2E_WEAPON_FX_ATTACK_ACCESSOR === globalThis.ADD2E_JB2A_VFX_VERSION) return true;
-  const descriptor = Object.getOwnPropertyDescriptor(globalThis, "add2eAttackRoll");
-  let stored = add2eWrapAttackRollForWeaponFx(globalThis.add2eAttackRoll);
-  try {
-    Object.defineProperty(globalThis, "add2eAttackRoll", {
-      configurable: true,
-      get() { return stored; },
-      set(value) { stored = add2eWrapAttackRollForWeaponFx(value); }
-    });
-    globalThis.__ADD2E_WEAPON_FX_ATTACK_ACCESSOR = globalThis.ADD2E_JB2A_VFX_VERSION;
-    if (descriptor?.set && typeof descriptor.set === "function") descriptor.set.call(globalThis, stored);
+  const current = globalThis.add2eAttackRoll;
+  if (typeof current !== "function" || current.name === "add2eAttackRollPending") return false;
+  if (add2eAttackRollChainContainsWeaponFx(current)) {
+    globalThis.__ADD2E_WEAPON_FX_ATTACK_PATCH_VERSION = globalThis.ADD2E_JB2A_VFX_VERSION;
     return true;
-  } catch (e) {
-    console.warn("[ADD2E][JB2A][WEAPON][PATCH_ERROR] Accroche attaque non installée.", e);
-    globalThis.add2eAttackRoll = stored;
-    return false;
   }
+
+  const wrapped = add2eWrapAttackRollForWeaponFx(current);
+  if (wrapped === current) return false;
+  globalThis.add2eAttackRoll = wrapped;
+
+  const installed = add2eAttackRollChainContainsWeaponFx(globalThis.add2eAttackRoll);
+  if (installed) globalThis.__ADD2E_WEAPON_FX_ATTACK_PATCH_VERSION = globalThis.ADD2E_JB2A_VFX_VERSION;
+  return installed;
 }
 
 function add2eScheduleWeaponAttackPatch() {
   let attempts = 0;
   const tryPatch = () => {
     attempts += 1;
-    add2eInstallWeaponAttackPatch();
-    const fn = globalThis.add2eAttackRoll;
-    if ((typeof fn === "function" && fn.__add2eWeaponFxWrapped) || attempts >= 60) return;
-    setTimeout(tryPatch, 250);
+    if (add2eInstallWeaponAttackPatch()) return;
+    if (attempts < 60) setTimeout(tryPatch, 250);
   };
   tryPatch();
 }
