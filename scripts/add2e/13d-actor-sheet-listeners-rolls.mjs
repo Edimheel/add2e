@@ -1,8 +1,8 @@
 // ADD2E — Actor sheet listeners : jets de caractéristiques, sauvegardes et HUD.
 // Compatible Foundry V13/V14/V15.
 
-export const ADD2E_SHEET_ROLL_DELEGATION_VERSION = "2026-07-24-canonical-save-executor-v6-transient-modifiers";
-const ADD2E_SAVE_RESOLVER_VERSION = "2026-07-24-canonical-save-resolver-v4-transient-modifiers";
+export const ADD2E_SHEET_ROLL_DELEGATION_VERSION = "2026-07-24-canonical-save-executor-v7-final";
+const ADD2E_SAVE_RESOLVER_VERSION = "2026-07-24-canonical-save-resolver-v5-final";
 
 const ADD2E_SAVE_DEFINITIONS = Object.freeze([
   Object.freeze({
@@ -24,7 +24,7 @@ const ADD2E_SAVE_DEFINITIONS = Object.freeze([
   Object.freeze({
     index: 2,
     key: "baguettes",
-    label: "Baguettes et badines",
+    label: "Baguettes, bâtons et bâtonnets",
     shortLabel: "Baguettes",
     icon: "fas fa-magic",
     aliases: Object.freeze(["baguette", "baguettes", "badine", "badines", "baton", "batons", "batonnet", "batonnets", "wand", "wands", "rod", "rods", "staff", "staves"])
@@ -52,8 +52,15 @@ const ADD2E_SAVE_EQUIPMENT_TYPES = new Set([
   "equipment", "magic", "objet_magique"
 ]);
 
+const ADD2E_MENTAL_SAVE_KEYS = new Set([
+  "mental", "attaque_mentale", "mental_attack", "charme", "charm",
+  "hypnose", "hypnosis", "illusion", "peur", "effroi", "fear",
+  "possession", "suggestion", "seduction", "telepathie", "telepathy",
+  "fantasme", "phantasm", "enchantement", "enchantment"
+]);
+
 export async function add2eEvaluateRollSafe(formula) {
-  const roll = new Roll(formula);
+  const roll = new Roll(String(formula || "0"));
   await roll.evaluate();
   return roll;
 }
@@ -82,6 +89,14 @@ function add2eSaveTag(engine, value) {
     : String(value ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_");
 }
 
+function add2eSaveArray(value) {
+  if (value === undefined || value === null || value === "") return [];
+  if (Array.isArray(value)) return value.flatMap(add2eSaveArray);
+  if (value instanceof Set) return [...value].flatMap(add2eSaveArray);
+  if (typeof value === "string") return value.split(/[,;|\n]+/g).map(entry => entry.trim()).filter(Boolean);
+  return [value];
+}
+
 function add2eSaveDefinition(engine, value) {
   const numeric = Number(value);
   if (Number.isInteger(numeric) && numeric >= 0 && numeric < ADD2E_SAVE_DEFINITIONS.length) {
@@ -98,7 +113,12 @@ function add2eSaveReadNumber(engine, ...values) {
   if (typeof engine?.readNumber === "function") return engine.readNumber(...values);
   for (const value of values) {
     if (value === undefined || value === null || value === "") continue;
-    const number = Number(value);
+    if (typeof value === "object") {
+      const nested = add2eSaveReadNumber(engine, value.value, value.current, value.actuel, value.total, value.max);
+      if (Number.isFinite(nested)) return nested;
+      continue;
+    }
+    const number = Number(String(value).replace(",", "."));
     if (Number.isFinite(number)) return number;
   }
   return null;
@@ -119,6 +139,27 @@ function add2eSaveReadFromCollection(engine, raw, definition) {
     if (Number.isFinite(value) && value > 0) return value;
   }
   return null;
+}
+
+function add2eSaveDirectActorValues(system, definition) {
+  const common = [
+    system?.[`sauvegarde_${definition.key}`],
+    system?.[`save_${definition.key}`],
+    system?.[`jp_${definition.key}`]
+  ];
+  if (definition.key === "mort_paralysie") {
+    return [...common, system?.sauvegarde_mort, system?.sauvegarde_paralysie, system?.sauvegarde_poison, system?.jp_mort, system?.jp_paralysie, system?.jp_poison];
+  }
+  if (definition.key === "petrification") {
+    return [...common, system?.sauvegarde_petrification, system?.sauvegarde_polymorphose, system?.jp_petrification, system?.jp_polymorphose];
+  }
+  if (definition.key === "baguettes") {
+    return [...common, system?.sauvegarde_baguettes, system?.sauvegarde_batons, system?.sauvegarde_batonnets, system?.jp_baguettes, system?.jp_batons];
+  }
+  if (definition.key === "souffle") {
+    return [...common, system?.sauvegarde_souffle, system?.sauvegarde_souffles, system?.jp_souffle, system?.jp_souffles];
+  }
+  return [...common, system?.sauvegarde_sortileges, system?.sauvegarde_sorts, system?.jp_sort, system?.jp_sorts, system?.jp_sortileges];
 }
 
 function add2eSaveClassSources(engine, actor, definition) {
@@ -179,21 +220,41 @@ function add2eSaveActorSource(engine, actor, definition) {
   const system = actor?.system ?? {};
   for (const raw of [
     system.sauvegardes,
+    system.calculatedSaves,
     system.savingThrows,
     system.saves,
     system.jets_sauvegarde,
     system.defense?.savingThrows,
-    system.combat?.savingThrows
+    system.combat?.savingThrows,
+    actor?.calculatedSaves
   ]) {
     const target = add2eSaveReadFromCollection(engine, raw, definition);
     if (Number.isFinite(target) && target > 0) {
       return { kind: "actor", target, actor, name: actor?.name ?? "Acteur" };
     }
   }
-  return null;
+
+  const target = add2eSaveReadNumber(engine, ...add2eSaveDirectActorValues(system, definition));
+  return Number.isFinite(target) && target > 0
+    ? { kind: "actor", target, actor, name: actor?.name ?? "Acteur" }
+    : null;
 }
 
-function add2eSaveTargetResolution(engine, actor, definition) {
+function add2eSaveTargetResolution(engine, actor, definition, context = {}) {
+  const explicit = add2eSaveReadNumber(engine, context.saveTarget, context.targetSave, context.threshold);
+  if (Number.isFinite(explicit) && explicit > 0) {
+    const selected = { kind: "context", target: explicit, name: context.saveTargetLabel ?? "Contexte de l’action" };
+    return {
+      definition,
+      target: explicit,
+      selected,
+      candidates: [selected],
+      classSources: [],
+      actorSource: null,
+      source: "context"
+    };
+  }
+
   const classSources = add2eSaveClassSources(engine, actor, definition);
   const actorSource = add2eSaveActorSource(engine, actor, definition);
   const candidates = classSources.length ? classSources : (actorSource ? [actorSource] : []);
@@ -209,12 +270,37 @@ function add2eSaveTargetResolution(engine, actor, definition) {
   };
 }
 
-function add2eSaveTagMatches(engine, definition, matcher) {
+function add2eSaveContextKeys(engine, definition, context = {}) {
+  const keys = new Set(["all", "tout", definition.key, ...definition.aliases].map(value => add2eSaveNormalize(engine, value)).filter(Boolean));
+  const raw = [
+    context.attackType,
+    context.effectType,
+    context.spellType,
+    context.saveContext,
+    context.category,
+    context.saveCategory,
+    context.type,
+    context.actionType,
+    context.source,
+    ...add2eSaveArray(context.tags),
+    ...add2eSaveArray(context.actionTags),
+    ...add2eSaveArray(context.effectTags),
+    ...add2eSaveArray(context.spellTags)
+  ];
+  for (const value of raw) {
+    const normalized = add2eSaveNormalize(engine, value);
+    if (!normalized) continue;
+    keys.add(normalized);
+    for (const part of normalized.split("_")) if (part) keys.add(part);
+  }
+  if ([...keys].some(key => ADD2E_MENTAL_SAVE_KEYS.has(key))) keys.add("mental");
+  return keys;
+}
+
+function add2eSaveTagMatches(engine, definition, matcher, context = {}) {
   const normalized = add2eSaveNormalize(engine, matcher);
-  return normalized === "all"
-    || normalized === "tout"
-    || normalized === definition.key
-    || definition.aliases.includes(normalized);
+  if (!normalized) return false;
+  return add2eSaveContextKeys(engine, definition, context).has(normalized);
 }
 
 function add2eSaveConstitutionBonus(engine, actor) {
@@ -227,19 +313,8 @@ function add2eSaveConstitutionBonus(engine, actor) {
 
 function add2eSaveIsMentalContext(engine, context = {}) {
   if (context.mental === true || context.mentalAttack === true || context.attackMental === true) return true;
-  const candidates = [
-    context.attackType,
-    context.effectType,
-    context.spellType,
-    context.saveContext,
-    context.category,
-    ...(Array.isArray(context.tags) ? context.tags : [])
-  ];
-  const mentalKeys = new Set([
-    "mental", "attaque_mentale", "mental_attack", "charme", "charm", "hypnose", "hypnosis",
-    "illusion", "peur", "effroi", "fear", "possession", "suggestion", "seduction", "telepathie", "telepathy"
-  ]);
-  return candidates.some(candidate => mentalKeys.has(add2eSaveNormalize(engine, candidate)));
+  const keys = add2eSaveContextKeys(engine, ADD2E_SAVE_DEFINITIONS[4], context);
+  return [...keys].some(key => ADD2E_MENTAL_SAVE_KEYS.has(key));
 }
 
 function add2eSaveWisdomAdjustment(value) {
@@ -312,7 +387,7 @@ function add2eSaveTransientModifiers(engine, actor, definition, context = {}) {
     const value = Number(data.value ?? data.amount ?? data.bonus ?? data.modifier);
     if (!Number.isFinite(value) || value === 0) return;
     const requestedTarget = data.target ?? data.saveType ?? data.category ?? definition.key;
-    if (!add2eSaveTagMatches(engine, definition, requestedTarget)) return;
+    if (!add2eSaveTagMatches(engine, definition, requestedTarget, context)) return;
 
     const label = String(data.label ?? data.name ?? "Modificateur circonstanciel de sauvegarde").trim();
     const id = String(data.id ?? `${context.source ?? "save"}:transient:${index}`);
@@ -343,7 +418,7 @@ function add2eSaveTransientModifiers(engine, actor, definition, context = {}) {
   return modifiers;
 }
 
-function add2eSaveLegacyTagModifiers(engine, actor, definition, context = {}) {
+function add2eSaveTagModifiers(engine, actor, definition, context = {}) {
   const modifiers = [];
   const tags = typeof engine.getActiveTags === "function" ? engine.getActiveTags(actor) : [];
   const push = ({ tag, value, label, suffix }) => {
@@ -358,12 +433,12 @@ function add2eSaveLegacyTagModifiers(engine, actor, definition, context = {}) {
       priority: 100,
       stacking: { mode: "stack", group: null },
       source: {
-        kind: "legacy-save-tag",
+        kind: "tag",
         id: `${actor.id}:${tag}`,
         uuid: actor.uuid ?? "",
         name: actor.name ?? "Acteur"
       },
-      metadata: { label, sourceTag: tag, producer: "legacy-save-tag" }
+      metadata: { label, sourceTag: tag, producer: "save-tag-normalization" }
     }));
   };
 
@@ -384,7 +459,7 @@ function add2eSaveLegacyTagModifiers(engine, actor, definition, context = {}) {
     const parts = tag.split(":");
     const rawValue = parts.at(-1);
     const matcher = parts.slice(1, -1).join(":");
-    if (!add2eSaveTagMatches(engine, definition, matcher)) continue;
+    if (!add2eSaveTagMatches(engine, definition, matcher, context)) continue;
 
     if (rawValue === "const") {
       push({
@@ -397,7 +472,7 @@ function add2eSaveLegacyTagModifiers(engine, actor, definition, context = {}) {
       push({
         tag,
         value: Number(rawValue),
-        label: `Bonus de sauvegarde contre ${definition.shortLabel.toLowerCase()}`,
+        label: `Bonus de sauvegarde contre ${matcher || definition.shortLabel.toLowerCase()}`,
         suffix: "conditional"
       });
     }
@@ -419,7 +494,7 @@ function add2eSaveCanonicalModifiers(engine, actor, definition, context = {}) {
     if (sourceItem && ADD2E_SAVE_EQUIPMENT_TYPES.has(sourceType) && !engine.itemEquipped(sourceItem)) continue;
 
     const target = add2eSaveNormalize(engine, normalized.target);
-    if (target !== "all" && target !== "tout" && !add2eSaveTagMatches(engine, definition, target)) continue;
+    if (!add2eSaveTagMatches(engine, definition, target, context)) continue;
     modifiers.push({
       ...normalized,
       target: target === "all" || target === "tout" ? "all" : definition.key,
@@ -434,7 +509,8 @@ function add2eSaveDeduplicate(modifiers = []) {
   return modifiers.filter(modifier => {
     if (!modifier) return false;
     const source = modifier.source ?? {};
-    const key = JSON.stringify([
+    const sourceTag = String(modifier.metadata?.sourceTag ?? "");
+    const key = sourceTag || JSON.stringify([
       modifier.id,
       modifier.domain,
       modifier.target,
@@ -456,7 +532,6 @@ function add2eResolveSavingThrow(engine, actor, saveType, context = {}) {
   const definition = add2eSaveDefinition(engine, saveType);
   if (!definition) throw new Error(`Catégorie de sauvegarde inconnue : ${saveType}`);
 
-  const targetResolution = add2eSaveTargetResolution(engine, actor, definition);
   const saveContext = {
     ...context,
     actor,
@@ -467,11 +542,12 @@ function add2eResolveSavingThrow(engine, actor, saveType, context = {}) {
     saveIndex: definition.index,
     source: context.source ?? "canonical-save-resolver"
   };
+  const targetResolution = add2eSaveTargetResolution(engine, actor, definition, saveContext);
   const canonical = add2eSaveCanonicalModifiers(engine, actor, definition, saveContext);
   const canonicalSourceTags = new Set(
     canonical.map(modifier => String(modifier?.metadata?.sourceTag ?? "")).filter(Boolean)
   );
-  const legacy = add2eSaveLegacyTagModifiers(engine, actor, definition, saveContext)
+  const tagModifiers = add2eSaveTagModifiers(engine, actor, definition, saveContext)
     .filter(modifier => !canonicalSourceTags.has(String(modifier?.metadata?.sourceTag ?? "")));
   const mentalWisdom = add2eSaveMentalWisdomModifier(engine, actor, definition, saveContext);
   const transient = add2eSaveTransientModifiers(engine, actor, definition, saveContext);
@@ -482,7 +558,7 @@ function add2eResolveSavingThrow(engine, actor, saveType, context = {}) {
     context: saveContext,
     modifiers: add2eSaveDeduplicate([
       ...canonical,
-      ...legacy,
+      ...tagModifiers,
       ...(mentalWisdom ? [mentalWisdom] : []),
       ...transient
     ])
@@ -500,6 +576,18 @@ function add2eResolveSavingThrow(engine, actor, saveType, context = {}) {
     context: saveContext,
     version: ADD2E_SAVE_RESOLVER_VERSION
   };
+}
+
+async function add2eResolveMonsterSheetTarget(engine, actor, definition) {
+  if (String(actor?.type ?? "").toLowerCase() !== "monster") return null;
+  try {
+    const data = await actor?.sheet?.getData?.();
+    for (const raw of [data?.calculatedSaves, data?.sauvegardes, data?.savingThrows, data?.saves]) {
+      const target = add2eSaveReadFromCollection(engine, raw, definition);
+      if (Number.isFinite(target) && target > 0) return target;
+    }
+  } catch (_error) {}
+  return null;
 }
 
 async function add2eRollSavingThrow(engine, actor, saveType, options = {}) {
@@ -529,8 +617,21 @@ async function add2eRollSavingThrow(engine, actor, saveType, options = {}) {
     };
   }
 
-  const resolution = engine.resolveSavingThrow(actor, saveType, { ...context, source });
-  const target = Number(resolution?.target);
+  let resolution = engine.resolveSavingThrow(actor, saveType, { ...context, source });
+  let target = Number(resolution?.target);
+  if (!Number.isFinite(target) || target <= 0) {
+    const monsterTarget = await add2eResolveMonsterSheetTarget(engine, actor, resolution?.definition ?? add2eSaveDefinition(engine, saveType));
+    if (Number.isFinite(monsterTarget) && monsterTarget > 0) {
+      resolution = engine.resolveSavingThrow(actor, saveType, {
+        ...context,
+        source,
+        saveTarget: monsterTarget,
+        saveTargetLabel: "Sauvegarde calculée du monstre"
+      });
+      target = Number(resolution?.target);
+    }
+  }
+
   if (!Number.isFinite(target) || target <= 0) {
     return {
       ok: false,
@@ -551,7 +652,9 @@ async function add2eRollSavingThrow(engine, actor, saveType, options = {}) {
   }
 
   const roll = await add2eEvaluateRollSafe("1d20");
-  if (showDice !== false && game.dice3d) await game.dice3d.showForRoll(roll);
+  if (showDice !== false) {
+    try { await game.dice3d?.showForRoll?.(roll); } catch (_error) {}
+  }
   const d20 = Number(roll.total) || 0;
   const bonus = Number(resolution.bonus) || 0;
   const total = d20 + bonus;
@@ -599,8 +702,8 @@ function add2eInstallCanonicalSaveResolver(engine) {
     getSaveTarget: {
       configurable: true,
       writable: true,
-      value(actor, saveType) {
-        return this.resolveSavingThrow(actor, saveType, { source: "get-save-target" }).target;
+      value(actor, saveType, context = {}) {
+        return this.resolveSavingThrow(actor, saveType, { ...context, source: context.source ?? "get-save-target" }).target;
       }
     },
     getSaveBonus: {
@@ -611,6 +714,48 @@ function add2eInstallCanonicalSaveResolver(engine) {
           ...options,
           source: options.source ?? "get-save-bonus"
         }).bonus;
+      }
+    },
+    getActionSaveThreshold: {
+      configurable: true,
+      writable: true,
+      value(actor, saveType = "sorts", context = {}) {
+        return this.resolveSavingThrow(actor, saveType, {
+          ...context,
+          source: context.source ?? "action-save-threshold"
+        }).target;
+      }
+    },
+    rollActionSave: {
+      configurable: true,
+      writable: true,
+      async value(actor, saveType = "sorts", bonus = 0, context = {}) {
+        const numericBonus = Number(bonus) || 0;
+        const saveModifiers = [
+          ...add2eSaveArray(context.saveModifiers),
+          ...(numericBonus ? [{
+            id: `${context.source ?? "action-save"}:explicit-bonus`,
+            value: numericBonus,
+            target: saveType,
+            label: context.bonusLabel ?? "Bonus de sauvegarde de l’action",
+            source: { kind: "action", id: context.source ?? "action-save", name: context.bonusLabel ?? "Action" }
+          }] : [])
+        ];
+        const result = await this.rollSavingThrow(actor, saveType, {
+          ...context,
+          saveModifiers,
+          source: context.source ?? "action-save",
+          createChat: context.createChat === true,
+          showDice: context.showDice !== false
+        });
+        return {
+          ...result,
+          type: result.resolution?.key ?? String(saveType ?? ""),
+          threshold: Number(result.target),
+          total: Number(result.total) || 0,
+          bonus: Number(result.bonus) || 0,
+          canRoll: result.ok === true
+        };
       }
     }
   });
@@ -669,6 +814,7 @@ async function add2eCreateSavingThrowCard({ actor, roll, resolution, total, succ
     ],
     message: success ? "Réussite du jet de sauvegarde." : "Échec du jet de sauvegarde.",
     chatData: {
+      speaker: ChatMessage.getSpeaker({ actor }),
       rolls: [roll],
       flags: {
         add2e: {
@@ -679,7 +825,7 @@ async function add2eCreateSavingThrowCard({ actor, roll, resolution, total, succ
           saveBonus: resolution.bonus,
           saveTotal: total,
           saveSuccess: success,
-          saveMental: resolution.context?.mental === true,
+          saveMental: add2eSaveIsMentalContext(add2eSheetRollEffectsEngine(), resolution.context),
           saveResolverVersion: ADD2E_SAVE_RESOLVER_VERSION
         }
       }
@@ -693,34 +839,55 @@ async function add2eCreateSavingThrowCard({ actor, roll, resolution, total, succ
 
 export async function add2eRollCharacteristicCard(actor, carac) {
   if (!actor) return ui.notifications.warn("Aucun acteur pour ce jet.");
-  const label = carac?.toUpperCase() || "Caractéristique";
-  const val = Number(actor.system?.[carac]) || 10;
-  const roll = await add2eEvaluateRollSafe("1d20");
-  if (game.dice3d) await game.dice3d.showForRoll(roll);
-
+  const key = String(carac ?? "").trim().toLowerCase();
+  const labels = {
+    force: "Force",
+    dexterite: "Dextérité",
+    constitution: "Constitution",
+    intelligence: "Intelligence",
+    sagesse: "Sagesse",
+    charisme: "Charisme"
+  };
   const icons = {
-    force: "fa-dumbbell",
-    dexterite: "fa-running",
-    constitution: "fa-heartbeat",
-    intelligence: "fa-brain",
-    sagesse: "fa-eye",
-    charisme: "fa-theater-masks"
+    force: "fas fa-dumbbell",
+    dexterite: "fas fa-running",
+    constitution: "fas fa-heartbeat",
+    intelligence: "fas fa-brain",
+    sagesse: "fas fa-eye",
+    charisme: "fas fa-theater-masks"
   };
-  const colors = {
-    force: "#4ab878",
-    dexterite: "#f3aa3c",
-    constitution: "#e74c3c",
-    intelligence: "#2980b9",
-    sagesse: "#9b59b6",
-    charisme: "#e056fd"
+  const engine = add2eSheetRollEffectsEngine();
+  const resolved = typeof engine?.resolveAbility === "function"
+    ? engine.resolveAbility(actor, key, { type: "ability-check", source: "actor-sheet-ability-roll" })
+    : null;
+  const target = Number(resolved?.total ?? actor.system?.[key] ?? actor.system?.[`${key}_base`] ?? 10) || 10;
+  const roll = await add2eEvaluateRollSafe("1d20");
+  try { await game.dice3d?.showForRoll?.(roll); } catch (_error) {}
+  const total = Number(roll.total) || 0;
+  const success = total <= target;
+
+  if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
+    throw new Error("Le constructeur commun des cartes de chat ADD2E n’est pas disponible.");
+  }
+  const options = {
+    actor,
+    title: labels[key] ?? key.toUpperCase() ?? "Caractéristique",
+    icon: icons[key] ?? "fas fa-dice-d20",
+    variant: success ? "success" : "failure",
+    source: { name: actor.name, img: actor.img, type: "Test de caractéristique" },
+    rows: [
+      { label: "Seuil", value: target },
+      { label: "D20", value: total }
+    ],
+    message: success ? "Réussite du test de caractéristique." : "Échec du test de caractéristique.",
+    chatData: {
+      speaker: ChatMessage.getSpeaker({ actor }),
+      rolls: [roll],
+      flags: { add2e: { abilityRoll: true, ability: key, abilityTarget: target, abilitySuccess: success } }
+    }
   };
-  const icon = icons[carac] || "fa-dice-d20";
-  const color = colors[carac] || "#6c4e95";
-  const success = roll.total <= val;
-  const result = success ? "✔️ Réussite" : "❌ Échec";
-  const resultColor = success ? "#1cb360" : "#c34040";
-  const content = `<div class="add2e-card-test" style="border-radius:13px;box-shadow:0 2px 10px #b5e7c388;background:linear-gradient(100deg,#f9fcfa 90%,#e4fbf1 100%);border:1.4px solid ${color};max-width:420px;padding:.85em 1.1em .8em;font-family:var(--font-primary);"><div style="display:flex;align-items:center;gap:.7em;margin-bottom:.5em;"><i class="fas ${icon}" style="font-size:2em;color:${color};"></i><span style="font-size:1.17em;font-weight:bold;color:${color};">${label}</span><span style="margin-left:auto;font-size:1em;font-weight:500;color:#666;">Test de caractéristique</span></div><div style="font-size:1.11em;margin-bottom:.25em;">Seuil&nbsp;: <b>${val}</b>&nbsp;&nbsp;|&nbsp;&nbsp;Résultat&nbsp;: <b>${roll.total}</b></div><div style="margin:.2em 0 .1em;font-size:1.1em;"><span style="font-weight:600;color:${resultColor};">${result}</span></div></div>`;
-  return ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content });
+  globalThis.add2eBuildChatCard(options);
+  return globalThis.add2eCreateChatCard(options);
 }
 
 export async function add2eRollSaveCard(actor, saveType, context = {}) {
@@ -771,8 +938,8 @@ export function add2eInstallHudSheetRollBridge() {
     }
     return current.rollSavingThrow(actor, saveType, options);
   };
-  globalThis.add2eGetSaveTarget = (actor, saveType) =>
-    globalThis.add2eResolveSavingThrow(actor, saveType, { source: "global-get-save-target" }).target;
+  globalThis.add2eGetSaveTarget = (actor, saveType, context = {}) =>
+    globalThis.add2eResolveSavingThrow(actor, saveType, { ...context, source: context.source ?? "global-get-save-target" }).target;
   globalThis.add2eRollCharacteristicCard = add2eRollCharacteristicCard;
   globalThis.add2eRollSaveCard = add2eRollSaveCard;
 
