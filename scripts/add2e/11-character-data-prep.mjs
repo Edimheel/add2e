@@ -377,13 +377,6 @@ Hooks.once("ready", () => {
   }, 750);
 });
 
-// Exposition globale conservée temporairement jusqu'au raccordement ES de la feuille.
-try { globalThis.FORCE_TABLE = FORCE_TABLE; } catch (_e) {}
-try { globalThis.INTELLIGENCE_TABLE = INTELLIGENCE_TABLE; } catch (_e) {}
-try { globalThis.SAGESSE_TABLE = SAGESSE_TABLE; } catch (_e) {}
-try { globalThis.DEXTERITE_TABLE = DEXTERITE_TABLE; } catch (_e) {}
-try { globalThis.CONSTITUTION_TABLE = CONSTITUTION_TABLE; } catch (_e) {}
-try { globalThis.CHARISME_TABLE = CHARISME_TABLE; } catch (_e) {}
 try { globalThis.consommerSortMemorise = consommerSortMemorise; } catch (_e) {}
 try { globalThis.majImageToken = majImageToken; } catch (_e) {}
 try { globalThis.plageToRollFormula = plageToRollFormula; } catch (_e) {}
