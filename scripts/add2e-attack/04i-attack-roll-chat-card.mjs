@@ -3,9 +3,9 @@
 // Chaque joueur actif crée sa carte simplifiée privée ; un seul MJ crée la carte détaillée.
 // Compatible Foundry V13/V14/V15.
 
-const VERSION = "2026-07-24-attack-chat-clean-v31";
+const VERSION = "2026-07-24-attack-chat-single-create-v32";
 const SOCKET = "system.add2e";
-const ROUTE_TYPE = "ADD2E_ATTACK_CHAT_ROUTE_V31";
+const ROUTE_TYPE = "ADD2E_ATTACK_CHAT_ROUTE_V32";
 const LOG = "[ADD2E][ATTACK_CHAT]";
 
 globalThis.ADD2E_ATTACK_CHAT_VISIBILITY_VERSION = VERSION;
@@ -193,42 +193,6 @@ function playerCardOptions(ctx) {
   };
 }
 
-function gmCardOptions(ctx) {
-  const snapshot = ctx.snapshot;
-  const result = outcome(ctx);
-  const rows = [
-    { label: "Arme", value: ctx?.arme?.name ?? "Arme" },
-    { label: "Résultat", value: result.title }
-  ];
-  if (result.hit) rows.push({ label: "Dégâts", value: String(number(snapshot?.damage?.amount)) });
-  if (snapshot?.assassination?.resolved) {
-    rows.push({
-      label: "Assassinat",
-      value: `${snapshot.assassination.success ? "Réussi" : "Échoué"} · ${snapshot.assassination.roll} / ${snapshot.assassination.score}%`
-    });
-  }
-
-  const flags = baseFlags(ctx, "gm-only", "gm-details");
-  flags.add2e.attackSnapshot = typeof foundry?.utils?.deepClone === "function"
-    ? foundry.utils.deepClone(snapshot)
-    : cloneForSocket(snapshot);
-
-  return {
-    title: `Détails d’attaque — ${result.title}`,
-    icon: "fas fa-list-check",
-    variant: result.variant,
-    source: sourceIdentity(ctx),
-    target: targetIdentity(ctx),
-    rows,
-    chatData: {
-      speaker: { alias: ctx?.actor?.name ?? "ADD2E" },
-      whisper: userIds(gmUsers()),
-      blind: false,
-      flags
-    }
-  };
-}
-
 function detailRowsHtml(rows = []) {
   return rows
     .filter(row => row && (row.label !== undefined || row.value !== undefined))
@@ -351,13 +315,41 @@ function gmDetailsHtml(ctx) {
   ].join("");
 }
 
-function appendDetailsToCard(cardHtml, detailsHtml) {
-  const card = String(cardHtml ?? "");
-  const details = String(detailsHtml ?? "");
-  if (!card || !details) return card;
-  const marker = "</div></div>";
-  const index = card.lastIndexOf(marker);
-  return index < 0 ? `${card}${details}` : `${card.slice(0, index)}${details}${card.slice(index)}`;
+function gmCardOptions(ctx) {
+  const snapshot = ctx.snapshot;
+  const result = outcome(ctx);
+  const rows = [
+    { label: "Arme", value: ctx?.arme?.name ?? "Arme" },
+    { label: "Résultat", value: result.title }
+  ];
+  if (result.hit) rows.push({ label: "Dégâts", value: String(number(snapshot?.damage?.amount)) });
+  if (snapshot?.assassination?.resolved) {
+    rows.push({
+      label: "Assassinat",
+      value: `${snapshot.assassination.success ? "Réussi" : "Échoué"} · ${snapshot.assassination.roll} / ${snapshot.assassination.score}%`
+    });
+  }
+
+  const flags = baseFlags(ctx, "gm-only", "gm-details");
+  flags.add2e.attackSnapshot = typeof foundry?.utils?.deepClone === "function"
+    ? foundry.utils.deepClone(snapshot)
+    : cloneForSocket(snapshot);
+
+  return {
+    title: `Détails d’attaque — ${result.title}`,
+    icon: "fas fa-list-check",
+    variant: result.variant,
+    source: sourceIdentity(ctx),
+    target: targetIdentity(ctx),
+    rows,
+    trustedBodyHtml: gmDetailsHtml(ctx),
+    chatData: {
+      speaker: { alias: ctx?.actor?.name ?? "ADD2E" },
+      whisper: userIds(gmUsers()),
+      blind: false,
+      flags
+    }
+  };
 }
 
 function optionsForCurrentPlayer(options) {
@@ -405,13 +397,7 @@ async function createRoutedCard(payload = {}) {
 
   globalThis.__ADD2E_ATTACK_CHAT_ROUTE_IDS.add(messageId);
   try {
-    const message = await globalThis.add2eCreateChatCard(options);
-    const detailsHtml = kind === "gm" ? String(payload.detailsHtml ?? "").trim() : "";
-    if (message && detailsHtml) {
-      const enrichedContent = appendDetailsToCard(preview, detailsHtml);
-      if (enrichedContent && enrichedContent !== preview) await message.update({ content: enrichedContent });
-    }
-    return message;
+    return await globalThis.add2eCreateChatCard(options);
   } catch (error) {
     globalThis.__ADD2E_ATTACK_CHAT_ROUTE_IDS.delete(messageId);
     throw error;
@@ -454,8 +440,7 @@ async function routePlayerCard(options, ctx) {
     messageId,
     kind: "player",
     playerUserIds,
-    options,
-    detailsHtml: ""
+    options
   });
   if (!payload) throw new Error("Impossible de sérialiser la carte d’attaque joueur.");
 
@@ -487,8 +472,7 @@ async function routeGmCard(options, ctx) {
     messageId,
     creatorId,
     kind: "gm",
-    options,
-    detailsHtml: gmDetailsHtml(ctx)
+    options
   });
   if (!payload) throw new Error("Impossible de sérialiser la carte d’attaque MJ.");
 
