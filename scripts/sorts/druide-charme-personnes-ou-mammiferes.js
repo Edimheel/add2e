@@ -1,449 +1,426 @@
-// ADD2E — onUse Druide niveau 2 : Charme-personnes ou mammifères
-// Version : 2026-05-05-druide-n1-7-v1
-// Retour attendu par le moteur ADD2E : true = sort consommé, false = sort non consommé.
+// Charme-personnes ou mammifères — ADD2E
+// Version : 2026-07-24-canonical-mental-save-executor-v1
+// Compatible Foundry V13/V14/V15.
 
-const ADD2E_SORT_CONFIG = {
-  "name": "Charme-personnes ou mammifères",
-  "slug": "charme_personnes_ou_mammiferes",
-  "level": 2,
-  "classe": "Druide",
-  "script_type": "simple_effect",
-  "description": "Charme-personnes ou mammifères applique, retire ou transforme un état important : paralysie, poison, maladie, confusion, transformation ou autre condition. Le script crée ou retire les effets actifs reconnus, puis le MD tranche les cas particuliers.",
-  "effect_rounds": "long",
-  "effectTags": [
-    "charme",
-    "mental",
-    "mammifere"
-  ],
-  "modes": [
-    {
-      "id": "normal",
-      "label": "Charme-personnes ou mammifères"
+return await (async () => {
+  const TAG = "[ADD2E][SORT_ONUSE][DRUIDE_CHARME_PERSONNES_OU_MAMMIFERES]";
+  const PERIODIC_SAVE_VERSION = "2026-07-24-periodic-save-canonical-executor-v3";
+  const sourceItem = typeof sort !== "undefined" && sort
+    ? sort
+    : (typeof item !== "undefined" && item
+      ? item
+      : (typeof spell !== "undefined" && spell
+        ? spell
+        : (typeof this !== "undefined" && this?.documentName === "Item" ? this : null)));
+  const caster = (typeof actor !== "undefined" && actor) ? actor : sourceItem?.parent;
+  if (!sourceItem || !caster) {
+    ui.notifications.error("Charme-personnes ou mammifères : source ou lanceur introuvable.");
+    return false;
+  }
+
+  const refund = async reason => {
+    if (reason) ui.notifications.warn(reason);
+    try {
+      if (sourceItem.type === "sort") return;
+      const globalCharges = await sourceItem.getFlag?.("add2e", "global_charges");
+      if (globalCharges !== undefined) {
+        await sourceItem.setFlag("add2e", "global_charges", Number(globalCharges) + 1);
+        ui.notifications.info(`Charge restituée à ${sourceItem.name}.`);
+        return;
+      }
+      if (sourceItem.system?.isPower && sourceItem.system?.sourceWeaponId) {
+        const parentItem = caster.items?.get(sourceItem.system.sourceWeaponId);
+        const index = sourceItem.system.powerIndex;
+        const charges = await parentItem?.getFlag?.("add2e", `charges_${index}`);
+        if (parentItem && charges !== undefined) {
+          await parentItem.setFlag("add2e", `charges_${index}`, Number(charges) + 1);
+          ui.notifications.info("Charge restituée.");
+        }
+      }
+    } catch (error) {
+      console.warn(`${TAG}[REFUND_FAILED]`, error);
     }
-  ],
-  "dice": null
-};
-const ADD2E_ONUSE_TAG = "[ADD2E][SORT_ONUSE][DRUIDE_N1_7]";
-
-function add2eHtmlEscape(value) {
-  const div = document.createElement("div");
-  div.innerText = String(value ?? "");
-  return div.innerHTML;
-}
-
-function add2eCasterLevel(actor) {
-  return Number(actor?.system?.niveau ?? actor?.system?.level ?? actor?.system?.details?.niveau ?? 1) || 1;
-}
-
-async function add2eEvalRoll(formula) {
-  return await new Roll(formula).evaluate();
-}
-
-function add2eRoundCount(expr, level) {
-  if (typeof expr === "number") return expr;
-  if (!expr) return 0;
-  const s = String(expr);
-  if (s === "level") return level;
-  if (s === "2*level") return 2 * level;
-  if (s === "4*level") return 4 * level;
-  if (s === "4+level") return 4 + level;
-  if (s === "10") return 10;
-  if (s === "10+level") return 10 + level;
-  if (s === "10*level") return 10 * level;
-  if (s === "40+10*level") return 40 + (10 * level);
-  if (s === "60+10*level") return 60 + (10 * level);
-  if (s === "60*level") return 60 * level;
-  if (s === "long") return 0;
-  if (s === "special") return 0;
-  return Number(s) || 0;
-}
-
-function add2eGetCasterToken() {
-  return token ?? args?.[0]?.token ?? canvas?.tokens?.controlled?.[0] ?? null;
-}
-
-function add2eGetTargets({ fallbackCaster = true } = {}) {
-  const targets = Array.from(game.user.targets ?? []);
-  if (targets.length) return targets;
-  const casterToken = add2eGetCasterToken();
-  return (fallbackCaster && casterToken) ? [casterToken] : [];
-}
-
-async function add2eChat(title, html, speakerToken = null, options = {}) {
-  const casterToken = speakerToken ?? (typeof add2eGetCasterToken === "function" ? add2eGetCasterToken() : null);
-  const casterActor = actor ?? casterToken?.actor ?? null;
-  const casterName = casterActor?.name ?? casterToken?.name ?? "Druide";
-  const spellName = item?.name ?? title ?? "Sort druidique";
-  const casterImg = casterToken?.document?.texture?.src ?? casterActor?.img ?? "icons/svg/mystery-man.svg";
-  const spellImg = item?.img ?? "icons/svg/book.svg";
-  const targets = Array.from(game.user.targets ?? []);
-  const targetLabel = options.targetLabel ?? (targets.length ? targets.map(t => t.name).join(", ") : casterName);
-  const outcome = options.outcome ?? title ?? spellName;
-  const rule = options.rule ?? options.regle ?? "";
-  const subtitle = options.subtitle ?? "Sort druidique";
-
-  const safeCaster = add2eHtmlEscape(casterName);
-  const safeSpell = add2eHtmlEscape(spellName);
-  const safeSubtitle = add2eHtmlEscape(subtitle);
-  const safeTarget = add2eHtmlEscape(targetLabel);
-  const safeOutcome = add2eHtmlEscape(outcome);
-  const safeCasterImg = add2eHtmlEscape(casterImg);
-  const safeSpellImg = add2eHtmlEscape(spellImg);
-
-  await ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor: casterActor, token: casterToken }),
-    content: `
-      <div class="add2e-chat-card add2e-druide-sort"
-           style="border:1px solid #75a86a;border-radius:8px;overflow:hidden;background:#f2fbec;color:#24411f;font-family:var(--font-primary);">
-        <div style="display:flex;align-items:center;gap:8px;background:#2f6f3e;color:#fff;padding:7px 9px;">
-          <img src="${safeCasterImg}" style="width:42px;height:42px;object-fit:cover;border-radius:50%;border:2px solid #b8e3a9;background:#fff;" />
-          <div style="flex:1;line-height:1.05;">
-            <div style="font-weight:800;font-size:14px;">${safeCaster}</div>
-            <div style="font-size:12px;font-weight:700;">lance ${safeSpell}</div>
-          </div>
-          <div style="font-weight:800;font-size:12px;text-align:center;white-space:nowrap;">${safeSubtitle}</div>
-          <img src="${safeSpellImg}" style="width:34px;height:34px;object-fit:cover;border-radius:3px;border:1px solid #b8e3a9;background:#fff;" />
-        </div>
-
-        <div style="padding:9px 10px 10px 10px;background:#f2fbec;">
-          <div style="font-size:13px;margin:0 0 6px 0;"><b>Cible :</b> ${safeTarget}</div>
-
-          <div style="border:1px solid #75a86a;border-radius:6px;background:#fbfff8;padding:8px;text-align:center;margin-bottom:7px;">
-            <div style="color:#1c7f41;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.3px;">${safeOutcome}</div>
-            <div style="font-size:13px;line-height:1.35;text-align:center;">${html}</div>
-          </div>
-
-          <details style="border:1px solid #75a86a;border-radius:5px;background:#fbfff8;padding:5px 7px;">
-            <summary style="cursor:pointer;font-weight:800;color:#315f29;">Règle appliquée</summary>
-            <div style="margin-top:5px;font-size:12px;line-height:1.35;">${rule || "Effet du sort appliqué selon sa description et l’arbitrage du MD."}</div>
-          </details>
-        </div>
-      </div>`
-  });
-}
-
-async function add2eApplyTaggedEffect(targetActor, { name, img, tags, rounds = 0, description = "", changes = [] }) {
-  if (!targetActor) return false;
-
-  const data = {
-    name,
-    img: img || item?.img || "icons/svg/aura.svg",
-    disabled: false,
-    transfer: false,
-    type: "base",
-    system: {},
-    changes,
-    duration: {
-      rounds: rounds || undefined,
-      startRound: game.combat?.round ?? null,
-      startTime: game.time?.worldTime ?? null,
-      combat: game.combat?.id ?? null
-    },
-    description,
-    flags: { add2e: { tags: tags ?? [] } }
   };
 
-  try {
-    await targetActor.createEmbeddedDocuments("ActiveEffect", [data]);
-    return true;
-  } catch (e) {
-    console.warn(`${ADD2E_ONUSE_TAG}[EFFECT_CREATE_FAILED]`, {
-      sort: ADD2E_SORT_CONFIG.name,
-      target: targetActor.name,
-      error: e
-    });
+  const targets = Array.from(game.user.targets ?? []).filter(target => target?.actor);
+  if (targets.length !== 1) {
+    await refund("Charme-personnes ou mammifères exige exactement une cible.");
     return false;
   }
-}
-
-async function add2eRemoveTaggedEffects(targetActor, removeTags = []) {
-  if (!targetActor?.effects) return 0;
-
-  const normalized = removeTags.map(t => String(t).toLowerCase());
-  const toDelete = [];
-
-  for (const ef of targetActor.effects) {
-    const tags = (ef.flags?.add2e?.tags ?? []).map(t => String(t).toLowerCase());
-    const name = String(ef.name ?? "").toLowerCase();
-
-    if (normalized.some(t => tags.includes(t) || name.includes(t.replace("etat:", "").replace("retire:", "")))) {
-      toDelete.push(ef.id);
-    }
+  if (typeof globalThis.add2eRollSavingThrow !== "function") {
+    await refund("Charme-personnes ou mammifères : l’exécuteur canonique de sauvegardes est indisponible.");
+    return false;
+  }
+  if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
+    await refund("Charme-personnes ou mammifères : le constructeur commun des cartes de chat est indisponible.");
+    return false;
   }
 
-  if (!toDelete.length) return 0;
-  await targetActor.deleteEmbeddedDocuments("ActiveEffect", toDelete);
-  return toDelete.length;
-}
+  const normalize = value => String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
 
-async function add2eChooseMode(config) {
-  const modes = config.modes ?? [{ id: "normal", label: config.name }];
-  const needsNote = [
-    "note", "summon_note", "mode_note", "detection", "dispel_magic",
-    "reincarnation", "terrain", "movement"
-  ].includes(config.script_type);
+  const targetCategory = targetActor => {
+    const actorType = normalize(targetActor?.type);
+    if (["personnage", "pnj"].includes(actorType)) return "personne";
 
-  if (modes.length <= 1 && !needsNote) return { mode: modes[0]?.id ?? "normal", note: "" };
+    const system = targetActor?.system ?? {};
+    const markers = [
+      system.type,
+      system.type_monstre,
+      system.creatureType,
+      system.creature_type,
+      system.race,
+      system.espece,
+      system.espèce,
+      system.species,
+      system.details?.race,
+      system.details?.type,
+      ...(Array.isArray(system.tags) ? system.tags : []),
+      ...(Array.isArray(system.effectTags) ? system.effectTags : []),
+      ...(Array.isArray(targetActor?.flags?.add2e?.tags) ? targetActor.flags.add2e.tags : [])
+    ].map(normalize).filter(Boolean);
+    const has = values => values.some(value => markers.some(marker => marker === value || marker.includes(value)));
+    if (has(["mammifere", "mammal"])) return "mammifère";
+    if (has([
+      "personne", "humain", "humaine", "humanoide", "demi_humain", "demi_humaine",
+      "elfe", "demi_elfe", "nain", "naine", "gnome", "petite_gens", "halfling",
+      "demi_orque", "human", "humanoid"
+    ])) return "personne";
+    return null;
+  };
 
-  return await new Promise(resolve => {
-    let done = false;
-    const finish = value => {
-      if (done) return;
-      done = true;
-      resolve(value);
+  const targetToken = targets[0];
+  const targetActor = targetToken.actor;
+  const category = targetCategory(targetActor);
+  if (!category) {
+    await refund(
+      `${targetActor.name} n’est pas identifié comme une personne ou un mammifère. `
+      + "Renseignez system.type, system.type_monstre ou un tag mammifere/humanoide."
+    );
+    return false;
+  }
+
+  if (!game.add2eCharmeHooksRegistered) {
+    game.add2eCharmeHooksRegistered = true;
+    const stopVfx = effect => {
+      const label = String(effect?.name ?? effect?.label ?? "").toLowerCase();
+      if (!label.includes("charmé") && !label.includes("charme")) return;
+      if (typeof Sequencer === "undefined") return;
+      for (const tokenDocument of effect?.parent?.getActiveTokens?.() ?? []) {
+        try {
+          Sequencer.EffectManager.endEffects({
+            name: `charme-effect-${tokenDocument.id}`,
+            object: tokenDocument
+          });
+        } catch (error) {
+          console.warn(`${TAG}[VFX_END_FAILED]`, error);
+        }
+      }
     };
-
-    let content = `<form><p><b>${add2eHtmlEscape(config.name)}</b></p>`;
-    if (needsNote) {
-      content += `<div class="form-group"><label>Note de scène / cible / paramètres</label><textarea name="note" rows="3"></textarea></div>`;
-    }
-    content += `</form>`;
-
-    const buttons = {};
-    for (const mode of modes) {
-      buttons[mode.id] = {
-        label: mode.label,
-        callback: html => finish({
-          mode: mode.id,
-          note: html?.find?.("[name='note']")?.val?.() ?? ""
-        })
-      };
-    }
-    buttons.cancel = { label: "Annuler", callback: () => finish(null) };
-
-    new Dialog({
-      title: config.name,
-      content,
-      buttons,
-      default: modes[0]?.id ?? "normal",
-      close: () => finish(null)
-    }).render(true);
-  });
-}
-
-async function add2eSimpleEffect(choice, config) {
-  const targets = add2eGetTargets({ fallbackCaster: true });
-  const level = add2eCasterLevel(actor);
-  const rounds = add2eRoundCount(config.effect_rounds, level);
-  const mode = choice?.mode ?? "normal";
-  const title = mode !== "normal"
-    ? (config.modes?.find(m => m.id === mode)?.label ?? config.name)
-    : config.name;
-
-  const tags = [
-    `sort:${config.slug}`,
-    "classe:druide",
-    "liste:druide",
-    `niveau:${config.level}`,
-    ...(config.effectTags ?? []),
-    mode !== "normal" ? `mode:${mode}` : ""
-  ].filter(Boolean);
-
-  for (const t of targets) {
-    await add2eApplyTaggedEffect(t.actor, {
-      name: title,
-      img: item?.img,
-      tags,
-      rounds,
-      description: config.description
+    Hooks.on("deleteActiveEffect", stopVfx);
+    Hooks.on("updateActiveEffect", (effect, changed) => {
+      if (changed?.disabled === true) stopVfx(effect);
     });
   }
 
-  await add2eChat(title, `
-    <p>Cible(s) : ${targets.map(t => `<b>${add2eHtmlEscape(t.name)}</b>`).join(", ")}</p>
-    ${rounds ? `<p>Durée mécanique : <b>${rounds}</b> round(s).</p>` : ""}
-  `, null, {
-    outcome: title,
-    rule: add2eHtmlEscape(config.description)
+  const intelligence = subject => {
+    const system = subject?.system ?? {};
+    for (const field of ["intelligence", "intelligence_base", "int_aff"]) {
+      const value = Number(system[field]);
+      if (Number.isFinite(value)) return value;
+    }
+    return Number(system.abilities?.int?.value ?? 0) || 0;
+  };
+  const currentTick = () => {
+    const fromApi = Number(game.add2e?.time?.currentTick?.() ?? globalThis.ADD2E_TIME_ENGINE?.currentTick?.());
+    if (Number.isFinite(fromApi) && fromApi >= 0) return Math.floor(fromApi);
+    try {
+      const setting = Number(game.settings?.get?.("add2e", "worldTimeTick"));
+      if (Number.isFinite(setting) && setting >= 0) return Math.floor(setting);
+    } catch (_error) {}
+    return 0;
+  };
+  const interval = value => {
+    const score = Math.max(0, Math.floor(Number(value) || 0));
+    if (score <= 3) return { days: 90, label: "3 mois" };
+    if (score <= 6) return { days: 60, label: "2 mois" };
+    if (score <= 9) return { days: 30, label: "1 mois" };
+    if (score <= 12) return { days: 21, label: "3 semaines" };
+    if (score <= 14) return { days: 14, label: "2 semaines" };
+    if (score <= 16) return { days: 7, label: "1 semaine" };
+    if (score === 17) return { days: 3, label: "3 jours" };
+    if (score === 18) return { days: 2, label: "2 jours" };
+    return { days: 1, label: "1 jour" };
+  };
+  const periodicSaveData = subject => {
+    const score = intelligence(subject);
+    const duration = interval(score);
+    let ticks = Number(game.add2e?.time?.toRounds?.(duration.days * 24, "hour"));
+    if (!Number.isFinite(ticks) || ticks <= 0) ticks = duration.days * 24 * 60;
+    ticks = Math.max(1, Math.floor(ticks));
+    const createdAtTick = currentTick();
+    return {
+      version: PERIODIC_SAVE_VERSION,
+      enabled: true,
+      kind: "saving-throw",
+      sourceName: sourceItem.name,
+      intervalDays: duration.days,
+      intervalLabel: duration.label,
+      intervalTicks: ticks,
+      createdAtTick,
+      nextSaveTick: createdAtTick + ticks,
+      lastSaveTick: null,
+      attempts: 0,
+      calendarAssumption: "1 mois = 30 jours de temps ADD2E",
+      save: {
+        category: "sorts",
+        label: "Sortilèges",
+        context: {
+          mental: true,
+          effectType: "charme",
+          tags: ["mental", "charme", "druide"],
+          source: "spell:druide_charme_personnes_ou_mammiferes:periodic"
+        }
+      },
+      resolution: { onSuccess: "delete-effect", onFailure: "keep-effect" },
+      cleanup: { sequencerEffectNames: ["charme-effect-{tokenId}"] },
+      chat: {
+        title: "Sauvegarde périodique",
+        sourceName: sourceItem.name,
+        successHeading: "CHARME ROMPU",
+        failureHeading: "CHARME MAINTENU",
+        successText: "{actor} réussit son jet et se libère du charme.",
+        failureText: "{actor} reste charmé. Prochain jet dans {interval}.",
+        details: [{ label: "Intelligence", value: score }]
+      }
+    };
+  };
+
+  const effectsEngine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  const applyEffect = async effectData => {
+    if (game.user.isGM || targetActor.isOwner) {
+      await targetActor.createEmbeddedDocuments("ActiveEffect", [effectData]);
+      return true;
+    }
+    if (game.socket) {
+      game.socket.emit("system.add2e", {
+        type: "applyActiveEffect",
+        actorId: targetActor.id,
+        actorUuid: targetActor.uuid,
+        sceneId: canvas.scene?.id,
+        tokenId: targetToken.id,
+        effectData
+      });
+      return true;
+    }
+    ui.notifications.error("Socket ADD2E indisponible : impossible d’appliquer l’effet Charmé.");
+    return false;
+  };
+  const playVfx = async () => {
+    if (typeof Sequence === "undefined") return;
+    try {
+      if (typeof Sequencer !== "undefined") {
+        Sequencer.EffectManager.endEffects({ name: `charme-effect-${targetToken.id}`, object: targetToken });
+      }
+      await new Sequence()
+        .effect()
+        .file("jb2a.cast_generic.02.blue")
+        .attachTo(targetToken)
+        .persist(true)
+        .name(`charme-effect-${targetToken.id}`)
+        .scaleToObject(1.5)
+        .opacity(0.8)
+        .belowTokens(false)
+        .play();
+    } catch (error) {
+      console.warn(`${TAG}[VFX_FAILED]`, error);
+    }
+  };
+
+  const modifierDetails = save => {
+    const applied = save?.resolution?.bonusResolution?.applied ?? [];
+    return applied.length
+      ? applied.map(entry => {
+          const modifier = entry?.modifier ?? entry;
+          const value = Number(modifier?.value) || 0;
+          const label = modifier?.metadata?.label ?? modifier?.source?.name ?? "Modificateur";
+          return `${label} ${value >= 0 ? "+" : ""}${value}`;
+        }).join(" ; ")
+      : "Aucun";
+  };
+  const createCard = async ({ resistance, save = null, outcome, periodicSave = null }) => {
+    const resistanceText = resistance?.found
+      ? `${Number(resistance.pct) || 0}% · d100 ${Number(resistance.jet) || 0} · ${resistance.resiste ? "réussie" : "échouée"}`
+      : "Aucune";
+    const rows = [
+      { label: "Cible", value: targetActor.name },
+      { label: "Nature", value: category },
+      { label: "Portée", value: "8 pouces AD&D" },
+      { label: "Résistance raciale", value: resistanceText }
+    ];
+    if (save?.ok) {
+      rows.push(
+        { label: "D20", value: save.d20 },
+        { label: "Bonus de sauvegarde", value: `${save.bonus >= 0 ? "+" : ""}${save.bonus}` },
+        { label: "Total", value: save.total },
+        { label: "Seuil", value: save.target },
+        { label: "Modificateurs", value: modifierDetails(save) }
+      );
+    }
+    if (periodicSave) {
+      rows.push({
+        label: "Prochaine sauvegarde",
+        value: `${periodicSave.intervalLabel} · Intelligence ${periodicSave.chat.details[0].value}`
+      });
+    }
+
+    const outcomeData = {
+      racial: { variant: "success", message: `${targetActor.name} résiste au charme grâce à sa résistance raciale.` },
+      saved: { variant: "success", message: `${targetActor.name} réussit sa sauvegarde mentale et résiste au charme.` },
+      charmed: { variant: "failure", message: `${targetActor.name} considère désormais ${caster.name} comme un ami sincère, sans être asservi.` }
+    }[outcome];
+
+    const options = {
+      actor: caster,
+      title: sourceItem.name || "Charme-personnes ou mammifères",
+      icon: "fas fa-heart",
+      variant: outcomeData.variant,
+      source: {
+        name: caster.name,
+        img: caster.img,
+        type: "Enchantement / Charme",
+        meta: "Attaque mentale · Druide"
+      },
+      target: {
+        name: targetActor.name,
+        img: targetActor.img,
+        type: category,
+        meta: save?.resolution?.targetResolution?.selected?.className
+          ?? save?.resolution?.targetResolution?.source
+          ?? ""
+      },
+      rows,
+      message: outcomeData.message,
+      notes: outcome === "charmed"
+        ? [
+            "Le charme ne permet pas un contrôle automatique de la cible.",
+            "La cible conserve son alignement, sa personnalité et son instinct de conservation.",
+            "Le sort ne confère aucun langage commun."
+          ]
+        : [],
+      chatData: {
+        speaker: ChatMessage.getSpeaker({ actor: caster }),
+        rolls: save?.roll ? [save.roll] : [],
+        flags: {
+          add2e: {
+            spell: "druide_charme_personnes_ou_mammiferes",
+            sourceItemUuid: sourceItem.uuid,
+            targetActorUuid: targetActor.uuid,
+            targetCategory: category,
+            outcome,
+            resistanceFound: resistance?.found === true,
+            resistancePercent: resistance?.pct ?? null,
+            resistanceRoll: resistance?.jet ?? null,
+            resistanceSuccess: resistance?.resiste === true,
+            saveType: save?.resolution?.key ?? null,
+            saveTarget: save?.target ?? null,
+            saveBonus: save?.bonus ?? null,
+            saveTotal: save?.total ?? null,
+            saveSuccess: save?.success ?? null,
+            saveMental: true,
+            saveResolverVersion: save?.version ?? null,
+            periodicSave: periodicSave ?? null
+          }
+        }
+      }
+    };
+    const preview = globalThis.add2eBuildChatCard(options);
+    if (!String(preview ?? "").trim()) {
+      throw new Error("Charme-personnes ou mammifères : carte de chat vide.");
+    }
+    await globalThis.add2eCreateChatCard(options);
+  };
+
+  const resistance = effectsEngine?.checkResistanceDetails?.(targetActor, "charme", { chat: false }) ?? null;
+  if (resistance?.resiste) {
+    await createCard({ resistance, outcome: "racial" });
+    return true;
+  }
+
+  const save = await globalThis.add2eRollSavingThrow(targetActor, 4, {
+    source: "spell:druide_charme_personnes_ou_mammiferes",
+    sourceItem,
+    caster,
+    targetToken,
+    frontale: true,
+    mental: true,
+    effectType: "charme",
+    tags: ["mental", "charme", "druide"],
+    createChat: false,
+    showDice: true
   });
-
-  return true;
-}
-
-async function add2eHeal(config) {
-  const targets = add2eGetTargets({ fallbackCaster: false });
-  if (!targets.length) {
-    ui.notifications.warn(`${config.name} : cible obligatoire.`);
+  if (!save?.ok) {
+    await refund(`Charme-personnes ou mammifères : aucune sauvegarde contre les sortilèges pour ${targetActor.name}.`);
     return false;
   }
-
-  const formula = config.dice || "1d8";
-  const roll = await add2eEvalRoll(formula);
-  await roll.toMessage({
-    speaker: ChatMessage.getSpeaker({ actor, token: add2eGetCasterToken() }),
-    flavor: config.name
-  });
-
-  const target = targets[0];
-  const targetActor = target.actor ?? target;
-  const amount = Number(roll.total) || 0;
-  const maxHP = Number(targetActor.system?.points_de_coup ?? targetActor.system?.pv_max ?? targetActor.system?.hp?.max ?? 0) || 0;
-  const curHP = Number(targetActor.system?.pdv ?? targetActor.system?.pv ?? targetActor.system?.hp?.value ?? 0) || 0;
-  const newHp = maxHP ? Math.min(maxHP, curHP + amount) : curHP + amount;
-  const healed = Math.max(0, newHp - curHP);
-
-  await targetActor.update({ "system.pdv": newHp });
-
-  await add2eChat("SOINS", `
-    <p>Jet : <b>${roll.total}</b></p>
-    <p>PV rendus : <b>${healed}</b> ${maxHP ? "(limité par le maximum)" : ""}</p>
-  `, null, {
-    targetLabel: target.name,
-    outcome: "SOINS",
-    rule: add2eHtmlEscape(config.description)
-  });
-
-  return true;
-}
-
-async function add2eDamage(config) {
-  const targets = add2eGetTargets({ fallbackCaster: false });
-  const level = add2eCasterLevel(actor);
-  let formula = config.dice || "1d6";
-
-  if (formula === "2d8+level") formula = `2d8+${level}`;
-  if (formula === "2d8+leveld8") formula = `${Math.min(10, 2 + level)}d8`;
-  if (formula === "special" || formula === "variable") formula = "1d20";
-
-  const roll = await add2eEvalRoll(formula);
-  await roll.toMessage({
-    speaker: ChatMessage.getSpeaker({ actor, token: add2eGetCasterToken() }),
-    flavor: config.name
-  });
-
-  await add2eChat(config.name, `
-    <p>Jet indicatif : <b>${roll.total}</b> (${formula})</p>
-    ${targets.length ? `<p>Cible(s) : ${targets.map(t => `<b>${add2eHtmlEscape(t.name)}</b>`).join(", ")}</p>` : "<p>Aucune cible sélectionnée : appliquer manuellement si nécessaire.</p>"}
-  `, null, {
-    outcome: "EFFET OFFENSIF",
-    rule: add2eHtmlEscape(config.description)
-  });
-
-  return true;
-}
-
-async function add2eRemoveCondition(config) {
-  const targets = add2eGetTargets({ fallbackCaster: false });
-  if (!targets.length) {
-    ui.notifications.warn(`${config.name} : cible obligatoire.`);
-    return false;
+  if (save.success) {
+    await createCard({ resistance, save, outcome: "saved" });
+    return true;
   }
 
-  let removeTags = [];
-  if (config.slug.includes("contre_poison")) removeTags = ["etat:poison", "poison", "empoisonne"];
-  else if (config.slug.includes("guerison_des_maladies")) removeTags = ["etat:maladie", "maladie", "infection"];
-  else removeTags = config.effectTags ?? [];
-
-  let removed = 0;
-  for (const t of targets) removed += await add2eRemoveTaggedEffects(t.actor, removeTags);
-
-  await add2eChat(config.name, `
-    <p>Cible(s) : ${targets.map(t => `<b>${add2eHtmlEscape(t.name)}</b>`).join(", ")}</p>
-    <p>Effets retirés automatiquement : <b>${removed}</b>.</p>
-  `, null, {
-    targetLabel: targets.map(t => t.name).join(", "),
-    outcome: "ÉTAT TRAITÉ",
-    rule: add2eHtmlEscape(config.description)
-  });
-
-  return true;
-}
-
-async function add2eDispelMagic(config, choice) {
-  const roll = await add2eEvalRoll("1d20");
-  await roll.toMessage({
-    speaker: ChatMessage.getSpeaker({ actor, token: add2eGetCasterToken() }),
-    flavor: `${config.name} — jet indicatif`
-  });
-
-  await add2eChat(config.name, `
-    <p>Jet indicatif : <b>${roll.total}</b></p>
-    ${choice?.note ? `<p>Effet visé : <b>${add2eHtmlEscape(choice.note)}</b></p>` : ""}
-  `, null, {
-    outcome: "DISSIPATION",
-    rule: "Comparer selon la règle de dissipation avec le niveau ou la puissance de l’effet magique ciblé."
-  });
-
-  return true;
-}
-
-async function add2eNoteOnly(config, choice) {
-  await add2eChat(config.name, `
-    <p>${add2eHtmlEscape(config.description)}</p>
-    ${choice?.note ? `<p>Note : <b>${add2eHtmlEscape(choice.note)}</b></p>` : ""}
-  `, null, {
-    outcome: config.name.toUpperCase(),
-    rule: add2eHtmlEscape(config.description)
-  });
-
-  return true;
-}
-
-async function add2eReincarnation(config, choice) {
-  const targets = add2eGetTargets({ fallbackCaster: false });
-  if (!targets.length) {
-    ui.notifications.warn(`${config.name} : cible obligatoire.`);
-    return false;
+  const periodicSave = periodicSaveData(targetActor);
+  if (game.user.isGM || targetActor.isOwner) {
+    const existing = targetActor.effects?.find?.(effect =>
+      (effect.flags?.add2e?.tags ?? []).includes("charme")
+    );
+    if (existing) await existing.delete();
   }
 
-  for (const t of targets) {
-    await add2eApplyTaggedEffect(t.actor, {
-      name: config.name,
-      img: item?.img,
-      tags: [`sort:${config.slug}`, "classe:druide", "liste:druide", `niveau:${config.level}`, "reincarnation", "retour:vie"],
-      rounds: 0,
-      description: config.description
-    });
-  }
-
-  await add2eChat(config.name, `
-    <p>Réincarnation notée sur : ${targets.map(t => `<b>${add2eHtmlEscape(t.name)}</b>`).join(", ")}</p>
-    ${choice?.note ? `<p>Note : <b>${add2eHtmlEscape(choice.note)}</b></p>` : ""}
-  `, null, {
-    targetLabel: targets.map(t => t.name).join(", "),
-    outcome: "RÉINCARNATION",
-    rule: add2eHtmlEscape(config.description)
+  const applied = await applyEffect({
+    name: "Charmé",
+    img: "icons/svg/status/heart.svg",
+    origin: sourceItem.uuid,
+    duration: {},
+    disabled: false,
+    transfer: false,
+    description:
+      `${targetActor.name} considère ${caster.name} comme un ami sincère. `
+      + "Le charme n’impose pas d’ordres suicidaires, ne modifie pas l’alignement et ne confère aucun langage commun.",
+    flags: {
+      add2e: {
+        tags: [
+          "charme",
+          "mental",
+          "etat:charme",
+          "classe:druide",
+          "sort:druide_charme_personnes_ou_mammiferes"
+        ],
+        sourceId: caster.id,
+        sourceUuid: caster.uuid ?? null,
+        sourceName: caster.name,
+        spellName: sourceItem.name,
+        targetCategory: category,
+        periodicSave,
+        charmRules: {
+          automaticBreakOnCasterAttack: true,
+          newSaveOnHarmfulRequest: true,
+          changesAlignment: false,
+          grantsLanguage: false,
+          domination: false
+        }
+      }
+    }
   });
+  if (!applied) return false;
 
+  await playVfx();
+  await createCard({ resistance, save, outcome: "charmed", periodicSave });
   return true;
-}
-
-const choice = await add2eChooseMode(ADD2E_SORT_CONFIG);
-if (!choice) {
-  ui.notifications.info(`${ADD2E_SORT_CONFIG.name} annulé.`);
-  return false;
-}
-
-console.log(`${ADD2E_ONUSE_TAG}[START]`, {
-  sort: ADD2E_SORT_CONFIG.name,
-  actor: actor?.name,
-  mode: choice.mode,
-  targets: Array.from(game.user.targets ?? []).map(t => t.name)
-});
-
-switch (ADD2E_SORT_CONFIG.script_type) {
-  case "heal":
-    return await add2eHeal(ADD2E_SORT_CONFIG);
-
-  case "damage_roll":
-    return await add2eDamage(ADD2E_SORT_CONFIG);
-
-  case "remove_condition":
-    return await add2eRemoveCondition(ADD2E_SORT_CONFIG);
-
-  case "dispel_magic":
-    return await add2eDispelMagic(ADD2E_SORT_CONFIG, choice);
-
-  case "reincarnation":
-    return await add2eReincarnation(ADD2E_SORT_CONFIG, choice);
-
-  case "simple_effect":
-    return await add2eSimpleEffect(choice, ADD2E_SORT_CONFIG);
-
-  case "detection":
-  case "note":
-  case "summon_note":
-  case "mode_note":
-  default:
-    return await add2eNoteOnly(ADD2E_SORT_CONFIG, choice);
-}
+})();
