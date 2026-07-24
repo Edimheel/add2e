@@ -300,10 +300,7 @@ return await (async () => {
     if (typeof Sequence === "undefined") return false;
     const radiusPx = metersToPx(SPELL.radiusMeters);
     const files = [
-      "jb2a.fog_cloud.02.green",
-      "jb2a.fog_cloud.01.green",
-      "jb2a.smoke.puff.centered.green",
-      "jb2a.smoke.puff.centered.grey"
+      "MarkerPoison_01_Dark_Green_400x400.webm"
     ];
 
     for (const file of files) {
