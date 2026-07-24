@@ -3,13 +3,26 @@
 // Une carte détaillée est créée par un client MJ ; une carte simplifiée par un client joueur.
 // Compatible Foundry V13/V14/V15.
 
-const VERSION = "2026-07-24-attack-chat-role-routed-v26";
+const VERSION = "2026-07-24-attack-chat-gm-collapsible-details-v27";
 const SOCKET = "system.add2e";
-const ROUTE_TYPE = "ADD2E_ATTACK_CHAT_ROUTE_V26";
+const ROUTE_TYPE = "ADD2E_ATTACK_CHAT_ROUTE_V27";
 const LOG = "[ADD2E][ATTACK_CHAT]";
 
 globalThis.ADD2E_ATTACK_CHAT_VISIBILITY_VERSION = VERSION;
 globalThis.__ADD2E_ATTACK_CHAT_ROUTE_IDS ??= new Set();
+
+function escapeHtml(value) {
+  const text = String(value ?? "");
+  try {
+    if (typeof foundry?.utils?.escapeHTML === "function") return foundry.utils.escapeHTML(text);
+  } catch (_error) {}
+  return text
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
 
 function signed(value) {
   const number = Number(value) || 0;
@@ -206,30 +219,11 @@ function playerCardOptions(ctx) {
 function gmCardOptions(ctx) {
   const snapshot = ctx.snapshot;
   const result = outcome(ctx);
-  const threshold = snapshot?.threshold ?? {};
   const rows = [
     { label: "Arme", value: ctx?.arme?.name ?? "Arme" },
-    { label: "Résultat", value: result.title },
-    { label: "Diagnostic", value: snapshot.diagId },
-    { label: "Toucher — Jet", value: attackRollText(snapshot) },
-    { label: "Toucher — Portée", value: rangeText(snapshot) },
-    { label: "Toucher — Position", value: positionSummary(snapshot) },
-    { label: "Toucher — THAC0 / CA", value: `${number(threshold.thac0)} - ${number(threshold.armorClass)} = ${number(threshold.base)}` },
-    { label: "Toucher — Modificateurs", value: modifierSummary(snapshot.attackResolution) },
-    { label: "Toucher — Bonus total", value: signed(snapshot?.roll?.bonus) },
-    { label: "Toucher — Seuil final", value: thresholdText(snapshot) }
+    { label: "Résultat", value: result.title }
   ];
-
-  const conditional = Array.isArray(snapshot?.conditionalDetails) ? snapshot.conditionalDetails.filter(Boolean) : [];
-  if (conditional.length) rows.push({ label: "Toucher — Défenses conditionnelles", value: conditional.join(" ; ") });
-  if (result.hit) {
-    rows.push({ label: "Dégâts — Modificateurs", value: modifierSummary(snapshot.damageResolution) });
-    rows.push({ label: "Dégâts — Calcul", value: `${snapshot?.damage?.formula ?? "—"} → ${snapshot?.damage?.details ?? snapshot?.damage?.amount ?? "—"}` });
-    rows.push({ label: "Dégâts — Total", value: String(number(snapshot?.damage?.amount)) });
-  } else {
-    rows.push({ label: "Dégâts", value: "Aucun : l’attaque ne touche pas." });
-  }
-  if (ctx.useBackstab) rows.push({ label: "Attaque sournoise", value: `Dégâts ×${number(ctx.backstabMultiplier, 1)}` });
+  if (result.hit) rows.push({ label: "Dégâts", value: String(number(snapshot?.damage?.amount)) });
   if (snapshot?.assassination?.resolved) {
     rows.push({
       label: "Assassinat",
@@ -258,6 +252,68 @@ function gmCardOptions(ctx) {
   };
 }
 
+function detailRowsHtml(rows = []) {
+  return rows
+    .filter(row => row && (row.label !== undefined || row.value !== undefined))
+    .map(row => `<div class="add2e-card-label">${escapeHtml(row.label ?? "")}</div><div class="add2e-card-value">${escapeHtml(row.value ?? "—")}</div>`)
+    .join("");
+}
+
+function detailSectionHtml({ label, icon, rows }) {
+  const body = detailRowsHtml(rows);
+  if (!body) return "";
+  return `<details class="add2e-attack-detail-section" style="margin-top:8px;border:1px solid var(--add2e-card-border,#b98b2d);border-radius:8px;overflow:hidden;background:rgba(255,255,255,.35);"><summary style="cursor:pointer;padding:7px 9px;font-weight:900;background:rgba(185,139,45,.18);"><i class="${escapeHtml(icon)}"></i> ${escapeHtml(label)}</summary><div class="add2e-card-grid" style="padding:8px;">${body}</div></details>`;
+}
+
+function gmDetailsHtml(ctx) {
+  const snapshot = ctx.snapshot;
+  const result = outcome(ctx);
+  const threshold = snapshot?.threshold ?? {};
+  const touchRows = [
+    { label: "Diagnostic", value: snapshot.diagId },
+    { label: "Jet", value: attackRollText(snapshot) },
+    { label: "Portée", value: rangeText(snapshot) },
+    { label: "Position", value: positionSummary(snapshot) },
+    { label: "THAC0 / CA", value: `${number(threshold.thac0)} - ${number(threshold.armorClass)} = ${number(threshold.base)}` },
+    { label: "Modificateurs", value: modifierSummary(snapshot.attackResolution) },
+    { label: "Bonus total", value: signed(snapshot?.roll?.bonus) },
+    { label: "Seuil final au d20", value: thresholdText(snapshot) }
+  ];
+  const conditional = Array.isArray(snapshot?.conditionalDetails) ? snapshot.conditionalDetails.filter(Boolean) : [];
+  if (conditional.length) touchRows.push({ label: "Défenses conditionnelles", value: conditional.join(" ; ") });
+
+  const damageRows = result.hit
+    ? [
+        { label: "Modificateurs", value: modifierSummary(snapshot.damageResolution) },
+        { label: "Formule", value: snapshot?.damage?.formula ?? "—" },
+        { label: "Détail du jet", value: snapshot?.damage?.details ?? "—" },
+        { label: "Total", value: String(number(snapshot?.damage?.amount)) }
+      ]
+    : [{ label: "Dégâts", value: "Aucun : l’attaque ne touche pas." }];
+  if (ctx.useBackstab) damageRows.push({ label: "Attaque sournoise", value: `Dégâts ×${number(ctx.backstabMultiplier, 1)}` });
+  if (snapshot?.assassination?.resolved) {
+    damageRows.push({
+      label: "Assassinat",
+      value: `${snapshot.assassination.success ? "Réussi" : "Échoué"} · ${snapshot.assassination.roll} / ${snapshot.assassination.score}%`
+    });
+  }
+
+  return [
+    detailSectionHtml({ label: "Détails du toucher", icon: "fas fa-bullseye", rows: touchRows }),
+    detailSectionHtml({ label: "Détails des dégâts", icon: "fas fa-burst", rows: damageRows })
+  ].join("");
+}
+
+function appendDetailsToCard(cardHtml, detailsHtml) {
+  const card = String(cardHtml ?? "");
+  const details = String(detailsHtml ?? "");
+  if (!card || !details) return card;
+  const marker = "</div></div>";
+  const index = card.lastIndexOf(marker);
+  if (index < 0) return `${card}${details}`;
+  return `${card.slice(0, index)}${details}${card.slice(index)}`;
+}
+
 async function createRoutedCard(payload = {}) {
   requireCommonChatApi();
   const messageId = String(payload.messageId ?? "");
@@ -271,7 +327,13 @@ async function createRoutedCard(payload = {}) {
 
   globalThis.__ADD2E_ATTACK_CHAT_ROUTE_IDS.add(messageId);
   try {
-    return await globalThis.add2eCreateChatCard(options);
+    const message = await globalThis.add2eCreateChatCard(options);
+    const detailsHtml = String(payload.detailsHtml ?? "").trim();
+    if (message && detailsHtml) {
+      const enrichedContent = appendDetailsToCard(preview, detailsHtml);
+      if (enrichedContent && enrichedContent !== preview) await message.update({ content: enrichedContent });
+    }
+    return message;
   } catch (error) {
     globalThis.__ADD2E_ATTACK_CHAT_ROUTE_IDS.delete(messageId);
     throw error;
@@ -318,7 +380,8 @@ async function routeCard(kind, options, ctx) {
     messageId,
     creatorId,
     kind,
-    options
+    options,
+    detailsHtml: kind === "gm" ? gmDetailsHtml(ctx) : ""
   });
   if (!payload) throw new Error(`Impossible de sérialiser la carte d’attaque ${kind}.`);
 
