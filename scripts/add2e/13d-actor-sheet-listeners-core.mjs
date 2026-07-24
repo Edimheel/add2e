@@ -3,7 +3,6 @@
 import {
   ADD2E_SHEET_ROLL_DELEGATION_VERSION,
   add2eEvaluateRollSafe,
-  add2eRollCharacteristicCard,
   add2eRollSaveCard,
   add2eInstallHudSheetRollBridge
 } from "./13d-actor-sheet-listeners-rolls.mjs";
@@ -12,6 +11,9 @@ import { add2eBindActorSheetSpellListeners } from "./13d-actor-sheet-listeners-s
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant activateListeners.");
 
 globalThis.ADD2E_SHEET_ROLL_DELEGATION_VERSION = ADD2E_SHEET_ROLL_DELEGATION_VERSION;
+// Le HUD possède déjà ses écouteurs locaux. On installe uniquement les API globales
+// de jets, sans conserver le second écouteur document qui doublait les actions.
+globalThis.__add2eHudSheetRollBridgeV1 = true;
 add2eInstallHudSheetRollBridge();
 
 const ADD2E_LISTENER_CARACS = ["force", "dexterite", "constitution", "intelligence", "sagesse", "charisme"];
@@ -123,7 +125,12 @@ globalThis.Add2eActorSheet.prototype.activateListeners = function activateListen
 
   html.find('.roll-stat').off('click.add2e').on('click.add2e', async ev => {
     ev.preventDefault();
-    await add2eRollCharacteristicCard(this.actor, ev.currentTarget.dataset.stat);
+    if (typeof globalThis.add2eRollCharacteristicCard !== "function") {
+      throw new Error("L’exécuteur canonique ADD2E de caractéristiques n’est pas disponible.");
+    }
+    await globalThis.add2eRollCharacteristicCard(this.actor, ev.currentTarget.dataset.stat, {
+      source: "actor-sheet-ability-roll"
+    });
   });
 
   html.find('.roll-save').off('click.add2e').on('click.add2e', async ev => {
