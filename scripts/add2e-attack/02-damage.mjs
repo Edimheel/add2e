@@ -1,9 +1,10 @@
 // scripts/add2e-attack/02-damage.mjs
 // ADD2E — Application des dégâts via Add2eEffectsEngine.
+// Compatible Foundry V13/V14/V15.
 
 import { add2eGetCombatStatProfile } from "./03-attack-rules.mjs";
 
-export const ADD2E_DAMAGE_VERSION = "2026-07-22-magic-immunity-context-v2";
+export const ADD2E_DAMAGE_VERSION = "2026-07-24-common-defense-chat-card-v3";
 
 function add2eDamageTokenClass() {
   return foundry?.canvas?.placeables?.Token ?? CONFIG?.Token?.objectClass ?? null;
@@ -33,13 +34,13 @@ function add2eDamageNormalize(value) {
     .replace(/^_+|_+$/g, "");
 }
 
-function add2eDamageEscapeHtml(value) {
-  return String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+function add2eDamageRequireChatApi() {
+  if (
+    typeof globalThis.add2eBuildChatCard !== "function"
+    || typeof globalThis.add2eCreateChatCard !== "function"
+  ) {
+    throw new Error("Le constructeur commun des cartes ADD2E est indisponible.");
+  }
 }
 
 function add2eDamageEffectTags(effect) {
@@ -233,13 +234,38 @@ function add2eDamageRuleMessage(template, actor, context) {
 
 async function add2eDamagePostRuleMessage(actor, rule, success, context) {
   const template = success ? rule?.successMessage : rule?.failureMessage;
-  if (!template) return;
+  if (!template) return null;
+
+  add2eDamageRequireChatApi();
   const label = String(rule?.label ?? "Règle défensive");
-  await ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor }),
-    content: `<div class="add2e-chat-card" style="border:1px solid #8b5e20;border-radius:9px;background:#fff7df;padding:.65em .8em;"><h3 style="margin:0 0 .35em 0;">${add2eDamageEscapeHtml(label)}</h3><p style="margin:.2em 0;">${add2eDamageEscapeHtml(add2eDamageRuleMessage(template, actor, context))}</p></div>`,
-    flags: { add2e: { genericIncomingDamageRule: true, ruleKind: rule?.kind ?? "" } }
-  });
+  const options = {
+    actor,
+    title: `Défense — ${label}`,
+    icon: success ? "fas fa-shield-halved" : "fas fa-shield",
+    variant: success ? "success" : "failure",
+    source: {
+      name: actor?.name ?? "Cible",
+      img: actor?.img,
+      type: "Défense"
+    },
+    rows: [
+      { label: "Résultat", value: success ? "Réussite" : "Échec" }
+    ],
+    message: add2eDamageRuleMessage(template, actor, context),
+    chatData: {
+      speaker: ChatMessage.getSpeaker({ actor }),
+      flags: {
+        add2e: {
+          genericIncomingDamageRule: true,
+          ruleKind: rule?.kind ?? ""
+        }
+      }
+    }
+  };
+
+  const preview = String(globalThis.add2eBuildChatCard(options) ?? "").trim();
+  if (!preview) throw new Error("La carte de règle défensive ADD2E est vide.");
+  return globalThis.add2eCreateChatCard(options);
 }
 
 async function add2eResolveGenericIncomingDamage(actor, original, options = {}) {
