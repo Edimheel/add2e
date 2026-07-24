@@ -460,6 +460,11 @@ export function add2eBuildPositionAttackAdjustment(actor, positionInfo) {
   };
 }
 
+function add2ePushUniqueAbility(list, ability) {
+  const normalized = add2eNormalizeAttackTag(ability);
+  if (normalized && !list.includes(normalized)) list.push(normalized);
+}
+
 export function add2eGetCombatStatProfile(arme) {
   const sys = arme?.system ?? {};
   const tags = add2eCollectAttackTags(arme);
@@ -497,42 +502,63 @@ export function add2eGetCombatStatProfile(arme) {
 
   const noToucherCarac = has("mod_carac:toucher:none");
   const noDegatsCarac = has("mod_carac:degats:none");
-
-  let toucherCarac = null;
-  let degatsCarac = null;
+  const toucherCaracs = [];
+  const degatsCaracs = [];
 
   if (!noToucherCarac) {
-    if (has("mod_carac:toucher:force")) toucherCarac = "force";
-    else if (has("mod_carac:toucher:dexterite")) toucherCarac = "dexterite";
-    else if (has("mod_carac:toucher:intelligence")) toucherCarac = "intelligence";
-    else if (has("mod_carac:toucher:sagesse")) toucherCarac = "sagesse";
-    else if (has("mod_carac:toucher:charisme")) toucherCarac = "charisme";
-    else if (isProjectilePropulse) toucherCarac = "dexterite";
-    else if (isCorpsACorps || isLancer || defaultContact) toucherCarac = "force";
+    for (const ability of ["force", "dexterite", "intelligence", "sagesse", "charisme"]) {
+      if (has(`mod_carac:toucher:${ability}`)) add2ePushUniqueAbility(toucherCaracs, ability);
+    }
+    if (!toucherCaracs.length) {
+      if (isProjectilePropulse) add2ePushUniqueAbility(toucherCaracs, "dexterite");
+      else if (isLancer) {
+        // Manuel des joueurs : une arme lancée à la main cumule Force et Dextérité au toucher.
+        add2ePushUniqueAbility(toucherCaracs, "force");
+        add2ePushUniqueAbility(toucherCaracs, "dexterite");
+      } else if (isCorpsACorps || defaultContact) add2ePushUniqueAbility(toucherCaracs, "force");
+    }
   }
 
   if (!noDegatsCarac) {
-    if (has("mod_carac:degats:force")) degatsCarac = "force";
-    else if (has("mod_carac:degats:dexterite")) degatsCarac = "dexterite";
-    else if (has("mod_carac:degats:intelligence")) degatsCarac = "intelligence";
-    else if (has("mod_carac:degats:sagesse")) degatsCarac = "sagesse";
-    else if (has("mod_carac:degats:charisme")) degatsCarac = "charisme";
-    else if (isCorpsACorps || isLancer || defaultContact) degatsCarac = "force";
+    for (const ability of ["force", "dexterite", "intelligence", "sagesse", "charisme"]) {
+      if (has(`mod_carac:degats:${ability}`)) add2ePushUniqueAbility(degatsCaracs, ability);
+    }
+    if (!degatsCaracs.length && (isCorpsACorps || isLancer || defaultContact)) {
+      add2ePushUniqueAbility(degatsCaracs, "force");
+    }
   }
+
+  const toucherCarac = toucherCaracs.length ? toucherCaracs.join("+") : null;
+  const degatsCarac = degatsCaracs.length ? degatsCaracs.join("+") : null;
 
   return {
     tags: [...tags],
     tagSet: tags,
     toucherCarac,
     degatsCarac,
+    toucherCaracs,
+    degatsCaracs,
     isProjectilePropulse,
     isLancer,
     isCorpsACorps: isCorpsACorps || defaultContact
   };
 }
 
+function add2eAttackAbilityComponents(key) {
+  const rawValues = Array.isArray(key) ? key : String(key ?? "").split("+");
+  const components = [];
+  for (const value of rawValues) add2ePushUniqueAbility(components, value);
+  return components;
+}
+
 export function add2eGetAttackAbilityModifier(actor, key, usage) {
-  const normalized = add2eNormalizeAttackTag(key);
+  const components = add2eAttackAbilityComponents(key);
+  if (components.length > 1) {
+    return components.reduce((total, ability) => total + add2eGetAttackAbilityModifier(actor, ability, usage), 0);
+  }
+
+  const normalized = components[0] ?? add2eNormalizeAttackTag(key);
+  if (!normalized) return 0;
   const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
   if (typeof engine?.resolveAbilityDerived !== "function") {
     throw new Error("Le résolveur canonique ADD2E des ajustements de caractéristiques n’est pas disponible.");
@@ -572,7 +598,6 @@ export function add2eGetAttackAbilityModifier(actor, key, usage) {
 }
 
 export function add2eAttackAbilityLabel(key) {
-  const normalized = add2eNormalizeAttackTag(key);
   const labels = {
     force: "FOR",
     dexterite: "DEX",
@@ -581,7 +606,9 @@ export function add2eAttackAbilityLabel(key) {
     sagesse: "SAG",
     charisme: "CHA"
   };
-  return labels[normalized] || "Carac.";
+  const components = add2eAttackAbilityComponents(key);
+  if (!components.length) return "Carac.";
+  return components.map(component => labels[component] || "Carac.").join(" + ");
 }
 
 export function add2eIsOneUseWeapon(arme) {
