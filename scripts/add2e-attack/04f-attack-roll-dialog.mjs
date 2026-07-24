@@ -2,7 +2,7 @@
 // ADD2E — Dialogue d'attaque ApplicationV2 / DialogV2.
 // Compatible Foundry V13/V14/V15.
 
-const ADD2E_ATTACK_DIALOG_VERSION = "2026-06-25-mixed-weapon-explicit-tags-v6";
+const ADD2E_ATTACK_DIALOG_VERSION = "2026-07-24-thrown-availability-dialog-v7";
 const ADD2E_ATTACK_DIALOG_WIDTH = 480;
 
 function add2eAttackFormAdapter(root) {
@@ -245,6 +245,25 @@ function add2eApplyWeaponMode(root) {
   return true;
 }
 
+async function add2eValidateAttackWeaponAvailability(root) {
+  const container = add2eAttackRoot(root) ?? root;
+  if (!container) return false;
+
+  const validator = globalThis.add2eValidateWeaponAttackAvailability;
+  if (typeof validator !== "function") {
+    throw new Error("Le validateur de disponibilité des armes est indisponible.");
+  }
+
+  const checkbox = container.querySelector?.("#add2e-weapon-throw") ?? null;
+  const mode = checkbox ? (checkbox.checked ? "throw" : "contact") : "auto";
+  return validator({
+    actorId: container.dataset?.add2eActorId,
+    weaponId: container.dataset?.add2eWeaponId,
+    mode,
+    notify: true
+  });
+}
+
 function add2eForceDialogSize(appOrElement) {
   const element = appOrElement?.element ?? appOrElement ?? null;
   for (const root of new Set([element, element?.closest?.("dialog"), element?.closest?.(".application")].filter(Boolean))) {
@@ -329,6 +348,11 @@ export async function add2eAttackOpenDialogV2({ title, content, width, classes, 
                 ?? add2eAttackRoot(dlg)
                 ?? document.querySelector(".add2e-attack-form");
               add2eApplyWeaponMode(root);
+              const available = await add2eValidateAttackWeaponAvailability(root);
+              if (!available) {
+                submitting = false;
+                return false;
+              }
               return finish(await onOk(add2eAttackFormAdapter(root)));
             } catch (error) {
               console.error("[ADD2E][ATTAQUE][DIALOG][SUBMIT_ERROR]", error);
