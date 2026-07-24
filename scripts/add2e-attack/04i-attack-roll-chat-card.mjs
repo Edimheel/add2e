@@ -3,9 +3,9 @@
 // Chaque joueur actif crée sa carte simplifiée privée ; un seul MJ crée la carte détaillée.
 // Compatible Foundry V13/V14/V15.
 
-const VERSION = "2026-07-24-attack-chat-readable-hit-details-v29";
+const VERSION = "2026-07-24-attack-chat-visible-detail-values-v30";
 const SOCKET = "system.add2e";
-const ROUTE_TYPE = "ADD2E_ATTACK_CHAT_ROUTE_V29";
+const ROUTE_TYPE = "ADD2E_ATTACK_CHAT_ROUTE_V30";
 const LOG = "[ADD2E][ATTACK_CHAT]";
 
 globalThis.ADD2E_ATTACK_CHAT_VISIBILITY_VERSION = VERSION;
@@ -248,14 +248,18 @@ function gmCardOptions(ctx) {
 function detailRowsHtml(rows = []) {
   return rows
     .filter(row => row && (row.label !== undefined || row.value !== undefined))
-    .map(row => `<div class="add2e-card-label">${escapeHtml(row.label ?? "")}</div><div class="add2e-card-value">${escapeHtml(row.value ?? "—")}</div>`)
+    .map(row => {
+      const label = escapeHtml(row.label ?? "");
+      const value = escapeHtml(row.value ?? "—");
+      return `<div class="add2e-attack-detail-row" style="display:block!important;width:100%!important;box-sizing:border-box!important;padding:8px 9px!important;border-bottom:1px solid rgba(185,139,45,.34)!important;color:#2f250c!important;background:rgba(255,253,244,.72)!important;white-space:normal!important;"><div class="add2e-attack-detail-label" style="display:block!important;width:100%!important;margin:0 0 3px 0!important;color:#6a4917!important;font-size:.74rem!important;font-weight:950!important;line-height:1.2!important;text-transform:uppercase!important;letter-spacing:.015em!important;white-space:normal!important;overflow-wrap:anywhere!important;">${label}</div><div class="add2e-attack-detail-value" style="display:block!important;width:100%!important;min-height:1.35em!important;margin:0!important;color:#2f250c!important;font-size:.95rem!important;font-weight:750!important;line-height:1.35!important;white-space:normal!important;overflow-wrap:anywhere!important;word-break:normal!important;opacity:1!important;visibility:visible!important;">${value}</div></div>`;
+    })
     .join("");
 }
 
 function detailSectionHtml({ label, icon, rows }) {
   const body = detailRowsHtml(rows);
   if (!body) return "";
-  return `<details class="add2e-attack-detail-section" style="margin-top:8px;border:1px solid var(--add2e-card-border,#b98b2d);border-radius:8px;overflow:hidden;background:rgba(255,255,255,.35);"><summary style="cursor:pointer;padding:7px 9px;font-weight:900;background:rgba(185,139,45,.18);"><i class="${escapeHtml(icon)}"></i> ${escapeHtml(label)}</summary><div class="add2e-card-grid" style="padding:8px;">${body}</div></details>`;
+  return `<details class="add2e-attack-detail-section" style="display:block!important;width:100%!important;box-sizing:border-box!important;margin-top:8px!important;border:1px solid var(--add2e-card-border,#b98b2d)!important;border-radius:8px!important;overflow:hidden!important;background:rgba(255,255,255,.35)!important;color:#2f250c!important;"><summary style="display:list-item!important;cursor:pointer!important;padding:7px 9px!important;color:#3a270c!important;font-weight:900!important;line-height:1.25!important;background:rgba(185,139,45,.18)!important;"><i class="${escapeHtml(icon)}"></i> ${escapeHtml(label)}</summary><div class="add2e-attack-detail-list" style="display:block!important;width:100%!important;box-sizing:border-box!important;padding:4px 8px 8px!important;color:#2f250c!important;background:rgba(255,250,235,.52)!important;">${body}</div></details>`;
 }
 
 function gmDetailsHtml(ctx) {
