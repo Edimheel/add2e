@@ -31,7 +31,7 @@
                 </thead>
                 <tbody>
                   {{#each (add2eEquippedWeaponRows actor listeArmes listeObjets combatDefense) as |row|}}
-                    <tr title="Toucher : magie {{row.magicHitSigned}} + {{row.abilityLabel}} {{row.abilityHitSigned}} + autres {{row.otherHitSigned}} = {{row.totalHitSigned}}&#10;Dégâts : magie {{row.magicDamageSigned}} + {{row.abilityLabel}} {{row.abilityDamageSigned}} + autres {{row.otherDamageSigned}} = {{row.totalDamageSigned}}&#10;THAC0 : {{row.thacoBase}} - bonus toucher {{row.totalHitSigned}} = {{row.thacoEffectif}}">
+                    <tr title="Toucher : magie {{row.magicHitSigned}} + {{row.abilityHitLabel}} {{row.abilityHitSigned}} + autres {{row.otherHitSigned}} = {{row.totalHitSigned}}&#10;Dégâts : magie {{row.magicDamageSigned}} + {{row.abilityDamageLabel}} {{row.abilityDamageSigned}} + autres {{row.otherDamageSigned}} = {{row.totalDamageSigned}}&#10;THAC0 : {{row.thacoBase}} - bonus toucher {{row.totalHitSigned}} = {{row.thacoEffectif}}">
                       <td><b>{{row.name}}</b></td>
                       <td>{{row.damage}}</td>
                       <td><b>{{row.totalHitSigned}}</b></td>
