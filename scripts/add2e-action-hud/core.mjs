@@ -1,9 +1,9 @@
 // scripts/add2e-action-hud.mjs
 // ADD2E — HUD d'action rapide maison.
-// Version : 2026-06-15-v52-spell-component-availability-badges
+// Version : 2026-07-24-v53-canonical-saves-color-ui
 // Le HUD reste une interface : les actions délèguent aux fonctions système.
 
-const ADD2E_ACTION_HUD_VERSION = "2026-06-15-v52-spell-component-availability-badges";
+const ADD2E_ACTION_HUD_VERSION = "2026-07-24-v53-canonical-saves-color-ui";
 const HUD_ID = "add2e-action-hud";
 const STYLE_ID = "add2e-action-hud-style";
 const STORAGE_KEY = "add2e.actionHud.state.v46";
@@ -39,11 +39,11 @@ const CARACS = [
   ["charisme", "CHA", "Charisme", "fa-comments"]
 ];
 const SAVES = [
-  ["Paralysie", "Paralysie / poison / mort", "fa-skull-crossbones"],
-  ["Pétrification", "Pétrification / métamorphose", "fa-mountain"],
-  ["Baguettes", "Baguettes", "fa-magic"],
-  ["Souffles", "Souffles", "fa-wind"],
-  ["Sorts", "Sorts", "fa-scroll"]
+  ["Paralysie", "Paralysie / poison / mort", "fa-skull-crossbones", "ruby"],
+  ["Pétrification", "Pétrification / métamorphose", "fa-mountain", "amber"],
+  ["Baguettes", "Baguettes, bâtons et bâtonnets", "fa-magic", "violet"],
+  ["Souffles", "Souffles", "fa-wind", "cyan"],
+  ["Sorts", "Sortilèges", "fa-scroll", "emerald"]
 ];
 
 function esc(value) {
@@ -722,11 +722,63 @@ function ability(actor, key) {
   const direct = Number(actor?.system?.[key]);
   return Number.isFinite(direct) ? direct : num(actor?.system?.[`${key}_base`], 10);
 }
-function savingThrows(actor) {
-  const level = Math.max(1, num(actor?.system?.niveau, 1));
-  const row = actor?.system?.details_classe?.progression?.[level - 1];
-  const values = arr(row?.savingThrows || actor?.system?.sauvegardes || actor?.system?.savingThrows || []).map(value => num(value, 0));
-  return values.length >= 5 ? values.slice(0, 5) : [0, 0, 0, 0, 0];
+function saveSigned(value) {
+  const numeric = Number(value) || 0;
+  return `${numeric >= 0 ? "+" : ""}${numeric}`;
+}
+function saveSourceLabel(resolution) {
+  const selected = resolution?.targetResolution?.selected;
+  if (selected?.kind === "class") {
+    return [selected.className, selected.classLevel ? `niveau ${selected.classLevel}` : ""]
+      .filter(Boolean)
+      .join(" · ");
+  }
+  return selected?.name ?? "Valeur de l’acteur";
+}
+function savingThrowResolutions(actor) {
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  const resolver = typeof globalThis.add2eResolveSavingThrow === "function"
+    ? globalThis.add2eResolveSavingThrow
+    : (typeof engine?.resolveSavingThrow === "function" ? engine.resolveSavingThrow.bind(engine) : null);
+
+  if (!resolver) {
+    console.error(`${TAG}[SAVES][RESOLVER_MISSING]`, { actor: actor?.name ?? null });
+    return SAVES.map((save, index) => ({
+      index,
+      label: save[1],
+      icon: save[2],
+      theme: save[3],
+      target: null,
+      targetDisplay: "—",
+      bonus: 0,
+      bonusDisplay: "±0",
+      sourceLabel: "Résolveur indisponible",
+      available: false
+    }));
+  }
+
+  return SAVES.map((save, index) => {
+    const resolution = resolver(actor, index, {
+      source: "action-hud-save-display",
+      consumer: "action-hud",
+      frontale: true
+    });
+    const target = Number(resolution?.target);
+    const bonus = Number(resolution?.bonus) || 0;
+    const available = Number.isFinite(target) && target > 0;
+    return {
+      index,
+      label: resolution?.label ?? save[1],
+      icon: resolution?.definition?.icon?.replace(/^fas\s+/, "") ?? save[2],
+      theme: save[3],
+      target: available ? target : null,
+      targetDisplay: available ? String(target) : "—",
+      bonus,
+      bonusDisplay: saveSigned(bonus),
+      sourceLabel: saveSourceLabel(resolution),
+      available
+    };
+  });
 }
 function hp(actor) { return num(actor?.system?.pdv ?? actor?.system?.pv?.value ?? actor?.system?.hp?.value ?? actor?.system?.hp, 0); }
 function hpMax(actor) { return num(actor?.system?.points_de_coup ?? actor?.system?.pv?.max ?? actor?.system?.hp?.max ?? actor?.system?.hpMax, hp(actor)); }
@@ -766,7 +818,27 @@ function injectStyle() {
 #${HUD_ID} .money-row{display:flex;flex-wrap:wrap;gap:5px;padding:6px;border:1px solid rgba(214,176,90,.38);border-radius:10px;background:rgba(0,0,0,.18)}#${HUD_ID} .money-title{color:#ffe4a1;font-weight:950;margin-right:3px}#${HUD_ID} .money-pill{border:1px solid rgba(214,176,90,.55);border-radius:999px;padding:2px 7px;background:rgba(214,176,90,.12);color:#fff0bd;font-weight:900;font-size:.78em}#${HUD_ID} .equip-ok{color:#b8ffb8}#${HUD_ID} .equip-off{color:#ffcf91}
 #${HUD_ID} .act{min-width:78px;min-height:30px;padding:4px 9px;border:1px solid #d6b05a;border-radius:9px;background:linear-gradient(180deg,#fff0bd,#d6a345);color:#211307;font-size:.8em;font-weight:950;cursor:pointer;white-space:nowrap}#${HUD_ID} .danger{min-width:36px;width:36px;color:#ffd0c8;border-color:#b94735;background:linear-gradient(180deg,#7d241b,#42120d)}#${HUD_ID} .empty{padding:12px;border:1px dashed rgba(214,176,90,.45);border-radius:10px;color:#c8ad6e;font-style:italic;text-align:center}
 #${HUD_ID} .spell-layout{display:grid;grid-template-rows:auto minmax(0,1fr);gap:8px}#${HUD_ID} .spell-levels{display:flex;flex-wrap:wrap;gap:6px;padding-bottom:2px;border-bottom:1px solid rgba(214,176,90,.28)}#${HUD_ID} .spell-level{min-height:30px;padding:5px 10px;border:1px solid rgba(214,176,90,.55);border-radius:999px;background:rgba(214,176,90,.12);color:#ffe4a1;font-weight:950;font-size:.82em;cursor:pointer}#${HUD_ID} .spell-level.active{background:linear-gradient(180deg,#f0c66d,#c78d2e);color:#211307}#${HUD_ID} .spell-list{display:grid;gap:6px;max-height:260px;overflow-y:auto;padding-right:3px}#${HUD_ID} .spell-list-title{color:#ffe4a1;font-weight:950;font-size:.82em;margin:0 0 2px 2px}
-#${HUD_ID} .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}#${HUD_ID} .cell{display:grid;grid-template-columns:38px minmax(0,1fr);gap:8px;align-items:center;min-height:48px;padding:8px;border-radius:12px;border:1px solid rgba(214,176,90,.38);background:rgba(255,250,235,.07)}#${HUD_ID} .cell b{display:block;color:#ffe4a1;font-size:1.32em;font-weight:950;line-height:1.05;text-shadow:0 1px 2px rgba(0,0,0,.45)}#${HUD_ID} .roll-icon{width:36px;height:36px;min-width:36px;padding:0;border-radius:10px;border:1px solid rgba(214,176,90,.65);background:rgba(255,244,201,.12);color:#ffe4a1;cursor:pointer}#${HUD_ID} .roll-icon:hover{filter:brightness(1.2)}#${HUD_ID} button,#${HUD_ID} [data-action],#${HUD_ID} [data-tab]{user-select:auto;touch-action:auto}`;
+#${HUD_ID} .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}#${HUD_ID} .cell{display:grid;grid-template-columns:38px minmax(0,1fr);gap:8px;align-items:center;min-height:48px;padding:8px;border-radius:12px;border:1px solid rgba(214,176,90,.38);background:rgba(255,250,235,.07)}#${HUD_ID} .cell b{display:block;color:#ffe4a1;font-size:1.32em;font-weight:950;line-height:1.05;text-shadow:0 1px 2px rgba(0,0,0,.45)}#${HUD_ID} .roll-icon{width:36px;height:36px;min-width:36px;padding:0;border-radius:10px;border:1px solid rgba(214,176,90,.65);background:rgba(255,244,201,.12);color:#ffe4a1;cursor:pointer}#${HUD_ID} .roll-icon:hover{filter:brightness(1.2)}
+#${HUD_ID} .save-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+#${HUD_ID} .save-card{--save-accent:#ffe08a;--save-deep:rgba(82,58,19,.88);--save-soft:rgba(255,224,138,.16);position:relative;display:grid;grid-template-columns:52px minmax(0,1fr) auto;grid-template-areas:"icon name score" "icon hint mod";gap:2px 10px;align-items:center;min-height:74px;padding:10px 11px;border:1px solid var(--save-accent);border-radius:14px;background:linear-gradient(135deg,var(--save-soft),rgba(255,255,255,.035) 55%,var(--save-deep));box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 4px 12px rgba(0,0,0,.2);overflow:hidden}
+#${HUD_ID} .save-card::after{content:"";position:absolute;right:-20px;bottom:-28px;width:92px;height:92px;border-radius:50%;background:var(--save-soft);filter:blur(2px);pointer-events:none}
+#${HUD_ID} .save-card-ruby{--save-accent:#ff8b7d;--save-deep:rgba(92,28,28,.9);--save-soft:rgba(255,111,97,.2)}
+#${HUD_ID} .save-card-amber{--save-accent:#ffd166;--save-deep:rgba(90,59,17,.9);--save-soft:rgba(255,193,72,.2)}
+#${HUD_ID} .save-card-violet{--save-accent:#c8a8ff;--save-deep:rgba(60,38,96,.9);--save-soft:rgba(177,129,255,.21)}
+#${HUD_ID} .save-card-cyan{--save-accent:#73ddff;--save-deep:rgba(21,67,86,.9);--save-soft:rgba(74,205,255,.2)}
+#${HUD_ID} .save-card-emerald{--save-accent:#7ee7b7;--save-deep:rgba(24,78,57,.9);--save-soft:rgba(68,211,143,.2)}
+#${HUD_ID} .save-roll-icon{grid-area:icon;position:relative;z-index:1;width:48px;height:48px;padding:0;border:1px solid var(--save-accent);border-radius:15px;background:radial-gradient(circle at 35% 28%,rgba(255,255,255,.32),var(--save-soft) 42%,rgba(0,0,0,.24));color:#fff7dc;font-size:1.25rem;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.25)}
+#${HUD_ID} .save-roll-icon:hover{transform:translateY(-1px) scale(1.04);filter:brightness(1.18)}
+#${HUD_ID} .save-name{grid-area:name;position:relative;z-index:1;color:#fff9e8;font-size:.9rem;font-weight:950;line-height:1.08;text-shadow:0 1px 2px rgba(0,0,0,.55)}
+#${HUD_ID} .save-hint{grid-area:hint;position:relative;z-index:1;color:rgba(255,248,221,.72);font-size:.67rem;font-weight:750}
+#${HUD_ID} .save-score{grid-area:score;position:relative;z-index:1;display:flex;align-items:baseline;gap:4px;justify-self:end}
+#${HUD_ID} .save-score strong{color:#fff;font-size:1.55rem;font-weight:1000;line-height:1;text-shadow:0 2px 4px rgba(0,0,0,.48)}
+#${HUD_ID} .save-score small{color:rgba(255,248,221,.76);font-size:.61rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+#${HUD_ID} .save-mod{grid-area:mod;position:relative;z-index:1;justify-self:end;min-width:34px;padding:2px 7px;border-radius:999px;text-align:center;font-size:.72rem;font-weight:950;border:1px solid rgba(255,255,255,.32);background:rgba(0,0,0,.2)}
+#${HUD_ID} .save-mod.positive{color:#baffd8;background:rgba(20,110,66,.46);border-color:rgba(126,231,183,.65)}
+#${HUD_ID} .save-mod.negative{color:#ffd0c9;background:rgba(126,36,29,.48);border-color:rgba(255,139,125,.66)}
+#${HUD_ID} .save-mod.neutral{color:#fff1bd;background:rgba(95,76,26,.4);border-color:rgba(255,209,102,.5)}
+#${HUD_ID} button,#${HUD_ID} [data-action],#${HUD_ID} [data-tab]{user-select:auto;touch-action:auto}`;
   document.head.appendChild(style);
 }
 
@@ -815,8 +887,14 @@ function effectRows(actor) {
   return rows.map(effect => `<div class="row effect-row"><img src="${esc(effect.img || effect.icon || "icons/svg/aura.svg")}" alt=""><div><div class="title">${esc(effectDisplayName(effect))}</div><div class="meta"><span>${esc(effectDurationLabel(effect))}</span></div></div><button type="button" class="act danger" data-action="remove-effect" data-effect-id="${esc(effect.id ?? effect._id ?? "")}"><i class="fas fa-trash"></i></button></div>`).join("");
 }
 function saveRows(actor) {
-  const values = savingThrows(actor);
-  return `<div class="grid">${SAVES.map((save, index) => `<div class="cell"><button type="button" class="roll-icon" data-action="roll-save" data-save-index="${index}" title="Jet ${esc(save[1])}"><i class="fas ${save[2]}"></i></button><div><b>${esc(save[1])} ${esc(values[index] || "—")}</b></div></div>`).join("")}</div>`;
+  const rows = savingThrowResolutions(actor);
+  return `<div class="save-grid">${rows.map(row => {
+    const modifierClass = row.bonus > 0 ? "positive" : (row.bonus < 0 ? "negative" : "neutral");
+    const title = row.available
+      ? `${row.label} · seuil ${row.targetDisplay} · bonus ${row.bonusDisplay} · ${row.sourceLabel}`
+      : `${row.label} · valeur indisponible`;
+    return `<div class="save-card save-card-${esc(row.theme)}" title="${esc(title)}"><button type="button" class="save-roll-icon" data-action="roll-save" data-save-index="${row.index}" title="Jet de ${esc(row.label)}"><i class="fas ${esc(row.icon)}"></i></button><span class="save-name">${esc(row.label)}</span><span class="save-hint">D20 total égal ou supérieur</span><span class="save-score"><strong>${esc(row.targetDisplay)}</strong><small>seuil</small></span><span class="save-mod ${modifierClass}" title="Bonus ou malus appliqué au D20">${esc(row.bonusDisplay)}</span></div>`;
+  }).join("")}</div>`;
 }
 function abilityRows(actor) {
   return `<div class="grid">${CARACS.map(carac => `<div class="cell"><button type="button" class="roll-icon" data-action="roll-ability" data-ability="${carac[0]}" title="Jet ${esc(carac[1])}"><i class="fas ${carac[3]}"></i></button><div><b>${carac[1]} ${esc(ability(actor, carac[0]))}</b></div></div>`).join("")}</div>`;
@@ -865,8 +943,8 @@ function refreshHud(reason = "refresh", options = {}) {
 }
 function closeHud() { hud()?.remove(); hudActor = null; hudToken = null; }
 function bindDirectHudPointerEvents(element) {
-  if (!element || element.__add2eDirectDragBindingV52) return;
-  element.__add2eDirectDragBindingV52 = true;
+  if (!element || element.__add2eDirectDragBindingV53) return;
+  element.__add2eDirectDragBindingV53 = true;
   element.addEventListener("pointerdown", pointerDown, true);
   element.addEventListener("mousedown", pointerDown, true);
   element.addEventListener("touchstart", pointerDown, { capture: true, passive: false });
