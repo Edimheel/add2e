@@ -1,8 +1,8 @@
 // ADD2E — Actor sheet listeners : jets de caractéristiques, sauvegardes et HUD.
 // Compatible Foundry V13/V14/V15.
 
-export const ADD2E_SHEET_ROLL_DELEGATION_VERSION = "2026-07-24-canonical-save-executor-v5-mental-wisdom";
-const ADD2E_SAVE_RESOLVER_VERSION = "2026-07-24-canonical-save-resolver-v3-mental-wisdom";
+export const ADD2E_SHEET_ROLL_DELEGATION_VERSION = "2026-07-24-canonical-save-executor-v6-transient-modifiers";
+const ADD2E_SAVE_RESOLVER_VERSION = "2026-07-24-canonical-save-resolver-v4-transient-modifiers";
 
 const ADD2E_SAVE_DEFINITIONS = Object.freeze([
   Object.freeze({
@@ -299,6 +299,50 @@ function add2eSaveMentalWisdomModifier(engine, actor, definition, context = {}) 
   });
 }
 
+function add2eSaveTransientModifiers(engine, actor, definition, context = {}) {
+  const raw = context.saveModifiers ?? context.transientSaveModifiers ?? [];
+  const entries = Array.isArray(raw) ? raw : [raw];
+  const modifiers = [];
+
+  entries.forEach((entry, index) => {
+    if (entry === undefined || entry === null || entry === "") return;
+    const data = typeof entry === "number" ? { value: entry } : entry;
+    if (!data || typeof data !== "object") return;
+
+    const value = Number(data.value ?? data.amount ?? data.bonus ?? data.modifier);
+    if (!Number.isFinite(value) || value === 0) return;
+    const requestedTarget = data.target ?? data.saveType ?? data.category ?? definition.key;
+    if (!add2eSaveTagMatches(engine, definition, requestedTarget)) return;
+
+    const label = String(data.label ?? data.name ?? "Modificateur circonstanciel de sauvegarde").trim();
+    const id = String(data.id ?? `${context.source ?? "save"}:transient:${index}`);
+    modifiers.push(engine.createModifier({
+      id,
+      domain: "save",
+      target: definition.key,
+      operation: String(data.operation ?? "add"),
+      value,
+      priority: Number.isFinite(Number(data.priority)) ? Number(data.priority) : 1000,
+      stacking: data.stacking && typeof data.stacking === "object"
+        ? data.stacking
+        : { mode: "stack", group: null },
+      source: {
+        kind: String(data.source?.kind ?? "situational"),
+        id: String(data.source?.id ?? id),
+        uuid: String(data.source?.uuid ?? context.sourceItem?.uuid ?? ""),
+        name: String(data.source?.name ?? context.sourceItem?.name ?? label)
+      },
+      metadata: {
+        ...(data.metadata && typeof data.metadata === "object" ? data.metadata : {}),
+        label,
+        producer: "save-context",
+        transient: true
+      }
+    }));
+  });
+  return modifiers;
+}
+
 function add2eSaveLegacyTagModifiers(engine, actor, definition, context = {}) {
   const modifiers = [];
   const tags = typeof engine.getActiveTags === "function" ? engine.getActiveTags(actor) : [];
@@ -430,6 +474,7 @@ function add2eResolveSavingThrow(engine, actor, saveType, context = {}) {
   const legacy = add2eSaveLegacyTagModifiers(engine, actor, definition, saveContext)
     .filter(modifier => !canonicalSourceTags.has(String(modifier?.metadata?.sourceTag ?? "")));
   const mentalWisdom = add2eSaveMentalWisdomModifier(engine, actor, definition, saveContext);
+  const transient = add2eSaveTransientModifiers(engine, actor, definition, saveContext);
   const bonusResolution = engine.resolve(actor, {
     domain: "save",
     target: definition.key,
@@ -438,7 +483,8 @@ function add2eResolveSavingThrow(engine, actor, saveType, context = {}) {
     modifiers: add2eSaveDeduplicate([
       ...canonical,
       ...legacy,
-      ...(mentalWisdom ? [mentalWisdom] : [])
+      ...(mentalWisdom ? [mentalWisdom] : []),
+      ...transient
     ])
   });
 
