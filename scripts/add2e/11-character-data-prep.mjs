@@ -3,6 +3,7 @@
 // =======================
 
 const ADD2E_MULTICLASS_HP_SYNC_VERSION = "2026-06-13-multiclass-hp-current-gain-v1";
+const ADD2E_ABILITY_DERIVED_VERSION = "2026-07-24-canonical-derived-abilities-v1";
 globalThis.ADD2E_MULTICLASS_HP_SYNC_VERSION = ADD2E_MULTICLASS_HP_SYNC_VERSION;
 const ADD2E_MULTICLASS_HP_SYNC_LOCK = new Set();
 
@@ -298,6 +299,138 @@ export const SAGESSE_TABLE = {3:{magie:-3,sort_suppl:0,echec:80},4:{magie:-2,sor
 export const DEXTERITE_TABLE = {3:{att:-3,def:+4},4:{att:-2,def:+3},5:{att:-1,def:+2},6:{att:0,def:+1},7:{att:0,def:0},8:{att:0,def:0},9:{att:0,def:0},10:{att:0,def:0},11:{att:0,def:0},12:{att:0,def:0},13:{att:0,def:0},14:{att:0,def:-1},15:{att:0,def:-1},16:{att:+1,def:-2},17:{att:+2,def:-3},18:{att:+3,def:-4}};
 export const CONSTITUTION_TABLE = {3:{pv:-2,trauma:35,resu:40},4:{pv:-1,trauma:40,resu:45},5:{pv:-1,trauma:45,resu:50},6:{pv:-1,trauma:50,resu:55},7:{pv:0,trauma:55,resu:60},8:{pv:0,trauma:60,resu:65},9:{pv:0,trauma:65,resu:70},10:{pv:0,trauma:70,resu:75},11:{pv:0,trauma:75,resu:80},12:{pv:0,trauma:80,resu:85},13:{pv:0,trauma:85,resu:90},14:{pv:0,trauma:88,resu:92},15:{pv:+1,trauma:91,resu:94},16:{pv:+2,trauma:95,resu:96},17:{pv:+2,trauma:97,resu:98},18:{pv:+2,trauma:99,resu:100}};
 export const CHARISME_TABLE = {3:{compagnons:1,loy:-30,react:-25},4:{compagnons:1,loy:-25,react:-20},5:{compagnons:2,loy:-20,react:-15},6:{compagnons:2,loy:-15,react:-10},7:{compagnons:3,loy:-10,react:-5},8:{compagnons:3,loy:-5,react:0},9:{compagnons:4,loy:0,react:0},10:{compagnons:4,loy:0,react:0},11:{compagnons:4,loy:0,react:0},12:{compagnons:5,loy:0,react:0},13:{compagnons:6,loy:+5,react:5},14:{compagnons:7,loy:+10,react:10},15:{compagnons:8,loy:+15,react:15},16:{compagnons:9,loy:+20,react:25},17:{compagnons:10,loy:+30,react:30},18:{compagnons:15,loy:+40,react:35}};
+
+const ADD2E_DERIVED_DEFAULTS = Object.freeze({
+  force: Object.freeze({ toucher: 0, degats: 0, poids: 0, ouvrir: "—", tordre: "—" }),
+  dexterite: Object.freeze({ att: 0, def: 0 }),
+  constitution: Object.freeze({ pv: 0, trauma: 0, resu: 0 }),
+  intelligence: Object.freeze({ langues: 0, chance_sort: 0, min_sort: 0, max_sort: 0, sort_par_niveau: 0 }),
+  sagesse: Object.freeze({ magie: 0, sort_suppl: 0, echec: 0 }),
+  charisme: Object.freeze({ compagnons: 0, loy: 0, react: 0 })
+});
+
+function add2eNormalizeDerivedAbility(value) {
+  const key = String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "");
+  return ({
+    str: "force",
+    strength: "force",
+    dex: "dexterite",
+    dexterity: "dexterite",
+    con: "constitution",
+    int: "intelligence",
+    wis: "sagesse",
+    wisdom: "sagesse",
+    cha: "charisme",
+    charisma: "charisme"
+  })[key] ?? key;
+}
+
+function add2eDerivedTable(ability) {
+  return ({
+    force: FORCE_TABLE,
+    dexterite: DEXTERITE_TABLE,
+    constitution: CONSTITUTION_TABLE,
+    intelligence: INTELLIGENCE_TABLE,
+    sagesse: SAGESSE_TABLE,
+    charisme: CHARISME_TABLE
+  })[ability] ?? null;
+}
+
+function add2eExceptionalStrengthClassEligible(actor) {
+  return Array.from(actor?.items ?? [])
+    .filter(item => String(item?.type ?? "").toLowerCase() === "classe")
+    .some(item => {
+      const text = [item?.name, item?.system?.slug, item?.system?.nom, item?.system?.name, item?.system?.label]
+        .map(value => String(value ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f’']/g, ""))
+        .join(" ");
+      return text.includes("guerrier") || text.includes("paladin") || text.includes("ranger");
+    });
+}
+
+function add2eExceptionalStrengthTableKey(actor, resolution, total) {
+  const metadata = resolution?.override?.modifier?.metadata ?? {};
+  const overrideKey = String(metadata.displayValue ?? "").trim();
+  if (resolution?.override && Object.prototype.hasOwnProperty.call(FORCE_TABLE, overrideKey)) return overrideKey;
+  if (resolution?.override || total !== 18 || !add2eExceptionalStrengthClassEligible(actor)) return total;
+
+  const score = Math.max(0, Math.min(100, Math.trunc(Number(actor?.system?.force_ex) || 0)));
+  if (score >= 1 && score <= 50) return "18/01-50";
+  if (score >= 51 && score <= 75) return "18/51-75";
+  if (score >= 76 && score <= 90) return "18/76-90";
+  if (score >= 91 && score <= 99) return "18/91-99";
+  if (score === 100) return "18/00";
+  return total;
+}
+
+function add2eResolveAbilityDerived(actor, ability, context = {}) {
+  if (!actor) throw new Error("Aucun acteur pour résoudre les ajustements de caractéristique.");
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  if (typeof engine?.resolveAbility !== "function") {
+    throw new Error("Le résolveur canonique ADD2E des caractéristiques n’est pas disponible.");
+  }
+
+  const key = add2eNormalizeDerivedAbility(ability);
+  const table = add2eDerivedTable(key);
+  if (!table) throw new Error(`Caractéristique dérivée inconnue : ${String(ability ?? "") || "vide"}`);
+
+  const resolution = engine.resolveAbility(actor, key, {
+    ...context,
+    source: context.source ?? "ability-derived"
+  });
+  const total = Number(resolution?.total) || 0;
+  const tableKey = key === "force" ? add2eExceptionalStrengthTableKey(actor, resolution, total) : total;
+  const overrideMetadata = resolution?.override?.modifier?.metadata ?? {};
+  const overrideProfile = overrideMetadata.profile && typeof overrideMetadata.profile === "object"
+    ? foundry.utils.deepClone(overrideMetadata.profile)
+    : {};
+  const profile = {
+    ...ADD2E_DERIVED_DEFAULTS[key],
+    ...(table?.[tableKey] ?? {}),
+    ...overrideProfile
+  };
+  const displayValue = key === "force"
+    ? (overrideMetadata.displayValue ?? tableKey)
+    : total;
+
+  return {
+    version: ADD2E_ABILITY_DERIVED_VERSION,
+    actor,
+    ability: key,
+    total,
+    tableKey,
+    displayValue,
+    profile,
+    resolution,
+    exceptionalStrengthEligible: key === "force"
+      && !resolution?.override
+      && total === 18
+      && add2eExceptionalStrengthClassEligible(actor)
+  };
+}
+
+function add2eInstallAbilityDerivedResolver() {
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  if (!engine?.resolveAbility) return false;
+  if (engine.__add2eAbilityDerivedVersion === ADD2E_ABILITY_DERIVED_VERSION) return true;
+
+  Object.defineProperty(engine, "resolveAbilityDerived", {
+    configurable: true,
+    writable: true,
+    value(actor, ability, context = {}) {
+      return add2eResolveAbilityDerived(actor, ability, context);
+    }
+  });
+  engine.__add2eAbilityDerivedVersion = ADD2E_ABILITY_DERIVED_VERSION;
+  return true;
+}
+
+add2eInstallAbilityDerivedResolver();
+Hooks.once("ready", add2eInstallAbilityDerivedResolver);
 
 async function consommerSortMemorise(actor, nomSort, niveau = 1) {
   const chemin = `system.memorized.${niveau}.${nomSort}`;
