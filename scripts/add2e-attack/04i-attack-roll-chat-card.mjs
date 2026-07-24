@@ -3,7 +3,7 @@
 // La carte narrative est publique ; la carte détaillée reste MJ uniquement.
 // Compatible Foundry V13/V14/V15.
 
-const VERSION = "2026-07-24-attack-chat-canonical-snapshot-v24";
+const VERSION = "2026-07-24-attack-chat-canonical-snapshot-v25";
 const LOG = "[ADD2E][ATTACK_CHAT]";
 
 globalThis.ADD2E_ATTACK_CHAT_VISIBILITY_VERSION = VERSION;
@@ -21,7 +21,7 @@ function number(value, fallback = 0) {
 function outcome(ctx) {
   const snapshot = ctx?.snapshot ?? {};
   const d20 = number(snapshot?.roll?.d20 ?? ctx?.d20);
-  const hit = snapshot?.result?.hit ?? ctx?.finalResult === true;
+  const hit = snapshot?.result?.hit ?? (ctx?.finalResult === true);
   if (d20 === 20) return { key: "natural20", hit: true, title: "Coup exceptionnel !", icon: "fas fa-star", variant: "success" };
   if (d20 === 1) return { key: "natural1", hit: false, title: "Échec critique !", icon: "fas fa-times", variant: "failure" };
   return hit
@@ -194,6 +194,7 @@ function gmCardOptions(ctx) {
     });
   }
 
+  const deepClone = globalThis.foundry?.utils?.deepClone;
   return {
     actor: ctx.actor,
     title: `Détails d’attaque — ${result.title}`,
@@ -221,29 +222,12 @@ function gmCardOptions(ctx) {
           attackChatVisibilityVersion: VERSION,
           attackDiagId: snapshot.diagId,
           attackSnapshotVersion: snapshot.version,
-          attackSnapshot: foundry?.utils?.deepClone ? foundry.utils.deepClone(snapshot) : snapshot,
+          attackSnapshot: typeof deepClone === "function" ? deepClone(snapshot) : snapshot,
           createdByAttackRoll: true
         }
       }
     }
   };
-}
-
-function legacySnapshot(ctx) {
-  return Object.freeze({
-    version: VERSION,
-    diagId: String(ctx?.diagId ?? `attack-${Date.now()}`),
-    range: Object.freeze({ description: ctx?.descPortee ?? "Contact", band: ctx?.typePortee ?? "Contact", modifier: number(ctx?.malusPortee) }),
-    position: Object.freeze({ label: ctx?.activePositionAttackAdjustment?.label ?? "Face", zone: "front", caBefore: ctx?.caAvantPosition, caAfterPosition: ctx?.caAvantConditionnelle, caFinal: ctx?.caFinaleCible }),
-    threshold: Object.freeze({ thac0: number(ctx?.thaco), armorClass: number(ctx?.caFinaleCible), base: number(ctx?.valeurPourToucher), final: number(ctx?.seuilFinalD20) }),
-    roll: Object.freeze({ d20: number(ctx?.d20), bonus: number(ctx?.totalBonusToucher), total: number(ctx?.totalAuToucher) }),
-    result: Object.freeze({ hit: ctx?.finalResult === true }),
-    damage: Object.freeze({ amount: number(ctx?.degats), formula: ctx?.formulaDegats ?? "", details: ctx?.detailsDegats ?? "" }),
-    attackResolution: Object.freeze({ applied: [] }),
-    damageResolution: Object.freeze({ applied: [] }),
-    conditionalDetails: Object.freeze([]),
-    assassination: Object.freeze({ resolved: !!ctx?.assassinatResult, success: ctx?.assassinatResult?.success === true, roll: ctx?.assassinatResult?.total ?? null, score: ctx?.assassinatResult?.finalScore ?? null })
-  });
 }
 
 function scheduleEffectsEngineAttackResolved(ctx) {
@@ -256,29 +240,19 @@ function scheduleEffectsEngineAttackResolved(ctx) {
 
 export async function add2eCreateAttackChatCards(ctx = {}) {
   requireCommonChatApi();
-  const resolved = { ...ctx, snapshot: ctx.snapshot ?? legacySnapshot(ctx) };
-  const publicOptions = publicCardOptions(resolved);
-  const gmOptions = gmCardOptions(resolved);
+  if (!ctx?.snapshot || typeof ctx.snapshot !== "object") {
+    throw new Error("La carte d’attaque exige un snapshot canonique de résolution.");
+  }
+
+  const publicOptions = publicCardOptions(ctx);
+  const gmOptions = gmCardOptions(ctx);
   if (!String(globalThis.add2eBuildChatCard(publicOptions) ?? "").trim()) throw new Error("La carte publique d’attaque ADD2E est vide.");
   if (!String(globalThis.add2eBuildChatCard(gmOptions) ?? "").trim()) throw new Error("La carte MJ d’attaque ADD2E est vide.");
 
   const publicMessage = await globalThis.add2eCreateChatCard(publicOptions);
   const gmMessage = await globalThis.add2eCreateChatCard(gmOptions);
-  scheduleEffectsEngineAttackResolved(resolved);
+  scheduleEffectsEngineAttackResolved(ctx);
   return { publicMessage, gmMessage };
-}
-
-// Transition atomique : l'ancien appel délègue au nouveau créateur commun.
-// Cet export sera supprimé dès que 04-attack-roll.mjs appellera directement
-// add2eCreateAttackChatCards().
-export function add2eBuildAttackChatCard(ctx = {}) {
-  setTimeout(() => {
-    add2eCreateAttackChatCards(ctx).catch(error => {
-      console.error(`${LOG}[CREATE_CARDS]`, error);
-      ui.notifications?.error?.("Impossible de publier les cartes d’attaque.");
-    });
-  }, 0);
-  return "";
 }
 
 globalThis.add2eAttackChatDebug = function add2eAttackChatDebug() {
