@@ -277,10 +277,6 @@ function add2eInstallAbilityCheckExecutor() {
   });
 
   engine.__add2eAbilityCheckVersion = ADD2E_ABILITY_CHECK_VERSION;
-  globalThis.add2eResolveAbilityCheck = (actor, ability, context = {}) =>
-    add2eResolveAbilityCheck(actor, ability, context);
-  globalThis.add2eRollAbilityCheck = async (actor, ability, options = {}) =>
-    add2eCanonicalRollAbilityCheck(actor, ability, options);
   globalThis.add2eRollCharacteristicCard = async (actor, ability, options = {}) => {
     const result = await add2eCanonicalRollAbilityCheck(actor, ability, {
       ...options,
@@ -307,7 +303,7 @@ function add2eAbilityHudActor() {
 function add2eRefreshAbilityHud() {
   const root = document.getElementById("add2e-action-hud");
   const actor = add2eAbilityHudActor();
-  if (!root || !actor || typeof globalThis.add2eResolveAbilityCheck !== "function") return false;
+  if (!root || !actor) return false;
 
   for (const button of root.querySelectorAll("[data-section='caracs'] [data-action='roll-ability']")) {
     const definition = add2eAbilityDefinition(button.dataset.ability);
@@ -315,7 +311,7 @@ function add2eRefreshAbilityHud() {
     const valueRoot = cell?.querySelector("b");
     if (!definition || !cell || !valueRoot) continue;
 
-    const resolved = globalThis.add2eResolveAbilityCheck(actor, definition.key, {
+    const resolved = add2eResolveAbilityCheck(actor, definition.key, {
       source: "action-hud-ability-display",
       consumer: "action-hud"
     });
