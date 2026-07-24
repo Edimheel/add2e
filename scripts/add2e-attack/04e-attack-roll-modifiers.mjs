@@ -8,7 +8,7 @@ import {
   add2eGetAttackAbilityModifier
 } from "./03-attack-rules.mjs";
 
-export const ADD2E_ATTACK_MODIFIERS_VERSION = "2026-07-23-canonical-persistent-combat-resolution-v5";
+export const ADD2E_ATTACK_MODIFIERS_VERSION = "2026-07-24-targetless-canonical-preview-v6";
 
 const ADD2E_ATTACK_WEAPON_TYPES = new Set(["arme", "weapon"]);
 const ADD2E_ATTACK_MAGIC_ITEM_EFFECT_FLAG = "magicItemCatalogueEffect";
@@ -56,7 +56,7 @@ export function add2eAttackBuildTargetTagSet(cible) {
   add2eAttackPushNormalizedTag(targetTags, cible?.system?.effectTags);
   add2eAttackPushNormalizedTag(targetTags, cible?.flags?.add2e?.tags);
   const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
-  if (typeof engine?.getActiveTags === "function") add2eAttackPushNormalizedTag(targetTags, engine.getActiveTags(cible) ?? []);
+  if (cible && typeof engine?.getActiveTags === "function") add2eAttackPushNormalizedTag(targetTags, engine.getActiveTags(cible) ?? []);
   return targetTags;
 }
 
@@ -95,7 +95,7 @@ function add2eAttackNormalizeModifierTag(rawTag) {
 function add2eAttackGetActiveTargetEffectTags(cible) {
   const tags = new Set();
   const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
-  if (typeof engine?.getActiveTags === "function") add2eAttackPushNormalizedTag(tags, engine.getActiveTags(cible) ?? []);
+  if (cible && typeof engine?.getActiveTags === "function") add2eAttackPushNormalizedTag(tags, engine.getActiveTags(cible) ?? []);
   return tags;
 }
 
@@ -373,7 +373,7 @@ export function add2eAttackComputeTargetDefensiveAttackModifiers({ actor, cible 
   };
 }
 
-export function add2eAttackComputeActiveAttackModifiers({ actor, cible, arme = null, combatProfile }) {
+export function add2eAttackComputeActiveAttackModifiers({ actor, cible = null, arme = null, combatProfile }) {
   const engine = add2eAttackEffectsEngine();
   const targetTags = add2eAttackBuildTargetTagSet(cible);
   const abilityModifiers = add2eAttackAbilityModifierContext(actor, combatProfile);
@@ -393,7 +393,8 @@ export function add2eAttackComputeActiveAttackModifiers({ actor, cible, arme = n
     targetTags: [...targetTags],
     combatProfile,
     actionTags: combatProfile?.tags ?? [],
-    abilityModifiers
+    abilityModifiers,
+    previewWithoutTarget: !cible
   };
 
   const collected = (typeof engine.collect === "function" ? engine.collect(actor, context) : [])
@@ -464,7 +465,7 @@ export function add2eAttackComputeActiveAttackModifiers({ actor, cible, arme = n
     metadata: { producer: "weapon-base-field" }
   }));
 
-  const racialAttack = typeof engine.getAttackBonusAgainst === "function"
+  const racialAttack = cible && typeof engine.getAttackBonusAgainst === "function"
     ? engine.getAttackBonusAgainst(actor, cible)
     : { value: 0, details: [] };
   const bonusRacialVs = Number(racialAttack.value) || 0;
