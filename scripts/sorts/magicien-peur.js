@@ -1,5 +1,5 @@
 // ADD2E — onUse Magicien : Peur
-// Version : 2026-07-24-canonical-mental-save-cone-v3
+// Version : 2026-07-24-canonical-mental-save-forced-flee-v1
 // Compatible Foundry V13/V14/V15.
 // Contrat : return true = sort consommé ; return false = sort non consommé.
 
@@ -8,13 +8,7 @@ return await (async () => {
   const SPELL = {
     name: "Peur",
     slug: "peur",
-    level: 2,
     school: "Illusion/Fantasme",
-    rangeText: "0",
-    areaText: "cône de peur devant le lanceur",
-    saveText: "Annule",
-    castingTimeText: "2 segments",
-    componentsText: "V, S, M",
     coneDistanceMeters: 18,
     coneAngle: 60,
     imgFallback: "systems/add2e/assets/icones/sorts/peur.webp",
@@ -37,7 +31,6 @@ return await (async () => {
     if (typeof token !== "undefined" && token?.actor?.id === caster?.id) return token;
     return canvas.tokens?.controlled?.find(entry => entry.actor?.id === caster?.id)
       ?? caster?.getActiveTokens?.()[0]
-      ?? canvas.tokens?.controlled?.[0]
       ?? null;
   })();
 
@@ -75,6 +68,11 @@ return await (async () => {
   }
   if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
     await refund(`${SPELL.name} : le constructeur commun des cartes de chat est indisponible.`);
+    return false;
+  }
+  const fleeExecutor = game.add2e?.forceFleeToken ?? globalThis.add2eForceFleeToken;
+  if (typeof fleeExecutor !== "function") {
+    await refund(`${SPELL.name} : le moteur commun de fuite ADD2E est indisponible.`);
     return false;
   }
 
@@ -120,9 +118,7 @@ return await (async () => {
     return canvas.stage?.worldTransform?.applyInverse(global) ?? null;
   };
   const resetRuler = () => {
-    try {
-      canvas.controls?.ruler?.reset?.();
-    } catch (_error) {}
+    try { canvas.controls?.ruler?.reset?.(); } catch (_error) {}
   };
   const parentLayer = () => canvas.interface ?? canvas.controls ?? canvas.stage;
   const canvasRadiansToFoundryRotation = radians => (radians * 180 / Math.PI + 90 + 360) % 360;
@@ -271,11 +267,13 @@ return await (async () => {
     const effectData = {
       name: `${SPELL.name} — effrayé`,
       img: sourceItem?.img || SPELL.imgFallback,
+      origin: sourceItem.uuid ?? caster.uuid,
       disabled: false,
       transfer: false,
       duration: {
         rounds: durationRounds,
         startRound: game.combat?.round ?? null,
+        startTurn: game.combat?.turn ?? null,
         startTime: game.time?.worldTime ?? null,
         combat: game.combat?.id ?? null
       },
@@ -283,12 +281,16 @@ return await (async () => {
       flags: {
         add2e: {
           spell: SPELL.slug,
+          casterId: caster.id,
+          casterUuid: caster.uuid ?? null,
+          casterName: caster.name,
           sourceId: caster.id,
           sourceUuid: caster.uuid ?? null,
           sourceName: caster.name,
           tags: [
             "classe:magicien", "liste:magicien", "niveau:2", "sort:peur",
-            "mental", "type:condition", "etat:peur", "fuite"
+            "mental", "type:condition", "etat:peur", "fuite",
+            "mouvement:eloignement_obligatoire"
           ]
         }
       }
@@ -315,6 +317,16 @@ return await (async () => {
     return false;
   };
 
+  const forceFlee = targetToken => fleeExecutor({
+    sourceToken: casterToken,
+    targetToken,
+    actor: targetToken.actor,
+    reason: "spell:magicien_peur:forced-flee",
+    flagKey: "peurForcedMove",
+    allowGridFallback: true,
+    currentRound: Number(game.combat?.round ?? 0) || null
+  });
+
   const modifierDetails = save => {
     const applied = save?.resolution?.bonusResolution?.applied ?? [];
     return applied.length
@@ -326,14 +338,24 @@ return await (async () => {
         }).join(" ; ")
       : "Aucun";
   };
+  const fleeLabel = flee => {
+    if (!flee) return "Non déclenchée";
+    if (flee.moved) return `Déplacement appliqué : ${Number(flee.movedMeters ?? 0).toFixed(1)} m`;
+    if (flee.requested) return `Déplacement demandé au MJ : ${Number(flee.movedMeters ?? 0).toFixed(1)} m`;
+    return flee.reason ?? "Aucun déplacement possible";
+  };
 
   const createCard = async (results, durationRounds) => {
     const rows = results.length
-      ? results.flatMap(result => [
-          { label: result.targetToken.name, value: result.save.success ? "Résiste" : "Fuit" },
-          { label: `${result.targetToken.name} · jet`, value: `d20 ${result.save.d20} ${result.save.bonus >= 0 ? "+" : ""}${result.save.bonus} = ${result.save.total} / ${result.save.target}` },
-          { label: `${result.targetToken.name} · modificateurs`, value: modifierDetails(result.save) }
-        ])
+      ? results.flatMap(result => {
+          const targetRows = [
+            { label: result.targetToken.name, value: result.save.success ? "Résiste" : "Fuit" },
+            { label: `${result.targetToken.name} · jet`, value: `d20 ${result.save.d20} ${result.save.bonus >= 0 ? "+" : ""}${result.save.bonus} = ${result.save.total} / ${result.save.target}` },
+            { label: `${result.targetToken.name} · modificateurs`, value: modifierDetails(result.save) }
+          ];
+          if (!result.save.success) targetRows.push({ label: `${result.targetToken.name} · déplacement`, value: fleeLabel(result.flee) });
+          return targetRows;
+        })
       : [{ label: "Cibles", value: "Aucune créature détectée dans le cône" }];
     rows.push({ label: "Durée", value: `${durationRounds} round${durationRounds > 1 ? "s" : ""}` });
 
@@ -359,7 +381,9 @@ return await (async () => {
           add2e: {
             spell: SPELL.slug,
             sourceItemUuid: sourceItem.uuid,
+            casterUuid: caster.uuid ?? null,
             mentalAttack: true,
+            forcedFlee: true,
             saveType: "sorts",
             durationRounds,
             targetResults: results.map(result => ({
@@ -370,7 +394,12 @@ return await (async () => {
               total: result.save.total,
               target: result.save.target,
               success: result.save.success,
-              resolverVersion: result.save.version
+              resolverVersion: result.save.version,
+              fleeMoved: result.flee?.moved === true,
+              fleeRequested: result.flee?.requested === true,
+              fleeMaxMeters: result.flee?.maxMeters ?? null,
+              fleeMovedMeters: result.flee?.movedMeters ?? null,
+              fleeReason: result.flee?.reason ?? null
             }))
           }
         }
@@ -381,8 +410,7 @@ return await (async () => {
     await globalThis.add2eCreateChatCard(options);
   };
 
-  const level = casterLevel();
-  const durationRounds = Math.max(1, level);
+  const durationRounds = Math.max(1, casterLevel());
   const placement = await waitForConePlacement();
   if (!placement) {
     await refund(`${SPELL.name} : lancement annulé.`);
@@ -409,13 +437,19 @@ return await (async () => {
       await refund(`${SPELL.name} : aucune sauvegarde contre les sortilèges pour ${targetToken.name}.`);
       return false;
     }
-    results.push({ targetToken, save });
+    results.push({ targetToken, save, flee: null });
   }
 
   for (const result of results) {
-    if (!result.save.success) {
-      const applied = await applyFear(result.targetToken, durationRounds);
-      if (!applied) return false;
+    if (result.save.success) continue;
+    const applied = await applyFear(result.targetToken, durationRounds);
+    if (!applied) return false;
+    result.flee = await forceFlee(result.targetToken);
+    if (result.flee?.fatal) {
+      console.warn(`${TAG}[FORCED_FLEE_FAILED]`, {
+        target: result.targetToken.name,
+        reason: result.flee.reason
+      });
     }
   }
   await createCard(results, durationRounds);
