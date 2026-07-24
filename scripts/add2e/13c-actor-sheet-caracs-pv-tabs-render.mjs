@@ -2,20 +2,11 @@
 // La progression de classe provient de l’Item classe exact.
 // Compatible Foundry V13/V14/V15.
 
-import {
-  FORCE_TABLE,
-  DEXTERITE_TABLE,
-  CONSTITUTION_TABLE,
-  INTELLIGENCE_TABLE,
-  SAGESSE_TABLE,
-  CHARISME_TABLE
-} from "./11-character-data-prep.mjs";
-
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant 13c.");
 
 const ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION = "2026-07-23-force-ex-eligibility-invariant-v6";
 const ADD2E_HP_MODIFIERS_VERSION = "2026-06-28-generic-hp-modifiers-v1";
-const ADD2E_ABILITY_CONSUMER_VERSION = "2026-07-23-bonus-bigbang-abilities-v1";
+const ADD2E_ABILITY_CONSUMER_VERSION = "2026-07-24-canonical-derived-abilities-v2";
 globalThis.ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION = ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION;
 globalThis.ADD2E_HP_MODIFIERS_VERSION = ADD2E_HP_MODIFIERS_VERSION;
 globalThis.ADD2E_ABILITY_CONSUMER_VERSION = ADD2E_ABILITY_CONSUMER_VERSION;
@@ -70,6 +61,14 @@ function add2eAbilityResolution(actor, ability, context = {}) {
     throw new Error("Le résolveur canonique ADD2E des caractéristiques n’est pas disponible.");
   }
   return engine.resolveAbility(actor, ability, context);
+}
+
+function add2eAbilityDerivedResolution(actor, ability, context = {}) {
+  const engine = globalThis.ADD2E_EFFECTS;
+  if (!engine || typeof engine.resolveAbilityDerived !== "function") {
+    throw new Error("Le résolveur canonique ADD2E des ajustements de caractéristiques n’est pas disponible.");
+  }
+  return engine.resolveAbilityDerived(actor, ability, context);
 }
 
 function add2eExceptionalStrengthTotal(actor) {
@@ -382,47 +381,28 @@ globalThis.Add2eActorSheet.prototype.autoSetCaracAjustements = async function au
       await this.actor.update(baseUpdates, { add2eInternal: true, add2eReason: "ability-base-initialize" });
     }
 
-    const resolutions = Object.fromEntries(CARACS_LIST.map(carac => [
+    const derived = Object.fromEntries(CARACS_LIST.map(carac => [
       carac,
-      add2eAbilityResolution(this.actor, carac, { consumer: "actor-sheet-characteristics" })
+      add2eAbilityDerivedResolution(this.actor, carac, {
+        source: "actor-sheet-characteristics",
+        consumer: "application-v2"
+      })
     ]));
-    const totalCaracs = Object.fromEntries(CARACS_LIST.map(carac => [carac, resolutions[carac].total]));
-    const forceResolution = resolutions.force;
-    const forceOverrideMetadata = forceResolution.override?.modifier?.metadata ?? {};
-    const forceOverrideProfile = forceOverrideMetadata.profile && typeof forceOverrideMetadata.profile === "object"
-      ? forceOverrideMetadata.profile
-      : {};
-
-    const allowExceptional = add2eActorCanUseExceptionalStrength(this.actor);
-    const exceptionalStrengthEligible = !forceResolution.override && totalCaracs.force === 18 && allowExceptional;
-    const storedForceEx = exceptionalStrengthEligible
+    const totalCaracs = Object.fromEntries(CARACS_LIST.map(carac => [carac, derived[carac].total]));
+    const forceDerived = derived.force;
+    const storedForceEx = forceDerived.exceptionalStrengthEligible
       ? Math.max(0, Math.min(100, Math.trunc(Number(this.actor.system?.force_ex) || 0)))
       : 0;
-
-    let forceKey = totalCaracs.force;
-    let forceDisplay = forceOverrideMetadata.displayValue ?? totalCaracs.force;
-    const overrideDisplayKey = String(forceOverrideMetadata.displayValue ?? "").trim();
-    if (forceResolution.override && FORCE_TABLE?.[overrideDisplayKey]) {
-      forceKey = overrideDisplayKey;
-    } else if (exceptionalStrengthEligible) {
-      if (storedForceEx >= 1 && storedForceEx <= 50) forceKey = forceDisplay = "18/01-50";
-      else if (storedForceEx >= 51 && storedForceEx <= 75) forceKey = forceDisplay = "18/51-75";
-      else if (storedForceEx >= 76 && storedForceEx <= 90) forceKey = forceDisplay = "18/76-90";
-      else if (storedForceEx >= 91 && storedForceEx <= 99) forceKey = forceDisplay = "18/91-99";
-      else if (storedForceEx === 100) forceKey = forceDisplay = "18/00";
-    }
-
-    const forceTableRow = FORCE_TABLE?.[forceKey] ?? { toucher: 0, degats: 0, poids: 0, ouvrir: "—", tordre: "—" };
-    const forceBonus = { ...forceTableRow, ...forceOverrideProfile };
-    const dexBonus = DEXTERITE_TABLE?.[totalCaracs.dexterite] ?? { att: 0, def: 0 };
-    const conBonus = CONSTITUTION_TABLE?.[totalCaracs.constitution] ?? { pv: 0, trauma: 0, resu: 0 };
-    const intBonus = INTELLIGENCE_TABLE?.[totalCaracs.intelligence] ?? { langues: 0, chance_sort: 0, min_sort: 0, max_sort: 0, sort_par_niveau: 0 };
-    const sagBonus = SAGESSE_TABLE?.[totalCaracs.sagesse] ?? { magie: 0, sort_suppl: 0, echec: 0 };
-    const chaBonus = CHARISME_TABLE?.[totalCaracs.charisme] ?? { compagnons: 0, loy: 0, react: 0 };
+    const forceBonus = forceDerived.profile;
+    const dexBonus = derived.dexterite.profile;
+    const conBonus = derived.constitution.profile;
+    const intBonus = derived.intelligence.profile;
+    const sagBonus = derived.sagesse.profile;
+    const chaBonus = derived.charisme.profile;
 
     const fullUpdate = {
       "system.force_ex": storedForceEx,
-      "system.for_aff": forceDisplay,
+      "system.for_aff": forceDerived.displayValue,
       "system.dex_aff": totalCaracs.dexterite,
       "system.con_aff": totalCaracs.constitution,
       "system.int_aff": totalCaracs.intelligence,
@@ -487,7 +467,11 @@ globalThis.Add2eActorSheet.prototype.autoSetPointsDeCoup = async function autoSe
     if (!Number.isFinite(hitDie) || hitDie <= 0) return;
 
     const s = actor.system;
-    const conBonus = Number(s.con_pv || 0);
+    const conDerived = add2eAbilityDerivedResolution(actor, "constitution", {
+      source: "hit-points-calculation",
+      consumer: "actor-sheet-hit-points"
+    });
+    const conBonus = Number(conDerived.profile?.pv || 0);
     let hpRolls = Array.isArray(s.hpRolls) ? [...s.hpRolls] : [];
     if (force) hpRolls = [];
     if (hpRolls.length < 1 || !Number.isFinite(hpRolls[0])) hpRolls[0] = hitDie;
