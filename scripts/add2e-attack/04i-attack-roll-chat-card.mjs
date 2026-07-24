@@ -1,12 +1,15 @@
 // scripts/add2e-attack/04i-attack-roll-chat-card.mjs
 // ADD2E — Cartes de chat d'attaque construites par l'API commune.
-// La carte narrative est publique ; la carte détaillée reste MJ uniquement.
+// Une carte détaillée est créée par un client MJ ; une carte simplifiée par un client joueur.
 // Compatible Foundry V13/V14/V15.
 
-const VERSION = "2026-07-24-attack-chat-canonical-snapshot-v25";
+const VERSION = "2026-07-24-attack-chat-role-routed-v26";
+const SOCKET = "system.add2e";
+const ROUTE_TYPE = "ADD2E_ATTACK_CHAT_ROUTE_V26";
 const LOG = "[ADD2E][ATTACK_CHAT]";
 
 globalThis.ADD2E_ATTACK_CHAT_VISIBILITY_VERSION = VERSION;
+globalThis.__ADD2E_ATTACK_CHAT_ROUTE_IDS ??= new Set();
 
 function signed(value) {
   const number = Number(value) || 0;
@@ -61,15 +64,41 @@ function roleplay(ctx) {
   ]);
 }
 
-function gmIds() {
-  const recipients = ChatMessage.getWhisperRecipients?.("GM") ?? [];
-  const users = recipients.length ? recipients : Array.from(game.users ?? []).filter(user => user?.isGM);
-  return users.map(user => user?.id).filter(Boolean);
+function users() {
+  return Array.isArray(game?.users?.contents) ? game.users.contents : Array.from(game?.users ?? []);
+}
+
+function gmUsers() {
+  return users().filter(user => user?.isGM && user?.id);
+}
+
+function playerUsers() {
+  return users().filter(user => !user?.isGM && user?.id);
+}
+
+function userIds(list) {
+  return list.map(user => String(user.id)).filter(Boolean);
+}
+
+function activeCreatorId(list) {
+  return list
+    .filter(user => user?.active === true && user?.id)
+    .map(user => String(user.id))
+    .sort((a, b) => a.localeCompare(b))[0] ?? null;
 }
 
 function requireCommonChatApi() {
   if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
     throw new Error("Le constructeur commun des cartes ADD2E est indisponible.");
+  }
+}
+
+function cloneForSocket(value) {
+  try {
+    return JSON.parse(JSON.stringify(value));
+  } catch (error) {
+    console.error(`${LOG}[SERIALIZE_FAILED]`, error);
+    return null;
   }
 }
 
@@ -113,53 +142,63 @@ function thresholdText(snapshot) {
   return `${number(threshold.base)} - (${signed(snapshot?.roll?.bonus)}) = ${number(threshold.final)}`;
 }
 
-function publicCardOptions(ctx) {
+function sourceIdentity(ctx) {
+  return {
+    name: ctx?.actor?.name ?? "Attaquant",
+    img: ctx?.chatImg ?? ctx?.actor?.img,
+    type: "Attaquant",
+    meta: ctx?.arme?.name ?? ""
+  };
+}
+
+function targetIdentity(ctx) {
+  return {
+    name: ctx?.nomCible ?? ctx?.cible?.name ?? "Cible",
+    img: ctx?.cible?.token?.texture?.src ?? ctx?.cible?.prototypeToken?.texture?.src ?? ctx?.cible?.img,
+    type: "Défenseur"
+  };
+}
+
+function baseFlags(ctx, visibility, kind) {
+  return {
+    add2e: {
+      attackChatVisibility: visibility,
+      attackChatKind: kind,
+      attackChatVisibilityVersion: VERSION,
+      attackDiagId: ctx.snapshot.diagId,
+      attackSnapshotVersion: ctx.snapshot.version,
+      createdByAttackRoll: true
+    }
+  };
+}
+
+function playerCardOptions(ctx) {
   const snapshot = ctx.snapshot;
   const result = outcome(ctx);
   const rows = [
     { label: "Arme", value: ctx?.arme?.name ?? "Arme" },
-    { label: "Jet", value: attackRollText(snapshot) },
-    { label: "Portée", value: rangeText(snapshot) }
+    { label: "Résultat", value: result.title }
   ];
-  if (result.hit && number(snapshot?.damage?.amount) > 0) rows.push({ label: "Dégâts", value: String(number(snapshot.damage.amount)) });
+  if (result.hit && number(snapshot?.damage?.amount) > 0) {
+    rows.push({ label: "Dégâts", value: String(number(snapshot.damage.amount)) });
+  }
   if (snapshot?.assassination?.resolved) {
-    rows.push({
-      label: "Assassinat",
-      value: `${snapshot.assassination.success ? "Réussi" : "Échoué"} · ${snapshot.assassination.roll} / ${snapshot.assassination.score}%`
-    });
+    rows.push({ label: "Assassinat", value: snapshot.assassination.success ? "Réussi" : "Échoué" });
   }
 
   return {
-    actor: ctx.actor,
     title: `Attaque — ${result.title}`,
     icon: result.icon,
     variant: result.variant,
-    source: {
-      name: ctx?.actor?.name ?? "Attaquant",
-      img: ctx?.chatImg ?? ctx?.actor?.img,
-      type: "Attaquant",
-      meta: ctx?.arme?.name ?? ""
-    },
-    target: {
-      name: ctx?.nomCible ?? ctx?.cible?.name ?? "Cible",
-      img: ctx?.cible?.token?.texture?.src ?? ctx?.cible?.img,
-      type: "Défenseur"
-    },
+    source: sourceIdentity(ctx),
+    target: targetIdentity(ctx),
     rows,
     message: roleplay(ctx),
     chatData: {
-      speaker: ChatMessage.getSpeaker({ actor: ctx.actor }),
-      whisper: [],
+      speaker: { alias: ctx?.actor?.name ?? "ADD2E" },
+      whisper: userIds(playerUsers()),
       blind: false,
-      flags: {
-        add2e: {
-          attackChatVisibility: "public",
-          attackChatVisibilityVersion: VERSION,
-          attackDiagId: snapshot.diagId,
-          attackSnapshotVersion: snapshot.version,
-          createdByAttackRoll: true
-        }
-      }
+      flags: baseFlags(ctx, "players-only", "player-summary")
     }
   };
 }
@@ -169,22 +208,26 @@ function gmCardOptions(ctx) {
   const result = outcome(ctx);
   const threshold = snapshot?.threshold ?? {};
   const rows = [
-    { label: "Diagnostic", value: snapshot.diagId },
     { label: "Arme", value: ctx?.arme?.name ?? "Arme" },
-    { label: "Jet", value: attackRollText(snapshot) },
-    { label: "Portée", value: rangeText(snapshot) },
-    { label: "Position", value: positionSummary(snapshot) },
-    { label: "THAC0 / CA", value: `${number(threshold.thac0)} - ${number(threshold.armorClass)} = ${number(threshold.base)}` },
-    { label: "Modificateurs au toucher", value: modifierSummary(snapshot.attackResolution) },
-    { label: "Bonus total", value: signed(snapshot?.roll?.bonus) },
-    { label: "Seuil final au d20", value: thresholdText(snapshot) }
+    { label: "Résultat", value: result.title },
+    { label: "Diagnostic", value: snapshot.diagId },
+    { label: "Toucher — Jet", value: attackRollText(snapshot) },
+    { label: "Toucher — Portée", value: rangeText(snapshot) },
+    { label: "Toucher — Position", value: positionSummary(snapshot) },
+    { label: "Toucher — THAC0 / CA", value: `${number(threshold.thac0)} - ${number(threshold.armorClass)} = ${number(threshold.base)}` },
+    { label: "Toucher — Modificateurs", value: modifierSummary(snapshot.attackResolution) },
+    { label: "Toucher — Bonus total", value: signed(snapshot?.roll?.bonus) },
+    { label: "Toucher — Seuil final", value: thresholdText(snapshot) }
   ];
 
   const conditional = Array.isArray(snapshot?.conditionalDetails) ? snapshot.conditionalDetails.filter(Boolean) : [];
-  if (conditional.length) rows.push({ label: "Défenses conditionnelles", value: conditional.join(" ; ") });
+  if (conditional.length) rows.push({ label: "Toucher — Défenses conditionnelles", value: conditional.join(" ; ") });
   if (result.hit) {
-    rows.push({ label: "Modificateurs aux dégâts", value: modifierSummary(snapshot.damageResolution) });
-    rows.push({ label: "Dégâts", value: `${snapshot?.damage?.formula ?? "—"} → ${snapshot?.damage?.details ?? snapshot?.damage?.amount ?? "—"}` });
+    rows.push({ label: "Dégâts — Modificateurs", value: modifierSummary(snapshot.damageResolution) });
+    rows.push({ label: "Dégâts — Calcul", value: `${snapshot?.damage?.formula ?? "—"} → ${snapshot?.damage?.details ?? snapshot?.damage?.amount ?? "—"}` });
+    rows.push({ label: "Dégâts — Total", value: String(number(snapshot?.damage?.amount)) });
+  } else {
+    rows.push({ label: "Dégâts", value: "Aucun : l’attaque ne touche pas." });
   }
   if (ctx.useBackstab) rows.push({ label: "Attaque sournoise", value: `Dégâts ×${number(ctx.backstabMultiplier, 1)}` });
   if (snapshot?.assassination?.resolved) {
@@ -194,40 +237,99 @@ function gmCardOptions(ctx) {
     });
   }
 
-  const deepClone = globalThis.foundry?.utils?.deepClone;
+  const flags = baseFlags(ctx, "gm-only", "gm-details");
+  flags.add2e.attackSnapshot = typeof foundry?.utils?.deepClone === "function"
+    ? foundry.utils.deepClone(snapshot)
+    : cloneForSocket(snapshot);
+
   return {
-    actor: ctx.actor,
     title: `Détails d’attaque — ${result.title}`,
     icon: "fas fa-list-check",
     variant: result.variant,
-    source: {
-      name: ctx?.actor?.name ?? "Attaquant",
-      img: ctx?.chatImg ?? ctx?.actor?.img,
-      type: "Attaquant",
-      meta: ctx?.arme?.name ?? ""
-    },
-    target: {
-      name: ctx?.nomCible ?? ctx?.cible?.name ?? "Cible",
-      img: ctx?.cible?.token?.texture?.src ?? ctx?.cible?.img,
-      type: "Défenseur"
-    },
+    source: sourceIdentity(ctx),
+    target: targetIdentity(ctx),
     rows,
     chatData: {
-      speaker: ChatMessage.getSpeaker({ actor: ctx.actor }),
-      whisper: gmIds(),
+      speaker: { alias: ctx?.actor?.name ?? "ADD2E" },
+      whisper: userIds(gmUsers()),
       blind: false,
-      flags: {
-        add2e: {
-          attackChatVisibility: "gm-only",
-          attackChatVisibilityVersion: VERSION,
-          attackDiagId: snapshot.diagId,
-          attackSnapshotVersion: snapshot.version,
-          attackSnapshot: typeof deepClone === "function" ? deepClone(snapshot) : snapshot,
-          createdByAttackRoll: true
-        }
-      }
+      flags
     }
   };
+}
+
+async function createRoutedCard(payload = {}) {
+  requireCommonChatApi();
+  const messageId = String(payload.messageId ?? "");
+  if (!messageId || globalThis.__ADD2E_ATTACK_CHAT_ROUTE_IDS.has(messageId)) return null;
+  if (String(payload.creatorId ?? "") !== String(game.user?.id ?? "")) return null;
+
+  const options = payload.options && typeof payload.options === "object" ? payload.options : null;
+  if (!options) return null;
+  const preview = String(globalThis.add2eBuildChatCard(options) ?? "").trim();
+  if (!preview) throw new Error(`La carte d’attaque ${payload.kind ?? "inconnue"} est vide.`);
+
+  globalThis.__ADD2E_ATTACK_CHAT_ROUTE_IDS.add(messageId);
+  try {
+    return await globalThis.add2eCreateChatCard(options);
+  } catch (error) {
+    globalThis.__ADD2E_ATTACK_CHAT_ROUTE_IDS.delete(messageId);
+    throw error;
+  }
+}
+
+function onAttackChatSocket(data) {
+  if (data?.type !== ROUTE_TYPE) return;
+  const payload = data?.payload ?? {};
+  if (payload.version !== VERSION) return;
+  if (String(payload.creatorId ?? "") !== String(game.user?.id ?? "")) return;
+  void createRoutedCard(payload).catch(error => console.error(`${LOG}[ROUTED_CREATE_FAILED]`, { payload, error }));
+}
+
+function registerAttackChatSocket() {
+  if (!game?.socket?.on) return false;
+  const previous = globalThis.__ADD2E_ATTACK_CHAT_SOCKET_HANDLER;
+  if (previous && typeof game.socket.off === "function") game.socket.off(SOCKET, previous);
+  globalThis.__ADD2E_ATTACK_CHAT_SOCKET_HANDLER = onAttackChatSocket;
+  game.socket.on(SOCKET, onAttackChatSocket);
+  globalThis.__ADD2E_ATTACK_CHAT_SOCKET_VERSION = VERSION;
+  return true;
+}
+
+function installAttackChatSocket() {
+  if (registerAttackChatSocket()) return;
+  Hooks.once("ready", registerAttackChatSocket);
+}
+
+async function routeCard(kind, options, ctx) {
+  const recipients = kind === "gm" ? gmUsers() : playerUsers();
+  const creatorId = activeCreatorId(recipients);
+  if (!creatorId) {
+    console.warn(`${LOG}[NO_ACTIVE_CREATOR]`, { kind, recipients: userIds(recipients), diagId: ctx?.snapshot?.diagId });
+    return { status: "skipped", kind, creatorId: null, message: null };
+  }
+
+  const messageId = `attack-chat-${kind}-${ctx.snapshot.diagId}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  options.chatData.flags.add2e.attackRouteId = messageId;
+  options.chatData.flags.add2e.attackRouteCreatorId = creatorId;
+
+  const payload = cloneForSocket({
+    version: VERSION,
+    messageId,
+    creatorId,
+    kind,
+    options
+  });
+  if (!payload) throw new Error(`Impossible de sérialiser la carte d’attaque ${kind}.`);
+
+  if (creatorId === String(game.user?.id ?? "")) {
+    const message = await createRoutedCard(payload);
+    return { status: "created", kind, creatorId, message };
+  }
+
+  if (!game?.socket?.emit) throw new Error("Le socket ADD2E est indisponible pour router la carte d’attaque.");
+  game.socket.emit(SOCKET, { type: ROUTE_TYPE, payload });
+  return { status: "queued", kind, creatorId, message: null };
 }
 
 function scheduleEffectsEngineAttackResolved(ctx) {
@@ -244,25 +346,34 @@ export async function add2eCreateAttackChatCards(ctx = {}) {
     throw new Error("La carte d’attaque exige un snapshot canonique de résolution.");
   }
 
-  const publicOptions = publicCardOptions(ctx);
+  const playerOptions = playerCardOptions(ctx);
   const gmOptions = gmCardOptions(ctx);
-  if (!String(globalThis.add2eBuildChatCard(publicOptions) ?? "").trim()) throw new Error("La carte publique d’attaque ADD2E est vide.");
+  if (!String(globalThis.add2eBuildChatCard(playerOptions) ?? "").trim()) throw new Error("La carte joueur d’attaque ADD2E est vide.");
   if (!String(globalThis.add2eBuildChatCard(gmOptions) ?? "").trim()) throw new Error("La carte MJ d’attaque ADD2E est vide.");
 
-  const publicMessage = await globalThis.add2eCreateChatCard(publicOptions);
-  const gmMessage = await globalThis.add2eCreateChatCard(gmOptions);
+  const [playerRoute, gmRoute] = await Promise.all([
+    routeCard("player", playerOptions, ctx),
+    routeCard("gm", gmOptions, ctx)
+  ]);
   scheduleEffectsEngineAttackResolved(ctx);
-  return { publicMessage, gmMessage };
+  return { playerRoute, gmRoute };
 }
+
+installAttackChatSocket();
 
 globalThis.add2eAttackChatDebug = function add2eAttackChatDebug() {
   return {
     version: VERSION,
+    socketVersion: globalThis.__ADD2E_ATTACK_CHAT_SOCKET_VERSION ?? null,
     commonBuilder: typeof globalThis.add2eBuildChatCard === "function",
     commonCreator: typeof globalThis.add2eCreateChatCard === "function",
     user: game.user?.name,
     userId: game.user?.id,
     isGM: game.user?.isGM,
+    activeGmCreatorId: activeCreatorId(gmUsers()),
+    activePlayerCreatorId: activeCreatorId(playerUsers()),
+    gmRecipients: userIds(gmUsers()),
+    playerRecipients: userIds(playerUsers()),
     ready: game?.ready
   };
 };
