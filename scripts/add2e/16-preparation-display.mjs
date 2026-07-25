@@ -1,14 +1,11 @@
 // ============================================================
 // ADD2E — Contrôles de mémorisation des sorts
-// Version : 2026-07-03-v51-preparation-binding-diagnostic
+// Version : 2026-07-26-canonical-preparation-consumer-v1
+// Source exclusive des quotas et compteurs : 07-spellcasting-rules.mjs.
+// Compatible Foundry V13/V14/V15 et ApplicationV2.
 // ============================================================
-// Source des quotas : 07-spellcasting-rules.mjs.
-// - Restaure la règle dev-grosses-modifications : memorizedCount prioritaire pour un sort à liste unique.
-// - Restreint les sorts auto-accordés à la liste de la classe accordante.
-// - Résout les boutons +/- avec clé stable avant l'ancien sortId après drop/rendu.
-// - Diagnostique précisément le rendu, le binding, l'acteur et le sort résolus.
 
-const ADD2E_SPELL_PREP_SCROLL_VERSION = "2026-07-03-v51-preparation-binding-diagnostic";
+const ADD2E_SPELL_PREP_SCROLL_VERSION = "2026-07-26-canonical-preparation-consumer-v1";
 globalThis.ADD2E_SPELL_PREP_SCROLL_VERSION = ADD2E_SPELL_PREP_SCROLL_VERSION;
 
 function add2eSpellPrepDebug(stage, payload = {}) {
@@ -27,7 +24,9 @@ function add2eSpellPrepNormalizeText(value) {
 }
 
 function add2eSpellPrepNormalizeKey(value) {
-  return typeof add2eNormalizeSpellKey === "function" ? add2eNormalizeSpellKey(value) : add2eSpellPrepNormalizeText(value);
+  return typeof globalThis.add2eNormalizeSpellKey === "function"
+    ? globalThis.add2eNormalizeSpellKey(value)
+    : add2eSpellPrepNormalizeText(value);
 }
 
 function add2eSpellPrepDescribeItem(item) {
@@ -41,18 +40,18 @@ function add2eSpellPrepDescribeItem(item) {
   };
 }
 
-function add2eSpellPrepDescribeButton(btn) {
-  if (!btn) return null;
-  const row = btn.closest?.("tr.sort-row, tr[data-sort-id]");
+function add2eSpellPrepDescribeButton(button) {
+  if (!button) return null;
+  const row = button.closest?.("tr.sort-row, tr[data-sort-id]");
   return {
-    className: String(btn.className ?? ""),
-    sortId: btn.dataset?.sortId ?? row?.dataset?.sortId ?? null,
-    stableKey: btn.dataset?.spellStableKey ?? row?.dataset?.spellStableKey ?? null,
-    entryKey: btn.dataset?.entryKey ?? btn.dataset?.spellEntryKey ?? null,
-    spellName: btn.dataset?.spellName ?? row?.dataset?.spellName ?? null,
-    spellLevel: btn.dataset?.spellLevel ?? row?.dataset?.spellLevel ?? null,
-    actorId: btn.dataset?.actorId ?? btn.closest?.("[data-actor-id]")?.dataset?.actorId ?? null,
-    bound: btn.dataset?.add2ePrepBound ?? null
+    className: String(button.className ?? ""),
+    sortId: button.dataset?.sortId ?? row?.dataset?.sortId ?? null,
+    stableKey: button.dataset?.spellStableKey ?? row?.dataset?.spellStableKey ?? null,
+    entryKey: button.dataset?.entryKey ?? button.dataset?.spellEntryKey ?? null,
+    spellName: button.dataset?.spellName ?? row?.dataset?.spellName ?? null,
+    spellLevel: button.dataset?.spellLevel ?? row?.dataset?.spellLevel ?? null,
+    actorId: button.dataset?.actorId ?? button.closest?.("[data-actor-id]")?.dataset?.actorId ?? null,
+    bound: button.dataset?.add2ePrepBound ?? null
   };
 }
 
@@ -70,12 +69,12 @@ function add2eSpellPrepStableKeyForItem(item) {
   return name ? `${lists || "liste_inconnue"}|${level}|${name}` : "";
 }
 
-function add2eSpellPrepCandidateStableKeys(btn, row) {
+function add2eSpellPrepCandidateStableKeys(button, row) {
   const values = [
-    btn?.dataset?.spellStableKey,
-    btn?.closest?.("[data-spell-stable-key]")?.dataset?.spellStableKey,
+    button?.dataset?.spellStableKey,
+    button?.closest?.("[data-spell-stable-key]")?.dataset?.spellStableKey,
     row?.dataset?.spellStableKey,
-    btn?.getAttribute?.("data-spell-stable-key"),
+    button?.getAttribute?.("data-spell-stable-key"),
     row?.getAttribute?.("data-spell-stable-key")
   ];
   return [...new Set(values.map(value => String(value ?? "").trim()).filter(Boolean))];
@@ -98,182 +97,46 @@ function add2eSpellPrepRepairDomSpellId(row, found) {
   const stable = add2eSpellPrepStableKeyForItem(found);
   row.dataset.sortId = found.id;
   if (stable) row.dataset.spellStableKey = stable;
-  row.querySelectorAll?.("[data-sort-id]").forEach(el => { el.dataset.sortId = found.id; });
-  if (stable) row.querySelectorAll?.("[data-spell-stable-key]").forEach(el => { el.dataset.spellStableKey = stable; });
-}
-
-function add2eSpellPrepInstallSingleListCountOverride() {
-  if (globalThis.__ADD2E_SPELL_PREP_SINGLE_LIST_COUNT_V49) return;
-  globalThis.__ADD2E_SPELL_PREP_SINGLE_LIST_COUNT_V49 = true;
-
-  const normalizeKey = add2eSpellPrepNormalizeKey;
-  const originalGetSpellListsFromItem = globalThis.add2eGetSpellListsFromItem;
-
-  const normalizeArray = value => {
-    if (Array.isArray(value)) return value.flatMap(normalizeArray).filter(Boolean);
-    if (value === undefined || value === null || value === "") return [];
-    if (typeof value === "string") return value.split(/[,;|\n]+/g).map(normalizeKey).filter(Boolean);
-    return [normalizeKey(value)].filter(Boolean);
-  };
-
-  const classNameLists = className => {
-    const n = normalizeKey(className);
-    if (n.includes("clerc") || n.includes("pretre") || n.includes("priest")) return ["clerc"];
-    if (n.includes("druide") || n.includes("druid")) return ["druide"];
-    if (n.includes("magicien") || n.includes("mage") || n.includes("wizard")) return ["magicien"];
-    if (n.includes("illusionniste") || n.includes("illusionist")) return ["illusionniste"];
-    return [];
-  };
-
-  const grantedListsForSort = sort => {
-    const flags = sort?.flags?.add2e ?? {};
-    const explicit = normalizeArray(flags.grantedSpellLists ?? flags.learnedSpellLists ?? flags.knownSpellLists);
-    if (explicit.length) return [...new Set(explicit)];
-    if (flags.autoGrantedSpellSync !== true && !flags.autoGrantedByClassId && !flags.autoGrantedByClass) return [];
-
-    const actor = sort?.parent ?? null;
-    const classId = flags.autoGrantedByClassId;
-    const classItem = classId && actor?.items?.get ? actor.items.get(classId) : null;
-    if (classItem) {
-      try {
-        if (typeof add2eSpellSyncClassLists === "function") {
-          const lists = normalizeArray(add2eSpellSyncClassLists(classItem));
-          if (lists.length) return [...new Set(lists)];
-        }
-      } catch (_e) {}
-      const lists = classNameLists(classItem.name ?? classItem.system?.label ?? classItem.system?.nom ?? classItem.system?.name);
-      if (lists.length) return lists;
-    }
-    return classNameLists(flags.autoGrantedByClass);
-  };
-
-  globalThis.add2eGetSpellListsFromItem = function add2eGetSpellListsFromItemGrantedCompat(sort) {
-    const granted = grantedListsForSort(sort);
-    if (granted.length) return granted;
-    return typeof originalGetSpellListsFromItem === "function" ? originalGetSpellListsFromItem(sort) : [];
-  };
-
-  const regular = sort => typeof add2eIsRegularPreparableSpell === "function"
-    ? add2eIsRegularPreparableSpell(sort)
-    : !(typeof add2eIsObjectMagicSpellForPreparation === "function" && add2eIsObjectMagicSpellForPreparation(sort));
-  const listsOf = sort => typeof add2eGetSpellListsFromItem === "function" ? add2eGetSpellListsFromItem(sort) : [];
-  const byListOf = sort => {
-    const raw = sort?.getFlag?.("add2e", "memorizedByList") ?? sort?.flags?.add2e?.memorizedByList ?? {};
-    return raw && typeof raw === "object" && !Array.isArray(raw) ? foundry.utils.deepClone(raw) : {};
-  };
-
-  globalThis.add2eGetMemorizedCountForEntry = function add2eGetMemorizedCountForEntryCompat(sort, entry) {
-    const key = normalizeKey(entry?.key);
-    if (!sort || !key || !regular(sort)) return 0;
-    const lists = listsOf(sort).map(normalizeKey).filter(Boolean);
-    const legacyRaw = sort.getFlag?.("add2e", "memorizedCount") ?? sort.flags?.add2e?.memorizedCount;
-    const legacyPresent = legacyRaw !== undefined && legacyRaw !== null && legacyRaw !== "";
-    const legacyCount = Math.max(0, Number(legacyRaw) || 0);
-    if (lists.length <= 1 && lists.includes(key) && legacyPresent) return legacyCount;
-    const byList = byListOf(sort);
-    if (Object.prototype.hasOwnProperty.call(byList, key)) return Math.max(0, Number(byList[key] ?? 0) || 0);
-    if (lists.length <= 1 && lists.includes(key)) return legacyCount;
-    return 0;
-  };
-
-  globalThis.add2eGetTotalMemorizedCount = function add2eGetTotalMemorizedCountCompat(sort) {
-    if (!sort || !regular(sort)) return 0;
-    const lists = listsOf(sort).map(normalizeKey).filter(Boolean);
-    const legacyRaw = sort.getFlag?.("add2e", "memorizedCount") ?? sort.flags?.add2e?.memorizedCount;
-    const legacyPresent = legacyRaw !== undefined && legacyRaw !== null && legacyRaw !== "";
-    if (lists.length <= 1 && legacyPresent) return Math.max(0, Number(legacyRaw) || 0);
-    const byList = byListOf(sort);
-    return Object.values(byList).reduce((sum, v) => sum + (Number(v) || 0), 0);
-  };
-
-  globalThis.add2eSetMemorizedCountForEntry = async function add2eSetMemorizedCountForEntryPersist(sort, entry, value) {
-    const key = normalizeKey(entry?.key);
-    if (!sort || !key || !regular(sort)) return;
-    const next = Math.max(0, Number(value) || 0);
-    const byList = byListOf(sort);
-    if (next > 0) byList[key] = next;
-    else delete byList[key];
-    for (const k of Object.keys(byList)) if ((Number(byList[k]) || 0) <= 0) delete byList[k];
-    const total = Object.values(byList).reduce((sum, v) => sum + (Number(v) || 0), 0);
-
-    await sort.update({
-      "flags.add2e.memorizedByList": byList,
-      "flags.add2e.memorizedCount": total
-    }, { render: false, diff: false, add2eSpellPreparation: true });
-  };
-
-  globalThis.add2eCountPreparedForEntryLevel = function add2eCountPreparedForEntryLevelCompat(actor, entry, spellLevel) {
-    const key = normalizeKey(entry?.key);
-    const lvl = Number(spellLevel) || 1;
-    let total = 0;
-    for (const sort of actor?.items?.filter?.(i => String(i.type || "").toLowerCase() === "sort") ?? []) {
-      if (!regular(sort)) continue;
-      const sLvl = Number(sort.system?.niveau ?? sort.system?.level ?? 1) || 1;
-      if (sLvl !== lvl) continue;
-      const lists = listsOf(sort).map(normalizeKey).filter(Boolean);
-      if (!lists.includes(key)) continue;
-      total += globalThis.add2eGetMemorizedCountForEntry(sort, entry);
-    }
-    return total;
-  };
+  row.querySelectorAll?.("[data-sort-id]").forEach(element => { element.dataset.sortId = found.id; });
+  if (stable) row.querySelectorAll?.("[data-spell-stable-key]").forEach(element => { element.dataset.spellStableKey = stable; });
 }
 
 function add2eSpellPrepActorWindows(actor) {
   const actorId = String(actor?.id ?? "");
   if (!actorId) return [];
   return Object.values(ui.windows ?? {}).filter(app => {
-    const doc = app?.actor ?? app?.document ?? app?.object ?? null;
-    return doc?.documentName === "Actor" && String(doc.id) === actorId;
+    const document = app?.actor ?? app?.document ?? app?.object ?? null;
+    return document?.documentName === "Actor" && String(document.id) === actorId;
   });
 }
 
-function add2eSpellPrepResolveActorFromButton(btn) {
-  const actorId = btn?.dataset?.actorId ?? btn?.closest?.("[data-actor-id]")?.dataset?.actorId;
-  if (actorId && game.actors?.get(actorId)) {
-    const actor = game.actors.get(actorId);
-    add2eSpellPrepDebug("ACTOR_FROM_BUTTON", { actor: actor.name, actorId, button: add2eSpellPrepDescribeButton(btn) });
-    return actor;
-  }
-  const appRoot = btn?.closest?.(".application, .window-app, .app");
+function add2eSpellPrepResolveActorFromButton(button) {
+  const actorId = button?.dataset?.actorId ?? button?.closest?.("[data-actor-id]")?.dataset?.actorId;
+  if (actorId && game.actors?.get(actorId)) return game.actors.get(actorId);
+
+  const appRoot = button?.closest?.(".application, .window-app, .app");
   const appId = appRoot?.dataset?.appid || appRoot?.dataset?.appId || appRoot?.id?.replace(/^app-/, "") || null;
   if (appId) {
-    const app = Object.values(ui.windows ?? {}).find(w => String(w.appId) === String(appId) || String(w.id) === String(appId));
+    const app = Object.values(ui.windows ?? {}).find(candidate => String(candidate.appId) === String(appId) || String(candidate.id) === String(appId));
     const actor = app?.actor ?? app?.document ?? app?.object ?? null;
-    if (actor?.documentName === "Actor") {
-      add2eSpellPrepDebug("ACTOR_FROM_APPLICATION", { actor: actor.name, actorId: actor.id, appId, button: add2eSpellPrepDescribeButton(btn) });
-      return actor;
-    }
+    if (actor?.documentName === "Actor") return actor;
   }
-  const selected = canvas?.tokens?.controlled?.[0]?.actor;
-  if (selected?.documentName === "Actor") {
-    add2eSpellPrepDebug("ACTOR_FROM_SELECTED_TOKEN", { actor: selected.name, actorId: selected.id, button: add2eSpellPrepDescribeButton(btn) });
-    return selected;
-  }
-  const character = game.user?.character ?? null;
-  add2eSpellPrepDebug("ACTOR_FROM_USER_CHARACTER", { actor: character?.name ?? null, actorId: character?.id ?? null, button: add2eSpellPrepDescribeButton(btn) });
-  return character;
+
+  return canvas?.tokens?.controlled?.[0]?.actor ?? game.user?.character ?? null;
 }
 
-function add2eSpellPrepResolveSort(actor, btn, entryKey = "") {
-  const directId = btn?.dataset?.sortId || btn?.closest?.("[data-sort-id]")?.dataset?.sortId;
+function add2eSpellPrepResolveSort(actor, button, entryKey = "") {
+  const directId = button?.dataset?.sortId || button?.closest?.("[data-sort-id]")?.dataset?.sortId;
   const direct = directId ? actor?.items?.get?.(directId) : null;
-  if (direct) {
-    add2eSpellPrepDebug("RESOLVE_DIRECT", { actor: actor?.name, button: add2eSpellPrepDescribeButton(btn), sort: add2eSpellPrepDescribeItem(direct) });
-    return direct;
-  }
+  if (direct) return direct;
 
-  const row = btn?.closest?.("tr.sort-row, tr[data-sort-id]");
-  const stableKeys = add2eSpellPrepCandidateStableKeys(btn, row);
+  const row = button?.closest?.("tr.sort-row, tr[data-sort-id]");
+  const stableKeys = add2eSpellPrepCandidateStableKeys(button, row);
   if (stableKeys.length) {
-    const stableMatches = Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "sort" && stableKeys.includes(add2eSpellPrepStableKeyForItem(item)));
-    add2eSpellPrepDebug("RESOLVE_STABLE", {
-      actor: actor?.name,
-      directId: directId ?? null,
-      stableKeys,
-      button: add2eSpellPrepDescribeButton(btn),
-      matches: stableMatches.map(add2eSpellPrepDescribeItem)
-    });
-    const found = stableMatches[0] ?? null;
+    const found = Array.from(actor?.items ?? []).find(item =>
+      String(item?.type ?? "").toLowerCase() === "sort"
+      && stableKeys.includes(add2eSpellPrepStableKeyForItem(item))
+    ) ?? null;
     if (found) {
       add2eSpellPrepRepairDomSpellId(row, found);
       return found;
@@ -281,42 +144,29 @@ function add2eSpellPrepResolveSort(actor, btn, entryKey = "") {
   }
 
   const rawName = row?.dataset?.spellName
-    || btn?.dataset?.spellName
+    || button?.dataset?.spellName
     || row?.querySelector?.(".a2e-sort-name-link, .toggle-sort-desc-chat")?.textContent
     || row?.querySelector?.("[title^='Lancer ']")?.getAttribute?.("title")?.replace(/^Lancer\s+/i, "")
     || row?.children?.[2]?.textContent
     || "";
   const targetName = add2eSpellPrepNormalizeText(String(rawName).replace(/Composants\s*:.*$/i, ""));
-  const explicitLevel = Number(row?.dataset?.spellLevel ?? btn?.dataset?.spellLevel ?? 0) || null;
+  const explicitLevel = Number(row?.dataset?.spellLevel ?? button?.dataset?.spellLevel ?? 0) || null;
   const groupText = row?.closest?.(".a2e-panel")?.querySelector?.("h3")?.textContent ?? "";
   const levelMatch = String(groupText).match(/niveau\s*(\d+)/i);
   const targetLevel = explicitLevel || (levelMatch ? Number(levelMatch[1]) : null);
   const key = add2eSpellPrepNormalizeKey(entryKey);
 
-  const candidates = Array.from(actor?.items ?? []).filter(item => {
+  const found = Array.from(actor?.items ?? []).find(item => {
     if (String(item?.type ?? "").toLowerCase() !== "sort") return false;
     if (targetName && add2eSpellPrepNormalizeText(item.name) !== targetName) return false;
     if (targetLevel && (Number(item.system?.niveau ?? item.system?.level ?? 1) || 1) !== targetLevel) return false;
     if (key) {
-      try {
-        const lists = (globalThis.add2eGetSpellListsFromItem?.(item) ?? []).map(add2eSpellPrepNormalizeKey);
-        if (!lists.includes(key)) return false;
-      } catch (_e) {}
+      const lists = (globalThis.add2eGetSpellListsFromItem?.(item) ?? []).map(add2eSpellPrepNormalizeKey);
+      if (!lists.includes(key)) return false;
     }
     return true;
-  });
+  }) ?? null;
 
-  const found = candidates[0] ?? null;
-  add2eSpellPrepDebug("RESOLVE_FALLBACK", {
-    actor: actor?.name,
-    directId: directId ?? null,
-    targetName,
-    targetLevel,
-    entryKey: key,
-    button: add2eSpellPrepDescribeButton(btn),
-    candidates: candidates.map(add2eSpellPrepDescribeItem),
-    allActorSorts: found ? undefined : Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "sort").map(add2eSpellPrepDescribeItem)
-  });
   if (found) add2eSpellPrepRepairDomSpellId(row, found);
   return found;
 }
@@ -325,27 +175,32 @@ function add2eSpellPrepSnapshot(actor) {
   return add2eSpellPrepActorWindows(actor).map(app => {
     const root = app.element?.[0] ?? app.element ?? null;
     const scrollables = [root?.closest?.(".window-content"), root?.querySelector?.(".a2e-tab-content.active"), root, document.scrollingElement].filter(Boolean);
-    const activeTab = root?.querySelector?.(".a2e-tabs .item.active[data-tab]")?.dataset?.tab ?? root?.querySelector?.(".a2e-tab-content.active[data-tab]")?.dataset?.tab ?? null;
-    return { appId: app.appId, activeTab, scroll: scrollables.map((el, i) => ({ i, top: Number(el.scrollTop) || 0, left: Number(el.scrollLeft) || 0 })) };
+    const activeTab = root?.querySelector?.(".a2e-tabs .item.active[data-tab]")?.dataset?.tab
+      ?? root?.querySelector?.(".a2e-tab-content.active[data-tab]")?.dataset?.tab
+      ?? null;
+    return {
+      appId: app.appId,
+      activeTab,
+      scroll: scrollables.map((element, index) => ({ index, top: Number(element.scrollTop) || 0, left: Number(element.scrollLeft) || 0 }))
+    };
   });
 }
 
 function add2eSpellPrepRestoreSnapshot(snapshot) {
-  if (!snapshot?.length) return;
-  for (const snap of snapshot) {
-    const app = ui.windows?.[snap.appId];
+  for (const saved of snapshot ?? []) {
+    const app = ui.windows?.[saved.appId];
     const root = app?.element?.[0] ?? app?.element ?? null;
     if (!root) continue;
-    if (snap.activeTab) {
-      root.querySelectorAll?.(".a2e-tabs .item[data-tab]").forEach(el => el.classList.toggle("active", el.dataset.tab === snap.activeTab));
-      root.querySelectorAll?.(".a2e-tab-content[data-tab]").forEach(el => el.classList.toggle("active", el.dataset.tab === snap.activeTab));
+    if (saved.activeTab) {
+      root.querySelectorAll?.(".a2e-tabs .item[data-tab]").forEach(element => element.classList.toggle("active", element.dataset.tab === saved.activeTab));
+      root.querySelectorAll?.(".a2e-tab-content[data-tab]").forEach(element => element.classList.toggle("active", element.dataset.tab === saved.activeTab));
     }
     const scrollables = [root.closest?.(".window-content"), root.querySelector?.(".a2e-tab-content.active"), root, document.scrollingElement].filter(Boolean);
-    for (const s of snap.scroll ?? []) {
-      const el = scrollables[s.i];
-      if (!el) continue;
-      el.scrollTop = s.top;
-      el.scrollLeft = s.left;
+    for (const position of saved.scroll ?? []) {
+      const element = scrollables[position.index];
+      if (!element) continue;
+      element.scrollTop = position.top;
+      element.scrollLeft = position.left;
     }
   }
 }
@@ -362,24 +217,17 @@ function add2eSpellPrepCounterRoots(actor, clickedButton = null) {
 }
 
 function add2eSpellPrepReadVisibleTotal(actor, entry, spellLevel, clickedButton = null) {
-  const label = String(entry?.label || add2eSpellLabel(add2eNormalizeSpellKey(entry?.key)) || "").toLowerCase();
-  const nText = `n${Number(spellLevel) || 1}`;
+  const label = String(entry?.label || globalThis.add2eSpellLabel?.(entry?.key) || "").toLowerCase();
+  const levelText = `n${Number(spellLevel) || 1}`;
   const readRatio = text => {
-    const m = String(text ?? "").match(/(\d+)\s*\/\s*(\d+)/);
-    return m ? { count: Number(m[1]), max: Number(m[2]) } : null;
+    const match = String(text ?? "").match(/(\d+)\s*\/\s*(\d+)/);
+    return match ? { count: Number(match[1]), max: Number(match[2]) } : null;
   };
   for (const root of add2eSpellPrepCounterRoots(actor, clickedButton)) {
-    for (const el of root.querySelectorAll?.(".a2e-spell-capacity-pill") ?? []) {
-      const txt = String(el.textContent ?? "").toLowerCase();
-      if (!txt.includes(label) || !txt.includes(nText)) continue;
-      const ratio = readRatio(txt);
-      if (ratio) return ratio;
-    }
-    for (const group of root.querySelectorAll?.(".add2e-spell-list-group") ?? []) {
-      const h3 = group.querySelector?.("h3");
-      const txt = String(h3?.textContent ?? "").toLowerCase();
-      if (!txt.includes(label)) continue;
-      const ratio = readRatio(txt);
+    for (const element of root.querySelectorAll?.(".a2e-spell-capacity-pill") ?? []) {
+      const text = String(element.textContent ?? "").toLowerCase();
+      if (!text.includes(label) || !text.includes(levelText)) continue;
+      const ratio = readRatio(text);
       if (ratio) return ratio;
     }
   }
@@ -387,73 +235,69 @@ function add2eSpellPrepReadVisibleTotal(actor, entry, spellLevel, clickedButton 
 }
 
 function add2eSpellPrepSetGlobalCounters(actor, entry, spellLevel, total, max, clickedButton = null) {
-  const key = add2eNormalizeSpellKey(entry?.key);
-  const label = entry?.label || add2eSpellLabel(key);
+  const key = add2eSpellPrepNormalizeKey(entry?.key);
+  const label = entry?.label || globalThis.add2eSpellLabel?.(key) || key;
   const count = Math.max(0, Number(total) || 0);
   const limit = Math.max(0, Number(max) || 0);
-  const fullText = `${label} : ${count} / ${limit}`;
   const compactText = `${label} ${count}/${limit}`;
   const pillText = `${label} N${spellLevel} ${count}/${limit}`;
-  const lowerTitle = `sorts de ${String(label).toLowerCase()}`;
   for (const root of add2eSpellPrepCounterRoots(actor, clickedButton)) {
     const escaped = globalThis.CSS?.escape ? CSS.escape(key) : key.replace(/(["'\\.#:[\],>+~*=])/g, "\\$1");
-    root.querySelectorAll?.(`.a2e-sort-slot-${escaped}`).forEach(el => { el.textContent = compactText; });
-    root.querySelectorAll?.(".a2e-spell-capacity-pill").forEach(el => {
-      const txt = String(el.textContent ?? "").toLowerCase();
-      if (txt.includes(String(label).toLowerCase()) && txt.includes(`n${spellLevel}`)) el.textContent = pillText;
-    });
-    root.querySelectorAll?.(".add2e-spell-list-group").forEach(group => {
-      const h3 = group.querySelector?.("h3");
-      const h3Text = String(h3?.textContent ?? "").toLowerCase();
-      if (!h3 || (!h3Text.includes(String(label).toLowerCase()) && !h3Text.includes(lowerTitle))) return;
-      const badge = h3.querySelector?.(".sort-memorize-badge");
-      if (badge) badge.textContent = fullText;
+    root.querySelectorAll?.(`.a2e-sort-slot-${escaped}`).forEach(element => { element.textContent = compactText; });
+    root.querySelectorAll?.(".a2e-spell-capacity-pill").forEach(element => {
+      const text = String(element.textContent ?? "").toLowerCase();
+      if (text.includes(String(label).toLowerCase()) && text.includes(`n${spellLevel}`)) element.textContent = pillText;
     });
   }
 }
 
-function add2eSpellPrepSetRowCount(actor, sort, next, clickedButton = null) {
+function add2eSpellPrepSetRowCount(sort, next, clickedButton = null) {
   const text = String(Math.max(0, Number(next) || 0));
-  const setIn = container => {
-    if (!container) return;
+  const containers = [clickedButton?.closest?.(".add2e-spell-prep-entry"), clickedButton?.closest?.("tr")].filter(Boolean);
+  for (const container of containers) {
     for (const badge of container.querySelectorAll?.(".sort-memorize-badge, [data-memorized-count], [data-add2e-memorized-count]") ?? []) {
       badge.textContent = text;
       badge.dataset.memorizedCount = text;
       badge.dataset.add2eMemorizedCount = text;
-      badge.setAttribute("data-memorized-count", text);
     }
-  };
-  setIn(clickedButton?.closest?.(".add2e-spell-prep-entry"));
-  setIn(clickedButton?.closest?.("tr"));
+  }
+  add2eSpellPrepDebug("ROW_COUNT", { sort: sort?.name, next });
 }
 
 function add2eSpellPrepArray(value) {
   if (Array.isArray(value)) return value.flatMap(add2eSpellPrepArray).filter(Boolean);
   if (value === null || value === undefined || value === "") return [];
-  if (typeof value === "string") return value.split(/[,;|\n]+|\bet\b/gi).map(x => x.trim()).filter(Boolean);
+  if (typeof value === "string") return value.split(/[,;|\n]+|\bet\b/gi).map(entry => entry.trim()).filter(Boolean);
   if (typeof value === "object") {
     const name = value.name ?? value.nom ?? value.label ?? value.item ?? value.itemName ?? value.component ?? value.composant ?? value.slug ?? value.id;
-    const qty = value.quantity ?? value.quantite ?? value.qty ?? value.nombre ?? value.count ?? null;
-    if (name) return [qty ? `${name} ×${qty}` : String(name)];
+    const quantity = value.quantity ?? value.quantite ?? value.qty ?? value.nombre ?? value.count ?? null;
+    if (name) return [quantity ? `${name} ×${quantity}` : String(name)];
   }
   return [String(value)];
 }
 
 function add2eSpellPrepIsOnlyComponentCode(value) {
-  const t = String(value ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z]/g, "");
-  return ["v", "s", "m", "vs", "vm", "sm", "vsm", "verbal", "somatique", "materiel", "materielle", "material"].includes(t);
+  const text = String(value ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z]/g, "");
+  return ["v", "s", "m", "vs", "vm", "sm", "vsm", "verbal", "somatique", "materiel", "materielle", "material"].includes(text);
 }
 
 function add2eSpellPrepMaterialComponents(sort) {
-  const s = sort?.system ?? {};
-  const f = sort?.flags?.add2e ?? {};
+  const system = sort?.system ?? {};
+  const flags = sort?.flags?.add2e ?? {};
   const values = [];
-  for (const field of [s.composants_requis, s.composantsMateriels, s.composants_materiels, s.composantsMateriel, s.composant_materiel, s.composantMateriel, s.materiel, s.matériel, s.material, s.materialComponent, s.materialComponents, s.material_components, s.requiredComponents, s.componentsRequired, s.components?.material, s.components?.materials, f.composants_requis, f.components, f.requiredComponents]) values.push(...add2eSpellPrepArray(field));
-  for (const tag of [...add2eSpellPrepArray(s.tags), ...add2eSpellPrepArray(s.effectTags), ...add2eSpellPrepArray(f.tags), ...add2eSpellPrepArray(f.effectTags)]) {
+  for (const field of [
+    system.composants_requis, system.composantsMateriels, system.composants_materiels,
+    system.composantsMateriel, system.composant_materiel, system.composantMateriel,
+    system.materiel, system.matériel, system.material, system.materialComponent,
+    system.materialComponents, system.material_components, system.requiredComponents,
+    system.componentsRequired, system.components?.material, system.components?.materials,
+    flags.composants_requis, flags.components, flags.requiredComponents
+  ]) values.push(...add2eSpellPrepArray(field));
+  for (const tag of [...add2eSpellPrepArray(system.tags), ...add2eSpellPrepArray(system.effectTags), ...add2eSpellPrepArray(flags.tags), ...add2eSpellPrepArray(flags.effectTags)]) {
     const raw = String(tag ?? "").trim();
     if (/^composant[:_]/i.test(raw)) values.push(raw.replace(/^composant[:_]/i, ""));
   }
-  return [...new Set(values.map(v => String(v ?? "").trim()).filter(v => v && !add2eSpellPrepIsOnlyComponentCode(v)))];
+  return [...new Set(values.map(value => String(value ?? "").trim()).filter(value => value && !add2eSpellPrepIsOnlyComponentCode(value)))];
 }
 
 function add2eSpellPrepEnsureComponentStyle(root) {
@@ -469,115 +313,82 @@ function add2eSpellPrepInjectComponents(actor, root) {
   add2eSpellPrepEnsureComponentStyle(root);
   for (const row of root.querySelectorAll?.("table.sort-table tbody tr") ?? []) {
     if (row.classList.contains("sort-description") || row.classList.contains("add2e-object-magic-power-row")) continue;
-    const sortId = row.querySelector("[data-sort-id]")?.dataset?.sortId || row.getAttribute("data-sort-id");
-    const sort = (sortId ? actor.items.get(sortId) : null) ?? add2eSpellPrepResolveSort(actor, row.querySelector("[data-sort-id]") ?? row);
+    const trigger = row.querySelector("[data-sort-id]") ?? row;
+    const sort = add2eSpellPrepResolveSort(actor, trigger);
     if (!sort) continue;
     row.querySelector(".add2e-sort-components")?.remove();
-    const comps = add2eSpellPrepMaterialComponents(sort);
-    if (!comps.length) continue;
+    const components = add2eSpellPrepMaterialComponents(sort);
+    if (!components.length) continue;
     const badge = document.createElement("span");
     badge.className = "add2e-sort-components";
-    badge.textContent = `Composants : ${comps.join(", ")}`;
+    badge.textContent = `Composants : ${components.join(", ")}`;
     const target = row.querySelector(".a2e-sort-name-link")?.parentElement ?? row.querySelector("td:nth-child(3)") ?? row.querySelector("td");
-    target?.appendChild(document.createTextNode(" "));
-    target?.appendChild(badge);
+    target?.append(document.createTextNode(" "), badge);
   }
 }
 
-async function add2eHandleSpellPreparationButton(btn, event = null, actorOverride = null) {
+function add2eSpellPrepAccessMessage(check, entry, spellLevel) {
+  if (check?.reason === "intelligence-level") {
+    return `Intelligence insuffisante : niveau maximal de sort ${check.maximumSpellLevel || 0}.`;
+  }
+  if (check?.reason === "ability-requirement") {
+    return `Prérequis insuffisant : ${check.requiredAbility || "caractéristique"} ${check.requiredScore || 0}.`;
+  }
+  if (check?.reason === "list") return "Ce sort n’appartient à aucune liste disponible pour cet acteur.";
+  return `${entry?.label ?? "Cette liste"} ne permet pas les sorts de niveau ${spellLevel}.`;
+}
+
+async function add2eHandleSpellPreparationButton(button, event = null, actorOverride = null) {
   event?.preventDefault?.();
   event?.stopPropagation?.();
   event?.stopImmediatePropagation?.();
-  btn?.blur?.();
+  button?.blur?.();
 
-  const actor = actorOverride ?? add2eSpellPrepResolveActorFromButton(btn);
-  add2eSpellPrepDebug("CLICK", {
-    actorOverride: actorOverride?.name ?? null,
-    actor: actor?.name ?? null,
-    actorId: actor?.id ?? null,
-    button: add2eSpellPrepDescribeButton(btn)
-  });
+  const actor = actorOverride ?? add2eSpellPrepResolveActorFromButton(button);
   if (!actor?.items) return ui.notifications.warn("Acteur introuvable pour la préparation du sort.");
   const snapshot = add2eSpellPrepSnapshot(actor);
 
   try {
-    add2eSpellPrepInstallSingleListCountOverride();
-    const entryKey = add2eNormalizeSpellKey(btn.dataset.entryKey || btn.dataset.spellEntryKey || btn.getAttribute("data-entry-key") || btn.getAttribute("data-spell-entry-key"));
-    const sort = add2eSpellPrepResolveSort(actor, btn, entryKey);
-    if (!sort) {
-      add2eSpellPrepDebug("MISSING_SORT", {
-        actor: actor.name,
-        actorId: actor.id,
-        entryKey,
-        button: add2eSpellPrepDescribeButton(btn),
-        actorSorts: Array.from(actor.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "sort").map(add2eSpellPrepDescribeItem)
-      });
-      return ui.notifications.warn("Sort introuvable sur l'acteur après rafraîchissement de la feuille.");
-    }
-    add2eSpellPrepDebug("RESOLVED_FOR_CLICK", { actor: actor.name, entryKey, sort: add2eSpellPrepDescribeItem(sort) });
-    if (typeof add2eIsObjectMagicSpellForPreparation === "function" && add2eIsObjectMagicSpellForPreparation(sort)) return ui.notifications.warn("Ce pouvoir d'objet magique ne se prépare pas comme un sort.");
+    const entryKey = add2eSpellPrepNormalizeKey(button.dataset.entryKey || button.dataset.spellEntryKey || button.getAttribute("data-entry-key") || button.getAttribute("data-spell-entry-key"));
+    const sort = add2eSpellPrepResolveSort(actor, button, entryKey);
+    if (!sort) return ui.notifications.warn("Sort introuvable sur l’acteur après rafraîchissement de la feuille.");
+    if (globalThis.add2eIsObjectMagicSpellForPreparation?.(sort)) return ui.notifications.warn("Ce pouvoir d’objet magique ne se prépare pas comme un sort.");
 
-    const check = add2eCanActorUseSpell(actor, sort);
-    const entry = entryKey ? add2eGetSpellcastingEntries(actor).find(e => add2eNormalizeSpellKey(e.key) === entryKey) : check?.entry;
+    const check = globalThis.add2eCanActorUseSpell?.(actor, sort);
+    const entry = entryKey
+      ? globalThis.add2eGetSpellcastingEntries?.(actor)?.find(candidate => add2eSpellPrepNormalizeKey(candidate.key) === entryKey)
+      : check?.entry;
     if (!entry) return ui.notifications.warn("Type de préparation introuvable.");
 
-    const resolvedEntryKey = add2eNormalizeSpellKey(entry.key);
-    const sortLists = add2eGetSpellListsFromItem(sort);
     const spellLevel = Number(sort.system?.niveau ?? sort.system?.level ?? 1) || 1;
-    const maxSpellLevel = Number(entry.maxSpellLevel ?? 0) || 0;
-    if (!sortLists.includes(resolvedEntryKey)) return ui.notifications.warn(`Ce sort n'appartient pas à la liste ${entry.label}.`);
-    if (maxSpellLevel && spellLevel > maxSpellLevel) return ui.notifications.warn(`${entry.label} ne permet pas les sorts de niveau ${spellLevel}.`);
+    if (!check?.ok) return ui.notifications.warn(add2eSpellPrepAccessMessage(check, entry, spellLevel));
 
-    const limit = Number(add2eGetSlotsForEntryLevel(actor, entry, spellLevel) || 0);
+    const limit = Number(globalThis.add2eGetSlotsForEntryLevel?.(actor, entry, spellLevel) || 0);
     if (limit <= 0) return ui.notifications.warn(`Aucun emplacement ${entry.label} de niveau ${spellLevel} disponible.`);
 
-    const current = add2eGetMemorizedCountForEntry(sort, entry);
-    const centralTotalBefore = add2eCountPreparedForEntryLevel(actor, entry, spellLevel);
-    const visibleRatio = add2eSpellPrepReadVisibleTotal(actor, entry, spellLevel, btn);
-    const isPlus = btn.classList.contains("a2e-spell-entry-plus") || btn.classList.contains("sort-memorize-plus");
-    const isMinus = btn.classList.contains("a2e-spell-entry-minus") || btn.classList.contains("sort-memorize-minus");
+    const current = Number(globalThis.add2eGetMemorizedCountForEntry?.(sort, entry) || 0);
+    const centralTotal = Number(globalThis.add2eCountPreparedForEntryLevel?.(actor, entry, spellLevel) || 0);
+    const visibleRatio = add2eSpellPrepReadVisibleTotal(actor, entry, spellLevel, button);
+    const isPlus = button.classList.contains("a2e-spell-entry-plus") || button.classList.contains("sort-memorize-plus");
+    const isMinus = button.classList.contains("a2e-spell-entry-minus") || button.classList.contains("sort-memorize-minus");
     if (!isPlus && !isMinus) return;
 
-    let totalBefore = centralTotalBefore;
-    if (isPlus && visibleRatio && Number.isFinite(visibleRatio.count) && visibleRatio.count < centralTotalBefore) totalBefore = visibleRatio.count;
+    const totalBefore = isPlus && visibleRatio && visibleRatio.count < centralTotal ? visibleRatio.count : centralTotal;
+    if (isPlus && totalBefore >= limit) return ui.notifications.warn(`Limite atteinte : ${entry.label} niveau ${spellLevel} (${totalBefore}/${limit}).`);
+    if (isMinus && current <= 0) return ui.notifications.warn(`Aucun sort ${entry.label} à retirer.`);
 
-    let next = current;
-    let totalAfter = totalBefore;
-    if (isPlus) {
-      if (totalBefore >= limit) return ui.notifications.warn(`Limite atteinte : ${entry.label} niveau ${spellLevel} (${totalBefore}/${limit}).`);
-      next = current + 1;
-      totalAfter = totalBefore + 1;
-    } else {
-      if (current <= 0) return ui.notifications.warn(`Aucun sort ${entry.label} à retirer.`);
-      next = current - 1;
-      totalAfter = Math.max(0, totalBefore - 1);
-    }
-
-    add2eSpellPrepDebug("WRITE", {
-      actor: actor.name,
-      entry: { key: resolvedEntryKey, label: entry.label },
-      sort: add2eSpellPrepDescribeItem(sort),
-      action: isPlus ? "plus" : "minus",
-      current,
-      next,
-      totalBefore,
-      totalAfter,
-      limit
-    });
-    add2eSpellPrepSetRowCount(actor, sort, next, btn);
-    add2eSpellPrepSetGlobalCounters(actor, entry, spellLevel, totalAfter, limit, btn);
-    await add2eSetMemorizedCountForEntry(sort, entry, next);
-    add2eSpellPrepDebug("WRITE_DONE", { actor: actor.name, sort: add2eSpellPrepDescribeItem(sort), next });
-    add2eSpellPrepSetRowCount(actor, sort, next, btn);
-    add2eSpellPrepSetGlobalCounters(actor, entry, spellLevel, totalAfter, limit, btn);
+    const next = isPlus ? current + 1 : current - 1;
+    const totalAfter = isPlus ? totalBefore + 1 : Math.max(0, totalBefore - 1);
+    add2eSpellPrepSetRowCount(sort, next, button);
+    add2eSpellPrepSetGlobalCounters(actor, entry, spellLevel, totalAfter, limit, button);
+    await globalThis.add2eSetMemorizedCountForEntry?.(sort, entry, next);
 
     setTimeout(() => {
-      add2eSpellPrepInstallSingleListCountOverride();
       for (const app of add2eSpellPrepActorWindows(actor)) app.render?.(false);
       add2eSpellPrepRestoreRepeated(snapshot);
     }, 120);
-  } catch (err) {
-    console.error("[ADD2E][SPELL_PREP][ERROR]", err);
+  } catch (error) {
+    console.error("[ADD2E][SPELL_PREP][ERROR]", error);
     ui.notifications.error("Erreur pendant la mémorisation du sort.");
   } finally {
     add2eSpellPrepRestoreRepeated(snapshot);
@@ -585,61 +396,41 @@ async function add2eHandleSpellPreparationButton(btn, event = null, actorOverrid
 }
 
 function add2eBindNativeHbsSpellPreparationControls(actor, root) {
-  if (!actor || !root || typeof root.querySelectorAll !== "function") {
-    add2eSpellPrepDebug("BIND_SKIPPED", { actor: actor?.name ?? null, hasRoot: !!root, rootType: root?.constructor?.name ?? null });
-    return;
-  }
-  add2eSpellPrepInstallSingleListCountOverride();
+  if (!actor || !root || typeof root.querySelectorAll !== "function") return;
   if (root.dataset) root.dataset.actorId = String(actor.id ?? "");
-  const buttons = Array.from(root.querySelectorAll(".a2e-spell-entry-plus, .a2e-spell-entry-minus, .sort-memorize-plus, .sort-memorize-minus"));
-  const diagnostics = [];
-  for (const btn of buttons) {
-    const row = btn.closest?.("tr.sort-row, tr[data-sort-id]");
-    const parent = btn.closest?.(".add2e-spell-prep-entry");
-    btn.dataset.actorId = String(actor.id ?? "");
-    if (row?.dataset?.sortId && !btn.dataset.sortId) btn.dataset.sortId = row.dataset.sortId;
-    if (row?.dataset?.spellStableKey && !btn.dataset.spellStableKey) btn.dataset.spellStableKey = row.dataset.spellStableKey;
-    if (row?.dataset?.spellName && !btn.dataset.spellName) btn.dataset.spellName = row.dataset.spellName;
-    if (row?.dataset?.spellLevel && !btn.dataset.spellLevel) btn.dataset.spellLevel = row.dataset.spellLevel;
-    if (parent?.dataset?.entryKey && !btn.dataset.entryKey) btn.dataset.entryKey = parent.dataset.entryKey;
-    const entryKey = add2eSpellPrepNormalizeKey(btn.dataset.entryKey || btn.dataset.spellEntryKey || "");
-    const resolved = add2eSpellPrepResolveSort(actor, btn, entryKey);
+  for (const button of root.querySelectorAll(".a2e-spell-entry-plus, .a2e-spell-entry-minus, .sort-memorize-plus, .sort-memorize-minus")) {
+    const row = button.closest?.("tr.sort-row, tr[data-sort-id]");
+    const parent = button.closest?.(".add2e-spell-prep-entry");
+    button.dataset.actorId = String(actor.id ?? "");
+    if (row?.dataset?.sortId && !button.dataset.sortId) button.dataset.sortId = row.dataset.sortId;
+    if (row?.dataset?.spellStableKey && !button.dataset.spellStableKey) button.dataset.spellStableKey = row.dataset.spellStableKey;
+    if (row?.dataset?.spellName && !button.dataset.spellName) button.dataset.spellName = row.dataset.spellName;
+    if (row?.dataset?.spellLevel && !button.dataset.spellLevel) button.dataset.spellLevel = row.dataset.spellLevel;
+    if (parent?.dataset?.entryKey && !button.dataset.entryKey) button.dataset.entryKey = parent.dataset.entryKey;
+    const resolved = add2eSpellPrepResolveSort(actor, button, add2eSpellPrepNormalizeKey(button.dataset.entryKey || button.dataset.spellEntryKey || ""));
     if (resolved) add2eSpellPrepRepairDomSpellId(row, resolved);
-    diagnostics.push({ ...add2eSpellPrepDescribeButton(btn), resolved: add2eSpellPrepDescribeItem(resolved) });
-    if (btn.dataset.add2ePrepBound === "1") continue;
-    btn.dataset.add2ePrepBound = "1";
-    btn.addEventListener("pointerdown", ev => { ev.preventDefault(); ev.stopPropagation(); }, { capture: true });
-    btn.addEventListener("mousedown", ev => { ev.preventDefault(); ev.stopPropagation(); }, { capture: true });
-    btn.addEventListener("click", ev => add2eHandleSpellPreparationButton(btn, ev, actor), { capture: true });
+    if (button.dataset.add2ePrepBound === "1") continue;
+    button.dataset.add2ePrepBound = "1";
+    button.addEventListener("pointerdown", currentEvent => { currentEvent.preventDefault(); currentEvent.stopPropagation(); }, { capture: true });
+    button.addEventListener("mousedown", currentEvent => { currentEvent.preventDefault(); currentEvent.stopPropagation(); }, { capture: true });
+    button.addEventListener("click", currentEvent => add2eHandleSpellPreparationButton(button, currentEvent, actor), { capture: true });
   }
-  add2eSpellPrepDebug("BIND", { actor: actor.name, actorId: actor.id, rootTag: root.tagName ?? root.constructor?.name ?? null, controls: diagnostics });
 }
 
 function add2eInstallDelegatedSpellPreparationControls() {
-  if (globalThis.ADD2E_SPELL_PREP_DELEGATED_V49_INSTALLED) return;
-  globalThis.ADD2E_SPELL_PREP_DELEGATED_V49_INSTALLED = true;
-  add2eSpellPrepInstallSingleListCountOverride();
-  document.addEventListener("click", ev => {
-    const btn = ev.target?.closest?.(".a2e-spell-entry-plus, .a2e-spell-entry-minus, .sort-memorize-plus, .sort-memorize-minus");
-    if (!btn) return;
-    if (btn.dataset.add2ePrepBound === "1") return;
-    add2eSpellPrepDebug("DELEGATED_CLICK", { button: add2eSpellPrepDescribeButton(btn) });
-    add2eHandleSpellPreparationButton(btn, ev, null);
+  if (globalThis.ADD2E_SPELL_PREP_DELEGATED_CANONICAL_INSTALLED) return;
+  globalThis.ADD2E_SPELL_PREP_DELEGATED_CANONICAL_INSTALLED = true;
+  document.addEventListener("click", event => {
+    const button = event.target?.closest?.(".a2e-spell-entry-plus, .a2e-spell-entry-minus, .sort-memorize-plus, .sort-memorize-minus");
+    if (!button || button.dataset.add2ePrepBound === "1") return;
+    void add2eHandleSpellPreparationButton(button, event, null);
   }, true);
 }
 
 function add2eOnActorSheetRendered(app, html) {
   const actor = app?.actor ?? app?.document;
+  if (actor?.documentName !== "Actor") return;
   const root = add2eSpellPrepDomRoot(app, html);
-  add2eSpellPrepInstallSingleListCountOverride();
-  add2eSpellPrepDebug("RENDER", {
-    actor: actor?.name ?? null,
-    actorId: actor?.id ?? null,
-    htmlType: html?.constructor?.name ?? null,
-    rootType: root?.constructor?.name ?? null,
-    rootTag: root?.tagName ?? null,
-    controls: root?.querySelectorAll?.(".a2e-spell-entry-plus, .a2e-spell-entry-minus, .sort-memorize-plus, .sort-memorize-minus")?.length ?? 0
-  });
   setTimeout(() => {
     add2eBindNativeHbsSpellPreparationControls(actor, root);
     add2eSpellPrepInjectComponents(actor, root);
@@ -648,13 +439,9 @@ function add2eOnActorSheetRendered(app, html) {
 
 Hooks.once("ready", add2eInstallDelegatedSpellPreparationControls);
 Hooks.on("renderActorSheet", add2eOnActorSheetRendered);
-Hooks.on("renderApplication", (app, html) => {
-  const actor = app?.actor ?? app?.document;
-  if (actor?.documentName === "Actor") add2eOnActorSheetRendered(app, html);
-});
+Hooks.on("renderApplication", (app, html) => add2eOnActorSheetRendered(app, html));
 
-try { globalThis.add2eBindNativeHbsSpellPreparationControls = add2eBindNativeHbsSpellPreparationControls; } catch (_e) {}
-try { globalThis.add2eHandleSpellPreparationButton = add2eHandleSpellPreparationButton; } catch (_e) {}
-try { globalThis.add2eSpellPrepInjectComponents = add2eSpellPrepInjectComponents; } catch (_e) {}
-try { globalThis.add2eSpellPrepInstallSingleListCountOverride = add2eSpellPrepInstallSingleListCountOverride; } catch (_e) {}
-try { globalThis.add2eSpellPrepResolveSort = add2eSpellPrepResolveSort; } catch (_e) {}
+globalThis.add2eBindNativeHbsSpellPreparationControls = add2eBindNativeHbsSpellPreparationControls;
+globalThis.add2eHandleSpellPreparationButton = add2eHandleSpellPreparationButton;
+globalThis.add2eSpellPrepInjectComponents = add2eSpellPrepInjectComponents;
+globalThis.add2eSpellPrepResolveSort = add2eSpellPrepResolveSort;
