@@ -144,15 +144,11 @@
   </header>
 
   <section class="saves-section">
-    {{#if isSavingThrowString}}
-      <div style="flex:1;text-align:center"><label style="font-weight:bold;margin-right:10px">Sauvegardes comme :</label><input type="text" name="system.savingThrows" value="{{system.savingThrows}}" style="width:50%;font-weight:bold"/></div>
-    {{else}}
-      <a class="save-btn sv-paralysie roll-save" data-save-index="0" data-save-val="{{calculatedSaves.paralysie}}" title="Paralysie / Poison / Mort"><i class="fas fa-skull"></i><span class="val">{{calculatedSaves.paralysie}}</span></a>
-      <a class="save-btn sv-baguette roll-save" data-save-index="1" data-save-val="{{calculatedSaves.baguettes}}" title="Baguettes / Bâtons"><i class="fas fa-magic"></i><span class="val">{{calculatedSaves.baguettes}}</span></a>
-      <a class="save-btn sv-petrif roll-save" data-save-index="2" data-save-val="{{calculatedSaves.petrification}}" title="Pétrification / Polymorphose"><i class="fas fa-mountain"></i><span class="val">{{calculatedSaves.petrification}}</span></a>
-      <a class="save-btn sv-souffle roll-save" data-save-index="3" data-save-val="{{calculatedSaves.souffle}}" title="Souffles"><i class="fas fa-wind"></i><span class="val">{{calculatedSaves.souffle}}</span></a>
-      <a class="save-btn sv-sorts roll-save" data-save-index="4" data-save-val="{{calculatedSaves.sorts}}" title="Sorts"><i class="fas fa-scroll"></i><span class="val">{{calculatedSaves.sorts}}</span></a>
-    {{/if}}
+    <a class="save-btn sv-paralysie roll-save" data-save-type="mort_paralysie" title="Paralysie / Poison / Mort"><i class="fas fa-skull"></i><span class="val">{{calculatedSaves.paralysie}}</span></a>
+    <a class="save-btn sv-petrif roll-save" data-save-type="petrification" title="Pétrification / Polymorphose"><i class="fas fa-mountain"></i><span class="val">{{calculatedSaves.petrification}}</span></a>
+    <a class="save-btn sv-baguette roll-save" data-save-type="baguettes" title="Baguettes / Bâtons"><i class="fas fa-magic"></i><span class="val">{{calculatedSaves.baguettes}}</span></a>
+    <a class="save-btn sv-souffle roll-save" data-save-type="souffle" title="Souffles"><i class="fas fa-wind"></i><span class="val">{{calculatedSaves.souffle}}</span></a>
+    <a class="save-btn sv-sorts roll-save" data-save-type="sorts" title="Sorts"><i class="fas fa-scroll"></i><span class="val">{{calculatedSaves.sorts}}</span></a>
   </section>
 
   <nav class="sheet-tabs tabs" data-group="primary">
