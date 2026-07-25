@@ -3,30 +3,16 @@
  * - Layout stabilisé
  * - Inventaire complet
  * - Injection automatique des pouvoirs d'objets
- * - Nettoyage visuel automatique
+ * - Défense et sauvegardes exclusivement canoniques
  */
 
-const ADD2E_MONSTER_SHEET_VERSION = "2026-07-12-monster-render-signature-v9";
+const ADD2E_MONSTER_SHEET_VERSION = "2026-07-25-monster-canonical-defense-save-v10";
 globalThis.ADD2E_MONSTER_SHEET_VERSION = ADD2E_MONSTER_SHEET_VERSION;
 
 const ADD2E_MONSTER_ACTOR_SHEET_V2 = foundry?.applications?.sheets?.ActorSheetV2;
 if (!ADD2E_MONSTER_ACTOR_SHEET_V2) throw new Error("[ADD2E] ActorSheetV2 introuvable pour la feuille de monstre.");
 const ActorsCollection = foundry.documents.collections.Actors;
 const ItemDocument = foundry.documents.Item;
-const ChatMessageDocument = foundry.documents.ChatMessage;
-
-const FIGHTER_SAVES = [
-  { level: 0,  saves: [16, 17, 18, 20, 19] },
-  { level: 1,  saves: [14, 16, 15, 17, 17] },
-  { level: 3,  saves: [13, 15, 14, 16, 16] },
-  { level: 5,  saves: [11, 13, 12, 13, 14] },
-  { level: 7,  saves: [10, 12, 11, 12, 13] },
-  { level: 9,  saves: [8,  10, 9,  9,  11] },
-  { level: 11, saves: [7,  9,  8,  8,  10] },
-  { level: 13, saves: [5,  7,  6,  5,  8]  },
-  { level: 15, saves: [4,  6,  5,  4,  7]  },
-  { level: 17, saves: [3,  5,  4,  4,  6]  }
-];
 
 const ADD2E_LINKED_PACKS = {
   weapons: "add2e.armes",
@@ -51,11 +37,20 @@ const ADD2E_LINKED_GROUP_ALIASES = {
 
 const ADD2E_EQUIPPABLE_POWER_TYPES = new Set(["arme", "armure", "objet", "equipement", "consommable", "loot", "conteneur"]);
 const ADD2E_LINKED_INDEX_CACHE = new Map();
+const ADD2E_MONSTER_CA_SYNC_LOCK = new Set();
 
 const ADD2E_NATURAL_ATTACKS = new Set([
   "griffe", "griffes", "morsure", "bec", "serres", "serre", "dard", "queue", "coup_de_queue",
   "tentacule", "tentacules", "corne", "cornes", "sabot", "sabots", "poing", "poings", "pince", "pinces",
   "piquants", "epines", "spores", "regard", "souffle", "contact", "toucher", "constriction", "ecrasement"
+]);
+
+const ADD2E_MONSTER_SAVE_TYPES = Object.freeze([
+  "mort_paralysie",
+  "petrification",
+  "baguettes",
+  "souffle",
+  "sorts"
 ]);
 
 function __add2eNormalize(str) {
@@ -287,6 +282,7 @@ async function __add2eHydrateMonsterLinkedItems(actor, options = {}) {
 
     await actor.setFlag("add2e", "linkedItemsHydrated", true);
     await actor.setFlag("add2e", "linkedItemsHydratedAt", Date.now());
+    await add2eSyncMonsterCanonicalArmorClass(actor, "monster-linked-items-hydrated");
 
     if (options.notify !== false) {
       if (imported > 0) ui.notifications.info(`${actor.name} : ${imported} item(s) importé(s).`);
@@ -295,7 +291,8 @@ async function __add2eHydrateMonsterLinkedItems(actor, options = {}) {
     }
 
     return { imported, missing, results };
-  } catch (_e) {
+  } catch (error) {
+    console.error("[ADD2E][MONSTER][HYDRATE]", error);
     ui.notifications.error("Hydratation des items du monstre impossible.");
     return null;
   }
@@ -352,6 +349,57 @@ function __add2eFindVirtualPowerSpell(actor, fakeId) {
 }
 
 globalThis.add2eHydrateMonsterLinkedItems = __add2eHydrateMonsterLinkedItems;
+
+function add2eMonsterEffectsEngine() {
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  if (!engine || typeof engine.resolveArmorClass !== "function") {
+    throw new Error("Le résolveur canonique de classe d’armure ADD2E n’est pas disponible.");
+  }
+  return engine;
+}
+
+function add2eResolveMonsterArmorClass(actor, context = {}) {
+  return add2eMonsterEffectsEngine().resolveArmorClass(actor, {
+    ...context,
+    actor,
+    source: context.source ?? "monster-sheet-armor-class"
+  });
+}
+
+function add2eResolveMonsterSavingThrows(actor) {
+  if (typeof globalThis.add2eResolveSavingThrow !== "function") {
+    throw new Error("Le résolveur canonique de sauvegardes ADD2E n’est pas disponible.");
+  }
+  return Object.fromEntries(ADD2E_MONSTER_SAVE_TYPES.map(saveType => [
+    saveType,
+    globalThis.add2eResolveSavingThrow(actor, saveType, {
+      source: "monster-sheet-save-display",
+      frontale: true
+    })
+  ]));
+}
+
+async function add2eSyncMonsterCanonicalArmorClass(actor, reason = "monster-canonical-armor-class-sync") {
+  if (!actor || String(actor.type ?? "").toLowerCase() !== "monster") return null;
+  if (ADD2E_MONSTER_CA_SYNC_LOCK.has(actor.id)) return null;
+
+  ADD2E_MONSTER_CA_SYNC_LOCK.add(actor.id);
+  try {
+    const resolution = add2eResolveMonsterArmorClass(actor, { source: reason });
+    const caTotal = Number(resolution?.caTotal);
+    if (!Number.isFinite(caTotal)) throw new Error(`CA canonique invalide pour ${actor.name}.`);
+    if (Number(actor.system?.ca_total) !== caTotal) {
+      await actor.update({ "system.ca_total": caTotal }, {
+        add2eInternal: true,
+        add2eReason: "monster-canonical-armor-class-sync",
+        render: false
+      });
+    }
+    return resolution;
+  } finally {
+    ADD2E_MONSTER_CA_SYNC_LOCK.delete(actor.id);
+  }
+}
 
 function add2eCollectMonsterFormData(root) {
   const form = root?.matches?.("form") ? root : root?.querySelector?.("form");
@@ -462,41 +510,34 @@ export class Add2eMonsterSheet extends ADD2E_MONSTER_ACTOR_SHEET_V2 {
   }
 
   async getData() {
+    const armorClassResolution = add2eResolveMonsterArmorClass(this.actor, {
+      source: "monster-sheet-get-data"
+    });
+    const saveResolutions = add2eResolveMonsterSavingThrows(this.actor);
+    const system = foundry.utils.deepClone(this.actor.system ?? {});
+    system.ca_total = Number(armorClassResolution.caTotal);
+
     const data = {
       actor: this.actor,
       object: this.actor,
       document: this.actor,
-      system: this.actor.system,
+      system,
       items: this.actor.items,
       effects: this.actor.effects,
       editable: this.editable,
       owner: this.actor.isOwner,
       limited: this.actor.limited,
-      options: this.options
+      options: this.options,
+      armorClassResolution,
+      saveResolutions,
+      calculatedSaves: {
+        paralysie: saveResolutions.mort_paralysie.target,
+        petrification: saveResolutions.petrification.target,
+        baguettes: saveResolutions.baguettes.target,
+        souffle: saveResolutions.souffle.target,
+        sorts: saveResolutions.sorts.target
+      }
     };
-
-    const manualSaves = data.system.sauvegardes;
-    let finalSaves = [];
-
-    if (manualSaves && (Array.isArray(manualSaves) || typeof manualSaves === "object")) {
-      const arr = Array.isArray(manualSaves) ? manualSaves : Object.values(manualSaves);
-      if (arr.length >= 5) finalSaves = arr.map(Number);
-    }
-
-    if (finalSaves.length < 5) {
-      const dv = parseInt(data.system.hitDice) || 1;
-      const saveLine = FIGHTER_SAVES.slice().reverse().find(l => dv >= l.level) || FIGHTER_SAVES[1];
-      finalSaves = saveLine.saves;
-    }
-
-    data.calculatedSaves = {
-      paralysie: finalSaves[0],
-      baguettes: finalSaves[1],
-      petrification: finalSaves[2],
-      souffle: finalSaves[3],
-      sorts: finalSaves[4]
-    };
-    data.isSavingThrowString = false;
 
     data.listeArmes = this.actor.items.filter(i => i.type === "arme");
     data.listeArmures = this.actor.items.filter(i => i.type === "armure");
@@ -519,31 +560,30 @@ export class Add2eMonsterSheet extends ADD2E_MONSTER_ACTOR_SHEET_V2 {
 
     for (const niv of data.niveauxSorts) {
       let count = 0;
-      for (const s of sortsParNiveau[niv]) count += Number(s.getFlag("add2e", "memorizedCount") || 0);
+      for (const sort of sortsParNiveau[niv]) count += Number(sort.getFlag("add2e", "memorizedCount") || 0);
       data.sortsMemorizedByLevel[niv] = { count, max: "-" };
     }
 
-    data.activeEffectsList = this.actor.effects.map(eff => {
+    data.activeEffectsList = this.actor.effects.map(effect => {
       let durationStr = "Permanente";
-      if (eff.duration?.rounds) durationStr = `${eff.duration.rounds} rds`;
-      else if (eff.duration?.seconds) durationStr = `${eff.duration.seconds} s`;
-      else if (eff.isTemporary) durationStr = "Temporaire";
+      if (effect.duration?.rounds) durationStr = `${effect.duration.rounds} rds`;
+      else if (effect.duration?.seconds) durationStr = `${effect.duration.seconds} s`;
+      else if (effect.isTemporary) durationStr = "Temporaire";
 
-      let desc = eff.description || "";
-      if (!desc && eff.flags?.add2e?.tags) desc = eff.flags.add2e.tags.join(", ");
+      let desc = effect.description || "";
+      if (!desc && effect.flags?.add2e?.tags) desc = effect.flags.add2e.tags.join(", ");
 
       return {
-        id: eff.id,
-        name: eff.name || eff.label,
-        img: eff.img || eff.icon || "icons/svg/aura.svg",
-        disabled: eff.disabled,
+        id: effect.id,
+        name: effect.name || effect.label,
+        img: effect.img || effect.icon || "icons/svg/aura.svg",
+        disabled: effect.disabled,
         duration: durationStr,
         description: desc,
-        sourceName: eff.origin ? "Source externe" : "Propre"
+        sourceName: effect.origin ? "Source externe" : "Propre"
       };
     });
 
-    await this._recalculerCA();
     return data;
   }
 
@@ -615,9 +655,9 @@ export class Add2eMonsterSheet extends ADD2E_MONSTER_ACTOR_SHEET_V2 {
     const form = root.matches?.("form") ? root : root.querySelector?.("form");
     if (!form || !this.editable) return;
 
-    const submit = async ev => {
-      ev?.preventDefault?.();
-      await this._updateObject(ev, add2eCollectMonsterFormData(form));
+    const submit = async event => {
+      event?.preventDefault?.();
+      await this._updateObject(event, add2eCollectMonsterFormData(form));
     };
 
     form.addEventListener("submit", submit);
@@ -632,50 +672,41 @@ export class Add2eMonsterSheet extends ADD2E_MONSTER_ACTOR_SHEET_V2 {
     this._injectLayoutFix();
     this._activateAutoSubmit(root);
 
-    html.find(".sheet-tabs .item").off("click.add2e-monster-tabs").on("click.add2e-monster-tabs", ev => {
-      ev.preventDefault();
-      const tabName = $(ev.currentTarget).data("tab");
+    html.find(".sheet-tabs .item").off("click.add2e-monster-tabs").on("click.add2e-monster-tabs", event => {
+      event.preventDefault();
+      const tabName = $(event.currentTarget).data("tab");
       html.find(".sheet-tabs .item").removeClass("active");
       html.find(".tab").removeClass("active");
-      $(ev.currentTarget).addClass("active");
+      $(event.currentTarget).addClass("active");
       html.find(`.tab[data-tab="${tabName}"]`).addClass("active");
     });
 
-    html.find(".roll-save").off("click.add2e-monster-save").on("click.add2e-monster-save", async ev => {
-      ev.preventDefault();
-      const btn = $(ev.currentTarget);
-      const index = Number(btn.data("saveIndex"));
-      const seuil = parseInt(btn.data("saveVal")) || 20;
-      const labels = ["Paralysie / Mort", "Baguettes", "Pétrification", "Souffle", "Sorts"];
-      const label = labels[index] || "Sauvegarde";
-      const colors = ["#16a085", "#f39c12", "#8e44ad", "#d35400", "#c0392b"];
-      const icons = ["fa-skull-crossbones", "fa-magic", "fa-cubes", "fa-wind", "fa-scroll"];
-      const color = colors[index] || "#444";
-      const icon = icons[index] || "fa-dice-d20";
-
-      const roll = new Roll("1d20");
-      await roll.evaluate();
-      if (game.dice3d) await game.dice3d.showForRoll(roll, game.user, true);
-
-      const success = roll.total >= seuil;
-      const messageContent = `
-        <div class="add2e-card-test" style="border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.2); background:linear-gradient(135deg, #fff 0%, #f0f0f0 100%); border:2px solid ${color}; padding:5px 10px; font-family:var(--font-primary);">
-          <div style="display:flex; align-items:center; gap:10px; border-bottom:1px solid #ccc; padding-bottom:5px; margin-bottom:5px;">
-            <i class="fas ${icon}" style="font-size:1.5em; color:${color};"></i>
-            <div><div style="font-weight:bold; font-size:1.1em; color:${color};">${label}</div><div style="font-size:0.8em; color:#666;">Jet de Sauvegarde (Monstre)</div></div>
-          </div>
-          <div style="font-size:1.1em; text-align:center; margin:5px 0;">Seuil : <b>${seuil}</b> | Résultat : <b>${roll.total}</b></div>
-          <div style="text-align:center; font-weight:bold; font-size:1.2em; margin-top:5px; color:${success ? "#27ae60" : "#c0392b"};">${success ? "SUCCÈS" : "ÉCHEC"}</div>
-        </div>
-      `;
-      ChatMessageDocument.create({ speaker: ChatMessageDocument.getSpeaker({ actor: this.actor }), content: messageContent });
+    html.find(".roll-save").off("click.add2e-monster-save").on("click.add2e-monster-save", async event => {
+      event.preventDefault();
+      event.stopPropagation();
+      const saveType = String(event.currentTarget?.dataset?.saveType ?? "").trim();
+      if (!ADD2E_MONSTER_SAVE_TYPES.includes(saveType)) {
+        throw new Error(`Catégorie canonique de sauvegarde invalide : ${saveType || "vide"}`);
+      }
+      if (typeof globalThis.add2eRollSavingThrow !== "function") {
+        throw new Error("L’exécuteur canonique de sauvegardes ADD2E n’est pas disponible.");
+      }
+      const result = await globalThis.add2eRollSavingThrow(this.actor, saveType, {
+        source: "monster-sheet-save-roll",
+        frontale: true,
+        createChat: true,
+        showDice: true
+      });
+      if (!result?.ok) {
+        ui.notifications.warn(`Aucune valeur canonique disponible pour ${result?.resolution?.label ?? saveType}.`);
+      }
     });
 
-    html.find(".effect-control").off("click.add2e-monster-effect").on("click.add2e-monster-effect", async ev => {
-      ev.preventDefault();
-      const btn = $(ev.currentTarget);
-      const action = btn.data("action");
-      const id = btn.data("effectId");
+    html.find(".effect-control").off("click.add2e-monster-effect").on("click.add2e-monster-effect", async event => {
+      event.preventDefault();
+      const button = $(event.currentTarget);
+      const action = button.data("action");
+      const id = button.data("effectId");
 
       if (action === "create") {
         return this.actor.createEmbeddedDocuments("ActiveEffect", [{
@@ -686,16 +717,17 @@ export class Add2eMonsterSheet extends ADD2E_MONSTER_ACTOR_SHEET_V2 {
         }]);
       }
 
-      const eff = this.actor.effects.get(id);
-      if (!eff) return;
-      if (action === "toggle") return eff.update({ disabled: !eff.disabled });
-      if (action === "edit") return eff.sheet.render(true);
-      if (action === "delete") return eff.delete();
+      const effect = this.actor.effects.get(id);
+      if (!effect) return;
+      if (action === "toggle") await effect.update({ disabled: !effect.disabled });
+      else if (action === "edit") return effect.sheet.render(true);
+      else if (action === "delete") await effect.delete();
+      await add2eSyncMonsterCanonicalArmorClass(this.actor, `monster-effect-${action}`);
     });
 
-    html.find(".item-equip").off("click.add2e-monster-equip").on("click.add2e-monster-equip", async ev => {
-      ev.preventDefault();
-      const id = $(ev.currentTarget).data("itemId");
+    html.find(".item-equip").off("click.add2e-monster-equip").on("click.add2e-monster-equip", async event => {
+      event.preventDefault();
+      const id = $(event.currentTarget).data("itemId");
       const item = this.actor.items.get(id);
       if (!item) return;
 
@@ -703,36 +735,37 @@ export class Add2eMonsterSheet extends ADD2E_MONSTER_ACTOR_SHEET_V2 {
       if (changed) this._renderPreservingView(root);
     });
 
-    html.find(".hydrate-linked-items").off("click.add2e-monster-hydrate").on("click.add2e-monster-hydrate", async ev => {
-      ev.preventDefault();
+    html.find(".hydrate-linked-items").off("click.add2e-monster-hydrate").on("click.add2e-monster-hydrate", async event => {
+      event.preventDefault();
       await __add2eHydrateMonsterLinkedItems(this.actor, { notify: true });
       this.render(false);
     });
 
-    html.find(".item-edit, .arme-edit, .armure-edit, .sort-edit, .objet-edit").off("click.add2e-monster-edit").on("click.add2e-monster-edit", ev => {
-      ev.preventDefault();
-      const id = $(ev.currentTarget).data("itemId") || $(ev.currentTarget).data("sortId");
+    html.find(".item-edit, .arme-edit, .armure-edit, .sort-edit, .objet-edit").off("click.add2e-monster-edit").on("click.add2e-monster-edit", event => {
+      event.preventDefault();
+      const id = $(event.currentTarget).data("itemId") || $(event.currentTarget).data("sortId");
       const item = this.actor.items.get(id);
       if (item) item.sheet.render(true);
     });
 
-    html.find(".item-delete, .arme-delete, .armure-delete, .sort-delete, .objet-delete").off("click.add2e-monster-delete").on("click.add2e-monster-delete", async ev => {
-      ev.preventDefault();
-      const id = $(ev.currentTarget).data("itemId") || $(ev.currentTarget).data("sortId");
+    html.find(".item-delete, .arme-delete, .armure-delete, .sort-delete, .objet-delete").off("click.add2e-monster-delete").on("click.add2e-monster-delete", async event => {
+      event.preventDefault();
+      const id = $(event.currentTarget).data("itemId") || $(event.currentTarget).data("sortId");
       if (id) await this.actor.deleteEmbeddedDocuments("Item", [id]);
+      await add2eSyncMonsterCanonicalArmorClass(this.actor, "monster-item-delete");
       this.render(false);
     });
 
-    html.find(".arme-img-attack").off("click.add2e-monster-attack").on("click.add2e-monster-attack", ev => {
-      ev.preventDefault();
-      const id = $(ev.currentTarget).data("itemId");
+    html.find(".arme-img-attack").off("click.add2e-monster-attack").on("click.add2e-monster-attack", event => {
+      event.preventDefault();
+      const id = $(event.currentTarget).data("itemId");
       const item = this.actor.items.get(id);
       if (globalThis.add2eAttackRoll) globalThis.add2eAttackRoll({ actor: this.actor, arme: item });
     });
 
-    html.find(".sort-cast-img").off("click.add2e-monster-cast").on("click.add2e-monster-cast", ev => {
-      ev.preventDefault();
-      const sortId = $(ev.currentTarget).data("sortId");
+    html.find(".sort-cast-img").off("click.add2e-monster-cast").on("click.add2e-monster-cast", event => {
+      event.preventDefault();
+      const sortId = $(event.currentTarget).data("sortId");
       let item = this.actor.items.get(sortId);
       if (!item) item = __add2eFindVirtualPowerSpell(this.actor, sortId);
       if (item && globalThis.add2eCastSpell) {
@@ -741,34 +774,34 @@ export class Add2eMonsterSheet extends ADD2E_MONSTER_ACTOR_SHEET_V2 {
       }
     });
 
-    html.find(".sort-memorize-plus").off("click.add2e-monster-mem-plus").on("click.add2e-monster-mem-plus", async ev => {
-      ev.preventDefault();
-      const id = $(ev.currentTarget).data("sortId");
+    html.find(".sort-memorize-plus").off("click.add2e-monster-mem-plus").on("click.add2e-monster-mem-plus", async event => {
+      event.preventDefault();
+      const id = $(event.currentTarget).data("sortId");
       const sort = this.actor.items.get(id);
       if (!sort) return;
-      const cur = Number(sort.getFlag("add2e", "memorizedCount") || 0);
-      await sort.setFlag("add2e", "memorizedCount", cur + 1);
+      const current = Number(sort.getFlag("add2e", "memorizedCount") || 0);
+      await sort.setFlag("add2e", "memorizedCount", current + 1);
       this.render(false);
     });
 
-    html.find(".sort-memorize-minus").off("click.add2e-monster-mem-minus").on("click.add2e-monster-mem-minus", async ev => {
-      ev.preventDefault();
-      const id = $(ev.currentTarget).data("sortId");
+    html.find(".sort-memorize-minus").off("click.add2e-monster-mem-minus").on("click.add2e-monster-mem-minus", async event => {
+      event.preventDefault();
+      const id = $(event.currentTarget).data("sortId");
       const sort = this.actor.items.get(id);
       if (!sort) return;
-      const cur = Number(sort.getFlag("add2e", "memorizedCount") || 0);
-      await sort.setFlag("add2e", "memorizedCount", Math.max(0, cur - 1));
+      const current = Number(sort.getFlag("add2e", "memorizedCount") || 0);
+      await sort.setFlag("add2e", "memorizedCount", Math.max(0, current - 1));
       this.render(false);
     });
 
-    html.find(".toggle-sort-desc-chat").off("click.add2e-monster-desc").on("click.add2e-monster-desc", ev => {
-      ev.preventDefault();
-      const id = $(ev.currentTarget).data("sortId");
+    html.find(".toggle-sort-desc-chat").off("click.add2e-monster-desc").on("click.add2e-monster-desc", event => {
+      event.preventDefault();
+      const id = $(event.currentTarget).data("sortId");
       html.find(`#desc-chat-${id}`).slideToggle(200);
     });
 
-    html.find('img[data-edit="img"]').off("click.add2e-monster-img").on("click.add2e-monster-img", ev => {
-      ev.preventDefault();
+    html.find('img[data-edit="img"]').off("click.add2e-monster-img").on("click.add2e-monster-img", event => {
+      event.preventDefault();
       const FilePicker = add2eGetFilePickerClass();
       if (!FilePicker) return;
       new FilePicker({
@@ -807,42 +840,17 @@ export class Add2eMonsterSheet extends ADD2E_MONSTER_ACTOR_SHEET_V2 {
   }
 
   async _onEquipItem(item) {
-    const dejaEquipee = item?.system?.equipee === true;
-    const prochainEtat = !dejaEquipee;
+    const currentlyEquipped = item?.system?.equipee === true;
+    const nextState = !currentlyEquipped;
+    if (!ADD2E_EQUIPPABLE_POWER_TYPES.has(item.type)) return false;
 
-    if (item.type === "arme") {
-      return this._setMonsterItemEquipped(item, prochainEtat, prochainEtat ? "monster-equip-weapon" : "monster-unequip-weapon");
-    }
-
-    if (item.type === "armure") {
-      const changed = await this._setMonsterItemEquipped(item, prochainEtat, prochainEtat ? "monster-equip-armor" : "monster-unequip-armor");
-      if (changed) await this._recalculerCA();
-      return changed;
-    }
-
-    if (["objet", "equipement", "consommable", "loot", "conteneur"].includes(item.type)) {
-      return this._setMonsterItemEquipped(item, prochainEtat, prochainEtat ? "monster-equip-item" : "monster-unequip-item");
-    }
-
-    return false;
-  }
-
-  async _recalculerCA() {
-    const itemsEquipes = this.actor.items.filter(i => i.type === "armure" && i.system.equipee);
-    const caBase = Number(this.actor.system.armorClass) || Number(this.actor.system.ca_naturel) || 10;
-    let nouveauCA = caBase;
-
-    for (const item of itemsEquipes) {
-      const acItem = Number(item.system.ac);
-      if (!Number.isNaN(acItem)) {
-        if (item.name.toLowerCase().includes("bouclier")) nouveauCA -= 1;
-        else if (acItem < nouveauCA) nouveauCA = acItem;
-      }
-    }
-
-    const dexDef = Number(this.actor.system.dex_def) || 0;
-    nouveauCA += dexDef;
-    if (nouveauCA !== this.actor.system.ca_total) await this.actor.update({ "system.ca_total": nouveauCA });
+    const changed = await this._setMonsterItemEquipped(
+      item,
+      nextState,
+      nextState ? `monster-equip-${item.type}` : `monster-unequip-${item.type}`
+    );
+    if (changed) await add2eSyncMonsterCanonicalArmorClass(this.actor, `monster-equipment-${item.type}`);
+    return changed;
   }
 }
 
@@ -850,6 +858,16 @@ ActorsCollection.registerSheet("add2e", Add2eMonsterSheet, {
   types: ["monster"],
   makeDefault: true,
   label: "ADD2e Descartes (FR) - Monstre"
+});
+
+Hooks.on("createActiveEffect", effect => {
+  const actor = effect?.parent;
+  if (actor?.type === "monster") add2eSyncMonsterCanonicalArmorClass(actor, "monster-effect-create").catch(console.error);
+});
+
+Hooks.on("updateActiveEffect", effect => {
+  const actor = effect?.parent;
+  if (actor?.type === "monster") add2eSyncMonsterCanonicalArmorClass(actor, "monster-effect-update").catch(console.error);
 });
 
 Hooks.on("deleteActiveEffect", async effect => {
@@ -868,6 +886,24 @@ Hooks.on("deleteActiveEffect", async effect => {
     globalThis.Sequencer.EffectManager.endEffects({ origin: effect.uuid });
     globalThis.Sequencer.EffectManager.endEffects({ name: effect.name });
   }
+
+  const actor = effect?.parent;
+  if (actor?.type === "monster") await add2eSyncMonsterCanonicalArmorClass(actor, "monster-effect-delete");
+});
+
+Hooks.on("createItem", item => {
+  const actor = item?.parent;
+  if (actor?.type === "monster") add2eSyncMonsterCanonicalArmorClass(actor, "monster-item-create").catch(console.error);
+});
+
+Hooks.on("updateItem", item => {
+  const actor = item?.parent;
+  if (actor?.type === "monster") add2eSyncMonsterCanonicalArmorClass(actor, "monster-item-update").catch(console.error);
+});
+
+Hooks.on("deleteItem", item => {
+  const actor = item?.parent;
+  if (actor?.type === "monster") add2eSyncMonsterCanonicalArmorClass(actor, "monster-item-delete-hook").catch(console.error);
 });
 
 Hooks.on("createToken", async tokenDoc => {
