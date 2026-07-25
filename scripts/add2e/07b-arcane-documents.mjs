@@ -20,6 +20,7 @@ import {
 } from "./07b-arcane-spellbooks.mjs";
 import {
   castScroll,
+  scribeScroll,
   consumeScrollSpell,
   hydrateScroll
 } from "./07b-arcane-scrolls.mjs";
@@ -37,6 +38,7 @@ globalThis.ADD2E_ARCANE_DOCUMENTS = {
   copySpellbook,
   viewSpellbook,
   castScroll,
+  scribeScroll,
   consumeScrollSpell,
   hydrateScroll,
   detachPersonalSpellbooks,
@@ -51,4 +53,5 @@ globalThis.add2eCreateArcaneChatMessage = createArcaneChatMessage;
 globalThis.add2eSyncActorSpellbooks = syncActorSpellbooks;
 globalThis.add2eCopySpellbook = copySpellbook;
 globalThis.add2eCastScroll = castScroll;
+globalThis.add2eScribeScroll = scribeScroll;
 globalThis.add2eDetachPersonalSpellbooks = detachPersonalSpellbooks;
