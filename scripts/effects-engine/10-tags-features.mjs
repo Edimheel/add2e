@@ -607,87 +607,6 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
       return true;
     },
 
-    getActionSaveThreshold(actor, saveType = "sorts") {
-      const system = actor?.system ?? {};
-      const type = this.normalizeKey(saveType);
-      const index = {
-        mort: 0,
-        paralysie: 0,
-        poison: 0,
-        baguette: 1,
-        wand: 1,
-        petrification: 2,
-        transformation: 2,
-        souffle: 3,
-        breath: 3,
-        sort: 4,
-        sortilege: 4,
-        spell: 4,
-        magie: 4,
-        magic: 4
-      }[type];
-      if (Number.isInteger(index) && Array.isArray(system.sauvegardes)) {
-        const fromArray = this.readNumber(system.sauvegardes[index]);
-        if (Number.isFinite(fromArray) && fromArray > 0) return fromArray;
-      }
-
-      const candidates = type === "sort" || type === "sortilege" || type === "spell" || type === "magie" || type === "magic"
-        ? [
-          system.sauvegarde_sortileges,
-          system.sauvegarde_sorts,
-          system.sauvegardes?.sortileges,
-          system.sauvegardes?.sorts,
-          system.saves?.sorts,
-          system.saves?.spell,
-          system.saves?.spells,
-          system.saves?.magic,
-          system.calculatedSaves?.sorts,
-          system.calculatedSaves?.spell,
-          system.calculatedSaves?.spells,
-          system.jp_sort,
-          system.jp_sorts,
-          system.jp?.sorts,
-          system.jp?.sortileges
-        ]
-        : [
-          system.sauvegardes?.[type],
-          system.saves?.[type],
-          system.calculatedSaves?.[type],
-          system.jp?.[type]
-        ];
-      return this.readNumber(...candidates);
-    },
-
-    async rollActionSave(actor, saveType = "sorts", bonus = 0) {
-      const threshold = this.getActionSaveThreshold(actor, saveType);
-      const value = Number(bonus) || 0;
-      if (!Number.isFinite(threshold) || threshold <= 0) {
-        return {
-          canRoll: false,
-          type: String(saveType ?? ""),
-          threshold: NaN,
-          total: 0,
-          success: false,
-          bonus: value,
-          roll: null
-        };
-      }
-
-      const formula = value ? `1d20${value >= 0 ? "+" : ""}${value}` : "1d20";
-      const roll = await new Roll(formula).evaluate();
-      if (game.dice3d) await game.dice3d.showForRoll(roll);
-      const total = Number(roll.total) || 0;
-      return {
-        canRoll: true,
-        type: String(saveType ?? ""),
-        threshold,
-        total,
-        success: total >= threshold,
-        bonus: value,
-        roll
-      };
-    },
-
     async evaluateActionRules(actor, action = {}) {
       const actionType = this.normalizeKey(action?.type ?? "");
       const subjectTags = new Set(this.ruleTags(action?.subjectTags ?? action?.actorTags));
@@ -711,10 +630,21 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
           continue;
         }
 
+        if (typeof this.rollActionSave !== "function") {
+          throw new Error("Le résolveur canonique de sauvegardes ADD2E n’est pas installé.");
+        }
         const save = await this.rollActionSave(
           action.saveActor ?? action.actor ?? action.sourceActor ?? null,
           rule.saveType ?? "sorts",
-          Number(rule.saveBonus) || 0
+          Number(rule.saveBonus) || 0,
+          {
+            source: rule.source?.effectName ?? rule.label ?? "action-rule-save-gate",
+            ruleScope: action.ruleScope,
+            actionType,
+            actionTags: [...actionTags],
+            createChat: action.createSaveChat === true,
+            showDice: action.showSaveDice !== false
+          }
         );
         const failureMode = this.normalizeKey(rule.onFailure ?? rule.onFail ?? "block");
         const allowed = save.canRoll ? save.success : failureMode !== "block";
