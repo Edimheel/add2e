@@ -3,6 +3,7 @@
 
 import {
   norm,
+  esc,
   itemType,
   isSpellbook,
   isScroll,
@@ -21,7 +22,12 @@ import {
   viewSpellbook,
   refreshSpellbookDialog
 } from "./07b-arcane-spellbooks.mjs";
-import { castScroll, scribeScroll } from "./07b-arcane-scrolls.mjs";
+import {
+  castScroll,
+  scribeScroll,
+  consumeScrollSpell,
+  hydrateScroll
+} from "./07b-arcane-scrolls.mjs";
 
 function applicationForElement(element) {
   const root = element?.closest?.(".application");
@@ -128,6 +134,89 @@ function toggleArcaneDocument(element, item) {
   return true;
 }
 
+function scrollLearningSource(scroll, entry) {
+  return {
+    id: scroll.id,
+    uuid: scroll.uuid,
+    name: scroll.name,
+    img: scroll.img,
+    type: "objet",
+    system: {
+      arcaneDocument: {
+        schema: 1,
+        kind: "spellbook",
+        personal: false,
+        ownerList: Array.from(entry?.lists ?? [])[0] ?? "",
+        spells: [entry]
+      }
+    },
+    flags: {
+      add2e: {
+        arcaneDocumentKind: "spellbook",
+        personalSpellbook: false
+      }
+    }
+  };
+}
+
+async function selectScrollLearningEntry(scroll, entries) {
+  if (entries.length === 1) return entries[0];
+  const DialogV2 = foundry?.applications?.api?.DialogV2;
+  if (!DialogV2?.wait) throw new Error("DialogV2 est introuvable.");
+  const options = entries.map((entry, index) => {
+    const lists = Array.from(entry?.lists ?? []).map(listLabel).join(" / ") || "Liste inconnue";
+    return `<option value="${index}">${esc(entry.name)} — niveau ${Number(entry.level) || 1} — ${esc(lists)}</option>`;
+  }).join("");
+  const selected = await DialogV2.wait({
+    window: { title: `Recopier depuis ${scroll.name}` },
+    modal: true,
+    rejectClose: false,
+    content: `<form class="add2e-copy-scroll" style="min-width:520px;padding:8px;"><p>Choisissez le sort à tenter de recopier dans le livre personnel.</p><label style="display:grid;gap:5px;"><b>Sort</b><select name="spellIndex">${options}</select></label></form>`,
+    buttons: [
+      {
+        action: "copy",
+        label: "Recopier le sort",
+        icon: "fa-solid fa-copy",
+        default: true,
+        callback: (_event, button, dialog) => {
+          const element = dialog?.element?.jquery ? dialog.element[0] : dialog?.element;
+          const form = button?.form ?? element?.querySelector?.("form.add2e-copy-scroll");
+          return Number(form?.elements?.spellIndex?.value ?? -1);
+        }
+      },
+      { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => -1 }
+    ]
+  });
+  return Number.isInteger(selected) && selected >= 0 ? entries[selected] ?? null : null;
+}
+
+async function copyScrollSpell(actor, scroll, requestedSpellKey = "") {
+  if (!actor || !scroll || !isScroll(scroll)) return false;
+  await hydrateScroll(scroll);
+  const entries = documentEntries(scroll);
+  if (!entries.length) {
+    ui.notifications.warn(`${scroll.name} ne contient aucun sort exploitable.`);
+    return false;
+  }
+
+  const requestedKey = String(requestedSpellKey ?? "").trim();
+  const entry = requestedKey
+    ? entries.find(candidate => String(candidate.key) === requestedKey) ?? null
+    : await selectScrollLearningEntry(scroll, entries);
+  if (!entry) {
+    if (requestedKey) ui.notifications.warn("Le sort demandé n’existe plus sur ce parchemin.");
+    return false;
+  }
+
+  const copied = await copySpellbook(actor, scrollLearningSource(scroll, entry), entry.key);
+  if (!copied) return false;
+
+  const consumed = await consumeScrollSpell(actor, scroll, entry.key);
+  if (!consumed) throw new Error("Le sort a été appris, mais son inscription n’a pas pu être retirée du parchemin.");
+  globalThis.add2eRerenderActorSheet?.(actor, true);
+  return true;
+}
+
 async function handleAction(element) {
   const action = String(element?.dataset?.add2eArcaneAction ?? "");
   const itemId = String(element?.dataset?.itemId ?? "");
@@ -154,6 +243,7 @@ async function handleAction(element) {
     await refreshSpellbookDialog(application, item, actor);
     return copied;
   }
+  if (action === "copy-scroll") return copyScrollSpell(actor, item, element?.dataset?.spellKey ?? "");
   if (action === "cast-scroll") return castScroll(actor, item);
   return false;
 }
