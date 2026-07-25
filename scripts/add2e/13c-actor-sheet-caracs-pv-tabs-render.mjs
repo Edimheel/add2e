@@ -6,7 +6,7 @@ if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit Ã
 
 const ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION = "2026-07-23-force-ex-eligibility-invariant-v6";
 const ADD2E_HP_MODIFIERS_VERSION = "2026-06-28-generic-hp-modifiers-v1";
-const ADD2E_ABILITY_CONSUMER_VERSION = "2026-07-24-canonical-derived-abilities-v2";
+const ADD2E_ABILITY_CONSUMER_VERSION = "2026-07-25-canonical-derived-abilities-hp-clamp-v3";
 globalThis.ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION = ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION;
 globalThis.ADD2E_HP_MODIFIERS_VERSION = ADD2E_HP_MODIFIERS_VERSION;
 globalThis.ADD2E_ABILITY_CONSUMER_VERSION = ADD2E_ABILITY_CONSUMER_VERSION;
@@ -489,13 +489,15 @@ globalThis.Add2eActorSheet.prototype.autoSetPointsDeCoup = async function autoSe
     const sameHpRolls = foundry.utils.deepEqual
       ? foundry.utils.deepEqual(s.hpRolls ?? [], hpRolls)
       : JSON.stringify(s.hpRolls ?? []) === JSON.stringify(hpRolls);
+    const currentHp = Number(s.pdv);
     const updates = {};
     if (!sameHpRolls) updates["system.hpRolls"] = hpRolls;
     if (Number(s.points_de_coup) !== hpMax) updates["system.points_de_coup"] = hpMax;
-    if (syncCurrent && Number(s.pdv) !== hpMax) updates["system.pdv"] = hpMax;
+    if (syncCurrent && currentHp !== hpMax) updates["system.pdv"] = hpMax;
+    else if (Number.isFinite(currentHp) && currentHp > hpMax) updates["system.pdv"] = hpMax;
     if (!Object.keys(updates).length) return;
 
-    await actor.update(updates, { add2eInternal: true, reason });
+    await actor.update(updates, { add2eInternal: true, add2eReason: reason });
   } catch (error) {
     console.warn("[ADD2E][HP] Erreur autoSetPointsDeCoup :", error);
   }
