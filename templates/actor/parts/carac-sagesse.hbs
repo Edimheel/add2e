@@ -19,11 +19,34 @@
                 </div>
               </td>
               <td>
-                <div class="carac-adjustments-line">
-                  <div class="a2e-adjustment-item"><label>Bonus magie</label><input type="text" value="{{signedNumber abilityDerived.sagesse.profile.magie}}" readonly></div>
-                  <div class="a2e-adjustment-item"><label>Sorts bonus</label><input type="text" value="{{abilityDerived.sagesse.bonusSpellsSummary}}" readonly></div>
-                  <div class="a2e-adjustment-item"><label>% échec</label><input type="text" value="{{abilityDerived.sagesse.profile.echec}} %" readonly></div>
-                  <div class="a2e-adjustment-item"><label>Immunités</label><input type="text" value="{{abilityDerived.sagesse.spellImmunitiesSummary}}" readonly></div>
+                <div class="carac-adjustments-line" style="display:grid;grid-template-columns:1fr;gap:8px;width:100%;">
+                  <section style="display:grid;gap:4px;min-width:0;">
+                    <div style="font-size:0.72em;font-weight:900;line-height:1;color:#6f4b12;text-transform:uppercase;letter-spacing:0.03em;">Protection mentale</div>
+                    <div style="display:grid;grid-template-columns:repeat(2,minmax(130px,1fr));gap:6px;min-width:0;">
+                      <div class="a2e-adjustment-item" style="max-width:none;min-width:0;grid-template-rows:minmax(26px,auto) 30px;">
+                        <label style="white-space:normal;overflow:visible;text-overflow:clip;line-height:1.08;min-height:26px;display:flex;align-items:flex-end;justify-content:center;">Bonus contre la magie mentale</label>
+                        <input type="text" value="{{signedNumber abilityDerived.sagesse.profile.magie}}" title="Ajustement aux jets de protection contre les attaques mentales" style="width:100%;min-width:0;height:30px;" readonly>
+                      </div>
+                      <div class="a2e-adjustment-item" style="max-width:none;min-width:0;grid-template-rows:minmax(26px,auto) 30px;">
+                        <label style="white-space:normal;overflow:visible;text-overflow:clip;line-height:1.08;min-height:26px;display:flex;align-items:flex-end;justify-content:center;">Échec des sorts</label>
+                        <input type="text" value="{{abilityDerived.sagesse.profile.echec}} %" title="Pourcentage d’échec des sorts divins" style="width:100%;min-width:0;height:30px;" readonly>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section style="display:grid;gap:4px;min-width:0;">
+                    <div style="font-size:0.72em;font-weight:900;line-height:1;color:#6f4b12;text-transform:uppercase;letter-spacing:0.03em;">Sorts divins</div>
+                    <div style="display:grid;grid-template-columns:repeat(2,minmax(130px,1fr));gap:6px;min-width:0;">
+                      <div class="a2e-adjustment-item" style="max-width:none;min-width:0;grid-template-rows:minmax(26px,auto) 30px;">
+                        <label style="white-space:normal;overflow:visible;text-overflow:clip;line-height:1.08;min-height:26px;display:flex;align-items:flex-end;justify-content:center;">Bonus de sorts par niveau</label>
+                        <input type="text" value="{{abilityDerived.sagesse.bonusSpellsSummary}}" title="Emplacements de sorts supplémentaires accordés par niveau de sort" style="width:100%;min-width:0;height:30px;" readonly>
+                      </div>
+                      <div class="a2e-adjustment-item" style="max-width:none;min-width:0;grid-template-rows:minmax(26px,auto) 30px;">
+                        <label style="white-space:normal;overflow:visible;text-overflow:clip;line-height:1.08;min-height:26px;display:flex;align-items:flex-end;justify-content:center;">Immunités aux sorts</label>
+                        <input type="text" value="{{abilityDerived.sagesse.spellImmunitiesSummary}}" title="Sorts auxquels le personnage est immunisé grâce à sa Sagesse" style="width:100%;min-width:0;height:30px;" readonly>
+                      </div>
+                    </div>
+                  </section>
                 </div>
               </td>
             </tr>
