@@ -70,6 +70,7 @@
     .add2e-monster-readable-sheet input,
     .add2e-monster-readable-sheet textarea { width: 100%; background: #fffaf0; border: 1px solid #b9a15d; border-radius: 4px; padding: 4px 6px; color: #1d1606; }
     .add2e-monster-readable-sheet .key-stat input { text-align: center; font-weight: 900; font-size: 1.05rem; }
+    .add2e-monster-readable-sheet .key-stat input[readonly] { cursor: default; background: rgba(236, 230, 208, .9); color: #5f5130; }
     .add2e-monster-readable-sheet .saves-section { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 8px 10px; background: rgba(250, 242, 216, .88); border-bottom: 1px solid var(--gold); min-height: 64px; flex: 0 0 auto; }
     .add2e-monster-readable-sheet .save-btn { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; width: 76px; min-height: 50px; border-radius: 7px; border: 1px solid rgba(0, 0, 0, .2); color: #fff; font-size: .78rem; cursor: pointer; text-shadow: 0 1px 2px #000; box-shadow: 0 2px 4px rgba(0, 0, 0, .2); }
     .add2e-monster-readable-sheet .save-btn:hover { transform: translateY(-1px); }
@@ -148,7 +149,7 @@
       </div>
       <div class="key-stats">
         <div class="key-stat"><label>CA</label><input type="number" name="system.armorClass" value="{{system.armorClass}}"/></div>
-        <div class="key-stat"><label>CA totale</label><input type="number" name="system.ca_total" value="{{system.ca_total}}"/></div>
+        <div class="key-stat"><label>CA totale</label><input type="number" value="{{system.ca_total}}" readonly aria-label="CA totale calculée" title="Valeur calculée par le résolveur canonique"/></div>
         <div class="key-stat"><label>TAC0</label><input type="number" name="system.thac0" value="{{system.thac0}}"/></div>
         <div class="key-stat"><label>PV</label><input type="number" name="system.pdv" value="{{system.pdv}}"/></div>
         <div class="key-stat"><label>DV</label><input type="text" name="system.hitDice" value="{{system.hitDice}}"/></div>
