@@ -7,7 +7,7 @@
                 <div>
                   <label>CA</label>
                   <strong>{{combatDefense.ac_totale}}</strong>
-                  <small>physique {{combatDefense.ac_naturelle}}</small>
+                  <small>base résolue {{combatDefense.ac_base}}</small>
                 </div>
               </div>
 
@@ -16,7 +16,7 @@
                 <div>
                   <label>THAC0</label>
                   <strong>{{combatDefense.thaco}}</strong>
-                  <small>attaque de base</small>
+                  <small>meilleure progression active</small>
                 </div>
               </div>
 
@@ -33,26 +33,26 @@
             <div class="a2e-panel">
               <h2><i class="fas fa-swords"></i> Attaque rapide</h2>
               <div class="a2e-panel-body">
-                {{#if actor.system.arme_equipee}}
+                {{#if equippedWeaponRows.length}}
                   <div class="a2e-summary-attack-list">
-                    {{#each listeArmes as |arme|}}
-                      {{#if arme.system.equipee}}
-                        <div class="a2e-summary-weapon item" data-item-id="{{arme._id}}">
-                          <img class="arme-img-attack" data-item-id="{{arme._id}}" src="{{arme.img}}" title="Attaquer avec {{arme.name}}">
-                          <div>
-                            <div class="a2e-summary-weapon-name">{{arme.name}}</div>
-                            <div class="a2e-summary-weapon-meta">
-                              <span><b>Dégâts</b> {{arme.system.dégâts.contre_moyen}} / {{arme.system.dégâts.contre_grand}}</span>
-                              <span><b>Type</b> {{arme.system.type_degats}}</span>
-                              <span><b>Toucher</b> {{../combatDefense.bonus_toucher}}</span>
-                              <span><b>Dégâts bonus</b> {{../combatDefense.bonus_degats}}</span>
-                            </div>
+                    {{#each equippedWeaponRows as |row|}}
+                      <div class="a2e-summary-weapon item" data-item-id="{{row.id}}" title="Toucher : {{row.attackDetailsTitle}}&#10;Dégâts : {{row.damageDetailsTitle}}">
+                        <img class="arme-img-attack" data-item-id="{{row.id}}" src="{{row.img}}" title="Attaquer avec {{row.name}}">
+                        <div>
+                          <div class="a2e-summary-weapon-name">{{row.name}}</div>
+                          <div class="a2e-summary-weapon-meta">
+                            <span><b>Dégâts</b> {{row.damage}}</span>
+                            <span><b>Type</b> {{row.type}}</span>
+                            <span><b>Toucher</b> {{row.totalHitSigned}}</span>
+                            <span><b>Dégâts bonus</b> {{row.totalDamageSigned}}</span>
+                            {{#if row.projectileName}}<span><b>Projectile</b> {{row.projectileName}} ×{{row.projectileQuantity}}</span>{{/if}}
+                            {{#if row.projectileMissing}}<span><b>Projectile</b> manquant</span>{{/if}}
                           </div>
-                          <button type="button" class="a2e-summary-attack-button arme-img-attack" data-item-id="{{arme._id}}">
-                            <i class="fas fa-dice-d20"></i>&nbsp;Attaquer
-                          </button>
                         </div>
-                      {{/if}}
+                        <button type="button" class="a2e-summary-attack-button arme-img-attack" data-item-id="{{row.id}}">
+                          <i class="fas fa-dice-d20"></i>&nbsp;Attaquer
+                        </button>
+                      </div>
                     {{/each}}
                   </div>
                 {{else}}
@@ -63,12 +63,13 @@
 
             <div class="a2e-grid-2">
               <div class="a2e-panel">
-                <h2><i class="fas fa-shield-alt"></i> Défense équipée</h2>
+                <h2><i class="fas fa-shield-alt"></i> Défense résolue</h2>
                 <div class="a2e-panel-body">
                   <div class="a2e-summary-pills">
-                    <span class="a2e-summary-pill">Armure : {{{combatDefense.armure}}}</span>
-                    <span class="a2e-summary-pill">Bouclier : {{{combatDefense.bouclier}}}</span>
-                    <span class="a2e-summary-pill">Heaume : {{{combatDefense.heaume}}}</span>
+                    {{#each combatDefense.summaryRows as |row|}}
+                      <span class="a2e-summary-pill" title="{{row.sourceName}}">{{row.label}} : {{row.value}}</span>
+                    {{/each}}
+                    <span class="a2e-summary-pill"><b>CA finale : {{combatDefense.ac_totale}}</b></span>
                   </div>
                 </div>
               </div>
@@ -76,22 +77,15 @@
               <div class="a2e-panel">
                 <h2><i class="fas fa-magic"></i> Préparations</h2>
                 <div class="a2e-panel-body">
-                  {{#if progressionCourante.spellsPerLevel}}
+                  {{#if add2eSpellSummaryRows.length}}
                     <div class="a2e-summary-pills a2e-prep-summary">
-                      {{#each progressionCourante.spellsPerLevel as |slots idx|}}
-                        {{#if slots}}
-                          {{#with (lookup ../sortsMemorizedByLevel (add idx 1))}}
-                            <span class="a2e-summary-pill a2e-prep-pill">
-                              <b>N{{add idx 1}}</b>
-                              <span>{{count}} / {{max}}</span>
-                            </span>
-                          {{else}}
-                            <span class="a2e-summary-pill a2e-prep-pill">
-                              <b>N{{add idx 1}}</b>
-                              <span>0 / {{slots}}</span>
-                            </span>
-                          {{/with}}
-                        {{/if}}
+                      {{#each add2eSpellSummaryRows as |row|}}
+                        {{#each row.levels as |level|}}
+                          <span class="a2e-summary-pill a2e-prep-pill">
+                            <b>{{row.label}} N{{level.spellLevel}}</b>
+                            <span>{{level.count}} / {{level.max}}</span>
+                          </span>
+                        {{/each}}
                       {{/each}}
                     </div>
                   {{else}}
