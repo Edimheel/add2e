@@ -7,7 +7,7 @@ import {
   add2eRefundSpellComponents as add2eCoreRefundSpellComponents
 } from "./22e-consumables-core.mjs";
 
-const ADD2E_CONSUMABLES_VERSION = "2026-07-22-returning-thrown-weapons-v6";
+const ADD2E_CONSUMABLES_VERSION = "2026-07-25-canonical-ammunition-type-v7";
 globalThis.ADD2E_CONSUMABLES_VERSION = ADD2E_CONSUMABLES_VERSION;
 
 function add2eConsumablesLog(...args) {
@@ -185,7 +185,37 @@ export function add2eGetWeaponRequiredAmmoType(arme) {
 
 function add2eAmmoType(item) {
   const sys = item?.system ?? {};
-  return add2eSlugify(sys.munitionType ?? sys.munition_type ?? sys.sousType ?? sys.sous_type ?? sys.categorie ?? item?.name ?? "");
+  const explicitCandidates = [
+    sys.munitionType,
+    sys.munition_type,
+    sys.ammoType,
+    sys.ammunitionType,
+    sys.sousType,
+    sys.sous_type,
+    sys.subtype
+  ].map(add2eSlugify).filter(Boolean);
+  const generic = new Set(["munition", "munitions", "projectile", "projectiles", "consommable", "consommables"]);
+  const explicit = explicitCandidates.find(value => !generic.has(value));
+  if (explicit) return explicit;
+
+  for (const tag of add2eTagsOf(item)) {
+    const raw = String(tag ?? "");
+    if (/^(munition|projectile):/i.test(raw)) {
+      const value = add2eSlugify(raw.split(":").slice(1).join(":"));
+      if (value && !generic.has(value)) return value;
+    }
+  }
+
+  const haystack = [item?.name, sys.nom, sys.slug, sys.categorie, sys.category, ...add2eTagsOf(item)]
+    .map(add2eSlugify)
+    .filter(Boolean)
+    .join(" ");
+  if (/\baiguille(s)?\b/.test(haystack)) return "aiguille";
+  if (/\bballe(s)?_arquebuse\b|\bmunition_arquebuse\b/.test(haystack)) return "balle_arquebuse";
+  if (/\bcarreau(x)?\b|\btrait(s)?_arbalete\b/.test(haystack)) return "carreau";
+  if (/\bfleche(s)?\b/.test(haystack)) return "fleche";
+  if (/\bbille(s)?\b|\bpierre(s)?_de_fronde\b/.test(haystack)) return "bille";
+  return "";
 }
 
 function add2eAmmoCompatibleWithRequired(item, required, arme = null) {
@@ -461,7 +491,6 @@ function add2eWrapActorSheetDropForAmmunition() {
   };
 }
 
-// Compatibilité API : l'équipement hybride est désormais traité par 03b.
 export async function add2eEquipHybridThrownWeaponAsContact(actor, weapon, sheet = null) {
   if (!actor || !weapon) return false;
   const action = globalThis.add2eHandleItemAction ?? globalThis.handleItemAction;
