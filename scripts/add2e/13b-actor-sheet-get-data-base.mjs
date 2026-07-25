@@ -179,20 +179,53 @@ function add2eSheetAbilityDerivedData(engine, actor, ability) {
     consumer: "application-v2"
   });
   const total = Number(derived?.total) || 0;
+  const rawTotal = Number.isFinite(Number(derived?.rawTotal)) ? Number(derived.rawTotal) : total;
+  const score = Number.isFinite(Number(derived?.score)) ? Number(derived.score) : total;
   const base = Number(derived?.resolution?.base);
   const adjustment = Number.isFinite(base) ? total - base : 0;
+  const profile = foundry.utils.deepClone(derived?.profile ?? {});
+  const bounds = foundry.utils.deepClone(derived?.bounds ?? { min: 3, max: 25, status: "within-range", clamped: false });
+  const bonusSpellRows = Object.entries(profile.bonusSortsParNiveau ?? {})
+    .map(([level, amount]) => ({ level: Number(level), amount: Number(amount) || 0 }))
+    .filter(row => Number.isInteger(row.level) && row.level > 0 && row.amount > 0)
+    .sort((left, right) => left.level - right.level);
+  const spellImmunities = Array.isArray(profile.immunitesSorts) ? [...profile.immunitesSorts] : [];
+  const illusionImmunities = Array.isArray(profile.immunitesIllusions) ? [...profile.immunitesIllusions] : [];
+
   return {
     total,
+    rawTotal,
+    score,
     base: Number.isFinite(base) ? base : total,
     adjustment,
     adjustmentDisplay: `${adjustment >= 0 ? "+" : ""}${adjustment}`,
     hasAdjustment: adjustment !== 0,
     displayValue: derived?.displayValue ?? total,
-    tableKey: derived?.tableKey ?? total,
-    profile: foundry.utils.deepClone(derived?.profile ?? {}),
+    tableKey: derived?.tableKey ?? score,
+    bounds,
+    boundsStatus: String(bounds.status ?? "within-range"),
+    outOfBounds: bounds.status !== "within-range",
+    boundsDisplay: bounds.status === "below-minimum"
+      ? `Profil minimum ${bounds.min}`
+      : bounds.status === "above-maximum"
+        ? `Profil maximum ${bounds.max}`
+        : `Profil ${score}`,
+    profile,
+    profileSource: foundry.utils.deepClone(derived?.profileSource ?? {}),
     modifiers: add2eSheetAppliedModifierRows(derived?.resolution),
     resolution: derived?.resolution,
-    exceptionalStrengthEligible: derived?.exceptionalStrengthEligible === true
+    exceptionalStrength: foundry.utils.deepClone(derived?.exceptionalStrength ?? {}),
+    exceptionalStrengthEligible: derived?.exceptionalStrength?.eligible === true || derived?.exceptionalStrengthEligible === true,
+    bonusSpellRows,
+    bonusSpellsSummary: bonusSpellRows.length
+      ? bonusSpellRows.map(row => `N${row.level} +${row.amount}`).join(" · ")
+      : "Aucun",
+    spellImmunities,
+    spellImmunitiesSummary: spellImmunities.length ? spellImmunities.join(", ") : "Aucune",
+    illusionImmunities,
+    illusionImmunitiesSummary: illusionImmunities.length
+      ? illusionImmunities.map(level => `N${level}`).join(", ")
+      : "Aucune"
   };
 }
 
