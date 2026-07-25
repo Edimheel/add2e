@@ -45,7 +45,7 @@ import {
   add2eCreateAttackChatCards
 } from "./04i-attack-roll-chat-card.mjs";
 
-const ADD2E_ATTACK_VERSION = "2026-07-24-canonical-action-snapshot-v3";
+const ADD2E_ATTACK_VERSION = "2026-07-25-canonical-target-ac-v4";
 const ADD2E_ATTACK_SNAPSHOT_VERSION = "2026-07-24-attack-resolution-snapshot-v1";
 const ADD2E_ATTACK_ROLL_INVOKE_DEDUPE_MS = 1500;
 
@@ -156,7 +156,7 @@ function add2eResolveTargetArmorClass({ cible, actor, arme, isTouchAttack }) {
     const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
     if (typeof engine?.getMagicPassiveDefense === "function") {
       caComputedDetails = engine.getMagicPassiveDefense(cible, { source: "attack-roll", attacker: actor?.name, weapon: arme?.name });
-      caComputedDetails.stored = { ca: system.ca, armorClass: system.armorClass, ca_total: system.ca_total, ca_naturel: system.ca_naturel };
+      caComputedDetails.stored = { ca: system.ca, armorClass: system.armorClass, ca_naturel: system.ca_naturel };
       caSourceCible = "effects-engine:magic-passive-defense";
       caBaseCible = caComputedDetails.caTotal;
     } else {
@@ -168,7 +168,6 @@ function add2eResolveTargetArmorClass({ cible, actor, arme, isTouchAttack }) {
     const read = add2eReadSystemNumber(
       system,
       "armorClass",
-      "ca_total",
       "ca",
       "ac",
       "ca_naturel",
@@ -177,7 +176,7 @@ function add2eResolveTargetArmorClass({ cible, actor, arme, isTouchAttack }) {
       "combat.armorClass",
       "combat.ca"
     );
-    caSourceCible = read.path ? `system.${read.path}` : "system.armorClass|ca_total|ca|ac";
+    caSourceCible = read.path ? `system.${read.path}` : "system.armorClass|ca|ac";
     caBaseCible = read.value;
   }
 
