@@ -51,6 +51,7 @@
                 <th>Nom</th>
                 <th>Qté</th>
                 <th>Poids</th>
+                <th>Effets appliqués</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -96,6 +97,13 @@
                   </td>
                   <td>{{objet.system.quantite}}</td>
                   <td>{{objet.system.poids}}</td>
+                  <td class="a2e-small">
+                    {{#with (lookup ../equipmentModifierSummaryByItemId objet._id)}}
+                      {{this}}
+                    {{else}}
+                      —
+                    {{/with}}
+                  </td>
                   <td>
                     <div class="a2e-actions">
                       {{#if (eq objet.system.arcaneDocument.kind "spellbook")}}
