@@ -96,6 +96,108 @@ function add2eGetClassNatureMechanics(actor) {
   };
 }
 
+function add2eLanguageValues(value) {
+  if (value === undefined || value === null || value === "") return [];
+  if (Array.isArray(value)) return value.flatMap(add2eLanguageValues);
+  if (value instanceof Set) return [...value].flatMap(add2eLanguageValues);
+  if (typeof value === "string") {
+    return value.split(/[,;|\n]+/g).map(entry => entry.trim()).filter(Boolean);
+  }
+  if (typeof value === "object") {
+    for (const key of ["langues", "languages", "items", "list", "values", "value"]) {
+      if (value[key] !== undefined) return add2eLanguageValues(value[key]);
+    }
+  }
+  return [String(value).trim()].filter(Boolean);
+}
+
+function add2eUniqueLanguages(value) {
+  const seen = new Set();
+  const languages = [];
+  for (const label of add2eLanguageValues(value)) {
+    const key = add2eClassMechanicsNormalize(label);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    languages.push({ key, label: String(label).trim() });
+  }
+  return languages;
+}
+
+function add2eLanguageClassProfile(actor) {
+  const values = Array.from(actor?.items ?? [])
+    .filter(item => String(item?.type ?? "").toLowerCase() === "classe")
+    .flatMap(item => [item?.name, item?.system?.slug, item?.system?.label, item?.system?.nom])
+    .map(add2eClassMechanicsNormalize)
+    .filter(Boolean);
+  return {
+    druid: values.some(value => value.includes("druide") || value.includes("druid")),
+    thief: values.some(value => value.includes("voleur") || value.includes("thief") || value.includes("assassin"))
+  };
+}
+
+function add2eLanguageIsFree(language, freeKeys, alignmentKey, classes) {
+  const key = language.key;
+  if (freeKeys.has(key)) return true;
+  if (["commun", "langue_commune", "langage_commun", "common"].includes(key)) return true;
+  if (key === alignmentKey || key.includes("langue_alignement") || key.includes("alignment_language")) return true;
+  if (classes.druid && ["druidique", "langue_druidique", "druidic"].includes(key)) return true;
+  if (classes.thief && ["argot_des_voleurs", "argot_voleur", "thieves_cant", "thief_cant"].includes(key)) return true;
+  return false;
+}
+
+function add2ePrepareLanguageQuota(actor, data) {
+  const intelligence = data?.abilityDerived?.intelligence;
+  if (!intelligence) throw new Error("Le profil canonique d’Intelligence est indisponible pour le quota de langues.");
+
+  const capacity = Math.max(0, Number(intelligence.profile?.langues) || 0);
+  const known = add2eUniqueLanguages(actor?.system?.langues);
+  const racial = add2eUniqueLanguages(actor?.system?.details_race?.langues);
+  const freeKeys = new Set(racial.map(language => language.key));
+  const alignmentKey = add2eClassMechanicsNormalize(actor?.system?.alignement ?? actor?.system?.alignment ?? "");
+  const classes = add2eLanguageClassProfile(actor);
+  const free = known.filter(language => add2eLanguageIsFree(language, freeKeys, alignmentKey, classes));
+  const additional = known.filter(language => !add2eLanguageIsFree(language, freeKeys, alignmentKey, classes));
+  const used = additional.length;
+  const remaining = Math.max(0, capacity - used);
+  const exceeded = Math.max(0, used - capacity);
+  const quota = {
+    capacity,
+    used,
+    remaining,
+    exceeded,
+    knownCount: known.length,
+    freeCount: free.length,
+    display: `${used} / ${capacity}`,
+    status: exceeded > 0
+      ? `Dépassement : ${exceeded}`
+      : `Restantes : ${remaining}`,
+    knownLabels: known.map(language => language.label),
+    freeLabels: free.map(language => language.label),
+    additionalLabels: additional.map(language => language.label)
+  };
+
+  intelligence.languageQuota = quota;
+  data.languageQuota = quota;
+  return quota;
+}
+
+function add2eInstallLanguageQuotaDisplay() {
+  const prototype = globalThis.Add2eActorSheet?.prototype;
+  if (!prototype || prototype.__add2eLanguageQuotaDisplayV1 === true) return Boolean(prototype);
+  const originalGetData = prototype.getData;
+  if (typeof originalGetData !== "function") throw new Error("getData ApplicationV2 est indisponible pour le quota de langues.");
+
+  prototype.getData = async function add2eLanguageQuotaGetData(...args) {
+    const data = await originalGetData.apply(this, args);
+    add2ePrepareLanguageQuota(this.actor, data);
+    return data;
+  };
+  prototype.__add2eLanguageQuotaDisplayV1 = true;
+  return true;
+}
+
 add2eInstallElementalSaveBonuses();
+add2eInstallLanguageQuotaDisplay();
 Hooks.once("ready", add2eInstallElementalSaveBonuses);
 globalThis.add2eGetClassNatureMechanics = add2eGetClassNatureMechanics;
+globalThis.add2ePrepareLanguageQuota = add2ePrepareLanguageQuota;
