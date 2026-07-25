@@ -1,92 +1,71 @@
 // ADD2E — Actor sheet getData : CA canonique, sauvegardes, équipement et synthèse de combat.
 // Compatible Foundry V13/V14/V15.
 
-function add2eSheetCombatNormalizeTag(value) {
+import {
+  add2eGetCombatStatProfile,
+  add2eAttackAbilityLabel
+} from "../add2e-attack/03-attack-rules.mjs";
+import { add2eAttackComputeActiveAttackModifiers } from "../add2e-attack/04e-attack-roll-modifiers.mjs";
+import { add2eGetEquippedProjectileForWeapon } from "./21-consumables.mjs";
+
+function add2eSheetCombatNormalize(value) {
   return String(value ?? "")
     .trim()
     .toLowerCase()
     .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/[’']/g, "")
-    .replace(/[\s-]+/g, "_")
-    .replace(/_+/g, "_")
-    .replace(/^_+|_+$/g, "")
-    .replace(/^arme_/, "arme:")
-    .replace(/^type_arme_/, "type_arme:")
-    .replace(/^famille_arme_/, "famille_arme:")
-    .replace(/^usage_/, "usage:")
-    .replace(/^combat_/, "combat:")
-    .replace(/^mod_carac_/, "mod_carac:")
-    .replace(/^bonus_degats_/, "bonus_degats:");
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
 }
 
-function add2eSheetCombatArray(value) {
-  if (!value) return [];
-  if (Array.isArray(value)) return value.flatMap(add2eSheetCombatArray).filter(Boolean);
-  if (value instanceof Set) return [...value].flatMap(add2eSheetCombatArray).filter(Boolean);
-  if (typeof value === "string") return value.split(/[,;|\n]+/g).map(part => part.trim()).filter(Boolean);
-  if (typeof value === "object") {
-    for (const key of ["tags", "effectTags", "effecttags", "list", "items", "value"]) {
-      if (value[key] !== undefined) return add2eSheetCombatArray(value[key]);
-    }
+function add2eSheetSigned(value) {
+  const number = Number(value) || 0;
+  return `${number >= 0 ? "+" : ""}${number}`;
+}
+
+function add2eSheetModifierValue(modifier) {
+  const operation = String(modifier?.operation ?? "add");
+  const raw = modifier?.value;
+  if (operation === "add") return add2eSheetSigned(raw);
+  if (operation === "set") return `= ${String(raw ?? "—")}`;
+  if (operation === "multiply") return `× ${String(raw ?? "—")}`;
+  if (operation === "minmax" && raw && typeof raw === "object") {
+    if (raw.min !== undefined) return `min. ${raw.min}`;
+    if (raw.max !== undefined) return `max. ${raw.max}`;
   }
-  return [];
+  return String(raw ?? "—");
 }
 
-function add2eSheetCombatActionTags(item) {
-  const system = item?.system ?? {};
-  const tags = new Set();
-  const push = value => {
-    for (const raw of add2eSheetCombatArray(value)) {
-      const tag = add2eSheetCombatNormalizeTag(raw);
-      if (!tag) continue;
-      tags.add(tag);
-      if (tag.startsWith("arme:")) tags.add(`type_arme:${tag.slice(5)}`);
-      if (tag.startsWith("famille_arme:")) tags.add(`type_arme:${tag.slice(13)}`);
-    }
-  };
-
-  push(item?.name);
-  push(system.nom);
-  push(system.tags);
-  push(system.tag);
-  push(system.effectTags);
-  push(system.effecttags);
-  push(system.effets);
-  push(system.effects);
-  push(item?.flags?.add2e?.tags);
-  push(item?.flags?.add2e?.effectTags);
-  push(system.type_arme);
-  push(system.famille_arme);
-  push(system.categorie);
-  return [...tags];
-}
-
-function add2eSheetApplyPassiveCombatModifiers({ actor, arme, bonusToucher, bonusDegats, toucherCarac, toucherValue, degatsCarac, degatsValue }) {
-  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
-  if (!actor || !arme || typeof engine?.getPassiveCombatModifiers !== "function") {
-    return { bonusToucher, bonusDegats, passive: null };
-  }
-  const passive = engine.getPassiveCombatModifiers(actor, {
-    type: "attaque",
-    ruleScope: "owner",
-    actor,
-    actionTags: add2eSheetCombatActionTags(arme),
-    abilityModifiers: {
-      toucher: { ability: toucherCarac, value: Number(toucherValue) || 0 },
-      degats: { ability: degatsCarac, value: Number(degatsValue) || 0 }
-    }
-  });
-  return {
-    bonusToucher: bonusToucher + (Number(passive?.toucher) || 0),
-    bonusDegats: bonusDegats + (Number(passive?.degats) || 0),
-    passive
-  };
+function add2eSheetAppliedRows(resolution) {
+  return Array.isArray(resolution?.applied)
+    ? resolution.applied.map(entry => {
+      const modifier = entry?.modifier ?? {};
+      const numericValue = modifier.operation === "add" && Number.isFinite(Number(modifier.value))
+        ? Number(modifier.value)
+        : 0;
+      return {
+        id: String(modifier.id ?? ""),
+        label: String(modifier.metadata?.label ?? modifier.source?.name ?? modifier.id ?? "Modificateur"),
+        value: add2eSheetModifierValue(modifier),
+        numericValue,
+        sourceId: String(modifier.source?.id ?? ""),
+        sourceName: String(modifier.source?.name ?? ""),
+        sourceKind: String(modifier.source?.kind ?? ""),
+        producer: String(modifier.metadata?.producer ?? ""),
+        domain: String(modifier.domain ?? ""),
+        target: String(modifier.target ?? "")
+      };
+    })
+    : [];
 }
 
 function add2eSheetArmorClassEngine() {
   const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
   if (!engine || typeof engine.resolveArmorClass !== "function") {
     throw new Error("Le résolveur canonique ADD2E de classe d’armure n’est pas disponible.");
+  }
+  if (typeof engine.itemEquipped !== "function") {
+    throw new Error("Le résolveur canonique ADD2E de l’équipement n’est pas disponible.");
   }
   return engine;
 }
@@ -97,11 +76,6 @@ function add2eSheetSavingThrowEngine() {
     throw new Error("Le résolveur canonique ADD2E de sauvegardes n’est pas disponible.");
   }
   return engine;
-}
-
-function add2eSheetSaveSigned(value) {
-  const number = Number(value) || 0;
-  return `${number >= 0 ? "+" : ""}${number}`;
 }
 
 function add2eSheetSaveSourceLabel(resolution) {
@@ -127,7 +101,7 @@ function add2eSheetSavingThrowRows(actor) {
     const bonus = Number(resolution?.bonus) || 0;
     const sourceLabel = add2eSheetSaveSourceLabel(resolution);
     const targetDisplay = hasTarget ? String(target) : "—";
-    const bonusDisplay = add2eSheetSaveSigned(bonus);
+    const bonusDisplay = add2eSheetSigned(bonus);
     const title = [
       `Jet de ${resolution?.label ?? "sauvegarde"}`,
       `Seuil : ${targetDisplay}`,
@@ -153,14 +127,6 @@ function add2eSheetSavingThrowRows(actor) {
   });
 }
 
-function add2eSheetArmorLabel(resolution, fallback) {
-  if (resolution?.mode === "transformation") return resolution.transformation?.label ?? "Transformation";
-  if (resolution?.mode === "monk") return "Défense martiale du moine";
-  if (resolution?.mode === "passive") return resolution.passiveArmorClass?.label ?? "Défense passive de classe";
-  if (resolution?.fixedCAActive) return `${resolution.fixedSource || "CA fixe"} <small style="color:#7f704d;">(CA fixe)</small>`;
-  return resolution?.armorName && resolution.armorName !== "Aucune" ? resolution.armorName : fallback;
-}
-
 function add2eSheetSyncArmorClass(actor, resolution) {
   const caNaturel = Number(resolution?.caNaturel);
   const caTotal = Number(resolution?.caTotal);
@@ -178,22 +144,192 @@ function add2eSheetSyncArmorClass(actor, resolution) {
   }).catch(error => console.error("[ADD2E][ARMOR_CLASS][SYNC_ERROR]", { actor: actor.name, error }));
 }
 
-export function add2ePrepareActorSheetCombatData({ actor, data, sys, progressionCourante, isMonk }) {
+function add2eSheetDefenseBaseLabel(resolution) {
+  if (resolution?.mode === "transformation") return resolution.transformation?.label ?? "Transformation";
+  if (resolution?.mode === "monk") return "Défense martiale du moine";
+  if (resolution?.mode === "passive") return resolution.passiveArmorClass?.label ?? "Défense passive de classe";
+  if (resolution?.fixedCAActive) return `${resolution.fixedSource || "CA fixe"} (CA fixe)`;
+  if (resolution?.selectedArmor?.name) return resolution.selectedArmor.name;
+  return "Sans armure";
+}
+
+function add2eSheetDefenseRows(armorClass) {
+  const rows = [{
+    id: "armor-class-base",
+    label: add2eSheetDefenseBaseLabel(armorClass),
+    value: String(armorClass?.baseAfterFixed ?? armorClass?.armorBase ?? 10),
+    sourceName: "Base défensive",
+    sourceKind: String(armorClass?.mode ?? "equipment"),
+    sourceId: String(armorClass?.selectedArmor?.id ?? "")
+  }];
+  rows.push(...add2eSheetAppliedRows(armorClass?.naturalResolution));
+  rows.push(...add2eSheetAppliedRows(armorClass?.totalResolution));
+  return rows;
+}
+
+function add2eSheetClassSlug(classItem) {
+  const system = classItem?.system ?? {};
+  return add2eSheetCombatNormalize(system.slug ?? system.label ?? system.nom ?? system.name ?? classItem?.name ?? "classe");
+}
+
+function add2eSheetClassLevel(actor, classItem) {
+  const levels = actor?.system?.niveaux_par_classe ?? {};
+  const slug = add2eSheetClassSlug(classItem);
+  const raw = levels?.[classItem?.id]
+    ?? levels?.[slug]
+    ?? classItem?.system?.niveau
+    ?? classItem?.system?.level
+    ?? actor?.system?.niveau;
+  return Math.max(1, Math.floor(Number(raw) || 1));
+}
+
+function add2eSheetClassThaco(actor, classItem) {
+  const level = add2eSheetClassLevel(actor, classItem);
+  const progression = Array.isArray(classItem?.system?.progression) ? classItem.system.progression : [];
+  const row = progression.find(entry => Number(entry?.niveau ?? entry?.level) === level)
+    ?? progression[level - 1]
+    ?? null;
+  if (!row) {
+    throw new Error(`Progression THAC0 absente pour ${classItem?.name ?? "classe"} au niveau ${level}.`);
+  }
+  const thaco = Number(row.thac0 ?? row.thaco ?? row.THAC0);
+  if (!Number.isFinite(thaco) || thaco <= 0) {
+    throw new Error(`THAC0 invalide pour ${classItem?.name ?? "classe"} au niveau ${level}.`);
+  }
+  return thaco;
+}
+
+function add2eSheetResolveThaco(actor, transformation) {
+  const transformationThaco = Number(transformation?.thac0);
+  if (Number.isFinite(transformationThaco) && transformationThaco > 0) return transformationThaco;
+  const classes = Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
+  if (!classes.length) return 20;
+  return Math.min(...classes.map(classItem => add2eSheetClassThaco(actor, classItem)));
+}
+
+function add2eSheetDamageData(item) {
+  const system = item?.system ?? {};
+  return system.dégâts ?? system.degats ?? system.damage ?? system.damages ?? null;
+}
+
+function add2eSheetDamagePart(data, keys) {
+  if (!data || typeof data !== "object") return "";
+  for (const key of keys) {
+    const value = data[key];
+    if (value !== undefined && value !== null && String(value).trim() !== "") return String(value).trim();
+  }
+  return "";
+}
+
+function add2eSheetDisplayDamage(item) {
+  const data = add2eSheetDamageData(item);
+  if (typeof data === "string" && data.trim()) return data.trim();
+  const medium = add2eSheetDamagePart(data, ["contre_moyen", "moyen", "medium", "m", "M"]);
+  const large = add2eSheetDamagePart(data, ["contre_grand", "grand", "large", "g", "G", "L"]);
+  if (medium || large) return `${medium || "-"} / ${large || "-"}`;
+  return "-";
+}
+
+function add2eSheetRowsTotal(rows, predicate) {
+  return rows.filter(predicate).reduce((total, row) => total + Number(row.numericValue || 0), 0);
+}
+
+function add2eSheetWeaponRows(actor, weapons, thaco, engine) {
+  return weapons.map(weapon => {
+    const combatProfile = add2eGetCombatStatProfile(weapon);
+    const canonical = add2eAttackComputeActiveAttackModifiers({
+      actor,
+      cible: null,
+      arme: weapon,
+      combatProfile
+    });
+    const attackRows = add2eSheetAppliedRows(canonical.attackResolution);
+    const damageRows = add2eSheetAppliedRows(canonical.damageResolution);
+    const abilityHit = add2eSheetRowsTotal(attackRows, row => row.producer === "ability-table");
+    const abilityDamage = add2eSheetRowsTotal(damageRows, row => row.producer === "ability-table");
+    const weaponHit = add2eSheetRowsTotal(attackRows, row => row.producer === "weapon-base-field" && row.sourceId === String(weapon.id));
+    const weaponDamage = add2eSheetRowsTotal(damageRows, row => row.producer === "weapon-base-field" && row.sourceId === String(weapon.id));
+    const totalHit = Number(canonical.attackResolution?.total) || 0;
+    const totalDamage = Number(canonical.damageResolution?.total) || 0;
+    const otherHit = totalHit - abilityHit - weaponHit;
+    const otherDamage = totalDamage - abilityDamage - weaponDamage;
+    const projectile = combatProfile.isProjectilePropulse
+      ? add2eGetEquippedProjectileForWeapon(actor, weapon)
+      : null;
+    const damageSource = projectile ?? weapon;
+    const attackDetailsTitle = attackRows.map(row => `${row.label} ${row.value}`).join(" · ") || "Aucun modificateur";
+    const damageDetailsTitle = damageRows.map(row => `${row.label} ${row.value}`).join(" · ") || "Aucun modificateur";
+    const effectRows = [...attackRows, ...damageRows].filter(row => !["ability-table", "weapon-base-field"].includes(row.producer));
+    const effectSummary = [...new Set(effectRows.map(row => `${row.label} ${row.value}`))].join(" · ");
+
+    return {
+      id: weapon.id,
+      name: weapon.name,
+      img: weapon.img,
+      equipped: engine.itemEquipped(weapon),
+      damage: add2eSheetDisplayDamage(damageSource),
+      damageSourceName: damageSource?.name ?? weapon.name,
+      type: String(weapon.system?.type_degats ?? ""),
+      speed: weapon.system?.facteur_rapidité ?? "—",
+      combatProfile,
+      abilityHitLabel: combatProfile.toucherCarac ? add2eAttackAbilityLabel(combatProfile.toucherCarac) : "—",
+      abilityDamageLabel: combatProfile.degatsCarac ? add2eAttackAbilityLabel(combatProfile.degatsCarac) : "—",
+      abilityHit,
+      abilityDamage,
+      abilityHitSigned: add2eSheetSigned(abilityHit),
+      abilityDamageSigned: add2eSheetSigned(abilityDamage),
+      weaponHit,
+      weaponDamage,
+      weaponHitSigned: add2eSheetSigned(weaponHit),
+      weaponDamageSigned: add2eSheetSigned(weaponDamage),
+      otherHit,
+      otherDamage,
+      otherHitSigned: add2eSheetSigned(otherHit),
+      otherDamageSigned: add2eSheetSigned(otherDamage),
+      totalHit,
+      totalDamage,
+      totalHitSigned: add2eSheetSigned(totalHit),
+      totalDamageSigned: add2eSheetSigned(totalDamage),
+      thacoBase: thaco,
+      thacoEffectif: thaco - totalHit,
+      attackRows,
+      damageRows,
+      attackDetailsTitle,
+      damageDetailsTitle,
+      effectSummary,
+      projectileId: projectile?.id ?? null,
+      projectileName: projectile?.name ?? "",
+      projectileQuantity: projectile ? Number(projectile.system?.quantite ?? projectile.system?.quantity ?? 0) || 0 : null,
+      projectileMissing: combatProfile.isProjectilePropulse && !projectile
+    };
+  });
+}
+
+function add2eSheetArmorRows(armors, armorClass, defenseRows, engine) {
+  return armors.map(armor => {
+    const contributions = defenseRows.filter(row => row.sourceId === String(armor.id));
+    const selectedAsBase = String(armorClass?.selectedArmor?.id ?? "") === String(armor.id);
+    const baseAc = Number(armor.system?.ac ?? armor.system?.ca ?? armor.system?.armorClass);
+    const contributionSummary = contributions.map(row => `${row.label} ${row.value}`).join(" · ");
+    const baseSummary = selectedAsBase ? `CA de base ${armorClass.armorBase}` : "";
+    return {
+      id: armor.id,
+      name: armor.name,
+      img: armor.img,
+      equipped: engine.itemEquipped(armor),
+      selectedAsBase,
+      baseAc: Number.isFinite(baseAc) ? baseAc : "—",
+      canonicalDelta: contributions.reduce((total, row) => total + Number(row.numericValue || 0), 0),
+      canonicalDeltaDisplay: add2eSheetSigned(contributions.reduce((total, row) => total + Number(row.numericValue || 0), 0)),
+      effectSummary: [baseSummary, contributionSummary].filter(Boolean).join(" · ") || "—"
+    };
+  });
+}
+
+export function add2ePrepareActorSheetCombatData({ actor, data, sys }) {
   const engine = add2eSheetArmorClassEngine();
   const transformation = globalThis.add2eGetCapabilityTransformationCombatProfile?.(actor) ?? null;
-  const transformationTHAC0 = Number(transformation?.thac0);
-  const hasTransformationTHAC0 = Number.isFinite(transformationTHAC0);
   const transformationMovement = String(transformation?.movement ?? "").trim();
-
-  const armure = data.listeArmures.find(item => item.system.equipee
-    && !(item.name.toLowerCase().includes("bouclier") || item.name.toLowerCase().includes("heaume") || item.name.toLowerCase().includes("casque")));
-  const bouclier = data.listeArmures.find(item => item.system.equipee && item.name.toLowerCase().includes("bouclier"));
-  const heaume = data.listeArmures.find(item => item.system.equipee
-    && (item.name.toLowerCase().includes("heaume") || item.name.toLowerCase().includes("casque")));
-
-  sys.armure_equipee = armure || null;
-  sys.bouclier_equipe = bouclier || null;
-  sys.heaume_equipe = heaume || null;
   if (transformationMovement) sys.vitesse_deplacement = transformationMovement;
 
   const armorClass = engine.resolveArmorClass(actor, {
@@ -206,88 +342,27 @@ export function add2ePrepareActorSheetCombatData({ actor, data, sys, progression
   sys.ca_total = Number(armorClass.caTotal);
   add2eSheetSyncArmorClass(actor, armorClass);
 
-  let bonusArmureToucher = 0;
-  let bonusArmureDegats = 0;
-  for (const piece of [armure, bouclier, heaume].filter(Boolean)) {
-    bonusArmureToucher += Number(piece.system.bonus_toucher || 0);
-    bonusArmureDegats += Number(piece.system.bonus_degats || 0);
-  }
-
-  const arme = data.listeArmes.find(item => item.system.equipee) || null;
-  sys.arme_equipee = arme;
-
-  const thaco = hasTransformationTHAC0 ? transformationTHAC0 : (data.progressionCourante?.thac0 || sys.thaco || 20);
-  const typeDegats = arme?.system.type_degats || "";
-  const armeBonusToucher = arme ? (
-    typeof engine.getMagicWeaponBonus === "function"
-      ? engine.getMagicWeaponBonus(arme, "hit")
-      : Number(arme.system.bonus_hit || 0)
-  ) : 0;
-  const armeBonusDegats = arme ? (
-    typeof engine.getMagicWeaponBonus === "function"
-      ? engine.getMagicWeaponBonus(arme, "damage")
-      : Number(arme.system.bonus_dom || 0)
-  ) : 0;
-  let bonusToucher = 0;
-  let bonusDegats = 0;
-  let passiveCombat = null;
-
-  if (arme) {
-    let toucherCarac = null;
-    let degatsCarac = null;
-    let toucherValue = 0;
-    let degatsValue = 0;
-
-    if ((typeDegats || "").includes("tranchant") || (typeDegats || "").includes("contondant")) {
-      toucherCarac = "force";
-      degatsCarac = "force";
-      toucherValue = Number(sys.force_bonus_toucher) || 0;
-      degatsValue = Number(sys.force_bonus_degats) || 0;
-    } else if ((typeDegats || "").includes("perforant")) {
-      toucherCarac = "dexterite";
-      degatsCarac = "dexterite";
-      toucherValue = Number(sys.dex_att) || 0;
-      degatsValue = Number(sys.dex_att) || 0;
-    }
-
-    bonusToucher = toucherValue + armeBonusToucher + bonusArmureToucher;
-    bonusDegats = degatsValue + armeBonusDegats + bonusArmureDegats;
-
-    const passiveResult = add2eSheetApplyPassiveCombatModifiers({
-      actor,
-      arme,
-      bonusToucher,
-      bonusDegats,
-      toucherCarac,
-      toucherValue,
-      degatsCarac,
-      degatsValue
-    });
-    bonusToucher = passiveResult.bonusToucher;
-    bonusDegats = passiveResult.bonusDegats;
-    passiveCombat = passiveResult.passive;
-  }
-
-  const degatsMoyen = arme?.system.dégâts?.contre_moyen || "-";
-  const degatsGrand = arme?.system.dégâts?.contre_grand || "-";
+  const thaco = add2eSheetResolveThaco(actor, transformation);
+  const defenseRows = add2eSheetDefenseRows(armorClass);
+  const weaponRows = add2eSheetWeaponRows(actor, data.listeArmes, thaco, engine);
+  const armorRows = add2eSheetArmorRows(data.listeArmures, armorClass, defenseRows, engine);
   const monkMartial = armorClass.monk ?? null;
 
+  data.weaponRows = weaponRows;
+  data.equippedWeaponRows = weaponRows.filter(row => row.equipped);
+  data.armorRows = armorRows;
   data.monkMartialProgression = monkMartial;
   data.combatDefense = {
-    armure: add2eSheetArmorLabel(armorClass, armure ? armure.name : "<em>Aucune</em>"),
-    bouclier: armorClass.shieldIgnored ? "<em>Ignoré</em>" : (bouclier ? bouclier.name : "<em>Aucun</em>"),
-    heaume: heaume ? heaume.name : "<em>Aucun</em>",
-    ac_naturelle: sys.ca_naturel,
-    ac_totale: sys.ca_total,
-    objets_magiques_defense: armorClass,
-    armor_class_resolution: armorClass,
-    arme: arme ? arme.name : "<em>Aucune</em>",
+    ac_base: Number(armorClass.baseAfterFixed),
+    ac_naturelle: Number(armorClass.caNaturel),
+    ac_totale: Number(armorClass.caTotal),
+    dex: Number(armorClass.dex) || 0,
+    dexIgnored: armorClass.dexIgnored === true,
     thaco,
-    degats: `${degatsMoyen} / ${degatsGrand}`,
-    type_degats: typeDegats,
-    bonus_toucher: bonusToucher,
-    bonus_degats: bonusDegats,
-    passive_combat: passiveCombat,
+    detailRows: defenseRows,
+    summaryRows: defenseRows,
+    armor_class_resolution: armorClass,
+    objets_magiques_defense: armorClass,
     monk_martial: monkMartial,
     attaques_par_round: monkMartial?.attacksPerRound ?? "",
     degats_main_nue: monkMartial?.unarmedDamage ?? "",
