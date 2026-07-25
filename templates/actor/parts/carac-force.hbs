@@ -9,10 +9,10 @@
                 <div class="carac-control-group">
                   <button type="button" class="carac-btn moins" data-carac="force" tabindex="-1">−</button>
                   <div class="carac-value carac-drop-target" data-carac="force" style="position:relative;overflow:visible;"
-                       title="Tirage naturel : {{actor.flags.add2e.base_caracs.force}}&#10;Ajustement racial : {{subtract actor.system.force_base actor.flags.add2e.base_caracs.force}}&#10;Score définitif : {{actor.system.force_base}}&#10;Valeur effective : {{actor.system.for_aff}}">
-                    <span style="font-size:1.45em;font-weight:700;line-height:1;">{{actor.system.for_aff}}</span>
-                    {{#if (subtract actor.system.force_base actor.flags.add2e.base_caracs.force)}}
-                      <span class="carac-racial-bonus-inline">(race {{#if (gt (subtract actor.system.force_base actor.flags.add2e.base_caracs.force) 0)}}+{{/if}}{{subtract actor.system.force_base actor.flags.add2e.base_caracs.force}})</span>
+                       title="Base : {{abilityDerived.force.base}}&#10;Valeur finale : {{abilityDerived.force.displayValue}}{{#each abilityDerived.force.modifiers}}&#10;{{label}} {{value}}{{/each}}">
+                    <span style="font-size:1.45em;font-weight:700;line-height:1;">{{abilityDerived.force.displayValue}}</span>
+                    {{#if abilityDerived.force.hasAdjustment}}
+                      <span class="carac-racial-bonus-inline">({{abilityDerived.force.adjustmentDisplay}})</span>
                     {{/if}}
                     {{#if canExceptionalStrength}}
                       {{#if editable}}
@@ -32,11 +32,11 @@
               </td>
               <td>
                 <div class="carac-adjustments-line">
-                  <div class="a2e-adjustment-item"><label>Toucher</label><input type="text" name="system.force_bonus_toucher" value="{{actor.system.force_bonus_toucher}}" readonly></div>
-                  <div class="a2e-adjustment-item"><label>Dégâts</label><input type="text" name="system.force_bonus_degats" value="{{actor.system.force_bonus_degats}}" readonly></div>
-                  <div class="a2e-adjustment-item"><label>Poids</label><input type="text" name="system.force_poids" value="{{actor.system.force_poids}}" readonly></div>
-                  <div class="a2e-adjustment-item"><label>Portes</label><input type="text" name="system.force_ouvrir" value="{{actor.system.force_ouvrir}}" readonly></div>
-                  <div class="a2e-adjustment-item"><label>Barreaux</label><input type="text" name="system.force_tordre" value="{{actor.system.force_tordre}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>Toucher</label><input type="text" value="{{signedNumber abilityDerived.force.profile.toucher}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>Dégâts</label><input type="text" value="{{signedNumber abilityDerived.force.profile.degats}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>Poids</label><input type="text" value="{{abilityDerived.force.profile.poids}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>Portes</label><input type="text" value="{{abilityDerived.force.profile.ouvrir}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>Barreaux</label><input type="text" value="{{abilityDerived.force.profile.tordre}}" readonly></div>
                 </div>
               </td>
             </tr>
