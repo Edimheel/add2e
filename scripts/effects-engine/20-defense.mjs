@@ -9,7 +9,7 @@ const register = (Engine, methods) => Object.defineProperties(
   ]))
 );
 
-const ADD2E_ARMOR_CLASS_RESOLVER_VERSION = "2026-07-23-canonical-armor-class-v3-item-context";
+const ADD2E_ARMOR_CLASS_RESOLVER_VERSION = "2026-07-25-canonical-armor-class-v4-synchronized-total";
 
 const ADD2E_COMBAT_IDENTITY_PREFIXES = [
   "type_monstre:",
@@ -266,7 +266,6 @@ export function installEffectsEngineDefense(Engine) {
       const storedActorCA = actorType !== "personnage"
         ? this.readNumber(
           system.armorClass,
-          system.ca_total,
           system.ca,
           system.ac,
           system.ca_naturel,
