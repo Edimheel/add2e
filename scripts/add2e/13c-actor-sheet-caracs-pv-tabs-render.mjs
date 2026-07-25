@@ -4,9 +4,9 @@
 
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant 13c.");
 
-const ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION = "2026-07-23-force-ex-eligibility-invariant-v6";
+const ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION = "2026-07-26-force-ex-canonical-derived-profile-v7";
 const ADD2E_HP_MODIFIERS_VERSION = "2026-06-28-generic-hp-modifiers-v1";
-const ADD2E_ABILITY_CONSUMER_VERSION = "2026-07-25-canonical-derived-abilities-hp-clamp-v3";
+const ADD2E_ABILITY_CONSUMER_VERSION = "2026-07-26-canonical-derived-abilities-3-25-v4";
 globalThis.ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION = ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION;
 globalThis.ADD2E_HP_MODIFIERS_VERSION = ADD2E_HP_MODIFIERS_VERSION;
 globalThis.ADD2E_ABILITY_CONSUMER_VERSION = ADD2E_ABILITY_CONSUMER_VERSION;
@@ -33,36 +33,6 @@ function add2eSyncForceExSelects(root, actor) {
   });
 }
 
-function add2eNormalizeClassForExceptionalStrength(value) {
-  return String(value ?? "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f’']/g, "");
-}
-
-function add2eActorCanUseExceptionalStrength(actor) {
-  const classItems = Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
-  return classItems.some(classItem => {
-    const text = [
-      classItem?.name,
-      classItem?.system?.slug,
-      classItem?.system?.nom,
-      classItem?.system?.name,
-      classItem?.system?.label
-    ].map(add2eNormalizeClassForExceptionalStrength).join(" ");
-    return text.includes("guerrier") || text.includes("paladin") || text.includes("ranger");
-  });
-}
-globalThis.add2eActorCanUseExceptionalStrength = add2eActorCanUseExceptionalStrength;
-
-function add2eAbilityResolution(actor, ability, context = {}) {
-  const engine = globalThis.ADD2E_EFFECTS;
-  if (!engine || typeof engine.resolveAbility !== "function") {
-    throw new Error("Le résolveur canonique ADD2E des caractéristiques n’est pas disponible.");
-  }
-  return engine.resolveAbility(actor, ability, context);
-}
-
 function add2eAbilityDerivedResolution(actor, ability, context = {}) {
   const engine = globalThis.ADD2E_EFFECTS;
   if (!engine || typeof engine.resolveAbilityDerived !== "function") {
@@ -71,17 +41,16 @@ function add2eAbilityDerivedResolution(actor, ability, context = {}) {
   return engine.resolveAbilityDerived(actor, ability, context);
 }
 
-function add2eExceptionalStrengthTotal(actor) {
-  return Number(add2eAbilityResolution(actor, "force", { consumer: "exceptional-strength" }).total) || 0;
-}
-
 async function add2eSetExceptionalStrength(actor, rawValue, { reason = "force-ex-selection" } = {}) {
   if (!actor?.system) return false;
 
   const selected = Math.trunc(Number(rawValue));
   const forceEx = Number.isFinite(selected) && selected >= 0 && selected <= 100 ? selected : 0;
-  const totalForce = add2eExceptionalStrengthTotal(actor);
-  const allowed = totalForce === 18 && add2eActorCanUseExceptionalStrength(actor);
+  const forceDerived = add2eAbilityDerivedResolution(actor, "force", {
+    source: "exceptional-strength-selection",
+    consumer: "application-v2"
+  });
+  const allowed = forceDerived?.exceptionalStrength?.eligible === true;
   const stored = allowed ? forceEx : 0;
 
   if (Number(actor.system?.force_ex ?? 0) !== stored) {
@@ -102,6 +71,11 @@ function add2eClone(value) {
   if (typeof foundry?.utils?.deepClone === "function") return foundry.utils.deepClone(value);
   if (typeof foundry?.utils?.duplicate === "function") return foundry.utils.duplicate(value);
   return JSON.parse(JSON.stringify(value ?? {}));
+}
+
+function add2eValuesEqual(left, right) {
+  if (typeof foundry?.utils?.deepEqual === "function") return foundry.utils.deepEqual(left, right);
+  return JSON.stringify(left) === JSON.stringify(right);
 }
 
 function add2eNumber(value, fallback = 0) {
@@ -390,7 +364,7 @@ globalThis.Add2eActorSheet.prototype.autoSetCaracAjustements = async function au
     ]));
     const totalCaracs = Object.fromEntries(CARACS_LIST.map(carac => [carac, derived[carac].total]));
     const forceDerived = derived.force;
-    const storedForceEx = forceDerived.exceptionalStrengthEligible
+    const storedForceEx = forceDerived.exceptionalStrength?.eligible === true
       ? Math.max(0, Math.min(100, Math.trunc(Number(this.actor.system?.force_ex) || 0)))
       : 0;
     const forceBonus = forceDerived.profile;
@@ -419,16 +393,22 @@ globalThis.Add2eActorSheet.prototype.autoSetCaracAjustements = async function au
       "system.dex_att": Number(dexBonus.att || 0),
       "system.dex_def": Number(dexBonus.def || 0),
       "system.con_pv": Number(conBonus.pv || 0),
+      "system.con_pv_guerrier": Number(conBonus.pv_guerrier ?? conBonus.pv ?? 0),
       "system.con_trauma": Number(conBonus.trauma || 0),
       "system.con_resu": Number(conBonus.resu || 0),
+      "system.con_poison": Number(conBonus.poison || 0),
+      "system.con_regeneration": conBonus.regeneration ?? null,
       "system.int_langues": Number(intBonus.langues || 0),
       "system.int_chance_sort": Number(intBonus.chance_sort || 0),
       "system.int_min_sort": Number(intBonus.min_sort || 0),
-      "system.int_max_sort": Number(intBonus.max_sort || 0),
-      "system.int_sort_par_niveau": Number(intBonus.sort_par_niveau || 0),
+      "system.int_max_sort": intBonus.max_sort ?? 0,
+      "system.int_sort_par_niveau": intBonus.sort_par_niveau ?? 0,
+      "system.int_niveau_sort_max": Number(intBonus.niveau_sort_max || 0),
+      "system.int_immunites_illusions": add2eClone(Array.isArray(intBonus.immunitesIllusions) ? intBonus.immunitesIllusions : []),
       "system.sag_magie": Number(sagBonus.magie || 0),
-      "system.sag_sort_suppl": Number(sagBonus.sort_suppl || 0),
+      "system.sag_bonus_sorts_par_niveau": add2eClone(sagBonus.bonusSortsParNiveau ?? {}),
       "system.sag_echec": Number(sagBonus.echec || 0),
+      "system.sag_immunites_sorts": add2eClone(Array.isArray(sagBonus.immunitesSorts) ? sagBonus.immunitesSorts : []),
       "system.cha_compagnons": Number(chaBonus.compagnons || 0),
       "system.cha_loy": Number(chaBonus.loy || 0),
       "system.cha_react": Number(chaBonus.react || 0)
@@ -436,8 +416,10 @@ globalThis.Add2eActorSheet.prototype.autoSetCaracAjustements = async function au
 
     const diff = {};
     for (const [path, value] of Object.entries(fullUpdate)) {
-      if (foundry.utils.getProperty(this.actor, path) !== value) diff[path] = value;
+      if (!add2eValuesEqual(foundry.utils.getProperty(this.actor, path), value)) diff[path] = value;
     }
+    if (Object.prototype.hasOwnProperty.call(this.actor.system ?? {}, "sag_sort_suppl")) diff["system.-=sag_sort_suppl"] = null;
+    if (Object.prototype.hasOwnProperty.call(this.actor.system ?? {}, "sagesse_sorts_bonus")) diff["system.-=sagesse_sorts_bonus"] = null;
 
     if (Object.keys(diff).length) {
       await this.actor.update(diff, { add2eInternal: true, add2eReason: "ability-derived-recalculate" });
