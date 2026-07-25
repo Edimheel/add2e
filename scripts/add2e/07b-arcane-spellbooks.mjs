@@ -376,15 +376,6 @@ async function storeLearningRecord(actor, list, entry, result) {
 }
 
 function learningEligibility(actor, entry, lists, profile, history = learningHistory(actor)) {
-  if (entry.level > profile.maximumSpellLevel) {
-    return {
-      ok: false,
-      reason: "spell-level",
-      message: `Intelligence ${profile.score} : niveau maximal accessible ${profile.maximumSpellLevel}.`,
-      lists: []
-    };
-  }
-
   const allowedLists = [];
   const blocked = [];
   for (const rawList of lists) {
