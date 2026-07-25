@@ -9,7 +9,7 @@
                 <div class="carac-control-group">
                   <button type="button" class="carac-btn moins" data-carac="intelligence" tabindex="-1">−</button>
                   <div class="carac-value carac-drop-target" data-carac="intelligence"
-                       title="Base : {{abilityDerived.intelligence.base}}&#10;Valeur finale : {{abilityDerived.intelligence.total}}{{#each abilityDerived.intelligence.modifiers}}&#10;{{label}} {{value}}{{/each}}">
+                       title="Base : {{abilityDerived.intelligence.base}}&#10;Valeur finale : {{abilityDerived.intelligence.total}}&#10;{{abilityDerived.intelligence.boundsDisplay}}{{#each abilityDerived.intelligence.modifiers}}&#10;{{label}} {{value}}{{/each}}">
                     <span style="font-size:1.45em;font-weight:700;line-height:1;">{{abilityDerived.intelligence.total}}</span>
                     {{#if abilityDerived.intelligence.hasAdjustment}}
                       <span class="carac-racial-bonus-inline">({{abilityDerived.intelligence.adjustmentDisplay}})</span>
@@ -25,6 +25,8 @@
                   <div class="a2e-adjustment-item"><label>Sorts min</label><input type="text" value="{{abilityDerived.intelligence.profile.min_sort}}" readonly></div>
                   <div class="a2e-adjustment-item"><label>Sorts max</label><input type="text" value="{{abilityDerived.intelligence.profile.max_sort}}" readonly></div>
                   <div class="a2e-adjustment-item"><label>/ niveau</label><input type="text" value="{{abilityDerived.intelligence.profile.sort_par_niveau}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>Niv. max</label><input type="text" value="{{abilityDerived.intelligence.profile.niveau_sort_max}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>Illusions</label><input type="text" value="{{abilityDerived.intelligence.illusionImmunitiesSummary}}" readonly></div>
                 </div>
               </td>
             </tr>
