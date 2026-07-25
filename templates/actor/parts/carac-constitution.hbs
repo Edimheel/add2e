@@ -9,10 +9,10 @@
                 <div class="carac-control-group">
                   <button type="button" class="carac-btn moins" data-carac="constitution" tabindex="-1">−</button>
                   <div class="carac-value carac-drop-target" data-carac="constitution"
-                       title="Tirage naturel : {{actor.flags.add2e.base_caracs.constitution}}&#10;Ajustement racial : {{subtract actor.system.constitution_base actor.flags.add2e.base_caracs.constitution}}&#10;Score définitif : {{actor.system.constitution_base}}&#10;Valeur effective : {{actor.system.con_aff}}">
-                    <span style="font-size:1.45em;font-weight:700;line-height:1;">{{actor.system.con_aff}}</span>
-                    {{#if (subtract actor.system.constitution_base actor.flags.add2e.base_caracs.constitution)}}
-                      <span class="carac-racial-bonus-inline">(race {{#if (gt (subtract actor.system.constitution_base actor.flags.add2e.base_caracs.constitution) 0)}}+{{/if}}{{subtract actor.system.constitution_base actor.flags.add2e.base_caracs.constitution}})</span>
+                       title="Base : {{abilityDerived.constitution.base}}&#10;Valeur finale : {{abilityDerived.constitution.total}}{{#each abilityDerived.constitution.modifiers}}&#10;{{label}} {{value}}{{/each}}">
+                    <span style="font-size:1.45em;font-weight:700;line-height:1;">{{abilityDerived.constitution.total}}</span>
+                    {{#if abilityDerived.constitution.hasAdjustment}}
+                      <span class="carac-racial-bonus-inline">({{abilityDerived.constitution.adjustmentDisplay}})</span>
                     {{/if}}
                   </div>
                   <button type="button" class="carac-btn plus" data-carac="constitution" tabindex="-1">+</button>
@@ -20,9 +20,9 @@
               </td>
               <td>
                 <div class="carac-adjustments-line">
-                  <div class="a2e-adjustment-item"><label>PV / niv.</label><input type="text" name="system.con_pv" value="{{actor.system.con_pv}}" readonly></div>
-                  <div class="a2e-adjustment-item"><label>Choc</label><input type="text" name="system.con_trauma" value="{{actor.system.con_trauma}}" readonly></div>
-                  <div class="a2e-adjustment-item"><label>Résurrection</label><input type="text" name="system.con_resu" value="{{actor.system.con_resu}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>PV / niv.</label><input type="text" value="{{signedNumber abilityDerived.constitution.profile.pv}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>Choc</label><input type="text" value="{{abilityDerived.constitution.profile.trauma}} %" readonly></div>
+                  <div class="a2e-adjustment-item"><label>Résurrection</label><input type="text" value="{{abilityDerived.constitution.profile.resu}} %" readonly></div>
                 </div>
               </td>
             </tr>
