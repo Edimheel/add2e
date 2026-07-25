@@ -1,8 +1,8 @@
 // ADD2E — Actor sheet listeners : jets de caractéristiques, sauvegardes et HUD.
 // Compatible Foundry V13/V14/V15.
 
-export const ADD2E_SHEET_ROLL_DELEGATION_VERSION = "2026-07-24-canonical-save-executor-v7-final";
-const ADD2E_SAVE_RESOLVER_VERSION = "2026-07-24-canonical-save-resolver-v5-final";
+export const ADD2E_SHEET_ROLL_DELEGATION_VERSION = "2026-07-25-canonical-monster-save-v8";
+const ADD2E_SAVE_RESOLVER_VERSION = "2026-07-25-canonical-save-resolver-v6-monster-source";
 
 const ADD2E_SAVE_DEFINITIONS = Object.freeze([
   Object.freeze({
@@ -47,6 +47,21 @@ const ADD2E_SAVE_DEFINITIONS = Object.freeze([
   })
 ]);
 
+// Ordre canonique : mort/paralysie, pétrification, baguettes, souffle, sorts.
+// Cette progression est une source métier du résolveur, jamais un calcul de feuille.
+const ADD2E_MONSTER_FIGHTER_SAVE_PROGRESSION = Object.freeze([
+  Object.freeze({ level: 0, saves: Object.freeze([16, 18, 17, 20, 19]) }),
+  Object.freeze({ level: 1, saves: Object.freeze([14, 15, 16, 17, 17]) }),
+  Object.freeze({ level: 3, saves: Object.freeze([13, 14, 15, 16, 16]) }),
+  Object.freeze({ level: 5, saves: Object.freeze([11, 12, 13, 13, 14]) }),
+  Object.freeze({ level: 7, saves: Object.freeze([10, 11, 12, 12, 13]) }),
+  Object.freeze({ level: 9, saves: Object.freeze([8, 9, 10, 9, 11]) }),
+  Object.freeze({ level: 11, saves: Object.freeze([7, 8, 9, 8, 10]) }),
+  Object.freeze({ level: 13, saves: Object.freeze([5, 6, 7, 5, 8]) }),
+  Object.freeze({ level: 15, saves: Object.freeze([4, 5, 6, 4, 7]) }),
+  Object.freeze({ level: 17, saves: Object.freeze([3, 4, 5, 4, 6]) })
+]);
+
 const ADD2E_SAVE_EQUIPMENT_TYPES = new Set([
   "arme", "weapon", "armure", "armor", "objet", "object",
   "equipment", "magic", "objet_magique"
@@ -67,16 +82,16 @@ export async function add2eEvaluateRollSafe(formula) {
 
 function add2eSheetRollEffectsEngine() {
   const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
-  if (!engine) return null;
+  if (!engine) throw new Error("Le moteur d’effets canonique ADD2E n’est pas disponible.");
   add2eInstallCanonicalSaveResolver(engine);
   return engine;
 }
 
 function add2eSaveNormalize(engine, value) {
-  const raw = typeof engine?.normalizeTag === "function"
-    ? engine.normalizeTag(value)
-    : String(value ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  return String(raw ?? "")
+  if (typeof engine?.normalizeTag !== "function") {
+    throw new Error("La normalisation canonique ADD2E n’est pas disponible.");
+  }
+  return String(engine.normalizeTag(value) ?? "")
     .replace(/[’']/g, "")
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/_+/g, "_")
@@ -84,9 +99,10 @@ function add2eSaveNormalize(engine, value) {
 }
 
 function add2eSaveTag(engine, value) {
-  return typeof engine?.normalizeTag === "function"
-    ? String(engine.normalizeTag(value) ?? "")
-    : String(value ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_");
+  if (typeof engine?.normalizeTag !== "function") {
+    throw new Error("La normalisation canonique ADD2E n’est pas disponible.");
+  }
+  return String(engine.normalizeTag(value) ?? "");
 }
 
 function add2eSaveArray(value) {
@@ -110,18 +126,10 @@ function add2eSaveDefinition(engine, value) {
 }
 
 function add2eSaveReadNumber(engine, ...values) {
-  if (typeof engine?.readNumber === "function") return engine.readNumber(...values);
-  for (const value of values) {
-    if (value === undefined || value === null || value === "") continue;
-    if (typeof value === "object") {
-      const nested = add2eSaveReadNumber(engine, value.value, value.current, value.actuel, value.total, value.max);
-      if (Number.isFinite(nested)) return nested;
-      continue;
-    }
-    const number = Number(String(value).replace(",", "."));
-    if (Number.isFinite(number)) return number;
+  if (typeof engine?.readNumber !== "function") {
+    throw new Error("La lecture numérique canonique ADD2E n’est pas disponible.");
   }
-  return null;
+  return engine.readNumber(...values);
 }
 
 function add2eSaveReadFromCollection(engine, raw, definition) {
@@ -163,36 +171,27 @@ function add2eSaveDirectActorValues(system, definition) {
 }
 
 function add2eSaveClassSources(engine, actor, definition) {
+  if (typeof engine.getEmbeddedClassItems !== "function"
+    || typeof engine.getEmbeddedClassLevel !== "function"
+    || typeof engine.getClassProgressionEntryForPassiveRule !== "function") {
+    throw new Error("Les API canoniques de progression de classe ADD2E ne sont pas disponibles.");
+  }
+
   const sources = [];
-  const classItems = typeof engine.getEmbeddedClassItems === "function"
-    ? engine.getEmbeddedClassItems(actor)
-    : Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
+  for (const classItem of engine.getEmbeddedClassItems(actor)) {
+    const classLevel = engine.getEmbeddedClassLevel(classItem);
+    if (!Number.isFinite(classLevel) || classLevel < 1) continue;
 
-  for (const classItem of classItems) {
-    const classLevel = typeof engine.getEmbeddedClassLevel === "function"
-      ? engine.getEmbeddedClassLevel(classItem)
-      : add2eSaveReadNumber(engine, classItem?.system?.niveau, classItem?.system?.level);
-
-    let progression = null;
-    if (typeof engine.getClassProgressionEntryForPassiveRule === "function") {
-      progression = engine.getClassProgressionEntryForPassiveRule({
-        progression: "progression",
-        source: {
-          actor,
-          classItemId: classItem?.id ?? null,
-          classItemUuid: classItem?.uuid ?? null,
-          className: classItem?.name ?? classItem?.system?.label ?? "Classe",
-          classLevel
-        }
-      }, { actor });
-    }
-
-    if (!progression) {
-      const rows = Array.isArray(classItem?.system?.progression) ? classItem.system.progression : [];
-      progression = rows.find(row => Number(row?.niveau ?? row?.level) === Number(classLevel))
-        ?? rows[Math.max(0, Math.min(rows.length - 1, Number(classLevel || 1) - 1))]
-        ?? null;
-    }
+    const progression = engine.getClassProgressionEntryForPassiveRule({
+      progression: "progression",
+      source: {
+        actor,
+        classItemId: classItem?.id ?? null,
+        classItemUuid: classItem?.uuid ?? null,
+        className: classItem?.name ?? classItem?.system?.label ?? "Classe",
+        classLevel
+      }
+    }, { actor });
 
     const target = add2eSaveReadFromCollection(
       engine,
@@ -209,7 +208,7 @@ function add2eSaveClassSources(engine, actor, definition) {
       target,
       classItem,
       className: classItem?.name ?? classItem?.system?.label ?? "Classe",
-      classLevel: Number(classLevel) || null,
+      classLevel: Number(classLevel),
       progression
     });
   }
@@ -240,6 +239,47 @@ function add2eSaveActorSource(engine, actor, definition) {
     : null;
 }
 
+function add2eMonsterHitDice(actor) {
+  const system = actor?.system ?? {};
+  for (const raw of [
+    system.hitDice,
+    system.hit_dice,
+    system.dv,
+    system.hd,
+    system.details?.hitDice,
+    system.details?.hit_dice,
+    system.details?.dv
+  ]) {
+    if (raw === undefined || raw === null || raw === "") continue;
+    if (Number.isFinite(Number(raw)) && Number(raw) > 0) return Math.floor(Number(raw));
+    const match = String(raw).trim().match(/\d+/);
+    if (match && Number(match[0]) > 0) return Number(match[0]);
+  }
+  return null;
+}
+
+function add2eSaveMonsterSource(actor, definition) {
+  const actorType = String(actor?.type ?? "").trim().toLowerCase();
+  if (!['monster', 'monstre'].includes(actorType)) return null;
+
+  const hitDice = add2eMonsterHitDice(actor);
+  if (!Number.isFinite(hitDice) || hitDice < 1) return null;
+  const progression = [...ADD2E_MONSTER_FIGHTER_SAVE_PROGRESSION]
+    .reverse()
+    .find(row => hitDice >= row.level) ?? null;
+  const target = Number(progression?.saves?.[definition.index]);
+  if (!Number.isFinite(target) || target <= 0) return null;
+
+  return {
+    kind: "monster-progression",
+    target,
+    actor,
+    hitDice,
+    progression,
+    name: `Progression de guerrier · ${hitDice} DV`
+  };
+}
+
 function add2eSaveTargetResolution(engine, actor, definition, context = {}) {
   const explicit = add2eSaveReadNumber(engine, context.saveTarget, context.targetSave, context.threshold);
   if (Number.isFinite(explicit) && explicit > 0) {
@@ -251,14 +291,23 @@ function add2eSaveTargetResolution(engine, actor, definition, context = {}) {
       candidates: [selected],
       classSources: [],
       actorSource: null,
+      monsterSource: null,
       source: "context"
     };
   }
 
   const classSources = add2eSaveClassSources(engine, actor, definition);
   const actorSource = add2eSaveActorSource(engine, actor, definition);
-  const candidates = classSources.length ? classSources : (actorSource ? [actorSource] : []);
+  const monsterSource = add2eSaveMonsterSource(actor, definition);
+  const candidates = classSources.length
+    ? classSources
+    : actorSource
+      ? [actorSource]
+      : monsterSource
+        ? [monsterSource]
+        : [];
   const selected = [...candidates].sort((left, right) => Number(left.target) - Number(right.target))[0] ?? null;
+
   return {
     definition,
     target: Number(selected?.target),
@@ -266,12 +315,15 @@ function add2eSaveTargetResolution(engine, actor, definition, context = {}) {
     candidates,
     classSources,
     actorSource,
-    source: classSources.length ? "classes" : actorSource ? "actor" : "none"
+    monsterSource,
+    source: classSources.length ? "classes" : actorSource ? "actor" : monsterSource ? "monster-progression" : "none"
   };
 }
 
 function add2eSaveContextKeys(engine, definition, context = {}) {
-  const keys = new Set(["all", "tout", definition.key, ...definition.aliases].map(value => add2eSaveNormalize(engine, value)).filter(Boolean));
+  const keys = new Set(["all", "tout", definition.key, ...definition.aliases]
+    .map(value => add2eSaveNormalize(engine, value))
+    .filter(Boolean));
   const raw = [
     context.attackType,
     context.effectType,
@@ -304,9 +356,13 @@ function add2eSaveTagMatches(engine, definition, matcher, context = {}) {
 }
 
 function add2eSaveConstitutionBonus(engine, actor) {
-  const total = typeof engine.resolveAbility === "function"
-    ? Number(engine.resolveAbility(actor, "constitution", { type: "save", source: "saving-throw" })?.total)
-    : add2eSaveReadNumber(engine, actor?.system?.constitution_base, actor?.system?.constitution);
+  if (typeof engine.resolveAbility !== "function") {
+    throw new Error("Le résolveur canonique des caractéristiques ADD2E n’est pas disponible.");
+  }
+  const total = Number(engine.resolveAbility(actor, "constitution", {
+    type: "save",
+    source: "saving-throw:constitution"
+  })?.total);
   if (!Number.isFinite(total)) return 0;
   return Math.max(0, Math.min(5, Math.floor(total / 3.5)));
 }
@@ -332,21 +388,16 @@ function add2eSaveWisdomAdjustment(value) {
 
 function add2eSaveMentalWisdomModifier(engine, actor, definition, context = {}) {
   if (!add2eSaveIsMentalContext(engine, context)) return null;
-  const wisdom = typeof engine.resolveAbility === "function"
-    ? Number(engine.resolveAbility(actor, "sagesse", {
-        ...context,
-        actor,
-        type: "save",
-        actionType: "save",
-        source: `${context.source ?? "saving-throw"}:mental-wisdom`
-      })?.total)
-    : add2eSaveReadNumber(
-        engine,
-        actor?.system?.sagesse_base,
-        actor?.system?.sagesse,
-        actor?.system?.sag_aff,
-        actor?.system?.abilities?.wis?.value
-      );
+  if (typeof engine.resolveAbility !== "function") {
+    throw new Error("Le résolveur canonique des caractéristiques ADD2E n’est pas disponible.");
+  }
+  const wisdom = Number(engine.resolveAbility(actor, "sagesse", {
+    ...context,
+    actor,
+    type: "save",
+    actionType: "save",
+    source: `${context.source ?? "saving-throw"}:mental-wisdom`
+  })?.total);
   const value = add2eSaveWisdomAdjustment(wisdom);
   if (!Number.isFinite(value) || value === 0) return null;
 
@@ -419,8 +470,10 @@ function add2eSaveTransientModifiers(engine, actor, definition, context = {}) {
 }
 
 function add2eSaveTagModifiers(engine, actor, definition, context = {}) {
+  if (typeof engine.getActiveTags !== "function") {
+    throw new Error("La collecte canonique des tags ADD2E n’est pas disponible.");
+  }
   const modifiers = [];
-  const tags = typeof engine.getActiveTags === "function" ? engine.getActiveTags(actor) : [];
   const push = ({ tag, value, label, suffix }) => {
     const amount = Number(value);
     if (!Number.isFinite(amount) || amount === 0) return;
@@ -442,7 +495,7 @@ function add2eSaveTagModifiers(engine, actor, definition, context = {}) {
     }));
   };
 
-  for (const rawTag of tags) {
+  for (const rawTag of engine.getActiveTags(actor)) {
     const tag = add2eSaveTag(engine, rawTag);
     if (!tag) continue;
 
@@ -481,10 +534,12 @@ function add2eSaveTagModifiers(engine, actor, definition, context = {}) {
 }
 
 function add2eSaveCanonicalModifiers(engine, actor, definition, context = {}) {
-  const collected = typeof engine.collect === "function" ? engine.collect(actor, context) : [];
+  if (typeof engine.collect !== "function" || typeof engine.normalizeModifier !== "function") {
+    throw new Error("Le collecteur canonique de modificateurs ADD2E n’est pas disponible.");
+  }
   const modifiers = [];
 
-  for (const raw of collected) {
+  for (const raw of engine.collect(actor, context)) {
     const normalized = engine.normalizeModifier(raw, { source: raw?.source });
     if (!normalized || normalized.domain !== "save") continue;
 
@@ -578,18 +633,6 @@ function add2eResolveSavingThrow(engine, actor, saveType, context = {}) {
   };
 }
 
-async function add2eResolveMonsterSheetTarget(engine, actor, definition) {
-  if (String(actor?.type ?? "").toLowerCase() !== "monster") return null;
-  try {
-    const data = await actor?.sheet?.getData?.();
-    for (const raw of [data?.calculatedSaves, data?.sauvegardes, data?.savingThrows, data?.saves]) {
-      const target = add2eSaveReadFromCollection(engine, raw, definition);
-      if (Number.isFinite(target) && target > 0) return target;
-    }
-  } catch (_error) {}
-  return null;
-}
-
 async function add2eRollSavingThrow(engine, actor, saveType, options = {}) {
   const {
     createChat = false,
@@ -617,21 +660,8 @@ async function add2eRollSavingThrow(engine, actor, saveType, options = {}) {
     };
   }
 
-  let resolution = engine.resolveSavingThrow(actor, saveType, { ...context, source });
-  let target = Number(resolution?.target);
-  if (!Number.isFinite(target) || target <= 0) {
-    const monsterTarget = await add2eResolveMonsterSheetTarget(engine, actor, resolution?.definition ?? add2eSaveDefinition(engine, saveType));
-    if (Number.isFinite(monsterTarget) && monsterTarget > 0) {
-      resolution = engine.resolveSavingThrow(actor, saveType, {
-        ...context,
-        source,
-        saveTarget: monsterTarget,
-        saveTargetLabel: "Sauvegarde calculée du monstre"
-      });
-      target = Number(resolution?.target);
-    }
-  }
-
+  const resolution = engine.resolveSavingThrow(actor, saveType, { ...context, source });
+  const target = Number(resolution?.target);
   if (!Number.isFinite(target) || target <= 0) {
     return {
       ok: false,
@@ -652,7 +682,7 @@ async function add2eRollSavingThrow(engine, actor, saveType, options = {}) {
   }
 
   const roll = await add2eEvaluateRollSafe("1d20");
-  if (showDice !== false) {
+  if (createChat !== true && showDice !== false) {
     try { await game.dice3d?.showForRoll?.(roll); } catch (_error) {}
   }
   const d20 = Number(roll.total) || 0;
@@ -703,7 +733,10 @@ function add2eInstallCanonicalSaveResolver(engine) {
       configurable: true,
       writable: true,
       value(actor, saveType, context = {}) {
-        return this.resolveSavingThrow(actor, saveType, { ...context, source: context.source ?? "get-save-target" }).target;
+        return this.resolveSavingThrow(actor, saveType, {
+          ...context,
+          source: context.source ?? "get-save-target"
+        }).target;
       }
     },
     getSaveBonus: {
@@ -738,7 +771,11 @@ function add2eInstallCanonicalSaveResolver(engine) {
             value: numericBonus,
             target: saveType,
             label: context.bonusLabel ?? "Bonus de sauvegarde de l’action",
-            source: { kind: "action", id: context.source ?? "action-save", name: context.bonusLabel ?? "Action" }
+            source: {
+              kind: "action",
+              id: context.source ?? "action-save",
+              name: context.bonusLabel ?? "Action"
+            }
           }] : [])
         ];
         const result = await this.rollSavingThrow(actor, saveType, {
@@ -837,7 +874,7 @@ async function add2eCreateSavingThrowCard({ actor, roll, resolution, total, succ
   return globalThis.add2eCreateChatCard(options);
 }
 
-export async function add2eRollCharacteristicCard(actor, carac) {
+export async function add2eRollCharacteristicCard(actor, carac, context = {}) {
   if (!actor) return ui.notifications.warn("Aucun acteur pour ce jet.");
   const key = String(carac ?? "").trim().toLowerCase();
   const labels = {
@@ -857,12 +894,18 @@ export async function add2eRollCharacteristicCard(actor, carac) {
     charisme: "fas fa-theater-masks"
   };
   const engine = add2eSheetRollEffectsEngine();
-  const resolved = typeof engine?.resolveAbility === "function"
-    ? engine.resolveAbility(actor, key, { type: "ability-check", source: "actor-sheet-ability-roll" })
-    : null;
-  const target = Number(resolved?.total ?? actor.system?.[key] ?? actor.system?.[`${key}_base`] ?? 10) || 10;
+  if (typeof engine.resolveAbility !== "function") {
+    throw new Error("Le résolveur canonique des caractéristiques ADD2E n’est pas disponible.");
+  }
+  const resolved = engine.resolveAbility(actor, key, {
+    ...context,
+    type: "ability-check",
+    source: context.source ?? "actor-sheet-ability-roll"
+  });
+  const target = Number(resolved?.total);
+  if (!Number.isFinite(target)) throw new Error(`Valeur canonique introuvable pour ${key}.`);
+
   const roll = await add2eEvaluateRollSafe("1d20");
-  try { await game.dice3d?.showForRoll?.(roll); } catch (_error) {}
   const total = Number(roll.total) || 0;
   const success = total <= target;
 
@@ -883,7 +926,14 @@ export async function add2eRollCharacteristicCard(actor, carac) {
     chatData: {
       speaker: ChatMessage.getSpeaker({ actor }),
       rolls: [roll],
-      flags: { add2e: { abilityRoll: true, ability: key, abilityTarget: target, abilitySuccess: success } }
+      flags: {
+        add2e: {
+          abilityRoll: true,
+          ability: key,
+          abilityTarget: target,
+          abilitySuccess: success
+        }
+      }
     }
   };
   globalThis.add2eBuildChatCard(options);
@@ -893,7 +943,7 @@ export async function add2eRollCharacteristicCard(actor, carac) {
 export async function add2eRollSaveCard(actor, saveType, context = {}) {
   if (!actor) return ui.notifications.warn("Aucun acteur pour ce jet.");
   const engine = add2eSheetRollEffectsEngine();
-  if (!engine?.rollSavingThrow) {
+  if (typeof engine.rollSavingThrow !== "function") {
     throw new Error("L’exécuteur canonique ADD2E de sauvegardes n’est pas disponible.");
   }
 
@@ -911,7 +961,7 @@ export async function add2eRollSaveCard(actor, saveType, context = {}) {
   return result.chatMessage;
 }
 
-function add2eHudRollActorFallback() {
+function add2eHudRollActor() {
   const hudState = globalThis.add2eHudFixDebug?.();
   return canvas?.tokens?.controlled?.[0]?.actor
     ?? game.actors?.get?.(hudState?.actorId)
@@ -921,25 +971,22 @@ function add2eHudRollActorFallback() {
 
 export function add2eInstallHudSheetRollBridge() {
   const engine = add2eSheetRollEffectsEngine();
-  if (engine) add2eInstallCanonicalSaveResolver(engine);
+  add2eInstallCanonicalSaveResolver(engine);
   globalThis.ADD2E_SHEET_ROLL_DELEGATION_VERSION = ADD2E_SHEET_ROLL_DELEGATION_VERSION;
   globalThis.ADD2E_SAVE_RESOLVER_VERSION = ADD2E_SAVE_RESOLVER_VERSION;
   globalThis.add2eResolveSavingThrow = (actor, saveType, context = {}) => {
     const current = add2eSheetRollEffectsEngine();
-    if (!current?.resolveSavingThrow) {
-      throw new Error("Le résolveur canonique ADD2E de sauvegardes n’est pas disponible.");
-    }
     return current.resolveSavingThrow(actor, saveType, context);
   };
   globalThis.add2eRollSavingThrow = async (actor, saveType, options = {}) => {
     const current = add2eSheetRollEffectsEngine();
-    if (!current?.rollSavingThrow) {
-      throw new Error("L’exécuteur canonique ADD2E de sauvegardes n’est pas disponible.");
-    }
     return current.rollSavingThrow(actor, saveType, options);
   };
   globalThis.add2eGetSaveTarget = (actor, saveType, context = {}) =>
-    globalThis.add2eResolveSavingThrow(actor, saveType, { ...context, source: context.source ?? "global-get-save-target" }).target;
+    globalThis.add2eResolveSavingThrow(actor, saveType, {
+      ...context,
+      source: context.source ?? "global-get-save-target"
+    }).target;
   globalThis.add2eRollCharacteristicCard = add2eRollCharacteristicCard;
   globalThis.add2eRollSaveCard = add2eRollSaveCard;
 
@@ -954,10 +1001,12 @@ export function add2eInstallHudSheetRollBridge() {
     event.stopPropagation();
     event.stopImmediatePropagation?.();
 
-    const actor = add2eHudRollActorFallback();
+    const actor = add2eHudRollActor();
     if (!actor) return ui.notifications.warn("Aucun acteur sélectionné pour le jet.");
     if (button.dataset.action === "roll-ability") {
-      return add2eRollCharacteristicCard(actor, button.dataset.ability);
+      return add2eRollCharacteristicCard(actor, button.dataset.ability, {
+        source: "action-hud-ability-roll"
+      });
     }
     if (button.dataset.action === "roll-save") {
       return add2eRollSaveCard(actor, Number(button.dataset.saveIndex), {
