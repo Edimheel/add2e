@@ -28,7 +28,7 @@ const SYNC_LOCKS = new Set();
 const SYNC_TIMERS = new Map();
 const DETACH_LOCKS = new Set();
 const SPELLBOOK_DIALOGS = new Map();
-const ADD2E_SPELL_LEARNING_VERSION = "2026-07-26-canonical-intelligence-learning-v1";
+const ADD2E_SPELL_LEARNING_VERSION = "2026-07-26-canonical-intelligence-learning-v2";
 
 globalThis.ADD2E_SPELL_LEARNING_VERSION = ADD2E_SPELL_LEARNING_VERSION;
 
@@ -48,16 +48,51 @@ function actorKnownEntries(actor, list) {
   return entries.sort((left, right) => left.level - right.level || left.name.localeCompare(right.name, "fr"));
 }
 
+function spellbookOwnerUuid(book) {
+  const data = arcaneData(book);
+  return String(data.ownerActorUuid ?? book?.flags?.add2e?.ownerActorUuid ?? "").trim();
+}
+
+function isCanonicalPersonalBook(actor, book, list = "") {
+  if (!actor || !book || !isSpellbook(book)) return false;
+  const data = arcaneData(book);
+  const wantedList = listKey(list || data.ownerList || book?.flags?.add2e?.ownerSpellList);
+  return data.personal === true
+    && ARCANE_LISTS.has(wantedList)
+    && listKey(data.ownerList) === wantedList
+    && spellbookOwnerUuid(book) === actor.uuid;
+}
+
 function personalBook(actor, list) {
   const wantedList = listKey(list);
-  return Array.from(actor?.items ?? []).find(item => {
-    if (!isSpellbook(item)) return false;
-    const data = arcaneData(item);
-    const ownerUuid = String(data.ownerActorUuid ?? item.flags?.add2e?.ownerActorUuid ?? "");
-    return data.personal === true
-      && listKey(data.ownerList) === wantedList
-      && (!ownerUuid || ownerUuid === actor.uuid);
-  }) ?? null;
+  return Array.from(actor?.items ?? []).find(item => isCanonicalPersonalBook(actor, item, wantedList)) ?? null;
+}
+
+async function externalizeForeignPersonalBook(actor, book, { reason = "ownership-normalization" } = {}) {
+  if (!actor || !book || !isSpellbook(book)) return false;
+  const current = arcaneData(book);
+  const flaggedPersonal = current.personal === true || book.flags?.add2e?.personalSpellbook === true;
+  if (!flaggedPersonal || isCanonicalPersonalBook(actor, book)) return false;
+  const next = {
+    ...clone(current),
+    schema: 1,
+    kind: "spellbook",
+    personal: false,
+    ownerActorUuid: "",
+    spells: documentEntries(book).map(clone)
+  };
+  await book.update({
+    "system.arcaneDocument": next,
+    "system.magique": true,
+    "system.consommable": false,
+    "flags.add2e.arcaneDocumentKind": "spellbook",
+    "flags.add2e.personalSpellbook": false,
+    "flags.add2e.ownerActorUuid": "",
+    "flags.add2e.spellbookOwnershipNormalized": true,
+    "flags.add2e.spellbookOwnershipReason": reason,
+    "flags.add2e.spellbookOwnershipNormalizedAt": new Date().toISOString()
+  }, { add2eInternal: true, add2eArcaneSync: true, render: false });
+  return true;
 }
 
 async function ensurePersonalBook(actor, list) {
@@ -191,7 +226,7 @@ export async function detachPersonalSpellbooks(actor, { reason = "loot-death" } 
         kind: "spellbook",
         personal: false,
         ownerActorUuid: "",
-        spells: documentEntries(book)
+        spells: documentEntries(book).map(clone)
       };
       await book.update({
         "system.arcaneDocument": next,
@@ -239,25 +274,19 @@ export async function syncActorSpellbooks(actor, { reason = "sync" } = {}) {
   try {
     const lists = actorArcaneLists(actor);
     const detachedForLoot = actor.getFlag?.("add2e", "arcaneBooksDetachedForLoot") === true;
+    let normalizedBooks = 0;
     let books = 0;
     let scrolls = 0;
+
+    for (const book of Array.from(actor.items).filter(isSpellbook)) {
+      if (await externalizeForeignPersonalBook(actor, book, { reason })) normalizedBooks += 1;
+    }
+
     if (!detachedForLoot) {
       for (const list of lists) if (await ensurePersonalBook(actor, list)) books += 1;
     }
-    for (const book of Array.from(actor.items).filter(isSpellbook)) {
-      const data = arcaneData(book);
-      const ownerUuid = String(data.ownerActorUuid ?? "");
-      if (data.personal === true && ownerUuid && ownerUuid !== actor.uuid) {
-        await book.update({
-          "system.arcaneDocument.personal": false,
-          "system.arcaneDocument.ownerActorUuid": "",
-          "flags.add2e.personalSpellbook": false,
-          "flags.add2e.ownerActorUuid": ""
-        }, { add2eInternal: true, add2eArcaneSync: true, render: false });
-      }
-    }
     for (const item of Array.from(actor.items)) if (await hydrateScroll(item)) scrolls += 1;
-    return { books, scrolls, detachedForLoot, reason };
+    return { books, scrolls, normalizedBooks, detachedForLoot, reason };
   } finally {
     SYNC_LOCKS.delete(lockKey);
   }
@@ -474,13 +503,18 @@ async function createLearningRollMessage({ actor, book, entry, roll, total, prof
   return globalThis.add2eCreateChatCard(card);
 }
 
-function compatibleCandidates(actor, book, profile) {
+function candidateSourceEntries(source) {
+  return (Array.isArray(source) ? source : documentEntries(source)).map(entry => clone(entry));
+}
+
+function compatibleCandidates(actor, source, profile) {
   const compatibleActorLists = actorArcaneLists(actor);
   const history = learningHistory(actor);
   const candidates = [];
-  for (const entry of documentEntries(book)) {
+  for (const entry of candidateSourceEntries(source)) {
     const unknownLists = entry.lists
-      .filter(list => compatibleActorLists.includes(listKey(list)))
+      .map(listKey)
+      .filter(list => compatibleActorLists.includes(list))
       .filter(list => !actorKnows(actor, entry, list));
     if (!unknownLists.length) continue;
     const eligibility = learningEligibility(actor, entry, unknownLists, profile, history);
@@ -534,6 +568,20 @@ async function selectSpellbookCandidates(actor, book, candidates, profile) {
 
 export async function copySpellbook(actor, book, requestedSpellKey = "") {
   if (!actor || !book || !isSpellbook(book)) return false;
+
+  const sourceEntries = documentEntries(book).map(entry => clone(entry));
+  const sourceBook = {
+    id: book.id,
+    uuid: book.uuid,
+    name: book.name,
+    img: book.img
+  };
+  if (!sourceEntries.length) {
+    ui.notifications.info("Ce livre ne contient aucun sort à copier.");
+    return false;
+  }
+
+  await externalizeForeignPersonalBook(actor, book, { reason: "before-copy" });
   await syncActorSpellbooks(actor, { reason: "before-copy" });
   const compatibleActorLists = actorArcaneLists(actor);
   if (!compatibleActorLists.length) {
@@ -542,7 +590,7 @@ export async function copySpellbook(actor, book, requestedSpellKey = "") {
   }
 
   const profile = intelligenceLearningProfile(actor);
-  const candidates = compatibleCandidates(actor, book, profile);
+  const candidates = compatibleCandidates(actor, sourceEntries, profile);
   if (!candidates.length) {
     ui.notifications.info("Aucun sort compatible et inconnu à copier dans ce livre.");
     return false;
@@ -562,7 +610,7 @@ export async function copySpellbook(actor, book, requestedSpellKey = "") {
     }
     selected = [index];
   } else {
-    selected = await selectSpellbookCandidates(actor, book, candidates, profile);
+    selected = await selectSpellbookCandidates(actor, sourceBook, candidates, profile);
   }
   if (!selected?.length) return false;
 
@@ -588,13 +636,13 @@ export async function copySpellbook(actor, book, requestedSpellKey = "") {
         roll: total,
         chance: profile.chance,
         success,
-        book
+        book: sourceBook
       });
     }
 
     if (!success) {
       failed.push(candidate.entry.name);
-      await createLearningRollMessage({ actor, book, entry: candidate.entry, roll, total, profile, success: false, reason: "Le sort n’est pas compris." });
+      await createLearningRollMessage({ actor, book: sourceBook, entry: candidate.entry, roll, total, profile, success: false, reason: "Le sort n’est pas compris." });
       continue;
     }
 
@@ -602,16 +650,16 @@ export async function copySpellbook(actor, book, requestedSpellKey = "") {
       const sourceDocument = await resolveSpell(candidate.entry);
       if (!sourceDocument) throw new Error("Sort source introuvable dans le compendium des sorts.");
       await addKnownSpell(actor, sourceDocument, candidate.entry, currentEligibility.lists, {
-        bookUuid: book.uuid,
-        bookName: book.name,
+        bookUuid: sourceBook.uuid,
+        bookName: sourceBook.name,
         roll: total,
         chance: profile.chance
       });
       copied.push(candidate.entry.name);
-      await createLearningRollMessage({ actor, book, entry: candidate.entry, roll, total, profile, success: true, reason: "Le sort est ajouté aux sorts connus." });
+      await createLearningRollMessage({ actor, book: sourceBook, entry: candidate.entry, roll, total, profile, success: true, reason: "Le sort est ajouté aux sorts connus." });
     } catch (error) {
       errors.push(`${candidate.entry.name} — ${error?.message ?? error}`);
-      console.error("[ADD2E][ARCANE_DOCUMENTS][COPY_ERROR]", { actor: actor.name, book: book.name, entry: candidate.entry, error });
+      console.error("[ADD2E][ARCANE_DOCUMENTS][COPY_ERROR]", { actor: actor.name, book: sourceBook.name, entry: candidate.entry, error });
     }
   }
 
