@@ -42,7 +42,16 @@
     <div class="a2e-panel" style="min-width:0;">
       <h2>Objets</h2>
       <div class="a2e-panel-body">
-        <a class="a2e-action-icon a2e-action-add objet-create" title="Créer un objet" style="margin-bottom:8px;font-size:1.2em;"><i class="fas fa-plus-circle"></i></a>
+        <div class="a2e-actions" style="justify-content:flex-start;margin-bottom:8px;">
+          <a class="a2e-action-icon a2e-action-add objet-create" title="Créer un objet" style="font-size:1.2em;"><i class="fas fa-plus-circle"></i></a>
+          <a
+            class="a2e-action-icon a2e-action-add"
+            data-add2e-arcane-action="scribe-scroll"
+            data-actor-id="{{actor._id}}"
+            title="Écrire un parchemin magique"
+            style="font-size:1.2em;"
+          ><i class="fas fa-feather-pointed"></i></a>
+        </div>
 
         {{#if listeObjetsDivers.length}}
           <table class="a2e-table a2e-objets-table">
