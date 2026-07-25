@@ -465,22 +465,24 @@ async function createLearningRollMessage({ actor, book, entry, roll, total, prof
   if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
     throw new Error("Les constructeurs communs de cartes ADD2E sont indisponibles.");
   }
+  const comparison = success ? "≤" : ">";
+  const list = Array.from(entry?.lists ?? []).map(listLabel).join(" / ") || "Sort";
+  const resultLabel = success ? "Ajouté aux sorts connus" : "Sort non compris";
   const card = {
     actor,
-    title: `Apprentissage — ${entry.name} — ${success ? "RÉUSSITE" : "ÉCHEC"}`,
+    title: success ? "Apprentissage réussi" : "Apprentissage échoué",
     icon: "fas fa-book-open-reader",
     variant: success ? "success" : "failure",
     source: {
-      name: book.name,
-      img: book.img,
-      type: "Livre de sorts"
+      name: entry.name,
+      img: entry.img || book.img,
+      type: `${list} · niveau ${entry.level}`
     },
     rows: [
-      { label: "Jet", value: `${total} / ${profile.chance}` },
+      { label: "Jet d’apprentissage", value: `${total} ${comparison} ${profile.chance} %` },
       { label: "Intelligence", value: String(profile.score) },
-      { label: "Limites du niveau", value: `${profile.minimum} min. · ${profile.maximumLabel} max.` },
-      { label: "Niveau maximal accessible", value: String(profile.maximumSpellLevel) },
-      ...(reason ? [{ label: "Résultat", value: reason }] : [])
+      { label: "Livre", value: book.name },
+      { label: "Résultat", value: resultLabel }
     ],
     chatData: {
       speaker: ChatMessage.getSpeaker({ actor }),
@@ -494,6 +496,7 @@ async function createLearningRollMessage({ actor, book, entry, roll, total, prof
           spellName: entry.name,
           spellLevel: entry.level,
           bookUuid: book.uuid,
+          learningReason: reason,
           spellLearningVersion: ADD2E_SPELL_LEARNING_VERSION
         }
       }
