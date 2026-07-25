@@ -21,7 +21,7 @@ import {
   viewSpellbook,
   refreshSpellbookDialog
 } from "./07b-arcane-spellbooks.mjs";
-import { castScroll } from "./07b-arcane-scrolls.mjs";
+import { castScroll, scribeScroll } from "./07b-arcane-scrolls.mjs";
 
 function applicationForElement(element) {
   const root = element?.closest?.(".application");
@@ -133,9 +133,15 @@ async function handleAction(element) {
   const itemId = String(element?.dataset?.itemId ?? "");
   const application = applicationForElement(element);
   const actor = actorForAction(element, application);
-  const item = actor?.items?.get?.(itemId) ?? null;
 
-  if (!actor || !item) {
+  if (!actor) {
+    ui.notifications.warn("Acteur introuvable pour l’action arcanique.");
+    return false;
+  }
+  if (action === "scribe-scroll") return scribeScroll(actor);
+
+  const item = actor.items?.get?.(itemId) ?? null;
+  if (!item) {
     ui.notifications.warn("Document arcanique introuvable.");
     return false;
   }
