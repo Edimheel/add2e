@@ -9,10 +9,10 @@
                 <div class="carac-control-group">
                   <button type="button" class="carac-btn moins" data-carac="dexterite" tabindex="-1">−</button>
                   <div class="carac-value carac-drop-target" data-carac="dexterite"
-                       title="Tirage naturel : {{actor.flags.add2e.base_caracs.dexterite}}&#10;Ajustement racial : {{subtract actor.system.dexterite_base actor.flags.add2e.base_caracs.dexterite}}&#10;Score définitif : {{actor.system.dexterite_base}}&#10;Valeur effective : {{actor.system.dex_aff}}">
-                    <span style="font-size:1.45em;font-weight:700;line-height:1;">{{actor.system.dex_aff}}</span>
-                    {{#if (subtract actor.system.dexterite_base actor.flags.add2e.base_caracs.dexterite)}}
-                      <span class="carac-racial-bonus-inline">(race {{#if (gt (subtract actor.system.dexterite_base actor.flags.add2e.base_caracs.dexterite) 0)}}+{{/if}}{{subtract actor.system.dexterite_base actor.flags.add2e.base_caracs.dexterite}})</span>
+                       title="Base : {{abilityDerived.dexterite.base}}&#10;Valeur finale : {{abilityDerived.dexterite.total}}{{#each abilityDerived.dexterite.modifiers}}&#10;{{label}} {{value}}{{/each}}">
+                    <span style="font-size:1.45em;font-weight:700;line-height:1;">{{abilityDerived.dexterite.total}}</span>
+                    {{#if abilityDerived.dexterite.hasAdjustment}}
+                      <span class="carac-racial-bonus-inline">({{abilityDerived.dexterite.adjustmentDisplay}})</span>
                     {{/if}}
                   </div>
                   <button type="button" class="carac-btn plus" data-carac="dexterite" tabindex="-1">+</button>
@@ -20,8 +20,8 @@
               </td>
               <td>
                 <div class="carac-adjustments-line">
-                  <div class="a2e-adjustment-item"><label>Réaction</label><input type="text" name="system.dex_att" value="{{actor.system.dex_att}}" readonly></div>
-                  <div class="a2e-adjustment-item"><label>CA défense</label><input type="text" name="system.dex_def" value="{{actor.system.dex_def}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>Réaction / tir</label><input type="text" value="{{signedNumber abilityDerived.dexterite.profile.att}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>CA défense</label><input type="text" value="{{signedNumber abilityDerived.dexterite.profile.def}}" readonly></div>
                 </div>
               </td>
             </tr>
