@@ -140,6 +140,85 @@ function add2eBuildSummaryClassFeatures(features = []) {
   return result;
 }
 
+function add2eSheetModifierValue(modifier) {
+  const operation = String(modifier?.operation ?? "add");
+  const raw = modifier?.value;
+  if (operation === "add") {
+    const value = Number(raw) || 0;
+    return `${value >= 0 ? "+" : ""}${value}`;
+  }
+  if (operation === "set") return `= ${String(raw ?? "—")}`;
+  if (operation === "multiply") return `× ${String(raw ?? "—")}`;
+  if (operation === "minmax" && raw && typeof raw === "object") {
+    if (raw.min !== undefined) return `min. ${raw.min}`;
+    if (raw.max !== undefined) return `max. ${raw.max}`;
+  }
+  return String(raw ?? "—");
+}
+
+function add2eSheetAppliedModifierRows(resolution) {
+  return Array.isArray(resolution?.applied)
+    ? resolution.applied.map(entry => {
+      const modifier = entry?.modifier ?? {};
+      return {
+        id: String(modifier.id ?? ""),
+        label: String(modifier.metadata?.label ?? modifier.source?.name ?? modifier.id ?? "Modificateur"),
+        value: add2eSheetModifierValue(modifier),
+        sourceName: String(modifier.source?.name ?? ""),
+        sourceKind: String(modifier.source?.kind ?? ""),
+        domain: String(modifier.domain ?? ""),
+        target: String(modifier.target ?? "")
+      };
+    })
+    : [];
+}
+
+function add2eSheetAbilityDerivedData(engine, actor, ability) {
+  const derived = engine.resolveAbilityDerived(actor, ability, {
+    source: "actor-sheet-base-data",
+    consumer: "application-v2"
+  });
+  const total = Number(derived?.total) || 0;
+  const base = Number(derived?.resolution?.base);
+  const adjustment = Number.isFinite(base) ? total - base : 0;
+  return {
+    total,
+    base: Number.isFinite(base) ? base : total,
+    adjustment,
+    adjustmentDisplay: `${adjustment >= 0 ? "+" : ""}${adjustment}`,
+    hasAdjustment: adjustment !== 0,
+    displayValue: derived?.displayValue ?? total,
+    tableKey: derived?.tableKey ?? total,
+    profile: foundry.utils.deepClone(derived?.profile ?? {}),
+    modifiers: add2eSheetAppliedModifierRows(derived?.resolution),
+    resolution: derived?.resolution,
+    exceptionalStrengthEligible: derived?.exceptionalStrengthEligible === true
+  };
+}
+
+function add2eSheetEquipmentModifierSummaries(engine, actor, items) {
+  if (typeof engine.collect !== "function") {
+    throw new Error("Le collecteur canonique ADD2E des modificateurs n’est pas disponible.");
+  }
+  const itemIds = new Set(items.map(item => String(item.id)));
+  const summaries = Object.fromEntries(items.map(item => [item.id, []]));
+  const modifiers = engine.collect(actor, {
+    actor,
+    consumer: "actor-sheet-equipment-summary"
+  });
+
+  for (const modifier of modifiers) {
+    const sourceItemId = String(modifier?._context?.sourceItem?.id ?? "");
+    const sourceId = String(modifier?.source?.id ?? "");
+    const itemId = itemIds.has(sourceItemId) ? sourceItemId : itemIds.has(sourceId) ? sourceId : "";
+    if (!itemId) continue;
+    const label = String(modifier?.metadata?.label ?? modifier?.source?.name ?? modifier?.id ?? "Effet");
+    summaries[itemId].push(`${label} ${add2eSheetModifierValue(modifier)}`);
+  }
+
+  return Object.fromEntries(Object.entries(summaries).map(([itemId, entries]) => [itemId, entries.join(" · ")]));
+}
+
 export function add2ePrepareActorSheetBaseData({ sheet, data }) {
   const actor = sheet.actor;
   const sys = data.actor.system;
@@ -209,21 +288,17 @@ export function add2ePrepareActorSheetBaseData({ sheet, data }) {
   sys.details_classe = details_classe;
 
   const abilityEngine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
-  if (!abilityEngine || typeof abilityEngine.resolveAbility !== "function") {
-    throw new Error("Le résolveur canonique ADD2E des caractéristiques n’est pas disponible.");
+  if (!abilityEngine || typeof abilityEngine.resolveAbilityDerived !== "function") {
+    throw new Error("Le résolveur canonique ADD2E des caractéristiques dérivées n’est pas disponible.");
   }
+  data.abilityDerived = {};
   for (const carac of CARACS) {
-    const resolution = abilityEngine.resolveAbility(actor, carac, { consumer: "actor-sheet-base-data" });
-    sys[carac] = Number(resolution?.total) || 0;
+    const derived = add2eSheetAbilityDerivedData(abilityEngine, actor, carac);
+    data.abilityDerived[carac] = derived;
+    sys[carac] = derived.total;
   }
 
-  const exceptionalStrengthClasses = Array.from(actor?.items ?? [])
-    .filter(item => String(item?.type ?? "").toLowerCase() === "classe")
-    .map(item => [item?.name, item?.system?.slug, item?.system?.label, item?.system?.nom, item?.system?.name]
-      .map(value => String(value ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f’']/g, ""))
-      .join(" "));
-  data.canExceptionalStrength = Number(sys.force) === 18
-    && exceptionalStrengthClasses.some(value => value.includes("guerrier") || value.includes("paladin") || value.includes("ranger"));
+  data.canExceptionalStrength = data.abilityDerived.force?.exceptionalStrengthEligible === true;
   if (data.canExceptionalStrength && (sys.force_ex === undefined || sys.force_ex === null)) sys.force_ex = 0;
 
   let niveau = Number(sys.niveau);
@@ -261,6 +336,7 @@ export function add2ePrepareActorSheetBaseData({ sheet, data }) {
   data.listeArmures = items.filter(item => item.type === "armure");
   data.thiefSkills = data.thiefSkillRows;
   data.listeObjets = items.filter(i => i.type === "objet");
+  data.equipmentModifierSummaryByItemId = add2eSheetEquipmentModifierSummaries(abilityEngine, actor, data.listeObjets);
 
   let poidsTotal = 0;
   data.listeObjets.forEach(o => {
