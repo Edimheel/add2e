@@ -9,7 +9,7 @@
                 <div class="carac-control-group">
                   <button type="button" class="carac-btn moins" data-carac="sagesse" tabindex="-1">−</button>
                   <div class="carac-value carac-drop-target" data-carac="sagesse"
-                       title="Base : {{abilityDerived.sagesse.base}}&#10;Valeur finale : {{abilityDerived.sagesse.total}}{{#each abilityDerived.sagesse.modifiers}}&#10;{{label}} {{value}}{{/each}}">
+                       title="Base : {{abilityDerived.sagesse.base}}&#10;Valeur finale : {{abilityDerived.sagesse.total}}&#10;{{abilityDerived.sagesse.boundsDisplay}}{{#each abilityDerived.sagesse.modifiers}}&#10;{{label}} {{value}}{{/each}}">
                     <span style="font-size:1.45em;font-weight:700;line-height:1;">{{abilityDerived.sagesse.total}}</span>
                     {{#if abilityDerived.sagesse.hasAdjustment}}
                       <span class="carac-racial-bonus-inline">({{abilityDerived.sagesse.adjustmentDisplay}})</span>
@@ -21,8 +21,9 @@
               <td>
                 <div class="carac-adjustments-line">
                   <div class="a2e-adjustment-item"><label>Bonus magie</label><input type="text" value="{{signedNumber abilityDerived.sagesse.profile.magie}}" readonly></div>
-                  <div class="a2e-adjustment-item"><label>Sorts bonus</label><input type="text" value="{{abilityDerived.sagesse.profile.sort_suppl}}" readonly></div>
+                  <div class="a2e-adjustment-item"><label>Sorts bonus</label><input type="text" value="{{abilityDerived.sagesse.bonusSpellsSummary}}" readonly></div>
                   <div class="a2e-adjustment-item"><label>% échec</label><input type="text" value="{{abilityDerived.sagesse.profile.echec}} %" readonly></div>
+                  <div class="a2e-adjustment-item"><label>Immunités</label><input type="text" value="{{abilityDerived.sagesse.spellImmunitiesSummary}}" readonly></div>
                 </div>
               </td>
             </tr>
