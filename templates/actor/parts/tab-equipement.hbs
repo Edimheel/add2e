@@ -135,6 +135,16 @@
                         {{/unless}}
                       {{/if}}
 
+                      {{#if (eq objet.system.arcaneDocument.kind "spell-scroll")}}
+                        <a
+                          class="item-control a2e-action-icon a2e-action-add"
+                          data-add2e-arcane-action="copy-scroll"
+                          data-item-id="{{objet._id}}"
+                          data-actor-id="{{../actor._id}}"
+                          title="Recopier un sort du parchemin dans le livre personnel"
+                        ><i class="fas fa-copy"></i></a>
+                      {{/if}}
+
                       <a class="item-control item-equip a2e-action-icon a2e-equip-state-icon {{#if objet.system.equipee}}equip-green{{else}}equip-red{{/if}}" data-action="equip" data-item-id="{{objet._id}}" title="{{#if objet.system.equipee}}Équipé — cliquer pour retirer{{else}}Non équipé — cliquer pour équiper{{/if}}">
                         <i class="fas fa-gem"></i>
                       </a>
