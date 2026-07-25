@@ -19,14 +19,46 @@
                 </div>
               </td>
               <td>
-                <div class="carac-adjustments-line">
-                  <div class="a2e-adjustment-item"><label>Langues</label><input type="text" value="{{abilityDerived.intelligence.profile.langues}}" readonly></div>
-                  <div class="a2e-adjustment-item"><label>% sort</label><input type="text" value="{{abilityDerived.intelligence.profile.chance_sort}} %" readonly></div>
-                  <div class="a2e-adjustment-item"><label>Sorts min</label><input type="text" value="{{abilityDerived.intelligence.profile.min_sort}}" readonly></div>
-                  <div class="a2e-adjustment-item"><label>Sorts max</label><input type="text" value="{{abilityDerived.intelligence.profile.max_sort}}" readonly></div>
-                  <div class="a2e-adjustment-item"><label>/ niveau</label><input type="text" value="{{abilityDerived.intelligence.profile.sort_par_niveau}}" readonly></div>
-                  <div class="a2e-adjustment-item"><label>Niv. max</label><input type="text" value="{{abilityDerived.intelligence.profile.niveau_sort_max}}" readonly></div>
-                  <div class="a2e-adjustment-item"><label>Illusions</label><input type="text" value="{{abilityDerived.intelligence.illusionImmunitiesSummary}}" readonly></div>
+                <div class="carac-adjustments-line" style="display:grid;grid-template-columns:1fr;gap:8px;width:100%;">
+                  <section style="display:grid;gap:4px;min-width:0;">
+                    <div style="font-size:0.72em;font-weight:900;line-height:1;color:#6f4b12;text-transform:uppercase;letter-spacing:0.03em;">Connaissances</div>
+                    <div style="display:grid;grid-template-columns:repeat(4,minmax(74px,1fr));gap:6px;min-width:0;">
+                      <div class="a2e-adjustment-item" style="max-width:none;min-width:0;grid-template-rows:minmax(26px,auto) 30px;">
+                        <label style="white-space:normal;overflow:visible;text-overflow:clip;line-height:1.08;min-height:26px;display:flex;align-items:flex-end;justify-content:center;">Langues</label>
+                        <input type="text" value="{{abilityDerived.intelligence.profile.langues}}" title="Langues supplémentaires" style="width:100%;min-width:0;height:30px;" readonly>
+                      </div>
+                      <div class="a2e-adjustment-item" style="max-width:none;min-width:0;grid-template-rows:minmax(26px,auto) 30px;">
+                        <label style="white-space:normal;overflow:visible;text-overflow:clip;line-height:1.08;min-height:26px;display:flex;align-items:flex-end;justify-content:center;">Chance d’apprendre</label>
+                        <input type="text" value="{{abilityDerived.intelligence.profile.chance_sort}} %" title="Chance de connaître chaque sort" style="width:100%;min-width:0;height:30px;" readonly>
+                      </div>
+                      <div class="a2e-adjustment-item" style="max-width:none;min-width:0;grid-template-rows:minmax(26px,auto) 30px;">
+                        <label style="white-space:normal;overflow:visible;text-overflow:clip;line-height:1.08;min-height:26px;display:flex;align-items:flex-end;justify-content:center;">Niveau maximal</label>
+                        <input type="text" value="{{abilityDerived.intelligence.profile.niveau_sort_max}}" title="Niveau maximal de sort accessible" style="width:100%;min-width:0;height:30px;" readonly>
+                      </div>
+                      <div class="a2e-adjustment-item" style="max-width:none;min-width:0;grid-template-rows:minmax(26px,auto) 30px;">
+                        <label style="white-space:normal;overflow:visible;text-overflow:clip;line-height:1.08;min-height:26px;display:flex;align-items:flex-end;justify-content:center;">Immunités aux illusions</label>
+                        <input type="text" value="{{abilityDerived.intelligence.illusionImmunitiesSummary}}" title="Niveaux d’illusions auxquels le personnage est immunisé" style="width:100%;min-width:0;height:30px;" readonly>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section style="display:grid;gap:4px;min-width:0;">
+                    <div style="font-size:0.72em;font-weight:900;line-height:1;color:#6f4b12;text-transform:uppercase;letter-spacing:0.03em;">Apprentissage des sorts</div>
+                    <div style="display:grid;grid-template-columns:repeat(3,minmax(96px,1fr));gap:6px;min-width:0;">
+                      <div class="a2e-adjustment-item" style="max-width:none;min-width:0;grid-template-rows:minmax(26px,auto) 30px;">
+                        <label style="white-space:normal;overflow:visible;text-overflow:clip;line-height:1.08;min-height:26px;display:flex;align-items:flex-end;justify-content:center;">Minimum par niveau</label>
+                        <input type="text" value="{{abilityDerived.intelligence.profile.min_sort}}" title="Nombre minimum de sorts connus par niveau" style="width:100%;min-width:0;height:30px;" readonly>
+                      </div>
+                      <div class="a2e-adjustment-item" style="max-width:none;min-width:0;grid-template-rows:minmax(26px,auto) 30px;">
+                        <label style="white-space:normal;overflow:visible;text-overflow:clip;line-height:1.08;min-height:26px;display:flex;align-items:flex-end;justify-content:center;">Maximum par niveau</label>
+                        <input type="text" value="{{abilityDerived.intelligence.profile.max_sort}}" title="Nombre maximum de sorts connus par niveau" style="width:100%;min-width:0;height:30px;" readonly>
+                      </div>
+                      <div class="a2e-adjustment-item" style="max-width:none;min-width:0;grid-template-rows:minmax(26px,auto) 30px;">
+                        <label style="white-space:normal;overflow:visible;text-overflow:clip;line-height:1.08;min-height:26px;display:flex;align-items:flex-end;justify-content:center;">Sorts par niveau</label>
+                        <input type="text" value="{{abilityDerived.intelligence.profile.sort_par_niveau}}" title="Capacité de sorts par niveau" style="width:100%;min-width:0;height:30px;" readonly>
+                      </div>
+                    </div>
+                  </section>
                 </div>
               </td>
             </tr>
