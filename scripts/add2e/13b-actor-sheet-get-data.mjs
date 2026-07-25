@@ -3,24 +3,8 @@
 
 import "./13b-actor-sheet-get-data-core.mjs";
 
-const ADD2E_SPELL_SLOT_BONUS_VERSION = "2026-07-23-generic-wisdom-slot-canonical-ability-v2";
+const ADD2E_SPELL_SLOT_BONUS_VERSION = "2026-07-26-generic-wisdom-slot-derived-profile-v3";
 globalThis.ADD2E_SPELL_SLOT_BONUS_VERSION = ADD2E_SPELL_SLOT_BONUS_VERSION;
-
-const ADD2E_WISDOM_BONUS_SPELLS = Object.freeze({
-  13: Object.freeze([1]),
-  14: Object.freeze([2]),
-  15: Object.freeze([2, 1]),
-  16: Object.freeze([2, 2]),
-  17: Object.freeze([2, 2, 1]),
-  18: Object.freeze([2, 2, 1, 1]),
-  19: Object.freeze([3, 2, 1, 2]),
-  20: Object.freeze([3, 3, 2, 2]),
-  21: Object.freeze([3, 3, 2, 3, 1]),
-  22: Object.freeze([3, 3, 3, 3, 2]),
-  23: Object.freeze([3, 3, 3, 3, 2, 1]),
-  24: Object.freeze([3, 3, 3, 3, 3, 2]),
-  25: Object.freeze([3, 3, 3, 3, 3, 3, 1])
-});
 
 function add2eSpellSlotBonusNormalize(value) {
   return String(value ?? "")
@@ -43,30 +27,41 @@ function add2eSpellSlotBonusNumber(value, fallback = 0) {
   return Number.isFinite(candidate) ? candidate : fallback;
 }
 
-function add2eSpellSlotBonusAbility(actor, ability) {
-  if (!actor) return 0;
-  const key = add2eSpellSlotBonusNormalize(ability);
-  const canonical = ["wis", "wisdom", "sagesse"].includes(key) ? "sagesse"
+function add2eSpellSlotBonusAbilityKey(value) {
+  const key = add2eSpellSlotBonusNormalize(value);
+  return ["wis", "wisdom", "sagesse"].includes(key) ? "sagesse"
     : ["str", "strength", "force"].includes(key) ? "force"
       : ["dex", "dexterity", "dexterite"].includes(key) ? "dexterite"
         : ["con", "constitution"].includes(key) ? "constitution"
           : ["int", "intelligence"].includes(key) ? "intelligence"
             : ["cha", "charisma", "charisme"].includes(key) ? "charisme"
               : key;
+}
+
+function add2eSpellSlotBonusDerived(actor, ability) {
+  if (!actor) return null;
+  const canonical = add2eSpellSlotBonusAbilityKey(ability);
   const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
-  if (!engine || typeof engine.resolveAbility !== "function") {
-    throw new Error("Le résolveur canonique ADD2E des caractéristiques n’est pas disponible.");
+  if (!engine || typeof engine.resolveAbilityDerived !== "function") {
+    throw new Error("Le résolveur canonique ADD2E des profils dérivés n’est pas disponible.");
   }
-  return add2eSpellSlotBonusNumber(
-    engine.resolveAbility(actor, canonical, { consumer: "spell-slot-and-class-mechanics" })?.total,
-    0
-  );
+  return engine.resolveAbilityDerived(actor, canonical, {
+    source: "spell-slot-and-class-mechanics",
+    consumer: "spell-slot-and-class-mechanics"
+  });
+}
+
+function add2eSpellSlotBonusAbility(actor, ability) {
+  return add2eSpellSlotBonusNumber(add2eSpellSlotBonusDerived(actor, ability)?.total, 0);
 }
 
 function add2eWisdomBonusSpellSlots(actor, spellLevel) {
-  const wisdom = Math.max(0, Math.min(25, Math.floor(add2eSpellSlotBonusAbility(actor, "sagesse"))));
-  const row = ADD2E_WISDOM_BONUS_SPELLS[wisdom] ?? [];
-  return Math.max(0, add2eSpellSlotBonusNumber(row[Math.max(0, Number(spellLevel) - 1)], 0));
+  const level = Math.max(1, Math.trunc(Number(spellLevel) || 1));
+  const profile = add2eSpellSlotBonusDerived(actor, "sagesse")?.profile ?? {};
+  const bonusByLevel = profile.bonusSortsParNiveau && typeof profile.bonusSortsParNiveau === "object"
+    ? profile.bonusSortsParNiveau
+    : {};
+  return Math.max(0, add2eSpellSlotBonusNumber(bonusByLevel[level], 0));
 }
 
 function add2eSpellSlotBonusClassItem(actor, source) {
