@@ -17,6 +17,28 @@ globalThis.__add2eHudSheetRollBridgeV1 = true;
 add2eInstallHudSheetRollBridge();
 
 const ADD2E_LISTENER_CARACS = ["force", "dexterite", "constitution", "intelligence", "sagesse", "charisme"];
+const ADD2E_CONSTITUTION_RULES_VERSION = "2026-07-26-constitution-hp-survival-v1";
+const ADD2E_FIGHTER_HP_CLASSES = new Set(["guerrier", "paladin", "ranger"]);
+const ADD2E_CONSTITUTION_CHECKS = Object.freeze({
+  trauma: Object.freeze({
+    key: "trauma",
+    profileKey: "trauma",
+    label: "Résistance aux traumatismes",
+    shortLabel: "Choc traumatique",
+    icon: "fas fa-heart-pulse",
+    chatCardType: "constitution-trauma-check"
+  }),
+  resurrection: Object.freeze({
+    key: "resurrection",
+    profileKey: "resu",
+    label: "Survie à la résurrection",
+    shortLabel: "Résurrection",
+    icon: "fas fa-hand-holding-heart",
+    chatCardType: "constitution-resurrection-check"
+  })
+});
+
+globalThis.ADD2E_CONSTITUTION_RULES_VERSION = ADD2E_CONSTITUTION_RULES_VERSION;
 
 function add2eListenerNumber(value, fallback = 0) {
   const number = Number(value);
@@ -39,6 +61,263 @@ function add2eListenerAppliedRacialAdjustment(actor, carac, naturalValue) {
   if (raw < 0 && natural + raw < 3) return Math.min(0, 3 - natural);
   return raw;
 }
+
+function add2eConstitutionEngine() {
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  if (!engine || typeof engine.resolveAbilityDerived !== "function" || typeof engine.resolve !== "function") {
+    throw new Error("Le moteur canonique ADD2E de Constitution n’est pas disponible.");
+  }
+  return engine;
+}
+
+function add2eConstitutionNormalize(value) {
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  if (typeof engine?.normalizeTag === "function") {
+    return String(engine.normalizeTag(value) ?? "")
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/_+/g, "_")
+      .replace(/^_+|_+$/g, "");
+  }
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function add2eConstitutionClassKey(classDocument) {
+  const system = classDocument?.system ?? {};
+  const candidates = [system.slug, system.key, system.label, system.nom, system.name, classDocument?.name];
+  for (const candidate of candidates) {
+    const key = add2eConstitutionNormalize(candidate);
+    if (["guerrier", "fighter", "warrior"].includes(key)) return "guerrier";
+    if (key === "paladin") return "paladin";
+    if (key === "ranger") return "ranger";
+  }
+  return add2eConstitutionNormalize(candidates.find(value => String(value ?? "").trim()) ?? "classe");
+}
+
+function add2eResolveConstitutionHitPointProgression(actor, classDocument) {
+  if (!actor?.system || !classDocument?.system) return null;
+  const engine = add2eConstitutionEngine();
+  const system = classDocument.system;
+  const level = Math.max(1, Math.floor(Number(system.niveau ?? system.level) || 1));
+  const configuredHitDie = Math.floor(Number(system.hitDie) || 0);
+  if (!Number.isFinite(configuredHitDie) || configuredHitDie < 1) return null;
+
+  const classKey = add2eConstitutionClassKey(classDocument);
+  const fighterClass = ADD2E_FIGHTER_HP_CLASSES.has(classKey);
+  const constitution = engine.resolveAbilityDerived(actor, "constitution", {
+    source: "hit-points-calculation",
+    consumer: "actor-sheet-hit-points",
+    classItemId: classDocument.id,
+    classItemUuid: classDocument.uuid,
+    classKey
+  });
+  const normalBonus = Math.trunc(Number(constitution?.profile?.pv) || 0);
+  const fighterBonus = Math.trunc(Number(constitution?.profile?.pv_guerrier) || 0);
+
+  if (classKey === "ranger") {
+    return {
+      classKey,
+      className: classDocument.name,
+      fighterClass: true,
+      level,
+      dieSize: 8,
+      hitDice: Math.min(11, level + 1),
+      fixedLevels: Math.max(0, level - 10),
+      fixedHitPointsPerLevel: 2,
+      constitutionBonusPerDie: fighterBonus,
+      constitution
+    };
+  }
+
+  if (classKey === "guerrier" || classKey === "paladin") {
+    return {
+      classKey,
+      className: classDocument.name,
+      fighterClass: true,
+      level,
+      dieSize: configuredHitDie,
+      hitDice: Math.min(9, level),
+      fixedLevels: Math.max(0, level - 9),
+      fixedHitPointsPerLevel: 3,
+      constitutionBonusPerDie: fighterBonus,
+      constitution
+    };
+  }
+
+  return {
+    classKey,
+    className: classDocument.name,
+    fighterClass,
+    level,
+    dieSize: configuredHitDie,
+    hitDice: level,
+    fixedLevels: 0,
+    fixedHitPointsPerLevel: 0,
+    constitutionBonusPerDie: normalBonus,
+    constitution
+  };
+}
+
+async function add2eRecalculateSingleClassHitPoints(actor, { syncCurrent = false, force = false, reason = "unknown" } = {}) {
+  if (!actor?.system) return false;
+  const classes = Array.from(actor.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
+  if (classes.length !== 1) return false;
+
+  const progression = add2eResolveConstitutionHitPointProgression(actor, classes[0]);
+  if (!progression) return false;
+
+  const system = actor.system;
+  let hpRolls = Array.isArray(system.hpRolls) ? [...system.hpRolls] : [];
+  if (force) hpRolls = [];
+
+  for (let index = 0; index < progression.hitDice; index += 1) {
+    if (index === 0) {
+      hpRolls[index] = progression.dieSize;
+      continue;
+    }
+    const current = Number(hpRolls[index]);
+    if (Number.isFinite(current) && current >= 1 && current <= progression.dieSize) continue;
+    hpRolls[index] = 1 + Math.floor(Math.random() * progression.dieSize);
+  }
+  hpRolls = hpRolls.slice(0, progression.hitDice);
+
+  const hitDiceTotal = hpRolls.reduce((total, roll) => (
+    total + Math.max(1, Math.trunc(Number(roll) || 1) + progression.constitutionBonusPerDie)
+  ), 0);
+  const fixedTotal = progression.fixedLevels * progression.fixedHitPointsPerLevel;
+  const baseMaximum = Math.max(1, hitDiceTotal + fixedTotal);
+  const modifierTotal = Math.trunc(Number(globalThis.add2eGetActorHpModifierTotal?.(actor)) || 0);
+  const effectiveMaximum = Math.max(1, baseMaximum + modifierTotal);
+
+  const sameRolls = typeof foundry?.utils?.deepEqual === "function"
+    ? foundry.utils.deepEqual(system.hpRolls ?? [], hpRolls)
+    : JSON.stringify(system.hpRolls ?? []) === JSON.stringify(hpRolls);
+  const currentHitPoints = Number(system.pdv);
+  const maximumChanged = Number(system.points_de_coup) !== effectiveMaximum;
+  const currentChanged = syncCurrent
+    ? currentHitPoints !== effectiveMaximum
+    : Number.isFinite(currentHitPoints) && currentHitPoints > effectiveMaximum;
+
+  const updates = {};
+  if (!sameRolls) updates["system.hpRolls"] = hpRolls;
+  if (maximumChanged || currentChanged) updates["system.points_de_coup"] = baseMaximum;
+  if (currentChanged) updates["system.pdv"] = baseMaximum;
+  if (!Object.keys(updates).length) return true;
+
+  await actor.update(updates, {
+    add2eInternal: true,
+    add2eReason: reason,
+    add2eConstitutionHitPoints: true
+  });
+  return true;
+}
+
+function add2eConstitutionCheckDefinition(check) {
+  const key = add2eConstitutionNormalize(check);
+  if (["trauma", "traumatisme", "choc", "choc_traumatique"].includes(key)) return ADD2E_CONSTITUTION_CHECKS.trauma;
+  if (["resurrection", "resu", "rappel_a_la_vie", "survie_resurrection"].includes(key)) return ADD2E_CONSTITUTION_CHECKS.resurrection;
+  return null;
+}
+
+async function add2eRollConstitutionCheckCard(actor, check, context = {}) {
+  if (!actor?.system) throw new Error("Acteur introuvable pour le test de Constitution.");
+  const definition = add2eConstitutionCheckDefinition(check);
+  if (!definition) throw new Error(`Test de Constitution inconnu : ${String(check ?? "vide")}.`);
+  if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
+    throw new Error("Les constructeurs communs de cartes ADD2E sont indisponibles.");
+  }
+
+  const engine = add2eConstitutionEngine();
+  const constitution = engine.resolveAbilityDerived(actor, "constitution", {
+    ...context,
+    source: context.source ?? `constitution-check:${definition.key}`,
+    consumer: "actor-sheet-constitution-check",
+    actionType: "save",
+    saveType: definition.key
+  });
+  const baseChance = Math.max(0, Math.min(100, Math.trunc(Number(constitution?.profile?.[definition.profileKey]) || 0)));
+  const resolution = engine.resolve(actor, {
+    domain: "save",
+    target: definition.key,
+    base: baseChance,
+    rounding: "floor",
+    context: {
+      ...context,
+      actor,
+      actionType: "save",
+      saveType: definition.key,
+      constitutionCheck: definition.key,
+      source: context.source ?? `constitution-check:${definition.key}`
+    }
+  });
+  const threshold = Math.max(0, Math.min(100, Math.trunc(Number(resolution?.total) || 0)));
+  const roll = await add2eEvaluateRollSafe("1d100");
+  const total = Math.trunc(Number(roll.total) || 0);
+  const success = total <= threshold;
+  const adjustment = threshold - baseChance;
+  const comparison = success ? "≤" : ">";
+
+  const card = {
+    actor,
+    title: definition.label,
+    icon: definition.icon,
+    variant: success ? "success" : "failure",
+    source: {
+      name: actor.name,
+      img: actor.img,
+      type: `Constitution ${constitution?.total ?? "—"}`
+    },
+    rows: [
+      { label: "Chance de base", value: `${baseChance} %` },
+      { label: "Ajustements", value: adjustment ? `${adjustment > 0 ? "+" : ""}${adjustment} %` : "Aucun" },
+      { label: "Seuil final", value: `${threshold} %` },
+      { label: "Jet", value: `${total} ${comparison} ${threshold}` },
+      { label: "Résultat", value: success ? "Réussite" : "Échec" }
+    ],
+    chatData: {
+      speaker: ChatMessage.getSpeaker({ actor }),
+      rolls: [roll],
+      flags: {
+        add2e: {
+          chatCardType: definition.chatCardType,
+          constitutionRulesVersion: ADD2E_CONSTITUTION_RULES_VERSION,
+          check: definition.key,
+          success,
+          total,
+          baseChance,
+          threshold,
+          adjustment,
+          constitution: Number(constitution?.total) || null
+        }
+      }
+    }
+  };
+  globalThis.add2eBuildChatCard(card);
+  const message = await globalThis.add2eCreateChatCard(card);
+  return { success, total, baseChance, threshold, adjustment, roll, message, resolution, constitution };
+}
+
+globalThis.add2eResolveConstitutionHitPointProgression = add2eResolveConstitutionHitPointProgression;
+globalThis.add2eRecalculateSingleClassHitPoints = add2eRecalculateSingleClassHitPoints;
+globalThis.add2eRollConstitutionCheckCard = add2eRollConstitutionCheckCard;
+globalThis.add2eRollTraumaticShockCard = (actor, context = {}) => add2eRollConstitutionCheckCard(actor, "trauma", context);
+globalThis.add2eRollResurrectionSurvivalCard = (actor, context = {}) => add2eRollConstitutionCheckCard(actor, "resurrection", context);
+
+globalThis.Add2eActorSheet.prototype.autoSetPointsDeCoup = async function autoSetPointsDeCoup(options = {}) {
+  try {
+    return await add2eRecalculateSingleClassHitPoints(this.actor, options);
+  } catch (error) {
+    console.warn("[ADD2E][HP][CONSTITUTION] Erreur autoSetPointsDeCoup :", error);
+    return false;
+  }
+};
 
 globalThis.Add2eActorSheet.prototype.activateListeners = function activateListeners(html) {
   html = html?.jquery ? html : $(html);
@@ -136,6 +415,19 @@ globalThis.Add2eActorSheet.prototype.activateListeners = function activateListen
   html.find('.roll-save').off('click.add2e').on('click.add2e', async ev => {
     ev.preventDefault();
     await add2eRollSaveCard(this.actor, Number(ev.currentTarget.dataset.save));
+  });
+
+  html.find('.add2e-constitution-check').off('click.add2eConstitutionCheck').on('click.add2eConstitutionCheck', async ev => {
+    ev.preventDefault();
+    ev.stopPropagation();
+    this._add2eRememberActiveTab(html);
+    const check = String(ev.currentTarget.dataset.check ?? "").trim();
+    try {
+      await add2eRollConstitutionCheckCard(this.actor, check, { source: "actor-sheet-constitution-check" });
+    } catch (error) {
+      console.error("[ADD2E][CONSTITUTION][CHECK_ERROR]", { actor: this.actor?.name, check, error });
+      ui.notifications.error(error?.message || "Erreur pendant le test de Constitution.");
+    }
   });
 
   html.find('.add2e-thief-skill-roll').off('click.add2e').on('click.add2e', async ev => {
