@@ -1,6 +1,6 @@
 // ADD2E — onUse Magicien : Suggestion
-// Version : 2026-07-26-suggestion-canonical-object-context-v1
-// Compatible Foundry V13/V14/V15.
+// Version : 2026-07-26-suggestion-single-result-card-v2
+// Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2.
 // Retour attendu : true = sort/pouvoir consommé, false = coût restitué.
 
 return await (async () => {
@@ -9,6 +9,7 @@ return await (async () => {
     ? sort
     : ((typeof item !== "undefined" && item) ? item : null);
   const caster = (typeof actor !== "undefined" && actor) ? actor : spellDocument?.parent;
+
   if (!spellDocument || !caster) {
     ui.notifications.error("Suggestion : source ou lanceur introuvable.");
     return false;
@@ -51,15 +52,21 @@ return await (async () => {
     ?? objectItem?.system?.pouvoirsMagiques
     ?? objectItem?.system?.magicalPowers
     ?? [];
-  const powers = Array.isArray(rawPowers) ? rawPowers : rawPowers && typeof rawPowers === "object" ? Object.values(rawPowers) : [];
+  const powers = Array.isArray(rawPowers)
+    ? rawPowers
+    : rawPowers && typeof rawPowers === "object" ? Object.values(rawPowers) : [];
   const sourcePower = Number.isInteger(powerIndex) ? powers[powerIndex] ?? null : null;
   const powerEffects = Array.isArray(sourcePower?.effects) ? sourcePower.effects : [];
   const suggestionEffect = powerEffects.find(effect => norm(effect?.type ?? effect?.kind) === "suggestion")
     ?? powerEffects.find(effect => norm(effect?.type ?? effect?.kind) === "linked_spell")
     ?? {};
-  const parameters = sourcePower?.parameters && typeof sourcePower.parameters === "object" ? sourcePower.parameters : {};
+  const parameters = sourcePower?.parameters && typeof sourcePower.parameters === "object"
+    ? sourcePower.parameters
+    : {};
   const sourceDocument = objectItem ?? spellDocument;
-  const isObjectPower = spellDocument.system?.isObjectPower === true || spellDocument.system?.isPower === true || !!objectItem;
+  const isObjectPower = spellDocument.system?.isObjectPower === true
+    || spellDocument.system?.isPower === true
+    || !!objectItem;
 
   const casterLevel = Math.max(1, Math.floor(number(
     spellDocument.system?.casterLevel,
@@ -77,6 +84,7 @@ return await (async () => {
     ui.notifications.warn("Suggestion exige au moins une cible sélectionnée.");
     return false;
   }
+
   const configuredMaxTargets = number(parameters.maxTargets, suggestionEffect.maxTargets);
   const maximumTargets = Number.isFinite(configuredMaxTargets)
     ? Math.max(1, Math.floor(configuredMaxTargets))
@@ -96,8 +104,10 @@ return await (async () => {
   };
   const casterToken = (typeof token !== "undefined" && token)
     ? token
-    : args?.[0]?.token ?? canvas?.tokens?.controlled?.find?.(entry => entry.actor?.id === caster.id)
-      ?? caster.getActiveTokens?.()?.[0] ?? null;
+    : args?.[0]?.token
+      ?? canvas?.tokens?.controlled?.find?.(entry => entry.actor?.id === caster.id)
+      ?? caster.getActiveTokens?.()?.[0]
+      ?? null;
   const measureDistance = targetToken => {
     if (!casterToken || !targetToken || casterToken === targetToken) return 0;
     try {
@@ -115,7 +125,13 @@ return await (async () => {
     const gridDistance = Number(canvas?.scene?.grid?.distance ?? 1) || 1;
     return pixels / gridSize * gridDistance;
   };
-  const maximumRange = distanceValue(parameters.range ?? suggestionEffect.range ?? spellDocument.system?.portee ?? spellDocument.system?.portée ?? 3);
+  const maximumRange = distanceValue(
+    parameters.range
+    ?? suggestionEffect.range
+    ?? spellDocument.system?.portee
+    ?? spellDocument.system?.portée
+    ?? 3
+  );
   if (Number.isFinite(maximumRange) && casterToken) {
     const outOfRange = targets.filter(target => Number(measureDistance(target)) > maximumRange);
     if (outOfRange.length) {
@@ -185,24 +201,43 @@ return await (async () => {
     return Math.max(10, (6 + (6 * casterLevel)) * 10);
   })();
 
+  const incomingLabel = result => String(result?.label ?? result?.details ?? "Défense passive").trim();
+  const incomingDetail = result => {
+    if (!result || result.kind === "none") return "";
+    if (result.kind === "resistance") {
+      const status = result.blocked ? "réussie" : "échouée";
+      return `${incomingLabel(result)} ${Number(result.pct) || 0}% — jet ${Number(result.roll) || 0} : résistance ${status}`;
+    }
+    return incomingLabel(result);
+  };
+
   const buildCard = async ({ results, invalidReason = "" }) => {
     const rolls = results.map(result => result.save?.roll).filter(Boolean);
     const rows = results.map(result => {
       const save = result.save;
-      const detail = result.outcome === "racial"
-        ? `Résistance au charme réussie (${Number(result.resistance?.jet) || 0}/${Number(result.resistance?.pct) || 0} %)`
-        : result.outcome === "saved"
-          ? `Sauvegarde réussie — ${save.total} contre ${save.target}`
-          : result.outcome === "affected"
-            ? `Sauvegarde échouée — suggestion active pour ${durationRounds} rounds`
-            : invalidReason || "Aucun effet";
+      const passive = incomingDetail(result.incoming);
+      let detail;
+      if (result.outcome === "immune") {
+        detail = `Immunité — ${passive || incomingLabel(result.resistance)} : effet annulé`;
+      } else if (result.outcome === "resisted") {
+        detail = `${passive || "Résistance réussie"} : effet annulé`;
+      } else if (result.outcome === "racial") {
+        detail = `Résistance au charme réussie (${Number(result.resistance?.jet) || 0}/${Number(result.resistance?.pct) || 0} %) : effet annulé`;
+      } else if (result.outcome === "saved") {
+        detail = `${passive ? `${passive} ; ` : ""}Sauvegarde réussie — ${save.total} contre ${save.target} : effet annulé`;
+      } else if (result.outcome === "affected") {
+        detail = `${passive ? `${passive} ; ` : ""}Sauvegarde échouée — suggestion active pour ${durationRounds} rounds`;
+      } else {
+        detail = invalidReason || "Aucun effet";
+      }
       return { label: result.targetActor.name, value: detail };
     });
+    const affected = results.some(result => result.outcome === "affected");
     const card = {
       actor: caster,
       title: sourceDocument.name || "Suggestion",
       icon: "fas fa-comments",
-      variant: results.some(result => result.outcome === "affected") ? "ability" : "success",
+      variant: affected ? "ability" : "success",
       source: {
         name: caster.name,
         img: caster.img,
@@ -215,7 +250,9 @@ return await (async () => {
         { label: "Ajustement de sauvegarde", value: `${choice.saveModifier >= 0 ? "+" : ""}${choice.saveModifier}` },
         ...rows
       ],
-      message: invalidReason || "Chaque cible qui échoue à sa sauvegarde est soumise à la suggestion formulée.",
+      message: invalidReason || (affected
+        ? "La suggestion est appliquée uniquement aux cibles dont toutes les défenses ont échoué."
+        : "La suggestion n’affecte aucune cible."),
       chatData: {
         speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken }),
         rolls,
@@ -231,7 +268,13 @@ return await (async () => {
             reasonable: choice.reasonable,
             saveModifier: choice.saveModifier,
             durationRounds,
-            outcomes: results.map(result => ({ actorUuid: result.targetActor.uuid, outcome: result.outcome }))
+            singleResultCard: true,
+            outcomes: results.map(result => ({
+              actorUuid: result.targetActor.uuid,
+              outcome: result.outcome,
+              incomingKind: result.incoming?.kind ?? "none",
+              incomingBlocked: result.incoming?.blocked === true
+            }))
           }
         }
       }
@@ -246,7 +289,14 @@ return await (async () => {
       ? "La cible ne comprend pas la langue : la suggestion n’a aucun effet."
       : "La formulation est directement nuisible ou manifestement déraisonnable : le sort est annulé sans effet.";
     await buildCard({
-      results: targets.map(targetToken => ({ targetToken, targetActor: targetToken.actor, save: null, resistance: null, outcome: "invalid" })),
+      results: targets.map(targetToken => ({
+        targetToken,
+        targetActor: targetToken.actor,
+        incoming: null,
+        save: null,
+        resistance: null,
+        outcome: "invalid"
+      })),
       invalidReason
     });
     return true;
@@ -258,14 +308,44 @@ return await (async () => {
   }
 
   const effectsEngine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  const resolveIncoming = globalThis.add2eResolveIncomingActiveEffect;
+  const incomingTags = ["etat:suggestion", "suggestion", "mental", "charme", "sort:suggestion"];
   const prepared = [];
+
   for (const targetToken of targets) {
     const targetActor = targetToken.actor;
-    const resistance = effectsEngine?.checkResistanceDetails?.(targetActor, "charme", { chat: false }) ?? null;
-    if (resistance?.resiste) {
-      prepared.push({ targetToken, targetActor, resistance, save: null, outcome: "racial" });
+    const incoming = typeof resolveIncoming === "function"
+      ? resolveIncoming(targetActor, {
+          effect: null,
+          data: null,
+          tags: new Set(incomingTags),
+          keys: new Set(["suggestion"]),
+          name: "Suggestion"
+        })
+      : { blocked: false, kind: "none", pct: 0, roll: 0, label: "" };
+
+    if (incoming?.blocked === true) {
+      prepared.push({
+        targetToken,
+        targetActor,
+        incoming,
+        resistance: null,
+        save: null,
+        outcome: incoming.kind === "resistance" ? "resisted" : "immune"
+      });
       continue;
     }
+
+    const resistance = effectsEngine?.checkResistanceDetails?.(targetActor, "charme", { chat: false }) ?? null;
+    if (resistance?.immunise === true) {
+      prepared.push({ targetToken, targetActor, incoming, resistance, save: null, outcome: "immune" });
+      continue;
+    }
+    if (resistance?.resiste === true) {
+      prepared.push({ targetToken, targetActor, incoming, resistance, save: null, outcome: "racial" });
+      continue;
+    }
+
     const saveModifiers = choice.saveModifier === 0 ? [] : [{
       id: `${sourceDocument.id ?? "suggestion"}:${targetActor.id}:circumstance`,
       target: "sorts",
@@ -290,7 +370,14 @@ return await (async () => {
       ui.notifications.error(`Suggestion : sauvegarde contre les sortilèges indisponible pour ${targetActor.name}.`);
       return false;
     }
-    prepared.push({ targetToken, targetActor, resistance, save, outcome: save.success ? "saved" : "affected" });
+    prepared.push({
+      targetToken,
+      targetActor,
+      incoming,
+      resistance,
+      save,
+      outcome: save.success ? "saved" : "affected"
+    });
   }
 
   const applyEffect = async entry => {
@@ -298,10 +385,15 @@ return await (async () => {
     const effectKey = `${sourceDocument.uuid ?? sourceDocument.id}:${caster.uuid ?? caster.id}:suggestion`;
     const existingIds = Array.from(targetActor.effects ?? [])
       .filter(effect => String(effect.flags?.add2e?.suggestionKey ?? "") === effectKey)
-      .map(effect => effect.id).filter(Boolean);
+      .map(effect => effect.id)
+      .filter(Boolean);
     if ((game.user?.isGM || targetActor.isOwner) && existingIds.length) {
-      await targetActor.deleteEmbeddedDocuments("ActiveEffect", existingIds, { add2eInternal: true, add2eReason: "replace-suggestion" });
+      await targetActor.deleteEmbeddedDocuments("ActiveEffect", existingIds, {
+        add2eInternal: true,
+        add2eReason: "replace-suggestion"
+      });
     }
+
     const tags = ["etat:suggestion", "suggestion", "mental", "charme", "sort:suggestion"];
     const extraFlags = {
       suggestionKey: effectKey,
@@ -314,6 +406,8 @@ return await (async () => {
       suggestion: choice.suggestion,
       tags,
       effectTags: tags,
+      incomingEffectResolutionBypass: true,
+      incomingEffectPreResolved: true,
       rules: [{ type: "state_condition", condition: "suggestion", mental: true, instruction: choice.suggestion }]
     };
     const effectData = typeof game.add2e?.time?.effectData === "function"
@@ -347,14 +441,24 @@ return await (async () => {
           changes: [],
           flags: { add2e: extraFlags }
         };
+
     if (game.user?.isGM || targetActor.isOwner) {
       if (typeof game.add2e?.time?.createTimedActiveEffect === "function") {
-        await game.add2e.time.createTimedActiveEffect(targetActor, effectData);
+        await game.add2e.time.createTimedActiveEffect(targetActor, effectData, {
+          add2eSkipIncomingEffectResolution: true,
+          add2eInternal: true,
+          add2eReason: "suggestion-pre-resolved"
+        });
       } else {
-        await targetActor.createEmbeddedDocuments("ActiveEffect", [effectData], { add2eInternal: true, add2eReason: "suggestion" });
+        await targetActor.createEmbeddedDocuments("ActiveEffect", [effectData], {
+          add2eSkipIncomingEffectResolution: true,
+          add2eInternal: true,
+          add2eReason: "suggestion-pre-resolved"
+        });
       }
       return true;
     }
+
     if (game.socket) {
       game.socket.emit("system.add2e", {
         type: "applyActiveEffect",
@@ -362,7 +466,12 @@ return await (async () => {
         actorUuid: targetActor.uuid,
         sceneId: canvas.scene?.id,
         tokenId: targetToken.id,
-        effectData
+        effectData,
+        options: {
+          add2eSkipIncomingEffectResolution: true,
+          add2eInternal: true,
+          add2eReason: "suggestion-pre-resolved"
+        }
       });
       return true;
     }
@@ -382,7 +491,12 @@ return await (async () => {
     caster: caster.name,
     source: sourceDocument.name,
     objectItem: objectItem?.name ?? null,
-    targets: prepared.map(entry => ({ name: entry.targetActor.name, outcome: entry.outcome })),
+    targets: prepared.map(entry => ({
+      name: entry.targetActor.name,
+      outcome: entry.outcome,
+      incomingKind: entry.incoming?.kind ?? "none",
+      incomingBlocked: entry.incoming?.blocked === true
+    })),
     durationRounds
   });
   return true;
