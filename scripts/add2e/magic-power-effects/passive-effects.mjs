@@ -4,10 +4,16 @@ import {
   VERSION, EFFECT_FLAG, INTERNAL_EFFECT_OPTION, INTERNAL_NORMALIZE_OPTION,
   cataloguePowers, clone, currentTick, equal, itemUsable, powerArray
 } from "./runtime.mjs";
-import { compilePower, compiledFromRules, rulesOf, uniqueChanges, uniqueTags } from "./rules.mjs";
+import {
+  compilePower, compiledFromRules, rulesOf, uniqueChanges, uniqueModifiers, uniqueTags
+} from "./rules.mjs";
 
 const NORMALIZE_LOCK = new Set();
 const changeSignature = change => `${String(change?.key ?? "")}|${Number(change?.mode ?? 0)}|${String(change?.value ?? "")}|${Number(change?.priority ?? 0)}`;
+const modifierSignature = modifier => JSON.stringify([
+  modifier?.domain, modifier?.target, modifier?.operation, modifier?.value,
+  modifier?.priority, modifier?.stacking, modifier?.conditions, modifier?.metadata
+]);
 
 function signature(value) {
   const text = JSON.stringify(value);
@@ -36,6 +42,7 @@ function effectData(item, power, index, compiled) {
     tags: compiled.tags,
     effectTags: compiled.tags,
     rules: compiled.rules,
+    modifiers: compiled.modifiers,
     handledTypes: compiled.handledTypes,
     periodic: compiled.periodic,
     periodicState: { lastTick: currentTick(), lastAppliedTick: null, pulses: 0, healed: 0, cycleIndex: 0 },
@@ -74,6 +81,7 @@ function effectData(item, power, index, compiled) {
     img: base.img,
     tags: compiled.tags,
     rules: compiled.rules,
+    modifiers: compiled.modifiers,
     changes: base.changes,
     periodic: compiled.periodic,
     handledTypes: compiled.handledTypes
@@ -151,20 +159,26 @@ export async function normalizeEffectDocument(effect) {
   try {
     const previous = effect.flags?.add2e?.magicPowerNormalization ?? {};
     const oldChangeSignatures = new Set(Array.isArray(previous.generatedChangeSignatures) ? previous.generatedChangeSignatures : []);
+    const oldModifierSignatures = new Set(Array.isArray(previous.generatedModifierSignatures) ? previous.generatedModifierSignatures : []);
     const oldTags = new Set(Array.isArray(previous.generatedTags) ? previous.generatedTags.map(String) : []);
     const baseChanges = Array.from(effect.changes ?? []).filter(change => !oldChangeSignatures.has(changeSignature(change)));
+    const baseModifiers = Array.from(effect.flags?.add2e?.modifiers ?? [])
+      .filter(modifier => !oldModifierSignatures.has(modifierSignature(modifier)));
     const baseTags = Array.from(effect.flags?.add2e?.tags ?? effect.flags?.add2e?.effectTags ?? [])
       .filter(tag => !oldTags.has(String(tag)));
     const compiled = compiledFromRules(rulesOf(effect));
     const changes = uniqueChanges([...baseChanges, ...compiled.changes]);
+    const modifiers = uniqueModifiers([...baseModifiers, ...compiled.modifiers]);
     const tags = uniqueTags([...baseTags, ...compiled.tags]);
     const state = {
       version: VERSION,
       generatedTags: compiled.tags,
-      generatedChangeSignatures: compiled.changes.map(changeSignature)
+      generatedChangeSignatures: compiled.changes.map(changeSignature),
+      generatedModifierSignatures: compiled.modifiers.map(modifierSignature)
     };
     const update = {};
     if (!equal(Array.from(effect.changes ?? []), changes)) update.changes = changes;
+    if (!equal(Array.from(effect.flags?.add2e?.modifiers ?? []), modifiers)) update["flags.add2e.modifiers"] = modifiers;
     if (!equal(Array.from(effect.flags?.add2e?.tags ?? []), tags)) update["flags.add2e.tags"] = tags;
     if (!equal(Array.from(effect.flags?.add2e?.effectTags ?? []), tags)) update["flags.add2e.effectTags"] = tags;
     if (!equal(previous, state)) update["flags.add2e.magicPowerNormalization"] = state;
