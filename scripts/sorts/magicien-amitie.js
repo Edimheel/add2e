@@ -1,753 +1,595 @@
-// ADD2E — onUse Magicien : Amitié
-// Compatible Foundry V13/V14/V15.
-// La zone est exprimée dans l'unité tactique AD&D du manuel, jamais en cases.
+/**
+ * ADD2E — Amitié
+ * Magicien niveau 1 — sauvegarde, zone et réaction sociale canoniques.
+ * Compatible Foundry V13/V14/V15 — aucune fenêtre legacy.
+ * Contrat onUse : true = sort consommé ; false = sort non consommé.
+ */
 
-const ADD2E_ONUSE_TAG = "[ADD2E][SORT_ONUSE][MAGICIEN][AMITIE]";
-const ADD2E_ACTOR = typeof actor !== "undefined" ? actor : null;
-const ADD2E_ITEM = typeof item !== "undefined" ? item : null;
-const ADD2E_TOKEN = typeof token !== "undefined" ? token : null;
-const ADD2E_ARGS = typeof args !== "undefined" ? args : [];
+const __add2eOnUseResult = await (async () => {
+  const VERSION = "2026-07-26-canonical-reaction-v3";
+  const TAG = "[ADD2E][SORT_ONUSE][MAGICIEN][AMITIE]";
+  const CONFIG = Object.freeze({
+    name: "Amitié",
+    slug: "amitie",
+    level: 1,
+    school: "Enchantement/Charme",
+    areaUnit: "adnd-inch",
+    areaUsage: "area",
+    areaMeasure: "diameter",
+    img: "systems/add2e/assets/icones/sorts/magicien-amitie.webp",
+    fallbackImg: "icons/magic/control/hypnosis-mesmerism-eye.webp"
+  });
 
-const ADD2E_SORT_CONFIG = Object.freeze({
-  name: "Amitié",
-  slug: "amitie",
-  level: 1,
-  school: "Enchantement/Charme",
-  rangeText: "0",
-  durationText: "1 round par niveau",
-  castingTimeText: "1 segment",
-  saveText: "Spécial",
-  areaText: "sphère d’un diamètre de 1\" + 1\" par niveau",
-  areaUnit: "adnd-inch",
-  areaUsage: "area",
-  areaMeasure: "diameter",
-  materialText: "craie ou farine blanche, noir de fumée ou suie, vermillon",
-  img: "systems/add2e/assets/icones/sorts/magicien-amitie.webp",
-  imgFallback: "icons/magic/control/hypnosis-mesmerism-eye.webp"
-});
+  const sourceItem = (typeof sort !== "undefined" && sort)
+    || (typeof item !== "undefined" && item)
+    || (typeof spell !== "undefined" && spell)
+    || (typeof args !== "undefined" && args?.[0]?.item)
+    || null;
+  const caster = (typeof actor !== "undefined" && actor)
+    || sourceItem?.parent
+    || null;
+  const suppliedToken = (typeof token !== "undefined" && token)
+    || (typeof args !== "undefined" && args?.[0]?.token)
+    || null;
 
-function add2eClone(value) {
-  if (foundry?.utils?.deepClone) return foundry.utils.deepClone(value);
-  if (foundry?.utils?.duplicate) return foundry.utils.duplicate(value);
-  return JSON.parse(JSON.stringify(value));
-}
+  if (!sourceItem || !caster) {
+    ui.notifications.error("Amitié : lanceur ou sort introuvable.");
+    return false;
+  }
+  if (typeof globalThis.add2eRollSavingThrow !== "function") {
+    ui.notifications.error("Amitié : l’exécuteur canonique de sauvegardes est indisponible.");
+    return false;
+  }
+  if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
+    ui.notifications.error("Amitié : les cartes communes ADD2E sont indisponibles.");
+    return false;
+  }
+  if (typeof globalThis.add2eRollContextualReactionCard !== "function") {
+    ui.notifications.error("Amitié : le contrôleur canonique de réaction contextuelle est indisponible.");
+    return false;
+  }
 
-function add2eRandomId() {
-  return foundry?.utils?.randomID?.(16)
+  const effectsEngine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  if (!effectsEngine || typeof effectsEngine.resolveAbilityDerived !== "function" || typeof effectsEngine.createModifier !== "function") {
+    ui.notifications.error("Amitié : le moteur canonique des effets est indisponible.");
+    return false;
+  }
+  const timeEngine = game.add2e?.time ?? globalThis.ADD2E_TIME_ENGINE ?? null;
+  if (!timeEngine || typeof timeEngine.durationData !== "function") {
+    ui.notifications.error("Amitié : le moteur canonique de durée est indisponible.");
+    return false;
+  }
+
+  const clone = value => {
+    if (typeof foundry?.utils?.deepClone === "function") return foundry.utils.deepClone(value);
+    return JSON.parse(JSON.stringify(value));
+  };
+  const number = (value, fallback = 0) => {
+    const result = Number(value);
+    return Number.isFinite(result) ? result : fallback;
+  };
+  const signed = value => `${Number(value) > 0 ? "+" : ""}${Number(value) || 0}`;
+  const randomId = () => foundry.utils.randomID?.(16)
     ?? globalThis.crypto?.randomUUID?.().replace(/-/g, "").slice(0, 16)
-    ?? `amitie_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
-}
+    ?? `amitie_${Date.now()}`;
+  const spellImg = sourceItem.img || CONFIG.img || CONFIG.fallbackImg;
 
-function add2eHtmlEscape(value) {
-  const div = document.createElement("div");
-  div.innerText = String(value ?? "");
-  return div.innerHTML;
-}
-
-function add2eNormalize(value) {
-  return String(value ?? "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-    .replace(/[’']/g, "")
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "");
-}
-
-function add2eSpellImg() {
-  const img = ADD2E_ITEM?.img || "";
-  if (img && !String(img).includes("magicien-amitie.webp")) return img;
-  return ADD2E_SORT_CONFIG.imgFallback;
-}
-
-function add2eReadNumber(...values) {
-  for (const value of values) {
-    if (value === undefined || value === null || value === "") continue;
-    if (typeof value === "object") {
-      const nested = add2eReadNumber(value.value, value.valeur, value.total, value.current, value.max);
-      if (Number.isFinite(nested)) return nested;
-      continue;
-    }
-    const match = String(value).replace(",", ".").match(/-?\d+(?:\.\d+)?/);
-    if (!match) continue;
-    const number = Number(match[0]);
-    if (Number.isFinite(number)) return number;
-  }
-  return null;
-}
-
-function add2eCasterLevel(actorDoc) {
-  const classItem = Array.from(actorDoc?.items ?? []).find(entry => {
-    if (!/(classe|class)/.test(add2eNormalize(entry?.type))) return false;
-    const label = add2eNormalize(entry?.name ?? entry?.system?.nom);
-    return label === "magicien" || label.includes("magicien");
-  }) ?? null;
-
-  const classLevel = add2eReadNumber(
-    classItem?.system?.niveau,
-    classItem?.system?.level,
-    classItem?.system?.details?.niveau,
-    classItem?.system?.details?.level
-  );
-  if (Number.isFinite(classLevel) && classLevel > 0) return Math.floor(classLevel);
-
-  const actorLevel = add2eReadNumber(
-    actorDoc?.system?.niveau,
-    actorDoc?.system?.level,
-    actorDoc?.system?.details?.niveau,
-    actorDoc?.system?.details?.level
-  );
-  return Math.max(1, Math.floor(actorLevel || 1));
-}
-
-function add2eGetCasterToken(actorDoc) {
-  return ADD2E_TOKEN
-    ?? ADD2E_ARGS?.[0]?.token
-    ?? canvas?.tokens?.controlled?.find(tokenDoc => tokenDoc.actor?.id === actorDoc?.id)
-    ?? actorDoc?.getActiveTokens?.()?.[0]
-    ?? canvas?.tokens?.controlled?.[0]
+  const casterLevel = Math.max(1, Math.trunc(number(
+    globalThis.add2eSpellClassLevel?.(caster, { sourceItem })
+      ?? Array.from(caster.items ?? []).find(entry => String(entry?.type ?? "").toLowerCase() === "classe" && /magicien/i.test(String(entry?.name ?? "")))?.system?.niveau
+      ?? caster.system?.niveau
+      ?? caster.system?.level,
+    1
+  )));
+  const durationRounds = casterLevel;
+  const casterToken = suppliedToken
+    ?? canvas.tokens?.controlled?.find(entry => entry.actor?.id === caster.id)
+    ?? caster.getActiveTokens?.()[0]
     ?? null;
-}
 
-function add2eAreaDiameterInches(level) {
-  // Convention ADD2E : 1" + 1"/niveau est le diamètre tactique de la sphère.
-  return 1 + Math.max(1, Math.floor(Number(level) || 1));
-}
-
-function add2eFallbackSceneArea(level) {
-  const diameterInches = add2eAreaDiameterInches(level);
-  const diameterMeters = diameterInches * 3;
-  const radiusMeters = diameterMeters / 2;
-  const scene = canvas?.scene ?? null;
-  const unit = String(scene?.grid?.units ?? scene?.grid?.unit ?? "ft").trim().toLowerCase();
-  const metric = /^(m|metre|metres|meter|meters)$/.test(unit);
-  const sceneUnit = metric ? "m" : "ft";
-  const radiusSceneDistance = metric ? radiusMeters : radiusMeters / 0.3048;
-  const diameterSceneDistance = radiusSceneDistance * 2;
-  const gridDistance = Math.max(0.000001, Number(scene?.grid?.distance) || 1);
-  const gridSize = Math.max(1, Number(scene?.grid?.size ?? canvas?.grid?.size) || 100);
-  const radiusGridCells = radiusSceneDistance / gridDistance;
-  const diameterGridCells = diameterSceneDistance / gridDistance;
-
-  return {
-    sourceDistance: diameterInches,
-    sourceUnit: "adnd-inch",
-    sourceLabel: `${diameterInches}\"`,
-    measure: "diameter",
-    measureMeters: diameterMeters,
-    sourceMeters: diameterMeters,
-    tactical: { usage: "area", environment: "interior", metersPerInch: 3 },
-    radiusMeters,
-    diameterMeters,
-    sceneDistance: radiusSceneDistance,
-    gridCells: radiusGridCells,
-    pixels: radiusGridCells * gridSize,
-    sceneUnit,
-    sceneLabel: `${Math.round(radiusSceneDistance * 1000) / 1000} ${sceneUnit}`,
-    gridDistance,
-    gridSize,
-    radiusSceneDistance,
-    radiusGridCells,
-    radiusPixels: radiusGridCells * gridSize,
-    diameterSceneDistance,
-    diameterGridCells,
-    diameterPixels: diameterGridCells * gridSize
-  };
-}
-
-function add2eSceneArea(level) {
-  const generic = globalThis.add2eSceneDistance;
-  if (typeof generic === "function") {
-    const area = generic({
-      scene: canvas?.scene ?? null,
-      distance: add2eAreaDiameterInches(level),
-      unit: ADD2E_SORT_CONFIG.areaUnit,
-      usage: ADD2E_SORT_CONFIG.areaUsage,
-      measure: ADD2E_SORT_CONFIG.areaMeasure
-    });
-    if (Number.isFinite(Number(area?.sceneDistance)) && Number.isFinite(Number(area?.pixels))) return area;
-  }
-  return add2eFallbackSceneArea(level);
-}
-
-function add2eDisplayNumber(value, decimals = 3) {
-  const number = Number(value);
-  if (!Number.isFinite(number)) return "—";
-  return String(Math.round(number * (10 ** decimals)) / (10 ** decimals)).replace(".", ",");
-}
-
-function add2eAreaDiameterText(level) {
-  const area = add2eSceneArea(level);
-  const suffix = Math.abs(area.diameterGridCells - 1) < 0.001 ? "case" : "cases";
-  return `${add2eAreaDiameterInches(level)}\" AD&D de diamètre (${add2eDisplayNumber(area.diameterSceneDistance)} ${area.sceneUnit} ; ${add2eDisplayNumber(area.diameterGridCells, 2)} ${suffix})`;
-}
-
-function add2eEffectDuration(level) {
-  const rounds = Math.max(1, Math.floor(Number(level) || 1));
-  return {
-    rounds,
-    startRound: game.combat?.round ?? null,
-    startTime: game.time?.worldTime ?? null,
-    combat: game.combat?.id ?? null
-  };
-}
-
-function add2eTokenCenter(tokenDocOrPlaceable) {
-  const placeable = tokenDocOrPlaceable?.object ?? tokenDocOrPlaceable;
-  if (placeable?.center) return { x: Number(placeable.center.x), y: Number(placeable.center.y) };
-
-  const doc = tokenDocOrPlaceable?.document ?? tokenDocOrPlaceable;
-  const gridSize = Number(canvas?.scene?.grid?.size ?? canvas?.grid?.size) || 100;
-  return {
-    x: Number(doc?.x ?? 0) + (Math.max(1, Number(doc?.width) || 1) * gridSize) / 2,
-    y: Number(doc?.y ?? 0) + (Math.max(1, Number(doc?.height) || 1) * gridSize) / 2
-  };
-}
-
-function add2eCanvasEventPosition(event) {
-  try {
-    const point = event?.data?.getLocalPosition?.(canvas.stage)
-      ?? event?.getLocalPosition?.(canvas.stage)
-      ?? null;
-    if (point) return { x: Number(point.x), y: Number(point.y) };
-  } catch (_error) {}
-
-  const original = event?.data?.originalEvent ?? event?.nativeEvent ?? event;
-  const rect = canvas?.app?.view?.getBoundingClientRect?.();
-  if (!original || !rect) return null;
-  return {
-    x: ((original.clientX - rect.left) / rect.width) * canvas.dimensions.width,
-    y: ((original.clientY - rect.top) / rect.height) * canvas.dimensions.height
-  };
-}
-
-function add2eBuildTemplateData(center, level, templateRequestId) {
-  const area = add2eSceneArea(level);
-  return {
-    t: "circle",
-    user: game.user.id,
-    x: Number(center.x),
-    y: Number(center.y),
-    // MeasuredTemplate.distance reçoit toujours le rayon, ici dérivé du diamètre.
-    distance: area.sceneDistance,
-    direction: 0,
-    fillColor: "#b36bff",
-    borderColor: "#fff2a8",
-    flags: {
-      add2e: {
-        spell: ADD2E_SORT_CONFIG.slug,
-        spellName: ADD2E_SORT_CONFIG.name,
-        templateRequestId,
-        areaMeasure: ADD2E_SORT_CONFIG.areaMeasure,
-        areaDiameterInches: add2eAreaDiameterInches(level),
-        areaUnit: ADD2E_SORT_CONFIG.areaUnit,
-        areaUsage: ADD2E_SORT_CONFIG.areaUsage,
-        areaDiameterMeters: area.diameterMeters,
-        areaDiameterSceneDistance: area.diameterSceneDistance,
-        areaDiameterSceneUnit: area.sceneUnit,
-        areaDiameterGridCells: area.diameterGridCells,
-        areaRadiusMeters: area.radiusMeters,
-        areaRadiusSceneDistance: area.radiusSceneDistance,
-        areaRadiusGridCells: area.radiusGridCells,
-        casterId: ADD2E_ACTOR?.id ?? null,
-        casterUuid: ADD2E_ACTOR?.uuid ?? null,
-        sourceItemId: ADD2E_ITEM?.id ?? null,
-        sourceItemUuid: ADD2E_ITEM?.uuid ?? null
-      }
-    }
-  };
-}
-
-async function add2eCreateNativePreviewTemplate(initialCenter, level, templateRequestId) {
-  const TemplateDocument = CONFIG?.MeasuredTemplate?.documentClass;
-  const TemplateObject = CONFIG?.MeasuredTemplate?.objectClass;
-  if (!TemplateDocument || !TemplateObject || !canvas?.templates) return null;
-
-  const document = new TemplateDocument(add2eBuildTemplateData(initialCenter, level, templateRequestId), { parent: canvas.scene });
-  const template = new TemplateObject(document);
-  const layer = canvas.templates.preview ?? canvas.templates;
-  await template.draw();
-  layer.addChild(template);
-  template.refresh?.();
-  return template;
-}
-
-function add2eEmitGmOperation(operation, payload) {
-  game.socket?.emit?.("system.add2e", {
-    type: "ADD2E_GM_OPERATION",
-    operation,
-    payload
-  });
-}
-
-async function add2eTryCreateSceneTemplate(templateData, previewTemplate, templateRequestId) {
-  if (!canvas?.scene?.createEmbeddedDocuments) return { persisted: false, templateId: null, via: "none" };
-  try {
-    const created = await canvas.scene.createEmbeddedDocuments("MeasuredTemplate", [add2eClone(templateData)]);
-    previewTemplate?.destroy?.({ children: true });
-    return { persisted: true, templateId: created?.[0]?.id ?? null, via: "direct" };
-  } catch (error) {
-    console.warn(`${ADD2E_ONUSE_TAG}[TEMPLATE_CREATE_DENIED] Création du gabarit relayée au MJ.`, error);
-    add2eEmitGmOperation("createMeasuredTemplate", {
-      sceneId: canvas?.scene?.id ?? null,
-      templateData,
-      templateRequestId,
-      spell: ADD2E_SORT_CONFIG.slug,
-      spellName: ADD2E_SORT_CONFIG.name
-    });
-    setTimeout(() => previewTemplate?.destroy?.({ children: true }), 1500);
-    return { persisted: true, templateId: null, via: "gm-relay" };
-  }
-}
-
-async function add2eDeleteLinkedTemplate(zone, reason = "cleanup") {
-  if (!zone?.templateRequestId) return false;
-  const payload = {
-    sceneId: zone.sceneId ?? canvas?.scene?.id ?? null,
-    templateId: zone.templateId ?? null,
-    templateRequestId: zone.templateRequestId,
-    spell: ADD2E_SORT_CONFIG.slug,
-    reason
-  };
-
-  if (game.user?.isGM && canvas?.scene?.deleteEmbeddedDocuments) {
-    const ids = Array.from(canvas.scene.templates ?? [])
-      .filter(template => template.id === payload.templateId || template.flags?.add2e?.templateRequestId === payload.templateRequestId)
-      .map(template => template.id)
-      .filter(Boolean);
-    if (ids.length) {
-      await canvas.scene.deleteEmbeddedDocuments("MeasuredTemplate", ids);
-      return true;
-    }
-  }
-
-  add2eEmitGmOperation("deleteMeasuredTemplates", payload);
-  return true;
-}
-
-async function add2eChooseNativeTemplateZone(level, casterToken, templateRequestId) {
-  if (!canvas?.ready || !canvas?.stage || !canvas?.templates) {
-    ui.notifications?.warn?.("Amitié : scène ou canevas indisponible.");
-    return null;
-  }
-
-  const casterCenter = casterToken ? add2eTokenCenter(casterToken) : { x: canvas.dimensions.width / 2, y: canvas.dimensions.height / 2 };
-  const previewTemplate = await add2eCreateNativePreviewTemplate(casterCenter, level, templateRequestId);
-  const view = canvas.app?.view;
-  const previousCursor = view?.style?.cursor ?? "";
-  if (view?.style) view.style.cursor = "crosshair";
-  canvas.templates.activate?.();
-  ui.notifications?.info?.("Amitié : cliquez sur la scène pour placer la zone, clic droit pour annuler.");
-
-  return new Promise(resolve => {
-    let done = false;
-    let current = { ...casterCenter };
-    const cleanup = () => {
-      canvas.stage.off("mousemove", onMove);
-      canvas.stage.off("mousedown", onConfirm);
-      canvas.stage.off("rightdown", onCancel);
-      if (view?.style) view.style.cursor = previousCursor;
+  const areaDiameterInches = 1 + casterLevel;
+  const fallbackArea = () => {
+    const diameterMeters = areaDiameterInches * 3;
+    const radiusMeters = diameterMeters / 2;
+    const scene = canvas.scene;
+    const sceneUnitKey = String(scene?.grid?.units ?? "m").trim().toLowerCase();
+    const metric = ["m", "metre", "metres", "meter", "meters"].includes(sceneUnitKey);
+    const sceneUnit = metric ? "m" : "ft";
+    const radiusSceneDistance = metric ? radiusMeters : radiusMeters / 0.3048;
+    const gridDistance = Math.max(0.000001, number(scene?.grid?.distance, 1));
+    const gridSize = Math.max(1, number(scene?.grid?.size ?? canvas.grid?.size, 100));
+    return {
+      sourceDistance: areaDiameterInches,
+      sourceUnit: CONFIG.areaUnit,
+      measure: CONFIG.areaMeasure,
+      diameterMeters,
+      radiusMeters,
+      sceneDistance: radiusSceneDistance,
+      radiusSceneDistance,
+      diameterSceneDistance: radiusSceneDistance * 2,
+      radiusGridCells: radiusSceneDistance / gridDistance,
+      diameterGridCells: (radiusSceneDistance * 2) / gridDistance,
+      radiusPixels: (radiusSceneDistance / gridDistance) * gridSize,
+      pixels: (radiusSceneDistance / gridDistance) * gridSize,
+      sceneUnit,
+      gridDistance,
+      gridSize
     };
-    const finish = async value => {
-      if (done) return;
-      done = true;
-      cleanup();
-      if (!value) {
-        try { previewTemplate?.destroy?.({ children: true }); } catch (_error) {}
-        resolve(null);
-        return;
-      }
-      const templateData = add2eBuildTemplateData(value, level, templateRequestId);
-      const creation = await add2eTryCreateSceneTemplate(templateData, previewTemplate, templateRequestId);
-      resolve({
-        x: value.x,
-        y: value.y,
-        templateData,
-        templateRequestId,
-        sceneId: canvas?.scene?.id ?? null,
-        persisted: creation.persisted,
-        templateId: creation.templateId,
-        templateVia: creation.via
+  };
+  const sceneArea = () => {
+    if (typeof globalThis.add2eSceneDistance === "function") {
+      const resolved = globalThis.add2eSceneDistance({
+        scene: canvas.scene,
+        distance: areaDiameterInches,
+        unit: CONFIG.areaUnit,
+        usage: CONFIG.areaUsage,
+        measure: CONFIG.areaMeasure
       });
-    };
-    const refresh = position => {
-      if (!position) return;
-      current = { x: Number(position.x), y: Number(position.y) };
-      previewTemplate?.document?.updateSource?.({ x: current.x, y: current.y });
-      previewTemplate?.refresh?.();
-    };
-    const onMove = event => {
-      event?.stopPropagation?.();
-      refresh(add2eCanvasEventPosition(event));
-    };
-    const onConfirm = event => {
-      event?.stopPropagation?.();
-      event?.data?.originalEvent?.preventDefault?.();
-      refresh(add2eCanvasEventPosition(event) ?? current);
-      finish(current);
-    };
-    const onCancel = event => {
-      event?.stopPropagation?.();
-      event?.data?.originalEvent?.preventDefault?.();
-      finish(null);
-    };
+      if (Number.isFinite(Number(resolved?.sceneDistance)) && Number.isFinite(Number(resolved?.pixels))) {
+        return {
+          ...resolved,
+          radiusPixels: number(resolved.radiusPixels ?? resolved.pixels),
+          radiusSceneDistance: number(resolved.radiusSceneDistance ?? resolved.sceneDistance),
+          diameterSceneDistance: number(resolved.diameterSceneDistance, number(resolved.sceneDistance) * 2),
+          radiusGridCells: number(resolved.radiusGridCells ?? resolved.gridCells),
+          diameterGridCells: number(resolved.diameterGridCells, number(resolved.gridCells) * 2)
+        };
+      }
+    }
+    return fallbackArea();
+  };
 
-    canvas.stage.on("mousemove", onMove);
-    canvas.stage.once("mousedown", onConfirm);
-    canvas.stage.once("rightdown", onCancel);
-    refresh(casterCenter);
-  });
-}
+  const tokenCenter = tokenDocOrPlaceable => {
+    const placeable = tokenDocOrPlaceable?.object ?? tokenDocOrPlaceable;
+    if (placeable?.center) return { x: number(placeable.center.x), y: number(placeable.center.y) };
+    const document = tokenDocOrPlaceable?.document ?? tokenDocOrPlaceable;
+    const gridSize = number(canvas.scene?.grid?.size ?? canvas.grid?.size, 100);
+    return {
+      x: number(document?.x) + (Math.max(1, number(document?.width, 1)) * gridSize) / 2,
+      y: number(document?.y) + (Math.max(1, number(document?.height, 1)) * gridSize) / 2
+    };
+  };
 
-function add2eTokensInZone(center, level, casterToken) {
-  const area = add2eSceneArea(level);
-  const radiusPixels = Number(area.radiusPixels ?? area.pixels) || 0;
-  const casterId = casterToken?.id ?? casterToken?.document?.id ?? null;
-  return (canvas?.tokens?.placeables ?? [])
-    .filter(target => target?.actor && target.id !== casterId)
-    .filter(target => {
-      const targetCenter = add2eTokenCenter(target);
-      return Math.hypot(targetCenter.x - center.x, targetCenter.y - center.y) <= radiusPixels;
+  const canvasPosition = event => {
+    try {
+      const point = event?.data?.getLocalPosition?.(canvas.stage)
+        ?? event?.getLocalPosition?.(canvas.stage)
+        ?? null;
+      if (point) return { x: number(point.x), y: number(point.y) };
+    } catch (_error) {}
+    const original = event?.data?.originalEvent ?? event?.nativeEvent ?? event;
+    const rect = canvas.app?.view?.getBoundingClientRect?.();
+    if (!original || !rect) return null;
+    return {
+      x: ((original.clientX - rect.left) / rect.width) * canvas.dimensions.width,
+      y: ((original.clientY - rect.top) / rect.height) * canvas.dimensions.height
+    };
+  };
+
+  const emitGmOperation = (operation, payload) => {
+    game.socket.emit("system.add2e", {
+      type: "ADD2E_GM_OPERATION",
+      operation,
+      payload
     });
-}
+  };
 
-function add2eReadSaveVsSpells(actorDoc) {
-  const system = actorDoc?.system ?? {};
-  const direct = add2eReadNumber(
-    system.sauvegarde_sortileges,
-    system.sauvegarde_sortilege,
-    system.saveSorts,
-    system.saveSpells,
-    system.saves?.sorts,
-    system.saves?.spells,
-    system.savingThrows?.sorts,
-    system.savingThrows?.spells,
-    system.sauvegardes?.sorts,
-    system.sauvegardes?.sortileges
-  );
-  if (Number.isFinite(direct)) return direct;
-
-  for (const collection of [system.sauvegardes, system.savingThrows]) {
-    if (!Array.isArray(collection)) continue;
-    const named = collection.find(entry => /sort|spell/i.test(String(entry?.type ?? entry?.key ?? entry?.name ?? entry?.label ?? entry?.nom ?? "")));
-    const namedValue = add2eReadNumber(named?.value, named?.valeur, named?.total, named?.score);
-    if (Number.isFinite(namedValue)) return namedValue;
-    const values = collection.map(entry => add2eReadNumber(entry)).filter(Number.isFinite);
-    if (values.length >= 5) return values[4];
-    if (values.length) return values.at(-1);
-  }
-
-  for (const raw of [system.savingThrows, system.sauvegardes]) {
-    if (typeof raw !== "string") continue;
-    const labeled = raw.match(/(?:sortil[eè]ges?|sorts?|spells?)\D*(\d+)/i);
-    if (labeled) return Number(labeled[1]);
-    const values = raw.match(/\d+/g)?.map(Number).filter(Number.isFinite) ?? [];
-    if (values.length >= 5) return values[4];
-    if (values.length) return values.at(-1);
-  }
-  return null;
-}
-
-function add2eSaveBonus(actorDoc) {
-  try {
-    const analyzed = globalThis.Add2eEffectsEngine?.analyze?.(actorDoc, {
-      type: "save",
-      vsType: "sort",
-      spell: ADD2E_SORT_CONFIG.slug
-    });
-    return Number(analyzed?.bonus_save) || 0;
-  } catch (_error) {
-    return 0;
-  }
-}
-
-function add2eIsAnimalIntelligenceOrLess(actorDoc) {
-  const system = actorDoc?.system ?? {};
-  const number = add2eReadNumber(system.intelligence, system.int, system.intel, system.mental?.intelligence);
-  if (Number.isFinite(number)) return number <= 2;
-  const text = String(system.intelligence ?? system.intelligenceText ?? system.intelligence_monstre ?? system.description ?? "").toLowerCase();
-  return /animal|non.?intelligent|semi.?intelligent|faible/.test(text);
-}
-
-async function add2eRollTargetSave(actorDoc) {
-  const saveTarget = add2eReadSaveVsSpells(actorDoc);
-  const bonus = add2eSaveBonus(actorDoc);
-  const roll = await new Roll("1d20").evaluate({ async: true });
-  const total = Number(roll.total) + bonus;
-  const hasSave = Number.isFinite(saveTarget);
-  return { roll, saveTarget, bonus, total, hasSave, success: hasSave ? total >= saveTarget : null };
-}
-
-function add2eBuildTargetEffect({ targetToken, casterActor, choice, level, modifier, saveData, zone }) {
-  const favorable = choice === "favorable";
-  const signedModifier = favorable ? Math.abs(modifier) : -Math.abs(modifier);
-  const area = add2eSceneArea(level);
-  const casterSlug = String(casterActor?.id ?? "caster").replace(/[^a-zA-Z0-9_-]/g, "_");
-
-  return {
-    name: favorable ? "Amitié — impression favorable" : "Amitié — irritation",
-    img: add2eSpellImg(),
-    disabled: false,
-    transfer: false,
-    type: "base",
-    system: {},
-    changes: [{
-      key: `flags.add2e.amitie.${casterSlug}.charismeApparent`,
-      mode: CONST?.ACTIVE_EFFECT_MODES?.OVERRIDE ?? 5,
-      value: String(signedModifier),
-      priority: 20
-    }],
-    duration: add2eEffectDuration(level),
-    description: favorable
-      ? `${targetToken.name} est favorablement impressionné par ${casterActor?.name ?? "le magicien"}.`
-      : `${targetToken.name} se montre irrité par la présence de ${casterActor?.name ?? "le magicien"}.`,
-    flags: {
-      add2e: {
-        templateRequestId: zone?.templateRequestId ?? null,
-        templateId: zone?.templateId ?? null,
-        templateSceneId: zone?.sceneId ?? canvas?.scene?.id ?? null,
-        tags: [
-          "classe:magicien",
-          "liste:magicien",
-          "niveau:1",
-          "sort:amitie",
-          "ecole:enchantement_charme",
-          "type:charme",
-          "type:social",
-          `caster:${casterActor?.id ?? ""}`,
-          `caster_uuid:${casterActor?.uuid ?? ""}`,
-          favorable ? "reaction:favorable" : "reaction:irritee",
-          favorable ? `charisme_apparent_lanceur:+${Math.abs(modifier)}` : `charisme_apparent_lanceur:-${Math.abs(modifier)}`,
-          "duree:1_round_par_niveau",
-          `duree_rounds:${Math.max(1, level)}`,
-          "jet_sauvegarde:special",
-          `template_request:${zone?.templateRequestId ?? ""}`
-        ],
-        spell: {
-          slug: ADD2E_SORT_CONFIG.slug,
-          name: ADD2E_SORT_CONFIG.name,
-          level: ADD2E_SORT_CONFIG.level,
-          school: ADD2E_SORT_CONFIG.school,
-          casterId: casterActor?.id ?? null,
-          casterUuid: casterActor?.uuid ?? null,
-          casterName: casterActor?.name ?? "",
-          targetTokenId: targetToken?.id ?? null,
-          targetActorUuid: targetToken?.actor?.uuid ?? null,
-          reaction: favorable ? "favorable" : "irritated",
-          charismaApparentModifier: signedModifier,
-          saveRoll: saveData?.roll?.total ?? null,
-          saveBonus: saveData?.bonus ?? 0,
-          saveTotal: saveData?.total ?? null,
-          saveTarget: saveData?.saveTarget ?? null,
-          casterLevel: level,
-          durationRounds: Math.max(1, level),
-          areaMeasure: ADD2E_SORT_CONFIG.areaMeasure,
-          areaDiameterInches: add2eAreaDiameterInches(level),
-          areaUnit: ADD2E_SORT_CONFIG.areaUnit,
-          areaUsage: ADD2E_SORT_CONFIG.areaUsage,
-          areaDiameterMeters: area.diameterMeters,
-          areaDiameterSceneDistance: area.diameterSceneDistance,
+  const buildTemplateData = (center, requestId) => {
+    const area = sceneArea();
+    return {
+      t: "circle",
+      user: game.user.id,
+      x: number(center.x),
+      y: number(center.y),
+      distance: number(area.sceneDistance),
+      direction: 0,
+      fillColor: "#b36bff",
+      borderColor: "#fff2a8",
+      flags: {
+        add2e: {
+          spell: CONFIG.slug,
+          spellName: CONFIG.name,
+          templateRequestId: requestId,
+          areaMeasure: CONFIG.areaMeasure,
+          areaDiameterInches,
+          areaUnit: CONFIG.areaUnit,
+          areaUsage: CONFIG.areaUsage,
+          areaDiameterMeters: number(area.diameterMeters),
+          areaDiameterSceneDistance: number(area.diameterSceneDistance),
           areaDiameterSceneUnit: area.sceneUnit,
-          areaDiameterGridCells: area.diameterGridCells,
-          areaRadiusMeters: area.radiusMeters,
-          areaRadiusSceneDistance: area.radiusSceneDistance,
-          areaRadiusGridCells: area.radiusGridCells,
-          templateRequestId: zone?.templateRequestId ?? null,
-          templateId: zone?.templateId ?? null,
-          templateSceneId: zone?.sceneId ?? canvas?.scene?.id ?? null,
-          sourceItemId: ADD2E_ITEM?.id ?? null,
-          sourceItemUuid: ADD2E_ITEM?.uuid ?? null
+          areaDiameterGridCells: number(area.diameterGridCells),
+          areaRadiusMeters: number(area.radiusMeters),
+          areaRadiusSceneDistance: number(area.radiusSceneDistance),
+          areaRadiusGridCells: number(area.radiusGridCells),
+          casterId: caster.id,
+          casterUuid: caster.uuid,
+          sourceItemId: sourceItem.id,
+          sourceItemUuid: sourceItem.uuid
         }
       }
+    };
+  };
+
+  const createPreview = async (center, requestId) => {
+    const TemplateDocument = CONFIG.MeasuredTemplate?.documentClass ?? globalThis.CONFIG?.MeasuredTemplate?.documentClass;
+    const TemplateObject = CONFIG.MeasuredTemplate?.objectClass ?? globalThis.CONFIG?.MeasuredTemplate?.objectClass;
+    if (!TemplateDocument || !TemplateObject || !canvas.templates) return null;
+    const document = new TemplateDocument(buildTemplateData(center, requestId), { parent: canvas.scene });
+    const template = new TemplateObject(document);
+    const layer = canvas.templates.preview ?? canvas.templates;
+    await template.draw();
+    layer.addChild(template);
+    template.refresh?.();
+    return template;
+  };
+
+  const persistTemplate = async (templateData, preview, requestId) => {
+    try {
+      const created = await canvas.scene.createEmbeddedDocuments("MeasuredTemplate", [clone(templateData)]);
+      preview?.destroy?.({ children: true });
+      return { templateId: created?.[0]?.id ?? null, via: "direct" };
+    } catch (error) {
+      console.warn(`${TAG}[TEMPLATE_RELAY]`, error);
+      emitGmOperation("createMeasuredTemplate", {
+        sceneId: canvas.scene?.id ?? null,
+        templateData,
+        templateRequestId: requestId,
+        spell: CONFIG.slug,
+        spellName: CONFIG.name
+      });
+      setTimeout(() => preview?.destroy?.({ children: true }), 1500);
+      return { templateId: null, via: "gm-relay" };
     }
   };
-}
 
-async function add2eApplyEffectOnTarget(targetToken, effectData) {
-  if (!targetToken?.actor || !effectData) return false;
-  if (game.user?.isGM || targetToken.actor.isOwner) {
-    try {
-      await targetToken.actor.createEmbeddedDocuments("ActiveEffect", [add2eClone(effectData)]);
+  const chooseZone = async requestId => {
+    if (!canvas.ready || !canvas.stage || !canvas.templates || !canvas.scene) {
+      ui.notifications.warn("Amitié : scène ou canevas indisponible.");
+      return null;
+    }
+    const initial = casterToken
+      ? tokenCenter(casterToken)
+      : { x: canvas.dimensions.width / 2, y: canvas.dimensions.height / 2 };
+    const preview = await createPreview(initial, requestId);
+    const view = canvas.app?.view;
+    const previousCursor = view?.style?.cursor ?? "";
+    if (view?.style) view.style.cursor = "crosshair";
+    canvas.templates.activate?.();
+    ui.notifications.info("Amitié : cliquez sur la scène pour placer la zone, clic droit pour annuler.");
+
+    return new Promise(resolve => {
+      let finished = false;
+      let current = { ...initial };
+      const cleanup = () => {
+        canvas.stage.off("mousemove", onMove);
+        canvas.stage.off("mousedown", onConfirm);
+        canvas.stage.off("rightdown", onCancel);
+        if (view?.style) view.style.cursor = previousCursor;
+      };
+      const refresh = position => {
+        if (!position) return;
+        current = { x: number(position.x), y: number(position.y) };
+        preview?.document?.updateSource?.(current);
+        preview?.refresh?.();
+      };
+      const finish = async position => {
+        if (finished) return;
+        finished = true;
+        cleanup();
+        if (!position) {
+          preview?.destroy?.({ children: true });
+          resolve(null);
+          return;
+        }
+        const templateData = buildTemplateData(position, requestId);
+        const persisted = await persistTemplate(templateData, preview, requestId);
+        resolve({
+          x: position.x,
+          y: position.y,
+          sceneId: canvas.scene.id,
+          templateRequestId: requestId,
+          templateId: persisted.templateId,
+          templateVia: persisted.via
+        });
+      };
+      const onMove = event => {
+        event?.stopPropagation?.();
+        refresh(canvasPosition(event));
+      };
+      const onConfirm = event => {
+        event?.stopPropagation?.();
+        event?.data?.originalEvent?.preventDefault?.();
+        refresh(canvasPosition(event) ?? current);
+        void finish(current);
+      };
+      const onCancel = event => {
+        event?.stopPropagation?.();
+        event?.data?.originalEvent?.preventDefault?.();
+        void finish(null);
+      };
+      canvas.stage.on("mousemove", onMove);
+      canvas.stage.once("mousedown", onConfirm);
+      canvas.stage.once("rightdown", onCancel);
+      refresh(initial);
+    });
+  };
+
+  const deleteTemplate = async zone => {
+    if (!zone?.templateRequestId) return;
+    const ids = Array.from(canvas.scene?.templates ?? [])
+      .filter(template => template.id === zone.templateId || template.flags?.add2e?.templateRequestId === zone.templateRequestId)
+      .map(template => template.id)
+      .filter(Boolean);
+    if (game.user.isGM && ids.length) {
+      await canvas.scene.deleteEmbeddedDocuments("MeasuredTemplate", ids);
+      return;
+    }
+    emitGmOperation("deleteMeasuredTemplates", {
+      sceneId: zone.sceneId,
+      templateId: zone.templateId,
+      templateRequestId: zone.templateRequestId,
+      spell: CONFIG.slug,
+      reason: "targets-resolved"
+    });
+  };
+
+  const targetsInZone = zone => {
+    const area = sceneArea();
+    const radiusPixels = number(area.radiusPixels ?? area.pixels);
+    const casterTokenId = casterToken?.id ?? casterToken?.document?.id ?? null;
+    return (canvas.tokens?.placeables ?? [])
+      .filter(target => target?.actor && target.id !== casterTokenId)
+      .filter(target => {
+        const center = tokenCenter(target);
+        return Math.hypot(center.x - zone.x, center.y - zone.y) <= radiusPixels;
+      });
+  };
+
+  const hasAnimalIntelligence = targetActor => {
+    const intelligence = effectsEngine.resolveAbilityDerived(targetActor, "intelligence", {
+      source: "spell:amitie",
+      sourceItem,
+      caster,
+      targetActor
+    });
+    return Number(intelligence?.total) <= 2;
+  };
+
+  const buildReactionEffect = (targetToken, modifierValue, saveResult, zone) => {
+    const favorable = modifierValue > 0;
+    const modifierId = `${sourceItem.id || CONFIG.slug}:${caster.id}:${targetToken.actor.id}:reaction`;
+    const modifier = effectsEngine.createModifier({
+      id: modifierId,
+      domain: "reaction",
+      target: "encounter",
+      operation: "add",
+      value: modifierValue,
+      priority: Date.now(),
+      stacking: {
+        mode: "unique-source",
+        group: `amitie:${caster.id}:${targetToken.actor.id}`
+      },
+      conditions: {},
+      source: {
+        kind: "spell",
+        id: sourceItem.id || CONFIG.slug,
+        uuid: sourceItem.uuid || `Actor.${caster.id}.Item.${sourceItem.id || CONFIG.slug}`,
+        name: sourceItem.name || CONFIG.name
+      },
+      duration: { rounds: durationRounds },
+      metadata: {
+        label: favorable ? "Amitié — impression favorable" : "Amitié — irritation",
+        direction: "incoming",
+        sourceActorId: caster.id,
+        sourceActorUuid: caster.uuid,
+        sourceActorName: caster.name,
+        targetActorId: targetToken.actor.id,
+        targetActorUuid: targetToken.actor.uuid,
+        spellKey: CONFIG.slug,
+        spellName: sourceItem.name || CONFIG.name,
+        saveSuccess: saveResult.success === true
+      }
+    });
+
+    return {
+      name: favorable ? "Amitié — impression favorable" : "Amitié — irritation",
+      img: spellImg,
+      disabled: false,
+      transfer: false,
+      type: "base",
+      system: {},
+      changes: [],
+      duration: timeEngine.durationData(durationRounds),
+      description: favorable
+        ? `${targetToken.name} est favorablement impressionné par ${caster.name}.`
+        : `${targetToken.name} se montre irrité par la présence de ${caster.name}.`,
+      flags: {
+        add2e: {
+          modifiers: [modifier],
+          tags: [
+            "classe:magicien",
+            "liste:magicien",
+            "niveau:1",
+            "sort:amitie",
+            "type:charme",
+            "type:social",
+            favorable ? "reaction:favorable" : "reaction:irritee",
+            `reaction_modifier:${modifierValue}`,
+            `caster:${caster.id}`,
+            `duree_rounds:${durationRounds}`
+          ],
+          spell: {
+            slug: CONFIG.slug,
+            name: sourceItem.name || CONFIG.name,
+            casterId: caster.id,
+            casterUuid: caster.uuid,
+            casterName: caster.name,
+            targetActorId: targetToken.actor.id,
+            targetActorUuid: targetToken.actor.uuid,
+            reactionModifier: modifierValue,
+            saveRoll: saveResult.roll?.total ?? null,
+            saveTotal: saveResult.total ?? null,
+            saveTarget: saveResult.target ?? null,
+            durationRounds,
+            templateRequestId: zone.templateRequestId,
+            templateId: zone.templateId,
+            templateSceneId: zone.sceneId,
+            sourceItemId: sourceItem.id,
+            sourceItemUuid: sourceItem.uuid,
+            version: VERSION
+          }
+        }
+      }
+    };
+  };
+
+  const applyEffect = async (targetToken, effectData) => {
+    if (game.user.isGM || targetToken.actor.isOwner) {
+      await targetToken.actor.createEmbeddedDocuments("ActiveEffect", [clone(effectData)]);
       return true;
-    } catch (error) {
-      console.warn(`${ADD2E_ONUSE_TAG}[DIRECT_EFFECT_FAILED] Passage par relais MJ.`, error);
+    }
+    emitGmOperation("createActiveEffect", {
+      actorUuid: targetToken.actor.uuid,
+      actorId: targetToken.actor.id,
+      sceneId: canvas.scene?.id ?? null,
+      tokenId: targetToken.document?.id ?? targetToken.id,
+      effectData
+    });
+    return true;
+  };
+
+  const resolveTarget = async (targetToken, zone) => {
+    if (hasAnimalIntelligence(targetToken.actor)) {
+      return {
+        targetToken,
+        status: "ignored",
+        label: "Intelligence animale ou inférieure : non affecté",
+        modifier: 0,
+        rolls: []
+      };
+    }
+
+    const save = await globalThis.add2eRollSavingThrow(targetToken.actor, 4, {
+      source: "spell:amitie",
+      sourceItem,
+      caster,
+      targetToken,
+      frontale: true,
+      createChat: false,
+      showDice: true
+    });
+    if (!save?.ok) {
+      return {
+        targetToken,
+        status: "manual",
+        label: "Sauvegarde contre les sortilèges indisponible",
+        modifier: 0,
+        save,
+        rolls: [save?.roll].filter(Boolean)
+      };
+    }
+
+    const modifierRoll = await new Roll(save.success ? "1d4" : "2d4").evaluate();
+    const modifierValue = (save.success ? -1 : 1) * Math.max(1, Math.trunc(number(modifierRoll.total, 1)));
+    const effectData = buildReactionEffect(targetToken, modifierValue, save, zone);
+    await applyEffect(targetToken, effectData);
+
+    return {
+      targetToken,
+      status: save.success ? "resisted" : "affected",
+      label: save.success ? "Résiste et s’irrite" : "Impression favorable",
+      modifier: modifierValue,
+      save,
+      modifierRoll,
+      rolls: [save.roll, modifierRoll].filter(Boolean)
+    };
+  };
+
+  const requestId = randomId();
+  const zone = await chooseZone(requestId);
+  if (!zone) return false;
+
+  const results = [];
+  try {
+    for (const targetToken of targetsInZone(zone)) {
+      results.push(await resolveTarget(targetToken, zone));
+    }
+
+    const area = sceneArea();
+    const rows = [
+      { label: "Zone", value: `${areaDiameterInches}\" AD&D de diamètre` },
+      { label: "Durée", value: `${durationRounds} round${durationRounds > 1 ? "s" : ""}` },
+      ...results.map(result => ({
+        label: result.targetToken?.name ?? result.targetToken?.actor?.name ?? "Créature",
+        value: result.modifier
+          ? `${result.label} (${signed(result.modifier)})`
+          : result.label
+      })),
+      { label: "Réaction contextuelle", value: "Cibler une créature puis utiliser le bouton Réaction de la ligne Charisme." }
+    ];
+    if (!results.length) rows.splice(2, 0, { label: "Créatures affectées", value: "Aucune" });
+
+    const card = {
+      actor: caster,
+      title: sourceItem.name || CONFIG.name,
+      icon: "fas fa-face-smile",
+      variant: results.some(result => result.status === "affected") ? "success" : "neutral",
+      source: {
+        name: caster.name,
+        img: casterToken?.document?.texture?.src ?? caster.img,
+        type: `Magicien niveau ${casterLevel}`
+      },
+      rows,
+      chatData: {
+        speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken }),
+        rolls: results.flatMap(result => result.rolls ?? []),
+        flags: {
+          add2e: {
+            chatCardType: "spell-amitie-reaction",
+            charismaConsumerVersion: VERSION,
+            spellKey: CONFIG.slug,
+            sourceItemUuid: sourceItem.uuid,
+            casterUuid: caster.uuid,
+            casterLevel,
+            durationRounds,
+            areaDiameterInches,
+            areaDiameterMeters: number(area.diameterMeters),
+            templateRequestId: zone.templateRequestId,
+            templateId: zone.templateId,
+            results: results.map(result => ({
+              targetActorUuid: result.targetToken?.actor?.uuid ?? null,
+              targetTokenId: result.targetToken?.id ?? null,
+              status: result.status,
+              modifier: result.modifier,
+              saveSuccess: result.save?.success ?? null,
+              saveTotal: result.save?.total ?? null,
+              saveTarget: result.save?.target ?? null
+            }))
+          }
+        }
+      }
+    };
+    globalThis.add2eBuildChatCard(card);
+    await globalThis.add2eCreateChatCard(card);
+  } finally {
+    try {
+      await deleteTemplate(zone);
+    } finally {
+      canvas.tokens?.activate?.();
     }
   }
 
-  add2eEmitGmOperation("createActiveEffect", {
-    actorUuid: targetToken.actor.uuid,
-    actorId: targetToken.actor.id,
-    sceneId: canvas?.scene?.id ?? null,
-    tokenId: targetToken.document?.id ?? targetToken.id ?? null,
-    effectData
+  console.log(`${TAG}[DONE]`, {
+    actor: caster.name,
+    casterLevel,
+    targetCount: results.length,
+    results: results.map(result => ({
+      target: result.targetToken?.name,
+      status: result.status,
+      modifier: result.modifier
+    }))
   });
   return true;
-}
+})();
 
-async function add2eResolveAmitieTarget(targetToken, casterActor, level, zone) {
-  if (!targetToken?.actor) return null;
-  if (add2eIsAnimalIntelligenceOrLess(targetToken.actor)) {
-    return { token: targetToken, actor: targetToken.actor, status: "ignored", label: "non affecté", modifier: 0, saveData: null, effectRequested: false };
-  }
-
-  const saveData = await add2eRollTargetSave(targetToken.actor);
-  if (!saveData.hasSave) {
-    return { token: targetToken, actor: targetToken.actor, status: "manual", label: "à résoudre par le MD", modifier: 0, saveData, effectRequested: false };
-  }
-
-  const successfulSave = saveData.success === true;
-  const modifierRoll = await new Roll(successfulSave ? "1d4" : "2d4").evaluate({ async: true });
-  const modifier = Math.abs(Number(modifierRoll.total) || 1);
-  const effectData = add2eBuildTargetEffect({
-    targetToken,
-    casterActor,
-    choice: successfulSave ? "irritated" : "favorable",
-    level,
-    modifier,
-    saveData,
-    zone
-  });
-  const effectRequested = await add2eApplyEffectOnTarget(targetToken, effectData);
-
-  return successfulSave
-    ? { token: targetToken, actor: targetToken.actor, status: "success", label: "résiste et s’irrite", modifier: -modifier, saveData, effectRequested }
-    : { token: targetToken, actor: targetToken.actor, status: "failure", label: "favorable", modifier, saveData, effectRequested };
-}
-
-function add2eResultLine(result) {
-  const name = add2eHtmlEscape(result?.token?.name ?? result?.actor?.name ?? "Créature");
-  if (result.status === "ignored") return `<tr><td>${name}</td><td colspan="3">Non affecté</td></tr>`;
-  if (result.status === "manual") {
-    const rollText = result.saveData?.roll?.total ? `Jet ${result.saveData.roll.total}` : "Jet effectué";
-    return `<tr><td>${name}</td><td>${add2eHtmlEscape(rollText)}</td><td>—</td><td>À résoudre</td></tr>`;
-  }
-
-  const total = Number(result.saveData?.total ?? result.saveData?.roll?.total ?? 0);
-  const bonus = Number(result.saveData?.bonus ?? 0);
-  const threshold = result.saveData?.saveTarget;
-  const modifier = Number(result.modifier) || 0;
-  const modifierText = modifier > 0 ? `+${modifier}` : `${modifier}`;
-  return `<tr><td>${name}</td><td>${add2eHtmlEscape(String(total))}${bonus ? ` <small>(${bonus > 0 ? "+" : ""}${bonus})</small>` : ""}</td><td>${add2eHtmlEscape(String(threshold))}</td><td>${add2eHtmlEscape(result.label)} <b>${add2eHtmlEscape(modifierText)}</b></td></tr>`;
-}
-
-async function add2eChatAmitie(actorDoc, level, results) {
-  const casterToken = add2eGetCasterToken(actorDoc);
-  const casterName = actorDoc?.name ?? casterToken?.name ?? "Magicien";
-  const casterImg = casterToken?.document?.texture?.src ?? actorDoc?.img ?? "icons/svg/mystery-man.svg";
-  const spellImg = add2eSpellImg();
-  const durationRounds = Math.max(1, level);
-  const diameterText = add2eAreaDiameterText(level);
-  const tableRows = results.length
-    ? results.map(add2eResultLine).join("\n")
-    : `<tr><td colspan="4">Aucune créature n’est prise dans l’enchantement.</td></tr>`;
-
-  await ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor: actorDoc, token: casterToken }),
-    content: `
-      <div class="add2e-chat-card add2e-magicien-sort add2e-sort-amitie"
-           style="border:1px solid #8e63c7;border-radius:8px;overflow:hidden;background:#f6f0ff;color:#2d2144;font-family:var(--font-primary);">
-        <div style="display:flex;align-items:center;gap:8px;background:#5b3f8c;color:#fff;padding:7px 9px;">
-          <img src="${add2eHtmlEscape(casterImg)}" style="width:42px;height:42px;object-fit:cover;border-radius:50%;border:2px solid #d8c3ff;background:#fff;" />
-          <div style="flex:1;line-height:1.05;">
-            <div style="font-weight:800;font-size:14px;">${add2eHtmlEscape(casterName)}</div>
-            <div style="font-size:12px;font-weight:700;">lance ${add2eHtmlEscape(ADD2E_SORT_CONFIG.name)}</div>
-          </div>
-          <div style="font-weight:800;font-size:12px;text-align:center;white-space:nowrap;">Magicien niv. ${level}</div>
-          <img src="${add2eHtmlEscape(spellImg)}" style="width:34px;height:34px;object-fit:cover;border-radius:3px;border:1px solid #d8c3ff;background:#fff;" />
-        </div>
-        <div style="padding:9px 10px 10px;background:#f6f0ff;">
-          <div style="border:1px solid #8e63c7;border-radius:6px;background:#fffaff;padding:8px;margin-bottom:7px;">
-            <div style="color:#6c31b5;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.3px;text-align:center;">Enchantement social</div>
-            <p style="margin:.35em 0;font-size:13px;line-height:1.35;">Le visage du magicien se pare de signes colorés et son aura devient plus marquante.</p>
-            <p style="margin:.35em 0;font-size:13px;line-height:1.35;"><b>Diamètre :</b> ${add2eHtmlEscape(diameterText)} — <b>Durée :</b> ${durationRounds} round${durationRounds > 1 ? "s" : ""}.</p>
-          </div>
-          <table style="width:100%;border-collapse:collapse;background:#fffaff;border:1px solid #8e63c7;font-size:12px;">
-            <thead><tr style="background:#e8d9ff;color:#2d2144;"><th style="text-align:left;padding:4px;border-bottom:1px solid #8e63c7;">Créature</th><th style="text-align:center;padding:4px;border-bottom:1px solid #8e63c7;">Jet</th><th style="text-align:center;padding:4px;border-bottom:1px solid #8e63c7;">Seuil</th><th style="text-align:left;padding:4px;border-bottom:1px solid #8e63c7;">Réaction</th></tr></thead>
-            <tbody>${tableRows}</tbody>
-          </table>
-          <details style="border:1px solid #8e63c7;border-radius:5px;background:#fffaff;padding:5px 7px;margin-top:7px;">
-            <summary style="cursor:pointer;font-weight:800;color:#4a2e78;">Paramètres du sort</summary>
-            <div style="margin-top:5px;font-size:12px;line-height:1.35;">
-              <p><b>École :</b> ${add2eHtmlEscape(ADD2E_SORT_CONFIG.school)} — <b>Portée :</b> ${add2eHtmlEscape(ADD2E_SORT_CONFIG.rangeText)}.</p>
-              <p><b>Zone :</b> ${add2eHtmlEscape(ADD2E_SORT_CONFIG.areaText)}.</p>
-              <p><b>Composantes :</b> V, S, M — <b>Incantation :</b> ${add2eHtmlEscape(ADD2E_SORT_CONFIG.castingTimeText)} — <b>Jet de sauvegarde :</b> ${add2eHtmlEscape(ADD2E_SORT_CONFIG.saveText)}.</p>
-              <p><b>Composante matérielle :</b> ${add2eHtmlEscape(ADD2E_SORT_CONFIG.materialText)} appliqués sur le visage.</p>
-            </div>
-          </details>
-        </div>
-      </div>`
-  });
-}
-
-if (!ADD2E_ACTOR) {
-  ui.notifications?.warn?.("Amitié : acteur lanceur introuvable.");
-  console.warn(`${ADD2E_ONUSE_TAG}[NO_ACTOR] Acteur lanceur introuvable.`);
-  return false;
-}
-
-const level = add2eCasterLevel(ADD2E_ACTOR);
-const casterToken = add2eGetCasterToken(ADD2E_ACTOR);
-const templateRequestId = add2eRandomId();
-const zone = await add2eChooseNativeTemplateZone(level, casterToken, templateRequestId);
-if (!zone) {
-  console.log(`${ADD2E_ONUSE_TAG}[CANCEL] Zone annulée : remboursement du slot mémorisé par le dispatcher.`);
-  return false;
-}
-
-const results = [];
-try {
-  const area = add2eSceneArea(level);
-  const targetTokens = add2eTokensInZone(zone, level, casterToken);
-
-  console.log(`${ADD2E_ONUSE_TAG}[START]`, {
-    actor: ADD2E_ACTOR.name,
-    sort: ADD2E_ITEM?.name,
-    level,
-    zoneCenter: { x: zone.x, y: zone.y },
-    templatePersisted: zone.persisted,
-    templateVia: zone.templateVia,
-    templateRequestId: zone.templateRequestId,
-    templateId: zone.templateId,
-    areaMeasure: area.measure,
-    diameterTacticalInches: add2eAreaDiameterInches(level),
-    diameterMeters: area.diameterMeters,
-    diameterSceneDistance: area.diameterSceneDistance,
-    diameterSceneUnit: area.sceneUnit,
-    diameterGridCells: area.diameterGridCells,
-    radiusSceneDistance: area.radiusSceneDistance,
-    radiusGridCells: area.radiusGridCells,
-    radiusPixels: area.radiusPixels,
-    targets: targetTokens.map(target => ({ name: target.name, actor: target.actor?.name }))
-  });
-
-  for (const targetToken of targetTokens) {
-    const result = await add2eResolveAmitieTarget(targetToken, ADD2E_ACTOR, level, zone);
-    if (result) results.push(result);
-  }
-
-  await add2eChatAmitie(ADD2E_ACTOR, level, results);
-} finally {
-  try {
-    await add2eDeleteLinkedTemplate(zone, "targets-resolved");
-  } finally {
-    canvas?.tokens?.activate?.();
-  }
-}
-
-console.log(`${ADD2E_ONUSE_TAG}[DONE]`, {
-  consumedByDispatcher: true,
-  targetCount: results.length,
-  templatePersisted: zone.persisted,
-  templateVia: zone.templateVia,
-  templateRequestId: zone.templateRequestId,
-  results: results.map(result => ({
-    token: result.token?.name,
-    status: result.status,
-    saveTotal: result.saveData?.total ?? null,
-    saveTarget: result.saveData?.saveTarget ?? null,
-    modifier: result.modifier,
-    effectRequested: result.effectRequested
-  }))
-});
-
-return true;
+return __add2eOnUseResult;
