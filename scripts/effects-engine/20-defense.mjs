@@ -9,7 +9,7 @@ const register = (Engine, methods) => Object.defineProperties(
   ]))
 );
 
-const ADD2E_ARMOR_CLASS_RESOLVER_VERSION = "2026-07-25-canonical-armor-class-v4-synchronized-total";
+const ADD2E_ARMOR_CLASS_RESOLVER_VERSION = "2026-07-26-canonical-armor-class-v5-derived-dexterity";
 
 const ADD2E_COMBAT_IDENTITY_PREFIXES = [
   "type_monstre:",
@@ -252,6 +252,22 @@ function add2eArmorLayerModifier(engine, { id, target = "naturel", value, source
 
 export function installEffectsEngineDefense(Engine) {
   register(Engine, {
+    getDexDefense(actor, context = {}) {
+      if (!actor) return 0;
+      if (typeof this.resolveAbilityDerived !== "function") {
+        throw new Error("Le résolveur canonique ADD2E des ajustements de caractéristiques n’est pas disponible.");
+      }
+      const derived = this.resolveAbilityDerived(actor, "dexterite", {
+        ...context,
+        domain: context.domain ?? "armor-class",
+        type: context.type ?? "defensive-dexterity",
+        source: context.source ?? "armor-class-dexterity",
+        consumer: context.consumer ?? "effects-engine-defense"
+      });
+      const value = Number(derived?.profile?.def);
+      return Number.isFinite(value) ? value : 0;
+    },
+
     resolveArmorClass(actor, context = {}) {
       if (!actor) throw new Error("Acteur manquant pour la résolution de CA.");
       const system = actor.system ?? {};
@@ -345,7 +361,10 @@ export function installEffectsEngineDefense(Engine) {
         if (modifier) naturalModifiers.push(modifier);
       }
 
-      const dex = ignoreDex ? 0 : this.getDexDefense(actor);
+      const dex = ignoreDex ? 0 : this.getDexDefense(actor, {
+        ...context,
+        source: context.source ?? "armor-class-dexterity"
+      });
       const dexModifier = add2eArmorLayerModifier(this, {
         id: `${actor.id}:armor-class:dexterity`,
         value: dex,
