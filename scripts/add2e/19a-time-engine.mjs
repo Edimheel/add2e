@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — Service générique de gestion du temps et des durées.
-// Version : 2026-07-01-time-engine-foundry-duration-value-v2
+// Version : 2026-07-26-time-engine-natural-regeneration-v3
 //
 // Rôle :
 // - Fournit un format commun pour les durées en rounds.
@@ -8,10 +8,13 @@
 // - Ajoute un tick global de temps de jeu utilisable hors combat.
 // - Normalise les ActiveEffect existants pour le moteur de rounds et de temps.
 // - Expose des helpers réutilisables par les scripts onUse sans dépendre d'un sort.
+// - Déclenche la régénération naturelle de Constitution sur le tick unique.
 // - Compatible Foundry V13/V14/V15.
 // ============================================================================
 
-export const ADD2E_TIME_ENGINE_VERSION = "2026-07-01-time-engine-foundry-duration-value-v2";
+import { add2eApplyNaturalRegeneration } from "./18a-vital-status-core.mjs";
+
+export const ADD2E_TIME_ENGINE_VERSION = "2026-07-26-time-engine-natural-regeneration-v3";
 
 const TAG = "[ADD2E][TIME_ENGINE]";
 const FLAG_SCOPE = "add2e";
@@ -61,6 +64,57 @@ function currentCombatData() {
   };
 }
 
+function add2eTimeActorKey(actor) {
+  return String(actor?.uuid ?? actor?.id ?? actor?.name ?? "").trim();
+}
+
+function add2eTimeAllActors() {
+  const actors = new Map();
+  const push = actor => {
+    if (!actor?.system) return;
+    const key = add2eTimeActorKey(actor);
+    if (key && !actors.has(key)) actors.set(key, actor);
+  };
+
+  for (const actor of game.actors?.contents ?? []) push(actor);
+  for (const scene of game.scenes?.contents ?? []) {
+    for (const tokenDocument of scene.tokens?.contents ?? scene.tokens ?? []) push(tokenDocument?.actor);
+  }
+  for (const token of canvas?.tokens?.placeables ?? []) push(token?.actor);
+  for (const combatant of game.combat?.combatants ?? []) push(combatant?.actor ?? combatant?.token?.actor);
+  return [...actors.values()];
+}
+
+export async function add2eTimeProcessNaturalRegeneration({
+  beforeTick = 0,
+  afterTick = 0,
+  reason = "time-advance"
+} = {}) {
+  if (!game.user?.isGM) return { ok: false, reason: "not-gm", actors: 0, healed: 0, rows: [] };
+  const before = Math.max(0, Math.trunc(Number(beforeTick) || 0));
+  const after = Math.max(before, Math.trunc(Number(afterTick) || 0));
+  if (after <= before) return { ok: true, reason: "no-time", before, after, actors: 0, healed: 0, rows: [] };
+
+  const actors = add2eTimeAllActors();
+  const rows = [];
+  let healed = 0;
+  for (const actor of actors) {
+    try {
+      const result = await add2eApplyNaturalRegeneration(actor, { beforeTick: before, afterTick: after, reason });
+      if (result?.applied || !["no-regeneration", "interval-pending", "full-hit-points", "not-living"].includes(result?.reason)) {
+        rows.push({ actor: actor.name, actorId: actor.id ?? null, actorUuid: actor.uuid ?? null, ...result });
+      }
+      healed += Math.max(0, Number(result?.healed) || 0);
+    } catch (err) {
+      warn("[NATURAL_REGENERATION_FAILED]", { actor: actor?.name, actorId: actor?.id, before, after, reason, err });
+      rows.push({ actor: actor?.name ?? "Acteur", actorId: actor?.id ?? null, error: String(err?.message || err) });
+    }
+  }
+  const result = { ok: true, before, after, reason, actors: actors.length, healed, rows };
+  if (healed > 0) log("[NATURAL_REGENERATION]", result);
+  return result;
+}
+
 export function add2eTimeRegisterSettings() {
   if (!game?.settings) return false;
   try {
@@ -94,10 +148,14 @@ export function add2eTimeCurrentTick() {
 export async function add2eTimeSetTick(value, { reason = "manual" } = {}) {
   if (!game.user?.isGM) return { ok: false, reason: "not-gm", tick: add2eTimeCurrentTick() };
   add2eTimeRegisterSettings();
+  const before = add2eTimeCurrentTick();
   const next = Math.max(0, Math.floor(Number(value) || 0));
   await game.settings.set(SETTING_SCOPE, ADD2E_TIME_TICK_SETTING, next);
-  log("[TICK_SET]", { tick: next, reason });
-  return { ok: true, tick: next, reason };
+  const regeneration = next > before
+    ? await add2eTimeProcessNaturalRegeneration({ beforeTick: before, afterTick: next, reason })
+    : { ok: true, reason: "tick-not-increased", before, after: next, actors: 0, healed: 0, rows: [] };
+  log("[TICK_SET]", { before, tick: next, reason, regeneration: { actors: regeneration.actors, healed: regeneration.healed } });
+  return { ok: true, before, tick: next, reason, regeneration };
 }
 
 export async function add2eTimeAdvanceTick(rounds = 0, { reason = "manual" } = {}) {
@@ -105,9 +163,9 @@ export async function add2eTimeAdvanceTick(rounds = 0, { reason = "manual" } = {
   const delta = Math.max(0, Math.floor(Number(rounds) || 0));
   const before = add2eTimeCurrentTick();
   const after = before + delta;
-  await add2eTimeSetTick(after, { reason });
-  log("[TICK_ADVANCE]", { before, after, delta, reason });
-  return { ok: true, before, after, delta, reason };
+  const set = await add2eTimeSetTick(after, { reason });
+  log("[TICK_ADVANCE]", { before, after, delta, reason, regeneration: set?.regeneration ? { actors: set.regeneration.actors, healed: set.regeneration.healed } : null });
+  return { ok: true, before, after, delta, reason, regeneration: set?.regeneration ?? null };
 }
 
 export function add2eTimeNormalizeUnit(value) {
@@ -487,6 +545,7 @@ export function add2eRegisterTimeEngineApi() {
     currentTick: add2eTimeCurrentTick,
     setTick: add2eTimeSetTick,
     advanceTick: add2eTimeAdvanceTick,
+    processNaturalRegeneration: add2eTimeProcessNaturalRegeneration,
     normalizeUnit: add2eTimeNormalizeUnit,
     formulaToRounds: add2eTimeFormulaToRounds,
     toRounds: add2eTimeToRounds,
@@ -503,7 +562,8 @@ export function add2eRegisterTimeEngineApi() {
 
   globalThis.ADD2E_TIME_ENGINE_VERSION = ADD2E_TIME_ENGINE_VERSION;
   globalThis.ADD2E_TIME_ENGINE = game.add2e.time;
+  globalThis.add2eTimeProcessNaturalRegeneration = add2eTimeProcessNaturalRegeneration;
 
-  log("[REGISTERED]", { version: ADD2E_TIME_ENGINE_VERSION, tick: add2eTimeCurrentTick() });
+  log("[REGISTERED]", { version: ADD2E_TIME_ENGINE_VERSION, tick: add2eTimeCurrentTick(), naturalRegeneration: true });
   return true;
 }
