@@ -431,7 +431,7 @@ function add2eTransformationMergeTags(existing, additions) {
 
 function add2eCaptureCapabilityTransformationCombatState(actor) {
   const actorSystem = {};
-  for (const path of ["system.ca", "system.ca_optimale", "system.ca_naturel", "system.ca_total", "system.dex_def", "system.thac0", "system.vitesse_deplacement"]) {
+  for (const path of ["system.ca", "system.ca_optimale", "system.ca_naturel", "system.ca_total", "system.thac0", "system.vitesse_deplacement"]) {
     actorSystem[path] = add2eTransformationClone(add2eTransformationGetProperty(actor, path));
   }
   const classes = add2eTransformationClassItems(actor).map(item => ({
@@ -453,7 +453,6 @@ async function add2eApplyCapabilityTransformationCombatProfile(actor, profile = 
     actorUpdate["system.ca_optimale"] = armorClass;
     actorUpdate["system.ca_naturel"] = armorClass;
     actorUpdate["system.ca_total"] = armorClass;
-    actorUpdate["system.dex_def"] = armorClass - 10;
   }
   if (thac0 !== null) actorUpdate["system.thac0"] = thac0;
   if (movement) actorUpdate["system.vitesse_deplacement"] = movement;
