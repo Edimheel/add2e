@@ -11,6 +11,29 @@ const ABILITY_ALIASES = Object.freeze({
   charisme: "charisme", charisma: "charisme", cha: "charisme"
 });
 
+const SOCIAL_TARGET_ALIASES = Object.freeze({
+  human: ["human", "humain", "humaine"],
+  humain: ["human", "humain", "humaine"],
+  humanoid: [
+    "humanoid", "humanoide", "human", "humain", "humaine",
+    "dwarf", "nain", "elf", "elfe", "gnome", "halfling", "petite-gens", "petite_gens",
+    "half-elf", "half_elf", "demi-elfe", "demi_elfe",
+    "half-orc", "half_orc", "demi-orque", "demi_orque",
+    "orc", "orque", "goblin", "gobelin", "hobgoblin", "hobgobelin",
+    "bugbear", "gobelours", "kobold", "gnoll", "ogre", "troll",
+    "lizardman", "lizardfolk", "homme-lezard", "homme_lezard"
+  ],
+  humanoide: [
+    "humanoid", "humanoide", "human", "humain", "humaine",
+    "dwarf", "nain", "elf", "elfe", "gnome", "halfling", "petite-gens", "petite_gens",
+    "half-elf", "half_elf", "demi-elfe", "demi_elfe",
+    "half-orc", "half_orc", "demi-orque", "demi_orque",
+    "orc", "orque", "goblin", "gobelin", "hobgoblin", "hobgobelin",
+    "bugbear", "gobelours", "kobold", "gnoll", "ogre", "troll",
+    "lizardman", "lizardfolk", "homme-lezard", "homme_lezard"
+  ]
+});
+
 const DAMAGE_ALIASES = Object.freeze({
   feu: ["feu", "fire"], fire: ["feu", "fire"],
   froid: ["froid", "cold"], cold: ["froid", "cold"],
@@ -38,7 +61,12 @@ export function rulesOf(effect) {
 }
 
 const changeKey = change => `${change.key}|${Number(change.mode)}|${String(change.value)}|${Number(change.priority ?? 0)}`;
+const modifierKey = modifier => JSON.stringify([
+  modifier?.domain, modifier?.target, modifier?.operation, modifier?.value,
+  modifier?.priority, modifier?.stacking, modifier?.conditions, modifier?.metadata
+]);
 export const uniqueChanges = changes => uniqueBy(changes.filter(change => change?.key), changeKey);
+export const uniqueModifiers = modifiers => uniqueBy(modifiers.filter(modifier => modifier?.domain && modifier?.target), modifierKey);
 export const uniqueTags = tags => uniqueBy(tags.map(value => String(value ?? "").trim()).filter(Boolean), value => norm(value));
 
 function values(effect, keys) {
@@ -119,6 +147,38 @@ function characteristicCompilation(effect, type, tags, rules) {
       priority
     });
   }
+}
+
+function socialCompilation(effect, type, tags, rules, modifiers) {
+  if (!["reaction_bonus", "reaction_modifier", "reaction_minimum"].includes(type)) return;
+  const value = number(effect.value, effect.bonus, effect.amount, effect.minimum, effect.reactionBonus);
+  if (!Number.isFinite(value)) return;
+  const requested = norm(effect.operation ?? effect.mode ?? (type === "reaction_minimum" ? "minimum" : "add"));
+  const minimum = type === "reaction_minimum" || ["minimum", "min", "at_least", "floor"].includes(requested);
+  const targetAny = uniqueTags(values(effect, ["targetAny", "targets", "against", "creatureTypes", "races"]));
+  const targetRaces = uniqueTags(targetAny.flatMap(target => SOCIAL_TARGET_ALIASES[norm(target)] ?? [target]));
+  const priority = Math.max(1, Math.floor(number(effect.priority) ?? 100));
+  const conditions = targetRaces.length ? { targetRaces } : {};
+  const operation = minimum ? "minmax" : "add";
+  const modifierValue = minimum ? { min: value, max: null } : value;
+  tags.add(minimum ? `reaction_minimum:${value}` : `reaction_bonus:${signed(value)}`);
+  targetAny.forEach(target => tags.add(`reaction_vs:${target}`));
+  rules.push({ source: "magic-item-catalogue", type, kind: "reaction_modifier", value, operation, targetAny, priority });
+  modifiers.push({
+    domain: "reaction",
+    target: "encounter",
+    operation,
+    value: modifierValue,
+    priority,
+    stacking: { mode: "stack", group: "reaction:magic-item" },
+    conditions,
+    metadata: {
+      label: effect.label ?? effect.name ?? (minimum ? "Réaction minimale" : "Bonus aux réactions"),
+      effectType: type,
+      targetAny,
+      targetRaces
+    }
+  });
 }
 
 function fixedArmorClassCompilation(effect, type, tags, rules) {
@@ -210,9 +270,11 @@ export function compileDefinition(effect = {}) {
   const rules = [];
   const periodic = [];
   const changes = [];
+  const modifiers = [];
 
   movementCompilation(effect, type, tags, rules);
   characteristicCompilation(effect, type, tags, rules);
+  socialCompilation(effect, type, tags, rules, modifiers);
   fixedArmorClassCompilation(effect, type, tags, rules);
   defenseCompilation(effect, type, tags);
   combatCompilation(effect, type, tags, rules);
@@ -239,8 +301,17 @@ export function compileDefinition(effect = {}) {
 
   if (Array.isArray(effect.rules)) rules.push(...clone(effect.rules));
   else if (effect.rule && typeof effect.rule === "object") rules.push(clone(effect.rule));
-  if (type && type !== "charges") rules.push({ source: "magic-item-catalogue", type, ...clone(effect) });
-  return { type, tags: uniqueTags([...tags]), rules, periodic, changes: uniqueChanges(changes) };
+  if (type && type !== "charges" && !["reaction_bonus", "reaction_modifier", "reaction_minimum"].includes(type)) {
+    rules.push({ source: "magic-item-catalogue", type, ...clone(effect) });
+  }
+  return {
+    type,
+    tags: uniqueTags([...tags]),
+    rules,
+    periodic,
+    changes: uniqueChanges(changes),
+    modifiers: uniqueModifiers(modifiers)
+  };
 }
 
 export function compilePower(power, { requirePassive = true } = {}) {
@@ -249,6 +320,7 @@ export function compilePower(power, { requirePassive = true } = {}) {
   const rules = [];
   const periodic = [];
   const changes = [];
+  const modifiers = [];
   const handledTypes = [];
   for (const effect of Array.isArray(power?.effects) ? power.effects : []) {
     const compiled = compileDefinition(effect);
@@ -257,23 +329,38 @@ export function compilePower(power, { requirePassive = true } = {}) {
     rules.push(...compiled.rules);
     periodic.push(...compiled.periodic);
     changes.push(...compiled.changes);
+    modifiers.push(...compiled.modifiers);
   }
-  return tags.size || rules.length || periodic.length || changes.length
-    ? { tags: uniqueTags([...tags]), rules, periodic, changes: uniqueChanges(changes), handledTypes: [...new Set(handledTypes)] }
+  return tags.size || rules.length || periodic.length || changes.length || modifiers.length
+    ? {
+        tags: uniqueTags([...tags]),
+        rules,
+        periodic,
+        changes: uniqueChanges(changes),
+        modifiers: uniqueModifiers(modifiers),
+        handledTypes: [...new Set(handledTypes)]
+      }
     : null;
 }
 
 export function compiledFromRules(rules = []) {
   const tags = [];
   const changes = [];
+  const modifiers = [];
   const normalizedRules = [];
   for (const rule of rules) {
     const compiled = compileDefinition(rule);
     tags.push(...compiled.tags);
     changes.push(...compiled.changes);
+    modifiers.push(...compiled.modifiers);
     normalizedRules.push(...compiled.rules);
   }
-  return { tags: uniqueTags(tags), changes: uniqueChanges(changes), rules: normalizedRules };
+  return {
+    tags: uniqueTags(tags),
+    changes: uniqueChanges(changes),
+    modifiers: uniqueModifiers(modifiers),
+    rules: normalizedRules
+  };
 }
 
 export function fixedArmorClassRule(rule = {}) {
