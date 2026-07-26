@@ -4,7 +4,7 @@
 
 import "./13b-actor-sheet-get-data-core.mjs";
 
-const ADD2E_CLASS_MECHANICS_VERSION = "2026-07-26-sheet-consumer-only-v2";
+const ADD2E_CLASS_MECHANICS_VERSION = "2026-07-26-sheet-charisma-social-v3";
 globalThis.ADD2E_CLASS_MECHANICS_VERSION = ADD2E_CLASS_MECHANICS_VERSION;
 
 function add2eClassMechanicsNormalize(value) {
@@ -213,6 +213,57 @@ function add2ePrepareConstitutionHitPointBonus(actor, data) {
   return hitPointBonus;
 }
 
+function add2ePrepareCharismaSocialProfile(actor, data) {
+  const charisma = data?.abilityDerived?.charisme;
+  if (!charisma) throw new Error("Le profil canonique de Charisme est indisponible pour l’affichage social.");
+  if (
+    typeof globalThis.add2eResolveCharismaFollowers !== "function"
+    || typeof globalThis.add2eResolveCharismaLoyalty !== "function"
+    || typeof globalThis.add2eResolveCharismaReaction !== "function"
+  ) {
+    throw new Error("Les résolveurs canoniques de Charisme sont indisponibles.");
+  }
+
+  const followers = globalThis.add2eResolveCharismaFollowers(actor, {
+    source: "actor-sheet-charisma-display"
+  });
+  const loyalty = globalThis.add2eResolveCharismaLoyalty(actor, {
+    source: "actor-sheet-charisma-display"
+  });
+  const reaction = globalThis.add2eResolveCharismaReaction(actor, {
+    source: "actor-sheet-charisma-display"
+  });
+
+  const social = {
+    followers: {
+      base: followers.base,
+      adjustment: followers.adjustment,
+      maximum: followers.maximum,
+      description: followers.adjustment
+        ? `Maximum de base ${followers.base}, ajustements ${followers.adjustment > 0 ? "+" : ""}${followers.adjustment}`
+        : `Maximum de base ${followers.base}`
+    },
+    loyalty: {
+      base: loyalty.base,
+      charismaAdjustment: loyalty.charismaAdjustment,
+      permanentAdjustment: loyalty.permanentAdjustment,
+      threshold: loyalty.threshold,
+      description: `Base ${loyalty.base} % ; Charisme ${loyalty.charismaAdjustment > 0 ? "+" : ""}${loyalty.charismaAdjustment} %${loyalty.permanentAdjustment ? ` ; autres ${loyalty.permanentAdjustment > 0 ? "+" : ""}${loyalty.permanentAdjustment} %` : ""}`
+    },
+    reaction: {
+      charismaAdjustment: reaction.charismaAdjustment,
+      permanentAdjustment: reaction.permanentAdjustment,
+      adjustment: reaction.adjustment,
+      description: `Charisme ${reaction.charismaAdjustment > 0 ? "+" : ""}${reaction.charismaAdjustment} %${reaction.permanentAdjustment ? ` ; autres ${reaction.permanentAdjustment > 0 ? "+" : ""}${reaction.permanentAdjustment} %` : ""}`
+    },
+    version: globalThis.ADD2E_CHARISMA_RULES_VERSION ?? ADD2E_CLASS_MECHANICS_VERSION
+  };
+
+  charisma.social = social;
+  data.charismaSocial = social;
+  return social;
+}
+
 function add2eInstallDerivedSheetDisplays() {
   const prototype = globalThis.Add2eActorSheet?.prototype;
   if (!prototype || prototype.__add2eDerivedSheetDisplaysV2 === true) return Boolean(prototype);
@@ -223,6 +274,7 @@ function add2eInstallDerivedSheetDisplays() {
     const data = await originalGetData.apply(this, args);
     add2ePrepareConstitutionHitPointBonus(this.actor, data);
     add2ePrepareLanguageQuota(this.actor, data);
+    add2ePrepareCharismaSocialProfile(this.actor, data);
     return data;
   };
   prototype.__add2eDerivedSheetDisplaysV2 = true;
@@ -235,3 +287,4 @@ Hooks.once("ready", add2eInstallElementalSaveBonuses);
 globalThis.add2eGetClassNatureMechanics = add2eGetClassNatureMechanics;
 globalThis.add2ePrepareLanguageQuota = add2ePrepareLanguageQuota;
 globalThis.add2ePrepareConstitutionHitPointBonus = add2ePrepareConstitutionHitPointBonus;
+globalThis.add2ePrepareCharismaSocialProfile = add2ePrepareCharismaSocialProfile;
