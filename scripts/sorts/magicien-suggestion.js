@@ -1,168 +1,389 @@
 // ADD2E — onUse Magicien : Suggestion
-// Version : 2026-05-05-magicien-n1-9-v2
-// Retour attendu : true = sort consommé, false = sort non consommé.
+// Version : 2026-07-26-suggestion-canonical-object-context-v1
+// Compatible Foundry V13/V14/V15.
+// Retour attendu : true = sort/pouvoir consommé, false = coût restitué.
 
-const ADD2E_SORT_CONFIG = {
-  "name": "Suggestion",
-  "slug": "suggestion",
-  "level": 3,
-  "kind": "condition",
-  "description": "Suggestion applique un état ou une transformation : charme, peur, invisibilité, paralysie, rapidité, ralentissement, métamorphose ou effet comparable. Le script pose un effet actif de suivi.",
-  "dice": null,
-  "modes": [
-    {
-      "id": "normal",
-      "label": "Suggestion"
+return await (async () => {
+  const TAG = "[ADD2E][SORT_ONUSE][MAGICIEN][SUGGESTION]";
+  const spellDocument = (typeof sort !== "undefined" && sort)
+    ? sort
+    : ((typeof item !== "undefined" && item) ? item : null);
+  const caster = (typeof actor !== "undefined" && actor) ? actor : spellDocument?.parent;
+  if (!spellDocument || !caster) {
+    ui.notifications.error("Suggestion : source ou lanceur introuvable.");
+    return false;
+  }
+  if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
+    ui.notifications.error("Suggestion : les constructeurs communs de cartes ADD2E sont indisponibles.");
+    return false;
+  }
+
+  const norm = value => String(value ?? "").trim().toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "").replace(/[^a-z0-9:+*_.-]+/g, "_")
+    .replace(/_+/g, "_").replace(/^_+|_+$/g, "");
+  const list = value => {
+    if (value == null || value === "") return [];
+    if (Array.isArray(value)) return value.flatMap(list);
+    if (value instanceof Set) return [...value].flatMap(list);
+    if (typeof value === "string") return value.split(/[,;|\n]+/g).map(entry => entry.trim()).filter(Boolean);
+    return [value];
+  };
+  const number = (...values) => {
+    for (const value of values) {
+      if (value === undefined || value === null || value === "") continue;
+      const result = Number(String(value).replace(",", "."));
+      if (Number.isFinite(result)) return result;
     }
-  ]
-};
-const ADD2E_ONUSE_TAG = "[ADD2E][SORT_ONUSE][MAGICIEN]";
+    return null;
+  };
+  const escape = value => String(value ?? "")
+    .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
 
-function add2eHtmlEscape(value) {
-  const div = document.createElement("div");
-  div.innerText = String(value ?? "");
-  return div.innerHTML;
-}
+  const objectItemId = spellDocument.system?.sourceItemId
+    ?? spellDocument.system?.sourceWeaponId
+    ?? spellDocument.flags?.add2e?.sourceItemId;
+  const objectItem = objectItemId ? caster.items?.get?.(objectItemId) ?? null : null;
+  const powerIndex = Number(spellDocument.system?.powerIndex ?? spellDocument.flags?.add2e?.powerIndex);
+  const rawPowers = objectItem?.system?.pouvoirs
+    ?? objectItem?.system?.powers
+    ?? objectItem?.system?.pouvoirsMagiques
+    ?? objectItem?.system?.magicalPowers
+    ?? [];
+  const powers = Array.isArray(rawPowers) ? rawPowers : rawPowers && typeof rawPowers === "object" ? Object.values(rawPowers) : [];
+  const sourcePower = Number.isInteger(powerIndex) ? powers[powerIndex] ?? null : null;
+  const powerEffects = Array.isArray(sourcePower?.effects) ? sourcePower.effects : [];
+  const suggestionEffect = powerEffects.find(effect => norm(effect?.type ?? effect?.kind) === "suggestion")
+    ?? powerEffects.find(effect => norm(effect?.type ?? effect?.kind) === "linked_spell")
+    ?? {};
+  const parameters = sourcePower?.parameters && typeof sourcePower.parameters === "object" ? sourcePower.parameters : {};
+  const sourceDocument = objectItem ?? spellDocument;
+  const isObjectPower = spellDocument.system?.isObjectPower === true || spellDocument.system?.isPower === true || !!objectItem;
 
-function add2eCasterLevel(actor) {
-  return Number(actor?.system?.niveau ?? actor?.system?.level ?? actor?.system?.details?.niveau ?? 1) || 1;
-}
+  const casterLevel = Math.max(1, Math.floor(number(
+    spellDocument.system?.casterLevel,
+    spellDocument.system?.niveauLanceur,
+    spellDocument.system?.niveau_lanceur,
+    spellDocument.flags?.add2e?.casterLevel,
+    caster.system?.niveau,
+    caster.system?.level,
+    caster.system?.details?.niveau,
+    1
+  ) ?? 1));
 
-async function add2eEvalRoll(formula) {
-  return await new Roll(formula).evaluate();
-}
+  const selectedTargets = Array.from(game.user?.targets ?? []).filter(target => target?.actor);
+  if (!selectedTargets.length) {
+    ui.notifications.warn("Suggestion exige au moins une cible sélectionnée.");
+    return false;
+  }
+  const configuredMaxTargets = number(parameters.maxTargets, suggestionEffect.maxTargets);
+  const maximumTargets = Number.isFinite(configuredMaxTargets)
+    ? Math.max(1, Math.floor(configuredMaxTargets))
+    : (isObjectPower ? selectedTargets.length : 1);
+  if (selectedTargets.length > maximumTargets) {
+    ui.notifications.warn(`Suggestion accepte au maximum ${maximumTargets} cible(s) dans ce contexte.`);
+    return false;
+  }
+  const targets = selectedTargets.slice(0, maximumTargets);
 
-function add2eDamageFormula(raw, level) {
-  const s = String(raw || "1d6");
-  if (s === "leveld3") return `${Math.max(1, level)}d3`;
-  if (s === "leveld4+level") return `${Math.max(1, level)}d4+${level}`;
-  if (s === "leveld6") return `${Math.max(1, Math.min(10, level))}d6`;
-  if (s === "1d8+level") return `1d8+${level}`;
-  if (s === "1d6+level") return `1d6+${level}`;
-  if (s === "special" || s === "variable") return "1d20";
-  return s;
-}
+  const distanceValue = value => {
+    if (value == null || value === "") return null;
+    if (typeof value === "number") return Number.isFinite(value) ? value : null;
+    if (typeof value === "object") return number(value.value, value.amount, value.distance, value.range);
+    const match = String(value).match(/-?\d+(?:[.,]\d+)?/);
+    return match ? Number(match[0].replace(",", ".")) : null;
+  };
+  const casterToken = (typeof token !== "undefined" && token)
+    ? token
+    : args?.[0]?.token ?? canvas?.tokens?.controlled?.find?.(entry => entry.actor?.id === caster.id)
+      ?? caster.getActiveTokens?.()?.[0] ?? null;
+  const measureDistance = targetToken => {
+    if (!casterToken || !targetToken || casterToken === targetToken) return 0;
+    try {
+      const measured = Number(globalThis.add2eMeasureTokenGridDistance?.(casterToken, targetToken));
+      if (Number.isFinite(measured)) return measured;
+    } catch (_error) {}
+    const source = casterToken.center ?? { x: casterToken.x ?? 0, y: casterToken.y ?? 0 };
+    const target = targetToken.center ?? { x: targetToken.x ?? 0, y: targetToken.y ?? 0 };
+    try {
+      const measured = Number(canvas?.grid?.measurePath?.([source, target])?.distance);
+      if (Number.isFinite(measured)) return measured;
+    } catch (_error) {}
+    const pixels = Math.hypot(Number(target.x) - Number(source.x), Number(target.y) - Number(source.y));
+    const gridSize = Number(canvas?.scene?.grid?.size ?? canvas?.grid?.size ?? 1) || 1;
+    const gridDistance = Number(canvas?.scene?.grid?.distance ?? 1) || 1;
+    return pixels / gridSize * gridDistance;
+  };
+  const maximumRange = distanceValue(parameters.range ?? suggestionEffect.range ?? spellDocument.system?.portee ?? spellDocument.system?.portée ?? 3);
+  if (Number.isFinite(maximumRange) && casterToken) {
+    const outOfRange = targets.filter(target => Number(measureDistance(target)) > maximumRange);
+    if (outOfRange.length) {
+      ui.notifications.warn(`Cible(s) hors de portée de Suggestion : ${outOfRange.map(target => target.name).join(", ")}.`);
+      return false;
+    }
+  }
 
-function add2eRoundCount(level) {
-  return Math.max(1, level);
-}
-
-function add2eGetCasterToken() {
-  return token ?? args?.[0]?.token ?? canvas?.tokens?.controlled?.[0] ?? null;
-}
-
-function add2eGetTargets({ fallbackCaster = true } = {}) {
-  const targets = Array.from(game.user.targets ?? []);
-  if (targets.length) return targets;
-  const casterToken = add2eGetCasterToken();
-  return (fallbackCaster && casterToken) ? [casterToken] : [];
-}
-
-async function add2eChat(title, html, speakerToken = null, options = {}) {
-  const casterToken = speakerToken ?? add2eGetCasterToken();
-  const casterActor = actor ?? casterToken?.actor ?? null;
-  const casterName = casterActor?.name ?? casterToken?.name ?? "Magicien";
-  const spellName = item?.name ?? title ?? "Sort de magicien";
-  const casterImg = casterToken?.document?.texture?.src ?? casterActor?.img ?? "icons/svg/mystery-man.svg";
-  const spellImg = item?.img ?? "icons/svg/book.svg";
-  const targets = Array.from(game.user.targets ?? []);
-  const targetLabel = options.targetLabel ?? (targets.length ? targets.map(t => t.name).join(", ") : casterName);
-  const outcome = options.outcome ?? title ?? spellName;
-  const rule = options.rule ?? "";
-  await ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor: casterActor, token: casterToken }),
+  const DialogV2 = foundry?.applications?.api?.DialogV2;
+  if (!DialogV2?.wait) {
+    ui.notifications.error("Suggestion : DialogV2 est indisponible.");
+    return false;
+  }
+  const choice = await DialogV2.wait({
+    window: { title: `Suggestion — ${sourceDocument.name}` },
+    modal: true,
+    rejectClose: false,
     content: `
-      <div class="add2e-chat-card add2e-magicien-sort" style="border:1px solid #8e63c7;border-radius:8px;overflow:hidden;background:#f6f0ff;color:#2d2144;font-family:var(--font-primary);">
-        <div style="display:flex;align-items:center;gap:8px;background:#5b3f8c;color:#fff;padding:7px 9px;">
-          <img src="${add2eHtmlEscape(casterImg)}" style="width:42px;height:42px;object-fit:cover;border-radius:50%;border:2px solid #d8c3ff;background:#fff;" />
-          <div style="flex:1;line-height:1.05;">
-            <div style="font-weight:800;font-size:14px;">${add2eHtmlEscape(casterName)}</div>
-            <div style="font-size:12px;font-weight:700;">lance ${add2eHtmlEscape(spellName)}</div>
-          </div>
-          <div style="font-weight:800;font-size:12px;text-align:center;white-space:nowrap;">Sort profane</div>
-          <img src="${add2eHtmlEscape(spellImg)}" style="width:34px;height:34px;object-fit:cover;border-radius:3px;border:1px solid #d8c3ff;background:#fff;" />
+      <form class="add2e-dialog add2e-suggestion-dialog" style="min-width:520px;padding:10px;display:grid;gap:10px;">
+        <p style="margin:0;">Formulez la suggestion adressée à ${escape(targets.map(target => target.name).join(", "))}.</p>
+        <div class="form-group" style="display:grid;gap:4px;">
+          <label for="add2e-suggestion-text"><strong>Suggestion prononcée</strong></label>
+          <textarea id="add2e-suggestion-text" name="suggestion" rows="4" required></textarea>
         </div>
-        <div style="padding:9px 10px 10px 10px;background:#f6f0ff;">
-          <div style="font-size:13px;margin:0 0 6px 0;"><b>Cible :</b> ${add2eHtmlEscape(targetLabel)}</div>
-          <div style="border:1px solid #8e63c7;border-radius:6px;background:#fffaff;padding:8px;text-align:center;margin-bottom:7px;">
-            <div style="color:#6c31b5;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.3px;">${add2eHtmlEscape(outcome)}</div>
-            <div style="font-size:13px;line-height:1.35;text-align:center;">${html}</div>
-          </div>
-          <details style="border:1px solid #8e63c7;border-radius:5px;background:#fffaff;padding:5px 7px;">
-            <summary style="cursor:pointer;font-weight:800;color:#4a2e78;">Règle appliquée</summary>
-            <div style="margin-top:5px;font-size:12px;line-height:1.35;">${rule || "Effet du sort appliqué selon sa description et l’arbitrage du MD."}</div>
-          </details>
+        <label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" name="understands" checked> La cible comprend la langue employée.</label>
+        <label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" name="reasonable" checked> La formulation semble raisonnable et n’ordonne pas directement une action nuisible.</label>
+        <div class="form-group" style="display:grid;grid-template-columns:1fr 90px;align-items:center;gap:8px;">
+          <label for="add2e-suggestion-save-modifier">Ajustement circonstanciel au jet de protection</label>
+          <input id="add2e-suggestion-save-modifier" type="number" name="saveModifier" value="0" step="1">
         </div>
-      </div>`
+        <p style="margin:0;font-size:.85em;">Une suggestion particulièrement raisonnable peut recevoir un malus de −1, −2, etc. au jet de protection, selon le MD.</p>
+      </form>`,
+    buttons: [
+      {
+        action: "apply",
+        label: "Prononcer la suggestion",
+        icon: "fa-solid fa-comments",
+        default: true,
+        callback: (_event, button, dialog) => {
+          const form = button?.form ?? dialog?.element?.querySelector?.("form");
+          const suggestion = String(form?.querySelector?.('[name="suggestion"]')?.value ?? "").trim();
+          if (!suggestion) {
+            ui.notifications.warn("La suggestion doit être formulée.");
+            return null;
+          }
+          return {
+            suggestion,
+            understands: form?.querySelector?.('[name="understands"]')?.checked === true,
+            reasonable: form?.querySelector?.('[name="reasonable"]')?.checked === true,
+            saveModifier: Number(form?.querySelector?.('[name="saveModifier"]')?.value ?? 0) || 0
+          };
+        }
+      },
+      { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => null }
+    ]
   });
-}
+  if (!choice) return false;
 
-async function add2eApplyEffect(targetActor, name, tags, rounds = 0) {
-  if (!targetActor) return false;
-  await targetActor.createEmbeddedDocuments("ActiveEffect", [{
-    name,
-    img: item?.img || "icons/svg/aura.svg",
-    disabled: false,
-    transfer: false,
-    type: "base",
-    system: {},
-    changes: [],
-    duration: { rounds: rounds || undefined, startRound: game.combat?.round ?? null, startTime: game.time?.worldTime ?? null, combat: game.combat?.id ?? null },
-    description: ADD2E_SORT_CONFIG.description,
-    flags: { add2e: { tags } }
-  }]);
-  return true;
-}
-
-async function add2eAskNote(config) {
-  const needsNote = ["note","summon","summon_note","movement","terrain","utility","detection"].includes(config.kind) || (config.modes?.length > 1);
-  if (!needsNote) return { mode: "normal", note: "" };
-  return await new Promise(resolve => {
-    let done = false;
-    const finish = v => { if (!done) { done = true; resolve(v); } };
-    const buttons = {};
-    for (const m of config.modes ?? [{id:"normal",label:config.name}]) {
-      buttons[m.id] = { label: m.label, callback: html => finish({ mode:m.id, note: html.find("[name='note']").val() ?? "" }) };
+  const durationRounds = (() => {
+    const raw = parameters.duration ?? suggestionEffect.duration;
+    if (raw && typeof raw === "object") {
+      const value = number(raw.value, raw.amount, raw.duration, raw.rounds);
+      const unit = raw.unit ?? raw.units ?? raw.type ?? "round";
+      const resolved = Number(game.add2e?.time?.toRounds?.(value, unit, { level: casterLevel }));
+      if (Number.isFinite(resolved) && resolved > 0) return Math.max(1, Math.floor(resolved));
     }
-    buttons.cancel = { label: "Annuler", callback: () => finish(null) };
-    new Dialog({
-      title: config.name,
-      content: `<form><p><b>${add2eHtmlEscape(config.name)}</b></p><div class="form-group"><label>Note / paramètres</label><textarea name="note" rows="3"></textarea></div></form>`,
-      buttons,
-      default: Object.keys(buttons)[0],
-      close: () => finish(null)
-    }).render(true);
+    return Math.max(10, (6 + (6 * casterLevel)) * 10);
+  })();
+
+  const buildCard = async ({ results, invalidReason = "" }) => {
+    const rolls = results.map(result => result.save?.roll).filter(Boolean);
+    const rows = results.map(result => {
+      const save = result.save;
+      const detail = result.outcome === "racial"
+        ? `Résistance au charme réussie (${Number(result.resistance?.jet) || 0}/${Number(result.resistance?.pct) || 0} %)`
+        : result.outcome === "saved"
+          ? `Sauvegarde réussie — ${save.total} contre ${save.target}`
+          : result.outcome === "affected"
+            ? `Sauvegarde échouée — suggestion active pour ${durationRounds} rounds`
+            : invalidReason || "Aucun effet";
+      return { label: result.targetActor.name, value: detail };
+    });
+    const card = {
+      actor: caster,
+      title: sourceDocument.name || "Suggestion",
+      icon: "fas fa-comments",
+      variant: results.some(result => result.outcome === "affected") ? "ability" : "success",
+      source: {
+        name: caster.name,
+        img: caster.img,
+        type: isObjectPower ? "Pouvoir d’objet magique" : "Enchantement / Charme",
+        meta: `Suggestion · portée ${Number.isFinite(maximumRange) ? maximumRange : 3}`
+      },
+      rows: [
+        { label: "Formulation", value: choice.suggestion },
+        { label: "Durée", value: `${durationRounds} rounds ADD2E` },
+        { label: "Ajustement de sauvegarde", value: `${choice.saveModifier >= 0 ? "+" : ""}${choice.saveModifier}` },
+        ...rows
+      ],
+      message: invalidReason || "Chaque cible qui échoue à sa sauvegarde est soumise à la suggestion formulée.",
+      chatData: {
+        speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken }),
+        rolls,
+        flags: {
+          add2e: {
+            spell: "suggestion",
+            sourceItemUuid: sourceDocument.uuid ?? null,
+            objectItemUuid: objectItem?.uuid ?? null,
+            powerIndex: Number.isInteger(powerIndex) ? powerIndex : null,
+            targetActorUuids: results.map(result => result.targetActor.uuid),
+            suggestion: choice.suggestion,
+            understands: choice.understands,
+            reasonable: choice.reasonable,
+            saveModifier: choice.saveModifier,
+            durationRounds,
+            outcomes: results.map(result => ({ actorUuid: result.targetActor.uuid, outcome: result.outcome }))
+          }
+        }
+      }
+    };
+    const preview = globalThis.add2eBuildChatCard(card);
+    if (!String(preview ?? "").trim()) throw new Error("Suggestion : carte de chat vide.");
+    await globalThis.add2eCreateChatCard(card);
+  };
+
+  if (!choice.understands || !choice.reasonable) {
+    const invalidReason = !choice.understands
+      ? "La cible ne comprend pas la langue : la suggestion n’a aucun effet."
+      : "La formulation est directement nuisible ou manifestement déraisonnable : le sort est annulé sans effet.";
+    await buildCard({
+      results: targets.map(targetToken => ({ targetToken, targetActor: targetToken.actor, save: null, resistance: null, outcome: "invalid" })),
+      invalidReason
+    });
+    return true;
+  }
+
+  if (typeof globalThis.add2eRollSavingThrow !== "function") {
+    ui.notifications.error("Suggestion : l’exécuteur canonique de sauvegardes est indisponible.");
+    return false;
+  }
+
+  const effectsEngine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  const prepared = [];
+  for (const targetToken of targets) {
+    const targetActor = targetToken.actor;
+    const resistance = effectsEngine?.checkResistanceDetails?.(targetActor, "charme", { chat: false }) ?? null;
+    if (resistance?.resiste) {
+      prepared.push({ targetToken, targetActor, resistance, save: null, outcome: "racial" });
+      continue;
+    }
+    const saveModifiers = choice.saveModifier === 0 ? [] : [{
+      id: `${sourceDocument.id ?? "suggestion"}:${targetActor.id}:circumstance`,
+      target: "sorts",
+      value: choice.saveModifier,
+      label: "Caractère raisonnable de la suggestion",
+      source: "spell:suggestion"
+    }];
+    const save = await globalThis.add2eRollSavingThrow(targetActor, 4, {
+      source: "spell:suggestion",
+      sourceItem: sourceDocument,
+      caster,
+      targetToken,
+      frontale: true,
+      mental: true,
+      effectType: "suggestion",
+      tags: ["mental", "suggestion", "charme", ...list(parameters.targetAny ?? suggestionEffect.targetAny).map(norm)],
+      saveModifiers,
+      createChat: false,
+      showDice: true
+    });
+    if (!save?.ok) {
+      ui.notifications.error(`Suggestion : sauvegarde contre les sortilèges indisponible pour ${targetActor.name}.`);
+      return false;
+    }
+    prepared.push({ targetToken, targetActor, resistance, save, outcome: save.success ? "saved" : "affected" });
+  }
+
+  const applyEffect = async entry => {
+    const { targetToken, targetActor } = entry;
+    const effectKey = `${sourceDocument.uuid ?? sourceDocument.id}:${caster.uuid ?? caster.id}:suggestion`;
+    const existingIds = Array.from(targetActor.effects ?? [])
+      .filter(effect => String(effect.flags?.add2e?.suggestionKey ?? "") === effectKey)
+      .map(effect => effect.id).filter(Boolean);
+    if ((game.user?.isGM || targetActor.isOwner) && existingIds.length) {
+      await targetActor.deleteEmbeddedDocuments("ActiveEffect", existingIds, { add2eInternal: true, add2eReason: "replace-suggestion" });
+    }
+    const tags = ["etat:suggestion", "suggestion", "mental", "charme", "sort:suggestion"];
+    const extraFlags = {
+      suggestionKey: effectKey,
+      sourceId: caster.id,
+      sourceUuid: caster.uuid ?? null,
+      sourceName: caster.name,
+      sourceItemUuid: sourceDocument.uuid ?? null,
+      objectItemUuid: objectItem?.uuid ?? null,
+      powerIndex: Number.isInteger(powerIndex) ? powerIndex : null,
+      suggestion: choice.suggestion,
+      tags,
+      effectTags: tags,
+      rules: [{ type: "state_condition", condition: "suggestion", mental: true, instruction: choice.suggestion }]
+    };
+    const effectData = typeof game.add2e?.time?.effectData === "function"
+      ? game.add2e.time.effectData({
+          name: "Sous suggestion",
+          img: sourceDocument.img || "icons/svg/aura.svg",
+          origin: sourceDocument.uuid ?? null,
+          rounds: durationRounds,
+          unit: "round",
+          description: choice.suggestion,
+          tags,
+          changes: [],
+          source: isObjectPower ? "magic-item" : "spell",
+          sourceItem: sourceDocument,
+          extraFlags
+        })
+      : {
+          name: "Sous suggestion",
+          img: sourceDocument.img || "icons/svg/aura.svg",
+          origin: sourceDocument.uuid ?? null,
+          disabled: false,
+          transfer: false,
+          duration: {
+            rounds: durationRounds,
+            startRound: game.combat?.round ?? null,
+            startTurn: game.combat?.turn ?? null,
+            startTime: game.time?.worldTime ?? null,
+            combat: game.combat?.id ?? null
+          },
+          description: choice.suggestion,
+          changes: [],
+          flags: { add2e: extraFlags }
+        };
+    if (game.user?.isGM || targetActor.isOwner) {
+      if (typeof game.add2e?.time?.createTimedActiveEffect === "function") {
+        await game.add2e.time.createTimedActiveEffect(targetActor, effectData);
+      } else {
+        await targetActor.createEmbeddedDocuments("ActiveEffect", [effectData], { add2eInternal: true, add2eReason: "suggestion" });
+      }
+      return true;
+    }
+    if (game.socket) {
+      game.socket.emit("system.add2e", {
+        type: "applyActiveEffect",
+        actorId: targetActor.id,
+        actorUuid: targetActor.uuid,
+        sceneId: canvas.scene?.id,
+        tokenId: targetToken.id,
+        effectData
+      });
+      return true;
+    }
+    return false;
+  };
+
+  for (const entry of prepared) {
+    if (entry.outcome !== "affected") continue;
+    if (!await applyEffect(entry)) {
+      ui.notifications.error(`Suggestion : impossible d’appliquer l’effet à ${entry.targetActor.name}.`);
+      return false;
+    }
+  }
+
+  await buildCard({ results: prepared });
+  console.log(`${TAG}[RESOLVED]`, {
+    caster: caster.name,
+    source: sourceDocument.name,
+    objectItem: objectItem?.name ?? null,
+    targets: prepared.map(entry => ({ name: entry.targetActor.name, outcome: entry.outcome })),
+    durationRounds
   });
-}
-
-const choice = await add2eAskNote(ADD2E_SORT_CONFIG);
-if (!choice) return false;
-
-const level = add2eCasterLevel(actor);
-const targets = add2eGetTargets({ fallbackCaster: ADD2E_SORT_CONFIG.kind !== "damage" });
-const baseTags = [`sort:${ADD2E_SORT_CONFIG.slug}`, "classe:magicien", "liste:magicien", `niveau:${ADD2E_SORT_CONFIG.level}`, `type:${ADD2E_SORT_CONFIG.kind}`];
-
-console.log(`${ADD2E_ONUSE_TAG}[START]`, { sort: ADD2E_SORT_CONFIG.name, actor: actor?.name, level, targets: targets.map(t => t.name), mode: choice.mode });
-
-if (ADD2E_SORT_CONFIG.kind === "damage") {
-  const formula = add2eDamageFormula(ADD2E_SORT_CONFIG.dice, level);
-  const roll = await add2eEvalRoll(formula);
-  await roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor, token: add2eGetCasterToken() }), flavor: ADD2E_SORT_CONFIG.name });
-  await add2eChat(ADD2E_SORT_CONFIG.name, `
-    <p>Jet indicatif : <b>${roll.total}</b> (${formula})</p>
-    ${targets.length ? `<p>Cible(s) : ${targets.map(t => `<b>${add2eHtmlEscape(t.name)}</b>`).join(", ")}</p>` : "<p>Aucune cible sélectionnée : appliquer manuellement si nécessaire.</p>"}
-  `, null, { outcome: "EFFET OFFENSIF", rule: add2eHtmlEscape(ADD2E_SORT_CONFIG.description) });
   return true;
-}
-
-if (["condition","protection"].includes(ADD2E_SORT_CONFIG.kind)) {
-  for (const t of targets) await add2eApplyEffect(t.actor, ADD2E_SORT_CONFIG.name, baseTags, add2eRoundCount(level));
-  await add2eChat(ADD2E_SORT_CONFIG.name, `<p>Effet actif appliqué à : ${targets.map(t => `<b>${add2eHtmlEscape(t.name)}</b>`).join(", ")}</p>`, null, { outcome: "EFFET ACTIF", rule: add2eHtmlEscape(ADD2E_SORT_CONFIG.description) });
-  return true;
-}
-
-await add2eChat(ADD2E_SORT_CONFIG.name, `
-  <p>${add2eHtmlEscape(ADD2E_SORT_CONFIG.description)}</p>
-  ${choice.note ? `<p>Note : <b>${add2eHtmlEscape(choice.note)}</b></p>` : ""}
-`, null, { outcome: ADD2E_SORT_CONFIG.name.toUpperCase(), rule: add2eHtmlEscape(ADD2E_SORT_CONFIG.description) });
-return true;
+})();
