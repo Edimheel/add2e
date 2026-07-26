@@ -17,7 +17,7 @@ globalThis.__add2eHudSheetRollBridgeV1 = true;
 add2eInstallHudSheetRollBridge();
 
 const ADD2E_LISTENER_CARACS = ["force", "dexterite", "constitution", "intelligence", "sagesse", "charisme"];
-const ADD2E_CONSTITUTION_RULES_VERSION = "2026-07-26-constitution-hp-survival-v1";
+const ADD2E_CONSTITUTION_RULES_VERSION = "2026-07-26-constitution-hp-survival-v2";
 const ADD2E_FIGHTER_HP_CLASSES = new Set(["guerrier", "paladin", "ranger"]);
 const ADD2E_CONSTITUTION_CHECKS = Object.freeze({
   trauma: Object.freeze({
@@ -199,16 +199,26 @@ async function add2eRecalculateSingleClassHitPoints(actor, { syncCurrent = false
   const sameRolls = typeof foundry?.utils?.deepEqual === "function"
     ? foundry.utils.deepEqual(system.hpRolls ?? [], hpRolls)
     : JSON.stringify(system.hpRolls ?? []) === JSON.stringify(hpRolls);
+  const previousMaximum = Number(system.points_de_coup);
   const currentHitPoints = Number(system.pdv);
-  const maximumChanged = Number(system.points_de_coup) !== effectiveMaximum;
-  const currentChanged = syncCurrent
-    ? currentHitPoints !== effectiveMaximum
-    : Number.isFinite(currentHitPoints) && currentHitPoints > effectiveMaximum;
+  const maximumChanged = previousMaximum !== effectiveMaximum;
+  const maximumDelta = Number.isFinite(previousMaximum) ? effectiveMaximum - previousMaximum : 0;
+  const synchronizeCurrent = syncCurrent === true || reason === "level-change";
 
+  let nextCurrentHitPoints = currentHitPoints;
+  if (synchronizeCurrent) {
+    nextCurrentHitPoints = effectiveMaximum;
+  } else if (Number.isFinite(currentHitPoints) && Number.isFinite(previousMaximum) && maximumDelta !== 0) {
+    nextCurrentHitPoints = Math.min(effectiveMaximum, currentHitPoints + maximumDelta);
+  } else if (Number.isFinite(currentHitPoints) && currentHitPoints > effectiveMaximum) {
+    nextCurrentHitPoints = effectiveMaximum;
+  }
+
+  const currentChanged = Number.isFinite(nextCurrentHitPoints) && nextCurrentHitPoints !== currentHitPoints;
   const updates = {};
   if (!sameRolls) updates["system.hpRolls"] = hpRolls;
   if (maximumChanged || currentChanged) updates["system.points_de_coup"] = baseMaximum;
-  if (currentChanged) updates["system.pdv"] = baseMaximum;
+  if (currentChanged) updates["system.pdv"] = nextCurrentHitPoints - modifierTotal;
   if (!Object.keys(updates).length) return true;
 
   await actor.update(updates, {
