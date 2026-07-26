@@ -20,7 +20,10 @@
               </td>
               <td>
                 <div class="carac-adjustments-line">
-                  <div class="a2e-adjustment-item"><label>PV / niv.</label><input type="text" value="{{signedNumber abilityDerived.constitution.profile.pv}}" readonly></div>
+                  <div class="a2e-adjustment-item">
+                    <label>PV / niv.</label>
+                    <input type="text" value="{{signedNumber abilityDerived.constitution.hitPointBonus.value}}" title="{{abilityDerived.constitution.hitPointBonus.description}}" readonly>
+                  </div>
                   <div class="a2e-adjustment-item">
                     <label>Choc</label>
                     <div style="display:flex;align-items:center;gap:3px;">
