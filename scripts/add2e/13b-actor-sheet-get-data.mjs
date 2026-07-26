@@ -181,23 +181,57 @@ function add2ePrepareLanguageQuota(actor, data) {
   return quota;
 }
 
-function add2eInstallLanguageQuotaDisplay() {
-  const prototype = globalThis.Add2eActorSheet?.prototype;
-  if (!prototype || prototype.__add2eLanguageQuotaDisplayV1 === true) return Boolean(prototype);
-  const originalGetData = prototype.getData;
-  if (typeof originalGetData !== "function") throw new Error("getData ApplicationV2 est indisponible pour le quota de langues.");
+function add2ePrepareConstitutionHitPointBonus(actor, data) {
+  const constitution = data?.abilityDerived?.constitution;
+  if (!constitution) throw new Error("Le profil canonique de Constitution est indisponible pour l’affichage des PV.");
 
-  prototype.getData = async function add2eLanguageQuotaGetData(...args) {
+  const classItems = Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
+  let progression = null;
+  let value = Math.trunc(Number(constitution.profile?.pv) || 0);
+
+  if (classItems.length === 1) {
+    if (typeof globalThis.add2eResolveConstitutionHitPointProgression !== "function") {
+      throw new Error("Le résolveur canonique de progression des PV de Constitution est indisponible.");
+    }
+    progression = globalThis.add2eResolveConstitutionHitPointProgression(actor, classItems[0]);
+    if (!progression) throw new Error("La progression canonique des PV de Constitution n’a pas pu être résolue.");
+    value = Math.trunc(Number(progression.constitutionBonusPerDie) || 0);
+  }
+
+  const hitPointBonus = {
+    value,
+    fighterClass: progression?.fighterClass === true,
+    classKey: progression?.classKey ?? "",
+    className: progression?.className ?? "",
+    description: progression?.fighterClass === true
+      ? `Bonus de Constitution par dé de vie — ${progression.className}`
+      : "Bonus de Constitution par dé de vie"
+  };
+
+  constitution.hitPointBonus = hitPointBonus;
+  data.constitutionHitPointBonus = hitPointBonus;
+  return hitPointBonus;
+}
+
+function add2eInstallDerivedSheetDisplays() {
+  const prototype = globalThis.Add2eActorSheet?.prototype;
+  if (!prototype || prototype.__add2eDerivedSheetDisplaysV2 === true) return Boolean(prototype);
+  const originalGetData = prototype.getData;
+  if (typeof originalGetData !== "function") throw new Error("getData ApplicationV2 est indisponible pour les profils dérivés de la feuille.");
+
+  prototype.getData = async function add2eDerivedSheetDisplaysGetData(...args) {
     const data = await originalGetData.apply(this, args);
+    add2ePrepareConstitutionHitPointBonus(this.actor, data);
     add2ePrepareLanguageQuota(this.actor, data);
     return data;
   };
-  prototype.__add2eLanguageQuotaDisplayV1 = true;
+  prototype.__add2eDerivedSheetDisplaysV2 = true;
   return true;
 }
 
 add2eInstallElementalSaveBonuses();
-add2eInstallLanguageQuotaDisplay();
+add2eInstallDerivedSheetDisplays();
 Hooks.once("ready", add2eInstallElementalSaveBonuses);
 globalThis.add2eGetClassNatureMechanics = add2eGetClassNatureMechanics;
 globalThis.add2ePrepareLanguageQuota = add2ePrepareLanguageQuota;
+globalThis.add2ePrepareConstitutionHitPointBonus = add2ePrepareConstitutionHitPointBonus;
