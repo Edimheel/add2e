@@ -20,9 +20,28 @@
               </td>
               <td>
                 <div class="carac-adjustments-line">
-                  <div class="a2e-adjustment-item"><label>Compagnons</label><input type="text" value="{{abilityDerived.charisme.profile.compagnons}}" readonly></div>
-                  <div class="a2e-adjustment-item"><label>Loyauté</label><input type="text" value="{{signedNumber abilityDerived.charisme.profile.loy}}" readonly></div>
-                  <div class="a2e-adjustment-item"><label>Réaction</label><input type="text" value="{{signedNumber abilityDerived.charisme.profile.react}}" readonly></div>
+                  <div class="a2e-adjustment-item">
+                    <label>Compagnons</label>
+                    <input type="text" value="{{abilityDerived.charisme.social.followers.maximum}}" title="{{abilityDerived.charisme.social.followers.description}}" readonly>
+                  </div>
+                  <div class="a2e-adjustment-item">
+                    <label>Loyauté</label>
+                    <div style="display:flex;align-items:center;gap:3px;">
+                      <input type="text" value="{{abilityDerived.charisme.social.loyalty.threshold}} %" title="{{abilityDerived.charisme.social.loyalty.description}}" readonly>
+                      <button type="button" class="add2e-charisma-check" data-check="loyalty" title="Tester la loyauté" aria-label="Tester la loyauté" style="width:26px;height:24px;min-width:26px;padding:0;display:inline-flex;align-items:center;justify-content:center;">
+                        <i class="fas fa-people-group"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="a2e-adjustment-item">
+                    <label>Réaction</label>
+                    <div style="display:flex;align-items:center;gap:3px;">
+                      <input type="text" value="{{signedNumber abilityDerived.charisme.social.reaction.adjustment}} %" title="{{abilityDerived.charisme.social.reaction.description}}" readonly>
+                      <button type="button" class="add2e-charisma-check" data-check="reaction" title="Tester la réaction initiale" aria-label="Tester la réaction initiale" style="width:26px;height:24px;min-width:26px;padding:0;display:inline-flex;align-items:center;justify-content:center;">
+                        <i class="fas fa-comments"></i>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </td>
             </tr>
