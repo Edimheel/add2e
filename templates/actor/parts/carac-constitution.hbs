@@ -21,8 +21,24 @@
               <td>
                 <div class="carac-adjustments-line">
                   <div class="a2e-adjustment-item"><label>PV / niv.</label><input type="text" value="{{signedNumber abilityDerived.constitution.profile.pv}}" readonly></div>
-                  <div class="a2e-adjustment-item"><label>Choc</label><input type="text" value="{{abilityDerived.constitution.profile.trauma}} %" readonly></div>
-                  <div class="a2e-adjustment-item"><label>Résurrection</label><input type="text" value="{{abilityDerived.constitution.profile.resu}} %" readonly></div>
+                  <div class="a2e-adjustment-item">
+                    <label>Choc</label>
+                    <div style="display:flex;align-items:center;gap:3px;">
+                      <input type="text" value="{{abilityDerived.constitution.profile.trauma}} %" readonly>
+                      <button type="button" class="add2e-constitution-check" data-check="trauma" title="Tester la résistance aux traumatismes" aria-label="Tester la résistance aux traumatismes" style="width:26px;height:24px;min-width:26px;padding:0;display:inline-flex;align-items:center;justify-content:center;">
+                        <i class="fas fa-heart-pulse"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="a2e-adjustment-item">
+                    <label>Résurrection</label>
+                    <div style="display:flex;align-items:center;gap:3px;">
+                      <input type="text" value="{{abilityDerived.constitution.profile.resu}} %" readonly>
+                      <button type="button" class="add2e-constitution-check" data-check="resurrection" title="Tester la survie à la résurrection" aria-label="Tester la survie à la résurrection" style="width:26px;height:24px;min-width:26px;padding:0;display:inline-flex;align-items:center;justify-content:center;">
+                        <i class="fas fa-hand-holding-heart"></i>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </td>
             </tr>
