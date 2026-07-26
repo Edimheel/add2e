@@ -1,0 +1,167 @@
+{
+  "schema": 2,
+  "catalogueId": "add2e-gdm-magic-powers",
+  "version": "2026-07-26-gdm-social-influence-v1",
+  "extends": "../catalogue-pouvoirs-objets-magiques.json",
+  "status": "social-influence-mechanics-complete",
+  "source": {
+    "book": "Guide du Maître AD&D restauré V2",
+    "sections": ["III.A. Potions", "III.C. Anneaux"],
+    "pages": "123, 126"
+  },
+  "principles": {
+    "notObjectTemplates": true,
+    "powersAreReusable": true,
+    "objectSpecificCombinationsAreAuditOnly": true,
+    "existingSpellItemsMustBeReusedWhenAvailable": true,
+    "generatorMayOnlyOfferCompatiblePowers": true
+  },
+  "conditionVocabularyAdditions": {
+    "targetTags": [
+      "human", "humanoid", "dwarf", "elf", "gnome", "halfling", "half-elf", "half-orc",
+      "orc", "goblin", "hobgoblin", "bugbear", "kobold", "gnoll", "ogre", "troll", "lizardfolk"
+    ],
+    "socialTags": ["reaction", "persuasion", "suggestion", "charm", "mental"]
+  },
+  "powers": [
+    {
+      "id": "social_reaction_bonus",
+      "label": "Bonus aux réactions sociales",
+      "category": "social",
+      "compatibility": {"itemTypes": ["arme", "armure", "objet"]},
+      "activation": {"type": "passive", "trigger": "carried-or-equipped-or-active"},
+      "automation": "automatic",
+      "parameters": {
+        "value": {"type": "percentage", "required": true},
+        "targetAny": {"type": "tag-list", "required": false}
+      },
+      "effects": [
+        {"type": "reaction_bonus", "value": "@value", "targetAny": "@targetAny"}
+      ],
+      "source": {"section": "III.A", "page": "123"}
+    },
+    {
+      "id": "social_reaction_minimum",
+      "label": "Ajustement minimal aux réactions sociales",
+      "category": "social",
+      "compatibility": {"itemTypes": ["arme", "armure", "objet"]},
+      "activation": {"type": "passive", "trigger": "equipped"},
+      "automation": "automatic",
+      "parameters": {
+        "minimum": {"type": "percentage", "required": true},
+        "targetAny": {"type": "tag-list", "required": false}
+      },
+      "effects": [
+        {"type": "reaction_minimum", "minimum": "@minimum", "targetAny": "@targetAny"}
+      ],
+      "source": {"section": "III.C", "page": "126"}
+    },
+    {
+      "id": "social_suggestion",
+      "label": "Suggestion sociale par objet",
+      "category": "social",
+      "compatibility": {"itemTypes": ["arme", "armure", "objet"]},
+      "activation": {"type": "action", "trigger": "discussion"},
+      "automation": "automatic",
+      "parameters": {
+        "spellUuid": {"type": "uuid", "documentType": "Item", "required": false},
+        "spellName": {"type": "string", "default": "Suggestion"},
+        "casterLevel": {"type": "integer", "required": false},
+        "chargeCost": {"type": "integer", "default": 0},
+        "activationTime": {"type": "string", "default": "3 segments"},
+        "target": {"type": "choice", "values": ["creature", "targets"], "default": "creature"},
+        "targetAny": {"type": "tag-list", "required": false},
+        "maxTargets": {"type": "formula-or-integer", "required": false},
+        "maxHitDice": {"type": "formula-or-integer", "required": false},
+        "maxTotalHitDice": {"type": "formula-or-integer", "required": false},
+        "range": {"type": "distance", "default": 3},
+        "duration": {"type": "duration", "required": false},
+        "frequency": {"type": "duration", "required": false}
+      },
+      "validation": {"requiresOneOf": ["spellUuid", "spellName"]},
+      "effects": [
+        {
+          "type": "linked_spell",
+          "spellUuid": "@spellUuid",
+          "spellName": "@spellName",
+          "casterLevel": "@casterLevel",
+          "chargeCost": "@chargeCost",
+          "activationTime": "@activationTime",
+          "target": "@target",
+          "targetAny": "@targetAny",
+          "maxTargets": "@maxTargets",
+          "maxHitDice": "@maxHitDice",
+          "maxTotalHitDice": "@maxTotalHitDice",
+          "range": "@range",
+          "duration": "@duration",
+          "frequency": "@frequency"
+        }
+      ],
+      "source": {"section": "III.A, III.C", "page": "123, 126"}
+    },
+    {
+      "id": "social_charm_person_pool",
+      "label": "Charme-personne avec réserve de dés de vie",
+      "category": "control",
+      "compatibility": {"itemTypes": ["objet"]},
+      "activation": {"type": "action", "trigger": "command"},
+      "automation": "automatic",
+      "parameters": {
+        "spellUuid": {"type": "uuid", "documentType": "Item", "required": false},
+        "spellName": {"type": "string", "default": "Charme-personne"},
+        "casterLevel": {"type": "integer", "required": false},
+        "chargeCost": {"type": "integer", "default": 0},
+        "activationTime": {"type": "string", "default": "3 segments"},
+        "target": {"type": "choice", "values": ["targets"], "default": "targets"},
+        "targetAny": {"type": "tag-list", "default": ["human", "humanoid"]},
+        "maxTotalHitDice": {"type": "formula-or-integer", "default": 21},
+        "range": {"type": "distance", "required": false},
+        "frequency": {"type": "duration", "default": {"value": 1, "unit": "day"}}
+      },
+      "validation": {"requiresOneOf": ["spellUuid", "spellName"]},
+      "effects": [
+        {
+          "type": "linked_spell",
+          "spellUuid": "@spellUuid",
+          "spellName": "@spellName",
+          "casterLevel": "@casterLevel",
+          "chargeCost": "@chargeCost",
+          "activationTime": "@activationTime",
+          "target": "@target",
+          "targetAny": "@targetAny",
+          "maxTotalHitDice": "@maxTotalHitDice",
+          "range": "@range",
+          "frequency": "@frequency"
+        }
+      ],
+      "source": {"section": "III.C", "page": "126"}
+    }
+  ],
+  "auditReferences": [
+    {
+      "name": "Anneau d’influence humaine",
+      "selectableAsTemplate": false,
+      "powers": [
+        {"id": "social_reaction_minimum", "parameters": {"minimum": 35, "targetAny": ["human", "humanoid"]}},
+        {"id": "social_suggestion", "parameters": {"spellName": "Suggestion", "target": "creature", "targetAny": ["human", "humanoid"], "range": 3, "frequency": {"value": 1, "unit": "day"}}},
+        {"id": "social_charm_person_pool", "parameters": {"spellName": "Charme-personne", "target": "targets", "targetAny": ["human", "humanoid"], "maxTotalHitDice": 21, "frequency": {"value": 1, "unit": "day"}}}
+      ],
+      "source": {"section": "III.C", "page": "126"}
+    },
+    {
+      "name": "Philtre de persuasion",
+      "selectableAsTemplate": false,
+      "powers": [
+        {"id": "social_reaction_bonus", "parameters": {"value": 25}},
+        {"id": "social_suggestion", "parameters": {"spellName": "Suggestion", "target": "targets", "range": 3, "frequency": {"value": 1, "unit": "turn"}}}
+      ],
+      "source": {"section": "III.A", "page": "123"}
+    }
+  ],
+  "coverage": {
+    "analysedSections": ["III.A", "III.C"],
+    "coverageMode": "social-influence-canonical-mechanics",
+    "generatorIntegration": false,
+    "powerCount": 4
+  }
+}
