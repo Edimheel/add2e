@@ -1,9 +1,11 @@
 // ============================================================================
 // ADD2E — États vitaux : constantes, lecture PV et règles métier.
-// Version : 2026-07-13-vital-status-hostile-loot-corpse-v2
+// Version : 2026-07-26-vital-status-resurrection-regeneration-v3
 // ============================================================================
 
-export const ADD2E_VITAL_STATUS_CORE_VERSION = "2026-07-13-vital-status-hostile-loot-corpse-v2";
+export const ADD2E_VITAL_STATUS_CORE_VERSION = "2026-07-26-vital-status-resurrection-regeneration-v3";
+export const ADD2E_RESURRECTION_RULES_VERSION = "2026-07-26-resurrection-constitution-v1";
+export const ADD2E_NATURAL_REGENERATION_VERSION = "2026-07-26-natural-regeneration-v1";
 
 export const ADD2E_VITAL_STATUS = {
   unconscious: { key: "unconscious", name: "Inconscient", icon: "icons/svg/daze.svg" },
@@ -51,6 +53,12 @@ export function add2eVitalActorType(actor) {
   return add2eVitalNorm(actor?.type);
 }
 
+function add2eVitalClone(value) {
+  if (typeof foundry?.utils?.deepClone === "function") return foundry.utils.deepClone(value);
+  if (typeof foundry?.utils?.duplicate === "function") return foundry.utils.duplicate(value);
+  return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
+}
+
 function add2eVitalIsMarkedLootCorpse(actor) {
   try {
     return actor?.getFlag?.("add2e", "isLootCorpse") === true;
@@ -80,6 +88,23 @@ export function add2eVitalReadHP(actor) {
   const raw = sys.pdv ?? sys.pv?.value ?? sys.hp?.value ?? sys.hp;
   const fallback = sys.points_de_coup ?? sys.pv?.max ?? sys.hp?.max ?? 0;
   return add2eVitalNumber(raw, add2eVitalNumber(fallback, 0));
+}
+
+export function add2eVitalReadMaximumHP(actor) {
+  const sys = actor?.system ?? {};
+  return add2eVitalNumber(
+    sys.points_de_coup ?? sys.pv?.max ?? sys.hp?.max ?? sys.points_de_vie?.max,
+    0
+  );
+}
+
+export function add2eVitalHpUpdatePath(actor) {
+  const sys = actor?.system ?? {};
+  if (sys.pdv !== undefined) return "system.pdv";
+  if (sys.pv?.value !== undefined) return "system.pv.value";
+  if (sys.hp?.value !== undefined) return "system.hp.value";
+  if (sys.hp !== undefined && typeof sys.hp !== "object") return "system.hp";
+  return "system.pdv";
 }
 
 export function add2eVitalDesiredStatus(actor) {
@@ -132,3 +157,429 @@ export function add2eVitalEffectKind(effect) {
   if (statuses.has("unconscious") || statuses.has("inconscient")) return "unconscious";
   return null;
 }
+
+function add2eVitalActorIsDead(actor) {
+  if (add2eVitalDesiredStatus(actor) === "dead") return true;
+  return Array.from(actor?.effects ?? []).some(effect => !effect?.disabled && add2eVitalEffectKind(effect) === "dead");
+}
+
+function add2eVitalEngine() {
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  if (!engine || typeof engine.resolveAbilityDerived !== "function" || typeof engine.createModifier !== "function") {
+    throw new Error("Le moteur canonique ADD2E des caractéristiques n’est pas disponible.");
+  }
+  return engine;
+}
+
+function add2eVitalActorModifiers(actor) {
+  const raw = actor?.flags?.add2e?.modifiers;
+  if (Array.isArray(raw)) return add2eVitalClone(raw);
+  if (raw && typeof raw === "object") return add2eVitalClone(Object.values(raw));
+  return [];
+}
+
+function add2eResurrectionModifierId(actor) {
+  return `${actor?.id ?? "actor"}:constitution:resurrection-penalty`;
+}
+
+function add2eResurrectionState(actor) {
+  const raw = actor?.flags?.add2e?.resurrection;
+  return raw && typeof raw === "object" ? add2eVitalClone(raw) : {};
+}
+
+function add2eResurrectionModifier(actor, successes) {
+  return add2eVitalEngine().createModifier({
+    id: add2eResurrectionModifierId(actor),
+    domain: "ability",
+    target: "constitution",
+    operation: "add",
+    value: -Math.max(0, Math.trunc(Number(successes) || 0)),
+    priority: 100,
+    stacking: { mode: "unique-source", group: "ability:constitution:resurrection" },
+    source: {
+      kind: "rule",
+      id: `${actor.id}:resurrection`,
+      uuid: actor.uuid ?? "",
+      name: "Résurrections successives"
+    },
+    metadata: {
+      label: "Perte permanente de Constitution après résurrection",
+      permanent: true,
+      resurrectionPenalty: true
+    }
+  });
+}
+
+async function add2eVitalCreateCard(card) {
+  if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
+    throw new Error("Les constructeurs communs de cartes ADD2E sont indisponibles.");
+  }
+  globalThis.add2eBuildChatCard(card);
+  return globalThis.add2eCreateChatCard(card);
+}
+
+async function add2eVitalSync(actor, reason) {
+  if (typeof globalThis.add2eSyncActorVitalStatus === "function") {
+    await globalThis.add2eSyncActorVitalStatus(actor, { reason });
+  }
+}
+
+export async function add2eAttemptResurrection({
+  targetActor,
+  casterActor = null,
+  sourceItem = null,
+  sourceToken = null,
+  source = "resurrection"
+} = {}) {
+  if (!targetActor?.system) return { attempted: false, consumed: false, reason: "target-missing" };
+  if (!add2eVitalActorIsDead(targetActor)) return { attempted: false, consumed: false, reason: "target-not-dead" };
+
+  const state = add2eResurrectionState(targetActor);
+  if (state.permanentDeath === true) return { attempted: false, consumed: false, reason: "permanent-death", state };
+
+  const engine = add2eVitalEngine();
+  const constitution = engine.resolveAbilityDerived(targetActor, "constitution", {
+    source: `${source}:eligibility`,
+    consumer: "resurrection-limit",
+    casterActor,
+    sourceItem
+  });
+  const initialConstitution = Math.max(1, Math.trunc(Number(state.initialConstitution ?? constitution?.total) || 1));
+  const successes = Math.max(0, Math.trunc(Number(state.successes) || 0));
+  if (successes >= initialConstitution) {
+    return { attempted: false, consumed: false, reason: "resurrection-limit", initialConstitution, successes, state };
+  }
+  if (typeof globalThis.add2eRollResurrectionSurvivalCard !== "function") {
+    throw new Error("Le test canonique de survie à la résurrection est indisponible.");
+  }
+
+  const rollResult = await globalThis.add2eRollResurrectionSurvivalCard(targetActor, {
+    source,
+    casterActor,
+    sourceItem,
+    actionType: "save",
+    saveType: "resurrection"
+  });
+  const spellName = sourceItem?.name ?? "Résurrection";
+  const now = Date.now();
+
+  if (!rollResult.success) {
+    const currentHp = add2eVitalReadHP(targetActor);
+    const type = add2eVitalActorType(targetActor);
+    const deadHp = type === "personnage" || type === "pnj" ? Math.min(currentHp, -11) : Math.min(currentHp, 0);
+    const nextState = {
+      ...state,
+      version: ADD2E_RESURRECTION_RULES_VERSION,
+      initialConstitution,
+      successes,
+      failures: Math.max(0, Math.trunc(Number(state.failures) || 0)) + 1,
+      permanentDeath: true,
+      lastAttemptAt: now,
+      lastAttemptSource: sourceItem?.uuid ?? source,
+      lastAttemptResult: "failure"
+    };
+    await targetActor.update({
+      "flags.add2e.resurrection": nextState,
+      [add2eVitalHpUpdatePath(targetActor)]: deadHp
+    }, {
+      add2eInternal: true,
+      add2eReason: "resurrection-survival-failure",
+      add2eResurrection: true
+    });
+    await add2eVitalSync(targetActor, "resurrection-survival-failure");
+    await add2eVitalCreateCard({
+      actor: targetActor,
+      title: `${spellName} — mort définitive`,
+      icon: sourceItem?.img ?? "icons/svg/skull.svg",
+      variant: "failure",
+      source: {
+        name: casterActor?.name ?? spellName,
+        img: sourceItem?.img ?? casterActor?.img,
+        type: "Résurrection"
+      },
+      rows: [
+        { label: "Cible", value: targetActor.name },
+        { label: "Jet", value: `${rollResult.total} / ${rollResult.threshold} %` },
+        { label: "Résurrections réussies", value: `${successes} / ${initialConstitution}` },
+        { label: "Résultat", value: "Échec : la créature ne peut plus être ressuscitée" }
+      ],
+      chatData: {
+        speaker: ChatMessage.getSpeaker({ actor: casterActor ?? targetActor, token: sourceToken ?? null }),
+        flags: {
+          add2e: {
+            chatCardType: "resurrection-outcome",
+            resurrectionRulesVersion: ADD2E_RESURRECTION_RULES_VERSION,
+            targetActorUuid: targetActor.uuid,
+            success: false,
+            permanentDeath: true,
+            initialConstitution,
+            successes
+          }
+        }
+      }
+    });
+    return { attempted: true, consumed: true, success: false, permanentDeath: true, rollResult, state: nextState };
+  }
+
+  const nextSuccesses = successes + 1;
+  const modifiers = add2eVitalActorModifiers(targetActor)
+    .filter(modifier => String(modifier?.id ?? "") !== add2eResurrectionModifierId(targetActor));
+  modifiers.push(add2eResurrectionModifier(targetActor, nextSuccesses));
+  const nextState = {
+    ...state,
+    version: ADD2E_RESURRECTION_RULES_VERSION,
+    initialConstitution,
+    successes: nextSuccesses,
+    failures: Math.max(0, Math.trunc(Number(state.failures) || 0)),
+    permanentDeath: false,
+    lastAttemptAt: now,
+    lastAttemptSource: sourceItem?.uuid ?? source,
+    lastAttemptResult: "success"
+  };
+
+  await targetActor.update({
+    "flags.add2e.modifiers": modifiers,
+    "flags.add2e.resurrection": nextState
+  }, {
+    add2eInternal: true,
+    add2eReason: "resurrection-constitution-loss",
+    add2eResurrection: true
+  });
+
+  if (typeof targetActor.sheet?.autoSetCaracAjustements === "function") {
+    await targetActor.sheet.autoSetCaracAjustements();
+  }
+  await targetActor.update({ [add2eVitalHpUpdatePath(targetActor)]: 1 }, {
+    add2eInternal: true,
+    add2eReason: "resurrection-restore-life",
+    add2eResurrection: true
+  });
+  await add2eVitalSync(targetActor, "resurrection-success");
+
+  const afterConstitution = engine.resolveAbilityDerived(targetActor, "constitution", {
+    source: `${source}:result`,
+    consumer: "resurrection-result",
+    casterActor,
+    sourceItem
+  });
+  await add2eVitalCreateCard({
+    actor: targetActor,
+    title: `${spellName} — réussite`,
+    icon: sourceItem?.img ?? "icons/svg/regen.svg",
+    variant: "success",
+    source: {
+      name: casterActor?.name ?? spellName,
+      img: sourceItem?.img ?? casterActor?.img,
+      type: "Résurrection"
+    },
+    rows: [
+      { label: "Cible", value: targetActor.name },
+      { label: "Jet", value: `${rollResult.total} / ${rollResult.threshold} %` },
+      { label: "PV restaurés", value: "1" },
+      { label: "Constitution", value: `${constitution?.total ?? "—"} → ${afterConstitution?.total ?? "—"}` },
+      { label: "Résurrections réussies", value: `${nextSuccesses} / ${initialConstitution}` }
+    ],
+    chatData: {
+      speaker: ChatMessage.getSpeaker({ actor: casterActor ?? targetActor, token: sourceToken ?? null }),
+      flags: {
+        add2e: {
+          chatCardType: "resurrection-outcome",
+          resurrectionRulesVersion: ADD2E_RESURRECTION_RULES_VERSION,
+          targetActorUuid: targetActor.uuid,
+          success: true,
+          permanentDeath: false,
+          initialConstitution,
+          successes: nextSuccesses,
+          constitutionBefore: Number(constitution?.total) || null,
+          constitutionAfter: Number(afterConstitution?.total) || null
+        }
+      }
+    }
+  });
+
+  return {
+    attempted: true,
+    consumed: true,
+    success: true,
+    permanentDeath: false,
+    rollResult,
+    initialConstitution,
+    successes: nextSuccesses,
+    constitutionBefore: constitution,
+    constitutionAfter: afterConstitution,
+    state: nextState
+  };
+}
+
+export function add2eNaturalRegenerationInterval(profile) {
+  const raw = String(profile ?? "").trim().toLowerCase();
+  if (!raw) return 0;
+  if (/^1\s*\/\s*tours?$/.test(raw)) return 10;
+  const match = raw.match(/^1\s*\/\s*(\d+)\s*tours?$/);
+  if (!match) return 0;
+  return Math.max(1, Math.trunc(Number(match[1]) || 0)) * 10;
+}
+
+async function add2eNaturalRegenerationCard(actor, healed, current, maximum, intervalRounds, reason) {
+  return add2eVitalCreateCard({
+    actor,
+    title: "Régénération naturelle",
+    icon: "icons/magic/life/heart-cross-strong-green.webp",
+    variant: "healing",
+    source: {
+      name: actor.name,
+      img: actor.img,
+      type: "Constitution exceptionnelle"
+    },
+    rows: [
+      { label: "PV régénérés", value: healed },
+      { label: "PV", value: `${current} / ${maximum}` },
+      { label: "Intervalle", value: `${intervalRounds} rounds` }
+    ],
+    chatData: {
+      speaker: ChatMessage.getSpeaker({ actor }),
+      flags: {
+        add2e: {
+          chatCardType: "natural-regeneration",
+          naturalRegenerationVersion: ADD2E_NATURAL_REGENERATION_VERSION,
+          actorUuid: actor.uuid,
+          healed,
+          current,
+          maximum,
+          intervalRounds,
+          reason
+        }
+      }
+    }
+  });
+}
+
+export async function add2eApplyNaturalRegeneration(actor, {
+  beforeTick = 0,
+  afterTick = 0,
+  reason = "time-advance"
+} = {}) {
+  if (!game.user?.isGM) return { applied: false, reason: "not-gm" };
+  if (!actor?.system) return { applied: false, reason: "actor-missing" };
+
+  const engine = add2eVitalEngine();
+  const constitution = engine.resolveAbilityDerived(actor, "constitution", {
+    source: "natural-regeneration",
+    consumer: "time-engine",
+    reason
+  });
+  const profile = constitution?.profile?.regeneration ?? null;
+  const intervalRounds = add2eNaturalRegenerationInterval(profile);
+  const before = Math.max(0, Math.trunc(Number(beforeTick) || 0));
+  const after = Math.max(before, Math.trunc(Number(afterTick) || 0));
+  if (intervalRounds <= 0) {
+    if (actor.flags?.add2e?.naturalRegeneration) {
+      await actor.update({
+        "flags.add2e.naturalRegeneration": {
+          version: ADD2E_NATURAL_REGENERATION_VERSION,
+          profile: "",
+          intervalRounds: 0,
+          constitution: Number(constitution?.total) || null,
+          lastTick: after,
+          updatedAt: Date.now(),
+          reason
+        }
+      }, {
+        add2eInternal: true,
+        add2eReason: "natural-regeneration-disabled",
+        add2eNaturalRegeneration: true
+      });
+    }
+    return { applied: false, reason: "no-regeneration", profile, before, after };
+  }
+
+  if (after <= before) return { applied: false, reason: "no-time", before, after, intervalRounds };
+
+  const rawState = actor.flags?.add2e?.naturalRegeneration;
+  const state = rawState && typeof rawState === "object" ? add2eVitalClone(rawState) : {};
+  const sameInterval = Number(state.intervalRounds) === intervalRounds;
+  const storedTick = Number(state.lastTick);
+  const lastTick = sameInterval && Number.isFinite(storedTick) ? Math.min(after, Math.max(0, Math.trunc(storedTick))) : before;
+  const current = add2eVitalReadHP(actor);
+  const maximum = add2eVitalReadMaximumHP(actor);
+  const nextStateBase = {
+    version: ADD2E_NATURAL_REGENERATION_VERSION,
+    profile: String(profile),
+    intervalRounds,
+    constitution: Number(constitution?.total) || null,
+    updatedAt: Date.now(),
+    reason
+  };
+
+  if (!Number.isFinite(current) || !Number.isFinite(maximum) || maximum <= 0) {
+    return { applied: false, reason: "hp-invalid", current, maximum, intervalRounds };
+  }
+
+  if (current <= 0 || current >= maximum) {
+    await actor.update({
+      "flags.add2e.naturalRegeneration": { ...nextStateBase, lastTick: after }
+    }, {
+      add2eInternal: true,
+      add2eReason: "natural-regeneration-checkpoint",
+      add2eNaturalRegeneration: true
+    });
+    return {
+      applied: false,
+      reason: current <= 0 ? "not-living" : "full-hit-points",
+      current,
+      maximum,
+      intervalRounds,
+      lastTick: after
+    };
+  }
+
+  const elapsed = Math.max(0, after - lastTick);
+  const intervals = Math.floor(elapsed / intervalRounds);
+  if (intervals <= 0) {
+    if (!rawState || !sameInterval) {
+      await actor.update({
+        "flags.add2e.naturalRegeneration": { ...nextStateBase, lastTick }
+      }, {
+        add2eInternal: true,
+        add2eReason: "natural-regeneration-initialize",
+        add2eNaturalRegeneration: true
+      });
+    }
+    return { applied: false, reason: "interval-pending", current, maximum, intervalRounds, elapsed, lastTick };
+  }
+
+  const missing = Math.max(0, maximum - current);
+  const healed = Math.min(missing, intervals);
+  const nextCurrent = Math.min(maximum, current + healed);
+  const reachedMaximum = nextCurrent >= maximum;
+  const nextLastTick = reachedMaximum ? after : lastTick + (intervals * intervalRounds);
+  await actor.update({
+    [add2eVitalHpUpdatePath(actor)]: nextCurrent,
+    "flags.add2e.naturalRegeneration": { ...nextStateBase, lastTick: nextLastTick }
+  }, {
+    add2eInternal: true,
+    add2eReason: "natural-regeneration-heal",
+    add2eNaturalRegeneration: true
+  });
+  await add2eVitalSync(actor, "natural-regeneration-heal");
+  if (healed > 0) await add2eNaturalRegenerationCard(actor, healed, nextCurrent, maximum, intervalRounds, reason);
+
+  return {
+    applied: healed > 0,
+    reason: healed > 0 ? "healed" : "no-healing",
+    healed,
+    before: current,
+    after: nextCurrent,
+    maximum,
+    intervalRounds,
+    intervals,
+    lastTick: nextLastTick,
+    profile,
+    constitution
+  };
+}
+
+globalThis.ADD2E_RESURRECTION_RULES_VERSION = ADD2E_RESURRECTION_RULES_VERSION;
+globalThis.ADD2E_NATURAL_REGENERATION_VERSION = ADD2E_NATURAL_REGENERATION_VERSION;
+globalThis.add2eAttemptResurrection = add2eAttemptResurrection;
+globalThis.add2eApplyNaturalRegeneration = add2eApplyNaturalRegeneration;
