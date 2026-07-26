@@ -812,12 +812,18 @@ function add2eGetEquippedThiefBonusMaps(actor) {
 }
 
 function add2eGetActorFinalDexterity(actor) {
-  const system = actor?.system ?? {};
-  const base = Number(system.dexterite_base ?? system.dexterite ?? system.dex_aff ?? 0);
-  const racial = Number(system.bonus_caracteristiques?.dexterite ?? system.dexterite_race ?? 0);
-  const divers = Number(system.bonus_divers_caracteristiques?.dexterite ?? 0);
-  const total = base + racial + divers;
-  return Number.isFinite(total) && total > 0 ? Math.floor(total) : 0;
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  if (typeof engine?.resolveAbilityDerived !== "function") {
+    throw new Error("Le résolveur canonique ADD2E des ajustements de caractéristiques n’est pas disponible.");
+  }
+  const derived = engine.resolveAbilityDerived(actor, "dexterite", {
+    domain: "skill",
+    type: "thief-skill",
+    source: "class-effects-thief-dexterity",
+    consumer: "class-effects"
+  });
+  const score = Number(derived?.score);
+  return Number.isFinite(score) && score > 0 ? Math.floor(score) : 0;
 }
 
 function add2eGetThiefDexBonus(actor, key) {
@@ -1039,9 +1045,49 @@ async function add2eRollThiefSkill(actor, key) {
   if (game.dice3d) await game.dice3d.showForRoll(roll);
   const success = roll.total <= finalValue;
   const noticed = skill.key === "pickpocket" && roll.total >= finalValue + 21;
-  const color = success ? "#1f8f4d" : "#b3261e";
   const allDetails = [{ label: "Base", value: skill.base }, ...skill.bonuses, ...(situational !== 0 ? [{ label: "Situation", value: situational }] : [])];
-  await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content: `<div class="add2e-card-test" style="border-radius:12px;border:1px solid ${color};background:#fffdf6;padding:.75em 1em;font-family:var(--font-primary);"><div style="display:flex;align-items:center;gap:.6em;margin-bottom:.4em;"><i class="fas fa-mask" style="color:${color};font-size:1.5em;"></i><b style="color:${color};font-size:1.12em;">${skill.label}</b><span style="margin-left:auto;color:#666;">${isAssassination ? "Compétence d’assassin" : "Compétence de voleur"}</span></div><div>Score final : <b>${finalValue}%</b> — Jet : <b>${roll.total}</b></div><div style="font-size:.9em;color:#555;margin-top:.35em;">${allDetails.map(d => `${d.label} ${add2eFormatSigned(d.value)}%`).join(" ; ")}</div><div style="margin-top:.35em;font-weight:800;color:${color};">${success ? "Réussite" : "Échec"}</div>${isAssassination && success ? `<div style="margin-top:.25em;color:#1f8f4d;font-weight:700;">Assassinat réussi : effet létal à appliquer selon les conditions de scène et l’arbitrage du MJ.</div>` : ""}${isAssassination && !success ? `<div style="margin-top:.25em;color:#b3261e;font-weight:700;">Assassinat manqué.</div>` : ""}${noticed ? `<div style="margin-top:.25em;color:#b3261e;font-weight:700;">La victime remarque la tentative de pickpocket.</div>` : ""}</div>` });
+  if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
+    throw new Error("Le constructeur commun des cartes ADD2E est indisponible.");
+  }
+  const consequence = isAssassination
+    ? (success ? "Assassinat réussi : effet létal à appliquer selon les conditions de scène et l’arbitrage du MJ." : "Assassinat manqué.")
+    : (noticed ? "La victime remarque la tentative de pickpocket." : "");
+  const card = {
+    actor,
+    title: `${skill.label} — ${success ? "RÉUSSITE" : "ÉCHEC"}`,
+    icon: "fas fa-mask",
+    variant: success ? "success" : "failure",
+    source: {
+      name: actor.name,
+      img: actor.img,
+      type: isAssassination ? "Compétence d’assassin" : "Compétence de voleur"
+    },
+    rows: [
+      { label: "Score final", value: `${finalValue}%` },
+      { label: "Jet", value: String(roll.total) },
+      { label: "Ajustements", value: allDetails.map(d => `${d.label} ${add2eFormatSigned(d.value)}%`).join(" ; ") || "Aucun" },
+      { label: "Résultat", value: success ? "Réussite" : "Échec" },
+      ...(consequence ? [{ label: "Conséquence", value: consequence }] : [])
+    ],
+    chatData: {
+      speaker: ChatMessage.getSpeaker({ actor }),
+      rolls: [roll],
+      flags: {
+        add2e: {
+          thiefSkill: true,
+          skill: skill.key,
+          score: finalValue,
+          roll: Number(roll.total) || 0,
+          success,
+          noticed,
+          assassination: isAssassination
+        }
+      }
+    }
+  };
+  const preview = globalThis.add2eBuildChatCard(card);
+  if (!String(preview ?? "").trim()) throw new Error("La carte de compétence de voleur ADD2E est vide.");
+  await globalThis.add2eCreateChatCard(card);
 }
 
 globalThis.add2eGetActorThiefSkills = add2eGetActorThiefSkills;
@@ -1160,16 +1206,23 @@ async function handleItemAction({ actor, action, itemId, itemType, sheet }) {
       }
       await item.update({ "system.equipee": true });
     }
-    const equipped = actor.items.filter(i => ["armure", "armor"].includes(String(i.type || "").toLowerCase()) && i.system.equipee);
-    const armure = equipped.find(i => !add2eIsShield(i) && !add2eIsHelmet(i));
-    const bouclier = equipped.find(i => add2eIsShield(i));
-    const heaume = equipped.find(i => add2eIsHelmet(i));
-    let caTotal = actor.system.ca_naturel || 10;
-    if (armure) caTotal = Number(armure.system.ac);
-    if (bouclier) caTotal -= Number(bouclier.system.ac);
-    if (heaume) caTotal -= Number(heaume.system.ac);
-    caTotal += actor.system.dex_def || 0;
-    await actor.update({ "system.ca_total": caTotal });
+    const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+    if (typeof engine?.resolveArmorClass !== "function") {
+      throw new Error("Le résolveur canonique ADD2E de classe d’armure n’est pas disponible.");
+    }
+    const defense = engine.resolveArmorClass(actor, {
+      type: "equipment-change",
+      source: "class-effects-equipment-toggle",
+      consumer: "class-effects"
+    });
+    const caNaturel = Number(defense?.caNaturel);
+    const caTotal = Number(defense?.caTotal);
+    const update = {};
+    if (Number.isFinite(caNaturel)) update["system.ca_naturel"] = caNaturel;
+    if (Number.isFinite(caTotal)) update["system.ca_total"] = caTotal;
+    if (Object.keys(update).length) {
+      await actor.update(update, { add2eInternal: true, add2eReason: "equipment-defense-recalculate" });
+    }
     sheet?._add2eRememberActiveTab?.();
     sheet?.render(false);
   }
@@ -1197,18 +1250,6 @@ function showAdd2eDiceRollerDialog() {
       }));
     }
   });
-}
-
-function add2e_updateFinalCaracs(actor) {
-  const CARACS = ["force", "dexterite", "constitution", "intelligence", "sagesse", "charisme"];
-  const updates = {};
-  for (const c of CARACS) {
-    const base = getProperty(actor.system, `${c}_base`) ?? 10;
-    const bonusRace = getProperty(actor.system.bonus_caracteristiques, c) ?? 0;
-    const bonusDivers = getProperty(actor.system.bonus_divers_caracteristiques, c) ?? 0;
-    updates[`system.${c}`] = base + bonusRace + bonusDivers;
-  }
-  return actor.update(updates);
 }
 
 function formatSortChamp(val) {
@@ -1250,5 +1291,4 @@ try { globalThis.add2ePromptThiefSkillModifiers = add2ePromptThiefSkillModifiers
 try { globalThis.add2eRollThiefSkill = add2eRollThiefSkill; } catch (_e) {}
 try { globalThis.handleItemAction = handleItemAction; } catch (_e) {}
 try { globalThis.showAdd2eDiceRollerDialog = showAdd2eDiceRollerDialog; } catch (_e) {}
-try { globalThis.add2e_updateFinalCaracs = add2e_updateFinalCaracs; } catch (_e) {}
 try { globalThis.formatSortChamp = formatSortChamp; } catch (_e) {}
