@@ -11,6 +11,26 @@ const register = (Engine, methods) => Object.defineProperties(
 
 export function installEffectsEngineDamage(Engine) {
   register(Engine, {
+    getConstitutionTotal(actor, context = {}) {
+      if (!actor) return 0;
+      if (typeof this.resolveAbility !== "function") {
+        throw new Error("Le résolveur canonique ADD2E des caractéristiques n’est pas disponible.");
+      }
+      const resolution = this.resolveAbility(actor, "constitution", {
+        ...context,
+        domain: context.domain ?? "save",
+        type: context.type ?? "constitution-save-bonus",
+        source: context.source ?? "constitution-save-bonus",
+        consumer: context.consumer ?? "effects-engine-resistance"
+      });
+      const total = Number(resolution?.total);
+      return Number.isFinite(total) ? total : 0;
+    },
+
+    getConstitutionSaveBonus(actor, context = {}) {
+      return Math.max(0, Math.min(5, Math.floor(this.getConstitutionTotal(actor, context) / 3.5)));
+    },
+
     getDamageContext(type = "", details = "") {
       const raw = `${String(type ?? "")} ${String(details ?? "")}`;
       const normalized = this.normalizeTag(raw);
