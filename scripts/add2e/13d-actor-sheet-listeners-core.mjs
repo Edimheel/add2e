@@ -18,6 +18,7 @@ add2eInstallHudSheetRollBridge();
 
 const ADD2E_LISTENER_CARACS = ["force", "dexterite", "constitution", "intelligence", "sagesse", "charisme"];
 const ADD2E_CONSTITUTION_RULES_VERSION = "2026-07-26-constitution-hp-survival-v2";
+const ADD2E_CHARISMA_RULES_VERSION = "2026-07-26-charisma-social-resolution-v1";
 const ADD2E_FIGHTER_HP_CLASSES = new Set(["guerrier", "paladin", "ranger"]);
 const ADD2E_CONSTITUTION_CHECKS = Object.freeze({
   trauma: Object.freeze({
@@ -39,6 +40,7 @@ const ADD2E_CONSTITUTION_CHECKS = Object.freeze({
 });
 
 globalThis.ADD2E_CONSTITUTION_RULES_VERSION = ADD2E_CONSTITUTION_RULES_VERSION;
+globalThis.ADD2E_CHARISMA_RULES_VERSION = ADD2E_CHARISMA_RULES_VERSION;
 
 function add2eListenerNumber(value, fallback = 0) {
   const number = Number(value);
@@ -314,11 +316,329 @@ async function add2eRollConstitutionCheckCard(actor, check, context = {}) {
   return { success, total, baseChance, threshold, adjustment, roll, message, resolution, constitution };
 }
 
+function add2eCharismaEngine() {
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  if (
+    !engine
+    || typeof engine.resolveAbilityDerived !== "function"
+    || typeof engine.resolve !== "function"
+    || typeof engine.collect !== "function"
+    || typeof engine.createModifier !== "function"
+  ) {
+    throw new Error("Le moteur canonique ADD2E de Charisme n’est pas disponible.");
+  }
+  return engine;
+}
+
+function add2eCharismaCircumstance(context = {}) {
+  const raw = context?.circumstance;
+  if (!raw || typeof raw !== "object") return null;
+  const value = Number(raw.value ?? raw.amount ?? raw.bonus ?? raw.modifier);
+  if (!Number.isFinite(value) || value === 0) return null;
+  return {
+    label: String(raw.label ?? raw.name ?? "Circonstance").trim() || "Circonstance",
+    value
+  };
+}
+
+function add2eResolveCharismaDomain(actor, {
+  domain,
+  target,
+  base,
+  context = {},
+  rounding = "floor"
+} = {}) {
+  if (!actor?.system) throw new Error("Acteur introuvable pour la résolution de Charisme.");
+  const engine = add2eCharismaEngine();
+  const resolutionContext = {
+    ...context,
+    actor,
+    actionType: domain,
+    charismaDomain: domain,
+    charismaTarget: target,
+    source: context.source ?? `charisma:${domain}:${target}`
+  };
+  const modifiers = engine.collect(actor, resolutionContext);
+  const circumstance = add2eCharismaCircumstance(context);
+  if (circumstance) {
+    modifiers.push(engine.createModifier({
+      id: `${actor.id}:charisma:${domain}:${target}:circumstance`,
+      domain,
+      target,
+      operation: "add",
+      value: circumstance.value,
+      priority: 1000,
+      stacking: { mode: "stack", group: null },
+      conditions: {},
+      source: {
+        kind: "context",
+        id: `actor-sheet:${domain}:${target}`,
+        uuid: actor.uuid ?? "",
+        name: circumstance.label
+      },
+      metadata: {
+        label: circumstance.label,
+        transient: true,
+        circumstance: true
+      }
+    }));
+  }
+  const resolution = engine.resolve(actor, {
+    domain,
+    target,
+    base,
+    rounding,
+    modifiers,
+    context: resolutionContext
+  });
+  return { engine, resolution, circumstance };
+}
+
+function add2eResolveCharismaFollowers(actor, context = {}) {
+  const engine = add2eCharismaEngine();
+  const charisma = engine.resolveAbilityDerived(actor, "charisme", {
+    ...context,
+    source: context.source ?? "charisma-followers",
+    consumer: "followers-maximum"
+  });
+  const base = Math.max(0, Math.trunc(Number(charisma?.profile?.compagnons) || 0));
+  const { resolution } = add2eResolveCharismaDomain(actor, {
+    domain: "resource",
+    target: "followers-max",
+    base,
+    context: {
+      ...context,
+      source: context.source ?? "charisma-followers"
+    }
+  });
+  const maximum = Math.max(0, Math.trunc(Number(resolution?.total) || 0));
+  return {
+    version: ADD2E_CHARISMA_RULES_VERSION,
+    charisma,
+    base,
+    maximum,
+    adjustment: maximum - base,
+    resolution
+  };
+}
+
+function add2eResolveCharismaLoyalty(actor, context = {}) {
+  const engine = add2eCharismaEngine();
+  const charisma = engine.resolveAbilityDerived(actor, "charisme", {
+    ...context,
+    source: context.source ?? "charisma-loyalty",
+    consumer: "loyalty"
+  });
+  const charismaAdjustment = Math.trunc(Number(charisma?.profile?.loy) || 0);
+  const baseChance = 50 + charismaAdjustment;
+  const { resolution, circumstance } = add2eResolveCharismaDomain(actor, {
+    domain: "morale",
+    target: "loyalty",
+    base: baseChance,
+    context: {
+      ...context,
+      source: context.source ?? "charisma-loyalty"
+    }
+  });
+  const rawThreshold = Math.trunc(Number(resolution?.total) || 0);
+  const threshold = Math.max(0, Math.min(100, rawThreshold));
+  return {
+    version: ADD2E_CHARISMA_RULES_VERSION,
+    charisma,
+    base: 50,
+    charismaAdjustment,
+    baseChance,
+    permanentAdjustment: Math.trunc(Number(resolution?.total) || 0) - baseChance - (circumstance?.value ?? 0),
+    circumstance,
+    threshold,
+    rawThreshold,
+    resolution
+  };
+}
+
+function add2eResolveCharismaReaction(actor, context = {}) {
+  const engine = add2eCharismaEngine();
+  const charisma = engine.resolveAbilityDerived(actor, "charisme", {
+    ...context,
+    source: context.source ?? "charisma-reaction",
+    consumer: "encounter-reaction"
+  });
+  const charismaAdjustment = Math.trunc(Number(charisma?.profile?.react) || 0);
+  const { resolution, circumstance } = add2eResolveCharismaDomain(actor, {
+    domain: "reaction",
+    target: "encounter",
+    base: charismaAdjustment,
+    context: {
+      ...context,
+      source: context.source ?? "charisma-reaction"
+    }
+  });
+  const adjustment = Math.trunc(Number(resolution?.total) || 0);
+  return {
+    version: ADD2E_CHARISMA_RULES_VERSION,
+    charisma,
+    charismaAdjustment,
+    permanentAdjustment: adjustment - charismaAdjustment - (circumstance?.value ?? 0),
+    circumstance,
+    adjustment,
+    resolution
+  };
+}
+
+function add2eCharismaReactionOutcome(total) {
+  const value = Math.trunc(Number(total) || 0);
+  if (value <= 5) return { key: "violently-hostile", label: "Violemment hostile", variant: "failure" };
+  if (value <= 25) return { key: "hostile", label: "Hostile", variant: "failure" };
+  if (value <= 45) return { key: "uncertain-negative", label: "Incertaine, tendance négative", variant: "neutral" };
+  if (value <= 55) return { key: "neutral", label: "Neutre ou indifférente", variant: "neutral" };
+  if (value <= 75) return { key: "uncertain-positive", label: "Incertaine, tendance positive", variant: "neutral" };
+  if (value <= 95) return { key: "friendly", label: "Amicale", variant: "success" };
+  return { key: "extremely-friendly", label: "Extrêmement amicale", variant: "success" };
+}
+
+async function add2eRollCharismaReactionCard(actor, context = {}) {
+  if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
+    throw new Error("Les constructeurs communs de cartes ADD2E sont indisponibles.");
+  }
+  const reaction = add2eResolveCharismaReaction(actor, context);
+  const roll = await add2eEvaluateRollSafe("1d100");
+  const rawRoll = Math.trunc(Number(roll.total) || 0);
+  const total = rawRoll + reaction.adjustment;
+  const outcome = add2eCharismaReactionOutcome(total);
+  const otherAdjustment = reaction.permanentAdjustment;
+  const card = {
+    actor,
+    title: "Réaction initiale",
+    icon: "fas fa-comments",
+    variant: outcome.variant,
+    source: {
+      name: actor.name,
+      img: actor.img,
+      type: `Charisme ${reaction.charisma?.total ?? "—"}`
+    },
+    rows: [
+      { label: "Jet brut", value: rawRoll },
+      { label: "Ajustement de Charisme", value: `${reaction.charismaAdjustment > 0 ? "+" : ""}${reaction.charismaAdjustment}` },
+      { label: "Autres ajustements", value: otherAdjustment ? `${otherAdjustment > 0 ? "+" : ""}${otherAdjustment}` : "Aucun" },
+      reaction.circumstance ? { label: reaction.circumstance.label, value: `${reaction.circumstance.value > 0 ? "+" : ""}${reaction.circumstance.value}` } : null,
+      { label: "Résultat final", value: total },
+      { label: "Réaction", value: outcome.label }
+    ].filter(Boolean),
+    chatData: {
+      speaker: ChatMessage.getSpeaker({ actor }),
+      rolls: [roll],
+      flags: {
+        add2e: {
+          chatCardType: "charisma-reaction-check",
+          charismaRulesVersion: ADD2E_CHARISMA_RULES_VERSION,
+          rawRoll,
+          total,
+          adjustment: reaction.adjustment,
+          charismaAdjustment: reaction.charismaAdjustment,
+          circumstance: reaction.circumstance,
+          outcome: outcome.key,
+          actorUuid: actor.uuid
+        }
+      }
+    }
+  };
+  globalThis.add2eBuildChatCard(card);
+  const message = await globalThis.add2eCreateChatCard(card);
+  return { ...reaction, roll, rawRoll, total, outcome, message };
+}
+
+async function add2eRollCharismaLoyaltyCard(actor, context = {}) {
+  if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
+    throw new Error("Les constructeurs communs de cartes ADD2E sont indisponibles.");
+  }
+  const loyalty = add2eResolveCharismaLoyalty(actor, context);
+  const roll = await add2eEvaluateRollSafe("1d100");
+  const total = Math.trunc(Number(roll.total) || 0);
+  const success = total <= loyalty.threshold;
+  const otherAdjustment = loyalty.permanentAdjustment;
+  const card = {
+    actor,
+    title: "Test de loyauté",
+    icon: "fas fa-people-group",
+    variant: success ? "success" : "failure",
+    source: {
+      name: actor.name,
+      img: actor.img,
+      type: `Charisme ${loyalty.charisma?.total ?? "—"}`
+    },
+    rows: [
+      { label: "Base", value: "50 %" },
+      { label: "Ajustement de Charisme", value: `${loyalty.charismaAdjustment > 0 ? "+" : ""}${loyalty.charismaAdjustment} %` },
+      { label: "Autres ajustements", value: otherAdjustment ? `${otherAdjustment > 0 ? "+" : ""}${otherAdjustment} %` : "Aucun" },
+      loyalty.circumstance ? { label: loyalty.circumstance.label, value: `${loyalty.circumstance.value > 0 ? "+" : ""}${loyalty.circumstance.value} %` } : null,
+      { label: "Seuil final", value: `${loyalty.threshold} %` },
+      { label: "Jet", value: `${total} ${success ? "≤" : ">"} ${loyalty.threshold}` },
+      { label: "Résultat", value: success ? "Loyal" : "Déloyal" }
+    ].filter(Boolean),
+    chatData: {
+      speaker: ChatMessage.getSpeaker({ actor }),
+      rolls: [roll],
+      flags: {
+        add2e: {
+          chatCardType: "charisma-loyalty-check",
+          charismaRulesVersion: ADD2E_CHARISMA_RULES_VERSION,
+          success,
+          total,
+          threshold: loyalty.threshold,
+          charismaAdjustment: loyalty.charismaAdjustment,
+          circumstance: loyalty.circumstance,
+          actorUuid: actor.uuid
+        }
+      }
+    }
+  };
+  globalThis.add2eBuildChatCard(card);
+  const message = await globalThis.add2eCreateChatCard(card);
+  return { ...loyalty, roll, total, success, message };
+}
+
+async function add2ePromptCharismaCircumstance(check) {
+  const DialogV2 = foundry.applications?.api?.DialogV2;
+  if (!DialogV2?.wait) throw new Error("DialogV2 est indisponible.");
+  const key = add2eConstitutionNormalize(check);
+  const title = key === "loyalty" ? "Test de loyauté" : "Réaction initiale";
+  const result = await DialogV2.wait({
+    window: { title: `${title} — circonstance` },
+    position: { width: 390 },
+    content: `<form style="display:flex;flex-direction:column;gap:8px;"><div class="form-group"><label>Circonstance</label><input type="text" name="label" placeholder="Ex. offre généreuse"></div><div class="form-group"><label>Modificateur</label><input type="number" name="value" value="0" step="1"></div><p style="margin:0;font-size:.85em;">Cette valeur modifie uniquement ce jet et ne change pas le Charisme.</p></form>`,
+    buttons: [
+      {
+        action: "roll",
+        label: "Lancer",
+        icon: "fa-solid fa-dice-d20",
+        default: true,
+        callback: (_event, button) => ({
+          label: String(button.form?.elements?.label?.value ?? "").trim() || "Circonstance",
+          value: Number(button.form?.elements?.value?.value ?? 0) || 0
+        })
+      },
+      {
+        action: "cancel",
+        label: "Annuler",
+        icon: "fa-solid fa-xmark",
+        callback: () => null
+      }
+    ],
+    rejectClose: false
+  });
+  return result;
+}
+
 globalThis.add2eResolveConstitutionHitPointProgression = add2eResolveConstitutionHitPointProgression;
 globalThis.add2eRecalculateSingleClassHitPoints = add2eRecalculateSingleClassHitPoints;
 globalThis.add2eRollConstitutionCheckCard = add2eRollConstitutionCheckCard;
 globalThis.add2eRollTraumaticShockCard = (actor, context = {}) => add2eRollConstitutionCheckCard(actor, "trauma", context);
 globalThis.add2eRollResurrectionSurvivalCard = (actor, context = {}) => add2eRollConstitutionCheckCard(actor, "resurrection", context);
+globalThis.add2eResolveCharismaFollowers = add2eResolveCharismaFollowers;
+globalThis.add2eResolveCharismaLoyalty = add2eResolveCharismaLoyalty;
+globalThis.add2eRollCharismaLoyaltyCard = add2eRollCharismaLoyaltyCard;
+globalThis.add2eResolveCharismaReaction = add2eResolveCharismaReaction;
+globalThis.add2eRollCharismaReactionCard = add2eRollCharismaReactionCard;
 
 globalThis.Add2eActorSheet.prototype.autoSetPointsDeCoup = async function autoSetPointsDeCoup(options = {}) {
   try {
@@ -437,6 +757,33 @@ globalThis.Add2eActorSheet.prototype.activateListeners = function activateListen
     } catch (error) {
       console.error("[ADD2E][CONSTITUTION][CHECK_ERROR]", { actor: this.actor?.name, check, error });
       ui.notifications.error(error?.message || "Erreur pendant le test de Constitution.");
+    }
+  });
+
+  html.find('.add2e-charisma-check').off('click.add2eCharismaCheck').on('click.add2eCharismaCheck', async ev => {
+    ev.preventDefault();
+    ev.stopPropagation();
+    this._add2eRememberActiveTab(html);
+    const check = add2eConstitutionNormalize(ev.currentTarget.dataset.check);
+    try {
+      const circumstance = await add2ePromptCharismaCircumstance(check);
+      if (!circumstance) return;
+      if (check === "loyalty" || check === "loyaute") {
+        await add2eRollCharismaLoyaltyCard(this.actor, {
+          source: "actor-sheet-charisma-loyalty",
+          circumstance
+        });
+      } else if (check === "reaction") {
+        await add2eRollCharismaReactionCard(this.actor, {
+          source: "actor-sheet-charisma-reaction",
+          circumstance
+        });
+      } else {
+        throw new Error(`Test de Charisme inconnu : ${check || "vide"}.`);
+      }
+    } catch (error) {
+      console.error("[ADD2E][CHARISME][CHECK_ERROR]", { actor: this.actor?.name, check, error });
+      ui.notifications.error(error?.message || "Erreur pendant le test de Charisme.");
     }
   });
 
