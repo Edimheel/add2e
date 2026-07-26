@@ -654,82 +654,228 @@
       "cible": "",
       "duree": "Tant que porté, sauf activation contraire",
       "jet_sauvegarde": "",
-      "charges": {
-        "value": null,
-        "max": null,
-        "mode": "permanent",
-        "recharge": ""
-      },
-      "max_charges": 0,
       "pouvoirs": [
         {
-          "id": "anneau_dinfluence_humaine_1",
-          "name": "Charme-personne",
-          "nom": "Charme-personne",
-          "img": "icons/equipment/finger/ring-gold-red.webp",
-          "niveau": 1,
-          "level": 1,
-          "ecole": "Enchantement/Charme",
-          "activation": "Porté / commande",
-          "temps_activation": "1 action",
-          "duree": "Tant que porté, sauf activation contraire",
-          "cible": "Selon effet",
-          "jet_sauvegarde": "",
-          "description": "Améliore les réactions et permet des effets de charme ou suggestion.",
-          "cout": 0,
-          "cost": 0,
-          "chargeCost": 0,
-          "charges": 1,
-          "max": 1,
-          "chargesMode": "permanent",
-          "recharge": "",
-          "usesGlobalCharges": false,
-          "onUse": "systems/add2e/scripts/sorts/charme_personne.js",
-          "on_use": "systems/add2e/scripts/sorts/charme_personne.js",
-          "onUseSortEquivalent": "Charme-personne",
-          "tags": [
-            "objet_magique",
-            "sous_type:anneau",
-            "objet:anneau_dinfluence_humaine",
-            "charges",
-            "objet",
-            "permanent",
-            "sort_equivalent:charme_personne",
-            "onuse:sort",
-            "classe_sort:magicien",
-            "effet_passif",
-            "actif_si_equipe"
-          ],
-          "effectTags": [
-            "objet_magique",
-            "sous_type_anneau",
-            "objet_anneau_dinfluence_humaine",
-            "charges",
-            "objet",
-            "permanent",
-            "sort_equivalent_charme_personne",
-            "onuse_sort",
-            "classe_sort_magicien",
-            "effet_passif",
-            "actif_si_equipe"
-          ],
-          "objetMagicOnUse": "systems/add2e/scripts/objets_magiques/anneau_dinfluence_humaine.js",
-          "fallbackOnUse": "systems/add2e/scripts/objets_magiques/anneau_dinfluence_humaine.js",
-          "onUseSortPath": "systems/add2e/scripts/sorts/charme_personne.js",
-          "onUseSource": "liste_sorts_full.json",
-          "linkedSpell": {
-            "name": "Charme-personne",
-            "nom": "Charme-personne",
-            "niveau": 1,
-            "classe": "Magicien",
-            "spellLists": [
-              "magicien"
-            ],
-            "ecole": "Enchantement/Charme",
-            "onUse": "systems/add2e/scripts/sorts/charme_personne.js",
-            "img": "systems/add2e/assets/icones/sorts/charme_personne.webp"
+          "schema": 2,
+          "kind": "catalogue",
+          "catalogueId": "social_reaction_minimum",
+          "name": "Ajustement minimal aux réactions sociales",
+          "label": "Ajustement minimal aux réactions sociales",
+          "category": "social",
+          "automation": "automatic",
+          "activation": {
+            "type": "passive",
+            "trigger": "equipped"
           },
-          "onuse": "systems/add2e/scripts/sorts/charme_personne.js"
+          "parameters": {
+            "minimum": 35,
+            "targetAny": [
+              "human",
+              "humanoid"
+            ]
+          },
+          "effects": [
+            {
+              "type": "reaction_minimum",
+              "minimum": 35,
+              "targetAny": [
+                "human",
+                "humanoid"
+              ]
+            }
+          ],
+          "effectTemplates": [
+            {
+              "type": "reaction_minimum",
+              "minimum": "@minimum",
+              "targetAny": "@targetAny"
+            }
+          ],
+          "compatibility": {
+            "itemTypes": [
+              "arme",
+              "armure",
+              "objet"
+            ]
+          },
+          "validation": {},
+          "source": {
+            "section": "III.C",
+            "page": "126"
+          },
+          "catalogue": {
+            "id": "add2e-gdm-magic-powers",
+            "version": "2026-07-26-catalogue-manifest-v7",
+            "runtimeVersion": "2026-07-22-magic-power-effects-modular-v1"
+          }
+        },
+        {
+          "schema": 2,
+          "kind": "catalogue",
+          "catalogueId": "social_suggestion",
+          "name": "Suggestion sociale par objet",
+          "label": "Suggestion sociale par objet",
+          "category": "social",
+          "automation": "automatic",
+          "activation": {
+            "type": "action",
+            "trigger": "discussion"
+          },
+          "parameters": {
+            "spellName": "Suggestion",
+            "chargeCost": 0,
+            "activationTime": "3 segments",
+            "target": "creature",
+            "targetAny": [
+              "human",
+              "humanoid"
+            ],
+            "range": 3,
+            "frequency": {
+              "value": 1,
+              "unit": "day"
+            }
+          },
+          "effects": [
+            {
+              "type": "linked_spell",
+              "spellName": "Suggestion",
+              "chargeCost": 0,
+              "activationTime": "3 segments",
+              "target": "creature",
+              "targetAny": [
+                "human",
+                "humanoid"
+              ],
+              "range": 3,
+              "frequency": {
+                "value": 1,
+                "unit": "day"
+              }
+            }
+          ],
+          "effectTemplates": [
+            {
+              "type": "linked_spell",
+              "spellUuid": "@spellUuid",
+              "spellName": "@spellName",
+              "casterLevel": "@casterLevel",
+              "chargeCost": "@chargeCost",
+              "activationTime": "@activationTime",
+              "target": "@target",
+              "targetAny": "@targetAny",
+              "maxTargets": "@maxTargets",
+              "maxHitDice": "@maxHitDice",
+              "maxTotalHitDice": "@maxTotalHitDice",
+              "range": "@range",
+              "duration": "@duration",
+              "frequency": "@frequency",
+              "requiredEffectTag": "@requiredEffectTag"
+            }
+          ],
+          "compatibility": {
+            "itemTypes": [
+              "arme",
+              "armure",
+              "objet"
+            ]
+          },
+          "validation": {
+            "requiresOneOf": [
+              "spellUuid",
+              "spellName"
+            ]
+          },
+          "source": {
+            "section": "III.A, III.C",
+            "page": "123, 126"
+          },
+          "catalogue": {
+            "id": "add2e-gdm-magic-powers",
+            "version": "2026-07-26-catalogue-manifest-v7",
+            "runtimeVersion": "2026-07-22-magic-power-effects-modular-v1"
+          }
+        },
+        {
+          "schema": 2,
+          "kind": "catalogue",
+          "catalogueId": "social_charm_person_pool",
+          "name": "Charme-personne avec réserve de dés de vie",
+          "label": "Charme-personne avec réserve de dés de vie",
+          "category": "control",
+          "automation": "automatic",
+          "activation": {
+            "type": "action",
+            "trigger": "command"
+          },
+          "parameters": {
+            "spellName": "Charme-personne",
+            "chargeCost": 0,
+            "activationTime": "3 segments",
+            "target": "targets",
+            "targetAny": [
+              "human",
+              "humanoid"
+            ],
+            "maxTotalHitDice": 21,
+            "frequency": {
+              "value": 1,
+              "unit": "day"
+            }
+          },
+          "effects": [
+            {
+              "type": "linked_spell",
+              "spellName": "Charme-personne",
+              "chargeCost": 0,
+              "activationTime": "3 segments",
+              "target": "targets",
+              "targetAny": [
+                "human",
+                "humanoid"
+              ],
+              "maxTotalHitDice": 21,
+              "frequency": {
+                "value": 1,
+                "unit": "day"
+              }
+            }
+          ],
+          "effectTemplates": [
+            {
+              "type": "linked_spell",
+              "spellUuid": "@spellUuid",
+              "spellName": "@spellName",
+              "casterLevel": "@casterLevel",
+              "chargeCost": "@chargeCost",
+              "activationTime": "@activationTime",
+              "target": "@target",
+              "targetAny": "@targetAny",
+              "maxTotalHitDice": "@maxTotalHitDice",
+              "range": "@range",
+              "frequency": "@frequency"
+            }
+          ],
+          "compatibility": {
+            "itemTypes": [
+              "objet"
+            ]
+          },
+          "validation": {
+            "requiresOneOf": [
+              "spellUuid",
+              "spellName"
+            ]
+          },
+          "source": {
+            "section": "III.C",
+            "page": "126"
+          },
+          "catalogue": {
+            "id": "add2e-gdm-magic-powers",
+            "version": "2026-07-26-catalogue-manifest-v7",
+            "runtimeVersion": "2026-07-22-magic-power-effects-modular-v1"
+          }
         }
       ],
       "effet": "Améliore les réactions et permet des effets de charme ou suggestion.",
@@ -737,144 +883,48 @@
       "tags": [
         "objet_magique",
         "sous_type:anneau",
+        "anneau",
+        "actif_si_equipe",
         "objet:anneau_dinfluence_humaine",
-        "charges",
-        "objet",
-        "permanent",
-        "effet:charisma_reaction_override:18",
-        "effet_type:charisma_reaction_override",
-        "effet_passif",
-        "actif_si_equipe"
+        "permanent"
       ],
       "effectTags": [
         "objet_magique",
-        "sous_type_anneau",
-        "objet_anneau_dinfluence_humaine",
-        "charges",
-        "objet",
-        "permanent",
-        "effet_charisma_reaction_override_18",
-        "effet_type_charisma_reaction_override",
-        "effet_passif",
-        "actif_si_equipe"
+        "sous_type:anneau",
+        "anneau",
+        "actif_si_equipe",
+        "objet:anneau_dinfluence_humaine",
+        "permanent"
       ],
-      "powers": [
-        {
-          "id": "anneau_dinfluence_humaine_1",
-          "name": "Charme-personne",
-          "nom": "Charme-personne",
-          "img": "icons/equipment/finger/ring-gold-red.webp",
-          "niveau": 1,
-          "level": 1,
-          "ecole": "Enchantement/Charme",
-          "activation": "Porté / commande",
-          "temps_activation": "1 action",
-          "duree": "Tant que porté, sauf activation contraire",
-          "cible": "Selon effet",
-          "jet_sauvegarde": "",
-          "description": "Améliore les réactions et permet des effets de charme ou suggestion.",
-          "cout": 0,
-          "cost": 0,
-          "chargeCost": 0,
-          "charges": 1,
-          "max": 1,
-          "chargesMode": "permanent",
-          "recharge": "",
-          "usesGlobalCharges": false,
-          "onUse": "systems/add2e/scripts/sorts/charme_personne.js",
-          "on_use": "systems/add2e/scripts/sorts/charme_personne.js",
-          "onUseSortEquivalent": "Charme-personne",
-          "tags": [
-            "objet_magique",
-            "sous_type:anneau",
-            "objet:anneau_dinfluence_humaine",
-            "charges",
-            "objet",
-            "permanent",
-            "sort_equivalent:charme_personne",
-            "onuse:sort",
-            "classe_sort:magicien",
-            "effet_passif",
-            "actif_si_equipe"
-          ],
-          "effectTags": [
-            "objet_magique",
-            "sous_type_anneau",
-            "objet_anneau_dinfluence_humaine",
-            "charges",
-            "objet",
-            "permanent",
-            "sort_equivalent_charme_personne",
-            "onuse_sort",
-            "classe_sort_magicien",
-            "effet_passif",
-            "actif_si_equipe"
-          ],
-          "objetMagicOnUse": "systems/add2e/scripts/objets_magiques/anneau_dinfluence_humaine.js",
-          "fallbackOnUse": "systems/add2e/scripts/objets_magiques/anneau_dinfluence_humaine.js",
-          "onUseSortPath": "systems/add2e/scripts/sorts/charme_personne.js",
-          "onUseSource": "liste_sorts_full.json",
-          "linkedSpell": {
-            "name": "Charme-personne",
-            "nom": "Charme-personne",
-            "niveau": 1,
-            "classe": "Magicien",
-            "spellLists": [
-              "magicien"
-            ],
-            "ecole": "Enchantement/Charme",
-            "onUse": "systems/add2e/scripts/sorts/charme_personne.js",
-            "img": "systems/add2e/assets/icones/sorts/charme_personne.webp"
-          },
-          "onuse": "systems/add2e/scripts/sorts/charme_personne.js"
-        }
-      ],
-      "onUse": "",
-      "on_use": "",
-      "fallbackOnUseSortRootRemoved": "systems/add2e/scripts/sorts/charme_personne.js",
-      "onuse": "",
       "description_reelle": "Anneau d’influence humaine + : cet anneau a la propriété d’augmenter le charisme de son porteur jusqu’à 18 en ce qui concerne les réactions lors des rencontres avec des humains/humanoïdes. Son possesseur peut faire des suggestions lors d’une discussion avec n’importe quel humain/humanoïde (jet de protection applicable). Il peut aussi charmer jusqu’à 21 dés de vie/ niveaux d’humains/humanoïdes (jet de protection applicable) tout comme s’il se servait du sort de magicien du 1er niveau, charme-personnes. Ces deux derniers usages de l’anneau ne sont utilisables qu’une fois par jour. Suggestion et charme requièrent 3 segments de temps d’incantation.",
       "description_source": "Guide du Maître, section Objets magiques (extraction PDF)",
       "description_texte": "Anneau d’influence humaine + : cet anneau a la propriété d’augmenter le charisme de son porteur jusqu’à 18 en ce qui concerne les réactions lors des rencontres avec des humains/humanoïdes. Son possesseur peut faire des suggestions lors d’une discussion avec n’importe quel humain/humanoïde (jet de protection applicable). Il peut aussi charmer jusqu’à 21 dés de vie/ niveaux d’humains/humanoïdes (jet de protection applicable) tout comme s’il se servait du sort de magicien du 1er niveau, charme-personnes. Ces deux derniers usages de l’anneau ne sont utilisables qu’une fois par jour. Suggestion et charme requièrent 3 segments de temps d’incantation.",
-      "charisme_reaction_override": 18,
-      "effetsPassifs": [
-        {
-          "type": "charisma_reaction_override",
-          "subtype": "humanoides",
-          "value": 18,
-          "applyWhen": "equipped",
-          "label": "Anneau d’influence humaine : Charisme 18 pour réactions humains/humanoïdes",
-          "mode": "set",
-          "stat": "charisme",
-          "condition": "réactions humains/humanoïdes",
-          "sourceCorrection": "2026-05-19-objets-magiques-passifs-v1"
-        }
-      ],
-      "add2eEffects": [
-        {
-          "type": "charisma_reaction_override",
-          "subtype": "humanoides",
-          "value": 18,
-          "applyWhen": "equipped",
-          "label": "Anneau d’influence humaine : Charisme 18 pour réactions humains/humanoïdes",
-          "mode": "set",
-          "stat": "charisme",
-          "condition": "réactions humains/humanoïdes",
-          "sourceCorrection": "2026-05-19-objets-magiques-passifs-v1"
-        }
-      ],
-      "bonus_ca": 0,
       "bonus_ac": 0,
-      "ca_bonus": 0,
-      "ac_bonus": 0,
-      "protectionBonus": 0,
-      "protection_bonus": 0,
       "ca_fixe": null,
-      "caFixe": null,
-      "fixedCA": null,
-      "ac_fixe": null,
-      "fixed_ac": null,
-      "nom_non_identifie": "Anneau"
+      "nom_non_identifie": "Anneau",
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "sous_type": "anneau",
+      "enchantement": {
+        "schema": 1,
+        "base": {
+          "uuid": "",
+          "id": "",
+          "name": "",
+          "type": ""
+        },
+        "application": "porteur",
+        "bonusToucher": 0,
+        "bonusDegats": 0,
+        "bonusCA": 0,
+        "caFixe": null,
+        "baseStats": {
+          "bonusToucher": 0,
+          "bonusDegats": 0,
+          "bonusCA": 0,
+          "caFixe": null
+        }
+      }
     },
     "effects": [],
     "flags": {
@@ -885,12 +935,26 @@
         "isMagicItem": true,
         "sourceBook": "Guide du Maître",
         "itemFamily": "anneau",
-        "powerCount": 1,
-        "usesGlobalCharges": false,
-        "chargeMode": "permanent",
-        "hasPassiveMechanicalEffects": true,
-        "passiveEffectsVersion": "2026-05-19-objets-magiques-passifs-v1",
-        "passiveEffectsApplyWhen": "equipped"
+        "powerCount": 3,
+        "magicItemProfile": "anneau",
+        "magicItemBuilderVersion": "2026-07-21-magic-item-builder-v8-integrated-catalogue",
+        "kind": "anneau",
+        "category": "objet_magique",
+        "magicItemBuilder": {
+          "version": "2026-07-21-magic-item-builder-v8-integrated-catalogue",
+          "generatedTags": []
+        },
+        "magicPowerCatalogue": {
+          "schema": 1,
+          "catalogueId": "add2e-gdm-magic-powers",
+          "catalogueVersion": "2026-07-26-catalogue-manifest-v7",
+          "runtimeVersion": "2026-07-22-magic-power-effects-modular-v1",
+          "powerIds": [
+            "social_reaction_minimum",
+            "social_suggestion",
+            "social_charm_person_pool"
+          ]
+        }
       }
     }
   },
@@ -40875,7 +40939,7 @@
       "nom": "Philtre de persuasion",
       "type": "objet",
       "categorie": "objet_magique",
-      "sousType": "philtre",
+      "sousType": "potion",
       "rarete": "rare",
       "prix": "",
       "xp": 0,
@@ -40886,194 +40950,207 @@
       "identifie": false,
       "maudit": false,
       "consommable": true,
-      "activation": "Boire ou faire boire une dose",
+      "activation": "Boire une dose",
       "cible": "",
-      "duree": "variable",
+      "duree": "4+1d4 tours",
       "jet_sauvegarde": "",
       "charges": {
         "value": 1,
-        "max": 1,
-        "mode": "consommation",
-        "recharge": "jamais ou selon MD"
+        "max": 1
       },
-      "max_charges": 1,
       "pouvoirs": [
         {
-          "id": "philtre_de_persuasion_1",
-          "name": "Suggestion",
-          "nom": "Suggestion",
-          "img": "icons/consumables/potions/potion-flask-corked-pink.webp",
-          "niveau": 3,
-          "level": 3,
-          "ecole": "Enchantement/Charme",
-          "activation": "Boire ou faire boire une dose",
-          "temps_activation": "2-5 segments",
-          "duree": "variable",
-          "cible": "Selon effet",
-          "jet_sauvegarde": "",
-          "description": "Rend le buveur plus convaincant dans les réactions sociales.",
-          "cout": 1,
-          "cost": 1,
-          "chargeCost": 1,
-          "charges": 1,
-          "max": 1,
-          "chargesMode": "charges",
-          "recharge": "jamais ou selon MD",
-          "usesGlobalCharges": true,
-          "onUse": "systems/add2e/scripts/sorts/magicien-suggestion.js",
-          "on_use": "systems/add2e/scripts/sorts/magicien-suggestion.js",
-          "onUseSortEquivalent": "Suggestion",
-          "tags": [
-            "objet_magique",
-            "sous_type:philtre",
-            "objet:philtre_de_persuasion",
-            "consommable",
-            "charges",
-            "objet",
-            "charge:globale",
-            "sort_equivalent:suggestion",
-            "onuse:sort",
-            "classe_sort:magicien"
-          ],
-          "effectTags": [
-            "objet_magique",
-            "sous_type_philtre",
-            "objet_philtre_de_persuasion",
-            "consommable",
-            "charges",
-            "objet",
-            "charge_globale",
-            "sort_equivalent_suggestion",
-            "onuse_sort",
-            "classe_sort_magicien"
-          ],
-          "objetMagicOnUse": "systems/add2e/scripts/objets_magiques/philtre_de_persuasion.js",
-          "fallbackOnUse": "systems/add2e/scripts/objets_magiques/philtre_de_persuasion.js",
-          "onUseSortPath": "systems/add2e/scripts/sorts/magicien-suggestion.js",
-          "onUseSource": "liste_sorts_full.json",
-          "linkedSpell": {
-            "name": "Suggestion",
-            "nom": "Suggestion",
-            "niveau": 3,
-            "classe": "Magicien",
-            "spellLists": [
-              "magicien"
-            ],
-            "ecole": "Enchantement/Charme",
-            "onUse": "systems/add2e/scripts/sorts/magicien-suggestion.js",
-            "img": "systems/add2e/assets/icones/sorts/magicien-suggestion.webp"
+          "schema": 2,
+          "kind": "catalogue",
+          "catalogueId": "social_persuasion_potion",
+          "name": "Boire un philtre de persuasion",
+          "label": "Boire un philtre de persuasion",
+          "category": "consumable",
+          "automation": "automatic",
+          "activation": {
+            "type": "action",
+            "trigger": "drink"
           },
-          "onuse": "systems/add2e/scripts/sorts/magicien-suggestion.js"
+          "parameters": {
+            "value": 25,
+            "durationFormula": "4+1d4",
+            "durationUnit": "turn",
+            "activationTag": "potion_persuasion_active",
+            "chargeCost": 1
+          },
+          "effects": [
+            {
+              "type": "reaction_bonus",
+              "value": 25,
+              "target": "self",
+              "durationFormula": "4+1d4",
+              "durationUnit": "turn",
+              "tags": [
+                "potion_persuasion_active"
+              ],
+              "chargeCost": 1
+            }
+          ],
+          "effectTemplates": [
+            {
+              "type": "reaction_bonus",
+              "value": "@value",
+              "target": "self",
+              "durationFormula": "@durationFormula",
+              "durationUnit": "@durationUnit",
+              "tags": [
+                "@activationTag"
+              ],
+              "chargeCost": "@chargeCost"
+            }
+          ],
+          "compatibility": {
+            "itemTypes": [
+              "objet"
+            ]
+          },
+          "validation": {},
+          "source": {
+            "section": "III.A",
+            "page": "123"
+          },
+          "catalogue": {
+            "id": "add2e-gdm-magic-powers",
+            "version": "2026-07-26-catalogue-manifest-v7",
+            "runtimeVersion": "2026-07-22-magic-power-effects-modular-v1"
+          }
+        },
+        {
+          "schema": 2,
+          "kind": "catalogue",
+          "catalogueId": "social_suggestion",
+          "name": "Suggestion sociale par objet",
+          "label": "Suggestion sociale par objet",
+          "category": "social",
+          "automation": "automatic",
+          "activation": {
+            "type": "action",
+            "trigger": "discussion"
+          },
+          "parameters": {
+            "spellName": "Suggestion",
+            "chargeCost": 0,
+            "activationTime": "1 round",
+            "target": "targets",
+            "range": 3,
+            "frequency": {
+              "value": 1,
+              "unit": "turn"
+            },
+            "requiredEffectTag": "potion_persuasion_active"
+          },
+          "effects": [
+            {
+              "type": "linked_spell",
+              "spellName": "Suggestion",
+              "chargeCost": 0,
+              "activationTime": "1 round",
+              "target": "targets",
+              "range": 3,
+              "frequency": {
+                "value": 1,
+                "unit": "turn"
+              },
+              "requiredEffectTag": "potion_persuasion_active"
+            }
+          ],
+          "effectTemplates": [
+            {
+              "type": "linked_spell",
+              "spellUuid": "@spellUuid",
+              "spellName": "@spellName",
+              "casterLevel": "@casterLevel",
+              "chargeCost": "@chargeCost",
+              "activationTime": "@activationTime",
+              "target": "@target",
+              "targetAny": "@targetAny",
+              "maxTargets": "@maxTargets",
+              "maxHitDice": "@maxHitDice",
+              "maxTotalHitDice": "@maxTotalHitDice",
+              "range": "@range",
+              "duration": "@duration",
+              "frequency": "@frequency",
+              "requiredEffectTag": "@requiredEffectTag"
+            }
+          ],
+          "compatibility": {
+            "itemTypes": [
+              "arme",
+              "armure",
+              "objet"
+            ]
+          },
+          "validation": {
+            "requiresOneOf": [
+              "spellUuid",
+              "spellName"
+            ]
+          },
+          "source": {
+            "section": "III.A, III.C",
+            "page": "123, 126"
+          },
+          "catalogue": {
+            "id": "add2e-gdm-magic-powers",
+            "version": "2026-07-26-catalogue-manifest-v7",
+            "runtimeVersion": "2026-07-22-magic-power-effects-modular-v1"
+          }
         }
       ],
       "effet": "Rend le buveur plus convaincant dans les réactions sociales.",
-      "description": "<p><strong>Philtre de persuasion</strong></p><p>Philtre de persuasion : quand une créature ingurgite cette potion, elle devient plus charismatique, gagnant ainsi un ajustement de +25 % sur les tirages de réaction. L’individu est aussi capable de suggérer (voir le sort de magicien du 3e niveau, suggestion) une fois par tour à autant de créatures qui se trouvent à moins de 3&quot; de lui. Les parchemins se trouvent généralement dans les cylindres (tubes d’ivoire, de jade, de cuir, de métal ou de bois). Vous pouvez exiger que les joueurs lisent certaines runes/écritures magique sur les tubes pour pouvoir les ouvrir dans certains cas. Cela vous permet que le sort de lecture de la magie (ou de compréhension des langues) soit pris et utilisé tout en vous offrant la possibilité de placer certains pièges (symboles, runes explosives) et des malédictions sur les parchemins puissants.</p>",
+      "description": "<p><strong>Philtre de persuasion</strong></p><p>Philtre de persuasion : quand une créature ingurgite cette potion, elle devient plus charismatique, gagnant ainsi un ajustement de +25 % sur les tirages de réaction. L’individu est aussi capable de suggérer (voir le sort de magicien du 3e niveau, suggestion) une fois par tour à autant de créatures qui se trouvent à moins de 3\" de lui.</p>",
       "tags": [
         "objet_magique",
-        "sous_type:philtre",
-        "objet:philtre_de_persuasion",
+        "potion",
+        "consommable_potion",
         "consommable",
+        "objet:philtre_de_persuasion",
         "charges",
-        "objet",
         "charge:globale"
       ],
       "effectTags": [
         "objet_magique",
-        "sous_type_philtre",
-        "objet_philtre_de_persuasion",
+        "potion",
+        "consommable_potion",
         "consommable",
+        "objet:philtre_de_persuasion",
         "charges",
-        "objet",
-        "charge_globale"
+        "charge:globale"
       ],
-      "powers": [
-        {
-          "id": "philtre_de_persuasion_1",
-          "name": "Suggestion",
-          "nom": "Suggestion",
-          "img": "icons/consumables/potions/potion-flask-corked-pink.webp",
-          "niveau": 3,
-          "level": 3,
-          "ecole": "Enchantement/Charme",
-          "activation": "Boire ou faire boire une dose",
-          "temps_activation": "2-5 segments",
-          "duree": "variable",
-          "cible": "Selon effet",
-          "jet_sauvegarde": "",
-          "description": "Rend le buveur plus convaincant dans les réactions sociales.",
-          "cout": 1,
-          "cost": 1,
-          "chargeCost": 1,
-          "charges": 1,
-          "max": 1,
-          "chargesMode": "charges",
-          "recharge": "jamais ou selon MD",
-          "usesGlobalCharges": true,
-          "onUse": "systems/add2e/scripts/sorts/magicien-suggestion.js",
-          "on_use": "systems/add2e/scripts/sorts/magicien-suggestion.js",
-          "onUseSortEquivalent": "Suggestion",
-          "tags": [
-            "objet_magique",
-            "sous_type:philtre",
-            "objet:philtre_de_persuasion",
-            "consommable",
-            "charges",
-            "objet",
-            "charge:globale",
-            "sort_equivalent:suggestion",
-            "onuse:sort",
-            "classe_sort:magicien"
-          ],
-          "effectTags": [
-            "objet_magique",
-            "sous_type_philtre",
-            "objet_philtre_de_persuasion",
-            "consommable",
-            "charges",
-            "objet",
-            "charge_globale",
-            "sort_equivalent_suggestion",
-            "onuse_sort",
-            "classe_sort_magicien"
-          ],
-          "objetMagicOnUse": "systems/add2e/scripts/objets_magiques/philtre_de_persuasion.js",
-          "fallbackOnUse": "systems/add2e/scripts/objets_magiques/philtre_de_persuasion.js",
-          "onUseSortPath": "systems/add2e/scripts/sorts/magicien-suggestion.js",
-          "onUseSource": "liste_sorts_full.json",
-          "linkedSpell": {
-            "name": "Suggestion",
-            "nom": "Suggestion",
-            "niveau": 3,
-            "classe": "Magicien",
-            "spellLists": [
-              "magicien"
-            ],
-            "ecole": "Enchantement/Charme",
-            "onUse": "systems/add2e/scripts/sorts/magicien-suggestion.js",
-            "img": "systems/add2e/assets/icones/sorts/magicien-suggestion.webp"
-          },
-          "onuse": "systems/add2e/scripts/sorts/magicien-suggestion.js"
-        }
-      ],
-      "onUse": "",
-      "on_use": "",
-      "fallbackOnUseSortRootRemoved": "systems/add2e/scripts/sorts/magicien-suggestion.js",
-      "onuse": "",
-      "description_reelle": "Philtre de persuasion : quand une créature ingurgite cette potion, elle devient plus charismatique, gagnant ainsi un ajustement de +25 % sur les tirages de réaction. L’individu est aussi capable de suggérer (voir le sort de magicien du 3e niveau, suggestion) une fois par tour à autant de créatures qui se trouvent à moins de 3\" de lui. Les parchemins se trouvent généralement dans les cylindres (tubes d’ivoire, de jade, de cuir, de métal ou de bois). Vous pouvez exiger que les joueurs lisent certaines runes/écritures magique sur les tubes pour pouvoir les ouvrir dans certains cas. Cela vous permet que le sort de lecture de la magie (ou de compréhension des langues) soit pris et utilisé tout en vous offrant la possibilité de placer certains pièges (symboles, runes explosives) et des malédictions sur les parchemins puissants.",
+      "description_reelle": "Philtre de persuasion : quand une créature ingurgite cette potion, elle devient plus charismatique, gagnant ainsi un ajustement de +25 % sur les tirages de réaction. L’individu est aussi capable de suggérer (voir le sort de magicien du 3e niveau, suggestion) une fois par tour à autant de créatures qui se trouvent à moins de 3\" de lui.",
       "description_source": "Guide du Maître, section Objets magiques (extraction PDF)",
-      "description_texte": "Philtre de persuasion : quand une créature ingurgite cette potion, elle devient plus charismatique, gagnant ainsi un ajustement de +25 % sur les tirages de réaction. L’individu est aussi capable de suggérer (voir le sort de magicien du 3e niveau, suggestion) une fois par tour à autant de créatures qui se trouvent à moins de 3\" de lui. Les parchemins se trouvent généralement dans les cylindres (tubes d’ivoire, de jade, de cuir, de métal ou de bois). Vous pouvez exiger que les joueurs lisent certaines runes/écritures magique sur les tubes pour pouvoir les ouvrir dans certains cas. Cela vous permet que le sort de lecture de la magie (ou de compréhension des langues) soit pris et utilisé tout en vous offrant la possibilité de placer certains pièges (symboles, runes explosives) et des malédictions sur les parchemins puissants.",
-      "bonus_ca": 0,
+      "description_texte": "Philtre de persuasion : quand une créature ingurgite cette potion, elle devient plus charismatique, gagnant ainsi un ajustement de +25 % sur les tirages de réaction. L’individu est aussi capable de suggérer (voir le sort de magicien du 3e niveau, suggestion) une fois par tour à autant de créatures qui se trouvent à moins de 3\" de lui.",
       "bonus_ac": 0,
-      "ca_bonus": 0,
-      "ac_bonus": 0,
-      "protectionBonus": 0,
-      "protection_bonus": 0,
       "ca_fixe": null,
-      "caFixe": null,
-      "fixedCA": null,
-      "ac_fixe": null,
-      "fixed_ac": null,
-      "nom_non_identifie": "Philtre"
+      "nom_non_identifie": "Philtre",
+      "bonus_toucher": 0,
+      "bonus_degats": 0,
+      "sous_type": "potion",
+      "enchantement": {
+        "schema": 1,
+        "base": {
+          "uuid": "",
+          "id": "",
+          "name": "",
+          "type": ""
+        },
+        "application": "porteur",
+        "bonusToucher": 0,
+        "bonusDegats": 0,
+        "bonusCA": 0,
+        "caFixe": null,
+        "baseStats": {
+          "bonusToucher": 0,
+          "bonusDegats": 0,
+          "bonusCA": 0,
+          "caFixe": null
+        }
+      }
     },
     "effects": [],
     "flags": {
@@ -41084,9 +41161,25 @@
         "isMagicItem": true,
         "sourceBook": "Guide du Maître",
         "itemFamily": "philtre",
-        "powerCount": 1,
-        "usesGlobalCharges": true,
-        "chargeMode": "consommation"
+        "powerCount": 2,
+        "magicItemProfile": "potion",
+        "magicItemBuilderVersion": "2026-07-21-magic-item-builder-v8-integrated-catalogue",
+        "kind": "potion",
+        "category": "objet_magique",
+        "magicItemBuilder": {
+          "version": "2026-07-21-magic-item-builder-v8-integrated-catalogue",
+          "generatedTags": []
+        },
+        "magicPowerCatalogue": {
+          "schema": 1,
+          "catalogueId": "add2e-gdm-magic-powers",
+          "catalogueVersion": "2026-07-26-catalogue-manifest-v7",
+          "runtimeVersion": "2026-07-22-magic-power-effects-modular-v1",
+          "powerIds": [
+            "social_persuasion_potion",
+            "social_suggestion"
+          ]
+        }
       }
     }
   },
