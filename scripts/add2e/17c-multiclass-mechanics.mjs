@@ -4,7 +4,7 @@
 
 import { MULTICLASS_VERSION, classItems as coreClassItems, classProgression, classProgressionUpdate, classSlug } from "./17b-multiclass-core.mjs";
 
-const VERSION = "2026-07-26-class-item-progression-canonical-con-v4";
+const VERSION = "2026-07-26-class-item-progression-warrior-con-v5";
 const TAG = "[ADD2E][CLASSE][CANONIQUE]";
 const timers = new Map();
 
@@ -284,7 +284,7 @@ async function syncClassProgressionSummary(actor, { reason = "class-item-progres
   return true;
 }
 
-function constitutionHitPointBonus(actor) {
+function constitutionHitPointBonus(actor, entries = []) {
   const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
   if (typeof engine?.resolveAbilityDerived !== "function") {
     throw new Error("Le résolveur canonique ADD2E des ajustements de caractéristiques n’est pas disponible.");
@@ -295,7 +295,10 @@ function constitutionHitPointBonus(actor) {
     source: "multiclass-hit-points",
     consumer: "class-item-progression"
   });
-  const value = Number(derived?.profile?.pv);
+  const warriorClass = entries.some(entry =>
+    ["guerrier", "paladin", "ranger", "rodeur"].includes(String(entry?.slug ?? ""))
+  );
+  const value = Number(warriorClass ? derived?.profile?.pv_guerrier : derived?.profile?.pv);
   return Number.isFinite(value) ? Math.trunc(value) : 0;
 }
 
@@ -304,7 +307,7 @@ async function syncHp(actor, { syncCurrent = false, force = false, reason = "mul
   const entries = entriesFor(actor, { includePnj: actor?.type === "pnj" });
   if (!entries.length) return false;
   const rolls = Array.isArray(actor.system?.hpRollsMulticlass) && !force ? foundry.utils.deepClone(actor.system.hpRollsMulticlass) : [];
-  const conBonus = constitutionHitPointBonus(actor);
+  const conBonus = constitutionHitPointBonus(actor, entries);
   let max = 0;
 
   for (let index = 0; index < Math.max(...entries.map(entry => entry.level)); index += 1) {
