@@ -247,19 +247,6 @@ export function installEffectsEngineTagsAndFeatures(Engine) {
       return allowed[0] ?? String(fallback ?? "");
     },
 
-    getConstitutionTotal(actor) {
-      const system = actor?.system ?? {};
-      const direct = Number(system.constitution);
-      if (!Number.isNaN(direct) && direct > 0) return direct;
-      return Number(system.constitution_base || 0)
-        + Number(system.constitution_race ?? system.bonus_caracteristiques?.constitution ?? 0)
-        + Number(system.constitution_bonus ?? system.bonus_divers_caracteristiques?.constitution ?? 0);
-    },
-
-    getConstitutionSaveBonus(actor) {
-      return Math.max(0, Math.min(5, Math.floor(this.getConstitutionTotal(actor) / 3.5)));
-    },
-
     getRacialTagsForRace() {
       return [];
     },
