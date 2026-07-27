@@ -1,6 +1,9 @@
 // systems/add2e/scripts/capacites/ranger-suivants.js
 // ADD2E — Ranger : Appel des suivants
 
+const ADD2E_RANGER_SUIVANTS_VERSION = "2026-07-27-shared-chat-card-v1";
+globalThis.ADD2E_RANGER_SUIVANTS_VERSION = ADD2E_RANGER_SUIVANTS_VERSION;
+
 function a2eRangerFeatureLevel(currentActor, currentFeature) {
   const level = Number(
     globalThis.add2eFeatureActorLevel?.(currentActor, currentFeature)
@@ -35,13 +38,33 @@ const roll = await (new Roll("2d12")).evaluate({ async: true });
 if (game.dice3d) await game.dice3d.showForRoll(roll);
 await actor.setFlag("add2e", "rangerSuivantsUtilises", { used: true, total: roll.total, at: Date.now() });
 
-const content = `
-<div class="add2e-chat-card" style="border:1px solid #567;border-radius:8px;padding:8px;background:#f3f8ff;">
-  <h3 style="margin:0 0 6px 0;color:#234;">Appel des suivants — ${actor.name}</h3>
-  <p>Le ranger attire une troupe de suivants. Le résultat indique le nombre brut ; le MJ détermine leur nature.</p>
-  <p style="font-size:1.2em;"><b>Nombre de suivants :</b> ${roll.total}</p>
-  <p><small>Cette capacité est normalement unique pour ce ranger ; les suivants perdus ne sont pas automatiquement remplacés.</small></p>
-</div>`;
+const buildChatCard = globalThis.add2eBuildChatCard;
+const createChatCard = globalThis.add2eCreateChatCard;
+if (typeof buildChatCard !== "function" || typeof createChatCard !== "function") {
+  throw new Error("Les constructeurs communs de cartes ADD2E ne sont pas disponibles.");
+}
 
-await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content });
+const cardOptions = {
+  actor,
+  title: "Appel des suivants",
+  icon: "fas fa-users",
+  variant: "ability",
+  rows: [
+    { label: "Nombre de suivants", value: String(roll.total) },
+    { label: "Usage", value: "Unique pour ce ranger" }
+  ],
+  message: "Le MJ détermine la nature de la troupe attirée.",
+  trustedBodyHtml: "<p>Les suivants perdus ne sont pas automatiquement remplacés.</p>",
+  chatData: {
+    flags: {
+      add2e: {
+        sourceCapacite: "ranger-suivants",
+        version: ADD2E_RANGER_SUIVANTS_VERSION
+      }
+    }
+  }
+};
+
+buildChatCard(cardOptions);
+await createChatCard(cardOptions);
 return true;
