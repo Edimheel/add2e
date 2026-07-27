@@ -1,6 +1,9 @@
 // systems/add2e/scripts/capacites/ranger-pistage.js
 // ADD2E — Ranger : Pistage
 
+const ADD2E_RANGER_PISTAGE_VERSION = "2026-07-27-shared-chat-card-v1";
+globalThis.ADD2E_RANGER_PISTAGE_VERSION = ADD2E_RANGER_PISTAGE_VERSION;
+
 function a2eRangerFeatureLevel(currentActor, currentFeature) {
   const level = Number(
     globalThis.add2eFeatureActorLevel?.(currentActor, currentFeature)
@@ -43,16 +46,32 @@ if ((exterieur === undefined || souterrain === undefined) && Array.isArray(ligne
 exterieur = Number(exterieur ?? 0) || 0;
 souterrain = Number(souterrain ?? 0) || 0;
 
-const content = `
-<div class="add2e-chat-card" style="border:1px solid #7a8f55;border-radius:8px;padding:8px;background:#f7fbef;">
-  <h3 style="margin:0 0 6px 0;color:#425d1f;">Pistage — ${actor.name}</h3>
-  <p>Le ranger tente de suivre une piste. Le MJ applique les modificateurs selon le terrain, le temps écoulé, la météo et le nombre de créatures.</p>
-  <ul>
-    <li><b>Base extérieur :</b> ${exterieur || "selon situation"}%</li>
-    <li><b>Base souterrain :</b> ${souterrain || "selon situation"}%</li>
-    <li><b>Rappel :</b> +2 % par créature au-delà de la première ; −10 % par jour écoulé ; −25 % par heure de précipitations.</li>
-  </ul>
-</div>`;
+const buildChatCard = globalThis.add2eBuildChatCard;
+const createChatCard = globalThis.add2eCreateChatCard;
+if (typeof buildChatCard !== "function" || typeof createChatCard !== "function") {
+  throw new Error("Les constructeurs communs de cartes ADD2E ne sont pas disponibles.");
+}
 
-await ChatMessage.create({ speaker: ChatMessage.getSpeaker({ actor }), content });
+const cardOptions = {
+  actor,
+  title: "Pistage",
+  icon: "fas fa-shoe-prints",
+  variant: "ability",
+  rows: [
+    { label: "Base extérieur", value: exterieur ? `${exterieur}%` : "Selon situation" },
+    { label: "Base souterrain", value: souterrain ? `${souterrain}%` : "Selon situation" }
+  ],
+  message: "Le MJ applique les modificateurs selon le terrain, le temps écoulé, la météo et le nombre de créatures.",
+  trustedBodyHtml: "<p><b>Rappel :</b> +2 % par créature au-delà de la première ; −10 % par jour écoulé ; −25 % par heure de précipitations.</p>",
+  chatData: {
+    flags: {
+      add2e: {
+        sourceCapacite: "ranger-pistage",
+        version: ADD2E_RANGER_PISTAGE_VERSION
+      }
+    }
+  }
+};
+buildChatCard(cardOptions);
+await createChatCard(cardOptions);
 return true;
