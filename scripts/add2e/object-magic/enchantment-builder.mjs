@@ -122,7 +122,7 @@ export function add2eMagicBuilderSyncUpdate(item, change) {
     version: ADD2E_MAGIC_ITEM_BUILDER_VERSION,
     generatedTags
   });
-  const powers = mergedSystem.pouvoirs ?? mergedSystem.powers ?? [];
+  const powers = mergedSystem.pouvoirs ?? [];
   const chargeMax = add2eMagicNumber(mergedSystem.charges?.max, 0);
   const isMagic = Boolean(
     enchantement.baseUuid
