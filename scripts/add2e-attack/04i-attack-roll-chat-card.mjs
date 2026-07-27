@@ -3,9 +3,9 @@
 // Chaque joueur actif crée sa carte simplifiée privée ; un seul MJ crée la carte détaillée.
 // Compatible Foundry V13/V14/V15.
 
-const VERSION = "2026-07-27-attack-chat-readable-details-v33";
+const VERSION = "2026-07-27-attack-chat-collapsed-summary-v34";
 const SOCKET = "system.add2e";
-const ROUTE_TYPE = "ADD2E_ATTACK_CHAT_ROUTE_V33";
+const ROUTE_TYPE = "ADD2E_ATTACK_CHAT_ROUTE_V34";
 const LOG = "[ADD2E][ATTACK_CHAT]";
 
 const ACTIVE_ITEM_TYPES = new Set([
@@ -31,6 +31,11 @@ function escapeHtml(value) {
 function signed(value) {
   const numeric = Number(value) || 0;
   return `${numeric >= 0 ? "+" : "−"}${Math.abs(numeric)}`;
+}
+
+function expressionTerm(value) {
+  const numeric = Number(value) || 0;
+  return `${numeric >= 0 ? "+" : "−"} ${Math.abs(numeric)}`;
 }
 
 function number(value, fallback = 0) {
@@ -371,7 +376,7 @@ function calculationBoxHtml(lines = [], result = null) {
 
 function detailSectionHtml({ label, icon, body }) {
   if (!String(body ?? "").trim()) return "";
-  return `<details open class="add2e-attack-detail-section" style="display:block!important;width:100%!important;box-sizing:border-box!important;margin-top:8px!important;border:1px solid var(--add2e-card-border,#b98b2d)!important;border-radius:8px!important;overflow:hidden!important;background:rgba(255,255,255,.35)!important;color:#2f250c!important;"><summary style="display:list-item!important;cursor:pointer!important;padding:8px 9px!important;color:#3a270c!important;font-weight:950!important;line-height:1.25!important;background:rgba(185,139,45,.18)!important;"><i class="${escapeHtml(icon)}"></i> ${escapeHtml(label)}</summary><div style="display:block!important;width:100%!important;box-sizing:border-box!important;padding:9px!important;color:#2f250c!important;background:rgba(255,250,235,.52)!important;">${body}</div></details>`;
+  return `<details class="add2e-attack-detail-section" style="display:block!important;width:100%!important;box-sizing:border-box!important;margin-top:8px!important;border:1px solid var(--add2e-card-border,#b98b2d)!important;border-radius:8px!important;overflow:hidden!important;background:rgba(255,255,255,.35)!important;color:#2f250c!important;"><summary style="display:list-item!important;cursor:pointer!important;padding:8px 9px!important;color:#3a270c!important;font-weight:950!important;line-height:1.25!important;background:rgba(185,139,45,.18)!important;"><i class="${escapeHtml(icon)}"></i> ${escapeHtml(label)}</summary><div style="display:block!important;width:100%!important;box-sizing:border-box!important;padding:9px!important;color:#2f250c!important;background:rgba(255,250,235,.52)!important;">${body}</div></details>`;
 }
 
 function baseDamageFormula(snapshot) {
@@ -392,6 +397,14 @@ function rawDamageRollDetails(snapshot, multiplier = 1) {
     details = details.replace(new RegExp(`\\s*${sign}\\s*${Math.abs(bonus)}\\s*$`), "").trim();
   }
   return details || "—";
+}
+
+function summaryDamageRoll(snapshot, multiplier = 1) {
+  const raw = rawDamageRollDetails(snapshot, multiplier);
+  const bonus = number(snapshot?.damage?.bonus);
+  const amount = number(snapshot?.damage?.amount);
+  const multiplierText = multiplier > 1 ? `, puis × ${multiplier}` : "";
+  return `${raw} ${expressionTerm(bonus)}${multiplierText} = ${amount}`;
 }
 
 function touchDetailsHtml(ctx) {
@@ -420,7 +433,7 @@ function touchDetailsHtml(ctx) {
   const calculations = calculationBoxHtml([
     { label: "Seuil de base", value: `THAC0 ${thac0} − CA ${armorClass} = ${baseThreshold}` },
     { label: "Seuil après modificateurs", value: `${baseThreshold} ${attackBonus >= 0 ? "−" : "+"} ${Math.abs(attackBonus)} = ${finalThreshold}` },
-    { label: "Jet obtenu", value: `${d20} ${attackBonus >= 0 ? "+" : "−"} ${Math.abs(attackBonus)} = ${rollTotal}` }
+    { label: "Jet obtenu", value: `${d20} ${expressionTerm(attackBonus)} = ${rollTotal}` }
   ], result.title);
   const conditionalHtml = conditional.length
     ? `<div style="margin-top:8px;padding:7px 8px;border-left:3px solid #b98b2d;background:rgba(185,139,45,.1);color:#4b3a1c;font-size:.78rem;line-height:1.35;"><strong>Défenses particulières :</strong> ${escapeHtml(conditional.join(" ; "))}</div>`
@@ -522,12 +535,18 @@ function gmDetailsHtml(ctx) {
 function gmCardOptions(ctx) {
   const snapshot = ctx.snapshot;
   const result = outcome(ctx);
+  const d20 = number(snapshot?.roll?.d20);
+  const attackBonus = number(snapshot?.roll?.bonus);
+  const attackTotal = number(snapshot?.roll?.total, d20 + attackBonus);
+  const multiplier = ctx.useBackstab ? Math.max(1, number(ctx.backstabMultiplier, 1)) : 1;
   const rows = [
-    { label: "Arme", value: ctx?.arme?.name ?? "Arme" },
     { label: "Cible", value: `${ctx?.nomCible ?? ctx?.cible?.name ?? "Cible"} · CA ${number(snapshot?.threshold?.armorClass)}` },
-    { label: "Résultat", value: result.title }
+    { label: "Toucher", value: `${d20} ${expressionTerm(attackBonus)} = ${attackTotal} · ${result.title}` },
+    {
+      label: "Dégâts",
+      value: result.hit ? summaryDamageRoll(snapshot, multiplier) : "Aucun — attaque ratée"
+    }
   ];
-  if (result.hit) rows.push({ label: "Dégâts", value: String(number(snapshot?.damage?.amount)) });
   if (snapshot?.assassination?.resolved) {
     rows.push({
       label: "Assassinat",
