@@ -4,7 +4,7 @@
 
 import { MULTICLASS_VERSION, classItems as coreClassItems, classProgression, classProgressionUpdate, classSlug } from "./17b-multiclass-core.mjs";
 
-const VERSION = "2026-07-27-class-item-progression-current-hp-delta-v7";
+const VERSION = "2026-07-27-class-item-canonical-hit-points-v8";
 const TAG = "[ADD2E][CLASSE][CANONIQUE]";
 const timers = new Map();
 
@@ -302,15 +302,16 @@ function constitutionHitPointBonus(actor, entries = []) {
   return Number.isFinite(value) ? Math.trunc(value) : 0;
 }
 
-async function syncHp(actor, { syncCurrent = false, force = false, reason = "multiclass-item-progression" } = {}) {
+async function syncHp(actor, { syncCurrent: _syncCurrent = false, force = false, reason = "multiclass-item-progression" } = {}) {
   if (!isMultiHpActor(actor)) return false;
   const entries = entriesFor(actor, { includePnj: actor?.type === "pnj" });
   if (!entries.length) return false;
   const rolls = Array.isArray(actor.system?.hpRollsMulticlass) && !force ? foundry.utils.deepClone(actor.system.hpRollsMulticlass) : [];
   const conBonus = constitutionHitPointBonus(actor, entries);
-  let max = 0;
+  const maximumClassLevel = Math.max(...entries.map(entry => entry.level));
+  let baseMaximum = 0;
 
-  for (let index = 0; index < Math.max(...entries.map(entry => entry.level)); index += 1) {
+  for (let index = 0; index < maximumClassLevel; index += 1) {
     let total = 0;
     let count = 0;
     for (const entry of entries) {
@@ -329,25 +330,44 @@ async function syncHp(actor, { syncCurrent = false, force = false, reason = "mul
     }
     if (count) {
       const averagedHitPoints = (total + conBonus) / count;
-      max += Math.max(1, Math.floor(averagedHitPoints + 0.5));
+      baseMaximum += Math.max(1, Math.floor(averagedHitPoints + 0.5));
     }
   }
 
-  const hpMax = Math.max(1, Math.floor(max));
-  const previousHpMax = n(actor.system?.points_de_coup, NaN);
-  const currentHp = n(actor.system?.pdv, NaN);
-  const updates = { "system.hpRollsMulticlass": rolls, "system.points_de_coup": hpMax };
-
-  if (syncCurrent) {
-    updates["system.pdv"] = hpMax;
-  } else if (Number.isFinite(currentHp) && Number.isFinite(previousHpMax)) {
-    const maximumDelta = hpMax - previousHpMax;
-    if (maximumDelta > 0) updates["system.pdv"] = Math.min(hpMax, currentHp + maximumDelta);
-    else if (currentHp > hpMax) updates["system.pdv"] = hpMax;
-  } else if (Number.isFinite(currentHp) && currentHp > hpMax) {
-    updates["system.pdv"] = hpMax;
+  baseMaximum = Math.max(1, Math.floor(baseMaximum));
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  if (typeof engine?.resolveHitPoints !== "function") {
+    throw new Error("Le résolveur canonique ADD2E des points de vie n’est pas disponible.");
   }
-  await actor.update(updates, { add2eInternal: true, add2eMulticlassInternal: true, add2eReason: reason });
+  const levelBySource = Object.fromEntries(entries.flatMap(entry => [
+    [entry.itemId, entry.level],
+    [entry.item?.uuid, entry.level]
+  ]).filter(([key]) => Boolean(key)));
+  const resolution = engine.resolveHitPoints(actor, {
+    baseMaximum,
+    previousMaximum: actor.system?.points_de_coup,
+    previousCurrent: actor.system?.pdv,
+    level: maximumClassLevel,
+    source: reason,
+    consumer: "multiclass-hit-points",
+    context: {
+      classLevels: entries.map(entry => ({ itemId: entry.itemId, uuid: entry.item?.uuid, level: entry.level, slug: entry.slug })),
+      levelBySource
+    }
+  });
+
+  const updates = {};
+  if (!same(actor.system?.hpRollsMulticlass ?? [], rolls)) updates["system.hpRollsMulticlass"] = rolls;
+  if (Number(actor.system?.points_de_coup) !== Number(resolution.maximum.total)) updates["system.points_de_coup"] = resolution.maximum.total;
+  if (Number(actor.system?.pdv) !== Number(resolution.current.total)) updates["system.pdv"] = resolution.current.total;
+  if (!Object.keys(updates).length) return true;
+  await actor.update(updates, {
+    add2eInternal: true,
+    add2eMulticlassInternal: true,
+    add2eHitPointResolution: true,
+    add2eReason: reason,
+    render: false
+  });
   return true;
 }
 
