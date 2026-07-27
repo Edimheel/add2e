@@ -2,60 +2,8 @@
 //  HOOK UNIQUE updateActor
 // =======================
 
-const ADD2E_MULTICLASS_HP_SYNC_VERSION = "2026-06-13-multiclass-hp-current-gain-v1";
-globalThis.ADD2E_MULTICLASS_HP_SYNC_VERSION = ADD2E_MULTICLASS_HP_SYNC_VERSION;
-const ADD2E_MULTICLASS_HP_SYNC_LOCK = new Set();
-
-function add2eIsMulticlassCharacter(actor) {
-  if (!actor || actor.type !== "personnage") return false;
-  if (actor.system?.multiclasse?.enabled === true) return true;
-  return (actor.items?.filter?.(i => String(i.type || "").toLowerCase() === "classe")?.length ?? 0) > 1;
-}
-
-function add2eMulticlassHpRelevant(changes = {}) {
-  if (!changes?.system) return false;
-  return foundry.utils.hasProperty(changes, "system.niveaux_par_classe")
-    || foundry.utils.hasProperty(changes, "system.xp_par_classe")
-    || foundry.utils.hasProperty(changes, "system.classes")
-    || foundry.utils.hasProperty(changes, "system.details_classes")
-    || foundry.utils.hasProperty(changes, "system.multiclasse")
-    || foundry.utils.hasProperty(changes, "system.classe");
-}
-
-async function add2eSyncMulticlassHp(actor, { force = false, syncCurrent = false, reason = "multiclass-hp-sync" } = {}) {
-  if (!game.user?.isGM) return false;
-  if (!add2eIsMulticlassCharacter(actor)) return false;
-  if (ADD2E_MULTICLASS_HP_SYNC_LOCK.has(actor.id)) return false;
-
-  ADD2E_MULTICLASS_HP_SYNC_LOCK.add(actor.id);
-  try {
-    const oldMax = Number(actor.system?.points_de_coup ?? 0);
-    const oldCurrent = Number(actor.system?.pdv ?? 0);
-
-    if (typeof actor.sheet?.autoSetPointsDeCoup === "function") {
-      await actor.sheet.autoSetPointsDeCoup({ syncCurrent: false, force, reason });
-    }
-
-    const max = Number(actor.system?.points_de_coup ?? 0);
-    const current = Number(actor.system?.pdv ?? 0);
-    if (!Number.isFinite(max) || max <= 0 || !Number.isFinite(current)) return true;
-
-    const hpGain = Number.isFinite(oldMax) && oldMax > 0 ? Math.max(0, max - oldMax) : 0;
-    const update = {};
-
-    if (syncCurrent) update["system.pdv"] = max;
-    else if (hpGain > 0 && Number.isFinite(oldCurrent)) update["system.pdv"] = Math.min(max, Math.max(current, oldCurrent + hpGain));
-    else if (current > max) update["system.pdv"] = max;
-
-    if (Object.keys(update).length) await actor.update(update, { add2eInternal: true, add2eReason: reason });
-    return true;
-  } catch (err) {
-    console.warn("[ADD2E][MULTICLASSE][PV][SYNC_ERROR]", { actor: actor?.name, reason, err });
-    return false;
-  } finally {
-    ADD2E_MULTICLASS_HP_SYNC_LOCK.delete(actor.id);
-  }
-}
+const ADD2E_CHARACTER_DATA_PREP_VERSION = "2026-07-27-canonical-hit-points-consumers-v2";
+globalThis.ADD2E_CHARACTER_DATA_PREP_VERSION = ADD2E_CHARACTER_DATA_PREP_VERSION;
 
 const ADD2E_CARAC_CHANGE_KEYS = Object.freeze([
   "force", "force_base", "force_ex",
@@ -71,6 +19,29 @@ const ADD2E_CARAC_RECALC_REASONS = new Set([
   "ability-derived-recalculate"
 ]);
 
+function add2eModifierList(raw) {
+  if (Array.isArray(raw)) return raw;
+  if (raw && typeof raw === "object") return Object.values(raw);
+  return [];
+}
+
+function add2eModifierListHasDomain(raw, domain) {
+  const expected = String(domain ?? "").trim().toLowerCase();
+  return add2eModifierList(raw).some(modifier => String(modifier?.domain ?? "").trim().toLowerCase() === expected);
+}
+
+function add2eChangesTouchModifiers(changes = {}) {
+  if (!changes || typeof changes !== "object") return false;
+  if (Object.prototype.hasOwnProperty.call(changes, "flags.add2e.modifiers")) return true;
+  if (Object.prototype.hasOwnProperty.call(changes, "flags.add2e.-=modifiers")) return true;
+  if (foundry.utils.hasProperty(changes, "flags.add2e.modifiers")) return true;
+  const nested = changes?.flags?.add2e;
+  return Boolean(nested && typeof nested === "object" && (
+    Object.prototype.hasOwnProperty.call(nested, "modifiers")
+    || Object.prototype.hasOwnProperty.call(nested, "-=modifiers")
+  ));
+}
+
 function add2eActorUpdateChangesCharacteristic(changes = {}) {
   const system = changes?.system && typeof changes.system === "object" ? changes.system : {};
   const systemChanged = ADD2E_CARAC_CHANGE_KEYS.some(key => {
@@ -79,10 +50,14 @@ function add2eActorUpdateChangesCharacteristic(changes = {}) {
       || Object.prototype.hasOwnProperty.call(changes, path)
       || foundry.utils.hasProperty(changes, path);
   });
-  return systemChanged
-    || Object.prototype.hasOwnProperty.call(changes, "flags.add2e.modifiers")
-    || foundry.utils.hasProperty(changes, "flags.add2e.modifiers");
+  return systemChanged || add2eChangesTouchModifiers(changes);
 }
+
+function add2eActorUpdateChangesHitPoints(changes = {}) {
+  return add2eChangesTouchModifiers(changes);
+}
+
+const ADD2E_ACTOR_HP_RECALC_LOCK = new Set();
 
 Hooks.on("updateActor", async (actor, changes = {}, options = {}, _userId) => {
   if (options?._fromSync) return;
@@ -91,11 +66,11 @@ Hooks.on("updateActor", async (actor, changes = {}, options = {}, _userId) => {
   if (changeKeys.length === 1 && changeKeys[0] === "_id") return;
 
   const caracChanged = actor?.type === "personnage" && add2eActorUpdateChangesCharacteristic(changes);
+  const hitPointModifiersChanged = add2eActorUpdateChangesHitPoints(changes);
   const caracRecalculation = ADD2E_CARAC_RECALC_REASONS.has(String(options?.add2eReason ?? ""));
-  if (options?.add2eInternal && (!caracChanged || caracRecalculation)) return;
 
   // =====================================================
-  // 0) Garde anti-boucle + gestion PV au changement de niveau
+  // 0) Niveau : validation et consommateurs non-PV
   // =====================================================
   if (changes?.system && Object.prototype.hasOwnProperty.call(changes.system, "niveau")) {
     const clamp = add2eClampLevelToClassMax(actor, changes.system.niveau, null, { notify: true });
@@ -103,24 +78,8 @@ Hooks.on("updateActor", async (actor, changes = {}, options = {}, _userId) => {
       await actor.update({ "system.niveau": clamp.level }, { add2eInternal: true });
       changes.system.niveau = clamp.level;
     }
-  }
 
-  if (changes?.system && Object.prototype.hasOwnProperty.call(changes.system, "niveau")) {
     const lvl = Number(changes.system.niveau) || Number(actor.system?.niveau) || 1;
-
-    try {
-      if (actor.sheet?.autoSetPointsDeCoup) {
-        await actor.sheet.autoSetPointsDeCoup({ syncCurrent: true, force: true, reason: "level-change" });
-      } else {
-        const classeItem = actor.items?.find(i => i.type === "classe");
-        const prog = classeItem?.system?.progression;
-        const hpMax = Array.isArray(prog) && prog[lvl - 1] && prog[lvl - 1].pdv !== undefined ? Number(prog[lvl - 1].pdv) : NaN;
-        if (Number.isFinite(hpMax) && hpMax > 0) {
-          await actor.update({ "system.points_de_coup": hpMax, "system.pdv": hpMax }, { add2eInternal: true });
-        }
-      }
-    } catch (_e) {}
-
     try {
       await add2eSyncMonkUnarmedWeapon(actor);
     } catch (_e) {}
@@ -132,21 +91,24 @@ Hooks.on("updateActor", async (actor, changes = {}, options = {}, _userId) => {
     }
   }
 
-  if (add2eMulticlassHpRelevant(changes)) {
-    await add2eSyncMulticlassHp(actor, { force: false, syncCurrent: false, reason: "multiclass-field-change" });
-  }
-
   // =====================================================
   // 1) Recalcul des caractéristiques par le résolveur unique
   // =====================================================
+  let hitPointsHandledByCharacteristics = false;
   try {
-    if (caracChanged && !ACTIVE_CARAC_AUTO.has(actor.id)) {
+    const skipCarac = (options?.add2eInternal && caracRecalculation)
+      || options?.add2eHitPointModifierUpdate === true
+      || options?.add2eHitPointModifierMigration === true
+      || options?.add2eHitPointResolution === true;
+    if (caracChanged && !skipCarac && !ACTIVE_CARAC_AUTO.has(actor.id)) {
       ACTIVE_CARAC_AUTO.add(actor.id);
       try {
         if (typeof actor.sheet?.autoSetCaracAjustements === "function") {
           await actor.sheet.autoSetCaracAjustements();
+          hitPointsHandledByCharacteristics = true;
         } else if (typeof actor.autoSetCaracAjustements === "function") {
           await actor.autoSetCaracAjustements();
+          hitPointsHandledByCharacteristics = true;
         }
         if (actor.sheet?.rendered) actor.sheet.render(false);
       } finally {
@@ -156,7 +118,26 @@ Hooks.on("updateActor", async (actor, changes = {}, options = {}, _userId) => {
   } catch (_e) {}
 
   // =====================================================
-  // 2) Gestion auto des états INCONSCIENT / MORT (PV)
+  // 2) Recalcul des PV uniquement après mutation de modificateurs
+  // =====================================================
+  try {
+    const alreadyHandled = options?.add2eHitPointModifierUpdate === true
+      || options?.add2eHitPointModifierMigration === true
+      || options?.add2eHitPointResolution === true;
+    if (hitPointModifiersChanged && !hitPointsHandledByCharacteristics && !alreadyHandled && !ADD2E_ACTOR_HP_RECALC_LOCK.has(actor.id)) {
+      ADD2E_ACTOR_HP_RECALC_LOCK.add(actor.id);
+      try {
+        if (typeof globalThis.add2eRecalculateHitPoints === "function") {
+          await globalThis.add2eRecalculateHitPoints(actor, { reason: "actor-hit-point-modifiers" });
+        }
+      } finally {
+        ADD2E_ACTOR_HP_RECALC_LOCK.delete(actor.id);
+      }
+    }
+  } catch (_e) {}
+
+  // =====================================================
+  // 3) Gestion auto des états INCONSCIENT / MORT (PV courants)
   // =====================================================
   try {
     if (game.user.isGM && game.user.id === game.users.activeGM?.id) {
@@ -205,7 +186,7 @@ Hooks.on("updateActor", async (actor, changes = {}, options = {}, _userId) => {
   } catch (_e) {}
 
   // =====================================================
-  // 3) Synchronisation des tokens liés
+  // 4) Synchronisation des tokens liés
   //    Pour les tokens liés, Foundry synchronise déjà.
   // =====================================================
   try {
@@ -213,53 +194,51 @@ Hooks.on("updateActor", async (actor, changes = {}, options = {}, _userId) => {
   } catch (_e) {}
 });
 
-function add2eModifierListHasAbility(raw) {
-  const list = Array.isArray(raw) ? raw : (raw && typeof raw === "object" ? Object.values(raw) : []);
-  return list.some(modifier => String(modifier?.domain ?? "").trim().toLowerCase() === "ability");
-}
-
-function add2eDocumentHasAbilityModifier(document) {
-  if (add2eModifierListHasAbility(document?.flags?.add2e?.modifiers)) return true;
+function add2eDocumentHasModifierDomain(document, domain) {
+  if (add2eModifierListHasDomain(document?.flags?.add2e?.modifiers, domain)) return true;
   const effects = Array.from(document?.effects?.contents ?? document?.effects ?? []);
-  return effects.some(effect => effect?.disabled !== true && add2eModifierListHasAbility(effect?.flags?.add2e?.modifiers));
+  return effects.some(effect => effect?.disabled !== true && add2eModifierListHasDomain(effect?.flags?.add2e?.modifiers, domain));
 }
 
-function add2eChangesTouchModifiers(changes = {}) {
-  if (!changes || typeof changes !== "object") return false;
-  if (Object.prototype.hasOwnProperty.call(changes, "flags.add2e.modifiers")) return true;
-  if (Object.prototype.hasOwnProperty.call(changes, "flags.add2e.-=modifiers")) return true;
-  if (foundry.utils.hasProperty(changes, "flags.add2e.modifiers")) return true;
-  const nested = changes?.flags?.add2e;
-  return Boolean(nested && typeof nested === "object" && (
-    Object.prototype.hasOwnProperty.call(nested, "modifiers")
-    || Object.prototype.hasOwnProperty.call(nested, "-=modifiers")
-  ));
-}
+const ADD2E_EFFECT_MODIFIER_RECALC_LOCK = new Set();
+async function add2eRecalculateAfterModifierDocument(document, changes = null) {
+  const touchesModifiers = add2eChangesTouchModifiers(changes);
+  const abilityChanged = add2eDocumentHasModifierDomain(document, "ability") || touchesModifiers;
+  const hitPointsChanged = add2eDocumentHasModifierDomain(document, "hit-points") || touchesModifiers;
+  if (!abilityChanged && !hitPointsChanged) return;
 
-const ADD2E_EFFECT_CARAC_RECALC_LOCK = new Set();
-async function add2eRecalculateCharacteristicsAfterModifierDocument(document, changes = null) {
-  if (!add2eDocumentHasAbilityModifier(document) && !add2eChangesTouchModifiers(changes)) return;
   const parent = document?.parent ?? document?.actor ?? null;
   const actor = parent?.documentName === "Actor" ? parent : parent?.actor ?? null;
-  if (!actor?.system || actor.type !== "personnage" || ADD2E_EFFECT_CARAC_RECALC_LOCK.has(actor.id)) return;
+  if (!actor?.system || ADD2E_EFFECT_MODIFIER_RECALC_LOCK.has(actor.id)) return;
 
-  ADD2E_EFFECT_CARAC_RECALC_LOCK.add(actor.id);
+  ADD2E_EFFECT_MODIFIER_RECALC_LOCK.add(actor.id);
   try {
     await new Promise(resolve => setTimeout(resolve, 0));
-    if (typeof actor.sheet?.autoSetCaracAjustements === "function") await actor.sheet.autoSetCaracAjustements();
-    else if (typeof actor.autoSetCaracAjustements === "function") await actor.autoSetCaracAjustements();
+    let hitPointsHandled = false;
+    if (abilityChanged && actor.type === "personnage") {
+      if (typeof actor.sheet?.autoSetCaracAjustements === "function") {
+        await actor.sheet.autoSetCaracAjustements();
+        hitPointsHandled = true;
+      } else if (typeof actor.autoSetCaracAjustements === "function") {
+        await actor.autoSetCaracAjustements();
+        hitPointsHandled = true;
+      }
+    }
+    if (hitPointsChanged && !hitPointsHandled && typeof globalThis.add2eRecalculateHitPoints === "function") {
+      await globalThis.add2eRecalculateHitPoints(actor, { reason: "modifier-document-hit-points" });
+    }
     if (actor.sheet?.rendered) actor.sheet.render(false);
   } finally {
-    ADD2E_EFFECT_CARAC_RECALC_LOCK.delete(actor.id);
+    ADD2E_EFFECT_MODIFIER_RECALC_LOCK.delete(actor.id);
   }
 }
 
-Hooks.on("createActiveEffect", effect => add2eRecalculateCharacteristicsAfterModifierDocument(effect));
-Hooks.on("updateActiveEffect", (effect, changes) => add2eRecalculateCharacteristicsAfterModifierDocument(effect, changes));
-Hooks.on("deleteActiveEffect", effect => add2eRecalculateCharacteristicsAfterModifierDocument(effect));
-Hooks.on("createItem", item => add2eRecalculateCharacteristicsAfterModifierDocument(item));
-Hooks.on("updateItem", (item, changes) => add2eRecalculateCharacteristicsAfterModifierDocument(item, changes));
-Hooks.on("deleteItem", item => add2eRecalculateCharacteristicsAfterModifierDocument(item));
+Hooks.on("createActiveEffect", effect => add2eRecalculateAfterModifierDocument(effect));
+Hooks.on("updateActiveEffect", (effect, changes) => add2eRecalculateAfterModifierDocument(effect, changes));
+Hooks.on("deleteActiveEffect", effect => add2eRecalculateAfterModifierDocument(effect));
+Hooks.on("createItem", item => add2eRecalculateAfterModifierDocument(item));
+Hooks.on("updateItem", (item, changes) => add2eRecalculateAfterModifierDocument(item, changes));
+Hooks.on("deleteItem", item => add2eRecalculateAfterModifierDocument(item));
 
 async function consommerSortMemorise(actor, nomSort, niveau = 1) {
   const chemin = `system.memorized.${niveau}.${nomSort}`;
@@ -330,17 +309,7 @@ Hooks.once("ready", () => {
   })();
 });
 
-Hooks.once("ready", () => {
-  window.setTimeout(() => {
-    if (!game.user?.isGM) return;
-    for (const actor of game.actors?.contents ?? []) {
-      add2eSyncMulticlassHp(actor, { force: false, syncCurrent: false, reason: "ready-multiclass-hp-clamp" });
-    }
-  }, 750);
-});
-
 try { globalThis.consommerSortMemorise = consommerSortMemorise; } catch (_e) {}
 try { globalThis.majImageToken = majImageToken; } catch (_e) {}
 try { globalThis.plageToRollFormula = plageToRollFormula; } catch (_e) {}
 try { globalThis.rollHitDice = rollHitDice; } catch (_e) {}
-try { globalThis.add2eSyncMulticlassHp = add2eSyncMulticlassHp; } catch (_e) {}
