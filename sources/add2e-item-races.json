@@ -1,0 +1,1352 @@
+{
+  "exporter": "ADD2E compendium export",
+  "version": "2026-07-27-add2e-export-compendiums-v1",
+  "exportedAt": "2026-07-27T11:07:33.390Z",
+  "world": "test-clerc",
+  "worldTitle": "test clerc",
+  "system": "add2e",
+  "systemVersion": "0.1.21",
+  "compendium": {
+    "collection": "add2e.races",
+    "label": "Races",
+    "documentName": "Item",
+    "packageName": "add2e",
+    "packageType": "system",
+    "packName": "races"
+  },
+  "folders": [],
+  "count": 8,
+  "documents": [
+    {
+      "name": "Demi-orque",
+      "type": "race",
+      "img": "systems/add2e/assets/icones/races/Demi-orc.webp",
+      "system": {
+        "bonus_caracteristiques": {
+          "force": 1,
+          "dexterite": 0,
+          "constitution": 1,
+          "intelligence": 0,
+          "sagesse": 0,
+          "charisme": -2
+        },
+        "vitesse": 36,
+        "langues": [
+          "commun",
+          "orque"
+        ],
+        "label": "Demi-orque",
+        "tags": [
+          "race:demi_orque"
+        ],
+        "slug": "demi_orque",
+        "vitesse_deplacement": 36,
+        "identityTags": [
+          "race:demi_orque"
+        ],
+        "effectTags": [],
+        "racialProfile": {
+          "id": "demi_orque",
+          "version": 1,
+          "vision": {
+            "type": "infravision",
+            "range": 18
+          },
+          "passives": [
+            {
+              "id": "vision",
+              "label": "Infravision 18 m",
+              "description": "Infravision jusqu’à 18 m."
+            },
+            {
+              "id": "social",
+              "label": "Charisme envers les orques",
+              "description": "La pénalité de Charisme ne s’applique pas aux orques et demi-orques."
+            }
+          ],
+          "capabilities": []
+        },
+        "multiclassing": {
+          "enabled": true,
+          "mode": "multiclass",
+          "dualClassAllowed": false,
+          "allowedCombinations": [
+            {
+              "key": "clerc_guerrier",
+              "label": "Clerc / Guerrier",
+              "classes": [
+                "clerc",
+                "guerrier"
+              ],
+              "restrictions": []
+            },
+            {
+              "key": "clerc_voleur",
+              "label": "Clerc / Voleur",
+              "classes": [
+                "clerc",
+                "voleur"
+              ],
+              "restrictions": [
+                "thief_equipment"
+              ]
+            },
+            {
+              "key": "clerc_assassin",
+              "label": "Clerc / Assassin",
+              "classes": [
+                "clerc",
+                "assassin"
+              ],
+              "restrictions": [
+                "thief_equipment"
+              ]
+            },
+            {
+              "key": "guerrier_voleur",
+              "label": "Guerrier / Voleur",
+              "classes": [
+                "guerrier",
+                "voleur"
+              ],
+              "restrictions": [
+                "thief_equipment"
+              ]
+            },
+            {
+              "key": "guerrier_assassin",
+              "label": "Guerrier / Assassin",
+              "classes": [
+                "guerrier",
+                "assassin"
+              ],
+              "restrictions": [
+                "thief_equipment"
+              ]
+            }
+          ]
+        },
+        "thief_adjustments": {
+          "pickpocket": -5,
+          "crochetage_serrures": 5,
+          "detection_pieges": 5,
+          "ecoute": 5,
+          "escalade": 5,
+          "lecture_langues": -10
+        }
+      },
+      "effects": [],
+      "folder": null,
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Races",
+          "sourceFolderId": "U2lknhPsNDXeVax4",
+          "exportedAt": "2026-05-24T15:21:36.034Z"
+        },
+        "add2e": {
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-07-02T16:14:04.339Z"
+        }
+      },
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.20",
+        "createdTime": 1783008862642,
+        "modifiedTime": 1783182014181,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": "Compendium.add2e.races.Item.EMPQreDkjJAjP62n",
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_id": "40qNeGn7oUlsf9TC",
+      "sort": 0
+    },
+    {
+      "name": "Petite-gens",
+      "type": "race",
+      "img": "systems/add2e/assets/icones/races/petite_gens.webp",
+      "system": {
+        "bonus_caracteristiques": {
+          "force": -1,
+          "dexterite": 1,
+          "constitution": 0,
+          "intelligence": 0,
+          "sagesse": 0,
+          "charisme": 0
+        },
+        "vitesse": 18,
+        "langues": "commun,petite-gens,gnome,elfe",
+        "label": "Petite-gens",
+        "tags": [
+          "race:petite_gens"
+        ],
+        "slug": "petite_gens",
+        "vitesse_deplacement": 18,
+        "identityTags": [
+          "race:petite_gens"
+        ],
+        "effectTags": [],
+        "racialProfile": {
+          "id": "petite_gens",
+          "version": 1,
+          "saveBonuses": [
+            {
+              "mode": "constitution",
+              "categories": [
+                "poison",
+                "baguettes",
+                "sorts"
+              ]
+            }
+          ],
+          "passives": [
+            {
+              "id": "vision",
+              "label": "Infravision selon l’ascendance",
+              "description": "Sang mêlé : 9 m ; Costaud de pur sang : 18 m. Sous-race à préciser."
+            },
+            {
+              "id": "save",
+              "label": "Résistance des petites-gens",
+              "description": "Bonus de Constitution contre poison, baguettes, bâtons, bâtonnets et sorts."
+            }
+          ],
+          "capabilities": [
+            {
+              "id": "pente",
+              "label": "Détecter une pente",
+              "description": "Jet 1d4 : réussite ≤ 3. Conditions : recherche active, souterrain, concentration.",
+              "formula": "1d4",
+              "successAt": 3,
+              "requires": [
+                "search_active",
+                "underground",
+                "concentration"
+              ]
+            },
+            {
+              "id": "direction",
+              "label": "Déterminer la direction",
+              "description": "Jet 1d2 : réussite ≤ 1. Conditions : recherche active, souterrain, concentration.",
+              "formula": "1d2",
+              "successAt": 1,
+              "requires": [
+                "search_active",
+                "underground",
+                "concentration"
+              ]
+            },
+            {
+              "id": "surprise_sans_porte",
+              "label": "Surprise des petites-gens",
+              "description": "Jet 1d6 : réussite ≤ 4. Conditions : isolé, sans armure de métal.",
+              "formula": "1d6",
+              "successAt": 4,
+              "requires": [
+                "alone",
+                "no_metal_armor"
+              ]
+            },
+            {
+              "id": "surprise_avec_porte",
+              "label": "Surprise des petites-gens après ouverture de porte",
+              "description": "Jet 1d6 : réussite ≤ 2. Conditions : isolé, sans armure de métal, porte ouverte.",
+              "formula": "1d6",
+              "successAt": 2,
+              "requires": [
+                "alone",
+                "no_metal_armor",
+                "opens_door"
+              ]
+            }
+          ]
+        },
+        "multiclassing": {
+          "enabled": true,
+          "mode": "multiclass",
+          "dualClassAllowed": false,
+          "allowedCombinations": [
+            {
+              "key": "guerrier_voleur",
+              "label": "Guerrier / Voleur",
+              "classes": [
+                "guerrier",
+                "voleur"
+              ],
+              "restrictions": [
+                "thief_equipment"
+              ]
+            }
+          ]
+        },
+        "thief_adjustments": {
+          "pickpocket": 5,
+          "crochetage_serrures": 5,
+          "detection_pieges": 5,
+          "deplacement_silencieux": 10,
+          "dissimulation": 15,
+          "ecoute": 5,
+          "escalade": -15,
+          "lecture_langues": -5
+        }
+      },
+      "effects": [],
+      "folder": null,
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Races",
+          "sourceFolderId": "U2lknhPsNDXeVax4",
+          "exportedAt": "2026-05-24T15:21:36.034Z"
+        },
+        "add2e": {
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-07-02T16:14:05.998Z"
+        }
+      },
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.20",
+        "createdTime": 1783008862658,
+        "modifiedTime": 1783182014373,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": "Compendium.add2e.races.Item.VCIowLv0LJ7fNran",
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_id": "A7YqeCgrLQaKOh00",
+      "sort": 0
+    },
+    {
+      "name": "Gnome",
+      "type": "race",
+      "img": "systems/add2e/assets/icones/races/Gnome.webp",
+      "system": {
+        "bonus_caracteristiques": {},
+        "vitesse": 18,
+        "langues": "",
+        "label": "Gnome",
+        "tags": [
+          "race:gnome"
+        ],
+        "slug": "gnome",
+        "vitesse_deplacement": 18,
+        "identityTags": [
+          "race:gnome"
+        ],
+        "effectTags": [],
+        "racialProfile": {
+          "id": "gnome",
+          "version": 1,
+          "vision": {
+            "type": "infravision",
+            "range": 18
+          },
+          "saveBonuses": [
+            {
+              "mode": "constitution",
+              "categories": [
+                "baguettes",
+                "sorts"
+              ]
+            }
+          ],
+          "attackModifiers": [
+            {
+              "mode": "bonus_touche_vs",
+              "targets": [
+                "kobold",
+                "gobelin"
+              ],
+              "value": 1
+            },
+            {
+              "mode": "bonus_ca_vs",
+              "targets": [
+                "gnoll",
+                "goblour",
+                "ogre",
+                "troll",
+                "ogre_mage",
+                "geant",
+                "titan"
+              ],
+              "value": 4
+            }
+          ],
+          "passives": [
+            {
+              "id": "vision",
+              "label": "Infravision 18 m",
+              "description": "Infravision jusqu’à 18 m."
+            },
+            {
+              "id": "save",
+              "label": "Résistance à la magie",
+              "description": "Bonus de Constitution contre baguettes, bâtons, bâtonnets et sorts."
+            },
+            {
+              "id": "combat",
+              "label": "Combat racial",
+              "description": "+1 contre kobolds/gobelins ; -4 aux attaquants désignés."
+            }
+          ],
+          "capabilities": [
+            {
+              "id": "pente",
+              "label": "Détecter une pente",
+              "description": "Jet 1d10 : réussite ≤ 8. Conditions : recherche active, souterrain, à 3 m ou moins, concentration.",
+              "formula": "1d10",
+              "successAt": 8,
+              "requires": [
+                "search_active",
+                "underground",
+                "within_three_meters",
+                "concentration"
+              ]
+            },
+            {
+              "id": "paroi_fragile",
+              "label": "Détecter une paroi fragile",
+              "description": "Jet 1d10 : réussite ≤ 7. Conditions : recherche active, souterrain, à 3 m ou moins, concentration.",
+              "formula": "1d10",
+              "successAt": 7,
+              "requires": [
+                "search_active",
+                "underground",
+                "within_three_meters",
+                "concentration"
+              ]
+            },
+            {
+              "id": "profondeur",
+              "label": "Déterminer la profondeur",
+              "description": "Jet 1d10 : réussite ≤ 6. Conditions : recherche active, souterrain, concentration.",
+              "formula": "1d10",
+              "successAt": 6,
+              "requires": [
+                "search_active",
+                "underground",
+                "concentration"
+              ]
+            },
+            {
+              "id": "direction",
+              "label": "Déterminer la direction",
+              "description": "Jet 1d2 : réussite ≤ 1. Conditions : recherche active, souterrain, concentration.",
+              "formula": "1d2",
+              "successAt": 1,
+              "requires": [
+                "search_active",
+                "underground",
+                "concentration"
+              ]
+            }
+          ]
+        },
+        "multiclassing": {
+          "enabled": true,
+          "mode": "multiclass",
+          "dualClassAllowed": false,
+          "allowedCombinations": [
+            {
+              "key": "guerrier_illusionniste",
+              "label": "Guerrier / Illusionniste",
+              "classes": [
+                "guerrier",
+                "illusionniste"
+              ],
+              "restrictions": []
+            },
+            {
+              "key": "guerrier_voleur",
+              "label": "Guerrier / Voleur",
+              "classes": [
+                "guerrier",
+                "voleur"
+              ],
+              "restrictions": [
+                "thief_equipment"
+              ]
+            },
+            {
+              "key": "illusionniste_voleur",
+              "label": "Illusionniste / Voleur",
+              "classes": [
+                "illusionniste",
+                "voleur"
+              ],
+              "restrictions": [
+                "thief_equipment"
+              ]
+            }
+          ]
+        },
+        "thief_adjustments": {
+          "crochetage_serrures": 5,
+          "detection_pieges": 10,
+          "deplacement_silencieux": 5,
+          "dissimulation": 5,
+          "ecoute": 10,
+          "escalade": -15
+        }
+      },
+      "effects": [],
+      "folder": null,
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Races",
+          "sourceFolderId": "U2lknhPsNDXeVax4",
+          "exportedAt": "2026-05-24T15:21:36.034Z"
+        },
+        "add2e": {
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-07-02T16:14:04.930Z"
+        }
+      },
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.20",
+        "createdTime": 1783008862647,
+        "modifiedTime": 1783182014248,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": "Compendium.add2e.races.Item.9i1b1XIknvRTMfQa",
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_id": "Hh11saX8n8lgLybo",
+      "sort": 0
+    },
+    {
+      "name": "Demi-elfe",
+      "type": "race",
+      "img": "systems/add2e/assets/icones/races/Demi-elfe.webp",
+      "system": {
+        "bonus_caracteristiques": {
+          "force": 0,
+          "dexterite": 0,
+          "constitution": 0,
+          "intelligence": 0,
+          "sagesse": 0,
+          "charisme": 0
+        },
+        "vitesse": 36,
+        "langues": [
+          "elfe",
+          "commun",
+          "gnome",
+          "petite-gens",
+          "gobelin",
+          "hobgobelin",
+          "orque",
+          "gnoll"
+        ],
+        "label": "Demi-elfe",
+        "tags": [
+          "race:demi_elfe"
+        ],
+        "slug": "demi_elfe",
+        "vitesse_deplacement": 36,
+        "identityTags": [
+          "race:demi_elfe"
+        ],
+        "effectTags": [],
+        "racialProfile": {
+          "id": "demi_elfe",
+          "version": 1,
+          "vision": {
+            "type": "infravision",
+            "range": 18
+          },
+          "resistances": [
+            {
+              "types": [
+                "charme",
+                "sommeil"
+              ],
+              "percent": 30
+            }
+          ],
+          "passives": [
+            {
+              "id": "vision",
+              "label": "Infravision 18 m",
+              "description": "Infravision jusqu’à 18 m."
+            },
+            {
+              "id": "resist",
+              "label": "Résistance charme et sommeil",
+              "description": "Résistance de 30 % aux charmes et au sommeil."
+            }
+          ],
+          "capabilities": [
+            {
+              "id": "porte_derobee_passage",
+              "label": "Détection d’une porte dérobée",
+              "description": "Jet 1d6 : réussite ≤ 1. Conditions : à 3 m ou moins.",
+              "formula": "1d6",
+              "successAt": 1,
+              "requires": [
+                "within_three_meters"
+              ]
+            },
+            {
+              "id": "porte_derobee_recherche",
+              "label": "Recherche d’une porte dérobée",
+              "description": "Jet 1d6 : réussite ≤ 3. Conditions : recherche active, à 3 m ou moins.",
+              "formula": "1d6",
+              "successAt": 3,
+              "requires": [
+                "search_active",
+                "within_three_meters"
+              ]
+            },
+            {
+              "id": "porte_secrete_recherche",
+              "label": "Recherche d’une porte secrète",
+              "description": "Jet 1d6 : réussite ≤ 2. Conditions : recherche active, à 3 m ou moins.",
+              "formula": "1d6",
+              "successAt": 2,
+              "requires": [
+                "search_active",
+                "within_three_meters"
+              ]
+            }
+          ]
+        },
+        "multiclassing": {
+          "enabled": true,
+          "mode": "multiclass",
+          "dualClassAllowed": false,
+          "allowedCombinations": [
+            {
+              "key": "clerc_guerrier",
+              "label": "Clerc / Guerrier",
+              "classes": [
+                "clerc",
+                "guerrier"
+              ],
+              "restrictions": []
+            },
+            {
+              "key": "clerc_guerrier_magicien",
+              "label": "Clerc / Guerrier / Magicien",
+              "classes": [
+                "clerc",
+                "guerrier",
+                "magicien"
+              ],
+              "restrictions": []
+            },
+            {
+              "key": "clerc_ranger",
+              "label": "Clerc / Ranger",
+              "classes": [
+                "clerc",
+                "ranger"
+              ],
+              "restrictions": []
+            },
+            {
+              "key": "clerc_magicien",
+              "label": "Clerc / Magicien",
+              "classes": [
+                "clerc",
+                "magicien"
+              ],
+              "restrictions": []
+            },
+            {
+              "key": "guerrier_magicien",
+              "label": "Guerrier / Magicien",
+              "classes": [
+                "guerrier",
+                "magicien"
+              ],
+              "restrictions": []
+            },
+            {
+              "key": "guerrier_voleur",
+              "label": "Guerrier / Voleur",
+              "classes": [
+                "guerrier",
+                "voleur"
+              ],
+              "restrictions": [
+                "thief_equipment"
+              ]
+            },
+            {
+              "key": "guerrier_magicien_voleur",
+              "label": "Guerrier / Magicien / Voleur",
+              "classes": [
+                "guerrier",
+                "magicien",
+                "voleur"
+              ],
+              "restrictions": [
+                "thief_equipment"
+              ]
+            },
+            {
+              "key": "magicien_voleur",
+              "label": "Magicien / Voleur",
+              "classes": [
+                "magicien",
+                "voleur"
+              ],
+              "restrictions": [
+                "thief_equipment"
+              ]
+            }
+          ]
+        },
+        "thief_adjustments": {
+          "pickpocket": 10,
+          "dissimulation": 5
+        }
+      },
+      "effects": [],
+      "folder": null,
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Races",
+          "sourceFolderId": "U2lknhPsNDXeVax4",
+          "exportedAt": "2026-05-24T15:21:36.034Z"
+        },
+        "add2e": {
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-07-02T16:14:03.938Z"
+        }
+      },
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.20",
+        "createdTime": 1783008862635,
+        "modifiedTime": 1783182014148,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": "Compendium.add2e.races.Item.78hXUeNx3SKHN18o",
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_id": "XXamEA05aNNYwaXc",
+      "sort": 0
+    },
+    {
+      "name": "Humain",
+      "type": "race",
+      "img": "systems/add2e/assets/icones/races/Humain.webp",
+      "system": {
+        "bonus_caracteristiques": {
+          "force": 0,
+          "dexterite": 0,
+          "constitution": 0,
+          "intelligence": 0,
+          "sagesse": 0,
+          "charisme": 0
+        },
+        "vitesse": 36,
+        "langues": "",
+        "label": "Humain",
+        "tags": [
+          "race:humain"
+        ],
+        "slug": "humain",
+        "vitesse_deplacement": 36,
+        "identityTags": [
+          "race:humain"
+        ],
+        "effectTags": [],
+        "racialProfile": {
+          "id": "humain",
+          "version": 1,
+          "passives": [],
+          "capabilities": []
+        },
+        "multiclassing": {
+          "enabled": false,
+          "mode": "single_or_dualclass",
+          "dualClassAllowed": true,
+          "allowedCombinations": []
+        }
+      },
+      "effects": [],
+      "folder": null,
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Races",
+          "sourceFolderId": "U2lknhPsNDXeVax4",
+          "exportedAt": "2026-05-24T15:21:36.034Z"
+        },
+        "add2e": {
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-07-02T16:14:05.210Z"
+        }
+      },
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.20",
+        "createdTime": 1783008862650,
+        "modifiedTime": 1783182014279,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": "Compendium.add2e.races.Item.Q9vxzz2IeQqCEcRV",
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_id": "kFi2qbTyr4ekxaaj",
+      "sort": 0
+    },
+    {
+      "name": "Kender",
+      "type": "race",
+      "img": "icons/creatures/mammals/humanoid-halfling-green.webp",
+      "system": {
+        "bonus_caracteristiques": {
+          "force": -1,
+          "dexterite": 1,
+          "constitution": 0,
+          "intelligence": 0,
+          "sagesse": 0,
+          "charisme": 0
+        },
+        "vitesse": 24,
+        "langues": "commun,kenderspeak,patois",
+        "label": "Kender",
+        "tags": [
+          "race:kender"
+        ],
+        "slug": "kender",
+        "vitesse_deplacement": 24,
+        "identityTags": [
+          "race:kender"
+        ],
+        "effectTags": [],
+        "racialProfile": {
+          "id": "kender",
+          "version": 1,
+          "immunities": [
+            "peur"
+          ],
+          "passives": [
+            {
+              "id": "peur",
+              "label": "Immunité à la peur",
+              "description": "Le Kender est immunisé à la peur."
+            },
+            {
+              "id": "poison",
+              "label": "Poison de campagne",
+              "description": "Aucun bonus automatique : règle de campagne."
+            }
+          ],
+          "capabilities": []
+        },
+        "multiclassing": {
+          "enabled": false,
+          "mode": "campaign_extension",
+          "dualClassAllowed": false,
+          "allowedCombinations": []
+        },
+        "thief_adjustments": {
+          "pickpocket": 5,
+          "crochetage_serrures": 5,
+          "detection_pieges": 5,
+          "deplacement_silencieux": 10,
+          "dissimulation": 10,
+          "ecoute": 5,
+          "escalade": 5,
+          "lecture_langues": -5
+        },
+        "onUse": "scripts/kender.js"
+      },
+      "effects": [],
+      "folder": null,
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Races",
+          "sourceFolderId": "U2lknhPsNDXeVax4",
+          "exportedAt": "2026-05-24T15:21:36.034Z"
+        },
+        "add2e": {
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-07-02T16:14:05.332Z"
+        }
+      },
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.20",
+        "createdTime": 1783008862652,
+        "modifiedTime": 1783182014315,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": "Compendium.add2e.races.Item.gLSvOk7uIOlsroPO",
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_id": "kLLEiSqWFyRME8HJ",
+      "sort": 0
+    },
+    {
+      "name": "Nain",
+      "type": "race",
+      "img": "systems/add2e/assets/icones/races/nain.webp",
+      "system": {
+        "bonus_caracteristiques": {
+          "force": 0,
+          "dexterite": 0,
+          "constitution": 1,
+          "intelligence": 0,
+          "sagesse": 0,
+          "charisme": -1
+        },
+        "vitesse": 18,
+        "langues": "nain,gnome,gobelin,kobold,orque,commun",
+        "label": "Nain",
+        "tags": [
+          "race:nain"
+        ],
+        "slug": "nain",
+        "vitesse_deplacement": 18,
+        "identityTags": [
+          "race:nain"
+        ],
+        "effectTags": [],
+        "racialProfile": {
+          "id": "nain",
+          "version": 1,
+          "vision": {
+            "type": "infravision",
+            "range": 18
+          },
+          "saveBonuses": [
+            {
+              "mode": "constitution",
+              "categories": [
+                "poison",
+                "baguettes",
+                "sorts"
+              ]
+            }
+          ],
+          "attackModifiers": [
+            {
+              "mode": "bonus_touche_vs",
+              "targets": [
+                "demi_orque",
+                "gobelin",
+                "hobgobelin",
+                "orque"
+              ],
+              "value": 1
+            },
+            {
+              "mode": "bonus_ca_vs",
+              "targets": [
+                "ogre",
+                "troll",
+                "ogre_mage",
+                "geant",
+                "titan"
+              ],
+              "value": 4
+            }
+          ],
+          "passives": [
+            {
+              "id": "vision",
+              "label": "Infravision 18 m",
+              "description": "Infravision jusqu’à 18 m."
+            },
+            {
+              "id": "save",
+              "label": "Résistance naine",
+              "description": "Bonus de Constitution contre poison, baguettes, bâtons, bâtonnets et sorts."
+            },
+            {
+              "id": "combat",
+              "label": "Combat racial",
+              "description": "+1 contre demi-orques/gobelins/hobgobelins/orques ; -4 aux attaquants désignés."
+            },
+            {
+              "id": "social",
+              "label": "Charisme envers les nains",
+              "description": "La pénalité de Charisme ne s’applique pas aux nains."
+            }
+          ],
+          "capabilities": [
+            {
+              "id": "pente",
+              "label": "Détecter une pente",
+              "description": "Jet 1d4 : réussite ≤ 3. Conditions : recherche active, souterrain, à 3 m ou moins, concentration.",
+              "formula": "1d4",
+              "successAt": 3,
+              "requires": [
+                "search_active",
+                "underground",
+                "within_three_meters",
+                "concentration"
+              ]
+            },
+            {
+              "id": "construction_recente",
+              "label": "Détecter une construction récente",
+              "description": "Jet 1d4 : réussite ≤ 3. Conditions : recherche active, souterrain, à 3 m ou moins, concentration.",
+              "formula": "1d4",
+              "successAt": 3,
+              "requires": [
+                "search_active",
+                "underground",
+                "within_three_meters",
+                "concentration"
+              ]
+            },
+            {
+              "id": "paroi_mobile",
+              "label": "Détecter une paroi mobile",
+              "description": "Jet 1d6 : réussite ≤ 4. Conditions : recherche active, souterrain, à 3 m ou moins, concentration.",
+              "formula": "1d6",
+              "successAt": 4,
+              "requires": [
+                "search_active",
+                "underground",
+                "within_three_meters",
+                "concentration"
+              ]
+            },
+            {
+              "id": "piege_pierre",
+              "label": "Détecter un piège de pierre",
+              "description": "Jet 1d4 : réussite ≤ 2. Conditions : recherche active, souterrain, à 3 m ou moins, concentration.",
+              "formula": "1d4",
+              "successAt": 2,
+              "requires": [
+                "search_active",
+                "underground",
+                "within_three_meters",
+                "concentration"
+              ]
+            },
+            {
+              "id": "profondeur",
+              "label": "Déterminer la profondeur",
+              "description": "Jet 1d2 : réussite ≤ 1. Conditions : recherche active, souterrain, concentration.",
+              "formula": "1d2",
+              "successAt": 1,
+              "requires": [
+                "search_active",
+                "underground",
+                "concentration"
+              ]
+            }
+          ]
+        },
+        "multiclassing": {
+          "enabled": true,
+          "mode": "multiclass",
+          "dualClassAllowed": false,
+          "allowedCombinations": [
+            {
+              "key": "guerrier_voleur",
+              "label": "Guerrier / Voleur",
+              "classes": [
+                "guerrier",
+                "voleur"
+              ],
+              "restrictions": [
+                "thief_equipment"
+              ]
+            }
+          ]
+        },
+        "thief_adjustments": {
+          "crochetage_serrures": 10,
+          "detection_pieges": 15,
+          "escalade": -10,
+          "lecture_langues": -5
+        }
+      },
+      "effects": [],
+      "folder": null,
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Races",
+          "sourceFolderId": "U2lknhPsNDXeVax4",
+          "exportedAt": "2026-05-24T15:21:36.034Z"
+        },
+        "add2e": {
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-07-02T16:14:05.721Z"
+        }
+      },
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.20",
+        "createdTime": 1783008862654,
+        "modifiedTime": 1783182014345,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": "Compendium.add2e.races.Item.eAVWRK54vba0LKYR",
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_id": "seD9AULRReaN6wxW",
+      "sort": 0
+    },
+    {
+      "name": "Elfe",
+      "type": "race",
+      "img": "systems/add2e/assets/icones/races/Elfe.webp",
+      "system": {
+        "bonus_caracteristiques": {
+          "force": 0,
+          "dexterite": 1,
+          "constitution": -1,
+          "intelligence": 0,
+          "sagesse": 0,
+          "charisme": 0
+        },
+        "vitesse": 36,
+        "langues": "elfe,commun,gnome,petite-gens,gobelin,hobgobelin,orque,gnoll",
+        "label": "Elfe",
+        "tags": [
+          "race:elfe"
+        ],
+        "slug": "elfe",
+        "vitesse_deplacement": 36,
+        "identityTags": [
+          "race:elfe"
+        ],
+        "effectTags": [],
+        "racialProfile": {
+          "id": "elfe",
+          "version": 1,
+          "vision": {
+            "type": "infravision",
+            "range": 18
+          },
+          "resistances": [
+            {
+              "types": [
+                "charme",
+                "sommeil"
+              ],
+              "percent": 90
+            }
+          ],
+          "attackModifiers": [
+            {
+              "mode": "bonus_touche",
+              "weapons": [
+                "arc",
+                "epee_courte",
+                "epee_longue"
+              ],
+              "value": 1
+            }
+          ],
+          "passives": [
+            {
+              "id": "vision",
+              "label": "Infravision 18 m",
+              "description": "Infravision jusqu’à 18 m."
+            },
+            {
+              "id": "resist",
+              "label": "Résistance charme et sommeil",
+              "description": "Résistance de 90 % aux charmes et au sommeil."
+            },
+            {
+              "id": "armes",
+              "label": "Maîtrise des armes elfiques",
+              "description": "+1 au toucher avec arcs, épées courtes et épées longues."
+            }
+          ],
+          "capabilities": [
+            {
+              "id": "porte_derobee_passage",
+              "label": "Détection d’une porte dérobée",
+              "description": "Jet 1d6 : réussite ≤ 1. Conditions : à 3 m ou moins.",
+              "formula": "1d6",
+              "successAt": 1,
+              "requires": [
+                "within_three_meters"
+              ]
+            },
+            {
+              "id": "porte_derobee_recherche",
+              "label": "Recherche d’une porte dérobée",
+              "description": "Jet 1d6 : réussite ≤ 3. Conditions : recherche active, à 3 m ou moins.",
+              "formula": "1d6",
+              "successAt": 3,
+              "requires": [
+                "search_active",
+                "within_three_meters"
+              ]
+            },
+            {
+              "id": "porte_secrete_recherche",
+              "label": "Recherche d’une porte secrète",
+              "description": "Jet 1d6 : réussite ≤ 2. Conditions : recherche active, à 3 m ou moins.",
+              "formula": "1d6",
+              "successAt": 2,
+              "requires": [
+                "search_active",
+                "within_three_meters"
+              ]
+            },
+            {
+              "id": "surprise_sans_porte",
+              "label": "Surprise elfique",
+              "description": "Jet 1d6 : réussite ≤ 4. Conditions : isolé, sans armure de métal.",
+              "formula": "1d6",
+              "successAt": 4,
+              "requires": [
+                "alone",
+                "no_metal_armor"
+              ]
+            },
+            {
+              "id": "surprise_avec_porte",
+              "label": "Surprise elfique après ouverture de porte",
+              "description": "Jet 1d6 : réussite ≤ 2. Conditions : isolé, sans armure de métal, porte ouverte.",
+              "formula": "1d6",
+              "successAt": 2,
+              "requires": [
+                "alone",
+                "no_metal_armor",
+                "opens_door"
+              ]
+            }
+          ]
+        },
+        "multiclassing": {
+          "enabled": true,
+          "mode": "multiclass",
+          "dualClassAllowed": false,
+          "allowedCombinations": [
+            {
+              "key": "guerrier_magicien",
+              "label": "Guerrier / Magicien",
+              "classes": [
+                "guerrier",
+                "magicien"
+              ],
+              "restrictions": []
+            },
+            {
+              "key": "guerrier_voleur",
+              "label": "Guerrier / Voleur",
+              "classes": [
+                "guerrier",
+                "voleur"
+              ],
+              "restrictions": [
+                "thief_equipment"
+              ]
+            },
+            {
+              "key": "guerrier_magicien_voleur",
+              "label": "Guerrier / Magicien / Voleur",
+              "classes": [
+                "guerrier",
+                "magicien",
+                "voleur"
+              ],
+              "restrictions": [
+                "thief_equipment"
+              ]
+            },
+            {
+              "key": "magicien_voleur",
+              "label": "Magicien / Voleur",
+              "classes": [
+                "magicien",
+                "voleur"
+              ],
+              "restrictions": [
+                "thief_equipment"
+              ]
+            }
+          ]
+        },
+        "thief_adjustments": {
+          "pickpocket": 5,
+          "crochetage_serrures": -5,
+          "deplacement_silencieux": 5,
+          "dissimulation": 10,
+          "ecoute": 5
+        }
+      },
+      "effects": [],
+      "folder": null,
+      "flags": {
+        "add2eExport": {
+          "folderPath": "Races",
+          "sourceFolderId": "U2lknhPsNDXeVax4",
+          "exportedAt": "2026-05-24T15:21:36.034Z"
+        },
+        "add2e": {
+          "importedBy": "ADD2E import universel",
+          "importerVersion": "2026-05-26-v14-folders-spells-class-level",
+          "importedAt": "2026-07-02T16:14:04.674Z"
+        }
+      },
+      "ownership": {
+        "default": 0,
+        "3qitoEt1cN3Qhvig": 3
+      },
+      "_stats": {
+        "coreVersion": "14.363",
+        "systemId": "add2e",
+        "systemVersion": "0.1.20",
+        "createdTime": 1783008862645,
+        "modifiedTime": 1783182014217,
+        "lastModifiedBy": "3qitoEt1cN3Qhvig",
+        "compendiumSource": "Compendium.add2e.races.Item.ZyLS6eZXTaqwGfzh",
+        "duplicateSource": null,
+        "exportSource": null
+      },
+      "_id": "znbTBFNdE2yLjGjf",
+      "sort": 0
+    }
+  ]
+}
