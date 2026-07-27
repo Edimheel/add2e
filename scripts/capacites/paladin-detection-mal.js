@@ -1,5 +1,5 @@
 /* ADD2E — Paladin : Détection du mal */
-const ADD2E_PALADIN_DETECTION_MAL_VERSION = "2026-05-03-v1";
+const ADD2E_PALADIN_DETECTION_MAL_VERSION = "2026-07-27-shared-chat-card-v2";
 globalThis.ADD2E_PALADIN_DETECTION_MAL_VERSION = ADD2E_PALADIN_DETECTION_MAL_VERSION;
 
 function a2ePalNorm(v) {
@@ -21,15 +21,30 @@ for (const token of targets) {
   rows.push(`<li><b>${token.name}</b> : ${evil ? "présence mauvaise détectée" : "aucune aura mauvaise évidente"}</li>`);
 }
 
-await ChatMessage.create({
-  speaker: ChatMessage.getSpeaker({ actor }),
-  content: `
-    <div class="add2e-chat-card">
-      <h3>Détection du mal</h3>
-      <p><b>${actor.name}</b> se concentre pour détecter le mal à <b>20 mètres</b>.</p>
-      ${rows.length ? `<ul>${rows.join("")}</ul>` : "<p>Aucune cible sélectionnée. Le MD indique si une présence mauvaise est perçue dans la zone.</p>"}
-    </div>
-  `
-});
-
+const buildChatCard = globalThis.add2eBuildChatCard;
+const createChatCard = globalThis.add2eCreateChatCard;
+if (typeof buildChatCard !== "function" || typeof createChatCard !== "function") {
+  throw new Error("Les constructeurs communs de cartes ADD2E ne sont pas disponibles.");
+}
+const cardOptions = {
+  actor,
+  title: "Détection du mal",
+  icon: "fas fa-eye",
+  variant: "ability",
+  rows: [{ label: "Portée", value: "20 mètres" }],
+  message: `${actor.name} se concentre pour détecter le mal.`,
+  trustedBodyHtml: rows.length
+    ? `<ul>${rows.join("")}</ul>`
+    : "<p>Aucune cible sélectionnée. Le MD indique si une présence mauvaise est perçue dans la zone.</p>",
+  chatData: {
+    flags: {
+      add2e: {
+        sourceCapacite: "paladin-detection-mal",
+        version: ADD2E_PALADIN_DETECTION_MAL_VERSION
+      }
+    }
+  }
+};
+buildChatCard(cardOptions);
+await createChatCard(cardOptions);
 return true;
