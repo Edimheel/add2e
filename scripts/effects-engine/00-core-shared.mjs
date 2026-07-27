@@ -110,7 +110,9 @@ export const hitPointCalculationKey = value => {
   return aliases[key] ?? key;
 };
 
-export const sourceStableKey = source => String(source?.uuid ?? source?.id ?? source?.name ?? "").trim();
+export const sourceStableKey = source => [source?.uuid, source?.id, source?.name]
+  .map(value => String(value ?? "").trim())
+  .find(Boolean) ?? "";
 
 export const modifierSignature = modifier => JSON.stringify([
   modifier?.domain,
