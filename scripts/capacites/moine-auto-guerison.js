@@ -3,7 +3,7 @@
  * Script exécuté via on_use d'une classFeature.
  * Compatible Foundry V13 / V14 / V15.
  */
-const ADD2E_MOINE_AUTO_GUERISON_VERSION = "2026-07-10-add2e-time-cooldown-v4";
+const ADD2E_MOINE_AUTO_GUERISON_VERSION = "2026-07-27-shared-chat-card-v5";
 const ADD2E_MOINE_AUTO_GUERISON_DAY_ROUNDS = 1440;
 
 globalThis.ADD2E_MOINE_AUTO_GUERISON_VERSION = ADD2E_MOINE_AUTO_GUERISON_VERSION;
@@ -180,8 +180,23 @@ await actor.setFlag("add2e", "moine.autoGuerison", {
   at: Date.now()
 });
 
-await ChatMessage.create({
-  speaker: ChatMessage.getSpeaker({ actor }),
-  content: `<div class="add2e-chat-card"><h3>Auto-guérison du moine</h3><p><b>${actor.name}</b> récupère <b>${gained} PV</b>.</p><p>Formule : <b>${healFormula}</b> → ${healAmount}</p><p>PV : ${current} → ${healed} / ${max}</p><p>Utilisation : <b>1 / jour</b>.</p></div>`
-});
+const buildChatCard = globalThis.add2eBuildChatCard;
+const createChatCard = globalThis.add2eCreateChatCard;
+if (typeof buildChatCard !== "function" || typeof createChatCard !== "function") {
+  throw new Error("Les constructeurs communs de cartes ADD2E ne sont pas disponibles.");
+}
+const cardOptions = {
+  actor,
+  title: "Auto-guérison du moine",
+  icon: "fas fa-hand-holding-medical",
+  variant: "success",
+  rows: [
+    { label: "Récupération", value: `+${gained} PV` },
+    { label: "Formule", value: `${healFormula} → ${healAmount}` },
+    { label: "PV", value: `${current} → ${healed} / ${max}` },
+    { label: "Utilisation", value: "1 / jour" }
+  ]
+};
+buildChatCard(cardOptions);
+await createChatCard(cardOptions);
 return true;
