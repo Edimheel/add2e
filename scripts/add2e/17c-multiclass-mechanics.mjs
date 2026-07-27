@@ -4,7 +4,7 @@
 
 import { MULTICLASS_VERSION, classItems as coreClassItems, classProgression, classProgressionUpdate, classSlug } from "./17b-multiclass-core.mjs";
 
-const VERSION = "2026-07-27-class-item-progression-multiclass-hp-formula-v6";
+const VERSION = "2026-07-27-class-item-progression-current-hp-delta-v7";
 const TAG = "[ADD2E][CLASSE][CANONIQUE]";
 const timers = new Map();
 
@@ -334,10 +334,19 @@ async function syncHp(actor, { syncCurrent = false, force = false, reason = "mul
   }
 
   const hpMax = Math.max(1, Math.floor(max));
-  const updates = { "system.hpRollsMulticlass": rolls, "system.points_de_coup": hpMax };
+  const previousHpMax = n(actor.system?.points_de_coup, NaN);
   const currentHp = n(actor.system?.pdv, NaN);
-  if (syncCurrent) updates["system.pdv"] = hpMax;
-  else if (Number.isFinite(currentHp) && currentHp > hpMax) updates["system.pdv"] = hpMax;
+  const updates = { "system.hpRollsMulticlass": rolls, "system.points_de_coup": hpMax };
+
+  if (syncCurrent) {
+    updates["system.pdv"] = hpMax;
+  } else if (Number.isFinite(currentHp) && Number.isFinite(previousHpMax)) {
+    const maximumDelta = hpMax - previousHpMax;
+    if (maximumDelta > 0) updates["system.pdv"] = Math.min(hpMax, currentHp + maximumDelta);
+    else if (currentHp > hpMax) updates["system.pdv"] = hpMax;
+  } else if (Number.isFinite(currentHp) && currentHp > hpMax) {
+    updates["system.pdv"] = hpMax;
+  }
   await actor.update(updates, { add2eInternal: true, add2eMulticlassInternal: true, add2eReason: reason });
   return true;
 }
