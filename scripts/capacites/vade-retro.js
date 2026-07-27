@@ -3,7 +3,7 @@
 // Contrat onUse : true = capacité utilisée ; false = annulée / non utilisée.
 
 const __add2eVadeRetroResult = await (async () => {
-  const VERSION = "2026-07-07-vade-retro-trace-v12";
+  const VERSION = "2026-07-27-derived-charisma-shared-card-v13";
   const ICON = "icons/magic/holy/barrier-shield-winged-cross.webp";
   const CONE = Object.freeze({ angle: 90, cells: 3 });
   const CONTEXTS_FLAG = "__ADD2E_VADE_RETRO_CONTINUATION_CONTEXTS";
@@ -115,19 +115,32 @@ const __add2eVadeRetroResult = await (async () => {
   const featureOnUse = String(source?.on_use ?? source?.onUse ?? source?.script ?? source?.macro ?? "").trim();
 
   async function postClassCard({ title = "Vade-rétro", lead = "", details = [], rows = [], footer = "" } = {}) {
-    const shared = game.add2e?.postVadeRetroCard ?? globalThis.add2ePostVadeRetroCard;
-    if (typeof shared === "function") {
-      await shared(caster, { title, lead, details, rows: rows.map(row => ({ name: row.target ?? row.name, result: row.result })), footer });
-      return;
+    const buildChatCard = globalThis.add2eBuildChatCard;
+    const createChatCard = globalThis.add2eCreateChatCard;
+    if (typeof buildChatCard !== "function" || typeof createChatCard !== "function") {
+      throw new Error("Les constructeurs communs de cartes ADD2E ne sont pas disponibles.");
     }
+
     const detailsHtml = details.filter(Boolean).map(detail => `<p>${detail}</p>`).join("");
     const rowsHtml = rows.length ? `<ul>${rows.map(row => `<li><b>${esc(row.target ?? row.name)}</b> : ${esc(row.result)}</li>`).join("")}</ul>` : "";
-    const styles = globalThis.CONST?.CHAT_MESSAGE_STYLES;
-    await ChatMessage.create({
-      speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken }),
-      content: `<div class="add2e-chat-card add2e-class-ability"><h3>${esc(title)}</h3>${lead ? `<p>${lead}</p>` : ""}${detailsHtml}${rowsHtml}${footer ? `<p>${footer}</p>` : ""}</div>`,
-      ...(styles?.OTHER !== undefined ? { style: styles.OTHER } : { type: globalThis.CONST?.CHAT_MESSAGE_TYPES?.OTHER ?? 0 })
-    });
+    const cardOptions = {
+      actor: caster,
+      title,
+      icon: "fas fa-sun",
+      variant: "ability",
+      trustedBodyHtml: `${lead ? `<p>${lead}</p>` : ""}${detailsHtml}${rowsHtml}${footer ? `<p>${footer}</p>` : ""}`,
+      chatData: {
+        flags: {
+          add2e: {
+            sourceCapacite: "vade-retro",
+            version: VERSION
+          }
+        }
+      }
+    };
+
+    buildChatCard(cardOptions);
+    await createChatCard(cardOptions);
   }
 
   function metersPerGridCell() {
@@ -567,7 +580,17 @@ const __add2eVadeRetroResult = await (async () => {
   } else if (evilCleric) {
     const threshold = String(entry).startsWith("T") ? null : Number(entry);
     const reactionRoll = await roll("1d100");
-    const adjustment = Number(caster.system?.cha_react ?? 0) || 0;
+    const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+    if (typeof engine?.resolveAbilityDerived !== "function") {
+      throw new Error("Vade-rétro : resolveAbilityDerived() est indisponible.");
+    }
+    const charisma = engine.resolveAbilityDerived(caster, "charisme", {
+      domain: "reaction",
+      type: "vade-retro-evil-reaction",
+      source: "vade-retro",
+      consumer: "vade-retro"
+    });
+    const adjustment = Number(charisma?.profile?.react ?? 0) || 0;
     const total = Number(reactionRoll.total) + adjustment;
     const attitude = total >= 56 ? "Amical" : "Neutre";
     const hours = String(entry).startsWith("T") ? 24 : Math.max(1, 24 - threshold);
