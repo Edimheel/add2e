@@ -1,5 +1,5 @@
 // ADD2E — Détection de la magie — Foundry V13/V14/V15, DialogV2.
-// Version : 2026-07-14-inventory-detection-v3
+// Version : 2026-07-27-shared-chat-card-v4
 // Retour attendu : true = sort consommé, false = sort non consommé.
 
 const __add2eDetectionMagieResult = await (async () => {
@@ -37,10 +37,6 @@ const __add2eDetectionMagieResult = await (async () => {
     .replace(/[’']/g, "")
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "");
-
-  const chatStyleData = () => CONST.CHAT_MESSAGE_STYLES
-    ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER }
-    : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 };
 
   if (!caster || !sourceItem) {
     ui.notifications.error("Détection de la magie : lanceur ou sort introuvable.");
@@ -234,32 +230,32 @@ const __add2eDetectionMagieResult = await (async () => {
     `
     : `<p style="margin:0;text-align:center;"><b>Aucune aura magique détectée.</b></p>`;
 
-  await ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken }),
-    content: `
-      <div class="add2e-chat-card add2e-magicien-sort add2e-sort-detection-magie" style="border:1px solid #8e63c7;border-radius:8px;overflow:hidden;background:#f6f0ff;color:#2d2144;font-family:var(--font-primary);">
-        <div style="display:flex;align-items:center;gap:8px;background:#5b3f8c;color:#fff;padding:7px 9px;">
-          <img src="${esc(caster.img || "icons/svg/mystery-man.svg")}" style="width:42px;height:42px;object-fit:cover;border-radius:50%;border:2px solid #d8c3ff;background:#fff;">
-          <div style="flex:1;line-height:1.1;">
-            <div style="font-weight:800;font-size:14px;">${esc(caster.name)}</div>
-            <div style="font-size:12px;font-weight:700;">lance ${esc(sourceItem.name || "Détection de la magie")}</div>
-          </div>
-          <img src="${esc(sourceItem.img || "icons/svg/aura.svg")}" style="width:34px;height:34px;object-fit:cover;border-radius:3px;border:1px solid #d8c3ff;background:#fff;">
-        </div>
-
-        <div style="padding:10px;">
-          <div style="border:1px solid #8e63c7;border-radius:6px;background:#fffaff;padding:8px;">
-            <div style="color:#6c31b5;font-weight:900;text-align:center;margin-bottom:7px;">PERCEPTION MAGIQUE</div>
-            ${resultContent}
-          </div>
-          <p style="margin:7px 0 0;font-size:12px;">
-            Les objets sans aura ne sont pas révélés. Un objet non identifié conserve son nom générique.
-          </p>
-        </div>
-      </div>
-    `,
-    ...chatStyleData()
-  });
+  const build = globalThis.add2eBuildChatCard;
+  const create = globalThis.add2eCreateChatCard;
+  if (typeof build !== "function" || typeof create !== "function") {
+    throw new Error("Les constructeurs communs de cartes ADD2E sont indisponibles.");
+  }
+  const card = {
+    actor: caster,
+    title: sourceItem.name || "Détection de la magie",
+    icon: "fas fa-eye",
+    variant: "spell",
+    source: {
+      name: caster.name,
+      img: caster.img,
+      type: "Perception magique"
+    },
+    rows: [
+      { label: "Éléments examinés", value: selection.mode === "item" ? "Un objet" : "Tout le sac" },
+      { label: "Auras détectées", value: results.length }
+    ],
+    trustedBodyHtml: `${resultContent}<p style="margin:7px 0 0;font-size:12px;">Les objets sans aura ne sont pas révélés. Un objet non identifié conserve son nom générique.</p>`,
+    chatData: {
+      speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken })
+    }
+  };
+  build(card);
+  await create(card);
 
   await globalThis.ADD2E_PLAY_SPELL_FX?.("detection_magie", { casterToken });
 
