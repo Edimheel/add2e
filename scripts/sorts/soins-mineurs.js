@@ -25,9 +25,6 @@ const __add2eMinorCureResult = await (async () => {
   const esc = value => String(value ?? "")
     .replace(/&/g, "&amp;").replace(/</g, "&lt;")
     .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-  const chatStyle = () => CONST.CHAT_MESSAGE_STYLES
-    ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER }
-    : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 };
 
   const spell = typeof sourceItem !== "undefined" && sourceItem
     ? sourceItem
@@ -152,22 +149,32 @@ const __add2eMinorCureResult = await (async () => {
   }
 
   async function createAdd2eSpellCard({ title, targetName, status, resultHtml, rule }) {
-    await ChatMessage.create({
-      speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken }),
-      content: `<div class="add2e-spell-card add2e-spell-card-clerc" style="border-radius:12px;box-shadow:0 4px 10px #0002;background:linear-gradient(135deg,${COLORS.pale2} 0%,${COLORS.pale} 100%);border:1.5px solid ${COLORS.border};overflow:hidden;padding:0;font-family:var(--font-primary);">
-        <div style="background:linear-gradient(90deg,${COLORS.dark} 0%,${COLORS.main} 100%);padding:8px 12px;color:#fff;display:flex;align-items:center;gap:10px;border-bottom:2px solid ${COLORS.borderDark};">
-          <img src="${esc(caster.img ?? "icons/svg/mystery-man.svg")}" style="width:36px;height:36px;border-radius:50%;border:2px solid #fff;object-fit:cover;">
-          <div style="line-height:1.2;flex:1;"><div style="font-weight:bold;font-size:1.05em;">${esc(caster.name ?? "Lanceur")}</div><div style="font-size:.85em;opacity:.95;">lance <b>${esc(title)}</b></div></div>
-          <img src="${esc(spell.img ?? FALLBACK_ICON)}" style="width:32px;height:32px;border-radius:4px;background:#fff;object-fit:cover;">
-        </div>
-        <div style="padding:10px;color:${COLORS.dark};">
-          <div style="margin-bottom:7px;font-size:.95em;"><b>Cible :</b> ${esc(targetName)}</div>
-          <div style="border:1px solid ${COLORS.border};background:#fffdf4;border-radius:7px;padding:8px;text-align:center;">${resultHtml}</div>
-          <details style="margin-top:8px;background:#fff;border:1px solid ${COLORS.border};border-radius:6px;"><summary style="cursor:pointer;color:${COLORS.dark};font-weight:600;padding:6px;">Règle appliquée</summary><div style="padding:8px;font-size:.85em;line-height:1.45;">${esc(rule)}</div></details>
-        </div>
-      </div>`,
-      ...chatStyle()
-    });
+    const build = globalThis.add2eBuildChatCard;
+    const create = globalThis.add2eCreateChatCard;
+    if (typeof build !== "function" || typeof create !== "function") {
+      throw new Error("Les constructeurs communs de cartes ADD2E sont indisponibles.");
+    }
+    const options = {
+      actor: caster,
+      title,
+      icon: "fas fa-hand-holding-medical",
+      variant: title === CURE ? "success" : "failure",
+      source: {
+        name: caster.name,
+        img: caster.img,
+        type: "Sort divin"
+      },
+      rows: [
+        { label: "Cible", value: targetName },
+        { label: "Effet", value: status }
+      ],
+      trustedBodyHtml: `<div style="text-align:center;">${resultHtml}</div><details style="margin-top:8px;"><summary>Règle appliquée</summary><div style="padding-top:6px;">${esc(rule)}</div></details>`,
+      chatData: {
+        speaker: ChatMessage.getSpeaker({ actor: caster, token: casterToken })
+      }
+    };
+    build(options);
+    return create(options);
   }
 
   if (isCure) {
