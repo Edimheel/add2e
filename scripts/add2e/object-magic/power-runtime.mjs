@@ -268,14 +268,7 @@ export function add2eMagicItemEquippedOrUsable(item) {
 
 export function add2eMagicObjectRawPowers(item) {
   if (!add2eMagicItemEquippedOrUsable(item)) return [];
-  const system = item?.system ?? {};
-  return system.pouvoirs
-    ?? system.powers
-    ?? system.pouvoirsMagiques
-    ?? system.magicalPowers
-    ?? system.sorts
-    ?? system.spells
-    ?? [];
+  return item?.system?.pouvoirs ?? [];
 }
 
 export function add2eMagicObjectPowerArray(item) {
