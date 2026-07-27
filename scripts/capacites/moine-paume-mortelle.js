@@ -6,7 +6,7 @@
  * feuille ou le HUD résout immédiatement la capacité.
  * Compatible Foundry V13/V14/V15 — DialogV2 uniquement.
  */
-const ADD2E_MOINE_PAUME_MORTELLE_VERSION = "2026-07-10-capacity-style-v1";
+const ADD2E_MOINE_PAUME_MORTELLE_VERSION = "2026-07-27-shared-chat-card-v2";
 const ADD2E_PAUME_PROFILE_ID = "monk-quivering-palm";
 const ADD2E_PAUME_MIN_LEVEL = 13;
 const ADD2E_PAUME_TOUCH_WINDOW_ROUNDS = 3;
@@ -55,11 +55,6 @@ function a2ePaumeClone(value) {
     try { return JSON.parse(JSON.stringify(value)); }
     catch (_jsonError) { return value; }
   }
-}
-
-function a2ePaumeChatStyleData() {
-  if (CONST.CHAT_MESSAGE_STYLES) return { style: CONST.CHAT_MESSAGE_STYLES.OTHER };
-  return { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 };
 }
 
 function a2ePaumeServiceReady(service = globalThis.add2eCapabilitySpecialAttack) {
@@ -245,13 +240,33 @@ function a2ePaumeCardHtml({ title, subtitle = "Capacité de classe", body = "", 
     </div>`;
 }
 
-async function a2ePaumeChat(actorDocument, profile, title, body, color = ADD2E_PAUME_COLOR) {
-  return ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor: actorDocument }),
-    content: a2ePaumeCardHtml({ title, subtitle: "Capacité de moine", body, img: profile?.img ?? ADD2E_PAUME_IMG }),
-    flags: { add2e: { sourceCapacite: "paume_mortelle", capabilityProfile: ADD2E_PAUME_PROFILE_ID, version: ADD2E_MOINE_PAUME_MORTELLE_VERSION } },
-    ...a2ePaumeChatStyleData()
-  });
+async function a2ePaumeChat(actorDocument, profile, title, body) {
+  const buildChatCard = globalThis.add2eBuildChatCard;
+  const createChatCard = globalThis.add2eCreateChatCard;
+  if (typeof buildChatCard !== "function" || typeof createChatCard !== "function") {
+    throw new Error("Les constructeurs communs de cartes ADD2E ne sont pas disponibles.");
+  }
+
+  const cardOptions = {
+    actor: actorDocument,
+    title,
+    icon: "fas fa-hand",
+    variant: "ability",
+    trustedBodyHtml: body,
+    chatData: {
+      flags: {
+        add2e: {
+          sourceCapacite: "paume_mortelle",
+          capabilityProfile: ADD2E_PAUME_PROFILE_ID,
+          version: ADD2E_MOINE_PAUME_MORTELLE_VERSION,
+          image: profile?.img ?? ADD2E_PAUME_IMG
+        }
+      }
+    }
+  };
+
+  buildChatCard(cardOptions);
+  return createChatCard(cardOptions);
 }
 
 if (!actor) {
