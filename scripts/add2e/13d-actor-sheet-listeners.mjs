@@ -5,7 +5,7 @@ import "./13d-actor-sheet-listeners-core.mjs";
 
 const ADD2E_SHEET_LISTENER_RECOVERY_VERSION = "2026-07-05-sheet-tabs-force-ex-v1";
 
-const ADD2E_SCROLL_WRITING_VERSION = "2026-07-13-known-spell-scroll-writing-v1";
+const ADD2E_SCROLL_WRITING_VERSION = "2026-07-27-shared-chat-card-v2";
 const ADD2E_SCROLL_WRITING_LISTS = new Set(["magicien", "illusionniste"]);
 let ADD2E_SCROLL_WRITING_INDEX_PROMISE = null;
 
@@ -487,16 +487,32 @@ async function add2eWriteKnownSpellToScroll(actor, spell) {
     return false;
   }
 
-  await ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor }),
-    content: `
-      <div class="add2e-chat-card" style="border:1px solid #75552b;border-radius:8px;background:#fff8e7;padding:8px;">
-        <h3 style="margin:0 0 6px;">Parchemin écrit</h3>
-        <p><b>${add2eScrollWritingEsc(sourceDocument.name)}</b> a été inscrit sur un parchemin.</p>
-        <p>Quantité disponible : <b>${quantity}</b>.</p>
-      </div>
-    `
-  });
+  const build = globalThis.add2eBuildChatCard;
+  const create = globalThis.add2eCreateChatCard;
+  if (typeof build !== "function" || typeof create !== "function") {
+    throw new Error("Les constructeurs communs de cartes ADD2E sont indisponibles.");
+  }
+  const card = {
+    actor,
+    title: "Parchemin écrit",
+    icon: "fas fa-scroll",
+    variant: "success",
+    source: {
+      name: actor.name,
+      img: actor.img,
+      type: "Écriture de parchemin"
+    },
+    rows: [
+      { label: "Sort", value: sourceDocument.name },
+      { label: "Liste", value: listLabel },
+      { label: "Quantité disponible", value: quantity }
+    ],
+    chatData: {
+      speaker: ChatMessage.getSpeaker({ actor })
+    }
+  };
+  build(card);
+  await create(card);
 
   globalThis.add2eRerenderActorSheet?.(actor, true);
   return true;
