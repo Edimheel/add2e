@@ -175,7 +175,7 @@ return await (async () => {
     await caster.createEmbeddedDocuments("ActiveEffect", [effectData]);
 
     // =======================================================
-    // 6) MESSAGE CHAT (STYLE STANDARDISÉ VIOLET)
+    // 6) MESSAGE CHAT COMMUN
     // =======================================================
     const formatVal = (val) => {
         if (typeof globalThis.formatSortChamp === "function") return globalThis.formatSortChamp(val, niveauPerso);
@@ -191,52 +191,29 @@ return await (async () => {
         { label: "Incant.",  val: formatVal(info.temps_incantation) }
     ];
 
-    const chatContent = `
-      <div class="add2e-spell-card" style="border-radius:12px; box-shadow:0 4px 10px #715aab44; background:linear-gradient(135deg, #fdfbfd 0%, #f4efff 100%); border:1.5px solid #9373c7; margin:0.3em 0; padding:0; font-family:var(--font-primary); overflow:hidden;">
-        
-        <div style="background:linear-gradient(90deg, #6a3c99 0%, #8e44ad 100%); padding:8px 12px; display:flex; align-items:center; gap:10px; color:white; border-bottom:2px solid #5e35b1;">
-          <img src="${caster.img}" style="width:36px; height:36px; border-radius:50%; border:2px solid #fff; object-fit:cover;">
-          <div style="line-height:1.2;">
-            <div style="font-weight:bold; font-size:1.05em;">${caster.name}</div>
-            <div style="font-size:0.85em; opacity:0.9;">lance <span style="font-weight:bold; color:#f1c40f;">${_item.name}</span></div>
-          </div>
-          <img src="${spellIcon}" style="width:32px; height:32px; margin-left:auto; border-radius:4px; background:#fff;">
-        </div>
-
-        <div style="padding:10px 10px 5px 10px;">
-          
-          <div style="background:#eafaf1; border:1px solid #ccebd9; border-radius:6px; padding:6px; text-align:center; margin-bottom:8px;">
-            <span style="color:#27ae60; font-weight:bold; font-size:1.1em;">🔒 Porte Bloquée</span>
-            <div style="font-size:0.85em; color:#555; margin-top:2px;">Durée : ${dureeRounds} rds</div>
-          </div>
-
-          <details style="background:#fff; border:1px solid #e0d4fc; border-radius:6px;">
-            <summary style="cursor:pointer; color:#6a3c99; font-weight:600; font-size:0.9em; padding:6px 10px; background:#efe9f6; border-radius:6px; list-style:none;">
-              📜 Voir détails & description
-            </summary>
-            <div style="padding:8px;">
-              <table style="width:100%; font-size:0.85em; border-spacing:0; margin-bottom:10px; color:#333; border-bottom:1px solid #eee;">
-                ${detailsData.map((d, i) => `
-                  <tr style="${i % 2 === 0 ? 'background:#f8f6fa;' : ''}">
-                    <td style="color:#6a3c99; font-weight:600; padding:2px 5px; width:40%;">${d.label}</td>
-                    <td style="text-align:right; padding:2px 5px;">${d.val}</td>
-                  </tr>`).join("")}
-              </table>
-              <div style="color:#4a3b69; font-size:0.9em; line-height:1.4; text-align:justify;">
-                <b>Description :</b><br>
-                ${info.description || "<em>Aucune description.</em>"}
-              </div>
-            </div>
-          </details>
-        </div>
-      </div>
-    `;
-
-    ChatMessage.create({
-        speaker: ChatMessage.getSpeaker({ actor: caster }),
-        content: chatContent,
-        type: CONST.CHAT_MESSAGE_TYPES.OTHER
-    });
+    const build = globalThis.add2eBuildChatCard;
+    const create = globalThis.add2eCreateChatCard;
+    if (typeof build !== "function" || typeof create !== "function") {
+        throw new Error("Les constructeurs communs de cartes ADD2E sont indisponibles.");
+    }
+    const card = {
+        actor: caster,
+        title: _item.name,
+        icon: "fas fa-lock",
+        variant: "spell",
+        source: {
+            name: caster.name,
+            img: caster.img,
+            type: "Sort d’altération"
+        },
+        rows: detailsData.map(detail => ({ label: detail.label, value: detail.val })),
+        trustedBodyHtml: `<p style="text-align:center;"><b>Porte bloquée</b></p><p style="text-align:center;">Durée : ${dureeRounds} rounds.</p><details><summary>Description</summary><div style="padding-top:6px;">${info.description || "<em>Aucune description.</em>"}</div></details>`,
+        chatData: {
+            speaker: ChatMessage.getSpeaker({ actor: caster })
+        }
+    };
+    build(card);
+    await create(card);
 
     return true;
 
