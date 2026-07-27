@@ -752,7 +752,7 @@ class Add2eObjetSheet extends Add2eItemSheetV2 {
   async getData(options = {}) {
     const data = await super.getData(options);
     const system = data.system ?? {};
-    const powersRaw = system.pouvoirs ?? system.powers ?? system.pouvoirsMagiques ?? system.magicalPowers ?? [];
+    const powersRaw = system.pouvoirs ?? [];
     data.pouvoirs = Array.isArray(powersRaw)
       ? powersRaw.filter(p => p && typeof p === "object")
       : (powersRaw && typeof powersRaw === "object" ? Object.values(powersRaw).filter(p => p && typeof p === "object") : []);
