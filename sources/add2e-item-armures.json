@@ -43,7 +43,7 @@
         "categorie": "Légère",
         "bonus_ac": 0,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_toucher": null,
         "bonus_degats": null,
         "base": false,
@@ -110,7 +110,7 @@
         "categorie": "Légère",
         "bonus_ac": 0,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bouclier": false,
         "type_armure": "cuir_cloute"
       },
@@ -172,7 +172,7 @@
         "categorie": "Moyenne",
         "bonus_ac": 0,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bouclier": false,
         "type_armure": "ecailles"
       },
@@ -233,7 +233,7 @@
         "categorie": "Moyenne",
         "bonus_ac": 0,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bouclier": false,
         "type_armure": "tunique_metallique"
       },
@@ -294,7 +294,7 @@
         "categorie": "Lourde",
         "bonus_ac": 0,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bouclier": false,
         "type_armure": "torse_blinde"
       },
@@ -355,7 +355,7 @@
         "categorie": "Moyenne",
         "bonus_ac": 0,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bouclier": false,
         "type_armure": "mailles"
       },
@@ -417,7 +417,7 @@
         "categorie": "Moyenne",
         "bonus_ac": 0,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bouclier": false,
         "type_armure": "brigandine"
       },
@@ -479,7 +479,7 @@
         "categorie": "Moyenne",
         "bonus_ac": 0,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bouclier": false,
         "type_armure": "ecailles"
       },
@@ -540,7 +540,7 @@
         "categorie": "Bouclier",
         "bonus_ac": 0,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bouclier": true,
         "type_bouclier": "rond",
         "type_armure": "bouclier"
@@ -603,7 +603,7 @@
         "categorie": "Légère",
         "bonus_ac": 0,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bouclier": false,
         "type_armure": "cuir"
       },
@@ -665,7 +665,7 @@
         "categorie": "Moyenne",
         "bonus_ac": 0,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_toucher": null,
         "bonus_degats": null,
         "base": false,
@@ -731,7 +731,7 @@
         "categorie": "Bouclier",
         "bonus_ac": 0,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bouclier": true,
         "type_bouclier": "lourd",
         "type_armure": "bouclier"
@@ -861,7 +861,7 @@
         "categorie": "Moyenne",
         "bonus_ac": 0,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_toucher": null,
         "bonus_degats": null,
         "base": false,
@@ -928,7 +928,7 @@
         "categorie": "Moyenne",
         "bonus_ac": 0,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bouclier": false,
         "type_armure": "ecailles"
       },
@@ -989,7 +989,7 @@
         "categorie": "Légère",
         "bonus_ac": 0,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bouclier": false,
         "type_armure": "cuir_cloute"
       },
@@ -1050,7 +1050,7 @@
         "categorie": "Légère",
         "bonus_ac": 0,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_toucher": null,
         "bonus_degats": null,
         "base": false,
@@ -1118,7 +1118,7 @@
         "categorie": "Légère",
         "bonus_ac": 0,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bouclier": false,
         "type_armure": "rembourree"
       },
@@ -1179,7 +1179,7 @@
         "categorie": "Légère",
         "bonus_ac": 0,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bouclier": false,
         "type_armure": "rembourree"
       },
@@ -1241,7 +1241,7 @@
         "categorie": "Lourde",
         "bonus_ac": 0,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bouclier": false,
         "type_armure": "feuilletee"
       },
@@ -1302,7 +1302,7 @@
         "categorie": "Bouclier",
         "bonus_ac": 0,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bonus_toucher": null,
         "bonus_degats": null,
         "materiau": "",
@@ -1369,7 +1369,7 @@
         "categorie": "Moyenne",
         "bonus_ac": 0,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bouclier": false,
         "type_armure": "cuirasse"
       },
@@ -1430,7 +1430,7 @@
         "categorie": "Lourde",
         "bonus_ac": 0,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bouclier": false,
         "type_armure": "plaques"
       },
@@ -1492,7 +1492,7 @@
         "categorie": "Moyenne",
         "bonus_ac": 0,
         "equipee": false,
-        "magique": true,
+        "magique": false,
         "bouclier": false,
         "type_armure": "peau"
       },
