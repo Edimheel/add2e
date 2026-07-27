@@ -1,12 +1,11 @@
 // scripts/add2e-attack/06-cast-spell.mjs
 // ADD2E — Lancement de sorts, onUse, mémorisation, pouvoirs, parchemins et composants.
-// Version : 2026-07-26-divine-wisdom-failure-v1
+// Version : 2026-07-27-shared-fallback-chat-card-v2
 
 import { formatSortChamp, add2eGetSortField, add2eGetSortOnUsePath, add2eGetSortComponentsText } from "./01-core-helpers.mjs";
 import "./05-jb2a-vfx.mjs";
 import "../add2e/07b-arcane-documents.mjs";
 
-const style = () => CONST.CHAT_MESSAGE_STYLES ? { style: CONST.CHAT_MESSAGE_STYLES.OTHER } : { type: CONST.CHAT_MESSAGE_TYPES?.OTHER ?? 0 };
 const norm = value => String(value ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[’']/g, "").replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
 
 function listKeys(sortDoc) {
@@ -218,17 +217,39 @@ async function setMemorizedCount(actorDoc, sortDoc, value, reason = "") {
 }
 
 async function fallbackChat(actorDoc, sortDoc, chargeLabel = "") {
+  if (typeof globalThis.add2eBuildChatCard !== "function" || typeof globalThis.add2eCreateChatCard !== "function") {
+    throw new Error("Les constructeurs communs de cartes ADD2E sont indisponibles.");
+  }
   const info = sortDoc.system ?? {};
   const level = Number(actorDoc.system?.niveau) || Number(info.niveau) || 1;
-  const rows = ["portee", "duree", "cible", "temps_incantation"]
-    .map(key => `<tr><td>${key}</td><td>${formatSortChamp(add2eGetSortField(info, key), level) || "-"}</td></tr>`)
-    .join("");
+  const fields = [
+    ["Portée", "portee"],
+    ["Durée", "duree"],
+    ["Cible", "cible"],
+    ["Temps d’incantation", "temps_incantation"]
+  ];
   const description = add2eGetSortField(info, "description", "");
-  await ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor: actorDoc }),
-    content: `<div class="add2e-spell-card"><h3>${sortDoc.name} ${chargeLabel}</h3><table>${rows}</table><div>${description || ""}</div></div>`,
-    ...style()
-  });
+  const card = {
+    actor: actorDoc,
+    title: sortDoc.name,
+    icon: "fas fa-hat-wizard",
+    variant: "spell",
+    source: {
+      name: actorDoc.name,
+      img: actorDoc.img,
+      type: chargeLabel || "Sort"
+    },
+    rows: fields.map(([label, key]) => ({
+      label,
+      value: formatSortChamp(add2eGetSortField(info, key), level) || "—"
+    })),
+    trustedBodyHtml: description || "",
+    chatData: {
+      speaker: ChatMessage.getSpeaker({ actor: actorDoc })
+    }
+  };
+  globalThis.add2eBuildChatCard(card);
+  return globalThis.add2eCreateChatCard(card);
 }
 
 function add2eDivineCastingSource(actor, sort) {
@@ -461,7 +482,7 @@ export async function add2eCastSpell({ actor, sort, mode = "memorized", sourceIt
   }
 
   if (scrollCast) {
-    labelCharge = `<span style="color:#7b4b20;">Parchemin</span>`;
+    labelCharge = "Parchemin";
   } else if (sort.system?.isPower) {
     const weapon = actor.items.get(sort.system.sourceWeaponId ?? sort.system.sourceItemId);
     if (!weapon) {
@@ -483,9 +504,9 @@ export async function add2eCastSpell({ actor, sort, mode = "memorized", sourceIt
       const after = Math.max(0, current - cost);
       await add2ePowerWriteCurrent(weapon, flagKey, after, max, isGlobal);
       reservedCost = { kind: "power", weapon, flagKey, before: current, after, max, cost, isGlobal, potion: add2ePowerIsPotion(weapon) };
-      labelCharge = `<span style="color:#d35400;">Charges : ${after}/${max}</span>`;
+      labelCharge = `Charges : ${after}/${max}`;
     } else {
-      labelCharge = `<span style="color:#6b4b8a;">Sans dépense de charge</span>`;
+      labelCharge = "Sans dépense de charge";
     }
     const baseName = sort.name.replace(/\s\(.*?\)$/, "").trim();
     const realSpell = game.items.find(item => item.type === "sort" && item.name.toLowerCase() === baseName.toLowerCase());
@@ -500,7 +521,7 @@ export async function add2eCastSpell({ actor, sort, mode = "memorized", sourceIt
     const after = Math.max(0, memorized - 1);
     await setMemorizedCount(actor, sort, after, "reserve before onUse");
     reservedCost = { kind: "memorized", sort, before: memorized, after };
-    labelCharge = `<span style="color:#2980b9;">Reste : ${after}</span>`;
+    labelCharge = `Reste : ${after}`;
   }
 
   if (!await reserveComponents()) return false;
@@ -575,7 +596,7 @@ export async function add2eCastSpell({ actor, sort, mode = "memorized", sourceIt
       console.error("[ADD2E][CAST_SPELL][SCROLL_CONSUME_ERROR]", { actor: actor.name, scroll: sourceItem?.name, scrollId: sourceItem?.id, sourceSpellKey });
       ui.notifications.error("Le sort a été lancé, mais le parchemin n'a pas pu être consommé.");
     } else {
-      labelCharge = `<span style="color:#7b4b20;">Parchemin consommé</span>`;
+      labelCharge = "Parchemin consommé";
     }
   }
 
