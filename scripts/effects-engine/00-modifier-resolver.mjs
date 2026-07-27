@@ -6,11 +6,16 @@ import {
   ADD2E_MODIFIER_OPERATIONS,
   ADD2E_MODIFIER_STACKING,
   ADD2E_ABILITIES,
+  ADD2E_HIT_POINT_TARGETS,
+  ADD2E_HIT_POINT_CALCULATIONS,
+  ADD2E_HIT_POINTS_VERSION,
   register,
   clone,
   isObject,
   canonicalKey,
   abilityKey,
+  hitPointTargetKey,
+  hitPointCalculationKey,
   sourceStableKey,
   modifierSignature,
   rawList,
@@ -61,7 +66,9 @@ export function installModifierResolver(Engine) {
     normalizeModifier(raw = {}, defaults = {}) {
       if (!isObject(raw)) return null;
       const domain = canonicalKey(raw.domain ?? defaults.domain);
-      const target = abilityKey(raw.target ?? defaults.target);
+      const target = domain === "hit-points"
+        ? hitPointTargetKey(raw.target ?? defaults.target)
+        : abilityKey(raw.target ?? defaults.target);
       const operation = canonicalKey(raw.operation ?? defaults.operation ?? "add");
       const priorityValue = Number(raw.priority ?? defaults.priority ?? 100);
       const priority = Number.isFinite(priorityValue) ? priorityValue : 100;
@@ -93,6 +100,18 @@ export function installModifierResolver(Engine) {
       } else {
         value = Number(value);
       }
+      const metadata = clone(raw.metadata ?? defaults.metadata ?? {}) ?? {};
+      if (domain === "hit-points") {
+        metadata.calculation = hitPointCalculationKey(
+          raw.calculation
+          ?? metadata.calculation
+          ?? defaults.calculation
+          ?? defaults.metadata?.calculation
+          ?? "fixed"
+        ) || "fixed";
+        if (metadata.levelSource === undefined && raw.levelSource !== undefined) metadata.levelSource = raw.levelSource;
+        if (metadata.level === undefined && raw.level !== undefined) metadata.level = raw.level;
+      }
       const id = String(raw.id ?? `${sourceStableKey(source) || "modifier"}:${domain}:${target}:${operation}:${priority}`).trim();
       return {
         id,
@@ -105,7 +124,7 @@ export function installModifierResolver(Engine) {
         conditions: clone(raw.conditions ?? {}),
         source,
         duration: clone(raw.duration ?? null),
-        metadata: clone(raw.metadata ?? {})
+        metadata
       };
     },
 
@@ -119,6 +138,14 @@ export function installModifierResolver(Engine) {
         if (!ADD2E_MODIFIER_OPERATIONS.has(modifier.operation)) errors.push(`operation:${modifier.operation || "missing"}`);
         if (!ADD2E_MODIFIER_STACKING.has(modifier.stacking?.mode)) errors.push(`stacking:${modifier.stacking?.mode || "missing"}`);
         if (!sourceStableKey(modifier.source)) errors.push("source:missing");
+        if (modifier.domain === "hit-points") {
+          if (modifier.target !== "all" && !ADD2E_HIT_POINT_TARGETS.has(modifier.target)) {
+            errors.push(`hit-points-target:${modifier.target || "missing"}`);
+          }
+          const calculation = hitPointCalculationKey(modifier.metadata?.calculation ?? "fixed");
+          if (!ADD2E_HIT_POINT_CALCULATIONS.has(calculation)) errors.push(`hit-points-calculation:${calculation || "missing"}`);
+          if (calculation === "per-level" && modifier.operation !== "add") errors.push("hit-points-per-level-operation:add-required");
+        }
         if (modifier.operation === "minmax") {
           if (modifier.value?.min === null && modifier.value?.max === null) errors.push("value:bounds-missing");
         } else if (!Number.isFinite(Number(modifier.value))) errors.push("value:not-number");
@@ -305,7 +332,7 @@ export function installModifierResolver(Engine) {
 
     resolve(actor, query = {}) {
       const domain = canonicalKey(query.domain);
-      const target = abilityKey(query.target);
+      const target = domain === "hit-points" ? hitPointTargetKey(query.target) : abilityKey(query.target);
       if (!ADD2E_MODIFIER_DOMAINS.has(domain)) throw new Error(`Domaine de modificateur inconnu : ${domain || "vide"}`);
       if (!target) throw new Error("Cible de modificateur manquante.");
 
@@ -421,6 +448,123 @@ export function installModifierResolver(Engine) {
       });
     },
 
+    getHitPointModifierLevel(actor, modifier, context = {}) {
+      const metadata = modifier?.metadata ?? {};
+      const directLevel = Number(metadata.level);
+      if (Number.isFinite(directLevel) && directLevel >= 0) return Math.floor(directLevel);
+
+      const sourceItem = modifier?._context?.sourceItem ?? context.sourceItem ?? null;
+      const levelSource = canonicalKey(metadata.levelSource ?? "actor");
+      const levelBySource = isObject(context.levelBySource) ? context.levelBySource : {};
+      for (const key of [modifier?.source?.uuid, modifier?.source?.id, sourceItem?.uuid, sourceItem?.id].filter(Boolean)) {
+        const mapped = Number(levelBySource[key]);
+        if (Number.isFinite(mapped) && mapped >= 0) return Math.floor(mapped);
+      }
+
+      const classItemId = String(metadata.classItemId ?? "").trim();
+      const classItem = classItemId
+        ? Array.from(actor?.items ?? []).find(item => String(item?.id ?? "") === classItemId || String(item?.uuid ?? "") === classItemId)
+        : null;
+      const item = classItem ?? sourceItem;
+      if (["source", "source-item", "source-class", "class", "class-item"].includes(levelSource)) {
+        const itemLevel = Number(item?.system?.niveau ?? item?.system?.level);
+        if (Number.isFinite(itemLevel) && itemLevel >= 0) return Math.floor(itemLevel);
+        const contextClassLevel = Number(context.classLevel);
+        if (Number.isFinite(contextClassLevel) && contextClassLevel >= 0) return Math.floor(contextClassLevel);
+      }
+
+      const contextLevel = Number(context.level);
+      if (Number.isFinite(contextLevel) && contextLevel >= 0) return Math.floor(contextLevel);
+      return Math.max(0, Math.floor(this.getActorLevel(actor)));
+    },
+
+    prepareHitPointModifiers(actor, target, context = {}, provided = null) {
+      const canonicalTarget = hitPointTargetKey(target);
+      const source = Array.isArray(provided) ? provided : this.collect(actor, context);
+      return source.flatMap(raw => {
+        const modifier = this.normalizeModifier(raw, { source: raw?.source });
+        if (!modifier || modifier.domain !== "hit-points" || ![canonicalTarget, "all"].includes(modifier.target)) return [];
+        modifier._context = raw?._context ?? {};
+        const calculation = hitPointCalculationKey(modifier.metadata?.calculation ?? "fixed") || "fixed";
+        if (calculation !== "per-level") return [{ ...modifier, _context: modifier._context }];
+        const level = this.getHitPointModifierLevel(actor, modifier, context);
+        return [{
+          ...modifier,
+          value: Number(modifier.value) * level,
+          metadata: {
+            ...clone(modifier.metadata ?? {}),
+            calculation,
+            baseValue: Number(modifier.value),
+            resolvedLevel: level
+          },
+          _context: modifier._context
+        }];
+      });
+    },
+
+    preserveHitPointWounds(previousMaximum, previousCurrent, nextMaximum) {
+      const oldMaximum = Number(previousMaximum);
+      const oldCurrent = Number(previousCurrent);
+      const maximum = Math.max(1, Math.floor(Number(nextMaximum) || 1));
+      const hasHistory = Number.isFinite(oldMaximum) && oldMaximum > 0 && Number.isFinite(oldCurrent);
+      const wounds = hasHistory ? Math.max(0, oldMaximum - oldCurrent) : 0;
+      const current = hasHistory ? Math.min(maximum, maximum - wounds) : maximum;
+      return { previousMaximum: oldMaximum, previousCurrent: oldCurrent, maximum, wounds, current, initialized: !hasHistory };
+    },
+
+    resolveHitPoints(actor, options = {}) {
+      if (!actor?.system) throw new Error("Acteur invalide pour la résolution canonique des points de vie.");
+      const previousMaximum = Number(options.previousMaximum ?? actor.system.points_de_coup);
+      const previousCurrent = Number(options.previousCurrent ?? actor.system.pdv);
+      const requestedBase = Number(options.baseMaximum);
+      const baseMaximum = Math.max(1, Math.floor(Number.isFinite(requestedBase)
+        ? requestedBase
+        : (Number.isFinite(previousMaximum) && previousMaximum > 0 ? previousMaximum : 1)));
+      const context = {
+        ...(options.context ?? {}),
+        actor,
+        level: options.level ?? options.context?.level ?? this.getActorLevel(actor),
+        source: options.source ?? options.context?.source ?? "hit-points-resolution",
+        consumer: options.consumer ?? options.context?.consumer ?? "effects-engine"
+      };
+      const provided = Array.isArray(options.modifiers) ? options.modifiers : null;
+      const maximumModifiers = this.prepareHitPointModifiers(actor, "maximum", context, provided);
+      const maximumResolution = this.resolve(actor, {
+        domain: "hit-points",
+        target: "maximum",
+        base: baseMaximum,
+        context,
+        modifiers: maximumModifiers,
+        rounding: options.rounding ?? "floor"
+      });
+      const maximum = Math.max(1, Math.floor(Number(maximumResolution.total) || 1));
+      const preserved = this.preserveHitPointWounds(previousMaximum, previousCurrent, maximum);
+      const requestedCurrentBase = Number(options.currentBase);
+      const currentBase = Number.isFinite(requestedCurrentBase) ? requestedCurrentBase : preserved.current;
+      const currentModifiers = this.prepareHitPointModifiers(actor, "current", context, provided);
+      const currentResolution = this.resolve(actor, {
+        domain: "hit-points",
+        target: "current",
+        base: currentBase,
+        context,
+        modifiers: currentModifiers,
+        rounding: options.rounding ?? "floor"
+      });
+      const current = Math.min(maximum, Math.floor(Number(currentResolution.total) || 0));
+      return {
+        version: ADD2E_HIT_POINTS_VERSION,
+        actor,
+        baseMaximum,
+        previousMaximum,
+        previousCurrent,
+        wounds: preserved.wounds,
+        initialized: preserved.initialized,
+        maximum: { ...maximumResolution, total: maximum, unclampedTotal: maximumResolution.total },
+        current: { ...currentResolution, base: currentBase, total: current, unclampedTotal: currentResolution.total },
+        context
+      };
+    },
+
     addTagsInto(dst, raw) {
       if (!dst) return;
       const add = typeof dst.add === "function"
@@ -445,7 +589,7 @@ export function installModifierResolver(Engine) {
     },
 
     addEmbeddedItemEffectTagsInto(dst, item) {
-      const effects = item?.effects?.contents ?? item?.effects ?? [];
+      const effects = item?.effects?.contents ?? item.effects ?? [];
       for (const effect of effects) if (!effect?.disabled) this.addEffectTagsInto(dst, effect);
     },
 
