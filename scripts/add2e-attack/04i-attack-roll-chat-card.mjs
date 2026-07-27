@@ -3,10 +3,14 @@
 // Chaque joueur actif crée sa carte simplifiée privée ; un seul MJ crée la carte détaillée.
 // Compatible Foundry V13/V14/V15.
 
-const VERSION = "2026-07-24-attack-chat-single-create-v32";
+const VERSION = "2026-07-27-attack-chat-readable-details-v33";
 const SOCKET = "system.add2e";
-const ROUTE_TYPE = "ADD2E_ATTACK_CHAT_ROUTE_V32";
+const ROUTE_TYPE = "ADD2E_ATTACK_CHAT_ROUTE_V33";
 const LOG = "[ADD2E][ATTACK_CHAT]";
+
+const ACTIVE_ITEM_TYPES = new Set([
+  "arme", "armure", "objet", "weapon", "armor", "equipment", "object", "magic", "objet_magique"
+]);
 
 globalThis.ADD2E_ATTACK_CHAT_VISIBILITY_VERSION = VERSION;
 globalThis.__ADD2E_ATTACK_CHAT_ROUTE_IDS ??= new Set();
@@ -25,8 +29,8 @@ function escapeHtml(value) {
 }
 
 function signed(value) {
-  const number = Number(value) || 0;
-  return `${number >= 0 ? "+" : "−"}${Math.abs(number)}`;
+  const numeric = Number(value) || 0;
+  return `${numeric >= 0 ? "+" : "−"}${Math.abs(numeric)}`;
 }
 
 function number(value, fallback = 0) {
@@ -116,24 +120,339 @@ function cloneForSocket(value) {
   }
 }
 
-function modifierSummary(resolution) {
-  const applied = Array.isArray(resolution?.applied) ? resolution.applied : [];
-  if (!applied.length) return "Aucun";
-  return applied.map(entry => {
-    const label = String(entry?.label ?? entry?.metadata?.label ?? entry?.source?.name ?? entry?.id ?? "Modificateur");
-    const rangeBand = String(entry?.metadata?.rangeBand ?? "").trim();
-    return `${label}${rangeBand ? ` (${rangeBand})` : ""} ${signed(entry?.contribution)}`;
-  }).join(" ; ");
+function normalizeCombatTag(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/\s+/g, "_")
+    .replace(/,([0-9]+)$/, ".$1");
 }
 
-function positionSummary(snapshot) {
-  const position = snapshot?.position ?? {};
-  const label = String(position.label ?? position.zone ?? "Face");
-  const values = [position.caBefore, position.caAfterPosition, position.caFinal]
-    .map(value => number(value, NaN))
-    .filter(Number.isFinite);
-  const distinct = [...new Set(values)];
-  return distinct.length > 1 ? `${label} · CA ${distinct.join(" → ")}` : label;
+function collectTags(target, raw) {
+  if (raw === undefined || raw === null || raw === "") return;
+  if (Array.isArray(raw) || raw instanceof Set) {
+    for (const value of raw) collectTags(target, value);
+    return;
+  }
+  if (typeof raw === "object") {
+    for (const value of Object.values(raw)) collectTags(target, value);
+    return;
+  }
+  if (typeof raw !== "string") return;
+  for (const value of raw.split(/[,;|]/)) {
+    const tag = normalizeCombatTag(value);
+    if (tag) target.add(tag);
+  }
+}
+
+function documentTags(document) {
+  const tags = new Set();
+  for (const value of [
+    document?.system?.tags,
+    document?.system?.tag,
+    document?.system?.effectTags,
+    document?.system?.effets,
+    document?.system?.effects,
+    document?.flags?.add2e?.tags,
+    document?.flags?.add2e?.effectTags
+  ]) collectTags(tags, value);
+  if (document?.getFlag) {
+    try { collectTags(tags, document.getFlag("add2e", "tags")); } catch (_error) {}
+    try { collectTags(tags, document.getFlag("add2e", "effectTags")); } catch (_error) {}
+  }
+  return tags;
+}
+
+function combatTagDescriptor(rawTag) {
+  const tag = normalizeCombatTag(rawTag);
+  const definitions = [
+    ["bonus_attaque:", "attack"],
+    ["bonus_toucher:", "attack"],
+    ["bonus:toucher:", "attack"],
+    ["malus_attaque:", "attack"],
+    ["malus_toucher:", "attack"],
+    ["malus:toucher:", "attack"],
+    ["bonus_degats:", "damage"],
+    ["bonus:degats:", "damage"],
+    ["malus_degats:", "damage"],
+    ["malus:degats:", "damage"]
+  ];
+  for (const [prefix, domain] of definitions) {
+    if (!tag.startsWith(prefix)) continue;
+    const value = Number(tag.slice(prefix.length));
+    return Number.isFinite(value) ? { domain, value } : null;
+  }
+  return null;
+}
+
+function itemTypeLabel(item) {
+  const type = String(item?.type ?? "").toLowerCase();
+  return {
+    arme: "Arme",
+    weapon: "Arme",
+    armure: "Armure",
+    armor: "Armure",
+    objet: "Objet",
+    object: "Objet",
+    equipment: "Équipement",
+    magic: "Objet magique",
+    objet_magique: "Objet magique",
+    race: "Race",
+    classe: "Classe"
+  }[type] ?? "Objet porté";
+}
+
+function actorItemById(actor, id) {
+  const wanted = String(id ?? "").trim();
+  if (!wanted) return null;
+  return actor?.items?.get?.(wanted)
+    ?? Array.from(actor?.items ?? []).find(item => String(item?.id ?? "") === wanted)
+    ?? null;
+}
+
+function effectSourceItem(actor, effect) {
+  const byFlag = actorItemById(actor, effect?.flags?.add2e?.sourceItemId);
+  if (byFlag) return byFlag;
+  const match = String(effect?.origin ?? "").match(/\.Item\.([^.]+)(?:\.|$)/);
+  return actorItemById(actor, match?.[1]);
+}
+
+function activeTagCandidates(actor) {
+  const candidates = [];
+  const push = (name, kind, tags) => {
+    if (!name || !tags?.size) return;
+    candidates.push({ name: String(name), kind: String(kind), tags });
+  };
+
+  for (const effect of actor?.effects ?? []) {
+    if (!effect || effect.disabled === true || effect.isSuppressed === true || effect.flags?.add2e?.autoClassPassiveEffect === true) continue;
+    const item = effectSourceItem(actor, effect);
+    if (item && ACTIVE_ITEM_TYPES.has(String(item.type ?? "").toLowerCase()) && item.system?.equipee !== true) continue;
+    push(item?.name ?? effect.name ?? "Effet actif", item ? itemTypeLabel(item) : "Effet actif", documentTags(effect));
+  }
+
+  for (const item of actor?.items ?? []) {
+    const type = String(item?.type ?? "").toLowerCase();
+    const always = type === "race" || type === "classe";
+    if (!always && !ACTIVE_ITEM_TYPES.has(type)) continue;
+    if (ACTIVE_ITEM_TYPES.has(type) && item.system?.equipee !== true) continue;
+    push(item.name ?? "Objet", itemTypeLabel(item), documentTags(item));
+    for (const effect of Array.from(item.effects?.contents ?? item.effects ?? [])) {
+      if (!effect || effect.disabled === true || effect.isSuppressed === true) continue;
+      push(item.name ?? effect.name ?? "Objet", itemTypeLabel(item), documentTags(effect));
+    }
+  }
+
+  const unique = [];
+  const seen = new Set();
+  for (const candidate of candidates) {
+    const key = `${candidate.kind}|${candidate.name}|${[...candidate.tags].sort().join("|")}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    unique.push(candidate);
+  }
+  return unique;
+}
+
+function activeTagOrigin(ctx, entry, domain) {
+  const contribution = number(entry?.contribution);
+  const matches = activeTagCandidates(ctx?.actor).filter(candidate => [...candidate.tags].some(tag => {
+    const descriptor = combatTagDescriptor(tag);
+    return descriptor?.domain === domain && descriptor.value === contribution;
+  }));
+  const names = [];
+  const seen = new Set();
+  for (const match of matches) {
+    const key = `${match.kind}|${match.name}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    names.push(match);
+  }
+  return names.length === 1 ? names[0] : null;
+}
+
+function abilityLabel(value) {
+  const key = normalizeCombatTag(value);
+  return {
+    force: "Force",
+    dexterite: "Dextérité",
+    constitution: "Constitution",
+    intelligence: "Intelligence",
+    sagesse: "Sagesse",
+    charisme: "Charisme"
+  }[key] ?? String(value ?? "Caractéristique");
+}
+
+function resolvedAbilityScore(actor, ability) {
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+  if (!actor || !ability || typeof engine?.resolveAbilityDerived !== "function") return null;
+  try {
+    const score = Number(engine.resolveAbilityDerived(actor, ability, {
+      source: "attack-chat-card",
+      consumer: "attack-chat"
+    })?.total);
+    return Number.isFinite(score) ? score : null;
+  } catch (_error) {
+    return null;
+  }
+}
+
+function modifierPresentation(ctx, entry, domain) {
+  const source = entry?.source ?? {};
+  const metadata = entry?.metadata ?? {};
+  const kind = normalizeCombatTag(source.kind).replace(/-/g, "_");
+  const id = String(entry?.id ?? "");
+  const rawLabel = String(entry?.label ?? metadata.label ?? source.name ?? entry?.id ?? "Modificateur");
+
+  if (metadata.ability || kind === "ability") {
+    const ability = metadata.ability ?? id.split(":").pop();
+    const score = resolvedAbilityScore(ctx?.actor, ability);
+    return { label: `${abilityLabel(ability)}${score === null ? "" : ` ${score}`}`, source: "Caractéristique" };
+  }
+  if (kind === "weapon" || metadata.producer === "weapon-base-field") {
+    return {
+      label: String(source.name || ctx?.arme?.name || "Arme"),
+      source: domain === "damage" ? "Bonus aux dégâts de l’arme" : "Bonus au toucher de l’arme"
+    };
+  }
+  if (kind === "weapon_effect") return { label: String(source.name || ctx?.arme?.name || "Arme"), source: "Effet magique de l’arme" };
+  if (kind === "active_tags") {
+    const origin = activeTagOrigin(ctx, entry, domain);
+    return origin
+      ? { label: origin.name, source: `${origin.kind} — effet actif` }
+      : { label: rawLabel, source: "Effet actif de l’acteur" };
+  }
+  if (kind === "attack_action") {
+    if (id.includes(":attack:position")) return { label: `Position — ${ctx?.snapshot?.position?.label ?? "Situation"}`, source: "Situation de combat" };
+    if (id.includes(":attack:range")) return { label: `Portée — ${ctx?.snapshot?.range?.description ?? "Portée"}`, source: "Situation de combat" };
+    if (id.includes(":attack:backstab")) return { label: "Attaque dans le dos", source: "Capacité utilisée" };
+    if (id.includes(":attack:armor-adjustment")) return { label: "Ajustement arme contre armure", source: "Table arme/armure" };
+    if (id.includes(":attack:manual")) return { label: "Ajustement saisi", source: "Situation de combat" };
+    return { label: rawLabel, source: "Situation de combat" };
+  }
+  if (kind === "race") return { label: String(source.name || rawLabel), source: "Capacité raciale" };
+  if (kind === "passive_rules") return { label: rawLabel, source: "Règle passive" };
+  if (kind === "target_defense") return { label: String(source.name || rawLabel), source: "Défense de la cible" };
+  if (["item", "item_effect", "objet", "objet_magique", "effect"].includes(kind)) {
+    return { label: String(source.name || rawLabel), source: kind === "effect" ? "Effet actif" : "Objet ou effet embarqué" };
+  }
+  return { label: rawLabel, source: source.name && source.name !== rawLabel ? `Source : ${source.name}` : "Modificateur de combat" };
+}
+
+function infoCellHtml(label, value) {
+  return `<div style="min-width:0;padding:7px 8px;border:1px solid rgba(185,139,45,.28);border-radius:6px;background:rgba(255,253,244,.72);"><div style="margin-bottom:2px;color:#76511a;font-size:.68rem;font-weight:900;text-transform:uppercase;letter-spacing:.025em;">${escapeHtml(label)}</div><div style="color:#2f250c;font-size:.94rem;font-weight:850;line-height:1.25;overflow-wrap:anywhere;">${escapeHtml(value)}</div></div>`;
+}
+
+function contextGridHtml(cells = []) {
+  return `<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-bottom:9px;">${cells.map(cell => infoCellHtml(cell.label, cell.value)).join("")}</div>`;
+}
+
+function modifierTableHtml(ctx, resolution, domain) {
+  const applied = Array.isArray(resolution?.applied) ? resolution.applied : [];
+  const rows = applied.map(entry => {
+    const presentation = modifierPresentation(ctx, entry, domain);
+    const contribution = number(entry?.contribution);
+    return `<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:7px 2px;border-bottom:1px solid rgba(185,139,45,.22);"><div style="min-width:0;"><div style="color:#2f250c;font-size:.9rem;font-weight:850;line-height:1.25;overflow-wrap:anywhere;">${escapeHtml(presentation.label)}</div><div style="margin-top:1px;color:#76511a;font-size:.7rem;font-weight:700;line-height:1.2;overflow-wrap:anywhere;">${escapeHtml(presentation.source)}</div></div><div style="min-width:2.5rem;text-align:right;color:${contribution < 0 ? "#7b1f1f" : "#1f5f32"};font-size:1rem;font-weight:950;">${escapeHtml(signed(contribution))}</div></div>`;
+  }).join("");
+  const empty = `<div style="padding:7px 2px;color:#5f5138;font-size:.84rem;font-style:italic;">Aucun bonus ni malus.</div>`;
+  return `<div style="margin-top:8px;"><div style="margin-bottom:3px;color:#6a4917;font-size:.72rem;font-weight:950;text-transform:uppercase;letter-spacing:.02em;">Bonus et malus appliqués</div>${rows || empty}<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 2px 2px;color:#2f250c;font-weight:950;"><span>Total des modificateurs</span><span>${escapeHtml(signed(resolution?.total))}</span></div></div>`;
+}
+
+function calculationBoxHtml(lines = [], result = null) {
+  const body = lines.map(line => `<div style="display:flex;justify-content:space-between;gap:10px;padding:3px 0;"><span style="color:#76511a;font-size:.78rem;font-weight:800;">${escapeHtml(line.label)}</span><strong style="color:#2f250c;text-align:right;font-size:.9rem;">${escapeHtml(line.value)}</strong></div>`).join("");
+  const outcomeHtml = result
+    ? `<div style="margin-top:7px;padding:7px 8px;border-radius:6px;background:rgba(185,139,45,.16);color:#2f250c;text-align:center;font-size:1rem;font-weight:950;">${escapeHtml(result)}</div>`
+    : "";
+  return `<div style="margin-top:9px;padding:8px 9px;border:1px solid rgba(185,139,45,.34);border-radius:7px;background:rgba(255,250,235,.62);">${body}${outcomeHtml}</div>`;
+}
+
+function detailSectionHtml({ label, icon, body }) {
+  if (!String(body ?? "").trim()) return "";
+  return `<details open class="add2e-attack-detail-section" style="display:block!important;width:100%!important;box-sizing:border-box!important;margin-top:8px!important;border:1px solid var(--add2e-card-border,#b98b2d)!important;border-radius:8px!important;overflow:hidden!important;background:rgba(255,255,255,.35)!important;color:#2f250c!important;"><summary style="display:list-item!important;cursor:pointer!important;padding:8px 9px!important;color:#3a270c!important;font-weight:950!important;line-height:1.25!important;background:rgba(185,139,45,.18)!important;"><i class="${escapeHtml(icon)}"></i> ${escapeHtml(label)}</summary><div style="display:block!important;width:100%!important;box-sizing:border-box!important;padding:9px!important;color:#2f250c!important;background:rgba(255,250,235,.52)!important;">${body}</div></details>`;
+}
+
+function baseDamageFormula(snapshot) {
+  const formula = String(snapshot?.damage?.formula ?? "").replace(/\s+/g, "");
+  const bonus = number(snapshot?.damage?.bonus);
+  if (!formula || bonus === 0) return formula || "—";
+  const suffix = bonus > 0 ? `+${bonus}` : `${bonus}`;
+  return formula.endsWith(suffix) ? formula.slice(0, -suffix.length) || formula : formula;
+}
+
+function rawDamageRollDetails(snapshot, multiplier = 1) {
+  let details = String(snapshot?.damage?.details ?? "").trim();
+  if (!details) return "—";
+  if (multiplier > 1) details = details.replace(new RegExp(`\\s*[×x*]\\s*${multiplier}\\s*$`), "").trim();
+  const bonus = number(snapshot?.damage?.bonus);
+  if (bonus !== 0) {
+    const sign = bonus > 0 ? "\\+" : "[-−]";
+    details = details.replace(new RegExp(`\\s*${sign}\\s*${Math.abs(bonus)}\\s*$`), "").trim();
+  }
+  return details || "—";
+}
+
+function touchDetailsHtml(ctx) {
+  const snapshot = ctx.snapshot;
+  const result = outcome(ctx);
+  const threshold = snapshot?.threshold ?? {};
+  const range = snapshot?.range ?? {};
+  const thac0 = number(threshold.thac0);
+  const armorClass = number(threshold.armorClass);
+  const baseThreshold = number(threshold.base);
+  const attackBonus = number(snapshot?.roll?.bonus);
+  const finalThreshold = number(threshold.final);
+  const d20 = number(snapshot?.roll?.d20);
+  const rollTotal = number(snapshot?.roll?.total, d20 + attackBonus);
+  const rangeLabel = String(range.description ?? range.band ?? "Contact");
+  const rangeModifier = number(range.modifier);
+  const conditional = Array.isArray(snapshot?.conditionalDetails) ? snapshot.conditionalDetails.filter(Boolean) : [];
+
+  const context = contextGridHtml([
+    { label: "Cible", value: String(ctx?.nomCible ?? ctx?.cible?.name ?? "Cible") },
+    { label: "CA de la cible", value: String(armorClass) },
+    { label: "Position", value: String(snapshot?.position?.label ?? "Face") },
+    { label: "Portée", value: `${rangeLabel}${rangeModifier === 0 ? "" : ` (${signed(rangeModifier)})`}` }
+  ]);
+  const modifiers = modifierTableHtml(ctx, snapshot.attackResolution, "attack");
+  const calculations = calculationBoxHtml([
+    { label: "Seuil de base", value: `THAC0 ${thac0} − CA ${armorClass} = ${baseThreshold}` },
+    { label: "Seuil après modificateurs", value: `${baseThreshold} ${attackBonus >= 0 ? "−" : "+"} ${Math.abs(attackBonus)} = ${finalThreshold}` },
+    { label: "Jet obtenu", value: `${d20} ${attackBonus >= 0 ? "+" : "−"} ${Math.abs(attackBonus)} = ${rollTotal}` }
+  ], result.title);
+  const conditionalHtml = conditional.length
+    ? `<div style="margin-top:8px;padding:7px 8px;border-left:3px solid #b98b2d;background:rgba(185,139,45,.1);color:#4b3a1c;font-size:.78rem;line-height:1.35;"><strong>Défenses particulières :</strong> ${escapeHtml(conditional.join(" ; "))}</div>`
+    : "";
+  return `${context}${modifiers}${calculations}${conditionalHtml}`;
+}
+
+function damageDetailsHtml(ctx) {
+  const snapshot = ctx.snapshot;
+  const result = outcome(ctx);
+  if (!result.hit) return `<div style="padding:9px;border-radius:6px;background:rgba(123,31,31,.08);color:#5b2020;font-weight:850;">Aucun dégât : l’attaque ne touche pas.</div>`;
+
+  const multiplier = ctx.useBackstab ? Math.max(1, number(ctx.backstabMultiplier, 1)) : 1;
+  const damageBonus = number(snapshot?.damage?.bonus);
+  const damageAmount = number(snapshot?.damage?.amount);
+  const context = contextGridHtml([
+    { label: "Arme", value: String(ctx?.arme?.name ?? "Arme") },
+    { label: "Dés de base", value: baseDamageFormula(snapshot) },
+    { label: "Résultat des dés", value: rawDamageRollDetails(snapshot, multiplier) },
+    { label: "Dégâts appliqués", value: String(damageAmount) }
+  ]);
+  const modifiers = modifierTableHtml(ctx, snapshot.damageResolution, "damage");
+  const calculationLines = [
+    { label: "Calcul du jet", value: String(snapshot?.damage?.details ?? "—") },
+    { label: "Total des modificateurs", value: signed(damageBonus) }
+  ];
+  if (multiplier > 1) calculationLines.push({ label: "Attaque sournoise", value: `Dégâts ×${multiplier}` });
+  const calculations = calculationBoxHtml(calculationLines, `${damageAmount} dégâts`);
+  const assassination = snapshot?.assassination?.resolved
+    ? `<div style="margin-top:8px;padding:7px 8px;border-left:3px solid #b98b2d;background:rgba(185,139,45,.1);color:#4b3a1c;font-size:.78rem;line-height:1.35;"><strong>Assassinat :</strong> ${escapeHtml(snapshot.assassination.success ? "Réussi" : "Échoué")} · ${escapeHtml(snapshot.assassination.roll)} / ${escapeHtml(snapshot.assassination.score)}%</div>`
+    : "";
+  return `${context}${modifiers}${calculations}${assassination}`;
 }
 
 function sourceIdentity(ctx) {
@@ -193,125 +512,10 @@ function playerCardOptions(ctx) {
   };
 }
 
-function detailRowsHtml(rows = []) {
-  return rows
-    .filter(row => row && (row.label !== undefined || row.value !== undefined))
-    .map(row => {
-      const label = escapeHtml(row.label ?? "");
-      const value = escapeHtml(row.value ?? "—");
-      return `<div class="add2e-attack-detail-row" style="display:block!important;width:100%!important;box-sizing:border-box!important;padding:8px 9px!important;border-bottom:1px solid rgba(185,139,45,.34)!important;color:#2f250c!important;background:rgba(255,253,244,.72)!important;white-space:normal!important;"><div class="add2e-attack-detail-label" style="display:block!important;width:100%!important;margin:0 0 3px 0!important;color:#6a4917!important;font-size:.74rem!important;font-weight:950!important;line-height:1.2!important;text-transform:uppercase!important;letter-spacing:.015em!important;white-space:normal!important;overflow-wrap:anywhere!important;">${label}</div><div class="add2e-attack-detail-value" style="display:block!important;width:100%!important;min-height:1.35em!important;margin:0!important;color:#2f250c!important;font-size:.95rem!important;font-weight:750!important;line-height:1.35!important;white-space:normal!important;overflow-wrap:anywhere!important;word-break:normal!important;opacity:1!important;visibility:visible!important;">${value}</div></div>`;
-    })
-    .join("");
-}
-
-function detailSectionHtml({ label, icon, rows }) {
-  const body = detailRowsHtml(rows);
-  if (!body) return "";
-  return `<details class="add2e-attack-detail-section" style="display:block!important;width:100%!important;box-sizing:border-box!important;margin-top:8px!important;border:1px solid var(--add2e-card-border,#b98b2d)!important;border-radius:8px!important;overflow:hidden!important;background:rgba(255,255,255,.35)!important;color:#2f250c!important;"><summary style="display:list-item!important;cursor:pointer!important;padding:7px 9px!important;color:#3a270c!important;font-weight:900!important;line-height:1.25!important;background:rgba(185,139,45,.18)!important;"><i class="${escapeHtml(icon)}"></i> ${escapeHtml(label)}</summary><div class="add2e-attack-detail-list" style="display:block!important;width:100%!important;box-sizing:border-box!important;padding:4px 8px 8px!important;color:#2f250c!important;background:rgba(255,250,235,.52)!important;">${body}</div></details>`;
-}
-
 function gmDetailsHtml(ctx) {
-  const snapshot = ctx.snapshot;
-  const result = outcome(ctx);
-  const threshold = snapshot?.threshold ?? {};
-  const range = snapshot?.range ?? {};
-  const rangeModifier = number(range.modifier);
-  const rangeLabel = String(range.description ?? range.band ?? "Contact");
-  const thac0 = number(threshold.thac0);
-  const armorClass = number(threshold.armorClass);
-  const baseThreshold = number(threshold.base);
-  const attackBonus = number(snapshot?.roll?.bonus);
-  const finalThreshold = number(threshold.final);
-  const d20 = number(snapshot?.roll?.d20);
-  const rollTotal = number(snapshot?.roll?.total, d20 + attackBonus);
-  const appliedModifiers = Array.isArray(snapshot?.attackResolution?.applied)
-    ? snapshot.attackResolution.applied
-    : [];
-
-  const touchRows = [
-    {
-      label: "Situation — Portée",
-      value: `${rangeLabel} — ${rangeModifier === 0 ? "aucun ajustement" : `ajustement ${signed(rangeModifier)}`}`
-    },
-    {
-      label: "Situation — Position",
-      value: positionSummary(snapshot).replace(" · ", " — ")
-    }
-  ];
-
-  const conditional = Array.isArray(snapshot?.conditionalDetails) ? snapshot.conditionalDetails.filter(Boolean) : [];
-  if (conditional.length) {
-    touchRows.push({
-      label: "Situation — Défenses conditionnelles",
-      value: conditional.join(" ; ")
-    });
-  }
-
-  touchRows.push(
-    { label: "Seuil de base — THAC0", value: String(thac0) },
-    { label: "Seuil de base — CA finale", value: String(armorClass) },
-    { label: "Seuil de base — Calcul", value: `${thac0} − ${armorClass} = ${baseThreshold}` }
-  );
-
-  if (appliedModifiers.length) {
-    for (const entry of appliedModifiers) {
-      const modifier = entry?.modifier ?? entry ?? {};
-      const label = String(
-        entry?.label
-        ?? entry?.metadata?.label
-        ?? modifier?.metadata?.label
-        ?? modifier?.label
-        ?? modifier?.source?.name
-        ?? entry?.source?.name
-        ?? modifier?.id
-        ?? entry?.id
-        ?? "Modificateur"
-      );
-      const rangeBand = String(entry?.metadata?.rangeBand ?? modifier?.metadata?.rangeBand ?? "").trim();
-      const contribution = number(entry?.contribution ?? modifier?.contribution ?? modifier?.value);
-      touchRows.push({
-        label: `Modificateur — ${label}${rangeBand ? ` (${rangeBand})` : ""}`,
-        value: signed(contribution)
-      });
-    }
-  } else {
-    touchRows.push({ label: "Modificateurs appliqués", value: "Aucun" });
-  }
-
-  const thresholdOperator = attackBonus >= 0 ? "−" : "+";
-  const rollOperator = attackBonus >= 0 ? "+" : "−";
-  touchRows.push(
-    { label: "Résolution — Bonus cumulé", value: signed(attackBonus) },
-    {
-      label: "Résolution — Seuil final au d20",
-      value: `${baseThreshold} ${thresholdOperator} ${Math.abs(attackBonus)} = ${finalThreshold}`
-    },
-    {
-      label: "Résolution — Jet obtenu",
-      value: `${d20} ${rollOperator} ${Math.abs(attackBonus)} = ${rollTotal}`
-    },
-    { label: "Résolution — Résultat", value: result.title }
-  );
-
-  const damageRows = result.hit
-    ? [
-        { label: "Modificateurs", value: modifierSummary(snapshot.damageResolution) },
-        { label: "Formule", value: snapshot?.damage?.formula ?? "—" },
-        { label: "Détail du jet", value: snapshot?.damage?.details ?? "—" },
-        { label: "Total", value: String(number(snapshot?.damage?.amount)) }
-      ]
-    : [{ label: "Dégâts", value: "Aucun : l’attaque ne touche pas." }];
-  if (ctx.useBackstab) damageRows.push({ label: "Attaque sournoise", value: `Dégâts ×${number(ctx.backstabMultiplier, 1)}` });
-  if (snapshot?.assassination?.resolved) {
-    damageRows.push({
-      label: "Assassinat",
-      value: `${snapshot.assassination.success ? "Réussi" : "Échoué"} · ${snapshot.assassination.roll} / ${snapshot.assassination.score}%`
-    });
-  }
-
   return [
-    detailSectionHtml({ label: "Détails du toucher", icon: "fas fa-bullseye", rows: touchRows }),
-    detailSectionHtml({ label: "Détails des dégâts", icon: "fas fa-burst", rows: damageRows })
+    detailSectionHtml({ label: "Toucher", icon: "fas fa-bullseye", body: touchDetailsHtml(ctx) }),
+    detailSectionHtml({ label: "Dégâts", icon: "fas fa-burst", body: damageDetailsHtml(ctx) })
   ].join("");
 }
 
@@ -320,6 +524,7 @@ function gmCardOptions(ctx) {
   const result = outcome(ctx);
   const rows = [
     { label: "Arme", value: ctx?.arme?.name ?? "Arme" },
+    { label: "Cible", value: `${ctx?.nomCible ?? ctx?.cible?.name ?? "Cible"} · CA ${number(snapshot?.threshold?.armorClass)}` },
     { label: "Résultat", value: result.title }
   ];
   if (result.hit) rows.push({ label: "Dégâts", value: String(number(snapshot?.damage?.amount)) });
