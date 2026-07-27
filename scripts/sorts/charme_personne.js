@@ -1,5 +1,5 @@
 // Charme-personne — ADD2E
-// Version : 2026-07-24-canonical-mental-save-executor-v9
+// Version : 2026-07-27-canonical-intelligence-v10
 // Compatible Foundry V13/V14/V15.
 
 return await (async () => {
@@ -76,16 +76,17 @@ return await (async () => {
     });
   }
 
-  const readAbility = (targetActor, fields, key) => {
-    const system = targetActor?.system ?? {};
-    for (const field of fields) {
-      const value = Number(system[field]);
-      if (Number.isFinite(value)) return value;
+  const effectsEngine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  const intelligence = targetActor => {
+    if (typeof effectsEngine?.resolveAbilityDerived !== "function") {
+      throw new Error("Charme-personne : le résolveur canonique d’Intelligence est indisponible.");
     }
-    return Number(system.abilities?.[key]?.value ?? 0) || 0;
+    const resolution = effectsEngine.resolveAbilityDerived(targetActor, "intelligence", {
+      source: "spell:charme_personne:periodic-save",
+      consumer: "spell-on-use"
+    });
+    return Number(resolution?.total) || 0;
   };
-  const intelligence = targetActor =>
-    readAbility(targetActor, ["intelligence", "intelligence_base", "int_aff"], "int");
   const currentTick = () => {
     const fromApi = Number(game.add2e?.time?.currentTick?.() ?? globalThis.ADD2E_TIME_ENGINE?.currentTick?.());
     if (Number.isFinite(fromApi) && fromApi >= 0) return Math.floor(fromApi);
@@ -151,7 +152,6 @@ return await (async () => {
     };
   };
 
-  const effectsEngine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
   const applyEffect = async (targetToken, effectData) => {
     const targetActor = targetToken.actor;
     if (game.user.isGM || targetActor.isOwner) {
