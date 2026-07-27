@@ -216,10 +216,20 @@ function installGenericSaveExtensions(Engine) {
         const category = this.getSaveCategory(saveType);
         const tags = this.getActiveTags(actor);
         const has = matcher => tags.includes(`bonus_save_vs:${matcher}:const`);
-        if (category === "poison" && has("poison")) return this.getConstitutionSaveBonus(actor);
-        if (category === "baguettes" && (has("baguette") || has("baguettes") || has("baton") || has("staff"))) return this.getConstitutionSaveBonus(actor);
-        if (category === "sorts" && (has("magie") || has("magic") || has("sort") || has("sorts") || has("spell"))) return this.getConstitutionSaveBonus(actor);
-        return 0;
+        const applies = (category === "poison" && has("poison"))
+          || (category === "baguettes" && (has("baguette") || has("baguettes") || has("baton") || has("staff")))
+          || (category === "sorts" && (has("magie") || has("magic") || has("sort") || has("sorts") || has("spell")));
+        if (!applies) return 0;
+        if (typeof this.resolveAbilityDerived !== "function") {
+          throw new Error("Le résolveur canonique ADD2E de Constitution est indisponible pour les sauvegardes.");
+        }
+        const constitution = this.resolveAbilityDerived(actor, "constitution", {
+          domain: "saving-throw",
+          type: category,
+          source: "racial-constitution-save",
+          consumer: "effects-engine"
+        });
+        return Math.max(0, Math.min(5, Math.floor((Number(constitution?.total) || 0) / 3.5)));
       }
     },
     getSaveBonus: {
