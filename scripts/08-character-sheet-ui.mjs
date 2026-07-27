@@ -161,8 +161,7 @@ function add2eRefreshActorSheetsForItemChange(item, reason = "item-change", opti
     try {
       if (typeof globalThis.add2eMagicObjectActivePowerEntries === "function") return globalThis.add2eMagicObjectActivePowerEntries(item).length > 0;
     } catch (_e) {}
-    const sys = item.system ?? {};
-    const raw = sys.pouvoirs ?? sys.powers ?? sys.pouvoirsMagiques ?? sys.magicalPowers ?? sys.sorts ?? sys.spells ?? [];
+    const raw = item.system?.pouvoirs ?? [];
     return Array.isArray(raw) ? raw.length > 0 : !!(raw && typeof raw === "object" && Object.keys(raw).length);
   })();
 
