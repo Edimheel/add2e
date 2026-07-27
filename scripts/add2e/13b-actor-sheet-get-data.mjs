@@ -4,7 +4,7 @@
 
 import "./13b-actor-sheet-get-data-core.mjs";
 
-const ADD2E_CLASS_MECHANICS_VERSION = "2026-07-26-sheet-charisma-social-v3";
+const ADD2E_CLASS_MECHANICS_VERSION = "2026-07-27-sheet-multiclass-constitution-hp-v4";
 globalThis.ADD2E_CLASS_MECHANICS_VERSION = ADD2E_CLASS_MECHANICS_VERSION;
 
 function add2eClassMechanicsNormalize(value) {
@@ -189,13 +189,20 @@ function add2ePrepareConstitutionHitPointBonus(actor, data) {
   let progression = null;
   let value = Math.trunc(Number(constitution.profile?.pv) || 0);
 
-  if (classItems.length === 1) {
+  if (classItems.length) {
     if (typeof globalThis.add2eResolveConstitutionHitPointProgression !== "function") {
       throw new Error("Le résolveur canonique de progression des PV de Constitution est indisponible.");
     }
-    progression = globalThis.add2eResolveConstitutionHitPointProgression(actor, classItems[0]);
-    if (!progression) throw new Error("La progression canonique des PV de Constitution n’a pas pu être résolue.");
-    value = Math.trunc(Number(progression.constitutionBonusPerDie) || 0);
+    const progressions = classItems
+      .map(item => globalThis.add2eResolveConstitutionHitPointProgression(actor, item))
+      .filter(Boolean);
+    const fighterProgression = progressions.find(entry => entry?.fighterClass === true) ?? null;
+    progression = fighterProgression ?? (classItems.length === 1 ? progressions[0] ?? null : null);
+    if (classItems.length === 1 && !progression) {
+      throw new Error("La progression canonique des PV de Constitution n’a pas pu être résolue.");
+    }
+    if (fighterProgression) value = Math.trunc(Number(fighterProgression.constitutionBonusPerDie) || 0);
+    else if (classItems.length === 1) value = Math.trunc(Number(progression.constitutionBonusPerDie) || 0);
   }
 
   const hitPointBonus = {
