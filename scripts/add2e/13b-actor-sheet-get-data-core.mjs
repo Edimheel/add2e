@@ -6,7 +6,7 @@ import { add2ePopulateActorSheetSpellData } from "./13b-actor-sheet-get-data-spe
 
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant getData.");
 
-const ADD2E_ACTIVE_EFFECTS_DATA_VERSION = "2026-07-28-canonical-familiar-effects-v4";
+const ADD2E_ACTIVE_EFFECTS_DATA_VERSION = "2026-07-28-canonical-familiar-capabilities-v5";
 const ADD2E_HIDDEN_TECHNICAL_CLASS_RULE_KINDS = new Set(["armor_class_base", "attack_modifier"]);
 
 function add2eExceptionalStrengthValue(rawValue) {
@@ -83,13 +83,34 @@ function add2eEffectHasCanonicalModifier(effect) {
   return add2eEffectModifiers(effect).some(modifier => String(modifier?.domain ?? "").trim());
 }
 
+function add2eEffectFamiliarData(effect) {
+  return effect?.flags?.add2e?.familiar ?? effect?.getFlag?.("add2e", "familiar") ?? null;
+}
+
 function add2eEffectFamiliarKind(effect) {
-  const familiar = effect?.flags?.add2e?.familiar ?? effect?.getFlag?.("add2e", "familiar") ?? null;
-  return add2eNormEffectValue(familiar?.kind);
+  return add2eNormEffectValue(add2eEffectFamiliarData(effect)?.kind);
 }
 
 function add2eEffectIsAppliedFamiliar(effect) {
   return ["benefit", "penalty"].includes(add2eEffectFamiliarKind(effect));
+}
+
+function add2eEffectTagValues(effect) {
+  const raw = effect?.flags?.add2e?.tags ?? effect?.getFlag?.("add2e", "tags") ?? [];
+  if (Array.isArray(raw)) return raw.map(value => String(value ?? "").trim()).filter(Boolean);
+  if (typeof raw === "string") return raw.split(/[,;|\n]+/g).map(value => value.trim()).filter(Boolean);
+  if (raw && typeof raw === "object") return Object.values(raw).map(value => String(value ?? "").trim()).filter(Boolean);
+  return [];
+}
+
+function add2eEffectIsFamiliarVitality(effect) {
+  return add2eEffectTagValues(effect).some(tag => add2eNormEffectValue(tag) === "familier_partage_pv");
+}
+
+function add2eEffectCapabilityName(effect) {
+  return String(effect?.name ?? effect?.label ?? "Capacité accordée")
+    .replace(/^\s*Familier\s*[—–-]\s*/i, "")
+    .trim() || "Capacité accordée";
 }
 
 function add2eEffectIsSynchronizedClassPassive(effect) {
@@ -229,6 +250,21 @@ function add2eEffectSourceName(effect) {
   );
 }
 
+function add2eFamiliarEffectCapability(effect) {
+  if (!effect || effect.disabled === true || effect.isSuppressed === true) return null;
+  if (add2eEffectFamiliarKind(effect) !== "benefit" || add2eEffectIsFamiliarVitality(effect)) return null;
+  const familiar = add2eEffectFamiliarData(effect) ?? {};
+  return {
+    id: effect.id,
+    name: add2eEffectCapabilityName(effect),
+    img: effect.img || "icons/svg/aura.svg",
+    description: add2eEffectDescription(effect),
+    sourceName: add2eEffectSourceName(effect),
+    familiarLabel: String(familiar.familiarLabel ?? "").trim(),
+    tags: add2eEffectTagValues(effect)
+  };
+}
+
 export function add2ePopulateActorSheetActiveEffectsData(actor, data) {
   data.activeEffectsList = Array.from(actor?.effects ?? [])
     .filter(add2eShouldShowEffect)
@@ -241,6 +277,13 @@ export function add2ePopulateActorSheetActiveEffectsData(actor, data) {
       sourceName: add2eEffectSourceName(eff)
     }));
   return data.activeEffectsList;
+}
+
+export function add2ePopulateActorSheetEffectCapabilities(actor, data) {
+  data.activeEffectCapabilities = Array.from(actor?.effects ?? [])
+    .map(add2eFamiliarEffectCapability)
+    .filter(Boolean);
+  return data.activeEffectCapabilities;
 }
 
 globalThis.Add2eActorSheet.prototype.getData = async function getData() {
@@ -262,6 +305,7 @@ globalThis.Add2eActorSheet.prototype.getData = async function getData() {
 
   add2ePopulateActorSheetSpellData({ actor: state.actor, data, items: state.items });
   add2ePopulateActorSheetActiveEffectsData(this.actor, data);
+  add2ePopulateActorSheetEffectCapabilities(this.actor, data);
 
   data.alignementsDisponibles = add2eSheetAllowedAlignments(state.actor, state.sys);
   data.activeTab = this._add2eGetNativeActiveTab?.() || this._add2eActiveTab || this._add2eReadStoredTab?.() || "resume";
