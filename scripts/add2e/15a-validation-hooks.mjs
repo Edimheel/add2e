@@ -1,151 +1,323 @@
-// ADD2E — Validation hooks et recalcul canonique des documents.
+// ADD2E — Validation des documents et consommateurs directs des effets.
 // Compatible Foundry V13/V14/V15.
 
-const ADD2E_CANONICAL_HP_DOCUMENT_HOOKS_VERSION = "2026-07-28-canonical-hit-points-document-hooks-v2";
-globalThis.ADD2E_CANONICAL_HP_DOCUMENT_HOOKS_VERSION = ADD2E_CANONICAL_HP_DOCUMENT_HOOKS_VERSION;
+const ADD2E_DOCUMENT_EFFECT_CONSUMERS_VERSION = "2026-07-28-direct-familiar-consumers-v3";
+globalThis.ADD2E_DOCUMENT_EFFECT_CONSUMERS_VERSION = ADD2E_DOCUMENT_EFFECT_CONSUMERS_VERSION;
 
-const add2eCanonicalHpRecalculationQueue = new Map();
+function add2eEffectConsumerClone(value) {
+  if (value === undefined || value === null) return value;
+  if (typeof foundry?.utils?.deepClone === "function") return foundry.utils.deepClone(value);
+  if (typeof foundry?.utils?.duplicate === "function") return foundry.utils.duplicate(value);
+  return JSON.parse(JSON.stringify(value));
+}
 
-function add2eCanonicalHpList(value) {
+function add2eEffectConsumerList(value) {
   if (Array.isArray(value)) return value.filter(entry => entry && typeof entry === "object");
   if (value && typeof value === "object") return Object.values(value).filter(entry => entry && typeof entry === "object");
   return [];
 }
 
-function add2eCanonicalHpDocumentModifiers(document) {
+function add2eEffectConsumerModifiers(document) {
   let value = document?.flags?.add2e?.modifiers;
   if ((value === undefined || value === null) && typeof document?.getFlag === "function") {
     try { value = document.getFlag("add2e", "modifiers"); }
     catch (_error) { value = null; }
   }
-  return add2eCanonicalHpList(value);
+  return add2eEffectConsumerList(value);
 }
 
-function add2eCanonicalHpHasModifier(document) {
-  return add2eCanonicalHpDocumentModifiers(document)
+function add2eEffectConsumerHasHitPoints(document) {
+  return add2eEffectConsumerModifiers(document)
     .some(modifier => String(modifier?.domain ?? "").trim().toLowerCase() === "hit-points");
 }
 
-function add2eCanonicalHpItemHasModifier(item) {
-  if (add2eCanonicalHpHasModifier(item)) return true;
-  return Array.from(item?.effects?.contents ?? item?.effects ?? [])
-    .some(effect => add2eCanonicalHpHasModifier(effect));
-}
-
-function add2eCanonicalHpChangesTouchModifiers(changes = {}) {
+function add2eEffectConsumerChangesTouchModifiers(changes = {}) {
   if (Object.prototype.hasOwnProperty.call(changes, "flags.add2e.modifiers")) return true;
   if (Object.prototype.hasOwnProperty.call(changes, "flags.add2e.-=modifiers")) return true;
   if (typeof foundry?.utils?.hasProperty === "function" && foundry.utils.hasProperty(changes, "flags.add2e.modifiers")) return true;
-  return Object.keys(changes).some(key =>
-    key === "flags.add2e.modifiers"
+  return Object.keys(changes ?? {}).some(key => key === "flags.add2e.modifiers"
     || key === "flags.add2e.-=modifiers"
-    || key.startsWith("flags.add2e.modifiers.")
-  );
+    || key.startsWith("flags.add2e.modifiers."));
 }
 
-function add2eCanonicalHpActor(document) {
+function add2eEffectConsumerActor(document) {
   const parent = document?.parent ?? document?.actor ?? null;
   if (parent?.documentName === "Actor") return parent;
   if (document?.documentName === "Actor") return document;
   return null;
 }
 
-function add2eCanonicalHpCanRecalculate() {
+function add2eEffectConsumerOwnsHook(userId) {
+  return !userId || String(userId) === String(game.user?.id ?? "");
+}
+
+function add2eEffectConsumerIsResponsibleGM() {
   if (!game.user?.isGM) return false;
   if (typeof game.user.isActiveGM === "boolean") return game.user.isActiveGM;
   return game.users?.activeGM?.id === game.user.id;
 }
 
-function add2eQueueCanonicalHitPointRecalculation(actor, reason = "canonical-hit-points-document-change") {
-  if (!actor?.id || !actor?.system || !add2eCanonicalHpCanRecalculate()) return;
-  const existing = add2eCanonicalHpRecalculationQueue.get(actor.id);
-  if (existing?.scheduled === true) {
-    existing.reason = reason;
-    return;
+async function add2eRecalculateHitPointsDirect(actor, { reason = "canonical-hit-points", force = false } = {}) {
+  if (!actor?.system) return false;
+  const classes = Array.from(actor.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
+
+  if (classes.length > 1) {
+    if (typeof globalThis.add2eSyncMulticlassHp !== "function") {
+      throw new Error("Le calcul canonique des PV multiclassés est indisponible.");
+    }
+    await globalThis.add2eSyncMulticlassHp(actor, { force, reason });
+  } else {
+    const calculate = globalThis.Add2eActorSheet?.prototype?.autoSetPointsDeCoup;
+    if (typeof calculate !== "function") {
+      throw new Error("Le calcul canonique des PV monoclasse est indisponible.");
+    }
+    await calculate.call({ actor }, { force, reason });
   }
 
-  const queued = { actor, reason, scheduled: true };
-  add2eCanonicalHpRecalculationQueue.set(actor.id, queued);
-  setTimeout(async () => {
-    const current = add2eCanonicalHpRecalculationQueue.get(actor.id);
-    add2eCanonicalHpRecalculationQueue.delete(actor.id);
-    if (!current?.actor || !add2eCanonicalHpCanRecalculate()) return;
-    try {
-      if (typeof globalThis.add2eRecalculateHitPoints !== "function") {
-        throw new Error("Le recalcul canonique ADD2E des points de vie n’est pas disponible.");
-      }
-      await globalThis.add2eRecalculateHitPoints(current.actor, { reason: current.reason });
-      const sheet = current.actor.sheet;
-      if (sheet?.rendered === true) await sheet.render({ force: true });
-    } catch (error) {
-      console.error("[ADD2E][HIT_POINTS][DOCUMENT_RECALCULATION]", {
-        actor: current.actor?.name,
-        reason: current.reason,
-        error
+  const sheet = actor.sheet;
+  if (sheet?.rendered === true) await sheet.render({ force: true });
+  return true;
+}
+
+globalThis.add2eRecalculateHitPoints = add2eRecalculateHitPointsDirect;
+
+function add2eFamiliarEffectData(effect) {
+  return effect?.flags?.add2e?.familiar ?? effect?.getFlag?.("add2e", "familiar") ?? null;
+}
+
+function add2eFamiliarEffectTags(effect) {
+  let raw = effect?.flags?.add2e?.tags;
+  if ((raw === undefined || raw === null) && typeof effect?.getFlag === "function") {
+    try { raw = effect.getFlag("add2e", "tags"); }
+    catch (_error) { raw = null; }
+  }
+  if (Array.isArray(raw)) return raw.map(value => String(value ?? "").trim()).filter(Boolean);
+  if (typeof raw === "string") return raw.split(/[,;|\n]+/g).map(value => value.trim()).filter(Boolean);
+  if (raw && typeof raw === "object") return Object.values(raw).map(value => String(value ?? "").trim()).filter(Boolean);
+  return [];
+}
+
+function add2eFamiliarEffectIsBenefit(effect) {
+  return add2eFamiliarEffectData(effect)?.kind === "benefit";
+}
+
+function add2eFamiliarEffectIsVitality(effect) {
+  if (add2eEffectConsumerHasHitPoints(effect)) return true;
+  return add2eFamiliarEffectTags(effect).some(tag => String(tag).trim().toLowerCase() === "familier:partage_pv");
+}
+
+function add2eFamiliarEffectDescription(effect) {
+  return String(
+    effect?.description
+    ?? effect?.flags?.add2e?.description
+    ?? effect?.getFlag?.("core", "description")
+    ?? ""
+  ).trim();
+}
+
+function add2eFamiliarCapabilityIcon(effect) {
+  const text = `${effect?.name ?? ""} ${add2eFamiliarEffectTags(effect).join(" ")}`
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  if (text.includes("vision") || text.includes("infravision") || text.includes("sens")) return "fa-eye";
+  if (text.includes("ouie")) return "fa-ear-listen";
+  if (text.includes("resistance") || text.includes("protection")) return "fa-shield-halved";
+  if (text.includes("regeneration") || text.includes("vitalite")) return "fa-heart-pulse";
+  if (text.includes("dexterite")) return "fa-person-running";
+  if (text.includes("surpris")) return "fa-user-shield";
+  return "fa-paw";
+}
+
+function add2eFamiliarCapabilities(actor) {
+  return Array.from(actor?.effects ?? []).flatMap(effect => {
+    if (!effect || effect.disabled === true || effect.isSuppressed === true) return [];
+    if (!add2eFamiliarEffectIsBenefit(effect) || add2eFamiliarEffectIsVitality(effect)) return [];
+    const familiar = add2eFamiliarEffectData(effect) ?? {};
+    const label = String(effect.name ?? effect.label ?? "Capacité de familier")
+      .replace(/^\s*Familier\s*[—–-]\s*/i, "")
+      .trim();
+    return [{
+      id: `familiar-effect:${effect.id}`,
+      key: `familiar-effect:${effect.id}`,
+      label: label || "Capacité de familier",
+      description: add2eFamiliarEffectDescription(effect),
+      img: effect.img || "icons/svg/aura.svg",
+      iconClass: add2eFamiliarCapabilityIcon(effect),
+      sourceId: effect.id,
+      sourceName: `Familier — ${String(familiar.familiarLabel ?? "Familier").trim()}`,
+      actionType: "passive-effect",
+      activable: true,
+      canRoll: false,
+      rollLabel: ""
+    }];
+  });
+}
+
+function add2eInstallFamiliarCapabilityConsumer() {
+  const prototype = globalThis.Add2eActorSheet?.prototype;
+  if (!prototype || prototype.__add2eFamiliarCapabilityConsumerVersion === ADD2E_DOCUMENT_EFFECT_CONSUMERS_VERSION) return false;
+  const base = prototype.getData;
+  if (typeof base !== "function") return false;
+
+  prototype.getData = async function add2eGetDataWithFamiliarCapabilities(...args) {
+    const data = await base.apply(this, args);
+    const actor = this.actor ?? this.document ?? null;
+    const existing = Array.isArray(data.activeRacialCapabilities) ? data.activeRacialCapabilities : [];
+    const familiar = add2eFamiliarCapabilities(actor);
+    const seen = new Set(existing.map(entry => String(entry?.id ?? entry?.key ?? "")));
+    data.activeRacialCapabilities = [
+      ...existing,
+      ...familiar.filter(entry => !seen.has(String(entry.id)))
+    ];
+    return data;
+  };
+  prototype.__add2eFamiliarCapabilityConsumerVersion = ADD2E_DOCUMENT_EFFECT_CONSUMERS_VERSION;
+  return true;
+}
+
+function add2eFamiliarNightVisionActive(actor) {
+  return Array.from(actor?.effects ?? []).some(effect => {
+    if (!effect || effect.disabled === true || effect.isSuppressed === true || !add2eFamiliarEffectIsBenefit(effect)) return false;
+    return add2eFamiliarEffectTags(effect).some(tag => {
+      const value = String(tag ?? "").trim().toLowerCase();
+      return value.includes("familier:sens:vision_nocturne")
+        || value.includes("familier:sens:infravision")
+        || value.startsWith("infravision:");
+    });
+  });
+}
+
+function add2eFamiliarLink(actor) {
+  return actor?.getFlag?.("add2e", "familiar") ?? actor?.flags?.add2e?.familiar ?? null;
+}
+
+function add2eSightData(value) {
+  return add2eEffectConsumerClone(value?.toObject?.() ?? value ?? {});
+}
+
+function add2eFamiliarMasterToken(actor, link) {
+  const scene = game.scenes?.get?.(link?.sceneId) ?? null;
+  return scene?.tokens?.get?.(link?.masterTokenId) ?? null;
+}
+
+function add2eFamiliarDarkvisionMode(current = {}) {
+  if (globalThis.CONFIG?.Canvas?.visionModes?.darkvision) return "darkvision";
+  return String(current?.visionMode ?? "basic") || "basic";
+}
+
+async function add2eSyncFamiliarNightVision(actor) {
+  if (!add2eEffectConsumerIsResponsibleGM() || !actor?.update) return false;
+  const link = add2eFamiliarLink(actor);
+  if (!link?.linkId) return false;
+
+  const active = add2eFamiliarNightVisionActive(actor);
+  const token = add2eFamiliarMasterToken(actor, link);
+  const stored = link.masterVisionBase && typeof link.masterVisionBase === "object"
+    ? add2eEffectConsumerClone(link.masterVisionBase)
+    : null;
+
+  if (active) {
+    const base = stored ?? {
+      prototype: add2eSightData(actor.prototypeToken?.sight ?? actor._source?.prototypeToken?.sight),
+      tokenId: token?.id ?? null,
+      token: token ? add2eSightData(token.sight ?? token._source?.sight) : null
+    };
+    if (!stored) {
+      await actor.setFlag("add2e", "familiar", {
+        ...add2eEffectConsumerClone(link),
+        masterVisionBase: base
+      }, { add2eFamiliarRelation: true, add2eInternal: true });
+    }
+
+    const currentPrototype = add2eSightData(actor.prototypeToken?.sight ?? actor._source?.prototypeToken?.sight);
+    const nextPrototype = {
+      ...currentPrototype,
+      enabled: true,
+      visionMode: add2eFamiliarDarkvisionMode(currentPrototype)
+    };
+    await actor.update({ "prototypeToken.sight": nextPrototype }, {
+      add2eFamiliarRelation: true,
+      add2eInternal: true,
+      add2eReason: "familiar-night-vision-enable"
+    });
+
+    if (token?.update) {
+      const currentToken = add2eSightData(token.sight ?? token._source?.sight);
+      await token.update({ sight: {
+        ...currentToken,
+        enabled: true,
+        visionMode: add2eFamiliarDarkvisionMode(currentToken)
+      } }, {
+        add2eFamiliarRelation: true,
+        add2eInternal: true,
+        add2eReason: "familiar-night-vision-enable"
       });
     }
-  }, 0);
+    return true;
+  }
+
+  if (!stored) return false;
+  await actor.update({ "prototypeToken.sight": add2eEffectConsumerClone(stored.prototype ?? {}) }, {
+    add2eFamiliarRelation: true,
+    add2eInternal: true,
+    add2eReason: "familiar-night-vision-disable"
+  });
+  if (token?.update && stored.token) {
+    await token.update({ sight: add2eEffectConsumerClone(stored.token) }, {
+      add2eFamiliarRelation: true,
+      add2eInternal: true,
+      add2eReason: "familiar-night-vision-disable"
+    });
+  }
+  const nextLink = add2eEffectConsumerClone(link);
+  delete nextLink.masterVisionBase;
+  await actor.setFlag("add2e", "familiar", nextLink, {
+    add2eFamiliarRelation: true,
+    add2eInternal: true
+  });
+  return true;
 }
 
-function add2eInstallCanonicalHitPointDocumentHooks() {
-  if (globalThis.__ADD2E_CANONICAL_HP_DOCUMENT_HOOKS_VERSION__ === ADD2E_CANONICAL_HP_DOCUMENT_HOOKS_VERSION) return;
-  globalThis.__ADD2E_CANONICAL_HP_DOCUMENT_HOOKS_VERSION__ = ADD2E_CANONICAL_HP_DOCUMENT_HOOKS_VERSION;
+async function add2eConsumeActiveEffectChange(effect, changes = {}, userId = null) {
+  if (!add2eEffectConsumerOwnsHook(userId)) return;
+  const actor = add2eEffectConsumerActor(effect);
+  if (!actor) return;
 
-  Hooks.on("createActiveEffect", effect => {
-    if (!add2eCanonicalHpCanRecalculate() || !add2eCanonicalHpHasModifier(effect)) return;
-    add2eQueueCanonicalHitPointRecalculation(add2eCanonicalHpActor(effect), "create-active-effect-hit-points");
-  });
+  const stateChanged = Object.prototype.hasOwnProperty.call(changes, "disabled")
+    || Object.prototype.hasOwnProperty.call(changes, "isSuppressed");
+  const hitPointsChanged = add2eEffectConsumerHasHitPoints(effect)
+    || add2eEffectConsumerChangesTouchModifiers(changes);
+  const familiarChanged = !!add2eFamiliarEffectData(effect);
 
-  Hooks.on("updateActiveEffect", (effect, changes = {}) => {
-    if (!add2eCanonicalHpCanRecalculate()) return;
-    const stateChanged = Object.prototype.hasOwnProperty.call(changes, "disabled")
-      || Object.prototype.hasOwnProperty.call(changes, "isSuppressed");
-    if (!stateChanged && !add2eCanonicalHpChangesTouchModifiers(changes) && !add2eCanonicalHpHasModifier(effect)) return;
-    add2eQueueCanonicalHitPointRecalculation(add2eCanonicalHpActor(effect), "update-active-effect-hit-points");
-  });
-
-  Hooks.on("deleteActiveEffect", effect => {
-    if (!add2eCanonicalHpCanRecalculate() || !add2eCanonicalHpHasModifier(effect)) return;
-    add2eQueueCanonicalHitPointRecalculation(add2eCanonicalHpActor(effect), "delete-active-effect-hit-points");
-  });
-
-  Hooks.on("createItem", item => {
-    if (!add2eCanonicalHpCanRecalculate() || !add2eCanonicalHpItemHasModifier(item)) return;
-    add2eQueueCanonicalHitPointRecalculation(add2eCanonicalHpActor(item), "create-item-hit-points");
-  });
-
-  Hooks.on("updateItem", (item, changes = {}) => {
-    if (!add2eCanonicalHpCanRecalculate()) return;
-    if (!add2eCanonicalHpChangesTouchModifiers(changes) && !add2eCanonicalHpItemHasModifier(item)) return;
-    add2eQueueCanonicalHitPointRecalculation(add2eCanonicalHpActor(item), "update-item-hit-points");
-  });
-
-  Hooks.on("deleteItem", item => {
-    if (!add2eCanonicalHpCanRecalculate() || !add2eCanonicalHpItemHasModifier(item)) return;
-    add2eQueueCanonicalHitPointRecalculation(add2eCanonicalHpActor(item), "delete-item-hit-points");
-  });
-
-  Hooks.on("updateActor", (actor, changes = {}) => {
-    if (!add2eCanonicalHpCanRecalculate() || !add2eCanonicalHpChangesTouchModifiers(changes)) return;
-    add2eQueueCanonicalHitPointRecalculation(actor, "update-actor-hit-points-modifiers");
-  });
-
-  Hooks.once("ready", () => {
-    if (!add2eCanonicalHpCanRecalculate()) return;
-    for (const actor of game.actors?.contents ?? []) {
-      const hasActorModifier = add2eCanonicalHpHasModifier(actor);
-      const hasEffectModifier = Array.from(actor.effects ?? []).some(effect =>
-        effect?.disabled !== true && effect?.isSuppressed !== true && add2eCanonicalHpHasModifier(effect)
-      );
-      const hasItemModifier = Array.from(actor.items ?? []).some(item => add2eCanonicalHpItemHasModifier(item));
-      if (hasActorModifier || hasEffectModifier || hasItemModifier) {
-        add2eQueueCanonicalHitPointRecalculation(actor, "ready-canonical-hit-points");
-      }
-    }
-  });
+  if (hitPointsChanged) {
+    await add2eRecalculateHitPointsDirect(actor, { reason: "active-effect-hit-points" });
+  }
+  if (familiarChanged && (stateChanged || !Object.keys(changes ?? {}).length || add2eEffectConsumerChangesTouchModifiers(changes))) {
+    await add2eSyncFamiliarNightVision(actor);
+    if (actor.sheet?.rendered === true && !hitPointsChanged) await actor.sheet.render({ force: true });
+  }
 }
 
-add2eInstallCanonicalHitPointDocumentHooks();
+Hooks.on("createActiveEffect", (effect, _options = {}, userId) => {
+  add2eConsumeActiveEffectChange(effect, {}, userId).catch(error => console.error("[ADD2E][ACTIVE_EFFECT][CREATE]", error));
+});
+Hooks.on("updateActiveEffect", (effect, changes = {}, _options = {}, userId) => {
+  add2eConsumeActiveEffectChange(effect, changes, userId).catch(error => console.error("[ADD2E][ACTIVE_EFFECT][UPDATE]", error));
+});
+Hooks.on("deleteActiveEffect", (effect, _options = {}, userId) => {
+  add2eConsumeActiveEffectChange(effect, {}, userId).catch(error => console.error("[ADD2E][ACTIVE_EFFECT][DELETE]", error));
+});
+
+Hooks.once("ready", async () => {
+  add2eInstallFamiliarCapabilityConsumer();
+  if (!add2eEffectConsumerIsResponsibleGM()) return;
+  for (const actor of game.actors?.contents ?? []) {
+    const activeHitPoints = Array.from(actor.effects ?? []).some(effect =>
+      effect?.disabled !== true && effect?.isSuppressed !== true && add2eEffectConsumerHasHitPoints(effect)
+    );
+    if (activeHitPoints) await add2eRecalculateHitPointsDirect(actor, { reason: "ready-hit-points-resolution" });
+    if (add2eFamiliarLink(actor)?.linkId) await add2eSyncFamiliarNightVision(actor);
+  }
+});
 
 Hooks.once("ready", () => {
   add2eRegisterClassItemSheet();
