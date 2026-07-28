@@ -32,30 +32,6 @@
     </div>
   {{/if}}
 
-  {{#if activeEffectCapabilities.length}}
-    <div class="a2e-panel a2e-effect-capabilities-panel">
-      <h2>Capacités accordées par les effets actifs</h2>
-      <div class="a2e-panel-body">
-        <div class="a2e-grid-2">
-          {{#each activeEffectCapabilities as |capability|}}
-            <div class="a2e-panel" style="box-shadow:none;">
-              <h3 style="display:flex;align-items:center;gap:8px;">
-                <img src="{{capability.img}}" alt="" style="width:30px;height:30px;border:0;border-radius:5px;object-fit:cover;">
-                <span>{{capability.name}}</span>
-                {{#if capability.sourceName}}
-                  <small class="a2e-muted"> — {{capability.sourceName}}</small>
-                {{/if}}
-              </h3>
-              <div class="a2e-panel-body a2e-small">
-                {{{capability.description}}}
-              </div>
-            </div>
-          {{/each}}
-        </div>
-      </div>
-    </div>
-  {{/if}}
-
   <div class="a2e-grid-2">
     <div class="a2e-panel">
       <h2>Capacités activables</h2>
@@ -96,7 +72,7 @@
     </div>
 
     <div class="a2e-panel">
-      <h2>Capacités raciales activables</h2>
+      <h2>Capacités raciales et accordées</h2>
       <div class="a2e-panel-body">
         {{#if activeRacialCapabilities.length}}
           {{#each activeRacialCapabilities as |capability|}}
@@ -125,7 +101,7 @@
             </div>
           {{/each}}
         {{else}}
-          <p class="a2e-muted">Aucune capacité raciale activable pour cette race.</p>
+          <p class="a2e-muted">Aucune capacité raciale ou accordée active.</p>
         {{/if}}
       </div>
     </div>
