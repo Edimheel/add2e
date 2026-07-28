@@ -2,7 +2,7 @@
 //  HOOK UNIQUE updateActor
 // =======================
 
-const ADD2E_CHARACTER_DATA_PREP_VERSION = "2026-07-28-canonical-character-data-consumers-v3";
+const ADD2E_CHARACTER_DATA_PREP_VERSION = "2026-07-28-canonical-character-data-consumers-v4";
 globalThis.ADD2E_CHARACTER_DATA_PREP_VERSION = ADD2E_CHARACTER_DATA_PREP_VERSION;
 
 const ADD2E_CARAC_CHANGE_KEYS = Object.freeze([
@@ -78,8 +78,6 @@ Hooks.on("updateActor", async (actor, changes = {}, options = {}, _userId) => {
   // =====================================================
   try {
     const skipCarac = (options?.add2eInternal && caracRecalculation)
-      || options?.add2eHitPointModifierUpdate === true
-      || options?.add2eHitPointModifierMigration === true
       || options?.add2eHitPointResolution === true;
     if (caracChanged && !skipCarac && !ACTIVE_CARAC_AUTO.has(actor.id)) {
       ACTIVE_CARAC_AUTO.add(actor.id);
