@@ -1,5 +1,6 @@
 // scripts/add2e-initiative-icons.mjs
 // ADD2E — icône D6 du bouton de jet d'initiative dans le tracker.
+// Rafraîchissement par hooks publics et observation DOM, sans patch de méthode privée.
 
 import { ADD2E_INITIATIVE_D6_ICON, ADD2E_INITIATIVE_VERSION } from "./add2e-initiative-constants.mjs";
 
@@ -13,6 +14,8 @@ const INITIATIVE_ROLL_BUTTON_SELECTOR = [
 const INITIATIVE_ICON = `url(${ADD2E_INITIATIVE_D6_ICON})`;
 const INITIATIVE_ICON_HOVER = `url(${ADD2E_INITIATIVE_D6_ICON})`;
 const INITIATIVE_TOOLTIP = "Lancer l'initiative ADD2E (1d6, le résultat le plus élevé commence)";
+let initiativeIconObserver = null;
+let initiativeIconRefreshScheduled = false;
 
 function rootElement(root = document) {
   if (root?.jquery) return root[0];
@@ -56,27 +59,38 @@ export function patchInitiativeIcons(root = document) {
   } catch (_err) {}
 }
 
-function combatTrackerClass() {
-  return globalThis.foundry?.applications?.sidebar?.tabs?.CombatTracker
-    ?? globalThis.CombatTracker
-    ?? ui?.combat?.constructor
-    ?? null;
+function scheduleInitiativeIconRefresh() {
+  if (initiativeIconRefreshScheduled) return;
+  initiativeIconRefreshScheduled = true;
+  queueMicrotask(() => {
+    initiativeIconRefreshScheduled = false;
+    patchInitiativeIcons(document);
+  });
 }
 
 export function installInitiativeIconPatch() {
-  const cls = combatTrackerClass();
-  const proto = cls?.prototype;
-  if (!proto || typeof proto._onRender !== "function") return false;
-  if (proto._onRender.__add2eD6IconPatch === ADD2E_INITIATIVE_VERSION) return true;
+  if (globalThis.__ADD2E_INITIATIVE_ICON_OBSERVER === ADD2E_INITIATIVE_VERSION) return true;
+  globalThis.__ADD2E_INITIATIVE_ICON_OBSERVER = ADD2E_INITIATIVE_VERSION;
 
-  const originalOnRender = proto._onRender.__add2eOriginal ?? proto._onRender;
-  proto._onRender = async function add2eCombatTrackerOnRenderD6Icons(...args) {
-    const result = await originalOnRender.apply(this, args);
-    patchInitiativeIcons(this.element ?? document);
-    return result;
-  };
+  initiativeIconObserver?.disconnect?.();
+  initiativeIconObserver = null;
 
-  proto._onRender.__add2eD6IconPatch = ADD2E_INITIATIVE_VERSION;
-  proto._onRender.__add2eOriginal = originalOnRender;
+  if (!document?.body || typeof MutationObserver !== "function") {
+    patchInitiativeIcons(document);
+    return true;
+  }
+
+  initiativeIconObserver = new MutationObserver(mutations => {
+    if (mutations.some(mutation => mutation.addedNodes?.length || mutation.type === "attributes")) {
+      scheduleInitiativeIconRefresh();
+    }
+  });
+  initiativeIconObserver.observe(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ["class", "data-action", "data-control"]
+  });
+  patchInitiativeIcons(document);
   return true;
 }
