@@ -32,6 +32,82 @@ import {
 import { add2eInitiativeDebug, installHooks } from "./add2e-initiative-hooks.mjs";
 import { createInitiativeChatCard } from "./add2e-initiative-chat.mjs";
 
+const INCAPACITATING_STATUS_IDS = new Set([
+  "dead", "defeated", "unconscious", "incapacitated", "inactive",
+  "mort", "inconscient", "hors-combat", "hors-jeu",
+  "paralyzed", "paralysed", "paralyse",
+  "petrified", "petrifie",
+  "stunned", "etourdi",
+  "asleep", "sleeping", "endormi",
+  "neutralized", "neutralise"
+]);
+
+function normalizeStatus(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function effectStatusIds(effect) {
+  const statuses = new Set();
+  for (const status of effect?.statuses ?? []) {
+    const id = normalizeStatus(status?.id ?? status);
+    if (id) statuses.add(id);
+  }
+  for (const value of [
+    effect?.statusId,
+    effect?.flags?.core?.statusId,
+    effect?.flags?.add2e?.statusId,
+    effect?.flags?.add2e?.vitalStatus,
+    effect?.name
+  ]) {
+    const id = normalizeStatus(value);
+    if (id) statuses.add(id);
+  }
+  return statuses;
+}
+
+export function combatantSkipReason(combatant) {
+  if (!combatant) return "Combattant introuvable";
+  if (isInactiveCombatant(combatant)) return "Incapable d'agir";
+
+  for (const document of [combatant, combatant.token, combatant.actor].filter(Boolean)) {
+    if (document?.flags?.add2e?.skipCombatTurn === true) return "Tour neutralisé";
+    for (const effect of document?.effects ?? []) {
+      if (!effect || effect.disabled === true || effect.isSuppressed === true) continue;
+      if (effect?.flags?.add2e?.skipCombatTurn === true) return effect.name || "Tour neutralisé";
+      for (const status of effectStatusIds(effect)) {
+        if (INCAPACITATING_STATUS_IDS.has(status)) return effect.name || status;
+      }
+    }
+  }
+  return "";
+}
+
+export function canCombatantTakeTurn(combatant) {
+  return combatantSkipReason(combatant) === "";
+}
+
+export async function advanceCombatTurn(combat = game.combat, direction = 1, { notify = true } = {}) {
+  if (!combat?.started) return combat;
+  const maximum = Math.max(1, combat.combatants?.size ?? Array.from(combat.combatants ?? []).length ?? 1);
+
+  for (let attempt = 0; attempt < maximum; attempt += 1) {
+    await advanceSortedTurn(combat, direction >= 0 ? 1 : -1);
+    const active = currentCombatant(combat);
+    const reason = combatantSkipReason(active);
+    if (!reason) return combat;
+    if (notify) ui.notifications?.info?.(`${active?.name ?? "Combattant"} est sauté : ${reason}.`);
+  }
+
+  if (notify) ui.notifications?.warn?.("Aucun combattant capable d'agir n'a été trouvé.");
+  return combat;
+}
+
 function initiativeEngine() {
   const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
   if (!engine || typeof engine.resolve !== "function") {
@@ -190,6 +266,34 @@ export function installInitiativeRollPatch() {
   return true;
 }
 
+export function installInitiativeNavigationPatch() {
+  if (initiativeState.navigationPatched) return true;
+  const proto = globalThis.Combat?.prototype;
+  if (!proto || typeof proto.nextTurn !== "function" || typeof proto.previousTurn !== "function") return false;
+  if (proto.nextTurn.__add2eCanonicalNavigation === ADD2E_INITIATIVE_VERSION
+    && proto.previousTurn.__add2eCanonicalNavigation === ADD2E_INITIATIVE_VERSION) {
+    initiativeState.navigationPatched = true;
+    return true;
+  }
+
+  const originalNext = proto.nextTurn.__add2eOriginalNavigation ?? proto.nextTurn;
+  const originalPrevious = proto.previousTurn.__add2eOriginalNavigation ?? proto.previousTurn;
+  proto.nextTurn = function add2eCanonicalNextTurn(...args) {
+    if (game?.system?.id !== "add2e") return originalNext.apply(this, args);
+    return advanceCombatTurn(this, 1);
+  };
+  proto.previousTurn = function add2eCanonicalPreviousTurn(...args) {
+    if (game?.system?.id !== "add2e") return originalPrevious.apply(this, args);
+    return advanceCombatTurn(this, -1);
+  };
+  proto.nextTurn.__add2eCanonicalNavigation = ADD2E_INITIATIVE_VERSION;
+  proto.nextTurn.__add2eOriginalNavigation = originalNext;
+  proto.previousTurn.__add2eCanonicalNavigation = ADD2E_INITIATIVE_VERSION;
+  proto.previousTurn.__add2eOriginalNavigation = originalPrevious;
+  initiativeState.navigationPatched = true;
+  return true;
+}
+
 function exposeGlobals() {
   game.add2e = game.add2e ?? {};
   game.add2e.initiativeVersion = ADD2E_INITIATIVE_VERSION;
@@ -200,8 +304,9 @@ function exposeGlobals() {
     compare: compareCombatantsAscending,
     order: sortedCombatants,
     current: currentCombatant,
-    canTakeTurn: combatant => !isInactiveCombatant(combatant),
-    advance: advanceSortedTurn
+    canTakeTurn: canCombatantTakeTurn,
+    skipReason: combatantSkipReason,
+    advance: advanceCombatTurn
   };
 
   Object.assign(globalThis, {
@@ -211,8 +316,9 @@ function exposeGlobals() {
     add2eCompareInitiative: compareCombatantsAscending,
     add2eGetCombatOrder: sortedCombatants,
     add2eGetCurrentCombatant: currentCombatant,
-    add2eCanCombatantTakeTurn: combatant => !isInactiveCombatant(combatant),
-    add2eAdvanceCombatTurn: advanceSortedTurn,
+    add2eCanCombatantTakeTurn: canCombatantTakeTurn,
+    add2eCombatantSkipReason: combatantSkipReason,
+    add2eAdvanceCombatTurn: advanceCombatTurn,
     add2eSortInitiative: sortInitiativeAscending,
     add2eScheduleInitiativeSort: scheduleInitiativeSort,
     add2eCanActorActNow: canActorActNow,
@@ -231,6 +337,7 @@ function installInitiativeCore() {
   configureInitiative();
   installCombatPatch();
   installInitiativeRollPatch();
+  installInitiativeNavigationPatch();
 }
 
 Hooks.once("init", installInitiativeCore);
@@ -253,7 +360,9 @@ export {
   compareCombatantsAscending as add2eCompareInitiative,
   sortedCombatants as add2eGetCombatOrder,
   currentCombatant as add2eGetCurrentCombatant,
-  advanceSortedTurn as add2eAdvanceCombatTurn,
+  advanceCombatTurn as add2eAdvanceCombatTurn,
+  canCombatantTakeTurn as add2eCanCombatantTakeTurn,
+  combatantSkipReason as add2eCombatantSkipReason,
   canActorActNow as add2eCanActorActNow,
   syncActionHudToCombatant as add2eSyncActionHudToCombatant,
   scheduleLocalSync as add2eSyncCombatAfterRefresh,
