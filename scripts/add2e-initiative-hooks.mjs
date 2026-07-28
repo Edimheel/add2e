@@ -8,6 +8,7 @@ import { patchInitiativeIcons } from "./add2e-initiative-icons.mjs";
 import { canTokenInteractNow, clearFoundryMovementTrailAggressive } from "./add2e-initiative-locks.mjs";
 
 const MOVEMENT_KEYS = ["x", "y", "elevation", "rotation"];
+let canonicalTurnEventTimer = null;
 
 function hasAnyProperty(obj, keys) {
   return keys.some(key => hasProperty(obj ?? {}, key));
@@ -19,6 +20,20 @@ function combatFor(combatant) {
 
 function patchTrackerIcons(app, html) {
   if (app?.options?.id === "combat" || app?.tabName === "combat" || app?.id === "combat") patchInitiativeIcons(html);
+}
+
+function scheduleCanonicalTurnEvent(combat, reason, delay = 0) {
+  if (!combat) return;
+  clearTimeout(canonicalTurnEventTimer);
+  canonicalTurnEventTimer = setTimeout(() => {
+    const active = currentCombatant(combat);
+    Hooks.callAll("add2eInitiativeTurnChanged", combat, {
+      reason,
+      round: Number(combat.round ?? 0),
+      turn: Number(combat.turn ?? 0),
+      combatantId: active?.id ?? null
+    });
+  }, Math.max(0, Number(delay) || 0));
 }
 
 export function add2eInitiativeDebug(label = "debug", combat = game.combat) {
@@ -55,12 +70,25 @@ export function installHooks() {
 
   Hooks.on("updateCombat", (combat, changes, options) => {
     if (options?.add2eInitiativeSort || options?.add2eInitiativeNavigation) return;
-    if (hasProperty(changes ?? {}, "started") && combat?.started) return scheduleLocalSync(combat, { delay: 80, selectToken: true, reason: "combat-start" });
-    if (hasAnyProperty(changes, ["turn", "round"])) scheduleLocalSync(combat, { delay: 40, selectToken: true, reason: "combat-update" });
+    if (hasProperty(changes ?? {}, "started") && combat?.started) {
+      scheduleLocalSync(combat, { delay: 80, selectToken: true, reason: "combat-start" });
+      scheduleCanonicalTurnEvent(combat, "combat-start", 85);
+      return;
+    }
+    if (hasAnyProperty(changes, ["turn", "round"])) {
+      scheduleLocalSync(combat, { delay: 40, selectToken: true, reason: "combat-update" });
+      scheduleCanonicalTurnEvent(combat, "combat-update", 45);
+    }
   });
 
-  Hooks.on("combatTurn", combat => scheduleLocalSync(combat, { delay: 30, selectToken: true, reason: "combat-turn" }));
-  Hooks.on("combatRound", combat => scheduleLocalSync(combat, { delay: 30, selectToken: true, reason: "combat-round" }));
+  Hooks.on("combatTurn", combat => {
+    scheduleLocalSync(combat, { delay: 30, selectToken: true, reason: "combat-turn" });
+    scheduleCanonicalTurnEvent(combat, "combat-turn", 35);
+  });
+  Hooks.on("combatRound", combat => {
+    scheduleLocalSync(combat, { delay: 30, selectToken: true, reason: "combat-round" });
+    scheduleCanonicalTurnEvent(combat, "combat-round", 35);
+  });
   Hooks.on("canvasReady", () => scheduleLocalSync(game.combat, { delay: 180, selectToken: false, reason: "refresh" }));
   Hooks.on("hoverToken", clearFoundryMovementTrailAggressive);
   Hooks.on("refreshToken", clearFoundryMovementTrailAggressive);
