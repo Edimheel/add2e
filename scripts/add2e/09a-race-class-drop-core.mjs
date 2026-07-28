@@ -5,7 +5,7 @@
 
 import { levelForClassXp } from "./17b-multiclass-rules.mjs";
 
-export const ADD2E_RACE_CLASS_DROP_VERSION = "2026-07-23-forced-deletion-force-ex-v4";
+export const ADD2E_RACE_CLASS_DROP_VERSION = "2026-07-28-canonical-actor-hit-points-drop-v5";
 globalThis.ADD2E_RACE_CLASS_DROP_VERSION = ADD2E_RACE_CLASS_DROP_VERSION;
 
 export const CARACS = ["force", "dexterite", "constitution", "intelligence", "sagesse", "charisme"];
@@ -402,7 +402,13 @@ export async function add2eApplyClassItemDataToActor(actor, classData, sheet = n
   await actor.update(updates, { add2eInternal: true });
 
   if (typeof sheet?.autoSetCaracAjustements === "function") await sheet.autoSetCaracAjustements();
-  if (typeof sheet?.autoSetPointsDeCoup === "function") await sheet.autoSetPointsDeCoup({ syncCurrent: true, force: true, reason: options.reason || "first-class-drop" });
+  if (typeof globalThis.add2eRecalculateHitPoints !== "function") {
+    throw new Error("Le service canonique ADD2E de recalcul des points de vie est indisponible.");
+  }
+  await globalThis.add2eRecalculateHitPoints(actor, {
+    force: true,
+    reason: options.reason || "first-class-drop"
+  });
   try { await globalThis.add2eSyncActorSpellsFromClass?.(actor, classDoc, { mode: "replace", showWait: true }); }
   catch (error) { console.error("[ADD2E][CLASSE][SORTS]", error); }
   sheet?.render?.(false);
