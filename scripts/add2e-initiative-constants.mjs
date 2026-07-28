@@ -1,15 +1,17 @@
 // scripts/add2e-initiative-constants.mjs
 // ADD2E — constantes et utilitaires partagés de l'initiative.
 
-export const ADD2E_INITIATIVE_VERSION = "2026-05-30-initiative-split-v1";
+export const ADD2E_INITIATIVE_VERSION = "2026-07-28-canonical-initiative-v1";
 export const ADD2E_INITIATIVE_D6_ICON = "systems/add2e/assets/D6_3D_tracker.png";
 export const TAG = "[ADD2E][INIT]";
 
 export const initiativeState = {
   configured: false,
   patched: false,
+  rollPatched: false,
   hooksInstalled: false,
   sorting: false,
+  rolling: false,
   warningAt: 0,
   sortTimer: null,
   localSyncTimer: null
@@ -21,7 +23,7 @@ export function configureInitiative() {
   if (initiativeState.configured) return;
   initiativeState.configured = true;
   CONFIG.Combat ??= {};
-  CONFIG.Combat.initiative = { formula: "1d6", decimals: 2 };
+  CONFIG.Combat.initiative = { formula: "1d6", decimals: 0 };
 }
 
 export function hasProperty(obj, path) {
