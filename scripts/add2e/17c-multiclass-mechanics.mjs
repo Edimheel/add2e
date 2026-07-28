@@ -5,7 +5,7 @@
 
 import { MULTICLASS_VERSION, classItems as coreClassItems, classProgression, classProgressionUpdate, classSlug } from "./17b-multiclass-core.mjs";
 
-const VERSION = "2026-07-28-current-hit-points-idempotent-v10";
+const VERSION = "2026-07-28-canonical-hit-points-closure-v11";
 const TAG = "[ADD2E][CLASSE][CANONIQUE]";
 const timers = new Map();
 const hitPointQueues = new Map();
@@ -19,7 +19,6 @@ const n = (value, fallback = 0) => {
 };
 const classes = actor => coreClassItems(actor);
 const hasClasses = actor => actor?.type === "personnage" && classes(actor).length > 0;
-const isMulti = actor => hasClasses(actor) && classes(actor).length > 1;
 const keyFor = entry => classSlug(entry?.item) || String(entry?.itemId ?? "");
 
 function same(left, right) {
@@ -719,12 +718,6 @@ function installSheetPatch() {
   const proto = globalThis.Add2eActorSheet?.prototype;
   if (!proto || proto.__add2eClassProgressionPatch === VERSION) return;
 
-  try { delete proto.__add2eOriginalAutoSetPointsDeCoup; } catch (_error) {}
-  proto.autoSetPointsDeCoup = async function add2eCanonicalActorHitPoints(options = {}) {
-    const actor = this.document ?? this.actor;
-    return add2eRecalculateHitPoints(actor, options);
-  };
-
   if (typeof proto.getData === "function" && !proto.__add2eOriginalClassProgressionGetData) {
     proto.__add2eOriginalClassProgressionGetData = proto.getData;
     proto.getData = async function add2eClassProgressionSheetData(...args) {
@@ -755,7 +748,6 @@ globalThis.add2eRecalculateHitPoints = add2eRecalculateHitPoints;
 globalThis.add2eCalculateHitPointState = calculateHitPointState;
 globalThis.add2eGetLastHitPointResolution = getLastHitPointResolution;
 globalThis.add2eGetHitPointCurrentBase = actor => getHitPointCurrentBase(actor).value;
-globalThis.add2eSyncMulticlassHp = add2eRecalculateHitPoints;
 globalThis.add2eSyncMulticlassCombatSummary = (actor, options = {}) => syncClassProgressionSummary(actor, options);
 globalThis.add2eMulticlassClassEntries = entriesFor;
 globalThis.add2eApplyMulticlassProgressionToSheet = applyClassProgressionToSheet;
