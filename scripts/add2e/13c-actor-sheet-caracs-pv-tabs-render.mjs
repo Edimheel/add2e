@@ -78,16 +78,17 @@ function add2eValuesEqual(left, right) {
 
 async function add2eRecalculateHitPoints(actor, { reason = "hit-points-recalculate", force = false } = {}) {
   if (!actor?.system) return false;
-  const classes = Array.from(actor.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
-  if (classes.length > 1 && typeof globalThis.add2eSyncMulticlassHp === "function") {
-    await globalThis.add2eSyncMulticlassHp(actor, { force, reason });
-    return true;
+  const prototype = globalThis.Add2eActorSheet?.prototype;
+  const calculate = prototype?.autoSetPointsDeCoup;
+  if (typeof calculate !== "function") {
+    throw new Error("Le calcul canonique ADD2E des points de vie est indisponible.");
   }
-  if (typeof actor.sheet?.autoSetPointsDeCoup === "function") {
-    await actor.sheet.autoSetPointsDeCoup({ force, reason });
-    return true;
-  }
-  return false;
+  const context = Object.create(prototype);
+  Object.defineProperties(context, {
+    actor: { value: actor, configurable: true },
+    document: { value: actor, configurable: true }
+  });
+  return (await calculate.call(context, { force, reason })) === true;
 }
 globalThis.add2eRecalculateHitPoints = add2eRecalculateHitPoints;
 
