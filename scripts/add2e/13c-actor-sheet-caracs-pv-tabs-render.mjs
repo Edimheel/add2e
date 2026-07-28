@@ -10,11 +10,6 @@ const ADD2E_ABILITY_CONSUMER_VERSION = "2026-07-28-character-sheet-hit-point-clo
 globalThis.ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION = ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION;
 globalThis.ADD2E_ABILITY_CONSUMER_VERSION = ADD2E_ABILITY_CONSUMER_VERSION;
 
-const add2eActorSheetPrototype = globalThis.Add2eActorSheet.prototype;
-if (Object.prototype.hasOwnProperty.call(add2eActorSheetPrototype, "autoSetPointsDeCoup")) {
-  delete add2eActorSheetPrototype.autoSetPointsDeCoup;
-}
-
 function add2eV2Root(source) {
   if (!source) return null;
   const root = source.jquery ? source[0] : source;
