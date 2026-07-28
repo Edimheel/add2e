@@ -52,11 +52,20 @@ function initiativeBreakdown(resolution = {}) {
   return applied.length ? applied.map(modifierText).join(" ; ") : "Aucun";
 }
 
+function tieText(tie = {}) {
+  if (tie?.tied !== true) return "Aucune";
+  const names = Array.isArray(tie.names) ? tie.names.filter(Boolean) : [];
+  return names.length
+    ? `Égalité avec ${names.join(", ")} — ordre stable du tracker`
+    : "Égalité — ordre stable du tracker";
+}
+
 export async function createInitiativeChatCard({
   combatant,
   roll,
   formula = "1d6",
   resolution,
+  tie = null,
   messageOptions = {},
   messageMode = null
 } = {}) {
@@ -86,6 +95,7 @@ export async function createInitiativeChatCard({
       { label: "Modificateurs", value: initiativeBreakdown(resolution) },
       { label: "Ajustement total", value: adjustment ? signed(adjustment) : "Aucun" },
       { label: "Initiative finale", value: Number.isFinite(total) ? total : "—" },
+      ...(tie?.tied === true ? [{ label: "Égalité", value: tieText(tie) }] : []),
       { label: "Ordre", value: "Le résultat le plus élevé agit en premier." }
     ],
     chatData: {
@@ -104,7 +114,9 @@ export async function createInitiativeChatCard({
           formula,
           baseRoll: Number.isFinite(base) ? base : null,
           adjustment,
-          total: Number.isFinite(total) ? total : null
+          total: Number.isFinite(total) ? total : null,
+          tie: tie?.tied === true,
+          tieCombatantIds: tie?.tied === true ? tie.combatantIds ?? [] : []
         }
       }
     }
