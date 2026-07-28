@@ -1,7 +1,7 @@
 // ============================================================
 // ADD2E — Nettoyage effets de classe + compétences de voleur
 // ============================================================
-const ADD2E_CLASS_PASSIVE_EFFECTS_VERSION = "2026-07-11-stable-identity-atomic-reconcile-v3";
+const ADD2E_CLASS_PASSIVE_EFFECTS_VERSION = "2026-07-28-canonical-class-feature-modifiers-v4";
 const ADD2E_CLASS_PASSIVE_EFFECT_SYNC_STATES = new Map();
 
 function add2eClassEffectKey(value) {
@@ -199,6 +199,86 @@ function add2eClassFeatureStatuses(feature) {
   return [];
 }
 
+function add2eClassFeatureRawModifiers(feature) {
+  const activeEffect = add2eClassFeatureActiveEffectData(feature);
+  const out = [];
+  const append = raw => {
+    if (!raw) return;
+    if (Array.isArray(raw)) {
+      raw.forEach(append);
+      return;
+    }
+    if (typeof raw !== "object") return;
+    const isModifier = ["domain", "target", "operation", "value", "stacking", "conditions", "metadata"]
+      .some(key => Object.prototype.hasOwnProperty.call(raw, key));
+    if (isModifier) {
+      out.push(add2eClassEffectClone(raw));
+      return;
+    }
+    Object.values(raw).forEach(append);
+  };
+
+  for (const raw of [
+    feature?.modifiers,
+    feature?.flags?.add2e?.modifiers,
+    activeEffect?.modifiers,
+    activeEffect?.flags?.add2e?.modifiers
+  ]) append(raw);
+
+  const seen = new Set();
+  return out.filter(modifier => {
+    const key = String(modifier?.id ?? "").trim() || JSON.stringify(modifier);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function add2eClassModifierEngine() {
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  if (typeof engine?.createModifier !== "function") {
+    throw new Error("Le résolveur canonique ADD2E des modificateurs de capacités de classe n’est pas disponible.");
+  }
+  return engine;
+}
+
+function add2eClassFeatureModifiers(feature, classItem, classKey, featureId, label, level) {
+  const rawModifiers = add2eClassFeatureRawModifiers(feature);
+  if (!rawModifiers.length) return [];
+  const engine = add2eClassModifierEngine();
+  const defaultSource = {
+    kind: "class_feature",
+    id: `${classItem.id}:${featureId}`,
+    uuid: `${classItem.uuid}#${featureId}`,
+    name: label
+  };
+
+  return rawModifiers.map((raw, index) => {
+    const rawSource = raw?.source && typeof raw.source === "object" ? raw.source : {};
+    const rawMetadata = raw?.metadata && typeof raw.metadata === "object" ? raw.metadata : {};
+    return engine.createModifier({
+      ...add2eClassEffectClone(raw),
+      id: String(raw?.id ?? `add2e-class-feature:${classKey}:${featureId}:${index + 1}`).trim(),
+      source: {
+        kind: String(rawSource.kind ?? defaultSource.kind),
+        id: String(rawSource.id ?? defaultSource.id),
+        uuid: String(rawSource.uuid ?? defaultSource.uuid),
+        name: String(rawSource.name ?? defaultSource.name)
+      },
+      metadata: {
+        ...add2eClassEffectClone(rawMetadata),
+        classItemId: classItem.id,
+        classItemUuid: classItem.uuid,
+        classKey,
+        classLevel: level,
+        featureId,
+        featureName: label,
+        levelSource: rawMetadata.levelSource ?? "class-item"
+      }
+    });
+  });
+}
+
 function add2eClassFeatureHasFoundryMechanic(feature) {
   if (!feature || typeof feature !== "object") return false;
   const implementation = feature?.flags?.add2e?.implementation ?? feature?.implementation ?? {};
@@ -210,6 +290,7 @@ function add2eClassFeatureHasFoundryMechanic(feature) {
   const rules = add2eClassFeatureRules(feature);
   const changes = add2eClassFeatureChanges(feature);
   const statuses = add2eClassFeatureStatuses(feature);
+  const modifiers = add2eClassFeatureRawModifiers(feature);
   const activeEffect = add2eClassFeatureActiveEffectData(feature);
   const explicitlyDeclared = feature.activeEffect === true
     || feature.foundryEffect === true
@@ -217,7 +298,7 @@ function add2eClassFeatureHasFoundryMechanic(feature) {
     || activeEffect.active === true
     || activeEffect.type === "ActiveEffect";
 
-  return rules.length > 0 || changes.length > 0 || statuses.length > 0 || explicitlyDeclared;
+  return rules.length > 0 || changes.length > 0 || statuses.length > 0 || modifiers.length > 0 || explicitlyDeclared;
 }
 
 function add2eCollectUnlockedClassEffectTags(actor, classItem = null) {
@@ -305,6 +386,7 @@ function add2eBuildClassPassiveEffectData(actor, classItem, feature, featureInde
   const tags = add2eClassFeatureTags(feature);
   const changes = add2eClassFeatureChanges(feature);
   const statuses = add2eClassFeatureStatuses(feature);
+  const modifiers = add2eClassFeatureModifiers(feature, classItem, classKey, featureId, label, level);
   const rules = add2eClassFeatureRules(feature).map(rule => ({
     ...rule,
     source: {
@@ -352,7 +434,8 @@ function add2eBuildClassPassiveEffectData(actor, classItem, feature, featureInde
           description,
           tags,
           effectTags: tags,
-          rules
+          rules,
+          modifiers
         }
       }
     }
