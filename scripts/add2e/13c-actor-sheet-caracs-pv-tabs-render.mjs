@@ -6,9 +6,14 @@
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant 13c.");
 
 const ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION = "2026-07-26-force-ex-canonical-derived-profile-v7";
-const ADD2E_ABILITY_CONSUMER_VERSION = "2026-07-28-character-sheet-without-hit-point-calculator-v5";
+const ADD2E_ABILITY_CONSUMER_VERSION = "2026-07-28-character-sheet-hit-point-closure-v6";
 globalThis.ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION = ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION;
 globalThis.ADD2E_ABILITY_CONSUMER_VERSION = ADD2E_ABILITY_CONSUMER_VERSION;
+
+const add2eActorSheetPrototype = globalThis.Add2eActorSheet.prototype;
+if (Object.prototype.hasOwnProperty.call(add2eActorSheetPrototype, "autoSetPointsDeCoup")) {
+  delete add2eActorSheetPrototype.autoSetPointsDeCoup;
+}
 
 function add2eV2Root(source) {
   if (!source) return null;
