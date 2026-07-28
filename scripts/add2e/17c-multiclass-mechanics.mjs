@@ -5,7 +5,7 @@
 
 import { MULTICLASS_VERSION, classItems as coreClassItems, classProgression, classProgressionUpdate, classSlug } from "./17b-multiclass-core.mjs";
 
-const VERSION = "2026-07-28-canonical-actor-hit-points-v9";
+const VERSION = "2026-07-28-current-hit-points-idempotent-v10";
 const TAG = "[ADD2E][CLASSE][CANONIQUE]";
 const timers = new Map();
 const hitPointQueues = new Map();
@@ -430,7 +430,97 @@ function multiclassHitPointBase(actor, entries, { force = false } = {}) {
   };
 }
 
-async function calculateHitPointState(actor, { force = false, reason = "hit-points-recalculate" } = {}) {
+function hitPointActorKey(actor) {
+  return String(actor?.uuid ?? actor?.id ?? "");
+}
+
+function hitPointContext(actor, entries, level, reason) {
+  const levelBySource = Object.fromEntries(entries.flatMap(entry => [
+    [entry.itemId, entry.level],
+    [entry.item?.uuid, entry.level]
+  ]).filter(([key]) => Boolean(key)));
+  const mode = entries.length > 1 ? "multiclass" : "single-class";
+  return {
+    actor,
+    level,
+    source: reason,
+    consumer: "canonical-class-hit-points",
+    mode,
+    classLevels: entries.map(entry => ({
+      itemId: entry.itemId,
+      uuid: entry.item?.uuid,
+      level: entry.level,
+      slug: entry.slug
+    })),
+    levelBySource
+  };
+}
+
+function currentHitPointModifierProfile(actor, context) {
+  const engine = hitPointEngine();
+  if (typeof engine.prepareHitPointModifiers !== "function" || typeof engine.resolve !== "function") {
+    throw new Error("Le résolveur canonique des modificateurs de PV courants est indisponible.");
+  }
+  const modifiers = engine.prepareHitPointModifiers(actor, "current", context);
+  const unsupported = modifiers.filter(modifier => String(modifier?.operation ?? "add") !== "add");
+  if (unsupported.length) {
+    const labels = unsupported.map(modifier => modifier?.source?.name ?? modifier?.id ?? "modificateur inconnu").join(", ");
+    throw new Error(`Les modificateurs persistants de PV courants acceptent uniquement l’opération add : ${labels}.`);
+  }
+  const resolution = engine.resolve(actor, {
+    domain: "hit-points",
+    target: "current",
+    base: 0,
+    context,
+    modifiers,
+    rounding: "floor"
+  });
+  return {
+    total: Number(resolution?.total) || 0,
+    modifiers,
+    resolution
+  };
+}
+
+function getHitPointCurrentBase(actor, options = {}) {
+  if (!actor?.system) return 0;
+  const previousMaximum = n(options.previousMaximum, n(actor.system?.points_de_coup, 0));
+  const previousCurrent = n(options.previousCurrent, n(actor.system?.pdv, previousMaximum));
+  const requested = Number(options.previousCurrentBase);
+  if (Number.isFinite(requested)) {
+    return { value: requested, source: "explicit" };
+  }
+
+  const last = lastHitPointResolutions.get(hitPointActorKey(actor));
+  const lastBase = Number(last?.currentBase);
+  const lastMaximum = Number(last?.finalMaximum);
+  const lastCurrent = Number(last?.finalCurrent);
+  if (Number.isFinite(lastBase) && lastMaximum === previousMaximum && Number.isFinite(lastCurrent)) {
+    return {
+      value: lastBase + (previousCurrent - lastCurrent),
+      source: previousCurrent === lastCurrent ? "last-resolution" : "last-resolution-current-delta"
+    };
+  }
+
+  const entries = options.entries ?? entriesFor(actor, { includePnj: actor.type === "pnj" });
+  const level = Number(options.level) || Math.max(1, ...entries.map(entry => n(entry.level, 1)));
+  const context = options.context ?? hitPointContext(
+    actor,
+    entries,
+    level,
+    options.reason ?? "hit-points-current-base"
+  );
+  const profile = currentHitPointModifierProfile(actor, context);
+  return {
+    value: previousCurrent - profile.total,
+    source: "active-current-modifier-inversion",
+    previousAdjustment: profile.total
+  };
+}
+
+async function calculateHitPointState(actor, options = {}) {
+  const force = options.force === true;
+  const reason = options.reason ?? "hit-points-recalculate";
   if (!actor?.system) return { ok: false, reason: "actor-without-system" };
   if (actor.type === "personnage" && !(await ensureCanonicalClassProgression(actor))) {
     return { ok: false, reason: "class-progression-unavailable" };
@@ -442,23 +532,30 @@ async function calculateHitPointState(actor, { force = false, reason = "hit-poin
     ? singleClassHitPointBase(actor, entries[0], { force })
     : multiclassHitPointBase(actor, entries, { force });
   const engine = hitPointEngine();
-  const levelBySource = Object.fromEntries(entries.flatMap(entry => [
-    [entry.itemId, entry.level],
-    [entry.item?.uuid, entry.level]
-  ]).filter(([key]) => Boolean(key)));
+  const context = hitPointContext(actor, entries, base.level, reason);
   const previousMaximum = n(actor.system?.points_de_coup, 0);
   const previousCurrent = n(actor.system?.pdv, previousMaximum);
+  const previousCurrentBaseState = getHitPointCurrentBase(actor, {
+    previousMaximum,
+    previousCurrent,
+    previousCurrentBase: options.previousCurrentBase,
+    entries,
+    level: base.level,
+    context,
+    reason
+  });
+  const previousCurrentBase = n(previousCurrentBaseState.value, previousCurrent);
   const resolution = engine.resolveHitPoints(actor, {
     baseMaximum: base.baseMaximum,
     previousMaximum,
-    previousCurrent,
+    previousCurrent: previousCurrentBase,
     level: base.level,
     source: reason,
     consumer: "canonical-class-hit-points",
     context: {
       mode: base.mode,
-      classLevels: entries.map(entry => ({ itemId: entry.itemId, uuid: entry.item?.uuid, level: entry.level, slug: entry.slug })),
-      levelBySource
+      classLevels: context.classLevels,
+      levelBySource: context.levelBySource
     }
   });
 
@@ -470,6 +567,10 @@ async function calculateHitPointState(actor, { force = false, reason = "hit-poin
   }
   if (previousMaximum !== Number(resolution.maximum.total)) updates["system.points_de_coup"] = resolution.maximum.total;
   if (previousCurrent !== Number(resolution.current.total)) updates["system.pdv"] = resolution.current.total;
+
+  const currentBase = Number(resolution.current?.base) || 0;
+  const currentUnclampedTotal = Number(resolution.current?.unclampedTotal ?? resolution.current?.total) || 0;
+  const currentAdjustment = currentUnclampedTotal - currentBase;
 
   return {
     ok: true,
@@ -486,8 +587,12 @@ async function calculateHitPointState(actor, { force = false, reason = "hit-poin
     rolls: clone(base.rolls),
     previousMaximum,
     previousCurrent,
+    previousCurrentBase,
+    previousCurrentBaseSource: previousCurrentBaseState.source,
     maximum: Number(resolution.maximum.total),
     current: Number(resolution.current.total),
+    currentBase,
+    currentAdjustment,
     maximumResolution: {
       additionsTotal: resolution.maximum?.additionsTotal ?? null,
       multiplierTotal: resolution.maximum?.multiplierTotal ?? null,
@@ -502,12 +607,26 @@ async function calculateHitPointState(actor, { force = false, reason = "hit-poin
         reason: entry?.reason ?? null
       }))
     },
+    currentResolution: {
+      base: currentBase,
+      unclampedTotal: currentUnclampedTotal,
+      total: Number(resolution.current.total),
+      adjustment: currentAdjustment,
+      additionsTotal: resolution.current?.additionsTotal ?? null,
+      multiplierTotal: resolution.current?.multiplierTotal ?? null,
+      applied: (resolution.current?.applied ?? []).map(entry => ({
+        id: entry?.modifier?.id ?? null,
+        value: entry?.modifier?.value ?? null,
+        operation: entry?.modifier?.operation ?? null,
+        source: entry?.modifier?.source?.name ?? null
+      })),
+      rejected: (resolution.current?.rejected ?? []).map(entry => ({
+        id: entry?.modifier?.id ?? null,
+        reason: entry?.reason ?? null
+      }))
+    },
     updates
   };
-}
-
-function hitPointActorKey(actor) {
-  return String(actor?.uuid ?? actor?.id ?? "");
 }
 
 async function applyHitPointState(actor, options = {}) {
@@ -635,6 +754,7 @@ function responsibleReadyGM() {
 globalThis.add2eRecalculateHitPoints = add2eRecalculateHitPoints;
 globalThis.add2eCalculateHitPointState = calculateHitPointState;
 globalThis.add2eGetLastHitPointResolution = getLastHitPointResolution;
+globalThis.add2eGetHitPointCurrentBase = actor => getHitPointCurrentBase(actor).value;
 globalThis.add2eSyncMulticlassHp = add2eRecalculateHitPoints;
 globalThis.add2eSyncMulticlassCombatSummary = (actor, options = {}) => syncClassProgressionSummary(actor, options);
 globalThis.add2eMulticlassClassEntries = entriesFor;
