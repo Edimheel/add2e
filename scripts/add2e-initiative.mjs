@@ -14,7 +14,6 @@ import {
   forceFirstInitiativeTurn,
   getCombatOrder,
   initiativeTieGroup,
-  installCombatPatch,
   isInactiveCombatant,
   scheduleInitiativeSort,
   scheduleLocalSync,
@@ -397,7 +396,6 @@ function exposeGlobals() {
 
 function installInitiativeCore() {
   configureInitiative();
-  installCombatPatch();
   installInitiativeRollPatch();
   installInitiativeNavigationPatch();
 }
