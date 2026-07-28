@@ -1,177 +1,148 @@
-// ADD2E — Validation hooks et compatibilité legacy.
+// ADD2E — Validation hooks et recalcul canonique des documents.
+// Compatible Foundry V13/V14/V15.
 
-const ADD2E_FAMILIAR_HP_BRIDGE_VERSION = "2026-06-28-familiar-hp-bridge-v3";
-globalThis.ADD2E_FAMILIAR_HP_BRIDGE_VERSION = ADD2E_FAMILIAR_HP_BRIDGE_VERSION;
+const ADD2E_CANONICAL_HP_DOCUMENT_HOOKS_VERSION = "2026-07-28-canonical-hit-points-document-hooks-v1";
+globalThis.ADD2E_CANONICAL_HP_DOCUMENT_HOOKS_VERSION = ADD2E_CANONICAL_HP_DOCUMENT_HOOKS_VERSION;
 
-const add2eFamHpNumber = (value, fallback = 0) => {
-  const number = Number(value);
-  return Number.isFinite(number) ? number : fallback;
-};
+const add2eCanonicalHpRecalculationQueue = new Map();
 
-function add2eFamHpRead(source, path) {
-  if (Object.prototype.hasOwnProperty.call(source ?? {}, path)) return source[path];
-  return foundry?.utils?.getProperty?.(source ?? {}, path);
+function add2eCanonicalHpList(value) {
+  if (Array.isArray(value)) return value.filter(entry => entry && typeof entry === "object");
+  if (value && typeof value === "object") return Object.values(value).filter(entry => entry && typeof entry === "object");
+  return [];
 }
 
-function add2eFamHpState(actor, changes = null) {
-  const updated = changes ? add2eFamHpRead(changes, "flags.add2e.familiarHpShare") : undefined;
-  const state = updated !== undefined
-    ? updated
-    : actor?.getFlag?.("add2e", "familiarHpShare") ?? actor?.flags?.add2e?.familiarHpShare ?? null;
-  if (!state || typeof state !== "object") return null;
-  const linkId = String(state.linkId ?? actor?.getFlag?.("add2e", "familiar")?.linkId ?? actor?.flags?.add2e?.familiar?.linkId ?? "").trim();
-  if (!linkId) return null;
-  return { linkId, amount: Math.max(0, Math.floor(add2eFamHpNumber(state.amount, 0))) };
-}
-
-function add2eFamHpSource(linkId) {
-  return `familier:${String(linkId ?? "").trim()}`;
-}
-
-function add2eFamHpRecord(linkId, amount) {
-  return {
-    amount: Math.max(0, Math.floor(add2eFamHpNumber(amount, 0))),
-    label: "Vitalité partagée du familier",
-    kind: "familier",
-    temporary: true,
-    linkId: String(linkId ?? "").trim()
-  };
-}
-
-function add2eFamHpRegistry(actor) {
-  const value = actor?.getFlag?.("add2e", "hpModifiers") ?? actor?.flags?.add2e?.hpModifiers ?? {};
-  return value && typeof value === "object" && !Array.isArray(value) ? value : {};
-}
-
-function add2eFamHpModifierAmount(actor, source) {
-  return Math.trunc(add2eFamHpNumber(add2eFamHpRegistry(actor)?.[source]?.amount, 0));
-}
-
-async function add2eSetActorHpModifier(actor, sourceId, modifier = {}, { reason = "hp-modifier" } = {}) {
-  if (!actor?.system || !String(sourceId ?? "").trim()) return false;
-  const source = String(sourceId).trim();
-  const previous = add2eFamHpModifierAmount(actor, source);
-  const desired = Math.trunc(add2eFamHpNumber(modifier.amount ?? modifier.value ?? modifier.bonus, 0));
-  const delta = desired - previous;
-  const max = add2eFamHpNumber(actor.system.points_de_coup, NaN);
-  const current = add2eFamHpNumber(actor.system.pdv, NaN);
-  const updates = {};
-
-  if (desired) {
-    updates[`flags.add2e.hpModifiers.${source}`] = {
-      ...modifier,
-      amount: desired,
-      label: String(modifier.label ?? modifier.name ?? source)
-    };
-  } else {
-    updates[`flags.add2e.hpModifiers.-=${source}`] = null;
+function add2eCanonicalHpDocumentModifiers(document) {
+  let value = document?.flags?.add2e?.modifiers;
+  if ((value === undefined || value === null) && typeof document?.getFlag === "function") {
+    try { value = document.getFlag("add2e", "modifiers"); }
+    catch (_error) { value = null; }
   }
-  if (Number.isFinite(max) && delta) updates["system.points_de_coup"] = Math.max(1, max + delta);
-  if (Number.isFinite(current) && delta) updates["system.pdv"] = current + delta;
-  if (!Object.keys(updates).length) return false;
+  return add2eCanonicalHpList(value);
+}
 
-  await actor.update(updates, {
-    add2eHpModifiersFinal: true,
-    add2eHpModifiers: true,
-    add2eInternal: true,
-    add2eReason: reason
+function add2eCanonicalHpHasModifier(document) {
+  return add2eCanonicalHpDocumentModifiers(document)
+    .some(modifier => String(modifier?.domain ?? "").trim().toLowerCase() === "hit-points");
+}
+
+function add2eCanonicalHpItemHasModifier(item) {
+  if (add2eCanonicalHpHasModifier(item)) return true;
+  return Array.from(item?.effects?.contents ?? item?.effects ?? [])
+    .some(effect => add2eCanonicalHpHasModifier(effect));
+}
+
+function add2eCanonicalHpChangesTouchModifiers(changes = {}) {
+  if (Object.prototype.hasOwnProperty.call(changes, "flags.add2e.modifiers")) return true;
+  if (Object.prototype.hasOwnProperty.call(changes, "flags.add2e.-=modifiers")) return true;
+  if (typeof foundry?.utils?.hasProperty === "function" && foundry.utils.hasProperty(changes, "flags.add2e.modifiers")) return true;
+  return Object.keys(changes).some(key =>
+    key === "flags.add2e.modifiers"
+    || key === "flags.add2e.-=modifiers"
+    || key.startsWith("flags.add2e.modifiers.")
+  );
+}
+
+function add2eCanonicalHpActor(document) {
+  const parent = document?.parent ?? document?.actor ?? null;
+  if (parent?.documentName === "Actor") return parent;
+  if (document?.documentName === "Actor") return document;
+  return null;
+}
+
+function add2eCanonicalHpIsOriginatingUser(userId) {
+  return !userId || String(userId) === String(game.user?.id ?? "");
+}
+
+function add2eQueueCanonicalHitPointRecalculation(actor, reason = "canonical-hit-points-document-change") {
+  if (!actor?.id || !actor?.system) return;
+  const existing = add2eCanonicalHpRecalculationQueue.get(actor.id);
+  if (existing?.scheduled === true) {
+    existing.reason = reason;
+    return;
+  }
+
+  const queued = { actor, reason, scheduled: true };
+  add2eCanonicalHpRecalculationQueue.set(actor.id, queued);
+  setTimeout(async () => {
+    const current = add2eCanonicalHpRecalculationQueue.get(actor.id);
+    add2eCanonicalHpRecalculationQueue.delete(actor.id);
+    if (!current?.actor) return;
+    try {
+      if (typeof globalThis.add2eRecalculateHitPoints !== "function") {
+        throw new Error("Le recalcul canonique ADD2E des points de vie n’est pas disponible.");
+      }
+      await globalThis.add2eRecalculateHitPoints(current.actor, { reason: current.reason });
+      const sheet = current.actor.sheet;
+      if (sheet?.rendered === true) sheet.render({ force: false });
+    } catch (error) {
+      console.error("[ADD2E][HIT_POINTS][DOCUMENT_RECALCULATION]", {
+        actor: current.actor?.name,
+        reason: current.reason,
+        error
+      });
+    }
+  }, 0);
+}
+
+function add2eInstallCanonicalHitPointDocumentHooks() {
+  if (globalThis.__ADD2E_CANONICAL_HP_DOCUMENT_HOOKS_VERSION__ === ADD2E_CANONICAL_HP_DOCUMENT_HOOKS_VERSION) return;
+  globalThis.__ADD2E_CANONICAL_HP_DOCUMENT_HOOKS_VERSION__ = ADD2E_CANONICAL_HP_DOCUMENT_HOOKS_VERSION;
+
+  Hooks.on("createActiveEffect", (effect, _options = {}, userId) => {
+    if (!add2eCanonicalHpIsOriginatingUser(userId) || !add2eCanonicalHpHasModifier(effect)) return;
+    add2eQueueCanonicalHitPointRecalculation(add2eCanonicalHpActor(effect), "create-active-effect-hit-points");
   });
-  return true;
-}
 
-async function add2eRemoveActorHpModifier(actor, sourceId, options = {}) {
-  return add2eSetActorHpModifier(actor, sourceId, { amount: 0 }, options);
-}
-
-async function add2eFamHpReconcileActor(actor) {
-  if (!game.user?.isGM || !actor?.system) return false;
-  const beforeMax = add2eFamHpNumber(actor.system.points_de_coup, NaN);
-  const beforeCurrent = add2eFamHpNumber(actor.system.pdv, NaN);
-  const desired = add2eFamHpState(actor);
-  const registry = add2eFamHpRegistry(actor);
-  const desiredSource = desired?.amount > 0 ? add2eFamHpSource(desired.linkId) : null;
-  const updates = {};
-  let changed = false;
-
-  for (const [source, modifier] of Object.entries(registry)) {
-    if (modifier?.kind !== "familier" || modifier?.temporary !== true) continue;
-    if (source === desiredSource && add2eFamHpNumber(modifier.amount, 0) === desired.amount) continue;
-    updates[`flags.add2e.hpModifiers.-=${source}`] = null;
-    changed = true;
-  }
-
-  if (desiredSource) {
-    const current = registry[desiredSource];
-    if (!current
-      || add2eFamHpNumber(current.amount, 0) !== desired.amount
-      || current.kind !== "familier"
-      || current.temporary !== true) {
-      updates[`flags.add2e.hpModifiers.${desiredSource}`] = add2eFamHpRecord(desired.linkId, desired.amount);
-      changed = true;
-    }
-  }
-
-  if (!changed) return false;
-
-  await actor.update(updates, {
-    add2eHpModifiersMigration: true,
-    add2eHpModifiersFinal: true,
-    add2eInternal: true,
-    add2eReason: "reconcile-familiar-hp-modifier"
+  Hooks.on("updateActiveEffect", (effect, changes = {}, _options = {}, userId) => {
+    if (!add2eCanonicalHpIsOriginatingUser(userId)) return;
+    const stateChanged = Object.prototype.hasOwnProperty.call(changes, "disabled")
+      || Object.prototype.hasOwnProperty.call(changes, "isSuppressed");
+    if (!stateChanged && !add2eCanonicalHpChangesTouchModifiers(changes) && !add2eCanonicalHpHasModifier(effect)) return;
+    add2eQueueCanonicalHitPointRecalculation(add2eCanonicalHpActor(effect), "update-active-effect-hit-points");
   });
-  await globalThis.add2eRecalculateActorHpModifiers?.(actor, { reason: "reconcile-familiar-hp-modifier" });
 
-  const delta = add2eFamHpNumber(actor.system.points_de_coup, beforeMax) - beforeMax;
-  if (Number.isFinite(beforeCurrent) && delta) {
-    await actor.update({ "system.pdv": beforeCurrent + delta }, {
-      add2eHpModifiersFinal: true,
-      add2eInternal: true,
-      add2eReason: "reconcile-familiar-hp-current"
-    });
-  }
-  return true;
-}
+  Hooks.on("deleteActiveEffect", (effect, _options = {}, userId) => {
+    if (!add2eCanonicalHpIsOriginatingUser(userId) || !add2eCanonicalHpHasModifier(effect)) return;
+    add2eQueueCanonicalHitPointRecalculation(add2eCanonicalHpActor(effect), "delete-active-effect-hit-points");
+  });
 
-if (!globalThis.__ADD2E_FAMILIAR_HP_BRIDGE_REGISTERED__) {
-  globalThis.__ADD2E_FAMILIAR_HP_BRIDGE_REGISTERED__ = true;
+  Hooks.on("createItem", (item, _options = {}, userId) => {
+    if (!add2eCanonicalHpIsOriginatingUser(userId) || !add2eCanonicalHpItemHasModifier(item)) return;
+    add2eQueueCanonicalHitPointRecalculation(add2eCanonicalHpActor(item), "create-item-hit-points");
+  });
 
-  Hooks.on("preUpdateActor", (actor, changes = {}, options = {}) => {
-    if (options?.add2eFamiliarHpShare === true) {
-      const after = add2eFamHpState(actor, changes);
-      if (!after) return;
-      const source = add2eFamHpSource(after.linkId);
-      delete changes["flags.add2e.hpModifiers"];
-      if (after.amount > 0) changes[`flags.add2e.hpModifiers.${source}`] = add2eFamHpRecord(after.linkId, after.amount);
-      else changes[`flags.add2e.hpModifiers.-=${source}`] = null;
-      return;
-    }
+  Hooks.on("updateItem", (item, changes = {}, _options = {}, userId) => {
+    if (!add2eCanonicalHpIsOriginatingUser(userId)) return;
+    if (!add2eCanonicalHpChangesTouchModifiers(changes) && !add2eCanonicalHpItemHasModifier(item)) return;
+    add2eQueueCanonicalHitPointRecalculation(add2eCanonicalHpActor(item), "update-item-hit-points");
+  });
 
-    if (options?.add2eFamiliarDeathPenalty === true) {
-      const linkId = String(actor?.getFlag?.("add2e", "familiar")?.linkId ?? actor?.flags?.add2e?.familiar?.linkId ?? "").trim();
-      const previous = add2eFamHpNumber(actor?.system?.points_de_coup, NaN);
-      const next = add2eFamHpNumber(add2eFamHpRead(changes, "system.points_de_coup"), NaN);
-      const penalty = Number.isFinite(previous) && Number.isFinite(next) ? Math.max(0, Math.floor(previous - next)) : 0;
-      if (!linkId || !penalty) return;
-      delete changes["flags.add2e.hpModifiers"];
-      changes[`flags.add2e.hpModifiers.familier-penalite:${linkId}`] = {
-        amount: -penalty,
-        label: "Pénalité de mort du familier",
-        kind: "familier",
-        persistent: true,
-        linkId
-      };
-    }
+  Hooks.on("deleteItem", (item, _options = {}, userId) => {
+    if (!add2eCanonicalHpIsOriginatingUser(userId) || !add2eCanonicalHpItemHasModifier(item)) return;
+    add2eQueueCanonicalHitPointRecalculation(add2eCanonicalHpActor(item), "delete-item-hit-points");
+  });
+
+  Hooks.on("updateActor", (actor, changes = {}, _options = {}, userId) => {
+    if (!add2eCanonicalHpIsOriginatingUser(userId) || !add2eCanonicalHpChangesTouchModifiers(changes)) return;
+    add2eQueueCanonicalHitPointRecalculation(actor, "update-actor-hit-points-modifiers");
   });
 
   Hooks.once("ready", () => {
-    globalThis.add2eSetActorHpModifier = add2eSetActorHpModifier;
-    globalThis.add2eRemoveActorHpModifier = add2eRemoveActorHpModifier;
-    if (!game.user?.isGM) return;
-    setTimeout(() => {
-      for (const actor of game.actors?.contents ?? []) add2eFamHpReconcileActor(actor).catch(() => {});
-    }, 500);
+    for (const actor of game.actors?.contents ?? []) {
+      const hasActorModifier = add2eCanonicalHpHasModifier(actor);
+      const hasEffectModifier = Array.from(actor.effects ?? []).some(effect =>
+        effect?.disabled !== true && effect?.isSuppressed !== true && add2eCanonicalHpHasModifier(effect)
+      );
+      const hasItemModifier = Array.from(actor.items ?? []).some(item => add2eCanonicalHpItemHasModifier(item));
+      if (hasActorModifier || hasEffectModifier || hasItemModifier) {
+        add2eQueueCanonicalHitPointRecalculation(actor, "ready-canonical-hit-points");
+      }
+    }
   });
 }
+
+add2eInstallCanonicalHitPointDocumentHooks();
 
 Hooks.once("ready", () => {
   add2eRegisterClassItemSheet();
