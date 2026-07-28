@@ -6,7 +6,7 @@ import { add2ePopulateActorSheetSpellData } from "./13b-actor-sheet-get-data-spe
 
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant getData.");
 
-const ADD2E_ACTIVE_EFFECTS_DATA_VERSION = "2026-07-11-hide-technical-class-rules-v3";
+const ADD2E_ACTIVE_EFFECTS_DATA_VERSION = "2026-07-28-canonical-familiar-effects-v4";
 const ADD2E_HIDDEN_TECHNICAL_CLASS_RULE_KINDS = new Set(["armor_class_base", "attack_modifier"]);
 
 function add2eExceptionalStrengthValue(rawValue) {
@@ -66,6 +66,30 @@ function add2eEffectHasFoundryStatus(effect) {
 
 function add2eEffectHasMeaningfulChanges(effect) {
   return Array.isArray(effect?.changes) && effect.changes.some(change => String(change?.key ?? "").trim());
+}
+
+function add2eEffectModifiers(effect) {
+  let raw = effect?.flags?.add2e?.modifiers;
+  if ((raw === undefined || raw === null) && typeof effect?.getFlag === "function") {
+    try { raw = effect.getFlag("add2e", "modifiers"); }
+    catch (_error) { raw = null; }
+  }
+  if (Array.isArray(raw)) return raw.filter(modifier => modifier && typeof modifier === "object");
+  if (raw && typeof raw === "object") return Object.values(raw).filter(modifier => modifier && typeof modifier === "object");
+  return [];
+}
+
+function add2eEffectHasCanonicalModifier(effect) {
+  return add2eEffectModifiers(effect).some(modifier => String(modifier?.domain ?? "").trim());
+}
+
+function add2eEffectFamiliarKind(effect) {
+  const familiar = effect?.flags?.add2e?.familiar ?? effect?.getFlag?.("add2e", "familiar") ?? null;
+  return add2eNormEffectValue(familiar?.kind);
+}
+
+function add2eEffectIsAppliedFamiliar(effect) {
+  return ["benefit", "penalty"].includes(add2eEffectFamiliarKind(effect));
 }
 
 function add2eEffectIsSynchronizedClassPassive(effect) {
@@ -174,6 +198,8 @@ function add2eEffectDuration(effect) {
 function add2eEffectHasExplicitAppliedMarker(effect) {
   const add2e = effect?.flags?.add2e ?? {};
   if (add2e.applied === true || add2e.active === true || add2e.visibleEffect === true) return true;
+  if (add2eEffectHasCanonicalModifier(effect)) return true;
+  if (add2eEffectIsAppliedFamiliar(effect)) return true;
   const text = add2eEffectMarkerText(effect);
   return /temporaire|temporary|applique|applied|actif|active|condition|etat|blessure|fuite|fear|stun|paraly|poison|sort|spell|capacity|capacite|capability_special_attack_window|timeengine|roundengine/.test(text);
 }
@@ -191,6 +217,8 @@ function add2eShouldShowEffect(effect) {
 
 function add2eEffectSourceName(effect) {
   const add2e = effect?.flags?.add2e ?? {};
+  const familiarLabel = String(add2e.familiar?.familiarLabel ?? "").trim();
+  if (familiarLabel) return `Familier — ${familiarLabel}`;
   return String(
     add2e.sourceClasse
     ?? add2e.sourceClass
