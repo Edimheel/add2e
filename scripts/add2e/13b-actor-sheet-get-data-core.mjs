@@ -6,7 +6,7 @@ import { add2ePopulateActorSheetSpellData } from "./13b-actor-sheet-get-data-spe
 
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant getData.");
 
-const ADD2E_ACTIVE_EFFECTS_DATA_VERSION = "2026-07-28-canonical-familiar-effects-v5";
+const ADD2E_ACTIVE_EFFECTS_DATA_VERSION = "2026-07-28-canonical-familiar-effects-v6";
 const ADD2E_HIDDEN_TECHNICAL_CLASS_RULE_KINDS = new Set(["armor_class_base", "attack_modifier"]);
 
 function add2eExceptionalStrengthValue(rawValue) {
@@ -283,40 +283,38 @@ function add2eFamiliarCapability(effect) {
   };
 }
 
-function add2ePopulateActorSheetFamiliarCapabilities(actor, data) {
-  const existing = Array.isArray(data.activeRacialCapabilities) ? data.activeRacialCapabilities : [];
-  const familiar = Array.from(actor?.effects ?? [])
+export function add2ePopulateActorSheetActiveEffectsData(actor, data) {
+  const visibleEffects = Array.from(actor?.effects ?? []).filter(add2eShouldShowEffect);
+  data.activeEffectsList = visibleEffects.map(effect => ({
+    id: effect.id,
+    name: effect.name || "",
+    img: effect.img || "icons/svg/aura.svg",
+    description: add2eEffectDescription(effect),
+    duration: add2eEffectDuration(effect),
+    sourceName: add2eEffectSourceName(effect)
+  }));
+
+  const existingCapabilities = Array.isArray(data.activeRacialCapabilities) ? data.activeRacialCapabilities : [];
+  const familiarCapabilities = visibleEffects
     .filter(add2eIsFamiliarCapabilityEffect)
     .map(add2eFamiliarCapability);
   const seen = new Set();
-  data.activeRacialCapabilities = [...existing, ...familiar].filter(capability => {
+  data.activeRacialCapabilities = [...existingCapabilities, ...familiarCapabilities].filter(capability => {
     const key = String(capability?.id ?? capability?.key ?? capability?.label ?? "").trim();
     if (!key || seen.has(key)) return false;
     seen.add(key);
     return true;
   });
-  return data.activeRacialCapabilities;
-}
 
-export function add2ePopulateActorSheetActiveEffectsData(actor, data) {
-  data.activeEffectsList = Array.from(actor?.effects ?? [])
-    .filter(add2eShouldShowEffect)
-    .map(eff => ({
-      id: eff.id,
-      name: eff.name || "",
-      img: eff.img || "icons/svg/aura.svg",
-      description: add2eEffectDescription(eff),
-      duration: add2eEffectDuration(eff),
-      sourceName: add2eEffectSourceName(eff)
-    }));
   return data.activeEffectsList;
 }
 
 globalThis.Add2eActorSheet.prototype.getData = async function getData() {
   const data = this._add2eNativeGetData();
   const state = add2ePrepareActorSheetBaseData({ sheet: this, data });
+  const actor = this.document ?? this.actor ?? state.actor;
 
-  const forceEx = add2eExceptionalStrengthValue(this.actor?.system?.force_ex);
+  const forceEx = add2eExceptionalStrengthValue(actor?.system?.force_ex);
   data.forceExCurrent = forceEx;
   data.forceExNoneSelected = forceEx === 0;
   data.forceExValues = data.canExceptionalStrength ? add2eExceptionalStrengthValues(forceEx) : [];
@@ -330,8 +328,7 @@ globalThis.Add2eActorSheet.prototype.getData = async function getData() {
   });
 
   add2ePopulateActorSheetSpellData({ actor: state.actor, data, items: state.items });
-  add2ePopulateActorSheetActiveEffectsData(this.actor, data);
-  add2ePopulateActorSheetFamiliarCapabilities(this.actor, data);
+  add2ePopulateActorSheetActiveEffectsData(actor, data);
 
   data.alignementsDisponibles = add2eSheetAllowedAlignments(state.actor, state.sys);
   data.activeTab = this._add2eGetNativeActiveTab?.() || this._add2eActiveTab || this._add2eReadStoredTab?.() || "resume";
