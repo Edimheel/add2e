@@ -50,18 +50,11 @@ function skipInactiveRotationEnabled() {
   const keys = ["skipDefeated", "skipDefeatedCombatants", "skipInactive", "skipInactiveCombatants"];
   const trackerConfig = safeSetting("core", "combatTrackerConfig");
   const fromConfig = objectBool(trackerConfig, keys);
-  if (fromConfig !== null) {
-    console.log(`${TAG}[INACTIVE][OPTION]`, { source: "core.combatTrackerConfig", value: fromConfig, trackerConfig });
-    return fromConfig;
-  }
+  if (fromConfig !== null) return fromConfig;
   for (const key of keys) {
     const parsed = boolSetting(safeSetting("core", key));
-    if (parsed !== null) {
-      console.log(`${TAG}[INACTIVE][OPTION]`, { source: `core.${key}`, value: parsed });
-      return parsed;
-    }
+    if (parsed !== null) return parsed;
   }
-  console.log(`${TAG}[INACTIVE][OPTION]`, { source: "not-found", value: false, trackerConfig });
   return false;
 }
 
@@ -109,7 +102,7 @@ export function isInactiveCombatant(combatant) {
   const tokenDoc = combatant.token ?? null;
   const actor = combatant.actor ?? tokenDoc?.actor ?? null;
   const hp = actorHp(actor);
-  const inactive = Boolean(
+  return Boolean(
     documentHasInactiveFlag(combatant) ||
     documentHasInactiveFlag(tokenDoc) ||
     documentHasInactiveFlag(actor) ||
@@ -121,8 +114,6 @@ export function isInactiveCombatant(combatant) {
     effectsHaveInactiveStatus(actor) ||
     (hp.value !== null && hp.value <= 0)
   );
-  console.log(`${TAG}[INACTIVE][CHECK]`, { combatant: combatant?.name ?? combatant?.id ?? null, combatantId: combatant?.id ?? null, actor: actor?.name ?? null, inactive, defeated: combatant?.defeated ?? null, coreDefeated: combatant?.flags?.core?.defeated ?? null, hpPath: hp.path, hpValue: hp.value });
-  return inactive;
 }
 
 export function initiativeValue(value) {
@@ -131,25 +122,40 @@ export function initiativeValue(value) {
   return Number.isFinite(n) ? n : null;
 }
 
-export function compareCombatantsAscending(a, b) {
+function stableCombatantSort(combatant) {
+  const value = Number(combatant?.sort);
+  return Number.isFinite(value) ? value : Number.MAX_SAFE_INTEGER;
+}
+
+export function compareInitiativeHighFirst(a, b) {
   const ai = initiativeValue(a?.initiative);
   const bi = initiativeValue(b?.initiative);
-  if (ai === null && bi === null) return String(a?.id ?? "").localeCompare(String(b?.id ?? ""));
+  if (ai === null && bi === null) {
+    const bySort = stableCombatantSort(a) - stableCombatantSort(b);
+    return bySort || String(a?.id ?? "").localeCompare(String(b?.id ?? ""));
+  }
   if (ai === null) return 1;
   if (bi === null) return -1;
   if (ai !== bi) return bi - ai;
-  return String(a?.id ?? "").localeCompare(String(b?.id ?? ""));
+  const bySort = stableCombatantSort(a) - stableCombatantSort(b);
+  return bySort || String(a?.id ?? "").localeCompare(String(b?.id ?? ""));
 }
 
-export function sortedCombatants(combat = game.combat) {
-  return Array.from(combat?.combatants ?? []).sort(compareCombatantsAscending);
+export function getCombatOrder(combat = game.combat) {
+  return Array.from(combat?.combatants ?? []).sort(compareInitiativeHighFirst);
+}
+
+export function initiativeTieGroup(combatant, combat = game.combat) {
+  const score = initiativeValue(combatant?.initiative);
+  if (score === null) return [];
+  return getCombatOrder(combat).filter(entry => initiativeValue(entry?.initiative) === score);
 }
 
 function activeCombatantId(combat = game.combat) {
   return combat?.current?.combatantId ?? combat?.combatant?.id ?? null;
 }
 
-export function combatTurnIndex(combat = game.combat, turns = sortedCombatants(combat)) {
+export function combatTurnIndex(combat = game.combat, turns = getCombatOrder(combat)) {
   if (!turns.length) return 0;
   const activeId = activeCombatantId(combat);
   const activeIndex = activeId ? turns.findIndex(c => c.id === activeId) : -1;
@@ -157,7 +163,7 @@ export function combatTurnIndex(combat = game.combat, turns = sortedCombatants(c
   return numericTurnIndex(combat, turns);
 }
 
-function numericTurnIndex(combat = game.combat, turns = sortedCombatants(combat)) {
+function numericTurnIndex(combat = game.combat, turns = getCombatOrder(combat)) {
   if (!turns.length) return 0;
   const raw = Number(combat?.turn ?? combat?.current?.turn ?? 0);
   return Math.max(0, Math.min(turns.length - 1, Number.isFinite(raw) ? Math.floor(raw) : 0));
@@ -195,19 +201,12 @@ function firstEligibleIndex(turns) {
 function resolveNextActiveTurn(turns, current, direction) {
   let next = current;
   let roundDelta = 0;
-  const skipped = [];
   for (let attempt = 0; attempt < turns.length; attempt += 1) {
     next += direction;
     if (next >= turns.length) { next = 0; roundDelta += 1; }
     else if (next < 0) { next = turns.length - 1; roundDelta -= 1; }
-    const candidate = turns[next];
-    if (!isInactiveCombatant(candidate)) {
-      console.log(`${TAG}[INACTIVE][NEXT]`, { currentIndex: current, selectedIndex: next, selected: candidate?.name ?? candidate?.id ?? null, direction, roundDelta, skipped });
-      return { index: next, roundDelta };
-    }
-    skipped.push({ index: next, name: candidate?.name ?? candidate?.id ?? null });
+    if (!isInactiveCombatant(turns[next])) return { index: next, roundDelta };
   }
-  console.log(`${TAG}[INACTIVE][NEXT][ALL_SKIPPED]`, { currentIndex: current, direction, skipped });
   return { index: current, roundDelta: 0 };
 }
 
@@ -220,16 +219,17 @@ function localIndex(combat, turns, first) {
 
 export function applyLocalOrder(combat = game.combat, { first = false, reason = "local-order" } = {}) {
   if (!combat || !isCombatStarted(combat)) return false;
-  const turns = sortedCombatants(combat);
+  const turns = getCombatOrder(combat);
   if (!turns.length) return false;
   const index = localIndex(combat, turns, first);
-  console.log(`${TAG}[INACTIVE][APPLY_LOCAL]`, { reason, round: combat?.round ?? null, previousTurn: combat?.turn ?? null, selectedIndex: index, selected: turns[index]?.name ?? turns[index]?.id ?? null });
-  return setLocalTurn(combat, turns, index);
+  const applied = setLocalTurn(combat, turns, index);
+  if (applied) Hooks.callAll("add2eInitiativeOrderApplied", combat, { reason, turn: index, combatantId: turns[index]?.id ?? null });
+  return applied;
 }
 
 export function currentCombatant(combat = game.combat) {
   if (!isCombatStarted(combat)) return null;
-  const turns = Array.isArray(combat.turns) && combat.turns.length ? combat.turns : sortedCombatants(combat);
+  const turns = Array.isArray(combat.turns) && combat.turns.length ? combat.turns : getCombatOrder(combat);
   return turns[combatTurnIndex(combat, turns)] ?? null;
 }
 
@@ -660,7 +660,6 @@ export async function add2eRecordWeaponAttack(actor, { weapon = null, combat = g
   };
 
   await writeMultipleAttackState(actor, combat, state);
-  console.log(`${TAG}[MULTI_ATTACK][RECORDED]`, { actor: actor.name, weapon: weapon?.name ?? null, round: state.round, ratio: state.ratio, total: state.total, used: state.used, pending: state.pending, phase: state.phase, rateOfFireMultiplier: state.rateOfFireMultiplier, rateAutoReload: state.rateAutoReload, rateInitiativeRule: state.rateInitiativeRule });
   if (state.total > 1) {
     const context = state.phase === "extra" ? "extra-recorded" : (state.pending > 0 ? "normal-pending" : "normal-done");
     ui.notifications?.info?.(multipleAttackMessage(actor, state, context));
@@ -710,22 +709,21 @@ export function scheduleLocalSync(combat = game.combat, { delay = 120, selectTok
 }
 
 async function updateTurn(combat, index, round = combatRound(combat)) {
-  const turns = sortedCombatants(combat);
+  const turns = getCombatOrder(combat);
   if (!turns.length || !isCombatStarted(combat)) return combat;
   const safeIndex = Math.max(0, Math.min(turns.length - 1, Number(index) || 0));
   const safeRound = Math.max(1, Math.floor(Number(round) || 1));
-  const target = turns[safeIndex];
-  console.log(`${TAG}[INACTIVE][UPDATE_TURN]`, { round: safeRound, turn: safeIndex, target: target?.name ?? target?.id ?? null, targetInactive: isInactiveCombatant(target), multipleAttackPhase: currentMultipleAttackPhase(combat)?.phase ?? null });
   await combat.update({ round: safeRound, turn: safeIndex }, { add2eInitiativeNavigation: true });
   setLocalTurn(combat, turns, safeIndex);
   selectCurrentToken(combat);
   if (typeof globalThis.add2eSyncActionHudToCombatant === "function") globalThis.add2eSyncActionHudToCombatant(combat, { reason: "turn" });
+  Hooks.callAll("add2eInitiativeTurnChanged", combat, { round: safeRound, turn: safeIndex, combatantId: turns[safeIndex]?.id ?? null });
   return combat;
 }
 
-export async function forceFirstSortedTurn(combat = game.combat) {
+export async function forceFirstInitiativeTurn(combat = game.combat) {
   if (!combat || !isCombatStarted(combat)) return combat;
-  const turns = sortedCombatants(combat);
+  const turns = getCombatOrder(combat);
   if (!turns.length) return combat;
   await leaveExtraAttackPhase(combat, combatRound(combat));
   setLocalTurn(combat, turns, firstEligibleIndex(turns));
@@ -733,16 +731,15 @@ export async function forceFirstSortedTurn(combat = game.combat) {
   return combat;
 }
 
-export async function advanceSortedTurn(combat = game.combat, step = 1) {
+export async function advanceInitiativeTurn(combat = game.combat, step = 1) {
   if (!combat || !isCombatStarted(combat)) return combat;
-  const turns = sortedCombatants(combat);
+  const turns = getCombatOrder(combat);
   if (!turns.length) return combat;
   const current = numericTurnIndex(combat, turns);
   const direction = step >= 0 ? 1 : -1;
   let next = current + direction;
   let round = combatRound(combat);
   const skipInactive = skipInactiveRotationEnabled();
-  console.log(`${TAG}[INACTIVE][ADVANCE]`, { round, currentIndex: current, current: turns[current]?.name ?? turns[current]?.id ?? null, direction, skipInactive, currentInactive: isInactiveCombatant(turns[current]), multipleAttackPhase: currentMultipleAttackPhase(combat)?.phase ?? null });
 
   if (direction > 0 && phaseIsExtra(combat, round)) {
     const currentActor = turns[current]?.actor ?? null;
@@ -773,11 +770,11 @@ export async function advanceSortedTurn(combat = game.combat, step = 1) {
   return updateTurn(combat, next, round);
 }
 
-export async function sortInitiativeAscending(combat = game.combat) {
+export async function sortInitiativeHighFirst(combat = game.combat) {
   if (!combat || initiativeState.sorting) return false;
   const combatants = Array.from(combat.combatants ?? []);
   if (!combatants.length || !isCombatStarted(combat)) return false;
-  const turns = sortedCombatants(combat);
+  const turns = getCombatOrder(combat);
   const updates = turns.map((c, index) => ({ _id: c.id, sort: index })).filter(update => {
     const current = combatants.find(c => c.id === update._id);
     return current && Number(current.sort) !== Number(update.sort);
@@ -785,10 +782,10 @@ export async function sortInitiativeAscending(combat = game.combat) {
   initiativeState.sorting = true;
   try {
     if (updates.length) await combat.updateEmbeddedDocuments("Combatant", updates, { add2eInitiativeSort: true });
-    applyLocalOrder(combat, { reason: "sort" });
+    applyLocalOrder(combat, { reason: "sort-high-first" });
     return true;
   } catch (err) {
-    console.error(`${TAG}[SORT_ASC][ERROR]`, err);
+    console.error(`${TAG}[SORT_HIGH_FIRST][ERROR]`, err);
     return false;
   } finally {
     initiativeState.sorting = false;
@@ -798,18 +795,18 @@ export async function sortInitiativeAscending(combat = game.combat) {
 export function scheduleInitiativeSort(combat = game.combat) {
   if (!combat) return;
   clearTimeout(initiativeState.sortTimer);
-  initiativeState.sortTimer = setTimeout(() => sortInitiativeAscending(combat), 100);
+  initiativeState.sortTimer = setTimeout(() => sortInitiativeHighFirst(combat), 100);
 }
 
 export function patchNativeSort(target) {
   if (!target || typeof target._sortCombatants !== "function") return false;
-  if (target._sortCombatants.__add2eLowFirst === ADD2E_INITIATIVE_VERSION) return true;
+  if (target._sortCombatants.__add2eHighFirst === ADD2E_INITIATIVE_VERSION) return true;
   const original = target._sortCombatants.__add2eOriginal ?? target._sortCombatants;
-  target._sortCombatants = function add2eSortCombatantsLowFirst(a, b) {
-    if (game?.system?.id === "add2e") return compareCombatantsAscending(a, b);
+  target._sortCombatants = function add2eSortCombatantsHighFirst(a, b) {
+    if (game?.system?.id === "add2e") return compareInitiativeHighFirst(a, b);
     return original.call(this, a, b);
   };
-  target._sortCombatants.__add2eLowFirst = ADD2E_INITIATIVE_VERSION;
+  target._sortCombatants.__add2eHighFirst = ADD2E_INITIATIVE_VERSION;
   target._sortCombatants.__add2eOriginal = original;
   return true;
 }
@@ -820,43 +817,25 @@ export function installCombatPatch() {
   if (!proto) return false;
   patchNativeSort(proto);
   patchNativeSort(globalThis.Combat);
-  if (proto.setupTurns && proto.setupTurns.__add2eLowFirstSetup !== ADD2E_INITIATIVE_VERSION) {
+  if (proto.setupTurns && proto.setupTurns.__add2eHighFirstSetup !== ADD2E_INITIATIVE_VERSION) {
     const original = proto.setupTurns.__add2eOriginal ?? proto.setupTurns;
-    proto.setupTurns = function add2eSetupTurnsLowFirst(...args) {
+    proto.setupTurns = function add2eSetupTurnsHighFirst(...args) {
       const result = original.apply(this, args);
-      if (game?.system?.id === "add2e") setLocalTurnsOnly(this, sortedCombatants(this));
+      if (game?.system?.id === "add2e") setLocalTurnsOnly(this, getCombatOrder(this));
       return result;
     };
-    proto.setupTurns.__add2eLowFirstSetup = ADD2E_INITIATIVE_VERSION;
+    proto.setupTurns.__add2eHighFirstSetup = ADD2E_INITIATIVE_VERSION;
     proto.setupTurns.__add2eOriginal = original;
   }
-  if (proto.startCombat && proto.startCombat.__add2eLowFirstStart !== ADD2E_INITIATIVE_VERSION) {
+  if (proto.startCombat && proto.startCombat.__add2eHighFirstStart !== ADD2E_INITIATIVE_VERSION) {
     const original = proto.startCombat.__add2eOriginal ?? proto.startCombat;
-    proto.startCombat = async function add2eStartCombatLowFirst(...args) {
+    proto.startCombat = async function add2eStartCombatHighFirst(...args) {
       const result = await original.apply(this, args);
       if (game?.system?.id === "add2e") scheduleLocalSync(this, { delay: 40, selectToken: true, reason: "startCombat" });
       return result;
     };
-    proto.startCombat.__add2eLowFirstStart = ADD2E_INITIATIVE_VERSION;
+    proto.startCombat.__add2eHighFirstStart = ADD2E_INITIATIVE_VERSION;
     proto.startCombat.__add2eOriginal = original;
-  }
-  if (proto.nextTurn && proto.nextTurn.__add2eLowFirstNext !== ADD2E_INITIATIVE_VERSION) {
-    const original = proto.nextTurn.__add2eOriginal ?? proto.nextTurn;
-    proto.nextTurn = function add2eNextTurnLowFirst(...args) {
-      if (game?.system?.id !== "add2e") return original.apply(this, args);
-      return advanceSortedTurn(this, 1);
-    };
-    proto.nextTurn.__add2eLowFirstNext = ADD2E_INITIATIVE_VERSION;
-    proto.nextTurn.__add2eOriginal = original;
-  }
-  if (proto.previousTurn && proto.previousTurn.__add2eLowFirstPrevious !== ADD2E_INITIATIVE_VERSION) {
-    const original = proto.previousTurn.__add2eOriginal ?? proto.previousTurn;
-    proto.previousTurn = function add2ePreviousTurnLowFirst(...args) {
-      if (game?.system?.id !== "add2e") return original.apply(this, args);
-      return advanceSortedTurn(this, -1);
-    };
-    proto.previousTurn.__add2eLowFirstPrevious = ADD2E_INITIATIVE_VERSION;
-    proto.previousTurn.__add2eOriginal = original;
   }
   initiativeState.patched = true;
   return true;
