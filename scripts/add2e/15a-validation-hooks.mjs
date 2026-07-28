@@ -210,20 +210,6 @@ Hooks.on("preCreateItem", itemData => {
   }
 });
 
-async function rollInitiativeD6(combatants) {
-  if (!combatants.length) return;
-  for (const combatant of combatants) {
-    const roll = await new Roll("1d6").evaluate({ async: true });
-    if (combatant.actor) await combatant.actor.update({ "system.initiative": roll.total });
-    await combatant.update({ initiative: roll.total });
-    await ChatMessage.create({
-      speaker: ChatMessage.getSpeaker({ actor: combatant.actor }),
-      content: `Initiative : <b>${roll.total}</b> (1d6)`,
-      flavor: "Initiative"
-    });
-  }
-}
-
 function add2eEffectExplicitlyLinkedToItem(effect, item) {
   if (!effect || !item) return false;
   const origin = String(effect.origin ?? "");
@@ -271,5 +257,3 @@ Hooks.on("deleteItem", async (item, options = {}, userId) => {
     if (!/ActiveEffect .* does not exist|does not exist/i.test(String(error?.message ?? error))) throw error;
   }
 });
-
-globalThis.rollInitiativeD6 = rollInitiativeD6;
