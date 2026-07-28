@@ -175,8 +175,10 @@ export function installModifierResolver(Engine) {
     collect(actor, context = {}) {
       if (!actor) return [];
       const collected = [];
-      const pushDocument = (document, defaults, sourceContext = {}) => {
+      const modifierKey = modifier => `${modifier.id}|${sourceStableKey(modifier.source)}|${modifierSignature(modifier)}`;
+      const pushDocument = (document, defaults, sourceContext = {}, skippedKeys = null) => {
         for (const modifier of this.collectDocumentModifiers(document, defaults)) {
+          if (skippedKeys?.has(modifierKey(modifier))) continue;
           collected.push({
             ...modifier,
             _context: {
@@ -192,17 +194,23 @@ export function installModifierResolver(Engine) {
         source: { kind: "actor", id: actor.id, uuid: actor.uuid, name: actor.name }
       });
 
-      for (const effect of effectArray(actor)) {
-        if (!effect || effect.disabled === true || effect.isSuppressed === true) continue;
+      const actorEffects = effectArray(actor).filter(Boolean);
+      const materializedModifierKeys = new Set();
+      for (const effect of actorEffects) {
         const flags = effect.flags?.add2e ?? {};
-        pushDocument(effect, {
+        const defaults = {
           source: {
             kind: canonicalKey(flags.sourceType ?? flags.sourceKind ?? "effect") || "effect",
             id: String(flags.sourceItemId ?? effect.id ?? ""),
             uuid: String(flags.sourceItemUuid ?? effect.uuid ?? ""),
             name: String(flags.classFeatureName ?? effect.name ?? "")
           }
-        }, { sourceEffect: effect });
+        };
+        for (const modifier of this.collectDocumentModifiers(effect, defaults)) {
+          materializedModifierKeys.add(modifierKey(modifier));
+        }
+        if (effect.disabled === true || effect.isSuppressed === true) continue;
+        pushDocument(effect, defaults, { sourceEffect: effect });
       }
 
       for (const item of itemArray(actor)) {
@@ -225,13 +233,13 @@ export function installModifierResolver(Engine) {
               uuid: String(item.uuid ?? effect.uuid ?? ""),
               name: String(effect.name ?? item.name ?? "")
             }
-          }, { sourceItem: item, sourceEffect: effect });
+          }, { sourceItem: item, sourceEffect: effect }, materializedModifierKeys);
         }
       }
 
       const seen = new Set();
       return collected.filter(modifier => {
-        const key = `${modifier.id}|${sourceStableKey(modifier.source)}|${modifierSignature(modifier)}`;
+        const key = modifierKey(modifier);
         if (seen.has(key)) return false;
         seen.add(key);
         return true;
