@@ -1,7 +1,7 @@
 // ADD2E — Validation des documents et consommateurs directs des effets.
 // Compatible Foundry V13/V14/V15.
 
-const ADD2E_DOCUMENT_EFFECT_CONSUMERS_VERSION = "2026-07-28-canonical-hit-points-hooks-v5";
+const ADD2E_DOCUMENT_EFFECT_CONSUMERS_VERSION = "2026-07-28-canonical-hit-points-hooks-v6";
 globalThis.ADD2E_DOCUMENT_EFFECT_CONSUMERS_VERSION = ADD2E_DOCUMENT_EFFECT_CONSUMERS_VERSION;
 
 function add2eEffectConsumerList(value) {
@@ -33,6 +33,7 @@ function add2eEffectConsumerChangesTouchModifiers(changes = {}) {
 function add2eEffectConsumerActor(document) {
   const parent = document?.parent ?? document?.actor ?? null;
   if (parent?.documentName === "Actor") return parent;
+  if (parent?.actor?.documentName === "Actor") return parent.actor;
   if (document?.documentName === "Actor") return document;
   return null;
 }
@@ -59,6 +60,17 @@ function add2eIsFamiliarEffect(effect) {
   return add2eEffectTags(effect).some(tag => tag === "familier" || tag.startsWith("familier:"));
 }
 
+async function add2eWaitForDocumentRemoval(actor, document) {
+  if (!actor || !document?.id) return;
+  await new Promise(resolve => setTimeout(resolve, 0));
+  if (document.documentName === "ActiveEffect" && actor.effects?.has?.(document.id)) {
+    await new Promise(resolve => setTimeout(resolve, 0));
+  }
+  if (document.documentName === "Item" && actor.items?.has?.(document.id)) {
+    await new Promise(resolve => setTimeout(resolve, 0));
+  }
+}
+
 async function add2eRecalculateActorHitPoints(actor, reason) {
   if (!actor?.system || !add2eEffectConsumerIsResponsibleGM()) return false;
   if (typeof globalThis.add2eRecalculateHitPoints !== "function") {
@@ -69,29 +81,44 @@ async function add2eRecalculateActorHitPoints(actor, reason) {
   return recalculated === true;
 }
 
-async function add2eConsumeActiveEffectChange(effect, changes = {}) {
-  const actor = add2eEffectConsumerActor(effect);
+async function add2eConsumeModifierDocumentChange(document, changes = {}, { deleted = false } = {}) {
+  const actor = add2eEffectConsumerActor(document);
   if (!actor) return;
-  const stateChanged = Object.prototype.hasOwnProperty.call(changes, "disabled")
-    || Object.prototype.hasOwnProperty.call(changes, "isSuppressed");
-  const hitPointsChanged = add2eEffectConsumerHasHitPoints(effect)
+  const hitPointsChanged = add2eEffectConsumerHasHitPoints(document)
     || add2eEffectConsumerChangesTouchModifiers(changes);
-  const familiarChanged = add2eIsFamiliarEffect(effect);
+  const familiarChanged = document?.documentName === "ActiveEffect" && add2eIsFamiliarEffect(document);
 
-  if (hitPointsChanged) await add2eRecalculateActorHitPoints(actor, "active-effect-hit-points");
-  else if (familiarChanged && (stateChanged || Object.keys(changes).length === 0) && actor.sheet?.rendered === true) {
+  if (deleted) await add2eWaitForDocumentRemoval(actor, document);
+
+  if (hitPointsChanged) {
+    await add2eRecalculateActorHitPoints(actor, deleted ? "modifier-document-deleted" : "modifier-document-changed");
+  } else if (familiarChanged && actor.sheet?.rendered === true) {
     await actor.sheet.render({ force: true });
   }
 }
 
 Hooks.on("createActiveEffect", effect => {
-  add2eConsumeActiveEffectChange(effect).catch(error => console.error("[ADD2E][ACTIVE_EFFECT][CREATE]", error));
+  add2eConsumeModifierDocumentChange(effect).catch(error => console.error("[ADD2E][ACTIVE_EFFECT][CREATE]", error));
 });
 Hooks.on("updateActiveEffect", (effect, changes = {}) => {
-  add2eConsumeActiveEffectChange(effect, changes).catch(error => console.error("[ADD2E][ACTIVE_EFFECT][UPDATE]", error));
+  add2eConsumeModifierDocumentChange(effect, changes).catch(error => console.error("[ADD2E][ACTIVE_EFFECT][UPDATE]", error));
 });
 Hooks.on("deleteActiveEffect", effect => {
-  add2eConsumeActiveEffectChange(effect).catch(error => console.error("[ADD2E][ACTIVE_EFFECT][DELETE]", error));
+  add2eConsumeModifierDocumentChange(effect, {}, { deleted: true }).catch(error => console.error("[ADD2E][ACTIVE_EFFECT][DELETE]", error));
+});
+Hooks.on("createItem", item => {
+  add2eConsumeModifierDocumentChange(item).catch(error => console.error("[ADD2E][ITEM_MODIFIER][CREATE]", error));
+});
+Hooks.on("updateItem", (item, changes = {}) => {
+  add2eConsumeModifierDocumentChange(item, changes).catch(error => console.error("[ADD2E][ITEM_MODIFIER][UPDATE]", error));
+});
+Hooks.on("deleteItem", item => {
+  add2eConsumeModifierDocumentChange(item, {}, { deleted: true }).catch(error => console.error("[ADD2E][ITEM_MODIFIER][DELETE]", error));
+});
+Hooks.on("updateActor", (actor, changes = {}, options = {}) => {
+  if (options?.add2eHitPointResolution === true || !add2eEffectConsumerChangesTouchModifiers(changes)) return;
+  add2eRecalculateActorHitPoints(actor, "actor-modifiers-changed")
+    .catch(error => console.error("[ADD2E][ACTOR_MODIFIER][UPDATE]", error));
 });
 
 Hooks.once("ready", async () => {
@@ -99,7 +126,8 @@ Hooks.once("ready", async () => {
   for (const actor of game.actors?.contents ?? []) {
     const activeHitPoints = Array.from(actor.effects ?? []).some(effect =>
       effect?.disabled !== true && effect?.isSuppressed !== true && add2eEffectConsumerHasHitPoints(effect)
-    );
+    ) || add2eEffectConsumerHasHitPoints(actor)
+      || Array.from(actor.items ?? []).some(item => add2eEffectConsumerHasHitPoints(item));
     if (activeHitPoints) await add2eRecalculateActorHitPoints(actor, "ready-hit-points-resolution");
   }
 });
