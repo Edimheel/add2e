@@ -1,7 +1,7 @@
 // scripts/add2e-initiative-icons.mjs
 // ADD2E — icône D6 du bouton de jet d'initiative dans le tracker.
 
-import { ADD2E_INITIATIVE_D6_ICON } from "./add2e-initiative-constants.mjs";
+import { ADD2E_INITIATIVE_D6_ICON, ADD2E_INITIATIVE_VERSION } from "./add2e-initiative-constants.mjs";
 
 const INITIATIVE_ROLL_BUTTON_SELECTOR = [
   ".token-initiative button.combatant-control.roll",
@@ -12,6 +12,7 @@ const INITIATIVE_ROLL_BUTTON_SELECTOR = [
 
 const INITIATIVE_ICON = `url(${ADD2E_INITIATIVE_D6_ICON})`;
 const INITIATIVE_ICON_HOVER = `url(${ADD2E_INITIATIVE_D6_ICON})`;
+const INITIATIVE_TOOLTIP = "Lancer l'initiative ADD2E (1d6, le résultat le plus élevé commence)";
 
 function rootElement(root = document) {
   if (root?.jquery) return root[0];
@@ -38,8 +39,8 @@ function patchRollButton(button) {
   button.style.setProperty("background-color", "transparent");
   button.style.setProperty("border-radius", "0");
   button.style.setProperty("box-shadow", "none");
-  button.title = "Lancer l'initiative ADD2E (1d6, le plus petit commence)";
-  button.dataset.tooltip = "Lancer l'initiative ADD2E (1d6, le plus petit commence)";
+  button.title = INITIATIVE_TOOLTIP;
+  button.dataset.tooltip = INITIATIVE_TOOLTIP;
 
   return beforeIcon !== INITIATIVE_ICON || beforeHover !== INITIATIVE_ICON_HOVER;
 }
@@ -66,16 +67,16 @@ export function installInitiativeIconPatch() {
   const cls = combatTrackerClass();
   const proto = cls?.prototype;
   if (!proto || typeof proto._onRender !== "function") return false;
-  if (proto._onRender.__add2eD6IconPatch) return true;
+  if (proto._onRender.__add2eD6IconPatch === ADD2E_INITIATIVE_VERSION) return true;
 
-  const originalOnRender = proto._onRender;
+  const originalOnRender = proto._onRender.__add2eOriginal ?? proto._onRender;
   proto._onRender = async function add2eCombatTrackerOnRenderD6Icons(...args) {
     const result = await originalOnRender.apply(this, args);
     patchInitiativeIcons(this.element ?? document);
     return result;
   };
 
-  proto._onRender.__add2eD6IconPatch = true;
+  proto._onRender.__add2eD6IconPatch = ADD2E_INITIATIVE_VERSION;
   proto._onRender.__add2eOriginal = originalOnRender;
   return true;
 }
