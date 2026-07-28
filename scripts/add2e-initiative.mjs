@@ -33,6 +33,7 @@ import {
 import { add2eInitiativeDebug, installHooks } from "./add2e-initiative-hooks.mjs";
 import { createInitiativeChatCard } from "./add2e-initiative-chat.mjs";
 
+const ADD2E_INITIATIVE_FIELD_MIGRATION_VERSION = "2026-07-28-initiative-fields-v1";
 const INCAPACITATING_STATUS_IDS = new Set([
   "dead", "defeated", "unconscious", "incapacitated", "inactive",
   "mort", "inconscient", "hors-combat", "hors-jeu",
@@ -70,6 +71,40 @@ function effectStatusIds(effect) {
     if (id) statuses.add(id);
   }
   return statuses;
+}
+
+function isResponsibleInitiativeGM() {
+  if (!game.user?.isGM) return false;
+  const activeGM = game.users?.activeGM
+    ?? Array.from(game.users ?? []).find(user => user?.active && user?.isGM)
+    ?? null;
+  return !activeGM || activeGM.id === game.user.id;
+}
+
+function legacyInitiativeFieldUpdate(actor) {
+  const system = actor?.system ?? {};
+  const update = {};
+  if (Object.prototype.hasOwnProperty.call(system, "initiative")) update["system.-=initiative"] = null;
+  if (Object.prototype.hasOwnProperty.call(system, "dexterite_initiative")) update["system.-=dexterite_initiative"] = null;
+  return update;
+}
+
+async function migrateLegacyInitiativeFields() {
+  globalThis.ADD2E_INITIATIVE_FIELD_MIGRATION_VERSION = ADD2E_INITIATIVE_FIELD_MIGRATION_VERSION;
+  if (!isResponsibleInitiativeGM()) return { migrated: 0, skipped: true };
+
+  let migrated = 0;
+  for (const actor of game.actors?.contents ?? game.actors ?? []) {
+    const update = legacyInitiativeFieldUpdate(actor);
+    if (!Object.keys(update).length) continue;
+    await actor.update(update, {
+      add2eInitiativeMigration: true,
+      add2eMigrationVersion: ADD2E_INITIATIVE_FIELD_MIGRATION_VERSION
+    });
+    migrated += 1;
+  }
+  if (migrated) console.log(`${TAG}[MIGRATION][LEGACY_FIELDS]`, { version: ADD2E_INITIATIVE_FIELD_MIGRATION_VERSION, migrated });
+  return { migrated, skipped: false };
 }
 
 export function combatantSkipReason(combatant) {
@@ -330,7 +365,8 @@ function exposeGlobals() {
     current: currentCombatant,
     canTakeTurn: canCombatantTakeTurn,
     skipReason: combatantSkipReason,
-    advance: advanceCombatTurn
+    advance: advanceCombatTurn,
+    migrateLegacyFields: migrateLegacyInitiativeFields
   };
 
   Object.assign(globalThis, {
@@ -354,7 +390,8 @@ function exposeGlobals() {
     add2eDebugCombatState: add2eInitiativeDebug,
     add2eSelectActiveCombatantToken: selectCurrentToken,
     add2eClearFoundryMovementTrail: clearFoundryMovementTrailAggressive,
-    add2eForceFirstInitiativeTurn: forceFirstInitiativeTurn
+    add2eForceFirstInitiativeTurn: forceFirstInitiativeTurn,
+    add2eMigrateLegacyInitiativeFields: migrateLegacyInitiativeFields
   });
 }
 
@@ -367,13 +404,14 @@ function installInitiativeCore() {
 
 Hooks.once("init", installInitiativeCore);
 Hooks.once("setup", installInitiativeCore);
-Hooks.once("ready", () => {
+Hooks.once("ready", async () => {
   installInitiativeCore();
   installInitiativeIconPatch();
   exposeGlobals();
   installTokenMoveLock();
   installActionLocks();
   installHooks();
+  await migrateLegacyInitiativeFields();
   patchInitiativeIcons(ui?.combat?.element ?? document);
   console.log(`${TAG}[CANONICAL_READY]`, ADD2E_INITIATIVE_VERSION);
 });
@@ -393,5 +431,6 @@ export {
   syncActionHudToCombatant as add2eSyncActionHudToCombatant,
   scheduleLocalSync as add2eSyncCombatAfterRefresh,
   add2eInitiativeDebug as add2eDebugCombatState,
-  clearFoundryMovementTrailAggressive as add2eDisableMovementHistoryRecording
+  clearFoundryMovementTrailAggressive as add2eDisableMovementHistoryRecording,
+  migrateLegacyInitiativeFields as add2eMigrateLegacyInitiativeFields
 };
