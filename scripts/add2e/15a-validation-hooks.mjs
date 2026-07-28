@@ -1,7 +1,7 @@
 // ADD2E — Validation hooks et recalcul canonique des documents.
 // Compatible Foundry V13/V14/V15.
 
-const ADD2E_CANONICAL_HP_DOCUMENT_HOOKS_VERSION = "2026-07-28-canonical-hit-points-document-hooks-v1";
+const ADD2E_CANONICAL_HP_DOCUMENT_HOOKS_VERSION = "2026-07-28-canonical-hit-points-document-hooks-v2";
 globalThis.ADD2E_CANONICAL_HP_DOCUMENT_HOOKS_VERSION = ADD2E_CANONICAL_HP_DOCUMENT_HOOKS_VERSION;
 
 const add2eCanonicalHpRecalculationQueue = new Map();
@@ -50,12 +50,14 @@ function add2eCanonicalHpActor(document) {
   return null;
 }
 
-function add2eCanonicalHpIsOriginatingUser(userId) {
-  return !userId || String(userId) === String(game.user?.id ?? "");
+function add2eCanonicalHpCanRecalculate() {
+  if (!game.user?.isGM) return false;
+  if (typeof game.user.isActiveGM === "boolean") return game.user.isActiveGM;
+  return game.users?.activeGM?.id === game.user.id;
 }
 
 function add2eQueueCanonicalHitPointRecalculation(actor, reason = "canonical-hit-points-document-change") {
-  if (!actor?.id || !actor?.system) return;
+  if (!actor?.id || !actor?.system || !add2eCanonicalHpCanRecalculate()) return;
   const existing = add2eCanonicalHpRecalculationQueue.get(actor.id);
   if (existing?.scheduled === true) {
     existing.reason = reason;
@@ -67,14 +69,14 @@ function add2eQueueCanonicalHitPointRecalculation(actor, reason = "canonical-hit
   setTimeout(async () => {
     const current = add2eCanonicalHpRecalculationQueue.get(actor.id);
     add2eCanonicalHpRecalculationQueue.delete(actor.id);
-    if (!current?.actor) return;
+    if (!current?.actor || !add2eCanonicalHpCanRecalculate()) return;
     try {
       if (typeof globalThis.add2eRecalculateHitPoints !== "function") {
         throw new Error("Le recalcul canonique ADD2E des points de vie n’est pas disponible.");
       }
       await globalThis.add2eRecalculateHitPoints(current.actor, { reason: current.reason });
       const sheet = current.actor.sheet;
-      if (sheet?.rendered === true) sheet.render({ force: false });
+      if (sheet?.rendered === true) await sheet.render({ force: true });
     } catch (error) {
       console.error("[ADD2E][HIT_POINTS][DOCUMENT_RECALCULATION]", {
         actor: current.actor?.name,
@@ -89,46 +91,47 @@ function add2eInstallCanonicalHitPointDocumentHooks() {
   if (globalThis.__ADD2E_CANONICAL_HP_DOCUMENT_HOOKS_VERSION__ === ADD2E_CANONICAL_HP_DOCUMENT_HOOKS_VERSION) return;
   globalThis.__ADD2E_CANONICAL_HP_DOCUMENT_HOOKS_VERSION__ = ADD2E_CANONICAL_HP_DOCUMENT_HOOKS_VERSION;
 
-  Hooks.on("createActiveEffect", (effect, _options = {}, userId) => {
-    if (!add2eCanonicalHpIsOriginatingUser(userId) || !add2eCanonicalHpHasModifier(effect)) return;
+  Hooks.on("createActiveEffect", effect => {
+    if (!add2eCanonicalHpCanRecalculate() || !add2eCanonicalHpHasModifier(effect)) return;
     add2eQueueCanonicalHitPointRecalculation(add2eCanonicalHpActor(effect), "create-active-effect-hit-points");
   });
 
-  Hooks.on("updateActiveEffect", (effect, changes = {}, _options = {}, userId) => {
-    if (!add2eCanonicalHpIsOriginatingUser(userId)) return;
+  Hooks.on("updateActiveEffect", (effect, changes = {}) => {
+    if (!add2eCanonicalHpCanRecalculate()) return;
     const stateChanged = Object.prototype.hasOwnProperty.call(changes, "disabled")
       || Object.prototype.hasOwnProperty.call(changes, "isSuppressed");
     if (!stateChanged && !add2eCanonicalHpChangesTouchModifiers(changes) && !add2eCanonicalHpHasModifier(effect)) return;
     add2eQueueCanonicalHitPointRecalculation(add2eCanonicalHpActor(effect), "update-active-effect-hit-points");
   });
 
-  Hooks.on("deleteActiveEffect", (effect, _options = {}, userId) => {
-    if (!add2eCanonicalHpIsOriginatingUser(userId) || !add2eCanonicalHpHasModifier(effect)) return;
+  Hooks.on("deleteActiveEffect", effect => {
+    if (!add2eCanonicalHpCanRecalculate() || !add2eCanonicalHpHasModifier(effect)) return;
     add2eQueueCanonicalHitPointRecalculation(add2eCanonicalHpActor(effect), "delete-active-effect-hit-points");
   });
 
-  Hooks.on("createItem", (item, _options = {}, userId) => {
-    if (!add2eCanonicalHpIsOriginatingUser(userId) || !add2eCanonicalHpItemHasModifier(item)) return;
+  Hooks.on("createItem", item => {
+    if (!add2eCanonicalHpCanRecalculate() || !add2eCanonicalHpItemHasModifier(item)) return;
     add2eQueueCanonicalHitPointRecalculation(add2eCanonicalHpActor(item), "create-item-hit-points");
   });
 
-  Hooks.on("updateItem", (item, changes = {}, _options = {}, userId) => {
-    if (!add2eCanonicalHpIsOriginatingUser(userId)) return;
+  Hooks.on("updateItem", (item, changes = {}) => {
+    if (!add2eCanonicalHpCanRecalculate()) return;
     if (!add2eCanonicalHpChangesTouchModifiers(changes) && !add2eCanonicalHpItemHasModifier(item)) return;
     add2eQueueCanonicalHitPointRecalculation(add2eCanonicalHpActor(item), "update-item-hit-points");
   });
 
-  Hooks.on("deleteItem", (item, _options = {}, userId) => {
-    if (!add2eCanonicalHpIsOriginatingUser(userId) || !add2eCanonicalHpItemHasModifier(item)) return;
+  Hooks.on("deleteItem", item => {
+    if (!add2eCanonicalHpCanRecalculate() || !add2eCanonicalHpItemHasModifier(item)) return;
     add2eQueueCanonicalHitPointRecalculation(add2eCanonicalHpActor(item), "delete-item-hit-points");
   });
 
-  Hooks.on("updateActor", (actor, changes = {}, _options = {}, userId) => {
-    if (!add2eCanonicalHpIsOriginatingUser(userId) || !add2eCanonicalHpChangesTouchModifiers(changes)) return;
+  Hooks.on("updateActor", (actor, changes = {}) => {
+    if (!add2eCanonicalHpCanRecalculate() || !add2eCanonicalHpChangesTouchModifiers(changes)) return;
     add2eQueueCanonicalHitPointRecalculation(actor, "update-actor-hit-points-modifiers");
   });
 
   Hooks.once("ready", () => {
+    if (!add2eCanonicalHpCanRecalculate()) return;
     for (const actor of game.actors?.contents ?? []) {
       const hasActorModifier = add2eCanonicalHpHasModifier(actor);
       const hasEffectModifier = Array.from(actor.effects ?? []).some(effect =>
