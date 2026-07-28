@@ -8,17 +8,18 @@ import {
   initiativeState
 } from "./add2e-initiative-constants.mjs";
 import {
-  advanceSortedTurn,
-  compareCombatantsAscending,
+  advanceInitiativeTurn,
+  compareInitiativeHighFirst,
   currentCombatant,
-  forceFirstSortedTurn,
+  forceFirstInitiativeTurn,
+  getCombatOrder,
+  initiativeTieGroup,
   installCombatPatch,
   isInactiveCombatant,
   scheduleInitiativeSort,
   scheduleLocalSync,
   selectCurrentToken,
-  sortInitiativeAscending,
-  sortedCombatants
+  sortInitiativeHighFirst
 } from "./add2e-initiative-order.mjs";
 import { installInitiativeIconPatch, patchInitiativeIcons } from "./add2e-initiative-icons.mjs";
 import {
@@ -97,7 +98,7 @@ export async function advanceCombatTurn(combat = game.combat, direction = 1, { n
   const maximum = Math.max(1, combat.combatants?.size ?? Array.from(combat.combatants ?? []).length ?? 1);
 
   for (let attempt = 0; attempt < maximum; attempt += 1) {
-    await advanceSortedTurn(combat, direction >= 0 ? 1 : -1);
+    await advanceInitiativeTurn(combat, direction >= 0 ? 1 : -1);
     const active = currentCombatant(combat);
     const reason = combatantSkipReason(active);
     if (!reason) return combat;
@@ -178,10 +179,20 @@ function combatantSpeakerOptions(combatant, options = {}) {
 
 async function restoreCurrentCombatant(combat, combatantId, updateTurn) {
   if (!combat?.started || updateTurn === false || !combatantId) return;
-  const turns = sortedCombatants(combat);
+  const turns = getCombatOrder(combat);
   const index = turns.findIndex(entry => String(entry.id) === String(combatantId));
   if (index < 0 || Number(combat.turn) === index) return;
   await combat.update({ turn: index }, { add2eInitiativeNavigation: true });
+}
+
+function initiativeTieData(combat, combatant) {
+  const group = initiativeTieGroup(combatant, combat);
+  return {
+    tied: group.length > 1,
+    score: Number(combatant?.initiative),
+    combatantIds: group.map(entry => entry.id),
+    names: group.map(entry => entry.name)
+  };
 }
 
 export async function rollInitiative(combat, ids, options = {}) {
@@ -231,17 +242,29 @@ export async function rollInitiative(combat, ids, options = {}) {
     add2eInitiativeSort: true
   });
 
-  if (combat.started) await sortInitiativeAscending(combat);
+  if (combat.started) await sortInitiativeHighFirst(combat);
   else combat.setupTurns?.();
   await restoreCurrentCombatant(combat, activeId, options.updateTurn);
 
-  for (const message of messages) await createInitiativeChatCard(message);
+  for (const message of messages) {
+    await createInitiativeChatCard({
+      ...message,
+      tie: initiativeTieData(combat, message.combatant)
+    });
+  }
+
+  const ties = updates
+    .map(update => combat.combatants.get?.(update._id))
+    .filter(Boolean)
+    .map(combatant => initiativeTieData(combat, combatant))
+    .filter(entry => entry.tied);
 
   Hooks.callAll("add2eInitiativeRolled", combat, {
     version: ADD2E_INITIATIVE_VERSION,
     formula,
     updates,
-    combatantIds: updates.map(update => update._id)
+    combatantIds: updates.map(update => update._id),
+    ties
   });
   return combat;
 }
@@ -301,8 +324,9 @@ function exposeGlobals() {
     version: ADD2E_INITIATIVE_VERSION,
     resolve: resolveInitiative,
     roll: rollInitiative,
-    compare: compareCombatantsAscending,
-    order: sortedCombatants,
+    compare: compareInitiativeHighFirst,
+    order: getCombatOrder,
+    ties: initiativeTieGroup,
     current: currentCombatant,
     canTakeTurn: canCombatantTakeTurn,
     skipReason: combatantSkipReason,
@@ -313,13 +337,14 @@ function exposeGlobals() {
     add2eConfigureInitiative: configureInitiative,
     add2eResolveInitiative: resolveInitiative,
     add2eRollInitiative: rollInitiative,
-    add2eCompareInitiative: compareCombatantsAscending,
-    add2eGetCombatOrder: sortedCombatants,
+    add2eCompareInitiative: compareInitiativeHighFirst,
+    add2eGetCombatOrder: getCombatOrder,
+    add2eGetInitiativeTieGroup: initiativeTieGroup,
     add2eGetCurrentCombatant: currentCombatant,
     add2eCanCombatantTakeTurn: canCombatantTakeTurn,
     add2eCombatantSkipReason: combatantSkipReason,
     add2eAdvanceCombatTurn: advanceCombatTurn,
-    add2eSortInitiative: sortInitiativeAscending,
+    add2eSortInitiative: sortInitiativeHighFirst,
     add2eScheduleInitiativeSort: scheduleInitiativeSort,
     add2eCanActorActNow: canActorActNow,
     add2eCanTokenInteractNow: canTokenInteractNow,
@@ -329,7 +354,7 @@ function exposeGlobals() {
     add2eDebugCombatState: add2eInitiativeDebug,
     add2eSelectActiveCombatantToken: selectCurrentToken,
     add2eClearFoundryMovementTrail: clearFoundryMovementTrailAggressive,
-    add2eForceFirstSortedTurn: forceFirstSortedTurn
+    add2eForceFirstInitiativeTurn: forceFirstInitiativeTurn
   });
 }
 
@@ -357,8 +382,9 @@ export {
   configureInitiative as add2eConfigureInitiative,
   resolveInitiative as add2eResolveInitiative,
   rollInitiative as add2eRollInitiative,
-  compareCombatantsAscending as add2eCompareInitiative,
-  sortedCombatants as add2eGetCombatOrder,
+  compareInitiativeHighFirst as add2eCompareInitiative,
+  getCombatOrder as add2eGetCombatOrder,
+  initiativeTieGroup as add2eGetInitiativeTieGroup,
   currentCombatant as add2eGetCurrentCombatant,
   advanceCombatTurn as add2eAdvanceCombatTurn,
   canCombatantTakeTurn as add2eCanCombatantTakeTurn,
