@@ -1,37 +1,29 @@
 // ============================================================================
 // ADD2E — Tracker de combat horizontal
 // ApplicationV2 / DialogV2 — Compatible Foundry V13/V14/V15.
-// Le document Combat reste l'unique source de vérité.
+// Interface directe du service canonique d'initiative ADD2E.
 // ============================================================================
 
+import { add2eMultipleAttackHudStatus } from "../add2e-initiative-order.mjs";
 import {
-  add2eMultipleAttackHudStatus,
-  currentCombatant,
-  isInactiveCombatant,
-  sortedCombatants
-} from "../add2e-initiative-order.mjs";
+  add2eAdvanceCombatTurn,
+  add2eCombatantSkipReason,
+  add2eGetCombatOrder,
+  add2eGetCurrentCombatant,
+  add2eRollInitiative
+} from "../add2e-initiative.mjs";
 
-export const ADD2E_HORIZONTAL_TRACKER_VERSION = "2026-07-16-horizontal-combat-tracker-v6-window-layer";
+export const ADD2E_HORIZONTAL_TRACKER_VERSION = "2026-07-28-horizontal-combat-tracker-canonical-v7";
 
 const ApplicationV2 = foundry?.applications?.api?.ApplicationV2;
 const DialogV2 = foundry?.applications?.api?.DialogV2;
 if (!ApplicationV2) throw new Error("[ADD2E][HORIZONTAL_TRACKER] ApplicationV2 introuvable.");
 
 const STYLE_ID = "add2e-horizontal-combat-tracker-style";
-const SKIP_STATUS_IDS = new Set([
-  "dead", "defeated", "unconscious", "incapacitated", "inactive",
-  "mort", "inconscient", "hors-combat", "hors-jeu",
-  "paralyzed", "paralysed", "paralyse",
-  "petrified", "petrifie",
-  "stunned", "etourdi",
-  "asleep", "sleeping", "endormi",
-  "neutralized", "neutralise"
-]);
 
 let trackerApp = null;
 let refreshTimer = null;
 let layoutTimer = null;
-let navigationRunning = false;
 let sidebarObserver = null;
 
 function esc(value) {
@@ -41,49 +33,6 @@ function esc(value) {
   return node.innerHTML;
 }
 
-function normalizeStatus(value) {
-  return String(value ?? "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
-function effectStatuses(effect) {
-  const statuses = new Set();
-  for (const status of effect?.statuses ?? []) statuses.add(normalizeStatus(status?.id ?? status));
-  for (const value of [
-    effect?.statusId,
-    effect?.flags?.core?.statusId,
-    effect?.flags?.add2e?.statusId,
-    effect?.flags?.add2e?.vitalStatus,
-    effect?.name
-  ]) {
-    const normalized = normalizeStatus(value);
-    if (normalized) statuses.add(normalized);
-  }
-  return statuses;
-}
-
-function combatantSkipReason(combatant) {
-  if (!combatant) return "Combattant introuvable";
-  if (isInactiveCombatant(combatant)) return "Incapable d’agir";
-
-  for (const document of [combatant, combatant.token, combatant.actor].filter(Boolean)) {
-    if (document?.flags?.add2e?.skipCombatTurn === true) return "Tour neutralisé";
-    for (const effect of document?.effects ?? []) {
-      if (effect?.disabled || effect?.isSuppressed) continue;
-      if (effect?.flags?.add2e?.skipCombatTurn === true) return effect.name || "Tour neutralisé";
-      for (const status of effectStatuses(effect)) {
-        if (SKIP_STATUS_IDS.has(status)) return effect.name || status;
-      }
-    }
-  }
-  return "";
-}
-
 function trackerCombat() {
   const combat = game.combat;
   return combat?.combatants?.size ? combat : null;
@@ -91,7 +40,7 @@ function trackerCombat() {
 
 function activeCombatantId(combat) {
   if (!combat?.started) return null;
-  return combat?.current?.combatantId ?? combat?.combatant?.id ?? currentCombatant(combat)?.id ?? null;
+  return add2eGetCurrentCombatant(combat)?.id ?? null;
 }
 
 function combatantImage(combatant, hiddenForPlayer = false) {
@@ -407,29 +356,10 @@ async function rollCombatants(combat, ids) {
     return combatant && userCanManage(combatant);
   });
   if (!allowedIds.length) return ui.notifications?.warn?.("Aucune initiative autorisée à lancer.");
-  return combat.rollInitiative(allowedIds, {
+  return add2eRollInitiative(combat, allowedIds, {
     updateTurn: false,
     messageOptions: { rollMode: game.settings?.get?.("core", "rollMode") ?? "publicroll" }
   });
-}
-
-async function advanceAndSkip(combat, direction = 1) {
-  if (!combat?.started || navigationRunning) return;
-  navigationRunning = true;
-  try {
-    const maximum = Math.max(1, combat.combatants?.size ?? 1);
-    for (let attempt = 0; attempt < maximum; attempt += 1) {
-      if (direction >= 0) await combat.nextTurn();
-      else await combat.previousTurn();
-      const current = currentCombatant(combat);
-      const reason = combatantSkipReason(current);
-      if (!reason) return current;
-      ui.notifications?.info?.(`${current?.name ?? "Combattant"} est sauté : ${reason}.`);
-    }
-    ui.notifications?.warn?.("Aucun combattant capable d’agir n’a été trouvé.");
-  } finally {
-    navigationRunning = false;
-  }
 }
 
 class Add2eHorizontalCombatTracker extends ApplicationV2 {
@@ -447,11 +377,11 @@ class Add2eHorizontalCombatTracker extends ApplicationV2 {
 
     const started = combat.started === true;
     const activeId = activeCombatantId(combat);
-    const combatants = sortedCombatants(combat)
+    const combatants = add2eGetCombatOrder(combat)
       .filter(combatant => game.user?.isGM || combatant.hidden !== true)
       .map(combatant => {
         const hiddenForPlayer = combatant.hidden === true && !game.user?.isGM;
-        const skipReason = combatantSkipReason(combatant);
+        const skipReason = add2eCombatantSkipReason(combatant);
         return {
           id: combatant.id,
           name: hiddenForPlayer ? "Combattant masqué" : combatant.name,
@@ -540,8 +470,8 @@ class Add2eHorizontalCombatTracker extends ApplicationV2 {
     const combatant = this.combatantFromEvent(event);
 
     if (action === "start-combat" && game.user?.isGM && !combat.started) return combat.startCombat();
-    if (action === "next-turn" && combat.started) return advanceAndSkip(combat, 1);
-    if (action === "previous-turn" && combat.started) return advanceAndSkip(combat, -1);
+    if (action === "next-turn" && combat.started) return add2eAdvanceCombatTurn(combat, 1);
+    if (action === "previous-turn" && combat.started) return add2eAdvanceCombatTurn(combat, -1);
     if (action === "roll-one" && combatant) return rollCombatants(combat, [combatant.id]);
     if (action === "roll-missing") {
       const ids = Array.from(combat.combatants ?? [])
@@ -641,7 +571,8 @@ const REFRESH_HOOKS = [
   "createCombat", "updateCombat", "deleteCombat",
   "createCombatant", "updateCombatant", "deleteCombatant",
   "createActiveEffect", "updateActiveEffect", "deleteActiveEffect",
-  "updateActor", "updateToken", "canvasReady", "collapseSidebar"
+  "updateActor", "updateToken", "canvasReady", "collapseSidebar",
+  "add2eInitiativeRolled"
 ];
 
 Hooks.once("ready", () => {
@@ -654,7 +585,7 @@ Hooks.once("ready", () => {
     refresh: refreshTracker,
     layout: applyTrackerLayout,
     app: () => getTrackerApp(),
-    skipReason: combatantSkipReason
+    skipReason: add2eCombatantSkipReason
   };
   globalThis.ADD2E_HORIZONTAL_TRACKER_VERSION = ADD2E_HORIZONTAL_TRACKER_VERSION;
 });
