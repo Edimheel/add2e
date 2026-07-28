@@ -9,6 +9,7 @@ export const initiativeState = {
   configured: false,
   patched: false,
   rollPatched: false,
+  navigationPatched: false,
   hooksInstalled: false,
   sorting: false,
   rolling: false,
