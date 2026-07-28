@@ -5,10 +5,8 @@
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant 13c.");
 
 const ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION = "2026-07-26-force-ex-canonical-derived-profile-v7";
-const ADD2E_HP_MODIFIERS_VERSION = "2026-07-28-canonical-hit-points-migration-v3";
 const ADD2E_ABILITY_CONSUMER_VERSION = "2026-07-26-canonical-derived-abilities-3-25-v4";
 globalThis.ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION = ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION;
-globalThis.ADD2E_HP_MODIFIERS_VERSION = ADD2E_HP_MODIFIERS_VERSION;
 globalThis.ADD2E_ABILITY_CONSUMER_VERSION = ADD2E_ABILITY_CONSUMER_VERSION;
 
 function add2eV2Root(source) {
@@ -78,131 +76,6 @@ function add2eValuesEqual(left, right) {
   return JSON.stringify(left) === JSON.stringify(right);
 }
 
-function add2eNumber(value, fallback = 0) {
-  const number = Number(value);
-  return Number.isFinite(number) ? number : fallback;
-}
-
-function add2eModifierList(value) {
-  if (Array.isArray(value)) return value.filter(entry => entry && typeof entry === "object").map(add2eClone);
-  if (value && typeof value === "object") return Object.values(value).filter(entry => entry && typeof entry === "object").map(add2eClone);
-  return [];
-}
-
-function add2eActorCanonicalModifiers(actor) {
-  return add2eModifierList(actor?.getFlag?.("add2e", "modifiers") ?? actor?.flags?.add2e?.modifiers ?? []);
-}
-
-function add2eNormalizeHpTarget(value) {
-  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
-  if (typeof engine?.normalizeModifier === "function") {
-    const normalized = engine.normalizeModifier({
-      domain: "hit-points",
-      target: value ?? "maximum",
-      operation: "add",
-      value: 0,
-      source: { kind: "actor", id: "normalization" }
-    });
-    return normalized?.target ?? "maximum";
-  }
-  const key = String(value ?? "maximum").trim().toLowerCase();
-  return ["current", "courant", "pdv"].includes(key) ? "current" : "maximum";
-}
-
-function add2eHpSourceId(modifier) {
-  return String(
-    modifier?.metadata?.legacySourceId
-    ?? modifier?.metadata?.sourceId
-    ?? modifier?.source?.id
-    ?? modifier?.id
-    ?? ""
-  ).trim();
-}
-
-function add2eIsCanonicalHpModifier(modifier) {
-  return String(modifier?.domain ?? "").trim().toLowerCase() === "hit-points"
-    && ["maximum", "current", "all"].includes(add2eNormalizeHpTarget(modifier?.target));
-}
-
-function add2eCanonicalHpModifier(sourceId, modifier = {}) {
-  const source = String(sourceId ?? "").trim();
-  if (!source) return null;
-  const amount = Math.trunc(add2eNumber(modifier.amount ?? modifier.value ?? modifier.bonus, 0));
-  if (!amount) return null;
-  const target = add2eNormalizeHpTarget(modifier.target ?? "maximum");
-  const label = String(modifier.label ?? modifier.name ?? source);
-  const calculation = String(modifier.calculation ?? modifier.metadata?.calculation ?? "fixed");
-  return {
-    id: `add2e-hit-points:${source}`,
-    domain: "hit-points",
-    target,
-    operation: "add",
-    value: amount,
-    priority: Number.isFinite(Number(modifier.priority)) ? Number(modifier.priority) : 100,
-    stacking: {
-      mode: String(modifier.stacking?.mode ?? "unique-source"),
-      group: String(modifier.stacking?.group ?? `hit-points:${target}:${source}`)
-    },
-    conditions: add2eClone(modifier.conditions ?? {}),
-    source: {
-      kind: String(modifier.source?.kind ?? modifier.kind ?? "legacy"),
-      id: source,
-      uuid: String(modifier.source?.uuid ?? ""),
-      name: String(modifier.source?.name ?? label)
-    },
-    duration: add2eClone(modifier.duration ?? null),
-    metadata: {
-      ...add2eClone(modifier.metadata ?? {}),
-      label,
-      calculation,
-      legacySourceId: source,
-      migratedFromHpModifiers: true,
-      temporary: modifier.temporary === true || modifier.metadata?.temporary === true,
-      persistent: modifier.persistent === true || modifier.metadata?.persistent === true,
-      linkId: modifier.linkId ?? modifier.metadata?.linkId ?? null,
-      levelSource: modifier.levelSource ?? modifier.metadata?.levelSource,
-      level: modifier.level ?? modifier.metadata?.level
-    }
-  };
-}
-
-function add2eUpsertCanonicalHpModifier(modifiers, sourceId, rawModifier = {}) {
-  const source = String(sourceId ?? "").trim();
-  const id = `add2e-hit-points:${source}`;
-  const next = add2eModifierList(modifiers).filter(modifier => {
-    if (String(modifier?.id ?? "") === id) return false;
-    return !(add2eIsCanonicalHpModifier(modifier) && add2eHpSourceId(modifier) === source);
-  });
-  const canonical = add2eCanonicalHpModifier(source, rawModifier);
-  if (canonical) next.push(canonical);
-  return next;
-}
-
-function add2eLegacyHpModifierRegistry(value) {
-  const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
-  const registry = {};
-  for (const [sourceId, raw] of Object.entries(source)) {
-    const id = String(sourceId ?? "").trim();
-    if (!id || !raw || typeof raw !== "object") continue;
-    const amount = Math.trunc(add2eNumber(raw.amount ?? raw.value ?? raw.bonus, 0));
-    if (!amount) continue;
-    registry[id] = { ...add2eClone(raw), amount, label: String(raw.label ?? raw.name ?? id) };
-  }
-  return registry;
-}
-
-function add2eFamiliarLegacyShare(actor) {
-  const value = actor?.getFlag?.("add2e", "familiarHpShare") ?? actor?.flags?.add2e?.familiarHpShare ?? null;
-  if (!value || typeof value !== "object") return null;
-  const linkId = String(value.linkId ?? actor?.getFlag?.("add2e", "familiar")?.linkId ?? actor?.flags?.add2e?.familiar?.linkId ?? "").trim();
-  const amount = Math.max(0, Math.floor(add2eNumber(value.amount, 0)));
-  return linkId ? { linkId, amount } : null;
-}
-
-function add2eFamiliarModifierSource(linkId) {
-  return `familier:${String(linkId ?? "").trim()}`;
-}
-
 async function add2eRecalculateHitPoints(actor, { reason = "hit-points-recalculate", force = false } = {}) {
   if (!actor?.system) return false;
   const classes = Array.from(actor.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
@@ -216,63 +89,7 @@ async function add2eRecalculateHitPoints(actor, { reason = "hit-points-recalcula
   }
   return false;
 }
-
-async function add2eMigrateLegacyHitPointModifiers(actor) {
-  if (!game.user?.isGM || !actor?.system) return false;
-  const legacyRegistry = add2eLegacyHpModifierRegistry(actor?.getFlag?.("add2e", "hpModifiers") ?? actor?.flags?.add2e?.hpModifiers ?? {});
-  const share = add2eFamiliarLegacyShare(actor);
-  if (!Object.keys(legacyRegistry).length && !share?.linkId) return false;
-
-  let modifiers = add2eActorCanonicalModifiers(actor);
-  for (const [source, modifier] of Object.entries(legacyRegistry)) {
-    modifiers = add2eUpsertCanonicalHpModifier(modifiers, source, modifier);
-  }
-  if (share?.linkId) {
-    modifiers = add2eUpsertCanonicalHpModifier(modifiers, add2eFamiliarModifierSource(share.linkId), {
-      amount: share.amount,
-      label: "Vitalité partagée du familier",
-      kind: "familier",
-      temporary: true,
-      linkId: share.linkId
-    });
-  }
-
-  await actor.update({
-    "flags.add2e.modifiers": modifiers,
-    "flags.add2e.-=hpModifiers": null,
-    "flags.add2e.-=familiarHpShare": null
-  }, {
-    add2eInternal: true,
-    add2eHitPointModifierMigration: true,
-    add2eReason: "migrate-canonical-hit-points",
-    render: false
-  });
-  await add2eRecalculateHitPoints(actor, { reason: "migrate-canonical-hit-points" });
-  return true;
-}
-
-function add2eInstallCanonicalHitPointMigration() {
-  if (globalThis.__ADD2E_HP_MODIFIER_MIGRATION_VERSION__ === ADD2E_HP_MODIFIERS_VERSION) return;
-  globalThis.__ADD2E_HP_MODIFIER_MIGRATION_VERSION__ = ADD2E_HP_MODIFIERS_VERSION;
-  delete globalThis.__ADD2E_HP_MODIFIER_REGISTRY_VERSION__;
-  delete globalThis.add2eGetActorHpModifiers;
-  delete globalThis.add2eGetActorHpModifierTotal;
-  delete globalThis.add2eSetActorHpModifier;
-  delete globalThis.add2eRemoveActorHpModifier;
-  delete globalThis.add2eRecalculateActorHpModifiers;
-
-  globalThis.add2eRecalculateHitPoints = add2eRecalculateHitPoints;
-  Hooks.once("ready", () => {
-    if (!game.user?.isGM) return;
-    setTimeout(() => {
-      for (const actor of game.actors?.contents ?? []) {
-        add2eMigrateLegacyHitPointModifiers(actor).catch(error => console.warn("[ADD2E][HIT_POINTS][MIGRATION]", { actor: actor?.name, error }));
-      }
-    }, 200);
-  });
-}
-
-add2eInstallCanonicalHitPointMigration();
+globalThis.add2eRecalculateHitPoints = add2eRecalculateHitPoints;
 
 globalThis.Add2eActorSheet.prototype.autoSetCaracAjustements = async function autoSetCaracAjustements() {
   if (this._autoSetCaracsInProgress) return;
