@@ -1,11 +1,12 @@
-// ADD2E — Actor sheet caracs, PV, onglets et rendu — full ApplicationV2
+// ADD2E — Actor sheet caracs, onglets et rendu — full ApplicationV2
 // La progression de classe provient de l’Item classe exact.
+// Le calcul métier des points de vie appartient au service canonique de progression.
 // Compatible Foundry V13/V14/V15.
 
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant 13c.");
 
 const ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION = "2026-07-26-force-ex-canonical-derived-profile-v7";
-const ADD2E_ABILITY_CONSUMER_VERSION = "2026-07-26-canonical-derived-abilities-3-25-v4";
+const ADD2E_ABILITY_CONSUMER_VERSION = "2026-07-28-character-sheet-without-hit-point-calculator-v5";
 globalThis.ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION = ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION;
 globalThis.ADD2E_ABILITY_CONSUMER_VERSION = ADD2E_ABILITY_CONSUMER_VERSION;
 
@@ -75,22 +76,6 @@ function add2eValuesEqual(left, right) {
   if (typeof foundry?.utils?.deepEqual === "function") return foundry.utils.deepEqual(left, right);
   return JSON.stringify(left) === JSON.stringify(right);
 }
-
-async function add2eRecalculateHitPoints(actor, { reason = "hit-points-recalculate", force = false } = {}) {
-  if (!actor?.system) return false;
-  const prototype = globalThis.Add2eActorSheet?.prototype;
-  const calculate = prototype?.autoSetPointsDeCoup;
-  if (typeof calculate !== "function") {
-    throw new Error("Le calcul canonique ADD2E des points de vie est indisponible.");
-  }
-  const context = Object.create(prototype);
-  Object.defineProperties(context, {
-    actor: { value: actor, configurable: true },
-    document: { value: actor, configurable: true }
-  });
-  return (await calculate.call(context, { force, reason })) === true;
-}
-globalThis.add2eRecalculateHitPoints = add2eRecalculateHitPoints;
 
 globalThis.Add2eActorSheet.prototype.autoSetCaracAjustements = async function autoSetCaracAjustements() {
   if (this._autoSetCaracsInProgress) return;
@@ -183,95 +168,13 @@ globalThis.Add2eActorSheet.prototype.autoSetCaracAjustements = async function au
     if (Object.keys(diff).length) {
       await this.actor.update(diff, { add2eInternal: true, add2eReason: "ability-derived-recalculate" });
     }
-    if (typeof this.autoSetPointsDeCoup === "function") await this.autoSetPointsDeCoup();
+    if (typeof globalThis.add2eRecalculateHitPoints === "function") {
+      await globalThis.add2eRecalculateHitPoints(this.actor, { reason: "ability-derived-recalculate" });
+    }
   } catch (error) {
     console.error("[ADD2E] Erreur dans autoSetCaracAjustements()", error);
   } finally {
     this._autoSetCaracsInProgress = false;
-  }
-};
-
-globalThis.Add2eActorSheet.prototype.autoSetPointsDeCoup = async function autoSetPointsDeCoup({ force = false, reason = "unknown" } = {}) {
-  try {
-    const actor = this.actor;
-    if (!actor?.system) return false;
-
-    const classes = Array.from(actor.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
-    if (classes.length !== 1) return false;
-
-    const classDoc = classes[0];
-    const cls = classDoc.system ?? null;
-    if (!cls) return false;
-
-    const level = Math.max(1, Number(cls.niveau ?? cls.level) || 1);
-    const hitDie = Number(cls.hitDie || 0);
-    if (!Number.isFinite(hitDie) || hitDie <= 0) return false;
-
-    const s = actor.system;
-    const conDerived = add2eAbilityDerivedResolution(actor, "constitution", {
-      domain: "hit-points",
-      type: "single-class-hit-points",
-      source: "hit-points-calculation",
-      consumer: "actor-sheet-hit-points"
-    });
-    const progression = typeof globalThis.add2eResolveConstitutionHitPointProgression === "function"
-      ? globalThis.add2eResolveConstitutionHitPointProgression(actor, classDoc)
-      : null;
-    const conBonus = Number(progression?.constitutionBonusPerDie ?? conDerived.profile?.pv ?? 0) || 0;
-    let hpRolls = Array.isArray(s.hpRolls) ? [...s.hpRolls] : [];
-    if (force) hpRolls = [];
-    if (hpRolls.length < 1 || !Number.isFinite(hpRolls[0])) hpRolls[0] = hitDie;
-
-    for (let index = 1; index < level; index += 1) {
-      const current = hpRolls[index];
-      if (Number.isFinite(current) && current >= 1 && current <= hitDie) continue;
-      hpRolls[index] = 1 + Math.floor(Math.random() * hitDie);
-    }
-    hpRolls = hpRolls.slice(0, level);
-
-    let baseMaximum = 0;
-    for (let index = 0; index < level; index += 1) {
-      baseMaximum += (index === 0 ? hitDie : (Number(hpRolls[index]) || 1)) + conBonus;
-    }
-    if (!Number.isFinite(baseMaximum) || baseMaximum < 1) baseMaximum = 1;
-
-    const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
-    if (typeof engine?.resolveHitPoints !== "function") {
-      throw new Error("Le résolveur canonique ADD2E des points de vie n’est pas disponible.");
-    }
-    const resolution = engine.resolveHitPoints(actor, {
-      baseMaximum,
-      previousMaximum: s.points_de_coup,
-      previousCurrent: s.pdv,
-      level,
-      source: reason,
-      consumer: "single-class-hit-points",
-      context: {
-        classLevel: level,
-        sourceItem: classDoc,
-        levelBySource: { [classDoc.id]: level, [classDoc.uuid]: level }
-      }
-    });
-
-    const sameHpRolls = foundry.utils.deepEqual
-      ? foundry.utils.deepEqual(s.hpRolls ?? [], hpRolls)
-      : JSON.stringify(s.hpRolls ?? []) === JSON.stringify(hpRolls);
-    const updates = {};
-    if (!sameHpRolls) updates["system.hpRolls"] = hpRolls;
-    if (Number(s.points_de_coup) !== Number(resolution.maximum.total)) updates["system.points_de_coup"] = resolution.maximum.total;
-    if (Number(s.pdv) !== Number(resolution.current.total)) updates["system.pdv"] = resolution.current.total;
-    if (!Object.keys(updates).length) return true;
-
-    await actor.update(updates, {
-      add2eInternal: true,
-      add2eHitPointResolution: true,
-      add2eReason: reason,
-      render: false
-    });
-    return true;
-  } catch (error) {
-    console.warn("[ADD2E][HP] Erreur autoSetPointsDeCoup :", error);
-    return false;
   }
 };
 
