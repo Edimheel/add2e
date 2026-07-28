@@ -1,7 +1,7 @@
 // scripts/add2e-initiative-constants.mjs
 // ADD2E — constantes et utilitaires partagés de l'initiative.
 
-export const ADD2E_INITIATIVE_VERSION = "2026-07-28-canonical-initiative-v1";
+export const ADD2E_INITIATIVE_VERSION = "2026-07-28-canonical-initiative-v2";
 export const ADD2E_INITIATIVE_D6_ICON = "systems/add2e/assets/D6_3D_tracker.png";
 export const TAG = "[ADD2E][INIT]";
 
