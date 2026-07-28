@@ -6,7 +6,7 @@ import { add2ePopulateActorSheetSpellData } from "./13b-actor-sheet-get-data-spe
 
 if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant getData.");
 
-const ADD2E_ACTIVE_EFFECTS_DATA_VERSION = "2026-07-28-canonical-familiar-effects-v4";
+const ADD2E_ACTIVE_EFFECTS_DATA_VERSION = "2026-07-28-canonical-familiar-effects-v5";
 const ADD2E_HIDDEN_TECHNICAL_CLASS_RULE_KINDS = new Set(["armor_class_base", "attack_modifier"]);
 
 function add2eExceptionalStrengthValue(rawValue) {
@@ -83,9 +83,12 @@ function add2eEffectHasCanonicalModifier(effect) {
   return add2eEffectModifiers(effect).some(modifier => String(modifier?.domain ?? "").trim());
 }
 
+function add2eEffectFamiliarData(effect) {
+  return effect?.flags?.add2e?.familiar ?? effect?.getFlag?.("add2e", "familiar") ?? null;
+}
+
 function add2eEffectFamiliarKind(effect) {
-  const familiar = effect?.flags?.add2e?.familiar ?? effect?.getFlag?.("add2e", "familiar") ?? null;
-  return add2eNormEffectValue(familiar?.kind);
+  return add2eNormEffectValue(add2eEffectFamiliarData(effect)?.kind);
 }
 
 function add2eEffectIsAppliedFamiliar(effect) {
@@ -229,6 +232,72 @@ function add2eEffectSourceName(effect) {
   );
 }
 
+function add2eEffectTags(effect) {
+  const raw = effect?.flags?.add2e?.tags ?? effect?.getFlag?.("add2e", "tags") ?? [];
+  const values = Array.isArray(raw)
+    ? raw
+    : typeof raw === "string"
+      ? raw.split(/[,;|\n]+/g)
+      : raw && typeof raw === "object"
+        ? Object.values(raw)
+        : [];
+  return values.map(value => String(value ?? "").trim().toLowerCase()).filter(Boolean);
+}
+
+function add2eFamiliarCapabilityIcon(effect) {
+  const text = `${effect?.name ?? ""} ${add2eEffectTags(effect).join(" ")}`;
+  const normalized = add2eNormEffectValue(text);
+  if (/vision|infravision|sens|vue/.test(normalized)) return "fa-eye";
+  if (/ouie|audition|ecoute/.test(normalized)) return "fa-ear-listen";
+  if (/resistance|protection|save|sauvegarde/.test(normalized)) return "fa-shield-halved";
+  if (/regeneration|soin/.test(normalized)) return "fa-heart-pulse";
+  if (/dexterite|agilite/.test(normalized)) return "fa-person-running";
+  if (/surprise/.test(normalized)) return "fa-user-shield";
+  if (/niveau/.test(normalized)) return "fa-arrow-up-right-dots";
+  return "fa-paw";
+}
+
+function add2eIsFamiliarCapabilityEffect(effect) {
+  if (!effect || effect.disabled === true || effect.isSuppressed === true) return false;
+  if (add2eEffectFamiliarKind(effect) !== "benefit") return false;
+  const tags = add2eEffectTags(effect);
+  return !tags.includes("familier:partage_pv");
+}
+
+function add2eFamiliarCapability(effect) {
+  const familiar = add2eEffectFamiliarData(effect) ?? {};
+  const label = String(effect?.name ?? effect?.label ?? "Capacité de familier")
+    .replace(/^\s*Familier\s*[—–-]\s*/i, "")
+    .trim() || "Capacité de familier";
+  return {
+    id: `familiar-effect:${effect.id}`,
+    key: `familiar-effect:${effect.id}`,
+    label,
+    description: String(add2eEffectDescription(effect) ?? ""),
+    img: effect.img || "icons/svg/aura.svg",
+    iconClass: add2eFamiliarCapabilityIcon(effect),
+    sourceName: `Familier — ${String(familiar.familiarLabel ?? "Familier").trim()}`,
+    canRoll: false,
+    rollLabel: "",
+    familiar: true
+  };
+}
+
+function add2ePopulateActorSheetFamiliarCapabilities(actor, data) {
+  const existing = Array.isArray(data.activeRacialCapabilities) ? data.activeRacialCapabilities : [];
+  const familiar = Array.from(actor?.effects ?? [])
+    .filter(add2eIsFamiliarCapabilityEffect)
+    .map(add2eFamiliarCapability);
+  const seen = new Set();
+  data.activeRacialCapabilities = [...existing, ...familiar].filter(capability => {
+    const key = String(capability?.id ?? capability?.key ?? capability?.label ?? "").trim();
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  return data.activeRacialCapabilities;
+}
+
 export function add2ePopulateActorSheetActiveEffectsData(actor, data) {
   data.activeEffectsList = Array.from(actor?.effects ?? [])
     .filter(add2eShouldShowEffect)
@@ -262,6 +331,7 @@ globalThis.Add2eActorSheet.prototype.getData = async function getData() {
 
   add2ePopulateActorSheetSpellData({ actor: state.actor, data, items: state.items });
   add2ePopulateActorSheetActiveEffectsData(this.actor, data);
+  add2ePopulateActorSheetFamiliarCapabilities(this.actor, data);
 
   data.alignementsDisponibles = add2eSheetAllowedAlignments(state.actor, state.sys);
   data.activeTab = this._add2eGetNativeActiveTab?.() || this._add2eActiveTab || this._add2eReadStoredTab?.() || "resume";
