@@ -2,7 +2,7 @@
 // ADD2E — hooks d'initiative.
 
 import { ADD2E_INITIATIVE_VERSION, hasProperty, initiativeState } from "./add2e-initiative-constants.mjs";
-import { currentCombatant, scheduleInitiativeSort, scheduleLocalSync, sortedCombatants } from "./add2e-initiative-order.mjs";
+import { currentCombatant, getCombatOrder, scheduleInitiativeSort, scheduleLocalSync } from "./add2e-initiative-order.mjs";
 import { installInitiativeChatCard } from "./add2e-initiative-chat.mjs";
 import { patchInitiativeIcons } from "./add2e-initiative-icons.mjs";
 import { canTokenInteractNow, clearFoundryMovementTrailAggressive } from "./add2e-initiative-locks.mjs";
@@ -22,10 +22,11 @@ function patchTrackerIcons(app, html) {
 }
 
 export function add2eInitiativeDebug(label = "debug", combat = game.combat) {
-  const turns = sortedCombatants(combat);
+  const turns = getCombatOrder(combat);
   return {
     label,
     version: ADD2E_INITIATIVE_VERSION,
+    rule: "high-first",
     started: combat?.started ?? null,
     round: combat?.round ?? null,
     turn: combat?.turn ?? null,
