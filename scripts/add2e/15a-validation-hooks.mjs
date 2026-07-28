@@ -1,7 +1,7 @@
 // ADD2E — Validation des documents et consommateurs directs des effets.
 // Compatible Foundry V13/V14/V15.
 
-const ADD2E_DOCUMENT_EFFECT_CONSUMERS_VERSION = "2026-07-28-canonical-hit-points-hooks-v9";
+const ADD2E_DOCUMENT_EFFECT_CONSUMERS_VERSION = "2026-07-28-current-hit-points-hooks-v10";
 globalThis.ADD2E_DOCUMENT_EFFECT_CONSUMERS_VERSION = ADD2E_DOCUMENT_EFFECT_CONSUMERS_VERSION;
 
 function add2eEffectConsumerList(value) {
@@ -68,6 +68,15 @@ function add2eIsFamiliarEffect(effect) {
   return add2eEffectTags(effect).some(tag => tag === "familier" || tag.startsWith("familier:"));
 }
 
+function add2eCapturePreviousCurrentBase(document, options = {}) {
+  if (!options || options.add2eHitPointResolution === true) return;
+  if (Number.isFinite(Number(options.add2ePreviousCurrentBase))) return;
+  const actor = add2eEffectConsumerActor(document);
+  if (!actor?.system || typeof globalThis.add2eGetHitPointCurrentBase !== "function") return;
+  const currentBase = Number(globalThis.add2eGetHitPointCurrentBase(actor));
+  if (Number.isFinite(currentBase)) options.add2ePreviousCurrentBase = currentBase;
+}
+
 async function add2eWaitForDocumentRemoval(actor, document) {
   if (!actor || !document?.id) return;
   await new Promise(resolve => setTimeout(resolve, 0));
@@ -79,17 +88,21 @@ async function add2eWaitForDocumentRemoval(actor, document) {
   }
 }
 
-async function add2eRecalculateActorHitPoints(actor, reason) {
+async function add2eRecalculateActorHitPoints(actor, reason, options = {}) {
   if (!actor?.system || !add2eEffectConsumerIsResponsibleGM()) return false;
   if (typeof globalThis.add2eRecalculateHitPoints !== "function") {
     throw new Error("Le recalcul canonique ADD2E des points de vie est indisponible.");
   }
-  const recalculated = await globalThis.add2eRecalculateHitPoints(actor, { reason });
+  const previousCurrentBase = Number(options?.add2ePreviousCurrentBase);
+  const recalculated = await globalThis.add2eRecalculateHitPoints(actor, {
+    reason,
+    ...(Number.isFinite(previousCurrentBase) ? { previousCurrentBase } : {})
+  });
   if (recalculated && actor.sheet?.rendered === true) await actor.sheet.render({ force: true });
   return recalculated === true;
 }
 
-async function add2eConsumeModifierDocumentChange(document, changes = {}, { deleted = false } = {}) {
+async function add2eConsumeModifierDocumentChange(document, changes = {}, { deleted = false, operationOptions = {} } = {}) {
   const actor = add2eEffectConsumerActor(document);
   if (!actor) return;
   const hitPointsChanged = add2eEffectConsumerHasHitPoints(document)
@@ -99,33 +112,70 @@ async function add2eConsumeModifierDocumentChange(document, changes = {}, { dele
   if (deleted) await add2eWaitForDocumentRemoval(actor, document);
 
   if (hitPointsChanged) {
-    await add2eRecalculateActorHitPoints(actor, deleted ? "modifier-document-deleted" : "modifier-document-changed");
+    await add2eRecalculateActorHitPoints(
+      actor,
+      deleted ? "modifier-document-deleted" : "modifier-document-changed",
+      operationOptions
+    );
   } else if (familiarChanged && actor.sheet?.rendered === true) {
     await actor.sheet.render({ force: true });
   }
 }
 
-Hooks.on("createActiveEffect", effect => {
-  add2eConsumeModifierDocumentChange(effect).catch(error => console.error("[ADD2E][ACTIVE_EFFECT][CREATE]", error));
+Hooks.on("preCreateActiveEffect", (effect, _data, options = {}) => {
+  add2eCapturePreviousCurrentBase(effect, options);
 });
-Hooks.on("updateActiveEffect", (effect, changes = {}) => {
-  add2eConsumeModifierDocumentChange(effect, changes).catch(error => console.error("[ADD2E][ACTIVE_EFFECT][UPDATE]", error));
+Hooks.on("preUpdateActiveEffect", (effect, changes = {}, options = {}) => {
+  if (add2eEffectConsumerHasHitPoints(effect) || add2eEffectConsumerChangesTouchModifiers(changes)) {
+    add2eCapturePreviousCurrentBase(effect, options);
+  }
 });
-Hooks.on("deleteActiveEffect", effect => {
-  add2eConsumeModifierDocumentChange(effect, {}, { deleted: true }).catch(error => console.error("[ADD2E][ACTIVE_EFFECT][DELETE]", error));
+Hooks.on("preDeleteActiveEffect", (effect, options = {}) => {
+  if (add2eEffectConsumerHasHitPoints(effect)) add2eCapturePreviousCurrentBase(effect, options);
 });
-Hooks.on("createItem", item => {
-  add2eConsumeModifierDocumentChange(item).catch(error => console.error("[ADD2E][ITEM_MODIFIER][CREATE]", error));
+Hooks.on("preCreateItem", (item, _data, options = {}) => {
+  add2eCapturePreviousCurrentBase(item, options);
 });
-Hooks.on("updateItem", (item, changes = {}) => {
-  add2eConsumeModifierDocumentChange(item, changes).catch(error => console.error("[ADD2E][ITEM_MODIFIER][UPDATE]", error));
+Hooks.on("preUpdateItem", (item, changes = {}, options = {}) => {
+  if (add2eEffectConsumerHasHitPoints(item) || add2eEffectConsumerChangesTouchModifiers(changes)) {
+    add2eCapturePreviousCurrentBase(item, options);
+  }
 });
-Hooks.on("deleteItem", item => {
-  add2eConsumeModifierDocumentChange(item, {}, { deleted: true }).catch(error => console.error("[ADD2E][ITEM_MODIFIER][DELETE]", error));
+Hooks.on("preDeleteItem", (item, options = {}) => {
+  if (add2eEffectConsumerHasHitPoints(item)) add2eCapturePreviousCurrentBase(item, options);
+});
+Hooks.on("preUpdateActor", (actor, changes = {}, options = {}) => {
+  if (options?.add2eHitPointResolution === true || !add2eEffectConsumerChangesTouchModifiers(changes)) return;
+  add2eCapturePreviousCurrentBase(actor, options);
+});
+
+Hooks.on("createActiveEffect", (effect, options = {}) => {
+  add2eConsumeModifierDocumentChange(effect, {}, { operationOptions: options })
+    .catch(error => console.error("[ADD2E][ACTIVE_EFFECT][CREATE]", error));
+});
+Hooks.on("updateActiveEffect", (effect, changes = {}, options = {}) => {
+  add2eConsumeModifierDocumentChange(effect, changes, { operationOptions: options })
+    .catch(error => console.error("[ADD2E][ACTIVE_EFFECT][UPDATE]", error));
+});
+Hooks.on("deleteActiveEffect", (effect, options = {}) => {
+  add2eConsumeModifierDocumentChange(effect, {}, { deleted: true, operationOptions: options })
+    .catch(error => console.error("[ADD2E][ACTIVE_EFFECT][DELETE]", error));
+});
+Hooks.on("createItem", (item, options = {}) => {
+  add2eConsumeModifierDocumentChange(item, {}, { operationOptions: options })
+    .catch(error => console.error("[ADD2E][ITEM_MODIFIER][CREATE]", error));
+});
+Hooks.on("updateItem", (item, changes = {}, options = {}) => {
+  add2eConsumeModifierDocumentChange(item, changes, { operationOptions: options })
+    .catch(error => console.error("[ADD2E][ITEM_MODIFIER][UPDATE]", error));
+});
+Hooks.on("deleteItem", (item, options = {}) => {
+  add2eConsumeModifierDocumentChange(item, {}, { deleted: true, operationOptions: options })
+    .catch(error => console.error("[ADD2E][ITEM_MODIFIER][DELETE]", error));
 });
 Hooks.on("updateActor", (actor, changes = {}, options = {}) => {
   if (options?.add2eHitPointResolution === true || !add2eEffectConsumerChangesTouchModifiers(changes)) return;
-  add2eRecalculateActorHitPoints(actor, "actor-modifiers-changed")
+  add2eRecalculateActorHitPoints(actor, "actor-modifiers-changed", options)
     .catch(error => console.error("[ADD2E][ACTOR_MODIFIER][UPDATE]", error));
 });
 
