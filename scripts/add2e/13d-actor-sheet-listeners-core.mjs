@@ -17,7 +17,7 @@ globalThis.__add2eHudSheetRollBridgeV1 = true;
 add2eInstallHudSheetRollBridge();
 
 const ADD2E_LISTENER_CARACS = ["force", "dexterite", "constitution", "intelligence", "sagesse", "charisme"];
-const ADD2E_CONSTITUTION_RULES_VERSION = "2026-07-26-constitution-hp-survival-v2";
+const ADD2E_CONSTITUTION_RULES_VERSION = "2026-07-28-constitution-canonical-hit-points-v3";
 const ADD2E_CHARISMA_RULES_VERSION = "2026-07-26-charisma-social-resolution-v1";
 const ADD2E_FIGHTER_HP_CLASSES = new Set(["guerrier", "paladin", "ranger"]);
 const ADD2E_CONSTITUTION_CHECKS = Object.freeze({
@@ -165,70 +165,6 @@ function add2eResolveConstitutionHitPointProgression(actor, classDocument) {
     constitutionBonusPerDie: normalBonus,
     constitution
   };
-}
-
-async function add2eRecalculateSingleClassHitPoints(actor, { syncCurrent = false, force = false, reason = "unknown" } = {}) {
-  if (!actor?.system) return false;
-  const classes = Array.from(actor.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
-  if (classes.length !== 1) return false;
-
-  const progression = add2eResolveConstitutionHitPointProgression(actor, classes[0]);
-  if (!progression) return false;
-
-  const system = actor.system;
-  let hpRolls = Array.isArray(system.hpRolls) ? [...system.hpRolls] : [];
-  if (force) hpRolls = [];
-
-  for (let index = 0; index < progression.hitDice; index += 1) {
-    if (index === 0) {
-      hpRolls[index] = progression.dieSize;
-      continue;
-    }
-    const current = Number(hpRolls[index]);
-    if (Number.isFinite(current) && current >= 1 && current <= progression.dieSize) continue;
-    hpRolls[index] = 1 + Math.floor(Math.random() * progression.dieSize);
-  }
-  hpRolls = hpRolls.slice(0, progression.hitDice);
-
-  const hitDiceTotal = hpRolls.reduce((total, roll) => (
-    total + Math.max(1, Math.trunc(Number(roll) || 1) + progression.constitutionBonusPerDie)
-  ), 0);
-  const fixedTotal = progression.fixedLevels * progression.fixedHitPointsPerLevel;
-  const baseMaximum = Math.max(1, hitDiceTotal + fixedTotal);
-  const modifierTotal = Math.trunc(Number(globalThis.add2eGetActorHpModifierTotal?.(actor)) || 0);
-  const effectiveMaximum = Math.max(1, baseMaximum + modifierTotal);
-
-  const sameRolls = typeof foundry?.utils?.deepEqual === "function"
-    ? foundry.utils.deepEqual(system.hpRolls ?? [], hpRolls)
-    : JSON.stringify(system.hpRolls ?? []) === JSON.stringify(hpRolls);
-  const previousMaximum = Number(system.points_de_coup);
-  const currentHitPoints = Number(system.pdv);
-  const maximumChanged = previousMaximum !== effectiveMaximum;
-  const maximumDelta = Number.isFinite(previousMaximum) ? effectiveMaximum - previousMaximum : 0;
-  const synchronizeCurrent = syncCurrent === true || reason === "level-change";
-
-  let nextCurrentHitPoints = currentHitPoints;
-  if (synchronizeCurrent) {
-    nextCurrentHitPoints = effectiveMaximum;
-  } else if (Number.isFinite(currentHitPoints) && Number.isFinite(previousMaximum) && maximumDelta !== 0) {
-    nextCurrentHitPoints = Math.min(effectiveMaximum, currentHitPoints + maximumDelta);
-  } else if (Number.isFinite(currentHitPoints) && currentHitPoints > effectiveMaximum) {
-    nextCurrentHitPoints = effectiveMaximum;
-  }
-
-  const currentChanged = Number.isFinite(nextCurrentHitPoints) && nextCurrentHitPoints !== currentHitPoints;
-  const updates = {};
-  if (!sameRolls) updates["system.hpRolls"] = hpRolls;
-  if (maximumChanged || currentChanged) updates["system.points_de_coup"] = baseMaximum;
-  if (currentChanged) updates["system.pdv"] = nextCurrentHitPoints - modifierTotal;
-  if (!Object.keys(updates).length) return true;
-
-  await actor.update(updates, {
-    add2eInternal: true,
-    add2eReason: reason,
-    add2eConstitutionHitPoints: true
-  });
-  return true;
 }
 
 function add2eConstitutionCheckDefinition(check) {
@@ -630,7 +566,6 @@ async function add2ePromptCharismaCircumstance(check) {
 }
 
 globalThis.add2eResolveConstitutionHitPointProgression = add2eResolveConstitutionHitPointProgression;
-globalThis.add2eRecalculateSingleClassHitPoints = add2eRecalculateSingleClassHitPoints;
 globalThis.add2eRollConstitutionCheckCard = add2eRollConstitutionCheckCard;
 globalThis.add2eRollTraumaticShockCard = (actor, context = {}) => add2eRollConstitutionCheckCard(actor, "trauma", context);
 globalThis.add2eRollResurrectionSurvivalCard = (actor, context = {}) => add2eRollConstitutionCheckCard(actor, "resurrection", context);
@@ -639,15 +574,6 @@ globalThis.add2eResolveCharismaLoyalty = add2eResolveCharismaLoyalty;
 globalThis.add2eRollCharismaLoyaltyCard = add2eRollCharismaLoyaltyCard;
 globalThis.add2eResolveCharismaReaction = add2eResolveCharismaReaction;
 globalThis.add2eRollCharismaReactionCard = add2eRollCharismaReactionCard;
-
-globalThis.Add2eActorSheet.prototype.autoSetPointsDeCoup = async function autoSetPointsDeCoup(options = {}) {
-  try {
-    return await add2eRecalculateSingleClassHitPoints(this.actor, options);
-  } catch (error) {
-    console.warn("[ADD2E][HP][CONSTITUTION] Erreur autoSetPointsDeCoup :", error);
-    return false;
-  }
-};
 
 globalThis.Add2eActorSheet.prototype.activateListeners = function activateListeners(html) {
   html = html?.jquery ? html : $(html);
