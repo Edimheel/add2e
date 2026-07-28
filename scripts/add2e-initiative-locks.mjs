@@ -13,6 +13,8 @@ import {
 const ACTION_GLOBALS = ["add2eAttackRoll", "add2eCastSpell", "cast_spell", "add2eExecuteClassFeatureOnUse"];
 const TOKEN_DRAG_METHODS = ["_onDragLeftStart", "_onDragLeftMove", "_onDragLeftDrop", "_onDragLeftCancel"];
 const VADE_RETRO_CONTINUATION_CONTEXTS = "__ADD2E_VADE_RETRO_CONTINUATION_CONTEXTS";
+let lastHudSyncKey = "";
+let lastHudSyncAt = 0;
 
 function actorFromActionArgs(args) {
   const first = args?.[0] ?? null;
@@ -105,6 +107,14 @@ async function executeLockedAction(name, original, context, args) {
   return result;
 }
 
+function installCanonicalHudFollowHooks() {
+  if (globalThis.__ADD2E_CANONICAL_HUD_FOLLOW === ADD2E_INITIATIVE_VERSION) return;
+  globalThis.__ADD2E_CANONICAL_HUD_FOLLOW = ADD2E_INITIATIVE_VERSION;
+  Hooks.on("add2eInitiativeTurnChanged", (combat, details = {}) => {
+    syncActionHudToCombatant(combat, { reason: details.reason ?? "canonical-turn" });
+  });
+}
+
 export function installActionLocks() {
   for (const name of ACTION_GLOBALS) {
     const current = globalThis[name];
@@ -117,6 +127,7 @@ export function installActionLocks() {
     wrapped.__add2eOriginal = current;
     globalThis[name] = wrapped;
   }
+  installCanonicalHudFollowHooks();
 }
 
 function resetRuler(ruler) {
@@ -175,6 +186,13 @@ export function syncActionHudToCombatant(combat = game.combat, { reason = "comba
   const combatant = currentCombatant(combat);
   const actor = combatant?.actor ?? null;
   if (!actor || typeof globalThis.add2eRenderActionHud !== "function") return false;
+
+  const now = Date.now();
+  const syncKey = `${combat.id ?? "combat"}:${combat.round ?? 0}:${combat.turn ?? 0}:${combatant.id ?? actor.id}`;
+  if (syncKey === lastHudSyncKey && now - lastHudSyncAt < 120) return true;
+  lastHudSyncKey = syncKey;
+  lastHudSyncAt = now;
+
   try {
     globalThis.add2eRenderActionHud(actor, tokenFromCombatant(combatant), { reason: `initiative-${reason}` });
     renderMultipleAttackHudBanner(actor);
