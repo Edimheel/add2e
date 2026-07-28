@@ -1,7 +1,7 @@
 // ADD2E — Validation des documents et consommateurs directs des effets.
 // Compatible Foundry V13/V14/V15.
 
-const ADD2E_DOCUMENT_EFFECT_CONSUMERS_VERSION = "2026-07-28-canonical-hit-points-hooks-v8";
+const ADD2E_DOCUMENT_EFFECT_CONSUMERS_VERSION = "2026-07-28-canonical-hit-points-hooks-v9";
 globalThis.ADD2E_DOCUMENT_EFFECT_CONSUMERS_VERSION = ADD2E_DOCUMENT_EFFECT_CONSUMERS_VERSION;
 
 function add2eEffectConsumerList(value) {
@@ -18,15 +18,23 @@ function add2eEffectConsumerModifiers(document) {
   return add2eEffectConsumerList(value);
 }
 
-function add2eEffectConsumerHasHitPoints(document) {
+function add2eEffectConsumerHasDirectHitPoints(document) {
   return add2eEffectConsumerModifiers(document)
     .some(modifier => String(modifier?.domain ?? "").trim().toLowerCase() === "hit-points");
+}
+
+function add2eEffectConsumerHasHitPoints(document) {
+  if (add2eEffectConsumerHasDirectHitPoints(document)) return true;
+  if (document?.documentName !== "Item") return false;
+  return Array.from(document.effects?.contents ?? document.effects ?? [])
+    .some(effect => add2eEffectConsumerHasDirectHitPoints(effect));
 }
 
 function add2eEffectConsumerChangesTouchModifiers(changes = {}) {
   if (Object.prototype.hasOwnProperty.call(changes, "flags.add2e.modifiers")) return true;
   if (Object.prototype.hasOwnProperty.call(changes, "flags.add2e.-=modifiers")) return true;
   if (foundry.utils.hasProperty(changes, "flags.add2e.modifiers")) return true;
+  if (Object.prototype.hasOwnProperty.call(changes, "effects") || foundry.utils.hasProperty(changes, "effects")) return true;
   return Object.keys(changes).some(key => key.startsWith("flags.add2e.modifiers."));
 }
 
