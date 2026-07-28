@@ -1,7 +1,7 @@
 // ADD2E — Validation des documents et consommateurs directs des effets.
 // Compatible Foundry V13/V14/V15.
 
-const ADD2E_DOCUMENT_EFFECT_CONSUMERS_VERSION = "2026-07-28-direct-familiar-consumers-v4";
+const ADD2E_DOCUMENT_EFFECT_CONSUMERS_VERSION = "2026-07-28-canonical-hit-points-hooks-v5";
 globalThis.ADD2E_DOCUMENT_EFFECT_CONSUMERS_VERSION = ADD2E_DOCUMENT_EFFECT_CONSUMERS_VERSION;
 
 function add2eEffectConsumerList(value) {
@@ -59,76 +59,14 @@ function add2eIsFamiliarEffect(effect) {
   return add2eEffectTags(effect).some(tag => tag === "familier" || tag.startsWith("familier:"));
 }
 
-function add2eIsFamiliarCapability(effect) {
-  if (!effect || effect.disabled === true || effect.isSuppressed === true) return false;
-  const tags = add2eEffectTags(effect);
-  if (!tags.some(tag => tag === "familier" || tag.startsWith("familier:"))) return false;
-  if (tags.includes("familier:partage_pv")) return false;
-  if (tags.includes("familier:penalite_mort")) return false;
-  if (tags.includes("familier:partage_sens")) return false;
-  if (tags.includes("familier:suivi")) return false;
-  return true;
-}
-
-function add2eFamiliarCapability(effect) {
-  const familiar = effect?.flags?.add2e?.familiar ?? {};
-  const name = String(effect?.name ?? effect?.label ?? "Capacité de familier")
-    .replace(/^\s*Familier\s*[—–-]\s*/i, "")
-    .trim() || "Capacité de familier";
-  const description = String(
-    effect?.description
-    ?? effect?.flags?.add2e?.description
-    ?? effect?.getFlag?.("core", "description")
-    ?? ""
-  ).trim();
-  return {
-    id: `familiar-effect:${effect.id}`,
-    key: `familiar-effect:${effect.id}`,
-    name,
-    label: name,
-    description,
-    img: effect.img || "icons/svg/aura.svg",
-    sourceName: `Familier — ${String(familiar.familiarLabel ?? "Familier").trim()}`,
-    familiar: true,
-    passive: true,
-    activable: false,
-    canRoll: false,
-    rollLabel: ""
-  };
-}
-
-function add2eFamiliarCapabilities(actor) {
-  return Array.from(actor?.effects ?? [])
-    .filter(add2eIsFamiliarCapability)
-    .map(add2eFamiliarCapability);
-}
-
-function add2eInstallFamiliarCapabilityConsumer() {
-  const prototype = globalThis.Add2eActorSheet?.prototype;
-  if (!prototype || prototype.__add2eFamiliarCapabilityConsumerVersion === ADD2E_DOCUMENT_EFFECT_CONSUMERS_VERSION) return false;
-  const base = prototype.getData;
-  if (typeof base !== "function") throw new Error("Le getData ApplicationV2 du personnage est indisponible.");
-
-  prototype.getData = async function add2eGetDataWithFamiliarCapabilities(...args) {
-    const data = await base.apply(this, args);
-    const actor = this.actor ?? this.document;
-    const familiar = add2eFamiliarCapabilities(actor);
-    data.activeEffectCapabilities = familiar;
-    data.familiarCapabilities = familiar;
-    return data;
-  };
-  prototype.__add2eFamiliarCapabilityConsumerVersion = ADD2E_DOCUMENT_EFFECT_CONSUMERS_VERSION;
-  return true;
-}
-
 async function add2eRecalculateActorHitPoints(actor, reason) {
   if (!actor?.system || !add2eEffectConsumerIsResponsibleGM()) return false;
   if (typeof globalThis.add2eRecalculateHitPoints !== "function") {
     throw new Error("Le recalcul canonique ADD2E des points de vie est indisponible.");
   }
-  await globalThis.add2eRecalculateHitPoints(actor, { reason });
-  if (actor.sheet?.rendered === true) await actor.sheet.render({ force: true });
-  return true;
+  const recalculated = await globalThis.add2eRecalculateHitPoints(actor, { reason });
+  if (recalculated && actor.sheet?.rendered === true) await actor.sheet.render({ force: true });
+  return recalculated === true;
 }
 
 async function add2eConsumeActiveEffectChange(effect, changes = {}) {
@@ -145,8 +83,6 @@ async function add2eConsumeActiveEffectChange(effect, changes = {}) {
     await actor.sheet.render({ force: true });
   }
 }
-
-add2eInstallFamiliarCapabilityConsumer();
 
 Hooks.on("createActiveEffect", effect => {
   add2eConsumeActiveEffectChange(effect).catch(error => console.error("[ADD2E][ACTIVE_EFFECT][CREATE]", error));
