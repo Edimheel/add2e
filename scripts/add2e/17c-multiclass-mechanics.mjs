@@ -1,12 +1,15 @@
-// ADD2E — Progression de classe canonique
+// ADD2E — Progression de classe canonique et points de vie canoniques.
 // Un monoclasse est une collection d'un Item classe ; un multiclassé en a plusieurs.
+// Le calcul des PV reçoit directement un Actor et ne dépend d'aucune feuille.
 // Compatible Foundry V13/V14/V15.
 
 import { MULTICLASS_VERSION, classItems as coreClassItems, classProgression, classProgressionUpdate, classSlug } from "./17b-multiclass-core.mjs";
 
-const VERSION = "2026-07-27-class-item-canonical-hit-points-v8";
+const VERSION = "2026-07-28-canonical-actor-hit-points-v9";
 const TAG = "[ADD2E][CLASSE][CANONIQUE]";
 const timers = new Map();
+const hitPointQueues = new Map();
+const lastHitPointResolutions = new Map();
 
 globalThis.ADD2E_MULTICLASS_MECHANICS_VERSION = VERSION;
 
@@ -17,7 +20,6 @@ const n = (value, fallback = 0) => {
 const classes = actor => coreClassItems(actor);
 const hasClasses = actor => actor?.type === "personnage" && classes(actor).length > 0;
 const isMulti = actor => hasClasses(actor) && classes(actor).length > 1;
-const isMultiHpActor = actor => isMulti(actor) || (actor?.type === "pnj" && classes(actor).length > 1);
 const keyFor = entry => classSlug(entry?.item) || String(entry?.itemId ?? "");
 
 function same(left, right) {
@@ -25,6 +27,13 @@ function same(left, right) {
   return foundry?.utils?.deepEqual
     ? foundry.utils.deepEqual(left, right)
     : JSON.stringify(left) === JSON.stringify(right);
+}
+
+function clone(value) {
+  if (value === undefined || value === null) return value;
+  if (typeof foundry?.utils?.deepClone === "function") return foundry.utils.deepClone(value);
+  if (typeof foundry?.utils?.duplicate === "function") return foundry.utils.duplicate(value);
+  return JSON.parse(JSON.stringify(value));
 }
 
 function progressionRows(item) {
@@ -284,91 +293,272 @@ async function syncClassProgressionSummary(actor, { reason = "class-item-progres
   return true;
 }
 
-function constitutionHitPointBonus(actor, entries = []) {
-  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
-  if (typeof engine?.resolveAbilityDerived !== "function") {
-    throw new Error("Le résolveur canonique ADD2E des ajustements de caractéristiques n’est pas disponible.");
-  }
-  const derived = engine.resolveAbilityDerived(actor, "constitution", {
-    domain: "hit-points",
-    type: "multiclass-hit-points",
-    source: "multiclass-hit-points",
-    consumer: "class-item-progression"
-  });
-  const warriorClass = entries.some(entry =>
-    ["guerrier", "paladin", "ranger", "rodeur"].includes(String(entry?.slug ?? ""))
-  );
-  const value = Number(warriorClass ? derived?.profile?.pv_guerrier : derived?.profile?.pv);
-  return Number.isFinite(value) ? Math.trunc(value) : 0;
-}
-
-async function syncHp(actor, { syncCurrent: _syncCurrent = false, force = false, reason = "multiclass-item-progression" } = {}) {
-  if (!isMultiHpActor(actor)) return false;
-  const entries = entriesFor(actor, { includePnj: actor?.type === "pnj" });
-  if (!entries.length) return false;
-  const rolls = Array.isArray(actor.system?.hpRollsMulticlass) && !force ? foundry.utils.deepClone(actor.system.hpRollsMulticlass) : [];
-  const conBonus = constitutionHitPointBonus(actor, entries);
-  const maximumClassLevel = Math.max(...entries.map(entry => entry.level));
-  let baseMaximum = 0;
-
-  for (let index = 0; index < maximumClassLevel; index += 1) {
-    let total = 0;
-    let count = 0;
-    for (const entry of entries) {
-      if (entry.level <= index) continue;
-      const die = n(entry.system?.hitDie ?? entry.system?.dv);
-      if (die <= 0) continue;
-      rolls[index] ??= {};
-      const key = keyFor(entry);
-      let value = n(rolls[index][key], NaN);
-      if (!Number.isFinite(value) || value < 1 || value > die || (force && index > 0)) {
-        value = index === 0 ? die : 1 + Math.floor(Math.random() * die);
-        rolls[index][key] = value;
-      }
-      total += value;
-      count += 1;
-    }
-    if (count) {
-      const averagedHitPoints = (total + conBonus) / count;
-      baseMaximum += Math.max(1, Math.floor(averagedHitPoints + 0.5));
-    }
-  }
-
-  baseMaximum = Math.max(1, Math.floor(baseMaximum));
+function hitPointEngine() {
   const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
   if (typeof engine?.resolveHitPoints !== "function") {
     throw new Error("Le résolveur canonique ADD2E des points de vie n’est pas disponible.");
   }
+  if (typeof engine?.resolveAbilityDerived !== "function") {
+    throw new Error("Le résolveur canonique ADD2E des ajustements de caractéristiques n’est pas disponible.");
+  }
+  return engine;
+}
+
+function hitDieFor(entry) {
+  const die = Math.floor(n(entry?.system?.hitDie ?? entry?.system?.dv, 0));
+  return die > 0 ? die : 0;
+}
+
+function isWarriorEntry(entry) {
+  return ["guerrier", "paladin", "ranger", "rodeur"].includes(String(entry?.slug ?? ""));
+}
+
+function constitutionHitPointBonus(actor, entries = []) {
+  const engine = hitPointEngine();
+  const multi = entries.length > 1;
+  const derived = engine.resolveAbilityDerived(actor, "constitution", {
+    domain: "hit-points",
+    type: multi ? "multiclass-hit-points" : "single-class-hit-points",
+    source: "canonical-hit-points",
+    consumer: "class-item-progression"
+  });
+
+  if (!multi && entries[0]) {
+    const progression = typeof globalThis.add2eResolveConstitutionHitPointProgression === "function"
+      ? globalThis.add2eResolveConstitutionHitPointProgression(actor, entries[0].item)
+      : null;
+    const profileValue = isWarriorEntry(entries[0])
+      ? derived?.profile?.pv_guerrier ?? derived?.profile?.pv
+      : derived?.profile?.pv;
+    const value = Number(progression?.constitutionBonusPerDie ?? profileValue);
+    return Number.isFinite(value) ? Math.trunc(value) : 0;
+  }
+
+  const profileValue = entries.some(isWarriorEntry)
+    ? derived?.profile?.pv_guerrier ?? derived?.profile?.pv
+    : derived?.profile?.pv;
+  const value = Number(profileValue);
+  return Number.isFinite(value) ? Math.trunc(value) : 0;
+}
+
+function singleClassHitPointBase(actor, entry, { force = false } = {}) {
+  const hitDie = hitDieFor(entry);
+  if (!hitDie) throw new Error(`Dé de vie invalide pour la classe ${entry?.name ?? "inconnue"}.`);
+  const level = Math.max(1, Math.floor(n(entry.level, 1)));
+  const constitutionBonusPerDie = constitutionHitPointBonus(actor, [entry]);
+  let rolls = Array.isArray(actor.system?.hpRolls) && !force ? [...actor.system.hpRolls] : [];
+
+  if (!Number.isFinite(Number(rolls[0]))) rolls[0] = hitDie;
+  for (let index = 1; index < level; index += 1) {
+    const current = Number(rolls[index]);
+    if (Number.isFinite(current) && current >= 1 && current <= hitDie) continue;
+    rolls[index] = 1 + Math.floor(Math.random() * hitDie);
+  }
+  rolls = rolls.slice(0, level).map((value, index) => index === 0
+    ? (Number.isFinite(Number(value)) ? Number(value) : hitDie)
+    : Math.max(1, Math.min(hitDie, Math.floor(n(value, 1)))));
+
+  const classContributions = rolls.map((roll, index) => ({
+    level: index + 1,
+    classItemId: entry.itemId,
+    classItemUuid: entry.item?.uuid ?? null,
+    className: entry.name,
+    hitDie,
+    roll,
+    constitutionBonus: constitutionBonusPerDie,
+    total: Math.max(1, roll + constitutionBonusPerDie)
+  }));
+  const baseMaximum = Math.max(1, classContributions.reduce((total, row) => total + row.total, 0));
+  return { mode: "single-class", level, rolls, constitutionBonusPerDie, classContributions, baseMaximum };
+}
+
+function multiclassHitPointBase(actor, entries, { force = false } = {}) {
+  const level = Math.max(...entries.map(entry => Math.max(1, Math.floor(n(entry.level, 1)))));
+  const constitutionBonusPerDie = constitutionHitPointBonus(actor, entries);
+  const rolls = Array.isArray(actor.system?.hpRollsMulticlass) && !force
+    ? clone(actor.system.hpRollsMulticlass)
+    : [];
+  const classContributions = [];
+  let baseMaximum = 0;
+
+  for (let index = 0; index < level; index += 1) {
+    const activeEntries = entries.filter(entry => entry.level > index && hitDieFor(entry) > 0);
+    if (!activeEntries.length) continue;
+    rolls[index] ??= {};
+    let totalRolls = 0;
+    const sources = [];
+
+    for (const entry of activeEntries) {
+      const hitDie = hitDieFor(entry);
+      const key = keyFor(entry);
+      let roll = n(rolls[index][key], NaN);
+      if (!Number.isFinite(roll) || roll < 1 || roll > hitDie) {
+        roll = index === 0 ? hitDie : 1 + Math.floor(Math.random() * hitDie);
+        rolls[index][key] = roll;
+      }
+      totalRolls += roll;
+      sources.push({
+        classItemId: entry.itemId,
+        classItemUuid: entry.item?.uuid ?? null,
+        className: entry.name,
+        classSlug: entry.slug,
+        hitDie,
+        roll
+      });
+    }
+
+    const divisor = activeEntries.length;
+    const total = Math.max(1, Math.floor(((totalRolls + constitutionBonusPerDie) / divisor) + 0.5));
+    baseMaximum += total;
+    classContributions.push({
+      level: index + 1,
+      sources,
+      totalRolls,
+      constitutionBonus: constitutionBonusPerDie,
+      divisor,
+      total
+    });
+  }
+
+  return {
+    mode: "multiclass",
+    level,
+    rolls: rolls.slice(0, level),
+    constitutionBonusPerDie,
+    classContributions,
+    baseMaximum: Math.max(1, Math.floor(baseMaximum))
+  };
+}
+
+async function calculateHitPointState(actor, { force = false, reason = "hit-points-recalculate" } = {}) {
+  if (!actor?.system) return { ok: false, reason: "actor-without-system" };
+  if (actor.type === "personnage" && !(await ensureCanonicalClassProgression(actor))) {
+    return { ok: false, reason: "class-progression-unavailable" };
+  }
+
+  const entries = entriesFor(actor, { includePnj: actor.type === "pnj" });
+  if (!entries.length) return { ok: false, reason: "no-canonical-class-entry" };
+  const base = entries.length === 1
+    ? singleClassHitPointBase(actor, entries[0], { force })
+    : multiclassHitPointBase(actor, entries, { force });
+  const engine = hitPointEngine();
   const levelBySource = Object.fromEntries(entries.flatMap(entry => [
     [entry.itemId, entry.level],
     [entry.item?.uuid, entry.level]
   ]).filter(([key]) => Boolean(key)));
+  const previousMaximum = n(actor.system?.points_de_coup, 0);
+  const previousCurrent = n(actor.system?.pdv, previousMaximum);
   const resolution = engine.resolveHitPoints(actor, {
-    baseMaximum,
-    previousMaximum: actor.system?.points_de_coup,
-    previousCurrent: actor.system?.pdv,
-    level: maximumClassLevel,
+    baseMaximum: base.baseMaximum,
+    previousMaximum,
+    previousCurrent,
+    level: base.level,
     source: reason,
-    consumer: "multiclass-hit-points",
+    consumer: "canonical-class-hit-points",
     context: {
+      mode: base.mode,
       classLevels: entries.map(entry => ({ itemId: entry.itemId, uuid: entry.item?.uuid, level: entry.level, slug: entry.slug })),
       levelBySource
     }
   });
 
   const updates = {};
-  if (!same(actor.system?.hpRollsMulticlass ?? [], rolls)) updates["system.hpRollsMulticlass"] = rolls;
-  if (Number(actor.system?.points_de_coup) !== Number(resolution.maximum.total)) updates["system.points_de_coup"] = resolution.maximum.total;
-  if (Number(actor.system?.pdv) !== Number(resolution.current.total)) updates["system.pdv"] = resolution.current.total;
-  if (!Object.keys(updates).length) return true;
-  await actor.update(updates, {
-    add2eInternal: true,
-    add2eMulticlassInternal: true,
-    add2eHitPointResolution: true,
-    add2eReason: reason,
-    render: false
-  });
+  if (base.mode === "single-class") {
+    if (!same(actor.system?.hpRolls ?? [], base.rolls)) updates["system.hpRolls"] = base.rolls;
+  } else if (!same(actor.system?.hpRollsMulticlass ?? [], base.rolls)) {
+    updates["system.hpRollsMulticlass"] = base.rolls;
+  }
+  if (previousMaximum !== Number(resolution.maximum.total)) updates["system.points_de_coup"] = resolution.maximum.total;
+  if (previousCurrent !== Number(resolution.current.total)) updates["system.pdv"] = resolution.current.total;
+
+  return {
+    ok: true,
+    actorId: actor.id,
+    actorUuid: actor.uuid,
+    actorName: actor.name,
+    reason,
+    force,
+    mode: base.mode,
+    level: base.level,
+    baseMaximum: base.baseMaximum,
+    constitutionBonusPerDie: base.constitutionBonusPerDie,
+    classContributions: base.classContributions,
+    rolls: clone(base.rolls),
+    previousMaximum,
+    previousCurrent,
+    maximum: Number(resolution.maximum.total),
+    current: Number(resolution.current.total),
+    maximumResolution: {
+      additionsTotal: resolution.maximum?.additionsTotal ?? null,
+      multiplierTotal: resolution.maximum?.multiplierTotal ?? null,
+      applied: (resolution.maximum?.applied ?? []).map(entry => ({
+        id: entry?.modifier?.id ?? null,
+        value: entry?.modifier?.value ?? null,
+        operation: entry?.modifier?.operation ?? null,
+        source: entry?.modifier?.source?.name ?? null
+      })),
+      rejected: (resolution.maximum?.rejected ?? []).map(entry => ({
+        id: entry?.modifier?.id ?? null,
+        reason: entry?.reason ?? null
+      }))
+    },
+    updates
+  };
+}
+
+function hitPointActorKey(actor) {
+  return String(actor?.uuid ?? actor?.id ?? "");
+}
+
+async function applyHitPointState(actor, options = {}) {
+  const state = await calculateHitPointState(actor, options);
+  if (!state.ok) {
+    console.warn("[ADD2E][HP_CANONICAL][SKIPPED]", { actor: actor?.name, ...state });
+    return false;
+  }
+
+  if (Object.keys(state.updates).length) {
+    await actor.update(state.updates, {
+      add2eInternal: true,
+      add2eMulticlassInternal: true,
+      add2eHitPointResolution: true,
+      add2eReason: state.reason,
+      render: false
+    });
+  }
+
+  const finalState = {
+    ...state,
+    written: Object.keys(state.updates).length > 0,
+    finalMaximum: n(actor.system?.points_de_coup, state.maximum),
+    finalCurrent: n(actor.system?.pdv, state.current)
+  };
+  lastHitPointResolutions.set(hitPointActorKey(actor), clone(finalState));
+  console.log("[ADD2E][HP_CANONICAL][RESOLUTION]", finalState);
   return true;
+}
+
+function add2eRecalculateHitPoints(actor, options = {}) {
+  if (!actor?.id || !actor?.system) return Promise.resolve(false);
+  const key = hitPointActorKey(actor);
+  const previous = hitPointQueues.get(key) ?? Promise.resolve(true);
+  const task = previous
+    .catch(error => {
+      console.error("[ADD2E][HP_CANONICAL][PREVIOUS_ERROR]", { actor: actor?.name, error });
+      return false;
+    })
+    .then(() => applyHitPointState(actor, options));
+  hitPointQueues.set(key, task);
+  const cleanup = () => {
+    if (hitPointQueues.get(key) === task) hitPointQueues.delete(key);
+  };
+  task.then(cleanup, cleanup);
+  return task;
+}
+
+function getLastHitPointResolution(actor) {
+  const key = typeof actor === "string" ? actor : hitPointActorKey(actor);
+  return clone(lastHitPointResolutions.get(key) ?? null);
 }
 
 function bindDirectClassFields(sheet) {
@@ -399,7 +589,7 @@ function queue(actor, reason) {
     timers.delete(id);
     try {
       await syncClassProgressionSummary(actor, { reason: `${reason}:summary` });
-      if (isMulti(actor)) await syncHp(actor, { reason: `${reason}:hp` });
+      await add2eRecalculateHitPoints(actor, { reason: `${reason}:hp` });
     } catch (error) {
       console.warn(`${TAG}[SYNC_ERROR]`, { actor: actor?.name, error });
     }
@@ -410,13 +600,11 @@ function installSheetPatch() {
   const proto = globalThis.Add2eActorSheet?.prototype;
   if (!proto || proto.__add2eClassProgressionPatch === VERSION) return;
 
-  if (typeof proto.autoSetPointsDeCoup === "function" && !proto.__add2eOriginalAutoSetPointsDeCoup) {
-    proto.__add2eOriginalAutoSetPointsDeCoup = proto.autoSetPointsDeCoup;
-    proto.autoSetPointsDeCoup = async function add2eClassItemHp(options = {}) {
-      const actor = this.document ?? this.actor;
-      return isMultiHpActor(actor) ? syncHp(actor, options) : this.__add2eOriginalAutoSetPointsDeCoup(options);
-    };
-  }
+  try { delete proto.__add2eOriginalAutoSetPointsDeCoup; } catch (_error) {}
+  proto.autoSetPointsDeCoup = async function add2eCanonicalActorHitPoints(options = {}) {
+    const actor = this.document ?? this.actor;
+    return add2eRecalculateHitPoints(actor, options);
+  };
 
   if (typeof proto.getData === "function" && !proto.__add2eOriginalClassProgressionGetData) {
     proto.__add2eOriginalClassProgressionGetData = proto.getData;
@@ -438,7 +626,16 @@ function installSheetPatch() {
   proto.__add2eClassProgressionPatch = VERSION;
 }
 
-globalThis.add2eSyncMulticlassHp = syncHp;
+function responsibleReadyGM() {
+  if (!game.user?.isGM) return false;
+  const activeGM = game.users?.activeGM ?? Array.from(game.users ?? []).find(user => user.active && user.isGM) ?? null;
+  return !activeGM || activeGM.id === game.user.id;
+}
+
+globalThis.add2eRecalculateHitPoints = add2eRecalculateHitPoints;
+globalThis.add2eCalculateHitPointState = calculateHitPointState;
+globalThis.add2eGetLastHitPointResolution = getLastHitPointResolution;
+globalThis.add2eSyncMulticlassHp = add2eRecalculateHitPoints;
 globalThis.add2eSyncMulticlassCombatSummary = (actor, options = {}) => syncClassProgressionSummary(actor, options);
 globalThis.add2eMulticlassClassEntries = entriesFor;
 globalThis.add2eApplyMulticlassProgressionToSheet = applyClassProgressionToSheet;
@@ -450,21 +647,24 @@ globalThis.add2eBindDirectMulticlassFields = bindDirectClassFields;
 Hooks.once("init", installSheetPatch);
 Hooks.once("ready", async () => {
   installSheetPatch();
-  if (!game.user?.isGM) return;
+  if (!responsibleReadyGM()) return;
   for (const actor of game.actors?.filter(entry => entry.type === "personnage" && classes(entry).length) ?? []) {
     try {
       await ensureCanonicalClassProgression(actor);
       await syncClassProgressionSummary(actor, { reason: "class-item-progression-ready" });
-      if (isMulti(actor)) await syncHp(actor, { reason: "class-item-progression-ready-hp" });
+      await add2eRecalculateHitPoints(actor, { reason: "class-item-progression-ready-hp" });
     } catch (error) {
       console.warn(`${TAG}[READY_SYNC_ERROR]`, { actor: actor?.name, error });
     }
   }
 });
 setTimeout(installSheetPatch, 0);
-Hooks.on("createItem", item => { if (String(item?.type ?? "").toLowerCase() === "classe") queue(item.parent, "create-class-item"); });
-Hooks.on("updateItem", (item, _changes, options = {}) => {
-  if (options?.add2eInternal || options?.add2eMulticlassInternal || String(item?.type ?? "").toLowerCase() !== "classe") return;
-  queue(item.parent, "update-class-item");
+Hooks.on("createItem", item => {
+  if (String(item?.type ?? "").toLowerCase() === "classe") queue(item.parent, "create-class-item");
 });
-Hooks.on("deleteItem", item => { if (String(item?.type ?? "").toLowerCase() === "classe") queue(item.parent, "delete-class-item"); });
+Hooks.on("updateItem", item => {
+  if (String(item?.type ?? "").toLowerCase() === "classe") queue(item.parent, "update-class-item");
+});
+Hooks.on("deleteItem", item => {
+  if (String(item?.type ?? "").toLowerCase() === "classe") queue(item.parent, "delete-class-item");
+});
