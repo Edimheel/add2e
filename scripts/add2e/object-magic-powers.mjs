@@ -4,10 +4,11 @@
 
 import {
   ADD2E_MAGIC_ITEM_BUILDER_VERSION,
+  add2eMagicClone,
   add2eMagicReadNumber
 } from "./object-magic/core.mjs";
 import {
-  add2eBuildVirtualObjectPowerSort,
+  add2eBuildVirtualObjectPowerSort as add2eBuildVirtualObjectPowerSortRuntime,
   add2eExecuteObjectMagicPower as add2eExecuteObjectMagicPowerRuntime,
   add2eMagicItemEquippedOrUsable as add2eMagicItemEquippedOrUsableRuntime,
   add2eMagicLooksMagical,
@@ -56,6 +57,154 @@ function add2eMagicBoolean(value) {
   return ["true", "1", "on", "yes", "oui", "equipped", "worn", "portee", "porté"].includes(normalized);
 }
 
+function add2eMagicText(...values) {
+  for (const value of values) {
+    if (value === undefined || value === null || typeof value === "object") continue;
+    const text = String(value).trim();
+    if (text && text !== "[object Object]") return text;
+  }
+  return "";
+}
+
+function add2eMagicLinkedSpellEffect(power) {
+  return (Array.isArray(power?.effects) ? power.effects : [])
+    .find(effect => ["linked_spell", "linked-spell", "sort_lie", "sort-lié"].includes(String(effect?.type ?? effect?.kind ?? "").trim().toLowerCase()))
+    ?? null;
+}
+
+function add2eMagicLinkedSpellDocument(power) {
+  const effect = add2eMagicLinkedSpellEffect(power);
+  const uuid = add2eMagicText(
+    effect?.spellUuid,
+    power?.parameters?.spellUuid,
+    power?.spellUuid,
+    power?.linkedSpell?.spellUuid,
+    power?.linkedSpell?.uuid,
+    power?.linkedSpell?.sourceUuid
+  );
+  if (!uuid || typeof globalThis.fromUuidSync !== "function") return null;
+  try { return globalThis.fromUuidSync(uuid) ?? null; }
+  catch (_error) { return null; }
+}
+
+export function add2eMagicObjectPowerDisplayName(power, item = null) {
+  const effect = add2eMagicLinkedSpellEffect(power);
+  const linkedDocument = add2eMagicLinkedSpellDocument(power);
+  return add2eMagicText(
+    power?.parameters?.spellName,
+    effect?.spellName,
+    effect?.name,
+    effect?.nom,
+    power?.spellName,
+    power?.linkedSpell?.spellName,
+    power?.linkedSpell?.name,
+    linkedDocument?.name,
+    power?.name,
+    power?.nom,
+    power?.label,
+    item?.name,
+    "Pouvoir magique"
+  );
+}
+
+function add2eMagicActivationNumber(value) {
+  if (value === undefined || value === null || value === "") return null;
+  if (typeof value === "number") return Number.isFinite(value) && value >= 0 ? value : null;
+  if (typeof value === "string") {
+    const match = value.trim().match(/-?\d+(?:[.,]\d+)?/);
+    if (!match) return null;
+    const number = Number(match[0].replace(",", "."));
+    return Number.isFinite(number) && number >= 0 ? number : null;
+  }
+  if (typeof value === "object") {
+    for (const key of ["segments", "segment", "initiativeSegment", "castingTime", "activationTime", "time", "value", "amount", "cost"]) {
+      const number = add2eMagicActivationNumber(value[key]);
+      if (Number.isFinite(number)) return number;
+    }
+  }
+  return null;
+}
+
+export function add2eMagicObjectPowerActivation(power) {
+  const effect = add2eMagicLinkedSpellEffect(power);
+  const linkedDocument = add2eMagicLinkedSpellDocument(power);
+  const linkedSystem = linkedDocument?.system ?? power?.linkedSpell?.system ?? {};
+  const candidates = [
+    power?.initiativeSegment,
+    power?.temps_incantation,
+    power?.castingTime,
+    power?.casting_time,
+    power?.activationTime,
+    power?.parameters?.initiativeSegment,
+    power?.parameters?.activationTime,
+    power?.parameters?.castingTime,
+    effect?.initiativeSegment,
+    effect?.activationTime,
+    power?.activation,
+    linkedSystem?.initiativeSegment,
+    linkedSystem?.temps_incantation,
+    linkedSystem?.castingTime,
+    linkedSystem?.casting_time
+  ];
+  let segment = null;
+  for (const candidate of candidates) {
+    segment = add2eMagicActivationNumber(candidate);
+    if (Number.isFinite(segment)) break;
+  }
+  const label = Number.isFinite(segment)
+    ? `${segment} segment${segment > 1 ? "s" : ""}`
+    : add2eMagicText(
+        power?.activationLabel,
+        power?.activation?.label,
+        power?.activation?.text,
+        power?.temps_incantation,
+        power?.castingTime,
+        power?.casting_time,
+        effect?.activationLabel,
+        linkedSystem?.temps_incantation,
+        linkedSystem?.castingTime,
+        linkedSystem?.casting_time,
+        "Objet magique"
+      );
+  return { segment: Number.isFinite(segment) ? segment : null, label };
+}
+
+function add2eDecorateMagicPower(power, item = null) {
+  const decorated = add2eMagicClone(power ?? {});
+  const linkedDocument = add2eMagicLinkedSpellDocument(power);
+  const activation = add2eMagicObjectPowerActivation(power);
+  const displayName = add2eMagicObjectPowerDisplayName(power, item);
+  decorated.catalogueLabel ??= add2eMagicText(power?.label, power?.name, power?.nom);
+  decorated.name = displayName;
+  decorated.nom = displayName;
+  decorated.displayName = displayName;
+  decorated.activationLabel = activation.label;
+  decorated.temps_incantation = activation.label;
+  if (activation.segment !== null) decorated.initiativeSegment = activation.segment;
+  if (decorated.kind === "catalogue" && !add2eObjectPowerOnUsePath(decorated)) {
+    decorated.onUse = "add2e://magic-catalogue";
+    decorated.onuse = decorated.onUse;
+    decorated.on_use = decorated.onUse;
+  }
+  if (linkedDocument?.img) decorated.img = linkedDocument.img;
+  return decorated;
+}
+
+function add2eBuildDisplayVirtualObjectPowerSort(actor, itemSource, power, index) {
+  const decorated = add2eDecorateMagicPower(power, itemSource);
+  const sort = add2eBuildVirtualObjectPowerSortRuntime(actor, itemSource, decorated, index);
+  const activation = add2eMagicObjectPowerActivation(decorated);
+  const source = {
+    name: decorated.name,
+    ...(decorated.img ? { img: decorated.img } : {}),
+    "system.temps_incantation": activation.label,
+    ...(activation.segment !== null ? { "system.initiativeSegment": activation.segment } : {})
+  };
+  try { sort?.updateSource?.(source); }
+  catch (_error) {}
+  return sort;
+}
+
 export function add2eMagicItemPowerUsable(item) {
   if (add2eMagicItemEquippedOrUsableRuntime(item)) return true;
   const system = item?.system ?? {};
@@ -82,7 +231,7 @@ export function add2eMagicObjectConfiguredPowerArray(item) {
 
 export function add2eMagicObjectConfiguredPowerEntries(item) {
   return add2eMagicObjectConfiguredPowerArray(item)
-    .map((power, index) => ({ power, index }))
+    .map((power, index) => ({ power: add2eDecorateMagicPower(power, item), index }))
     .filter(entry => add2eObjectPowerOnUsePath(entry.power));
 }
 
@@ -90,6 +239,10 @@ async function add2eExecuteObjectMagicPowerGuarded(actor, itemSource, power, ind
   if (!add2eMagicItemPowerUsable(itemSource)) {
     ui.notifications?.warn?.(`${itemSource?.name ?? "L’objet magique"} doit être équipé pour utiliser ce pouvoir.`);
     return false;
+  }
+  if ((power?.kind === "catalogue" || add2eObjectPowerOnUsePath(power) === "add2e://magic-catalogue")
+    && typeof globalThis.add2eExecuteMagicCataloguePower === "function") {
+    return globalThis.add2eExecuteMagicCataloguePower(actor, itemSource, power, index, sheet);
   }
   return add2eExecuteObjectMagicPowerRuntime(actor, itemSource, power, index, sheet);
 }
@@ -147,7 +300,7 @@ Object.assign(globalThis, {
   add2eObjectPowerMaxCharges,
   add2eObjectPowerCurrentCharges,
   add2eObjectPowerSetCharges,
-  add2eBuildVirtualObjectPowerSort,
+  add2eBuildVirtualObjectPowerSort: add2eBuildDisplayVirtualObjectPowerSort,
   add2eExecuteObjectMagicPower: add2eExecuteObjectMagicPowerGuarded,
   add2eMagicItemEquippedOrUsable: add2eMagicItemPowerUsable,
   add2eMagicObjectRawPowers: add2eMagicObjectConfiguredRawPowers,
@@ -158,6 +311,8 @@ Object.assign(globalThis, {
   add2eMagicObjectChargeInfo,
   add2eMagicLooksMagical,
   add2eMagicPowerGeneratedId,
+  add2eMagicObjectPowerDisplayName,
+  add2eMagicObjectPowerActivation,
   add2eUiCollectObjectMagicGroups,
   add2eUiCollectObjectMagicPowers,
   add2eUiBuildObjectMagicSection,
