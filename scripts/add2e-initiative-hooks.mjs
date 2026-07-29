@@ -40,16 +40,16 @@ function scopedRound(data) {
   return Number.isFinite(round) ? Math.max(0, Math.floor(round)) : 0;
 }
 
-function roundDataIsCurrent(data, combat) {
-  if (!data || typeof data !== "object") return false;
-  if (combat?.started !== true) return false;
-  const currentRound = Math.max(1, Math.floor(Number(combat?.round) || 1));
+function roundDataIsCurrent(data, combat, force = false) {
+  if (!data || typeof data !== "object" || force) return false;
   const storedRound = scopedRound(data);
+  if (combat?.started !== true) return storedRound === 0;
+  const currentRound = Math.max(1, Math.floor(Number(combat?.round) || 1));
   if (currentRound === 1) return storedRound === 0 || storedRound === 1;
   return storedRound === currentRound;
 }
 
-export async function cleanupInitiativeRoundData(combat = game.combat, { reason = "round-cleanup" } = {}) {
+export async function cleanupInitiativeRoundData(combat = game.combat, { reason = "round-cleanup", force = false } = {}) {
   if (!combat?.combatants || !responsibleInitiativeGM()) return { cleaned: 0, skipped: true };
 
   const updates = [];
@@ -59,7 +59,7 @@ export async function cleanupInitiativeRoundData(combat = game.combat, { reason 
     let changed = false;
     for (const [flagName, deletionPath] of ROUND_SCOPED_FLAG_PATHS) {
       if (!Object.prototype.hasOwnProperty.call(flags, flagName)) continue;
-      if (roundDataIsCurrent(flags[flagName], combat)) continue;
+      if (roundDataIsCurrent(flags[flagName], combat, force)) continue;
       update[deletionPath] = null;
       changed = true;
     }
@@ -80,11 +80,11 @@ export async function cleanupInitiativeRoundData(combat = game.combat, { reason 
   return { cleaned: updates.length, skipped: false };
 }
 
-function scheduleInitiativeRoundDataCleanup(combat, reason, delay = 0) {
+function scheduleInitiativeRoundDataCleanup(combat, reason, delay = 0, { force = false } = {}) {
   if (!combat) return;
   clearTimeout(roundDataCleanupTimer);
   roundDataCleanupTimer = setTimeout(() => {
-    cleanupInitiativeRoundData(combat, { reason }).catch(error => {
+    cleanupInitiativeRoundData(combat, { reason, force }).catch(error => {
       console.error("[ADD2E][INIT][ROUND_CLEANUP][ERROR]", error);
     });
   }, Math.max(0, Number(delay) || 0));
@@ -140,7 +140,8 @@ export function installHooks() {
     const startedChanged = hasProperty(changes ?? {}, "started");
     const roundChanged = hasProperty(changes ?? {}, "round");
     if (startedChanged || roundChanged) {
-      scheduleInitiativeRoundDataCleanup(combat, startedChanged && !combat?.started ? "combat-end" : "round-change", 10);
+      const ended = startedChanged && !combat?.started;
+      scheduleInitiativeRoundDataCleanup(combat, ended ? "combat-end" : "round-change", 10, { force: ended });
     }
 
     if (options?.add2eInitiativeSort || options?.add2eInitiativeNavigation) return;
