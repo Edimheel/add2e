@@ -183,8 +183,8 @@ function add2eHudEquipmentRow(item) {
   return `<div class="row equipment-row">
     <img src="${add2eHudCombatEscape(item?.img || "icons/svg/item-bag.svg")}" alt="">
     <div>
-      <div class="title">${add2eHudCombatEscape(item?.name ?? "Objet")}${quantity !== "—" ? ` ×${add2eHudCombatEscape(quantity)}` : ""}</div>
-      <div class="meta">${add2eHudCombatState(item)}<span>Poids ${add2eHudCombatEscape(weight)}</span></div>
+      <div class="title">${add2eHudCombatEscape(item?.name ?? "Objet")}</div>
+      <div class="meta">${add2eHudCombatState(item)}<span>Qté ${add2eHudCombatEscape(quantity)}</span><span>Poids ${add2eHudCombatEscape(weight)}</span></div>
     </div>
     <button type="button" class="act" data-add2e-hud-combat-action="equip" data-item-id="${itemId}">${actionLabel}</button>
   </div>`;
@@ -698,4 +698,4 @@ function add2eHudCombatInstall() {
 }
 
 if (game?.ready) add2eHudCombatInstall();
-else Hooks.once("ready", add2eHudCombatInstall());
+else Hooks.once("ready", add2eHudCombatInstall);
