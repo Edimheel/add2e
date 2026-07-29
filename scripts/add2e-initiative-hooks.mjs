@@ -104,6 +104,209 @@ function scheduleCanonicalTurnEvent(combat, reason, delay = 0) {
   }, Math.max(0, Number(delay) || 0));
 }
 
+function validationInitiativeScore(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const score = Number(value);
+  return Number.isFinite(score) ? score : null;
+}
+
+function validationScopeIds(combat, scope) {
+  const combatants = Array.from(combat?.combatants ?? []);
+  if (scope === "all") return combatants.map(entry => entry.id).filter(Boolean);
+  if (scope === "monsters") {
+    return combatants
+      .filter(entry => String(entry?.actor?.type ?? "").toLowerCase() === "monster")
+      .map(entry => entry.id)
+      .filter(Boolean);
+  }
+  if (scope === "missing") {
+    return combatants
+      .filter(entry => validationInitiativeScore(entry?.initiative) === null)
+      .map(entry => entry.id)
+      .filter(Boolean);
+  }
+  return [];
+}
+
+function validationLegacyActorFields(actor) {
+  const system = actor?.system ?? {};
+  return ["initiative", "dexterite_initiative"]
+    .filter(key => Object.prototype.hasOwnProperty.call(system, key));
+}
+
+export async function add2eValidateInitiativeLot2F({
+  combat = game.combat,
+  rollScope = null,
+  log = true
+} = {}) {
+  const errors = [];
+  const warnings = [];
+  const service = game.add2e?.initiative ?? null;
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+
+  if (!combat?.combatants) errors.push("Aucun combat actif ou préparé n'est disponible.");
+  if (!service) errors.push("Le service canonique game.add2e.initiative est indisponible.");
+  for (const name of ["resolve", "roll", "order", "current", "declaredAction", "situation", "actionContext", "tieResolution", "skipReason"]) {
+    if (typeof service?.[name] !== "function") errors.push(`Service d'initiative manquant : ${name}.`);
+  }
+  if (typeof engine?.resolve !== "function") errors.push("Le moteur canonique de modificateurs est indisponible.");
+
+  const formula = String(CONFIG.Combat?.initiative?.formula ?? "");
+  const decimals = Number(CONFIG.Combat?.initiative?.decimals);
+  if (formula !== "1d6") errors.push(`Formule d'initiative inattendue : ${formula || "vide"}.`);
+  if (decimals !== 0) errors.push(`Décimales d'initiative inattendues : ${Number.isFinite(decimals) ? decimals : "indéfinies"}.`);
+
+  const normalizedScope = String(rollScope ?? "").trim().toLowerCase();
+  if (normalizedScope) {
+    if (!combat?.combatants || typeof service?.roll !== "function") {
+      errors.push("Le jet demandé ne peut pas être exécuté sans combat et service canonique.");
+    } else if (!game.user?.isGM && ["all", "monsters"].includes(normalizedScope)) {
+      errors.push("Seul le MJ peut lancer collectivement l'initiative de tous ou des monstres.");
+    } else if (!["all", "monsters", "missing"].includes(normalizedScope)) {
+      errors.push(`Portée de jet inconnue : ${normalizedScope}.`);
+    } else {
+      const ids = validationScopeIds(combat, normalizedScope);
+      if (!ids.length) warnings.push(`Aucun combattant ne correspond au jet « ${normalizedScope} ».`);
+      else {
+        await service.roll(combat, ids, {
+          updateTurn: false,
+          messageOptions: { rollMode: game.settings?.get?.("core", "rollMode") ?? "publicroll" }
+        });
+      }
+    }
+  }
+
+  const order = combat?.combatants && typeof service?.order === "function"
+    ? service.order(combat)
+    : getCombatOrder(combat);
+  const rows = [];
+
+  for (const [index, combatant] of order.entries()) {
+    const actor = combatant?.actor ?? null;
+    const rawFlags = combatant?.flags?.add2e ?? {};
+    const action = typeof service?.declaredAction === "function" ? service.declaredAction(combatant, combat) : null;
+    const situation = typeof service?.situation === "function" ? service.situation(combatant, combat) : null;
+    const actionContext = typeof service?.actionContext === "function"
+      ? service.actionContext(combatant, actor, combat)
+      : null;
+    const tie = typeof service?.tieResolution === "function" ? service.tieResolution(combatant, combat) : null;
+    const skipReason = typeof service?.skipReason === "function" ? service.skipReason(combatant) : "";
+    let resolution = null;
+    if (actor && typeof service?.resolve === "function" && typeof engine?.resolve === "function") {
+      try {
+        resolution = service.resolve(actor, {
+          base: 0,
+          combat,
+          combatant,
+          context: { source: "lot-2f-validation" }
+        });
+      } catch (error) {
+        errors.push(`${combatant.name ?? combatant.id} : résolution impossible — ${error.message}.`);
+      }
+    }
+
+    const legacyFields = validationLegacyActorFields(actor);
+    if (legacyFields.length) errors.push(`${combatant.name ?? combatant.id} : champs historiques présents (${legacyFields.join(", ")}).`);
+    if (rawFlags.initiativeAction && !roundDataIsCurrent(rawFlags.initiativeAction, combat)) {
+      errors.push(`${combatant.name ?? combatant.id} : action déclarée périmée encore enregistrée.`);
+    }
+    if (rawFlags.initiativeSituation && !roundDataIsCurrent(rawFlags.initiativeSituation, combat)) {
+      errors.push(`${combatant.name ?? combatant.id} : situation d'initiative périmée encore enregistrée.`);
+    }
+
+    rows.push({
+      index,
+      id: combatant.id,
+      name: combatant.name,
+      actorType: actor?.type ?? "",
+      initiative: validationInitiativeScore(combatant.initiative),
+      sort: combatant.sort,
+      active: currentCombatant(combat)?.id === combatant.id,
+      skipReason,
+      action: action?.label ?? "",
+      actionType: action?.kind ?? "",
+      segment: Number.isFinite(Number(action?.segment)) ? Number(action.segment) : null,
+      situationModifier: Number(actionContext?.situation?.modifier ?? situation?.modifier ?? 0) || 0,
+      surprise: Number(actionContext?.situation?.surpriseSegments ?? situation?.surpriseSegments ?? 0) || 0,
+      surpriseRemaining: Number(actionContext?.situation?.remainingSurpriseSegments ?? 0) || 0,
+      dexterityReaction: Number(actionContext?.situation?.dexterityReaction ?? 0) || 0,
+      modifierTotal: Number(resolution?.total ?? 0) || 0,
+      appliedModifiers: Array.from(resolution?.applied ?? []).map(entry => entry?.modifier?.source?.name || entry?.modifier?.source?.id || entry?.modifier?.id).filter(Boolean),
+      tied: tie?.tied === true,
+      tieResolvedByAction: tie?.resolvedByAction === true
+    });
+  }
+
+  for (let index = 1; index < rows.length; index += 1) {
+    const previous = rows[index - 1];
+    const current = rows[index];
+    if (previous.initiative === null && current.initiative !== null) {
+      errors.push(`${current.name} possède une initiative mais apparaît après un combattant sans initiative.`);
+      continue;
+    }
+    if (previous.initiative !== null && current.initiative !== null && previous.initiative < current.initiative) {
+      errors.push(`Ordre décroissant invalide entre ${previous.name} (${previous.initiative}) et ${current.name} (${current.initiative}).`);
+    }
+    if (
+      previous.initiative !== null
+      && previous.initiative === current.initiative
+      && previous.tieResolvedByAction
+      && Number.isFinite(previous.segment)
+      && Number.isFinite(current.segment)
+      && previous.segment > current.segment
+    ) {
+      errors.push(`Départage d'action invalide entre ${previous.name} (segment ${previous.segment}) et ${current.name} (segment ${current.segment}).`);
+    }
+  }
+
+  if (combat?.started && order.length) {
+    const active = typeof service?.current === "function" ? service.current(combat) : currentCombatant(combat);
+    const expected = order[Math.max(0, Math.min(order.length - 1, Number(combat.turn) || 0))] ?? null;
+    if (active?.id !== expected?.id) {
+      errors.push(`Combattant actif incohérent : service=${active?.name ?? "aucun"}, ordre=${expected?.name ?? "aucun"}.`);
+    }
+  }
+
+  const report = {
+    ok: errors.length === 0,
+    version: ADD2E_INITIATIVE_VERSION,
+    formula,
+    decimals,
+    started: combat?.started ?? false,
+    round: combat?.round ?? null,
+    turn: combat?.turn ?? null,
+    active: currentCombatant(combat)?.name ?? null,
+    rollScope: normalizedScope || null,
+    errors,
+    warnings,
+    rows
+  };
+
+  if (log) {
+    const method = report.ok ? "info" : "error";
+    console.groupCollapsed?.(`[ADD2E][INIT][LOT_2F_VALIDATION] ${report.ok ? "OK" : "ERREURS"}`);
+    console[method]?.("Rapport", report);
+    console.table?.(rows.map(row => ({
+      ordre: row.index,
+      combattant: row.name,
+      type: row.actorType,
+      initiative: row.initiative,
+      action: row.action,
+      segment: row.segment,
+      situation: row.situationModifier,
+      surprise: `${row.surprise}→${row.surpriseRemaining}`,
+      reactionDEX: row.dexterityReaction,
+      modificateurs: row.appliedModifiers.join(" ; "),
+      saute: row.skipReason
+    })));
+    if (errors.length) console.error("Erreurs", errors);
+    if (warnings.length) console.warn("Avertissements", warnings);
+    console.groupEnd?.();
+  }
+
+  return report;
+}
+
 export function add2eInitiativeDebug(label = "debug", combat = game.combat) {
   const turns = getCombatOrder(combat);
   return {
@@ -175,5 +378,9 @@ export function installHooks() {
 
   scheduleInitiativeRoundDataCleanup(game.combat, "ready", 0);
   globalThis.add2eCleanupInitiativeRoundData = cleanupInitiativeRoundData;
+  globalThis.add2eValidateInitiativeLot2F = add2eValidateInitiativeLot2F;
+  game.add2e ??= {};
+  game.add2e.initiative ??= {};
+  game.add2e.initiative.validate = add2eValidateInitiativeLot2F;
   installInitiativeChatCard();
 }
