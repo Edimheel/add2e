@@ -18,7 +18,7 @@ import {
   add2eSetInitiativeSituation
 } from "../add2e-initiative.mjs";
 
-export const ADD2E_HORIZONTAL_TRACKER_VERSION = "2026-07-29-horizontal-combat-tracker-actions-v8";
+export const ADD2E_HORIZONTAL_TRACKER_VERSION = "2026-07-29-horizontal-combat-tracker-round-rolls-v9";
 
 const ApplicationV2 = foundry?.applications?.api?.ApplicationV2;
 const DialogV2 = foundry?.applications?.api?.DialogV2;
@@ -583,6 +583,25 @@ async function rollCombatants(combat, ids) {
   });
 }
 
+function allCombatantIds(combat) {
+  return Array.from(combat?.combatants ?? []).map(combatant => combatant.id).filter(Boolean);
+}
+
+function monsterCombatantIds(combat) {
+  return Array.from(combat?.combatants ?? [])
+    .filter(combatant => String(combatant?.actor?.type ?? "").toLowerCase() === "monster")
+    .map(combatant => combatant.id)
+    .filter(Boolean);
+}
+
+async function advanceRound(combat) {
+  if (!game.user?.isGM || !combat?.started) return combat;
+  if (typeof combat.nextRound !== "function") {
+    throw new Error("L’API publique Combat.nextRound est indisponible.");
+  }
+  return combat.nextRound();
+}
+
 class Add2eHorizontalCombatTracker extends ApplicationV2 {
   static DEFAULT_OPTIONS = {
     id: "add2e-horizontal-combat-tracker",
@@ -668,7 +687,10 @@ class Add2eHorizontalCombatTracker extends ApplicationV2 {
           <div class="add2e-horizontal-round"><small>${context.started ? "COMBAT" : "PRÉPARATION"}</small>${context.started ? `Round ${context.round}` : "Initiative"}</div>
           <button type="button" class="add2e-horizontal-control" data-action="previous-turn" title="Tour précédent" ${context.started ? "" : "disabled"}><i class="fas fa-chevron-left"></i></button>
           <button type="button" class="add2e-horizontal-control" data-action="next-turn" title="Tour suivant" ${context.started ? "" : "disabled"}><i class="fas fa-chevron-right"></i></button>
+          ${context.isGM ? `<button type="button" class="add2e-horizontal-control" data-action="next-round" title="Passer directement au round suivant" ${context.started ? "" : "disabled"}><i class="fas fa-forward-step"></i></button>` : ""}
           <button type="button" class="add2e-horizontal-control" data-action="roll-missing" title="Lancer les initiatives manquantes"><i class="fas fa-dice-d6"></i></button>
+          ${context.isGM ? '<button type="button" class="add2e-horizontal-control" data-action="roll-all" title="Lancer l’initiative de tous les combattants"><i class="fas fa-dice"></i></button>' : ""}
+          ${context.isGM ? '<button type="button" class="add2e-horizontal-control" data-action="roll-monsters" title="Lancer l’initiative de tous les monstres"><i class="fas fa-dragon"></i></button>' : ""}
           ${context.isGM && !context.started ? '<button type="button" class="add2e-horizontal-control start" data-action="start-combat" title="Démarrer le combat"><i class="fas fa-play"></i>&nbsp;Démarrer</button>' : ""}
           ${context.isGM && context.started ? '<button type="button" class="add2e-horizontal-control" data-action="end-combat" title="Terminer le combat"><i class="fas fa-flag-checkered"></i></button>' : ""}
         </div>
@@ -713,12 +735,21 @@ class Add2eHorizontalCombatTracker extends ApplicationV2 {
     if (action === "start-combat" && game.user?.isGM && !combat.started) return combat.startCombat();
     if (action === "next-turn" && combat.started) return add2eAdvanceCombatTurn(combat, 1);
     if (action === "previous-turn" && combat.started) return add2eAdvanceCombatTurn(combat, -1);
+    if (action === "next-round" && game.user?.isGM && combat.started) return advanceRound(combat);
     if (action === "roll-one" && combatant) return rollCombatants(combat, [combatant.id]);
     if (action === "roll-missing") {
       const ids = Array.from(combat.combatants ?? [])
         .filter(entry => entry.initiative === null || entry.initiative === undefined)
         .map(entry => entry.id);
       return ids.length ? rollCombatants(combat, ids) : ui.notifications?.info?.("Toutes les initiatives sont déjà renseignées.");
+    }
+    if (action === "roll-all" && game.user?.isGM) {
+      const ids = allCombatantIds(combat);
+      return ids.length ? rollCombatants(combat, ids) : ui.notifications?.info?.("Aucun combattant dans le combat.");
+    }
+    if (action === "roll-monsters" && game.user?.isGM) {
+      const ids = monsterCombatantIds(combat);
+      return ids.length ? rollCombatants(combat, ids) : ui.notifications?.info?.("Aucun monstre dans le combat.");
     }
     if (action === "focus-token" && combatant) return this._focusCombatant(combatant);
     if (action === "end-combat" && game.user?.isGM && combat.started) return combat.endCombat();
