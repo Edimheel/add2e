@@ -8,6 +8,7 @@ import { patchInitiativeIcons } from "./add2e-initiative-icons.mjs";
 import { canTokenInteractNow, clearFoundryMovementTrailAggressive } from "./add2e-initiative-locks.mjs";
 
 const MOVEMENT_KEYS = ["x", "y", "elevation", "rotation"];
+const MULTIPLE_ATTACK_PHASE_FLAG = "multipleAttackPhase";
 const ROUND_SCOPED_FLAG_PATHS = [
   ["initiativeAction", "flags.add2e.-=initiativeAction"],
   ["initiativeSituation", "flags.add2e.-=initiativeSituation"]
@@ -49,8 +50,14 @@ function roundDataIsCurrent(data, combat, force = false) {
   return storedRound === currentRound;
 }
 
+function multipleAttackPhaseIsCurrent(combat, force = false) {
+  const phase = combat?.flags?.add2e?.[MULTIPLE_ATTACK_PHASE_FLAG] ?? null;
+  if (!phase || typeof phase !== "object" || force || combat?.started !== true) return false;
+  return scopedRound(phase) === Math.max(1, Math.floor(Number(combat?.round) || 1));
+}
+
 export async function cleanupInitiativeRoundData(combat = game.combat, { reason = "round-cleanup", force = false } = {}) {
-  if (!combat?.combatants || !responsibleInitiativeGM()) return { cleaned: 0, skipped: true };
+  if (!combat?.combatants || !responsibleInitiativeGM()) return { cleaned: 0, phaseCleared: false, skipped: true };
 
   const updates = [];
   for (const combatant of combat.combatants ?? []) {
@@ -66,18 +73,34 @@ export async function cleanupInitiativeRoundData(combat = game.combat, { reason 
     if (changed) updates.push(update);
   }
 
-  if (!updates.length) return { cleaned: 0, skipped: false };
-  await combat.updateEmbeddedDocuments("Combatant", updates, {
-    add2eInitiativeRoundCleanup: true,
-    add2eInitiativeVersion: ADD2E_INITIATIVE_VERSION,
-    add2eReason: reason
-  });
+  const hasMultipleAttackPhase = Object.prototype.hasOwnProperty.call(
+    combat?.flags?.add2e ?? {},
+    MULTIPLE_ATTACK_PHASE_FLAG
+  );
+  const phaseCleared = hasMultipleAttackPhase && !multipleAttackPhaseIsCurrent(combat, force);
+
+  if (!updates.length && !phaseCleared) return { cleaned: 0, phaseCleared: false, skipped: false };
+  if (updates.length) {
+    await combat.updateEmbeddedDocuments("Combatant", updates, {
+      add2eInitiativeRoundCleanup: true,
+      add2eInitiativeVersion: ADD2E_INITIATIVE_VERSION,
+      add2eReason: reason
+    });
+  }
+  if (phaseCleared) {
+    await combat.update({ "flags.add2e.-=multipleAttackPhase": null }, {
+      add2eInitiativeRoundCleanup: true,
+      add2eInitiativeVersion: ADD2E_INITIATIVE_VERSION,
+      add2eReason: reason
+    });
+  }
   Hooks.callAll("add2eInitiativeRoundDataCleared", combat, {
     reason,
     round: Number(combat.round ?? 0),
-    combatantIds: updates.map(update => update._id)
+    combatantIds: updates.map(update => update._id),
+    phaseCleared
   });
-  return { cleaned: updates.length, skipped: false };
+  return { cleaned: updates.length, phaseCleared, skipped: false };
 }
 
 function scheduleInitiativeRoundDataCleanup(combat, reason, delay = 0, { force = false } = {}) {
@@ -259,6 +282,11 @@ export async function add2eValidateInitiativeLot2F({
     }
   }
 
+  const multipleAttackPhase = combat?.flags?.add2e?.[MULTIPLE_ATTACK_PHASE_FLAG] ?? null;
+  if (multipleAttackPhase && !multipleAttackPhaseIsCurrent(combat)) {
+    errors.push(`Phase d'attaques multiples périmée : round ${scopedRound(multipleAttackPhase)} pour le round ${Number(combat?.round ?? 0)}.`);
+  }
+
   if (combat?.started && order.length) {
     const active = typeof service?.current === "function" ? service.current(combat) : currentCombatant(combat);
     const expected = order[Math.max(0, Math.min(order.length - 1, Number(combat.turn) || 0))] ?? null;
@@ -276,6 +304,7 @@ export async function add2eValidateInitiativeLot2F({
     round: combat?.round ?? null,
     turn: combat?.turn ?? null,
     active: currentCombatant(combat)?.name ?? null,
+    multipleAttackPhase,
     rollScope: normalizedScope || null,
     errors,
     warnings,
