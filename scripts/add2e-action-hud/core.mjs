@@ -109,6 +109,51 @@ function setCollapsed(value, persist = true) {
   if (persist) saveState({ collapsed: !!value });
   applyGeometry(element, true);
 }
+
+function objectMagicPowerEntries(actor) {
+  if (typeof globalThis.add2eMagicObjectActivePowerEntries !== "function") return [];
+  if (typeof globalThis.add2eBuildVirtualObjectPowerSort !== "function") return [];
+  const entries = [];
+  for (const sourceItem of actorItems(actor)) {
+    let powers = [];
+    try { powers = globalThis.add2eMagicObjectActivePowerEntries(sourceItem) ?? []; }
+    catch (_error) { powers = []; }
+    for (const { power, index } of powers) {
+      try {
+        const virtualSpell = globalThis.add2eBuildVirtualObjectPowerSort(actor, sourceItem, power, index);
+        if (virtualSpell) entries.push({ sourceItem, power, index, virtualSpell });
+      } catch (error) {
+        console.warn(`${TAG}[OBJECT_POWER][BUILD_ERROR]`, { actor: actor?.name, item: sourceItem?.name, index, error });
+      }
+    }
+  }
+  return entries;
+}
+
+function objectMagicPowerDeclarationLabel(entry) {
+  return `${entry.sourceItem?.name ?? "Objet magique"} — ${entry.virtualSpell?.name ?? "Pouvoir"}`;
+}
+
+function objectMagicPowerRows(actor) {
+  const entries = objectMagicPowerEntries(actor);
+  if (!entries.length) return "";
+  let declared = null;
+  try { declared = globalThis.add2eGetDeclaredInitiativeAction?.(actor) ?? null; } catch (_error) {}
+  const rows = entries.map(entry => {
+    const { sourceItem, virtualSpell, index } = entry;
+    const system = virtualSpell.system ?? {};
+    const label = objectMagicPowerDeclarationLabel(entry);
+    const active = declared?.kind === "item"
+      && String(declared?.itemId ?? "") === String(sourceItem.id ?? "")
+      && String(declared?.label ?? "") === label;
+    const activation = system.temps_incantation ?? system.casting_time ?? system.castingTime ?? "Objet magique";
+    const charges = Number(virtualSpell.getFlag?.("add2e", "memorizedCount") ?? 0) || 0;
+    const cost = Math.max(0, Number(system.cost ?? system.cout ?? 0) || 0);
+    return `<div class="row initiative-row"><button type="button" class="img-act" data-action="use-object-power" data-item-id="${esc(sourceItem.id)}" data-power-index="${index}" title="Utiliser ${esc(virtualSpell.name)}"><img src="${esc(virtualSpell.img || sourceItem.img || "icons/svg/aura.svg")}" alt=""></button><div><div class="title">${esc(virtualSpell.name)}</div><div class="meta"><span>${esc(sourceItem.name)}</span><span>Activation ${esc(activation)}</span><span>Charges ${charges}${cost > 0 ? ` · coût ${cost}` : ""}</span></div></div><button type="button" class="act initiative-declare${active ? " declared" : ""}" data-action="declare-initiative-object-power" data-item-id="${esc(sourceItem.id)}" data-power-index="${index}">${active ? "Déclarée" : "Déclarer"}</button></div>`;
+  }).join("");
+  return `<div class="spell-layout object-magic-power-layout"><div class="spell-list"><div class="spell-list-title">Pouvoirs d’objets magiques</div>${rows}</div></div>`;
+}
+
 function hudHtml(actor, token = null) {
   const img = token?.document?.texture?.src || actor.img || "icons/svg/mystery-man.svg";
   const isMonster = isMonsterActor(actor);
@@ -117,9 +162,10 @@ function hudHtml(actor, token = null) {
   const niveau = isMonster ? (actor.system?.dv ?? actor.system?.hitDice ?? actor.system?.niveau ?? "—") : (actor.system?.niveau ?? "—");
   const spellContent = spellRows(actor, selectedSpellGroup);
   selectedSpellGroup = spellContent.selectedGroup;
+  const spellsAndPowers = `${spellContent.html}${objectMagicPowerRows(actor)}`;
   const tab = (key, icon, label) => `<button type="button" class="a2e-hud-tab ${activeTab === key ? "active" : ""}" data-tab="${key}"><i class="${icon}"></i> ${label}</button>`;
   const section = (key, html) => `<section class="${activeTab === key ? "active" : ""}" data-section="${key}">${html}</section>`;
-  return `<div class="a2e-hud-shell" data-drag-handle="1"><div class="a2e-hud-panel">${section("attaques", weaponRows(actor))}${section("sorts", spellContent.html)}${section("capacites", featureRows(actor))}${section("equipement", equipmentRows(actor))}${section("effets", effectRows(actor))}${section("sauvegardes", saveRows(actor))}${section("caracs", abilityRows(actor))}</div><nav class="a2e-hud-tabs">${tab("attaques", "fas fa-swords", "Armes")}${tab("sorts", "fas fa-book", "Sorts")}${tab("capacites", "fas fa-bolt", "Capacités")}${tab("equipement", "fas fa-box-open", "Équipement")}${tab("effets", "fas fa-hourglass-half", "Effets")}${tab("sauvegardes", "fas fa-shield-alt", "Sauv.")}${tab("caracs", "fas fa-dice-d20", "Carac.")}</nav><div class="a2e-hud-header" data-drag-handle="1"><img class="portrait" src="${esc(img)}" alt=""><div><div class="name">${esc(actor.name)}</div><div class="sub">${esc(race)} — ${esc(classe)} ${isMonster ? "DV" : "niv."} ${esc(niveau)}</div><div class="pills"><span class="pill">PV ${hp(actor)} / ${hpMax(actor)}</span><span class="pill">CA ${esc(armorClass(actor))}</span><span class="pill">THAC0 ${esc(thaco(actor))}</span></div></div><button type="button" class="icon" data-action="toggle-collapse"><i class="fas fa-chevron-down"></i></button><button type="button" class="icon resize" data-resize-handle="1"><i class="fas fa-up-right-and-down-left-from-center"></i></button></div></div>`;
+  return `<div class="a2e-hud-shell" data-drag-handle="1"><div class="a2e-hud-panel">${section("attaques", weaponRows(actor))}${section("sorts", spellsAndPowers)}${section("capacites", featureRows(actor))}${section("equipement", equipmentRows(actor))}${section("effets", effectRows(actor))}${section("sauvegardes", saveRows(actor))}${section("caracs", abilityRows(actor))}</div><nav class="a2e-hud-tabs">${tab("attaques", "fas fa-swords", "Armes")}${tab("sorts", "fas fa-book", "Sorts")}${tab("capacites", "fas fa-bolt", "Capacités")}${tab("equipement", "fas fa-box-open", "Équipement")}${tab("effets", "fas fa-hourglass-half", "Effets")}${tab("sauvegardes", "fas fa-shield-alt", "Sauv.")}${tab("caracs", "fas fa-dice-d20", "Carac.")}</nav><div class="a2e-hud-header" data-drag-handle="1"><img class="portrait" src="${esc(img)}" alt=""><div><div class="name">${esc(actor.name)}</div><div class="sub">${esc(race)} — ${esc(classe)} ${isMonster ? "DV" : "niv."} ${esc(niveau)}</div><div class="pills"><span class="pill">PV ${hp(actor)} / ${hpMax(actor)}</span><span class="pill">CA ${esc(armorClass(actor))}</span><span class="pill">THAC0 ${esc(thaco(actor))}</span></div></div><button type="button" class="icon" data-action="toggle-collapse"><i class="fas fa-chevron-down"></i></button><button type="button" class="icon resize" data-resize-handle="1"><i class="fas fa-up-right-and-down-left-from-center"></i></button></div></div>`;
 }
 export function renderHud(actor = null, token = null, { reason = "render" } = {}) {
   if (dragging || resizing) return false;
@@ -178,6 +224,40 @@ async function declareInitiativeAction(actor, itemId, kind) {
   await globalThis.add2eDeclareInitiativeAction(actor, { kind, item });
   return renderHud(actor, hudToken, { reason: `declare-initiative-${kind}` });
 }
+function resolveObjectMagicPower(actor, itemId, powerIndex) {
+  const sourceItem = getItem(actor, itemId);
+  if (!sourceItem) return null;
+  if (typeof globalThis.add2eMagicObjectActivePowerEntries !== "function") return null;
+  if (typeof globalThis.add2eBuildVirtualObjectPowerSort !== "function") return null;
+  const index = Math.max(0, Math.floor(Number(powerIndex) || 0));
+  const entry = (globalThis.add2eMagicObjectActivePowerEntries(sourceItem) ?? []).find(candidate => Number(candidate.index) === index);
+  if (!entry?.power) return null;
+  const virtualSpell = globalThis.add2eBuildVirtualObjectPowerSort(actor, sourceItem, entry.power, index);
+  return { sourceItem, power: entry.power, index, virtualSpell };
+}
+async function declareObjectMagicPower(actor, itemId, powerIndex) {
+  const entry = resolveObjectMagicPower(actor, itemId, powerIndex);
+  if (!entry) return ui.notifications.warn("Pouvoir d'objet magique introuvable.");
+  if (typeof globalThis.add2eDeclareInitiativeAction !== "function") return ui.notifications.error("Service canonique de déclaration d'initiative indisponible.");
+  const activation = entry.virtualSpell.system?.temps_incantation ?? entry.virtualSpell.system?.casting_time ?? entry.virtualSpell.system?.castingTime ?? "Objet magique";
+  const declarationItem = {
+    id: entry.sourceItem.id,
+    uuid: entry.sourceItem.uuid,
+    name: objectMagicPowerDeclarationLabel(entry),
+    type: "item",
+    system: { initiativeSegment: activation }
+  };
+  await globalThis.add2eDeclareInitiativeAction(actor, { kind: "item", item: declarationItem });
+  return renderHud(actor, hudToken, { reason: "declare-initiative-object-power" });
+}
+async function useObjectMagicPower(actor, itemId, powerIndex) {
+  const entry = resolveObjectMagicPower(actor, itemId, powerIndex);
+  if (!entry) return ui.notifications.warn("Pouvoir d'objet magique introuvable.");
+  if (typeof globalThis.add2eExecuteObjectMagicPower !== "function") return ui.notifications.error("Exécuteur canonique des pouvoirs d'objets magiques indisponible.");
+  const result = await globalThis.add2eExecuteObjectMagicPower(actor, entry.sourceItem, entry.power, entry.index, actor.sheet ?? null);
+  renderHud(actor, hudToken, { reason: "use-object-power" });
+  return result;
+}
 async function handleAction(event, actor, button) {
   event.preventDefault(); event.stopPropagation();
   const action = button.dataset.action;
@@ -186,8 +266,10 @@ async function handleAction(event, actor, button) {
     if (action === "select-spell-group") { selectedSpellGroup = button.dataset.spellGroup || selectedSpellGroup; return renderHud(actor, tokenFor(actor), { reason: "select-spell-group" }); }
     if (action === "declare-initiative-weapon") return declareInitiativeAction(actor, button.dataset.itemId, "weapon");
     if (action === "declare-initiative-spell") return declareInitiativeAction(actor, button.dataset.itemId, "spell");
+    if (action === "declare-initiative-object-power") return declareObjectMagicPower(actor, button.dataset.itemId, button.dataset.powerIndex);
     if (action === "attack") return sheetAttack(actor, button.dataset.itemId);
     if (action === "cast-spell") return sheetCastSpell(actor, button.dataset.itemId);
+    if (action === "use-object-power") return useObjectMagicPower(actor, button.dataset.itemId, button.dataset.powerIndex);
     if (action === "use-feature") return sheetUseFeature(actor, Number(button.dataset.featureIndex));
     if (action === "toggle-equipment") return toggleEquipment(actor, button.dataset.itemId);
     if (action === "remove-effect") return removeEffect(actor, button.dataset.effectId);
