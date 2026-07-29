@@ -149,7 +149,12 @@ function objectMagicPowerRows(actor) {
     const activation = system.temps_incantation ?? system.casting_time ?? system.castingTime ?? "Objet magique";
     const charges = Number(virtualSpell.getFlag?.("add2e", "memorizedCount") ?? 0) || 0;
     const cost = Math.max(0, Number(system.cost ?? system.cout ?? 0) || 0);
-    return `<div class="row initiative-row"><button type="button" class="img-act" data-action="use-object-power" data-item-id="${esc(sourceItem.id)}" data-power-index="${index}" title="Utiliser ${esc(virtualSpell.name)}"><img src="${esc(virtualSpell.img || sourceItem.img || "icons/svg/aura.svg")}" alt=""></button><div><div class="title">${esc(virtualSpell.name)}</div><div class="meta"><span>${esc(sourceItem.name)}</span><span>Activation ${esc(activation)}</span><span>Charges ${charges}${cost > 0 ? ` · coût ${cost}` : ""}</span></div></div><button type="button" class="act initiative-declare${active ? " declared" : ""}" data-action="declare-initiative-object-power" data-item-id="${esc(sourceItem.id)}" data-power-index="${index}">${active ? "Déclarée" : "Déclarer"}</button></div>`;
+    const usable = globalThis.add2eMagicItemEquippedOrUsable?.(sourceItem) === true;
+    const useTitle = usable ? `Utiliser ${virtualSpell.name}` : `${sourceItem.name} doit être équipé pour utiliser ${virtualSpell.name}`;
+    const initiativeTitle = usable
+      ? "Choisir cette action pour départager les égalités d’initiative"
+      : `${sourceItem.name} doit être équipé avant de choisir cette action d’initiative`;
+    return `<div class="row initiative-row"><button type="button" class="img-act" data-action="use-object-power" data-item-id="${esc(sourceItem.id)}" data-power-index="${index}" title="${esc(useTitle)}"${usable ? "" : " disabled"}><img src="${esc(virtualSpell.img || sourceItem.img || "icons/svg/aura.svg")}" alt=""></button><div><div class="title">${esc(virtualSpell.name)}</div><div class="meta"><span>${esc(sourceItem.name)}</span><span>Activation ${esc(activation)}</span><span>Charges ${charges}${cost > 0 ? ` · coût ${cost}` : ""}</span>${usable ? "" : '<span class="equip-off">Objet non équipé</span>'}</div></div><button type="button" class="act initiative-declare${active ? " declared" : ""}" data-action="declare-initiative-object-power" data-item-id="${esc(sourceItem.id)}" data-power-index="${index}" title="${esc(initiativeTitle)}"${usable ? "" : " disabled"}>${active ? "Choisie" : "Initiative"}</button></div>`;
   }).join("");
   return `<div class="spell-layout object-magic-power-layout"><div class="spell-list"><div class="spell-list-title">Pouvoirs d’objets magiques</div>${rows}</div></div>`;
 }
@@ -162,7 +167,9 @@ function hudHtml(actor, token = null) {
   const niveau = isMonster ? (actor.system?.dv ?? actor.system?.hitDice ?? actor.system?.niveau ?? "—") : (actor.system?.niveau ?? "—");
   const spellContent = spellRows(actor, selectedSpellGroup);
   selectedSpellGroup = spellContent.selectedGroup;
-  const spellsAndPowers = `${spellContent.html}${objectMagicPowerRows(actor)}`;
+  const objectPowerContent = objectMagicPowerRows(actor);
+  const spellHtml = objectPowerContent && spellContent.selectedGroup === null ? "" : spellContent.html;
+  const spellsAndPowers = `${spellHtml}${objectPowerContent}`;
   const tab = (key, icon, label) => `<button type="button" class="a2e-hud-tab ${activeTab === key ? "active" : ""}" data-tab="${key}"><i class="${icon}"></i> ${label}</button>`;
   const section = (key, html) => `<section class="${activeTab === key ? "active" : ""}" data-section="${key}">${html}</section>`;
   return `<div class="a2e-hud-shell" data-drag-handle="1"><div class="a2e-hud-panel">${section("attaques", weaponRows(actor))}${section("sorts", spellsAndPowers)}${section("capacites", featureRows(actor))}${section("equipement", equipmentRows(actor))}${section("effets", effectRows(actor))}${section("sauvegardes", saveRows(actor))}${section("caracs", abilityRows(actor))}</div><nav class="a2e-hud-tabs">${tab("attaques", "fas fa-swords", "Armes")}${tab("sorts", "fas fa-book", "Sorts")}${tab("capacites", "fas fa-bolt", "Capacités")}${tab("equipement", "fas fa-box-open", "Équipement")}${tab("effets", "fas fa-hourglass-half", "Effets")}${tab("sauvegardes", "fas fa-shield-alt", "Sauv.")}${tab("caracs", "fas fa-dice-d20", "Carac.")}</nav><div class="a2e-hud-header" data-drag-handle="1"><img class="portrait" src="${esc(img)}" alt=""><div><div class="name">${esc(actor.name)}</div><div class="sub">${esc(race)} — ${esc(classe)} ${isMonster ? "DV" : "niv."} ${esc(niveau)}</div><div class="pills"><span class="pill">PV ${hp(actor)} / ${hpMax(actor)}</span><span class="pill">CA ${esc(armorClass(actor))}</span><span class="pill">THAC0 ${esc(thaco(actor))}</span></div></div><button type="button" class="icon" data-action="toggle-collapse"><i class="fas fa-chevron-down"></i></button><button type="button" class="icon resize" data-resize-handle="1"><i class="fas fa-up-right-and-down-left-from-center"></i></button></div></div>`;
@@ -205,8 +212,19 @@ function bindDirectHudPointerEvents(element) {
   element.addEventListener("mousedown", pointerDown, true);
   element.addEventListener("touchstart", pointerDown, { capture: true, passive: false });
 }
+function normalizeInitiativeButtonLabels(element) {
+  for (const button of element?.querySelectorAll?.('[data-action^="declare-initiative-"]') ?? []) {
+    if (button.disabled) continue;
+    const chosen = button.classList.contains("declared");
+    button.textContent = chosen ? "Choisie" : "Initiative";
+    button.title = chosen
+      ? "Cette action est choisie pour départager les égalités d’initiative"
+      : "Choisir cette action pour départager les égalités d’initiative";
+  }
+}
 function bindHudEvents(element, actor) {
   bindDirectHudPointerEvents(element);
+  normalizeInitiativeButtonLabels(element);
   element.querySelectorAll("[data-tab]").forEach(button => button.addEventListener("click", event => {
     event.preventDefault(); event.stopPropagation();
     const next = button.dataset.tab || "attaques";
@@ -238,8 +256,9 @@ function resolveObjectMagicPower(actor, itemId, powerIndex) {
 async function declareObjectMagicPower(actor, itemId, powerIndex) {
   const entry = resolveObjectMagicPower(actor, itemId, powerIndex);
   if (!entry) return ui.notifications.warn("Pouvoir d'objet magique introuvable.");
+  if (globalThis.add2eMagicItemEquippedOrUsable?.(entry.sourceItem) !== true) return ui.notifications.warn(`${entry.sourceItem.name} doit être équipé avant de choisir ce pouvoir pour l’initiative.`);
   if (typeof globalThis.add2eDeclareInitiativeAction !== "function") return ui.notifications.error("Service canonique de déclaration d'initiative indisponible.");
-  const activation = entry.virtualSpell.system?.temps_incantation ?? entry.virtualSpell.system?.casting_time ?? entry.virtualSpell.system?.castingTime ?? "Objet magique";
+  const activation = entry.virtualSpell.system?.initiativeSegment ?? entry.virtualSpell.system?.temps_incantation ?? entry.virtualSpell.system?.casting_time ?? entry.virtualSpell.system?.castingTime ?? "Objet magique";
   const declarationItem = {
     id: entry.sourceItem.id,
     uuid: entry.sourceItem.uuid,
