@@ -52,12 +52,39 @@ function initiativeBreakdown(resolution = {}) {
   return applied.length ? applied.map(modifierText).join(" ; ") : "Aucun";
 }
 
+function actionText(action = null) {
+  if (!action) return "Aucune action déclarée";
+  const segment = Number(action.segment);
+  const kind = action.kind === "weapon" ? "Arme" : action.kind === "spell" ? "Sort" : "Action";
+  return Number.isFinite(segment)
+    ? `${kind} · ${action.label} · facteur ${segment}`
+    : `${kind} · ${action.label}`;
+}
+
+function situationRows(actionContext = null) {
+  const situation = actionContext?.situation ?? {};
+  const modifier = Number(situation.modifier) || 0;
+  const surprise = Math.max(0, Number(situation.surpriseSegments) || 0);
+  const reaction = Number(situation.dexterityReaction) || 0;
+  const remaining = Math.max(0, Number(situation.remainingSurpriseSegments) || 0);
+  const rows = [];
+  if (modifier) rows.push({ label: "Situation", value: signed(modifier) });
+  if (surprise) {
+    rows.push({
+      label: "Surprise",
+      value: `${surprise} segment${surprise > 1 ? "s" : ""} · réaction DEX ${signed(reaction)} · reste ${remaining}`
+    });
+  }
+  return rows;
+}
+
 function tieText(tie = {}) {
   if (tie?.tied !== true) return "Aucune";
   const names = Array.isArray(tie.names) ? tie.names.filter(Boolean) : [];
-  return names.length
-    ? `Égalité avec ${names.join(", ")} — ordre stable du tracker`
-    : "Égalité — ordre stable du tracker";
+  const suffix = tie.resolvedByAction === true
+    ? "départage par rapidité ou temps d’incantation"
+    : "ordre stable du tracker";
+  return names.length ? `Égalité avec ${names.join(", ")} — ${suffix}` : `Égalité — ${suffix}`;
 }
 
 export async function createInitiativeChatCard({
@@ -65,6 +92,7 @@ export async function createInitiativeChatCard({
   roll,
   formula = "1d6",
   resolution,
+  actionContext = resolution?.actionContext ?? null,
   tie = null,
   messageOptions = {},
   messageMode = null
@@ -79,10 +107,9 @@ export async function createInitiativeChatCard({
   const adjustment = Number.isFinite(base) && Number.isFinite(total) ? total - base : 0;
   const flags = messageOptions?.flags && typeof messageOptions.flags === "object" ? messageOptions.flags : {};
   const add2eFlags = flags.add2e && typeof flags.add2e === "object" ? flags.add2e : {};
-  const speaker = messageOptions?.speaker ?? ChatMessage.getSpeaker({
-    actor,
-    token: combatant?.token?.object ?? undefined
-  });
+  const speaker = messageOptions?.speaker ?? ChatMessage.getSpeaker({ actor, token: combatant?.token?.object ?? undefined });
+  const action = actionContext?.action ?? null;
+  const situation = actionContext?.situation ?? null;
 
   const card = {
     actor,
@@ -92,6 +119,8 @@ export async function createInitiativeChatCard({
     source: sourceIdentity(combatant),
     rows: [
       { label: "Jet", value: `${Number.isFinite(base) ? base : "—"} (${formula})` },
+      { label: "Action déclarée", value: actionText(action) },
+      ...situationRows(actionContext),
       { label: "Modificateurs", value: initiativeBreakdown(resolution) },
       { label: "Ajustement total", value: adjustment ? signed(adjustment) : "Aucun" },
       { label: "Initiative finale", value: Number.isFinite(total) ? total : "—" },
@@ -115,7 +144,10 @@ export async function createInitiativeChatCard({
           baseRoll: Number.isFinite(base) ? base : null,
           adjustment,
           total: Number.isFinite(total) ? total : null,
+          action: action ? { ...action } : null,
+          situation: situation ? { ...situation } : null,
           tie: tie?.tied === true,
+          tieResolvedByAction: tie?.resolvedByAction === true,
           tieCombatantIds: tie?.tied === true ? tie.combatantIds ?? [] : []
         }
       }
