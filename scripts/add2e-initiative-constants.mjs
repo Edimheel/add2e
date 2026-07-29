@@ -7,7 +7,6 @@ export const TAG = "[ADD2E][INIT]";
 
 export const initiativeState = {
   configured: false,
-  patched: false,
   rollPatched: false,
   navigationPatched: false,
   hooksInstalled: false,
