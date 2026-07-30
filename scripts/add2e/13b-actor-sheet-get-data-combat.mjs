@@ -193,7 +193,7 @@ function add2eSheetClassThaco(actor, classItem) {
     throw new Error(`Progression THAC0 absente pour ${classItem?.name ?? "classe"} au niveau ${level}.`);
   }
   const thaco = Number(row.thac0 ?? row.thaco ?? row.THAC0);
-  if (!Number.isFinite(thaco) || thaco <= 0) {
+  if (!Number.isFinite(thaco)) {
     throw new Error(`THAC0 invalide pour ${classItem?.name ?? "classe"} au niveau ${level}.`);
   }
   return thaco;
@@ -201,7 +201,7 @@ function add2eSheetClassThaco(actor, classItem) {
 
 function add2eSheetResolveThaco(actor, transformation) {
   const transformationThaco = Number(transformation?.thac0);
-  if (Number.isFinite(transformationThaco) && transformationThaco > 0) return transformationThaco;
+  if (Number.isFinite(transformationThaco)) return transformationThaco;
   const classes = Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
   if (!classes.length) return 20;
   return Math.min(...classes.map(classItem => add2eSheetClassThaco(actor, classItem)));
