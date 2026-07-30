@@ -163,13 +163,6 @@ function removeMovementUpdates(updates = {}) {
   return updates;
 }
 
-function sceneMovementContextChanged(changes = {}) {
-  return changesTouchPaths(changes, [
-    "flags.add2e.terrain", "flags.add2e.environment", "flags.add2e.milieu",
-    "grid.distance", "grid.units"
-  ]);
-}
-
 Hooks.once("init", () => {
   game.settings.register("add2e", "xpAutoLevel", {
     name: "ADD2E — XP : niveau automatique",
@@ -241,20 +234,11 @@ Hooks.on("deleteActiveEffect", (effect, options = {}) => {
   if (actor?.type === "personnage") queueMovementRecalc(actor, "effect:delete");
 });
 
-Hooks.on("updateScene", (scene, changes = {}, options = {}) => {
-  if (options?.add2eInternal || !sceneMovementContextChanged(changes)) return;
-  const actors = new Set(
-    Array.from(scene?.tokens ?? [])
-      .map(token => token?.actor)
-      .filter(actor => actor?.type === "personnage")
-  );
-  for (const actor of actors) queueMovementRecalc(actor, "scene-movement-context");
-});
-
 Hooks.on("renderActorSheet", (sheet, html) => {
   if (sheet?.actor?.type !== "personnage" || isMulticlassActor(sheet.actor)) return;
   const root = html?.jquery ? html[0] : html;
-  const levelField = [...root?.querySelectorAll?.(".a2e-field") ?? []].find(field => norm(field.querySelector?.("label")?.textContent ?? "") === "niveau");
+  const levelField = [...root?.querySelectorAll?.(".a2e-field") ?? []]
+    .find(field => norm(field.querySelector?.("label")?.textContent ?? "") === "niveau");
   if (!root || root.querySelector("input[name='system.xp']") || !levelField) return;
   const field = document.createElement("div");
   field.className = "a2e-field a2e-xp-field";
