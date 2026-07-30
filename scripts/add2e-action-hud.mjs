@@ -27,6 +27,7 @@ let racialEffectsRenderScheduled = false;
 let racialEffectsRendering = false;
 let multipleAttackRenderScheduled = false;
 let multipleAttackRendering = false;
+let horizontalAttackRendering = false;
 
 function esc(value) {
   try {
@@ -73,6 +74,13 @@ function ensureStyles() {
     #${ADD2E_HUD_ID} .a2e-hud-multiple-detail{font-size:.76em;line-height:1.25;color:inherit;opacity:.92}
     #${ADD2E_HUD_ID} .a2e-hud-multiple-rate{font-weight:900;white-space:nowrap}
     #${ADD2E_HUD_ID} button.img-act.a2e-multiple-attack-blocked{opacity:.42;filter:grayscale(.75);cursor:not-allowed}
+    #add2e-horizontal-combat-tracker .add2e-horizontal-attacks.a2e-guided-attacks{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:4px;padding:3px 5px;font-size:.61rem;line-height:1.05}
+    #add2e-horizontal-combat-tracker .add2e-horizontal-attack-count{display:grid;place-items:center;min-width:30px;padding:2px 4px;border:1px solid currentColor;border-radius:5px;font-size:.72rem;font-weight:1000}
+    #add2e-horizontal-combat-tracker .add2e-horizontal-attack-state{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:950}
+    #add2e-horizontal-combat-tracker .add2e-horizontal-attacks.extra{background:rgba(38,112,40,.9);color:#dfffd5;border:1px solid #93df79}
+    #add2e-horizontal-combat-tracker .add2e-horizontal-attacks.pending{background:rgba(96,67,16,.9);color:#fff2b4;border:1px solid #d6b05a}
+    #add2e-horizontal-combat-tracker .add2e-horizontal-attacks.used{background:rgba(55,55,55,.9);color:#ddd;border:1px solid #888}
+    #add2e-horizontal-combat-tracker .add2e-horizontal-round.a2e-extra-phase{min-width:150px;border-color:#93df79;background:rgba(38,112,40,.9);color:#eaffdf}
   `;
   document.head.appendChild(style);
 }
@@ -199,6 +207,41 @@ function renderMultipleAttackGuidance() {
   multipleAttackRendering = false;
 }
 
+function renderHorizontalAttackGuidance() {
+  if (horizontalAttackRendering) return;
+  const tracker = document.getElementById("add2e-horizontal-combat-tracker");
+  const combat = game.combat;
+  if (!tracker || !combat?.combatants) return;
+  horizontalAttackRendering = true;
+  withMutationSuppressed(() => {
+    ensureStyles();
+    let extraPhase = false;
+    const currentId = String(globalThis.add2eGetCurrentCombatant?.(combat)?.id ?? combat?.combatant?.id ?? "");
+    for (const card of tracker.querySelectorAll("[data-combatant-id]")) {
+      const combatant = combat.combatants.get?.(card.dataset.combatantId) ?? null;
+      const status = combatant?.actor ? add2eMultipleAttackHudStatus(combatant.actor, combat) : null;
+      const badge = card.querySelector(".add2e-horizontal-attacks");
+      if (!status || !badge) continue;
+      const count = multipleAttackCount(status);
+      const guidance = multipleAttackGuidance(status);
+      const countLabel = count ? `${count.used}/${count.total}` : String(status.ratio ?? "—");
+      const stateLabel = status.css === "extra" ? "À jouer" : status.css === "pending" ? "En attente" : "Terminé";
+      badge.className = `add2e-horizontal-attacks a2e-guided-attacks ${status.css ?? "pending"}`;
+      badge.title = `${guidance.title} — ${status.detail ?? ""}`;
+      badge.innerHTML = `<strong class="add2e-horizontal-attack-count">${esc(countLabel)}</strong><span class="add2e-horizontal-attack-state">${esc(stateLabel)}</span>`;
+      if (status.css === "extra" && String(combatant.id ?? "") === currentId) extraPhase = true;
+    }
+    const round = tracker.querySelector(".add2e-horizontal-round");
+    if (round) {
+      round.classList.toggle("a2e-extra-phase", extraPhase);
+      round.innerHTML = extraPhase
+        ? `<small>PHASE</small>Attaques supplémentaires`
+        : `<small>${combat.started ? "COMBAT" : "PRÉPARATION"}</small>${combat.started ? `Round ${Math.max(1, Number(combat.round) || 1)}` : "Initiative"}`;
+    }
+  });
+  horizontalAttackRendering = false;
+}
+
 function scheduleMultipleAttackGuidance() {
   if (multipleAttackRenderScheduled) return;
   multipleAttackRenderScheduled = true;
@@ -206,6 +249,7 @@ function scheduleMultipleAttackGuidance() {
   raf(() => {
     multipleAttackRenderScheduled = false;
     renderMultipleAttackGuidance();
+    renderHorizontalAttackGuidance();
   });
 }
 
@@ -362,8 +406,7 @@ function installHudComplements() {
   bodyObserver = new MutationObserver(() => {
     if (suppressMutation) return;
     const root = document.getElementById(ADD2E_HUD_ID);
-    if (!root) return;
-    observeHudRoot(root);
+    if (root) observeHudRoot(root);
     scheduleComplements();
   });
   bodyObserver.observe(document.body, { childList: true, subtree: true });
