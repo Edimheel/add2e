@@ -1,168 +1,501 @@
-// ADD2E — onUse Magicien : Lévitation
-// Version : 2026-05-05-magicien-n1-9-v2
-// Retour attendu : true = sort consommé, false = sort non consommé.
+// ADD2E — onUse Magicien : Lévitation.
+// Compatible Foundry V13/V14/V15 — DialogV2 uniquement.
+// La mécanique est matérialisée par un ActiveEffect et des modificateurs du moteur canonique.
 
-const ADD2E_SORT_CONFIG = {
-  "name": "Lévitation",
-  "slug": "levitation",
-  "level": 2,
-  "kind": "movement",
-  "description": "Lévitation permet un déplacement, un passage, une lévitation, un vol, une téléportation ou une transition magique. Le MD valide les limites et la destination.",
-  "dice": null,
-  "modes": [
-    {
-      "id": "normal",
-      "label": "Lévitation"
-    }
-  ]
-};
-const ADD2E_ONUSE_TAG = "[ADD2E][SORT_ONUSE][MAGICIEN]";
-
-function add2eHtmlEscape(value) {
-  const div = document.createElement("div");
-  div.innerText = String(value ?? "");
-  return div.innerHTML;
-}
-
-function add2eCasterLevel(actor) {
-  return Number(actor?.system?.niveau ?? actor?.system?.level ?? actor?.system?.details?.niveau ?? 1) || 1;
-}
-
-async function add2eEvalRoll(formula) {
-  return await new Roll(formula).evaluate();
-}
-
-function add2eDamageFormula(raw, level) {
-  const s = String(raw || "1d6");
-  if (s === "leveld3") return `${Math.max(1, level)}d3`;
-  if (s === "leveld4+level") return `${Math.max(1, level)}d4+${level}`;
-  if (s === "leveld6") return `${Math.max(1, Math.min(10, level))}d6`;
-  if (s === "1d8+level") return `1d8+${level}`;
-  if (s === "1d6+level") return `1d6+${level}`;
-  if (s === "special" || s === "variable") return "1d20";
-  return s;
-}
-
-function add2eRoundCount(level) {
-  return Math.max(1, level);
-}
-
-function add2eGetCasterToken() {
-  return token ?? args?.[0]?.token ?? canvas?.tokens?.controlled?.[0] ?? null;
-}
-
-function add2eGetTargets({ fallbackCaster = true } = {}) {
-  const targets = Array.from(game.user.targets ?? []);
-  if (targets.length) return targets;
-  const casterToken = add2eGetCasterToken();
-  return (fallbackCaster && casterToken) ? [casterToken] : [];
-}
-
-async function add2eChat(title, html, speakerToken = null, options = {}) {
-  const casterToken = speakerToken ?? add2eGetCasterToken();
-  const casterActor = actor ?? casterToken?.actor ?? null;
-  const casterName = casterActor?.name ?? casterToken?.name ?? "Magicien";
-  const spellName = item?.name ?? title ?? "Sort de magicien";
-  const casterImg = casterToken?.document?.texture?.src ?? casterActor?.img ?? "icons/svg/mystery-man.svg";
-  const spellImg = item?.img ?? "icons/svg/book.svg";
-  const targets = Array.from(game.user.targets ?? []);
-  const targetLabel = options.targetLabel ?? (targets.length ? targets.map(t => t.name).join(", ") : casterName);
-  const outcome = options.outcome ?? title ?? spellName;
-  const rule = options.rule ?? "";
-  await ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor: casterActor, token: casterToken }),
-    content: `
-      <div class="add2e-chat-card add2e-magicien-sort" style="border:1px solid #8e63c7;border-radius:8px;overflow:hidden;background:#f6f0ff;color:#2d2144;font-family:var(--font-primary);">
-        <div style="display:flex;align-items:center;gap:8px;background:#5b3f8c;color:#fff;padding:7px 9px;">
-          <img src="${add2eHtmlEscape(casterImg)}" style="width:42px;height:42px;object-fit:cover;border-radius:50%;border:2px solid #d8c3ff;background:#fff;" />
-          <div style="flex:1;line-height:1.05;">
-            <div style="font-weight:800;font-size:14px;">${add2eHtmlEscape(casterName)}</div>
-            <div style="font-size:12px;font-weight:700;">lance ${add2eHtmlEscape(spellName)}</div>
-          </div>
-          <div style="font-weight:800;font-size:12px;text-align:center;white-space:nowrap;">Sort profane</div>
-          <img src="${add2eHtmlEscape(spellImg)}" style="width:34px;height:34px;object-fit:cover;border-radius:3px;border:1px solid #d8c3ff;background:#fff;" />
-        </div>
-        <div style="padding:9px 10px 10px 10px;background:#f6f0ff;">
-          <div style="font-size:13px;margin:0 0 6px 0;"><b>Cible :</b> ${add2eHtmlEscape(targetLabel)}</div>
-          <div style="border:1px solid #8e63c7;border-radius:6px;background:#fffaff;padding:8px;text-align:center;margin-bottom:7px;">
-            <div style="color:#6c31b5;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.3px;">${add2eHtmlEscape(outcome)}</div>
-            <div style="font-size:13px;line-height:1.35;text-align:center;">${html}</div>
-          </div>
-          <details style="border:1px solid #8e63c7;border-radius:5px;background:#fffaff;padding:5px 7px;">
-            <summary style="cursor:pointer;font-weight:800;color:#4a2e78;">Règle appliquée</summary>
-            <div style="margin-top:5px;font-size:12px;line-height:1.35;">${rule || "Effet du sort appliqué selon sa description et l’arbitrage du MD."}</div>
-          </details>
-        </div>
-      </div>`
+return await (async () => {
+  const VERSION = "2026-07-30-levitation-canonical-movement-v1";
+  const TAG = "[ADD2E][SORT_ONUSE][MAGICIEN][LEVITATION]";
+  const SPELL = Object.freeze({
+    name: "Lévitation",
+    slug: "levitation",
+    level: 2,
+    rangeMetresPerLevel: 6,
+    durationRoundsPerLevel: 10,
+    selfVerticalSpeed: 6,
+    otherVerticalSpeed: 3,
+    capacityKgPerLevel: 50,
+    imgFallback: "systems/add2e/assets/icones/sorts/magicien-levitation.webp"
   });
-}
 
-async function add2eApplyEffect(targetActor, name, tags, rounds = 0) {
-  if (!targetActor) return false;
-  await targetActor.createEmbeddedDocuments("ActiveEffect", [{
-    name,
-    img: item?.img || "icons/svg/aura.svg",
-    disabled: false,
-    transfer: false,
-    type: "base",
-    system: {},
-    changes: [],
-    duration: { rounds: rounds || undefined, startRound: game.combat?.round ?? null, startTime: game.time?.worldTime ?? null, combat: game.combat?.id ?? null },
-    description: ADD2E_SORT_CONFIG.description,
-    flags: { add2e: { tags } }
-  }]);
-  return true;
-}
-
-async function add2eAskNote(config) {
-  const needsNote = ["note","summon","summon_note","movement","terrain","utility","detection"].includes(config.kind) || (config.modes?.length > 1);
-  if (!needsNote) return { mode: "normal", note: "" };
-  return await new Promise(resolve => {
-    let done = false;
-    const finish = v => { if (!done) { done = true; resolve(v); } };
-    const buttons = {};
-    for (const m of config.modes ?? [{id:"normal",label:config.name}]) {
-      buttons[m.id] = { label: m.label, callback: html => finish({ mode:m.id, note: html.find("[name='note']").val() ?? "" }) };
+  const number = (value, fallback = 0) => {
+    if (typeof value === "number") return Number.isFinite(value) ? value : fallback;
+    if (value && typeof value === "object") {
+      for (const key of ["value", "current", "actuel", "total", "base", "max"]) {
+        if (value[key] !== undefined) {
+          const parsed = number(value[key], NaN);
+          if (Number.isFinite(parsed)) return parsed;
+        }
+      }
+      return fallback;
     }
-    buttons.cancel = { label: "Annuler", callback: () => finish(null) };
-    new Dialog({
-      title: config.name,
-      content: `<form><p><b>${add2eHtmlEscape(config.name)}</b></p><div class="form-group"><label>Note / paramètres</label><textarea name="note" rows="3"></textarea></div></form>`,
-      buttons,
-      default: Object.keys(buttons)[0],
-      close: () => finish(null)
-    }).render(true);
+    const match = String(value ?? "")
+      .replace(/\u00a0/g, " ")
+      .replace(/,/g, ".")
+      .match(/[+\-]?\d+(?:\.\d+)?/);
+    const parsed = match ? Number(match[0]) : NaN;
+    return Number.isFinite(parsed) ? parsed : fallback;
+  };
+
+  const esc = value => String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+  const norm = value => String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+
+  const sourceSpell = (typeof item !== "undefined" && item)
+    || (typeof sort !== "undefined" && sort)
+    || (typeof sourceItem !== "undefined" && sourceItem)
+    || (typeof args !== "undefined" && args?.[0]?.item)
+    || null;
+
+  const castDocument = (typeof sort !== "undefined" && sort)
+    || (typeof args !== "undefined" && args?.[0]?.sort)
+    || sourceSpell;
+
+  const caster = (typeof actor !== "undefined" && actor)
+    || sourceSpell?.parent
+    || (typeof args !== "undefined" && args?.[0]?.actor)
+    || null;
+
+  function casterTokenFor(actorDocument) {
+    const direct = (typeof token !== "undefined" && token?.actor?.id === actorDocument?.id) ? token : null;
+    return direct
+      ?? canvas?.tokens?.controlled?.find?.(candidate => candidate?.actor?.id === actorDocument?.id)
+      ?? actorDocument?.getActiveTokens?.(true, true)?.[0]
+      ?? null;
+  }
+
+  function actorClassLevel(actorDocument) {
+    const explicitCasterLevel = number(
+      castDocument?.system?.casterLevel
+      ?? castDocument?.system?.niveauLanceur
+      ?? castDocument?.system?.niveau_lanceur
+      ?? castDocument?.flags?.add2e?.casterLevel,
+      NaN
+    );
+    if (Number.isFinite(explicitCasterLevel) && explicitCasterLevel > 0) return Math.floor(explicitCasterLevel);
+
+    const details = actorDocument?.system?.details_classe ?? {};
+    const byDetails = number(
+      details?.magicien?.niveau
+      ?? details?.mage?.niveau
+      ?? details?.illusionniste?.niveau,
+      NaN
+    );
+    if (Number.isFinite(byDetails) && byDetails > 0) return Math.floor(byDetails);
+
+    const classItem = Array.from(actorDocument?.items ?? []).find(candidate => {
+      if (String(candidate?.type ?? "").toLowerCase() !== "classe") return false;
+      return /magicien|mage|illusionniste/i.test(String(candidate?.name ?? ""));
+    });
+    const byItem = number(classItem?.system?.niveau ?? classItem?.system?.level, NaN);
+    if (Number.isFinite(byItem) && byItem > 0) return Math.floor(byItem);
+
+    return Math.max(1, Math.floor(number(actorDocument?.system?.niveau ?? actorDocument?.system?.level, 1)));
+  }
+
+  function magicPowerContext(actorDocument) {
+    const virtual = castDocument?.system?.isPower === true || String((typeof args !== "undefined" && args?.[0]?.castMode) ?? "") === "power";
+    if (!virtual) return { active: false, item: null, power: null, powerIndex: null, permanent: false };
+
+    const sourceId = String(
+      castDocument?.system?.sourceItemId
+      ?? castDocument?.system?.sourceWeaponId
+      ?? castDocument?.flags?.add2e?.sourceItemId
+      ?? ""
+    ).trim();
+    const objectItem = sourceId ? actorDocument?.items?.get?.(sourceId) ?? null : null;
+    const powerIndex = Math.max(0, Math.floor(number(castDocument?.system?.powerIndex ?? castDocument?.flags?.add2e?.powerIndex, 0)));
+    const powers = objectItem?.system?.pouvoirs ?? objectItem?.system?.powers ?? [];
+    const power = Array.isArray(powers) ? powers[powerIndex] ?? null : null;
+    const chargeMode = norm(power?.chargesMode ?? power?.modeCharges ?? power?.mode_charges);
+    const durationText = norm(power?.duree ?? power?.duration ?? power?.parameters?.duree ?? power?.parameters?.duration);
+    const permanent = chargeMode === "permanent"
+      || durationText.includes("tant_que_porte")
+      || durationText.includes("permanent")
+      || durationText.includes("illimite");
+    return { active: true, item: objectItem, power, powerIndex, permanent };
+  }
+
+  function selectedTarget(casterActor, casterToken) {
+    const selected = Array.from(game.user?.targets ?? []).filter(target => target?.actor);
+    if (selected.length > 1) {
+      ui.notifications.warn(`${SPELL.name} : sélectionnez au maximum une cible.`);
+      return { valid: false, token: null, actor: null };
+    }
+    if (selected.length === 1) return { valid: true, token: selected[0], actor: selected[0].actor };
+    return { valid: true, token: casterToken, actor: casterActor };
+  }
+
+  function unitToMetres(value, unit) {
+    const key = norm(unit);
+    if (["ft", "feet", "foot", "pied", "pieds", "pi"].includes(key)) return value * 0.3048;
+    if (["km", "kilometre", "kilometres"].includes(key)) return value * 1000;
+    return value;
+  }
+
+  function distanceMetres(leftToken, rightToken) {
+    if (!leftToken || !rightToken) return 0;
+    const leftScene = leftToken.document?.parent ?? leftToken.scene ?? null;
+    const rightScene = rightToken.document?.parent ?? rightToken.scene ?? null;
+    if (leftScene?.id && rightScene?.id && leftScene.id !== rightScene.id) return Number.POSITIVE_INFINITY;
+    const scene = leftScene ?? rightScene ?? canvas?.scene ?? null;
+    const size = number(scene?.grid?.size ?? canvas?.grid?.size, 100) || 100;
+    const distance = number(scene?.grid?.distance ?? canvas?.scene?.grid?.distance, 1) || 1;
+    const unit = scene?.grid?.units ?? canvas?.scene?.grid?.units ?? "m";
+    const left = leftToken.center ?? {
+      x: number(leftToken.document?.x ?? leftToken.x, 0) + (number(leftToken.document?.width ?? leftToken.width, 1) * size / 2),
+      y: number(leftToken.document?.y ?? leftToken.y, 0) + (number(leftToken.document?.height ?? leftToken.height, 1) * size / 2)
+    };
+    const right = rightToken.center ?? {
+      x: number(rightToken.document?.x ?? rightToken.x, 0) + (number(rightToken.document?.width ?? rightToken.width, 1) * size / 2),
+      y: number(rightToken.document?.y ?? rightToken.y, 0) + (number(rightToken.document?.height ?? rightToken.height, 1) * size / 2)
+    };
+    return unitToMetres((Math.hypot(number(right.x) - number(left.x), number(right.y) - number(left.y)) / size) * distance, unit);
+  }
+
+  function bodyWeightKg(actorDocument) {
+    const value = number(actorDocument?.system?.poids, NaN);
+    return Number.isFinite(value) && value > 0 ? value : null;
+  }
+
+  function carriedWeightKg(actorDocument, targetToken) {
+    const compute = globalThis.add2eComputeMovement;
+    if (typeof compute !== "function") {
+      throw new Error("Le domaine canonique ADD2E du mouvement et de l’encombrement est indisponible.");
+    }
+    const result = compute(actorDocument, {
+      token: targetToken?.document ?? targetToken ?? null,
+      scene: targetToken?.document?.parent ?? targetToken?.scene ?? canvas?.scene ?? null,
+      consumer: "spell-levitation-weight"
+    });
+    return Math.max(0, number(result?.poidsKg, 0));
+  }
+
+  async function askSavingThrow(targetName) {
+    const DialogV2 = foundry?.applications?.api?.DialogV2;
+    if (!DialogV2?.wait) throw new Error(`${SPELL.name} : DialogV2 est indisponible.`);
+    return DialogV2.wait({
+      window: { title: `${SPELL.name} — jet de protection`, icon: "fas fa-arrow-up" },
+      modal: true,
+      rejectClose: false,
+      content: `<form class="add2e-dialog-v2"><p><b>${esc(targetName ?? "La cible")}</b> peut annuler l’effet par un jet de protection si elle n’est pas consentante.</p><p>Choisissez le résultat du jet ou appliquez directement l’effet à une cible consentante.</p></form>`,
+      buttons: [
+        { action: "failed", label: "Consentante / jet raté", icon: "fas fa-check", default: true, callback: () => "failed" },
+        { action: "saved", label: "Jet réussi", icon: "fas fa-shield-halved", callback: () => "saved" },
+        { action: "cancel", label: "Annuler", icon: "fas fa-times", callback: () => null }
+      ],
+      close: () => null
+    });
+  }
+
+  function sourceIdentity(powerContext) {
+    const sourceDocument = powerContext.item ?? sourceSpell ?? castDocument;
+    return {
+      document: sourceDocument,
+      id: String(sourceDocument?.id ?? sourceDocument?._id ?? SPELL.slug),
+      uuid: String(sourceDocument?.uuid ?? ""),
+      name: String(sourceDocument?.name ?? SPELL.name),
+      type: powerContext.active ? "objet_magique" : "spell"
+    };
+  }
+
+  function matchingEffects(actorDocument, source) {
+    return Array.from(actorDocument?.effects?.contents ?? actorDocument?.effects ?? []).filter(effect => {
+      const flags = effect?.flags?.add2e ?? {};
+      return norm(flags.spell) === SPELL.slug
+        && (!source?.id || String(flags.sourceItemId ?? "") === String(source.id));
+    });
+  }
+
+  async function refreshMovement(actorDocument) {
+    if (actorDocument?.type !== "personnage") return null;
+    const recalc = globalThis.add2eRecalcMoveXp;
+    return typeof recalc === "function" ? recalc(actorDocument, { mode: "movement" }) : null;
+  }
+
+  async function removeEffects(actorDocument, effects) {
+    const ids = effects.map(effect => effect?.id).filter(Boolean);
+    if (ids.length) await actorDocument.deleteEmbeddedDocuments("ActiveEffect", [...new Set(ids)]);
+    await refreshMovement(actorDocument);
+  }
+
+  function durationData(rounds, permanent) {
+    if (permanent) return {};
+    return {
+      rounds,
+      startRound: game.combat?.round ?? null,
+      startTurn: game.combat?.turn ?? null,
+      startTime: game.time?.worldTime ?? null,
+      combat: game.combat?.id ?? null
+    };
+  }
+
+  async function createEffect({ targetActor, casterActor, casterLevel, source, verticalSpeed, selfCast, capacityKg, totalWeightKg, weightKnown, durationRounds, permanent }) {
+    const existing = Array.from(targetActor?.effects?.contents ?? targetActor?.effects ?? []).filter(effect => norm(effect?.flags?.add2e?.spell) === SPELL.slug);
+    const existingIds = existing.map(effect => effect.id).filter(Boolean);
+    if (existingIds.length) await targetActor.deleteEmbeddedDocuments("ActiveEffect", existingIds);
+
+    const commonMetadata = {
+      spell: SPELL.slug,
+      modes: ["levitation", "vertical", "vertical-only"],
+      movementMode: "levitation",
+      verticalOnly: true,
+      horizontalAllowed: false,
+      verticalSpeedMetersPerRound: verticalSpeed,
+      selfCast,
+      capacityKg,
+      targetWeightKg: weightKnown ? totalWeightKg : null,
+      weightKnown
+    };
+
+    const modifiers = [
+      {
+        id: `spell:${source.id}:${SPELL.slug}:ground`,
+        domain: "movement",
+        target: "ground",
+        operation: "set",
+        value: 0,
+        priority: 250,
+        stacking: { mode: "exclusive", group: "magical-movement-mode" },
+        conditions: { active: true },
+        metadata: commonMetadata
+      },
+      {
+        id: `spell:${source.id}:${SPELL.slug}:vertical`,
+        domain: "movement",
+        target: "vertical",
+        operation: "set",
+        value: verticalSpeed,
+        priority: 250,
+        stacking: { mode: "exclusive", group: "magical-vertical-movement" },
+        conditions: { active: true },
+        metadata: commonMetadata
+      }
+    ];
+
+    const [effect] = await targetActor.createEmbeddedDocuments("ActiveEffect", [{
+      name: SPELL.name,
+      img: source.document?.img ?? sourceSpell?.img ?? SPELL.imgFallback,
+      disabled: false,
+      transfer: false,
+      type: "base",
+      system: {},
+      changes: [],
+      duration: durationData(durationRounds, permanent),
+      description: `La cible lévite verticalement à ${verticalSpeed} m par round. Tout mouvement horizontal volontaire est impossible, sauf en prenant appui sur une surface.`,
+      flags: {
+        add2e: {
+          version: VERSION,
+          sourceType: source.type,
+          sourceItemId: source.id,
+          sourceItemUuid: source.uuid,
+          sourceItemName: source.name,
+          casterActorId: casterActor?.id ?? null,
+          casterActorUuid: casterActor?.uuid ?? null,
+          casterLevel,
+          spell: SPELL.slug,
+          effectType: "movement",
+          permanent,
+          durationRounds: permanent ? null : durationRounds,
+          tags: [
+            `sort:${SPELL.slug}`,
+            "classe:magicien",
+            "liste:magicien",
+            "niveau:2",
+            "type:movement",
+            "etat:levitation",
+            "movement-mode:levitation",
+            "mouvement:vertical"
+          ],
+          movement: commonMetadata,
+          modifiers
+        }
+      }
+    }]);
+
+    await refreshMovement(targetActor);
+    return effect ?? null;
+  }
+
+  async function createCard({ casterActor, targetActor, source, outcome, variant, rows, message }) {
+    const build = globalThis.add2eBuildChatCard;
+    const create = globalThis.add2eCreateChatCard;
+    if (typeof build !== "function" || typeof create !== "function") {
+      throw new Error("Les constructeurs communs de cartes ADD2E sont indisponibles.");
+    }
+    const options = {
+      actor: casterActor,
+      title: SPELL.name,
+      icon: "fas fa-arrow-up",
+      variant,
+      source: {
+        name: casterActor?.name ?? "Magicien",
+        img: casterActor?.img,
+        type: source.type === "objet_magique" ? `Objet magique — ${source.name}` : "Sort profane"
+      },
+      rows: [
+        { label: "Cible", value: targetActor?.name ?? "—" },
+        { label: "Résultat", value: outcome },
+        ...rows
+      ],
+      message,
+      chatData: {
+        flags: {
+          add2e: {
+            spellEffect: SPELL.slug,
+            version: VERSION,
+            outcome: norm(outcome),
+            targetActorId: targetActor?.id ?? null,
+            sourceItemId: source.id
+          }
+        }
+      }
+    };
+    const preview = build(options);
+    if (!String(preview ?? "").trim()) throw new Error(`La carte ADD2E de ${SPELL.name} est vide.`);
+    return create(options);
+  }
+
+  if (!caster || !sourceSpell) {
+    ui.notifications.error(`${SPELL.name} : lanceur ou sort introuvable.`);
+    return false;
+  }
+
+  const casterToken = casterTokenFor(caster);
+  const target = selectedTarget(caster, casterToken);
+  if (!target.valid || !target.actor) return false;
+
+  const targetActor = target.actor;
+  const targetToken = target.token;
+  const selfCast = String(targetActor.id) === String(caster.id);
+  const level = actorClassLevel(caster);
+  const rangeMetres = SPELL.rangeMetresPerLevel * level;
+
+  if (!selfCast) {
+    if (!casterToken || !targetToken) {
+      ui.notifications.warn(`${SPELL.name} : les tokens du lanceur et de la cible doivent être présents sur la scène.`);
+      return false;
+    }
+    const distance = distanceMetres(casterToken, targetToken);
+    if (!Number.isFinite(distance) || distance > rangeMetres + 0.001) {
+      ui.notifications.warn(`${SPELL.name} : cible hors portée (${Number.isFinite(distance) ? distance.toFixed(1) : "—"} m / ${rangeMetres} m).`);
+      return false;
+    }
+  }
+
+  const powerContext = magicPowerContext(caster);
+  const source = sourceIdentity(powerContext);
+  const sourceEffects = matchingEffects(targetActor, source);
+  if (powerContext.permanent && sourceEffects.length) {
+    await removeEffects(targetActor, sourceEffects);
+    await createCard({
+      casterActor: caster,
+      targetActor,
+      source,
+      outcome: "Effet désactivé",
+      variant: "success",
+      rows: [{ label: "Mouvement", value: "Le déplacement normal est rétabli." }],
+      message: `${source.name} ne maintient plus la lévitation.`
+    });
+    console.log(`${TAG}[TOGGLE_OFF]`, { caster: caster.name, target: targetActor.name, source: source.name });
+    return true;
+  }
+
+  if (!selfCast) {
+    const saveResult = await askSavingThrow(targetActor.name);
+    if (!saveResult) return false;
+    if (saveResult === "saved") {
+      await createCard({
+        casterActor: caster,
+        targetActor,
+        source,
+        outcome: "Jet de protection réussi",
+        variant: "failure",
+        rows: [{ label: "Effet", value: "Aucune lévitation n’est appliquée." }],
+        message: `${targetActor.name} résiste à la lévitation.`
+      });
+      console.log(`${TAG}[SAVED]`, { caster: caster.name, target: targetActor.name });
+      return true;
+    }
+  }
+
+  const capacityKg = SPELL.capacityKgPerLevel * level;
+  const bodyKg = bodyWeightKg(targetActor);
+  const carriedKg = carriedWeightKg(targetActor, targetToken);
+  const weightKnown = Number.isFinite(bodyKg);
+  const totalWeightKg = weightKnown ? bodyKg + carriedKg : carriedKg;
+
+  if (weightKnown && totalWeightKg > capacityKg + 0.001) {
+    await createCard({
+      casterActor: caster,
+      targetActor,
+      source,
+      outcome: "Poids trop élevé",
+      variant: "failure",
+      rows: [
+        { label: "Poids total", value: `${totalWeightKg.toFixed(1)} kg` },
+        { label: "Capacité", value: `${capacityKg} kg` },
+        { label: "Effet", value: "Aucune lévitation n’est appliquée." }
+      ],
+      message: `${targetActor.name} dépasse la masse maximale que le sort peut soulever.`
+    });
+    console.log(`${TAG}[OVERWEIGHT]`, { caster: caster.name, target: targetActor.name, capacityKg, totalWeightKg });
+    return true;
+  }
+
+  const verticalSpeed = selfCast ? SPELL.selfVerticalSpeed : SPELL.otherVerticalSpeed;
+  const durationRounds = SPELL.durationRoundsPerLevel * level;
+  await createEffect({
+    targetActor,
+    casterActor: caster,
+    casterLevel: level,
+    source,
+    verticalSpeed,
+    selfCast,
+    capacityKg,
+    totalWeightKg,
+    weightKnown,
+    durationRounds,
+    permanent: powerContext.permanent
   });
-}
 
-const choice = await add2eAskNote(ADD2E_SORT_CONFIG);
-if (!choice) return false;
+  await createCard({
+    casterActor: caster,
+    targetActor,
+    source,
+    outcome: "Lévitation appliquée",
+    variant: "success",
+    rows: [
+      { label: "Déplacement", value: `vertical uniquement — ${verticalSpeed} m/round` },
+      { label: "Horizontal", value: "0 m, sauf appui sur une surface" },
+      { label: "Durée", value: powerContext.permanent ? "Tant que l’effet reste actif" : `${durationRounds} rounds (${level} tour${level > 1 ? "s" : ""})` },
+      { label: "Capacité", value: `${capacityKg} kg` },
+      { label: "Poids", value: weightKnown ? `${totalWeightKg.toFixed(1)} kg, équipement compris` : `poids corporel non renseigné ; ${carriedKg.toFixed(1)} kg d’équipement comptabilisé` }
+    ],
+    message: selfCast
+      ? `${targetActor.name} contrôle sa montée et sa descente.`
+      : `${caster.name} contrôle l’altitude de ${targetActor.name}.`
+  });
 
-const level = add2eCasterLevel(actor);
-const targets = add2eGetTargets({ fallbackCaster: ADD2E_SORT_CONFIG.kind !== "damage" });
-const baseTags = [`sort:${ADD2E_SORT_CONFIG.slug}`, "classe:magicien", "liste:magicien", `niveau:${ADD2E_SORT_CONFIG.level}`, `type:${ADD2E_SORT_CONFIG.kind}`];
-
-console.log(`${ADD2E_ONUSE_TAG}[START]`, { sort: ADD2E_SORT_CONFIG.name, actor: actor?.name, level, targets: targets.map(t => t.name), mode: choice.mode });
-
-if (ADD2E_SORT_CONFIG.kind === "damage") {
-  const formula = add2eDamageFormula(ADD2E_SORT_CONFIG.dice, level);
-  const roll = await add2eEvalRoll(formula);
-  await roll.toMessage({ speaker: ChatMessage.getSpeaker({ actor, token: add2eGetCasterToken() }), flavor: ADD2E_SORT_CONFIG.name });
-  await add2eChat(ADD2E_SORT_CONFIG.name, `
-    <p>Jet indicatif : <b>${roll.total}</b> (${formula})</p>
-    ${targets.length ? `<p>Cible(s) : ${targets.map(t => `<b>${add2eHtmlEscape(t.name)}</b>`).join(", ")}</p>` : "<p>Aucune cible sélectionnée : appliquer manuellement si nécessaire.</p>"}
-  `, null, { outcome: "EFFET OFFENSIF", rule: add2eHtmlEscape(ADD2E_SORT_CONFIG.description) });
+  console.log(`${TAG}[DONE]`, {
+    version: VERSION,
+    caster: caster.name,
+    target: targetActor.name,
+    level,
+    verticalSpeed,
+    permanent: powerContext.permanent,
+    weightKnown
+  });
   return true;
-}
-
-if (["condition","protection"].includes(ADD2E_SORT_CONFIG.kind)) {
-  for (const t of targets) await add2eApplyEffect(t.actor, ADD2E_SORT_CONFIG.name, baseTags, add2eRoundCount(level));
-  await add2eChat(ADD2E_SORT_CONFIG.name, `<p>Effet actif appliqué à : ${targets.map(t => `<b>${add2eHtmlEscape(t.name)}</b>`).join(", ")}</p>`, null, { outcome: "EFFET ACTIF", rule: add2eHtmlEscape(ADD2E_SORT_CONFIG.description) });
-  return true;
-}
-
-await add2eChat(ADD2E_SORT_CONFIG.name, `
-  <p>${add2eHtmlEscape(ADD2E_SORT_CONFIG.description)}</p>
-  ${choice.note ? `<p>Note : <b>${add2eHtmlEscape(choice.note)}</b></p>` : ""}
-`, null, { outcome: ADD2E_SORT_CONFIG.name.toUpperCase(), rule: add2eHtmlEscape(ADD2E_SORT_CONFIG.description) });
-return true;
+})();
