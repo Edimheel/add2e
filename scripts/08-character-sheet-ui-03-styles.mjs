@@ -1,174 +1,18 @@
 // ============================================================
 // ADD2E — 08 Character Sheet UI — 03 styles
-// Présentation des tuiles et HUD compact.
+// Présentation des tuiles de la feuille et dialogues associés.
+// Le HUD possède désormais son unique navigation canonique dans add2e-action-hud/core.mjs.
 // ============================================================
 
 const ADD2E_CAPABILITIES_STYLE_ID = "add2e-capabilities-global-style";
-const ADD2E_HUD_CAPABILITIES_TABS_FLAG = "__ADD2E_HUD_CAPABILITIES_TABS_V6";
 const ADD2E_THIEF_DIALOG_FLAG = "__ADD2E_THIEF_DIALOG_STYLE_V4";
 const ADD2E_THIEF_DEX_SYNC_FLAG = "__ADD2E_THIEF_DEX_SYNC_V1";
-const ADD2E_CAPABILITY_ICON_ROOT = "systems/add2e/assets/icones/capacites";
 
-let add2eHudCapabilitiesTab = "classe";
-let add2eHudCapabilitiesObserver = null;
 let add2eThiefDialogObserver = null;
 const add2eThiefDexteritySyncs = new Map();
 
 function add2eHudFeatureName(feature) {
   return String(feature?._add2eHudLabel ?? feature?.name ?? feature?.label ?? feature?.title ?? feature?.nom ?? "Capacité").trim();
-}
-
-function hudRoot() {
-  return document.getElementById("add2e-action-hud");
-}
-
-function hudCapabilitiesSection() {
-  return hudRoot()?.querySelector?.('section[data-section="capacites"]') ?? null;
-}
-
-function normalizeCapabilityLabel(value) {
-  return String(value ?? "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[’']/g, "_")
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "");
-}
-
-function hudCapabilityImage(label) {
-  const key = normalizeCapabilityLabel(label);
-  const files = [
-    [/vade_retro|repousser_morts_vivants/, "vade-retro.webp"],
-    [/pickpocket|pick_pocket|vol_a_la_tire/, "pickpocket.webp"],
-    [/crochetage|serrure/, "crochetage-serrures.webp"],
-    [/piege|desamorc/, "detection-pieges.webp"],
-    [/deplacement_silencieux/, "deplacement-silencieux.webp"],
-    [/dissimulation|dans_l_ombre|cache_dans_l_ombre/, "dissimulation.webp"],
-    [/acuite_auditive|ecoute|bruit/, "ecoute.webp"],
-    [/escalade|grimper/, "escalade.webp"],
-    [/lecture_des_langues|lire_les_langues/, "lecture-langues.webp"],
-    [/attaque_dans_le_dos|frappe_dans_le_dos|backstab/, "frappe-dans-le-dos.webp"]
-  ];
-  const entry = files.find(([pattern]) => pattern.test(key));
-  return entry ? `${ADD2E_CAPABILITY_ICON_ROOT}/${entry[1]}` : "";
-}
-
-function setHudCapabilitiesTab(section, value) {
-  const racialPanel = section?.querySelector?.(':scope > .a2e-hud-racial-capabilities');
-  const hasRacial = Boolean(racialPanel?.querySelector?.('.a2e-hud-racial-row'));
-  const next = value === "racial" && hasRacial ? "racial" : "classe";
-  add2eHudCapabilitiesTab = next;
-  if (!section) return;
-
-  section.dataset.add2eCapabilityTab = next;
-  for (const button of section.querySelectorAll(':scope > .a2e-hud-capability-subtabs [data-add2e-capability-tab]')) {
-    const active = button.dataset.add2eCapabilityTab === next;
-    button.classList.toggle("active", active);
-    button.disabled = button.dataset.add2eCapabilityTab === "racial" && !hasRacial;
-  }
-}
-
-function decorateHudClassFeatureControls(section) {
-  for (const button of section?.querySelectorAll?.('button.act[data-action="use-feature"]') ?? []) {
-    const row = button.closest?.(".row.compact");
-    if (!row) continue;
-    if (row.firstElementChild !== button) row.prepend(button);
-
-    const label = String(row.querySelector?.(".title")?.textContent ?? "").trim();
-    const image = hudCapabilityImage(label);
-    button.setAttribute("aria-label", button.title || `Utiliser ${label || "la capacité"}`);
-
-    if (image) {
-      if (button.dataset.add2eCapabilityImage !== image) {
-        button.dataset.add2eCapabilityImage = image;
-        button.innerHTML = `<img src="${image}" alt="" aria-hidden="true">`;
-      }
-      button.classList.add("a2e-hud-capability-image");
-      continue;
-    }
-
-    button.classList.remove("a2e-hud-capability-image");
-    if (button.dataset.add2eIconControl !== "true") {
-      button.dataset.add2eIconControl = "true";
-      button.innerHTML = '<i class="fas fa-bolt" aria-hidden="true"></i>';
-    }
-  }
-}
-
-function setupHudCapabilitiesTabs() {
-  const section = hudCapabilitiesSection();
-  if (!section) return;
-
-  let tabs = section.querySelector(':scope > .a2e-hud-capability-subtabs');
-  if (!tabs) {
-    tabs = document.createElement("div");
-    tabs.className = "a2e-hud-capability-subtabs";
-    tabs.innerHTML = '<button type="button" data-add2e-capability-tab="classe">Classe</button><button type="button" data-add2e-capability-tab="racial">Racial</button>';
-  }
-  if (section.firstElementChild !== tabs) section.prepend(tabs);
-
-  const racialPanel = section.querySelector(':scope > .a2e-hud-racial-capabilities');
-  for (const child of Array.from(section.children)) {
-    if (child === tabs || child === racialPanel) continue;
-    child.dataset.add2eCapabilityGroup = "classe";
-  }
-  if (racialPanel) racialPanel.dataset.add2eCapabilityGroup = "racial";
-
-  decorateHudClassFeatureControls(section);
-  setHudCapabilitiesTab(section, add2eHudCapabilitiesTab);
-}
-
-function scheduleHudCapabilitiesTabs() {
-  const raf = globalThis.requestAnimationFrame ?? (callback => window.setTimeout(callback, 16));
-  raf(setupHudCapabilitiesTabs);
-}
-
-function restoreHudCapabilitiesTab() {
-  const root = hudRoot();
-  if (!root) return;
-  const nav = root.querySelector?.('.a2e-hud-tab[data-tab="capacites"]');
-  if (nav && !nav.classList.contains("active")) nav.click();
-  const section = hudCapabilitiesSection();
-  if (section) setHudCapabilitiesTab(section, add2eHudCapabilitiesTab);
-}
-
-function installHudCapabilitiesTabs() {
-  if (globalThis[ADD2E_HUD_CAPABILITIES_TABS_FLAG]) return;
-  globalThis[ADD2E_HUD_CAPABILITIES_TABS_FLAG] = true;
-  globalThis.add2eFeatureName ??= add2eHudFeatureName;
-
-  document.addEventListener("click", event => {
-    const subtab = event.target?.closest?.('[data-add2e-capability-tab]');
-    if (subtab && !subtab.disabled) {
-      const section = subtab.closest?.('section[data-section="capacites"]');
-      if (!section) return;
-      event.preventDefault();
-      event.stopPropagation();
-      event.stopImmediatePropagation?.();
-      setHudCapabilitiesTab(section, subtab.dataset.add2eCapabilityTab);
-      return;
-    }
-
-    const featureButton = event.target?.closest?.('#add2e-action-hud button.act[data-action="use-feature"]');
-    if (!featureButton) return;
-    const section = featureButton.closest?.('section[data-section="capacites"]');
-    if (!section) return;
-    const retainedSubtab = add2eHudCapabilitiesTab;
-    for (const delay of [0, 120]) {
-      window.setTimeout(() => {
-        add2eHudCapabilitiesTab = retainedSubtab;
-        restoreHudCapabilitiesTab();
-      }, delay);
-    }
-  }, true);
-
-  add2eHudCapabilitiesObserver = new MutationObserver(mutations => {
-    const touched = mutations.some(mutation => mutation.target?.closest?.("#add2e-action-hud") || [...(mutation.addedNodes ?? [])].some(node => node?.id === "add2e-action-hud" || node?.querySelector?.("#add2e-action-hud")));
-    if (touched) scheduleHudCapabilitiesTabs();
-  });
-  add2eHudCapabilitiesObserver.observe(document.body, { childList: true, subtree: true });
-  scheduleHudCapabilitiesTabs();
 }
 
 function thiefDialogWindow(form) {
@@ -375,26 +219,6 @@ function injectGlobalCapabilityStyles() {
     .add2e-character-v2-app .add2e-character-v3 .a2e-feature-card-img,
     .add2e-character-v3 .a2e-feature-card-img { display:block !important; width:100% !important; height:100% !important; object-fit:cover !important; border:0 !important; }
 
-    /* HUD : mêmes illustrations pour les capacités correspondantes. */
-    #add2e-action-hud section[data-section="capacites"] > .a2e-hud-capability-subtabs { display:flex; gap:6px; padding-bottom:4px; border-bottom:1px solid rgba(214,176,90,.28); }
-    #add2e-action-hud .a2e-hud-capability-subtabs button { min-height:30px; padding:5px 11px; border:1px solid rgba(214,176,90,.55); border-radius:999px; background:rgba(214,176,90,.12); color:#ffe4a1; font-weight:900; font-size:.82em; cursor:pointer; }
-    #add2e-action-hud .a2e-hud-capability-subtabs button.active { background:linear-gradient(180deg,#f0c66d,#c78d2e); color:#211307; }
-    #add2e-action-hud .a2e-hud-capability-subtabs button:disabled { opacity:.45; cursor:default; }
-    #add2e-action-hud section[data-section="capacites"][data-add2e-capability-tab="classe"] > .a2e-hud-racial-capabilities { display:none !important; }
-    #add2e-action-hud section[data-section="capacites"][data-add2e-capability-tab="racial"] > [data-add2e-capability-group="classe"] { display:none !important; }
-    #add2e-action-hud section[data-section="capacites"][data-add2e-capability-tab="racial"] > .a2e-hud-racial-capabilities { display:grid !important; gap:7px; }
-    #add2e-action-hud section[data-section="capacites"] > .a2e-hud-racial-capabilities .a2e-hud-racial-title { display:none !important; }
-    #add2e-action-hud section[data-section="capacites"] .row.compact:has(> button.act[data-action="use-feature"]),
-    #add2e-action-hud section[data-section="capacites"] .a2e-hud-racial-row { grid-template-columns:30px minmax(0,1fr) !important; min-height:34px !important; padding:5px !important; }
-    #add2e-action-hud section[data-section="capacites"] .row.compact > button.act[data-action="use-feature"],
-    #add2e-action-hud section[data-section="capacites"] .a2e-hud-racial-row > .a2e-hud-racial-icon { grid-column:1 !important; grid-row:1 !important; width:28px !important; min-width:28px !important; height:28px !important; min-height:28px !important; padding:0 !important; border:1px solid rgba(101,184,255,.82) !important; border-radius:7px !important; background:rgba(43,112,177,.24) !important; color:#8fd2ff !important; box-shadow:none !important; overflow:hidden !important; }
-    #add2e-action-hud section[data-section="capacites"] .row.compact > button.a2e-hud-capability-image { border-color:rgba(214,176,90,.85) !important; background:#211307 !important; }
-    #add2e-action-hud section[data-section="capacites"] .row.compact > button.a2e-hud-capability-image img { display:block !important; width:24px !important; height:24px !important; object-fit:cover !important; border:0 !important; border-radius:5px !important; pointer-events:none !important; }
-    #add2e-action-hud section[data-section="capacites"] .row.compact > div,
-    #add2e-action-hud section[data-section="capacites"] .a2e-hud-racial-row > div { grid-column:2 !important; grid-row:1 !important; min-width:0; }
-    #add2e-action-hud section[data-section="capacites"] .row.compact > button.act[data-action="use-feature"] i { font-size:13px; pointer-events:none; }
-    #add2e-action-hud section[data-section="capacites"] .a2e-hud-racial-row .a2e-hud-racial-description { display:none !important; }
-
     /* DialogV2 des compétences de voleur. */
     .application.add2e-thief-dialog-window,.window-app.add2e-thief-dialog-window,.app.add2e-thief-dialog-window,.dialog.add2e-thief-dialog-window { border:2px solid #c99a36 !important; border-radius:16px !important; overflow:hidden !important; box-shadow:0 10px 26px rgba(0,0,0,.22) !important; background:linear-gradient(180deg,#fffaf0,#f3e6c8) !important; }
     .application.add2e-thief-dialog-window .window-header,.window-app.add2e-thief-dialog-window .window-header,.app.add2e-thief-dialog-window .window-header,.dialog.add2e-thief-dialog-window .window-header { background:linear-gradient(90deg,#6f4b12,#b88924) !important; color:#fff !important; border-bottom:2px solid #c99a36 !important; }
@@ -409,17 +233,15 @@ function injectGlobalCapabilityStyles() {
   document.head.appendChild(style);
 }
 
-if (game?.ready) {
+function installCharacterCapabilityPresentation() {
+  globalThis.add2eFeatureName ??= add2eHudFeatureName;
   injectGlobalCapabilityStyles();
-  installHudCapabilitiesTabs();
   installThiefDialogStyle();
-} else {
-  Hooks.once("ready", () => {
-    injectGlobalCapabilityStyles();
-    installHudCapabilitiesTabs();
-    installThiefDialogStyle();
-  });
+  document.querySelectorAll?.("#add2e-action-hud .a2e-hud-capability-subtabs")?.forEach?.(element => element.remove());
 }
+
+if (game?.ready) installCharacterCapabilityPresentation();
+else Hooks.once("ready", installCharacterCapabilityPresentation);
 
 export function injectCharacterUiStyles(sheetRoot) {
   if (!sheetRoot) return;
