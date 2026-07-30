@@ -97,7 +97,8 @@ function scheduleInitiativeRoundDataCleanup(combat, reason, delay = 0, { force =
   if (!combat) return;
   clearTimeout(roundDataCleanupTimer);
   roundDataCleanupTimer = setTimeout(() => {
-    cleanupInitiativeRoundData(combat, { reason, force }).catch(error => console.error("[ADD2E][INIT][ROUND_CLEANUP][ERROR]", error));
+    cleanupInitiativeRoundData(combat, { reason, force })
+      .catch(error => console.error("[ADD2E][INIT][ROUND_CLEANUP][ERROR]", error));
   }, Math.max(0, Number(delay) || 0));
 }
 
@@ -118,14 +119,35 @@ function scheduleCanonicalTurnEvent(combat, reason, delay = 0) {
 function validationScopeIds(combat, scope) {
   const combatants = Array.from(combat?.combatants ?? []);
   if (scope === "all") return combatants.map(entry => entry.id).filter(Boolean);
-  if (scope === "monsters") return combatants.filter(entry => String(entry?.actor?.type ?? "").toLowerCase() === "monster").map(entry => entry.id).filter(Boolean);
-  if (scope === "missing") return combatants.filter(entry => validationScore(entry?.initiative) === null).map(entry => entry.id).filter(Boolean);
+  if (scope === "monsters") {
+    return combatants
+      .filter(entry => String(entry?.actor?.type ?? "").toLowerCase() === "monster")
+      .map(entry => entry.id)
+      .filter(Boolean);
+  }
+  if (scope === "missing") {
+    return combatants
+      .filter(entry => validationScore(entry?.initiative) === null)
+      .map(entry => entry.id)
+      .filter(Boolean);
+  }
   return [];
 }
 
 function validationLegacyActorFields(actor) {
   const system = actor?.system ?? {};
-  return ["initiative", "dexterite_initiative"].filter(key => Object.prototype.hasOwnProperty.call(system, key));
+  return ["initiative", "dexterite_initiative"]
+    .filter(key => Object.prototype.hasOwnProperty.call(system, key));
+}
+
+function validationMessageMode() {
+  const generation = Number(game.release?.generation ?? String(game.version ?? "").split(".")[0]) || 13;
+  const settingKey = generation >= 14 ? "messageMode" : "rollMode";
+  try {
+    return game.settings?.get?.("core", settingKey) ?? "publicroll";
+  } catch (_error) {
+    return "publicroll";
+  }
 }
 
 function mockCombatant({ id, initiative = 4, sort = 0, action = null, situation = null }) {
@@ -133,6 +155,7 @@ function mockCombatant({ id, initiative = 4, sort = 0, action = null, situation 
   if (action) add2e.initiativeAction = { round: 1, ...action };
   if (situation) add2e.initiativeSituation = { round: 1, ...situation };
   return {
+    documentName: "Combatant",
     id,
     name: id,
     initiative,
@@ -150,7 +173,7 @@ function scenarioResult(id, label, expected, actual) {
 function runTieScenario(service, definition) {
   try {
     const combatants = definition.combatants.map(mockCombatant);
-    const combat = { started: true, round: definition.round ?? 1, combatants };
+    const combat = { documentName: "Combat", started: true, round: definition.round ?? 1, combatants };
     const result = service.tieResolution(combatants[0], combat);
     return scenarioResult(definition.id, definition.label, definition.expected, {
       resolvedByAction: result?.resolvedByAction === true,
@@ -207,7 +230,7 @@ function runInitiativeScenarioValidation(service) {
       initiative: 1,
       situation: { modifier: -2, surpriseSegments: 4, applyDexterityReaction: false }
     });
-    const combat = { started: true, round: 1, combatants: [subject] };
+    const combat = { documentName: "Combat", started: true, round: 1, combatants: [subject] };
     const situation = service.situation(subject, combat);
     const context = service.actionContext(subject, null, combat);
     scenarios.push(scenarioResult(
@@ -231,7 +254,7 @@ function runInitiativeScenarioValidation(service) {
       action: { round: 1, kind: "weapon", label: "Ancienne arme", segment: 1 },
       situation: { round: 1, modifier: 3, surpriseSegments: 2 }
     });
-    const combat = { started: true, round: 2, combatants: [subject] };
+    const combat = { documentName: "Combat", started: true, round: 2, combatants: [subject] };
     const situation = service.situation(subject, combat);
     scenarios.push(scenarioResult(
       "expired-round-data",
@@ -263,7 +286,9 @@ export async function add2eValidateInitiativeLot2F({ combat = game.combat, rollS
   if (typeof engine?.resolve !== "function") errors.push("Le moteur canonique de modificateurs est indisponible.");
 
   const scenarios = runInitiativeScenarioValidation(service);
-  scenarios.filter(scenario => !scenario.ok).forEach(scenario => errors.push(`Scénario invalide : ${scenario.label}${scenario.error ? ` — ${scenario.error}` : ""}.`));
+  scenarios
+    .filter(scenario => !scenario.ok)
+    .forEach(scenario => errors.push(`Scénario invalide : ${scenario.label}${scenario.error ? ` — ${scenario.error}` : ""}.`));
 
   const formula = String(CONFIG.Combat?.initiative?.formula ?? "");
   const decimals = Number(CONFIG.Combat?.initiative?.decimals);
@@ -272,15 +297,18 @@ export async function add2eValidateInitiativeLot2F({ combat = game.combat, rollS
 
   const normalizedScope = String(rollScope ?? "").trim().toLowerCase();
   if (normalizedScope) {
-    if (!combat?.combatants || typeof service?.roll !== "function") errors.push("Le jet demandé ne peut pas être exécuté sans combat et service canonique.");
-    else if (!game.user?.isGM && ["all", "monsters"].includes(normalizedScope)) errors.push("Seul le MJ peut lancer collectivement l'initiative de tous ou des monstres.");
-    else if (!["all", "monsters", "missing"].includes(normalizedScope)) errors.push(`Portée de jet inconnue : ${normalizedScope}.`);
-    else {
+    if (!combat?.combatants || typeof service?.roll !== "function") {
+      errors.push("Le jet demandé ne peut pas être exécuté sans combat et service canonique.");
+    } else if (!game.user?.isGM && ["all", "monsters"].includes(normalizedScope)) {
+      errors.push("Seul le MJ peut lancer collectivement l'initiative de tous ou des monstres.");
+    } else if (!["all", "monsters", "missing"].includes(normalizedScope)) {
+      errors.push(`Portée de jet inconnue : ${normalizedScope}.`);
+    } else {
       const ids = validationScopeIds(combat, normalizedScope);
       if (!ids.length) warnings.push(`Aucun combattant ne correspond au jet « ${normalizedScope} ».`);
       else await service.roll(combat, ids, {
         updateTurn: false,
-        messageOptions: { rollMode: game.settings?.get?.("core", "rollMode") ?? "publicroll" }
+        messageMode: validationMessageMode()
       });
     }
   }
@@ -332,7 +360,9 @@ export async function add2eValidateInitiativeLot2F({ combat = game.combat, rollS
       surpriseRemaining: Number(actionContext?.situation?.remainingSurpriseSegments ?? 0) || 0,
       dexterityReaction: Number(actionContext?.situation?.dexterityReaction ?? 0) || 0,
       modifierTotal: Number(resolution?.total ?? 0) || 0,
-      appliedModifiers: Array.from(resolution?.applied ?? []).map(entry => entry?.modifier?.source?.name || entry?.modifier?.source?.id || entry?.modifier?.id).filter(Boolean),
+      appliedModifiers: Array.from(resolution?.applied ?? [])
+        .map(entry => entry?.modifier?.source?.name || entry?.modifier?.source?.id || entry?.modifier?.id)
+        .filter(Boolean),
       tied: tie?.tied === true,
       tieResolvedByAction: tie?.resolvedByAction === true
     });
@@ -341,8 +371,11 @@ export async function add2eValidateInitiativeLot2F({ combat = game.combat, rollS
   for (let index = 1; index < rows.length; index += 1) {
     const previous = rows[index - 1];
     const current = rows[index];
-    if (previous.initiative === null && current.initiative !== null) errors.push(`${current.name} possède une initiative mais apparaît après un combattant sans initiative.`);
-    else if (previous.initiative !== null && current.initiative !== null && previous.initiative < current.initiative) errors.push(`Ordre décroissant invalide entre ${previous.name} (${previous.initiative}) et ${current.name} (${current.initiative}).`);
+    if (previous.initiative === null && current.initiative !== null) {
+      errors.push(`${current.name} possède une initiative mais apparaît après un combattant sans initiative.`);
+    } else if (previous.initiative !== null && current.initiative !== null && previous.initiative < current.initiative) {
+      errors.push(`Ordre décroissant invalide entre ${previous.name} (${previous.initiative}) et ${current.name} (${current.initiative}).`);
+    }
     if (previous.initiative !== null && previous.initiative === current.initiative && previous.tieResolvedByAction
       && Number.isFinite(previous.segment) && Number.isFinite(current.segment) && previous.segment > current.segment) {
       errors.push(`Départage d'action invalide entre ${previous.name} (segment ${previous.segment}) et ${current.name} (segment ${current.segment}).`);
@@ -350,7 +383,9 @@ export async function add2eValidateInitiativeLot2F({ combat = game.combat, rollS
   }
 
   const multipleAttackPhase = combat?.flags?.add2e?.[MULTIPLE_ATTACK_PHASE_FLAG] ?? null;
-  if (multipleAttackPhase && !multipleAttackPhaseIsCurrent(combat)) errors.push(`Phase d'attaques multiples périmée : round ${scopedRound(multipleAttackPhase)} pour le round ${Number(combat?.round ?? 0)}.`);
+  if (multipleAttackPhase && !multipleAttackPhaseIsCurrent(combat)) {
+    errors.push(`Phase d'attaques multiples périmée : round ${scopedRound(multipleAttackPhase)} pour le round ${Number(combat?.round ?? 0)}.`);
+  }
   if (combat?.started && order.length) {
     const active = service?.current?.(combat) ?? currentCombatant(combat);
     const expected = order[Math.max(0, Math.min(order.length - 1, Number(combat.turn) || 0))] ?? null;
@@ -377,8 +412,26 @@ export async function add2eValidateInitiativeLot2F({ combat = game.combat, rollS
     const method = report.ok ? "info" : "error";
     console.groupCollapsed?.(`[ADD2E][INIT][LOT_2F_VALIDATION] ${report.ok ? "OK" : "ERREURS"}`);
     console[method]?.("Rapport", report);
-    console.table?.(scenarios.map(scenario => ({ scenario: scenario.label, ok: scenario.ok, attendu: JSON.stringify(scenario.expected ?? null), obtenu: JSON.stringify(scenario.actual ?? null), erreur: scenario.error ?? "" })));
-    console.table?.(rows.map(row => ({ ordre: row.index, combattant: row.name, type: row.actorType, initiative: row.initiative, action: row.action, segment: row.segment, situation: row.situationModifier, surprise: `${row.surprise}→${row.surpriseRemaining}`, reactionDEX: row.dexterityReaction, modificateurs: row.appliedModifiers.join(" ; "), saute: row.skipReason })));
+    console.table?.(scenarios.map(scenario => ({
+      scenario: scenario.label,
+      ok: scenario.ok,
+      attendu: JSON.stringify(scenario.expected ?? null),
+      obtenu: JSON.stringify(scenario.actual ?? null),
+      erreur: scenario.error ?? ""
+    })));
+    console.table?.(rows.map(row => ({
+      ordre: row.index,
+      combattant: row.name,
+      type: row.actorType,
+      initiative: row.initiative,
+      action: row.action,
+      segment: row.segment,
+      situation: row.situationModifier,
+      surprise: `${row.surprise}→${row.surpriseRemaining}`,
+      reactionDEX: row.dexterityReaction,
+      modificateurs: row.appliedModifiers.join(" ; "),
+      saute: row.skipReason
+    })));
     if (errors.length) console.error("Erreurs", errors);
     if (warnings.length) console.warn("Avertissements", warnings);
     console.groupEnd?.();
@@ -397,7 +450,14 @@ export function add2eInitiativeDebug(label = "debug", combat = game.combat) {
     turn: combat?.turn ?? null,
     current: combat?.current ?? null,
     active: currentCombatant(combat)?.name ?? null,
-    turns: turns.map((combatant, index) => ({ index, id: combatant.id, name: combatant.name, initiative: combatant.initiative, sort: combatant.sort, tokenId: combatant.tokenId }))
+    turns: turns.map((combatant, index) => ({
+      index,
+      id: combatant.id,
+      name: combatant.name,
+      initiative: combatant.initiative,
+      sort: combatant.sort,
+      tokenId: combatant.tokenId
+    }))
   };
 }
 
