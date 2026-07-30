@@ -9,7 +9,7 @@ import { installEffectsEngineDamage } from "./effects-engine/30-resistance-damag
 import { installEffectsEngineMonk } from "./effects-engine/40-monk.mjs";
 import { installEffectsEngineAnalysis } from "./effects-engine/50-analysis.mjs";
 
-globalThis.ADD2E_EFFECTS_ENGINE_VERSION = "2026-07-23-canonical-modifiers-public-normalization-v5";
+globalThis.ADD2E_EFFECTS_ENGINE_VERSION = "2026-07-30-canonical-transformation-movement-v6";
 
 class Add2eEffectsEngine {}
 
@@ -359,13 +359,28 @@ function add2eTransformationClone(value) {
 }
 
 function add2eTransformationNumber(value) {
-  const number = Number(value);
+  if (value === undefined || value === null || value === "") return null;
+  if (value && typeof value === "object") {
+    for (const key of ["value", "total", "current", "actuel", "base", "speed", "movement", "vitesse"]) {
+      const nested = add2eTransformationNumber(value?.[key]);
+      if (nested !== null) return nested;
+    }
+    return null;
+  }
+  const match = String(value).replace(/,/g, ".").match(/[+\-]?\d+(?:\.\d+)?/);
+  const number = match ? Number(match[0]) : NaN;
   return Number.isFinite(number) ? number : null;
 }
 
 function add2eTransformationGetProperty(object, path) {
   if (foundry?.utils?.getProperty) return foundry.utils.getProperty(object, path);
   return String(path).split(".").reduce((current, key) => current?.[key], object);
+}
+
+function add2eTransformationKey(value) {
+  return String(value ?? "")
+    .trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[’']/g, "").replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "");
 }
 
 function add2eTransformationMeta(document) {
@@ -397,6 +412,10 @@ function add2eGetCapabilityTransformationCombatProfile(actor, options = {}) {
   if (!effect) return null;
   const meta = add2eTransformationMeta(effect) ?? {};
   const combat = meta.combat && typeof meta.combat === "object" ? meta.combat : {};
+  const movementProfile = add2eTransformationClone(combat.movement ?? meta.movement ?? null);
+  const movement = movementProfile && typeof movementProfile === "object"
+    ? String(movementProfile.ground ?? movementProfile.sol ?? movementProfile.value ?? movementProfile.speed ?? movementProfile.vitesse ?? "").trim()
+    : String(movementProfile ?? "").trim();
   return {
     effect,
     effectId: effect.id ?? null,
@@ -406,7 +425,10 @@ function add2eGetCapabilityTransformationCombatProfile(actor, options = {}) {
     label: String(meta.label ?? effect.name ?? "Transformation"),
     armorClass: add2eTransformationNumber(combat.armorClass ?? combat.ca ?? combat.ac ?? meta.armorClass ?? meta.ca ?? meta.ac),
     thac0: add2eTransformationNumber(combat.thac0 ?? combat.thaco ?? meta.thac0 ?? meta.thaco),
-    movement: String(combat.movement ?? meta.movement ?? "").trim(),
+    movement,
+    movementProfile,
+    movementMode: String(combat.movementMode ?? combat.modeDeplacement ?? meta.movementMode ?? meta.modeDeplacement ?? ""),
+    size: combat.size ?? combat.taille ?? meta.size ?? meta.taille ?? null,
     raw: meta
   };
 }
@@ -439,9 +461,118 @@ function add2eTransformationMergeTags(existing, additions) {
   return result;
 }
 
+const ADD2E_TRANSFORMATION_MOVEMENT_TARGETS = Object.freeze({
+  ground: "ground", sol: "ground", terrestre: "ground", marche: "ground",
+  flight: "flight", fly: "flight", vol: "flight", aerien: "flight", aerienne: "flight",
+  ascent: "ascent", montee: "ascent", monter: "ascent",
+  descent: "descent", descente: "descent", descendre: "descent",
+  vertical: "vertical", levitation: "vertical",
+  underwater: "underwater", sous_eau: "underwater", aquatique: "underwater",
+  swim: "swim", nage: "swim", nager: "swim"
+});
+
+function add2eTransformationMovementTarget(value, fallback = "ground") {
+  return ADD2E_TRANSFORMATION_MOVEMENT_TARGETS[add2eTransformationKey(value)] ?? fallback;
+}
+
+function add2eTransformationMovementEntries(profile = {}) {
+  const raw = profile.movement ?? profile.vitesse ?? profile.speed ?? null;
+  const explicitTarget = add2eTransformationMovementTarget(
+    profile.movementTarget ?? profile.movementMode ?? profile.modeDeplacement ?? profile.travelMode ?? profile.mode,
+    "ground"
+  );
+  const entries = [];
+  const push = (target, value) => {
+    const speed = add2eTransformationNumber(value);
+    if (speed === null || speed < 0) return;
+    entries.push({ target: add2eTransformationMovementTarget(target, explicitTarget), value: speed });
+  };
+
+  if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+    for (const [key, value] of Object.entries(raw)) {
+      if (["mode", "target", "type", "label", "unit", "unite"].includes(add2eTransformationKey(key))) continue;
+      const target = ADD2E_TRANSFORMATION_MOVEMENT_TARGETS[add2eTransformationKey(key)];
+      if (target) push(target, value);
+    }
+    if (!entries.length) push(raw.target ?? raw.mode ?? explicitTarget, raw.value ?? raw.speed ?? raw.vitesse ?? raw.movement);
+  } else push(explicitTarget, raw);
+
+  const unique = new Map();
+  for (const entry of entries) unique.set(entry.target, entry);
+  return [...unique.values()];
+}
+
+function add2eTransformationMovementModifier(effect, meta, entry, profile = {}) {
+  const sourceKey = String(meta?.sourceKey ?? effect?.id ?? "transformation");
+  const formKey = String(meta?.formKey ?? profile.formKey ?? profile.form ?? "");
+  const size = profile.size ?? profile.taille ?? meta?.size ?? meta?.taille ?? null;
+  return {
+    id: `transformation:${sourceKey}:movement:${entry.target}`,
+    domain: "movement",
+    target: entry.target,
+    operation: "set",
+    value: entry.value,
+    priority: Math.max(1, Number(profile.movementPriority ?? profile.priority) || 260),
+    stacking: { mode: "exclusive", group: `transformation-movement:${entry.target}` },
+    conditions: { active: true },
+    metadata: {
+      label: String(profile.label ?? meta?.label ?? effect?.name ?? "Transformation"),
+      producer: "capability-transformation",
+      movementMode: entry.target,
+      modes: [entry.target],
+      transformation: formKey || null,
+      size,
+      ignoresEncumbrance: profile.ignoreEncumbrance === true || profile.ignoresEncumbrance === true
+    }
+  };
+}
+
+async function add2eApplyCapabilityTransformationMovementProfile(actor, profile = {}) {
+  const sourceKey = String(profile.sourceKey ?? profile.key ?? "").trim();
+  const explicitEffect = profile.effect?.document ?? profile.effect ?? null;
+  const effect = explicitEffect?.parent === actor
+    ? explicitEffect
+    : add2eGetActiveCapabilityTransformation(actor, sourceKey ? { sourceKey } : {});
+  const entries = add2eTransformationMovementEntries(profile);
+  if (!effect?.update) {
+    if (!entries.length) return { applied: false, effect: null, modifiers: [] };
+    throw new Error("La transformation active est introuvable pour matérialiser son mouvement canonique.");
+  }
+  const meta = add2eTransformationClone(add2eTransformationMeta(effect) ?? {});
+  const existing = add2eTransformationArray(effect.flags?.add2e?.modifiers)
+    .filter(modifier => !(
+      add2eTransformationKey(modifier?.domain) === "movement"
+      && add2eTransformationKey(modifier?.metadata?.producer) === "capability_transformation"
+    ));
+  const modifiers = entries.map(entry => add2eTransformationMovementModifier(effect, meta, entry, profile));
+  const oldMovementTags = new Set([
+    "mouvement:ground", "mouvement:flight", "mouvement:ascent", "mouvement:descent",
+    "mouvement:vertical", "mouvement:underwater", "mouvement:swim"
+  ]);
+  const retainedTags = add2eTransformationTagList(effect.flags?.add2e?.tags)
+    .filter(tag => !oldMovementTags.has(add2eTransformationKey(tag).replace(/^mouvement_/, "mouvement:")));
+  const tags = add2eTransformationMergeTags(retainedTags, [
+    "transformation",
+    meta.formKey ? `forme:${meta.formKey}` : "",
+    profile.size ?? profile.taille ?? meta.size ?? meta.taille ? `taille:${profile.size ?? profile.taille ?? meta.size ?? meta.taille}` : "",
+    ...entries.map(entry => `mouvement:${entry.target}`)
+  ].filter(Boolean));
+  meta.movement = add2eTransformationClone(profile.movement ?? profile.vitesse ?? profile.speed ?? null);
+  meta.movementModes = entries.map(entry => entry.target);
+  if (profile.size ?? profile.taille) meta.size = profile.size ?? profile.taille;
+  await effect.update({
+    "flags.add2e.capabilityTransformation": meta,
+    "flags.add2e.modifiers": [...existing, ...modifiers],
+    "flags.add2e.tags": tags,
+    "flags.add2e.effectTags": tags
+  }, { add2eInternal: true, add2eReason: "capability-transformation-canonical-movement", render: false });
+  await globalThis.add2eRecalcMoveXp?.(actor, { mode: "movement" });
+  return { applied: modifiers.length > 0, effect, modifiers };
+}
+
 function add2eCaptureCapabilityTransformationCombatState(actor) {
   const actorSystem = {};
-  for (const path of ["system.ca", "system.ca_optimale", "system.ca_naturel", "system.ca_total", "system.thac0", "system.vitesse_deplacement"]) {
+  for (const path of ["system.ca", "system.ca_optimale", "system.ca_naturel", "system.ca_total", "system.thac0"]) {
     actorSystem[path] = add2eTransformationClone(add2eTransformationGetProperty(actor, path));
   }
   const classes = add2eTransformationClassItems(actor).map(item => ({
@@ -456,7 +587,6 @@ async function add2eApplyCapabilityTransformationCombatProfile(actor, profile = 
   if (!actor?.update) return false;
   const armorClass = add2eTransformationNumber(profile.armorClass ?? profile.ca ?? profile.ac);
   const thac0 = add2eTransformationNumber(profile.thac0 ?? profile.thaco);
-  const movement = String(profile.movement ?? "").trim();
   const actorUpdate = {};
   if (armorClass !== null) {
     actorUpdate["system.ca"] = armorClass;
@@ -465,8 +595,9 @@ async function add2eApplyCapabilityTransformationCombatProfile(actor, profile = 
     actorUpdate["system.ca_total"] = armorClass;
   }
   if (thac0 !== null) actorUpdate["system.thac0"] = thac0;
-  if (movement) actorUpdate["system.vitesse_deplacement"] = movement;
   if (Object.keys(actorUpdate).length) await actor.update(actorUpdate, { add2eInternal: true, add2eReason: "capability-transformation-combat-profile" });
+
+  await add2eApplyCapabilityTransformationMovementProfile(actor, profile);
 
   if (thac0 === null || !actor.updateEmbeddedDocuments) return true;
   const updates = [];
@@ -486,6 +617,9 @@ async function add2eApplyCapabilityTransformationCombatProfile(actor, profile = 
 async function add2eRestoreCapabilityTransformationCombatState(actor, snapshot = {}) {
   if (!actor?.update) return false;
   const actorUpdate = snapshot?.actorSystem && typeof snapshot.actorSystem === "object" ? snapshot.actorSystem : {};
+  delete actorUpdate["system.vitesse_deplacement"];
+  delete actorUpdate["system.movement"];
+  delete actorUpdate["system.mouvement"];
   if (Object.keys(actorUpdate).length) await actor.update(actorUpdate, { add2eInternal: true, add2eReason: "capability-transformation-combat-restore" });
   const updates = (Array.isArray(snapshot?.classes) ? snapshot.classes : []).filter(entry => entry?.id).map(entry => ({
     _id: entry.id,
@@ -493,6 +627,7 @@ async function add2eRestoreCapabilityTransformationCombatState(actor, snapshot =
     "system.thac0": add2eTransformationClone(entry.thac0)
   }));
   if (updates.length && actor.updateEmbeddedDocuments) await actor.updateEmbeddedDocuments("Item", updates, { add2eInternal: true, add2eReason: "capability-transformation-combat-restore" });
+  await globalThis.add2eRecalcMoveXp?.(actor, { mode: "movement" });
   return true;
 }
 
@@ -581,10 +716,11 @@ installSingleReadActionRules(Add2eEffectsEngine);
 installGateOnUseOutcomeContract(Add2eEffectsEngine);
 
 globalThis.Add2eEffectsEngine = Add2eEffectsEngine;
-globalThis.ADD2E_CAPABILITY_TRANSFORMATIONS_VERSION = "2026-07-07-capability-transformations-v3";
+globalThis.ADD2E_CAPABILITY_TRANSFORMATIONS_VERSION = "2026-07-30-canonical-transformation-movement-v4";
 globalThis.add2eGetActiveCapabilityTransformation = add2eGetActiveCapabilityTransformation;
 globalThis.add2eGetCapabilityTransformationCombatProfile = add2eGetCapabilityTransformationCombatProfile;
 globalThis.add2eCaptureCapabilityTransformationCombatState = add2eCaptureCapabilityTransformationCombatState;
+globalThis.add2eApplyCapabilityTransformationMovementProfile = add2eApplyCapabilityTransformationMovementProfile;
 globalThis.add2eApplyCapabilityTransformationCombatProfile = add2eApplyCapabilityTransformationCombatProfile;
 globalThis.add2eRestoreCapabilityTransformationCombatState = add2eRestoreCapabilityTransformationCombatState;
 globalThis.add2eCaptureCapabilityTransformationWeaponAllowance = add2eCaptureCapabilityTransformationWeaponAllowance;
