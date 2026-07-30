@@ -228,7 +228,6 @@ return await (async () => {
       ascentSpeedMetersPerRound: SPELL.ascentSpeed,
       descentSpeedMetersPerRound: SPELL.descentSpeed,
       underwaterSpeedMetersPerRound: SPELL.underwaterSpeed,
-      manoeuvrabilityClass: "B",
       ignoresEncumbrance: true
     };
 
@@ -336,8 +335,7 @@ return await (async () => {
             "type:movement",
             "etat:vol",
             "movement-mode:flight",
-            "mouvement:aerien",
-            "manoeuvrabilite:B"
+            "mouvement:aerien"
           ],
           movement: commonMetadata,
           modifiers
@@ -455,7 +453,7 @@ return await (async () => {
     outcome: "Vol appliqué",
     variant: "success",
     rows: [
-      { label: "Vol", value: `${SPELL.horizontalSpeed} m/round — manœuvrabilité B` },
+      { label: "Vol", value: `${SPELL.horizontalSpeed} m/round` },
       { label: "Montée", value: `${SPELL.ascentSpeed} m/round` },
       { label: "Descente", value: `${SPELL.descentSpeed} m/round` },
       { label: "Sous l’eau", value: `${SPELL.underwaterSpeed} m/round, sans pénalité d’encombrement` },
