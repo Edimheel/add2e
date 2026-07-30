@@ -2,13 +2,18 @@
 // ADD2E — Point d'entrée du HUD d'action rapide.
 // Le cœur canonique possède seul les armes, attaques, sorts, équipements et capacités.
 
+import {
+  add2eCanActorWeaponAttackNow,
+  add2eMultipleAttackHudStatus
+} from "./add2e-initiative-order.mjs";
+
 export {
   add2eRenderActionHud,
   add2eRefreshActionHud,
   add2eCloseActionHud
 } from "./add2e-action-hud/core.mjs";
 
-const ADD2E_HUD_COMPLEMENTS_VERSION = "2026-07-30-hud-passive-complements-v14";
+const ADD2E_HUD_COMPLEMENTS_VERSION = "2026-07-30-hud-multiple-attacks-guidance-v15";
 const ADD2E_HUD_ID = "add2e-action-hud";
 const ADD2E_HUD_COMPLEMENTS_STYLE_ID = "add2e-action-hud-complements-style";
 
@@ -20,6 +25,8 @@ let thiefRenderScheduled = false;
 let thiefRendering = false;
 let racialEffectsRenderScheduled = false;
 let racialEffectsRendering = false;
+let multipleAttackRenderScheduled = false;
+let multipleAttackRendering = false;
 
 function esc(value) {
   try {
@@ -58,6 +65,14 @@ function ensureStyles() {
     #${ADD2E_HUD_ID} .a2e-hud-racial-title{color:#d9ebff;font-size:.82em;font-weight:950}
     #${ADD2E_HUD_ID} .a2e-hud-racial-row{border-color:rgba(126,181,221,.54);background:rgba(10,24,42,.24)}
     #${ADD2E_HUD_ID} .a2e-hud-racial-description{color:#d8e8fa;font-size:.78em;line-height:1.35;margin-top:3px}
+    #${ADD2E_HUD_ID} .a2e-hud-multiple-attacks{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 10px;align-items:center;margin-bottom:8px;padding:8px 10px;border:1px solid rgba(214,176,90,.7);border-radius:10px;background:rgba(77,57,22,.38);color:#fff3c6}
+    #${ADD2E_HUD_ID} .a2e-hud-multiple-attacks.extra{border-color:#93df79;background:rgba(48,111,38,.46);box-shadow:0 0 0 1px rgba(147,223,121,.2)}
+    #${ADD2E_HUD_ID} .a2e-hud-multiple-attacks.used{border-color:rgba(145,145,145,.62);background:rgba(58,58,58,.42);color:#ddd}
+    #${ADD2E_HUD_ID} .a2e-hud-multiple-count{grid-row:1/3;display:grid;place-items:center;min-width:58px;min-height:46px;padding:4px 8px;border:1px solid currentColor;border-radius:9px;font-size:1.16em;font-weight:1000;line-height:1}
+    #${ADD2E_HUD_ID} .a2e-hud-multiple-title{font-weight:1000;line-height:1.1}
+    #${ADD2E_HUD_ID} .a2e-hud-multiple-detail{font-size:.76em;line-height:1.25;color:inherit;opacity:.92}
+    #${ADD2E_HUD_ID} .a2e-hud-multiple-rate{font-weight:900;white-space:nowrap}
+    #${ADD2E_HUD_ID} button.img-act.a2e-multiple-attack-blocked{opacity:.42;filter:grayscale(.75);cursor:not-allowed}
   `;
   document.head.appendChild(style);
 }
@@ -69,6 +84,129 @@ function withMutationSuppressed(callback) {
   } finally {
     window.setTimeout(() => { suppressMutation = false; }, 0);
   }
+}
+
+function multipleAttackStatus(actor) {
+  try {
+    const status = add2eMultipleAttackHudStatus(actor, game.combat);
+    return status && typeof status === "object" ? status : null;
+  } catch (error) {
+    console.warn("[ADD2E][HUD][ATTAQUES_MULTIPLES][STATUS]", error);
+    return null;
+  }
+}
+
+function multipleAttackCount(status) {
+  const match = String(status?.detail ?? "").match(/(\d+)\s*\/\s*(\d+)/);
+  return match ? { used: Number(match[1]) || 0, total: Number(match[2]) || 1 } : null;
+}
+
+function multipleAttackGuidance(status) {
+  if (status?.css === "extra") return {
+    title: "Attaque supplémentaire à jouer",
+    instruction: "Clique sur l’icône de l’arme pour jouer l’attaque suivante."
+  };
+  if (status?.css === "pending") return {
+    title: "Attaque suivante en fin de round",
+    instruction: "Termine le tour. Le tracker reviendra automatiquement sur cet acteur."
+  };
+  return {
+    title: "Attaques du round terminées",
+    instruction: "Aucune attaque supplémentaire ne reste disponible ce round."
+  };
+}
+
+function multipleAttackSignature(actor, status) {
+  return JSON.stringify({
+    actorId: actor?.id ?? "",
+    label: status?.label ?? "",
+    detail: status?.detail ?? "",
+    ratio: status?.ratio ?? "",
+    css: status?.css ?? ""
+  });
+}
+
+function multipleAttackHtml(status) {
+  const count = multipleAttackCount(status);
+  const guidance = multipleAttackGuidance(status);
+  const countLabel = count ? `${count.used} / ${count.total}` : String(status?.ratio ?? "—");
+  return `<div class="a2e-hud-multiple-count">${esc(countLabel)}</div><div class="a2e-hud-multiple-title">${esc(guidance.title)} <span class="a2e-hud-multiple-rate">· cadence ${esc(status?.ratio ?? "1/1")}</span></div><div class="a2e-hud-multiple-detail">${esc(guidance.instruction)}<br>${esc(status?.detail ?? "")}</div>`;
+}
+
+function updateWeaponAttackButtons(section, actor, status) {
+  for (const button of section.querySelectorAll('button[data-action="attack"][data-item-id]')) {
+    const weapon = actor?.items?.get?.(button.dataset.itemId) ?? null;
+    let allowed = true;
+    try {
+      allowed = add2eCanActorWeaponAttackNow(actor, { weapon, combat: game.combat, notify: false }) !== false;
+    } catch (error) {
+      console.warn("[ADD2E][HUD][ATTAQUES_MULTIPLES][BUTTON]", error);
+    }
+    button.disabled = !allowed;
+    button.classList.toggle("a2e-multiple-attack-blocked", !allowed);
+    if (!allowed) {
+      button.title = status?.css === "pending"
+        ? "Première attaque déjà jouée : attaque suivante en fin de round"
+        : "Aucune attaque restante ce round";
+    } else if (status?.css === "extra") {
+      button.title = `Jouer l’attaque supplémentaire avec ${weapon?.name ?? "cette arme"}`;
+    } else {
+      button.title = `Attaquer avec ${weapon?.name ?? "cette arme"}`;
+    }
+  }
+}
+
+function openAttackTabForExtraPhase(root, actor, status) {
+  if (status?.css !== "extra") return;
+  const current = globalThis.add2eGetCurrentCombatant?.(game.combat) ?? game.combat?.combatant ?? null;
+  if (String(current?.actor?.id ?? "") !== String(actor?.id ?? "")) return;
+  const tab = root.querySelector('[data-tab="attaques"]');
+  if (tab && !tab.classList.contains("active")) tab.click();
+}
+
+function renderMultipleAttackGuidance() {
+  if (multipleAttackRendering) return;
+  const root = document.getElementById(ADD2E_HUD_ID);
+  const actor = currentHudActor();
+  const section = root?.querySelector?.('[data-section="attaques"]');
+  if (!root || !actor || !section) return;
+  const status = multipleAttackStatus(actor);
+  const existing = section.querySelector(':scope > .a2e-hud-multiple-attacks');
+
+  multipleAttackRendering = true;
+  withMutationSuppressed(() => {
+    ensureStyles();
+    if (!status) {
+      existing?.remove?.();
+      updateWeaponAttackButtons(section, actor, null);
+      return;
+    }
+    const signature = multipleAttackSignature(actor, status);
+    let panel = existing;
+    if (!panel) {
+      panel = document.createElement("div");
+      panel.className = "a2e-hud-multiple-attacks";
+      section.prepend(panel);
+    }
+    if (panel.dataset.add2eMultipleAttackSignature !== signature) {
+      panel.dataset.add2eMultipleAttackSignature = signature;
+      panel.className = `a2e-hud-multiple-attacks ${status.css ?? "pending"}`;
+      panel.innerHTML = multipleAttackHtml(status);
+    }
+    updateWeaponAttackButtons(section, actor, status);
+    openAttackTabForExtraPhase(root, actor, status);
+  });
+  multipleAttackRendering = false;
+}
+
+function scheduleMultipleAttackGuidance() {
+  if (multipleAttackRenderScheduled) return;
+  multipleAttackRenderScheduled = true;
+  const raf = globalThis.requestAnimationFrame ?? (callback => window.setTimeout(callback, 16));
+  raf(() => {
+    multipleAttackRenderScheduled = false;
+    renderMultipleAttackGuidance();
+  });
 }
 
 function thiefActivityStatus(actor) {
@@ -200,6 +338,7 @@ function scheduleRacialEffects() {
 }
 
 function scheduleComplements() {
+  scheduleMultipleAttackGuidance();
   scheduleThiefActivity();
   scheduleRacialEffects();
 }
@@ -235,6 +374,8 @@ function installHudComplements() {
   Hooks.on("updateActor", actor => {
     if (actor?.id === currentHudActor()?.id) scheduleComplements();
   });
+  Hooks.on("updateCombat", () => scheduleMultipleAttackGuidance());
+  Hooks.on("add2eInitiativeTurnChanged", () => scheduleMultipleAttackGuidance());
   for (const hookName of ["createActiveEffect", "updateActiveEffect", "deleteActiveEffect"]) {
     Hooks.on(hookName, effect => {
       if (effect?.parent?.id === currentHudActor()?.id) scheduleComplements();
