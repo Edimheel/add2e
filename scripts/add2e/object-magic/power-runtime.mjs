@@ -110,6 +110,14 @@ export function add2eMagicPowerGeneratedId(item, index) {
   return String(item?.id ?? "00000000000000").substring(0, 14) + String(index).padStart(2, "0");
 }
 
+function add2eVirtualItemParent(actor) {
+  const DataModelClass = globalThis.foundry?.abstract?.DataModel
+    ?? globalThis.foundry?.data?.DataModel
+    ?? null;
+  if (typeof DataModelClass === "function") return actor instanceof DataModelClass ? actor : null;
+  return actor?.documentName === "Actor" && typeof actor?.getRollData === "function" ? actor : null;
+}
+
 export function add2eBuildVirtualObjectPowerSort(actor, itemSource, power, index) {
   const generatedId = add2eMagicPowerGeneratedId(itemSource, index);
   const onUse = add2eObjectPowerOnUsePath(power);
@@ -160,7 +168,8 @@ export function add2eBuildVirtualObjectPowerSort(actor, itemSource, power, index
       }
     }
   };
-  const sort = new Item(fakeData, { parent: actor });
+  const parent = add2eVirtualItemParent(actor);
+  const sort = parent ? new Item(fakeData, { parent }) : new Item(fakeData);
   sort.getFlag = (scope, key) => {
     if (scope !== "add2e") return null;
     if (key === "memorizedCount") return cost <= 0 ? 1 : add2eObjectPowerCurrentCharges(itemSource, power, index);
