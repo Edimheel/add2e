@@ -1,12 +1,15 @@
 // ADD2E — Domaine XP, mouvement et encombrement canoniques.
 // Compatible Foundry V13/V14/V15 — DialogV2 uniquement.
 
-export const ADD2E_MOVE_XP_VERSION = "2026-07-30-canonical-movement-encumbrance-v10";
+export const ADD2E_MOVE_XP_VERSION = "2026-07-30-canonical-movement-encumbrance-v11";
 export const ADD2E_MOVE_XP_TAG = "[ADD2E][MOVE_XP]";
 export const ADD2E_MOVE_XP_INTERNAL = "add2eMoveXpInternal";
 export const ADD2E_MOVE_XP_RECALC_DELAY_MS = 140;
 
 const MISSING_MOVEMENT_BASE_WARNED = new Set();
+const GOLD_PIECES_PER_KILOGRAM = 20;
+const GOLD_PIECES_PER_POUND = 10;
+const ADND_MOVEMENT_INCH_METRES = 3;
 
 export function log(label, data = {}) {
   console.log(`${ADD2E_MOVE_XP_TAG}${label}`, data);
@@ -21,9 +24,22 @@ export function num(value, fallback = 0) {
     }
     return fallback;
   }
-  const raw = String(value ?? "").trim();
+
+  let raw = String(value ?? "").trim().replace(/\u00a0/g, " ").replace(/\s+/g, "");
   if (!raw) return fallback;
-  const parsed = Number(raw.replace(/\s+/g, "").replace(/\./g, "").replace(/,/g, ".").replace(/[^0-9.+\-]/g, ""));
+  raw = raw.replace(/[^0-9.,+\-]/g, "");
+  if (!raw) return fallback;
+
+  if (raw.includes(",") && raw.includes(".")) {
+    if (raw.lastIndexOf(",") > raw.lastIndexOf(".")) raw = raw.replace(/\./g, "").replace(",", ".");
+    else raw = raw.replace(/,/g, "");
+  } else if (raw.includes(",")) {
+    raw = raw.replace(",", ".");
+  } else if (/^[+\-]?\d{1,3}(?:\.\d{3})+$/.test(raw)) {
+    raw = raw.replace(/\./g, "");
+  }
+
+  const parsed = Number(raw);
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
@@ -53,8 +69,13 @@ function round2(value) {
 
 function clone(value) {
   if (value === undefined || value === null) return value;
-  try { return foundry?.utils?.deepClone ? foundry.utils.deepClone(value) : JSON.parse(JSON.stringify(value)); }
-  catch (_error) { return value; }
+  try {
+    return foundry?.utils?.deepClone
+      ? foundry.utils.deepClone(value)
+      : JSON.parse(JSON.stringify(value));
+  } catch (_error) {
+    return value;
+  }
 }
 
 export function sameValue(left, right) {
@@ -71,19 +92,25 @@ export function getPath(document, path) {
 }
 
 export function changedUpdatePayload(actor, updates = {}) {
-  return Object.fromEntries(Object.entries(updates).filter(([path, value]) => !sameValue(getPath(actor, path), value)));
+  return Object.fromEntries(
+    Object.entries(updates).filter(([path, value]) => !sameValue(getPath(actor, path), value))
+  );
 }
 
 export function changeValue(changes, path) {
-  return foundry.utils.hasProperty(changes, path) ? foundry.utils.getProperty(changes, path) : undefined;
+  return foundry.utils.hasProperty(changes, path)
+    ? foundry.utils.getProperty(changes, path)
+    : undefined;
 }
 
 export function changedPath(actor, changes, path) {
-  return foundry.utils.hasProperty(changes, path) && !sameValue(changeValue(changes, path), getPath(actor, path));
+  return foundry.utils.hasProperty(changes, path)
+    && !sameValue(changeValue(changes, path), getPath(actor, path));
 }
 
 export function classItems(actor) {
-  return Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
+  return Array.from(actor?.items ?? [])
+    .filter(item => String(item?.type ?? "").toLowerCase() === "classe");
 }
 
 function classItem(actor) {
@@ -92,7 +119,8 @@ function classItem(actor) {
 }
 
 function raceItem(actor) {
-  return Array.from(actor?.items ?? []).find(item => String(item?.type ?? "").toLowerCase() === "race") ?? null;
+  return Array.from(actor?.items ?? [])
+    .find(item => String(item?.type ?? "").toLowerCase() === "race") ?? null;
 }
 
 export function isMulticlassActor(actor) {
@@ -101,7 +129,9 @@ export function isMulticlassActor(actor) {
 
 function parseXpRange(raw) {
   const text = String(raw ?? "").trim();
-  const values = text.match(/[0-9][0-9.\s]*/g)?.map(value => num(value, NaN)).filter(Number.isFinite) ?? [];
+  const values = text.match(/[0-9][0-9.\s]*/g)
+    ?.map(value => num(value, NaN))
+    .filter(Number.isFinite) ?? [];
   return { min: values[0] ?? 0, max: values[1] ?? null, raw: text };
 }
 
@@ -110,7 +140,14 @@ function xpRows(actor) {
   const progression = Array.isArray(cls.progression) ? cls.progression : [];
   return progression
     .map((row, index) => {
-      const range = parseXpRange(row?.xp ?? row?.experience ?? row?.xpRange ?? row?.niveau_xp ?? "");
+      const range = parseXpRange(
+        row?.xpRange
+        ?? row?.xp_range
+        ?? row?.experience
+        ?? row?.niveau_xp
+        ?? row?.xp
+        ?? ""
+      );
       return {
         ...row,
         niveau: num(row?.niveau ?? row?.level ?? index + 1, index + 1),
@@ -156,8 +193,12 @@ function xpMeta(actor, levelValue, xpValue) {
     nextLevel: next?.niveau ?? null,
     nextXp,
     xpToNext: next ? Math.max(0, nextXp - xp) : 0,
-    percent: next ? Math.max(0, Math.min(100, Math.floor(((xp - currentMin) / span) * 100))) : 100,
-    progressionLabel: next ? `${xp.toLocaleString()} / ${nextXp.toLocaleString()} XP` : `${xp.toLocaleString()} XP — niveau maximum de la table`,
+    percent: next
+      ? Math.max(0, Math.min(100, Math.floor(((xp - currentMin) / span) * 100)))
+      : 100,
+    progressionLabel: next
+      ? `${xp.toLocaleString()} / ${nextXp.toLocaleString()} XP`
+      : `${xp.toLocaleString()} XP — niveau maximum de la table`,
     hasProgression: rows.length > 0
   };
 }
@@ -210,11 +251,13 @@ function currentProgressionRowForClass(item) {
   if (!item) return null;
   const level = Math.max(1, num(item.system?.niveau ?? item.system?.level, 1));
   const progression = Array.isArray(item.system?.progression) ? item.system.progression : [];
-  return progression.find(row => Number(row?.niveau ?? row?.level) === level) ?? progression[level - 1] ?? null;
+  return progression.find(row => Number(row?.niveau ?? row?.level) === level)
+    ?? progression[level - 1]
+    ?? null;
 }
 
-function movementValue(system = {}) {
-  return firstPositive(
+function directMovementMetres(system = {}) {
+  const value = firstPositive(
     system.mouvement,
     system.movement,
     system.vitesse,
@@ -225,31 +268,55 @@ function movementValue(system = {}) {
     system.monkMovement,
     system.baseMovement
   );
+  return value > 0
+    ? { value, rawValue: value, unit: "metres", field: "direct" }
+    : null;
+}
+
+function progressionMovementMetres(row = {}) {
+  const direct = directMovementMetres(row);
+  if (direct) return direct;
+
+  const monkInches = firstPositive(row?.monk?.movement);
+  if (monkInches > 0) {
+    return {
+      value: round2(monkInches * ADND_MOVEMENT_INCH_METRES),
+      rawValue: monkInches,
+      unit: "adnd-inch",
+      field: "monk.movement"
+    };
+  }
+  return null;
 }
 
 function naturalMovementSource(actor) {
   const sources = [];
   const race = raceItem(actor);
-  const raceValue = movementValue(race?.system ?? {});
-  if (raceValue > 0) {
-    sources.push({ kind: "race", itemId: race.id, itemUuid: race.uuid, name: race.name, value: raceValue });
+  const raceMovement = directMovementMetres(race?.system ?? {});
+  if (raceMovement?.value > 0) {
+    sources.push({
+      kind: "race",
+      itemId: race.id,
+      itemUuid: race.uuid,
+      name: race.name,
+      ...raceMovement
+    });
   }
 
   for (const item of classItems(actor)) {
     const row = currentProgressionRowForClass(item) ?? {};
-    const progressionValue = movementValue(row);
-    const classValue = movementValue(item.system ?? {});
-    const value = progressionValue > 0 ? progressionValue : classValue;
-    if (value > 0) {
-      sources.push({
-        kind: progressionValue > 0 ? "class-progression" : "class",
-        itemId: item.id,
-        itemUuid: item.uuid,
-        name: item.name,
-        level: Math.max(1, num(item.system?.niveau ?? item.system?.level, 1)),
-        value
-      });
-    }
+    const progressionMovement = progressionMovementMetres(row);
+    const classMovement = directMovementMetres(item.system ?? {});
+    const movement = progressionMovement ?? classMovement;
+    if (!movement?.value) continue;
+    sources.push({
+      kind: progressionMovement ? "class-progression" : "class",
+      itemId: item.id,
+      itemUuid: item.uuid,
+      name: item.name,
+      level: Math.max(1, num(item.system?.niveau ?? item.system?.level, 1)),
+      ...movement
+    });
   }
 
   const selected = [...sources].sort((left, right) => right.value - left.value)[0] ?? null;
@@ -283,23 +350,137 @@ function itemIsCarried(item) {
   if (["classe", "race", "sort", "spell"].includes(type)) return false;
   const system = item?.system ?? {};
   const flags = item?.flags?.add2e ?? {};
-  if (system.carried === false || system.transporte === false || system.transporté === false || system.inInventory === false) return false;
-  if (flags.carried === false || flags.ignoreEncumbrance === true || system.ignoreEncumbrance === true) return false;
+  if (
+    system.carried === false
+    || system.transporte === false
+    || system.transporté === false
+    || system.inInventory === false
+  ) return false;
+  if (
+    flags.carried === false
+    || flags.ignoreEncumbrance === true
+    || system.ignoreEncumbrance === true
+  ) return false;
   return true;
+}
+
+function normalizedWeightUnit(system = {}) {
+  return norm(
+    system.poids_unite
+    ?? system.weightUnit
+    ?? system.weight_unit
+    ?? system.unite_poids
+    ?? system["unité_poids"]
+    ?? ""
+  );
+}
+
+function magicArmorIsWeightless(item) {
+  const system = item?.system ?? {};
+  const type = String(item?.type ?? "").toLowerCase();
+  const isArmor = ["armure", "armor"].includes(type);
+  const isShield = system.bouclier === true
+    || norm(system.type_armure) === "bouclier"
+    || norm(system.categorie) === "bouclier";
+  return isArmor && !isShield && (system.magique === true || system.magic === true);
+}
+
+function itemWeightGoldPieces(item) {
+  const system = item?.system ?? {};
+  if (magicArmorIsWeightless(item)) {
+    return {
+      value: 0,
+      rawValue: num(system.poids ?? system.weight, 0),
+      rawUnit: normalizedWeightUnit(system) || "source",
+      source: "magic-armor-weightless"
+    };
+  }
+
+  const explicitGp = num(
+    system.poids_encombrement_po
+    ?? system.encumbrance_gp
+    ?? system.encumbranceGoldPieces,
+    NaN
+  );
+  if (Number.isFinite(explicitGp) && explicitGp >= 0) {
+    return {
+      value: explicitGp,
+      rawValue: explicitGp,
+      rawUnit: "gp",
+      source: "poids_encombrement_po"
+    };
+  }
+
+  const rawValue = num(
+    system.poids
+    ?? system.weight
+    ?? system.encombrement
+    ?? system.encumbrance,
+    0
+  );
+  if (!(rawValue > 0)) {
+    return {
+      value: 0,
+      rawValue: 0,
+      rawUnit: normalizedWeightUnit(system) || null,
+      source: "zero"
+    };
+  }
+
+  const unit = normalizedWeightUnit(system);
+  if (["po", "pp", "gp", "piece_dor", "pieces_dor", "gold_piece", "gold_pieces"].includes(unit)) {
+    return { value: rawValue, rawValue, rawUnit: unit, source: "explicit-gp" };
+  }
+  if (["kg", "kilogramme", "kilogrammes", "kilogram", "kilograms"].includes(unit)) {
+    return {
+      value: round2(rawValue * GOLD_PIECES_PER_KILOGRAM),
+      rawValue,
+      rawUnit: unit,
+      source: "explicit-kg"
+    };
+  }
+  if (["lb", "lbs", "livre", "livres", "pound", "pounds"].includes(unit)) {
+    return {
+      value: round2(rawValue * GOLD_PIECES_PER_POUND),
+      rawValue,
+      rawUnit: unit,
+      source: "explicit-pound"
+    };
+  }
+
+  const type = String(item?.type ?? "").toLowerCase();
+  if (["arme", "weapon", "armure", "armor"].includes(type)) {
+    return {
+      value: round2(rawValue * GOLD_PIECES_PER_POUND),
+      rawValue,
+      rawUnit: "pound",
+      source: "item-type-pound"
+    };
+  }
+
+  return {
+    value: round2(rawValue * GOLD_PIECES_PER_KILOGRAM),
+    rawValue,
+    rawUnit: "kg",
+    source: "object-default-kg"
+  };
 }
 
 function itemWeightEntry(item) {
   const system = item?.system ?? {};
   const quantity = Math.max(0, num(system.quantite ?? system.quantity ?? 1, 1));
-  const unitWeight = Math.max(0, num(system.poids ?? system.weight ?? system.encombrement ?? system.encumbrance ?? 0, 0));
+  const normalized = itemWeightGoldPieces(item);
   return {
     item,
     itemId: item?.id ?? null,
     itemUuid: item?.uuid ?? null,
     name: item?.name ?? "Objet",
     quantity,
-    unitWeight,
-    total: round2(quantity * unitWeight)
+    rawUnitWeight: normalized.rawValue,
+    weightUnit: normalized.rawUnit,
+    weightSource: normalized.source,
+    unitWeight: round2(normalized.value),
+    total: round2(quantity * normalized.value)
   };
 }
 
@@ -316,15 +497,20 @@ function carriedInventory(actor) {
 
 function equippedArmor(actor) {
   const engine = effectsEngine();
-  return (actor?.items?.contents ?? Array.from(actor?.items ?? [])).filter(item => {
-    const type = String(item?.type ?? "").toLowerCase();
-    return ["armure", "armor"].includes(type) && engine.itemEquipped(item);
-  });
+  return (actor?.items?.contents ?? Array.from(actor?.items ?? []))
+    .filter(item => {
+      const type = String(item?.type ?? "").toLowerCase();
+      return ["armure", "armor"].includes(type) && engine.itemEquipped(item);
+    });
 }
 
 function activeStatuses(actor) {
   const statuses = new Set();
-  for (const effect of [...(actor?.effects?.contents ?? actor?.effects ?? []), ...(actor?.appliedEffects ?? [])]) {
+  const effects = [
+    ...(actor?.effects?.contents ?? actor?.effects ?? []),
+    ...(actor?.appliedEffects ?? [])
+  ];
+  for (const effect of effects) {
     if (!effect || effect.disabled === true || effect.isSuppressed === true || effect.active === false) continue;
     for (const status of effect.statuses ?? []) {
       const key = norm(status?.id ?? status);
@@ -335,7 +521,9 @@ function activeStatuses(actor) {
 }
 
 function explicitContextValue(options, key) {
-  return Object.prototype.hasOwnProperty.call(options ?? {}, key) ? options[key] : undefined;
+  return Object.prototype.hasOwnProperty.call(options ?? {}, key)
+    ? options[key]
+    : undefined;
 }
 
 function movementRuntimeToken(actor, options = {}) {
@@ -343,12 +531,15 @@ function movementRuntimeToken(actor, options = {}) {
   const direct = options.token?.document ?? options.token ?? null;
   if (direct) return direct;
 
-  const controlled = canvas?.tokens?.controlled?.find?.(token => token?.actor?.id === actor?.id) ?? null;
+  const controlled = canvas?.tokens?.controlled
+    ?.find?.(token => token?.actor?.id === actor?.id) ?? null;
   if (controlled?.document) return controlled.document;
 
   const active = actor?.getActiveTokens?.(true, true) ?? [];
   const currentSceneId = canvas?.scene?.id ?? null;
-  const current = active.find(token => (token?.document?.parent?.id ?? token?.scene?.id) === currentSceneId) ?? active[0] ?? null;
+  const current = active.find(
+    token => (token?.document?.parent?.id ?? token?.scene?.id) === currentSceneId
+  ) ?? active[0] ?? null;
   return current?.document ?? current ?? null;
 }
 
@@ -366,7 +557,8 @@ function movementRuntimeContext(actor, options = {}) {
 
   const terrain = explicitTerrain !== undefined
     ? explicitTerrain
-    : tokenFlags.terrain ?? (persistent ? actorFlags.terrain ?? null : sceneFlags.terrain ?? actorFlags.terrain ?? null);
+    : tokenFlags.terrain
+      ?? (persistent ? actorFlags.terrain ?? null : sceneFlags.terrain ?? actorFlags.terrain ?? null);
 
   const environment = explicitEnvironment !== undefined
     ? explicitEnvironment
@@ -376,7 +568,11 @@ function movementRuntimeContext(actor, options = {}) {
         ?? tokenFlags.milieu
         ?? (persistent
           ? actorFlags.environment ?? actorFlags.milieu ?? null
-          : sceneFlags.environment ?? sceneFlags.milieu ?? actorFlags.environment ?? actorFlags.milieu ?? null);
+          : sceneFlags.environment
+            ?? sceneFlags.milieu
+            ?? actorFlags.environment
+            ?? actorFlags.milieu
+            ?? null);
 
   return {
     token,
@@ -385,7 +581,8 @@ function movementRuntimeContext(actor, options = {}) {
     environment,
     milieu: environment,
     persistent,
-    consumer: options.consumer ?? (persistent ? "movement-persistent-mirror" : "movement-runtime")
+    consumer: options.consumer
+      ?? (persistent ? "movement-persistent-mirror" : "movement-runtime")
   };
 }
 
@@ -404,6 +601,9 @@ function movementContext(actor, source, inventory, armor, strength, options = {}
         itemUuid: entry.itemUuid,
         name: entry.name,
         quantity: entry.quantity,
+        rawUnitWeight: entry.rawUnitWeight,
+        weightUnit: entry.weightUnit,
+        weightSource: entry.weightSource,
         unitWeight: entry.unitWeight,
         total: entry.total
       }))
@@ -412,7 +612,12 @@ function movementContext(actor, source, inventory, armor, strength, options = {}
     equippedArmor: armor,
     strength: strength.derived,
     size: options.size ?? system.taille ?? system.size ?? system.gabarit ?? flags.size ?? null,
-    transformation: options.transformation ?? flags.transformation ?? system.transformation ?? system.forme ?? system.form ?? null,
+    transformation: options.transformation
+      ?? flags.transformation
+      ?? system.transformation
+      ?? system.forme
+      ?? system.form
+      ?? null,
     terrain: runtime.terrain,
     environment: runtime.environment,
     milieu: runtime.milieu,
@@ -428,16 +633,26 @@ function resolvedTotal(resolution, fallback = 0) {
 }
 
 function encumbranceCategory(weight, normalLimit, heavyLimit, maximumLimit) {
-  if (weight > maximumLimit) return { label: "Surcharge", category: "surcharge", multiplier: 0 };
-  if (weight > heavyLimit) return { label: "Très encombré", category: "tres_encombre", multiplier: 0.25 };
-  if (weight > normalLimit) return { label: "Encombré", category: "encombre", multiplier: 0.5 };
+  if (weight > maximumLimit) {
+    return { label: "Surcharge", category: "surcharge", multiplier: 0 };
+  }
+  if (weight > heavyLimit) {
+    return { label: "Très encombré", category: "tres_encombre", multiplier: 0.25 };
+  }
+  if (weight > normalLimit) {
+    return { label: "Encombré", category: "encombre", multiplier: 0.5 };
+  }
   return { label: "Équipement normal", category: "normal", multiplier: 1 };
 }
 
 function collectModes(resolution) {
   const modes = new Set();
   const add = value => {
-    const list = Array.isArray(value) ? value : value === undefined || value === null ? [] : [value];
+    const list = Array.isArray(value)
+      ? value
+      : value === undefined || value === null
+        ? []
+        : [value];
     for (const entry of list.flatMap(item => String(item ?? "").split(/[,;|\n]+/g))) {
       const key = norm(entry);
       if (key) modes.add(key);
@@ -463,6 +678,7 @@ function emptyMovement() {
     actuel: 0,
     vitesse: 0,
     poids: 0,
+    poidsPo: 0,
     poidsKg: 0,
     forcePoids: 0,
     limiteNormale: 0,
@@ -521,8 +737,14 @@ export function computeMovement(actor, options = {}) {
   });
 
   const normalLimit = resolvedTotal(normalCapacityResolution, normalCapacityBase);
-  const heavyLimit = Math.max(normalLimit, resolvedTotal(heavyCapacityResolution, heavyCapacityBase));
-  const maximumLimit = Math.max(heavyLimit, resolvedTotal(maximumCapacityResolution, maximumCapacityBase));
+  const heavyLimit = Math.max(
+    normalLimit,
+    resolvedTotal(heavyCapacityResolution, heavyCapacityBase)
+  );
+  const maximumLimit = Math.max(
+    heavyLimit,
+    resolvedTotal(maximumCapacityResolution, maximumCapacityBase)
+  );
   const category = encumbranceCategory(weight, normalLimit, heavyLimit, maximumLimit);
 
   const multiplierResolution = canonicalResolve(actor, {
@@ -536,7 +758,10 @@ export function computeMovement(actor, options = {}) {
       encumbranceCategory: category.category
     }
   });
-  const multiplier = Math.max(0, num(multiplierResolution?.total, category.multiplier));
+  const multiplier = Math.max(
+    0,
+    num(multiplierResolution?.total, category.multiplier)
+  );
   const movementBase = Math.max(0, source.value * multiplier);
 
   const movementResolution = canonicalResolve(actor, {
@@ -556,7 +781,9 @@ export function computeMovement(actor, options = {}) {
   const resolvedMovement = Math.max(0, num(movementResolution?.total, movementBase));
   const actuel = Math.floor(resolvedMovement);
   const modes = collectModes(movementResolution);
-  const canonicalApplied = Array.isArray(movementResolution?.applied) ? movementResolution.applied : [];
+  const canonicalApplied = Array.isArray(movementResolution?.applied)
+    ? movementResolution.applied
+    : [];
 
   if (source.missing && options.warnMissingBase !== false) {
     const key = String(actor.uuid ?? actor.id ?? actor.name ?? "actor");
@@ -577,7 +804,8 @@ export function computeMovement(actor, options = {}) {
     actuel,
     vitesse: actuel,
     poids: weight,
-    poidsKg: round2(weight / 20),
+    poidsPo: weight,
+    poidsKg: round2(weight / GOLD_PIECES_PER_KILOGRAM),
     forcePoids: strength.weightAdjustment,
     limiteNormale: normalLimit,
     limiteLourde: heavyLimit,
@@ -672,7 +900,10 @@ export function flatActorUpdates(actor, { mode = "auto", incoming = {} } = {}) {
   }
 
   const meta = xpMeta(actor, level, xp);
-  const currentTitle = xpRows(actor).find(row => Number(row.niveau) === level)?.title ?? actor?.system?.titre ?? "";
+  const currentTitle = xpRows(actor)
+    .find(row => Number(row.niveau) === level)?.title
+    ?? actor?.system?.titre
+    ?? "";
   const updates = {
     "system.xp": xp,
     "system.niveau": level,
@@ -701,7 +932,9 @@ export async function recalc(actor, { mode = "auto", notify = false } = {}) {
     });
   }
   if (notify && mode === "level" && !result.multiclass) {
-    ui.notifications.info(`${actor.name} : XP ajustée au niveau ${result.xp.level} (${result.xp.xp.toLocaleString()} XP).`);
+    ui.notifications.info(
+      `${actor.name} : XP ajustée au niveau ${result.xp.level} (${result.xp.xp.toLocaleString()} XP).`
+    );
   }
   return result;
 }
@@ -717,10 +950,22 @@ async function createXpCard(actor, { title = "Expérience", rows = [], message =
     title,
     icon: "fas fa-star",
     variant: "success",
-    source: { name: actor?.name ?? "Acteur", img: actor?.img, type: "Progression" },
+    source: {
+      name: actor?.name ?? "Acteur",
+      img: actor?.img,
+      type: "Progression"
+    },
     rows,
     message,
-    chatData: { flags: { add2e: { moveXp: true, version: ADD2E_MOVE_XP_VERSION, ...flags } } }
+    chatData: {
+      flags: {
+        add2e: {
+          moveXp: true,
+          version: ADD2E_MOVE_XP_VERSION,
+          ...flags
+        }
+      }
+    }
   };
   const preview = build(options);
   if (!String(preview ?? "").trim()) throw new Error("La carte d’XP ADD2E est vide.");
@@ -745,8 +990,14 @@ export async function awardXp(actor, amount, { reason = "Gain d'expérience", pe
       .join(" ; ") ?? "";
     await createXpCard(actor, {
       rows: [
-        { label: "Gain", value: `+${total.toLocaleString()} XP${bonus ? `, dont bonus ${bonus.toLocaleString()} XP` : ""}` },
-        { label: "Répartition", value: details || "Items classe mis à jour" }
+        {
+          label: "Gain",
+          value: `+${total.toLocaleString()} XP${bonus ? `, dont bonus ${bonus.toLocaleString()} XP` : ""}`
+        },
+        {
+          label: "Répartition",
+          value: details || "Items classe mis à jour"
+        }
       ],
       message: reason || "Progression multiclasses mise à jour.",
       flags: { multiclass: true, total, bonus }
@@ -756,19 +1007,44 @@ export async function awardXp(actor, amount, { reason = "Gain d'expérience", pe
 
   const before = Math.max(0, Math.floor(num(actor.system?.xp, 0)));
   const after = before + total;
-  const result = flatActorUpdates(actor, { mode: "xp", incoming: { "system.xp": after } });
+  const result = flatActorUpdates(actor, {
+    mode: "xp",
+    incoming: { "system.xp": after }
+  });
   const updates = changedUpdatePayload(actor, result.updates);
-  if (Object.keys(updates).length) await actor.update(updates, { add2eReason: "move-xp-award" });
+  if (Object.keys(updates).length) {
+    await actor.update(updates, { add2eReason: "move-xp-award" });
+  }
   const displayedXp = Number(updates["system.xp"] ?? result.xp.xp ?? after) || after;
-  const displayedLevel = String(updates["system.niveau"] ?? result.xp.level ?? actor.system?.niveau ?? "-");
+  const displayedLevel = String(
+    updates["system.niveau"]
+    ?? result.xp.level
+    ?? actor.system?.niveau
+    ?? "-"
+  );
   await createXpCard(actor, {
     rows: [
-      { label: "Gain", value: `+${total.toLocaleString()} XP${bonus ? `, dont bonus ${bonus.toLocaleString()} XP` : ""}` },
-      { label: "Expérience", value: `${before.toLocaleString()} → ${displayedXp.toLocaleString()} XP` },
-      { label: "Niveau actuel", value: displayedLevel }
+      {
+        label: "Gain",
+        value: `+${total.toLocaleString()} XP${bonus ? `, dont bonus ${bonus.toLocaleString()} XP` : ""}`
+      },
+      {
+        label: "Expérience",
+        value: `${before.toLocaleString()} → ${displayedXp.toLocaleString()} XP`
+      },
+      {
+        label: "Niveau actuel",
+        value: displayedLevel
+      }
     ],
     message: reason || "Gain d’expérience",
-    flags: { multiclass: false, total, bonus, before, after: displayedXp }
+    flags: {
+      multiclass: false,
+      total,
+      bonus,
+      before,
+      after: displayedXp
+    }
   });
   return { before, after: displayedXp, total, bonus, ...result };
 }
@@ -780,7 +1056,13 @@ export async function promptXp(actor) {
     ui.notifications.warn("DialogV2 indisponible : attribution d'XP annulée.");
     return;
   }
-  const content = `<form><div class="form-group"><label>XP à ajouter</label><input type="number" name="amount" value="0" step="1"></div><div class="form-group"><label>Bonus %</label><input type="number" name="percentBonus" value="0" step="1"></div><div class="form-group"><label>Motif</label><input type="text" name="reason" value="Récompense d'aventure"></div></form>`;
+  const content = [
+    "<form>",
+    '<div class="form-group"><label>XP à ajouter</label><input type="number" name="amount" value="0" step="1"></div>',
+    '<div class="form-group"><label>Bonus %</label><input type="number" name="percentBonus" value="0" step="1"></div>',
+    '<div class="form-group"><label>Motif</label><input type="text" name="reason" value="Récompense d’aventure"></div>',
+    "</form>"
+  ].join("");
   const result = await DialogV2.wait({
     window: { title: `Attribuer de l'XP — ${actor.name}` },
     content,
@@ -790,7 +1072,9 @@ export async function promptXp(actor) {
         label: "Ajouter",
         default: true,
         callback: (_event, button, dialog) => {
-          const form = button?.form ?? dialog?.element?.querySelector?.("form") ?? null;
+          const form = button?.form
+            ?? dialog?.element?.querySelector?.("form")
+            ?? null;
           return {
             action: "add",
             amount: form?.elements?.amount?.value ?? form?.amount?.value ?? 0,
@@ -799,7 +1083,11 @@ export async function promptXp(actor) {
           };
         }
       },
-      { action: "cancel", label: "Annuler", callback: () => ({ action: "cancel" }) }
+      {
+        action: "cancel",
+        label: "Annuler",
+        callback: () => ({ action: "cancel" })
+      }
     ],
     modal: true,
     rejectClose: false,
