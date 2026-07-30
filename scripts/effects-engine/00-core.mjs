@@ -4,7 +4,9 @@
 import {
   ADD2E_MODIFIER_RESOLVER_VERSION,
   canonicalKey,
-  isObject
+  isObject,
+  sourceStableKey,
+  modifierSignature
 } from "./00-core-shared.mjs";
 import { installModifierResolver } from "./00-modifier-resolver.mjs";
 import {
@@ -30,7 +32,7 @@ export {
   ADD2E_ABILITY_BOUNDS
 };
 
-const ADD2E_MODIFIER_CONTEXT_CONDITIONS_VERSION = "2026-07-30-movement-context-conditions-v1";
+const ADD2E_MODIFIER_CONTEXT_CONDITIONS_VERSION = "2026-07-30-movement-context-conditions-v2";
 
 function contextValues(raw) {
   if (raw === undefined || raw === null || raw === "") return [];
@@ -83,11 +85,60 @@ function numericContextCondition(actualRaw, conditionRaw) {
   return { applicable: actual === expected, reason: actual === expected ? "equal" : "value" };
 }
 
+function documentSource(document, fallbackKind) {
+  const flags = document?.flags?.add2e ?? {};
+  return {
+    kind: canonicalKey(flags.sourceType ?? flags.sourceKind ?? fallbackKind) || fallbackKind,
+    id: String(document?.id ?? document?._id ?? ""),
+    uuid: String(document?.uuid ?? ""),
+    name: String(document?.name ?? document?.label ?? fallbackKind)
+  };
+}
+
 function installContextConditionExtensions(Engine) {
+  const baseCollect = Engine.collect.bind(Engine);
   const baseEvaluate = Engine.evaluateModifierConditions.bind(Engine);
   const baseItemEquipped = Engine.itemEquipped.bind(Engine);
 
   Object.defineProperties(Engine, {
+    collect: {
+      configurable: true,
+      writable: true,
+      value(actor, context = {}) {
+        const collected = baseCollect(actor, context);
+        const token = context.token?.document ?? context.token ?? null;
+        const scene = context.scene ?? token?.parent ?? null;
+
+        const appendDocument = (document, fallbackKind, sourceContext = {}) => {
+          if (!document || document === actor) return;
+          const defaults = { source: documentSource(document, fallbackKind) };
+          for (const modifier of this.collectDocumentModifiers(document, defaults)) {
+            collected.push({
+              ...modifier,
+              _context: {
+                sourceDocument: document,
+                sourceItem: null,
+                sourceEffect: null,
+                sourceToken: sourceContext.sourceToken ?? null,
+                sourceScene: sourceContext.sourceScene ?? null
+              }
+            });
+          }
+        };
+
+        appendDocument(scene, "scene", { sourceScene: scene });
+        appendDocument(token, "token", { sourceToken: token, sourceScene: scene });
+
+        const seen = new Set();
+        return collected.filter(modifier => {
+          const key = `${modifier?.id ?? ""}|${sourceStableKey(modifier?.source)}|${modifierSignature(modifier)}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+      }
+    },
+
     itemEquipped: {
       configurable: true,
       writable: true,
