@@ -48,6 +48,22 @@ const DAMAGE_ALIASES = Object.freeze({
   charme: ["charme", "charm"], charm: ["charme", "charm"]
 });
 
+const MOVEMENT_TYPES = new Set([
+  "movement_mode", "movement_bonus", "movement_modifier", "movement_multiplier", "movement_override",
+  "movement_speed_multiplier", "speed_bonus", "speed_modifier", "speed_multiplier", "speed_override",
+  "base_movement", "fixed_movement"
+]);
+
+const MOVEMENT_TARGET_ALIASES = Object.freeze({
+  ground: "ground", sol: "ground", terrestre: "ground", marche: "ground", walking: "ground",
+  flight: "flight", fly: "flight", vol: "flight", aerien: "flight", aerienne: "flight",
+  ascent: "ascent", montee: "ascent", monter: "ascent",
+  descent: "descent", descente: "descent", descendre: "descent",
+  vertical: "vertical", levitation: "vertical",
+  underwater: "underwater", sous_eau: "underwater", aquatique: "underwater",
+  swim: "swim", nage: "swim", nager: "swim"
+});
+
 export const ruleType = rule => norm(rule?.type ?? rule?.kind ?? rule?.category ?? "");
 export const canonicalAbility = value => ABILITY_ALIASES[norm(value)] ?? "";
 export const damageAliases = value => DAMAGE_ALIASES[norm(value)] ?? (norm(value) ? [norm(value)] : []);
@@ -79,10 +95,31 @@ function pushTag(tags, prefix, rawValues, suffix = null) {
   });
 }
 
-function movementCompilation(effect, type, tags, rules) {
-  if (!["movement_mode", "movement_bonus", "movement_modifier", "movement_multiplier", "movement_override",
-    "movement_speed_multiplier", "speed_bonus", "speed_modifier", "speed_multiplier", "speed_override",
-    "base_movement", "fixed_movement"].includes(type)) return;
+function movementTarget(value) {
+  const key = norm(value);
+  return MOVEMENT_TARGET_ALIASES[key] ?? "";
+}
+
+function movementConditions(effect) {
+  const conditions = effect?.conditions && typeof effect.conditions === "object" && !Array.isArray(effect.conditions)
+    ? clone(effect.conditions)
+    : {};
+  const mappings = [
+    ["terrain", ["terrain", "terrains"]],
+    ["environment", ["environment", "environments", "milieu", "milieux"]],
+    ["size", ["size", "sizes", "taille", "tailles"]],
+    ["transformation", ["transformation", "transformations", "form", "forms", "forme", "formes"]],
+    ["status", ["status", "statuses", "etat", "etats"]]
+  ];
+  for (const [target, keys] of mappings) {
+    const raw = values(effect, keys);
+    if (raw.length && conditions[target] === undefined) conditions[target] = raw;
+  }
+  return conditions;
+}
+
+function movementCompilation(effect, type, tags, modifiers) {
+  if (!MOVEMENT_TYPES.has(type)) return;
   const explicitMode = norm(effect.operation ?? effect.applyMode ?? effect.application ?? effect.mode);
   const multiplier = number(effect.multiplier, effect.factor, effect.coefficient);
   const direct = number(effect.value, effect.amount, effect.bonus, effect.modifier, effect.speed, effect.movement, effect.distance);
@@ -90,33 +127,58 @@ function movementCompilation(effect, type, tags, rules) {
   const override = type.includes("override") || type.includes("fixed") || type === "base_movement"
     || ["override", "set", "fixed", "replace", "impose", "imposed"].includes(explicitMode);
   const value = multiply ? multiplier ?? direct : direct ?? multiplier;
-  const operation = multiply ? "multiply" : override ? "override" : "add";
+  const operation = multiply ? "multiply" : override ? "set" : "add";
   const priority = Math.max(1, Math.floor(number(effect.priority) ?? 100));
-  const movementModes = values(effect, ["movementMode", "movementModes", "modeName", "travelMode", "movementType", "modes"])
-    .map(norm).filter(entry => entry && !["add", "multiply", "override", "set", "fixed"].includes(entry));
-  if (!movementModes.length && type === "movement_mode") {
-    const candidate = norm(effect.mode ?? effect.value ?? effect.movement);
-    if (candidate && !Number.isFinite(Number(candidate))) movementModes.push(candidate);
+  const requestedModes = values(effect, [
+    "target", "targets", "movementTarget", "movementTargets", "movementMode", "movementModes",
+    "modeName", "travelMode", "movementType", "modes"
+  ]).map(movementTarget).filter(Boolean);
+  if (!requestedModes.length && type === "movement_mode") {
+    const candidate = movementTarget(effect.mode ?? effect.value ?? effect.movement);
+    if (candidate) requestedModes.push(candidate);
   }
-  movementModes.forEach(entry => {
-    tags.add(`mouvement:${entry}`);
-    tags.add(`movement_mode:${entry}`);
-  });
+  const targets = [...new Set(requestedModes.length ? requestedModes : ["ground"])];
+  for (const target of targets) {
+    tags.add(`mouvement:${target}`);
+    tags.add(`movement_mode:${target}`);
+  }
   if (Number.isFinite(value)) {
     const tagValue = operation === "multiply" ? String(value) : signed(value);
     tags.add(`mouvement_${operation}:${tagValue}`);
     tags.add(`movement_${operation}:${tagValue}`);
   }
-  if (!movementModes.length && !Number.isFinite(value)) return;
-  rules.push({
-    kind: "movement_modifier",
-    type,
-    value: Number.isFinite(value) ? value : null,
-    operation: Number.isFinite(value) ? operation : "mode",
-    modes: movementModes,
-    priority,
-    ...(hasValue(effect.fatigueRule) ? { fatigueRule: clone(effect.fatigueRule) } : {})
-  });
+  if (!Number.isFinite(value)) return;
+
+  const conditions = movementConditions(effect);
+  const requestedStacking = norm(effect?.stacking?.mode ?? effect?.stackingMode ?? effect?.cumul ?? "");
+  for (const target of targets) {
+    const defaultStacking = operation === "set"
+      ? { mode: "exclusive", group: `movement:${target}:override` }
+      : operation === "multiply"
+        ? { mode: "highest", group: `movement:${target}:multiplier` }
+        : { mode: "stack", group: `movement:${target}:bonus` };
+    const stacking = requestedStacking
+      ? { mode: requestedStacking, group: String(effect?.stacking?.group ?? effect?.stackingGroup ?? defaultStacking.group) }
+      : defaultStacking;
+    modifiers.push({
+      domain: "movement",
+      target,
+      operation,
+      value,
+      priority,
+      stacking,
+      conditions,
+      metadata: {
+        label: effect.label ?? effect.name ?? "Déplacement magique",
+        producer: "magic-item-catalogue",
+        effectType: type,
+        modes: targets,
+        movementMode: target,
+        ignoresEncumbrance: effect.ignoreEncumbrance === true || effect.ignoresEncumbrance === true,
+        ...(hasValue(effect.fatigueRule) ? { fatigueRule: clone(effect.fatigueRule) } : {})
+      }
+    });
+  }
 }
 
 function characteristicCompilation(effect, type, tags, rules) {
@@ -272,7 +334,7 @@ export function compileDefinition(effect = {}) {
   const changes = [];
   const modifiers = [];
 
-  movementCompilation(effect, type, tags, rules);
+  movementCompilation(effect, type, tags, modifiers);
   characteristicCompilation(effect, type, tags, rules);
   socialCompilation(effect, type, tags, rules, modifiers);
   fixedArmorClassCompilation(effect, type, tags, rules);
@@ -301,7 +363,7 @@ export function compileDefinition(effect = {}) {
 
   if (Array.isArray(effect.rules)) rules.push(...clone(effect.rules));
   else if (effect.rule && typeof effect.rule === "object") rules.push(clone(effect.rule));
-  if (type && type !== "charges" && !["reaction_bonus", "reaction_modifier", "reaction_minimum"].includes(type)) {
+  if (type && type !== "charges" && !MOVEMENT_TYPES.has(type) && !["reaction_bonus", "reaction_modifier", "reaction_minimum"].includes(type)) {
     rules.push({ source: "magic-item-catalogue", type, ...clone(effect) });
   }
   return {
