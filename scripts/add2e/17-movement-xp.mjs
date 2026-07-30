@@ -38,10 +38,13 @@ const ITEM_MOVEMENT_FIELDS = Object.freeze([
   "system.mouvement", "system.movement", "system.vitesse", "system.vitesse_deplacement",
   "system.deplacement", "system.déplacement", "system.monkMove", "system.monkMovement", "system.baseMovement",
   "system.progression", "system.poids", "system.weight", "system.encombrement", "system.encumbrance",
+  "system.poids_unite", "system.weightUnit", "system.poids_encombrement_po", "system.encumbrance_gp",
   "system.quantite", "system.quantity", "system.carried", "system.transporte", "system.transporté",
-  "system.inInventory", "system.ignoreEncumbrance", "system.equipe", "system.equipee", "system.equipped",
+  "system.inInventory", "system.ignoreEncumbrance", "system.encumbranceExempt",
+  "system.categorie", "system.category", "system.sousType", "system.subType", "system.subtype",
+  "system.tags", "system.effectTags", "system.equipe", "system.equipee", "system.equipped",
   "system.porte", "system.portee", "system.porté", "system.worn", "flags.add2e.modifiers",
-  "flags.add2e.carried", "flags.add2e.ignoreEncumbrance"
+  "flags.add2e.tags", "flags.add2e.effectTags", "flags.add2e.carried", "flags.add2e.ignoreEncumbrance"
 ]);
 
 const ACTOR_MOVEMENT_FIELDS = Object.freeze([
@@ -49,7 +52,8 @@ const ACTOR_MOVEMENT_FIELDS = Object.freeze([
   "system.bonus_caracteristiques.force", "system.bonus_divers_caracteristiques.force",
   "system.taille", "system.size", "system.gabarit", "system.transformation", "system.forme", "system.form",
   "system.mouvement", "system.movement", "system.vitesse_deplacement",
-  "flags.add2e.modifiers", "flags.add2e.size", "flags.add2e.transformation", "flags.add2e.terrain"
+  "flags.add2e.modifiers", "flags.add2e.size", "flags.add2e.transformation", "flags.add2e.terrain",
+  "flags.add2e.environment", "flags.add2e.milieu", "flags.add2e.monnaie"
 ]);
 
 globalThis.ADD2E_MOVE_XP_VERSION = ADD2E_MOVE_XP_VERSION;
@@ -99,7 +103,7 @@ function documentHasMovementModifier(document) {
 
 function itemHasWeightSource(item) {
   const system = item?.system ?? {};
-  return ["poids", "weight", "encombrement", "encumbrance"].some(key => {
+  return ["poids", "weight", "encombrement", "encumbrance", "poids_encombrement_po", "encumbrance_gp"].some(key => {
     if (!Object.prototype.hasOwnProperty.call(system, key)) return false;
     const value = Number(system[key]);
     return Number.isFinite(value) ? value !== 0 : String(system[key] ?? "").trim() !== "";
@@ -110,7 +114,6 @@ function itemCanAffectMovement(item, hookName, changes = {}, options = {}) {
   const actor = item?.parent;
   if (!actor || actor.documentName !== "Actor" || actor.type !== "personnage") return false;
   if (options?.add2eSpellSync || options?.add2eDropPurge || options?.add2eCompendiumTruth) return false;
-
   const type = String(item.type ?? "").toLowerCase();
   const structural = ["classe", "race"].includes(type);
   if (options?.add2eInternal && !structural) return false;
@@ -136,17 +139,15 @@ function effectHasStatus(effect) {
   const statuses = effect?.statuses;
   if (statuses instanceof Set && statuses.size > 0) return true;
   if (Array.isArray(statuses) && statuses.length > 0) return true;
-  return Boolean(
-    effect?.statusId
-    || effect?.flags?.core?.statusId
-    || effect?.flags?.add2e?.statusId
-    || effect?.flags?.add2e?.vitalStatus
-  );
+  return Boolean(effect?.statusId || effect?.flags?.core?.statusId || effect?.flags?.add2e?.statusId || effect?.flags?.add2e?.vitalStatus);
 }
 
 function effectTouchesMovement(effect, changes = {}) {
   if (documentHasMovementModifier(effect) || effectHasStatus(effect)) return true;
-  if (changesTouchPaths(changes, ["flags.add2e.modifiers", "statuses", "disabled", "isSuppressed"])) return true;
+  if (changesTouchPaths(changes, [
+    "flags.add2e.modifiers", "flags.add2e.capabilityTransformation", "flags.add2e.movement",
+    "flags.add2e.tags", "flags.add2e.effectTags", "statuses", "disabled", "isSuppressed"
+  ])) return true;
   const effectChanges = Array.isArray(effect?.changes) ? effect.changes : [];
   return effectChanges.some(change => {
     const key = String(change?.key ?? "");
@@ -186,12 +187,8 @@ Hooks.on("preUpdateActor", (actor, changes, options) => {
   if (options?.[ADD2E_MOVE_XP_INTERNAL] || options?.add2eInternal || !actor || actor.type !== "personnage") return true;
   const levelChanged = changedPath(actor, changes, "system.niveau");
   const xpChanged = changedPath(actor, changes, "system.xp");
-  const movementChanged = [
-    "system.mouvement.base",
-    "system.vitesse_deplacement"
-  ].some(path => changedPath(actor, changes, path));
+  const movementChanged = ["system.mouvement.base", "system.vitesse_deplacement"].some(path => changedPath(actor, changes, path));
   if (!levelChanged && !xpChanged && !movementChanged) return true;
-
   if (isMulticlassActor(actor) && (levelChanged || xpChanged)) {
     if (movementChanged) {
       const derived = changedUpdatePayload(actor, movementUpdates(actor).updates);
@@ -199,7 +196,6 @@ Hooks.on("preUpdateActor", (actor, changes, options) => {
     }
     return true;
   }
-
   const incoming = {};
   if (levelChanged) incoming["system.niveau"] = changeValue(changes, "system.niveau");
   if (xpChanged) incoming["system.xp"] = changeValue(changes, "system.xp");
