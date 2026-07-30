@@ -1,10 +1,12 @@
-// ADD2E — Domaine XP, mouvement et encombrement.
+// ADD2E — Domaine XP, mouvement et encombrement canoniques.
 // Compatible Foundry V13/V14/V15 — DialogV2 uniquement.
 
-export const ADD2E_MOVE_XP_VERSION = "2026-07-27-movement-xp-split-canonical-force-v8";
+export const ADD2E_MOVE_XP_VERSION = "2026-07-30-canonical-movement-encumbrance-v9";
 export const ADD2E_MOVE_XP_TAG = "[ADD2E][MOVE_XP]";
 export const ADD2E_MOVE_XP_INTERNAL = "add2eMoveXpInternal";
 export const ADD2E_MOVE_XP_RECALC_DELAY_MS = 140;
+
+const MISSING_MOVEMENT_BASE_WARNED = new Set();
 
 export function log(label, data = {}) {
   console.log(`${ADD2E_MOVE_XP_TAG}${label}`, data);
@@ -43,6 +45,16 @@ function firstPositive(...values) {
     if (Number.isFinite(out) && out > 0) return out;
   }
   return 0;
+}
+
+function round2(value) {
+  return Math.round(Math.max(0, num(value, 0)) * 100) / 100;
+}
+
+function clone(value) {
+  if (value === undefined || value === null) return value;
+  try { return foundry?.utils?.deepClone ? foundry.utils.deepClone(value) : JSON.parse(JSON.stringify(value)); }
+  catch (_error) { return value; }
 }
 
 export function sameValue(left, right) {
@@ -165,187 +177,382 @@ export function computeXp(actor) {
   return xpMeta(actor, level, xp);
 }
 
-function movementFromRaceName(actor) {
-  const label = norm(raceItem(actor)?.name ?? actor?.system?.race ?? "");
-  if (label.includes("nain") || label.includes("gnome") || label.includes("petite_gens") || label.includes("halfelin") || label.includes("halfeling") || label.includes("halfling")) return 6;
-  return 12;
+function effectsEngine() {
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
+  if (!engine || typeof engine.resolve !== "function") {
+    throw new Error("Le moteur canonique ADD2E des domaines movement/encumbrance est indisponible.");
+  }
+  return engine;
 }
 
-function currentProgressionRow(actor) {
-  const item = classItem(actor);
+function canonicalResolve(actor, { domain, target, base = 0, context = {} } = {}) {
+  const safeBase = num(base, 0);
+  return effectsEngine().resolve(actor, {
+    domain,
+    target,
+    base: safeBase,
+    context: {
+      ...context,
+      actor,
+      actionType: domain,
+      source: context.source ?? "movement-encumbrance"
+    }
+  });
+}
+
+function currentProgressionRowForClass(item) {
   if (!item) return null;
   const level = Math.max(1, num(item.system?.niveau ?? item.system?.level, 1));
   const progression = Array.isArray(item.system?.progression) ? item.system.progression : [];
   return progression.find(row => Number(row?.niveau ?? row?.level) === level) ?? progression[level - 1] ?? null;
 }
 
-function activeMovementEffects(actor) {
-  const seen = new Set();
-  const effects = [
-    ...(actor?.effects?.contents ?? actor?.effects ?? []),
-    ...(actor?.appliedEffects ?? [])
-  ];
-  return effects.filter(effect => {
-    const id = String(effect?.uuid ?? effect?.id ?? "");
-    if (!effect || !id || seen.has(id) || effect.disabled === true || effect.isSuppressed === true || effect.active === false) return false;
-    seen.add(id);
-    return true;
-  });
+function movementValue(system = {}) {
+  return firstPositive(
+    system.mouvement,
+    system.movement,
+    system.vitesse,
+    system.vitesse_deplacement,
+    system.deplacement,
+    system["déplacement"],
+    system.monkMove,
+    system.monkMovement,
+    system.baseMovement
+  );
 }
 
-export function magicMovementRules(actor) {
-  const entries = [];
-  let sequence = 0;
-  for (const effect of activeMovementEffects(actor)) {
-    const raw = effect?.flags?.add2e?.rules;
-    const rules = Array.isArray(raw) ? raw : Array.isArray(raw?.rules) ? raw.rules : raw && typeof raw === "object" ? [raw] : [];
-    for (const rule of rules) {
-      if (norm(rule?.kind) !== "movement_modifier") continue;
-      const operation = norm(rule?.operation);
-      const value = num(rule?.value, NaN);
-      const modes = (Array.isArray(rule?.modes) ? rule.modes : [rule?.modes])
-        .flatMap(entry => String(entry ?? "").split(/[,;|\n]+/g))
-        .map(norm).filter(Boolean);
-      entries.push({
-        effectId: effect.id ?? null,
-        effectName: effect.name ?? "Effet magique",
-        operation: ["add", "multiply", "override", "mode"].includes(operation) ? operation : "add",
-        value: Number.isFinite(value) ? value : null,
-        modes,
-        priority: Math.max(1, Math.floor(num(rule?.priority, 100))),
-        sequence: sequence++
+function naturalMovementSource(actor) {
+  const sources = [];
+  const race = raceItem(actor);
+  const raceValue = movementValue(race?.system ?? {});
+  if (raceValue > 0) {
+    sources.push({ kind: "race", itemId: race.id, itemUuid: race.uuid, name: race.name, value: raceValue });
+  }
+
+  for (const item of classItems(actor)) {
+    const row = currentProgressionRowForClass(item) ?? {};
+    const progressionValue = movementValue(row);
+    const classValue = movementValue(item.system ?? {});
+    const value = progressionValue > 0 ? progressionValue : classValue;
+    if (value > 0) {
+      sources.push({
+        kind: progressionValue > 0 ? "class-progression" : "class",
+        itemId: item.id,
+        itemUuid: item.uuid,
+        name: item.name,
+        level: Math.max(1, num(item.system?.niveau ?? item.system?.level, 1)),
+        value
       });
     }
   }
-  return entries.sort((left, right) => left.priority - right.priority || left.sequence - right.sequence);
-}
 
-function naturalBaseMove(actor) {
-  const item = classItem(actor);
-  const row = currentProgressionRow(actor) ?? {};
-  const cls = item?.system ?? {};
-  const race = raceItem(actor)?.system ?? {};
-  const preparedSys = actor?.system ?? {};
-  const sourceSys = actor?._source?.system ?? preparedSys;
-  const storedMovement = sourceSys.mouvement && typeof sourceSys.mouvement === "object" ? sourceSys.mouvement : {};
-
-  const classMove = firstPositive(
-    row.mouvement, row.movement, row.vitesse, row.vitesse_deplacement, row.deplacement, row["déplacement"], row.monkMove, row.monkMovement,
-    cls.mouvement, cls.movement, cls.vitesse, cls.vitesse_deplacement, cls.deplacement, cls["déplacement"], cls.baseMovement
-  );
-  if (classMove > 0) return classMove;
-
-  const raceMove = firstPositive(race.mouvement, race.movement, race.vitesse, race.vitesse_deplacement, race.deplacement, race["déplacement"], race.baseMovement);
-  if (raceMove > 0) return raceMove;
-
-  const storedBase = firstPositive(
-    storedMovement.naturalBase,
-    storedMovement.baseNaturelle,
-    storedMovement.base,
-    storedMovement.vitesseBase,
-    sourceSys.vitesse_base,
-    sourceSys.vitesseBase,
-    sourceSys.vitesse_deplacement_base
-  );
-  if (storedBase > 0) return storedBase;
-
-  return movementFromRaceName(actor);
-}
-
-function resolveMagicMovement(actor, naturalBase) {
-  const rules = magicMovementRules(actor);
-  const modes = new Set();
-  const applied = [];
-  let base = Math.max(0, num(naturalBase, 0));
-
-  for (const rule of rules) {
-    rule.modes.forEach(mode => modes.add(mode));
-    if (!Number.isFinite(rule.value) || rule.operation === "mode") continue;
-    const before = base;
-    if (rule.operation === "multiply") base *= rule.value;
-    else if (rule.operation === "override") base = rule.value;
-    else base += rule.value;
-    base = Math.max(0, base);
-    applied.push({ ...rule, before, after: base });
-  }
-
+  const selected = [...sources].sort((left, right) => right.value - left.value)[0] ?? null;
   return {
-    active: rules.length > 0,
-    naturalBase: Math.round(Math.max(0, num(naturalBase, 0)) * 100) / 100,
-    base: Math.round(base * 100) / 100,
-    modes: [...modes],
-    rules: applied
+    value: selected?.value ?? 0,
+    selected,
+    sources,
+    missing: !selected
   };
 }
 
-function strengthWeightAdjustment(actor) {
-  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
-  if (typeof engine?.resolveAbilityDerived !== "function") {
+function strengthEncumbranceProfile(actor) {
+  const engine = effectsEngine();
+  if (typeof engine.resolveAbilityDerived !== "function") {
     throw new Error("Le résolveur canonique ADD2E de Force est indisponible pour l’encombrement.");
   }
   const derived = engine.resolveAbilityDerived(actor, "force", {
     domain: "encumbrance",
     type: "movement-encumbrance",
-    source: "movement-xp",
-    consumer: "movement-xp"
+    source: "movement-encumbrance",
+    consumer: "movement"
   });
-  return num(derived?.profile?.poids, 0);
+  return {
+    derived,
+    weightAdjustment: num(derived?.profile?.poids, 0)
+  };
 }
 
-function itemWeight(item) {
+function itemIsCarried(item) {
   const type = String(item?.type ?? "").toLowerCase();
-  if (["classe", "race", "sort", "spell"].includes(type)) return 0;
+  if (["classe", "race", "sort", "spell"].includes(type)) return false;
   const system = item?.system ?? {};
-  const quantity = Math.max(1, num(system.quantite ?? system.quantity ?? 1, 1));
-  const weight = num(system.poids ?? system.weight ?? system.encombrement ?? system.encumbrance ?? 0, 0);
-  return Math.max(0, quantity * weight);
+  const flags = item?.flags?.add2e ?? {};
+  if (system.carried === false || system.transporte === false || system.transporté === false || system.inInventory === false) return false;
+  if (flags.carried === false || flags.ignoreEncumbrance === true || system.ignoreEncumbrance === true) return false;
+  return true;
 }
 
-function carriedWeight(actor) {
-  return (actor?.items?.contents ?? Array.from(actor?.items ?? [])).reduce((total, item) => total + itemWeight(item), 0);
+function itemWeightEntry(item) {
+  const system = item?.system ?? {};
+  const quantity = Math.max(0, num(system.quantite ?? system.quantity ?? 1, 1));
+  const unitWeight = Math.max(0, num(system.poids ?? system.weight ?? system.encombrement ?? system.encumbrance ?? 0, 0));
+  return {
+    item,
+    itemId: item?.id ?? null,
+    itemUuid: item?.uuid ?? null,
+    name: item?.name ?? "Objet",
+    quantity,
+    unitWeight,
+    total: round2(quantity * unitWeight)
+  };
+}
+
+function carriedInventory(actor) {
+  const entries = (actor?.items?.contents ?? Array.from(actor?.items ?? []))
+    .filter(itemIsCarried)
+    .map(itemWeightEntry)
+    .filter(entry => entry.total > 0);
+  return {
+    entries,
+    total: round2(entries.reduce((sum, entry) => sum + entry.total, 0))
+  };
+}
+
+function equippedArmor(actor) {
+  return (actor?.items?.contents ?? Array.from(actor?.items ?? [])).filter(item => {
+    const type = String(item?.type ?? "").toLowerCase();
+    if (!["armure", "armor"].includes(type)) return false;
+    const system = item?.system ?? {};
+    return system.equipe === true || system.equipped === true || system.porte === true || system.portee === true || system.worn === true;
+  });
+}
+
+function activeStatuses(actor) {
+  const statuses = new Set();
+  for (const effect of [...(actor?.effects?.contents ?? actor?.effects ?? []), ...(actor?.appliedEffects ?? [])]) {
+    if (!effect || effect.disabled === true || effect.isSuppressed === true || effect.active === false) continue;
+    for (const status of effect.statuses ?? []) {
+      const key = norm(status?.id ?? status);
+      if (key) statuses.add(key);
+    }
+  }
+  return [...statuses];
+}
+
+function movementContext(actor, source, inventory, armor, strength) {
+  const system = actor?.system ?? {};
+  const flags = actor?.flags?.add2e ?? {};
+  const scene = canvas?.scene ?? null;
+  return {
+    source: "movement-encumbrance",
+    consumer: "movement-token-control",
+    movementSource: clone(source),
+    inventory: {
+      total: inventory.total,
+      entries: inventory.entries.map(entry => ({
+        itemId: entry.itemId,
+        itemUuid: entry.itemUuid,
+        name: entry.name,
+        quantity: entry.quantity,
+        unitWeight: entry.unitWeight,
+        total: entry.total
+      }))
+    },
+    armor,
+    equippedArmor: armor,
+    strength: strength.derived,
+    size: system.taille ?? system.size ?? system.gabarit ?? flags.size ?? null,
+    transformation: flags.transformation ?? system.transformation ?? system.forme ?? system.form ?? null,
+    terrain: flags.terrain ?? scene?.flags?.add2e?.terrain ?? null,
+    statuses: activeStatuses(actor),
+    scene,
+    environment: scene?.flags?.add2e?.environment ?? scene?.flags?.add2e?.milieu ?? null
+  };
+}
+
+function resolvedTotal(resolution, fallback = 0) {
+  return round2(num(resolution?.total, fallback));
+}
+
+function encumbranceCategory(weight, normalLimit, heavyLimit, maximumLimit) {
+  if (weight > maximumLimit) return { label: "Surcharge", category: "surcharge", multiplier: 0 };
+  if (weight > heavyLimit) return { label: "Très encombré", category: "tres_encombre", multiplier: 0.25 };
+  if (weight > normalLimit) return { label: "Encombré", category: "encombre", multiplier: 0.5 };
+  return { label: "Équipement normal", category: "normal", multiplier: 1 };
+}
+
+function collectModes(resolution) {
+  const modes = new Set();
+  const add = value => {
+    const list = Array.isArray(value) ? value : value === undefined || value === null ? [] : [value];
+    for (const entry of list.flatMap(item => String(item ?? "").split(/[,;|\n]+/g))) {
+      const key = norm(entry);
+      if (key) modes.add(key);
+    }
+  };
+  for (const entry of resolution?.applied ?? []) {
+    add(entry?.modes);
+    add(entry?.mode);
+    add(entry?.metadata?.modes);
+    add(entry?.modifier?.modes);
+    add(entry?.modifier?.mode);
+    add(entry?.modifier?.metadata?.modes);
+    add(entry?.source?.metadata?.modes);
+  }
+  return [...modes];
 }
 
 export function computeMovement(actor) {
-  const naturalBase = naturalBaseMove(actor);
-  const magic = resolveMagicMovement(actor, naturalBase);
-  const base = magic.base;
-  const weight = carriedWeight(actor);
-  const forceAdjustment = strengthWeightAdjustment(actor);
-  const normalLimit = Math.max(50, 500 + forceAdjustment);
-  const heavyLimit = Math.max(normalLimit + 1, 1000 + forceAdjustment);
-  const severeLimit = Math.max(heavyLimit + 1, 1500 + forceAdjustment);
+  if (!actor || actor.type !== "personnage") {
+    return {
+      naturalBase: 0,
+      baseNaturelle: 0,
+      base: 0,
+      actuel: 0,
+      vitesse: 0,
+      poids: 0,
+      poidsKg: 0,
+      forcePoids: 0,
+      limiteNormale: 0,
+      limiteLourde: 0,
+      limiteSurcharge: 0,
+      categorie: "normal",
+      label: "Équipement normal",
+      multiplier: 1,
+      modes: [],
+      modesMagiques: [],
+      metresTour: 0,
+      donjonRoundMetres: 0,
+      segmentMetres: 0,
+      exterieurDemiJourKm: 0
+    };
+  }
 
-  let label = "Équipement normal";
-  let category = "normal";
-  let multiplier = 1;
-  if (weight > severeLimit) { label = "Surcharge"; category = "surcharge"; multiplier = 0; }
-  else if (weight > heavyLimit) { label = "Très encombré"; category = "tres_encombre"; multiplier = 0.25; }
-  else if (weight > normalLimit) { label = "Encombré"; category = "encombre"; multiplier = 0.5; }
+  const source = naturalMovementSource(actor);
+  const inventory = carriedInventory(actor);
+  const armor = equippedArmor(actor);
+  const strength = strengthEncumbranceProfile(actor);
+  const context = movementContext(actor, source, inventory, armor, strength);
 
-  const actuel = Math.max(0, Math.floor(base * multiplier));
+  const carriedWeightResolution = canonicalResolve(actor, {
+    domain: "encumbrance",
+    target: "carried-weight",
+    base: inventory.total,
+    context: { ...context, encumbranceTarget: "carried-weight" }
+  });
+  const weight = resolvedTotal(carriedWeightResolution, inventory.total);
+
+  const normalCapacityBase = Math.max(0, 500 + strength.weightAdjustment);
+  const heavyCapacityBase = Math.max(normalCapacityBase, 1000 + strength.weightAdjustment);
+  const maximumCapacityBase = Math.max(heavyCapacityBase, 1500 + strength.weightAdjustment);
+
+  const normalCapacityResolution = canonicalResolve(actor, {
+    domain: "encumbrance",
+    target: "capacity.normal",
+    base: normalCapacityBase,
+    context: { ...context, carriedWeight: weight, capacityTier: "normal" }
+  });
+  const heavyCapacityResolution = canonicalResolve(actor, {
+    domain: "encumbrance",
+    target: "capacity.heavy",
+    base: heavyCapacityBase,
+    context: { ...context, carriedWeight: weight, capacityTier: "heavy" }
+  });
+  const maximumCapacityResolution = canonicalResolve(actor, {
+    domain: "encumbrance",
+    target: "capacity.maximum",
+    base: maximumCapacityBase,
+    context: { ...context, carriedWeight: weight, capacityTier: "maximum" }
+  });
+
+  const normalLimit = resolvedTotal(normalCapacityResolution, normalCapacityBase);
+  const heavyLimit = Math.max(normalLimit, resolvedTotal(heavyCapacityResolution, heavyCapacityBase));
+  const maximumLimit = Math.max(heavyLimit, resolvedTotal(maximumCapacityResolution, maximumCapacityBase));
+  const category = encumbranceCategory(weight, normalLimit, heavyLimit, maximumLimit);
+
+  const multiplierResolution = canonicalResolve(actor, {
+    domain: "encumbrance",
+    target: "movement-multiplier",
+    base: category.multiplier,
+    context: {
+      ...context,
+      carriedWeight: weight,
+      limits: { normal: normalLimit, heavy: heavyLimit, maximum: maximumLimit },
+      encumbranceCategory: category.category
+    }
+  });
+  const multiplier = Math.max(0, num(multiplierResolution?.total, category.multiplier));
+  const movementBase = Math.max(0, source.value * multiplier);
+
+  const movementResolution = canonicalResolve(actor, {
+    domain: "movement",
+    target: "ground",
+    base: movementBase,
+    context: {
+      ...context,
+      naturalBase: source.value,
+      carriedWeight: weight,
+      encumbranceMultiplier: multiplier,
+      encumbranceCategory: category.category,
+      limits: { normal: normalLimit, heavy: heavyLimit, maximum: maximumLimit }
+    }
+  });
+
+  const resolvedMovement = Math.max(0, num(movementResolution?.total, movementBase));
+  const actuel = Math.floor(resolvedMovement);
+  const modes = collectModes(movementResolution);
+  const canonicalApplied = Array.isArray(movementResolution?.applied) ? movementResolution.applied : [];
+
+  if (source.missing) {
+    const key = String(actor.uuid ?? actor.id ?? actor.name ?? "actor");
+    if (!MISSING_MOVEMENT_BASE_WARNED.has(key)) {
+      MISSING_MOVEMENT_BASE_WARNED.add(key);
+      console.warn(`${ADD2E_MOVE_XP_TAG}[MOVEMENT][MISSING_BASE]`, {
+        actor: actor.name,
+        actorId: actor.id,
+        message: "Aucun mouvement explicite n’est défini sur l’Item race ou les Items classe."
+      });
+    }
+  }
+
   return {
-    naturalBase: magic.naturalBase,
-    baseNaturelle: magic.naturalBase,
-    base,
+    naturalBase: round2(source.value),
+    baseNaturelle: round2(source.value),
+    base: round2(movementBase),
     actuel,
     vitesse: actuel,
-    poids: Math.round(weight * 100) / 100,
-    poidsKg: Math.round((weight / 20) * 100) / 100,
-    forcePoids: forceAdjustment,
+    poids: weight,
+    poidsKg: round2(weight / 20),
+    forcePoids: strength.weightAdjustment,
     limiteNormale: normalLimit,
     limiteLourde: heavyLimit,
-    limiteSurcharge: severeLimit,
-    categorie: category,
-    label,
+    limiteSurcharge: maximumLimit,
+    categorie: category.category,
+    label: category.label,
     multiplier,
-    modes: magic.modes,
-    modesMagiques: magic.modes,
-    magic,
+    modes,
+    modesMagiques: modes,
+    source,
+    encumbrance: {
+      carriedWeight: carriedWeightResolution,
+      capacities: {
+        normal: normalCapacityResolution,
+        heavy: heavyCapacityResolution,
+        maximum: maximumCapacityResolution
+      },
+      movementMultiplier: multiplierResolution,
+      category: category.category,
+      label: category.label
+    },
+    movementResolution,
+    magic: {
+      active: canonicalApplied.length > 0,
+      naturalBase: round2(source.value),
+      base: round2(resolvedMovement),
+      modes,
+      rules: canonicalApplied
+    },
     metresTour: actuel,
     donjonRoundMetres: actuel,
-    segmentMetres: Math.round(actuel / 10 * 100) / 100,
-    exterieurDemiJourKm: Math.round(actuel * 1.6 * 100) / 100
+    segmentMetres: round2(actuel / 10),
+    exterieurDemiJourKm: round2(actuel * 1.6)
   };
+}
+
+// Nom historique conservé uniquement comme vue de diagnostic des modificateurs
+// canoniques appliqués. Aucune règle flags.add2e.rules n’est interprétée ici.
+export function magicMovementRules(actor) {
+  return computeMovement(actor)?.movementResolution?.applied ?? [];
 }
 
 export function movementUpdates(actor) {
