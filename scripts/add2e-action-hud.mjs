@@ -8,7 +8,7 @@ export {
   add2eCloseActionHud
 } from "./add2e-action-hud/core.mjs";
 
-const ADD2E_HUD_COMPLEMENTS_VERSION = "2026-07-30-hud-complements-only-v12";
+const ADD2E_HUD_COMPLEMENTS_VERSION = "2026-07-30-hud-familiar-capabilities-v13";
 const ADD2E_HUD_ID = "add2e-action-hud";
 const ADD2E_HUD_COMPLEMENTS_STYLE_ID = "add2e-action-hud-complements-style";
 
@@ -112,15 +112,18 @@ function familiarHtml(actor, rows) {
     const info = familiarActionInfo(data);
     return `<button type="button" class="a2e-hud-familiar-action a2e-familiar-effect-action" data-actor-id="${esc(actor.id)}" data-effect-id="${esc(effect.id ?? effect._id ?? "")}" data-familiar-action="${esc(data.action)}" title="${esc(info.title)}"><i class="fas ${info.icon}"></i> ${esc(info.label)}</button>`;
   }).join("");
-  return `<div class="a2e-hud-familiar-actions-title"><i class="fas fa-paw"></i> Commandes du familier</div>${controls}`;
+  return `<div class="a2e-hud-familiar-actions-title"><i class="fas fa-paw"></i> Familier</div>${controls}`;
 }
 
 function renderFamiliarActions() {
   if (familiarRendering) return;
   const root = document.getElementById(ADD2E_HUD_ID);
   const actor = currentHudActor();
-  const section = root?.querySelector?.('[data-section="effets"]');
+  const section = root?.querySelector?.('[data-section="capacites"]');
   if (!root || !actor || !section) return;
+
+  root.querySelector('[data-section="effets"] > .a2e-hud-familiar-actions')?.remove?.();
+
   const rows = familiarActionEffects(actor);
   const existing = section.querySelector(':scope > .a2e-hud-familiar-actions');
   if (!rows.length) {
@@ -138,6 +141,7 @@ function renderFamiliarActions() {
     panel.dataset.add2eHudFamiliarSignature = signature;
     panel.innerHTML = familiarHtml(actor, rows);
     section.prepend(panel);
+    for (const empty of section.querySelectorAll(':scope > .empty')) empty.remove();
   });
   familiarRendering = false;
 }
