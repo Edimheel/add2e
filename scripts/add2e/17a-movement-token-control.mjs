@@ -437,7 +437,9 @@ function notifyGmsMovementExceeded(tokenDoc, result, { userId = null } = {}) {
       .catch(error => console.warn(`${ADD2E_MOVE_XP_TAG}[TOKEN][GM_ALERT_ERROR]`, error));
   }
 
-  if (game.user.isGM) ui.notifications.warn(`${result.actor.name} dépasse son mouvement (${result.status.label}) : ${result.next.toFixed(1)} m / ${result.max.toFixed(1)} m.`);
+  if (game.user.isGM) {
+    ui.notifications.warn(`${result.actor.name} dépasse son mouvement (${result.status.label}) : ${result.next.toFixed(1)} m / ${result.max.toFixed(1)} m.`);
+  }
 }
 
 function rememberAllowedMovement(tokenDoc, changes, result) {
@@ -461,7 +463,11 @@ export function computeTokenMovementScale(tokenDoc, changes = {}, { movement = n
   const actor = tokenDoc.actor;
   if (!actor || actor.type !== "personnage") return null;
 
-  const details = computeMovement(actor);
+  const details = computeMovement(actor, {
+    token: tokenDoc,
+    scene: tokenDoc.parent ?? canvas?.scene ?? null,
+    consumer: "movement-token-control"
+  });
   const max = Number(details.actuel ?? actor.system?.movement ?? actor.system?.vitesse_deplacement ?? 0) || 0;
   const origin = from ?? (movement ? nativeMovementOrigin(tokenDoc, movement) : (game.combat ? { x: tokenDoc.x, y: tokenDoc.y } : movementOrigin(tokenDoc)));
   const nativeDistance = movement ? nativeMovementMeters(tokenDoc, movement, phase) : null;
@@ -482,7 +488,9 @@ export function validateTokenMovement(tokenDoc, changes, options = {}, movement 
   const result = computeTokenMovementScale(tokenDoc, changes, { movement, phase: movement ? "pre" : "legacy" });
   if (!result) return { allowed: true, result: null };
 
-  if (result.next > result.max + 0.01) notifyGmsMovementExceeded(tokenDoc, result, { userId: options?.userId ?? game.user?.id ?? null });
+  if (result.next > result.max + 0.01) {
+    notifyGmsMovementExceeded(tokenDoc, result, { userId: options?.userId ?? game.user?.id ?? null });
+  }
   if (game.user.isGM || !result.status.blocked) return { allowed: true, result };
 
   ui.notifications.warn(`${actor.name} dépasse son mouvement (${result.status.label}) : ${result.next.toFixed(1)} m / ${result.max.toFixed(1)} m.`);
@@ -505,11 +513,14 @@ export function installMovementTokenControl() {
     installMovementDragPreview();
     if (game.user.isGM) {
       for (const actor of game.actors?.filter(actor => actor.type === "personnage") ?? []) {
-        await recalc(actor, { mode: "movement" }).catch(error => console.warn(`${ADD2E_MOVE_XP_TAG}[READY][SKIP]`, actor?.name, error));
+        await recalc(actor, { mode: "movement" })
+          .catch(error => console.warn(`${ADD2E_MOVE_XP_TAG}[READY][SKIP]`, actor?.name, error));
       }
     }
     for (const token of canvas?.tokens?.placeables ?? []) {
-      if (token.actor?.type === "personnage") token.document.setFlag("add2e", "lastAllowedPosition", { x: token.document.x, y: token.document.y });
+      if (token.actor?.type === "personnage") {
+        token.document.setFlag("add2e", "lastAllowedPosition", { x: token.document.x, y: token.document.y });
+      }
     }
   });
 
@@ -520,7 +531,12 @@ export function installMovementTokenControl() {
     if (!tokenDoc?.actor || tokenDoc.actor.type !== "personnage") return true;
 
     const target = nativeMovementTarget(tokenDoc, movement);
-    const checked = validateTokenMovement(tokenDoc, target, { ...operation, add2eNativeMovement: true, userId: game.user?.id ?? null }, movement);
+    const checked = validateTokenMovement(
+      tokenDoc,
+      target,
+      { ...operation, add2eNativeMovement: true, userId: game.user?.id ?? null },
+      movement
+    );
     if (!checked.allowed) return false;
 
     nativeMovementCache.set(nativeMovementCacheKey(tokenDoc, movement), { result: checked.result, target });
@@ -556,7 +572,9 @@ export function installMovementTokenControl() {
     const result = computeTokenMovementScale(tokenDoc, { x: tokenDoc.x, y: tokenDoc.y });
     if (!result) return;
     drawMovementScale(tokenDoc, result.status, result.next, result.max);
-    if (!userId || game.user?.id === userId) rememberAllowedMovement(tokenDoc, { x: tokenDoc.x, y: tokenDoc.y }, result);
+    if (!userId || game.user?.id === userId) {
+      rememberAllowedMovement(tokenDoc, { x: tokenDoc.x, y: tokenDoc.y }, result);
+    }
   });
 
   Hooks.on("controlToken", token => {
