@@ -1,7 +1,7 @@
 // ADD2E — Domaine XP, mouvement et encombrement canoniques.
 // Compatible Foundry V13/V14/V15 — DialogV2 uniquement.
 
-export const ADD2E_MOVE_XP_VERSION = "2026-07-30-canonical-movement-encumbrance-v11";
+export const ADD2E_MOVE_XP_VERSION = "2026-07-30-canonical-movement-encumbrance-v12";
 export const ADD2E_MOVE_XP_TAG = "[ADD2E][MOVE_XP]";
 export const ADD2E_MOVE_XP_INTERNAL = "add2eMoveXpInternal";
 export const ADD2E_MOVE_XP_RECALC_DELAY_MS = 140;
@@ -10,6 +10,9 @@ const MISSING_MOVEMENT_BASE_WARNED = new Set();
 const GOLD_PIECES_PER_KILOGRAM = 20;
 const GOLD_PIECES_PER_POUND = 10;
 const ADND_MOVEMENT_INCH_METRES = 3;
+const MOVEMENT_TARGETS = Object.freeze([
+  "ground", "flight", "ascent", "descent", "vertical", "underwater", "swim"
+]);
 
 export function log(label, data = {}) {
   console.log(`${ADD2E_MOVE_XP_TAG}${label}`, data);
@@ -29,16 +32,11 @@ export function num(value, fallback = 0) {
   if (!raw) return fallback;
   raw = raw.replace(/[^0-9.,+\-]/g, "");
   if (!raw) return fallback;
-
   if (raw.includes(",") && raw.includes(".")) {
     if (raw.lastIndexOf(",") > raw.lastIndexOf(".")) raw = raw.replace(/\./g, "").replace(",", ".");
     else raw = raw.replace(/,/g, "");
-  } else if (raw.includes(",")) {
-    raw = raw.replace(",", ".");
-  } else if (/^[+\-]?\d{1,3}(?:\.\d{3})+$/.test(raw)) {
-    raw = raw.replace(/\./g, "");
-  }
-
+  } else if (raw.includes(",")) raw = raw.replace(",", ".");
+  else if (/^[+\-]?\d{1,3}(?:\.\d{3})+$/.test(raw)) raw = raw.replace(/\./g, "");
   const parsed = Number(raw);
   return Number.isFinite(parsed) ? parsed : fallback;
 }
@@ -70,12 +68,29 @@ function round2(value) {
 function clone(value) {
   if (value === undefined || value === null) return value;
   try {
-    return foundry?.utils?.deepClone
-      ? foundry.utils.deepClone(value)
-      : JSON.parse(JSON.stringify(value));
+    return foundry?.utils?.deepClone ? foundry.utils.deepClone(value) : JSON.parse(JSON.stringify(value));
   } catch (_error) {
     return value;
   }
+}
+
+function records(value) {
+  if (Array.isArray(value)) return value.filter(Boolean);
+  if (value && typeof value === "object") return Object.values(value).filter(Boolean);
+  return [];
+}
+
+function scalars(value) {
+  if (value === undefined || value === null || value === "") return [];
+  if (Array.isArray(value)) return value.flatMap(scalars);
+  if (value instanceof Set) return [...value].flatMap(scalars);
+  if (typeof value === "object") {
+    for (const key of ["values", "items", "list", "tags", "effectTags", "modes", "value"]) {
+      if (value[key] !== undefined) return scalars(value[key]);
+    }
+    return [];
+  }
+  return String(value).split(/[,;|\n]+/g).map(entry => entry.trim()).filter(Boolean);
 }
 
 export function sameValue(left, right) {
@@ -92,25 +107,19 @@ export function getPath(document, path) {
 }
 
 export function changedUpdatePayload(actor, updates = {}) {
-  return Object.fromEntries(
-    Object.entries(updates).filter(([path, value]) => !sameValue(getPath(actor, path), value))
-  );
+  return Object.fromEntries(Object.entries(updates).filter(([path, value]) => !sameValue(getPath(actor, path), value)));
 }
 
 export function changeValue(changes, path) {
-  return foundry.utils.hasProperty(changes, path)
-    ? foundry.utils.getProperty(changes, path)
-    : undefined;
+  return foundry.utils.hasProperty(changes, path) ? foundry.utils.getProperty(changes, path) : undefined;
 }
 
 export function changedPath(actor, changes, path) {
-  return foundry.utils.hasProperty(changes, path)
-    && !sameValue(changeValue(changes, path), getPath(actor, path));
+  return foundry.utils.hasProperty(changes, path) && !sameValue(changeValue(changes, path), getPath(actor, path));
 }
 
 export function classItems(actor) {
-  return Array.from(actor?.items ?? [])
-    .filter(item => String(item?.type ?? "").toLowerCase() === "classe");
+  return Array.from(actor?.items ?? []).filter(item => String(item?.type ?? "").toLowerCase() === "classe");
 }
 
 function classItem(actor) {
@@ -119,8 +128,7 @@ function classItem(actor) {
 }
 
 function raceItem(actor) {
-  return Array.from(actor?.items ?? [])
-    .find(item => String(item?.type ?? "").toLowerCase() === "race") ?? null;
+  return Array.from(actor?.items ?? []).find(item => String(item?.type ?? "").toLowerCase() === "race") ?? null;
 }
 
 export function isMulticlassActor(actor) {
@@ -129,35 +137,23 @@ export function isMulticlassActor(actor) {
 
 function parseXpRange(raw) {
   const text = String(raw ?? "").trim();
-  const values = text.match(/[0-9][0-9.\s]*/g)
-    ?.map(value => num(value, NaN))
-    .filter(Number.isFinite) ?? [];
+  const values = text.match(/[0-9][0-9.\s]*/g)?.map(value => num(value, NaN)).filter(Number.isFinite) ?? [];
   return { min: values[0] ?? 0, max: values[1] ?? null, raw: text };
 }
 
 function xpRows(actor) {
   const cls = classItem(actor)?.system ?? actor?.system?.details_classe ?? {};
   const progression = Array.isArray(cls.progression) ? cls.progression : [];
-  return progression
-    .map((row, index) => {
-      const range = parseXpRange(
-        row?.xpRange
-        ?? row?.xp_range
-        ?? row?.experience
-        ?? row?.niveau_xp
-        ?? row?.xp
-        ?? ""
-      );
-      return {
-        ...row,
-        niveau: num(row?.niveau ?? row?.level ?? index + 1, index + 1),
-        xpMin: range.min,
-        xpMax: range.max,
-        xpLabel: range.raw
-      };
-    })
-    .filter(row => row.niveau > 0)
-    .sort((left, right) => left.niveau - right.niveau);
+  return progression.map((row, index) => {
+    const range = parseXpRange(row?.xpRange ?? row?.xp_range ?? row?.experience ?? row?.niveau_xp ?? row?.xp ?? "");
+    return {
+      ...row,
+      niveau: num(row?.niveau ?? row?.level ?? index + 1, index + 1),
+      xpMin: range.min,
+      xpMax: range.max,
+      xpLabel: range.raw
+    };
+  }).filter(row => row.niveau > 0).sort((left, right) => left.niveau - right.niveau);
 }
 
 export function minXpForLevel(actor, level = null) {
@@ -193,12 +189,8 @@ function xpMeta(actor, levelValue, xpValue) {
     nextLevel: next?.niveau ?? null,
     nextXp,
     xpToNext: next ? Math.max(0, nextXp - xp) : 0,
-    percent: next
-      ? Math.max(0, Math.min(100, Math.floor(((xp - currentMin) / span) * 100)))
-      : 100,
-    progressionLabel: next
-      ? `${xp.toLocaleString()} / ${nextXp.toLocaleString()} XP`
-      : `${xp.toLocaleString()} XP — niveau maximum de la table`,
+    percent: next ? Math.max(0, Math.min(100, Math.floor(((xp - currentMin) / span) * 100))) : 100,
+    progressionLabel: next ? `${xp.toLocaleString()} / ${nextXp.toLocaleString()} XP` : `${xp.toLocaleString()} XP — niveau maximum de la table`,
     hasProgression: rows.length > 0
   };
 }
@@ -206,14 +198,8 @@ function xpMeta(actor, levelValue, xpValue) {
 export function computeXp(actor) {
   if (isMulticlassActor(actor)) {
     return {
-      xp: null,
-      level: null,
-      requiredMin: null,
-      suggestedLevel: null,
-      nextLevel: null,
-      nextXp: null,
-      xpToNext: null,
-      percent: null,
+      xp: null, level: null, requiredMin: null, suggestedLevel: null, nextLevel: null,
+      nextXp: null, xpToNext: null, percent: null,
       progressionLabel: "Progression gérée par les Items classe",
       hasProgression: false,
       multiclass: true
@@ -233,11 +219,10 @@ function effectsEngine() {
 }
 
 function canonicalResolve(actor, { domain, target, base = 0, context = {} } = {}) {
-  const safeBase = num(base, 0);
   return effectsEngine().resolve(actor, {
     domain,
     target,
-    base: safeBase,
+    base: num(base, 0),
     context: {
       ...context,
       actor,
@@ -251,9 +236,7 @@ function currentProgressionRowForClass(item) {
   if (!item) return null;
   const level = Math.max(1, num(item.system?.niveau ?? item.system?.level, 1));
   const progression = Array.isArray(item.system?.progression) ? item.system.progression : [];
-  return progression.find(row => Number(row?.niveau ?? row?.level) === level)
-    ?? progression[level - 1]
-    ?? null;
+  return progression.find(row => Number(row?.niveau ?? row?.level) === level) ?? progression[level - 1] ?? null;
 }
 
 function directMovementMetres(system = {}) {
@@ -268,25 +251,16 @@ function directMovementMetres(system = {}) {
     system.monkMovement,
     system.baseMovement
   );
-  return value > 0
-    ? { value, rawValue: value, unit: "metres", field: "direct" }
-    : null;
+  return value > 0 ? { value, rawValue: value, unit: "metres", field: "direct" } : null;
 }
 
 function progressionMovementMetres(row = {}) {
   const direct = directMovementMetres(row);
   if (direct) return direct;
-
   const monkInches = firstPositive(row?.monk?.movement);
-  if (monkInches > 0) {
-    return {
-      value: round2(monkInches * ADND_MOVEMENT_INCH_METRES),
-      rawValue: monkInches,
-      unit: "adnd-inch",
-      field: "monk.movement"
-    };
-  }
-  return null;
+  return monkInches > 0
+    ? { value: round2(monkInches * ADND_MOVEMENT_INCH_METRES), rawValue: monkInches, unit: "adnd-inch", field: "monk.movement" }
+    : null;
 }
 
 function naturalMovementSource(actor) {
@@ -294,18 +268,10 @@ function naturalMovementSource(actor) {
   const race = raceItem(actor);
   const raceMovement = directMovementMetres(race?.system ?? {});
   if (raceMovement?.value > 0) {
-    sources.push({
-      kind: "race",
-      itemId: race.id,
-      itemUuid: race.uuid,
-      name: race.name,
-      ...raceMovement
-    });
+    sources.push({ kind: "race", itemId: race.id, itemUuid: race.uuid, name: race.name, ...raceMovement });
   }
-
   for (const item of classItems(actor)) {
-    const row = currentProgressionRowForClass(item) ?? {};
-    const progressionMovement = progressionMovementMetres(row);
+    const progressionMovement = progressionMovementMetres(currentProgressionRowForClass(item) ?? {});
     const classMovement = directMovementMetres(item.system ?? {});
     const movement = progressionMovement ?? classMovement;
     if (!movement?.value) continue;
@@ -318,14 +284,15 @@ function naturalMovementSource(actor) {
       ...movement
     });
   }
-
-  const selected = [...sources].sort((left, right) => right.value - left.value)[0] ?? null;
-  return {
-    value: selected?.value ?? 0,
-    selected,
-    sources,
-    missing: !selected
-  };
+  const actorMovement = actor?.type === "personnage" ? null : directMovementMetres(actor?.system ?? {});
+  if (actorMovement?.value > 0) {
+    sources.push({ kind: "actor", itemId: null, itemUuid: actor?.uuid ?? null, name: actor?.name ?? "Acteur", ...actorMovement });
+  }
+  const selected = [...sources].sort((left, right) => {
+    const priority = { "class-progression": 4, race: 3, class: 2, actor: 1 };
+    return right.value - left.value || (priority[right.kind] ?? 0) - (priority[left.kind] ?? 0);
+  })[0] ?? null;
+  return { value: selected?.value ?? 0, selected, sources, missing: !selected };
 }
 
 function strengthEncumbranceProfile(actor) {
@@ -339,10 +306,48 @@ function strengthEncumbranceProfile(actor) {
     source: "movement-encumbrance",
     consumer: "movement"
   });
-  return {
-    derived,
-    weightAdjustment: num(derived?.profile?.poids, 0)
-  };
+  return { derived, weightAdjustment: num(derived?.profile?.poids, 0) };
+}
+
+function itemTags(item) {
+  const system = item?.system ?? {};
+  const flags = item?.flags?.add2e ?? {};
+  return new Set([
+    ...scalars(system.tags),
+    ...scalars(system.effectTags),
+    ...scalars(flags.tags),
+    ...scalars(flags.effectTags)
+  ].map(norm).filter(Boolean));
+}
+
+function itemEquipped(item) {
+  try { return effectsEngine().itemEquipped(item); }
+  catch (_error) {
+    const system = item?.system ?? {};
+    return system.equipe === true || system.equipee === true || system.equipped === true || system.porte === true || system.portee === true;
+  }
+}
+
+function itemEncumbranceExemption(item) {
+  const system = item?.system ?? {};
+  const flags = item?.flags?.add2e ?? {};
+  const category = norm(system.categorie ?? system.category);
+  const subtype = norm(system.sousType ?? system.subType ?? system.subtype);
+  const tags = itemTags(item);
+
+  if (flags.ignoreEncumbrance === true || system.ignoreEncumbrance === true || system.encumbranceExempt === true) {
+    return "explicit";
+  }
+  if (category === "composant_sort" || subtype === "composant" || tags.has("composant_sort")) {
+    return "spell-component";
+  }
+  if (tags.has("objet_outils_de_voleur") || tags.has("outils_de_voleur")) {
+    return "thief-tools";
+  }
+  if (category === "vetement" && itemEquipped(item)) {
+    return "worn-clothing";
+  }
+  return null;
 }
 
 function itemIsCarried(item) {
@@ -350,120 +355,49 @@ function itemIsCarried(item) {
   if (["classe", "race", "sort", "spell"].includes(type)) return false;
   const system = item?.system ?? {};
   const flags = item?.flags?.add2e ?? {};
-  if (
-    system.carried === false
-    || system.transporte === false
-    || system.transporté === false
-    || system.inInventory === false
-  ) return false;
-  if (
-    flags.carried === false
-    || flags.ignoreEncumbrance === true
-    || system.ignoreEncumbrance === true
-  ) return false;
-  return true;
+  if (system.carried === false || system.transporte === false || system.transporté === false || system.inInventory === false) return false;
+  if (flags.carried === false) return false;
+  return !itemEncumbranceExemption(item);
 }
 
 function normalizedWeightUnit(system = {}) {
-  return norm(
-    system.poids_unite
-    ?? system.weightUnit
-    ?? system.weight_unit
-    ?? system.unite_poids
-    ?? system["unité_poids"]
-    ?? ""
-  );
+  return norm(system.poids_unite ?? system.weightUnit ?? system.weight_unit ?? system.unite_poids ?? system["unité_poids"] ?? "");
 }
 
 function magicArmorIsWeightless(item) {
   const system = item?.system ?? {};
   const type = String(item?.type ?? "").toLowerCase();
   const isArmor = ["armure", "armor"].includes(type);
-  const isShield = system.bouclier === true
-    || norm(system.type_armure) === "bouclier"
-    || norm(system.categorie) === "bouclier";
+  const isShield = system.bouclier === true || norm(system.type_armure) === "bouclier" || norm(system.categorie) === "bouclier";
   return isArmor && !isShield && (system.magique === true || system.magic === true);
 }
 
 function itemWeightGoldPieces(item) {
   const system = item?.system ?? {};
   if (magicArmorIsWeightless(item)) {
-    return {
-      value: 0,
-      rawValue: num(system.poids ?? system.weight, 0),
-      rawUnit: normalizedWeightUnit(system) || "source",
-      source: "magic-armor-weightless"
-    };
+    return { value: 0, rawValue: num(system.poids ?? system.weight, 0), rawUnit: normalizedWeightUnit(system) || "source", source: "magic-armor-weightless" };
   }
-
-  const explicitGp = num(
-    system.poids_encombrement_po
-    ?? system.encumbrance_gp
-    ?? system.encumbranceGoldPieces,
-    NaN
-  );
+  const explicitGp = num(system.poids_encombrement_po ?? system.encumbrance_gp ?? system.encumbranceGoldPieces, NaN);
   if (Number.isFinite(explicitGp) && explicitGp >= 0) {
-    return {
-      value: explicitGp,
-      rawValue: explicitGp,
-      rawUnit: "gp",
-      source: "poids_encombrement_po"
-    };
+    return { value: explicitGp, rawValue: explicitGp, rawUnit: "gp", source: "poids_encombrement_po" };
   }
-
-  const rawValue = num(
-    system.poids
-    ?? system.weight
-    ?? system.encombrement
-    ?? system.encumbrance,
-    0
-  );
-  if (!(rawValue > 0)) {
-    return {
-      value: 0,
-      rawValue: 0,
-      rawUnit: normalizedWeightUnit(system) || null,
-      source: "zero"
-    };
-  }
-
+  const rawValue = num(system.poids ?? system.weight ?? system.encombrement ?? system.encumbrance, 0);
+  if (!(rawValue > 0)) return { value: 0, rawValue: 0, rawUnit: normalizedWeightUnit(system) || null, source: "zero" };
   const unit = normalizedWeightUnit(system);
   if (["po", "pp", "gp", "piece_dor", "pieces_dor", "gold_piece", "gold_pieces"].includes(unit)) {
     return { value: rawValue, rawValue, rawUnit: unit, source: "explicit-gp" };
   }
   if (["kg", "kilogramme", "kilogrammes", "kilogram", "kilograms"].includes(unit)) {
-    return {
-      value: round2(rawValue * GOLD_PIECES_PER_KILOGRAM),
-      rawValue,
-      rawUnit: unit,
-      source: "explicit-kg"
-    };
+    return { value: round2(rawValue * GOLD_PIECES_PER_KILOGRAM), rawValue, rawUnit: unit, source: "explicit-kg" };
   }
   if (["lb", "lbs", "livre", "livres", "pound", "pounds"].includes(unit)) {
-    return {
-      value: round2(rawValue * GOLD_PIECES_PER_POUND),
-      rawValue,
-      rawUnit: unit,
-      source: "explicit-pound"
-    };
+    return { value: round2(rawValue * GOLD_PIECES_PER_POUND), rawValue, rawUnit: unit, source: "explicit-pound" };
   }
-
   const type = String(item?.type ?? "").toLowerCase();
   if (["arme", "weapon", "armure", "armor"].includes(type)) {
-    return {
-      value: round2(rawValue * GOLD_PIECES_PER_POUND),
-      rawValue,
-      rawUnit: "pound",
-      source: "item-type-pound"
-    };
+    return { value: round2(rawValue * GOLD_PIECES_PER_POUND), rawValue, rawUnit: "pound", source: "item-type-pound" };
   }
-
-  return {
-    value: round2(rawValue * GOLD_PIECES_PER_KILOGRAM),
-    rawValue,
-    rawUnit: "kg",
-    source: "object-default-kg"
-  };
+  return { value: round2(rawValue * GOLD_PIECES_PER_KILOGRAM), rawValue, rawUnit: "kg", source: "object-default-kg" };
 }
 
 function itemWeightEntry(item) {
@@ -471,6 +405,7 @@ function itemWeightEntry(item) {
   const quantity = Math.max(0, num(system.quantite ?? system.quantity ?? 1, 1));
   const normalized = itemWeightGoldPieces(item);
   return {
+    kind: "item",
     item,
     itemId: item?.id ?? null,
     itemUuid: item?.uuid ?? null,
@@ -484,34 +419,55 @@ function itemWeightEntry(item) {
   };
 }
 
-function carriedInventory(actor) {
-  const entries = (actor?.items?.contents ?? Array.from(actor?.items ?? []))
-    .filter(itemIsCarried)
-    .map(itemWeightEntry)
-    .filter(entry => entry.total > 0);
+function moneyWeightEntry(actor) {
+  const money = actor?.flags?.add2e?.monnaie ?? {};
+  const denominations = Object.fromEntries(["pp", "po", "pe", "pa", "pc"].map(key => [key, Math.max(0, Math.floor(num(money?.[key], 0)))]));
+  const quantity = Object.values(denominations).reduce((sum, value) => sum + value, 0);
   return {
-    entries,
-    total: round2(entries.reduce((sum, entry) => sum + entry.total, 0))
+    kind: "money",
+    item: null,
+    itemId: null,
+    itemUuid: null,
+    name: "Monnaie transportée",
+    quantity,
+    denominations,
+    rawUnitWeight: 1,
+    weightUnit: "coin",
+    weightSource: "flags.add2e.monnaie",
+    unitWeight: 1,
+    total: round2(quantity)
   };
 }
 
+function carriedInventory(actor) {
+  const itemEntries = (actor?.items?.contents ?? Array.from(actor?.items ?? [])).filter(itemIsCarried).map(itemWeightEntry).filter(entry => entry.total > 0);
+  const coinEntry = moneyWeightEntry(actor);
+  const entries = coinEntry.total > 0 ? [...itemEntries, coinEntry] : itemEntries;
+  return { entries, total: round2(entries.reduce((sum, entry) => sum + entry.total, 0)) };
+}
+
 function equippedArmor(actor) {
-  const engine = effectsEngine();
-  return (actor?.items?.contents ?? Array.from(actor?.items ?? []))
-    .filter(item => {
-      const type = String(item?.type ?? "").toLowerCase();
-      return ["armure", "armor"].includes(type) && engine.itemEquipped(item);
-    });
+  return (actor?.items?.contents ?? Array.from(actor?.items ?? [])).filter(item => {
+    const type = String(item?.type ?? "").toLowerCase();
+    return ["armure", "armor"].includes(type) && itemEquipped(item);
+  });
+}
+
+function activeEffects(actor) {
+  const seen = new Set();
+  const result = [];
+  for (const effect of [...(actor?.effects?.contents ?? actor?.effects ?? []), ...(actor?.appliedEffects ?? [])]) {
+    const key = String(effect?.uuid ?? effect?.id ?? "");
+    if (!effect || effect.disabled === true || effect.isSuppressed === true || effect.active === false || !key || seen.has(key)) continue;
+    seen.add(key);
+    result.push(effect);
+  }
+  return result;
 }
 
 function activeStatuses(actor) {
   const statuses = new Set();
-  const effects = [
-    ...(actor?.effects?.contents ?? actor?.effects ?? []),
-    ...(actor?.appliedEffects ?? [])
-  ];
-  for (const effect of effects) {
-    if (!effect || effect.disabled === true || effect.isSuppressed === true || effect.active === false) continue;
+  for (const effect of activeEffects(actor)) {
     for (const status of effect.statuses ?? []) {
       const key = norm(status?.id ?? status);
       if (key) statuses.add(key);
@@ -520,26 +476,53 @@ function activeStatuses(actor) {
   return [...statuses];
 }
 
+function transformationContext(actor, token = null) {
+  const candidates = [];
+  const add = (effect, raw, source) => {
+    if (!raw || typeof raw !== "object") return;
+    const form = raw.formKey ?? raw.form ?? raw.forme ?? raw.transformation ?? raw.movementMode ?? raw.mode ?? null;
+    const size = raw.size ?? raw.taille ?? raw.sizeCategory ?? raw.gabarit ?? null;
+    const factor = num(raw.factor ?? raw.scale ?? raw.sizeFactor, NaN);
+    candidates.push({ effectId: effect?.id ?? null, source, form, size, factor: Number.isFinite(factor) ? factor : null, raw: clone(raw) });
+  };
+
+  for (const effect of activeEffects(actor)) {
+    const flags = effect?.flags?.add2e ?? {};
+    add(effect, flags.capabilityTransformation, "capabilityTransformation");
+    add(effect, flags.movement, "movement");
+    for (const tag of scalars(flags.tags ?? flags.effectTags)) {
+      const key = norm(tag);
+      if (key.startsWith("forme_")) add(effect, { form: key.slice(6) }, "tag");
+      else if (key.startsWith("transformation_")) add(effect, { form: key.slice(15) }, "tag");
+      else if (key.startsWith("taille_")) add(effect, { size: key.slice(7) }, "tag");
+    }
+  }
+
+  const tokenTransform = token?.flags?.add2e?.tokenTransform ?? null;
+  add(null, tokenTransform, "tokenTransform");
+  const selected = candidates[candidates.length - 1] ?? null;
+  return {
+    selected,
+    candidates,
+    form: selected?.form ?? null,
+    size: selected?.size ?? null,
+    factor: selected?.factor ?? null
+  };
+}
+
 function explicitContextValue(options, key) {
-  return Object.prototype.hasOwnProperty.call(options ?? {}, key)
-    ? options[key]
-    : undefined;
+  return Object.prototype.hasOwnProperty.call(options ?? {}, key) ? options[key] : undefined;
 }
 
 function movementRuntimeToken(actor, options = {}) {
   if (options.persistent === true) return null;
   const direct = options.token?.document ?? options.token ?? null;
   if (direct) return direct;
-
-  const controlled = canvas?.tokens?.controlled
-    ?.find?.(token => token?.actor?.id === actor?.id) ?? null;
+  const controlled = canvas?.tokens?.controlled?.find?.(token => token?.actor?.id === actor?.id) ?? null;
   if (controlled?.document) return controlled.document;
-
   const active = actor?.getActiveTokens?.(true, true) ?? [];
   const currentSceneId = canvas?.scene?.id ?? null;
-  const current = active.find(
-    token => (token?.document?.parent?.id ?? token?.scene?.id) === currentSceneId
-  ) ?? active[0] ?? null;
+  const current = active.find(token => (token?.document?.parent?.id ?? token?.scene?.id) === currentSceneId) ?? active[0] ?? null;
   return current?.document ?? current ?? null;
 }
 
@@ -550,30 +533,17 @@ function movementRuntimeContext(actor, options = {}) {
   const tokenFlags = token?.flags?.add2e ?? {};
   const scene = persistent ? null : (options.scene ?? token?.parent ?? canvas?.scene ?? null);
   const sceneFlags = scene?.flags?.add2e ?? {};
-
   const explicitTerrain = explicitContextValue(options, "terrain");
   const explicitEnvironment = explicitContextValue(options, "environment");
   const explicitMilieu = explicitContextValue(options, "milieu");
-
-  const terrain = explicitTerrain !== undefined
-    ? explicitTerrain
-    : tokenFlags.terrain
-      ?? (persistent ? actorFlags.terrain ?? null : sceneFlags.terrain ?? actorFlags.terrain ?? null);
-
+  const terrain = explicitTerrain !== undefined ? explicitTerrain : tokenFlags.terrain ?? (persistent ? actorFlags.terrain ?? null : sceneFlags.terrain ?? actorFlags.terrain ?? null);
   const environment = explicitEnvironment !== undefined
     ? explicitEnvironment
     : explicitMilieu !== undefined
       ? explicitMilieu
-      : tokenFlags.environment
-        ?? tokenFlags.milieu
-        ?? (persistent
-          ? actorFlags.environment ?? actorFlags.milieu ?? null
-          : sceneFlags.environment
-            ?? sceneFlags.milieu
-            ?? actorFlags.environment
-            ?? actorFlags.milieu
-            ?? null);
-
+      : tokenFlags.environment ?? tokenFlags.milieu ?? (persistent
+        ? actorFlags.environment ?? actorFlags.milieu ?? null
+        : sceneFlags.environment ?? sceneFlags.milieu ?? actorFlags.environment ?? actorFlags.milieu ?? null);
   return {
     token,
     scene: persistent ? null : scene,
@@ -581,8 +551,7 @@ function movementRuntimeContext(actor, options = {}) {
     environment,
     milieu: environment,
     persistent,
-    consumer: options.consumer
-      ?? (persistent ? "movement-persistent-mirror" : "movement-runtime")
+    consumer: options.consumer ?? (persistent ? "movement-persistent-mirror" : "movement-runtime")
   };
 }
 
@@ -590,6 +559,9 @@ function movementContext(actor, source, inventory, armor, strength, options = {}
   const system = actor?.system ?? {};
   const flags = actor?.flags?.add2e ?? {};
   const runtime = movementRuntimeContext(actor, options);
+  const transformed = transformationContext(actor, runtime.token);
+  const transformation = options.transformation ?? transformed.form ?? flags.transformation ?? system.transformation ?? system.forme ?? system.form ?? null;
+  const size = options.size ?? transformed.size ?? system.taille ?? system.size ?? system.gabarit ?? flags.size ?? null;
   return {
     source: "movement-encumbrance",
     consumer: runtime.consumer,
@@ -597,10 +569,12 @@ function movementContext(actor, source, inventory, armor, strength, options = {}
     inventory: {
       total: inventory.total,
       entries: inventory.entries.map(entry => ({
+        kind: entry.kind,
         itemId: entry.itemId,
         itemUuid: entry.itemUuid,
         name: entry.name,
         quantity: entry.quantity,
+        denominations: clone(entry.denominations),
         rawUnitWeight: entry.rawUnitWeight,
         weightUnit: entry.weightUnit,
         weightSource: entry.weightSource,
@@ -611,20 +585,21 @@ function movementContext(actor, source, inventory, armor, strength, options = {}
     armor,
     equippedArmor: armor,
     strength: strength.derived,
-    size: options.size ?? system.taille ?? system.size ?? system.gabarit ?? flags.size ?? null,
-    transformation: options.transformation
-      ?? flags.transformation
-      ?? system.transformation
-      ?? system.forme
-      ?? system.form
-      ?? null,
+    size,
+    taille: size,
+    transformation,
+    form: transformation,
+    forme: transformation,
+    transformationContext: transformed,
     terrain: runtime.terrain,
     environment: runtime.environment,
     milieu: runtime.milieu,
     statuses: options.statuses ?? activeStatuses(actor),
     token: runtime.token,
     scene: runtime.scene,
-    persistent: runtime.persistent
+    persistent: runtime.persistent,
+    movementMode: options.movementMode ?? options.mode ?? null,
+    movementModes: options.movementModes ?? null
   };
 }
 
@@ -633,44 +608,68 @@ function resolvedTotal(resolution, fallback = 0) {
 }
 
 function encumbranceCategory(weight, normalLimit, heavyLimit, maximumLimit) {
-  if (weight > maximumLimit) {
-    return { label: "Surcharge", category: "surcharge", multiplier: 0 };
-  }
-  if (weight > heavyLimit) {
-    return { label: "Très encombré", category: "tres_encombre", multiplier: 0.25 };
-  }
-  if (weight > normalLimit) {
-    return { label: "Encombré", category: "encombre", multiplier: 0.5 };
-  }
+  if (weight > maximumLimit) return { label: "Surcharge", category: "surcharge", multiplier: 0 };
+  if (weight > heavyLimit) return { label: "Très encombré", category: "tres_encombre", multiplier: 0.25 };
+  if (weight > normalLimit) return { label: "Encombré", category: "encombre", multiplier: 0.5 };
   return { label: "Équipement normal", category: "normal", multiplier: 1 };
 }
 
-function collectModes(resolution) {
+function collectModes(...resolutions) {
   const modes = new Set();
   const add = value => {
-    const list = Array.isArray(value)
-      ? value
-      : value === undefined || value === null
-        ? []
-        : [value];
-    for (const entry of list.flatMap(item => String(item ?? "").split(/[,;|\n]+/g))) {
+    for (const entry of scalars(value)) {
       const key = norm(entry);
       if (key) modes.add(key);
     }
   };
-  for (const entry of resolution?.applied ?? []) {
-    add(entry?.modes);
-    add(entry?.mode);
-    add(entry?.metadata?.modes);
-    add(entry?.modifier?.modes);
-    add(entry?.modifier?.mode);
-    add(entry?.modifier?.metadata?.modes);
-    add(entry?.source?.metadata?.modes);
+  for (const resolution of resolutions.filter(Boolean)) {
+    for (const entry of resolution?.applied ?? []) {
+      add(entry?.modes);
+      add(entry?.mode);
+      add(entry?.metadata?.modes);
+      add(entry?.modifier?.modes);
+      add(entry?.modifier?.mode);
+      add(entry?.modifier?.metadata?.modes);
+      add(entry?.source?.metadata?.modes);
+    }
   }
   return [...modes];
 }
 
+function environmentMode(environment) {
+  const key = norm(environment);
+  if (["underwater", "sous_eau", "aquatique", "water", "eau"].includes(key)) return "underwater";
+  return null;
+}
+
+function canonicalMovementMode(raw, movementModes = {}) {
+  const key = norm(raw);
+  const aliases = {
+    terrestre: "ground",
+    sol: "ground",
+    ground: "ground",
+    vol: "flight",
+    flight: "flight",
+    aerien: "flight",
+    aerienne: "flight",
+    montee: "ascent",
+    ascent: "ascent",
+    descente: "descent",
+    descent: "descent",
+    vertical: "vertical",
+    levitation: "vertical",
+    sous_eau: "underwater",
+    underwater: "underwater",
+    aquatique: "underwater",
+    nage: "swim",
+    swim: "swim"
+  };
+  const target = aliases[key] ?? key;
+  return MOVEMENT_TARGETS.includes(target) && movementModes[target]?.available ? target : "ground";
+}
+
 function emptyMovement() {
+  const modeData = Object.fromEntries(MOVEMENT_TARGETS.map(target => [target, { target, base: 0, value: 0, available: target === "ground", resolution: null }]));
   return {
     naturalBase: 0,
     baseNaturelle: 0,
@@ -687,8 +686,10 @@ function emptyMovement() {
     categorie: "normal",
     label: "Équipement normal",
     multiplier: 1,
+    modeActif: "ground",
     modes: [],
     modesMagiques: [],
+    movementModes: modeData,
     metresTour: 0,
     donjonRoundMetres: 0,
     segmentMetres: 0,
@@ -697,8 +698,7 @@ function emptyMovement() {
 }
 
 export function computeMovement(actor, options = {}) {
-  if (!actor || actor.type !== "personnage") return emptyMovement();
-
+  if (!actor) return emptyMovement();
   const source = naturalMovementSource(actor);
   const inventory = carriedInventory(actor);
   const armor = equippedArmor(actor);
@@ -712,41 +712,25 @@ export function computeMovement(actor, options = {}) {
     context: { ...context, encumbranceTarget: "carried-weight" }
   });
   const weight = resolvedTotal(carriedWeightResolution, inventory.total);
-
   const normalCapacityBase = Math.max(0, 500 + strength.weightAdjustment);
   const heavyCapacityBase = Math.max(normalCapacityBase, 1000 + strength.weightAdjustment);
   const maximumCapacityBase = Math.max(heavyCapacityBase, 1500 + strength.weightAdjustment);
-
   const normalCapacityResolution = canonicalResolve(actor, {
-    domain: "encumbrance",
-    target: "capacity.normal",
-    base: normalCapacityBase,
+    domain: "encumbrance", target: "capacity.normal", base: normalCapacityBase,
     context: { ...context, carriedWeight: weight, capacityTier: "normal" }
   });
   const heavyCapacityResolution = canonicalResolve(actor, {
-    domain: "encumbrance",
-    target: "capacity.heavy",
-    base: heavyCapacityBase,
+    domain: "encumbrance", target: "capacity.heavy", base: heavyCapacityBase,
     context: { ...context, carriedWeight: weight, capacityTier: "heavy" }
   });
   const maximumCapacityResolution = canonicalResolve(actor, {
-    domain: "encumbrance",
-    target: "capacity.maximum",
-    base: maximumCapacityBase,
+    domain: "encumbrance", target: "capacity.maximum", base: maximumCapacityBase,
     context: { ...context, carriedWeight: weight, capacityTier: "maximum" }
   });
-
   const normalLimit = resolvedTotal(normalCapacityResolution, normalCapacityBase);
-  const heavyLimit = Math.max(
-    normalLimit,
-    resolvedTotal(heavyCapacityResolution, heavyCapacityBase)
-  );
-  const maximumLimit = Math.max(
-    heavyLimit,
-    resolvedTotal(maximumCapacityResolution, maximumCapacityBase)
-  );
+  const heavyLimit = Math.max(normalLimit, resolvedTotal(heavyCapacityResolution, heavyCapacityBase));
+  const maximumLimit = Math.max(heavyLimit, resolvedTotal(maximumCapacityResolution, maximumCapacityBase));
   const category = encumbranceCategory(weight, normalLimit, heavyLimit, maximumLimit);
-
   const multiplierResolution = canonicalResolve(actor, {
     domain: "encumbrance",
     target: "movement-multiplier",
@@ -758,32 +742,45 @@ export function computeMovement(actor, options = {}) {
       encumbranceCategory: category.category
     }
   });
-  const multiplier = Math.max(
-    0,
-    num(multiplierResolution?.total, category.multiplier)
-  );
+  const multiplier = Math.max(0, num(multiplierResolution?.total, category.multiplier));
   const movementBase = Math.max(0, source.value * multiplier);
+  const sharedMovementContext = {
+    ...context,
+    naturalBase: source.value,
+    carriedWeight: weight,
+    encumbranceMultiplier: multiplier,
+    encumbranceCategory: category.category,
+    limits: { normal: normalLimit, heavy: heavyLimit, maximum: maximumLimit }
+  };
 
-  const movementResolution = canonicalResolve(actor, {
-    domain: "movement",
-    target: "ground",
-    base: movementBase,
-    context: {
-      ...context,
-      naturalBase: source.value,
-      carriedWeight: weight,
-      encumbranceMultiplier: multiplier,
-      encumbranceCategory: category.category,
-      limits: { normal: normalLimit, heavy: heavyLimit, maximum: maximumLimit }
-    }
-  });
+  const movementModes = {};
+  for (const target of MOVEMENT_TARGETS) {
+    const base = target === "ground" ? movementBase : 0;
+    const resolution = canonicalResolve(actor, {
+      domain: "movement",
+      target,
+      base,
+      context: { ...sharedMovementContext, movementMode: target }
+    });
+    const value = Math.max(0, num(resolution?.total, base));
+    const applied = Array.isArray(resolution?.applied) ? resolution.applied : [];
+    movementModes[target] = {
+      target,
+      base: round2(base),
+      value: Math.floor(value),
+      preciseValue: round2(value),
+      available: target === "ground" || applied.length > 0 || value > 0,
+      resolution
+    };
+  }
 
-  const resolvedMovement = Math.max(0, num(movementResolution?.total, movementBase));
-  const actuel = Math.floor(resolvedMovement);
-  const modes = collectModes(movementResolution);
-  const canonicalApplied = Array.isArray(movementResolution?.applied)
-    ? movementResolution.applied
-    : [];
+  const requestedMode = options.movementMode ?? options.mode ?? environmentMode(context.environment) ?? "ground";
+  const modeActif = canonicalMovementMode(requestedMode, movementModes);
+  const selected = movementModes[modeActif] ?? movementModes.ground;
+  const actuel = selected.value;
+  const allResolutions = MOVEMENT_TARGETS.map(target => movementModes[target].resolution);
+  const modes = collectModes(...allResolutions);
+  const canonicalApplied = allResolutions.flatMap(resolution => Array.isArray(resolution?.applied) ? resolution.applied : []);
 
   if (source.missing && options.warnMissingBase !== false) {
     const key = String(actor.uuid ?? actor.id ?? actor.name ?? "actor");
@@ -792,7 +789,7 @@ export function computeMovement(actor, options = {}) {
       console.warn(`${ADD2E_MOVE_XP_TAG}[MOVEMENT][MISSING_BASE]`, {
         actor: actor.name,
         actorId: actor.id,
-        message: "Aucun mouvement explicite n’est défini sur l’Item race ou les Items classe."
+        message: "Aucun mouvement explicite n’est défini sur l’acteur, l’Item race ou les Items classe."
       });
     }
   }
@@ -803,6 +800,7 @@ export function computeMovement(actor, options = {}) {
     base: round2(movementBase),
     actuel,
     vitesse: actuel,
+    modeActif,
     poids: weight,
     poidsPo: weight,
     poidsKg: round2(weight / GOLD_PIECES_PER_KILOGRAM),
@@ -815,30 +813,31 @@ export function computeMovement(actor, options = {}) {
     multiplier,
     modes,
     modesMagiques: modes,
+    movementModes,
     source,
     contextScope: {
       persistent: context.persistent === true,
       tokenId: context.token?.id ?? null,
       sceneId: context.scene?.id ?? null,
       terrain: context.terrain ?? null,
-      environment: context.environment ?? null
+      environment: context.environment ?? null,
+      size: context.size ?? null,
+      transformation: context.transformation ?? null
     },
+    inventory: clone(context.inventory),
     encumbrance: {
       carriedWeight: carriedWeightResolution,
-      capacities: {
-        normal: normalCapacityResolution,
-        heavy: heavyCapacityResolution,
-        maximum: maximumCapacityResolution
-      },
+      capacities: { normal: normalCapacityResolution, heavy: heavyCapacityResolution, maximum: maximumCapacityResolution },
       movementMultiplier: multiplierResolution,
       category: category.category,
       label: category.label
     },
-    movementResolution,
+    movementResolution: movementModes.ground.resolution,
+    movementResolutions: Object.fromEntries(MOVEMENT_TARGETS.map(target => [target, movementModes[target].resolution])),
     magic: {
       active: canonicalApplied.length > 0,
       naturalBase: round2(source.value),
-      base: round2(resolvedMovement),
+      base: selected.preciseValue,
       modes,
       rules: canonicalApplied
     },
@@ -849,22 +848,17 @@ export function computeMovement(actor, options = {}) {
   };
 }
 
-// Nom historique conservé uniquement comme vue de diagnostic des modificateurs
-// canoniques appliqués. Aucune règle flags.add2e.rules n’est interprétée ici.
 export function magicMovementRules(actor, options = {}) {
-  return computeMovement(actor, options)?.movementResolution?.applied ?? [];
+  return computeMovement(actor, options)?.magic?.rules ?? [];
 }
 
 export function movementUpdates(actor) {
-  const movement = computeMovement(actor, {
-    persistent: true,
-    consumer: "movement-persistent-mirror"
-  });
+  const movement = computeMovement(actor, { persistent: true, consumer: "movement-persistent-mirror", movementMode: "ground" });
   return {
     updates: {
       "system.mouvement": movement,
-      "system.movement": movement.actuel,
-      "system.vitesse_deplacement": movement.actuel
+      "system.movement": movement.movementModes?.ground?.value ?? movement.actuel,
+      "system.vitesse_deplacement": movement.movementModes?.ground?.value ?? movement.actuel
     },
     movement
   };
@@ -872,22 +866,11 @@ export function movementUpdates(actor) {
 
 export function flatActorUpdates(actor, { mode = "auto", incoming = {} } = {}) {
   const movementOnly = movementUpdates(actor);
-  if (mode === "movement" || isMulticlassActor(actor)) {
-    return {
-      updates: movementOnly.updates,
-      xp: computeXp(actor),
-      movement: movementOnly.movement,
-      multiclass: isMulticlassActor(actor)
-    };
+  if (mode === "movement" || isMulticlassActor(actor) || actor?.type !== "personnage") {
+    return { updates: movementOnly.updates, xp: computeXp(actor), movement: movementOnly.movement, multiclass: isMulticlassActor(actor) };
   }
-
-  const incomingLevel = incoming["system.niveau"] !== undefined
-    ? Math.max(1, num(incoming["system.niveau"], 1))
-    : Math.max(1, num(actor?.system?.niveau, 1));
-  const incomingXp = incoming["system.xp"] !== undefined
-    ? Math.max(0, Math.floor(num(incoming["system.xp"], 0)))
-    : Math.max(0, Math.floor(num(actor?.system?.xp, 0)));
-
+  const incomingLevel = incoming["system.niveau"] !== undefined ? Math.max(1, num(incoming["system.niveau"], 1)) : Math.max(1, num(actor?.system?.niveau, 1));
+  const incomingXp = incoming["system.xp"] !== undefined ? Math.max(0, Math.floor(num(incoming["system.xp"], 0))) : Math.max(0, Math.floor(num(actor?.system?.xp, 0)));
   let level = incomingLevel;
   let xp = incomingXp;
   if (mode === "level") xp = minXpForLevel(actor, level);
@@ -895,15 +878,9 @@ export function flatActorUpdates(actor, { mode = "auto", incoming = {} } = {}) {
     xp = Math.max(xp, minXpForLevel(actor, level));
     const suggested = levelForXp(actor, xp);
     if (game.settings.get("add2e", "xpAutoLevel") && suggested > level) level = suggested;
-  } else {
-    xp = Math.max(xp, minXpForLevel(actor, level));
-  }
-
+  } else xp = Math.max(xp, minXpForLevel(actor, level));
   const meta = xpMeta(actor, level, xp);
-  const currentTitle = xpRows(actor)
-    .find(row => Number(row.niveau) === level)?.title
-    ?? actor?.system?.titre
-    ?? "";
+  const currentTitle = xpRows(actor).find(row => Number(row.niveau) === level)?.title ?? actor?.system?.titre ?? "";
   const updates = {
     "system.xp": xp,
     "system.niveau": level,
@@ -919,22 +896,16 @@ export function flatActorUpdates(actor, { mode = "auto", incoming = {} } = {}) {
 }
 
 export async function recalc(actor, { mode = "auto", notify = false } = {}) {
-  if (!actor || actor.type !== "personnage") return null;
+  if (!actor) return null;
   const result = flatActorUpdates(actor, { mode });
   const updates = changedUpdatePayload(actor, result.updates);
   result.updates = updates;
   result.skipped = Object.keys(updates).length === 0;
   if (!result.skipped) {
-    await actor.update(updates, {
-      [ADD2E_MOVE_XP_INTERNAL]: true,
-      add2eReason: `move-xp-recalc:${mode}`,
-      render: false
-    });
+    await actor.update(updates, { [ADD2E_MOVE_XP_INTERNAL]: true, add2eReason: `move-xp-recalc:${mode}`, render: false });
   }
-  if (notify && mode === "level" && !result.multiclass) {
-    ui.notifications.info(
-      `${actor.name} : XP ajustée au niveau ${result.xp.level} (${result.xp.xp.toLocaleString()} XP).`
-    );
+  if (notify && mode === "level" && actor.type === "personnage" && !result.multiclass) {
+    ui.notifications.info(`${actor.name} : XP ajustée au niveau ${result.xp.level} (${result.xp.xp.toLocaleString()} XP).`);
   }
   return result;
 }
@@ -942,30 +913,16 @@ export async function recalc(actor, { mode = "auto", notify = false } = {}) {
 async function createXpCard(actor, { title = "Expérience", rows = [], message = "", flags = {} } = {}) {
   const build = globalThis.add2eBuildChatCard;
   const create = globalThis.add2eCreateChatCard;
-  if (typeof build !== "function" || typeof create !== "function") {
-    throw new Error("Les constructeurs communs de cartes ADD2E ne sont pas disponibles.");
-  }
+  if (typeof build !== "function" || typeof create !== "function") throw new Error("Les constructeurs communs de cartes ADD2E ne sont pas disponibles.");
   const options = {
     actor,
     title,
     icon: "fas fa-star",
     variant: "success",
-    source: {
-      name: actor?.name ?? "Acteur",
-      img: actor?.img,
-      type: "Progression"
-    },
+    source: { name: actor?.name ?? "Acteur", img: actor?.img, type: "Progression" },
     rows,
     message,
-    chatData: {
-      flags: {
-        add2e: {
-          moveXp: true,
-          version: ADD2E_MOVE_XP_VERSION,
-          ...flags
-        }
-      }
-    }
+    chatData: { flags: { add2e: { moveXp: true, version: ADD2E_MOVE_XP_VERSION, ...flags } } }
   };
   const preview = build(options);
   if (!String(preview ?? "").trim()) throw new Error("La carte d’XP ADD2E est vide.");
@@ -977,7 +934,6 @@ export async function awardXp(actor, amount, { reason = "Gain d'expérience", pe
   const base = Math.max(0, Math.floor(num(amount, 0)));
   const bonus = Math.max(0, Math.floor(base * (num(percentBonus, 0) / 100)));
   const total = base + bonus;
-
   if (isMulticlassActor(actor)) {
     const applyCanonical = globalThis.add2eSessionXpApplyToActor;
     if (typeof applyCanonical !== "function") {
@@ -985,66 +941,32 @@ export async function awardXp(actor, amount, { reason = "Gain d'expérience", pe
       return null;
     }
     const result = await applyCanonical(actor, total, reason);
-    const details = result?.classes
-      ?.map(entry => `${entry.item?.name ?? "Classe"} ${entry.before ?? 0} → ${entry.after ?? 0}`)
-      .join(" ; ") ?? "";
+    const details = result?.classes?.map(entry => `${entry.item?.name ?? "Classe"} ${entry.before ?? 0} → ${entry.after ?? 0}`).join(" ; ") ?? "";
     await createXpCard(actor, {
       rows: [
-        {
-          label: "Gain",
-          value: `+${total.toLocaleString()} XP${bonus ? `, dont bonus ${bonus.toLocaleString()} XP` : ""}`
-        },
-        {
-          label: "Répartition",
-          value: details || "Items classe mis à jour"
-        }
+        { label: "Gain", value: `+${total.toLocaleString()} XP${bonus ? `, dont bonus ${bonus.toLocaleString()} XP` : ""}` },
+        { label: "Répartition", value: details || "Items classe mis à jour" }
       ],
       message: reason || "Progression multiclasses mise à jour.",
       flags: { multiclass: true, total, bonus }
     });
     return { total, bonus, ...result };
   }
-
   const before = Math.max(0, Math.floor(num(actor.system?.xp, 0)));
   const after = before + total;
-  const result = flatActorUpdates(actor, {
-    mode: "xp",
-    incoming: { "system.xp": after }
-  });
+  const result = flatActorUpdates(actor, { mode: "xp", incoming: { "system.xp": after } });
   const updates = changedUpdatePayload(actor, result.updates);
-  if (Object.keys(updates).length) {
-    await actor.update(updates, { add2eReason: "move-xp-award" });
-  }
+  if (Object.keys(updates).length) await actor.update(updates, { add2eReason: "move-xp-award" });
   const displayedXp = Number(updates["system.xp"] ?? result.xp.xp ?? after) || after;
-  const displayedLevel = String(
-    updates["system.niveau"]
-    ?? result.xp.level
-    ?? actor.system?.niveau
-    ?? "-"
-  );
+  const displayedLevel = String(updates["system.niveau"] ?? result.xp.level ?? actor.system?.niveau ?? "-");
   await createXpCard(actor, {
     rows: [
-      {
-        label: "Gain",
-        value: `+${total.toLocaleString()} XP${bonus ? `, dont bonus ${bonus.toLocaleString()} XP` : ""}`
-      },
-      {
-        label: "Expérience",
-        value: `${before.toLocaleString()} → ${displayedXp.toLocaleString()} XP`
-      },
-      {
-        label: "Niveau actuel",
-        value: displayedLevel
-      }
+      { label: "Gain", value: `+${total.toLocaleString()} XP${bonus ? `, dont bonus ${bonus.toLocaleString()} XP` : ""}` },
+      { label: "Expérience", value: `${before.toLocaleString()} → ${displayedXp.toLocaleString()} XP` },
+      { label: "Niveau actuel", value: displayedLevel }
     ],
     message: reason || "Gain d’expérience",
-    flags: {
-      multiclass: false,
-      total,
-      bonus,
-      before,
-      after: displayedXp
-    }
+    flags: { multiclass: false, total, bonus, before, after: displayedXp }
   });
   return { before, after: displayedXp, total, bonus, ...result };
 }
@@ -1072,9 +994,7 @@ export async function promptXp(actor) {
         label: "Ajouter",
         default: true,
         callback: (_event, button, dialog) => {
-          const form = button?.form
-            ?? dialog?.element?.querySelector?.("form")
-            ?? null;
+          const form = button?.form ?? dialog?.element?.querySelector?.("form") ?? null;
           return {
             action: "add",
             amount: form?.elements?.amount?.value ?? form?.amount?.value ?? 0,
@@ -1083,20 +1003,11 @@ export async function promptXp(actor) {
           };
         }
       },
-      {
-        action: "cancel",
-        label: "Annuler",
-        callback: () => ({ action: "cancel" })
-      }
+      { action: "cancel", label: "Annuler", callback: () => ({ action: "cancel" }) }
     ],
     modal: true,
     rejectClose: false,
     close: () => ({ action: "cancel" })
   });
-  if (result?.action === "add") {
-    await awardXp(actor, result.amount, {
-      reason: result.reason,
-      percentBonus: result.percentBonus
-    });
-  }
+  if (result?.action === "add") await awardXp(actor, result.amount, { reason: result.reason, percentBonus: result.percentBonus });
 }
