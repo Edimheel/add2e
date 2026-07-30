@@ -27,10 +27,13 @@ import { abilityRows, armorClass, effectDisplayName, effectRows, effects, hp, hp
 import { injectStyle } from "./styles.mjs";
 import { installActionHudRuntime } from "./runtime.mjs";
 
+const CAPABILITY_GROUPS = new Set(["classe", "race", "familier"]);
+
 let hudActor = null;
 let hudToken = null;
 let activeTab = "attaques";
 let selectedSpellGroup = null;
+let selectedCapabilityGroup = "classe";
 let dragging = false;
 let resizing = false;
 let manualIntentUntil = 0;
@@ -129,11 +132,9 @@ function objectMagicPowerEntries(actor) {
   }
   return entries;
 }
-
 function objectMagicPowerDeclarationLabel(entry) {
   return `${entry.sourceItem?.name ?? "Objet magique"} — ${entry.virtualSpell?.name ?? "Pouvoir"}`;
 }
-
 function objectMagicPowerRows(actor) {
   const entries = objectMagicPowerEntries(actor);
   if (!entries.length) return "";
@@ -159,6 +160,95 @@ function objectMagicPowerRows(actor) {
   return `<div class="spell-layout object-magic-power-layout"><div class="spell-list"><div class="spell-list-title">Pouvoirs d’objets magiques</div>${rows}</div></div>`;
 }
 
+function racialEngine() {
+  const engine = globalThis.Add2eEffectsEngine;
+  return typeof engine?.getRacialActions === "function" ? engine : null;
+}
+function racialCapabilities(actor) {
+  return racialEngine()?.getRacialActions?.(actor)?.filter(capability => capability?.activable !== false) ?? [];
+}
+function racialRequirementLabel(value) {
+  return {
+    within_three_meters: "à 3 m ou moins",
+    search_active: "recherche active",
+    underground: "sous terre",
+    concentration: "concentration",
+    alone: "isolé",
+    no_metal_armor: "sans armure de métal",
+    opens_door: "après ouverture d’une porte",
+    no_intense_light: "aucune lumière ou chaleur intense"
+  }[String(value ?? "").trim()] ?? String(value ?? "").replaceAll("_", " ");
+}
+function racialRequirements(capability) {
+  const value = capability?.requires;
+  const raw = Array.isArray(value) ? value : (value instanceof Set ? [...value] : (value ? Object.values(value) : []));
+  return raw.map(racialRequirementLabel).filter(Boolean);
+}
+function racialIcon(capability) {
+  const explicit = String(capability?.iconClass ?? "").trim();
+  if (explicit) return explicit;
+  const key = String(capability?.id ?? capability?.label ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  if (key.includes("infravision") || key.includes("vision")) return "fa-eye";
+  if (key.includes("porte")) return "fa-door-closed";
+  if (key.includes("pente")) return "fa-mountain";
+  if (key.includes("direction") || key.includes("profondeur")) return "fa-compass";
+  if (key.includes("paroi") || key.includes("construction")) return "fa-hammer";
+  if (key.includes("piege")) return "fa-triangle-exclamation";
+  if (key.includes("surprise")) return "fa-user-ninja";
+  return "fa-dice-d20";
+}
+function racialCapabilityRow(capability) {
+  const isVisionToggle = capability?.actionType === "vision-toggle";
+  const conditions = (!isVisionToggle || capability?.enabled !== true) ? racialRequirements(capability) : [];
+  const state = isVisionToggle
+    ? (capability?.enabled ? "Active" : "Inactive")
+    : (capability?.canRoll ? `Jet ${capability.formula} : réussite ≤ ${capability.successAt}` : "Capacité narrative");
+  const conditionLabel = conditions.length ? `<span>Conditions : ${esc(conditions.join(", "))}</span>` : "";
+  const title = isVisionToggle
+    ? `${capability?.enabled ? "Désactiver" : "Activer"} ${capability.label}`
+    : (capability?.canRoll ? `Lancer ${capability.label}` : capability.label);
+  const icon = isVisionToggle && capability?.enabled ? "fa-eye-slash" : racialIcon(capability);
+  const control = (isVisionToggle || capability?.canRoll)
+    ? `<button type="button" class="img-act capability-icon" data-action="use-racial-capability" data-racial-capability-id="${esc(capability.id)}" title="${esc(title)}"><i class="fas ${icon}"></i></button>`
+    : '<span aria-hidden="true"></span>';
+  return `<div class="row capability-row">${control}<div><div class="title">${esc(capability.label)}</div><div class="meta"><span>Capacité raciale</span><span>${esc(state)}</span>${conditionLabel}</div><div class="capability-description">${esc(capability.description)}</div></div></div>`;
+}
+function familiarEffectData(effect) {
+  return effect?.flags?.add2e?.familiar ?? effect?.getFlag?.("add2e", "familiar") ?? null;
+}
+function familiarActions(actor) {
+  return Array.from(actor?.effects ?? [])
+    .filter(effect => effect?.disabled !== true && effect?.isSuppressed !== true)
+    .map(effect => ({ effect, data: familiarEffectData(effect) }))
+    .filter(({ data }) => data?.kind === "action" && ["share-senses", "toggle-follow"].includes(String(data.action ?? "")));
+}
+function familiarActionInfo(data = {}) {
+  if (data.action === "share-senses") return { icon: "fa-eye", label: "Vision partagée", title: "Voir avec les sens du familier" };
+  return { icon: "fa-link", label: "Suivi", title: "Activer ou désactiver le suivi automatique" };
+}
+function familiarCapabilityRow(actor, { effect, data }) {
+  const info = familiarActionInfo(data);
+  const description = String(effect?.description ?? "").trim();
+  return `<div class="row capability-row"><button type="button" class="img-act capability-icon a2e-familiar-effect-action" data-actor-id="${esc(actor.id)}" data-effect-id="${esc(effect.id ?? effect._id ?? "")}" data-familiar-action="${esc(data.action)}" title="${esc(info.title)}"><i class="fas ${info.icon}"></i></button><div><div class="title">${esc(info.label)}</div><div class="meta"><span>Capacité du familier</span></div>${description ? `<div class="capability-description">${esc(description)}</div>` : ""}</div></div>`;
+}
+function capabilityRows(actor) {
+  if (!CAPABILITY_GROUPS.has(selectedCapabilityGroup)) selectedCapabilityGroup = "classe";
+  const classRows = features(actor);
+  const raceRows = racialCapabilities(actor);
+  const familiarRows = familiarActions(actor);
+  const groups = [
+    { key: "classe", label: "Classe", count: classRows.length },
+    { key: "race", label: "Race", count: raceRows.length },
+    { key: "familier", label: "Familier", count: familiarRows.length }
+  ];
+  const tabs = groups.map(group => `<button type="button" class="capability-tab${selectedCapabilityGroup === group.key ? " active" : ""}" data-action="select-capability-group" data-capability-group="${group.key}">${group.label} <span>${group.count}</span></button>`).join("");
+  let content = "";
+  if (selectedCapabilityGroup === "race") content = raceRows.length ? raceRows.map(racialCapabilityRow).join("") : '<div class="empty">Aucune capacité raciale utilisable.</div>';
+  else if (selectedCapabilityGroup === "familier") content = familiarRows.length ? familiarRows.map(entry => familiarCapabilityRow(actor, entry)).join("") : '<div class="empty">Aucune commande de familier disponible.</div>';
+  else content = featureRows(actor);
+  return `<div class="capability-layout"><div class="capability-tabs">${tabs}</div><div class="capability-list" data-capability-group-content="${selectedCapabilityGroup}">${content}</div></div>`;
+}
+
 function hudHtml(actor, token = null) {
   const img = token?.document?.texture?.src || actor.img || "icons/svg/mystery-man.svg";
   const isMonster = isMonsterActor(actor);
@@ -172,7 +262,7 @@ function hudHtml(actor, token = null) {
   const spellsAndPowers = `${spellHtml}${objectPowerContent}`;
   const tab = (key, icon, label) => `<button type="button" class="a2e-hud-tab ${activeTab === key ? "active" : ""}" data-tab="${key}"><i class="${icon}"></i> ${label}</button>`;
   const section = (key, html) => `<section class="${activeTab === key ? "active" : ""}" data-section="${key}">${html}</section>`;
-  return `<div class="a2e-hud-shell" data-drag-handle="1"><div class="a2e-hud-panel">${section("attaques", weaponRows(actor))}${section("sorts", spellsAndPowers)}${section("capacites", featureRows(actor))}${section("equipement", equipmentRows(actor))}${section("effets", effectRows(actor))}${section("sauvegardes", saveRows(actor))}${section("caracs", abilityRows(actor))}</div><nav class="a2e-hud-tabs">${tab("attaques", "fas fa-swords", "Armes")}${tab("sorts", "fas fa-book", "Sorts")}${tab("capacites", "fas fa-bolt", "Capacités")}${tab("equipement", "fas fa-box-open", "Équipement")}${tab("effets", "fas fa-hourglass-half", "Effets")}${tab("sauvegardes", "fas fa-shield-alt", "Sauv.")}${tab("caracs", "fas fa-dice-d20", "Carac.")}</nav><div class="a2e-hud-header" data-drag-handle="1"><img class="portrait" src="${esc(img)}" alt=""><div><div class="name">${esc(actor.name)}</div><div class="sub">${esc(race)} — ${esc(classe)} ${isMonster ? "DV" : "niv."} ${esc(niveau)}</div><div class="pills"><span class="pill">PV ${hp(actor)} / ${hpMax(actor)}</span><span class="pill">CA ${esc(armorClass(actor))}</span><span class="pill">THAC0 ${esc(thaco(actor))}</span></div></div><button type="button" class="icon" data-action="toggle-collapse"><i class="fas fa-chevron-down"></i></button><button type="button" class="icon resize" data-resize-handle="1"><i class="fas fa-up-right-and-down-left-from-center"></i></button></div></div>`;
+  return `<div class="a2e-hud-shell" data-drag-handle="1"><div class="a2e-hud-panel">${section("attaques", weaponRows(actor))}${section("sorts", spellsAndPowers)}${section("capacites", capabilityRows(actor))}${section("equipement", equipmentRows(actor))}${section("effets", effectRows(actor))}${section("sauvegardes", saveRows(actor))}${section("caracs", abilityRows(actor))}</div><nav class="a2e-hud-tabs">${tab("attaques", "fas fa-swords", "Armes")}${tab("sorts", "fas fa-book", "Sorts")}${tab("capacites", "fas fa-bolt", "Capacités")}${tab("equipement", "fas fa-box-open", "Équipement")}${tab("effets", "fas fa-hourglass-half", "Effets")}${tab("sauvegardes", "fas fa-shield-alt", "Sauv.")}${tab("caracs", "fas fa-dice-d20", "Carac.")}</nav><div class="a2e-hud-header" data-drag-handle="1"><img class="portrait" src="${esc(img)}" alt=""><div><div class="name">${esc(actor.name)}</div><div class="sub">${esc(race)} — ${esc(classe)} ${isMonster ? "DV" : "niv."} ${esc(niveau)}</div><div class="pills"><span class="pill">PV ${hp(actor)} / ${hpMax(actor)}</span><span class="pill">CA ${esc(armorClass(actor))}</span><span class="pill">THAC0 ${esc(thaco(actor))}</span></div></div><button type="button" class="icon" data-action="toggle-collapse"><i class="fas fa-chevron-down"></i></button><button type="button" class="icon resize" data-resize-handle="1"><i class="fas fa-up-right-and-down-left-from-center"></i></button></div></div>`;
 }
 export function renderHud(actor = null, token = null, { reason = "render" } = {}) {
   if (dragging || resizing) return false;
@@ -277,12 +367,27 @@ async function useObjectMagicPower(actor, itemId, powerIndex) {
   renderHud(actor, hudToken, { reason: "use-object-power" });
   return result;
 }
+async function useRacialCapability(actor, capabilityId) {
+  const use = globalThis.add2eUseRacialCapabilityFromElement;
+  if (typeof use !== "function") return ui.notifications.error("Le contrôleur des capacités raciales de la feuille n’est pas chargé.");
+  const relay = document.createElement("button");
+  relay.dataset.racialCapabilityId = String(capabilityId ?? "");
+  const result = await use(actor, relay, null);
+  renderHud(actor, hudToken, { reason: "use-racial-capability" });
+  return result;
+}
 async function handleAction(event, actor, button) {
   event.preventDefault(); event.stopPropagation();
   const action = button.dataset.action;
   try {
     if (action === "toggle-collapse") return setCollapsed(!hud()?.classList.contains("collapsed"), true);
     if (action === "select-spell-group") { selectedSpellGroup = button.dataset.spellGroup || selectedSpellGroup; return renderHud(actor, tokenFor(actor), { reason: "select-spell-group" }); }
+    if (action === "select-capability-group") {
+      const group = String(button.dataset.capabilityGroup ?? "classe");
+      selectedCapabilityGroup = CAPABILITY_GROUPS.has(group) ? group : "classe";
+      return renderHud(actor, tokenFor(actor), { reason: "select-capability-group" });
+    }
+    if (action === "use-racial-capability") return useRacialCapability(actor, button.dataset.racialCapabilityId);
     if (action === "declare-initiative-weapon") return declareInitiativeAction(actor, button.dataset.itemId, "weapon");
     if (action === "declare-initiative-spell") return declareInitiativeAction(actor, button.dataset.itemId, "spell");
     if (action === "declare-initiative-object-power") return declareObjectMagicPower(actor, button.dataset.itemId, button.dataset.powerIndex);
@@ -389,7 +494,7 @@ export function followCombat(combat = game.combat, forceOpen = false) {
   const token = combatant?.token?.object ?? (combatant?.tokenId ? canvas?.tokens?.get?.(combatant.tokenId) : null) ?? null;
   return renderHud(combatant.actor, token, { reason: "canonical-combat" });
 }
-export function getRuntimeState() { return { actor: hudActor ?? currentActor(), token: hudToken, activeTab, selectedSpellGroup, dragging, resizing }; }
+export function getRuntimeState() { return { actor: hudActor ?? currentActor(), token: hudToken, activeTab, selectedSpellGroup, selectedCapabilityGroup, dragging, resizing }; }
 
 installActionHudRuntime({ renderHud, refreshHud, closeHud, resetHudPosition, applyGeometry, pointerDown, bindCanvasControlledTokenClick, setManualIntent, followCombat, getRuntimeState });
 
