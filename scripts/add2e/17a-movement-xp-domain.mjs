@@ -1,7 +1,7 @@
 // ADD2E — Domaine XP, mouvement et encombrement canoniques.
 // Compatible Foundry V13/V14/V15 — DialogV2 uniquement.
 
-export const ADD2E_MOVE_XP_VERSION = "2026-07-31-canonical-movement-encumbrance-v13";
+export const ADD2E_MOVE_XP_VERSION = "2026-07-31-canonical-movement-encumbrance-v14";
 export const ADD2E_MOVE_XP_TAG = "[ADD2E][MOVE_XP]";
 export const ADD2E_MOVE_XP_INTERNAL = "add2eMoveXpInternal";
 export const ADD2E_MOVE_XP_RECALC_DELAY_MS = 140;
@@ -936,7 +936,7 @@ export function computeMovement(actor, options = {}) {
     movementModes[target] = {
       target,
       base: round2(base),
-      value: Math.floor(value),
+      value: round2(value),
       preciseValue: round2(value),
       available: target === "ground" || applied.length > 0 || value > 0,
       resolution
@@ -1036,9 +1036,7 @@ export function movementUpdates(actor) {
   const movement = computeMovement(actor, { persistent: true, consumer: "movement-persistent-mirror", movementMode: "ground" });
   return {
     updates: {
-      "system.mouvement": movement,
-      "system.movement": movement.movementModes?.ground?.value ?? movement.actuel,
-      "system.vitesse_deplacement": movement.movementModes?.ground?.value ?? movement.actuel
+      "system.mouvement": movement
     },
     movement
   };
