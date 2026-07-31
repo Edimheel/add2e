@@ -14,6 +14,7 @@ import { enhanceSpellParameterDialog, linkedSpellHandler, spellIndex } from "./s
 import { bindSheet, executePower, installEntriesBridge } from "./execution.mjs";
 
 let periodicQueue = Promise.resolve();
+const itemEffectQueues = new Map();
 
 function activeEffects(actor) {
   const seen = new Set();
@@ -148,12 +149,17 @@ function actorForEffect(effect) {
   return null;
 }
 
+function actorForItemDocument(item) {
+  const parent = item?.parent ?? item?.actor ?? null;
+  return parent?.documentName === "Actor" ? parent : null;
+}
+
 async function refreshActor(actor) {
   if (!actor || actor.type !== "personnage") return;
   try { await actor.sheet?.autoSetCaracAjustements?.(); } catch (error) {
     console.warn("[ADD2E][MAGIC_POWER_EFFECTS][CARACTERISTICS_REFRESH]", error);
   }
-  try { await globalThis.add2eRecalcMoveXp?.(actor, { reason: "magic-power-effect" }); } catch (error) {
+  try { await globalThis.add2eRecalcMoveXp?.(actor, { mode: "movement", reason: "magic-power-effect" }); } catch (error) {
     console.warn("[ADD2E][MAGIC_POWER_EFFECTS][MOVEMENT_REFRESH]", error);
   }
   if (actor.sheet?.rendered) actor.sheet.render(false);
@@ -174,6 +180,26 @@ function cleanUpdate(change) {
 }
 
 const localUser = userId => !userId || String(userId) === String(game.user?.id ?? "");
+
+function queueItemEffectOperation(item, label, operation) {
+  const actor = actorForItemDocument(item);
+  const key = String(actor?.uuid ?? item?.uuid ?? item?.id ?? label);
+  const previous = itemEffectQueues.get(key) ?? Promise.resolve();
+  const next = previous
+    .catch(() => undefined)
+    .then(operation)
+    .then(async result => {
+      await refreshActor(actor);
+      return result;
+    });
+  itemEffectQueues.set(key, next);
+  next
+    .catch(error => console.error(`[ADD2E][MAGIC_POWER_EFFECTS][${label}]`, error))
+    .finally(() => {
+      if (itemEffectQueues.get(key) === next) itemEffectQueues.delete(key);
+    });
+  return next;
+}
 
 async function migrate() {
   if (!primaryGM()) return { items: 0, actors: 0, effects: 0 };
@@ -231,29 +257,32 @@ Hooks.on("preUpdateItem", (_item, change, options = {}) => {
   if (!options[INTERNAL_EFFECT_OPTION]) cleanUpdate(change);
 });
 Hooks.on("createItem", (item, _options, userId) => {
-  if (localUser(userId)) syncItem(item).catch(error => console.error("[ADD2E][MAGIC_POWER_EFFECTS][CREATE_ITEM]", error));
+  if (!localUser(userId)) return;
+  queueItemEffectOperation(item, "CREATE_ITEM", () => syncItem(item));
 });
 Hooks.on("updateItem", (item, _change, options = {}, userId) => {
-  if (!options[INTERNAL_EFFECT_OPTION] && localUser(userId)) {
-    syncItem(item).catch(error => console.error("[ADD2E][MAGIC_POWER_EFFECTS][UPDATE_ITEM]", error));
-  }
+  if (options[INTERNAL_EFFECT_OPTION] || !localUser(userId)) return;
+  queueItemEffectOperation(item, "UPDATE_ITEM", () => syncItem(item));
 });
-Hooks.on("deleteItem", (item, _options, userId) => {
-  if (localUser(userId)) removeItemEffects(item).catch(error => console.error("[ADD2E][MAGIC_POWER_EFFECTS][DELETE_ITEM]", error));
-});
-Hooks.on("createActiveEffect", (effect, _options = {}, userId = null) => {
+Hooks.on("deleteItem", (item, _options = {}, userId = null) => {
   if (!localUser(userId)) return;
+  const actor = actorForItemDocument(item);
+  queueItemEffectOperation(item, "DELETE_ITEM", () => removeItemEffects(item, actor));
+});
+Hooks.on("createActiveEffect", (effect, options = {}, userId = null) => {
+  if (options[INTERNAL_EFFECT_OPTION] || !localUser(userId)) return;
   normalizeEffectDocument(effect)
     .then(() => refreshActor(actorForEffect(effect)))
     .catch(error => console.error("[ADD2E][MAGIC_POWER_EFFECTS][CREATE_EFFECT]", error));
 });
 Hooks.on("updateActiveEffect", (effect, _changes = {}, options = {}, userId = null) => {
-  if (options[INTERNAL_NORMALIZE_OPTION] || !localUser(userId)) return;
+  if (options[INTERNAL_EFFECT_OPTION] || options[INTERNAL_NORMALIZE_OPTION] || !localUser(userId)) return;
   normalizeEffectDocument(effect)
     .then(() => refreshActor(actorForEffect(effect)))
     .catch(error => console.error("[ADD2E][MAGIC_POWER_EFFECTS][UPDATE_EFFECT]", error));
 });
-Hooks.on("deleteActiveEffect", effect => {
+Hooks.on("deleteActiveEffect", (effect, options = {}, userId = null) => {
+  if (options[INTERNAL_EFFECT_OPTION] || !localUser(userId)) return;
   refreshActor(actorForEffect(effect)).catch(error => console.error("[ADD2E][MAGIC_POWER_EFFECTS][DELETE_EFFECT]", error));
 });
 Hooks.on("updateSetting", (setting, change) => {
