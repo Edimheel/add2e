@@ -10,12 +10,14 @@ import {
   norm
 } from "./17a-movement-xp-domain.mjs";
 
-const CONTROL_VERSION = "2026-07-31-native-ruler-gm-approval-v5";
+const CONTROL_VERSION = "2026-07-31-native-ruler-gm-approval-v6";
 const STATE_FLAG = "movementTurnState";
 const SOCKET = "system.add2e";
 const REQUEST = "ADD2E_MOVEMENT_APPROVAL_REQUEST";
 const RESPONSE = "ADD2E_MOVEMENT_APPROVAL_RESPONSE";
 const TIMEOUT_MS = 90_000;
+const PLAYER_DIALOG_WIDTH = 300;
+const GM_DIALOG_WIDTH = 360;
 
 const movementResultCache = new Map();
 const spentStateCache = new Map();
@@ -56,6 +58,10 @@ function randomId() {
   } catch (_error) {
     return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
   }
+}
+
+function dialogV2() {
+  return foundry?.applications?.api?.DialogV2 ?? null;
 }
 
 function point(value, fallback = {}) {
@@ -116,12 +122,11 @@ function movementWaypoints(tokenDoc, movement = {}, target = null) {
   const destinationSource = movement?.destination ?? target;
   if (destinationSource && isPointLike(destinationSource)) {
     const destination = point(destinationSource, previous);
-    const last = waypoints[waypoints.length - 1];
+    const last = waypoints.at(-1);
     if (!last || last.x !== destination.x || last.y !== destination.y || last.elevation !== destination.elevation) {
       waypoints.push(destination);
     }
   }
-
   return waypoints;
 }
 
@@ -132,21 +137,20 @@ function movementOrigin(tokenDoc, movement = {}) {
 function movementTarget(tokenDoc, movement = {}, fallback = null) {
   if (movement?.destination && isPointLike(movement.destination)) return point(movement.destination, tokenDoc);
   const waypoints = movementWaypoints(tokenDoc, movement, fallback);
-  return point(waypoints[waypoints.length - 1] ?? fallback, tokenDoc);
+  return point(waypoints.at(-1) ?? fallback, tokenDoc);
 }
 
 function movementComponents(tokenDoc, movement = {}, target = null) {
   const origin = movementOrigin(tokenDoc, movement);
   const destination = movementTarget(tokenDoc, movement, target);
-  const waypoints = movementWaypoints(tokenDoc, movement, destination);
-  const route = waypoints.length ? waypoints : [destination];
+  const route = movementWaypoints(tokenDoc, movement, destination);
   const { size, distance, unit } = sceneUnits(tokenDoc);
   let previous = origin;
   let horizontal = 0;
   let ascent = 0;
   let descent = 0;
 
-  for (const raw of route) {
+  for (const raw of route.length ? route : [destination]) {
     const current = point(raw, previous);
     horizontal += unitToMeters((Math.hypot(current.x - previous.x, current.y - previous.y) / size) * distance, unit);
     const elevationDelta = unitToMeters(current.elevation - previous.elevation, unit);
@@ -158,7 +162,7 @@ function movementComponents(tokenDoc, movement = {}, target = null) {
   return {
     origin,
     destination,
-    waypoints: route,
+    waypoints: route.length ? route : [destination],
     horizontal: round2(horizontal),
     ascent: round2(ascent),
     descent: round2(descent)
@@ -184,15 +188,13 @@ function combatantMatchesToken(combatant, tokenDoc) {
 function combatContainsToken(combat, tokenDoc) {
   if (!combatStarted(combat) || !tokenDoc?.id) return false;
   try {
-    const direct = combat.getCombatantByToken?.(tokenDoc.id);
-    if (direct) return true;
+    if (combat.getCombatantByToken?.(tokenDoc.id)) return true;
   } catch (_error) {}
   return Array.from(combat.combatants ?? []).some(combatant => combatantMatchesToken(combatant, tokenDoc));
 }
 
 function combatForToken(tokenDoc) {
   if (!tokenDoc) return null;
-
   const direct = tokenDoc.combatant?.combat ?? null;
   if (combatStarted(direct)) return direct;
 
@@ -210,8 +212,7 @@ function combatForToken(tokenDoc) {
 
 function combatRoundKey(tokenDoc) {
   const combat = combatForToken(tokenDoc);
-  if (!combat) return null;
-  return `${combat.id}:${Math.max(1, Number(combat.round) || 1)}`;
+  return combat ? `${combat.id}:${Math.max(1, Number(combat.round) || 1)}` : null;
 }
 
 function tokenRoundStateKey(tokenDoc) {
@@ -230,9 +231,7 @@ function normalizeSpentState(value = {}) {
 function spentThisRound(tokenDoc) {
   const roundKey = combatRoundKey(tokenDoc);
   if (!roundKey) return normalizeSpentState();
-
-  const cacheKey = tokenRoundStateKey(tokenDoc);
-  const local = normalizeSpentState(spentStateCache.get(cacheKey));
+  const local = normalizeSpentState(spentStateCache.get(tokenRoundStateKey(tokenDoc)));
   const stored = tokenDoc?.getFlag?.("add2e", STATE_FLAG) ?? {};
   const persisted = stored?.key === roundKey ? normalizeSpentState(stored) : normalizeSpentState();
   return local.ratio >= persisted.ratio ? local : persisted;
@@ -307,7 +306,7 @@ function movementBudget(details, tokenDoc, components) {
 
 function movementSummary(result) {
   const rows = [];
-  if (result.components.horizontal > 0) rows.push(`${result.components.horizontal.toFixed(1)} m ${result.budget.modes.horizontal}`);
+  if (result.components.horizontal > 0) rows.push(`${result.components.horizontal.toFixed(1)} m`);
   if (result.components.ascent > 0) rows.push(`+${result.components.ascent.toFixed(1)} m`);
   if (result.components.descent > 0) rows.push(`-${result.components.descent.toFixed(1)} m`);
   return rows.length ? rows.join(" · ") : "0 m";
@@ -337,29 +336,60 @@ function movementCacheKey(tokenDoc, target) {
   return `${tokenDoc?.uuid ?? tokenDoc?.id}:${destination.x}:${destination.y}:${destination.elevation}`;
 }
 
+function closeDialog(application) {
+  if (!application) return;
+  Promise.resolve(application.close?.({ animate: false })).catch(() => undefined);
+}
+
 function clearPendingApproval(requestId, reason = null) {
   const entry = pendingApprovals.get(requestId);
   if (!entry) return null;
   clearTimeout(entry.timer);
+  closeDialog(entry.playerDialog);
   pendingApprovals.delete(requestId);
   if (pendingApprovalByToken.get(entry.tokenKey) === requestId) pendingApprovalByToken.delete(entry.tokenKey);
   if (reason) ui.notifications.warn(reason);
   return entry;
 }
 
+function playerWaitingContent() {
+  return `<div class="add2e-dialog add2e-movement-waiting" style="box-sizing:border-box;width:276px;padding:16px 12px;text-align:center;color:#2f250c;">
+    <div style="display:flex;align-items:center;justify-content:center;gap:9px;padding:11px 12px;border:1px solid #d5b15a;border-radius:8px;background:#fff8dd;font-size:.95rem;font-weight:950;">
+      <i class="fa-solid fa-hourglass-half" aria-hidden="true"></i>
+      <span>Validation MJ en attente</span>
+    </div>
+  </div>`;
+}
+
+function openPlayerWaitingDialog(requestId) {
+  const DialogV2 = dialogV2();
+  if (!DialogV2) return null;
+  const dialog = new DialogV2({
+    window: { title: "Déplacement" },
+    classes: ["add2e-dialog", "add2e-movement-waiting-dialog"],
+    position: { width: PLAYER_DIALOG_WIDTH, height: "auto" },
+    modal: false,
+    content: playerWaitingContent(),
+    buttons: []
+  });
+  dialog.addEventListener?.("close", () => {
+    const entry = pendingApprovals.get(requestId);
+    if (entry?.playerDialog === dialog) entry.playerDialog = null;
+  }, { once: true });
+  Promise.resolve(dialog.render({ force: true }))
+    .then(() => dialog.setPosition?.({ width: PLAYER_DIALOG_WIDTH, height: "auto" }))
+    .catch(error => console.warn(`${ADD2E_MOVE_XP_TAG}[TOKEN][WAIT_DIALOG]`, error));
+  return dialog;
+}
+
 function approvalSnapshot(tokenDoc, result, requesterId) {
   const requester = game.users?.get?.(requesterId) ?? game.user;
-  const speedRows = Object.entries(result?.budget?.speeds ?? {})
-    .filter(([, value]) => Number(value) > 0)
-    .map(([mode, value]) => `${mode} ${round2(value)} m`);
+  const speed = Number(result?.budget?.speeds?.horizontal) || 0;
   return {
     requesterName: requester?.name ?? "Joueur",
     actorName: result?.actor?.name ?? tokenDoc?.actor?.name ?? "Personnage",
-    sceneName: tokenDoc?.parent?.name ?? canvas?.scene?.name ?? "Scène",
     movement: movementSummary(result),
-    speeds: speedRows.join(" · ") || "Aucune vitesse disponible",
-    attemptPercent: Number.isFinite(Number(result?.budget?.ratio)) ? Math.round(Number(result.budget.ratio) * 100) : null,
-    context: "exploration"
+    speed: `${round2(speed)} m`
   };
 }
 
@@ -378,7 +408,8 @@ function requestApproval(tokenDoc, movement, operation, result) {
   const tokenKey = tokenApprovalKey(tokenDoc);
   const existing = pendingApprovalByToken.get(tokenKey);
   if (existing && pendingApprovals.has(existing)) {
-    ui.notifications.info("Une demande de déplacement est déjà en attente pour ce token.");
+    const entry = pendingApprovals.get(existing);
+    if (!entry?.playerDialog) entry.playerDialog = openPlayerWaitingDialog(existing);
     return false;
   }
 
@@ -410,49 +441,55 @@ function requestApproval(tokenDoc, movement, operation, result) {
   const timer = setTimeout(() => {
     clearPendingApproval(requestId, "La demande de déplacement a expiré sans réponse du MJ.");
   }, TIMEOUT_MS);
-  pendingApprovals.set(requestId, { tokenKey, timer, packet });
+  const entry = { tokenKey, timer, packet, playerDialog: null };
+  pendingApprovals.set(requestId, entry);
   pendingApprovalByToken.set(tokenKey, requestId);
+  entry.playerDialog = openPlayerWaitingDialog(requestId);
   runtimeState.lastRequest = packet;
 
   try {
     game.socket.emit(SOCKET, packet);
     console.info(`${ADD2E_MOVE_XP_TAG}[TOKEN][APPROVAL_REQUEST_SENT]`, packet);
-    ui.notifications.info(`Déplacement hors combat suspendu : demande envoyée à ${gm.name}.`);
   } catch (error) {
     clearPendingApproval(requestId);
     console.error(`${ADD2E_MOVE_XP_TAG}[TOKEN][APPROVAL_REQUEST_ERROR]`, error);
-    ui.notifications.error("Déplacement bloqué, mais la demande n’a pas pu être envoyée au MJ.");
+    ui.notifications.error("La demande de déplacement n’a pas pu être envoyée au MJ.");
   }
   return false;
 }
 
 function approvalDialogContent(packet) {
   const summary = packet?.summary ?? {};
-  const attempt = summary.attemptPercent == null ? "impossible" : `${summary.attemptPercent} %`;
-  return `<div class="add2e-dialog add2e-movement-approval" style="min-width:430px;display:grid;gap:9px;">
-    <p><b>${escapeHtml(summary.requesterName)}</b> demande à dépasser sa vitesse de déplacement hors combat avec <b>${escapeHtml(summary.actorName)}</b>.</p>
-    <table style="width:100%;"><tbody>
-      <tr><th style="text-align:left;">Scène</th><td>${escapeHtml(summary.sceneName)}</td></tr>
-      <tr><th style="text-align:left;">Déplacement tenté</th><td>${escapeHtml(summary.movement)}</td></tr>
-      <tr><th style="text-align:left;">Vitesse résolue</th><td>${escapeHtml(summary.speeds)}</td></tr>
-      <tr><th style="text-align:left;">Part de la vitesse</th><td><b>${escapeHtml(attempt)}</b></td></tr>
-    </tbody></table>
-    <p style="margin:0;">Autoriser déplacera automatiquement le token. Refuser le laissera à sa position actuelle.</p>
+  const requester = escapeHtml(summary.requesterName ?? "Joueur");
+  const actor = escapeHtml(summary.actorName ?? "Personnage");
+  const movement = escapeHtml(summary.movement ?? "0 m");
+  const speed = escapeHtml(summary.speed ?? "0 m");
+  return `<div class="add2e-dialog add2e-movement-approval" style="box-sizing:border-box;width:336px;padding:2px;color:#2f250c;display:grid;gap:8px;">
+    <div style="padding:8px 10px;border:1px solid #d5b15a;border-radius:7px;background:#fff8dd;">
+      <div style="font-size:.72rem;font-weight:950;text-transform:uppercase;color:#5a3510;">${requester}</div>
+      <div style="font-size:.95rem;font-weight:950;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${actor}</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr auto;gap:5px 12px;padding:8px 10px;border:1px solid #d5b15a;border-radius:7px;background:#fffdf4;align-items:center;">
+      <span style="font-weight:850;">Déplacement demandé</span><b>${movement}</b>
+      <span style="font-weight:850;">Vitesse</span><b>${speed}</b>
+    </div>
   </div>`;
 }
 
 async function promptApproval(packet) {
-  const DialogV2 = foundry?.applications?.api?.DialogV2;
+  const DialogV2 = dialogV2();
   if (!DialogV2?.wait) throw new Error("DialogV2 est indisponible pour valider le déplacement.");
   return DialogV2.wait({
-    window: { title: "Valider un déplacement hors combat" },
+    window: { title: "Déplacement hors combat" },
+    classes: ["add2e-dialog", "add2e-movement-approval-dialog"],
+    position: { width: GM_DIALOG_WIDTH, height: "auto" },
     modal: true,
     rejectClose: false,
     content: approvalDialogContent(packet),
     buttons: [
       {
         action: "approve",
-        label: "Autoriser le déplacement",
+        label: "Autoriser",
         icon: "fa-solid fa-check",
         default: true,
         callback: () => true
@@ -475,7 +512,6 @@ function movementRecordSignature(tokenDoc, result) {
 function rememberMovement(tokenDoc, result, { persist = true } = {}) {
   const roundKey = combatRoundKey(tokenDoc);
   if (!roundKey || !result?.inCombat) return;
-
   const signature = movementRecordSignature(tokenDoc, result);
   if (recordedMovements.has(signature)) return;
   recordedMovements.add(signature);
@@ -490,7 +526,6 @@ function rememberMovement(tokenDoc, result, { persist = true } = {}) {
     modes: result.budget.modes
   };
   spentStateCache.set(tokenRoundStateKey(tokenDoc), state);
-
   if (persist) {
     tokenDoc.setFlag("add2e", STATE_FLAG, state)
       .catch(error => console.warn(`${ADD2E_MOVE_XP_TAG}[TOKEN][ROUND_STATE_ERROR]`, error));
@@ -501,9 +536,7 @@ async function executeApprovedMovement(packet) {
   const scene = game.scenes?.get?.(packet.sceneId) ?? null;
   const tokenDoc = scene?.tokens?.get?.(packet.tokenId) ?? null;
   if (!tokenDoc) throw new Error("Le token demandé n’existe plus dans la scène.");
-  if (combatForToken(tokenDoc)) {
-    throw new Error("Le combat a commencé : ce dépassement ne peut plus être autorisé.");
-  }
+  if (combatForToken(tokenDoc)) throw new Error("Le combat a commencé : ce dépassement ne peut plus être autorisé.");
 
   let completed = false;
   if (typeof tokenDoc.move === "function") {
@@ -515,15 +548,13 @@ async function executeApprovedMovement(packet) {
       add2eMovementRequesterId: packet.requesterId
     });
   } else {
-    const destination = point(packet.destination, tokenDoc);
-    await tokenDoc.update(destination, {
+    await tokenDoc.update(point(packet.destination, tokenDoc), {
       add2eIgnoreMovement: true,
       add2eMovementApprovalId: packet.requestId,
       add2eMovementRequesterId: packet.requesterId
     });
     completed = true;
   }
-
   if (completed === false) throw new Error("Foundry a interrompu le déplacement autorisé.");
 }
 
@@ -569,8 +600,9 @@ function handleApprovalResponse(packet) {
   if (String(packet.requesterId ?? "") !== String(game.user?.id ?? "")) return;
   if (!clearPendingApproval(packet.requestId)) return;
   runtimeState.lastResponse = packet;
-  if (packet.approved === true) ui.notifications.info(`${packet.gmName ?? "Le MJ"} a autorisé le déplacement hors combat.`);
-  else ui.notifications.warn(`${packet.gmName ?? "Le MJ"} a refusé le déplacement${packet.error ? ` (${packet.error})` : ""}.`);
+  if (packet.approved !== true) {
+    ui.notifications.warn(`${packet.gmName ?? "Le MJ"} a refusé le déplacement${packet.error ? ` (${packet.error})` : ""}.`);
+  }
 }
 
 function installSocket() {
@@ -640,19 +672,13 @@ export function validateTokenMovement(tokenDoc, changes, options = {}, movement 
   if (!tokenDoc?.actor || String(tokenDoc.actor.type ?? "").toLowerCase() !== "personnage") {
     return { allowed: true, result: null, decision: "allow" };
   }
-  const destination = point(changes, tokenDoc);
-  const result = computeTokenMovementScale(tokenDoc, destination, { movement });
-  if (!result || game.user?.isGM || !result.status.blocked) {
-    return { allowed: true, result, decision: "allow" };
-  }
+  const result = computeTokenMovementScale(tokenDoc, point(changes, tokenDoc), { movement });
+  if (!result || game.user?.isGM || !result.status.blocked) return { allowed: true, result, decision: "allow" };
   return { allowed: false, result, decision: result.inCombat ? "deny-combat" : "request-gm" };
 }
 
 function handleRejectedMovement(tokenDoc, movement, operation, checked) {
-  if (checked?.decision === "request-gm") {
-    requestApproval(tokenDoc, movement, operation, checked.result);
-    return false;
-  }
+  if (checked?.decision === "request-gm") return requestApproval(tokenDoc, movement, operation, checked.result);
 
   const result = checked?.result;
   runtimeState.lastDenial = {
@@ -671,11 +697,7 @@ function handleRejectedMovement(tokenDoc, movement, operation, checked) {
 
 function syntheticMovement(tokenDoc, changes = {}) {
   const destination = point(changes, tokenDoc);
-  return {
-    origin: point(tokenDoc),
-    destination,
-    pending: { waypoints: [destination] }
-  };
+  return { origin: point(tokenDoc), destination, pending: { waypoints: [destination] } };
 }
 
 function rememberResultForMove(tokenDoc, movement, result) {
@@ -800,8 +822,7 @@ export function installMovementTokenControl() {
   });
 
   Hooks.on("deleteToken", tokenDoc => {
-    const tokenKey = tokenApprovalKey(tokenDoc);
-    const requestId = pendingApprovalByToken.get(tokenKey);
+    const requestId = pendingApprovalByToken.get(tokenApprovalKey(tokenDoc));
     if (requestId) clearPendingApproval(requestId, "La demande a été annulée car le token a été supprimé.");
   });
 
@@ -824,6 +845,7 @@ export function installMovementTokenControl() {
       display: "foundry-native-token-ruler",
       combatPolicy: "strict-one-times-resolved-movement-per-round-no-override",
       explorationPolicy: "single-move-over-speed-requires-gm-approval",
+      playerFeedback: "dialog-v2-waiting",
       socketInstalled: runtimeState.socketInstalled
     });
     console.info(`${ADD2E_MOVE_XP_TAG}[TOKEN][CONTROLLER_READY]`, movementDiagnostics());
