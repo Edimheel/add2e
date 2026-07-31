@@ -33,6 +33,11 @@ import {
 
 const recalculationTimers = new Map();
 const MOVEMENT_DOMAINS = new Set(["movement", "encumbrance"]);
+const MOVEMENT_APPROVAL_RESPONSE = "ADD2E_MOVEMENT_APPROVAL_RESPONSE";
+const MOVEMENT_APPROVAL_SOCKET = "system.add2e";
+const MOVEMENT_APPROVAL_TIMEOUT_MS = 90_000;
+let movementWaitingDialog = null;
+let movementWaitingTimer = null;
 
 const ITEM_MOVEMENT_FIELDS = Object.freeze([
   "system.mouvement", "system.movement", "system.vitesse", "system.vitesse_deplacement",
@@ -57,6 +62,126 @@ const ACTOR_MOVEMENT_FIELDS = Object.freeze([
 ]);
 
 globalThis.ADD2E_MOVE_XP_VERSION = ADD2E_MOVE_XP_VERSION;
+
+function movementUiRoot(app, html = null) {
+  const element = app?.element ?? html?.[0] ?? html ?? null;
+  return element?.querySelector ? element : element?.[0] ?? null;
+}
+
+function removeMovementRequestNotifications() {
+  for (const notification of document.querySelectorAll?.("#notifications .notification") ?? []) {
+    const text = String(notification.textContent ?? "");
+    if (text.includes("Déplacement hors combat suspendu") || text.includes("Une demande de déplacement est déjà en attente")) notification.remove();
+  }
+}
+
+function closeMovementWaitingDialog() {
+  if (movementWaitingTimer) clearTimeout(movementWaitingTimer);
+  movementWaitingTimer = null;
+  const dialog = movementWaitingDialog;
+  movementWaitingDialog = null;
+  if (dialog) Promise.resolve(dialog.close?.({ animate: false })).catch(() => undefined);
+}
+
+function openMovementWaitingDialog() {
+  if (movementWaitingDialog) return;
+  const DialogV2 = foundry?.applications?.api?.DialogV2;
+  if (!DialogV2) return ui.notifications.info("Validation MJ en attente.");
+  try {
+    const dialog = new DialogV2({
+      window: { title: "Déplacement" },
+      classes: ["add2e-dialog", "add2e-movement-waiting-dialog"],
+      position: { width: 300, height: "auto" },
+      content: `<div class="add2e-movement-waiting" style="padding:14px 12px;text-align:center;color:#2f250c;"><div style="padding:10px;border:1px solid #d5b15a;border-radius:7px;background:#fff8dd;font-weight:950;"><i class="fa-solid fa-hourglass-half"></i> Validation MJ en attente</div></div>`,
+      buttons: [{ action: "close", label: "Fermer", callback: () => true }]
+    });
+    movementWaitingDialog = dialog;
+    movementWaitingTimer = setTimeout(closeMovementWaitingDialog, MOVEMENT_APPROVAL_TIMEOUT_MS);
+    dialog.addEventListener?.("close", () => {
+      if (movementWaitingDialog === dialog) movementWaitingDialog = null;
+      if (movementWaitingTimer) clearTimeout(movementWaitingTimer);
+      movementWaitingTimer = null;
+    }, { once: true });
+    Promise.resolve(dialog.render({ force: true })).then(() => {
+      movementUiRoot(dialog)?.querySelector?.("footer")?.style?.setProperty("display", "none", "important");
+      dialog.setPosition?.({ width: 300, height: "auto" });
+      for (const delay of [0, 50, 250]) setTimeout(removeMovementRequestNotifications, delay);
+    }).catch(error => {
+      console.warn(`${ADD2E_MOVE_XP_TAG}[TOKEN][WAIT_DIALOG]`, error);
+      closeMovementWaitingDialog();
+      ui.notifications.info("Validation MJ en attente.");
+    });
+  } catch (error) {
+    console.warn(`${ADD2E_MOVE_XP_TAG}[TOKEN][WAIT_DIALOG]`, error);
+    ui.notifications.info("Validation MJ en attente.");
+  }
+}
+
+function movementUiDestination(tokenDoc, movement = {}, fallback = null) {
+  if (movement?.destination) return movement.destination;
+  for (const list of [movement?.pending?.waypoints, movement?.waypoints, movement?.path, movement?.route]) {
+    if (Array.isArray(list) && list.length) return list[list.length - 1];
+  }
+  return fallback ?? tokenDoc;
+}
+
+function showMovementWaitingIfRequired(tokenDoc, target, options = {}, movement = null) {
+  if (!tokenDoc?.actor || options?.add2eIgnoreMovement || game.user?.isGM) return;
+  if (!Array.from(game.users ?? []).some(user => user.active && user.isGM)) return;
+  try {
+    const checked = validateTokenMovement(tokenDoc, target, options, movement);
+    if (!checked.allowed && checked.decision === "request-gm") openMovementWaitingDialog();
+  } catch (error) {
+    console.warn(`${ADD2E_MOVE_XP_TAG}[TOKEN][WAIT_CHECK]`, error);
+  }
+}
+
+function compactMovementApprovalDialog(app, html = null) {
+  const root = movementUiRoot(app, html);
+  const content = root?.querySelector?.(".add2e-movement-approval");
+  if (!content || content.dataset.add2eCompact === "1") return;
+  content.dataset.add2eCompact = "1";
+  content.style.cssText = "box-sizing:border-box;width:336px;display:grid;gap:6px;color:#2f250c;";
+  for (const row of content.querySelectorAll("tr")) {
+    const label = norm(row.querySelector("th")?.textContent ?? "");
+    if (label === "scene" || label === "part de la vitesse") row.remove();
+    else {
+      row.querySelector("th")?.style?.setProperty("padding", "3px 6px");
+      row.querySelector("td")?.style?.setProperty("padding", "3px 6px");
+    }
+  }
+  const paragraphs = content.querySelectorAll("p");
+  if (paragraphs[0]) paragraphs[0].style.margin = "0";
+  if (paragraphs[1]) paragraphs[1].remove();
+  for (const [action, label] of [["approve", "Autoriser"], ["deny", "Refuser"]]) {
+    const button = root.querySelector(`[data-action='${action}']`);
+    if (button) (button.querySelector(".button-label") ?? button).textContent = label;
+  }
+  root.style.setProperty("width", "360px", "important");
+  root.style.setProperty("min-width", "360px", "important");
+  root.style.setProperty("max-width", "360px", "important");
+  app?.setPosition?.({ width: 360, height: "auto" });
+}
+
+function installMovementApprovalUi() {
+  Hooks.on("preMoveToken", (tokenDoc, movement = {}, operation = {}) => {
+    showMovementWaitingIfRequired(tokenDoc, movementUiDestination(tokenDoc, movement), operation, movement);
+    return true;
+  });
+  Hooks.on("preUpdateToken", (tokenDoc, changes = {}, options = {}) => {
+    if (changes.x !== undefined || changes.y !== undefined || changes.elevation !== undefined || changes.z !== undefined) {
+      showMovementWaitingIfRequired(tokenDoc, changes, options, null);
+    }
+    return true;
+  });
+  Hooks.on("renderDialogV2", compactMovementApprovalDialog);
+  Hooks.on("renderApplicationV2", compactMovementApprovalDialog);
+  Hooks.once("ready", () => game.socket?.on?.(MOVEMENT_APPROVAL_SOCKET, packet => {
+    if (packet?.type === MOVEMENT_APPROVAL_RESPONSE && String(packet.requesterId ?? "") === String(game.user?.id ?? "")) {
+      closeMovementWaitingDialog();
+    }
+  }));
+}
 
 function actorTimerKey(actor) {
   return String(actor?.uuid ?? actor?.id ?? "");
@@ -261,6 +386,7 @@ Hooks.on("createItem", (item, options = {}) => queueItemMovementRecalc(item, "cr
 Hooks.on("updateItem", (item, changes = {}, options = {}) => queueItemMovementRecalc(item, "updateItem", changes, options));
 Hooks.on("deleteItem", (item, options = {}) => queueItemMovementRecalc(item, "deleteItem", {}, options));
 
+installMovementApprovalUi();
 installMovementTokenControl();
 
 globalThis.add2eComputeXp = computeXp;
