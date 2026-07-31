@@ -32,9 +32,12 @@ export {
   ADD2E_ABILITY_BOUNDS
 };
 
-const ADD2E_MODIFIER_CONTEXT_CONDITIONS_VERSION = "2026-07-31-encumbrance-settings-v6";
+const ADD2E_MODIFIER_CONTEXT_CONDITIONS_VERSION = "2026-07-31-armor-movement-v7";
 const ADD2E_MOVEMENT_METRES_PER_RATE = 3;
+const ADD2E_GOLD_PIECES_PER_KILOGRAM = 20;
+const ADD2E_GOLD_PIECES_PER_POUND = 10;
 const ADD2E_ENCUMBRANCE_SETTINGS_VERSION = "2026-07-31-world-encumbrance-settings-v1";
+const ADD2E_ARMOR_MOVEMENT_VERSION = "2026-07-31-canonical-armor-movement-v1";
 
 function add2eWorldSetting(key, fallback) {
   try {
@@ -125,6 +128,263 @@ function canonicalCurrencyEncumbranceModifier(Engine, actor, query = {}) {
       coinQuantity: quantity,
       excludedWeight: excluded,
       setting: "add2e.encumbranceCurrencyWeight"
+    }
+  });
+}
+
+function armorDocuments(context = {}) {
+  const raw = context.equippedArmor ?? context.armor ?? [];
+  const values = raw?.contents ?? raw;
+  try { return Array.from(values ?? []).filter(Boolean); }
+  catch (_error) { return []; }
+}
+
+function armorIsShield(item) {
+  const system = item?.system ?? {};
+  const identity = [
+    system.type_armure,
+    system.typeArmor,
+    system.categorie,
+    system.category,
+    system.structure,
+    system.nom,
+    item?.name
+  ].map(canonicalKey).filter(Boolean);
+  return system.bouclier === true
+    || system.shield === true
+    || identity.some(value => value === "bouclier" || value.includes("bouclier"));
+}
+
+function armorIsMagic(item) {
+  const system = item?.system ?? {};
+  const flags = item?.flags?.add2e ?? {};
+  return system.magique === true
+    || system.magic === true
+    || flags.isMagicItem === true
+    || flags.magique === true
+    || flags.magic === true;
+}
+
+function armorExplicitlyExempt(item) {
+  const system = item?.system ?? {};
+  const flags = item?.flags?.add2e ?? {};
+  return system.ignoreEncumbrance === true
+    || system.encumbranceExempt === true
+    || flags.ignoreEncumbrance === true
+    || flags.encumbranceExempt === true;
+}
+
+function armorIdentity(item) {
+  const system = item?.system ?? {};
+  return [
+    system.type_armure,
+    system.typeArmor,
+    system.structure,
+    system.categorie,
+    system.category,
+    system.properties,
+    system.nom,
+    system.enchantement?.baseName,
+    item?.name
+  ].map(canonicalKey).filter(Boolean).join(" ");
+}
+
+function armorBaseMovementRate(item) {
+  if (!item || armorIsShield(item)) return null;
+  const identity = armorIdentity(item);
+  if (!identity) return null;
+
+  if (identity.includes("maille-elfique") || identity.includes("cotte-de-mailles-elfique")) return 12;
+  if (identity.includes("cuir-cloute") || identity.includes("cuir-cloutee")) return 9;
+  if (identity.includes("plate-feuilletee") || identity.includes("plates-feuilletees")) return 6;
+  if (identity.includes("armure-de-plaques") || identity.includes("armure-de-plates")) return 6;
+  if (identity.includes("lorica") || identity.includes("plate") || identity.includes("plaques")) return 6;
+  if (identity.includes("harnois") || identity.includes("hoqueton") || identity.includes("broigne")) return 9;
+  if (identity.includes("maille") || identity.includes("cotte-de-mailles")) return 9;
+  if (identity.includes("cuir")) return 12;
+  return null;
+}
+
+function armorEffectiveMovementRate(item) {
+  const baseRate = armorBaseMovementRate(item);
+  if (!Number.isFinite(baseRate)) return null;
+  if (!armorIsMagic(item)) return baseRate;
+  if (baseRate <= 6) return 9;
+  if (baseRate <= 9) return 12;
+  return baseRate;
+}
+
+function armorMovementProfile(context = {}) {
+  const entries = armorDocuments(context).map(item => {
+    const baseRate = armorBaseMovementRate(item);
+    const effectiveRate = armorEffectiveMovementRate(item);
+    if (!Number.isFinite(baseRate) || !Number.isFinite(effectiveRate)) return null;
+    return {
+      item,
+      itemId: String(item?.id ?? ""),
+      itemUuid: String(item?.uuid ?? ""),
+      name: String(item?.name ?? "Armure"),
+      magical: armorIsMagic(item),
+      baseRate,
+      effectiveRate,
+      capMetres: effectiveRate * ADD2E_MOVEMENT_METRES_PER_RATE
+    };
+  }).filter(Boolean);
+  if (!entries.length) return null;
+  const selected = [...entries].sort((left, right) => left.capMetres - right.capMetres)[0];
+  return {
+    selected,
+    entries,
+    capRate: selected.effectiveRate,
+    capMetres: selected.capMetres
+  };
+}
+
+function armorWeightUnit(system = {}) {
+  return canonicalKey(
+    system.poids_unite
+      ?? system.weightUnit
+      ?? system.weight_unit
+      ?? system.unite_poids
+      ?? system["unité_poids"]
+      ?? ""
+  );
+}
+
+function armorBaseWeightGoldPieces(item) {
+  const system = item?.system ?? {};
+  const explicit = Number(system.poids_encombrement_po ?? system.encumbrance_gp ?? system.encumbranceGoldPieces);
+  if (Number.isFinite(explicit) && explicit >= 0) return explicit;
+
+  const raw = Number(system.poids ?? system.weight ?? system.encombrement ?? system.encumbrance);
+  if (!Number.isFinite(raw) || raw <= 0) return 0;
+  const unit = armorWeightUnit(system);
+  if (["po", "pp", "gp", "piece-dor", "pieces-dor", "gold-piece", "gold-pieces"].includes(unit)) return raw;
+  if (["kg", "kilogramme", "kilogrammes", "kilogram", "kilograms"].includes(unit)) {
+    return raw * ADD2E_GOLD_PIECES_PER_KILOGRAM;
+  }
+  if (["lb", "lbs", "livre", "livres", "pound", "pounds"].includes(unit)) {
+    return raw * ADD2E_GOLD_PIECES_PER_POUND;
+  }
+  return raw * ADD2E_GOLD_PIECES_PER_POUND;
+}
+
+function armorInventoryEntry(context, item) {
+  const entries = context.inventory?.entries;
+  if (!Array.isArray(entries)) return null;
+  const itemId = String(item?.id ?? "");
+  const itemUuid = String(item?.uuid ?? "");
+  return entries.find(entry => (
+    (itemId && String(entry?.itemId ?? "") === itemId)
+    || (itemUuid && String(entry?.itemUuid ?? "") === itemUuid)
+  )) ?? null;
+}
+
+function canonicalMagicArmorWeightModifier(Engine, actor, query = {}, context = {}) {
+  const domain = canonicalKey(query.domain);
+  const target = canonicalKey(query.target);
+  if (!actor || domain !== "encumbrance" || target !== "carried-weight") return null;
+
+  const details = [];
+  let adjustment = 0;
+  for (const item of armorDocuments(context)) {
+    if (!armorIsMagic(item)) continue;
+    const entry = armorInventoryEntry(context, item);
+    const quantity = Math.max(1, Number(entry?.quantity ?? item?.system?.quantite ?? item?.system?.quantity ?? 1) || 1);
+    const sourceWeight = Math.max(0, armorBaseWeightGoldPieces(item) * quantity);
+    const currentWeight = Math.max(0, Number(entry?.total) || 0);
+    const desiredWeight = armorExplicitlyExempt(item) || armorIsShield(item) ? 0 : sourceWeight / 2;
+    const delta = desiredWeight - currentWeight;
+    if (Math.abs(delta) < 0.0001) continue;
+    adjustment += delta;
+    details.push({
+      itemId: item?.id ?? null,
+      itemUuid: item?.uuid ?? null,
+      name: item?.name ?? "Armure magique",
+      shield: armorIsShield(item),
+      sourceWeight,
+      currentWeight,
+      desiredWeight,
+      adjustment: delta
+    });
+  }
+  if (!details.length || Math.abs(adjustment) < 0.0001) return null;
+
+  const base = Math.max(0, Number(query.base) || 0);
+  const value = Math.max(-base, adjustment);
+  return Engine.createModifier({
+    id: `${actor.id}:encumbrance:magic-armor-weight`,
+    domain: "encumbrance",
+    target: "carried-weight",
+    operation: "add",
+    value,
+    priority: 6,
+    stacking: { mode: "replace", group: "encumbrance-magic-armor-weight" },
+    source: {
+      kind: "armor-rule",
+      id: `${actor.id}:magic-armor-weight`,
+      uuid: actor.uuid ?? "",
+      name: "Poids des armures magiques"
+    },
+    metadata: {
+      label: "Poids canonique des armures magiques",
+      producer: "canonical-magic-armor-weight",
+      details,
+      version: ADD2E_ARMOR_MOVEMENT_VERSION
+    }
+  });
+}
+
+function armorCapAfterEncumbrance(profile, context = {}, base = 0) {
+  if (!profile?.capMetres) return null;
+  const category = canonicalKey(context.encumbranceCategory ?? "");
+  if (category === "surcharge") return 0;
+  if (category === "severe") return Math.max(0, Math.min(profile.capMetres, Number(base) || 0));
+  const multiplier = Number(context.encumbranceMultiplier);
+  const resolvedMultiplier = Number.isFinite(multiplier) ? Math.max(0, multiplier) : 1;
+  const rate = profile.capMetres / ADD2E_MOVEMENT_METRES_PER_RATE;
+  return Math.max(0, Math.floor((rate * resolvedMultiplier) + 1e-9) * ADD2E_MOVEMENT_METRES_PER_RATE);
+}
+
+function canonicalArmorMovementModifier(Engine, actor, query = {}, context = {}) {
+  if (!actor || String(actor.type ?? "").toLowerCase() !== "personnage") return null;
+  const domain = canonicalKey(query.domain);
+  const target = canonicalKey(query.target);
+  if (domain !== "movement" || !["ground", "sol", "terrestre"].includes(target)) return null;
+
+  const profile = armorMovementProfile(context);
+  if (!profile) return null;
+  const base = Math.max(0, Number(query.base) || 0);
+  const cap = armorCapAfterEncumbrance(profile, context, base);
+  if (!Number.isFinite(cap)) return null;
+  const value = Math.min(base, cap);
+  if (value >= base - 0.0001) return null;
+
+  return Engine.createModifier({
+    id: `${actor.id}:movement:armor-cap`,
+    domain: "movement",
+    target: "ground",
+    operation: "set",
+    value,
+    priority: 5,
+    stacking: { mode: "stack", group: null },
+    source: {
+      kind: "armor-rule",
+      id: profile.selected.itemId,
+      uuid: profile.selected.itemUuid,
+      name: profile.selected.name
+    },
+    metadata: {
+      label: `Plafond de mouvement — ${profile.selected.name}`,
+      producer: "canonical-armor-movement",
+      armorBaseRate: profile.selected.baseRate,
+      armorEffectiveRate: profile.selected.effectiveRate,
+      armorCapMetres: profile.capMetres,
+      resolvedCapMetres: cap,
+      magical: profile.selected.magical,
+      encumbranceCategory: context.encumbranceCategory ?? null,
+      encumbranceMultiplier: context.encumbranceMultiplier ?? null,
+      version: ADD2E_ARMOR_MOVEMENT_VERSION
     }
   });
 }
@@ -250,13 +510,17 @@ function actorMovementReferenceValue(actor, context = {}, base = 0) {
   const reference = Number(actor?.system?.vitesse_deplacement);
   if (!Number.isFinite(reference) || reference <= 0) return null;
 
+  const armorProfile = armorMovementProfile(context);
+  const referenceBase = Number.isFinite(armorProfile?.capMetres)
+    ? Math.min(reference, armorProfile.capMetres)
+    : reference;
   const category = canonicalKey(context.encumbranceCategory ?? "");
   if (category === "surcharge") return 0;
-  if (category === "severe") return Math.max(0, Number(base) || 0);
+  if (category === "severe") return Math.max(0, Math.min(referenceBase, Number(base) || 0));
 
   const multiplier = Number(context.encumbranceMultiplier);
   const resolvedMultiplier = Number.isFinite(multiplier) ? Math.max(0, multiplier) : 1;
-  const movementRate = reference / ADD2E_MOVEMENT_METRES_PER_RATE;
+  const movementRate = referenceBase / ADD2E_MOVEMENT_METRES_PER_RATE;
   return Math.max(0, Math.floor((movementRate * resolvedMultiplier) + 1e-9) * ADD2E_MOVEMENT_METRES_PER_RATE);
 }
 
@@ -271,6 +535,7 @@ function canonicalActorMovementReferenceModifier(Engine, actor, query = {}, cont
   const natural = Number(context.movementSource?.value ?? context.naturalBase);
   if (Number.isFinite(natural) && natural > 0 && Math.abs(value - Number(query.base ?? 0)) < 0.0001) return null;
 
+  const armorProfile = armorMovementProfile(context);
   return Engine.createModifier({
     id: `${actor.id}:movement:actor-reference`,
     domain: "movement",
@@ -290,6 +555,8 @@ function canonicalActorMovementReferenceModifier(Engine, actor, query = {}, cont
       producer: "actor-movement-reference",
       reference: Number(actor.system?.vitesse_deplacement),
       naturalBase: Number.isFinite(natural) ? natural : null,
+      armorCapMetres: armorProfile?.capMetres ?? null,
+      armorName: armorProfile?.selected?.name ?? null,
       encumbranceCategory: context.encumbranceCategory ?? null,
       encumbranceMultiplier: context.encumbranceMultiplier ?? null
     }
@@ -504,6 +771,14 @@ function installContextConditionExtensions(Engine) {
         if (currencyPolicy && !source.some(modifier => String(modifier?.id ?? "") === String(currencyPolicy.id))) {
           source.push(currencyPolicy);
         }
+        const magicArmorWeight = canonicalMagicArmorWeightModifier(this, actor, query, context);
+        if (magicArmorWeight && !source.some(modifier => String(modifier?.id ?? "") === String(magicArmorWeight.id))) {
+          source.push(magicArmorWeight);
+        }
+        const armorMovement = canonicalArmorMovementModifier(this, actor, query, context);
+        if (armorMovement && !source.some(modifier => String(modifier?.id ?? "") === String(armorMovement.id))) {
+          source.push(armorMovement);
+        }
         const movementReference = canonicalActorMovementReferenceModifier(this, actor, query, context);
         if (movementReference && !source.some(modifier => String(modifier?.id ?? "") === String(movementReference.id))) {
           source.push(movementReference);
@@ -520,6 +795,7 @@ function installContextConditionExtensions(Engine) {
 
   globalThis.ADD2E_MODIFIER_CONTEXT_CONDITIONS_VERSION = ADD2E_MODIFIER_CONTEXT_CONDITIONS_VERSION;
   globalThis.ADD2E_ENCUMBRANCE_SETTINGS_VERSION = ADD2E_ENCUMBRANCE_SETTINGS_VERSION;
+  globalThis.ADD2E_ARMOR_MOVEMENT_VERSION = ADD2E_ARMOR_MOVEMENT_VERSION;
 }
 
 export function installEffectsEngineCore(Engine) {
