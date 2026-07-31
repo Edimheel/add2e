@@ -1,97 +1,180 @@
 {
   "schema": 1,
   "catalogueId": "add2e-gdm-magic-powers",
-  "version": "2026-07-26-catalogue-manifest-v6",
+  "version": "2026-07-31-catalogue-manifest-v7",
   "mergeStrategy": "append-powers-and-merge-vocabularies",
   "fragments": [
     {
       "path": "../catalogue-pouvoirs-objets-magiques.json",
-      "sections": ["III.F", "III.G", "III.H"],
+      "sections": [
+        "III.F",
+        "III.G",
+        "III.H"
+      ],
       "status": "weapons-and-armors-core",
       "verifiedPowerCount": 29
     },
     {
       "path": "iii-a-d-core.json",
-      "sections": ["III.A", "III.B", "III.C", "III.D"],
+      "sections": [
+        "III.A",
+        "III.B",
+        "III.C",
+        "III.D"
+      ],
       "status": "potions-scrolls-rings-rods-staves-wands-core",
       "verifiedPowerCount": 51
     },
     {
       "path": "iii-a-d-social-influence.json",
-      "sections": ["III.A", "III.C"],
+      "sections": [
+        "III.A",
+        "III.C"
+      ],
       "status": "social-influence-canonical-mechanics",
       "verifiedPowerCount": 4
     },
     {
+      "path": "iii-e-movement.json",
+      "sections": [
+        "III.C",
+        "III.E"
+      ],
+      "status": "canonical-movement-and-encumbrance-powers",
+      "verifiedPowerCount": 2
+    },
+    {
       "path": "iii-e-core-1.json",
-      "sections": ["III.E.1", "III.E.2", "III.E.3", "III.E.4", "III.E.5"],
+      "sections": [
+        "III.E.1",
+        "III.E.2",
+        "III.E.3",
+        "III.E.4",
+        "III.E.5"
+      ],
       "status": "miscellaneous-magic-core-pass-1",
       "verifiedPowerCount": 13
     },
     {
       "path": "iii-e-core-2.json",
-      "sections": ["III.E.1", "III.E.2", "III.E.3", "III.E.4", "III.E.5"],
+      "sections": [
+        "III.E.1",
+        "III.E.2",
+        "III.E.3",
+        "III.E.4",
+        "III.E.5"
+      ],
       "status": "miscellaneous-magic-core-pass-1",
       "verifiedPowerCount": 13
     },
     {
       "path": "iii-e-core-3.json",
-      "sections": ["III.E.1", "III.E.2", "III.E.3", "III.E.4", "III.E.5"],
+      "sections": [
+        "III.E.1",
+        "III.E.2",
+        "III.E.3",
+        "III.E.4",
+        "III.E.5"
+      ],
       "status": "miscellaneous-magic-core-pass-1",
       "verifiedPowerCount": 13
     },
     {
       "path": "iii-e-core-4.json",
-      "sections": ["III.E.1", "III.E.2", "III.E.3", "III.E.4", "III.E.5"],
+      "sections": [
+        "III.E.1",
+        "III.E.2",
+        "III.E.3",
+        "III.E.4",
+        "III.E.5"
+      ],
       "status": "miscellaneous-magic-core-pass-1",
       "verifiedPowerCount": 13
     },
     {
       "path": "iii-e-core-5.json",
-      "sections": ["III.E.1", "III.E.2", "III.E.3", "III.E.4", "III.E.5"],
+      "sections": [
+        "III.E.1",
+        "III.E.2",
+        "III.E.3",
+        "III.E.4",
+        "III.E.5"
+      ],
       "status": "miscellaneous-magic-core-pass-1",
       "verifiedPowerCount": 13
     },
     {
       "path": "iii-e-core-6.json",
-      "sections": ["III.E.1", "III.E.2", "III.E.3", "III.E.4", "III.E.5"],
+      "sections": [
+        "III.E.1",
+        "III.E.2",
+        "III.E.3",
+        "III.E.4",
+        "III.E.5"
+      ],
       "status": "miscellaneous-magic-core-pass-1",
       "verifiedPowerCount": 12
     },
     {
       "path": "iii-e-rare-destiny.json",
-      "sections": ["III.E.1", "III.E.2", "III.E.3", "III.E.4", "III.E.5"],
+      "sections": [
+        "III.E.1",
+        "III.E.2",
+        "III.E.3",
+        "III.E.4",
+        "III.E.5"
+      ],
       "status": "miscellaneous-magic-second-pass-destiny",
       "verifiedPowerCount": 16
     },
     {
       "path": "iii-e-rare-containment.json",
-      "sections": ["III.E.1", "III.E.2", "III.E.3", "III.E.4", "III.E.5"],
+      "sections": [
+        "III.E.1",
+        "III.E.2",
+        "III.E.3",
+        "III.E.4",
+        "III.E.5"
+      ],
       "status": "miscellaneous-magic-second-pass-containment",
       "verifiedPowerCount": 14
     },
     {
       "path": "iii-e-rare-lifecycle.json",
-      "sections": ["III.E.1", "III.E.2", "III.E.3", "III.E.4", "III.E.5"],
+      "sections": [
+        "III.E.1",
+        "III.E.2",
+        "III.E.3",
+        "III.E.4",
+        "III.E.5"
+      ],
       "status": "miscellaneous-magic-second-pass-lifecycle",
       "verifiedPowerCount": 16
     }
   ],
   "coverage": {
     "analysedSections": [
-      "III.A", "III.B", "III.C", "III.D", "III.E", "III.F", "III.G", "III.H",
+      "III.A",
+      "III.B",
+      "III.C",
+      "III.D",
+      "III.E",
+      "III.F",
+      "III.G",
+      "III.H",
       "III.E spécial artefacts et reliques"
     ],
     "partialSections": [],
     "nextSections": [],
-    "generatorIntegration": false,
+    "generatorIntegration": true,
     "verifiedWeaponArmorPowerCount": 29,
     "verifiedCorePowerCount": 51,
     "verifiedSocialInfluencePowerCount": 4,
-    "verifiedMiscellaneousCorePowerCount": 77,
+    "verifiedMovementPowerCount": 2,
+    "verifiedMiscellaneousCorePowerCount": 79,
     "verifiedMiscellaneousSecondPassPowerCount": 46,
-    "verifiedMiscellaneousPowerCount": 123,
-    "verifiedStandardPowerCount": 207,
+    "verifiedMiscellaneousPowerCount": 125,
+    "verifiedStandardPowerCount": 209,
     "verifiedArtifactRelicPowerAndEffectCount": 215,
     "verifiedArtifactRelicDestructionMethodCount": 8
   },
@@ -106,7 +189,14 @@
   "artifactCatalogue": {
     "path": "artefacts-reliques/index.json",
     "status": "complete-source-tables-not-integrated",
-    "tables": ["I", "II", "III", "IV", "V", "VI"],
+    "tables": [
+      "I",
+      "II",
+      "III",
+      "IV",
+      "V",
+      "VI"
+    ],
     "verifiedPowerAndEffectCount": 215,
     "verifiedDestructionMethodCount": 8,
     "mergeWithStandardPowers": false
