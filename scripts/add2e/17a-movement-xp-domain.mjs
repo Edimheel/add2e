@@ -1,7 +1,7 @@
 // ADD2E — Domaine XP, mouvement et encombrement canoniques.
 // Compatible Foundry V13/V14/V15 — DialogV2 uniquement.
 
-export const ADD2E_MOVE_XP_VERSION = "2026-07-30-canonical-movement-encumbrance-v12";
+export const ADD2E_MOVE_XP_VERSION = "2026-07-31-canonical-movement-encumbrance-v13";
 export const ADD2E_MOVE_XP_TAG = "[ADD2E][MOVE_XP]";
 export const ADD2E_MOVE_XP_INTERNAL = "add2eMoveXpInternal";
 export const ADD2E_MOVE_XP_RECALC_DELAY_MS = 140;
@@ -10,9 +10,45 @@ const MISSING_MOVEMENT_BASE_WARNED = new Set();
 const GOLD_PIECES_PER_KILOGRAM = 20;
 const GOLD_PIECES_PER_POUND = 10;
 const ADND_MOVEMENT_INCH_METRES = 3;
+const WORN_CLOTHING_POUNDS = 5;
 const MOVEMENT_TARGETS = Object.freeze([
   "ground", "flight", "ascent", "descent", "vertical", "underwater", "swim"
 ]);
+
+const ENCUMBRANCE_TABLE_POUNDS = Object.freeze({
+  2: { unencumbered: 1, light: 2, moderate: 3, heavy: 4, severe: 6 },
+  3: { unencumbered: 5, light: 6, moderate: 7, heavy: 9, severe: 10 },
+  4: { unencumbered: 10, light: 13, moderate: 16, heavy: 19, severe: 25 },
+  5: { unencumbered: 10, light: 13, moderate: 16, heavy: 19, severe: 25 },
+  6: { unencumbered: 20, light: 29, moderate: 38, heavy: 46, severe: 55 },
+  7: { unencumbered: 20, light: 29, moderate: 38, heavy: 46, severe: 55 },
+  8: { unencumbered: 35, light: 50, moderate: 65, heavy: 80, severe: 90 },
+  9: { unencumbered: 35, light: 50, moderate: 65, heavy: 80, severe: 90 },
+  10: { unencumbered: 40, light: 58, moderate: 76, heavy: 96, severe: 110 },
+  11: { unencumbered: 40, light: 58, moderate: 76, heavy: 96, severe: 110 },
+  12: { unencumbered: 45, light: 69, moderate: 93, heavy: 117, severe: 140 },
+  13: { unencumbered: 45, light: 69, moderate: 93, heavy: 117, severe: 140 },
+  14: { unencumbered: 55, light: 85, moderate: 115, heavy: 145, severe: 170 },
+  15: { unencumbered: 55, light: 85, moderate: 115, heavy: 145, severe: 170 },
+  16: { unencumbered: 70, light: 100, moderate: 130, heavy: 160, severe: 195 },
+  17: { unencumbered: 85, light: 121, moderate: 157, heavy: 193, severe: 220 },
+  18: { unencumbered: 110, light: 149, moderate: 188, heavy: 227, severe: 255 },
+  "18/01-50": { unencumbered: 135, light: 174, moderate: 213, heavy: 252, severe: 280 },
+  "18/51-75": { unencumbered: 160, light: 199, moderate: 238, heavy: 277, severe: 305 },
+  "18/76-90": { unencumbered: 185, light: 224, moderate: 263, heavy: 302, severe: 330 },
+  "18/91-99": { unencumbered: 235, light: 274, moderate: 313, heavy: 352, severe: 380 },
+  "18/00": { unencumbered: 335, light: 374, moderate: 413, heavy: 452, severe: 480 }
+});
+
+const SUPERNATURAL_STRENGTH_CAPACITY_POUNDS = Object.freeze({
+  19: { unencumbered: 485, severe: 640 },
+  20: { unencumbered: 535, severe: 700 },
+  21: { unencumbered: 635, severe: 810 },
+  22: { unencumbered: 785, severe: 970 },
+  23: { unencumbered: 935, severe: 1130 },
+  24: { unencumbered: 1235, severe: 1440 },
+  25: { unencumbered: 1535, severe: 1750 }
+});
 
 export function log(label, data = {}) {
   console.log(`${ADD2E_MOVE_XP_TAG}${label}`, data);
@@ -295,6 +331,44 @@ function naturalMovementSource(actor) {
   return { value: selected?.value ?? 0, selected, sources, missing: !selected };
 }
 
+function supernaturalEncumbranceProfile(score) {
+  const source = SUPERNATURAL_STRENGTH_CAPACITY_POUNDS[score];
+  if (!source) return null;
+  const span = Math.max(0, source.severe - source.unencumbered);
+  return {
+    unencumbered: source.unencumbered,
+    light: source.unencumbered + Math.floor(span * 0.25),
+    moderate: source.unencumbered + Math.floor(span * 0.5),
+    heavy: source.unencumbered + Math.floor(span * 0.75),
+    severe: source.severe,
+    source: "strength-weight-allowance-max-press"
+  };
+}
+
+function strengthEncumbranceTableProfile(derived) {
+  const tableKey = String(derived?.tableKey ?? derived?.score ?? "");
+  const exact = ENCUMBRANCE_TABLE_POUNDS[tableKey] ?? null;
+  const score = Math.max(2, Math.min(25, Math.floor(num(derived?.score, 10))));
+  const pounds = exact ?? supernaturalEncumbranceProfile(score) ?? ENCUMBRANCE_TABLE_POUNDS[18];
+  const limitsPounds = {
+    unencumbered: round2(pounds.unencumbered),
+    light: round2(pounds.light),
+    moderate: round2(pounds.moderate),
+    heavy: round2(pounds.heavy),
+    severe: round2(pounds.severe)
+  };
+  const limitsGoldPieces = Object.fromEntries(
+    Object.entries(limitsPounds).map(([key, value]) => [key, round2(value * GOLD_PIECES_PER_POUND)])
+  );
+  return {
+    tableKey,
+    score,
+    source: exact ? "phb-table-47" : (pounds.source ?? "phb-table-47"),
+    pounds: limitsPounds,
+    goldPieces: limitsGoldPieces
+  };
+}
+
 function strengthEncumbranceProfile(actor) {
   const engine = effectsEngine();
   if (typeof engine.resolveAbilityDerived !== "function") {
@@ -306,7 +380,11 @@ function strengthEncumbranceProfile(actor) {
     source: "movement-encumbrance",
     consumer: "movement"
   });
-  return { derived, weightAdjustment: num(derived?.profile?.poids, 0) };
+  return {
+    derived,
+    weightAdjustment: num(derived?.profile?.poids, 0),
+    capacityProfile: strengthEncumbranceTableProfile(derived)
+  };
 }
 
 function itemTags(item) {
@@ -345,7 +423,7 @@ function itemEncumbranceExemption(item) {
     return "thief-tools";
   }
   if (category === "vetement" && itemEquipped(item)) {
-    return "worn-clothing";
+    return "worn-clothing-standard-weight";
   }
   return null;
 }
@@ -439,10 +517,37 @@ function moneyWeightEntry(actor) {
   };
 }
 
+function wornClothingWeightEntry(actor) {
+  const items = actor?.items?.contents ?? Array.from(actor?.items ?? []);
+  const worn = items.filter(item => {
+    const system = item?.system ?? {};
+    const category = norm(system.categorie ?? system.category);
+    return category === "vetement" && itemEquipped(item);
+  });
+  if (!worn.length) return null;
+  return {
+    kind: "worn-clothing",
+    item: null,
+    itemId: null,
+    itemUuid: null,
+    itemIds: worn.map(item => item.id),
+    name: "Vêtements portés",
+    quantity: 1,
+    rawUnitWeight: WORN_CLOTHING_POUNDS,
+    weightUnit: "pound",
+    weightSource: "phb-standard-worn-clothing",
+    unitWeight: WORN_CLOTHING_POUNDS * GOLD_PIECES_PER_POUND,
+    total: WORN_CLOTHING_POUNDS * GOLD_PIECES_PER_POUND
+  };
+}
+
 function carriedInventory(actor) {
   const itemEntries = (actor?.items?.contents ?? Array.from(actor?.items ?? [])).filter(itemIsCarried).map(itemWeightEntry).filter(entry => entry.total > 0);
   const coinEntry = moneyWeightEntry(actor);
-  const entries = coinEntry.total > 0 ? [...itemEntries, coinEntry] : itemEntries;
+  const clothingEntry = wornClothingWeightEntry(actor);
+  const entries = [...itemEntries];
+  if (coinEntry.total > 0) entries.push(coinEntry);
+  if (clothingEntry?.total > 0) entries.push(clothingEntry);
   return { entries, total: round2(entries.reduce((sum, entry) => sum + entry.total, 0)) };
 }
 
@@ -572,6 +677,7 @@ function movementContext(actor, source, inventory, armor, strength, options = {}
         kind: entry.kind,
         itemId: entry.itemId,
         itemUuid: entry.itemUuid,
+        itemIds: clone(entry.itemIds),
         name: entry.name,
         quantity: entry.quantity,
         denominations: clone(entry.denominations),
@@ -585,6 +691,7 @@ function movementContext(actor, source, inventory, armor, strength, options = {}
     armor,
     equippedArmor: armor,
     strength: strength.derived,
+    strengthEncumbrance: clone(strength.capacityProfile),
     size,
     taille: size,
     transformation,
@@ -607,11 +714,38 @@ function resolvedTotal(resolution, fallback = 0) {
   return round2(num(resolution?.total, fallback));
 }
 
-function encumbranceCategory(weight, normalLimit, heavyLimit, maximumLimit) {
-  if (weight > maximumLimit) return { label: "Surcharge", category: "surcharge", multiplier: 0 };
-  if (weight > heavyLimit) return { label: "Très encombré", category: "tres_encombre", multiplier: 0.25 };
-  if (weight > normalLimit) return { label: "Encombré", category: "encombre", multiplier: 0.5 };
-  return { label: "Équipement normal", category: "normal", multiplier: 1 };
+function encumbranceCategory(weight, limits) {
+  if (weight > limits.severe) {
+    return { label: "Surcharge", category: "surcharge", multiplier: 0, attackPenalty: -4, armorClassPenalty: 3 };
+  }
+  if (weight > limits.heavy) {
+    return { label: "Encombrement sévère", category: "severe", multiplier: null, attackPenalty: -4, armorClassPenalty: 3 };
+  }
+  if (weight > limits.moderate) {
+    return { label: "Encombrement lourd", category: "lourd", multiplier: 1 / 3, attackPenalty: -2, armorClassPenalty: 1 };
+  }
+  if (weight > limits.light) {
+    return { label: "Encombrement modéré", category: "modere", multiplier: 1 / 2, attackPenalty: -1, armorClassPenalty: 0 };
+  }
+  if (weight > limits.unencumbered) {
+    return { label: "Encombrement léger", category: "leger", multiplier: 2 / 3, attackPenalty: 0, armorClassPenalty: 0 };
+  }
+  return { label: "Sans encombrement", category: "sans_encombrement", multiplier: 1, attackPenalty: 0, armorClassPenalty: 0 };
+}
+
+function categoryBaseMultiplier(category, naturalBase) {
+  if (category.category === "surcharge") return 0;
+  if (category.category === "severe") {
+    return naturalBase > 0 ? Math.min(1, ADND_MOVEMENT_INCH_METRES / naturalBase) : 0;
+  }
+  return Math.max(0, num(category.multiplier, 1));
+}
+
+function encumberedMovementMetres(naturalBase, multiplier, category) {
+  if (!(naturalBase > 0) || category === "surcharge" || !(multiplier > 0)) return 0;
+  const movementRate = naturalBase / ADND_MOVEMENT_INCH_METRES;
+  const adjustedRate = Math.max(0, Math.floor((movementRate * multiplier) + 1e-9));
+  return round2(adjustedRate * ADND_MOVEMENT_INCH_METRES);
 }
 
 function collectModes(...resolutions) {
@@ -680,12 +814,18 @@ function emptyMovement() {
     poidsPo: 0,
     poidsKg: 0,
     forcePoids: 0,
-    limiteNormale: 0,
+    limiteSansEncombrement: 0,
+    limiteLegere: 0,
+    limiteModeree: 0,
     limiteLourde: 0,
+    limiteSevere: 0,
+    limiteNormale: 0,
     limiteSurcharge: 0,
-    categorie: "normal",
-    label: "Équipement normal",
+    categorie: "sans_encombrement",
+    label: "Sans encombrement",
     multiplier: 1,
+    attaquePenalite: 0,
+    classeArmurePenalite: 0,
     modeActif: "ground",
     modes: [],
     modesMagiques: [],
@@ -712,45 +852,74 @@ export function computeMovement(actor, options = {}) {
     context: { ...context, encumbranceTarget: "carried-weight" }
   });
   const weight = resolvedTotal(carriedWeightResolution, inventory.total);
-  const normalCapacityBase = Math.max(0, 500 + strength.weightAdjustment);
-  const heavyCapacityBase = Math.max(normalCapacityBase, 1000 + strength.weightAdjustment);
-  const maximumCapacityBase = Math.max(heavyCapacityBase, 1500 + strength.weightAdjustment);
-  const normalCapacityResolution = canonicalResolve(actor, {
-    domain: "encumbrance", target: "capacity.normal", base: normalCapacityBase,
-    context: { ...context, carriedWeight: weight, capacityTier: "normal" }
-  });
-  const heavyCapacityResolution = canonicalResolve(actor, {
-    domain: "encumbrance", target: "capacity.heavy", base: heavyCapacityBase,
-    context: { ...context, carriedWeight: weight, capacityTier: "heavy" }
-  });
-  const maximumCapacityResolution = canonicalResolve(actor, {
-    domain: "encumbrance", target: "capacity.maximum", base: maximumCapacityBase,
-    context: { ...context, carriedWeight: weight, capacityTier: "maximum" }
-  });
-  const normalLimit = resolvedTotal(normalCapacityResolution, normalCapacityBase);
-  const heavyLimit = Math.max(normalLimit, resolvedTotal(heavyCapacityResolution, heavyCapacityBase));
-  const maximumLimit = Math.max(heavyLimit, resolvedTotal(maximumCapacityResolution, maximumCapacityBase));
-  const category = encumbranceCategory(weight, normalLimit, heavyLimit, maximumLimit);
+
+  const capacityKeys = ["unencumbered", "light", "moderate", "heavy", "severe"];
+  const capacityResolutions = {};
+  const resolvedLimits = {};
+  let previousLimit = 0;
+  for (const key of capacityKeys) {
+    const base = strength.capacityProfile.goldPieces[key];
+    const resolution = canonicalResolve(actor, {
+      domain: "encumbrance",
+      target: `capacity.${key}`,
+      base,
+      context: { ...context, carriedWeight: weight, capacityTier: key }
+    });
+    const total = Math.max(previousLimit, resolvedTotal(resolution, base));
+    capacityResolutions[key] = resolution;
+    resolvedLimits[key] = total;
+    previousLimit = total;
+  }
+
+  const category = encumbranceCategory(weight, resolvedLimits);
+  const multiplierBase = categoryBaseMultiplier(category, source.value);
   const multiplierResolution = canonicalResolve(actor, {
     domain: "encumbrance",
     target: "movement-multiplier",
-    base: category.multiplier,
+    base: multiplierBase,
     context: {
       ...context,
       carriedWeight: weight,
-      limits: { normal: normalLimit, heavy: heavyLimit, maximum: maximumLimit },
+      limits: clone(resolvedLimits),
       encumbranceCategory: category.category
     }
   });
-  const multiplier = Math.max(0, num(multiplierResolution?.total, category.multiplier));
-  const movementBase = Math.max(0, source.value * multiplier);
+  const multiplier = Math.max(0, num(multiplierResolution?.total, multiplierBase));
+  const movementBase = encumberedMovementMetres(source.value, multiplier, category.category);
+
+  const attackPenaltyResolution = canonicalResolve(actor, {
+    domain: "encumbrance",
+    target: "attack-penalty",
+    base: category.attackPenalty,
+    context: {
+      ...context,
+      carriedWeight: weight,
+      limits: clone(resolvedLimits),
+      encumbranceCategory: category.category
+    }
+  });
+  const armorClassPenaltyResolution = canonicalResolve(actor, {
+    domain: "encumbrance",
+    target: "armor-class-penalty",
+    base: category.armorClassPenalty,
+    context: {
+      ...context,
+      carriedWeight: weight,
+      limits: clone(resolvedLimits),
+      encumbranceCategory: category.category
+    }
+  });
+  const attackPenalty = num(attackPenaltyResolution?.total, category.attackPenalty);
+  const armorClassPenalty = num(armorClassPenaltyResolution?.total, category.armorClassPenalty);
+
   const sharedMovementContext = {
     ...context,
     naturalBase: source.value,
     carriedWeight: weight,
     encumbranceMultiplier: multiplier,
     encumbranceCategory: category.category,
-    limits: { normal: normalLimit, heavy: heavyLimit, maximum: maximumLimit }
+    encumbranceCombat: { attackPenalty, armorClassPenalty },
+    limits: clone(resolvedLimits)
   };
 
   const movementModes = {};
@@ -805,12 +974,19 @@ export function computeMovement(actor, options = {}) {
     poidsPo: weight,
     poidsKg: round2(weight / GOLD_PIECES_PER_KILOGRAM),
     forcePoids: strength.weightAdjustment,
-    limiteNormale: normalLimit,
-    limiteLourde: heavyLimit,
-    limiteSurcharge: maximumLimit,
+    forceProfilEncombrement: clone(strength.capacityProfile),
+    limiteSansEncombrement: resolvedLimits.unencumbered,
+    limiteLegere: resolvedLimits.light,
+    limiteModeree: resolvedLimits.moderate,
+    limiteLourde: resolvedLimits.heavy,
+    limiteSevere: resolvedLimits.severe,
+    limiteNormale: resolvedLimits.unencumbered,
+    limiteSurcharge: resolvedLimits.severe,
     categorie: category.category,
     label: category.label,
     multiplier,
+    attaquePenalite: attackPenalty,
+    classeArmurePenalite: armorClassPenalty,
     modes,
     modesMagiques: modes,
     movementModes,
@@ -827,8 +1003,12 @@ export function computeMovement(actor, options = {}) {
     inventory: clone(context.inventory),
     encumbrance: {
       carriedWeight: carriedWeightResolution,
-      capacities: { normal: normalCapacityResolution, heavy: heavyCapacityResolution, maximum: maximumCapacityResolution },
+      capacities: capacityResolutions,
+      capacityProfile: clone(strength.capacityProfile),
+      limits: clone(resolvedLimits),
       movementMultiplier: multiplierResolution,
+      attackPenalty: attackPenaltyResolution,
+      armorClassPenalty: armorClassPenaltyResolution,
       category: category.category,
       label: category.label
     },
