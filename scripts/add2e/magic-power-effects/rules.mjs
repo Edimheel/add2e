@@ -51,7 +51,11 @@ const DAMAGE_ALIASES = Object.freeze({
 const MOVEMENT_TYPES = new Set([
   "movement_mode", "movement_bonus", "movement_modifier", "movement_multiplier", "movement_override",
   "movement_speed_multiplier", "speed_bonus", "speed_modifier", "speed_multiplier", "speed_override",
-  "base_movement", "fixed_movement"
+  "base_movement", "fixed_movement", "movement_weight_step_penalty", "weight_step_movement_penalty"
+]);
+
+const MOVEMENT_WEIGHT_STEP_TYPES = new Set([
+  "movement_weight_step_penalty", "weight_step_movement_penalty"
 ]);
 
 const MOVEMENT_TARGET_ALIASES = Object.freeze({
@@ -118,16 +122,56 @@ function movementConditions(effect) {
   return conditions;
 }
 
+function movementWeightStepConfig(effect, type) {
+  if (!MOVEMENT_WEIGHT_STEP_TYPES.has(type)) return null;
+  const threshold = number(
+    effect.threshold,
+    effect.freeWeight,
+    effect.freeWeightGp,
+    effect.startWeight,
+    effect.startAt
+  );
+  const step = number(
+    effect.step,
+    effect.weightStep,
+    effect.stepWeight,
+    effect.weightPerStep
+  );
+  const rawPenalty = number(
+    effect.penaltyPerStep,
+    effect.penalty,
+    effect.value,
+    effect.amount,
+    effect.modifier
+  );
+  if (!Number.isFinite(threshold)
+    || threshold < 0
+    || !Number.isFinite(step)
+    || step <= 0
+    || !Number.isFinite(rawPenalty)
+    || rawPenalty === 0) return null;
+  const requestedRounding = norm(effect.stepRounding ?? effect.rounding ?? "floor");
+  return {
+    kind: "carried-weight-step-penalty",
+    threshold,
+    step,
+    penaltyPerStep: -Math.abs(rawPenalty),
+    rounding: ["floor", "ceil", "round"].includes(requestedRounding) ? requestedRounding : "floor",
+    weightUnit: norm(effect.weightUnit ?? effect.unit ?? "gp") || "gp"
+  };
+}
+
 function movementCompilation(effect, type, tags, modifiers) {
   if (!MOVEMENT_TYPES.has(type)) return;
+  const weightStep = movementWeightStepConfig(effect, type);
   const explicitMode = norm(effect.operation ?? effect.applyMode ?? effect.application ?? effect.mode);
   const multiplier = number(effect.multiplier, effect.factor, effect.coefficient);
   const direct = number(effect.value, effect.amount, effect.bonus, effect.modifier, effect.speed, effect.movement, effect.distance);
-  const multiply = type.includes("multiplier") || ["multiply", "multiplication", "multiplier", "factor"].includes(explicitMode);
-  const override = type.includes("override") || type.includes("fixed") || type === "base_movement"
-    || ["override", "set", "fixed", "replace", "impose", "imposed"].includes(explicitMode);
-  const value = multiply ? multiplier ?? direct : direct ?? multiplier;
-  const operation = multiply ? "multiply" : override ? "set" : "add";
+  const multiply = !weightStep && (type.includes("multiplier") || ["multiply", "multiplication", "multiplier", "factor"].includes(explicitMode));
+  const override = !weightStep && (type.includes("override") || type.includes("fixed") || type === "base_movement"
+    || ["override", "set", "fixed", "replace", "impose", "imposed"].includes(explicitMode));
+  const value = weightStep ? 0 : multiply ? multiplier ?? direct : direct ?? multiplier;
+  const operation = weightStep ? "add" : multiply ? "multiply" : override ? "set" : "add";
   const priority = Math.max(1, Math.floor(number(effect.priority) ?? 100));
   const requestedModes = values(effect, [
     "target", "targets", "movementTarget", "movementTargets", "movementMode", "movementModes",
@@ -142,12 +186,15 @@ function movementCompilation(effect, type, tags, modifiers) {
     tags.add(`mouvement:${target}`);
     tags.add(`movement_mode:${target}`);
   }
-  if (Number.isFinite(value)) {
+  if (weightStep) {
+    tags.add("mouvement_dynamique:poids_par_palier");
+    tags.add("movement_dynamic:carried_weight_step_penalty");
+  } else if (Number.isFinite(value)) {
     const tagValue = operation === "multiply" ? String(value) : signed(value);
     tags.add(`mouvement_${operation}:${tagValue}`);
     tags.add(`movement_${operation}:${tagValue}`);
   }
-  if (!Number.isFinite(value)) return;
+  if (!weightStep && !Number.isFinite(value)) return;
 
   const conditions = movementConditions(effect);
   const requestedStacking = norm(effect?.stacking?.mode ?? effect?.stackingMode ?? effect?.cumul ?? "");
@@ -175,6 +222,7 @@ function movementCompilation(effect, type, tags, modifiers) {
         modes: targets,
         movementMode: target,
         ignoresEncumbrance: effect.ignoreEncumbrance === true || effect.ignoresEncumbrance === true,
+        ...(weightStep ? { dynamicValue: weightStep } : {}),
         ...(hasValue(effect.fatigueRule) ? { fatigueRule: clone(effect.fatigueRule) } : {})
       }
     });
