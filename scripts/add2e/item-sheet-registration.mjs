@@ -1,14 +1,14 @@
 // scripts/add2e/item-sheet-registration.mjs
 // ADD2E — Enregistrement strict des fiches d'items spécialisées.
 // Compatible Foundry V13/V14/V15 — ApplicationV2 / DialogV2.
-// Version : 2026-07-23-magic-item-data-normalizer-v2
+// Version : 2026-07-31-readable-magic-power-editor-v2
 
 import { Add2eItemSheet } from "../add2e-item-sheet.mjs";
 globalThis.Add2eItemSheet = Add2eItemSheet;
 
 const POWER_FIELDS = ["pouvoirs", "powers", "pouvoirsMagiques", "magicalPowers"];
 const MAGIC_ITEM_TYPES = new Set(["arme", "armure", "objet"]);
-const EDITOR_VERSION = "2026-07-23-magic-power-sheet-editor-v1";
+const EDITOR_VERSION = "2026-07-31-readable-magic-power-editor-v2";
 const NORMALIZER_VERSION = "2026-07-23-magic-item-data-normalizer-v2";
 
 function add2eItemsCollection() { return foundry?.documents?.collections?.Items ?? globalThis.Items; }
@@ -120,37 +120,7 @@ async function resolveItem(uuid) {
   const id = value.split(".").at(-1);
   return game.items?.get?.(id) ?? game.actors?.contents?.flatMap(actor => actor.items?.contents ?? []).find(item => item.id === id) ?? null;
 }
-function initial(schema, current) { if (current !== undefined) return current; if (schema.default !== undefined) return clone(schema.default); if (schema.value !== undefined) return clone(schema.value); return undefined; }
-function control(name, schema = {}, current) {
-  const type = norm(schema.type), value = initial(schema, current), required = schema.required === true ? ' <span style="color:#a40000">*</span>' : "", label = `${esc(name)}${required}`, common = `name="${esc(name)}" data-add2e-parameter-type="${esc(type)}"`;
-  if (type === "boolean") return `<label class="form-group" style="display:flex;align-items:center;gap:8px"><input ${common} type="checkbox" ${value === true ? "checked" : ""}> <span>${label}</span></label>`;
-  if (["fixed", "fixed_list"].includes(type)) { const fixed = schema.value !== undefined ? schema.value : value; return `<div class="form-group"><label>${label}</label><input ${common} type="hidden" value="${esc(format(fixed))}"><div>${esc(format(fixed))}</div></div>`; }
-  if (type === "choice" && Array.isArray(schema.values)) return `<div class="form-group"><label>${label}</label><select ${common}>${schema.values.map(entry => `<option value="${esc(entry)}"${String(entry) === String(value) ? " selected" : ""}>${esc(entry)}</option>`).join("")}</select></div>`;
-  if (type === "choice_list" && Array.isArray(schema.values)) { const selected = new Set(list(value).map(String)); return `<div class="form-group"><label>${label}</label><select ${common} multiple size="${Math.min(7, Math.max(3, schema.values.length))}">${schema.values.map(entry => `<option value="${esc(entry)}"${selected.has(String(entry)) ? " selected" : ""}>${esc(entry)}</option>`).join("")}</select></div>`; }
-  if (["integer", "number", "percentage", "percentage_per_use"].includes(type)) return `<div class="form-group"><label>${label}</label><input ${common} type="number" step="${type === "integer" ? "1" : "any"}" value="${esc(value ?? "")}"></div>`;
-  if (["object", "effect_list", "effect_table", "spell_list", "form_list", "save_rule", "percentage_or_save", "percentage_or_table", "number_or_table", "weight_or_table", "formula_or_table"].includes(type)) return `<div class="form-group"><label>${label}</label><textarea ${common} rows="4">${esc(value === undefined ? "" : format(value))}</textarea></div>`;
-  if (["tag_list", "string_list", "integer_list"].includes(type)) return `<div class="form-group"><label>${label}</label><input ${common} type="text" value="${esc(list(value).join(", "))}"></div>`;
-  return `<div class="form-group"><label>${label}</label><input ${common} type="text" value="${esc(value === undefined ? "" : format(value))}"></div>`;
-}
-function read(input, schema = {}) {
-  const type = norm(schema.type);
-  if (type === "boolean") return input.checked === true;
-  if (type === "choice_list") return [...input.selectedOptions].map(option => option.value);
-  if (["fixed", "fixed_list"].includes(type)) return clone(schema.value);
-  const raw = String(input.value ?? "").trim(); if (!raw) return undefined;
-  if (["integer", "number", "percentage", "percentage_per_use"].includes(type)) { const value = Number(raw.replace(",", ".")); return Number.isFinite(value) ? value : undefined; }
-  if (["tag_list", "string_list"].includes(type)) return list(raw).map(String);
-  if (type === "integer_list") return list(raw).map(Number).filter(Number.isFinite);
-  if (["formula_or_integer", "integer_or_null", "number_or_formula", "number_or_distance"].includes(type)) { const value = Number(raw.replace(",", ".")); return Number.isFinite(value) ? value : raw; }
-  if (["object", "effect_list", "effect_table", "spell_list", "form_list", "save_rule", "percentage_or_save", "percentage_or_table", "number_or_table", "weight_or_table", "formula_or_table"].includes(type)) { try { return JSON.parse(raw); } catch (_e) { return raw; } }
-  return raw;
-}
-function missingParameters(definition, parameters) {
-  const missing = Object.entries(definition.parameters ?? {}).filter(([name, schema]) => schema?.required === true && (parameters[name] === undefined || parameters[name] === null || parameters[name] === "" || (Array.isArray(parameters[name]) && !parameters[name].length))).map(([name]) => name);
-  const alternatives = list(definition.validation?.requiresOneOf);
-  if (alternatives.length && !alternatives.some(name => parameters[name] !== undefined && parameters[name] !== null && parameters[name] !== "" && (!Array.isArray(parameters[name]) || parameters[name].length))) missing.push(`un des paramètres suivants : ${alternatives.join(", ")}`);
-  return missing;
-}
+
 function resolveTemplates(value, parameters) {
   if (Array.isArray(value)) return value.map(entry => resolveTemplates(entry, parameters));
   if (value && typeof value === "object") return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, resolveTemplates(entry, parameters)]));
@@ -160,10 +130,12 @@ function resolveTemplates(value, parameters) {
 }
 
 async function editCanonical(definition, current = {}) {
-  const DialogV2 = foundry?.applications?.api?.DialogV2; if (!DialogV2?.wait) return ui.notifications.error("DialogV2 est introuvable."), null;
-  const entries = Object.entries(definition.parameters ?? {}), controls = entries.length ? entries.map(([name, schema]) => control(name, schema, current[name])).join("") : "<p><em>Ce pouvoir ne possède aucun paramètre modifiable.</em></p>";
-  const result = await DialogV2.wait({ window: { title: `Modifier — ${definition.label}` }, modal: true, rejectClose: false, content: `<div class="add2e-dialog add2e-magic-power-parameter-form" style="min-width:560px;padding:10px;display:grid;gap:8px"><strong>${esc(definition.label)}</strong>${controls}</div>`, buttons: [{ action: "save", label: "Enregistrer", icon: "fa-solid fa-check", default: true, callback: (_event, button, dialog) => { const root = button?.form ?? dialog?.element, parameters = {}; for (const [name, schema] of entries) { const input = root?.querySelector?.(`[name="${CSS.escape(name)}"]`); if (!input) continue; const value = read(input, schema); if (value !== undefined) parameters[name] = value; } const missing = missingParameters(definition, parameters); if (missing.length) { ui.notifications.warn(`Paramètres obligatoires manquants : ${missing.join(", ")}.`); return false; } return parameters; } }, { action: "cancel", label: "Annuler", icon: "fa-solid fa-xmark", callback: () => null }] });
-  return result && typeof result === "object" ? result : null;
+  const configure = globalThis.add2eMagicCatalogueConfigurePower;
+  if (typeof configure !== "function") {
+    ui.notifications.error("L’éditeur canonique lisible des pouvoirs est indisponible.");
+    return null;
+  }
+  return configure(definition, current);
 }
 async function editLegacy(power) {
   const DialogV2 = foundry?.applications?.api?.DialogV2; if (!DialogV2?.wait) return ui.notifications.error("DialogV2 est introuvable."), null;
