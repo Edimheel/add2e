@@ -1,7 +1,7 @@
 {
   "schema": 2,
   "catalogueId": "add2e-gdm-magic-powers",
-  "version": "2026-07-31-gdm-iii-e-movement-v1",
+  "version": "2026-07-31-gdm-iii-e-movement-v2-readable-parameters",
   "extends": "../catalogue-pouvoirs-objets-magiques.json",
   "status": "canonical-movement-and-encumbrance-powers",
   "source": {
@@ -48,16 +48,33 @@
             "vertical"
           ],
           "default": "ground",
-          "required": true
+          "required": true,
+          "label": "Mode de déplacement",
+          "description": "Choisissez le mode auquel la vitesse magique s’applique.",
+          "optionLabels": {
+            "ground": "Marche",
+            "flight": "Vol",
+            "swim": "Nage",
+            "underwater": "Déplacement sous-marin",
+            "ascent": "Ascension",
+            "descent": "Descente",
+            "vertical": "Déplacement vertical"
+          }
         },
         "speed": {
           "type": "number",
           "min": 0,
-          "required": true
+          "required": true,
+          "label": "Vitesse",
+          "description": "Vitesse finale imposée par l’objet, en mètres par round. Exemple : 36 correspond à un déplacement AD&D de 12 pouces.",
+          "placeholder": "36",
+          "unit": "m/round"
         },
         "ignoreEncumbrance": {
           "type": "boolean",
-          "default": false
+          "default": false,
+          "label": "Ignorer l’encombrement normal",
+          "description": "Cochez cette option lorsque la vitesse magique remplace les pénalités ordinaires d’encombrement. Une pénalité spéciale propre à l’objet peut toujours être ajoutée séparément."
         }
       },
       "effects": [
@@ -72,7 +89,8 @@
       "source": {
         "section": "III.C, III.E",
         "page": "127, 136-138"
-      }
+      },
+      "description": "Impose une vitesse finale à un mode de déplacement lorsque l’objet est porté ou équipé. La vitesse est saisie en mètres par round."
     },
     {
       "id": "misc_weight_step_movement_penalty",
@@ -101,22 +119,45 @@
             "vertical"
           ],
           "default": "ground",
-          "required": true
+          "required": true,
+          "label": "Mode de déplacement",
+          "description": "Choisissez le mode de déplacement pénalisé par la charge.",
+          "optionLabels": {
+            "ground": "Marche",
+            "flight": "Vol",
+            "swim": "Nage",
+            "underwater": "Déplacement sous-marin",
+            "ascent": "Ascension",
+            "descent": "Descente",
+            "vertical": "Déplacement vertical"
+          }
         },
         "threshold": {
           "type": "number",
           "min": 0,
-          "required": true
+          "required": true,
+          "label": "Seuil sans pénalité",
+          "description": "Charge transportée autorisée avant la première réduction de vitesse.",
+          "placeholder": "2000",
+          "unit": "po"
         },
         "step": {
           "type": "number",
           "min": 0.01,
-          "required": true
+          "required": true,
+          "label": "Poids par palier",
+          "description": "Quantité de charge excédentaire nécessaire pour appliquer une pénalité supplémentaire.",
+          "placeholder": "100",
+          "unit": "po"
         },
         "penaltyPerStep": {
           "type": "number",
           "min": 0.01,
-          "required": true
+          "required": true,
+          "label": "Pénalité par palier",
+          "description": "Nombre positif de mètres retirés à la vitesse pour chaque palier dépassé.",
+          "placeholder": "3",
+          "unit": "m/round"
         },
         "stepRounding": {
           "type": "choice",
@@ -126,7 +167,14 @@
             "round"
           ],
           "default": "floor",
-          "required": true
+          "required": true,
+          "label": "Calcul des paliers",
+          "description": "Détermine comment une fraction de palier est comptée.",
+          "optionLabels": {
+            "floor": "Paliers complets uniquement",
+            "ceil": "Toute fraction compte comme un palier",
+            "round": "Arrondi au palier le plus proche"
+          }
         },
         "weightUnit": {
           "type": "choice",
@@ -134,7 +182,12 @@
             "gp"
           ],
           "default": "gp",
-          "required": true
+          "required": true,
+          "label": "Unité de charge",
+          "description": "Unité utilisée par le système d’encombrement AD&D.",
+          "optionLabels": {
+            "gp": "Pièces d’or (po)"
+          }
         }
       },
       "effects": [
@@ -152,7 +205,8 @@
       "source": {
         "section": "III.E",
         "page": "136-138"
-      }
+      },
+      "description": "Réduit une vitesse par paliers lorsque la charge transportée dépasse un seuil défini par l’objet."
     }
   ],
   "auditReferences": [
