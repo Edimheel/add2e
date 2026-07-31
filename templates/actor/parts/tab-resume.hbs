@@ -24,8 +24,8 @@
                 <i class="fas fa-running"></i>
                 <div>
                   <label>Mouvement</label>
-                  <strong>{{#if system.movement}}{{system.movement}}{{else}}{{actor.system.movement}}{{/if}} m</strong>
-                  <small>déplacement</small>
+                  <strong>{{#if actor.system.mouvement}}{{actor.system.mouvement.actuel}}{{else}}{{actor.system.vitesse_deplacement}}{{/if}} m</strong>
+                  <small>déplacement résolu</small>
                 </div>
               </div>
             </div>
