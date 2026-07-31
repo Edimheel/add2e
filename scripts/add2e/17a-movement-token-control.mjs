@@ -10,7 +10,7 @@ import {
   norm
 } from "./17a-movement-xp-domain.mjs";
 
-const CONTROL_VERSION = "2026-07-31-native-ruler-gm-approval-v6";
+const CONTROL_VERSION = "2026-07-31-native-ruler-gm-approval-v7";
 const STATE_FLAG = "movementTurnState";
 const SOCKET = "system.add2e";
 const REQUEST = "ADD2E_MOVEMENT_APPROVAL_REQUEST";
@@ -571,8 +571,11 @@ function sendApprovalResponse(packet, approved, error = null) {
 }
 
 function handleApprovalRequest(packet) {
-  if (!packet || packet.type !== REQUEST) return;
-  if (!game.user?.isGM || String(packet.gmId ?? "") !== String(game.user.id ?? "")) return;
+  if (!packet || packet.type !== REQUEST || !game.user?.isGM) return;
+  const assignedGm = game.users?.get?.(packet.gmId) ?? null;
+  const assignedIsActive = Boolean(assignedGm?.active && assignedGm?.isGM);
+  if (assignedIsActive && String(packet.gmId ?? "") !== String(game.user.id ?? "")) return;
+  if (!assignedIsActive && !responsibleGm()) return;
   if (handledApprovals.has(packet.requestId)) return;
   handledApprovals.add(packet.requestId);
   runtimeState.lastRequest = packet;
@@ -770,9 +773,13 @@ export function installMovementTokenControl() {
   globalThis.ADD2E_MOVEMENT_TOKEN_CONTROL_STATE = runtimeState;
   globalThis.add2eDiagnoseTokenMovement = movementDiagnostics;
 
+  if (game?.ready) runtimeState.ready = true;
+  installSocket();
+
   console.info(`${ADD2E_MOVE_XP_TAG}[TOKEN][CONTROLLER_LOADED]`, {
     controllerVersion: CONTROL_VERSION,
-    coreVersion: game?.version ?? game?.release?.version ?? null
+    coreVersion: game?.version ?? game?.release?.version ?? null,
+    socketInstalled: runtimeState.socketInstalled
   });
 
   Hooks.on("preMoveToken", (tokenDoc, movement, operation = {}) => {
