@@ -10,7 +10,7 @@ import {
   norm
 } from "./17a-movement-xp-domain.mjs";
 
-const CONTROL_VERSION = "2026-07-31-native-ruler-gm-approval-v4";
+const CONTROL_VERSION = "2026-07-31-native-ruler-gm-approval-v5";
 const STATE_FLAG = "movementTurnState";
 const SOCKET = "system.add2e";
 const REQUEST = "ADD2E_MOVEMENT_APPROVAL_REQUEST";
@@ -33,7 +33,8 @@ const runtimeState = {
   hookCounts: { preMoveToken: 0, preUpdateToken: 0, moveToken: 0, updateToken: 0 },
   lastCheck: null,
   lastRequest: null,
-  lastResponse: null
+  lastResponse: null,
+  lastDenial: null
 };
 
 const round2 = value => Math.round(Math.max(0, Number(value) || 0) * 100) / 100;
@@ -357,17 +358,20 @@ function approvalSnapshot(tokenDoc, result, requesterId) {
     sceneName: tokenDoc?.parent?.name ?? canvas?.scene?.name ?? "Scène",
     movement: movementSummary(result),
     speeds: speedRows.join(" · ") || "Aucune vitesse disponible",
-    spentPercent: Math.round((Number(result?.spent?.ratio) || 0) * 100),
     attemptPercent: Number.isFinite(Number(result?.budget?.ratio)) ? Math.round(Number(result.budget.ratio) * 100) : null,
-    totalPercent: Number.isFinite(Number(result?.nextRatio)) ? Math.round(Number(result.nextRatio) * 100) : null,
-    round: combatForToken(tokenDoc)?.round ?? null
+    context: "exploration"
   };
 }
 
 function requestApproval(tokenDoc, movement, operation, result) {
+  if (result?.inCombat) {
+    ui.notifications.warn("Déplacement impossible : la limite de mouvement en combat ne peut pas être dépassée.");
+    return false;
+  }
+
   const gm = activeGm();
   if (!gm) {
-    ui.notifications.warn("Déplacement bloqué : aucun MJ actif ne peut valider le dépassement.");
+    ui.notifications.warn("Déplacement bloqué : aucun MJ actif ne peut valider le dépassement hors combat.");
     return false;
   }
 
@@ -413,7 +417,7 @@ function requestApproval(tokenDoc, movement, operation, result) {
   try {
     game.socket.emit(SOCKET, packet);
     console.info(`${ADD2E_MOVE_XP_TAG}[TOKEN][APPROVAL_REQUEST_SENT]`, packet);
-    ui.notifications.info(`Déplacement bloqué : demande envoyée à ${gm.name}.`);
+    ui.notifications.info(`Déplacement hors combat suspendu : demande envoyée à ${gm.name}.`);
   } catch (error) {
     clearPendingApproval(requestId);
     console.error(`${ADD2E_MOVE_XP_TAG}[TOKEN][APPROVAL_REQUEST_ERROR]`, error);
@@ -425,17 +429,13 @@ function requestApproval(tokenDoc, movement, operation, result) {
 function approvalDialogContent(packet) {
   const summary = packet?.summary ?? {};
   const attempt = summary.attemptPercent == null ? "impossible" : `${summary.attemptPercent} %`;
-  const total = summary.totalPercent == null ? "impossible" : `${summary.totalPercent} %`;
   return `<div class="add2e-dialog add2e-movement-approval" style="min-width:430px;display:grid;gap:9px;">
-    <p><b>${escapeHtml(summary.requesterName)}</b> demande à dépasser le mouvement de combat de <b>${escapeHtml(summary.actorName)}</b>.</p>
+    <p><b>${escapeHtml(summary.requesterName)}</b> demande à dépasser sa vitesse de déplacement hors combat avec <b>${escapeHtml(summary.actorName)}</b>.</p>
     <table style="width:100%;"><tbody>
       <tr><th style="text-align:left;">Scène</th><td>${escapeHtml(summary.sceneName)}</td></tr>
-      <tr><th style="text-align:left;">Round</th><td>${escapeHtml(summary.round ?? "—")}</td></tr>
       <tr><th style="text-align:left;">Déplacement tenté</th><td>${escapeHtml(summary.movement)}</td></tr>
       <tr><th style="text-align:left;">Vitesse résolue</th><td>${escapeHtml(summary.speeds)}</td></tr>
-      <tr><th style="text-align:left;">Déjà consommé</th><td>${escapeHtml(summary.spentPercent)} %</td></tr>
-      <tr><th style="text-align:left;">Coût de ce déplacement</th><td>${escapeHtml(attempt)}</td></tr>
-      <tr><th style="text-align:left;">Total après déplacement</th><td><b>${escapeHtml(total)}</b></td></tr>
+      <tr><th style="text-align:left;">Part de la vitesse</th><td><b>${escapeHtml(attempt)}</b></td></tr>
     </tbody></table>
     <p style="margin:0;">Autoriser déplacera automatiquement le token. Refuser le laissera à sa position actuelle.</p>
   </div>`;
@@ -445,7 +445,7 @@ async function promptApproval(packet) {
   const DialogV2 = foundry?.applications?.api?.DialogV2;
   if (!DialogV2?.wait) throw new Error("DialogV2 est indisponible pour valider le déplacement.");
   return DialogV2.wait({
-    window: { title: "Valider un dépassement de mouvement" },
+    window: { title: "Valider un déplacement hors combat" },
     modal: true,
     rejectClose: false,
     content: approvalDialogContent(packet),
@@ -474,7 +474,7 @@ function movementRecordSignature(tokenDoc, result) {
 
 function rememberMovement(tokenDoc, result, { persist = true } = {}) {
   const roundKey = combatRoundKey(tokenDoc);
-  if (!roundKey || !result) return;
+  if (!roundKey || !result?.inCombat) return;
 
   const signature = movementRecordSignature(tokenDoc, result);
   if (recordedMovements.has(signature)) return;
@@ -501,13 +501,9 @@ async function executeApprovedMovement(packet) {
   const scene = game.scenes?.get?.(packet.sceneId) ?? null;
   const tokenDoc = scene?.tokens?.get?.(packet.tokenId) ?? null;
   if (!tokenDoc) throw new Error("Le token demandé n’existe plus dans la scène.");
-
-  const movement = {
-    origin: packet.origin,
-    destination: packet.destination,
-    pending: { waypoints: packet.waypoints }
-  };
-  const result = computeTokenMovementScale(tokenDoc, packet.destination, { movement });
+  if (combatForToken(tokenDoc)) {
+    throw new Error("Le combat a commencé : ce dépassement ne peut plus être autorisé.");
+  }
 
   let completed = false;
   if (typeof tokenDoc.move === "function") {
@@ -529,7 +525,6 @@ async function executeApprovedMovement(packet) {
   }
 
   if (completed === false) throw new Error("Foundry a interrompu le déplacement autorisé.");
-  if (result?.enforced) rememberMovement(tokenDoc, result, { persist: true });
 }
 
 function sendApprovalResponse(packet, approved, error = null) {
@@ -574,7 +569,7 @@ function handleApprovalResponse(packet) {
   if (String(packet.requesterId ?? "") !== String(game.user?.id ?? "")) return;
   if (!clearPendingApproval(packet.requestId)) return;
   runtimeState.lastResponse = packet;
-  if (packet.approved === true) ui.notifications.info(`${packet.gmName ?? "Le MJ"} a autorisé le déplacement.`);
+  if (packet.approved === true) ui.notifications.info(`${packet.gmName ?? "Le MJ"} a autorisé le déplacement hors combat.`);
   else ui.notifications.warn(`${packet.gmName ?? "Le MJ"} a refusé le déplacement${packet.error ? ` (${packet.error})` : ""}.`);
 }
 
@@ -603,47 +598,75 @@ export function computeTokenMovementScale(tokenDoc, target = {}, { movement = nu
     consumer: "movement-token-control"
   });
   const budget = movementBudget(details, tokenDoc, components);
-  const enforced = Boolean(combatForToken(tokenDoc));
-  const spent = enforced ? spentThisRound(tokenDoc) : normalizeSpentState();
+  const combat = combatForToken(tokenDoc);
+  const inCombat = Boolean(combat);
+  const spent = inCombat ? spentThisRound(tokenDoc) : normalizeSpentState();
   const nextRatio = spent.ratio + budget.ratio;
+  const status = movementStatus(nextRatio);
   const result = {
     actor,
     movement: details,
     components,
     budget,
     spent,
-    enforced,
-    inCombat: enforced,
+    enforced: inCombat,
+    inCombat,
     nextRatio,
     next: nextRatio,
     max: 1,
     origin: components.origin,
     target: components.destination,
-    status: movementStatus(nextRatio)
+    status,
+    decision: status.blocked ? (inCombat ? "deny-combat" : "request-gm") : "allow"
   };
   runtimeState.lastCheck = {
     at: Date.now(),
     actor: actor.name,
     token: tokenDoc.name,
-    enforced,
+    inCombat,
+    enforced: inCombat,
     components,
     speeds: budget.speeds,
     spent,
     nextRatio,
-    blocked: result.status.blocked
+    blocked: status.blocked,
+    decision: result.decision
   };
   return result;
 }
 
 export function validateTokenMovement(tokenDoc, changes, options = {}, movement = null) {
-  if (options?.add2eIgnoreMovement) return { allowed: true, result: null };
+  if (options?.add2eIgnoreMovement) return { allowed: true, result: null, decision: "allow" };
   if (!tokenDoc?.actor || String(tokenDoc.actor.type ?? "").toLowerCase() !== "personnage") {
-    return { allowed: true, result: null };
+    return { allowed: true, result: null, decision: "allow" };
   }
   const destination = point(changes, tokenDoc);
   const result = computeTokenMovementScale(tokenDoc, destination, { movement });
-  if (!result || !result.enforced || game.user?.isGM || !result.status.blocked) return { allowed: true, result };
-  return { allowed: false, result };
+  if (!result || game.user?.isGM || !result.status.blocked) {
+    return { allowed: true, result, decision: "allow" };
+  }
+  return { allowed: false, result, decision: result.inCombat ? "deny-combat" : "request-gm" };
+}
+
+function handleRejectedMovement(tokenDoc, movement, operation, checked) {
+  if (checked?.decision === "request-gm") {
+    requestApproval(tokenDoc, movement, operation, checked.result);
+    return false;
+  }
+
+  const result = checked?.result;
+  runtimeState.lastDenial = {
+    at: Date.now(),
+    actor: result?.actor?.name ?? tokenDoc?.actor?.name ?? null,
+    token: tokenDoc?.name ?? null,
+    movement: movementSummary(result),
+    speed: result?.budget?.speeds?.horizontal ?? null,
+    spentPercent: Math.round((Number(result?.spent?.ratio) || 0) * 100),
+    totalPercent: Number.isFinite(Number(result?.nextRatio)) ? Math.round(Number(result.nextRatio) * 100) : null,
+    decision: "deny-combat"
+  };
+  ui.notifications.warn("Déplacement impossible : la limite de mouvement du round est atteinte.");
+  return false;
 }
 
 function syntheticMovement(tokenDoc, changes = {}) {
@@ -701,6 +724,10 @@ function movementDiagnostics(tokenDoc = canvas?.tokens?.controlled?.[0]?.documen
   const gm = activeGm();
   return {
     controllerVersion: CONTROL_VERSION,
+    policy: {
+      combat: "strict-no-override",
+      exploration: "single-move-over-speed-requires-gm-approval"
+    },
     runtime: foundry?.utils?.deepClone?.(runtimeState) ?? JSON.parse(JSON.stringify(runtimeState)),
     user: { id: game.user?.id, name: game.user?.name, isGM: game.user?.isGM },
     socket: { available: Boolean(game.socket), installed: runtimeState.socketInstalled, channel: SOCKET },
@@ -732,10 +759,7 @@ export function installMovementTokenControl() {
     try { movement.showRuler = true; } catch (_error) {}
     const target = movementTarget(tokenDoc, movement);
     const checked = validateTokenMovement(tokenDoc, target, operation, movement);
-    if (!checked.allowed) {
-      requestApproval(tokenDoc, movement, operation, checked.result);
-      return false;
-    }
+    if (!checked.allowed) return handleRejectedMovement(tokenDoc, movement, operation, checked);
     rememberResultForMove(tokenDoc, movement, checked.result);
     return true;
   });
@@ -747,10 +771,7 @@ export function installMovementTokenControl() {
     if (!touchesPosition || !tokenDoc?.actor) return true;
     const movement = syntheticMovement(tokenDoc, changes);
     const checked = validateTokenMovement(tokenDoc, movement.destination, { ...options, userId }, movement);
-    if (!checked.allowed) {
-      requestApproval(tokenDoc, movement, { ...options, userId }, checked.result);
-      return false;
-    }
+    if (!checked.allowed) return handleRejectedMovement(tokenDoc, movement, { ...options, userId }, checked);
     rememberResultForMove(tokenDoc, movement, checked.result);
     return true;
   });
@@ -761,7 +782,7 @@ export function installMovementTokenControl() {
     const target = movementTarget(tokenDoc, movement);
     const result = consumeCachedResult(tokenDoc, movement, target)
       ?? computeTokenMovementScale(tokenDoc, target, { movement });
-    if (!result?.enforced) return;
+    if (!result?.inCombat) return;
     const requesterId = String(user?.id ?? operation?.userId ?? "");
     const isRequester = !requesterId || requesterId === String(game.user?.id ?? "");
     if (isRequester || responsibleGm()) rememberMovement(tokenDoc, result, { persist: responsibleGm() || isRequester });
@@ -773,7 +794,7 @@ export function installMovementTokenControl() {
     const touchesPosition = changes.x !== undefined || changes.y !== undefined || changes.elevation !== undefined || changes.z !== undefined;
     if (!touchesPosition || !tokenDoc?.actor) return;
     const result = consumeCachedResult(tokenDoc, null, tokenDoc);
-    if (!result?.enforced) return;
+    if (!result?.inCombat) return;
     const isRequester = !userId || String(userId) === String(game.user?.id ?? "");
     if (isRequester || responsibleGm()) rememberMovement(tokenDoc, result, { persist: responsibleGm() || isRequester });
   });
@@ -801,8 +822,8 @@ export function installMovementTokenControl() {
       version: ADD2E_MOVE_XP_VERSION,
       controllerVersion: CONTROL_VERSION,
       display: "foundry-native-token-ruler",
-      combatPolicy: "strict-one-times-resolved-movement-per-round-with-gm-approval",
-      explorationPolicy: "unrestricted",
+      combatPolicy: "strict-one-times-resolved-movement-per-round-no-override",
+      explorationPolicy: "single-move-over-speed-requires-gm-approval",
       socketInstalled: runtimeState.socketInstalled
     });
     console.info(`${ADD2E_MOVE_XP_TAG}[TOKEN][CONTROLLER_READY]`, movementDiagnostics());
