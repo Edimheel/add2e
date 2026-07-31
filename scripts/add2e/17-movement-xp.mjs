@@ -33,7 +33,7 @@ import {
 
 const recalculationTimers = new Map();
 const MOVEMENT_DOMAINS = new Set(["movement", "encumbrance"]);
-const ADD2E_ENCUMBRANCE_SETTINGS_VERSION = "2026-07-31-world-encumbrance-settings-v1";
+const ADD2E_ENCUMBRANCE_SETTINGS_VERSION = "2026-07-31-world-encumbrance-settings-v2";
 
 const ITEM_MOVEMENT_FIELDS = Object.freeze([
   "system.mouvement", "system.movement", "system.vitesse", "system.vitesse_deplacement",
@@ -128,11 +128,21 @@ function isPrimaryActiveGm() {
   return !activeGms.length || activeGms[0]?.id === game.user.id;
 }
 
+let worldSettingRecalcChain = Promise.resolve();
+
 function queueAllMovementRecalcs(reason = "world-setting") {
   if (!isPrimaryActiveGm()) return;
-  for (const actor of Array.from(game.actors ?? [])) {
-    if (actor?.type === "personnage") queueMovementRecalc(actor, reason);
-  }
+  const actors = Array.from(game.actors ?? []).filter(actor => actor?.type === "personnage");
+  worldSettingRecalcChain = worldSettingRecalcChain.then(async () => {
+    for (const actor of actors) {
+      try {
+        await recalcMovementMirror(actor, reason);
+      } catch (error) {
+        console.warn(`${ADD2E_MOVE_XP_TAG}[SETTING_RECALC]`, { actor: actor.name, reason, error });
+      }
+      await new Promise(resolve => setTimeout(resolve, 25));
+    }
+  });
 }
 
 function readEncumbranceSettings() {
@@ -146,6 +156,66 @@ function readEncumbranceSettings() {
     version: ADD2E_ENCUMBRANCE_SETTINGS_VERSION
   };
 }
+
+function registerAdd2eSetting(key, data) {
+  const settings = globalThis.game?.settings;
+  if (!settings?.register) return false;
+  const fullKey = `add2e.${key}`;
+  if (settings.settings?.has?.(fullKey)) return true;
+  try {
+    settings.register("add2e", key, data);
+    return true;
+  } catch (error) {
+    console.error(`${ADD2E_MOVE_XP_TAG}[SETTING_REGISTER]`, { key: fullKey, error });
+    return false;
+  }
+}
+
+function registerMovementSettings() {
+  const registered = [
+    registerAdd2eSetting("xpAutoLevel", {
+      name: "ADD2E — XP : niveau automatique",
+      hint: "Quand l'XP atteint un seuil, le niveau est augmenté automatiquement.",
+      scope: "world",
+      config: true,
+      type: Boolean,
+      default: true
+    }),
+    registerAdd2eSetting("encumbranceEnabled", {
+      name: "ADD2E — Gestion de l’encombrement",
+      hint: "Applique le poids transporté aux déplacements ainsi que les pénalités d’attaque et de classe d’armure. Désactiver cette option neutralise uniquement l’encombrement ; les autres effets de mouvement restent actifs.",
+      scope: "world",
+      config: true,
+      type: Boolean,
+      default: true,
+      onChange: () => queueAllMovementRecalcs("setting:encumbranceEnabled")
+    }),
+    registerAdd2eSetting("encumbranceCurrencyWeight", {
+      name: "ADD2E — Compter la monnaie dans l’encombrement",
+      hint: "Quand cette option est active, chaque pièce transportée compte pour une unité d’encombrement, quelle que soit sa valeur. Désactivée, la monnaie ne modifie pas les paliers de charge.",
+      scope: "world",
+      config: true,
+      type: Boolean,
+      default: false,
+      onChange: () => queueAllMovementRecalcs("setting:encumbranceCurrencyWeight")
+    }),
+    registerAdd2eSetting("enforceTokenMovement", {
+      name: "ADD2E — Contrôle canonique du déplacement",
+      hint: "Clé de compatibilité interne. En combat, le contrôleur canonique est toujours actif et les dépassements des joueurs exigent une validation du MJ.",
+      scope: "world",
+      config: false,
+      type: Boolean,
+      default: true
+    })
+  ];
+
+  const success = registered.every(Boolean);
+  globalThis.ADD2E_ENCUMBRANCE_SETTINGS_REGISTERED = success;
+  return success;
+}
+
+registerMovementSettings();
+Hooks.once("init", registerMovementSettings);
 
 function flattenedKeys(changes = {}) {
   const flattened = foundry.utils.flattenObject?.(changes) ?? changes;
@@ -234,45 +304,6 @@ function removeMovementUpdates(updates = {}) {
   for (const path of ["system.mouvement", ...COMPUTED_MOVEMENT_SCALARS]) delete updates[path];
   return updates;
 }
-
-Hooks.once("init", () => {
-  game.settings.register("add2e", "xpAutoLevel", {
-    name: "ADD2E — XP : niveau automatique",
-    hint: "Quand l'XP atteint un seuil, le niveau est augmenté automatiquement.",
-    scope: "world",
-    config: true,
-    type: Boolean,
-    default: true
-  });
-  game.settings.register("add2e", "encumbranceEnabled", {
-    name: "ADD2E — Gestion de l’encombrement",
-    hint: "Applique le poids transporté aux déplacements ainsi que les pénalités d’attaque et de classe d’armure. Désactiver cette option neutralise uniquement l’encombrement ; les autres effets de mouvement restent actifs.",
-    scope: "world",
-    config: true,
-    type: Boolean,
-    default: true,
-    onChange: () => queueAllMovementRecalcs("setting:encumbranceEnabled")
-  });
-  game.settings.register("add2e", "encumbranceCurrencyWeight", {
-    name: "ADD2E — Compter la monnaie dans l’encombrement",
-    hint: "Quand cette option est active, chaque pièce transportée compte pour une unité d’encombrement, quelle que soit sa valeur. Désactivée, la monnaie ne modifie pas les paliers de charge.",
-    scope: "world",
-    config: true,
-    type: Boolean,
-    default: false,
-    onChange: () => queueAllMovementRecalcs("setting:encumbranceCurrencyWeight")
-  });
-  game.settings.register("add2e", "enforceTokenMovement", {
-    name: "ADD2E — Contrôle canonique du déplacement",
-    hint: "Clé de compatibilité interne. En combat, le contrôleur canonique est toujours actif et les dépassements des joueurs exigent une validation du MJ.",
-    scope: "world",
-    config: false,
-    type: Boolean,
-    default: true
-  });
-});
-
-Hooks.once("ready", () => queueAllMovementRecalcs("ready:encumbrance-settings"));
 
 Hooks.on("preUpdateActor", (actor, changes, options = {}) => {
   const computedMovementWrite = isComputedMovementWrite(options);
