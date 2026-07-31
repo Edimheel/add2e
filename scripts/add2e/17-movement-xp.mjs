@@ -56,10 +56,52 @@ const ACTOR_MOVEMENT_FIELDS = Object.freeze([
   "flags.add2e.environment", "flags.add2e.milieu", "flags.add2e.monnaie"
 ]);
 
+const COMPUTED_MOVEMENT_SCALARS = Object.freeze([
+  "system.movement",
+  "system.vitesse_deplacement"
+]);
+
 globalThis.ADD2E_MOVE_XP_VERSION = ADD2E_MOVE_XP_VERSION;
+globalThis.ADD2E_MOVEMENT_REFERENCE_POLICY_VERSION = "2026-07-31-preserve-actor-reference-v1";
 
 function actorTimerKey(actor) {
   return String(actor?.uuid ?? actor?.id ?? "");
+}
+
+function removeComputedMovementScalars(updates = {}) {
+  for (const path of COMPUTED_MOVEMENT_SCALARS) delete updates[path];
+  return updates;
+}
+
+function stripComputedMovementScalarsFromChanges(changes = {}) {
+  for (const path of COMPUTED_MOVEMENT_SCALARS) {
+    if (Object.prototype.hasOwnProperty.call(changes, path)) delete changes[path];
+  }
+  const system = changes?.system;
+  if (system && typeof system === "object") {
+    delete system.movement;
+    delete system.vitesse_deplacement;
+  }
+  return changes;
+}
+
+function isComputedMovementWrite(options = {}) {
+  if (options?.[ADD2E_MOVE_XP_INTERNAL]) return true;
+  const reason = String(options?.add2eReason ?? "");
+  return reason.startsWith("move-xp-recalc:") || reason === "move-xp-award";
+}
+
+async function recalcMovementMirror(actor, reason = "document-change") {
+  if (!actor) return null;
+  const result = movementUpdates(actor);
+  const updates = removeComputedMovementScalars(changedUpdatePayload(actor, result.updates));
+  if (!Object.keys(updates).length) return { ...result, updates, skipped: true };
+  await actor.update(updates, {
+    [ADD2E_MOVE_XP_INTERNAL]: true,
+    add2eReason: `move-xp-recalc:movement:${reason}`,
+    render: false
+  });
+  return { ...result, updates, skipped: false };
 }
 
 function queueMovementRecalc(actor, reason = "document-change") {
@@ -70,7 +112,7 @@ function queueMovementRecalc(actor, reason = "document-change") {
   if (existing) clearTimeout(existing);
   const timer = setTimeout(() => {
     recalculationTimers.delete(key);
-    recalc(actor, { mode: "movement" })
+    recalcMovementMirror(actor, reason)
       .catch(error => console.warn(`${ADD2E_MOVE_XP_TAG}[RECALC]`, { actor: actor.name, reason, error }));
   }, ADD2E_MOVE_XP_RECALC_DELAY_MS);
   recalculationTimers.set(key, timer);
@@ -160,7 +202,7 @@ function actorMovementSourceChanged(changes = {}) {
 }
 
 function removeMovementUpdates(updates = {}) {
-  for (const path of ["system.mouvement", "system.movement", "system.vitesse_deplacement"]) delete updates[path];
+  for (const path of ["system.mouvement", ...COMPUTED_MOVEMENT_SCALARS]) delete updates[path];
   return updates;
 }
 
@@ -183,25 +225,33 @@ Hooks.once("init", () => {
   });
 });
 
-Hooks.on("preUpdateActor", (actor, changes, options) => {
+Hooks.on("preUpdateActor", (actor, changes, options = {}) => {
+  const computedMovementWrite = isComputedMovementWrite(options);
+  if (computedMovementWrite) stripComputedMovementScalarsFromChanges(changes);
   if (options?.[ADD2E_MOVE_XP_INTERNAL] || options?.add2eInternal || !actor || actor.type !== "personnage") return true;
+
   const levelChanged = changedPath(actor, changes, "system.niveau");
   const xpChanged = changedPath(actor, changes, "system.xp");
-  const movementChanged = ["system.mouvement.base", "system.vitesse_deplacement"].some(path => changedPath(actor, changes, path));
+  const movementChanged = ["system.mouvement.base", "system.movement", "system.vitesse_deplacement"]
+    .some(path => changedPath(actor, changes, path));
   if (!levelChanged && !xpChanged && !movementChanged) return true;
+
   if (isMulticlassActor(actor) && (levelChanged || xpChanged)) {
     if (movementChanged) {
       const derived = changedUpdatePayload(actor, movementUpdates(actor).updates);
+      removeMovementUpdates(derived);
       if (Object.keys(derived).length) foundry.utils.mergeObject(changes, foundry.utils.expandObject(derived), { inplace: true });
     }
     return true;
   }
+
   const incoming = {};
   if (levelChanged) incoming["system.niveau"] = changeValue(changes, "system.niveau");
   if (xpChanged) incoming["system.xp"] = changeValue(changes, "system.xp");
   const mode = levelChanged && !xpChanged ? "level" : xpChanged ? "xp" : "movement";
   const result = flatActorUpdates(actor, { mode, incoming });
   const derived = changedUpdatePayload(actor, result.updates);
+  removeComputedMovementScalars(derived);
   if (actorMovementSourceChanged(changes)) removeMovementUpdates(derived);
   if (Object.keys(derived).length) foundry.utils.mergeObject(changes, foundry.utils.expandObject(derived), { inplace: true });
   options.add2eReason = `move-xp-preupdate:${mode}`;
