@@ -1,0 +1,238 @@
+{
+  "schema": 2,
+  "catalogueId": "add2e-gdm-magic-powers",
+  "version": "2026-07-31-gdm-iii-e-movement-v1",
+  "extends": "../catalogue-pouvoirs-objets-magiques.json",
+  "status": "canonical-movement-and-encumbrance-powers",
+  "source": {
+    "book": "Guide du Maître AD&D restauré V2",
+    "sections": [
+      "III.C. Anneaux",
+      "III.E. Objets magiques divers"
+    ],
+    "pages": "127, 136-138"
+  },
+  "principles": {
+    "notObjectTemplates": true,
+    "powersAreReusable": true,
+    "objectSpecificCombinationsAreAuditOnly": true,
+    "generatorMayOnlyOfferCompatiblePowers": true,
+    "terrainRulesExcluded": true,
+    "passengerLoadRequiresDedicatedContext": true
+  },
+  "powers": [
+    {
+      "id": "misc_fixed_movement_speed",
+      "label": "Vitesse de déplacement imposée",
+      "category": "movement",
+      "compatibility": {
+        "itemTypes": [
+          "objet"
+        ]
+      },
+      "activation": {
+        "type": "passive",
+        "trigger": "worn-or-equipped"
+      },
+      "automation": "automatic",
+      "parameters": {
+        "movementMode": {
+          "type": "choice",
+          "values": [
+            "ground",
+            "flight",
+            "swim",
+            "underwater",
+            "ascent",
+            "descent",
+            "vertical"
+          ],
+          "default": "ground",
+          "required": true
+        },
+        "speed": {
+          "type": "number",
+          "min": 0,
+          "required": true
+        },
+        "ignoreEncumbrance": {
+          "type": "boolean",
+          "default": false
+        }
+      },
+      "effects": [
+        {
+          "type": "movement_override",
+          "label": "Vitesse de déplacement imposée",
+          "target": "@movementMode",
+          "value": "@speed",
+          "ignoreEncumbrance": "@ignoreEncumbrance"
+        }
+      ],
+      "source": {
+        "section": "III.C, III.E",
+        "page": "127, 136-138"
+      }
+    },
+    {
+      "id": "misc_weight_step_movement_penalty",
+      "label": "Pénalité de vitesse par palier de charge",
+      "category": "movement",
+      "compatibility": {
+        "itemTypes": [
+          "objet"
+        ]
+      },
+      "activation": {
+        "type": "passive",
+        "trigger": "worn-or-equipped"
+      },
+      "automation": "automatic",
+      "parameters": {
+        "movementMode": {
+          "type": "choice",
+          "values": [
+            "ground",
+            "flight",
+            "swim",
+            "underwater",
+            "ascent",
+            "descent",
+            "vertical"
+          ],
+          "default": "ground",
+          "required": true
+        },
+        "threshold": {
+          "type": "number",
+          "min": 0,
+          "required": true
+        },
+        "step": {
+          "type": "number",
+          "min": 0.01,
+          "required": true
+        },
+        "penaltyPerStep": {
+          "type": "number",
+          "min": 0.01,
+          "required": true
+        },
+        "stepRounding": {
+          "type": "choice",
+          "values": [
+            "floor",
+            "ceil",
+            "round"
+          ],
+          "default": "floor",
+          "required": true
+        },
+        "weightUnit": {
+          "type": "choice",
+          "values": [
+            "gp"
+          ],
+          "default": "gp",
+          "required": true
+        }
+      },
+      "effects": [
+        {
+          "type": "movement_weight_step_penalty",
+          "label": "Pénalité de vitesse par palier de charge",
+          "target": "@movementMode",
+          "threshold": "@threshold",
+          "step": "@step",
+          "penaltyPerStep": "@penaltyPerStep",
+          "stepRounding": "@stepRounding",
+          "weightUnit": "@weightUnit"
+        }
+      ],
+      "source": {
+        "section": "III.E",
+        "page": "136-138"
+      }
+    }
+  ],
+  "auditReferences": [
+    {
+      "name": "Bottes de rapidité",
+      "selectableAsTemplate": false,
+      "powers": [
+        {
+          "id": "misc_fixed_movement_speed",
+          "parameters": {
+            "movementMode": "ground",
+            "speed": 72,
+            "ignoreEncumbrance": true
+          }
+        },
+        {
+          "id": "misc_weight_step_movement_penalty",
+          "parameters": {
+            "movementMode": "ground",
+            "threshold": 2000,
+            "step": 100,
+            "penaltyPerStep": 3,
+            "stepRounding": "floor",
+            "weightUnit": "gp"
+          }
+        }
+      ],
+      "source": {
+        "section": "III.E",
+        "page": "136"
+      }
+    },
+    {
+      "name": "Bottes de sept lieues",
+      "selectableAsTemplate": false,
+      "powers": [
+        {
+          "id": "misc_fixed_movement_speed",
+          "parameters": {
+            "movementMode": "ground",
+            "speed": 36,
+            "ignoreEncumbrance": true
+          }
+        }
+      ],
+      "source": {
+        "section": "III.E",
+        "page": "136"
+      }
+    },
+    {
+      "name": "Anneau de nage",
+      "selectableAsTemplate": false,
+      "powers": [
+        {
+          "id": "movement_mode",
+          "parameters": {
+            "mode": "swim",
+            "speed": 63
+          }
+        }
+      ],
+      "source": {
+        "section": "III.C",
+        "page": "127"
+      }
+    }
+  ],
+  "coverage": {
+    "analysedSections": [
+      "III.C",
+      "III.E"
+    ],
+    "coverageMode": "canonical-movement-mechanics",
+    "generatorIntegration": true,
+    "powerCount": 2,
+    "excluded": [
+      "terrain penalties",
+      "broom passenger load",
+      "carpet passenger count"
+    ]
+  }
+}
