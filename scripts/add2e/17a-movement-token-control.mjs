@@ -10,159 +10,154 @@ import {
   norm
 } from "./17a-movement-xp-domain.mjs";
 
-const MOVEMENT_TURN_STATE_FLAG = "movementTurnState";
-const MOVEMENT_APPROVAL_REQUEST = "ADD2E_MOVEMENT_APPROVAL_REQUEST";
-const MOVEMENT_APPROVAL_RESPONSE = "ADD2E_MOVEMENT_APPROVAL_RESPONSE";
-const MOVEMENT_APPROVAL_TIMEOUT_MS = 90_000;
-const MOVEMENT_SOCKET_CHANNEL = "system.add2e";
-const nativeMovementCache = new Map();
-const pendingMovementApprovals = new Map();
-const pendingMovementByToken = new Map();
-const handledMovementApprovals = new Set();
-let gmApprovalQueue = Promise.resolve();
+const CONTROL_VERSION = "2026-07-31-native-ruler-gm-approval-v3";
+const STATE_FLAG = "movementTurnState";
+const REQUEST = "ADD2E_MOVEMENT_APPROVAL_REQUEST";
+const RESPONSE = "ADD2E_MOVEMENT_APPROVAL_RESPONSE";
+const TIMEOUT_MS = 90_000;
+const SOCKET = "system.add2e";
+const nativeCache = new Map();
+const updateCache = new Map();
+const pending = new Map();
+const pendingByToken = new Map();
+const handled = new Set();
+const recorded = new Set();
+let gmQueue = Promise.resolve();
 
-function unitToMeters(distance, unit) {
-  const value = norm(unit);
-  if (["ft", "feet", "foot", "pied", "pieds", "pi"].includes(value)) return distance * 0.3048;
-  if (["km", "kilometre", "kilometres"].includes(value)) return distance * 1000;
-  return distance;
-}
-
-function round2(value) {
-  return Math.round(Math.max(0, Number(value) || 0) * 100) / 100;
-}
-
-function escapeHtml(value) {
-  return String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
+const round2 = value => Math.round(Math.max(0, Number(value) || 0) * 100) / 100;
+const isPoint = value => Number.isFinite(Number(value?.x)) && Number.isFinite(Number(value?.y));
+const escapeHtml = value => String(value ?? "")
+  .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+  .replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 
 function randomId() {
-  try {
-    const id = foundry?.utils?.randomID?.(24);
-    if (id) return id;
-  } catch (_error) {}
-  try { return crypto.randomUUID(); }
+  try { return foundry?.utils?.randomID?.(24) || crypto.randomUUID(); }
   catch (_error) { return `${Date.now()}-${Math.random().toString(36).slice(2)}`; }
 }
 
-function isPoint(value) {
-  return Number.isFinite(Number(value?.x)) && Number.isFinite(Number(value?.y));
+function point(value, fallback = {}) {
+  const source = value?.position ?? value?.destination ?? value?.point ?? value ?? {};
+  return {
+    x: Number(source?.x ?? fallback?.x ?? 0),
+    y: Number(source?.y ?? fallback?.y ?? 0),
+    elevation: Number(source?.elevation ?? source?.z ?? fallback?.elevation ?? fallback?.z ?? 0)
+  };
 }
 
-function point(value, fallback = {}) {
-  const candidate = value?.position ?? value?.destination ?? value?.point ?? value ?? {};
-  return {
-    x: Number(candidate?.x ?? fallback?.x ?? 0),
-    y: Number(candidate?.y ?? fallback?.y ?? 0),
-    elevation: Number(candidate?.elevation ?? candidate?.z ?? fallback?.elevation ?? fallback?.z ?? 0)
-  };
+function unitToMeters(distance, unit) {
+  const key = norm(unit);
+  if (["ft", "feet", "foot", "pied", "pieds", "pi"].includes(key)) return distance * 0.3048;
+  if (["km", "kilometre", "kilometres"].includes(key)) return distance * 1000;
+  return distance;
 }
 
 function sceneUnits(tokenDoc) {
-  const scene = tokenDoc?.parent ?? canvas?.scene ?? null;
+  const scene = tokenDoc?.parent ?? canvas?.scene;
   return {
     size: Number(scene?.grid?.size ?? canvas?.grid?.size ?? 100) || 100,
-    distance: Number(scene?.grid?.distance ?? canvas?.scene?.grid?.distance ?? 1) || 1,
-    unit: scene?.grid?.units ?? canvas?.scene?.grid?.units ?? "m"
+    distance: Number(scene?.grid?.distance ?? 1) || 1,
+    unit: scene?.grid?.units ?? "m"
   };
 }
 
-function tokenCenter(tokenDoc, position) {
-  const { size } = sceneUnits(tokenDoc);
-  return {
-    x: Number(position?.x ?? tokenDoc?.x ?? 0) + Number(tokenDoc?.width ?? 1) * size / 2,
-    y: Number(position?.y ?? tokenDoc?.y ?? 0) + Number(tokenDoc?.height ?? 1) * size / 2
-  };
+function waypointsOf(movement = {}, target = null) {
+  const raw = [movement?.waypoints, movement?.pending?.waypoints, movement?.path, movement?.route]
+    .find(Array.isArray) ?? [];
+  const waypoints = raw.filter(isPoint).map(entry => {
+    const p = point(entry, target ?? {});
+    const out = { x: p.x, y: p.y, elevation: p.elevation };
+    for (const key of ["action", "checkpoint", "explicit", "snapped"]) {
+      if (["string", "boolean", "number"].includes(typeof entry?.[key])) out[key] = entry[key];
+    }
+    return out;
+  });
+  const rawDestination = movement?.destination ?? target;
+  if (isPoint(rawDestination)) {
+    const destination = point(rawDestination);
+    const last = waypoints[waypoints.length - 1];
+    if (!last || last.x !== destination.x || last.y !== destination.y || last.elevation !== destination.elevation) {
+      waypoints.push(destination);
+    }
+  }
+  return waypoints;
 }
 
-function nativeMovementOrigin(tokenDoc, movement = {}) {
+function movementOrigin(tokenDoc, movement = {}) {
   return isPoint(movement?.origin) ? point(movement.origin, tokenDoc) : point(tokenDoc);
 }
 
-function nativeMovementTarget(tokenDoc, movement = {}) {
+function movementTarget(tokenDoc, movement = {}) {
   if (isPoint(movement?.destination)) return point(movement.destination, tokenDoc);
-  const pending = movement?.pending?.waypoints ?? [];
-  const last = pending[pending.length - 1];
-  if (isPoint(last)) return point(last, tokenDoc);
-  return point(tokenDoc);
+  const waypoints = waypointsOf(movement);
+  const last = waypoints[waypoints.length - 1];
+  return last ? point(last, tokenDoc) : point(tokenDoc);
 }
 
-function nativeHorizontalMeters(tokenDoc, movement = {}, phase = "pre") {
+function reportedHorizontal(tokenDoc, movement = {}, phase = "pre") {
   const sections = phase === "pre"
-    ? [movement?.pending, movement?.passed]
-    : [movement?.passed, movement?.pending];
+    ? [movement?.pending, movement?.passed, movement]
+    : [movement?.passed, movement?.pending, movement];
   const unit = tokenDoc?.parent?.grid?.units ?? canvas?.scene?.grid?.units ?? "m";
   for (const section of sections) {
-    const distance = Number(section?.distance);
-    if (Number.isFinite(distance) && distance >= 0) return round2(unitToMeters(distance, unit));
+    for (const raw of [section?.distance, section?.cost, section?.measurement?.distance]) {
+      const value = Number(raw);
+      if (Number.isFinite(value) && value >= 0) return round2(unitToMeters(value, unit));
+    }
   }
   return null;
 }
 
-function nativeMovementCacheKey(tokenDoc, movement = {}) {
-  return `${tokenDoc?.uuid ?? tokenDoc?.id ?? "token"}:${movement?.id ?? "movement"}`;
-}
-
-function movementComponents(tokenDoc, target, { from = null, horizontalOverride = null } = {}) {
+function movementComponents(tokenDoc, target, { movement = null, from = null, horizontalOverride = null } = {}) {
   const origin = point(from ?? tokenDoc, tokenDoc);
   const destination = point(target, tokenDoc);
   const { size, distance, unit } = sceneUnits(tokenDoc);
-  const left = tokenCenter(tokenDoc, origin);
-  const right = tokenCenter(tokenDoc, destination);
-  const horizontal = Number.isFinite(Number(horizontalOverride))
-    ? Math.max(0, Number(horizontalOverride))
-    : unitToMeters((Math.hypot(right.x - left.x, right.y - left.y) / size) * distance, unit);
-  const elevationDelta = unitToMeters(destination.elevation - origin.elevation, unit);
-  return {
-    origin,
-    destination,
-    horizontal: round2(horizontal),
-    ascent: round2(Math.max(0, elevationDelta)),
-    descent: round2(Math.max(0, -elevationDelta)),
-    elevationDelta: Math.round(elevationDelta * 100) / 100
-  };
+  const route = waypointsOf(movement ?? {}, destination);
+  const points = route.length ? route : [destination];
+  let previous = origin;
+  let horizontal = 0;
+  let ascent = 0;
+  let descent = 0;
+
+  for (const raw of points) {
+    const current = point(raw, previous);
+    horizontal += unitToMeters((Math.hypot(current.x - previous.x, current.y - previous.y) / size) * distance, unit);
+    const dz = unitToMeters(current.elevation - previous.elevation, unit);
+    if (dz > 0) ascent += dz;
+    else descent -= dz;
+    previous = current;
+  }
+  if (Number.isFinite(Number(horizontalOverride))) horizontal = Math.max(0, Number(horizontalOverride));
+  return { origin, destination, horizontal: round2(horizontal), ascent: round2(ascent), descent: round2(descent) };
 }
 
 function activeCombat() {
-  const combat = game.combat ?? null;
-  if (!combat) return null;
-  const started = combat.started === true || Number(combat.round) > 0;
-  return started ? combat : null;
+  const combat = game.combat;
+  return combat && (combat.started === true || Number(combat.round) > 0) ? combat : null;
 }
 
 function combatantForToken(tokenDoc) {
   const combat = activeCombat();
   if (!combat || !tokenDoc?.id) return null;
-  const sceneId = tokenDoc.parent?.id ?? canvas?.scene?.id ?? null;
+  try {
+    const direct = tokenDoc.combatant ?? combat.getCombatantByToken?.(tokenDoc.id);
+    if (direct && (!direct.combat || direct.combat.id === combat.id)) return direct;
+  } catch (_error) {}
   return Array.from(combat.combatants ?? []).find(combatant => {
     const tokenId = combatant.tokenId ?? combatant.token?.id ?? combatant.token?.document?.id;
-    const combatantSceneId = combatant.sceneId ?? combatant.token?.parent?.id ?? sceneId;
-    return String(tokenId ?? "") === String(tokenDoc.id)
-      && (!sceneId || !combatantSceneId || String(combatantSceneId) === String(sceneId));
+    return String(tokenId ?? "") === String(tokenDoc.id);
   }) ?? null;
 }
 
 function combatRoundKey(tokenDoc) {
   const combat = activeCombat();
-  const combatant = combatantForToken(tokenDoc);
-  if (!combat || !combatant) return null;
+  if (!combat || !combatantForToken(tokenDoc)) return null;
   return `${combat.id}:${Math.max(1, Number(combat.round) || 1)}`;
-}
-
-function emptySpentState() {
-  return { ratio: 0, horizontal: 0, ascent: 0, descent: 0 };
 }
 
 function spentThisRound(tokenDoc) {
   const key = combatRoundKey(tokenDoc);
-  if (!key || !tokenDoc) return emptySpentState();
-  const state = tokenDoc.getFlag?.("add2e", MOVEMENT_TURN_STATE_FLAG) ?? {};
-  if (state.key !== key) return emptySpentState();
+  const state = tokenDoc?.getFlag?.("add2e", STATE_FLAG) ?? {};
+  if (!key || state.key !== key) return { ratio: 0, horizontal: 0, ascent: 0, descent: 0 };
   return {
     ratio: Math.max(0, Number(state.ratio) || 0),
     horizontal: Math.max(0, Number(state.horizontal) || 0),
@@ -171,31 +166,21 @@ function spentThisRound(tokenDoc) {
   };
 }
 
-function movementScaleStatus(ratio) {
+function movementStatus(ratio) {
   if (!Number.isFinite(ratio)) return { key: "red", label: "impossible", blocked: true };
   if (ratio <= 1.0001) return { key: "green", label: "autorisé", blocked: false };
   if (ratio <= 2.0001) return { key: "orange", label: "dépassé", blocked: true };
   return { key: "red", label: "largement dépassé", blocked: true };
 }
 
-function movementModeSpeed(details, target) {
-  const entry = details?.movementModes?.[target] ?? null;
+function modeSpeed(details, target) {
+  const entry = details?.movementModes?.[target];
   return entry?.available ? Math.max(0, Number(entry.preciseValue ?? entry.value) || 0) : 0;
 }
 
-function environmentKey(tokenDoc) {
-  const tokenFlags = tokenDoc?.flags?.add2e ?? {};
-  const sceneFlags = tokenDoc?.parent?.flags?.add2e ?? canvas?.scene?.flags?.add2e ?? {};
-  return norm(tokenFlags.environment ?? tokenFlags.milieu ?? sceneFlags.environment ?? sceneFlags.milieu ?? "");
-}
-
-function explicitMovementMode(tokenDoc) {
-  return norm(tokenDoc?.flags?.add2e?.movementMode ?? tokenDoc?.flags?.add2e?.modeDeplacement ?? "");
-}
-
-function selectHorizontalMode(details, tokenDoc, components) {
+function horizontalMode(details, tokenDoc, components) {
   const modes = details?.movementModes ?? {};
-  const explicit = explicitMovementMode(tokenDoc);
+  const explicit = norm(tokenDoc?.flags?.add2e?.movementMode ?? tokenDoc?.flags?.add2e?.modeDeplacement ?? "");
   const aliases = {
     sol: "ground", terrestre: "ground", ground: "ground",
     vol: "flight", aerien: "flight", aerienne: "flight", flight: "flight",
@@ -204,28 +189,22 @@ function selectHorizontalMode(details, tokenDoc, components) {
   };
   const requested = aliases[explicit] ?? explicit;
   if (requested && modes[requested]?.available) return requested;
-  const environment = environmentKey(tokenDoc);
+  const tokenFlags = tokenDoc?.flags?.add2e ?? {};
+  const sceneFlags = tokenDoc?.parent?.flags?.add2e ?? canvas?.scene?.flags?.add2e ?? {};
+  const environment = norm(tokenFlags.environment ?? tokenFlags.milieu ?? sceneFlags.environment ?? sceneFlags.milieu ?? "");
   if (["underwater", "sous_eau", "aquatique", "eau"].includes(environment)) {
     if (modes.underwater?.available) return "underwater";
     if (modes.swim?.available) return "swim";
   }
-  const airborne = Math.max(components.origin.elevation, components.destination.elevation) > 0.001;
-  if (airborne && modes.flight?.available) return "flight";
+  if (Math.max(components.origin.elevation, components.destination.elevation) > 0.001 && modes.flight?.available) return "flight";
   return "ground";
 }
 
-function selectVerticalMode(details, direction) {
+function verticalMode(details, direction) {
   const modes = details?.movementModes ?? {};
-  if (direction === "ascent") {
-    if (modes.ascent?.available) return "ascent";
-    if (modes.vertical?.available) return "vertical";
-    if (modes.flight?.available) return "flight";
-  }
-  if (direction === "descent") {
-    if (modes.descent?.available) return "descent";
-    if (modes.vertical?.available) return "vertical";
-    if (modes.flight?.available) return "flight";
-  }
+  if (modes[direction]?.available) return direction;
+  if (modes.vertical?.available) return "vertical";
+  if (modes.flight?.available) return "flight";
   return direction;
 }
 
@@ -235,73 +214,63 @@ function componentRatio(distance, speed) {
 }
 
 function movementBudget(details, tokenDoc, components) {
-  const horizontalMode = selectHorizontalMode(details, tokenDoc, components);
-  const ascentMode = selectVerticalMode(details, "ascent");
-  const descentMode = selectVerticalMode(details, "descent");
+  const modes = {
+    horizontal: horizontalMode(details, tokenDoc, components),
+    ascent: verticalMode(details, "ascent"),
+    descent: verticalMode(details, "descent")
+  };
   const speeds = {
-    horizontal: movementModeSpeed(details, horizontalMode),
-    ascent: movementModeSpeed(details, ascentMode),
-    descent: movementModeSpeed(details, descentMode)
+    horizontal: modeSpeed(details, modes.horizontal),
+    ascent: modeSpeed(details, modes.ascent),
+    descent: modeSpeed(details, modes.descent)
   };
   const ratios = {
     horizontal: componentRatio(components.horizontal, speeds.horizontal),
     ascent: componentRatio(components.ascent, speeds.ascent),
     descent: componentRatio(components.descent, speeds.descent)
   };
-  return {
-    modes: { horizontal: horizontalMode, ascent: ascentMode, descent: descentMode },
-    speeds,
-    ratios,
-    ratio: ratios.horizontal + ratios.ascent + ratios.descent
-  };
+  return { modes, speeds, ratios, ratio: ratios.horizontal + ratios.ascent + ratios.descent };
 }
 
 function movementSummary(result) {
-  const pieces = [];
-  if (result.components.horizontal > 0) pieces.push(`${result.components.horizontal.toFixed(1)} m ${result.budget.modes.horizontal}`);
-  if (result.components.ascent > 0) pieces.push(`+${result.components.ascent.toFixed(1)} m`);
-  if (result.components.descent > 0) pieces.push(`-${result.components.descent.toFixed(1)} m`);
-  return pieces.length ? pieces.join(" · ") : "0 m";
+  const rows = [];
+  if (result.components.horizontal > 0) rows.push(`${result.components.horizontal.toFixed(1)} m ${result.budget.modes.horizontal}`);
+  if (result.components.ascent > 0) rows.push(`+${result.components.ascent.toFixed(1)} m`);
+  if (result.components.descent > 0) rows.push(`-${result.components.descent.toFixed(1)} m`);
+  return rows.length ? rows.join(" · ") : "0 m";
+}
+
+function enforcementEnabled() {
+  try { return game.settings.get("add2e", "enforceTokenMovement") !== false; }
+  catch (_error) { return true; }
 }
 
 function activeGm() {
-  const collection = Array.from(game.users ?? []);
-  const preferred = game.users?.activeGM ?? collection.find(user => user.active && user.isGM && user.isActiveGM === true);
-  return preferred ?? collection.find(user => user.active && user.isGM) ?? null;
+  const users = Array.from(game.users ?? []);
+  const direct = game.users?.activeGM;
+  if (direct?.active && direct.isGM) return direct;
+  return users.find(user => user.active && user.isGM && user.isActiveGM === true)
+    ?? users.find(user => user.active && user.isGM)
+    ?? null;
 }
 
-function movementApprovalTokenKey(tokenDoc) {
+function tokenApprovalKey(tokenDoc) {
   return `${tokenDoc?.parent?.id ?? canvas?.scene?.id ?? "scene"}:${tokenDoc?.id ?? "token"}`;
 }
 
-function movementWaypoints(movement = {}, target = {}) {
-  const pending = Array.isArray(movement?.pending?.waypoints) ? movement.pending.waypoints : [];
-  const source = pending.length ? pending : [movement?.destination ?? target];
-  const waypoints = source.filter(isPoint).map(entry => {
-    const position = point(entry, target);
-    const waypoint = { x: position.x, y: position.y, elevation: position.elevation };
-    for (const key of ["action", "checkpoint", "explicit", "snapped"]) {
-      const value = entry?.[key];
-      if (["string", "boolean", "number"].includes(typeof value)) waypoint[key] = value;
-    }
-    return waypoint;
-  });
-  const destination = point(target);
-  const last = waypoints[waypoints.length - 1];
-  if (!last || last.x !== destination.x || last.y !== destination.y || last.elevation !== destination.elevation) {
-    waypoints.push(destination);
-  }
-  return waypoints;
+function clearPending(requestId, reason = null) {
+  const entry = pending.get(requestId);
+  if (!entry) return null;
+  clearTimeout(entry.timer);
+  pending.delete(requestId);
+  if (pendingByToken.get(entry.tokenKey) === requestId) pendingByToken.delete(entry.tokenKey);
+  if (reason) ui.notifications.warn(reason);
+  return entry;
 }
 
-function movementReplayOptions(movement = {}, operation = {}, requestId = "") {
-  const options = {
-    showRuler: true,
-    add2eIgnoreMovement: true,
-    add2eMovementApprovalId: requestId
-  };
+function replayOptions(movement, operation, requestId) {
+  const options = { showRuler: true, add2eIgnoreMovement: true, add2eMovementApprovalId: requestId };
   if (typeof movement?.autoRotate === "boolean") options.autoRotate = movement.autoRotate;
-  else if (typeof operation?.autoRotate === "boolean") options.autoRotate = operation.autoRotate;
   if (typeof operation?.animate === "boolean") options.animate = operation.animate;
   if (typeof operation?.method === "string" && operation.method) options.method = operation.method;
   return options;
@@ -315,7 +284,6 @@ function approvalSnapshot(tokenDoc, result, requesterId) {
   return {
     requesterName: requester?.name ?? "Joueur",
     actorName: result?.actor?.name ?? tokenDoc?.actor?.name ?? "Personnage",
-    tokenName: tokenDoc?.name ?? result?.actor?.name ?? "Token",
     sceneName: tokenDoc?.parent?.name ?? canvas?.scene?.name ?? "Scène",
     movement: movementSummary(result),
     speeds: speedRows.join(" · ") || "Aucune vitesse disponible",
@@ -326,111 +294,107 @@ function approvalSnapshot(tokenDoc, result, requesterId) {
   };
 }
 
-function clearPendingApproval(requestId, reason = null) {
-  const pending = pendingMovementApprovals.get(requestId);
-  if (!pending) return null;
-  clearTimeout(pending.timer);
-  pendingMovementApprovals.delete(requestId);
-  if (pendingMovementByToken.get(pending.tokenKey) === requestId) pendingMovementByToken.delete(pending.tokenKey);
-  if (reason) ui.notifications?.warn?.(reason);
-  return pending;
-}
-
-function requestMovementApproval(tokenDoc, movement, operation, result) {
+function requestApproval(tokenDoc, movement, operation, result) {
   const gm = activeGm();
   if (!gm) {
     ui.notifications.warn("Le déplacement dépasse la limite et aucun MJ actif ne peut le valider.");
     return false;
   }
-  const tokenKey = movementApprovalTokenKey(tokenDoc);
-  const existingId = pendingMovementByToken.get(tokenKey);
-  if (existingId && pendingMovementApprovals.has(existingId)) {
+  const tokenKey = tokenApprovalKey(tokenDoc);
+  const existing = pendingByToken.get(tokenKey);
+  if (existing && pending.has(existing)) {
     ui.notifications.info("Une demande de déplacement est déjà en attente pour ce token.");
     return false;
   }
-
   const requestId = randomId();
   const requesterId = String(game.user?.id ?? "");
+  const target = movementTarget(tokenDoc, movement);
+  const waypoints = waypointsOf(movement, target);
   const packet = {
-    type: MOVEMENT_APPROVAL_REQUEST,
+    type: REQUEST,
     requestId,
     requesterId,
     gmId: String(gm.id),
     sceneId: String(tokenDoc?.parent?.id ?? canvas?.scene?.id ?? ""),
     tokenId: String(tokenDoc?.id ?? ""),
-    actorId: String(tokenDoc?.actor?.id ?? ""),
-    waypoints: movementWaypoints(movement, nativeMovementTarget(tokenDoc, movement)),
-    moveOptions: movementReplayOptions(movement, operation, requestId),
+    origin: movementOrigin(tokenDoc, movement),
+    destination: target,
+    waypoints: waypoints.length ? waypoints : [target],
+    moveOptions: replayOptions(movement, operation, requestId),
     summary: approvalSnapshot(tokenDoc, result, requesterId)
   };
-  const timer = setTimeout(() => {
-    clearPendingApproval(requestId, "La demande de déplacement a expiré sans réponse du MJ.");
-  }, MOVEMENT_APPROVAL_TIMEOUT_MS);
-  pendingMovementApprovals.set(requestId, { requestId, tokenKey, timer, packet });
-  pendingMovementByToken.set(tokenKey, requestId);
-
-  try {
-    game.socket.emit(MOVEMENT_SOCKET_CHANNEL, packet);
-    ui.notifications.info(`Déplacement bloqué : demande envoyée à ${gm.name}.`);
-  } catch (error) {
-    clearPendingApproval(requestId);
-    console.error(`${ADD2E_MOVE_XP_TAG}[TOKEN][APPROVAL_REQUEST_ERROR]`, error);
-    ui.notifications.error("Impossible d’envoyer la demande de déplacement au MJ.");
-  }
+  const timer = setTimeout(() => clearPending(requestId, "La demande de déplacement a expiré sans réponse du MJ."), TIMEOUT_MS);
+  pending.set(requestId, { tokenKey, timer, packet });
+  pendingByToken.set(tokenKey, requestId);
+  game.socket.emit(SOCKET, packet);
+  console.info(`${ADD2E_MOVE_XP_TAG}[TOKEN][APPROVAL_REQUEST_SENT]`, packet);
+  ui.notifications.info(`Déplacement bloqué : demande envoyée à ${gm.name}.`);
   return false;
 }
 
-function approvalDialogContent(packet) {
-  const summary = packet?.summary ?? {};
-  const total = summary.totalPercent == null ? "impossible" : `${summary.totalPercent} %`;
-  const attempt = summary.attemptPercent == null ? "impossible" : `${summary.attemptPercent} %`;
+function dialogContent(packet) {
+  const s = packet.summary ?? {};
+  const total = s.totalPercent == null ? "impossible" : `${s.totalPercent} %`;
+  const attempt = s.attemptPercent == null ? "impossible" : `${s.attemptPercent} %`;
   return `<div class="add2e-dialog add2e-movement-approval" style="min-width:430px;display:grid;gap:9px;">
-    <p><b>${escapeHtml(summary.requesterName)}</b> demande à dépasser le mouvement de combat de <b>${escapeHtml(summary.actorName)}</b>.</p>
-    <table style="width:100%;">
-      <tbody>
-        <tr><th style="text-align:left;">Scène</th><td>${escapeHtml(summary.sceneName)}</td></tr>
-        <tr><th style="text-align:left;">Round</th><td>${escapeHtml(summary.round ?? "—")}</td></tr>
-        <tr><th style="text-align:left;">Déplacement tenté</th><td>${escapeHtml(summary.movement)}</td></tr>
-        <tr><th style="text-align:left;">Vitesse résolue</th><td>${escapeHtml(summary.speeds)}</td></tr>
-        <tr><th style="text-align:left;">Déjà consommé</th><td>${escapeHtml(summary.spentPercent)} %</td></tr>
-        <tr><th style="text-align:left;">Coût de ce déplacement</th><td>${escapeHtml(attempt)}</td></tr>
-        <tr><th style="text-align:left;">Total après déplacement</th><td><b>${escapeHtml(total)}</b></td></tr>
-      </tbody>
-    </table>
+    <p><b>${escapeHtml(s.requesterName)}</b> demande à dépasser le mouvement de combat de <b>${escapeHtml(s.actorName)}</b>.</p>
+    <table style="width:100%;"><tbody>
+      <tr><th style="text-align:left;">Scène</th><td>${escapeHtml(s.sceneName)}</td></tr>
+      <tr><th style="text-align:left;">Round</th><td>${escapeHtml(s.round ?? "—")}</td></tr>
+      <tr><th style="text-align:left;">Déplacement tenté</th><td>${escapeHtml(s.movement)}</td></tr>
+      <tr><th style="text-align:left;">Vitesse résolue</th><td>${escapeHtml(s.speeds)}</td></tr>
+      <tr><th style="text-align:left;">Déjà consommé</th><td>${escapeHtml(s.spentPercent)} %</td></tr>
+      <tr><th style="text-align:left;">Coût de ce déplacement</th><td>${escapeHtml(attempt)}</td></tr>
+      <tr><th style="text-align:left;">Total après déplacement</th><td><b>${escapeHtml(total)}</b></td></tr>
+    </tbody></table>
     <p style="margin:0;">Autoriser déplacera automatiquement le token. Refuser le laissera à sa position actuelle.</p>
   </div>`;
 }
 
-async function promptMovementApproval(packet) {
+async function promptApproval(packet) {
   const DialogV2 = foundry?.applications?.api?.DialogV2;
   if (!DialogV2?.wait) throw new Error("DialogV2 est indisponible pour valider le déplacement.");
-  const answer = await DialogV2.wait({
+  return DialogV2.wait({
     window: { title: "Valider un dépassement de mouvement" },
     modal: true,
     rejectClose: false,
-    content: approvalDialogContent(packet),
+    content: dialogContent(packet),
     buttons: [
-      {
-        action: "approve",
-        label: "Autoriser le déplacement",
-        icon: "fa-solid fa-check",
-        default: true
-      },
-      {
-        action: "deny",
-        label: "Refuser",
-        icon: "fa-solid fa-xmark"
-      }
+      { action: "approve", label: "Autoriser le déplacement", icon: "fa-solid fa-check", default: true, callback: () => true },
+      { action: "deny", label: "Refuser", icon: "fa-solid fa-xmark", callback: () => false }
     ]
   });
-  return answer === "approve";
 }
 
-async function executeApprovedMovement(packet) {
-  const scene = game.scenes?.get?.(packet.sceneId) ?? null;
-  const tokenDoc = scene?.tokens?.get?.(packet.tokenId) ?? null;
+function recordKey(tokenDoc, result) {
+  const target = result?.target ?? result?.components?.destination ?? {};
+  return `${combatRoundKey(tokenDoc) ?? "none"}:${tokenDoc?.id}:${target.x}:${target.y}:${target.elevation}:${round2(result?.spent?.ratio)}`;
+}
+
+function rememberMovement(tokenDoc, result) {
+  const key = combatRoundKey(tokenDoc);
+  if (!key || !result) return;
+  const signature = recordKey(tokenDoc, result);
+  if (recorded.has(signature)) return;
+  recorded.add(signature);
+  setTimeout(() => recorded.delete(signature), 2500);
+  tokenDoc.setFlag("add2e", STATE_FLAG, {
+    key,
+    ratio: round2(result.nextRatio),
+    horizontal: round2(result.spent.horizontal + result.components.horizontal),
+    ascent: round2(result.spent.ascent + result.components.ascent),
+    descent: round2(result.spent.descent + result.components.descent),
+    modes: result.budget.modes
+  }).catch(error => console.warn(`${ADD2E_MOVE_XP_TAG}[TOKEN][ROUND_STATE_ERROR]`, error));
+}
+
+async function executeApproved(packet) {
+  const scene = game.scenes?.get?.(packet.sceneId);
+  const tokenDoc = scene?.tokens?.get?.(packet.tokenId);
   if (!tokenDoc) throw new Error("Le token demandé n’existe plus dans la scène.");
   if (typeof tokenDoc.move !== "function") throw new Error("L’API native TokenDocument.move est indisponible.");
+  const movement = { origin: packet.origin, destination: packet.destination, waypoints: packet.waypoints };
+  const result = computeTokenMovementScale(tokenDoc, packet.destination, { movement, phase: "pre" });
   const completed = await tokenDoc.move(packet.waypoints, {
     ...(packet.moveOptions ?? {}),
     showRuler: true,
@@ -439,11 +403,12 @@ async function executeApprovedMovement(packet) {
     add2eMovementRequesterId: packet.requesterId
   });
   if (completed === false) throw new Error("Foundry a interrompu le déplacement autorisé.");
+  if (result?.enforced) rememberMovement(tokenDoc, result);
 }
 
-function sendMovementApprovalResponse(packet, approved, error = null) {
-  game.socket.emit(MOVEMENT_SOCKET_CHANNEL, {
-    type: MOVEMENT_APPROVAL_RESPONSE,
+function sendResponse(packet, approved, error = null) {
+  game.socket.emit(SOCKET, {
+    type: RESPONSE,
     requestId: packet.requestId,
     requesterId: packet.requesterId,
     gmId: String(game.user?.id ?? ""),
@@ -453,146 +418,117 @@ function sendMovementApprovalResponse(packet, approved, error = null) {
   });
 }
 
-function handleMovementApprovalRequest(packet) {
-  if (!packet || packet.type !== MOVEMENT_APPROVAL_REQUEST) return;
+function handleRequest(packet) {
+  if (!packet || packet.type !== REQUEST) return;
   if (!game.user?.isGM || String(packet.gmId ?? "") !== String(game.user.id ?? "")) return;
-  if (handledMovementApprovals.has(packet.requestId)) return;
-  handledMovementApprovals.add(packet.requestId);
-
-  gmApprovalQueue = gmApprovalQueue
-    .catch(() => undefined)
-    .then(async () => {
-      let approved = false;
-      let error = null;
-      try {
-        approved = await promptMovementApproval(packet);
-        if (approved) await executeApprovedMovement(packet);
-      } catch (caught) {
-        error = caught;
-        approved = false;
-        console.error(`${ADD2E_MOVE_XP_TAG}[TOKEN][APPROVAL_GM_ERROR]`, caught);
-        ui.notifications.error(`Validation du déplacement impossible : ${caught.message}`);
-      }
-      sendMovementApprovalResponse(packet, approved, error);
-      setTimeout(() => handledMovementApprovals.delete(packet.requestId), MOVEMENT_APPROVAL_TIMEOUT_MS);
-    });
-}
-
-function handleMovementApprovalResponse(packet) {
-  if (!packet || packet.type !== MOVEMENT_APPROVAL_RESPONSE) return;
-  if (String(packet.requesterId ?? "") !== String(game.user?.id ?? "")) return;
-  const pending = clearPendingApproval(packet.requestId);
-  if (!pending) return;
-  if (packet.approved === true) {
-    ui.notifications.info(`${packet.gmName ?? "Le MJ"} a autorisé le déplacement.`);
-    return;
-  }
-  const detail = packet.error ? ` (${packet.error})` : "";
-  ui.notifications.warn(`${packet.gmName ?? "Le MJ"} a refusé le déplacement${detail}.`);
-}
-
-function installMovementApprovalSocket() {
-  if (globalThis.__ADD2E_MOVEMENT_APPROVAL_SOCKET__ === ADD2E_MOVE_XP_VERSION) return;
-  globalThis.__ADD2E_MOVEMENT_APPROVAL_SOCKET__ = ADD2E_MOVE_XP_VERSION;
-  game.socket.on(MOVEMENT_SOCKET_CHANNEL, packet => {
-    if (packet?.type === MOVEMENT_APPROVAL_REQUEST) handleMovementApprovalRequest(packet);
-    else if (packet?.type === MOVEMENT_APPROVAL_RESPONSE) handleMovementApprovalResponse(packet);
+  if (handled.has(packet.requestId)) return;
+  handled.add(packet.requestId);
+  console.info(`${ADD2E_MOVE_XP_TAG}[TOKEN][APPROVAL_REQUEST_RECEIVED]`, packet);
+  gmQueue = gmQueue.catch(() => undefined).then(async () => {
+    let approved = false;
+    let error = null;
+    try {
+      approved = await promptApproval(packet) === true;
+      if (approved) await executeApproved(packet);
+    } catch (caught) {
+      error = caught;
+      approved = false;
+      console.error(`${ADD2E_MOVE_XP_TAG}[TOKEN][APPROVAL_GM_ERROR]`, caught);
+      ui.notifications.error(`Validation du déplacement impossible : ${caught.message}`);
+    }
+    sendResponse(packet, approved, error);
+    setTimeout(() => handled.delete(packet.requestId), TIMEOUT_MS);
   });
 }
 
-function rememberCombatMovement(tokenDoc, result) {
-  const key = combatRoundKey(tokenDoc);
-  if (!key || !result || !tokenDoc) return;
-  const state = {
-    key,
-    ratio: round2(result.nextRatio),
-    horizontal: round2(result.spent.horizontal + result.components.horizontal),
-    ascent: round2(result.spent.ascent + result.components.ascent),
-    descent: round2(result.spent.descent + result.components.descent),
-    modes: result.budget.modes
-  };
-  tokenDoc.setFlag("add2e", MOVEMENT_TURN_STATE_FLAG, state)
-    .catch(error => console.warn(`${ADD2E_MOVE_XP_TAG}[TOKEN][ROUND_STATE_ERROR]`, error));
+function handleResponse(packet) {
+  if (!packet || packet.type !== RESPONSE) return;
+  if (String(packet.requesterId ?? "") !== String(game.user?.id ?? "")) return;
+  if (!clearPending(packet.requestId)) return;
+  if (packet.approved) ui.notifications.info(`${packet.gmName ?? "Le MJ"} a autorisé le déplacement.`);
+  else ui.notifications.warn(`${packet.gmName ?? "Le MJ"} a refusé le déplacement${packet.error ? ` (${packet.error})` : ""}.`);
+}
+
+function installSocket() {
+  if (globalThis.__ADD2E_MOVEMENT_APPROVAL_SOCKET__ === CONTROL_VERSION) return;
+  globalThis.__ADD2E_MOVEMENT_APPROVAL_SOCKET__ = CONTROL_VERSION;
+  game.socket.on(SOCKET, packet => {
+    if (packet?.type === REQUEST) handleRequest(packet);
+    else if (packet?.type === RESPONSE) handleResponse(packet);
+  });
 }
 
 export function computeTokenMovementScale(tokenDoc, target = {}, { movement = null, phase = "legacy", from = null } = {}) {
   const actor = tokenDoc?.actor;
   if (!actor || actor.type !== "personnage") return null;
-  const origin = from ?? (movement ? nativeMovementOrigin(tokenDoc, movement) : point(tokenDoc));
-  const horizontalOverride = movement ? nativeHorizontalMeters(tokenDoc, movement, phase) : null;
-  const components = movementComponents(tokenDoc, target, { from: origin, horizontalOverride });
+  const origin = from ?? (movement ? movementOrigin(tokenDoc, movement) : point(tokenDoc));
+  const components = movementComponents(tokenDoc, target, {
+    movement,
+    from: origin,
+    horizontalOverride: movement ? reportedHorizontal(tokenDoc, movement, phase) : null
+  });
   const details = computeMovement(actor, {
     token: tokenDoc,
-    scene: tokenDoc.parent ?? canvas?.scene ?? null,
+    scene: tokenDoc.parent ?? canvas?.scene,
     consumer: "movement-token-control"
   });
   const budget = movementBudget(details, tokenDoc, components);
   const enforced = Boolean(combatRoundKey(tokenDoc));
-  const spent = enforced ? spentThisRound(tokenDoc) : emptySpentState();
+  const spent = enforced ? spentThisRound(tokenDoc) : { ratio: 0, horizontal: 0, ascent: 0, descent: 0 };
   const nextRatio = spent.ratio + budget.ratio;
-  const status = movementScaleStatus(nextRatio);
   return {
-    actor,
-    movement: details,
-    components,
-    budget,
-    spent,
-    enforced,
-    inCombat: Boolean(activeCombat()),
-    nextRatio,
-    next: nextRatio,
-    max: 1,
-    origin: components.origin,
-    target: components.destination,
-    status
+    actor, movement: details, components, budget, spent, enforced,
+    inCombat: Boolean(activeCombat()), nextRatio, next: nextRatio, max: 1,
+    origin: components.origin, target: components.destination, status: movementStatus(nextRatio)
   };
 }
 
 export function validateTokenMovement(tokenDoc, changes, options = {}, movement = null) {
-  if (options?.add2eIgnoreMovement || !game.settings.get("add2e", "enforceTokenMovement")) {
-    return { allowed: true, result: null };
-  }
+  if (options?.add2eIgnoreMovement || !enforcementEnabled()) return { allowed: true, result: null };
   if (!changes || (changes.x === undefined && changes.y === undefined && changes.elevation === undefined && changes.z === undefined)) {
     return { allowed: true, result: null };
   }
-  const actor = tokenDoc?.actor;
-  if (!actor || actor.type !== "personnage") return { allowed: true, result: null };
+  if (!tokenDoc?.actor || tokenDoc.actor.type !== "personnage") return { allowed: true, result: null };
   const result = computeTokenMovementScale(tokenDoc, changes, { movement, phase: movement ? "pre" : "legacy" });
-  if (!result || !result.enforced) return { allowed: true, result };
-  if (game.user.isGM || !result.status.blocked) return { allowed: true, result };
+  if (!result || !result.enforced || game.user.isGM || !result.status.blocked) return { allowed: true, result };
   return { allowed: false, result };
 }
 
-function localMovementUser(user, operation = {}) {
-  const userId = user?.id ?? operation?.userId ?? operation?.user?.id ?? null;
-  return !userId || String(userId) === String(game.user?.id ?? "");
+function syntheticMovement(tokenDoc, changes) {
+  const destination = point(changes, tokenDoc);
+  return { origin: point(tokenDoc), destination, waypoints: [destination] };
 }
 
-function clearCombatMovementStates() {
+function cacheKey(tokenDoc, target) {
+  const p = point(target, tokenDoc);
+  return `${tokenDoc?.uuid ?? tokenDoc?.id}:${p.x}:${p.y}:${p.elevation}`;
+}
+
+function clearStates() {
   if (!game.user?.isGM) return;
   for (const token of canvas?.tokens?.placeables ?? []) {
-    if (token.actor?.type !== "personnage") continue;
-    token.document.unsetFlag("add2e", MOVEMENT_TURN_STATE_FLAG).catch(() => undefined);
+    if (token.actor?.type === "personnage") token.document.unsetFlag("add2e", STATE_FLAG).catch(() => undefined);
   }
 }
 
-function clearAllPendingApprovals(reason = null) {
-  for (const requestId of [...pendingMovementApprovals.keys()]) clearPendingApproval(requestId, reason);
-  pendingMovementByToken.clear();
-}
-
 export function installMovementTokenControl() {
-  if (globalThis.__ADD2E_MOVEMENT_TOKEN_CONTROL__ === ADD2E_MOVE_XP_VERSION) return;
-  globalThis.__ADD2E_MOVEMENT_TOKEN_CONTROL__ = ADD2E_MOVE_XP_VERSION;
+  if (globalThis.__ADD2E_MOVEMENT_TOKEN_CONTROL__ === CONTROL_VERSION) return;
+  globalThis.__ADD2E_MOVEMENT_TOKEN_CONTROL__ = CONTROL_VERSION;
+  globalThis.ADD2E_MOVEMENT_TOKEN_CONTROL_VERSION = CONTROL_VERSION;
 
   Hooks.once("ready", async () => {
-    installMovementApprovalSocket();
+    installSocket();
     log("[READY]", {
       version: ADD2E_MOVE_XP_VERSION,
+      controllerVersion: CONTROL_VERSION,
       display: "foundry-native-token-ruler",
       combatPolicy: "strict-one-times-resolved-movement-per-round-with-gm-approval",
-      explorationPolicy: "unrestricted"
+      explorationPolicy: "unrestricted",
+      enforcementEnabled: enforcementEnabled()
     });
+    if (game.user.isGM && !enforcementEnabled()) {
+      ui.notifications.warn("Le contrôle ADD2E des déplacements est désactivé dans les paramètres du monde.");
+    }
     if (!game.user.isGM) return;
     for (const actor of game.actors?.filter(actor => actor.type === "personnage") ?? []) {
       await recalc(actor, { mode: "movement" })
@@ -601,46 +537,68 @@ export function installMovementTokenControl() {
   });
 
   Hooks.on("preMoveToken", (tokenDoc, movement, operation = {}) => {
-    if (!tokenDoc?.actor || tokenDoc.actor.type !== "personnage") return true;
+    if (!tokenDoc?.actor || tokenDoc.actor.type !== "personnage" || operation?.add2eIgnoreMovement) return true;
     try { movement.showRuler = true; } catch (_error) {}
-    const target = nativeMovementTarget(tokenDoc, movement);
-    const checked = validateTokenMovement(
-      tokenDoc,
-      target,
-      { ...operation, add2eNativeMovement: true, userId: game.user?.id ?? null },
-      movement
-    );
+    const target = movementTarget(tokenDoc, movement);
+    const checked = validateTokenMovement(tokenDoc, target, operation, movement);
     if (!checked.allowed) {
-      requestMovementApproval(tokenDoc, movement, operation, checked.result);
+      requestApproval(tokenDoc, movement, operation, checked.result);
       return false;
     }
-    nativeMovementCache.set(nativeMovementCacheKey(tokenDoc, movement), { result: checked.result, target });
+    nativeCache.set(`${tokenDoc.uuid}:${movement?.id ?? "movement"}`, checked.result);
+    updateCache.set(cacheKey(tokenDoc, target), checked.result);
+    return true;
+  });
+
+  Hooks.on("preUpdateToken", (tokenDoc, changes = {}, options = {}, userId = null) => {
+    if (options?.add2eIgnoreMovement) return true;
+    if (!changes || (changes.x === undefined && changes.y === undefined && changes.elevation === undefined && changes.z === undefined)) return true;
+    if (!tokenDoc?.actor || tokenDoc.actor.type !== "personnage") return true;
+    const movement = syntheticMovement(tokenDoc, changes);
+    const checked = validateTokenMovement(tokenDoc, movement.destination, { ...options, userId }, movement);
+    if (!checked.allowed) {
+      requestApproval(tokenDoc, movement, { ...options, userId }, checked.result);
+      return false;
+    }
+    updateCache.set(cacheKey(tokenDoc, movement.destination), checked.result);
     return true;
   });
 
   Hooks.on("moveToken", (tokenDoc, movement, operation = {}, user = null) => {
     if (!tokenDoc?.actor || tokenDoc.actor.type !== "personnage") return;
-    const key = nativeMovementCacheKey(tokenDoc, movement);
-    const cached = nativeMovementCache.get(key) ?? null;
-    nativeMovementCache.delete(key);
-    const target = nativeMovementTarget(tokenDoc, movement);
-    const result = cached?.result ?? computeTokenMovementScale(tokenDoc, target, { movement, phase: "post" });
-    if (!result?.enforced || !localMovementUser(user, operation)) return;
-    rememberCombatMovement(tokenDoc, result);
+    const target = movementTarget(tokenDoc, movement);
+    const nativeKey = `${tokenDoc.uuid}:${movement?.id ?? "movement"}`;
+    const result = nativeCache.get(nativeKey)
+      ?? updateCache.get(cacheKey(tokenDoc, target))
+      ?? computeTokenMovementScale(tokenDoc, target, { movement, phase: "post" });
+    nativeCache.delete(nativeKey);
+    updateCache.delete(cacheKey(tokenDoc, target));
+    const userId = user?.id ?? operation?.userId ?? null;
+    if (result?.enforced && (!userId || String(userId) === String(game.user?.id ?? ""))) rememberMovement(tokenDoc, result);
+  });
+
+  Hooks.on("updateToken", (tokenDoc, changes = {}, options = {}, userId = null) => {
+    if (options?.add2eIgnoreMovement) return;
+    if (!changes || (changes.x === undefined && changes.y === undefined && changes.elevation === undefined && changes.z === undefined)) return;
+    if (userId && String(userId) !== String(game.user?.id ?? "")) return;
+    const key = cacheKey(tokenDoc, tokenDoc);
+    const result = updateCache.get(key);
+    updateCache.delete(key);
+    if (result?.enforced) rememberMovement(tokenDoc, result);
   });
 
   Hooks.on("deleteToken", tokenDoc => {
-    const prefix = `${tokenDoc?.uuid ?? tokenDoc?.id ?? "token"}:`;
-    for (const key of nativeMovementCache.keys()) if (key.startsWith(prefix)) nativeMovementCache.delete(key);
-    const tokenKey = movementApprovalTokenKey(tokenDoc);
-    const requestId = pendingMovementByToken.get(tokenKey);
-    if (requestId) clearPendingApproval(requestId, "La demande a été annulée car le token a été supprimé.");
+    const tokenKey = tokenApprovalKey(tokenDoc);
+    const requestId = pendingByToken.get(tokenKey);
+    if (requestId) clearPending(requestId, "La demande a été annulée car le token a été supprimé.");
   });
 
   Hooks.on("deleteCombat", () => {
-    nativeMovementCache.clear();
-    handledMovementApprovals.clear();
-    clearAllPendingApprovals("La demande a été annulée car le combat est terminé.");
-    clearCombatMovementStates();
+    nativeCache.clear();
+    updateCache.clear();
+    recorded.clear();
+    handled.clear();
+    for (const requestId of [...pending.keys()]) clearPending(requestId, "La demande a été annulée car le combat est terminé.");
+    clearStates();
   });
 }
