@@ -11,9 +11,15 @@ import {
 } from "./17a-movement-xp-domain.mjs";
 
 const MOVEMENT_TURN_STATE_FLAG = "movementTurnState";
-const MOVE_ALERT_DEDUP_MS = 900;
-const movementAlertCache = new Map();
+const MOVEMENT_APPROVAL_REQUEST = "ADD2E_MOVEMENT_APPROVAL_REQUEST";
+const MOVEMENT_APPROVAL_RESPONSE = "ADD2E_MOVEMENT_APPROVAL_RESPONSE";
+const MOVEMENT_APPROVAL_TIMEOUT_MS = 90_000;
+const MOVEMENT_SOCKET_CHANNEL = "system.add2e";
 const nativeMovementCache = new Map();
+const pendingMovementApprovals = new Map();
+const pendingMovementByToken = new Map();
+const handledMovementApprovals = new Set();
+let gmApprovalQueue = Promise.resolve();
 
 function unitToMeters(distance, unit) {
   const value = norm(unit);
@@ -24,6 +30,24 @@ function unitToMeters(distance, unit) {
 
 function round2(value) {
   return Math.round(Math.max(0, Number(value) || 0) * 100) / 100;
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function randomId() {
+  try {
+    const id = foundry?.utils?.randomID?.(24);
+    if (id) return id;
+  } catch (_error) {}
+  try { return crypto.randomUUID(); }
+  catch (_error) { return `${Date.now()}-${Math.random().toString(36).slice(2)}`; }
 }
 
 function isPoint(value) {
@@ -240,66 +264,240 @@ function movementSummary(result) {
   return pieces.length ? pieces.join(" · ") : "0 m";
 }
 
-async function createMovementAlertCard(tokenDoc, result, movedBy, recipients) {
-  const build = globalThis.add2eBuildChatCard;
-  const create = globalThis.add2eCreateChatCard;
-  if (typeof build !== "function" || typeof create !== "function") {
-    throw new Error("Les constructeurs communs de cartes ADD2E ne sont pas disponibles.");
-  }
-  const percent = Number.isFinite(result.nextRatio) ? `${Math.round(result.nextRatio * 100)} %` : "impossible";
-  const options = {
-    actor: result.actor,
-    title: "Déplacement de combat dépassé",
-    icon: "fas fa-person-walking-arrow-right",
-    variant: "failure",
-    source: { name: result.actor.name, img: result.actor.img, type: "Déplacement" },
-    rows: [
-      { label: "Utilisateur", value: movedBy },
-      { label: "Déplacement tenté", value: movementSummary(result) },
-      { label: "Budget du round", value: percent },
-      { label: "Vitesse", value: `${result.budget.speeds.horizontal || 0} m/round` },
-      { label: "État", value: result.status.label }
-    ],
-    chatData: {
-      whisper: recipients,
-      flags: {
-        add2e: {
-          movementAlert: true,
-          tokenId: tokenDoc?.id ?? null,
-          status: result.status.key,
-          ratio: result.nextRatio,
-          components: result.components,
-          modes: result.budget.modes,
-          combatRound: activeCombat()?.round ?? null,
-          version: ADD2E_MOVE_XP_VERSION
-        }
-      }
-    }
-  };
-  const preview = build(options);
-  if (!String(preview ?? "").trim()) throw new Error("La carte d’alerte de déplacement ADD2E est vide.");
-  return create(options);
+function activeGm() {
+  const collection = Array.from(game.users ?? []);
+  const preferred = game.users?.activeGM ?? collection.find(user => user.active && user.isGM && user.isActiveGM === true);
+  return preferred ?? collection.find(user => user.active && user.isGM) ?? null;
 }
 
-function notifyGmsMovementExceeded(tokenDoc, result, { userId = null } = {}) {
-  if (!result?.enforced || result.nextRatio <= 1.0001) return;
-  const sceneId = tokenDoc?.parent?.id ?? canvas?.scene?.id ?? "scene";
-  const roundKey = combatRoundKey(tokenDoc) ?? "combat";
-  const dedupKey = `${sceneId}:${tokenDoc?.id ?? "token"}:${roundKey}:${Math.round(result.nextRatio * 100)}`;
-  const now = Date.now();
-  const previous = movementAlertCache.get(dedupKey) ?? 0;
-  if ((now - previous) < MOVE_ALERT_DEDUP_MS) return;
-  movementAlertCache.set(dedupKey, now);
-  const movedBy = game.users?.get?.(userId ?? game.user?.id)?.name ?? game.user?.name ?? "Utilisateur";
-  const recipients = ChatMessage.getWhisperRecipients?.("GM")?.map(user => user.id).filter(Boolean) ?? [];
-  if (recipients.length) {
-    createMovementAlertCard(tokenDoc, result, movedBy, recipients)
-      .catch(error => console.warn(`${ADD2E_MOVE_XP_TAG}[TOKEN][GM_ALERT_ERROR]`, error));
+function movementApprovalTokenKey(tokenDoc) {
+  return `${tokenDoc?.parent?.id ?? canvas?.scene?.id ?? "scene"}:${tokenDoc?.id ?? "token"}`;
+}
+
+function movementWaypoints(movement = {}, target = {}) {
+  const pending = Array.isArray(movement?.pending?.waypoints) ? movement.pending.waypoints : [];
+  const source = pending.length ? pending : [movement?.destination ?? target];
+  const waypoints = source.filter(isPoint).map(entry => {
+    const position = point(entry, target);
+    const waypoint = { x: position.x, y: position.y, elevation: position.elevation };
+    for (const key of ["action", "checkpoint", "explicit", "snapped"]) {
+      const value = entry?.[key];
+      if (["string", "boolean", "number"].includes(typeof value)) waypoint[key] = value;
+    }
+    return waypoint;
+  });
+  const destination = point(target);
+  const last = waypoints[waypoints.length - 1];
+  if (!last || last.x !== destination.x || last.y !== destination.y || last.elevation !== destination.elevation) {
+    waypoints.push(destination);
   }
-  if (game.user.isGM) {
-    const percent = Number.isFinite(result.nextRatio) ? Math.round(result.nextRatio * 100) : "∞";
-    ui.notifications.warn(`${result.actor.name} dépasse son mouvement de combat : ${percent} % du round.`);
+  return waypoints;
+}
+
+function movementReplayOptions(movement = {}, operation = {}, requestId = "") {
+  const options = {
+    showRuler: true,
+    add2eIgnoreMovement: true,
+    add2eMovementApprovalId: requestId
+  };
+  if (typeof movement?.autoRotate === "boolean") options.autoRotate = movement.autoRotate;
+  else if (typeof operation?.autoRotate === "boolean") options.autoRotate = operation.autoRotate;
+  if (typeof operation?.animate === "boolean") options.animate = operation.animate;
+  if (typeof operation?.method === "string" && operation.method) options.method = operation.method;
+  return options;
+}
+
+function approvalSnapshot(tokenDoc, result, requesterId) {
+  const requester = game.users?.get?.(requesterId) ?? game.user;
+  const speedRows = Object.entries(result?.budget?.speeds ?? {})
+    .filter(([, value]) => Number(value) > 0)
+    .map(([mode, value]) => `${mode} ${round2(value)} m`);
+  return {
+    requesterName: requester?.name ?? "Joueur",
+    actorName: result?.actor?.name ?? tokenDoc?.actor?.name ?? "Personnage",
+    tokenName: tokenDoc?.name ?? result?.actor?.name ?? "Token",
+    sceneName: tokenDoc?.parent?.name ?? canvas?.scene?.name ?? "Scène",
+    movement: movementSummary(result),
+    speeds: speedRows.join(" · ") || "Aucune vitesse disponible",
+    spentPercent: Math.round((Number(result?.spent?.ratio) || 0) * 100),
+    attemptPercent: Number.isFinite(Number(result?.budget?.ratio)) ? Math.round(Number(result.budget.ratio) * 100) : null,
+    totalPercent: Number.isFinite(Number(result?.nextRatio)) ? Math.round(Number(result.nextRatio) * 100) : null,
+    round: activeCombat()?.round ?? null
+  };
+}
+
+function clearPendingApproval(requestId, reason = null) {
+  const pending = pendingMovementApprovals.get(requestId);
+  if (!pending) return null;
+  clearTimeout(pending.timer);
+  pendingMovementApprovals.delete(requestId);
+  if (pendingMovementByToken.get(pending.tokenKey) === requestId) pendingMovementByToken.delete(pending.tokenKey);
+  if (reason) ui.notifications?.warn?.(reason);
+  return pending;
+}
+
+function requestMovementApproval(tokenDoc, movement, operation, result) {
+  const gm = activeGm();
+  if (!gm) {
+    ui.notifications.warn("Le déplacement dépasse la limite et aucun MJ actif ne peut le valider.");
+    return false;
   }
+  const tokenKey = movementApprovalTokenKey(tokenDoc);
+  const existingId = pendingMovementByToken.get(tokenKey);
+  if (existingId && pendingMovementApprovals.has(existingId)) {
+    ui.notifications.info("Une demande de déplacement est déjà en attente pour ce token.");
+    return false;
+  }
+
+  const requestId = randomId();
+  const requesterId = String(game.user?.id ?? "");
+  const packet = {
+    type: MOVEMENT_APPROVAL_REQUEST,
+    requestId,
+    requesterId,
+    gmId: String(gm.id),
+    sceneId: String(tokenDoc?.parent?.id ?? canvas?.scene?.id ?? ""),
+    tokenId: String(tokenDoc?.id ?? ""),
+    actorId: String(tokenDoc?.actor?.id ?? ""),
+    waypoints: movementWaypoints(movement, nativeMovementTarget(tokenDoc, movement)),
+    moveOptions: movementReplayOptions(movement, operation, requestId),
+    summary: approvalSnapshot(tokenDoc, result, requesterId)
+  };
+  const timer = setTimeout(() => {
+    clearPendingApproval(requestId, "La demande de déplacement a expiré sans réponse du MJ.");
+  }, MOVEMENT_APPROVAL_TIMEOUT_MS);
+  pendingMovementApprovals.set(requestId, { requestId, tokenKey, timer, packet });
+  pendingMovementByToken.set(tokenKey, requestId);
+
+  try {
+    game.socket.emit(MOVEMENT_SOCKET_CHANNEL, packet);
+    ui.notifications.info(`Déplacement bloqué : demande envoyée à ${gm.name}.`);
+  } catch (error) {
+    clearPendingApproval(requestId);
+    console.error(`${ADD2E_MOVE_XP_TAG}[TOKEN][APPROVAL_REQUEST_ERROR]`, error);
+    ui.notifications.error("Impossible d’envoyer la demande de déplacement au MJ.");
+  }
+  return false;
+}
+
+function approvalDialogContent(packet) {
+  const summary = packet?.summary ?? {};
+  const total = summary.totalPercent == null ? "impossible" : `${summary.totalPercent} %`;
+  const attempt = summary.attemptPercent == null ? "impossible" : `${summary.attemptPercent} %`;
+  return `<div class="add2e-dialog add2e-movement-approval" style="min-width:430px;display:grid;gap:9px;">
+    <p><b>${escapeHtml(summary.requesterName)}</b> demande à dépasser le mouvement de combat de <b>${escapeHtml(summary.actorName)}</b>.</p>
+    <table style="width:100%;">
+      <tbody>
+        <tr><th style="text-align:left;">Scène</th><td>${escapeHtml(summary.sceneName)}</td></tr>
+        <tr><th style="text-align:left;">Round</th><td>${escapeHtml(summary.round ?? "—")}</td></tr>
+        <tr><th style="text-align:left;">Déplacement tenté</th><td>${escapeHtml(summary.movement)}</td></tr>
+        <tr><th style="text-align:left;">Vitesse résolue</th><td>${escapeHtml(summary.speeds)}</td></tr>
+        <tr><th style="text-align:left;">Déjà consommé</th><td>${escapeHtml(summary.spentPercent)} %</td></tr>
+        <tr><th style="text-align:left;">Coût de ce déplacement</th><td>${escapeHtml(attempt)}</td></tr>
+        <tr><th style="text-align:left;">Total après déplacement</th><td><b>${escapeHtml(total)}</b></td></tr>
+      </tbody>
+    </table>
+    <p style="margin:0;">Autoriser déplacera automatiquement le token. Refuser le laissera à sa position actuelle.</p>
+  </div>`;
+}
+
+async function promptMovementApproval(packet) {
+  const DialogV2 = foundry?.applications?.api?.DialogV2;
+  if (!DialogV2?.wait) throw new Error("DialogV2 est indisponible pour valider le déplacement.");
+  const answer = await DialogV2.wait({
+    window: { title: "Valider un dépassement de mouvement" },
+    modal: true,
+    rejectClose: false,
+    content: approvalDialogContent(packet),
+    buttons: [
+      {
+        action: "approve",
+        label: "Autoriser le déplacement",
+        icon: "fa-solid fa-check",
+        default: true
+      },
+      {
+        action: "deny",
+        label: "Refuser",
+        icon: "fa-solid fa-xmark"
+      }
+    ]
+  });
+  return answer === "approve";
+}
+
+async function executeApprovedMovement(packet) {
+  const scene = game.scenes?.get?.(packet.sceneId) ?? null;
+  const tokenDoc = scene?.tokens?.get?.(packet.tokenId) ?? null;
+  if (!tokenDoc) throw new Error("Le token demandé n’existe plus dans la scène.");
+  if (typeof tokenDoc.move !== "function") throw new Error("L’API native TokenDocument.move est indisponible.");
+  const completed = await tokenDoc.move(packet.waypoints, {
+    ...(packet.moveOptions ?? {}),
+    showRuler: true,
+    add2eIgnoreMovement: true,
+    add2eMovementApprovalId: packet.requestId,
+    add2eMovementRequesterId: packet.requesterId
+  });
+  if (completed === false) throw new Error("Foundry a interrompu le déplacement autorisé.");
+}
+
+function sendMovementApprovalResponse(packet, approved, error = null) {
+  game.socket.emit(MOVEMENT_SOCKET_CHANNEL, {
+    type: MOVEMENT_APPROVAL_RESPONSE,
+    requestId: packet.requestId,
+    requesterId: packet.requesterId,
+    gmId: String(game.user?.id ?? ""),
+    gmName: game.user?.name ?? "MJ",
+    approved: approved === true,
+    error: error ? String(error?.message ?? error) : null
+  });
+}
+
+function handleMovementApprovalRequest(packet) {
+  if (!packet || packet.type !== MOVEMENT_APPROVAL_REQUEST) return;
+  if (!game.user?.isGM || String(packet.gmId ?? "") !== String(game.user.id ?? "")) return;
+  if (handledMovementApprovals.has(packet.requestId)) return;
+  handledMovementApprovals.add(packet.requestId);
+
+  gmApprovalQueue = gmApprovalQueue
+    .catch(() => undefined)
+    .then(async () => {
+      let approved = false;
+      let error = null;
+      try {
+        approved = await promptMovementApproval(packet);
+        if (approved) await executeApprovedMovement(packet);
+      } catch (caught) {
+        error = caught;
+        approved = false;
+        console.error(`${ADD2E_MOVE_XP_TAG}[TOKEN][APPROVAL_GM_ERROR]`, caught);
+        ui.notifications.error(`Validation du déplacement impossible : ${caught.message}`);
+      }
+      sendMovementApprovalResponse(packet, approved, error);
+      setTimeout(() => handledMovementApprovals.delete(packet.requestId), MOVEMENT_APPROVAL_TIMEOUT_MS);
+    });
+}
+
+function handleMovementApprovalResponse(packet) {
+  if (!packet || packet.type !== MOVEMENT_APPROVAL_RESPONSE) return;
+  if (String(packet.requesterId ?? "") !== String(game.user?.id ?? "")) return;
+  const pending = clearPendingApproval(packet.requestId);
+  if (!pending) return;
+  if (packet.approved === true) {
+    ui.notifications.info(`${packet.gmName ?? "Le MJ"} a autorisé le déplacement.`);
+    return;
+  }
+  const detail = packet.error ? ` (${packet.error})` : "";
+  ui.notifications.warn(`${packet.gmName ?? "Le MJ"} a refusé le déplacement${detail}.`);
+}
+
+function installMovementApprovalSocket() {
+  if (globalThis.__ADD2E_MOVEMENT_APPROVAL_SOCKET__ === ADD2E_MOVE_XP_VERSION) return;
+  globalThis.__ADD2E_MOVEMENT_APPROVAL_SOCKET__ = ADD2E_MOVE_XP_VERSION;
+  game.socket.on(MOVEMENT_SOCKET_CHANNEL, packet => {
+    if (packet?.type === MOVEMENT_APPROVAL_REQUEST) handleMovementApprovalRequest(packet);
+    else if (packet?.type === MOVEMENT_APPROVAL_RESPONSE) handleMovementApprovalResponse(packet);
+  });
 }
 
 function rememberCombatMovement(tokenDoc, result) {
@@ -361,10 +559,7 @@ export function validateTokenMovement(tokenDoc, changes, options = {}, movement 
   if (!actor || actor.type !== "personnage") return { allowed: true, result: null };
   const result = computeTokenMovementScale(tokenDoc, changes, { movement, phase: movement ? "pre" : "legacy" });
   if (!result || !result.enforced) return { allowed: true, result };
-  if (result.nextRatio > 1.0001) notifyGmsMovementExceeded(tokenDoc, result, { userId: options?.userId ?? game.user?.id ?? null });
   if (game.user.isGM || !result.status.blocked) return { allowed: true, result };
-  const percent = Number.isFinite(result.nextRatio) ? Math.round(result.nextRatio * 100) : "∞";
-  ui.notifications.warn(`${actor.name} dépasse son mouvement de combat : ${percent} % du round.`);
   return { allowed: false, result };
 }
 
@@ -381,15 +576,21 @@ function clearCombatMovementStates() {
   }
 }
 
+function clearAllPendingApprovals(reason = null) {
+  for (const requestId of [...pendingMovementApprovals.keys()]) clearPendingApproval(requestId, reason);
+  pendingMovementByToken.clear();
+}
+
 export function installMovementTokenControl() {
   if (globalThis.__ADD2E_MOVEMENT_TOKEN_CONTROL__ === ADD2E_MOVE_XP_VERSION) return;
   globalThis.__ADD2E_MOVEMENT_TOKEN_CONTROL__ = ADD2E_MOVE_XP_VERSION;
 
   Hooks.once("ready", async () => {
+    installMovementApprovalSocket();
     log("[READY]", {
       version: ADD2E_MOVE_XP_VERSION,
       display: "foundry-native-token-ruler",
-      combatPolicy: "strict-one-times-resolved-movement-per-round",
+      combatPolicy: "strict-one-times-resolved-movement-per-round-with-gm-approval",
       explorationPolicy: "unrestricted"
     });
     if (!game.user.isGM) return;
@@ -409,7 +610,10 @@ export function installMovementTokenControl() {
       { ...operation, add2eNativeMovement: true, userId: game.user?.id ?? null },
       movement
     );
-    if (!checked.allowed) return false;
+    if (!checked.allowed) {
+      requestMovementApproval(tokenDoc, movement, operation, checked.result);
+      return false;
+    }
     nativeMovementCache.set(nativeMovementCacheKey(tokenDoc, movement), { result: checked.result, target });
     return true;
   });
@@ -428,11 +632,15 @@ export function installMovementTokenControl() {
   Hooks.on("deleteToken", tokenDoc => {
     const prefix = `${tokenDoc?.uuid ?? tokenDoc?.id ?? "token"}:`;
     for (const key of nativeMovementCache.keys()) if (key.startsWith(prefix)) nativeMovementCache.delete(key);
+    const tokenKey = movementApprovalTokenKey(tokenDoc);
+    const requestId = pendingMovementByToken.get(tokenKey);
+    if (requestId) clearPendingApproval(requestId, "La demande a été annulée car le token a été supprimé.");
   });
 
   Hooks.on("deleteCombat", () => {
-    movementAlertCache.clear();
     nativeMovementCache.clear();
+    handledMovementApprovals.clear();
+    clearAllPendingApprovals("La demande a été annulée car le combat est terminé.");
     clearCombatMovementStates();
   });
 }
