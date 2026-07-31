@@ -32,7 +32,7 @@ export {
   ADD2E_ABILITY_BOUNDS
 };
 
-const ADD2E_MODIFIER_CONTEXT_CONDITIONS_VERSION = "2026-07-30-movement-context-conditions-v2";
+const ADD2E_MODIFIER_CONTEXT_CONDITIONS_VERSION = "2026-07-31-movement-context-conditions-v3";
 
 function contextValues(raw) {
   if (raw === undefined || raw === null || raw === "") return [];
@@ -95,10 +95,67 @@ function documentSource(document, fallbackKind) {
   };
 }
 
+function dynamicMovementValue(modifier, context = {}) {
+  const metadata = isObject(modifier?.metadata) ? modifier.metadata : {};
+  const dynamic = isObject(metadata.dynamicValue) ? metadata.dynamicValue : null;
+  const kind = canonicalKey(dynamic?.kind ?? "");
+  if (kind !== "carried-weight-step-penalty") return modifier;
+
+  const carriedWeight = Number(context.carriedWeight ?? context.inventory?.total);
+  const threshold = Number(dynamic.threshold);
+  const step = Number(dynamic.step);
+  const penaltyPerStep = Number(dynamic.penaltyPerStep);
+  const rounding = canonicalKey(dynamic.rounding ?? "floor") || "floor";
+  if (!Number.isFinite(carriedWeight)
+    || !Number.isFinite(threshold)
+    || threshold < 0
+    || !Number.isFinite(step)
+    || step <= 0
+    || !Number.isFinite(penaltyPerStep)) {
+    return {
+      ...modifier,
+      value: 0,
+      metadata: {
+        ...metadata,
+        dynamicValue: {
+          ...dynamic,
+          resolved: false,
+          reason: "invalid-or-missing-weight-context"
+        }
+      }
+    };
+  }
+
+  const excess = Math.max(0, carriedWeight - threshold);
+  const rawSteps = excess / step;
+  const steps = rounding === "ceil"
+    ? Math.ceil(rawSteps)
+    : rounding === "round"
+      ? Math.round(rawSteps)
+      : Math.floor(rawSteps);
+  const value = steps * penaltyPerStep;
+  return {
+    ...modifier,
+    value,
+    metadata: {
+      ...metadata,
+      dynamicValue: {
+        ...dynamic,
+        resolved: true,
+        carriedWeight,
+        excess,
+        steps,
+        value
+      }
+    }
+  };
+}
+
 function installContextConditionExtensions(Engine) {
   const baseCollect = Engine.collect.bind(Engine);
   const baseEvaluate = Engine.evaluateModifierConditions.bind(Engine);
   const baseItemEquipped = Engine.itemEquipped.bind(Engine);
+  const baseResolve = Engine.resolve.bind(Engine);
 
   Object.defineProperties(Engine, {
     collect: {
@@ -220,6 +277,22 @@ function installContextConditionExtensions(Engine) {
         }
 
         return { applicable: true, reason: "applicable" };
+      }
+    },
+
+    resolve: {
+      configurable: true,
+      writable: true,
+      value(actor, query = {}) {
+        const context = {
+          ...(query.context ?? {}),
+          actor,
+          item: query.item ?? query.context?.item,
+          targetActor: query.targetActor ?? query.context?.targetActor
+        };
+        const source = Array.isArray(query.modifiers) ? query.modifiers : this.collect(actor, context);
+        const modifiers = source.map(modifier => dynamicMovementValue(modifier, context));
+        return baseResolve(actor, { ...query, context, modifiers });
       }
     }
   });
