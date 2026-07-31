@@ -33,6 +33,7 @@ import {
 
 const recalculationTimers = new Map();
 const MOVEMENT_DOMAINS = new Set(["movement", "encumbrance"]);
+const ADD2E_ENCUMBRANCE_SETTINGS_VERSION = "2026-07-31-world-encumbrance-settings-v1";
 
 const ITEM_MOVEMENT_FIELDS = Object.freeze([
   "system.mouvement", "system.movement", "system.vitesse", "system.vitesse_deplacement",
@@ -63,6 +64,7 @@ const COMPUTED_MOVEMENT_SCALARS = Object.freeze([
 
 globalThis.ADD2E_MOVE_XP_VERSION = ADD2E_MOVE_XP_VERSION;
 globalThis.ADD2E_MOVEMENT_REFERENCE_POLICY_VERSION = "2026-07-31-preserve-actor-reference-v1";
+globalThis.ADD2E_ENCUMBRANCE_SETTINGS_VERSION = ADD2E_ENCUMBRANCE_SETTINGS_VERSION;
 
 function actorTimerKey(actor) {
   return String(actor?.uuid ?? actor?.id ?? "");
@@ -116,6 +118,33 @@ function queueMovementRecalc(actor, reason = "document-change") {
       .catch(error => console.warn(`${ADD2E_MOVE_XP_TAG}[RECALC]`, { actor: actor.name, reason, error }));
   }, ADD2E_MOVE_XP_RECALC_DELAY_MS);
   recalculationTimers.set(key, timer);
+}
+
+function isPrimaryActiveGm() {
+  if (!game.user?.isGM) return false;
+  const activeGms = Array.from(game.users ?? [])
+    .filter(user => user?.active && user?.isGM)
+    .sort((left, right) => String(left.id ?? "").localeCompare(String(right.id ?? "")));
+  return !activeGms.length || activeGms[0]?.id === game.user.id;
+}
+
+function queueAllMovementRecalcs(reason = "world-setting") {
+  if (!isPrimaryActiveGm()) return;
+  for (const actor of Array.from(game.actors ?? [])) {
+    if (actor?.type === "personnage") queueMovementRecalc(actor, reason);
+  }
+}
+
+function readEncumbranceSettings() {
+  const read = (key, fallback) => {
+    try { return game.settings.get("add2e", key); }
+    catch (_error) { return fallback; }
+  };
+  return {
+    enabled: read("encumbranceEnabled", true) !== false,
+    currencyWeight: read("encumbranceCurrencyWeight", false) === true,
+    version: ADD2E_ENCUMBRANCE_SETTINGS_VERSION
+  };
 }
 
 function flattenedKeys(changes = {}) {
@@ -215,6 +244,24 @@ Hooks.once("init", () => {
     type: Boolean,
     default: true
   });
+  game.settings.register("add2e", "encumbranceEnabled", {
+    name: "ADD2E — Gestion de l’encombrement",
+    hint: "Applique le poids transporté aux déplacements ainsi que les pénalités d’attaque et de classe d’armure. Désactiver cette option neutralise uniquement l’encombrement ; les autres effets de mouvement restent actifs.",
+    scope: "world",
+    config: true,
+    type: Boolean,
+    default: true,
+    onChange: () => queueAllMovementRecalcs("setting:encumbranceEnabled")
+  });
+  game.settings.register("add2e", "encumbranceCurrencyWeight", {
+    name: "ADD2E — Compter la monnaie dans l’encombrement",
+    hint: "Quand cette option est active, chaque pièce transportée compte pour une unité d’encombrement, quelle que soit sa valeur. Désactivée, la monnaie ne modifie pas les paliers de charge.",
+    scope: "world",
+    config: true,
+    type: Boolean,
+    default: false,
+    onChange: () => queueAllMovementRecalcs("setting:encumbranceCurrencyWeight")
+  });
   game.settings.register("add2e", "enforceTokenMovement", {
     name: "ADD2E — Contrôle canonique du déplacement",
     hint: "Clé de compatibilité interne. En combat, le contrôleur canonique est toujours actif et les dépassements des joueurs exigent une validation du MJ.",
@@ -224,6 +271,8 @@ Hooks.once("init", () => {
     default: true
   });
 });
+
+Hooks.once("ready", () => queueAllMovementRecalcs("ready:encumbrance-settings"));
 
 Hooks.on("preUpdateActor", (actor, changes, options = {}) => {
   const computedMovementWrite = isComputedMovementWrite(options);
@@ -322,3 +371,4 @@ globalThis.add2ePromptXp = promptXp;
 globalThis.add2eMinXpForLevel = minXpForLevel;
 globalThis.add2eValidateTokenMovement = validateTokenMovement;
 globalThis.add2eComputeTokenMovementScale = computeTokenMovementScale;
+globalThis.add2eGetEncumbranceSettings = readEncumbranceSettings;
