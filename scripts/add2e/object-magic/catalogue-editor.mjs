@@ -110,33 +110,163 @@ function add2eMagicCatalogueJsonValue(value) {
   catch (_error) { return String(value); }
 }
 
-function add2eMagicCatalogueParameterControl(name, schema = {}, currentValue) {
+const ADD2E_MAGIC_PARAMETER_LABELS = Object.freeze({
+  movement_mode: "Mode de déplacement",
+  speed: "Vitesse",
+  ignore_encumbrance: "Ignorer l’encombrement",
+  threshold: "Seuil",
+  step: "Valeur d’un palier",
+  penalty_per_step: "Pénalité par palier",
+  step_rounding: "Calcul des paliers",
+  weight_unit: "Unité de charge",
+  duration: "Durée",
+  range: "Portée",
+  distance: "Distance",
+  capacity: "Capacité",
+  charge_cost: "Coût en charges",
+  caster_level: "Niveau de lanceur",
+  spell_uuid: "Sort lié",
+  spell_name: "Nom du sort",
+  target: "Cible",
+  targets: "Cibles",
+  formula: "Formule",
+  amount: "Valeur",
+  value: "Valeur",
+  multiplier: "Multiplicateur",
+  chance: "Probabilité",
+  percentage: "Pourcentage",
+  save: "Jet de sauvegarde",
+  affects_carried: "Affecte l’équipement transporté",
+  activation_time: "Temps d’activation",
+  command_words: "Mots de commande"
+});
+
+const ADD2E_MAGIC_OPTION_LABELS = Object.freeze({
+  ground: "Marche",
+  flight: "Vol",
+  fly: "Vol",
+  swim: "Nage",
+  underwater: "Déplacement sous-marin",
+  ascent: "Ascension",
+  descent: "Descente",
+  vertical: "Déplacement vertical",
+  climb: "Escalade",
+  levitate: "Lévitation",
+  water_walk: "Marche sur l’eau",
+  air_walk: "Marche dans les airs",
+  burrow: "Fouissement",
+  floor: "Paliers complets uniquement",
+  ceil: "Toute fraction compte comme un palier",
+  round: "Arrondi au palier le plus proche",
+  gp: "Pièces d’or (po)",
+  self: "Soi-même",
+  creature: "Une créature",
+  touch: "Au contact",
+  yes: "Oui",
+  no: "Non"
+});
+
+function add2eMagicCatalogueHumanize(value) {
+  const text = String(value ?? "")
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/[_-]+/g, " ")
+    .trim();
+  if (!text) return "Paramètre";
+  return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+}
+
+export function add2eMagicCatalogueParameterLabel(name, schema = {}) {
+  const explicit = String(schema.label ?? schema.title ?? "").trim();
+  if (explicit) return explicit;
+  return ADD2E_MAGIC_PARAMETER_LABELS[add2eObjectMagicNormalizeTag(name)] ?? add2eMagicCatalogueHumanize(name);
+}
+
+function add2eMagicCatalogueParameterDescription(name, schema = {}, type = "") {
+  const explicit = String(schema.description ?? schema.help ?? schema.hint ?? "").trim();
+  if (explicit) return explicit;
+  if (type === "boolean") return `Cochez cette option pour activer « ${add2eMagicCatalogueParameterLabel(name, schema)} ».`;
+  if (type === "choice") return "Choisissez la valeur correspondant à la règle de l’objet.";
+  if (type === "choice_list") return "Sélectionnez une ou plusieurs valeurs correspondant à la règle de l’objet.";
+  if (["integer", "number", "percentage", "percentage_per_use"].includes(type)) return "Saisissez la valeur numérique indiquée par la règle de l’objet.";
+  if (["tag_list", "string_list", "integer_list"].includes(type)) return "Saisissez plusieurs valeurs séparées par des virgules.";
+  if (["object", "effect_list", "effect_table", "spell_list", "form_list", "save_rule", "percentage_or_save", "percentage_or_table", "number_or_table", "weight_or_table", "formula_or_table"].includes(type)) return "Saisissez une valeur simple ou une structure JSON conforme à la règle.";
+  return "Saisissez la valeur demandée par la règle de ce pouvoir.";
+}
+
+function add2eMagicCatalogueParameterPlaceholder(schema = {}, fallback = "") {
+  return String(schema.placeholder ?? schema.example ?? fallback ?? "").trim();
+}
+
+function add2eMagicCatalogueParameterUnit(schema = {}) {
+  return String(schema.unit ?? schema.units ?? "").trim();
+}
+
+function add2eMagicCatalogueOptionLabel(entry, schema = {}) {
+  const key = String(entry ?? "");
+  const explicit = schema.optionLabels?.[key] ?? schema.labels?.[key];
+  if (explicit !== undefined && explicit !== null && String(explicit).trim()) return String(explicit).trim();
+  return ADD2E_MAGIC_OPTION_LABELS[add2eObjectMagicNormalizeTag(key)] ?? add2eMagicCatalogueHumanize(key);
+}
+
+function add2eMagicCatalogueParameterLimits(schema = {}) {
+  const parts = [];
+  if (Number.isFinite(Number(schema.min))) parts.push(`minimum ${Number(schema.min)}`);
+  if (Number.isFinite(Number(schema.max))) parts.push(`maximum ${Number(schema.max)}`);
+  return parts.join(" · ");
+}
+
+function add2eMagicCatalogueControlShell(name, schema, type, controlHtml) {
+  const label = add2eMagicCatalogueParameterLabel(name, schema);
+  const required = schema.required === true ? ' <span style="color:#a40000" aria-label="obligatoire">*</span>' : "";
+  const description = add2eMagicCatalogueParameterDescription(name, schema, type);
+  const unit = add2eMagicCatalogueParameterUnit(schema);
+  const limits = add2eMagicCatalogueParameterLimits(schema);
+  return `<section class="add2e-magic-parameter" style="border:1px solid var(--color-border-light-primary,#a98b52);border-radius:8px;padding:10px;display:grid;gap:6px;">
+    <label style="font-weight:700;display:flex;gap:6px;align-items:center;flex-wrap:wrap;" for="add2e-power-${add2eObjectMagicEscapeHtml(name)}">
+      <span>${add2eObjectMagicEscapeHtml(label)}${required}</span>
+      ${unit ? `<span style="font-size:.8em;font-weight:600;opacity:.72;">(${add2eObjectMagicEscapeHtml(unit)})</span>` : ""}
+    </label>
+    <div style="font-size:.88em;line-height:1.35;opacity:.82;">${add2eObjectMagicEscapeHtml(description)}</div>
+    ${controlHtml}
+    ${limits ? `<small style="opacity:.7;">${add2eObjectMagicEscapeHtml(limits)}</small>` : ""}
+  </section>`;
+}
+
+export function add2eMagicCatalogueParameterControl(name, schema = {}, currentValue) {
   const type = add2eObjectMagicNormalizeTag(schema.type);
   const value = add2eMagicCatalogueParameterInitial(schema, currentValue);
   const escapedName = add2eObjectMagicEscapeHtml(name);
-  const required = schema.required === true ? ' <span style="color:#a40000">*</span>' : "";
-  const label = `${add2eObjectMagicEscapeHtml(name)}${required}`;
-  const common = `name="${escapedName}" data-add2e-parameter-type="${add2eObjectMagicEscapeHtml(type)}"`;
+  const controlId = `add2e-power-${escapedName}`;
+  const common = `id="${controlId}" name="${escapedName}" data-add2e-parameter-type="${add2eObjectMagicEscapeHtml(type)}"`;
+  let html = "";
+
   if (type === "boolean") {
-    return `<label class="form-group" style="display:flex;align-items:center;gap:8px;"><input ${common} type="checkbox" ${value === true ? "checked" : ""}> <span>${label}</span></label>`;
+    html = `<label style="display:flex;align-items:center;gap:9px;padding:6px 0;font-weight:600;"><input ${common} type="checkbox" ${value === true ? "checked" : ""}> <span>${value === true ? "Option activée" : "Activer cette option"}</span></label>`;
+    return add2eMagicCatalogueControlShell(name, schema, type, html);
   }
   if (type === "fixed" || type === "fixed_list") {
-    return `<div class="form-group"><label>${label}</label><input ${common} type="hidden" value="${add2eObjectMagicEscapeHtml(add2eMagicCatalogueJsonValue(value))}"><div style="padding:6px 8px;border:1px solid var(--color-border-light-primary,#999);border-radius:4px;opacity:.85;">${add2eObjectMagicEscapeHtml(add2eMagicCatalogueJsonValue(value) || "Valeur imposée")}</div></div>`;
+    const display = add2eMagicCatalogueJsonValue(value) || "Valeur imposée";
+    html = `<input ${common} type="hidden" value="${add2eObjectMagicEscapeHtml(display)}"><div style="padding:7px 9px;border:1px solid var(--color-border-light-primary,#999);border-radius:5px;opacity:.9;">${add2eObjectMagicEscapeHtml(display)}</div>`;
+    return add2eMagicCatalogueControlShell(name, schema, type, html);
   }
   if (type === "choice" && Array.isArray(schema.values)) {
-    const options = schema.values.map(entry => `<option value="${add2eObjectMagicEscapeHtml(entry)}"${String(entry) === String(value) ? " selected" : ""}>${add2eObjectMagicEscapeHtml(entry)}</option>`).join("");
-    return `<div class="form-group"><label>${label}</label><select ${common}>${options}</select></div>`;
+    const options = schema.values.map(entry => `<option value="${add2eObjectMagicEscapeHtml(entry)}"${String(entry) === String(value) ? " selected" : ""}>${add2eObjectMagicEscapeHtml(add2eMagicCatalogueOptionLabel(entry, schema))}</option>`).join("");
+    html = `<select ${common}>${options}</select>`;
+    return add2eMagicCatalogueControlShell(name, schema, type, html);
   }
   if (type === "choice_list" && Array.isArray(schema.values)) {
     const selectedValues = new Set(add2eObjectMagicToArray(value).map(String));
-    const options = schema.values.map(entry => `<option value="${add2eObjectMagicEscapeHtml(entry)}"${selectedValues.has(String(entry)) ? " selected" : ""}>${add2eObjectMagicEscapeHtml(entry)}</option>`).join("");
-    return `<div class="form-group"><label>${label}</label><select ${common} multiple size="${Math.min(7, Math.max(3, schema.values.length))}">${options}</select></div>`;
+    const options = schema.values.map(entry => `<option value="${add2eObjectMagicEscapeHtml(entry)}"${selectedValues.has(String(entry)) ? " selected" : ""}>${add2eObjectMagicEscapeHtml(add2eMagicCatalogueOptionLabel(entry, schema))}</option>`).join("");
+    html = `<select ${common} multiple size="${Math.min(7, Math.max(3, schema.values.length))}">${options}</select>`;
+    return add2eMagicCatalogueControlShell(name, schema, type, html);
   }
   const numericTypes = new Set(["integer", "number", "percentage", "percentage_per_use"]);
   if (numericTypes.has(type)) {
     const min = Number.isFinite(Number(schema.min)) ? ` min="${Number(schema.min)}"` : "";
     const max = Number.isFinite(Number(schema.max)) ? ` max="${Number(schema.max)}"` : "";
-    return `<div class="form-group"><label>${label}</label><input ${common} type="number" step="${type === "integer" ? "1" : "any"}"${min}${max} value="${add2eObjectMagicEscapeHtml(value ?? "")}"></div>`;
+    const placeholder = add2eMagicCatalogueParameterPlaceholder(schema);
+    html = `<input ${common} type="number" step="${type === "integer" ? "1" : "any"}"${min}${max}${placeholder ? ` placeholder="${add2eObjectMagicEscapeHtml(placeholder)}"` : ""} value="${add2eObjectMagicEscapeHtml(value ?? "")}">`;
+    return add2eMagicCatalogueControlShell(name, schema, type, html);
   }
   const jsonTypes = new Set([
     "object", "effect_list", "effect_table", "spell_list", "form_list", "save_rule",
@@ -144,13 +274,19 @@ function add2eMagicCatalogueParameterControl(name, schema = {}, currentValue) {
     "formula_or_table"
   ]);
   if (jsonTypes.has(type)) {
-    return `<div class="form-group"><label>${label}</label><textarea ${common} rows="3" placeholder="Valeur ou JSON">${add2eObjectMagicEscapeHtml(add2eMagicCatalogueJsonValue(value))}</textarea></div>`;
+    const placeholder = add2eMagicCatalogueParameterPlaceholder(schema, "Valeur ou JSON");
+    html = `<textarea ${common} rows="3" placeholder="${add2eObjectMagicEscapeHtml(placeholder)}">${add2eObjectMagicEscapeHtml(add2eMagicCatalogueJsonValue(value))}</textarea>`;
+    return add2eMagicCatalogueControlShell(name, schema, type, html);
   }
   const listTypes = new Set(["tag_list", "string_list", "integer_list"]);
   if (listTypes.has(type)) {
-    return `<div class="form-group"><label>${label}</label><input ${common} type="text" value="${add2eObjectMagicEscapeHtml(add2eObjectMagicToArray(value).join(", "))}" placeholder="Valeurs séparées par des virgules"></div>`;
+    const placeholder = add2eMagicCatalogueParameterPlaceholder(schema, "Valeurs séparées par des virgules");
+    html = `<input ${common} type="text" value="${add2eObjectMagicEscapeHtml(add2eObjectMagicToArray(value).join(", "))}" placeholder="${add2eObjectMagicEscapeHtml(placeholder)}">`;
+    return add2eMagicCatalogueControlShell(name, schema, type, html);
   }
-  return `<div class="form-group"><label>${label}</label><input ${common} type="text" value="${add2eObjectMagicEscapeHtml(add2eMagicCatalogueJsonValue(value))}"></div>`;
+  const placeholder = add2eMagicCatalogueParameterPlaceholder(schema);
+  html = `<input ${common} type="text" value="${add2eObjectMagicEscapeHtml(add2eMagicCatalogueJsonValue(value))}"${placeholder ? ` placeholder="${add2eObjectMagicEscapeHtml(placeholder)}"` : ""}>`;
+  return add2eMagicCatalogueControlShell(name, schema, type, html);
 }
 
 function add2eMagicCatalogueReadParameter(input, schema = {}) {
@@ -181,24 +317,27 @@ function add2eMagicCatalogueReadParameter(input, schema = {}) {
   return raw;
 }
 
-function add2eMagicCatalogueValidateParameters(power, parameters) {
+export function add2eMagicCatalogueValidateParameters(power, parameters) {
   const missing = [];
   for (const [name, schema] of Object.entries(power.parameters ?? {})) {
     if (schema?.required !== true) continue;
     const value = parameters[name];
-    if (value === undefined || value === null || value === "" || (Array.isArray(value) && !value.length)) missing.push(name);
+    if (value === undefined || value === null || value === "" || (Array.isArray(value) && !value.length)) {
+      missing.push(add2eMagicCatalogueParameterLabel(name, schema));
+    }
   }
   const alternatives = add2eObjectMagicToArray(power.validation?.requiresOneOf);
   if (alternatives.length && !alternatives.some(name => {
     const value = parameters[name];
     return value !== undefined && value !== null && value !== "" && (!Array.isArray(value) || value.length);
   })) {
-    missing.push(`un des paramètres suivants : ${alternatives.join(", ")}`);
+    const labels = alternatives.map(name => add2eMagicCatalogueParameterLabel(name, power.parameters?.[name] ?? {}));
+    missing.push(`un des champs suivants : ${labels.join(", ")}`);
   }
   return missing;
 }
 
-async function add2eMagicCatalogueConfigurePower(power, existingParameters = {}) {
+export async function add2eMagicCatalogueConfigurePower(power, existingParameters = {}) {
   const DialogV2 = foundry?.applications?.api?.DialogV2;
   if (!DialogV2?.wait) {
     ui.notifications.error("DialogV2 est introuvable.");
@@ -209,19 +348,21 @@ async function add2eMagicCatalogueConfigurePower(power, existingParameters = {})
   const controls = parameterEntries.map(([name, schema]) =>
     add2eMagicCatalogueParameterControl(name, schema, existingParameters?.[name])
   ).join("");
+  const summary = String(power.description ?? power.summary ?? power.help ?? "").trim();
   const result = await DialogV2.wait({
-    window: { title: `Configurer — ${power.label}` },
+    window: { title: `Configurer — ${power.label}`, classes: ["add2e-magic-power-configuration-window"] },
     modal: true,
     rejectClose: false,
-    content: `<div class="add2e-dialog add2e-magic-power-parameter-form" style="min-width:560px;padding:10px;display:grid;gap:8px;">
+    content: `<div class="add2e-dialog add2e-magic-power-parameter-form" style="min-width:620px;max-width:760px;padding:12px;display:grid;gap:10px;">
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-        <strong>${add2eObjectMagicEscapeHtml(power.label)}</strong>
+        <strong style="font-size:1.06em;">${add2eObjectMagicEscapeHtml(power.label)}</strong>
         <span style="font-size:.8em;padding:2px 7px;border:1px solid currentColor;border-radius:999px;">${add2eObjectMagicEscapeHtml(add2eMagicCatalogueCategoryLabel(power.category))}</span>
         <span style="font-size:.8em;padding:2px 7px;border:1px solid currentColor;border-radius:999px;">${add2eObjectMagicEscapeHtml(add2eMagicCatalogueAutomationLabel(power.automation))}</span>
       </div>
-      <p style="margin:0;opacity:.8;">Source : ${add2eObjectMagicEscapeHtml(power.source?.section ?? "Guide du Maître")}${power.source?.page ? `, page ${add2eObjectMagicEscapeHtml(power.source.page)}` : ""}</p>
+      ${summary ? `<p style="margin:0;line-height:1.4;">${add2eObjectMagicEscapeHtml(summary)}</p>` : ""}
+      <p style="margin:0;opacity:.78;">Source : ${add2eObjectMagicEscapeHtml(power.source?.section ?? "Guide du Maître")}${power.source?.page ? `, page ${add2eObjectMagicEscapeHtml(power.source.page)}` : ""}</p>
       ${controls}
-      <p style="margin:0;font-size:.82em;opacity:.75;">Les champs complexes acceptent une valeur simple ou du JSON. Les paramètres marqués d’un astérisque sont obligatoires.</p>
+      <p style="margin:0;font-size:.82em;opacity:.75;">Les champs marqués d’un astérisque sont obligatoires.</p>
     </div>`,
     buttons: [
       {
@@ -241,7 +382,7 @@ async function add2eMagicCatalogueConfigurePower(power, existingParameters = {})
           }
           const missing = add2eMagicCatalogueValidateParameters(power, parameters);
           if (missing.length) {
-            ui.notifications.warn(`Paramètres obligatoires manquants : ${missing.join(", ")}.`);
+            ui.notifications.warn(`Champs obligatoires manquants : ${missing.join(", ")}.`);
             return false;
           }
           return parameters;
@@ -300,16 +441,21 @@ export function add2eMagicCatalogueRenderAvailable(form, state) {
   if (count) count.textContent = `${powers.length} pouvoir${powers.length > 1 ? "s" : ""} compatible${powers.length > 1 ? "s" : ""}`;
 }
 
-function add2eMagicCatalogueParameterSummary(parameters = {}) {
+function add2eMagicCatalogueParameterSummary(power, parameters = {}) {
   const entries = Object.entries(parameters);
   if (!entries.length) return "Aucun paramètre";
   return entries.map(([key, value]) => {
+    const schema = power?.parameters?.[key] ?? {};
+    const label = add2eMagicCatalogueParameterLabel(key, schema);
     const display = Array.isArray(value)
-      ? value.join(", ")
+      ? value.map(entry => add2eMagicCatalogueOptionLabel(entry, schema)).join(", ")
       : typeof value === "object"
         ? JSON.stringify(value)
-        : String(value);
-    return `${key}: ${display}`;
+        : schema?.optionLabels?.[String(value)] !== undefined || ADD2E_MAGIC_OPTION_LABELS[add2eObjectMagicNormalizeTag(value)]
+          ? add2eMagicCatalogueOptionLabel(value, schema)
+          : String(value);
+    const unit = add2eMagicCatalogueParameterUnit(schema);
+    return `${label} : ${display}${unit && value !== "" ? ` ${unit}` : ""}`;
   }).join(" · ");
 }
 
@@ -326,7 +472,7 @@ function add2eMagicCatalogueRenderSelected(form, state) {
           <button type="button" data-action="edit-catalogue-power" data-power-uid="${add2eObjectMagicEscapeHtml(entry.uid)}" title="Configurer"><i class="fa-solid fa-pen"></i></button>
           <button type="button" data-action="remove-catalogue-power" data-power-uid="${add2eObjectMagicEscapeHtml(entry.uid)}" title="Retirer"><i class="fa-solid fa-trash"></i></button>
         </div>
-        <small style="opacity:.8;overflow-wrap:anywhere;">${add2eObjectMagicEscapeHtml(add2eMagicCatalogueParameterSummary(entry.parameters))}</small>
+        <small style="opacity:.8;overflow-wrap:anywhere;">${add2eObjectMagicEscapeHtml(add2eMagicCatalogueParameterSummary(entry.power, entry.parameters))}</small>
       </article>`).join("")
     : `<p style="margin:0;opacity:.72;text-align:center;padding:7px;">Aucun pouvoir sélectionné.</p>`;
   const count = section.querySelector('[data-add2e-selected-count]');
@@ -481,3 +627,8 @@ export function add2eMagicCatalogueAttachToItemData(itemData, powers, catalogue)
     powerIds: (powers ?? []).map(power => power.catalogueId)
   };
 }
+
+globalThis.add2eMagicCatalogueConfigurePower = add2eMagicCatalogueConfigurePower;
+globalThis.add2eMagicCatalogueParameterControl = add2eMagicCatalogueParameterControl;
+globalThis.add2eMagicCatalogueParameterLabel = add2eMagicCatalogueParameterLabel;
+globalThis.add2eMagicCatalogueValidateParameters = add2eMagicCatalogueValidateParameters;
