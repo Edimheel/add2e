@@ -32,7 +32,7 @@ export {
   ADD2E_ABILITY_BOUNDS
 };
 
-const ADD2E_MODIFIER_CONTEXT_CONDITIONS_VERSION = "2026-07-31-movement-context-conditions-v3";
+const ADD2E_MODIFIER_CONTEXT_CONDITIONS_VERSION = "2026-07-31-encumbrance-combat-conditions-v4";
 
 function contextValues(raw) {
   if (raw === undefined || raw === null || raw === "") return [];
@@ -149,6 +149,62 @@ function dynamicMovementValue(modifier, context = {}) {
       }
     }
   };
+}
+
+function canonicalEncumbranceCombatModifier(Engine, actor, query = {}, context = {}) {
+  if (!actor || String(actor.type ?? "").toLowerCase() !== "personnage") return null;
+  const domain = canonicalKey(query.domain);
+  const target = canonicalKey(query.target);
+  const isAttack = domain === "attack" && ["toucher", "hit", "attack", "attaque"].includes(target);
+  const isArmorClass = domain === "armor-class" && ["total", "all"].includes(target);
+  if (!isAttack && !isArmorClass) return null;
+
+  const computeMovement = globalThis.add2eComputeMovement;
+  if (typeof computeMovement !== "function") {
+    if (globalThis.game?.ready) {
+      throw new Error("Le domaine canonique movement/encumbrance n’est pas chargé pour la résolution de combat.");
+    }
+    return null;
+  }
+
+  const movement = computeMovement(actor, {
+    token: context.token,
+    scene: context.scene,
+    terrain: context.terrain,
+    environment: context.environment ?? context.milieu,
+    transformation: context.transformation ?? context.form ?? context.forme,
+    size: context.size ?? context.taille,
+    movementMode: context.movementMode ?? "ground",
+    consumer: isAttack ? "attack-encumbrance" : "armor-class-encumbrance"
+  });
+  const value = Number(isAttack ? movement?.attaquePenalite : movement?.classeArmurePenalite) || 0;
+  if (!value) return null;
+
+  const label = `Pénalité d’encombrement — ${movement?.label ?? movement?.categorie ?? "charge"}`;
+  return Engine.createModifier({
+    id: `${actor.id}:encumbrance:${domain}:${target}`,
+    domain,
+    target: isAttack ? "toucher" : "total",
+    operation: "add",
+    value,
+    priority: 120,
+    stacking: { mode: "replace", group: `encumbrance:${domain}:${target}` },
+    source: {
+      kind: "encumbrance",
+      id: `${actor.id}:encumbrance`,
+      uuid: actor.uuid ?? "",
+      name: movement?.label ?? "Encombrement"
+    },
+    metadata: {
+      label,
+      producer: "canonical-encumbrance",
+      category: movement?.categorie ?? null,
+      carriedWeight: movement?.poidsPo ?? movement?.poids ?? null,
+      movement: movement?.actuel ?? null,
+      attackPenalty: movement?.attaquePenalite ?? 0,
+      armorClassPenalty: movement?.classeArmurePenalite ?? 0
+    }
+  });
 }
 
 function installContextConditionExtensions(Engine) {
@@ -290,7 +346,13 @@ function installContextConditionExtensions(Engine) {
           item: query.item ?? query.context?.item,
           targetActor: query.targetActor ?? query.context?.targetActor
         };
-        const source = Array.isArray(query.modifiers) ? query.modifiers : this.collect(actor, context);
+        const source = [
+          ...(Array.isArray(query.modifiers) ? query.modifiers : this.collect(actor, context))
+        ];
+        const encumbranceModifier = canonicalEncumbranceCombatModifier(this, actor, query, context);
+        if (encumbranceModifier && !source.some(modifier => String(modifier?.id ?? "") === String(encumbranceModifier.id))) {
+          source.push(encumbranceModifier);
+        }
         const modifiers = source.map(modifier => dynamicMovementValue(modifier, context));
         return baseResolve(actor, { ...query, context, modifiers });
       }
