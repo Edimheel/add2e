@@ -5,12 +5,11 @@ import {
   ADD2E_MOVE_XP_VERSION,
   ADD2E_MOVE_XP_TAG,
   computeMovement,
-  recalc,
   log,
   norm
 } from "./17a-movement-xp-domain.mjs";
 
-const CONTROL_VERSION = "2026-07-31-native-ruler-gm-approval-v7";
+const CONTROL_VERSION = "2026-07-31-native-ruler-gm-approval-v8";
 const STATE_FLAG = "movementTurnState";
 const SOCKET = "system.add2e";
 const REQUEST = "ADD2E_MOVEMENT_APPROVAL_REQUEST";
@@ -843,7 +842,7 @@ export function installMovementTokenControl() {
     clearCombatStates();
   });
 
-  Hooks.once("ready", async () => {
+  Hooks.once("ready", () => {
     runtimeState.ready = true;
     installSocket();
     log("[READY]", {
@@ -856,11 +855,5 @@ export function installMovementTokenControl() {
       socketInstalled: runtimeState.socketInstalled
     });
     console.info(`${ADD2E_MOVE_XP_TAG}[TOKEN][CONTROLLER_READY]`, movementDiagnostics());
-
-    if (!game.user?.isGM) return;
-    for (const actor of game.actors?.filter(actor => actor.type === "personnage") ?? []) {
-      await recalc(actor, { mode: "movement" })
-        .catch(error => console.warn(`${ADD2E_MOVE_XP_TAG}[READY][SKIP]`, actor?.name, error));
-    }
   });
 }
