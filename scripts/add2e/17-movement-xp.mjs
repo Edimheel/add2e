@@ -174,10 +174,10 @@ Hooks.once("init", () => {
     default: true
   });
   game.settings.register("add2e", "enforceTokenMovement", {
-    name: "ADD2E — Contrôler le déplacement des tokens",
-    hint: "Bloque les joueurs qui dépassent leur mouvement. Le MJ peut se déplacer librement, reçoit un avertissement et voit l'échelle vert / orange / rouge.",
+    name: "ADD2E — Contrôle canonique du déplacement",
+    hint: "Clé de compatibilité interne. En combat, le contrôleur canonique est toujours actif et les dépassements des joueurs exigent une validation du MJ.",
     scope: "world",
-    config: true,
+    config: false,
     type: Boolean,
     default: true
   });
