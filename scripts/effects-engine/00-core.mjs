@@ -32,8 +32,102 @@ export {
   ADD2E_ABILITY_BOUNDS
 };
 
-const ADD2E_MODIFIER_CONTEXT_CONDITIONS_VERSION = "2026-07-31-actor-movement-reference-v5";
+const ADD2E_MODIFIER_CONTEXT_CONDITIONS_VERSION = "2026-07-31-encumbrance-settings-v6";
 const ADD2E_MOVEMENT_METRES_PER_RATE = 3;
+const ADD2E_ENCUMBRANCE_SETTINGS_VERSION = "2026-07-31-world-encumbrance-settings-v1";
+
+function add2eWorldSetting(key, fallback) {
+  try {
+    const settings = globalThis.game?.settings;
+    if (!settings?.get) return fallback;
+    return settings.get("add2e", key);
+  } catch (_error) {
+    return fallback;
+  }
+}
+
+function encumbranceEnabled() {
+  return add2eWorldSetting("encumbranceEnabled", true) !== false;
+}
+
+function currencyEncumbranceEnabled() {
+  return add2eWorldSetting("encumbranceCurrencyWeight", false) === true;
+}
+
+function actorMoneyQuantity(actor) {
+  const money = actor?.flags?.add2e?.monnaie ?? {};
+  return ["pp", "po", "pe", "pa", "pc"].reduce((total, key) => {
+    const value = Number(money?.[key]);
+    return total + (Number.isFinite(value) && value > 0 ? Math.floor(value) : 0);
+  }, 0);
+}
+
+function disabledEncumbranceResolution(query = {}) {
+  const domain = "encumbrance";
+  const target = canonicalKey(query.target);
+  const baseValue = Number(query.base ?? 0);
+  const base = Number.isFinite(baseValue) ? baseValue : 0;
+  const total = target === "movement-multiplier"
+    ? 1
+    : target.startsWith("capacity-")
+      ? base
+      : 0;
+  return {
+    domain,
+    target,
+    base,
+    additionsTotal: 0,
+    multiplierTotal: 1,
+    override: null,
+    total,
+    applied: [],
+    rejected: [],
+    stages: {
+      afterOverride: total,
+      afterAdditions: total,
+      afterMultipliers: total,
+      afterBounds: total
+    },
+    disabled: true,
+    policy: "world-setting:encumbranceEnabled"
+  };
+}
+
+function canonicalCurrencyEncumbranceModifier(Engine, actor, query = {}) {
+  if (!actor || currencyEncumbranceEnabled()) return null;
+  const domain = canonicalKey(query.domain);
+  const target = canonicalKey(query.target);
+  if (domain !== "encumbrance" || target !== "carried-weight") return null;
+
+  const quantity = actorMoneyQuantity(actor);
+  if (!(quantity > 0)) return null;
+  const base = Math.max(0, Number(query.base) || 0);
+  const excluded = Math.min(base, quantity);
+  if (!(excluded > 0)) return null;
+
+  return Engine.createModifier({
+    id: `${actor.id}:encumbrance:currency-policy`,
+    domain: "encumbrance",
+    target: "carried-weight",
+    operation: "add",
+    value: -excluded,
+    priority: 5,
+    stacking: { mode: "replace", group: "encumbrance-currency-policy" },
+    source: {
+      kind: "system-setting",
+      id: "encumbranceCurrencyWeight",
+      uuid: "",
+      name: "Monnaie ignorée pour l’encombrement"
+    },
+    metadata: {
+      label: "Monnaie ignorée pour l’encombrement",
+      producer: "encumbrance-currency-policy",
+      coinQuantity: quantity,
+      excludedWeight: excluded,
+      setting: "add2e.encumbranceCurrencyWeight"
+    }
+  });
+}
 
 function contextValues(raw) {
   if (raw === undefined || raw === null || raw === "") return [];
@@ -203,6 +297,7 @@ function canonicalActorMovementReferenceModifier(Engine, actor, query = {}, cont
 }
 
 function canonicalEncumbranceCombatModifier(Engine, actor, query = {}, context = {}) {
+  if (!encumbranceEnabled()) return null;
   if (!actor || String(actor.type ?? "").toLowerCase() !== "personnage") return null;
   const domain = canonicalKey(query.domain);
   const target = canonicalKey(query.target);
@@ -397,9 +492,18 @@ function installContextConditionExtensions(Engine) {
           item: query.item ?? query.context?.item,
           targetActor: query.targetActor ?? query.context?.targetActor
         };
+        const domain = canonicalKey(query.domain);
+        if (domain === "encumbrance" && !encumbranceEnabled()) {
+          return disabledEncumbranceResolution(query);
+        }
+
         const source = [
           ...(Array.isArray(query.modifiers) ? query.modifiers : this.collect(actor, context))
         ];
+        const currencyPolicy = canonicalCurrencyEncumbranceModifier(this, actor, query);
+        if (currencyPolicy && !source.some(modifier => String(modifier?.id ?? "") === String(currencyPolicy.id))) {
+          source.push(currencyPolicy);
+        }
         const movementReference = canonicalActorMovementReferenceModifier(this, actor, query, context);
         if (movementReference && !source.some(modifier => String(modifier?.id ?? "") === String(movementReference.id))) {
           source.push(movementReference);
@@ -415,6 +519,7 @@ function installContextConditionExtensions(Engine) {
   });
 
   globalThis.ADD2E_MODIFIER_CONTEXT_CONDITIONS_VERSION = ADD2E_MODIFIER_CONTEXT_CONDITIONS_VERSION;
+  globalThis.ADD2E_ENCUMBRANCE_SETTINGS_VERSION = ADD2E_ENCUMBRANCE_SETTINGS_VERSION;
 }
 
 export function installEffectsEngineCore(Engine) {
