@@ -1,13 +1,11 @@
 /* ADD2E — Druide : Forme animale. ApplicationV2/DialogV2, V13/V14/V15.
- * L'effet actif n'a volontairement aucune durée : la forme dure jusqu'au retour volontaire.
+ * La forme reste active jusqu'au retour volontaire ou à la suppression de son effet.
  */
-const ADD2E_DRUIDE_FORME_ANIMALE_VERSION = "2026-07-31-canonical-movement-v3";
+const ADD2E_DRUIDE_FORME_ANIMALE_VERSION = "2026-08-01-canonical-document-transform-v4";
 const SCOPE = "druid-animal-form";
+const TRANSFORM_GROUP = "physical-form";
 const DAY_ROUNDS = 1440;
-const STATE_FLAG = "capabilityTransformations";
 const USAGE_FLAG = "capabilityUsage";
-const SOCKET = "system.add2e";
-const GM_OPERATION = "ADD2E_GM_OPERATION";
 
 const FORMS = Object.freeze([
   {
@@ -145,133 +143,62 @@ const hp = currentActor => {
   };
 };
 
-const effects = currentActor => Array.from(currentActor?.effects ?? []).filter(effect => (
-  effect?.flags?.add2e?.capabilityTransformation?.sourceKey === SCOPE
-  && effect?.flags?.add2e?.capabilityTransformation?.kind === "form"
-));
+const effects = currentActor => Array.from(currentActor?.effects ?? []).filter(effect => {
+  const transform = effect?.flags?.add2e?.documentTransformation ?? null;
+  const meta = effect?.flags?.add2e?.capabilityTransformation ?? null;
+  return transform?.group === TRANSFORM_GROUP
+    && meta?.sourceKey === SCOPE
+    && meta?.kind === "form";
+});
 
-const naturalAttacks = currentActor => Array.from(currentActor?.items ?? []).filter(item => (
-  item?.flags?.add2e?.capabilityTransformation?.sourceKey === SCOPE
-  && item?.flags?.add2e?.capabilityTransformation?.kind === "natural-attack"
-));
-
-const getState = currentActor => {
-  const root = currentActor.getFlag("add2e", STATE_FLAG) ?? {};
-  const state = root?.[SCOPE] ?? null;
-  return { root, state: state && typeof state === "object" ? state : null };
-};
-
-async function setState(currentActor, root, state = null) {
-  const next = { ...(root && typeof root === "object" ? root : {}) };
-  if (state) next[SCOPE] = state;
-  else delete next[SCOPE];
-  return Object.keys(next).length
-    ? currentActor.setFlag("add2e", STATE_FLAG, next)
-    : currentActor.unsetFlag("add2e", STATE_FLAG);
+function tokenDocument(value) {
+  const document = value?.document ?? value ?? null;
+  return document?.parent?.documentName === "Scene" ? document : null;
 }
 
-function activeTokens(currentActor) {
-  const scene = canvas?.scene ?? game.scenes?.active;
-  return scene?.tokens
-    ? Array.from(scene.tokens).filter(token => (
-      token?.actorId === currentActor?.id || token?.actor?.id === currentActor?.id
-    ))
-    : [];
+function tokenMatchesActor(document, currentActor) {
+  return document?.actor === currentActor
+    || document?.actorId === currentActor?.id
+    || document?.actor?.id === currentActor?.id;
 }
 
-async function updateToken(token, updateData, reason) {
-  const scene = token?.parent ?? canvas?.scene;
-  if (!token?.id || !scene?.id) return false;
-  if (game.user?.isGM) {
-    await token.update(updateData, { add2eInternal: true, add2eReason: reason });
-    return true;
-  }
-  game.socket?.emit?.(SOCKET, {
-    type: GM_OPERATION,
-    operation: "updateToken",
-    payload: { sceneId: scene.id, tokenId: token.id, updateData }
-  });
-  return true;
+function tokenCandidates(currentActor) {
+  const rows = [];
+  const seen = new Set();
+  const push = value => {
+    const document = tokenDocument(value);
+    const sceneId = document?.parent?.id ?? null;
+    const tokenId = document?.id ?? null;
+    const key = sceneId && tokenId ? `${sceneId}:${tokenId}` : "";
+    if (!key || seen.has(key) || !tokenMatchesActor(document, currentActor)) return;
+    seen.add(key);
+    rows.push(document);
+  };
+
+  push(currentActor?.token);
+  for (const placeable of canvas?.tokens?.controlled ?? []) push(placeable);
+  for (const placeable of canvas?.tokens?.placeables ?? []) push(placeable);
+  return rows;
 }
 
-function equipmentSnapshot(currentActor) {
+function activeTokenFromEffect(effect) {
+  const transform = effect?.flags?.add2e?.documentTransformation ?? null;
+  return transform?.sceneId && transform?.tokenId
+    ? game.scenes?.get?.(transform.sceneId)?.tokens?.get?.(transform.tokenId) ?? null
+    : null;
+}
+
+function equipmentUpdates(currentActor) {
   return Array.from(currentActor?.items ?? [])
     .filter(item => ["arme", "armure"].includes(String(item?.type ?? "").toLowerCase()))
-    .map(item => ({
-      id: item.id,
-      equipee: item?.system?.equipee === true,
-      equipped: item?.system?.equipped === true,
-      hasEquipped: Object.prototype.hasOwnProperty.call(item?.system ?? {}, "equipped")
-    }));
-}
-
-async function suspendEquipment(currentActor, snapshotData) {
-  const updates = (snapshotData?.equipment ?? [])
-    .filter(entry => entry.id && (entry.equipee || entry.equipped))
-    .map(entry => {
-      const update = { _id: entry.id, "system.equipee": false };
-      if (entry.hasEquipped) update["system.equipped"] = false;
+    .filter(item => item?.system?.equipee === true || item?.system?.equipped === true)
+    .map(item => {
+      const update = { _id: item.id, "system.equipee": false };
+      if (Object.prototype.hasOwnProperty.call(item?.system ?? {}, "equipped")) {
+        update["system.equipped"] = false;
+      }
       return update;
     });
-  if (updates.length) {
-    await currentActor.updateEmbeddedDocuments("Item", updates, {
-      add2eInternal: true,
-      add2eReason: "capability-transformation-suspend-equipment"
-    });
-  }
-}
-
-async function restoreEquipment(currentActor, snapshotData) {
-  const updates = (snapshotData?.equipment ?? [])
-    .filter(entry => entry?.id)
-    .map(entry => {
-      const update = { _id: entry.id, "system.equipee": entry.equipee === true };
-      if (entry.hasEquipped) update["system.equipped"] = entry.equipped === true;
-      return update;
-    });
-  if (updates.length) {
-    await currentActor.updateEmbeddedDocuments("Item", updates, {
-      add2eInternal: true,
-      add2eReason: "capability-transformation-restore-equipment"
-    });
-  }
-}
-
-function combatSnapshot(currentActor) {
-  return {
-    ca: currentActor.system?.ca,
-    ca_optimale: currentActor.system?.ca_optimale,
-    ca_naturel: currentActor.system?.ca_naturel,
-    ca_total: currentActor.system?.ca_total,
-    thac0: currentActor.system?.thac0
-  };
-}
-
-function snapshot(currentActor) {
-  return {
-    combat: combatSnapshot(currentActor),
-    equipment: equipmentSnapshot(currentActor),
-    tokens: activeTokens(currentActor)
-      .map(token => ({
-        sceneId: token.parent?.id,
-        tokenId: token.id,
-        textureSrc: token.texture?.src ?? null
-      }))
-      .filter(entry => entry.sceneId && entry.tokenId)
-  };
-}
-
-async function restoreCombat(currentActor, data = {}) {
-  const update = {};
-  const combat = data?.combat ?? {};
-  for (const [key, value] of Object.entries(combat)) update[`system.${key}`] = value;
-  if (Object.keys(update).length) {
-    await currentActor.update(update, {
-      add2eInternal: true,
-      add2eReason: "capability-transformation-combat-restore",
-      render: false
-    });
-  }
 }
 
 function transformationModifiers(form) {
@@ -326,53 +253,8 @@ function transformationModifiers(form) {
   ];
 }
 
-async function applyCombat(currentActor, form, recovered) {
-  const before = hp(currentActor);
-  const next = Number.isFinite(before.current) && Number.isFinite(before.maximum)
-    ? Math.min(before.maximum, before.current + Math.max(0, recovered))
-    : before.current;
-  const applied = Number.isFinite(before.current) && Number.isFinite(next)
-    ? Math.max(0, next - before.current)
-    : 0;
-  const update = {
-    "system.ca": form.combat.armorClass,
-    "system.ca_optimale": form.combat.armorClass,
-    "system.ca_naturel": form.combat.armorClass,
-    "system.ca_total": form.combat.armorClass,
-    "system.thac0": form.combat.thac0
-  };
-  if (applied) update["system.pdv"] = next;
-  await currentActor.update(update, {
-    add2eInternal: true,
-    add2eReason: "capability-transformation-combat-profile",
-    render: false
-  });
-  return applied;
-}
-
-async function restoreTokens(data) {
-  await Promise.all((data?.tokens ?? []).map(async entry => {
-    const token = game.scenes?.get?.(entry.sceneId)?.tokens?.get?.(entry.tokenId);
-    if (token && entry.textureSrc) {
-      await updateToken(
-        token,
-        { "texture.src": entry.textureSrc },
-        "capability-transformation-token-restore"
-      );
-    }
-  }));
-}
-
-async function setTokenImage(currentActor, img) {
-  await Promise.all(activeTokens(currentActor).map(token => updateToken(
-    token,
-    { "texture.src": img },
-    "capability-transformation-token-image"
-  )));
-}
-
-async function createNaturalAttacks(currentActor, form) {
-  const documents = form.attacks.map(attack => ({
+function naturalAttackDocuments(form) {
+  return form.attacks.map(attack => ({
     type: "arme",
     name: `${form.label} — ${attack.label}`,
     img: form.img,
@@ -433,58 +315,10 @@ async function createNaturalAttacks(currentActor, form) {
       }
     }
   }));
-  return currentActor.createEmbeddedDocuments("Item", documents, {
-    add2eInternal: true,
-    add2eReason: "capability-transformation-natural-attacks"
-  });
 }
 
-async function restore(
-  currentActor,
-  { deleteEffects = true, reason = "capability-transformation-return" } = {}
-) {
-  const stored = getState(currentActor);
-  if (!stored.state) return false;
-
-  const data = stored.state.snapshot ?? {};
-  const itemIds = naturalAttacks(currentActor).map(item => item.id).filter(Boolean);
-  const effectIds = deleteEffects
-    ? effects(currentActor).map(effect => effect.id).filter(Boolean)
-    : [];
-
-  await Promise.all([
-    itemIds.length
-      ? currentActor.deleteEmbeddedDocuments("Item", itemIds, {
-        add2eInternal: true,
-        add2eReason: reason
-      })
-      : null,
-    effectIds.length
-      ? currentActor.deleteEmbeddedDocuments("ActiveEffect", effectIds, {
-        add2eInternal: true,
-        add2eDruideTransformationInternal: true,
-        add2eReason: reason
-      })
-      : null
-  ]);
-
-  await restoreCombat(currentActor, data);
-  await restoreEquipment(currentActor, data);
-  await restoreTokens(data);
-  await setState(currentActor, stored.root, null);
-  return true;
-}
-
-async function apply(currentActor, form, tick, recovered, recoveryPercent, recoveryRoll) {
-  if (getState(currentActor).state) {
-    await restore(currentActor, { reason: "capability-transformation-switch" });
-  }
-
-  const data = snapshot(currentActor);
-  await suspendEquipment(currentActor, data);
-  const applied = await applyCombat(currentActor, form, recovered);
-
-  const effectData = {
+function effectData(form, tick) {
+  return {
     name: `Forme animale — ${form.label}`,
     img: form.img,
     disabled: false,
@@ -525,60 +359,117 @@ async function apply(currentActor, form, tick, recovered, recoveryPercent, recov
       }
     }
   };
-
-  const [attacks, effectsCreated] = await Promise.all([
-    createNaturalAttacks(currentActor, form),
-    currentActor.createEmbeddedDocuments("ActiveEffect", [effectData], {
-      add2eInternal: true,
-      add2eReason: "capability-transformation-apply"
-    }),
-    setTokenImage(currentActor, form.img)
-  ]);
-
-  const effect = effectsCreated?.[0] ?? null;
-  const root = getState(currentActor).root;
-  await setState(currentActor, root, {
-    version: ADD2E_DRUIDE_FORME_ANIMALE_VERSION,
-    sourceKey: SCOPE,
-    formKey: form.key,
-    category: form.category,
-    effectId: effect?.id ?? null,
-    naturalAttackIds: attacks.map(attack => attack.id).filter(Boolean),
-    snapshot: data,
-    recovery: {
-      roll: recoveryRoll,
-      percent: recoveryPercent,
-      points: applied
-    },
-    activatedAtTick: tick
-  });
-  return { effect, applied };
 }
 
-async function choose(available, active) {
+async function restore(currentActor, currentEffect = effects(currentActor)[0] ?? null) {
+  if (!currentEffect) return false;
+  const restoreCanonical = globalThis.add2eRestoreDocumentTransformationFromEffect;
+  if (typeof restoreCanonical !== "function") {
+    throw new Error("Le moteur canonique de transformation ADD2E est indisponible.");
+  }
+
+  await restoreCanonical(currentEffect, { reason: "capability-transformation-return" });
+  if (currentActor.effects?.get?.(currentEffect.id)) {
+    await currentActor.deleteEmbeddedDocuments("ActiveEffect", [currentEffect.id], {
+      add2eDocumentTransform: true,
+      add2eDocumentTransformReason: "capability-transformation-return"
+    });
+  }
+  return true;
+}
+
+async function apply(currentActor, token, form, tick, recovery) {
+  const applyCanonical = globalThis.add2eApplyDocumentTransformation;
+  if (typeof applyCanonical !== "function") {
+    throw new Error("Le moteur canonique de transformation ADD2E est indisponible.");
+  }
+
+  const result = await applyCanonical({
+    actor: currentActor,
+    token,
+    effectData: effectData(form, tick),
+    group: TRANSFORM_GROUP,
+    mode: form.key,
+    scope: "actor",
+    source: {
+      kind: "class-feature",
+      id: SCOPE,
+      uuid: feature?.uuid ?? "",
+      name: feature?.name ?? "Forme animale"
+    },
+    tokenUpdate: {
+      "texture.src": form.img
+    },
+    actorUpdate: {
+      "system.ca": form.combat.armorClass,
+      "system.ca_optimale": form.combat.armorClass,
+      "system.ca_naturel": form.combat.armorClass,
+      "system.ca_total": form.combat.armorClass,
+      "system.thac0": form.combat.thac0
+    },
+    itemUpdates: equipmentUpdates(currentActor),
+    temporaryItems: naturalAttackDocuments(form)
+  });
+
+  if (!result?.ok || !result.effect) {
+    throw new Error(`Échec de la transformation canonique : ${result?.reason ?? "résultat invalide"}.`);
+  }
+
+  if (recovery > 0) {
+    const life = hp(currentActor);
+    const next = Number.isFinite(life.current) && Number.isFinite(life.maximum)
+      ? Math.min(life.maximum, life.current + recovery)
+      : life.current;
+    if (Number.isFinite(next) && next !== life.current) {
+      try {
+        await currentActor.update({ "system.pdv": next }, {
+          add2eInternal: true,
+          add2eReason: "capability-transformation-recovery",
+          render: false
+        });
+      } catch (error) {
+        await restore(currentActor, result.effect);
+        throw error;
+      }
+    }
+  }
+
+  return { effect: result.effect, applied: recovery };
+}
+
+async function choose(available, currentEffect, tokens) {
   const DialogV2 = foundry?.applications?.api?.DialogV2;
   if (!DialogV2?.wait) {
     ui.notifications.error("Forme animale : DialogV2 est indisponible.");
     return null;
   }
 
-  const options = FORMS
+  const formOptions = FORMS
     .filter(form => available.includes(form.category))
     .map(form => (
       `<option value="${esc(form.key)}">${esc(form.label)} — CA ${form.combat.armorClass}, `
       + `TAC0 ${form.combat.thac0}, ${esc(form.combat.movement)}</option>`
     ))
     .join("");
+  const currentToken = activeTokenFromEffect(currentEffect);
+  const tokenOptions = tokens.map(token => {
+    const selected = currentToken?.id === token.id && currentToken?.parent?.id === token.parent?.id ? " selected" : "";
+    const sceneName = token.parent?.name ?? "Scène";
+    return `<option value="${esc(`${token.parent?.id}:${token.id}`)}"${selected}>${esc(token.name ?? currentActor?.name ?? "Token")} — ${esc(sceneName)}</option>`;
+  }).join("");
 
   return DialogV2.wait({
     window: { title: "Forme animale du druide" },
     position: { width: 600 },
     content: [
       '<form style="display:grid;gap:8px;font-family:var(--font-primary);">',
-      "<div>La forme n'a pas de durée automatique : elle reste active jusqu'au retour volontaire.</div>",
+      "<div>La forme reste active jusqu'au retour volontaire ou à la suppression de son effet.</div>",
       available.length
-        ? `<label>Forme <select name="formKey" style="width:100%">${options}</select></label>`
+        ? `<label>Forme <select name="formKey" style="width:100%">${formOptions}</select></label>`
         : "<div>Les trois catégories ont déjà été utilisées aujourd'hui.</div>",
+      available.length && tokens.length > 1
+        ? `<label>Token transformé <select name="tokenKey" style="width:100%">${tokenOptions}</select></label>`
+        : "",
       "</form>"
     ].join(""),
     buttons: [
@@ -590,11 +481,12 @@ async function choose(available, active) {
           default: true,
           callback: (_event, button) => ({
             action: "transform",
-            formKey: String(button.form?.elements?.formKey?.value ?? "")
+            formKey: String(button.form?.elements?.formKey?.value ?? ""),
+            tokenKey: String(button.form?.elements?.tokenKey?.value ?? "")
           })
         }]
         : []),
-      ...(active
+      ...(currentEffect
         ? [{
           action: "return",
           label: "Revenir à la forme normale",
@@ -649,28 +541,6 @@ async function chat(
   return create(options);
 }
 
-function installRestoreHook() {
-  if (globalThis.__ADD2E_DRUIDE_TRANSFORMATION_RESTORE_HOOK_V5) return;
-  globalThis.__ADD2E_DRUIDE_TRANSFORMATION_RESTORE_HOOK_V5 = true;
-  Hooks.on("deleteActiveEffect", (effect, options = {}) => {
-    if (options?.add2eDruideTransformationInternal) return;
-    const meta = effect?.flags?.add2e?.capabilityTransformation ?? {};
-    if (meta.sourceKey !== SCOPE || meta.kind !== "form") return;
-    const currentActor = effect?.parent?.documentName === "Actor" ? effect.parent : null;
-    if (currentActor) {
-      void restore(currentActor, {
-        deleteEffects: false,
-        reason: "capability-transformation-effect-removed"
-      }).catch(error => console.error("[ADD2E][FORME_ANIMALE][RESTORE]", error));
-    }
-  });
-}
-
-installRestoreHook();
-globalThis.ADD2E_CAPABILITY_TRANSFORMATIONS ??= {};
-globalThis.ADD2E_CAPABILITY_TRANSFORMATIONS.restore = restore;
-globalThis.ADD2E_CAPABILITY_TRANSFORMATIONS.forms = FORMS;
-
 if (!actor) {
   ui.notifications.error("Forme animale : acteur introuvable.");
   return false;
@@ -692,6 +562,13 @@ if (tick === null) {
   return false;
 }
 
+const tokens = tokenCandidates(actor);
+const activeEffect = effects(actor)[0] ?? null;
+if (!tokens.length && !activeEffect) {
+  ui.notifications.warn("Forme animale : aucun token actif de cet acteur n’est disponible sur la scène.");
+  return false;
+}
+
 const day = Math.floor(tick / DAY_ROUNDS);
 const root = actor.getFlag("add2e", USAGE_FLAG) ?? {};
 const previous = root?.[SCOPE] ?? {};
@@ -702,12 +579,12 @@ const used = Number(previous.dayIndex) === day
   ? previous.categories
   : {};
 const available = categories.filter(category => used?.[category]?.used !== true);
-const choice = await choose(available, effects(actor)[0] ?? null);
+const choice = await choose(available, activeEffect, tokens);
 
 if (!choice) return false;
 
 if (choice.action === "return") {
-  if (!await restore(actor)) {
+  if (!await restore(actor, activeEffect)) {
     ui.notifications.warn("Aucune forme animale active à retirer.");
     return false;
   }
@@ -722,6 +599,16 @@ if (!form || !available.includes(form.category)) {
   return false;
 }
 
+let selectedToken = tokens[0] ?? null;
+if (choice.tokenKey) {
+  const [sceneId, tokenId] = String(choice.tokenKey).split(":");
+  selectedToken = tokens.find(token => token.parent?.id === sceneId && token.id === tokenId) ?? null;
+}
+if (!selectedToken) {
+  ui.notifications.warn("Le token choisi pour la transformation n’est plus disponible.");
+  return false;
+}
+
 const life = hp(actor);
 const lost = Number.isFinite(life.maximum) && Number.isFinite(life.current)
   ? Math.max(0, life.maximum - life.current)
@@ -731,7 +618,7 @@ if (game.dice3d) void game.dice3d.showForRoll(roll);
 const die = Math.max(1, Math.min(6, Number(roll.total) || 1));
 const percent = die * 10;
 const recovery = Math.min(lost, Math.ceil(lost * percent / 100));
-const result = await apply(actor, form, tick, recovery, percent, die);
+const result = await apply(actor, selectedToken, form, tick, recovery);
 
 const nextUsed = {
   ...used,
@@ -765,13 +652,9 @@ await chat(
   + `<b>Mouvement :</b> ${esc(form.combat.movement)}.<br>`
   + `<b>PV rendus :</b> ${result.applied} (${percent}% des ${lost} PV perdus).<br>`
   + `<b>Attaques :</b> ${esc(form.attacks.map(attack => `${attack.label} ${attack.damage}`).join(" ; "))}.<br>`
-  + "<small>La forme reste active jusqu'au retour volontaire.</small>",
+  + "<small>La forme reste active jusqu'au retour volontaire ou à la suppression de son effet.</small>",
   form.img
 );
 
-if (!result.effect) {
-  ui.notifications.warn("La forme est active, mais l’effet de suivi doit être vérifié.");
-} else {
-  ui.notifications.info(`Forme animale active : ${form.label}.`);
-}
+ui.notifications.info(`Forme animale active : ${form.label}.`);
 return true;
