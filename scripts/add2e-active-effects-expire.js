@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — Point d'entrée : moteur de temps, rounds + états vitaux.
-// Version : 2026-08-01-canonical-document-transform-v13
+// Version : 2026-08-01-canonical-document-transform-v14
 // Compatible Foundry V13/V14/V15.
 // ============================================================================
 
@@ -35,11 +35,11 @@ import {
 } from "./add2e/19b-world-time-engine.mjs";
 
 const ADD2E_TOKEN_TRANSFORM_VERSION = "2026-08-01-timed-token-transform-v2";
-const ADD2E_DOCUMENT_TRANSFORM_VERSION = "2026-08-01-canonical-document-transform-v13";
+const ADD2E_DOCUMENT_TRANSFORM_VERSION = "2026-08-01-canonical-document-transform-v14";
 const ADD2E_TOKEN_TRANSFORM_FLAG = "tokenTransform";
 const ADD2E_DOCUMENT_TRANSFORM_FLAG = "documentTransformation";
 const ADD2E_DOCUMENT_TRANSFORM_MARKERS_FLAG = "documentTransformations";
-const ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION = "2026-08-01-canonical-document-transform-v13";
+const ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION = "2026-08-01-canonical-document-transform-v14";
 
 globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION;
 globalThis.ADD2E_VITAL_STATUS_CORE_VERSION = ADD2E_VITAL_STATUS_CORE_VERSION;
