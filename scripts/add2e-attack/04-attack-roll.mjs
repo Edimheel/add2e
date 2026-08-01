@@ -45,7 +45,7 @@ import {
   add2eCreateAttackChatCards
 } from "./04i-attack-roll-chat-card.mjs";
 
-const ADD2E_ATTACK_VERSION = "2026-07-25-canonical-target-ac-v4";
+const ADD2E_ATTACK_VERSION = "2026-08-01-canonical-transformation-thac0-v5";
 const ADD2E_ATTACK_SNAPSHOT_VERSION = "2026-07-24-attack-resolution-snapshot-v1";
 const ADD2E_ATTACK_ROLL_INVOKE_DEDUPE_MS = 1500;
 
@@ -120,6 +120,10 @@ function add2eResolveAttackSourceToken(actor) {
 
 function add2eResolveAttackThac0(actor) {
   const system = actor.system || {};
+  const transformation = globalThis.add2eGetCapabilityTransformationCombatProfile?.(actor) ?? null;
+  const transformationThac0 = add2eReadStrictNumber(transformation?.thac0);
+  if (transformationThac0 !== null) return transformationThac0;
+
   if (actor.type === "personnage") {
     const classItem = actor.items?.find(item => item.type === "classe");
     const level = Number(system.niveau) || 1;
