@@ -1,7 +1,7 @@
 /* ADD2E — Druide : Forme animale. ApplicationV2/DialogV2, V13/V14/V15.
  * La forme reste active jusqu'au retour volontaire ou à la suppression de son effet.
  */
-const ADD2E_DRUIDE_FORME_ANIMALE_VERSION = "2026-08-01-canonical-transformation-profile-v6";
+const ADD2E_DRUIDE_FORME_ANIMALE_VERSION = "2026-08-01-restore-diagnostics-v7";
 const SCOPE = "druid-animal-form";
 const TRANSFORM_GROUP = "physical-form";
 const DAY_ROUNDS = 1440;
@@ -121,6 +121,8 @@ const n = (...values) => {
   return null;
 };
 
+const wait = milliseconds => new Promise(resolve => window.setTimeout(resolve, milliseconds));
+
 const featureLevel = (currentActor, currentFeature) => {
   const level = Number(
     globalThis.add2eFeatureActorLevel?.(currentActor, currentFeature)
@@ -186,6 +188,174 @@ function activeTokenFromEffect(effect) {
   return transform?.sceneId && transform?.tokenId
     ? game.scenes?.get?.(transform.sceneId)?.tokens?.get?.(transform.tokenId) ?? null
     : null;
+}
+
+function diagnosticClone(value) {
+  try {
+    if (foundry?.utils?.deepClone) return foundry.utils.deepClone(value);
+    return JSON.parse(JSON.stringify(value));
+  } catch (_error) {
+    return String(value ?? "");
+  }
+}
+
+function diagnosticTextureSource(texture) {
+  const resource = texture?.source?.resource
+    ?? texture?.baseTexture?.resource
+    ?? texture?.resource
+    ?? null;
+  return resource?.src ?? resource?.url ?? null;
+}
+
+function diagnosticOptions(options = {}) {
+  return {
+    add2eDocumentTransform: options?.add2eDocumentTransform ?? null,
+    add2eDocumentTransformReason: options?.add2eDocumentTransformReason ?? null,
+    add2eTokenTransform: options?.add2eTokenTransform ?? null,
+    add2eTokenTransformReason: options?.add2eTokenTransformReason ?? null,
+    add2eInternal: options?.add2eInternal ?? null,
+    add2eReason: options?.add2eReason ?? null,
+    render: options?.render ?? null,
+    diff: options?.diff ?? null,
+    recursive: options?.recursive ?? null,
+    noHook: options?.noHook ?? null
+  };
+}
+
+function diagnosticState(currentActor, currentEffect) {
+  const transform = currentEffect?.flags?.add2e?.documentTransformation ?? null;
+  const scene = transform?.sceneId ? game.scenes?.get?.(transform.sceneId) ?? null : null;
+  const token = scene?.tokens?.get?.(transform?.tokenId) ?? null;
+  const placeable = canvas?.scene?.id === transform?.sceneId
+    ? canvas.tokens?.get?.(transform?.tokenId) ?? null
+    : null;
+  const actorMarker = currentActor?.flags?.add2e?.documentTransformations?.[transform?.groupKey ?? TRANSFORM_GROUP] ?? null;
+  const tokenMarker = token?.flags?.add2e?.documentTransformations?.[transform?.groupKey ?? TRANSFORM_GROUP] ?? null;
+  const originalTexture = transform?.original?.token?.texture?.src?.value
+    ?? transform?.original?.token?.["texture.src"]?.value
+    ?? null;
+  const appliedTexture = transform?.applied?.token?.texture?.src
+    ?? transform?.applied?.token?.["texture.src"]
+    ?? null;
+
+  return {
+    timestamp: Date.now(),
+    version: ADD2E_DRUIDE_FORME_ANIMALE_VERSION,
+    transformId: transform?.id ?? null,
+    effectId: currentEffect?.id ?? null,
+    effectDisabled: currentEffect?.disabled ?? null,
+    sceneId: transform?.sceneId ?? null,
+    tokenId: transform?.tokenId ?? null,
+    actorId: currentActor?.id ?? null,
+    actorUuid: currentActor?.uuid ?? null,
+    actorIsToken: currentActor?.isToken ?? null,
+    tokenExists: !!token,
+    actorLink: token?.actorLink ?? null,
+    tokenActorUuid: token?.actor?.uuid ?? null,
+    documentTexture: token?.texture?.src ?? null,
+    sourceTexture: token?._source?.texture?.src ?? null,
+    prototypeTexture: currentActor?.prototypeToken?.texture?.src ?? null,
+    placeableExists: !!placeable,
+    placeableDocumentSame: placeable?.document === token,
+    placeableDocumentTexture: placeable?.document?.texture?.src ?? null,
+    placeableTexture: diagnosticTextureSource(placeable?.texture),
+    meshTexture: diagnosticTextureSource(placeable?.mesh?.texture),
+    originalTexture,
+    appliedTexture,
+    actorMarkerId: actorMarker?.id ?? null,
+    tokenMarkerId: tokenMarker?.id ?? null,
+    temporaryItemIds: Array.from(transform?.temporaryItemIds ?? [])
+  };
+}
+
+function installRestoreDiagnostics(currentActor, currentEffect) {
+  const transform = currentEffect?.flags?.add2e?.documentTransformation ?? null;
+  const hookIds = [];
+  const matchesToken = token => String(token?.parent?.id ?? "") === String(transform?.sceneId ?? "")
+    && String(token?.id ?? "") === String(transform?.tokenId ?? "");
+  const matchesActor = document => String(document?.id ?? "") === String(currentActor?.id ?? "")
+    || String(document?.uuid ?? "") === String(currentActor?.uuid ?? "");
+  const log = (stage, details = {}) => {
+    try {
+      console.warn(`[ADD2E][DRUIDE][FORME_ANIMALE][RESTORE_DIAG][${stage}]`, {
+        ...diagnosticState(currentActor, currentEffect),
+        ...details
+      });
+    } catch (error) {
+      console.warn("[ADD2E][DRUIDE][FORME_ANIMALE][RESTORE_DIAG][LOGGER_ERROR]", error);
+    }
+  };
+
+  hookIds.push(["preUpdateToken", Hooks.on("preUpdateToken", (token, changes = {}, options = {}, userId = null) => {
+    if (!matchesToken(token)) return;
+    log("HOOK_PRE_UPDATE_TOKEN", {
+      userId,
+      changes: diagnosticClone(changes),
+      options: diagnosticOptions(options),
+      hookDocumentTexture: token?.texture?.src ?? null,
+      hookSourceTexture: token?._source?.texture?.src ?? null
+    });
+  })]);
+
+  hookIds.push(["updateToken", Hooks.on("updateToken", (token, changes = {}, options = {}, userId = null) => {
+    if (!matchesToken(token)) return;
+    log("HOOK_UPDATE_TOKEN", {
+      userId,
+      changes: diagnosticClone(changes),
+      options: diagnosticOptions(options),
+      hookDocumentTexture: token?.texture?.src ?? null,
+      hookSourceTexture: token?._source?.texture?.src ?? null
+    });
+  })]);
+
+  hookIds.push(["updateActor", Hooks.on("updateActor", (updatedActor, changes = {}, options = {}, userId = null) => {
+    if (!matchesActor(updatedActor)) return;
+    log("HOOK_UPDATE_ACTOR", {
+      userId,
+      changes: diagnosticClone(changes),
+      options: diagnosticOptions(options),
+      hookActorUuid: updatedActor?.uuid ?? null,
+      hookActorIsToken: updatedActor?.isToken ?? null
+    });
+  })]);
+
+  hookIds.push(["updateItem", Hooks.on("updateItem", (updatedItem, changes = {}, options = {}, userId = null) => {
+    if (!matchesActor(updatedItem?.parent)) return;
+    log("HOOK_UPDATE_ITEM", {
+      userId,
+      itemId: updatedItem?.id ?? null,
+      itemName: updatedItem?.name ?? null,
+      changes: diagnosticClone(changes),
+      options: diagnosticOptions(options)
+    });
+  })]);
+
+  hookIds.push(["deleteItem", Hooks.on("deleteItem", (deletedItem, options = {}, userId = null) => {
+    if (!matchesActor(deletedItem?.parent)) return;
+    log("HOOK_DELETE_ITEM", {
+      userId,
+      itemId: deletedItem?.id ?? null,
+      itemName: deletedItem?.name ?? null,
+      options: diagnosticOptions(options)
+    });
+  })]);
+
+  hookIds.push(["updateActiveEffect", Hooks.on("updateActiveEffect", (updatedEffect, changes = {}, options = {}, userId = null) => {
+    if (String(updatedEffect?.id ?? "") !== String(currentEffect?.id ?? "")) return;
+    log("HOOK_UPDATE_ACTIVE_EFFECT", {
+      userId,
+      changes: diagnosticClone(changes),
+      options: diagnosticOptions(options),
+      hookEffectDisabled: updatedEffect?.disabled ?? null
+    });
+  })]);
+
+  return {
+    log,
+    stop() {
+      for (const [hook, id] of hookIds) Hooks.off(hook, id);
+    }
+  };
 }
 
 function equipmentUpdates(currentActor) {
@@ -368,16 +538,41 @@ async function restore(currentActor, currentEffect = effects(currentActor)[0] ??
     throw new Error("Le moteur canonique de transformation ADD2E est indisponible.");
   }
 
-  const result = await restoreCanonical(currentEffect, {
-    reason: "capability-transformation-return"
-  });
+  const diagnostics = installRestoreDiagnostics(currentActor, currentEffect);
+  diagnostics.log("START");
+  let result = null;
+  try {
+    result = await restoreCanonical(currentEffect, {
+      reason: "capability-transformation-return"
+    });
+    diagnostics.log("CANONICAL_RETURN", { result: diagnosticClone(result) });
+    await Promise.resolve();
+    diagnostics.log("AFTER_MICROTASK");
+    await wait(0);
+    diagnostics.log("AFTER_TIMER_0");
+    await wait(250);
+    diagnostics.log("AFTER_TIMER_250");
+  } catch (error) {
+    diagnostics.log("CANONICAL_THROW", {
+      errorName: error?.name ?? null,
+      errorMessage: error?.message ?? String(error),
+      errorStack: error?.stack ?? null
+    });
+    await wait(250);
+    diagnostics.log("AFTER_THROW_TIMER_250");
+    diagnostics.stop();
+    throw error;
+  }
+  diagnostics.stop();
+
   if (!result?.ok || result?.tokenRestored !== true) {
     console.error("[ADD2E][DRUIDE][FORME_ANIMALE][RESTORE_FAILED]", {
       actor: currentActor.name,
       actorId: currentActor.id,
       effect: currentEffect.name,
       effectId: currentEffect.id,
-      result
+      result,
+      finalState: diagnosticState(currentActor, currentEffect)
     });
     throw new Error(
       `Retour à la forme normale non confirmé : ${result?.reason ?? "résultat de restauration invalide"}. `
@@ -424,6 +619,15 @@ async function apply(currentActor, token, form, tick, recovery) {
   if (!result?.ok || !result.effect) {
     throw new Error(`Échec de la transformation canonique : ${result?.reason ?? "résultat invalide"}.`);
   }
+
+  console.warn("[ADD2E][DRUIDE][FORME_ANIMALE][APPLY_DIAG]", {
+    actor: currentActor.name,
+    actorId: currentActor.id,
+    form: form.label,
+    effectId: result.effect.id,
+    transform: diagnosticClone(result.effect?.flags?.add2e?.documentTransformation ?? null),
+    state: diagnosticState(currentActor, result.effect)
+  });
 
   let appliedRecovery = 0;
   if (recovery > 0) {
