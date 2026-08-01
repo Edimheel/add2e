@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — Point d'entrée : moteur de temps, rounds + états vitaux.
-// Version : 2026-08-01-canonical-document-transform-v19
+// Version : 2026-08-01-canonical-document-transform-v20
 // Compatible Foundry V13/V14/V15.
 // ============================================================================
 
@@ -35,11 +35,11 @@ import {
 } from "./add2e/19b-world-time-engine.mjs";
 
 const ADD2E_TOKEN_TRANSFORM_VERSION = "2026-08-01-timed-token-transform-v2";
-const ADD2E_DOCUMENT_TRANSFORM_VERSION = "2026-08-01-canonical-document-transform-v19";
+const ADD2E_DOCUMENT_TRANSFORM_VERSION = "2026-08-01-canonical-document-transform-v20";
 const ADD2E_TOKEN_TRANSFORM_FLAG = "tokenTransform";
 const ADD2E_DOCUMENT_TRANSFORM_FLAG = "documentTransformation";
 const ADD2E_DOCUMENT_TRANSFORM_MARKERS_FLAG = "documentTransformations";
-const ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION = "2026-08-01-canonical-document-transform-v19";
+const ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION = "2026-08-01-canonical-document-transform-v20";
 
 globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION;
 globalThis.ADD2E_VITAL_STATUS_CORE_VERSION = ADD2E_VITAL_STATUS_CORE_VERSION;
@@ -381,24 +381,15 @@ async function add2eRefreshSceneTokenTexture(tokenDocument) {
   if (!tokenObject) return false;
 
   try {
-    if (typeof tokenObject.draw === "function") {
-      await tokenObject.draw();
-      return true;
-    }
     if (typeof tokenObject.renderFlags?.set === "function") {
       tokenObject.renderFlags.set({ redraw: true });
-      if (typeof tokenObject.applyRenderFlags === "function") await tokenObject.applyRenderFlags();
-      return true;
-    }
-    if (typeof tokenObject.refresh === "function") {
-      tokenObject.refresh();
       return true;
     }
   } catch (error) {
-    console.warn("[ADD2E][DOCUMENT-TRANSFORM][TOKEN_REDRAW_FAILED]", {
+    console.warn("[ADD2E][DOCUMENT-TRANSFORM][TOKEN_RENDER_FLAG_FAILED]", {
       sceneId,
       tokenId: tokenDocument.id ?? null,
-      texture: tokenDocument?.texture?.src ?? null,
+      texture: tokenDocument?._source?.texture?.src ?? tokenDocument?.texture?.src ?? null,
       error
     });
   }
