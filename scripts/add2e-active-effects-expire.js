@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — Point d'entrée : moteur de temps, rounds + états vitaux.
-// Version : 2026-08-01-canonical-document-transform-v5
+// Version : 2026-08-01-canonical-document-transform-v6
 // Compatible Foundry V13/V14/V15.
 // ============================================================================
 
@@ -35,11 +35,11 @@ import {
 } from "./add2e/19b-world-time-engine.mjs";
 
 const ADD2E_TOKEN_TRANSFORM_VERSION = "2026-08-01-timed-token-transform-v2";
-const ADD2E_DOCUMENT_TRANSFORM_VERSION = "2026-08-01-canonical-document-transform-v5";
+const ADD2E_DOCUMENT_TRANSFORM_VERSION = "2026-08-01-canonical-document-transform-v6";
 const ADD2E_TOKEN_TRANSFORM_FLAG = "tokenTransform";
 const ADD2E_DOCUMENT_TRANSFORM_FLAG = "documentTransformation";
 const ADD2E_DOCUMENT_TRANSFORM_MARKERS_FLAG = "documentTransformations";
-const ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION = "2026-08-01-canonical-document-transform-v5";
+const ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION = "2026-08-01-canonical-document-transform-v6";
 
 globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION;
 globalThis.ADD2E_VITAL_STATUS_CORE_VERSION = ADD2E_VITAL_STATUS_CORE_VERSION;
@@ -221,6 +221,51 @@ function add2eRestoreUpdate(snapshot = {}) {
   return add2eSanitizeUpdate(update);
 }
 
+function add2ePrototypeTokenTexture(actor) {
+  const prototypeData = add2ePlainDocumentData(actor?.prototypeToken);
+  const candidates = [
+    add2eGetProperty(prototypeData, "texture.src"),
+    actor?.prototypeToken?.texture?.src,
+    actor?.img
+  ];
+  for (const candidate of candidates) {
+    const src = String(candidate ?? "").trim();
+    if (src) return src;
+  }
+  return "";
+}
+
+function add2eResolvedRestorationOriginal(actor, transform) {
+  const original = add2eClone(transform?.original ?? {}) ?? {};
+  original.token ??= {};
+
+  const textureEntry = original.token["texture.src"] ?? null;
+  const hasTextureValue = textureEntry?.exists === true
+    && Object.prototype.hasOwnProperty.call(textureEntry, "value");
+  const originalTexture = hasTextureValue ? String(textureEntry.value ?? "").trim() : "";
+  const appliedTexture = String(transform?.applied?.token?.["texture.src"] ?? "").trim();
+  const prototypeTexture = add2ePrototypeTokenTexture(actor);
+  const physicalForm = String(transform?.group ?? "") === "physical-form";
+  const invalidOriginal = !originalTexture || originalTexture === appliedTexture;
+  const canRepairTexture = physicalForm
+    && !!appliedTexture
+    && invalidOriginal
+    && !!prototypeTexture
+    && prototypeTexture !== appliedTexture;
+
+  if (canRepairTexture) {
+    original.token["texture.src"] = { exists: true, value: prototypeTexture };
+  }
+
+  return {
+    original,
+    tokenTextureRepaired: canRepairTexture,
+    originalTexture: canRepairTexture ? prototypeTexture : originalTexture,
+    appliedTexture,
+    prototypeTexture
+  };
+}
+
 function add2eTokenTransformData(effect) {
   try {
     return effect?.getFlag?.("add2e", ADD2E_TOKEN_TRANSFORM_FLAG)
@@ -305,6 +350,7 @@ function add2eCanonicalMarker(transform) {
     tokenId: transform.tokenId,
     recovery: {
       original: add2eClone(transform.original ?? {}),
+      applied: add2eClone(transform.applied ?? {}),
       temporaryItemIds: Array.from(transform.temporaryItemIds ?? []).filter(Boolean)
     }
   });
@@ -325,11 +371,17 @@ async function add2eRestoreOrphanedDocumentTransformation(actor, tokenDocument, 
   const actorMatches = String(actorMarker?.id ?? "") === id;
   const tokenMatches = String(tokenMarker?.id ?? "") === id;
   const marker = actorMatches ? actorMarker : tokenMarker;
-  const original = marker?.recovery?.original ?? {};
+  const recovery = marker?.recovery ?? {};
+  const resolvedOriginal = add2eResolvedRestorationOriginal(actor, {
+    group: marker?.group,
+    original: recovery.original,
+    applied: recovery.applied
+  });
+  const original = resolvedOriginal.original;
   const groupKey = marker?.groupKey ?? add2eTransformGroupKey(marker?.group);
   const markerTransform = { groupKey };
 
-  const temporaryIds = new Set(Array.from(marker?.recovery?.temporaryItemIds ?? []).filter(Boolean));
+  const temporaryIds = new Set(Array.from(recovery?.temporaryItemIds ?? []).filter(Boolean));
   for (const item of actor.items ?? []) {
     if (String(item?.flags?.add2e?.documentTransformationId ?? "") === id) temporaryIds.add(item.id);
   }
@@ -383,6 +435,7 @@ async function add2eRestoreOrphanedDocumentTransformation(actor, tokenDocument, 
     transformId: id,
     actorRestored: actorMatches && Object.keys(original?.actor ?? {}).length > 0,
     tokenRestored: tokenMatches && Object.keys(original?.token ?? {}).length > 0,
+    tokenTextureRepaired: resolvedOriginal.tokenTextureRepaired,
     temporaryItemsDeleted: temporaryIds.size
   };
 }
@@ -596,6 +649,14 @@ export async function add2eRestoreDocumentTransformationFromEffect(effect, { rea
   const tokenMarker = add2eDocumentTransformMarker(tokenDocument, transform);
   const actorCurrent = transform.tracksActor && String(actorMarker?.id ?? "") === String(transform.id);
   const tokenCurrent = String(tokenMarker?.id ?? "") === String(transform.id);
+  const tokenMarkerMissing = !String(tokenMarker?.id ?? "");
+  const tokenOwnedThroughActor = !!tokenDocument
+    && actorCurrent
+    && tokenMarkerMissing
+    && add2eTokenTransformMatchesToken(transform, tokenDocument);
+  const tokenRestorable = !!tokenDocument && (tokenCurrent || tokenOwnedThroughActor);
+  const resolvedOriginal = add2eResolvedRestorationOriginal(actor, transform);
+  const original = resolvedOriginal.original;
 
   const temporaryIds = new Set(Array.from(transform.temporaryItemIds ?? []).filter(Boolean));
   for (const item of actor.items ?? []) {
@@ -611,7 +672,7 @@ export async function add2eRestoreDocumentTransformationFromEffect(effect, { rea
 
   if (actorCurrent) {
     const itemUpdates = [];
-    for (const entry of transform.original?.items ?? []) {
+    for (const entry of original?.items ?? []) {
       if (!actor.items?.get?.(entry.id)) continue;
       const restored = add2eRestoreUpdate(entry.values);
       if (Object.keys(restored).length) itemUpdates.push({ _id: entry.id, ...restored });
@@ -625,7 +686,7 @@ export async function add2eRestoreDocumentTransformationFromEffect(effect, { rea
     }
 
     const actorUpdate = add2eSanitizeUpdate({
-      ...add2eRestoreUpdate(transform.original?.actor),
+      ...add2eRestoreUpdate(original?.actor),
       [add2eCanonicalMarkerDeletePath(transform)]: null
     });
     await actor.update(actorUpdate, {
@@ -635,9 +696,9 @@ export async function add2eRestoreDocumentTransformationFromEffect(effect, { rea
     });
   }
 
-  if (tokenCurrent && tokenDocument) {
+  if (tokenRestorable) {
     const tokenUpdate = add2eSanitizeUpdate({
-      ...add2eRestoreUpdate(transform.original?.token),
+      ...add2eRestoreUpdate(original?.token),
       [add2eCanonicalMarkerDeletePath(transform)]: null
     });
     await tokenDocument.update(tokenUpdate, {
@@ -647,12 +708,14 @@ export async function add2eRestoreDocumentTransformationFromEffect(effect, { rea
   }
 
   return {
-    ok: actorCurrent || tokenCurrent || temporaryIds.size > 0,
+    ok: actorCurrent || tokenRestorable || temporaryIds.size > 0,
     actorRestored: actorCurrent,
-    tokenRestored: tokenCurrent,
+    tokenRestored: tokenRestorable,
+    tokenOwnedThroughActor,
+    tokenTextureRepaired: resolvedOriginal.tokenTextureRepaired,
     temporaryItemsDeleted: temporaryIds.size,
     transformId: transform.id,
-    reason: actorCurrent || tokenCurrent ? "restored" : "superseded"
+    reason: actorCurrent || tokenRestorable ? "restored" : "superseded"
   };
 }
 
