@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — Point d'entrée : moteur de temps, rounds + états vitaux.
-// Version : 2026-08-01-canonical-document-transform-v10
+// Version : 2026-08-01-canonical-document-transform-v11
 // Compatible Foundry V13/V14/V15.
 // ============================================================================
 
@@ -35,11 +35,11 @@ import {
 } from "./add2e/19b-world-time-engine.mjs";
 
 const ADD2E_TOKEN_TRANSFORM_VERSION = "2026-08-01-timed-token-transform-v2";
-const ADD2E_DOCUMENT_TRANSFORM_VERSION = "2026-08-01-canonical-document-transform-v10";
+const ADD2E_DOCUMENT_TRANSFORM_VERSION = "2026-08-01-canonical-document-transform-v11";
 const ADD2E_TOKEN_TRANSFORM_FLAG = "tokenTransform";
 const ADD2E_DOCUMENT_TRANSFORM_FLAG = "documentTransformation";
 const ADD2E_DOCUMENT_TRANSFORM_MARKERS_FLAG = "documentTransformations";
-const ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION = "2026-08-01-canonical-document-transform-v10";
+const ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION = "2026-08-01-canonical-document-transform-v11";
 
 globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION;
 globalThis.ADD2E_VITAL_STATUS_CORE_VERSION = ADD2E_VITAL_STATUS_CORE_VERSION;
@@ -192,23 +192,20 @@ function add2eSanitizeUpdate(updateData = {}) {
 
 function add2eForcedDeletionValue() {
   const ForcedDeletion = foundry?.data?.operators?.ForcedDeletion;
-  if (typeof ForcedDeletion === "function") return new ForcedDeletion();
-  return null;
+  if (typeof ForcedDeletion !== "function") {
+    throw new Error("Foundry ForcedDeletion est indisponible sur cette version.");
+  }
+  return new ForcedDeletion();
 }
 
 function add2eSetDeletion(update, parentPath, key) {
   if (!update || !parentPath || !key) return update;
-  const forcedDeletion = add2eForcedDeletionValue();
-  if (forcedDeletion) {
-    const existing = update[parentPath];
-    const nested = existing && Object.getPrototypeOf(existing) === Object.prototype
-      ? existing
-      : {};
-    nested[key] = forcedDeletion;
-    update[parentPath] = nested;
-  } else {
-    update[`${parentPath}.-=${key}`] = null;
-  }
+  const existing = update[parentPath];
+  const nested = existing && Object.getPrototypeOf(existing) === Object.prototype
+    ? existing
+    : {};
+  nested[key] = add2eForcedDeletionValue();
+  update[parentPath] = nested;
   return update;
 }
 
@@ -216,7 +213,7 @@ function add2eSnapshotPaths(document, updateData = {}, ignored = new Set()) {
   const snapshot = {};
   const source = add2ePlainDocumentData(document);
   for (const path of Object.keys(updateData ?? {})) {
-    if (!path || path === "_id" || ignored.has(path) || path.startsWith("-=") || path.includes(".-=")) continue;
+    if (!path || path === "_id" || ignored.has(path)) continue;
     const exists = add2eHasProperty(source, path);
     const value = exists ? add2eWithoutUndefined(add2eClone(add2eGetProperty(source, path))) : undefined;
     snapshot[path] = value === undefined ? { exists: false } : { exists: true, value };
@@ -239,11 +236,7 @@ function add2eRestoreUpdate(snapshot = {}) {
       const leaf = parts.pop();
       const parentPath = parts.join(".");
       if (leaf && parentPath) add2eSetDeletion(update, parentPath, leaf);
-      else if (leaf) {
-        const forcedDeletion = add2eForcedDeletionValue();
-        if (forcedDeletion) update[leaf] = forcedDeletion;
-        else update[`-=${leaf}`] = null;
-      }
+      else if (leaf) update[leaf] = add2eForcedDeletionValue();
     }
   }
   return add2eSanitizeUpdate(update);
