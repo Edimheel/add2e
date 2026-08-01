@@ -1,8 +1,12 @@
 // ADD2E — Validation des documents et consommateurs directs des effets.
 // Compatible Foundry V13/V14/V15.
 
-const ADD2E_DOCUMENT_EFFECT_CONSUMERS_VERSION = "2026-07-28-current-hit-points-hooks-v10";
+const ADD2E_DOCUMENT_EFFECT_CONSUMERS_VERSION = "2026-08-01-druid-form-restore-v11";
 globalThis.ADD2E_DOCUMENT_EFFECT_CONSUMERS_VERSION = ADD2E_DOCUMENT_EFFECT_CONSUMERS_VERSION;
+
+const ADD2E_DRUID_ANIMAL_FORM_SCOPE = "druid-animal-form";
+const ADD2E_TRANSFORMATION_STATE_FLAG = "capabilityTransformations";
+const ADD2E_DRUID_ANIMAL_FORM_RESTORE_QUEUE = new Set();
 
 function add2eEffectConsumerList(value) {
   if (Array.isArray(value)) return value.filter(entry => entry && typeof entry === "object");
@@ -66,6 +70,131 @@ function add2eEffectTags(effect) {
 
 function add2eIsFamiliarEffect(effect) {
   return add2eEffectTags(effect).some(tag => tag === "familier" || tag.startsWith("familier:"));
+}
+
+function add2eDruidAnimalFormMeta(effect) {
+  const meta = effect?.flags?.add2e?.capabilityTransformation ?? {};
+  return meta?.sourceKey === ADD2E_DRUID_ANIMAL_FORM_SCOPE && meta?.kind === "form"
+    ? meta
+    : null;
+}
+
+function add2eDruidAnimalFormState(actor) {
+  const root = actor?.getFlag?.("add2e", ADD2E_TRANSFORMATION_STATE_FLAG) ?? {};
+  const state = root?.[ADD2E_DRUID_ANIMAL_FORM_SCOPE] ?? null;
+  return {
+    root: root && typeof root === "object" ? root : {},
+    state: state && typeof state === "object" ? state : null
+  };
+}
+
+function add2eDruidAnimalFormActorKey(actor) {
+  return String(actor?.uuid ?? actor?.id ?? "").trim();
+}
+
+function add2eDruidAnimalFormNaturalAttackIds(actor, state = {}) {
+  const ids = new Set(Array.isArray(state?.naturalAttackIds) ? state.naturalAttackIds.filter(Boolean) : []);
+  for (const item of actor?.items ?? []) {
+    const meta = item?.flags?.add2e?.capabilityTransformation ?? {};
+    if (meta.sourceKey === ADD2E_DRUID_ANIMAL_FORM_SCOPE && meta.kind === "natural-attack" && item.id) ids.add(item.id);
+  }
+  return [...ids].filter(id => actor?.items?.has?.(id));
+}
+
+async function add2eDruidAnimalFormClearState(actor, root = {}) {
+  const next = typeof foundry?.utils?.deepClone === "function"
+    ? foundry.utils.deepClone(root)
+    : { ...(root && typeof root === "object" ? root : {}) };
+  delete next[ADD2E_DRUID_ANIMAL_FORM_SCOPE];
+  if (Object.keys(next).length) {
+    await actor.setFlag("add2e", ADD2E_TRANSFORMATION_STATE_FLAG, next);
+  } else {
+    await actor.unsetFlag("add2e", ADD2E_TRANSFORMATION_STATE_FLAG);
+  }
+}
+
+async function add2eRestoreDruidAnimalFormAfterEffectDeletion(effect, options = {}) {
+  if (options?.add2eDruideTransformationInternal) return false;
+  if (!add2eEffectConsumerIsResponsibleGM()) return false;
+  if (!add2eDruidAnimalFormMeta(effect)) return false;
+
+  const actor = add2eEffectConsumerActor(effect);
+  if (!actor) return false;
+
+  const queueKey = add2eDruidAnimalFormActorKey(actor);
+  if (!queueKey || ADD2E_DRUID_ANIMAL_FORM_RESTORE_QUEUE.has(queueKey)) return false;
+  ADD2E_DRUID_ANIMAL_FORM_RESTORE_QUEUE.add(queueKey);
+
+  try {
+    // Le script de capacité installe encore son hook durant la session courante.
+    // Ce délai lui laisse la priorité ; après un rechargement, l'état reste présent
+    // et ce consommateur permanent prend alors en charge la restauration.
+    await new Promise(resolve => setTimeout(resolve, 250));
+
+    const stored = add2eDruidAnimalFormState(actor);
+    if (!stored.state) return false;
+    if (stored.state.effectId && effect?.id && String(stored.state.effectId) !== String(effect.id)) return false;
+
+    const snapshot = stored.state.snapshot ?? {};
+    const naturalAttackIds = add2eDruidAnimalFormNaturalAttackIds(actor, stored.state);
+    if (naturalAttackIds.length) {
+      try {
+        await actor.deleteEmbeddedDocuments("Item", naturalAttackIds, {
+          add2eInternal: true,
+          add2eReason: "capability-transformation-effect-removed"
+        });
+      } catch (error) {
+        if (!/does not exist|introuvable/i.test(String(error?.message ?? error))) throw error;
+      }
+    }
+
+    const combatUpdate = {};
+    for (const key of ["ca", "ca_optimale", "ca_naturel", "ca_total", "thac0"]) {
+      if (Object.prototype.hasOwnProperty.call(snapshot?.combat ?? {}, key)) {
+        combatUpdate[`system.${key}`] = snapshot.combat[key];
+      }
+    }
+    if (Object.keys(combatUpdate).length) {
+      await actor.update(combatUpdate, {
+        add2eInternal: true,
+        add2eReason: "capability-transformation-combat-restore",
+        render: false
+      });
+    }
+
+    const equipmentUpdates = (Array.isArray(snapshot?.equipment) ? snapshot.equipment : [])
+      .filter(entry => entry?.id && actor.items?.has?.(entry.id))
+      .map(entry => {
+        const update = { _id: entry.id, "system.equipee": entry.equipee === true };
+        if (entry.hasEquipped) update["system.equipped"] = entry.equipped === true;
+        return update;
+      });
+    if (equipmentUpdates.length) {
+      await actor.updateEmbeddedDocuments("Item", equipmentUpdates, {
+        add2eInternal: true,
+        add2eReason: "capability-transformation-restore-equipment"
+      });
+    }
+
+    await Promise.all((Array.isArray(snapshot?.tokens) ? snapshot.tokens : []).map(async entry => {
+      const token = game.scenes?.get?.(entry?.sceneId)?.tokens?.get?.(entry?.tokenId) ?? null;
+      if (!token || !entry?.textureSrc) return;
+      await token.update(
+        { "texture.src": entry.textureSrc },
+        {
+          add2eInternal: true,
+          add2eDruideTransformationInternal: true,
+          add2eReason: "capability-transformation-token-restore"
+        }
+      );
+    }));
+
+    await add2eDruidAnimalFormClearState(actor, stored.root);
+    if (actor.sheet?.rendered === true) await actor.sheet.render({ force: true });
+    return true;
+  } finally {
+    ADD2E_DRUID_ANIMAL_FORM_RESTORE_QUEUE.delete(queueKey);
+  }
 }
 
 function add2eCapturePreviousCurrentBase(document, options = {}) {
@@ -160,6 +289,8 @@ Hooks.on("updateActiveEffect", (effect, changes = {}, options = {}) => {
 Hooks.on("deleteActiveEffect", (effect, options = {}) => {
   add2eConsumeModifierDocumentChange(effect, {}, { deleted: true, operationOptions: options })
     .catch(error => console.error("[ADD2E][ACTIVE_EFFECT][DELETE]", error));
+  add2eRestoreDruidAnimalFormAfterEffectDeletion(effect, options)
+    .catch(error => console.error("[ADD2E][FORME_ANIMALE][PERMANENT_RESTORE]", error));
 });
 Hooks.on("createItem", (item, options = {}) => {
   add2eConsumeModifierDocumentChange(item, {}, { operationOptions: options })
