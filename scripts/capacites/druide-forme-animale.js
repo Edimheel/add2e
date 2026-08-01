@@ -1,7 +1,7 @@
 /* ADD2E — Druide : Forme animale. ApplicationV2/DialogV2, V13/V14/V15.
  * La forme reste active jusqu'au retour volontaire ou à la suppression de son effet.
  */
-const ADD2E_DRUIDE_FORME_ANIMALE_VERSION = "2026-08-01-canonical-document-transform-v5";
+const ADD2E_DRUIDE_FORME_ANIMALE_VERSION = "2026-08-01-canonical-transformation-profile-v6";
 const SCOPE = "druid-animal-form";
 const TRANSFORM_GROUP = "physical-form";
 const DAY_ROUNDS = 1440;
@@ -416,13 +416,7 @@ async function apply(currentActor, token, form, tick, recovery) {
     tokenUpdate: {
       "texture.src": form.img
     },
-    actorUpdate: {
-      "system.ca": form.combat.armorClass,
-      "system.ca_optimale": form.combat.armorClass,
-      "system.ca_naturel": form.combat.armorClass,
-      "system.ca_total": form.combat.armorClass,
-      "system.thac0": form.combat.thac0
-    },
+    actorUpdate: {},
     itemUpdates: equipmentUpdates(currentActor),
     temporaryItems: naturalAttackDocuments(form)
   });
