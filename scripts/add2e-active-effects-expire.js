@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — Point d'entrée : moteur de temps, rounds + états vitaux.
-// Version : 2026-08-01-canonical-document-transform-v16
+// Version : 2026-08-01-canonical-document-transform-v17
 // Compatible Foundry V13/V14/V15.
 // ============================================================================
 
@@ -35,11 +35,11 @@ import {
 } from "./add2e/19b-world-time-engine.mjs";
 
 const ADD2E_TOKEN_TRANSFORM_VERSION = "2026-08-01-timed-token-transform-v2";
-const ADD2E_DOCUMENT_TRANSFORM_VERSION = "2026-08-01-canonical-document-transform-v16";
+const ADD2E_DOCUMENT_TRANSFORM_VERSION = "2026-08-01-canonical-document-transform-v17";
 const ADD2E_TOKEN_TRANSFORM_FLAG = "tokenTransform";
 const ADD2E_DOCUMENT_TRANSFORM_FLAG = "documentTransformation";
 const ADD2E_DOCUMENT_TRANSFORM_MARKERS_FLAG = "documentTransformations";
-const ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION = "2026-08-01-canonical-document-transform-v16";
+const ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION = "2026-08-01-canonical-document-transform-v17";
 
 globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION;
 globalThis.ADD2E_VITAL_STATUS_CORE_VERSION = ADD2E_VITAL_STATUS_CORE_VERSION;
@@ -231,10 +231,55 @@ function add2eSnapshotPaths(document, updateData = {}, ignored = new Set()) {
   return snapshot;
 }
 
+function add2eSnapshotEntries(snapshot = {}, prefix = "") {
+  const rows = [];
+  const visit = (node, path) => {
+    if (!node || typeof node !== "object") return;
+
+    if (Array.isArray(node)) {
+      for (const entry of node) {
+        const entryPath = String(entry?.path ?? "").trim();
+        if (!entryPath || typeof entry?.exists !== "boolean") continue;
+        const row = { path: entryPath, exists: entry.exists };
+        if (Object.prototype.hasOwnProperty.call(entry, "value")) row.value = add2eClone(entry.value);
+        rows.push(row);
+      }
+      return;
+    }
+
+    if (typeof node.exists === "boolean") {
+      if (!path) return;
+      const row = { path, exists: node.exists };
+      if (Object.prototype.hasOwnProperty.call(node, "value")) row.value = add2eClone(node.value);
+      rows.push(row);
+      return;
+    }
+
+    for (const [key, value] of Object.entries(node)) {
+      if (!key) continue;
+      visit(value, path ? `${path}.${key}` : key);
+    }
+  };
+
+  visit(snapshot, prefix);
+  return rows;
+}
+
+function add2eSnapshotSize(snapshot = {}) {
+  return add2eSnapshotEntries(snapshot).length;
+}
+
+function add2eStoredUpdateValue(updateData = {}, path = "") {
+  if (!path) return undefined;
+  if (Object.prototype.hasOwnProperty.call(updateData ?? {}, path)) return updateData[path];
+  return add2eGetProperty(updateData, path);
+}
+
 function add2eRestoreUpdate(snapshot = {}) {
   const update = {};
-  for (const [path, entry] of Object.entries(snapshot ?? {})) {
-    if (!path || !entry) continue;
+  for (const entry of add2eSnapshotEntries(snapshot)) {
+    const path = entry.path;
+    if (!path) continue;
     const hasValue = Object.prototype.hasOwnProperty.call(entry, "value");
     if (entry.exists === true && hasValue) {
       const value = add2eWithoutUndefined(add2eClone(entry.value));
@@ -261,11 +306,12 @@ function add2eResolvedRestorationOriginal(transform) {
   const original = add2eClone(transform?.original ?? {}) ?? {};
   original.token ??= {};
 
-  const textureEntry = original.token["texture.src"] ?? null;
+  const textureEntry = add2eSnapshotEntries(original.token)
+    .find(entry => entry.path === "texture.src") ?? null;
   const hasTextureValue = textureEntry?.exists === true
     && Object.prototype.hasOwnProperty.call(textureEntry, "value");
   const originalTexture = hasTextureValue ? String(textureEntry.value ?? "").trim() : "";
-  const appliedTexture = String(transform?.applied?.token?.["texture.src"] ?? "").trim();
+  const appliedTexture = String(add2eStoredUpdateValue(transform?.applied?.token ?? {}, "texture.src") ?? "").trim();
 
   return {
     original,
@@ -287,8 +333,9 @@ function add2eSameValue(left, right) {
 function add2eVerifySnapshot(document, snapshot = {}) {
   const source = add2ePlainDocumentData(document);
   const mismatches = [];
-  for (const [path, entry] of Object.entries(snapshot ?? {})) {
-    if (!path || !entry) continue;
+  for (const entry of add2eSnapshotEntries(snapshot)) {
+    const path = entry.path;
+    if (!path) continue;
     const exists = add2eHasProperty(source, path);
     const actual = exists ? add2eClone(add2eGetProperty(source, path)) : undefined;
     if (entry.exists === false) {
@@ -496,7 +543,7 @@ async function add2eRestoreOrphanedDocumentTransformation(actor, tokenDocument, 
   const groupKey = marker?.groupKey ?? add2eTransformGroupKey(marker?.group);
   const markerTransform = { groupKey };
 
-  if (!tokenRestorable && Object.keys(original?.token ?? {}).length) {
+  if (!tokenRestorable && add2eSnapshotSize(original?.token)) {
     return { ok: false, reason: "orphan-token-not-owned", transformId: id };
   }
 
@@ -538,13 +585,13 @@ async function add2eRestoreOrphanedDocumentTransformation(actor, tokenDocument, 
 
   const actorVerification = actorMatches
     ? add2eVerifySnapshot(actor, original?.actor)
-    : { ok: Object.keys(original?.actor ?? {}).length === 0, mismatches: [] };
+    : { ok: add2eSnapshotSize(original?.actor) === 0, mismatches: [] };
   const itemVerification = actorMatches
     ? add2eVerifyItemSnapshots(actor, original?.items)
     : { ok: Array.from(original?.items ?? []).length === 0, items: [] };
   const tokenVerification = tokenRestorable
     ? add2eVerifySnapshot(tokenDocument, original?.token)
-    : { ok: Object.keys(original?.token ?? {}).length === 0, mismatches: [] };
+    : { ok: add2eSnapshotSize(original?.token) === 0, mismatches: [] };
 
   if (!actorVerification.ok || !itemVerification.ok || !tokenVerification.ok) {
     return {
@@ -854,8 +901,8 @@ export async function add2eRestoreDocumentTransformationFromEffect(effect, { rea
     && (tokenCurrent || tokenOwnedThroughActor || effectOwnedWithoutMarkers);
   const resolvedOriginal = add2eResolvedRestorationOriginal(transform);
   const original = resolvedOriginal.original;
-  const tokenSnapshotRequired = Object.keys(original?.token ?? {}).length > 0;
-  const actorSnapshotRequired = transform.tracksActor && Object.keys(original?.actor ?? {}).length > 0;
+  const tokenSnapshotRequired = add2eSnapshotSize(original?.token) > 0;
+  const actorSnapshotRequired = transform.tracksActor && add2eSnapshotSize(original?.actor) > 0;
 
   if (tokenSnapshotRequired && !tokenRestorable) {
     return {
