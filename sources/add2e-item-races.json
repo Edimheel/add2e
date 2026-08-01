@@ -1,6 +1,6 @@
 {
   "exporter": "ADD2E compendium export",
-  "version": "2026-07-27-add2e-export-compendiums-v1",
+  "version": "2026-08-01-canonical-race-movement-v2",
   "exportedAt": "2026-07-27T11:07:33.390Z",
   "world": "test-clerc",
   "worldTitle": "test clerc",
@@ -30,7 +30,7 @@
           "sagesse": 0,
           "charisme": -2
         },
-        "vitesse": 36,
+        "movement": 36,
         "langues": [
           "commun",
           "orque"
@@ -40,7 +40,6 @@
           "race:demi_orque"
         ],
         "slug": "demi_orque",
-        "vitesse_deplacement": 36,
         "identityTags": [
           "race:demi_orque"
         ],
@@ -180,14 +179,13 @@
           "sagesse": 0,
           "charisme": 0
         },
-        "vitesse": 18,
+        "movement": 18,
         "langues": "commun,petite-gens,gnome,elfe",
         "label": "Petite-gens",
         "tags": [
           "race:petite_gens"
         ],
         "slug": "petite_gens",
-        "vitesse_deplacement": 18,
         "identityTags": [
           "race:petite_gens"
         ],
@@ -334,14 +332,13 @@
       "img": "systems/add2e/assets/icones/races/Gnome.webp",
       "system": {
         "bonus_caracteristiques": {},
-        "vitesse": 18,
+        "movement": 18,
         "langues": "",
         "label": "Gnome",
         "tags": [
           "race:gnome"
         ],
         "slug": "gnome",
-        "vitesse_deplacement": 18,
         "identityTags": [
           "race:gnome"
         ],
@@ -547,7 +544,7 @@
           "sagesse": 0,
           "charisme": 0
         },
-        "vitesse": 36,
+        "movement": 36,
         "langues": [
           "elfe",
           "commun",
@@ -563,7 +560,6 @@
           "race:demi_elfe"
         ],
         "slug": "demi_elfe",
-        "vitesse_deplacement": 36,
         "identityTags": [
           "race:demi_elfe"
         ],
@@ -768,14 +764,13 @@
           "sagesse": 0,
           "charisme": 0
         },
-        "vitesse": 36,
+        "movement": 36,
         "langues": "",
         "label": "Humain",
         "tags": [
           "race:humain"
         ],
         "slug": "humain",
-        "vitesse_deplacement": 36,
         "identityTags": [
           "race:humain"
         ],
@@ -838,14 +833,13 @@
           "sagesse": 0,
           "charisme": 0
         },
-        "vitesse": 24,
+        "movement": 24,
         "langues": "commun,kenderspeak,patois",
         "label": "Kender",
         "tags": [
           "race:kender"
         ],
         "slug": "kender",
-        "vitesse_deplacement": 24,
         "identityTags": [
           "race:kender"
         ],
@@ -933,14 +927,13 @@
           "sagesse": 0,
           "charisme": -1
         },
-        "vitesse": 18,
+        "movement": 18,
         "langues": "nain,gnome,gobelin,kobold,orque,commun",
         "label": "Nain",
         "tags": [
           "race:nain"
         ],
         "slug": "nain",
-        "vitesse_deplacement": 18,
         "identityTags": [
           "race:nain"
         ],
@@ -1144,14 +1137,13 @@
           "sagesse": 0,
           "charisme": 0
         },
-        "vitesse": 36,
+        "movement": 36,
         "langues": "elfe,commun,gnome,petite-gens,gobelin,hobgobelin,orque,gnoll",
         "label": "Elfe",
         "tags": [
           "race:elfe"
         ],
         "slug": "elfe",
-        "vitesse_deplacement": 36,
         "identityTags": [
           "race:elfe"
         ],
