@@ -415,18 +415,20 @@ async function apply(currentActor, token, form, tick, recovery) {
     throw new Error(`Échec de la transformation canonique : ${result?.reason ?? "résultat invalide"}.`);
   }
 
+  let appliedRecovery = 0;
   if (recovery > 0) {
     const life = hp(currentActor);
     const next = Number.isFinite(life.current) && Number.isFinite(life.maximum)
       ? Math.min(life.maximum, life.current + recovery)
       : life.current;
-    if (Number.isFinite(next) && next !== life.current) {
+    if (Number.isFinite(next) && Number.isFinite(life.current) && next !== life.current) {
       try {
         await currentActor.update({ "system.pdv": next }, {
           add2eInternal: true,
           add2eReason: "capability-transformation-recovery",
           render: false
         });
+        appliedRecovery = Math.max(0, next - life.current);
       } catch (error) {
         await restore(currentActor, result.effect);
         throw error;
@@ -434,7 +436,7 @@ async function apply(currentActor, token, form, tick, recovery) {
     }
   }
 
-  return { effect: result.effect, applied: recovery };
+  return { effect: result.effect, applied: appliedRecovery };
 }
 
 async function choose(available, currentEffect, tokens) {
@@ -455,7 +457,8 @@ async function choose(available, currentEffect, tokens) {
   const tokenOptions = tokens.map(token => {
     const selected = currentToken?.id === token.id && currentToken?.parent?.id === token.parent?.id ? " selected" : "";
     const sceneName = token.parent?.name ?? "Scène";
-    return `<option value="${esc(`${token.parent?.id}:${token.id}`)}"${selected}>${esc(token.name ?? currentActor?.name ?? "Token")} — ${esc(sceneName)}</option>`;
+    const tokenName = token.name ?? token.actor?.name ?? "Token";
+    return `<option value="${esc(`${token.parent?.id}:${token.id}`)}"${selected}>${esc(tokenName)} — ${esc(sceneName)}</option>`;
   }).join("");
 
   return DialogV2.wait({
