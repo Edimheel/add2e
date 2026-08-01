@@ -252,6 +252,21 @@ function add2eSheetEquipmentModifierSummaries(engine, actor, items) {
   return Object.fromEntries(Object.entries(summaries).map(([itemId, entries]) => [itemId, entries.join(" · ")]));
 }
 
+function add2eSheetMovementData(actor) {
+  const computeMovement = globalThis.add2eComputeMovement;
+  if (typeof computeMovement !== "function") {
+    throw new Error("Le résolveur canonique ADD2E du mouvement et de l’encombrement n’est pas disponible.");
+  }
+  const movement = computeMovement(actor, {
+    consumer: "actor-sheet-application-v2",
+    movementMode: "ground"
+  });
+  if (!movement || typeof movement !== "object") {
+    throw new Error(`La résolution canonique du mouvement est invalide pour ${actor?.name ?? "acteur"}.`);
+  }
+  return foundry.utils.deepClone(movement);
+}
+
 export function add2ePrepareActorSheetBaseData({ sheet, data }) {
   const actor = sheet.actor;
   const sys = data.actor.system;
@@ -311,8 +326,7 @@ export function add2ePrepareActorSheetBaseData({ sheet, data }) {
   }
 
   sys.details_race = details_race;
-  sys.movement = details_race.movement || 0;
-  data.movement = sys.movement;
+  data.movement = add2eSheetMovementData(actor);
 
   let details_classe = sys.details_classe || {};
   details_classe.specialAbilities = Array.isArray(details_classe.specialAbilities)
@@ -370,14 +384,6 @@ export function add2ePrepareActorSheetBaseData({ sheet, data }) {
   data.thiefSkills = data.thiefSkillRows;
   data.listeObjets = items.filter(i => i.type === "objet");
   data.equipmentModifierSummaryByItemId = add2eSheetEquipmentModifierSummaries(abilityEngine, actor, data.listeObjets);
-
-  let poidsTotal = 0;
-  data.listeObjets.forEach(o => {
-    const qte = Number(o.system.quantite) || 1;
-    const pds = Number(o.system.poids) || 0;
-    poidsTotal += (qte * pds);
-  });
-  data.poidsTotalObjets = poidsTotal;
 
   return { actor, sys, items, niveau, progressionCourante, isMonk };
 }
