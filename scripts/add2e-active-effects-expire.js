@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — Point d'entrée : moteur de temps, rounds + états vitaux.
-// Version : 2026-08-01-canonical-document-transform-v2
+// Version : 2026-08-01-canonical-document-transform-v3
 // Compatible Foundry V13/V14/V15.
 // ============================================================================
 
@@ -35,11 +35,11 @@ import {
 } from "./add2e/19b-world-time-engine.mjs";
 
 const ADD2E_TOKEN_TRANSFORM_VERSION = "2026-08-01-timed-token-transform-v2";
-const ADD2E_DOCUMENT_TRANSFORM_VERSION = "2026-08-01-canonical-document-transform-v2";
+const ADD2E_DOCUMENT_TRANSFORM_VERSION = "2026-08-01-canonical-document-transform-v3";
 const ADD2E_TOKEN_TRANSFORM_FLAG = "tokenTransform";
 const ADD2E_DOCUMENT_TRANSFORM_FLAG = "documentTransformation";
 const ADD2E_DOCUMENT_TRANSFORM_MARKERS_FLAG = "documentTransformations";
-const ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION = "2026-08-01-canonical-document-transform-v2";
+const ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION = "2026-08-01-canonical-document-transform-v3";
 
 globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION;
 globalThis.ADD2E_VITAL_STATUS_CORE_VERSION = ADD2E_VITAL_STATUS_CORE_VERSION;
@@ -89,6 +89,12 @@ function add2eEscapeHtml(value) {
 function add2eCurrentRoundForEffects() {
   const round = Number(game.combat?.round ?? 0);
   return Number.isFinite(round) && round > 0 ? round : 0;
+}
+
+function add2eIsResponsibleGM() {
+  if (!game.user?.isGM) return false;
+  if (typeof game.user.isActiveGM === "boolean") return game.user.isActiveGM;
+  return game.users?.activeGM?.id === game.user.id;
 }
 
 function add2eTokenDocument(tokenLike) {
@@ -945,7 +951,7 @@ Hooks.on("updateActiveEffect", async (effect, changed = {}, options = {}) => {
     if (effect?.parent?.type === "monster") add2eRenderOpenMonsterSheets(effect.parent);
     return;
   }
-  if (game.user?.isGM && Object.prototype.hasOwnProperty.call(changed, "disabled")) {
+  if (add2eIsResponsibleGM() && Object.prototype.hasOwnProperty.call(changed, "disabled")) {
     if (effect?.disabled) await add2eRestoreTokenTransformationFromEffect(effect, { reason: "effect-disabled" });
     else await add2eReapplyTokenTransformationFromEffect(effect, { reason: "effect-enabled" });
   }
@@ -953,7 +959,7 @@ Hooks.on("updateActiveEffect", async (effect, changed = {}, options = {}) => {
 });
 
 Hooks.on("deleteActiveEffect", async (effect, options = {}) => {
-  if (!game.user?.isGM) return;
+  if (!add2eIsResponsibleGM()) return;
   if (!options?.add2eDocumentTransform) await add2eRestoreTokenTransformationFromEffect(effect, { reason: "effect-deleted" });
   const actor = effect?.parent;
   const temporaryItemId = effect?.flags?.add2e?.temporaryItemId;
