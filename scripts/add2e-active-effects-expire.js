@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — Point d'entrée : moteur de temps, rounds + états vitaux.
-// Version : 2026-08-01-canonical-document-transform-v18
+// Version : 2026-08-01-canonical-document-transform-v19
 // Compatible Foundry V13/V14/V15.
 // ============================================================================
 
@@ -35,11 +35,11 @@ import {
 } from "./add2e/19b-world-time-engine.mjs";
 
 const ADD2E_TOKEN_TRANSFORM_VERSION = "2026-08-01-timed-token-transform-v2";
-const ADD2E_DOCUMENT_TRANSFORM_VERSION = "2026-08-01-canonical-document-transform-v18";
+const ADD2E_DOCUMENT_TRANSFORM_VERSION = "2026-08-01-canonical-document-transform-v19";
 const ADD2E_TOKEN_TRANSFORM_FLAG = "tokenTransform";
 const ADD2E_DOCUMENT_TRANSFORM_FLAG = "documentTransformation";
 const ADD2E_DOCUMENT_TRANSFORM_MARKERS_FLAG = "documentTransformations";
-const ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION = "2026-08-01-canonical-document-transform-v18";
+const ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION = "2026-08-01-canonical-document-transform-v19";
 
 globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION;
 globalThis.ADD2E_VITAL_STATUS_CORE_VERSION = ADD2E_VITAL_STATUS_CORE_VERSION;
@@ -269,12 +269,6 @@ function add2eSnapshotSize(snapshot = {}) {
   return add2eSnapshotEntries(snapshot).length;
 }
 
-function add2eStoredUpdateHasPath(updateData = {}, path = "") {
-  if (!path) return false;
-  return Object.prototype.hasOwnProperty.call(updateData ?? {}, path)
-    || add2eHasProperty(updateData, path);
-}
-
 function add2eStoredUpdateValue(updateData = {}, path = "") {
   if (!path) return undefined;
   if (Object.prototype.hasOwnProperty.call(updateData ?? {}, path)) return updateData[path];
@@ -329,13 +323,6 @@ function add2eResolvedRestorationOriginal(transform) {
 
 function add2eSameValue(left, right) {
   if (Object.is(left, right)) return true;
-  const scalarLeft = typeof left === "number" || typeof left === "string";
-  const scalarRight = typeof right === "number" || typeof right === "string";
-  if (scalarLeft && scalarRight && String(left).trim() !== "" && String(right).trim() !== "") {
-    const leftNumber = Number(left);
-    const rightNumber = Number(right);
-    if (Number.isFinite(leftNumber) && Number.isFinite(rightNumber) && leftNumber === rightNumber) return true;
-  }
   if (typeof foundry?.utils?.deepEqual === "function") {
     try { return foundry.utils.deepEqual(left, right); } catch (_error) {}
   }
@@ -367,41 +354,6 @@ function add2eVerifySnapshot(document, snapshot = {}) {
     }
   }
   return { ok: mismatches.length === 0, mismatches };
-}
-
-function add2eVerifyReleasedSnapshot(document, snapshot = {}, applied = {}) {
-  const strict = add2eVerifySnapshot(document, snapshot);
-  if (strict.ok) return { ...strict, released: [] };
-
-  const source = add2ePlainDocumentData(document);
-  const mismatches = [];
-  const released = [];
-
-  for (const mismatch of strict.mismatches) {
-    const path = String(mismatch?.path ?? "");
-    if (!path || !add2eStoredUpdateHasPath(applied, path)) {
-      mismatches.push(mismatch);
-      continue;
-    }
-
-    const actualExists = add2eHasProperty(source, path);
-    const actual = actualExists ? add2eClone(add2eGetProperty(source, path)) : undefined;
-    const appliedValue = add2eClone(add2eStoredUpdateValue(applied, path));
-    const stillApplied = actualExists && add2eSameValue(actual, appliedValue);
-
-    if (stillApplied) {
-      mismatches.push({ ...mismatch, applied: appliedValue });
-      continue;
-    }
-
-    released.push({ ...mismatch, applied: appliedValue });
-  }
-
-  return {
-    ok: mismatches.length === 0,
-    mismatches,
-    released
-  };
 }
 
 function add2eVerifyItemSnapshots(actor, entries = []) {
@@ -621,19 +573,23 @@ async function add2eRestoreOrphanedDocumentTransformation(actor, tokenDocument, 
   }
 
   if (tokenRestorable) {
+    tokenDocument = add2eTokenTransformToken(marker);
+    if (!tokenDocument) return { ok: false, reason: "orphan-token-missing-after-actor-restore", transformId: id };
     const tokenUpdate = add2eSanitizeUpdate(add2eRestoreUpdate(original?.token));
     if (Object.keys(tokenUpdate).length) {
       await tokenDocument.update(tokenUpdate, {
         add2eDocumentTransform: true,
         add2eDocumentTransformReason: reason
       });
+      tokenDocument = add2eTokenTransformToken(marker);
+      if (!tokenDocument) return { ok: false, reason: "orphan-token-missing-after-token-restore", transformId: id };
       await add2eRefreshSceneTokenTexture(tokenDocument);
     }
   }
 
   const actorVerification = actorMatches
-    ? add2eVerifyReleasedSnapshot(actor, original?.actor, recovery?.applied?.actor)
-    : { ok: add2eSnapshotSize(original?.actor) === 0, mismatches: [], released: [] };
+    ? add2eVerifySnapshot(actor, original?.actor)
+    : { ok: add2eSnapshotSize(original?.actor) === 0, mismatches: [] };
   const itemVerification = actorMatches
     ? add2eVerifyItemSnapshots(actor, original?.items)
     : { ok: Array.from(original?.items ?? []).length === 0, items: [] };
@@ -666,6 +622,10 @@ async function add2eRestoreOrphanedDocumentTransformation(actor, tokenDocument, 
     });
   }
 
+  tokenDocument = tokenRestorable ? add2eTokenTransformToken(marker) : tokenDocument;
+  if (tokenRestorable && !tokenDocument) {
+    return { ok: false, reason: "orphan-token-missing-before-marker-cleanup", transformId: id };
+  }
   const currentActorMarker = add2eDocumentTransformMarker(actor, markerTransform);
   const currentTokenMarker = add2eDocumentTransformMarker(tokenDocument, markerTransform);
   if (currentActorMarker && String(currentActorMarker.id ?? "") !== id) {
@@ -685,6 +645,8 @@ async function add2eRestoreOrphanedDocumentTransformation(actor, tokenDocument, 
     });
   }
   if (currentTokenMarker && String(currentTokenMarker.id ?? "") === id) {
+    tokenDocument = add2eTokenTransformToken(marker);
+    if (!tokenDocument) return { ok: false, reason: "orphan-token-missing-for-marker-cleanup", transformId: id };
     const tokenMarkerUpdate = {};
     add2eDeleteCanonicalMarker(tokenMarkerUpdate, markerTransform);
     await tokenDocument.update(tokenMarkerUpdate, {
@@ -921,7 +883,7 @@ export async function add2eRestoreDocumentTransformationFromEffect(effect, { rea
   const actor = effect?.parent?.documentName === "Actor" ? effect.parent : null;
   if (!actor || !transform?.id) return { ok: false, reason: "no-document-transform" };
 
-  const tokenDocument = add2eTokenTransformToken(transform);
+  let tokenDocument = add2eTokenTransformToken(transform);
   const actorMarker = transform.tracksActor ? add2eDocumentTransformMarker(actor, transform) : null;
   const tokenMarker = add2eDocumentTransformMarker(tokenDocument, transform);
   const actorCurrent = transform.tracksActor && String(actorMarker?.id ?? "") === String(transform.id);
@@ -1005,19 +967,27 @@ export async function add2eRestoreDocumentTransformationFromEffect(effect, { rea
   }
 
   if (tokenRestorable) {
+    tokenDocument = add2eTokenTransformToken(transform);
+    if (!tokenDocument) {
+      return { ok: false, reason: "token-missing-after-actor-restore", transformId: transform.id };
+    }
     const tokenUpdate = add2eSanitizeUpdate(add2eRestoreUpdate(original?.token));
     if (Object.keys(tokenUpdate).length) {
       await tokenDocument.update(tokenUpdate, {
         add2eDocumentTransform: true,
         add2eDocumentTransformReason: reason
       });
+      tokenDocument = add2eTokenTransformToken(transform);
+      if (!tokenDocument) {
+        return { ok: false, reason: "token-missing-after-token-restore", transformId: transform.id };
+      }
       await add2eRefreshSceneTokenTexture(tokenDocument);
     }
   }
 
   const actorVerification = actorRestorable
-    ? add2eVerifyReleasedSnapshot(actor, original?.actor, transform?.applied?.actor)
-    : { ok: !actorSnapshotRequired, mismatches: [], released: [] };
+    ? add2eVerifySnapshot(actor, original?.actor)
+    : { ok: !actorSnapshotRequired, mismatches: [] };
   const itemVerification = actorRestorable
     ? add2eVerifyItemSnapshots(actor, original?.items)
     : { ok: Array.from(original?.items ?? []).length === 0, items: [] };
@@ -1055,6 +1025,10 @@ export async function add2eRestoreDocumentTransformationFromEffect(effect, { rea
     });
   }
 
+  tokenDocument = tokenRestorable ? add2eTokenTransformToken(transform) : tokenDocument;
+  if (tokenRestorable && !tokenDocument) {
+    return { ok: false, reason: "token-missing-before-marker-cleanup", transformId: transform.id };
+  }
   const currentActorMarker = transform.tracksActor ? add2eDocumentTransformMarker(actor, transform) : null;
   const currentTokenMarker = add2eDocumentTransformMarker(tokenDocument, transform);
   if (currentActorMarker && String(currentActorMarker.id ?? "") !== String(transform.id)) {
@@ -1074,6 +1048,8 @@ export async function add2eRestoreDocumentTransformationFromEffect(effect, { rea
     });
   }
   if (currentTokenMarker && String(currentTokenMarker.id ?? "") === String(transform.id)) {
+    tokenDocument = add2eTokenTransformToken(transform);
+    if (!tokenDocument) return { ok: false, reason: "token-missing-for-marker-cleanup", transformId: transform.id };
     const tokenMarkerUpdate = {};
     add2eDeleteCanonicalMarker(tokenMarkerUpdate, transform);
     await tokenDocument.update(tokenMarkerUpdate, {
@@ -1082,6 +1058,7 @@ export async function add2eRestoreDocumentTransformationFromEffect(effect, { rea
     });
   }
 
+  tokenDocument = tokenRestorable ? add2eTokenTransformToken(transform) : tokenDocument;
   return {
     ok: true,
     actorRestored: actorRestorable,
@@ -1104,7 +1081,7 @@ export async function add2eRestoreDocumentTransformationFromEffect(effect, { rea
 export async function add2eReapplyDocumentTransformationFromEffect(effect, { reason = "effect-enabled" } = {}) {
   const transform = add2eDocumentTransformData(effect);
   const actor = effect?.parent?.documentName === "Actor" ? effect.parent : null;
-  const tokenDocument = add2eTokenTransformToken(transform);
+  let tokenDocument = add2eTokenTransformToken(transform);
   if (!actor || !tokenDocument || !transform?.id) return { ok: false, reason: "no-document-transform" };
 
   const reconciled = await add2eReconcileDocumentTransformationMarkers(actor, tokenDocument, transform, {
@@ -1157,6 +1134,8 @@ export async function add2eReapplyDocumentTransformationFromEffect(effect, { rea
     }
   }
 
+  tokenDocument = add2eTokenTransformToken(transform);
+  if (!tokenDocument) return { ok: false, reason: "token-missing-after-actor-apply" };
   const tokenUpdate = add2eSanitizeUpdate(add2eCanonicalTokenUpdate(tokenDocument, transform.applied?.token, {
     marker: add2eCanonicalMarker(transform),
     transform
@@ -1165,6 +1144,8 @@ export async function add2eReapplyDocumentTransformationFromEffect(effect, { rea
     add2eDocumentTransform: true,
     add2eDocumentTransformReason: reason
   });
+  tokenDocument = add2eTokenTransformToken(transform);
+  if (!tokenDocument) return { ok: false, reason: "token-missing-after-token-apply" };
   await add2eRefreshSceneTokenTexture(tokenDocument);
 
   const next = add2eWithoutUndefined({ ...add2eClone(transform), phase: "active", temporaryItemIds });
@@ -1240,9 +1221,11 @@ export async function add2eApplyDocumentTransformation({
   });
   if (!reconciled.ok) return reconciled;
 
+  const currentTokenDocument = game.scenes?.get?.(tokenDocument.parent?.id)?.tokens?.get?.(tokenDocument.id) ?? null;
+  if (!currentTokenDocument) return { ok: false, reason: "token-missing-after-marker-reconcile" };
   const prepared = add2ePrepareDocumentTransformation({
     actor,
-    token: tokenDocument,
+    token: currentTokenDocument,
     group,
     mode,
     scope,
@@ -1293,7 +1276,7 @@ export async function add2eRestoreTokenTransformationFromEffect(effect, { reason
   const transform = add2eTokenTransformData(effect);
   if (!transform?.id || !transform?.original) return { ok: false, reason: "no-transform" };
 
-  const tokenDocument = add2eTokenTransformToken(transform);
+  let tokenDocument = add2eTokenTransformToken(transform);
   if (!tokenDocument) return { ok: false, reason: "token-missing" };
 
   const marker = add2eTokenTransformMarker(tokenDocument);
@@ -1303,6 +1286,8 @@ export async function add2eRestoreTokenTransformationFromEffect(effect, { reason
     add2eTokenTransformUpdate(tokenDocument, transform.original, { clear: true }),
     { add2eTokenTransform: true, add2eTokenTransformReason: reason }
   );
+  tokenDocument = add2eTokenTransformToken(transform);
+  if (!tokenDocument) return { ok: false, reason: "token-missing-after-restore" };
   await add2eRefreshSceneTokenTexture(tokenDocument);
   return { ok: true, tokenId: tokenDocument.id, transformId: transform.id };
 }
@@ -1312,7 +1297,7 @@ export async function add2eReapplyTokenTransformationFromEffect(effect, { reason
   const transform = add2eTokenTransformData(effect);
   if (!transform?.id || !transform?.applied) return { ok: false, reason: "no-transform" };
 
-  const tokenDocument = add2eTokenTransformToken(transform);
+  let tokenDocument = add2eTokenTransformToken(transform);
   if (!tokenDocument) return { ok: false, reason: "token-missing" };
 
   const marker = add2eTokenTransformMarker(tokenDocument);
@@ -1322,6 +1307,8 @@ export async function add2eReapplyTokenTransformationFromEffect(effect, { reason
     add2eTokenTransformUpdate(tokenDocument, transform.applied, { marker: transform }),
     { add2eTokenTransform: true, add2eTokenTransformReason: reason }
   );
+  tokenDocument = add2eTokenTransformToken(transform);
+  if (!tokenDocument) return { ok: false, reason: "token-missing-after-reapply" };
   await add2eRefreshSceneTokenTexture(tokenDocument);
   return { ok: true, tokenId: tokenDocument.id, transformId: transform.id };
 }
@@ -1341,7 +1328,7 @@ export async function add2eDeleteTokenTransformationEffects(actor, effects = [],
 }
 
 export async function add2eApplyTimedTokenTransformation({ actor, token, effectData, factor, group = "generic", mode = "default", source = "effect" } = {}) {
-  const tokenDocument = add2eTokenDocument(token);
+  let tokenDocument = add2eTokenDocument(token);
   if (!actor || !tokenDocument || !effectData) return { ok: false, reason: "missing-document" };
 
   const existing = add2eFindTokenTransformationEffects(actor, tokenDocument, { group });
@@ -1371,7 +1358,11 @@ export async function add2eApplyTimedTokenTransformation({ actor, token, effectD
   if (!effect) return { ok: false, reason: "effect-create-failed" };
 
   try {
+    tokenDocument = add2eTokenTransformToken(prepared.transform);
+    if (!tokenDocument) throw new Error("Token introuvable après création de l’effet de transformation.");
     await tokenDocument.update(prepared.updateData, { add2eTokenTransform: true, add2eTokenTransformReason: "apply" });
+    tokenDocument = add2eTokenTransformToken(prepared.transform);
+    if (!tokenDocument) throw new Error("Token introuvable après application de la transformation.");
     await add2eRefreshSceneTokenTexture(tokenDocument);
   } catch (error) {
     if (actor.effects?.get?.(effect.id)) await actor.deleteEmbeddedDocuments("ActiveEffect", [effect.id], { add2eTokenTransform: true, add2eTokenTransformReason: "rollback" });
