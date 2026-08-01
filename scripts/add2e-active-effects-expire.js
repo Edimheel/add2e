@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — Point d'entrée : moteur de temps, rounds + états vitaux.
-// Version : 2026-08-01-canonical-document-transform-v3
+// Version : 2026-08-01-canonical-document-transform-v4
 // Compatible Foundry V13/V14/V15.
 // ============================================================================
 
@@ -35,11 +35,11 @@ import {
 } from "./add2e/19b-world-time-engine.mjs";
 
 const ADD2E_TOKEN_TRANSFORM_VERSION = "2026-08-01-timed-token-transform-v2";
-const ADD2E_DOCUMENT_TRANSFORM_VERSION = "2026-08-01-canonical-document-transform-v3";
+const ADD2E_DOCUMENT_TRANSFORM_VERSION = "2026-08-01-canonical-document-transform-v4";
 const ADD2E_TOKEN_TRANSFORM_FLAG = "tokenTransform";
 const ADD2E_DOCUMENT_TRANSFORM_FLAG = "documentTransformation";
 const ADD2E_DOCUMENT_TRANSFORM_MARKERS_FLAG = "documentTransformations";
-const ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION = "2026-08-01-canonical-document-transform-v3";
+const ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION = "2026-08-01-canonical-document-transform-v4";
 
 globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION;
 globalThis.ADD2E_VITAL_STATUS_CORE_VERSION = ADD2E_VITAL_STATUS_CORE_VERSION;
@@ -152,14 +152,52 @@ function add2eHasProperty(object, path) {
   return true;
 }
 
+function add2ePlainDocumentData(document) {
+  try {
+    if (typeof document?.toObject === "function") return document.toObject(false) ?? {};
+  } catch (_error) {}
+  return document ?? {};
+}
+
+function add2eWithoutUndefined(value) {
+  if (value === undefined) return undefined;
+  if (Array.isArray(value)) {
+    return value.map(entry => {
+      const cleaned = add2eWithoutUndefined(entry);
+      return cleaned === undefined ? null : cleaned;
+    });
+  }
+  if (value && typeof value === "object") {
+    const prototype = Object.getPrototypeOf(value);
+    if (prototype !== Object.prototype && prototype !== null) return value;
+    const cleaned = {};
+    for (const [key, entry] of Object.entries(value)) {
+      const next = add2eWithoutUndefined(entry);
+      if (next !== undefined) cleaned[key] = next;
+    }
+    return cleaned;
+  }
+  return value;
+}
+
+function add2eSanitizeUpdate(updateData = {}) {
+  const update = {};
+  for (const [path, value] of Object.entries(updateData ?? {})) {
+    if (!path || value === undefined) continue;
+    const cleaned = add2eWithoutUndefined(value);
+    if (cleaned !== undefined) update[path] = cleaned;
+  }
+  return update;
+}
+
 function add2eSnapshotPaths(document, updateData = {}, ignored = new Set()) {
   const snapshot = {};
+  const source = add2ePlainDocumentData(document);
   for (const path of Object.keys(updateData ?? {})) {
-    if (!path || path === "_id" || ignored.has(path) || path.includes(".-=")) continue;
-    snapshot[path] = {
-      exists: add2eHasProperty(document, path),
-      value: add2eClone(add2eGetProperty(document, path))
-    };
+    if (!path || path === "_id" || ignored.has(path) || path.startsWith("-=") || path.includes(".-=")) continue;
+    const exists = add2eHasProperty(source, path);
+    const value = exists ? add2eWithoutUndefined(add2eClone(add2eGetProperty(source, path))) : undefined;
+    snapshot[path] = value === undefined ? { exists: false } : { exists: true, value };
   }
   return snapshot;
 }
@@ -167,14 +205,20 @@ function add2eSnapshotPaths(document, updateData = {}, ignored = new Set()) {
 function add2eRestoreUpdate(snapshot = {}) {
   const update = {};
   for (const [path, entry] of Object.entries(snapshot ?? {})) {
-    if (entry?.exists) update[path] = add2eClone(entry.value);
-    else {
+    if (!path || !entry) continue;
+    const hasValue = Object.prototype.hasOwnProperty.call(entry, "value");
+    if (entry.exists === true && hasValue) {
+      const value = add2eWithoutUndefined(add2eClone(entry.value));
+      if (value !== undefined) update[path] = value;
+      continue;
+    }
+    if (entry.exists === false) {
       const parts = String(path).split(".");
       const leaf = parts.pop();
       if (leaf) update[`${parts.join(".")}${parts.length ? "." : ""}-=${leaf}`] = null;
     }
   }
-  return update;
+  return add2eSanitizeUpdate(update);
 }
 
 function add2eTokenTransformData(effect) {
@@ -261,7 +305,7 @@ function add2eCanonicalMarkerDeletePath(transform) {
 }
 
 function add2eCanonicalTokenUpdate(tokenDocument, tokenUpdate = {}, { marker = null, clear = false, transform = null } = {}) {
-  const update = add2eClone(tokenUpdate ?? {}) ?? {};
+  const update = add2eSanitizeUpdate(add2eClone(tokenUpdate ?? {}) ?? {});
   const changesWidth = Object.prototype.hasOwnProperty.call(update, "width");
   const changesHeight = Object.prototype.hasOwnProperty.call(update, "height");
   if ((changesWidth || changesHeight) && !Object.prototype.hasOwnProperty.call(update, "x") && !Object.prototype.hasOwnProperty.call(update, "y")) {
@@ -275,11 +319,11 @@ function add2eCanonicalTokenUpdate(tokenDocument, tokenUpdate = {}, { marker = n
   }
   if (clear && transform) update[add2eCanonicalMarkerDeletePath(transform)] = null;
   else if (marker && transform) update[add2eCanonicalMarkerPath(transform)] = marker;
-  return update;
+  return add2eSanitizeUpdate(update);
 }
 
 function add2eTemporaryItemData(data, transform) {
-  const item = add2eClone(data ?? {}) ?? {};
+  const item = add2eWithoutUndefined(add2eClone(data ?? {}) ?? {}) ?? {};
   delete item._id;
   item.flags ??= {};
   item.flags.add2e ??= {};
@@ -346,7 +390,7 @@ export function add2ePrepareDocumentTransformation({
   const transform = {
     version: ADD2E_DOCUMENT_TRANSFORM_VERSION,
     id: String(id ?? add2eTransformId()),
-    source: add2eClone(source ?? "effect"),
+    source: add2eWithoutUndefined(add2eClone(source ?? "effect")),
     group: String(group ?? "generic"),
     groupKey: add2eTransformGroupKey(group),
     mode: String(mode ?? "default"),
@@ -363,11 +407,13 @@ export function add2ePrepareDocumentTransformation({
       items: []
     },
     applied: {
-      token: add2eClone(tokenUpdate ?? {}) ?? {},
-      actor: add2eClone(actorUpdate ?? {}) ?? {},
+      token: add2eSanitizeUpdate(add2eClone(tokenUpdate ?? {}) ?? {}),
+      actor: add2eSanitizeUpdate(add2eClone(actorUpdate ?? {}) ?? {}),
       items: []
     },
-    temporaryItems: Array.from(temporaryItems ?? []).map(entry => add2eClone(entry)),
+    temporaryItems: Array.from(temporaryItems ?? [])
+      .map(entry => add2eWithoutUndefined(add2eClone(entry)))
+      .filter(entry => entry !== undefined),
     temporaryItemIds: []
   };
 
@@ -375,10 +421,11 @@ export function add2ePrepareDocumentTransformation({
     const itemId = String(update?._id ?? "");
     const item = itemId ? actor.items?.get?.(itemId) ?? null : null;
     if (!item) continue;
-    const applied = add2eClone(update);
+    const applied = add2eClone(update) ?? {};
     delete applied._id;
-    transform.original.items.push({ id: itemId, values: add2eSnapshotPaths(item, applied) });
-    transform.applied.items.push({ id: itemId, update: applied });
+    const cleanApplied = add2eSanitizeUpdate(applied);
+    transform.original.items.push({ id: itemId, values: add2eSnapshotPaths(item, cleanApplied) });
+    transform.applied.items.push({ id: itemId, update: cleanApplied });
   }
 
   const tokenApplied = add2eCanonicalTokenUpdate(tokenDocument, transform.applied.token, {
@@ -446,7 +493,8 @@ export async function add2eRestoreDocumentTransformationFromEffect(effect, { rea
     const itemUpdates = [];
     for (const entry of transform.original?.items ?? []) {
       if (!actor.items?.get?.(entry.id)) continue;
-      itemUpdates.push({ _id: entry.id, ...add2eRestoreUpdate(entry.values) });
+      const restored = add2eRestoreUpdate(entry.values);
+      if (Object.keys(restored).length) itemUpdates.push({ _id: entry.id, ...restored });
     }
     if (itemUpdates.length) {
       await actor.updateEmbeddedDocuments("Item", itemUpdates, {
@@ -456,10 +504,11 @@ export async function add2eRestoreDocumentTransformationFromEffect(effect, { rea
       });
     }
 
-    await actor.update({
+    const actorUpdate = add2eSanitizeUpdate({
       ...add2eRestoreUpdate(transform.original?.actor),
       [add2eCanonicalMarkerDeletePath(transform)]: null
-    }, {
+    });
+    await actor.update(actorUpdate, {
       add2eDocumentTransform: true,
       add2eDocumentTransformReason: reason,
       render: false
@@ -467,10 +516,11 @@ export async function add2eRestoreDocumentTransformationFromEffect(effect, { rea
   }
 
   if (tokenCurrent && tokenDocument) {
-    await tokenDocument.update({
+    const tokenUpdate = add2eSanitizeUpdate({
       ...add2eRestoreUpdate(transform.original?.token),
       [add2eCanonicalMarkerDeletePath(transform)]: null
-    }, {
+    });
+    await tokenDocument.update(tokenUpdate, {
       add2eDocumentTransform: true,
       add2eDocumentTransformReason: reason
     });
@@ -495,10 +545,11 @@ export async function add2eReapplyDocumentTransformationFromEffect(effect, { rea
   if (transform.tracksActor) {
     const actorMarker = add2eDocumentTransformMarker(actor, transform);
     if (actorMarker?.id && String(actorMarker.id) !== String(transform.id)) return { ok: false, reason: "superseded" };
-    await actor.update({
+    const actorUpdate = add2eSanitizeUpdate({
       ...(add2eClone(transform.applied?.actor) ?? {}),
       [add2eCanonicalMarkerPath(transform)]: add2eCanonicalMarker(transform)
-    }, {
+    });
+    await actor.update(actorUpdate, {
       add2eDocumentTransform: true,
       add2eDocumentTransformReason: reason,
       render: false
@@ -506,7 +557,11 @@ export async function add2eReapplyDocumentTransformationFromEffect(effect, { rea
 
     const itemUpdates = Array.from(transform.applied?.items ?? [])
       .filter(entry => actor.items?.get?.(entry.id))
-      .map(entry => ({ _id: entry.id, ...(add2eClone(entry.update) ?? {}) }));
+      .map(entry => {
+        const update = add2eSanitizeUpdate(add2eClone(entry.update) ?? {});
+        return Object.keys(update).length ? { _id: entry.id, ...update } : null;
+      })
+      .filter(Boolean);
     if (itemUpdates.length) {
       await actor.updateEmbeddedDocuments("Item", itemUpdates, {
         add2eDocumentTransform: true,
@@ -534,15 +589,16 @@ export async function add2eReapplyDocumentTransformationFromEffect(effect, { rea
     }
   }
 
-  await tokenDocument.update(
-    add2eCanonicalTokenUpdate(tokenDocument, transform.applied?.token, {
-      marker: add2eCanonicalMarker(transform),
-      transform
-    }),
-    { add2eDocumentTransform: true, add2eDocumentTransformReason: reason }
-  );
+  const tokenUpdate = add2eSanitizeUpdate(add2eCanonicalTokenUpdate(tokenDocument, transform.applied?.token, {
+    marker: add2eCanonicalMarker(transform),
+    transform
+  }));
+  await tokenDocument.update(tokenUpdate, {
+    add2eDocumentTransform: true,
+    add2eDocumentTransformReason: reason
+  });
 
-  const next = { ...add2eClone(transform), phase: "active", temporaryItemIds };
+  const next = add2eWithoutUndefined({ ...add2eClone(transform), phase: "active", temporaryItemIds });
   await effect.update({ [`flags.add2e.${ADD2E_DOCUMENT_TRANSFORM_FLAG}`]: next }, {
     add2eDocumentTransform: true,
     add2eDocumentTransformReason: reason,
