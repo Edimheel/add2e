@@ -4,7 +4,7 @@
 // ============================================================
 import { escapeHtml, expose } from "./08-character-sheet-ui-00-utils.mjs";
 
-globalThis.ADD2E_CHARACTER_EFFECTS_UI_VERSION = "2026-07-10-show-only-applied-effects-v1";
+globalThis.ADD2E_CHARACTER_EFFECTS_UI_VERSION = "2026-08-01-transactional-effect-delete-v2";
 
 function familiarAction(effect) {
   const data = effect?.flags?.add2e?.familiar ?? effect?.getFlag?.("add2e", "familiar") ?? null;
@@ -148,6 +148,36 @@ function shouldShowEffect(effect) {
   return false;
 }
 
+async function restoreTransformationBeforeDelete(effect) {
+  const documentTransform = effect?.flags?.add2e?.documentTransformation ?? null;
+  const tokenTransform = effect?.flags?.add2e?.tokenTransform ?? null;
+  if (!documentTransform && !tokenTransform) return { ok: true, options: {} };
+
+  const restore = globalThis.add2eRestoreTokenTransformationFromEffect;
+  if (typeof restore !== "function") {
+    return { ok: false, reason: "restore-engine-missing", result: null, options: {} };
+  }
+
+  const result = await restore(effect, { reason: "character-sheet-effect-delete" });
+  if (!result?.ok) {
+    return { ok: false, reason: result?.reason ?? "restore-failed", result, options: {} };
+  }
+
+  return {
+    ok: true,
+    result,
+    options: documentTransform
+      ? {
+          add2eDocumentTransform: true,
+          add2eDocumentTransformReason: "character-sheet-effect-delete"
+        }
+      : {
+          add2eTokenTransform: true,
+          add2eTokenTransformReason: "character-sheet-effect-delete"
+        }
+  };
+}
+
 export function buildEffectsTab(sheet) {
   const actor = sheet?.actor ?? sheet?.document;
   const effects = Array.from(actor?.effects ?? []).filter(shouldShowEffect);
@@ -258,7 +288,21 @@ export function injectEffectsTab(sheet, sheetRoot) {
       return;
     }
     try {
-      await actor.deleteEmbeddedDocuments("ActiveEffect", [effect.id]);
+      const restored = await restoreTransformationBeforeDelete(effect);
+      if (!restored.ok) {
+        console.error("[ADD2E][CHARACTER_UI][EFFECT_DELETE][RESTORE_FAILED]", {
+          actor: actor.name,
+          actorId: actor.id,
+          effect: effect.name,
+          effectId,
+          reason: restored.reason,
+          result: restored.result
+        });
+        ui.notifications.error(`Impossible de supprimer « ${effect.name} » : la restauration de la transformation a échoué.`);
+        sheet.render(false);
+        return;
+      }
+      await actor.deleteEmbeddedDocuments("ActiveEffect", [effect.id], restored.options);
     } catch (err) {
       const msg = String(err?.message || err || "");
       if (!msg.includes("does not exist") && !msg.includes("n'existe pas")) {
