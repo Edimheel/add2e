@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — Point d'entrée : moteur de temps, rounds + états vitaux.
-// Version : 2026-08-01-canonical-document-transform-v4
+// Version : 2026-08-01-canonical-document-transform-v5
 // Compatible Foundry V13/V14/V15.
 // ============================================================================
 
@@ -35,11 +35,11 @@ import {
 } from "./add2e/19b-world-time-engine.mjs";
 
 const ADD2E_TOKEN_TRANSFORM_VERSION = "2026-08-01-timed-token-transform-v2";
-const ADD2E_DOCUMENT_TRANSFORM_VERSION = "2026-08-01-canonical-document-transform-v4";
+const ADD2E_DOCUMENT_TRANSFORM_VERSION = "2026-08-01-canonical-document-transform-v5";
 const ADD2E_TOKEN_TRANSFORM_FLAG = "tokenTransform";
 const ADD2E_DOCUMENT_TRANSFORM_FLAG = "documentTransformation";
 const ADD2E_DOCUMENT_TRANSFORM_MARKERS_FLAG = "documentTransformations";
-const ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION = "2026-08-01-canonical-document-transform-v4";
+const ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION = "2026-08-01-canonical-document-transform-v5";
 
 globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION;
 globalThis.ADD2E_VITAL_STATUS_CORE_VERSION = ADD2E_VITAL_STATUS_CORE_VERSION;
@@ -250,6 +250,15 @@ function add2eDocumentTransformMarker(document, transform) {
   return document?.flags?.add2e?.[ADD2E_DOCUMENT_TRANSFORM_MARKERS_FLAG]?.[key] ?? null;
 }
 
+function add2eDocumentTransformationEffectById(actor, transformId) {
+  const id = String(transformId ?? "");
+  if (!actor || !id) return null;
+  return Array.from(actor.effects ?? []).find(effect => {
+    const transform = add2eDocumentTransformData(effect);
+    return String(transform?.id ?? "") === id;
+  }) ?? null;
+}
+
 function add2eTokenTransformMatchesToken(transform, tokenDocument) {
   if (!transform || !tokenDocument) return false;
   const scene = add2eTokenScene(tokenDocument);
@@ -283,7 +292,7 @@ function add2eTokenTransformUpdate(tokenDocument, dimensions, { clear = false, m
 }
 
 function add2eCanonicalMarker(transform) {
-  return {
+  return add2eWithoutUndefined({
     version: transform.version,
     id: transform.id,
     source: transform.source,
@@ -291,9 +300,14 @@ function add2eCanonicalMarker(transform) {
     groupKey: transform.groupKey,
     mode: transform.mode,
     scope: transform.scope,
+    tracksActor: transform.tracksActor,
     sceneId: transform.sceneId,
-    tokenId: transform.tokenId
-  };
+    tokenId: transform.tokenId,
+    recovery: {
+      original: add2eClone(transform.original ?? {}),
+      temporaryItemIds: Array.from(transform.temporaryItemIds ?? []).filter(Boolean)
+    }
+  });
 }
 
 function add2eCanonicalMarkerPath(transform) {
@@ -302,6 +316,112 @@ function add2eCanonicalMarkerPath(transform) {
 
 function add2eCanonicalMarkerDeletePath(transform) {
   return `flags.add2e.${ADD2E_DOCUMENT_TRANSFORM_MARKERS_FLAG}.-=${transform.groupKey}`;
+}
+
+async function add2eRestoreOrphanedDocumentTransformation(actor, tokenDocument, transformId, actorMarker, tokenMarker, { reason = "orphan-recovery" } = {}) {
+  const id = String(transformId ?? "");
+  if (!actor || !id) return { ok: false, reason: "invalid-orphan" };
+
+  const actorMatches = String(actorMarker?.id ?? "") === id;
+  const tokenMatches = String(tokenMarker?.id ?? "") === id;
+  const marker = actorMatches ? actorMarker : tokenMarker;
+  const original = marker?.recovery?.original ?? {};
+  const groupKey = marker?.groupKey ?? add2eTransformGroupKey(marker?.group);
+  const markerTransform = { groupKey };
+
+  const temporaryIds = new Set(Array.from(marker?.recovery?.temporaryItemIds ?? []).filter(Boolean));
+  for (const item of actor.items ?? []) {
+    if (String(item?.flags?.add2e?.documentTransformationId ?? "") === id) temporaryIds.add(item.id);
+  }
+  if (temporaryIds.size) {
+    await actor.deleteEmbeddedDocuments("Item", [...temporaryIds], {
+      add2eDocumentTransform: true,
+      add2eDocumentTransformReason: reason,
+      render: false
+    });
+  }
+
+  if (actorMatches) {
+    const itemUpdates = [];
+    for (const entry of original?.items ?? []) {
+      if (!actor.items?.get?.(entry.id)) continue;
+      const restored = add2eRestoreUpdate(entry.values);
+      if (Object.keys(restored).length) itemUpdates.push({ _id: entry.id, ...restored });
+    }
+    if (itemUpdates.length) {
+      await actor.updateEmbeddedDocuments("Item", itemUpdates, {
+        add2eDocumentTransform: true,
+        add2eDocumentTransformReason: reason,
+        render: false
+      });
+    }
+
+    const actorUpdate = add2eSanitizeUpdate({
+      ...add2eRestoreUpdate(original?.actor),
+      [add2eCanonicalMarkerDeletePath(markerTransform)]: null
+    });
+    await actor.update(actorUpdate, {
+      add2eDocumentTransform: true,
+      add2eDocumentTransformReason: reason,
+      render: false
+    });
+  }
+
+  if (tokenMatches && tokenDocument) {
+    const tokenUpdate = add2eSanitizeUpdate({
+      ...add2eRestoreUpdate(original?.token),
+      [add2eCanonicalMarkerDeletePath(markerTransform)]: null
+    });
+    await tokenDocument.update(tokenUpdate, {
+      add2eDocumentTransform: true,
+      add2eDocumentTransformReason: reason
+    });
+  }
+
+  return {
+    ok: true,
+    transformId: id,
+    actorRestored: actorMatches && Object.keys(original?.actor ?? {}).length > 0,
+    tokenRestored: tokenMatches && Object.keys(original?.token ?? {}).length > 0,
+    temporaryItemsDeleted: temporaryIds.size
+  };
+}
+
+async function add2eReconcileDocumentTransformationMarkers(actor, tokenDocument, transform, { reason = "marker-reconcile" } = {}) {
+  if (!actor || !transform?.id) return { ok: false, reason: "no-document-transform" };
+
+  const actorMarker = transform.tracksActor ? add2eDocumentTransformMarker(actor, transform) : null;
+  const tokenMarker = add2eDocumentTransformMarker(tokenDocument, transform);
+  const currentId = String(transform.id);
+  const orphanIds = [...new Set([actorMarker?.id, tokenMarker?.id]
+    .map(value => String(value ?? ""))
+    .filter(value => value && value !== currentId))];
+
+  for (const markerId of orphanIds) {
+    const owner = add2eDocumentTransformationEffectById(actor, markerId);
+    if (owner) {
+      return {
+        ok: false,
+        reason: "superseded",
+        ownerEffectId: owner.id,
+        ownerTransformId: markerId
+      };
+    }
+  }
+
+  const recovered = [];
+  for (const markerId of orphanIds) {
+    recovered.push(await add2eRestoreOrphanedDocumentTransformation(
+      actor,
+      tokenDocument,
+      markerId,
+      actorMarker,
+      tokenMarker,
+      { reason }
+    ));
+  }
+
+  return { ok: true, recovered };
 }
 
 function add2eCanonicalTokenUpdate(tokenDocument, tokenUpdate = {}, { marker = null, clear = false, transform = null } = {}) {
@@ -542,9 +662,12 @@ export async function add2eReapplyDocumentTransformationFromEffect(effect, { rea
   const tokenDocument = add2eTokenTransformToken(transform);
   if (!actor || !tokenDocument || !transform?.id) return { ok: false, reason: "no-document-transform" };
 
+  const reconciled = await add2eReconcileDocumentTransformationMarkers(actor, tokenDocument, transform, {
+    reason: `${reason}:marker-reconcile`
+  });
+  if (!reconciled.ok) return reconciled;
+
   if (transform.tracksActor) {
-    const actorMarker = add2eDocumentTransformMarker(actor, transform);
-    if (actorMarker?.id && String(actorMarker.id) !== String(transform.id)) return { ok: false, reason: "superseded" };
     const actorUpdate = add2eSanitizeUpdate({
       ...(add2eClone(transform.applied?.actor) ?? {}),
       [add2eCanonicalMarkerPath(transform)]: add2eCanonicalMarker(transform)
@@ -604,7 +727,7 @@ export async function add2eReapplyDocumentTransformationFromEffect(effect, { rea
     add2eDocumentTransformReason: reason,
     render: false
   });
-  return { ok: true, effect, transform: next, temporaryItemIds };
+  return { ok: true, effect, transform: next, temporaryItemIds, reconciled };
 }
 
 export async function add2eDeleteDocumentTransformationEffects(actor, effects = [], { reason = "replace" } = {}) {
@@ -640,6 +763,20 @@ export async function add2eApplyDocumentTransformation({
   const existing = add2eFindDocumentTransformationEffects(actor, tokenDocument, { group, includeDisabled: true });
   if (existing.length) await add2eDeleteDocumentTransformationEffects(actor, existing, { reason: "replace" });
 
+  const transformIdentity = {
+    id: add2eTransformId(),
+    group: String(group ?? "generic"),
+    groupKey: add2eTransformGroupKey(group),
+    tracksActor: String(scope ?? "actor") !== "token"
+      || Object.keys(actorUpdate ?? {}).length > 0
+      || Array.from(itemUpdates ?? []).length > 0
+      || Array.from(temporaryItems ?? []).length > 0
+  };
+  const reconciled = await add2eReconcileDocumentTransformationMarkers(actor, tokenDocument, transformIdentity, {
+    reason: "apply:marker-reconcile"
+  });
+  if (!reconciled.ok) return reconciled;
+
   const prepared = add2ePrepareDocumentTransformation({
     actor,
     token: tokenDocument,
@@ -650,7 +787,8 @@ export async function add2eApplyDocumentTransformation({
     tokenUpdate,
     actorUpdate,
     itemUpdates,
-    temporaryItems
+    temporaryItems,
+    id: transformIdentity.id
   });
   if (!prepared) return { ok: false, reason: "invalid-transform" };
 
