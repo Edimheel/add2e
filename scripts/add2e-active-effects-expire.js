@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — Point d'entrée : moteur de temps, rounds + états vitaux.
-// Version : 2026-08-01-canonical-document-transform-v12
+// Version : 2026-08-01-canonical-document-transform-v13
 // Compatible Foundry V13/V14/V15.
 // ============================================================================
 
@@ -35,11 +35,11 @@ import {
 } from "./add2e/19b-world-time-engine.mjs";
 
 const ADD2E_TOKEN_TRANSFORM_VERSION = "2026-08-01-timed-token-transform-v2";
-const ADD2E_DOCUMENT_TRANSFORM_VERSION = "2026-08-01-canonical-document-transform-v12";
+const ADD2E_DOCUMENT_TRANSFORM_VERSION = "2026-08-01-canonical-document-transform-v13";
 const ADD2E_TOKEN_TRANSFORM_FLAG = "tokenTransform";
 const ADD2E_DOCUMENT_TRANSFORM_FLAG = "documentTransformation";
 const ADD2E_DOCUMENT_TRANSFORM_MARKERS_FLAG = "documentTransformations";
-const ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION = "2026-08-01-canonical-document-transform-v12";
+const ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION = "2026-08-01-canonical-document-transform-v13";
 
 globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION;
 globalThis.ADD2E_VITAL_STATUS_CORE_VERSION = ADD2E_VITAL_STATUS_CORE_VERSION;
@@ -190,6 +190,11 @@ function add2eSanitizeUpdate(updateData = {}) {
   return update;
 }
 
+function add2eFoundryGeneration() {
+  const generation = Number(game?.release?.generation ?? game?.version?.split?.(".")?.[0]);
+  return Number.isFinite(generation) ? generation : 0;
+}
+
 function add2eForcedDeletionValue() {
   const ForcedDeletion = foundry?.data?.operators?.ForcedDeletion;
   return typeof ForcedDeletion === "function" ? new ForcedDeletion() : null;
@@ -205,9 +210,12 @@ function add2eSetDeletion(update, parentPath, key) {
       : {};
     nested[key] = forcedDeletion;
     update[parentPath] = nested;
-  } else {
-    update[`${parentPath}.-=${key}`] = null;
+    return update;
   }
+  if (add2eFoundryGeneration() >= 14) {
+    throw new Error(`Foundry ${add2eFoundryGeneration()} exige ForcedDeletion pour supprimer ${parentPath}.${key}.`);
+  }
+  update[`${parentPath}.-=${key}`] = null;
   return update;
 }
 
@@ -241,7 +249,8 @@ function add2eRestoreUpdate(snapshot = {}) {
       else if (leaf) {
         const forcedDeletion = add2eForcedDeletionValue();
         if (forcedDeletion) update[leaf] = forcedDeletion;
-        else update[`-=${leaf}`] = null;
+        else if (add2eFoundryGeneration() < 14) update[`-=${leaf}`] = null;
+        else throw new Error(`Foundry ${add2eFoundryGeneration()} exige ForcedDeletion pour supprimer ${leaf}.`);
       }
     }
   }
