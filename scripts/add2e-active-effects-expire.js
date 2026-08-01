@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — Point d'entrée : moteur de temps, rounds + états vitaux.
-// Version : 2026-08-01-canonical-document-transform-v7
+// Version : 2026-08-01-canonical-document-transform-v8
 // Compatible Foundry V13/V14/V15.
 // ============================================================================
 
@@ -35,11 +35,11 @@ import {
 } from "./add2e/19b-world-time-engine.mjs";
 
 const ADD2E_TOKEN_TRANSFORM_VERSION = "2026-08-01-timed-token-transform-v2";
-const ADD2E_DOCUMENT_TRANSFORM_VERSION = "2026-08-01-canonical-document-transform-v7";
+const ADD2E_DOCUMENT_TRANSFORM_VERSION = "2026-08-01-canonical-document-transform-v8";
 const ADD2E_TOKEN_TRANSFORM_FLAG = "tokenTransform";
 const ADD2E_DOCUMENT_TRANSFORM_FLAG = "documentTransformation";
 const ADD2E_DOCUMENT_TRANSFORM_MARKERS_FLAG = "documentTransformations";
-const ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION = "2026-08-01-canonical-document-transform-v7";
+const ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION = "2026-08-01-canonical-document-transform-v8";
 
 globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION;
 globalThis.ADD2E_VITAL_STATUS_CORE_VERSION = ADD2E_VITAL_STATUS_CORE_VERSION;
@@ -190,6 +190,29 @@ function add2eSanitizeUpdate(updateData = {}) {
   return update;
 }
 
+function add2eForcedDeletionValue() {
+  const ForcedDeletion = foundry?.data?.operators?.ForcedDeletion;
+  if (typeof ForcedDeletion === "function") return new ForcedDeletion();
+  return null;
+}
+
+function add2eSetDeletion(update, parentPath, key) {
+  if (!update || !parentPath || !key) return update;
+  const forcedDeletion = add2eForcedDeletionValue();
+  if (forcedDeletion) {
+    const current = add2eGetProperty(update, parentPath);
+    const nested = current && typeof current === "object" && !Array.isArray(current)
+      ? current
+      : {};
+    nested[key] = forcedDeletion;
+    if (typeof foundry?.utils?.setProperty === "function") foundry.utils.setProperty(update, parentPath, nested);
+    else update[parentPath] = nested;
+  } else {
+    update[`${parentPath}.-=${key}`] = null;
+  }
+  return update;
+}
+
 function add2eSnapshotPaths(document, updateData = {}, ignored = new Set()) {
   const snapshot = {};
   const source = add2ePlainDocumentData(document);
@@ -215,7 +238,13 @@ function add2eRestoreUpdate(snapshot = {}) {
     if (entry.exists === false) {
       const parts = String(path).split(".");
       const leaf = parts.pop();
-      if (leaf) update[`${parts.join(".")}${parts.length ? "." : ""}-=${leaf}`] = null;
+      const parentPath = parts.join(".");
+      if (leaf && parentPath) add2eSetDeletion(update, parentPath, leaf);
+      else if (leaf) {
+        const forcedDeletion = add2eForcedDeletionValue();
+        if (forcedDeletion) update[leaf] = forcedDeletion;
+        else update[`-=${leaf}`] = null;
+      }
     }
   }
   return add2eSanitizeUpdate(update);
@@ -323,7 +352,7 @@ function add2eTokenTransformUpdate(tokenDocument, dimensions, { clear = false, m
     y: add2eNumber(tokenDocument?.y, 0) + ((oldHeight - height) * gridSize / 2)
   };
 
-  if (clear) update["flags.add2e.-=tokenTransform"] = null;
+  if (clear) add2eSetDeletion(update, "flags.add2e", ADD2E_TOKEN_TRANSFORM_FLAG);
   else if (marker) update["flags.add2e.tokenTransform"] = marker;
   return update;
 }
@@ -352,8 +381,12 @@ function add2eCanonicalMarkerPath(transform) {
   return `flags.add2e.${ADD2E_DOCUMENT_TRANSFORM_MARKERS_FLAG}.${transform.groupKey}`;
 }
 
-function add2eCanonicalMarkerDeletePath(transform) {
-  return `flags.add2e.${ADD2E_DOCUMENT_TRANSFORM_MARKERS_FLAG}.-=${transform.groupKey}`;
+function add2eDeleteCanonicalMarker(update, transform) {
+  return add2eSetDeletion(
+    update,
+    `flags.add2e.${ADD2E_DOCUMENT_TRANSFORM_MARKERS_FLAG}`,
+    transform.groupKey
+  );
 }
 
 async function add2eRestoreOrphanedDocumentTransformation(actor, tokenDocument, transformId, actorMarker, tokenMarker, { reason = "orphan-recovery" } = {}) {
@@ -407,9 +440,9 @@ async function add2eRestoreOrphanedDocumentTransformation(actor, tokenDocument, 
     }
 
     const actorUpdate = add2eSanitizeUpdate({
-      ...add2eRestoreUpdate(original?.actor),
-      [add2eCanonicalMarkerDeletePath(markerTransform)]: null
+      ...add2eRestoreUpdate(original?.actor)
     });
+    add2eDeleteCanonicalMarker(actorUpdate, markerTransform);
     await actor.update(actorUpdate, {
       add2eDocumentTransform: true,
       add2eDocumentTransformReason: reason,
@@ -419,9 +452,9 @@ async function add2eRestoreOrphanedDocumentTransformation(actor, tokenDocument, 
 
   if (tokenRestorable) {
     const tokenUpdate = add2eSanitizeUpdate({
-      ...add2eRestoreUpdate(original?.token),
-      [add2eCanonicalMarkerDeletePath(markerTransform)]: null
+      ...add2eRestoreUpdate(original?.token)
     });
+    add2eDeleteCanonicalMarker(tokenUpdate, markerTransform);
     await tokenDocument.update(tokenUpdate, {
       add2eDocumentTransform: true,
       add2eDocumentTransformReason: reason
@@ -490,7 +523,7 @@ function add2eCanonicalTokenUpdate(tokenDocument, tokenUpdate = {}, { marker = n
     update.x = add2eNumber(tokenDocument?.x, 0) + ((oldWidth - width) * gridSize / 2);
     update.y = add2eNumber(tokenDocument?.y, 0) + ((oldHeight - height) * gridSize / 2);
   }
-  if (clear && transform) update[add2eCanonicalMarkerDeletePath(transform)] = null;
+  if (clear && transform) add2eDeleteCanonicalMarker(update, transform);
   else if (marker && transform) update[add2eCanonicalMarkerPath(transform)] = marker;
   return add2eSanitizeUpdate(update);
 }
@@ -686,9 +719,9 @@ export async function add2eRestoreDocumentTransformationFromEffect(effect, { rea
     }
 
     const actorUpdate = add2eSanitizeUpdate({
-      ...add2eRestoreUpdate(original?.actor),
-      [add2eCanonicalMarkerDeletePath(transform)]: null
+      ...add2eRestoreUpdate(original?.actor)
     });
+    add2eDeleteCanonicalMarker(actorUpdate, transform);
     await actor.update(actorUpdate, {
       add2eDocumentTransform: true,
       add2eDocumentTransformReason: reason,
@@ -698,9 +731,9 @@ export async function add2eRestoreDocumentTransformationFromEffect(effect, { rea
 
   if (tokenRestorable) {
     const tokenUpdate = add2eSanitizeUpdate({
-      ...add2eRestoreUpdate(original?.token),
-      [add2eCanonicalMarkerDeletePath(transform)]: null
+      ...add2eRestoreUpdate(original?.token)
     });
+    add2eDeleteCanonicalMarker(tokenUpdate, transform);
     await tokenDocument.update(tokenUpdate, {
       add2eDocumentTransform: true,
       add2eDocumentTransformReason: reason
