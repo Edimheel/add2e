@@ -97,11 +97,14 @@
   </section>
 
   <section class="add2e-card"><h3><i class="fas fa-bullseye"></i> Portée et maniement</h3>
-    <div class="add2e-grid-4">
+    <div class="add2e-grid-3">
       <div class="add2e-stat"><label>Portée courte</label><input type="number" name="system.portee_courte" value="{{item.system.portee_courte}}"></div>
       <div class="add2e-stat"><label>Portée moyenne</label><input type="number" name="system.portee_moyenne" value="{{item.system.portee_moyenne}}"></div>
       <div class="add2e-stat"><label>Portée longue</label><input type="number" name="system.portee_longue" value="{{item.system.portee_longue}}"></div>
-      <div class="add2e-stat"><label>Poids</label><input type="number" name="system.poids" value="{{item.system.poids}}"></div>
+    </div>
+    <div class="add2e-grid-2">
+      <div class="add2e-stat"><label>Poids</label><input type="text" name="system.poids" value="{{item.system.poids}}"></div>
+      <div class="add2e-stat"><label>Unité</label><select name="system.poids_unite"><option value="lb" {{#if (eq item.system.poids_unite "lb")}}selected{{/if}}>lb</option><option value="kg" {{#if (eq item.system.poids_unite "kg")}}selected{{/if}}>kg</option><option value="po" {{#if (eq item.system.poids_unite "po")}}selected{{/if}}>po</option></select></div>
     </div>
     <div class="add2e-checks" style="margin-top:8px;">
       <label><input type="checkbox" name="system.deuxMains" {{#if item.system.deuxMains}}checked{{/if}}> Deux mains</label>
