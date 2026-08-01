@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — Point d'entrée : moteur de temps, rounds + états vitaux.
-// Version : 2026-08-01-canonical-document-transform-v14
+// Version : 2026-08-01-canonical-document-transform-v15
 // Compatible Foundry V13/V14/V15.
 // ============================================================================
 
@@ -35,11 +35,11 @@ import {
 } from "./add2e/19b-world-time-engine.mjs";
 
 const ADD2E_TOKEN_TRANSFORM_VERSION = "2026-08-01-timed-token-transform-v2";
-const ADD2E_DOCUMENT_TRANSFORM_VERSION = "2026-08-01-canonical-document-transform-v14";
+const ADD2E_DOCUMENT_TRANSFORM_VERSION = "2026-08-01-canonical-document-transform-v15";
 const ADD2E_TOKEN_TRANSFORM_FLAG = "tokenTransform";
 const ADD2E_DOCUMENT_TRANSFORM_FLAG = "documentTransformation";
 const ADD2E_DOCUMENT_TRANSFORM_MARKERS_FLAG = "documentTransformations";
-const ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION = "2026-08-01-canonical-document-transform-v14";
+const ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION = "2026-08-01-canonical-document-transform-v15";
 
 globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION;
 globalThis.ADD2E_VITAL_STATUS_CORE_VERSION = ADD2E_VITAL_STATUS_CORE_VERSION;
@@ -275,21 +275,36 @@ function add2eResolvedRestorationOriginal(transform) {
   };
 }
 
-function add2eRefreshSceneTokenTexture(tokenDocument) {
+async function add2eRefreshSceneTokenTexture(tokenDocument) {
   if (!tokenDocument) return false;
   const sceneId = tokenDocument?.parent?.id ?? null;
-  const tokenObject = tokenDocument.object
-    ?? (canvas?.scene?.id === sceneId ? canvas?.tokens?.get?.(tokenDocument.id) : null)
+  if (canvas?.scene?.id !== sceneId) return false;
+  const tokenObject = canvas?.tokens?.get?.(tokenDocument.id)
+    ?? tokenDocument.object
     ?? null;
   if (!tokenObject) return false;
 
-  if (typeof tokenObject.renderFlags?.set === "function") {
-    tokenObject.renderFlags.set({ redraw: true });
-    return true;
-  }
-  if (typeof tokenObject.refresh === "function") {
-    tokenObject.refresh();
-    return true;
+  try {
+    if (typeof tokenObject.draw === "function") {
+      await tokenObject.draw();
+      return true;
+    }
+    if (typeof tokenObject.renderFlags?.set === "function") {
+      tokenObject.renderFlags.set({ redraw: true });
+      if (typeof tokenObject.applyRenderFlags === "function") await tokenObject.applyRenderFlags();
+      return true;
+    }
+    if (typeof tokenObject.refresh === "function") {
+      tokenObject.refresh();
+      return true;
+    }
+  } catch (error) {
+    console.warn("[ADD2E][DOCUMENT-TRANSFORM][TOKEN_REDRAW_FAILED]", {
+      sceneId,
+      tokenId: tokenDocument.id ?? null,
+      texture: tokenDocument?.texture?.src ?? null,
+      error
+    });
   }
   return false;
 }
@@ -466,7 +481,7 @@ async function add2eRestoreOrphanedDocumentTransformation(actor, tokenDocument, 
       add2eDocumentTransform: true,
       add2eDocumentTransformReason: reason
     });
-    add2eRefreshSceneTokenTexture(tokenDocument);
+    await add2eRefreshSceneTokenTexture(tokenDocument);
   }
 
   return {
@@ -745,7 +760,7 @@ export async function add2eRestoreDocumentTransformationFromEffect(effect, { rea
       add2eDocumentTransform: true,
       add2eDocumentTransformReason: reason
     });
-    add2eRefreshSceneTokenTexture(tokenDocument);
+    await add2eRefreshSceneTokenTexture(tokenDocument);
   }
 
   return {
@@ -824,7 +839,7 @@ export async function add2eReapplyDocumentTransformationFromEffect(effect, { rea
     add2eDocumentTransform: true,
     add2eDocumentTransformReason: reason
   });
-  add2eRefreshSceneTokenTexture(tokenDocument);
+  await add2eRefreshSceneTokenTexture(tokenDocument);
 
   const next = add2eWithoutUndefined({ ...add2eClone(transform), phase: "active", temporaryItemIds });
   await effect.update({ [`flags.add2e.${ADD2E_DOCUMENT_TRANSFORM_FLAG}`]: next }, {
@@ -943,7 +958,7 @@ export async function add2eRestoreTokenTransformationFromEffect(effect, { reason
     add2eTokenTransformUpdate(tokenDocument, transform.original, { clear: true }),
     { add2eTokenTransform: true, add2eTokenTransformReason: reason }
   );
-  add2eRefreshSceneTokenTexture(tokenDocument);
+  await add2eRefreshSceneTokenTexture(tokenDocument);
   return { ok: true, tokenId: tokenDocument.id, transformId: transform.id };
 }
 
@@ -962,7 +977,7 @@ export async function add2eReapplyTokenTransformationFromEffect(effect, { reason
     add2eTokenTransformUpdate(tokenDocument, transform.applied, { marker: transform }),
     { add2eTokenTransform: true, add2eTokenTransformReason: reason }
   );
-  add2eRefreshSceneTokenTexture(tokenDocument);
+  await add2eRefreshSceneTokenTexture(tokenDocument);
   return { ok: true, tokenId: tokenDocument.id, transformId: transform.id };
 }
 
@@ -1002,7 +1017,7 @@ export async function add2eApplyTimedTokenTransformation({ actor, token, effectD
 
   try {
     await tokenDocument.update(prepared.updateData, { add2eTokenTransform: true, add2eTokenTransformReason: "apply" });
-    add2eRefreshSceneTokenTexture(tokenDocument);
+    await add2eRefreshSceneTokenTexture(tokenDocument);
   } catch (error) {
     if (actor.effects?.get?.(effect.id)) await actor.deleteEmbeddedDocuments("ActiveEffect", [effect.id], { add2eTokenTransform: true, add2eTokenTransformReason: "rollback" });
     throw error;
@@ -1244,6 +1259,22 @@ Hooks.on("updateActor", async (actor, changed, options) => {
     foundry.utils.hasProperty(changed, "system.hp") ||
     foundry.utils.hasProperty(changed, "system.points_de_coup");
   if (hpChanged) window.setTimeout(() => add2eSyncActorVitalStatus(actor, { reason: "updateActor:hp" }), 30);
+});
+
+Hooks.on("updateToken", (tokenDocument, changed = {}, options = {}, userId = null) => {
+  const textureChanged = Object.prototype.hasOwnProperty.call(changed, "texture.src")
+    || Object.prototype.hasOwnProperty.call(changed?.texture ?? {}, "src")
+    || foundry.utils.hasProperty(changed, "texture.src");
+  if (!textureChanged) return;
+  if (userId === game.user?.id && (options?.add2eDocumentTransform || options?.add2eTokenTransform)) return;
+  window.setTimeout(() => {
+    add2eRefreshSceneTokenTexture(tokenDocument)
+      .catch(error => console.warn("[ADD2E][DOCUMENT-TRANSFORM][REMOTE_TOKEN_REDRAW_FAILED]", {
+        sceneId: tokenDocument?.parent?.id ?? null,
+        tokenId: tokenDocument?.id ?? null,
+        error
+      }));
+  }, 0);
 });
 
 Hooks.on("createActiveEffect", effect => add2eNormalizeCreatedEffect(effect));
