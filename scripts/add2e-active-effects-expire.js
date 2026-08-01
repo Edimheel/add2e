@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — Point d'entrée : moteur de temps, rounds + états vitaux.
-// Version : 2026-08-01-canonical-document-transform-v17
+// Version : 2026-08-01-canonical-document-transform-v18
 // Compatible Foundry V13/V14/V15.
 // ============================================================================
 
@@ -35,11 +35,11 @@ import {
 } from "./add2e/19b-world-time-engine.mjs";
 
 const ADD2E_TOKEN_TRANSFORM_VERSION = "2026-08-01-timed-token-transform-v2";
-const ADD2E_DOCUMENT_TRANSFORM_VERSION = "2026-08-01-canonical-document-transform-v17";
+const ADD2E_DOCUMENT_TRANSFORM_VERSION = "2026-08-01-canonical-document-transform-v18";
 const ADD2E_TOKEN_TRANSFORM_FLAG = "tokenTransform";
 const ADD2E_DOCUMENT_TRANSFORM_FLAG = "documentTransformation";
 const ADD2E_DOCUMENT_TRANSFORM_MARKERS_FLAG = "documentTransformations";
-const ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION = "2026-08-01-canonical-document-transform-v17";
+const ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION = "2026-08-01-canonical-document-transform-v18";
 
 globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION;
 globalThis.ADD2E_VITAL_STATUS_CORE_VERSION = ADD2E_VITAL_STATUS_CORE_VERSION;
@@ -269,6 +269,12 @@ function add2eSnapshotSize(snapshot = {}) {
   return add2eSnapshotEntries(snapshot).length;
 }
 
+function add2eStoredUpdateHasPath(updateData = {}, path = "") {
+  if (!path) return false;
+  return Object.prototype.hasOwnProperty.call(updateData ?? {}, path)
+    || add2eHasProperty(updateData, path);
+}
+
 function add2eStoredUpdateValue(updateData = {}, path = "") {
   if (!path) return undefined;
   if (Object.prototype.hasOwnProperty.call(updateData ?? {}, path)) return updateData[path];
@@ -323,6 +329,13 @@ function add2eResolvedRestorationOriginal(transform) {
 
 function add2eSameValue(left, right) {
   if (Object.is(left, right)) return true;
+  const scalarLeft = typeof left === "number" || typeof left === "string";
+  const scalarRight = typeof right === "number" || typeof right === "string";
+  if (scalarLeft && scalarRight && String(left).trim() !== "" && String(right).trim() !== "") {
+    const leftNumber = Number(left);
+    const rightNumber = Number(right);
+    if (Number.isFinite(leftNumber) && Number.isFinite(rightNumber) && leftNumber === rightNumber) return true;
+  }
   if (typeof foundry?.utils?.deepEqual === "function") {
     try { return foundry.utils.deepEqual(left, right); } catch (_error) {}
   }
@@ -354,6 +367,41 @@ function add2eVerifySnapshot(document, snapshot = {}) {
     }
   }
   return { ok: mismatches.length === 0, mismatches };
+}
+
+function add2eVerifyReleasedSnapshot(document, snapshot = {}, applied = {}) {
+  const strict = add2eVerifySnapshot(document, snapshot);
+  if (strict.ok) return { ...strict, released: [] };
+
+  const source = add2ePlainDocumentData(document);
+  const mismatches = [];
+  const released = [];
+
+  for (const mismatch of strict.mismatches) {
+    const path = String(mismatch?.path ?? "");
+    if (!path || !add2eStoredUpdateHasPath(applied, path)) {
+      mismatches.push(mismatch);
+      continue;
+    }
+
+    const actualExists = add2eHasProperty(source, path);
+    const actual = actualExists ? add2eClone(add2eGetProperty(source, path)) : undefined;
+    const appliedValue = add2eClone(add2eStoredUpdateValue(applied, path));
+    const stillApplied = actualExists && add2eSameValue(actual, appliedValue);
+
+    if (stillApplied) {
+      mismatches.push({ ...mismatch, applied: appliedValue });
+      continue;
+    }
+
+    released.push({ ...mismatch, applied: appliedValue });
+  }
+
+  return {
+    ok: mismatches.length === 0,
+    mismatches,
+    released
+  };
 }
 
 function add2eVerifyItemSnapshots(actor, entries = []) {
@@ -584,8 +632,8 @@ async function add2eRestoreOrphanedDocumentTransformation(actor, tokenDocument, 
   }
 
   const actorVerification = actorMatches
-    ? add2eVerifySnapshot(actor, original?.actor)
-    : { ok: add2eSnapshotSize(original?.actor) === 0, mismatches: [] };
+    ? add2eVerifyReleasedSnapshot(actor, original?.actor, recovery?.applied?.actor)
+    : { ok: add2eSnapshotSize(original?.actor) === 0, mismatches: [], released: [] };
   const itemVerification = actorMatches
     ? add2eVerifyItemSnapshots(actor, original?.items)
     : { ok: Array.from(original?.items ?? []).length === 0, items: [] };
@@ -598,6 +646,8 @@ async function add2eRestoreOrphanedDocumentTransformation(actor, tokenDocument, 
       ok: false,
       reason: "orphan-postcondition-failed",
       transformId: id,
+      actorRestored: actorVerification.ok && itemVerification.ok,
+      tokenRestored: tokenVerification.ok,
       actorVerification,
       itemVerification,
       tokenVerification
@@ -966,8 +1016,8 @@ export async function add2eRestoreDocumentTransformationFromEffect(effect, { rea
   }
 
   const actorVerification = actorRestorable
-    ? add2eVerifySnapshot(actor, original?.actor)
-    : { ok: !actorSnapshotRequired, mismatches: [] };
+    ? add2eVerifyReleasedSnapshot(actor, original?.actor, transform?.applied?.actor)
+    : { ok: !actorSnapshotRequired, mismatches: [], released: [] };
   const itemVerification = actorRestorable
     ? add2eVerifyItemSnapshots(actor, original?.items)
     : { ok: Array.from(original?.items ?? []).length === 0, items: [] };
@@ -980,8 +1030,8 @@ export async function add2eRestoreDocumentTransformationFromEffect(effect, { rea
       ok: false,
       reason: "postcondition-failed",
       transformId: transform.id,
-      actorRestored: false,
-      tokenRestored: false,
+      actorRestored: actorVerification.ok && itemVerification.ok,
+      tokenRestored: tokenVerification.ok,
       tokenOwnedThroughActor,
       actorOwnedThroughToken,
       effectOwnedWithoutMarkers,
