@@ -329,8 +329,6 @@ function add2eSheetArmorRows(armors, armorClass, defenseRows, engine) {
 export function add2ePrepareActorSheetCombatData({ actor, data, sys }) {
   const engine = add2eSheetArmorClassEngine();
   const transformation = globalThis.add2eGetCapabilityTransformationCombatProfile?.(actor) ?? null;
-  const transformationMovement = String(transformation?.movement ?? "").trim();
-  if (transformationMovement) sys.vitesse_deplacement = transformationMovement;
 
   const armorClass = engine.resolveArmorClass(actor, {
     source: "actor-sheet",
