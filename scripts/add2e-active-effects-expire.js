@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — Point d'entrée : moteur de temps, rounds + états vitaux.
-// Version : 2026-08-01-canonical-document-transform-v6
+// Version : 2026-08-01-canonical-document-transform-v7
 // Compatible Foundry V13/V14/V15.
 // ============================================================================
 
@@ -35,11 +35,11 @@ import {
 } from "./add2e/19b-world-time-engine.mjs";
 
 const ADD2E_TOKEN_TRANSFORM_VERSION = "2026-08-01-timed-token-transform-v2";
-const ADD2E_DOCUMENT_TRANSFORM_VERSION = "2026-08-01-canonical-document-transform-v6";
+const ADD2E_DOCUMENT_TRANSFORM_VERSION = "2026-08-01-canonical-document-transform-v7";
 const ADD2E_TOKEN_TRANSFORM_FLAG = "tokenTransform";
 const ADD2E_DOCUMENT_TRANSFORM_FLAG = "documentTransformation";
 const ADD2E_DOCUMENT_TRANSFORM_MARKERS_FLAG = "documentTransformations";
-const ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION = "2026-08-01-canonical-document-transform-v6";
+const ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION = "2026-08-01-canonical-document-transform-v7";
 
 globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION;
 globalThis.ADD2E_VITAL_STATUS_CORE_VERSION = ADD2E_VITAL_STATUS_CORE_VERSION;
@@ -221,21 +221,7 @@ function add2eRestoreUpdate(snapshot = {}) {
   return add2eSanitizeUpdate(update);
 }
 
-function add2ePrototypeTokenTexture(actor) {
-  const prototypeData = add2ePlainDocumentData(actor?.prototypeToken);
-  const candidates = [
-    add2eGetProperty(prototypeData, "texture.src"),
-    actor?.prototypeToken?.texture?.src,
-    actor?.img
-  ];
-  for (const candidate of candidates) {
-    const src = String(candidate ?? "").trim();
-    if (src) return src;
-  }
-  return "";
-}
-
-function add2eResolvedRestorationOriginal(actor, transform) {
+function add2eResolvedRestorationOriginal(transform) {
   const original = add2eClone(transform?.original ?? {}) ?? {};
   original.token ??= {};
 
@@ -244,26 +230,32 @@ function add2eResolvedRestorationOriginal(actor, transform) {
     && Object.prototype.hasOwnProperty.call(textureEntry, "value");
   const originalTexture = hasTextureValue ? String(textureEntry.value ?? "").trim() : "";
   const appliedTexture = String(transform?.applied?.token?.["texture.src"] ?? "").trim();
-  const prototypeTexture = add2ePrototypeTokenTexture(actor);
-  const physicalForm = String(transform?.group ?? "") === "physical-form";
-  const invalidOriginal = !originalTexture || originalTexture === appliedTexture;
-  const canRepairTexture = physicalForm
-    && !!appliedTexture
-    && invalidOriginal
-    && !!prototypeTexture
-    && prototypeTexture !== appliedTexture;
-
-  if (canRepairTexture) {
-    original.token["texture.src"] = { exists: true, value: prototypeTexture };
-  }
 
   return {
     original,
-    tokenTextureRepaired: canRepairTexture,
-    originalTexture: canRepairTexture ? prototypeTexture : originalTexture,
-    appliedTexture,
-    prototypeTexture
+    tokenTextureRepaired: false,
+    originalTexture,
+    appliedTexture
   };
+}
+
+function add2eRefreshSceneTokenTexture(tokenDocument) {
+  if (!tokenDocument) return false;
+  const sceneId = tokenDocument?.parent?.id ?? null;
+  const tokenObject = tokenDocument.object
+    ?? (canvas?.scene?.id === sceneId ? canvas?.tokens?.get?.(tokenDocument.id) : null)
+    ?? null;
+  if (!tokenObject) return false;
+
+  if (typeof tokenObject.renderFlags?.set === "function") {
+    tokenObject.renderFlags.set({ redraw: true });
+    return true;
+  }
+  if (typeof tokenObject.refresh === "function") {
+    tokenObject.refresh();
+    return true;
+  }
+  return false;
 }
 
 function add2eTokenTransformData(effect) {
@@ -371,8 +363,14 @@ async function add2eRestoreOrphanedDocumentTransformation(actor, tokenDocument, 
   const actorMatches = String(actorMarker?.id ?? "") === id;
   const tokenMatches = String(tokenMarker?.id ?? "") === id;
   const marker = actorMatches ? actorMarker : tokenMarker;
+  const tokenMarkerMissing = !String(tokenMarker?.id ?? "");
+  const tokenOwnedThroughActor = !!tokenDocument
+    && actorMatches
+    && tokenMarkerMissing
+    && add2eTokenTransformMatchesToken(marker, tokenDocument);
+  const tokenRestorable = !!tokenDocument && (tokenMatches || tokenOwnedThroughActor);
   const recovery = marker?.recovery ?? {};
-  const resolvedOriginal = add2eResolvedRestorationOriginal(actor, {
+  const resolvedOriginal = add2eResolvedRestorationOriginal({
     group: marker?.group,
     original: recovery.original,
     applied: recovery.applied
@@ -419,7 +417,7 @@ async function add2eRestoreOrphanedDocumentTransformation(actor, tokenDocument, 
     });
   }
 
-  if (tokenMatches && tokenDocument) {
+  if (tokenRestorable) {
     const tokenUpdate = add2eSanitizeUpdate({
       ...add2eRestoreUpdate(original?.token),
       [add2eCanonicalMarkerDeletePath(markerTransform)]: null
@@ -428,13 +426,15 @@ async function add2eRestoreOrphanedDocumentTransformation(actor, tokenDocument, 
       add2eDocumentTransform: true,
       add2eDocumentTransformReason: reason
     });
+    add2eRefreshSceneTokenTexture(tokenDocument);
   }
 
   return {
     ok: true,
     transformId: id,
     actorRestored: actorMatches && Object.keys(original?.actor ?? {}).length > 0,
-    tokenRestored: tokenMatches && Object.keys(original?.token ?? {}).length > 0,
+    tokenRestored: tokenRestorable && Object.keys(original?.token ?? {}).length > 0,
+    tokenOwnedThroughActor,
     tokenTextureRepaired: resolvedOriginal.tokenTextureRepaired,
     temporaryItemsDeleted: temporaryIds.size
   };
@@ -655,7 +655,7 @@ export async function add2eRestoreDocumentTransformationFromEffect(effect, { rea
     && tokenMarkerMissing
     && add2eTokenTransformMatchesToken(transform, tokenDocument);
   const tokenRestorable = !!tokenDocument && (tokenCurrent || tokenOwnedThroughActor);
-  const resolvedOriginal = add2eResolvedRestorationOriginal(actor, transform);
+  const resolvedOriginal = add2eResolvedRestorationOriginal(transform);
   const original = resolvedOriginal.original;
 
   const temporaryIds = new Set(Array.from(transform.temporaryItemIds ?? []).filter(Boolean));
@@ -705,6 +705,7 @@ export async function add2eRestoreDocumentTransformationFromEffect(effect, { rea
       add2eDocumentTransform: true,
       add2eDocumentTransformReason: reason
     });
+    add2eRefreshSceneTokenTexture(tokenDocument);
   }
 
   return {
@@ -783,6 +784,7 @@ export async function add2eReapplyDocumentTransformationFromEffect(effect, { rea
     add2eDocumentTransform: true,
     add2eDocumentTransformReason: reason
   });
+  add2eRefreshSceneTokenTexture(tokenDocument);
 
   const next = add2eWithoutUndefined({ ...add2eClone(transform), phase: "active", temporaryItemIds });
   await effect.update({ [`flags.add2e.${ADD2E_DOCUMENT_TRANSFORM_FLAG}`]: next }, {
@@ -901,6 +903,7 @@ export async function add2eRestoreTokenTransformationFromEffect(effect, { reason
     add2eTokenTransformUpdate(tokenDocument, transform.original, { clear: true }),
     { add2eTokenTransform: true, add2eTokenTransformReason: reason }
   );
+  add2eRefreshSceneTokenTexture(tokenDocument);
   return { ok: true, tokenId: tokenDocument.id, transformId: transform.id };
 }
 
@@ -919,6 +922,7 @@ export async function add2eReapplyTokenTransformationFromEffect(effect, { reason
     add2eTokenTransformUpdate(tokenDocument, transform.applied, { marker: transform }),
     { add2eTokenTransform: true, add2eTokenTransformReason: reason }
   );
+  add2eRefreshSceneTokenTexture(tokenDocument);
   return { ok: true, tokenId: tokenDocument.id, transformId: transform.id };
 }
 
@@ -958,6 +962,7 @@ export async function add2eApplyTimedTokenTransformation({ actor, token, effectD
 
   try {
     await tokenDocument.update(prepared.updateData, { add2eTokenTransform: true, add2eTokenTransformReason: "apply" });
+    add2eRefreshSceneTokenTexture(tokenDocument);
   } catch (error) {
     if (actor.effects?.get?.(effect.id)) await actor.deleteEmbeddedDocuments("ActiveEffect", [effect.id], { add2eTokenTransform: true, add2eTokenTransformReason: "rollback" });
     throw error;
