@@ -157,10 +157,14 @@
               {{/each}}
             </tbody>
           </table>
-          <p class="a2e-small"><b>Poids total objets :</b> {{poidsTotalObjets}}</p>
         {{else}}
           <p class="a2e-muted">Aucun objet.</p>
         {{/if}}
+
+        <p class="a2e-small" style="margin:8px 0 0;line-height:1.35;">
+          <b>Charge transportée :</b> {{movement.poidsPo}} po ({{movement.poidsKg}} kg)<br>
+          <b>Encombrement :</b> {{movement.label}}
+        </p>
       </div>
     </div>
 
