@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — Point d'entrée : moteur de temps, rounds + états vitaux.
-// Version : 2026-07-01-active-effects-monster-time-v3
+// Version : 2026-08-01-canonical-document-transform-v2
 // Compatible Foundry V13/V14/V15.
 // ============================================================================
 
@@ -34,9 +34,12 @@ import {
   add2eWorldTimeExpireAllActors
 } from "./add2e/19b-world-time-engine.mjs";
 
-const ADD2E_TOKEN_TRANSFORM_VERSION = "2026-07-01-timed-token-transform-v1";
+const ADD2E_TOKEN_TRANSFORM_VERSION = "2026-08-01-timed-token-transform-v2";
+const ADD2E_DOCUMENT_TRANSFORM_VERSION = "2026-08-01-canonical-document-transform-v2";
 const ADD2E_TOKEN_TRANSFORM_FLAG = "tokenTransform";
-const ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION = "2026-07-01-active-effects-monster-time-v3";
+const ADD2E_DOCUMENT_TRANSFORM_FLAG = "documentTransformation";
+const ADD2E_DOCUMENT_TRANSFORM_MARKERS_FLAG = "documentTransformations";
+const ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION = "2026-08-01-canonical-document-transform-v2";
 
 globalThis.ADD2E_ACTIVE_EFFECTS_EXPIRE_VERSION = ADD2E_ACTIVE_EFFECTS_ENTRY_VERSION;
 globalThis.ADD2E_VITAL_STATUS_CORE_VERSION = ADD2E_VITAL_STATUS_CORE_VERSION;
@@ -61,7 +64,8 @@ console.log("[ADD2E][AUTO-REMOVE][VERSION]", {
   timeEngine: ADD2E_TIME_ENGINE_VERSION,
   roundEngine: ADD2E_ROUND_ENGINE_VERSION,
   worldTimeEngine: ADD2E_WORLD_TIME_ENGINE_VERSION,
-  tokenTransform: ADD2E_TOKEN_TRANSFORM_VERSION
+  tokenTransform: ADD2E_TOKEN_TRANSFORM_VERSION,
+  documentTransform: ADD2E_DOCUMENT_TRANSFORM_VERSION
 });
 
 function add2eNumber(value, fallback = NaN) {
@@ -70,6 +74,7 @@ function add2eNumber(value, fallback = NaN) {
 }
 
 function add2eClone(value) {
+  if (value === undefined) return undefined;
   if (foundry?.utils?.deepClone) return foundry.utils.deepClone(value);
   if (foundry?.utils?.duplicate) return foundry.utils.duplicate(value);
   return JSON.parse(JSON.stringify(value));
@@ -105,6 +110,17 @@ function add2eTransformId() {
     ?? `transform_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
 }
 
+function add2eTransformGroupKey(value) {
+  return String(value ?? "generic")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9_-]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    || "generic";
+}
+
 function add2eRoundTokenValue(value, minimum = 0.2) {
   const number = add2eNumber(value, minimum);
   return Math.max(minimum, Math.round(number * 1000) / 1000);
@@ -112,6 +128,47 @@ function add2eRoundTokenValue(value, minimum = 0.2) {
 
 function add2eTokenGridSize(tokenDocument) {
   return Math.max(1, add2eNumber(add2eTokenScene(tokenDocument)?.grid?.size ?? canvas?.grid?.size, 100));
+}
+
+function add2eGetProperty(object, path) {
+  if (typeof foundry?.utils?.getProperty === "function") return foundry.utils.getProperty(object, path);
+  return String(path ?? "").split(".").reduce((value, key) => value?.[key], object);
+}
+
+function add2eHasProperty(object, path) {
+  if (typeof foundry?.utils?.hasProperty === "function") return foundry.utils.hasProperty(object, path);
+  const parts = String(path ?? "").split(".");
+  let value = object;
+  for (const part of parts) {
+    if (value === null || value === undefined || !Object.prototype.hasOwnProperty.call(value, part)) return false;
+    value = value[part];
+  }
+  return true;
+}
+
+function add2eSnapshotPaths(document, updateData = {}, ignored = new Set()) {
+  const snapshot = {};
+  for (const path of Object.keys(updateData ?? {})) {
+    if (!path || path === "_id" || ignored.has(path) || path.includes(".-=")) continue;
+    snapshot[path] = {
+      exists: add2eHasProperty(document, path),
+      value: add2eClone(add2eGetProperty(document, path))
+    };
+  }
+  return snapshot;
+}
+
+function add2eRestoreUpdate(snapshot = {}) {
+  const update = {};
+  for (const [path, entry] of Object.entries(snapshot ?? {})) {
+    if (entry?.exists) update[path] = add2eClone(entry.value);
+    else {
+      const parts = String(path).split(".");
+      const leaf = parts.pop();
+      if (leaf) update[`${parts.join(".")}${parts.length ? "." : ""}-=${leaf}`] = null;
+    }
+  }
+  return update;
 }
 
 function add2eTokenTransformData(effect) {
@@ -124,8 +181,23 @@ function add2eTokenTransformData(effect) {
   }
 }
 
+function add2eDocumentTransformData(effect) {
+  try {
+    return effect?.getFlag?.("add2e", ADD2E_DOCUMENT_TRANSFORM_FLAG)
+      ?? effect?.flags?.add2e?.[ADD2E_DOCUMENT_TRANSFORM_FLAG]
+      ?? null;
+  } catch (_error) {
+    return effect?.flags?.add2e?.[ADD2E_DOCUMENT_TRANSFORM_FLAG] ?? null;
+  }
+}
+
 function add2eTokenTransformMarker(tokenDocument) {
   return tokenDocument?.flags?.add2e?.[ADD2E_TOKEN_TRANSFORM_FLAG] ?? null;
+}
+
+function add2eDocumentTransformMarker(document, transform) {
+  const key = transform?.groupKey ?? add2eTransformGroupKey(transform?.group);
+  return document?.flags?.add2e?.[ADD2E_DOCUMENT_TRANSFORM_MARKERS_FLAG]?.[key] ?? null;
 }
 
 function add2eTokenTransformMatchesToken(transform, tokenDocument) {
@@ -158,6 +230,56 @@ function add2eTokenTransformUpdate(tokenDocument, dimensions, { clear = false, m
   if (clear) update["flags.add2e.-=tokenTransform"] = null;
   else if (marker) update["flags.add2e.tokenTransform"] = marker;
   return update;
+}
+
+function add2eCanonicalMarker(transform) {
+  return {
+    version: transform.version,
+    id: transform.id,
+    source: transform.source,
+    group: transform.group,
+    groupKey: transform.groupKey,
+    mode: transform.mode,
+    scope: transform.scope,
+    sceneId: transform.sceneId,
+    tokenId: transform.tokenId
+  };
+}
+
+function add2eCanonicalMarkerPath(transform) {
+  return `flags.add2e.${ADD2E_DOCUMENT_TRANSFORM_MARKERS_FLAG}.${transform.groupKey}`;
+}
+
+function add2eCanonicalMarkerDeletePath(transform) {
+  return `flags.add2e.${ADD2E_DOCUMENT_TRANSFORM_MARKERS_FLAG}.-=${transform.groupKey}`;
+}
+
+function add2eCanonicalTokenUpdate(tokenDocument, tokenUpdate = {}, { marker = null, clear = false, transform = null } = {}) {
+  const update = add2eClone(tokenUpdate ?? {}) ?? {};
+  const changesWidth = Object.prototype.hasOwnProperty.call(update, "width");
+  const changesHeight = Object.prototype.hasOwnProperty.call(update, "height");
+  if ((changesWidth || changesHeight) && !Object.prototype.hasOwnProperty.call(update, "x") && !Object.prototype.hasOwnProperty.call(update, "y")) {
+    const gridSize = add2eTokenGridSize(tokenDocument);
+    const oldWidth = add2eRoundTokenValue(tokenDocument?.width, 0.2);
+    const oldHeight = add2eRoundTokenValue(tokenDocument?.height, 0.2);
+    const width = changesWidth ? add2eRoundTokenValue(update.width, 0.2) : oldWidth;
+    const height = changesHeight ? add2eRoundTokenValue(update.height, 0.2) : oldHeight;
+    update.x = add2eNumber(tokenDocument?.x, 0) + ((oldWidth - width) * gridSize / 2);
+    update.y = add2eNumber(tokenDocument?.y, 0) + ((oldHeight - height) * gridSize / 2);
+  }
+  if (clear && transform) update[add2eCanonicalMarkerDeletePath(transform)] = null;
+  else if (marker && transform) update[add2eCanonicalMarkerPath(transform)] = marker;
+  return update;
+}
+
+function add2eTemporaryItemData(data, transform) {
+  const item = add2eClone(data ?? {}) ?? {};
+  delete item._id;
+  item.flags ??= {};
+  item.flags.add2e ??= {};
+  item.flags.add2e.documentTransformationId = transform.id;
+  item.flags.add2e.documentTransformationGroup = transform.group;
+  return item;
 }
 
 export function add2ePrepareTokenTransformation({ token, factor = 1, group = "generic", mode = "default", id = null, source = "effect" } = {}) {
@@ -193,18 +315,316 @@ export function add2ePrepareTokenTransformation({ token, factor = 1, group = "ge
   };
 }
 
+export function add2ePrepareDocumentTransformation({
+  actor,
+  token,
+  group = "generic",
+  mode = "default",
+  scope = "actor",
+  source = "effect",
+  tokenUpdate = {},
+  actorUpdate = {},
+  itemUpdates = [],
+  temporaryItems = [],
+  id = null
+} = {}) {
+  const tokenDocument = add2eTokenDocument(token);
+  const scene = add2eTokenScene(tokenDocument);
+  if (!actor || !tokenDocument || !scene) return null;
+
+  const normalizedScope = String(scope ?? "actor") === "token" ? "token" : "actor";
+  const tracksActor = normalizedScope === "actor"
+    || Object.keys(actorUpdate ?? {}).length > 0
+    || Array.from(itemUpdates ?? []).length > 0
+    || Array.from(temporaryItems ?? []).length > 0;
+  const transform = {
+    version: ADD2E_DOCUMENT_TRANSFORM_VERSION,
+    id: String(id ?? add2eTransformId()),
+    source: add2eClone(source ?? "effect"),
+    group: String(group ?? "generic"),
+    groupKey: add2eTransformGroupKey(group),
+    mode: String(mode ?? "default"),
+    scope: normalizedScope,
+    tracksActor,
+    actorId: actor.id ?? null,
+    actorUuid: actor.uuid ?? null,
+    sceneId: scene.id ?? null,
+    tokenId: tokenDocument.id ?? null,
+    phase: "prepared",
+    original: {
+      token: add2eSnapshotPaths(tokenDocument, tokenUpdate),
+      actor: add2eSnapshotPaths(actor, actorUpdate),
+      items: []
+    },
+    applied: {
+      token: add2eClone(tokenUpdate ?? {}) ?? {},
+      actor: add2eClone(actorUpdate ?? {}) ?? {},
+      items: []
+    },
+    temporaryItems: Array.from(temporaryItems ?? []).map(entry => add2eClone(entry)),
+    temporaryItemIds: []
+  };
+
+  for (const update of Array.from(itemUpdates ?? [])) {
+    const itemId = String(update?._id ?? "");
+    const item = itemId ? actor.items?.get?.(itemId) ?? null : null;
+    if (!item) continue;
+    const applied = add2eClone(update);
+    delete applied._id;
+    transform.original.items.push({ id: itemId, values: add2eSnapshotPaths(item, applied) });
+    transform.applied.items.push({ id: itemId, update: applied });
+  }
+
+  const tokenApplied = add2eCanonicalTokenUpdate(tokenDocument, transform.applied.token, {
+    marker: add2eCanonicalMarker(transform),
+    transform
+  });
+  if (Object.prototype.hasOwnProperty.call(tokenApplied, "x") && !Object.prototype.hasOwnProperty.call(transform.original.token, "x")) {
+    transform.original.token.x = { exists: true, value: tokenDocument.x };
+  }
+  if (Object.prototype.hasOwnProperty.call(tokenApplied, "y") && !Object.prototype.hasOwnProperty.call(transform.original.token, "y")) {
+    transform.original.token.y = { exists: true, value: tokenDocument.y };
+  }
+  transform.applied.token = tokenApplied;
+  return { transform };
+}
+
 export function add2eFindTokenTransformationEffects(actor, token, { group = null, includeDisabled = false } = {}) {
   const tokenDocument = add2eTokenDocument(token);
   if (!actor || !tokenDocument) return [];
   return Array.from(actor.effects ?? []).filter(effect => {
     if (!includeDisabled && effect?.disabled) return false;
-    const transform = add2eTokenTransformData(effect);
+    const transform = add2eDocumentTransformData(effect) ?? add2eTokenTransformData(effect);
     if (!add2eTokenTransformMatchesToken(transform, tokenDocument)) return false;
     return !group || String(transform.group ?? "") === String(group);
   });
 }
 
+export function add2eFindDocumentTransformationEffects(actor, token = null, { group = null, includeDisabled = false } = {}) {
+  const tokenDocument = add2eTokenDocument(token);
+  if (!actor) return [];
+  return Array.from(actor.effects ?? []).filter(effect => {
+    if (!includeDisabled && effect?.disabled) return false;
+    const transform = add2eDocumentTransformData(effect);
+    if (!transform) return false;
+    if (group && String(transform.group ?? "") !== String(group)) return false;
+    if (transform.scope === "token" && tokenDocument && !add2eTokenTransformMatchesToken(transform, tokenDocument)) return false;
+    return transform.scope !== "token" || !!tokenDocument;
+  });
+}
+
+export async function add2eRestoreDocumentTransformationFromEffect(effect, { reason = "effect-removed" } = {}) {
+  const transform = add2eDocumentTransformData(effect);
+  const actor = effect?.parent?.documentName === "Actor" ? effect.parent : null;
+  if (!actor || !transform?.id) return { ok: false, reason: "no-document-transform" };
+
+  const tokenDocument = add2eTokenTransformToken(transform);
+  const actorMarker = transform.tracksActor ? add2eDocumentTransformMarker(actor, transform) : null;
+  const tokenMarker = add2eDocumentTransformMarker(tokenDocument, transform);
+  const actorCurrent = transform.tracksActor && String(actorMarker?.id ?? "") === String(transform.id);
+  const tokenCurrent = String(tokenMarker?.id ?? "") === String(transform.id);
+
+  const temporaryIds = new Set(Array.from(transform.temporaryItemIds ?? []).filter(Boolean));
+  for (const item of actor.items ?? []) {
+    if (String(item?.flags?.add2e?.documentTransformationId ?? "") === String(transform.id)) temporaryIds.add(item.id);
+  }
+  if (temporaryIds.size) {
+    await actor.deleteEmbeddedDocuments("Item", [...temporaryIds], {
+      add2eDocumentTransform: true,
+      add2eDocumentTransformReason: reason,
+      render: false
+    });
+  }
+
+  if (actorCurrent) {
+    const itemUpdates = [];
+    for (const entry of transform.original?.items ?? []) {
+      if (!actor.items?.get?.(entry.id)) continue;
+      itemUpdates.push({ _id: entry.id, ...add2eRestoreUpdate(entry.values) });
+    }
+    if (itemUpdates.length) {
+      await actor.updateEmbeddedDocuments("Item", itemUpdates, {
+        add2eDocumentTransform: true,
+        add2eDocumentTransformReason: reason,
+        render: false
+      });
+    }
+
+    await actor.update({
+      ...add2eRestoreUpdate(transform.original?.actor),
+      [add2eCanonicalMarkerDeletePath(transform)]: null
+    }, {
+      add2eDocumentTransform: true,
+      add2eDocumentTransformReason: reason,
+      render: false
+    });
+  }
+
+  if (tokenCurrent && tokenDocument) {
+    await tokenDocument.update({
+      ...add2eRestoreUpdate(transform.original?.token),
+      [add2eCanonicalMarkerDeletePath(transform)]: null
+    }, {
+      add2eDocumentTransform: true,
+      add2eDocumentTransformReason: reason
+    });
+  }
+
+  return {
+    ok: actorCurrent || tokenCurrent || temporaryIds.size > 0,
+    actorRestored: actorCurrent,
+    tokenRestored: tokenCurrent,
+    temporaryItemsDeleted: temporaryIds.size,
+    transformId: transform.id,
+    reason: actorCurrent || tokenCurrent ? "restored" : "superseded"
+  };
+}
+
+export async function add2eReapplyDocumentTransformationFromEffect(effect, { reason = "effect-enabled" } = {}) {
+  const transform = add2eDocumentTransformData(effect);
+  const actor = effect?.parent?.documentName === "Actor" ? effect.parent : null;
+  const tokenDocument = add2eTokenTransformToken(transform);
+  if (!actor || !tokenDocument || !transform?.id) return { ok: false, reason: "no-document-transform" };
+
+  if (transform.tracksActor) {
+    const actorMarker = add2eDocumentTransformMarker(actor, transform);
+    if (actorMarker?.id && String(actorMarker.id) !== String(transform.id)) return { ok: false, reason: "superseded" };
+    await actor.update({
+      ...(add2eClone(transform.applied?.actor) ?? {}),
+      [add2eCanonicalMarkerPath(transform)]: add2eCanonicalMarker(transform)
+    }, {
+      add2eDocumentTransform: true,
+      add2eDocumentTransformReason: reason,
+      render: false
+    });
+
+    const itemUpdates = Array.from(transform.applied?.items ?? [])
+      .filter(entry => actor.items?.get?.(entry.id))
+      .map(entry => ({ _id: entry.id, ...(add2eClone(entry.update) ?? {}) }));
+    if (itemUpdates.length) {
+      await actor.updateEmbeddedDocuments("Item", itemUpdates, {
+        add2eDocumentTransform: true,
+        add2eDocumentTransformReason: reason,
+        render: false
+      });
+    }
+  }
+
+  let temporaryItemIds = [];
+  if (Array.isArray(transform.temporaryItems) && transform.temporaryItems.length) {
+    const existing = Array.from(actor.items ?? []).filter(item => String(item?.flags?.add2e?.documentTransformationId ?? "") === String(transform.id));
+    if (existing.length) temporaryItemIds = existing.map(item => item.id).filter(Boolean);
+    else {
+      const created = await actor.createEmbeddedDocuments(
+        "Item",
+        transform.temporaryItems.map(data => add2eTemporaryItemData(data, transform)),
+        {
+          add2eDocumentTransform: true,
+          add2eDocumentTransformReason: reason,
+          render: false
+        }
+      );
+      temporaryItemIds = created.map(item => item.id).filter(Boolean);
+    }
+  }
+
+  await tokenDocument.update(
+    add2eCanonicalTokenUpdate(tokenDocument, transform.applied?.token, {
+      marker: add2eCanonicalMarker(transform),
+      transform
+    }),
+    { add2eDocumentTransform: true, add2eDocumentTransformReason: reason }
+  );
+
+  const next = { ...add2eClone(transform), phase: "active", temporaryItemIds };
+  await effect.update({ [`flags.add2e.${ADD2E_DOCUMENT_TRANSFORM_FLAG}`]: next }, {
+    add2eDocumentTransform: true,
+    add2eDocumentTransformReason: reason,
+    render: false
+  });
+  return { ok: true, effect, transform: next, temporaryItemIds };
+}
+
+export async function add2eDeleteDocumentTransformationEffects(actor, effects = [], { reason = "replace" } = {}) {
+  if (!actor) return { deleted: 0, ids: [] };
+  const selected = Array.from(effects ?? []).filter(effect => effect?.id && actor.effects?.get?.(effect.id));
+  for (const effect of selected) await add2eRestoreDocumentTransformationFromEffect(effect, { reason });
+  const ids = selected.map(effect => effect.id).filter(id => actor.effects?.get?.(id));
+  if (ids.length) {
+    await actor.deleteEmbeddedDocuments("ActiveEffect", ids, {
+      add2eDocumentTransform: true,
+      add2eDocumentTransformReason: reason
+    });
+  }
+  return { deleted: ids.length, ids };
+}
+
+export async function add2eApplyDocumentTransformation({
+  actor,
+  token,
+  effectData,
+  group = "generic",
+  mode = "default",
+  scope = "actor",
+  source = "effect",
+  tokenUpdate = {},
+  actorUpdate = {},
+  itemUpdates = [],
+  temporaryItems = []
+} = {}) {
+  const tokenDocument = add2eTokenDocument(token);
+  if (!actor || !tokenDocument || !effectData) return { ok: false, reason: "missing-document" };
+
+  const existing = add2eFindDocumentTransformationEffects(actor, tokenDocument, { group, includeDisabled: true });
+  if (existing.length) await add2eDeleteDocumentTransformationEffects(actor, existing, { reason: "replace" });
+
+  const prepared = add2ePrepareDocumentTransformation({
+    actor,
+    token: tokenDocument,
+    group,
+    mode,
+    scope,
+    source,
+    tokenUpdate,
+    actorUpdate,
+    itemUpdates,
+    temporaryItems
+  });
+  if (!prepared) return { ok: false, reason: "invalid-transform" };
+
+  const data = add2eClone(effectData);
+  data.flags ??= {};
+  data.flags.add2e ??= {};
+  data.flags.add2e[ADD2E_DOCUMENT_TRANSFORM_FLAG] = prepared.transform;
+
+  const created = await actor.createEmbeddedDocuments("ActiveEffect", [data], {
+    add2eDocumentTransform: true,
+    add2eDocumentTransformReason: "prepare",
+    render: false
+  });
+  const effect = created?.[0] ?? null;
+  if (!effect) return { ok: false, reason: "effect-create-failed" };
+
+  try {
+    return await add2eReapplyDocumentTransformationFromEffect(effect, { reason: "apply" });
+  } catch (error) {
+    try {
+      await add2eRestoreDocumentTransformationFromEffect(effect, { reason: "rollback" });
+      if (actor.effects?.get?.(effect.id)) {
+        await actor.deleteEmbeddedDocuments("ActiveEffect", [effect.id], {
+          add2eDocumentTransform: true,
+          add2eDocumentTransformReason: "rollback"
+        });
+      }
+    } catch (rollbackError) {
+      console.error("[ADD2E][DOCUMENT-TRANSFORM][ROLLBACK]", rollbackError);
+    }
+    throw error;
+  }
+}
+
 export async function add2eRestoreTokenTransformationFromEffect(effect, { reason = "effect-removed" } = {}) {
+  if (add2eDocumentTransformData(effect)) return add2eRestoreDocumentTransformationFromEffect(effect, { reason });
   const transform = add2eTokenTransformData(effect);
   if (!transform?.id || !transform?.original) return { ok: false, reason: "no-transform" };
 
@@ -222,6 +642,7 @@ export async function add2eRestoreTokenTransformationFromEffect(effect, { reason
 }
 
 export async function add2eReapplyTokenTransformationFromEffect(effect, { reason = "effect-enabled" } = {}) {
+  if (add2eDocumentTransformData(effect)) return add2eReapplyDocumentTransformationFromEffect(effect, { reason });
   const transform = add2eTokenTransformData(effect);
   if (!transform?.id || !transform?.applied) return { ok: false, reason: "no-transform" };
 
@@ -252,7 +673,7 @@ export async function add2eApplyTimedTokenTransformation({ actor, token, effectD
   if (!actor || !tokenDocument || !effectData) return { ok: false, reason: "missing-document" };
 
   const existing = add2eFindTokenTransformationEffects(actor, tokenDocument, { group });
-  const opposite = existing.filter(effect => String(add2eTokenTransformData(effect)?.mode ?? "") !== String(mode));
+  const opposite = existing.filter(effect => String((add2eDocumentTransformData(effect) ?? add2eTokenTransformData(effect))?.mode ?? "") !== String(mode));
   if (opposite.length) {
     const removed = await add2eDeleteTokenTransformationEffects(actor, opposite, { reason: "inverse-cancel" });
     return { ok: true, cancelled: true, removed };
@@ -347,11 +768,17 @@ export async function add2eRollSavingThrow(actor, { index = 4, label = null, sou
 }
 
 globalThis.add2ePrepareTokenTransformation = add2ePrepareTokenTransformation;
+globalThis.add2ePrepareDocumentTransformation = add2ePrepareDocumentTransformation;
 globalThis.add2eFindTokenTransformationEffects = add2eFindTokenTransformationEffects;
+globalThis.add2eFindDocumentTransformationEffects = add2eFindDocumentTransformationEffects;
 globalThis.add2eRestoreTokenTransformationFromEffect = add2eRestoreTokenTransformationFromEffect;
+globalThis.add2eRestoreDocumentTransformationFromEffect = add2eRestoreDocumentTransformationFromEffect;
 globalThis.add2eReapplyTokenTransformationFromEffect = add2eReapplyTokenTransformationFromEffect;
+globalThis.add2eReapplyDocumentTransformationFromEffect = add2eReapplyDocumentTransformationFromEffect;
 globalThis.add2eDeleteTokenTransformationEffects = add2eDeleteTokenTransformationEffects;
+globalThis.add2eDeleteDocumentTransformationEffects = add2eDeleteDocumentTransformationEffects;
 globalThis.add2eApplyTimedTokenTransformation = add2eApplyTimedTokenTransformation;
+globalThis.add2eApplyDocumentTransformation = add2eApplyDocumentTransformation;
 globalThis.add2eRollSavingThrow = add2eRollSavingThrow;
 
 function add2eEffectDurationLabel(effect) {
@@ -513,7 +940,11 @@ Hooks.on("updateActor", async (actor, changed, options) => {
 
 Hooks.on("createActiveEffect", effect => add2eNormalizeCreatedEffect(effect));
 
-Hooks.on("updateActiveEffect", async (effect, changed = {}) => {
+Hooks.on("updateActiveEffect", async (effect, changed = {}, options = {}) => {
+  if (options?.add2eDocumentTransform) {
+    if (effect?.parent?.type === "monster") add2eRenderOpenMonsterSheets(effect.parent);
+    return;
+  }
   if (game.user?.isGM && Object.prototype.hasOwnProperty.call(changed, "disabled")) {
     if (effect?.disabled) await add2eRestoreTokenTransformationFromEffect(effect, { reason: "effect-disabled" });
     else await add2eReapplyTokenTransformationFromEffect(effect, { reason: "effect-enabled" });
@@ -521,9 +952,9 @@ Hooks.on("updateActiveEffect", async (effect, changed = {}) => {
   if (effect?.parent?.type === "monster") add2eRenderOpenMonsterSheets(effect.parent);
 });
 
-Hooks.on("deleteActiveEffect", async effect => {
+Hooks.on("deleteActiveEffect", async (effect, options = {}) => {
   if (!game.user?.isGM) return;
-  await add2eRestoreTokenTransformationFromEffect(effect, { reason: "effect-deleted" });
+  if (!options?.add2eDocumentTransform) await add2eRestoreTokenTransformationFromEffect(effect, { reason: "effect-deleted" });
   const actor = effect?.parent;
   const temporaryItemId = effect?.flags?.add2e?.temporaryItemId;
   if (actor?.documentName === "Actor" && temporaryItemId && actor.items?.get(temporaryItemId)) await actor.deleteEmbeddedDocuments("Item", [temporaryItemId]);
