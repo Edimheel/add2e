@@ -1,7 +1,7 @@
 /* ADD2E — Druide : Forme animale. ApplicationV2/DialogV2, V13/V14/V15.
  * La forme reste active jusqu'au retour volontaire ou à la suppression de son effet.
  */
-const ADD2E_DRUIDE_FORME_ANIMALE_VERSION = "2026-08-01-canonical-document-transform-v4";
+const ADD2E_DRUIDE_FORME_ANIMALE_VERSION = "2026-08-01-canonical-document-transform-v5";
 const SCOPE = "druid-animal-form";
 const TRANSFORM_GROUP = "physical-form";
 const DAY_ROUNDS = 1440;
@@ -362,20 +362,36 @@ function effectData(form, tick) {
 }
 
 async function restore(currentActor, currentEffect = effects(currentActor)[0] ?? null) {
-  if (!currentEffect) return false;
+  if (!currentEffect) return null;
   const restoreCanonical = globalThis.add2eRestoreDocumentTransformationFromEffect;
   if (typeof restoreCanonical !== "function") {
     throw new Error("Le moteur canonique de transformation ADD2E est indisponible.");
   }
 
-  await restoreCanonical(currentEffect, { reason: "capability-transformation-return" });
+  const result = await restoreCanonical(currentEffect, {
+    reason: "capability-transformation-return"
+  });
+  if (!result?.ok || result?.tokenRestored !== true) {
+    console.error("[ADD2E][DRUIDE][FORME_ANIMALE][RESTORE_FAILED]", {
+      actor: currentActor.name,
+      actorId: currentActor.id,
+      effect: currentEffect.name,
+      effectId: currentEffect.id,
+      result
+    });
+    throw new Error(
+      `Retour à la forme normale non confirmé : ${result?.reason ?? "résultat de restauration invalide"}. `
+      + `L’effet est conservé pour ne pas perdre son image d’origine.`
+    );
+  }
+
   if (currentActor.effects?.get?.(currentEffect.id)) {
     await currentActor.deleteEmbeddedDocuments("ActiveEffect", [currentEffect.id], {
       add2eDocumentTransform: true,
       add2eDocumentTransformReason: "capability-transformation-return"
     });
   }
-  return true;
+  return result;
 }
 
 async function apply(currentActor, token, form, tick, recovery) {
@@ -587,7 +603,8 @@ const choice = await choose(available, activeEffect, tokens);
 if (!choice) return false;
 
 if (choice.action === "return") {
-  if (!await restore(actor, activeEffect)) {
+  const restored = await restore(actor, activeEffect);
+  if (!restored?.ok) {
     ui.notifications.warn("Aucune forme animale active à retirer.");
     return false;
   }
