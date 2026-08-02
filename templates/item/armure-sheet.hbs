@@ -1,164 +1,121 @@
-<form class="sheet item armure-sheet add2e-pretty-item" autocomplete="off" data-item-uuid="{{item.uuid}}">
+<form class="sheet item armure-sheet add2e-pretty-item {{#if item.system.magique}}add2e-magic-armor{{else}}add2e-standard-armor{{/if}}" autocomplete="off" data-item-uuid="{{item.uuid}}">
   <style>
-    .armure-sheet.add2e-pretty-item{--card:#fffaf0;--border:#8b5e34;--soft:rgba(91,52,25,.22);--title:#3b2414;color:#2f241c;}
-    .armure-sheet input,.armure-sheet textarea,.armure-sheet select{width:100%;background:rgba(255,255,255,.88);border:1px solid var(--soft);border-radius:6px;padding:4px 6px;color:#1f1a16;}
-    .armure-sheet textarea{min-height:72px;resize:vertical;}
-    .a2e-armor-hero{display:grid;grid-template-columns:110px 1fr;gap:12px;padding:12px;border:2px solid var(--border);border-radius:12px;background:linear-gradient(135deg,#fff3d6,#ead9b7);box-shadow:0 2px 8px rgba(0,0,0,.18);margin-bottom:10px;}
-    .a2e-armor-hero img{width:110px;height:110px;object-fit:contain;border-radius:10px;border:2px solid rgba(75,47,24,.5);background:#1f1a16;cursor:pointer;}
-    .a2e-armor-title input{font-size:1.65em;font-weight:800;color:var(--title);border:0;border-bottom:2px solid rgba(124,45,18,.35);border-radius:0;background:rgba(255,255,255,.35);}
-    .a2e-grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
-    .a2e-grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px;}
-    .a2e-grid-4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;}
-    .a2e-card{background:var(--card);border:1px solid var(--soft);border-radius:10px;padding:10px;margin-bottom:10px;}
-    .a2e-card h3{margin:0 0 8px;color:var(--title);border-bottom:1px solid var(--soft);padding-bottom:5px;font-size:1.15em;font-weight:800;}
-    .a2e-field label,.a2e-stat label{display:block;font-size:.78em;text-transform:uppercase;letter-spacing:.04em;color:#6f6258;font-weight:800;margin-bottom:3px;}
-    .a2e-stat{background:rgba(251,246,234,.95);border:1px solid rgba(124,45,18,.18);border-radius:8px;padding:7px;}
-    .a2e-checks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:8px;}
-    .a2e-checks label{display:flex;align-items:center;gap:6px;padding:6px;border:1px solid var(--soft);border-radius:8px;background:rgba(255,255,255,.5);font-weight:700;}
-    .a2e-checks input{width:auto;}
-    .a2e-note{font-size:.86em;color:#6f6258;margin-top:4px;}
-    .a2e-rich-editor{min-height:100px;padding:8px 10px;border:1px solid var(--soft);border-radius:8px;background:#fffdf7;color:#2f241c;line-height:1.35;}
-    .a2e-rich-editor .editor{min-height:120px;}.a2e-rich-editor .editor-content{min-height:100px;}
-    .a2e-base-zone,.a2e-power-drop-zone{display:grid;place-items:center;min-height:76px;padding:10px;border:2px dashed #9b7434;border-radius:8px;background:#fff8e7;text-align:center;}
-    .a2e-base-zone.is-dragover,.a2e-power-drop-zone.is-dragover{border-color:#4d7e31;background:#eef7e7;}
-    .a2e-base-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:7px;margin-top:7px;}.a2e-base-actions button{width:auto;}
-    .a2e-power-list{display:grid;gap:8px;margin:9px 0;padding:0;list-style:none;}
-    .a2e-power-entry{border:1px solid var(--soft);border-radius:8px;background:#fffdf7;overflow:hidden;}
-    .a2e-power-entry summary{display:grid;grid-template-columns:38px minmax(0,1fr) auto auto;gap:8px;align-items:center;padding:8px;cursor:pointer;list-style:none;}
-    .a2e-power-entry summary::-webkit-details-marker{display:none;}
-    .a2e-power-entry summary>img{width:34px;height:34px;object-fit:cover;border:1px solid var(--border);border-radius:5px;}
-    .a2e-power-badges{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px;}
-    .a2e-power-badge{padding:2px 6px;border:1px solid rgba(91,52,25,.32);border-radius:999px;background:#f5ead0;font-size:.72em;font-weight:700;}
-    .a2e-power-cost{white-space:nowrap;font-weight:800;}
-    .a2e-power-actions{display:flex;gap:5px;}.a2e-power-actions button{width:32px;height:30px;padding:0;}
-    .a2e-power-details{display:grid;gap:9px;padding:10px 12px;border-top:1px solid var(--soft);background:#fffaf0;}
-    .a2e-power-meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;}
-    .a2e-power-meta div{padding:6px 7px;border:1px solid rgba(91,52,25,.16);border-radius:6px;background:#fffdf7;}
-    .a2e-power-meta b{display:block;margin-bottom:2px;font-size:.74em;text-transform:uppercase;color:#6f6258;}
-    .a2e-power-json{margin:0;padding:8px;border:1px solid rgba(91,52,25,.18);border-radius:6px;background:#f7f0df;white-space:pre-wrap;overflow-wrap:anywhere;font-size:.78em;}
-    .a2e-power-description{padding:7px 8px;border-left:3px solid var(--border);background:#fffdf7;}
-    @media(max-width:650px){.a2e-grid-4,.a2e-grid-3,.a2e-checks,.a2e-power-meta{grid-template-columns:repeat(2,minmax(0,1fr));}.a2e-armor-hero{grid-template-columns:88px minmax(0,1fr)}.a2e-armor-hero img{width:88px;height:88px}.a2e-power-entry summary{grid-template-columns:36px minmax(0,1fr) auto}.a2e-power-actions{grid-column:2/4;justify-content:flex-end}}
+    .armure-sheet.add2e-pretty-item{--card:#fffaf0;--border:#8b5e34;--soft:rgba(91,52,25,.22);--title:#3b2414;color:#2f241c}
+    .armure-sheet.add2e-magic-armor{--card:#f4f8ff;--border:#3e638d;--soft:rgba(42,78,118,.25);--title:#213f62}
+    .armure-sheet input,.armure-sheet textarea,.armure-sheet select{width:100%;background:rgba(255,255,255,.88);border:1px solid var(--soft);border-radius:6px;padding:4px 6px;color:#1f1a16}
+    .a2e-armor-hero{display:grid;grid-template-columns:110px minmax(0,1fr);gap:12px;padding:12px;border:2px solid var(--border);border-radius:12px;background:linear-gradient(135deg,#fff3d6,#ead9b7);box-shadow:0 2px 8px rgba(0,0,0,.18);margin-bottom:10px}
+    .add2e-magic-armor .a2e-armor-hero{background:linear-gradient(135deg,#eef6ff,#cbdcef)}
+    .a2e-armor-hero img{width:110px;height:110px;object-fit:contain;border-radius:10px;border:2px solid var(--border);background:#1f1a16;cursor:pointer}
+    .a2e-title-row{display:flex;align-items:center;gap:8px}.a2e-title-row input{font-size:1.65em;font-weight:800;color:var(--title);border:0;border-bottom:2px solid var(--soft);border-radius:0;background:rgba(255,255,255,.35)}
+    .a2e-magic-label{white-space:nowrap;padding:5px 9px;border:1px solid var(--border);border-radius:999px;background:rgba(255,255,255,.55);font-weight:800;color:var(--title)}
+    .a2e-grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.a2e-grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.a2e-grid-4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+    .a2e-card{background:var(--card);border:1px solid var(--soft);border-radius:10px;padding:10px;margin-bottom:10px}.a2e-card h3{margin:0 0 8px;color:var(--title);border-bottom:1px solid var(--soft);padding-bottom:5px;font-size:1.08em;font-weight:800}
+    .a2e-field label,.a2e-stat label{display:block;font-size:.76em;text-transform:uppercase;letter-spacing:.04em;color:#6f6258;font-weight:800;margin-bottom:3px}.a2e-stat{background:rgba(255,255,255,.56);border:1px solid var(--soft);border-radius:8px;padding:7px}
+    .a2e-checks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.a2e-checks label{display:flex;align-items:center;gap:6px;padding:6px;border:1px solid var(--soft);border-radius:8px;background:rgba(255,255,255,.55);font-weight:700}.a2e-checks input{width:auto}
+    .a2e-rich-editor{min-height:100px;padding:8px 10px;border:1px solid var(--soft);border-radius:8px;background:#fffdf7}.a2e-rich-editor .editor{min-height:120px}.a2e-rich-editor .editor-content{min-height:100px}
+    .a2e-power-drop-zone{display:grid;place-items:center;min-height:70px;padding:10px;border:2px dashed var(--border);border-radius:8px;background:rgba(255,255,255,.55);text-align:center}.a2e-power-drop-zone.is-dragover{background:#eef7e7}
+    .a2e-power-list{display:grid;gap:8px;margin:9px 0;padding:0;list-style:none}.a2e-power-entry{border:1px solid var(--soft);border-radius:8px;background:#fffdf7;overflow:hidden}.a2e-power-entry summary{display:grid;grid-template-columns:38px minmax(0,1fr) auto auto;gap:8px;align-items:center;padding:8px;cursor:pointer;list-style:none}.a2e-power-entry summary::-webkit-details-marker{display:none}.a2e-power-entry img{width:34px;height:34px;object-fit:cover;border:1px solid var(--border);border-radius:5px}.a2e-power-badges{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}.a2e-power-badge{padding:2px 6px;border:1px solid var(--soft);border-radius:999px;background:#eaf2fb;font-size:.72em;font-weight:700}.a2e-power-actions{display:flex;gap:5px}.a2e-power-actions button{width:32px;height:30px;padding:0}.a2e-power-details{display:grid;gap:8px;padding:10px 12px;border-top:1px solid var(--soft)}.a2e-power-json{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.78em}
+    details.a2e-technical{margin-top:8px}details.a2e-technical summary{cursor:pointer;font-weight:800;color:#6f6258}
+    @media(max-width:650px){.a2e-grid-4,.a2e-grid-3,.a2e-checks{grid-template-columns:repeat(2,minmax(0,1fr))}.a2e-armor-hero{grid-template-columns:88px minmax(0,1fr)}.a2e-armor-hero img{width:88px;height:88px}}
   </style>
 
   <header class="a2e-armor-hero">
-    <img src="{{img}}" alt="Image de l'armure" data-edit="img" />
+    <img src="{{img}}" alt="Image de l'armure" data-edit="img">
     <div>
-      <div class="a2e-armor-title"><input type="text" name="name" value="{{item.name}}" placeholder="Nom de l'armure"></div>
-      <div class="a2e-grid-3">
-        <div class="a2e-field"><label>Nom système</label><input type="text" name="system.nom" value="{{item.system.nom}}"></div>
-        <div class="a2e-field"><label>Catégorie</label><input type="text" name="system.categorie" value="{{item.system.categorie}}" placeholder="Lourde"></div>
-        <div class="a2e-field"><label>Propriétés legacy</label><input type="text" name="system.properties" value="{{item.system.properties}}" placeholder="Lourde"></div>
+      <div class="a2e-title-row">
+        {{#if item.system.magique}}
+          {{#if item.system.identifie}}
+            <input type="text" name="name" value="{{item.name}}" placeholder="Nom de l'armure magique">
+          {{else}}
+            <input type="text" value="{{#if item.system.nom_non_identifie}}{{item.system.nom_non_identifie}}{{else}}Armure inconnue{{/if}}" readonly>
+            <input type="hidden" name="name" value="{{item.name}}">
+          {{/if}}
+          <span class="a2e-magic-label"><i class="fas fa-wand-magic-sparkles"></i> Armure magique</span>
+          <input type="hidden" name="system.magique" value="true">
+        {{else}}
+          <input type="text" name="name" value="{{item.name}}" placeholder="Nom de l'armure">
+        {{/if}}
+      </div>
+      <div class="a2e-grid-3" style="margin-top:8px">
+        <div class="a2e-field"><label>Catégorie</label><input type="text" name="system.categorie" value="{{item.system.categorie}}"></div>
+        <div class="a2e-field"><label>Type d'armure</label><input type="text" name="system.type_armure" value="{{item.system.type_armure}}"></div>
+        <div class="a2e-field"><label>Structure</label><input type="text" name="system.structure" value="{{item.system.structure}}"></div>
+      </div>
+      <div class="a2e-checks" style="margin-top:8px">
+        <label><input type="checkbox" name="system.equipee" {{checked item.system.equipee}}> Équipée</label>
+        <label><input type="checkbox" name="system.bouclier" {{checked item.system.bouclier}}> Bouclier</label>
+        {{#if item.system.magique}}
+          <label><input type="checkbox" name="system.identifie" {{checked item.system.identifie}}> Identifiée</label>
+          <label><input type="checkbox" name="system.maudit" {{checked item.system.maudit}}> Maudite</label>
+        {{/if}}
       </div>
     </div>
   </header>
 
   <section class="a2e-card">
-    <h3><i class="fas fa-link"></i> Armure de base</h3>
-    <div class="a2e-base-zone" ondragenter="event.preventDefault();this.classList.add('is-dragover');" ondragover="event.preventDefault();event.stopPropagation();this.classList.add('is-dragover');" ondragleave="this.classList.remove('is-dragover');" ondrop="this.classList.remove('is-dragover');globalThis.add2eMagicBuilderDropBase?.(event,this.closest('form').dataset.itemUuid);">
-      <div><b>{{#if item.system.enchantement.baseName}}{{item.system.enchantement.baseName}}{{else}}Aucune base sélectionnée{{/if}}</b><div class="a2e-note">Déposez ici une armure ou choisissez-la dans le monde et les compendiums.</div></div>
-      <div class="a2e-base-actions"><button type="button" onclick="globalThis.add2eMagicBuilderChooseBase?.(this.closest('form').dataset.itemUuid);"><i class="fas fa-list"></i> Choisir une base</button>{{#if item.system.enchantement.baseName}}<button type="button" onclick="globalThis.add2eMagicBuilderClearBase?.(this.closest('form').dataset.itemUuid);"><i class="fas fa-unlink"></i> Dissocier</button>{{/if}}</div>
-    </div>
-  </section>
-
-  <section class="a2e-card"><h3><i class="fas fa-shield-alt"></i> Protection de base</h3>
+    <h3><i class="fas fa-shield-alt"></i> Protection</h3>
     <div class="a2e-grid-3">
       <div class="a2e-stat"><label>CA de base</label><input type="number" name="system.ac" value="{{item.system.ac}}"></div>
-      <div class="a2e-stat"><label>Type armure</label><input type="text" name="system.type_armure" value="{{item.system.type_armure}}" placeholder="bandes"></div>
-      <div class="a2e-stat"><label>Structure</label><input type="text" name="system.structure" value="{{item.system.structure}}" placeholder="bandes"></div>
-    </div>
-    <div class="a2e-checks">
-      <label><input type="checkbox" name="system.equipee" {{#if item.system.equipee}}checked{{/if}}> Équipée</label>
-      <label><input type="checkbox" name="system.magique" {{#if item.system.magique}}checked{{/if}}> Magique</label>
-      <label><input type="checkbox" name="system.identifie" {{#if item.system.identifie}}checked{{/if}}> Identifiée</label>
-      <label><input type="checkbox" name="system.bouclier" {{#if item.system.bouclier}}checked{{/if}}> Bouclier</label>
+      <div class="a2e-stat"><label>Type de bouclier</label><input type="text" name="system.type_bouclier" value="{{item.system.type_bouclier}}"></div>
+      <div class="a2e-stat"><label>Propriétés</label><input type="text" name="system.properties" value="{{item.system.properties}}"></div>
     </div>
   </section>
 
   <section class="a2e-card">
-    <h3><i class="fas fa-wand-magic-sparkles"></i> Enchantement du porteur</h3>
-    <input type="hidden" name="system.enchantement.application" value="porteur">
-    <div class="a2e-grid-4">
-      <div class="a2e-stat"><label>Bonus toucher</label><input type="number" name="system.enchantement.bonusToucher" value="{{#if item.system.enchantement.bonusToucher}}{{item.system.enchantement.bonusToucher}}{{else}}{{item.system.bonus_toucher}}{{/if}}"></div>
-      <div class="a2e-stat"><label>Bonus dégâts</label><input type="number" name="system.enchantement.bonusDegats" value="{{#if item.system.enchantement.bonusDegats}}{{item.system.enchantement.bonusDegats}}{{else}}{{item.system.bonus_degats}}{{/if}}"></div>
-      <div class="a2e-stat"><label>Bonus CA</label><input type="number" name="system.enchantement.bonusCA" value="{{#if item.system.enchantement.bonusCA}}{{item.system.enchantement.bonusCA}}{{else}}{{item.system.bonus_ac}}{{/if}}"></div>
-      <div class="a2e-stat"><label>CA fixe</label><input type="number" name="system.enchantement.caFixe" value="{{#if item.system.enchantement.caFixe}}{{item.system.enchantement.caFixe}}{{else}}{{item.system.ca_fixe}}{{/if}}" placeholder="—"></div>
-    </div>
-    <div class="a2e-grid-2">
-      <div class="a2e-field"><label>Nom non identifié</label><input type="text" name="system.nom_non_identifie" value="{{item.system.nom_non_identifie}}" placeholder="Armure ancienne"></div>
-      <div class="a2e-field"><label>Nom interne</label><input type="text" name="system.nom" value="{{item.system.nom}}"></div>
-    </div>
-    <div class="a2e-note">Le bonus de CA réduit la CA du porteur. Une CA fixe remplace la couche d’armure selon les règles du moteur de défense ADD2E.</div>
-  </section>
-
-  <section class="a2e-card"><h3><i class="fas fa-weight-hanging"></i> Encombrement et valeur</h3>
+    <h3><i class="fas fa-weight-hanging"></i> Inventaire</h3>
     <div class="a2e-grid-4">
       <div class="a2e-stat"><label>Poids</label><input type="number" name="system.poids" value="{{item.system.poids}}"></div>
-      <div class="a2e-stat"><label>Unité</label><select name="system.poids_unite"><option value="lb" {{#if (eq item.system.poids_unite "lb")}}selected{{/if}}>lb</option><option value="kg" {{#if (eq item.system.poids_unite "kg")}}selected{{/if}}>kg</option><option value="po" {{#if (eq item.system.poids_unite "po")}}selected{{/if}}>po</option></select></div>
+      <div class="a2e-stat"><label>Unité</label><select name="system.poids_unite"><option value="" {{#unless item.system.poids_unite}}selected{{/unless}}>—</option><option value="lb" {{#if (eq item.system.poids_unite "lb")}}selected{{/if}}>lb</option><option value="kg" {{#if (eq item.system.poids_unite "kg")}}selected{{/if}}>kg</option><option value="po" {{#if (eq item.system.poids_unite "po")}}selected{{/if}}>po</option></select></div>
       <div class="a2e-stat"><label>Prix</label><input type="text" name="system.prix" value="{{item.system.prix}}"></div>
-      <div class="a2e-stat"><label>Cost legacy</label><input type="text" name="system.cost" value="{{item.system.cost}}"></div>
+      <div class="a2e-stat"><label>Matériau</label><input type="text" name="system.materiau" value="{{item.system.materiau}}"></div>
     </div>
-    <div class="a2e-grid-2" style="margin-top:8px;"><div class="a2e-stat"><label>Matériau</label><input type="text" name="system.materiau" value="{{item.system.materiau}}"></div><div class="a2e-stat"><label>Objet de base</label><input type="checkbox" name="system.base" {{#if item.system.base}}checked{{/if}}></div></div>
   </section>
+
+  {{#if item.system.magique}}
+    <section class="a2e-card">
+      <h3><i class="fas fa-wand-magic-sparkles"></i> Propriétés magiques</h3>
+      <input type="hidden" name="system.enchantement.application" value="porteur">
+      <div class="a2e-grid-3">
+        <div class="a2e-field"><label>Nom non identifié</label><input type="text" name="system.nom_non_identifie" value="{{item.system.nom_non_identifie}}"></div>
+        <div class="a2e-stat"><label>Bonus CA</label><input type="number" name="system.enchantement.bonusCA" value="{{#if item.system.enchantement.bonusCA}}{{item.system.enchantement.bonusCA}}{{else}}{{item.system.bonus_ac}}{{/if}}"></div>
+        <div class="a2e-stat"><label>CA fixe</label><input type="number" name="system.enchantement.caFixe" value="{{#if item.system.enchantement.caFixe}}{{item.system.enchantement.caFixe}}{{else}}{{item.system.ca_fixe}}{{/if}}"></div>
+      </div>
+    </section>
+
+    <section class="a2e-card">
+      <h3><i class="fas fa-battery-three-quarters"></i> Charges et pouvoirs</h3>
+      <div class="a2e-grid-4">
+        <div class="a2e-stat"><label>Charges actuelles</label><input type="number" name="system.charges.value" value="{{item.system.charges.value}}"></div>
+        <div class="a2e-stat"><label>Charges maximum</label><input type="number" name="system.charges.max" value="{{item.system.charges.max}}"></div>
+        <div class="a2e-stat"><label>Rechargeable</label><input type="checkbox" name="system.charges.rechargeable" {{checked item.system.charges.rechargeable}}></div>
+        <div class="a2e-stat"><label>Formule</label><input type="text" name="system.charges.rechargeFormula" value="{{item.system.charges.rechargeFormula}}" placeholder="1d6"></div>
+      </div>
+      {{#with (add2eMagicSheetPowers item) as |powers|}}
+        {{#if powers.length}}
+          <ol class="a2e-power-list">
+            {{#each powers as |p|}}
+              <li class="a2e-power-entry">
+                <details>
+                  <summary>
+                    <img src="{{#if p.img}}{{p.img}}{{else}}icons/svg/aura.svg{{/if}}" alt="">
+                    <div><b>{{p._add2eName}}</b><div class="a2e-power-badges"><span class="a2e-power-badge">{{p._add2eKindLabel}}</span><span class="a2e-power-badge">{{p._add2eCategoryLabel}}</span><span class="a2e-power-badge">{{p._add2eAutomationLabel}}</span></div></div>
+                    <span>Coût {{p._add2eCost}}</span>
+                    {{#if @root.editable}}<div class="a2e-power-actions"><button type="button" title="Modifier" onclick="event.preventDefault();event.stopPropagation();globalThis.add2eMagicBuilderEditPower?.(this.closest('form').dataset.itemUuid,{{p._add2eIndex}});"><i class="fas fa-pen"></i></button><button type="button" title="Retirer" onclick="event.preventDefault();event.stopPropagation();globalThis.add2eMagicBuilderRemovePower?.(this.closest('form').dataset.itemUuid,{{p._add2eIndex}});"><i class="fas fa-trash"></i></button></div>{{/if}}
+                  </summary>
+                  <div class="a2e-power-details">{{#if p.description}}<div>{{{p.description}}}</div>{{/if}}{{#if p._add2eHasParameters}}<pre class="a2e-power-json">{{p._add2eParametersJson}}</pre>{{/if}}{{#if p._add2eHasEffects}}<pre class="a2e-power-json">{{p._add2eEffectsJson}}</pre>{{/if}}</div>
+                </details>
+              </li>
+            {{/each}}
+          </ol>
+        {{else}}<p><em>Aucun pouvoir configuré.</em></p>{{/if}}
+      {{/with}}
+      <div class="a2e-power-drop-zone" ondragenter="event.preventDefault();this.classList.add('is-dragover');" ondragover="event.preventDefault();event.stopPropagation();this.classList.add('is-dragover');" ondragleave="this.classList.remove('is-dragover');" ondrop="this.classList.remove('is-dragover');globalThis.add2eMagicBuilderDropPower?.(event,this.closest('form').dataset.itemUuid);"><b>Déposez ici un sort à transformer en pouvoir</b></div>
+    </section>
+  {{/if}}
 
   <section class="a2e-card">
-    <h3><i class="fas fa-battery-three-quarters"></i> Charges et pouvoirs</h3>
-    <div class="a2e-grid-4">
-      <div class="a2e-stat"><label>Charges actuelles</label><input type="number" name="system.charges.value" value="{{item.system.charges.value}}"></div>
-      <div class="a2e-stat"><label>Charges maximum</label><input type="number" name="system.charges.max" value="{{item.system.charges.max}}"></div>
-      <div class="a2e-stat"><label>Rechargeable</label><input type="checkbox" name="system.charges.rechargeable" {{#if item.system.charges.rechargeable}}checked{{/if}}></div>
-      <div class="a2e-stat"><label>Formule de recharge</label><input type="text" name="system.charges.rechargeFormula" value="{{item.system.charges.rechargeFormula}}" placeholder="1d6"></div>
-    </div>
-
-    {{#with (add2eMagicSheetPowers item) as |powers|}}
-      {{#if powers.length}}
-        <ol class="a2e-power-list">
-          {{#each powers as |p|}}
-            <li class="a2e-power-entry">
-              <details>
-                <summary>
-                  <img src="{{#if p.img}}{{p.img}}{{else}}icons/svg/aura.svg{{/if}}" alt="">
-                  <div>
-                    <b>{{p._add2eName}}</b>
-                    <div class="a2e-power-badges">
-                      <span class="a2e-power-badge">{{p._add2eKindLabel}}</span>
-                      <span class="a2e-power-badge">{{p._add2eCategoryLabel}}</span>
-                      <span class="a2e-power-badge">{{p._add2eAutomationLabel}}</span>
-                    </div>
-                  </div>
-                  <span class="a2e-power-cost">Coût {{p._add2eCost}}</span>
-                  {{#if @root.editable}}
-                    <div class="a2e-power-actions">
-                      <button type="button" title="Modifier ce pouvoir" onclick="event.preventDefault();event.stopPropagation();globalThis.add2eMagicBuilderEditPower?.(this.closest('form').dataset.itemUuid,{{p._add2eIndex}});"><i class="fas fa-pen"></i></button>
-                      <button type="button" title="Retirer ce pouvoir" onclick="event.preventDefault();event.stopPropagation();globalThis.add2eMagicBuilderRemovePower?.(this.closest('form').dataset.itemUuid,{{p._add2eIndex}});"><i class="fas fa-trash"></i></button>
-                    </div>
-                  {{/if}}
-                </summary>
-                <div class="a2e-power-details">
-                  {{#if p.description}}<div class="a2e-power-description">{{{p.description}}}</div>{{/if}}
-                  <div class="a2e-power-meta">
-                    <div><b>Activation</b>{{p._add2eActivationLabel}}</div>
-                    <div><b>Source</b>{{p._add2eSourceLabel}}</div>
-                    <div><b>Identifiant</b>{{#if p.catalogueId}}{{p.catalogueId}}{{else}}Pouvoir issu d’un sort{{/if}}</div>
-                  </div>
-                  {{#if p._add2eHasParameters}}<div><b>Paramètres configurés</b><pre class="a2e-power-json">{{p._add2eParametersJson}}</pre></div>{{/if}}
-                  {{#if p._add2eHasEffects}}<div><b>Effets générés</b><pre class="a2e-power-json">{{p._add2eEffectsJson}}</pre></div>{{/if}}
-                </div>
-              </details>
-            </li>
-          {{/each}}
-        </ol>
-      {{else}}
-        <p class="a2e-note" style="text-align:center;"><em>Aucun pouvoir configuré.</em></p>
-      {{/if}}
-    {{/with}}
-
-    <div class="a2e-power-drop-zone" ondragenter="event.preventDefault();this.classList.add('is-dragover');" ondragover="event.preventDefault();event.stopPropagation();this.classList.add('is-dragover');" ondragleave="this.classList.remove('is-dragover');" ondrop="this.classList.remove('is-dragover');globalThis.add2eMagicBuilderDropPower?.(event,this.closest('form').dataset.itemUuid);"><div><i class="fas fa-wand-magic-sparkles fa-2x"></i><p><b>Déposez ici un sort à transformer en pouvoir</b></p></div></div>
+    <h3><i class="fas fa-scroll"></i> Description</h3>
+    <div class="a2e-rich-editor">{{editor item.system.description target="system.description" button=true editable=editable engine="prosemirror"}}</div>
+    <details class="a2e-technical"><summary>Données techniques</summary><div class="a2e-grid-2" style="margin-top:8px"><div class="a2e-field"><label>Tags</label><textarea name="system.tags" rows="3">{{item.system.tags}}</textarea></div><div class="a2e-field"><label>Effect tags</label><textarea name="system.effectTags" rows="3">{{item.system.effectTags}}</textarea></div></div></details>
   </section>
-
-  <section class="a2e-card"><h3><i class="fas fa-tags"></i> Tags d’effets</h3>
-    <div class="a2e-grid-2"><div class="a2e-field"><label>Tags</label><textarea name="system.tags" rows="4">{{item.system.tags}}</textarea></div><div class="a2e-field"><label>Effect tags</label><textarea name="system.effectTags" rows="4">{{item.system.effectTags}}</textarea></div></div>
-    <div class="a2e-note">Les tags générés par l’enchantement sont conservés automatiquement.</div>
-  </section>
-
-  <section class="a2e-card"><h3><i class="fas fa-scroll"></i> Description</h3><div class="a2e-field"><label>Description</label><div class="a2e-rich-editor">{{editor item.system.description target="system.description" button=true editable=editable engine="prosemirror"}}</div></div></section>
 </form>
