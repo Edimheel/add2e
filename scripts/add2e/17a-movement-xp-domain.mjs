@@ -1,7 +1,7 @@
 // ADD2E — Domaine XP, mouvement et encombrement canoniques.
 // Compatible Foundry V13/V14/V15 — DialogV2 uniquement.
 
-export const ADD2E_MOVE_XP_VERSION = "2026-08-02-canonical-movement-sources-v18";
+export const ADD2E_MOVE_XP_VERSION = "2026-08-02-canonical-armor-profile-v19";
 export const ADD2E_MOVE_XP_TAG = "[ADD2E][MOVE_XP]";
 export const ADD2E_MOVE_XP_INTERNAL = "add2eMoveXpInternal";
 export const ADD2E_MOVE_XP_RECALC_DELAY_MS = 140;
@@ -464,8 +464,12 @@ function magicArmorIsWeightless(item) {
   const system = item?.system ?? {};
   const type = String(item?.type ?? "").toLowerCase();
   const isArmor = ["armure", "armor"].includes(type);
-  const isShield = system.bouclier === true || norm(system.type_armure) === "bouclier" || norm(system.categorie) === "bouclier";
-  return isArmor && !isShield && (system.magique === true || system.magic === true);
+  if (!isArmor) return false;
+  const engine = effectsEngine();
+  if (typeof engine.armorIsShield !== "function") {
+    throw new Error("Le profil canonique de bouclier ADD2E est indisponible.");
+  }
+  return engine.armorIsShield(item) !== true && (system.magique === true || system.magic === true);
 }
 
 function itemWeightGoldPieces(item) {
@@ -570,12 +574,15 @@ function carriedInventory(actor) {
 }
 
 function equippedArmor(actor) {
+  const engine = effectsEngine();
+  if (typeof engine.armorIsShield !== "function") {
+    throw new Error("Le profil canonique de bouclier ADD2E est indisponible.");
+  }
   return (actor?.items?.contents ?? Array.from(actor?.items ?? [])).filter(item => {
     const type = String(item?.type ?? "").toLowerCase();
-    if (!["armure", "armor"].includes(type) || !itemEquipped(item)) return false;
-    const system = item?.system ?? {};
-    const identity = norm(`${system.type_armure ?? ""} ${system.categorie ?? ""} ${system.nom ?? ""} ${item?.name ?? ""}`);
-    return system.bouclier !== true && !identity.includes("bouclier");
+    return ["armure", "armor"].includes(type)
+      && itemEquipped(item)
+      && engine.armorIsShield(item) !== true;
   });
 }
 
