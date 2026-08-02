@@ -32,7 +32,7 @@ export {
   ADD2E_ABILITY_BOUNDS
 };
 
-const ADD2E_MODIFIER_CONTEXT_CONDITIONS_VERSION = "2026-08-02-carried-magic-armor-weight-v9";
+const ADD2E_MODIFIER_CONTEXT_CONDITIONS_VERSION = "2026-08-02-canonical-movement-sources-v10";
 const ADD2E_MOVEMENT_METRES_PER_RATE = 3;
 const ADD2E_GOLD_PIECES_PER_KILOGRAM = 20;
 const ADD2E_GOLD_PIECES_PER_POUND = 10;
@@ -533,63 +533,6 @@ function dynamicMovementValue(modifier, context = {}) {
   };
 }
 
-function actorMovementReferenceValue(actor, context = {}, base = 0) {
-  const reference = Number(actor?.system?.vitesse_deplacement);
-  if (!Number.isFinite(reference) || reference <= 0) return null;
-
-  const armorProfile = armorMovementProfile(context);
-  const referenceBase = Number.isFinite(armorProfile?.capMetres)
-    ? Math.min(reference, armorProfile.capMetres)
-    : reference;
-  const category = canonicalKey(context.encumbranceCategory ?? "");
-  if (category === "surcharge") return 0;
-  if (category === "severe") return Math.max(0, Math.min(referenceBase, Number(base) || 0));
-
-  const multiplier = Number(context.encumbranceMultiplier);
-  const resolvedMultiplier = Number.isFinite(multiplier) ? Math.max(0, multiplier) : 1;
-  const movementRate = referenceBase / ADD2E_MOVEMENT_METRES_PER_RATE;
-  return Math.max(0, Math.floor((movementRate * resolvedMultiplier) + 1e-9) * ADD2E_MOVEMENT_METRES_PER_RATE);
-}
-
-function canonicalActorMovementReferenceModifier(Engine, actor, query = {}, context = {}) {
-  if (!actor || String(actor.type ?? "").toLowerCase() !== "personnage") return null;
-  const domain = canonicalKey(query.domain);
-  const target = canonicalKey(query.target);
-  if (domain !== "movement" || !["ground", "sol", "terrestre"].includes(target)) return null;
-
-  const value = actorMovementReferenceValue(actor, context, query.base);
-  if (!Number.isFinite(value)) return null;
-  const natural = Number(context.movementSource?.value ?? context.naturalBase);
-  if (Number.isFinite(natural) && natural > 0 && Math.abs(value - Number(query.base ?? 0)) < 0.0001) return null;
-
-  const armorProfile = armorMovementProfile(context);
-  return Engine.createModifier({
-    id: `${actor.id}:movement:actor-reference`,
-    domain: "movement",
-    target: "ground",
-    operation: "set",
-    value,
-    priority: 10,
-    stacking: { mode: "stack", group: null },
-    source: {
-      kind: "actor-reference",
-      id: actor.id,
-      uuid: actor.uuid ?? "",
-      name: actor.name ?? "Personnage"
-    },
-    metadata: {
-      label: "Mouvement de référence de l’acteur",
-      producer: "actor-movement-reference",
-      reference: Number(actor.system?.vitesse_deplacement),
-      naturalBase: Number.isFinite(natural) ? natural : null,
-      armorCapMetres: armorProfile?.capMetres ?? null,
-      armorName: armorProfile?.selected?.name ?? null,
-      encumbranceCategory: context.encumbranceCategory ?? null,
-      encumbranceMultiplier: context.encumbranceMultiplier ?? null
-    }
-  });
-}
-
 function canonicalEncumbranceCombatModifier(Engine, actor, query = {}, context = {}) {
   if (!encumbranceEnabled()) return null;
   if (!actor || String(actor.type ?? "").toLowerCase() !== "personnage") return null;
@@ -810,10 +753,6 @@ function installContextConditionExtensions(Engine) {
         const armorMovement = canonicalArmorMovementModifier(this, actor, query, context);
         if (armorMovement && !source.some(modifier => String(modifier?.id ?? "") === String(armorMovement.id))) {
           source.push(armorMovement);
-        }
-        const movementReference = canonicalActorMovementReferenceModifier(this, actor, query, context);
-        if (movementReference && !source.some(modifier => String(modifier?.id ?? "") === String(movementReference.id))) {
-          source.push(movementReference);
         }
         const encumbranceModifier = canonicalEncumbranceCombatModifier(this, actor, query, context);
         if (encumbranceModifier && !source.some(modifier => String(modifier?.id ?? "") === String(encumbranceModifier.id))) {
