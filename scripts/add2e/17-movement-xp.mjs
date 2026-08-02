@@ -24,7 +24,7 @@ import {
   awardXp,
   promptXp,
   minXpForLevel
-} from "./17a-movement-xp-domain.mjs";
+} from "../effects-engine/00-core.mjs";
 import {
   installMovementTokenControl,
   validateTokenMovement,
