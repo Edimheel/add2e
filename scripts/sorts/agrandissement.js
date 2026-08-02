@@ -2,7 +2,7 @@
 // Compatible Foundry V13/V14/V15 — DialogV2 uniquement.
 
 return await (async () => {
-  const VERSION = "2026-08-02-agrandissement-onuse-v2";
+  const VERSION = "2026-08-02-agrandissement-onuse-v3";
   const TRANSFORM_GROUP = "agrandissement-retrecissement";
   const SPELL_SLUG = "agrandissement";
 
@@ -189,13 +189,23 @@ return await (async () => {
   };
 
   if (targetKind === "creature" && !consenting) {
-    const save = await globalThis.add2eRollSavingThrow?.(target.actor, {
-      index: 4,
-      label: "Sorts",
-      sourceName: label,
-      token: target,
-      createChat: true
-    });
+    const save = await globalThis.add2eRollSavingThrow?.(
+      target.actor,
+      "sorts",
+      {
+        source: `spell:${SPELL_SLUG}`,
+        sourceName: label,
+        sourceItem: spellItem,
+        token: target,
+        spellType: "alteration",
+        spellTags: [
+          `sort:${mode === "retrecissement" ? "retrecissement" : "agrandissement"}`,
+          "ecole:alteration"
+        ],
+        createChat: true,
+        showDice: true
+      }
+    );
     if (!save?.ok) {
       ui.notifications?.error?.(`${label} : jet de protection contre les sorts introuvable pour cette cible.`);
       return false;
