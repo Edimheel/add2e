@@ -4,6 +4,7 @@
 // Les composants, la durée, le jet de sauvegarde et la transformation de token
 // sont délégués aux services génériques du système.
 
+const ADD2E_ENLARGE_VERSION = "2026-08-02-canonical-size-context-v2";
 const ADD2E_SPELL = Object.freeze({
   name: "Agrandissement",
   slug: "agrandissement",
@@ -320,7 +321,17 @@ function add2eBuildEffectData({ casterActor, targetToken, spellItem, mode, targe
     sourceItem: spellItem,
     endMessage: `${modeLabel} prend fin sur {actor}.`,
     extraFlags: {
+      capabilityTransformation: {
+        version: ADD2E_ENLARGE_VERSION,
+        sourceKey: `spell:${ADD2E_SPELL.slug}`,
+        kind: "size",
+        size: mode === "retrecissement" ? "reduite" : "agrandie",
+        factor: metrics.factor,
+        mode,
+        targetKind
+      },
       spell: {
+        version: ADD2E_ENLARGE_VERSION,
         slug: ADD2E_SPELL.slug,
         name: modeLabel,
         class: "Magicien",
@@ -397,34 +408,64 @@ async function add2eApplyTransformation({ targetToken, effectData, metrics, mode
 }
 
 async function add2ePostSpellCard({ casterActor, casterToken, spellItem, targetToken, mode, targetKind, level, metrics, outcome, detail, relayed = false }) {
+  const build = globalThis.add2eBuildChatCard;
+  const create = globalThis.add2eCreateChatCard;
+  if (typeof build !== "function" || typeof create !== "function") {
+    throw new Error("Les constructeurs communs de cartes ADD2E ne sont pas disponibles.");
+  }
+
   const casterName = casterActor?.name ?? casterToken?.name ?? "Magicien";
   const casterImg = casterToken?.document?.texture?.src ?? casterActor?.img ?? "icons/svg/mystery-man.svg";
-  const spellImg = spellItem?.img ?? "icons/svg/book.svg";
   const modeLabel = add2eModeLabel(mode);
-  const ratioLine = mode === "retrecissement"
-    ? `Rapport inverse : <b>${metrics.displayPercent} %</b> de la taille et du poids normaux.`
-    : `Variation : <b>+${metrics.percentage} %</b> de taille et de poids.`;
-
-  await ChatMessage.create({
-    speaker: ChatMessage.getSpeaker({ actor: casterActor, token: casterToken }),
-    content: `
-      <div class="add2e-chat-card add2e-magicien-sort" style="border:1px solid #7b3f98;border-radius:8px;overflow:hidden;background:#f8f2fb;color:#34203d;font-family:var(--font-primary);">
-        <div style="display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,#351447,#6d2d82 65%,#8d4eac);color:#fff;padding:7px 9px;">
-          <img src="${add2eEscapeHtml(casterImg)}" style="width:42px;height:42px;object-fit:cover;border-radius:50%;border:2px solid #ecdaf6;background:#fff;" />
-          <div style="flex:1;line-height:1.05;"><div style="font-weight:800;font-size:14px;">${add2eEscapeHtml(casterName)}</div><div style="font-size:12px;font-weight:700;">lance ${add2eEscapeHtml(modeLabel)}</div></div>
-          <img src="${add2eEscapeHtml(spellImg)}" style="width:34px;height:34px;object-fit:cover;border-radius:3px;border:1px solid #ecdaf6;background:#fff;" />
-        </div>
-        <div style="padding:9px 10px 10px;background:#f8f2fb;">
-          <div style="font-size:13px;margin:0 0 6px 0;"><b>Cible :</b> ${add2eEscapeHtml(targetToken?.name ?? "Cible")}</div>
-          <div style="border:1px solid #b77bd0;border-radius:6px;background:#fffaff;padding:8px;text-align:center;margin-bottom:7px;">
-            <div style="color:#6b2d82;font-weight:900;font-size:14px;text-transform:uppercase;letter-spacing:.3px;">${add2eEscapeHtml(outcome)}</div>
-            <div style="font-size:13px;line-height:1.35;text-align:center;">${detail}</div>
-          </div>
-          <div style="font-size:12px;line-height:1.4;"><b>${targetKind === "objet" ? "Objet" : "Créature vivante"}</b> — ${ratioLine}<br />Durée : <b>${level} tour${level > 1 ? "s" : ""}</b> (${level * 10} rounds).${relayed ? "<br />Application demandée au MJ." : ""}</div>
-          <details style="margin-top:7px;border:1px solid #b77bd0;border-radius:5px;background:#fffaff;padding:5px 7px;"><summary style="cursor:pointer;font-weight:800;color:#54226a;">Règle du Manuel</summary><div style="margin-top:5px;font-size:12px;line-height:1.35;">Une créature visible varie de 20 % par niveau du magicien, jusqu’à 200 %. Un objet visible varie de 10 % par niveau, jusqu’à 100 %. Rétrécissement annule Agrandissement ou applique le rapport inverse. Un acteur monstre a droit à un jet de protection contre les sorts.</div></details>
-        </div>
-      </div>`
-  });
+  const ratio = mode === "retrecissement"
+    ? `${metrics.displayPercent} % de la taille et du poids normaux`
+    : `+${metrics.percentage} % de taille et de poids`;
+  const body = [
+    `<div>${add2eEscapeHtml(detail)}</div>`,
+    relayed ? "<div><small>Application demandée au MJ.</small></div>" : "",
+    '<details style="margin-top:7px"><summary>Règle du Manuel</summary>',
+    '<div>Une créature visible varie de 20 % par niveau du magicien, jusqu’à 200 %. ',
+    'Un objet visible varie de 10 % par niveau, jusqu’à 100 %. ',
+    'Rétrécissement annule Agrandissement ou applique le rapport inverse. ',
+    'Un acteur monstre a droit à un jet de protection contre les sorts.</div></details>'
+  ].join("");
+  const options = {
+    actor: casterActor,
+    title: modeLabel,
+    icon: "fas fa-up-right-and-down-left-from-center",
+    variant: outcome === "EFFET ACTIF" ? "success" : "warning",
+    source: {
+      name: casterName,
+      img: casterImg,
+      type: "Sort de magicien",
+      meta: spellItem?.name ?? modeLabel
+    },
+    rows: [
+      { label: "Cible", value: targetToken?.name ?? "Cible" },
+      { label: "Résultat", value: outcome },
+      { label: "Variation", value: ratio },
+      { label: "Durée", value: `${level} tour${level > 1 ? "s" : ""} (${level * 10} rounds)` }
+    ],
+    trustedBodyHtml: body,
+    chatData: {
+      speaker: ChatMessage.getSpeaker({ actor: casterActor, token: casterToken }),
+      flags: {
+        add2e: {
+          version: ADD2E_ENLARGE_VERSION,
+          spell: ADD2E_SPELL.slug,
+          mode,
+          targetKind,
+          factor: metrics.factor,
+          percentage: metrics.percentage,
+          targetActorUuid: targetToken?.actor?.uuid ?? null,
+          targetTokenId: targetToken?.document?.id ?? targetToken?.id ?? null
+        }
+      }
+    }
+  };
+  const preview = build(options);
+  if (!String(preview ?? "").trim()) throw new Error(`${modeLabel} : carte de chat vide.`);
+  return create(options);
 }
 
 const casterActor = add2eCurrentActor();
