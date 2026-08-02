@@ -3,7 +3,7 @@
 // Le calcul métier des points de vie appartient au service canonique de progression.
 // Compatible Foundry V13/V14/V15.
 
-if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant 13c.");
+import { Add2eActorSheet } from "./13a-actor-sheet-class.mjs";
 
 const ADD2E_EXCEPTIONAL_STRENGTH_INPUT_VERSION = "2026-07-26-force-ex-canonical-derived-profile-v7";
 const ADD2E_ABILITY_CONSUMER_VERSION = "2026-07-28-character-sheet-hit-point-closure-v6";
@@ -77,7 +77,7 @@ function add2eValuesEqual(left, right) {
   return JSON.stringify(left) === JSON.stringify(right);
 }
 
-globalThis.Add2eActorSheet.prototype.autoSetCaracAjustements = async function autoSetCaracAjustements() {
+Add2eActorSheet.prototype.autoSetCaracAjustements = async function autoSetCaracAjustements() {
   if (this._autoSetCaracsInProgress) return;
   if (!this.actor?.system) return;
 
@@ -178,7 +178,7 @@ globalThis.Add2eActorSheet.prototype.autoSetCaracAjustements = async function au
   }
 };
 
-globalThis.Add2eActorSheet.prototype._enableCaracClickAssign = function _enableCaracClickAssign(roller) {
+Add2eActorSheet.prototype._enableCaracClickAssign = function _enableCaracClickAssign(roller) {
   add2eV2Jq(this.element).find(".carac-drop-target").each((_index, element) => {
     element.classList.add("clickable");
     element.onclick = () => {
@@ -189,20 +189,20 @@ globalThis.Add2eActorSheet.prototype._enableCaracClickAssign = function _enableC
   });
 };
 
-globalThis.Add2eActorSheet.prototype._add2eTabStorageKey = function _add2eTabStorageKey() {
+Add2eActorSheet.prototype._add2eTabStorageKey = function _add2eTabStorageKey() {
   return `add2e.actor.${this.actor?.id || "unknown"}.activeTab`;
 };
 
-globalThis.Add2eActorSheet.prototype._add2eReadStoredTab = function _add2eReadStoredTab() {
+Add2eActorSheet.prototype._add2eReadStoredTab = function _add2eReadStoredTab() {
   try { return sessionStorage.getItem(this._add2eTabStorageKey()) || null; }
   catch (_error) { return null; }
 };
 
-globalThis.Add2eActorSheet.prototype._add2eSheetRoot = function _add2eSheetRoot(html = null) {
+Add2eActorSheet.prototype._add2eSheetRoot = function _add2eSheetRoot(html = null) {
   return add2eV2Root(html ?? this.element);
 };
 
-globalThis.Add2eActorSheet.prototype._add2eCurrentTabFromHtml = function _add2eCurrentTabFromHtml(html = null) {
+Add2eActorSheet.prototype._add2eCurrentTabFromHtml = function _add2eCurrentTabFromHtml(html = null) {
   const root = this._add2eSheetRoot(html);
   if (!root) return this._add2eActiveTab || this._add2eReadStoredTab() || "resume";
   return root.querySelector(".a2e-tabs .item.active[data-tab]")?.dataset?.tab
@@ -213,7 +213,7 @@ globalThis.Add2eActorSheet.prototype._add2eCurrentTabFromHtml = function _add2eC
     || "resume";
 };
 
-globalThis.Add2eActorSheet.prototype._add2eRememberActiveTab = function _add2eRememberActiveTab(html = null, explicitTab = null) {
+Add2eActorSheet.prototype._add2eRememberActiveTab = function _add2eRememberActiveTab(html = null, explicitTab = null) {
   const tab = explicitTab || this._add2eCurrentTabFromHtml(html) || "resume";
   this._add2eActiveTab = tab;
   this._add2eSetNativeActiveTab?.(tab);
@@ -223,7 +223,7 @@ globalThis.Add2eActorSheet.prototype._add2eRememberActiveTab = function _add2eRe
   return tab;
 };
 
-globalThis.Add2eActorSheet.prototype._add2eActivateTab = function _add2eActivateTab(tabName = null, html = null) {
+Add2eActorSheet.prototype._add2eActivateTab = function _add2eActivateTab(tabName = null, html = null) {
   const root = this._add2eSheetRoot(html);
   if (!root) return;
   const tab = tabName || this._add2eActiveTab || this._add2eReadStoredTab() || "resume";
