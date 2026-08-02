@@ -1,6 +1,9 @@
 // ADD2E — effets actifs, sauvegardes et statistiques du HUD d'action.
 
-import { CARACS, SAVES, TAG, actorEffects, esc, getItem, lower, num, tokenFor } from "./shared.mjs";
+import { add2eInstallHudSheetRollBridge } from "../add2e/13d-actor-sheet-listeners-rolls.mjs";
+import { CARACS, SAVES, actorEffects, esc, getItem, lower, num, tokenFor } from "./shared.mjs";
+
+add2eInstallHudSheetRollBridge();
 
 export function effectDisplayName(effect) {
   const name = String(effect?.name ?? effect?.label ?? effect?._source?.name ?? effect?._source?.label ?? "").trim();
@@ -98,14 +101,16 @@ function saveSourceLabel(resolution) {
   return selected?.name ?? "Valeur de l’acteur";
 }
 function savingThrowResolutions(actor) {
-  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine ?? null;
-  const resolver = typeof globalThis.add2eResolveSavingThrow === "function" ? globalThis.add2eResolveSavingThrow : (typeof engine?.resolveSavingThrow === "function" ? engine.resolveSavingThrow.bind(engine) : null);
-  if (!resolver) {
-    console.error(`${TAG}[SAVES][RESOLVER_MISSING]`, { actor: actor?.name ?? null });
-    return SAVES.map((save, index) => ({ index, label: save[1], icon: save[2], theme: save[3], targetDisplay: "—", bonus: 0, bonusDisplay: "±0", sourceLabel: "Résolveur indisponible", available: false }));
+  const engine = globalThis.ADD2E_EFFECTS ?? globalThis.Add2eEffectsEngine;
+  if (typeof engine?.resolveSavingThrow !== "function") {
+    throw new Error("[ADD2E][ACTION_HUD][SAVES] Le résolveur canonique de sauvegardes n'est pas installé sur le moteur d'effets.");
   }
   return SAVES.map((save, index) => {
-    const resolution = resolver(actor, index, { source: "action-hud-save-display", consumer: "action-hud", frontale: true });
+    const resolution = engine.resolveSavingThrow(actor, index, {
+      source: "action-hud-save-display",
+      consumer: "action-hud",
+      frontale: true
+    });
     const target = Number(resolution?.target);
     const bonus = Number(resolution?.bonus) || 0;
     const available = Number.isFinite(target) && target > 0;

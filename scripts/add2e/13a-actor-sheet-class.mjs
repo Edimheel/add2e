@@ -2,7 +2,7 @@
 // Feuille personnage ADD2E full ApplicationV2 : aucun héritage appv1, aucun pont ActorSheet.
 // Le contexte rendu utilise une vue isolée du système de l'acteur.
 
-const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-06-26-application-v2-class-bound-spells-v10";
+const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-08-02-application-v2-module-export-v11";
 const ADD2E_ACTOR_SHEET_V2_CSS_ID = "add2e-application-v2-character-sheet-css";
 const ADD2E_ACTOR_SHEET_V2_CSS_PATH = "systems/add2e/styles/application-v2-character-sheet.css";
 
@@ -189,7 +189,7 @@ function add2eBindApplicationV2Close(sheet) {
   }
 }
 
-class Add2eActorSheet extends ADD2E_ACTOR_SHEET_BASE {
+export class Add2eActorSheet extends ADD2E_ACTOR_SHEET_BASE {
   static ADD2E_APPLICATION_V2_VERSION = ADD2E_ACTOR_SHEET_V2_VERSION;
 
   static DEFAULT_OPTIONS = {
