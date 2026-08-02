@@ -1,7 +1,7 @@
 // ADD2E — Domaine XP, mouvement et encombrement canoniques.
 // Compatible Foundry V13/V14/V15 — DialogV2 uniquement.
 
-export const ADD2E_MOVE_XP_VERSION = "2026-07-31-canonical-movement-encumbrance-v14";
+export const ADD2E_MOVE_XP_VERSION = "2026-08-02-canonical-movement-no-terrain-v15";
 export const ADD2E_MOVE_XP_TAG = "[ADD2E][MOVE_XP]";
 export const ADD2E_MOVE_XP_INTERNAL = "add2eMoveXpInternal";
 export const ADD2E_MOVE_XP_RECALC_DELAY_MS = 140;
@@ -255,12 +255,18 @@ function effectsEngine() {
 }
 
 function canonicalResolve(actor, { domain, target, base = 0, context = {} } = {}) {
-  return effectsEngine().resolve(actor, {
+  const cleanContext = { ...context, terrain: "__add2e_movement_terrain_ignored__" };
+  const engine = effectsEngine();
+  const collected = typeof engine.collect === "function"
+    ? engine.collect(actor, cleanContext).filter(modifier => norm(modifier?.source?.kind) !== "scene")
+    : undefined;
+  return engine.resolve(actor, {
     domain,
     target,
     base: num(base, 0),
+    ...(Array.isArray(collected) ? { modifiers: collected } : {}),
     context: {
-      ...context,
+      ...cleanContext,
       actor,
       actionType: domain,
       source: context.source ?? "movement-encumbrance"
@@ -554,7 +560,10 @@ function carriedInventory(actor) {
 function equippedArmor(actor) {
   return (actor?.items?.contents ?? Array.from(actor?.items ?? [])).filter(item => {
     const type = String(item?.type ?? "").toLowerCase();
-    return ["armure", "armor"].includes(type) && itemEquipped(item);
+    if (!["armure", "armor"].includes(type) || !itemEquipped(item)) return false;
+    const system = item?.system ?? {};
+    const identity = norm(`${system.type_armure ?? ""} ${system.categorie ?? ""} ${system.nom ?? ""} ${item?.name ?? ""}`);
+    return system.bouclier !== true && !identity.includes("bouclier");
   });
 }
 
@@ -638,10 +647,8 @@ function movementRuntimeContext(actor, options = {}) {
   const tokenFlags = token?.flags?.add2e ?? {};
   const scene = persistent ? null : (options.scene ?? token?.parent ?? canvas?.scene ?? null);
   const sceneFlags = scene?.flags?.add2e ?? {};
-  const explicitTerrain = explicitContextValue(options, "terrain");
   const explicitEnvironment = explicitContextValue(options, "environment");
   const explicitMilieu = explicitContextValue(options, "milieu");
-  const terrain = explicitTerrain !== undefined ? explicitTerrain : tokenFlags.terrain ?? (persistent ? actorFlags.terrain ?? null : sceneFlags.terrain ?? actorFlags.terrain ?? null);
   const environment = explicitEnvironment !== undefined
     ? explicitEnvironment
     : explicitMilieu !== undefined
@@ -652,7 +659,6 @@ function movementRuntimeContext(actor, options = {}) {
   return {
     token,
     scene: persistent ? null : scene,
-    terrain,
     environment,
     milieu: environment,
     persistent,
@@ -698,7 +704,6 @@ function movementContext(actor, source, inventory, armor, strength, options = {}
     form: transformation,
     forme: transformation,
     transformationContext: transformed,
-    terrain: runtime.terrain,
     environment: runtime.environment,
     milieu: runtime.milieu,
     statuses: options.statuses ?? activeStatuses(actor),
@@ -995,7 +1000,6 @@ export function computeMovement(actor, options = {}) {
       persistent: context.persistent === true,
       tokenId: context.token?.id ?? null,
       sceneId: context.scene?.id ?? null,
-      terrain: context.terrain ?? null,
       environment: context.environment ?? null,
       size: context.size ?? null,
       transformation: context.transformation ?? null
