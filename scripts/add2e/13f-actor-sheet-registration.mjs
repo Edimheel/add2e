@@ -1,22 +1,12 @@
 // ADD2E — Enregistrement de la feuille personnage ApplicationV2
 
-if (!globalThis.Add2eActorSheet) {
-  throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant l'enregistrement de la sheet.");
-}
+import { Add2eActorSheet } from "./13a-actor-sheet-class.mjs";
 
-foundry.documents.collections.Actors.registerSheet("add2e", globalThis.Add2eActorSheet, {
+foundry.documents.collections.Actors.registerSheet("add2e", Add2eActorSheet, {
   types: ["personnage"],
   makeDefault: true,
   label: "ADD2e Personnage"
 });
-
-// Exposition globale conservée pour compatibilité avec le code legacy et les scripts onUse.
-try { globalThis.Add2eActorSheet = globalThis.Add2eActorSheet; } catch (_e) {}
-
-// NOTE : les modules 13b/13c/13d/13e appellent encore ActorSheet.prototype.*
-// dans leurs méthodes de prototype. Ces références sont résolues à l'exécution.
-// Le pont défini dans 13a doit donc rester disponible tant que ces méthodes
-// n'auront pas été réécrites directement vers ADD2E_ACTOR_SHEET_LEGACY_BRIDGE.
 
 const ADD2E_REVERSIBLE_COMPONENT_MODE_VERSION = "2026-06-23-reversible-components-entry-mode-v1";
 globalThis.ADD2E_REVERSIBLE_COMPONENT_MODE_VERSION = ADD2E_REVERSIBLE_COMPONENT_MODE_VERSION;
@@ -231,12 +221,15 @@ function add2ePostprocessObjectMagicLinkedSpellNames(data, actor) {
 }
 
 function add2ePatchReversibleComponentSheetRows() {
-  const proto = globalThis.Add2eActorSheet?.prototype;
-  if (!proto || proto.__add2eReversibleComponentSheetRowsV1 || typeof proto.getData !== "function") return false;
+  const prototype = Add2eActorSheet.prototype;
+  if (prototype.__add2eReversibleComponentSheetRowsV1) return true;
+  if (typeof prototype.getData !== "function") {
+    throw new Error("[ADD2E] Add2eActorSheet.getData est indisponible pour les composants réversibles.");
+  }
 
-  proto.__add2eReversibleComponentSheetRowsV1 = true;
-  const originalGetData = proto.getData;
-  proto.getData = async function add2eReversibleComponentGetData(...args) {
+  prototype.__add2eReversibleComponentSheetRowsV1 = true;
+  const originalGetData = prototype.getData;
+  prototype.getData = async function add2eReversibleComponentGetData(...args) {
     const data = await originalGetData.apply(this, args);
     add2ePostprocessReversibleSpellRows(data);
     return add2ePostprocessObjectMagicLinkedSpellNames(data, this.actor ?? data?.actor);
@@ -287,13 +280,4 @@ function add2eInstallReversibleComponentApiBridge() {
 }
 
 add2ePatchReversibleComponentSheetRows();
-
-Hooks.once("ready", () => {
-  let attempts = 0;
-  const install = () => {
-    const installed = add2eInstallReversibleComponentApiBridge();
-    attempts += 1;
-    if (!installed && attempts < 20) window.setTimeout(install, 50);
-  };
-  window.setTimeout(install, 125);
-});
+Hooks.once("ready", add2eInstallReversibleComponentApiBridge);
