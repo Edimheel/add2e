@@ -1,11 +1,12 @@
 // ADD2E — Actor sheet getData : orchestrateur ApplicationV2.
 
-import { Add2eActorSheet } from "./13a-actor-sheet-class.mjs";
 import { add2ePrepareActorSheetBaseData } from "./13b-actor-sheet-get-data-base.mjs";
 import { add2ePrepareActorSheetCombatData } from "./13b-actor-sheet-get-data-combat.mjs";
 import { add2ePopulateActorSheetSpellData } from "./13b-actor-sheet-get-data-spells.mjs";
 
-const ADD2E_ACTIVE_EFFECTS_DATA_VERSION = "2026-08-02-explicit-sheet-module-dependency-v7";
+if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant getData.");
+
+const ADD2E_ACTIVE_EFFECTS_DATA_VERSION = "2026-07-28-canonical-familiar-effects-v6";
 const ADD2E_HIDDEN_TECHNICAL_CLASS_RULE_KINDS = new Set(["armor_class_base", "attack_modifier"]);
 
 function add2eExceptionalStrengthValue(rawValue) {
@@ -308,7 +309,7 @@ export function add2ePopulateActorSheetActiveEffectsData(actor, data) {
   return data.activeEffectsList;
 }
 
-Add2eActorSheet.prototype.getData = async function getData() {
+globalThis.Add2eActorSheet.prototype.getData = async function getData() {
   const data = this._add2eNativeGetData();
   const state = add2ePrepareActorSheetBaseData({ sheet: this, data });
   const actor = this.document ?? this.actor ?? state.actor;
