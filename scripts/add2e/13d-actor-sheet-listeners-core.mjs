@@ -1,5 +1,6 @@
 // ADD2E — Actor sheet listeners : noyau d'orchestration ApplicationV2.
 
+import { Add2eActorSheet } from "./13a-actor-sheet-class.mjs";
 import {
   ADD2E_SHEET_ROLL_DELEGATION_VERSION,
   add2eEvaluateRollSafe,
@@ -7,8 +8,6 @@ import {
   add2eInstallHudSheetRollBridge
 } from "./13d-actor-sheet-listeners-rolls.mjs";
 import { add2eBindActorSheetSpellListeners } from "./13d-actor-sheet-listeners-spells.mjs";
-
-if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant activateListeners.");
 
 globalThis.ADD2E_SHEET_ROLL_DELEGATION_VERSION = ADD2E_SHEET_ROLL_DELEGATION_VERSION;
 // Le HUD possède déjà ses écouteurs locaux. On installe uniquement les API globales
@@ -575,7 +574,7 @@ globalThis.add2eRollCharismaLoyaltyCard = add2eRollCharismaLoyaltyCard;
 globalThis.add2eResolveCharismaReaction = add2eResolveCharismaReaction;
 globalThis.add2eRollCharismaReactionCard = add2eRollCharismaReactionCard;
 
-globalThis.Add2eActorSheet.prototype.activateListeners = function activateListeners(html) {
+Add2eActorSheet.prototype.activateListeners = function activateListeners(html) {
   html = html?.jquery ? html : $(html);
   const self = this;
 
