@@ -2,7 +2,7 @@
 // Feuille personnage ADD2E full ApplicationV2 : aucun héritage appv1, aucun pont ActorSheet.
 // Le contexte rendu utilise une vue isolée du système de l'acteur.
 
-const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-08-02-application-v2-module-export-v11";
+const ADD2E_ACTOR_SHEET_V2_VERSION = "2026-08-02-application-v2-global-contract-v12";
 const ADD2E_ACTOR_SHEET_V2_CSS_ID = "add2e-application-v2-character-sheet-css";
 const ADD2E_ACTOR_SHEET_V2_CSS_PATH = "systems/add2e/styles/application-v2-character-sheet.css";
 
@@ -309,15 +309,12 @@ export class Add2eActorSheet extends ADD2E_ACTOR_SHEET_BASE {
   }
 }
 
-try {
-  globalThis.ADD2E_ACTOR_SHEET_V2_VERSION = ADD2E_ACTOR_SHEET_V2_VERSION;
-  globalThis.ADD2E_ACTOR_SHEET_V2_CSS_PATH = ADD2E_ACTOR_SHEET_V2_CSS_PATH;
-  globalThis.add2eEnsureApplicationV2CharacterCss = add2eEnsureApplicationV2CharacterCss;
-  globalThis.add2eBindApplicationV2Close = add2eBindApplicationV2Close;
-  globalThis.add2eBuildActorSheetView = add2eBuildActorSheetView;
-  globalThis.Add2eActorSheet = Add2eActorSheet;
-  delete globalThis.ADD2E_ACTOR_SHEET_LEGACY_BRIDGE;
-} catch (_error) {}
+globalThis.Add2eActorSheet = Add2eActorSheet;
+globalThis.ADD2E_ACTOR_SHEET_V2_VERSION = ADD2E_ACTOR_SHEET_V2_VERSION;
+globalThis.ADD2E_ACTOR_SHEET_V2_CSS_PATH = ADD2E_ACTOR_SHEET_V2_CSS_PATH;
+globalThis.add2eEnsureApplicationV2CharacterCss = add2eEnsureApplicationV2CharacterCss;
+globalThis.add2eBindApplicationV2Close = add2eBindApplicationV2Close;
+globalThis.add2eBuildActorSheetView = add2eBuildActorSheetView;
 
 add2eEnsureApplicationV2CharacterCss();
 console.log("[ADD2E][ACTOR_SHEET][APPLICATION_V2_FULL]", ADD2E_ACTOR_SHEET_V2_VERSION);
