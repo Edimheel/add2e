@@ -18,6 +18,8 @@
     "scripts/add2e-attack.mjs",
     "scripts/add2e-action-hud.mjs",
     "scripts/add2e/chat-card.mjs",
+    "scripts/add2e/spell-identity.mjs",
+    "scripts/add2e/spell-agrandissement-service.mjs",
     "scripts/add2e.mjs",
     "scripts/add2e/magic-power-effects-adapter.mjs",
     "scripts/add2e/capability-special-attacks.mjs",
