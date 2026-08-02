@@ -1,7 +1,7 @@
 // ADD2E — Domaine XP, mouvement et encombrement canoniques.
 // Compatible Foundry V13/V14/V15 — DialogV2 uniquement.
 
-export const ADD2E_MOVE_XP_VERSION = "2026-08-02-canonical-transformation-dimensions-v16";
+export const ADD2E_MOVE_XP_VERSION = "2026-08-02-canonical-carried-state-v17";
 export const ADD2E_MOVE_XP_TAG = "[ADD2E][MOVE_XP]";
 export const ADD2E_MOVE_XP_INTERNAL = "add2eMoveXpInternal";
 export const ADD2E_MOVE_XP_RECALC_DELAY_MS = 140;
@@ -439,9 +439,22 @@ function itemIsCarried(item) {
   if (["classe", "race", "sort", "spell"].includes(type)) return false;
   const system = item?.system ?? {};
   const flags = item?.flags?.add2e ?? {};
-  if (system.carried === false || system.transporte === false || system.transporté === false || system.inInventory === false) return false;
-  if (flags.carried === false) return false;
-  return !itemEncumbranceExemption(item);
+  const exemption = itemEncumbranceExemption(item);
+
+  // Un objet équipé est nécessairement porté, même si un ancien alias de
+  // transport contient encore false. L’équipement actif est l’autorité la
+  // plus forte ; les états de transport servent uniquement aux objets rangés.
+  if (itemEquipped(item)) return !exemption;
+
+  const carriedState = [
+    system.transporte,
+    system.transporté,
+    system.carried,
+    system.inInventory,
+    flags.carried
+  ].find(value => typeof value === "boolean");
+  if (carriedState === false) return false;
+  return !exemption;
 }
 
 function normalizedWeightUnit(system = {}) {
