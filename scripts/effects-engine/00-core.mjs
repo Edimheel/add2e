@@ -32,12 +32,35 @@ export {
   ADD2E_ABILITY_BOUNDS
 };
 
-const ADD2E_MODIFIER_CONTEXT_CONDITIONS_VERSION = "2026-08-02-canonical-movement-sources-v10";
+const ADD2E_MODIFIER_CONTEXT_CONDITIONS_VERSION = "2026-08-02-canonical-armor-properties-v11";
 const ADD2E_MOVEMENT_METRES_PER_RATE = 3;
 const ADD2E_GOLD_PIECES_PER_KILOGRAM = 20;
 const ADD2E_GOLD_PIECES_PER_POUND = 10;
 const ADD2E_ENCUMBRANCE_SETTINGS_VERSION = "2026-08-02-world-encumbrance-settings-v2";
-const ADD2E_ARMOR_MOVEMENT_VERSION = "2026-08-02-canonical-armor-movement-v2";
+const ADD2E_ARMOR_MOVEMENT_VERSION = "2026-08-02-canonical-armor-properties-v3";
+
+const ADD2E_ARMOR_CATEGORY_MOVEMENT_RATES = Object.freeze({
+  legere: 12,
+  moyenne: 9,
+  lourde: 6
+});
+
+const ADD2E_ARMOR_TYPE_MOVEMENT_RATES = Object.freeze({
+  rembourree: 12,
+  cuir: 12,
+  "cuir-cloute": 9,
+  ecailles: 9,
+  "tunique-metallique": 9,
+  mailles: 9,
+  brigandine: 9,
+  annelee: 9,
+  cuirasse: 9,
+  peau: 9,
+  "torse-blinde": 6,
+  bandes: 6,
+  feuilletee: 6,
+  plaques: 6
+});
 
 function add2eWorldSetting(key, fallback) {
   try {
@@ -139,20 +162,96 @@ function armorDocuments(context = {}) {
   catch (_error) { return []; }
 }
 
+function scalarValues(value) {
+  if (value === undefined || value === null || value === "") return [];
+  if (Array.isArray(value)) return value.flatMap(scalarValues);
+  if (value instanceof Set) return [...value].flatMap(scalarValues);
+  if (isObject(value)) return Object.values(value).flatMap(scalarValues);
+  return String(value).split(/[,;|\n]+/g).map(entry => entry.trim()).filter(Boolean);
+}
+
+function armorTags(item) {
+  const system = item?.system ?? {};
+  const flags = item?.flags?.add2e ?? {};
+  return new Set([
+    ...scalarValues(system.tags),
+    ...scalarValues(system.effectTags),
+    ...scalarValues(flags.tags),
+    ...scalarValues(flags.effectTags)
+  ].map(canonicalKey).filter(Boolean));
+}
+
+function armorTaggedValue(tags, prefixes = []) {
+  for (const prefixValue of prefixes) {
+    const prefix = canonicalKey(prefixValue);
+    for (const tag of tags) {
+      if (tag.startsWith(`${prefix}-`)) return tag.slice(prefix.length + 1);
+    }
+  }
+  return "";
+}
+
+function armorNumericField(system, fields = []) {
+  for (const field of fields) {
+    const value = Number(system?.[field]);
+    if (Number.isFinite(value) && value > 0) return value;
+  }
+  return null;
+}
+
+function armorNumericTag(tags, prefixes = []) {
+  const raw = armorTaggedValue(tags, prefixes);
+  if (!raw) return null;
+  const value = Number(raw.replace(/-/g, "."));
+  return Number.isFinite(value) && value > 0 ? value : null;
+}
+
+function armorTypeKey(item, tags = armorTags(item)) {
+  const system = item?.system ?? {};
+  return canonicalKey(
+    system.type_armure
+      ?? system.typeArmor
+      ?? system.armorType
+      ?? armorTaggedValue(tags, ["type_armure", "armor_type"])
+  );
+}
+
+function armorCategoryKey(item, tags = armorTags(item)) {
+  const system = item?.system ?? {};
+  const raw = canonicalKey(
+    system.categorie_armure
+      ?? system.armorCategory
+      ?? system.categorie
+      ?? system.category
+      ?? armorTaggedValue(tags, ["categorie_armure", "armor_category"])
+  );
+  const aliases = {
+    light: "legere",
+    leger: "legere",
+    legere: "legere",
+    medium: "moyenne",
+    moyen: "moyenne",
+    moyenne: "moyenne",
+    heavy: "lourde",
+    lourd: "lourde",
+    lourde: "lourde"
+  };
+  return aliases[raw] ?? raw;
+}
+
 function armorIsShield(item) {
   const system = item?.system ?? {};
-  const identity = [
-    system.type_armure,
-    system.typeArmor,
-    system.categorie,
-    system.category,
-    system.structure,
-    system.nom,
-    item?.name
-  ].map(canonicalKey).filter(Boolean);
+  const tags = armorTags(item);
+  const type = armorTypeKey(item, tags);
+  const category = armorCategoryKey(item, tags);
   return system.bouclier === true
     || system.shield === true
-    || identity.some(value => value === "bouclier" || value.includes("bouclier"));
+    || type === "bouclier"
+    || type === "shield"
+    || category === "bouclier"
+    || category === "shield"
+    || tags.has("armure-bouclier")
+    || tags.has("armor-shield");
 }
 
 function armorIsMagic(item) {
@@ -174,41 +273,69 @@ function armorExplicitlyExempt(item) {
     || flags.encumbranceExempt === true;
 }
 
-function armorIdentity(item) {
+function armorCanonicalProfile(item) {
+  if (!item) return null;
   const system = item?.system ?? {};
-  return [
-    system.type_armure,
-    system.typeArmor,
-    system.structure,
-    system.categorie,
-    system.category,
-    system.properties,
-    system.nom,
-    system.enchantement?.baseName,
-    item?.name
-  ].map(canonicalKey).filter(Boolean).join(" ");
+  const tags = armorTags(item);
+  const shield = armorIsShield(item);
+  const type = armorTypeKey(item, tags);
+  const category = armorCategoryKey(item, tags);
+  const explicitRate = armorNumericField(system, [
+    "movement_rate",
+    "movementRate",
+    "mouvement_armure",
+    "mouvementArmure",
+    "armorMovementRate"
+  ]);
+  const taggedRate = armorNumericTag(tags, [
+    "movement_rate",
+    "mouvement_armure",
+    "armor_movement_rate"
+  ]);
+  const typeRate = ADD2E_ARMOR_TYPE_MOVEMENT_RATES[type] ?? null;
+  const categoryRate = ADD2E_ARMOR_CATEGORY_MOVEMENT_RATES[category] ?? null;
+  const baseRate = shield ? null : explicitRate ?? taggedRate ?? typeRate ?? categoryRate;
+  const explicitMagicRate = armorNumericField(system, [
+    "magic_movement_rate",
+    "magicMovementRate",
+    "mouvement_armure_magique",
+    "mouvementArmureMagique"
+  ]) ?? armorNumericTag(tags, [
+    "magic_movement_rate",
+    "mouvement_armure_magique",
+    "magic_armor_movement_rate"
+  ]);
+  const rateSource = explicitRate !== null
+    ? "field"
+    : taggedRate !== null
+      ? "tag"
+      : typeRate !== null
+        ? "type_armure"
+        : categoryRate !== null
+          ? "categorie"
+          : null;
+  return {
+    shield,
+    magical: armorIsMagic(item),
+    type,
+    category,
+    tags: [...tags],
+    baseRate: Number.isFinite(baseRate) ? baseRate : null,
+    explicitMagicRate,
+    rateSource
+  };
 }
 
 function armorBaseMovementRate(item) {
-  if (!item || armorIsShield(item)) return null;
-  const identity = armorIdentity(item);
-  if (!identity) return null;
-
-  if (identity.includes("maille-elfique") || identity.includes("cotte-de-mailles-elfique")) return 12;
-  if (identity.includes("cuir-cloute") || identity.includes("cuir-cloutee")) return 9;
-  if (identity.includes("plate-feuilletee") || identity.includes("plates-feuilletees")) return 6;
-  if (identity.includes("armure-de-plaques") || identity.includes("armure-de-plates")) return 6;
-  if (identity.includes("lorica") || identity.includes("plate") || identity.includes("plaques")) return 6;
-  if (identity.includes("harnois") || identity.includes("hoqueton") || identity.includes("broigne")) return 9;
-  if (identity.includes("maille") || identity.includes("cotte-de-mailles")) return 9;
-  if (identity.includes("cuir")) return 12;
-  return null;
+  return armorCanonicalProfile(item)?.baseRate ?? null;
 }
 
 function armorEffectiveMovementRate(item) {
-  const baseRate = armorBaseMovementRate(item);
+  const profile = armorCanonicalProfile(item);
+  const baseRate = profile?.baseRate;
   if (!Number.isFinite(baseRate)) return null;
-  if (!armorIsMagic(item)) return baseRate;
+  if (!profile.magical) return baseRate;
+  if (Number.isFinite(profile.explicitMagicRate)) return profile.explicitMagicRate;
   if (baseRate <= 6) return 9;
   if (baseRate <= 9) return 12;
   return baseRate;
@@ -216,7 +343,8 @@ function armorEffectiveMovementRate(item) {
 
 function armorMovementProfile(context = {}) {
   const entries = armorDocuments(context).map(item => {
-    const baseRate = armorBaseMovementRate(item);
+    const canonical = armorCanonicalProfile(item);
+    const baseRate = canonical?.baseRate;
     const effectiveRate = armorEffectiveMovementRate(item);
     if (!Number.isFinite(baseRate) || !Number.isFinite(effectiveRate)) return null;
     return {
@@ -224,7 +352,11 @@ function armorMovementProfile(context = {}) {
       itemId: String(item?.id ?? ""),
       itemUuid: String(item?.uuid ?? ""),
       name: String(item?.name ?? "Armure"),
-      magical: armorIsMagic(item),
+      magical: canonical.magical,
+      shield: canonical.shield,
+      type: canonical.type,
+      category: canonical.category,
+      rateSource: canonical.rateSource,
       baseRate,
       effectiveRate,
       capMetres: effectiveRate * ADD2E_MOVEMENT_METRES_PER_RATE
@@ -362,6 +494,40 @@ function canonicalMagicArmorWeightModifier(Engine, actor, query = {}, context = 
   });
 }
 
+function canonicalTransformationWeightModifier(Engine, actor, query = {}, context = {}) {
+  const domain = canonicalKey(query.domain);
+  const target = canonicalKey(query.target);
+  if (!actor || domain !== "encumbrance" || target !== "carried-weight") return null;
+  const factor = Number(context.transformationFactor ?? context.sizeFactor);
+  if (!Number.isFinite(factor) || factor <= 0 || Math.abs(factor - 1) < 0.0001) return null;
+
+  const factorSource = context.transformationContext?.factorSource ?? null;
+  const sourceId = factorSource?.effectId ?? `${actor.id}:size-transformation`;
+  return Engine.createModifier({
+    id: `${actor.id}:encumbrance:transformation-weight`,
+    domain: "encumbrance",
+    target: "carried-weight",
+    operation: "multiply",
+    value: factor,
+    priority: 40,
+    stacking: { mode: "replace", group: "encumbrance-transformation-weight" },
+    source: {
+      kind: "transformation",
+      id: sourceId,
+      uuid: "",
+      name: context.transformation ?? context.form ?? context.forme ?? "Transformation de taille"
+    },
+    metadata: {
+      label: `Facteur de poids de transformation ×${factor}`,
+      producer: "canonical-transformation-weight",
+      factor,
+      form: context.transformation ?? context.form ?? context.forme ?? null,
+      size: context.size ?? context.taille ?? null,
+      version: ADD2E_ARMOR_MOVEMENT_VERSION
+    }
+  });
+}
+
 function armorCapAfterEncumbrance(profile, context = {}, base = 0) {
   if (!profile?.capMetres) return null;
   const category = canonicalKey(context.encumbranceCategory ?? "");
@@ -404,6 +570,9 @@ function canonicalArmorMovementModifier(Engine, actor, query = {}, context = {})
     metadata: {
       label: `Plafond de mouvement — ${profile.selected.name}`,
       producer: "canonical-armor-movement",
+      armorType: profile.selected.type,
+      armorCategory: profile.selected.category,
+      armorRateSource: profile.selected.rateSource,
       armorBaseRate: profile.selected.baseRate,
       armorEffectiveRate: profile.selected.effectiveRate,
       armorCapMetres: profile.capMetres,
@@ -647,6 +816,31 @@ function installContextConditionExtensions(Engine) {
       }
     },
 
+    armorIsShield: {
+      configurable: true,
+      writable: true,
+      value(item) {
+        return armorIsShield(item);
+      }
+    },
+
+    armorCanonicalProfile: {
+      configurable: true,
+      writable: true,
+      value(item) {
+        const profile = armorCanonicalProfile(item);
+        return profile ? { ...profile, tags: [...profile.tags] } : null;
+      }
+    },
+
+    armorMovementProfile: {
+      configurable: true,
+      writable: true,
+      value(context = {}) {
+        return armorMovementProfile(context);
+      }
+    },
+
     evaluateModifierConditions: {
       configurable: true,
       writable: true,
@@ -749,6 +943,10 @@ function installContextConditionExtensions(Engine) {
         const magicArmorWeight = canonicalMagicArmorWeightModifier(this, actor, query, context);
         if (magicArmorWeight && !source.some(modifier => String(modifier?.id ?? "") === String(magicArmorWeight.id))) {
           source.push(magicArmorWeight);
+        }
+        const transformationWeight = canonicalTransformationWeightModifier(this, actor, query, context);
+        if (transformationWeight && !source.some(modifier => String(modifier?.id ?? "") === String(transformationWeight.id))) {
+          source.push(transformationWeight);
         }
         const armorMovement = canonicalArmorMovementModifier(this, actor, query, context);
         if (armorMovement && !source.some(modifier => String(modifier?.id ?? "") === String(armorMovement.id))) {
