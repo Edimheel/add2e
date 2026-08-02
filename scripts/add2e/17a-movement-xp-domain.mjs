@@ -1,7 +1,7 @@
 // ADD2E — Domaine XP, mouvement et encombrement canoniques.
 // Compatible Foundry V13/V14/V15 — DialogV2 uniquement.
 
-export const ADD2E_MOVE_XP_VERSION = "2026-08-02-canonical-carried-state-v17";
+export const ADD2E_MOVE_XP_VERSION = "2026-08-02-canonical-movement-sources-v18";
 export const ADD2E_MOVE_XP_TAG = "[ADD2E][MOVE_XP]";
 export const ADD2E_MOVE_XP_INTERNAL = "add2eMoveXpInternal";
 export const ADD2E_MOVE_XP_RECALC_DELAY_MS = 140;
@@ -286,7 +286,6 @@ function directMovementMetres(system = {}) {
     system.mouvement,
     system.movement,
     system.vitesse,
-    system.vitesse_deplacement,
     system.deplacement,
     system["déplacement"],
     system.monkMove,
@@ -695,7 +694,7 @@ function movementRuntimeContext(actor, options = {}) {
     environment,
     milieu: environment,
     persistent,
-    consumer: options.consumer ?? (persistent ? "movement-persistent-mirror" : "movement-runtime")
+    consumer: options.consumer ?? (persistent ? "movement-persistent-state" : "movement-runtime")
   };
 }
 
@@ -1073,7 +1072,7 @@ export function magicMovementRules(actor, options = {}) {
 }
 
 export function movementUpdates(actor) {
-  const movement = computeMovement(actor, { persistent: true, consumer: "movement-persistent-mirror", movementMode: "ground" });
+  const movement = computeMovement(actor, { persistent: true, consumer: "movement-persistent-state", movementMode: "ground" });
   return {
     updates: {
       "system.mouvement": movement
