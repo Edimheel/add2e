@@ -33,7 +33,8 @@ import {
 
 const recalculationTimers = new Map();
 const MOVEMENT_DOMAINS = new Set(["movement", "encumbrance"]);
-const ADD2E_ENCUMBRANCE_SETTINGS_VERSION = "2026-08-02-world-encumbrance-settings-v3";
+const ADD2E_ENCUMBRANCE_SETTINGS_VERSION = "2026-08-02-world-encumbrance-settings-v4";
+const ADD2E_MOVEMENT_EFFECT_CONTEXT_VERSION = "2026-08-02-size-transformation-effect-context-v1";
 
 const ITEM_MOVEMENT_FIELDS = Object.freeze([
   "system.mouvement", "system.movement", "system.vitesse", "system.vitesse_deplacement",
@@ -66,6 +67,7 @@ globalThis.ADD2E_MOVE_XP_VERSION = ADD2E_MOVE_XP_VERSION;
 globalThis.ADD2E_MOVEMENT_REFERENCE_POLICY_VERSION = "2026-07-31-preserve-actor-reference-v1";
 globalThis.ADD2E_ENCUMBRANCE_SETTINGS_VERSION = ADD2E_ENCUMBRANCE_SETTINGS_VERSION;
 globalThis.ADD2E_MOVEMENT_TERRAIN_POLICY_VERSION = "2026-08-02-terrain-out-of-scope-v1";
+globalThis.ADD2E_MOVEMENT_EFFECT_CONTEXT_VERSION = ADD2E_MOVEMENT_EFFECT_CONTEXT_VERSION;
 
 function actorTimerKey(actor) {
   return String(actor?.uuid ?? actor?.id ?? "");
@@ -284,8 +286,53 @@ function effectHasStatus(effect) {
   return Boolean(effect?.statusId || effect?.flags?.core?.statusId || effect?.flags?.add2e?.statusId || effect?.flags?.add2e?.vitalStatus);
 }
 
+function effectTagValues(effect) {
+  const flags = effect?.flags?.add2e ?? {};
+  const values = [];
+  const append = raw => {
+    if (raw === undefined || raw === null || raw === "") return;
+    if (Array.isArray(raw)) {
+      for (const entry of raw) append(entry);
+      return;
+    }
+    if (raw instanceof Set) {
+      for (const entry of raw) append(entry);
+      return;
+    }
+    if (raw && typeof raw === "object") {
+      for (const entry of Object.values(raw)) append(entry);
+      return;
+    }
+    for (const entry of String(raw).split(/[,;|\n]+/g)) {
+      const key = norm(entry);
+      if (key) values.push(key);
+    }
+  };
+  append(flags.tags);
+  append(flags.effectTags);
+  return values;
+}
+
+function effectHasMovementContext(effect) {
+  const flags = effect?.flags?.add2e ?? {};
+  if (flags.capabilityTransformation && typeof flags.capabilityTransformation === "object") return true;
+  if (flags.movement && typeof flags.movement === "object") return true;
+  return effectTagValues(effect).some(tag => (
+    tag.startsWith("taille_")
+    || tag.startsWith("forme_")
+    || tag.startsWith("transformation_")
+    || tag.startsWith("facteur_taille_")
+    || tag.startsWith("mouvement_")
+    || tag.startsWith("movement_")
+    || tag.startsWith("encombrement_")
+    || tag.startsWith("encumbrance_")
+    || tag === "poids_augmente"
+    || tag === "poids_reduit"
+  ));
+}
+
 function effectTouchesMovement(effect, changes = {}) {
-  if (documentHasMovementModifier(effect) || effectHasStatus(effect)) return true;
+  if (documentHasMovementModifier(effect) || effectHasStatus(effect) || effectHasMovementContext(effect)) return true;
   if (changesTouchPaths(changes, [
     "flags.add2e.modifiers", "flags.add2e.capabilityTransformation", "flags.add2e.movement",
     "flags.add2e.tags", "flags.add2e.effectTags", "statuses", "disabled", "isSuppressed"
