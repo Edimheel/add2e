@@ -1,10 +1,12 @@
 // ADD2E — Résolution compendium-first des drops personnage
-// Version : 2026-06-15-drop-compendium-first-split-v2
+// Version : 2026-08-02-explicit-application-v2-class-v3
 //
 // Module court chargé après le drop historique. Il force la résolution depuis
 // le compendium avant que les validateurs race/classe ne lisent raw.data.
 
-const ADD2E_DROP_COMPENDIUM_RESOLVER_VERSION = "2026-06-15-drop-compendium-first-split-v2";
+import { Add2eActorSheet } from "./13a-actor-sheet-class.mjs";
+
+const ADD2E_DROP_COMPENDIUM_RESOLVER_VERSION = "2026-08-02-explicit-application-v2-class-v3";
 globalThis.ADD2E_DROP_COMPENDIUM_RESOLVER_VERSION = ADD2E_DROP_COMPENDIUM_RESOLVER_VERSION;
 
 function add2eDropResolverNormalize(value) {
@@ -95,41 +97,31 @@ function add2eDropResolverBuildSyntheticEvent(event, raw, itemData) {
 }
 
 function add2eInstallDropCompendiumFirstWrapper() {
-  const SheetClass = globalThis.Add2eActorSheet;
-  if (!SheetClass?.prototype?._onDrop) return false;
-  if (SheetClass.prototype.__add2eDropCompendiumFirstWrapped) return true;
+  const prototype = Add2eActorSheet.prototype;
+  if (prototype.__add2eDropCompendiumFirstWrapped) return true;
+  if (typeof prototype._onDrop !== "function") {
+    throw new Error("[ADD2E] Add2eActorSheet._onDrop doit être installé avant le résolveur compendium-first.");
+  }
 
-  const original = SheetClass.prototype._onDrop;
-  SheetClass.prototype._onDrop = async function add2eDropCompendiumFirstWrapped(event) {
-    let raw = null;
-    try {
-      raw = JSON.parse(event.dataTransfer?.getData("text/plain") || "{}");
-      if (raw?.type === "Item") {
-        const itemData = await add2eResolveDropItemDataCompendiumFirst(raw);
-        if (itemData) {
-          const syntheticEvent = add2eDropResolverBuildSyntheticEvent(event, raw, itemData);
-          return original.call(this, syntheticEvent);
-        }
+  const original = prototype._onDrop;
+  prototype._onDrop = async function add2eDropCompendiumFirstWrapped(event) {
+    const raw = JSON.parse(event.dataTransfer?.getData("text/plain") || "{}");
+    if (raw?.type === "Item") {
+      const itemData = await add2eResolveDropItemDataCompendiumFirst(raw);
+      if (itemData) {
+        const syntheticEvent = add2eDropResolverBuildSyntheticEvent(event, raw, itemData);
+        return original.call(this, syntheticEvent);
       }
-    } catch (err) {
-      console.warn("[ADD2E][DROP][COMPENDIUM_FIRST] Résolution compendium impossible, fallback drop natif.", err);
     }
     return original.call(this, event);
   };
 
-  SheetClass.prototype.__add2eDropCompendiumFirstWrapped = true;
+  prototype.__add2eDropCompendiumFirstWrapped = true;
   console.log("[ADD2E][DROP][COMPENDIUM_FIRST][READY]", ADD2E_DROP_COMPENDIUM_RESOLVER_VERSION);
   return true;
 }
 
-if (!add2eInstallDropCompendiumFirstWrapper()) {
-  Hooks.once("ready", () => {
-    if (!add2eInstallDropCompendiumFirstWrapper()) {
-      setTimeout(add2eInstallDropCompendiumFirstWrapper, 250);
-      setTimeout(add2eInstallDropCompendiumFirstWrapper, 1000);
-    }
-  });
-}
+add2eInstallDropCompendiumFirstWrapper();
 
-try { globalThis.add2eResolveDropItemDataCompendiumFirst = add2eResolveDropItemDataCompendiumFirst; } catch (_e) {}
-try { globalThis.add2eInstallDropCompendiumFirstWrapper = add2eInstallDropCompendiumFirstWrapper; } catch (_e) {}
+globalThis.add2eResolveDropItemDataCompendiumFirst = add2eResolveDropItemDataCompendiumFirst;
+globalThis.add2eInstallDropCompendiumFirstWrapper = add2eInstallDropCompendiumFirstWrapper;
