@@ -2,7 +2,7 @@
 // Compatible Foundry V13/V14/V15. Aucun Dialog V1.
 // Les drops de classe/race sont délégués aux routeurs spécialisés.
 
-if (!globalThis.Add2eActorSheet) throw new Error("[ADD2E] Add2eActorSheet doit être chargé avant _onDrop.");
+import { Add2eActorSheet } from "./13a-actor-sheet-class.mjs";
 
 const ADD2E_ACTOR_SHEET_DROP_VERSION = "2026-07-16-actor-drop-current-name-v4";
 const ADD2E_SPELL_DROP_PENDING = globalThis.ADD2E_SPELL_DROP_PENDING instanceof Set
@@ -321,7 +321,7 @@ function classItems(actor) {
   return Array.from(actor?.items ?? []).filter(item => itemType(item) === "classe");
 }
 
-globalThis.Add2eActorSheet.prototype._onDrop = async function add2eSafeOnDrop(event, data = null) {
+Add2eActorSheet.prototype._onDrop = async function add2eSafeOnDrop(event, data = null) {
   event.preventDefault?.();
   event.stopPropagation?.();
   let raw = data;
@@ -388,10 +388,10 @@ globalThis.Add2eActorSheet.prototype._onDrop = async function add2eSafeOnDrop(ev
   }
 };
 
-if (!globalThis.Add2eActorSheet.prototype.__add2eDropAnywhereBoundSafeV4) {
-  globalThis.Add2eActorSheet.prototype.__add2eDropAnywhereBoundSafeV4 = true;
-  const previousOnRender = globalThis.Add2eActorSheet.prototype._onRender;
-  globalThis.Add2eActorSheet.prototype._onRender = async function add2eSafeDropOnRender(context, options = {}) {
+if (!Add2eActorSheet.prototype.__add2eDropAnywhereBoundSafeV4) {
+  Add2eActorSheet.prototype.__add2eDropAnywhereBoundSafeV4 = true;
+  const previousOnRender = Add2eActorSheet.prototype._onRender;
+  Add2eActorSheet.prototype._onRender = async function add2eSafeDropOnRender(context, options = {}) {
     const result = await previousOnRender.call(this, context, options);
     bindDropAnywhere(this);
     return result;
@@ -473,8 +473,7 @@ Hooks.on("deleteItem", (item, options = {}, userId = null) => {
     });
   } catch (_error) {}
 
-  queueMicrotask(() => renderActorApplications(actor));
-  setTimeout(() => renderActorApplications(actor), 100);
+  renderActorApplications(actor);
 });
 
 try { globalThis.add2eDropPurgeClassContent = add2eDropPurgeClassContent; } catch (_error) {}
