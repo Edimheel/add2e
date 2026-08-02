@@ -33,7 +33,7 @@ export {
 };
 
 const ADD2E_MODIFIER_CONTEXT_CONDITIONS_VERSION = "2026-08-02-integrated-movement-encumbrance-v10";
-const ADD2E_MOVEMENT_METRE_PER_RATE = 3;
+const ADD2E_MOVEMENT_METRES_PER_RATE = 3;
 const ADD2E_GOLD_PIECES_PER_KILOGRAM = 20;
 const ADD2E_GOLD_PIECES_PER_POUND = 10;
 const ADD2E_ENCUMBRANCE_SETTINGS_VERSION = "2026-08-02-world-encumbrance-settings-v2";
@@ -227,7 +227,7 @@ function armorMovementProfile(context = {}) {
       magical: armorIsMagic(item),
       baseRate,
       effectiveRate,
-      capMetres: effectiveRate * ADD2E_MOVEMENT_METRE_PER_RATE
+      capMetres: effectiveRate * ADD2E_MOVEMENT_METRES_PER_RATE
     };
   }).filter(Boolean);
   if (!entries.length) return null;
@@ -252,19 +252,6 @@ function armorWeightUnit(system = {}) {
 }
 
 function armorBaseWeightGoldPieces(item) {
-  const resolved = globalThis.add2eMagicBuilderResolveBaseWeight?.(item) ?? null;
-  const resolvedGp = Number(resolved?.encumbranceGoldPieces);
-  if (Number.isFinite(resolvedGp) && resolvedGp > 0) return resolvedGp;
-  const resolvedValue = Number(resolved?.value);
-  if (Number.isFinite(resolvedValue) && resolvedValue > 0) {
-    const resolvedUnit = canonicalKey(resolved?.unit);
-    if (["po", "pp", "gp", "piece-dor", "pieces-dor", "gold-piece", "gold-pieces"].includes(resolvedUnit)) return resolvedValue;
-    if (["kg", "kilogramme", "kilogrammes", "kilogram", "kilograms"].includes(resolvedUnit)) {
-      return resolvedValue * ADD2E_GOLD_PIECES_PER_KILOGRAM;
-    }
-    return resolvedValue * ADD2E_GOLD_PIECES_PER_POUND;
-  }
-
   const system = item?.system ?? {};
   const explicit = Number(system.poids_encombrement_po ?? system.encumbrance_gp ?? system.encumbranceGoldPieces);
   if (Number.isFinite(explicit) && explicit >= 0) return explicit;
@@ -382,8 +369,8 @@ function armorCapAfterEncumbrance(profile, context = {}, base = 0) {
   if (category === "severe") return Math.max(0, Math.min(profile.capMetres, Number(base) || 0));
   const multiplier = Number(context.encumbranceMultiplier);
   const resolvedMultiplier = Number.isFinite(multiplier) ? Math.max(0, multiplier) : 1;
-  const rate = profile.capMetres / ADD2E_MOVEMENT_METRE_PER_RATE;
-  return Math.max(0, Math.floor((rate * resolvedMultiplier) + 1e-9) * ADD2E_MOVEMENT_METRE_PER_RATE);
+  const rate = profile.capMetres / ADD2E_MOVEMENT_METRES_PER_RATE;
+  return Math.max(0, Math.floor((rate * resolvedMultiplier) + 1e-9) * ADD2E_MOVEMENT_METRES_PER_RATE);
 }
 
 function canonicalArmorMovementModifier(Engine, actor, query = {}, context = {}) {
@@ -560,8 +547,8 @@ function actorMovementReferenceValue(actor, context = {}, base = 0) {
 
   const multiplier = Number(context.encumbranceMultiplier);
   const resolvedMultiplier = Number.isFinite(multiplier) ? Math.max(0, multiplier) : 1;
-  const movementRate = referenceBase / ADD2E_MOVEMENT_METRE_PER_RATE;
-  return Math.max(0, Math.floor((movementRate * resolvedMultiplier) + 1e-9) * ADD2E_MOVEMENT_METRE_PER_RATE);
+  const movementRate = referenceBase / ADD2E_MOVEMENT_METRES_PER_RATE;
+  return Math.max(0, Math.floor((movementRate * resolvedMultiplier) + 1e-9) * ADD2E_MOVEMENT_METRES_PER_RATE);
 }
 
 function canonicalActorMovementReferenceModifier(Engine, actor, query = {}, context = {}) {
@@ -612,15 +599,15 @@ function canonicalEncumbranceCombatModifier(Engine, actor, query = {}, context =
   const isArmorClass = domain === "armor-class" && ["total", "all"].includes(target);
   if (!isAttack && !isArmorClass) return null;
 
-  const compute = globalThis.add2eComputeMovement;
-  if (typeof compute !== "function") {
+  const computeMovement = globalThis.add2eComputeMovement;
+  if (typeof computeMovement !== "function") {
     if (globalThis.game?.ready) {
       throw new Error("Le domaine canonique movement/encumbrance n’est pas chargé pour la résolution de combat.");
     }
     return null;
   }
 
-  const movement = compute(actor, {
+  const movement = computeMovement(actor, {
     token: context.token,
     scene: context.scene,
     environment: context.environment ?? context.milieu,
@@ -1324,43 +1311,17 @@ function magicArmorIsWeightless(item) {
   return isArmor && !isShield && (system.magique === true || system.magic === true);
 }
 
-function resolvedBaseItemWeight(item) {
-  const resolver = globalThis.add2eMagicBuilderResolveBaseWeight;
-  if (typeof resolver !== "function") return null;
-  const resolved = resolver(item);
-  if (!resolved || typeof resolved !== "object") return null;
-  const explicitGp = num(resolved.encumbranceGoldPieces, NaN);
-  if (Number.isFinite(explicitGp) && explicitGp > 0) {
-    return { value: explicitGp, rawValue: explicitGp, rawUnit: "gp", source: `magic-base:${resolved.match ?? "resolved"}` };
-  }
-  const rawValue = num(resolved.value, NaN);
-  if (!(rawValue > 0)) return null;
-  const unit = norm(resolved.unit);
-  if (["po", "pp", "gp", "piece_dor", "pieces_dor", "gold_piece", "gold_pieces"].includes(unit)) {
-    return { value: rawValue, rawValue, rawUnit: unit, source: `magic-base:${resolved.match ?? "resolved"}` };
-  }
-  if (["kg", "kilogramme", "kilogrammes", "kilogram", "kilograms"].includes(unit)) {
-    return { value: round2(rawValue * GOLD_PIECES_PER_KILOGRAM), rawValue, rawUnit: unit, source: `magic-base:${resolved.match ?? "resolved"}` };
-  }
-  return { value: round2(rawValue * GOLD_PIECES_PER_POUND), rawValue, rawUnit: unit || "pound", source: `magic-base:${resolved.match ?? "resolved"}` };
-}
-
 function itemWeightGoldPieces(item) {
   const system = item?.system ?? {};
   if (magicArmorIsWeightless(item)) {
-    const baseWeight = resolvedBaseItemWeight(item);
-    return { value: 0, rawValue: baseWeight?.rawValue ?? num(system.poids ?? system.weight, 0), rawUnit: baseWeight?.rawUnit ?? normalizedWeightUnit(system) || "source", source: "magic-armor-weightless" };
+    return { value: 0, rawValue: num(system.poids ?? system.weight, 0), rawUnit: normalizedWeightUnit(system) || "source", source: "magic-armor-weightless" };
   }
   const explicitGp = num(system.poids_encombrement_po ?? system.encumbrance_gp ?? system.encumbranceGoldPieces, NaN);
   if (Number.isFinite(explicitGp) && explicitGp >= 0) {
     return { value: explicitGp, rawValue: explicitGp, rawUnit: "gp", source: "poids_encombrement_po" };
   }
   const rawValue = num(system.poids ?? system.weight ?? system.encombrement ?? system.encumbrance, 0);
-  if (!(rawValue > 0)) {
-    const baseWeight = resolvedBaseItemWeight(item);
-    if (baseWeight) return baseWeight;
-    return { value: 0, rawValue: 0, rawUnit: normalizedWeightUnit(system) || null, source: "zero" };
-  }
+  if (!(rawValue > 0)) return { value: 0, rawValue: 0, rawUnit: normalizedWeightUnit(system) || null, source: "zero" };
   const unit = normalizedWeightUnit(system);
   if (["po", "pp", "gp", "piece_dor", "pieces_dor", "gold_piece", "gold_pieces"].includes(unit)) {
     return { value: rawValue, rawValue, rawUnit: unit, source: "explicit-gp" };
@@ -1488,10 +1449,7 @@ function transformationContext(actor, token = null) {
   const candidates = [];
   const add = (effect, raw, source) => {
     if (!raw || typeof raw !== "object") return;
-    const kind = norm(raw.kind ?? raw.type ?? "");
-    const form = kind === "size"
-      ? raw.formKey ?? raw.form ?? raw.forme ?? raw.transformation ?? null
-      : raw.formKey ?? raw.form ?? raw.forme ?? raw.transformation ?? raw.movementMode ?? raw.mode ?? null;
+    const form = raw.formKey ?? raw.form ?? raw.forme ?? raw.transformation ?? raw.movementMode ?? raw.mode ?? null;
     const size = raw.size ?? raw.taille ?? raw.sizeCategory ?? raw.gabarit ?? null;
     const factor = num(raw.factor ?? raw.scale ?? raw.sizeFactor, NaN);
     candidates.push({
