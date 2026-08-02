@@ -37,7 +37,7 @@ const ADD2E_ENCUMBRANCE_SETTINGS_VERSION = "2026-08-02-world-encumbrance-setting
 const ADD2E_MOVEMENT_EFFECT_CONTEXT_VERSION = "2026-08-02-size-transformation-effect-context-v1";
 
 const ITEM_MOVEMENT_FIELDS = Object.freeze([
-  "system.mouvement", "system.movement", "system.vitesse", "system.vitesse_deplacement",
+  "system.mouvement", "system.movement", "system.vitesse",
   "system.deplacement", "system.déplacement", "system.monkMove", "system.monkMovement", "system.baseMovement",
   "system.progression", "system.poids", "system.weight", "system.encombrement", "system.encumbrance",
   "system.poids_unite", "system.weightUnit", "system.poids_encombrement_po", "system.encumbrance_gp",
@@ -53,18 +53,17 @@ const ACTOR_MOVEMENT_FIELDS = Object.freeze([
   "system.force", "system.force_base", "system.force_ex",
   "system.bonus_caracteristiques.force", "system.bonus_divers_caracteristiques.force",
   "system.taille", "system.size", "system.gabarit", "system.transformation", "system.forme", "system.form",
-  "system.mouvement", "system.movement", "system.vitesse_deplacement",
+  "system.mouvement", "system.movement",
   "flags.add2e.modifiers", "flags.add2e.size", "flags.add2e.transformation",
   "flags.add2e.environment", "flags.add2e.milieu", "flags.add2e.monnaie"
 ]);
 
 const COMPUTED_MOVEMENT_SCALARS = Object.freeze([
-  "system.movement",
-  "system.vitesse_deplacement"
+  "system.movement"
 ]);
 
 globalThis.ADD2E_MOVE_XP_VERSION = ADD2E_MOVE_XP_VERSION;
-globalThis.ADD2E_MOVEMENT_REFERENCE_POLICY_VERSION = "2026-07-31-preserve-actor-reference-v1";
+globalThis.ADD2E_MOVEMENT_REFERENCE_POLICY_VERSION = "2026-08-02-canonical-sources-only-v2";
 globalThis.ADD2E_ENCUMBRANCE_SETTINGS_VERSION = ADD2E_ENCUMBRANCE_SETTINGS_VERSION;
 globalThis.ADD2E_MOVEMENT_TERRAIN_POLICY_VERSION = "2026-08-02-terrain-out-of-scope-v1";
 globalThis.ADD2E_MOVEMENT_EFFECT_CONTEXT_VERSION = ADD2E_MOVEMENT_EFFECT_CONTEXT_VERSION;
@@ -83,10 +82,7 @@ function stripComputedMovementScalarsFromChanges(changes = {}) {
     if (Object.prototype.hasOwnProperty.call(changes, path)) delete changes[path];
   }
   const system = changes?.system;
-  if (system && typeof system === "object") {
-    delete system.movement;
-    delete system.vitesse_deplacement;
-  }
+  if (system && typeof system === "object") delete system.movement;
   return changes;
 }
 
@@ -96,7 +92,7 @@ function isComputedMovementWrite(options = {}) {
   return reason.startsWith("move-xp-recalc:") || reason === "move-xp-award";
 }
 
-async function recalcMovementMirror(actor, reason = "document-change") {
+async function recalcMovementState(actor, reason = "document-change") {
   if (!actor) return null;
   const result = movementUpdates(actor);
   const updates = removeComputedMovementScalars(changedUpdatePayload(actor, result.updates));
@@ -117,7 +113,7 @@ function queueMovementRecalc(actor, reason = "document-change") {
   if (existing) clearTimeout(existing);
   const timer = setTimeout(() => {
     recalculationTimers.delete(key);
-    recalcMovementMirror(actor, reason)
+    recalcMovementState(actor, reason)
       .catch(error => console.warn(`${ADD2E_MOVE_XP_TAG}[RECALC]`, { actor: actor.name, reason, error }));
   }, ADD2E_MOVE_XP_RECALC_DELAY_MS);
   recalculationTimers.set(key, timer);
@@ -139,7 +135,7 @@ function queueAllMovementRecalcs(reason = "world-setting") {
   worldSettingRecalcChain = worldSettingRecalcChain.then(async () => {
     for (const actor of actors) {
       try {
-        await recalcMovementMirror(actor, reason);
+        await recalcMovementState(actor, reason);
       } catch (error) {
         console.warn(`${ADD2E_MOVE_XP_TAG}[SETTING_RECALC]`, { actor: actor.name, reason, error });
       }
@@ -360,7 +356,7 @@ Hooks.on("preUpdateActor", (actor, changes, options = {}) => {
 
   const levelChanged = changedPath(actor, changes, "system.niveau");
   const xpChanged = changedPath(actor, changes, "system.xp");
-  const movementChanged = ["system.mouvement.base", "system.movement", "system.vitesse_deplacement"]
+  const movementChanged = ["system.mouvement.base", "system.movement"]
     .some(path => changedPath(actor, changes, path));
   if (!levelChanged && !xpChanged && !movementChanged) return true;
 
