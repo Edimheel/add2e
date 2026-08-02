@@ -2,6 +2,7 @@
 // Les calculs de sorts proviennent exclusivement de 07-spellcasting-rules.mjs.
 // Compatible Foundry V13/V14/V15.
 
+import { Add2eActorSheet } from "./13a-actor-sheet-class.mjs";
 import "./13b-actor-sheet-get-data-core.mjs";
 
 const ADD2E_CLASS_MECHANICS_VERSION = "2026-07-27-sheet-multiclass-constitution-hp-v4";
@@ -272,8 +273,8 @@ function add2ePrepareCharismaSocialProfile(actor, data) {
 }
 
 function add2eInstallDerivedSheetDisplays() {
-  const prototype = globalThis.Add2eActorSheet?.prototype;
-  if (!prototype || prototype.__add2eDerivedSheetDisplaysV2 === true) return Boolean(prototype);
+  const prototype = Add2eActorSheet.prototype;
+  if (prototype.__add2eDerivedSheetDisplaysV2 === true) return true;
   const originalGetData = prototype.getData;
   if (typeof originalGetData !== "function") throw new Error("getData ApplicationV2 est indisponible pour les profils dérivés de la feuille.");
 
