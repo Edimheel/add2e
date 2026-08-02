@@ -32,7 +32,7 @@ export {
   ADD2E_ABILITY_BOUNDS
 };
 
-const ADD2E_MODIFIER_CONTEXT_CONDITIONS_VERSION = "2026-08-02-no-terrain-magic-shield-weight-v8";
+const ADD2E_MODIFIER_CONTEXT_CONDITIONS_VERSION = "2026-08-02-carried-magic-armor-weight-v9";
 const ADD2E_MOVEMENT_METRES_PER_RATE = 3;
 const ADD2E_GOLD_PIECES_PER_KILOGRAM = 20;
 const ADD2E_GOLD_PIECES_PER_POUND = 10;
@@ -280,6 +280,28 @@ function armorInventoryEntry(context, item) {
   )) ?? null;
 }
 
+function armorExplicitlyNotCarried(item) {
+  const system = item?.system ?? {};
+  const flags = item?.flags?.add2e ?? {};
+  const state = [
+    system.transporte,
+    system.transporté,
+    system.carried,
+    system.inInventory,
+    flags.carried
+  ].find(value => typeof value === "boolean");
+  return state === false;
+}
+
+function carriedMagicArmorDocuments(Engine, actor) {
+  return Array.from(actor?.items ?? []).filter(item => {
+    const type = String(item?.type ?? "").toLowerCase();
+    if (!["armure", "armor"].includes(type) || !armorIsMagic(item)) return false;
+    if (Engine.itemEquipped(item)) return true;
+    return !armorExplicitlyNotCarried(item);
+  });
+}
+
 function canonicalMagicArmorWeightModifier(Engine, actor, query = {}, context = {}) {
   const domain = canonicalKey(query.domain);
   const target = canonicalKey(query.target);
@@ -287,8 +309,7 @@ function canonicalMagicArmorWeightModifier(Engine, actor, query = {}, context = 
 
   const details = [];
   let adjustment = 0;
-  for (const item of armorDocuments(context)) {
-    if (!armorIsMagic(item)) continue;
+  for (const item of carriedMagicArmorDocuments(Engine, actor)) {
     const entry = armorInventoryEntry(context, item);
     const quantity = Math.max(1, Number(entry?.quantity ?? item?.system?.quantite ?? item?.system?.quantity ?? 1) || 1);
     const sourceWeight = Math.max(0, armorBaseWeightGoldPieces(item) * quantity);
@@ -307,6 +328,7 @@ function canonicalMagicArmorWeightModifier(Engine, actor, query = {}, context = 
       itemUuid: item?.uuid ?? null,
       name: item?.name ?? "Armure magique",
       shield,
+      equipped: Engine.itemEquipped(item),
       sourceWeight,
       currentWeight,
       desiredWeight,
