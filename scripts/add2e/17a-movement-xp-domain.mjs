@@ -1,7 +1,7 @@
 // ADD2E — Domaine XP, mouvement et encombrement canoniques.
 // Compatible Foundry V13/V14/V15 — DialogV2 uniquement.
 
-export const ADD2E_MOVE_XP_VERSION = "2026-08-02-canonical-movement-no-terrain-v15";
+export const ADD2E_MOVE_XP_VERSION = "2026-08-02-canonical-transformation-dimensions-v16";
 export const ADD2E_MOVE_XP_TAG = "[ADD2E][MOVE_XP]";
 export const ADD2E_MOVE_XP_INTERNAL = "add2eMoveXpInternal";
 export const ADD2E_MOVE_XP_RECALC_DELAY_MS = 140;
@@ -597,7 +597,14 @@ function transformationContext(actor, token = null) {
     const form = raw.formKey ?? raw.form ?? raw.forme ?? raw.transformation ?? raw.movementMode ?? raw.mode ?? null;
     const size = raw.size ?? raw.taille ?? raw.sizeCategory ?? raw.gabarit ?? null;
     const factor = num(raw.factor ?? raw.scale ?? raw.sizeFactor, NaN);
-    candidates.push({ effectId: effect?.id ?? null, source, form, size, factor: Number.isFinite(factor) ? factor : null, raw: clone(raw) });
+    candidates.push({
+      effectId: effect?.id ?? null,
+      source,
+      form,
+      size,
+      factor: Number.isFinite(factor) ? factor : null,
+      raw: clone(raw)
+    });
   };
 
   for (const effect of activeEffects(actor)) {
@@ -614,13 +621,26 @@ function transformationContext(actor, token = null) {
 
   const tokenTransform = token?.flags?.add2e?.tokenTransform ?? null;
   add(null, tokenTransform, "tokenTransform");
+
+  const lastCandidate = predicate => [...candidates].reverse().find(predicate) ?? null;
+  const formSource = lastCandidate(candidate => candidate.form !== null
+    && candidate.form !== undefined
+    && String(candidate.form).trim() !== "");
+  const sizeSource = lastCandidate(candidate => candidate.size !== null
+    && candidate.size !== undefined
+    && String(candidate.size).trim() !== "");
+  const factorSource = lastCandidate(candidate => Number.isFinite(Number(candidate.factor)));
   const selected = candidates[candidates.length - 1] ?? null;
+
   return {
     selected,
     candidates,
-    form: selected?.form ?? null,
-    size: selected?.size ?? null,
-    factor: selected?.factor ?? null
+    formSource,
+    sizeSource,
+    factorSource,
+    form: formSource?.form ?? null,
+    size: sizeSource?.size ?? null,
+    factor: factorSource?.factor ?? null
   };
 }
 
@@ -703,6 +723,8 @@ function movementContext(actor, source, inventory, armor, strength, options = {}
     transformation,
     form: transformation,
     forme: transformation,
+    transformationFactor: transformed.factor,
+    sizeFactor: transformed.factor,
     transformationContext: transformed,
     environment: runtime.environment,
     milieu: runtime.milieu,
@@ -1002,7 +1024,8 @@ export function computeMovement(actor, options = {}) {
       sceneId: context.scene?.id ?? null,
       environment: context.environment ?? null,
       size: context.size ?? null,
-      transformation: context.transformation ?? null
+      transformation: context.transformation ?? null,
+      factor: context.transformationFactor ?? null
     },
     inventory: clone(context.inventory),
     encumbrance: {
