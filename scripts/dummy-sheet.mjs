@@ -1,9 +1,8 @@
 // ADD2E — Feuille Dummy minimale.
 // Compatible Foundry V13/V14/V15, ApplicationV2 uniquement.
 
-const DUMMY_SHEET_VERSION = "2026-07-06-dummy-actor-layout-v2";
+const DUMMY_SHEET_VERSION = "2026-08-02-dummy-init-registration-v3";
 const DUMMY_TYPE = "dummy";
-const ActorsCollection = foundry?.documents?.collections?.Actors;
 const AppApi = foundry?.applications?.api ?? {};
 const SheetsApi = foundry?.applications?.sheets ?? {};
 const HandlebarsApplicationMixin = AppApi.HandlebarsApplicationMixin;
@@ -11,7 +10,6 @@ const DocumentSheetV2 = SheetsApi.ActorSheetV2 ?? SheetsApi.DocumentSheetV2 ?? A
 
 if (!HandlebarsApplicationMixin) throw new Error("[ADD2E][DUMMY] HandlebarsApplicationMixin introuvable.");
 if (!DocumentSheetV2) throw new Error("[ADD2E][DUMMY] ActorSheetV2/DocumentSheetV2 introuvable.");
-if (!ActorsCollection) throw new Error("[ADD2E][DUMMY] Collection Actors introuvable.");
 
 globalThis.ADD2E_DUMMY_SHEET_VERSION = DUMMY_SHEET_VERSION;
 
@@ -127,10 +125,20 @@ export class Add2eDummySheet extends DummySheetBase {
   }
 }
 
-ActorsCollection.registerSheet("add2e", Add2eDummySheet, {
-  types: [DUMMY_TYPE],
-  makeDefault: true,
-  label: "ADD2e — Dummy"
-});
+function add2eRegisterDummySheet() {
+  const DocumentSheetConfig = foundry.applications.apps.DocumentSheetConfig;
+  const ActorDocument = foundry.documents.Actor;
+  if (!DocumentSheetConfig?.registerSheet) throw new Error("[ADD2E][DUMMY] DocumentSheetConfig.registerSheet est indisponible.");
+  if (!ActorDocument) throw new Error("[ADD2E][DUMMY] Le document Actor est indisponible.");
 
-try { globalThis.Add2eDummySheet = Add2eDummySheet; } catch (_error) {}
+  DocumentSheetConfig.registerSheet(ActorDocument, game.system.id, Add2eDummySheet, {
+    types: [DUMMY_TYPE],
+    makeDefault: true,
+    canConfigure: true,
+    canBeDefault: true,
+    label: "ADD2e — Dummy"
+  });
+}
+
+Hooks.once("init", add2eRegisterDummySheet);
+globalThis.Add2eDummySheet = Add2eDummySheet;
