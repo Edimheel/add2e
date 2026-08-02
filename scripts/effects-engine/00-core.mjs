@@ -32,12 +32,12 @@ export {
   ADD2E_ABILITY_BOUNDS
 };
 
-const ADD2E_MODIFIER_CONTEXT_CONDITIONS_VERSION = "2026-07-31-armor-movement-v7";
+const ADD2E_MODIFIER_CONTEXT_CONDITIONS_VERSION = "2026-08-02-no-terrain-magic-shield-weight-v8";
 const ADD2E_MOVEMENT_METRES_PER_RATE = 3;
 const ADD2E_GOLD_PIECES_PER_KILOGRAM = 20;
 const ADD2E_GOLD_PIECES_PER_POUND = 10;
-const ADD2E_ENCUMBRANCE_SETTINGS_VERSION = "2026-07-31-world-encumbrance-settings-v1";
-const ADD2E_ARMOR_MOVEMENT_VERSION = "2026-07-31-canonical-armor-movement-v1";
+const ADD2E_ENCUMBRANCE_SETTINGS_VERSION = "2026-08-02-world-encumbrance-settings-v2";
+const ADD2E_ARMOR_MOVEMENT_VERSION = "2026-08-02-canonical-armor-movement-v2";
 
 function add2eWorldSetting(key, fallback) {
   try {
@@ -293,7 +293,12 @@ function canonicalMagicArmorWeightModifier(Engine, actor, query = {}, context = 
     const quantity = Math.max(1, Number(entry?.quantity ?? item?.system?.quantite ?? item?.system?.quantity ?? 1) || 1);
     const sourceWeight = Math.max(0, armorBaseWeightGoldPieces(item) * quantity);
     const currentWeight = Math.max(0, Number(entry?.total) || 0);
-    const desiredWeight = armorExplicitlyExempt(item) || armorIsShield(item) ? 0 : sourceWeight / 2;
+    const shield = armorIsShield(item);
+    const desiredWeight = armorExplicitlyExempt(item)
+      ? 0
+      : shield
+        ? sourceWeight
+        : sourceWeight / 2;
     const delta = desiredWeight - currentWeight;
     if (Math.abs(delta) < 0.0001) continue;
     adjustment += delta;
@@ -301,7 +306,7 @@ function canonicalMagicArmorWeightModifier(Engine, actor, query = {}, context = 
       itemId: item?.id ?? null,
       itemUuid: item?.uuid ?? null,
       name: item?.name ?? "Armure magique",
-      shield: armorIsShield(item),
+      shield,
       sourceWeight,
       currentWeight,
       desiredWeight,
@@ -583,7 +588,6 @@ function canonicalEncumbranceCombatModifier(Engine, actor, query = {}, context =
   const movement = computeMovement(actor, {
     token: context.token,
     scene: context.scene,
-    terrain: context.terrain,
     environment: context.environment ?? context.milieu,
     transformation: context.transformation ?? context.form ?? context.forme,
     size: context.size ?? context.taille,
@@ -652,7 +656,7 @@ function installContextConditionExtensions(Engine) {
           }
         };
 
-        appendDocument(scene, "scene", { sourceScene: scene });
+        if (context.ignoreTerrain !== true) appendDocument(scene, "scene", { sourceScene: scene });
         appendDocument(token, "token", { sourceToken: token, sourceScene: scene });
 
         const seen = new Set();
@@ -689,7 +693,9 @@ function installContextConditionExtensions(Engine) {
         const checks = [
           {
             keys: ["terrain", "terrains"],
-            actual: context.terrain ?? context.scene?.flags?.add2e?.terrain,
+            actual: context.ignoreTerrain === true
+              ? null
+              : context.terrain ?? context.scene?.flags?.add2e?.terrain,
             reason: "condition-terrain"
           },
           {
@@ -760,6 +766,10 @@ function installContextConditionExtensions(Engine) {
           targetActor: query.targetActor ?? query.context?.targetActor
         };
         const domain = canonicalKey(query.domain);
+        if (["movement", "encumbrance"].includes(domain)) {
+          context.terrain = null;
+          context.ignoreTerrain = true;
+        }
         if (domain === "encumbrance" && !encumbranceEnabled()) {
           return disabledEncumbranceResolution(query);
         }
