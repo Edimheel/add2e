@@ -2,11 +2,22 @@
 
 import { Add2eActorSheet } from "./13a-actor-sheet-class.mjs";
 
-foundry.documents.collections.Actors.registerSheet("add2e", Add2eActorSheet, {
-  types: ["personnage"],
-  makeDefault: true,
-  label: "ADD2e Personnage"
-});
+function add2eRegisterCharacterSheet() {
+  const DocumentSheetConfig = foundry.applications.apps.DocumentSheetConfig;
+  const ActorDocument = foundry.documents.Actor;
+  if (!DocumentSheetConfig?.registerSheet) throw new Error("[ADD2E] DocumentSheetConfig.registerSheet est indisponible.");
+  if (!ActorDocument) throw new Error("[ADD2E] Le document Actor est indisponible pour l’enregistrement de la feuille personnage.");
+
+  DocumentSheetConfig.registerSheet(ActorDocument, game.system.id, Add2eActorSheet, {
+    types: ["personnage"],
+    makeDefault: true,
+    canConfigure: true,
+    canBeDefault: true,
+    label: "ADD2e Personnage"
+  });
+}
+
+Hooks.once("init", add2eRegisterCharacterSheet);
 
 const ADD2E_REVERSIBLE_COMPONENT_MODE_VERSION = "2026-06-23-reversible-components-entry-mode-v1";
 globalThis.ADD2E_REVERSIBLE_COMPONENT_MODE_VERSION = ADD2E_REVERSIBLE_COMPONENT_MODE_VERSION;
