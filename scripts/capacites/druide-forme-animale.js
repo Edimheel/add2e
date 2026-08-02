@@ -1,16 +1,20 @@
 /* ADD2E — Druide : Forme animale. ApplicationV2/DialogV2, V13/V14/V15.
  * La forme reste active jusqu'au retour volontaire ou à la suppression de son effet.
  */
-const ADD2E_DRUIDE_FORME_ANIMALE_VERSION = "2026-08-01-canonical-transformation-profile-v8";
+const ADD2E_DRUIDE_FORME_ANIMALE_VERSION = "2026-08-02-canonical-transformation-profile-v9";
 const SCOPE = "druid-animal-form";
 const TRANSFORM_GROUP = "physical-form";
 const DAY_ROUNDS = 1440;
 const USAGE_FLAG = "capabilityUsage";
+const EQUIPPED_FIELDS = Object.freeze([
+  "equipee", "equipped", "equipe", "équipé", "porte", "portee", "porté", "worn"
+]);
 
 const FORMS = Object.freeze([
   {
     key: "grenouille",
     category: "reptile",
+    size: "petite",
     label: "Grenouille",
     img: "systems/add2e/assets/token/grenouille.webp",
     combat: {
@@ -24,6 +28,7 @@ const FORMS = Object.freeze([
   {
     key: "grand_serpent",
     category: "reptile",
+    size: "grande",
     label: "Grand serpent",
     img: "systems/add2e/assets/token/grand-serpent.webp",
     combat: {
@@ -40,6 +45,7 @@ const FORMS = Object.freeze([
   {
     key: "geai",
     category: "oiseau",
+    size: "petite",
     label: "Geai",
     img: "systems/add2e/assets/token/geai.webp",
     combat: {
@@ -53,6 +59,7 @@ const FORMS = Object.freeze([
   {
     key: "aigle",
     category: "oiseau",
+    size: "grande",
     label: "Aigle",
     img: "systems/add2e/assets/token/aigle.webp",
     combat: {
@@ -69,6 +76,7 @@ const FORMS = Object.freeze([
   {
     key: "chauve_souris",
     category: "mammifere",
+    size: "petite",
     label: "Chauve-souris",
     img: "systems/add2e/assets/token/chauve-souris.webp",
     combat: {
@@ -82,6 +90,7 @@ const FORMS = Object.freeze([
   {
     key: "ours_noir",
     category: "mammifere",
+    size: "grande",
     label: "Ours noir",
     img: "systems/add2e/assets/token/ours-noir.webp",
     combat: {
@@ -191,11 +200,12 @@ function activeTokenFromEffect(effect) {
 function equipmentUpdates(currentActor) {
   return Array.from(currentActor?.items ?? [])
     .filter(item => ["arme", "armure"].includes(String(item?.type ?? "").toLowerCase()))
-    .filter(item => item?.system?.equipee === true || item?.system?.equipped === true)
+    .filter(item => EQUIPPED_FIELDS.some(field => item?.system?.[field] === true))
     .map(item => {
+      const system = item?.system ?? {};
       const update = { _id: item.id, "system.equipee": false };
-      if (Object.prototype.hasOwnProperty.call(item?.system ?? {}, "equipped")) {
-        update["system.equipped"] = false;
+      for (const field of EQUIPPED_FIELDS) {
+        if (Object.prototype.hasOwnProperty.call(system, field)) update[`system.${field}`] = false;
       }
       return update;
     });
@@ -334,7 +344,8 @@ function effectData(form, tick) {
           "capability:transformation",
           "forme_animale:active",
           `forme_animale:${form.category}`,
-          `forme_animale:${form.key}`
+          `forme_animale:${form.key}`,
+          `taille:${form.size}`
         ],
         modifiers: transformationModifiers(form),
         capabilityTransformation: {
@@ -343,6 +354,7 @@ function effectData(form, tick) {
           kind: "form",
           formKey: form.key,
           category: form.category,
+          size: form.size,
           label: form.label,
           combat: {
             ...form.combat,
