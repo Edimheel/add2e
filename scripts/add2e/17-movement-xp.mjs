@@ -33,7 +33,7 @@ import {
 
 const recalculationTimers = new Map();
 const MOVEMENT_DOMAINS = new Set(["movement", "encumbrance"]);
-const ADD2E_ENCUMBRANCE_SETTINGS_VERSION = "2026-07-31-world-encumbrance-settings-v2";
+const ADD2E_ENCUMBRANCE_SETTINGS_VERSION = "2026-08-02-world-encumbrance-settings-v3";
 
 const ITEM_MOVEMENT_FIELDS = Object.freeze([
   "system.mouvement", "system.movement", "system.vitesse", "system.vitesse_deplacement",
@@ -53,7 +53,7 @@ const ACTOR_MOVEMENT_FIELDS = Object.freeze([
   "system.bonus_caracteristiques.force", "system.bonus_divers_caracteristiques.force",
   "system.taille", "system.size", "system.gabarit", "system.transformation", "system.forme", "system.form",
   "system.mouvement", "system.movement", "system.vitesse_deplacement",
-  "flags.add2e.modifiers", "flags.add2e.size", "flags.add2e.transformation", "flags.add2e.terrain",
+  "flags.add2e.modifiers", "flags.add2e.size", "flags.add2e.transformation",
   "flags.add2e.environment", "flags.add2e.milieu", "flags.add2e.monnaie"
 ]);
 
@@ -65,6 +65,7 @@ const COMPUTED_MOVEMENT_SCALARS = Object.freeze([
 globalThis.ADD2E_MOVE_XP_VERSION = ADD2E_MOVE_XP_VERSION;
 globalThis.ADD2E_MOVEMENT_REFERENCE_POLICY_VERSION = "2026-07-31-preserve-actor-reference-v1";
 globalThis.ADD2E_ENCUMBRANCE_SETTINGS_VERSION = ADD2E_ENCUMBRANCE_SETTINGS_VERSION;
+globalThis.ADD2E_MOVEMENT_TERRAIN_POLICY_VERSION = "2026-08-02-terrain-out-of-scope-v1";
 
 function actorTimerKey(actor) {
   return String(actor?.uuid ?? actor?.id ?? "");
