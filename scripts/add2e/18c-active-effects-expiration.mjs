@@ -1,6 +1,6 @@
 // ============================================================================
 // ADD2E — Expiration des effets temporaires.
-// Version : 2026-07-06-active-effects-repulsed-vade-replace-v4
+// Version : 2026-08-02-active-effect-transformation-expiration-v5
 // ============================================================================
 
 import { add2eVitalEffectKind } from "./18a-vital-status-core.mjs";
@@ -11,7 +11,7 @@ import {
   add2eTimeRemainingRounds
 } from "./19a-time-engine.mjs";
 
-export const ADD2E_ACTIVE_EFFECTS_EXPIRATION_VERSION = "2026-07-06-active-effects-repulsed-vade-replace-v4";
+export const ADD2E_ACTIVE_EFFECTS_EXPIRATION_VERSION = "2026-08-02-active-effect-transformation-expiration-v5";
 
 const LINKED_EFFECT_GROUP_FLAG = "linkedEffectGroup";
 const LINKED_EFFECT_GROUP_HOOKS_FLAG = "ADD2E_LINKED_EFFECT_GROUP_HOOKS_REGISTERED";
@@ -277,6 +277,48 @@ function remainingForEffect(effect, currentRound) {
 async function deleteTemporaryLinkedItem(actor, effect) {
   const temporaryItemId = effect?.flags?.add2e?.temporaryItemId;
   if (temporaryItemId && actor.items?.get(temporaryItemId)) await actor.deleteEmbeddedDocuments("Item", [temporaryItemId]);
+}
+
+function effectTransformationKind(effect) {
+  const flags = effect?.flags?.add2e ?? {};
+  if (flags.documentTransformation && typeof flags.documentTransformation === "object") return "document";
+  if (flags.tokenTransform && typeof flags.tokenTransform === "object") return "token";
+  return null;
+}
+
+async function deleteExpiredEffect(actor, effect) {
+  if (!actor?.effects?.get?.(effect?.id)) return { ok: true, alreadyGone: true, kind: null };
+
+  const kind = effectTransformationKind(effect);
+  if (kind === "document") {
+    const remove = globalThis.add2eDeleteDocumentTransformationEffects;
+    if (typeof remove !== "function") {
+      throw new Error("Le restaurateur canonique des transformations de documents n’est pas disponible.");
+    }
+    const result = await remove(actor, [effect], { reason: "effect-expired" });
+    if (!result?.ok) {
+      throw new Error(`La restauration de la transformation de document a échoué (${result?.reason ?? "raison inconnue"}).`);
+    }
+  } else if (kind === "token") {
+    const remove = globalThis.add2eDeleteTokenTransformationEffects;
+    if (typeof remove !== "function") {
+      throw new Error("Le restaurateur canonique des transformations de token n’est pas disponible.");
+    }
+    const result = await remove(actor, [effect], { reason: "effect-expired" });
+    if (!result?.ok) {
+      throw new Error(`La restauration de la transformation du token a échoué (${result?.reason ?? "raison inconnue"}).`);
+    }
+  } else {
+    await actor.deleteEmbeddedDocuments("ActiveEffect", [effect.id], {
+      add2eEffectExpiration: true,
+      add2eReason: "effect-expired"
+    });
+  }
+
+  if (actor.effects?.get?.(effect.id)) {
+    throw new Error(`L’effet expiré ${effect.id} existe encore après sa suppression.`);
+  }
+  return { ok: true, alreadyGone: false, kind };
 }
 
 function snapshotEffect(effect, remainingData) {
@@ -554,14 +596,25 @@ export async function add2eExpireTemporaryEffectsForActor(actor, currentRound = 
 
   let deleted = 0;
   let messages = 0;
+  const deletedIds = [];
   for (const snapshot of valid) {
     const effect = actor.effects.get(snapshot.id);
     if (!effect) continue;
 
     try {
       await deleteTemporaryLinkedItem(actor, effect);
-      if (actor.effects.get(snapshot.id)) await actor.deleteEmbeddedDocuments("ActiveEffect", [snapshot.id]);
+      const removal = await deleteExpiredEffect(actor, effect);
+      if (!removal?.ok || actor.effects.get(snapshot.id)) {
+        throw new Error(`L’effet expiré ${snapshot.id} n’a pas été supprimé.`);
+      }
       deleted += 1;
+      deletedIds.push(snapshot.id);
+      console.log("[ADD2E][AUTO-REMOVE][DELETED]", {
+        actor: actor.name,
+        effectId: snapshot.id,
+        transformationKind: removal.kind,
+        restoredBeforeDelete: Boolean(removal.kind)
+      });
       const notified = await notifyExpiredEffect(actor, snapshot, currentRound);
       if (notified) messages += 1;
     } catch (err) {
@@ -570,11 +623,11 @@ export async function add2eExpireTemporaryEffectsForActor(actor, currentRound = 
         console.warn("[ADD2E][AUTO-REMOVE][ALREADY_GONE] Effet déjà absent, suppression ignorée", { actor: actor.name, effectId: snapshot.id, err });
         continue;
       }
-      console.error("[ADD2E][AUTO-REMOVE][DELETE_ERROR] Suppression impossible", { actor: actor.name, effectId: snapshot.id, err });
+      console.error("[ADD2E][AUTO-REMOVE][DELETE_ERROR] Suppression ou restauration impossible", { actor: actor.name, effectId: snapshot.id, err });
     }
   }
 
-  return { actor: actor.name, deleted, ids: validIds, messages };
+  return { actor: actor.name, deleted, ids: deletedIds, messages };
 }
 
 registerLinkedEffectGroupHooks();
