@@ -1,6 +1,7 @@
 // ADD2E — Point d'entrée des écouteurs de feuille ApplicationV2.
 // Les comportements sont répartis en modules fonctionnels sans modifier les sélecteurs ni l'ordre d'exécution.
 
+import { Add2eActorSheet } from "./13a-actor-sheet-class.mjs";
 import "./13d-actor-sheet-listeners-core.mjs";
 
 const ADD2E_SHEET_LISTENER_RECOVERY_VERSION = "2026-07-05-sheet-tabs-force-ex-v1";
@@ -19,8 +20,8 @@ function add2eListenerRoot(sheet, html) {
 }
 
 function add2eInstallSheetListenerRecovery() {
-  const proto = globalThis.Add2eActorSheet?.prototype;
-  if (!proto || typeof proto._add2eBindPersistentTabs === "function") return;
+  const proto = Add2eActorSheet.prototype;
+  if (typeof proto._add2eBindPersistentTabs === "function") return true;
 
   proto._add2eBindPersistentTabs = function _add2eBindPersistentTabs(html) {
     const root = add2eListenerRoot(this, html);
@@ -74,6 +75,8 @@ function add2eInstallSheetListenerRecovery() {
       });
     });
   };
+
+  return true;
 }
 
 function add2eScrollWritingNorm(value) {
@@ -544,8 +547,11 @@ function add2eAnnotateSpellRowsForScrollWriting(data, actor) {
 }
 
 function add2eInstallScrollWritingDataPatch() {
-  const proto = globalThis.Add2eActorSheet?.prototype;
-  if (!proto || proto.__add2eScrollWritingDataV1 || typeof proto.getData !== "function") return false;
+  const proto = Add2eActorSheet.prototype;
+  if (proto.__add2eScrollWritingDataV1) return true;
+  if (typeof proto.getData !== "function") {
+    throw new Error("[ADD2E] Add2eActorSheet.getData est indisponible pour l’écriture de parchemins.");
+  }
 
   proto.__add2eScrollWritingDataV1 = true;
   const originalGetData = proto.getData;
@@ -559,8 +565,11 @@ function add2eInstallScrollWritingDataPatch() {
 }
 
 function add2eInstallScrollWritingListeners() {
-  const proto = globalThis.Add2eActorSheet?.prototype;
-  if (!proto || proto.__add2eScrollWritingListenersV1 || typeof proto.activateListeners !== "function") return false;
+  const proto = Add2eActorSheet.prototype;
+  if (proto.__add2eScrollWritingListenersV1) return true;
+  if (typeof proto.activateListeners !== "function") {
+    throw new Error("[ADD2E] Add2eActorSheet.activateListeners est indisponible pour l’écriture de parchemins.");
+  }
 
   proto.__add2eScrollWritingListenersV1 = true;
   const originalActivateListeners = proto.activateListeners;
