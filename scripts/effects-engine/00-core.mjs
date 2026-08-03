@@ -21,6 +21,7 @@ import {
 } from "./00-ability-derived.mjs";
 import { installEnginePrimitives } from "./00-engine-primitives.mjs";
 import { installCharacteristicEffectCanonicalization } from "./00-characteristic-effects.mjs";
+import { add2eMagicBuilderResolveBaseWeight } from "../add2e/object-magic/enchantment-builder.mjs";
 
 export {
   FORCE_TABLE,
@@ -32,12 +33,12 @@ export {
   ADD2E_ABILITY_BOUNDS
 };
 
-const ADD2E_MODIFIER_CONTEXT_CONDITIONS_VERSION = "2026-08-02-canonical-armor-properties-v11";
+const ADD2E_MODIFIER_CONTEXT_CONDITIONS_VERSION = "2026-08-03-canonical-magic-item-weight-v12";
 const ADD2E_MOVEMENT_METRES_PER_RATE = 3;
 const ADD2E_GOLD_PIECES_PER_KILOGRAM = 20;
 const ADD2E_GOLD_PIECES_PER_POUND = 10;
 const ADD2E_ENCUMBRANCE_SETTINGS_VERSION = "2026-08-02-world-encumbrance-settings-v2";
-const ADD2E_ARMOR_MOVEMENT_VERSION = "2026-08-02-canonical-armor-properties-v3";
+const ADD2E_ARMOR_MOVEMENT_VERSION = "2026-08-03-canonical-magic-item-weight-v4";
 
 const ADD2E_ARMOR_CATEGORY_MOVEMENT_RATES = Object.freeze({
   legere: 12,
@@ -61,6 +62,11 @@ const ADD2E_ARMOR_TYPE_MOVEMENT_RATES = Object.freeze({
   feuilletee: 6,
   plaques: 6
 });
+
+const ADD2E_MAGIC_ITEM_WEIGHT_TYPES = new Set([
+  "arme", "weapon", "armure", "armor", "objet", "object",
+  "equipment", "magic", "objet_magique", "objet-magique"
+]);
 
 function add2eWorldSetting(key, fallback) {
   try {
@@ -372,33 +378,49 @@ function armorMovementProfile(context = {}) {
   };
 }
 
-function armorWeightUnit(system = {}) {
+function armorWeightUnit(system = {}, fallback = "") {
   return canonicalKey(
     system.poids_unite
       ?? system.weightUnit
       ?? system.weight_unit
       ?? system.unite_poids
       ?? system["unité_poids"]
-      ?? ""
+      ?? fallback
   );
+}
+
+function weightGoldPieces(value, unit, fallbackUnit = "pound") {
+  const amount = Number(value);
+  if (!Number.isFinite(amount) || amount <= 0) return 0;
+  const canonicalUnit = canonicalKey(unit || fallbackUnit);
+  if (["po", "pp", "gp", "piece-dor", "pieces-dor", "gold-piece", "gold-pieces"].includes(canonicalUnit)) return amount;
+  if (["kg", "kilogramme", "kilogrammes", "kilogram", "kilograms"].includes(canonicalUnit)) {
+    return amount * ADD2E_GOLD_PIECES_PER_KILOGRAM;
+  }
+  if (["lb", "lbs", "livre", "livres", "pound", "pounds"].includes(canonicalUnit)) {
+    return amount * ADD2E_GOLD_PIECES_PER_POUND;
+  }
+  return fallbackUnit === "kg"
+    ? amount * ADD2E_GOLD_PIECES_PER_KILOGRAM
+    : amount * ADD2E_GOLD_PIECES_PER_POUND;
 }
 
 function armorBaseWeightGoldPieces(item) {
   const system = item?.system ?? {};
+  const type = String(item?.type ?? "").toLowerCase();
+  const fallbackUnit = ["arme", "weapon", "armure", "armor"].includes(type) ? "pound" : "kg";
   const explicit = Number(system.poids_encombrement_po ?? system.encumbrance_gp ?? system.encumbranceGoldPieces);
   if (Number.isFinite(explicit) && explicit >= 0) return explicit;
 
   const raw = Number(system.poids ?? system.weight ?? system.encombrement ?? system.encumbrance);
-  if (!Number.isFinite(raw) || raw <= 0) return 0;
-  const unit = armorWeightUnit(system);
-  if (["po", "pp", "gp", "piece-dor", "pieces-dor", "gold-piece", "gold-pieces"].includes(unit)) return raw;
-  if (["kg", "kilogramme", "kilogrammes", "kilogram", "kilograms"].includes(unit)) {
-    return raw * ADD2E_GOLD_PIECES_PER_KILOGRAM;
+  if (Number.isFinite(raw) && raw > 0) {
+    return weightGoldPieces(raw, armorWeightUnit(system, fallbackUnit), fallbackUnit);
   }
-  if (["lb", "lbs", "livre", "livres", "pound", "pounds"].includes(unit)) {
-    return raw * ADD2E_GOLD_PIECES_PER_POUND;
-  }
-  return raw * ADD2E_GOLD_PIECES_PER_POUND;
+
+  const resolved = add2eMagicBuilderResolveBaseWeight(item);
+  const resolvedExplicit = Number(resolved?.encumbranceGoldPieces);
+  if (Number.isFinite(resolvedExplicit) && resolvedExplicit > 0) return resolvedExplicit;
+  return weightGoldPieces(resolved?.value, resolved?.unit, fallbackUnit);
 }
 
 function armorInventoryEntry(context, item) {
@@ -425,42 +447,48 @@ function armorExplicitlyNotCarried(item) {
   return state === false;
 }
 
-function carriedMagicArmorDocuments(Engine, actor) {
+function carriedMagicItemDocuments(Engine, actor) {
   return Array.from(actor?.items ?? []).filter(item => {
     const type = String(item?.type ?? "").toLowerCase();
-    if (!["armure", "armor"].includes(type) || !armorIsMagic(item)) return false;
+    if (!ADD2E_MAGIC_ITEM_WEIGHT_TYPES.has(type) || !armorIsMagic(item)) return false;
     if (Engine.itemEquipped(item)) return true;
     return !armorExplicitlyNotCarried(item);
   });
 }
 
-function canonicalMagicArmorWeightModifier(Engine, actor, query = {}, context = {}) {
+function canonicalMagicItemWeightModifier(Engine, actor, query = {}, context = {}) {
   const domain = canonicalKey(query.domain);
   const target = canonicalKey(query.target);
   if (!actor || domain !== "encumbrance" || target !== "carried-weight") return null;
 
   const details = [];
   let adjustment = 0;
-  for (const item of carriedMagicArmorDocuments(Engine, actor)) {
+  for (const item of carriedMagicItemDocuments(Engine, actor)) {
     const entry = armorInventoryEntry(context, item);
-    const quantity = Math.max(1, Number(entry?.quantity ?? item?.system?.quantite ?? item?.system?.quantity ?? 1) || 1);
+    const quantity = Math.max(0, Number(entry?.quantity ?? item?.system?.quantite ?? item?.system?.quantity ?? 1) || 0);
+    if (!(quantity > 0)) continue;
     const sourceWeight = Math.max(0, armorBaseWeightGoldPieces(item) * quantity);
     const currentWeight = Math.max(0, Number(entry?.total) || 0);
-    const shield = armorIsShield(item);
+    const type = String(item?.type ?? "").toLowerCase();
+    const armor = ["armure", "armor"].includes(type);
+    const shield = armor && armorIsShield(item);
     const desiredWeight = armorExplicitlyExempt(item)
       ? 0
-      : shield
-        ? sourceWeight
-        : sourceWeight / 2;
+      : armor && !shield
+        ? sourceWeight / 2
+        : sourceWeight;
     const delta = desiredWeight - currentWeight;
     if (Math.abs(delta) < 0.0001) continue;
     adjustment += delta;
     details.push({
       itemId: item?.id ?? null,
       itemUuid: item?.uuid ?? null,
-      name: item?.name ?? "Armure magique",
+      name: item?.name ?? "Objet magique",
+      type,
+      armor,
       shield,
       equipped: Engine.itemEquipped(item),
+      quantity,
       sourceWeight,
       currentWeight,
       desiredWeight,
@@ -472,22 +500,22 @@ function canonicalMagicArmorWeightModifier(Engine, actor, query = {}, context = 
   const base = Math.max(0, Number(query.base) || 0);
   const value = Math.max(-base, adjustment);
   return Engine.createModifier({
-    id: `${actor.id}:encumbrance:magic-armor-weight`,
+    id: `${actor.id}:encumbrance:magic-item-weight`,
     domain: "encumbrance",
     target: "carried-weight",
     operation: "add",
     value,
     priority: 6,
-    stacking: { mode: "replace", group: "encumbrance-magic-armor-weight" },
+    stacking: { mode: "replace", group: "encumbrance-magic-item-weight" },
     source: {
-      kind: "armor-rule",
-      id: `${actor.id}:magic-armor-weight`,
+      kind: "item-rule",
+      id: `${actor.id}:magic-item-weight`,
       uuid: actor.uuid ?? "",
-      name: "Poids des armures magiques"
+      name: "Poids des objets magiques"
     },
     metadata: {
-      label: "Poids canonique des armures magiques",
-      producer: "canonical-magic-armor-weight",
+      label: "Poids canonique des objets magiques",
+      producer: "canonical-magic-item-weight",
       details,
       version: ADD2E_ARMOR_MOVEMENT_VERSION
     }
@@ -940,9 +968,9 @@ function installContextConditionExtensions(Engine) {
         if (currencyPolicy && !source.some(modifier => String(modifier?.id ?? "") === String(currencyPolicy.id))) {
           source.push(currencyPolicy);
         }
-        const magicArmorWeight = canonicalMagicArmorWeightModifier(this, actor, query, context);
-        if (magicArmorWeight && !source.some(modifier => String(modifier?.id ?? "") === String(magicArmorWeight.id))) {
-          source.push(magicArmorWeight);
+        const magicItemWeight = canonicalMagicItemWeightModifier(this, actor, query, context);
+        if (magicItemWeight && !source.some(modifier => String(modifier?.id ?? "") === String(magicItemWeight.id))) {
+          source.push(magicItemWeight);
         }
         const transformationWeight = canonicalTransformationWeightModifier(this, actor, query, context);
         if (transformationWeight && !source.some(modifier => String(modifier?.id ?? "") === String(transformationWeight.id))) {
