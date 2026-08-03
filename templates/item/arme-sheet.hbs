@@ -116,23 +116,19 @@
         {{#if powers.length}}
           <ol class="a2e-power-list">
             {{#each powers as |p|}}
-              <li class="a2e-power-entry" {{#if p._add2eVirtualModifier}}data-add2e-virtual-power="{{p._add2eVirtualModifierKey}}"{{/if}}>
+              <li class="a2e-power-entry">
                 <details open>
                   <summary>
                     <img src="{{#if p.img}}{{p.img}}{{else}}icons/svg/aura.svg{{/if}}" alt="">
                     <div><b>{{p._add2eName}}</b><div class="a2e-power-badges"><span class="a2e-power-badge">{{p._add2eKindLabel}}</span><span class="a2e-power-badge">{{p._add2eCategoryLabel}}</span><span class="a2e-power-badge">{{p._add2eAutomationLabel}}</span></div></div>
                     <span>Coût {{p._add2eCost}}</span>
                     {{#if @root.editable}}
-                      {{#if p._add2eVirtualModifier}}
-                        {{#if p._add2eHasStoredPower}}<div class="a2e-power-actions"><button type="button" title="Modifier" onclick="event.preventDefault();event.stopPropagation();globalThis.add2eMagicBuilderEditPower?.(this.closest('form').dataset.itemUuid,{{p._add2eIndex}});"><i class="fas fa-pen"></i></button><button type="button" title="Retirer" onclick="event.preventDefault();event.stopPropagation();globalThis.add2eMagicBuilderRemovePower?.(this.closest('form').dataset.itemUuid,{{p._add2eIndex}});"><i class="fas fa-trash"></i></button></div>{{/if}}
-                      {{else}}
-                        <div class="a2e-power-actions"><button type="button" title="Modifier" onclick="event.preventDefault();event.stopPropagation();globalThis.add2eMagicBuilderEditPower?.(this.closest('form').dataset.itemUuid,{{p._add2eIndex}});"><i class="fas fa-pen"></i></button><button type="button" title="Retirer" onclick="event.preventDefault();event.stopPropagation();globalThis.add2eMagicBuilderRemovePower?.(this.closest('form').dataset.itemUuid,{{p._add2eIndex}});"><i class="fas fa-trash"></i></button></div>
-                      {{/if}}
+                      <div class="a2e-power-actions"><button type="button" title="Modifier" onclick="event.preventDefault();event.stopPropagation();globalThis.add2eMagicBuilderEditPower?.(this.closest('form').dataset.itemUuid,{{p._add2eIndex}});"><i class="fas fa-pen"></i></button><button type="button" title="Retirer" onclick="event.preventDefault();event.stopPropagation();globalThis.add2eMagicBuilderRemovePower?.(this.closest('form').dataset.itemUuid,{{p._add2eIndex}});"><i class="fas fa-trash"></i></button></div>
                     {{/if}}
                   </summary>
                   <div class="a2e-power-details">
-                    {{#if p._add2eVirtualModifier}}
-                      <div class="a2e-power-canonical"><b>{{p._add2eCanonicalValueLabel}}</b><span>{{p._add2eCanonicalDescription}}</span></div>
+                    {{#if p._add2eHasCanonicalValue}}
+                      <div class="a2e-power-canonical"><b>{{p._add2eCanonicalValueLabel}}</b></div>
                     {{else}}
                       {{#if p.description}}<div>{{{p.description}}}</div>{{/if}}
                       {{#if p._add2eHasParameters}}<pre class="a2e-power-json">{{p._add2eParametersJson}}</pre>{{/if}}
