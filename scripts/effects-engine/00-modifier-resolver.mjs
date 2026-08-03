@@ -1,6 +1,6 @@
 // ADD2E — Effects Engine / résolveur générique de modificateurs.
 // Compatible Foundry V13/V14/V15.
-// Version : 2026-08-03-canonical-armor-defense-v2
+// Version : 2026-08-03-canonical-armor-defense-v3
 
 import {
   ADD2E_MODIFIER_DOMAINS,
@@ -672,7 +672,26 @@ export function installModifierResolver(Engine) {
         || /\+\s*\d+/.test(String(item?.name ?? ""));
     },
 
+    itemArmorClassModifiers(item, operations = null) {
+      const allowed = operations ? new Set(this.toArray(operations).map(value => this.normalizeKey(value))) : null;
+      const defaults = {
+        source: {
+          kind: this.normalizeKey(item?.flags?.add2e?.sourceType ?? item?.type ?? "item") || "item",
+          id: String(item?.id ?? item?._id ?? item?.name ?? "item"),
+          uuid: String(item?.uuid ?? ""),
+          name: String(item?.name ?? "Item")
+        }
+      };
+      return rawList(item?.flags?.add2e?.modifiers)
+        .map(raw => this.normalizeModifier(raw, defaults))
+        .filter(modifier => modifier?.domain === "armor-class" && (!allowed || allowed.has(modifier.operation)));
+    },
+
     itemDefenseBonus(item) {
+      const canonical = this.itemArmorClassModifiers(item, ["add"])
+        .some(modifier => ["naturel", "total", "all"].includes(this.normalizeKey(modifier.target)));
+      if (canonical) return 0;
+
       const system = item?.system ?? {};
       const type = String(item?.type ?? "").toLowerCase();
       if (type === "armure" || type === "armor") {
@@ -695,6 +714,10 @@ export function installModifierResolver(Engine) {
     },
 
     itemFixedCA(item) {
+      const canonical = this.itemArmorClassModifiers(item, ["set", "minmax"])
+        .some(modifier => ["naturel", "total", "all"].includes(this.normalizeKey(modifier.target)));
+      if (canonical) return null;
+
       const system = item?.system ?? {};
       const type = String(item?.type ?? "").toLowerCase();
       if (type === "armure" || type === "armor") {
