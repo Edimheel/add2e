@@ -51,6 +51,8 @@ export * from "./object-magic/profiles.mjs";
 export * from "./object-magic/catalogue-editor.mjs";
 export * from "./object-magic/item-creator.mjs";
 
+const ADD2E_MAGIC_POWER_READABLE_SHEET_VERSION = "2026-08-03-readable-canonical-bonus-cards-v1";
+
 function add2eMagicBoolean(value) {
   if (value === true || value === 1) return true;
   const normalized = String(value ?? "").trim().toLowerCase();
@@ -235,6 +237,57 @@ export function add2eMagicObjectConfiguredPowerEntries(item) {
     .filter(entry => add2eObjectPowerOnUsePath(entry.power));
 }
 
+function add2eMagicEscapeSheetHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function add2eMagicReadableValueLabel(value) {
+  return String(value ?? "")
+    .split(" · ")
+    .map(part => part.replace(/^(Bonus au toucher|Bonus aux dégâts|Bonus de CA|CA fixe)\s+(.+)$/, "$1 : $2"))
+    .join(" · ");
+}
+
+function add2eMagicReadableSheetPower(power) {
+  if (!power?._add2eHasCanonicalValue) return power;
+  const valueLabel = add2eMagicReadableValueLabel(power._add2eCanonicalValueLabel);
+  const rawDescription = String(power.description ?? "").trim();
+  const description = `<div class="a2e-power-canonical"><b>${add2eMagicEscapeSheetHtml(valueLabel)}</b>${rawDescription ? `<span>${add2eMagicEscapeSheetHtml(rawDescription)}</span>` : ""}</div>`;
+  return {
+    ...power,
+    description,
+    _add2eCanonicalValueLabel: valueLabel,
+    _add2eHasParameters: false,
+    _add2eHasEffects: false,
+    _add2eParametersJson: "",
+    _add2eEffectsJson: ""
+  };
+}
+
+const add2eMagicBaseSheetPowers = globalThis.__ADD2E_BASE_MAGIC_SHEET_POWERS__
+  ?? globalThis.add2eMagicBuilderSheetPowers;
+globalThis.__ADD2E_BASE_MAGIC_SHEET_POWERS__ = add2eMagicBaseSheetPowers;
+
+function add2eReadableMagicSheetPowers(item) {
+  const powers = typeof add2eMagicBaseSheetPowers === "function"
+    ? add2eMagicBaseSheetPowers(item)
+    : [];
+  return Array.isArray(powers) ? powers.map(add2eMagicReadableSheetPower) : [];
+}
+
+function installReadableMagicSheetPowers() {
+  globalThis.add2eMagicBuilderSheetPowers = add2eReadableMagicSheetPowers;
+  globalThis.ADD2E_MAGIC_POWER_READABLE_SHEET_VERSION = ADD2E_MAGIC_POWER_READABLE_SHEET_VERSION;
+  if (typeof Handlebars !== "undefined") {
+    Handlebars.registerHelper("add2eMagicSheetPowers", item => add2eReadableMagicSheetPowers(item));
+  }
+}
+
 async function add2eExecuteObjectMagicPowerGuarded(actor, itemSource, power, index, sheet = null) {
   if (!add2eMagicItemPowerUsable(itemSource)) {
     ui.notifications?.warn?.(`${itemSource?.name ?? "L’objet magique"} doit être équipé pour utiliser ce pouvoir.`);
@@ -355,6 +408,7 @@ Object.assign(globalThis, {
   add2eCreateMagicItem: add2eMagicBuilderCreateMagicItem
 });
 
+installReadableMagicSheetPowers();
 installCanonicalMagicCreatorButtonHooks();
 installMagicEnchantmentBuilderHooks();
 installMagicItemCreatorHooks();
