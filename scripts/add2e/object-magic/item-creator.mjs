@@ -4,14 +4,11 @@
 import {
   ADD2E_MAGIC_ITEM_BUILDER_VERSION,
   add2eMagicClone,
-  add2eMagicGetProperty,
   add2eMagicMergeUniqueValues,
   add2eMagicNumber,
   add2eMagicOptionalNumber,
-  add2eMagicSetProperty,
   add2eMagicSigned,
-  add2eObjectMagicEscapeHtml,
-  add2eObjectMagicNormalizeTag
+  add2eObjectMagicEscapeHtml
 } from "./core.mjs";
 import { ADD2E_MAGIC_CREATOR_PROFILES } from "./profiles.mjs";
 import {
@@ -32,15 +29,6 @@ import {
   add2eMagicCreatorForm,
   add2eMagicCreatorState
 } from "./catalogue-editor.mjs";
-
-const ADD2E_MAGIC_ARMOR_MODIFIER_ID = "magic-item-builder:armor-class:bonus";
-const ADD2E_MAGIC_ARMOR_BONUS_POWER_TYPES = new Set([
-  "armor_class_bonus",
-  "armor_bonus",
-  "ac_bonus",
-  "defense_bonus",
-  "protection_bonus"
-]);
 
 let hooksInstalled = false;
 
@@ -322,267 +310,6 @@ function add2eMagicBuilderCreatorSanitizeBase(baseItem, profile, name) {
   return source;
 }
 
-function add2eMagicBuilderArmorPowerType(effect) {
-  return ADD2E_MAGIC_ARMOR_BONUS_POWER_TYPES.has(
-    add2eObjectMagicNormalizeTag(effect?.type ?? effect?.kind ?? effect?.category)
-  );
-}
-
-function add2eMagicBuilderTemplateParameterKeys(value, keys = new Set()) {
-  if (Array.isArray(value)) {
-    value.forEach(entry => add2eMagicBuilderTemplateParameterKeys(entry, keys));
-    return keys;
-  }
-  if (value && typeof value === "object") {
-    Object.values(value).forEach(entry => add2eMagicBuilderTemplateParameterKeys(entry, keys));
-    return keys;
-  }
-  if (typeof value !== "string") return keys;
-  for (const match of value.matchAll(/@([A-Za-z0-9_]+)/g)) keys.add(match[1]);
-  return keys;
-}
-
-function add2eMagicBuilderCanonicalizeArmorBonusPowers(powers = []) {
-  const normalized = add2eMagicClone(powers ?? []);
-  const bonuses = [];
-  for (const power of normalized) {
-    const effects = Array.isArray(power?.effects) ? power.effects : [];
-    const templates = Array.isArray(power?.effectTemplates) ? power.effectTemplates : [];
-    const armorEffects = effects.filter(add2eMagicBuilderArmorPowerType);
-    const armorTemplates = templates.filter(add2eMagicBuilderArmorPowerType);
-    for (const effect of armorEffects) {
-      const value = add2eMagicOptionalNumber(
-        effect?.bonus
-        ?? effect?.value
-        ?? effect?.amount
-        ?? effect?.armorClassBonus
-        ?? effect?.acBonus
-      );
-      if (Number.isFinite(value) && value !== 0) bonuses.push(Math.abs(value));
-    }
-    if (!armorEffects.length && !armorTemplates.length) continue;
-    power.effects = effects.filter(effect => !add2eMagicBuilderArmorPowerType(effect));
-    power.effectTemplates = templates.filter(effect => !add2eMagicBuilderArmorPowerType(effect));
-    const parameterKeys = add2eMagicBuilderTemplateParameterKeys(armorTemplates);
-    if (power.parameters && typeof power.parameters === "object" && !Array.isArray(power.parameters)) {
-      for (const key of parameterKeys) delete power.parameters[key];
-    }
-    power.canonicalizedEffects = add2eMagicMergeUniqueValues(power.canonicalizedEffects, "armor-class");
-  }
-  return { powers: normalized, bonuses };
-}
-
-function add2eMagicBuilderResolveArmorBonusSource(result, powers = []) {
-  const canonical = add2eMagicBuilderCanonicalizeArmorBonusPowers(powers);
-  if (canonical.bonuses.length > 1) {
-    throw new Error("Le bonus de CA est défini par plusieurs pouvoirs. Conservez un seul pouvoir de bonus d’armure.");
-  }
-  const powerBonus = canonical.bonuses[0] ?? 0;
-  const fieldBonus = Math.abs(add2eMagicNumber(result?.bonusCA, 0));
-  if (fieldBonus && powerBonus && fieldBonus !== powerBonus) {
-    throw new Error(`Le bonus de CA du champ (${fieldBonus}) diffère de celui du pouvoir (${powerBonus}). Utilisez une seule valeur.`);
-  }
-  return {
-    result: {
-      ...result,
-      bonusCA: powerBonus || fieldBonus
-    },
-    powers: canonical.powers
-  };
-}
-
-function add2eMagicBuilderPowerPresentsArmorBonus(powers) {
-  const entries = Array.isArray(powers)
-    ? powers
-    : powers && typeof powers === "object"
-      ? Object.values(powers)
-      : [];
-  return entries.some(power => {
-    const values = Array.isArray(power?.canonicalizedEffects)
-      ? power.canonicalizedEffects
-      : power?.canonicalizedEffects
-        ? [power.canonicalizedEffects]
-        : [];
-    return values.some(value => add2eObjectMagicNormalizeTag(value) === "armor_class");
-  });
-}
-
-function add2eMagicBuilderItemArmorModifier(item, change = null) {
-  const changed = change ? add2eMagicGetProperty(change, "flags.add2e.modifiers") : undefined;
-  const modifiers = Array.isArray(changed)
-    ? changed
-    : Array.isArray(item?.flags?.add2e?.modifiers)
-      ? item.flags.add2e.modifiers
-      : [];
-  return modifiers.find(modifier => modifier?.domain === "armor-class"
-    && modifier?.operation === "add"
-    && (modifier?.id === ADD2E_MAGIC_ARMOR_MODIFIER_ID || modifier?.metadata?.producer === "magic-item-builder"))
-    ?? null;
-}
-
-function add2eMagicBuilderUpdatedArmorModifier(item, value, existing = null) {
-  const type = add2eMagicBuilderType(item);
-  const target = type === "armure" ? "naturel" : "total";
-  const sourceKind = type === "armure" ? "armor" : "equipment";
-  return {
-    ...(existing ? add2eMagicClone(existing) : {}),
-    id: ADD2E_MAGIC_ARMOR_MODIFIER_ID,
-    domain: "armor-class",
-    target,
-    operation: "add",
-    value: -Math.abs(value),
-    priority: 100,
-    stacking: { mode: "stack", group: null },
-    conditions: { equipped: true },
-    source: {
-      ...(existing?.source ?? {}),
-      kind: sourceKind,
-      id: String(item?.id ?? ""),
-      uuid: String(item?.uuid ?? ""),
-      name: String(item?.name ?? "Objet magique")
-    },
-    metadata: {
-      ...(existing?.metadata ?? {}),
-      label: `${item?.name ?? "Objet magique"} — bonus de CA`,
-      producer: "magic-item-builder",
-      profile: String(item?.flags?.add2e?.magicItemProfile ?? item?.type ?? "objet")
-    }
-  };
-}
-
-function add2eMagicBuilderSyncCanonicalArmorField(item, change, options = {}) {
-  if (options?.add2eInternal === true) return;
-  const explicitBonus = add2eMagicGetProperty(change, "system.enchantement.bonusCA");
-  const changedPowers = add2eMagicGetProperty(change, "system.pouvoirs");
-  const oldPowerPresentation = add2eMagicBuilderPowerPresentsArmorBonus(item?.system?.pouvoirs);
-  const nextPowerPresentation = add2eMagicBuilderPowerPresentsArmorBonus(
-    changedPowers === undefined ? item?.system?.pouvoirs : changedPowers
-  );
-  if (explicitBonus === undefined && !(oldPowerPresentation && !nextPowerPresentation)) return;
-
-  const currentModifier = add2eMagicBuilderItemArmorModifier(item, change);
-  const currentValue = currentModifier ? Math.abs(Number(currentModifier.value) || 0) : 0;
-  const requestedValue = explicitBonus === undefined ? currentValue : Math.abs(add2eMagicNumber(explicitBonus, 0));
-  let canonicalValue = currentValue;
-
-  if (explicitBonus !== undefined) {
-    if (nextPowerPresentation) {
-      if (requestedValue && requestedValue !== currentValue) {
-        ui.notifications.warn("Le bonus de CA est représenté par un pouvoir. Modifiez ou retirez ce pouvoir avant de saisir une autre valeur dans le champ.");
-        return false;
-      }
-      canonicalValue = currentValue;
-    } else {
-      canonicalValue = requestedValue;
-    }
-  } else if (oldPowerPresentation && !nextPowerPresentation) {
-    canonicalValue = 0;
-  }
-
-  const changedModifiers = add2eMagicGetProperty(change, "flags.add2e.modifiers");
-  const modifiers = Array.isArray(changedModifiers)
-    ? add2eMagicClone(changedModifiers)
-    : add2eMagicClone(item?.flags?.add2e?.modifiers ?? []);
-  const retained = modifiers.filter(modifier => !(modifier?.domain === "armor-class"
-    && modifier?.operation === "add"
-    && (modifier?.id === ADD2E_MAGIC_ARMOR_MODIFIER_ID || modifier?.metadata?.producer === "magic-item-builder")));
-  if (canonicalValue > 0) retained.push(add2eMagicBuilderUpdatedArmorModifier(item, canonicalValue, currentModifier));
-  add2eMagicSetProperty(change, "flags.add2e.modifiers", retained);
-  add2eMagicSetProperty(change, "system.enchantement.bonusCA", 0);
-
-  const currentBuilder = item?.flags?.add2e?.magicItemBuilder ?? {};
-  const changedBuilder = add2eMagicGetProperty(change, "flags.add2e.magicItemBuilder") ?? {};
-  const generatedModifiers = Array.isArray(changedBuilder.generatedModifiers)
-    ? changedBuilder.generatedModifiers.map(String)
-    : Array.isArray(currentBuilder.generatedModifiers)
-      ? currentBuilder.generatedModifiers.map(String)
-      : [];
-  const filteredIds = generatedModifiers.filter(id => id && id !== ADD2E_MAGIC_ARMOR_MODIFIER_ID);
-  if (canonicalValue > 0) filteredIds.push(ADD2E_MAGIC_ARMOR_MODIFIER_ID);
-  add2eMagicSetProperty(change, "flags.add2e.magicItemBuilder", {
-    ...currentBuilder,
-    ...changedBuilder,
-    version: ADD2E_MAGIC_ITEM_BUILDER_VERSION,
-    generatedModifiers: [...new Set(filteredIds)]
-  });
-  return true;
-}
-
-function add2eMagicBuilderRenderCanonicalArmorField(app, html) {
-  const item = app?.document ?? app?.item ?? app?.object ?? null;
-  if (item?.documentName !== "Item") return;
-  queueMicrotask(() => {
-    const raw = html instanceof HTMLElement
-      ? html
-      : html?.[0] instanceof HTMLElement
-        ? html[0]
-        : app?.element?.jquery
-          ? app.element[0]
-          : app?.element;
-    const field = raw?.querySelector?.('[name="system.enchantement.bonusCA"]');
-    if (!field) return;
-    const modifier = add2eMagicBuilderItemArmorModifier(item);
-    const value = add2eMagicBuilderPowerPresentsArmorBonus(item?.system?.pouvoirs)
-      ? 0
-      : Math.abs(Number(modifier?.value) || 0);
-    field.value = String(value);
-    field.setAttribute("value", String(value));
-  });
-}
-
-function add2eMagicBuilderCanonicalDefenseModifiers(itemData, profileKey, type, result, baseStats) {
-  itemData.flags ??= {};
-  itemData.flags.add2e ??= {};
-  const current = Array.isArray(itemData.flags.add2e.modifiers)
-    ? add2eMagicClone(itemData.flags.add2e.modifiers)
-    : [];
-  const retained = current.filter(modifier => modifier?.metadata?.producer !== "magic-item-builder");
-  const generated = [];
-  const target = type === "armure" ? "naturel" : "total";
-  const sourceKind = type === "armure" ? "armor" : "equipment";
-  const defenseBonus = Number(baseStats?.bonusCA ?? 0) + Number(result?.bonusCA ?? 0);
-  if (Number.isFinite(defenseBonus) && defenseBonus !== 0) {
-    generated.push({
-      id: ADD2E_MAGIC_ARMOR_MODIFIER_ID,
-      domain: "armor-class",
-      target,
-      operation: "add",
-      value: -Math.abs(defenseBonus),
-      priority: 100,
-      stacking: { mode: "stack", group: null },
-      conditions: { equipped: true },
-      source: { kind: sourceKind, name: itemData.name },
-      metadata: {
-        label: `${itemData.name} — bonus de CA`,
-        producer: "magic-item-builder",
-        profile: profileKey
-      }
-    });
-  }
-  const fixedRaw = result?.caFixe ?? baseStats?.caFixe ?? null;
-  const fixedCA = fixedRaw === null || fixedRaw === undefined || fixedRaw === "" ? null : Number(fixedRaw);
-  if (Number.isFinite(fixedCA)) {
-    generated.push({
-      id: "magic-item-builder:armor-class:fixed",
-      domain: "armor-class",
-      target,
-      operation: "minmax",
-      value: { max: fixedCA },
-      priority: 300,
-      stacking: { mode: "lowest", group: `armor-class:${target}:fixed-equipment` },
-      conditions: { equipped: true },
-      source: { kind: sourceKind, name: itemData.name },
-      metadata: {
-        label: `${itemData.name} — CA fixe ${fixedCA}`,
-        producer: "magic-item-builder",
-        profile: profileKey
-      }
-    });
-  }
-  itemData.flags.add2e.modifiers = [...retained, ...generated];
-  return generated.map(modifier => modifier.id);
-}
-
 function add2eMagicBuilderCreatorEnchantSystem(itemData, profileKey, profile, result, baseItem = null) {
   const system = itemData.system ??= {};
   const type = profile.itemType;
@@ -605,14 +332,14 @@ function add2eMagicBuilderCreatorEnchantSystem(itemData, profileKey, profile, re
   system.tags = add2eMagicMergeUniqueValues(system.tags, profile.tags);
   system.effectTags = add2eMagicMergeUniqueValues(system.effectTags, profile.tags);
   const enchantement = {
-    schema: 2,
+    schema: 1,
     baseUuid: String(baseItem?.uuid ?? ""),
     baseName: String(baseItem?.name ?? ""),
     baseType: String(baseItem?.type ?? ""),
     application,
     bonusToucher: result.bonusToucher,
     bonusDegats: result.bonusDegats,
-    bonusCA: 0,
+    bonusCA: result.bonusCA,
     caFixe: result.caFixe,
     baseStats
   };
@@ -625,10 +352,8 @@ function add2eMagicBuilderCreatorEnchantSystem(itemData, profileKey, profile, re
     system.bonus_toucher = result.bonusToucher;
     system.bonus_degats = result.bonusDegats;
   }
-  for (const key of [
-    "bonus_ac", "bonus_ca", "ca_bonus", "ac_bonus", "protectionBonus", "protection_bonus",
-    "ca_fixe", "caFixe", "fixedCA", "fixed_ac", "ac_fixe", "acFixe"
-  ]) delete system[key];
+  system.bonus_ac = baseStats.bonusCA + result.bonusCA;
+  system.ca_fixe = result.caFixe ?? baseStats.caFixe ?? null;
   if (application === "porteur") {
     if (result.bonusToucher) system.effectTags = add2eMagicMergeUniqueValues(system.effectTags, `bonus_attaque:${add2eMagicSigned(result.bonusToucher)}`);
     if (result.bonusDegats) system.effectTags = add2eMagicMergeUniqueValues(system.effectTags, `bonus_degats:${add2eMagicSigned(result.bonusDegats)}`);
@@ -649,7 +374,6 @@ function add2eMagicBuilderCreatorEnchantSystem(itemData, profileKey, profile, re
   }
   itemData.flags ??= {};
   itemData.flags.add2e ??= {};
-  const generatedModifierIds = add2eMagicBuilderCanonicalDefenseModifiers(itemData, profileKey, type, result, baseStats);
   Object.assign(itemData.flags.add2e, {
     magicItemProfile: profileKey,
     magicItemBuilderVersion: ADD2E_MAGIC_ITEM_BUILDER_VERSION,
@@ -668,8 +392,7 @@ function add2eMagicBuilderCreatorEnchantSystem(itemData, profileKey, profile, re
           result.bonusToucher ? `bonus_attaque:${add2eMagicSigned(result.bonusToucher)}` : "",
           result.bonusDegats ? `bonus_degats:${add2eMagicSigned(result.bonusDegats)}` : ""
         ].filter(Boolean)
-      : [],
-    generatedModifiers: generatedModifierIds
+      : []
   };
 }
 
@@ -749,13 +472,6 @@ export async function add2eMagicBuilderCreateMagicItem(directory = null) {
     ui.notifications.error(error.message);
     return null;
   }
-  let canonical;
-  try { canonical = add2eMagicBuilderResolveArmorBonusSource(result, catalogueSelection.powers); }
-  catch (error) {
-    ui.notifications.error(error.message);
-    return null;
-  }
-  const canonicalResult = canonical.result;
   let baseItem = null;
   if (profile.baseType) {
     if (!result.baseUuid) {
@@ -778,7 +494,7 @@ export async function add2eMagicBuilderCreateMagicItem(directory = null) {
     itemData = add2eMagicBuilderCreatorSpellbookData(profile, name);
   } else if (baseItem) {
     itemData = add2eMagicBuilderCreatorSanitizeBase(baseItem, profile, name);
-    add2eMagicBuilderCreatorEnchantSystem(itemData, profileKey, profile, canonicalResult, baseItem);
+    add2eMagicBuilderCreatorEnchantSystem(itemData, profileKey, profile, result, baseItem);
   } else {
     itemData = {
       name,
@@ -802,13 +518,13 @@ export async function add2eMagicBuilderCreateMagicItem(directory = null) {
       effects: [],
       flags: { add2e: {} }
     };
-    add2eMagicBuilderCreatorEnchantSystem(itemData, profileKey, profile, canonicalResult, null);
+    add2eMagicBuilderCreatorEnchantSystem(itemData, profileKey, profile, result, null);
     if (profileKey === "parchemin") {
       itemData.system.arcaneDocument = { schema: 1, kind: "spell-scroll", personal: false, spells: [] };
       itemData.flags.add2e.arcaneDocumentKind = "spell-scroll";
     }
   }
-  add2eMagicCatalogueAttachToItemData(itemData, canonical.powers, catalogueSelection.catalogue);
+  add2eMagicCatalogueAttachToItemData(itemData, catalogueSelection.powers, catalogueSelection.catalogue);
   if (folder) itemData.folder = folder;
   const ItemClass = CONFIG?.Item?.documentClass ?? globalThis.Item;
   const created = await ItemClass.create(itemData, { renderSheet: true });
@@ -843,8 +559,6 @@ function add2eMagicBuilderInstallDirectoryCreator(app, html) {
 export function installMagicItemCreatorHooks() {
   if (hooksInstalled) return;
   hooksInstalled = true;
-  Hooks.on("preUpdateItem", add2eMagicBuilderSyncCanonicalArmorField);
-  Hooks.on("renderApplicationV2", add2eMagicBuilderRenderCanonicalArmorField);
   Hooks.on("renderItemDirectory", add2eMagicBuilderInstallDirectoryCreator);
   Hooks.on("renderSidebarTab", (app, html) => {
     const id = String(app?.options?.id ?? app?.id ?? app?.constructor?.name ?? "").toLowerCase();
