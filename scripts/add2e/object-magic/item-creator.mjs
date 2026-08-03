@@ -322,14 +322,15 @@ function add2eMagicBuilderCanonicalDefenseModifiers(itemData, profileKey, type, 
   const sourceKind = type === "armure" ? "armor" : "equipment";
   const defenseBonus = Number(baseStats?.bonusCA ?? 0) + Number(result?.bonusCA ?? 0);
   if (Number.isFinite(defenseBonus) && defenseBonus !== 0) {
+    const magnitude = Math.abs(defenseBonus);
     generated.push({
       id: "magic-item-builder:armor-class:bonus",
       domain: "armor-class",
       target,
       operation: "add",
-      value: -defenseBonus,
-      priority: 100,
-      stacking: { mode: "stack", group: null },
+      value: -magnitude,
+      priority: 100 + magnitude,
+      stacking: { mode: "unique-source", group: `armor-class:${target}:source-bonus` },
       conditions: { equipped: true },
       source: { kind: sourceKind, name: itemData.name },
       metadata: {
