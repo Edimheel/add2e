@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "catalogueId": "add2e-gdm-magic-powers",
-  "version": "2026-07-31-catalogue-manifest-v7",
+  "version": "2026-08-03-catalogue-manifest-v8",
   "mergeStrategy": "append-powers-and-merge-vocabularies",
   "fragments": [
     {
@@ -32,6 +32,14 @@
         "III.C"
       ],
       "status": "social-influence-canonical-mechanics",
+      "verifiedPowerCount": 4
+    },
+    {
+      "path": "canonical-item-bonuses.json",
+      "sections": [
+        "Bonus des objets magiques"
+      ],
+      "status": "canonical-item-bonus-powers",
       "verifiedPowerCount": 4
     },
     {
@@ -170,11 +178,12 @@
     "verifiedWeaponArmorPowerCount": 29,
     "verifiedCorePowerCount": 51,
     "verifiedSocialInfluencePowerCount": 4,
+    "verifiedCanonicalItemBonusPowerCount": 4,
     "verifiedMovementPowerCount": 2,
     "verifiedMiscellaneousCorePowerCount": 79,
     "verifiedMiscellaneousSecondPassPowerCount": 46,
     "verifiedMiscellaneousPowerCount": 125,
-    "verifiedStandardPowerCount": 209,
+    "verifiedStandardPowerCount": 213,
     "verifiedArtifactRelicPowerAndEffectCount": 215,
     "verifiedArtifactRelicDestructionMethodCount": 8
   },
