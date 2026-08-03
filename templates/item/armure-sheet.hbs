@@ -37,9 +37,38 @@
         {{/if}}
       </div>
       <div class="a2e-grid-3" style="margin-top:8px">
-        <div class="a2e-field"><label>Catégorie</label><input type="text" name="system.categorie" value="{{item.system.categorie}}"></div>
-        <div class="a2e-field"><label>Type d'armure</label><input type="text" name="system.type_armure" value="{{item.system.type_armure}}"></div>
-        <div class="a2e-field"><label>Structure</label><input type="text" name="system.structure" value="{{item.system.structure}}"></div>
+        <div class="a2e-field">
+          <label>Catégorie</label>
+          <select name="system.categorie">
+            <option value="" {{#unless item.system.categorie}}selected{{/unless}}>—</option>
+            <option value="Légère" {{#if (eq item.system.categorie "Légère")}}selected{{/if}}>Légère</option>
+            <option value="Moyenne" {{#if (eq item.system.categorie "Moyenne")}}selected{{/if}}>Moyenne</option>
+            <option value="Lourde" {{#if (eq item.system.categorie "Lourde")}}selected{{/if}}>Lourde</option>
+            <option value="Bouclier" {{#if (eq item.system.categorie "Bouclier")}}selected{{/if}}>Bouclier</option>
+          </select>
+        </div>
+        <div class="a2e-field">
+          <label>Type d'armure</label>
+          <select name="system.type_armure">
+            <option value="" {{#unless item.system.type_armure}}selected{{/unless}}>—</option>
+            <option value="rembourree" {{#if (eq item.system.type_armure "rembourree")}}selected{{/if}}>Rembourrée</option>
+            <option value="cuir" {{#if (eq item.system.type_armure "cuir")}}selected{{/if}}>Cuir</option>
+            <option value="cuir_cloute" {{#if (eq item.system.type_armure "cuir_cloute")}}selected{{/if}}>Cuir clouté</option>
+            <option value="ecailles" {{#if (eq item.system.type_armure "ecailles")}}selected{{/if}}>Écailles</option>
+            <option value="tunique_metallique" {{#if (eq item.system.type_armure "tunique_metallique")}}selected{{/if}}>Tunique métallique</option>
+            <option value="mailles" {{#if (eq item.system.type_armure "mailles")}}selected{{/if}}>Mailles</option>
+            <option value="brigandine" {{#if (eq item.system.type_armure "brigandine")}}selected{{/if}}>Brigandine</option>
+            <option value="annelee" {{#if (eq item.system.type_armure "annelee")}}selected{{/if}}>Annelée</option>
+            <option value="cuirasse" {{#if (eq item.system.type_armure "cuirasse")}}selected{{/if}}>Cuirasse</option>
+            <option value="peau" {{#if (eq item.system.type_armure "peau")}}selected{{/if}}>Peau</option>
+            <option value="torse_blinde" {{#if (eq item.system.type_armure "torse_blinde")}}selected{{/if}}>Torse blindé</option>
+            <option value="bandes" {{#if (eq item.system.type_armure "bandes")}}selected{{/if}}>Bandes</option>
+            <option value="feuilletee" {{#if (eq item.system.type_armure "feuilletee")}}selected{{/if}}>Feuilletée</option>
+            <option value="plaques" {{#if (eq item.system.type_armure "plaques")}}selected{{/if}}>Plaques</option>
+            <option value="bouclier" {{#if (eq item.system.type_armure "bouclier")}}selected{{/if}}>Bouclier</option>
+          </select>
+        </div>
+        <div class="a2e-field"><label>Structure</label><input type="text" name="system.structure" value="{{item.system.structure}}" placeholder="casque, heaume..."></div>
       </div>
       <div class="a2e-checks" style="margin-top:8px">
         <label><input type="checkbox" name="system.equipee" {{checked item.system.equipee}}> Équipée</label>
@@ -54,10 +83,18 @@
 
   <section class="a2e-card">
     <h3><i class="fas fa-shield-alt"></i> Protection</h3>
-    <div class="a2e-grid-3">
+    <div class="a2e-grid-2">
       <div class="a2e-stat"><label>CA de base</label><input type="number" name="system.ac" value="{{item.system.ac}}"></div>
-      <div class="a2e-stat"><label>Type de bouclier</label><input type="text" name="system.type_bouclier" value="{{item.system.type_bouclier}}"></div>
-      <div class="a2e-stat"><label>Propriétés</label><input type="text" name="system.properties" value="{{item.system.properties}}"></div>
+      <div class="a2e-stat">
+        <label>Type de bouclier</label>
+        <select name="system.type_bouclier">
+          <option value="" {{#unless item.system.type_bouclier}}selected{{/unless}}>—</option>
+          <option value="rond" {{#if (eq item.system.type_bouclier "rond")}}selected{{/if}}>Rond</option>
+          <option value="lourd" {{#if (eq item.system.type_bouclier "lourd")}}selected{{/if}}>Lourd</option>
+          <option value="tour" {{#if (eq item.system.type_bouclier "tour")}}selected{{/if}}>Tour</option>
+          <option value="bois" {{#if (eq item.system.type_bouclier "bois")}}selected{{/if}}>Bois</option>
+        </select>
+      </div>
     </div>
   </section>
 
@@ -77,8 +114,8 @@
       <input type="hidden" name="system.enchantement.application" value="porteur">
       <div class="a2e-grid-3">
         <div class="a2e-field"><label>Nom non identifié</label><input type="text" name="system.nom_non_identifie" value="{{item.system.nom_non_identifie}}"></div>
-        <div class="a2e-stat"><label>Bonus CA</label><input type="number" name="system.enchantement.bonusCA" value="{{#if item.system.enchantement.bonusCA}}{{item.system.enchantement.bonusCA}}{{else}}{{item.system.bonus_ac}}{{/if}}"></div>
-        <div class="a2e-stat"><label>CA fixe</label><input type="number" name="system.enchantement.caFixe" value="{{#if item.system.enchantement.caFixe}}{{item.system.enchantement.caFixe}}{{else}}{{item.system.ca_fixe}}{{/if}}"></div>
+        <div class="a2e-stat"><label>Bonus CA</label><input type="number" name="system.enchantement.bonusCA" value="{{item.system.enchantement.bonusCA}}"></div>
+        <div class="a2e-stat"><label>CA fixe</label><input type="number" name="system.enchantement.caFixe" value="{{item.system.enchantement.caFixe}}"></div>
       </div>
     </section>
 
@@ -116,6 +153,6 @@
   <section class="a2e-card">
     <h3><i class="fas fa-scroll"></i> Description</h3>
     <div class="a2e-rich-editor">{{editor item.system.description target="system.description" button=true editable=editable engine="prosemirror"}}</div>
-    <details class="a2e-technical"><summary>Données techniques</summary><div class="a2e-grid-2" style="margin-top:8px"><div class="a2e-field"><label>Tags</label><textarea name="system.tags" rows="3">{{item.system.tags}}</textarea></div><div class="a2e-field"><label>Effect tags</label><textarea name="system.effectTags" rows="3">{{item.system.effectTags}}</textarea></div></div></details>
+    <details class="a2e-technical"><summary>Données techniques</summary><div class="a2e-field" style="margin-top:8px"><label>Tags canoniques</label><textarea name="system.tags" rows="3">{{item.system.tags}}</textarea></div></details>
   </section>
 </form>
